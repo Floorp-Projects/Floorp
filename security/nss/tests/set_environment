@@ -39,6 +39,7 @@ CVSROOT=:pserver:svbld@redcvs.red.iplanet.com:/m/src
 
 os_name=`uname -s`
 os_version=`uname -r`
+os_p=`uname -p`
 os_full=""
 
 if [ -f /u/svbld/bin/nsarch  ]
@@ -59,29 +60,32 @@ if [ "$os_name" = "HP-UX" ]
 then
     PATH=$PATH:/usr/local/bin:/opt/aCC/bin:/usr/local/bin/audio:/tools/ns/bin:/etc:/usr/contrib/bin:/usr/contrib/bin/X11:/usr/local/hpux/bin:/nfs/iapp1/hphome/bin:/etc:/u/svbld/bin/HP/perl/bin
     JAVA_HOME="/share/builds/components/cms_jdk/HP-UX/1.2.2.04"
+#    JAVA_HOME="/share/builds/components/cms_jdk/HP-UX/1.3.0.00"
 elif [ "$os_name" = "SunOS" ]
 then
     NATIVE_FLAG="-native"
     XAPPLRESDIR=/usr/openwin/lib/app-defaults:/usr/local/lib/X11/app-defaults
     OPENWINHOME=/usr/openwin
     LD_LIBRARY_PATH=$OPENWINHOME/lib
-    PATH=/tools/ns/bin:$PATH:/opt/SUNWspro/bin:/usr/bin/X11:/usr/openwin/bin:/usr/openwin/demo
-    if [ "$os_version" = "5.8" -o "$os_version" = "5.7" -o \
-         "$os_version" = "5.9" ]
-    then
-        PATH=$PATH:/tools/ns/workshop-5.0/bin
-    else
-        PATH=$PATH:/tools/ns/workshop-4.0/bin
-    fi
-    PATH=$PATH:/usr/ccs/bin:/usr/ucb/bin:/opt/SUNWwabi/bin:/usr/local/bin:/tools/ns/bin:/etc:/tools/contrib/bin
     if [ "$os_full" = "SOLARISx86 2.8" -o "$os_full" = "SOLARISx86 2.9" ] 
     then
-        PATH=/usr/ucb:/opt/usr/local/bin:$PATH
+        #PATH=/usr/ucb:/opt/usr/local/bin:$PATH
         JAVA_HOME="/usr/java1.2"
+        PATH=".:/usr/dist/share/forte_dev_i386,v6.2/SUNWspro/bin:/opt/usr/local/perl5/bin:/opt/SUNWspro/bin:/opt/usr/local/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/ccs/bin:/usr/ucb/bin:/usr/ucb:/opt/SUNWwabi/bin:/usr/local/bin:/tools/ns/bin:/etc:/tools/contrib/bin"
     else
         PATH=/usr/ucb:$PATH
         JAVA_HOME="/share/builds/components/jdk/1.2.2/SunOS"
-    fi
+        PATH=/tools/ns/bin:$PATH:/opt/SUNWspro/bin:/usr/bin/X11:/usr/openwin/bin:/usr/openwin/demo
+    
+        if [ "$os_version" = "5.8" -o "$os_version" = "5.7" -o \
+             "$os_version" = "5.9" ]
+        then
+            PATH=$PATH:/usr/dist/pkgs/forte_dev,v6.2/SUNWspro/bin:/tools/ns/workshop/bin
+        else
+            PATH=$PATH:/usr/dist/share/devpro,v5.0/5.x-sparc/bin:/tools/ns/workshop/bin
+        fi
+        PATH=$PATH:/usr/ccs/bin:/usr/ucb/bin:/opt/SUNWwabi/bin:/usr/local/bin:/tools/ns/bin:/etc:/tools/contrib/bin
+     fi
     export XAPPLRESDIR  OPENWINHOME LD_LIBRARY_PATH
 
 elif [ "$os_name" = "IRIX" ]
@@ -214,5 +218,6 @@ system=`uname -n`        # name of this system.
 
 JAVAC=$JAVA_HOME/bin/javac
 JAVA=$JAVA_HOME/bin/java
+#JAVA=$JAVA_HOME/jre/bin/java
 export JAVAC JAVA JAVA_HOME
 
