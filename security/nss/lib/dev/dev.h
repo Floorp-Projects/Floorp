@@ -41,7 +41,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.29 $ $Date: 2002/06/24 22:36:53 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.30 $ $Date: 2002/08/27 23:37:56 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -741,6 +741,7 @@ nssCryptokiTrust_GetAttributes
 (
   nssCryptokiObject *trustObject,
   nssSession *sessionOpt,
+  NSSItem *sha1_hash,
   nssTrustLevel *serverAuth,
   nssTrustLevel *clientAuth,
   nssTrustLevel *codeSigning,
