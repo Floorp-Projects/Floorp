@@ -159,13 +159,13 @@ public:
     NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
                                  const char* hostName);
     NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
-                                 TIMAPACLRightsInfo* aclRights);
+                                 nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
-                             TIMAPACLRightsInfo* aclRights);
+                             nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                   TIMAPACLRightsInfo* aclRights);
+                                   nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                         TIMAPACLRightsInfo* aclRights);
+                                         nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
                                  FolderQueryInfo* aInfo);
     
@@ -481,37 +481,37 @@ struct SetMailAccountUrlProxyEvent : nsImapExtensionProxyEvent
 struct ClearFolderRightsProxyEvent : nsImapExtensionProxyEvent
 {
     ClearFolderRightsProxyEvent(nsImapExtensionProxy* aProxy,
-                                TIMAPACLRightsInfo* aclRights);
+                                nsIMAPACLRightsInfo* aclRights);
     virtual ~ClearFolderRightsProxyEvent();
     NS_IMETHOD HandleEvent();
-    TIMAPACLRightsInfo m_aclRightsInfo;
+    nsIMAPACLRightsInfo m_aclRightsInfo;
 };
 
 struct AddFolderRightsProxyEvent : nsImapExtensionProxyEvent
 {
     AddFolderRightsProxyEvent(nsImapExtensionProxy* aProxy,
-                                TIMAPACLRightsInfo* aclRights);
+                                nsIMAPACLRightsInfo* aclRights);
     virtual ~AddFolderRightsProxyEvent();
     NS_IMETHOD HandleEvent();
-    TIMAPACLRightsInfo m_aclRightsInfo;
+    nsIMAPACLRightsInfo m_aclRightsInfo;
 };
 
 struct RefreshFolderRightsProxyEvent : nsImapExtensionProxyEvent
 {
     RefreshFolderRightsProxyEvent(nsImapExtensionProxy* aProxy,
-                                TIMAPACLRightsInfo* aclRights);
+                                nsIMAPACLRightsInfo* aclRights);
     virtual ~RefreshFolderRightsProxyEvent();
     NS_IMETHOD HandleEvent();
-    TIMAPACLRightsInfo m_aclRightsInfo;
+    nsIMAPACLRightsInfo m_aclRightsInfo;
 };
 
 struct FolderNeedsACLInitializedProxyEvent : nsImapExtensionProxyEvent
 {
     FolderNeedsACLInitializedProxyEvent(nsImapExtensionProxy* aProxy,
-                                TIMAPACLRightsInfo* aclRights);
+                                nsIMAPACLRightsInfo* aclRights);
     virtual ~FolderNeedsACLInitializedProxyEvent();
     NS_IMETHOD HandleEvent();
-    TIMAPACLRightsInfo m_aclRightsInfo;
+    nsIMAPACLRightsInfo m_aclRightsInfo;
 };
 
 struct SetFolderAdminURLProxyEvent : nsImapExtensionProxyEvent

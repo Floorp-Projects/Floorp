@@ -266,7 +266,7 @@ typedef struct _MessageSizeInfo
 
 // This class is only used for passing data
 // between the IMAP and mozilla threadns 
-class TIMAPACLRightsInfo
+class nsIMAPACLRightsInfo
 { 
 public:
 	char *hostName, *mailboxName, *userName, *rights;

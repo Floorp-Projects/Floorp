@@ -193,7 +193,8 @@ nsImapProtocol::nsImapProtocol() :
     m_fetchByChunks = PR_FALSE;
     m_chunkSize = 0;
     m_chunkThreshold = 0;
-    m_fromHeaderSeen = FALSE;
+    m_fromHeaderSeen = PR_FALSE;
+    m_closeNeededBeforeSelect = PR_FALSE;
 
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
@@ -202,12 +203,15 @@ nsImapProtocol::nsImapProtocol() :
 
 nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue)
 {
-	NS_PRECONDITION(aSinkEventQueue, 
+	NS_PRECONDITION(aSinkEventQueue && aHostSessionList, 
              "oops...trying to initalize with a null sink event queue!");
-	if (!aSinkEventQueue)
+	if (!aSinkEventQueue || !aHostSessionList)
         return NS_ERROR_NULL_POINTER;
 
     m_sinkEventQueue = aSinkEventQueue;
+    m_hostSessionList = aHostSessionList;
+    m_parser.SetHostSessionList(aHostSessionList);
+    NS_ADDREF (m_hostSessionList);
 	return NS_OK;
 }
 
@@ -1772,22 +1776,128 @@ PRBool nsImapProtocol::GetIOTunnellingEnabled()
 // if userName is NULL, it means "me," or MYRIGHTS.
 void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char *userName, const char *rights)
 {
+    nsIMAPACLRightsInfo *aclRightsInfo = new nsIMAPACLRightsInfo();
+	if (aclRightsInfo)
+	{
+		nsIMAPNamespace *namespaceForFolder = nsnull;
+        NS_ASSERTION (m_hostSessionList, "fatal ... null host session list");
+        if (m_hostSessionList)
+            m_hostSessionList->GetNamespaceForMailboxForHost(
+                GetImapHostName(), GetImapUserName(), mailboxName,
+                namespaceForFolder);
+		NS_ASSERTION (namespaceForFolder, 
+                      "Oops ... null namespace for folder");
+		aclRightsInfo->hostName = PL_strdup(GetImapHostName());
+
+		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, FALSE);
+		if (nonUTF7ConvertedName)
+			mailboxName = nonUTF7ConvertedName;
+
+		if (namespaceForFolder)
+            m_runningUrl->AllocateCanonicalPath(
+                mailboxName,
+                namespaceForFolder->GetDelimiter(), 
+                &aclRightsInfo->mailboxName);
+		else
+            m_runningUrl->AllocateCanonicalPath(mailboxName,
+                          kOnlineHierarchySeparatorUnknown, 
+                          &aclRightsInfo->mailboxName);
+
+		PR_FREEIF(nonUTF7ConvertedName);
+		if (userName)
+			aclRightsInfo->userName = PL_strdup(userName);
+		else
+			aclRightsInfo->userName = NULL;
+		aclRightsInfo->rights = PL_strdup(rights);
+		
+
+		if (aclRightsInfo->hostName && 
+            aclRightsInfo->mailboxName && aclRightsInfo->rights && 
+			userName ? (aclRightsInfo->userName != NULL) : TRUE)
+		{
+            if (m_imapExtension)
+            {
+                m_imapExtension->AddFolderRights(this, aclRightsInfo);
+                WaitForFEEventCompletion();
+            }
+        }
+        PR_FREEIF(aclRightsInfo->hostName);
+        PR_FREEIF(aclRightsInfo->mailboxName);
+        PR_FREEIF(aclRightsInfo->rights);
+        PR_FREEIF(aclRightsInfo->userName);
+
+		delete aclRightsInfo;
+	}
+	else
+		HandleMemoryFailure();
 }
 
 
 void nsImapProtocol::CommitNamespacesForHostEvent()
 {
+    if (m_imapMiscellaneous)
+    {
+        m_imapMiscellaneous->CommitNamespaces(this, GetImapHostName());
+        WaitForFEEventCompletion();
+    }
 }
 
 // notifies libmsg that we have new capability data for the current host
 void nsImapProtocol::CommitCapabilityForHostEvent()
 {
+    if (m_imapMiscellaneous)
+    {
+        m_imapMiscellaneous->CommitCapabilityForHost(this, GetImapHostName());
+        WaitForFEEventCompletion();
+    }
 }
 
 // rights is a single string of rights, as specified by RFC2086, the IMAP ACL extension.
 // Clears all rights for a given folder, for all users.
-void nsImapProtocol::ClearAllFolderRights(const char *mailboxName)
+void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
+                                          nsIMAPNamespace *nsForMailbox)
 {
+	NS_ASSERTION (nsForMailbox, "Oops ... null name space");
+    nsIMAPACLRightsInfo *aclRightsInfo = new nsIMAPACLRightsInfo();
+	if (aclRightsInfo)
+	{
+		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, FALSE);
+		if (nonUTF7ConvertedName)
+			mailboxName = nonUTF7ConvertedName;
+
+        const char *hostName = "";
+        m_runningUrl->GetHost(&hostName);
+
+		aclRightsInfo->hostName = PL_strdup(hostName);
+		if (nsForMailbox)
+            m_runningUrl->AllocateCanonicalPath(mailboxName,
+                                                nsForMailbox->GetDelimiter(),
+                                                &aclRightsInfo->mailboxName); 
+		else
+            m_runningUrl->AllocateCanonicalPath(
+                mailboxName, kOnlineHierarchySeparatorUnknown,
+                &aclRightsInfo->mailboxName);
+
+		PR_FREEIF(nonUTF7ConvertedName);
+
+		aclRightsInfo->rights = NULL;
+		aclRightsInfo->userName = NULL;
+
+		if (aclRightsInfo->hostName && aclRightsInfo->mailboxName)
+		{
+            if (m_imapExtension)
+            {
+                m_imapExtension->ClearFolderRights(this, aclRightsInfo);
+		        WaitForFEEventCompletion();
+            }
+        }
+        PR_FREEIF(aclRightsInfo->hostName);
+        PR_FREEIF(aclRightsInfo->mailboxName);
+
+		delete aclRightsInfo;
+	}
+	else
+		HandleMemoryFailure();
 }
 
 char* 
@@ -1925,19 +2035,68 @@ char*
 nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString, PRBool
                                           aConvertToUtf7Imap)
 {
-    return nsnull;
+    // ***** temporary **** Fix me ****
+    if (aSourceString)
+        return PL_strdup(aSourceString);
+    else
+        return nsnull;
 }
 
 	// imap commands issued by the parser
 void
-nsImapProtocol::Store(nsString2 &aMessageList, const char * aMessageData,
-                      PRBool aIdsAreUid)
+nsImapProtocol::Store(nsString2 &messageList, const char * messageData,
+                      PRBool idsAreUid)
 {
+   IncrementCommandTagNumber();
+    
+    char *formatString;
+    if (idsAreUid)
+        formatString = "%s uid store %s %s\015\012";
+    else
+        formatString = "%s store %s %s\015\012";
+        
+    // we might need to close this mailbox after this
+	m_closeNeededBeforeSelect = GetDeleteIsMoveToTrash() && (PL_strcasestr(messageData, "\\Deleted"));
+
+	const char *commandTag = GetServerCommandTag();
+	int protocolStringSize = PL_strlen(formatString) + PL_strlen(messageList.GetBuffer()) + PL_strlen(messageData) + PL_strlen(commandTag) + 1;
+	char *protocolString = (char *) PR_CALLOC( protocolStringSize );
+
+	if (protocolString)
+	{
+	    PR_snprintf(protocolString,                              // string to create
+	            protocolStringSize,                              // max size
+	            formatString,                                   // format string
+	            commandTag,                  					// command tag
+	            messageList,
+	            messageData);
+	            
+	    int                 ioStatus = SendData(protocolString);
+	    
+		ParseIMAPandCheckForNewMail(protocolString); // ??? do we really need this
+	    PR_Free(protocolString);
+    }
+    else
+    	HandleMemoryFailure();
 }
 
 void
 nsImapProtocol::Expunge()
 {
+    ProgressEventFunctionUsingId (/***** fix me **** MK_IMAP_STATUS_EXPUNGING_MAILBOX */ -1);
+    IncrementCommandTagNumber();
+    
+    char *tmpBuffer = 
+    PR_smprintf("%s expunge" CRLF,     // format string
+                GetServerCommandTag()); // command tag
+    
+    if (tmpBuffer)
+    {
+        PRInt32 ioStatus = SendData(tmpBuffer);
+        PR_Free(tmpBuffer);
+    }
+    
+	ParseIMAPandCheckForNewMail(); // ??? do we really need to do this
 }
 
 void
@@ -1948,4 +2107,16 @@ nsImapProtocol::HandleMemoryFailure()
     // m_imapThreadIsRunning = PR_FALSE;
     // SetConnectionStatus(-1);
     PR_CExitMonitor(this);
+}
+
+PRBool
+nsImapProtocol::GetDeleteIsMoveToTrash()
+{
+    PRBool rv = PR_FALSE;
+    NS_ASSERTION (m_hostSessionList, "fatal... null host session list");
+    if (m_hostSessionList)
+        m_hostSessionList->GetDeleteIsMoveToTrashForHost(GetImapHostName(),
+                                                         GetImapUserName(),
+                                                         rv);
+    return rv;
 }

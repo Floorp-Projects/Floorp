@@ -32,6 +32,7 @@
 #include "nsImapServerResponseParser.h"
 #include "nsImapProxyEvent.h"
 #include "nsImapFlagAndUidState.h"
+#include "nsIMAPNamespace.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -184,7 +185,7 @@ public:
 	// rights is a single string of rights, as specified by RFC2086, the IMAP ACL extension.
 	void AddFolderRightsForUser(const char *mailboxName, const char *userName, const char *rights);
 	// Clears all rights for a given folder, for all users.
-	void ClearAllFolderRights(const char *mailboxName);
+	void ClearAllFolderRights(const char *mailboxName, nsIMAPNamespace *nsForMailbox);
 
     void WaitForFEEventCompletion();
     void HandleMemoryFailure();
@@ -209,6 +210,7 @@ private:
 	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
 
     // ******* Thread support *******
+    nsIImapHostSessionList *m_hostSessionList;
     PLEventQueue *m_sinkEventQueue;
     PLEventQueue *m_eventQueue;
     PRThread     *m_thread;
@@ -227,6 +229,7 @@ private:
     nsISupports* m_consumer;
     PRInt32 m_connectionStatus;
     nsIMsgIncomingServer * m_server;
+
     nsImapLogProxy *m_imapLog;
     nsImapMailfolderProxy *m_imapMailfolder;
     nsImapMessageProxy *m_imapMessage;
@@ -234,9 +237,8 @@ private:
     nsImapMiscellaneousProxy *m_imapMiscellaneous;
     // helper function to setup imap sink interface proxies
     void SetupSinkProxy();
+    PRBool GetDeleteIsMoveToTrash();
 
-    nsIOutputStream *m_messageDownloadOutputStream;
-    
     PRMonitor *GetDataMemberMonitor();
     nsString2 m_currentCommand;
     nsImapServerResponseParser m_parser;
@@ -295,6 +297,8 @@ private:
     PRInt32 m_chunkThreshold;
     TLineDownloadCache m_downloadLineCache;
     PRBool m_fromHeaderSeen;
+
+    PRBool m_closeNeededBeforeSelect;
 };
 
 #endif  // nsImapProtocol_h___

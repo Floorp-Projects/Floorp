@@ -863,9 +863,10 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) const
 
 }
 
-NS_IMETHODIMP nsImapUrl::AllocateCannonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const
+NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const
 {
 	NS_LOCK_INSTANCE();
+    *allocatedPath = nsnull;
 #if 0 // here's the old code.
 	char delimiterToUse = onlineDelimiter;
 	if (onlineDelimiter == kOnlineHierarchySeparatorUnknown ||
@@ -924,7 +925,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCannonicalPath(const char *serverPath, char onl
 	return canonicalPath;
 #endif // 0
     NS_UNLOCK_INSTANCE();
-    return NS_OK;
+    return NS_ERROR_NULL_POINTER;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

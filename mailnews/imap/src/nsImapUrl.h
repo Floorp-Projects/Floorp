@@ -105,7 +105,7 @@ public:
     NS_IMETHOD ToString(PRUnichar* *aString) const;
 
 	NS_IMETHOD GetImapPartToFetch(char **result) const;
-	NS_IMETHOD AllocateCannonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const;
+	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) const;
 
 	NS_IMETHOD	CreateListOfMessageIdsString(char **result) const;
 

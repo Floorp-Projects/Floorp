@@ -127,6 +127,8 @@ public:
 
 	PRBool GetFillingInShell();
 	void	UseCachedShell(nsIMAPBodyShell *cachedShell);
+    void SetHostSessionList(nsIImapHostSessionList *aHostSession);
+	nsIImapHostSessionList *GetHostSessionList();
 
 protected:
     virtual void    flags();
@@ -172,7 +174,6 @@ protected:
 	virtual PRBool		GetNextLineForParser(char **nextLine);
 	virtual void    end_of_line();
 
-	nsIMAPHostSessionList *GetHostSessionList();
 private:
     PRBool                   fProcessingTaggedResponse;
     PRBool                   fCurrentCommandFailed;
@@ -241,7 +242,7 @@ private:
 	// The connection object
     nsImapProtocol &fServerConnection;
 
-	nsIMAPHostSessionList *fHostSessionList;
+	nsIImapHostSessionList *fHostSessionList;
 };
 
 #endif

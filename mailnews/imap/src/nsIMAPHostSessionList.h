@@ -36,6 +36,7 @@ protected:
 	char			*fHostName;
 	char			*fUserName;
 	char			*fCachedPassword;
+	char			*fOnlineDir;
 	nsIMAPHostInfo	*fNextHost;
 	PRUint32		fCapabilityFlags;
 	char			*fHierarchyDelimiters;	// string of top-level hierarchy delimiters
@@ -48,6 +49,8 @@ protected:
 	PRBool			fShouldAlwaysListInbox;
 	PRBool			fHaveAdminURL;
 	PRBool			fPasswordVerifiedOnline;
+	PRBool			fDeleteIsMoveToTrash;
+	PRBool			fGotNamespaces;
 	nsIMAPBodyShellCache	*fShellCache;
 };
 
@@ -79,6 +82,23 @@ public:
 	 NS_IMETHOD GetPasswordVerifiedOnline(const char *hostName, const char *userName, PRBool &result);
 	 NS_IMETHOD	SetPasswordVerifiedOnline(const char *hostName, const char *userName);
 
+    // OnlineDir
+    NS_IMETHOD GetOnlineDirForHost(const char *hostName, const char *userName,
+                                   nsString &result);
+    NS_IMETHOD SetOnlineDirForHost(const char *hostName, const char *userName,
+                                   const char *onlineDir);
+
+    // Delete is move to trash folder
+    NS_IMETHOD GetDeleteIsMoveToTrashForHost(const char *hostName, const char
+                                             *userName, PRBool &result);
+    NS_IMETHOD SetDeleteIsMoveToTrashForHost(const char *hostName, const char
+                                             *userName, PRBool isMoveToTrash);
+
+    // Get namespaces
+    NS_IMETHOD GetGotNamespacesForHost(const char *hostName, const char
+                                       *userName, PRBool &result);
+    NS_IMETHOD SetGotNamespacesForHost(const char *hostName, const char
+                                       *userName, PRBool gotNamespaces);
 	// Folders
 	 NS_IMETHOD	SetHaveWeEverDiscoveredFoldersForHost(const char *hostName, const char *userName, PRBool discovered);
 	 NS_IMETHOD	GetHaveWeEverDiscoveredFoldersForHost(const char *hostName, const char *userName, PRBool &result);

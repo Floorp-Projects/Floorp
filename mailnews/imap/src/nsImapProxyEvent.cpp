@@ -859,7 +859,7 @@ nsImapExtensionProxy::SetMailAccountUrl(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapExtensionProxy::ClearFolderRights(nsIImapProtocol* aProtocol,
-                                        TIMAPACLRightsInfo* aclRights)
+                                        nsIMAPACLRightsInfo* aclRights)
 {
     nsresult res = NS_OK;
     NS_PRECONDITION (aclRights, "Oops... null aclRights");
@@ -886,7 +886,7 @@ nsImapExtensionProxy::ClearFolderRights(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapExtensionProxy::AddFolderRights(nsIImapProtocol* aProtocol,
-                                      TIMAPACLRightsInfo* aclRights)
+                                      nsIMAPACLRightsInfo* aclRights)
 {
     nsresult res = NS_OK;
     NS_PRECONDITION (aclRights, "Oops... null aclRights");
@@ -913,7 +913,7 @@ nsImapExtensionProxy::AddFolderRights(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapExtensionProxy::RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                          TIMAPACLRightsInfo* aclRights)
+                                          nsIMAPACLRightsInfo* aclRights)
 {
     nsresult res = NS_OK;
     NS_PRECONDITION (aclRights, "Oops... null aclRights");
@@ -940,7 +940,7 @@ nsImapExtensionProxy::RefreshFolderRights(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapExtensionProxy::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                                TIMAPACLRightsInfo* aclRights)
+                                                nsIMAPACLRightsInfo* aclRights)
 {
     nsresult res = NS_OK;
     NS_PRECONDITION (aclRights, "Oops... null aclRights");
@@ -2285,7 +2285,7 @@ SetMailAccountUrlProxyEvent::HandleEvent()
 }
 
 ClearFolderRightsProxyEvent::ClearFolderRightsProxyEvent(
-    nsImapExtensionProxy* aProxy, TIMAPACLRightsInfo* aclRights) :
+    nsImapExtensionProxy* aProxy, nsIMAPACLRightsInfo* aclRights) :
     nsImapExtensionProxyEvent(aProxy)
 {
     NS_ASSERTION (aclRights, "Oops... a null acl rights info");
@@ -2327,7 +2327,7 @@ ClearFolderRightsProxyEvent::HandleEvent()
 }
 
 AddFolderRightsProxyEvent::AddFolderRightsProxyEvent(
-    nsImapExtensionProxy* aProxy, TIMAPACLRightsInfo* aclRights) :
+    nsImapExtensionProxy* aProxy, nsIMAPACLRightsInfo* aclRights) :
     nsImapExtensionProxyEvent(aProxy)
 {
     NS_ASSERTION (aclRights, "Oops... a null acl rights info");
@@ -2369,7 +2369,7 @@ AddFolderRightsProxyEvent::HandleEvent()
 }
 
 RefreshFolderRightsProxyEvent::RefreshFolderRightsProxyEvent(
-    nsImapExtensionProxy* aProxy, TIMAPACLRightsInfo* aclRights) :
+    nsImapExtensionProxy* aProxy, nsIMAPACLRightsInfo* aclRights) :
     nsImapExtensionProxyEvent(aProxy)
 {
     NS_ASSERTION (aclRights, "Oops... a null acl rights info");
@@ -2411,7 +2411,7 @@ RefreshFolderRightsProxyEvent::HandleEvent()
 }
 
 FolderNeedsACLInitializedProxyEvent::FolderNeedsACLInitializedProxyEvent(
-    nsImapExtensionProxy* aProxy, TIMAPACLRightsInfo* aclRights) :
+    nsImapExtensionProxy* aProxy, nsIMAPACLRightsInfo* aclRights) :
     nsImapExtensionProxyEvent(aProxy)
 {
     NS_ASSERTION (aclRights, "Oops... a null acl rights info");

@@ -40,6 +40,7 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 {
 	fHostName = nsCRT::strdup(hostName);
 	fUserName = nsCRT::strdup(userName);
+    fOnlineDir = NULL;
 	fNextHost = NULL;
 	fCachedPassword = NULL;
 	fCapabilityFlags = kCapabilityUndefined;
@@ -52,6 +53,8 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 	fShouldAlwaysListInbox = TRUE;
 	fShellCache = nsIMAPBodyShellCache::Create();
 	fPasswordVerifiedOnline = FALSE;
+    fDeleteIsMoveToTrash = FALSE;
+    fGotNamespaces = FALSE;
 }
 
 nsIMAPHostInfo::~nsIMAPHostInfo()
@@ -60,6 +63,7 @@ nsIMAPHostInfo::~nsIMAPHostInfo()
 	PR_FREEIF(fUserName);
 	PR_FREEIF(fCachedPassword);
 	PR_FREEIF(fHierarchyDelimiters);
+    PR_FREEIF(fOnlineDir);
 	delete fNamespaceList;
 	delete fShellCache;
 }
@@ -218,6 +222,78 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetPasswordVerifiedOnline(const char *hostN
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
 		result = host->fPasswordVerifiedOnline;
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
+
+NS_IMETHODIMP nsIMAPHostSessionList::GetOnlineDirForHost(const char *hostName,
+                                                         const char *userName,
+                                                         nsString &result)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+        result = host->fOnlineDir;
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
+
+NS_IMETHODIMP nsIMAPHostSessionList::SetOnlineDirForHost(const char *hostName,
+                                                         const char *userName,
+                                                         const char *onlineDir)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+	{
+		PR_FREEIF(host->fOnlineDir);
+		if (onlineDir)
+			host->fOnlineDir = nsCRT::strdup(onlineDir);
+	}
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
+
+NS_IMETHODIMP nsIMAPHostSessionList::GetDeleteIsMoveToTrashForHost(
+    const char *hostName, const char *userName, PRBool &result)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+        result = host->fDeleteIsMoveToTrash;
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
+
+NS_IMETHODIMP nsIMAPHostSessionList::SetDeleteIsMoveToTrashForHost(
+    const char *hostName, const char *userName, PRBool isMoveToTrash)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+		host->fDeleteIsMoveToTrash = isMoveToTrash;
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
+
+NS_IMETHODIMP nsIMAPHostSessionList::GetGotNamespacesForHost(
+    const char *hostName, const char *userName, PRBool &result)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+        result = host->fGotNamespaces;
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
+
+NS_IMETHODIMP nsIMAPHostSessionList::SetGotNamespacesForHost(
+    const char *hostName, const char *userName, PRBool gotNamespaces)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+		host->fGotNamespaces = gotNamespaces;
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
