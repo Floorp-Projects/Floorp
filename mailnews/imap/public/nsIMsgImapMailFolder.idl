@@ -28,6 +28,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   void RemoveSubFolder(in nsIMsgFolder folder);
   void CreateClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter);
   void List();
+  void RenameLocal(in string newname);
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;

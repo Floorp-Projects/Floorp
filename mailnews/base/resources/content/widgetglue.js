@@ -795,20 +795,21 @@ function MsgRenameFolder()
 function RenameFolder(name,uri)
 {
     dump("uri,name = " + uri + "," + name + "\n");
-    var tree = GetFolderTree();
-    if (tree)
+    var folderTree = GetFolderTree();
+    if (folderTree)
     {
 	if (uri && (uri != "") && name && (name != "")) {
                 var selectedFolder = GetResourceFromUri(uri);
-                tree.clearItemSelection();
-                messenger.RenameFolder(tree.database, selectedFolder, name);
+                folderTree.clearItemSelection();
+                folderTree.clearCellSelection();
+                messenger.RenameFolder(folderTree.database, selectedFolder, name);
         }
         else {
                 dump("no name or nothing selected\n");
         }   
     }
     else {
-	dump("no tree\n");
+	dump("no folder tree\n");
     }
 }
 

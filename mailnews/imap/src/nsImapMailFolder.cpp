@@ -282,6 +282,12 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 		mSubFolders->AppendElement(supports);
 	*child = folder;
 	NS_IF_ADDREF(*child);
+    nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(folder);
+    if (imapFolder)
+    {
+        // for renaming
+        imapFolder->SetOnlineName("");
+    }
 	return rv;
 }
 
@@ -893,10 +899,6 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
 NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName)
 {
     nsresult rv = NS_ERROR_FAILURE;
-	char *utf7Name = CreateUtf7ConvertedStringFromUnicode(newName);
-    rv = RenameLocal(utf7Name);
-	nsCRT::free(utf7Name);
-
     NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv))
         rv = imapService->RenameLeaf(m_eventQueue, this, newName, this,
@@ -929,8 +931,15 @@ NS_IMETHODIMP nsImapMailFolder::ForceDBClosed()
     return NS_OK;
 }
 
-nsresult nsImapMailFolder::RenameLocal(const char *newName)
+NS_IMETHODIMP
+ nsImapMailFolder::RenameLocal(const char *newName)
 {
+    nsCAutoString leafname = newName;
+    // newName always in the canonical form "greatparent/parentname/leafname"
+    PRInt32 leafpos = leafname.RFindChar('/');
+    if (leafpos >0)
+        leafname.Cut(0, leafpos+1);
+
     m_msgParser = null_nsCOMPtr();
     ForceDBClosed();
 
@@ -955,7 +964,7 @@ nsresult nsImapMailFolder::RenameLocal(const char *newName)
     nsFileSpec fileSpec;
     oldPathSpec->GetFileSpec(&fileSpec);
     nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
-    nsCAutoString newNameStr = newName;
+    nsCAutoString newNameStr = leafname;
     newNameStr += ".msf";
     rv = oldSummarySpec.Rename(newNameStr.GetBuffer());
     if (NS_SUCCEEDED(rv))
@@ -967,7 +976,7 @@ nsresult nsImapMailFolder::RenameLocal(const char *newName)
         }
         if (cnt > 0)
         {
-            newNameStr = newName;
+            newNameStr = leafname;
             newNameStr += ".sbd";
             dirSpec.Rename(newNameStr.GetBuffer());
         }
@@ -3040,13 +3049,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 }
                 break;
             case nsIImapUrl::nsImapRenameFolder:
-                if (NS_FAILED(aExitCode))
-                {
-                    char *oldName = nsnull;
-                    imapUrl->CreateServerDestinationFolderPathString(&oldName);
-                    RenameLocal(oldName);
-                    nsCRT::free(oldName);
-                }
                 break;
             default:
                 break;

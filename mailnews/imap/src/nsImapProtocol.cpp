@@ -795,29 +795,29 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
     // **** jt - This routine should only be called by imap service.
   nsAutoCMonitor(this);
 
-  // if the connection is closed,then don't try to send data
-  // to the connection.
-  PRBool connectionIsLost = !TestFlag(IMAP_CONNECTION_IS_OPEN);
-
   PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
   nsImapServerResponseParser::kFolderSelected && isSaveToClose;
   nsCString command;
   nsresult rv = NS_OK;
+  PRUint32 writeCount;
 
-  if (closeNeeded && GetDeleteIsMoveToTrash() && !connectionIsLost)
+  if (closeNeeded && GetDeleteIsMoveToTrash() &&
+      TestFlag(IMAP_CONNECTION_IS_OPEN))
   {
     IncrementCommandTagNumber();
     command = GetServerCommandTag();
     command.Append(" close" CRLF);
-    rv = SendData(command.GetBuffer());
+    rv = m_outputStream->Write(command.GetBuffer(), command.Length(),
+                               &writeCount);
   }
 
-  if (!connectionIsLost)
+  if (NS_SUCCEEDED(rv) && TestFlag(IMAP_CONNECTION_IS_OPEN))
   {
     IncrementCommandTagNumber();
     command = GetServerCommandTag();
     command.Append(" logout" CRLF);
-    rv = SendData(command.GetBuffer());
+    rv = m_outputStream->Write(command.GetBuffer(), command.Length(),
+                               &writeCount);
   }
 
   PR_EnterMonitor(m_threadDeathMonitor);

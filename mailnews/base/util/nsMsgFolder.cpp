@@ -940,6 +940,8 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 		{
 			if (folder == child.get())
 			{
+        //Remove self as parent
+        child->SetParent(nsnull);
 				// maybe delete disk storage for it, and its subfolders
 				status = child->RecursiveDelete(deleteStorage);	
 
@@ -948,8 +950,6 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 
 					//Remove from list of subfolders.
 					mSubFolders->RemoveElement(supports);
-					//Remove self as parent
-					child->SetParent(nsnull);
 					nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
 					nsCOMPtr<nsISupports> folderSupports;
 					rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
@@ -957,6 +957,10 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 						NotifyItemDeleted(folderSupports, childSupports, "folderView");
 					break;
 				}
+        else
+          {  // setting parent back if we failed
+            child->SetParent(this);
+          }
 			}
 			else
 			{
@@ -987,14 +991,21 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 
 		if(NS_SUCCEEDED(status))
 		{
-			status = child->RecursiveDelete(deleteStorage);  // recur
-			mSubFolders->RemoveElement(child);  // unlink it from this's child list
 			child->SetParent(nsnull);
-			nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-			nsCOMPtr<nsISupports> folderSupports;
-			rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
-			if(childSupports && NS_SUCCEEDED(rv))
-				NotifyItemDeleted(folderSupports, childSupports, "folderView");
+			status = child->RecursiveDelete(deleteStorage);  // recur
+      if (NS_SUCCEEDED(status))
+        {
+          mSubFolders->RemoveElement(child);  // unlink it from this's child list
+          nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
+          nsCOMPtr<nsISupports> folderSupports;
+          rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
+          if(childSupports && NS_SUCCEEDED(rv))
+            NotifyItemDeleted(folderSupports, childSupports, "folderView");
+        }
+      else
+        { // setting parent back if we failed for some reason
+          child->SetParent(this);
+        }
 		}
 		cnt--;
 	}

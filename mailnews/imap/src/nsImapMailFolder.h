@@ -277,7 +277,7 @@ protected:
     PRBool InTrash(nsIMsgFolder* folder);
 	nsresult GetServerKey(char **serverKey);
 
-    nsresult RenameLocal(const char *newName);
+    //nsresult RenameLocal(const char *newName);
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);

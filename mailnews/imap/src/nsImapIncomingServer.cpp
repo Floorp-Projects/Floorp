@@ -770,13 +770,12 @@ NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, cons
         nsCOMPtr<nsIMsgFolder> me;
         rv = GetFolder(oldName, getter_AddRefs(me));
         if (NS_FAILED(rv)) return rv;
-        rv = me->GetParent(getter_AddRefs(iFolder));
+
+        nsCOMPtr<nsIMsgImapMailFolder> folder;
+        folder = do_QueryInterface(me, &rv);
         if (NS_SUCCEEDED(rv))
-        {
-            parent = do_QueryInterface(iFolder, &rv);
-            if (NS_SUCCEEDED(rv))
-                    parent->RemoveSubFolder(me);
-        }
+            folder->RenameLocal(newName);
+
         nsCOMPtr<nsIFolder> rootFolder;
         rv = GetRootFolder(getter_AddRefs(rootFolder));
         if (NS_SUCCEEDED(rv))
