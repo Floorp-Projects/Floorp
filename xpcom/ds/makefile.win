@@ -49,6 +49,7 @@ EXPORTS =                          \
         nsCharTraits.h             \
         nsAReadableString.h        \
         nsAWritableString.h        \
+        nsReadableUtils.h          \
         nsSharedString.h           \
         nsStatistics.h             \
         nsStr.h                    \
@@ -114,6 +115,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsProperties.obj              \
         .\$(OBJDIR)\nsPersistentProperties.obj    \
         .\$(OBJDIR)\nsQuickSort.obj               \
+        .\$(OBJDIR)\nsReadableUtils.obj           \
         .\$(OBJDIR)\nsSizeOfHandler.obj           \
         .\$(OBJDIR)\nsStatistics.obj              \
         .\$(OBJDIR)\nsStr.obj                     \
