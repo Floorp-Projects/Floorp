@@ -27,14 +27,14 @@
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
-nsFontMetricsGTK :: nsFontMetricsGTK()
+nsFontMetricsGTK::nsFontMetricsGTK()
 {
   NS_INIT_REFCNT();
   mFont = nsnull;
   mFontHandle = nsnull;
 }
 
-nsFontMetricsGTK :: ~nsFontMetricsGTK()
+nsFontMetricsGTK::~nsFontMetricsGTK()
 {
   if (nsnull != mFont) {
     delete mFont;

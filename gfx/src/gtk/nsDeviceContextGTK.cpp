@@ -32,7 +32,7 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 typedef unsigned char BYTE;
 
-nsDeviceContextGTK :: nsDeviceContextGTK()
+nsDeviceContextGTK::nsDeviceContextGTK()
 {
   NS_INIT_REFCNT();
   mTwipsToPixels = 1.0;
@@ -55,7 +55,7 @@ nsDeviceContextGTK :: nsDeviceContextGTK()
   mNumCells = 0;
 }
 
-nsDeviceContextGTK :: ~nsDeviceContextGTK()
+nsDeviceContextGTK::~nsDeviceContextGTK()
 {
   if (mColormap) 
     {
