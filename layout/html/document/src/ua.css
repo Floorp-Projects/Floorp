@@ -108,8 +108,8 @@ TABLE {
   display: table;
   border-style: outset;
   border-color: #C0C0C0;
-  cell-spacing: 4px;
-  cell-padding: 4px;
+  cell-spacing: 2px;
+  cell-padding: 2px;
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -183,22 +183,30 @@ A:out-of-date {
 A:link IMG {
   display: inline;
   border: 2px solid blue;
-  text-decoration: underline;
+  font-family: sans-serif;
+  font-size: 8.5pt;
+  text-decoration: none;
 }
 A:visited IMG {
   display: inline;
   border: 2px solid purple;
-  text-decoration: underline;
+  font-family: sans-serif;
+  font-size: 8.5pt;
+  text-decoration: none;
 }
 A:active IMG {
   display: inline;
   border: 2px solid lime;
-  text-decoration: underline;
+  font-family: sans-serif;
+  font-size: 8.5pt;
+  text-decoration: none;
 }
 A:out-of-date IMG {
   display: inline;
   border: 2px solid red;
-  text-decoration: underline;
+  font-family: sans-serif;
+  font-size: 8.5pt;
+  text-decoration: none;
 }
 B, STRONG {
   display: inline;
@@ -321,6 +329,8 @@ BR {
 }
 IMG {
   display: inline;
+  font-family: sans-serif;
+  font-size: 8.5pt;
 }
 SPACER {
   display: inline;
