@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *   Blake Ross <blakeross@telocity.com> 
- *   Ben Goodger <ben@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -38,51 +37,70 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIWebProgressListener.idl"
 
-interface nsIDOMXULDocument;
-interface nsIDownloadItem;
+interface nsIURI;
+interface nsILocalFile;
+interface nsIWebProgressListener;
+interface nsIDownloadProgressListener;
 
-[scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
-interface nsIDownloadManager : nsISupports {
+[scriptable, uuid(06cb92f2-1dd2-11b2-95f2-96dfdfb804a1)]
+interface nsIDownloadItem : nsISupports {
+    
+    /**
+     * prettyName
+     * The user-readable description of a download
+     */
+    attribute wstring prettyName;
+    
+    /**
+     * source
+     * The source of a download
+     */
+    attribute nsIURI source;
+    
+    /**
+     * target
+     * The local file where the download is being saved
+     */
+    attribute nsILocalFile target;
+    
+    /**
+     * percentComplete
+     * The percent complete of an item at any given moment
+     */
+    readonly attribute PRInt32 percentComplete;
 
-  /**
-  * addItem
-  * Adds an item to be managed by the download manager.
-  */
-  
-  void addItem(in nsIDownloadItem item);
+    /**
+     * timeStarted
+     * The time a download was started; necessary for more accurate
+     * measurements 
+     */
+    readonly attribute long long timeStarted;
 
-  /**
-  * getItem
-  * Used to retrieve a download managed by the download manager.
-  */
+    /**
+     * listener
+     * Optionally set by the client; downloading information is
+     * passed to this listener and used to update client UI
+     */
+    attribute nsIWebProgressListener listener;
 
-  nsIDownloadItem getItem(in string id);
-  
-  void notifyDownloadEnded(in string id);
+    /**
+     * listener
+     * Optionally set by the client; downloading information is
+     * passed to this listener and used to update client UI
+     */
+    attribute nsIWebProgressListener propertiesListener;
 
-  /**
-  * initializeUI
-  * Called by the download manager FE to signify that the manager
-  * should begin forwarding progress notifications to the ui listener.
-  */
-  void initializeUI(in nsIDOMXULDocument document);
-
-  /**
-  * uninitializeUI
-  * Called by the download manager FE to signify that that the manager
-  * should stop forwarding progress notifications to the ui listener because
-  * the FE is no longer being displayed.
-  */
-  void uninitializeUI();
+    /**
+     * internalListener
+     * Set by the download manager; used to update download manager UI
+     */
+    attribute nsIDownloadProgressListener internalListener;
 };
 
-
 %{C++
-#define NS_DOWNLOADMANAGER_CONTRACTID "@mozilla.org/download-manager;1"
-#define NS_DOWNLOADMANAGER_CLASSNAME "Mozilla Download Manager"
-// {EDB0490E-1DD1-11B2-83B8-DBF8D85906A6}
-#define NS_DOWNLOADMANAGER_CID \
-    { 0xedb0490e, 0x1dd1, 0x11b2, { 0x83, 0xb8, 0xdb, 0xf8, 0xd8, 0x59, 0x06, 0xa6 } }
+#define NS_DOWNLOADITEM_CONTRACTID "@mozilla.org/download-manager/item;1"
+// {E3FA9D0A-1DD1-11B2-BDEF-8C720B597445}
+#define NS_DOWNLOADITEM_CID \
+    { 0xe3fa9d0a, 0x1dd1, 0x11b2, { 0xbd, 0xef, 0x8c, 0x72, 0x0b, 0x59, 0x74, 0x45 } }
 %}
