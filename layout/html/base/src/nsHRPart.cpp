@@ -126,7 +126,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
 
   nscoord newWidth = width;
   if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
-    newWidth = position->mWidth.GetIntValue();
+    newWidth = position->mWidth.GetCoordValue();
   }
   else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
     // Width is (mostly) interpreted at rendering time
