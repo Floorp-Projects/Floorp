@@ -4877,7 +4877,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
           if (NS_SUCCEEDED(rv) && digest)
           {
             nsCAutoString encodedDigest;
-        PRUint32 digestLength = digest.Length();
+        PRUint32 digestLength = 16;
             char hexVal[8];
 
             for (PRUint32 j=0; j<digestLength; j++) 
