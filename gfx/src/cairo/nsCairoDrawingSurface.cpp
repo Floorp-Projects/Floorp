@@ -38,12 +38,16 @@
 
 #include "nsCairoDrawingSurface.h"
 
+#if defined(MOZ_ENABLE_GTK2)
+#include <gdk/gdkx.h>
+#endif
+
 #include "nsMemory.h"
 
 NS_IMPL_ISUPPORTS1(nsCairoDrawingSurface, nsIDrawingSurface)
 
 nsCairoDrawingSurface::nsCairoDrawingSurface()
-    : mSurface(nsnull), mImageSurface(nsnull), mSurfaceData(nsnull), mOwnsData(PR_FALSE)
+    : mSurface(nsnull), mImageSurface(nsnull)
 {
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     mPixmap = 0;
@@ -56,10 +60,10 @@ nsCairoDrawingSurface::~nsCairoDrawingSurface()
         cairo_surface_destroy (mSurface);
     if (mImageSurface && !mFastAccess) // otherwise, mImageSurface == mSurface
         cairo_surface_destroy (mImageSurface);
-
+    
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     if (mPixmap != 0)
-        XFreePixmap(mXDisplay, mPixmap)
+        XFreePixmap(mXDisplay, mPixmap);
 #endif
 }
 
@@ -74,7 +78,6 @@ nsCairoDrawingSurface::Init(nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32
 
     if (aFastAccess) {
         mSurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, aWidth, aHeight);
-        mDepth = 32;
         mFastAccess = PR_TRUE;
     } else {
         // otherwise, we need to do toolkit-specific stuff
@@ -89,7 +92,6 @@ nsCairoDrawingSurface::Init(nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32
                                               aDC->GetXVisual(),
                                               CAIRO_FORMAT_ARGB32,
                                               aDC->GetXColormap());
-        mDepth = 32;
 
         mFastAccess = PR_FALSE;
 #else

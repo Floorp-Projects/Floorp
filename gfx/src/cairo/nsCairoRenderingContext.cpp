@@ -18,7 +18,7 @@
  * Copyright (C) 2004 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Stuart Parmenter <pavlov@netscape.com>
+ *    Stuart Parmenter <pavlov@pavlov.net>
  *    Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -104,7 +104,7 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
+nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSurface)
 {
     NS_WARNING ("not implemented");
     mDeviceContext = aContext;
@@ -164,7 +164,7 @@ nsCairoRenderingContext::UnlockDrawingSurface(void)
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+nsCairoRenderingContext::SelectOffScreenDrawingSurface(nsIDrawingSurface *aSurface)
 {
     nsCairoDrawingSurface *cds = (nsCairoDrawingSurface *) aSurface;
 
@@ -182,10 +182,11 @@ nsCairoRenderingContext::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::GetDrawingSurface(nsDrawingSurface *aSurface)
+nsCairoRenderingContext::GetDrawingSurface(nsIDrawingSurface **aSurface)
 {
     if (mSelectedSurface)
-        *aSurface = (nsDrawingSurface) mSelectedSurface;
+        // XXX should this addref?
+        *aSurface = (nsIDrawingSurface*) mSelectedSurface;
     else {
         NS_WARNING ("nsCairoRenderingContext::GetDrawingSurface with non-selected surface!\n");
         *aSurface = nsnull;
@@ -202,17 +203,15 @@ nsCairoRenderingContext::GetHints(PRUint32& aResult)
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::PushState(void)
+nsCairoRenderingContext::PushState()
 {
-    /* XXX Save moz clip state! */
     cairo_save (mCairo);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::PopState(PRBool &aClipEmpty)
+nsCairoRenderingContext::PopState()
 {
-    /* XXX Restore moz clip state! */
     cairo_restore (mCairo);
     return NS_OK;
 }
@@ -230,8 +229,7 @@ nsCairoRenderingContext::IsVisibleRect(const nsRect& aRect, PRBool &aIsVisible)
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine,
-                                     PRBool &aClipEmpty)
+nsCairoRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
     // transform rect by current transform matrix and clip
     return NS_OK;
@@ -281,7 +279,7 @@ nsCairoRenderingContext::DoCairoClip()
     
 NS_IMETHODIMP
 nsCairoRenderingContext::SetClipRegion(const nsIRegion& aRegion,
-                                       nsClipCombine aCombine, PRBool &aClipEmpty)
+                                       nsClipCombine aCombine)
 {
     // region is in device coords, no transformation!
     // how do we do that with cairo?
@@ -450,6 +448,7 @@ nsCairoRenderingContext::GetCurrentTransform(nsTransform2D *&aTransform)
     {
         aTransform->SetToTranslate (tx, ty);
     } else {
+        /* XXX we need to add api on nsTransform2D to set all these values since they are private
         aTransform->m00 = a;
         aTransform->m01 = b;
         aTransform->m10 = c;
@@ -457,6 +456,7 @@ nsCairoRenderingContext::GetCurrentTransform(nsTransform2D *&aTransform)
         aTransform->m20 = tx;
         aTransform->m21 = ty;
         aTransform->type = MG_2DGENERAL;
+        */
     }
 
     return NS_OK;
@@ -465,17 +465,17 @@ nsCairoRenderingContext::GetCurrentTransform(nsTransform2D *&aTransform)
 NS_IMETHODIMP
 nsCairoRenderingContext::CreateDrawingSurface(const nsRect &aBounds,
                                               PRUint32 aSurfFlags,
-                                              nsDrawingSurface &aSurface)
+                                              nsIDrawingSurface* &aSurface)
 {
     nsCairoDrawingSurface *cds = new nsCairoDrawingSurface();
-    cds->Init (aBounds.width, aBounds.height);
-    aSurface = (nsDrawingSurface) cds;
+    cds->Init ((nsCairoDeviceContext *)mDeviceContext.get(), aBounds.width, aBounds.height, PR_FALSE);
+    aSurface = (nsIDrawingSurface*) cds;
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::DestroyDrawingSurface(nsDrawingSurface aDS)
+nsCairoRenderingContext::DestroyDrawingSurface(nsIDrawingSurface *aDS)
 {
     nsCairoDrawingSurface *cds = (nsCairoDrawingSurface *) aDS;
     cds->Release();
@@ -688,7 +688,7 @@ nsCairoRenderingContext::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+nsCairoRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
                                            PRInt32 aSrcX, PRInt32 aSrcY,
                                            const nsRect &aDestBounds,
                                            PRUint32 aCopyFlags)
@@ -745,7 +745,7 @@ nsCairoRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 NS_IMETHODIMP
 nsCairoRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
                                        const nsRect &aMaxSize,
-                                       nsDrawingSurface &aBackbuffer)
+                                       nsIDrawingSurface* &aBackbuffer)
 {
     if (mBackBuffer) {
         PRUint32 w, h;
@@ -758,7 +758,7 @@ nsCairoRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
 
     if (!mBackBuffer) {
         mBackBuffer = new nsCairoDrawingSurface();
-        mBackBuffer->Init (aRequestedSize.width, aRequestedSize.height);
+        mBackBuffer->Init ((nsCairoDeviceContext *)mDeviceContext.get(), aRequestedSize.width, aRequestedSize.height, PR_FALSE);
         NS_ADDREF(mBackBuffer);
     }
 
@@ -789,19 +789,9 @@ nsCairoRenderingContext::DestroyCachedBackbuffer(void)
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect,
-                                   const nsPoint * aDestPoint)
-{
-    nscoord w, h;
-    aImage->GetWidth(&w);
-    aImage->GetHeight(&h);
-    nsRect r (aDestPoint->x, aDestPoint->y, w, h);
-    return DrawScaledImage(aImage, aSrcRect, &r);
-}
-
-NS_IMETHODIMP
-nsCairoRenderingContext::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect,
-                                         const nsRect * aDestRect)
+nsCairoRenderingContext::DrawImage(imgIContainer *aImage,
+                                   const nsRect &aSrcRect,
+                                   const nsRect &aDestRect)
 {
     nsCOMPtr<gfxIImageFrame> iframe;
     aImage->GetCurrentFrame(getter_AddRefs(iframe));
@@ -815,8 +805,8 @@ nsCairoRenderingContext::DrawScaledImage(imgIContainer *aImage, const nsRect * a
     nsRect iframeRect;
     iframe->GetRect(iframeRect);
 
-    nsRect sr(*aSrcRect);
-    nsRect dr(*aDestRect);
+    nsRect sr(aSrcRect);
+    nsRect dr(aDestRect);
 
 #if 0
     if (iframeRect.x > 0) {
@@ -854,10 +844,11 @@ nsCairoRenderingContext::DrawScaledImage(imgIContainer *aImage, const nsRect * a
 
     img->LockImagePixels(PR_FALSE);
 
+    /* XXX
     img->Draw(*this, mCairo,
               sr.x, sr.y, sr.width, sr.height,
               dr.x, dr.y, dr.width, dr.height);
-
+    */
     img->UnlockImagePixels(PR_FALSE);
  
     return NS_OK;
@@ -876,9 +867,11 @@ nsCairoRenderingContext::DrawTile(imgIContainer *aImage,
     if (!img) return NS_ERROR_FAILURE;
 
     img->LockImagePixels(PR_FALSE);
+    /* XXX
     img->Draw(*this, mCairo,
               aXOffset, aYOffset, aTargetRect->width, aTargetRect->height,
               aTargetRect->x, aTargetRect->y, aTargetRect->width, aTargetRect->height);
+    */
     img->UnlockImagePixels(PR_FALSE);
 
     return NS_OK;
@@ -1072,28 +1065,4 @@ NS_IMETHODIMP
 nsCairoRenderingContext:: RenderPostScriptDataFragment(const unsigned char *psdata, unsigned long psdatalen)
 {
     return NS_OK;
-}
-
-//
-// this is gone on trunk
-//
-NS_IMETHODIMP nsCairoRenderingContext::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsCairoRenderingContext::RasterPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsCairoRenderingContext::FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsCairoRenderingContext::DrawPath(nsPathPoint aPoints[], PRInt32 aNumPoints)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsCairoRenderingContext::FillPath(nsPathPoint aPoints[], PRInt32 aNumPoints)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -18,7 +18,7 @@
  * Copyright (C) 2004 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Stuart Parmenter <pavlov@netscape.com>
+ *    Stuart Parmenter <pavlov@pavlov.net>
  *    Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -65,7 +65,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget);
-    NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
+    NS_IMETHOD Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSurface);
     NS_IMETHOD Reset(void);
     NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext);
     NS_IMETHOD LockDrawingSurface(PRInt32 aX, PRInt32 aY,
@@ -74,19 +74,19 @@ public:
                                   PRInt32 *aWidthBytes,
                                   PRUint32 aFlags);
     NS_IMETHOD UnlockDrawingSurface(void);
-    NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
-    NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
+    NS_IMETHOD SelectOffScreenDrawingSurface(nsIDrawingSurface *aSurface);
+    NS_IMETHOD GetDrawingSurface(nsIDrawingSurface **aSurface);
     NS_IMETHOD GetHints(PRUint32& aResult);
     NS_IMETHOD PushState(void);
-    NS_IMETHOD PopState(PRBool &aClipEmpty);
+    NS_IMETHOD PopState(void);
     NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aIsVisible);
-    NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
+    NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
     NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aHasLocalClip);
     NS_IMETHOD SetLineStyle(nsLineStyle aLineStyle);
     NS_IMETHOD GetLineStyle(nsLineStyle &aLineStyle);
     NS_IMETHOD GetPenMode(nsPenMode &aPenMode);
     NS_IMETHOD SetPenMode(nsPenMode aPenMode);
-    NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty);
+    NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
     NS_IMETHOD CopyClipRegion(nsIRegion &aRegion);
     NS_IMETHOD GetClipRegion(nsIRegion **aRegion);
     NS_IMETHOD SetColor(nscolor aColor);
@@ -97,8 +97,8 @@ public:
     NS_IMETHOD Translate(nscoord aX, nscoord aY);
     NS_IMETHOD Scale(float aSx, float aSy);
     NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
-    NS_IMETHOD CreateDrawingSurface(const nsRect &aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
-    NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
+    NS_IMETHOD CreateDrawingSurface(const nsRect &aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface);
+    NS_IMETHOD DestroyDrawingSurface(nsIDrawingSurface *aDS);
     NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
     NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
     NS_IMETHOD DrawRect(const nsRect& aRect);
@@ -170,11 +170,14 @@ public:
     NS_IMETHOD DrawString(const nsString& aString, nscoord aX, nscoord aY,
                           PRInt32 aFontID = -1,
                           const nscoord* aSpacing = nsnull);
-    NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                                 const nsRect &aDestBounds, PRUint32 aCopyFlags);
+    NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
+                                 PRInt32 aSrcX, PRInt32 aSrcY,
+                                 const nsRect &aDestBounds,
+                                 PRUint32 aCopyFlags);
     NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
-    NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize,
-                             nsDrawingSurface &aBackbuffer);
+    NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize,
+                             const nsRect &aMaxSize,
+                             nsIDrawingSurface* &aBackbuffer);
     NS_IMETHOD ReleaseBackbuffer(void);
     NS_IMETHOD DestroyCachedBackbuffer(void);
     NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
@@ -187,22 +190,14 @@ public:
 
 #endif // MOZ_MATHML
 
-    NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect,
-                         const nsPoint * aDestPoint);
-    NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect,
-                               const nsRect * aDestRect);
+
+    NS_IMETHOD DrawImage(imgIContainer *aImage,
+                         const nsRect &aSrcRect,
+                         const nsRect &aDestRect);
     NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset,
                         const nsRect * aTargetRect);
 
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) { return NS_OK; }
-
-    // This stuff is GONE on TRUNK, but is there on Aviary
-    NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-    NS_IMETHOD RasterPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-    NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-    NS_IMETHOD DrawPath(nsPathPoint aPoints[], PRInt32 aNumPoints);
-    NS_IMETHOD FillPath(nsPathPoint aPoints[], PRInt32 aNumPoints);
-    
 
 protected:
     PRBool DoCairoDrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
