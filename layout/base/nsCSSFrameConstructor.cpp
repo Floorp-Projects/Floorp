@@ -4179,9 +4179,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         // Set flag so the events go to the listFrame not child frames.
         // XXX: We should replace this with a real widget manager similar
         // to how the nsFormControlFrame works. Re-directing events is a temporary Kludge.
-      nsIView *listView = listFrame->GetView();
-      NS_ASSERTION(listView, "ListFrame's view is nsnull");
-      //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
+      NS_ASSERTION(listFrame->GetView(), "ListFrame's view is nsnull");
+      //listFrame->GetView()->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
       // Create display and button frames from the combobox's anonymous content.
       // The anonymous content is appended to existing anonymous content for this
