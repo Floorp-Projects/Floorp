@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <new.h>
+#include <setjmp.h>
 
 /* system headers */
 #include <Files.h>
@@ -53,6 +54,10 @@
 static CWResult	Compile(CWPluginContext context);
 static CWResult	Disassemble(CWPluginContext context);
 static CWResult	LocateFile(CWPluginContext context, const char* filename, FSSpec& file);
+
+/* external variables */
+extern jmp_buf exit_jump;
+extern int exit_status;
 
 /* global variables */
 CWPluginContext gPluginContext;
@@ -159,7 +164,7 @@ static CWResult	Compile(CWPluginContext context)
 	if (!CWSUCCESS(err))
 		return (err);
 
-	// the compiler only understands full path names.
+	// get the name of the source file to compile.
 	gSourcePath = p2c_strdup(gSourceFile.name);
 	if (gSourcePath == NULL)
 		return cwErrOutOfMemory;
@@ -168,6 +173,13 @@ static CWResult	Compile(CWPluginContext context)
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeHeader, false, false };
 	GetSettings(context, settings);
 	
+	// if generating .xpt files, let the IDE tell us where to put the output file.
+	// otherwise, put them in the project's output directory.
+	if (settings.mode == kXPIDLModeTypelib)
+		err = CWGetSuggestedObjectFileSpec(context, fileNum, &gOutputFile);
+	else
+		err = CWGetOutputFileDirectory(gPluginContext, &gOutputFile);
+		
 	int argc = 3;
 	char* modes[] = { "header", "stub", "typelib", "doc" };
 	char* argv[] = { "xpidl", "-m", modes[settings.mode - 1], NULL, NULL, NULL, NULL, };
@@ -175,12 +187,13 @@ static CWResult	Compile(CWPluginContext context)
 	if (settings.verbose) argv[argc++] = "-v";
 	argv[argc++] = gSourcePath;
 	
-	try {
+	if (setjmp(exit_jump) == 0) {
 		if (xpidl_main(argc, argv) != 0)
 			err = cwErrRequestFailed;
-	} catch (int status) {
+	} else {
 		// evidently the good old exit function got called.
-		err = cwErrRequestFailed;
+		if (exit_status != 0)
+			err = cwErrRequestFailed;
 	}
 
 	// if the compilation succeeded, tell CodeWarrior about the output file.
@@ -256,12 +269,11 @@ FILE* std::fopen(const char* filename, const char *mode)
 			// opening the main source file.
 			filespec = gSourceFile;
 		} else if (mode[0] == 'w') {
-			// if an output file, try opening it in the current project's output directory.
-			CWResult err = CWGetOutputFileDirectory(gPluginContext, &filespec);
-			if (err == noErr) {
-				c2p_strcpy(filespec.name, filename);
-				gOutputFile = filespec;
-			}
+			// if an output file, open it in the current compilation's output directory.
+			c2p_strcpy(filespec.name, filename);
+			filespec.vRefNum = gOutputFile.vRefNum;
+			filespec.parID = gOutputFile.parID;
+			c2p_strcpy(gOutputFile.name, filename);
 		} else {
 			// an input file, use CodeWarrior's search paths to find the named source file.
 			err = LocateFile(gPluginContext, filename, filespec);
