@@ -132,7 +132,7 @@ typedef struct _net_CookiePermissionStruct {
 } net_CookiePermissionStruct;
 
 typedef struct _net_DeferCookieStruct {
- //   MWContext * context;
+    MWContext * context;
     char * cur_url;
     char * set_cookie_header;
     time_t timeToExpire;
@@ -1141,7 +1141,7 @@ net_UndeferCookies() {
 	defer_cookie = (net_DeferCookieStruct*)XP_ListRemoveEndObject(net_defer_cookie_list);
 	net_unlock_defer_cookie_list();
 	net_IntSetCookieString (
-	//	defer_cookie->context,
+		defer_cookie->context,
 		defer_cookie->cur_url,
 		defer_cookie->set_cookie_header,
 		defer_cookie->timeToExpire);
