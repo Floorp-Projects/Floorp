@@ -104,6 +104,7 @@ nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue,
         if (same) {
             NS_RELEASE(curEntry);
             mEntries->DeleteElementAt(i);
+            break;
         }
         NS_RELEASE(curEntry); // ditch our ref to it
     }
