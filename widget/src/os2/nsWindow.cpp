@@ -156,6 +156,8 @@ nsWindow::nsWindow() : nsBaseWidget()
     mPreferredWidth     = 0;
     mPreferredHeight    = 0;
     mWindowState        = nsWindowState_ePrecreate;
+    mWindowType         = eWindowType_child;
+    mBorderStyle        = eBorderStyle_default;
     mFont               = nsnull;
     mOS2Toolkit         = nsnull;
     mMenuBar            = nsnull;
@@ -708,6 +710,11 @@ void nsWindow::DoCreate( HWND hwndP, nsWindow *aParent,
                       nsWidgetInitData *aInitData)
 {
    mWindowState = nsWindowState_eInCreate;
+
+   if( aInitData != nsnull) {
+     SetWindowType(aInitData->mWindowType);
+     SetBorderStyle(aInitData->mBorderStyle);
+   }
 
    // Must ensure toolkit before attempting to thread-switch!
    if( !mToolkit)
