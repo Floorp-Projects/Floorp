@@ -208,8 +208,14 @@ sub processtalkback {
 }
 
 sub packit {
-  my ($packaging_dir, $package_location, $url, $stagedir) = @_;
+  my ($packaging_dir, $package_location, $url, $stagedir, $builddir) = @_;
   my $status;
+
+  if (is_windows()) {
+    # need to convert the path in case we're using activestate perl
+    $builddir = `cygpath -u $builddir`;
+  }
+  chomp($builddir);
 
   if (do_installer()) {
     if (is_windows()) {
@@ -305,8 +311,28 @@ sub packit {
 
   if ($Settings::archive) {
     TinderUtils::run_shell_command "make -C $packaging_dir";
+
+    my(@xforms_xpi);
+    if ($Settings::BuildXForms) {
+      TinderUtils::run_shell_command "cd $builddir/extensions/schema-validation; $builddir/build/autoconf/make-makefile";
+      TinderUtils::run_shell_command "make -C $builddir/extensions/schema-validation";
+
+      TinderUtils::run_shell_command "cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile";
+      TinderUtils::run_shell_command "make -C $builddir/extensions/xforms";
+
+      TinderUtils::run_shell_command "cd $builddir/extensions/xforms/package; $builddir/build/autoconf/make-makefile";
+      TinderUtils::run_shell_command "make -C $builddir/extensions/xforms/package xpi";
+
+      @xforms_xpi = grep { -f $_ } <${builddir}/extensions/xforms/package/stage/xforms/xforms.xpi>;
+    }
+
     if (is_windows()) {
       TinderUtils::run_shell_command "cp $package_location/../*.zip $stagedir/";
+      TinderUtils::run_shell_command "mkdir -p $stagedir/windows-xpi/";
+      if ( scalar(@xforms_xpi) gt 0 ) {
+        my $xforms_xpi_files = join(' ', @xforms_xpi);
+        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/windows-xpi/";
+      }
     } elsif (is_mac()) {
       system("mkdir -p $package_location");
       system("mkdir -p $stagedir");
@@ -326,12 +352,23 @@ sub packit {
       } else {
 	TinderUtils::print_log "No files to copy\n";
       }
+
+      TinderUtils::run_shell_command "mkdir -p $stagedir/mac-xpi/";
+      if ( scalar(@xforms_xpi) gt 0 ) {
+        my $xforms_xpi_files = join(' ', @xforms_xpi);
+        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/mac-xpi/";
+      }
     } else {
       my $archive_loc = "$package_location/..";
       if ($Settings::package_creation_path eq "/xpinstall/packager") {
         $archive_loc = "$archive_loc/dist";
       }
       TinderUtils::run_shell_command "cp $archive_loc/*.tar.gz $stagedir/";
+      TinderUtils::run_shell_command "mkdir -p $stagedir/linux-xpi/";
+      if ( scalar(@xforms_xpi) gt 0 ) {
+        my $xforms_xpi_files = join(' ', @xforms_xpi);
+        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/linux-xpi/";
+      }
     }
   }
 
@@ -701,7 +738,7 @@ sub main {
 
   $upload_directory = $package_location . "/" . $upload_directory;
 
-  unless (packit($package_creation_path,$package_location,$url_path,$upload_directory)) {
+  unless (packit($package_creation_path,$package_location,$url_path,$upload_directory,$objdir)) {
     return returnStatus("Packaging failed", ("testfailed"));
   }
 
