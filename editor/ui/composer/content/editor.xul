@@ -178,13 +178,9 @@
     </hbox> 
   </toolbar>
   <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbalign="center" grippytooltiptext="&formatToolbar.tooltip;">
-    <!-- We need this else menulists get stretched -->
-    <hbox align="center">
-      <!-- from editorOverlay -->
-      <menulist id="ParagraphSelect"/>
-      <stack id="ColorButtons"/>
-    </hbox>
-
+    <!-- from editorOverlay -->
+    <menulist id="ParagraphSelect"/>
+    <stack id="ColorButtons"/>
     <toolbarbutton id="DecreaseFontSizeButton"/>
     <toolbarbutton id="IncreaseFontSizeButton"/>
 
