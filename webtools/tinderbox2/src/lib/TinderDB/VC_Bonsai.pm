@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.43 $ 
-# $Date: 2002/05/06 21:03:11 $ 
+# $Revision: 1.44 $ 
+# $Date: 2002/05/06 21:05:01 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.43 $ )[1];
+$VERSION = ( qw $Revision: 1.44 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -382,14 +382,14 @@ sub is_break_cell {
 
     my $is_state1_different = 
         (
-         (defined($last_treestate)) &&
+         (defined($LAST_TREESTATE)) &&
          (defined($DATABASE{$tree}{$next_time}{'treestate'})) &&
          ($LAST_TREESTATE ne $DATABASE{$tree}{$next_time}{'treestate'}) &&
          1);
 
     my $is_state2_different = 
         (
-         (defined($last_treestate)) &&
+         (defined($LAST_TREESTATE)) &&
          (defined($DATABASE{$tree}{$time}{'treestate'})) &&
          ($LAST_TREESTATE ne $DATABASE{$tree}{$time}{'treestate'}) &&
          1);
