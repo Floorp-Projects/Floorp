@@ -115,6 +115,7 @@ class nsInstall
             PATCH_BAD_CHECKSUM_TARGET   = -221,
             PATCH_BAD_CHECKSUM_RESULT   = -222,
             UNINSTALL_FAILED            = -223,
+            PACKAGE_FOLDER_NOT_SET      = -224,
             GESTALT_UNKNOWN_ERR         = -5550,
             GESTALT_INVALID_ARGUMENT    = -5551,
             
@@ -221,6 +222,7 @@ class nsInstall
         void*               mJarFileData;
         
         nsString            mInstallArguments;
+        nsString            mPackageFolder;
 
         PRBool              mUserCancelled;
         

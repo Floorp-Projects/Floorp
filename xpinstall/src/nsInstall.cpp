@@ -549,11 +549,16 @@ PRInt32
 nsInstall::AddSubcomponent(const nsString& aJarSource,
                            PRInt32* aReturn)
 {
-    //FIX aFolder needs to be found!
+    if(mPackageFolder == "null")
+    {
+        *aReturn = SaveError( nsInstall::PACKAGE_FOLDER_NOT_SET );
+        return NS_OK;
+    }
+
     return AddSubcomponent("", 
                            "", 
                            aJarSource, 
-                           "", 
+                           mPackageFolder, 
                            "", 
                            PR_FALSE, 
                            aReturn);
@@ -945,7 +950,11 @@ nsInstall::SetPackageFolder(const nsString& aFolder)
 PRInt32    
 nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegistryPackageName, const nsString& aVersion, PRInt32* aReturn)
 {
-    *aReturn     = nsInstall::SUCCESS;
+    char szRegPackagePath[MAXREGPATHLEN];
+    char* szRegPackageName = aRegistryPackageName.ToNewCString();
+
+    *szRegPackagePath = '0';
+    *aReturn   = nsInstall::SUCCESS;
     
     ResetError();
         
@@ -966,6 +975,17 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
         return NS_OK;
     }
 
+    if(REGERR_OK == VR_GetPath(szRegPackageName, MAXREGPATHLEN, szRegPackagePath))
+    {
+      mPackageFolder = szRegPackagePath;
+    }
+    else
+    {
+      mPackageFolder = "null";
+    }
+
+    if(szRegPackageName)
+      delete [] szRegPackageName;
 
     if (mVersionInfo != nsnull)
         delete mVersionInfo;
