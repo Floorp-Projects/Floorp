@@ -27,7 +27,7 @@ class nsBinaryOutputStream : public nsIBinaryOutputStream
 {
 public:
     nsBinaryOutputStream(nsIOutputStream *aStream);
-    ~nsBinaryOutputStream() {};
+    virtual ~nsBinaryOutputStream() {};
 
 private:
     
@@ -51,7 +51,7 @@ class nsBinaryInputStream : public nsIBinaryInputStream
 {
 public:
     nsBinaryInputStream(nsIInputStream *aStream);
-    ~nsBinaryInputStream() {};
+    virtual ~nsBinaryInputStream() {};
 
 private:
     // nsISupports methods
