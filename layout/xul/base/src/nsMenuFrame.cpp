@@ -343,6 +343,7 @@ nsMenuFrame::Destroy(nsPresContext* aPresContext)
     }
   }
 
+  UngenerateMenu();
   DestroyPopupFrames(aPresContext);
   return nsBoxFrame::Destroy(aPresContext);
 }
