@@ -542,23 +542,14 @@ ProcessSingleExtension(CERTCertExtension *extension,
 PRUint32 
 getCertType(CERTCertificate *cert)
 {
-  char *nick = cert->nickname;
-  char *email = cert->emailAddr;
   nsNSSCertTrust trust(cert->trust);
-  /*
-fprintf(stderr, "====> nick: %s  email: %s  has-any-user: %d  hash-any-ca: %d  has-peer100: %d  has-peer001: %d\n",
-  nick, email, (nick) ? trust.HasAnyUser() : 0, (nick) ? trust.HasAnyCA() : 0, (nick) ? trust.HasPeer(PR_TRUE, PR_FALSE, PR_FALSE) : 0, 
-  (email) ? trust.HasPeer(PR_FALSE, PR_TRUE, PR_FALSE) : 0 );
-*/
-  if (nick) {
-    if (trust.HasAnyUser())
-      return nsIX509Cert::USER_CERT;
-    if (trust.HasAnyCA() || CERT_IsCACert(cert,NULL))
-      return nsIX509Cert::CA_CERT;
-    if (trust.HasPeer(PR_TRUE, PR_FALSE, PR_FALSE))
-      return nsIX509Cert::SERVER_CERT;
-  }
-  if (email && trust.HasPeer(PR_FALSE, PR_TRUE, PR_FALSE))
+  if (cert->nickname && trust.HasAnyUser())
+    return nsIX509Cert::USER_CERT;
+  if (trust.HasAnyCA() || CERT_IsCACert(cert,NULL))
+    return nsIX509Cert::CA_CERT;
+  if (trust.HasPeer(PR_TRUE, PR_FALSE, PR_FALSE))
+    return nsIX509Cert::SERVER_CERT;
+  if (cert->emailAddr)
     return nsIX509Cert::EMAIL_CERT;
-  return nsIX509Cert::UNKNOWN_CERT;
+  return nsIX509Cert::SERVER_CERT;
 }
