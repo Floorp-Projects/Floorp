@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  plugin \
 		  pref \
 		  intl \
+		  windowwatcher \
 		  $(NULL)
 
 OSHELPER	= nsOSHelperAppService.cpp

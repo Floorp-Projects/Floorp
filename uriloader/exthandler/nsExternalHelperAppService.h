@@ -227,6 +227,9 @@ protected:
   // the base class implementation ensures that mSuggestedFileName has
   // mTempFileExtension as extension;
   virtual void EnsureSuggestedFileName();
+  // utility function to send proper error notification to web progress listener
+  typedef enum { kReadError, kWriteError, kLaunchError } ErrorType;
+  void SendStatusChange(ErrorType type, nsresult aStatus, nsIRequest *aRequest, const nsAFlatString &path);
   
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;

@@ -63,6 +63,7 @@ function nsHelperAppDialog() {
     this.strings   = new Array;
     this.elements  = new Array;
     this.updateSelf = true;
+    this.mTitle    = "";
 }
 
 nsHelperAppDialog.prototype = {
@@ -105,6 +106,9 @@ nsHelperAppDialog.prototype = {
                                        null );
          // Hook this object to the dialog.
          this.mDialog.dialog = this;
+         // Watch for error notifications.
+         this.progressListener.helperAppDlg = this;
+         this.mLauncher.setWebProgressListener( this.progressListener );
     },
 
     // promptForSaveToFile:  Display file picker dialog and return selected file.
@@ -191,6 +195,49 @@ nsHelperAppDialog.prototype = {
     
     // ---------- implementation methods ----------
 
+    // Web progress listener so we can detect errors while mLauncher is
+    // streaming the data to a temporary file.
+    progressListener: {
+        // Implementation properties.
+        helperAppDlg: null,
+
+        // nsIWebProgressListener methods.
+        // Look for error notifications and display alert to user.
+        onStatusChange: function( aWebProgress, aRequest, aStatus, aMessage ) {
+            if ( aStatus != Components.results.NS_OK ) {
+                // Get prompt service.
+                var prompter = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
+                                   .getService( Components.interfaces.nsIPromptService );
+                // Display error alert (using text supplied by back-end).
+                prompter.alert( this.dialog, this.helperAppDlg.mTitle, aMessage );
+
+                // Close the dialog.
+                this.helperAppDlg.onCancel();
+                if ( this.helperAppDlg.mDialog ) {
+                    this.helperAppDlg.mDialog.close();
+                }
+            }
+        },
+
+        // Ignore onProgressChange, onStateChange, onLocationChange, and onSecurityChange notifications.
+        onProgressChange: function( aWebProgress,
+                                    aRequest,
+                                    aCurSelfProgress,
+                                    aMaxSelfProgress,
+                                    aCurTotalProgress,
+                                    aMaxTotalProgress ) {
+        },
+
+        onStateChange: function( aWebProgress, aRequest, aStateFlags, aStatus ) {
+        },
+
+        onLocationChange: function( aWebProgress, aRequest, aLocation ) {
+        },
+
+        onSecurityChange: function( aWebProgress, aRequest, state ) {
+        },
+    },
+
     // initDialog:  Fill various dialog fields with initial content.
     initDialog : function() {
          // Check if file is executable (in which case, we will go straight to
@@ -200,6 +247,9 @@ nsHelperAppDialog.prototype = {
          var tmpFile = this.mLauncher.getDownloadInfo( ignore1, ignore2 );
          if ( tmpFile.isExecutable() ) {
              this.mLauncher.saveToDisk( null, false );
+             // Make sure onunload handler doesn't cancel.
+             this.mDialog.dialog = null;
+             // Close the dialog.
              this.mDialog.close();
              return;
          }
@@ -232,8 +282,8 @@ nsHelperAppDialog.prototype = {
            fname = suggestedFileName;
            
 
-         var title = this.replaceInsert( win.getAttribute( "title" ), 1, fname);
-         win.setAttribute( "title", title );
+         this.mTitle = this.replaceInsert( win.getAttribute( "title" ), 1, fname);
+         win.setAttribute( "title", this.mTitle );
 
          // Put content type and location into intro.
          this.initIntro(url);
@@ -414,6 +464,10 @@ nsHelperAppDialog.prototype = {
 
       this.processAlwaysAskState(); 
 
+      // Remove our web progress listener (a progress dialog will be
+      // taking over).
+      this.mLauncher.setWebProgressListener( null );
+
       if ( this.dialogElement( "openUsing" ).selected ) 
       {
          // If no app "chosen" then convert input string to file.
@@ -435,6 +489,9 @@ nsHelperAppDialog.prototype = {
 
     // onCancel:
     onCancel: function() {
+        // Remove our web progress listener.
+        this.mLauncher.setWebProgressListener( null );
+
         // Cancel app launcher.
         try {
             this.mLauncher.Cancel();

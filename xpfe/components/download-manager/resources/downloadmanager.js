@@ -130,8 +130,13 @@ var downloadViewController = {
     var isDownloading = gDownloadManager.getDownload(selectedItem.id);
     switch (aCommand) {
     case "cmd_openfile":
-      if (!isDownloading && getFileForItem(selectedItem).isExecutable())
+      try {
+        if (!isDownloading && getFileForItem(selectedItem).isExecutable())
+          return false;
+      } catch(e) {
+        // Exception means file doesn't exist; launch is not allowed.
         return false;
+      }
 
     case "cmd_showinshell":
       // some apps like kazaa/morpheus let you "preview" in-progress downloads because
