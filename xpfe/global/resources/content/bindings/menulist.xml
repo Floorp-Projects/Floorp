@@ -61,36 +61,6 @@
         </body>
       </method>
 
-      <method name="setSelectionInternal">
-        <parameter name="val"/>
-        <body>
-          <![CDATA[
-            if (this.selectedInternal == val)
-              return val;
-            
-            if (this.selectedInternal)
-              this.selectedInternal.removeAttribute('selected');
-
-            this.selectedInternal = val;
-            if (!this.selectedInternal) {
-              this.removeAttribute('value');
-              this.removeAttribute('src');
-              this.removeAttribute('label');
-              return val;
-            }
-             
-            val.setAttribute('selected', 'true');
-
-            this.setAttribute('value', val.getAttribute('value'));
-            this.setAttribute('src', val.getAttribute('src'));
-            this.setAttribute('label', val.getAttribute('label'));
-
-            return val;
-
-          ]]>
-        </body>
-      </method>
-      
       <property name="value" onget="return this.getAttribute('value');">
         <setter>
           <![CDATA[
@@ -164,7 +134,27 @@
         </getter>
         <setter>
           <![CDATA[
-            return this.setSelectionInternal(val);
+            if (this.selectedInternal == val)
+              return val;
+            
+            if (this.selectedInternal)
+              this.selectedInternal.removeAttribute('selected');
+
+            this.selectedInternal = val;
+            if (!this.selectedInternal) {
+              this.removeAttribute('value');
+              this.removeAttribute('src');
+              this.removeAttribute('label');
+              return val;
+            }
+             
+            val.setAttribute('selected', 'true');
+
+            this.setAttribute('value', val.getAttribute('value'));
+            this.setAttribute('src', val.getAttribute('src'));
+            this.setAttribute('label', val.getAttribute('label'));
+
+            return val;
           ]]>
         </setter>
       </property>
@@ -186,33 +176,62 @@
     <implementation>
       <constructor><![CDATA[
         this.setInitialSelection();
-        // Put an oncreate handler on the <menupopup>
-        //  so we select matching menuitem when it is opened
-        var arr = getElementsByTagName("menupopup");
-        if (arr && arr.length)
-          arr[0].setAttribute('oncreate', 'selectInputFieldValueInList()');
+
+        // Default behavior is to use _selectInputFieldValueInList()
+        //  to automatically select the inputField.value in the list
+        if (!this.getAttribute("autoSelectMenuitem"))
+          this.setAttribute("autoSelectMenuitem", "true");
+
       ]]></constructor>
 
-      <method name="selectInputFieldValueInList">
+      <method name="_selectInputFieldValueInList">
         <body>
         <![CDATA[
+          if (this.getAttribute("autoSelectMenuitem") != "true")
+            return "";
+
           // Find and select the menuitem that matches inputField's "value"
           var inputVal = this.inputField.value;
           var arr;
 
           if (this.childNodes.length)
-           arr = this.firstChild.getElementsByAttribute('label', inputVal);
+            arr = this.firstChild.getElementsByAttribute('label', inputVal);
 
-          if (arr && arr.length) {
-           this.selectedItem = arr[0];
-          } else {
-            this.selectedItem = null;
-            // Reset these because setting selected item "null" will clear it
-            this.inputField.value = inputVal;
-            this.setAttribute('value', inputVal);
-          }
+          if (arr && arr.length)
+            this.setSelectionInternal(arr[0]);
+          else
+            this.setSelectionInternal(null);
+
           return inputVal;
         ]]>
+        </body>
+      </method>
+
+      <method name="setSelectionInternal">
+        <parameter name="val"/>
+        <body>
+          <![CDATA[
+            // This is called internally to set selected item
+            //  without triggering infinite loop
+            //  when using selectedItem's setter
+            if (this.selectedInternal == val)
+              return val;
+            
+            if (this.selectedInternal)
+              this.selectedInternal.removeAttribute('selected');
+
+            this.selectedInternal = val;
+
+            //Do NOT change the "value", which is owned by inputField
+            if (!this.selectedInternal) {
+              this.removeAttribute('src');
+              return val;
+            }
+            val.setAttribute('selected', 'true');
+            this.setAttribute('src', val.getAttribute('src'));
+
+            return val;
+          ]]>
         </body>
       </method>
 
@@ -242,7 +261,9 @@
           // (Allows using "menulist.value" instead of "menulist.inputField.value")
           this.inputField.value = val;
           this.setAttribute('value', val);
-          this.selectInputFieldValueInList();
+          this.setAttribute('label', val);
+          this._selectInputFieldValueInList();
+          return val;
         ]]>
         </setter>
       </property>
@@ -250,22 +271,44 @@
       <property name="selectedItem">
         <getter>
           <![CDATA[
-            this.selectInputFieldValueInList();
+            // Make sure internally-selected item
+            //  is in sync with inputField.value
+            this._selectInputFieldValueInList();
             return this.selectedInternal;
           ]]>
         </getter>
         <setter>
           <![CDATA[
-            return this.setSelectionInternal(val);
+            // This doesn't touch inputField.value or "value" and "label" attributes
+            this.setSelectionInternal(val);
+
+            if (!this.selectedInternal) {
+              this.inputField.value = "";
+              this.removeAttribute('value');
+              this.removeAttribute('label');
+              return val;
+            }
+
+            // Editable menulist uses "label" as its "value"
+            var label = val.getAttribute('label');
+            this.inputField.value = label;
+            this.setAttribute('value', label);
+            this.setAttribute('label', label);
+
+            return val;
           ]]>
         </setter>
       </property>
+      <property name="autoSelectMenuitem" 
+                onset="this.setAttribute('autoSelectMenuitem',val); return val;"
+                onget="return this.getAttribute('autoSelectMenuitem');"/>
     </implementation>
 
     <handlers>
       <handler event="focus" phase="capturing">
       <![CDATA[
-        if (this.getAttribute('focused') != 'true') {
+        if (this.getAttribute('focused') != 'true') 
+        {
           this.setAttribute('focused','true');
           this.suppressFocusBlur = true;
           if (document.commandDispatcher.focusedElement != this.inputField) 
@@ -281,6 +324,45 @@
           this.removeAttribute('focused');
         }
       ]]>
+      </handler>
+
+      <handler event="create">
+        <![CDATA[
+          // BUG in Classic skin: doesn't shift focus when popup is opened
+          //   so force it to inputField here
+          if (event.target.parentNode == this) {
+            if (document.commandDispatcher.focusedElement != this.inputField) 
+              this.inputField.focus();
+
+            if (this.selectedItem) {
+              // Not ready for auto-setting the active child in hierarchies yet.
+              // For now, only do this when the outermost menupopup opens.
+              var menuBox = this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+              menuBox.activeChild = this.selectedItem;
+            }
+          }
+        ]]>
+      </handler>
+
+      <handler event="keypress">
+        <![CDATA[
+          // open popup if key is up or down
+          if (event.keyCode == 38 || event.keyCode == 40)
+          {
+            var popups = this.getElementsByTagNameNS(
+                              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                              "menupopup");
+            if (popups) {
+              if (popups[0].getAttribute("open") != "true") {
+                event.preventDefault();
+
+                popups[0].openPopup(this, -1, -1, "popup", "bottomleft", "topleft");
+
+                this._selectInputFieldValueInList();
+              }
+            }
+          }
+        ]]>
       </handler>
     </handlers>    
   </binding>
