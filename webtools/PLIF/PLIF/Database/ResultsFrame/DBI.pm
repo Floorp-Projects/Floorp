@@ -58,7 +58,18 @@ sub row {
     my $self = shift;
     $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
     # XXX check for error
-    return $self->handle->fetchrow_array();
+    if (wantarray) {
+        return $self->handle->fetchrow_array();
+    } else {
+        my $array = $self->handle->fetchrow_arrayref();
+        if ($#$array) {
+            # more than one data point
+            return $array;
+        } else {
+            # only one data point
+            return $array->[0];
+        }
+    }
 }
 
 sub rows {
