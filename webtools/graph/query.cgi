@@ -40,7 +40,7 @@ sub make_filenames_list {
 
 # Print out a list of testnames in db directory
 sub print_testnames {
-  my ($tbox, $autoscale, $days) = @_;
+  my ($tbox, $autoscale, $days, $units) = @_;
 
   # HTTP header
   print "Content-type: text/html\n\n<HTML>\n";
@@ -55,7 +55,7 @@ sub print_testnames {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&days=$days>$_</a>\n";
+	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&days=$days&units=$units>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -64,7 +64,7 @@ sub print_testnames {
 
 # Print out a list of machines in db/<testname> directory, with links.
 sub print_machines {
-  my ($testname, $autoscale, $days) = @_;
+  my ($testname, $autoscale, $days, $units) = @_;
 
   # HTTP header
   print "Content-type: text/html\n\n<HTML>\n";
@@ -79,7 +79,7 @@ sub print_machines {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&days=$days>$_</a>\n";
+	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&days=$days&units=$units>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -156,9 +156,9 @@ sub show_graph {
 }
 
 if(!$TESTNAME) {
-  print_testnames($TBOX, $AUTOSCALE, $DAYS);
+  print_testnames($TBOX, $AUTOSCALE, $DAYS, $UNITS);
 } elsif(!$TBOX) {
-  print_machines($TESTNAME, $AUTOSCALE, $DAYS);
+  print_machines($TESTNAME, $AUTOSCALE, $DAYS, $UNITS);
 } else {
   show_graph();
 }
