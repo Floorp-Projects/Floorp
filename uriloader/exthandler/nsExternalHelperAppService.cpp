@@ -264,23 +264,13 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 #undef MAC_TYPE
 
 /**
- * MIME Types for which decoding should be disabled
- */
-static const char* const nonDecodableTypes [] = {
-  "application/tar",
-  "application/x-tar",
-  0
-};
-
-/**
  * File extensions for which decoding should be disabled.
  */
-static const char* const nonDecodableExtensions [] = {
-  "gz",
-  "tgz",
-  "zip",
-  "Z",
-  0
+static nsDefaultMimeTypeEntry nonDecodableExtensions [] = {
+  { APPLICATION_GZIP, "gz" }, 
+  { APPLICATION_GZIP, "tgz" },
+  { APPLICATION_ZIP, "zip" },
+  { APPLICATION_COMPRESS, "Z" }
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS6(
@@ -482,27 +472,15 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForType(const char *aMimeContentType, PRBool *aApplyDecoding)
+NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const char *aExtension, const char* aEncodingType, PRBool *aApplyDecoding)
 {
-  NS_PRECONDITION(aMimeContentType, "Null MIME type");
+  NS_PRECONDITION(aExtension, "Null extension");
+  NS_PRECONDITION(aEncodingType, "Null encoding type");
   *aApplyDecoding = PR_TRUE;
-  PRUint32 index;
-  for (index = 0; nonDecodableTypes[index]; ++index) {
-    if (!PL_strcasecmp(aMimeContentType, nonDecodableTypes[index])) {
-      *aApplyDecoding = PR_FALSE;
-      break;
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const char *aExtension, PRBool *aApplyDecoding)
-{
-  NS_PRECONDITION(aExtension, "Null Extension");
-  *aApplyDecoding = PR_TRUE;
-  PRUint32 index;
-  for(index = 0; nonDecodableExtensions[index]; ++index) {
-    if (!PL_strcasecmp(aExtension, nonDecodableExtensions[index])) {
+  PRUint32 i;
+  for(i = 0; i < NS_ARRAY_LENGTH(nonDecodableExtensions); ++i) {
+    if (!PL_strcasecmp(aExtension, nonDecodableExtensions[i].mFileExtension) &&
+        !PL_strcasecmp(aEncodingType, nonDecodableExtensions[i].mMimeType)) {
       *aApplyDecoding = PR_FALSE;
       break;
     }
@@ -1291,22 +1269,33 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     // Turn off content encoding conversions if needed
     PRBool applyConversion = PR_TRUE;
 
-    NS_ASSERTION(mHelperAppService, "Not initialized");
-    mHelperAppService->ApplyDecodingForType(MIMEType, &applyConversion);
-    
-    if (applyConversion)
+    nsCOMPtr<nsIURL> sourceURL(do_QueryInterface(mSourceUrl));
+    if (sourceURL)
     {
-      // Now we double-check that it's OK to decode this extension
-      nsCOMPtr<nsIURI> channelURI;
-      aChannel->GetURI(getter_AddRefs(channelURI));
-      nsCOMPtr<nsIURL> channelURL(do_QueryInterface(channelURI));
-      if (channelURL)
+      nsCAutoString extension;
+      sourceURL->GetFileExtension(extension);
+      if (!extension.IsEmpty())
       {
-        nsCAutoString extension;
-        channelURL->GetFileExtension(extension);
-        if (!extension.IsEmpty())
-          mHelperAppService->ApplyDecodingForExtension(extension.get(), &applyConversion);
-      }
+        nsCOMPtr<nsIUTF8StringEnumerator> encEnum;
+        encChannel->GetContentEncodings(getter_AddRefs(encEnum));
+        if (encEnum)
+        {
+          PRBool hasMore;
+          rv = encEnum->HasMore(&hasMore);
+          if (NS_SUCCEEDED(rv) && hasMore)
+          {
+            nsCAutoString encType;
+            rv = encEnum->GetNext(encType);
+            if (NS_SUCCEEDED(rv) && !encType.IsEmpty())
+            {
+              NS_ASSERTION(mHelperAppService, "Not initialized");
+              mHelperAppService->ApplyDecodingForExtension(extension.get(),
+                                                           encType.get(),
+                                                           &applyConversion);
+            }
+          }
+        }
+      }    
     }
 
     encChannel->SetApplyConversion( applyConversion );

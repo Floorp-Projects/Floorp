@@ -52,16 +52,13 @@ interface nsIExternalHelperAppService : nsISupports
                                in nsISupports aWindowContext); 
 
   /**
-   * Returns true if this type is to be decoded prior to saving or passing
-   * off to helper apps, false otherwise
+   * Returns true if data from a URL with this extension combination
+   * is to be decoded from aEncodingType prior to saving or passing
+   * off to helper apps, false otherwise.
    */
-  boolean applyDecodingForType (in string aMimeContentType);
+  boolean applyDecodingForExtension(in string aExtension,
+                                    in string aEncodingType);
 
-  /**
-   * Returns false if files with this extension are not to be decoded prior
-   * to saving or passing off to helper apps, false otherwise
-   */
-  boolean applyDecodingForExtension(in string aExtension);
 };
 
 /**
