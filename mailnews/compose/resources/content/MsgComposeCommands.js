@@ -338,8 +338,10 @@ function ComposeUnload(calledFromExit)
 	//...and what's about the editor appcore, how can we release it?
 }
 
-function SetDocumentCharacterSet(aCharset)
+function SetDocumentCharacterSet(event)
 {
+  var aCharset = event.target.getAttribute('id');
+
   dump("SetDocumentCharacterSet Callback!\n");
   dump(aCharset + "\n");
 
@@ -404,11 +406,15 @@ function InitCharsetMenuCheckMark()
     prefs = null;
   }
   var send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
+//  send_default_charset = send_default_charset.toUpperCase();
+  dump("send_default_charset is " + send_default_charset + "\n");
+
   var compFieldsCharset = msgCompose.compFields.GetCharacterSet();
-  compFieldsCharset = compFieldsCharset.toUpperCase();
-  if (compFieldsCharset == "US-ASCII")
+//  compFieldsCharset = compFieldsCharset.toUpperCase();
+  dump("msgCompose.compFields is " + compFieldsCharset + "\n");
+
+  if (compFieldsCharset == "us-ascii")
     compFieldsCharset = "ISO-8859-1";
-  send_default_charset = send_default_charset.toUpperCase();
   menuitem = document.getElementById(compFieldsCharset);
 
   // charset may have been set implicitly in case of reply/forward

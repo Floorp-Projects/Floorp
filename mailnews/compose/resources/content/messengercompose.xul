@@ -26,6 +26,8 @@ Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 -->
 
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd">
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -231,6 +233,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuseparator/>
 			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
+<!-- Deprecated BEGIN
 			<menu value="&dcharMenu.label;" oncreate="InitCharsetMenuCheckMark();">
 			<menupopup>
 			<menuitem id="ISO-8859-1" type="radio" name="charsetGroup" value="&dcharIso1Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
@@ -265,6 +268,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuitem value="&dcharDEFAULT.label;" oncommand="SetDefaultMailSendCharacterSet();"/>
 			</menupopup>
 		</menu>
+END of Deprecated -->
+            <menu id = "maileditCharsetMenu" />
 	</menupopup>
     </menu>
 
