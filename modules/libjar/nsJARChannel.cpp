@@ -117,10 +117,13 @@ public:
 
     nsJARDownloadObserver(nsIFile* jarCacheFile, nsJARChannel* jarChannel,
                           OnJARFileAvailableFun onJARFileAvailable, 
-                          void* closure) {
+                          void* closure)
+        : mJarCacheFile(jarCacheFile),
+          mJARChannel(jarChannel),
+          mOnJARFileAvailable(onJARFileAvailable),
+          mClosure(closure)
+    {
         NS_INIT_REFCNT();
-        mJarCacheFile = jarCacheFile;
-        mJARChannel = jarChannel;
         NS_ADDREF(mJARChannel);
     }
 
