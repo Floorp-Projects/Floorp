@@ -101,9 +101,9 @@ pref("security.canotices.VeriSignInc.notice3",
 
 pref("signed.applets.DefaultTo30Security",  false);
 pref("signed.applets.securityIsOn",         true);
-pref("signed.applets.codebase_principal_support", false);
+pref("signed.applets.codebase_principal_support", true);
 pref("signed.applets.local_classes_have_30_powers", false);
 pref("signed.applets.capabilitiesDB.lock_to_current", false);
 pref("signed.applets.low_security_for_local_classes", false);
-pref("signed.applets.simulate_signatures_on_system_classes", false);
+pref("signed.applets.simulate_signatures_on_system_classes", true);
 pref("signed.applets.verbose_security_exception", false);
