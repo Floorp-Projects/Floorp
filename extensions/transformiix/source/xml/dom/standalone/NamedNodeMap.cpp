@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -22,10 +23,6 @@
 //
 //  Implementation of the Document Object Model Level 1 Core
 //    Implementation of the NamedNodeMap class
-//
-// Modification History:
-// Who  When      What
-// TK   03/29/99  Created
 //
 
 #include "dom.h"
@@ -108,4 +105,25 @@ NodeListDefinition::ListItem*
     }
 
   return NULL;
+}
+
+AttrMap::AttrMap()
+{
+    ownerElement = NULL;
+}
+
+Node* AttrMap::setNamedItem(Node* arg)
+{
+  if (arg->getNodeType() != Node::ATTRIBUTE_NODE)
+    return NULL;
+  ((Attr*)arg)->ownerElement = ownerElement;
+  return NamedNodeMap::setNamedItem(arg);
+}
+
+Node* AttrMap::removeNamedItem(const String& name)
+{
+  Attr* node = (Attr*)NamedNodeMap::removeNamedItem(name);
+  if (node)
+    node->ownerElement = NULL;
+  return node;
 }

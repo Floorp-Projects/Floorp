@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -240,6 +241,9 @@ class Node : public MozillaObjectWrapper
         //From DOM3 26-Jan-2001 WD
         virtual String getBaseURI();
 
+        // txXPathNode functions
+        virtual Node* getXPathParent();
+
     protected:
         String nodeName;
         String nodeValue;
@@ -409,6 +413,8 @@ class Attr : public Node
         const String& getValue();
         void setValue(const String& aNewValue);
 
+        // txXPathNode functions override
+        Node* getXPathParent();
 };
 
 /**

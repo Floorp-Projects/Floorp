@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -102,4 +103,19 @@ void Attr::setValue(const String& aNewValue)
 
     if (nsAttr)
         nsAttr->SetValue(aNewValue.getConstNSString());
+}
+
+/*
+ * Call nsIDOMAttr::GetOwnerElement to get the owning element
+ *
+ * @return the xpath parent
+ */
+Node* Attr::getXPathParent()
+{
+    NSI_FROM_TX_NULL_CHECK(Attr)
+    nsCOMPtr<nsIDOMElement> ownerElem;
+
+    if (NS_SUCCEEDED(nsAttr->GetOwnerElement(getter_AddRefs(ownerElem))))
+        return ownerDocument->createWrapper(ownerElem);
+    return NULL;
 }

@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -107,19 +108,6 @@ public:
 
     
 private:
-
-
-    /**
-     * Adds the given child/parent mapping to the list of parents
-    **/
-    void addParentReference(Node* child, Node* parent);
-
-    /**
-     * Indexes until the given node has been indexed
-    **/
-    void continueIndexing(Node* node);
-
-
     /**
      * Returns the DocumentOrder for the given Node
      * @param node a pointer to the Node in which to return the 
@@ -128,53 +116,12 @@ private:
     **/
     OrderInfo* getDocumentOrder(Node* node);
 
-
-    /**
-     * A Hashtable of attribute's parent nodes
-    **/
-    Map parents;
-
     /**
      * A Hashtable of Node/OrderInfo mappings
     **/
     Map orders;
 
-    /**
-     * A list of IndexState objects (one for each Document)
-    **/
-    List  indexes;
-
-    
 }; //-- DOMHelper
-
-/**
- * A class which holds information about the current state of
- * indexing
-**/
-class IndexState {
-
- public:
-
-  IndexState();
-  ~IndexState();
- 
-  /**
-   * The Document that this IndexState is for
-  **/
-  Document* document;
-
-  /**
-   * The next node to index
-  **/
-  Node*    next;
-
-  /**
-   * A boolean indicating if the indexing has completed
-  **/
-  MBool    done;
-
-}; //-- IndexState
-
 
 #endif
 
