@@ -127,7 +127,8 @@ public class NativeRegExp extends IdScriptable implements Function {
     private static final byte REOP_END           = 53;
 
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    public static void init(Context cx, Scriptable scope, boolean sealed)
+    {
 
         NativeRegExp proto = new NativeRegExp();
         proto.prototypeFlag = true;
@@ -150,12 +151,14 @@ public class NativeRegExp extends IdScriptable implements Function {
     }
 
     public NativeRegExp(Context cx, Scriptable scope, String source,
-                        String global, boolean flat) {
+                        String global, boolean flat)
+    {
         init(cx, scope, source, global, flat);
     }
 
     public void init(Context cx, Scriptable scope, String str,
-                     String global, boolean flat) {
+                     String global, boolean flat)
+    {
         this.source = str.toCharArray();
         int length = str.length();
         flags = 0;
@@ -169,18 +172,14 @@ public class NativeRegExp extends IdScriptable implements Function {
                 } else if (c == 'm') {
                     flags |= JSREG_MULTILINE;
                 } else {
-                    Object[] errArgs = { new Character(c) };
-                    throw NativeGlobal.constructError(cx, "SyntaxError",
-                                                      ScriptRuntime.getMessage(
-                                                      "msg.invalid.re.flag",
-                                                      errArgs),
-                                                      scope);
+                    reportError(cx, scope,
+                                "msg.invalid.re.flag", String.valueOf(c));
                 }
             }
         }
 
         CompilerState state = new CompilerState(this.source, length, flags, cx, scope);
-        if (flat && (length > 0)) {
+        if (flat && length > 0) {
 if (debug) {
 System.out.println("flat = \"" + str + "\"");
 }
@@ -220,20 +219,24 @@ System.out.println();
         setParentScope(scope);
     }
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return "RegExp";
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                       Object[] args) {
+                       Object[] args)
+    {
         return execSub(cx, scope, args, MATCH);
     }
 
-    public Scriptable construct(Context cx, Scriptable scope, Object[] args) {
+    public Scriptable construct(Context cx, Scriptable scope, Object[] args)
+    {
         return (Scriptable) call(cx, scope, null, args);
     }
 
-    Scriptable compile(Context cx, Scriptable scope, Object[] args) {
+    Scriptable compile(Context cx, Scriptable scope, Object[] args)
+    {
         if (args.length > 0 && args[0] instanceof NativeRegExp) {
             if (args.length > 1 && args[1] != Undefined.instance) {
                 // report error
@@ -258,7 +261,8 @@ System.out.println();
         return this;
     }
 
-    public String toString() {
+    public String toString()
+    {
         StringBuffer buf = new StringBuffer();
         buf.append('/');
         if (source != null) buf.append(source);
@@ -272,10 +276,10 @@ System.out.println();
         return buf.toString();
     }
 
-    NativeRegExp() {
-    }
+    NativeRegExp() {  }
 
-    private static RegExpImpl getImpl(Context cx) {
+    private static RegExpImpl getImpl(Context cx)
+    {
         return (RegExpImpl) ScriptRuntime.getRegExpProxy(cx);
     }
 
@@ -287,12 +291,7 @@ System.out.println();
         if (args.length == 0) {
             str = reImpl.input;
             if (str == null) {
-                Object[] errArgs = { toString() };
-                throw NativeGlobal.constructError(
-                                                  cx, "SyntaxError",
-                                                  ScriptRuntime.getMessage
-                                                  ("msg.no.re.input.for", errArgs),
-                                                  scopeObj);
+                reportError(cx, scopeObj, "msg.no.re.input.for", toString());
             }
         } else {
             str = ScriptRuntime.toString(args[0]);
@@ -316,25 +315,8 @@ System.out.println();
         return rval;
     }
 
-    private Object exec(Context cx, Scriptable scopeObj, Object[] args) {
-        return execSub(cx, scopeObj, args, MATCH);
-    }
-
-    private Object test(Context cx, Scriptable scopeObj, Object[] args) {
-        Object rval = execSub(cx, scopeObj, args, TEST);
-        if (rval == null || !rval.equals(Boolean.TRUE))
-            rval = Boolean.FALSE;
-        return rval;
-    }
-
-    private Object prefix(Context cx, Scriptable scopeObj, Object[] args) {
-        return execSub(cx, scopeObj, args, PREFIX);
-    }
-
-
-
-
-    static char getEscape(char c) {
+    static char getEscape(char c)
+    {
         switch (c) {
         case 'b':
             return '\b';
@@ -352,34 +334,41 @@ System.out.println();
         throw new RuntimeException();
     }
 
-    static public boolean isDigit(char c) {
+    static boolean isDigit(char c)
+    {
         return '0' <= c && c <= '9';
     }
 
-    static int unDigit(char c) {
+    static int unDigit(char c)
+    {
         return c - '0';
     }
 
-    static boolean isHex(char c) {
+    static boolean isHex(char c)
+    {
         return ('0' <= c && c <= '9') || ('a' <= c && c <= 'f') ||
             ('A' <= c && c <= 'F');
     }
 
-    static int unHex(char c) {
+    static int unHex(char c)
+    {
         if ('0' <= c && c <= '9')
             return c - '0';
         return 10 + Character.toLowerCase(c) - 'a';
     }
 
-    static boolean isWord(char c) {
+    static boolean isWord(char c)
+    {
         return Character.isLetter(c) || isDigit(c) || c == '_';
     }
 
-    private boolean isLineTerm(char c) {
+    private static boolean isLineTerm(char c)
+    {
         return TokenStream.isJSLineTerminator(c);
     }
 
-    private boolean isREWhiteSpace(int c) {
+    private static boolean isREWhiteSpace(int c)
+    {
         return (c == '\u0020' || c == '\u0009'
                 || c == '\n' || c == '\r'
                 || c == 0x2028 || c == 0x2029
@@ -387,7 +376,6 @@ System.out.println();
                 || c == '\u00A0'
                 || Character.getType((char)c) == Character.SPACE_SEPARATOR);
     }
-
 
     /*
      *
@@ -400,8 +388,7 @@ System.out.println();
      *    code point value is less than decimal 128, then return ch.
      * 6. Return cu.
      */
-    private char
-    canonicalize(char ch)
+    private static char canonicalize(char ch)
     {
         char cu = Character.toUpperCase(ch);
         if ((ch >= 128) && (cu < 128)) return ch;
@@ -431,7 +418,8 @@ System.out.println();
  *  regexp:     altern                  A regular expression is one or more
  *              altern '|' regexp       alternatives separated by vertical bar.
  */
-    private boolean parseDisjunction(CompilerState state) {
+    private static boolean parseDisjunction(CompilerState state)
+    {
         if (!parseAlternative(state))
             return false;
         char[] source = state.cpbegin;
@@ -456,7 +444,7 @@ System.out.println();
  *  altern:     item                    An alternative is one or more items,
  *              item altern             concatenated together.
  */
-    private boolean parseAlternative(CompilerState state)
+    private static boolean parseAlternative(CompilerState state)
     {
         RENode headTerm = null;
         RENode tailTerm = null;
@@ -492,7 +480,7 @@ System.out.println();
     }
 
     /* calculate the total size of the bitmap required for a class expression */
-    private boolean
+    private static boolean
     calculateBitmapSize(CompilerState state, RENode target, char[] src,
                         int index, int end)
     {
@@ -707,7 +695,7 @@ System.out.println();
      *                                      atom right-hand sides.
      */
 
-    private void doFlat(CompilerState state, char c)
+    private static void doFlat(CompilerState state, char c)
     {
         state.result = new RENode(REOP_FLAT);
         state.result.chr = c;
@@ -716,7 +704,7 @@ System.out.println();
         state.progLength += 3;
     }
 
-    private int
+    private static int
     getDecimalValue(char c, CompilerState state)
     {
         char[] src = state.cpbegin;
@@ -733,7 +721,7 @@ System.out.println();
         return value;
     }
 
-    private boolean
+    private static boolean
     parseTerm(CompilerState state)
     {
         char[] src = state.cpbegin;
@@ -1137,43 +1125,44 @@ System.out.println();
         return true;
     }
 
-    private void CHECK_OFFSET(int diff)
+    private static void CHECK_OFFSET(int diff)
     {
         if ((short)diff != diff)
             throw new RuntimeException();
     }
 
-    private void SET_OFFSET(int pc, int off)
+    private static void SET_OFFSET(byte[] array, int pc, int off)
     {
-        program[pc] = (byte)(off >> 8);
-        program[pc + 1] = (byte)(off);
+        array[pc] = (byte)(off >> 8);
+        array[pc + 1] = (byte)(off);
     }
 
-    private int GET_OFFSET(int pc)
+    private static int GET_OFFSET(byte[] array, int pc)
     {
-        return ((program[pc] & 0xFF) << 8) | (program[pc + 1] & 0xFF);
+        return ((array[pc] & 0xFF) << 8) | (array[pc + 1] & 0xFF);
     }
 
-    private int GET_ARG(int pc)
+    private static int GET_ARG(byte[] array, int pc)
     {
-        return GET_OFFSET(pc);
+        return GET_OFFSET(array, pc);
     }
 
-    private void SET_ARG(int pc, int arg)
+    private static void SET_ARG(byte[] array, int pc, int arg)
     {
-        SET_OFFSET(pc, arg);
+        SET_OFFSET(array, pc, arg);
     }
 
     private static final int OFFSET_LEN =         2;
     private static final int ARG_LEN =            OFFSET_LEN;
 
-    private int
+    private static int
     emitREBytecode(CompilerState state, NativeRegExp re, int pc, RENode t)
     {
         RENode nextAlt;
         int nextAltFixup, nextTermFixup;
         int diff;
         RECharSet charSet;
+        byte[] program = re.program;
 
         while (t != null) {
             program[pc++] = t.op;
@@ -1191,7 +1180,7 @@ System.out.println();
                 pc += OFFSET_LEN;
                 diff = pc - nextAltFixup;
                 CHECK_OFFSET(diff);
-                SET_OFFSET(nextAltFixup, diff);
+                SET_OFFSET(program, nextAltFixup, diff);
                 pc = emitREBytecode(state, re, pc, nextAlt);
 
                 program[pc++] = REOP_JUMP;
@@ -1200,11 +1189,11 @@ System.out.println();
 
                 diff = pc - nextTermFixup;
                 CHECK_OFFSET(diff);
-                SET_OFFSET(nextTermFixup, diff);
+                SET_OFFSET(program, nextTermFixup, diff);
 
                 diff = pc - nextAltFixup;
                 CHECK_OFFSET(diff);
-                SET_OFFSET(nextAltFixup, diff);
+                SET_OFFSET(program, nextAltFixup, diff);
                 break;
             case REOP_FLAT:
                 /*
@@ -1223,9 +1212,9 @@ System.out.println();
                         program[pc - 1] = REOP_FLATi;
                     else
                         program[pc - 1] = REOP_FLAT;
-                    SET_ARG(pc, t.flatIndex);
+                    SET_ARG(program, pc, t.flatIndex);
                     pc += ARG_LEN;
-                    SET_ARG(pc, t.length);
+                    SET_ARG(program, pc, t.length);
                     pc += ARG_LEN;
                 }
                 else {
@@ -1241,21 +1230,21 @@ System.out.println();
                             program[pc - 1] = REOP_UCFLAT1i;
                         else
                             program[pc - 1] = REOP_UCFLAT1;
-                        SET_ARG(pc, t.chr);
+                        SET_ARG(program, pc, t.chr);
                         pc += ARG_LEN;
                     }
                 }
                 break;
             case REOP_LPAREN:
-                SET_ARG(pc, t.parenIndex);
+                SET_ARG(program, pc, t.parenIndex);
                 pc += ARG_LEN;
                 pc = emitREBytecode(state, re, pc, t.kid);
                 program[pc++] = REOP_RPAREN;
-                SET_ARG(pc, t.parenIndex);
+                SET_ARG(program, pc, t.parenIndex);
                 pc += ARG_LEN;
                 break;
             case REOP_BACKREF:
-                SET_ARG(pc, t.parenIndex);
+                SET_ARG(program, pc, t.parenIndex);
                 pc += ARG_LEN;
                 break;
             case REOP_ASSERT:
@@ -1265,7 +1254,7 @@ System.out.println();
                 program[pc++] = REOP_ASSERTTEST;
                 diff = pc - nextTermFixup;
                 CHECK_OFFSET(diff);
-                SET_OFFSET(nextTermFixup, diff);
+                SET_OFFSET(program, nextTermFixup, diff);
                 break;
             case REOP_ASSERT_NOT:
                 nextTermFixup = pc;
@@ -1274,7 +1263,7 @@ System.out.println();
                 program[pc++] = REOP_ASSERTNOTTEST;
                 diff = pc - nextTermFixup;
                 CHECK_OFFSET(diff);
-                SET_OFFSET(nextTermFixup, diff);
+                SET_OFFSET(program, nextTermFixup, diff);
                 break;
             case REOP_QUANT:
                 if ((t.min == 0) && (t.max == -1))
@@ -1287,14 +1276,14 @@ System.out.println();
                     program[pc - 1] = (t.greedy) ? REOP_PLUS : REOP_MINIMALPLUS;
                 else {
                     if (!t.greedy) program[pc - 1] = REOP_MINIMALQUANT;
-                    SET_ARG(pc, t.min);
+                    SET_ARG(program, pc, t.min);
                     pc += ARG_LEN;
-                    SET_ARG(pc, t.max);
+                    SET_ARG(program, pc, t.max);
                     pc += ARG_LEN;
                 }
-                SET_ARG(pc, t.parenCount);
+                SET_ARG(program, pc, t.parenCount);
                 pc += ARG_LEN;
-                SET_ARG(pc, t.parenIndex);
+                SET_ARG(program, pc, t.parenIndex);
                 pc += ARG_LEN;
                 nextTermFixup = pc;
                 pc += OFFSET_LEN;
@@ -1302,10 +1291,10 @@ System.out.println();
                 program[pc++] = REOP_ENDCHILD;
                 diff = pc - nextTermFixup;
                 CHECK_OFFSET(diff);
-                SET_OFFSET(nextTermFixup, diff);
+                SET_OFFSET(program, nextTermFixup, diff);
                 break;
             case REOP_CLASS:
-                SET_ARG(pc, t.index);
+                SET_ARG(program, pc, t.index);
                 pc += ARG_LEN;
                 charSet = re.classList[t.index];
                 charSet.converted = false;
@@ -1321,9 +1310,8 @@ System.out.println();
         return pc;
     }
 
-    private REBackTrackData
-    pushBackTrackState(REGlobalData gData, byte op,
-                                        int target, REMatchState x)
+    private static REBackTrackData
+    pushBackTrackState(REGlobalData gData, byte op, int target, REMatchState x)
     {
         REBackTrackData result;
         if (gData.backTrackStackTop == gData.maxBackTrack) {
@@ -1370,7 +1358,7 @@ System.out.println();
         10. Let y be the State (e+1, cap).
         11. Call c(y) and return its result.
     */
-    private REMatchState
+    private static REMatchState
     flatMatcher(REGlobalData gData, REMatchState x, char matchCh)
     {
         if (x.cp == gData.cpend)
@@ -1381,7 +1369,7 @@ System.out.println();
         return x;
     }
 
-    private REMatchState
+    private static REMatchState
     flatIMatcher(REGlobalData gData, REMatchState x, char matchCh)
     {
         if (x.cp == gData.cpend)
@@ -1396,7 +1384,7 @@ System.out.println();
     /*
      *   Consecutive literal characters.
      */
-    private REMatchState
+    private static REMatchState
     flatNMatcher(REGlobalData gData, REMatchState x, int matchChars,
                  int length)
     {
@@ -1412,7 +1400,7 @@ System.out.println();
         return x;
     }
 
-    private REMatchState
+    private static REMatchState
     flatNIMatcher(REGlobalData gData, REMatchState x, int matchChars,
                   int length)
     {
@@ -1451,7 +1439,7 @@ System.out.println();
         9. Let y be the State (f, cap).
         10. Call c(y) and return its result.
     */
-    private REMatchState
+    private static REMatchState
     backrefMatcher(REGlobalData gData, REMatchState x, int parenIndex)
     {
         int len;
@@ -1483,7 +1471,7 @@ System.out.println();
 
 
     /* Add a single character to the RECharSet */
-    private void
+    private static void
     addCharacterToCharSet(RECharSet cs, char c)
     {
         int byteIndex = (int)(c / 8);
@@ -1494,7 +1482,7 @@ System.out.println();
 
 
     /* Add a character range, c1 to c2 (inclusive) to the RECharSet */
-    private void
+    private static void
     addCharacterRangeToCharSet(RECharSet cs, char c1, char c2)
     {
         int i;
@@ -1520,7 +1508,7 @@ System.out.println();
     }
 
     /* Compile the source of the class into a RECharSet */
-    private boolean
+    private static boolean
     processCharSet(REGlobalData gData, RECharSet charSet)
     {
         int src = charSet.startIndex;
@@ -1718,7 +1706,7 @@ System.out.println();
      *   Initialize the character set if it this is the first call.
      *   Test the bit - if the ^ flag was specified, non-inclusion is a success
      */
-    private REMatchState
+    private static REMatchState
     classMatcher(REGlobalData gData, REMatchState x, int index)
     {
         char ch;
@@ -1753,7 +1741,7 @@ System.out.println();
         return x;
     }
 
-    private REMatchState
+    private static REMatchState
     executeREBytecode(REGlobalData gData, REMatchState x)
     {
         int pc = 0;
@@ -1788,7 +1776,7 @@ System.out.println("Input = \"" + new String(gData.cpbegin) + "\", start at " + 
         switch (op) {
         case REOP_UCFLAT1:
         case REOP_UCFLAT1i:
-            anchorCh = (char)GET_ARG(pc);
+            anchorCh = (char)GET_ARG(program, pc);
             anchor = true;
             break;
         case REOP_FLAT1:
@@ -1798,7 +1786,7 @@ System.out.println("Input = \"" + new String(gData.cpbegin) + "\", start at " + 
             break;
         case REOP_FLAT:
         case REOP_FLATi:
-            k = GET_ARG(pc);
+            k = GET_ARG(program, pc);
             anchorCh = source[k];
             anchor = true;
             break;
@@ -1940,16 +1928,16 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     result = null;
                 break;
             case REOP_FLAT:
-                offset = GET_ARG(pc);
+                offset = GET_ARG(program, pc);
                 pc += ARG_LEN;
-                length = GET_ARG(pc);
+                length = GET_ARG(program, pc);
                 pc += ARG_LEN;
                 result = flatNMatcher(gData, x, offset, length);
                 break;
             case REOP_FLATi:
-                offset = GET_ARG(pc);
+                offset = GET_ARG(program, pc);
                 pc += ARG_LEN;
-                length = GET_ARG(pc);
+                length = GET_ARG(program, pc);
                 pc += ARG_LEN;
                 result = flatNIMatcher(gData, x, offset, length);
                 break;
@@ -1962,18 +1950,18 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 result = flatIMatcher(gData, x, matchCh);
                 break;
             case REOP_UCFLAT1:
-                matchCh = (char)GET_ARG(pc);
+                matchCh = (char)GET_ARG(program, pc);
                 pc += ARG_LEN;
                 result = flatMatcher(gData, x, matchCh);
                 break;
             case REOP_UCFLAT1i:
-                matchCh = (char)GET_ARG(pc);
+                matchCh = (char)GET_ARG(program, pc);
                 pc += ARG_LEN;
                 result = flatIMatcher(gData, x, matchCh);
                 break;
 
             case REOP_ALT:
-                nextpc = pc + GET_OFFSET(pc);
+                nextpc = pc + GET_OFFSET(program, pc);
                 nextop = program[nextpc++];
                 gData.stateStack[gData.stateStackTop].continuation_pc =
                                                                currentContinuation_pc;
@@ -1991,20 +1979,20 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                               gData.stateStack[gData.stateStackTop].continuation_pc;
                 currentContinuation_op =
                               gData.stateStack[gData.stateStackTop].continuation_op;
-                offset = GET_OFFSET(pc);
+                offset = GET_OFFSET(program, pc);
                 pc += offset;
                 op = program[pc++];
                 continue;
 
 
             case REOP_LPAREN:
-                parenIndex = GET_ARG(pc);
+                parenIndex = GET_ARG(program, pc);
                 pc += ARG_LEN;
                 x.set_parens(parenIndex, x.cp, 0);
                 op = program[pc++];
                 continue;
             case REOP_RPAREN:
-                parenIndex = GET_ARG(pc);
+                parenIndex = GET_ARG(program, pc);
                 pc += ARG_LEN;
                 cap_index = x.parens_index(parenIndex);
                 x.set_parens(parenIndex, cap_index, x.cp - cap_index);
@@ -2013,7 +2001,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 op = program[pc++];
                 continue;
             case REOP_BACKREF:
-                parenIndex = GET_ARG(pc);
+                parenIndex = GET_ARG(program, pc);
                 pc += ARG_LEN;
                 result = backrefMatcher(gData, x, parenIndex);
                 break;
@@ -2026,7 +2014,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 curState.index = x.cp;
                 ++gData.stateStackTop;
                 pushBackTrackState(gData, REOP_ASSERTTEST,
-                                        pc + GET_OFFSET(pc), x);
+                                        pc + GET_OFFSET(program, pc), x);
                 pc += ARG_LEN;
                 op = program[pc++];
                 continue;
@@ -2038,7 +2026,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 curState.index = x.cp;
                 ++gData.stateStackTop;
                 pushBackTrackState(gData, REOP_ASSERTNOTTEST,
-                                        pc + GET_OFFSET(pc), x);
+                                        pc + GET_OFFSET(program, pc), x);
                 pc += ARG_LEN;
                 op = program[pc++];
                 continue;
@@ -2066,7 +2054,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 break;
 
             case REOP_CLASS:
-                index = GET_ARG(pc);
+                index = GET_ARG(program, pc);
                 pc += ARG_LEN;
                 result = classMatcher(gData, x, index);
                 if (!gData.ok)
@@ -2128,9 +2116,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 
             case REOP_QUANT:
                 curState = gData.stateStack[gData.stateStackTop];
-                curState.min = GET_ARG(pc);
+                curState.min = GET_ARG(program, pc);
                 pc += ARG_LEN;
-                curState.max = GET_ARG(pc);
+                curState.max = GET_ARG(program, pc);
                 pc += ARG_LEN;
 
                 curState.index = x.cp;
@@ -2162,7 +2150,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     if (curState.min == 0)
                         result = x;
                     pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(pc);
+                    pc = pc + GET_OFFSET(program, pc);
                     break;
                 }
                 else {
@@ -2173,7 +2161,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                         currentContinuation_pc = curState.continuation_pc;
                         currentContinuation_op = curState.continuation_op;
                         pc += 2 * ARG_LEN;
-                        pc = pc + GET_OFFSET(pc);
+                        pc = pc + GET_OFFSET(program, pc);
                         break;
                     }
                     if (curState.min != 0) curState.min--;
@@ -2183,7 +2171,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                         currentContinuation_pc = curState.continuation_pc;
                         currentContinuation_op = curState.continuation_op;
                         pc += 2 * ARG_LEN;
-                        pc = pc + GET_OFFSET(pc);
+                        pc = pc + GET_OFFSET(program, pc);
                         break;
                     }
                     curState.index = x.cp;
@@ -2191,9 +2179,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     currentContinuation_op = REOP_REPEAT;
                     currentContinuation_pc = pc;
                     pushBackTrackState(gData, REOP_REPEAT, pc, x);
-                    parenCount = GET_ARG(pc);
+                    parenCount = GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    parenIndex = GET_ARG(pc);
+                    parenIndex = GET_ARG(program, pc);
                     pc += 2 * ARG_LEN;
                     op = program[pc++];
                     for (k = 0; k < parenCount; k++) {
@@ -2221,7 +2209,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
                     --gData.stateStackTop;
                     pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(pc);
+                    pc = pc + GET_OFFSET(program, pc);
                     op = program[pc++];
                 }
                 continue;
@@ -2244,7 +2232,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
                     --gData.stateStackTop;
                     pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(pc);
+                    pc = pc + GET_OFFSET(program, pc);
                     op = program[pc++];
                 }
                 continue;
@@ -2267,15 +2255,15 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
                     --gData.stateStackTop;
                     pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(pc);
+                    pc = pc + GET_OFFSET(program, pc);
                     op = program[pc++];
                 }
                 continue;
             case REOP_MINIMALQUANT:
                 curState = gData.stateStack[gData.stateStackTop];
-                curState.min = GET_ARG(pc);
+                curState.min = GET_ARG(program, pc);
                 pc += ARG_LEN;
-                curState.max = GET_ARG(pc);
+                curState.max = GET_ARG(program, pc);
                 pc += ARG_LEN;
                 curState.index = x.cp;
                 curState.continuation_pc = currentContinuation_pc;
@@ -2292,7 +2280,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
                     --gData.stateStackTop;
                     pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
-                    pc = pc + GET_OFFSET(pc);
+                    pc = pc + GET_OFFSET(program, pc);
                     op = program[pc++];
                 }
                 continue;
@@ -2310,9 +2298,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                         curState.index = x.cp;
                         currentContinuation_op = REOP_MINIMALREPEAT;
                         currentContinuation_pc = pc;
-                        parenCount = GET_ARG(pc);
+                        parenCount = GET_ARG(program, pc);
                         pc += ARG_LEN;
-                        parenIndex = GET_ARG(pc);
+                        parenIndex = GET_ARG(program, pc);
                         pc += 2 * ARG_LEN;
                         for (k = 0; k < parenCount; k++) {
                             x.set_parens(parenIndex + k, -1, 0);
@@ -2342,9 +2330,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     if (curState.min != 0) {
                         currentContinuation_op = REOP_MINIMALREPEAT;
                         currentContinuation_pc = pc;
-                        parenCount = GET_ARG(pc);
+                        parenCount = GET_ARG(program, pc);
                         pc += ARG_LEN;
-                        parenIndex = GET_ARG(pc);
+                        parenIndex = GET_ARG(program, pc);
                         pc += 2 * ARG_LEN;
                         for (k = 0; k < parenCount; k++) {
                             x.set_parens(parenIndex + k, -1, 0);
@@ -2362,7 +2350,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                         pushBackTrackState(gData, REOP_MINIMALREPEAT, pc, x);
                         --gData.stateStackTop;
                         pc += 2 * ARG_LEN;
-                        pc = pc + GET_OFFSET(pc);
+                        pc = pc + GET_OFFSET(program, pc);
                         op = program[pc++];
                         continue;
                     }
@@ -2418,7 +2406,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 //        return null;
     }
 
-    private REMatchState
+    private static REMatchState
     MatchRegExp(REGlobalData gData, REMatchState x)
     {
         int sz;
@@ -2630,13 +2618,18 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         return flags;
     }
 
-    private void reportError(String msg, String arg, CompilerState state)
+    private static void
+    reportError(String msg, String arg, CompilerState state)
     {
-        Object[] args = { arg };
-        throw NativeGlobal.constructError(
-                                          state.cx, "SyntaxError",
-                                          ScriptRuntime.getMessage(msg, args),
-                                          state.scope);
+        reportError(state.cx, state.scope, msg, arg);
+    }
+
+    private static void
+    reportError(Context cx, Scriptable scope, String msg, String arg)
+    {
+        throw NativeGlobal.constructError(cx, "SyntaxError",
+                                          ScriptRuntime.getMessage1(msg, arg),
+                                          scope);
     }
 
     protected int getIdAttributes(int id)
@@ -2706,20 +2699,22 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
     {
         if (prototypeFlag) {
             switch (methodId) {
-                case Id_compile:
-                    return realThis(thisObj, f).compile(cx, scope, args);
+              case Id_compile:
+                return realThis(thisObj, f).compile(cx, scope, args);
 
-                case Id_toString:
-                    return realThis(thisObj, f).toString();
+              case Id_toString:
+                return realThis(thisObj, f).toString();
 
-                case Id_exec:
-                    return realThis(thisObj, f).exec(cx, scope, args);
+              case Id_exec:
+                return realThis(thisObj, f).execSub(cx, scope, args, MATCH);
 
-                case Id_test:
-                    return realThis(thisObj, f).test(cx, scope, args);
+              case Id_test: {
+                Object x = realThis(thisObj, f).execSub(cx, scope, args, TEST);
+                return Boolean.TRUE.equals(x) ? Boolean.TRUE : Boolean.FALSE;
+              }
 
-                case Id_prefix:
-                    return realThis(thisObj, f).prefix(cx, scope, args);
+              case Id_prefix:
+                return realThis(thisObj, f).execSub(cx, scope, args, PREFIX);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
@@ -2833,7 +2828,8 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 
 class RENode {
 
-    RENode(byte op) {
+    RENode(byte op)
+    {
         this.op = op;
     }
 
@@ -2866,7 +2862,9 @@ class RENode {
 
 class CompilerState {
 
-    CompilerState(char[] source, int length, int flags, Context cx, Scriptable scope) {
+    CompilerState(char[] source, int length, int flags,
+                  Context cx, Scriptable scope)
+    {
         this.cpbegin = source;
         this.cp = 0;
         this.cpend = length;
@@ -2911,16 +2909,19 @@ final class REMatchState {
     }
 
 /* start of capture contents, -1 for empty  */
-    int parens_index(int i) {
+    int parens_index(int i)
+    {
         return (int)(parens[i]);
     }
 
 /* length of capture contents  */
-    int parens_length(int i) {
+    int parens_length(int i)
+    {
         return (int)(parens[i] >>> 32);
     }
 
-    void set_parens(int i, int index, int length) {
+    void set_parens(int i, int index, int length)
+    {
         parens[i] = ((long)index & 0xffffffffL) | ((long)length << 32);
     }
 
