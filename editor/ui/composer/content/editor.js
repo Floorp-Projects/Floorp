@@ -126,6 +126,24 @@ function IsEditingRenderedHTML()
 }
 
 
+var DocumentReloadListener =
+{
+  NotifyDocumentCreated: function() {},
+  NotifyDocumentWillBeDestroyed: function() {},
+
+  NotifyDocumentStateChanged:function( isNowDirty )
+  {
+    var charset = editorShell.GetDocumentCharacterSet();
+
+    // unregister the listener to prevent multiple callbacks
+    editorShell.UnregisterDocumentStateListener( DocumentReloadListener );
+
+    // update the META charset with the current presentation charset
+    editorShell.SetDocumentCharacterSet(charset);
+  }
+};
+
+
 // This is called when the real editor document is created,
 // before it's loaded.
 var DocumentStateListener =
@@ -499,6 +517,9 @@ function EditorSetDocumentCharacterSet(aCharset)
     editorShell.SetDocumentCharacterSet(aCharset);
     if( editorShell.editorDocument.location != "about:blank")
     {
+      // reloading the document will reverse any changes to the META charset, 
+      // we need to put them back in, which is achieved by a dedicated listener
+      editorShell.RegisterDocumentStateListener( DocumentReloadListener );
       editorShell.LoadUrl(editorShell.editorDocument.location);
     }
   }
