@@ -671,9 +671,11 @@ void nsNativeFileSpec::operator += (const char* inRelativePath)
 	mError = FSpGetDirectoryID(&mSpec, &dirID, &isDirectory);
 	if (mError == noErr && isDirectory)
 	{
-		mError = FSMakeFSSpec(mSpec.vRefNum, dirID, "\pG'day", *this);
-		if (mError == noErr)
-			SetLeafName(inRelativePath);
+		Str255 partialPath;
+		MacFileHelpers::PLstrcpy(partialPath, inRelativePath);
+		mError = FSMakeFSSpec(mSpec.vRefNum, dirID, partialPath, *this);
+		//if (mError == noErr)
+		//	SetLeafName(inRelativePath);
 	}
 } // nsNativeFileSpec::operator +=
 
