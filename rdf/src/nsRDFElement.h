@@ -80,10 +80,11 @@ public:
     NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
     NS_IMETHOD IsSynthetic(PRBool& aResult);
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
-    NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue, PRBool aNotify);
-    NS_IMETHOD GetAttribute(const nsString& aName, nsString& aResult) const;
-    NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify);
-    NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray, PRInt32& aResult) const;
+    NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue, PRBool aNotify);
+    NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
+    NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
+    NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
+                                  nsIAtom*& aName) const;
     NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
     NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
     NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const;
@@ -167,9 +168,9 @@ protected:
     /** The element's tag */
     nsAutoString      mTag;
 
-    /** A hashtable that maps attribute names to values. Instantiated
+    /** An array of attribute data. Instantiated
         lazily if attributes are required */
-    nsHashtable*      mAttributes;
+    nsVoidArray*      mAttributes;
 
     /**
      * Dynamically generate the element's children from the RDF graph

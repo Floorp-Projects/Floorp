@@ -147,48 +147,26 @@ RDFDOMNodeListImpl::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 
 
 ////////////////////////////////////////////////////////////////////////
-// AttributeKey
+// nsGenericAttribute
 
-class AttributeKey : public nsHashKey
+struct nsGenericAttribute
 {
-private:
-    nsIAtom* mAttr;
+  nsGenericAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue)
+    : mNameSpaceID(aNameSpaceID),
+      mName(aName),
+      mValue(aValue)
+  {
+    NS_IF_ADDREF(mName);
+  }
 
-public:
-    AttributeKey(const nsString& attr) {
-        nsAutoString s;
-        attr.ToUpperCase(s); // just be case-insensitive
-        mAttr = NS_NewAtom(s);
-    }
+  ~nsGenericAttribute(void)
+  {
+    NS_IF_RELEASE(mName);
+  }
 
-    AttributeKey(nsIAtom* atom) {
-        mAttr = atom;
-        NS_IF_ADDREF(mAttr);
-    }
-
-    virtual ~AttributeKey(void) {
-        NS_IF_RELEASE(mAttr);
-    }
-
-    virtual PRUint32 HashValue(void) const {
-        return (PRUint32) mAttr;
-    }
-
-    virtual PRBool Equals(const nsHashKey* aKey) const {
-        // XXX like to do a dynamic cast here.
-        AttributeKey* that = (AttributeKey*) aKey;
-        return ((that) && (this->mAttr == that->mAttr));
-    }
-
-    virtual nsHashKey* Clone(void) const {
-        return new AttributeKey(mAttr);
-    }
-
-    nsresult GetAtomValue(nsIAtom*& result) {
-        result = mAttr;
-        NS_IF_ADDREF(mAttr);
-        return NS_OK;
-    }
+  PRInt32   mNameSpaceID;
+  nsIAtom*  mName;
+  nsString  mValue;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -223,26 +201,17 @@ nsRDFElement::nsRDFElement(void)
     NS_INIT_REFCNT();
 }
 
-static PRBool
-rdf_AttributeDestroyEnumFunc(nsHashKey* key, void* aData, void* closure)
-{
-    // XXX this doesn't seem to work...
-    //nsHashtable* attributes = (nsHashtable*) closure;
-    //attributes->Remove(key);
-
-    // XXX like to do a dynamic_cast here...
-    nsString* value = (nsString*) aData;
-    delete value;
-
-    return PR_TRUE;
-}
- 
 nsRDFElement::~nsRDFElement()
 {
-    if (mAttributes) {
-        mAttributes->Enumerate(rdf_AttributeDestroyEnumFunc, mAttributes);
-        delete mAttributes;
+  if (nsnull != mAttributes) {
+    PRInt32 count = mAttributes->Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+      delete attr;
     }
+    delete mAttributes;
+  }
     // mDocument is not refcounted
     //NS_IF_RELEASE(mScriptObject); XXX don't forget!
     NS_IF_RELEASE(mChildren);
@@ -875,43 +844,82 @@ nsRDFElement::GetTag(nsIAtom*& aResult) const
 }
 
 
+// XXX attribute code swiped from nsGenericContainerElement
+// this class could probably just use nsGenericContainerElement
+// needed to maintain attribute namespace ID as well as ordering
 NS_IMETHODIMP 
-nsRDFElement::SetAttribute(const nsString& aName, 
+nsRDFElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            const nsString& aValue,
                            PRBool aNotify)
 {
-    if (! mAttributes) {
-        // Construct the attribute table on demand.
-        if (! (mAttributes = new nsHashtable(7)))
-            return NS_ERROR_OUT_OF_MEMORY;
+  NS_ASSERTION(kNameSpaceID_Unknown != aNameSpaceID, "must have name space ID");
+  if (kNameSpaceID_Unknown == aNameSpaceID) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  NS_ASSERTION(nsnull != aName, "must have attribute name");
+  if (nsnull == aName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+
+  if (nsnull == mAttributes) {
+    mAttributes = new nsVoidArray();
+  }
+  if (nsnull != mAttributes) {
+    nsGenericAttribute* attr;
+    PRInt32 index;
+    PRInt32 count = mAttributes->Count();
+    for (index = 0; index < count; index++) {
+      attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+      if ((aNameSpaceID == attr->mNameSpaceID) && (aName == attr->mName)) {
+        attr->mValue = aValue;
+        rv = NS_OK;
+        break;
+      }
     }
+    
+    if (index >= count) { // didn't find it
+      attr = new nsGenericAttribute(aNameSpaceID, aName, aValue);
+      if (nsnull != attr) {
+        mAttributes->AppendElement(attr);
+        rv = NS_OK;
+      }
+    }
+    // XXX notify doc?
+  }
 
-    AttributeKey key(aName);
-
-    nsString* value = new nsString(aValue);
-    if (! value)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsString* old = NS_STATIC_CAST(nsString*, mAttributes->Put(&key, value));
-    delete old;
-
-    return NS_OK;
+  return rv;
 }
 
 
 NS_IMETHODIMP
-nsRDFElement::GetAttribute(const nsString& aName, nsString& aResult) const
+nsRDFElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const
 {
-    nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+  NS_ASSERTION(nsnull != aName, "must have attribute name");
+  if (nsnull == aName) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-    if (mAttributes) {
-        AttributeKey key(aName);
-        nsString* value = NS_STATIC_CAST(nsString*, mAttributes->Get(&key));
-        if (value) {
-            aResult = *value;
-            return NS_CONTENT_ATTR_HAS_VALUE;
+  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+
+  if (nsnull != mAttributes) {
+    PRInt32 count = mAttributes->Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
+      if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
+        aResult = attr->mValue;
+        if (0 < aResult.Length()) {
+          rv = NS_CONTENT_ATTR_HAS_VALUE;
         }
+        else {
+          rv = NS_CONTENT_ATTR_NO_VALUE;
+        }
+        break;
+      }
     }
+  }
 
 #if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     // XXX I'm not sure if we should support properties as attributes
@@ -951,47 +959,50 @@ done:
 }
 
 NS_IMETHODIMP
-nsRDFElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
+nsRDFElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 {
-    if (! mAttributes)
-        return NS_OK; // never set
+  NS_ASSERTION(nsnull != aName, "must have attribute name");
+  if (nsnull == aName) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-    AttributeKey key(aAttribute);
-    nsString* old = NS_STATIC_CAST(nsString*, mAttributes->Remove(&key));
-    delete old;
+  nsresult rv = NS_OK;
 
-    return NS_OK;
-}
-
-static PRBool
-rdf_AttributeNameEnumFunc(nsHashKey* key, void* aData, void* closure)
-{
-    // XXX like to do dynamic_cast<>'s here...
-    nsISupportsArray* array = (nsISupportsArray*) closure;
-    AttributeKey* k = (AttributeKey*) key;
-
-    nsIAtom* atom;
-    if (NS_SUCCEEDED(k->GetAtomValue(atom))) {
-        array->AppendElement(atom);
-        NS_RELEASE(atom);
+  if (nsnull != mAttributes) {
+    PRInt32 count = mAttributes->Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+      if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
+        mAttributes->RemoveElementAt(index);
+        delete attr;
+        break;
+      }
     }
-    return PR_TRUE;
+
+// XXX notify document??
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
-nsRDFElement::GetAllAttributeNames(nsISupportsArray* aArray, PRInt32& aResult) const
+nsRDFElement::GetAttributeNameAt(PRInt32 aIndex,
+                                 PRInt32& aNameSpaceID, 
+                                 nsIAtom*& aName) const
 {
-    if (! aArray)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv = NS_OK;
-
-    aArray->Clear(); // XXX or did you want me to append?
-
-    if (mAttributes)
-        mAttributes->Enumerate(rdf_AttributeNameEnumFunc, aArray);
-
-    aResult = aArray->Count();
+  if (nsnull != mAttributes) {
+    nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(aIndex);
+    if (nsnull != attr) {
+      aNameSpaceID = attr->mNameSpaceID;
+      aName = attr->mName;
+      NS_IF_ADDREF(aName);
+      return NS_OK;
+    }
+  }
+  aNameSpaceID = kNameSpaceID_None;
+  aName = nsnull;
+  return NS_ERROR_ILLEGAL_VALUE;
 
 #if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     // XXX I'm not sure if we should support attributes or not...
@@ -1041,18 +1052,20 @@ done:
     NS_IF_RELEASE(db);
     nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
 
-#endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     return rv;
+#endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
 }
 
 NS_IMETHODIMP
 nsRDFElement::GetAttributeCount(PRInt32& aResult) const
 {
     nsresult rv = NS_OK;
-    aResult = 0;
-
-    if (mAttributes)
-        aResult += mAttributes->Count();
+    if (nsnull != mAttributes) {
+      aResult = mAttributes->Count();
+    }
+    else {
+      aResult = 0;
+    }
 
 #if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     PR_ASSERT(0);     // XXX need to write this...
@@ -1086,22 +1099,21 @@ nsRDFElement::List(FILE* out, PRInt32 aIndent) const
     }
 
     {
-        nsISupportsArray* attrs;
         PRInt32 nattrs;
 
-        if (NS_FAILED(rv = NS_NewISupportsArray(&attrs)))
-            return rv;
-
-        if (NS_SUCCEEDED(rv = GetAllAttributeNames(attrs, nattrs))) {
+        if (NS_SUCCEEDED(rv = GetAttributeCount(nattrs))) {
             for (PRInt32 i = 0; i < nattrs; ++i) {
-                nsIAtom* attr = (nsIAtom*) attrs->ElementAt(i);
+                nsIAtom* attr = nsnull;
+                PRInt32 nameSpaceID;
+                GetAttributeNameAt(i, nameSpaceID, attr);
+
+
+                nsAutoString v;
+                GetAttribute(nameSpaceID, attr, v);
 
                 nsAutoString s;
                 attr->ToString(s);
                 NS_RELEASE(attr);
-
-                nsAutoString v;
-                GetAttribute(s, v);
 
                 fputs(" ", out);
                 fputs(s, out);
@@ -1109,8 +1121,6 @@ nsRDFElement::List(FILE* out, PRInt32 aIndent) const
                 fputs(v, out);
             }
         }
-
-        NS_RELEASE(attrs);
 
         if (NS_FAILED(rv))
             return rv;
