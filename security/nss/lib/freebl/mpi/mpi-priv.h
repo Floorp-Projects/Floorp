@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.6 2000/08/02 20:47:05 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.7 2000/08/08 03:20:34 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -167,7 +167,10 @@ mp_err   s_mp_pad(mp_int *mp, mp_size min);    /* left pad with zeroes    */
  void     s_mp_clamp(mp_int *mp);               /* clip leading zeroes     */
 #else
  #define  s_mp_clamp(mp)\
-     { while(USED(mp) > 1 && DIGIT((mp), USED(mp) - 1) == 0) USED(mp) -= 1; }
+  { mp_size used = MP_USED(mp); \
+    while (used > 1 && DIGIT(mp, used - 1) == 0) --used; \
+    MP_USED(mp) = used; \
+  } 
 #endif /* MP_MACRO */
 
 void     s_mp_exch(mp_int *a, mp_int *b);      /* swap a and b in place   */
@@ -194,8 +197,6 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset);
                                                /* a += b * RADIX^offset   */
 mp_err   s_mp_sub(mp_int *a, const mp_int *b); /* magnitude subtract      */
 mp_err   s_mp_mul(mp_int *a, const mp_int *b); /* magnitude multiply      */
-mp_err   s_mp_mul_d_add_offset(mp_int *a, mp_digit b, mp_int *c, mp_size off);
-                                      /* c += a * b * (MP_RADIX ** offset);  */
 #if MP_SQUARE
 mp_err   s_mp_sqr(mp_int *a);                  /* magnitude square        */
 #else
@@ -212,6 +213,12 @@ int      s_mp_ispow2d(mp_digit d);             /* is d a power of 2?      */
 int      s_mp_tovalue(char ch, int r);          /* convert ch to value    */
 char     s_mp_todigit(mp_digit val, int r, int low); /* convert val to digit */
 int      s_mp_outlen(int bits, int r);          /* output length in bytes */
+mp_digit s_mp_invmod_32b(mp_digit P);   /* returns (P ** -1) mod (2 ** 32) */
+void    s_mp_mul_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c);
+                                       /* c += a * b * (MP_RADIX ** offset);  */
+
+#define s_mp_mul_d_add_offset(a, b, c, off) \
+  (s_mp_mul_add(MP_DIGITS(a), MP_USED(a), b, MP_DIGITS(c) + off), MP_OKAY)
 
 /* }}} */
 #endif
