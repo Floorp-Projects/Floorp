@@ -1869,7 +1869,22 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     }
 #endif
 
-#ifdef XP_PC
+#if defined(XP_OS2)
+      switch (sysID) {
+        case eSystemFont_List:
+        case eSystemFont_Button:
+          aFont->mFont.name = defaultVariableFont->name;
+          break;
+        case eSystemFont_Field:
+          if (eCompatibility_NavQuirks == mode)
+             aFont->mFont.name.Assign(NS_LITERAL_STRING("monospace"));
+          else
+             aFont->mFont.name = defaultVariableFont->name;
+          break;
+    }
+#endif
+
+#ifdef XP_WIN
     //
     // As far as I can tell the system default fonts and sizes for
     // on MS-Windows for Buttons, Listboxes/Comboxes and Text Fields are 
