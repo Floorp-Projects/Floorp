@@ -105,6 +105,14 @@ nsSprocketLayout::GetFrameState(nsIBox* aBox, nsFrameState& aState)
    aState = frame->GetStateBits();
 }
 
+static PRUint8
+GetFrameDirection(nsIBox* aBox)
+{
+   nsIFrame* frame = nsnull;
+   aBox->GetFrame(&frame);
+   return frame->GetStyleVisibility()->mDirection;
+}
+
 static void
 HandleBoxPack(nsIBox* aBox, const nsFrameState& aFrameState, nscoord& aX, nscoord& aY, 
               const nsRect& aOriginalRect, const nsRect& aClientRect)
@@ -113,13 +121,38 @@ HandleBoxPack(nsIBox* aBox, const nsFrameState& aFrameState, nscoord& aX, nscoor
   // bigger for a horizontal box, and |y| will get bigger for a vertical box).  In the reverse
   // direction, the opposite is true.  We'll be laying out each child at a smaller |x| or
   // |y|.
-  if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL) {
-    aX = aClientRect.x; // The normal direction. |x| and |y| increase as we move through our children.
-    aY = aClientRect.y;
+  PRUint8 frameDirection = GetFrameDirection(aBox);
+
+  if (aFrameState & NS_STATE_IS_HORIZONTAL) {
+    if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL) {
+      // The normal direction. |x| increases as we move through our children.
+      aX = aClientRect.x;
+    }
+    else {
+      // The reverse direction. |x| decreases as we move through our children.
+      aX = aClientRect.x + aOriginalRect.width;
+    }
+    // |y| is always in the normal direction in horizontal boxes
+    aY = aClientRect.y;    
   }
   else {
-    aX = aClientRect.x + aOriginalRect.width;  // The reverse direction. |x| and |y| decrease as we
-    aY = aClientRect.y + aOriginalRect.height; // move through our children.
+    // take direction property into account for |x| in vertical boxes
+    if (frameDirection == NS_STYLE_DIRECTION_LTR) {
+      // The normal direction. |x| increases as we move through our children.
+      aX = aClientRect.x;
+    }
+    else {
+      // The reverse direction. |x| decreases as we move through our children.
+      aX = aClientRect.x + aOriginalRect.width;
+    }
+    if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL) {
+      // The normal direction. |y| increases as we move through our children.
+      aY = aClientRect.y;
+    }
+    else {
+      // The reverse direction. |y| decreases as we move through our children.
+      aY = aClientRect.y + aOriginalRect.height;
+    }
   }
 
   // Get our pack/alignment information.
@@ -955,17 +988,24 @@ nsSprocketLayout::ComputeChildsNextPosition(nsIBox* aBox,
     if (frameState & NS_STATE_AUTO_STRETCH)
       aCurX = aBoxRect.x;
     else {
+      PRUint8 frameDirection = GetFrameDirection(aBox);
       switch (halign) 
       {
          case nsBoxFrame::hAlign_Left:
+           if (frameDirection == NS_STYLE_DIRECTION_LTR)
              aCurX = aBoxRect.x;
-             break;
+           else
+             aCurX = aBoxRect.x + aBoxRect.width - aCurrentChildSize.width;
+           break;
          case nsBoxFrame::hAlign_Center:
              aCurX = aBoxRect.x + (aBoxRect.width/2 - aCurrentChildSize.width/2);
              break;
          case nsBoxFrame::hAlign_Right:
+           if (frameDirection == NS_STYLE_DIRECTION_LTR)
              aCurX = aBoxRect.x + aBoxRect.width - aCurrentChildSize.width;
-             break;
+           else
+             aCurX = aBoxRect.x;
+           break;
       }
     }
   }
