@@ -80,6 +80,7 @@ REQUIRES	= xpcom \
 		  cookie \
 		  layout \
 		  chrome \
+		  extensions \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
