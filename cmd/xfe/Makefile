@@ -601,7 +601,7 @@ else
 MOTIFLIB	= /usr/X11R6/lib/libXm.a
 endif
 
-OTHER_LIBS	= $(MOTIFLIB) $(XTOOLLIB) $(XMULIB) $(EXTENSIONLIB) $(XLIB) /usr/lib/libm.a -ldl
+OTHER_LIBS	= $(MOTIFLIB) $(XTOOLLIB) $(XMULIB) $(EXTENSIONLIB) $(XLIB) -lm -ldl
 
 #
 # This assumes there is a libXm.so on the system.  If there isn't, you'll
@@ -909,7 +909,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE)$(CPU_ARCH),Linux2.0x86)
 $(OBJDIR)/$(XFE_PROGNAME)-motif-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) -L/usr/X11R6/lib $(DYN_MOTIFLIB) -lXt -lSM -lICE $(XMULIB) $(EXTENSIONLIB) $(XLIB) /usr/lib/libm.a -ldl $(NSPR_LIB) $(DNS_LIB) -lc
+	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) -L/usr/X11R6/lib $(DYN_MOTIFLIB) -lXt -lSM -lICE $(XMULIB) $(EXTENSIONLIB) $(XLIB) -lm -ldl $(NSPR_LIB) $(DNS_LIB) -lc
 	@$(EXTRA_POST_LINK_CMD) $@
 endif
 
