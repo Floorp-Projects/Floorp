@@ -97,10 +97,6 @@ components/libgfx_mac.dylib
 components/gfx.xpt 
 libgkgfx.dylib 
 
-; gfx2
-components/libgfx2.dylib
-components/gfx2.xpt
-
 ; jar
 components/libjar50.dylib
 components/jar.xpt

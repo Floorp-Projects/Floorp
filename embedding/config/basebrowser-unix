@@ -48,8 +48,6 @@ libgtkembedmoz.so
 components/libtimer_gtk.so
 components/libgfx_gtk.so                     
 components/gfx.xpt 
-components/libgfx2.so
-components/gfx2.xpt
 components/libwidget_gtk.so
 components/widget.xpt
 
