@@ -1055,7 +1055,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
       docViewer->GetDocument(*getter_AddRefs(doc));
 
       // Get the URL for the document
-      nsCOMPtr<nsIURI>  docURL = nsDontAddRef<nsIURI>(doc->GetDocumentURL());
+      nsCOMPtr<nsIURI>  docURL = getter_AddRefs(doc->GetDocumentURL());
 
       if (aUri && docURL && EqualBaseURLs(docURL, aUri))
          {
