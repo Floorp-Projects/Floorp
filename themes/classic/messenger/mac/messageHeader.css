@@ -40,7 +40,6 @@ mail-emailaddress {
   display: -moz-inline-box;
 }
 
-.buttonTopSpacer     { height: .3em; }
 .buttonSpacer        { width: .5em; }
 .headerBox              { overflow: hidden; min-width:50px;}
 .headerValueBox { width: 7.7em; -moz-box-pack: end;}
@@ -89,28 +88,16 @@ mail-emailaddress {
   list-style-image      : url("chrome://global/skin/twisty-open.gif");
 }
 
-html.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
-html.subjectvalue      {font-weight: bold;}
+label.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
+.subjectvalue      {font-weight: bold;}
 
-text.subjectvalue
- {
-  font-weight: bold;
- }
-
-text.headerdisplayname 
+.headerdisplayname 
   { 
     font-weight           : bold; 
     margin-right          : 0.5em; 
     margin-left           : 0.5em; 
     min-height: 16px;
   }
-
-text.headerValue 
-  { 
-    white-space           : normal; 
-    min-width             : 50px; 
-  }
-
    
 #msgHeaderView
   {

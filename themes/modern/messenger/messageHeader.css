@@ -77,22 +77,17 @@
   min-width: 50px;
 }
 
-html.headerValue {
+label.headerValue {
+  min-width: 50px;
   margin: 0px;
-  min-width: 50px;
   white-space: normal;
 }
 
-text.headerValue {
-  min-width: 50px;
-  white-space: normal;
-}
-
-html.subjectvalue {
+.subjectvalue {
   font-weight: bold;
 }
 
-text.headerdisplayname {
+.headerdisplayname {
   margin-right: .5em;
   margin-left: .5em;
   min-height: 18px;
@@ -176,10 +171,6 @@ text.collapsedHeaderDisplayName {
 }
 
 /* ::::: miscellaneous ::::: */
-
-.buttonTopSpacer {
-  height: .3em;
-}
 
 .buttonSpacer {
   width: .5em;

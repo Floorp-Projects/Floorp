@@ -41,11 +41,6 @@ mail-emailaddress
     display               : -moz-inline-box;
   }
 
-.buttonTopSpacer     
-  { 
-    height                : 0.3em; 
-  }
-
 .buttonSpacer        
   { 
     width                 : 0.5em; 
@@ -111,35 +106,24 @@ mail-emailaddress
   list-style-image      : url("chrome://global/skin/twisty-open.gif");
 }
 
-html.headerValue   
+label.headerValue   
   { 
     white-space           : normal;
     min-width             : 50px; 
     margin                : 0px;
   }
 
-html.subjectvalue  
+.subjectvalue  
   { 
     font-weight           : bold; 
   }
 
-text.subjectvalue
- {
-  font-weight: bold;
- }
-
-text.headerdisplayname 
+.headerdisplayname 
   { 
     font-weight           : bold; 
     margin-right          : 0.5em; 
     margin-left           : 0.5em; 
     min-height: 16px;
-  }
-
-text.headerValue 
-  { 
-    white-space           : normal; 
-    min-width             : 50px; 
   }
   
 #msgHeaderView
