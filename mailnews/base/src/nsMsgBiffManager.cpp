@@ -69,7 +69,9 @@ nsMsgBiffManager::nsMsgBiffManager()
 
 nsMsgBiffManager::~nsMsgBiffManager()
 {
-	mBiffTimer->Cancel();
+	if (mBiffTimer) {
+		mBiffTimer->Cancel();
+	}
 	NS_IF_RELEASE(mBiffTimer);
 
 	PRInt32 count = mBiffArray->Count();
