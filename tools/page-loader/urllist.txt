@@ -40,7 +40,7 @@
 #
 #
 
-HTTPBASE: http://somehost.somedomain.sometld/content/base/ 	
+HTTPBASE: http://somehost.somedomain.sometld/content/base/
 FILEBASE: /var/www/html/content/base/
 
 home.netscape.com       index.html                               # optionally specify a filename
