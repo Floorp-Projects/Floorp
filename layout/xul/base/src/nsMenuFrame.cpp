@@ -151,7 +151,7 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
   mMenuParent = menuparent.get();
 
   // Do the type="checkbox" magic
-  UpdateMenuType();
+  UpdateMenuType(aPresContext);
 
   nsAutoString accelString;
   BuildAcceleratorText(accelString);
