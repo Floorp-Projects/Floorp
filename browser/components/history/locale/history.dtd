@@ -1,53 +1,5 @@
-<!-- extracted from ./history.xul -->
-
-<!ENTITY menuBar.tooltip            "Menu Bar">
-<!ENTITY fileMenu.label             "File">
-<!ENTITY closeCmd.label             "Close">
-<!ENTITY editMenu.label             "Edit"> 
-<!ENTITY undoCmd.label              "Undo">
-<!ENTITY redoCmd.label              "Redo">
-<!ENTITY cutCmd.label               "Cut">
-<!ENTITY copyCmd.label              "Copy">
-<!ENTITY pasteCmd.label             "Paste">
-<!ENTITY deleteCmd.label            "Delete">
-<!ENTITY deleteHostnameCmd.accesskey "l">
-<!ENTITY deleteDomainCmd.accesskey "o">
-<!ENTITY selAllCmd.label            "Select All">
-<!ENTITY findHisCmd.label           "Search History...">
-<!ENTITY findHisCmd.commandkey      "f">
-<!ENTITY findHisCmd.accesskey       "S">
-<!ENTITY groupBy.label              "Group By">
-<!ENTITY groupBy.accesskey          "G">
-<!ENTITY groupByDay.label           "Day">
-<!ENTITY groupByDay.accesskey       "D">
-<!ENTITY groupByNone.label          "None">
-<!ENTITY groupByNone.accesskey      "N">
-<!ENTITY historyWindowTitle.label   "History">
-<!ENTITY menuitem.view.unsorted.label "Unsorted">
-<!ENTITY menuitem.view.unsorted.accesskey "u">
-<!ENTITY menuitem.view.ascending.label "A > Z Sort Order">
-<!ENTITY menuitem.view.ascending.accesskey "a">
-<!ENTITY menuitem.view.descending.label "Z > A Sort Order">
-<!ENTITY menuitem.view.descending.accesskey "z">
-<!ENTITY menuitem.view.show_columns.label "Show columns">
-<!ENTITY menuitem.view.show_columns.accesskey "S">
 <!ENTITY find.label                "Find:">
 <!ENTITY find.accesskey            "n">
-<!ENTITY releaseCmd.label          "Release Notes">
-<!ENTITY tree.header.name.label              "Title">
-<!ENTITY tree.header.name.akey               "T">
-<!ENTITY tree.header.url.label               "Location">
-<!ENTITY tree.header.url.akey                "L">
-<!ENTITY tree.header.date.label              "Last Visited">
-<!ENTITY tree.header.date.akey               "a">
-<!ENTITY tree.header.firstvisitdate.label    "First Visited">
-<!ENTITY tree.header.firstvisitdate.akey     "F">
-<!ENTITY tree.header.referrer.label          "Referrer">
-<!ENTITY tree.header.referrer.akey           "R">
-<!ENTITY tree.header.hostname.label          "Hostname">
-<!ENTITY tree.header.hostname.akey           "H">
-<!ENTITY tree.header.visitcount.label        "Visit Count">
-<!ENTITY tree.header.visitcount.akey         "V">
 <!ENTITY collapseExpand.accesskey            "e">
 <!ENTITY byDate.label "By Date">
 <!ENTITY byDate.accesskey "D">
@@ -62,3 +14,5 @@
 <!ENTITY byDayAndSite.accesskey "t">
 <!ENTITY openInNewWindow.label "Open in New Window">
 <!ENTITY openInNewWindow.accesskey "W">
+<!ENTITY openInNewTab.label "Open in New Tab">
+<!ENTITY openInNewTab.accesskey "T">
