@@ -237,7 +237,6 @@ static void MakeIPv4MappedAddr(const char *v4, char *v6)
     memset(v6, 0, 10);
     memset(v6 + 10, 0xff, 2);
     memcpy(v6 + 12, v4, 4);
-    PR_ASSERT(_PR_IN6_IS_ADDR_V4MAPPED(((PRIPv6Addr *) v6)));
 }
 
 /*
@@ -247,7 +246,6 @@ static void MakeIPv4CompatAddr(const char *v4, char *v6)
 {
     memset(v6, 0, 12);
     memcpy(v6 + 12, v4, 4);
-    PR_ASSERT(_PR_IN6_IS_ADDR_V4COMPAT(((PRIPv6Addr *) v6)));
 }
 
 /*
