@@ -24,7 +24,7 @@
 #include "htrdf.h"
 
 class LStream;
-class CRDFCoordinator;
+class CWindowRDFCoordinator;
 
 
 class CNavCenterWindow : public CNetscapeWindow, CSaveWindowStatus
@@ -36,7 +36,8 @@ class CNavCenterWindow : public CNetscapeWindow, CSaveWindowStatus
 		virtual ~CNavCenterWindow ( ) ;
 		
 		// make the given pane the one that is in front
-		virtual void BringPaneToFront ( HT_ViewType inPane ) ;
+		virtual void BuildHTPane ( HT_Resource inPane ) ;
+		virtual void BuildHTPane ( RDF_Resource inPane ) ;
 
 		virtual	CNSContext*	GetWindowContext() const { return nil; };
 		
@@ -52,6 +53,6 @@ class CNavCenterWindow : public CNetscapeWindow, CSaveWindowStatus
 		
 		void DoDefaultPrefs() ;
 		
-		CRDFCoordinator* mTree;
+		CWindowRDFCoordinator* mTree;
 
 }; // CNavCenterWindow

@@ -55,7 +55,7 @@ CNavCenterWindow :: FinishCreateSelf()
 	// use saved positioning information
 	FinishCreateWindow();
 	
-	mTree = dynamic_cast<CRDFCoordinator*>(FindPaneByID(CWindowRDFCoordinator::pane_ID));
+	mTree = dynamic_cast<CWindowRDFCoordinator*>(FindPaneByID(CWindowRDFCoordinator::pane_ID));
 	Assert_(mTree);
 	mTree->RegisterNavCenter(NULL);
 
@@ -70,12 +70,22 @@ CNavCenterWindow :: FinishCreateSelf()
 // make the given pane the one that is in front
 //
 void
-CNavCenterWindow :: BringPaneToFront ( HT_ViewType inPane ) 
+CNavCenterWindow :: BuildHTPane ( HT_Resource inTopNode ) 
 {
-	mTree->SelectView ( inPane );
+	mTree->BuildHTPane ( inTopNode );
+//	mTree->SelectView ( inPane );
 		
 } // BringPaneToFront
 		
+
+void
+CNavCenterWindow :: BuildHTPane ( RDF_Resource inTopNode ) 
+{
+	mTree->BuildHTPane ( inTopNode );
+//	mTree->SelectView ( inPane );
+		
+} // BringPaneToFront
+
 
 //
 // DoClose
