@@ -189,6 +189,7 @@ function calendarInit()
    // loop through the calendars via the rootSequence of the RDF datasource
    var seq = gCalendarWindow.calendarManager.rdf.getRootSeq("urn:calendarcontainer");
    var list = seq.getSubNodes();
+   var calListItems = document.getElementById( "list-calendars-listbox" ).getElementsByTagName("listitem");
 
    for(i=0; i<list.length;i++)
    {
@@ -203,7 +204,10 @@ function calendarInit()
 
 	 // if the calendar had a color attribute create a style sheet for it
      if (calendarColor != null)
+     {
        gCalendarStyleSheet.insertRule("." + containerName + " { background-color:" + calendarColor + "!important;}", 1);
+       calListItems[i+1].childNodes[0].setAttribute("class", "calendar-list-item-class " + containerName);
+     }
 
    }
    // CofC Calendar Coloring Change

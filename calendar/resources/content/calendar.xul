@@ -506,7 +506,6 @@
                               <listcell class="calendar-list-item-class"
                                  label="rdf:http://home.netscape.com/NC-rdf#name"
                                  flex="1"
-                                 style="background-color: rdf:http://home.netscape.com/NC-rdf#color"
                                  type="checkbox"
                                  checked="rdf:http://home.netscape.com/NC-rdf#active"
                                  />
