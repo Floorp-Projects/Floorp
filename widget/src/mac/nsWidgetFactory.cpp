@@ -57,6 +57,7 @@
 #define MACSTATIC
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
+static NS_DEFINE_IID(kCPopUp,         NS_POPUP_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
@@ -182,6 +183,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
 
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kCWindow)) {
+        inst = (nsISupports*)new nsMacWindow();
+    }
+    else if (mClassID.Equals(kCPopUp)) {
         inst = (nsISupports*)new nsMacWindow();
     }
     else if (mClassID.Equals(kCChild)) {
