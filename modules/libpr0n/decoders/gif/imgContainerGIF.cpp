@@ -186,27 +186,15 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
       BuildCompositeMask(mCompositingFrame, firstFrame);
     }
   }
-  // If this is our second frame, init a timer so we don't display
-  // the next frame until the delay timer has expired for the current
-  // frame.
 
-  if (!mTimer && (numFrames >= 1)) {
-      PRInt32 timeout;
-      nsCOMPtr<gfxIImageFrame> currentFrame;
-      inlinedGetFrameAt(mCurrentDecodingFrameIndex, getter_AddRefs(currentFrame));
-      currentFrame->GetTimeout(&timeout);
-      if (timeout > 0) { // -1 means display this frame forever
-
-        if (mAnimating) {
-          // Since we have more than one frame we need a timer
-          mTimer = do_CreateInstance("@mozilla.org/timer;1");
-          mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
-                                   timeout, nsITimer::TYPE_REPEATING_SLACK);
-        }
-      }
+  if (numFrames > 0) {
+    // If this is our second frame, init a timer so we don't display
+    // the next frame until the delay timer has expired for the current
+    // frame.
+    if (!mAnimating)
+      StartAnimation();
+    mCurrentDecodingFrameIndex++;
   }
-
-  if (numFrames > 0) mCurrentDecodingFrameIndex++;
 
   mCurrentFrameIsFinishedDecoding = PR_FALSE;
 
@@ -234,7 +222,6 @@ NS_IMETHODIMP imgContainerGIF::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTime
 
   currentFrame->SetTimeout(aTimeout);
 
-  StartAnimation();
   return NS_OK;
 }
 
@@ -299,40 +286,33 @@ NS_IMETHODIMP imgContainerGIF::SetAnimationMode(PRUint16 aAnimationMode)
 /* void startAnimation () */
 NS_IMETHODIMP imgContainerGIF::StartAnimation()
 {
-  if (mAnimationMode == kDontAnimMode)      // don't animate
-  {
-    mAnimating = PR_FALSE;
+  if (mAnimationMode == kDontAnimMode)
     return NS_OK;
-  }
 
-  mAnimating = PR_TRUE;
-
-  if (mTimer)
+  if (mAnimating || mTimer)
     return NS_OK;
 
   PRUint32 numFrames = inlinedGetNumFrames();
-
   if (numFrames > 1) {
     PRInt32 timeout;
     nsCOMPtr<gfxIImageFrame> currentFrame;
+
     inlinedGetCurrentFrame(getter_AddRefs(currentFrame));
-    if (currentFrame) {
+    if (currentFrame)
       currentFrame->GetTimeout(&timeout);
-      if (timeout > 0) { // -1 means display this frame forever
+    else
+      timeout = 100; // XXX hack.. the timer notify code will do the right thing,
+                     // so just get that started
 
-        mAnimating = PR_TRUE;
-        if (!mTimer) mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (timeout > 0) { // -1 means display this frame forever
+      mTimer = do_CreateInstance("@mozilla.org/timer;1");
+      if (!mTimer)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-        mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
-                                 timeout, nsITimer::TYPE_REPEATING_SLACK);
-      }
-    } else {
-      // XXX hack.. the timer notify code will do the right thing, so just get that started
+      // The only way mAnimating becomes true is if the mTimer is created
       mAnimating = PR_TRUE;
-      if (!mTimer) mTimer = do_CreateInstance("@mozilla.org/timer;1");
-
       mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
-                               100, nsITimer::TYPE_REPEATING_SLACK);
+                               timeout, nsITimer::TYPE_REPEATING_SLACK);
     }
   }
 
