@@ -813,21 +813,7 @@ nsHTTPChannel::OpenCacheEntry()
     else
         accessRequested = nsICache::ACCESS_READ_WRITE; // normal browsing
 
-    //
-    // Open a cache entry with key = "http-method url"
-    //
-    
-    nsAutoString method;
-    mRequest->Method()->ToString(method);
-    char *methodStr = method.ToNewCString();
-
-    nsCAutoString key;
-    key += methodStr;
-    key += NS_LITERAL_CSTRING(" ");
-    key += mRequest->Spec();
-
-    nsMemory::Free(methodStr);
-
+    // Open a cache entry with key = url
     return session->AsyncOpenCacheEntry(mRequest->Spec(),
                                         accessRequested,
                                         this);
