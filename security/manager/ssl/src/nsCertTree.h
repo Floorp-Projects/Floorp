@@ -75,6 +75,7 @@ private:
   nsIX509Cert *GetCertAtIndex(PRInt32 _index);
 
   void FreeCertArray();
+  nsresult UpdateUIContents();
 
 #ifdef DEBUG_CERT_TREE
   /* for debugging purposes */

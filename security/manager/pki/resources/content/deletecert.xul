@@ -53,7 +53,7 @@
       <button id="ok-button" label="&certmgr.ok.label;"
               oncommand="doOK();"/> 
       <button id="cancel-button" label="&certmgr.cancel.label;"
-              oncommand="window.close();"/> 
+              oncommand="doCancel();"/> 
       <button id="help-button" label="&certmgr.help.label;"
               oncommand="doHelp();"/> 
     </hbox>
