@@ -575,7 +575,7 @@ nsXPBaseWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupConten
                          PRInt32 aXPos, PRInt32 aYPos, 
                          const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow)
+                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
 {
   return NS_OK;
 }

@@ -165,7 +165,7 @@ public:
   NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
                             PRInt32 aXPos, PRInt32 aYPos, 
                             const nsString& aPopupType, const nsString& anAnchorAlignment,
-                            const nsString& aPopupAlignment);
+                            const nsString& aPopupAlignment, nsIDOMWindow** outPopup);
   
   // nsIDOMEventCapturer interface
   NS_IMETHOD    CaptureEvent(const nsString& aType);
