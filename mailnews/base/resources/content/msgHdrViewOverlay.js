@@ -348,7 +348,6 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
     {
       optionalToggleButton.removeAttribute('hideNonBox');
     }
-    FinishEmailProcessing();
   } // if msgheader parser
 }
 
@@ -406,6 +405,7 @@ function UpdateMessageHeaders()
   OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData.CcValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
   hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData.NewsgroupsValue); 
   hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData.UserAgentValue);
+  FinishEmailProcessing();
 }
 
 function ClearCurrentHeaders()
