@@ -1884,8 +1884,12 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
 // static
 already_AddRefed<nsIImage>
 nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
-                                    PRBool aDoMimeCheck)
+                                    imgIRequest **aRequest)
 {
+  if (aRequest) {
+    *aRequest = nsnull;
+  }
+
   NS_ENSURE_TRUE(aContent, nsnull);
   
   nsCOMPtr<imgIRequest> imgRequest;
@@ -1895,33 +1899,6 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
     return nsnull;
   }
   
-  if (aDoMimeCheck) {
-    nsCOMPtr<nsIMIMEService> mimeService =
-      do_GetService("@mozilla.org/mime;1");
-
-    imgILoader *imgLoader = nsContentUtils::GetImgLoader();
-
-    if (mimeService) {
-      nsCAutoString mimeType;
-      nsCOMPtr<nsIURI> uri;
-
-      imgRequest->GetURI(getter_AddRefs(uri));
-      mimeService->GetTypeFromURI(uri, mimeType);
-
-      PRBool supportedType;
-      if (NS_FAILED(imgLoader->SupportImageWithMimeType(mimeType.get(),
-                                                        &supportedType)) ||
-          !supportedType) {
-        // The extension of the image we're about to drag doesn't
-        // match an extension that we recognize as an image. Disallow
-        // dragging this image as an image to prevent dropping images
-        // with extensions that the OS won't recognize as images.
-
-        return nsnull;
-      }
-    }
-  }
-
   nsCOMPtr<imgIContainer> imgContainer;
   imgRequest->GetImage(getter_AddRefs(imgContainer));
 
@@ -1940,6 +1917,10 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
 
   if (!ir) {
     return nsnull;
+  }
+
+  if (aRequest) {
+    imgRequest.swap(*aRequest);
   }
 
   nsIImage* image = nsnull;
