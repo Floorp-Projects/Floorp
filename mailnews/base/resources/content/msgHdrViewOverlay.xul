@@ -87,28 +87,28 @@ Rights Reserved.
 				<box id="ToBox" class="headerBox" align="horizontal" hide="true">
             
             <text class="headerdisplayname" value="&toField.label;"/>
-            <html:div  class="headervalue" id="ToValueShort" flex="1">
+            <box class="headervalue" id="ToValueShort" flex="1">
             <titledbutton class="showMoreAddressesButton" id="ToValueToggleIcon" 
                 onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
-            </html:div>
+            </box>
 
-            <html:div class="headervalue" id="ToValueLong" hide="true" flex="1">
+            <box class="headervalue" id="ToValueLong" hide="true" flex="1">
             <titledbutton class="showFewerAddressesButton"  
                onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
-            </html:div>
+            </box>
 				</box>
 
 			    <box id="CcBox" class="headerBox" align="horizontal" hide="true">
             <text class="headerdisplayname" value="&ccField.label;"/>
-              <html:div class="headervalue" id="CcValueShort" flex="1">
+              <box class="headervalue" id="CcValueShort" flex="1">
               <titledbutton class="showMoreAddressesButton" id="CcValueToggleIcon" 
                 onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-              </html:div>
+              </box>
 
-              <html:div class="headervalue" id="CcValueLong" hide="true" flex="1">
+              <box class="headervalue" id="CcValueLong" hide="true" flex="1">
               <titledbutton class="showFewerAddressesButton"  
                 onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-              </html:div>
+              </box>
 				  </box>
 
         	<box id="NewsgroupBox" class="headerBox" align="horizontal" hide="true">

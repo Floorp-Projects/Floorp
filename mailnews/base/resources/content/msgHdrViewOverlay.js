@@ -381,7 +381,11 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       {
         var child = parentDiv.childNodes[parentDiv.childNodes.length - 1]; 
         if (parentDiv.childNodes.length > 1)
-          parentDiv.insertBefore(document.createTextNode(", "), child);       
+        {
+          var textNode = document.createElement("text");
+          textNode.setAttribute("value", ", ");
+          parentDiv.insertBefore(textNode, child);       
+        }
         parentDiv.insertBefore(item, child);
       }
       else
