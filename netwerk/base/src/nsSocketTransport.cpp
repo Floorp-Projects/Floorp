@@ -1257,8 +1257,8 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
   //
   // The write operation has completed...
   //
-  if ((NS_SUCCEEDED(rv) && (0 == totalBytesWritten)) ||         // eof, or
-      (GetFlag(eSocketWrite_Async) && (0 == mWriteCount))) {    // wrote everything
+  if (NS_SUCCEEDED(rv) && (0 == totalBytesWritten ||         // eof, or
+      GetFlag(eSocketWrite_Async) && 0 == mWriteCount) ) {    // wrote everything
     mSelectFlags &= (~PR_POLL_WRITE);
     rv = NS_OK;
   }
