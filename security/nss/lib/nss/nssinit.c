@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.15 2001/02/09 01:34:12 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.16 2001/02/10 02:02:57 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -301,13 +301,33 @@ NSS_InitReadWrite(const char *configdir)
 		PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
+/*
+ * OK there are now lots of options here, lets go through them all:
+ *
+ * configdir - base directory where all the cert, key, and module datbases live.
+ * certPrefix - prefix added to the beginning of the cert database example: "
+ * 			"https-server1-"
+ * keyPrefix - prefix added to the beginning of the key database example: "
+ * 			"https-server1-"
+ * secmodName - name of the security module database (usually "secmod.db").
+ * flags - change the open options of NSS_Initialize as follows:
+ * 	NSS_INIT_READONLY - Open the databases read only.
+ * 	NSS_INIT_NOCERTDB - Don't open the cert DB and key DB's, just 
+ * 			initialize the volatile certdb.
+ * 	NSS_INIT_NOMODDB  - Don't open the security module DB, just 
+ *			initialize the 	PKCS #11 module.
+ *      NSS_INIT_FORCEOPEN - Continue to force initializations even if the 
+ * 			databases cannot be opened.
+ */
 SECStatus
 NSS_Initialize(const char *configdir, const char *certPrefix, 
-	const char *keyPrefix, const char *secmodName, 
-	PRBool readOnly, PRBool noCertDB, PRBool noModDB, PRBool forceOpen)
+	const char *keyPrefix, const char *secmodName, PRUint32 flags)
 {
     return nss_Init(configdir, certPrefix, keyPrefix, secmodName, 
-		readOnly, noCertDB, noModDB, forceOpen);
+	((flags & NSS_INIT_READONLY) == NSS_INIT_READONLY),
+	((flags & NSS_INIT_NOCERTDB) == NSS_INIT_NOCERTDB),
+	((flags & NSS_INIT_NOMODDB) == NSS_INIT_NOMODDB),
+	((flags & NSS_INIT_FORCEOPEN) == NSS_INIT_FORCEOPEN));
 }
 
 /*
