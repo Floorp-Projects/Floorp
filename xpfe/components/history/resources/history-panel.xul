@@ -31,6 +31,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="HistoryInit();">
 
+  <popupset id="historyContextMenu"/>
   <!-- use deep merging to hide certain columns by default -->
   <outliner id="historyOutliner">
     <outlinercol id="Name"/>
