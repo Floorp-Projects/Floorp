@@ -43,10 +43,6 @@
 #include <signal.h>
 #endif
 
-/* --- Declare these to avoid "implicit" warnings --- */
-PR_EXTERN(void) _PR_MD_NEW_SEM(_MDSemaphore *md, PRUintn value);
-PR_EXTERN(void) _PR_MD_DESTROY_SEM(_MDSemaphore *md);
-
 /* --- globals ------------------------------------------------ */
 _NSPR_TLS*        pThreadLocalStorage = 0;
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
@@ -96,6 +92,7 @@ _pr_SetThreadMDHandle(PRThread *thread)
 PRStatus
 _PR_MD_INIT_THREAD(PRThread *thread)
 {
+   APIRET rv;
 #ifdef XP_OS2_EMX
    /* disable SIGPIPE */
    struct sigaction sa;
@@ -110,8 +107,8 @@ _PR_MD_INIT_THREAD(PRThread *thread)
    }
 
    /* Create the blocking IO semaphore */
-   _PR_MD_NEW_SEM(&thread->md.blocked_sema, 1);
-   return (thread->md.blocked_sema.sem != 0) ? PR_SUCCESS : PR_FAILURE;
+   rv = DosCreateEventSem(NULL, &(thread->md.blocked_sema), 0, 0);
+   return (rv == NO_ERROR) ? PR_SUCCESS : PR_FAILURE;
 }
 
 PRStatus
@@ -178,40 +175,23 @@ _PR_MD_SET_PRIORITY(_MDThread *thread, PRThreadPriority newPri)
 void
 _PR_MD_CLEAN_THREAD(PRThread *thread)
 {
-	if (&thread->md.blocked_sema) {
-	  _PR_MD_DESTROY_SEM(&thread->md.blocked_sema);
-	}
-	
-	if (thread->md.handle) {
-	  DosKillThread(thread->md.handle);
-	  thread->md.handle = 0;
-	}
+    APIRET rv;
+
+    if (thread->md.blocked_sema) {
+        rv = DosCloseEventSem(thread->md.blocked_sema);
+        PR_ASSERT(rv == NO_ERROR);
+        thread->md.blocked_sema = 0;
+    }
+
+    if (thread->md.handle) {
+        thread->md.handle = 0;
+    }
 }
 
 void
 _PR_MD_EXIT_THREAD(PRThread *thread)
 {
-    _PR_MD_DESTROY_SEM(&thread->md.blocked_sema);
-
-    if (thread->md.handle) {
-       /* DosKillThread will not kill a suspended thread, but it will mark it
-        * for death; we must resume it after killing it to make sure it knows
-        * it is about to die (pretty wicked, huh?).
-        *
-        * DosKillThread will not kill the current thread, instead we must use
-        * DosExit.
-        */
-       if ( thread != _MD_CURRENT_THREAD() ) {
-           DosKillThread( thread->md.handle );
-           DosResumeThread( thread->md.handle );
-       } else {
-#ifndef XP_OS2_EMX
-           _endthread();
-#endif
-       }
-       thread->md.handle = 0;
-    }
-
+    _PR_MD_CLEAN_THREAD(thread);
     _PR_MD_SET_CURRENT_THREAD(NULL);
 }
 
