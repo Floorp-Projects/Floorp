@@ -51,6 +51,7 @@
 
 static PRUnichar gt ('>');
 static PRUnichar space (' ');
+static PRUnichar nbsp (0xa0);
 static PRUnichar nl ('\n');
 static PRUnichar cr('\r');
 static PRUnichar hyphen ('-');
@@ -198,8 +199,17 @@ BreakLine(nsAString& aOutString, PRUint32& outStringCol,
           PRUint32 citeLevel)
 {
   aOutString.Append(nl);
-  AddCite(aOutString, citeLevel);
-  outStringCol = citeLevel + (citeLevel ? 1 : 0);
+  if (citeLevel > 0)
+  {
+    AddCite(aOutString, citeLevel);
+    outStringCol = citeLevel + 1;
+  }
+  else outStringCol = 0;
+}
+
+static inline PRBool IsSpace(PRUnichar c)
+{
+  return (nsCRT::IsAsciiSpace(c) || (c == nl) || (c == cr) || (c == nbsp));
 }
 
 NS_IMETHODIMP
@@ -276,12 +286,6 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
       continue;
     }
 
-#ifdef DEBUG_wrapping
-    printf("Outer loop after skipping over cite: '%s'\n",
-           NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
-                                                length-posInString)).get());
-#endif
-
     // If the cite level has changed, then start a new line with the
     // new cite level (but if we're at the beginning of the string,
     // don't bother).
@@ -301,13 +305,9 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
     // If it's not a cite, and we're not at the beginning of a line in
     // the output string, add a space to separate new text from the
     // previous text.
-    else if (outStringCol > 0)
+    else if (outStringCol > citeLevel)
     {
-#ifdef DEBUG_wrapping
-      printf("Appending space; citeLevel=%d, outStringCol=%d\n", citeLevel,
-             outStringCol);
-#endif
-      aOutString.Append(PRUnichar(space));
+      aOutString.Append(space);
       ++outStringCol;
     }
 
@@ -324,19 +324,11 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
     // and break it ourselves without resorting to the line breaker.
     if (citeLevel == 0)
     {
-#ifdef DEBUG_wrapping
-      printf("Unquoted: appending '%s'\n",
-             NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
-                                             nextNewline-posInString)).get());
-#endif
       aOutString.Append(Substring(tString, posInString,
                                   nextNewline-posInString));
       outStringCol += nextNewline - posInString;
       if (nextNewline != (PRInt32)length)
       {
-#ifdef DEBUG_wrapping
-        printf("unquoted: appending a newline\n");
-#endif
         aOutString.Append(nl);
         outStringCol = 0;
       }
@@ -375,11 +367,6 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
         while ((PRUint32)lastRealChar > posInString
                && nsCRT::IsAsciiSpace(tString[lastRealChar-1]))
           --lastRealChar;
-#ifdef DEBUG_wrapping
-        printf("Short line: '%s'\n",
-               NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
-                                          lastRealChar - posInString)).get());
-#endif
 
         aOutString += Substring(tString,
                                 posInString, lastRealChar - posInString);
@@ -389,7 +376,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
       }
 
       PRInt32 eol = posInString + aWrapCol - citeLevel - outStringCol;
-      // eol is the prospective end of line ...
+      // eol is the prospective end of line.
       // We'll first look backwards from there for a place to break.
       // If it's already less than our current position,
       // then our line is already too long, so break now.
@@ -406,11 +393,19 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
       {
         rv = lineBreaker->Prev(tString.get() + posInString,
                                length - posInString,
-                               eol - posInString, &breakPt, &needMore);
+                               eol + 1 - posInString, &breakPt, &needMore);
         if (NS_FAILED(rv) || needMore)
         {
           // if we couldn't find a breakpoint looking backwards,
-          // try looking forwards:
+          // and we're not starting a new line, then end this line
+          // and loop around again:
+          if (outStringCol > citeLevel + 1)
+          {
+            BreakLine(aOutString, outStringCol, citeLevel);
+            continue;    // continue inner loop, with outStringCol now at bol
+          }
+
+          // Else try looking forwards:
           rv = lineBreaker->Next(tString.get() + posInString,
                                  length - posInString,
                                  eol - posInString, &breakPt, &needMore);
@@ -439,11 +434,6 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
       const int SLOP = 6;
       if (outStringCol + breakPt > aWrapCol + SLOP)
       {
-#ifdef DEBUG_wrapping
-        printf("line would be too long, breaking early\n");
-        printf("outStringCol=%d, posInString=%d, breakPt=%d\n",
-               outStringCol, posInString, breakPt);
-#endif
         if (outStringCol <= citeLevel+1)
         {
           // Break hard, with a hyphen, and loop around again.
@@ -451,23 +441,23 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
                                   aWrapCol - outStringCol - 1);
           aOutString += hyphen;
           posInString += aWrapCol - outStringCol - 1;
-#ifdef DEBUG_wrapping
-          printf("Need to break hard!  Now posInString=%d\n", posInString);
-#endif
         }
         BreakLine(aOutString, outStringCol, citeLevel);
         continue;
       }
 
-#ifdef DEBUG_wrapping
-      printf("breakPt = %d\n", breakPt);
-#endif
-
-      aOutString += Substring(tString, posInString, breakPt);
-      // If we're letting it slop over, then we need to advance the
-      // pos by one more, to get past the character which caused the wrap:
-      posInString += breakPt + (outStringCol + breakPt > aWrapCol ? 1 : 0);
-      outStringCol += breakPt;
+      nsAutoString sub (Substring(tString, posInString, breakPt));
+      // skip newlines or whitespace at the end of the string
+      PRInt32 subend = sub.Length();
+      while (subend > 0 && IsSpace(sub[subend-1]))
+        --subend;
+      sub.Left(sub, subend);
+      aOutString += sub;
+      outStringCol += sub.Length();
+      // Advance past the whitespace which caused the wrap:
+      posInString += breakPt;
+      while (posInString < length && IsSpace(tString[posInString]))
+        ++posInString;
 
       // Add a newline and the quote level to the out string
       if (posInString < length)    // not for the last line, though
@@ -480,10 +470,6 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
 #endif
   } // end outer loop over lines of aInString
 
-#ifdef DEBUG_wrapping
-  printf("About to return: \n%s\n",
-         NS_LossyConvertUCS2toASCII(aOutString).get());
-#endif
   return NS_OK;
 }
 
