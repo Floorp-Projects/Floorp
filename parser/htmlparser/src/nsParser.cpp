@@ -1294,7 +1294,8 @@ nsresult nsParser::BuildModel() {
     nsIDTD* theRootDTD=theRootContext->mDTD;
     if(theRootDTD) {      
       MOZ_TIMER_START(mDTDTime);
-      result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);      
+      nsresult rv=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);  
+      result=(mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING)? mInternalState:rv; // Fix for 32527
       MOZ_TIMER_STOP(mDTDTime);
     }
   }
