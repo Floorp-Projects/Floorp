@@ -286,6 +286,7 @@ nsSpecialSystemDirectory::nsSpecialSystemDirectory(SystemDirectories aSystemSyst
 nsSpecialSystemDirectory::~nsSpecialSystemDirectory()
 //----------------------------------------------------------------------------------------
 {
+    // XXX [MLK] need to delete hash table and its contents
 }
 
 //----------------------------------------------------------------------------------------
@@ -671,6 +672,8 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
     }
 }
 
+// XXX what does this return value mean?! It isn't checked anywhere,
+// and a NULL return from the hashtable->Put() isn't an error.
 PRBool
 nsSpecialSystemDirectory::Set(SystemDirectories dirToSet, nsFileSpec *dirSpec)
 {
@@ -684,8 +687,8 @@ nsSpecialSystemDirectory::Set(SystemDirectories dirToSet, nsFileSpec *dirSpec)
     }
     PR_ASSERT(NULL != systemDirectoriesLocations);
     
-    if (NULL != systemDirectoriesLocations->Put(&dirKey, dirSpec))
-    {
+    nsFileSpec *newSpec = new nsFileSpec(*dirSpec);
+    if (newSpec && NULL != systemDirectoriesLocations->Put(&dirKey, newSpec)) {
         rc = PR_TRUE;
     }
     
