@@ -1756,11 +1756,13 @@ SI_LoadSignonData() {
     }
 
     /* store the info for this URL into memory-resident data structure */
-    si_PutData(passwordRealm, &signonData, PR_FALSE);
+    PRInt32 count = signonData.Count();
+    if (count) {
+      si_PutData(passwordRealm, &signonData, PR_FALSE);
+    }
 
     /* free up all the allocations done for processing this URL */
     Recycle(passwordRealm);
-    PRInt32 count = signonData.Count();
     for (PRInt32 i=count-1; i>=0; i--) {
       data = NS_STATIC_CAST(si_SignonDataStruct*, signonData.ElementAt(i));
       delete data;
