@@ -41,7 +41,6 @@ EXPORTS		= \
 		nsIButton.h \
 		nsICheckButton.h \
 		nsITextWidget.h \
-		nsIScrollbar.h \
 		nsGUIEvent.h \
 		nsEvent.h \
 		nsIMouseListener.h \

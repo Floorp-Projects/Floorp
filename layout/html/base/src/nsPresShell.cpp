@@ -6876,7 +6876,6 @@ PresShell::RemoveDummyLayoutRequest(void)
 #include "nsILinkHandler.h"
 
 static NS_DEFINE_CID(kViewManagerCID, NS_VIEW_MANAGER_CID);
-static NS_DEFINE_CID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
 static void

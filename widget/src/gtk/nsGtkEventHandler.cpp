@@ -41,7 +41,6 @@
 #include "nsWindow.h"
 #include "nsAppShell.h"
 
-#include "nsScrollbar.h"
 #include "nsGUIEvent.h"
 
 #include "nsTextWidget.h"
@@ -482,69 +481,6 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
   NS_RELEASE(widget);
 
   delete event.windowSize;
-}
-
-//==============================================================
-void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
-{
-  nsScrollbar *widget = (nsScrollbar*) p;
-  nsScrollbarEvent sevent;
-
-  sevent.message = NS_SCROLLBAR_POS;
-  sevent.widget  = (nsWidget *) p;
-  sevent.eventStructType = NS_SCROLLBAR_EVENT;
-
-  GdkWindow *win = (GdkWindow *)widget->GetNativeData(NS_NATIVE_WINDOW);
-  gdk_window_get_pointer(win, &sevent.point.x, &sevent.point.y, nsnull);
-
-  NS_ADDREF(widget);
-  widget->OnScroll(sevent, adj->value);
-  NS_RELEASE(widget);
-
-/* FIXME we need to set point.* from the event stuff. */
-#if 0
-  nsWindow * widgetWindow = (nsWindow *) p ;
-  XmScrollBarCallbackStruct * cbs = (XmScrollBarCallbackStruct*) call_data;
-  sevent.widget  = (nsWindow *) p;
-  if (cbs->event != nsnull) {
-    sevent.point.x = cbs->event->xbutton.x;
-    sevent.point.y = cbs->event->xbutton.y;
-  } else {
-    sevent.point.x = 0;
-    sevent.point.y = 0;
-  }
-  sevent.time    = 0; //XXX Implement this
-
-  switch (cbs->reason) {
-
-    case XmCR_INCREMENT:
-      sevent.message = NS_SCROLLBAR_LINE_NEXT;
-      break;
-
-    case XmCR_DECREMENT:
-      sevent.message = NS_SCROLLBAR_LINE_PREV;
-      break;
-
-    case XmCR_PAGE_INCREMENT:
-      sevent.message = NS_SCROLLBAR_PAGE_NEXT;
-      break;
-
-    case XmCR_PAGE_DECREMENT:
-      sevent.message = NS_SCROLLBAR_PAGE_PREV;
-      break;
-
-    case XmCR_DRAG:
-      sevent.message = NS_SCROLLBAR_POS;
-      break;
-
-    case XmCR_VALUE_CHANGED:
-      sevent.message = NS_SCROLLBAR_POS;
-      break;
-
-    default:
-      break;
-  }
-#endif
 }
 
 // GTK's text widget already does XIM, so we don't want to do this again

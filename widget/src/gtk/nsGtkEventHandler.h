@@ -50,8 +50,6 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event, gpointer 
 gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p);
 gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p);
 
-void handle_scrollbar_value_changed(GtkAdjustment *adjustment, gpointer p);
-
 //----------------------------------------------------
 
 void handle_xlib_shell_event(GdkSuperWin *superwin, XEvent *event, gpointer p);

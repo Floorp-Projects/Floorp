@@ -8,7 +8,6 @@ nsIKBStateControl.h
 nsIButton.h
 nsICheckButton.h
 nsITextWidget.h
-nsIScrollbar.h
 nsGUIEvent.h
 nsEvent.h
 nsIMouseListener.h
@@ -17,7 +16,6 @@ nsIMenuListener.h
 nsWidgetsCID.h
 nsILabel.h
 nsILookAndFeel.h
-nsWidgetSupport.h
 nsIMenu.h
 nsIMenuBar.h
 nsIMenuItem.h

@@ -49,7 +49,6 @@ CSRCS		= \
 
 CPPSRCS		= \
 		nsWindow.cpp \
-		nsScrollbar.cpp \
 		nsAppShell.cpp \
 		nsWidgetFactory.cpp \
 		nsToolkit.cpp \

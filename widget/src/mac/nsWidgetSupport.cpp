@@ -47,7 +47,6 @@
 #include "nsIToolkit.h"
 #include "nsIWidget.h"
 #include "nsICheckButton.h"
-#include "nsIScrollbar.h"
 #include "nsITextWidget.h"
 
 
@@ -161,33 +160,6 @@ NS_CreateTextWidget(nsISupports* aParent,
 }
 
 
-
-NS_WIDGET nsresult 
-NS_CreateScrollBar(nsISupports* aParent, 
-									nsIScrollbar* aWidget, 
-									const nsRect& aRect, 
-									EVENT_CALLBACK aHandleEventFunction)
-{
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
-
-  nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
-	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    NS_IF_RELEASE(widget);
-	}
-  else
-  {
-    NS_ERROR("Called QueryInterface on a non nsIWidget supported object");
-  }
-
-	if (aParent)
-	  NS_IF_RELEASE(parent);
-
-  return NS_OK;
-}
 
 extern NS_WIDGET nsresult 
 NS_ShowWidget(nsISupports* aWidget, PRBool aShow)

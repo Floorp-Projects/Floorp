@@ -483,7 +483,7 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
   nsIView * rootView = nsnull;
 
   // Create a view
-  static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
+  static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLL_PORT_VIEW_CID);
 
   status = nsComponentManager::CreateInstance(kScrollingViewCID, 
                                         nsnull, 

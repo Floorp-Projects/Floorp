@@ -61,7 +61,6 @@ CPPSRCS		= \
 		nsKeyboardUtils.cpp \
 		nsLabel.cpp \
 		nsLookAndFeel.cpp \
-		nsScrollbar.cpp \
 		nsSound.cpp \
 		nsTextHelper.cpp \
 		nsTextWidget.cpp \

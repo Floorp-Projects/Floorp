@@ -53,7 +53,6 @@ class nsIMouseListener;
 class nsIToolkit;
 class nsIWidget;
 class nsICheckButton;
-class nsIScrollbar;
 class nsITooltipWidget;
 class nsITextWidget;
 
@@ -95,13 +94,6 @@ NS_CreateTooltipWidget(nsISupports* aParent,
                       const nsRect& aRect, 
                       EVENT_CALLBACK aHandleEventFunction,
                       const nsFont* aFont = nsnull);
-
-
-extern nsresult 
-NS_CreateScrollBar(nsISupports* aParent,	
-                      nsIScrollbar* aWidget, 
-                      const nsRect& aRect, 
-                      EVENT_CALLBACK aHandleEventFunction);
 
 
 extern nsresult 

@@ -55,7 +55,6 @@ CPPSRCS		= \
 		nsFilePicker.cpp \
 		nsFrameWindow.cpp \
 		nsLookAndFeel.cpp \
-		nsScrollbar.cpp \
 		nsSound.cpp \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \

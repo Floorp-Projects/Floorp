@@ -50,7 +50,6 @@
 #include "nsTextWidget.h"
 #include "nsLabel.h"
 #include "nsFilePicker.h"
-#include "nsScrollbar.h"
 #include "nsNativeScrollbar.h"
 
 #if TARGET_CARBON
@@ -100,7 +99,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRadioButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsListBox)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextAreaWidget)
 #endif
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)	// used by Viewer?
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
@@ -141,14 +139,6 @@ static const nsModuleComponentInfo components[] =
 		NS_FILEPICKER_CID,
 		"@mozilla.org/filepicker;1",
 		nsFilePickerConstructor },
-	{	"Horiz Scrollbar",
-		NS_HORZSCROLLBAR_CID,
-		"@mozilla.org/widgets/horizscroll/mac;1",
-		nsScrollbarConstructor },
-	{	"Vert Scrollbar",
-		NS_VERTSCROLLBAR_CID,
-		"@mozilla.org/widgets/vertscroll/mac;1",
-		nsScrollbarConstructor },
 	{ 	"Text Field",
 		NS_TEXTFIELD_CID,
 		"@mozilla.org/widgets/textwidget/mac;1",

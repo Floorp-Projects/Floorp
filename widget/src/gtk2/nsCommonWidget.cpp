@@ -206,17 +206,6 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent,
     aEvent.time      = aGdkEvent->time;
 }
 
-void
-nsCommonWidget::InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg)
-{
-    memset(&aEvent, 0, sizeof(nsScrollbarEvent));
-    aEvent.eventStructType = NS_SCROLLBAR_EVENT;
-    aEvent.message = NS_SCROLLBAR_POS;
-    aEvent.widget  = NS_STATIC_CAST(nsIWidget *, this);
-    // XXX do we need to get the pointer position relative to the widget
-    // or not?
-}
-
 #ifdef ACCESSIBILITY
 
 void

@@ -42,7 +42,6 @@
 #include "nsIPresContext.h"
 #include "nsIWidget.h"
 #include "nsIButton.h"
-#include "nsIScrollbar.h"
 #include "nsGUIEvent.h"
 #include "nsIDeviceContext.h"
 #include "nsIComponentManager.h"

@@ -42,7 +42,6 @@
 #include "nsBaseWidget.h"
 #include "nsLookAndFeel.h"
 #include "nsWindow.h"
-#include "nsScrollbar.h"
 #include "nsGtkMozRemoteHelper.h"
 #include "nsTransferable.h"
 #include "nsClipboardHelper.h"
@@ -69,64 +68,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 
-static
-nsresult nsHorizScrollbarConstructor (nsISupports *aOuter,
-                                      REFNSIID     aIID,
-                                      void       **aResult)
-{
-    nsresult rv;
-    nsISupports *inst = nsnull;
-
-    if (!aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    *aResult = nsnull;
-
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    inst = (nsISupports *)(nsBaseWidget *)(nsCommonWidget *)
-        new nsScrollbar(PR_FALSE);
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(inst);
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-
-    return rv;
-}
-
-static
-nsresult nsVertScrollbarConstructor   (nsISupports *aOuter,
-                                       REFNSIID     aIID,
-                                       void       **aResult)
-{
-    nsresult rv;
-    nsISupports *inst = nsnull;
-
-    if (!aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    *aResult = nsnull;
-
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    inst = (nsISupports *)(nsBaseWidget *)(nsCommonWidget *)
-        new nsScrollbar(PR_TRUE);
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(inst);
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-
-    return rv;
-}
-
 static const nsModuleComponentInfo components[] =
 {
     { "Gtk2 Window",
@@ -145,14 +86,6 @@ static const nsModuleComponentInfo components[] =
       NS_LOOKANDFEEL_CID,
       "@mozilla.org/widget/lookandfeel/gtk;1",
       nsLookAndFeelConstructor },
-    { "Gtk2 Horiz Scrollbar",
-      NS_HORZSCROLLBAR_CID,
-      "@mozilla.org/widgets/hoizscroll/gtk;1",
-      nsHorizScrollbarConstructor },
-    { "Gtk2 Vert Scrollbar",
-      NS_VERTSCROLLBAR_CID,
-      "@mozilla.org/widgets/vertscroll/gtk;1",
-      nsVertScrollbarConstructor },
     { "Gtk2 Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",

@@ -154,7 +154,6 @@ public:
   void                 InvalidateWindowPos(void);
 
 
-  virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
   // in nsWidget now
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
   

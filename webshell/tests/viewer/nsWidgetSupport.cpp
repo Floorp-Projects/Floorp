@@ -43,7 +43,6 @@
 #include "nsIWidget.h"
 #include "nsICheckButton.h"
 #include "nsITextWidget.h"
-#include "nsIScrollbar.h"
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -52,7 +51,6 @@ static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
-static NS_DEFINE_IID(kIScrollBarIID, NS_ISCROLLBAR_IID);
 
 #ifdef XP_MAC
 	#define WIDGET_SUPPORT_EXPORT(returnType)	PR_PUBLIC_API(returnType)
@@ -167,33 +165,6 @@ NS_CreateTextWidget(nsISupports* aParent,
 }
 
 
-
-WIDGET_SUPPORT_EXPORT(nsresult)
-NS_CreateScrollBar(nsISupports* aParent, 
-									nsIScrollbar* aWidget, 
-									const nsRect& aRect, 
-									EVENT_CALLBACK aHandleEventFunction)
-{
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
-
-  nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    NS_IF_RELEASE(widget);
-	}
-  else
-  {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
-  }
-
-	if (aParent)
-	  NS_IF_RELEASE(parent);
-
-  return NS_OK;
-}
 
 WIDGET_SUPPORT_EXPORT(nsresult)
 NS_ShowWidget(nsISupports* aWidget, PRBool aShow)

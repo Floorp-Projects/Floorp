@@ -135,7 +135,6 @@
 // view stuff
 #include "nsViewsCID.h"
 #include "nsView.h"
-#include "nsScrollingView.h"
 #include "nsScrollPortView.h"
 #include "nsViewManager.h"
 
@@ -529,7 +528,6 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(nsView)
-NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(nsScrollingView)
 NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(nsScrollPortView)
 
 static NS_IMETHODIMP
@@ -1169,8 +1167,6 @@ static const nsModuleComponentInfo gComponents[] = {
   { "View Manager", NS_VIEW_MANAGER_CID, "@mozilla.org/view-manager;1",
     nsViewManagerConstructor },
   { "View", NS_VIEW_CID, "@mozilla.org/view;1", nsViewConstructor },
-  { "Scrolling View", NS_SCROLLING_VIEW_CID, "@mozilla.org/scrolling-view;1",
-    nsScrollingViewConstructor },
   { "Scroll Port View", NS_SCROLL_PORT_VIEW_CID,
     "@mozilla.org/scroll-port-view;1", nsScrollPortViewConstructor },
 
