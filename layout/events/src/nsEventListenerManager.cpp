@@ -1472,7 +1472,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     : nsEventStatus_eConsumeNoDefault;
 
   // This is correct
-  *aEventStatus = (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) || mDestroyed
+  *aEventStatus = (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT)
     ? nsEventStatus_eConsumeNoDefault
     : *aEventStatus;
 
