@@ -114,7 +114,7 @@ function doFind()
 	var url = "find:datasource=" + datasource;
 	url += "&match=" + match;
 	url += "&method=" + method;
-	url += "&text=" + gTextName;
+	url += "&text=" + escape(gTextName);
 	debug("Find URL: " + url + "\n");
 
 	// load find URL into results pane
