@@ -33,22 +33,28 @@ static PRUint16 gKSC5601ShiftTable[] =  {
   0, u2BytesGRCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
-
-static PRUint16 *g_EUCKRMappingTable[2] = {
-  g_AsciiMapping,
-  g_ufKSC5601Mapping
+static PRUint16 gComposedHangulShiftTable[] =  {
+  0, uComposedHangulCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
-static PRUint16 *g_EUCKRShiftTable[2] =  {
+static PRUint16 *g_EUCKRMappingTable[3] = {
+  g_AsciiMapping,
+  g_ufKSC5601Mapping,
+  g_HangulNullMapping
+};
+
+static PRUint16 *g_EUCKRShiftTable[3] =  {
   gAsciiShiftTable,
-  gKSC5601ShiftTable
+  gKSC5601ShiftTable,
+  gComposedHangulShiftTable
 };
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToEUCKR [implementation]
 
 nsUnicodeToEUCKR::nsUnicodeToEUCKR() 
-: nsMultiTableEncoderSupport(2,
+: nsMultiTableEncoderSupport(3,
                         (uShiftTable**) g_EUCKRShiftTable, 
                         (uMappingTable**) g_EUCKRMappingTable)
 {
@@ -71,6 +77,6 @@ NS_IMETHODIMP nsUnicodeToEUCKR::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  *aDestLength = aSrcLength * 2;
+  *aDestLength = aSrcLength * 8; // change from 2 to 8 because of composed jamo
   return NS_OK;
 }
