@@ -1646,7 +1646,8 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 #endif /* XP_PC || XP_MAC */
 
     if (mNumOldProfiles > 0) {
-        UpdateMozProfileRegistry();
+        rv = UpdateMozProfileRegistry();
+	if (NS_FAILED(rv)) return rv;
     }
 
 
@@ -1659,7 +1660,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 // mOldProfiles, mOldProfLocations carried info about
 // profile names and locations respectively. They are
 // populated inthe routine MigrateProfileInfo()
-NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
+nsresult nsProfile::UpdateMozProfileRegistry()
 {
 
 	nsresult rv = NS_OK;
