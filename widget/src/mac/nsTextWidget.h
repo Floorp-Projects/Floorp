@@ -48,6 +48,7 @@ public:
   // nsWindow Interface
   virtual PRBool	DispatchMouseEvent(nsMouseEvent &aEvent);
   virtual PRBool	DispatchWindowEvent(nsGUIEvent& aEvent);
+	virtual PRBool 	OnPaint(nsPaintEvent &aEvent);
 
 	// nsITextWidget interface
   NS_IMETHOD        SetPassword(PRBool aIsPassword);
@@ -65,10 +66,13 @@ public:
   NS_IMETHOD        SetCaretPosition(PRUint32 aPosition);
   NS_IMETHOD        GetCaretPosition(PRUint32& aPosition);
 
-	// LPeriodical interface
+	// Repeater interface
 	virtual	void	RepeatAction(const EventRecord& inMacEvent);
 
 protected:
+
+	virtual void		GetRectForMacControl(nsRect &outRect);
+
 	PRBool		mIsPassword;
 	PRBool		mIsReadOnly;
 	TEHandle	mTE;

@@ -140,7 +140,9 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 				case NS_GOTFOCUS:
 				{
 					StartDraw();
-					::TEActivate(mTE);
+					//::TEActivate(mTE);
+					ActivateControl(mControl);
+					OSErr err = SetKeyboardFocus(mWindowPtr, mControl, kControlFocusNextPart);
 					EndDraw();
 					StartIdling();
 					break;
@@ -150,7 +152,8 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 				{
 					StopIdling();
 					StartDraw();
-					::TEDeactivate(mTE);
+					//::TEDeactivate(mTE);
+					DeactivateControl(mControl);
 					EndDraw();
 					break;
 				}
@@ -178,18 +181,9 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 		  		}
 		  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextWidget is a single line editor
 		  		{
-		  			//HACK! this is so theKey and theModifiers don't get optimized out when not used
-		  			OSErr foo = ::HandleControlKey(mControl, theKey, theChar, theModifiers);
-					if ( foo != noErr )
-						DebugStr("\pHandleControlKey returned error");
-						
-					StartDraw();		  			
-#if 0				// for some reason, HandleControlKey() doesn't work...
+						StartDraw();		  			
 		  			::HandleControlKey(mControl, theKey, theChar, theModifiers);
-#else				// ...so let's take a more direct approach
-						::TEKey(theChar, mTE);
-#endif
-					EndDraw();
+						EndDraw();
 		  			eventHandled = PR_TRUE;
 		  		}
 					break;
@@ -199,22 +193,47 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 	return (eventHandled);
 }
 
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+PRBool nsTextWidget::OnPaint(nsPaintEvent &aEvent)
+{
+	Inherited::OnPaint(aEvent);
+	
+	/* draw a box.*/
+	if (mVisible)
+	{
+			nsRect ctlRect = mBounds;
+			ctlRect.x = ctlRect.y = 0;
+			//ctlRect.Deflate(1, 1);
+			mTempRenderingContext->SetColor(NS_RGB(0, 0, 0));
+			mTempRenderingContext->DrawRect(ctlRect);
+	}
+	
+	return PR_FALSE;
+}
+
 #pragma mark -
+
 //-------------------------------------------------------------------------
 //
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
 {
+	nsresult	theResult = NS_OK;
+	
 	// note: it is assumed that we can't have a read-only password field
 	if (aIsPassword != mIsPassword)
 	{
 		mIsPassword = aIsPassword;
 		short newControlType = (aIsPassword ? kControlEditTextPasswordProc : kControlEditTextProc);
 		SetControlType(newControlType);
-		//¥TODO: delete the control and recreate it with the new type;
+		
+		theResult = CreateOrReplaceMacControl(newControlType);
 	}
-	return NS_OK;
+	return theResult;
 }
 
 //-------------------------------------------------------------------------
@@ -223,6 +242,8 @@ NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextWidget::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 {
+	nsresult	theResult = NS_OK;
+
 	// note: it is assumed that we can't have a read-only password field
 	aOldFlag = mIsReadOnly;
 	if (aReadOnlyFlag != mIsReadOnly)
@@ -230,9 +251,10 @@ NS_METHOD  nsTextWidget::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 		mIsReadOnly = aReadOnlyFlag;
 		short newControlType = (aReadOnlyFlag ? kControlStaticTextProc : kControlEditTextProc);
 		SetControlType(newControlType);
-		//¥TODO: delete the control and recreate it with the new type;
+
+		theResult = CreateOrReplaceMacControl(newControlType);
 	}
-	return NS_OK;
+	return theResult;
 }
 
 #pragma mark -
@@ -446,7 +468,21 @@ void	nsTextWidget::RepeatAction(const EventRecord& inMacEvent)
 	if (mTE)
 	{
 		StartDraw();
-		::TEIdle(mTE);
+		//::TEIdle(mTE);
+		IdleControls(mWindowPtr);		// this should really live in the window
 		EndDraw();
 	}
 }
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsTextWidget::GetRectForMacControl(nsRect &outRect)
+{
+		outRect = mBounds;
+		outRect.x = outRect.y = 0;
+		// inset to make space for border
+		outRect.Deflate(1, 1);
+}
+
