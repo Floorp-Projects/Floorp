@@ -27,14 +27,18 @@ const PRInt32 kImapFlagAndUidStateSize =	100;
 class nsImapFlagAndUidState : public nsIImapFlagAndUidState
 {
 public:
+    NS_DECL_ISUPPORTS
     nsImapFlagAndUidState(int numberOfMessages, PRUint16 flags = 0);
     nsImapFlagAndUidState(const nsImapFlagAndUidState& state, PRUint16 flags = 0);
     virtual				 ~nsImapFlagAndUidState();
     
-    NS_IMETHOD			GetNumberOfMessages(PRInt32 *result);
-    NS_IMETHOD			GetUidOfMessage(PRInt32 zeroBasedIndex, PRUint32 *result);
-    NS_IMETHOD			GetMessageFlags(PRInt32 zeroBasedIndex, imapMessageFlagsType *result);
-	NS_IMETHOD			GetNumberOfRecentMessages(PRInt32 *result);
+
+	NS_DECL_NSIIMAPFLAGANDUIDSTATE
+
+//    NS_IMETHOD			GetNumberOfMessages(PRInt32 *result);
+//    NS_IMETHOD			GetUidOfMessage(PRInt32 zeroBasedIndex, PRUint32 *result);
+//    NS_IMETHOD			GetMessageFlags(PRInt32 zeroBasedIndex, imapMessageFlagsType *result);
+//	NS_IMETHOD			GetNumberOfRecentMessages(PRInt32 *result);
 
     PRInt32				GetNumberOfDeletedMessages();
     

@@ -23,6 +23,8 @@
 #include "prcmon.h"
 #include "nspr.h"
 
+NS_IMPL_ISUPPORTS(nsImapFlagAndUidState, nsIImapFlagAndUidState::GetIID())
+
 NS_IMETHODIMP nsImapFlagAndUidState::GetNumberOfMessages(PRInt32 *result)
 {
 	if (!result)
@@ -47,7 +49,7 @@ NS_IMETHODIMP nsImapFlagAndUidState::GetUidOfMessage(PRInt32 zeroBasedIndex, PRU
 
 
 
-NS_IMETHODIMP	nsImapFlagAndUidState::GetMessageFlags(PRInt32 zeroBasedIndex, imapMessageFlagsType *result)
+NS_IMETHODIMP	nsImapFlagAndUidState::GetMessageFlags(PRInt32 zeroBasedIndex, PRUint16 *result)
 {
 	if (!result)
 		return NS_ERROR_NULL_POINTER;

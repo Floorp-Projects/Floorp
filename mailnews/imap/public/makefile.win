@@ -21,6 +21,7 @@ MODULE= msgimap
 XPIDLSRCS =	\
 			.\nsIImapServerSink.idl	\
 			.\nsIImapIncomingServer.idl \
+			.\nsIImapFlagAndUidState.idl \
 			$(NULL)
 
 ################################################################################
@@ -36,7 +37,6 @@ EXPORTS =								\
 			nsIImapExtensionSink.h		\
 			nsIImapMiscellaneousSink.h	\
 			nsIImapService.h			\
-			nsIImapFlagAndUidState.h	\
 			$(NULL)
 
 
