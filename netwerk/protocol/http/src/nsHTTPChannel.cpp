@@ -522,12 +522,9 @@ nsHTTPChannel::Init(nsILoadGroup *aGroup)
     PRUnichar * ua = nsnull;
     rv = service->GetUserAgent(&ua);
     if (NS_FAILED(rv)) return rv;
-    nsString2 uaString(ua);
+    nsCString uaString(ua);
     nsCRT::free(ua);
-    char * uaCString = uaString.ToNewCString();
-    if (!uaCString) return NS_ERROR_OUT_OF_MEMORY;
-    mRequest->SetHeader(nsHTTPAtoms::User_Agent, uaCString);
-    nsCRT::free(uaCString);
+    mRequest->SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
     return NS_OK;
 }
 
