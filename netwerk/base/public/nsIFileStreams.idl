@@ -47,6 +47,9 @@ interface nsISeekableStream : nsISupports
     
     void seek(in long whence, in long offset);
     unsigned long tell();
+
+    // truncate stream to the current offset
+    void setEOF();
 };
 
 [scriptable, uuid(616f5b48-da09-11d3-8cda-0060b0fc14a3)]

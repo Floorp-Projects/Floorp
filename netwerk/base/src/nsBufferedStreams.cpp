@@ -138,6 +138,19 @@ nsBufferedStream::Tell(PRUint32 *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBufferedStream::SetEOF()
+{
+    if (mStream == nsnull)
+        return NS_BASE_STREAM_CLOSED;
+    
+    nsresult rv;
+    nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mStream, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return ras->SetEOF();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedInputStream
 

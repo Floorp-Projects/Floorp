@@ -2329,6 +2329,12 @@ nsSocketIS::Tell(PRUint32 *offset)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSocketIS::SetEOF()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //
 //----------------------------------------------------------------------------
 // nsSocketOS
@@ -2454,6 +2460,12 @@ nsSocketOS::Tell(PRUint32 *offset)
     NS_ENSURE_ARG_POINTER(offset);
     *offset = mOffset;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketOS::SetEOF()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //

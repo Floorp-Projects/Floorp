@@ -474,12 +474,19 @@ nsFileTransport::OpenOutputStream(PRUint32 aTransferOffset,
     NS_ASSERTION(aTransferCount == PRUint32(-1), "need to wrap output stream in one that truncates");
     
     nsresult rv = mStreamIO->GetOutputStream(aResult);
-    if (NS_SUCCEEDED(rv) && aTransferOffset) {
-        nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(*aResult, &rv));
-        if (NS_SUCCEEDED(rv) && seekable) {
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(*aResult, &rv));
+    if (seekable) {
+        if (aTransferOffset)
             rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, aTransferOffset);
-        }
+        if (NS_SUCCEEDED(rv))
+            rv = seekable->SetEOF();
     }
+    // a stream need not support nsISeekableStream unless a transfer offset
+    // greater than zero was requested.
+    else if (aTransferOffset == 0)
+        rv = NS_OK;
     
     return rv;
 }
@@ -673,14 +680,12 @@ nsFileTransport::Process(void)
         if (mOffset > 0) {
             // if we need to set a starting offset, QI for the nsISeekableStream
             // and set it
-            nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(source, &mStatus);
-            if (NS_FAILED(mStatus)) {
-                mXferState = END_READ;
-                return;
+            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(source, &mStatus);
+            if (NS_SUCCEEDED(mStatus)) {
+                // for now, assume the offset is always relative to the start of the
+                // file (position 0) so use PR_SEEK_SET
+                mStatus = seekable->Seek(PR_SEEK_SET, mOffset);
             }
-            // for now, assume the offset is always relative to the start of the
-            // file (position 0) so use PR_SEEK_SET
-            mStatus = ras->Seek(PR_SEEK_SET, mOffset);
             if (NS_FAILED(mStatus)) {
                 mXferState = END_READ;
                 return;
@@ -866,23 +871,24 @@ nsFileTransport::Process(void)
             return;
         }
 
-        if (mOffset > 0) {
-            // If we need to set a starting offset, QI for the nsISeekableStream
-            // and set it.
-            nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mSink, &mStatus);
-            if (NS_FAILED(mStatus)) {
-                mXferState = END_WRITE;
-                return;
-            }
-            // For now, assume the offset is always relative to the start of the
-            // file (position 0) so use PR_SEEK_SET.
-            mStatus = ras->Seek(PR_SEEK_SET, mOffset);
-            if (NS_FAILED(mStatus)) {
-                mXferState = END_WRITE;
-                return;
-            }
-            mOffset = 0;
+        // QI to a seekable stream so we can set EOF and Seek (if required)
+        nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mSink, &mStatus));
+        if (seekable) {
+            if (mOffset)
+                mStatus = seekable->Seek(nsISeekableStream::NS_SEEK_SET, mOffset);
+            if (NS_SUCCEEDED(mStatus))
+                mStatus = seekable->SetEOF();
         }
+        // a stream need not support nsISeekableStream unless a transfer offset
+        // greater than zero was requested.
+        else if (mOffset == 0)
+            mStatus = NS_OK;
+
+        if (NS_FAILED(mStatus)) {
+            mXferState = END_WRITE;
+            return;
+        }
+        mOffset = 0;
 
         if (!mSinkWrapper) {
             //

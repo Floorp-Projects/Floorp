@@ -20,6 +20,24 @@
  * Contributor(s): 
  */
 
+// file truncation support
+#if defined(__linux)
+#define _BSD_SOURCE 1
+#include <unistd.h>
+#elif defined(XP_MAC)
+#include <Files.h>
+#elif defined(XP_WIN)
+#include <windows.h>
+#else
+// XXX add necessary include file for ftruncate (or equivalent)
+#endif
+
+#if defined(XP_MAC)
+#include "pprio.h"
+#else
+#include "private/pprio.h"
+#endif
+
 #include "nsFileStreams.h"
 #include "nsILocalFile.h"
 #include "nsXPIDLString.h"
@@ -342,6 +360,46 @@ nsFileStream::Tell(PRUint32 *result)
         return NS_ErrorAccordingToNSPR();
     }
     *result = cnt;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileStream::SetEOF()
+{
+    if (mFD == nsnull)
+        return NS_BASE_STREAM_CLOSED;
+
+#if defined(__linux) || defined(XP_MAC) || defined(XP_OS2)
+    // Some system calls require an EOF offset.
+    PRUint32 offset;
+    nsresult rv = Tell(&offset);
+    if (NS_FAILED(rv)) return rv;
+#endif
+
+#if defined(__linux)
+    if (ftruncate(PR_FileDesc2NativeHandle(mFD), offset) != 0) {
+        NS_ERROR("ftruncate failed");
+        return NS_ERROR_FAILURE;
+    }
+#elif defined(XP_MAC)
+    if (::SetEOF(PR_FileDesc2NativeHandle(mFD), offset) != 0) {
+        NS_ERROR("SetEOF failed");
+        return NS_ERROR_FAILURE;
+    }
+#elif defined(XP_WIN)
+    if (!SetEndOfFile((HANDLE) PR_FileDesc2NativeHandle(mFD))) {
+        NS_ERROR("SetEndOfFile failed");
+        return NS_ERROR_FAILURE;
+    }
+#elif defined(XP_OS2)
+    if (DosSetFileSize((HFILE) PR_FileDesc2NativeHandle(mFD), offset) != NO_ERROR) {
+        NS_ERROR("DosSetFileSize failed");
+        return NS_ERROR_FAILURE;
+    }
+#else
+    // XXX not implemented
+#endif
+
     return NS_OK;
 }
 
