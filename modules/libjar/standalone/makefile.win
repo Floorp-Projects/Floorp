@@ -21,7 +21,6 @@
 # Contributors:
 #     Daniel Veditz <dveditz@netscape.com>
 
-IGNORE_MANIFEST=1
 
 MODULE=jar 
 DEPTH=..\..\..

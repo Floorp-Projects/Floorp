@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..
-IGNORE_MANIFEST=1
+
 
 !if defined(MOZ_ACTIVEX_SUPPORT)
 DIRS = $(DIRS) ActiveX
