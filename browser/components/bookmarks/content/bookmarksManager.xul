@@ -44,6 +44,7 @@
 <?xml-stylesheet href="chrome://browser/skin/bookmarks/bookmarksManager.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 <!DOCTYPE window SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd">
 
 <window id="bookmark-window" windowtype="bookmarks:manager"
@@ -99,6 +100,9 @@
     <key id="bm_key_find" key="&edit.find.keybinding;" modifiers="accel" command="cmd_bm_find"/>
     <key id="bm_key_properties" key="&edit.properties.keybinding;" modifiers="accel" command="cmd_bm_properties"/>
   </keyset>
+
+  <commandset id="baseMenuCommandSet" />
+  <keyset id="baseMenuKeyset" />
 
   <toolbox id="bookmarks-toolbox">
     <menubar id="main-menubar">
@@ -186,6 +190,11 @@
                     resource="direction" name="sortDirectionSet"/>
         </menupopup>
       </menu>
+#ifdef XP_MACOSX
+      <menu id="windowMenu"/>
+      <menupopup id="menu_ToolsPopup"/>
+#endif
+      <menu id="helpMenu"/>
     </menubar>
 
     <toolbar id="command-toolbar" tbalign="stretch" class="chromeclass-toolbar">
