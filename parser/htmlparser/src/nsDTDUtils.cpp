@@ -675,7 +675,7 @@ void CObserverDictionary::RegisterObservers() {
   if(result == NS_OK){
     nsString  theTopic("htmlparser");
     nsIEnumerator* theEnum;
-    result = theObserverService->EnumerateObserverList(theTopic, &theEnum);
+    result = theObserverService->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
     if(result == NS_OK){
       nsIElementObserver* theElementObserver;
       nsISupports *inst;

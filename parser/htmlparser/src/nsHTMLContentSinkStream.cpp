@@ -445,7 +445,7 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream(nsIOutputStream* aOutStream,
                                                  nsString* aOutString,
                                                  const nsString* aCharsetOverride,
                                                  PRBool aDoFormat,
-                                                 PRBool aDoHeader)  {
+                                                 PRBool aDoHeader) : mBuffer("",eOneByte) {
   NS_INIT_REFCNT();
   mLowerCaseTags = PR_TRUE;  
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
@@ -454,8 +454,6 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream(nsIOutputStream* aOutStream,
   mIndent = 0;
   mDoFormat = aDoFormat;
   mDoHeader = aDoHeader;
-  mBuffer = nsnull;
-  mBufferSize = 0;
   mUnicodeEncoder = nsnull;
   mStream = aOutStream;
   mString = aOutString;
@@ -505,8 +503,8 @@ nsHTMLContentSinkStream::EndContext(PRInt32 aPosition)
 }
 
 
-void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
-{
+void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize) {
+/*
   if (mBufferSize < aNewSize)
   {
     delete [] mBuffer;
@@ -516,6 +514,7 @@ void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
       mBuffer[0] = 0;
     }
   }
+*/
 }
 
 
@@ -532,24 +531,17 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
   PRInt32       length = aSrc.Length();
   nsresult      result;
 
-  if (mUnicodeEncoder != nsnull && length > 0)
-  {
-    EnsureBufferSize(length);
-    mBufferLength = mBufferSize;
-    
+  if (mUnicodeEncoder != nsnull && length > 0)   {
+    //EnsureBufferSize(length);    
     mUnicodeEncoder->Reset();
-    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, mBuffer, &mBufferLength);
-    mBuffer[mBufferLength] = 0;
-    PRInt32 temp = mBufferLength;
+    mBuffer.SetCapacity(2*length);  //cause that's what greg used to do, but may not be necessary.
+    PRInt32 theNewLength=mBuffer.mCapacity;
+    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, (char*)mBuffer.GetBuffer(), &theNewLength);
+    mBuffer.Truncate(theNewLength);
     if (NS_SUCCEEDED(result))
-      result = mUnicodeEncoder->Finish(mBuffer,&temp);
+      result = mUnicodeEncoder->Finish((char*)mBuffer.GetBuffer(),&theNewLength);
 
-
-    for (PRInt32 i = 0; i < mBufferLength; i++)
-    {
-      if (mBuffer[i] == char(CH_NBSP))
-        mBuffer[i] = ' ';
-    }
+    mBuffer.ReplaceChar(CH_NBSP,' ');  //switch all nbsp's to spaces
   }
   
 }
@@ -565,16 +557,15 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
     if (mStream != nsnull)
     {
       nsOutputStream out(mStream);
-      out.write(mBuffer,mBufferLength);
+      out.write(mBuffer.GetBuffer(),mBuffer.Length());
     }
-    if (mString != nsnull)
-    {
+    if (0!=mString) {
       mString->Append(mBuffer);
     }
   }
   else
   {
-    if (mStream != nsnull)
+    if (0!=mStream)
     {
       nsOutputStream out(mStream);
       const PRUnichar* unicode = aString.GetUnicode();
@@ -645,24 +636,19 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
     for(i=0;i<theCount;i++){
       const nsString& temp=aNode.GetKeyAt(i);
       
-      if (!temp.Equals(nsString("Steve's unbelievable hack attribute")))
-      {      
-        nsString key = temp;
+      if (!temp.Equals(nsString("Steve's unbelievable hack attribute"))) {      
+        nsAutoString key(temp,eOneByte);
 
         if (mLowerCaseTags == PR_TRUE)
           key.ToLowerCase();
         else
           key.ToUpperCase();
 
-
-        EnsureBufferSize(key.Length());
-        key.ToCString(mBuffer,mBufferSize);
-
         // send to ouput " [KEY]="
         Write(' ');
-        Write(mBuffer);
+        Write(key.GetBuffer());
         Write(char(kEqual));
-        mColPos += 1 + strlen(mBuffer) + 1;
+        mColPos += 1 + key.Length() + 1;
       
         const nsString& value=aNode.GetValueAt(i);
         
@@ -671,7 +657,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
         Write(value);
         Write('\"');
 
-        mColPos += 1 + strlen(mBuffer) + 1;
+        mColPos += 1 + key.Length() + 1;
       }
     }
   }
@@ -934,25 +920,18 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   if (PermitWSBeforeOpen(tag))
     AddIndent();
 
-  EnsureBufferSize(tagName.Length());
-  tagName.ToCString(mBuffer,mBufferSize);
+  nsAutoString theBuf(tagName,eOneByte);
 
   Write(kLessThan);
-  Write(mBuffer);
+  Write(theBuf.GetBuffer());
 
   mColPos += 1 + tagName.Length();
 
-  if (tag == eHTMLTag_style)
-  {
+  if (tag == eHTMLTag_style) {
     Write(">\n");
     const   nsString& data = aNode.GetSkippedContent();
-    PRInt32 size = data.Length();
-    char*   buffer = new char[size+1];
-    if(buffer){
-      data.ToCString(buffer,size+1);
-      Write(buffer);
-      delete[] buffer;
-    }
+    nsAutoString theBuf(data,eOneByte);
+    Write(theBuf.GetBuffer());
   }
   else
   {
@@ -1007,18 +986,16 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
     AddIndent();
   }
 
-  EnsureBufferSize(tagName.Length());
-  tagName.ToCString(mBuffer,mBufferSize);
+  nsAutoString theBuf(tagName,eOneByte);
   
   Write(kLessThan);
   Write(kForwardSlash);
-  Write(mBuffer);
+  Write(theBuf.GetBuffer());
   Write(kGreaterThan);
 
-  mColPos += 1 + 1 + strlen(mBuffer) + 1;
+  mColPos += 1 + 1 + theBuf.Length() + 1;
   
-  if (BreakAfterClose(tag))
-  {
+  if (BreakAfterClose(tag)) {
     Write('\n');
     mColPos = 0;
   }
