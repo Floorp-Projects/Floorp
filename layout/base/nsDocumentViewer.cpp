@@ -2705,10 +2705,9 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
    GetPresShell(getter_AddRefs(presShell));
    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-   // Flush out all content and style updates.  Note that we don't need to
-   // flush layout since we're about to do a top-level resize reflow, and we
-   // shouldn't have any parents to propagate the flush to.
-   mDocument->FlushPendingNotifications(Flush_Style);
+   // Flush out all content and style updates. We can't use a resize reflow
+   // because it won't change some sizes that a style change reflow will.
+   mDocument->FlushPendingNotifications(Flush_Layout);
                                         
    NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE,
       NS_UNCONSTRAINEDSIZE), NS_ERROR_FAILURE);
