@@ -19,7 +19,7 @@ MODULE = nls
 LCFLAGS= -DMOZ_TREX -DLIBJULIAN $(LCFLAGS)
 CFLAGS= -DMOZ_TREX $(CFLAGS)
 
-EXPORTS = unistring.h calendar.h ptypes.h locid.h hashtab.h timezone.h smpdtfmt.h gregocal.h datefmt.h simpletz.h parsepos.h unicode.h
+EXPORTS = unistring.h calendar.h ptypes.h locid.h hashtab.h timezone.h smpdtfmt.h gregocal.h datefmt.h simpletz.h parsepos.h unicode.h nlsloc.h
 
 #//------------------------------------------------------------------------
 #//

@@ -1,6 +1,8 @@
 #ifndef ptypes_h__
 #define ptypes_h__
 
+#include "nspr.h"
+
 typedef double Date;
 
 #define ZERO_ERROR 0

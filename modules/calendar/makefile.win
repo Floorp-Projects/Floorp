@@ -125,6 +125,11 @@ LLIBS = $(LLIBS) \
     $(DIST)\lib\nssb30.lib \
     $(DIST)\lib\pr$(MOZ_BITS)40.lib \
 !else
+!ifdef MOZ_TREX_FREE
+    $(DIST)\lib\nlsstub10.lib \
+    $(DIST)\lib\libnspr21.lib \
+    $(DIST)\lib\libplc21.lib \
+!else
     $(DIST)\lib\nsfmt$(MOZ_BITS)30.lib \
     $(DIST)\lib\nsuni$(MOZ_BITS)30.lib \
     $(DIST)\lib\nscck$(MOZ_BITS)30.lib \
@@ -133,6 +138,7 @@ LLIBS = $(LLIBS) \
     $(DIST)\lib\nssb$(MOZ_BITS)30.lib \
     $(DIST)\lib\libnspr21.lib \
     $(DIST)\lib\libplc21.lib \
+!endif
 !endif
 !if defined(MOZ_CAPI)
     .\capi\capi.lib \
