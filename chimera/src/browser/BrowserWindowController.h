@@ -51,8 +51,9 @@ class nsIDOMNode;
   IBOutlet id mSidebarSourceTabView;
   IBOutlet id mLocationToolbarView;
   IBOutlet NSTextField* mURLBar;
-  IBOutlet id mStatus;
-  IBOutlet id mProgress;
+  IBOutlet NSTextField* mStatus;
+  IBOutlet NSProgressIndicator* mProgress;
+  IBOutlet NSImageView* mLock;
   IBOutlet id mLocationSheetWindow;
   IBOutlet id mLocationSheetURLField;
 
@@ -113,6 +114,9 @@ class nsIDOMNode;
 - (void)updateLocationFields:(NSString *)locationString;
 - (void)updateToolbarItems;
 - (void)focusURLBar;
+
+    // call to update the image of the lock icon with a value from nsIWebProgressListener
+- (void)updateLock:(unsigned int)securityState;
 
 - (void)performAppropriateLocationAction;
 - (IBAction)goToLocationFromToolbarURLField:(id)sender;
@@ -184,5 +188,11 @@ class nsIDOMNode;
 - (IBAction)viewOnlyThisImage:(id)aSender;
 
 - (NSView*) bookmarksToolbar;
+
+// Called to get cached versions of our security icons
++ (NSImage*) insecureIcon;
++ (NSImage*) secureIcon;
++ (NSImage*) brokenIcon;
+
 @end
 

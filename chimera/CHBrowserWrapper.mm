@@ -53,6 +53,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsCocoaBrowserService.h"
+#include "nsIWebProgressListener.h"
 
 #define DOCUMENT_DONE_STRING @"Document: Done"
 #define LOADING_STRING @"Loading..."
@@ -106,6 +107,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   return [self initWithFrame: NSZeroRect];
 }
 
+//
+// initWithFrame:  (designated initializer)
+//
+// Create a Gecko browser view and hook everything up to the UI
+//
 - (id)initWithFrame:(NSRect)frameRect
 {
   if ( (self = [super initWithFrame: frameRect]) ) {
@@ -115,6 +121,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [mBrowserView addListener:self];
     mIsBusy = NO;
     mListenersAttached = NO;
+    mSecureState = nsIWebProgressListener::STATE_IS_INSECURE;
   }
   return self;
 }
@@ -125,14 +132,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 }
 
 -(void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
-    progress: (id)aProgress windowController: aWindowController
+        progress: (id)aProgress windowController: (BrowserWindowController*)aWindowController
 {
   urlbar = aUrlbar;
   status = aStatus;
   progress = aProgress;
   progressSuper = [aProgress superview];
   mWindowController = aWindowController;
-  
+
   if (!mIsBusy)
     [progress removeFromSuperview];
   
@@ -142,6 +149,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   
   mIsPrimary = YES;
 
+  // update the global lock icon to the current state of this browser. We need
+  // to do this after we set |mIsPrimary|.
+  [self onSecurityStateChange:mSecureState];
+  
   if ([[self window] isKeyWindow])
     [mBrowserView setActive: YES];
   
@@ -282,6 +293,20 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 - (void)onStatusChange:(NSString*)aStatusString
 {
   [status setStringValue: aStatusString];
+}
+
+//
+// onSecurityStateChange:
+//
+// Update the lock to the appropriate icon to match what necko is telling us, but
+// only if we own the UI. If we're not the primary browser, we have no business
+// mucking with the lock icon.
+//
+- (void)onSecurityStateChange:(unsigned long)newState
+{
+  mSecureState = newState;
+  if ( mIsPrimary )
+    [mWindowController updateLock:newState];
 }
 
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type 

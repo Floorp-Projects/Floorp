@@ -536,105 +536,93 @@ nsCocoaBrowserListener::GetSiteWindow(void * *aSiteWindow)
   return NS_OK;
 }
 
+
+//
 // Implementation of nsIWebProgressListener
+//
+
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP 
-nsCocoaBrowserListener::OnStateChange(nsIWebProgress *aWebProgress, 
-				      nsIRequest *aRequest, 
-				      PRInt32 aStateFlags, 
-				      PRUint32 aStatus)
+nsCocoaBrowserListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
+                                        PRInt32 aStateFlags, PRUint32 aStatus)
 {
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id obj;
+  id<NSBrowserListener> obj;
   
   if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK) {
     if (aStateFlags & nsIWebProgressListener::STATE_START) {
-      while ((obj = [enumerator nextObject])) {
-	[obj onLoadingStarted];
-      }
+      while ((obj = [enumerator nextObject]))
+        [obj onLoadingStarted];
     }
     else if (aStateFlags & nsIWebProgressListener::STATE_STOP) {
-      while ((obj = [enumerator nextObject])) {
-	[obj onLoadingCompleted:(NS_SUCCEEDED(aStatus))];
-      }
+      while ((obj = [enumerator nextObject]))
+        [obj onLoadingCompleted:(NS_SUCCEEDED(aStatus))];
     }
   }
-
 
   return NS_OK;
 }
 
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
 NS_IMETHODIMP 
-nsCocoaBrowserListener::OnProgressChange(nsIWebProgress *aWebProgress, 
-					 nsIRequest *aRequest, 
-					 PRInt32 aCurSelfProgress, 
-					 PRInt32 aMaxSelfProgress, 
-					 PRInt32 aCurTotalProgress, 
-					 PRInt32 aMaxTotalProgress)
+nsCocoaBrowserListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
+                                          PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
+                                          PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id obj;
- 
-  while ((obj = [enumerator nextObject])) {
+  id<NSBrowserListener> obj;
+  while ((obj = [enumerator nextObject]))
     [obj onProgressChange:aCurTotalProgress outOf:aMaxTotalProgress];
-  }
   
   return NS_OK;
 }
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP 
-nsCocoaBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, 
-					 nsIRequest *aRequest, 
-					 nsIURI *location)
+nsCocoaBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
+                                          nsIURI *location)
 {
   if (!location)
     return NS_ERROR_FAILURE;
     
   nsCAutoString spec;
   location->GetSpec(spec);
-  const char* cstr = spec.get();
-  NSString* str = [NSString stringWithCString:cstr];
+  NSString* str = [NSString stringWithCString:spec.get()];
   NSURL* url = [NSURL URLWithString:str];
 
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id obj;
- 
-  while ((obj = [enumerator nextObject])) {
+  id<NSBrowserListener> obj;
+  while ((obj = [enumerator nextObject]))
     [obj onLocationChange:url];
-  }
 
   return NS_OK;
 }
 
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP 
-nsCocoaBrowserListener::OnStatusChange(nsIWebProgress *aWebProgress, 
-				       nsIRequest *aRequest, 
-				       nsresult aStatus, 
-				       const PRUnichar *aMessage)
+nsCocoaBrowserListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, 
+                                        const PRUnichar *aMessage)
 {
-  nsCAutoString msg; msg.AssignWithConversion(aMessage);
-  
-  NSString* str = [NSString stringWithCString:msg.get()];
+  NSString* str = [NSString stringWithCharacters:aMessage length:nsCRT::strlen(aMessage)];
   
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id obj;
- 
-  while ((obj = [enumerator nextObject])) {
+  id<NSBrowserListener> obj; 
+  while ((obj = [enumerator nextObject]))
     [obj onStatusChange: str];
-  }
 
   return NS_OK;
 }
 
 /* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
 NS_IMETHODIMP 
-nsCocoaBrowserListener::OnSecurityChange(nsIWebProgress *aWebProgress, 
-					 nsIRequest *aRequest, 
-					 PRInt32 state)
+nsCocoaBrowserListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
+                                          PRInt32 state)
 {
+  NSEnumerator* enumerator = [mListeners objectEnumerator];
+  id<NSBrowserListener> obj; 
+  while ((obj = [enumerator nextObject]))
+    [obj onSecurityStateChange: state];
+
   return NS_OK;
 }
 
