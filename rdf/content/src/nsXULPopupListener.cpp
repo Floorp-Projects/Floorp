@@ -21,7 +21,6 @@
   tracks xul popups, context menus, and tooltips
  */
 
-#include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIXULPopupListener.h"
