@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.20 2001/06/05 00:26:37 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.21 2001/06/13 21:14:54 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1571,7 +1571,11 @@ ssl3_HandleNoCertificate(sslSocket *ss)
 	SSL3_SendAlert(ss, alert_fatal, bad_certificate);
 
 	lower = ss->fd->lower;
+#ifdef _WIN32
+	lower->methods->shutdown(lower, PR_SHUTDOWN_SEND);
+#else
 	lower->methods->shutdown(lower, PR_SHUTDOWN_BOTH);
+#endif
 	PORT_SetError(SSL_ERROR_NO_CERTIFICATE);
 	return SECFailure;
     }
@@ -6309,6 +6313,10 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     	/* This is TLS's version of a no_certificate alert. */
     	/* I'm a server. I've requested a client cert. He hasn't got one. */
 	rv = ssl3_HandleNoCertificate(ss);
+	if (rv != SECSuccess) {
+	    errCode = PORT_GetError();
+	    goto loser;
+	}
 	goto cert_block;
     }
 
