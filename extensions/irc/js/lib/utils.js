@@ -116,8 +116,17 @@ function dumpObjectTree (o, recurse, compress, level)
 
     for (i in o)
     {
+        var t, ex;
         
-        var t = typeof o[i];
+        try
+        {
+            t = typeof o[i];
+        }
+        catch (ex)
+        {
+            t = "ERROR";
+        }
+        
         switch (t)
         {
             case "function":
@@ -149,6 +158,10 @@ function dumpObjectTree (o, recurse, compress, level)
                     s += pfx + tee + i + " (" + t + ") '" + o[i] + "'\n";
                 break;
 
+            case "ERROR":
+                s += pfx + tee + i + " (" + t + ") ?\n";
+                break;
+                
             default:
                 s += pfx + tee + i + " (" + t + ") " + o[i] + "\n";
                 
@@ -517,7 +530,7 @@ function getRandomElement (ary)
 function roundTo (num, prec)
 {
 
-    return parseInt ( Math.round(num * Math.pow (10, prec))) /
+    return parseInt (Math.round(num * Math.pow (10, prec))) /
         Math.pow (10, prec);   
 
 }
@@ -548,7 +561,7 @@ function getStackTrace ()
 
     while (frame)
     {
-        var name = frame.functionName ? frame.functionName : "[anonymous]";
+        var name = frame.name ? frame.name : "[anonymous]";
         str += "\n" + name + "@" + frame.lineNumber;
         frame = frame.caller;
     }
