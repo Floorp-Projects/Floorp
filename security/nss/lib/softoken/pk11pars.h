@@ -662,7 +662,7 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
     return slotString;
 }
 
-char *
+static char *
 pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
 	  PRBool isModuleDB,  PRBool isModuleDBOnly, PRBool isCritical, 
 	  unsigned long trustOrder, unsigned long cipherOrder,
@@ -701,7 +701,8 @@ pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
 
     return nss;
 }
-char *
+
+static char *
 pk11_mkNewModuleSpec(char *dllName, char *commonName, char *parameters, 
 								char *nss) {
     char *moduleSpec;
