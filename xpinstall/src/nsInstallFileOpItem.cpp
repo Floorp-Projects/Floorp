@@ -640,6 +640,16 @@ nsInstallFileOpItem::NativeFileOpFileCopyPrepare()
         return nsInstall::DOES_NOT_EXIST;
       else if(mTarget->IsFile())
         return nsInstall::IS_FILE;
+      else
+      {
+        nsFileSpec tempVar;
+
+        tempVar = *mTarget;
+        tempVar += mSrc->GetLeafName();
+
+        if(tempVar.Exists())
+          return nsInstall::ALREADY_EXISTS;
+      }
 
       return nsInstall::SUCCESS;
     }
@@ -749,8 +759,20 @@ nsInstallFileOpItem::NativeFileOpFileMovePrepare()
   {
     if(!mTarget->Exists())
       return nsInstall::DOES_NOT_EXIST;
+    else if(mTarget->IsFile())
+      return nsInstall::IS_FILE;
     else
-      return NativeFileOpFileCopyPrepare();
+    {
+      nsFileSpec tempVar;
+
+      tempVar = *mTarget;
+      tempVar += mSrc->GetLeafName();
+
+      if(tempVar.Exists())
+        return nsInstall::ALREADY_EXISTS;
+      else
+        return NativeFileOpFileCopyPrepare();
+    }
   }
 
   return nsInstall::SOURCE_DOES_NOT_EXIST;
