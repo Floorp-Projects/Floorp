@@ -16,6 +16,8 @@
 #
 
 # XP way of doing the build date.
-# 98091509 = 1998, September, 15th, 9am local time zone
+# 1998091509 = 1998, September, 15th, 9am local time zone
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
-printf("%02d%02d%02d%02d\n", $year, 1+$mon, $mday, $hour);
+# localtime returns year minus 1900
+$year = $year + 1900;
+printf("%04d%02d%02d%02d\n", $year, 1+$mon, $mday, $hour);
