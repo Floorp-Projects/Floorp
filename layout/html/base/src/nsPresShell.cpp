@@ -76,6 +76,8 @@
 #include "nsIGenericTransferable.h"
 #include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
+#include "nsIWebShell.h"
+
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_IID(kIClipboardIID,       NS_ICLIPBOARD_IID);
@@ -339,10 +341,6 @@ public:
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
   //nsIFocusTracker interface
-  NS_IMETHOD SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame);
-
-  NS_IMETHOD GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame);
-
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame);
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **outCaret);
@@ -384,8 +382,6 @@ protected:
   PRUint32 mReflowLockCount;
   PRBool mIsDestroying;
   nsIFrame* mCurrentEventFrame;
-  nsIFrame* mFocusEventFrame; //keeps track of which frame has focus. 
-  nsIFrame* mAnchorEventFrame; //keeps track of which frame has focus. 
   
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
@@ -626,6 +622,22 @@ PresShell::Init(nsIDocument* aDocument,
   // from content
   //SetCaretEnabled(PR_TRUE);			// make it show in browser windows
 #endif  
+//set up selection to be displayed in document
+  nsCOMPtr<nsISupports> container;
+  result = aPresContext->GetContainer(getter_AddRefs(container));
+  if (NS_SUCCEEDED(result) && container) {
+    nsCOMPtr<nsIWebShell> webShell;
+    webShell = do_QueryInterface(container,&result);
+    if (NS_SUCCEEDED(result) && webShell){
+      nsWebShellType webShellType;
+      result = webShell->GetWebShellType(webShellType);
+      if (NS_SUCCEEDED(result)){
+        if (nsWebShellContent == webShellType){
+          mDocument->SetDisplaySelection(PR_TRUE);
+        }
+      }
+    }
+  }
 
   return NS_OK;
 }
@@ -954,27 +966,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   return NS_OK; //XXX this needs to be real. MMP
 }
 
-//it is ok to pass null, it will simply ignore that parameter.
-//if necessary we can add a clear focus, but I dont think it is a big
-//deal.
-NS_IMETHODIMP
-PresShell::SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame){
-  if (aFrame)
-    mFocusEventFrame = aFrame;
-  if (aAnchorFrame)
-    mAnchorEventFrame = aAnchorFrame;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame){
-  if (!aFrame || !aAnchorFrame) 
-    return NS_ERROR_NULL_POINTER;
-  *aFrame = mFocusEventFrame;
-  *aAnchorFrame = mAnchorEventFrame; 
-  return NS_OK;
-}
-
 NS_IMETHODIMP PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
   if (!aFrame)
     return NS_ERROR_NULL_POINTER;
@@ -1285,12 +1276,6 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   
   if (aFrame == mCurrentEventFrame) {
     mCurrentEventFrame = nsnull;
-  }
-  if (aFrame == mFocusEventFrame) {
-    mFocusEventFrame = nsnull;
-  }
-  if (aFrame == mAnchorEventFrame) {
-    mAnchorEventFrame = nsnull;
   }
   return NS_OK;
 }
@@ -1989,7 +1974,7 @@ PresShell::HandleEvent(nsIView         *aView,
   frame = (nsIFrame *)clientData;
 
   if (nsnull != frame) {
-    if (mSelection && mFocusEventFrame && aEvent->eventStructType == NS_KEY_EVENT)
+    if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
     {
       mSelection->EnableFrameNotification(PR_FALSE);
       mSelection->HandleKeyEvent(aEvent);

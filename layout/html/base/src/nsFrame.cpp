@@ -771,7 +771,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus&  aEventStatus)
 {
-  if (!DisplaySelection(aPresContext, PR_TRUE)) {
+  if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
 
@@ -814,7 +814,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
                               nsGUIEvent*     aEvent,
                               nsEventStatus&  aEventStatus)
 {
-  if (!DisplaySelection(aPresContext, PR_TRUE)) {
+  if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
 
