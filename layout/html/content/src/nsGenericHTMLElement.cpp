@@ -3233,6 +3233,7 @@ nsGenericHTMLContainerElement::~nsGenericHTMLContainerElement()
   PRInt32 n = mChildren.Count();
   for (PRInt32 i = 0; i < n; i++) {
     nsIContent* kid = (nsIContent *)mChildren.ElementAt(i);
+    kid->SetParent(nsnull);
     NS_RELEASE(kid);
   }
 }
