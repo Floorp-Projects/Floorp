@@ -147,21 +147,22 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
   while(box) {
     nsIMonument* monument = nsnull;
     box->GetLayoutManager(getter_AddRefs(layout));
-    layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument);
-    
-    if (monument) 
-         monument->BuildBoxSizeList(box, aState, first, last);
-    else {
-         nsMonumentLayout::BuildBoxSizeList(box, aState, first, last);
-         first->bogus = PR_TRUE;
+
+    if (layout) {
+      layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument);
+      if (monument) 
+           monument->BuildBoxSizeList(box, aState, first, last);
+      else {
+           nsMonumentLayout::BuildBoxSizeList(box, aState, first, last);
+           first->bogus = PR_TRUE;
+      }
+
+      if (count == 0)
+        aFirst = first;
+      else 
+        (aLast)->next = first;
+      aLast = last;
     }
-
-    if (count == 0)
-      aFirst = first;
-    else 
-      (aLast)->next = first;
-
-    aLast = last;
     
     box->GetNextBox(&box);
     count++;
