@@ -1549,7 +1549,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(nsIAbDirectory *aList,
   PRUint32 totalAddress = GetListAddressTotal(pListRow) + 1;
   SetListAddressTotal(pListRow, totalAddress);
   nsCOMPtr<nsIAbCard> pNewCard;
-  rv = AddListCardColumnsToRow(newCard, pListRow, totalAddress, getter_AddRefs(pNewCard));
+  rv = AddListCardColumnsToRow(newCard, pListRow, totalAddress, getter_AddRefs(pNewCard), PR_TRUE /* aInMailingList */);
   NS_ENSURE_SUCCESS(rv,rv);
 
   addressList->AppendElement(newCard);
@@ -1561,7 +1561,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(nsIAbDirectory *aList,
 }
 
 nsresult nsAddrDatabase::AddListCardColumnsToRow
-(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos, nsIAbCard** pNewCard)
+(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos, nsIAbCard** pNewCard, PRBool aInMailingList)
 {
   if (!pCard && !pListRow )
     return NS_ERROR_NULL_POINTER;
@@ -1595,12 +1595,25 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
     
     NS_ENSURE_TRUE(pCardRow, NS_ERROR_NULL_POINTER);
     
+    nsXPIDLString name;
+    pCard->GetDisplayName(getter_Copies(name));
+    if (!name.IsEmpty()) {
+      AddDisplayName(pCardRow, NS_ConvertUCS2toUTF8(name).get());
+      err = m_mdbPabTable->AddRow(GetEnv(), pCardRow);
+    }
+
     nsCOMPtr<nsIAbCard>    newCard;
     CreateABCard(pCardRow, 0, getter_AddRefs(newCard));
     NS_IF_ADDREF(*pNewCard = newCard);
     
     if (cardWasAdded) {
       NotifyCardEntryChange(AB_NotifyInserted, newCard, NULL);
+    }
+    else if (!aInMailingList) {
+      NotifyCardEntryChange(AB_NotifyInserted, pCard, NULL);
+    }
+    else {
+      NotifyCardEntryChange(AB_NotifyPropertyChanged, pCard, NULL);
     }
     
     //add a column with address row id to the list row
@@ -1654,7 +1667,6 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
         list->GetDescription(getter_Copies(unicodeStr));
         AddListDescription(listRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
             
-
     // XXX todo, this code has problems if you manually enter duplicate emails.
         nsCOMPtr <nsISupportsArray> pAddressLists;
         list->GetAddressLists(getter_AddRefs(pAddressLists));
@@ -1686,6 +1698,9 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
             if (NS_FAILED(err))
                 continue;
 
+            PRBool listHasCard = PR_FALSE;
+            err = list->HasCard(pCard, &listHasCard);
+
             // start from 1
             pos = i + 1;
             pCard->GetPrimaryEmail(getter_Copies(email));
@@ -1693,7 +1708,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
             if (email && emailLength)
             {
                 nsCOMPtr<nsIAbCard> pNewCard;
-                err = AddListCardColumnsToRow(pCard, listRow, pos, getter_AddRefs(pNewCard));
+                err = AddListCardColumnsToRow(pCard, listRow, pos, getter_AddRefs(pNewCard), listHasCard);
                 if (pNewCard)
                     pAddressLists->ReplaceElementAt(pNewCard, i);
             }

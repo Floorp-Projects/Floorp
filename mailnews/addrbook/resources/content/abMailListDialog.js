@@ -131,16 +131,16 @@ function GetListValue(mailList, doAdd)
       cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
       if (cardproperty)
       {
-        var beginpos = fieldValue.search('<');
-        var endpos = fieldValue.search('>');
-        if (beginpos != -1)
-        {
-          beginpos++;
-          var newValue = fieldValue.slice(beginpos, endpos);
-          cardproperty.primaryEmail = newValue;
-        }
-        else
-          cardproperty.primaryEmail = fieldValue;
+        var msgHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"]
+                                        .getService(Components.interfaces.nsIMsgHeaderParser);
+        var addresses = {};
+        var names = {};
+        var fullNames = {};
+        var numAddresses = msgHeaderParser.parseHeadersWithArray(fieldValue, addresses, names, fullNames);
+
+        cardproperty.primaryEmail = addresses.value[0];
+        cardproperty.displayName = names.value[0];
+
         if (doAdd || (doAdd == false && pos >= oldTotal))
           mailList.addressLists.AppendElement(cardproperty);
         pos++;
