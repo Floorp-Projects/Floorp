@@ -146,7 +146,7 @@ class nsParser : public nsIParser,
      *  @param   aCommand -- ptrs to string that contains command
      *  @return	 nada
      */
-    NS_IMETHOD_(void) GetCommand(nsString& aCommand);
+    NS_IMETHOD_(void) GetCommand(nsCString& aCommand);
     NS_IMETHOD_(void) SetCommand(const char* aCommand);
     NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand);
 
@@ -453,7 +453,7 @@ protected:
 
     nsString            mUnusedInput;
     nsCString           mCharset;
-    nsString            mCommandStr;
+    nsCString           mCommandStr;
 
     
    

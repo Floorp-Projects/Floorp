@@ -200,7 +200,7 @@ nsXMLContentSink::WillBuildModel(void)
 
   // Check for correct load-command for maybe prettyprinting
   if (mPrettyPrintXML) {
-    nsAutoString command;
+    nsCAutoString command;
     mParser->GetCommand(command);
     if (!command.EqualsLiteral("view")) {
       mPrettyPrintXML = PR_FALSE;
@@ -495,7 +495,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
            aNodeInfo->Equals(nsHTMLAtoms::input, kNameSpaceID_XHTML) ||
            aNodeInfo->Equals(nsHTMLAtoms::object, kNameSpaceID_XHTML) ||
            aNodeInfo->Equals(nsHTMLAtoms::applet, kNameSpaceID_XHTML)) {
-    nsAutoString cmd;
+    nsCAutoString cmd;
     if (mParser) {
       mParser->GetCommand(cmd);
     }
@@ -637,8 +637,9 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   nsresult rv = NS_OK;
   mPrettyPrintXML = PR_FALSE;
 
-  nsAutoString cmd;
-  if (mParser) mParser->GetCommand(cmd);
+  nsCAutoString cmd;
+  if (mParser)
+    mParser->GetCommand(cmd);
   if (cmd.EqualsASCII(kLoadAsData))
     return NS_OK; // Do not load stylesheets when loading as data
 
