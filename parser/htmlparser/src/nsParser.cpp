@@ -21,7 +21,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
   
-#define DEBUG_XMLENCODING
 #define XMLENCODING_PEEKBYTES 64
 #define DISABLE_TRANSITIONAL_MODE
 
@@ -2593,9 +2592,6 @@ ParserWriteFunc(nsIInputStream* in,
        ((count >= 4) && 
         DetectByteOrderMark((const unsigned char*)buf, 
                             theNumRead, guess, guessSource))) { 
-#ifdef DEBUG_XMLENCODING 
-      printf("xmlencoding detect- %s\n", guess.ToNewCString()); 
-#endif 
       nsCOMPtr<nsICharsetAlias> alias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
       result = alias->GetPreferred(guess, preferred);
       // Only continue if it's a recognized charset and not
