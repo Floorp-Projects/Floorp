@@ -866,10 +866,6 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 #define NS_ENSURE_FALSE(x, ret) \
   NS_ENSURE_TRUE(!(x), ret)
 
-// Only here until I can get rid of all the callsites.
-#define NS_ENSURE(x, ret) NS_ENSURE_TRUE(x, ret)
-#define NS_ENSURE_NOT(x, ret) NS_ENSURE_FALSE(x, ret)
-
 ///////////////////////////////////////////////////////////////////////////////
 // Macros for checking results
 ///////////////////////////////////////////////////////////////////////////////
