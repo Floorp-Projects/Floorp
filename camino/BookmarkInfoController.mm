@@ -29,10 +29,12 @@
 
 -(id) init
 {
+#if 0
   [mNameField         setDelegate: self];
   [mLocationField     setDelegate: self];
   [mKeywordField      setDelegate: self];
   [mDescriptionField  setDelegate: self];
+#endif
 
   [super initWithWindowNibName:@"BookmarkInfoPanel"];
 
