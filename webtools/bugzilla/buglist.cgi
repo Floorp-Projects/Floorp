@@ -1227,6 +1227,7 @@ else {
 
 # Some versions of perl will taint 'votes' if this is done as a single
 # statement, because $::FORM{'votes'} is tainted at this point
+$::FORM{'votes'} ||= "";
 if (trim($::FORM{'votes'}) && !grep($_ eq 'votes', @displaycolumns)) {
     push(@displaycolumns, 'votes');
 }
