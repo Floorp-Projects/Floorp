@@ -265,17 +265,6 @@ struct nsHTMLReflowState : nsReflowState {
     GetPageBoxReflowState(const nsReflowState* aParentRS);
 
   /**
-   * Compute the margin for <TT>aFrame</TT>. If a percentage needs to
-   * be computed it will be computed by finding the containing block,
-   * use GetContainingBlockReflowState. aParentReflowState is aFrame's
-   * parent's reflow state. The resulting computed margin is returned
-   * in aResult.
-   */ 
-  static void ComputeMarginFor(nsIFrame* aFrame,
-                               const nsReflowState* aParentReflowState,
-                               nsMargin& aResult);
-
-  /**
    * Compute the border plus padding for <TT>aFrame</TT>. If a
    * percentage needs to be computed it will be computed by finding
    * the containing block, use GetContainingBlockReflowState.
@@ -321,12 +310,12 @@ protected:
   void CalculateLeftRightMargin(const nsHTMLReflowState* aContainingBlockRS,
                                 nscoord                  aComputedWidth);
 
-  static void ComputeHorizontalValue(nscoord aContainingBlockWidth,
+  void ComputeHorizontalValue(nscoord aContainingBlockWidth,
                                      nsStyleUnit aUnit,
                                      const nsStyleCoord& aCoord,
                                      nscoord& aResult);
 
-  static void ComputeVerticalValue(nscoord aContainingBlockHeight,
+  void ComputeVerticalValue(nscoord aContainingBlockHeight,
                                    nsStyleUnit aUnit,
                                    const nsStyleCoord& aCoord,
                                    nscoord& aResult);
