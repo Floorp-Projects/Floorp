@@ -21,8 +21,8 @@ MODULE=msgimap
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) imapMsgs_en-US.properties $(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) imapMsgs.properties $(DIST)\bin\chrome\messenger\locale\en-US
 
 clobber::
-	rm -f $(DIST)bin\chrome\messenger\locale\en-US\imapMsgs_en-US.properties
+	rm -f $(DIST)bin\chrome\messenger\locale\en-US\imapMsgs.properties
 

@@ -1167,7 +1167,7 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString)
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-#define IMAP_MSGS_URL       "resource:/chrome/messenger/locale/en-US/imapMsgs_en-US.properties"
+#define IMAP_MSGS_URL       "chrome://messenger/locale/imapMsgs.properties"
 
 NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar **aString)
 {

@@ -26,7 +26,7 @@
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-#define IMAP_MSGS_URL       "resource:/chrome/messenger/locale/en-US/imapMsgs_en-US.properties"
+#define IMAP_MSGS_URL       "chrome://messenger/locale/imapMsgs.properties"
 
 extern "C" 
 PRUnichar *
