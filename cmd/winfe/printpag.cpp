@@ -338,8 +338,9 @@ void CPrintPageSetup::ShowPagePreview ( CClientDC & pdc )
 
 void CPrintPageSetup::MarginError ( char * szTitle )
 {
-    MessageBox ( 
-        "The margin value entered was not valid.  Try a smaller number.",
+
+    MessageBox (
+        szLoadString(IDS_MARGINENTRYERROR),
         szTitle, MB_OK | MB_ICONEXCLAMATION );
 
 }

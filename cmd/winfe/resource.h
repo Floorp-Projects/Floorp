@@ -805,6 +805,7 @@
 #define IDC_COMPOSE_BCC                 805
 #define IDC_COMPOSE_NEWSGROUPS          807
 #define IDC_COMPOSE_FOLLOWUP            809
+#define IDS_MARGINENTRYERROR            810
 #define IDC_COMPOSE_SUBJECT_TEXT        826
 #define IDS_MESSAGEFORMAT               827
 #define IDS_FORMAT_ASKME                828

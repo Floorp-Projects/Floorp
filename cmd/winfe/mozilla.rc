@@ -3089,6 +3089,7 @@ BEGIN
     IDS_PAGESETUP_INCHES    "Margins (Inches)"
     IDS_PAGESETUP_CENTIMETERS "Margins (Centimeters)"
     IDS_PAGESETUP_CM        "cm"
+	IDS_MARGINENTRYERROR    "The margin value entered was not valid.  Try a smaller number."
 END
 
 STRINGTABLE DISCARDABLE 
