@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.11 1999/08/10 22:41:26 dp%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.12 1999/09/25 20:00:17 kipp%netscape.com Exp $
  */
 
 
@@ -83,25 +83,34 @@ NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_IID(kIImgDCallbkIID, NS_IIMGDCALLBK_IID);
 
+ImgDCallbk::~ImgDCallbk()
+{
+#if 0
+    /* XXX kipp sez: this is never right to do! instead
+       il_delete_container should be used */
+    if(ilContainer) delete ilContainer;
+#endif
+}
+
 NS_IMPL_ISUPPORTS(ImgDCallbk, kIImgDCallbkIID)
 
 NS_IMETHODIMP
 ImgDCallbk::CreateInstance(const nsCID &aClass,
-			     il_container *ic,
-                             const nsIID &aIID,
-                             void **ppv)
+                           il_container *ic,
+                           const nsIID &aIID,
+                           void **ppv)
 {
-   ImgDCallbk *imgdcb = NULL;
-   *ppv  = NULL;
+  ImgDCallbk *imgdcb = NULL;
+  *ppv  = NULL;
  
-   if (&aClass && !aIID.Equals(kISupportsIID))
-       return NS_NOINTERFACE;
+  if (&aClass && !aIID.Equals(kISupportsIID))
+    return NS_NOINTERFACE;
 
-   imgdcb = new ImgDCallbk(ic);
-   /* make sure interface = nsISupports, ImgDCallbk */
-   nsresult res = imgdcb->QueryInterface(aIID,(void**)ppv);
+  imgdcb = new ImgDCallbk(ic);
+  /* make sure interface = nsISupports, ImgDCallbk */
+  nsresult res = imgdcb->QueryInterface(aIID,(void**)ppv);
 
-    if (NS_FAILED(res)) {
+  if (NS_FAILED(res)) {
     *ppv = NULL;
     delete imgdcb;
   }
@@ -308,12 +317,13 @@ il_image_match(il_container *ic,          /* Candidate for match. */
        requested size. */
     if (!(
         /* Both dimensions match (either zero is a match.) */
-        ((req_width == ic->dest_width) && (req_height == ic->dest_height)) ||
+        (((uint32)req_width == ic->dest_width) &&
+         ((uint32)req_height == ic->dest_height)) ||
         /* Width matches, request height zero, aspect ratio same. */
-        (ic_sized && (req_width == ic->dest_width) && !req_height &&
+        (ic_sized && ((uint32)req_width == ic->dest_width) && !req_height &&
          !ic->aspect_distorted) ||
         /* Height matches, request width zero, aspect ratio same. */
-        (ic_sized && (req_height == ic->dest_height) && !req_width &&
+        (ic_sized && ((uint32)req_height == ic->dest_height) && !req_width &&
          !ic->aspect_distorted) ||
         /* Request dimensions zero, cache entry has natural dimensions. */
         (!req_width && !req_height && ic->natural_size)
@@ -372,8 +382,8 @@ il_image_match(il_container *ic,          /* Candidate for match. */
 
 
     if((ic->display_type==IL_Printer) &&
-	(ic->dest_width != ic->image->header.width) &&
-	(ic->dest_height != ic->image->header.height ))
+       (ic->dest_width != ic->image->header.width) &&
+       (ic->dest_height != ic->image->header.height ))
           return FALSE;
 
     /* XXX - temporary */
@@ -437,8 +447,6 @@ il_get_container(IL_GroupContext *img_cx,
     uint32 urlhash, hash;
     il_container *ic;
     
-    int result;
-
     urlhash = hash = il_hash(image_url);
 
     /*
@@ -563,24 +571,21 @@ il_get_container(IL_GroupContext *img_cx,
         NS_ADDREF(ic->img_cb);
 
         /* callbacks for the  image decoders */
-        ImgDCallbk* imgdcb;
-
-        imgdcb = new ImgDCallbk(ic);
-
-        NS_ADDREF(imgdcb);
-
-        nsresult res = imgdcb->QueryInterface(kIImgDCallbkIID, (void**)&imgdcb);
-
-        if (NS_FAILED(res)) {
-	         if(imgdcb)
-              *imgdcb = NULL;
-           delete imgdcb; 
-	         return NULL;
+        ImgDCallbk* imgdcb = new ImgDCallbk(ic);
+        if (!imgdcb) {
+          // XXX this leaks the ic and various parts
+          // XXX factor out cleanup logic
+          return NULL;
         }
-
+        nsresult res = imgdcb->QueryInterface(kIImgDCallbkIID, (void**)&imgdcb);
+        if (NS_FAILED(res)) {
+          delete imgdcb; 
+          // XXX this leaks the ic!!!
+          // XXX factor out cleanup logic
+          return NULL;
+        }
         imgdcb->SetContainer(ic);
         ic->imgdcb = imgdcb;
-        NS_ADDREF(ic->imgdcb);
     }
     
     il_addtocache(ic);
@@ -624,12 +629,16 @@ il_delete_container(il_container *ic)
          * of the container until then.
          */
         if (ic->is_url_loading) {
+#ifdef DEBUG_kipp
+            printf("il_delete_container: bad: can't delete ic=%p '%s'\n",
+                   ic, ic->url_address ? ic->url_address : "(null)");
+#endif
             ic->state = IC_ABORT_PENDING;
             return;
         }
         
         PR_ASSERT(ic->clients == NULL);
-		    il_scour_container(ic);
+	    il_scour_container(ic);
 
 
         PR_FREEIF(ic->background_color);
@@ -639,12 +648,22 @@ il_delete_container(il_container *ic)
         PR_FREEIF(ic->src_header);
 
         /* delete the image */
-        if (!(ic->image || ic->mask))
+        if (!(ic->image || ic->mask)) {
+#ifdef DEBUG_kipp
+            printf("il_delete_container: bad: ic=%p '%s' image=%p mask=%p\n",
+                   ic, ic->url_address ? ic->url_address : "(null)",
+                   ic->image, ic->mask);
+#endif
             return;
+        }
         il_destroy_pixmap(ic->img_cb, ic->image);
         if (ic->mask)
             il_destroy_pixmap(ic->img_cb, ic->mask);
         NS_RELEASE(ic->img_cb);
+        if (ic->imgdcb) {
+          ic->imgdcb->SetContainer(nsnull);
+          NS_RELEASE(ic->imgdcb);
+        }
 
         FREE_IF_NOT_NULL(ic->comment);
         FREE_IF_NOT_NULL(ic->url_address);
@@ -673,6 +692,7 @@ il_destroy_pixmap(ilIImageRenderer *img_cb, IL_Pixmap *pixmap)
 }
 
 
+#if 0
 static char *
 il_visual_info(il_container *ic)
 {
@@ -843,7 +863,7 @@ IL_HTMLImageInfo(char *url_address)
 
     return output;
 }
-
+#endif
 
 
 il_container *
@@ -960,8 +980,9 @@ IL_ShrinkCache(void)
 
     for (ic = il_cache.tail; ic; ic = ic->prev)
 	{
-		if (ic->is_in_use)
+        if (ic->is_in_use) {
             continue;
+        }
 
         il_removefromcache(ic);
         il_delete_container(ic);
@@ -969,6 +990,29 @@ IL_ShrinkCache(void)
     }
 
     return il_cache.bytes;
+}
+
+IL_IMPLEMENT(void)
+IL_FlushCache(void)
+{
+	ILTRACE(3,("flush"));
+
+	il_container *ic = il_cache.head;
+    while (ic)
+	{
+        if (ic->is_in_use) {
+#ifdef DEBUG_kipp
+            printf("IL_FlushCache: il_container %p in use '%s'\n",
+                   ic, ic->url_address ? ic->url_address : "(null)");
+#endif
+            ic = ic->next;
+            continue;
+        }
+
+        il_removefromcache(ic);
+        il_delete_container(ic);
+        ic = il_cache.head;
+    }
 }
 
 IL_IMPLEMENT(uint32)
