@@ -32,9 +32,7 @@ static const PRBool gsDebug = PR_FALSE;
 
 #define UPDATE_QUANTUM  1000 / 40
 
-#ifdef XP_MAC	// temporary
-#define NO_DOUBLE_BUFFER
-#endif
+//#define NO_DOUBLE_BUFFER
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
