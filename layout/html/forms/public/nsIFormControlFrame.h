@@ -48,6 +48,8 @@ public:
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE) = 0;
 
+  virtual void ScrollIntoView(nsIPresContext* aPresContext) = 0;  
+
   virtual void MouseClicked(nsIPresContext* aPresContext) = 0;
 
   virtual void Reset() = 0;
