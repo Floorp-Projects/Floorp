@@ -3285,12 +3285,8 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
     // we need to repeatedly get the count here because it can change on the way
     count = mLoadedFonts.Count();
     while (i < count) {
-      currFont = (nsFontWin*)mLoadedFonts[i];
-      if (!FONT_HAS_GLYPH(currFont->mMap, *currChar)) {
-        // advance to the next loaded font
-        ++i;
-      }
-      else {
+      currFont = (nsFontWin*)mLoadedFonts[i++];
+      if (FONT_HAS_GLYPH(currFont->mMap, *currChar)) {
         // see if we can keep the same font for adjacent characters. We can
         // do so only if the font can represent these chars AND none of the
         // previous fonts can represent these chars
@@ -3298,7 +3294,7 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
           j = 0;
           if (!FONT_HAS_GLYPH(currFont->mMap, *currChar)) 
             break;
-          for (; j < i; ++j) {
+          for (; j < i-1; ++j) {
             prevFont = (nsFontWin*)mLoadedFonts[j];
             if (FONT_HAS_GLYPH(prevFont->mMap, *currChar)) {
               // Another font was found, we cannot use the current font for this char
@@ -3321,22 +3317,19 @@ callback:
       }
     }
 
-    // load additional fonts, retaining the last font index i from where
-    // we will keep advancing
+    // load additional fonts
     currFont = FindFont(aDC, *currChar);
-    if (currFont == mSubstituteFont) {
-      // Exception to the font index... the substitute font can be anywhere
-      // inside mLoadedFonts[]. When it is returned from the second time onwards,
-      // the number of loaded fonts is constant, so we need to set the running
-      // index so that we can enter the "while (i < count)" loop above
-      // and advance from there
-      i = mLoadedFonts.IndexOf(mSubstituteFont);
-      continue;
-    }
+    i = mLoadedFonts.IndexOf(currFont);
 
     // bail out if something weird happened, this error must never happen
     NS_ASSERTION(currFont, "Could not find a font");
     if (!currFont) return NS_ERROR_FAILURE;
+
+#if 0
+    // XXX fix me - bug 104153
+    if (currFont == mSubstituteFont) {
+    }
+#endif
   }
 
   return NS_OK;
@@ -3364,12 +3357,8 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
     // we need to repeatedly get the count here because it can change on the way
     count = mLoadedFonts.Count();
     while (i < count) {
-      currFont = (nsFontWin*)mLoadedFonts[i];
-      if (!FONT_HAS_GLYPH(currFont->mMap, *currChar)) {
-        // advance to the next loaded font
-        ++i;
-      }
-      else {
+      currFont = (nsFontWin*)mLoadedFonts[i++];
+      if (FONT_HAS_GLYPH(currFont->mMap, *currChar)) {
         // see if we can keep the same font for adjacent characters. We can
         // do so only if the font can represent these chars AND none of the
         // previous fonts can represent these chars
@@ -3377,7 +3366,7 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
           j = 0;
           if (!FONT_HAS_GLYPH(currFont->mMap, *currChar))
             break;
-          for (; j < i; ++j) {
+          for (; j < i-1; ++j) {
             prevFont = (nsFontWin*)mLoadedFonts[j];
             if (FONT_HAS_GLYPH(prevFont->mMap, *currChar)) {
               // Another font was found, we cannot use the current font for this char
@@ -3400,22 +3389,19 @@ callback:
       }
     }
 
-    // load additional fonts, retaining the last font index i from where
-    // we will keep advancing
+    // load additional fonts
     currFont = FindFont(aDC, *currChar);
-    if (currFont == mSubstituteFont) {
-      // Exception to the font index... the substitute font can be anywhere
-      // inside mLoadedFonts[]. When it is returned from the second time onwards,
-      // the number of loaded fonts is constant, so we need to set the running
-      // index so that we can enter the "while (i < count)" loop above
-      // and advance from there
-      i = mLoadedFonts.IndexOf(mSubstituteFont);
-      continue;
-    }
+    i = mLoadedFonts.IndexOf(currFont);
 
     // bail out if something weird happened, this error must never happen
     NS_ASSERTION(currFont, "Could not find a font");
     if (!currFont) return NS_ERROR_FAILURE;
+
+#if 0
+    // XXX fix me - bug 104153
+    if (currFont == mSubstituteFont) {
+    }
+#endif
   }
 
   return NS_OK;
@@ -4747,7 +4733,9 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
   const PRUnichar* lastChar  = aString + aLength;
   const PRUnichar* currChar  = firstChar;
 
-  nsFontSubset* currFont;
+  nsFontWinA* currFont;
+  nsFontWinA* prevFont;
+  nsFontSubset* currSubset;
   nsFontSubset** subset;
   nsFontSubset** endSubsets;
   PRInt32 i, j, count;
@@ -4758,41 +4746,37 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
     // we need to repeatedly get the count here because it can change on the way
     count = mLoadedFonts.Count();
     while (i < count) {
-      nsFontWinA* font = (nsFontWinA*)mLoadedFonts[i];
-      if (!FONT_HAS_GLYPH(font->mMap, *currChar)) {
-        // advance to the next loaded font
-        ++i;
-      }
-      else {
-        subset = font->mSubsets;
-        endSubsets = subset + font->mSubsetsCount;
+      currFont = (nsFontWinA*)mLoadedFonts[i++];
+      if (FONT_HAS_GLYPH(currFont->mMap, *currChar)) {
+        subset = currFont->mSubsets;
+        endSubsets = subset + currFont->mSubsetsCount;
         while (subset < endSubsets) {
           if (!(*subset)->mMap) {
-            if (!(*subset)->Load(aDC, this, font)) {
+            if (!(*subset)->Load(aDC, this, currFont)) {
               ++subset;
               continue;
             }
           }
           if (FONT_HAS_GLYPH((*subset)->mMap, *currChar)) {
             // we found a subset that can represent the current character
-            currFont = *subset;
+            currSubset = *subset;
             // see if we can keep the same subset for adjacent characters. We
             // can do so only if the subset can represent these chars AND none
             // of the previous fonts can represent these chars
             while (++currChar < lastChar) {
               j = 0;
-              if (!FONT_HAS_GLYPH(currFont->mMap, *currChar))
+              if (!FONT_HAS_GLYPH(currSubset->mMap, *currChar))
                 break;
-              for (; j < i; ++j) {
+              for (; j < i-1; ++j) {
                 // NOTE: we are overwriting variables here (we now *know* that we
                 // will break out of the bigger outer loop after the callback...)
-                font = (nsFontWinA*)mLoadedFonts[j];
-                if (FONT_HAS_GLYPH(font->mMap, *currChar)) {
-                  subset = font->mSubsets;
-                  endSubsets = subset + font->mSubsetsCount;
+                prevFont = (nsFontWinA*)mLoadedFonts[j];
+                if (FONT_HAS_GLYPH(prevFont->mMap, *currChar)) {
+                  subset = prevFont->mSubsets;
+                  endSubsets = subset + prevFont->mSubsetsCount;
                   while (subset < endSubsets) {
                     if (!(*subset)->mMap) {
-                      if (!(*subset)->Load(aDC, this, font)) {
+                      if (!(*subset)->Load(aDC, this, prevFont)) {
                         ++subset;
                         continue;
                       }
@@ -4810,7 +4794,7 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
 callback:
             // We have a substring that can be represented with the same font, and
             // we are about to switch fonts, it is time to notify our caller.
-            nsFontSwitch fontSwitch = {currFont};
+            nsFontSwitch fontSwitch = {currSubset};
             running = (*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData);
 
             if (!running || currChar == lastChar) return NS_OK;
@@ -4826,22 +4810,19 @@ callback:
       }
     }
 
-    // load additional fonts, retaining the last font index i from where
-    // we will keep advancing
-    currFont = (nsFontSubset*)FindFont(aDC, *currChar);
-    if (currFont == mSubstituteFont) {
-      // Exception to the font index... the substitute font can be anywhere
-      // inside mLoadedFonts[]. When it is returned from the second time onwards,
-      // the number of loaded fonts is constant, so we need to set the running
-      // index so that we can enter the "while (i < count)" loop above
-      // and advance from there
-      i = mLoadedFonts.IndexOf(mSubstituteFont);
-      continue;
-    }
+    // load additional fonts
+    currFont = (nsFontWinA*)FindFont(aDC, *currChar);
+    i = mLoadedFonts.IndexOf(currFont);
 
     // bail out if something weird happened, this error must never happen
     NS_ASSERTION(currFont, "Could not find a font");
     if (!currFont) return NS_ERROR_FAILURE;
+
+#if 0
+    // XXX fix me - bug 104153
+    if (currFont == mSubstituteFont) {
+    }
+#endif
   }
 
   return NS_OK;
