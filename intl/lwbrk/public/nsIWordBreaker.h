@@ -37,6 +37,7 @@ public:
                             const PRUnichar* aText2 , PRUint32 aTextLen2,
                             PRBool *oCanBreak) = 0;
   NS_IMETHOD PostionToBoundary(const PRUnichar* aText1 , PRUint32 aTextLen1,
+                                      PRUint32 aOffset,
                                       PRUint32 *oWordBegin,
                                       PRUint32 *oWordEnd) =   0;
   NS_IMETHOD FirstForwardBreak   (nsIBreakState* state) = 0; 
