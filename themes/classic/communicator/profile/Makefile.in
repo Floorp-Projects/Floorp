@@ -31,11 +31,9 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/profile
 
 EXPORT_RESOURCE_SAMPLES = \
-	migrate.gif \
         newProfile1_2.css \
         profile.css \
         profileManager.css \
-        profileicon-large.gif \
         mac-users.gif \
         $(NULL)
 

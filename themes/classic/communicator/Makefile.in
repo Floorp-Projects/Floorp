@@ -32,9 +32,6 @@ EXPORT_RESOURCE = \
 		$(srcdir)/lock.gif \
 		$(srcdir)/unlock.gif \
 		$(srcdir)/broken.gif \
-		$(srcdir)/navbar-endbox.gif \
-		$(srcdir)/tb-menubutton-dm.gif \
-		$(srcdir)/tb-menubutton-dm-disabled.gif \
 		$(srcdir)/menubuttonBindings.xml \
 		$(srcdir)/offline.gif \
 		$(srcdir)/online.gif \

@@ -29,9 +29,7 @@ clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\profile\*.*
 
 install:: 
-	$(MAKE_INSTALL) migrate.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile
 	$(MAKE_INSTALL) newProfile1_2.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile
 	$(MAKE_INSTALL) profile.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile
 	$(MAKE_INSTALL) profileManager.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile
-	$(MAKE_INSTALL) profileicon-large.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile
 	$(MAKE_INSTALL) mac-users.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile

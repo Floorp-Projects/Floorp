@@ -28,14 +28,11 @@ include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 install:: 
-	$(MAKE_INSTALL) navbar-endbox.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) toolbar-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) toolbar-bg.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) broken.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) lock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) tb-menubutton-dm.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
-	$(MAKE_INSTALL) tb-menubutton-dm-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) menubuttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) offline.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) online.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
