@@ -19,6 +19,8 @@ DEPTH=../..
 
 include $(DEPTH)/config/config.mk
 
+DIRS = core
+
 LIBRARY_NAME = jsdom
 
 DEFINES = -D_IMPL_NS_DOM
