@@ -25,6 +25,7 @@
 
 [% DEFAULT title = "Bug List" %]
 [% style_url = "css/buglist.css" %]
+[% qorder = order FILTER url_quote IF order %]
 
 
 [%############################################################################%]
@@ -137,7 +138,7 @@
 
     [% IF bugs.size > 1 && caneditbugs && !dotweak %]
       <a href="buglist.cgi?[% urlquerypart %]
-        [%- "&order=$order" FILTER uri html IF order %]&tweak=1">Change Several 
+        [%- "&order=$qorder" FILTER html IF order %]&amp;tweak=1">Change Several 
         Bugs at Once</a>
       &nbsp;&nbsp;
     [% END %]

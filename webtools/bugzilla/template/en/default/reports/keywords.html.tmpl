@@ -53,7 +53,7 @@
     <td>[% keyword.description %]</td>
     <td align="right">
       [% IF keyword.bugcount > 0 %]
-        <A HREF="buglist.cgi?keywords=[% keyword.name FILTER uri %]">
+        <a href="buglist.cgi?keywords=[% keyword.name FILTER url_quote %]">
           [% keyword.bugcount %]</a>
       [% ELSE %]
         none

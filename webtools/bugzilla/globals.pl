@@ -1616,6 +1616,13 @@ $::template ||= Template->new(
         } , 
         
         html => \&html_quote , 
+
+        # This subroutine in CGI.pl escapes characters in a variable
+        # or value string for use in a query string.  It escapes all
+        # characters NOT in the regex set: [a-zA-Z0-9_\-.].  The 'uri'
+        # filter should be used for a full URL that may have
+        # characters that need encoding.
+        url_quote => \&url_quote ,
       } ,
   }
 ) || DisplayError("Template creation failed: " . Template->error())

@@ -67,7 +67,7 @@ sub IssueEmailChangeToken {
     $vars->{'oldemailaddress'} = $old_email . &::Param('emailsuffix');
     $vars->{'newemailaddress'} = $new_email . &::Param('emailsuffix');
 
-    $vars->{'token'} = &::url_quote($token);
+    $vars->{'token'} = $token;
     $vars->{'emailaddress'} = $old_email . &::Param('emailsuffix');
 
     my $message;
@@ -78,7 +78,7 @@ sub IssueEmailChangeToken {
     print SENDMAIL $message;
     close SENDMAIL;
 
-    $vars->{'token'} = &::url_quote($newtoken);
+    $vars->{'token'} = $newtoken;
     $vars->{'emailaddress'} = $new_email . &::Param('emailsuffix');
 
     $message = "";
@@ -211,7 +211,7 @@ sub Cancel {
     $vars->{'emailaddress'} = $username;
     $vars->{'maintainer'} = $maintainer;
     $vars->{'remoteaddress'} = $::ENV{'REMOTE_ADDR'};
-    $vars->{'token'} = &::url_quote($token);
+    $vars->{'token'} = $token;
     $vars->{'tokentype'} = $tokentype;
     $vars->{'issuedate'} = $issuedate;
     $vars->{'eventdata'} = $eventdata;

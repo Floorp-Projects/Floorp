@@ -49,6 +49,8 @@
   }
 %]
 
+[% qorder = order FILTER url_quote IF order %]
+
 [%############################################################################%]
 [%# Table Header                                                             #%]
 [%############################################################################%]
@@ -98,8 +100,8 @@
 [% BLOCK columnheader %]
   <th colspan="[% splitheader ? 2 : 1 %]">
     <a href="buglist.cgi?[% urlquerypart %]&amp;order=
-      [% column.name FILTER uri html %]
-      [% ",$order" FILTER uri html IF order %]">
+      [% column.name FILTER url_quote FILTER html %]
+      [% ",$qorder" FILTER html IF order %]">
         [%- abbrev.$id.title || column.title -%]</a>
   </th>
 [% END %]

@@ -31,5 +31,5 @@ for your account to [% newemailaddress %].
 If you are not the person who made this request, or you wish to cancel
 this request, visit the following link:
 
-[% Param('urlbase') %]token.cgi?a=cxlem&t=[% token FILTER html %]
+[% Param('urlbase') %]token.cgi?a=cxlem&t=[% token FILTER url_quote %]
 

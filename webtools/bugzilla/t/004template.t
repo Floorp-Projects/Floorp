@@ -63,8 +63,9 @@ my $template = Template->new(
     # actually have to function in this test, just be defined.
     FILTERS =>
     {
-        strike => sub { return $_ } ,
-        js     => sub { return $_ }
+        js        => sub { return $_ } ,
+        strike    => sub { return $_ } ,
+        url_quote => sub { return $_ } ,
     },
 }
 );
