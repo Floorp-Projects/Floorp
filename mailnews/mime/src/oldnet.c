@@ -1094,17 +1094,17 @@ escape_unescaped_percents(const char *incomingURL)
 		{
 			if (*inC == '%')
 			{
-				// Check if either of the next two characters are non-hex.
+				/* Check if either of the next two characters are non-hex. */
 				if ( !*(inC+1) || NONHEX(*(inC+1)) || !*(inC+2) || NONHEX(*(inC+2)) )
 				{
-					// Hex characters don't follow, escape the 
-					// percent char
+					/* Hex characters don't follow, escape the 
+					   percent char */
 					*outC++ = '%'; *outC++ = '2'; *outC++ = '5';
 				}
 				else
 				{
-					// Hex characters follow, so assume the percent 
-					// is escaping something else
+					/* Hex characters follow, so assume the percent 
+					   is escaping something else */
 					*outC++ = *inC;
 				}
 			}
