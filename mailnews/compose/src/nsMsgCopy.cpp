@@ -313,6 +313,16 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     nsCOMPtr <nsIMsgFolder> folderResource;
     folderResource = do_QueryInterface(resource, &rv);
     if (NS_SUCCEEDED(rv) && folderResource) {
+	// check that folder really exists by seeing if it has a server
+	// GetResource() will return NS_OK and create the resource, but it may not 
+	// be a "real" folder
+	// we need to return a failure code, so the user gets the alert that
+	// their pref was bogus
+	nsCOMPtr <nsIMsgIncomingServer> server;
+	rv = folderResource->GetServer(getter_AddRefs(server));
+	if (NS_FAILED(rv)) return rv;
+	if (!server) return NS_ERROR_FAILURE;
+
 	*msgFolder = folderResource;
 	NS_ADDREF(*msgFolder);
 	return NS_OK;
