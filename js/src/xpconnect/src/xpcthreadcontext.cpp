@@ -319,6 +319,10 @@ xpcPerThreadData::GetSafeJSContext()
                        !JS_InitStandardClasses(mSafeJSContext, glob) ||
                        NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
                     {
+                        // Explicitly end the request since we are about to kill
+                        // the JSContext that 'req' will try to use when it
+                        // goes out of scope.
+                        req.EndRequest(); 
                         JS_DestroyContext(mSafeJSContext);
                         mSafeJSContext = nsnull;
                     }
