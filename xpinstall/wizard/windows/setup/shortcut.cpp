@@ -22,6 +22,15 @@
  *     Sean Su <ssu@netscape.com>
  */
 
+/* This is a hack for vc5.0.  It needs to be set *before*
+ * any shell include files.
+ */
+#if (_MSC_VER == 1100)
+#define INITGUID
+#include "objbase.h"
+DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
+#endif
+
 #include <shlobj.h>
 #include "shortcut.h"
 
