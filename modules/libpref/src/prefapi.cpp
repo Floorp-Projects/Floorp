@@ -2429,7 +2429,12 @@ void pref_Alert(char* msg)
 #if defined(XP_UNIX)
     if ( getenv("NO_PREF_SPAM") == NULL )
 #endif
+      /* FE_Alert will eventually become something else */
+#if 0
 	FE_Alert(NULL, msg);
+#else
+    fputs(stderr, msg);
+#endif
 #endif
 #if defined (XP_PC)
 		MessageBox (NULL, msg, "Netscape -- JS Preference Warning", MB_OK);
