@@ -3,8 +3,8 @@
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
    readonly attribute  DOMString            tagName;
-   DOMString                 getDOMAttribute(in DOMString name);
-   void                      setDOMAttribute(in DOMString name, 
+   DOMString                 getAttribute(in DOMString name);
+   void                      setAttribute(in DOMString name, 
                                           in DOMString value)
                                           raises(DOMException);
    void                      removeAttribute(in DOMString name)

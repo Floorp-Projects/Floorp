@@ -38,9 +38,9 @@ public:
 
   NS_IMETHOD    GetTagName(nsString& aTagName)=0;
 
-  NS_IMETHOD    GetDOMAttribute(const nsString& aName, nsString& aReturn)=0;
+  NS_IMETHOD    GetAttribute(const nsString& aName, nsString& aReturn)=0;
 
-  NS_IMETHOD    SetDOMAttribute(const nsString& aName, const nsString& aValue)=0;
+  NS_IMETHOD    SetAttribute(const nsString& aName, const nsString& aValue)=0;
 
   NS_IMETHOD    RemoveAttribute(const nsString& aName)=0;
 
@@ -58,8 +58,8 @@ public:
 
 #define NS_DECL_IDOMELEMENT   \
   NS_IMETHOD    GetTagName(nsString& aTagName);  \
-  NS_IMETHOD    GetDOMAttribute(const nsString& aName, nsString& aReturn);  \
-  NS_IMETHOD    SetDOMAttribute(const nsString& aName, const nsString& aValue);  \
+  NS_IMETHOD    GetAttribute(const nsString& aName, nsString& aReturn);  \
+  NS_IMETHOD    SetAttribute(const nsString& aName, const nsString& aValue);  \
   NS_IMETHOD    RemoveAttribute(const nsString& aName);  \
   NS_IMETHOD    GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn);  \
   NS_IMETHOD    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);  \
@@ -71,8 +71,8 @@ public:
 
 #define NS_FORWARD_IDOMELEMENT(_to)  \
   NS_IMETHOD    GetTagName(nsString& aTagName) { return _to##GetTagName(aTagName); } \
-  NS_IMETHOD    GetDOMAttribute(const nsString& aName, nsString& aReturn) { return _to##GetDOMAttribute(aName, aReturn); }  \
-  NS_IMETHOD    SetDOMAttribute(const nsString& aName, const nsString& aValue) { return _to##SetDOMAttribute(aName, aValue); }  \
+  NS_IMETHOD    GetAttribute(const nsString& aName, nsString& aReturn) { return _to##GetAttribute(aName, aReturn); }  \
+  NS_IMETHOD    SetAttribute(const nsString& aName, const nsString& aValue) { return _to##SetAttribute(aName, aValue); }  \
   NS_IMETHOD    RemoveAttribute(const nsString& aName) { return _to##RemoveAttribute(aName); }  \
   NS_IMETHOD    GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn) { return _to##GetAttributeNode(aName, aReturn); }  \
   NS_IMETHOD    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) { return _to##SetAttributeNode(aNewAttr, aReturn); }  \

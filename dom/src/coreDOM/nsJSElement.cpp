@@ -147,10 +147,10 @@ ResolveElement(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method GetDOMAttribute
+// Native method GetAttribute
 //
 PR_STATIC_CALLBACK(JSBool)
-ElementGetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+ElementGetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -168,14 +168,14 @@ ElementGetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->GetDOMAttribute(b0, nativeRet)) {
+    if (NS_OK != nativeThis->GetAttribute(b0, nativeRet)) {
       return JS_FALSE;
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
-    JS_ReportError(cx, "Function getDOMAttribute requires 1 parameters");
+    JS_ReportError(cx, "Function getAttribute requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -184,10 +184,10 @@ ElementGetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
 
 //
-// Native method SetDOMAttribute
+// Native method SetAttribute
 //
 PR_STATIC_CALLBACK(JSBool)
-ElementSetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+ElementSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -207,14 +207,14 @@ ElementSetDOMAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    if (NS_OK != nativeThis->SetDOMAttribute(b0, b1)) {
+    if (NS_OK != nativeThis->SetAttribute(b0, b1)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function setDOMAttribute requires 2 parameters");
+    JS_ReportError(cx, "Function setAttribute requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -484,8 +484,8 @@ static JSPropertySpec ElementProperties[] =
 //
 static JSFunctionSpec ElementMethods[] = 
 {
-  {"getAttribute",          ElementGetDOMAttribute,     1},
-  {"setAttribute",          ElementSetDOMAttribute,     2},
+  {"getAttribute",          ElementGetAttribute,     1},
+  {"setAttribute",          ElementSetAttribute,     2},
   {"removeAttribute",          ElementRemoveAttribute,     1},
   {"getAttributeNode",          ElementGetAttributeNode,     1},
   {"setAttributeNode",          ElementSetAttributeNode,     1},
