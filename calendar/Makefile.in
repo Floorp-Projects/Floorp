@@ -58,7 +58,7 @@ winxpi::
 	cp libxpical/xpical.dll ./windows/components
 	cp libxpical/_xpidlgen/calendar.xpt ./windows/components
 	cp resources/content/calendarService.js ./windows/components
-	cd windows; find components/ resources/ install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_windows.xpi
+	cd windows; find components/ resources/ icons/ install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_windows.xpi
 	mv ./windows/calendar_windows.xpi .
 	echo "Done."
 
@@ -75,7 +75,25 @@ linuxxpi::
 	cp libxpical/libxpical.so ./linux/components
 	cp libxpical/_xpidlgen/calendar.xpt ./linux/components
 	cp resources/content/calendarService.js ./linux/components
-	cd linux; find components/ resources/ bin/ install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_linux.xpi 
+	cd linux; find components/ resources/ icons/ install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_linux.xpi 
 	mv ./linux/calendar_linux.xpi .
 	echo "Done."
+
+macxpi::
+	rm -f calendar_mac.xpi
+	rm -rf linux/components
+	rm -rf linux/resources
+
+	echo "Building Mac xpi..."
+	cp -r resources ./linux
+	./createBuildId.pl ./linux/resources/content/about.html
+	cd linux
+	mkdir -p ./linux/components
+	cp libxpical/libxpical.dylib ./linux/components
+	cp libxpical/_xpidlgen/calendar.xpt ./linux/components
+	cp resources/content/calendarService.js ./linux/components
+	cd linux; find components/ resources/ icons/ install.js \( -name CVS -o -name Makefile -o -name makefile.win -o -name Makefile.in -o -name test -o -name .cvsignore \) -prune -o -print | xargs zip calendar_mac.xpi 
+	mv ./linux/calendar_mac.xpi .
+	echo "Done."
+
 
