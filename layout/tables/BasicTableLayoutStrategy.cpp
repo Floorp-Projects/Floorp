@@ -687,12 +687,18 @@ void BasicTableLayoutStrategy::DistributeFixedSpace(nsVoidArray *aColSpanList)
       mTableFrame->GetColumnFrame(colIndex+i, colFrame);
       float percent;
       percent = ((float)(colFrame->GetEffectiveMaxColWidth()))/((float)totalEffectiveWidth);
-      nscoord colWidth = (nscoord)(totalColWidth*percent);
-      if (gsDebug==PR_TRUE) 
-        printf("  assigning fixed col width for spanning cells:  column %d set to %d\n", 
-               colIndex+i, colWidth);
-      mTableFrame->SetColumnWidth(colIndex+i, colWidth);
-      colFrame->SetMaxColWidth(colWidth);
+      nscoord newColWidth = (nscoord)(totalColWidth*percent);
+      nscoord minColWidth = colFrame->GetEffectiveMinColWidth();
+      nscoord oldColWidth = mTableFrame->GetColumnWidth(colIndex+i);
+      if (newColWidth>minColWidth)
+      {
+        if (gsDebug==PR_TRUE) 
+          printf("  assigning fixed col width for spanning cells:  column %d set to %d\n", 
+                 colIndex+i, newColWidth);
+        mTableFrame->SetColumnWidth(colIndex+i, newColWidth);
+        colFrame->SetEffectiveMaxColWidth(newColWidth);
+        mMaxTableWidth += (newColWidth-oldColWidth);
+      }
     }
   }
 }
@@ -1176,7 +1182,6 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
           printf ("  3 proportional step 2: col %d given %d proportion of remaining space %d, set to width = %d\n", 
                   info->mColIndex, info->mProportion, widthRemaining, computedColWidth);
         tableWidth += computedColWidth;
-//        effectiveColumnWidth = computedColWidth;
         delete info;
       }
     }
@@ -1551,8 +1556,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
         if (maxColWidth < cellDesiredWidth)
           maxColWidth = cellDesiredWidth;
         // effectiveMaxColumnWidth is the width as if no cells with colspans existed
-        if ((1==colSpan) && (colFrame->GetEffectiveMaxColWidth() < maxColWidth))
-          colFrame->SetEffectiveMaxColWidth(cellDesiredWidth);
+//        if ((1==colSpan) && (colFrame->GetEffectiveMaxColWidth() < maxColWidth))
+//          colFrame->SetEffectiveMaxColWidth(cellDesiredWidth);
         if (gsDebug==PR_TRUE) 
           printf ("    after cell %d, minColWidth=%d  maxColWidth=%d  effColWidth[%d]=%d,%d\n", 
                   rowIndex, minColWidth, maxColWidth, 
