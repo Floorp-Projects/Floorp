@@ -59,7 +59,7 @@ public:
    }
    PRBool Equals(const nsUnicodeFontMappingMac& anther);
    
-   PRBool ConvertUnicodeToGlyphs(short aFontNum, PRUnichar* aString,
+   PRBool ConvertUnicodeToGlyphs(short aFontNum, const PRUnichar* aString,
        ByteCount aStringLength, char *aBuffer, ByteCount aBufferLength, 
        ByteCount& oActualLength, ByteCount& oBytesRead, OptionBits opts);
 
