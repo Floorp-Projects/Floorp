@@ -231,7 +231,7 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   nsStylePosition* position = (nsStylePosition*)
     mStyleContext->GetData(eStyleStruct_Position);
   if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
-    aDesiredSize.width = position->mWidth.GetIntValue();
+    aDesiredSize.width = position->mWidth.GetCoordValue();
   }
   else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
     float pct = position->mWidth.GetPercentValue();
