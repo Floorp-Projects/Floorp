@@ -116,6 +116,10 @@ public:
 	NS_IMETHOD GetFileName(char * *aFileName);
 	NS_IMETHOD SetFileName(char * aFileName);
 
+    /* attribute string Param; */
+    NS_IMETHOD GetParam(char * *aParam);
+    NS_IMETHOD SetParam(char * aParam);
+
 	/* attribute string Query; */
 	NS_IMETHOD GetQuery(char * *aQuery);
 	NS_IMETHOD SetQuery(char * aQuery);

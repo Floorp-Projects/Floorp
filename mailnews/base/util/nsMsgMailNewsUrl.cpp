@@ -318,6 +318,16 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(char * aFileName)
 	return m_baseURL->SetFileName(aFileName);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetParam(char * *aParam)
+{
+	return m_baseURL->GetParam(aParam);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetParam(char *aParam)
+{
+	return m_baseURL->SetParam(aParam);
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::GetQuery(char * *aQuery)
 {
 	return m_baseURL->GetQuery(aQuery);
