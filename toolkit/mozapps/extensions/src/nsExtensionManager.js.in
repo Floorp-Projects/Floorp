@@ -486,7 +486,6 @@ nsInstallLogReader.prototype = {
   
     var fis = Components.classes["@mozilla.org/network/file-input-stream;1"]
                         .createInstance(Components.interfaces.nsIFileInputStream);
-    dumpFile(this.uninstallLog);
     fis.init(this.uninstallLog, -1, -1, false);
     var lis = fis.QueryInterface(Components.interfaces.nsILineInputStream);
     var line = { value: "" };
@@ -1927,7 +1926,8 @@ nsExtensionManager.prototype = {
     // tricked into installing an incompatible extension...
     this._ensureDS();
     var extensionID = this.canInstallItem(ds);
-    if (extensionID != -1) {
+    // |extensionID| must be a GUID string, not a number - a number means failure.
+    if (isNaN(parseInt(extensionID))) {
       // Clear any "disabled" flags that may have been set by the mismatch 
       // checking code at startup.
       var props = { toBeDisabled  : null,
