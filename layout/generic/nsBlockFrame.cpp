@@ -2515,7 +2515,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
 
     if (needSplit) {
       // Split line after the current frame
-      aKeepLineGoing = PR_FALSE;
+      *aKeepLineGoing = PR_FALSE;
       aFrame->GetNextSibling(&aFrame);
       rv = SplitLine(aState, aLine, aFrame);
       if (NS_FAILED(rv)) {
