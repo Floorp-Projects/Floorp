@@ -36,6 +36,8 @@
 #include "nsHTMLValue.h"
 #include "nsHTMLTagContent.h"
 #include "nsHTMLParts.h"
+#include "nsCSSLayout.h"
+
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 nsresult
@@ -107,10 +109,11 @@ nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   return mFirstChild->Init(aPresContext, aChildList);
 }
 
-NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsReflowMetrics&     aDesiredSize,
-                              const nsReflowState& aReflowState,
-                              nsReflowStatus&      aStatus)
+NS_IMETHODIMP
+nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus)
 {
   const nsReflowState* rsp = &aReflowState;
   nsReflowState resizeReflowState(aReflowState);
@@ -276,7 +279,8 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     ReflowAbsoluteItems(&aPresContext, *rsp);
 
     // Return our desired size
-    ComputeDesiredSize(desiredRect, rsp->maxSize, borderPadding, aDesiredSize);
+    ComputeDesiredSize(aPresContext, aReflowState, desiredRect,
+                       rsp->maxSize, borderPadding, aDesiredSize);
 
     // XXX This code is really temporary; the lower level frame
     // classes need to contribute to the area that needs damage
@@ -378,8 +382,12 @@ nsBodyFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   return NS_OK;
 }
 
-void AddToPadding(nsIPresContext* aPresContext, nsStyleUnit aStyleUnit, nscoord aValue, 
-                  PRBool aVertical, nsStyleCoord& aStyleCoord)
+static void
+AddToPadding(nsIPresContext* aPresContext,
+             nsStyleUnit aStyleUnit,
+             nscoord aValue, 
+             PRBool aVertical,
+             nsStyleCoord& aStyleCoord)
 {
   if (eStyleUnit_Coord == aStyleUnit) {
     nscoord coord;
@@ -390,8 +398,9 @@ void AddToPadding(nsIPresContext* aPresContext, nsStyleUnit aStyleUnit, nscoord 
   else if (eStyleUnit_Percent == aStyleUnit) {
     nsRect visibleArea;
     aPresContext->GetVisibleArea(visibleArea);
-    float increment = (aVertical) ? ((float)aValue) / ((float)visibleArea.height)
-                                  : ((float)aValue) / ((float)visibleArea.width);
+    float increment = (aVertical)
+      ? ((float)aValue) / ((float)visibleArea.height)
+      : ((float)aValue) / ((float)visibleArea.width);
     float percent = aStyleCoord.GetPercentValue();
     percent += increment;
     aStyleCoord.SetPercentValue(percent);
@@ -405,10 +414,11 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
     return NS_OK;
   }
 
-  // marginwidth/marginheight set in the body cancels marginwidth/marginheight set in the 
-  // web shell. However, if marginwidth is set in the web shell but marginheight is not set
-  // it is as if marginheight were set to 0. The same logic applies when marginheight is
-  // set and marginwidth is not set.
+  // marginwidth/marginheight set in the body cancels
+  // marginwidth/marginheight set in the web shell. However, if
+  // marginwidth is set in the web shell but marginheight is not set
+  // it is as if marginheight were set to 0. The same logic applies
+  // when marginheight is set and marginwidth is not set.
       
   PRInt32 marginWidth = -1, marginHeight = -1;
   
@@ -514,14 +524,17 @@ nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
 }
 
 void
-nsBodyFrame::ComputeDesiredSize(const nsRect&    aDesiredRect,
-                                const nsSize&    aMaxSize,
-                                const nsMargin&  aBorderPadding,
-                                nsReflowMetrics& aDesiredSize)
+nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
+                                const nsReflowState& aReflowState,
+                                const nsRect& aDesiredRect,
+                                const nsSize& aMaxSize,
+                                const nsMargin& aBorderPadding,
+                                nsReflowMetrics& aMetrics)
 {
-  // Note: Body used as a pseudo-frame shrink wraps
-  aDesiredSize.height = PR_MAX(aDesiredRect.YMost(), mSpaceManager->YMost());
-  aDesiredSize.width = aDesiredRect.XMost();
+  // Note: Body used as a pseudo-frame shrink wraps (unless of course
+  // style says otherwise)
+  nscoord height = PR_MAX(aDesiredRect.YMost(), mSpaceManager->YMost());
+  nscoord width = aDesiredRect.XMost();
 
   // Take into account absolutely positioned elements when computing the
   // desired size
@@ -532,22 +545,49 @@ nsBodyFrame::ComputeDesiredSize(const nsRect&    aDesiredRect,
     nsRect            rect;
 
     absoluteFrame->GetRect(rect);
-    if (rect.XMost() > aDesiredSize.width) {
-      aDesiredSize.width = rect.XMost();
+    nscoord xmost = rect.XMost();
+    nscoord ymost = rect.YMost();
+    if (xmost > width) {
+      width = xmost;
     }
-    if (rect.YMost() > aDesiredSize.height) {
-      aDesiredSize.height = rect.YMost();
+    if (ymost > height) {
+      height = ymost;
+    }
+  }
+
+  // Apply style size if present; XXX note the inner value (style-size -
+  // border+padding) should be given to the child as a max-size
+  nsSize styleSize;
+  PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, styleSize);
+  if (NS_SIZE_HAS_WIDTH & ss) {
+    width = styleSize.width + aBorderPadding.left + aBorderPadding.right;
+  }
+  else {
+    if (!mIsPseudoFrame) {
+      // Make sure we're at least as wide as our available width
+      width = PR_MAX(aMetrics.width, aMaxSize.width);
+    }
+  }
+
+  if (NS_SIZE_HAS_HEIGHT & ss) {
+    height = styleSize.width + aBorderPadding.top + aBorderPadding.bottom;
+  }
+  else {
+    if (!mIsPseudoFrame) {
+      height += aBorderPadding.top + aBorderPadding.bottom;
     }
   }
 
   if (!mIsPseudoFrame) {
     // Make sure we're at least as wide as our available width
-    aDesiredSize.width = PR_MAX(aDesiredSize.width, aMaxSize.width);
-    aDesiredSize.height += aBorderPadding.top +
-                           aBorderPadding.bottom;
+    width = PR_MAX(aMetrics.width, aMaxSize.width);
+    height += aBorderPadding.top + aBorderPadding.bottom;
   }
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
+
+  aMetrics.width = width;
+  aMetrics.height = height;
+  aMetrics.ascent = height;
+  aMetrics.descent = 0;
 }
 
 // Add the frame to the end of the child list
