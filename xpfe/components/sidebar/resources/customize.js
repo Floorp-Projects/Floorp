@@ -176,7 +176,7 @@ function PreviewPanel()
     if (!preview_URL || !preview_name) break;
 
     var preview = window.open("chrome://sidebar/content/preview.xul",
-                              "_blank", "chrome");
+                              "_blank", "chrome,resizable");
     preview.panel_name = preview_name;
     preview.panel_URL = preview_URL;
   }
