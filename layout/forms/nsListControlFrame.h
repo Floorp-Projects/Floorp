@@ -394,7 +394,6 @@ protected:
   PRPackedBool mButtonDown;
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
-  PRPackedBool mIsCapturingMouseEvents;
   PRInt32      mNumDisplayRows;
 
   PRBool       mIsAllContentHere;
