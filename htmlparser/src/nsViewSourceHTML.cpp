@@ -489,18 +489,17 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
 
 #ifdef DUMP_TO_FILE
     if (gDumpFile) {
-      nsCAutoString filename;
-      filename.AssignWithConversion(mFilename);
 
       fprintf(gDumpFile, "<html>\n");
       fprintf(gDumpFile, "<head>\n");
       fprintf(gDumpFile, "<title>");
       fprintf(gDumpFile, "Source of: ");
-      fprintf(gDumpFile, filename);
+      fputs(NS_ConvertUCS2toUTF8(mFilename).get(), gDumpFile);
       fprintf(gDumpFile, "</title>\n");
       fprintf(gDumpFile, "<link rel=\"stylesheet\" type=\"text/css\" href=\"resource:/res/viewsource.css\">\n");
+      fprintf(gDumpFile, "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n");
       fprintf(gDumpFile, "</head>\n");
-      fprintf(gDumpFile, "<body>\n");
+      fprintf(gDumpFile, "<body id=\"viewsource\">\n");
       fprintf(gDumpFile, "<pre>\n");
     }
 #endif //DUMP_TO_FILE
@@ -551,8 +550,15 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       nsCParserNode headNode(&headToken, 0/*stack token*/);
       mSink->OpenHead(headNode);
 
-      // Note that XUL with automatically add the prefix "Source of: "
-      mSink->SetTitle(mFilename);
+      // Note that XUL will automatically add the prefix "Source of: "
+      if (Substring(mFilename, 0, 5).Equals(NS_LITERAL_STRING("data:")) &&
+          mFilename.Length() > 50) {
+        nsAutoString dataFilename(Substring(mFilename, 0, 50));
+        dataFilename.Append(NS_LITERAL_STRING("..."));
+        mSink->SetTitle(dataFilename);
+      } else {
+        mSink->SetTitle(mFilename);
+      }
 
       if (theAllocator) {
         tag.Assign(NS_LITERAL_STRING("LINK"));
@@ -980,9 +986,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
   mSink->AddLeaf(theNode);
 #ifdef DUMP_TO_FILE
   if (gDumpFile) {
-    nsCAutoString cstr;
-    cstr.AssignWithConversion(aText);
-    fprintf(gDumpFile, cstr);
+    fputs(NS_ConvertUCS2toUTF8(aText).get(), gDumpFile);
   }
 #endif // DUMP_TO_FILE
 
