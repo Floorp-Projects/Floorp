@@ -342,7 +342,7 @@ NS_IMPL_ISUPPORTS2_CI(nsHTTPSOAPTransportCompletion, nsIDOMEventListener,
   NS_INIT_ISUPPORTS();
 }
 
-nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(nsISOAPCall * call, nsISOAPResponse * response, nsIXMLHttpRequest * request, nsISOAPResponseListener * listener):
+nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(nsISOAPCall * call, nsISOAPResponse * response, nsIXMLHttpRequest * request, nsISOAPResponseListener * listener) :
 mCall(call), mResponse(response), mRequest(request), mListener(listener)
 {
   NS_INIT_ISUPPORTS();

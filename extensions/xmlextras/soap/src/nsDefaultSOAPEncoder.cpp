@@ -203,7 +203,7 @@ ns##name##Encoder::~ns##name##Encoder() {}
   REGISTER_SCHEMA_ENCODER(UnsignedShort)\
   REGISTER_SCHEMA_ENCODER(UnsignedByte)\
 
-nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1():nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI11,
+nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1() : nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI11,
                nsnull,
                nsnull)
 {
@@ -215,7 +215,7 @@ nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1():nsSOAPEncoding(nsSOAPUtils:
   REGISTER_ENCODERS
 }
 
-nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2():nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI,
+nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2() : nsSOAPEncoding(nsSOAPUtils::kSOAPEncURI,
                nsnull,
                nsnull)
 {

@@ -90,7 +90,7 @@ protected:
   PRUint32 mCurrent;
 };
 NS_IMPL_ISUPPORTS2_CI(nsSOAPPropertyBag, nsIPropertyBag, nsIXPCScriptable) 
-nsSOAPPropertyBag::nsSOAPPropertyBag():mProperties(new nsSupportsHashtable)
+nsSOAPPropertyBag::nsSOAPPropertyBag() : mProperties(new nsSupportsHashtable)
 {
   NS_INIT_ISUPPORTS();
 
@@ -166,7 +166,7 @@ PRBool PropertyBagEnumFunc(nsHashKey * aKey, void *aData, void *aClosure)
   return PR_TRUE;
 }
 
-nsSOAPPropertyBagEnumerator::nsSOAPPropertyBagEnumerator(nsSOAPPropertyBag * aPropertyBag):mProperties(new nsSupportsArray()),
+nsSOAPPropertyBagEnumerator::nsSOAPPropertyBagEnumerator(nsSOAPPropertyBag * aPropertyBag) : mProperties(new nsSupportsArray()),
     mCurrent
     (0)
 {
@@ -204,7 +204,7 @@ NS_IMETHODIMP
 NS_IMPL_ISUPPORTS1_CI(nsSOAPProperty, nsIProperty)
 
 nsSOAPProperty::nsSOAPProperty(const nsAString & aName,
-                 nsIVariant * aValue):mName(aName), mValue(aValue) {
+                 nsIVariant * aValue) : mName(aName), mValue(aValue) {
   NS_INIT_REFCNT();
 }
 nsSOAPProperty::~nsSOAPProperty()

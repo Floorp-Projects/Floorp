@@ -54,8 +54,6 @@ public:
       // nsISOAPResponse
   NS_DECL_NSISOAPRESPONSE nsSOAPResponse();
    virtual ~ nsSOAPResponse();
-
-protected:
 };
 
 #endif

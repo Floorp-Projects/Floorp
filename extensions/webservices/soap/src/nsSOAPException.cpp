@@ -41,8 +41,9 @@
 #include "nsIXPConnect.h"
 
 nsSOAPException::nsSOAPException(nsresult aStatus, const nsAString & aName, 
-                                 const nsAString & aMessage, nsIException* aInner):
-  mStatus(aStatus),mName(aName),mMessage(aMessage),mInner(aInner)
+                                 const nsAString & aMessage, nsIException* aInner) :
+                                 mStatus(aStatus),mName(aName),mMessage(aMessage),
+                                 mInner(aInner)
 {
   NS_INIT_ISUPPORTS();
   nsresult rc;

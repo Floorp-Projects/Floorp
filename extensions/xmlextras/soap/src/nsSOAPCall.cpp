@@ -50,7 +50,7 @@
 //
 /////////////////////////////////////////////
 
-nsSOAPCall::nsSOAPCall():mVerifySourceHeader(PR_FALSE)
+nsSOAPCall::nsSOAPCall() : mVerifySourceHeader(PR_FALSE)
 {
 }
 

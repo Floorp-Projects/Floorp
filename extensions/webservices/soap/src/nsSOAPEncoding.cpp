@@ -52,8 +52,7 @@
 
 //  First comes the registry which shares between associated encodings but is never seen by xpconnect.
 
-NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncoding) nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding * aEncoding):mEncodings(new
-           nsSupportsHashtable)
+NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncoding) nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding * aEncoding) : mEncodings(new nsSupportsHashtable)
 {
   NS_INIT_ISUPPORTS();
 
@@ -243,7 +242,7 @@ NS_IMETHODIMP nsSOAPEncodingRegistry::GetExternalSchemaURI(const nsAString & aIn
 
 NS_IMPL_ISUPPORTS1_CI(nsSOAPEncoding, nsISOAPEncoding) 
 
-nsSOAPEncoding::nsSOAPEncoding():mEncoders(new nsSupportsHashtable()),
+nsSOAPEncoding::nsSOAPEncoding() : mEncoders(new nsSupportsHashtable()),
 mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable()), mMappedExternal(new nsSupportsHashtable())
 {
   NS_INIT_ISUPPORTS();
@@ -254,7 +253,7 @@ mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable())
   mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODER_1_1_CONTRACTID);
   mRegistry = new nsSOAPEncodingRegistry(this);
 }
-nsSOAPEncoding::nsSOAPEncoding(const nsAString & aStyleURI, nsSOAPEncodingRegistry * aRegistry, nsISOAPEncoding * aDefaultEncoding):mEncoders(new nsSupportsHashtable()),
+nsSOAPEncoding::nsSOAPEncoding(const nsAString & aStyleURI, nsSOAPEncodingRegistry * aRegistry, nsISOAPEncoding * aDefaultEncoding) : mEncoders(new nsSupportsHashtable()),
 mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable()), mMappedExternal(new nsSupportsHashtable())
 {
   NS_INIT_ISUPPORTS();

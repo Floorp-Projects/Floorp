@@ -49,7 +49,8 @@
 
 
 class nsSOAPPropertyBag;
-class nsSOAPPropertyBagMutator:public nsISOAPPropertyBagMutator {
+class nsSOAPPropertyBagMutator:public nsISOAPPropertyBagMutator
+{
 public:
   nsSOAPPropertyBagMutator();
   virtual ~nsSOAPPropertyBagMutator();
