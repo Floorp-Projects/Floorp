@@ -1826,7 +1826,6 @@ static JSFunctionSpec date_methods[] = {
     {"setUTCSeconds",       date_setUTCSeconds,     2,0,0 },
     {"setMilliseconds",     date_setMilliseconds,   1,0,0 },
     {"setUTCMilliseconds",  date_setUTCMilliseconds,1,0,0 },
-    {"toGMTString",         date_toGMTString,       0,0,0 },
     {"toUTCString",         date_toGMTString,       0,0,0 },
     {js_toLocaleString_str, date_toLocaleString,    0,0,0 },
     {"toLocaleDateString",  date_toLocaleDateString,0,0,0 },
@@ -1973,6 +1972,10 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 			 NULL, date_methods, NULL, date_static_methods);
     if (!proto)
 	return NULL;
+
+    /* Alias toUTCString with toGMTString.  (ECMA B.2.6) */
+    if (!JS_AliasProperty(cx, proto, "toUTCString", "toGMTString"))
+        return NULL;
 
     /* Set the value of the Date.prototype date to NaN */
     proto_date = date_constructor(cx, proto);
