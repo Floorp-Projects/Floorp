@@ -36,7 +36,9 @@ static int MimeMessage_parse_eof (MimeObject *, XP_Bool);
 static int MimeMessage_close_headers (MimeObject *obj);
 static int MimeMessage_write_headers_html (MimeObject *);
 
+#ifndef MOZ_MAIL_COMPOSE
 extern MimeObjectClass mimeFilterClass;
+#endif /* MOZ_MAIL_COMPOSE */
 
 #ifdef XP_UNIX
 extern void MimeHeaders_do_unix_display_hook_hack(MimeHeaders *);
@@ -417,7 +419,9 @@ MimeMessage_parse_eof (MimeObject *obj, XP_Bool abort_p)
 	   obj->options->decompose_file_p &&
 	   obj->options->done_parsing_outer_headers &&
 	   ! obj->options->is_multipart_msg &&
+#ifndef MOZ_MAIL_COMPOSE
 	   ! mime_typep(obj, (MimeObjectClass*) &mimeFilterClass) &&
+#endif /* MOZ_MAIL_COMPOSE */
 	   obj->options->decompose_file_close_fn ) {
 	status = obj->options->decompose_file_close_fn (
 											   obj->options->stream_closure );
@@ -453,7 +457,9 @@ MimeMessage_add_child (MimeObject *parent, MimeObject *child)
   if ( parent->options &&
 	   parent->options->decompose_file_p &&
 	   ! parent->options->is_multipart_msg &&
+#ifndef MOZ_MAIL_COMPOSE
 	   ! mime_typep(child, (MimeObjectClass*) &mimeFilterClass) &&
+#endif /* MOZ_MAIL_COMPOSE */
 	   parent->options->decompose_file_init_fn ) {
 	int status = 0;
 	status = parent->options->decompose_file_init_fn (

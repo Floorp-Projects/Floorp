@@ -52,8 +52,11 @@ CSRCS		= \
 		  addr.c \
 		  $(NULL)
 
-#		  mimevcrd.c \
-
+ifdef MOZ_MAIL_COMPOSE
+CSRCS		+= \
+		  mimevcrd.c \
+		  $(NULL)
+endif
 
 REQUIRES = mime nspr dbm img util layer security pref js julian nls xp network
 
@@ -68,7 +71,11 @@ endif
 
 INCLUDES 	+= -I./
 
-DEFINES += -DMOZILLA_30 -DNO_SECURITY
+ifndef MOZ_MAIL_COMPOSE
+DEFINES += -DMOZILLA_30
+endif
+
+DEFINES += -DNO_SECURITY
 
 #
 # Building the "mimefilt" executable, which reads a message from stdin and

@@ -1069,9 +1069,11 @@ MSG_RemoveDuplicateAddresses (const char *addrs,
       if (!found && removeAliasesToMe)
 	  {
 #ifndef MOZILLA_30
+#if CPLUS_PLUS_IN_C_FILE   /* C++ in C file! */
 		  found = MSG_Prefs::IsEmailAddressAnAliasForMe (a_array1[i]);
 		  if (found)
 			  break;
+#endif
 #endif /* MOZILLA_30 */
 	  }
 

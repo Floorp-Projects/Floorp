@@ -32,6 +32,8 @@
 MimeDefClass(MimeInlineTextVCard, MimeInlineTextVCardClass,
 			 mimeInlineTextVCardClass, &MIME_SUPERCLASS);
 
+MimeInlineTextVCardClass mimeInlineTextVCardClass;
+
 static int MimeInlineTextVCard_parse_line (char *, int32, MimeObject *);
 static int MimeInlineTextVCard_parse_eof (MimeObject *, XP_Bool);
 static int MimeInlineTextVCard_parse_begin (MimeObject *obj);

@@ -19,7 +19,6 @@
 /* mimedrft.c --- save and restore drafts of unfinished messages
  */
 
-#ifdef MIME_DRAFTS /* whole file */
 
 #include "xp.h"
 #include "xpgetstr.h"
@@ -29,6 +28,11 @@
 #include "mimeobj.h"
 #include "mimemsg.h"
 #include "mimeenc.h" /* jrm - needed to make it build 97/02/21 */
+
+/* ifdef MIME_DRAFTS has to be after the includes
+ * since that's where MIME_DRAFTS will be defined, if it is.
+ */
+#ifdef MIME_DRAFTS /* whole file */
 
 #define HEADER_NNTP_POSTING_HOST             "NNTP-Posting-Host"
 
@@ -511,11 +515,13 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 	
   if (cpane && mdd->url->fe_data) 
   {
+#ifdef MOZ_MAIL_NEWS
 	  if ( mdd->format_out != FO_CMDLINE_ATTACHMENTS ) 
 	  {
 		  MSG_SetPostDeliveryActionInfo (cpane, mdd->url->fe_data);
 	  }
 	  else
+#endif /* MOZ_MAIL_NEWS */
 	  {
 		  MSG_SetAttachmentList ( cpane, (MSG_AttachmentData*)(mdd->url->fe_data));
 	  }

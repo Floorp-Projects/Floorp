@@ -1102,11 +1102,13 @@ MIME_MessageConverter (int format_out, void *closure,
       )
     {
 #ifndef MOZILLA_30
+#ifdef MOZ_MAIL_NEWS
       MSG_Pane* pane = MSG_FindPane(context, MSG_MESSAGEPANE);
       msd->options->rot13_p = FALSE;
       if (pane) {
         msd->options->rot13_p = MSG_ShouldRot13Message(pane);
       }
+#endif /* MOZ_MAIL_NEWS */
 #else  /* MOZILLA_30 */
 
       XP_Bool all_headers_p = FALSE;
@@ -2221,6 +2223,7 @@ MIME_RegisterConverters(void)
 
 #ifndef MOZILLA_30
 
+#ifdef MOZ_MAIL_NEWS
 int
 MIME_DisplayAttachmentPane(MWContext* context)
 {
@@ -2239,6 +2242,7 @@ MIME_DisplayAttachmentPane(MWContext* context)
     }
     return 0;
 }
+#endif /* MOZ_MAIL_NEWS */
 
 
 /* This struct is the state we used in MIME_VCardConverter() */
