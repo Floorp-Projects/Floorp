@@ -9,15 +9,18 @@
         {CLASS = GoMenu; LANGUAGE = ObjC; SUPERCLASS = NSMenu; }, 
         {
             ACTIONS = {
+                aboutServers = id; 
                 addBookmark = id; 
                 addFolder = id; 
                 addSeparator = id; 
                 biggerTextSize = id; 
                 closeTab = id; 
+                connectToServer = id; 
                 displayPreferencesWindow = id; 
                 doReload = id; 
                 doSearch = id; 
                 doStop = id; 
+                exportBookmarks = id; 
                 feedbackLink = id; 
                 findAgain = id; 
                 findInPage = id; 
@@ -27,17 +30,18 @@
                 goHome = id; 
                 importBookmarks = id; 
                 infoLink = id; 
-                manageBookmarks = id; 
+                manageSidebar = id; 
                 newTab = id; 
                 newWindow = id; 
                 nextTab = id; 
                 openFile = id; 
                 openLocation = id; 
                 openMenuBookmark = id; 
+                pageSetup = id; 
                 previousTab = id; 
                 printPage = id; 
-                printPreview = id; 
                 savePage = id; 
+                sendURL = id; 
                 showAboutBox = id; 
                 smallerTextSize = id; 
                 toggleBookmarksToolbar = id; 
@@ -56,8 +60,11 @@
                 mCloseWindowMenuItem = NSMenuItem; 
                 mCreateBookmarksFolderMenuItem = NSMenuItem; 
                 mCreateBookmarksSeparatorMenuItem = NSMenuItem; 
+                mDockMenu = NSMenu; 
                 mFilterList = NSPopUpButton; 
                 mFilterView = NSView; 
+                mGoMenu = NSMenu; 
+                mServersSubmenu = NSMenu; 
                 mToggleSidebarMenuItem = NSMenuItem; 
             }; 
             SUPERCLASS = NSObject; 

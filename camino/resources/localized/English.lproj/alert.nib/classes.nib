@@ -1,7 +1,7 @@
 {
     IBClasses = (
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {CLASS = java.lang.Object; LANGUAGE = Java; }, 
+        {CLASS = "java.lang.Object"; LANGUAGE = Java; }, 
         {
             ACTIONS = {hitButton1 = id; hitButton2 = id; hitButton3 = id; }; 
             CLASS = nsAlertController; 
@@ -12,17 +12,17 @@
                 alertCheckPanelText = id; 
                 alertPanel = id; 
                 alertPanelText = id; 
+                confirmChangePasswordPanel = id; 
                 confirmCheckPanel = id; 
                 confirmCheckPanelButton1 = id; 
                 confirmCheckPanelButton2 = id; 
-                confirmCheckPanelButton3 = id; 
                 confirmCheckPanelCheck = id; 
                 confirmCheckPanelText = id; 
                 confirmPanel = id; 
                 confirmPanelButton1 = id; 
                 confirmPanelButton2 = id; 
-                confirmPanelButton3 = id; 
                 confirmPanelText = id; 
+                confirmStorePasswordPanel = id; 
                 expiredCertPanel = id; 
                 owner = id; 
                 passwordPanel = id; 

@@ -27,18 +27,20 @@
 {
   // IBOutlet NSButton *buttonSystemPreferences;
 	IBOutlet NSTextField *textFieldHomePage;
+	IBOutlet NSTextField *textFieldSearchPage;
   
 	IBOutlet NSButton *checkboxUseSystemHomePage;
   IBOutlet NSButton *checkboxNewTabBlank;
   IBOutlet NSButton *checkboxNewWindowBlank;
   
-  IBOutlet NSButton *checkboxOpenTabs;
-  IBOutlet NSButton *checkboxOpenTabsForAEs;
+  IBOutlet id radioOpenTabsForCommand;
+  IBOutlet id radioOpenForAE;
   IBOutlet NSButton *checkboxLoadTabsInBackground;
   
-  IBOutlet NSSlider *sliderHistoryDays;
   IBOutlet NSTextField *textFieldHistoryDays;
-
+  
+  IBOutlet NSTextField* mDownloadFolder;
+  IBOutlet NSButton* mEnableHelperApps;
 }
 
 - (IBAction)openSystemInternetPanel:(id)sender;
@@ -50,6 +52,9 @@
 
 - (NSString*)getSystemHomePage;
 - (NSString*)getCurrentHomePage;
+
+- (NSString*)getSystemSearchPage;
+- (NSString*)getCurrentSearchPage;
 
 -(IBAction) clearDiskCache:(id)aSender;
 

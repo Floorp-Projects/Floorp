@@ -1,17 +1,21 @@
 {
     IBClasses = (
         {
+            ACTIONS = {dockMenuCheckboxClicked = id; tabGroupCheckboxClicked = id; }; 
             CLASS = BookmarkInfoController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 mDescriptionField = NSTextField; 
                 mDescriptionLabel = NSTextField; 
+                mDockMenuCheckbox = NSButton; 
                 mKeywordField = NSTextField; 
                 mKeywordLabel = NSTextField; 
                 mLocationField = NSTextField; 
                 mLocationLabel = NSTextField; 
                 mNameField = NSTextField; 
                 mNameLabel = NSTextField; 
+                mTabgroupCheckbox = NSButton; 
+                mVariableFieldsContainer = NSView; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 

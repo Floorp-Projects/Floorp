@@ -1,0 +1,35 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = NSPreferencePane; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                "_firstKeyView" = id; 
+                "_initialKeyView" = id; 
+                "_lastKeyView" = id; 
+                "_window" = id; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {
+                clickEnableJS = id; 
+                clickEnableJava = id; 
+                clickEnablePlugins = id; 
+                clickEnablePopupBlocking = id; 
+            }; 
+            CLASS = OrgMozillaChimeraPreferenceWebFeatures; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mEnableJS = NSButton; 
+                mEnableJava = NSButton; 
+                mEnablePlugins = NSButton; 
+                mEnablePopupBlocking = NSButton; 
+            }; 
+            SUPERCLASS = PreferencePaneBase; 
+        }, 
+        {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }
+    ); 
+    IBVersion = 1; 
+}

@@ -129,4 +129,16 @@
   }
 }
 
+- (void)clearPref: (const char*)prefName
+{
+  if (mPrefService) {
+    mPrefService->ClearUserPref(prefName);
+  }
+}
+
+- (NSString*)getLocalizedString:(NSString*)key
+{
+  return NSLocalizedStringFromTableInBundle(key, nil, [NSBundle bundleForClass:[self class]], @"");
+}
+
 @end

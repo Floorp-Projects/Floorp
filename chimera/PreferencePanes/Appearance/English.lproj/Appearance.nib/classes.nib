@@ -10,32 +10,46 @@
         {
             CLASS = NSPreferencePane; 
             LANGUAGE = ObjC; 
-            OUTLETS = {_firstKeyView = id; _initialKeyView = id; _lastKeyView = id; _window = id; }; 
+            OUTLETS = {
+                "_firstKeyView" = id; 
+                "_initialKeyView" = id; 
+                "_lastKeyView" = id; 
+                "_window" = id; 
+            }; 
             SUPERCLASS = NSObject; 
         }, 
         {
             ACTIONS = {
+                advancedFontsDone = id; 
                 buttonClicked = id; 
                 colorChanged = id; 
                 fontChoiceButtonClicked = id; 
-                fontRegionListClicked = id; 
+                fontRegionPopupClicked = id; 
+                showAdvancedFontsDialog = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferenceAppearance; 
             LANGUAGE = ObjC; 
             OUTLETS = {
+                advancedFontsDialog = NSPanel; 
+                advancedFontsLabel = NSTextField; 
                 checkboxUnderlineLinks = NSButton; 
                 checkboxUseMyColors = NSButton; 
                 colorwellBackgroundColor = NSColorWell; 
                 colorwellTextColor = NSColorWell; 
                 colorwellUnvisitedLinks = NSColorWell; 
                 colorwellVisitedLinks = NSColorWell; 
-                fontSampleCursive = NSTextField; 
+                cursiveFontPopup = NSPopUpButton; 
+                defaultFontMatrix = NSMatrix; 
+                fantasyFontPopup = NSPopUpButton; 
                 fontSampleMonospace = NSTextField; 
-                fontSampleSansSerif = NSTextField; 
-                fontSampleSerif = NSTextField; 
+                fontSampleProportional = NSTextField; 
                 matrixChooseFont = NSMatrix; 
+                minFontSizePopup = NSPopUpButton; 
+                popupFontRegion = NSPopUpButton; 
+                proportionalSampleLabel = NSTextField; 
+                sansSerifFontPopup = NSPopUpButton; 
+                serifFontPopup = NSPopUpButton; 
                 tabView = NSTabView; 
-                tableViewFontRegion = NSTableView; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 

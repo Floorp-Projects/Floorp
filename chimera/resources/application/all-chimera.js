@@ -41,8 +41,7 @@
 // What to load in a new tab: 0 = blank, 1 = homepage, 2 = last page
 pref("browser.tabs.startPage", 0);
 
-// Disable the print progress dialog
-pref("print.show_print_progress", false);
+pref("print.use_global_printsettings", true);
 
 // Pick some reasonable OS X default fonts
 pref("font.name.serif.x-western", "Lucida Grande");
@@ -51,7 +50,26 @@ pref("font.size.variable.x-western", 15);
 pref("font.size.fixed.x-western", 12);
 pref("font.size.minimum-size.x-western", 10);
 
-// Unsuppress painting sooner (XXXbryner, why is this here?)
 pref("nglayout.initialpaint.delay", 250);
 
+// turn on universal character detection
+pref("intl.charset.detector", "universal_charset_detector");
 
+pref("chimera.store_passwords_with_keychain", true);
+pref("chimera.keychain_passwords_autofill", true);
+
+pref("chimera.enable_plugins", true);
+pref("chimera.log_js_to_console", true);
+
+// Identify Chimera in the UA string
+pref("general.useragent.vendor", "Chimera");
+pref("general.useragent.vendorSub", "0.6+");
+
+pref("network.dir.generate_html", true);
+pref("browser.chrome.favicons", true);
+
+// Default to auto download enabled but auto helper dispatch disabled
+pref("browser.download.autoDownload", true);
+pref("browser.download.autoDispatch", false);
+
+pref("chimera.enable_rendezvous", false);

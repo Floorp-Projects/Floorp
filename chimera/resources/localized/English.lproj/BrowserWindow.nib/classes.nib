@@ -33,7 +33,23 @@
             LANGUAGE = ObjC; 
             SUPERCLASS = ExtendedOutlineView; 
         }, 
-        {CLASS = BookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            ACTIONS = {addFolder = id; }; 
+            CLASS = BookmarksToolbar; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSView; 
+        }, 
+        {CLASS = BrowserContainerView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            CLASS = BrowserContentView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mBookmarksToolbar = BookmarksToolbar; 
+                mBrowserContainerView = NSView; 
+                mStatusBar = NSView; 
+            }; 
+            SUPERCLASS = NSView; 
+        }, 
         {CLASS = BrowserTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
         {
             CLASS = BrowserWindow; 
@@ -44,28 +60,47 @@
         {
             ACTIONS = {
                 back = id; 
+                biggerTextSize = id; 
                 bookmarkLink = id; 
                 bookmarkPage = id; 
                 cancelAddBookmarkSheet = id; 
                 cancelLocationSheet = id; 
+                closeCurrentTab = id; 
+                closeOtherTabs = id; 
+                closeSendersTab = id; 
+                copyImageLocation = id; 
                 copyLinkLocation = id; 
                 endAddBookmarkSheet = id; 
                 endLocationSheet = id; 
                 forward = id; 
+                frameToNewTab = id; 
+                frameToNewWindow = id; 
+                frameToThisWindow = id; 
+                getInfo = id; 
                 goToLocationFromToolbarURLField = id; 
                 home = id; 
                 manageBookmarks = id; 
+                moveTabToNewWindow = id; 
+                newTab = id; 
+                nextTab = id; 
                 openLinkInNewTab = id; 
                 openLinkInNewWindow = id; 
+                pageSetup = id; 
                 performSearch = id; 
+                previousTab = id; 
                 printDocument = id; 
                 reload = id; 
+                reloadSendersTab = id; 
+                saveFrameAs = id; 
                 saveImageAs = id; 
                 saveLinkAs = id; 
                 savePageAs = id; 
+                sendURL = id; 
+                smallerTextSize = id; 
                 stop = id; 
                 toggleSidebar = id; 
                 viewOnlyThisImage = id; 
+                viewPageSource = id; 
                 viewSource = id; 
             }; 
             CLASS = BrowserWindowController; 
@@ -76,7 +111,8 @@
                 mAddBookmarkSheetWindow = NSWindow; 
                 mAddBookmarkTitleField = NSTextField; 
                 mBackItem = NSMenuItem; 
-                mCachedBMDS = id; 
+                mContentView = BrowserContentView; 
+                mCopyItem = NSMenuItem; 
                 mForwardItem = NSMenuItem; 
                 mHistoryDataSource = HistoryDataSource; 
                 mImageLinkMenu = NSMenu; 
@@ -90,15 +126,15 @@
                 mPageMenu = NSMenu; 
                 mPersonalToolbar = BookmarksToolbar; 
                 mProgress = NSProgressIndicator; 
-                mProxyIcon = NSImageView; 
+                mProxyIcon = PageProxyIcon; 
                 mSidebarBookmarksDataSource = BookmarksDataSource; 
-                mSidebarBrowserView = id; 
                 mSidebarDrawer = NSDrawer; 
                 mSidebarSourceTabView = NSTabView; 
                 mSidebarTabView = NSTabView; 
                 mStatus = NSTextField; 
                 mStatusBar = NSView; 
                 mTabBrowser = BrowserTabView; 
+                mTabMenu = NSMenu; 
                 mURLBar = NSTextField; 
             }; 
             SUPERCLASS = NSWindowController; 

@@ -1,45 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
-<plist version="0.9">
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
 <dict>
 	<key>IBDocumentLocation</key>
-	<string>172 80 630 599 0 0 1280 1002 </string>
+	<string>66 21 653 383 0 0 1152 848 </string>
 	<key>IBEditorPositions</key>
 	<dict>
 		<key>124</key>
-		<string>345 803 170 144 0 0 1280 1002 </string>
+		<string>107 563 170 144 0 0 1600 1002 </string>
 		<key>160</key>
-		<string>165 292 195 666 0 0 1280 1002 </string>
+		<string>496 172 195 666 0 0 1152 848 </string>
 		<key>28</key>
-		<string>524 439 195 457 0 0 1280 1002 </string>
+		<string>478 352 195 457 0 0 1152 848 </string>
 		<key>297</key>
-		<string>233 646 176 162 0 0 1152 848 </string>
+		<string>107 466 213 294 0 0 1600 1002 </string>
 		<key>314</key>
-		<string>418 732 139 66 0 0 1152 848 </string>
+		<string>73 542 213 132 0 0 1600 1002 </string>
 		<key>336</key>
-		<string>630 666 200 132 0 0 1152 848 </string>
+		<string>486 756 213 180 0 0 1600 1002 </string>
 		<key>365</key>
-		<string>22 587 93 162 0 0 1152 848 </string>
+		<string>31 719 93 162 0 0 1600 1002 </string>
 		<key>463</key>
-		<string>22 619 200 180 0 0 1152 848 </string>
+		<string>97 693 213 246 0 0 1600 1002 </string>
 		<key>56</key>
 		<string>450 634 343 68 0 0 1280 1002 </string>
+		<key>654</key>
+		<string>206 785 198 144 0 0 1600 1002 </string>
 	</dict>
 	<key>IBFramework Version</key>
-	<string>248.0</string>
+	<string>286.0</string>
 	<key>IBGroupedObjects</key>
 	<dict>
-		<key>3</key>
+		<key>7</key>
 		<array>
-			<string>8</string>
-			<string>9</string>
+			<string>641</string>
+			<string>640</string>
 		</array>
 	</dict>
 	<key>IBLastGroupID</key>
-	<string>4</string>
+	<string>8</string>
 	<key>IBLockedObjects</key>
 	<array/>
 	<key>IBSystem Version</key>
-	<string>5S66</string>
+	<string>6F21</string>
 </dict>
 </plist>
