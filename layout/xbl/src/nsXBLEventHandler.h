@@ -31,6 +31,7 @@ class nsIDOMEvent;
 class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
+class nsIAtom;
 
 class nsXBLEventHandler : public nsIDOMKeyListener, 
                           public nsIDOMMouseListener
@@ -59,9 +60,14 @@ protected:
   inline PRBool MouseEventMatched(nsIDOMUIEvent* aMouseEvent);
   
   inline PRBool IsMatchingKeyCode(const PRUint32 aChar, const nsString& aKeyName);
-  inline PRBool IsMatchingCharCode(const nsString& aChar, const nsString& aKeyName);
+  inline PRBool IsMatchingCharCode(const PRUint32 aChar, const nsString& aKeyName);
 
   NS_IMETHOD ExecuteHandler();
+
+  static PRUint32 gRefCnt;
+  static nsIAtom* kKeyAtom;
+  static nsIAtom* kKeyCodeAtom;
+  static nsIAtom* kCharCodeAtom;
 
 protected:
   nsIContent* mBoundElement; // Both of these refs are weak.

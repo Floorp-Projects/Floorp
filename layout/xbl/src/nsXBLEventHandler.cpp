@@ -1,17 +1,36 @@
 #include "nsCOMPtr.h"
 #include "nsXBLEventHandler.h"
 #include "nsIContent.h"
+#include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsINameSpaceManager.h"
+
+PRUint32 nsXBLEventHandler::gRefCnt = 0;
+nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kCharCodeAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kKeyAtom = nsnull;
 
 nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement)
 {
   NS_INIT_REFCNT();
   mBoundElement = aBoundElement;
   mHandlerElement = aHandlerElement;
+  gRefCnt++;
+  if (gRefCnt == 1) {
+    kKeyCodeAtom = NS_NewAtom("keycode");
+    kKeyAtom = NS_NewAtom("key");
+    kCharCodeAtom = NS_NewAtom("charcode");
+  }
 }
 
 nsXBLEventHandler::~nsXBLEventHandler()
 {
+  gRefCnt--;
+  if (gRefCnt == 0) {
+    NS_RELEASE(kKeyAtom);
+    NS_RELEASE(kKeyCodeAtom);
+    NS_RELEASE(kCharCodeAtom);
+  }
 }
 
 NS_IMPL_ISUPPORTS2(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener)
@@ -100,7 +119,33 @@ PRBool
 nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 {
   nsAutoString trueString = "true";
-  nsAutoString falseString = "false";
+  
+  // Get the keycode and charcode of the key event.
+  PRUint32 keyCode, charCode;
+  aKeyEvent->GetKeyCode(&keyCode);
+  aKeyEvent->GetCharCode(&charCode);
+
+  PRBool keyMatched = PR_FALSE;
+
+  nsAutoString key;
+  mBoundElement->GetAttribute(kNameSpaceID_None, kKeyAtom, key);
+  if (!key.IsEmpty())
+    keyMatched = IsMatchingCharCode(charCode, key);
+  
+  key = "";
+  mBoundElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, key);
+  if (!key.IsEmpty())
+    keyMatched = IsMatchingKeyCode(keyCode, key);
+  
+  key = "";
+  mBoundElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, key);
+  if (!key.IsEmpty())
+    keyMatched = IsMatchingCharCode(charCode, key);
+  
+  if (!keyMatched)
+    return PR_FALSE;
+
+  // Now check modifier keys
 
   return PR_TRUE;
 }
@@ -696,14 +741,14 @@ PRBool nsXBLEventHandler::IsMatchingKeyCode(const PRUint32 aChar, const nsString
 }
 
 PRBool 
-nsXBLEventHandler::IsMatchingCharCode(const nsString& aChar, const nsString& aKeyName)
+nsXBLEventHandler::IsMatchingCharCode(const PRUint32 aChar, const nsString& aKeyName)
 {
-  PRBool ret = PR_FALSE;
-
-  if (aChar == aKeyName)
-    ret = PR_TRUE;
-
-  return ret;
+  char tempChar[2];
+  tempChar[0] = aChar;
+  tempChar[1] = 0;
+  nsAutoString tempChar2 = tempChar;
+  
+  return tempChar2.EqualsIgnoreCase(aKeyName);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
