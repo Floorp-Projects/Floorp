@@ -218,6 +218,45 @@ static PRBool misMatch( const PRBool &flag, const ProtocolRegistryEntry &entry )
     return result;
 }
 
+// isAccessRestricted - Returns PR_TRUE iff this user only has restricted access
+// to the registry keys we need to modify.
+static PRBool isAccessRestricted() {
+    char   subKey[] = "Software\\Mozilla - Test Key";
+    PRBool result = PR_FALSE;
+    DWORD  dwDisp = 0;
+    HKEY   key;
+    // Try to create/open a subkey under HKLM.
+    DWORD rc = ::RegCreateKeyEx( HKEY_LOCAL_MACHINE,
+                                 subKey,
+                                 0,
+                                 NULL,
+                                 REG_OPTION_NON_VOLATILE,
+                                 KEY_WRITE,
+                                 NULL,
+                                 &key,
+                                 &dwDisp );
+
+    if ( rc == ERROR_SUCCESS ) {
+        // Key was opened; first close it.
+        ::RegCloseKey( key );
+        // Delete it if we just created it.
+        switch( dwDisp ) {
+            case REG_CREATED_NEW_KEY:
+                ::RegDeleteKey( HKEY_LOCAL_MACHINE, subKey );
+                break;
+            case REG_OPENED_EXISTING_KEY:
+                break;
+        }
+    } else {
+        // Can't create/open it; we don't have access.
+        result = PR_TRUE;
+    }
+
+    return result;
+}
+
+
+
 // Implementation of method that checks settings versus registry and prompts user
 // if out of synch.
 NS_IMETHODIMP
@@ -230,6 +269,10 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
         return NS_OK;
     } else {
         alreadyChecked = PR_TRUE;
+        // Don't check further if we don't have sufficient access.
+        if ( isAccessRestricted() ) {
+            return NS_OK;
+        }
     }
 
     // Get settings.
@@ -565,7 +608,6 @@ NS_IMETHODIMP nsWindowsHooks::StartupTurboEnable()
     int rv = ::GetModuleFileName( NULL, fileName, sizeof fileName );
     if ( rv ) {
       strcat( fileName, " -turbo" );
-      nsresult rv;
       ::RegSetValueEx( hKey, NS_QUICKLAUNCH_RUN_KEY, 0, REG_SZ, ( LPBYTE )fileName, strlen( fileName ) );
     }
     ::RegCloseKey( hKey );

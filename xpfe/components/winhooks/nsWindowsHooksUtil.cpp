@@ -39,6 +39,7 @@
 #include <string.h>
 
 #include "nsString.h"
+#include "nsINativeAppSupportWin.h"
 
 // Where Mozilla stores its own registry values.
 const char * const mozillaKeyName = "Software\\Mozilla\\Desktop";
@@ -62,7 +63,26 @@ static nsCString thisApplication() {
     return result;
 }
 
-// Returns this
+// Returns the "short" name of this application (in upper case).  This is for
+// use as a StartMenuInternet value.
+static nsCString shortAppName() {
+    static nsCAutoString result;
+    
+    if ( result.IsEmpty() ) { 
+        // Find last backslash in thisApplication().
+        nsCAutoString thisApp( thisApplication() );
+        PRInt32 n = thisApp.RFind( "\\" );
+        if ( n != kNotFound ) {
+            // Use what comes after the last backslash.
+            result = (const char*)thisApp.get() + n + 1;
+        } else {
+            // Use entire string.
+            result = thisApp;
+        }
+    }
+
+    return result;
+}
 
 // RegistryEntry
 //
@@ -73,12 +93,13 @@ static nsCString thisApplication() {
 //      o The registry setting we'd like this entry to have when set.
 struct RegistryEntry {
     HKEY        baseKey;   // e.g., HKEY_CURRENT_USER
+    PRBool      isNull;    // i.e., should use ::RegDeleteValue
     nsCString   keyName;   // Key name.
     nsCString   valueName; // Value name (can be empty, which implies NULL).
     nsCString   setting;   // What we set it to.
 
     RegistryEntry( HKEY baseKey, const char* keyName, const char* valueName, const char* setting )
-        : baseKey( baseKey ), keyName( keyName ), valueName( valueName ), setting( setting ) {
+        : baseKey( baseKey ), isNull( setting == 0 ), keyName( keyName ), valueName( valueName ), setting( setting ? setting : "" ) {
     }
 
     PRBool     isAlreadySet() const;
@@ -239,7 +260,8 @@ PRBool RegistryEntry::isAlreadySet() const {
 // Gives registry entry the desired setting.
 nsresult RegistryEntry::set() {
 #ifdef DEBUG_law
-printf( "Setting %s=%s\n", fullName().get(), setting.get() );
+if ( isNull && setting.IsEmpty() ) printf( "Deleting %s\n", fullName().get() );
+else printf( "Setting %s=%s\n", fullName().get(), setting.get() );
 #endif
     nsresult result = NS_ERROR_FAILURE;
 
@@ -251,20 +273,29 @@ printf( "Setting %s=%s\n", fullName().get(), setting.get() );
         rc = ::RegCreateKey( baseKey, keyName.get(), &key );
     }
     if ( rc == ERROR_SUCCESS ) {
-        char buffer[4096] = { 0 };
-        DWORD len = sizeof buffer;
-        rc = ::RegQueryValueEx( key, valueNameArg(), NULL, NULL, (LPBYTE)buffer, &len );
-        if ( strcmp( setting.get(), buffer ) != 0 ) {
-            rc = ::RegSetValueEx( key, valueNameArg(), NULL, REG_SZ, (LPBYTE)setting.get(), setting.Length() );
-#ifdef DEBUG_law
-NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
-#endif
+        if ( isNull && setting.IsEmpty() ) {
+            // This means we need to actually remove the value, not merely set it to an
+            // empty string.
+            rc = ::RegDeleteValue( key, valueNameArg() );
             if ( rc == ERROR_SUCCESS ) {
                 result = NS_OK;
             }
         } else {
-            // Already has desired setting.
-            result = NS_OK;
+            char buffer[4096] = { 0 };
+            DWORD len = sizeof buffer;
+            rc = ::RegQueryValueEx( key, valueNameArg(), NULL, NULL, (LPBYTE)buffer, &len );
+            if ( strcmp( setting.get(), buffer ) != 0 ) {
+                rc = ::RegSetValueEx( key, valueNameArg(), NULL, REG_SZ, (LPBYTE)setting.get(), setting.Length() );
+#ifdef DEBUG_law
+NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
+#endif
+                if ( rc == ERROR_SUCCESS ) {
+                    result = NS_OK;
+                }
+            } else {
+                // Already has desired setting.
+                result = NS_OK;
+            }
         }
         ::RegCloseKey( key );
     } else {
@@ -291,9 +322,80 @@ nsresult SavedRegistryEntry::set() {
     return rv;
 }
 
+// setWindowsXP
+//
+//  We need to:
+//    a. Make sure this application is registered as a "Start Menu
+//       internet app" under HKLM\Software\Clients\StartMenuInternet.
+//    b. Make this app the default "Start Menu internet app" for this
+//       user.
+static void setWindowsXP() {
+    // We test for the presence of this subkey as a WindowsXP test.
+    // We do it this way so that vagueries of future Windows versions
+    // are handled as best we can.
+    HKEY key;
+    nsCAutoString baseKey( NS_LITERAL_CSTRING( "Software\\Clients\\StartMenuInternet" ) );
+    LONG rc = ::RegOpenKey( HKEY_LOCAL_MACHINE, baseKey, &key );
+    if ( rc == ERROR_SUCCESS ) {
+        // OK, this is WindowsXP (or equivalent).  Add this application to the
+        // set registered as "Start Menu internet apps."  These entries go
+        // under the subkey MOZILLA.EXE (or whatever the name of this executable is),
+        // that subkey name is generated by the utility function shortAppName.
+        if ( rc == ERROR_SUCCESS ) {
+            // The next 3 go under this subkey.
+            nsCAutoString subkey( baseKey + NS_LITERAL_CSTRING( "\\" ) + shortAppName() );
+            // Pretty name.  This goes into the LocalizedString value.  It is the
+            // name of the executable (preceded by '@'), followed by ",-nnn" where
+            // nnn is the resource identifier of the string in the .exe.  That value
+            // comes from nsINativeAppSupportWin.h.
+            char buffer[ _MAX_PATH + 8 ]; // Path, plus '@', comma, minus, and digits (5)
+            _snprintf( buffer, sizeof buffer, "@%s,-%d", thisApplication().get(), IDS_STARTMENU_APPNAME );
+            RegistryEntry( HKEY_LOCAL_MACHINE, 
+                           subkey,
+                           "LocalizedString", 
+                           buffer ).set();
+            // Default icon (from .exe resource).
+            RegistryEntry( HKEY_LOCAL_MACHINE, 
+                           nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\DefaultIcon" ) ),
+                           "", 
+                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( ",0" ) ) ).set();
+            // Command to open.
+            RegistryEntry( HKEY_LOCAL_MACHINE,
+                           nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\open\\command" ) ),
+                           "", 
+                           thisApplication() ).set();
+
+            // Now we need to select our application as the default start menu internet application.
+            // This is accomplished by first trying to store our subkey name in 
+            // HKLM\Software\Clients\StartMenuInternet's default value.  See
+            // http://support.microsoft.com/directory/article.asp?ID=KB;EN-US;Q297878 for detail.
+            SavedRegistryEntry hklmAppEntry( HKEY_LOCAL_MACHINE, baseKey, "", shortAppName() );
+            hklmAppEntry.set();
+            // That may or may not have worked (depending on whether we have sufficient access).
+            if ( hklmAppEntry.currentSetting() == hklmAppEntry.setting ) {
+                // We've set the hklm entry, so we can delete the one under hkcu.
+                SavedRegistryEntry( HKEY_CURRENT_USER, baseKey, "", 0 ).set();
+            } else {
+                // All we can do is set the default start menu internet app for this user.
+                SavedRegistryEntry( HKEY_CURRENT_USER, baseKey, "", shortAppName() );
+            }
+            // Notify the system of the changes.
+            ::SendMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\StartMenuInternet" );
+        }
+    }
+}
+
 // Set this entry and its corresponding DDE entry.  The DDE entry
 // must be turned off to stop Windows from trying to use DDE.
 nsresult ProtocolRegistryEntry::set() {
+    // If the protocol is http, then we have to do special stuff.
+    // We must take care of this first because setting the "protocol entry"
+    // for http will cause WindowsXP to do stuff automatically for us,
+    // thereby making it impossible for us to propertly reset.
+    if ( protocol == NS_LITERAL_CSTRING( "http" ) ) {
+        setWindowsXP();
+    }
+
     // Set this entry.
     nsresult rv = SavedRegistryEntry::set();
 
@@ -309,6 +411,9 @@ nsresult RegistryEntry::reset() {
     LONG rc = ::RegOpenKey( baseKey, keyName.get(), &key );
     if ( rc == ERROR_SUCCESS ) {
         rc = ::RegDeleteValue( key, valueNameArg() );
+#ifdef DEBUG_law
+if ( rc == ERROR_SUCCESS ) printf( "Deleting key=%s\n", (const char*)fullName() );
+#endif
     }
     return NS_OK;
 }
@@ -342,6 +447,31 @@ nsresult SavedRegistryEntry::reset() {
     return result;
 }
 
+// resetWindowsXP
+//
+// This function undoes "setWindowsXP," more or less.  It only needs to restore the selected
+// default Start Menu internet application.  The registration of this application as one of
+// the start menu internet apps can remain.  There is no check for the presence of anything
+// because the SaveRegistryEntry::reset calls will have no effect if there is no value at that
+// location (or, if that value has been changed by another application).
+static void resetWindowsXP() {
+    nsCAutoString baseKey( NS_LITERAL_CSTRING( "Software\\Clients\\StartMenuInternet" ) );
+    // First, try to restore the HKLM setting.  This will fail if either we didn't
+    // set that, or, if we don't have access).
+    SavedRegistryEntry( HKEY_LOCAL_MACHINE, baseKey, "", shortAppName() ).reset();
+
+    // The HKCU setting is trickier.  We may have set it, but we may also have
+    // removed it (see setWindowsXP(), above).  We first try to reverse the
+    // setting.  If we had removed it, then this will fail.
+    SavedRegistryEntry( HKEY_CURRENT_USER, baseKey, "", shortAppName() ).reset();
+    // Now, try to reverse the removal of this key.  This will fail if there is a  current
+    // setting, and will only work if this key is unset, and, we have a saved value.
+    SavedRegistryEntry( HKEY_CURRENT_USER, baseKey, "", 0 ).reset();
+
+    // Notify the system of the changes.
+    ::SendMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\StartMenuInternet" );
+}
+
 // Restore this entry and corresponding DDE entry.
 nsresult ProtocolRegistryEntry::reset() {
     // Restore this entry.
@@ -349,6 +479,11 @@ nsresult ProtocolRegistryEntry::reset() {
 
     // Do same for corresponding DDE entry.
     DDERegistryEntry( protocol.get() ).reset();
+
+    // For http:, on WindowsXP, we need to do some extra cleanup.
+    if ( protocol == NS_LITERAL_CSTRING( "http" ) ) {
+        resetWindowsXP();
+    }
 
     return rv;
 }
@@ -371,7 +506,7 @@ nsCString RegistryEntry::currentSetting() const {
     HKEY   key;
     LONG   rc = ::RegOpenKey( baseKey, keyName.get(), &key );
     if ( rc == ERROR_SUCCESS ) {
-        char buffer[4096];
+        char buffer[4096] = { 0 };
         DWORD len = sizeof buffer;
         rc = ::RegQueryValueEx( key, valueNameArg(), NULL, NULL, (LPBYTE)buffer, &len );
         if ( rc == ERROR_SUCCESS ) {
