@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 3.3 1999/05/27 22:39:08 pnunn%netscape.com Exp $
+ *  $Id: libimg.h,v 3.4 1999/09/25 19:59:01 kipp%netscape.com Exp $
  */
 
 
@@ -284,6 +284,11 @@ IL_UnCache(IL_Pixmap *pixmap);
    new approximate size of the imagelib cache. */
 IL_EXTERN(uint32)
 IL_ShrinkCache(void);
+
+/* Remove as many images as possible from the image cache. The only
+   images not removed are those that are in use. */
+IL_EXTERN(void)
+IL_FlushCache(void);
 
 /* Return the approximate storage consumed by the imagelib cache, in bytes */
 IL_EXTERN(uint32)
