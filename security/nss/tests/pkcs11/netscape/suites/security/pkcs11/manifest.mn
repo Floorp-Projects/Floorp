@@ -39,7 +39,7 @@ CSRCS = pk11test.c
 
 PROGRAM = pk11test
 
-REQUIRES = seccmd dbm security
+REQUIRES = seccmd dbm nss
 
 REGRESSION_SPEC = pkcs11.reg
 

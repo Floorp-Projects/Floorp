@@ -42,7 +42,7 @@ CSRCS = \
 	$(NULL)
 
 
-REQUIRES = security dbm seccmd
+REQUIRES = nss dbm seccmd
 
 ifdef ATTACH_CGI
 DEFINES += -DATTACH_CGI

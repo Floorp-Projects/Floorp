@@ -41,7 +41,7 @@ PRIVATE_EXPORTS = \
 	ocspti.h \
 	$(NULL)
 
-MODULE = security
+MODULE = nss
 
 CSRCS = \
 	certhtml.c \
@@ -53,7 +53,7 @@ CSRCS = \
     xcrldist.c \
 	$(NULL)
 
-REQUIRES = security dbm
+REQUIRES = dbm
 
 LIBRARY_NAME = certhi
 

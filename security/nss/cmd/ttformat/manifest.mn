@@ -36,7 +36,7 @@ CORE_DEPTH = ../../..
 DEFINES += -DNSPR20
 
 # MODULE public and private header  directories are implicitly REQUIRED.
-MODULE = security
+MODULE = nss
 
 CSRCS = ttformat.c
 

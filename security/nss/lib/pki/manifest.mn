@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.11 $ $Date: 2002/04/15 15:22:08 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.12 $ $Date: 2002/09/06 16:38:36 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -44,7 +44,7 @@ PRIVATE_EXPORTS = \
 EXPORTS =	   \
 	$(NULL)
 
-MODULE = security
+MODULE = nss
 
 CSRCS =		        \
 	asymmkey.c      \
@@ -65,7 +65,7 @@ PRIVATE_EXPORTS += pkistore.h pki3hack.h pkitm.h pkim.h
 DEFINES = -DNSS_3_4_CODE
 endif
 
-REQUIRES = security nspr
+REQUIRES = nspr
 
 LIBRARY_NAME = nsspki
 LIBRARY_VERSION = 3

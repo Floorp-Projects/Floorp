@@ -34,7 +34,7 @@
 CORE_DEPTH = ../../..
 
 # MODULE public and private header  directories are implicitly REQUIRED.
-MODULE = security
+MODULE = nss
 
 EXPORTS = 
 
@@ -43,9 +43,7 @@ CSRCS = ssltap.c	\
 
 PROGRAM =  ssltap
 
-# The MODULE is always implicitly required.
-# Listing it here in REQUIRES makes it appear twice in the cc command line.
-REQUIRES = security seccmd dbm
+REQUIRES = seccmd dbm
 
 PACKAGE_FILES = ssltap-manual.html licence.doc ssltap.exe
 

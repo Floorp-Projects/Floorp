@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.5 $ $Date: 2001/09/25 20:48:51 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.6 $ $Date: 2002/09/06 16:37:42 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -44,7 +44,7 @@ EXPORTS =	   \
 	nssbase.h  \
 	$(NULL)
 
-MODULE = security
+MODULE = nss
 
 CSRCS =		   \
 	arena.c	   \
@@ -60,6 +60,6 @@ CSRCS =		   \
 	whatnspr.c \
 	$(NULL)
 
-REQUIRES = security nspr
+REQUIRES = nspr
 
 LIBRARY_NAME = nssb

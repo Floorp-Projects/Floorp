@@ -35,7 +35,7 @@ DEPTH	= ../../..
 CORE_DEPTH = ../../..
 
 # MODULE public and private header  directories are implicitly REQUIRED.
-MODULE = security
+MODULE = nss
 
 INCLUDES += -I$(CORE_DEPTH)/nss/lib/softoken
 

@@ -48,7 +48,7 @@ EXPORTS = \
 	preenc.h \
 	$(NULL)
 
-MODULE = security
+MODULE = nss
 MAPFILE = $(OBJDIR)/ssl.def
 
 CSRCS = \
@@ -77,7 +77,7 @@ CSRCS = \
 	$(NULL)
 
 
-REQUIRES = security dbm
+REQUIRES = dbm
 
 LIBRARY_NAME = ssl
 LIBRARY_VERSION = 3

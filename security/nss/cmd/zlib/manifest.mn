@@ -54,7 +54,7 @@ CSRCS =	adler32.c 	\
 
 LIBRARY_NAME = zlib
 
-# REQUIRES = security
+# REQUIRES = nss
 
 DEFINES = -DNSPR20=1 -DMOZILLA_CLIENT=1
 

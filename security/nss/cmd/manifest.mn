@@ -34,7 +34,7 @@
 DEPTH	= ../..
 # MODULE	= seccmd
 
-REQUIRES = security nspr libdbm
+REQUIRES = nss nspr libdbm
 
 DIRS = lib  \
  zlib \

@@ -44,7 +44,7 @@ PRIVATE_EXPORTS = \
 	cmslocal.h \
 	$(NULL)
 
-MODULE = security
+MODULE = nss
 MAPFILE = $(OBJDIR)/smime.def
 
 CSRCS = \
@@ -71,7 +71,7 @@ CSRCS = \
 	smimever.c \
 	$(NULL)
 
-REQUIRES = security dbm
+REQUIRES = dbm
 
 LIBRARY_NAME = smime
 LIBRARY_VERSION = 3

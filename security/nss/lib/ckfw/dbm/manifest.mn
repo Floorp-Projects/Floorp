@@ -30,11 +30,11 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.1 $ $Date: 2000/05/15 20:39:56 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.2 $ $Date: 2002/09/06 16:37:56 $ $Name:  $"
 
 CORE_DEPTH = ../../../..
 
-MODULE = security
+MODULE = nss
 
 CSRCS =		   \
 	anchor.c   \
@@ -47,7 +47,7 @@ CSRCS =		   \
 	db.c	   \
 	$(NULL)
 
-REQUIRES = security dbm nspr
+REQUIRES = dbm nspr
 
 LIBRARY_NAME = nssckdbm
 
