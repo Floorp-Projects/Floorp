@@ -27,10 +27,12 @@ CActiveScriptSite::CActiveScriptSite()
 	m_ssScriptState = SCRIPTSTATE_UNINITIALIZED;
 }
 
+
 CActiveScriptSite::~CActiveScriptSite()
 {
 	Detach();
 }
+
 
 HRESULT CActiveScriptSite::Attach(CLSID clsidScriptEngine)
 {
