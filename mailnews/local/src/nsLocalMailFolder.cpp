@@ -2229,7 +2229,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMsgDBHdr *message)
   mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
  
   PRInt32 messageIndex = (mCopyState->m_copyingMultipleMessages) ? mCopyState->m_curCopyIndex - 1 : mCopyState->m_curCopyIndex;
-  NS_ASSERTION(!mCopyState->m_copyingMultipleMessages || mCopyState->m_curCopyIndex > 0, "mCopyState->m_curCopyIndex invalid");
+  NS_ASSERTION(!mCopyState->m_copyingMultipleMessages || mCopyState->m_curCopyIndex >= 0, "mCopyState->m_curCopyIndex invalid");
   // by the time we get here, m_curCopyIndex is 1 relative because WriteStartOfNewMessage increments it
   mCopyState->m_messages->QueryElementAt(messageIndex, NS_GET_IID(nsIMsgDBHdr),
                                   (void **)getter_AddRefs(mCopyState->m_message));
@@ -2665,32 +2665,32 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
                                              PRBool isMove)
 {
   if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
-	nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
-	nsresult rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
-											NS_GET_IID(nsICopyMessageStreamListener),
-											getter_AddRefs(copyStreamListener)); 
-	if(NS_FAILED(rv))
-		return rv;
-
-	nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(dstFolder));
-	if(!copyListener)
-		return NS_ERROR_NO_INTERFACE;
-
-	nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(mCopyState->m_srcSupport));
-	if(!srcFolder)
-		return NS_ERROR_NO_INTERFACE;
-
-	rv = copyStreamListener->Init(srcFolder, copyListener, nsnull);
-	if(NS_FAILED(rv))
-		return rv;
-
+  nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
+  nsresult rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
+    NS_GET_IID(nsICopyMessageStreamListener),
+    getter_AddRefs(copyStreamListener)); 
+  if(NS_FAILED(rv))
+    return rv;
+  
+  nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(dstFolder));
+  if(!copyListener)
+    return NS_ERROR_NO_INTERFACE;
+  
+  nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(mCopyState->m_srcSupport));
+  if(!srcFolder)
+    return NS_ERROR_NO_INTERFACE;
+  
+  rv = copyStreamListener->Init(srcFolder, copyListener, nsnull);
+  if(NS_FAILED(rv))
+    return rv;
+  
   if (!mCopyState->m_messageService)
   {
     nsXPIDLCString uri;
     srcFolder->GetURI(getter_Copies(uri));
     rv = GetMessageServiceFromURI(uri, &mCopyState->m_messageService);
   }
-   
+  
   if (NS_SUCCEEDED(rv) && mCopyState->m_messageService)
   {
 	nsMsgKeyArray keyArray;
@@ -2714,21 +2714,27 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
     keyArray.QuickSort();
     rv = SortMessagesBasedOnKey(messages, &keyArray, srcFolder);
     NS_ENSURE_SUCCESS(rv,rv);
-
-		nsCOMPtr<nsIStreamListener>
+    
+    nsCOMPtr<nsIStreamListener>
       streamListener(do_QueryInterface(copyStreamListener));
-		if(!streamListener)
-			return NS_ERROR_NO_INTERFACE;
-		mCopyState->m_curCopyIndex = 0; 
+    if(!streamListener)
+      return NS_ERROR_NO_INTERFACE;
+    mCopyState->m_curCopyIndex = 0; 
     // we need to kick off the first message - subsequent messages
     // are kicked off by nsMailboxProtocol when it finishes a message
-    // before starting the next message.
-    StartMessage();
-		mCopyState->m_messageService->CopyMessages(&keyArray, srcFolder, streamListener, isMove,
-                                            nsnull, aMsgWindow, nsnull);
-	}
-
-	return rv;
+    // before starting the next message. Only do this if the source folder
+    // is a local folder, however. IMAP will handle calling StartMessage for
+    // each message that gets downloaded, and news doesn't go through here
+    // because news only downloads one message at a time, and this routine
+    // is for multiple message copy.
+    nsCOMPtr <nsIMsgLocalMailFolder> srcLocalFolder = do_QueryInterface(srcFolder);
+    if (srcLocalFolder)
+      StartMessage();
+    mCopyState->m_messageService->CopyMessages(&keyArray, srcFolder, streamListener, isMove,
+      nsnull, aMsgWindow, nsnull);
+  }
+  
+  return rv;
 }
 
 nsresult nsMsgLocalMailFolder::CopyMessageTo(nsISupports *message, 
