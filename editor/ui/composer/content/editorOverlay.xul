@@ -329,6 +329,7 @@
     </menu>
     <menuitem id="viewSourceMenuitem" accesskey="&HTMLsource.accesskey;" observes="cmd_editHTML"/>
     <menuitem id="viewParagraphMarks" type="checkbox" value="&viewParagraphMarks.label;" accesskey="&viewparagraphmarks.accesskey;" oncommand="EditorToggleParagraphMarks();"/>
+    <menupopup id = "composerCharsetMenuPopup"  oncreate="updateCharsetPopupMenu(this)" />
 
   <!-- Insert menu -->
   <menu id="insertMenu" value="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
