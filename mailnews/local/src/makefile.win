@@ -40,6 +40,7 @@ CPPSRCS=                         \
 	nsParseMailbox.cpp \
 	nsMailboxProtocol.cpp		\
 	nsMsgLocalFactory.cpp		\
+	nsLocalMailFolder.cpp		\
 	$(NULL)
 
 OBJS=						\
@@ -51,6 +52,7 @@ OBJS=						\
 	.\$(OBJDIR)\nsParseMailbox.obj \
 	.\$(OBJDIR)\nsMailboxProtocol.obj		\
 	.\$(OBJDIR)\nsMsgLocalFactory.obj		\
+	.\$(OBJDIR)\nsLocalMailFolder.obj		\
 	$(NULL)
 
 

@@ -33,6 +33,7 @@ CPPSRCS = \
 	nsParseMailbox.cpp \
 	nsMailboxProtocol.cpp 	\
 	nsMailboxUrl.cpp	\
+	nsLocalMailFolder.cpp \
 	$(NULL)
 
 EXPORTS= \
