@@ -1815,15 +1815,13 @@ OSStatus MRJContext::removeEventHandlers(WindowRef window)
 void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 {
     if (pluginWindow != NULL) {
-        if (pluginWindow->height && pluginWindow->width && pluginWindow->x && pluginWindow->y) {
-            mPluginWindow = pluginWindow;
+        mPluginWindow = pluginWindow;
 
-            // establish the GrafPort the plugin will draw in.
-            mPluginPort = pluginWindow->window->port;
+        // establish the GrafPort the plugin will draw in.
+        mPluginPort = pluginWindow->window->port;
 
-            if (! appletLoaded())
-                loadApplet();
-        }
+        if (! appletLoaded())
+            loadApplet();
     } else {
         // tell MRJ the window has gone away.
         mPluginWindow = NULL;

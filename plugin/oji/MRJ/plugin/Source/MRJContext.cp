@@ -1366,15 +1366,13 @@ void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 	// don't do anything if the AWTContext hasn't been created yet.
 	if (mContext != NULL) {
     	if (pluginWindow != NULL) {
-    		if (pluginWindow->height != 0 && pluginWindow->width != 0) {
-    			mPluginWindow = pluginWindow;
+			mPluginWindow = pluginWindow;
 
-    			// establish the GrafPort the plugin will draw in.
-    			mPluginPort = pluginWindow->window->port;
+			// establish the GrafPort the plugin will draw in.
+			mPluginPort = pluginWindow->window->port;
 
-    			if (! appletLoaded())
-    				loadApplet();
-    		}
+			if (! appletLoaded())
+				loadApplet();
     	} else {
     		// tell MRJ the window has gone away.
     		mPluginWindow = NULL;
