@@ -1,0 +1,73 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Joe Hewitt <hewitt@netscape.com>
+ *  Kevin Gerich (webmail@kmgerich.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== groupbox.css ==================================================
+  == Styles used by the XUL groupbox and related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: groupbox ::::: */
+
+groupbox {
+  padding: 5px 1px 1px 0px;
+  margin: 6px;
+
+}
+
+.groupbox-title {
+	/* border-bottom: 1px solid #858585; */
+}
+
+.groupbox-body {
+  padding: 5px 5px 0px 5px;
+  border: 3px solid transparent;
+  -moz-border-top-colors: #9b9b9b #c8c8c8 #e1e1e1 ;
+  -moz-border-right-colors: #c4c4c4 #e1e1e1 #e4e4e4;
+  -moz-border-bottom-colors: #d6d6d6 #e2e2e2 #e4e4e4;
+  -moz-border-left-colors: #c4c4c4 #e1e1e1 #e4e4e4;
+  background: url("chrome://global/skin/10pct_transparent_grey.png") repeat !important;
+  -moz-border-radius: 3px;
+  margin: 0px;
+
+}
+
+caption {
+  padding: 0px 2px 1px 4px !important;
+  font: menu;
+}

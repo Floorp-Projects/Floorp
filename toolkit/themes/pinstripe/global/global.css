@@ -1,0 +1,198 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Kevin Gerich (webmail@kmgerich.com)
+ *
+ */
+
+/* ===== global.css =====================================================
+  == Styles that apply everywhere.
+  ======================================================================= */
+
+/* all localizable skin settings shall live here */
+@import url("chrome://global/locale/intl.css");
+
+@import url("chrome://global/skin/formatting.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+button[dlgtype="help"] {
+	min-width: 1px !important;
+	padding: 0px 0px 0px 0px !important;
+	-moz-appearance: button-small;
+	-moz-box-align: start !important;
+}
+button[dlgtype="help"] > .button-box > .button-icon {
+list-style-image: url("chrome://global/skin/icons/question-mark.png");
+padding: 0px !important;
+}
+
+button[dlgtype="help"] > .button-box > .button-text {
+  display: none !important;
+}
+/* ::::: XBL bindings ::::: */
+
+menulist > menupopup,
+.menulist-menupopup {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
+}
+
+.menulist-compact {
+  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
+}
+
+.tabbrowser-tabs {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabs-closebutton");
+}
+
+/* ::::: root elements ::::: */
+
+window,
+page,
+dialog,
+wizard { 
+  -moz-appearance: dialog;
+  background-color: #FFFFFF;
+  color: -moz-DialogText;
+  font: message-box;
+}
+
+/* deprecated */
+window.dialog { 
+  padding: 8px 10px 10px 8px;
+}
+
+[wait-cursor] { 
+  cursor: wait !important; 
+}
+
+/* ::::: alert icons :::::*/
+
+.message-icon,
+.alert-icon,
+.error-icon,
+.question-icon {
+  width: 64px;
+  height: 64px;
+  list-style-image: url("chrome://global/skin/icons/alert-exclam.png");
+  margin: 6px 20px 6px 6px !important;
+}
+
+/* ::::: iframe ::::: */
+
+iframe {
+  border: none;
+  width: 100px;
+  height: 100px;
+  min-width: 10px;
+  min-height: 10px;
+}
+
+/* ::::: statusbar ::::: */
+
+statusbar {
+  border-top: 1px solid #A3A3A3 !important;
+  min-width: 1px; /* DON'T DELETE!
+  Prevents hiding of scrollbars in browser when window is made smaller.*/
+  min-height: 15px !important;
+  background-color: #FFFFFF;
+  margin: 0px !important;
+  padding: 0px 10px 1px 1px;
+  -moz-appearance: none;
+}
+
+statusbarpanel {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  padding: 0 4px;
+  -moz-appearance: dialog;
+}
+
+.statusbarpanel-iconic {
+  padding: 0px;
+}    
+
+/* ::::: miscellaneous ::::: */
+
+.toolbar-focustarget {
+  -moz-user-focus: ignore !important;
+}
+
+#info.icon {
+	margin-right: 14px;
+}
+
+#commonDialog {
+	max-width: 40em;
+	line-height: 13px;
+}
+
+#header {
+	display: none !important;
+}
+
+#warn1 {
+	font: menu;
+	font-weight: bold;
+	line-height: 16pt;
+	padding-bottom: 10px;
+}
+
+#ok, #cancel, #launch, #reveal, #pauseResume {
+	font: menu !important;
+}
+
+.message-icon {
+	display: none !important;
+}
+
+#panelFrame {
+	margin-top: 2px;
+	padding-left: 10px;
+}
+
+description {
+	margin-bottom: 4px;
+}
+
+browser {
+    margin: 0px;
+    padding: 0px;
+    background-color: #FFFFFF;
+}
+
+/* miscellaneous stuff */
+
+#pref-navigator, #prefFontsDialog, #scriptsAndWindowPanel, #ImagesManager {
+	font: menu;
+}
+
+#prefFontsDialog description{
+	font-size: 95%;
+}
+
+#pref-navigator > groupbox > hbox > button {
+	font: message-box;
+	-moz-appearance: button-small;
+}
+
+#historyTree, #bookmarks-view {
+	border-top: 1px solid #bebebe;
+}
