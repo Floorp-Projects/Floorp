@@ -914,7 +914,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
 		              nsnull, aAppShell, nsnull, &initData);
-  mWindow->GetBounds(r);
+  mWindow->GetClientBounds(r);
 
   // Create web shell
   rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
@@ -926,7 +926,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
 		       r.x, r.y, r.width, r.height,
-		       nsScrollPreference_kAuto, aAllowPlugins);
+		       nsScrollPreference_kAuto, aAllowPlugins, PR_TRUE);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetObserver((nsIStreamObserver*)this);
   mWebShell->SetPrefs(aPrefs);
@@ -937,7 +937,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     if (NS_OK != rv) {
       return rv;
     }
-    mWindow->GetBounds(r);
+    mWindow->GetClientBounds(r);
     r.x = r.y = 0;
   }
 
@@ -985,7 +985,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   nsRect r(0, 0, aBounds.width, aBounds.height);
   mWindow->Create((nsIWidget*)NULL, r, HandleBrowserEvent,
 		  nsnull, aAppShell);
-  mWindow->GetBounds(r);
+  mWindow->GetClientBounds(r);
 
   // Create web shell
   rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
@@ -1008,7 +1008,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     if (NS_OK != rv) {
       return rv;
     }
-    mWindow->GetBounds(r);
+    mWindow->GetClientBounds(r);
     r.x = r.y = 0;
   }
 
@@ -1179,14 +1179,14 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   if (mLocation && NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&locationWidget)) {
     if (mChromeMask & NS_CHROME_TOOL_BAR_ON) {
       if (mThrobber) {
-	locationWidget->Resize(2*BUTTON_WIDTH, 0,
+	      locationWidget->Resize(2*BUTTON_WIDTH, 0,
 			  aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
 			  BUTTON_HEIGHT,
 			  PR_TRUE);
-	mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
+	      mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
       }
       else {
-	locationWidget->Resize(2*BUTTON_WIDTH, 0,
+	      locationWidget->Resize(2*BUTTON_WIDTH, 0,
 			  aWidth - 2*BUTTON_WIDTH,
 			  BUTTON_HEIGHT,
 			  PR_TRUE);
@@ -1248,7 +1248,7 @@ nsBrowserWindow::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
 NS_IMETHODIMP
 nsBrowserWindow::GetBounds(nsRect& aBounds)
 {
-  mWindow->GetBounds(aBounds);
+  mWindow->GetClientBounds(aBounds);
   return NS_OK;
 }
 
@@ -1307,7 +1307,7 @@ nsBrowserWindow::SetChrome(PRUint32 aChromeMask)
 {
   mChromeMask = aChromeMask;
   nsRect r;
-  mWindow->GetBounds(r);
+  mWindow->GetClientBounds(r);
   Layout(r.width, r.height);
 
   return NS_OK;

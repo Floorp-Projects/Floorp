@@ -102,7 +102,7 @@ public:
                   PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE,
-                  PRBool aIsSunkenBorder = PR_TRUE) = 0;
+                  PRBool aIsSunkenBorder = PR_FALSE) = 0;
 
   /**
    * Notify the WebShell that its parent's window is being destroyed.  After 

@@ -294,7 +294,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   {
     nsIWidget*  widget;
     aView->GetWidget(widget);
-    widget->GetBounds(wrect);
+    widget->GetClientBounds(wrect);
     wrect.x = wrect.y = 0;
     NS_RELEASE(widget);
     ds = GetDrawingSurface(*localcx, wrect);
@@ -380,7 +380,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
-    mRootWindow->GetBounds(wrect);
+    mRootWindow->GetClientBounds(wrect);
+    wrect.x = wrect.y = 0;
     ds = GetDrawingSurface(*localcx, wrect);
     localcx->SelectOffScreenDrawingSurface(ds);
   }
@@ -570,6 +571,8 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 
         nscoord width = ((nsSizeEvent*)aEvent)->windowSize->width;
         nscoord height = ((nsSizeEvent*)aEvent)->windowSize->height;
+        width = ((nsSizeEvent*)aEvent)->mWinWidth;
+        height = ((nsSizeEvent*)aEvent)->mWinHeight;
 
         // The root view may not be set if this is the resize associated with
         // window creation
