@@ -26,7 +26,6 @@ EXPORTS =		        \
     nsIEditRules.h  \
     nsEditorCID.h	  \
     nsICiter.h	\
-    nsIDocumentStateListener.h \
     $(NULL)
 
 MODULE = editor 
