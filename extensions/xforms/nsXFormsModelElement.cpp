@@ -768,28 +768,42 @@ nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
   NS_ENSURE_ARG_POINTER(aType);
   *aType = nsnull;
 
-  nsAutoString schemaTypeName;
-  nsAutoString schemaTypePrefix;
   nsCOMPtr<nsIDOMNode> boundNode;
-
   aControl->GetBoundNode(getter_AddRefs(boundNode));
   NS_ENSURE_TRUE(boundNode, NS_ERROR_FAILURE);
-  nsresult rv = nsXFormsUtils::ParseTypeFromNode(boundNode, schemaTypeName, 
-                                                 schemaTypePrefix);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  // get the namespace url from the prefix
-  nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString schemaTypeNamespace;
-  rv = domNode3->LookupNamespaceURI(schemaTypePrefix, schemaTypeNamespace);
+  nsAutoString schemaTypeName, schemaTypeNamespace;
+  nsresult rv = GetTypeAndNSFromNode(boundNode, schemaTypeName, 
+                                     schemaTypeNamespace);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXFormsSchemaValidator validator;
   nsCOMPtr<nsISchema> schema = do_QueryInterface(mSchemas);
   validator.LoadSchema(schema);
   return validator.GetType(schemaTypeName, schemaTypeNamespace, aType);
+}
+
+/* static */ nsresult
+nsXFormsModelElement::GetTypeAndNSFromNode(nsIDOMNode *aInstanceData, 
+                                           nsAString &aType, nsAString &aNSUri)
+{
+  nsAutoString schemaTypePrefix;
+  nsresult rv = nsXFormsUtils::ParseTypeFromNode(aInstanceData, aType, 
+                                                 schemaTypePrefix);
+
+  if(rv == NS_ERROR_NOT_AVAILABLE) {
+    // if there is no type assigned, then assume that the type is 'string'
+    aNSUri.Assign(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA));
+    aType.Assign(NS_LITERAL_STRING("string"));
+    rv = NS_OK;
+  } else {
+    // get the namespace url from the prefix
+    nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    rv = domNode3->LookupNamespaceURI(schemaTypePrefix, aNSUri);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -877,18 +891,9 @@ nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  nsAutoString schemaTypeName;
-  nsAutoString schemaTypePrefix;
-  nsresult rv = nsXFormsUtils::ParseTypeFromNode(aInstanceNode, schemaTypeName, 
-                                                 schemaTypePrefix);
-
-
-  // get the namespace url from the prefix
-  nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString schemaTypeNamespace;
-  rv = domNode3->LookupNamespaceURI(schemaTypePrefix, schemaTypeNamespace);
+  nsAutoString schemaTypeName, schemaTypeNamespace;
+  nsresult rv = GetTypeAndNSFromNode(aInstanceNode, schemaTypeName, 
+                                     schemaTypeNamespace);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXFormsSchemaValidator validator;

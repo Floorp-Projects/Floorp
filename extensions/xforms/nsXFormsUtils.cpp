@@ -73,6 +73,8 @@
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXFormsUtilityService.h"
+#include "nsIDOMAttr.h"
+#include "nsIDOM3Node.h"
 
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
@@ -1036,14 +1038,47 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
                                  nsAString &aType, nsAString &aNSPrefix)
 {
   nsresult rv;
+
+  // aInstanceData could be an instance data node or it could be an attribute
+  // on an instance data node (basically the node that a control is bound to).
+  // So first checking to see if it is a proper element node.  If it isn't,
+  // making sure that it is at least an attribute.  
+  //
+  // XXX - Once node type is set as a property on the element or attribute node,
+  // then we can treat elements and attributes the same.  For now we are using
+  // an attribute on the instance data node to store the type.  If we bind
+  // to an attribute on the instance data node there is nothing we can do but
+  // hope that it doesn't have a bound type until we get properties on 
+  // attributes working. (bug 283004)
   nsCOMPtr<nsIDOMElement> nodeElem = do_QueryInterface(aInstanceData, &rv);
-  NS_ENSURE_TRUE(nodeElem, NS_ERROR_FAILURE);
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsIDOMAttr> attrNode = do_QueryInterface(aInstanceData, &rv);
+    if(NS_SUCCEEDED(rv)){
+      // right now we can't handle having a 'type' property on attribute nodes.
+      // For now we'll treat this condition as not having a 'type' property
+      // on the given node at all.  This will allow a lot of testcases to still
+      // work ok as the caller will usually assign a default type of 
+      // 'xsd:string' when we return NS_ERROR_NOT_AVAILABLE here.
+      return NS_ERROR_NOT_AVAILABLE;
+    } else {
+      // can't have a 'type' property on anything other than an element or an
+      // attribute.  Return failure
+      return NS_ERROR_FAILURE;
+    }
+  }
 
   // right now type is stored as an attribute on the instance node.  In the
   // future it will be a property.
+  PRBool typeExists = PR_FALSE;
+  NS_NAMED_LITERAL_STRING(schemaInstanceURI, NS_NAMESPACE_XML_SCHEMA_INSTANCE);
+  NS_NAMED_LITERAL_STRING(type, "type");
+  nodeElem->HasAttributeNS(schemaInstanceURI, type, &typeExists);
+  if (!typeExists) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsAutoString typeAttribute;
-  nodeElem->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
-                           NS_LITERAL_STRING("type"), typeAttribute);
+  nodeElem->GetAttributeNS(schemaInstanceURI, type, typeAttribute);
 
   // split type (ns:type) into namespace and type.
   PRInt32 separator = typeAttribute.FindChar(':');
