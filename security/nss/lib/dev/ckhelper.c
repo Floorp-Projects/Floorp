@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.15 $ $Date: 2002/01/29 21:12:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.16 $ $Date: 2002/01/30 00:48:24 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -138,7 +138,7 @@ nssCKObject_GetAttributes
 	for (i=0; i<count; i++) {
 	    CK_ULONG ulValueLen = obj_template[i].ulValueLen;
 	    if (ulValueLen == 0) continue;
-	    if (ulValueLen < 0) {
+	    if (ulValueLen == (CK_ULONG) -1) {
 		obj_template[i].ulValueLen = 0;
 		continue;
 	    }
