@@ -94,8 +94,9 @@ nsSafeSaveFile::~nsSafeSaveFile(void)
 
 nsresult nsSafeSaveFile::CreateBackup(PurgeBackupType aPurgeType)
 {
-    nsresult rv, rv2;
-    PRBool   bExists;
+    nsCOMPtr<nsIFile> backupParent;
+    nsresult          rv, rv2;
+    PRBool            bExists;
 
     // if the target file doesn't exist there is nothing to backup
     if (!mTargetFileExists)
@@ -109,10 +110,15 @@ nsresult nsSafeSaveFile::CreateBackup(PurgeBackupType aPurgeType)
             return rv;
     }
 
+    // Ugh, copy only takes a directory and a name, lets "unpackage" our target file...
+    rv = mBackupFile->GetParent(getter_AddRefs(backupParent));
+    if (NS_FAILED(rv))
+        return rv;
+
     // and finally, copy the file (preserves file permissions)
     rv2 = NS_OK;
     do {
-        rv = mTargetFile->CopyToNative(nsnull, mBackupFileName);
+        rv = mTargetFile->CopyToNative(backupParent, mBackupFileName);
         if (NS_SUCCEEDED(rv))
             break;
 
