@@ -60,6 +60,7 @@ nsFontMetricsGTK::nsFontMetricsGTK()
   mStrikeoutOffset = 0;
   mUnderlineSize = 0;
   mUnderlineOffset = 0;
+  mSpaceWidth = 0;
 }
 
 nsFontMetricsGTK::~nsFontMetricsGTK()
@@ -417,6 +418,9 @@ void nsFontMetricsGTK::RealizeFont()
 
   // 56% of ascent, best guess for non-true type
   mXHeight = NSToCoordRound((float) fontInfo->ascent* f * 0.56f);
+
+  gint rawWidth = gdk_text_width(mFontHandle, " ", 1); 
+  mSpaceWidth = NSToCoordRound(rawWidth * f);
 
   unsigned long pr = 0;
 
@@ -2177,6 +2181,13 @@ nsFontMetricsGTK::DrawString(nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
     (PRUint8*) buf, sizeof(buf));
   ::gdk_draw_text(aSurface->GetDrawable(), aFont->mFont, aSurface->GetGC(), aX,
     aY + aFont->mBaselineAdjust, (char*) buf, len);
+}
+
+nsresult
+nsFontMetricsGTK::GetSpaceWidth(nscoord &aSpaceWidth)
+{
+  aSpaceWidth = mSpaceWidth;
+  return NS_OK;
 }
 
 #endif /* FONT_SWITCHING */
