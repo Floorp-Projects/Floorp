@@ -24,6 +24,8 @@ NET_VoidStreamClass * NET_VoidStreamBuilder(FO_Present_Types  format_out,
         				URL_Struct *      anchor,
         				MWContext *       window_id);
 
+NET_VoidStreamClass * NET_CStreamToVoidStream(void *cstream);
+
 uint32 NET_StreamIsWriteReady(NET_VoidStreamClass *stream);
 
 int32 NET_StreamPutBlock(NET_VoidStreamClass *stream, char *block, int32 l);
@@ -31,6 +33,11 @@ int32 NET_StreamPutBlock(NET_VoidStreamClass *stream, char *block, int32 l);
 void NET_StreamComplete(NET_VoidStreamClass *stream);
 
 void NET_StreamAbort(NET_VoidStreamClass *stream, int32 status);
+
+char * NET_StreamName(NET_VoidStreamClass *stream);
+
+int NET_SetStreamData(NET_VoidStreamClass *stream, void *data);
+void * NET_GetStreamData(NET_VoidStreamClass *stream);
 
 void NET_StreamFree(NET_VoidStreamClass *stream);
 
