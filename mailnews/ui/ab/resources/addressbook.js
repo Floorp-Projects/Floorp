@@ -13,19 +13,20 @@ function ChangeDirectoryByURI(uri)
 
 function EditCard() 
 {
-	var dialog = window.openDialog("chrome://addressbook/content/editcard.xul",
-								   "editCard",
-								   "chrome");
-	return dialog;
-}
+	var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+	if (!toolkitCore)
+	{
+		toolkitCore = new ToolkitCore();
+		if (toolkitCore)
+		{
+			toolkitCore.Init("ToolkitCore");
+		}
+    }
 
-
-function SelectAddress() 
-{
-	var dialog = window.openDialog("chrome://addressbook/content/selectaddress.xul",
-								   "selectAddress",
-								   "chrome");
-	return dialog;
+    if (toolkitCore)
+	{
+      toolkitCore.ShowWindow("chrome://addressbook/content/editcard.xul", window);
+    }
 }
 
 
