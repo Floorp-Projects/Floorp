@@ -4,12 +4,10 @@ window {
 
 tree { 
  display: table; 
- table-layout: fixed;
  background-color: #FFFFFF; 
  border: none; 
  border-spacing: 0px; 
-// border-collapse: collapse; 
-// width: 100%;
+ width: 100%;
 }
 
 treecol {
