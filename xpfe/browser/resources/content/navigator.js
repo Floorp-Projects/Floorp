@@ -316,28 +316,6 @@ function Startup()
     if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
       uriToLoad = window.arguments[0];
     
-    if (!turboMode) {
-      var cmdLineService =
-        Components.classes["@mozilla.org/appshell/commandLineService;1"]
-                  .getService(Components.interfaces.nsICmdLineService);
-      var cmdLineUrl = cmdLineService.URLToLoad;
-
-      // try the command line first
-      if (cmdLineUrl && !appCore.cmdLineURLUsed) {
-        uriToLoad = cmdLineUrl;
-        appCore.cmdLineURLUsed = true;
-      }
-
-      // ok, no command line, try the default args
-      if (!uriToLoad) {
-        var cmdLineHandler =
-          Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
-                    .getService(Components.interfaces.nsICmdLineHandler);
-        uriToLoad = cmdLineHandler.defaultArgs;
-      }
-    }
-
-
     if (uriToLoad && uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
       loadURI(uriToLoad);
