@@ -211,6 +211,8 @@ typedef int PRInt32;
 #define OS_NT3                          0x00000020
 #define OS_NT4                          0x00000040
 #define OS_NT5                          0x00000080
+#define OS_NT50                         0x00000100
+#define OS_NT51                         0x00000200
 
 /* DSR: Disk Space Required */
 #define DSR_DESTINATION                 0

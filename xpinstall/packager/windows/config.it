@@ -448,6 +448,78 @@ $InstallSizeArchive$:browser.xpi
 Attributes=SELECTED|DISABLED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\$MainExeFile$
 
+[Component Navigator-Windows Registry0]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\StartMenuInternet\$MainExeFile$
+Name=
+Name Value=$ProductName$
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=FALSE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+[Component Navigator-Windows Registry1]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\StartMenuInternet\$MainExeFile$\DefaultIcon
+Name=
+Name Value=[SETUP PATH]\$MainExeFile$,0
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+[Component Navigator-Windows Registry2]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\StartMenuInternet\$MainExeFile$\shell
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+[Component Navigator-Windows Registry3]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\StartMenuInternet\$MainExeFile$\shell\open
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+[Component Navigator-Windows Registry4]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\StartMenuInternet\$MainExeFile$\shell\open\command
+Name=
+Name Value="[SETUP PATH]\$MainExeFile$"
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+
+
 [Component MailNews]
 Description Short=Mail & News
 ;*** LOCALIZE ME BABY ***
@@ -458,6 +530,78 @@ $InstallSizeSystem$
 $InstallSizeArchive$:mail.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\msgbsutl.dll
+
+[Component MailNews-Windows Registry0]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\Mail\$ProductName$ Mail
+Name=
+Name Value=$ProductName$ Mail
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+[Component MailNews-Windows Registry1]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\Mail\$ProductName$ Mail\DefaultIcon
+Name=
+Name Value=[SETUP PATH]\$MainExeFile$,0
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+[Component MailNews-Windows Registry2]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\Mail\$ProductName$ Mail\shell
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+[Component MailNews-Windows Registry3]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\Mail\$ProductName$ Mail\shell\open
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+[Component MailNews-Windows Registry4]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Clients\Mail\$ProductName$ Mail\shell\open\command
+Name=
+Name Value="[SETUP PATH]\$MainExeFile$" -mail
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post archive
+OS=NT51
+
+
 
 [Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller

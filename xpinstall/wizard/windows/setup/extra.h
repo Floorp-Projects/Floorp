@@ -203,6 +203,7 @@ void              SetSetupCurrentDownloadFile(char *szCurrentFilename);
 char              *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
                                        DWORD dwCurrentDownloadFileBufSize);
 BOOL              DeleteWGetLog(void);
+DWORD             ParseOSType(char *szOSType);
 
 #endif /* _EXTRA_H_ */
 
