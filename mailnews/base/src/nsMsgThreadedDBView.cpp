@@ -624,8 +624,7 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 
           // the call to NoteChange() has to happen after we add the key
           // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
-          if (level != 0)
-            NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
+          NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
 
           if (level == 0)
           {
