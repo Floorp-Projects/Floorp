@@ -458,7 +458,7 @@ NS_IMETHODIMP nsXPBaseWindow::FindWebShellWithName(const PRUnichar* aName, nsIWe
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXPBaseWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
+NS_IMETHODIMP nsXPBaseWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
 {
   return NS_OK;
 }

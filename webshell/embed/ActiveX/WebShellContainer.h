@@ -52,7 +52,7 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
 	NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
-	NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell);
+	NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
 	// nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
