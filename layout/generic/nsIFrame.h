@@ -678,6 +678,10 @@ public:
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus) = 0;
 
+  NS_IMETHOD  GetContentForEvent(nsIPresContext* aPresContext,
+                                 nsEvent* aEvent,
+                                 nsIContent** aContent) = 0;
+
   NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,

@@ -585,6 +585,121 @@ nsGenericHTMLElement::SetDocumentForFormControls(nsIDocument* aDocument,
 }
 
 nsresult
+nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
+                                               nsEvent* aEvent,
+                                               nsIDOMEvent** aDOMEvent,
+                                               PRUint32 aFlags,
+                                               nsEventStatus* aEventStatus)
+{
+  NS_ENSURE_ARG(aPresContext);
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  // Try script event handlers first
+  nsresult ret = HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                aFlags, aEventStatus);
+
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
+      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
+    // If this anchor element has an HREF then it is sensitive to
+    // mouse events (otherwise ignore them).
+    nsAutoString href;
+    nsresult result = GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
+    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+      switch (aEvent->message) {
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+        {
+          // don't make the link grab the focus if there is no link handler
+          nsILinkHandler* handler;
+          nsresult rv = aPresContext->GetLinkHandler(&handler);
+          if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
+            nsIEventStateManager *stateManager;
+            if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
+              stateManager->SetContentState(mContent, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+              NS_RELEASE(stateManager);
+            }
+            NS_RELEASE(handler);
+            *aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          }
+        }
+        break;
+
+      case NS_MOUSE_LEFT_CLICK:
+      case NS_KEY_PRESS:
+      {
+        if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
+
+          nsKeyEvent * keyEvent;
+          if (aEvent->eventStructType == NS_KEY_EVENT) {
+            //Handle key commands from keys with char representation here, not on KeyDown
+            keyEvent = (nsKeyEvent *)aEvent;
+          }
+
+          //Click or return key
+          if (aEvent->message == NS_MOUSE_LEFT_CLICK || keyEvent->keyCode == NS_VK_RETURN) {
+            nsAutoString target;
+            nsIURI* baseURL = nsnull;
+            GetBaseURL(baseURL);
+            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
+            if (target.Length() == 0) {
+              GetBaseTarget(target);
+            }
+            ret = TriggerLink(aPresContext, eLinkVerb_Replace,
+                                     baseURL, href, target, PR_TRUE);
+            NS_IF_RELEASE(baseURL);
+            *aEventStatus = nsEventStatus_eConsumeDoDefault;
+          }
+        }
+      }
+      break;
+
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+        // XXX Bring up a contextual menu provided by the application
+        break;
+
+      case NS_MOUSE_ENTER:
+      {
+        nsIEventStateManager *stateManager;
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
+          stateManager->SetContentState(mContent, NS_EVENT_STATE_HOVER);
+          NS_RELEASE(stateManager);
+        }
+
+        nsAutoString target;
+        nsIURI* baseURL = nsnull;
+        GetBaseURL(baseURL);
+        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
+        if (target.Length() == 0) {
+          GetBaseTarget(target);
+        }
+        ret = TriggerLink(aPresContext, eLinkVerb_Replace,
+                          baseURL, href, target, PR_FALSE);
+        NS_IF_RELEASE(baseURL);
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
+      }
+      break;
+
+      case NS_MOUSE_EXIT:
+      {
+        nsIEventStateManager *stateManager;
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
+          stateManager->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+          NS_RELEASE(stateManager);
+        }
+
+        nsAutoString empty;
+        ret = TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
+      }
+      break;
+
+      default:
+        break;
+      }
+    }
+  }
+  return ret;
+}
+
+nsresult
 nsGenericHTMLElement::GetNameSpaceID(PRInt32& aID) const
 {
   aID = kNameSpaceID_HTML;

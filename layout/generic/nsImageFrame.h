@@ -53,6 +53,9 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+  NS_IMETHOD  GetContentForEvent(nsIPresContext* aPresContext,
+                                 nsEvent* aEvent,
+                                 nsIContent** aContent);
   NS_METHOD HandleEvent(nsIPresContext* aPresContext,
                         nsGUIEvent* aEvent,
                         nsEventStatus* aEventStatus);

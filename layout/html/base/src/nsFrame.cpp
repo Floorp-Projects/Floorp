@@ -749,6 +749,17 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
 /**
   *
  */
+NS_IMETHODIMP  
+nsFrame::GetContentForEvent(nsIPresContext* aPresContext,
+                            nsEvent* aEvent,
+                            nsIContent** aContent)
+{
+  return GetContent(aContent);
+}
+
+/**
+  *
+ */
 NS_IMETHODIMP
 nsFrame::HandleEvent(nsIPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,

@@ -195,6 +195,9 @@ public:
   NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);
+  NS_IMETHOD  GetContentForEvent(nsIPresContext* aPresContext,
+                                 nsEvent* aEvent,
+                                 nsIContent** aContent);
   NS_IMETHOD  GetCursor(nsIPresContext* aPresContext,
                         nsPoint&        aPoint,
                         PRInt32&        aCursor);

@@ -117,6 +117,11 @@ public:
                                       PRBool aDeep,
                                       nsIFormControl* aControl,
                                       nsIForm* aForm);
+  nsresult HandleDOMEventForAnchors(nsIPresContext* aPresContext,
+                                    nsEvent* aEvent,
+                                    nsIDOMEvent** aDOMEvent,
+                                    PRUint32 aFlags,
+                                    nsEventStatus* aEventStatus);
 
   // Implementation for nsIHTMLContent
   nsresult Compact();
