@@ -34,6 +34,13 @@ class nsStyleChangeList;
 #define NS_IFRAMEMANAGER_IID     \
 { 0xa6cf9107, 0x15b3, 0x11d2, \
   {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+  
+// Calback function used to destroy the value associated with a
+// given property. used by RemoveFrameProperty()
+typedef void 
+(*FMPropertyDtorFunc)(nsIFrame* aFrame,
+                      nsIAtom*  aPropertyName,
+                      void*     aPropertyValue);
 
 /**
  * Frame manager interface. The frame manager serves two purposes:
@@ -125,6 +132,29 @@ public:
    */
   NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
   NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
+
+  // Gets and sets properties on a given frame
+  NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
+                              nsIAtom*  aPropertyName,
+                              void**    aPropertyValue) = 0;
+  
+  // Sets the property value. A frame may only have one property value
+  // at a time for a given property name.
+  // When setting a property you may specify the dtor function (can be
+  // NULL) that will be used to destroy the property value. There can be
+  // only one dtor function for a given property atom, and the set call
+  // will fail with error NS_ERROR_INVALID_ARG if the dtor function does
+  // not match the existing dtor function
+  NS_IMETHOD SetFrameProperty(nsIFrame*          aFrame,
+                              nsIAtom*           aPropertyName,
+                              void*              aPropertyValue,
+                              FMPropertyDtorFunc aPropDtorFunc) = 0;
+
+  // Removes a property and destroys its property value by calling the dtor
+  // function associated with the property name. When a frame is destroyed any
+  // remaining properties are automatically removed
+  NS_IMETHOD RemoveFrameProperty(nsIFrame* aFrame,
+                                 nsIAtom*  aPropertyName) = 0;
 
 #ifdef NS_DEBUG
   /**
