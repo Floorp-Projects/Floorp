@@ -457,7 +457,7 @@ nsresult nsMsgCompFields::GetAttachVCard(PRBool *_retval)
 nsresult   
 nsMsgCompFields::SetUUEncodeAttachments(PRBool value)
 {
-	return GetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK);
+	return SetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK, value);
 }
 
 nsresult   
