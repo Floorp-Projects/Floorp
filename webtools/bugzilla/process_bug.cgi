@@ -68,6 +68,11 @@ if (defined $::FORM{'id'}) {
     }
 }
 
+# Make sure there are bugs to process.
+scalar(@idlist)
+  || DisplayError("You did not select any bugs to modify.")
+  && exit;
+
 # For each bug being modified, make sure its ID is a valid bug number 
 # representing an existing bug that the user is authorized to access.
 foreach my $id (@idlist) {
