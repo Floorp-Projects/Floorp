@@ -62,30 +62,6 @@ titledbutton#Throbber[busy="true"] {
 	list-style-image:url(chrome://navigator/skin/animthrob.gif);
 }
 
-toolbar#taskbar titledbutton{
-  color:#CCCCFF; 
-}
-
-toolbox#taskbox {
-  min-width: 2em;
-}
-
-toolbar#taskbar titledbutton:active {
-  border: 1px outset #666699;
-  color:white;
-}
-
-toolbar#taskbar {
-    /* note: use display: block/none from toolbar rules in xul.css */
-    background-color: #666699;
-    border-bottom: solid #333366 1px;
-    border-top: solid #9999AA 1px;
-    border-left: solid #9999AA 1px;
-    border-right: solid #333366 1px;
-    font: inherit;
-    min-height: 1em;
-    color: white;
-}
 
 
 box[class=insecure] {
@@ -128,31 +104,8 @@ titledbutton[class~=insecure] {
   display: none;
 }
  
-toolbar#taskbar titledbutton:active {
 
-  border: 1px inset #9999AA;
 
-}
-
-titledbutton#mini-nav
-{
-	list-style-image:url(resource:/res/toolbar/TB_MiniNav.gif);
-}
-
-titledbutton#mini-mail
-{
-	list-style-image:url(resource:/res/toolbar/TB_MiniMail.gif);
-}
-
-titledbutton#mini-addr
-{
-	list-style-image:url(resource:/res/toolbar/TB_MiniAddr.gif);
-}
-
-titledbutton#mini-comp
-{
-	list-style-image:url(resource:/res/toolbar/TB_MiniComp.gif);
-}
 
 box[type="secure"] {
    border-top: 2px solid yellow;
