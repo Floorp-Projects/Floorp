@@ -415,7 +415,7 @@ namespace MetaData {
 
         JS2Object *obj = JS2VAL_TO_OBJECT(x);
         if (obj->kind == ClassKind)    // therefore, not an E3 object, so just return
-            return engine->typeofString(x);     // the 'typeof' string
+            return engine->allocString("Function");// engine->typeofString(x);     // the 'typeof' string
 
         if (hint == NoHint) {
             if ((obj->kind == SimpleInstanceKind)

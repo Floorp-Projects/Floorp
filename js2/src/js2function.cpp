@@ -126,7 +126,7 @@ namespace MetaData {
 //        FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
     }
-
+#if 0
     static js2val Function_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
@@ -136,13 +136,13 @@ namespace MetaData {
 //        FunctionInstance *nfInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return STRING_TO_JS2VAL(meta->engine->Function_StringAtom);
     }
-
+#endif
     void initFunctionObject(JS2Metadata *meta)
     {
         FunctionData prototypeFunctions[] =
         {
             { "toString",            0, Function_toString },
-            { "valueOf",             0, Function_valueOf  },
+//            { "valueOf",             0, Function_valueOf  },
             { NULL }
         };
 

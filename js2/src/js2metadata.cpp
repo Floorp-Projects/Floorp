@@ -120,6 +120,8 @@ namespace MetaData {
             if (fnDef->resultType)
                 ValidateTypeExpression(cxt, env, fnDef->resultType);
             createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
+            if (cxt->E3compatibility)
+                createDynamicProperty(result, &world.identifiers["arguments"], JS2VAL_NULL, ReadAccess, true, false);
             result->fWrap->length = pCount;
             compileFrame->isConstructor = isConstructor;
             ValidateStmt(cxt, env, Plural, fnDef->body);
@@ -3796,6 +3798,15 @@ static const uint8 urlCharType[256] =
         return JS2VAL_UNDEFINED;
     }
 
+    static js2val class_underbarProtoGet(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        ASSERT(obj->kind == ClassKind);
+        JS2Class *c = checked_cast<JS2Class *>(obj);
+        return OBJECT_TO_JS2VAL(c->super);
+    }
+ 
     static js2val Object_valueOf(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
     {
         return thisValue;
@@ -3855,7 +3866,7 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js
         
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["namespace"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(attributeClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["attribute"]), JS2VAL_NULL);
-        MAKEBUILTINCLASS(classClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(classClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);                
         MAKEBUILTINCLASS(functionClass, objectClass, true, true, engine->Function_StringAtom, JS2VAL_NULL);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Package"]), JS2VAL_NULL);
 
@@ -3866,7 +3877,6 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js
         forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
 
         Variable *v;
-        FunctionInstance *fInst = NULL;
         
 // XXX Built-in Attributes... XXX 
 /*
@@ -3918,17 +3928,28 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         addGlobalObjectFunction("version", GlobalObject_version, 1);
 
 
-// Add __proto__ as a getter instance member to Object        
+// Add __proto__ as a getter/setter instance member to Object & class
         Multiname mn(&world.identifiers["__proto__"], publicNamespace);
+        FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), class_underbarProtoGet, env);
+        fInst->fWrap->length = 0;
+        InstanceGetter *g = new InstanceGetter(&mn, fInst, objectClass, true, true);
+        defineInstanceMember(classClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, g, 0);
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), class_underbarProtoGet, env);
+        fInst->fWrap->length = 0;
+        InstanceSetter *s = new InstanceSetter(&mn, fInst, objectClass, true, true);
+        defineInstanceMember(classClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, s, 0);
+
         fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoGet, env);
         fInst->fWrap->length = 0;
-        InstanceGetter *g = new InstanceGetter(&mn, fInst, objectClass, true, true);
+        g = new InstanceGetter(&mn, fInst, objectClass, true, true);
         defineInstanceMember(objectClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, g, 0);
         fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoSet, env);
         fInst->fWrap->length = 0;
-        InstanceSetter *s = new InstanceSetter(&mn, fInst, objectClass, true, true);
+        s = new InstanceSetter(&mn, fInst, objectClass, true, true);
         defineInstanceMember(objectClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, s, 0);
 
 
@@ -4574,16 +4595,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
-    static js2val class_ProtoGetter(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
-    {
-        ASSERT(JS2VAL_IS_OBJECT(thisValue));
-        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
-        ASSERT(obj->kind == ClassKind);
-        JS2Class *c = checked_cast<JS2Class *>(obj);
-
-        return OBJECT_TO_JS2VAL(c->super);
-    }
- 
     void JS2Metadata::initBuiltinClass(JS2Class *builtinClass, FunctionData *staticFunctions, NativeCode *construct, NativeCode *call)
     {
         FunctionData *pf;
@@ -4596,18 +4607,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         {
             Variable *v = new Variable(builtinClass, INT_TO_JS2VAL(1), true);
             defineLocalMember(env, engine->length_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
-
-            FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
-            callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), class_ProtoGetter, env);
-            callInst->fWrap->length = 0;
-            Getter *g = new Getter(objectClass, callInst);
-            defineLocalMember(env, &world.identifiers["__proto__"], NULL, Attribute::NoOverride, false, ReadAccess, g, 0, true);
-
             
             pf = staticFunctions;
             if (pf) {
                 while (pf->name) {
-                    callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+                    FunctionInstance *callInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                     callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                     callInst->fWrap->length = pf->length;
                     v = new Variable(functionClass, OBJECT_TO_JS2VAL(callInst), true);
