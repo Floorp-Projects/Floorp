@@ -238,7 +238,7 @@ main(int argc, char* argv[])
 
   // Create the socket transport...
   nsIChannel* transport;
-  rv = sts->CreateTransport(hostName, port, nsnull, &transport);
+  rv = sts->CreateTransport(hostName, port, nsnull, hostName, &transport);
 
 // This stuff is used to test the output stream
 #if 0

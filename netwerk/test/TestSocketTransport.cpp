@@ -277,7 +277,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
   // Create a socket transport...
   NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = sts->CreateTransport(aHostName, aPort, nsnull, &mTransport);
+    rv = sts->CreateTransport(aHostName, aPort, nsnull, aHostName, &mTransport);
   }
 
 
