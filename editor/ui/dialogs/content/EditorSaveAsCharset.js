@@ -89,7 +89,9 @@ function onOK()
    editorShell.BeginBatchChanges();
 
    if(titleWasEdited) {
+      try {
       editorShell.SetDocumentTitle(title);
+      } catch (ex) {}
    }
 
    if(charsetWasChanged) 
