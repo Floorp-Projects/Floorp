@@ -392,7 +392,7 @@ function SelectAddress()
 	dump("toAddress: " + toAddress + "\n");
 	window.openDialog("chrome://addressbook/content/abSelectAddressesDialog.xul",
 					  "",
-					  "chrome,resizable",
+					  "chrome,resizable,modal",
 					  {composeWindow:top.window,
 					   msgCompFields:msgCompFields,
 					   toAddress:toAddress,
