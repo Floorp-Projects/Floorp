@@ -104,7 +104,7 @@ struct fe_form_vtable
   void (*get_size_func)(FEFormData *, LO_FormElementStruct *);
   void (*element_is_submit_func)(FEFormData *, LO_FormElementStruct *);
   void (*display_element_func)(FEFormData *, LO_FormElementStruct  *);
-  void (*get_element_value)(FEFormData *, LO_FormElementStruct  *, XP_Bool);
+  void (*get_element_value)(FEFormData *, LO_FormElementStruct  *, XP_Bool, XP_Bool);
   void (*free_element_func)(FEFormData *, LO_FormElementData *);
   void (*reset_element)(FEFormData *, LO_FormElementStruct *);
   void (*select_element_func)(FEFormData *, LO_FormElementStruct *);
@@ -157,7 +157,7 @@ static FEFormData* alloc_form_data(int32 type);
 
 static void text_create_widget(FEFormData *, LO_FormElementStruct *);
 static void text_display(FEFormData *, LO_FormElementStruct *);
-static void text_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
+static void text_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool, XP_Bool);
 static void text_reset(FEFormData *, LO_FormElementStruct *);
 static void text_change(FEFormData *, LO_FormElementStruct *);
 static void text_focus(FEFormData *, LO_FormElementStruct *);
@@ -165,33 +165,31 @@ static void text_lost_focus(FEFormData *);
 static void text_select(FEFormData *, LO_FormElementStruct *);
 
 static void file_create_widget(FEFormData *, LO_FormElementStruct *);
-static void file_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
+static void file_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool, XP_Bool);
 static void file_free(FEFormData *, LO_FormElementData *);
 
 static void button_create_widget(FEFormData *, LO_FormElementStruct *);
 
 static void checkbox_create_widget(FEFormData *, LO_FormElementStruct *);
-static void checkbox_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
+static void checkbox_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool, XP_Bool);
 static void checkbox_change(FEFormData *, LO_FormElementStruct *);
 
 static void select_create_widget(FEFormData *, LO_FormElementStruct *);
-static void select_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
+static void select_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool, XP_Bool);
 static void select_free(FEFormData *, LO_FormElementData *);
 static void select_reset(FEFormData *, LO_FormElementStruct *);
 static void select_change(FEFormData *, LO_FormElementStruct *);
 
 static void textarea_create_widget(FEFormData *, LO_FormElementStruct *);
 static void textarea_display(FEFormData *, LO_FormElementStruct *);
-static void textarea_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
+static void textarea_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool, XP_Bool);
 static void textarea_reset(FEFormData *, LO_FormElementStruct *);
 static void textarea_lost_focus(FEFormData *);
 
 #ifdef ENDER
 
 static void htmlarea_create_widget(FEFormData *, LO_FormElementStruct *);
-static void htmlarea_get_size(FEFormData *, LO_FormElementStruct *);
-static void htmlarea_display(FEFormData *, LO_FormElementStruct *);
-static void htmlarea_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
+static void htmlarea_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool, XP_Bool);
 static void htmlarea_reset(FEFormData *, LO_FormElementStruct *);
 static void htmlarea_text_focus(FEFormData *, LO_FormElementStruct *);
 static void htmlarea_lost_focus(FEFormData *);
@@ -203,7 +201,7 @@ static void form_element_display(FEFormData *, LO_FormElementStruct *);
 static void form_element_get_size(FEFormData *, LO_FormElementStruct *);
 static void form_element_is_submit(FEFormData *, LO_FormElementStruct *);
 static void form_element_get_value(FEFormData *, LO_FormElementStruct *,
-				   XP_Bool);
+				   XP_Bool, XP_Bool);
 static void form_element_free(FEFormData *, LO_FormElementData *);
 
 
@@ -310,9 +308,9 @@ static FEFormVtable textarea_form_vtable = {
 
 static FEFormVtable htmlarea_form_vtable = {
   htmlarea_create_widget,
-  htmlarea_get_size,
+  form_element_get_size,
   NULL,
-  htmlarea_display,
+  form_element_display,
   htmlarea_get_value,
   htmlarea_element_free,
   htmlarea_reset,
@@ -975,7 +973,7 @@ form_element_is_submit(FEFormData *fed,
 static void
 form_element_get_value(FEFormData *fed,
 		       LO_FormElementStruct *form,
-		       XP_Bool delete_p)
+		       XP_Bool delete_p, XP_Bool submit)
 {
   if (delete_p)
     {
@@ -1215,7 +1213,7 @@ text_display(FEFormData *fed,
 static void
 text_get_value(FEFormData *fed,
 	       LO_FormElementStruct *form,
-	       XP_Bool delete_p)
+	       XP_Bool delete_p, XP_Bool submit)
 {
   MWContext *context = fed->context;
   INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(context);
@@ -1258,7 +1256,7 @@ text_get_value(FEFormData *fed,
   if ((char*)new_current != text)
     free (text);
 
-  form_element_get_value(fed, form, delete_p);
+  form_element_get_value(fed, form, delete_p, submit);
 }
 
 static void
@@ -1384,7 +1382,7 @@ text_lost_focus(FEFormData *fed)
      element, and send a CHANGE event to the javascript thread. */
   if (text_changed)
 	{
-		  (*fed->vtbl.get_element_value)(fed, fed->form, FALSE);
+		  (*fed->vtbl.get_element_value)(fed, fed->form, FALSE, FALSE);
 
 		  event = XP_NEW_ZAP(JSEvent);
 
@@ -1539,11 +1537,11 @@ file_create_widget(FEFormData *fed,
 static void
 file_get_value(FEFormData *fed,
 	       LO_FormElementStruct *form,
-	       XP_Bool delete_p)
+	       XP_Bool delete_p, XP_Bool submit)
 {
   FEFileFormData *filefed = (FEFileFormData*)fed;
   
-  text_get_value(fed, form, delete_p);
+  text_get_value(fed, form, delete_p, submit);
 
   /* if delete_p is true, then form_element_get_value will have destroyed
      fed->widget (our text field.)  We need to finish the job here. */
@@ -1766,7 +1764,7 @@ checkbox_create_widget(FEFormData *fed,
 static void
 checkbox_get_value(FEFormData *fed,
 		   LO_FormElementStruct *form,
-		   XP_Bool delete_p)
+		   XP_Bool delete_p, XP_Bool submit)
 {
   LO_FormElementData *form_data = XP_GetFormElementData(form);
   Boolean set = False;
@@ -1775,7 +1773,7 @@ checkbox_get_value(FEFormData *fed,
 
   XP_FormSetElementToggled(form_data, set);
 
-  form_element_get_value(fed, form, delete_p);
+  form_element_get_value(fed, form, delete_p, submit);
 }
 
 static void
@@ -2015,7 +2013,7 @@ select_create_widget(FEFormData *fed,
 static void 
 select_get_value(FEFormData *fed,
 		     LO_FormElementStruct *form,
-		     XP_Bool delete_p)
+		     XP_Bool delete_p, XP_Bool submit)
 {
   FESelectMultFormData *sel_fed = (FESelectMultFormData*)fed;
   LO_FormElementData *form_data = XP_GetFormElementData(form);
@@ -2030,7 +2028,7 @@ select_get_value(FEFormData *fed,
 			       sel_fed->selected_p[i]);
     }
 
-  form_element_get_value(fed, form, delete_p);
+  form_element_get_value(fed, form, delete_p, submit);
 }
 
 static void 
@@ -2317,7 +2315,7 @@ textarea_display(FEFormData *fed,
 static void
 textarea_get_value(FEFormData *fed,
 		   LO_FormElementStruct *form,
-		   XP_Bool delete_p)
+		   XP_Bool delete_p, XP_Bool submit)
 {
   MWContext *context = fed->context;
   LO_FormElementData *form_data = XP_GetFormElementData(form);
@@ -2355,7 +2353,7 @@ textarea_get_value(FEFormData *fed,
     free (text);
   }
 
-  form_element_get_value(fed, form, delete_p);
+  form_element_get_value(fed, form, delete_p, submit);
 }
 
 static void
@@ -2412,7 +2410,7 @@ textarea_lost_focus(FEFormData *fed)
      element, and send a CHANGE event to the javascript thread. */
   if (text_changed)
 	{
-		  (*fed->vtbl.get_element_value)(fed, fed->form, FALSE);
+		  (*fed->vtbl.get_element_value)(fed, fed->form, FALSE, FALSE);
 
 		  event = XP_NEW_ZAP(JSEvent);
 
@@ -2430,10 +2428,19 @@ htmlarea_focus_cb(Widget w, XtPointer closure, XEvent *event, Boolean *cont)
 {
   *cont = TRUE;
 
-  if (event->type == FocusIn)
-	fe_got_focus_cb(w, closure, (XtPointer)0);
-  else
-	fe_lost_focus_cb(w, closure, (XtPointer)0);
+  switch (event->type)
+  {
+    case FocusIn:
+      fe_got_focus_cb(w, closure, (XtPointer)0);
+      break; 
+    case FocusOut:
+      fe_lost_focus_cb(w, closure, (XtPointer)0);
+      break; 
+    case KeyPress:
+    case KeyRelease:
+      fe_key_handler(w, closure, event, cont);
+      break; 
+  }
 }
 
 static void
@@ -2453,10 +2460,6 @@ htmlarea_create_widget(FEFormData *fed, LO_FormElementStruct *form)
   if (!default_text)
 	default_text = (char*)XP_FormGetDefaultText(form_data);
 
-
-  /* XXX: For now, we are using the textarea's rows/cols attribute to specify
-   *      the composer widget's dimensions.
-   */
   XP_FormTextAreaGetDimensions(form_data, &ht, &wid);
 
   ha_fed->form_data.widget =
@@ -2472,7 +2475,8 @@ htmlarea_create_widget(FEFormData *fed, LO_FormElementStruct *form)
    * a DrawingArea so we register an event handler.
    */
   XtAddEventHandler(CONTEXT_DATA(ha_fed->editor_context)->drawing_area,
-					FocusChangeMask, FALSE, htmlarea_focus_cb, fed);
+					FocusChangeMask | KeyPressMask | KeyReleaseMask,
+					FALSE, htmlarea_focus_cb, fed);
 
   if (default_text)
   {
@@ -2482,34 +2486,7 @@ htmlarea_create_widget(FEFormData *fed, LO_FormElementStruct *form)
 }
 
 static void
-htmlarea_get_size(FEFormData *fed, LO_FormElementStruct *form)
-{
-#if HTMLAREA_USES_PIXELS_NOT_ROWCOL
-  LO_FormElementData *form_data;
-  int32 wid, ht;
-
-  form_data = XP_GetFormElementData(form);
-
-  /* XXX: For now, we are using the textarea's rows/cols attribute to specify
-   *      the composer widget's dimensions.
-   */
-  XP_FormTextAreaGetDimensions(form_data, &ht, &wid);
-
-  form->width  = wid;
-  form->height = ht;
-#else
-  form_element_get_size(fed, form);
-#endif
-}
-
-static void
-htmlarea_display(FEFormData *fed, LO_FormElementStruct *form)
-{
-  form_element_display(fed, form);
-}
-
-static void
-htmlarea_get_value(FEFormData *fed, LO_FormElementStruct *form, XP_Bool delete_p)
+htmlarea_get_value(FEFormData *fed, LO_FormElementStruct *form, XP_Bool delete_p, XP_Bool submit)
 {
   MWContext *context = fed->context;
   LO_FormElementData *form_data = XP_GetFormElementData(form);
@@ -2566,11 +2543,19 @@ htmlarea_text_focus(FEFormData *fed, LO_FormElementStruct *form)
 static void
 htmlarea_lost_focus(FEFormData *fed)
 {
-  /*
-   * TODO: Do stuff like in ...
-   *
-   * text_lost_focus(fed);
-   */
+  FEHTMLAreaFormData *ha_fed    = (FEHTMLAreaFormData*)fed;
+  JSEvent *event;
+
+  if (EDT_DirtyFlag(ha_fed->editor_context)) 
+  { 
+    (*fed->vtbl.get_element_value)(fed, fed->form, FALSE, FALSE);
+
+    event = XP_NEW_ZAP(JSEvent);
+    event->type = EVENT_CHANGE;
+    ET_SendEvent (fed->context, (LO_Element *) fed->form, event, NULL, NULL);
+
+    EDT_SetDirtyFlag(ha_fed->editor_context, FALSE); 
+  } 
 }
 
 static void
@@ -2765,7 +2750,7 @@ XFE_FormTextIsSubmit (MWContext *context, LO_FormElementStruct *form)
 
 void
 XFE_GetFormElementValue (MWContext *context, LO_FormElementStruct *form,
-						 XP_Bool delete_p)
+						 XP_Bool delete_p, XP_Bool submit)
 {
   LO_FormElementData *form_data = XP_GetFormElementData(form);
   FEFormData *fed;
@@ -2783,7 +2768,7 @@ XFE_GetFormElementValue (MWContext *context, LO_FormElementStruct *form,
   if (!fed) return;
 
   if (fed->vtbl.get_element_value)
-    (*fed->vtbl.get_element_value)(fed, form, delete_p);
+    (*fed->vtbl.get_element_value)(fed, form, delete_p, submit);
 }
 
 void
@@ -3059,7 +3044,7 @@ fe_form_file_browse_cb (Widget widget, XtPointer closure, XtPointer call_data)
 	XmTextFieldSetString (fed->widget, filename);
 	
 	/* resync up the backend with the current value in the text field. */
-	XFE_GetFormElementValue(fed->context, fed->form, False);
+	XFE_GetFormElementValue(fed->context, fed->form, False, False);
       }
 
     XP_FREE(filename);
@@ -3131,7 +3116,7 @@ fe_mocha_submit_form_cb (MWContext *context, LO_Element *element, int32 event,
   {
 	  MWContext *tempContext;
 
-      tempContext = XP_FindNamedContextInList(context, data->window_target);
+      tempContext = XP_FindNamedContextInList(context, (char *)data->window_target);
 
 	  /* Might be null if we're looking at _new. */
 	  if(tempContext)
@@ -3170,7 +3155,7 @@ fe_mocha_submit_click_form_cb(MWContext *context, LO_Element *element,
    * This needs to be done if we came here not because of the user
    * clicking on the submit button, like hitting RETURN on a text field.
    */
-  XFE_GetFormElementValue(fed->context, fed->form, False);
+  XFE_GetFormElementValue(fed->context, fed->form, False, False);
   
   {
 	JSEvent *event = XP_NEW_ZAP(JSEvent);
@@ -3238,7 +3223,7 @@ fe_mocha_button_form_cb (MWContext *context, LO_Element *element, int32 event,
   if (status != EVENT_OK)
     return;
 
-  XFE_GetFormElementValue (context, (LO_FormElementStruct *) element, False);
+  XFE_GetFormElementValue (context, (LO_FormElementStruct *) element, False, False);
 }
 
 
@@ -3631,7 +3616,7 @@ fe_mocha_radio_form_cb (MWContext *context, LO_Element *element,
 	LO_FormRadioSet (context, save);
       }
     
-    XFE_GetFormElementValue (context, (LO_FormElementStruct *) element, False);
+    XFE_GetFormElementValue (context, (LO_FormElementStruct *) element, False, False);
   }
   XP_FREE (cb);
 }
@@ -3674,7 +3659,7 @@ fe_radio_form_cb (Widget widget, XtPointer closure, XtPointer call_data)
        must be selected at all times. */
     XtVaSetValues (widget, XmNset, True, 0);
 
-  XFE_GetFormElementValue (fed->context, fed->form, False);
+  XFE_GetFormElementValue (fed->context, fed->form, False, False);
 
   {
     XEvent  *x_event;
@@ -3729,7 +3714,7 @@ fe_check_form_cb (Widget widget, XtPointer closure, XtPointer call_data)
   data = &form_data->form->element_data->ele_toggle;
   save = data->toggled;
 
-  XFE_GetFormElementValue (form_data->context, form_data->form, False);
+  XFE_GetFormElementValue (form_data->context, form_data->form, False, False);
 
   /*
    * The Motif documentation for XmToggleButton informs that call_data
