@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
+ * Cristian Tapus <cristian_tapus@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -102,6 +103,96 @@ icalcomponent* icalcomponent_fetch( icalcomponent* parent,const char* uid )
     }
     return nsnull;
 }
+
+/*
+ * This function adds the first component of the child component to the
+ * first component of the parent icalfileset (which is a icalfileset_impl)
+ *
+ * This is used in the following member functions: AddEvent, ModifyEvent,
+ * AddTodo, ModifyTodo
+ *
+ */
+icalerrorenum icalfileset_add_first_to_first_component(icalfileset *parent,
+                                       icalcomponent* child)
+{
+
+#ifdef ICAL_DEBUG
+    printf("icalfileset_add_first_to_first_component()::\n");
+#endif
+
+    struct icalfileset_impl* impl = (struct icalfileset_impl*)parent;
+
+    icalerror_check_arg_re((parent!=0),"parent", ICAL_BADARG_ERROR);
+    icalerror_check_arg_re((child!=0),"child",ICAL_BADARG_ERROR);
+
+    // get the first component of the child which is either a vevent or a vtodo 
+    icalcomponent* vfirst = icalcomponent_get_first_component(child, ICAL_VEVENT_COMPONENT);
+    if (vfirst==0) {
+      vfirst = icalcomponent_get_first_component(child, ICAL_VTODO_COMPONENT);
+    }
+    if (vfirst==0) return ICAL_INTERNAL_ERROR;
+        
+    // extract the first (presumably) vcalendar component of the parent stream 
+    struct icalfileset_impl* firstc = (struct icalfileset_impl*)icalfileset_get_first_component(impl);
+    
+    icalcomponent_kind kind_firstc;
+
+    if (firstc!=0) 
+      kind_firstc = icalcomponent_isa (firstc);
+    else 
+      // the check below will fail due to firstc==0
+      kind_firstc = ICAL_VCALENDAR_COMPONENT;
+
+    if ( (firstc==0) || (kind_firstc != ICAL_VCALENDAR_COMPONENT) ) {
+      // if parent stream is empty or first component is not a VCALENDAR
+      // then create a new vcalendar component 
+      firstc = (struct icalfileset_impl*)icalcomponent_new(ICAL_VCALENDAR_COMPONENT);
+      
+      if (firstc==0) {
+#ifdef ICAL_DEBUG
+	printf("icalfileset_add_first_to_first_component():: firstc is still NULL\n");
+#endif
+	return ICAL_INTERNAL_ERROR;
+      }
+   
+      // add component to parent stream
+      icalfileset_add_component(parent, firstc);
+    } else {
+      // I need to remove the version and the prodid
+            
+      //version
+      icalproperty *prop = icalcomponent_get_first_property(firstc, ICAL_VERSION_PROPERTY );
+      icalcomponent_remove_property( firstc, prop );
+      
+      //prodid
+      prop = icalcomponent_get_first_property( firstc, ICAL_PRODID_PROPERTY );
+      icalcomponent_remove_property( firstc, prop );
+    }
+    
+      
+    //version
+    icalproperty *prop = icalproperty_new_version( ICALEVENT_VERSION );
+    icalcomponent_add_property( firstc, prop );
+    
+    //prodid
+    prop = icalproperty_new_prodid( ICALEVENT_PRODID );
+    icalcomponent_add_property( firstc, prop );
+
+    // get the timezone component if any 
+    icalcomponent* timezone = icalcomponent_get_first_component(child, ICAL_VTIMEZONE_COMPONENT);
+
+    // we know that we have at most one timezone component inside the child component
+    if (timezone!=0) icalcomponent_add_component(firstc, timezone);
+    
+    // add first component of child into the first component of stream
+    icalcomponent_add_component(firstc, vfirst);
+    
+    icalfileset_mark(parent);
+    
+    return ICAL_NO_ERROR;
+
+}
+
 
 oeEventEnumerator::oeEventEnumerator( ) 
 :
@@ -905,10 +996,9 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
     }
 
     vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
-	
-    icalfileset_add_component( stream, vcalendar );
+    icalfileset_add_first_to_first_component( stream, vcalendar );
 
-	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
+    if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
 	    printf( "oeICalImpl::AddEvent() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
@@ -1025,10 +1115,9 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
     icalevent->UpdateLastModified();
 
     vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
-
-    icalfileset_add_component( stream, vcalendar );
-    
-	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
+    icalfileset_add_first_to_first_component( stream, vcalendar );  
+  
+    if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
 	    printf( "oeICalImpl::ModifyEvent() : WARNING icalfileset_commit() unsuccessful\n" );
         #endif
@@ -1965,7 +2054,7 @@ NS_IMETHODIMP oeICalImpl::AddTodo(oeIICalTodo *icaltodo,char **retid)
 
     vcalendar = ((oeICalTodoImpl *)icaltodo)->AsIcalComponent();
 	
-    icalfileset_add_component( stream, vcalendar );
+    icalfileset_add_first_to_first_component( stream, vcalendar );  
 
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
@@ -2169,8 +2258,9 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
     icalevent->UpdateLastModified();
 
     vcalendar = ((oeICalTodoImpl *)icalevent)->AsIcalComponent();
-    icalfileset_add_component( stream, vcalendar );
-    
+
+    icalfileset_add_first_to_first_component( stream, vcalendar );  
+      
 	if( icalfileset_commit(stream) != ICAL_NO_ERROR ) {
         #ifdef ICAL_DEBUG
 	    printf( "oeICalImpl::ModifyTodo() : WARNING icalfileset_commit() unsuccessful\n" );
