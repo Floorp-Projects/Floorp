@@ -3489,7 +3489,7 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
   AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
 
   // pass user input through filter before search
-  nsCommonString filtered = AutoCompletePrefilter(nsLocalString (searchString));
+  nsSharableString filtered = AutoCompletePrefilter(nsLocalString (searchString));
   if (filtered.Length() == 0) {
     listener->OnAutoComplete(results, status);
     return NS_OK;
@@ -3650,7 +3650,7 @@ nsGlobalHistory::AutoCompleteCutPrefix(nsAWritableString& aURL)
     aURL.Cut(0, idx);
 }
 
-nsCommonString
+nsSharableString
 nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
 {
   // XXX using nsAutoString here only because nsAString's Cut method doesn't work
@@ -3672,7 +3672,7 @@ nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
     url.ToLowerCase();
   }
   
-  return nsCommonString(url);
+  return nsSharableString(url);
 }
 
 PRBool

@@ -41,6 +41,7 @@
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsAWritableString.h"
+#include "nsSharableString.h"
 #include "nsITimer.h"
 #include "nsIAutoCompleteSession.h"
 
@@ -181,7 +182,7 @@ protected:
                               nsIAutoCompleteResults* aPrevResults,
                               nsIAutoCompleteResults* aResults);
   void AutoCompleteCutPrefix(nsAWritableString& aURL);
-  nsCommonString AutoCompletePrefilter(const nsAReadableString& aSearchString);
+  nsSharableString AutoCompletePrefilter(const nsAReadableString& aSearchString);
   PRBool AutoCompleteCompare(nsAString& aHistoryURL, const nsAReadableString& aUserURL);
 
   // caching of PR_Now() so we don't call it every time we do
