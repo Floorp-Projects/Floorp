@@ -666,6 +666,9 @@ nsContentList::ContentInserted(nsIDocument *aDocument,
                                nsIContent* aChild,
                                PRInt32 aIndexInContainer)
 {
+  // Note that aContainer can be null here if we are inserting into
+  // the document itself; any attempted optimizations to this method
+  // should deal with that.
   if (mState == LIST_DIRTY)
     return NS_OK;
 
@@ -703,6 +706,9 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
 {
+  // Note that aContainer can be null here if we are inserting into
+  // the document itself; any attempted optimizations to this method
+  // should deal with that.
   if (IsDescendantOfRoot(aContainer)) {
     if (MatchSelf(aChild)) {
       mState = LIST_DIRTY;
@@ -910,9 +916,17 @@ nsContentList::IsDescendantOfRoot(nsIContent* aContainer)
 {
   if (!mRootContent) {
 #ifdef DEBUG
-    nsCOMPtr<nsIDocument> doc;
-    aContainer->GetDocument(*getter_AddRefs(doc));
-    NS_ASSERTION(doc == mDocument, "We should not get in here if aContainer is appended to some _other_ document!");
+    // aContainer can be null when ContentInserted/ContentRemoved are
+    // called, but we still want to return PR_TRUE in such cases if
+    // mRootContent is null.  We could pass the document into this
+    // method instead of trying to get it from aContainer, but that
+    // seems a little pointless just to run this debug-only integrity
+    // check.
+    if (aContainer) { 
+      nsCOMPtr<nsIDocument> doc;
+      aContainer->GetDocument(*getter_AddRefs(doc));
+      NS_ASSERTION(doc == mDocument, "We should not get in here if aContainer is in some _other_ document!");
+    }
 #endif
     return PR_TRUE;
   }
