@@ -63,7 +63,7 @@ private:
 	CAliasEntry *	ResolveAlias( nsCString& name);
 	void 			ResolveEntries( nsCString& name, nsVoidArray& list, nsVoidArray& result);
 	void			BuildABCards( PRUint32 *pBytes, nsIAddrDatabase *pDb);
-	void			BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, nsIAddrDatabase *pDb);
+	void			BuildSingleCard( CAliasEntry *pEntry, nsVoidArray &emailList, nsIAddrDatabase *pDb);
 	PRInt32			FindAlias( nsCString& name);
 	void			ExtractNoteField( nsCString& note, nsCString& field, const char *pFieldName);
 	void			SanitizeValue( nsCString& val);

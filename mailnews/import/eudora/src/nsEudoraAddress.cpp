@@ -32,6 +32,14 @@ static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
 
 #define	kWhitespace	" \t\b\r\n"
 
+#define ADD_FIELD_TO_DB_ROW(pdb, func, dbRow, val, uniStr)    \
+  if (!val.IsEmpty())                                         \
+  {                                                           \
+        ConvertToUnicode(val.get(), uniStr);                  \
+        pdb->func(dbRow, NS_ConvertUCS2toUTF8(uniStr).get()); \
+  }
+
+
 // If we get a line longer than 16K it's just toooooo bad!
 #define kEudoraAddressBufferSz	(16 * 1024)
 
@@ -245,8 +253,6 @@ CAliasEntry *nsEudoraAddress::ProcessAlias( const char *pLine, PRInt32 len, nsSt
 	PRInt32		cnt = GetAliasName( pLine, len, name);
 	pLine += cnt;
 	len -= cnt;
-	if (!cnt || !len)
-		return( nsnull);
 
 	// we have 3 known forms of addresses in Eudora
 	// 1) real name <email@address>
@@ -256,6 +262,8 @@ CAliasEntry *nsEudoraAddress::ProcessAlias( const char *pLine, PRInt32 len, nsSt
 	// 5) <email@address> (Real name)
 	
 	CAliasEntry *pEntry = new CAliasEntry( name);
+	if (!cnt || !len)
+		return(pEntry);
 	
 	// Theoretically, an alias is just an RFC822 email adress, but it may contain
 	// an alias to another alias as the email!  I general, it appears close
@@ -538,7 +546,7 @@ void DumpAliasArray( nsVoidArray& a)
 	for (PRInt32 i = 0; i < cnt; i++) {
 		pEntry = (CAliasEntry *)a.ElementAt( i);
 		IMPORT_LOG1( "\tAlias: %s\n", pEntry->m_name.get());
-		if (pEntry->m_list.Count() > 1) {
+    if (pEntry->m_list.Count() > 1) {
 			IMPORT_LOG1( "\tList count #%ld\n", pEntry->m_list.Count());
 			for (PRInt32 j = 0; j < pEntry->m_list.Count(); j++) {
 				pData = (CAliasData *) pEntry->m_list.ElementAt( j);
@@ -548,7 +556,7 @@ void DumpAliasArray( nsVoidArray& a)
 				IMPORT_LOG1( "\t\tnickName: %s\n", pData->m_nickName.get());
 			}
 		}
-		else {
+		else if (pEntry->m_list.Count()) {
 			pData = (CAliasData *) pEntry->m_list.ElementAt( 0);
 			IMPORT_LOG1( "\t\temail: %s\n", pData->m_email.get());
 			IMPORT_LOG1( "\t\trealName: %s\n", pData->m_realName.get());
@@ -614,23 +622,17 @@ PRInt32 nsEudoraAddress::FindAlias( nsCString& name)
 void nsEudoraAddress::BuildABCards( PRUint32 *pBytes, nsIAddrDatabase *pDb)
 {
 	CAliasEntry *	pEntry;
-	CAliasData *	pData;
 	PRInt32			max = m_alias.Count();
 	PRInt32			i;
-	PRInt32			numAddrs;
-	nsCString		email;
-	nsVoidArray		entries;
+	nsVoidArray		emailList;
 	
 	// First off, run through the list and build person cards - groups/lists have to be done later
 	for (i = 0; i < max; i++) {
 		pEntry = (CAliasEntry *) m_alias.ElementAt( i);
-		ResolveEntries( pEntry->m_name, pEntry->m_list, entries);		
-		numAddrs = entries.Count();
-		if (numAddrs == 1) {
-			pData = (CAliasData *)entries.ElementAt( 0);
-			BuildSingleCard( pEntry, pData, pDb);
-		}
-		entries.Clear();
+		ResolveEntries( pEntry->m_name, pEntry->m_list, emailList);		
+    BuildSingleCard( pEntry, emailList, pDb);
+
+		emailList.Clear();
 
 		if (pBytes) {
 			// This isn't exact but it will get us close enough
@@ -697,37 +699,56 @@ void nsEudoraAddress::SplitString( nsCString& val1, nsCString& val2)
 	}
 }
 
-void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, nsIAddrDatabase *pDb)
+void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, nsVoidArray &emailList, nsIAddrDatabase *pDb)
 {
-	// we have a nickname always
-	// a real name sometimes
-	// an email address always
-	
-	// anything else found in notes!
-	
+  // We always have a nickname and everything else is optional.
+  // Map both home and work related fiedls to our address card. Eudora
+  // fields that can't be mapped will be left in the 'note' field!
 	nsIMdbRow* newRow = nsnull;
 	pDb->GetNewRow( &newRow); 
-	
-	/*
-		
-	*/
+  if (!newRow)
+    return;
 
-	nsCString	displayName(pData->m_realName);
-	nsCString	name;
-	nsCString	fax;
-	nsCString	phone;
-	nsCString	address;
-	nsCString	address2;
+	nsCString	displayName, name, firstName, lastName;
+	nsCString	fax, phone, mobile, webLink;
+	nsCString	address, address2, city, state, zip, country;
+	nsCString	phoneWK, webLinkWK, title, company;
+  nsCString	addressWK, address2WK, cityWK, stateWK, zipWK, countryWK;
 	nsCString	note(pEntry->m_notes);
-	if (note.Length() > 0) {
+
+	if (note.Length() > 0)
+  {
 		ExtractNoteField( note, fax, "fax");
 		ExtractNoteField( note, phone, "phone");
+    ExtractNoteField( note, mobile, "mobile");
 		ExtractNoteField( note, address, "address");
+    ExtractNoteField( note, city, "city");
+    ExtractNoteField( note, state, "state");
+    ExtractNoteField( note, zip, "zip");
+    ExtractNoteField( note, country, "country");
 		ExtractNoteField( note, name, "name");
+    ExtractNoteField( note, firstName, "first");
+    ExtractNoteField( note, lastName, "last");
+    ExtractNoteField( note, webLink, "web");
+
+    ExtractNoteField( note, addressWK, "address2");
+    ExtractNoteField( note, cityWK, "city2");
+    ExtractNoteField( note, stateWK, "state2");
+    ExtractNoteField( note, zipWK, "zip2");
+    ExtractNoteField( note, countryWK, "country2");
+		ExtractNoteField( note, phoneWK, "phone2");
+    ExtractNoteField( note, title, "title");
+    ExtractNoteField( note, company, "company");
+    ExtractNoteField( note, webLinkWK, "web2");
 	}
-	if (displayName.IsEmpty())
+
+  CAliasData *pData = emailList.Count() ? (CAliasData *)emailList.ElementAt(0) : nsnull;
+
+  if (pData && !pData->m_realName.IsEmpty())
+    displayName = pData->m_realName;
+	else if (!name.IsEmpty())
 		displayName = name;
-	if (displayName.IsEmpty())
+	else
 		displayName = pEntry->m_name;
 	
 	address.ReplaceSubstring( "\x03", "\x0D\x0A");
@@ -736,48 +757,67 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, n
 	fax.ReplaceSubstring( "\x03", " ");
 	phone.ReplaceSubstring( "\x03", " ");
 	name.ReplaceSubstring( "\x03", " ");
+  city.ReplaceSubstring( "\x03", " ");
+	state.ReplaceSubstring( "\x03", " ");
+  zip.ReplaceSubstring( "\x03", " ");
+  country.ReplaceSubstring( "\x03", " ");
+
+  addressWK.ReplaceSubstring( "\x03", "\x0D\x0A");
+  SplitString( addressWK, address2WK);
+	phoneWK.ReplaceSubstring( "\x03", " ");
+  cityWK.ReplaceSubstring( "\x03", " ");
+	stateWK.ReplaceSubstring( "\x03", " ");
+  zipWK.ReplaceSubstring( "\x03", " ");
+  countryWK.ReplaceSubstring( "\x03", " ");
+  title.ReplaceSubstring( "\x03", " ");
+  company.ReplaceSubstring( "\x03", " ");
 	
-	if (newRow) {
+	if (newRow)
+  {
 		nsAutoString uniStr;
 
-		ConvertToUnicode( displayName.get(), uniStr);
-		pDb->AddDisplayName( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
+    // Home related fields.
+    ADD_FIELD_TO_DB_ROW(pDb, AddDisplayName, newRow, displayName, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddNickName, newRow, pEntry->m_name, uniStr);
+    if (pData)
+      ADD_FIELD_TO_DB_ROW(pDb, AddPrimaryEmail, newRow, pData->m_email, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddFirstName, newRow, firstName, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddLastName, newRow, lastName, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWebPage2, newRow, webLink, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddFaxNumber, newRow, fax, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddHomePhone, newRow, phone, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddHomeAddress, newRow, address, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddHomeAddress2, newRow, address2, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddHomeCity, newRow, city, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddHomeZipCode, newRow, zip, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddHomeState, newRow, state, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddHomeCountry, newRow, country, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddCellularNumber, newRow, mobile, uniStr);
+    // Set 2nd email. If we have two/more email addresses then use the 2nd one on the list.
+    if (emailList.Count() > 1)
+    {
+      pData = (CAliasData *)emailList.ElementAt(1);
+      ADD_FIELD_TO_DB_ROW(pDb, Add2ndEmail, newRow, pData->m_email, uniStr);
+    }
 
-		ConvertToUnicode( pEntry->m_name.get(), uniStr);
-		pDb->AddNickName( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
+    // Work related fields.
+    ADD_FIELD_TO_DB_ROW(pDb, AddJobTitle, newRow, title, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddCompany, newRow, company, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWebPage1, newRow, webLinkWK, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWorkPhone, newRow, phoneWK, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWorkAddress, newRow, addressWK, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWorkAddress2, newRow, address2WK, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWorkCity, newRow, cityWK, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWorkZipCode, newRow, zipWK, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWorkState, newRow, stateWK, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddWorkCountry, newRow, countryWK, uniStr);
 
-		ConvertToUnicode( pData->m_email.get(), uniStr);
-		pDb->AddPrimaryEmail( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
-
-		if (!fax.IsEmpty()) {
-			ConvertToUnicode( fax.get(), uniStr);
-			pDb->AddFaxNumber( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
-		}
-
-		if (!phone.IsEmpty()) {
-			ConvertToUnicode( phone.get(), uniStr);
-			pDb->AddHomePhone( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
-		}
-
-		if (!address.IsEmpty()) {
-			ConvertToUnicode( address.get(), uniStr);
-			pDb->AddHomeAddress( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
-		}
-
-		if (!address2.IsEmpty()) {
-			ConvertToUnicode( address2.get(), uniStr);
-			pDb->AddHomeAddress2( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
-		}
-
-		if (!note.IsEmpty()) {
-			ConvertToUnicode( note.get(), uniStr);
-			pDb->AddNotes( newRow, NS_ConvertUCS2toUTF8(uniStr).get());
-		}
+    // Lastly, note field.
+    ADD_FIELD_TO_DB_ROW(pDb, AddNotes, newRow, note, uniStr);
 
 		pDb->AddCardRowToDB( newRow);
 
 		IMPORT_LOG1( "Added card to db: %s\n", displayName.get());
 	}		
 }
-
 
