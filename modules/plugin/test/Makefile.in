@@ -34,6 +34,8 @@ CPPSRCS = \
 
 include $(topsrcdir)/config/config.mk
 
+CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
+
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SAMPLES := \
