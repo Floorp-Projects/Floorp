@@ -409,6 +409,8 @@ function AbDeleteDirectory()
     if (!parentArray) 
       return; 
 
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+
     // check to see if personal or collected address books is selected for deletion.
     // if yes, prompt the user an appropriate message saying these cannot be deleted
     if ((selectedABURI != kCollectedAddressbookURI) &&
@@ -424,12 +426,9 @@ function AbDeleteDirectory()
       parentArray.AppendElement(parentDir);
     }
     else {
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-      if (promptService) {
-        promptService.alert(window,
+      promptService.alert(window,
           gAddressBookBundle.getString("cannotDeleteTitle"), 
           gAddressBookBundle.getString("cannotDeleteMessage"));
-      }
       return;
     }
 
@@ -441,7 +440,7 @@ function AbDeleteDirectory()
     else
       confirmDeleteMessage = gAddressBookBundle.getString("confirmDeleteAddressbook");
 
-    if (!window.confirm(confirmDeleteMessage))
+    if (!promptService.confirm(window, null, confirmDeleteMessage))
        return;
 
     var resourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
