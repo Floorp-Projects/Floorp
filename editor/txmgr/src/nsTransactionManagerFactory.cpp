@@ -19,6 +19,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsRepository.h"
 
 #include "nsTransactionManagerCID.h"
 #include "nsTransactionManager.h"
@@ -112,7 +113,8 @@ nsresult nsTransactionManagerFactory::LockFactory(PRBool aLock)
 }
 
 // return the proper factory to the caller
-extern "C" /* NS_TRANSACTIONMANAGER */ NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory
+**aFactory)
 {
   if (!aFactory)
     return NS_ERROR_NULL_POINTER;
