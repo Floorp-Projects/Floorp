@@ -197,19 +197,11 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
   mWindow = aWin;
   NS_ADDREF(aWin);
 
-#ifdef DEBUG
-  /* rhp - Needed to access the webshell to drive message display */
-  printf("nsMessenger::SetWindow(): Getting the webShell of interest...\n");
-#endif
-
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
-  if (!globalObj) 
-  {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
 
   nsIWebShell *webShell = nsnull;
-  nsIWebShell *rootWebShell = nsnull;
+  nsCOMPtr<nsIWebShell> rootWebShell;
 
   globalObj->GetWebShell(&webShell);
   if (nsnull == webShell) 
@@ -217,35 +209,27 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
     return NS_ERROR_FAILURE;
   }
 
-  webShell->GetRootWebShell(rootWebShell);
+  webShell->GetRootWebShell(*getter_AddRefs(rootWebShell));
   if (nsnull != rootWebShell) 
   {
     nsresult rv = rootWebShell->FindChildWithName(webShellName.GetUnicode(), *getter_AddRefs(mWebShell));
-#ifdef NS_DEBUG
-    if (NS_SUCCEEDED(rv) && nsnull != mWebShell)
-        printf("nsMessenger::SetWindow(): Got the webShell %s.\n", (const char *) nsAutoCString(webShellName));
-    else
-        printf("nsMessenger::SetWindow(): Failed to find webshell %s.\n", (const char *) nsAutoCString(webShellName));
-#endif
-	  if (mWebShell)
-	  {
-		  if (aMsgWindow)
-		  {
-			  nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
 
-			  aMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
-			  m_docLoaderObserver = do_QueryInterface(aStatusFeedback);
-			  if (aStatusFeedback)
-				  aStatusFeedback->SetWebShell(mWebShell, mWindow);
-			  mWebShell->SetDocLoaderObserver(m_docLoaderObserver);
-        NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-        if(NS_SUCCEEDED(rv))
-	        mailSession->SetTemporaryMsgWindow(aMsgWindow);
-        aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));
-		  }
+    if (NS_SUCCEEDED(rv) && mWebShell) {
+
+        if (aMsgWindow) {
+            nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
+            
+            aMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
+            m_docLoaderObserver = do_QueryInterface(aStatusFeedback);
+            if (aStatusFeedback)
+                aStatusFeedback->SetWebShell(mWebShell, mWindow);
+            mWebShell->SetDocLoaderObserver(m_docLoaderObserver);
+            NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+            if(NS_SUCCEEDED(rv))
+                mailSession->SetTemporaryMsgWindow(aMsgWindow);
+            aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));
+        }
     }
-  
-    NS_RELEASE(rootWebShell);
   }
 
   NS_RELEASE(webShell);
