@@ -54,6 +54,12 @@ public:
                                  const PRInt32 encodedWordSize, 
                                  char          **encodedString);
 
+  // Encode routine (utf-8 input)
+  NS_IMETHOD EncodeMimePartIIStr_UTF8(const char    *header, 
+                                      const char    *mailCharset, 
+                                      const PRInt32 encodedWordSize, 
+                                      char          **encodedString);
+
   NS_IMETHOD B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), 
                                 void *closure, MimeEncoderData **returnEncoderData);
 

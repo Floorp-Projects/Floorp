@@ -87,9 +87,18 @@ nsresult ConvertFromUnicode(const nsString aCharset,
                                      (nsISupports**)&ccm);
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsIUnicodeEncoder* encoder = nsnull;
+    nsString convCharset;
+
+    // map to converter charset
+    if (aCharset.EqualsIgnoreCase("us-ascii")) {
+      convCharset.SetString("iso-8859-1");
+    }
+    else {
+      convCharset = aCharset; 
+    }
 
     // get an unicode converter
-    res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+    res = ccm->GetUnicodeEncoder(&convCharset, &encoder);
     if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
       const PRUnichar *unichars = inString.GetUnicode();
       PRInt32 unicharLength = inString.Length();
@@ -169,19 +178,6 @@ const char *msgCompHeaderInternalCharset()
 // MIME encoder, output string should be freed by PR_FREE
 char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime) 
 {
-  nsString aCharset(msgCompHeaderInternalCharset());
-  nsString aString;
-  char *outCString = (char *) header; // initialize
-  nsresult res;
-
-  // utf-8 to ucs2 this conversion is inexpensive.
-  res = ConvertToUnicode(aCharset, header, aString);
-  if (NS_SUCCEEDED(res)) {
-    aCharset.SetString(charset);
-    // Convert to the mail charset
-    res = ConvertFromUnicode(aCharset, aString, &outCString);
-  }
-
   // No MIME, just duplicate the string.
   if (PR_FALSE == bUseMime) {
     return PL_strdup(header);
@@ -189,10 +185,10 @@ char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool 
 
   char *encodedString = nsnull;
   nsIMimeConverter *converter;
-  res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
                                            nsIMimeConverter::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
-    res = converter->EncodeMimePartIIStr(outCString, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
+    res = converter->EncodeMimePartIIStr_UTF8(header, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
     NS_RELEASE(converter);
   }
   return NS_SUCCEEDED(res) ? encodedString : nsnull;
@@ -210,7 +206,7 @@ char * INTL_GetDefaultMailCharset()
   	PRInt32 prefLength = kMAX_CSNAME;
 		
     prefs->Startup("prefs.js");
-		res = prefs->GetCharPref("intl.charactesr_set_name", prefValue, &prefLength);
+		res = prefs->GetCharPref("intl.character_set_name", prefValue, &prefLength);
     if (NS_SUCCEEDED(res) && prefLength > 0) {
       //TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
 			retVal = PL_strdup(prefValue);

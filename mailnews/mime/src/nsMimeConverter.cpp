@@ -131,6 +131,21 @@ nsMimeConverter::EncodeMimePartIIStr(const char    *header,
                                            const PRInt32 encodedWordSize, 
                                            char          **encodedString)
 {
+  char *utf8String;
+
+  // Encoder needs utf-8 string.
+  if (MIME_ConvertCharset(mailCharset, "utf-8", header, &utf8String) != 0)
+    return NS_ERROR_FAILURE;
+
+  return EncodeMimePartIIStr_UTF8((const char *) utf8String, mailCharset, encodedWordSize, encodedString);
+}
+
+nsresult
+nsMimeConverter::EncodeMimePartIIStr_UTF8(const char    *header, 
+                                          const char    *mailCharset, 
+                                          const PRInt32 encodedWordSize, 
+                                          char          **encodedString)
+{
   char *retString = MIME_EncodeMimePartIIStr(header, mailCharset, encodedWordSize);
   if (retString == NULL)
     return NS_ERROR_FAILURE;

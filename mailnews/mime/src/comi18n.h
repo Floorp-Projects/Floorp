@@ -50,7 +50,7 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
  * Use MIME_ConvertCharset in advance if the encoding string needs a conversion.
  *
  *
- * @param header          [IN] A header to encode.
+ * @param header          [IN] A header to encode (utf-8 Cstring).
  * @param mailCharset     [IN] Charset name (in C string) to convert.
  * @param encodedWordSize [IN] Byte lenght limit of the output, ususally 72 (use kMIME_ENCODED_WORD_SIZE).
  * @return            Encoded buffer (in C string) or NULL in case of error.
@@ -97,6 +97,16 @@ PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
 PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
                                  char** outCstring);
 
+
+/**
+ * Get a next character position in an UTF-8 string.
+ * Example: s += NextChar_UTF8(s);  // advance a pointer for one character
+ *
+ *
+ * @param str          [IN] An input C string (UTF-8).
+ * @return             A pointer to the next character.
+ */
+unsigned char * NextChar_UTF8(unsigned char *str);
 
 /*
  * To be removed. Existing for the backword compatibility. 
