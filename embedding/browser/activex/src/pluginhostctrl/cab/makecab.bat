@@ -11,9 +11,11 @@ set CERTFILE=%2
 set KEYFILE=%3
 set SPCFILE=%4
 
+REM === Check arguments ===
+
 if NOT .%PLUGINHOSTCTRLDLL%.==.. goto have_pluginhostctrl
 echo Usage : %0 pluginhostctrl [certfile keyfile spcfile]
-echo    
+echo .
 echo Specify the path to the pluginhostctrl.dll file as the first argument
 echo and optionally the certificate and keyfile as extra arguments.
 goto end
@@ -36,10 +38,11 @@ cabarc -s 6144 -r -P %OUTDIR%\ N %OUTCAB% out\*.*
 REM === Generate a test certificate to sign this thing with ===
 
 if NOT .%TESTCERT%.==.. goto end_testcert
+echo Generating a test certificate...
 set KEYFILE=.\test.key
 set CERTFILE=.\test.cer
 set SPCFILE=.\test.spc
-makecert -sv %KEYFILE% -n "CN=My Publisher Name" %CERTFILE%
+makecert -sv %KEYFILE% -n "CN=testcert.untrusted.org" %CERTFILE%
 cert2spc %CERTFILE% %SPCFILE%
 :end_testcert
 
@@ -50,9 +53,9 @@ if .%CERTFILE%.==.. goto the_end
 if .%KEYFILE%.==.. goto the_end
 if .%SPCFILE%.==.. goto the_end
 if NOT EXIST %CERTFILE% goto the_end
-if NOT EXIST %KEYFILE$ goto the_end
-if NOT EXIST %SPCFILE$ goto the_end
-
+if NOT EXIST %KEYFILE% goto the_end
+if NOT EXIST %SPCFILE% goto the_end
+echo Signing %OUTCAB%
 signcode -spc %SPCFILE% -v %KEYFILE% -n "Mozilla ActiveX control for hosting plugins" %OUTCAB%
 
 
