@@ -1688,11 +1688,6 @@ mips-sony-newsos*)
    
 esac
 
-dnl Turn off shared libraries if asked to do so.
-if test "$enable_shared" = no; then
-    MKSHLIB=
-fi
-
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl ========================================================
 dnl Check for system libraries
