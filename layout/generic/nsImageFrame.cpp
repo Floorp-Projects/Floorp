@@ -1461,8 +1461,10 @@ nsImageFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGro
 PRBool
 nsImageFrame::CanLoadImage(nsIURI *aURI)
 {
+
   PRBool shouldLoad = PR_TRUE; // default permit
 
+#if 0
   nsCOMPtr<nsIScriptSecurityManager> securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
 
   if (securityManager) {
@@ -1473,7 +1475,7 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
     if (NS_FAILED(proceed))
       return PR_FALSE;
   }
-
+#endif
   // XXX leave this if 0'd until there is a good way to test it.
 #if 0
 
