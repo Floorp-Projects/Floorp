@@ -29,6 +29,7 @@ CSRCS		= \
 
 CPPSRCS		= nsCaseConversionImp2.cpp \
 		  nsUnicharUtilFactory.cpp \
+		  nsCategoryImp.cpp \
 		  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
