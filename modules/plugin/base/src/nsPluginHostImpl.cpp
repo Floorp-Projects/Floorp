@@ -2146,7 +2146,7 @@ nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
       variants = plugins->mVariants;
 
       for (cnt = 0; cnt < variants; cnt++)
-        if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))
+        if (plugins->mMimeTypeArray[cnt] && (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType)))
           return NS_OK;
 
       if (cnt < variants)
@@ -2393,7 +2393,7 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
       variants = plugins->mVariants;
       
       for (cnt = 0; cnt < variants; cnt++) {
-        if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType)) {
+        if (plugins->mMimeTypeArray[cnt] && (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))) {
           aPlugin = plugins;
           return NS_OK;
         }

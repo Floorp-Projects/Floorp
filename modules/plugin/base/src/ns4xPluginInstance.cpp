@@ -37,40 +37,35 @@ class ns4xPluginStreamListener : public nsIPluginStreamListener {
 
 public:
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-    ///////////////////////////////////////////////////////////////////////////
-    // from nsIPluginStreamListener:
+  ///////////////////////////////////////////////////////////////////////////
+  // from nsIPluginStreamListener:
 
-    NS_IMETHOD
-    OnStartBinding(nsIPluginStreamInfo* pluginInfo);
+  NS_IMETHOD OnStartBinding(nsIPluginStreamInfo* pluginInfo);
 
-    NS_IMETHOD
-    OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, 
-                    PRUint32 length);
+  NS_IMETHOD OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, 
+                             PRUint32 length);
 
-    NS_IMETHOD
-    OnFileAvailable( nsIPluginStreamInfo* pluginInfo, const char* fileName);
+  NS_IMETHOD OnFileAvailable( nsIPluginStreamInfo* pluginInfo, const char* fileName);
 
-    NS_IMETHOD
-    OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status);
+  NS_IMETHOD OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status);
 
-	   NS_IMETHOD
-    GetStreamType(nsPluginStreamType *result);
+  NS_IMETHOD GetStreamType(nsPluginStreamType *result);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // ns4xPluginStreamListener specific methods:
+  ///////////////////////////////////////////////////////////////////////////
+  // ns4xPluginStreamListener specific methods:
 
-    ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData);
-    virtual ~ns4xPluginStreamListener(void);
+  ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData);
+  virtual ~ns4xPluginStreamListener(void);
 
 protected:
 
-    void* mNotifyData;
-   ns4xPluginInstance* mInst;
-   NPStream mNPStream;
-   PRUint32 mPosition;
-   nsPluginStreamType mStreamType;
+  void* mNotifyData;
+  ns4xPluginInstance* mInst;
+  NPStream mNPStream;
+  PRUint32 mPosition;
+  nsPluginStreamType mStreamType;
 };
 
 
@@ -327,8 +322,6 @@ ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks)
     fNPP.pdata = NULL;
     fNPP.ndata = this;
 
-    fPeer = nsnull;
-
     mWindowless = PR_FALSE;
     mTransparent = PR_FALSE;
     mStarted = PR_FALSE;
@@ -337,41 +330,23 @@ ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks)
 
 ns4xPluginInstance :: ~ns4xPluginInstance(void)
 {
-    NS_RELEASE(fPeer);
+#ifdef NS_DEBUG
+  printf("ns4xPluginInstance::~ns4xPluginInstance()\n");
+#endif
+#if defined(MOZ_WIDGET_GTK)
+  if (mXtBin)
+    gtk_widget_destroy(mXtBin);
+#endif
 }
 
 
 ////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ADDREF(ns4xPluginInstance);
-NS_IMPL_RELEASE(ns4xPluginInstance);
+NS_IMPL_ISUPPORTS1(ns4xPluginInstance, nsIPluginInstance)
 
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-NS_IMETHODIMP ns4xPluginInstance :: QueryInterface(const nsIID& iid, 
-                                                   void** instance)
-{
-  if (instance == NULL)
-    return NS_ERROR_NULL_POINTER;
-  
-  if (iid.Equals(kIPluginInstanceIID))
-    {
-      *instance = (void *)(nsIPluginInstance *)this;
-      AddRef();
-      return NS_OK;
-    }
-  
-  if (iid.Equals(kISupportsIID))
-    {
-      *instance = (void *)(nsISupports *)this;
-      AddRef();
-      return NS_OK;
-    }
-  
-  return NS_NOINTERFACE;
-}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -379,15 +354,15 @@ NS_IMETHODIMP ns4xPluginInstance :: QueryInterface(const nsIID& iid,
 NS_IMETHODIMP ns4xPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
 #ifdef MOZ_WIDGET_GTK
-  xtbin = nsnull;
+  mXtBin = nsnull;
 #endif
   return InitializePlugin(peer);
 }
 
 NS_IMETHODIMP ns4xPluginInstance::GetPeer(nsIPluginInstancePeer* *resultingPeer)
 {
-  NS_ADDREF(fPeer);
-  *resultingPeer = fPeer;
+  *resultingPeer = mPeer;
+  NS_IF_ADDREF(*resultingPeer);
   
   return NS_OK;
 }
@@ -401,12 +376,23 @@ NS_IMETHODIMP ns4xPluginInstance::Start(void)
   if(mStarted)
     return NS_OK;
   else
-    return InitializePlugin(fPeer); 
+    return InitializePlugin(mPeer); 
 }
 
 NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 {
   NPError error;
+
+#ifdef NS_DEBUG
+  printf("ns4xPluginInstance::Stop()\n");
+#endif
+
+#ifdef MOZ_WIDGET_GTK
+  if (mXtBin)
+    gtk_widget_destroy(mXtBin);
+#endif
+
+
 
   if (fCallbacks->destroy == NULL)
     return NS_ERROR_FAILURE; // XXX right error?
@@ -435,23 +421,21 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   const char* const* values = nsnull;
   nsresult rv;
   NPError error;
-  nsIPluginTagInfo* taginfo;
+
   
   NS_ASSERTION(peer != NULL, "null peer");
 
-  fPeer = peer;
-  NS_ADDREF(fPeer);
+  mPeer = peer;
 
-  rv = fPeer->QueryInterface(kIPluginTagInfoIID, (void **)&taginfo);
+  nsCOMPtr<nsIPluginTagInfo> taginfo = do_QueryInterface(mPeer, &rv);
 
-  if (NS_OK == rv)
+  if (NS_SUCCEEDED(rv))
   {
     taginfo->GetAttributes(count, names, values);
-    NS_IF_RELEASE(taginfo);
   }
 
   if (fCallbacks->newp == NULL)
-      return NS_ERROR_FAILURE; // XXX right error?
+    return NS_ERROR_FAILURE; // XXX right error?
   
   // XXX Note that the NPPluginType_* enums were crafted to be
   // backward compatible...
@@ -459,8 +443,8 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   nsPluginMode  mode;
   nsMIMEType    mimetype;
 
-  fPeer->GetMode(&mode);
-  fPeer->GetMIMEType(&mimetype);
+  mPeer->GetMode(&mode);
+  mPeer->GetMIMEType(&mimetype);
 
 #if !TARGET_CARBON
   // pinkerton
@@ -494,7 +478,7 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
                           (char**)names,
                           (char**)values,
                           NULL); // saved data
-#endif // XP_PC
+#endif // not XP_PC
 
 #endif //!TARGET_CARBON
   
@@ -525,7 +509,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   printf("Inside ns4xPluginInstance::SetWindow(%p)...\n", window);
 #endif
 
-  if (window == NULL || mStarted == PR_FALSE)
+  if (!window || !mStarted)
     return NS_OK;
   
   NPError error;
@@ -539,33 +523,58 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     // allocate a new NPSetWindowCallbackStruct structure at ws_info
     window->ws_info = (NPSetWindowCallbackStruct *)PR_MALLOC(sizeof(NPSetWindowCallbackStruct));
-    
+
     if (!window->ws_info)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    superwin = (GdkSuperWin *)(window->window);
     ws = (NPSetWindowCallbackStruct *)window->ws_info;
 
-    if (superwin->bin_window) {
+    superwin = GDK_SUPERWIN(window->window);
+    if (superwin->bin_window)
+    {
 #ifdef NS_DEBUG      
       printf("About to create new xtbin of %i X %i from %p...\n",
              window->width, window->height, superwin->bin_window);
 #endif
 
-      // Initialize GtkXtBin widget to encapsulate
-      // the Xt toolkit within this Gtk Application
-      xtbin = gtk_xtbin_new(superwin->bin_window, 0);
-      gtk_widget_set_usize(xtbin, window->width, window->height);
+#if 1
+      // if we destroyed the plugin when we left the page, we could remove this
+      // code (i believe) the problem here is that the window gets destroyed when
+      // its parent, etc does by changing a page the plugin instance is being
+      // held on to, so when we return to the page, we have a mXtBin, but it is
+      // in a not-so-good state.
+      // --
+      // this is lame.  we shouldn't be destroying this everytime, but I can't find
+      // a good way to tell if we need to destroy/recreate the xtbin or not
+      // what if the plugin wants to change the window and not just resize it??
+      // (pav)
 
-      printf("About to show xtbin(%p)...\n", xtbin); fflush(NULL);
-      gtk_widget_show(xtbin);
-      printf("completed gtk_widget_show(%p)\n", xtbin); fflush(NULL);
+      if (mXtBin) {
+        gtk_widget_destroy(mXtBin);
+        mXtBin = NULL;
+      }
+#endif
+
+
+      if (!mXtBin) {
+        mXtBin = gtk_xtbin_new(superwin->bin_window, 0);
+      } 
+
+      gtk_widget_set_usize(mXtBin, window->width, window->height);
+
+#ifdef NS_DEBUG
+      printf("About to show xtbin(%p)...\n", mXtBin); fflush(NULL);
+#endif
+      gtk_widget_show(mXtBin);
+#ifdef NS_DEBUG
+      printf("completed gtk_widget_show(%p)\n", mXtBin); fflush(NULL);
+#endif
     }
 
     // fill in window info structure 
     ws->type = 0; // OK, that was a guess!!
-    ws->depth = gdk_visual_get_best_depth();
-    ws->display = GTK_XTBIN(xtbin)->xtdisplay;
+    ws->depth = gdk_rgb_get_visual()->depth;
+    ws->display = GTK_XTBIN(mXtBin)->xtdisplay;
     ws->visual = GDK_VISUAL_XVISUAL(gdk_rgb_get_visual());
     ws->colormap = GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(superwin->bin_window));
 
@@ -574,7 +583,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
   // And now point the NPWindow structures window 
   // to the actual X window
-  window->window = (nsPluginPort *)GTK_XTBIN(xtbin)->xtwindow;
+  window->window = (nsPluginPort *)GTK_XTBIN(mXtBin)->xtwindow;
 #endif // MOZ_WIDGET_GTK
 
   if (fCallbacks->setwindow) {
