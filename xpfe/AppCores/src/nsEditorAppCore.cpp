@@ -245,7 +245,6 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
             nsIPresShell* shell = GetPresShellFor(aWebShell);
             NS_InitEditorMode(mDOMDoc, shell);
             mEditor = GetEditor();
-	          //SetToEditorMode(mDOMDoc, shell);
 	          NS_RELEASE(mDOMDoc);
             NS_IF_RELEASE(shell);
 	        }
@@ -511,70 +510,4 @@ static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 #define EDITOR_DLL "libender.so"
 #endif
 #endif
-
-NS_IMETHODIMP    
-nsEditorAppCore::SetToEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShell)
-{
-  nsresult result = NS_OK;
-  static needsInit=PR_TRUE;
-#if 0
-  if (gEditor)
-
-  gEditor=nsnull;
-
-  NS_ASSERTION(nsnull!=aDOMDocument, "null document");
-  NS_ASSERTION(nsnull!=aPresShell, "null presentation shell");
-
-  if ((nsnull==aDOMDocument) || (nsnull==aPresShell))
-    return NS_ERROR_NULL_POINTER;
-
-  /** temp code until the editor auto-registers **/
-  if (PR_TRUE==needsInit)
-  {
-    needsInit=PR_FALSE;
-    result = nsRepository::RegisterFactory(kHTMLEditorCID, EDITOR_DLL, 
-                                           PR_FALSE, PR_FALSE);
-    if (NS_ERROR_FACTORY_EXISTS!=result)
-    {
-      if (NS_FAILED(result))
-        return result;
-    }
-
-    result = nsRepository::RegisterFactory(kTextEditorCID, EDITOR_DLL, 
-                                           PR_FALSE, PR_FALSE);
-    if (NS_ERROR_FACTORY_EXISTS!=result)
-    {
-      if (NS_FAILED(result))
-        return result;
-    }
-
-    result = nsRepository::RegisterFactory(kEditorCID, EDITOR_DLL, 
-                                           PR_FALSE, PR_FALSE);
-    if (NS_ERROR_FACTORY_EXISTS!=result)
-    {
-      if (NS_FAILED(result))
-        return result;
-    }
-  }
-  /** end temp code **/
-/*
-  nsISupports *isup = nsnull;
-  result = nsServiceManager::GetService(kHTMLEditorCID,
-                                        kIHTMLEditorIID, &isup);
-*/
-  result = nsRepository::CreateInstance(kHTMLEditorCID,
-                                        nsnull,
-                                        kIHTMLEditorIID, (void **)&gEditor);
-  if (NS_FAILED(result))
-    return result;
-  if (!gEditor) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  gEditor->InitHTMLEditor(aDOMDocument, aPresShell);
-  gEditor->EnableUndo(PR_TRUE);
-#endif
-  return result;
-}
-
 
