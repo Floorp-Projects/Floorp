@@ -444,6 +444,153 @@ BrowserAppCoreLoadInitialPage(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
 
 //
+// Native method BackButtonPopup
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreBackButtonPopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.backbuttonpopup", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->BackButtonPopup()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function backButtonPopup requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ForwardButtonPopup
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreForwardButtonPopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.forwardbuttonpopup", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->ForwardButtonPopup()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function forwardButtonPopup requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GotoHistoryIndex
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreGotoHistoryIndex(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+  PRInt32 b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.gotohistoryindex", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->GotoHistoryIndex(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function gotoHistoryIndex requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method WalletPreview
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1474,6 +1621,9 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"stop",          BrowserAppCoreStop,     0},
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"loadInitialPage",          BrowserAppCoreLoadInitialPage,     0},
+  {"backButtonPopup",          BrowserAppCoreBackButtonPopup,     0},
+  {"forwardButtonPopup",          BrowserAppCoreForwardButtonPopup,     0},
+  {"gotoHistoryIndex",          BrowserAppCoreGotoHistoryIndex,     1},
   {"walletPreview",          BrowserAppCoreWalletPreview,     2},
   {"cookieViewer",          BrowserAppCoreCookieViewer,     1},
   {"signonViewer",          BrowserAppCoreSignonViewer,     1},

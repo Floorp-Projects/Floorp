@@ -383,6 +383,201 @@ nsresult ProfileDirectory(nsFileSpec& dirSpec) {
   return spec->GetFileSpec(&dirSpec);
 }
 
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::GotoHistoryIndex(PRInt32 aIndex)
+{
+    printf("In nsBrowserAppCOre::gotoHistoryIndex\n");
+    //	Goto(aIndex, mContentAreaWebShell, PR_FALSE);
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::BackButtonPopup()
+{
+
+  printf("In BrowserAppCore::Backbuttonpopup\n");
+
+#ifdef NOT_YET
+ // Get handle to the "backbuttonpopup" element
+  nsCOMPtr<nsIDOMElement>   backPopupElement;
+  rv = FindNamedXULElement(mWebShell, "backbuttonpopup", &backPopupElement);
+
+  if (!NS_SUCCEEDED(rv) ||  !backPopupElement)
+  {
+     return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMNode> backPopupNode(do_QueryInterface(backPopupElement)); 
+  if (!backPopupNode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsString  name;
+  backPopupNode->GetNodeName(name);
+  printf("Popup Node name = %s\n", name.ToNewCString());
+
+  
+  //get handle to the Menu item under popup
+  nsCOMPtr<nsIDOMNode>   menu;
+  backPopupNode->GetFirstChild(getter_AddRefs(menu));
+  if (!menu) {
+	  printf("Call to GetFirstChild failed\n");
+     return NS_ERROR_FAILURE;
+  }
+  
+  /*
+  //Get a nsIMenu out of the menu node
+  nsIMenu *  menuNode = nsnull;
+  rv = menu->QueryInterface(kIMenuIID, (void **)&menuNode);
+
+  if (!NS_SUCCEEDED(rv) || !menuNode) {
+	  printf("QueryInterface to nsIMenu failed\n");
+	  return NS_ERROR_FAILURE;
+  }
+*/
+  menu->GetNodeName(name);
+  printf("First child name = %s\n", name.ToNewCString());
+  PRBool hasChildren=PR_FALSE;
+
+  // Check of menu has children. If so, remove them.
+  menu->HasChildNodes(&hasChildren);
+  if (hasChildren) {
+     nsIDOMNodeList *   childList=nsnull;
+
+     //Get handle to the children list
+     rv = menu->GetChildNodes(&childList);
+     if (NS_SUCCEEDED(rv) && childList) {
+        PRInt32 ccount=0;
+        childList->GetLength((unsigned int *)&ccount);
+
+        // Remove the children one after one.
+        for (PRInt32 i=0; i<ccount; i++) {
+            nsIDOMNode * child=nsnull;
+            rv = childList->Item(i, &child);
+            nsIDOMNode * ret=nsnull;
+			if (NS_SUCCEEDED(rv) && child) {
+              rv = menu->RemoveChild(child, &ret);
+			  if (NS_SUCCEEDED(rv)) {
+				if (ret) {
+				  printf("Child %x removed from the popuplist \n", child);
+			      //Child was removed. release it.
+                  NS_IF_RELEASE(child);
+				}
+				else {
+					printf("Child %x was not removed from popuplist\n", child);
+				}
+			  }
+			  else
+			  {
+				 printf("Child %x was not removed from popuplist\n", child);
+                 return NS_ERROR_FAILURE;
+			  }
+			}  //child
+        } //(for)
+     }   // if (childList)
+	 
+  }    // hasChildren
+  else {
+
+	  printf("Menu has no children\n");
+  }
+	 
+             
+      /* Now build the popup list */
+
+  if (!mSHistory) {
+	  printf("mSHistory is null\n");
+     return NS_ERROR_FAILURE;
+	 }
+  
+  //Get current index in Session History
+  mSHistory->getCurrentIndex(index);
+
+  //Decide on the # of items in the popup list 
+  if (index > SHISTORY_POPUP_LIST)
+     i  = index-SHISTORY_POPUP_LIST;
+
+  for (PRInt32 j=i;j<index;j++) {
+      const PRUnichar * url=nsnull, *title=nsnull;
+
+      mSHistory->GetURLForIndex(j, &url);
+      nsAutoString  histURL(url);
+      mSHistory->GetTitleForIndex(j, &title);
+      nsAutoString  histTitle(title);
+      printf("URL = %s, TITLE = %s\n", histURL.ToNewCString(), histTitle.ToNewCString());
+      CreateMenuItem(menu, j, title);
+     }
+
+
+  NS_RELEASE(menuNode);
+#endif  /* NOT_YET */
+
+  return NS_OK;
+
+}
+
+
+
+NS_IMETHODIMP nsBrowserAppCore::CreateMenuItem(
+  nsIDOMNode *    aParentMenu,
+  PRInt32      aIndex,
+  const PRUnichar *  aName)
+{
+   printf("In CreateMenuItem\n");
+
+#ifdef  NOT_YET
+     nsString menuitemName(aName);
+
+  nsISupports * supports = nsnull;
+  rv = aparentMenu->QueryInterface(kISupportsIID, (void**) &supports);
+  if (!NS_SUCCEEDED(rv) && !supports)
+	  return NS_ERROR_FAILURE;
+
+  printf("In CreateMenuItem\n");
+  // Create nsMenuItem
+  nsIMenuItem * pnsMenuItem = nsnull;
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+
+  if (NS_OK == rv) {
+    pnsMenuItem->Create(supports, menuitemName, 0);                 
+    
+    // Make nsMenuItem a child of nsMenu
+    nsISupports * supports = nsnull;
+    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
+    aParentMenu->AppendChild(supports);
+    NS_RELEASE(supports);
+	
+    nsString menuitemCmd("gotoHistoryIndex(");
+	menuitemCmd += (aIndex);
+	menuitemCmd += ");";
+    
+    pnsMenuItem->SetCommand(menuitemCmd);
+    pnsMenuItem->SetWebShell(mWebShell);
+   
+   
+    // The parent owns us, so we can release
+    NS_RELEASE(pnsMenuItem);
+  } 
+#endif  /* NOT_YET */
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::ForwardButtonPopup()
+{
+     printf("Inside ForwardButtonPopup\n");
+	 return NS_OK;
+
+}
+
+
+
+
 PRInt32
 newWind(char* urlName)
 {
