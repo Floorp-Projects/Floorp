@@ -129,7 +129,7 @@ nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength,
   }
   else {
     char *Cstr = nsnull;
-    res = mCollation->UnicodeToChar(stringIn, &Cstr, mCharset);
+    res = mCollation->UnicodeToChar(stringNormalized, &Cstr, mCharset);
     if (NS_SUCCEEDED(res) && Cstr != nsnull) {
       byteLen = LCMapStringA(mLCID, LCMAP_SORTKEY, Cstr, PL_strlen(Cstr), (char *) key, (int) *outLen);
       PR_Free(Cstr);
