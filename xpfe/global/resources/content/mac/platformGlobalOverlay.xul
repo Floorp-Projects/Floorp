@@ -8,8 +8,8 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<!-- change the xul key for Mac -->
-	<keyset id="macoverlaykeyset">
+	<!-- Set the xul key for Mac -->
+	<keyset id="defaultKeySet">
 	<xulkey key="meta" />
 	</keyset>
 
