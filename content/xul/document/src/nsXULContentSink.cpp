@@ -1250,9 +1250,12 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
     if (generateIDAttr)
         ++numattrs;
 
-    nsXULPrototypeAttribute* attrs = new nsXULPrototypeAttribute[numattrs];
-    if (! attrs)
+    nsXULPrototypeAttribute* attrs = nsnull;
+    if (numattrs > 0) {
+      attrs = new nsXULPrototypeAttribute[numattrs];
+      if (! attrs)
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     aElement->mAttributes    = attrs;
     aElement->mNumAttributes = numattrs;
