@@ -227,14 +227,14 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
   
 	if(NS_FAILED(rv)) return rv;
 
-	nsAutoString uri (eOneByte);
+	nsCAutoString uri;
 	uri.Append(mURI);
 	uri.Append('/');
 
 	uri.Append(name);
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
+	rv = rdf->GetResource(uri, getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 
@@ -493,8 +493,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
 	rv = pathSpec->GetFileSpec(&path);
 	if (NS_FAILED(rv)) return rv;
 
-	nsAutoString tmpPath((nsFilePath)path, eOneByte);
-	*url = PR_smprintf("%s%s", urlScheme, tmpPath.GetBuffer());
+	nsCAutoString tmpPath((nsFilePath)path);
+	*url = PR_smprintf("%s%s", urlScheme, (const char *) tmpPath);
 	return NS_OK;
 
 }

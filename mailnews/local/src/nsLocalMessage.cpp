@@ -67,10 +67,10 @@ nsresult nsLocalMessage::GetFolderFromURI(nsIMsgFolder **folder)
 	if(NS_SUCCEEDED( rv = QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(resource))))
 	{
 		resource->GetValue( getter_Copies(uri) );
-		nsString messageFolderURIStr;
+		nsCAutoString messageFolderURIStr;
 		nsMsgKey key;
 		nsParseLocalMessageURI(uri, messageFolderURIStr, &key);
-		nsString folderOnly, folderURIStr;
+		nsCAutoString folderOnly, folderURIStr;
 
 		if (messageFolderURIStr.Find(kMailboxMessageRootURI) != ((PRInt32)-1))
 		{
@@ -78,7 +78,7 @@ nsresult nsLocalMessage::GetFolderFromURI(nsIMsgFolder **folder)
 			folderURIStr = kMailboxRootURI;
 			folderURIStr+= folderOnly;
 			nsCOMPtr<nsIRDFResource> folderResource;
-			char *folderURI = folderURIStr.ToNewCString();
+			const char *folderURI = folderURIStr.GetBuffer();
 
 			NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
 			if (NS_SUCCEEDED(rv))   // always check this before proceeding 
@@ -89,9 +89,6 @@ nsresult nsLocalMessage::GetFolderFromURI(nsIMsgFolder **folder)
 					rv = NS_SUCCEEDED(folderResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)folder));
 				}
 			}
-
-
-			delete[] folderURI;
 		}
 
 	}

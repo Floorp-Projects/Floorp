@@ -139,8 +139,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIChannel * /* aChannel */, nsI
 	if (m_mailDB)
 	{
 		nsMsgKeyArray	keys;
-		nsAutoString	author (eOneByte);
-		nsAutoString	subject (eOneByte);
+		nsCAutoString	author;
+		nsCAutoString	subject;
 
 //		m_mailDB->PrePopulate();
 		m_mailDB->ListAllKeys(keys);
@@ -1681,7 +1681,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 	{
 		nsIMsgDBHdr	*msgHdr = m_newMsgHdr;
 		PRUint32 msgFlags;
-		nsString trashNameVal(eOneByte);
+		nsCAutoString trashNameVal;
 
 		msgHdr->GetFlags(&msgFlags);
 
@@ -1699,8 +1699,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 				// so we use an nsString from above.
 				PRUnichar *folderName = nsnull;
 				rv = trash->GetName(&folderName);
-				// ### woa, is this right?. will the eOneByte nsString do the right unichar conversion?.
-				trashNameVal = folderName;
+				trashNameVal = nsCAutoString(folderName);
 				PR_FREEIF(folderName);
 				value = (void *) trashNameVal.GetBuffer();
 			}

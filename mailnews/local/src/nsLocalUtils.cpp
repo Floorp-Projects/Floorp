@@ -211,20 +211,20 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
  * message key number in key
  */
 nsresult nsParseLocalMessageURI(const char* uri,
-                                nsString& folderURI,
+                                nsCString& folderURI,
                                 PRUint32 *key)
 {
 	if(!key)
 		return NS_ERROR_NULL_POINTER;
 
-	nsAutoString uriStr = uri;
+	nsCAutoString uriStr = uri;
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
 		nsAutoString folderPath;
 		uriStr.Left(folderURI, keySeparator);
 
-		nsAutoString keyStr;
+		nsCAutoString keyStr;
 		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
 		PRInt32 errorCode;
 		*key = keyStr.ToInteger(&errorCode);
