@@ -23,6 +23,11 @@
 #     Douglas Turner <dougt@netscape.com>
 
 
+
+# Make this a true dynamic component even in static builds because
+# this component is shared by installer
+!undef MOZ_STATIC_COMPONENT_LIBS
+
 DEPTH=..\..
 
 include <$(DEPTH)/config/config.mak>

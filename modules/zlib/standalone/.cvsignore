@@ -25,3 +25,6 @@ zconf.h
 zlib.h
 zutil.h
 .deps_S
+maketree.c
+inffixed.h
+trees.h

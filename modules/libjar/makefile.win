@@ -24,9 +24,13 @@
 
 
 
+# Make this a true dynamic component even in static builds because
+# this component is shared by installer
+!undef MOZ_STATIC_COMPONENT_LIBS
+
 DIRS=standalone
 
-MODULE=jar 
+MODULE=jar
 LIBRARY_NAME=jar$(VERSION_NUMBER)
 MODULE_NAME=nsJarModule
 

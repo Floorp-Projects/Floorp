@@ -2,3 +2,4 @@ Makefile
 apprunner
 mozilla-bin
 mozilla-bin.pure
+nsStaticComponents.cpp

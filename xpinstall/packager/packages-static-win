@@ -37,17 +37,19 @@ bin\defaults\profile\localstore.rdf
 bin\defaults\profile\search.rdf
 bin\defaults\profile\mimeTypes.rdf
 
-
-[browser]
-install\ren8dot3.exe,bin\ren8dot3.exe
+[xpcom]
 bin\js3250.dll
 bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
 bin\xpistub.dll
-bin\mozilla.exe
-bin\nspr4.dll
 bin\nsreg.dll
+bin\nspr4.dll
+bin\components\xpinstal.dll
+bin\components\jar50.dll
+
+[browser]
+bin\mozilla.exe
 bin\components\nslocale.dll
 bin\plugins\npnul32.dll
 bin\res\cmessage.txt
