@@ -34,7 +34,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.2 2000/06/13 21:56:28 chrisk%netscape.com Exp $
+ * $Id: cmsdecode.c,v 1.3 2001/09/20 22:15:31 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -159,6 +159,9 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
 		break;
 	    case SEC_OID_PKCS7_ENCRYPTED_DATA:
 		p7dcx->content.encryptedData->cmsg = p7dcx->cmsg;
+		break;
+	    default:
+		PORT_Assert(0);
 		break;
 	    }
 	}
@@ -314,7 +317,7 @@ nss_cms_after_data(NSSCMSDecoderContext *p7dcx)
 {
     PLArenaPool *poolp;
     NSSCMSDecoderContext *childp7dcx;
-    SECStatus rv;
+    SECStatus rv = SECFailure;
 
     poolp = p7dcx->cmsg->poolp;
 
