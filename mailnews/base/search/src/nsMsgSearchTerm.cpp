@@ -21,7 +21,6 @@
  */
 
 #include "msgCore.h"
-#include "xp_core.h"
 #include "nsMsgSearchCore.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgDatabase.h"
@@ -402,7 +401,7 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 	if (IS_STRING_ATTRIBUTE(m_attribute))
 	{
 		PRBool	quoteVal = PR_FALSE;
-		while (IS_SPACE(*inStream))
+		while (nsString::IsSpace(*inStream))
 			inStream++;
 
 		// need to remove pair of '"', if present
@@ -447,7 +446,7 @@ nsMsgSearchOperator nsMsgSearchTerm::ParseOperator(char *inStream)
 	PRInt16				operatorVal;
 	nsresult		err;
 
-	while (IS_SPACE(*inStream))
+	while (nsString::IsSpace(*inStream))
 		inStream++;
 
 	char *commaSep = PL_strchr(inStream, ',');
@@ -466,7 +465,7 @@ nsMsgSearchAttribute nsMsgSearchTerm::ParseAttribute(char *inStream)
 	PRInt16				attributeVal;
 	nsresult		err;
 
-	while (IS_SPACE(*inStream))
+	while (nsString::IsSpace(*inStream))
 		inStream++;
 
 	// if we are dealing with an arbitrary header, it may be quoted....
@@ -611,12 +610,12 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRU
 					headerValue++; 
 
 				// strip leading white space
-				while (headerValue < buf_end && IS_SPACE(*headerValue))
+				while (headerValue < buf_end && nsString::IsSpace(*headerValue))
 					headerValue++; // advance to next character
 				
 				// strip trailing white space
 				char * end = buf_end - 1; 
-				while (end > headerValue && IS_SPACE(*end)) // while we haven't gone back past the start and we are white space....
+				while (end > headerValue && nsString::IsSpace(*end)) // while we haven't gone back past the start and we are white space....
 				{
 					*end = '\0';	// eat up the white space
 					end--;			// move back and examine the previous character....
