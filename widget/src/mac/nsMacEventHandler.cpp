@@ -52,7 +52,8 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	
 	mTopLevelWidget			= aTopLevelWidget;
 	mLastWidgetHit			= nsnull;
-	mLastWidgetPointed		= nsnull;
+	mLastWidgetPointed	= nsnull;
+	mTSMDocument				= nsnull;
 	
 	//
 	// create a TSMDocument for this window.  We are allocating a TSM document for
@@ -718,7 +719,8 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			//
 			// Activate The TSMDocument associated with this handler
 			//
-			err = ::ActivateTSMDocument(mTSMDocument);
+			if (mTSMDocument)
+				err = ::ActivateTSMDocument(mTSMDocument);
 #if 0
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: ActivateTSMDocument failed");
 			printf("nsEventHandler::HandleActivateEvent: ActivateTSMDocument[%p]\n",mTSMDocument);
@@ -751,7 +753,8 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			//
 			// Deactivate the TSMDocument assoicated with this EventHandler
 			//
-			err = ::DeactivateTSMDocument(mTSMDocument);
+			if (mTSMDocument)
+				err = ::DeactivateTSMDocument(mTSMDocument);
 #if 0
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
 			printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p]\n",mTSMDocument);
