@@ -6646,11 +6646,13 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 					PA_UNLOCK(buff);
 					if(buff)
 						XP_FREE(buff);
-						
+
+                    /*
 					//lo_AddParam(tag, "CODE", appletName);
 					//lo_RemoveParam(tag, "type");
 					//lo_AddParam(tag, "TYPE", "application/x-java-vm");
 					//lo_FormatEmbed(context, state, tag);
+                    */
 					
 					lo_ProcessObjectTag(context, state, tag, FALSE);
 					tag->is_end = TRUE;
