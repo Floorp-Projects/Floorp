@@ -26,7 +26,7 @@
 #include "nsXPLookAndFeel.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsLookAndFeelLog, 0)
+NS_IMPL_LOG(nsLookAndFeelLog)
 #define PRINTF NS_LOG_PRINTF(nsLookAndFeelLog)
 #define FLUSH  NS_LOG_FLUSH(nsLookAndFeelLog)
 

@@ -24,7 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsXPLookAndFeelLog, 0)
+NS_IMPL_LOG(nsXPLookAndFeelLog)
 #define PRINTF NS_LOG_PRINTF(nsXPLookAndFeelLog)
 #define FLUSH  NS_LOG_FLUSH(nsXPLookAndFeelLog)
  

@@ -49,7 +49,7 @@ Notes to self:
 #include "nsSpecialSystemDirectory.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsTransferableLog, 0)
+NS_IMPL_LOG(nsTransferableLog)
 #define PRINTF NS_LOG_PRINTF(nsTransferableLog)
 #define FLUSH  NS_LOG_FLUSH(nsTransferableLog)
 

@@ -42,7 +42,7 @@
 #include <X11/Xutil.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsGtkEventHandlerLog, 0)
+NS_IMPL_LOG(nsGtkEventHandlerLog)
 #define PRINTF NS_LOG_PRINTF(nsGtkEventHandlerLog)
 #define FLUSH  NS_LOG_FLUSH(nsGtkEventHandlerLog)
 

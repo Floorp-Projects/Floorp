@@ -20,15 +20,18 @@
  * Contributor(s): 
  */
 
+#include "nslog.h"
+#undef printf
+#undef fprintf
+
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsFileWidget.h"
 #include "nsIToolkit.h"
-#include "nslog.h"
 
-NS_IMPL_LOG(nsFileWidgetLog, 0)
+NS_IMPL_LOG(nsFileWidgetLog)
 #define PRINTF NS_LOG_PRINTF(nsFileWidgetLog)
 #define FLUSH  NS_LOG_FLUSH(nsFileWidgetLog)
 
@@ -115,7 +118,7 @@ static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
 
 static gint file_delete_window(GtkWidget *w, gpointer data)
 {
-    PRINTF("window closed\n");
+  PRINTF("window closed\n");
   gtk_main_quit();
   return PR_TRUE;
 }

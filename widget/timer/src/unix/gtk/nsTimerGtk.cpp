@@ -29,7 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsTimerGtkLog, 0)
+NS_IMPL_LOG(nsTimerGtkLog)
 #define PRINTF NS_LOG_PRINTF(nsTimerGtkLog)
 #define FLUSH  NS_LOG_FLUSH(nsTimerGtkLog)
 
