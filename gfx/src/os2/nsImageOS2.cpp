@@ -30,14 +30,10 @@
 #include <stdlib.h>
 
 #include "nsImageOS2.h"
-#include "nsIDeviceContext.h"
 #include "nsRenderingContextOS2.h"
 
-
-// Max size of image that could be tiled
-#define MAX_BUFFER_WIDTH   200        // For screen resolution 1600x1200
-#define MAX_BUFFER_HEIGHT  150        //   3 x 3 = 9 times
-
+#define MAX_BUFFER_WIDTH        128
+#define MAX_BUFFER_HEIGHT       128
 
 struct MONOBITMAPINFO
 {
