@@ -1036,7 +1036,6 @@ main(int argc, char **argv, char **envp)
         // eval loop)
         {
             nsCOMPtr<nsIPrincipal> princ;
-            nsresult rv = NS_OK;
 
             nsCOMPtr<nsIScriptSecurityManager> securityManager =
                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -1074,14 +1073,28 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        glob = JS_NewObject(cx, &global_class, NULL, NULL);
-        if (!glob)
+        nsCOMPtr<nsIXPCScriptable> backstagePass;
+        nsresult rv = rtsvc->GetBackstagePass(getter_AddRefs(backstagePass));
+        if (NS_FAILED(rv)) {
+            fprintf(gErrFile, "+++ Failed to get backstage pass from rtsvc: %8x\n",
+                    rv);
             return 1;
-        if (!JS_InitStandardClasses(cx, glob))
+        }
+
+        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+        rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
+                                                  NS_GET_IID(nsISupports),
+                                                  PR_FALSE,
+                                                  getter_AddRefs(holder));
+        if (NS_FAILED(rv))
             return 1;
+        
+        rv = holder->GetJSObject(&glob);
+        if (NS_FAILED(rv)) {
+            NS_ASSERTION(glob == nsnull, "bad GetJSObject?");
+            return 1;
+        }
         if (!JS_DefineFunctions(cx, glob, glob_functions))
-            return 1;
-        if (NS_FAILED(xpc->InitClasses(cx, glob)))
             return 1;
 
         envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
@@ -1093,20 +1106,6 @@ main(int argc, char **argv, char **envp)
 
         result = ProcessArgs(cx, glob, argv, argc);
 
-
-#ifdef TEST_InitClassesWithNewWrappedGlobal
-        // quick hacky test...
-
-        JSContext* foo = JS_NewContext(rt, 8192);
-        nsCOMPtr<nsIXPCTestNoisy> bar(new TestGlobal());
-        nsCOMPtr<nsIXPConnectJSObjectHolder> baz;
-        xpc->InitClassesWithNewWrappedGlobal(foo, bar, NS_GET_IID(nsIXPCTestNoisy),
-                                             PR_TRUE, getter_AddRefs(baz));
-        bar = nsnull;
-        baz = nsnull;
-        JS_GC(foo);
-        JS_DestroyContext(foo);
-#endif
 
 //#define TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN 1
 

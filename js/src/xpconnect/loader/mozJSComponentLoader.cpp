@@ -65,7 +65,6 @@
 #include "nsString.h"
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsIURL.h"
 #include "nsIStandardURL.h"
 #include "nsNetUtil.h"
@@ -326,76 +325,6 @@ static JSFunctionSpec gGlobalFun[] = {
 #endif
     {0}
 };
-
-#ifndef XPCONNECT_STANDALONE
-class BackstagePass : public nsIScriptObjectPrincipal, public nsIXPCScriptable
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSCRIPTABLE
-  
-  virtual nsIPrincipal* GetPrincipal() {
-    return mPrincipal;
-  }
-
-  BackstagePass(nsIPrincipal *prin) :
-    mPrincipal(prin)
-  {
-  }
-
-  virtual ~BackstagePass() { }
-
-private:
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS2(BackstagePass, nsIScriptObjectPrincipal, nsIXPCScriptable)
-
-#else
-
-class BackstagePass : public nsIXPCScriptable
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSCRIPTABLE
-
-  BackstagePass()
-  {
-  }
-
-  virtual ~BackstagePass() { }
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(BackstagePass, nsIXPCScriptable)
-
-#endif
-
-// The nsIXPCScriptable map declaration that will generate stubs for us...
-#define XPC_MAP_CLASSNAME           BackstagePass
-#define XPC_MAP_QUOTED_CLASSNAME   "BackstagePass"
-#define                             XPC_MAP_WANT_NEWRESOLVE
-#define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   | \
-                            nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY   | \
-                            nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY   | \
-                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS       | \
-                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE    | \
-                            nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
-#include "xpc_map_end.h" /* This will #undef the above */
-
-/* PRBool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 flags, out JSObjectPtr objp); */
-NS_IMETHODIMP
-BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                          JSContext * cx, JSObject * obj,
-                          jsval id, PRUint32 flags, 
-                          JSObject * *objp, PRBool *_retval)
-{
-    JSBool resolved;
-
-    *_retval = JS_ResolveStandardClass(cx, obj, id, &resolved);
-    if (*_retval && resolved)
-        *objp = obj;
-    return NS_OK;
-}
 
 mozJSComponentLoader::mozJSComponentLoader()
     : mRuntime(nsnull),
@@ -1020,16 +949,15 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         return nsnull;
 
 #ifndef XPCONNECT_STANDALONE
-    nsCOMPtr<nsIScriptObjectPrincipal> backstagePass =
-      new BackstagePass(mSystemPrincipal);
-
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
     if (NS_FAILED(rv) || !jsPrincipals)
         return nsnull;
-
-#else
-    nsCOMPtr<nsISupports> backstagePass = new BackstagePass();
 #endif
+
+    nsCOMPtr<nsIXPCScriptable> backstagePass;
+    rv = mRuntimeService->GetBackstagePass(getter_AddRefs(backstagePass));
+    if (NS_FAILED(rv))
+        return nsnull;
 
     JSCLAutoErrorReporterSetter aers(cx, Reporter);
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;

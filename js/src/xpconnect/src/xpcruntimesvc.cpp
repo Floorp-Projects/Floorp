@@ -41,6 +41,39 @@
 
 #include "xpcprivate.h"
 
+#ifndef XPCONNECT_STANDALONE
+NS_IMPL_THREADSAFE_ISUPPORTS2(BackstagePass, nsIScriptObjectPrincipal, nsIXPCScriptable)
+#else
+NS_IMPL_THREADSAFE_ISUPPORTS1(BackstagePass, nsIXPCScriptable)
+#endif
+
+// The nsIXPCScriptable map declaration that will generate stubs for us...
+#define XPC_MAP_CLASSNAME           BackstagePass
+#define XPC_MAP_QUOTED_CLASSNAME   "BackstagePass"
+#define                             XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   | \
+                            nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY   | \
+                            nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY   | \
+                            nsIXPCScriptable::DONT_ENUM_STATIC_PROPS       | \
+                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE    | \
+                            nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
+#include "xpc_map_end.h" /* This will #undef the above */
+
+/* PRBool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 flags, out JSObjectPtr objp); */
+NS_IMETHODIMP
+BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                          JSContext * cx, JSObject * obj,
+                          jsval id, PRUint32 flags, 
+                          JSObject * *objp, PRBool *_retval)
+{
+    JSBool resolved;
+
+    *_retval = JS_ResolveStandardClass(cx, obj, id, &resolved);
+    if(*_retval && resolved)
+        *objp = obj;
+    return NS_OK;
+}
+
 /*
  * This object holds state that we don't want to lose!
  *
@@ -80,6 +113,7 @@ nsJSRuntimeServiceImpl::GetSingleton()
         gJSRuntimeService = new nsJSRuntimeServiceImpl();
         // hold an extra reference to lock it down
         NS_IF_ADDREF(gJSRuntimeService);
+
     }
     NS_IF_ADDREF(gJSRuntimeService);
 
@@ -108,8 +142,30 @@ nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     *runtime = mRuntime;
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "nJRSI: returning %p\n", (void *)mRuntime);
+    return NS_OK;
+}
+
+/* attribute nsIXPCScriptable backstagePass; */
+NS_IMETHODIMP
+nsJSRuntimeServiceImpl::GetBackstagePass(nsIXPCScriptable **bsp)
+{
+    if(!mBackstagePass) {
+#ifndef XPCONNECT_STANDALONE
+        nsCOMPtr<nsIPrincipal> sysprin;
+        nsCOMPtr<nsIScriptSecurityManager> secman = 
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+        if(!secman)
+            return nsnull;
+        if(NS_FAILED(secman->GetSystemPrincipal(getter_AddRefs(sysprin))))
+            return nsnull;
+        
+        mBackstagePass = new BackstagePass(sysprin);
+#else
+        mBackstagePass = new BackstagePass();
 #endif
+        if(!mBackstagePass)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(*bsp = mBackstagePass);
     return NS_OK;
 }

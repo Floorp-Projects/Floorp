@@ -41,9 +41,11 @@
 #include "nsISupports.idl"
 
 [ptr] native JSRuntime(JSRuntime);
+interface nsIXPCScriptable;
 
-[uuid(dcfbb49c-1dd1-11b2-9f39-935aef484817)]
+[uuid(e7d09265-4c23-4028-b1b0-c99e02aa78f8)]
 interface nsIJSRuntimeService : nsISupports
 {
     readonly attribute JSRuntime        runtime;
+    readonly attribute nsIXPCScriptable backstagePass;
 };
