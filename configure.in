@@ -4249,10 +4249,10 @@ fi
 dnl ========================================================
 dnl XTF
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xtf,
-[  --enable-xtf            Enable XTF (pluggable xml tags) support],
-    MOZ_XTF=1,
-    MOZ_XTF= )
+MOZ_ARG_DISABLE_BOOL(xtf,
+[  --disable-xtf           Disable XTF (pluggable xml tags) support],
+    MOZ_XTF=,
+    MOZ_XTF=1 )
 if test -n "$MOZ_XTF"; then
   AC_DEFINE(MOZ_XTF)
 fi
