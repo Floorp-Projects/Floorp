@@ -535,27 +535,26 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 3;
         break;
     case eMetric_TabFocusModel:
-        CFPropertyListRef fullKeyboardAccessProperty;
-        fullKeyboardAccessProperty = ::CFPreferencesCopyValue (CFSTR("AppleKeyboardUIMode"),
-                                                               kCFPreferencesAnyApplication,
-                                                               kCFPreferencesCurrentUser,
-                                                               kCFPreferencesAnyHost);
-
-        if (fullKeyboardAccessProperty) {
-          PRInt32 fullKeyboardAccessPrefVal;
-          ::CFNumberGetValue(fullKeyboardAccessProperty, kCFNumberIntType,
-                             &fullKeyboardAccessPrefVal);
-
-          if (fullKeyboardAccessPrefVal == 3) // "Full keyboard access" is on
-            aMetric = 7; // everything that can be focused
-          else
-            aMetric = 1; // Textboxes
-
-          ::CFRelease(fullKeyboardAccessProperty);
+        {
+          // we should probably cache this
+          CFPropertyListRef fullKeyboardAccessProperty;
+          fullKeyboardAccessProperty = ::CFPreferencesCopyValue(CFSTR("AppleKeyboardUIMode"),
+                                                                 kCFPreferencesAnyApplication,
+                                                                 kCFPreferencesCurrentUser,
+                                                                 kCFPreferencesAnyHost);
+          aMetric = 1;    // default to just textboxes
+          if (fullKeyboardAccessProperty)
+          {
+            PRInt32 fullKeyboardAccessPrefVal;
+            if (::CFNumberGetValue(fullKeyboardAccessProperty, kCFNumberIntType, &fullKeyboardAccessPrefVal))
+            {
+              // the second bit means  "Full keyboard access" is on
+              if (fullKeyboardAccessPrefVal & (1 << 1))
+                aMetric = 7; // everything that can be focused
+            }
+            ::CFRelease(fullKeyboardAccessProperty);
+          }
         }
-        else // By default, "Full keyboard accees" preference is off
-          aMetric = 1;
-
         break;
     default:
         aMetric = 0;
