@@ -863,7 +863,7 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByNumber(
 
 }
 
-PR_IMPLEMENT(PRUintn) PR_NetAddrSize(const PRNetAddr* addr)
+PRUintn _PR_NetAddrSize(const PRNetAddr* addr)
 {
     PRUintn addrsize;
 
@@ -890,7 +890,7 @@ PR_IMPLEMENT(PRUintn) PR_NetAddrSize(const PRNetAddr* addr)
     else addrsize = 0;
 
     return addrsize;
-}  /* PR_NetAddrSize */
+}  /* _PR_NetAddrSize */
 
 PR_IMPLEMENT(PRIntn) PR_EnumerateHostEnt(
     PRIntn enumIndex, const PRHostEnt *hostEnt, PRUint16 port, PRNetAddr *address)

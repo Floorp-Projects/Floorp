@@ -47,8 +47,6 @@ IMPL_STRATEGY		= _PTH
 DEFINES			+= -D_REENTRANT
 endif
 
-USE_IPV6 = 1
-
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPU_ARCH		:= x86
 else
