@@ -560,7 +560,7 @@ public:
     {
         if (peq(property, kNC_URL))
 	{
-		char	*uri = nsnull;
+		const char	*uri = nsnull;
 		source->GetValue(&uri);
 		if (uri)
 		{
