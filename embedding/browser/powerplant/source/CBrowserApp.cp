@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -47,8 +47,15 @@
 #include "nsIImageManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIDirectoryService.h"
 #include "nsIPref.h"
 #include "nsRepeater.h"
+#include "nsILocalFile.h"
+#include "nsILocalFileMac.h"
+#include "nsIFileSpec.h"
+#include "nsIProfile.h"
+#include "nsEmbedAPI.h"
+#include "nsXPIDLString.h"
 #include "macstdlibextras.h"
 #include "SIOUX.h"
 
@@ -57,6 +64,10 @@
 extern "C" void NS_SetupRegistry();
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
+static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+
+static nsresult StartWithProfile(const char* inProfileName, PRBool& outProfileExisted);
 
 // ===========================================================================
 //		¥ Main Program
@@ -96,115 +107,6 @@ int main()
 
 
 // ---------------------------------------------------------------------------
-//		MMozillaApp constructor
-// ---------------------------------------------------------------------------
-
-MMozillaApp::MMozillaApp() :
-  mpIEventQueueService(nsnull), mpIServiceManager(nsnull)
-{
-	nsresult rv = InitWebShellApp();
-	if (rv != NS_OK)
-		ThrowOSErr_(rv);
-}
-
-// ---------------------------------------------------------------------------
-//		MMozillaApp destructor
-// ---------------------------------------------------------------------------
-
-MMozillaApp::~MMozillaApp()
-{
-	TermWebShellApp();
-}                  
-
-// ---------------------------------------------------------------------------
-//		MMozillaApp::InitWebShell
-// ---------------------------------------------------------------------------
-//	Does once only initialization of WebShell.
-//	Called at application startup.
-
-nsresult MMozillaApp::InitWebShellApp()
-{
-	RegisterClass_(CBrowserShell);
-	RegisterClass_(CBrowserWindow);
-	RegisterClass_(CUrlField);
-	RegisterClass_(CThrobber);
-
-	nsresult rv;
-	
-	// Initialize XPCOM
- 	NS_InitXPCOM(&mpIServiceManager, nsnull);
- 
- 	rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
-	if (NS_OK != rv) {
-		NS_ASSERTION(PR_FALSE, "Could not AutoRegister");
-		return rv;
-	}
- 	
-	// Initialize the Registry
-	NS_SetupRegistry();
-	
-	// Create the Event Queue for the UI thread...
-	rv = nsServiceManager::GetService(NS_EVENTQUEUESERVICE_PROGID,
-	                                 NS_GET_IID(nsIEventQueueService),
-	                                 (nsISupports **)&mpIEventQueueService);
-	if (NS_OK != rv) {
-		NS_ASSERTION(PR_FALSE, "Could not obtain the event queue service");
-		return rv;
-	}
-
-	rv = mpIEventQueueService->CreateThreadEventQueue();
-	if (NS_OK != rv) {
-		NS_ASSERTION(PR_FALSE, "Could not create the event queue for the thread");
-		return rv;
-	}
-			
-  // Load preferences
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-	if (NS_SUCCEEDED(rv))
-	{	  
-		prefs->StartUp();
-		prefs->ReadUserPrefs();
-		
-		// HACK ALERT: Since we don't have profiles, we don't have prefs
-		// Reduce the default font size here by hand
-	    prefs->SetIntPref("font.size.variable.x-western", 12);
-	    prefs->SetIntPref("font.size.fixed.x-western", 9);
-	}
-	else
-		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
-	
-	return NS_OK;
-}
-
-
-// ---------------------------------------------------------------------------
-//		MMozillaApp::TermWebShell
-// ---------------------------------------------------------------------------
-//	Does once per application run initialization of WebShell.
-//	Called at application quit time.
-
-void MMozillaApp::TermWebShellApp()
-{
-	nsresult	rv;
-	
-	UMacUnicode::ReleaseUnit();
-	
-	if (nsnull != mpIEventQueueService) {
-		nsServiceManager::ReleaseService(NS_EVENTQUEUESERVICE_PROGID, mpIEventQueueService);
-		mpIEventQueueService = nsnull;
-	}
-	
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-	if (NS_SUCCEEDED(rv))
-    	prefs->ShutDown();
-	
-	// Shutdown XPCOM?
-	rv = NS_ShutdownXPCOM(mpIServiceManager);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-}
-
-
-// ---------------------------------------------------------------------------
 //		¥ CBrowserApp
 // ---------------------------------------------------------------------------
 //	Constructor
@@ -215,13 +117,63 @@ CBrowserApp::CBrowserApp()
 		::RegisterAppearanceClient();
 	}
 
-	RegisterClass_(PP_PowerPlant::LWindow);		// You must register each kind of
+	RegisterClass_(PP_PowerPlant::LWindow);	// You must register each kind of
 	RegisterClass_(PP_PowerPlant::LCaption);	// PowerPlant classes that you use in your PPob resource.
 	
 	// Register the Appearance Manager/GA classes
 	PP_PowerPlant::UControlRegistry::RegisterClasses();
+	
+	// Register classes used by embedding
+	RegisterClass_(CBrowserShell);
+	RegisterClass_(CBrowserWindow);
+	RegisterClass_(CUrlField);
+	RegisterClass_(CThrobber);
 
-  SetSleepTime(0);			
+   // We need to idle threads often
+   SetSleepTime(0);
+    
+   // Get the directory which contains the mozilla parts
+   // In this case it is the app directory but it could
+   // be anywhere (an existing install of mozilla)
+
+   nsresult        rv;
+   ProcessSerialNumber psn;
+   ProcessInfoRec  processInfo;
+   FSSpec          appSpec;
+   nsCOMPtr<nsILocalFileMac> macDir;
+   nsCOMPtr<nsILocalFile>    appDir;  // If this ends up being NULL, default is used
+
+   if (!::GetCurrentProcess(&psn)) {
+      processInfo.processInfoLength = sizeof(processInfo);
+      processInfo.processName = NULL;
+      processInfo.processAppSpec = &appSpec;    
+      if (!::GetProcessInformation(&psn, &processInfo)) {
+         // Turn the FSSpec of the app into an FSSpec of the app's directory
+         ::FSMakeFSSpec(appSpec.vRefNum, appSpec.parID, "\p", &appSpec);
+         // Make an nsILocalFile out of it
+         rv = NS_NewLocalFileWithFSSpec(&appSpec, PR_TRUE, getter_AddRefs(macDir));
+         if (NS_SUCCEEDED(rv))
+             appDir = do_QueryInterface(macDir);
+      }
+   }
+
+   rv = NS_InitEmbedding(appDir, nsnull);
+   
+   // Start up the profile service   
+   PRBool profExisted;
+   rv = StartWithProfile("PPBrowser", profExisted);
+      
+   if (!profExisted) {
+       NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+       if (NS_SUCCEEDED(rv)) {	  
+    		
+    		// HACK ALERT: Since we don't have prefs UI, reduce the font size here by hand
+            prefs->SetIntPref("font.size.variable.x-western", 12);
+            prefs->SetIntPref("font.size.fixed.x-western", 12);
+    	}
+    	else
+    		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
+	}				
 }
 
 
@@ -233,6 +185,14 @@ CBrowserApp::CBrowserApp()
 
 CBrowserApp::~CBrowserApp()
 {
+   nsresult rv;
+   
+   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+   prefs->SavePrefFile();
+
+   UMacUnicode::ReleaseUnit();
+	   
+   NS_TermEmbedding();
 }
 
 // ---------------------------------------------------------------------------
@@ -376,4 +336,77 @@ CBrowserApp::FindCommandStatus(
 												outUsesMark, outMark, outName);
 			break;
 	}
+}
+
+
+Boolean CBrowserApp::AttemptQuitSelf(SInt32 inSaveOption)
+{	    
+   // IMPORTANT: This is one unfortunate thing about Powerplant - Windows don't
+   // get destroyed until the destructor of LCommander. We need to delete
+   // all of the CBrowserWindows though before we terminate embedding.
+    
+ 	TArrayIterator<LCommander*> iterator(mSubCommanders, LArrayIterator::from_End);
+ 	LCommander*		theSub;
+ 	while (iterator.Previous(theSub)) {
+ 	    if (dynamic_cast<CBrowserWindow*>(theSub)) {
+ 		    mSubCommanders.RemoveItemsAt(1, iterator.GetCurrentIndex());
+ 		    delete theSub;
+ 		}
+ 	}
+    
+   return true;
+}
+
+static nsresult StartWithProfile(const char* inProfileName, PRBool& outProfileExisted)
+{
+   // Warning: inProfileName must not contain spaces!!
+   
+   nsresult rv;
+   PRBool exists;
+   
+   NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
+   NS_ENSURE_TRUE(profileMgr, rv);
+
+   NS_WITH_SERVICE(nsICmdLineService, cmdLineService, kCmdLineServiceCID, &rv);
+   NS_ENSURE_TRUE(profileMgr, rv);
+   
+   // Now that we have the profile service, check whether the profile exists.
+   // This is needed because using the "-P" option with nsIProfile::StartupWithArgs
+   // when the profile does not exist will put up XUL UI in order to create a new profile.
+   // This will cause a crash because of profile mgr's assumptions about the
+   // AppShell service which are not true when embedding.
+      
+   nsString profileName; profileName.AssignWithConversion(inProfileName);
+   
+   char *nonConstProfileName = nsCRT::strdup(inProfileName);
+   NS_ENSURE_TRUE(nonConstProfileName, NS_ERROR_OUT_OF_MEMORY);
+   
+   rv = profileMgr->ProfileExists(profileName.GetUnicode(), &exists);
+   NS_ENSURE_SUCCESS(rv, rv);
+   
+   int argc = 0;
+   char* argv[3] = { nsnull, nsnull, nsnull };
+   
+   argv[argc++] = "progName"; // Don't think this matters but it's needed in order to parse correctly
+   
+   if (!exists)
+   {
+      // progName -CreateProfile profileName
+      argv[argc++] = "-CreateProfile";
+      argv[argc++] = nonConstProfileName;
+   }
+   else
+   {
+      // progName -P profileName
+      argv[argc++] = "-P";
+      argv[argc++] = nonConstProfileName;
+   }
+   rv = cmdLineService->Initialize(argc, argv);
+   NS_ENSURE_SUCCESS(rv, rv);
+   rv = profileMgr->StartupWithArgs(cmdLineService);   
+      
+   Recycle(nonConstProfileName);
+   outProfileExisted = exists;
+   
+   return rv;
 }
