@@ -248,6 +248,9 @@ typedef struct
 #define XmCSingleClickActivation "SingleClickActivation"
 #define XmNuseTextWidget "useTextWidget"
 #define XmCUseTextWidget "UseTextWidget"
+#define XmNcolumnSortType "columnSortType"
+#define XmCColumnSortType "ColumnSortType"
+#define XmRColumnSortType "ColumnSortType"
 #if 0
 #define XmNhideButtonTranslations "hideButtonTranslations"
 #define XmNunhideButtonTranslations "unhideButtonTranslations"
@@ -483,6 +486,11 @@ typedef struct _XmLGridCallbackStruct
 #define XmALIGNMENT_BOTTOM_LEFT  6
 #define XmALIGNMENT_BOTTOM       7
 #define XmALIGNMENT_BOTTOM_RIGHT 8
+
+/* xfe additions */
+#define XmSORT_NONE        0
+#define XmSORT_ASCENDING   1
+#define XmSORT_DESCENDING  2
 
 /* Progress resources */
 

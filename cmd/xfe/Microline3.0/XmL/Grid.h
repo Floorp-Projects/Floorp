@@ -138,6 +138,9 @@ XmLGridXYToCellTracking(Widget			widget,
 						Boolean *		enter, /* output only args. */
 						Boolean *		leave); /* output only args. */
 
+void XmLGridGetSort(Widget w, int *column, unsigned char *sortType);
+void XmLGridSetSort(Widget w, int column, unsigned char sortType);
+
 #ifdef XmL_CPP
 }
 #endif

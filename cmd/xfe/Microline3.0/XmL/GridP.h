@@ -134,13 +134,16 @@ typedef int (*XmLGridCellActionProc)();
 #define XmLGridColumnUserData        (1L<<2)
 #define XmLGridColumnResizable       (1L<<3)
 #define XmLGridColumnHidden          (1L<<4)
-#define XmLGridColumnValueMaskLen         5
+#define XmLGridColumnSortType        (1L<<5)
+#define XmLGridColumnValueMaskLen         6
 
 /* flags for XmLGridCell flags member */
 #define XmLGridCellSelectedFlag     (1 << 0)
 #define XmLGridCellValueSetFlag     (1 << 1)
 #define XmLGridCellInRowSpanFlag    (1 << 2)
 #define XmLGridCellInColumnSpanFlag (1 << 3)
+#define XmLGridCellDrawSortFlag     (1 << 4)
+#define XmLGridCellSortAscendingFlag (1 << 5)
 
 /* cell value mask for get/set values */
 #define XmLGridCellAlignment         (1L<<0)
@@ -276,6 +279,7 @@ typedef struct _XmLGridColumnPart
 
     /* xfe additions */
     Boolean hidden;
+	unsigned char sort;
 	} XmLGridColumnPart;
 
 struct _XmLGridColumnRec
@@ -351,6 +355,8 @@ typedef struct _XmLGridPart
 
       int lastCursorMotionRow;
       int lastCursorMotionCol;
+
+      unsigned char colSortType;
 
 	/* private data */
 	GC gc;
