@@ -50,12 +50,12 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 PRInt32 nsMsgFolder::gInstanceCount	= 0;
 
 nsIAtom * nsMsgFolder::kTotalMessagesAtom	= nsnull;
-nsIAtom * nsMsgFolder::kPrettyNameAtom	= nsnull;
-nsIAtom * nsMsgFolder::kNumNewBiffMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kBiffStateAtom	= nsnull;
+nsIAtom * nsMsgFolder::kNumNewBiffMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kTotalUnreadMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kFlaggedAtom	= nsnull;
 nsIAtom * nsMsgFolder::kStatusAtom	= nsnull;
+nsIAtom * nsMsgFolder::kNameAtom	= nsnull;
 
 
 nsMsgFolder::nsMsgFolder(void)
@@ -67,6 +67,7 @@ nsMsgFolder::nsMsgFolder(void)
     mPrefFlags(0),
     mBiffState(nsMsgBiffState_NoMail),
     mNumNewBiffMessages(0),
+    mHaveParsedURI(PR_FALSE),
     mIsServerIsValid(PR_FALSE),
     mIsServer(PR_FALSE)
 	{
@@ -91,7 +92,7 @@ nsMsgFolder::nsMsgFolder(void)
   if (gInstanceCount == 0) {
     kBiffStateAtom           = NS_NewAtom("BiffState");
     kNumNewBiffMessagesAtom  = NS_NewAtom("NumNewBiffMessages");
-    kPrettyNameAtom          = NS_NewAtom("PrettyName");
+    kNameAtom          = NS_NewAtom("Name");
     kTotalUnreadMessagesAtom = NS_NewAtom("TotalUnreadMessages");
     kTotalMessagesAtom       = NS_NewAtom("TotalMessages");
     kStatusAtom              = NS_NewAtom("Status");
@@ -118,9 +119,13 @@ nsMsgFolder::~nsMsgFolder(void)
 
     gInstanceCount--;
     if (gInstanceCount <= 0) {
+      NS_IF_RELEASE(kTotalMessagesAtom);
       NS_IF_RELEASE(kBiffStateAtom);
       NS_IF_RELEASE(kNumNewBiffMessagesAtom);
-      NS_IF_RELEASE(kPrettyNameAtom);
+      NS_IF_RELEASE(kTotalUnreadMessagesAtom);
+      NS_IF_RELEASE(kFlaggedAtom);
+      NS_IF_RELEASE(kStatusAtom);
+      NS_IF_RELEASE(kNameAtom);
     }
 }
 
@@ -136,10 +141,12 @@ NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgFolder*, this);
 	}              
+   if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference)))
+       *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*, this);
 
 	if(*aInstancePtr)
 	{
-		AddRef();
+     NS_ADDREF_THIS();
 		return NS_OK;
 	}
 
@@ -429,6 +436,7 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
   rv = parseURI(PR_TRUE);
   
   // done getting m_server
+  // just returns null if no server!
   *aServer = m_server;
   NS_IF_ADDREF(*aServer);
   
@@ -591,6 +599,9 @@ nsMsgFolder::parseURI(PRBool needServer)
       }
       mPath = serverPath;
     }
+
+    // URI is completely parsed when we've attempted to get the server
+    mHaveParsedURI=PR_TRUE;
   }
     
   return NS_OK;
@@ -686,31 +697,32 @@ nsMsgFolder::GetCanRename(PRBool *aResult)
 
 NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
 {
-	if (!name)
-		return NS_ERROR_NULL_POINTER;
-	*name = mName.ToNewUnicode();
-	return (*name) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return GetName(name);
 }
 
 NS_IMETHODIMP nsMsgFolder::SetPrettyName(const PRUnichar *name)
 {
-
-  NotifyUnicharPropertyChanged(kPrettyNameAtom, mName.GetUnicode(), name);
-  mName = name;
-  return NS_OK;
+  return SetName(name);
 }
 
 NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 {
-	if (!name)
-		return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(name);
 
   nsresult rv;
-  if (mName.IsEmpty()) {
+  if (!mHaveParsedURI && mName.IsEmpty()) {
     rv = parseURI();
     if (NS_FAILED(rv)) return rv;
   }
   
+  // if it's a server, just forward the call
+  if (mIsServer) {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_SUCCEEDED(rv) && server)
+      return server->GetPrettyName(name);
+  }
+
   *name = mName.ToNewUnicode();
   
   if (!(*name)) return NS_ERROR_OUT_OF_MEMORY;
@@ -721,6 +733,9 @@ NS_IMETHODIMP nsMsgFolder::SetName(const PRUnichar * name)
 {
   // override the URI-generated name
 	mName = name;
+  
+  // old/new value doesn't matter here
+  NotifyUnicharPropertyChanged(kNameAtom, name, name);
 	return NS_OK;
 }
 

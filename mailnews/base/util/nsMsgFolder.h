@@ -269,7 +269,7 @@ protected:
   //
   // stuff from the uri
   //
-  
+  PRBool mHaveParsedURI;        // is the URI completely parsed?
   PRBool mIsServerIsValid;
   PRBool mIsServer;
   nsString mName;
@@ -278,14 +278,14 @@ protected:
   // static stuff for cross-instance objects like atoms
   static PRInt32 gInstanceCount;
 
+  static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;
   static nsIAtom* kNumNewBiffMessagesAtom;
-  static nsIAtom* kPrettyNameAtom;
-  static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kTotalMessagesAtom;
   static nsIAtom* kStatusAtom;
   static nsIAtom* kFlaggedAtom;
-  
+  static nsIAtom* kNameAtom;
+
 };
 
 #endif
