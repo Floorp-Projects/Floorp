@@ -64,7 +64,7 @@
       var shouldRemoveFaslFile = false;
       //Switch the Content pack if necessary
       var oldContentPack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.contentlocale");
-      var newContentPack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "contentPackList" ).prefvalue;
+      var newContentPack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://content-packs/content/pref-contentpacks.xul", "contentPackList" ).prefvalue;
       if (newContentPack && (newContentPack != oldContentPack))
       {
         try {
@@ -77,7 +77,7 @@
 
       //Switch the Language pack if necessary
       var oldLanguagePack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.locale");
-      var newLanguagePack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "languagePackList" ).prefvalue;
+      var newLanguagePack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://content-packs/content/pref-contentpacks.xul", "languagePackList" ).prefvalue;
       if (newLanguagePack && (newLanguagePack != oldLanguagePack))
       {
         try {
