@@ -355,7 +355,7 @@
           // if a button is focused, dispatch its command instead 
           // of advancing the wizard
           var focused = document.commandDispatcher.focusedElement;
-          if (!(focused && focused.localName == "button" && focused.hasAttribute("dlgtype")))
+          if (!(focused && focused.localName == "button"))
             this.advance();
         ]]>
         </body>
