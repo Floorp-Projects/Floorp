@@ -672,6 +672,9 @@ xpfe/browser/resources/Makefile
 xpfe/browser/resources/content/Makefile
 xpfe/browser/resources/locale/Makefile
 xpfe/browser/resources/locale/en-US/Makefile
+xpfe/appfilelocprovider/Makefile
+xpfe/appfilelocprovider/public/Makefile
+xpfe/appfilelocprovider/src/Makefile
 xpfe/global/Makefile
 xpfe/global/resources/Makefile
 xpfe/global/resources/skin/os2/Makefile
@@ -704,6 +707,8 @@ embedding/browser/photon/Makefile
 embedding/browser/photon/src/Makefile
 embedding/browser/photon/tests/Makefile
 "
+#embedding/config/Makefile
+#embedding/tests/gtkEmbed/Makefile
 
 MAKEFILES_security="
 security/Makefile
