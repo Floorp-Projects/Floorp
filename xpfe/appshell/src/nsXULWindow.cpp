@@ -42,6 +42,7 @@
 #include "nsIIOService.h"
 #include "nsIJSContextStack.h"
 #include "nsIMarkupDocumentViewer.h"
+#include "nsIObserverService.h"
 #include "nsIWindowMediator.h"
 
 // XXX Get rid of this
@@ -116,6 +117,20 @@ NS_IMETHODIMP nsXULWindow::GetDocShell(nsIDocShell** aDocShell)
 
    *aDocShell = mDocShell;
    NS_IF_ADDREF(*aDocShell);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::SetIntrinsicallySized(PRBool aIntrinsicallySized)
+{
+   mIntrinsicallySized = aIntrinsicallySized;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::GetIntrinsicallySized(PRBool* aIntrinsicallySized)
+{
+   NS_ENSURE_ARG_POINTER(aIntrinsicallySized);
+
+   *aIntrinsicallySized = mIntrinsicallySized;
    return NS_OK;
 }
 
@@ -511,8 +526,6 @@ NS_IMETHODIMP nsXULWindow::SetFocus()
 NS_IMETHODIMP nsXULWindow::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
    PRBool* aTookFocus)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
    return NS_OK;
 }
 
@@ -1031,6 +1044,31 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    // into the new window's content shell array.  Locate the "content area" content
    // shell.
    xulWindow->GetPrimaryContentShell(aDocShellTreeItem);
+   return NS_OK;
+}
+
+// XXX can this switch now?
+/// This should rightfully be somebody's PROGID?
+// Will switch when the "app shell browser component" arrives.
+static const char *prefix = "component://netscape/appshell/component/browser/window";
+
+NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic, 
+   const PRUnichar* aData)
+{
+   nsCOMPtr<nsIObserverService> service(do_GetService(NS_OBSERVERSERVICE_PROGID));
+
+   if(!service)
+      return NS_ERROR_FAILURE;
+
+   nsCOMPtr<nsIWebShellWindow> 
+      removeme(do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this)));
+
+   nsAutoString topic(prefix);
+   topic += ";";
+   topic += aTopic;
+
+   NS_ENSURE_SUCCESS(service->Notify(removeme, topic.GetUnicode(), aData),
+      NS_ERROR_FAILURE);
    return NS_OK;
 }
 
