@@ -1,0 +1,70 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Author:
+ *   Adam Lock <adamlock@netscape.com>
+ *
+ * Contributor(s): 
+ */
+ 
+#include "nsISupports.idl"
+
+interface nsIDOMNode;
+
+/**
+ * An interface implemented by a tooltip text provider service. This
+ * service is called to discover what tooltip text is associated
+ * with the node that the pointer is positioned over.
+ *
+ * Embedders may implement and register their own tooltip text provider
+ * service if they wish to provide different tooltip text. 
+ *
+ * The default service returns the text stored in the TITLE
+ * attribute of the node or a containing parent.
+ *
+ * @note
+ * The tooltip text provider service is registered with the contract
+ * defined in NS_TOOLTIPTEXTPROVIDER_CONTRACTID.
+ *
+ * @see nsITooltipListener
+ * @see nsIComponentManager
+ * @see nsIDOMNode
+ *
+ * @status FROZEN
+ */
+[uuid(b128a1e6-44f3-4331-8fbe-5af360ff21ee)]
+interface nsITooltipTextProvider : nsISupports
+{
+    /**
+     * Called to obtain the tooltip text for a node.
+     *
+     * @arg aNode The node to obtain the text from.
+     * @arg aText The tooltip text.
+     *
+     * @return <CODE>PR_TRUE</CODE> if tooltip text is associated
+     *         with the node and was returned in the aText argument;
+     *         <CODE>PR_FALSE</CODE> otherwise.
+     */
+    boolean getNodeText(in nsIDOMNode aNode, out wstring aText);
+};
+
+%{ C++
+#define NS_TOOLTIPTEXTPROVIDER_CONTRACTID \
+"@mozilla.org/embedcomp/tooltiptextprovider;1"
+%}
