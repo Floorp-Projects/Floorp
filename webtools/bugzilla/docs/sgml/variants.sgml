@@ -10,7 +10,7 @@
   http://linas.org/linux/pm.html</ulink>
   </para>
 
-  <section id="varient-redhat">
+  <section id="variant-redhat">
     <title>Red Hat Bugzilla</title>
 
     <para>Red Hat's old fork of Bugzilla which was based on version 2.8 is now
