@@ -837,16 +837,25 @@ WSPProxy::VariantToInParameter(nsIInterfaceInfo* aInterfaceInfo,
     return VariantToArrayValue(arrayType.TagPart(), aXPTCVariant,
                                iinfo, aVariant);
   }
-  else {
-    if (type.IsInterfacePointer()) {
-      rv = aInterfaceInfo->GetInfoForParam(aMethodIndex, aParamInfo,
-                                           getter_AddRefs(iinfo));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+  // else
+  if (type.IsInterfacePointer()) {
+    rv = aInterfaceInfo->GetInfoForParam(aMethodIndex, aParamInfo, 
+                                         getter_AddRefs(iinfo));
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-    return VariantToValue(type_tag, &aXPTCVariant->val, iinfo, aVariant);
   }
+
+  if (type_tag == nsXPTType::T_DOMSTRING) {
+    // T_DOMSTRING values are expected to be stored in an nsAString
+    // object pointed to by the nsXPTCVariant...
+    return VariantToValue(type_tag, aXPTCVariant->val.p, iinfo, aVariant);
+  }
+  // else
+
+  // ... but other types are expected to be stored directly in the
+  // variant itself.
+  return VariantToValue(type_tag, &aXPTCVariant->val, iinfo, aVariant);
 }
 
 nsresult

@@ -39,6 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "wspprivate.h"
+#include "nsIXPConnect.h"
+#include "jsapi.h"
 
 
 WSPPropertyBagWrapper::WSPPropertyBagWrapper()
@@ -105,20 +107,20 @@ WSPPropertyBagWrapper::CallMethod(PRUint16 methodIndex,
                                   const nsXPTMethodInfo* info,
                                   nsXPTCMiniVariant* params)
 {
-  nsresult rv = NS_OK;
-  nsAutoString propName;
-  nsCOMPtr<nsIVariant> val;
-
   if (methodIndex < 3) {
     NS_ERROR("WSPPropertyBagWrapper: bad method index");
     return NS_ERROR_FAILURE;
   }
+
+  nsresult rv = NS_OK;
+  nsAutoString propName;
 
   rv = WSPFactory::C2XML(nsDependentCString(info->GetName()), propName);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
+  nsCOMPtr<nsIVariant> val;
   rv = mPropertyBag->GetProperty(propName, getter_AddRefs(val));
   if (NS_FAILED(rv)) {
     return rv;

@@ -240,9 +240,15 @@ WSPCallContext::CallCompletionListener()
     dp->val.p = nsnull;
   }
 
-  PRUint32 headerCount, bodyCount;
+  PRUint32 headerCount = 0, bodyCount = 0;
   nsISOAPHeaderBlock** headerBlocks;
   nsISOAPParameter** bodyBlocks;
+
+#define STRING_ARRAY_BUF_SIZE 2
+  nsAutoString string_array_buf[STRING_ARRAY_BUF_SIZE];
+  nsAutoString *string_array = &string_array_buf[0];
+  PRUint32 string_array_index = 0;
+
 
   // If we have an exception, report it now
   if (mException) {
@@ -363,6 +369,30 @@ WSPCallContext::CallCompletionListener()
                    "WSDL/IInfo param count mismatch");
 
       const nsXPTParamInfo& paramInfo = methodInfo->GetParam(paramIndex);
+      
+      if (XPT_TDP_TAG(paramInfo.type.prefix) == TD_DOMSTRING) {
+        // If there's no more room in the string buffer on the stack
+        // for this parameter, allocate an array on the heap.
+        if (string_array == &string_array_buf[0] &&
+            string_array_index >= STRING_ARRAY_BUF_SIZE) {
+          string_array = new nsAutoString[partCount - i];
+
+          if (!string_array) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+
+            goto call_completion_end;
+          }
+
+          // Reset string_array_index now that we switched arrays.
+          string_array_index = 0;
+        }
+
+        // Give the variant value a nsAString object to hold the data
+        // in.
+        vars->val.p =
+          NS_STATIC_CAST(nsAString *, &string_array[string_array_index++]);
+      }
+
       rv = WSPProxy::VariantToInParameter(listenerInterfaceInfo,
                                           mListenerMethodIndex, &paramInfo,
                                           value, vars);
@@ -395,6 +425,10 @@ call_completion_end:
   if(dispatchParams != paramBuffer) {
     delete [] dispatchParams;
   }
+  if (string_array != &string_array_buf[0]) {
+    delete [] string_array;
+  }
+
   nsCOMPtr<nsIWebServiceCallContext> kungFuDeathGrip(this);
   mProxy->CallCompleted(this);
   NS_RELEASE(mProxy);
