@@ -655,6 +655,7 @@ public:
 
 typedef BindingEntry<LocalBinding> LocalBindingEntry;
 
+
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
 typedef HashTable<LocalBindingEntry *, const StringAtom &> LocalBindingMap;
@@ -1409,10 +1410,11 @@ public:
 
 class BlockFrame : public NonWithFrame {
 public:
-    BlockFrame() : NonWithFrame(BlockFrameKind) { }
-    BlockFrame(BlockFrame *pluralFrame) : NonWithFrame(BlockFrameKind, pluralFrame) { }
+    BlockFrame() : NonWithFrame(BlockFrameKind), isFunctionFrame(false) { }
+    BlockFrame(BlockFrame *pluralFrame) : NonWithFrame(BlockFrameKind, pluralFrame), isFunctionFrame(false) { }
 
     Plurality plurality;
+    bool isFunctionFrame;
 
     virtual void instantiate(Environment *env);
     virtual ~BlockFrame()           { }
@@ -1750,6 +1752,9 @@ inline bool operator!=(MetaData::LocalBindingEntry *s1, const StringAtom &s2) { 
 
 inline bool operator==(MetaData::InstanceBindingEntry *s1, const StringAtom &s2) { return s1->name == s2;}
 inline bool operator!=(MetaData::InstanceBindingEntry *s1, const StringAtom &s2) { return s1->name != s2;}
+
+inline HashNumber hashString(const StringAtom &s) { return s.hash; }
+
 
 }; // namespace Javascript
 

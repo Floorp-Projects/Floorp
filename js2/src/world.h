@@ -53,7 +53,9 @@ namespace JavaScript {
       public:
         Token::Kind tokenKind;          // Token::Kind if this is a keyword; Token::identifier if not
 
-        explicit StringAtom(const String &s): String(s), tokenKind(Token::identifier) {}
+        HashNumber hash;
+            
+        explicit StringAtom(const String &s): String(s), tokenKind(Token::identifier), hash(hashString(s)) {}
       private:
         StringAtom(const StringAtom &);     // No copy constructor
         void operator=(const StringAtom &); // No assignment operator

@@ -190,6 +190,9 @@ enum JS2Op {
     eSlotPreInc,        // <slot index:u16>
     eSlotPreDec,        // <slot index:u16>
 
+
+    eNop
+
 };
 
 

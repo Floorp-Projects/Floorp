@@ -250,6 +250,7 @@ namespace MetaData {
                 {
                     BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
                     b->compileFrame = new (this) BlockFrame();
+                    b->compileFrame->isFunctionFrame = (env->getTopFrame()->kind == ParameterFrameKind);
                     bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc'd before eval pass.
                     env->addFrame(b->compileFrame);
                     targetList.push_back(p);
@@ -347,7 +348,6 @@ namespace MetaData {
             case StmtNode::Break:
                 {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                    g->blockCount = 0;
                     g->tgtID = -1;
                     if (g->name) {
                         // need to find the closest 'breakable' statement covered by the named label
@@ -366,9 +366,6 @@ namespace MetaData {
                                     }
                                 }
                                 break;
-                            case StmtNode::block:
-                                g->blockCount++;
-                                break;
                             }
                         }
                     }
@@ -377,9 +374,6 @@ namespace MetaData {
                         for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
                                         ((g->tgtID == -1) && (si != end)); si++) {
                             switch ((*si)->getKind()) {
-                            case StmtNode::block:
-                                g->blockCount++;
-                                break;
                             case StmtNode::While:
                             case StmtNode::DoWhile:
                                 {
@@ -410,7 +404,6 @@ namespace MetaData {
             case StmtNode::Continue:
                 {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                    g->blockCount = 0;
                     g->tgtID = -1;
                     if (g->name) {
                         // need to find the closest 'continuable' statement covered by the named label
@@ -428,9 +421,6 @@ namespace MetaData {
                                         foundit = true;
                                     }
                                 }
-                                break;
-                            case StmtNode::block:
-                                g->blockCount++;
                                 break;
                             case StmtNode::While:
                             case StmtNode::DoWhile:
@@ -456,9 +446,6 @@ namespace MetaData {
                             // only some non-label statements will do
                             StmtNode *s = *si;
                             switch (s->getKind()) {
-                            case StmtNode::block:
-                                g->blockCount++;
-                                break;
                             case StmtNode::While:
                             case StmtNode::DoWhile:
                                 {
@@ -909,24 +896,32 @@ namespace MetaData {
         case StmtNode::block:
         case StmtNode::group:
             {
+                targetList.push_back(p);
+                bool pushed = false;
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-//                BlockFrame *runtimeFrame = new (this) BlockFrame(b->compileFrame);
-                env->addFrame(b->compileFrame);    // XXX is this right? shouldn't this be the compile frame until execution occurs?
-                bCon->emitOp(ePushFrame, p->pos);
-                bCon->addFrame(b->compileFrame);
+                if (b->compileFrame->isFunctionFrame || b->compileFrame->localBindings.size()) {
+                    bCon->emitOp(ePushFrame, p->pos);
+                    bCon->addFrame(b->compileFrame);
+                    pushed = true;
+                }
+                env->addFrame(b->compileFrame);
                 StmtNode *bp = b->statements;
                 while (bp) {
                     SetupStmt(env, phase, bp);
                     bp = bp->next;
                 }
-                bCon->emitOp(ePopFrame, p->pos);
+                if (pushed)
+                    bCon->emitOp(ePopFrame, p->pos);
                 env->removeTopFrame();
+                targetList.pop_back();
             }
             break;
         case StmtNode::label:
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
+                targetList.push_back(p);
                 SetupStmt(env, phase, l->stmt);
+                targetList.pop_back();
                 // labelled statements target are break targets
                 bCon->setLabel(l->labelID);
             }
@@ -965,7 +960,53 @@ namespace MetaData {
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
                 bCon->emitBranch(eBreak, g->tgtID, p->pos);
-                bCon->addShort(g->blockCount);
+                uint32 blockCount = 0;
+                bool foundit = false;
+                for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
+                            ((si != end) && !foundit); si++)
+                {
+                    switch ((*si)->getKind()) {
+                        case StmtNode::label:
+                            {
+                                LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
+                                if (g->tgtID == l->labelID)
+                                    foundit = true;
+                            }
+                            break;
+                        case StmtNode::While:
+                        case StmtNode::DoWhile:
+                            {
+                                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(*si);
+                                if ((g->tgtID == w->breakLabelID) || (g->tgtID == w->continueLabelID))
+                                    foundit = true;
+                            }
+                            break;
+                        case StmtNode::For:
+                        case StmtNode::ForIn:
+                            {
+                                ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
+                                if ((g->tgtID == f->breakLabelID) || (g->tgtID == f->continueLabelID))
+                                    foundit = true;
+                            }
+                            break;
+                        case StmtNode::Switch:
+                            {
+                                SwitchStmtNode *s = checked_cast<SwitchStmtNode *>(*si);
+                                if (g->tgtID == s->breakLabelID)
+                                    foundit = true;
+                            }
+                            break;
+                        case StmtNode::block:
+                            {
+                                BlockStmtNode *b = checked_cast<BlockStmtNode *>(*si);
+                                if (b->compileFrame->isFunctionFrame || b->compileFrame->localBindings.size())
+                                    blockCount++;
+                            }
+                            break;
+                    }
+                }
+                ASSERT(foundit); 
+                bCon->addShort(blockCount);
             }
             break;
         case StmtNode::ForIn:
@@ -1028,7 +1069,9 @@ namespace MetaData {
                 }
                 v->emitWriteBytecode(bCon, p->pos);
                 bCon->emitOp(ePop, p->pos);     // clear iterator value from stack
+                targetList.push_back(p);
                 SetupStmt(env, phase, f->stmt);
+                targetList.pop_back();
                 bCon->setLabel(f->continueLabelID);
                 bCon->emitOp(eNext, p->pos);
                 bCon->emitBranch(eBranchTrue, loopTop, p->pos);
@@ -1047,7 +1090,9 @@ namespace MetaData {
                 if (f->expr2)
                     bCon->emitBranch(eBranch, testLocation, p->pos);
                 bCon->setLabel(loopTop);
+                targetList.push_back(p);
                 SetupStmt(env, phase, f->stmt);
+                targetList.pop_back();
                 bCon->setLabel(f->continueLabelID);
                 if (f->expr3) {
                     Reference *r = SetupExprNode(env, phase, f->expr3, &exprType);
@@ -1138,6 +1183,7 @@ namespace MetaData {
                 else
                     bCon->emitBranch(eBranch, defaultLabel, p->pos);
                 // Now emit the contents
+                targetList.push_back(p);
                 s = sw->statements;
                 while (s) {
                     if (s->getKind() == StmtNode::Case) {
@@ -1148,6 +1194,7 @@ namespace MetaData {
                         SetupStmt(env, phase, s);
                     s = s->next;
                 }
+                targetList.pop_back();
 
                 bCon->setLabel(sw->breakLabelID);
 				delete frV;
@@ -1159,7 +1206,9 @@ namespace MetaData {
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
                 bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
                 bCon->setLabel(loopTop);
+                targetList.push_back(p);
                 SetupStmt(env, phase, w->stmt);
+                targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
                 Reference *r = SetupExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
@@ -1172,7 +1221,9 @@ namespace MetaData {
                 UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
                 bCon->setLabel(loopTop);
+                targetList.push_back(p);
                 SetupStmt(env, phase, w->stmt);
+                targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
                 Reference *r = SetupExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);

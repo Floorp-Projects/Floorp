@@ -688,6 +688,9 @@ namespace MetaData {
         { eSlotPreInc, "SlotPreInc", U16 },         // <slot index:u16>
         { eSlotPreDec, "SlotPreDec", U16 },         // <slot index:u16>
 
+        
+        { eNop, "Nop", 0 },
+
     };
 
     uint8 *printInstruction(uint8 *pc, uint8 *start, BytecodeContainer *bCon, JS2Engine *engine)
@@ -1008,6 +1011,10 @@ namespace MetaData {
 
         case eBracketWriteRef:      // pop base and index, leave value
             return -2;
+
+
+        case eNop:
+            return 0;
 
         default:
             ASSERT(false);

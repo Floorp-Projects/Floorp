@@ -1154,9 +1154,16 @@
             pc += sizeof(short);
             ASSERT(slotIndex < localFrame->frameSlots->size());
             a = (*localFrame->frameSlots)[slotIndex];
-            float64 num = meta->toFloat64(a);
-            (*localFrame->frameSlots)[slotIndex] = allocNumber(num + 1.0);
-            pushNumber(num);
+            int32 i;
+            if (JS2VAL_IS_INT(a) && ((i = JS2VAL_TO_INT(a)) < JS2VAL_INT_MAX)) {
+                (*localFrame->frameSlots)[slotIndex] = INT_TO_JS2VAL(i + 1);
+                push(a);
+            }
+            else {
+                float64 num = meta->toFloat64(a);
+                (*localFrame->frameSlots)[slotIndex] = allocNumber(num + 1.0);
+                pushNumber(num);
+            }
         }
         break;
     case eFrameSlotPostDec:
