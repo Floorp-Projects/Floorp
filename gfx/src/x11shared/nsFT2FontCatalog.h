@@ -186,6 +186,7 @@ protected:
   nsHashtable   *mRange1Language;
   nsHashtable   *mRange2Language;
   PRBool         mAvailableFontCatalogService;
+  nsCOMPtr<nsIFreeType2> mFt2;
 #endif
 };
 

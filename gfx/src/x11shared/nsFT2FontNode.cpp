@@ -105,8 +105,8 @@ nsFT2FontNode::InitGlobals()
   
   LoadNodeTable();
   WeightTableInitCorrection(nsFreeTypeFont::sLinearWeightTable,
-                            nsFreeType::gAATTDarkTextMinValue,
-                            nsFreeType::gAATTDarkTextGain);
+                            nsFreeType2::gAATTDarkTextMinValue,
+                            nsFreeType2::gAATTDarkTextGain);
   
   return NS_OK;
 }
@@ -144,6 +144,8 @@ nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     familyTmp.Assign(family);
 
   sFcs->GetFontCatalogEntries(familyTmp, languageTmp, 0, 0, 0, 0, &arrayFC);
+  if (!arrayFC)
+    goto cleanup_and_return;
   arrayFC->Count(&count);
   for (i = 0; i < count; i++) {
     nsISupports* item = (nsISupports*)arrayFC->ElementAt(i);
@@ -165,14 +167,14 @@ nsFT2FontNode::GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       for (j=0; j<32; j++) {
         unsigned long bit = 1 << j;
         if (bit & codePageRange1) {
-          charSetName = nsFreeType::GetRange1CharSetName(bit);
+          charSetName = nsFreeType2::GetRange1CharSetName(bit);
           NS_ASSERTION(charSetName, "failed to get charset name");
           if (!charSetName)
             continue;
           node = LoadNode(fce, charSetName, aNodes);
         }
         if (bit & codePageRange2) {
-          charSetName = nsFreeType::GetRange2CharSetName(bit);
+          charSetName = nsFreeType2::GetRange2CharSetName(bit);
           if (!charSetName)
             continue;
           LoadNode(fce, charSetName, aNodes);
@@ -302,6 +304,8 @@ nsFT2FontNode::LoadNodeTable()
   nsISupportsArray* arrayFC;
   nsCAutoString family, language;
   sFcs->GetFontCatalogEntries(family, language, 0, 0, 0, 0, &arrayFC);
+  if (!arrayFC)
+    return PR_FALSE;
   PRUint32 count, i;
   arrayFC->Count(&count);
   for (i = 0; i < count; i++) {
@@ -324,7 +328,7 @@ nsFT2FontNode::LoadNodeTable()
       unsigned long bit = 1 << j;
       if (!(bit & codePageRange1))
         continue;
-      charsetName = nsFreeType::GetRange1CharSetName(bit);
+      charsetName = nsFreeType2::GetRange1CharSetName(bit);
       NS_ASSERTION(charsetName, "failed to get charset name");
       if (!charsetName)
         continue;
@@ -334,13 +338,13 @@ nsFT2FontNode::LoadNodeTable()
       unsigned long bit = 1 << j;
       if (!(bit & codePageRange2))
         continue;
-      charsetName = nsFreeType::GetRange2CharSetName(bit);
+      charsetName = nsFreeType2::GetRange2CharSetName(bit);
       if (!charsetName)
         continue;
       LoadNode(fce, charsetName, nsnull);
     }
   }
-  return 0;
+  return PR_TRUE;
 }
 
 //

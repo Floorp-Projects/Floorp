@@ -117,6 +117,7 @@ protected:
   nsITrueTypeFontCatalogEntry *mFaceID;
   PRUint16        mPixelSize;
   FTC_Image_Desc  mImageDesc;
+  nsCOMPtr<nsIFreeType2> mFt2;
 };
 
 void WeightTableInitCorrection(PRUint8*, PRUint8, double);

@@ -134,12 +134,21 @@ nsFT2FontCatalog::nsFT2FontCatalog()
 #if (defined(MOZ_ENABLE_FREETYPE2))
   nsresult rv;
   mAvailableFontCatalogService = PR_FALSE;
-  rv = nsFreeType::InitGlobals();
+
+  mFt2 = do_GetService(NS_FREETYPE2_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     // FreeType is not available
     return;
   }
-  if (!InitGlobals(nsFreeType::GetLibrary())) {
+
+  FT_Library lib;
+  mFt2->GetLibrary(&lib);
+  if (!lib) {
+    // FreeType is not available
+    return;
+  }
+
+  if (!InitGlobals(lib)) {
     // Font Catalog Service is not available
     return;
   }
@@ -149,12 +158,6 @@ nsFT2FontCatalog::nsFT2FontCatalog()
 
 nsFT2FontCatalog::~nsFT2FontCatalog()
 {
-#if (defined(MOZ_ENABLE_FREETYPE2))
-  /* destructor code */
-  FreeGlobals();
-  // assumption: no one else use nsFreeType
-  nsFreeType::FreeGlobals();
-#endif
 }
 
 NS_IMETHODIMP
@@ -1320,6 +1323,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
   int num_checked = 0;
   int blank_chars;
   nsCompressedCharMap ccmapObj;
+  nsresult rv;
 
   fce = (nsFontCatalogEntry *)calloc(1, sizeof(nsFontCatalogEntry));
   if (!fce)
@@ -1344,9 +1348,8 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
   fce->mFaceIndex = aFaceIndex;
 
   // open the font
-  fterror = (*nsFreeType::nsFT_New_Face)(aFreeTypeLibrary, aFontFileName,
-                                             aFaceIndex, &face);
-  if (fterror) {
+  rv = mFt2->NewFace(aFreeTypeLibrary, aFontFileName, aFaceIndex, &face);
+  if (NS_FAILED(rv)) {
     FONT_SCAN_PRINTF(("  FreeType failed to open, error=%d", fterror));
     goto cleanup_and_return;
   }
@@ -1359,7 +1362,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
   if (!face->family_name)
     goto cleanup_and_return;
   nsTTFontFamilyEncoderInfo *ffei;
-  ffei = nsFreeType::GetCustomEncoderInfo(face->family_name);
+  ffei = nsFreeType2::GetCustomEncoderInfo(face->family_name);
   if (ffei) {
     fce->mFlags = FCE_FLAGS_ISVALID | FCE_FLAGS_SYMBOL;
   }
@@ -1368,8 +1371,8 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
       if (   (face->charmaps[i]->platform_id == TT_PLATFORM_MICROSOFT)
           && (face->charmaps[i]->encoding_id == TT_MS_ID_UNICODE_CS)) {
         fce->mFlags = FCE_FLAGS_ISVALID | FCE_FLAGS_UNICODE;
-        fterror = (*nsFreeType::nsFT_Set_Charmap)(face, face->charmaps[i]);
-        if (fterror) {
+        rv = mFt2->SetCharmap(face, face->charmaps[i]);
+        if (NS_FAILED(rv)) {
           FONT_SCAN_PRINTF(("failed to select unicode charmap"));
           goto cleanup_and_return;
         }
@@ -1381,7 +1384,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
     goto cleanup_and_return;
   }
 
-  tt_os2 = (TT_OS2 *)(*nsFreeType::nsFT_Get_Sfnt_Table)(face, ft_sfnt_os2);
+  mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
   if (!tt_os2) {
     FONT_SCAN_PRINTF(("unable to get OS2 table"));
     goto cleanup_and_return;
@@ -1432,7 +1435,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
     slot = face->glyph;
     FONT_SCAN_PRINTF(("            "));
     for (i=0; i<len; i++) {
-      glyph_index = (*nsFreeType::nsFT_Get_Char_Index)(face, (FT_ULong)i);
+      mFt2->GetCharIndex(face, (FT_ULong)i, &glyph_index);
       //FONT_CATALOG_PRINTF(("i=%d, glyph_index=%d", i, glyph_index));
       if (!glyph_index)
         continue;
@@ -1442,12 +1445,12 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
         }
       }
       num_checked++;
-      fterror = (*nsFreeType::nsFT_Load_Glyph)(face, glyph_index,
+      rv = mFt2->LoadGlyph(face, glyph_index,
                  FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING);
       //FONT_CATALOG_PRINTF(("fterror = %d", fterror));
-      if (fterror) {
-        FONT_CATALOG_PRINTF(("error 0x%04x loading %d (glyph index = %d)", 
-                    fterror, i, glyph_index));
+      if (NS_FAILED(rv)) {
+        FONT_CATALOG_PRINTF(("error loading %d (glyph index = %d)", 
+                    i, glyph_index));
         continue;
       }
       if (slot->format == ft_glyph_format_outline) {
@@ -1456,10 +1459,9 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
           blank_chars++;
           FT_Glyph glyph;
           FT_BBox bbox;
-          (*nsFreeType::nsFT_Get_Glyph)(slot, &glyph);
-          (*nsFreeType::nsFT_Glyph_Get_CBox)(glyph, ft_glyph_bbox_pixels,
-                                                 &bbox);
-          (*nsFreeType::nsFT_Done_Glyph)(glyph);
+          mFt2->GetGlyph(slot, &glyph);
+          mFt2->GlyphGetCBox(glyph, ft_glyph_bbox_pixels, &bbox);
+          mFt2->DoneGlyph(glyph);
           if((bbox.xMax==0) && (bbox.xMin==0)
              && (bbox.yMax==0) && (bbox.yMin==0)) {
             continue;
@@ -1515,7 +1517,7 @@ nsFT2FontCatalog::NewFceFromFontFile(FT_Library aFreeTypeLibrary,
     goto cleanup_and_return;
   }
 
-  (*nsFreeType::nsFT_Done_Face)(face);
+  mFt2->DoneFace(face);
 
   FONT_SCAN_PRINTF(("\n"));
   return fce;
@@ -1534,7 +1536,7 @@ cleanup_and_return:
   fce->mStyleName = strdup("");
   FREE_IF(fce->mEmbeddedBitmapHeights);
   if (face)
-    (*nsFreeType::nsFT_Done_Face)(face);
+    mFt2->DoneFace(face);
   FONT_SCAN_PRINTF(("\n"));
   return fce;
 
@@ -1548,7 +1550,7 @@ no_memory_cleanup_and_return:
     FreeCCMap(fce->mCCMap);
   FREE_IF(fce);
   if (face)
-    (*nsFreeType::nsFT_Done_Face)(face);
+    mFt2->DoneFace(face);
   FONT_SCAN_PRINTF(("\n"));
   return nsnull;
 }
