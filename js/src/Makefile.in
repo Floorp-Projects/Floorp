@@ -290,6 +290,8 @@ ifeq ($(OS_ARCH),IRIX)
 ifndef GNU_CC
 _COMPILE_CFLAGS  = $(patsubst -O%,-O1,$(COMPILE_CFLAGS))
 jsapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.c Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO)
 	$(CC) -o $@ -c $(_COMPILE_CFLAGS) $<
 endif
 endif
@@ -302,7 +304,7 @@ ifeq (,$(filter OS2 WINNT OpenVMS,$(OS_ARCH)))
 # Do this in a single step to avoid dependency problems
 jsmath.o: jsmath.c $(FDLIBM_LIBRARY) Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS)
+	@$(MAKE_DEPS_AUTO)
 	$(ELOG) $(CC) $(OUTOPTION)$(JSMATH_PRELINK) -c $(COMPILE_CFLAGS) $<
 ifeq ($(OS_ARCH),QNX)
 ifneq ($(OS_TARGET),NTO)
@@ -323,8 +325,12 @@ endif
 # This suppresses optimization for this single compilation unit.
 ifeq ($(OS_ARCH),AIX)
 jsatom.o: jsatom.c Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO)
 	$(CC) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 jsdtoa.o: jsdtoa.c Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO)
 	$(CC) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
 
