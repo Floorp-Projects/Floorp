@@ -34,7 +34,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIWidget.h"
 #include "nsIEventSink.h"
-#include "nsMacMessageSink.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebProgress.h"
 
