@@ -43,6 +43,7 @@
 #include "xp_core.h"
 #include "plhash.h"
 #include "plstr.h"
+#include "prlong.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "prio.h"
@@ -52,7 +53,6 @@
 #include "nsIRDFFileSystem.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
-
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
@@ -96,6 +96,8 @@ private:
     static nsIRDFResource		*kNC_Child;
     static nsIRDFResource		*kNC_Name;
     static nsIRDFResource		*kNC_URL;
+    static nsIRDFResource		*kNC_Length;
+    static nsIRDFResource		*kWEB_LastMod;
     static nsIRDFResource		*kNC_FileSystemObject;
     static nsIRDFResource		*kNC_pulse;
     static nsIRDFResource		*kRDF_InstanceOf;
@@ -131,6 +133,8 @@ public:
     static nsresult GetFolderList(nsIRDFResource *source, PRBool allowHidden, PRBool onlyFirst, nsISimpleEnumerator **aResult);
     static nsresult GetName(nsIRDFResource *source, nsIRDFLiteral** aResult);
     static nsresult GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
+    static nsresult GetFileSize(nsIRDFResource *source, nsIRDFInt** aResult);
+    static nsresult GetLastMod(nsIRDFResource *source, nsIRDFDate** aResult);
 
 #ifdef	XP_WIN
     static PRBool   isValidFolder(nsIRDFResource *source);
@@ -154,6 +158,8 @@ nsIRDFResource		*FileSystemDataSource::kNC_FileSystemRoot;
 nsIRDFResource		*FileSystemDataSource::kNC_Child;
 nsIRDFResource		*FileSystemDataSource::kNC_Name;
 nsIRDFResource		*FileSystemDataSource::kNC_URL;
+nsIRDFResource		*FileSystemDataSource::kNC_Length;
+nsIRDFResource		*FileSystemDataSource::kWEB_LastMod;
 nsIRDFResource		*FileSystemDataSource::kNC_FileSystemObject;
 nsIRDFResource		*FileSystemDataSource::kNC_pulse;
 nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
@@ -205,7 +211,7 @@ FileSystemDataSource::isDirURI(nsIRDFResource* source)
 
     nsCOMPtr<nsIURI> aIURI;
     if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
-	    return(rv);
+	    return(PR_FALSE);
     if (!aIURI) return(PR_FALSE);
 
     nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
@@ -268,15 +274,17 @@ FileSystemDataSource::FileSystemDataSource(void)
 */
 #endif
 
-		gRDFService->GetResource(kURINC_FileSystemRoot,               &kNC_FileSystemRoot);
-		gRDFService->GetResource(NC_NAMESPACE_URI "child",            &kNC_Child);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Name",             &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI "URL",              &kNC_URL);
-		gRDFService->GetResource(NC_NAMESPACE_URI "FileSystemObject", &kNC_FileSystemObject);
-		gRDFService->GetResource(NC_NAMESPACE_URI "pulse",            &kNC_pulse);
+		gRDFService->GetResource(kURINC_FileSystemRoot,                &kNC_FileSystemRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "child",            &kNC_Child);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "Name",             &kNC_Name);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "URL",              &kNC_URL);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "Content-Length",   &kNC_Length);
+		gRDFService->GetResource(WEB_NAMESPACE_URI "LastModifiedDate", &kWEB_LastMod);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "FileSystemObject", &kNC_FileSystemObject);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "pulse",            &kNC_pulse);
 
-		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",      &kRDF_InstanceOf);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "type",            &kRDF_type);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",       &kRDF_InstanceOf);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "type",             &kRDF_type);
 
 		gFileSystemDataSource = this;
 	}
@@ -296,8 +304,10 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kNC_Child);
         NS_RELEASE(kNC_Name);
         NS_RELEASE(kNC_URL);
-	NS_RELEASE(kNC_FileSystemObject);
-	NS_RELEASE(kNC_pulse);
+        NS_RELEASE(kNC_Length);
+        NS_RELEASE(kWEB_LastMod);
+        NS_RELEASE(kNC_FileSystemObject);
+        NS_RELEASE(kNC_pulse);
         NS_RELEASE(kRDF_InstanceOf);
         NS_RELEASE(kRDF_type);
 
@@ -393,6 +403,8 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 	if (! target)
 		return NS_ERROR_NULL_POINTER;
 
+	*target = nsnull;
+
 	nsresult		rv = NS_RDF_NO_VALUE;
 
 	// we only have positive assertions in the file system data source.
@@ -430,6 +442,26 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 
 			return url->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 		}
+		else if (property == kNC_Length)
+		{
+		    nsCOMPtr<nsIRDFInt> fileSize;
+		    rv = GetFileSize(source, getter_AddRefs(fileSize));
+			if (NS_FAILED(rv)) return(rv);
+			if (!fileSize)	rv = NS_RDF_NO_VALUE;
+			if (rv == NS_RDF_NO_VALUE)	return(rv);
+
+			return fileSize->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+		}
+		else if (property == kWEB_LastMod)
+		{
+		    nsCOMPtr<nsIRDFDate> lastMod;
+		    rv = GetLastMod(source, getter_AddRefs(lastMod));
+			if (NS_FAILED(rv)) return(rv);
+			if (!lastMod)	rv = NS_RDF_NO_VALUE;
+			if (rv == NS_RDF_NO_VALUE)	return(rv);
+
+			return lastMod->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
+		}
 		else if (property == kRDF_type)
 		{
 			const char	*type;
@@ -444,7 +476,9 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 				rv = source->GetValueConst(&uri);
 				if (NS_FAILED(rv)) return(rv);
 
-				nsAutoString		theURI;theURI.AssignWithConversion(uri);
+				nsAutoString		theURI;
+				theURI.AssignWithConversion(uri);
+
 				if (theURI.Find(ieFavoritesDir) == 0)
 				{
 					if (theURI[theURI.Length() - 1] == '/')
@@ -455,50 +489,48 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 					{
 						rv = kNC_IEFavoriteObject->GetValueConst(&type);
 					}
-					if (NS_FAILED(rv)) return rv;
+					if (NS_FAILED(rv)) return(rv);
 				}
 			}
 #endif
 
-			nsAutoString	url; url.AssignWithConversion(type);
-			nsIRDFLiteral	*literal;
-			gRDFService->GetLiteral(url.GetUnicode(), &literal);
+			nsAutoString	url;
+			url.AssignWithConversion(type);
+			nsCOMPtr<nsIRDFLiteral> literal;
+			gRDFService->GetLiteral(url.GetUnicode(), getter_AddRefs(literal));
 			rv = literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-			NS_RELEASE(literal);
-			return rv;
+			return(rv);
 		}
 		else if (property == kNC_pulse)
 		{
-			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), &pulseLiteral);
+			nsCOMPtr<nsIRDFLiteral> pulseLiteral;
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), getter_AddRefs(pulseLiteral));
 			rv = pulseLiteral->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
-			NS_RELEASE(pulseLiteral);
-			return rv;
+			return(rv);
 		}
 		else if (property == kNC_Child)
 		{
 			// Oh this is evil. Somebody kill me now.
 			nsCOMPtr<nsISimpleEnumerator> children;
 			rv = GetFolderList(source, PR_FALSE, PR_TRUE, getter_AddRefs(children));
-			if (NS_FAILED(rv)) return rv;
+			if (NS_FAILED(rv)) return(rv);
 
 			PRBool hasMore;
 			rv = children->HasMoreElements(&hasMore);
-			if (NS_FAILED(rv)) return rv;
+			if (NS_FAILED(rv)) return(rv);
 
 			if (hasMore)
 			{
 				nsCOMPtr<nsISupports> isupports;
 				rv = children->GetNext(getter_AddRefs(isupports));
-				if (NS_FAILED(rv)) return rv;
+				if (NS_FAILED(rv)) return(rv);
 
 				return isupports->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			}
 		}
 	}
 
-	*target = nsnull;
-	return NS_RDF_NO_VALUE;
+	return(NS_RDF_NO_VALUE);
 }
 
 
@@ -520,6 +552,8 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 	NS_PRECONDITION(targets != nsnull, "null ptr");
 	if (! targets)
 		return NS_ERROR_NULL_POINTER;
+
+    *targets = nsnull;
 
 	// we only have positive assertions in the file system data source.
 	if (! tv)
@@ -1194,6 +1228,99 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 	*aResult = result;
 
 	return NS_OK;
+}
+
+
+
+nsresult
+FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
+{
+    *aResult = nsnull;
+
+	nsresult		rv;
+	const char		*uri = nsnull;
+
+	rv = source->GetValueConst(&uri);
+	if (NS_FAILED(rv)) return(rv);
+	if (!uri)	return(NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIURI>    aIURI;
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
+        return(rv);
+
+    nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
+    if (!fileURL)   return(PR_FALSE);
+
+	nsCOMPtr<nsIFile>	aFile;
+    if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
+		return(rv);
+	if (!aFile)		return(NS_ERROR_UNEXPECTED);
+
+    PRInt64 lastModDate;
+    if (NS_FAILED(rv = aFile->GetLastModificationDate(&lastModDate)))
+        return(rv);
+
+    // convert from milliseconds to seconds
+	PRTime		temp64, thousand;
+	LL_I2L(thousand, PR_MSEC_PER_SEC);
+	LL_MUL(temp64, lastModDate, thousand);
+
+	gRDFService->GetDateLiteral(temp64, aResult);
+
+    return(NS_OK);
+}
+
+
+nsresult
+FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
+{
+    *aResult = nsnull;
+
+	nsresult		rv;
+	const char		*uri = nsnull;
+
+	rv = source->GetValueConst(&uri);
+	if (NS_FAILED(rv)) return(rv);
+	if (!uri)	return(NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIURI>    aIURI;
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(aIURI), uri)))
+        return(rv);
+
+    nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(aIURI);
+    if (!fileURL)   return(PR_FALSE);
+
+	nsCOMPtr<nsIFile>	aFile;
+    if (NS_FAILED(rv = fileURL->GetFile(getter_AddRefs(aFile))))
+		return(rv);
+	if (!aFile)		return(NS_ERROR_UNEXPECTED);
+
+    // don't do anything with directories
+    PRBool  isDir = PR_FALSE;
+    if (NS_FAILED(rv = aFile->IsDirectory(&isDir)))
+        return(rv);
+    if (isDir == PR_TRUE)
+        return(NS_RDF_NO_VALUE);
+
+    PRInt64     aFileSize64;
+#ifdef  XP_MAC
+    // on Mac, get total file size (data + resource fork)
+    nsCOMPtr<nsILocalFileMac>   aMacFile = do_QueryInterface(aFile);
+    if (!aMacFile)  return(NS_ERROR_UNEXPECTED);
+    if (NS_FAILED(rv = aMacFile->GetFileSizeWithResFork(&aFileSize64)))
+        return(rv);
+#else
+    if (NS_FAILED(rv = aFile->GetFileSize(&aFileSize64)))
+        return(rv);
+#endif
+
+    // convert 64bits to 32bits
+    PRInt32     aFileSize32 = 0;
+	LL_L2I(aFileSize32, aFileSize64);
+
+	gRDFService->GetIntLiteral(aFileSize32, aResult);
+
+    return(NS_OK);
 }
 
 
