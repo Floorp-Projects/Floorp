@@ -497,11 +497,9 @@ MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
   [],
   [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
 
-MOZ_ARG_ENABLE_BOOL_OR_STRING(gprof,
-[  --enable-gprof	  enable gprof symbols and debugging],
-  [ MOZ_DEBUG=1 OPTIMIZE="-pg -g" ],
-  [],
-  [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
+MOZ_ARG_ENABLE_BOOL(gprof,
+[  --enable-gprof	  enable gprof symbols],
+  [ GPROF="-pg" ])
 
 MOZ_ARG_ENABLE_BOOL(profile,
 [  --enable-profile        enable profiling (solaris only)],
@@ -987,7 +985,7 @@ AC_CHECK_LIB(plds21, PL_GetEvent, NSPR_LIBS="-lplds21 $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplds21"], $NSPR_LIBS)
 
 CFLAGS=$_SAVE_CFLAGS
-CFLAGS="${OPTIMIZE} ${COMPILER_WARNINGS} ${CFLAGS}"
+CFLAGS="${OPTIMIZE} ${GPROF} ${COMPILER_WARNINGS} ${CFLAGS}"
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
