@@ -293,7 +293,13 @@ case "$target" in
     MKCSHLIB='$(LD) $(DSO_LDOPTS)'
     ;;
 
-*-irix*)
+*-irix5*)
+    DSO_LDOPTS='-elf -shared'
+    MKSHLIB_FORCE_ALL='-all'
+    MKSHLIB_UNFORCE_ALL='-none'
+    ;;
+
+*-irix6*)
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(DSO_LDOPTS)'
