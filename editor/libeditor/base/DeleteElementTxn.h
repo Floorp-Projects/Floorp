@@ -34,7 +34,7 @@
 class DeleteElementTxn : public EditTxn
 {
 public:
-
+ 
   /** initialize the transaction.
     * @param aElement the node to delete
     */

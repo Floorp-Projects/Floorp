@@ -41,7 +41,7 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
                                   PRUint32 aNumCharsToDelete)
 {
   NS_ASSERTION(aEditor&&aElement, "bad arg");
-  mEditor = do_QueryInterface(aEditor);
+  mEditor = aEditor;
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;

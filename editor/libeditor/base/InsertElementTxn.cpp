@@ -44,7 +44,7 @@ NS_IMETHODIMP InsertElementTxn::Init(nsIDOMNode *aNode,
   mNode = do_QueryInterface(aNode);
   mParent = do_QueryInterface(aParent);
   mOffset = aOffset;
-  mEditor = do_QueryInterface(aEditor);
+  mEditor = aEditor;
   return NS_OK;
 }
 

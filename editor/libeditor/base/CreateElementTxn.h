@@ -76,7 +76,7 @@ public:
 protected:
   
   /** the document into which the new node will be inserted */
-  nsCOMPtr<nsIEditor> mEditor;
+  nsIEditor* mEditor;
   
   /** the tag (mapping to object type) for the new element */
   nsString mTag;
