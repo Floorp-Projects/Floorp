@@ -11,8 +11,7 @@ objs = 	hash.o \
 	utilities.o \
 	world.o
 
-libs =	-lstdc++ -lm
-
+libs =	../../gc/boehm/gc.a -lstdc++ -lm
 
 %.o : %.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -21,7 +20,7 @@ js2: $(objs)
 	$(CC) -o $@ -ggdb $^ $(libs)
 
 gctest: gc_allocator.o
-	$(CC) -o $@ -ggdb $^ gc.a $(libs)
+	$(CC) -o $@ -ggdb $^ $(libs)
 
 clean:
 	rm -f $(objs)
