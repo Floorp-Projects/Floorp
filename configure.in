@@ -3234,12 +3234,6 @@ fi
 AC_SUBST(MOZ_FULLCIRCLE)
 AC_SUBST(FULLCIRCLE_LIBS)
 
-
-LDFLAGS=`echo \
-	$_WARNINGS_CFLAGS \
-	$LDFLAGS \
-	$CFLAGS`
-
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
