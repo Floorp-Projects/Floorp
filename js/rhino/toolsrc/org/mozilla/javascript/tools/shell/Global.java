@@ -93,7 +93,7 @@ public class Global extends ImporterTopLevel {
      * This method is defined as a JavaScript function.
      */
     public static void help(String s) {
-        Main.out.println(ToolErrorReporter.getMessage("msg.help"));
+        Main.getOut().println(ToolErrorReporter.getMessage("msg.help"));
     }
 
     /**
@@ -110,14 +110,14 @@ public class Global extends ImporterTopLevel {
     {
         for (int i=0; i < args.length; i++) {
             if (i > 0)
-                Main.out.print(" ");
+                Main.getOut().print(" ");
 
             // Convert the arbitrary JavaScript value into a string form.
             String s = Context.toString(args[i]);
 
-            Main.out.print(s);
+            Main.getOut().print(s);
         }
-        Main.out.println();
+        Main.getOut().println();
         return Context.getUndefinedValue();
     }
 

@@ -81,7 +81,7 @@ public class Main {
     public static int exec(String args[]) {
         Context cx = Context.enter();
 
-        errorReporter = new ToolErrorReporter(false, err);
+        errorReporter = new ToolErrorReporter(false, getErr());
         cx.setErrorReporter(errorReporter);
 
         // Create the "global" object where top-level variables will live.
@@ -249,7 +249,7 @@ public class Main {
             cx.setOptimizationLevel(-1);
             
             BufferedReader in = new BufferedReader
-                (new InputStreamReader(Main.in));
+                (new InputStreamReader(Main.getIn()));
             if(null != stm)
                 in = new DebugReader(in, stm, "<stdin>");           
             int lineno = 1;
@@ -257,8 +257,8 @@ public class Main {
             while (!hitEOF && !global.quitting) {
                 int startline = lineno;
                 if (filename == null)
-                    err.print("js> ");
-                err.flush();
+                    getErr().print("js> ");
+                getErr().flush();
                 String source = "";
                     
                 // Collect lines of source to compile.
@@ -268,7 +268,7 @@ public class Main {
                         newline = in.readLine();
                     }
                     catch (IOException ioe) {
-                        err.println(ioe.toString());
+                        getErr().println(ioe.toString());
                         break;
                     }
                     if (newline == null) {
@@ -284,7 +284,7 @@ public class Main {
                 Object result = evaluateReader(cx, global, reader, 
                                                "<stdin>", startline);
                 if (result != cx.getUndefinedValue()) {
-                    err.println(cx.toString(result));
+                    getErr().println(cx.toString(result));
                 }
                 NativeArray h = global.history;
                 h.put((int)h.jsGet_length(), h, source);
@@ -293,7 +293,7 @@ public class Main {
                     break;
                 }
             }
-            err.println();
+            getErr().println();
         } else {
             Reader in = null;
             try {
@@ -327,7 +327,7 @@ public class Main {
                 global.exitCode = EXITCODE_FILE_NOT_FOUND;
                 return;
             } catch (IOException ioe) {
-                err.println(ioe.toString());
+                getErr().println(ioe.toString());
             }
             
             // Here we evalute the entire contents of the file as
@@ -347,7 +347,7 @@ public class Main {
             result = cx.evaluateReader(scope, in, sourceName, lineno, null);
         }
         catch (WrappedException we) {
-            err.println(we.getWrappedException().toString());
+            getErr().println(we.getWrappedException().toString());
             we.printStackTrace();
         }
         catch (EcmaError ee) {
@@ -376,40 +376,52 @@ public class Main {
                 jse.getMessage()));
         }
         catch (IOException ioe) {
-            err.println(ioe.toString());
+            getErr().println(ioe.toString());
         }
         finally {
             try {
                 in.close();
             }
             catch (IOException ioe) {
-                err.println(ioe.toString());
+                getErr().println(ioe.toString());
             }
         }
         return result;
     }
 
     private static void p(String s) {
-        out.println(s);
+        getOut().println(s);
     }
 
+    public static InputStream getIn() {
+        return inStream == null ? System.in : inStream;
+    }
+    
     public static void setIn(InputStream _in) {
-        in = _in;
+        inStream = _in;
     }
 
+    public static PrintStream getOut() {
+        return outStream == null ? System.out : outStream;
+    }
+    
     public static void setOut(PrintStream _out) {
-        out = _out;
+        outStream = _out;
+    }
+
+    public static PrintStream getErr() { 
+        return errStream == null ? System.err : errStream;
     }
 
     public static void setErr(PrintStream _err) {
-        err = _err;
+        errStream = _err;
     }
-
+    
     static protected ToolErrorReporter errorReporter;
     static protected Global global;
-    static public InputStream in = System.in;
-    static public PrintStream out = System.out;
-    static public PrintStream err = System.err;
+    static public InputStream inStream;
+    static public PrintStream outStream;
+    static public PrintStream errStream;
     static private final int EXITCODE_RUNTIME_ERROR = 3;
     static private final int EXITCODE_FILE_NOT_FOUND = 4;
     
