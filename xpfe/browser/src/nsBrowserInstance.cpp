@@ -33,6 +33,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIHttpProtocolHandler.h"
 #include "nsISHistory.h"
 #include "nsIWebNavigation.h"
 #include "nsPIDOMWindow.h"
@@ -157,6 +158,7 @@ static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
 
 #define PREF_HOMEPAGE_OVERRIDE_URL "startup.homepage_override_url"
 #define PREF_HOMEPAGE_OVERRIDE "browser.startup.homepage_override.1"
+#define PREF_HOMEPAGE_OVERRIDE_MSTONE "browser.startup.homepage_override.mstone"
 #define PREF_BROWSER_STARTUP_PAGE "browser.startup.page"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
@@ -828,7 +830,7 @@ public:
   virtual ~nsBrowserContentHandler();
 
 protected:
-
+  PRBool NeedHomepageOverride(nsIPref *aPrefService);
 };
 
 NS_IMPL_ADDREF(nsBrowserContentHandler);
@@ -871,6 +873,39 @@ NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char **aChromeUrlForT
   return NS_OK;
 }
 
+PRBool nsBrowserContentHandler::NeedHomepageOverride(nsIPref *aPrefService)
+{
+  NS_ASSERTION(aPrefService, "Null pointer to prefs service!");
+
+  // get browser's current milestone
+  nsresult rv;
+  nsCOMPtr<nsIHttpProtocolHandler> httpHandler(
+      do_GetService("@mozilla.org/network/protocol;1?name=http", &rv));
+  if (NS_FAILED(rv))
+    return PR_TRUE;
+  nsXPIDLCString currMilestone;
+  httpHandler->GetMisc(getter_Copies(currMilestone));
+
+  // get saved milestone from user's prefs
+  nsXPIDLCString savedMilestone;
+  rv = aPrefService->GetCharPref(PREF_HOMEPAGE_OVERRIDE_MSTONE, 
+                                 getter_Copies(savedMilestone));
+
+  // failed to get pref -or- saved milestone older than current milestone, 
+  // write out known current milestone and show URL this time
+  if (NS_FAILED(rv) || 
+      !(currMilestone.Equals(savedMilestone)))
+  {
+    // update milestone in "homepage override" pref
+    aPrefService->SetCharPref(PREF_HOMEPAGE_OVERRIDE_MSTONE, 
+                              currMilestone.get());
+    return PR_TRUE;
+  }
+  
+  // don't override if saved and current are same
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 {
   if (!aDefaultArgs)
@@ -907,13 +942,10 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID));
     if (!prefs) return NS_ERROR_FAILURE;
 
-    PRBool override = PR_FALSE;
-    rv = prefs->GetBoolPref(PREF_HOMEPAGE_OVERRIDE, &override);
-    if (NS_SUCCEEDED(rv) && override) {
+    if (NeedHomepageOverride(prefs)) {
       nsXPIDLString url;
       rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
       if (NS_SUCCEEDED(rv) && (const PRUnichar *)url) {
-        rv = prefs->SetBoolPref(PREF_HOMEPAGE_OVERRIDE, PR_FALSE);
         args = url;
       }
     }
