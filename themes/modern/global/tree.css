@@ -75,6 +75,14 @@ treecell.propertylist {
   padding-right: 2px;
 }
 
+.treecell-indent > .tree-cell-primary-icon {
+  padding-left: 14px;
+ }
+
+treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-icon {
+  padding-left: 0px;
+}
+
 .tree-cell-twisty {
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
  user-focus:ignore;
