@@ -1271,7 +1271,7 @@ nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
   }
 
   *aGlobal = mScriptGlobal;
-  NS_ADDREF(mScriptGlobal);
+  NS_IF_ADDREF(mScriptGlobal);
 
   return res;
 }
