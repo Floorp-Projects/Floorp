@@ -842,7 +842,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   presShell->GetViewManager(getter_AddRefs(viewMan));  
   rv = view->Init(viewMan, viewBounds, parView);
   viewMan->InsertChild(parView, view, 0);
-  rv = view->CreateWidget(kCChildCID);
+  rv = view->CreateWidget(kCChildCID, nsnull, nsnull, PR_FALSE);
   SetView(view);
 
   // if the visibility is hidden, reflect that in the view
