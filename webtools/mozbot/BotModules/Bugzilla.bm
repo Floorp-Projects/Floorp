@@ -8,6 +8,8 @@ use vars qw(@ISA);
 @ISA = qw(BotModules);
 1;
 
+use XML::LibXML;
+
 # there is a minor error in this module: bugsHistory->$target->$bug is
 # accessed even when bugsHistory->$target doesn't yet exist. XXX
 
@@ -64,7 +66,12 @@ sub Told {
                       $/osix) {
         my $target = $event->{'target'};
         my $bug = $1;
-        $self->FetchBug($event, $bug, 'bugs', 0, 0);
+        # Single bugs use xml.cgi, because then we get error messages
+        if ($bug =~ m/^\d+$/) {
+            $self->FetchBug($event, $bug, 'bug', 0, 0);
+        } else {
+            $self->FetchBug($event, $bug, 'bugs', 0, 0);
+        }
         $self->{'bugsHistory'}->{$target}->{$bug} = $event->{'time'} if $bug =~ m/^[0-9]+$/os;
     } elsif ($message =~ m/^\s*bug-?total\s+(.+?)\s*$/osi) {
         $self->FetchBug($event, $1, 'total', 0, 0);
@@ -128,7 +135,7 @@ sub CheckForBugs {
             }
         } while (defined($bug));
         if ($bugsToFetch ne '') {
-            $self->FetchBug($event, $bugsToFetch, 'bugs', $skipURI, 1);
+            $self->FetchBug($event, $bugsToFetch, 'bug', $skipURI, 1);
         }
         return $bugsFound;
     }
@@ -176,91 +183,259 @@ sub Saw {
 
 sub FetchBug {
     my $self = shift;
-    my ($event, $bugParams, $type, $skipURI, $skipZaroo) = @_;
+    my ($event, $bugParams, $subtype, $skipURI, $skipZaroo) = @_;
     my $uri;
-    if ($type eq 'dwim') {
+    my $type;
+    if ($subtype eq 'bug') {
+        $uri = "$self->{'bugsURI'}xml.cgi?id=".join(',',split(' ',$bugParams));
+        $type = 'xml';
+    } elsif ($subtype eq 'dwim') {
         # XXX should escape query string
-        $uri = "$self->{'bugsURI'}buglist.cgi?$self->{'bugsDWIMQueryDefault'}".join(',',split(' ',$bugParams));
-        $type = 'bugs';
+        $uri = "$self->{'bugsURI'}buglist.cgi?format=rdf&$self->{'bugsDWIMQueryDefault'}".join(',',split(' ',$bugParams));
+        $subtype = 'bugs';
+        $type = 'buglist';
     } else {
-        $uri = "$self->{'bugsURI'}buglist.cgi?bug_id=".join(',',split(' ',$bugParams));
+        $uri = "$self->{'bugsURI'}buglist.cgi?format=rdf&bug_id=".join(',',split(' ',$bugParams));
+        $type = 'buglist';
     }
-    $self->getURI($event, $uri, 'bugs', $type, $skipURI, $skipZaroo);
+    $self->getURI($event, $uri, $type, $subtype, $skipURI, $skipZaroo);
 }
 
 sub GotURI {
     my $self = shift;
     my ($event, $uri, $output, $type, $subtype, $skipURI, $skipZaroo) = @_;
-    if ($type eq 'bugs') {
 
+    my @bugs;
+
+    # Bugzilla really needs a LIMIT option
+    my $maxRes;
+    if ($event->{'channel'}) {
+        $maxRes = 5;
+    } else {
+        $maxRes = 20;
+    }
+    my $truncated = 0;
+
+    if ($type eq 'buglist') {
+        # We asked for rdf, but old versions won't know how to do that
+        # So lets do some simple sniffing, until mozbot gives us a way
+        # to find out the server's returned mime type
+        my $format;
+        if ($output =~ /^<\?xml /) {
+            $type = 'rdf';
+        } else {
+            $type = 'html';
+        }
+    }
+
+    my $lots;
+    my $bugCount;
+
+    if ($type eq 'html') {
         my $lots;
         my @qp;
 
         # magicness
         { no warnings; # this can go _very_ wrong easily
 
-        $lots = ($output !~ m/<FORM\s+METHOD=POST\s+ACTION="long_list.cgi">/osi); # if we got truncated, then this will be missing
-        $output =~ s/<\/TABLE><TABLE .+?<\/A><\/TH>//gosi;
-        (undef, $output) = split(/Summary<\/A><\/TH>/osi, $output);
-        ($output, undef) = split(/<\/TABLE>/osi, $output);
-        $output =~ s/[\n\r]//gosi;
-        @qp = split(/<TR VALIGN=TOP ALIGN=LEFT CLASS=[-A-Za-z0-9]+ ><TD>/osi, $output); }
+          $lots = ($output !~ m/<FORM\s+METHOD=POST\s+ACTION="long_list.cgi">/osi); # if we got truncated, then this will be missing
 
-        # loop through output, constructing output string
-        my @output;
-        unless (@qp) {
-            unless ($skipZaroo) {
-                @output = ('Zarro boogs found.');
-            } else {
-                @output = ();
+          # Instead of relying on being able to accurately count the
+          # number of bugs (which we can't do if there are more than
+          # 199), use the number that bugzilla tells us.
+          if ($output =~ /(One|\d+) bugs? found/o) {
+              $bugCount = $1;
+              if ($bugCount eq "One") {
+                  $bugCount = 1;
+              }
+          }
+
+          $output =~ s/<\/TABLE><TABLE .+?<\/A><\/TH>//gosi;
+          (undef, $output) = split(/Summary<\/A><\/TH>/osi, $output);
+          ($output, undef) = split(/<\/TABLE>/osi, $output);
+          $output =~ s/[\n\r]//gosi;
+          @qp = split(m/<TR VALIGN=TOP ALIGN=LEFT CLASS=[-A-Za-z0-9]+(?: style='.*?')?\s*?><TD>/osi, $output);
+        }
+
+        if (scalar(@qp) == 0) {
+            $bugCount = 0;
+        }
+
+        if (!$lots && $subtype eq 'bugs') {
+            if (scalar(@qp) > $maxRes) {
+                $truncated = 1;
+                @qp = @qp[0..$maxRes-1];
             }
-        } else {
-            if ($lots) {
-                @output = ('Way too many bugs found. I gave up so as to not run out of memory. Try to narrow your search or something!');
-                $subtype = 'lots';
-            } elsif ($#qp > 1) {
-                @output = ($#qp.' bugs found.'); # @qp will contain one more item than there are bugs
-                if ((@qp > 5) and ($event->{'channel'}) and ($subtype ne 'total')) {
-                    $output[0] .= ' Five shown, please message me for the complete list.';
-                    @qp = @qp[0..4];
-                }
-            }
-            if ($subtype eq 'bugs') {
-                local $" = ', ';
-                foreach (@qp) {
-                    if ($_) {
-                        # more magic
-                        if (my @d = m|<A HREF="show_bug.cgi\?id=([0-9]+)">\1</A> <td class=severity><nobr>(.*?)</nobr><td class=priority><nobr>(.*?)</nobr><td class=platform><nobr>(.*?)</nobr><td class=owner><nobr>(.*?)</nobr><td class=status><nobr>(.*?)</nobr><td class=resolution><nobr>(.*?)</nobr><td class=summary>(.*)|osi) {
-                            # bugid severity priority platform owner status resolution subject
-                            my $bugid = shift @d;
-                            if ($skipURI) {
-                                push(@output, $self->unescapeXML("Bug $bugid: @d"));
-                            } else {
-                                push(@output, $self->unescapeXML("Bug $self->{'bugsURI'}show_bug.cgi?id=$bugid @d"));
-                            }
-                            $output[$#output] =~ s/, (?:, )+/, /gosi;
-                            $self->{'bugsHistory'}->{$event->{'target'}}->{$d[0]} = $event->{'time'};
-                        }
+
+            foreach (@qp) {
+                if ($_) {
+                    # more magic
+                    if (my @d = m|<A HREF="show_bug.cgi\?id=([0-9]+)">\1</A> <td class=severity><nobr>(.*?)</nobr><td class=priority><nobr>(.*?)</nobr><td class=platform><nobr>(.*?)</nobr><td class=owner><nobr>(.*?)</nobr><td class=status><nobr>(.*?)</nobr><td class=resolution><nobr>(.*?)</nobr><td class=summary>(.*)|osi) {
+                        # bugid severity priority platform owner status resolution subject
+                        my %bug;
+                        ($bug{'id'}, $bug{'severity'}, $bug{'priority'}, $bug{'platform'}, $bug{'owner'}, $bug{'status'}, $bug{'resolution'}, $bug{'summary'}) = @d;
+                        push (@bugs, \%bug);
                     }
                 }
             }
         }
+    } elsif ($type eq 'xml') {
+        # We came from xml.cgi
+        my $parser = XML::LibXML->new();
+        my $tree = $parser->parse_string($output);
+        my $root = $tree->getDocumentElement;
 
-        my $prefix;
-        if (grep {$_ eq $event->{'from'}} @{$self->{'skipPrefixFor'}}) {
-            # they don't want to have the report prefixed with their name
-            $prefix = '';
-        } else {
-            $prefix = "$event->{'from'}: ";
+        my @xml_bugs = $root->getElementsByTagName('bug');
+        $bugCount = scalar(@xml_bugs);
+
+        if (scalar(@xml_bugs) > $maxRes) {
+            $truncated = 1;
+            @xml_bugs = @xml_bugs[0..$maxRes-1];
         }
 
-        # now send out the output
-        foreach (@output) {
-            $self->say($event, "$prefix$_");
+        # OK, xml.cgi uses different names to the query stuff
+        # Take a deep breath, and use a mapping for the fields we
+        # care about
+        my %fieldMap = (
+                        'bug_id' => 'id',
+                        'bug_severity' => 'severity',
+                        'priority' => 'priority',
+                        'target_milestone' => 'target_milestone',
+                        'assigned_to' => 'owner',
+                        'bug_status' => 'status',
+                        'resolution' => 'resolution',
+                        'short_desc' => 'summary'
+                       );
+
+        foreach my $xml_bug(@xml_bugs) {
+            my %bug = {};
+            my $error = $xml_bug->getAttribute('error');
+            if (!defined $error) {
+                foreach my $field (keys %fieldMap) {
+                    my @arr = $xml_bug->getElementsByTagName($field);
+                    if (@arr) {
+                        my $str = $arr[0]->getFirstChild->getData();
+                        $bug{$fieldMap{$field}} = $str;
+                    }
+                }
+            }
+            else {
+                my @arr = $xml_bug->getElementsByTagName('bug_id');
+                $bug{'id'} = $arr[0]->getFirstChild->getData();
+                $bug{'error'} = $error;
+            }
+            push @bugs, \%bug;
+        }
+    } elsif ($type eq 'rdf') {
+        my $parser = XML::LibXML->new();
+        my $tree = $parser->parse_string($output);
+        my $root = $tree->getDocumentElement;
+        my @rdf_bugs = $root->getElementsByTagName('bz:bug');
+
+        $bugCount = scalar(@rdf_bugs);
+
+        if (scalar(@rdf_bugs) > $maxRes) {
+            $truncated = 1;
+            @rdf_bugs = @rdf_bugs[0..$maxRes-1];
         }
 
+        foreach my $rdf_bug (@rdf_bugs) {
+            my %bug = {};
+            my @children = $rdf_bug->getChildnodes();
+            foreach my $child (@children) {
+                next if ($child->getLocalName() eq 'text');
+                my $field = $child->getLocalName();
+                if ($child->getFirstChild()) {
+                    my $val = $child->getFirstChild->getData();
+                    $bug{$field} = $val;
+                }
+            }
+            push @bugs, \%bug;
+        }
     } else {
         return $self->SUPER::GotURI(@_);
+    }
+
+    # construct the response's preamble
+    my $preamble;
+    if ($bugCount == 0 && !$skipZaroo) {
+        $preamble = 'Zarro boogs found.';
+    } else {
+        my $bugCountStr;
+        if ($bugCount) {
+            $bugCountStr = "$bugCount bug" . ($bugCount == 1 ? '' : 's')
+              . " found";
+        }
+
+        if ($subtype eq 'total') {
+            $self->say($event, $bugCountStr);
+            return;
+        }
+
+        if ($lots) {
+            $preamble = $bugCountStr ? "$bugCountStr, which is too many for me to handle without running out of memory."
+              : 'Way too many bugs found. I gave up so as to not run out of memory.';
+            $preamble .= "$bugCountStr Try to narrow your search or something!";
+            $subtype = 'lots';
+        } elsif ($subtype ne 'bug' && $bugCount > 1) {
+            $preamble = $bugCountStr;
+            if ($truncated) {
+                if ($event->{'channel'}) {
+                    $preamble .= '. Five shown, please message me for more.';
+                } else {
+                    $preamble .= '. Will only show 20 results, please use the Bugzilla query form if you want more.';
+                }
+            }
+        }
+    }
+
+    my $prefix;
+    if (grep {$_ eq $event->{'from'}} @{$self->{'skipPrefixFor'}}) {
+        # they don't want to have the report prefixed with their name
+        $prefix = '';
+    } else {
+        $prefix = "$event->{'from'}: ";
+    }
+
+    if ($preamble) {
+        $self->say($event, "$prefix$preamble");
+    }
+
+    my $bug_link = $skipURI ? "" : "$self->{'bugsURI'}show_bug.cgi?id=";
+
+    # now send out the output
+    foreach my $bug (@bugs) {
+        if (!defined $bug->{'error'}) {
+            # Bugzilla doesn't give the TM by default, and we can't
+            # change this without using cookies, which aren't supported
+            # by the mozbot API. Later versions allow us to use a query param
+            # but we can't detect that that was accepted, which would break
+            # the HTML parsing
+            # xml.cgi gives us everything, so we can print this if we got
+            # results from there
+            # Maybe the list of columns to display could be a var, one day, after
+            # installations from source before Dec 2001 are no longer supported,
+            # or we can pass cookies
+            $self->say($event, $prefix .
+                       "Bug $bug_link$bug->{'id'} " .
+                       substr($bug->{'severity'}, 0, 3) . ", " .
+                       $bug->{'priority'} . ", " .
+                       ($bug->{'target_milestone'} ? "$bug->{'target_milestone'}, " : "") .
+                       $bug->{'owner'} . ", " .
+                       substr($bug->{'status'}, 0, 4) .
+                       ($bug->{'resolution'} ? " " . $bug->{'resolution'} : "") . ", " .
+                       substr($bug->{'summary'}, 0, 100));
+        } elsif ($bug->{'error'} eq 'NotFound') {
+            unless($skipZaroo) {
+                $self->say($event, $prefix . "Bug $bug->{'id'} was not found.");
+            }
+        } elsif ($bug->{'error'} eq 'NotPermitted') {
+            $self->say($event, $prefix . "Bug $bug_link$bug->{'id'} is not accessible");
+        } else {
+            unless($skipZaroo) {
+                $self->say($prefix . "Error accessing bug $bug->{'id'}: $bug->{'error'}");
+            }
+        }
     }
 }
 
