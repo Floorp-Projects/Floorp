@@ -1567,94 +1567,96 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
     if (eReflowReason_Initial == aReflowState.reason)
     {
-      if ((!mWebShell) && (PR_FALSE==IsSingleLineTextControl()))
-      { // multi-line text areas get their subdoc right away
-        rv = CreateSubDoc(&subBoundsInPixels);
-      }
-      
-      if (PR_TRUE==IsSingleLineTextControl())
-      {
-        // create anonymous text content
-        nsIContent* content;
-        rv = NS_NewTextNode(&content);
-        if (NS_FAILED(rv)) { return rv; }
-        if (!content) { return NS_ERROR_NULL_POINTER; }
-        nsIDocument* doc;
-        mContent->GetDocument(doc);
-        content->SetDocument(doc, PR_FALSE);
-        NS_RELEASE(doc);
-        mContent->AppendChildTo(content, PR_FALSE);
+      if (!mWebShell)
+      { // if we haven't already created a webshell, then create something to hold the initial text
+        PRInt32 type;
+        GetType(&type);
+        if ((PR_FALSE==IsSingleLineTextControl()) || (NS_FORM_INPUT_PASSWORD == type))
+        { // password controls and multi-line text areas get their subdoc right away
+          rv = CreateSubDoc(&subBoundsInPixels);
+        }
+        else
+        { // single line text controls get a display frame rather than a subdoc.
+          // the subdoc will be created when the frame first gets focus
+          // create anonymous text content
+          nsIContent* content;
+          rv = NS_NewTextNode(&content);
+          if (NS_FAILED(rv)) { return rv; }
+          if (!content) { return NS_ERROR_NULL_POINTER; }
+          nsIDocument* doc;
+          mContent->GetDocument(doc);
+          content->SetDocument(doc, PR_FALSE);
+          NS_RELEASE(doc);
+          mContent->AppendChildTo(content, PR_FALSE);
 
-        // set the value of the text node
-        content->QueryInterface(nsITextContent::GetIID(), getter_AddRefs(mDisplayContent));
-        if (!mDisplayContent) {return NS_ERROR_NO_INTERFACE; }
-        nsAutoString value;
-        GetText(&value, PR_FALSE);  // get the text value, either from input element attribute or cached state
-        PRInt32 len = value.Length();
-        if (0<len)
-        {
-          // for password fields, set the display text to '*', one per character
-          // XXX: the replacement character should be controllable via CSS
-          // for normal text fields, set the display text normally
-          PRInt32 type;
-          GetType(&type);
-          if (NS_FORM_INPUT_PASSWORD == type) 
+          // set the value of the text node
+          content->QueryInterface(nsITextContent::GetIID(), getter_AddRefs(mDisplayContent));
+          if (!mDisplayContent) {return NS_ERROR_NO_INTERFACE; }
+          nsAutoString value;
+          GetText(&value, PR_FALSE);  // get the text value, either from input element attribute or cached state
+          PRInt32 len = value.Length();
+          if (0<len)
           {
-            PRUnichar *initialPasswordText;
-            initialPasswordText = new PRUnichar[len+1];
-            if (!initialPasswordText) { return NS_ERROR_NULL_POINTER; }
-            PRInt32 i=0;
-            for (; i<len; i++) {
-              initialPasswordText[i] = PASSWORD_REPLACEMENT_CHAR;
+            // for password fields, set the display text to '*', one per character
+            // XXX: the replacement character should be controllable via CSS
+            // for normal text fields, set the display text normally
+            if (NS_FORM_INPUT_PASSWORD == type) 
+            {
+              PRUnichar *initialPasswordText;
+              initialPasswordText = new PRUnichar[len+1];
+              if (!initialPasswordText) { return NS_ERROR_NULL_POINTER; }
+              PRInt32 i=0;
+              for (; i<len; i++) {
+                initialPasswordText[i] = PASSWORD_REPLACEMENT_CHAR;
+              }
+              mDisplayContent->SetText(initialPasswordText, len, PR_TRUE);
+              delete [] initialPasswordText;
             }
-            mDisplayContent->SetText(initialPasswordText, len, PR_TRUE);
-            delete [] initialPasswordText;
-          }
-          else
-          {
-            const PRUnichar *initialText;
-            initialText = value.GetUnicode();
-            mDisplayContent->SetText(initialText, len, PR_TRUE);
-          }
-        }        
+            else
+            {
+              const PRUnichar *initialText;
+              initialText = value.GetUnicode();
+              mDisplayContent->SetText(initialText, len, PR_TRUE);
+            }
+          }        
 
-        // create the pseudo frame for the anonymous content
-        rv = NS_NewBlockFrame((nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
-        if (NS_FAILED(rv)) { return rv; }
-        if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
+          // create the pseudo frame for the anonymous content
+          rv = NS_NewBlockFrame((nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
+          if (NS_FAILED(rv)) { return rv; }
+          if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
         
-        // create the style context for the anonymous frame
-        nsCOMPtr<nsIStyleContext> styleContext;
-        rv = aPresContext.ResolvePseudoStyleContextFor(content, 
-                                                       nsHTMLAtoms::mozSingleLineTextControlFrame,
-                                                       mStyleContext,
-                                                       PR_FALSE,
-                                                       getter_AddRefs(styleContext));
-        if (NS_FAILED(rv)) { return rv; }
-        if (!styleContext) { return NS_ERROR_NULL_POINTER; }
+          // create the style context for the anonymous frame
+          nsCOMPtr<nsIStyleContext> styleContext;
+          rv = aPresContext.ResolvePseudoStyleContextFor(content, 
+                                                         nsHTMLAtoms::mozSingleLineTextControlFrame,
+                                                         mStyleContext,
+                                                         PR_FALSE,
+                                                         getter_AddRefs(styleContext));
+          if (NS_FAILED(rv)) { return rv; }
+          if (!styleContext) { return NS_ERROR_NULL_POINTER; }
 
-        // create a text frame and put it inside the block frame
-        nsIFrame *textFrame;
-        rv = NS_NewTextFrame(&textFrame);
-        if (NS_FAILED(rv)) { return rv; }
-        if (!textFrame) { return NS_ERROR_NULL_POINTER; }
-        nsCOMPtr<nsIStyleContext> textStyleContext;
-        rv = aPresContext.ResolvePseudoStyleContextFor(content, 
-                                                       nsHTMLAtoms::mozSingleLineTextControlFrame,
-                                                       styleContext,
-                                                       PR_FALSE,
-                                                       getter_AddRefs(textStyleContext));
-        if (NS_FAILED(rv)) { return rv; }
-        if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
-        textFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
-        textFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
+          // create a text frame and put it inside the block frame
+          nsIFrame *textFrame;
+          rv = NS_NewTextFrame(&textFrame);
+          if (NS_FAILED(rv)) { return rv; }
+          if (!textFrame) { return NS_ERROR_NULL_POINTER; }
+          nsCOMPtr<nsIStyleContext> textStyleContext;
+          rv = aPresContext.ResolvePseudoStyleContextFor(content, 
+                                                         nsHTMLAtoms::mozSingleLineTextControlFrame,
+                                                         styleContext,
+                                                         PR_FALSE,
+                                                         getter_AddRefs(textStyleContext));
+          if (NS_FAILED(rv)) { return rv; }
+          if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
+          textFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
+          textFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
         
-        rv = mDisplayFrame->Init(aPresContext, content, this, styleContext, nsnull);
-        if (NS_FAILED(rv)) { return rv; }
+          rv = mDisplayFrame->Init(aPresContext, content, this, styleContext, nsnull);
+          if (NS_FAILED(rv)) { return rv; }
 
-        mDisplayFrame->SetInitialChildList(aPresContext, nsnull, textFrame);
+          mDisplayFrame->SetInitialChildList(aPresContext, nsnull, textFrame);
+        }
       }
-      
     }
     if (mWebShell) 
     {
