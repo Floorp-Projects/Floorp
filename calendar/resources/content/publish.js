@@ -63,6 +63,11 @@ function GetIOService()
 }
 
 
+/**
+ * This is the entry point into the file from calendar.js
+ * contentType is always text/calendar
+ */
+ 
 function calendarPublish(aDataString, newLocation, fileName, login, password, contentType)
 {
   try
@@ -97,7 +102,7 @@ function calendarUploadFile(aSourceFilename, newLocation, fileName, login, passw
       }
 
        output_file_to_channel(protocolChannel, aSourceFilename, contentType);
-       protocolChannel.asyncOpen(gPublishingListener, null);
+       protocolChannel.asyncOpen(gPublishingListener, protocolChannel);
        dump("done\n");
    }
    catch (e)
@@ -112,7 +117,9 @@ function output_string_to_channel( aChannel, aDataString, contentType )
    var uploadChannel = aChannel.QueryInterface(Components.interfaces.nsIUploadChannel);
    var postStream = createInstance('@mozilla.org/io/string-input-stream;1', 'nsIStringInputStream');
 
+   // Create the stream
    postStream.setData(aDataString, aDataString.length);
+   // Send the stream (data) through the channel
    uploadChannel.setUploadStream(postStream, contentType, -1);
 }
 
@@ -133,8 +140,6 @@ function output_file_to_channel( aChannel, aFilePath, contentType )
 // this function takes a login and password and adds them to the destination url
 function get_destination_channel(destinationDirectoryLocation, fileName, login, password)
 {
-  try
-  {
     var ioService = GetIOService();
     if (!ioService)
     {
@@ -149,42 +154,44 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
       dump("can't create dest channel\n");
       return null;
     }
-    try {
-    dump("about to set callbacks\n");
-    destChannel.notificationCallbacks = window.docshell;  // docshell
-    dump("notification callbacks set\n");
-    }
-    catch(e) {dump(e+"\n");}
-    
-    try {
-       var httpChannel = destChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
-    }
-    catch( e )
+
+    try
     {
-       //alert( e );
+	dump("about to set callbacks\n");
+	destChannel.notificationCallbacks = window.docshell;  // docshell
+	dump("notification callbacks set\n");
+    }
+    catch(e) {
+	dump(e+"\n");
     }
     
-    if (httpChannel) 
+    try {
+       switch(destChannel.URI.scheme)
+       {
+	   case 'http':
+	       return destChannel.QueryInterface(
+		   Components.interfaces.nsIHttpChannel
+		);
+	   case 'https':
+	       return destChannel.QueryInterface(
+		   Components.interfaces.nsIHttpsChannel
+		);
+	   case 'ftp':
+	       return destChannel.QueryInterface(
+		   Components.interfaces.nsIFTPChannel
+		);
+	   case 'file':
+	       return destChannel.QueryInterface(
+		   Components.interfaces.nsIFileChannel
+		);
+	    default:
+		return null;
+	}
+    }
+    catch( e ) 
     {
-       dump("http channel found\n");
-       return httpChannel;
+       return null;
     }
-    var ftpChannel = destChannel.QueryInterface(Components.interfaces.nsIFTPChannel);
-    if (ftpChannel) dump("ftp channel found\n");
-    if (ftpChannel)
-      return ftpChannel;
-    
-    var httpsChannel = destChannel.QueryInterface(Components.interfaces.nsIHttpsChannel);
-    if (httpsChannel) dump("https channel found\n");
-    if (httpsChannel)
-      return httpsChannel;
-    else
-      return null;
-  }
-  catch (e)
-  {
-    return null;
-  }
 }
 
 
@@ -193,10 +200,9 @@ function create_channel_from_url(ioService, aURL, aLogin, aPassword)
 {
   try
   {
-    var nsiuri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+    var nsiuri = ioService.newURI(aURL, null, null);
     if (!nsiuri)
       return null;
-    nsiuri.spec = aURL;
     if (aLogin)
     {
       nsiuri.username = aLogin;
@@ -271,17 +277,17 @@ var gPublishingListener =
 
   onStartRequest: function(request, ctxt)
   {
-    dump("onStartRequest status = " + request.status + "\n");
+    dump("onStartRequest status = " + request.status.toString(16) + "\n");
   },
 
   onStopRequest: function(request, ctxt, status, errorMsg)
   {
-    dump("onStopRequest status = " + request.status + " " + errorMsg + "\n");
+    dump("onStopRequest status = " + request.status.toString(16) + " " + errorMsg + "\n");
   },
 
   onDataAvailable: function(request, ctxt, inStream, sourceOffset, count)
   {
-    dump("onDataAvailable status = " + request.status + " " + count + "\n");
+    dump("onDataAvailable status = " + request.status.toString(16) + " " + count + "\n");
   }
 }
 
