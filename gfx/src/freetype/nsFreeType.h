@@ -111,14 +111,14 @@ typedef FT_Error (*FTC_Manager_Done_t)(FTC_Manager);
 typedef FT_Error (*FTC_Manager_New_t)(FT_Library, FT_UInt, FT_UInt, FT_ULong,
                        FTC_Face_Requester, FT_Pointer, FTC_Manager*);
 typedef FT_Error (*FTC_Image_Cache_New_t)(FTC_Manager, FTC_Image_Cache*);
-#ifdef MOZ_SVG
+// #ifdef MOZ_SVG
 typedef FT_Error (*FT_Glyph_Transform_t)(FT_Glyph, FT_Matrix*, FT_Vector*);
 typedef FT_Error (*FT_Get_Kerning_t)
                       (FT_Face, FT_UInt, FT_UInt, FT_UInt, FT_Vector*);
 typedef FT_Error (*FT_Glyph_Copy_t)(FT_Glyph, FT_Glyph*);
 typedef FT_Error (*FT_Glyph_To_Bitmap_t)
                       (FT_Glyph*, FT_Render_Mode, FT_Vector*, FT_Bool);
-#endif
+// #endif
 
 typedef FT_ULong (*FT_Get_First_Char_t)(FT_Face, FT_UInt*);
 typedef FT_ULong (*FT_Get_Next_Char_t)(FT_Face, FT_ULong, FT_UInt*);
@@ -169,22 +169,22 @@ protected:
   FTC_Manager_Done_t        nsFTC_Manager_Done;
   FTC_Manager_New_t         nsFTC_Manager_New;
   FTC_Image_Cache_New_t     nsFTC_Image_Cache_New;
-#ifdef MOZ_SVG
+// #ifdef MOZ_SVG
   FT_Glyph_Transform_t      nsFT_Glyph_Transform;
   FT_Get_Kerning_t          nsFT_Get_Kerning;
   FT_Glyph_Copy_t           nsFT_Glyph_Copy;
   FT_Glyph_To_Bitmap_t      nsFT_Glyph_To_Bitmap;
-#endif
+// #endif
   FT_Get_First_Char_t       nsFT_Get_First_Char;
   FT_Get_Next_Char_t        nsFT_Get_Next_Char;
 
   // this array needs to be big enough to hold all the function pointers
   // plus one extra for the null at the end
-#ifdef MOZ_SVG
+// #ifdef MOZ_SVG
   static FtFuncList FtFuncs[24];
-#else
-  static FtFuncList FtFuncs[20];
-#endif
+// #else
+//  static FtFuncList FtFuncs[20];
+// #endif
   
 protected:
   PRBool mEnableFreeType2;
