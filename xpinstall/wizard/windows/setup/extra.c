@@ -7485,6 +7485,35 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   return(TRUE);
 }
 
+void CollateBackslashes(LPSTR szInputOutputStr)
+{
+  // search for "\\" in the output string, and replace it with "\"
+  LPSTR pSearch          = szInputOutputStr;
+  LPSTR pSearchEnd       = szInputOutputStr + lstrlen(szInputOutputStr);
+  LPSTR pPreviousSearch  = NULL;
+
+  while (pSearch < pSearchEnd)
+  {
+    if ('\\' == *pSearch)
+    {
+      if (pPreviousSearch && ('\\' == *pPreviousSearch))
+      { // found a second one -> remove it
+        memmove(pPreviousSearch, pSearch, pSearchEnd-pSearch+1);
+
+        // our string is shorter now ...
+        pSearchEnd -= pSearch - pPreviousSearch;
+
+        // no increment of pSearch here - we want to continue with the same character,
+        // again (just for the weird case of yet another backslash...)
+        continue;
+      }
+    }
+
+    pPreviousSearch = pSearch;
+    pSearch = CharNext(pSearch);
+  }
+}
+
 HRESULT DecryptString(LPSTR szOutputStr, LPSTR szInputStr)
 {
   DWORD dwLenInputStr;
@@ -7598,6 +7627,7 @@ HRESULT DecryptString(LPSTR szOutputStr, LPSTR szInputStr)
     {
       DecryptString(szResultStr, szOutputStr);
       lstrcpy(szOutputStr, szResultStr);
+      CollateBackslashes(szOutputStr);
     }
   }
   else

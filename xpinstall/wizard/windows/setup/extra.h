@@ -44,6 +44,7 @@ HRESULT           ParseConfigIni(LPSTR lpszCmdLine);
 HRESULT           ParseInstallIni();
 HRESULT           DecryptString(LPSTR szOutputStr, LPSTR szInputStr);
 HRESULT           DecryptVariable(LPSTR szVariable, DWORD dwVariableSize);
+void              CollateBackslashes(LPSTR szInputOutputStr);
 HRESULT           InitSetupGeneral(void);
 HRESULT           InitDlgWelcome(diW *diDialog);
 HRESULT           InitDlgLicense(diL *diDialog);
