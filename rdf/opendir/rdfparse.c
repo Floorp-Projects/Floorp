@@ -236,12 +236,13 @@ parseNextRDFXMLBlobInt(RDFT f, char* blob, int size) {
     if ((c == '\n') || (c == '\r')) lineNumber++;
     m = 0;
     somethingseenp = 0;
-    memset(f->line, '\0', RDF_BUF_SIZE-1);
+    /*    memset(f->line, '\0', RDF_BUF_SIZE-1); */
     if (f->holdOver[0] != '\0') {
       memcpy(f->line, f->holdOver, strlen(f->holdOver));
       m = strlen(f->holdOver);
       somethingseenp = 1;
-      memset(f->holdOver, '\0', RDF_BUF_SIZE-1);
+	  f->holdOver[0] = '\0';
+      /*    memset(f->holdOver, '\0', RDF_BUF_SIZE-1); */
     }   
     while ((n < size) && (wsCharp(c))  && (!somethingseenp)) {
       c = blob[++n]; 
@@ -256,19 +257,23 @@ parseNextRDFXMLBlobInt(RDFT f, char* blob, int size) {
       else break;
       if ((c == '\n') || (c == '\r')) lineNumber++;
     }
+    f->line[m] = '\0';
+    f->line[m+1] = '\0';
     if (c == '>') f->line[m] = c;
     n++;
     if (m > 0) {
       if ((c == '<') || (c == '>')) {
         last = n;
-        if (c == '<') f->holdOver[0] = '<'; 
+        if (c == '<') {
+			f->holdOver[0] = '<'; 
+			f->holdOver[1] = '\0';
+		}
         if (somethingseenp == 1) {
-          int ok = parseNextRDFToken(f, f->line);
-          if (!ok)
-	       return 0;
-        }
+         parseNextRDFToken(f, f->line);
+         }
       } else if (size > last) {
         memcpy(f->holdOver, f->line, m);
+        f->holdOver[m+1] = '\0';
       }
     } else if (c == '<') f->holdOver[0] = '<';
   }
