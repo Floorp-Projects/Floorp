@@ -90,6 +90,11 @@ public:
     virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
     virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
     virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+
+    void DisplayDebugInfoFor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor);
+
 };
 
 /**
@@ -116,6 +121,7 @@ public:
   void GetDebugInset(nsMargin& inset);
   void AdjustChildren(nsIPresContext& aPresContext, nsBoxFrame* aBox);
   void UpdatePseudoElements(nsIPresContext& aPresContext);
+  nsresult GetContentOf(nsIFrame* aFrame, nsIContent** aContent);
 
   // XXX for the moment we can only handle 100 children.
     // Should use a dynamic array.
@@ -179,7 +185,11 @@ nsBoxFrame::Init(nsIPresContext&  aPresContext,
 
   // see if we are a vertical or horizontal box.
   nsString value;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+
+  nsCOMPtr<nsIContent> content;
+  mInner->GetContentOf(this, getter_AddRefs(content));
+
+  content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
   if (value.EqualsIgnoreCase("vertical"))
     mHorizontal = PR_FALSE;
   else if (value.EqualsIgnoreCase("horizontal"))
@@ -263,7 +273,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFra
 
     // get the flexibility
     nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
+    mInner->GetContentOf(aFrame, getter_AddRefs(content));
 
     PRInt32 error;
     nsAutoString value;
@@ -272,7 +282,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFra
     {
         value.Trim("%");
         // convert to a percent.
-        aSize.flex = value.ToFloat(&error)/float(100.0);
+        aSize.flex = value.ToFloat(&error);
     }
 
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
@@ -400,7 +410,10 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
     mInner->mIsDebug = PR_FALSE;
     nsString value;
 
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::debug, value))
+    nsCOMPtr<nsIContent> content;
+    mInner->GetContentOf(this, getter_AddRefs(content));
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::debug, value))
     {
       mInner->mIsDebug = PR_TRUE;
     } else {
@@ -679,7 +692,7 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
           FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, mSprings[count], redraw, reason);
  
           // if the child got bigger then adjust our rect and all the children.
-          ChildResized(aDesiredSize, rect, mSprings[count], resized, changedIndex, finished, count, nextReason);
+          ChildResized(childFrame, aDesiredSize, rect, mSprings[count], resized, changedIndex, finished, count, nextReason);
         }
       
         
@@ -717,7 +730,7 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
 }
 
 void
-nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
+nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
 {
   if (mHorizontal) {
       // if we are a horizontal box see if the child will fit inside us.
@@ -726,6 +739,7 @@ nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCal
 
             // ok if the height changed then we need to reflow everyone but us at the new height
             // so we will set the changed index to be us. And signal that we need a new pass.
+
             aRect.height = aDesiredSize.height;
 
             // remember we do not need to clear the resized list because changing the height of a horizontal box
@@ -745,6 +759,23 @@ nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCal
             // because things flow from left to right top to bottom we know that
             // if we get wider that we can set the min size. This will only work
             // for width not height. Height must always be recalculated!
+
+            // however we must see whether the min size was set in css.
+            // if it was then this size should not override it.
+
+            // add in the css min, max, pref
+            const nsStylePosition* position;
+            nsresult rv = aFrame->GetStyleData(eStyleStruct_Position,
+                          (const nsStyleStruct*&) position);
+    
+            // same for min size. Unfortunately min size is always set to 0. So for now
+            // we will assume 0 means not set.
+            if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
+                nscoord min = position->mMinWidth.GetCoordValue();
+                if (min != 0)
+                   return;
+            }
+
             aInfo.minSize.width = aDesiredSize.width;
 
             // our width now becomes the new size
@@ -769,6 +800,19 @@ nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCal
             // ok if the height changed then we need to reflow everyone but us at the new height
             // so we will set the changed index to be us. And signal that we need a new pass.
             aRect.width = aDesiredSize.width;
+
+            // add in the css min, max, pref
+            const nsStylePosition* position;
+            nsresult rv = aFrame->GetStyleData(eStyleStruct_Position,
+                          (const nsStyleStruct*&) position);
+    
+            // same for min size. Unfortunately min size is always set to 0. So for now
+            // we will assume 0 means not set.
+            if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
+                nscoord min = position->mMinWidth.GetCoordValue();
+                if (min != 0)
+                   return;
+            }
 
             // because things flow from left to right top to bottom we know that
             // if we get wider that we can set the min size. This will only work
@@ -1181,7 +1225,6 @@ nsBoxFrame::AddSize(const nsSize& a, nsSize& b, PRBool largest)
   if ((largest && aheight > bheight) || (!largest && bheight < aheight)) 
       bheight = aheight;
 }
-
 
 
 void 
@@ -1789,13 +1832,16 @@ nsBoxFrameInner::UpdatePseudoElements(nsIPresContext& aPresContext)
     nsCOMPtr<nsIStyleContext> hs;
     nsCOMPtr<nsIStyleContext> vs;
 
+    nsCOMPtr<nsIContent> content;
+    GetContentOf(mOuter, getter_AddRefs(content));
+
 	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-horizontal-box-debug")) );
-	aPresContext.ProbePseudoStyleContextFor(mOuter->mContent, atom, mOuter->mStyleContext,
+	aPresContext.ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
 										  PR_FALSE,
 										  getter_AddRefs(hs));
 
   	atom = getter_AddRefs(NS_NewAtom(":-moz-vertical-box-debug"));
-	aPresContext.ProbePseudoStyleContextFor(mOuter->mContent, atom, mOuter->mStyleContext,
+	aPresContext.ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
 										  PR_FALSE,
 										  getter_AddRefs(vs));
 
@@ -1954,7 +2000,7 @@ void
 nsBoxDebugInner::AddListener()
 {
   nsCOMPtr<nsIContent> content;
-  mOuter->GetContent(getter_AddRefs(content));
+  mOuter->mInner->GetContentOf(mOuter, getter_AddRefs(content));
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
@@ -1965,17 +2011,223 @@ void
 nsBoxDebugInner::RemoveListener()
 {
   nsCOMPtr<nsIContent> content;
-  mOuter->GetContent(getter_AddRefs(content));
+  mOuter->mInner->GetContentOf(mOuter, getter_AddRefs(content));
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
   reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),kIDOMMouseMotionListenerIID);
 }
 
+void
+nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor)
+{
+    nscoord x = aPoint.x;
+    nscoord y = aPoint.y;
+
+    // get it into our coordintate system by subtracting our parents offsets.
+    nsIFrame* parent = mOuter;
+    while(parent != nsnull)
+    {
+      // if we hit a scrollable view make sure we take into account
+      // how much we are scrolled.
+      nsIScrollableView* scrollingView;
+      nsIView*           view;
+      parent->GetView(&view);
+      if (view) {
+        nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+        if (NS_SUCCEEDED(result)) {
+            nscoord xoff = 0;
+            nscoord yoff = 0;
+            scrollingView->GetScrollPosition(xoff, yoff);
+            x += xoff;
+            y += yoff;         
+        }
+      }
+
+     nsRect r;
+     parent->GetRect(r);
+     x -= r.x;
+     y -= r.y;
+     parent->GetParent(&parent);
+    }
+
+    nsRect r(0,0,mOuter->mRect.width, mOuter->mRect.height);
+
+    if (!r.Contains(nsPoint(x,y)))
+        return;
+
+        int count = 0;
+        nsIFrame* childFrame = mOuter->mFrames.FirstChild(); 
+        while (nsnull != childFrame) 
+        {    
+            nsRect r(0,0,0,0);
+            childFrame->GetRect(r);
+
+            // if we are not in the child. But in the spring above the child.
+            if (((mOuter->mHorizontal && x >= r.x && x < r.x + r.width && y < r.y) ||
+                (!mOuter->mHorizontal && y >= r.y && y < r.y + r.height && x < r.x))) {
+                //printf("y=%d, r.y=%d\n",y,r.y);
+                aCursor = NS_STYLE_CURSOR_POINTER;
+                   // found it but we already showed it.
+                    if (mDebugChild == childFrame)
+                        return;
+
+                    nsCOMPtr<nsIContent> content;
+                    mOuter->mInner->GetContentOf(childFrame, getter_AddRefs(content));
+
+                    nsString id;
+                    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
+                    char idValue[100];
+                    id.ToCString(idValue,100);
+                       
+                    nsString kClass;
+                    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, kClass);
+                    char kClassValue[100];
+                    kClass.ToCString(kClassValue,100);
+
+                    nsCOMPtr<nsIAtom> tag;
+                    content->GetTag(*getter_AddRefs(tag));
+                    nsString tagString;
+                    tag->ToString(tagString);
+                    char tagValue[100];
+                    tagString.ToCString(tagValue,100);
+
+                    printf("--------------------\n");
+                    printf("Tag='%s', id='%s' class='%s'\n", tagValue, idValue, kClassValue);
+
+                    mDebugChild = childFrame;
+                    nsCalculatedBoxInfo aSize;
+                    aSize.prefSize.width = NS_INTRINSICSIZE;
+                    aSize.prefSize.height = NS_INTRINSICSIZE;
+
+                    aSize.minSize.width = NS_INTRINSICSIZE;
+                    aSize.minSize.height = NS_INTRINSICSIZE;
+
+                    aSize.maxSize.width = NS_INTRINSICSIZE;
+                    aSize.maxSize.height = NS_INTRINSICSIZE;
+
+                    aSize.calculatedSize.width = NS_INTRINSICSIZE;
+                    aSize.calculatedSize.height = NS_INTRINSICSIZE;
+
+                    aSize.flex = -1.0;
+
+                  // add in the css min, max, pref
+                    const nsStylePosition* position;
+                    nsresult rv = childFrame->GetStyleData(eStyleStruct_Position,
+                                  (const nsStyleStruct*&) position);
+
+                    // see if the width or height was specifically set
+                    if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
+                        aSize.prefSize.width = position->mWidth.GetCoordValue();
+                    }
+
+                    if (position->mHeight.GetUnit() == eStyleUnit_Coord) {
+                        aSize.prefSize.height = position->mHeight.GetCoordValue();     
+                    }
+    
+                    // same for min size. Unfortunately min size is always set to 0. So for now
+                    // we will assume 0 means not set.
+                    if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
+                        nscoord min = position->mMinWidth.GetCoordValue();
+                        if (min != 0)
+                           aSize.minSize.width = min;
+                    }
+
+                    if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
+                        nscoord min = position->mMinHeight.GetCoordValue();
+                        if (min != 0)
+                           aSize.minSize.height = min;
+                    }
+
+                    // and max
+                    if (position->mMaxWidth.GetUnit() == eStyleUnit_Coord) {
+                        nscoord max = position->mMaxWidth.GetCoordValue();
+                        aSize.maxSize.width = max;
+                    }
+
+                    if (position->mMaxHeight.GetUnit() == eStyleUnit_Coord) {
+                        nscoord max = position->mMaxHeight.GetCoordValue();
+                        aSize.maxSize.height = max;
+                    }
+
+                    PRInt32 error;
+                    nsAutoString value;
+
+                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
+                    {
+                        value.Trim("%");
+                        aSize.flex = value.ToFloat(&error);
+                    }
+
+                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
+                    {
+                        float p2t;
+                        aPresContext.GetScaledPixelsToTwips(&p2t);
+
+                        value.Trim("%");
+
+                        aSize.prefSize.width = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+                    }
+
+                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value))
+                    {
+                        float p2t;
+                        aPresContext.GetScaledPixelsToTwips(&p2t);
+
+                        value.Trim("%");
+
+                        aSize.prefSize.height = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+                    }
+
+           
+
+                    char min[100];
+                    char pref[100];
+                    char max[100];
+                    char calc[100];
+                    char flex[100];
+
+                    GetValue(mOuter->mSprings[count].minSize,  aSize.minSize, min);
+                    GetValue(mOuter->mSprings[count].prefSize, aSize.prefSize, pref);
+                    GetValue(mOuter->mSprings[count].maxSize, aSize.maxSize, max);
+                    GetValue(mOuter->mSprings[count].calculatedSize,  aSize.calculatedSize, calc);
+                    GetValue(mOuter->mSprings[count].flex,  aSize.flex, flex);
+
+
+                    printf("min%s, pref%s, max%s, actual%s, flex=%s\n", 
+                        min,
+                        pref,
+                        max,
+                        calc,
+                        flex
+                    );
+                break;   
+            }
+          nsresult rv = childFrame->GetNextSibling(&childFrame);
+          NS_ASSERTION(rv == NS_OK,"failed to get next child");
+          count++;
+        }
+}
+
+NS_IMETHODIMP
+nsBoxFrame::GetCursor(nsIPresContext& aPresContext,
+                           nsPoint&        aPoint,
+                           PRInt32&        aCursor)
+{
+    nsresult rv = nsHTMLContainerFrame::GetCursor(aPresContext, aPoint, aCursor);
+
+    if (mInner->mDebugInner)
+        mInner->mDebugInner->DisplayDebugInfoFor(aPresContext, aPoint, aCursor);
+
+    return rv;
+}
+
 nsresult
 nsBoxDebugInner::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-
+/*
           nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aMouseEvent));
 
           PRInt32 xPx = 0;
@@ -2030,7 +2282,7 @@ nsBoxDebugInner::MouseMove(nsIDOMEvent* aMouseEvent)
                         return NS_OK;
 
                     nsCOMPtr<nsIContent> content;
-                    childFrame->GetContent(getter_AddRefs(content));
+                    mOuter->mInner->GetContentOf(childFrame, getter_AddRefs(content));
 
                     nsString id;
                     content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
@@ -2160,8 +2412,25 @@ nsBoxDebugInner::MouseMove(nsIDOMEvent* aMouseEvent)
         }
 
        // mDebugChild = nsnull;
-
+*/
         return NS_OK;
 }
+
+nsresult 
+nsBoxFrameInner::GetContentOf(nsIFrame* aFrame, nsIContent** aContent)
+{
+    // If we don't have a content node find a parent that does.
+    while(aFrame != nsnull) {
+        aFrame->GetContent(aContent);
+        if (*aContent != nsnull)
+            return NS_OK;
+
+        aFrame->GetParent(&aFrame);
+    }
+
+    NS_ERROR("Can't find a parent with a content node");
+    return NS_OK;
+}
+
 
 

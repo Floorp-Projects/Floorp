@@ -20,6 +20,7 @@
 #define nsScrollPortFrame_h___
 
 #include "nsHTMLContainerFrame.h"
+#include "nsIBox.h"
 
 /**
  * The scroll frame creates and manages the scrolling view
@@ -30,7 +31,7 @@
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsScrollPortFrame : public nsHTMLContainerFrame {
+class nsScrollPortFrame : public nsHTMLContainerFrame, public nsIBox {
 public:
   friend nsresult NS_NewScrollPortFrame(nsIFrame** aNewFrame);
 
@@ -87,6 +88,13 @@ public:
   
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+  // nsIBox methods
+  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
+
 protected:
   nsScrollPortFrame();
   virtual PRIntn GetSkipSides() const;
@@ -102,6 +110,12 @@ private:
 
   nsresult CalculateChildTotalSize(nsIFrame*            aKidFrame,
                                    nsHTMLReflowMetrics& aKidReflowMetrics);
+
+  nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize);
+
+  PRBool mNeedsRecalc;
+  nsBoxInfo mSpring;
+  PRBool mIncremental;
 };
 
 #endif /* nsScrollPortFrame_h___ */

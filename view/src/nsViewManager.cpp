@@ -1432,16 +1432,24 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
     // XXX Consolidate this code with the code above...
 //    if (aView != widgetView)
 //    {
-      do
-      {
+    // first our position
+    par->GetPosition(&x, &y);
+    trect.x += x;
+    trect.y += y;
+
+    // go up parent chain until we hit the widgetView.
+    // make sure we include the widget view in the calculation
+    while ((nsnull != par) && (par != widgetView))
+    {
+        par->GetParent(par);
+
+        if (par == nsnull)
+            break;
+
         par->GetPosition(&x, &y);
         trect.x += x;
         trect.y += y;
-
-        if (par != widgetView)
-          par->GetParent(par);
-      }
-      while ((nsnull != par) && (par != widgetView));
+    } 
 //    }
 
     // Add this rect to the widgetView's dirty region.

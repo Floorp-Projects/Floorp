@@ -66,6 +66,12 @@ public:
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                              nsIFrame**     aFrame);
 
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor);
+
+
+
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
   NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
@@ -153,7 +159,7 @@ protected:
                      nsString& aReason);
 
     virtual nsresult PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect);
-    virtual void ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
+    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
     virtual void LayoutChildrenInRect(nsRect& size);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
     virtual void BoundsCheck(const nsBoxInfo& aBoxInfo, nsRect& aRect);

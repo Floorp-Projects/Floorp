@@ -71,6 +71,11 @@ public:
                            nsGUIEvent *    aEvent,
                            nsEventStatus&  aEventStatus);
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow);
 
 
 }; // class nsScrollbarFrame

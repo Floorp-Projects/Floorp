@@ -382,6 +382,7 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
         mImageLoader.UpdateURLSpec(&aPresContext, src);
         //PRUint32 loadStatus = mImageLoader.GetLoadStatus();
 
+        /*
         // if the image is the same size only redraw otherwise reflow
         PRBool reflow = PR_TRUE;
 
@@ -412,6 +413,7 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
             }
           }
         }
+        */
   
   }
 }

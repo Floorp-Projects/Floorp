@@ -26,12 +26,14 @@
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsScrollingView.h"
+#include "nsScrollPortView.h"
 
 #include "nsIModule.h"
 
 static NS_DEFINE_CID(kCViewManager, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_CID(kCView, NS_VIEW_CID);
 static NS_DEFINE_CID(kCScrollingView, NS_SCROLLING_VIEW_CID);
+static NS_DEFINE_IID(kCScrollPortView, NS_SCROLL_PORT_VIEW_CID);
 static NS_DEFINE_CID(kCComponentManager, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -85,7 +87,10 @@ nsresult nsViewFactory::CreateInstance(nsISupports *aOuter,
 		view = new nsView();
 	} else if (mClassID.Equals(kCScrollingView)) {
 		view = new nsScrollingView();
+	} else if (mClassID.Equals(kCScrollPortView)) {
+		view = new nsScrollPortView(); 
 	}
+
 	if (nsnull == view)
 		return NS_ERROR_OUT_OF_MEMORY;  
 	rv = view->QueryInterface(aIID, aResult);
@@ -129,7 +134,7 @@ NSGetFactory(nsISupports* serviceMgr,
 			rv = NS_NewGenericFactory(&factory, &nsViewManagerConstructor);
 			if (NS_SUCCEEDED(rv))
 				*aFactory = factory;
-		} else if (aClass.Equals(kCView) || aClass.Equals(kCScrollingView)) {
+		} else if (aClass.Equals(kCView) || aClass.Equals(kCScrollingView) || aClass.Equals(kCScrollPortView)) {
 			nsViewFactory* factory = new nsViewFactory(aClass);
 			if (nsnull == factory) {
 				rv = NS_ERROR_OUT_OF_MEMORY;
@@ -262,7 +267,7 @@ nsViewModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass
             rv = factory->QueryInterface(aIID, aFactory);
         }
     }
-    else if (aClass.Equals(kCView) || aClass.Equals(kCScrollingView))
+    else if (aClass.Equals(kCView) || aClass.Equals(kCScrollingView) || aClass.Equals(kCScrollPortView))
     {
         rv = NS_ERROR_OUT_OF_MEMORY;
         nsViewFactory* factory = new nsViewFactory(aClass);
@@ -300,6 +305,10 @@ nsViewModule::RegisterSelf(nsIComponentManager *aCompMgr,
     rv = aCompMgr->RegisterComponentSpec(kCScrollingView, "Scrolling View",
                                          "component://netscape/scrolling-view",
                                          location, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    rv = aCompMgr->RegisterComponentSpec(kCScrollPortView, "Scroll Port View",
+                                         "component://netscape/scroll-port-view",
+                                         location, PR_TRUE, PR_TRUE);
 #ifdef DEBUG_dp
     printf("done.\n");
 #endif
@@ -317,6 +326,8 @@ nsViewModule::UnregisterSelf(nsIComponentManager *aCompMgr,
     rv = aCompMgr->UnregisterComponentSpec(kCView, location);
     if (NS_FAILED(rv)) return rv;
     rv = aCompMgr->UnregisterComponentSpec(kCScrollingView, location);
+    if (NS_FAILED(rv)) return rv;
+    rv = aCompMgr->UnregisterComponentSpec(kCScrollPortView, location);
     return rv;
 }
 

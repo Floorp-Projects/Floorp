@@ -42,6 +42,7 @@
 #include "nsIStyleRule.h"
 #include "nsHTMLValue.h"
 #include "nsIAnonymousContent.h"
+#include "nsIView.h"
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 static NS_DEFINE_IID(kIStyledContentIID,               NS_ISTYLEDCONTENT_IID);
@@ -211,21 +212,14 @@ AnonymousElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode)
 {
-
-    // get the document
-    nsCOMPtr<nsIDocument> document;
-    aParent->GetDocument(*getter_AddRefs(document));
-    
+   
     // create the xml element
     nsCOMPtr<nsIXMLContent> content;
     //NS_NewXMLElement(getter_AddRefs(content), aTag);
     content = new AnonymousElement(aTag);
 
     content->SetNameSpaceID(aNameSpaceId);
-    
-    // set the document
-    content->SetDocument(document, PR_TRUE);
-    
+        
     aNewNode = content;
 
   /*
@@ -283,7 +277,7 @@ nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
     aAnonymousChildren.AppendElement(content);
 
     NS_CreateAnonymousNode(mContent, nsXULAtoms::slider, nsXULAtoms::nameSpaceID, content);
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_FALSE);
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
     aAnonymousChildren.AppendElement(content);
 
     NS_CreateAnonymousNode(mContent, nsXULAtoms::scrollbarbutton, nsXULAtoms::nameSpaceID, content);
@@ -295,6 +289,21 @@ nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsScrollbarFrame::Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
+  nsIView* view;
+  GetView(&view);
+  view->SetContentTransparency(PR_TRUE);
+  return rv;
+}
 
 
 NS_IMETHODIMP

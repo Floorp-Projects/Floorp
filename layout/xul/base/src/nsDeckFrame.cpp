@@ -296,7 +296,7 @@ nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 }
 
 void
-nsDeckFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
+nsDeckFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
 {
   if (aDesiredSize.width > aRect.width) {
     aRect.width = aDesiredSize.width;
