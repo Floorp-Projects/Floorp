@@ -126,6 +126,7 @@ public:
 //    }
 
 #include "prcmon.h"
+#include "nsError.h"
 
 class nsAutoMonitor {
 public:
