@@ -66,6 +66,7 @@
 /* BSD/OS 4.3 and newer all have IPv6 support */
 #if _BSDI_VERSION >= 200105
 #define _PR_INET6
+#define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETIPNODEBYNAME
 #define _PR_HAVE_GETIPNODEBYADDR
 #define _PR_INET6_PROBE

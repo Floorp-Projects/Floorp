@@ -118,6 +118,7 @@ extern PRInt32 _PR_ia64_AtomicSet(PRInt32 *val, PRInt32 newval);
 #endif
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
 #define _PR_INET6
+#define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETHOSTBYNAME2
 #define _PR_INET6_PROBE
 #endif

@@ -90,6 +90,7 @@
 
 #if __FreeBSD_version >= 400014
 #define _PR_INET6
+#define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETHOSTBYNAME2
 #define _PR_INET6_PROBE
 #endif

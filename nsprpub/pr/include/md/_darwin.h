@@ -61,6 +61,27 @@
 #define _PR_NO_LARGE_FILES
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
 
+#define _PR_INET6
+/*
+ * I'd prefer to use getipnodebyname and getipnodebyaddr but the
+ * getipnodebyname(3) man page on Mac OS X 10.2 says they are not
+ * thread-safe.  AI_V4MAPPED|AI_ADDRCONFIG doesn't work either.
+ */
+#define _PR_HAVE_GETHOSTBYNAME2
+/*
+ * On Mac OS X 10.2, gethostbyaddr fails with h_errno=NO_RECOVERY
+ * if you pass an IPv4-mapped IPv6 address to it.
+ */
+#define _PR_GHBA_DISALLOW_V4MAPPED
+/* socket(AF_INET6) fails with EPROTONOSUPPORT on Mac OS X 10.1. */
+#if MACOS_DEPLOYMENT_TARGET < 100200
+#define _PR_INET6_PROBE
+#endif
+/* Mac OS X 10.2 has inet_ntop and inet_pton. */
+#if MACOS_DEPLOYMENT_TARGET >= 100200
+#define _PR_HAVE_INET_NTOP
+#endif
+
 #define USE_SETJMP
 
 #if !defined(_PR_PTHREADS)

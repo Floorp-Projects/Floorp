@@ -72,6 +72,7 @@
 #define _PR_USE_POLL
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #ifdef _PR_INET6
+#define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETHOSTBYNAME2
 #endif
 #define _PR_HAVE_SYSV_SEMAPHORES

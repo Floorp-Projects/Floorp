@@ -106,7 +106,9 @@ struct ip_mreq {
 #define _PR_HAVE_GETIPNODEBYNAME
 #define _PR_HAVE_GETIPNODEBYADDR
 #define _PR_INET6_PROBE
-#ifndef _PR_INET6
+#ifdef _PR_INET6
+#define _PR_HAVE_INET_NTOP
+#else
 #define AF_INET6 26
 #define AI_V4MAPPED 0x00000010
 #define AI_ALL      0x00000008

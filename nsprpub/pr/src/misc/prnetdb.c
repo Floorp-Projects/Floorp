@@ -182,7 +182,10 @@ static PRBool _pr_have_inet6_if = PR_FALSE;
 
 #undef DEBUG_QUERY_IFS
 
-#if defined(AIX)
+#if defined(AIX) \
+    || (defined(DARWIN) && (!defined(HAVE_GETIFADDRS) \
+        || (defined(MACOS_DEPLOYMENT_TARGET) \
+        && MACOS_DEPLOYMENT_TARGET < 100200)))
 
 /*
  * Use SIOCGIFCONF ioctl on platforms that don't have routing
@@ -288,7 +291,8 @@ _pr_QueryNetIfs(void)
             } 
         } else if (sa->sa_family == AF_INET6) {
             struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sa;
-            if (!IN6_IS_ADDR_LOOPBACK(&sin6->sin6_addr)) {
+            if (!IN6_IS_ADDR_LOOPBACK(&sin6->sin6_addr)
+                    && !IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr)) {
                 _pr_have_inet6_if = PR_TRUE;
             } 
         }
@@ -313,6 +317,75 @@ _pr_QueryNetIfs(void)
         ifr = (struct ifreq *)(((char *)sa) + sa_len);
     }
     PR_Free(buf);
+}
+
+#elif (defined(DARWIN) && defined(HAVE_GETIFADDRS))
+
+/*
+ * Use the BSD getifaddrs function.
+ */
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+
+#ifdef DEBUG_QUERY_IFS
+static void
+_pr_PrintIfaddrs(struct ifaddrs *ifa)
+{
+    struct sockaddr *sa;
+    const char* family;
+    void *addrp;
+    char addrstr[64];
+
+    sa = ifa->ifa_addr;
+    if (sa->sa_family == AF_INET) {
+        struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+        family = "inet";
+        addrp = &sin->sin_addr;
+    } else if (sa->sa_family == AF_INET6) {
+        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
+        family = "inet6";
+        addrp = &sin6->sin6_addr;
+    } else {
+        return;  /* skip if not AF_INET or AF_INET6 */
+    }
+    inet_ntop(sa->sa_family, addrp, addrstr, sizeof(addrstr));
+    printf("%s: %s %s\n", ifa->ifa_name, family, addrstr);
+}
+#endif
+
+static void
+_pr_QueryNetIfs(void)
+{
+    struct ifaddrs *ifp;
+    struct ifaddrs *ifa;
+
+    if (getifaddrs(&ifp) == -1) {
+        return;
+    }
+    for (ifa = ifp; ifa; ifa = ifa->ifa_next) {
+        struct sockaddr *sa;
+
+#ifdef DEBUG_QUERY_IFS
+        _pr_PrintIfaddrs(ifa);
+#endif
+        sa = ifa->ifa_addr;
+        if (sa->sa_family == AF_INET) {
+            struct sockaddr_in *sin = (struct sockaddr_in *) sa;
+            if (sin->sin_addr.s_addr != htonl(INADDR_LOOPBACK)) {
+                _pr_have_inet_if = 1;
+            } 
+        } else if (sa->sa_family == AF_INET6) {
+            struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sa;
+            if (!IN6_IS_ADDR_LOOPBACK(&sin6->sin6_addr)
+                    && !IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr)) {
+                _pr_have_inet6_if = 1;
+            } 
+        }
+    } 
+    freeifaddrs(ifp);
 }
 
 #else  /* default */
@@ -887,6 +960,10 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 #else
 		af = AF_INET;
 #endif
+#if defined(_PR_GHBA_DISALLOW_V4MAPPED)
+		if (_PR_IN6_IS_ADDR_V4MAPPED(&hostaddr->ipv6.ip))
+			af = AF_INET;
+#endif
 	}
 	else
 	{
@@ -1370,7 +1447,7 @@ PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val)
     return PR_FALSE;
 }
 
-#ifndef _PR_INET6
+#ifndef _PR_HAVE_INET_NTOP
 #define XX 127
 static const unsigned char index_hex[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
@@ -1610,14 +1687,14 @@ static const char *V6AddrToString(
 #undef STUFF    
 }
 
-#endif /* !_PR_INET6 */
+#endif /* !_PR_HAVE_INET_NTOP */
 
 PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
 {
     PRStatus status = PR_SUCCESS;
     PRIntn rv;
 
-#if defined(_PR_INET6)
+#if defined(_PR_HAVE_INET_NTOP)
     rv = inet_pton(AF_INET6, string, &addr->ipv6.ip);
     if (1 == rv)
     {
@@ -1640,7 +1717,7 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
             status = PR_FAILURE;
         }
     }
-#else /* _PR_INET6 */
+#else /* _PR_HAVE_INET_NTOP */
     rv = StringToV6Addr(string, &addr->ipv6.ip);
     if (1 == rv) {
         addr->raw.family = PR_AF_INET6;
@@ -1664,7 +1741,7 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         status = PR_FAILURE;
     }
-#endif /* _PR_INET6 */
+#endif /* _PR_HAVE_INET_NTOP */
 
     return status;
 }
@@ -1674,7 +1751,7 @@ PR_IMPLEMENT(PRStatus) PR_NetAddrToString(
 {
     if (PR_AF_INET6 == addr->raw.family)
     {
-#if defined(_PR_INET6)
+#if defined(_PR_HAVE_INET_NTOP)
         if (NULL == inet_ntop(AF_INET6, &addr->ipv6.ip, string, size))
 #else
         if (NULL == V6AddrToString(&addr->ipv6.ip, string, size))
