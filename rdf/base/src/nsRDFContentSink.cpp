@@ -176,12 +176,16 @@ public:
     NS_IMETHOD SetDataSource(nsIRDFDataSource* aDataSource);
     NS_IMETHOD GetDataSource(nsIRDFDataSource*& aDataSource);
 
-protected:
     // pseudo constants
     static PRInt32 gRefCnt;
     static nsIRDFService* gRDFService;
     static nsIRDFContainerUtils* gRDFContainerUtils;
     static nsIRDFResource* kRDF_type;
+    static nsIRDFResource* kRDF_instanceOf; // XXX should be RDF:type
+    static nsIRDFResource* kRDF_Alt;
+    static nsIRDFResource* kRDF_Bag;
+    static nsIRDFResource* kRDF_Seq;
+    static nsIRDFResource* kRDF_nextVal;
 
     static nsIAtom* kAboutAtom;
     static nsIAtom* kIdAtom;
@@ -194,6 +198,7 @@ protected:
     static nsIAtom* kAltAtom;
     static nsIAtom* kLiAtom;
 
+protected:
     // Text management
     nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                        PRBool* aDidFlush=nsnull);
@@ -233,6 +238,10 @@ protected:
     nsresult GetResourceAttribute(const nsIParserNode& aNode, nsIRDFResource** aResource);
     nsresult AddProperties(const nsIParserNode& aNode, nsIRDFResource* aSubject);
 
+    enum eContainerType { eBag, eSeq, eAlt };
+    nsresult InitContainer(nsIRDFResource* aContainerType, nsIRDFResource* aContainer);
+    nsresult ReinitContainer(nsIRDFResource* aContainerType, nsIRDFResource* aContainer);
+
     virtual nsresult OpenRDF(const nsIParserNode& aNode);
     virtual nsresult OpenObject(const nsIParserNode& aNode);
     virtual nsresult OpenProperty(const nsIParserNode& aNode);
@@ -260,6 +269,11 @@ PRInt32         RDFContentSinkImpl::gRefCnt = 0;
 nsIRDFService*  RDFContentSinkImpl::gRDFService;
 nsIRDFContainerUtils* RDFContentSinkImpl::gRDFContainerUtils;
 nsIRDFResource* RDFContentSinkImpl::kRDF_type;
+nsIRDFResource* RDFContentSinkImpl::kRDF_instanceOf;
+nsIRDFResource* RDFContentSinkImpl::kRDF_Alt;
+nsIRDFResource* RDFContentSinkImpl::kRDF_Bag;
+nsIRDFResource* RDFContentSinkImpl::kRDF_Seq;
+nsIRDFResource* RDFContentSinkImpl::kRDF_nextVal;
 
 nsIAtom* RDFContentSinkImpl::kAboutAtom;
 nsIAtom* RDFContentSinkImpl::kIdAtom;
@@ -296,7 +310,12 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
-            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
+            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
+            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
+            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
+            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
+            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
+            rv = gRDFService->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
         }
 
 
@@ -1138,6 +1157,93 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
     return NS_OK;
 }
 
+// XXX Wish there was a better macro in nsCom.h...
+#if defined(XP_PC)
+#define STDCALL __stdcall
+#else
+#define STDCALL
+#endif
+
+typedef nsresult (STDCALL nsIRDFContainerUtils::*nsContainerTestFn)(nsIRDFDataSource* aDataSource,
+                                                                    nsIRDFResource* aResource,
+                                                                    PRBool* aResult);
+
+typedef nsresult (STDCALL nsIRDFContainerUtils::*nsMakeContainerFn)(nsIRDFDataSource* aDataSource,
+                                                                    nsIRDFResource* aContainer,
+                                                                    nsIRDFContainer** aResult);
+
+struct ContainerInfo {
+    nsIRDFResource**  mType;
+    nsContainerTestFn mTestFn;
+    nsMakeContainerFn mMakeFn;
+};
+
+ContainerInfo gContainerInfo[] = {
+    { &RDFContentSinkImpl::kRDF_Alt, &nsIRDFContainerUtils::IsAlt, &nsIRDFContainerUtils::MakeAlt },
+    { &RDFContentSinkImpl::kRDF_Bag, &nsIRDFContainerUtils::IsBag, &nsIRDFContainerUtils::MakeBag },
+    { &RDFContentSinkImpl::kRDF_Seq, &nsIRDFContainerUtils::IsSeq, &nsIRDFContainerUtils::MakeSeq },
+    { 0, 0, 0 },
+};
+
+nsresult
+RDFContentSinkImpl::InitContainer(nsIRDFResource* aContainerType, nsIRDFResource* aContainer)
+{
+    // Do the right kind of initialization based on the container
+    // 'type' resource, and the state of the container (i.e., 'make' a
+    // new container vs. 'reinitialize' the container).
+    nsresult rv;
+
+    for (ContainerInfo* info = gContainerInfo; info->mType != 0; ++info) {
+        if (*info->mType != aContainerType)
+            continue;
+
+        PRBool isContainer;
+        rv = (gRDFContainerUtils->*(info->mTestFn))(mDataSource, aContainer, &isContainer);
+        if (isContainer) {
+            rv = ReinitContainer(aContainerType, aContainer);
+        }
+        else {
+            rv = (gRDFContainerUtils->*(info->mMakeFn))(mDataSource, aContainer, nsnull);
+        }
+        return rv;
+    }
+
+    NS_NOTREACHED("not an RDF container type");
+    return NS_ERROR_FAILURE;
+}
+
+
+
+nsresult
+RDFContentSinkImpl::ReinitContainer(nsIRDFResource* aContainerType, nsIRDFResource* aContainer)
+{
+    // Mega-kludge to deal with the fact that Make[Seq|Alt|Bag] is
+    // idempotent, and as such, containers will have state (e.g.,
+    // RDF:nextVal) maintained in the graph across loads. This
+    // re-initializes each container's RDF:nextVal to '1', and 'marks'
+    // the container as such.
+    nsresult rv;
+
+    nsCOMPtr<nsIRDFLiteral> one;
+    rv = gRDFService->GetLiteral(nsAutoString("1").GetUnicode(), getter_AddRefs(one));
+    if (NS_FAILED(rv)) return rv;
+
+    // Re-initialize the 'nextval' property
+    nsCOMPtr<nsIRDFNode> nextval;
+    rv = mDataSource->GetTarget(aContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(nextval));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mDataSource->Change(aContainer, kRDF_nextVal, nextval, one);
+    if (NS_FAILED(rv)) return rv;
+
+    // Re-mark as a container. XXX should be kRDF_type
+    rv = mDataSource->Assert(aContainer, kRDF_instanceOf, aContainerType, PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to mark container as such");
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // RDF-specific routines used to build the model
@@ -1204,17 +1310,17 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
         }
         else if (tag.get() == kBagAtom) {
             // it's a bag container
-            gRDFContainerUtils->MakeBag(mDataSource, rdfResource, nsnull);
+            InitContainer(kRDF_Bag, rdfResource);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else if (tag.get() == kSeqAtom) {
             // it's a seq container
-            gRDFContainerUtils->MakeSeq(mDataSource, rdfResource, nsnull);
+            InitContainer(kRDF_Seq, rdfResource);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else if (tag.get() == kAltAtom) {
             // it's an alt container
-            gRDFContainerUtils->MakeAlt(mDataSource, rdfResource, nsnull);
+            InitContainer(kRDF_Alt, rdfResource);
             mState = eRDFContentSinkState_InContainerElement;
         }
         else {
