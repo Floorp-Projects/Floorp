@@ -214,6 +214,7 @@ protected:
 
   static PRUint8 gLexTable[256];
   static void BuildLexTable();
+  static PRBool CheckLexTable(PRInt32 aChar, PRUint8 aBit, PRUint8* aLexTable);
 };
 
 #endif /* nsCSSScanner_h___ */
