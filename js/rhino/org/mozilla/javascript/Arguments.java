@@ -1,4 +1,3 @@
-
 /* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -16,6 +15,7 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 package org.mozilla.javascript;
 
 /**
