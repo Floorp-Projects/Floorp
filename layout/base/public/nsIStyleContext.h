@@ -44,7 +44,7 @@ class nsISupportsArray;
 struct nsStyleFont : public nsStyleStruct {
   nsFont  mFont;        // [inherited]
   nsFont  mFixedFont;   // [inherited]
-  PRUint8 mThreeD;      // [inherited] XXX fold this into nsFont or nuke it
+  PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
 
 protected:
   nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont);
