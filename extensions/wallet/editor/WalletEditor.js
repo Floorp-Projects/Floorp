@@ -360,6 +360,10 @@ function SchemaSelected()
   document.getElementById("addEntry").setAttribute("style", "display: inline;")
   document.getElementById("removeEntry").setAttribute("style", "display: inline;")
 
+  // display buttons next to synonym tree
+  document.getElementById("addSynonym").setAttribute("style", "display: inline;");
+  document.getElementById("removeSynonym").setAttribute("style", "display: inline;");
+
   // enable certain buttons
   document.getElementById("removeSchema").setAttribute("disabled", "false")
   document.getElementById("addEntry").setAttribute("disabled", "false")
@@ -376,10 +380,6 @@ function EntrySelected()
   var entryName = Decrypt(strings[entries[schemas[schemanumb]+entrynumb]+1]);
   var synonymText = document.getElementById("synonymtext");
   synonymText.setAttribute("value", synonymText.getAttribute("value2") + entryName);
-
-  // display buttons next to synonym tree
-  document.getElementById("addSynonym").setAttribute("style", "display: inline;");
-  document.getElementById("removeSynonym").setAttribute("style", "display: inline;");
 
   // enable certain buttons
   document.getElementById("removeEntry").setAttribute("disabled", "false")
@@ -640,8 +640,11 @@ function AddSchema0() {
 /* low-level add-entry routine */ 
 function AddEntry0() {
   var i;
+  var schemaId = document.getElementById("schematree").selectedItems[0].getAttribute("id");
+  var schemanumb =parseInt(schemaId.substring(5, schemaId.length));
+  var schemaName = strings[entries[schemas[schemanumb]]];
   var text = myPrompt
-    (bundle.GetStringFromName("EnterNewEntry"), "",
+    (bundle.GetStringFromName("EnterNewEntry")+" "+schemaName, "",
      bundle.GetStringFromName("AddingTitle"));
   if (text == "") {
     return;
@@ -674,8 +677,13 @@ function AddEntry0() {
 
 /* low-level add-synonym routine */
 function AddSynonym0() {
+  var schemaId = document.getElementById("schematree").selectedItems[0].getAttribute("id");
+  var schemanumb =parseInt(schemaId.substring(5, schemaId.length));
+  var entryId = document.getElementById("entrytree").selectedItems[0].getAttribute("id");
+  var entrynumb =parseInt(entryId.substring(5, entryId.length));
+  var entryName = Decrypt(strings[entries[schemas[schemanumb]+entrynumb]+1]);
   var text = myPrompt
-    (bundle.GetStringFromName("EnterNewSynonym"), "",
+    (bundle.GetStringFromName("EnterNewSynonym")+" "+entryName, "",
      bundle.GetStringFromName("AddingTitle"));
   if (text == "") {
     return;
