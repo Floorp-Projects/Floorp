@@ -24,6 +24,7 @@
 #include "nsRDFCID.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 NS_BEGIN_EXTERN_C
 
@@ -46,7 +47,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::QueryInterface(REFNSIID aIID, void** 
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsIStreamListener::GetIID()))
+	if (aIID.Equals(nsIStreamListener::GetIID()) || aIID.Equals(kISupportsIID))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
 	}              
