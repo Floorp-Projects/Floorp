@@ -23,10 +23,10 @@ class nsSoftwareUpdate: public nsISoftwareUpdate
         nsSoftwareUpdate();
         ~nsSoftwareUpdate();
         
+        static nsSoftwareUpdate *GetInstance();
+        
         NS_DECL_ISUPPORTS
 
-            NS_IMETHOD Startup();
-            NS_IMETHOD Shutdown();
             NS_IMETHOD InstallJar(nsInstallInfo *installInfo);
             NS_IMETHOD InstallJar(const nsString& fromURL, 
                                   const nsString& flags, 
@@ -35,8 +35,19 @@ class nsSoftwareUpdate: public nsISoftwareUpdate
 
 
     private:
+        nsresult Startup();
+        nsresult Shutdown();
+        
         nsresult UpdateInstallJarQueue();
         nsresult DeleteScheduledNodes();
+        
+        PRInt32           mInstalling;
+        nsVector*         mJarInstallQueue;
+
+        static nsSoftwareUpdate* mInstance;
+        
+        
+
 };
 
 

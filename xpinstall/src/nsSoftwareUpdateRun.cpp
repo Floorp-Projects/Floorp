@@ -15,25 +15,20 @@
 
 #include "nsRepository.h"
 
-#include "nsIWebShellWindow.h"
+#include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 
-#include "nsIServiceManager.h"
-#include "nsAppShellCIDs.h"
-#include "nsIAppShellService.h"
 
 #include "nsIURL.h"
 
 extern PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, const char* args);
 
-static NS_DEFINE_IID(kWebShellWindowIID, NS_IWEBSHELL_WINDOW_IID);
+static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
+static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
-
-static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
 
 /* ReadFileIntoBuffer
  * given a file name, reads it into buffer
@@ -104,12 +99,10 @@ extern "C" NS_EXPORT PRInt32 Install(const char* jarFile, const char* flags, con
     // Open the jarfile.
     void* hZip;
 
-    PRInt32 result = ZIP_OpenArchive(jarFile ,  &hZip);
+    PRInt32 rv = ZIP_OpenArchive(jarFile ,  &hZip);
     
-    if (result != ZIP_OK)
-    {
-        return result;
-    }
+    if (rv != ZIP_OK)
+        return rv;
 
 
     // Read manifest file for Install Script filename.
@@ -121,81 +114,71 @@ extern "C" NS_EXPORT PRInt32 Install(const char* jarFile, const char* flags, con
     installJSFileSpec.MakeUnique();
 
     // Extract the install.js file.
-    result  = ZIP_ExtractFile( hZip, "install.js", installJSFileSpec.GetCString() );
-    if (result != ZIP_OK)
-    {
-        return result;
-    }
-
-    nsIAppShellService      *appShell = nsnull;
-    nsIURL                  *url;
-    nsIWidget               *newWindow;
-    nsIWebShellWindow       *webShellWindow;
-    nsIWebShell             *aWebShell;
-
-    nsresult rv = NS_NewURL(&url, "resource:/res/install/progress.xul");
-    if (NS_FAILED(rv)) 
+    rv  = ZIP_ExtractFile( hZip, "install.js", installJSFileSpec.GetCString() );
+    if (rv != ZIP_OK)
     {
         return rv;
     }
+
+    nsIWebShell*      aWebShell  = nsnull;
+    nsIBrowserWindow* aWindow         = nsnull;
     
-    // Create a new window so that we can display UI.
-
-    rv = nsServiceManager::GetService( kAppShellServiceCID, 
-                                       kIAppShellServiceIID,
-                                       (nsISupports**) &appShell);
-
+    rv = nsComponentManager::CreateInstance(kBrowserWindowCID, 
+                                            nsnull,
+                                            kIBrowserWindowIID,
+                                            (void**) &aWindow);
+  
     if (NS_FAILED(rv)) 
-        return rv;
+    {
+        goto bail;
+    }
+  
+    aWindow->Init(nsnull, nsnull, nsRect(0, 0, 300, 300), PRUint32(~0), PR_FALSE);
+ 
+    rv = aWindow->GetWebShell(aWebShell);
 
-    appShell->CreateTopLevelWindow( nsnull, url, nsString("CID"), newWindow, nsnull, nsnull, 375, 375);
-
-    NS_RELEASE(url);
-    
-    
     if (rv == NS_OK)
     {
-//         rv = newWindow->GetWebShell(aWebShell);
+        nsIScriptContextOwner*  scriptContextOwner;
+        nsIScriptContext*       scriptContext;
 
+        rv = aWebShell->QueryInterface( kIScriptContextOwnerIID, (void**)&scriptContextOwner); 
+    
         if (rv == NS_OK)
         {
-            nsIScriptContextOwner*  scriptContextOwner;
-            nsIScriptContext*       scriptContext;
+            rv = scriptContextOwner->GetScriptContext(&scriptContext);
 
-            rv = aWebShell->QueryInterface( kIScriptContextOwnerIID, (void**)&scriptContextOwner); 
-            
-            if (rv == NS_OK)
+            if (NS_OK == rv) 
             {
-                rv = scriptContextOwner->GetScriptContext(&scriptContext);
+        
+                InitXPInstallObjects(scriptContext, jarFile, args );
 
-                if (NS_OK == rv) 
-                {
-                
-                    InitXPInstallObjects(scriptContext, jarFile, args );
+                char* buffer;
+                unsigned long bufferLength;
+        
+                ReadFileIntoBuffer(installJSFileSpec, &buffer, &bufferLength);
 
-                    char* buffer;
-                    unsigned long bufferLength;
-                
-                    ReadFileIntoBuffer(installJSFileSpec, &buffer, &bufferLength);
+                nsAutoString            retval;
+                PRBool                  isUndefined;
+                // We expected this to block.
+                scriptContext->EvaluateString(nsString(buffer), nsnull, 0, retval, &isUndefined);
 
-                    nsAutoString            retval;
-                    PRBool                  isUndefined;
-                    // We expected this to block.
-                    scriptContext->EvaluateString(nsString(buffer), nsnull, 0, retval, &isUndefined);
-
-                    PR_FREEIF(buffer);
-                    NS_RELEASE(scriptContext);
-                }
-            
-                NS_RELEASE(scriptContextOwner);
+                PR_FREEIF(buffer);
+                NS_RELEASE(scriptContext);
             }
-
+    
+            NS_RELEASE(scriptContextOwner);
         }
-        appShell->CloseTopLevelWindow(newWindow);
+        // close and release window.
+//        NS_RELEASE(aWebShell);
     }
-    else
+
+bail:
+
+    if (aWindow != nsnull)
     {
-        return -1;
+        aWindow->Close();
+        NS_RELEASE(aWindow);
     }
 
     ZIP_CloseArchive(&hZip);

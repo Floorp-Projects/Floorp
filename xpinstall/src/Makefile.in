@@ -29,7 +29,6 @@ REQUIRES        = dom js netlib raptor xpcom
 
 CPPSRCS = \
     nsSoftwareUpdate.cpp        \
-    nsSoftwareUpdateQueue.cpp   \
     nsInstall.cpp               \
     nsInstallDelete.cpp         \
     nsInstallExecute.cpp        \

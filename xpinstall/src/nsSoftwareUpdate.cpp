@@ -68,62 +68,51 @@ static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
-static PRInt32  gLockCnt     = 0;
-
-static PRInt32  gStarted     = 0;
-static PRInt32  gInstalling  = 0;
-static PRInt32  gDownloading = 0;
-
-static nsVector* gJarInstallQueue  = nsnull;
-static nsVector* gJarDownloadQueue = nsnull;
 
 
 
+nsSoftwareUpdate* nsSoftwareUpdate::mInstance = NULL;
 
 nsSoftwareUpdate::nsSoftwareUpdate()
 {
     NS_INIT_ISUPPORTS();
     
-    if (gStarted == 0)
-        Startup();
-    
-    PR_AtomicIncrement(&gStarted);
-
+    Startup();
 }
 nsSoftwareUpdate::~nsSoftwareUpdate()
 {
-    PR_AtomicDecrement(&gStarted);
-
-    if (gStarted == 0)
-        Shutdown();
+    Shutdown();
 }
+
+nsSoftwareUpdate *nsSoftwareUpdate::GetInstance()
+{
+  if (mInstance == NULL) 
+  {
+    mInstance = new nsSoftwareUpdate();
+  }
+  return mInstance;
+}
+
 
 NS_IMPL_ISUPPORTS(nsSoftwareUpdate,NS_ISOFTWAREUPDATE_IID)
 
 
-NS_IMETHODIMP
+nsresult
 nsSoftwareUpdate::Startup()
 {
     /***************************************/
     /* Create us a queue                   */
     /***************************************/
-   
-    gJarInstallQueue = new nsVector();
+    mInstalling = nsnull;
+
+    mJarInstallQueue = new nsVector();
 
     /***************************************/
     /* Add us to the Javascript Name Space */
     /***************************************/
    
-    nsIScriptNameSetRegistry *scriptNameSet;
-    nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                                   kIScriptNameSetRegistryIID,
-                                                  (nsISupports **)&scriptNameSet);
-    if (NS_OK == result) 
-    {
-        nsSoftwareUpdateNameSet* nameSet = new nsSoftwareUpdateNameSet();
-        scriptNameSet->AddExternalNameSet(nameSet);
-    }
-
+    new nsSoftwareUpdateNameSet();
+    
     /***************************************/
     /* Register us with NetLib             */
     /***************************************/
@@ -143,7 +132,7 @@ nsSoftwareUpdate::Startup()
     /* Stupid Hack to test js env*/
     /***************************************/
     // FIX:  HACK HACK HACK!
-#if 1    
+#if 0  
     nsSpecialSystemDirectory jarFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
     jarFile += "test.jar";
     if (jarFile.Exists())
@@ -161,21 +150,22 @@ nsSoftwareUpdate::Startup()
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsSoftwareUpdate::Shutdown()
 {
-    if (gJarInstallQueue != nsnull)
+    if (mJarInstallQueue != nsnull)
     {
         PRUint32 i=0;
-        for (; i < gJarInstallQueue->GetSize(); i++) 
+        for (; i < mJarInstallQueue->GetSize(); i++) 
         {
-            nsInstallInfo* element = (nsInstallInfo*)gJarInstallQueue->Get(i);
+            nsInstallInfo* element = (nsInstallInfo*)mJarInstallQueue->Get(i);
+            //FIX:  need to add to registry....
             delete element;
         }
 
-        gJarInstallQueue->RemoveAll();
-        delete (gJarInstallQueue);
-        gJarInstallQueue = nsnull;
+        mJarInstallQueue->RemoveAll();
+        delete (mJarInstallQueue);
+        mJarInstallQueue = nsnull;
     }
 
     NR_ShutdownRegistry();
@@ -198,7 +188,7 @@ nsSoftwareUpdate::InstallJar(  const nsString& fromURL,
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallJar(nsInstallInfo *installInfo)
 {
-    gJarInstallQueue->Add( installInfo );
+    mJarInstallQueue->Add( installInfo );
     UpdateInstallJarQueue();
 
     return NS_OK;
@@ -208,20 +198,20 @@ nsSoftwareUpdate::InstallJar(nsInstallInfo *installInfo)
 nsresult
 nsSoftwareUpdate::UpdateInstallJarQueue()
 {
-    if (gInstalling == 0)
+    if (mInstalling == 0)
     {
-        gInstalling++;
+        mInstalling++;
         
-        if (gJarInstallQueue->GetSize() <= 0)
+        if (mJarInstallQueue->GetSize() <= 0)
         {
-            gInstalling--;
+            mInstalling--;
             return 0;
         }
-        nsInstallInfo *nextInstall = (nsInstallInfo*)gJarInstallQueue->Get(0);
+        nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
         
         if (nextInstall == nsnull)
         {
-            gInstalling--;
+            mInstalling--;
             return 0;
         }
         
@@ -230,9 +220,9 @@ nsSoftwareUpdate::UpdateInstallJarQueue()
             Install( nextInstall );
           
             delete nextInstall;
-            gJarInstallQueue->Remove(0);
+            mJarInstallQueue->Remove(0);
         
-            gInstalling--;
+            mInstalling--;
 
             // We are done with install the last jar, let see if there are any more.
             UpdateInstallJarQueue();  // FIX: Maybe we should do this different to avoid blowing our stack?
@@ -280,15 +270,19 @@ nsSoftwareUpdateFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void
 
     *aResult = NULL;
 
-    nsSoftwareUpdate *inst = new nsSoftwareUpdate();
+    nsSoftwareUpdate *inst = nsSoftwareUpdate::GetInstance();
 
     if (inst == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult result =  inst->QueryInterface(aIID, aResult);
 
-    if (result != NS_OK)
-        delete inst;
+    if (NS_FAILED(result)) 
+    {
+        *aResult = NULL;
+    }
+
+    NS_ADDREF(inst);  // Are we sure that we need to addref???
 
     return result;
 }
@@ -313,6 +307,16 @@ nsSoftwareUpdateFactory::LockFactory(PRBool aLock)
 nsSoftwareUpdateNameSet::nsSoftwareUpdateNameSet()
 {
   NS_INIT_REFCNT();
+
+  nsIScriptNameSetRegistry *scriptNameSet;
+  nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
+                                                 kIScriptNameSetRegistryIID,
+                                                (nsISupports **)&scriptNameSet);
+    if (NS_OK == result) 
+    {
+        scriptNameSet->AddExternalNameSet(this);
+    }
+
 }
 
 nsSoftwareUpdateNameSet::~nsSoftwareUpdateNameSet()
@@ -370,7 +374,7 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 extern "C" NS_EXPORT PRBool
 NSCanUnload(nsISupports* serviceMgr)
 {
-    return PRBool (gStarted == 0 && gLockCnt == 0);
+    return PR_FALSE;
 }
 
 extern "C" NS_EXPORT nsresult
