@@ -67,7 +67,6 @@
 #include "nsIEnumerator.h"
 #include "nsISelectionPrivate.h"
 #include "nsIFrameSelection.h"
-#include "nsIContentIterator.h"
 #include "nsISupportsArray.h"
 #include "nsIParserService.h"
 #include "nsParserCIID.h"
@@ -80,7 +79,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
-nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
 enum nsRangeIterationDirection {
@@ -1257,7 +1255,7 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAWritableString& aEncodedString,
   }
 
   // encode range info : the start and end depth of the selection, where the depth is 
-  // distance down in the parent heirarchy.  Later we will need to add leading/trainlig
+  // distance down in the parent hierarchy.  Later we will need to add leading/trailing
   // whitespace info to this.
   nsAutoString infoString;
   infoString.AppendInt(mStartDepth);
@@ -1286,6 +1284,8 @@ nsHTMLCopyEncoder::IncludeInContext(nsIDOMNode *aNode)
       tag.get() == nsHTMLAtoms::u        ||
       tag.get() == nsHTMLAtoms::tt       ||
       tag.get() == nsHTMLAtoms::s        ||
+      tag.get() == nsHTMLAtoms::big      ||
+      tag.get() == nsHTMLAtoms::small    ||
       tag.get() == nsHTMLAtoms::strike   ||
       tag.get() == nsHTMLAtoms::em       ||
       tag.get() == nsHTMLAtoms::strong   ||
