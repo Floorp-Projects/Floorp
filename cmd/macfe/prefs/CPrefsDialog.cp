@@ -49,9 +49,15 @@
 
 #include "uapp.h"
 
+#include "CBrowserApplicationsMediator.h"
+#include "CLocationIndependenceMediator.h"
 
+// define this to have the prefs dialog open showing the last pane you
+// used, with all twisties expanded
+#define PREFS_DIALOG_REMEMBERS_PANE
 
-CPrefsDialog *CPrefsDialog::sThis = nil;
+CPrefsDialog*		CPrefsDialog::sThis = nil;
+PrefPaneID::ID		CPrefsDialog::sLastPrefPane = PrefPaneID::eNoPaneSpecified;
 
 //-----------------------------------
 CPrefsDialog::CPrefsDialog()
@@ -70,14 +76,18 @@ CPrefsDialog::~CPrefsDialog()
 	// all panes are freed by PowerPlant since they are subcommanders of this dialog...
 }
 
-
 //-----------------------------------
 void CPrefsDialog::EditPrefs(
-	Expand_T expand,
-	PrefPaneID::ID pane,
-	Selection_T selection)
+	Expand_T 			expand,
+	PrefPaneID::ID 		pane,
+	Selection_T 		selection)
 //-----------------------------------
 {
+
+#ifdef PREFS_DIALOG_REMEMBERS_PANE
+	pane = (pane != PrefPaneID::eNoPaneSpecified) ? pane : sLastPrefPane;
+#endif
+
 	if (sThis)
 	{
 		// very suspicious
@@ -98,6 +108,10 @@ void CPrefsDialog::EditPrefs(
 	XP_Bool	useIC;
 	prefResult = PREF_GetBoolPref(useInternetConfigPrefName, &useIC);
 	CPrefsMediator::UseIC(useIC);
+
+	// make sure the prefs cache is empty before we may use it
+	MPreferenceBase::InitTempPrefCache();
+	
 	sThis->DoPrefsWindow(expand, pane, selection);
 }
 
@@ -167,9 +181,9 @@ void CPrefsDialog::CheckForVCard()
 
 //-----------------------------------
 void CPrefsDialog::DoPrefsWindow(
-	Expand_T expand,
-	PrefPaneID::ID pane,
-	Selection_T selection)
+	Expand_T 		expand,
+	PrefPaneID::ID 	pane,
+	Selection_T		selection)
 //-----------------------------------
 {
 	if (!mWindow)
@@ -198,18 +212,17 @@ void CPrefsDialog::DoPrefsWindow(
 			
 			// Now have to collapse the all the rows except appearence
 			// This is icky
+#ifndef PREFS_DIALOG_REMEMBERS_PANE
 			mTable->CollapseRow( mTable->FindMessage ( PrefPaneID::eBrowser_Main  ) );
-			#ifdef MOZ_MAIL_NEWS
 			mTable->CollapseRow( mTable->FindMessage ( PrefPaneID::eMailNews_Main ) );
-			#endif // MOZ_MAIL_NEWS
 			#ifdef EDITOR
-			mTable->CollapseRow( mTable->FindMessage ( PrefPaneID::eEditor_Main ) );
-			#endif // EDITOR
-			#ifdef MOZ_OFFLINE
+				mTable->CollapseRow( mTable->FindMessage ( PrefPaneID::eEditor_Main ) );
+			#endif // Editor
+			#ifdef MOZ_MAIL_NEWS
 			mTable->CollapseRow( mTable->FindMessage ( PrefPaneID::eOffline_Main ) );
-			#endif // MOZ_OFFLINE
+			#endif // MOZ_MAIL_NEWS
 			mTable->CollapseRow( mTable->FindMessage ( PrefPaneID::eAdvanced_Main ) );	
-		
+#endif
 			
 			mTable->UnselectAllCells();
 			STableCell initialCell( 1, 1 );
@@ -425,11 +438,21 @@ void CPrefsDialog::ListenToMessage(
 void CPrefsDialog::Finished()
 //-----------------------------------
 {
+	sLastPrefPane = (PrefPaneID::ID)mTable->GetSelectedMessage();
+	
 	mWindow->DoClose();
 	mWindow = nil;
 	sThis = nil;
 	if (MPreferenceBase::GetWriteOnDestroy()) // the controls wrote themselves
+	{
+		// sub-dialogs of the main prefs dialog, e.g. the mail server edit dialog,
+		// write their prefs into a temporary tree which MPreferenceBase knows about.
+		// So tell MPreferenceBase to copy these temp prefs into the main prefs, and
+		// delete that tree.
+		MPreferenceBase::CopyCachedPrefsToMainPrefs();
+	
 		PREF_SavePrefFile();
+	}
 	delete this;
 }
 
@@ -446,8 +469,10 @@ void CPrefsDialog::RegisterViewClasses()
 	RegisterClass_(CBrowserApplicationsMediator);
 	RegisterClass_(CAdvancedCacheMediator);
 	RegisterClass_(CAdvancedProxiesMediator);
-#ifdef MOZ_MAIL_NEWS
+	
+	CBrowserApplicationsMediator::RegisterViewClasses();
 	RegisterClass_(CMailNewsIdentityMediator);
+#ifdef MOZ_MAIL_NEWS
 	RegisterClass_(CMailNewsMainMediator);
 	RegisterClass_(CMailNewsMessagesMediator);
 	RegisterClass_(CMailNewsOutgoingMediator);
@@ -455,6 +480,7 @@ void CPrefsDialog::RegisterViewClasses()
 	RegisterClass_(CMailNewsNewsServerMediator);
 	RegisterClass_(CReceiptsMediator);
 	RegisterClass_(CMailNewsDirectoryMediator);
+	RegisterClass_(CMailNewsAddressingMediator );
 #endif // MOZ_MAIL_NEWS
 #ifdef EDITOR
 	RegisterClass_(CEditorMainMediator);
@@ -465,5 +491,8 @@ void CPrefsDialog::RegisterViewClasses()
 #ifdef MOZ_LDAP
 	// And a dialog class:
 	RegisterClass_(CLDAPServerPropDialog);
+#endif
+#ifdef MOZ_LOC_INDEP
+	RegisterClass_(CLocationIndependenceMediator);
 #endif
 } // CPrefsDialog::RegisterViewClasses
