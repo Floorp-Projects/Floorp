@@ -328,14 +328,8 @@ nsImageDocument::EndLayout(nsISupports *ctxt,
                            nsresult status, 
                            const PRUnichar *errorMsg)
 {
-  // unused...
-  ctxt;
-  status;
-  errorMsg;
-
-  // title was being set here but this is never called...
-  //  (see UpdateTitle: work is done there now)
-
+  // We are being told to stop the layout (in the middle of image loading)
+  // - nothing to do here...
   return NS_OK;
 }
 
