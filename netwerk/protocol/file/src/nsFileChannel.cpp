@@ -99,25 +99,18 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 		// to be mac friendly you need to convert a file path to a nsFilePath before
 		// passing it to a nsFileSpec...
 #ifdef XP_MAC
-		static const char kNetscapeDirectory[] = "/usr/local/netscape/bin/";
-		static const unsigned int kNetscapeDirectoryLength = sizeof(kNetscapeDirectory) - 1;
-		if (nsCRT::strncmp(kNetscapeDirectory, fileString, kNetscapeDirectoryLength) == 0) {
-			nsSpecialSystemDirectory netscapeDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-			mSpec = netscapeDir + (fileString + kNetscapeDirectoryLength);
-		} else {
-			nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
-			mSpec = filePath;
-			
-			// Don't assume we actually created a good file spec
-			FSSpec theSpec = mSpec.GetFSSpec();
-			if (!theSpec.name[0])
-			{
-				NS_ERROR("failed to create a file spec");
+		nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
+		mSpec = filePath;
+		
+		// Don't assume we actually created a good file spec
+		FSSpec theSpec = mSpec.GetFSSpec();
+		if (!theSpec.name[0])
+		{
+			NS_ERROR("failed to create a file spec");
 
-				// Since we didn't actually create the file spec 
-				// we return an error
-				return NS_ERROR_MALFORMED_URI;
-			}
+			// Since we didn't actually create the file spec 
+			// we return an error
+			return NS_ERROR_MALFORMED_URI;
 		}
 #else
 		nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
