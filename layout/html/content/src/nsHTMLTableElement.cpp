@@ -22,6 +22,7 @@
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableCaptionElement.h"
 #include "nsIDOMHTMLTableSectionElement.h"
+#include "nsCOMPtr.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "GenericElementCollection.h"
@@ -404,18 +405,19 @@ NS_IMETHODIMP
 nsHTMLTableElement::GetCaption(nsIDOMHTMLTableCaptionElement** aValue)
 {
   *aValue = nsnull;
-  nsIDOMNode* child=nsnull;
-  mInner.GetFirstChild(&child);
-  while (nsnull!=child)
+  nsCOMPtr<nsIDOMNode> child;
+  mInner.GetFirstChild(getter_AddRefs(child));
+  while (child)
   {
-    nsIDOMHTMLTableCaptionElement *caption=nsnull;
-    nsresult rv = child->QueryInterface(kIDOMHTMLTableCaptionElementIID, (void**)&caption);
-    if ((NS_SUCCEEDED(rv)) && (nsnull!=caption))
+    nsCOMPtr<nsIDOMHTMLTableCaptionElement> caption = do_QueryInterface(child);
+    if (caption)
     {
       *aValue = caption;
+      NS_ADDREF(*aValue);
       break;
     }
-    child->GetNextSibling(&child);
+    nsCOMPtr<nsIDOMNode> temp = child;
+    temp->GetNextSibling(getter_AddRefs(child));
   }
   return NS_OK;
 }
@@ -427,8 +429,8 @@ nsHTMLTableElement::SetCaption(nsIDOMHTMLTableCaptionElement* aValue)
   if (NS_SUCCEEDED(rv)) {
     if (nsnull!=aValue)
     {
-      nsIDOMNode* resultingChild;
-      mInner.AppendChild(aValue, &resultingChild);
+      nsCOMPtr<nsIDOMNode> resultingChild;
+      mInner.AppendChild(aValue, getter_AddRefs(resultingChild));
     }
   }
   return rv;
@@ -437,42 +439,27 @@ nsHTMLTableElement::SetCaption(nsIDOMHTMLTableCaptionElement* aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::GetTHead(nsIDOMHTMLTableSectionElement** aValue)
 {
-  /* this is a better implementation, but GetElementsByTagName isn't implemented yet */
-  /*
   *aValue = nsnull;
-  nsIDOMNodeList *kids=nsnull;
-  nsAutoString theadAsString;
-  nsHTMLAtoms::thead->ToString(theadAsString);
-  nsresult rv = mInner.GetElementsByTagName(theadAsString, &kids);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=kids))
+  nsCOMPtr<nsIDOMNode> child;
+  mInner.GetFirstChild(getter_AddRefs(child));
+  while (child)
   {
-    nsIDOMNode *thead=nsnull;
-    rv = kids->Item(0, &thead);
-    if (NS_SUCCEEDED(rv))
-      *aValue = (nsIDOMHTMLTableSectionElement*)thead;
-  }
-  */
-
-  *aValue = nsnull;
-  nsIDOMNode* child=nsnull;
-  mInner.GetFirstChild(&child);
-  while (nsnull!=child)
-  {
-    nsIDOMHTMLTableSectionElement *section=nsnull;
-    nsresult rv = child->QueryInterface(kIDOMHTMLTableSectionElementIID, (void**)&section);
-    if ((NS_SUCCEEDED(rv)) && (nsnull!=section))
+    nsCOMPtr<nsIDOMHTMLTableSectionElement> section = do_QueryInterface(child);
+    if (section)
     {
-      nsString tag;
-      section->GetTagName(tag);
-      nsAutoString theadAsString;
-      nsHTMLAtoms::thead->ToString(theadAsString);
-      if (theadAsString==tag)
+      nsCOMPtr<nsIAtom> tag;
+      nsCOMPtr<nsIContent> content = do_QueryInterface(section);
+      
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsHTMLAtoms::thead)
       {
         *aValue = section;
+        NS_ADDREF(*aValue);
         break;
       }
     }
-    child->GetNextSibling(&child);
+    nsCOMPtr<nsIDOMNode> temp = child;
+    temp->GetNextSibling(getter_AddRefs(child));
   }
   return NS_OK;
 }
@@ -481,13 +468,21 @@ NS_IMETHODIMP
 nsHTMLTableElement::SetTHead(nsIDOMHTMLTableSectionElement* aValue)
 {
   nsresult rv = DeleteTHead();
-  if (NS_SUCCEEDED(rv)) {
-    if (nsnull!=aValue)
-    {
-      nsIDOMNode* resultingChild;
-      mInner.AppendChild(aValue, &resultingChild);
-    }
+  if (NS_FAILED(rv)) {
+    return rv;
   }
+
+  if (nsnull!=aValue) {
+    nsCOMPtr<nsIDOMNode> child;
+    rv = mInner.GetFirstChild(getter_AddRefs(child));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+     
+    nsCOMPtr<nsIDOMNode> resultChild;
+    rv = mInner.InsertBefore(aValue, child, getter_AddRefs(resultChild));
+  }
+
   return rv;
 }
 
@@ -495,25 +490,26 @@ NS_IMETHODIMP
 nsHTMLTableElement::GetTFoot(nsIDOMHTMLTableSectionElement** aValue)
 {
   *aValue = nsnull;
-  nsIDOMNode* child=nsnull;
-  mInner.GetFirstChild(&child);
-  while (nsnull!=child)
+  nsCOMPtr<nsIDOMNode> child;
+  mInner.GetFirstChild(getter_AddRefs(child));
+  while (child)
   {
-    nsIDOMHTMLTableSectionElement *section=nsnull;
-    nsresult rv = child->QueryInterface(kIDOMHTMLTableSectionElementIID, (void**)&section);
-    if ((NS_SUCCEEDED(rv)) && (nsnull!=section))
+    nsCOMPtr<nsIDOMHTMLTableSectionElement> section=do_QueryInterface(child);
+    if (section)
     {
-      nsString tag;
-      section->GetTagName(tag);
-      nsAutoString tfootAsString;
-      nsHTMLAtoms::tfoot->ToString(tfootAsString);
-      if (tfootAsString==tag)
+      nsCOMPtr<nsIAtom> tag;
+      nsCOMPtr<nsIContent> content = do_QueryInterface(section);
+
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsHTMLAtoms::tfoot)
       {
         *aValue = section;
+        NS_ADDREF(*aValue);
         break;
       }
     }
-    child->GetNextSibling(&child);
+    nsCOMPtr<nsIDOMNode> temp = child;
+    temp->GetNextSibling(getter_AddRefs(child));
   }
   return NS_OK;
 }
@@ -525,8 +521,8 @@ nsHTMLTableElement::SetTFoot(nsIDOMHTMLTableSectionElement* aValue)
   if (NS_SUCCEEDED(rv)) {
     if (nsnull!=aValue)
     {
-      nsIDOMNode* resultingChild;
-      mInner.AppendChild(aValue, &resultingChild);
+      nsCOMPtr<nsIDOMNode> resultingChild;
+      mInner.AppendChild(aValue, getter_AddRefs(resultingChild));
     }
   }
   return rv;
@@ -562,23 +558,29 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
   nsresult rv = NS_OK;
-  nsIDOMHTMLTableSectionElement *head=nsnull;
-  GetTHead(&head);
-  if (nsnull!=head)
+  nsCOMPtr<nsIDOMHTMLTableSectionElement> head;
+  GetTHead(getter_AddRefs(head));
+  if (head)
   { // return the existing thead
     head->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
     NS_ASSERTION(nsnull!=*aValue, "head must be a DOMHTMLElement");
-    NS_RELEASE(head);
   }
   else
   { // create a new head rowgroup
-    nsIHTMLContent *newHead=nsnull;
-    rv = NS_NewHTMLTableSectionElement(&newHead,nsHTMLAtoms::thead);
-    if (NS_SUCCEEDED(rv) && (nsnull!=newHead))
+    nsCOMPtr<nsIHTMLContent> newHead;
+    rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newHead),nsHTMLAtoms::thead);
+    if (NS_SUCCEEDED(rv) && newHead)
     {
-      rv = mInner.AppendChildTo(newHead, PR_TRUE);
+      nsCOMPtr<nsIDOMNode> child;
+      rv = mInner.GetFirstChild(getter_AddRefs(child));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+     
       newHead->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
-      NS_RELEASE(newHead);
+
+      nsCOMPtr<nsIDOMNode> resultChild;
+      rv = mInner.InsertBefore(*aValue, child, getter_AddRefs(resultChild));
     }
   }
   return NS_OK;
@@ -587,12 +589,12 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteTHead()
 {
-  nsIDOMHTMLTableSectionElement *childToDelete;
-  nsresult rv = GetTHead(&childToDelete);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=childToDelete))
+  nsCOMPtr<nsIDOMHTMLTableSectionElement> childToDelete;
+  nsresult rv = GetTHead(getter_AddRefs(childToDelete));
+  if ((NS_SUCCEEDED(rv)) && childToDelete)
   {
-    nsIDOMNode* resultingChild;
-    mInner.RemoveChild(childToDelete, &resultingChild); // mInner does the notification
+    nsCOMPtr<nsIDOMNode> resultingChild;
+    mInner.RemoveChild(childToDelete, getter_AddRefs(resultingChild)); // mInner does the notification
   }
   return NS_OK;
 }
@@ -602,23 +604,21 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
   nsresult rv = NS_OK;
-  nsIDOMHTMLTableSectionElement *foot=nsnull;
-  GetTFoot(&foot);
+  nsCOMPtr<nsIDOMHTMLTableSectionElement> foot;
+  GetTFoot(getter_AddRefs(foot));
   if (nsnull!=foot)
   { // return the existing tfoot
     foot->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
     NS_ASSERTION(nsnull!=*aValue, "foot must be a DOMHTMLElement");
-    NS_RELEASE(foot);
   }
   else
   { // create a new foot rowgroup
-    nsIHTMLContent *newFoot=nsnull;
-    rv = NS_NewHTMLTableSectionElement(&newFoot,nsHTMLAtoms::tfoot);
-    if (NS_SUCCEEDED(rv) && (nsnull!=newFoot))
+    nsCOMPtr<nsIHTMLContent> newFoot;
+    rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newFoot),nsHTMLAtoms::tfoot);
+    if (NS_SUCCEEDED(rv) && newFoot)
     {
       rv = mInner.AppendChildTo(newFoot, PR_TRUE);
       newFoot->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
-      NS_RELEASE(newFoot);
     }
   }
   return NS_OK;
@@ -628,12 +628,12 @@ NS_IMETHODIMP
 nsHTMLTableElement::DeleteTFoot()
 {
 {
-  nsIDOMHTMLTableSectionElement *childToDelete;
-  nsresult rv = GetTFoot(&childToDelete);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=childToDelete))
+  nsCOMPtr<nsIDOMHTMLTableSectionElement> childToDelete;
+  nsresult rv = GetTFoot(getter_AddRefs(childToDelete));
+  if ((NS_SUCCEEDED(rv)) && childToDelete)
   {
-    nsIDOMNode* resultingChild;
-    mInner.RemoveChild(childToDelete, &resultingChild); // mInner does the notification
+    nsCOMPtr<nsIDOMNode> resultingChild;
+    mInner.RemoveChild(childToDelete, getter_AddRefs(resultingChild)); // mInner does the notification
   }
   return NS_OK;
 }
@@ -646,23 +646,21 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
   nsresult rv = NS_OK;
-  nsIDOMHTMLTableCaptionElement *caption=nsnull;
-  GetCaption(&caption);
-  if (nsnull!=caption)
+  nsCOMPtr<nsIDOMHTMLTableCaptionElement> caption;
+  GetCaption(getter_AddRefs(caption));
+  if (caption)
   { // return the existing thead
     caption->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
     NS_ASSERTION(nsnull!=*aValue, "caption must be a DOMHTMLElement");
-    NS_RELEASE(caption);
   }
   else
   { // create a new head rowgroup
-    nsIHTMLContent *newCaption=nsnull;
-    rv = NS_NewHTMLTableCaptionElement(&newCaption,nsHTMLAtoms::caption);
-    if (NS_SUCCEEDED(rv) && (nsnull!=newCaption))
+    nsCOMPtr<nsIHTMLContent> newCaption;
+    rv = NS_NewHTMLTableCaptionElement(getter_AddRefs(newCaption),nsHTMLAtoms::caption);
+    if (NS_SUCCEEDED(rv) && newCaption)
     {
       rv = mInner.AppendChildTo(newCaption, PR_TRUE);
       newCaption->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
-      NS_RELEASE(newCaption);
     }
   }
   return NS_OK;
@@ -672,12 +670,12 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteCaption()
 {
-  nsIDOMHTMLTableCaptionElement *childToDelete;
-  nsresult rv = GetCaption(&childToDelete);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=childToDelete))
+  nsCOMPtr<nsIDOMHTMLTableCaptionElement> childToDelete;
+  nsresult rv = GetCaption(getter_AddRefs(childToDelete));
+  if ((NS_SUCCEEDED(rv)) && childToDelete)
   {
-    nsIDOMNode* resultingChild;
-    mInner.RemoveChild(childToDelete, &resultingChild); // mInner does the notification
+    nsCOMPtr<nsIDOMNode> resultingChild;
+    mInner.RemoveChild(childToDelete, getter_AddRefs(resultingChild)); // mInner does the notification
   }
   return NS_OK;
 }
