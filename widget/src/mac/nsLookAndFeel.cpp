@@ -185,6 +185,9 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor_window:
         aColor = NS_RGB(0xff,0xff,0xff);
         break;
+    case eColor__moz_field:
+        aColor = NS_RGB(0xff,0xff,0xff);
+        break;
 
     default:
         NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");

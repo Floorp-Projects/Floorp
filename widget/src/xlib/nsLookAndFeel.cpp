@@ -179,6 +179,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     aColor = NS_RGB(0x00, 0x00, 0x00);
     break;
 
+  case eColor__moz_field:
+    aColor = NS_RGB(0xc0, 0xc0, 0xc0);
+    break;
+
   default:
     /* default color is BLACK */
     aColor = 0;

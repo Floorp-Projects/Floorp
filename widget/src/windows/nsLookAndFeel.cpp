@@ -176,6 +176,9 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor_windowtext:
       idx = COLOR_WINDOWTEXT;
       break;
+    case eColor__moz_field:
+      idx = COLOR_WINDOW;  
+      break;  
     default:
         idx = COLOR_WINDOW;    
         break;
