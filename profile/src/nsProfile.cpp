@@ -774,7 +774,16 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     {
         if (cmdResult) {
 			foundProfileCommandArg = PR_TRUE;
-            nsAutoString currProfileName; currProfileName.AssignWithConversion(cmdResult);
+            // get a platform charset
+            nsAutoString charSet;
+            rv = GetPlatformCharset(charSet);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
+
+            // convert the profile name to Unicode
+            nsAutoString currProfileName; 
+            nsCAutoString profileName(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
+            rv = ConvertStringToUnicode(charSet, profileName.get(), currProfileName);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
 
 #ifdef DEBUG_profile
             printf("ProfileName : %s\n", (const char*)cmdResult);
@@ -830,7 +839,18 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #endif
 
 			foundProfileCommandArg = PR_TRUE;
-            nsAutoString currProfileName; currProfileName.AssignWithConversion(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
+
+            // get a platform charset
+            nsAutoString charSet;
+            rv = GetPlatformCharset(charSet);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
+
+            // convert the profile name to Unicode
+            nsAutoString currProfileName; 
+            nsCAutoString profileName(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
+            rv = ConvertStringToUnicode(charSet, profileName.get(), currProfileName);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
+
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
             if (!currProfileDirString.IsEmpty()) {
