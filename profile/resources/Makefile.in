@@ -45,6 +45,7 @@ FILES=\
         common.css						\
 		pm.css							\
 		pm.xul							\
+		pmrename.xul					\
         $(NULL)
 
 
