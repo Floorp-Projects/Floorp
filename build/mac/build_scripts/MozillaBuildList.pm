@@ -203,6 +203,8 @@ sub InstallNonChromeResources()
     MakeAlias(":mozilla:layout:html:document:src:quirk.css",                           "$resource_dir");
     MakeAlias(":mozilla:layout:html:document:src:viewsource.css",                      "$resource_dir");
     MakeAlias(":mozilla:layout:html:document:src:arrow.gif",                           "$resource_dir"); 
+    MakeAlias(":mozilla:layout:html:base:src:loading-image.gif",                       "$resource_dir"); 
+    MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",                        "$resource_dir"); 
     MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",            "$resource_dir");
     MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",                       "$resource_dir");
     MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",                         "$resource_dir");
