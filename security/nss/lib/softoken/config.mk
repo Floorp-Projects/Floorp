@@ -31,11 +31,6 @@
 # GPL.
 #
 
-
-ifdef MOZILLA_CLIENT
-DEFINES += -DMOZ_CLIENT
-endif
-
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
 CRYPTODIR=../freebl
