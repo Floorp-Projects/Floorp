@@ -1408,12 +1408,36 @@ NS_IMETHODIMP
 nsXULDocument::EndLoad()
 {
     nsresult rv;
-
+        
     // Whack the prototype document into the cache so that the next
     // time somebody asks for it, they don't need to load it by hand.
     nsCOMPtr<nsIURI> uri;
     rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISupportsArray> sheets;
+    reg->GetStyleSheets(uri, getter_AddRefs(sheets));
+   
+    // Walk the sheets and add them to the prototype. Also put them into the document.
+    if (sheets) {
+      nsCOMPtr<nsICSSStyleSheet> sheet;
+      PRUint32 count;
+      sheets->Count(&count);
+      for (PRUint32 i = 0; i < count; i++) {
+        nsCOMPtr<nsISupports> supp;
+        sheets->GetElementAt(i, getter_AddRefs(supp));
+        sheet = do_QueryInterface(supp);
+        if (sheet) {
+          nsCOMPtr<nsIURI> sheetURL;
+          sheet->GetURL(*getter_AddRefs(sheetURL));
+          if (gXULUtils->UseXULCache() && IsChromeURI(sheetURL))
+            mCurrentPrototype->AddStyleSheetReference(sheetURL);
+          AddStyleSheet(sheet);
+        }
+      }
+    }
 
     if (gXULUtils->UseXULCache() && IsChromeURI(mDocumentURL)) {
         // If it's a 'chrome:' prototype document, then put it into

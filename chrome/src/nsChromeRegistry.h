@@ -26,6 +26,7 @@
 class nsIRDFService;
 class nsIRDFDataSource;
 class nsIRDFResource;
+class nsIRDFNode;
 class nsICSSLoader;
 class nsISimpleEnumerator;
 class nsSupportsHashtable;
@@ -54,80 +55,85 @@ public:
                             nsCString& aResult, nsIRDFResource* aChromeResource,
                             nsIRDFResource* aProperty);
 
+  static nsresult UpdateArc(nsIRDFDataSource *aDataSource, nsIRDFResource* aSource, nsIRDFResource* aProperty, 
+                            nsIRDFNode *aTarget, PRBool aRemove);
+
 protected:
-  NS_IMETHOD GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult);
-   
-  nsresult GetResource(const nsCAutoString& aChromeType, nsIRDFResource** aResult);
+  NS_IMETHOD GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, nsIRDFDataSource **aResult);
+  NS_IMETHOD GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
+
+  nsresult GetResource(const nsCString& aChromeType, nsIRDFResource** aResult);
   
-  NS_IMETHOD UpdateOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, PRBool aRemove);
-  NS_IMETHOD UpdateOverlays(nsIRDFDataSource *aDataSource,
-                            PRBool aRemove);
-  
+  NS_IMETHOD UpdateDynamicDataSource(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, 
+                                     PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove);
+  NS_IMETHOD UpdateDynamicDataSources(nsIRDFDataSource *aDataSource, PRBool aIsOverlay, 
+                                      PRBool aUseProfile, PRBool aRemove);
+  NS_IMETHOD WriteInfoToDataSource(char *aDocURI, const PRUnichar *aOverlayURI,
+                                   PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove);
+ 
   void LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString & aURL);
   void GetUserSheetURL(nsCString & aURL);
 
 private:
-  NS_IMETHOD ReallyUpdateOverlayFromDataSource(char *aDocURI, const PRUnichar *aOverlayURI,
-                                               PRBool aRemove);
-  NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
+  NS_IMETHOD LoadDataSource(const nsCString &aFileName, nsIRDFDataSource **aResult,
                             PRBool aUseProfileDirOnly = PR_FALSE);
 
-  NS_IMETHOD GetProfileRoot(nsCAutoString& aFileURL);
-  NS_IMETHOD GetInstallRoot(nsCAutoString& aFileURL);
+  NS_IMETHOD GetProfileRoot(nsCString& aFileURL);
+  NS_IMETHOD GetInstallRoot(nsCString& aFileURL);
 
   NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
 
 	NS_IMETHOD ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument);
 
   NS_IMETHOD GetArcs(nsIRDFDataSource* aDataSource,
-                        const nsCAutoString& aType,
+                        const nsCString& aType,
                         nsISimpleEnumerator** aResult);
 
   NS_IMETHOD AddToCompositeDataSource(PRBool aUseProfile);
   
-  NS_IMETHOD GetBaseURL(const nsCAutoString& aPackage, const nsCAutoString& aProvider, 
-                             nsCAutoString& aBaseURL);
+  NS_IMETHOD GetBaseURL(const nsCString& aPackage, const nsCString& aProvider, 
+                             nsCString& aBaseURL);
 
-  NS_IMETHOD FindProvider(const nsCAutoString& aPackage,
-                          const nsCAutoString& aProvider,
+  NS_IMETHOD FindProvider(const nsCString& aPackage,
+                          const nsCString& aProvider,
                           nsIRDFResource *aArc,
                           nsIRDFNode **aSelectedProvider);
 
   NS_IMETHOD SelectPackageInProvider(nsIRDFResource *aPackageList,
-                                   const nsCAutoString& aPackage,
-                                   const nsCAutoString& aProvider,
-                                   const nsCAutoString& aProviderName,
+                                   const nsCString& aPackage,
+                                   const nsCString& aProvider,
+                                   const nsCString& aProviderName,
                                    nsIRDFResource *aArc,
                                    nsIRDFNode **aSelectedProvider);
 
-  NS_IMETHOD SetProvider(const nsCAutoString& aProvider,
+  NS_IMETHOD SetProvider(const nsCString& aProvider,
                          nsIRDFResource* aSelectionArc,
                          const PRUnichar* aProviderName,
                          PRBool aAllUsers, PRBool aIsAdding);
 
-  NS_IMETHOD SetProviderForPackage(const nsCAutoString& aProvider,
+  NS_IMETHOD SetProviderForPackage(const nsCString& aProvider,
                                    nsIRDFResource* aPackageResource, 
                                    nsIRDFResource* aProviderPackageResource, 
                                    nsIRDFResource* aSelectionArc, 
                                    PRBool aAllUsers, PRBool aIsAdding);
 
-  NS_IMETHOD SelectProviderForPackage(const nsCAutoString& aProviderType,
+  NS_IMETHOD SelectProviderForPackage(const nsCString& aProviderType,
                                         const PRUnichar *aProviderName, 
                                         const PRUnichar *aPackageName, 
                                         nsIRDFResource* aSelectionArc, 
                                         PRBool aUseProfile, PRBool aIsAdding);
 
-  NS_IMETHOD InstallProvider(const nsCAutoString& aProviderType,
-                             const nsCAutoString& aBaseURL,
-                             PRBool aUseProfile);
+  NS_IMETHOD InstallProvider(const nsCString& aProviderType,
+                             const nsCString& aBaseURL,
+                             PRBool aUseProfile, PRBool aRemove);
 
   void ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
 protected:
   PRBool mInstallInitialized;
   PRBool mProfileInitialized;
-  nsCAutoString mProfileRoot;
-  nsCAutoString mInstallRoot;
+  nsCString mProfileRoot;
+  nsCString mInstallRoot;
 
   nsCOMPtr<nsIRDFCompositeDataSource> mChromeDataSource;
   nsIRDFDataSource* mUIDataSource; // [WEAK] Composite holds on to us.
@@ -143,6 +149,7 @@ protected:
   nsCOMPtr<nsIRDFResource> mPackages;
   nsCOMPtr<nsIRDFResource> mPackage;
   nsCOMPtr<nsIRDFResource> mName;
+  nsCOMPtr<nsIRDFResource> mLocType;
 
   // Style Sheets
   nsCOMPtr<nsICSSStyleSheet> mScrollbarSheet;
