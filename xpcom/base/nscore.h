@@ -199,6 +199,8 @@ typedef PRUint16 PRUnichar;
     #undef HAVE_AMBIGUITY_RESOLVING_CPP_USING
   #endif
 
+  #define HAVE_CPP_NAMESPACE_STD
+
   /* VC++ is special and doesn't use naked min() and max() */
   #undef NS_MIN
   #define NS_MIN std::_cpp_min
