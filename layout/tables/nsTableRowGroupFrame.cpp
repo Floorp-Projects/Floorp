@@ -483,40 +483,22 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
 {
   if (mNextInFlow) {
     nsTableRowGroupFrame* nextInFlow = (nsTableRowGroupFrame*)mNextInFlow;
-    nsIFrame*             prevKidFrame = mFrames.LastChild();
   
     while (nsnull != nextInFlow) {
-      // Get the next child
-      nsIFrame* kidFrame = nextInFlow->mFrames.FirstChild();
-  
-      // Any more row frames?
-      if (nsnull == kidFrame) {
-        // No. Any frames on its overflow list?
-        if (nextInFlow->mOverflowFrames.NotEmpty()) {
-          // Move the overflow list to become the child list
-          nextInFlow->AppendChildren(nextInFlow->mOverflowFrames.FirstChild(), PR_TRUE);
-          nextInFlow->mOverflowFrames.SetFrames(nsnull);
-          kidFrame = nextInFlow->mFrames.FirstChild();
-        } else {
-          // We've pulled up all the children, so move to the next-in-flow.
-          nextInFlow->GetNextInFlow((nsIFrame**)&nextInFlow);
-          continue;
-        }
+      // Any frames on the next-in-flow's overflow list?
+      if (nextInFlow->mOverflowFrames.NotEmpty()) {
+        // Yes, append them to its child list
+        nextInFlow->mFrames.Join(nextInFlow, nextInFlow->mOverflowFrames);
       }
-  
-      // Remove the frame from its current parent
-      nextInFlow->mFrames.RemoveFirstChild();
-  
-      // Link the frame into our list of children
-      kidFrame->SetParent(this);
-      if (nsnull == prevKidFrame) {
-        mFrames.SetFrames(kidFrame);
-      } else {
-        prevKidFrame->SetNextSibling(kidFrame);
-      }
-      kidFrame->SetNextSibling(nsnull);
 
-      prevKidFrame = kidFrame;
+      // Any row frames?
+      if (nextInFlow->mFrames.NotEmpty()) {
+        // Append them to our child list
+        mFrames.Join(this, nextInFlow->mFrames);
+      }
+
+      // Move to the next-in-flow        
+      nextInFlow->GetNextInFlow((nsIFrame**)&nextInFlow);
     }
   }
 
