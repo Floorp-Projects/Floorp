@@ -153,7 +153,13 @@ if test "$GNU_CC"; then
     DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-fPIC'
 
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
+    # Turn on GNU specific features
+    # -Wall - turn on all warnings
+    # -pedantic - make compiler warn about non-ANSI stuff, and
+    #             be a little bit stricter
+    # -pipe     - speeds up the build a little by using pipes rather than
+    #             temp files
+    _WARNINGS_CFLAGS="${_WARNINGS_CXXFLAGS} -Wall -pedantic -pipe"
     #_WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
 
     _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
@@ -166,7 +172,8 @@ else
 fi
 
 if test "$GNU_CXX"; then
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
+    # Turn on GNU specific features
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -pedantic -pipe"
     #_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic"
 
     _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
@@ -951,10 +958,10 @@ AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
 
 dnl Make pedantic a flag for now since the builds currently choke on it.
-MOZ_ARG_ENABLE_BOOL(pedantic,
-[  --enable-pedantic       Issue all warnings demanded by strict ANSI C ],
-  [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic" ])
+#MOZ_ARG_ENABLE_BOOL(pedantic,
+#[  --enable-pedantic       Issue all warnings demanded by strict ANSI C ],
+#  [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
+#    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic" ])
 
 dnl Note: This should not be disabled if --enable-oji is set
 MOZ_ARG_DISABLE_BOOL(shared,
