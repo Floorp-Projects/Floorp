@@ -350,9 +350,9 @@ nsPolygonFrame::Paint(nsIPresContext* aPresContext,
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
 
     // get our border
-	  const nsStyleBorder* borderStyle = (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+	  const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 	  nsMargin border(0,0,0,0);
-	  borderStyle->CalcBorderFor(this, border);
+	  spacing->CalcBorderFor(this, border);
 
   
     // XXX - Color needs to comes from new style property fill
