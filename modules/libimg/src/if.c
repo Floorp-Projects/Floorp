@@ -1886,6 +1886,12 @@ IL_GetImage(const char* image_url,
     
     /* Add the referer to the URL. */
     IL_AddReferer(ic->net_cx, urls);
+
+    /* EXTREME HACK ALERT!
+       Special signal for Composer (Editor)
+       This will be used in IL_ViewStream to tell we are an editor
+       and use IL_NewStream instead (as we did in 4.06 code) */
+    urls->owner_id = (int)flags;
     
     ic->is_looping = FALSE;
     ic->url = urls;
