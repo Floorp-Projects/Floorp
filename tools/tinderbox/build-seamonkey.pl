@@ -11,7 +11,15 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.85 $ ';
+$::Version = '$Revision: 1.86 $ ';
+
+# "use strict" complains if we do not define these. They are not initialize here.
+# The default values are after "__END__".
+$Settings::MailNewsTest = $Settings::BloatStats = $Settings::UseTimeStamp = $Settings::EditorTest = 
+  $Settings::BuildSleep = $Settings::ReportFinalStatus = $Settings::DomToTextConversionTest = 
+  $Settings::AliveTest = $Settings::BuildAdministrator = $Settings::BloatTest = $Settings::ViewerTest = 
+  $Settings::BuildOnce = $Settings::RunTest = $Settings::Make = $Settings::BinaryName = 
+  $Settings::CVS = undef;
 
 sub PrintUsage {
     die <<END_USAGE
@@ -58,9 +66,11 @@ sub InitVars {
         # Save DATA section for printing the example.
         return if /^--example-config$/;
     }
+    no strict 'vars';
     while (<DATA>) {
-        s/^\s*\$(\S*)/\$Settings::$1/;
-        eval;
+      package Settings;
+      #warn "config:$_";
+      eval;
     }
 }
 
@@ -124,8 +134,8 @@ sub ApplyArgs {
 
 sub ConditionalArgs {
     $ENV{CVSROOT} = ":pserver:$ENV{USER}%netscape.com\@cvs.mozilla.org:/cvsroot";
-    $Settings::CVSCO .= " -r $Settings::BuildTag" 
-      unless $Settings::BuildTag eq '';
+    $Settings::CVSCO .= " -r $Settings::BuildTag"
+      unless not defined($Settings::BuildTag) or $Settings::BuildTag eq '';
 }
 
 sub print_log {
