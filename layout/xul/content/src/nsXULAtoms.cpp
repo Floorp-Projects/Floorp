@@ -39,11 +39,13 @@ void nsXULAtoms::AddRefAtoms() {
     /* XUL Atoms registers the XUL name space ID because it's a convenient
        place to do this, if you don't want a permanent, "well-known" ID.
     */
-    if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager)))
+    if (NS_SUCCEEDED(NS_NewNameSpaceManager(&gNameSpaceManager))) {
 //    gNameSpaceManager->CreateRootNameSpace(namespace);
-      gNameSpaceManager->RegisterNameSpace(kXULNameSpace, nameSpaceID);
-    else
+      nsAutoString nameSpace(kXULNameSpace);
+      gNameSpaceManager->RegisterNameSpace(nameSpace, nameSpaceID);
+    } else {
       NS_ASSERTION(0, "failed to create xul atoms namespace manager");
+    }
 
     // now register the atoms
 #define XUL_ATOM(_name, _value) _name = NS_NewAtom(_value);
