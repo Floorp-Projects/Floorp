@@ -39,6 +39,111 @@ nsWindow * mCurrentWindow = NULL;
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 
+// DoCreateTooltip - creates a tooltip control and adds some tools  
+//     to it. 
+// Returns the handle of the tooltip control if successful or NULL
+//     otherwise. 
+// hwndOwner - handle of the owner window 
+// 
+// Global variable 
+//     g_hinst - handle of the application instance 
+extern HINSTANCE g_hinst; 
+
+void nsWindow::AddTooltip(HWND hwndOwner,nsRect& aRect) 
+{ 
+  //  HWND hwndTT;    // handle of tooltip 
+    TOOLINFO ti;    // tool information 
+  
+    // Make sure the common control DLL is loaded
+    InitCommonControls(); 
+ 
+    // Create a tooltip control for the window if needed
+    if (mTooltip == (HWND) NULL) {
+        mTooltip = CreateWindow(TOOLTIPS_CLASS, (LPSTR) NULL, TTS_ALWAYSTIP, 
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
+        NULL, (HMENU) NULL, 
+        nsToolkit::mDllInstance,
+        NULL);
+    }
+ 
+    if (mTooltip == (HWND) NULL) 
+        return;
+
+    ti.cbSize = sizeof(TOOLINFO); 
+    ti.uFlags = TTF_SUBCLASS;
+    ti.hwnd = hwndOwner; 
+    ti.hinst = nsToolkit::mDllInstance; 
+    ti.uId = 0;
+    ti.lpszText = (LPSTR)" "; // must set text to 
+                              // something for tooltip to give events; 
+    ti.rect.left = aRect.x; 
+    ti.rect.top = aRect.y; 
+    ti.rect.right = aRect.x + aRect.width; 
+    ti.rect.bottom = aRect.y + aRect.height; 
+
+    if (!SendMessage(mTooltip, TTM_ADDTOOL, 0, 
+            (LPARAM) (LPTOOLINFO) &ti)) 
+        return; 
+
+   // return hwndTT; 
+} 
+
+//-------------------------------------------------------------------------
+//
+// Setup initial tooltip rectangles
+//
+//-------------------------------------------------------------------------
+
+void nsWindow::SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas)
+{
+  RemoveTooltips();
+  for (int i = 0; i < (int)aNumberOfTips; i++) {
+    AddTooltip(mWnd, (nsRect)(aTooltipAreas[i]));
+  }
+}
+
+//-------------------------------------------------------------------------
+//
+// Update all tooltip rectangles
+//
+//-------------------------------------------------------------------------
+
+void nsWindow::UpdateTooltips(const nsRect* aNewTips)
+{
+
+  TOOLINFO ti;
+  // Get the number of tooltips
+  UINT count = ::SendMessage(mTooltip, TTM_GETTOOLCOUNT, 0, 0); 
+  NS_ASSERTION(count > 0, "Called UpdateTooltips before calling SetTooltips");
+
+  for (UINT i = 0; i < count; i++) {
+    ::SendMessage(mTooltip, TTM_ENUMTOOLS, i, (LPARAM) (LPTOOLINFO)&ti);
+    ti.rect.left    = aNewTips[i].x; 
+    ti.rect.top     = aNewTips[i].y; 
+    ti.rect.right   = aNewTips[i].x + aNewTips[i].width; 
+    ti.rect.bottom  = aNewTips[i].y + aNewTips[i].height; 
+    ::SendMessage(mTooltip, TTM_NEWTOOLRECT, 0, (LPARAM) (LPTOOLINFO)&ti);
+  }
+}
+
+//-------------------------------------------------------------------------
+//
+// Remove all tooltip rectangles
+//
+//-------------------------------------------------------------------------
+
+void nsWindow::RemoveTooltips()
+{
+  TOOLINFO ti;
+  long val;
+  // Get the number of tooltips
+  UINT count = ::SendMessage(mTooltip, TTM_GETTOOLCOUNT, 0, (LPARAM)&val); 
+  for (UINT i = 0; i < count; i++) {
+    ::SendMessage(mTooltip, TTM_ENUMTOOLS, i,(LPARAM) (LPTOOLINFO)&ti);
+    ::SendMessage(mTooltip, TTM_DELTOOL, 0, (LPARAM) (LPTOOLINFO)&ti);
+  }
+}
+
 //-------------------------------------------------------------------------
 //
 // Convert nsEventStatus value to a windows boolean
@@ -113,6 +218,18 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
   }
 }
 
+//-------------------------------------------------------------------------
+//
+// Dispatch standard event
+//
+//-------------------------------------------------------------------------
+
+PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
+{
+  nsGUIEvent event;
+  InitEvent(event, aMsg);
+  return(DispatchEvent(&event));
+}
 
 //-------------------------------------------------------------------------
 //
@@ -170,6 +287,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mIsControlDown = PR_FALSE;
     mIsAltDown     = PR_FALSE;
     mIsDestroying = PR_FALSE;
+    mTooltip       = NULL;
 }
 
 
@@ -303,9 +421,7 @@ void nsWindow::Create(nsIWidget *aParent,
 
     // call the event callback to notify about creation
 
-    nsGUIEvent event;
-    InitEvent(event, NS_CREATE);
-    DispatchEvent(&event);
+    DispatchStandardEvent(NS_CREATE);
     SubclassWindow(TRUE);
 }
 
@@ -393,9 +509,7 @@ void nsWindow::Create(nsNativeWindow aParent,
     VERIFY(mWnd);
 
     // call the event callback to notify about creation
-    nsGUIEvent event;
-    InitEvent(event, NS_CREATE);
-    DispatchEvent(&event);
+    DispatchStandardEvent(NS_CREATE);
     SubclassWindow(TRUE);
 }
 
@@ -426,6 +540,11 @@ void nsWindow::Destroy()
 
     if (mPalette) {
         VERIFY(::DeleteObject(mPalette));
+    }
+
+      // Destroy the tooltip control
+    if (mTooltip) {
+      VERIFY(::DestroyWindow(mTooltip));
     }
 }
 
@@ -915,6 +1034,30 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 //-------------------------------------------------------------------------
 //
+// Relay mouse events to the tooltip control
+//
+//-------------------------------------------------------------------------
+
+void nsWindow::RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam)
+{
+  printf("relaying event\n");
+#if 0
+  MSG msg;
+  msg.hwnd = mWnd;	 
+  msg.message = aMsg; 
+  msg.wParam = wParam;
+  msg.lParam = lParam;
+  msg.time = ::GetMessageTime();
+  DWORD pos = ::GetMessagePos();
+  POINT pt;
+  msg.pt.x = LOWORD(pos);
+  msg.pt.y = HIWORD(pos);  
+  ::SendMessage(mTooltip, TTM_RELAYEVENT, 0, (LPARAM)(LPMSG) &msg);  
+#endif
+}
+
+//-------------------------------------------------------------------------
+//
 // Every function that needs a thread switch goes through this function
 // by calling SendMessage (..WM_CALLMETHOD..) in nsToolkit::CallMethod.
 //
@@ -999,11 +1142,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           {
             LPNMHDR pnmh = (LPNMHDR) lParam;
 
-            if (pnmh->code == TCN_SELCHANGE) {
-              nsGUIEvent event;
-              InitEvent(event, NS_TABCHANGE);
-              DispatchEvent(&event);
-              result = PR_TRUE;
+            switch (pnmh->code) {
+              case TCN_SELCHANGE: {
+                DispatchStandardEvent(NS_TABCHANGE);
+                result = PR_TRUE;
+              }
+              break;
+
+              case TTN_SHOW:
+                result = DispatchStandardEvent(NS_SHOW_TOOLTIP);
+                break;
+
+              case TTN_POP:
+                result = DispatchStandardEvent(NS_HIDE_TOOLTIP);
+                break;
             }
           }
           break;
@@ -1064,14 +1216,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_MOUSEMOVE:
+            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_MOVE);
             break;
 
         case WM_LBUTTONDOWN:
+            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
             break;
 
         case WM_LBUTTONUP:
+            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_UP);
             break;
 
@@ -1082,10 +1237,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_MBUTTONDOWN:
+            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
             break;
 
         case WM_MBUTTONUP:
+            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_UP);
             break;
 
@@ -1094,10 +1251,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_RBUTTONDOWN:
+            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
             break;
 
         case WM_RBUTTONUP:
+            //RelayMouseEvent(msg,wParam, lParam); 
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP);
             break;
 
@@ -1312,9 +1471,7 @@ void nsWindow::OnDestroy()
         mToolkit = NULL;
     }
 
-    nsGUIEvent event;
-    InitEvent(event, NS_DESTROY);
-    DispatchEvent(&event);
+    DispatchStandardEvent(NS_DESTROY);
 }
 
 
@@ -1481,9 +1638,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
 {
     // call the event callback 
     if (mEventCallback) {
-        nsGUIEvent event;
-        InitEvent(event, aEventType);
-        return(DispatchEvent(&event));
+        return(DispatchStandardEvent(aEventType));
     }
 
     return PR_FALSE;

@@ -109,6 +109,9 @@ public:
     virtual nsIToolkit*     GetToolkit();  
     virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
     virtual void            SetTitle(const nsString& aTitle); 
+    virtual void            SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas);
+    virtual void            RemoveTooltips();
+    virtual void            UpdateTooltips(const nsRect* aNewTips);
     virtual void            AddMouseListener(nsIMouseListener * aListener);
     virtual void            AddEventListener(nsIEventListener * aListener);
 
@@ -150,9 +153,13 @@ protected:
 
     void InitEvent(nsGUIEvent& event, PRUint32 aEventType);
     PRBool DispatchEvent(nsGUIEvent* event);
+    PRBool DispatchStandardEvent(PRUint32 aMsg);
+    void AddTooltip(HWND hwndOwner, nsRect& aRect);
+    void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
 protected:
     HWND        mWnd;
+    HWND        mTooltip;
     HPALETTE    mPalette;
     WNDPROC     mPrevWndProc;
     EVENT_CALLBACK mEventCallback;
@@ -380,7 +387,19 @@ protected:
     void SetTitle(const nsString& aTitle) \
     { \
       nsWindow::SetTitle(aTitle); \
-    } 
+    } \
+    void SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas) \
+    { \
+      nsWindow::SetTooltips(aNumberOfTips, aTooltipAreas); \
+    } \
+    void UpdateTooltips(const nsRect* aNewTips) \
+    { \
+      nsWindow::UpdateTooltips(aNewTips); \
+    } \
+    void RemoveTooltips() \
+    { \
+      nsWindow::RemoveTooltips(); \
+    }
 
 
 

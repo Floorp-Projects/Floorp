@@ -383,6 +383,35 @@ class nsIWidget : public nsISupports {
 
     virtual void SetTitle(const nsString& aTitle) = 0;
 
+    /**
+     * Set the collection of tooltip rectangles.
+     * A NS_SHOW_TOOLTIP event is generated when the mouse hovers over one
+     * of the rectangles. a NS_HIDE_TOOLTIP event is generated when the mouse
+     * is moved or a new tooltip is displayed.
+     *
+     * @param      aNumberOfTips    number of tooltip areas.
+     * @param      aTooltipArea     array of x,y,width,height rectangles specifying hot areas
+     *
+     */
+
+    virtual void SetTooltips(PRUint32 aNumberOfTips,const nsRect* aTooltipAreas) = 0;
+
+    /**
+     * Update the collection of tooltip rectangles. The number of tooltips must
+     * match the original number of tooltips specified in SetTooltips. Must be called
+     * after calling SetTooltips.
+     *
+     * @param      aNewTips     array of x,y,width,height rectangles specifying the new hot areas
+     *
+     */
+
+    virtual void UpdateTooltips(const nsRect* aNewTips) = 0;
+
+    /**
+     * Remove the collection of tooltip rectangles.
+     */
+
+    virtual void RemoveTooltips() = 0;
 
 };
 

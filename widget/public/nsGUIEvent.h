@@ -107,28 +107,34 @@ struct nsKeyEvent : public nsGUIEvent {
 
 #define NS_WINDOW_START                 100
 
-// Sent when window is created
+// Widget is being created
 #define NS_CREATE                       (NS_WINDOW_START)
-// Sent when window is destroyed
+// Widget is being destroyed
 #define NS_DESTROY                      (NS_WINDOW_START + 1)
-// Sent when the window is resized
+// Widget was resized
 #define NS_SIZE                         (NS_WINDOW_START + 2)
-// Sent when window gains focus
+// Widget gained focus
 #define NS_GOTFOCUS                     (NS_WINDOW_START + 3)
-// Sent when window loses focus
+// Widget lost focus
 #define NS_LOSTFOCUS                    (NS_WINDOW_START + 4)
-// Sent when the window needs to be repainted
+// Widget needs to be repainted
 #define NS_PAINT                        (NS_WINDOW_START + 30)
-// Sent when a key is pressed down within a window
+// Key is pressed down within a window
 #define NS_KEY_UP                       (NS_WINDOW_START + 32)
-// Sent when a key is released within a window
+// Key is released within a window
 #define NS_KEY_DOWN                     (NS_WINDOW_START + 33)
-// Sent when the window has been moved to a new location.
+// Window has been moved to a new location.
 // The events point contains the x, y location in screen coordinates
 #define NS_MOVE                         (NS_WINDOW_START + 34) 
 
-// Sent when a tab control's selected tab has changed
+// Tab control's selected tab has changed
 #define NS_TABCHANGE                    (NS_WINDOW_START + 35)
+
+// Tooltip should be shown
+#define NS_SHOW_TOOLTIP                 (NS_WINDOW_START + 36)
+// Tooltip should be hidden
+#define NS_HIDE_TOOLTIP                 (NS_WINDOW_START + 37)
+
 
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
