@@ -24,6 +24,8 @@
 #include "nsISupportsArray.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
 #include "nsIEnumerator.h"
 #include "nsMailDatabase.h"
 
@@ -31,6 +33,7 @@
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -141,13 +144,23 @@ nsURI2Name(char* uriStr, nsString& name)
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : nsMsgFolder(), mPath(nsnull), mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
-    mInitialized(PR_FALSE)
+    mInitialized(PR_FALSE), mMessagesInitialized(PR_FALSE),
+		mMessages(nsnull)
 {
   NS_INIT_REFCNT();
 }
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
+	if(mMessages)
+	{
+		PRUint32 count = mMessages->Count();
+
+		for (int i = count - 1; i >= 0; i--)
+			mMessages->RemoveElementAt(i);
+
+		NS_RELEASE(mMessages);
+	}
 }
 
 NS_IMPL_ADDREF(nsMsgLocalMailFolder)
@@ -224,18 +237,22 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;
     }
+	
+	nsIRDFService* rdfService = nsnull;
+    nsMsgLocalMailFolder* folder = nsnull;
 
-    // XXX trim off .sbd from uriStr
-    nsMsgLocalMailFolder* folder = new nsMsgLocalMailFolder(/*uriStr*/);
-
-    if (folder == nsnull) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      goto done;
-    }
-
-	folder->Init(uriStr);
+	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                             nsIRDFService::IID(),
+                                             (nsISupports**) &rdfService);
+	if(NS_SUCCEEDED(rv))
+	{
+		if(NS_SUCCEEDED(rv = rdfService->GetResource(uriStr, (nsIRDFResource**)&folder)))
+		{
+		    mSubFolders->AppendElement(NS_STATIC_CAST(nsIMsgFolder*, folder));
+		}
+		nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+	}
     delete[] uriStr;
-    mSubFolders->AppendElement(NS_STATIC_CAST(nsIMsgFolder*, folder));
   }
   done:
   return rv;
@@ -271,6 +288,50 @@ nsMsgLocalMailFolder::Initialize(void)
 #endif
   }
   return NS_OK;
+}
+
+
+nsresult
+nsMsgLocalMailFolder::InitializeMessages(void)
+{
+	nsNativeFileSpec path;
+	nsresult rv = GetPath(path);
+	if (NS_FAILED(rv)) return rv;
+	
+	nsFilePath filePath(path);
+	nsMailDatabase *pMailDatabase;
+
+	rv = NS_NewISupportsArray(&mMessages);
+	if (NS_FAILED(rv))
+		return rv;
+	NS_ADDREF(mMessages);
+
+	nsMailDatabase::Open(filePath, PR_TRUE, &pMailDatabase, PR_FALSE);
+	if(pMailDatabase)
+	{
+#ifdef DEBUG
+		pMailDatabase->PrePopulate();
+#endif
+		ListContext *pContext;
+		nsMsgHdr *pHdr;
+		char ch ='a';
+
+		pMailDatabase->ListFirst(&pContext, &pHdr);
+		while(pHdr)
+		{
+			nsISupports *supports;
+		  if(NS_SUCCEEDED(rv = pHdr->QueryInterface(kISupportsIID, (void**)&supports)))
+			{
+				mMessages->AppendElement(supports);
+				NS_RELEASE(supports);
+				pMailDatabase->ListNext(pContext, &pHdr);
+			}
+			else
+				return rv;
+		}
+		pMailDatabase->ListDone(pContext);
+	}
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -317,55 +378,12 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 {
-	nsNativeFileSpec path;
-	nsresult rv = GetPath(path);
-	if (NS_FAILED(rv)) return rv;
-	
-	nsFilePath filePath(path);
-	nsMailDatabase *pMailDatabase;
-
-	nsISupportsArray* messages;
-	rv = NS_NewISupportsArray(&messages);
-	if (NS_FAILED(rv))
-		return rv;
-	NS_ADDREF(messages);
-
-	nsMailDatabase::Open(filePath, PR_TRUE, &pMailDatabase, PR_FALSE);
-	if(pMailDatabase)
-	{
-#ifdef DEBUG
-		pMailDatabase->PrePopulate();
-#endif
-		ListContext *pContext;
-		nsMsgHdr *pHdr;
-
-		pMailDatabase->ListFirst(&pContext, &pHdr);
-		while(pHdr)
-		{
-			int num = 0;
-			nsISupports *supports;
-		    if(NS_SUCCEEDED(rv = pHdr->QueryInterface(kISupportsIID, (void**)&supports)))
-			{
-				nsAutoString str("mailbox://test");
-				str += num;
-  			    char* cstr = str.ToNewCString();
-
-				nsIRDFNode *pNode;
-				if(NS_SUCCEEDED(rv = pHdr->QueryInterface(nsIRDFNode::IID(), (void**)&pNode)))
-				{
-					pNode->Init(cstr);
-					pNode->Release();
-					messages->AppendElement(supports);
-				}
-				pMailDatabase->ListNext(pContext, &pHdr);
-				NS_RELEASE(supports);
-			}
-			else
-				return rv;
-		}
-		pMailDatabase->ListDone(pContext);
-	}
-  return messages->Enumerate(result); // empty set for now
+  if (!mMessagesInitialized) {
+    nsresult rv = InitializeMessages();
+    if (NS_FAILED(rv)) return rv;
+    mMessagesInitialized = PR_TRUE;      // XXX do this on failure too?
+  }
+  return mMessages->Enumerate(result);
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)

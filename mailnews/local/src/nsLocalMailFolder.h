@@ -108,6 +108,7 @@ public:
 protected:
   nsresult CreateSubFolders(void);
   nsresult Initialize(void);
+	nsresult InitializeMessages(void);
 
 protected:
   nsNativeFileSpec mPath;
@@ -115,6 +116,10 @@ protected:
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;
 	PRBool		mInitialized;
+	PRBool		mMessagesInitialized;
+	nsISupportsArray *mMessages;
+
+
 };
 
 #endif // nsMsgLocalMailFolder_h__

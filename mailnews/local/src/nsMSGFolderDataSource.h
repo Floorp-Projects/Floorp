@@ -112,5 +112,7 @@ public:
   static nsIRDFResource* kNC_MSGFolderRoot;
 
   static nsIRDFResource* kNC_Subject;
+  static nsIRDFResource* kNC_Sender;
+  static nsIRDFResource* kNC_Date;
 };
 
