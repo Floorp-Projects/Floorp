@@ -3897,7 +3897,7 @@ const jschar js_uriUnescaped_ucstr[] =
      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
      '-', '_', '.', '!', '~', '*', '\'', '(', ')', 0};
 
-#define URI_CHUNK_LENGTH 64U
+#define URI_CHUNK 64U
 
 /* Concatenate jschars onto an unshared/newborn JSString. */
 static JSBool
@@ -3907,8 +3907,8 @@ AddCharsToURI(JSContext *cx, JSString *str, const jschar *chars, size_t length)
 
     total = str->length + length + 1;
     if (!str->chars ||
-        total / URI_CHUNK_LENGTH > (str->length + 1) / URI_CHUNK_LENGTH) {
-        total = JS_ROUNDUP(total, URI_CHUNK_LENGTH);
+        JS_HOWMANY(total, URI_CHUNK) > JS_HOWMANY(str->length + 1, URI_CHUNK)) {
+        total = JS_ROUNDUP(total, URI_CHUNK);
         str->chars = JS_realloc(cx, str->chars, total * sizeof(jschar));
         if (!str->chars)
             return JS_FALSE;
