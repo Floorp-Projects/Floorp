@@ -449,14 +449,8 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
                                                     (nsISupports*)ioParamBlock
                                                   );
                     if ( argv ) {
-                        nsIDOMWindow *newWindow;
-                        rv = inParent->OpenDialog( jsContext, argv, 4, &newWindow );
-                        if ( NS_SUCCEEDED( rv ) )
-                        {
-    //                        newWindow->Release();
-                        } else
-                        {
-                        }
+                        nsCOMPtr<nsIDOMWindow> newWindow;
+                        rv = inParent->OpenDialog( jsContext, argv, 4, getter_AddRefs(newWindow) );
                         JS_PopArguments( jsContext, stackPtr );
                     }
                     else
