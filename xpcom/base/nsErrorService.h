@@ -45,7 +45,6 @@ class nsInt2StrHashtable
 {
 public:
     nsInt2StrHashtable();
-    virtual ~nsInt2StrHashtable();
 
     nsresult  Put(PRUint32 key, const char* aData);
     char*     Get(PRUint32 key);

@@ -47,7 +47,7 @@ static const PRUint32 kAutoArraySize = 8;
 class NS_COM nsSupportsArray : public nsISupportsArray {
 public:
   nsSupportsArray(void);
-  virtual ~nsSupportsArray(void);
+  ~nsSupportsArray(void); // nonvirtual since we're not subclassed
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);

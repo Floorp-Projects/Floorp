@@ -95,6 +95,10 @@ protected:
       mCount(0),
       mSimpleCurItem(0),
       mStringCurItem(0) { }
+
+  // A virtual destructor is needed here because subclasses of
+  // BaseStringEnumerator do not implement their own Release() method.
+
   virtual ~BaseStringEnumerator()
   {
     if (mArray)

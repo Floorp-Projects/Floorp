@@ -543,12 +543,8 @@ NS_NewGenericModule2(nsModuleInfo* info, nsIModule* *result)
     if (!m)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)result);
-    if (NS_FAILED(rv)) {
-        delete m;
-        m = nsnull;
-    }
+    // Increase refcnt and store away nsIModule interface to m in result
+    NS_ADDREF(*result = m);
     return rv;
 }
 

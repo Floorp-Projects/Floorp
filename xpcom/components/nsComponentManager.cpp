@@ -413,13 +413,14 @@ public:
     NS_DECL_NSIBIDIRECTIONALENUMERATOR
     NS_DECL_NSISIMPLEENUMERATOR
 
-    virtual ~PLDHashTableEnumeratorImpl();
     PLDHashTableEnumeratorImpl(PLDHashTable *table,
                                EnumeratorConverter converter,
                                void *converterData);
     PRInt32 Count() { return mCount; }
 private:
     PLDHashTableEnumeratorImpl(); /* no implementation */
+
+    ~PLDHashTableEnumeratorImpl();
     NS_IMETHODIMP ReleaseElements();
 
     nsVoidArray   mElements;
@@ -513,13 +514,15 @@ PL_NewDHashTableEnumerator(PLDHashTable *table,
     if (!impl)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    NS_ADDREF(impl);
+
     if (impl->Count() == -1) {
         // conversion failed
-        delete impl;
+        NS_RELEASE(impl);
         return NS_ERROR_FAILURE;
     }
 
-    NS_ADDREF(*retval = impl);
+    *retval = impl;
     return NS_OK;
 }
 

@@ -49,7 +49,6 @@ class NS_COM nsGetInterface : public nsCOMPtr_helper
         }
 
       virtual nsresult operator()( const nsIID&, void** ) const;
-      virtual ~nsGetInterface() {};
 
     private:
       nsCOMPtr<nsISupports> mSource;

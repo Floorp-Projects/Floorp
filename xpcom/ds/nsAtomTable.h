@@ -49,8 +49,13 @@
 class AtomImpl : public nsIAtom {
 public:
   AtomImpl();
-  virtual ~AtomImpl();
 
+protected:
+  // We don't need a virtual destructor here because PermanentAtomImpl
+  // deletions aren't handled through Release().
+  ~AtomImpl();
+
+public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIATOM
 
