@@ -910,7 +910,16 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     }
     die "Invalid order: $::FORM{'order'}" unless
         $::FORM{'order'} =~ /^([a-zA-Z0-9_., ]+)$/;
-    $query .= $::FORM{'order'};
+    
+    # Extra special disgusting hack: if we are ordering by target_milestone,
+    # change it to order by the sortkey of the target_milestone first.
+    my $order = $::FORM{'order'};
+    if ($order =~ /bugs.target_milestone/) {
+        $query =~ s/ WHERE / LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
+        $order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
+    }
+
+    $query .= $order;
 }
 
 
