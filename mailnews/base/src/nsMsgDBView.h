@@ -43,6 +43,8 @@ public:
 protected:
   nsresult ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded);
   nsresult ExpandAll();
+  nsresult ReverseSort();
+  nsresult ReverseThreads();
 
 	PRInt32	  GetSize(void) {return(m_keys.GetSize());}
 

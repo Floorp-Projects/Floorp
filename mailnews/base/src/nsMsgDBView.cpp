@@ -64,8 +64,22 @@ NS_IMETHODIMP nsMsgDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult nsMsgDBView::ReverseThreads()
+{
+    printf("XXX same sort type, just different sort order.  just reverse threads\n");
+    return NS_OK;
+}
+
+nsresult nsMsgDBView::ReverseSort()
+{
+    printf("XXX same sort type (but not threaded), just different sort order.  just reverse it\n");
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
+    nsresult rv;
+
     printf("XXX nsMsgDBView::Sort(%d,%d)\n",(int)sortType,(int)sortOrder);
     if (m_sortType == sortType && m_sortValid) {
         if (m_sortOrder == sortOrder) {
@@ -74,12 +88,12 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
         }   
         else {
             if (m_sortType != nsMsgViewSortType::byThread) {
-                printf("XXX same sort type (but not threaded), just different sort order.  just reverse it\n");
-                //ReverseSort();
+                rv = ReverseSort();
+                NS_ENSURE_SUCCESS(rv,rv);
             }
             else {
-                printf("XXX same sort type, just different sort order.  just reverse threads\n");
-                //ReverseThreads();
+                rv = ReverseThreads();
+                NS_ENSURE_SUCCESS(rv,rv);
             }
 
             m_sortType = sortType;

@@ -232,9 +232,9 @@ nsresult	nsMsgThreadedDBView::ExpandAll()
 	// go through expanding in place 
 	for (PRUint32 i = 0; i < m_keys.GetSize(); i++)
 	{
+#ifdef HAVE_BRANCH_YET
 		PRUint32	numExpanded;
 		PRUint32	flags = m_flags[i];
-#ifdef HAVE_BRANCH_YET
 		if (flags & kHasChildren && (flags & MSG_FLAG_ELIDED))
 		{
 			rv = ExpandByIndex(i, &numExpanded);
