@@ -868,24 +868,16 @@ static JSBool
 obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                          jsval *rval)
 {
-    JSObject *obj2;
-    JSProperty *prop;
     JSAtom *atom;
     uintN attrs;
-    JSBool ok;
 
     atom = js_ValueToStringAtom(cx, *argv);
-    if (atom == NULL || !OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop))
+    if (atom == NULL)
         return JS_FALSE;
-    if (!prop) {
-        *rval = JSVAL_FALSE;
-        return JS_TRUE;
-    }
-    ok = OBJ_GET_ATTRIBUTES(cx, obj2, (jsid)atom, prop, &attrs);
-    if (ok)
-        *rval = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
-    OBJ_DROP_PROPERTY(cx, obj2, prop);
-    return ok;
+    if (!OBJ_GET_ATTRIBUTES(cx, obj, (jsid)atom, NULL, &attrs))
+        return JS_FALSE;
+    *rval = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
+    return JS_TRUE;
 }
 #endif /* JS_HAS_NEW_OBJ_METHODS */
 
@@ -2075,8 +2067,10 @@ js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
     if (noprop) {
 	if (!js_LookupProperty(cx, obj, id, &obj, &prop))
 	    return JS_FALSE;
-	if (!prop)
-	    return JS_TRUE;
+        if (!prop) {
+            *attrsp = 0;
+            return JS_TRUE;
+        }
 	if (!OBJ_IS_NATIVE(obj)) {
 	    ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, attrsp);
 	    OBJ_DROP_PROPERTY(cx, obj, prop);
