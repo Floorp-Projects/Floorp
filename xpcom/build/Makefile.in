@@ -45,7 +45,8 @@ LOCAL_INCLUDES +=			\
 	-I$(srcdir)/../io		\
 	-I$(srcdir)/../components	\
 	-I$(srcdir)/../threads		\
-	$(NULL)
+	-I$(srcdir)/../proxy/src/       \
+        $(NULL)
 
 DEFINES += -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
