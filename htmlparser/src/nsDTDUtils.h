@@ -157,6 +157,7 @@ public:
 
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;
+  PRInt32         mContextTopIndex;
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };
