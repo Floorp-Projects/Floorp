@@ -33,6 +33,7 @@
 static WNDPROC OldListBoxWndProc;
 static BOOL    gbProcessingXpnstallFiles;
 static DWORD   gdwACFlag;
+static DWORD   gdwIndexLastSelected;
 
 void AskCancelDlg(HWND hDlg)
 {
@@ -303,6 +304,18 @@ LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   return(0);
 }
 
+LRESULT CALLBACK ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  switch(uMsg)
+  {
+    case LB_SETCURSEL:
+      gdwIndexLastSelected = (DWORD)wParam;
+      break;
+  }
+
+  return(CallWindowProc(OldListBoxWndProc, hWnd, uMsg, wParam, lParam));
+}
+
 LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
   DWORD dwIndex;
@@ -311,15 +324,19 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
   char  szBuf[MAX_BUF];
   char  szBufIndex[MAX_BUF];
   char  szPath[MAX_BUF];
-  char  szTempPath[MAX_BUF];
+  HWND  hwndLBFolders;
 
   switch(message)
   {
     case WM_INITDIALOG:
+      hwndLBFolders  = GetDlgItem(hDlg, 1121);
       SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+
+      OldListBoxWndProc    = SubclassWindow(hwndLBFolders, (WNDPROC)ListBoxBrowseWndProc);
+      gdwIndexLastSelected = SendDlgItemMessage(hDlg, 1121, LB_GETCURSEL, 0, (LPARAM)0);
       break;
 
     case WM_COMMAND:
@@ -328,32 +345,29 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case 1121:
           if(HIWORD(wParam) == LBN_DBLCLK)
           {
-            SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, 0, (LPARAM)szBuf);
-            lstrcpy(szPath, szBuf);
             dwIndex = SendDlgItemMessage(hDlg, 1121, LB_GETCURSEL, 0, (LPARAM)0);
-            for(dwLoop = 1; dwLoop <= dwIndex; dwLoop++)
-            {
-              SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, dwIndex, (LPARAM)szBufIndex);
-              lstrcpy(szTempPath, szPath);
-              AppendBackSlash(szTempPath, sizeof(szTempPath));
-              lstrcat(szTempPath, szBufIndex);
-              if(FileExists(szTempPath))
-              {
-                AppendBackSlash(szPath, sizeof(szPath));
-                lstrcpy(szPath, szTempPath);
-              }
-              else
-              {
-                SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, dwLoop, (LPARAM)szBuf);
-                lstrcpy(szTempPath, szPath);
-                AppendBackSlash(szTempPath, sizeof(szTempPath));
-                lstrcat(szTempPath, szBuf);
+            SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, 0, (LPARAM)szPath);
 
-                if(FileExists(szTempPath))
-                {
-                  AppendBackSlash(szPath, sizeof(szPath));
-                  lstrcpy(szPath, szTempPath);
-                }
+            if(gdwIndexLastSelected < dwIndex)
+            {
+              for(dwLoop = 1; dwLoop <= gdwIndexLastSelected; dwLoop++)
+              {
+                SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, dwLoop, (LPARAM)szBufIndex);
+                AppendBackSlash(szPath, sizeof(szPath));
+                lstrcat(szPath, szBufIndex);
+              }
+
+              SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, dwIndex, (LPARAM)szBufIndex);
+              AppendBackSlash(szPath, sizeof(szPath));
+              lstrcat(szPath, szBufIndex);
+            }
+            else
+            {
+              for(dwLoop = 1; dwLoop <= dwIndex; dwLoop++)
+              {
+                SendDlgItemMessage(hDlg, 1121, LB_GETTEXT, dwLoop, (LPARAM)szBufIndex);
+                AppendBackSlash(szPath, sizeof(szPath));
+                lstrcat(szPath, szBufIndex);
               }
             }
             SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szPath);
@@ -414,6 +428,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             }
           }
 
+          RemoveBackSlash(szBuf);
           lstrcpy(szTempSetupPath, szBuf);
           EndDialog(hDlg, 0);
           break;
@@ -831,6 +846,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           break;
 
         case IDCANCEL:
+          lstrcpy(sgProduct.szPath, szTempSetupPath);
           AskCancelDlg(hDlg);
           break;
 

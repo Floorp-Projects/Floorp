@@ -58,5 +58,7 @@ void              SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected, DWORD dwA
 LPSTR             GetStartInstallMessage(void);
 void              AppendStringWOAmpersand(LPSTR szInputString, DWORD dwInputStringSize, LPSTR szString);
 void              TruncateString(HWND hWnd, LPSTR szInPath, DWORD dwInPathBufSize, LPSTR szOutPath, DWORD dwOutPathBufSize);
+WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
+LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 #endif
