@@ -569,11 +569,11 @@ if ( Param("move-enabled") && (defined $::COOKIE{"Bugzilla_login"}) && ($::COOKI
 
 print "<BR></FORM>";
 
-print "
-<table><tr><td align=left><B>Description:</B></td>
+print qq|
+<table><tr><td align=left><B><a name="0" href="#c0">Description:</a></B></td>
 <td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
 <HR>
-";
+|;
 print $bug{'long_desc'};
 print "
 <HR>\n";
