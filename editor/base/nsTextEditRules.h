@@ -49,6 +49,15 @@ public:
   NS_IMETHOD DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
   NS_IMETHOD GetInsertBreakTag(nsIAtom **aTag);
 
+  NS_IMETHOD WillInsertText(nsIDOMSelection *aSelection, 
+                            const nsString& aInputString, 
+                            PRBool *aCancel,
+                            nsString& aOutputString);
+  NS_IMETHOD DidInsertText(nsIDOMSelection *aSelection, const nsString& aStringToInsert, nsresult aResult);
+
+  NS_IMETHOD WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
+  NS_IMETHOD DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
+
   NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel);
   NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult);
 

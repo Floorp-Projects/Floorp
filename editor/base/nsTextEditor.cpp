@@ -411,7 +411,29 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
 
 NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 {
-  return nsEditor::InsertText(aStringToInsert);
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
+
+  nsresult result = nsEditor::BeginTransaction();
+  if (NS_FAILED(result)) { return result; }
+
+  // pre-process
+  nsEditor::GetSelection(getter_AddRefs(selection));
+  nsString stringToInsert;
+  result = mRules->WillInsertText(selection, aStringToInsert, &cancel, stringToInsert);
+  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  {
+    result = nsEditor::InsertText(stringToInsert);
+    // post-process 
+    result = mRules->DidInsertText(selection, stringToInsert, result);
+  }
+
+  nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
+  NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
+
+  return result;
 }
 
 NS_IMETHODIMP nsTextEditor::InsertBreak()
