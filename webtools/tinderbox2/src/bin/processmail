@@ -11,8 +11,8 @@
 # logs in compressed form for future reference.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2000/09/22 15:16:52 $ 
+# $Revision: 1.8 $ 
+# $Date: 2000/10/18 20:24:06 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
 # $Name:  $ 
@@ -407,7 +407,7 @@ sub check_required_vars {
     # Keep the spacing between builds greater then our minumum HTML
     # grid spacing.  There can be very frequent updates but different
     # builds must be spaced apart.
-    my $safe_min = TinderDB::MIN_TABLE_SPACING + ($main::SECONDS_PER_MINUTE*2);
+    my $safe_min = TinderDB::TABLE_SPACING + ($main::SECONDS_PER_MINUTE*2);
     ($build_start > $safe_min) ||
        die("New build started too frequently.  Builds must start".
            "at least ".($safe_min).
