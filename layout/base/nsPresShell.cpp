@@ -3913,11 +3913,13 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
     rv = NS_ERROR_FAILURE; //changed to NS_OK in quirks mode if ScrollTo is called
     
     // Scroll to the top/left if the anchor can not be
-    // found (quirks mode only). @see bug 80784
+    // found and it is labelled top (quirks mode only). @see bug 80784
     nsCompatibility compatMode;
     mPresContext->GetCompatibilityMode(&compatMode);
    
-    if ((compatMode == eCompatibility_NavQuirks) && (mViewManager)) {
+    if ((aAnchorName.EqualsIgnoreCase("top")) &&
+        (compatMode == eCompatibility_NavQuirks) && 
+        (mViewManager)) { 
       // Get the viewport scroller
       nsIScrollableView* scrollingView;
       mViewManager->GetRootScrollableView(&scrollingView);
