@@ -26,7 +26,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = raptorhtmlpars
 
-DEFINES += -D_IMPL_NS_HTMLPARS
+DEFINES += -D_IMPL_NS_HTMLPARS -DXML_DTD
 
 CPPSRCS= \
 	nsDTDUtils.cpp 				\
