@@ -818,8 +818,13 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
      return rv;
 
   nsXPIDLCString nativeFolderName;
-  ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(folderName),
+  rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(folderName),
                      getter_Copies(nativeFolderName));
+  if (NS_FAILED(rv) || (nativeFolderName.Length() == 0)) {
+     ThrowAlertMsg("folderCreationFailed", msgWindow);
+     // I'm returning this value so the dialog stays up
+     return NS_MSG_FOLDER_EXISTS;
+  }
   
   nsCAutoString safeFolderName;
   safeFolderName.Assign(nativeFolderName.get());
