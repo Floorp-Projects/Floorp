@@ -135,34 +135,72 @@ $opt_sort = $form{'sort'};
 #
 &print_top;
 
-if ($ENV{'HTTP_USER_AGENT'} =~ /Win/) {
-    $font_tag = "<FONT FACE='Lucida Console' SIZE=-1>";
-} else {
-    # We don't want your stinking Windows font
-    $font_tag = "<FONT>";
-}
 
 # Print link at top for directory browsing
 #
-$output = "<DIV ALIGN=LEFT>";
+print q(
+<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TR><TD><A HREF="http://www.mozilla.org/"><IMG
+ SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
+ BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
+<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0 WIDTH="100%">
+ <TR>
+  <TD ALIGN=LEFT VALIGN=CENTER>
+   <NOBR><FONT SIZE="+2"><B>
+    CVS Log
+   </B></FONT></NOBR>
+   <BR><B>
+);
 
 foreach $path (split('/',$rcs_path)) {
-    $link_path .= $path;
-    $output .= "<A HREF='rview.cgi?dir=$link_path";
-    $output .= "&cvsroot=$form{'root'}" if defined $form{'root'};
-    $output .= "&rev=$browse_revtag" unless $browse_revtag eq 'HEAD';
-    $output .= "' onmouseover='window.status=\"Browse $link_path\";"
-        ." return true;'>$path</A>/ ";
-    $link_path .= '/';
+    $link_path .= url_encode2($path).'/' if $path ne 'mozilla';
+    print "<A HREF='http://lxr.mozilla.org/mozilla/source/$link_path'>$path</a>/ ";
 }
-$output .= "$file_tail (";
-$output .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
-$output .= $revision if $revision;
-$output .= ")";
+print "<A HREF='http://lxr.mozilla.org/mozilla/source/$link_path$file_tail'>$file_tail</a> ";
 
-EmitHtmlHeader("CVS Log", $output);
+print " (";
+print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
+print $revision if $revision;
+print ")";
 
-&print_useful_links($filename);
+print qq(
+</B>
+  </TD>
+
+  <TD ALIGN=RIGHT VALIGN=TOP WIDTH="1%">
+   <TABLE BORDER CELLPADDING=10 CELLSPACING=0>
+    <TR>
+     <TD NOWRAP BGCOLOR="#FAFAFA">
+      <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
+       <TR>
+        <TD>
+         <A HREF="http://lxr.mozilla.org/mozilla/source/$link_path$file_tail">lxr</A>
+        </TD><TD>
+         Browse the source code as hypertext.
+        </TD>
+       </TR><TR>
+        <TD>
+         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$file_tail">diff</A>
+        </TD><TD>
+         Compare any two version.
+        </TD>
+       </TR><TR>
+        <TD>
+         <A HREF="cvsblame.cgi?file=$filename">blame</A>&nbsp;
+        </TD><TD>
+         Annotate the author of each line.
+        </TD>
+       </TR>
+      </TABLE>
+     </TD>
+    </TR>
+   </TABLE>
+  </TD>
+ </TR>
+</TABLE>
+      );
+
+#&print_useful_links($filename);
  
 # Create a table with header links to sort by column.
 #
@@ -174,7 +212,7 @@ if ($opt_sort eq 'author') {
 }
 
 $table_header_tag = &url_encode3($table_header_tag);
-print "$font_tag$table_tag$table_header_tag";
+print "$table_tag$table_header_tag";
 
 # Print each line of the revision, preceded by its annotation.
 #
@@ -334,43 +372,9 @@ sub print_top {
     print <<__TOP__;
 <HTML>
 <HEAD>
-<TITLE>CVS Log $title_text</TITLE>
-<SCRIPT>
-
-var event = 0;	// Nav3.0 compatibility
-
-function who_menu(n,extra,d) {
-    if( parseInt(navigator.appVersion) < 4 ){
-        return true;
-    }
-    l = document.layers['popup'];
-    l.src="../registry/who.cgi?email="+n+extra;
-    l.top = d.target.y - 6;
-    l.left = d.target.x - 6;
-    l.visibility="show";
-    return false;
-}
-
-function file_menu(dir,file,prev_rev,rev,root,d) {
-    if( parseInt(navigator.appVersion) < 4 ){
-        return true;
-    }
-    l = document.layers['popup'];
-    l.src="../registry/file.cgi?file="+file+"&dir="+dir+"&prev_rev="+prev_rev+"&rev="+rev+"&cvsroot="+root+"&linked_text="+rev;
-    /* d.target.text */
-    l.top = d.target.y - 6;
-    l.left = d.target.x - 6;
-    l.visibility="show";
-    return false;
-}
-
-
-</SCRIPT>
-
+  <TITLE>CVS Log $title_text</TITLE>
 </HEAD>
 <BODY BGCOLOR=WHITE TEXT=BLACK>
-<layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
-</layer>
 
 __TOP__
 } # print_top
