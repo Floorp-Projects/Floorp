@@ -77,6 +77,7 @@ function save() {
     // Use stream xfer component to prompt for destination and save.
     var xfer = Components.classes[ "component://netscape/appshell/component/xfer" ].getService();
     xfer = xfer.QueryInterface( Components.interfaces.nsIStreamTransfer );
+    var retry = false;
     try {
         // When Necko lands, we need to receive the real nsIChannel and
         // do SelectFileAndTransferLocation!
@@ -85,11 +86,12 @@ function save() {
         xfer.SelectFileAndTransferLocationSpec( data.location, window.opener );
     } catch( exception ) {
         // Failed (or cancelled), give them another chance.
-        alert( "Save failed, rv=" + exception + "\n" );
-        return;
+        retry = true;
     }
-    // Save underway, close this dialog.
-    window.close();
+    // If save underway, close this dialog.
+    if ( !retry ) {
+        window.setTimeout( "window.close();", 10 );
+    }
 }
 
 function cancel() {
