@@ -47,8 +47,6 @@
 #include "nsIStringBundle.h"
 #include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
-#include "nsFileLocations.h"
-#include "nsIFileLocator.h"
 #include "nsIXBLService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
@@ -76,6 +74,7 @@
 #include "nsIImageManager.h"
 #include "nsIBindingManager.h"
 #include "prio.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kInstalledChromeFileName[] = "installed-chrome.txt";
@@ -2023,30 +2022,25 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const PRUnichar* aPackageName, 
 NS_IMETHODIMP
 nsChromeRegistry::GetProfileRoot(nsCString& aFileURL) 
 { 
-  nsCOMPtr<nsIFileLocator> fl;
-  
-  nsresult rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
-                                          nsnull,
-                                          NS_GET_IID(nsIFileLocator),
-                                          getter_AddRefs(fl));
-
-  if (NS_FAILED(rv))
-    return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsIFile> userChromeDir;  
 
   // Build a fileSpec that points to the destination
-  // (profile dir + chrome + package + provider + chrome.rdf)
-  nsCOMPtr<nsIFileSpec> chromeFileInterface;
-  fl->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(chromeFileInterface));
+  // (profile dir + chrome)  
+  rv = NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR, getter_AddRefs(userChromeDir));
+  if (NS_FAILED(rv) || !userChromeDir)
+    return NS_ERROR_FAILURE;
+    
+  char *filePath;
+  rv = userChromeDir->GetPath(&filePath);
+  if (NS_FAILED(rv))
+    return rv;
+  nsFileSpec chromeFile(filePath);
+  Recycle(filePath);
 
-  if (chromeFileInterface) {
-    nsFileSpec chromeFile;
-    chromeFileInterface->GetFileSpec(&chromeFile);
-    nsFileURL fileURL(chromeFile);
-    const char* fileStr = fileURL.GetURLString();
-    aFileURL = fileStr;
-    aFileURL += "chrome/";
-  }
-  else return NS_ERROR_FAILURE;
+  nsFileURL fileURL(chromeFile);
+  const char* fileStr = fileURL.GetURLString();
+  aFileURL = fileStr;
   
   return NS_OK; 
 }
@@ -2055,26 +2049,25 @@ NS_IMETHODIMP
 nsChromeRegistry::GetInstallRoot(nsCString& aFileURL) 
 { 
   nsresult rv;
-  nsCOMPtr<nsIFileLocator> fl;
-  rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
-                                          nsnull,
-                                          NS_GET_IID(nsIFileLocator),
-                                          getter_AddRefs(fl));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIFile> appChromeDir;  
 
   // Build a fileSpec that points to the destination
-  // (profile dir + chrome + package + provider + chrome.rdf)
-  nsCOMPtr<nsIFileSpec> chromeFileInterface;
-  rv = fl->GetFileLocation(nsSpecialFileSpec::App_ChromeDirectory, 
-                           getter_AddRefs(chromeFileInterface));
-  if (NS_FAILED(rv)) return rv;
+  // (bin dir + chrome)  
+  rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(appChromeDir));
+  if (NS_FAILED(rv) || !appChromeDir)
+    return NS_ERROR_FAILURE;
 
-  nsFileSpec chromeFile;
-  rv = chromeFileInterface->GetFileSpec(&chromeFile);
-  if (NS_FAILED(rv)) return rv;
+  char *filePath;
+  rv = appChromeDir->GetPath(&filePath);
+  if (NS_FAILED(rv))
+    return rv;
+  nsFileSpec chromeFile(filePath);
+  Recycle(filePath);
+
   nsFileURL fileURL(chromeFile);
   const char* fileStr = fileURL.GetURLString();
   aFileURL = fileStr;
+  
   return NS_OK; 
 }
 
@@ -2410,30 +2403,21 @@ nsChromeRegistry::CheckForNewChrome()
   }
 
   // open the installed-chrome file
-  nsCOMPtr<nsIFileLocator> locator;
-  rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
-                                          nsnull,
-                                          NS_GET_IID(nsIFileLocator),
-                                          getter_AddRefs(locator));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIFileSpec> listFileInterface;
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_ChromeDirectory, 
-                                getter_AddRefs(listFileInterface));
-  if (NS_FAILED(rv)) return rv;
-
-  nsFileSpec listFileSpec;
-  nsCOMPtr<nsILocalFile> listFile;
-  rv = listFileInterface->GetFileSpec(&listFileSpec);
-  if (NS_FAILED(rv)) return rv;
-  rv = NS_FileSpecToIFile(&listFileSpec, getter_AddRefs(listFile));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIFile> listFileInterface;
+  rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(listFileInterface));
+  if (NS_FAILED(rv))
+    return rv;
+    
+  nsCOMPtr<nsILocalFile> listFile(do_QueryInterface(listFileInterface, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  listFile->AppendRelativePath(kInstalledChromeFileName);
 
   PRFileDesc *file;
-  rv = listFile->AppendRelativePath(kInstalledChromeFileName);
-  if (NS_FAILED(rv)) return rv;
+
   rv = listFile->OpenNSPRFileDesc(PR_RDWR, 0, &file);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   // file is open. 
 
