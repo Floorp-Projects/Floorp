@@ -143,7 +143,7 @@ void nsNativeFileSpec::operator += (const char* inRelativePath)
 } // nsNativeFileSpec::operator +=
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::CreateDirectory(int mode)
+void nsNativeFileSpec::CreateDirectory(int /*mode*/)
 //----------------------------------------------------------------------------------------
 {
 	// Note that mPath is canonical!
