@@ -1,20 +1,20 @@
 var err = initInstall("Mozilla Mail", "Mail", "$Version$"); 
 logComment("initInstall: " + err);
 
-var communicatorFolder = getFolder("Program");
-logComment("communicatorFolder: " + communicatorFolder);
+var fProgram = getFolder("Program","Mozilla Folder");
+logComment("fProgram: " + fProgram);
 
 err = addDirectory("Program",
                    "$Version$",
                    "viewer",           // jar source folder 
-                   communicatorFolder, // target folder
-                   "Mozilla Folder",   // target subdir 
+                   fProgram,           // target folder
+                   "",                 // target subdir 
                    true );             // force flag 
 
 logComment("addDirectory() returned: " + err);
 
 err = registerChrome(CONTENT | DELAYED_CHROME,
-                     getFolder("Chrome","packages/messenger"));
+                     getFolder(fProgram,"chrome/packages/messenger"));
 logComment("registerChrome() returned: " + err);
 
 err = getLastError();
@@ -25,7 +25,7 @@ if (err==SUCCESS)
 }
 else
 {
-	cancelInstall();
+	cancelInstall(err);
 	logComment("cancelInstall() due to error: " + err);
 }
 

@@ -1,15 +1,14 @@
 var err = initInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
 logComment("initInstall: " + err);
 
-var communicatorFolder = getFolder("Program");
-logComment("communicatorFolder: " + communicatorFolder);
+var fProgram = getFolder("Program","Mozilla Folder");
+logComment("fProgram: " + fProgram);
 
-var subFolder = "Mozilla Folder";
 err = addDirectory("Program",
                    "$Version$",
                    "viewer",           // jar source folder
-                   communicatorFolder, // target folder
-                   subFolder,          // target subdir 
+                   fProgram,           // target folder 
+                   "",                 // target subdir 
                    true );             // force flag 
 
 logComment("addDirectory() returned: " + err);
@@ -21,7 +20,7 @@ logComment("addDirectory() returned: " + err);
 // logComment("dirCreate() returned: " + ignoreErr);
 
 var ctype = (CONTENT | DELAYED_CHROME);
-var cf = getFolder("Chrome");
+var cf = getFolder(fProgram,"chrome");
 registerChrome(ctype, getFolder(cf,"packages/core"));
 registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
 registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
@@ -30,8 +29,7 @@ err = getLastError();
 
 // make an alias to the browser on the desktop 
 var desktopFolder = getFolder("Mac Desktop");
-var appFolder = getFolder("Program", subFolder);
-var ignoreErr = fileMacAlias(appFolder,     "Mozilla",   // source
+var ignoreErr = fileMacAlias(fProgram,      "Mozilla",   // source
                              desktopFolder, "Mozilla");  // target
 logComment("fileMacAlias() returned: " + ignoreErr);
 

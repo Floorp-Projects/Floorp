@@ -1,16 +1,16 @@
 var err = initInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
 logComment("initInstall: " + err);
 
-var communicatorFolder = getFolder("Program");
-logComment("communicatorFolder: " + communicatorFolder);
+var fProgram = getFolder("Program","Mozilla Folder");
+logComment("fProgram: " + fProgram);
 
 var subFolder = "Mozilla Folder";
 
 err = addDirectory("Program",
                    "$Version$",
                    "viewer",           // jar source folder 
-                   communicatorFolder, // target folder 
-                   subFolder,          // target subdir 
+                   fProgram,           // target folder 
+                   "",                 // target subdir 
                    true );             // force flag 
 
 logComment("addDirectory() returned: " + err);
@@ -22,6 +22,6 @@ if (err==SUCCESS)
 }
 else
 {
-	cancelInstall();
+	cancelInstall(err);
 	logComment("cancelInstall() returned: " + err);
 }
