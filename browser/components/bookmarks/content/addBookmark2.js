@@ -94,8 +94,6 @@ function Startup()
   onFieldInput();
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));
-  dump('down: '+gExpander.getAttribute("tooltiptextdown")+"\n");
-  dump('up: '+gExpander.getAttribute("tooltiptextup")+"\n");
 
   // fix no more persisted class attribute in old profiles
   var localStore = RDF.GetDataSource("rdf:local-store");
