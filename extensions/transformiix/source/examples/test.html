@@ -78,11 +78,11 @@
       <BR>
       <B>Test:</B>&lt;xsl:apply-templates/&gt;<BR>
       <B>Desired Result:</B>element x, element y, element z<BR>
-      <B>Result:</B>element<B> x</B>,element<B> y</B>,element<B> z</B>
+      <B>Result:</B>
    
-   
-   
-   
+   ,element<B> x</B>
+   ,element<B> y</B>
+   ,element<B> z</B>
 
    
 </P>
@@ -91,7 +91,7 @@
       <BR>
       <B>Test:</B>&lt;xsl:apply-templates mode="mode-test"/&gt;<BR>
       <B>Desired Result:</B>x, y, z<BR>
-      <B>Result:</B>x, y, z</P>
+      <B>Result:</B>, x, y, z</P>
     <P>
       <B>Testing predicates</B>
       <BR>
@@ -708,6 +708,37 @@
         </TD>
         <TD>
           <FONT COLOR="blue">33</FONT>
+        </TD>
+      </TR>
+    </TABLE>
+    <TABLE>
+      <TR BGColor="#E0E0FF">
+        <TD Colspan="2" ALIGN="CENTER">
+          <B>Automatic Result Type Conversion</B>
+        </TD>
+      </TR>
+      <TR>
+        <TD VALIGN="TOP">
+          <B>Test:</B>
+        </TD>
+        <TD>&lt;xsl:value-of select="'747' + 8"/&gt;<BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Desired Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">755</FONT>
+          <BR>
+        </TD>
+      </TR>
+      <TR>
+        <TD>
+          <B>Result:</B>
+        </TD>
+        <TD>
+          <FONT COLOR="blue">755</FONT>
         </TD>
       </TR>
     </TABLE>

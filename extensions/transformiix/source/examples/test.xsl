@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    - original author.
  *
- * $Id: test.xsl,v 1.4 2000/02/17 03:28:53 kvisco%ziplink.net Exp $
+ * $Id: test.xsl,v 1.5 2000/03/31 10:16:38 kvisco%ziplink.net Exp $
  */
 -->
 
@@ -778,6 +778,35 @@
    </TR>
    </TABLE>
 
+  <!-- Result Type conversion tests -->
+   <TABLE>
+   <TR BGColor="#E0E0FF">
+      <TD Colspan="2" ALIGN="CENTER">
+         <B>Automatic Result Type Conversion</B>
+      </TD>
+   </TR>
+   <!-- new test -->
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="'747' + 8"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">755</FONT><BR/>
+      </TD>
+   </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="'747' + 8"/>
+         </FONT>
+      </TD>
+   </TR>
+   </TABLE>
   </BODY>
 </HTML>
 </xsl:template>
