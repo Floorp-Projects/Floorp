@@ -154,8 +154,6 @@ static struct CallbackNode* gCallbacks = NULL;
 static PRBool       gCallbacksEnabled = PR_FALSE;
 static PRBool       gIsAnyPrefLocked = PR_FALSE;
 static char *       gSavedLine = NULL; 
-static char *       gLockFileName = NULL;
-static char *       gLockVendor = NULL;
 
 
 static PLDHashTableOps     pref_HashTableOps = {
@@ -288,7 +286,6 @@ struct CallbackNode {
 
 /* -- Prototypes */
 static PrefResult pref_DoCallback(const char* changed_pref);
-static PRBool pref_VerifyLockFile(char* buf, long buflen);
 
 
 PR_STATIC_CALLBACK(JSBool) pref_BranchCallback(JSContext *cx, JSScript *script);
@@ -297,60 +294,6 @@ static void pref_Alert(char* msg);
 static PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
 static inline PrefHashEntry* pref_HashTableLookup(const void *key);
   
-/* Computes the MD5 hash of the given buffer (not including the first line)
-   and verifies the first line of the buffer expresses the correct hash in the form:
-   // xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
-   where each 'xx' is a hex value. */
-PRBool pref_VerifyLockFile(char* buf, long buflen)
-{
-#ifdef MOZ_SECURITY
-    PRBool success = PR_FALSE;
-    const int obscure_value = 7;
-    const long hash_length = 51;        /* len = 48 chars of MD5 + // + EOL */
-    unsigned char digest[16];
-    char szHash[64];
-
-    /* Unobscure file by subtracting some value from every char. */
-    long i;
-    for (i = 0; i < buflen; i++)
-        buf[i] -= obscure_value;
-
-    if (buflen >= hash_length)
-    {
-        const unsigned char magic_key[] = "VonGloda5652TX75235ISBN";
-        unsigned char *pStart = (unsigned char*) buf + hash_length;
-        unsigned int len;
-        
-        MD5Context * md5_cxt = MD5_NewContext();
-        MD5_Begin(md5_cxt);
-        
-        /* start with the magic key */
-        MD5_Update(md5_cxt, magic_key, sizeof(magic_key));
-
-        MD5_Update(md5_cxt, pStart, (unsigned int)(buflen - hash_length));
-        
-        MD5_End(md5_cxt, digest, &len, 16);
-        
-        MD5_DestroyContext(md5_cxt, PR_TRUE);
-        
-        PR_snprintf(szHash, 64, "%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
-            (int)digest[0],(int)digest[1],(int)digest[2],(int)digest[3],
-            (int)digest[4],(int)digest[5],(int)digest[6],(int)digest[7],
-            (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
-            (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]);
-
-        success = ( PL_strncmp((const char*) buf + 3, szHash, (PRUint32)(hash_length - 4)) == 0 );
-    }
-    return success;
-#else   
-    /*
-     * Should return 'success', but since the MD5 code is stubbed out,
-     * just return 'PR_TRUE' until we have a replacement.
-     */
-    return PR_TRUE;
-#endif
-}
-
 
 PRBool PREF_Init(const char *filename)
 {
@@ -1216,30 +1159,6 @@ pref_addChild(PLDHashTable *table, PLDHashEntryHdr* heh,PRUint32 number,void *ar
         }
     }
     return PL_DHASH_NEXT;
-}
-
-static PrefResult
-PREF_CreateChildList(const char* parent_node, char **child_list)
-{
-    PrefChildIter pcs;
-    if (!gHashTable.ops)
-        return PREF_NOT_INITIALIZED;
-    pcs.bufsize = 2048;
-    pcs.childList = (char*) malloc(sizeof(char) * pcs.bufsize);
-    if (*parent_node > 0)
-        pcs.parent = PR_smprintf("%s.", parent_node);
-    else
-        pcs.parent = PL_strdup("");
-    if (!pcs.parent || !pcs.childList)
-        return PREF_OUT_OF_MEMORY;
-    pcs.childList[0] = '\0';
-
-    PL_DHashTableEnumerate(&gHashTable, pref_addChild, &pcs);
-
-    *child_list = pcs.childList;
-    PR_Free(pcs.parent);
-    
-    return (pcs.childList == NULL) ? PREF_OUT_OF_MEMORY : PREF_OK;
 }
 
 /* Adds a node to the beginning of the callback list. */
