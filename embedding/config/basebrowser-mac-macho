@@ -106,8 +106,7 @@ components/libjsurl.dylib
 components/jsurl.xpt
 
 ; layout
-components/libgkcontent.dylib
-res/dtd/*
+res/dtd/xhtml11.dtd
 components/libgklayout.dylib                   
 components/libhtmlpars.dylib                 
 components/libgkview.dylib                   
@@ -245,11 +244,26 @@ res/arrowd.gif
 res/loading-image.gif
 res/broken-image.gif
 res/builtin/*
-res/entityTables/*
-res/fonts/*
+res/entityTables/html40Special.properties
+res/entityTables/htmlEntityVersion.properties
+res/entityTables/html40Latin1.properties
+res/entityTables/html40Symbols.properties
+res/entityTables/transliterate.properties
+res/fonts/fontEncoding.properties
 
 ;
-; MathML
+; Optional for MathML
 ;
-res/mathml.css
-Components/ucvmath.dylib
+;res/mathml.css
+;res/dtd/mathml.dtd
+;res/entityTables/mathml20.properties
+;res/fonts/mathfont.properties
+;res/fonts/mathfontCMEX10.properties
+;res/fonts/mathfontCMSY10.properties
+;res/fonts/mathfontMath1.properties
+;res/fonts/mathfontMath2.properties
+;res/fonts/mathfontMath4.properties
+;res/fonts/mathfontMTExtra.properties
+;res/fonts/mathfontPUA.properties
+;res/fonts/mathfontSymbol.properties
+;Components/ucvmath.dylib

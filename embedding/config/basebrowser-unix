@@ -56,8 +56,7 @@ components/widget.xpt
 
 ; layout
 libmoz_art_lgpl.so
-components/libgkcontent.so
-res/dtd/*
+res/dtd/xhtml11.dtd
 components/libgklayout.so                   
 components/libhtmlpars.so                 
 components/libgkview.so                   
@@ -250,11 +249,25 @@ res/arrowd.gif
 res/loading-image.gif
 res/broken-image.gif
 res/builtin/*
-res/entityTables/*
-res/fonts/*
+res/entityTables/html40Special.properties
+res/entityTables/htmlEntityVersion.properties
+res/entityTables/html40Latin1.properties
+res/entityTables/html40Symbols.properties
+res/entityTables/transliterate.properties
 
 ;
-; MathML
+; Optional for MathML
 ;
-res/mathml.css
-components/libucvmath.so
+;res/mathml.css
+;res/dtd/mathml.dtd
+;res/entityTables/mathml20.properties
+;res/fonts/mathfont.properties
+;res/fonts/mathfontCMEX10.properties
+;res/fonts/mathfontCMSY10.properties
+;res/fonts/mathfontMath1.properties
+;res/fonts/mathfontMath2.properties
+;res/fonts/mathfontMath4.properties
+;res/fonts/mathfontMTExtra.properties
+;res/fonts/mathfontPUA.properties
+;res/fonts/mathfontSymbol.properties
+;components/libucvmath.so
