@@ -90,6 +90,12 @@ nsGopherHandler::GetDefaultPort(PRInt32 *result) {
 }
 
 NS_IMETHODIMP
+nsGopherHandler::GetURIType(PRInt16 *result) {
+    *result = URI_NORELATIVE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsGopherHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result) {
     nsresult rv;

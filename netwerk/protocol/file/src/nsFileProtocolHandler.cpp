@@ -96,6 +96,13 @@ nsFileProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
+nsFileProtocolHandler::GetURIType(PRInt16 *result)
+{
+    *result = URI_NOAUTH;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                               nsIURI **result)
 {

@@ -59,12 +59,17 @@ NS_IMETHODIMP nsIconProtocolHandler::GetDefaultPort(PRInt32 *result)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsIconProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 {
     // don't override anything.  
     *_retval = PR_FALSE;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsIconProtocolHandler::GetURIType(PRInt16 *result) 
+{
+  *result = URI_NORELATIVE | URI_NOAUTH;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsIconProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **result) 

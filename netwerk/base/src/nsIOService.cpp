@@ -600,6 +600,19 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsIOService::GetURIType(const char* scheme, PRInt16 *uritype)
+{
+    nsCOMPtr<nsIProtocolHandler> handler;
+    nsresult rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    rv = handler->GetURIType(uritype);
+    return rv;
+}
+
+
 nsresult
 nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI, nsIURI* *result)
 {

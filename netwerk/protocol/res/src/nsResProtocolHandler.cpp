@@ -183,6 +183,13 @@ nsResProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
+nsResProtocolHandler::GetURIType(PRInt16 *result)
+{
+    *result = URI_STD;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsResProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result)
 {

@@ -121,6 +121,13 @@ nsThemeHandler::GetDefaultPort(PRInt32 *result)
 }
 
 NS_IMETHODIMP
+nsThemeHandler::GetURIType(PRInt16 *result)
+{
+    *result = URI_NORELATIVE | URI_NOAUTH;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsThemeHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **result)
 {
     nsresult rv;
