@@ -53,7 +53,6 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
   mWidth = aWidth;
   mHeight = aHeight;
   mDepth = aDepth;
-  mMaskReq = aMaskRequirements;
 
   // create the memory for the image
   ComputeMetrics();
