@@ -108,11 +108,9 @@ MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
 ###############################################################################
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-ifndef MOZ_ACTIVEX_SCRIPTING_SUPPORT
 XPIDLSRCS = \
     ./nsIMozAxPlugin.idl \
     $(NULL)
-endif
 endif
 
 _CONTROL_CPPSRCS = \
@@ -236,9 +234,7 @@ libs:: install-class
 endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-ifndef MOZ_ACTIVEX_SCRIPTING_SUPPORT
 libs:: install-typelib
-endif
 endif
 
 ifdef XPC_IDISPATCH_SUPPORT
@@ -257,9 +253,7 @@ ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) MozAxPlugin.class
 endif
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-ifndef MOZ_ACTIVEX_SCRIPTING_SUPPORT
 	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
-endif
 endif
 
 $(SHARED_LIBRARY) : $(DEFFILE)
