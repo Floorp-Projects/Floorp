@@ -2667,7 +2667,9 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
   gtk_widget_grab_focus(bin->child);
 
   gJustGotActivate = PR_TRUE;
-  widget->DispatchSetFocusEvent();
+  if(gJustGotDeactivate) {
+    widget->DispatchSetFocusEvent();
+  }
 
   return PR_TRUE;
 }
