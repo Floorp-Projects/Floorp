@@ -812,7 +812,8 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     nsCRT::free ( NS_REINTERPRET_CAST(char*, clipboardData) );
   }
   else
-    printf("Transferable didn't support the data flavor\n");
+    printf("Transferable didn't support data flavor %s (type = %d)\n",
+           dataFlavor ? dataFlavor : "None", type);
 }
 
 
