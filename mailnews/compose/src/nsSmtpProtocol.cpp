@@ -242,7 +242,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     nsresult rv = NS_OK;
 
     m_flags = 0;
-    m_backupFlags = 0;
+    m_origAuthFlags = 0;
     m_prefAuthMethod = PREF_AUTH_NONE;
     m_usernamePrompted = PR_FALSE;
     m_prefTrySSL = PREF_SSL_TRY;
@@ -710,7 +710,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
             }
 
             // for use after mechs disabled fallbacks when login failed
-            BackupFlags();
+            BackupAuthFlags();
         }
         startPos = endPos + 1;
     } while (endPos >= 0);
@@ -829,14 +829,14 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
 }
 
 
-void nsSmtpProtocol::BackupFlags()
+void nsSmtpProtocol::BackupAuthFlags()
 {
-  m_backupFlags = m_flags&SMTP_AUTH_ANY_ENABLED;
+  m_origAuthFlags = m_flags & SMTP_AUTH_ANY_ENABLED;
 }
 
-void nsSmtpProtocol::RestoreFlags()
+void nsSmtpProtocol::RestoreAuthFlags()
 {
-  m_flags |= m_backupFlags&SMTP_AUTH_CRAM_MD5_ENABLED;
+  m_flags |= m_origAuthFlags;
 }
 
 
@@ -884,9 +884,9 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
             if (m_usernamePrompted)
                 smtpServer->SetUsername("");
 
-            // Let's restore our backup from SendEhloResponse so we can
+            // Let's restore the original auth flags from SendEhloResponse so we can
             // try them again with new password and username
-            RestoreFlags();
+            RestoreAuthFlags();
         }
 
         m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;

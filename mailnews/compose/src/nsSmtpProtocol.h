@@ -247,9 +247,9 @@ private:
   nsresult GetUsernamePassword(char **aUsername, char **aPassword);
   nsresult PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar *aPromptValue, char **aPassword);
 
-    void BackupFlags();
-    void RestoreFlags();
-    PRInt32 m_backupFlags;
+    void BackupAuthFlags();
+    void RestoreAuthFlags();
+    PRInt32 m_origAuthFlags;
 };
 
 #endif  // nsSmtpProtocol_h___
