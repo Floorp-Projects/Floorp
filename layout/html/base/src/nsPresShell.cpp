@@ -3993,25 +3993,23 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     // Find a matching list of named nodes
     rv = htmlDoc->GetElementsByName(aAnchorName, getter_AddRefs(list));
     if (NS_SUCCEEDED(rv) && list) {
-      PRUint32 count;
       PRUint32 i;
-      list->GetLength(&count);
       // Loop through the named nodes looking for the first anchor
-      for (i = 0; i < count; i++) {
+      for (i = 0; PR_TRUE; i++) {
         nsCOMPtr<nsIDOMNode> node;
         rv = list->Item(i, getter_AddRefs(node));
-        if (NS_FAILED(rv)) {
+        if (!node) {  // End of list
           break;
         }
         // Ensure it's an anchor element
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-        nsAutoString tagName;
-        if (element && NS_SUCCEEDED(element->GetTagName(tagName))) {
-          ToLowerCase(tagName);
-          if (tagName.Equals(NS_LITERAL_STRING("a"))) {
-            content = do_QueryInterface(element);
+        content = do_QueryInterface(node);
+        if (content) {
+          nsCOMPtr<nsIAtom> tag;
+          content->GetTag(*getter_AddRefs(tag));
+          if (tag == nsHTMLAtoms::a) {
             break;
           }
+          content = nsnull;
         }
       }
     }
@@ -4025,14 +4023,12 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     // Get the list of anchor elements
     rv = doc->GetElementsByTagNameNS(nameSpace, NS_LITERAL_STRING("a"), getter_AddRefs(list));
     if (NS_SUCCEEDED(rv) && list) {
-      PRUint32 count;
       PRUint32 i;
-      list->GetLength(&count);
       // Loop through the named nodes looking for the first anchor
-      for (i = 0; i < count; i++) {
+      for (i = 0; PR_TRUE; i++) {
         nsCOMPtr<nsIDOMNode> node;
         rv = list->Item(i, getter_AddRefs(node));
-        if (NS_FAILED(rv)) {
+        if (!node) { // End of list
           break;
         }
         // Compare the name attribute

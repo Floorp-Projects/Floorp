@@ -72,11 +72,13 @@ function SortColumn(columnID)
 function find_sort_column()
 {
   var columns = document.getElementsByTagName('treecol');
-  for (var i = 0; i < columns.length; ++i) {
-    if (columns[i].getAttribute('sortDirection'))
-      return columns[i];
+  var i = 0;
+  var column;
+  while ((column = columns.item(i++)) != null) {
+      if (column.getAttribute('sortDirection'))
+          return column;
   }
-  return columns[0];
+  return columns.item(0);
 }
 
 // get the sort direction for the given column
@@ -160,7 +162,6 @@ function fillViewMenu(popup)
 {
   var fill_after = document.getElementById('fill_after_this_node');
   var fill_before = document.getElementById('fill_before_this_node');
-  var columns = document.getElementsByTagName('treecol');
   var strBundle = document.getElementById('sortBundle');
   var sortString;
   if (strBundle)
@@ -168,11 +169,11 @@ function fillViewMenu(popup)
   if (!sortString)
     sortString = "Sorted by %COLNAME%";
     
-  var popupChild = popup.firstChild.nextSibling.nextSibling;
   var firstTime = (fill_after.nextSibling == fill_before);
-  for (var i = 0; i < columns.length; ++i) {
-    var column = columns[i];
-    if (firstTime) {
+  if (firstTime) {
+    var columns = document.getElementsByTagName('treecol');
+    for (var i = 0; i < columns.length; ++i) {
+      var column = columns[i];
       // Construct an entry for each cell in the row.
       var column_name = column.getAttribute("label");
       var item = document.createElement("menuitem");

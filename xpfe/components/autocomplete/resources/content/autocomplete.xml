@@ -1575,7 +1575,7 @@
         <body><![CDATA[
           var textbox = document.getBindingParent(this);
           var kids = textbox.getElementsByTagName("menupopup");
-          if (kids.length) {
+          if (kids.item(0)) {
             kids[0].showPopup(textbox, -1, -1, "popup", "bottomleft", "topleft");
             textbox.setAttribute("open", true);
           }
