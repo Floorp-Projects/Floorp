@@ -304,6 +304,12 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame,
   nsHTMLReflowMetrics metrics(mComputeMaxElementSize
                               ? &innerMaxElementSize
                               : nsnull);
+#ifdef DEBUG
+  if (mComputeMaxElementSize) {
+    metrics.maxElementSize->width = nscoord(0xdeadbeef);
+    metrics.maxElementSize->height = nscoord(0xdeadbeef);
+  }
+#endif
   nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
   nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
@@ -313,6 +319,17 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame,
 #ifdef DEBUG_kipp
   NS_ASSERTION((metrics.width > -200000) && (metrics.width < 200000), "oy");
   NS_ASSERTION((metrics.height > -200000) && (metrics.height < 200000), "oy");
+#endif
+#ifdef DEBUG
+  if (mComputeMaxElementSize &&
+      ((nscoord(0xdeadbeef) == metrics.maxElementSize->width) ||
+       (nscoord(0xdeadbeef) == metrics.maxElementSize->height))) {
+    printf("nsInlineReflow: ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" didn't set max-element-size!\n");
+    metrics.maxElementSize->width = 0;
+    metrics.maxElementSize->height = 0;
+  }
 #endif
 
   aFrame->GetFrameState(&state);
@@ -701,6 +718,11 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
       // for the purposes of vertical alignment and line-height
       // sizing.
       nscoord lh = nsHTMLReflowState::CalcLineHeight(mPresContext, frame);
+#ifdef NOISY_VERTICAL_ALIGN
+      printf("  ");
+      nsFrame::ListTag(stdout, pfd->mFrame);
+      printf(": lineHeight=%d height=%d\n", lh, pfd->mBounds.height);
+#endif
       if (lh >= 0) {
         nscoord leading = lh - height;
         nscoord topLeading = leading / 2;
@@ -912,6 +934,12 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
       PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
       switch (verticalAlignEnum) {
       case NS_STYLE_VERTICAL_ALIGN_TOP:
+#ifdef NOISY_VERTICAL_ALIGN
+        printf("  ");
+        nsFrame::ListTag(stdout, pfd->mFrame);
+        printf(": [top] mTopEdge=%d margin.top=%d\n",
+               mTopEdge, pfd->mMargin.top);
+#endif
         pfd->mBounds.y = mTopEdge + pfd->mMargin.top;
         if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
           pfd->mBounds.y -= pfd->mBorderPadding.top;
@@ -919,6 +947,13 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
         break;
 
       case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+#ifdef NOISY_VERTICAL_ALIGN
+        printf("  ");
+        nsFrame::ListTag(stdout, pfd->mFrame);
+        printf(": [bottom] mTopEdge=%d lineHeight=%d height=%d margin.bottom=%d\n",
+               mTopEdge, lineHeight, pfd->mBounds.height,
+               pfd->mMargin.bottom);
+#endif
         pfd->mBounds.y = mTopEdge + lineHeight -
           pfd->mBounds.height - pfd->mMargin.bottom;
         if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
@@ -927,6 +962,12 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
         break;
 
       default:
+#ifdef NOISY_VERTICAL_ALIGN
+        printf("  ");
+        nsFrame::ListTag(stdout, pfd->mFrame);
+        printf(": y=%d topEdge=%d maxAscent=%d margin.top=%d\n",
+               pfd->mBounds.y, topEdge, maxAscent, pfd->mMargin.top);
+#endif
         pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y +
           pfd->mMargin.top;
         if (NS_CSS_FRAME_TYPE_INLINE == pfd->mFrameType) {
@@ -963,6 +1004,13 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   }
   aMaxAscent = maxAscent;
   aMaxDescent = lineHeight - maxAscent;
+#ifdef NOISY_VERTICAL_ALIGN
+  printf("  ==> ");
+  mOuterFrame->ListTag(stdout);
+  printf(": lineBox=%d,%d,%d,%d maxAscent=%d maxDescent=%d\n",
+         aLineBox.x, aLineBox.y, aLineBox.width, aLineBox.height,
+         aMaxAscent, aMaxDescent);
+#endif
 }
 
 void
