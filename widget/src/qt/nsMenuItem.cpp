@@ -291,6 +291,20 @@ NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetCheckboxType(PRBool aIsCheckbox)
+{
+    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenuItem::SetCheckboxType()\n"));
+    return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetCheckboxType(PRBool *aIsCheckbox)
+{
+    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenuItem::GetCheckboxType()\n"));
+    return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenuItem::GetCommand()\n"));
