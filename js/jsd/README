@@ -10,6 +10,9 @@ JavaSript Debugger (built in js/jsdj). This version assumes that you have a
 JRE compatible JVM installed. Only Windows is supported for this Java-based 
 debugging.
 
+The makefile assumes that the jdk/include directory is part of the path
+in your 'include' environment variable so that is can find jni.h.
+
 Though only Windows makefiles are supplied, the basic code in js/jsd should 
 compile for other platforms -- it is a newer version of code that builds and 
 ships with Communicator 4.x on many platforms.
