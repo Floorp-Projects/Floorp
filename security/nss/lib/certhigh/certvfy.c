@@ -1256,7 +1256,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
 #endif
     
     /* make sure that the cert is valid at time t */
-    allowOverride = (PRBool)((requiredUsages & certUsageSSLServer) ||
+    allowOverride = (PRBool)((requiredUsages & certificateUsageSSLServer) ||
                              (requiredUsages & certificateUsageSSLServerWithStepUp));
     validity = CERT_CheckCertValidTimes(cert, t, allowOverride);
     if ( validity != secCertTimeValid ) {
