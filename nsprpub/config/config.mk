@@ -93,6 +93,8 @@ endif
 endif
 endif # WINNT || OS2
 
+DEPENDENCIES	= $(OBJDIR)/.md
+
 ifdef BUILD_DEBUG_GC
 DEFINES		+= -DDEBUG_GC
 endif

@@ -81,6 +81,10 @@ OS_LIBS = -lc_r
 endif
 endif
 
+ifeq ($(OS_ARCH),IRIX)
+OS_LIBS = -lc
+endif
+
 EXTRA_LIBS = $(LIBNSPR)
 
 # On NCR and SCOOS, we can't link with extra libraries when

@@ -85,6 +85,7 @@ ifeq ($(OS_ARCH), IRIX)
 ifeq ($(USE_PTHREADS), 1)
 OS_LIBS = -lpthread
 endif
+OS_LIBS += -lc
 endif
 
 ifeq ($(OS_ARCH),AIX)
