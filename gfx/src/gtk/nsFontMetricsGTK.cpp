@@ -83,7 +83,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
     dpi = 100;
 
 #ifdef NOISY_FONTS
-  fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / 20);
+  g_print("looking for font %s (%d)", wildstring, aFont.size / 20);
 #endif
 
   //font properties we care about:
@@ -154,7 +154,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
     mFontHandle = ::gdk_font_load(nametouse);
 
 #ifdef NOISY_FONTS
-    fprintf(stderr, " is: %s\n", nametouse);
+    g_print(" is: %s\n", nametouse);
 #endif
 
     ::XFreeFontInfo(fnames, fonts, numnames);
@@ -164,7 +164,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
     //ack. we're in real trouble, go for fixed...
 
 #ifdef NOISY_FONTS
-    fprintf(stderr, " is: %s\n", "fixed (final fallback)");
+    g_print(" is: %s\n", "fixed (final fallback)");
 #endif
 
     mFontHandle = ::gdk_font_load("fixed");

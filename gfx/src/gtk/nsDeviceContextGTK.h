@@ -47,7 +47,7 @@ public:
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
 
-  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
+  NS_IMETHOD GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
