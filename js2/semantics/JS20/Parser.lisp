@@ -29,6 +29,9 @@
     
     
     (%heading (2 :semantics) "Objects")
+    (deftype object (union undefined null boolean float64 string namespace attribute class method-closure prototype instance))
+    
+    
     (%heading (3 :semantics) "Undefined")
     (deftag undefined)
     (deftype undefined (tag undefined))
@@ -108,6 +111,7 @@
     (define attribute-class class (make-built-in-class object-class fixed false))
     (define class-class class (make-built-in-class object-class fixed false))
     (define function-class class (make-built-in-class object-class fixed false))
+    (define prototype-class class (make-built-in-class object-class fixed false))
     
     (%text :comment "Return an ordered list of class " (:local d) :apostrophe "s ancestors, including " (:local d) " itself.")
     (define (ancestors (c class)) (vector class)
@@ -130,216 +134,7 @@
       (return (and (is-ancestor c d) (/= c d class))))
     
     
-    (%heading (3 :semantics) "Method Closures")
-    (deftuple method-closure
-      (this object)
-      (method method))
-    
-    
-    (%heading (3 :semantics) "Class Instances")
-    (defrecord instance
-      (type class)
-      (model instance-opt)
-      (call invoker)
-      (construct invoker)
-      (typeof-string string)
-      (slots (list-set slot) :var)
-      (dynamic-properties (list-set dynamic-property) :var))
-    (deftype instance-opt (union null instance))
-    
-    (defrecord dynamic-property 
-      (name string)
-      (value object))
-    
-    
-    (%heading (3 :semantics) "Objects")
-    
-    (deftype object (union undefined null boolean float64 string namespace attribute class method-closure instance))
-    
-    
-    (%text :comment "Return " (:local o) :apostrophe "s most specific type.")
-    (define (object-type (o object)) class
-      (case o
-        (:select undefined (return undefined-class))
-        (:select null (return null-class))
-        (:select boolean (return boolean-class))
-        (:select float64 (return number-class))
-        (:narrow string
-          (rwhen (= (length o) 1)
-            (return character-class))
-          (return string-class))
-        (:select namespace (return namespace-class))
-        (:select attribute (return attribute-class))
-        (:select class (return class-class))
-        (:select method-closure (return function-class))
-        (:narrow instance (return (& type o)))))
-    
-    (%text :comment "Return " (:tag true) " if " (:local o) " is an instance of class " (:local c) ". Consider "
-           (:tag null) " to be an instance of the classes " (:character-literal "Null") " and "
-           (:character-literal "Object") " only.")
-    (define (has-type (o object) (c class)) boolean
-      (return (is-ancestor c (object-type o))))
-    
-    (%text :comment "Return " (:tag true) " if " (:local o) " is an instance of class " (:local c) ". Consider "
-           (:tag null) " to be an instance of the classes " (:character-literal "Null") ", "
-           (:character-literal "Object") ", and all other non-primitive classes.")
-    (define (relaxed-has-type (o object) (c class)) boolean
-      (const t class (object-type o))
-      (return (or (is-ancestor c t)
-                  (and (= o null object) (not (& primitive c))))))
-    
-    (define (to-boolean (o object)) boolean
-      (case o
-        (:select (union undefined null) (return false))
-        (:narrow boolean (return o))
-        (:narrow float64 (return (not-in o (tag +zero -zero nan))))
-        (:narrow string (return (/= o "" string)))
-        (:select (union namespace attribute class method-closure) (return true))
-        (:select instance (todo))))
-    
-    (define (to-number (o object)) float64
-      (case o
-        (:select undefined (return nan))
-        (:select (union null (tag false)) (return +zero))
-        (:select (tag true) (return 1.0))
-        (:narrow float64 (return o))
-        (:select string (todo))
-        (:select (union namespace attribute class method-closure) (throw type-error))
-        (:select instance (todo))))
-    
-    (define (to-string (o object)) string
-      (case o
-        (:select undefined (return "undefined"))
-        (:select null (return "null"))
-        (:select (tag false) (return "false"))
-        (:select (tag true) (return "true"))
-        (:select float64 (todo))
-        (:narrow string (return o))
-        (:select namespace (todo))
-        (:select attribute (todo))
-        (:select class (todo))
-        (:select method-closure (todo))
-        (:select instance (todo))))
-    
-    (define (to-primitive (o object) (hint object :unused)) object
-      (case o
-        (:select (union undefined null boolean float64 string) (return o))
-        (:select (union namespace attribute class method-closure instance) (return (to-string o)))))
-    
-    (define (u-int32-to-int32 (i integer)) integer
-      (if (< i (expt 2 31))
-        (return i)
-        (return (- i (expt 2 32)))))
-    
-    (define (to-u-int32 (x float64)) integer
-      (rwhen (in x (tag +infinity -infinity nan) :narrow-false)
-        (return 0))
-      (return (mod (truncate-finite-float64 x) (expt 2 32))))
-    
-    (define (to-int32 (x float64)) integer
-      (return (u-int32-to-int32 (to-u-int32 x))))
-    
-    
-    (%heading (3 :semantics) "Slots")
-    (defrecord slot-id (type class))
-    
-    (defrecord slot
-      (id slot-id)
-      (value object :var))
-    
-    (define (find-slot (o object) (id slot-id)) slot
-      (rwhen (not-in o instance :narrow-false)
-        (bottom))
-      (const matching-slots (list-set slot)
-        (map (& slots o) s s (= (& id s) id slot-id)))
-      (assert (= (length matching-slots) 1))
-      (return (elt-of matching-slots)))
-    
-    (defrecord global-slot
-      (type class)
-      (value object :var))
-    
-    
-    (%heading (2 :semantics) "References")
-    (deftuple qualified-name (namespace namespace) (name string))
-    
-    (deftuple partial-name (namespaces (list-set namespace)) (name string))
-    
-    (deftuple dot-reference
-      (base object)
-      (super class-opt)
-      (prop-name partial-name))
-    
-    (deftuple bracket-reference
-      (base object)
-      (super class-opt)
-      (args argument-list))
-    
-    (deftype reference (union dot-reference bracket-reference))
-    (deftype obj-or-ref (union object reference))
-    
-    (%text :comment "Read the " (:type obj-or-ref) " " (:local r) ".")
-    (define (read-reference (r obj-or-ref)) object
-      (case r
-        (:narrow object (return r))
-        (:narrow dot-reference (return (read-property (& base r) (& prop-name r) (& super r))))
-        (:narrow bracket-reference (return (unary-dispatch bracket-read-table (& super r) null (& base r) (& args r))))))
-    
-    (%text :comment "Write " (:local o) " into the " (:type obj-or-ref) " " (:local r) ".")
-    (define (write-reference (r obj-or-ref) (o object)) void
-      (case r
-        (:select object (throw reference-error))
-        (:narrow dot-reference (write-property (& base r) (& prop-name r) (& super r) o))
-        (:narrow bracket-reference
-          (const args argument-list (new argument-list (append (vector o) (& positional (& args r))) (& named (& args r))))
-          (exec (unary-dispatch bracket-write-table (& super r) null (& base r) args)))))
-    
-    (define (delete-reference (r obj-or-ref)) object
-      (case r
-        (:select object (throw reference-error))
-        (:narrow dot-reference (return (delete-property (& base r) (& prop-name r) (& super r))))
-        (:narrow bracket-reference (return (unary-dispatch bracket-delete-table (& super r) null (& base r) (& args r))))))
-    
-    (define (reference-base (r obj-or-ref)) object
-      (case r
-        (:narrow object (return null))
-        (:narrow reference (return (& base r)))))
-    
-    
-    (%heading (2 :semantics) "Signatures")
-    (deftuple signature
-      (required-positional (vector class))
-      (optional-positional (vector class))
-      (optional-named (list-set named-parameter))
-      (rest class-opt)
-      (rest-allows-names boolean)
-      (return-type class))
-    
-    (deftuple named-parameter
-      (name string)
-      (type class))
-    
-    
-    (%heading (2 :semantics) "Argument Lists")
-    (deftuple named-argument (name string) (value object))
-    
-    (deftuple argument-list
-      (positional (vector object))
-      (named (list-set named-argument)))
-    
-    (%text :comment "The first " (:type object) " is the " (:character-literal "this") " value.")
-    (deftype invoker (-> (object argument-list) object))
-    
-    
-    (%heading (3 :semantics) "Members")
-    (defrecord method
-      (type signature)
-      (f instance-opt)) ;Method code (may be undefined)
-    
-    (defrecord accessor
-      (type class)
-      (f instance)) ;Getter or setter function code
-    
+    (%heading (4 :semantics) "Members")
     (deftype instance-category (tag abstract virtual final))
     (deftype instance-data (union slot-id method accessor))
     
@@ -369,6 +164,296 @@
     (deftype member-data (union instance-data global-data))
     (deftype member-data-opt (union null member-data))
     
+    (defrecord global-slot
+      (type class)
+      (value object :var))
+    
+    (defrecord method
+      (type signature)
+      (f instance-opt)) ;Method code (may be null)
+    
+    (defrecord accessor
+      (type class)
+      (f instance)) ;Getter or setter function code
+    
+        
+    (%heading (3 :semantics) "Method Closures")
+    (deftuple method-closure
+      (this object)
+      (method method))
+    
+    
+    (%heading (3 :semantics) "Prototype Instances")
+    (defrecord prototype
+      (parent prototype-opt)
+      (dynamic-properties (list-set dynamic-property) :var))
+    (deftype prototype-opt (union null prototype))
+    
+    
+    (%heading (3 :semantics) "Class Instances")
+    (defrecord instance
+      (type class)
+      (call invoker)
+      (construct invoker)
+      (typeof-string string)
+      (slots (list-set slot) :var)
+      (dynamic-properties (list-set dynamic-property) :var))
+    (deftype instance-opt (union null instance))
+    
+    (defrecord dynamic-property 
+      (name string)
+      (value object))
+    
+    (%heading (4 :semantics) "Slots")
+    (defrecord slot
+      (id slot-id)
+      (value object :var))
+    
+    (defrecord slot-id (type class))
+    
+    
+    (%heading (2 :semantics) "Qualified Names")
+    (deftuple qualified-name (namespace namespace) (name string))
+    
+    (deftuple partial-name (namespaces (list-set namespace)) (name string))
+    
+    
+    (%heading (2 :semantics) "References")
+    (deftuple dot-reference
+      (base object)
+      (super class-opt)
+      (prop-name partial-name))
+    
+    (deftuple bracket-reference
+      (base object)
+      (super class-opt)
+      (args argument-list))
+    
+    (deftype reference (union dot-reference bracket-reference))
+    (deftype obj-or-ref (union object reference))
+    
+    
+    (%heading (2 :semantics) "Signatures")
+    (deftuple signature
+      (required-positional (vector class))
+      (optional-positional (vector class))
+      (optional-named (list-set named-parameter))
+      (rest class-opt)
+      (rest-allows-names boolean)
+      (return-type class))
+    
+    (deftuple named-parameter
+      (name string)
+      (type class))
+    
+    
+    (%heading (2 :semantics) "Argument Lists")
+    (deftuple named-argument (name string) (value object))
+    
+    (deftuple argument-list
+      (positional (vector object))
+      (named (list-set named-argument)))
+    
+    (%text :comment "The first " (:type object) " is the " (:character-literal "this") " value.")
+    (deftype invoker (-> (object argument-list) object))
+    
+    
+    (%heading (2 :semantics) "Unary Operators")
+    (deftuple unary-method 
+      (operand-type class)
+      (f (-> (object object argument-list) object)))
+    
+    
+    (%heading (2 :semantics) "Binary Operators")
+    (deftuple binary-method
+      (left-type class)
+      (right-type class)
+      (f (-> (object object) object)))
+    
+    
+    (%heading (1 :semantics) "Data Operations")
+    (%heading (2 :semantics) "Numeric Utilities")
+    
+    (define (u-int32-to-int32 (i integer)) integer
+      (if (< i (expt 2 31))
+        (return i)
+        (return (- i (expt 2 32)))))
+    
+    (define (to-u-int32 (x float64)) integer
+      (rwhen (in x (tag +infinity -infinity nan) :narrow-false)
+        (return 0))
+      (return (mod (truncate-finite-float64 x) (expt 2 32))))
+    
+    (define (to-int32 (x float64)) integer
+      (return (u-int32-to-int32 (to-u-int32 x))))
+    
+    
+    (%heading (2 :semantics) "Object Utilities")
+    (%heading (3 :semantics) (:global object-type nil))
+    (%text :comment (:global-call object-type o) " returns an " (:type object) " " (:local o) :apostrophe "s most specific type.")
+    (define (object-type (o object)) class
+      (case o
+        (:select undefined (return undefined-class))
+        (:select null (return null-class))
+        (:select boolean (return boolean-class))
+        (:select float64 (return number-class))
+        (:narrow string
+          (rwhen (= (length o) 1)
+            (return character-class))
+          (return string-class))
+        (:select namespace (return namespace-class))
+        (:select attribute (return attribute-class))
+        (:select class (return class-class))
+        (:select method-closure (return function-class))
+        (:select prototype (return prototype-class))
+        (:narrow instance (return (& type o)))))
+    
+    (%heading (3 :semantics) (:global has-type nil))
+    (%text :comment "There are two tests for determining whether an object " (:local o) " is an instance of class " (:local c)
+           ". The first, " (:global has-type) ", is used for the purposes of method dispatch and helps determine whether a method of "
+           (:local c) " can be called on " (:local o) ". The second, " (:global relaxed-has-type) ", determines whether "
+           (:local o) " can be stored in a variable of type " (:local c) " without conversion.")
+    
+    (%text :comment (:global-call has-type o c) " returns " (:tag true) " if " (:local o) " is an instance of class " (:local c)
+           " (or one of " (:local c) :apostrophe "s subclasses). It considers "
+           (:tag null) " to be an instance of the classes " (:character-literal "Null") " and " (:character-literal "Object") " only.")
+    (define (has-type (o object) (c class)) boolean
+      (return (is-ancestor c (object-type o))))
+    
+    (%text :comment (:global-call relaxed-has-type o c) " returns " (:tag true) " if " (:local o) " is an instance of class " (:local c)
+           " (or one of " (:local c) :apostrophe "s subclasses) but considers "
+           (:tag null) " to be an instance of the classes " (:character-literal "Null") ", "
+           (:character-literal "Object") ", and all other non-primitive classes.")
+    (define (relaxed-has-type (o object) (c class)) boolean
+      (const t class (object-type o))
+      (return (or (is-ancestor c t)
+                  (and (= o null object) (not (& primitive c))))))
+    
+    (%heading (3 :semantics) (:global to-boolean nil))
+    (%text :comment (:global-call to-boolean o) " coerces an object " (:local o) " to a Boolean.")
+    (define (to-boolean (o object)) boolean
+      (case o
+        (:select (union undefined null) (return false))
+        (:narrow boolean (return o))
+        (:narrow float64 (return (not-in o (tag +zero -zero nan))))
+        (:narrow string (return (/= o "" string)))
+        (:select (union namespace attribute class method-closure prototype) (return true))
+        (:select instance (todo))))
+    
+    (%heading (3 :semantics) (:global to-number nil))
+    (%text :comment (:global-call to-number o) " coerces an object " (:local o) " to a number.")
+    (define (to-number (o object)) float64
+      (case o
+        (:select undefined (return nan))
+        (:select (union null (tag false)) (return +zero))
+        (:select (tag true) (return 1.0))
+        (:narrow float64 (return o))
+        (:select string (todo))
+        (:select (union namespace attribute class method-closure) (throw type-error))
+        (:select (union prototype instance) (todo))))
+    
+    (%heading (3 :semantics) (:global to-string nil))
+    (%text :comment (:global-call to-string o) " coerces an object " (:local o) " to a string.")
+    (define (to-string (o object)) string
+      (case o
+        (:select undefined (return "undefined"))
+        (:select null (return "null"))
+        (:select (tag false) (return "false"))
+        (:select (tag true) (return "true"))
+        (:select float64 (todo))
+        (:narrow string (return o))
+        (:select namespace (todo))
+        (:select attribute (todo))
+        (:select class (todo))
+        (:select method-closure (todo))
+        (:select (union prototype instance) (todo))))
+    
+    (%heading (3 :semantics) (:global to-primitive nil))
+    (define (to-primitive (o object) (hint object :unused)) object
+      (case o
+        (:select (union undefined null boolean float64 string) (return o))
+        (:select (union namespace attribute class method-closure prototype instance) (return (to-string o)))))
+    
+    
+    (%heading (3 :semantics) (:global unary-plus nil))
+    (%text :comment (:global-call unary-plus o) " returns the value of the unary expression " (:character-literal "+") (:local o) ".")
+    (define (unary-plus (a object)) object
+      (return (unary-dispatch plus-table null null a (new argument-list (vector-of object) (list-set-of named-argument)))))
+    
+    (%heading (3 :semantics) (:global unary-not nil))
+    (%text :comment (:global-call unary-not o) " returns the value of the unary expression " (:character-literal "!") (:local o) ".")
+    (define (unary-not (a object)) object
+      (return (not (to-boolean a))))
+    
+    
+    (%heading (2 :semantics) "References")
+    
+    (%text :comment "Read the " (:type obj-or-ref) " " (:local r) ".")
+    (define (read-reference (r obj-or-ref)) object
+      (case r
+        (:narrow object (return r))
+        (:narrow dot-reference (return (read-property (& base r) (& prop-name r) (& super r))))
+        (:narrow bracket-reference (return (unary-dispatch bracket-read-table (& super r) null (& base r) (& args r))))))
+    
+    (%text :comment "Write " (:local o) " into the " (:type obj-or-ref) " " (:local r) ".")
+    (define (write-reference (r obj-or-ref) (o object)) void
+      (case r
+        (:select object (throw reference-error))
+        (:narrow dot-reference (write-property (& base r) (& prop-name r) (& super r) o))
+        (:narrow bracket-reference
+          (const args argument-list (new argument-list (append (vector o) (& positional (& args r))) (& named (& args r))))
+          (exec (unary-dispatch bracket-write-table (& super r) null (& base r) args)))))
+    
+    (define (delete-reference (r obj-or-ref)) object
+      (case r
+        (:select object (throw reference-error))
+        (:narrow dot-reference (return (delete-property (& base r) (& prop-name r) (& super r))))
+        (:narrow bracket-reference (return (unary-dispatch bracket-delete-table (& super r) null (& base r) (& args r))))))
+    
+    (define (reference-base (r obj-or-ref)) object
+      (case r
+        (:narrow object (return null))
+        (:narrow reference (return (& base r)))))
+    
+    
+    (%heading (2 :semantics) "Slots")
+    
+    (define (find-slot (o object) (id slot-id)) slot
+      (rwhen (not-in o instance :narrow-false)
+        (bottom))
+      (const matching-slots (list-set slot)
+        (map (& slots o) s s (= (& id s) id slot-id)))
+      (assert (= (length matching-slots) 1))
+      (return (elt-of matching-slots)))
+    
+    
+    (%heading (2 :semantics) "Member Lookup")
+    (%heading (3 :semantics) "Reading a Qualified Property")
+    
+    (define (read-qualified-property (o object) (name string) (ns namespace) (indexable-only boolean)) object
+      (reserve p)
+      (rwhen (and (in o (union prototype instance) :narrow-true)
+                  (= ns public-namespace namespace)
+                  (some (& dynamic-properties o) p (= name (& name p) string) :define-true))
+        (return (& value p)))
+      (rwhen (and (in o prototype :narrow-true)
+                  (not-in (& parent o) (tag null)))
+        (return (read-qualified-property (& parent o) name ns indexable-only)))
+      (const d member-data-opt (if (in o class :narrow-true)
+                                 (most-specific-member o true name ns indexable-only)
+                                 (most-specific-member (object-type o) false name ns indexable-only)))
+      (case d
+        (:select (tag null)
+          (rwhen (= (& class-mod (object-type o)) dynamic class-modifier)
+            (return undefined))
+          (throw property-not-found-error))
+        (:narrow global-slot (return (& value d)))
+        (:narrow slot-id (return (& value (find-slot o d))))
+        (:narrow method
+          (return (new method-closure o d)))
+        (:narrow accessor
+          (return ((& call (& f d)) o (new argument-list (vector-of object) (list-set-of named-argument)))))))
+    
     
     (define (most-specific-member (c class) (global boolean) (name string) (ns namespace) (indexable-only boolean)) member-data-opt
       (function (test (m member)) boolean
@@ -390,28 +475,6 @@
         (return (most-specific-member s global name ns2 indexable-only)))
       (return null))
     
-    (define (read-qualified-property (o object) (name string) (ns namespace) (indexable-only boolean)) object
-      (when (in o instance :narrow-true)
-        (reserve p)
-        (rwhen (and (= ns public-namespace namespace)
-                    (some (& dynamic-properties o) p (= name (& name p) string) :define-true))
-          (return (& value p)))
-        (rwhen (not-in (& model o) (tag null))
-          (return (read-qualified-property (& model o) name ns indexable-only))))
-      (const d member-data-opt (if (in o class :narrow-true)
-                                 (most-specific-member o true name ns indexable-only)
-                                 (most-specific-member (object-type o) false name ns indexable-only)))
-      (case d
-        (:select (tag null)
-          (rwhen (= (& class-mod (object-type o)) dynamic class-modifier)
-            (return undefined))
-          (throw property-not-found-error))
-        (:narrow global-slot (return (& value d)))
-        (:narrow slot-id (return (& value (find-slot o d))))
-        (:narrow method
-          (return (new method-closure o d)))
-        (:narrow accessor
-          (return ((& call (& f d)) o (new argument-list (vector-of object) (list-set-of named-argument)))))))
     
     (define (resolve-member-namespace (c class) (global boolean) (name string) (uses (list-set namespace))) namespace-opt
       (const s class-opt (& super c))
@@ -433,9 +496,6 @@
       (return null))
     
     (define (resolve-object-namespace (o object) (name string) (uses (list-set namespace))) namespace
-      (when (in o instance :narrow-true)
-        (rwhen (not-in (& model o) (tag null))
-          (return (resolve-object-namespace (& model o) name uses))))
       (const ns namespace-opt (if (in o class :narrow-true)
                                 (resolve-member-namespace o true name uses)
                                 (resolve-member-namespace (object-type o) false name uses)))
@@ -443,15 +503,17 @@
         (return ns))
       (return public-namespace))
     
-    (define (read-property (o object :unused) (prop-name partial-name :unused) (super class-opt :unused)) object
+    ;Add indexable-only qualifier here.  It can only be used when the only namespace given is public.
+    ;Remove read-qualified-property because it's redundant.
+    (define (read-property (o object :unused) (prop-name partial-name :unused) (limit class-opt :unused)) object
       (todo))
     ;(const ns namespace (resolve-object-namespace o name uses))
     ;(return (read-qualified-property o name ns false)))
     
-    (define (write-property (o object :unused) (prop-name partial-name :unused) (super class-opt :unused) (new-value object :unused)) void
+    (define (write-property (o object :unused) (prop-name partial-name :unused) (limit class-opt :unused) (new-value object :unused)) void
       (todo))
     
-    (define (delete-property (o object :unused) (prop-name partial-name :unused) (super class-opt :unused)) boolean
+    (define (delete-property (o object :unused) (prop-name partial-name :unused) (limit class-opt :unused)) boolean
       (todo))
     
     (define (write-qualified-property (o object :unused) (name string :unused) (ns namespace :unused) (indexable-only boolean :unused) (new-value object :unused)) void
@@ -459,6 +521,56 @@
     
     (define (delete-qualified-property (o object :unused) (name string :unused) (ns namespace :unused) (indexable-only boolean :unused)) boolean
       (todo))
+    
+    
+    (%heading (2 :semantics) "Operator Dispatch")
+    (%heading (3 :semantics) "Unary Operators")
+    (%text :comment (:global-call unary-dispatch table limit this operand args) " dispatches the unary operator described by " (:local table)
+           " applied to the " (:character-literal "this") " value " (:local this) ", the first operand " (:local operand)
+           ", and zero or more additional positional and/or named arguments " (:local args)
+           ". If " (:local limit) " is non-" (:tag null)
+           ", lookup is restricted to operators defined on the proper ancestors of " (:local limit) ".")
+    (define (unary-dispatch (table (list-set unary-method)) (limit class-opt) (this object) (operand object) (args argument-list)) object
+      (const applicable-ops (list-set unary-method)
+        (map table m m (limited-has-type operand (& operand-type m) limit)))
+      (reserve best)
+      (if (some applicable-ops best
+                (every applicable-ops m2 (is-ancestor (& operand-type m2) (& operand-type best))) :define-true)
+        (return ((& f best) this operand args))
+        (throw property-not-found-error)))
+    
+    
+    (%text :comment (:global-call limited-has-type o c limit) " returns " (:tag true) " if " (:local o) " is a member of class " (:local c)
+           " with the added condition that, if " (:local limit) " is non-" (:tag null) ", " (:local c) " is a proper ancestor of " (:local limit) ".")
+    (define (limited-has-type (o object) (c class) (limit class-opt)) boolean
+      (if (has-type o c)
+        (if (in limit (tag null) :narrow-false)
+          (return true)
+          (return (is-proper-ancestor c limit)))
+        (return false)))
+    
+    
+    (%heading (3 :semantics) "Binary Operators")
+    (%text :comment (:global-call is-binary-descendant m1 m2) " is " (:tag true) " if " (:local m1) " is at least as specific as " (:local m2)
+           " as defined by the procedure below.")
+    (define (is-binary-descendant (m1 binary-method) (m2 binary-method)) boolean
+      (return (and (is-ancestor (& left-type m2) (& left-type m1))
+                   (is-ancestor (& right-type m2) (& right-type m1)))))
+    
+    (%text :comment (:global-call binary-dispatch table left-limit right-limit left right) " dispatch the binary operator described by " (:local table)
+           " applied to the operands " (:local left) " and " (:local right) ". If " (:local left-limit) " is non-" (:tag null)
+           ", the lookup is restricted to operator definitions with an ancestor of " (:local left-limit)
+           " for the left operand. Similarly, if " (:local right-limit) " is non-" (:tag null)
+           ", the lookup is restricted to operator definitions with an ancestor of " (:local right-limit) " for the right operand.")
+    (define (binary-dispatch (table (list-set binary-method)) (left-limit class-opt) (right-limit class-opt) (left object) (right object)) object
+      (const applicable-ops (list-set binary-method)
+        (map table m m (and (limited-has-type left (& left-type m) left-limit)
+                            (limited-has-type right (& right-type m) right-limit))))
+      (reserve best)
+      (if (some applicable-ops best
+                (every applicable-ops m2 (is-binary-descendant best m2)) :define-true)
+        (return ((& f best) left right))
+        (throw property-not-found-error)))
     
     
     (%heading (2 :semantics) "Validation Environments")
@@ -516,253 +628,6 @@
     (%text :comment "Return the value of " (:character-literal "this") ". Throw an exception if there is no " (:character-literal "this") " defined.")
     (define (lookup-this (e dynamic-env :unused)) object
       (todo))
-    
-    
-    (%heading (2 :semantics) "Unary Operators")
-    (deftuple unary-method 
-      (operand-type class)
-      (f (-> (object object argument-list) object)))
-    
-    (%text :comment "Return " (:tag true) " if " (:local o) " is a member of class " (:local c) " and, if "
-           (:local limit) " is non-" (:tag null) ", " (:local c) " is a proper ancestor of " (:local limit) ".")
-    (define (limited-has-type (o object) (c class) (limit class-opt)) boolean
-      (if (has-type o c)
-        (if (in limit (tag null) :narrow-false)
-          (return true)
-          (return (is-proper-ancestor c limit)))
-        (return false)))
-    
-    (%text :comment "Dispatch the unary operator described by " (:local table) " applied to the " (:character-literal "this")
-           " value " (:local this) ", the first argument " (:local operand)
-           ", and optionally other arguments " (:local args)
-           ". If " (:local limit) " is non-" (:tag null)
-           ", restrict the lookup to operators defined on the proper ancestors of " (:local limit) ".")
-    (define (unary-dispatch (table (list-set unary-method)) (limit class-opt) (this object) (operand object) (args argument-list)) object
-      (const applicable-ops (list-set unary-method)
-        (map table m m (limited-has-type operand (& operand-type m) limit)))
-      (reserve best)
-      (if (some applicable-ops best
-                (every applicable-ops m2 (is-ancestor (& operand-type m2) (& operand-type best))) :define-true)
-        (return ((& f best) this operand args))
-        (throw property-not-found-error)))
-    
-    
-    (%heading (3 :semantics) "Unary Operator Tables")
-    
-    (define (plus-object (this object :unused) (a object) (args argument-list :unused)) object
-      (return (to-number a)))
-    
-    (define (minus-object (this object :unused) (a object) (args argument-list :unused)) object
-      (return (float64-negate (to-number a))))
-    
-    (define (bitwise-not-object (this object :unused) (a object) (args argument-list :unused)) object
-      (const i integer (to-int32 (to-number a)))
-      (return (real-to-float64 (bitwise-xor i -1))))
-    
-    (define (increment-object (this object :unused) (a object) (args argument-list :unused)) object
-      (const x object (unary-plus a))
-      (return (binary-dispatch add-table null null x 1.0)))
-    
-    (define (decrement-object (this object :unused) (a object) (args argument-list :unused)) object
-      (const x object (unary-plus a))
-      (return (binary-dispatch subtract-table null null x 1.0)))
-    
-    (define (call-object (this object) (a object) (args argument-list)) object
-      (case a
-        (:select (union undefined null boolean float64 string namespace attribute) (throw type-error))
-        (:narrow (union class instance) (return ((& call a) this args)))
-        (:narrow method-closure (return (call-object (& this a) (& f (& method a)) args)))))
-    
-    (define (construct-object (this object) (a object) (args argument-list)) object
-      (case a
-        (:select (union undefined null boolean float64 string namespace attribute method-closure) (throw type-error))
-        (:narrow (union class instance) (return ((& construct a) this args)))))
-    
-    (define (bracket-read-object (this object :unused) (a object) (args argument-list)) object
-      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
-        (throw argument-mismatch-error))
-      (const name string (to-string (nth (& positional args) 0)))
-      (return (read-qualified-property a name public-namespace true)))
-    
-    (define (bracket-write-object (this object :unused) (a object) (args argument-list)) object
-      (rwhen (or (/= (length (& positional args)) 2) (nonempty (& named args)))
-        (throw argument-mismatch-error))
-      (const new-value object (nth (& positional args) 0))
-      (const name string (to-string (nth (& positional args) 1)))
-      (write-qualified-property a name public-namespace true new-value)
-      (return undefined))
-    
-    (define (bracket-delete-object (this object :unused) (a object) (args argument-list)) object
-      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
-        (throw argument-mismatch-error))
-      (const name string (to-string (nth (& positional args) 0)))
-      (return (delete-qualified-property a name public-namespace true)))
-    
-    
-    (defvar plus-table (list-set unary-method) (list-set (new unary-method object-class plus-object)))
-    (defvar minus-table (list-set unary-method) (list-set (new unary-method object-class minus-object)))
-    (defvar bitwise-not-table (list-set unary-method) (list-set (new unary-method object-class bitwise-not-object)))
-    (defvar increment-table (list-set unary-method) (list-set (new unary-method object-class increment-object)))
-    (defvar decrement-table (list-set unary-method) (list-set (new unary-method object-class decrement-object)))
-    (defvar call-table (list-set unary-method) (list-set (new unary-method object-class call-object)))
-    (defvar construct-table (list-set unary-method) (list-set (new unary-method object-class construct-object)))
-    (defvar bracket-read-table (list-set unary-method) (list-set (new unary-method object-class bracket-read-object)))
-    (defvar bracket-write-table (list-set unary-method) (list-set (new unary-method object-class bracket-write-object)))
-    (defvar bracket-delete-table (list-set unary-method) (list-set (new unary-method object-class bracket-delete-object)))
-    
-    
-    (define (unary-plus (a object)) object
-      (return (unary-dispatch plus-table null null a (new argument-list (vector-of object) (list-set-of named-argument)))))
-    
-    (define (unary-not (a object)) object
-      (return (not (to-boolean a))))
-    
-    
-    (%heading (2 :semantics) "Binary Operators")
-    (deftuple binary-method
-      (left-type class)
-      (right-type class)
-      (f (-> (object object) object)))
-    
-    
-    (%text :comment "Return " (:tag true) " if " (:local m1) " is at least as specific as " (:local m2) ".")
-    (define (is-binary-descendant (m1 binary-method) (m2 binary-method)) boolean
-      (return (and (is-ancestor (& left-type m2) (& left-type m1))
-                   (is-ancestor (& right-type m2) (& right-type m1)))))
-    
-    (%text :comment "Dispatch the binary operator described by " (:local table) " applied to " (:local left) " and " (:local right)
-           ". If " (:local left-limit) " is non-" (:tag null)
-           ", restrict the lookup to operator definitions with an ancestor of " (:local left-limit)
-           " for the left operand. Similarly, if " (:local right-limit) " is non-" (:tag null)
-           ", restrict the lookup to operator definitions with an ancestor of " (:local right-limit) " for the right operand.")
-    (define (binary-dispatch (table (list-set binary-method)) (left-limit class-opt) (right-limit class-opt) (left object) (right object)) object
-      (const applicable-ops (list-set binary-method)
-        (map table m m (and (limited-has-type left (& left-type m) left-limit)
-                            (limited-has-type right (& right-type m) right-limit))))
-      (reserve best)
-      (if (some applicable-ops best
-                (every applicable-ops m2 (is-binary-descendant best m2)) :define-true)
-        (return ((& f best) left right))
-        (throw property-not-found-error)))
-    
-    
-    (%heading (3 :semantics) "Binary Operator Tables")
-    
-    (define (add-objects (a object) (b object)) object
-      (const ap object (to-primitive a null))
-      (const bp object (to-primitive b null))
-      (if (or (in ap string) (in bp string))
-        (return (append (to-string ap) (to-string bp)))
-        (return (float64-add (to-number ap) (to-number bp)))))
-    
-    (define (subtract-objects (a object) (b object)) object
-      (return (float64-subtract (to-number a) (to-number b))))
-    
-    (define (multiply-objects (a object) (b object)) object
-      (return (float64-multiply (to-number a) (to-number b))))
-    
-    (define (divide-objects (a object) (b object)) object
-      (return (float64-divide (to-number a) (to-number b))))
-    
-    (define (remainder-objects (a object) (b object)) object
-      (return (float64-remainder (to-number a) (to-number b))))
-    
-    
-    (define (less-objects (a object) (b object)) object
-      (const ap object (to-primitive a null))
-      (const bp object (to-primitive b null))
-      (if (and (in ap string :narrow-true) (in bp string :narrow-true))
-        (return (< ap bp string))
-        (return (= (float64-compare (to-number ap) (to-number bp)) less order))))
-    
-    (define (less-or-equal-objects (a object) (b object)) object
-      (const ap object (to-primitive a null))
-      (const bp object (to-primitive b null))
-      (if (and (in ap string :narrow-true) (in bp string :narrow-true))
-        (return (<= ap bp string))
-        (return (in (float64-compare (to-number ap) (to-number bp)) (tag less equal)))))
-    
-    (define (equal-objects (a object) (b object)) object
-      (case a
-        (:select (union undefined null)
-          (return (in b (union undefined null))))
-        (:narrow boolean
-          (if (in b boolean :narrow-true)
-            (return (= a b boolean))
-            (return (equal-objects (to-number a) b))))
-        (:narrow float64
-          (const bp object (to-primitive b null))
-          (case bp
-            (:select (union undefined null namespace attribute class method-closure instance) (return false))
-            (:select (union boolean string float64) (return (= (float64-compare a (to-number bp)) equal order)))))
-        (:narrow string
-          (const bp object (to-primitive b null))
-          (case bp
-            (:select (union undefined null namespace attribute class method-closure instance) (return false))
-            (:select (union boolean float64) (return (= (float64-compare (to-number a) (to-number bp)) equal order)))
-            (:narrow string (return (= a bp string)))))
-        (:select (union namespace attribute class method-closure instance)
-          (case b
-            (:select (union undefined null) (return false))
-            (:select (union namespace attribute class method-closure instance) (return (strict-equal-objects a b)))
-            (:select (union boolean float64 string)
-              (const ap object (to-primitive a null))
-              (case ap
-                (:select (union undefined null namespace attribute class method-closure instance) (return false))
-                (:select (union boolean float64 string) (return (equal-objects ap b)))))))))
-    
-    (define (strict-equal-objects (a object) (b object)) object
-      (if (and (in a float64 :narrow-true) (in b float64 :narrow-true))
-        (return (= (float64-compare a b) equal order))
-        (return (= a b object))))
-    
-    
-    (define (shift-left-objects (a object) (b object)) object
-      (const i integer (to-u-int32 (to-number a)))
-      (const count integer (bitwise-and (to-u-int32 (to-number b)) (hex #x1F)))
-      (return (real-to-float64 (u-int32-to-int32 (bitwise-and (bitwise-shift i count) (hex #xFFFFFFFF))))))
-    
-    (define (shift-right-objects (a object) (b object)) object
-      (const i integer (to-int32 (to-number a)))
-      (const count integer (bitwise-and (to-u-int32 (to-number b)) (hex #x1F)))
-      (return (real-to-float64 (bitwise-shift i (neg count)))))
-    
-    (define (shift-right-unsigned-objects (a object) (b object)) object
-      (const i integer (to-u-int32 (to-number a)))
-      (const count integer (bitwise-and (to-u-int32 (to-number b)) (hex #x1F)))
-      (return (real-to-float64 (bitwise-shift i (neg count)))))
-    
-    (define (bitwise-and-objects (a object) (b object)) object
-      (const i integer (to-int32 (to-number a)))
-      (const j integer (to-int32 (to-number b)))
-      (return (real-to-float64 (bitwise-and i j))))
-    
-    (define (bitwise-xor-objects (a object) (b object)) object
-      (const i integer (to-int32 (to-number a)))
-      (const j integer (to-int32 (to-number b)))
-      (return (real-to-float64 (bitwise-xor i j))))
-    
-    (define (bitwise-or-objects (a object) (b object)) object
-      (const i integer (to-int32 (to-number a)))
-      (const j integer (to-int32 (to-number b)))
-      (return (real-to-float64 (bitwise-or i j))))
-    
-    
-    (defvar add-table (list-set binary-method) (list-set (new binary-method object-class object-class add-objects)))
-    (defvar subtract-table (list-set binary-method) (list-set (new binary-method object-class object-class subtract-objects)))
-    (defvar multiply-table (list-set binary-method) (list-set (new binary-method object-class object-class multiply-objects)))
-    (defvar divide-table (list-set binary-method) (list-set (new binary-method object-class object-class divide-objects)))
-    (defvar remainder-table (list-set binary-method) (list-set (new binary-method object-class object-class remainder-objects)))
-    (defvar less-table (list-set binary-method) (list-set (new binary-method object-class object-class less-objects)))
-    (defvar less-or-equal-table (list-set binary-method) (list-set (new binary-method object-class object-class less-or-equal-objects)))
-    (defvar equal-table (list-set binary-method) (list-set (new binary-method object-class object-class equal-objects)))
-    (defvar strict-equal-table (list-set binary-method) (list-set (new binary-method object-class object-class strict-equal-objects)))
-    (defvar shift-left-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-left-objects)))
-    (defvar shift-right-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-right-objects)))
-    (defvar shift-right-unsigned-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-right-unsigned-objects)))
-    (defvar bitwise-and-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-and-objects)))
-    (defvar bitwise-xor-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-xor-objects)))
-    (defvar bitwise-or-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-or-objects)))
     
     
     (%heading 1 "Expressions")
@@ -1290,7 +1155,7 @@
          (const a object (read-reference ((eval :unary-expression) e)))
          (case a
            (:select undefined (return "undefined"))
-           (:select null (return "object"))
+           (:select (union null prototype) (return "object"))
            (:select boolean (return "boolean"))
            (:select float64 (return "number"))
            (:select string (return "string"))
@@ -2384,7 +2249,201 @@
         (eval-program
          (begin
           ((validate :directives) initial-validation-env)
-          (return ((eval :directives) initial-dynamic-env undefined))))))))
+          (return ((eval :directives) initial-dynamic-env undefined))))))
+    
+    
+    
+    (%heading (1 :semantics) "Predefined Identifiers")
+    (%heading (1 :semantics) "Built-in Classes")
+    (%heading (1 :semantics) "Built-in Functions")
+    (%heading (1 :semantics) "Built-in Attributes")
+    (%heading (1 :semantics) "Built-in Operators")
+    (%heading (2 :semantics) "Unary Operators")
+    
+    (define (plus-object (this object :unused) (a object) (args argument-list :unused)) object
+      (return (to-number a)))
+    
+    (define (minus-object (this object :unused) (a object) (args argument-list :unused)) object
+      (return (float64-negate (to-number a))))
+    
+    (define (bitwise-not-object (this object :unused) (a object) (args argument-list :unused)) object
+      (const i integer (to-int32 (to-number a)))
+      (return (real-to-float64 (bitwise-xor i -1))))
+    
+    (define (increment-object (this object :unused) (a object) (args argument-list :unused)) object
+      (const x object (unary-plus a))
+      (return (binary-dispatch add-table null null x 1.0)))
+    
+    (define (decrement-object (this object :unused) (a object) (args argument-list :unused)) object
+      (const x object (unary-plus a))
+      (return (binary-dispatch subtract-table null null x 1.0)))
+    
+    (define (call-object (this object) (a object) (args argument-list)) object
+      (case a
+        (:select (union undefined null boolean float64 string namespace attribute prototype) (throw type-error))
+        (:narrow (union class instance) (return ((& call a) this args)))
+        (:narrow method-closure (return (call-object (& this a) (& f (& method a)) args)))))
+    
+    (define (construct-object (this object) (a object) (args argument-list)) object
+      (case a
+        (:select (union undefined null boolean float64 string namespace attribute method-closure prototype) (throw type-error))
+        (:narrow (union class instance) (return ((& construct a) this args)))))
+    
+    (define (bracket-read-object (this object :unused) (a object) (args argument-list)) object
+      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
+        (throw argument-mismatch-error))
+      (const name string (to-string (nth (& positional args) 0)))
+      (return (read-qualified-property a name public-namespace true)))
+    
+    (define (bracket-write-object (this object :unused) (a object) (args argument-list)) object
+      (rwhen (or (/= (length (& positional args)) 2) (nonempty (& named args)))
+        (throw argument-mismatch-error))
+      (const new-value object (nth (& positional args) 0))
+      (const name string (to-string (nth (& positional args) 1)))
+      (write-qualified-property a name public-namespace true new-value)
+      (return undefined))
+    
+    (define (bracket-delete-object (this object :unused) (a object) (args argument-list)) object
+      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
+        (throw argument-mismatch-error))
+      (const name string (to-string (nth (& positional args) 0)))
+      (return (delete-qualified-property a name public-namespace true)))
+    
+    
+    (defvar plus-table (list-set unary-method) (list-set (new unary-method object-class plus-object)))
+    (defvar minus-table (list-set unary-method) (list-set (new unary-method object-class minus-object)))
+    (defvar bitwise-not-table (list-set unary-method) (list-set (new unary-method object-class bitwise-not-object)))
+    (defvar increment-table (list-set unary-method) (list-set (new unary-method object-class increment-object)))
+    (defvar decrement-table (list-set unary-method) (list-set (new unary-method object-class decrement-object)))
+    (defvar call-table (list-set unary-method) (list-set (new unary-method object-class call-object)))
+    (defvar construct-table (list-set unary-method) (list-set (new unary-method object-class construct-object)))
+    (defvar bracket-read-table (list-set unary-method) (list-set (new unary-method object-class bracket-read-object)))
+    (defvar bracket-write-table (list-set unary-method) (list-set (new unary-method object-class bracket-write-object)))
+    (defvar bracket-delete-table (list-set unary-method) (list-set (new unary-method object-class bracket-delete-object)))
+    
+    
+    (%heading (2 :semantics) "Binary Operators")
+    
+    (define (add-objects (a object) (b object)) object
+      (const ap object (to-primitive a null))
+      (const bp object (to-primitive b null))
+      (if (or (in ap string) (in bp string))
+        (return (append (to-string ap) (to-string bp)))
+        (return (float64-add (to-number ap) (to-number bp)))))
+    
+    (define (subtract-objects (a object) (b object)) object
+      (return (float64-subtract (to-number a) (to-number b))))
+    
+    (define (multiply-objects (a object) (b object)) object
+      (return (float64-multiply (to-number a) (to-number b))))
+    
+    (define (divide-objects (a object) (b object)) object
+      (return (float64-divide (to-number a) (to-number b))))
+    
+    (define (remainder-objects (a object) (b object)) object
+      (return (float64-remainder (to-number a) (to-number b))))
+    
+    
+    (define (less-objects (a object) (b object)) object
+      (const ap object (to-primitive a null))
+      (const bp object (to-primitive b null))
+      (if (and (in ap string :narrow-true) (in bp string :narrow-true))
+        (return (< ap bp string))
+        (return (= (float64-compare (to-number ap) (to-number bp)) less order))))
+    
+    (define (less-or-equal-objects (a object) (b object)) object
+      (const ap object (to-primitive a null))
+      (const bp object (to-primitive b null))
+      (if (and (in ap string :narrow-true) (in bp string :narrow-true))
+        (return (<= ap bp string))
+        (return (in (float64-compare (to-number ap) (to-number bp)) (tag less equal)))))
+    
+    (define (equal-objects (a object) (b object)) object
+      (case a
+        (:select (union undefined null)
+          (return (in b (union undefined null))))
+        (:narrow boolean
+          (if (in b boolean :narrow-true)
+            (return (= a b boolean))
+            (return (equal-objects (to-number a) b))))
+        (:narrow float64
+          (const bp object (to-primitive b null))
+          (case bp
+            (:select (union undefined null namespace attribute class method-closure prototype instance) (return false))
+            (:select (union boolean string float64) (return (= (float64-compare a (to-number bp)) equal order)))))
+        (:narrow string
+          (const bp object (to-primitive b null))
+          (case bp
+            (:select (union undefined null namespace attribute class method-closure prototype instance) (return false))
+            (:select (union boolean float64) (return (= (float64-compare (to-number a) (to-number bp)) equal order)))
+            (:narrow string (return (= a bp string)))))
+        (:select (union namespace attribute class method-closure prototype instance)
+          (case b
+            (:select (union undefined null) (return false))
+            (:select (union namespace attribute class method-closure prototype instance) (return (strict-equal-objects a b)))
+            (:select (union boolean float64 string)
+              (const ap object (to-primitive a null))
+              (case ap
+                (:select (union undefined null namespace attribute class method-closure prototype instance) (return false))
+                (:select (union boolean float64 string) (return (equal-objects ap b)))))))))
+    
+    (define (strict-equal-objects (a object) (b object)) object
+      (if (and (in a float64 :narrow-true) (in b float64 :narrow-true))
+        (return (= (float64-compare a b) equal order))
+        (return (= a b object))))
+    
+    
+    (define (shift-left-objects (a object) (b object)) object
+      (const i integer (to-u-int32 (to-number a)))
+      (const count integer (bitwise-and (to-u-int32 (to-number b)) (hex #x1F)))
+      (return (real-to-float64 (u-int32-to-int32 (bitwise-and (bitwise-shift i count) (hex #xFFFFFFFF))))))
+    
+    (define (shift-right-objects (a object) (b object)) object
+      (const i integer (to-int32 (to-number a)))
+      (const count integer (bitwise-and (to-u-int32 (to-number b)) (hex #x1F)))
+      (return (real-to-float64 (bitwise-shift i (neg count)))))
+    
+    (define (shift-right-unsigned-objects (a object) (b object)) object
+      (const i integer (to-u-int32 (to-number a)))
+      (const count integer (bitwise-and (to-u-int32 (to-number b)) (hex #x1F)))
+      (return (real-to-float64 (bitwise-shift i (neg count)))))
+    
+    (define (bitwise-and-objects (a object) (b object)) object
+      (const i integer (to-int32 (to-number a)))
+      (const j integer (to-int32 (to-number b)))
+      (return (real-to-float64 (bitwise-and i j))))
+    
+    (define (bitwise-xor-objects (a object) (b object)) object
+      (const i integer (to-int32 (to-number a)))
+      (const j integer (to-int32 (to-number b)))
+      (return (real-to-float64 (bitwise-xor i j))))
+    
+    (define (bitwise-or-objects (a object) (b object)) object
+      (const i integer (to-int32 (to-number a)))
+      (const j integer (to-int32 (to-number b)))
+      (return (real-to-float64 (bitwise-or i j))))
+    
+    
+    (defvar add-table (list-set binary-method) (list-set (new binary-method object-class object-class add-objects)))
+    (defvar subtract-table (list-set binary-method) (list-set (new binary-method object-class object-class subtract-objects)))
+    (defvar multiply-table (list-set binary-method) (list-set (new binary-method object-class object-class multiply-objects)))
+    (defvar divide-table (list-set binary-method) (list-set (new binary-method object-class object-class divide-objects)))
+    (defvar remainder-table (list-set binary-method) (list-set (new binary-method object-class object-class remainder-objects)))
+    (defvar less-table (list-set binary-method) (list-set (new binary-method object-class object-class less-objects)))
+    (defvar less-or-equal-table (list-set binary-method) (list-set (new binary-method object-class object-class less-or-equal-objects)))
+    (defvar equal-table (list-set binary-method) (list-set (new binary-method object-class object-class equal-objects)))
+    (defvar strict-equal-table (list-set binary-method) (list-set (new binary-method object-class object-class strict-equal-objects)))
+    (defvar shift-left-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-left-objects)))
+    (defvar shift-right-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-right-objects)))
+    (defvar shift-right-unsigned-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-right-unsigned-objects)))
+    (defvar bitwise-and-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-and-objects)))
+    (defvar bitwise-xor-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-xor-objects)))
+    (defvar bitwise-or-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-or-objects)))
+    
+    
+    (%heading (1 :semantics) "Built-in Namespaces")
+    (%heading (1 :semantics) "Built-in Units")
+    ))
 
 
 (defparameter *jw* (generate-world "J" *jw-source* '((js2 . :js2) (es4 . :es4))))
@@ -2502,70 +2561,73 @@
             (coerce bins 'list)))))
 
 
-#|
-(values
- (length (grammar-states *jg*))
- (depict-rtf-to-local-file
-  "JS20/ParserGrammarJS2.rtf"
-  "JavaScript 2.0 Syntactic Grammar"
-  #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *jg* :heading1)
-      (depict-world-commands markup-stream *jw* :visible-semantics nil)))
- (depict-rtf-to-local-file
-  "JS20/ParserSemanticsJS2.rtf"
-  "JavaScript 2.0 Syntactic Semantics"
-  #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *jg* :heading1)
-      (depict-world-commands markup-stream *jw*)))
- (compute-ecma-subset)
- (depict-rtf-to-local-file
-  "JS20/ParserGrammarES4.rtf"
-  "ECMAScript Edition 4 Syntactic Grammar"
-  #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *eg* :heading1)
-      (depict-world-commands markup-stream *ew* :visible-semantics nil)))
- (depict-rtf-to-local-file
-  "JS20/ParserSemanticsES4.rtf"
-  "ECMAScript Edition 4 Syntactic Semantics"
-  #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *eg* :heading1)
-      (depict-world-commands markup-stream *ew*)))
- 
- (length (grammar-states *jg*))
- (depict-html-to-local-file
-  "JS20/ParserGrammarJS2.html"
-  "JavaScript 2.0 Syntactic Grammar"
-  t
-  #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *jg* :heading2)
-      (depict-world-commands markup-stream *jw* :heading-offset 1 :visible-semantics nil))
-  :external-link-base "notation.html")
- (depict-html-to-local-file
-  "JS20/ParserSemanticsJS2.html"
-  "JavaScript 2.0 Syntactic Semantics"
-  t
-  #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *jg* :heading1)
-      (depict-world-commands markup-stream *jw*))
-  :external-link-base "notation.html")
- (compute-ecma-subset)
- (depict-html-to-local-file
-  "JS20/ParserGrammarES4.html"
-  "ECMAScript Edition 4 Syntactic Grammar"
-  t
-  #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *eg* :heading2)
-      (depict-world-commands markup-stream *ew* :heading-offset 1 :visible-semantics nil))
-  :external-link-base "notation.html")
- (depict-html-to-local-file
-  "JS20/ParserSemanticsES4.html"
-  "ECMAScript Edition 4 Syntactic Semantics"
-  t
-  #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *eg* :heading1)
-      (depict-world-commands markup-stream *ew*))
-  :external-link-base "notation.html"))
+(defun dump-parser ()
+  (values
+   (length (grammar-states *jg*))
+   (depict-rtf-to-local-file
+    "JS20/ParserGrammarJS2.rtf"
+    "JavaScript 2.0 Syntactic Grammar"
+    #'(lambda (markup-stream)
+        (depict-js-terminals markup-stream *jg* :heading1)
+        (depict-world-commands markup-stream *jw* :visible-semantics nil)))
+   (depict-rtf-to-local-file
+    "JS20/ParserSemanticsJS2.rtf"
+    "JavaScript 2.0 Syntactic Semantics"
+    #'(lambda (markup-stream)
+        (depict-js-terminals markup-stream *jg* :heading1)
+        (depict-world-commands markup-stream *jw*)))
+   (compute-ecma-subset)
+   (depict-rtf-to-local-file
+    "JS20/ParserGrammarES4.rtf"
+    "ECMAScript Edition 4 Syntactic Grammar"
+    #'(lambda (markup-stream)
+        (depict-js-terminals markup-stream *eg* :heading1)
+        (depict-world-commands markup-stream *ew* :visible-semantics nil)))
+   (depict-rtf-to-local-file
+    "JS20/ParserSemanticsES4.rtf"
+    "ECMAScript Edition 4 Syntactic Semantics"
+    #'(lambda (markup-stream)
+        (depict-js-terminals markup-stream *eg* :heading1)
+        (depict-world-commands markup-stream *ew*)))
+   
+   (length (grammar-states *jg*))
+   (depict-html-to-local-file
+    "JS20/ParserGrammarJS2.html"
+    "JavaScript 2.0 Syntactic Grammar"
+    t
+    #'(lambda (markup-stream)
+        (depict-js-terminals markup-stream *jg* :heading2)
+        (depict-world-commands markup-stream *jw* :heading-offset 1 :visible-semantics nil))
+    :external-link-base "notation.html")
+   (depict-html-to-local-file
+    "JS20/ParserSemanticsJS2.html"
+    "JavaScript 2.0 Syntactic Semantics"
+    t
+    #'(lambda (markup-stream)
+        (depict-js-terminals markup-stream *jg* :heading1)
+        (depict-world-commands markup-stream *jw*))
+    :external-link-base "notation.html")
+   (compute-ecma-subset)
+   (depict-html-to-local-file
+    "JS20/ParserGrammarES4.html"
+    "ECMAScript Edition 4 Syntactic Grammar"
+    t
+    #'(lambda (markup-stream)
+        (depict-js-terminals markup-stream *eg* :heading2)
+        (depict-world-commands markup-stream *ew* :heading-offset 1 :visible-semantics nil))
+    :external-link-base "notation.html")
+   (depict-html-to-local-file
+    "JS20/ParserSemanticsES4.html"
+    "ECMAScript Edition 4 Syntactic Semantics"
+    t
+    #'(lambda (markup-stream)
+        (depict-js-terminals markup-stream *eg* :heading1)
+        (depict-world-commands markup-stream *ew*))
+    :external-link-base "notation.html")))
 
+
+#|
+(dump-parser)
 
 (depict-rtf-to-local-file
  "JS20/ParserSemanticsJS2.rtf"
