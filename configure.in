@@ -73,8 +73,6 @@ dnl    directory unless the src tree is cleaned up.
 dnl ========================================================
 _topsrcdir=`cd \`dirname $0\`; pwd`
 _objdir=`pwd`
-
-# Check for a separate objdir
 if test "$_topsrcdir" != "$_objdir"
 then
   # Check for a couple representative files in the source tree
@@ -141,46 +139,33 @@ fi
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
-dnl Checks for system specific bits
-dnl ========================================================
-dnl the qsort routine under solaris is faulty
-dnl Linux Alpha needs -mieee for FPU to work correctly
-dnl Note this case statement doesn't seem to handle [] as part of a regexp
-
 dnl set the defaults first
 dnl ========================================================
 AS=
 AS_DASH_C_FLAG='-c'
 NS_USE_NATIVE=
 DLL_SUFFIX="so"
-MKSHLIB='$(LD) $(DSO_LDOPTS)'
-DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-DSO_CFLAGS='-KPIC'
 
-dnl gcc can come with its own linker so it is better to use the pass-thru calls
-dnl MKSHLIB_FORCE_ALL is used to force the linker to include all object
-dnl files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker to
-dnl normal behavior.
+dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
-    MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
-    MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-fPIC'
 
-    # Turn on GNU specific features
-    _WARNINGS_CFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
     #_WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
 
     _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
 else
+    MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    DSO_CFLAGS='-KPIC'
     _DEFINES_CFLAGS='$(ACDEFINES)'
 fi
 
 if test "$GNU_CXX"; then
-    # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
     #_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic"
 
@@ -190,18 +175,53 @@ else
     _DEFINES_CXXFLAGS='$(ACDEFINES)'
 fi
 
-dnl now the exceptions
+dnl gcc can come with its own linker so it is better to use the pass-thru calls
+dnl MKSHLIB_FORCE_ALL is used to force the linker to include all object
+dnl files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker to
+dnl normal behavior.
 dnl ========================================================
+MKSHLIB_FORCE_ALL=
+MKSHLIB_UNFORCE_ALL=
+if test "$GNU_CC"; then
+  AC_MSG_CHECKING(whether ld has archive extraction flags)
+  AC_CACHE_VAL(ac_cv_mkshlib_force_and_unforce,
+   [_SAVE_LDFLAGS=$LDFLAGS; _SAVE_LIBS=$LIBS
+    ac_cv_mkshlib_force_and_unforce="no"
+    exec 3<&0 <<LOOP_INPUT
+	force="-Wl,--whole-archive";   unforce="-Wl,--no-whole-archive"
+	force="-Wl,-z -Wl,allextract"; unforce="-Wl,-z -Wl,defaultextract"
+	force="-Wl,all";               unforce="-Wl,-none"
+LOOP_INPUT
+    while read line
+    do
+      eval $line
+      LDFLAGS=$force
+      LIBS=$unforce
+      AC_TRY_LINK(,, ac_cv_mkshlib_force_and_unforce=$line; break)
+    done
+    exec 0<&3 3<&-
+    LDFLAGS=$_SAVE_LDFLAGS; LIBS=$_SAVE_LIBS
+   ])
+  if test "$ac_cv_mkshlib_force_and_unforce" = "no"; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(yes)
+    eval $ac_cv_mkshlib_force_and_unforce
+    MKSHLIB_FORCE_ALL=$force
+    MKSHLIB_UNFORCE_ALL=$unforce
+  fi
+fi
+
+dnl System overrides of the defaults
+dnl ========================================================
+dnl the qsort routine under solaris is faulty
+dnl Linux Alpha needs -mieee for FPU to work correctly
 case "$target" in
 *-*-aix*)
-	DLL_SUFFIX="so"
-	MKSHLIB_FORCE_ALL=''
-	MKSHLIB_UNFORCE_ALL=''
 	if test ! "$GNU_CC"; then
 		DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
 		DSO_CFLAGS='-DPIC -brtl -O -qnortti -qflag=w:w'
 	fi
-dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
 	MKSHLIB='/usr/ibmcxx/bin/makeC++SharedLib_r -p1 -brtl -berok --'
 	;;
 
@@ -212,7 +232,7 @@ dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
-	   DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+       DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
        AS='/usr/ccs/bin/as'
        AS_DASH_C_FLAG=''
 
@@ -227,29 +247,14 @@ dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
 
        NS_USE_NATIVE=1
     else
-       MKSHLIB='$(CC) $(DSO_LDOPTS)'
-
-dnl    donm: you need to detect that gcc is built to use the gnu
-dnl          linker.  You cant assume that here.
-dnl
-dnl    MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
-dnl    MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
-dnl
-
-       MKSHLIB_FORCE_ALL='-Wl,-z -Wl,allextract'
-       MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
-
        AS='$(CC)'
        ASFLAGS='$(CFLAGS)'
     fi
     ;;
 
 *-*-sunos*) 
-dnl Assumes the native ld is being used.
     DSO_LDOPTS=''
-    MKSHLIB='ld $(DSO_LDOPTS)'
-    MKSHLIB_FORCE_ALL=''
-    MKSHLIB_UNFORCE_ALL=''
+    MKSHLIB='$(LD) $(DSO_LDOPTS)'
     ;;
 
 alpha*-*-linux*)
@@ -278,9 +283,7 @@ alpha*-*-osf*)
     ;;
 
 *-freebsd*)
-    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` = "elf"; then
-        DLL_SUFFIX="so"
-    else
+    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` != "elf"; then
 	DLL_SUFFIX="so.1.0"
 	DSO_LDOPTS="-shared"
     fi
@@ -328,14 +331,11 @@ dnl What is this supposed to tell us...?  I don't see the point (at least on 1.3
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(DSO_LDOPTS)'
-    MKSHLIB_FORCE_ALL='-all'
-    MKSHLIB_UNFORCE_ALL=
-    if test "$GNU_CC"; then
-       MKSHLIB_FORCE_ALL=-Wl,-all
-       MKSHLIB_UNFORCE_ALL=-Wl,-none
-    else
+    if test ! "$GNU_CC"; then
        CFLAGS="$CFLAGS -woff 3262"
        CXXFLAGS="$CXXFLAGS -woff 3262"
+       MKSHLIB_FORCE_ALL='-all'
+       MKSHLIB_UNFORCE_ALL=
     fi
     ;;
 
@@ -782,7 +782,7 @@ MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 
 _cpp_md_flag=
 MOZ_ARG_DISABLE_BOOL(md,
-[  --disable-md            Use compiler-based dependencies ],
+[  --disable-md            Do not use compiler-based dependencies ],
   [],
   [_cpp_md_flag=1],
   [dnl Default is to turn on -MD if using GNU-compatible compilers
@@ -912,7 +912,7 @@ MOZ_ARG_ENABLE_BOOL(java,
   [MOZ_JAVA=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
 
 MOZ_ARG_ENABLE_BOOL(mail-compose,
-[  --enable-mail-compose   Enable old Messenger mail composer ],
+[  --enable-mail-compose   Enable old Messenger mail composer],
   [ MOZ_MAIL_COMPOSE=1 MOZ_EDITOR=1 ])
 
 dnl The new mail app is "smart-mail"
@@ -921,7 +921,7 @@ dnl [  --enable-smart-mail     Enable HTML/RDF-based client-side mail (untested)
 dnl  MOZ_SMART_MAIL=1)
 
 MOZ_ARG_DISABLE_BOOL(static,
-[  --disable-static        Disable building of internal static libs (broken)],
+[  --disable-static        Disable building of internal static libs],
   NO_STATIC_LIB=1)
 
 
