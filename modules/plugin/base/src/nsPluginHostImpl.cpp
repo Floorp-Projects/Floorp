@@ -28,6 +28,8 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIURL.h"
+#include "nsXPIDLString.h"
+#include "nsIPref.h"
 
 #ifndef NECKO
 #include "nsINetService.h"
@@ -40,6 +42,8 @@
 #include "nsNeckoUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
+#include "nsNeckoUtil.h"
+
 #endif // NECKO
 
 #include "nsIServiceManager.h"
@@ -75,6 +79,7 @@ static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
@@ -1505,10 +1510,103 @@ printf("plugin manager2 notifystatuschange called\n");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/**
+
+ * This method queries the prefs for proxy information.
+
+ * It has been tested and is known to work in the following three cases
+
+ * when no proxy host or port is specified
+
+ * when only the proxy host is specified
+
+ * when only the proxy port is specified
+
+ * This method conforms to the return code specified in 
+
+ * http://developer.netscape.com/docs/manuals/proxy/adminnt/autoconf.htm#1020923
+
+ * with the exception that multiple values are not implemented.
+
+ */
+
 NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
 {
-printf("plugin manager2 findproxyforurl called\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult res = NS_ERROR_NOT_IMPLEMENTED;
+#ifdef NECKO
+  const PRInt32 bufLen = 80;
+
+  nsIURI *uriIn = nsnull;
+  char *protocol = nsnull; 
+  char buf[bufLen];
+  nsXPIDLCString proxyHost;
+  PRInt32 proxyPort = -1;
+  PRBool useDirect = PR_FALSE;
+    
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
+
+  if (NS_FAILED(res) || (nsnull == prefs) || (nsnull == url)) {
+    return res;
+  }
+
+  NS_WITH_SERVICE(nsIIOService, theService, kIOServiceCID, &res);
+
+  if (NS_FAILED(res) || (nsnull == theService) || (nsnull == url)) {
+    goto FPFU_CLEANUP;
+  }
+
+  // make an nsURI from the argument url
+  res = theService->NewURI(url, nsnull, &uriIn);
+  if (NS_FAILED(res)) {
+    goto FPFU_CLEANUP;
+  }
+
+  // get the scheme from this nsURI
+  res = uriIn->GetScheme(&protocol);
+  if (NS_FAILED(res)) {
+    goto FPFU_CLEANUP;
+  }
+
+  PR_snprintf(buf, bufLen, "network.proxy.%s", protocol);
+  res = prefs->CopyCharPref(buf, getter_Copies(proxyHost));
+  if (NS_SUCCEEDED(res) && PL_strlen((const char *) proxyHost) > 0) {
+    PR_snprintf(buf, bufLen, "network.proxy.%s_port", protocol);
+    res = prefs->GetIntPref(buf, &proxyPort);
+    
+    if (NS_SUCCEEDED(res) && (proxyPort>0)) { // currently a bug in IntPref
+      // construct the return value
+      *result = PR_smprintf("PROXY %s:%d", (const char *) proxyHost, 
+                            proxyPort);
+      if (nsnull == *result) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+        goto FPFU_CLEANUP;
+      }
+    }
+    else { 
+      useDirect = PR_TRUE;
+    }
+  }
+  else {
+    useDirect = PR_TRUE;
+  }
+
+  if (useDirect) {
+    // construct the return value
+    *result = PR_smprintf("DIRECT");
+    if (nsnull == *result) {
+      res = NS_ERROR_OUT_OF_MEMORY;
+      goto FPFU_CLEANUP;
+    }
+  }
+
+
+ FPFU_CLEANUP:
+  nsCRT::free(protocol);
+  NS_RELEASE(uriIn);
+
+  
+#endif // NECKO
+  return res;
 }
 
 NS_IMETHODIMP nsPluginHostImpl::RegisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window)
