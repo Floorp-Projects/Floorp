@@ -619,6 +619,30 @@ XP_Bool	CNSContextCallbacks::Confirm(
 	return theNSContext->Confirm(inMessage);
 }
 
+XP_Bool CNSContextCallbacks::CheckConfirm(
+	MWContext* 				inContext,
+	const char*				pConfirmMessage,
+	const char*				pCheckMessage,
+	const char*				pOKMessage,
+	const char*				pCancelMessage,
+	XP_Bool*				pChecked)
+{
+	CNSContext* theNSContext = ExtractNSContext(inContext);
+	Assert_(theNSContext != NULL);
+	return theNSContext->CheckConfirm(pConfirmMessage, pCheckMessage, pOKMessage, pCancelMessage, pChecked);
+}
+
+XP_Bool CNSContextCallbacks::SelectDialog(
+	MWContext* 				inContext,
+	const char*				pMessage,
+	const char**			pList,
+	int16*					pCount)
+{
+	CNSContext* theNSContext = ExtractNSContext(inContext);
+	Assert_(theNSContext != NULL);
+	return theNSContext->SelectDialog(pMessage, pList, pCount);
+}
+
 char* CNSContextCallbacks::Prompt(
 	MWContext*				inContext,
 	const char* 			inMessage,

@@ -885,6 +885,37 @@ PRBool XP_Confirm( MWContext * , const char * msg)
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
+XP_Bool CNSContext::CheckConfirm(
+	const char*				pConfirmMessage,
+	const char*				pCheckMessage,
+	const char*				pOKMessage,
+	const char*				pCancelMessage,
+	XP_Bool*				pChecked)
+{
+	CStr255	confirmMessage(pConfirmMessage),
+			checkMessage(pCheckMessage),
+			okMessage(pOKMessage),
+			cancelMessage(pCancelMessage);
+	return (UStdDialogs::CheckConfirm(confirmMessage, checkMessage, okMessage, cancelMessage, pChecked));
+}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+XP_Bool CNSContext::SelectDialog(
+	const	char*			pMessage,
+	char**					pList,
+	int16*					pCount)
+{
+	CStr255	message(pMessage);
+	return (UStdDialogs::SelectDialog(message, pList, pCount));
+}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
 char* CNSContext::Prompt(
 	const char* 			inMessage,
 	const char*				inDefaultText)

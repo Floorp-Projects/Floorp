@@ -680,15 +680,10 @@ BOOL   FE_FileType(char * path,
 			(*context->funcs->PromptPassword)(context, Msg)
 #define FE_PromptUsernameAndPassword(cx, Msg, username, password) \
 			(*cx->funcs->PromptUsernameAndPassword)(cx,Msg,username,password)
-
-#ifdef XP_WIN /* privacy ifdef - last person to get here please remove */
 #define FE_CheckConfirm(context,msg,checkmsg,okmsg,cancelmsg,checked) \
 			(*context->funcs->CheckConfirm)(context,msg,checkmsg,okmsg,cancelmsg,checked)
-
 #define FE_SelectDialog(context,msg,list,count) \
 			(*context->funcs->SelectDialog)(context,msg,list,count)
-#endif
-
 #define FE_EnableClicking(context) \
 			(*context->funcs->EnableClicking)(context)
 #define FE_GetDefaultBackgroundColor(context,color) \

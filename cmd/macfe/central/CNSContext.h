@@ -432,6 +432,18 @@ protected:
 		virtual	XP_Bool				Confirm(
 											const char* 			inMessage);
 
+		virtual	XP_Bool				CheckConfirm(
+											const char*				pConfirmMessage,
+											const char*				pCheckMessage,
+											const char*				pOKMessage,
+											const char*				pCancelMessage,
+											XP_Bool*				pChecked);
+		
+		virtual	XP_Bool				SelectDialog(
+											const	char*			pMessage,
+											char**					pList,
+											int16*					pCount);
+
 		virtual	char* 				Prompt(
 											const char* 			inMessage,
 											const char*				inDefaultText);

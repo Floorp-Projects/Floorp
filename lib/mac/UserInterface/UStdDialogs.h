@@ -22,6 +22,8 @@
 
 #include "PascalString.h"
 
+#include "xp_core.h"
+
 const ResIDT cDefaultTextTraitsID = 128;
 const ResIDT cPasswordTextTraitsID = 4000;
 
@@ -203,6 +205,24 @@ class UStdDialogs
 								const CString&	inPromptText,
 								CString&	ioNameString,
 								CString&	ioPassString,
+								LWindow*			inOverWindow = NULL,
+								LCommander*			inSuper = NULL);
+
+
+		static Boolean	CheckConfirm(
+								const CString&		pConfirmMessage,
+								const CString&		pCheckMessage,
+								const CString&		pOKMessage,
+								const CString&		pCancelMessage,
+								XP_Bool*			pChecked,
+								LWindow*			inOverWindow = NULL,
+								LCommander*			inSuper = NULL);
+
+
+		static Boolean	SelectDialog(
+								const CString&		pMessage,
+								const char**		pList,
+								int16*				pCount,
 								LWindow*			inOverWindow = NULL,
 								LCommander*			inSuper = NULL);
 

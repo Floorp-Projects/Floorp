@@ -118,8 +118,8 @@ typedef struct {
 	*	checkMessage,
 	*	okMessage,
 	*	cancelMessage;
-	JSBool	accepted,	/* dialog was OKed? */
-		checked;	/* checkbox is checked? */
+	JSBool	accepted;	/* dialog was OKed? */
+	XP_Bool	checked;	/* checkbox is checked? */
 } MozillaEvent_CheckConfirmBox;	/* CheckConfirm message box event */
 
 
@@ -163,13 +163,9 @@ et_HandleEvent_CheckConfirmBox(MozillaEvent_CheckConfirmBox* e)
         e->ce.context->bJavaScriptCalling = TRUE;
     }
     
-#ifdef XP_WIN /* privacy ifdef - last person to get here please remove */
     e->accepted = FE_CheckConfirm(e->ce.context, e->mainMessage,
 		e->checkMessage, e->okMessage, e->cancelMessage,
 		&e->checked);
-#else
-    e->accepted = 0; /* and kill this else clause while you're at it */
-#endif
 	/* we're restricted to a single (void *) return value, and we need to return
 	   two separate booleans, thus the bit hackery: */
     pRet = (void *)	((e->accepted ? CHECKBOX_ACCEPTBIT : 0x0) |
@@ -214,7 +210,7 @@ JSBool
 ET_PostCheckConfirmBox(MWContext* context,
 	char* szMainMessage, char* szCheckMessage,
 	char* szOKMessage, char* szCancelMessage,
-	JSBool *bChecked)
+	XP_Bool *bChecked)
 {
     uint8 rtnVal;
     MozillaEvent_CheckConfirmBox* event = PR_NEW(MozillaEvent_CheckConfirmBox);
