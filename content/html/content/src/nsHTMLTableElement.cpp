@@ -841,50 +841,37 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   /* attributes that resolve to pixels, with min=0 */
   if ((aAttribute == nsHTMLAtoms::cellspacing) ||
       (aAttribute == nsHTMLAtoms::cellpadding)) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* attributes that are either empty, or integers, with min=0 */
   else if (aAttribute == nsHTMLAtoms::cols) {
-    nsAutoString tmp(aValue);
-    tmp.StripWhitespace();
-    if (0 == tmp.Length()) {
-      // Just set COLS, same as COLS=number of columns
-      aResult.SetEmptyValue();
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
-    else 
-    {
-      nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    }    
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
   /* attributes that are either empty, or pixels */
   else if (aAttribute == nsHTMLAtoms::border) {
-    nsAutoString tmp(aValue);
-    tmp.StripWhitespace();
-    if (0 == tmp.Length()) {
-      // Just enable the border; same as border=1
-      aResult.SetEmptyValue();
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
-    else 
-    {
-      nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel);
-    }    
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
   /* attributes that resolve to integers or percents */
   else if (aAttribute == nsHTMLAtoms::height) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* attributes that resolve to integers or percents or proportions */
   else if (aAttribute == nsHTMLAtoms::width) {
-    nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   /* other attributes */
@@ -893,25 +880,25 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::background) {
-    aResult.SetStringValue(aValue);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::frame) {
-    nsGenericHTMLElement::ParseEnumValue(aValue, kFrameTable, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kFrameTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::layout) {
-    nsGenericHTMLElement::ParseEnumValue(aValue, kLayoutTable, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kLayoutTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::rules) {
-    nsGenericHTMLElement::ParseEnumValue(aValue, kRulesTable, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kRulesTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
 
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -1033,21 +1020,14 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
   nsHTMLValue borderValue;
 
   aAttributes->GetAttribute(nsHTMLAtoms::border, borderValue);
-  if (borderValue.GetUnit() == eHTMLUnit_String)
-  {
-    nsAutoString borderAsString;
-    borderValue.GetStringValue(borderAsString);
-    nsGenericHTMLElement::ParseValue(borderAsString, 0, borderValue, eHTMLUnit_Pixel);
-  }
-  else if (borderValue.GetUnit() == eHTMLUnit_Null)
+  if (borderValue.GetUnit() == eHTMLUnit_Null)
   { // the absence of "border" with the presence of "frame" implies border = 1 pixel
     nsHTMLValue frameValue;
     aAttributes->GetAttribute(nsHTMLAtoms::frame, frameValue);
     if (frameValue.GetUnit() != eHTMLUnit_Null)
       borderValue.SetPixelValue(1);
   }
-  if ((borderValue.GetUnit() == eHTMLUnit_Pixel) || 
-      (borderValue.GetUnit() == eHTMLUnit_Empty)) {
+  if (borderValue.GetUnit() != eHTMLUnit_Null) {
     nsStyleSpacing* spacing = (nsStyleSpacing*)
       aContext->GetMutableStyleData(eStyleStruct_Spacing);
     nsStyleTable *tableStyle = (nsStyleTable*)
@@ -1055,7 +1035,7 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStyleCoord twips;
-    if (borderValue.GetUnit() == eHTMLUnit_Empty) {
+    if (borderValue.GetUnit() != eHTMLUnit_Pixel) {
       tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // non-0 values of border imply default rules=all
       twips.SetCoordValue(NSIntPixelsToTwips(1, p2t));
     }

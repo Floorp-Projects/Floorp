@@ -408,7 +408,7 @@ nsresult BodyFixupRule::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+//  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kIStyleRuleIID)) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
     NS_ADDREF_THIS();
@@ -591,22 +591,20 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
                                      const nsString& aValue,
                                      nsHTMLValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::background) {
-    aResult.SetStringValue(aValue);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
   if ((aAttribute == nsHTMLAtoms::bgcolor) ||
       (aAttribute == nsHTMLAtoms::text) ||
       (aAttribute == nsHTMLAtoms::link) ||
       (aAttribute == nsHTMLAtoms::alink) ||
       (aAttribute == nsHTMLAtoms::vlink)) {
-    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
-  if ((aAttribute == nsHTMLAtoms::marginwidth) ||
-      (aAttribute == nsHTMLAtoms::marginheight)) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  else if ((aAttribute == nsHTMLAtoms::marginwidth) ||
+           (aAttribute == nsHTMLAtoms::marginheight)) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

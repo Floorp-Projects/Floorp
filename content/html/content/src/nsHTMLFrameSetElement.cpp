@@ -133,17 +133,20 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
                                          nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::frameborder) {
     // XXX need to check for correct mode
-    nsGenericHTMLElement::ParseFrameborderValue(PR_FALSE, aValue, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseFrameborderValue(PR_FALSE, aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::border) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, 100, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, 100, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

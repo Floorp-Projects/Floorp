@@ -31,7 +31,7 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 
-#define _I32_MIN  (-2147483647 - 1) /* minimum signed 32 bit value */
+//#define _I32_MIN  (-2147483647 - 1) /* minimum signed 32 bit value */
 
 static NS_DEFINE_IID(kIDOMHTMLLayerElementIID, NS_IDOMHTMLLAYERELEMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
@@ -185,14 +185,10 @@ nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
                                       nsHTMLValue&    aResult)
 {
   // XXX CLIP
-  if (aAttribute == nsHTMLAtoms::src) {
-    aResult.SetStringValue(aValue);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-  else if ((aAttribute == nsHTMLAtoms::top)   ||
-           (aAttribute == nsHTMLAtoms::left)  ||
-           (aAttribute == nsHTMLAtoms::width) ||
-           (aAttribute == nsHTMLAtoms::height)) {
+  if ((aAttribute == nsHTMLAtoms::top)   ||
+      (aAttribute == nsHTMLAtoms::left)  ||
+      (aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::height)) {
     if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -212,10 +208,6 @@ nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
     if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
-  }
-  else if (aAttribute == nsHTMLAtoms::background) {
-    aResult.SetStringValue(aValue);
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
   // ABOVE, BELOW, OnMouseOver, OnMouseOut, OnFocus, OnBlur, OnLoad

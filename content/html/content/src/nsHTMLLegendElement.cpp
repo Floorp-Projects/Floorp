@@ -168,8 +168,9 @@ nsHTMLLegendElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

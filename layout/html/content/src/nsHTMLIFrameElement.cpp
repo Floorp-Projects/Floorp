@@ -165,32 +165,38 @@ nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::marginwidth) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::marginheight) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   if (aAttribute == nsHTMLAtoms::width) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::height) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::frameborder) {
-    nsGenericHTMLElement::ParseFrameborderValue(PR_TRUE, aValue, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseFrameborderValue(PR_TRUE, aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   } 
   else if (aAttribute == nsHTMLAtoms::scrolling) {
-    nsGenericHTMLElement::ParseScrollingValue(PR_TRUE, aValue, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseScrollingValue(PR_TRUE, aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult)) {

@@ -151,9 +151,9 @@ public:
                                     nsHTMLValue& aResult,
                                     nsHTMLUnit aValueUnit);
 
-  static void ParseValueOrPercentOrProportional(const nsString& aString,
-                                                nsHTMLValue& aResult, 
-                                                nsHTMLUnit aValueUnit);
+  static PRBool ParseValueOrPercentOrProportional(const nsString& aString,
+                                                  nsHTMLValue& aResult, 
+                                                  nsHTMLUnit aValueUnit);
 
   static PRBool ValueOrPercentToString(const nsHTMLValue& aValue,
                                        nsString& aResult);

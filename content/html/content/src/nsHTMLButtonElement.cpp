@@ -308,11 +308,12 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, 32767, aResult,
-                                     eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, 32767, aResult,
+                                         eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
-  if (aAttribute == nsHTMLAtoms::type) {
+  else if (aAttribute == nsHTMLAtoms::type) {
     nsGenericHTMLElement::EnumTable *table = kButtonTypeTable;
     while (nsnull != table->tag) { 
       if (aValue.EqualsIgnoreCase(table->tag)) {

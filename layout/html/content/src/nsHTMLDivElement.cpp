@@ -137,18 +137,21 @@ nsHTMLDivElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  if (aAttribute == nsHTMLAtoms::cols) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  else if (aAttribute == nsHTMLAtoms::cols) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
-  if (aAttribute == nsHTMLAtoms::gutter) {
-    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  else if (aAttribute == nsHTMLAtoms::gutter) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
-  if (aAttribute == nsHTMLAtoms::width) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  else if (aAttribute == nsHTMLAtoms::width) {
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

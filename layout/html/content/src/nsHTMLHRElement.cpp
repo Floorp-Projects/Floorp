@@ -172,13 +172,15 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::width) {
-    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                              eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                                  eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    nsGenericHTMLElement::ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::noshade) {
     aResult.SetEmptyValue();

@@ -154,9 +154,10 @@ nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  if (aAttribute == nsHTMLAtoms::color) {
-    nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+  else if (aAttribute == nsHTMLAtoms::color) {
+    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

@@ -672,12 +672,14 @@ nsHTMLSelectElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::tabindex) {
-    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }

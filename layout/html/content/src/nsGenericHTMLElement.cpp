@@ -591,6 +591,12 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
     return result;
   }
   else {
+    if (0 == aValue.Length()) { // ifempty string
+      val.Reset();  // set empty value
+      result = SetHTMLAttribute(aAttribute, val, aNotify);
+      NS_RELEASE(htmlContent);
+      return result;
+    }
     // set as string value to avoid another string copy
     PRBool  impact = NS_STYLE_HINT_NONE;
     htmlContent->GetMappedAttributeImpact(aAttribute, impact);
@@ -1265,8 +1271,6 @@ nsGenericHTMLElement::ParseValueOrPercent(const nsString& aString,
     return PR_TRUE;
   }
 
-  // Illegal values are mapped to empty
-  aResult.SetEmptyValue();
   return PR_FALSE;
 }
 
@@ -1275,7 +1279,7 @@ nsGenericHTMLElement::ParseValueOrPercent(const nsString& aString,
  *   percent  (n%),
  *   or proportional (n*)
  */
-void
+PRBool
 nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsString& aString,
                                                         nsHTMLValue& aResult, 
                                                         nsHTMLUnit aValueUnit)
@@ -1298,7 +1302,9 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsString& aString,
         aResult.SetIntValue(val, aValueUnit);
       }
     }
+    return PR_TRUE;
   }
+  return PR_FALSE;
 }
 
 PRBool
@@ -1365,8 +1371,6 @@ nsGenericHTMLElement::ParseValue(const nsString& aString, PRInt32 aMin,
     return PR_TRUE;
   }
 
-  // Illegal values are mapped to empty
-  aResult.SetEmptyValue();
   return PR_FALSE;
 }
 
@@ -1388,8 +1392,6 @@ nsGenericHTMLElement::ParseValue(const nsString& aString, PRInt32 aMin,
     return PR_TRUE;
   }
 
-  // Illegal values are mapped to empty
-  aResult.SetEmptyValue();
   return PR_FALSE;
 }
 
@@ -1435,8 +1437,6 @@ nsGenericHTMLElement::ParseColor(const nsString& aString,
     }
   }
 
-  // Illegal values are mapped to empty
-  aResult.SetEmptyValue();
   return PR_FALSE;
 }
 
@@ -1456,10 +1456,6 @@ nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
   if ((aValue.GetUnit() == eHTMLUnit_ColorName) || 
       (aValue.GetUnit() == eHTMLUnit_String)) {
     aValue.GetStringValue(aResult);
-    return PR_TRUE;
-  }
-  if (aValue.GetUnit() == eHTMLUnit_Empty) {  // was illegal
-    aResult.Truncate();
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -1652,14 +1648,12 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
       (aAttribute == nsHTMLAtoms::height)) {
-    ParseValueOrPercent(aString, aResult, eHTMLUnit_Pixel);
-    return PR_TRUE;
+    return ParseValueOrPercent(aString, aResult, eHTMLUnit_Pixel);
   }
   else if ((aAttribute == nsHTMLAtoms::hspace) ||
            (aAttribute == nsHTMLAtoms::vspace) ||
            (aAttribute == nsHTMLAtoms::border)) {
-    ParseValue(aString, 0, aResult, eHTMLUnit_Pixel);
-    return PR_TRUE;
+    return ParseValue(aString, 0, aResult, eHTMLUnit_Pixel);
   }
   return PR_FALSE;
 }
@@ -1894,13 +1888,16 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsIHTMLMappedAttributes*
 
   // border: pixels
   aAttributes->GetAttribute(nsHTMLAtoms::border, value);
-  if (value.GetUnit() != eHTMLUnit_Pixel) {
+  if (value.GetUnit() == eHTMLUnit_Null) {
     if (nsnull == aBorderColors) {
       return;
     }
     // If no border is defined and we are forcing a border, force
     // the size to 2 pixels.
     value.SetPixelValue(2);
+  }
+  else if (value.GetUnit() != eHTMLUnit_Pixel) {  // something other than pixels
+    value.SetPixelValue(0);
   }
 
   float p2t;
@@ -2025,38 +2022,6 @@ nsGenericHTMLElement::GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
   return PR_FALSE;
 }
 
-
-static PRBool AttributeChangeRequiresRepaint(const nsIAtom* aAttribute)
-{
-  // these are attributes that always require a restyle and a repaint, but not a reflow
-  // regardless of the tag they are associated with
-  return (PRBool)
-    (aAttribute==nsHTMLAtoms::bgcolor ||
-     aAttribute==nsHTMLAtoms::color);
-}
-
-static PRBool AttributeChangeRequiresReflow(const nsIAtom* aAttribute)
-{
-    // these are attributes that always require a restyle and reflow
-    // regardless of the tag they are associated with
-  return (PRBool)
-    (aAttribute==nsHTMLAtoms::align        ||
-     aAttribute==nsHTMLAtoms::border       ||
-     aAttribute==nsHTMLAtoms::cellpadding  ||
-     aAttribute==nsHTMLAtoms::cellspacing  ||
-     aAttribute==nsHTMLAtoms::ch           ||
-     aAttribute==nsHTMLAtoms::choff        ||
-     aAttribute==nsHTMLAtoms::colspan      ||
-     aAttribute==nsHTMLAtoms::face         ||
-     aAttribute==nsHTMLAtoms::frame        ||
-     aAttribute==nsHTMLAtoms::height       ||
-     aAttribute==nsHTMLAtoms::nowrap       ||
-     aAttribute==nsHTMLAtoms::rowspan      ||
-     aAttribute==nsHTMLAtoms::rules        ||
-     aAttribute==nsHTMLAtoms::span         ||
-     aAttribute==nsHTMLAtoms::valign       ||
-     aAttribute==nsHTMLAtoms::width);
-}
 
 //----------------------------------------------------------------------
 
