@@ -41,8 +41,6 @@
 
     var a = new Array();
 
-    var version;
-
     var VERSION = 0;
 
     if ( typeof version == "function" ) {
