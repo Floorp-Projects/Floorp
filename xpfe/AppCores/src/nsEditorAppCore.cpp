@@ -946,6 +946,20 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
 }
 
 
+NS_IMETHODIMP
+nsEditorAppCore::GetEditorDocument(nsIDOMDocument** aEditorDocument)
+{
+
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::GetEditorSelection(nsIDOMSelection** aEditorSelection)
+{
+
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // Pop up the link dialog once we have dialogs ...  for now, hardwire it
 NS_IMETHODIMP
 nsEditorAppCore::InsertLink()
