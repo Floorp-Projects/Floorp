@@ -118,68 +118,69 @@ namespace ICG {
         bool iCodeOwner;
         LabelList labels;
         
-        Register topRegister;           // highest (currently) alloacated register
-        Register registerBase;          // start of registers available for expression temps
-        uint32   maxRegister;           // highest (ever) allocated register
-        uint32   parameterCount;        // number of parameters declared for the function
-                                        // these must come before any variables declared.
-        TypedRegister exceptionRegister;// reserved to carry the exception object.
-        VariableList *variableList;     // name|register pair for each variable
+        Register mTopRegister;              // highest (currently) alloacated register
+        uint32   mParameterCount;           // number of parameters declared for the function
+                                            // these must come before any variables declared.
+        TypedRegister mExceptionRegister;   // reserved to carry the exception object.
+        VariableList *variableList;         // name|register pair for each variable
 
-        World *mWorld;                  // used to register strings
-        JSScope *mGlobal;               // the scope for compiling within
-        LabelStack mLabelStack;         // stack of LabelEntry objects, one per nested looping construct
-                                        // maps source position to instruction index
+        World *mWorld;                      // used to register strings
+        JSScope *mGlobal;                   // the scope for compiling within
+        LabelStack mLabelStack;             // stack of LabelEntry objects, one per nested looping construct
+                                            // maps source position to instruction index
         InstructionMap *mInstructionMap;
 
-        JSClass *mClass;                // enclosing class when generating code for methods
-        ICodeGeneratorFlags mFlags;     // assorted flags
+        JSClass *mClass;                    // enclosing class when generating code for methods
+        ICodeGeneratorFlags mFlags;         // assorted flags
 
-        void markMaxRegister()
-        { if (topRegister > maxRegister) maxRegister = topRegister; }
-        
-        Register getRegister()
-        { return topRegister++; }
+        std::vector<bool> mPermanentRegister;
 
-        void resetTopRegister()
-        { markMaxRegister(); topRegister = registerBase; }
-        
+        Register getTempRegister() 
+        { 
+            while (mTopRegister < mPermanentRegister.size())
+                if (!mPermanentRegister[mTopRegister]) 
+                    return mTopRegister++;
+                else
+                    ++mTopRegister;
+            mPermanentRegister.resize(mTopRegister + 1);
+            mPermanentRegister[mTopRegister] = false;
+            return mTopRegister++;
+        }
+
+        void resetTopRegister() { mTopRegister = mParameterCount; }
+        void resetStatement()   { resetTopRegister(); }
+
+        TypedRegister allocateRegister(const StringAtom& name, JSType *type);
+
+        void setRegisterForVariable(const StringAtom& name, TypedRegister r) { (*variableList)[name] = r; }
+
+        JSType *findType(const StringAtom& typeName);
+
+
+
+
+
 
         void setLabel(Label *label);
         
-        void jsr(Label *label)  { iCode->push_back(new Jsr(label)); }
-        void rts()              { iCode->push_back(new Rts()); }
+        void jsr(Label *label)                  { iCode->push_back(new Jsr(label)); }
+        void rts()                              { iCode->push_back(new Rts()); }
         void branch(Label *label);
         GenericBranch *branchTrue(Label *label, TypedRegister condition);
         GenericBranch *branchFalse(Label *label, TypedRegister condition);
         
         void beginTry(Label *catchLabel, Label *finallyLabel)
-            { iCode->push_back(new Tryin(catchLabel, finallyLabel)); }
-        void endTry()
-            { iCode->push_back(new Tryout()); }
+                                                { iCode->push_back(new Tryin(catchLabel, finallyLabel)); }
+        void endTry()                           { iCode->push_back(new Tryout()); }
 
-        void beginWith(TypedRegister obj)
-            { iCode->push_back(new Within(obj)); }
-        void endWith()
-            { iCode->push_back(new Without()); }
+        void beginWith(TypedRegister obj)       { iCode->push_back(new Within(obj)); }
+        void endWith()                          { iCode->push_back(new Without()); }
         
-        void resetStatement() { resetTopRegister(); }
 
-        void setRegisterForVariable(const StringAtom& name, TypedRegister r) 
-        { (*variableList)[name] = r; }
 
-        void startStatement(uint32 pos)
-        { (*mInstructionMap)[iCode->size()] = pos; }
+        void startStatement(uint32 pos)         { (*mInstructionMap)[iCode->size()] = pos; }
 
         ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
-
-        TypedRegister grabRegister(const StringAtom& name, JSType *type) 
-        {
-            TypedRegister result(getRegister(), type); 
-            (*variableList)[name] = result; 
-            registerBase = topRegister;
-            return result;
-        }
 
 
         bool isTopLevel()       { return (mFlags & kIsTopLevel) != 0; }
@@ -188,7 +189,11 @@ namespace ICG {
 
         void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
 
-        JSType *findType(const StringAtom& typeName);
+
+        typedef enum {Var, Property, Slot, Static, Name} LValueKind;
+
+        LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex);
+        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, RegisterList *args);
         TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, RegisterList *args);
         ICodeModule *genFunction(FunctionStmtNode *f);
     
@@ -207,32 +212,30 @@ namespace ICG {
         ICodeModule *complete();
 
         TypedRegister genExpr(ExprNode *p, 
-                    bool needBoolValueInBranch = false, 
-                    Label *trueBranch = NULL, 
-                    Label *falseBranch = NULL);
-        void preprocess(StmtNode *p);
+                                bool needBoolValueInBranch = false, 
+                                Label *trueBranch = NULL, 
+                                Label *falseBranch = NULL);
         TypedRegister genStmt(StmtNode *p, LabelSet *currentLabelSet = NULL);
 
         void returnStmt(TypedRegister r);
         void returnStmt();
-        void throwStmt(TypedRegister r)
-            { iCode->push_back(new Throw(r)); }
-        void debuggerStmt()
-            { iCode->push_back(new Debugger()); }
+        void throwStmt(TypedRegister r)         { iCode->push_back(new Throw(r)); }
+        void debuggerStmt()                     { iCode->push_back(new Debugger()); }
 
         TypedRegister allocateVariable(const StringAtom& name);
         TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName);
 
         TypedRegister findVariable(const StringAtom& name)
-            { VariableList::iterator i = variableList->find(name);
-        return (i == variableList->end()) ? TypedRegister(NotARegister, &None_Type) : (*i).second; }
+        {
+            VariableList::iterator i = variableList->find(name);
+            return (i == variableList->end()) ? TypedRegister(NotARegister, &None_Type) : (*i).second;
+        }
         
-        TypedRegister allocateParameter(const StringAtom& name) 
-            { parameterCount++; return grabRegister(name, &Any_Type); }
+        TypedRegister allocateParameter(const StringAtom& name)         { mParameterCount++; return allocateRegister(name, &Any_Type); }
         TypedRegister allocateParameter(const StringAtom& name, const StringAtom& typeName) 
-            { parameterCount++; return grabRegister(name, findType(typeName)); }
+                                                                        { mParameterCount++; return allocateRegister(name, findType(typeName)); }
         TypedRegister allocateParameter(const StringAtom& name, JSType *type) 
-            { parameterCount++; return grabRegister(name, type); }
+                                                                        { mParameterCount++; return allocateRegister(name, type); }
         
         Formatter& print(Formatter& f);
         
@@ -279,8 +282,7 @@ namespace ICG {
 
         TypedRegister varXcr(TypedRegister var, ICodeOp op);
         
-        Register getRegisterBase()                  { return topRegister; }
-        InstructionStream *getICode()               { return iCode; }
+        InstructionStream *getICode()   { return iCode; }
         
         Label *getLabel();
 

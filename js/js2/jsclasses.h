@@ -79,7 +79,7 @@ namespace JSClasses {
         uint32 mStaticCount;
         JSSlots mStaticSlots;
         JSValue* mStaticData;
-        ICodeModule* mConstructor;
+        ICodeModule* mInitializer;
         // typedef std::vector<ICodeModule*, gc_allocator<ICodeModule*> > JSMethods;
         // JSMethods mMethods;
     public:
@@ -89,7 +89,7 @@ namespace JSClasses {
                 mSlotCount(superClass ? superClass->mSlotCount : 0),
                 mStaticCount(0),
                 mStaticData(0),
-                mConstructor(0)
+                mInitializer(0)
         {
             // to "inherit" superClass methods.
             if (superClass)
@@ -106,14 +106,14 @@ namespace JSClasses {
             return mScope;
         }
 
-        void setConstructor(ICodeModule* ctor)
+        void setInitializer(ICodeModule* init)
         {
-            mConstructor = ctor;
+            mInitializer = init;
         }
         
-        ICodeModule* getConstructor()
+        ICodeModule* getInitializer()
         {
-            return mConstructor;
+            return mInitializer;
         }
         
         const JSSlot& defineSlot(const String& name, JSType* type)
