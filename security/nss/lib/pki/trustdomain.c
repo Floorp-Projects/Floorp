@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.39 $ $Date: 2002/04/18 17:30:05 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.40 $ $Date: 2002/04/18 19:37:12 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -285,8 +285,10 @@ NSSTrustDomain_FindTokenByName
          tok != (NSSToken *)NULL;
          tok  = (NSSToken *)nssListIterator_Next(td->tokens))
     {
-	myName = nssToken_GetName(tok);
-	if (nssUTF8_Equal(tokenName, myName, &nssrv)) break;
+	if (nssToken_IsPresent(tok)) {
+	    myName = nssToken_GetName(tok);
+	    if (nssUTF8_Equal(tokenName, myName, &nssrv)) break;
+	}
     }
     nssListIterator_Finish(td->tokens);
     return tok;
