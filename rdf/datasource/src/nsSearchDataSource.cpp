@@ -228,7 +228,7 @@ static PRBool		isSearchURI(nsIRDFResource* aResource);
 static nsresult		BeginSearchRequest(nsIRDFResource *source);
 static nsresult		DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsString text);
 static nsresult		GetSearchEngineList();
-static nsresult		ReadFileContents(char *basename, nsString & sourceContents);
+static nsresult		ReadFileContents(char *baseFilename, nsString & sourceContents);
 static nsresult		GetData(nsString data, char *sectionToFind, char *attribToFind, nsString &value);
 static nsresult		GetInputs(nsString data, nsString text, nsString &input);
 static nsresult		GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
@@ -812,18 +812,18 @@ SearchDataSource::BeginSearchRequest(nsIRDFResource *source)
 	// loop over specified search engines
 	while (engineArray->Count() > 0)
 	{
-		char *basename = (char *)(engineArray->ElementAt(0));
+		char *baseFilename = (char *)(engineArray->ElementAt(0));
 		engineArray->RemoveElementAt(0);
-		if (!basename)	continue;
+		if (!baseFilename)	continue;
 
 #ifdef	DEBUG
-		printf("Search engine to query: '%s'\n", basename);
+		printf("Search engine to query: '%s'\n", baseFilename);
 #endif
 
 		nsCOMPtr<nsIRDFResource>	engine;
-		gRDFService->GetResource(basename, getter_AddRefs(engine));
-		delete [] basename;
-		basename = nsnull;
+		gRDFService->GetResource(baseFilename, getter_AddRefs(engine));
+		delete [] baseFilename;
+		baseFilename = nsnull;
 		if (!engine)	continue;
 		DoSearch(source, engine, text);
 	}
@@ -873,15 +873,15 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 		if (engineStr.Find(kEngineProtocol) != 0)
 			return(rv);
 		engineStr.Cut(0, sizeof(kEngineProtocol) - 1);
-		char	*basename = engineStr.ToNewCString();
-		if (!basename)
+		char	*baseFilename = engineStr.ToNewCString();
+		if (!baseFilename)
 			return(rv);
-		basename = nsUnescape(basename);
-		if (!basename)
+		baseFilename = nsUnescape(baseFilename);
+		if (!baseFilename)
 			return(rv);
-		rv = ReadFileContents(basename, data);
-		delete [] basename;
-		basename = nsnull;
+		rv = ReadFileContents(baseFilename, data);
+		delete [] baseFilename;
+		baseFilename = nsnull;
 		if (NS_FAILED(rv))
 		{
 			return(rv);
@@ -1052,15 +1052,15 @@ SearchDataSource::GetSearchEngineList()
 						nsAutoString	searchURL(kEngineProtocol);
 						searchURL += uri;
 
-						char *basename = uri.ToNewCString();
-						if (!basename)	continue;
-						basename = nsUnescape(basename);
-						if (!basename)	continue;
+						char *baseFilename = uri.ToNewCString();
+						if (!baseFilename)	continue;
+						baseFilename = nsUnescape(baseFilename);
+						if (!baseFilename)	continue;
 
 						nsAutoString	data("");
-						rv = ReadFileContents(basename, data);
-						delete [] basename;
-						basename = nsnull;
+						rv = ReadFileContents(baseFilename, data);
+						delete [] baseFilename;
+						baseFilename = nsnull;
 						if (NS_FAILED(rv))	continue;
 
 						nsCOMPtr<nsIRDFResource>	searchRes;
@@ -1085,8 +1085,8 @@ SearchDataSource::GetSearchEngineList()
 							delete [] searchURI;
 							searchURI = nsnull;
 						}
-						delete [] basename;
-						basename = nsnull;
+						delete [] baseFilename;
+						baseFilename = nsnull;
 					}
 				}
 			}
@@ -1115,14 +1115,14 @@ SearchDataSource::isVisible(const nsNativeFileSpec& file)
 		}
 	}
 #else
-	char		*basename = file.GetLeafName();
-	if (nsnull != basename)
+	char		*baseFilename = file.GetLeafName();
+	if (nsnull != baseFilename)
 	{
-		if ((!strcmp(basename, ".")) || (!strcmp(basename, "..")))
+		if ((!strcmp(baseFilename, ".")) || (!strcmp(baseFilename, "..")))
 		{
 			isVisible = PR_FALSE;
 		}
-		nsCRT::free(basename);
+		nsCRT::free(baseFilename);
 	}
 #endif
 
@@ -1132,7 +1132,7 @@ SearchDataSource::isVisible(const nsNativeFileSpec& file)
 
 
 nsresult
-SearchDataSource::ReadFileContents(char *basename, nsString& sourceContents)
+SearchDataSource::ReadFileContents(char *baseFilename, nsString& sourceContents)
 {
 	nsresult			rv = NS_OK;
 
@@ -1145,7 +1145,7 @@ SearchDataSource::ReadFileContents(char *basename, nsString& sourceContents)
 	searchEngine += "rdf";
 	searchEngine += "search";
 #endif
-	searchEngine += basename;
+	searchEngine += baseFilename;
 
 #ifdef	XP_MAC
 	// be sure to resolve aliases in case we encounter one
@@ -1181,7 +1181,7 @@ SearchDataSource::ReadFileContents(char *basename, nsString& sourceContents)
 				{
 						childPath.Cut(0, separatorOffset+1);
 				}
-				if (childPath.EqualsIgnoreCase(basename))
+				if (childPath.EqualsIgnoreCase(baseFilename))
 				{
 					searchFile = fileSpec;
 				}

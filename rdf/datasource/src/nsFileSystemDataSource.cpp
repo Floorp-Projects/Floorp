@@ -886,14 +886,14 @@ FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 		}
 	}
 #else
-	char		*basename = file.GetLeafName();
-	if (nsnull != basename)
+	char		*baseFilename = file.GetLeafName();
+	if (nsnull != baseFilename)
 	{
-		if ((!strcmp(basename, ".")) || (!strcmp(basename, "..")))
+		if ((!strcmp(baseFilename, ".")) || (!strcmp(baseFilename, "..")))
 		{
 			isVisible = PR_FALSE;
 		}
-		nsCRT::free(basename);
+		nsCRT::free(baseFilename);
 	}
 #endif
 
@@ -949,16 +949,16 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 	source->GetValue( getter_Copies(uri) );
 	nsFileURL		url(uri);
 	nsNativeFileSpec	native(url);
-	char			*basename = native.GetLeafName();
+	char			*baseFilename = native.GetLeafName();
 
-	if (! basename)
+	if (! baseFilename)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	nsAutoString	name(basename);
+	nsAutoString	name(baseFilename);
 	nsIRDFLiteral *literal;
 	gRDFService->GetLiteral(name.GetUnicode(), &literal);
 	*aResult = literal;
-	nsCRT::free(basename);
+	nsCRT::free(baseFilename);
 
 	return NS_OK;
 }

@@ -447,15 +447,15 @@ FTPDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral** aResult)
 
 	// unescape basename
 	rv = NS_ERROR_NULL_POINTER;
-	char	*basename = url.ToNewCString();
-	if (basename)
+	char	*baseFilename = url.ToNewCString();
+	if (baseFilename)
 	{
-		basename = nsUnescape(basename);
-		if (basename)
+		baseFilename = nsUnescape(baseFilename);
+		if (baseFilename)
 		{
-			url = basename;
-			delete [] basename;
-			basename = nsnull;
+			url = baseFilename;
+			delete [] baseFilename;
+			baseFilename = nsnull;
 
 			nsIRDFLiteral	*literal;
 			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(url.GetUnicode(), &literal)))
