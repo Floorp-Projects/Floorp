@@ -140,6 +140,9 @@ nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)
   nsSelectionMgr* sm = new nsSelectionMgr;
   static nsIID iid = NS_ISELECTIONMGR_IID;
   return sm->QueryInterface(iid, (void**) aInstancePtrResult);
+#else
+  // Need to return something here to not break the build on Solaris CC.
+  return NS_OK;
 #endif
 }
 
