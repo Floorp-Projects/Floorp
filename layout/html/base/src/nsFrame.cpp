@@ -1863,6 +1863,23 @@ nsFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffs
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
+{
+  NS_PRECONDITION(outPoint != nsnull, "Null parameter");
+	nsPoint		bottomLeft(0, 0);
+  *outPoint = bottomLeft;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame)
+{
+  NS_PRECONDITION(outChildFrame && outFrameContentOffset, "Null parameter");
+  *outFrameContentOffset = 0;
+  *outChildFrame = this;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset,

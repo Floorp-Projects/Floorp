@@ -161,6 +161,16 @@ public:
                         PRInt32&        aCursor);
   NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
                               nsIFrame**     aFrame);
+
+  NS_IMETHOD  GetPointFromOffset(nsIPresContext*        inPresContext,
+                                 nsIRenderingContext*   inRendContext,
+                                 PRInt32                inOffset,
+                                 nsPoint*               outPoint);
+
+  NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
+                                 PRInt32*               outFrameContentOffset,
+                                 nsIFrame*              *outChildFrame);
+
   NS_IMETHOD  GetFrameState(nsFrameState* aResult);
   NS_IMETHOD  SetFrameState(nsFrameState aNewState);
 
