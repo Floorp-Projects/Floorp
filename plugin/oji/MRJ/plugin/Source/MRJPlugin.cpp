@@ -42,6 +42,8 @@
 #include "CSecureEnv.h"
 #include "EventFilter.h"
 
+#include <Resources.h>
+
 nsIServiceManager* theServiceManager = NULL;
 
 extern nsIServiceManager* theServiceManager;	// needs to be in badaptor.cpp.
@@ -51,21 +53,16 @@ extern nsIPlugin* thePlugin;
 nsIPluginManager2* thePluginManager2 = NULL;
 nsIAllocator* theMemoryAllocator = NULL;		// should also be provided by badaptor.cpp.
 
+FSSpec thePluginSpec;
+short thePluginRefnum = -1;
+
 // Common interface IDs.
 
 static NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
-static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-static NS_DEFINE_IID(kIPluginManager2IID, NS_IPLUGINMANAGER2_IID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
-static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
-static NS_DEFINE_IID(kIThreadManagerIID, NS_ITHREADMANAGER_IID);
-static NS_DEFINE_IID(kIRunnableIID, NS_IRUNNABLE_IID);
-static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-static NS_DEFINE_IID(kIJVMPluginInstanceIID, NS_IJVMPLUGININSTANCE_IID);
+
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
 
 #pragma export on
@@ -75,12 +72,12 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 	nsresult result = NS_OK;
 
 	if (theServiceManager == NULL) {
-		if (serviceManager->QueryInterface(kIServiceManagerIID, &theServiceManager) != NS_OK)
+		if (serviceManager->QueryInterface(NS_GET_IID(nsIServiceManager), &theServiceManager) != NS_OK)
 			return NS_ERROR_FAILURE;
 
 		// Our global operator new wants to use nsIMalloc to do all of its allocation.
 		// This should be available from the Service Manager.
-		if (theServiceManager->GetService(kAllocatorCID, kIAllocatorIID, (nsISupports**)&theMemoryAllocator) != NS_OK)
+		if (theServiceManager->GetService(kAllocatorCID, NS_GET_IID(nsIAllocator), (nsISupports**)&theMemoryAllocator) != NS_OK)
 			return NS_ERROR_FAILURE;
 	}
 
@@ -106,12 +103,14 @@ pascal void MRJPlugin__terminate(void);
 
 }
 
-static FSSpec thePluginSpec;
-
 pascal OSErr MRJPlugin__initialize(const CFragInitBlock *initBlock)
 {
-	if (initBlock->fragLocator.where == kDataForkCFragLocator)
+	if (initBlock->fragLocator.where == kDataForkCFragLocator) {
 		thePluginSpec = *initBlock->fragLocator.u.onDisk.fileSpec;
+	
+		// is it always the case that the plugin's resource file is open now?
+		thePluginRefnum = ::FSpOpenResFile(&thePluginSpec, fsRdPerm);
+	}
 	
 	return noErr;
 }
@@ -235,24 +234,24 @@ NS_METHOD MRJPlugin::Initialize()
 
 	// try to get a plugin manager.
 	if (thePluginManager == NULL) {
-		result = theServiceManager->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&thePluginManager);
+		result = theServiceManager->GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager), (nsISupports**)&thePluginManager);
 		if (result != NS_OK || thePluginManager == NULL)
 			return NS_ERROR_FAILURE;
 	}
 
 	// see if the enhanced plugin manager exists.
 	if (thePluginManager2 == NULL) {
-		if (thePluginManager->QueryInterface(kIPluginManager2IID, &thePluginManager2) != NS_OK)
+		if (thePluginManager->QueryInterface(NS_GET_IID(nsIPluginManager2), &thePluginManager2) != NS_OK)
 			thePluginManager2 = NULL;
 	}
 
 	// try to get a JVM manager. we have to be able to run without one.
-	if (theServiceManager->GetService(kJVMManagerCID, kIJVMManagerIID, (nsISupports**)&mManager) != NS_OK)
+	if (theServiceManager->GetService(kJVMManagerCID, NS_GET_IID(nsIJVMManager), (nsISupports**)&mManager) != NS_OK)
 		mManager = NULL;
 	
 	// try to get a Thread manager.
 	if (mManager != NULL) {
-		if (mManager->QueryInterface(kIThreadManagerIID, &mThreadManager) != NS_OK)
+		if (mManager->QueryInterface(NS_GET_IID(nsIThreadManager), &mThreadManager) != NS_OK)
 			mThreadManager = NULL;
 
 		if (mThreadManager != NULL)
