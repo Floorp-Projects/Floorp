@@ -9097,82 +9097,67 @@ RemoveGeneratedContentFrameSiblings(nsIPresContext *aPresContext, nsIPresShell *
   if (!content || !content->IsContentOfType(nsIContent::eELEMENT) || !styleContext)
     return;
 
-  //
   // Remove any :before generated content frame that precedes aFrame.
-  //
+  // Note that we don't want to check |HasPseudoStyle| since the
+  // pseudo-style may have just been removed (and thus we want to remove
+  // the frames).
 
-  if (HasPseudoStyle(aPresContext, content, styleContext,
-                     nsCSSAtoms::beforePseudo)) {
-    nsIFrame *beforeFrame = nsnull;
-    nsIFrame *frame = nsnull;
-    aFrame->GetParent(&frame);
+  nsIFrame *beforeFrame = nsnull;
+  nsIFrame *frame = nsnull;
+  aFrame->GetParent(&frame);
 
-    NS_ASSERTION(frame, "No parent frame!");
+  NS_ASSERTION(frame, "No parent frame!");
 
-    // Find aFrame's previous sibling.
-    // XXX: Is there a better way to do this?
+  // Find aFrame's previous sibling.
+  // XXX: Is there a better way to do this?
 
-    if (frame) {
-      nsIFrame *prev = nsnull;
-      frame->FirstChild(aPresContext, nsnull, &frame);
+  if (frame) {
+    nsIFrame *prev = nsnull;
+    frame->FirstChild(aPresContext, nsnull, &frame);
 
-      while (frame) {
-        if (frame == aFrame) {
-          beforeFrame = prev;
-          break;
-        }
-  
-        prev = frame;
-        frame->GetNextSibling(&frame);
+    while (frame) {
+      if (frame == aFrame) {
+        beforeFrame = prev;
+        break;
       }
-    }
 
-    if (beforeFrame &&
-        IsGeneratedContentFor(content, beforeFrame, nsCSSAtoms::beforePseudo)) {
-      aFrameManager->RemoveFrame(aPresContext, *aPresShell,
-                                 aInsertionPoint, nsnull,
-                                 beforeFrame);
+      prev = frame;
+      frame->GetNextSibling(&frame);
     }
   }
 
-  //
+  if (beforeFrame &&
+      IsGeneratedContentFor(content, beforeFrame, nsCSSAtoms::beforePseudo)) {
+    aFrameManager->RemoveFrame(aPresContext, *aPresShell,
+                               aInsertionPoint, nsnull,
+                               beforeFrame);
+  }
+
   // Remove any :after generated content frame that follows aFrame.
-  //
+  nsIFrame *afterFrame = nsnull;
+  aFrame->GetNextSibling(&afterFrame);
 
-  if (HasPseudoStyle(aPresContext, content, styleContext,
-                     nsCSSAtoms::afterPseudo)) {
-    nsIFrame *afterFrame = nsnull;
-    aFrame->GetNextSibling(&afterFrame);
+  if (!afterFrame) {
+    // At this point we know that aFrame has a :after frame,
+    // but it has no next sibling, so it's possible that it's
+    // :after frame was pushed into a continuing frame for it's parent.
 
-    if (!afterFrame)
-    {
-      // At this point we know that aFrame has a :after frame,
-      // but it has no next sibling, so it's possible that it's
-      // :after frame was pushed into a continuing frame for it's parent.
-
-      nsIFrame *frame = nsnull;
-
-      aFrame->GetParent(&frame);
-
-      NS_ASSERTION(frame, "No parent frame!");
-
+    nsIFrame *frame = nsnull;
+    aFrame->GetParent(&frame);
+    NS_ASSERTION(frame, "No parent frame!");
+    if (frame) {
+      // Now get the first child of the parent's next-in-flow.
+      frame->GetNextInFlow(&frame);
       if (frame)
-      {
-        // Now get the first child of the parent's next-in-flow.
-
-        frame->GetNextInFlow(&frame);
-
-        if (frame)
-          frame->FirstChild(aPresContext, nsnull, &afterFrame);
-      }
+        frame->FirstChild(aPresContext, nsnull, &afterFrame);
     }
+  }
 
-    if (afterFrame &&
-        IsGeneratedContentFor(content, afterFrame, nsCSSAtoms::afterPseudo)) {
-      aFrameManager->RemoveFrame(aPresContext, *aPresShell,
-                                 aInsertionPoint, nsnull,
-                                 afterFrame);
-    }
+  if (afterFrame &&
+      IsGeneratedContentFor(content, afterFrame, nsCSSAtoms::afterPseudo)) {
+    aFrameManager->RemoveFrame(aPresContext, *aPresShell,
+                               aInsertionPoint, nsnull,
+                               afterFrame);
   }
 }
 
@@ -9521,44 +9506,42 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                        nsnull, placeholderFrame);
       }
     }
-    else {
-      // See if it's absolutely or fixed positioned
-      if (display->IsAbsolutelyPositioned()) {
-        // Get the placeholder frame
-        nsPlaceholderFrame* placeholderFrame;
-        frameManager->GetPlaceholderFrameFor(childFrame,
-                                             (nsIFrame**)&placeholderFrame);
+    // See if it's absolutely or fixed positioned
+    else if (display->IsAbsolutelyPositioned()) {
+      // Get the placeholder frame
+      nsPlaceholderFrame* placeholderFrame;
+      frameManager->GetPlaceholderFrameFor(childFrame,
+                                           (nsIFrame**)&placeholderFrame);
 
-        // Remove the mapping from the frame to its placeholder
-        if (placeholderFrame)
-          frameManager->UnregisterPlaceholderFrame(placeholderFrame);
+      // Remove the mapping from the frame to its placeholder
+      if (placeholderFrame)
+        frameManager->UnregisterPlaceholderFrame(placeholderFrame);
 
-        // Generate two notifications. First for the absolutely positioned
-        // frame
-        rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame,
-          (NS_STYLE_POSITION_FIXED == display->mPosition) ?
-          nsLayoutAtoms::fixedList : nsLayoutAtoms::absoluteList, childFrame);
+      // Generate two notifications. First for the absolutely positioned
+      // frame
+      rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame,
+        (NS_STYLE_POSITION_FIXED == display->mPosition) ?
+        nsLayoutAtoms::fixedList : nsLayoutAtoms::absoluteList, childFrame);
 
-        // Now the placeholder frame
-        if (nsnull != placeholderFrame) {
-          placeholderFrame->GetParent(&parentFrame);
-          rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame, nsnull,
-                                         placeholderFrame);
-        }
+      // Now the placeholder frame
+      if (nsnull != placeholderFrame) {
+        placeholderFrame->GetParent(&parentFrame);
+        rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame, nsnull,
+                                       placeholderFrame);
+      }
 
-      } else {
-        // Notify the parent frame that it should delete the frame
-        // check for a table caption which goes on an additional child list with a different parent
-        nsIFrame* outerTableFrame; 
-        if (GetCaptionAdjustedParent(parentFrame, childFrame, &outerTableFrame)) {
-          rv = frameManager->RemoveFrame(aPresContext, *shell, outerTableFrame,
-                                         nsLayoutAtoms::captionList, childFrame);
-        }
-        else {
-          RemoveGeneratedContentFrameSiblings(aPresContext, shell, frameManager, insertionPoint, childFrame);
-          rv = frameManager->RemoveFrame(aPresContext, *shell, insertionPoint,
-                                         nsnull, childFrame);
-        }
+    } else {
+      // Notify the parent frame that it should delete the frame
+      // check for a table caption which goes on an additional child list with a different parent
+      nsIFrame* outerTableFrame; 
+      if (GetCaptionAdjustedParent(parentFrame, childFrame, &outerTableFrame)) {
+        rv = frameManager->RemoveFrame(aPresContext, *shell, outerTableFrame,
+                                       nsLayoutAtoms::captionList, childFrame);
+      }
+      else {
+        RemoveGeneratedContentFrameSiblings(aPresContext, shell, frameManager, insertionPoint, childFrame);
+        rv = frameManager->RemoveFrame(aPresContext, *shell, insertionPoint,
+                                       nsnull, childFrame);
       }
     }
 

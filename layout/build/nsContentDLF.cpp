@@ -175,25 +175,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              nsIContentViewer** aDocViewer)
 {
   nsresult rv = NS_OK;
-  if (!gUAStyleSheet) {
-    // Load the UA style sheet
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), UA_CSS_URL);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICSSLoader> cssLoader;
-      NS_NewCSSLoader(getter_AddRefs(cssLoader));
-      if (cssLoader) {
-        PRBool complete;
-        rv = cssLoader->LoadAgentSheet(uri, gUAStyleSheet, complete, nsnull);
-      }
-    }
-    if (NS_FAILED(rv)) {
-  #ifdef DEBUG
-      printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);
-  #endif
-      return rv;
-    }
-  }
+
+  EnsureUAStyleSheet();
 
   // Check aContentType to see if it's a view-source type
   //
@@ -300,6 +283,8 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
                                         nsIContentViewer** aDocViewerResult)
 {
   nsresult rv = NS_ERROR_FAILURE;  
+
+  EnsureUAStyleSheet();
 
   do {
     nsCOMPtr<nsIDocumentViewer> docv;
@@ -456,6 +441,8 @@ nsContentDLF::CreateInstance(nsIInputStream& aInputStream,
 
 {
   nsresult status = NS_ERROR_FAILURE;
+
+  EnsureUAStyleSheet();
 
   // Try RDF
   int typeIndex = 0;
@@ -679,4 +666,32 @@ nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
     return rv;
 
   return obsoleteManager->UnregisterComponentSpec(kDocumentFactoryImplCID, aPath);
+}
+
+/* static */ nsresult
+nsContentDLF::EnsureUAStyleSheet()
+{
+  if (gUAStyleSheet)
+    return NS_OK;
+
+  // Load the UA style sheet
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), UA_CSS_URL);
+  if (NS_FAILED(rv)) {
+#ifdef DEBUG
+    printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);
+#endif
+    return rv;
+  }
+  nsCOMPtr<nsICSSLoader> cssLoader;
+  NS_NewCSSLoader(getter_AddRefs(cssLoader));
+  if (!cssLoader)
+    return NS_ERROR_OUT_OF_MEMORY;
+  PRBool complete;
+  rv = cssLoader->LoadAgentSheet(uri, gUAStyleSheet, complete, nsnull);
+#ifdef DEBUG
+  if (NS_FAILED(rv))
+    printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);
+#endif
+  return rv;
 }

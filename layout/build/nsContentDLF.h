@@ -95,6 +95,9 @@ public:
                               nsIFile* aPath,
                               const char* aRegistryLocation,
                               const nsModuleComponentInfo* aInfo);
+
+private:
+  static nsresult EnsureUAStyleSheet();
 };
 
 nsresult
