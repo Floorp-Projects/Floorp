@@ -481,7 +481,8 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 		if (m_continuationResponse == m_responseCode && cont_char == ' ')
 			m_continuationResponse = -1;    /* ended */
 
-		m_responseText += "\n";
+        if (m_responseText.CharAt(m_responseText.Length() - 1) != '\n')
+          m_responseText += "\n";
     if(PL_strlen(line) > 3)
 			m_responseText += line+4;
   }
@@ -659,8 +660,8 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
     PRInt32 status = 0;
     nsCAutoString buffer;
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    
-    if (m_responseCode != 250) 
+
+    if (m_responseCode != 250)
     {
       /* EHLO must not be implemented by the server so fall back to the HELO case */
 
@@ -669,41 +670,56 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
             m_nextState = SMTP_ERROR_DONE;
             m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
             return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
-        }        
+        }
         buffer = "HELO ";
         buffer += GetUserDomainName();
         buffer += CRLF;
-        
+
         status = SendData(url, buffer.get());
-        
+
         m_nextState = SMTP_RESPONSE;
         m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
         SetFlag(SMTP_PAUSE_FOR_READ);
         return (status);
     }
-    else 
+
+    PRInt32 responseLength = m_responseText.Length();
+    PRInt32 startPos = 0;
+    PRInt32 endPos;
+    do
     {
-        char *ptr = NULL;
-        
-        ptr = PL_strcasestr(m_responseText.get(), "DSN");
-        if (ptr && nsCRT::ToUpper(*(ptr-1)) != 'X')
-            SetFlag(SMTP_EHLO_DSN_ENABLED);
-        
-        if (PL_strcasestr(m_responseText.get(), " PLAIN") != 0)
-            SetFlag(SMTP_AUTH_PLAIN_ENABLED);
+        endPos = m_responseText.FindChar('\n', startPos + 1);
+        nsCAutoString responseLine;
+        responseLine.Assign(Substring(m_responseText, startPos, 
+            (endPos >= 0 ? endPos : responseLength) - startPos));
+        responseLine.CompressWhitespace();
 
-        if (PL_strcasestr(m_responseText.get(), "AUTH=LOGIN") != 0)
-            SetFlag(SMTP_AUTH_LOGIN_ENABLED);	/* old style */
-
-        if (PL_strcasestr(m_responseText.get(), "STARTTLS") != 0)
+        if (responseLine.Compare("STARTTLS", PR_TRUE) == 0)
+        {
             SetFlag(SMTP_EHLO_STARTTLS_ENABLED);
+        }
+        else if (responseLine.Compare("DSN", PR_TRUE) == 0)
+        {
+            SetFlag(SMTP_EHLO_DSN_ENABLED);
+        }
+        else if (responseLine.Compare("AUTH", PR_TRUE, 4) == 0)
+        {
+            if (m_responseText.Find("PLAIN", PR_TRUE, 5) >= 0)  
+                SetFlag(SMTP_AUTH_PLAIN_ENABLED);
 
-        if (PL_strcasestr(m_responseText.get(), "EXTERNAL") != 0)
-            SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
-    }
+            if (m_responseText.Find("LOGIN", PR_TRUE, 5) >= 0)  
+                SetFlag(SMTP_AUTH_LOGIN_ENABLED);
+
+            if (m_responseText.Find("EXTERNAL", PR_TRUE, 5) >= 0)  
+                SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
+        }
+        startPos = endPos + 1;
+    } while (endPos >= 0);
+
     m_nextState = SMTP_AUTH_PROCESS_STATE;
     return status;
 }
+
 
 PRInt32 nsSmtpProtocol::SendTLSResponse()
 {
