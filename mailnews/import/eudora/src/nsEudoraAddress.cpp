@@ -622,12 +622,22 @@ void nsEudoraAddress::BuildABCards( PRUint32 *pBytes, nsIAddrDatabase *pDb)
 	PRInt32			max = m_alias.Count();
 	PRInt32			i;
 	nsVoidArray		emailList;
+  nsVoidArray membersArray;// Remember group members.
+  nsVoidArray groupsArray; // Remember groups.
 	
 	// First off, run through the list and build person cards - groups/lists have to be done later
 	for (i = 0; i < max; i++) {
 		pEntry = (CAliasEntry *) m_alias.ElementAt( i);
 		ResolveEntries( pEntry->m_name, pEntry->m_list, emailList);		
-    BuildSingleCard( pEntry, emailList, pDb);
+    if (emailList.Count() > 1)
+    {
+      // Remember group members uniquely and add them to db later.
+      RememberGroupMembers(membersArray, emailList);
+      // Remember groups and add them to db later.
+      groupsArray.AppendElement(pEntry);
+    }
+    else
+      AddSingleCard( pEntry, emailList, pDb);
 
 		emailList.Clear();
 
@@ -636,6 +646,21 @@ void nsEudoraAddress::BuildABCards( PRUint32 *pBytes, nsIAddrDatabase *pDb)
 			*pBytes += (pEntry->m_name.Length() + pEntry->m_notes.Length() + 10);
 		}
 	}
+
+  // Make sure group members exists before adding groups.
+  nsresult rv = AddGroupMembersAsCards(membersArray, pDb);
+  if (NS_FAILED(rv))
+    return;
+
+  // Now add the lists/groups (now that all cards have been added).
+  max = groupsArray.Count();
+  for (i = 0; i < max; i++)
+  {
+    pEntry = (CAliasEntry *) groupsArray.ElementAt(i);
+    ResolveEntries( pEntry->m_name, pEntry->m_list, emailList);
+    AddSingleList(pEntry, emailList, pDb);
+    emailList.Clear();
+  }
 }
 
 void nsEudoraAddress::ExtractNoteField( nsCString& note, nsCString& value, const char *pFieldName)
@@ -696,7 +721,7 @@ void nsEudoraAddress::SplitString( nsCString& val1, nsCString& val2)
 	}
 }
 
-void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, nsVoidArray &emailList, nsIAddrDatabase *pDb)
+void nsEudoraAddress::AddSingleCard( CAliasEntry *pEntry, nsVoidArray &emailList, nsIAddrDatabase *pDb)
 {
   // We always have a nickname and everything else is optional.
   // Map both home and work related fiedls to our address card. Eudora
@@ -790,12 +815,6 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, nsVoidArray &emailLi
     ADD_FIELD_TO_DB_ROW(pDb, AddHomeState, newRow, state, uniStr);
     ADD_FIELD_TO_DB_ROW(pDb, AddHomeCountry, newRow, country, uniStr);
     ADD_FIELD_TO_DB_ROW(pDb, AddCellularNumber, newRow, mobile, uniStr);
-    // Set 2nd email. If we have two/more email addresses then use the 2nd one on the list.
-    if (emailList.Count() > 1)
-    {
-      pData = (CAliasData *)emailList.ElementAt(1);
-      ADD_FIELD_TO_DB_ROW(pDb, Add2ndEmail, newRow, pData->m_email, uniStr);
-    }
 
     // Work related fields.
     ADD_FIELD_TO_DB_ROW(pDb, AddJobTitle, newRow, title, uniStr);
@@ -816,5 +835,94 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, nsVoidArray &emailLi
 
 		IMPORT_LOG1( "Added card to db: %s\n", displayName.get());
 	}		
+}
+
+//
+// Since there is no way to check if a card for a given email address already exists,
+// elements in 'membersArray' are make unique. So for each email address in 'emailList'
+// we check it in 'membersArray' and if it's not there then we add it to 'membersArray'.
+//
+void nsEudoraAddress::RememberGroupMembers(nsVoidArray &membersArray, nsVoidArray &emailList)
+{
+  PRInt32 cnt = emailList.Count();
+  CAliasData *pData;
+
+  for (PRInt32 i = 0; i < cnt; i++)
+  {
+    pData = (CAliasData *)emailList.ElementAt(i);
+    if (!pData)
+      continue;
+
+    PRInt32 memberCnt = membersArray.Count();
+    for (PRInt32 j = 0; j < memberCnt; j++)
+    {
+      if (pData == membersArray.ElementAt(j))
+        break;
+    }
+    if (j >= memberCnt)
+      membersArray.AppendElement(pData); // add to member list
+  }
+}
+
+nsresult nsEudoraAddress::AddGroupMembersAsCards(nsVoidArray &membersArray, nsIAddrDatabase *pDb)
+{
+  PRInt32 max = membersArray.Count();
+  CAliasData *pData;
+  nsresult rv = NS_OK;
+  nsCOMPtr <nsIMdbRow> newRow;
+  nsAutoString uniStr;
+  nsCAutoString	displayName;
+
+  for (PRInt32 i = 0; i < max; i++)
+  {
+    pData = (CAliasData *)membersArray.ElementAt(i);
+
+    if (!pData || (pData->m_email.IsEmpty()))
+      continue;
+
+    rv = pDb->GetNewRow(getter_AddRefs(newRow)); 
+    if (NS_FAILED(rv) || !newRow)
+      return rv;
+
+    if (!pData->m_realName.IsEmpty())
+      displayName = pData->m_realName;
+    else if (!pData->m_nickName.IsEmpty())
+      displayName = pData->m_nickName;
+    else
+      displayName.Truncate();
+
+    ADD_FIELD_TO_DB_ROW(pDb, AddDisplayName, newRow, displayName, uniStr);
+    ADD_FIELD_TO_DB_ROW(pDb, AddPrimaryEmail, newRow, pData->m_email, uniStr);
+    rv = pDb->AddCardRowToDB( newRow);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return rv;
+}
+
+nsresult nsEudoraAddress::AddSingleList(CAliasEntry *pEntry, nsVoidArray &emailList, nsIAddrDatabase *pDb)
+{
+  // Create a list.
+  nsCOMPtr <nsIMdbRow> newRow;
+  nsresult rv = pDb->GetNewListRow(getter_AddRefs(newRow)); 
+  if (NS_FAILED(rv) || !newRow)
+      return rv;
+
+  rv = pDb->AddListName(newRow, pEntry->m_name.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now add the members.
+  PRInt32 max = emailList.Count();
+  for (PRInt32 i = 0; i < max; i++)
+  {
+    CAliasData *pData = (CAliasData *)emailList.ElementAt(i);
+    nsCAutoString ldifValue(NS_LITERAL_CSTRING("mail=") + nsDependentCString(pData->m_email.get()));
+    rv = pDb->AddLdifListMember(newRow, ldifValue.get());
+  }
+
+  rv = pDb->AddCardRowToDB(newRow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = pDb->AddListDirNode(newRow);
+  return rv;
 }
 
