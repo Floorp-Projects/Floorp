@@ -163,6 +163,8 @@ public:
 
   nsFramesetDrag& GetDrag() { return mDrag; }
 
+  void RecalculateBorderResize();
+
 protected:
   void Scale(nscoord  aDesired, 
              PRInt32  aNumIndicies, 
@@ -257,6 +259,8 @@ protected:
   PRInt32          mMinDrag;
   PRInt32          mChildCount;
   nsHTMLFramesetFrame* mTopLevelFrameset;
+  nsHTMLFramesetBorderFrame** mVerBorders;  // vertical borders
+  nsHTMLFramesetBorderFrame** mHorBorders;  // horizontal borders
 };
 
 

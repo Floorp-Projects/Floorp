@@ -79,6 +79,7 @@
 
 class nsHTMLFrame;
 
+static NS_DEFINE_IID(kIFramesetFrameIID, NS_IFRAMESETFRAME_IID);
 static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_CID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
@@ -443,6 +444,29 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         mFrames.FirstChild());
     if (firstChild) {
       firstChild->ReloadURL(aPresContext);
+    }
+  }
+  // If the noResize attribute changes, dis/allow frame to be resized
+  else if (nsHTMLAtoms::noresize == aAttribute) {
+    nsCOMPtr<nsIContent> parentContent;
+    mContent->GetParent(*getter_AddRefs(parentContent));
+
+    nsCOMPtr<nsIAtom> parentTag;
+    parentContent->GetTag(*getter_AddRefs(parentTag));
+
+    if (nsHTMLAtoms::frameset == parentTag) {
+      nsIFrame* parentFrame = nsnull;
+      GetParent(&parentFrame);
+
+      if (parentFrame) {
+        // There is no interface for kIFramesetFrameIID
+        // so QI'ing to concrete class, yay!
+        nsHTMLFramesetFrame* framesetFrame = nsnull;
+        parentFrame->QueryInterface(kIFramesetFrameIID, (void **)&framesetFrame);
+        if (framesetFrame) {
+          framesetFrame->RecalculateBorderResize();
+        }
+      }
     }
   }
   return NS_OK;

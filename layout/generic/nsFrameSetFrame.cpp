@@ -206,6 +206,8 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame()
   mChildCount          = 0;
   mTopLevelFrameset    = nsnull;
   mEdgeColors.Set(NO_COLOR);
+  mVerBorders          = nsnull;
+  mHorBorders          = nsnull;
 }
 
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
@@ -214,6 +216,8 @@ nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
   if (mRowSpecs) delete [] mRowSpecs;
   if (mColSizes) delete [] mColSizes;
   if (mColSpecs) delete [] mColSpecs;
+  if (mVerBorders) delete[] mVerBorders;
+  if (mHorBorders) delete[] mHorBorders;
   mRowSizes = mColSizes = nsnull;
   mRowSpecs = mColSpecs = nsnull;
 }
@@ -971,8 +975,6 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
     CalculateRowCol(aPresContext, height, mNumRows, mRowSpecs, mRowSizes);
   }
 
-  nsHTMLFramesetBorderFrame** verBorders = nsnull;  // vertical borders
-  nsHTMLFramesetBorderFrame** horBorders = nsnull;  // horizontal borders
   PRBool*        verBordersVis     = nsnull; // vertical borders visibility
   nscolor*       verBorderColors   = nsnull;
   PRBool*        horBordersVis     = nsnull; // horizontal borders visibility
@@ -984,20 +986,20 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   nsFrameborder  frameborder       = GetFrameBorder(PR_FALSE);
 
   if (firstTime) {
-    verBorders    = new nsHTMLFramesetBorderFrame*[mNumCols];  // 1 more than number of ver borders
+    mVerBorders    = new nsHTMLFramesetBorderFrame*[mNumCols];  // 1 more than number of ver borders
     verBordersVis = new PRBool[mNumCols];
     verBorderColors = new nscolor[mNumCols];
     for (int verX  = 0; verX < mNumCols; verX++) {
-      verBorders[verX]    = nsnull;
+      mVerBorders[verX]    = nsnull;
       verBordersVis[verX] = PR_FALSE;
       verBorderColors[verX] = NO_COLOR;
     }
   
-    horBorders    = new nsHTMLFramesetBorderFrame*[mNumRows];  // 1 more than number of hor borders
+    mHorBorders    = new nsHTMLFramesetBorderFrame*[mNumRows];  // 1 more than number of hor borders
     horBordersVis = new PRBool[mNumRows];
     horBorderColors = new nscolor[mNumRows];
     for (int horX = 0; horX < mNumRows; horX++) {
-      horBorders[horX]    = nsnull;
+      mHorBorders[horX]    = nsnull;
       horBordersVis[horX] = PR_FALSE;
       horBorderColors[horX] = NO_COLOR;
     }
@@ -1130,7 +1132,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
           mChildCount++;
           lastChild->SetNextSibling(borderFrame);
           lastChild = borderFrame;
-          horBorders[cellIndex.y-1] = borderFrame;
+          mHorBorders[cellIndex.y-1] = borderFrame;
           // set the neighbors for determining drag boundaries
           borderFrame->mPrevNeighbor = lastRow; 
           borderFrame->mNextNeighbor = cellIndex.y;  
@@ -1158,7 +1160,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
             mChildCount++;
             lastChild->SetNextSibling(borderFrame);
             lastChild = borderFrame;
-            verBorders[cellIndex.x-1] = borderFrame;
+            mVerBorders[cellIndex.x-1] = borderFrame;
             // set the neighbors for determining drag boundaries
             borderFrame->mPrevNeighbor = lastCol; 
             borderFrame->mNextNeighbor = cellIndex.x;  
@@ -1264,27 +1266,25 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
     nscolor childColor;
     // set the visibility, color, mouse sensitivity of borders
     for (int verX = 0; verX < mNumCols-1; verX++) {
-      if (verBorders[verX]) {
-        verBorders[verX]->SetVisibility(verBordersVis[verX]);
-        SetBorderResize(childTypes, verBorders[verX]);
+      if (mVerBorders[verX]) {
+        mVerBorders[verX]->SetVisibility(verBordersVis[verX]);
+        SetBorderResize(childTypes, mVerBorders[verX]);
         childColor = (NO_COLOR == verBorderColors[verX]) ? borderColor : verBorderColors[verX];
-        verBorders[verX]->SetColor(childColor);
+        mVerBorders[verX]->SetColor(childColor);
       }
     }
     for (int horX = 0; horX < mNumRows-1; horX++) {
-      if (horBorders[horX]) {
-        horBorders[horX]->SetVisibility(horBordersVis[horX]);
-        SetBorderResize(childTypes, horBorders[horX]);
+      if (mHorBorders[horX]) {
+        mHorBorders[horX]->SetVisibility(horBordersVis[horX]);
+        SetBorderResize(childTypes, mHorBorders[horX]);
         childColor = (NO_COLOR == horBorderColors[horX]) ? borderColor : horBorderColors[horX]; 
-        horBorders[horX]->SetColor(childColor);
+        mHorBorders[horX]->SetColor(childColor);
       }
     }
 
     delete[] verBordersVis;    
-    delete[] verBorders;
     delete[] verBorderColors;
     delete[] horBordersVis; 
-    delete[] horBorders;
     delete[] horBorderColors;
     delete[] childTypes; 
     delete[] childFrameborder;
@@ -1374,6 +1374,58 @@ nsHTMLFramesetFrame::CanChildResize(PRBool  aVertical,
   } else {
     return !GetNoResize(child);
   }
+}
+
+// This calculates and sets the resizability of all border frames
+
+void
+nsHTMLFramesetFrame::RecalculateBorderResize()
+{
+  if (!mContent) {
+    return;
+  }
+
+  PRInt32 numCells = mNumRows * mNumCols; // max number of cells
+  PRInt32* childTypes = new PRInt32[numCells];
+  PRInt32 childIndex, frameOrFramesetChildIndex = 0;
+
+  PRInt32 numChildren; // number of any type of children
+  mContent->ChildCount(numChildren);
+  for (childIndex = 0; childIndex < numChildren; childIndex++) {
+    nsCOMPtr<nsIContent> childCon;
+    mContent->ChildAt(childIndex, *getter_AddRefs(childCon));
+    nsCOMPtr<nsIHTMLContent> child(do_QueryInterface(childCon));
+    if (child) {
+      nsCOMPtr<nsIAtom> tag;
+      child->GetTag(*getter_AddRefs(tag));
+      if (nsHTMLAtoms::frameset == tag) {
+        childTypes[frameOrFramesetChildIndex++] = FRAMESET;
+      } else if (nsHTMLAtoms::frame == tag) {
+        childTypes[frameOrFramesetChildIndex++] = FRAME;
+      }
+      // Don't overflow childTypes array
+      if (frameOrFramesetChildIndex >= numCells) {
+        break;
+      }
+    }
+  }
+
+  // set the visibility, color, mouse sensitivity of borders
+  PRInt32 verX;
+  for (verX = 0; verX < mNumCols-1; verX++) {
+    if (mVerBorders[verX]) {
+	  mVerBorders[verX]->mCanResize = PR_TRUE;
+      SetBorderResize(childTypes, mVerBorders[verX]);
+    }
+  }
+  PRInt32 horX;
+  for (horX = 0; horX < mNumRows-1; horX++) {
+    if (mHorBorders[horX]) {
+	  mHorBorders[horX]->mCanResize = PR_TRUE;
+      SetBorderResize(childTypes, mHorBorders[horX]);
+    }
+  }
+  delete[] childTypes;
 }
 
 void 
