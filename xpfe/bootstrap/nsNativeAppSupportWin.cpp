@@ -342,7 +342,7 @@ public:
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD StartServerMode();
-    NS_IMETHOD OnLastWindowClosing( nsIXULWindow *aWindow );
+    NS_IMETHOD OnLastWindowClosing();
     NS_IMETHOD SetIsServerMode( PRBool isServerMode );
     NS_IMETHOD EnsureProfile(nsICmdLineService* args);
 
@@ -945,7 +945,7 @@ struct MessageWindow {
                  if ( NS_SUCCEEDED( rv ) )
                      native->SetIsServerMode( PR_FALSE );
                  if ( !win )
-                     appShell->Quit();
+                     appShell->Quit(nsIAppShellService::eAttemptQuit);
              }
              break;
          }
@@ -1798,7 +1798,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
           nsCOMPtr<nsIDOMWindowInternal> win;
           GetMostRecentWindow( 0, getter_AddRefs( win ) );
           if (!win)
-            appShell->Quit();
+            appShell->Quit(nsIAppShellService::eAttemptQuit);
         }
       }
 
@@ -2540,7 +2540,7 @@ nsNativeAppSupportWin::SetIsServerMode( PRBool isServerMode ) {
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
+nsNativeAppSupportWin::OnLastWindowClosing() {
 
     if ( !mServerMode )
         return NS_OK;
@@ -2581,7 +2581,7 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
                 nsCOMPtr<nsIAppShellService> appShell =
                     do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
                 if ( NS_SUCCEEDED( rv ) ) {
-                    appShell->Quit();
+                    appShell->Quit(nsIAppShellService::eAttemptQuit);
                 }
                 return NS_OK;
             }
@@ -2653,7 +2653,7 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
     
         // Turn off turbo mode and quit the application.
         SetIsServerMode( PR_FALSE );
-        appShell->Quit();
+        appShell->Quit(nsIAppShellService::eAttemptQuit);
 
         // Done.  This app will now commence shutdown.
     }

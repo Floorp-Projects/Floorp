@@ -187,5 +187,5 @@ interface nsINativeAppSupport : nsISupports {
     attribute boolean shouldShowUI;
     void startServerMode();
 
-    void onLastWindowClosing(in nsIXULWindow aWindow);
+    void onLastWindowClosing();
 };
