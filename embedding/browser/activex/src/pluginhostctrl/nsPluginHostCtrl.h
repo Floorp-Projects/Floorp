@@ -205,6 +205,7 @@ protected:
         TCHAR *szFullPath; // Path + plugin name
         HINSTANCE hInstance;
         DWORD nRefCount;
+        NPPluginFuncs NPPFuncs;
     };
     static LoadedPluginInfo **m_pLoadedPlugins;
     static unsigned long m_nLoadedPlugins;

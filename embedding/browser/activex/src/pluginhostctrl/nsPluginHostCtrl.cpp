@@ -485,6 +485,7 @@ HRESULT nsPluginHostCtrl::LoadPlugin(const TCHAR *szPluginPath)
         if (_tcscmp(m_pLoadedPlugins[i]->szFullPath, szPluginPath) == 0)
         {
             m_pLoadedPlugin = m_pLoadedPlugins[i];
+            memcpy(&m_NPPFuncs, &m_pLoadedPlugin->NPPFuncs, sizeof(m_NPPFuncs));
             m_pLoadedPlugin->nRefCount++;
             return S_OK;
         }
@@ -531,6 +532,7 @@ HRESULT nsPluginHostCtrl::LoadPlugin(const TCHAR *szPluginPath)
     m_pLoadedPlugin->szFullPath = _tcsdup(szPluginPath);
     m_pLoadedPlugin->nRefCount = 1;
     m_pLoadedPlugin->hInstance = hInstance;
+    memcpy(&m_pLoadedPlugin->NPPFuncs, &m_NPPFuncs, sizeof(m_NPPFuncs));
 
     // Add it to the array
     if (m_pLoadedPlugins == NULL)
