@@ -1320,8 +1320,6 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
 
       again:
 	/* JS1.2 deviated from Perl by never matching at end of string. */
-	if (cx->version == JSVERSION_1_2 && (size_t)i == str->length)
-	    return -1;
 	index = (size_t)i;
 	if (!js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, &rval))
 	    return -2;
