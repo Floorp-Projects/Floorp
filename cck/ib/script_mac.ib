@@ -11,7 +11,7 @@ replaceXPI(ChromeDefaults.zip,no.jar,defaults/profile/US/panels.rdf,%SidebarPath
 replaceXPI(ChromeDefaults.zip,chrome/comm.jar,content/communicator/communicatorOverlay.xul,%HlpRDF%)
 modifyDTD(ChromeDefaults.zip,chrome/en-US.jar,locale/en-US/navigator/navigator.dtd,mainWindow.titlemodifier,%CompanyName%)
 modifyProperties(ChromeDefaults.zip,chrome/US.jar,locale/US/navigator-region/region.properties,browser.startup.homepage,%HomePageURL%)
-modifyProperties(ChromeDefaults.zip,chrome/US.jar,locale/US/navigator-region/region.properties,browser.throbber.url,%AnimatedLogoURL%)
+modifyProperties(ChromeDefaults.zip,chrome/US.jar,locale/US/editor-region/region-ns.properties,editor.throbber.url,%AnimatedLogoURL%)
 modifyProperties(ChromeDefaults.zip,chrome/US.jar,locale/US/aim-region/region.properties,aim.throbber.url,%AnimatedLogoURL%)
 modifyProperties(ChromeDefaults.zip,chrome/US.jar,locale/US/messenger-region/region-ns.properties,messenger.throbber.url,%AnimatedLogoURL%)
 modifyProperties(ChromeDefaults.zip,chrome/US.jar,locale/US/messenger-region/region-ns.properties,compose.throbber.url,%AnimatedLogoURL%)
