@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.8 $ 
-# $Date: 2001/07/20 19:04:59 $ 
+# $Revision: 1.9 $ 
+# $Date: 2002/02/25 19:31:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -110,6 +110,7 @@ sub summary_pages {
                       'panel',
                       'express',   
 		      'hdml',
+                      'jspanel',
                       
 # these summary function have not been debugged yet, I just took the
 # source from the previous Tinderbox
@@ -430,6 +431,41 @@ sub panel {
 
   $footer = "</body>\n</html>\n";
   $extension = 'html';
+
+  return ($header, $body, $footer, $extension);
+}
+
+sub jspanel {
+  my ($header, $body, $footer, $extension) = ();
+  my $temp;
+
+  $header = "";
+  $body = 'var status = "';
+
+  $temp .= HTMLPopUp::Link(
+                           "linktxt"=> ("$TREE is $TREE_STATE".
+                                        " as of $HTML_TIME"),
+                           "href"=>(FileStructure::get_filename($TREE, 
+                                                                 'tree_URL').
+                                     "/$FileStructure::DEFAULT_HTML_PAGE"),
+                     );
+  $temp =~ s/\"/\'/g;
+  $body .= $temp;
+
+  $body .= "<table border=0 cellpadding=1 cellspacing=1>";
+  for ($i=0; $i <= $#BUILD_NAMES; $i++) {
+    my ($buildname) = $BUILD_NAMES[$i];
+    my ($color) = $HTML_COLORS[$i];
+    $body .= "<tr><td class='tinderbuild' bgcolor='$color'>$buildname</td></tr>";
+  }
+
+  $body .= "</table>";
+
+  ## end the js
+  $body .= '";';
+
+  $footer = "\n";
+  $extension = 'js';
 
   return ($header, $body, $footer, $extension);
 }
