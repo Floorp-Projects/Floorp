@@ -52,6 +52,16 @@
 #include "tmreader.h"
 
 /*
+** Turn on to attempt adding support for graphs on your platform.
+*/
+#if defined(HAVE_BOUTELL_GD)
+#define ST_WANT_GRAPHS 1
+#endif /* HAVE_BOUTELL_GD */
+#if !defined(ST_WANT_GRAPHS)
+#define ST_WANT_GRAPHS 0
+#endif
+
+/*
 ** REPORT_ERROR
 ** REPORT_INFO
 **
@@ -60,7 +70,7 @@
 #define REPORT_ERROR(code, function) \
         PR_fprintf(PR_STDERR, "error(%d):\t%s\n", code, #function)
 #define REPORT_INFO(msg) \
-        PR_fprintf(PR_STDOUT, "%s: %s\n", globals.mOptions.mProgramName, (msg))
+        PR_fprintf(PR_STDOUT, "%s: %s\n", globals.mProgramName, (msg))
 
 /*
 ** CALLSITE_RUN
@@ -111,7 +121,11 @@
 #define ST_DEFAULT_LIFETIME_MIN 10
 
 /*
-** Allocations fall to this boundry size by default.
+**  Allocations fall to this boundry size by default.
+**  Overhead is taken after alignment.
+**
+**  The msvcrt malloc has an alignment of 16 with an overhead of 8.
+**  The win32 HeapAlloc has an alignment of 8 with an overhead of 8.
 */
 #define ST_DEFAULT_ALIGNMENT_SIZE 16
 #define ST_DEFAULT_OVERHEAD_SIZE 8
@@ -388,116 +402,24 @@ typedef struct __struct_STCategoryMapEntry {
 
 
 /*
-** STOptions
+**  STOptions
 **
-** Structure containing the various options for this code.
+**  Structure containing the varios options for the code.
+**  The definition of these options exists in a different file.
+**  We access that definition via macros to inline our structure definition.
 */
+#define ST_CMD_OPTION_BOOL(option_name, option_help) PRBool m##option_name;
+#define ST_CMD_OPTION_STRING(option_name, default_value, option_help) char m##option_name[ST_OPTION_STRING_MAX];
+#define ST_CMD_OPTION_STRING_ARRAY(option_name, array_size, option_help) char m##option_name[array_size][ST_OPTION_STRING_MAX];
+#define ST_CMD_OPTION_STRING_PTR_ARRAY(option_name, option_help) const char** m##option_name; PRUint32 m##option_name##Count;
+#define ST_CMD_OPTION_UINT32(option_name, default_value, multiplier, option_help) PRUint32 m##option_name;
+#define ST_CMD_OPTION_UINT64(option_name, default_value, multiplier, option_help) PRUint64 m##option_name##64;
+
 typedef struct __struct_STOptions
 {
-        /*
-        ** The string which identifies this program.
-        */
-        char mProgramName[ST_OPTION_STRING_MAX];
-
-        /*
-        ** File from which we retrieve the input.
-        ** The input should have been generated from a trace malloc run.
-        */
-        char mFileName[ST_OPTION_STRING_MAX];
-
-        /*
-        ** Which directory we will take over and write our output.
-        */
-        char mOutputDir[ST_OPTION_STRING_MAX];
-
-        /*
-        ** The various batch mode requests we've received.
-        */
-        const char** mBatchRequests;
-        PRUint32 mBatchRequestCount;
-
-        /*
-        ** Httpd port, where we accept queries.
-        */
-        PRUint32 mHttpdPort;
-
-        /*
-        ** Wether or not we should show help.
-        */
-        int mShowHelp;
-
-        /*
-        ** Maximum number of items to put in a list.
-        */
-        PRUint32 mListItemMax;
-
-        /*
-        ** Sort order control.
-        */
-        PRUint32 mOrderBy;
-
-        /*
-        ** Memory alignment size.
-        ** Overhead, taken after alignment.
-        **
-        ** The msvcrt malloc has an alignment of 16 with an overhead of 8.
-        ** The win32 HeapAlloc has an alignment of 8 with an overhead of 8.
-        */
-        PRUint32 mAlignBy;
-        PRUint32 mOverhead;
-
-        /*
-        ** Timeval control.
-        */
-        PRUint32 mTimevalMin;
-        PRUint32 mTimevalMax;
-
-        /*
-        ** Allocation timeval control.
-        */
-        PRUint32 mAllocationTimevalMin;
-        PRUint32 mAllocationTimevalMax;
-
-        /*
-        ** Size control.
-        */
-        PRUint32 mSizeMin;
-        PRUint32 mSizeMax;
-
-        /*
-        ** Lifetime timeval control.
-        */
-        PRUint32 mLifetimeMin;
-        PRUint32 mLifetimeMax;
-
-        /*
-        ** Weight control.
-        */
-        PRUint64 mWeightMin64;
-        PRUint64 mWeightMax64;
-
-        /*
-        ** Graph timeval control.
-        */
-        PRUint32 mGraphTimevalMin;
-        PRUint32 mGraphTimevalMax;
-
-        /*
-        ** Restrict callsite backtraces to those containing text.
-        */
-        char mRestrictText[ST_SUBSTRING_MATCH_MAX][ST_OPTION_STRING_MAX];
-
-        /*
-        ** File containing rules to categorize allocations
-        */
-        char mCategoryFile[ST_OPTION_STRING_MAX];
-
-        /*
-        ** Category to focus report on. '\0' if not focussing on a category.
-        */
-        char mCategoryName[ST_OPTION_STRING_MAX];
-
-} STOptions;
+#include "stoptions.h"
+}
+STOptions;
 
 /*
 **  STOptionChange
@@ -593,6 +515,11 @@ typedef struct __struct_STCache
 */
 typedef struct __struct_STGlobals
 {
+        /*
+        ** The string which identifies this program.
+        */
+        const char* mProgramName;
+
         /*
         ** Options derived from the command line.
         */

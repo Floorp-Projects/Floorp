@@ -71,16 +71,6 @@
 #include "nsQuickSort.h"
 
 /*
-** Turn on to attempt adding support for graphs on your platform.
-*/
-#if defined(HAVE_BOUTELL_GD)
-#define WANT_GRAPHS 1
-#endif /* HAVE_BOUTELL_GD */
-#if !defined(WANT_GRAPHS)
-#define WANT_GRAPHS 0
-#endif
-
-/*
 ** the globals variables.  happy joy.
 */
 STGlobals globals;
@@ -105,11 +95,11 @@ int showHelp(void)
 {
     int retval = 0;
 
-    if(0 != globals.mOptions.mShowHelp)
+    if(0 != globals.mOptions.mHelp)
     {
         PR_fprintf(PR_STDOUT,
 "Usage:\t%s [OPTION]... [-|filename]\n\n",
-                   globals.mOptions.mProgramName);
+                   globals.mProgramName);
 
         PR_fprintf(PR_STDOUT, "%s",
 "OPTIONS:\n"
@@ -210,7 +200,7 @@ int showHelp(void)
 "                                           By default, there is no maximum.\n"
                    "\n");
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
         PR_fprintf(PR_STDOUT, "%s",
 " -gmin<num>                               Set the graph minimum in seconds.\n"
 "                  Excludes representing graph intervals before said second.\n"
@@ -222,7 +212,7 @@ int showHelp(void)
 "                   Excludes representing graph intervals after said second.\n"
 "                                           By default, there is no maximum.\n"
                    "\n");
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
         PR_fprintf(PR_STDOUT,
 " -a<num>                               Set an allocation alignment boundry.\n"
@@ -310,11 +300,6 @@ int initOptions(int aArgCount, char** aArgArray)
     PRStatus prStatus = PR_SUCCESS;
 
     /*
-    ** Set the program name.
-    */
-    PR_snprintf(globals.mOptions.mProgramName, sizeof(globals.mOptions.mProgramName), "%s", aArgArray[0]);
-
-    /*
     ** As a default, stdin is the input.
     */
     PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", stdinDash);
@@ -364,10 +349,12 @@ int initOptions(int aArgCount, char** aArgArray)
     */
     globals.mOptions.mAllocationTimevalMax = ST_TIMEVAL_MAX;
 
+#if ST_WANT_GRAPHS
     /*
     ** As a default, there is no maximum graph timeval.
     */
     globals.mOptions.mGraphTimevalMax = ST_TIMEVAL_MAX;
+#endif
 
     /*
     ** As a default, we align byte sizes to a particular size.
@@ -426,7 +413,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                     }
                     else
@@ -434,7 +421,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         /*
                         ** Help.
                         */
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -450,7 +437,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     if(1 != scanRes)
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -466,7 +453,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     if(1 != scanRes)
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -483,7 +470,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -500,18 +487,18 @@ int initOptions(int aArgCount, char** aArgArray)
                         /*
                         ** Increase size of batch buffer.
                         */
-                        expand = (const char**)realloc((void*)globals.mOptions.mBatchRequests, sizeof(const char*) * (globals.mOptions.mBatchRequestCount + 1));
+                        expand = (const char**)realloc((void*)globals.mOptions.mBatchRequest, sizeof(const char*) * (globals.mOptions.mBatchRequestCount + 1));
                         if(NULL != expand)
                         {
                             /*
                             ** Reassign in case of pointer move.
                             */
-                            globals.mOptions.mBatchRequests = expand;
+                            globals.mOptions.mBatchRequest = expand;
 
                             /*
                             ** Add new entry, increase the count.
                             */
-                            globals.mOptions.mBatchRequests[globals.mOptions.mBatchRequestCount] = &aArgArray[traverse][2];
+                            globals.mOptions.mBatchRequest[globals.mOptions.mBatchRequestCount] = &aArgArray[traverse][2];
                             globals.mOptions.mBatchRequestCount++;
                         }
                         else
@@ -523,7 +510,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -539,7 +526,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     if(1 != scanRes)
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -557,7 +544,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                         else
                         {
@@ -575,7 +562,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                         else
                         {
@@ -585,7 +572,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -603,7 +590,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                         else
                         {
@@ -621,7 +608,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                         else
                         {
@@ -639,13 +626,13 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                     }
                 }
                 break;
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
                 case 'g':
                 {
                     if(0 == strncmp(&aArgArray[traverse][2], "min", 3))
@@ -659,7 +646,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                         else
                         {
@@ -677,7 +664,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                         else
                         {
@@ -687,11 +674,11 @@ int initOptions(int aArgCount, char** aArgArray)
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
                 case 's':
                 {
@@ -706,7 +693,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                     }
                     else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
@@ -720,13 +707,13 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                     }
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -744,7 +731,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                         else
                         {
@@ -762,7 +749,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                         else
                         {
@@ -772,7 +759,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -790,7 +777,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                     }
                     else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
@@ -804,13 +791,13 @@ int initOptions(int aArgCount, char** aArgArray)
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
-                            globals.mOptions.mShowHelp = __LINE__;
+                            globals.mOptions.mHelp = __LINE__;
                         }
                     }
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -850,7 +837,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -867,7 +854,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -884,7 +871,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     else
                     {
                         retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        globals.mOptions.mHelp = __LINE__;
                     }
                 }
                 break;
@@ -896,7 +883,7 @@ int initOptions(int aArgCount, char** aArgArray)
                     ** Error and show help.
                     */
                     retval = __LINE__;
-                    globals.mOptions.mShowHelp = __LINE__;
+                    globals.mOptions.mHelp = __LINE__;
                 }
                 break;
             }
@@ -927,7 +914,7 @@ int initOptions(int aArgCount, char** aArgArray)
     return retval;
 }
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
 /*
 ** createGraph
 **
@@ -985,9 +972,9 @@ gdImagePtr createGraph(int* aTransparencyColor)
 
     return retval;
 }
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
 /*
 ** drawGraph
 **
@@ -1152,7 +1139,7 @@ void drawGraph(gdImagePtr aImage, int aColor, const char* aGraphTitle, const cha
     }
 }
 
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
 #if defined(HAVE_BOUTELL_GD)
 /*
@@ -2682,7 +2669,7 @@ void htmlAnchor(STRequest* inRequest, const char* aHref, const char* aText, cons
             
             for(loop = 0; loop < globals.mOptions.mBatchRequestCount; loop++)
             {
-                comparison = strcmp(aHref, globals.mOptions.mBatchRequests[loop]);
+                comparison = strcmp(aHref, globals.mOptions.mBatchRequest[loop]);
                 if(0 == comparison)
                 {
                     break;
@@ -4246,7 +4233,7 @@ int displayCallsiteDetails(STRequest* inRequest, tmcallsite* aCallsite)
     return retval;
 }
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
 /*
 ** graphFootprint
 **
@@ -4438,9 +4425,9 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
 
     return retval;
 }
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
 /*
 ** graphTimeval
 **
@@ -4636,9 +4623,9 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
 
     return retval;
 }
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
 /*
 ** graphLifespan
 **
@@ -4837,9 +4824,9 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
 
     return retval;
 }
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
 /*
 ** graphWeight
 **
@@ -5051,7 +5038,7 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
 
     return retval;
 }
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
 /*
 **  fillOptions
@@ -5086,10 +5073,10 @@ void fillOptions(STOptions* outOptions, STOptionChange* outWhatChanged, const ch
         getDataPRUint32(inFormData, "mAllocationTimevalMin", &outOptions->mAllocationTimevalMin, &outWhatChanged->mSet, ST_TIMEVAL_RESOLUTION);
         getDataPRUint32(inFormData, "mAllocationTimevalMax", &outOptions->mAllocationTimevalMax, &outWhatChanged->mSet, ST_TIMEVAL_RESOLUTION);
         
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
         getDataPRUint32(inFormData, "mGraphTimevalMin", &outOptions->mGraphTimevalMin, &outWhatChanged->mGraph, ST_TIMEVAL_RESOLUTION);
         getDataPRUint32(inFormData, "mGraphTimevalMax", &outOptions->mGraphTimevalMax, &outWhatChanged->mGraph, ST_TIMEVAL_RESOLUTION);
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
         getDataPRUint32(inFormData, "mSizeMin", &outOptions->mSizeMin, &outWhatChanged->mSet, 1);
         getDataPRUint32(inFormData, "mSizeMax", &outOptions->mSizeMax, &outWhatChanged->mSet, 1);
@@ -5170,7 +5157,7 @@ int applySettings(STRequest* inRequest)
     }
 
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
     /*
     ** If any of the set was changed, we need to throw away all our
     **  cached graphs.
@@ -5190,7 +5177,7 @@ int applySettings(STRequest* inRequest)
         globals.mCache.mLifespanCached = 0;
         globals.mCache.mWeightCached = 0;
     }
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
     return retval;
 }
@@ -5261,7 +5248,7 @@ int displaySettings(STRequest* inRequest)
     PR_fprintf(inRequest->mFD, "<input type=text name=\"mOrderBy\" value=\"%u\"><br>\n", globals.mOptions.mOrderBy);
     PR_fprintf(inRequest->mFD, "<hr>\n");
 
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
     PR_fprintf(inRequest->mFD, "Modify the seconds for which the graphs cover;<br>\n");
     PR_fprintf(inRequest->mFD, "meaning that a narrower range will produce a more detailed graph for that timespan.<p>\n");
     PR_fprintf(inRequest->mFD, "Minimum graph second?<br>\n");
@@ -5269,7 +5256,7 @@ int displaySettings(STRequest* inRequest)
     PR_fprintf(inRequest->mFD, "Maximum graph second?<br>\n");
     PR_fprintf(inRequest->mFD, "<input type=text name=\"mGraphTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mGraphTimevalMax / ST_TIMEVAL_RESOLUTION);
     PR_fprintf(inRequest->mFD, "<hr>\n");
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
     PR_fprintf(inRequest->mFD, "Modify the secondss to target allocations created during a particular timespan;<br>\n");
     PR_fprintf(inRequest->mFD, "meaning that the allocations created only within the timespan are of interest.<p>\n");
@@ -5376,7 +5363,7 @@ int displayIndex(STRequest* inRequest)
     PR_fprintf(inRequest->mFD, "\n<li>");
     htmlAnchor(inRequest, "memory_leaks.html", "Memory Leak Report", NULL);
 
-#if WANT_GRAPHS    
+#if ST_WANT_GRAPHS    
     PR_fprintf(inRequest->mFD, "\n<li>Graphs");
     
     PR_fprintf(inRequest->mFD, "<ul>");
@@ -5394,7 +5381,7 @@ int displayIndex(STRequest* inRequest)
     htmlAnchor(inRequest, "weight_graph.html", "Allocation Weights", NULL);
     
     PR_fprintf(inRequest->mFD, "\n</ul>\n");
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
     
     PR_fprintf(inRequest->mFD, "\n</ul>\n");
     
@@ -5679,7 +5666,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 
             htmlFooter(&request);
         }
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
         else if(0 == strcmp("footprint_graph.html", aFileName))
         {
             int displayRes = 0;
@@ -5692,8 +5679,8 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 
             htmlFooter(&request);
         }
-#endif /* WANT_GRAPHS */
-#if WANT_GRAPHS
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
         else if(0 == strcmp("times_graph.html", aFileName))
         {
             int displayRes = 0;
@@ -5706,8 +5693,8 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 
             htmlFooter(&request);
         }
-#endif /* WANT_GRAPHS */
-#if WANT_GRAPHS
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
         else if(0 == strcmp("lifespan_graph.html", aFileName))
         {
             int displayRes = 0;
@@ -5720,8 +5707,8 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 
             htmlFooter(&request);
         }
-#endif /* WANT_GRAPHS */
-#if WANT_GRAPHS
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
         else if(0 == strcmp("weight_graph.html", aFileName))
         {
             int displayRes = 0;
@@ -5734,8 +5721,8 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 
             htmlFooter(&request);
         }
-#endif /* WANT_GRAPHS */
-#if WANT_GRAPHS
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
         else if(0 == strcmp("footprint.png", aFileName))
         {
             int graphRes = 0;
@@ -5747,8 +5734,8 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 REPORT_ERROR(__LINE__, graphFootprint);
             }
         }
-#endif /* WANT_GRAPHS */
-#if WANT_GRAPHS
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
         else if(0 == strcmp("times.png", aFileName))
         {
             int graphRes = 0;
@@ -5760,8 +5747,8 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 REPORT_ERROR(__LINE__, graphTimeval);
             }
         }
-#endif /* WANT_GRAPHS */
-#if WANT_GRAPHS
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
         else if(0 == strcmp("lifespan.png", aFileName))
         {
             int graphRes = 0;
@@ -5773,8 +5760,8 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 REPORT_ERROR(__LINE__, graphLifespan);
             }
         }
-#endif /* WANT_GRAPHS */
-#if WANT_GRAPHS
+#endif /* ST_WANT_GRAPHS */
+#if ST_WANT_GRAPHS
         else if(0 == strcmp("weight.png", aFileName))
         {
             int graphRes = 0;
@@ -5786,7 +5773,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
                 REPORT_ERROR(__LINE__, graphWeight);
             }
         }
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
         else if(0 == strcmp("categories_summary.html", aFileName))
         {
             int displayRes = 0;
@@ -5930,7 +5917,7 @@ void handleClient(void* inArg)
                 **  mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.27 2002/05/04 02:06:52 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.28 2002/05/07 23:39:33 blythe%netscape.com Exp $", crlf);
                 if(NULL != getData)
                 {
                     if(NULL == cookieData || (NULL != cookieData && 0 != strcmp(getData, cookieData)))
@@ -6184,7 +6171,7 @@ int batchMode(void)
         */
         for(loop = 0; loop < globals.mOptions.mBatchRequestCount; loop++)
         {
-            sprintfRes = PR_snprintf(aFileName, sizeof(aFileName), "%s%c%s", globals.mOptions.mOutputDir, PR_GetDirectorySeparator(), globals.mOptions.mBatchRequests[loop]);
+            sprintfRes = PR_snprintf(aFileName, sizeof(aFileName), "%s%c%s", globals.mOptions.mOutputDir, PR_GetDirectorySeparator(), globals.mOptions.mBatchRequest[loop]);
             if((PRUint32)-1 != sprintfRes)
             {
                 PRFileDesc* outFile = NULL;
@@ -6194,7 +6181,7 @@ int batchMode(void)
                 {
                     PRStatus closeRes = PR_SUCCESS;
                     
-                    handleRes = handleRequest(globals.mTMR, outFile, globals.mOptions.mBatchRequests[loop], NULL, NULL);
+                    handleRes = handleRequest(globals.mTMR, outFile, globals.mOptions.mBatchRequest[loop], NULL, NULL);
                     if(0 != handleRes)
                     {
                         failureSum += __LINE__;
@@ -6248,7 +6235,7 @@ int doRun(void)
     /*
     ** Create the new trace-malloc reader.
     */
-    globals.mTMR = tmreader_new(globals.mOptions.mProgramName, NULL);
+    globals.mTMR = tmreader_new(globals.mProgramName, NULL);
     if(NULL != globals.mTMR)
     {
         int tmResult = 0;
@@ -6271,7 +6258,7 @@ int doRun(void)
 
         if(0 == retval)
         {
-#if WANT_GRAPHS
+#if ST_WANT_GRAPHS
             /*
             ** May want to set the max graph timeval, now that we have it.
             */
@@ -6279,7 +6266,7 @@ int doRun(void)
             {
                 globals.mOptions.mGraphTimevalMax = (globals.mMaxTimeval - globals.mMinTimeval);
             }
-#endif /* WANT_GRAPHS */
+#endif /* ST_WANT_GRAPHS */
 
             /*
             ** Create the default sorted run.
@@ -6368,6 +6355,11 @@ int main(int aArgCount, char** aArgArray)
     ** Initialize globals
     */
     memset(&globals, 0, sizeof(globals));
+
+    /*
+    ** Set the program name.
+    */
+    globals.mProgramName = aArgArray[0];
 
     /*
     ** Set the minimum timeval really high so other code
