@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -968,7 +967,8 @@
 
 <toolbox id="mail-toolbox" class="toolbox-top" mode="icons">  
   <!-- Menu -->
-  <toolbar type="menubar" id="mail-toolbar-menubar" class="chromeclass-menubar" customizable="true" defaultset="menubar-items" mode="icons">
+  <toolbar type="menubar" id="mail-toolbar-menubar" class="chromeclass-menubar" customizable="true"
+           context="toolbar-context-menu" defaultset="menubar-items" mode="icons">
     <toolbaritem id="menubar-items" align="center">
       <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
         <!-- File -->

@@ -22,6 +22,7 @@
 #   Seth Spitzer <sspitzer@netscape.com>
 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
+
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -146,7 +147,7 @@
 
 <toolbox id="ab-toolbox" class="toolbox-top" mode="icons">
   <toolbar type="menubar" id="addrbook-toolbar-menubar" class="chromeclass-menubar" customizable="true"
-     defaultset="menubar-items" mode="icons">
+           context="toolbar-context-menu" defaultset="menubar-items" mode="icons">
 
    <toolbaritem id="menubar-items" align="center">
      <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
