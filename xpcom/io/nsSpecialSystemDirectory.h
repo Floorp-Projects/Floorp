@@ -100,6 +100,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   Win_Common_Desktopdirectory = 224   
         ,   Win_Appdata               =   225    
         ,   Win_Printhood             =   226    
+        ,   Win_Cookies               =   227
          
         ,   Unix_LocalDirectory       =   301
         ,   Unix_LibDirectory         =   302
