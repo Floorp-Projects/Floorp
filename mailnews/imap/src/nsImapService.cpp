@@ -370,13 +370,25 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       i18nurl->SetCharsetOverRide(aCharsetOverride);
 
       PRUint32 messageSize;
+      PRBool useMimePartsOnDemand = gMIMEOnDemand;
+      nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
 
       if (imapMessageSink)
         imapMessageSink->GetMessageSizeFromDB(msgKey, PR_TRUE, &messageSize);
 
       msgurl->SetMsgWindow(aMsgWindow);
 
-      if (!gMIMEOnDemand || (messageSize < (uint32) gMIMEOnDemandThreshold))
+      rv = msgurl->GetServer(getter_AddRefs(aMsgIncomingServer));
+    
+      if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
+      {
+          nsCOMPtr<nsIImapIncomingServer>
+              aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
+          if (NS_SUCCEEDED(rv) && aImapServer)
+            aImapServer->GetMimePartsOnDemand(&useMimePartsOnDemand);
+      }
+
+      if (!useMimePartsOnDemand || (messageSize < (uint32) gMIMEOnDemandThreshold))
 //                allowedToBreakApart && 
 //              !GetShouldFetchAllParts() &&
 //            GetServerStateParser().ServerHasIMAP4Rev1Capability() &&
