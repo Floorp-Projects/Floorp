@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.7 $ ';
+$Version = '$Revision: 1.8 $ ';
 
 
 sub PrintUsage {
@@ -20,9 +20,9 @@ sub PrintUsage {
 &ParseArgs;
 &ConditionalArgs;
 &GetSystemInfo;
+&LoadConfig;
 &SetupEnv;
 &SetupPath;
-&LoadConfig;
 &BuildIt;
 
 1;
