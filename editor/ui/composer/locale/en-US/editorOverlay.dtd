@@ -40,8 +40,8 @@
 <!ENTITY fileopenremote.keybinding "l">
 <!ENTITY fileRecentMenu.label "Recent Pages">
 <!ENTITY filerecentmenu.accesskey "r">
-<!ENTITY fileRevert.label "Revert to Last Saved">
-<!ENTITY filerevert.accesskey "d">
+<!ENTITY fileRevert.label "Revert">
+<!ENTITY filerevert.accesskey "v">
 <!ENTITY saveCmd.label "Save">
 <!ENTITY filesave.accesskey "s">
 <!ENTITY filesave.keybinding "s">
