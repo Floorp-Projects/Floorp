@@ -51,6 +51,12 @@ class nsISelection;
 class nsITransferable;
 class nsIOverrideDragSource;
 class nsIOverrideDropSite;
+class nsIImage;
+class nsIPresShell;
+class nsIPresContext;
+class nsIImageFrame;
+class nsIContent;
+class nsIDocument;
 
 
 // {1f34bc80-1bc7-11d6-a384-d705dd0746fc}
@@ -99,11 +105,14 @@ private:
   static void GetNodeString(nsIDOMNode* inNode, nsAString & outNodeString);
   static void NormalizeSelection(nsIDOMNode* inBaseNode, nsISelection* inSelection);
   static void GetEventDocument(nsIDOMEvent* inEvent, nsIDOMDocument** outDocument);
+  static nsresult GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage** outImage);
+  static nsresult GetImageFrame(nsIContent* aContent, nsIDocument *aDocument, nsIPresContext *aPresContext,
+                                  nsIPresShell *aPresShell, nsIImageFrame** aImageFrame);
 
   PRBool BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outURLString, nsAString & outTitleString,
-                        nsAString & outHTMLString, PRBool* outIsAnchor);
+                        nsAString & outHTMLString, nsIImage** outImage, PRBool* outIsAnchor);
   nsresult CreateTransferable(const nsAString & inURLString, const nsAString & inTitleString, 
-                                const nsAString & inHTMLString, PRBool inIsAnchor, 
+                                const nsAString & inHTMLString, nsIImage* inImage, PRBool inIsAnchor, 
                                 nsITransferable** outTrans);
   void ExtractURLFromData(const nsACString & inFlavor, nsISupports* inDataWrapper, PRUint32 inDataLen,
                            nsAString & outURL);

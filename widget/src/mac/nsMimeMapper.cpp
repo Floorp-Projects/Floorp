@@ -95,18 +95,22 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
   // pick them up by special casing MapMacsOSTypeToMimeType(). This means that
   // the low two bytes of the generated flavor can be used as an index into the list.
   if ( !format ) {
-    if ( PL_strcmp(aMimeStr, kTextMime) == 0 )
+    if ( PL_strcmp(aMimeStr, kUnicodeMime) == 0 )
+      format = kScrapFlavorTypeUnicode;
+    else if ( PL_strcmp(aMimeStr, kTextMime) == 0 )
       format = kScrapFlavorTypeText;
     else if ( PL_strcmp(aMimeStr, kFileMime) == 0 )
       format = flavorTypeHFS;
+    else if ( PL_strcmp(aMimeStr, kNativeImageMime) == 0 )
+      format = kScrapFlavorTypePicture;
+#if NOT_YET
     else if ( PL_strcmp(aMimeStr, kPNGImageMime) == 0 )
       format = kScrapFlavorTypePicture;
     else if ( PL_strcmp(aMimeStr, kJPEGImageMime) == 0 )
       format = kScrapFlavorTypePicture;
     else if ( PL_strcmp(aMimeStr, kGIFImageMime) == 0 )
       format = kScrapFlavorTypePicture;
-    else if ( PL_strcmp(aMimeStr, kUnicodeMime) == 0 )
-      format = kScrapFlavorTypeUnicode;
+#endif 
 
     else if ( inAddIfNotPresent ) {
       // create the flavor based on the unique id in the lower two bytes and 'MZ' in the
@@ -142,6 +146,10 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
     case kScrapFlavorTypeText: outMimeStr = kTextMime; break;
     case kScrapFlavorTypeUnicode: outMimeStr = kUnicodeMime; break;
     case flavorTypeHFS: outMimeStr = kFileMime; break;
+    
+    // if someone gives us PICT (or we could have put it there), use
+    // the native image mime type.
+    case kScrapFlavorTypePicture: outMimeStr = kNativeImageMime; break;
     
     // This flavor is the old 4.x Composer flavor for HTML. The actual data is a binary
     // data structure which we do NOT want to deal with in any way shape or form. I am

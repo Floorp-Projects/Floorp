@@ -77,6 +77,8 @@
 
 #include "nsIXULContent.h"
 #include "nsIDOMElement.h"
+#include "nsIImageMac.h"
+#include "nsIImage.h"
 
 
 // we need our own stuff for MacOS because of nsIDragSessionMac.
@@ -673,7 +675,8 @@ nsDragService :: DragSendDataProc ( FlavorType inFlavor, void* inRefCon, ItemRef
         retVal = ::SetDragItemFlavorData ( inDragRef, inItemRef, inFlavor, data, dataSize, 0 );
         NS_ASSERTION ( retVal == noErr, "SDIFD failed in DragSendDataProc" );
     }
-    nsMemory::Free ( data );
+    if ( data )
+      nsMemory::Free ( data );
   } // if valid refcon
   
   return retVal;
@@ -729,22 +732,47 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
     *outDataSize = 0;
     nsCOMPtr<nsISupports> data;
     if ( NS_SUCCEEDED(item->GetTransferData(actualFlavor, getter_AddRefs(data), outDataSize)) ) {
-      nsPrimitiveHelpers::CreateDataFromPrimitive ( actualFlavor, data, outData, *outDataSize );
-      
-      // if required, do the extra work to convert unicode to plain text and replace the output
-      // values with the plain text.
-      if ( needToDoConversionToPlainText ) {
-        char* plainTextData = nsnull;
-        PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, *outData);
-        PRInt32 plainTextLen = 0;
-        nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, *outDataSize / 2, &plainTextData, &plainTextLen );
-        if ( *outData ) {
-          nsMemory::Free(*outData);
-          *outData = plainTextData;
-          *outDataSize = plainTextLen;
+      if ( strcmp(actualFlavor, kNativeImageMime) == 0 ) {
+        // unwrap the image from its nsISupportsPrimitive wrapper
+        nsCOMPtr<nsISupportsInterfacePointer> ptr(do_QueryInterface(data));
+        nsCOMPtr<nsIImage> image;
+        ptr->GetData(getter_AddRefs(image));
+        
+        // we have an image, which is in the transferable as an nsIImage. Convert it
+        // to PICT (PicHandle) and put those bits on the clipboard. The actual size
+        // of the picture is the size of the handle, not sizeof(Picture).
+        nsCOMPtr<nsIImageMac> imageMac ( do_QueryInterface(image) );
+        if ( imageMac ) {
+          PicHandle picture = nsnull;
+          imageMac->ConvertToPICT ( &picture );
+          *outDataSize = ::GetHandleSize((Handle)picture);
+          *outData = nsMemory::Alloc(*outDataSize);
+          ::HLock((Handle)picture);
+          ::BlockMoveData(*picture, *outData, *outDataSize);
+          ::HUnlock((Handle)picture);
+          ::KillPicture(picture);
         }
         else
-          retVal = cantGetFlavorErr;
+          NS_WARNING ( "Image isn't an nsIImageMac in transferable" );
+      }
+      else {
+        nsPrimitiveHelpers::CreateDataFromPrimitive ( actualFlavor, data, outData, *outDataSize );
+        
+        // if required, do the extra work to convert unicode to plain text and replace the output
+        // values with the plain text.
+        if ( needToDoConversionToPlainText ) {
+          char* plainTextData = nsnull;
+          PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, *outData);
+          PRInt32 plainTextLen = 0;
+          nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, *outDataSize / 2, &plainTextData, &plainTextLen );
+          if ( *outData ) {
+            nsMemory::Free(*outData);
+            *outData = plainTextData;
+            *outDataSize = plainTextLen;
+          }
+          else
+            retVal = cantGetFlavorErr;
+        }
       }
     }
     else
