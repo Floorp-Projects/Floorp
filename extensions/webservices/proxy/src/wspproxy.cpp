@@ -1265,8 +1265,16 @@ WSPProxy::GetInterfaces(PRUint32 *count, nsIID * **array)
   }
 
   iids[0] = NS_STATIC_CAST(nsIID *, nsMemory::Clone(mIID, sizeof(nsIID)));
+  if (NS_UNLIKELY(!iids[0])) {
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(0, iids);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   const nsIID& wsiid = NS_GET_IID(nsIWebServiceProxy);
   iids[1] = NS_STATIC_CAST(nsIID *, nsMemory::Clone(&wsiid, sizeof(nsIID)));
+  if (NS_UNLIKELY(!iids[1])) {
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(1, iids);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   *array = iids;
 
