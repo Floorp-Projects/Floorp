@@ -39,7 +39,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- General -->
-<!ENTITY calendar.file.default.name  "My Calendar" >
+<!ENTITY calendar.file.default.name  "Mijn kalender" >
 
 <!-- Alarm -->
 <!ENTITY alarm.units.minutes  "Minuten" >
@@ -62,13 +62,13 @@
 <!ENTITY repeat.units.years.singular    "Jaar" >
 
 <!ENTITY priority.level.none              "Geen">
-<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.none.accesskey    "@">
 <!ENTITY priority.level.low               "Laag">
-<!ENTITY priority.level.low.accesskey     "L">
+<!ENTITY priority.level.low.accesskey     "@">
 <!ENTITY priority.level.medium            "Gemiddeld">
-<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.medium.accesskey  "@">
 <!ENTITY priority.level.high              "Hoog">
-<!ENTITY priority.level.high.accesskey    "H">
+<!ENTITY priority.level.high.accesskey    "@">
 
 <!ENTITY newevent.title.label        "Titel" >
 <!ENTITY newevent.location.label     "Lokatie" >
@@ -88,7 +88,7 @@
 <!ENTITY newevent.invite.label       "Uitnodigen" >
 <!ENTITY newevent.email.label        "Email waarschuwing aan" >
 <!ENTITY newevent.beforealarm.label  "voordat de gebeurtenis start" >
-<!ENTITY newevent.beforealarmends.label  "before the event ends" >
+<!ENTITY newevent.beforealarmends.label  "voordat de gebeurtenis eindigd" >
 <!ENTITY newevent.repeat.label       "Herhaal over" >
 <!ENTITY newevent.until.label        "Totdat" >
 <!ENTITY newevent.forever.label      "Altijd" >
@@ -102,7 +102,7 @@
 <!ENTITY newevent.repeatdate.tooltip    "Kies een datum om op te eindigen" >
 <!ENTITY newevent.recurend.warning    "Uw herhalingstijd eindigd voor uw eindtijd.">
 <!ENTITY newevent.endtime.tooltip    "Kies een eindtijd voor deze gebeurtenis" >
-<!ENTITY newevent.starttimeerror.alertmessage "Uw gebeurtenis kan niet eindigen voordat deze gestart is. Verbeter alstublieft de start- of eindtijd." >        
+<!ENTITY newevent.starttimeerror.alertmessage "Uw gebeurtenis kan niet eindigen voordat deze gestart is. Verbeter alstublieft de start- of eindtijd." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Uw herhalingstijd kan niet voor de eindtijd van de gebeurtenis vallen. Verbeter dit alstublieft of zet herhaling uit." >
 <!ENTITY newevent.newevent.tab.label "Gebeurtenis" >
 <!ENTITY newevent.recurrence.tab.label "Herhaling" >
@@ -119,19 +119,19 @@
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "Op de zoveelste dag van de maand">
 <!ENTITY newevent.advanced.repeat.dayofweek.label "Vierde dinsdag van de maand">
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Laatstedinsdag van de maand">
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Laatste dinsdag van de maand">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " van de maand">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "On the ">
-<!ENTITY newevent.advanced.repeat.last.label "Last ">
-<!ENTITY newevent.advanced.repeat.first.label "First">
-<!ENTITY newevent.advanced.repeat.second.label "Second">
-<!ENTITY newevent.advanced.repeat.third.label "Third">
-<!ENTITY newevent.advanced.repeat.fourth.label "Fourth">
-<!ENTITY newevent.advanced.repeat.first.extension "st">
-<!ENTITY newevent.advanced.repeat.second.extension "nd">
-<!ENTITY newevent.advanced.repeat.third.extension "rd">
-<!ENTITY newevent.advanced.repeat.nth.extension "th">
+<!ENTITY newevent.advanced.repeat.onthe.label "Op de ">
+<!ENTITY newevent.advanced.repeat.last.label "Laatste ">
+<!ENTITY newevent.advanced.repeat.first.label "Eerste">
+<!ENTITY newevent.advanced.repeat.second.label "Tweede">
+<!ENTITY newevent.advanced.repeat.third.label "Derde">
+<!ENTITY newevent.advanced.repeat.fourth.label "Vierde">
+<!ENTITY newevent.advanced.repeat.first.extension "">
+<!ENTITY newevent.advanced.repeat.second.extension "">
+<!ENTITY newevent.advanced.repeat.third.extension "">
+<!ENTITY newevent.advanced.repeat.nth.extension "">
 
 <!ENTITY newevent.choosefile.label "Kies bestand">
 <!ENTITY newevent.removeselectedfile.label "Verwijder geselecteerd bestand">
@@ -145,12 +145,12 @@
 <!ENTITY newtodo.starttime.warning "Uw startdatum valt nu uw vervaldatum.">
 <!ENTITY newtodo.cancelled.label "Geannuleerd">
 <!ENTITY newtodo.status.label "Status">
-<!ENTITY newtodo.beforealarm.label  "before the task starts" >
-<!ENTITY newtodo.beforealarmends.label  "before the task is due" >
-<!ENTITY newtodo.newtodo.tab.label "Task" >
-<!ENTITY newtodo.status.longlabel "Task Status">
-<!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
-<!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
+<!ENTITY newtodo.beforealarm.label  "voordat de taak start" >
+<!ENTITY newtodo.beforealarmends.label  "voordat de taak vervalt" >
+<!ENTITY newtodo.newtodo.tab.label "Taak" >
+<!ENTITY newtodo.status.longlabel "Taakstatus">
+<!ENTITY newtodo.duetime.warning    "Uw starttijd valt na uw vervaltijd.">
+<!ENTITY newtodo.duedate.warning    "Uw startdatum valt na uw vervaldatum.">
 
 <!ENTITY calendar.confirm.deleteevent "Weet u zeker dat u de volgende gebeurtenis wilt verwijderen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Weet u zeker dat u de volgende naamloze gebeurtenis wilt verwijderen?" >
@@ -180,13 +180,13 @@
 <!ENTITY calendar.flat.topbar.gototoday        "Ga naar vandaag" >
 <!ENTITY calendar.flat.topbar.choosedate       "Ga naar datum" >
 <!ENTITY calendar.flat.topbar.dayview          "Dagoverzicht" >
-<!ENTITY calendar.dayview.accesskey            "d" >
+<!ENTITY calendar.dayview.accesskey            "D" >
 <!ENTITY calendar.flat.topbar.weekview         "Weekoverzicht" >
-<!ENTITY calendar.weekview.accesskey           "w" >
+<!ENTITY calendar.weekview.accesskey           "W" >
 <!ENTITY calendar.flat.topbar.monthview        "Maandoverzicht" >
-<!ENTITY calendar.monthview.accesskey          "m" >
-<!ENTITY calendar.flat.topbar.multiweekview   "Multiweek" >
-<!ENTITY calendar.multiweekview.accesskey     "u" >
+<!ENTITY calendar.monthview.accesskey          "M" >
+<!ENTITY calendar.flat.topbar.multiweekview   "Meerdere wekenoverzicht" >
+<!ENTITY calendar.multiweekview.accesskey     "E" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Verwijder gebeurtenis" >
 <!ENTITY calendar.tools.modify.tooltip         "Wijzig gebeurtenis" >
@@ -226,15 +226,15 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Categori&#xEB;n">
 <!ENTITY calendar.unifinder.tree.location.label    "Lokatie">
 <!ENTITY calendar.unifinder.tree.status.label    "Status">
-<!ENTITY calendar.unifinder.tree.filename.label    "Calendar Name">
+<!ENTITY calendar.unifinder.tree.filename.label    "Kalendernaam">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Ga naar vandaag" >
 <!ENTITY calendar.choosedate.button.tooltip       "Kies datum om naartoe te gaan" >
 
-<!ENTITY calendar.dayview.button.tooltip          "Schakel over naar dagoverzicht" >
-<!ENTITY calendar.weekview.button.tooltip         "Schakel over naar weekoverzicht" >
-<!ENTITY calendar.monthview.button.tooltip        "Schakel over naar maandoverzicht" >
-<!ENTITY calendar.multiweekview.button.tooltip        "Switch to multiweek view" >
+<!ENTITY calendar.dayview.button.tooltip          "Naar dagoverzicht overschakelen" >
+<!ENTITY calendar.weekview.button.tooltip         "Naar weekoverzicht overschakelen" >
+<!ENTITY calendar.monthview.button.tooltip        "Naar maandoverzicht overschakelen" >
+<!ENTITY calendar.multiweekview.button.tooltip        "Naar meerdere wekenoverzicht overschakelen" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Volgende dag" >
 <!ENTITY calendar.prevday.button.tooltip        "Vorige dag" >
@@ -253,29 +253,29 @@
 <!ENTITY calendar.dayview.button.label          "Dagoverzicht" >
 <!ENTITY calendar.weekview.button.label         "Weekoverzicht" >
 <!ENTITY calendar.monthview.button.label        "Maandoverzicht" >
-<!ENTITY calendar.multiweekview.button.label        "Multiweek" >
+<!ENTITY calendar.multiweekview.button.label        "Meerder wekenoverzicht" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Alleen maandag-vrijdag" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
-<!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
-<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "@" >
+<!ENTITY calendar.displaytodos.checkbox.label   "Taken in overzicht" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "@" >
 
 <!ENTITY calendar.menu.options.modify           "Bewerken" >
 <!ENTITY calendar.menu.options.remove           "Verwijderen" >
 <!ENTITY calendar.menu.options.close            "Sluit venster" >
-<!ENTITY calendar.menu.options.close.accesskey  "C" >
+<!ENTITY calendar.menu.options.close.accesskey  "@" >
 
 <!ENTITY calendar.main.tab.label        "Gebeurtenissen" >
 <!ENTITY calendar.search.tab.label      "Zoeken">
 
 <!ENTITY calendar.search.options.searchfor " bevat">
 
-<!ENTITY calendar.menu.numberofweeks.label     "Number of Weeks" >
+<!ENTITY calendar.menu.numberofweeks.label     "Aantal weken" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 Week" >
-<!ENTITY calendar.menu.numberofweeks.2      "2 Weeks" >
-<!ENTITY calendar.menu.numberofweeks.3      "3 Weeks" >
-<!ENTITY calendar.menu.numberofweeks.4      "4 Weeks" >
-<!ENTITY calendar.menu.numberofweeks.5      "5 Weeks" >
-<!ENTITY calendar.menu.numberofweeks.6      "6 Weeks" >
+<!ENTITY calendar.menu.numberofweeks.2      "2 Weken" >
+<!ENTITY calendar.menu.numberofweeks.3      "3 Weken" >
+<!ENTITY calendar.menu.numberofweeks.4      "4 Weken" >
+<!ENTITY calendar.menu.numberofweeks.5      "5 Weken" >
+<!ENTITY calendar.menu.numberofweeks.6      "6 Weken" >
 
 <!-- Month View Entities -->
 <!ENTITY calendar.monthview.column.1.name "ZON">
@@ -288,54 +288,54 @@
 <!ENTITY week.short "W">
 
 <!-- Statusbar -->
-<!ENTITY statusText.label            "Document: Voltooid">
+<!ENTITY statusText.label            "Document: Klaar">
 
 <!-- Window Title -->
 <!ENTITY window.title            "Mozilla Kalender">
 
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Nieuwe gebeurtenis">
-<!ENTITY calendar.context.newevent.accesskey          "n">
+<!ENTITY calendar.context.newevent.accesskey          "G">
 <!ENTITY calendar.context.newtodo.label               "Nieuwe taak">
-<!ENTITY calendar.context.newtodo.accesskey           "k">
+<!ENTITY calendar.context.newtodo.accesskey           "T">
 <!ENTITY calendar.context.modifyevent.label           "Bewerk geselecteerde gebeurtenis">
-<!ENTITY calendar.context.modifyevent.accesskey       "e">
+<!ENTITY calendar.context.modifyevent.accesskey       "B">
 <!ENTITY calendar.context.modifytask.label            "Bewerk taak">
-<!ENTITY calendar.context.modifytask.accesskey        "e">
+<!ENTITY calendar.context.modifytask.accesskey        "B">
 <!ENTITY calendar.context.deleteevent.label           "Verwijder geselecteerde gebeurtenis">
-<!ENTITY calendar.context.deleteevent.accesskey       "l">
+<!ENTITY calendar.context.deleteevent.accesskey       "V">
 <!ENTITY calendar.context.deletetask.label            "Verwijder taak">
-<!ENTITY calendar.context.deletetask.accesskey        "l">
+<!ENTITY calendar.context.deletetask.accesskey        "V">
 <!ENTITY calendar.context.cutevent.label              "Knippen">
-<!ENTITY calendar.context.cutevent.accesskey          "t">
+<!ENTITY calendar.context.cutevent.accesskey          "K">
 <!ENTITY calendar.context.copyevent.label             "Kopi&#xEB;ren">
-<!ENTITY calendar.context.copyevent.accesskey         "c">
+<!ENTITY calendar.context.copyevent.accesskey         "I">
 <!ENTITY calendar.context.pasteevent.label            "Plakken">
-<!ENTITY calendar.context.pasteevent.accesskey        "p">
+<!ENTITY calendar.context.pasteevent.accesskey        "P">
 <!ENTITY calendar.context.selectall.label             "Alles selecteren">
-<!ENTITY calendar.context.selectall.accesskey         "a">
+<!ENTITY calendar.context.selectall.accesskey         "A">
 <!ENTITY calendar.context.gototoday.label             "Ga naar vandaag">
-<!ENTITY calendar.context.gototoday.accesskey         "g">
-<!ENTITY calendar.context.dayview.label               "Schakel over naar dagoverzicht">
-<!ENTITY calendar.context.dayview.accesskey           "d">
-<!ENTITY calendar.context.weekview.label              "Schakel over naar weekoverzicht">
-<!ENTITY calendar.context.weekview.accesskey          "w">
-<!ENTITY calendar.context.monthview.label             "Schakel over naar maandoverzicht">
-<!ENTITY calendar.context.monthview.accesskey         "m">
-<!ENTITY calendar.context.multiweekview.label        "Switch To Multiweek View">
-<!ENTITY calendar.context.multiweekview.accesskey    "u">
+<!ENTITY calendar.context.gototoday.accesskey         "N">
+<!ENTITY calendar.context.dayview.label               "Naar dagoverzicht overschakelen">
+<!ENTITY calendar.context.dayview.accesskey           "D">
+<!ENTITY calendar.context.weekview.label              "Naar weekoverzicht overschakelen">
+<!ENTITY calendar.context.weekview.accesskey          "W">
+<!ENTITY calendar.context.monthview.label             "Naar maandoverzicht overschakelen">
+<!ENTITY calendar.context.monthview.accesskey         "M">
+<!ENTITY calendar.context.multiweekview.label        "Naar meerdere wekenoverzicht overschakelen">
+<!ENTITY calendar.context.multiweekview.accesskey    "E">
 <!ENTITY calendar.context.reload.label                "Herladen">
-<!ENTITY calendar.context.reload.accesskey            "r">
-<!ENTITY calendar.context.emailevent.label            "Email geselecteerde gebeurtenis(sen)">
-<!ENTITY calendar.context.emailevent.accesskey        "i">
+<!ENTITY calendar.context.reload.accesskey            "@">
+<!ENTITY calendar.context.emailevent.label            "Email geselecteerd(e) gebeurtenis(sen)">
+<!ENTITY calendar.context.emailevent.accesskey        "L">
 <!ENTITY calendar.context.emailtask.label             "Email taak">
-<!ENTITY calendar.context.emailtask.accesskey         "i">
+<!ENTITY calendar.context.emailtask.accesskey         "@">
 
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Voortgang">
-<!ENTITY calendar.context.progress.accesskey          "p">
+<!ENTITY calendar.context.progress.accesskey          "O">
 <!ENTITY calendar.context.priority.label              "Prioriteit">
-<!ENTITY calendar.context.priority.accesskey          "r">
+<!ENTITY calendar.context.priority.accesskey          "P">
 
 <!ENTITY percnt "&#38;#37;" ><!--=percent sign-->
 
@@ -352,15 +352,15 @@
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Nieuwe kalender">
-<!ENTITY calendar.context.newserver.accesskey          "N">
+<!ENTITY calendar.context.newserver.accesskey          "@">
 <!ENTITY calendar.context.editserver.label             "Bewerk kalender">
-<!ENTITY calendar.context.editserver.accesskey         "E">
+<!ENTITY calendar.context.editserver.accesskey         "@">
 <!ENTITY calendar.context.deleteserver.label           "Verwijder kalender">
-<!ENTITY calendar.context.deleteserver.accesskey       "D">
+<!ENTITY calendar.context.deleteserver.accesskey       "@">
 <!ENTITY calendar.context.refreshserver.label          "Ververs kalenders op andere computer(s)">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.refreshserver.accesskey      "@">
 <!ENTITY calendar.context.publish.label                "Publiceer volledige kalender">
-<!ENTITY calendar.context.publish.accesskey            "P">
+<!ENTITY calendar.context.publish.accesskey            "@">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "Over Mozilla kalender">
@@ -392,7 +392,7 @@
 <!ENTITY calendar.server.dialog.help.label          "U kunt een lokaal bestandspad invoeren of een bestandspad op een andere computer, zoals http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
 
 <!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Color">
+<!ENTITY calendar.server.dialog.color.label "Kleur">
 
 <!ENTITY calendar.local.calendar.dialog.optional.label "De volgende velden zijn optioneel en worden gebruikt voor het publiceren van de kalender naar een andere lokatie.">
 
@@ -403,10 +403,10 @@
 <!ENTITY calendar.publish.password.label            "Wachtwoord">
 <!ENTITY calendar.publish.username.description      "(Optioneel) De gebruikersnaam om naar deze server te uploaden.">
 <!ENTITY calendar.publish.password.description      "(Optioneel) Het wachtwoord om naar deze server te uploaden.">
-<!ENTITY calendar.publish.publish.button      "Publish">
-<!ENTITY calendar.publish.close.button      "Close">
+<!ENTITY calendar.publish.publish.button      "Publiceren">
+<!ENTITY calendar.publish.close.button      "Sluiten">
 
-<!ENTITY calendar.publish.example.url.description   "Zoiets als http://www.myserver.com/webdav/test.ics">
+<!ENTITY calendar.publish.example.url.description   "Zoiets als http://www.mijnserver.nl/webdav/test.ics">
 
 <!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
 <!ENTITY allDayEvents.label "Gehele dag gebeurtenissen">
@@ -418,16 +418,16 @@
 <!ENTITY calendar.wizard.publish.label             "Publiceren: Publiceer gebeurtenissen naar een andere machine (bijv. op het Internet) waar andere personen zich kunnen aanmelden.">
 
 <!-- Calendar Import Duplicates Dialog -->
-<!ENTITY calendar.importdupes.dialog.title "Duplicate Management" >
+<!ENTITY calendar.importdupes.dialog.title "Duplicatenbeheer" >
 <!ENTITY calendar.importdupes.caption.label "Wat te doen met duplikaten:">
 <!ENTITY calendar.importdupes.autodiscard.label "Duplikaten automatisch afdanken">
 <!ENTITY calendar.importdupes.adddupes.label "Duplikaten toevoegen">
 <!ENTITY calendar.importdupes.prompt.label "Voor elke vragen">
 
 <!-- Calendar Printing -->
-<!ENTITY calendar.print.window.title "Print A Calendar">
-<!ENTITY calendar.print.selectoptions.label "Select your options below, and use OK to print">
-<!ENTITY calendar.print.selectviews.label "Select View to Print">
-<!ENTITY calendar.print.listselected.label "List Selected Events">
-<!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
-<!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
+<!ENTITY calendar.print.window.title "Een kalender afdrukken">
+<!ENTITY calendar.print.selectoptions.label "Selecteer hier onder uw keuzes en gebruik OK om af te drukken">
+<!ENTITY calendar.print.selectviews.label "Selecteer overzicht om af te drukken">
+<!ENTITY calendar.print.listselected.label "Geselecteerde gebeurtenissen opsommen">
+<!ENTITY calendar.print.onlyitemsstatus.label "Enkel items met deze status afdrukken:">
+<!ENTITY calendar.print.onlyitemscategory.label "Enkel items met deze categorie afderukken:">

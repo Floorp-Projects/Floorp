@@ -35,5 +35,5 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY calendarCmd.label  "Kalender">
-<!ENTITY calendarCmd.accesskey  "r">
-<!ENTITY calendarCmd.commandkey "6">
+<!ENTITY calendarCmd.accesskey  "K">
+<!ENTITY calendarCmd.commandkey "7">
