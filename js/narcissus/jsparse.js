@@ -201,7 +201,10 @@ Tokenizer.prototype = {
     },
 
     newSyntaxError: function (m) {
-        return new SyntaxError(m, this.filename, this.lineno);
+        var e = new SyntaxError(m, this.filename, this.lineno);
+        e.source = this.source;
+        e.cursor = this.cursor;
+        return e;
     }
 };
 
@@ -453,7 +456,6 @@ function Statement(t, x) {
                 if (--i < 0)
                     throw t.newSyntaxError("Label not found");
             } while (ss[i].label != n.label);
-            n.target = ss[i].statement;
         } else {
             do {
                 if (--i < 0) {
@@ -462,8 +464,8 @@ function Statement(t, x) {
                                                          : "continue"));
                 }
             } while (!ss[i].isLoop && (tt != BREAK || ss[i].type != SWITCH));
-            n.target = ss[i];
         }
+        n.target = ss[i];
         break;
 
       case TRY:
@@ -954,18 +956,8 @@ loop:
           // Automatic semicolon insertion means we may scan across a newline
           // and into the beginning of another statement.  If so, break out of
           // the while loop and let the t.scanOperand logic handle errors.
-          case FUNCTION:
-          case IF: case SWITCH: case CASE: case DEFAULT:
-          case FOR: case WHILE: case DO: case BREAK: case CONTINUE:
-          case TRY: case CATCH: case FINALLY:
-          case THROW: case RETURN:
-          case WITH:
-          case VAR: case CONST:
-          case DEBUGGER:
-            break loop;
-
           default:
-            throw t.newSyntaxError("Syntax error");
+            break loop;
         }
     }
 
