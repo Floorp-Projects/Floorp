@@ -219,8 +219,11 @@ nsEventQueueImpl::StopAcceptingEvents()
 void
 nsEventQueueImpl::NotifyObservers(const char *aTopic)
 {
-  nsresult rv;
+  // we must not invoke the observer service from a background thread!
+  if (!nsIThread::IsMainThread())
+    return;
 
+  nsresult rv;
   nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIEventQueue> kungFuDeathGrip(this);
