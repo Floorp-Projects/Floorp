@@ -31,10 +31,11 @@
 # I do not wish to bother writing a command line parser in shell and
 # configure can not easily be extended to handle other directories.
 
-: ${prefix:=/home/web/tinderbox} > /dev/null
-: ${cgibin_prefix:="\$(prefix)/bin"} > /dev/null
-: ${htmldir:="/home/httpd/html/tinderbox"} > /dev/null
+: ${prefix:=/home/tinderbox}
+: ${cgibin_prefix:="\$(prefix)/bin"}
+: ${htmldir:="/home/httpd/html/tinderbox"}
 
+: ${perl_flags:='-T'}
 
 
 : ${builddir:=./build} > /dev/null
@@ -42,7 +43,6 @@
 
 config_script='./config.out'
 tinder_version='0.09'
-perl_flags='-T'
 
 
 # -------------------
@@ -221,20 +221,24 @@ rm -rf $config_script
 
 pwd=`/bin/pwd`
 
-/bin/echo "#!perl - this script is run from makefile with -n\n" >> $config_script
-/bin/echo "# This script is automatically genareated by configure." >> $config_script
-/bin/echo "# This script configures various global variables.\n" >> $config_script
+/bin/echo -e "#!perl - this script is run from makefile with -n\n" >> $config_script
+/bin/echo -e "# This script is automatically genareated by configure." >> $config_script
+/bin/echo -e "# This script configures various global variables.\n" >> $config_script
 
 /bin/echo "while (<>) {" >> $config_script
 
 /bin/echo  >> $config_script
-/bin/echo "  # Set the library search path with suitable interposing directories." >> $config_script
+/bin/echo -e "  # Set the library search path with suitable interposing directories." >> $config_script
 
-/bin/echo "  s!\#tinder_libdir\#!$prefix/local_conf',\n   '$prefix/default_conf',\n   '$prefix/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
+/bin/echo -e "  s!\#tinder_libdir\#!$prefix/local_conf',\n   '$prefix/default_conf',\n   '$prefix/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
+
 /bin/echo >> $config_script
 
 /bin/echo "  s!\#prefix\#!$prefix!;" >> $config_script
 /bin/echo "  s!\#cgibin_prefix\#!$cgibin_prefix!;" >> $config_script
+/bin/echo "  s!\#htmldir\#!$htmldir!;" >> $config_script
+
+/bin/echo >> $config_script
 
 /bin/echo "  # Use Taint Perl mode for security." >> $config_script
 /bin/echo "  s!\#perlflags\#!$perl_flags!;" >> $config_script
@@ -249,7 +253,7 @@ pwd=`/bin/pwd`
 
 /bin/echo >> $config_script
 
-/bin/echo "  # Hard code various executable paths into the source for security reasons." >> $config_script
+/bin/echo -e "  # Hard code various executable paths into the source for security reasons." >> $config_script
 
 for cmd in perl
 do
@@ -261,9 +265,9 @@ do
 	/bin/echo "  s!\#$cmd\#!$full_cmd!;" >> $config_script
 done
 
-/bin/echo "} continue {" >> $config_script
-/bin/echo "  print or die \"-p destination: \$!\\\\n\";" >> $config_script
-/bin/echo "}" >> $config_script
+/bin/echo -e "} continue {" >> $config_script
+/bin/echo -e "  print or die \"-p destination: \$!\\\\n\";" >> $config_script
+/bin/echo -e "}" >> $config_script
 
 /bin/chmod +x $config_script
 
