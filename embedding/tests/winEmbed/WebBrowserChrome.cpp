@@ -29,6 +29,7 @@
 #include "nsIURI.h"
 #include "nsIWebProgress.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"
@@ -87,6 +88,14 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP WebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+  *aInstancePtr = 0;
+  if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
+    if (mWebBrowser)
+      return mWebBrowser->GetContentDOMWindow((nsIDOMWindow **) aInstancePtr);
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   return QueryInterface(aIID, aInstancePtr);
 }
 
@@ -192,7 +201,6 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeFlags,
   nsCOMPtr<nsIWebBrowserChrome> parent;
   nsCOMPtr<nsIWebBrowserChrome> newChrome;
 
-  parent = nsnull;
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
     parent = dont_QueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
   rv = ::CreateBrowserWindow(aChromeFlags, parent, getter_AddRefs(newChrome));
