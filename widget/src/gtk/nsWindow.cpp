@@ -111,6 +111,8 @@ nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 // we get our drop after the leave.
 nsWindow *nsWindow::mLastLeaveWindow = NULL;
 
+PRBool gJustGotActivate = PR_FALSE;
+
 static void printDepth(int depth) {
   int i;
   for (i=0; i < depth; i++)
@@ -968,8 +970,6 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
 
-PRBool gJustGotDeactivate = PR_TRUE;
-
 NS_IMETHODIMP
 nsWindow::SetFocus(void)
 {
@@ -991,12 +991,16 @@ nsWindow::SetFocus(void)
   {
     if (!GTK_WIDGET_HAS_FOCUS(top_mozarea))
     {
-      mBlockMozAreaFocusIn = PR_TRUE;
+      nsWindow *mozAreaWindow = (nsWindow *)gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
+      mozAreaWindow->mBlockMozAreaFocusIn = PR_TRUE;
+#ifdef DEBUG_FOCUS
+      printf("mozarea grabbing focus!\n");
+#endif
       gtk_widget_grab_focus(top_mozarea);
       // this will show the window if it's minimized and bring it to
       // the front of the stacking order.
       GetAttention();
-      mBlockMozAreaFocusIn = PR_FALSE;
+      mozAreaWindow->mBlockMozAreaFocusIn = PR_FALSE;
     }
   }
   
@@ -1021,7 +1025,10 @@ nsWindow::SetFocus(void)
 #endif // USE_XIM 
 
   DispatchSetFocusEvent();
-  DispatchActivateEvent();
+  if (gJustGotActivate) {
+    DispatchActivateEvent();
+    gJustGotActivate = PR_FALSE;
+  }
 
 #ifdef USE_XIM
     IMEActivateWidget();
@@ -1136,8 +1143,8 @@ void nsWindow::HandleMozAreaFocusIn(void)
 #ifdef DEBUG_FOCUS
   printf("nsWindow::HandleMozAreaFocusIn %p\n", this);
 #endif /* DEBUG_FOCUS */
+  gJustGotActivate = PR_TRUE;
   DispatchSetFocusEvent();
-  DispatchActivateEvent();
 }
 
 // this function is called whenever there's a focus out event on the
@@ -2775,8 +2782,8 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
   
   gtk_widget_grab_focus(bin->child);
 
+  gJustGotActivate = PR_TRUE;
   widget->DispatchSetFocusEvent();
-  widget->DispatchActivateEvent();
 
   return PR_TRUE;
 }
@@ -2869,7 +2876,7 @@ gint handle_mozarea_focus_out(GtkWidget *      aWidget,
 #ifdef DEBUG_FOCUS
   printf("handle_mozarea_focus_out\n");
 #endif
-  gJustGotDeactivate = PR_TRUE;
+
   if (!aWidget) {
     return PR_TRUE;
   }
