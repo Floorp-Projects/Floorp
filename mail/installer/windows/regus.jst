@@ -7,11 +7,13 @@ var platformNode = getPlatform();
 
 // ----LOCALIZATION NOTE: translate only these ------
 var prettyName = "US Region Pack";
-var chromeNode = "US";
+var langcode = "en";
+var chromeNode = langcode + "-US";
+
 // --- END CHANGABLE STUFF ---
 
 var regName    = "locales/mozilla/" + chromeNode;
-var chromeName = chromeNode + ".jar";
+var chromeName = chromeNode + "-mail.jar";
 var localeName = "locale/" + chromeNode + "/";
 
 srDest = $SpaceRequired$:thunderbird;
@@ -58,11 +60,7 @@ if(verifyDiskSpace(fProgram, srDest))
     // register chrome
     var cf = getFolder(fProgram, "chrome/"+ chromeName);
     registerChrome(chromeType, cf, localeName + "global-region/");
-    registerChrome(chromeType, cf, localeName + "browser-region/");
     registerChrome(chromeType, cf, localeName + "messenger-region/");
-
-    registerChrome(chromeType, cf, localeName + "communicator-region/");
-    registerChrome(chromeType, cf, localeName + "navigator-region/");
 
     err = performInstall(); 
     logComment("performInstall() returned: " + err);

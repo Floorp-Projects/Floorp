@@ -15,7 +15,7 @@ var langcode = "en";
 var chromeNode = langcode + "-US";
 // --- END CHANGABLE STUFF ---
 var regName    = "locales/mozilla/" + chromeNode;
-var chromeName = chromeNode + ".jar";
+var chromeName = chromeNode + "-mail.jar";
 var platformName = langcode + "-" + platformNode + ".jar";
 var localeName = "locale/" + chromeNode + "/";
 
@@ -43,7 +43,7 @@ if(verifyDiskSpace(fProgram, srDest))
     chromeType |= PROFILE_CHROME;
     fProgram = getFolder("Profile");
     logComment("try installing to the user profile:" + fProgram);
-    err = addDirectory("","bin",fProgram,"");
+    err = addDirectory("","thunderbird",fProgram,"");
   }
  
   setPackageFolder(fProgram);
@@ -58,30 +58,25 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(chromeType, cf, localeName + "global/");
     registerChrome(chromeType, pf, localeName + "global-platform/");
 
-    registerChrome(chromeType, cf, localeName + "browser/");
-    registerChrome(chromeType, cf, localeName + "browser-region/");
     registerChrome(chromeType, cf, localeName + "passwordmgr/");
     registerChrome(chromeType, cf, localeName + "mozapps/");
 
     registerChrome(chromeType, cf, localeName + "necko/");
     registerChrome(chromeType, cf, localeName + "autoconfig/");
-    registerChrome(chromeType, cf, localeName + "cookie/");
     registerChrome(chromeType, cf, localeName + "wallet/");
     registerChrome(chromeType, cf, localeName + "pippki/");
     registerChrome(chromeType, cf, localeName + "pipnss/");
 
-    registerChrome(chromeType, cf, localeName + "editor/");
     registerChrome(chromeType, cf, localeName + "mozldap/");
     registerChrome(chromeType, cf, localeName + "messenger-mdn/");
     registerChrome(chromeType, cf, localeName + "messenger-views/");
     registerChrome(chromeType, cf, localeName + "messenger-smime/");
     registerChrome(chromeType, cf, localeName + "messenger/");
-    registerChrome(chromeType, cf, localeName + "messenger-mapi/");
+    registerChrome(chromeType, pf, localeName + "messenger-mapi/");
 
     registerChrome(chromeType, cf, localeName + "communicator/");
     registerChrome(chromeType, pf, localeName + "communicator-platform/");
     registerChrome(chromeType, cf, localeName + "navigator/");
-    registerChrome(chromeType, pf, localeName + "navigator-platform/");
 
     err = performInstall(); 
     logComment("performInstall() returned: " + err);
