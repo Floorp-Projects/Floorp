@@ -219,5 +219,17 @@ function f1(a, b = 3, ...f, named c = 4, named d = 5, named e = 6) { return a + 
 test++; //23
 if (f1(2, "e":1, "c":5, "g":-16) != 0)  badTest += test + " ";
 
+import MentalState, exclude(lunacy);
+test++; //24
+if (!Normal::functioning)  badTest += test + " ";
+var ok:Boolean = false;
+try {
+    eval("lunacy");
+}
+catch (x) {
+    ok = true;
+}
+test++; //25
+if (!ok)  badTest += test + " ";
 
 if (badTest == 0) print("still sane (after " + test + " tests)") else print("gone off the deep end at test #" + badTest);
