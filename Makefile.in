@@ -57,6 +57,7 @@ endif
 
 DIRS +=				\
   modules/libutil		\
+  lib/xp			\
   intl				\
   js				\
   modules/security/freenav	\
@@ -66,7 +67,6 @@ DIRS +=				\
   modules/plugin		\
   modules/libjar		\
   caps				\
-  lib/xp			\
   htmlparser			\
   expat             \
   gfx				\
