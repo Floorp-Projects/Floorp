@@ -23,46 +23,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
 LIBRARY_NAME = nsappshell
 
 MODULE=raptor
-
-DLL_SUUFIX= .so
-
-#REQUIRES=raptor xpcom base netlib pref js dom
-
-INCLUDES+= -I../public -I$(PUBLIC)/raptor	\
-	   -I$(PUBLIC)/xpcom	\
-	   -I$(PUBLIC)/base	\
-	   -I$(PUBLIC)/netlib	\
-	   -I$(PUBLIC)/pref	\
-	   -I$(PUBLIC)/js	\
-	   -I$(PUBLIC)/dom
-
-EX_LIBS=\
-	-L$(DIST)/bin	\
-	-lxpcom		\
-	-lraptorbase	\
-	-lraptorgfx	\
-	-labouturl	\
-	-lhttpurl	\
-	-lfileurl	\
-	-lgophurl	\
-	-lftpurl	\
-	-lremoturl	\
-	-lxp		\
-	-lnetutil	\
-	-lnetcache	\
-	-lnetcnvts	\
-	-lmimetype	\
-	-lnetwork	\
-	-lnetlib	\
-	$(LIBNSPR)	\
-	$(NULL)
-
-
 
 CPPSRCS= \
 	nsXULCommand.cpp	\
@@ -72,19 +35,6 @@ CPPSRCS= \
 	nsCommandLineService.cpp \
 	$(NULL)
 
-CPP_OBJS=				\
- ./$(OBJDIR)/nsXULCommand.o	\
- ./$(OBJDIR)/nsAppShellService.o	\
- ./$(OBJDIR)/nsWebShellWindow.o		\
- ./$(OBJDIR)/nsAppShellFactory.o	\
- ./$(OBJDIR)/nsCommandLineService.o	\
- $(NULL)
-
+include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
-
-#install::
-#	$(INSTALL) $(LIBRARY)  $(DIST)/lib
-#clobber::
-#	rm -rf $(DIST)/bin/lib$(LIB_NAME).so
-#	rm -rf $(DIST)/lib/lib$(LIB_NAME).a
