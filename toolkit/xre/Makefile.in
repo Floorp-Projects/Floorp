@@ -120,6 +120,10 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap
 CXXFLAGS += $(TK_CFLAGS)
 
+ifdef BUILD_STATIC_LIBS
+DEFINES += -D_BUILD_STATIC_BIN
+endif
+
 export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDSRCS))
 ifeq ($(OS_ARCH),WINNT)
 	$(INSTALL) $^ $(srcdir)
