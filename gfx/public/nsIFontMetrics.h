@@ -143,18 +143,6 @@ public:
 #define FONT_LEADING_APIS_V2 1
 #endif 
 
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_MAC) || defined(XP_BEOS) 
-#define NEW_FONT_HEIGHT_APIS 1
-#endif
-#ifdef NEW_FONT_HEIGHT_APIS
-#ifndef FONT_LEADING_APIS_V2
-  /**
-   * Returns the normal line height (em height + leading).
-   */
-  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight) = 0;
-#endif /* not FONT_LEADING_APIS_V2 */
-#endif /* NEW_FONT_HEIGHT_APIS */
-
 #ifdef FONT_LEADING_APIS_V2
   /**
    * Returns the amount of internal leading (in app units) for the font. This
@@ -174,9 +162,12 @@ public:
    * is computed as the "height  - (ascent + descent)"
    */
   NS_IMETHOD  GetLeading(nscoord &aLeading) = 0;
-#endif /* FONT_LEADING_APIS_V2 */
 
-#ifdef NEW_FONT_HEIGHT_APIS
+  /**
+   * Returns the normal line height (em height + leading).
+   */
+  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight) = 0;
+#endif /* FONT_LEADING_APIS_V2 */
 
   /**
    * Returns the height (in app units) of the Western font's em square. This is
@@ -199,8 +190,6 @@ public:
    * This is max ascent plus max descent.
    */
   NS_IMETHOD  GetMaxHeight(nscoord &aHeight) = 0;
-
-#endif /* NEW_FONT_HEIGHT_APIS */
 
   /**
    * Returns, in app units, the maximum distance characters in this font extend
