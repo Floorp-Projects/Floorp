@@ -29,6 +29,7 @@ install::
 	$(MAKE_INSTALL) folderPane.xul	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) folderPane.css	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) threadPane.xul  $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) threadPane.css	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) message.html	$(DIST)\bin\res\samples
 
 clobber::
