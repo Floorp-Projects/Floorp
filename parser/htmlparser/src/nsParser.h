@@ -251,6 +251,14 @@ friend class CTokenHandler;
      */
     virtual nsITokenizer* GetTokenizer(void);
 
+    /**
+     * Call this to get a newly constructed tagstack
+     * @update	gess 5/05/99
+     * @param   aTagStack is an out parm that will contain your result
+     * @return  NS_OK if successful, or NS_HTMLPARSER_MEMORY_ERROR on error
+     */
+    virtual nsresult  CreateTagStack(nsITagStack** aTagStack);
+
 	/*
 	 * The following two should be removed once our Meta Charset work complete
 	 */
@@ -344,19 +352,6 @@ protected:
     nsString            mCharset;
     nsCharsetSource     mCharsetSource;
 };
-
-
-class nsTagStack : public nsITagStack {
-public:
-                      nsTagStack();
-  virtual void        Push(PRUnichar* aTag);
-  virtual PRUnichar*  Pop(void);
-  virtual PRUnichar*  TagAt(PRUint32 anIndex);
-  virtual PRUint32    GetSize(void);
-
-  nsDeque mTags;  //will hold a deque of prunichars...
-};
-
 
 
 #endif 
