@@ -207,7 +207,7 @@ nsTextBoxFrame::AlwaysAppendAccessKey()
     if (prefBranch) 
     {
       nsCOMPtr<nsIPrefLocalizedString> prefValue;
-      prefBranch->GetComplexValue("intl.menuitems.alwaysappendacceskeys",
+      prefBranch->GetComplexValue("intl.menuitems.alwaysappendaccesskeys",
                                   NS_GET_IID(nsIPrefLocalizedString),
                                   getter_AddRefs(prefValue));
       if (prefValue)
