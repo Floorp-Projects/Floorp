@@ -164,17 +164,23 @@ nsPathIter::eSegType  curveType;
     pp0 = &pts[0];
   }
   pp = pp0;
+  np = &aPointArray[0];
 
 	for ( i= 0; i < aNumPts; i++,np++,pp++){
 		pp->x = np->x;
 		pp->y = np->y;
+    pp->mIsOnCurve = np->mIsOnCurve;
 		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
 	}
 
-
   thePathIter = new nsPathIter(pp0,aNumPts);
 	while ( thePathIter->NextSeg(thecurve,curveType) ) {
-		//thecurve.Display_Graphic(TheProcess,NULL);
+    // draw the curve we found
+    if(eLINE == curveType){
+      DrawStdLine(thecurve.mAnc1.x,thecurve.mAnc1.y,thecurve.mAnc2.x,thecurve.mAnc2.y);
+    } else {
+      thecurve.SubDivide(this);
+    }
 	}
 
   // Release temporary storage if necessary
@@ -216,7 +222,7 @@ PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
  *	@update 3/29/00 dwc
  */
 void 
-QBezierCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],PRInt32 *aCurIndex)
+QBezierCurve::SubDivide(nsIRenderingContext *aRenderingContext)
 {
 QBezierCurve    curve1,curve2;
 PRInt16         fx,fy,smag;
@@ -228,30 +234,19 @@ PRInt16         fx,fy,smag;
   // for now to fix the build
 	//fx = (PRInt16)abs(curve1.mAnc2.x - this->mCon.x);
 	//fy = (PRInt16)abs(curve1.mAnc2.y - this->mCon.y);
-  fx = 1;
-  fy = 1;
+  fx = fy = 1;
 
 	smag = fx+fy-(PR_MIN(fx,fy)>>1);
   //smag = fx*fx + fy*fy;
  
 	if (smag>1){
 		// split the curve again
-    curve1.SubDivide(aRenderingContext,aPointArray,aCurIndex);
-    curve2.SubDivide(aRenderingContext,aPointArray,aCurIndex);
+    curve1.SubDivide(aRenderingContext);
+    curve2.SubDivide(aRenderingContext);
 	}else{
-    if(aPointArray ) {
-      // save the points for further processing
-      aPointArray[*aCurIndex].x = curve1.mAnc2.x;
-      aPointArray[*aCurIndex].y = curve1.mAnc2.y;
-      (*aCurIndex)++;
-      aPointArray[*aCurIndex].x = curve2.mAnc2.x;
-      aPointArray[*aCurIndex].y = curve2.mAnc2.y;
-      (*aCurIndex)++;
-    }else{
-		  // draw the curve 
-      aRenderingContext->DrawLine(curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y);
-      aRenderingContext->DrawLine(curve1.mAnc2.x,curve1.mAnc2.y,curve2.mAnc2.x,curve2.mAnc2.y);
-    }
+    // draw the curve 
+    aRenderingContext->DrawStdLine(curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y);
+    aRenderingContext->DrawStdLine(curve1.mAnc2.x,curve1.mAnc2.y,curve2.mAnc2.x,curve2.mAnc2.y);
 	}
 }
 
@@ -318,8 +313,8 @@ nsPathIter::nsPathIter(nsPathPoint* aThePath,PRUint32 aNumPts)
 PRBool  
 nsPathIter::NextSeg(QBezierCurve& TheSegment,eSegType& aCurveType)
 {
-PRInt8        code=0;
-PRBool        result = PR_FALSE;
+PRInt8        code=0,number=1;
+PRBool        result = PR_TRUE;
 nsPathPoint   *pt1,*pt2,*pt3;
 nsPathPoint   ptAvg,ptAvg1;
 
@@ -329,68 +324,74 @@ nsPathPoint   ptAvg,ptAvg1;
     pt1 = &(mThePath[mCurPoint]);
     if(PR_TRUE == pt1->mIsOnCurve) {
       code += 0x04;
-    }
-    
+    } 
     // 2nd point
     if ( (mCurPoint+1) < mNumPoints) {
+      number++;
       pt2 = &(mThePath[mCurPoint+1]);
-    } else{
-      pt2 = &(mThePath[0]);
-    }
-    if(PR_TRUE == pt2->mIsOnCurve) {
-      code += 0x02;
-    }
+      if(PR_TRUE == pt2->mIsOnCurve) {
+        code += 0x02;
+      }
 
-    // 3rd point
-    if( (mCurPoint+2) < mNumPoints) {
-      pt3 = &(mThePath[mCurPoint+2]);
-    } else if ( (mCurPoint+1) < mNumPoints) {
-      pt3 = &(mThePath[0]);
-    } else {
-      pt3 = &(mThePath[1]);
-    }
-    if(PR_TRUE == pt3->mIsOnCurve) {
-        code += 0x01;
-    }
-  
-    switch(code) {
-      case 07:                        // 111
-      case 06:                        // 110
+      // 3rd point
+      if( (mCurPoint+2) < mNumPoints) {
+        number++;
+        pt3 = &(mThePath[mCurPoint+2]);
+        if(PR_TRUE == pt3->mIsOnCurve) {
+          code += 0x01;
+        }
+        // have all three points..
+        switch(code) {
+          case 07:                        // 111
+          case 06:                        // 110
+            TheSegment.SetPoints(pt1->x,pt1->y,0,0,pt2->x,pt2->y);
+            aCurveType = eLINE;  
+            mCurPoint++;
+            break;
+          case 05:                        // 101
+            TheSegment.SetPoints(pt1->x,pt1->y,pt2->x,pt2->y,pt3->x,pt3->y);
+            aCurveType = eQCURVE;
+            mCurPoint+=2;
+            break;
+          case 04:                        // 100
+              ptAvg.x = (nscoord) (((pt2->x+pt3->x)/2.0));
+              ptAvg.y = (nscoord) (((pt2->y+pt3->y)/2.0));
+              TheSegment.SetPoints(pt1->x,pt1->y,pt2->x,pt2->y,ptAvg.x,ptAvg.y);
+              aCurveType = eQCURVE;
+              mCurPoint++;
+          case 03:                        // 011
+          case 02:                        // 010
+              TheSegment.SetPoints(pt1->x,pt1->y,0,0,pt2->x,pt2->y);
+              aCurveType = eLINE;  
+              mCurPoint++;
+          case 01:                        // 001
+              ptAvg.x = (nscoord) (((pt1->x+pt2->x)/2.0));
+              ptAvg.y = (nscoord) (((pt1->y+pt2->y)/2.0));
+              TheSegment.SetPoints(ptAvg.x,ptAvg.y,pt2->x,pt3->y,pt2->x,pt3->y);
+              aCurveType = eQCURVE;
+              mCurPoint+=2;
+          case 00:                        // 000
+              ptAvg.x = (nscoord) (((pt1->x+pt2->x)/2.0));
+              ptAvg.y = (nscoord) (((pt1->y+pt2->y)/2.0));
+              ptAvg1.x = (nscoord) (((pt2->x+pt3->x)/2.0));
+              ptAvg1.y = (nscoord) (((pt2->y+pt3->y)/2.0));
+              TheSegment.SetPoints(ptAvg.x,ptAvg.y,pt2->x,pt2->y,ptAvg1.x,ptAvg1.y);
+          default:
+            break;
+        }
+      } else {
+        // have two points.. draw a line
         TheSegment.SetPoints(pt1->x,pt1->y,0,0,pt2->x,pt2->y);
         aCurveType = eLINE;  
         mCurPoint++;
-        break;
-      case 05:                        // 101
-        TheSegment.SetPoints(pt1->x,pt1->y,pt2->x,pt2->y,pt3->x,pt3->y);
-        aCurveType = eQCURVE;
-        mCurPoint+=2;
-        break;
-      case 04:                        // 100
-          ptAvg.x = (nscoord) (((pt2->x+pt3->x)/2.0));
-          ptAvg.y = (nscoord) (((pt2->y+pt3->y)/2.0));
-          TheSegment.SetPoints(pt1->x,pt1->y,pt2->x,pt2->y,ptAvg.x,ptAvg.y);
-          aCurveType = eQCURVE;
-          mCurPoint++;
-      case 03:                        // 011
-      case 02:                        // 010
-          TheSegment.SetPoints(pt1->x,pt1->y,0,0,pt2->x,pt2->y);
-          aCurveType = eLINE;  
-          mCurPoint++;
-      case 01:                        // 001
-          ptAvg.x = (nscoord) (((pt1->x+pt2->x)/2.0));
-          ptAvg.y = (nscoord) (((pt1->y+pt2->y)/2.0));
-          TheSegment.SetPoints(ptAvg.x,ptAvg.y,pt2->x,pt3->y,pt2->x,pt3->y);
-          aCurveType = eQCURVE;
-          mCurPoint+=2;
-      case 00:                        // 000
-          ptAvg.x = (nscoord) (((pt1->x+pt2->x)/2.0));
-          ptAvg.y = (nscoord) (((pt1->y+pt2->y)/2.0));
-          ptAvg1.x = (nscoord) (((pt2->x+pt3->x)/2.0));
-          ptAvg1.y = (nscoord) (((pt2->y+pt3->y)/2.0));
-          TheSegment.SetPoints(ptAvg.x,ptAvg.y,pt2->x,pt2->y,ptAvg1.x,ptAvg1.y);
-      default:
-        break;
+      }
+    } else {
+      // just have one point
+      result = PR_FALSE;
     }
+  } else {
+    // all finished
+    result = PR_FALSE;
   }
 
   return result;

@@ -303,6 +303,16 @@ public:
    */
   NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) = 0;
 
+
+  /**
+   * Draw a line without being transformed
+   * @param aXO starting horiztonal coord in twips
+   * @param aY0 starting vertical coord in twips
+   * @param aX1 end horiztonal coord in twips
+   * @param aY1 end vertical coord in twips
+   */
+  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) = 0;
+
   /**
    * Draw a polyline
    * @param aPoints array of endpoints
