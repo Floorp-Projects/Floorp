@@ -826,8 +826,7 @@ public final class Context {
      * Compile a JavaScript function.
      * <p>
      * The function source must be a function definition as defined by
-     * ECMA (e.g., "function f(a) { return a; }"). As an extension to the
-     * ECMA grammar, the function name is optional.
+     * ECMA (e.g., "function f(a) { return a; }"). 
      *
      * @param scope the scope to compile relative to
      * @param source the function definition source
