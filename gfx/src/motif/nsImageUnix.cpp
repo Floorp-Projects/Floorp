@@ -84,3 +84,12 @@ PRBool nsImageUnix::SetAlphaMask(nsIImage *aTheMask)
   return(PR_FALSE);
 }
 
+nsresult nsImageUnix::Optimize(nsDrawingSurface aDrawingSurface)
+{
+  return(NS_OK);
+}
+
+nsIImage * nsImageUnix::DuplicateImage()
+{
+  return(nsnull);
+}
