@@ -43,7 +43,8 @@ package org.mozilla.javascript;
  * @see Node
  * @author Norris Boyd
  */
-public class PreorderNodeIterator {
+public final class PreorderNodeIterator {
+
     public PreorderNodeIterator(Node n) {
         start = n;
     }
