@@ -69,7 +69,9 @@ NO_PKG_FILES = \
 	xpt_link* \
 	$(NULL)
 
+ifeq ($(OS_ARCH), Darwin)
 MOZ_PKG_APPNAME = Firefox
+endif
 
 include $(DEPTH)/xpinstall/packager/Makefile
 
