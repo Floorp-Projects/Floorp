@@ -179,7 +179,7 @@ protected:
       loadReloadNormal,    // Reload
       loadReloadBypassCache,
       loadReloadBypassProxy,
-      loadRelaodBypassProxyAndCache,
+      loadReloadBypassProxyAndCache,
       loadLink
    } loadType;
 
