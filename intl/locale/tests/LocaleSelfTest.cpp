@@ -412,7 +412,7 @@ static void TestSortPrint2(collation_rec *key_array, int len)
 
 // Sort test by reading data from a file.
 //
-void SortTestFile(nsILocale* locale, nsICollation* collationInst, FILE* fp)
+static void SortTestFile(nsICollation* collationInst, FILE* fp)
 {
   nsString string_array[256]; 
   char buf[256];
@@ -486,7 +486,7 @@ static void TestSort(nsILocale *locale, nsCollationStrength collationStrength, F
 
   if (fp != NULL) {
     res = NS_ADDREF(collationInst);
-    SortTestFile(locale, collationInst, fp);
+    SortTestFile(collationInst, fp);
     NS_RELEASE(collationInst);
     return;
   }
@@ -758,14 +758,25 @@ int main(int argc, char** argv) {
 #endif//0
   
   // --------------------------------------------
+    nsCollationStrength strength = kCollationCaseInSensitive;
+    FILE *fp = NULL;
+
+#ifdef XP_MAC
+    TestCollation(locale);
+    // open "sort.txt" in the same directory
+    fp = fopen("sort.txt", "r");
+    TestSort(locale, kCollationCaseInSensitive, fp);
+    if (fp != NULL) {
+      fclose(fp);
+    }
+    TestDateTimeFormat(locale);
+#else  
   if (argc == 1) {
     TestCollation(locale);
     TestSort(locale, kCollationCaseInSensitive, NULL);
     TestDateTimeFormat(locale);
   }
   else {
-    nsCollationStrength strength = kCollationCaseInSensitive;
-    FILE *fp = NULL;
     char *s;
     s = find_option(argc, argv, "-h");
     if (s) {
@@ -800,6 +811,7 @@ int main(int argc, char** argv) {
       fclose(fp);
     }
   }
+#endif//XP_MAC
 
   NS_IF_RELEASE(locale);
 
