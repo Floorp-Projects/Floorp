@@ -1135,6 +1135,7 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
                                             nsMsgSearchScopeValue attribute,
                                             nsIMsgFolder *folder)
 {
+	NS_INIT_REFCNT();
 	m_attribute = attribute;
 	m_folder = folder;
 	m_searchServer = PR_TRUE;
@@ -1144,6 +1145,7 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
 
 nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
 {
+	NS_INIT_REFCNT();
 	m_searchServer = PR_TRUE;
 	m_fileStream = nsnull;
 }
