@@ -262,6 +262,27 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
   nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
   mOuterReflowState.mSpaceManager->Translate(tx, ty);
+
+  // See if this is the child's initial reflow and we are supposed to
+  // compute our maximum width
+  if (mComputeMaximumWidth && (eReflowReason_Initial == reason)) {
+    nscoord oldAvailableWidth = reflowState.availableWidth;
+    nscoord oldComputedWidth = reflowState.mComputedWidth;
+
+    reflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
+    reflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
+    rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
+                        aFrameReflowStatus);
+
+    // Update the reflow metrics with the maximum width
+    mMetrics.mMaximumWidth = mMetrics.width;
+
+    // The second reflow is just as a resize reflow with the constrained
+    // width
+    reflowState.availableWidth = oldAvailableWidth;
+    reflowState.mComputedWidth = oldComputedWidth;
+    reason = eReflowReason_Resize;
+  }
   rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
                       aFrameReflowStatus);
   mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
