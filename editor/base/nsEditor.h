@@ -88,7 +88,7 @@ public:
    */
   virtual ~nsEditor();
 
-/*BEGIN nsIEdieditor for more details*/
+/*BEGIN nsIEditor for more details*/
   
 //Interfaces for addref and release and queryinterface
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsEditor
@@ -272,10 +272,22 @@ protected:
 
   NS_IMETHOD DebugDumpContent() const;
 
+  // should these me methodimp?
   NS_IMETHODIMP SetPreeditText(const nsString& aStringToInsert);
 
   NS_IMETHODIMP DoInitialPreeeditInsert(const nsString& aStringToInsert);
 
+  // called each time we modify the document. Increments the mod
+  // count of the doc.
+  NS_IMETHOD IncDocModCount(PRInt32 inNumMods);
+  
+  // return the mod count of the doc we are editing. Zero means unchanged.
+  NS_IMETHOD GetDocModCount(PRInt32 &outModCount);
+  
+  // called ONLY when we need to override the doc's modification
+  // state. This should already be handled by nsIDiskDocument.
+  NS_IMETHOD ResetDocModCount();
+  
 protected:
 // XXXX: Horrible hack! We are doing this because
 // of an error in Gecko which is not rendering the
