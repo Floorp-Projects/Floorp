@@ -12,5 +12,6 @@ Connection.pm
 LDIF.pm
 README
 MPL-1.0.txt
-t/search.pl
-t/write.pl
+test_api/search.pl
+test_api/write.pl
+test_api/api.pl
