@@ -9,6 +9,12 @@ var key = {
  "?cust":  "chrome://help/locale/customize_help.html",
  "?comp":  "chrome://help/locale/composer_help.html",
 
+ "?nover_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Not_Verified_Not Encrypted",
+ "?ver_encrypt":  "chrome://help/locale/ssl_page_info_help.html#Verified_Encrypted",
+ "?conver_encrypt":  "chrome://help/locale/ssl_page_info_help.html#Conditionally_Verified_Encrypted",
+ "?ver_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Verified_Not Encrypted",
+ "?conver_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Conditionally_Verified_Not_Encrypted",
+
  "?my_certs":  "chrome://help/locale/certs_help.html#My_Certificates",
  "?cert_backup_pwd":  "chrome://help/locale/certs_help.html#Choose_a_Certificate_Backup_Password",
  "?delete_my_certs":  "chrome://help/locale/certs_help.html#Delete_My_Certificate",
@@ -26,7 +32,7 @@ var key = {
  "?priv_key_copy":  "chrome://help/locale/cert_dialog_help.html#Encryption_Key_Copy",
  "?backup_your_cert":  "chrome://help/locale/cert_dialog_help.html#Certificate_Backup",
  "?which_cert":  "chrome://help/locale/cert_dialog_help.html#User_Identification_Request",
- "?no_cert":  "chrome://help/locale/cert_dialog_help.html#User_Identification_Request",
+ "?no_cert":  "chrome://help/locale/cert_dialog_help.html#No_Acceptable_Identification",
  "?new_ca":  "chrome://help/locale/cert_dialog_help.html#New_Certificate_Authority",
  "?new_web_cert":  "chrome://help/locale/cert_dialog_help.html#New_Web_Site_Certificate",
  "?exp_web_cert":  "chrome://help/locale/cert_dialog_help.html#Expired_Web_Site_Certificate",
