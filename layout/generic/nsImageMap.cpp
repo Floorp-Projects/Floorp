@@ -871,10 +871,11 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
       if (NS_FAILED(rv)) return PR_FALSE;
 
       char *absUrlStr = nsnull;
-      const char *urlSpec = (area->mHREF).GetBuffer();
+      char *urlSpec = (area->mHREF).ToNewCString();
       rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
       NS_RELEASE(baseUri);
       aAbsURL = absUrlStr;
+      nsCRT::free(urlSpec);
       delete [] absUrlStr;
 #endif // NECKO
       aTarget = area->mTarget;

@@ -680,10 +680,11 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
         if (NS_FAILED(rv)) return rv;
 
         char *absUrlStr = nsnull;
-        const char *baseSpec = src.GetBuffer();
+        char *baseSpec = src.ToNewCString();
         rv = service->MakeAbsolute(baseSpec, baseUri, &absUrlStr);
         NS_RELEASE(baseUri);
         absURL = absUrlStr;
+        nsCRT::free(baseSpec);
         delete [] absUrlStr;
 #endif // NECKO
         NS_IF_RELEASE(baseURL);
