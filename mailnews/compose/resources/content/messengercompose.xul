@@ -130,7 +130,6 @@ Rights Reserved.
 <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
 <broadcaster id="dialog.start" ready="false"/>
 <observes element="dialog.start" attribute="ready" onchange="ComposeStartup()"/>
-    
 
 <menubar>
 	<menu name="File">
@@ -303,7 +302,7 @@ Rights Reserved.
 				</box>
 				<box align="honrizontal" flex="100%">
 					<html:div flex="20%">&subject.label;</html:div>
-				    <html:input id="msgSubject" type="text" flex="80%"/>
+				    <html:input id="msgSubject" type="text" flex="80%" onkeyup="SetComposeWindowTitle(event.which);"/>
 				</box>
 			</box>
 			<box align="vertical" flex="40%">

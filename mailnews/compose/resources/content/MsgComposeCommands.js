@@ -23,6 +23,15 @@ msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMs
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 
+var update_compose_title_as_you_type = true;
+var prefs = Components.classes["component://netscape/preferences"].getService();
+if (prefs) {
+	prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+	if (prefs) {
+		update_compose_title_as_you_type = prefs.GetBoolPref("mail.update_compose_title_as_you_type");
+	}
+}
+
 function GetArgs()
 {
 	var args = new Object();
@@ -157,13 +166,14 @@ function ComposeStartup()
 	    			msgCompFields.SetBcc(args.bcc);
 	    		if (args.newsgroups)
 	    			msgCompFields.SetNewsgroups(args.newsgroups);
-	    		if (args.subject)
+	    		if (args.subject) 
 	    			msgCompFields.SetSubject(args.subject);
-
+			
 				CompFields2Recipients(msgCompFields);
 				var subjectValue = msgCompFields.GetSubject();
-				if (subjectValue != "")
+				if (subjectValue != "") {
 					document.getElementById("msgSubject").value = subjectValue;
+				}
 			}
 			
 			document.getElementById("msgRecipient#1").focus();
@@ -428,4 +438,27 @@ function CompFields2Recipients(msgCompFields)
 			document.getElementById("msgRecipientType#" + i).value = "addrTo"; 
 		}
 	}
+}
+
+function SetComposeWindowTitle(event) 
+{
+	/* dump("event = " + event + "\n"); */
+
+	/* only set the title when they hit return (or tab?) if 
+	  mail.update_compose_title_as_you_type == false
+	 */
+	if ((event != 13) && (update_compose_title_as_you_type == false)) {
+		return;
+	}
+
+	newTitle = document.getElementById('msgSubject').value;
+
+	/* dump("newTitle = " + newTitle + "\n"); */
+
+	if (newTitle == "" ) {
+		/* i18N todo:  this should not be hard coded */
+		newTitle = '(no subject)';
+	}
+	/* i18N todo:  this should not be hard coded, either */
+	window.title = "Compose: "+ newTitle;
 }
