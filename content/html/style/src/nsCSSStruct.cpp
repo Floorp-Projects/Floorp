@@ -3718,24 +3718,9 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
     case eCSSProperty_quotes_close: {
       CSS_CHECK(Content) {
         switch (aProperty) {
-          case eCSSProperty_content:
-            CSS_CHECK_DATA(theContent->mContent, nsCSSValueList) {
-              theContent->mContent->mValue.Reset();          
-              CSS_IF_DELETE(theContent->mContent->mNext);
-            }
-            break;
-          case eCSSProperty__moz_counter_increment:
-            CSS_CHECK_DATA(theContent->mCounterIncrement, nsCSSCounterData) {
-              theContent->mCounterIncrement->mCounter.Reset(); 
-              CSS_IF_DELETE(theContent->mCounterIncrement->mNext);
-            }
-            break;
-          case eCSSProperty__moz_counter_reset:
-            CSS_CHECK_DATA(theContent->mCounterReset, nsCSSCounterData) {
-              theContent->mCounterReset->mCounter.Reset();
-              CSS_IF_DELETE(theContent->mCounterReset->mNext);
-            }
-            break;
+          case eCSSProperty_content:            CSS_IF_DELETE(theContent->mContent);   break;
+          case eCSSProperty__moz_counter_increment: CSS_IF_DELETE(theContent->mCounterIncrement); break;
+          case eCSSProperty__moz_counter_reset: CSS_IF_DELETE(theContent->mCounterReset); break;
           case eCSSProperty_marker_offset:      theContent->mMarkerOffset.Reset();     break;
           case eCSSProperty_quotes_open:
             CSS_CHECK_DATA(theContent->mQuotes, nsCSSQuotes) {
@@ -3768,20 +3753,10 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
           case eCSSProperty_user_input:       theUserInterface->mUserInput.Reset();      break;
           case eCSSProperty_user_modify:      theUserInterface->mUserModify.Reset();     break;
           case eCSSProperty_user_select:      theUserInterface->mUserSelect.Reset();     break;
-          case eCSSProperty_key_equivalent: 
-            CSS_CHECK_DATA(theUserInterface->mKeyEquivalent, nsCSSValueList) {
-              theUserInterface->mKeyEquivalent->mValue.Reset();
-              CSS_IF_DELETE(theUserInterface->mKeyEquivalent->mNext);
-            }
-            break;
+          case eCSSProperty_key_equivalent:   CSS_IF_DELETE(theUserInterface->mKeyEquivalent); break;
           case eCSSProperty_user_focus:       theUserInterface->mUserFocus.Reset();      break;
           case eCSSProperty_resizer:          theUserInterface->mResizer.Reset();        break;
-          case eCSSProperty_cursor:
-            CSS_CHECK_DATA(theUserInterface->mCursor, nsCSSValueList) {
-              theUserInterface->mCursor->mValue.Reset();
-              CSS_IF_DELETE(theUserInterface->mCursor->mNext);
-            }
-            break;
+          case eCSSProperty_cursor:           CSS_IF_DELETE(theUserInterface->mCursor);  break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
