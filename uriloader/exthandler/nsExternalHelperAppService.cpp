@@ -42,6 +42,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIDownload.h"
 #include "nsReadableUtils.h"
+#include "nsIRequest.h"
 
 // used to manage our in memory data source of helper applications
 #include "nsRDFCID.h"
@@ -273,8 +274,10 @@ NS_IMETHODIMP nsExternalHelperAppService::CanHandleContent(const char *aMimeCont
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
-                                                    PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
+NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType,
+                                                    nsIRequest *aRequest,
+                                                    nsISupports *aWindowContext,
+                                                    nsIStreamListener ** aStreamListener)
 {
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
   nsCAutoString fileExtension, query;
@@ -282,7 +285,23 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   // (1) Try to find a mime object by looking the mime type
   GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
   
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  // Get some stuff we will need later
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+
+  nsCOMPtr<nsIURL> url;
+  PRBool methodIsPost = PR_FALSE;
+  if (channel) {
+    nsCOMPtr<nsIURI> uri;
+    channel->GetURI(getter_AddRefs(uri));
+    url = do_QueryInterface(uri);
+
+    nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(channel);
+    if (httpChan) {
+      nsCAutoString requestMethod;
+      httpChan->GetRequestMethod(requestMethod);
+      methodIsPost = requestMethod.Equals("POST");
+    }
+  }
 
   if (!mimeInfo)
   {
@@ -294,8 +313,9 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
       // If so, then the extension in the URL doesn't tell us
       // anything about the content of the data, so don't try
       // to find a handler based on that.
+      // Same if it's the result of POSTed data
       url->GetQuery(query);
-      if (query.IsEmpty()) {
+      if (query.IsEmpty() && !methodIsPost) {
         url->GetFileExtension(fileExtension);    
         GetFromExtension(fileExtension.get(), getter_AddRefs(mimeInfo));
         // only over write mimeInfo if we got a non-null mime info object.
@@ -376,10 +396,9 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     // should be the primary extension once we are doen.
     // Ignore URL extension if data is output from a cgi script.
     if (fileExtension.IsEmpty()) {
-      nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
       if (url) {
         url->GetQuery(query);
-        if (query.IsEmpty()) {
+        if (query.IsEmpty() && !methodIsPost) {
           url->GetFileExtension(fileExtension);
         }
       }

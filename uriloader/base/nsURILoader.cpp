@@ -427,17 +427,13 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     // All attempts to dispatch this content have failed.  Just pass it off to
     // the helper app service.
 
-    nsCOMPtr<nsIURI> uri;
-    PRBool abortProcess = PR_FALSE;
-    aChannel->GetURI(getter_AddRefs(uri));
     nsCOMPtr<nsIExternalHelperAppService> helperAppService =
       do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, &rv);
     if (helperAppService)
     {
       rv = helperAppService->DoContent(contentType.get(),
-                                       uri,
+                                       request,
                                        m_originalContext,
-                                       &abortProcess,
                                        getter_AddRefs(contentStreamListener));
       if (NS_SUCCEEDED(rv) && contentStreamListener) {
         m_targetStreamListener = contentStreamListener;

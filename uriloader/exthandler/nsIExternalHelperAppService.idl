@@ -27,6 +27,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIRequest;
 interface nsIStreamListener;
 interface nsIFile;
 interface nsIMIMEInfo;
@@ -47,14 +48,12 @@ interface nsIExternalHelperAppService : nsISupports
   // into the returned stream listener. When the OnStopRequest is issued, the stream listener implementation
   // will launch the helper app with this data.
   // aMimeContentType --> the content type of the incoming data
-  // aURI --> the URI corresponding to the incoming data
+  // aRequest --> the request corresponding to the incoming data
   // aWindowContext --> use GetInterface to retrieve properties like the dom window or parent window...
   //                    the service might need this in order to bring up dialogs.
-  // aAbortProcess --> set to TRUE by the helper service if the caller should just forget about loading the document
-  //                   (typically this occurs if the helper app just wants the URI to run and not the data)
   // returns a nsIStreamListener which the caller should pump the data into.
-  nsIStreamListener doContent (in string aMimeContentType, in nsIURI aURI, 
-                               in nsISupports aWindowContext, out boolean aAbortProcess); 
+  nsIStreamListener doContent (in string aMimeContentType, in nsIRequest aRequest,
+                               in nsISupports aWindowContext); 
 
   // applyDecodingForType: returns true if this type is to be decoded
   //                       prior to saving or passing off to helper apps,
