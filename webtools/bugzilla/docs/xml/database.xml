@@ -13,7 +13,7 @@
     <para>
       <mediaobject>
 	<imageobject>
-	  <imagedata fileref="../images/dbschema.jpg" format="jpg">
+	  <imagedata fileref="../images/dbschema.jpg" format="JPG" />
 	</imageobject>
 	
 	<textobject>
@@ -359,7 +359,7 @@ http://www.devshed.com/Server_Side/MySQL/
   </section>
 
   <section id="granttables">
-    <title>MySQL Permissions & Grant Tables</title>
+    <title>MySQL Permissions &amp; Grant Tables</title>
     
     <note>
       <para>The following portion of documentation comes from my
@@ -480,7 +480,7 @@ mysql> GRANT
 SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,DROP,RELOAD,SHUTDOWN,PROCESS,
 FILE,
            ON keystone.*
-           TO <$sys_dbuser name>@localhost
+           TO &lt;$sys_dbuser name>@localhost
            IDENTIFIED BY '(password)'
 	     WITH GRANT OPTION;
 
@@ -488,7 +488,7 @@ OR
 
 mysql> GRANT ALL PRIVELEGES 
 		ON keystone.*
-		TO <$sys_dbuser name>@localhost
+		TO &lt;$sys_dbuser name>@localhost
 		IDENTIFIED BY '(password)'
 		WITH GRANT OPTION;
 

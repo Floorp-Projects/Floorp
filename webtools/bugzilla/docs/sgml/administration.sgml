@@ -8,7 +8,7 @@
   </subtitle>
   
   <para>
-    So you followed <quote><xref linkend="installation"></quote> to the
+    So you followed <quote><xref linkend="installation" /></quote> to the
     letter, and logged into Bugzilla for the very first time with your
     super-duper god account.  You sit, contentedly staring at the
     Bugzilla Query Screen, the worst of the whole mad business of
@@ -623,7 +623,7 @@
       <subtitle>Formerly, and in some spots still, called
 	"Programs"</subtitle>
       <para>
-	<glossterm linkend="gloss_product" baseform="product">Products</glossterm> are
+	<glossterm linkend="gloss-product" baseform="product">Products</glossterm> are
 	the broadest category in Bugzilla, and you should have the
 	least of these. If your company makes computer games, you
 	should have one product per game, and possibly a few special

@@ -92,7 +92,7 @@
 	Bugzilla has been successfully installed under Solaris, Linux,
 	and Win32. The peculiarities of installing on Win32 (Microsoft
 	Windows) are not included in this section of the Guide; please
-	check out the <xref linkend="win32"> for further advice
+	check out the <xref linkend="win32" /> for further advice
 	on getting Bugzilla to work on Microsoft Windows.
       </para>
       
@@ -109,7 +109,7 @@
 	  the CPAN dependencies listed below, and are running the very
 	  most recent version of Perl and MySQL (both the executables
 	  and development libraries) on your system, check out
-	  Bundle::Bugzilla in <xref linkend="bundlebugzilla"></para>
+	  Bundle::Bugzilla in <xref linkend="bundlebugzilla" /></para>
       </note>
       <para>
 	The software packages necessary for the proper running of bugzilla are:
@@ -286,7 +286,7 @@
 	<para>
 	  You can skip the following Perl module installation steps by
 	  installing <productname>Bundle::Bugzilla</productname> from
-	  <glossterm linkend="gloss_cpan">CPAN</glossterm>, which
+	  <glossterm linkend="gloss-cpan">CPAN</glossterm>, which
 	  includes them. All Perl module installation steps require
 	  you have an active Internet connection.  If you wish to use
 	  Bundle::Bugzilla, however, you must be using the latest
@@ -319,7 +319,7 @@
 	Like almost all Perl modules DBI can be found on the Comprehensive Perl
 	Archive Network (CPAN) at http://www.cpan.org.  The CPAN servers have a
 	real tendency to bog down, so please use mirrors.  The current location
-	at the time of this writing can be found in <xref linkend="downloadlinks">.
+	at the time of this writing can be found in <xref linkend="downloadlinks" />.
       </para>
       <para>
 	Quality, general Perl module installation instructions can be found on
@@ -397,7 +397,7 @@
       </para>
       <para>
 	Data::Dumper is used by the MySQL-related Perl modules.  It
-	can be found on CPAN (see <xref linkend="downloadlinks">) and
+	can be found on CPAN (see <xref linkend="downloadlinks" />) and
 	can be
 	installed by following the same four step make sequence used
 	for the DBI module.
@@ -445,7 +445,7 @@
 	  Many of the more common date/time/calendar related Perl
 	modules have been grouped into a bundle similar to the MySQL
 	modules bundle. This bundle is stored on the CPAN under the
-	name TimeDate (see link: <xref linkend="downloadlinks">). The
+	name TimeDate (see link: <xref linkend="downloadlinks" />). The
 	component module we're most interested in is the Date::Format
 	module, but installing all of them is probably a good idea
 	anyway.  The standard Perl module installation instructions
@@ -467,7 +467,7 @@
 	  Actually bugzilla uses the Graph module which relies on GD
 	itself.  Isn't that always the way with object-oriented
 	programming?  At any rate, you can find the GD library on CPAN
-	in <xref linkend="downloadlinks">.  
+	in <xref linkend="downloadlinks" />.  
 	</para>
 	<note>
 	  <para>
@@ -488,7 +488,7 @@
 	  The Chart module provides bugzilla with on-the-fly charting
 	abilities.  It can be installed in the usual fashion after it
 	has been fetched from CPAN where it is found as the
-	Chart-x.x... tarball, linked in <xref linkend="downloadlinks">. Note that
+	Chart-x.x... tarball, linked in <xref linkend="downloadlinks" />. Note that
 	as with the GD perl module, only the version listed above, or
 	newer, will work. Earlier versions used GIF's, which are no
 	longer supported by the latest versions of GD.
@@ -555,7 +555,7 @@ Options ExecCGI
 	  and the <quote>localconfig</quote> file. You should
 	  configure your HTTP server to not serve content from these
 	  files. Failure to do so will expose critical passwords and
-	  other data. Please see <xref linkend="htaccess"> for details
+	  other data. Please see <xref linkend="htaccess" /> for details
 	  on how to do this for Apache.  I appreciate notes on how to
 	  get this same functionality using other webservers.
 	  </para>
@@ -597,8 +597,8 @@ Options ExecCGI
 	location of your perl executable (probably
 	<filename>/usr/bin/perl</filename>). Otherwise you must hack
 	all the .cgi files to change where they look for perl, or use
-	<xref linkend="setperl">, found in
-	<xref linkend="patches">.  I suggest using the symlink
+	<xref linkend="setperl" />, found in
+	<xref linkend="patches" />.  I suggest using the symlink
 	approach for future release compatability.
 	<example>
 	  <title>Setting up bonsaitools symlink</title>
@@ -630,8 +630,8 @@ perl -pi -e 's@#!/usr/bonsaitools/bin/perl@#!/usr/bin/perl@' *cgi *pl Bug.pm
 	  <para>
 	    If you don't have root access to set this symlink up,
 	    check out the
-	    <xref linkend="setperl">, listed in <xref
-						      linkend="patches">. It will change the path to perl in all your Bugzilla files for you.
+	    <xref linkend="setperl" />, listed in <xref
+						      linkend="patches" />. It will change the path to perl in all your Bugzilla files for you.
 	  </para>
 	  </tip>
 	</para>
@@ -773,7 +773,7 @@ perl -pi -e 's@#!/usr/bonsaitools/bin/perl@#!/usr/bin/perl@' *cgi *pl Bug.pm
 	You should also install .htaccess files that the Apache
 	webserver will use  to restrict access to Bugzilla data files.
 	See <xref
-		  linkend="htaccess">.
+		  linkend="htaccess" />.
       </para>
       <para>
 	Once you are happy with the settings, re-run
@@ -993,7 +993,7 @@ bash# ./checksetup.pl
       </para>
       <para>
 	Use .htaccess files with the Apache webserver to secure your
-	bugzilla install. See <xref linkend="htaccess">
+	bugzilla install. See <xref linkend="htaccess" />
       </para>
       <para>
 	Consider also:
@@ -1136,7 +1136,7 @@ bash# ./checksetup.pl
     <title>BSD Installation Notes</title>
     <para>
       For instructions on how to set up Bugzilla on FreeBSD, NetBSD, OpenBSD, BSDi, etc. please
-      consult <xref linkend="osx">.
+      consult <xref linkend="osx" />.
     </para>
   </section>
   
@@ -1213,7 +1213,7 @@ bash# ./checksetup.pl
       </para>
     </section>
 
-    <section id="mod_throttle" xreflabel="Using mod_throttle to prevent Denial of Service attacks">
+    <section id="mod-throttle" xreflabel="Using mod_throttle to prevent Denial of Service attacks">
     	<title><filename>mod_throttle</filename> and Security</title>
       <para>
 	It is possible for a user, by mistake or on purpose, to access
@@ -1226,7 +1226,7 @@ bash# ./checksetup.pl
 	       url="http://www.snert.com/Software/Throttle/">http://www.snert.com/Software/Throttle/</ulink>. Follow the instructions to install into your Apache install.  <emphasis>This module only functions with the Apache web server!</emphasis>. You may use the <command>ThrottleClientIP</command> command provided by this module  to accomplish this goal. See the <ulink url="http://www.snert.com/Software/Throttle/">Module Instructions</ulink> for more  information. </para>
     </section>
     
-    <section id="content_type" xreflabel="Preventing untrusted Bugzilla contentfrom executing malicious Javascript code">
+    <section id="content-type" xreflabel="Preventing untrusted Bugzilla contentfrom executing malicious Javascript code">
       <title>Preventing untrusted Bugzilla content from executing malicious Javascript code</title>
       <para>It is possible for a Bugzilla to execute malicious
 	Javascript code.  Due to internationalization concerns, we are
@@ -1260,7 +1260,7 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
       <para>
 	The February 25, 1999 re-write of this page was done by Ry4an
 	Brase &lt;ry4an@ry4an.org&gt;, with some edits by Terry
-	Weissman, Bryce Nesbitt, Martin Pool, & Dan Mosedale (But
+	Weissman, Bryce Nesbitt, Martin Pool, &amp; Dan Mosedale (But
 	don't send bug reports to them; report them using bugzilla, at <ulink
 	url="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla">http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla</ulink> ).
       </para>
@@ -1306,7 +1306,7 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
 	<para>
 	  You should be familiar with, and cross-reference, the rest
 	  of the  
-	  <xref linkend="installation"> section while performing your
+	  <xref linkend="installation" /> section while performing your
 	  Win32 installation.
 	</para>
 	<para>  Making Bugzilla work on Microsoft Windows is no
@@ -1318,7 +1318,7 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
 	  requires hacking source code and implementing some advanced
 	  utilities.  What follows is the recommended installation
 	  procedure for Win32; additional suggestions are provided in
-	  <xref linkend="faq">.
+	  <xref linkend="faq" />.
 	</para>
       </note>
       
@@ -1328,7 +1328,7 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
 	    Install <ulink url="http://www.apache.org/">Apache Web
 	      Server</ulink> for Windows, and copy the Bugzilla files
 	    somewhere Apache can serve them.  Please follow all the
-	    instructions referenced in <xref linkend="installation">
+	    instructions referenced in <xref linkend="installation" />
 	    regarding your Apache configuration, particularly
 	    instructions regarding the <quote>AddHandler</quote>
 	    parameter and <quote>ExecCGI</quote>.
@@ -1339,7 +1339,7 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
 	      Web Server for this purpose.  However, setup is quite
 	      different.  If ActivePerl doesn't seem to handle your
 	      file associations correctly (for .cgi and .pl files),
-	      please consult <xref linkend="faq">.
+	      please consult <xref linkend="faq" />.
 	    </para>
 	    <para>
 	      If you are going to use IIS, if on Windows NT you must
@@ -1521,7 +1521,7 @@ my $webservergid = 'Administrators'
 	<step>
 	  <para>Edit <filename>localconfig</filename> to suit your
 	    requirements.  Set <varname>$db_pass</varname> to your
-	    <quote>bugs_password</quote> from <xref linkend="ntbugs-password">, and <varname>$webservergroup</varname> to <quote>8</quote>.</para>
+	    <quote>bugs_password</quote> from <xref linkend="ntbugs-password" />, and <varname>$webservergroup</varname> to <quote>8</quote>.</para>
 	  <note>
 	    <para>Not sure on the <quote>8</quote> for
 	      <varname>$webservergroup</varname> above.  If it's
@@ -1696,7 +1696,7 @@ exit;
 	    calls that use a perl script as an argument.  This may
 	    take you a while. There is a <quote>setperl.csh</quote>
 	    utility to speed part of this procedure, available in the
-	    <xref linkend="patches"> section of The Bugzilla Guide.
+	    <xref linkend="patches" /> section of The Bugzilla Guide.
 	    However, it requires the Cygwin GNU-compatible environment
 	    for Win32 be set up in order to work.  See <ulink url="http://www.cygwin.com/">http://www.cygwin.com/</ulink> for details on obtaining Cygwin.
 	  </para>

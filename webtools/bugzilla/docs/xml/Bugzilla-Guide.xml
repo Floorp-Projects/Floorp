@@ -1,4 +1,4 @@
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" [
 
 <!-- Include macros -->
 <!ENTITY about SYSTEM "about.sgml">
@@ -148,16 +148,16 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 	Bugzilla is an enterprise-class set of software utilities
 	that, when used together, power issue-tracking for hundreds of
 	organizations around the world, tracking millions of bugs.
-	While it is easy to use and quite flexible, it is very
+	While it is easy to use and quite flexible, it is
 	difficult for a novice to install and maintain.  Although we
 	have provided step-by-step directions, Bugzilla is not always
 	easy to get working.  Please be sure the person responsible
 	for installing and maintaining this software is a qualified
-	professional on operating system upon which you install
+	professional for the operating system upon which you install
 	Bugzilla.
       </para>
       <para>
-	THIS DOCUMENTATION IS MAINTAINED IN DOCBOOK 4.1 SGML FORMAT.
+	THIS DOCUMENTATION IS MAINTAINED IN DOCBOOK 4.1.2 XML FORMAT.
 	IF YOU WISH TO MAKE CORRECTIONS, PLEASE MAKE THEM IN PLAIN
 	TEXT OR SGML DIFFS AGAINST THE SOURCE.  I CANNOT ACCEPT
 	ADDITIONS TO THE GUIDE WRITTEN IN HTML!
@@ -165,18 +165,18 @@ try to avoid clutter and feel free to waste space in the code to make it more re
     </abstract>
 
 
-    <KEYWORDSET>
-      <KEYWORD>Bugzilla</KEYWORD>
-      <KEYWORD>Guide</KEYWORD>
-      <KEYWORD>installation</KEYWORD>
-      <KEYWORD>FAQ</KEYWORD>
-      <KEYWORD>administration</KEYWORD>
-      <KEYWORD>integration</KEYWORD>
-      <KEYWORD>MySQL</KEYWORD>
-      <KEYWORD>Mozilla</KEYWORD>
-      <KEYWORD>webtools</KEYWORD>
-    </KEYWORDSET>
-  </BOOKINFO>
+    <keywordset>
+      <keyword>Bugzilla</keyword>
+      <keyword>Guide</keyword>
+      <keyword>installation</keyword>
+      <keyword>FAQ</keyword>
+      <keyword>administration</keyword>
+      <keyword>integration</keyword>
+      <keyword>MySQL</keyword>
+      <keyword>Mozilla</keyword>
+      <keyword>webtools</keyword>
+    </keywordset>
+  </bookinfo>
 
 <!-- About This Guide -->
 &about;
@@ -203,7 +203,7 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 &faq;
 
 <!-- Appendix: Required Bugzilla Software Links -->
-&requiredsoftware
+&requiredsoftware;
 
 <!-- Appendix: The Database Schema -->
 &database;

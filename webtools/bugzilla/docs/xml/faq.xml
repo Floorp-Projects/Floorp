@@ -6,7 +6,7 @@
   <qandaset>
 
 
-    <qandadiv id="faq_general">
+    <qandadiv id="faq-general">
       <title>General Questions</title>
 
       <qandaentry>
@@ -270,7 +270,7 @@
     </qandadiv>
 
 
-    <qandadiv id="faq_redhat">
+    <qandadiv id="faq-redhat">
       <title>Red Hat Bugzilla</title>
       <para>
 	<note>
@@ -496,7 +496,7 @@
     </qandadiv>
 
 
-    <qandadiv id="faq_loki">
+    <qandadiv id="faq-loki">
       <title>Loki Bugzilla (AKA Fenris)</title>
 
       <qandaentry>
@@ -515,7 +515,7 @@
 
     </qandadiv>
 
-    <qandadiv id="faq_phb">
+    <qandadiv id="faq-phb">
       <title>Pointy-Haired-Boss Questions</title>
       <para>
 	<note>
@@ -1011,7 +1011,7 @@ if ($::FORM{sub} eq 'PutFooter') {
 	    your Bugzilla install can run untended for years.  If your
 	    Bugzilla strategy is critical to your business workflow, hire somebody
 	    with reasonable UNIX or Perl skills to handle your process management and
-	    bug-tracking maintenance & customization.
+	    bug-tracking maintenance &amp; customization.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1032,7 +1032,7 @@ if ($::FORM{sub} eq 'PutFooter') {
       </qandaentry>
     </qandadiv>
 
-    <qandadiv id="faq_install">
+    <qandadiv id="faq-install">
       <title>Bugzilla Installation</title>
       <qandaentry>
 	<question>
@@ -1078,7 +1078,7 @@ if ($::FORM{sub} eq 'PutFooter') {
 
     </qandadiv>
 
-    <qandadiv id="faq_security">
+    <qandadiv id="faq-security">
       <title>Bugzilla Security</title>
 
       <qandaentry>
@@ -1133,7 +1133,7 @@ if ($::FORM{sub} eq 'PutFooter') {
       </qandaentry>
     </qandadiv>
 
-    <qandadiv id="faq_email">
+    <qandadiv id="faq-email">
       <title>Bugzilla Email</title>
 
       <qandaentry>
@@ -1263,7 +1263,7 @@ if ($::FORM{sub} eq 'PutFooter') {
       </qandaentry>
     </qandadiv>
 
-    <qandadiv id="faq_db">
+    <qandadiv id="faq-db">
       <title>Bugzilla Database</title>
 
       <qandaentry>
@@ -1451,7 +1451,7 @@ if ($::FORM{sub} eq 'PutFooter') {
 
     </qandadiv>
 
-    <qandadiv id="faq_nt">
+    <qandadiv id="faq-nt">
       <title>Bugzilla and Win32</title>
 
       <qandaentry>
@@ -1662,7 +1662,7 @@ A: Sure! Here ya go!
 
     </qandadiv>
 
-    <qandadiv id="faq_use">
+    <qandadiv id="faq-use">
       <title>Bugzilla Usage</title>
 
       <qandaentry>
@@ -1754,7 +1754,7 @@ A: Sure! Here ya go!
 
     </qandadiv>
 
-    <qandadiv id="faq_hacking">
+    <qandadiv id="faq-hacking">
       <title>Bugzilla Hacking</title>
 
       <qandaentry>
@@ -1862,7 +1862,7 @@ A: Sure! Here ya go!
 
   </qandaset>
 
-</APPENDIX>
+</appendix>
 
 
 <!-- Keep this comment at the end of the file

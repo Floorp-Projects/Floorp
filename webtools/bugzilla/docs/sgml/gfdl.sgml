@@ -18,7 +18,7 @@ Everyone is permitted to copy and distribute verbatim copies
 of this license document, but changing it is not allowed.</para>
     </blockquote>
 
-  <sect1 label="0" id="gfdl_0">
+  <sect1 label="0" id="gfdl-0">
     <title>PREAMBLE</title>
 
     <para>The purpose of this License is to make a manual, textbook,
@@ -45,7 +45,7 @@ of this license document, but changing it is not allowed.</para>
     whose purpose is instruction or reference.</para>
   </sect1>
 
-  <sect1 label="1" id="gfdl_1">
+  <sect1 label="1" id="gfdl-1">
     <title>APPLICABILITY AND DEFINITIONS</title>
 
     <para>This License applies to any manual or other work that
@@ -113,7 +113,7 @@ of this license document, but changing it is not allowed.</para>
     text.</para>
   </sect1>
 
-  <sect1 label="2" id="gfdl_2">
+  <sect1 label="2" id="gfdl-2">
     <title>VERBATIM COPYING</title>
 
     <para>You may copy and distribute the Document in any medium,
@@ -131,7 +131,7 @@ of this license document, but changing it is not allowed.</para>
     above, and you may publicly display copies.</para>
   </sect1>
 
-  <sect1 label="3" id="gfdl_3">
+  <sect1 label="3" id="gfdl-3">
     <title>COPYING IN QUANTITY</title>
 
     <para>If you publish printed copies of the Document numbering more
@@ -173,7 +173,7 @@ of this license document, but changing it is not allowed.</para>
     updated version of the Document.</para>
   </sect1>
 
-  <sect1 label="4" id="gfdl_4">
+  <sect1 label="4" id="gfdl-4">
     <title>MODIFICATIONS</title>
 
     <para>You may copy and distribute a Modified Version of the
@@ -304,7 +304,7 @@ of this license document, but changing it is not allowed.</para>
     or to assert or imply endorsement of any Modified Version.</para>
   </sect1>
 
-  <sect1 label="5" id="gfdl_5">
+  <sect1 label="5" id="gfdl-5">
     <title>COMBINING DOCUMENTS</title>
 
     <para>You may combine the Document with other documents released
@@ -331,7 +331,7 @@ of this license document, but changing it is not allowed.</para>
     must delete all sections entitled "Endorsements."</para>
   </sect1>
 
-  <sect1 label="6" id="gfdl_6">
+  <sect1 label="6" id="gfdl-6">
     <title>COLLECTIONS OF DOCUMENTS</title>
 
     <para>You may make a collection consisting of the Document and
@@ -348,7 +348,7 @@ of this license document, but changing it is not allowed.</para>
     copying of that document.</para>
   </sect1>
 
-  <sect1 label="7" id="gfdl_7">
+  <sect1 label="7" id="gfdl-7">
     <title>AGGREGATION WITH INDEPENDENT WORKS</title>
     
     <para>A compilation of the Document or its derivatives with other
@@ -369,7 +369,7 @@ of this license document, but changing it is not allowed.</para>
     aggregate.</para>
   </sect1>
 
-  <sect1 label="8" id="gfdl_8">
+  <sect1 label="8" id="gfdl-8">
     <title>TRANSLATION</title>
 
     <para>Translation is considered a kind of modification, so you may
@@ -385,7 +385,7 @@ of this license document, but changing it is not allowed.</para>
     prevail.</para>
   </sect1>
 
-  <sect1 label="9" id="gfdl_9">
+  <sect1 label="9" id="gfdl-9">
     <title>TERMINATION</title>
     
     <para>You may not copy, modify, sublicense, or distribute the
@@ -398,7 +398,7 @@ of this license document, but changing it is not allowed.</para>
     compliance.</para>
   </sect1>
 
-  <sect1 label="10" id="gfdl_10">
+  <sect1 label="10" id="gfdl-10">
     <title>FUTURE REVISIONS OF THIS LICENSE</title>
 
     <para>The Free Software Foundation may publish new, revised
@@ -419,7 +419,7 @@ of this license document, but changing it is not allowed.</para>
     Free Software Foundation.</para>
   </sect1>
 
-  <sect1 label="" id="gfdl_howto">
+  <sect1 label="" id="gfdl-howto">
     <title>How to use this License for your documents</title>
 
     <para>To use this License in a document you have written, include

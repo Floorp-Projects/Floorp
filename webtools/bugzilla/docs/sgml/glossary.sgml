@@ -23,7 +23,7 @@
       </glossentry>
     </glossdiv>
     
-    <glossdiv id="gloss_a">
+    <glossdiv id="gloss-a">
       <title>A</title>
       <glossentry>
 	<glossterm>Apache</glossterm>
@@ -40,7 +40,7 @@
       </glossentry>
     </glossdiv>
     
-    <glossdiv id="gloss_b">
+    <glossdiv id="gloss-b">
       <title>B</title>
       <glossentry>
 	<glossterm>Bug</glossterm>
@@ -89,9 +89,9 @@
       </glossentry>
     </glossdiv>
 
-    <glossdiv id="gloss_c">
+    <glossdiv id="gloss-c">
       <title></title>
-      <glossentry id="gloss_component">
+      <glossentry id="gloss-component">
 	<glossterm>Component</glossterm>
 	<glossdef>
 	  <para>
@@ -103,7 +103,7 @@
 	  </para>
 	</glossdef>
       </glossentry>
-      <glossentry id="gloss_cpan">
+      <glossentry id="gloss-cpan">
 	<glossterm><acronym>CPAN</acronym></glossterm>
 	<glossdef>
 	  <para><acronym>CPAN</acronym> stands for the
@@ -117,7 +117,7 @@
       </glossentry>
     </glossdiv>
     
-    <glossdiv id="gloss_d">
+    <glossdiv id="gloss-d">
       <title>D</title>
       <glossentry>
 	<glossterm>daemon</glossterm>
@@ -132,7 +132,7 @@
       </glossentry>
     </glossdiv>
 
-    <glossdiv id="gloss_g">
+    <glossdiv id="gloss-g">
       <title></title>
       <glossentry>
 	<glossterm>Groups</glossterm>
@@ -148,9 +148,9 @@
       </glossentry>
     </glossdiv>
 
-    <glossdiv id="gloss_i">
+    <glossdiv id="gloss-i">
       <title>I</title>
-      <glossentry id="gloss_infiniteloop">
+      <glossentry id="gloss-infiniteloop">
 	<glossterm>Infinite Loop</glossterm>
 	<glossdef>
 	  <para>A loop of information that never ends; see recursion.</para>
@@ -158,7 +158,7 @@
       </glossentry>
     </glossdiv>
 
-    <glossdiv id="gloss_m">
+    <glossdiv id="gloss-m">
       <title>M</title>
       <glossentry>
 	<glossterm>mysqld</glossterm>
@@ -173,10 +173,10 @@
       </glossentry>
     </glossdiv>
 
-    <glossdiv id="gloss_p">
+    <glossdiv id="gloss-p">
       <title>P</title>
       <glossentry>
-	<glossterm id="gloss_product">Product</glossterm>
+	<glossterm id="gloss-product">Product</glossterm>
 	<glossdef>
 	  <para>A Product is a broad category of types of bugs.  In
 	    general, there are several Components to a Product.  A
@@ -212,7 +212,7 @@
       </glossentry>
     </glossdiv>
     
-    <glossdiv id="gloss_q">
+    <glossdiv id="gloss-q">
       <title>Q</title>
       <glossentry>
 	<glossterm>QA</glossterm>
@@ -229,9 +229,9 @@
       </glossentry>
     </glossdiv>
     
-    <glossdiv id="gloss_r">
+    <glossdiv id="gloss-r">
       <title>R</title>
-      <glossentry id="gloss_recursion" xreflabel="Recursion">
+      <glossentry id="gloss-recursion" xreflabel="Recursion">
 	<glossterm>Recursion</glossterm>
 	<glossdef>
 	  <para>The property of a function looking back at itself for
@@ -243,7 +243,7 @@
       </glossentry>
     </glossdiv>
 
-    <glossdiv id="gloss_s">
+    <glossdiv id="gloss-s">
       <title>S</title>
       <glossentry>
 	<glossterm><acronym>SGML</acronym></glossterm>
@@ -266,9 +266,9 @@
       </glossentry>
     </glossdiv>
 
-    <glossdiv id="gloss_t">
+    <glossdiv id="gloss-t">
       <title>T</title>
-      <glossentry id="gloss_target_milestone" xreflabel="Target Milestone">
+      <glossentry id="gloss-target-milestone" xreflabel="Target Milestone">
 	<glossterm>Target Milestone</glossterm>
 	<glossdef>
 	  <para>
@@ -285,7 +285,7 @@
       </glossentry>
     </glossdiv>
     
-    <glossdiv id="gloss_z">
+    <glossdiv id="gloss-z">
       <title>Z</title>
       <glossentry id="zarro-boogs-found" xreflabel="Zarro Boogs Found">
 	<glossterm>Zarro Boogs Found</glossterm>

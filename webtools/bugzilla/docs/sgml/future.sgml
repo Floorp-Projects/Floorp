@@ -357,7 +357,7 @@ Keywords
    group is more important than the previous, and therefore appears
    closer to the top.
 
-    Keyword Grouping & Ordering
+    Keyword Grouping &amp; Ordering
 
    We could further enhance both the global and bug specific keyword list
    by grouping keywords.  We should always have a "flat" view of

@@ -8,7 +8,7 @@
   <section id="bonsai" xreflabel="Bonsai, the Mozilla automated CVS management system">
     <title>Bonsai</title>
     <para>Bonsai is a web-based tool for managing <xref
-							linkend="cvs">
+							linkend="cvs" />
       .  Using Bonsai, administrators can control open/closed status
       of trees, query a fast relational database back-end for change,
       branch, and comment information, and view changes made since the
@@ -16,7 +16,7 @@
       engineer responsible to be <quote>on the hook</quote> (include
       cool URL link here for Hook policies at mozilla.org).  Bonsai
       also includes gateways to <xref
-								       linkend="tinderbox"> and Bugzilla </para>
+								       linkend="tinderbox" /> and Bugzilla </para>
   </section>
 
   <section id="cvs" xreflabel="CVS, the Concurrent Versioning System">

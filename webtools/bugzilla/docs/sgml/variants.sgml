@@ -23,25 +23,25 @@
 		      url="http://bugzilla.redhat.com/bugzilla/">http://bugzilla.redhat.com/bugzilla/</ulink></para>
   </section>
 
-  <section id="variant_fenris" xreflabel="Loki Bugzilla, a.k.a. Fenris">
+  <section id="variant-fenris" xreflabel="Loki Bugzilla, a.k.a. Fenris">
     <title>Loki Bugzilla (Fenris)</title>
     <para>Fenris can be found at <ulink
 					url="http://fenris.lokigames.com/">http://fenris.lokigames.com</ulink>.  It is a fork from Bugzilla.</para>
   </section>
 
-  <section id="variant_issuezilla" xreflabel="Issuezilla">
+  <section id="variant-issuezilla" xreflabel="Issuezilla">
     <title>Issuezilla</title>
     <para>Issuezilla is another fork from Bugzilla, and seems nearly
       as popular as the Red Hat Bugzilla fork.  Some Issuezilla team
       members are regular contributors to the Bugzilla mailing
       list/newsgroup.  Issuezilla is not the primary focus of
       bug-tracking at tigris.org, however.  Their Java-based
-      bug-tracker, <xref linkend="variant_scarab">, is under heavy development
+      bug-tracker, <xref linkend="variant-scarab" />, is under heavy development
       and looks promising!</para>
     <para>URL:  <ulink url="http://issuezilla.tigris.org/servlets/ProjectHome">http://issuezilla.tigris.org/servlets/ProjectHome</ulink></para>
   </section>
 
-  <section id="variant_scarab" xreflabel="Scarab, a newfangled Java-based issue tracker">
+  <section id="variant-scarab" xreflabel="Scarab, a newfangled Java-based issue tracker">
     <title>Scarab</title>
     <para>Scarab is a promising new bug-tracking system built using
       Java Serlet technology.  As of this writing, no source code has
@@ -51,7 +51,7 @@
     <para>URL: <ulink url="http://scarab.tigris.org/">http://scarab.tigris.org</ulink></para>
   </section>
 
-  <section id="variant_perforce" xreflabel="Using Perforce to track bugs">
+  <section id="variant-perforce" xreflabel="Using Perforce to track bugs">
     <title>Perforce SCM</title>
     <para>Although Perforce isn't really a bug tracker, it can be used
       as such through the <quote>jobs</quote> functionality.</para>
@@ -59,7 +59,7 @@
 		 url="http://www.perforce.com/perforce/technotes/note052.html"></ulink>http://www.perforce.com/perforce/technotes/note052.html</para>
   </section>
 
-  <section id="variant_sourceforge" xreflabel="SourceForge">
+  <section id="variant-sourceforge" xreflabel="SourceForge">
     <title>SourceForge</title>
     <para>SourceForge is more of a way of coordinating geographically
       distributed free software and open source projects over the

@@ -31,7 +31,7 @@ Chapter: Using Bugzilla
 <title>Using Bugzilla</title>
   <epigraph>
     <para>
-      What, Why, How, & Where?
+      What, Why, How, &amp; Where?
     </para>
   </epigraph>
 
@@ -612,7 +612,7 @@ system against which all others are measured.
 	<para>And all this time, I thought we were taking bugs <emphasis>out</emphasis>...</para>
       </epigraph>
       
-      <section id="bug_writing">
+      <section id="bug-writing">
 	<title>Writing a Great Bug Report</title>
 	<para>
 	  Before we plunge into writing your first bug report, I
@@ -701,7 +701,7 @@ system against which all others are measured.
 	</para>
       </section>
 
-      <section id="bug_manage">
+      <section id="bug-manage">
 	<title>Managing your Bug Reports</title>
 	<para>
 	  OK, you should have a link to the bug you just created near
@@ -812,7 +812,7 @@ system against which all others are measured.
 	  their flow charts and know when it is time to pull the bug
 	  onto a quality assurance platform for inspection.  Other
 	  people set up email gateways to
-	    <xref linkend="bonsai"> or <xref linkend="tinderbox">, and
+	    <xref linkend="bonsai" /> or <xref linkend="tinderbox" />, and
 	  restrict which types of Bugzilla information are fed to
 	  these systems..
 	</para>
