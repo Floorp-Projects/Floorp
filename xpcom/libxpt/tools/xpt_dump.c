@@ -29,32 +29,53 @@
 
 #define BASE_INDENT 3
 
+static char *type_array[20] = {"int8", "int16", "int32", "int64",
+                               "uint8", "uint16", "uint32", "uint64",
+                               "float", "double", "boolean", "char",
+                               "wchar_t", "void", "reserved", "reserved",
+                               "reserved", "reserved", "Interface *", 
+                               "InterfaceIs *"};
+
+static char *ptype_array[18] = {"int8 *", "int16 *", "int32 *", "int64 *",
+                                "uint8 *", "uint16 *", "uint32 *", "uint64 *",
+                                "float *", "double *", "boolean *", "char *",
+                                "wchar_t *", "void *", "nsIID **", "bstr",
+                                "string", "wstring"};
+                     
 PRBool
-XPT_VDumpHeader(XPTHeader *header, const int indent);
+XPT_DumpHeader(XPTHeader *header, const int indent, PRBool verbose_mode);
 
 PRBool
-XPT_VDumpAnnotations(XPTAnnotation *ann, const int indent);
+XPT_DumpAnnotations(XPTAnnotation *ann, const int indent, PRBool verbose_mode);
 
 PRBool
-XPT_VDumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide, 
-                                 const int indent);
-PRBool
-XPT_VDumpInterfaceDescriptor(XPTInterfaceDescriptor *id, const int indent);
+XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide, 
+                                 const int indent, PRBool verbose_mode);
 
 PRBool
-XPT_VDumpMethodDescriptor(XPTMethodDescriptor *md, const int indent);
+XPT_DumpInterfaceDescriptor(XPTInterfaceDescriptor *id, const int indent, 
+                            PRBool verbose_mode);
+
+PRBool
+XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent, 
+                         PRBool verbose_mode);
+PRBool
+XPT_GetStringForType(XPTTypeDescriptor *td, char **type_string);
 
 PRBool
 XPT_DumpXPTString(XPTString *str);
 
 PRBool
-XPT_VDumpParamDescriptor(XPTParamDescriptor *pd, const int indent);
+XPT_DumpParamDescriptor(XPTParamDescriptor *pd, const int indent, 
+                        PRBool verbose_mode);
 
 PRBool
-XPT_VDumpTypeDescriptor(XPTTypeDescriptor *td, int indent);
+XPT_DumpTypeDescriptor(XPTTypeDescriptor *td, int indent, 
+                       PRBool verbose_mode);
 
 PRBool
-XPT_VDumpConstDescriptor(XPTConstDescriptor *cd, const int indent);
+XPT_DumpConstDescriptor(XPTConstDescriptor *cd, const int indent, 
+                        PRBool verbose_mode);
 
 static void
 xpt_dump_usage(char *argv[]) {
@@ -127,16 +148,10 @@ main(int argc, char **argv)
             fprintf(stdout, "DoHeader failed\n");
             return 1;
         }
-        if (verbose_mode) {
-            if (!XPT_VDumpHeader(header, BASE_INDENT)) {
-                perror("FAILED: XPT_VDumpHeader");
-                return 1;
-            }
-        } else {
-            if (!XPT_VDumpHeader(header, BASE_INDENT)) {
-                perror("FAILED: XPT_DumpHeader");
-                return 1;
-            }
+
+        if (!XPT_DumpHeader(header, BASE_INDENT, verbose_mode)) {
+            perror("FAILED: XPT_DumpHeader");
+            return 1;
         }
    
         XPT_DestroyXDRState(state);
@@ -149,48 +164,60 @@ main(int argc, char **argv)
 }
 
 PRBool
-XPT_VDumpHeader(XPTHeader *header, const int indent) 
+XPT_DumpHeader(XPTHeader *header, const int indent, PRBool verbose_mode) 
 {
     int i;
     
-    fprintf(stdout, "%*sMagic beans:      ", indent, " ");
-    for (i=0; i<16; i++) {
-        fprintf(stdout, "%02x", header->magic[i]);
+    fprintf(stdout, "Header:\n");
+
+    if (verbose_mode) {
+        fprintf(stdout, "%*sMagic beans:           ", indent, " ");
+        for (i=0; i<16; i++) {
+            fprintf(stdout, "%02x", header->magic[i]);
+        }
+        fprintf(stdout, "\n");
+        if (strncmp(header->magic, XPT_MAGIC, 16) == 0)
+            fprintf(stdout, "%*s                       PASSED\n", indent, " ");
+        else
+            fprintf(stdout, "%*s                       FAILED\n", indent, " ");
     }
-    fprintf(stdout, "\n");
-    if (strncmp(header->magic, XPT_MAGIC, 16) == 0)
-        fprintf(stdout, "%*s                  PASSED\n", indent, " ");
-    else
-        fprintf(stdout, "%*s                  FAILED\n", indent, " "); 
-    fprintf(stdout, "%*sMajor version:    %d\n", indent, " ",
+    fprintf(stdout, "%*sMajor version:         %d\n", indent, " ",
             header->major_version);
-    fprintf(stdout, "%*sMinor version:    %d\n", indent, " ",
-            header->minor_version);
-    fprintf(stdout, "%*s# of interfaces:  %d\n", indent, " ",
+    fprintf(stdout, "%*sMinor version:         %d\n", indent, " ",
+            header->minor_version);    
+    fprintf(stdout, "%*sNumber of interfaces:  %d\n", indent, " ",
             header->num_interfaces);
-    fprintf(stdout, "%*sFile length:      %d\n", indent, " ",
-            header->file_length);
-    fprintf(stdout, "%*sData pool offset: %d\n", indent, " ",
-            header->data_pool);
 
-    fprintf(stdout, "\n%*sAnnotations:\n", indent, " ");
-    if (!XPT_VDumpAnnotations(header->annotations, indent*2))
-        return PR_FALSE;
+    if (verbose_mode) {
+        fprintf(stdout, "%*sFile length:           %d\n", indent, " ",
+                header->file_length);
+        fprintf(stdout, "%*sData pool offset:      %d\n\n", indent, " ",
+                header->data_pool);
+    }
     
-    fprintf(stdout, "\n%*sInterface Directory:\n", indent, " ");
-    for (i=0; i<header->num_interfaces; i++) {
-        fprintf(stdout, "%*sInterface #%d:\n", indent*2, " ", i);
+    fprintf(stdout, "%*sAnnotations:\n", indent, " ");
+    if (!XPT_DumpAnnotations(header->annotations, indent*2, verbose_mode))
+        return PR_FALSE;
 
-        if (!XPT_VDumpInterfaceDirectoryEntry(&header->interface_directory[i],
-                                             indent*3))
-            return PR_FALSE;
+    fprintf(stdout, "\nInterface Directory:\n");
+    for (i=0; i<header->num_interfaces; i++) {
+        if (verbose_mode) {
+            fprintf(stdout, "%*sInterface #%d:\n", indent, " ", i);
+            if (!XPT_DumpInterfaceDirectoryEntry(&header->interface_directory[i], indent*2, verbose_mode)) {
+                return PR_FALSE;
+            }
+        } else {
+            if (!XPT_DumpInterfaceDirectoryEntry(&header->interface_directory[i], indent, verbose_mode)) {
+                return PR_FALSE;
+            }
+        }
     }
 
     return PR_TRUE;
 }    
 
 PRBool
-XPT_VDumpAnnotations(XPTAnnotation *ann, const int indent) 
+XPT_DumpAnnotations(XPTAnnotation *ann, const int indent, PRBool verbose_mode) 
 {
     int i = -1;
     XPTAnnotation *last;
@@ -199,8 +226,13 @@ XPT_VDumpAnnotations(XPTAnnotation *ann, const int indent)
     do {
         i++;
         if (XPT_ANN_IS_PRIVATE(ann->flags)) {
-            fprintf(stdout, "%*sAnnotation #%d is private.\n", 
-                    indent, " ", i);
+            if (verbose_mode) {
+                fprintf(stdout, "%*sAnnotation #%d is private.\n", 
+                        indent, " ", i);
+            } else {
+                fprintf(stdout, "%*sAnnotation #%d:\n", 
+                        indent, " ", i);
+            }                
             fprintf(stdout, "%*sCreator:      ", new_indent, " ");
             if (!XPT_DumpXPTString(ann->creator))
                 return PR_FALSE;
@@ -217,119 +249,198 @@ XPT_VDumpAnnotations(XPTAnnotation *ann, const int indent)
         ann = ann->next;
     } while (!XPT_ANN_IS_LAST(last->flags));
         
-    fprintf(stdout, "%*sAnnotation #%d is the last annotation.\n", 
-            indent, " ", i);
-    
+    if (verbose_mode) {
+        fprintf(stdout, "%*sAnnotation #%d is the last annotation.\n", 
+                indent, " ", i);
+    }
+
     return PR_TRUE;
 }
 
 PRBool
-XPT_VDumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide, 
-                                 const int indent)
+XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide, 
+                                 const int indent, PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
 
-    fprintf(stdout, "%*sIID:                             "
-            "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n", indent, " ",
-            (PRUint32) ide->iid.m0, (PRUint32) ide->iid.m1,(PRUint32) ide->iid.m2,
-            (PRUint32) ide->iid.m3[0], (PRUint32) ide->iid.m3[1],
-            (PRUint32) ide->iid.m3[2], (PRUint32) ide->iid.m3[3],
-            (PRUint32) ide->iid.m3[4], (PRUint32) ide->iid.m3[5],
-            (PRUint32) ide->iid.m3[6], (PRUint32) ide->iid.m3[7]);
-    
-    fprintf(stdout, "%*sName:                            %s\n", 
-            indent, " ", ide->name);
-    fprintf(stdout, "%*sNamespace:                       %s\n", 
-            indent, " ", ide->namespace);
-    fprintf(stdout, "%*sAddress of interface descriptor: %p\n", 
-            indent, " ", ide->interface_descriptor);
+    if (verbose_mode) {
+        fprintf(stdout, "%*sIID:                             "
+                "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n", indent, " ",
+                (PRUint32) ide->iid.m0, (PRUint32) ide->iid.m1,(PRUint32) ide->iid.m2,
+                (PRUint32) ide->iid.m3[0], (PRUint32) ide->iid.m3[1],
+                (PRUint32) ide->iid.m3[2], (PRUint32) ide->iid.m3[3],
+                (PRUint32) ide->iid.m3[4], (PRUint32) ide->iid.m3[5],
+                (PRUint32) ide->iid.m3[6], (PRUint32) ide->iid.m3[7]);
+        
+        fprintf(stdout, "%*sName:                            %s\n", 
+                indent, " ", ide->name);
+        fprintf(stdout, "%*sNamespace:                       %s\n", 
+                indent, " ", ide->namespace);
+        fprintf(stdout, "%*sAddress of interface descriptor: %p\n", 
+                indent, " ", ide->interface_descriptor);
 
-    fprintf(stdout, "%*sDescriptor:\n", indent, " ");
-    if (!XPT_VDumpInterfaceDescriptor(ide->interface_descriptor, new_indent))
-        return PR_FALSE;
+        fprintf(stdout, "%*sDescriptor:\n", indent, " ");
+    
+        if (!XPT_DumpInterfaceDescriptor(ide->interface_descriptor, 
+                                         new_indent, verbose_mode)) {
+            return PR_FALSE;
+        }
+    } else {
+        fprintf(stdout, "%*sInterface %s::%s:\n", indent, " ", 
+                ide->namespace, ide->name);
+        if (!XPT_DumpInterfaceDescriptor(ide->interface_descriptor, 
+                                         new_indent, verbose_mode)) {
+            return PR_FALSE;
+        }
+    }
 
     return PR_TRUE;
 }    
 
 PRBool
-XPT_VDumpInterfaceDescriptor(XPTInterfaceDescriptor *id, const int indent)
+XPT_DumpInterfaceDescriptor(XPTInterfaceDescriptor *id, const int indent, 
+                            PRBool verbose_mode)
 {
     int i;
     int new_indent = indent + BASE_INDENT;
     int more_indent = new_indent + BASE_INDENT;
 
-    fprintf(stdout, "%*sOffset of parent interface (in data pool): %p\n", 
-            indent, " ", id->parent_interface);
-    fprintf(stdout, "%*s# of Method Descriptors:                   %d\n", 
-            indent, " ", id->num_methods);
-    for (i=0; i<id->num_methods; i++) {
-        fprintf(stdout, "%*sMethod #%d:\n", new_indent, " ", i);
-        if (!XPT_VDumpMethodDescriptor(&id->method_descriptors[i], more_indent))
-            return PR_FALSE;
-    }
-    fprintf(stdout, "%*s# of Constant Descriptors:                  %d\n", 
-            indent, " ", id->num_constants);
-    for (i=0; i<id->num_constants; i++) {
-        fprintf(stdout, "%*sConstant #%d:\n", new_indent, " ", i);
-        if (!XPT_VDumpConstDescriptor(&id->const_descriptors[i], more_indent))
-            return PR_FALSE;
-    }
+    if (verbose_mode) {
+        fprintf(stdout, "%*sOffset of parent interface (in data pool): %p\n", 
+                indent, " ", id->parent_interface);
+        fprintf(stdout, "%*s# of Method Descriptors:                   %d\n", 
+                indent, " ", id->num_methods);
+    } else {
+        fprintf(stdout, "%*sMethods:\n", indent, " ");
+    }   
     
+    if (id->num_methods == 0) {
+        fprintf(stdout, "%*sNo Methods\n", new_indent, " ");
+    } else {
+        for (i=0; i<id->num_methods; i++) {
+            if (verbose_mode) {
+                fprintf(stdout, "%*sMethod #%d:\n", new_indent, " ", i);
+                if (!XPT_DumpMethodDescriptor(&id->method_descriptors[i], 
+                                              more_indent, verbose_mode))
+                    return PR_FALSE;
+            } else {
+                if (!XPT_DumpMethodDescriptor(&id->method_descriptors[i], 
+                                              new_indent, verbose_mode))
+                    return PR_FALSE;
+            }            
+        }
+    }
+
+    if (verbose_mode) {
+        fprintf(stdout, "%*s# of Constant Descriptors:                  %d\n", 
+                indent, " ", id->num_constants);
+        for (i=0; i<id->num_constants; i++) {
+            fprintf(stdout, "%*sConstant #%d:\n", new_indent, " ", i);
+            if (!XPT_DumpConstDescriptor(&id->const_descriptors[i], 
+                                         more_indent, verbose_mode))
+                return PR_FALSE;
+        }
+    } else {
+        fprintf(stdout, "%*sConstants:\n", indent, " ");
+        for (i=0; i<id->num_constants; i++) {
+            if (!XPT_DumpConstDescriptor(&id->const_descriptors[i], 
+                                         new_indent, verbose_mode))
+                return PR_FALSE;
+        }
+    }
+
     return PR_TRUE;
 }
 
 PRBool
-XPT_VDumpMethodDescriptor(XPTMethodDescriptor *md, const int indent)
+XPT_DumpMethodDescriptor(XPTMethodDescriptor *md, const int indent, 
+                         PRBool verbose_mode)
 {
     int i;
     int new_indent = indent + BASE_INDENT;
     int more_indent = new_indent + BASE_INDENT;
 
-    fprintf(stdout, "%*sName:             %s\n", indent, " ", md->name);
-    fprintf(stdout, "%*sIs Getter?        ", indent, " ");
-    if (XPT_MD_IS_GETTER(md->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sIs Setter?        ", indent, " ");
-    if (XPT_MD_IS_SETTER(md->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sIs Varargs?       ", indent, " ");
-    if (XPT_MD_IS_VARARGS(md->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sIs Constructor?   ", indent, " ");
-    if (XPT_MD_IS_CTOR(md->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*sIs Hidden?        ", indent, " ");
-    if (XPT_MD_IS_HIDDEN(md->flags))
-        fprintf(stdout, "TRUE\n");
-    else 
-        fprintf(stdout, "FALSE\n");
-
-    fprintf(stdout, "%*s# of arguments:   %d\n", indent, " ", md->num_args);
-    fprintf(stdout, "%*sParameter Descriptors:\n", indent, " ");
-
-    for (i=0; i<md->num_args; i++) {
-        fprintf(stdout, "%*sParameter #%d:\n", new_indent, " ", i);
+    if (verbose_mode) {
+        fprintf(stdout, "%*sName:             %s\n", indent, " ", md->name);
+        fprintf(stdout, "%*sIs Getter?        ", indent, " ");
+        if (XPT_MD_IS_GETTER(md->flags))
+            fprintf(stdout, "TRUE\n");
+        else 
+            fprintf(stdout, "FALSE\n");
         
-        if (!XPT_VDumpParamDescriptor(&md->params[i], more_indent))
-            return PR_FALSE;
-    }
+        fprintf(stdout, "%*sIs Setter?        ", indent, " ");
+        if (XPT_MD_IS_SETTER(md->flags))
+            fprintf(stdout, "TRUE\n");
+        else 
+            fprintf(stdout, "FALSE\n");
+        
+        fprintf(stdout, "%*sIs Varargs?       ", indent, " ");
+        if (XPT_MD_IS_VARARGS(md->flags))
+            fprintf(stdout, "TRUE\n");
+        else 
+            fprintf(stdout, "FALSE\n");
+        
+        fprintf(stdout, "%*sIs Constructor?   ", indent, " ");
+        if (XPT_MD_IS_CTOR(md->flags))
+            fprintf(stdout, "TRUE\n");
+        else 
+            fprintf(stdout, "FALSE\n");
+        
+        fprintf(stdout, "%*sIs Hidden?        ", indent, " ");
+        if (XPT_MD_IS_HIDDEN(md->flags))
+            fprintf(stdout, "TRUE\n");
+        else 
+            fprintf(stdout, "FALSE\n");
+        
+        fprintf(stdout, "%*s# of arguments:   %d\n", indent, " ", md->num_args);
+        fprintf(stdout, "%*sParameter Descriptors:\n", indent, " ");
+        
+        for (i=0; i<md->num_args; i++) {
+            fprintf(stdout, "%*sParameter #%d:\n", new_indent, " ", i);
+            
+            if (!XPT_DumpParamDescriptor(&md->params[i], more_indent, 
+                                         verbose_mode))
+                return PR_FALSE;
+        }
    
-    fprintf(stdout, "%*sResult:\n", indent, " ");
-    if (!XPT_VDumpParamDescriptor(md->result, new_indent))
-        return PR_FALSE;
+        fprintf(stdout, "%*sResult:\n", indent, " ");
+        if (!XPT_DumpParamDescriptor(md->result, new_indent, verbose_mode)) {
+            return PR_FALSE;
+        }
+    } else {
+        char *param_type;
+        XPTParamDescriptor *pd;
+
+        if (!XPT_GetStringForType(&md->result->type, &param_type)) {
+            return PR_FALSE;
+        }
+        fprintf(stdout, "%*s%s %s(", indent, " ", param_type, md->name);
+        for (i=0; i<md->num_args; i++) {
+            if (i!=0) {
+                fprintf(stdout, ", ");
+            }
+            pd = &md->params[i];
+            if (!XPT_GetStringForType(&pd->type, &param_type)) {
+                return PR_FALSE;
+            }
+            fprintf(stdout, "%s", param_type);
+        }
+        fprintf(stdout, ");\n");   
+    }
+    return PR_TRUE;
+}
     
+PRBool
+XPT_GetStringForType(XPTTypeDescriptor *td, char **type_string)
+{
+    int tag = XPT_TDP_TAG(td->prefix);
+    
+    if (XPT_TDP_IS_POINTER(td->prefix.flags)) {
+        *type_string = ptype_array[tag];
+    } else {
+        *type_string = type_array[tag];
+    }
+
     return PR_TRUE;
 }
 
@@ -344,7 +455,8 @@ XPT_DumpXPTString(XPTString *str)
 }
 
 PRBool
-XPT_VDumpParamDescriptor(XPTParamDescriptor *pd, const int indent)
+XPT_DumpParamDescriptor(XPTParamDescriptor *pd, const int indent, 
+                        PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
 
@@ -367,14 +479,14 @@ XPT_VDumpParamDescriptor(XPTParamDescriptor *pd, const int indent)
         fprintf(stdout, "FALSE\n");
 
     fprintf(stdout, "%*sType Descriptor:\n", indent, " ");
-    if (!XPT_VDumpTypeDescriptor(&pd->type, new_indent))
+    if (!XPT_DumpTypeDescriptor(&pd->type, new_indent, verbose_mode))
         return PR_FALSE;
     
     return PR_TRUE;
 }
 
 PRBool
-XPT_VDumpTypeDescriptor(XPTTypeDescriptor *td, int indent)
+XPT_DumpTypeDescriptor(XPTTypeDescriptor *td, int indent, PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
 
@@ -415,70 +527,77 @@ XPT_VDumpTypeDescriptor(XPTTypeDescriptor *td, int indent)
 }
 
 PRBool
-XPT_VDumpConstDescriptor(XPTConstDescriptor *cd, const int indent)
+XPT_DumpConstDescriptor(XPTConstDescriptor *cd, const int indent, PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
-    char *out;
+    char *out, *const_type;
 
-    fprintf(stdout, "%*sName:   %s\n", indent, " ", cd->name);
-    fprintf(stdout, "%*sType Descriptor: \n", indent, " ");
-    if (!XPT_VDumpTypeDescriptor(&cd->type, new_indent))
-        return PR_FALSE;
-    fprintf(stdout, "%*sValue:  ", indent, " ");
+    if (verbose_mode) {
+        fprintf(stdout, "%*sName:   %s\n", indent, " ", cd->name);
+        fprintf(stdout, "%*sType Descriptor: \n", indent, " ");
+        if (!XPT_DumpTypeDescriptor(&cd->type, new_indent, verbose_mode))
+            return PR_FALSE;
+        fprintf(stdout, "%*sValue:  ", indent, " ");
+    } else {
+        if (!XPT_GetStringForType(&cd->type, &const_type)) {
+            return PR_FALSE;
+        }
+        fprintf(stdout, "%*s%s %s = ", indent, " ", const_type, cd->name);
+    }        
 
     switch(XPT_TDP_TAG(cd->type.prefix)) {
     case TD_INT8:
-        fprintf(stdout, "%d\n", cd->value.i8);
+        fprintf(stdout, "%d", cd->value.i8);
         break;
     case TD_INT16:
-        fprintf(stdout, "%d\n", cd->value.i16);
+        fprintf(stdout, "%d", cd->value.i16);
         break;
     case TD_INT32:
-        fprintf(stdout, "%d\n", cd->value.i32);
+        fprintf(stdout, "%d", cd->value.i32);
         break;
     case TD_INT64:
-        out = PR_smprintf("%lld\n", cd->value.i64);
+        out = PR_smprintf("%lld", cd->value.i64);
         fputs(out, stdout);
         PR_smprintf_free(out);
         break;
     case TD_UINT8:
-        fprintf(stdout, "%d\n", cd->value.ui8);
+        fprintf(stdout, "%d", cd->value.ui8);
         break;
     case TD_UINT16:
-        fprintf(stdout, "%d\n", cd->value.ui16);
+        fprintf(stdout, "%d", cd->value.ui16);
         break;
     case TD_UINT32:
-        fprintf(stdout, "%d\n", cd->value.ui32);
+        fprintf(stdout, "%d", cd->value.ui32);
         break;
     case TD_UINT64:
-        out = PR_smprintf("%lld\n", cd->value.ui64);
+        out = PR_smprintf("%lld", cd->value.ui64);
         fputs(out, stdout);
         PR_smprintf_free(out);
         break;
     case TD_FLOAT:
-        fprintf(stdout, "%f\n", cd->value.flt);
+        fprintf(stdout, "%f", cd->value.flt);
         break;
     case TD_DOUBLE:
-        fprintf(stdout, "%g\n", cd->value.dbl);
+        fprintf(stdout, "%g", cd->value.dbl);
         break;
     case TD_BOOL:
         if (cd->value.bul)
-            fprintf(stdout, "TRUE\n");
+            fprintf(stdout, "TRUE");
         else 
-            fprintf(stdout, "FALSE\n");
+            fprintf(stdout, "FALSE");
             break;
     case TD_CHAR:
-        fprintf(stdout, "%c\n", cd->value.ch);
+        fprintf(stdout, "%c", cd->value.ch);
         break;
     case TD_WCHAR:
-        fprintf(stdout, "%d\n", cd->value.wch);
+        fprintf(stdout, "%d", cd->value.wch);
         break;
     case TD_VOID:
-        fprintf(stdout, "VOID\n");
+        fprintf(stdout, "VOID");
         break;
     case TD_PPNSIID:
         if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
-        fprintf(stdout, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",
+        fprintf(stdout, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
                 cd->value.iid->m0, (PRUint32) cd->value.iid->m1,
                 (PRUint32) cd->value.iid->m2,
                 (PRUint32) cd->value.iid->m3[0], 
@@ -496,13 +615,12 @@ XPT_VDumpConstDescriptor(XPTConstDescriptor *cd, const int indent)
         if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
             if (!XPT_DumpXPTString(cd->value.string))
                 return PR_FALSE;
-            fprintf(stdout, "\n");
         } else 
             return PR_FALSE;
         break;            
     case TD_PSTRING:
         if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
-            fprintf(stdout, "%s\n", cd->value.str);
+            fprintf(stdout, "%s", cd->value.str);
         } else 
             return PR_FALSE;
         break;
@@ -510,7 +628,7 @@ XPT_VDumpConstDescriptor(XPTConstDescriptor *cd, const int indent)
         if (XPT_TDP_IS_POINTER(cd->type.prefix.flags)) {
             PRUint16 *ch = cd->value.wstr;
             while (*ch) {
-                fprintf(stderr, "%c", *ch & 0xff);
+                fprintf(stdout, "%c", *ch & 0xff);
                 ch++;
             }
         } else 
@@ -520,6 +638,12 @@ XPT_VDumpConstDescriptor(XPTConstDescriptor *cd, const int indent)
         perror("Unrecognized type");
         return PR_FALSE;
         break;   
+    }
+    
+    if (verbose_mode) {
+        fprintf(stdout, "\n");
+    } else {
+        fprintf(stdout, ";\n");
     }
 
     return PR_TRUE;
