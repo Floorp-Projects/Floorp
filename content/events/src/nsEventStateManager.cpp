@@ -2553,11 +2553,24 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
 #endif // end debug helpers
 
 NS_IMETHODIMP
-nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
+nsEventStateManager::ShiftFocus(PRBool aForward, nsIContent* aStart)
+{
+  // We use mTabbedThroughDocument to indicate that we have passed
+  // the end (or beginning) of the document we started tabbing from,
+  // without finding anything else to focus.  If we pass the end of
+  // the same document again (and the flag is set), we know that there
+  // is no focusable content anywhere in the tree, and should stop.
+
+  mTabbedThroughDocument = PR_FALSE;
+  return ShiftFocusInternal(aForward, aStart);
+}
+
+nsresult
+nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 {
 #ifdef DEBUG_DOCSHELL_FOCUS
-  printf("[%p] ShiftFocus: forward=%d, aStart=%p, mCurrentFocus=%p\n",
-         this, forward, aStart, mCurrentFocus);
+  printf("[%p] ShiftFocus: aForward=%d, aStart=%p, mCurrentFocus=%p\n",
+         this, aForward, aStart, mCurrentFocus);
 #endif
   NS_ASSERTION(mPresContext, "no pres context");
   EnsureDocument(mPresContext);
@@ -2600,7 +2613,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
     // So, use the docshell focus state to disambiguate.
 
     docShell->GetHasFocus(&docHasFocus);
-    if (forward) {
+    if (aForward) {
       mCurrentFocus = rootContent;
       NS_IF_ADDREF(mCurrentFocus);
       mCurrentTabIndex = 1;
@@ -2627,8 +2640,8 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
     presShell->GetPrimaryFrameFor(mCurrentFocus, &curFocusFrame);
 
   nsCOMPtr<nsIContent> nextFocus;
-  if (forward || !docHasFocus)
-    GetNextTabbableContent(rootContent, curFocusFrame, forward,
+  if (aForward || !docHasFocus)
+    GetNextTabbableContent(rootContent, curFocusFrame, aForward,
                            getter_AddRefs(nextFocus));
 
   if (nextFocus) {
@@ -2648,7 +2661,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
         presShell->GetPrimaryFrameFor(nextFocus, &nextFocusFrame);
         presShell->ScrollFrameIntoView(nextFocusFrame, NS_PRESSHELL_SCROLL_ANYWHERE,
                                        NS_PRESSHELL_SCROLL_ANYWHERE);
-        TabIntoDocument(subShell, forward);
+        TabIntoDocument(subShell, aForward);
       }
     } else {
       // there is no subshell, so just focus nextFocus
@@ -2683,7 +2696,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
       focusDocument = !(IsFrameSetDoc(docShell));
     }
 
-    if (!forward && !docHasFocus && focusDocument) {
+    if (!aForward && !docHasFocus && focusDocument) {
 #ifdef DEBUG_DOCSHELL_FOCUS
       printf("Focusing document\n");
 #endif
@@ -2696,6 +2709,11 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
       // in the same direction starting at the content element
       // corresponding to our docshell.
       
+      // Guard against infinite recursion (see explanation in ShiftFocus)
+      if (mTabbedThroughDocument)
+        return NS_OK;
+
+      mTabbedThroughDocument = PR_TRUE;
       nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(pcContainer);
       nsCOMPtr<nsIDocShellTreeItem> treeParent;
       treeItem->GetParent(getter_AddRefs(treeParent));
@@ -2720,13 +2738,13 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
           printf("popping out focus to parent docshell\n");
 #endif
 
-          parentESM->ShiftFocus(forward, shellContent);
+          parentESM->ShiftFocus(aForward, shellContent);
         }
       } else {
         PRBool tookFocus = PR_FALSE;
         nsCOMPtr<nsIDocShell> subShell = do_QueryInterface(pcContainer);
         if (subShell)
-          subShell->TabToTreeOwner(forward, &tookFocus);
+          subShell->TabToTreeOwner(aForward, &tookFocus);
         
 #ifdef DEBUG_DOCSHEL_FOCUS
         printf("offered focus to tree owner, tookFocus=%d\n",
@@ -2746,7 +2764,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aStart)
 
           NS_IF_RELEASE(mCurrentFocus);
           docShell->SetHasFocus(PR_FALSE);
-          ShiftFocus(forward);
+          ShiftFocusInternal(aForward);
         }
       }
     }
