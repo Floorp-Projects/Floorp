@@ -209,6 +209,16 @@ nsGfxTextControlFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
+nsGfxTextControlFrame::GetEditor(nsIEditor **aEditor)
+{
+  NS_ENSURE_ARG_POINTER(aEditor);
+
+  *aEditor = mEditor;
+  NS_IF_ADDREF(*aEditor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsGfxTextControlFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
@@ -219,12 +229,12 @@ nsGfxTextControlFrame::GetFrameType(nsIAtom** aType) const
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::GetEditor(nsIEditor **aEditor)
+nsGfxTextControlFrame::GetWebShell(nsIWebShell **aWebShell)
 {
-  NS_ENSURE_ARG_POINTER(aEditor);
+  NS_ENSURE_ARG_POINTER(aWebShell);
 
-  *aEditor = mEditor;
-  NS_IF_ADDREF(*aEditor);
+  *aWebShell = mWebShell;
+  NS_IF_ADDREF(*aWebShell);
   return NS_OK;
 }
 
@@ -2483,6 +2493,7 @@ nsGfxTextControlFrame::InstallEventListeners()
   if (NS_FAILED(result)) { return result ; }
   if (!mEventListener) { return NS_ERROR_NULL_POINTER; }
   mEventListener->SetFrame(this);
+  mEventListener->SetInnerPresShell(presShell);
   mEventListener->SetPresContext(mFramePresContext);
   mEventListener->SetView(view);
 
@@ -3413,6 +3424,22 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
           result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
         }
         NS_IF_RELEASE(manager);
+
+        if ((aEventType == NS_MOUSE_LEFT_BUTTON_DOWN) ||
+            (aEventType == NS_MOUSE_MIDDLE_BUTTON_DOWN) ||
+            (aEventType == NS_MOUSE_RIGHT_BUTTON_DOWN))
+        {
+          // Call consume focus events on the inner event state manager to prevent its
+          // PostHandleEvent from immediately blurring us.
+          nsCOMPtr<nsIPresContext> pc;
+          mInnerShell->GetPresContext(getter_AddRefs(pc));
+
+          nsCOMPtr<nsIEventStateManager> esm;
+          pc->GetEventStateManager(getter_AddRefs(esm));
+          esm->ConsumeFocusEvents(PR_TRUE);
+          // Now set the focus in to the widget.
+          mFrame->SetFocus();
+        }
       }
     }
   }
@@ -3625,6 +3652,7 @@ nsEnderEventListener::MouseOut(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
 {
+  /*
   // In this case, the focus has all ready been set because of the mouse down
   // and setting it on the native widget causes an event to be dispatched
   // and this listener then gets call. So we want to skip it here
@@ -3684,14 +3712,14 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
       NS_RELEASE(manager);
     }
   }
-
+*/
   return NS_OK;
 }
 
 nsresult
 nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
 {
-
+/*
   nsCOMPtr<nsIDOMUIEvent>uiEvent;
   uiEvent = do_QueryInterface(aEvent);
   if (!uiEvent) {
@@ -3737,7 +3765,7 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
     mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
 
   }
-
+*/
   return NS_OK;
 }
 

@@ -333,7 +333,6 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
   
-/*
   printf("%d : Focus occurred on: ", this);
   nsCOMPtr<nsIDOMElement> domDebugElement = do_QueryInterface(t);
   if (domDebugElement) {
@@ -348,7 +347,6 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
     else printf("Window with a XUL doc (happens twice)");
   }
   printf("\n");
-*/
 
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(t);
   if (domElement && (domElement != mCurrentElement)) {
@@ -388,7 +386,6 @@ nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
 
-/*
   printf("%d : Blur occurred on: ", this);
   nsCOMPtr<nsIDOMElement> domDebugElement = do_QueryInterface(t);
   if (domDebugElement) {
@@ -403,7 +400,6 @@ nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
     else printf("Window with a XUL doc (happens twice)");
   }
   printf("\n");
-*/
 
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(t);
   if (domElement) {

@@ -48,6 +48,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsISelfScrollingFrame.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIGfxTextControlFrame.h"
+#include "nsPIDOMWindow.h"
 
 #undef DEBUG_scroll     // define to see ugly mousewheel messages
 
@@ -86,6 +88,8 @@ nsEventStateManager::nsEventStateManager()
   mLastLeftMouseDownContent = nsnull;
   mLastMiddleMouseDownContent = nsnull;
   mLastRightMouseDownContent = nsnull;
+
+  mConsumeFocusEvents = PR_FALSE;
 
   // init d&d gesture state machine variables
   mIsTrackingDragGesture = PR_FALSE;
@@ -194,35 +198,18 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
-      if (!mDocument) {
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext->GetShell(getter_AddRefs(presShell));
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      
+      if (!mDocument) {  
         if (presShell) {
           presShell->GetDocument(&mDocument);
         }
       }
 
       if (gLastFocusedDocument == mDocument)
-        break;
-      
-      if (gLastFocusedDocument) {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        if(globalObject) {
-
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsEvent event;
-          event.eventStructType = NS_EVENT;
-          event.message = NS_BLUR_CONTENT;
-
-          nsCOMPtr<nsIEventStateManager> esm;
-          gLastFocusedPresContext->GetEventStateManager(getter_AddRefs(esm));
-          esm->SetFocusedContent(nsnull);
-          gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-          globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-        }   
-      }   
-            
+         break;
+        
       //fire focus
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent focusevent;
@@ -241,6 +228,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           mCurrentFocus = currentFocus;
         }
 
+        
         NS_IF_RELEASE(gLastFocusedDocument);
         gLastFocusedDocument = mDocument;
         gLastFocusedPresContext = aPresContext;
@@ -477,6 +465,11 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
+      if (mConsumeFocusEvents) {
+        mConsumeFocusEvents = PR_FALSE;
+        break;
+      }
+
       if (nsEventStatus_eConsumeNoDefault != *aStatus) {
         nsCOMPtr<nsIContent> newFocus;
         mCurrentTarget->GetContent(getter_AddRefs(newFocus));
@@ -1924,18 +1917,56 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 	  }
   }
 
-  if (nsnull != gLastFocusedPresContext && gLastFocusedContent) { 
-    //fire blur
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_BLUR_CONTENT;
+  if (nsnull != gLastFocusedPresContext) {
+    
+    if (gLastFocusedContent) { 
 
-    nsCOMPtr<nsIEventStateManager> esm;
-    gLastFocusedPresContext->GetEventStateManager(getter_AddRefs(esm));
-    esm->SetFocusedContent(gLastFocusedContent);
-    gLastFocusedContent->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-    esm->SetFocusedContent(nsnull);
+      // Retrieve this content node's pres context. it can be out of sync in
+      // the Ender widget case.
+      nsCOMPtr<nsIDocument> doc;
+      gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+      nsCOMPtr<nsIPresContext> oldPresContext;
+      shell->GetPresContext(getter_AddRefs(oldPresContext));
+
+      //fire blur
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_BLUR_CONTENT;
+
+      nsCOMPtr<nsIEventStateManager> esm;
+      oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+      esm->SetFocusedContent(gLastFocusedContent);
+      gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+      esm->SetFocusedContent(nsnull);
+    }
+
+    // Go ahead and fire a blur on the window.
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+      
+    if (!mDocument) {  
+      if (presShell) {
+        presShell->GetDocument(&mDocument);
+      }
+    }
+
+    if ((gLastFocusedDocument != mDocument) && globalObject) {  
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_BLUR_CONTENT;
+
+      nsCOMPtr<nsIEventStateManager> esm;
+      gLastFocusedPresContext->GetEventStateManager(getter_AddRefs(esm));
+      esm->SetFocusedContent(nsnull);
+      gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+      globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+    }
   }
   
   NS_IF_RELEASE(gLastFocusedContent);

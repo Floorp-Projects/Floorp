@@ -202,6 +202,8 @@ public:
 
   /** set the view associated with this listener instance */
   NS_IMETHOD SetView(nsIView *aView)=0;
+
+  NS_IMETHOD SetInnerPresShell(nsIPresShell* aPresShell)=0; // Weak ref
 };
 
 /******************************************************************************
@@ -236,6 +238,7 @@ public:
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
   NS_IMETHOD SetPresContext(nsIPresContext *aCx) {mContext = do_QueryInterface(aCx); return NS_OK;}
   NS_IMETHOD SetView(nsIView *aView) {mView = aView; return NS_OK;} // views are not ref counted
+  NS_IMETHOD SetInnerPresShell(nsIPresShell* aPresShell) { mInnerShell = aPresShell; return NS_OK; }
 
   /** nsIDOMKeyListener interfaces 
     * @see nsIDOMKeyListener
@@ -287,6 +290,7 @@ protected:
   nsCWeakReference<nsGfxTextControlFrame> mFrame;
   nsIView                  *mView;    // not ref counted
   nsCOMPtr<nsIPresContext>  mContext; // ref counted
+  nsIPresShell*             mInnerShell; // not ref counted
   nsCOMPtr<nsIContent>      mContent; // ref counted
   nsString                  mTextValue; // the value of the text field at focus
   PRBool                    mSkipFocusDispatch; // On Mouse down we don't want to dispatch 
@@ -505,6 +509,7 @@ public:
 
   /* ============= nsIGfxTextControlFrame ================= */
   NS_IMETHOD GetEditor(nsIEditor **aEditor);
+  NS_IMETHOD GetWebShell(nsIWebShell **aWebShell);
 
 protected:
 
