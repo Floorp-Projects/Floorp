@@ -29,8 +29,6 @@ Contributor(s): ______________________________________. -->
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % buildDTD SYSTEM "chrome://global/content/build.dtd" >
-%buildDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd" >
 %navigatorDTD;
 <!--<!ENTITY % policyDTD SYSTEM "chrome://browser/locale/policy/policy.dtd" >
