@@ -63,7 +63,8 @@ imgContainerGIF::~imgContainerGIF()
 }
 
 //******************************************************************************
-/* void init (in nscoord aWidth, in nscoord aHeight, in imgIContainerObserver aObserver); */
+/* void init (in nscoord aWidth, in nscoord aHeight,
+              in imgIContainerObserver aObserver); */
 NS_IMETHODIMP imgContainerGIF::Init(nscoord aWidth, nscoord aHeight,
                                     imgIContainerObserver *aObserver)
 {
@@ -119,7 +120,8 @@ NS_IMETHODIMP imgContainerGIF::GetNumFrames(PRUint32 *aNumFrames)
 
 //******************************************************************************
 /* gfxIImageFrame getFrameAt (in unsigned long index); */
-NS_IMETHODIMP imgContainerGIF::GetFrameAt(PRUint32 index, gfxIImageFrame **_retval)
+NS_IMETHODIMP imgContainerGIF::GetFrameAt(PRUint32 index,
+                                          gfxIImageFrame **_retval)
 {
   return inlinedGetFrameAt(index, _retval);
 }
@@ -221,14 +223,6 @@ NS_IMETHODIMP imgContainerGIF::EndFrameDecode(PRUint32 aFrameNum,
 {
   // It is now okay to start the timer for the next frame in the animation
   mCurrentFrameIsFinishedDecoding = PR_TRUE;
-
-  nsCOMPtr<gfxIImageFrame> currentFrame;
-  inlinedGetFrameAt(aFrameNum-1, getter_AddRefs(currentFrame));
-  NS_ASSERTION(currentFrame, "Received an EndFrameDecode call with an invalid frame number");
-  if (!currentFrame) return NS_ERROR_UNEXPECTED;
-
-  currentFrame->SetTimeout(aTimeout);
-
   return NS_OK;
 }
 
@@ -237,9 +231,9 @@ NS_IMETHODIMP imgContainerGIF::EndFrameDecode(PRUint32 aFrameNum,
 NS_IMETHODIMP imgContainerGIF::DecodingComplete(void)
 {
   mDoneDecoding = PR_TRUE;
-
-  PRUint32 numFrames;
-  mFrames.Count(&numFrames);
+  // If there's only 1 frame, optimize it.
+  // Optimizing animated gifs is not supported
+  PRUint32 numFrames = inlinedGetNumFrames();
   if (numFrames == 1) {
     nsCOMPtr<gfxIImageFrame> currentFrame;
     inlinedGetFrameAt(0, getter_AddRefs(currentFrame));
@@ -257,7 +251,8 @@ NS_IMETHODIMP imgContainerGIF::Clear()
 //******************************************************************************
 NS_IMETHODIMP imgContainerGIF::GetAnimationMode(PRUint16 *aAnimationMode)
 {
-  if (!aAnimationMode) return NS_ERROR_NULL_POINTER;
+  if (!aAnimationMode)
+    return NS_ERROR_NULL_POINTER;
   *aAnimationMode = mAnimationMode;
   return NS_OK;
 }
@@ -290,10 +285,7 @@ NS_IMETHODIMP imgContainerGIF::SetAnimationMode(PRUint16 aAnimationMode)
 /* void startAnimation () */
 NS_IMETHODIMP imgContainerGIF::StartAnimation()
 {
-  if (mAnimationMode == kDontAnimMode)
-    return NS_OK;
-
-  if (mAnimating || mTimer)
+  if (mAnimationMode == kDontAnimMode || mAnimating || mTimer)
     return NS_OK;
 
   PRUint32 numFrames = inlinedGetNumFrames();
@@ -302,22 +294,22 @@ NS_IMETHODIMP imgContainerGIF::StartAnimation()
     nsCOMPtr<gfxIImageFrame> currentFrame;
 
     inlinedGetCurrentFrame(getter_AddRefs(currentFrame));
-    if (currentFrame)
+    if (currentFrame) {
       currentFrame->GetTimeout(&timeout);
-    else
-      timeout = 100; // XXX hack.. the timer notify code will do the right thing,
-                     // so just get that started
+      if (timeout <= 0) // -1 means display this frame forever
+        return NS_OK;
+    } else
+      timeout = 100; // XXX hack.. the timer notify code will do the right
+                     //     thing, so just get that started
 
-    if (timeout > 0) { // -1 means display this frame forever
-      mTimer = do_CreateInstance("@mozilla.org/timer;1");
-      if (!mTimer)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mTimer)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-      // The only way mAnimating becomes true is if the mTimer is created
-      mAnimating = PR_TRUE;
-      mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
-                               timeout, nsITimer::TYPE_REPEATING_SLACK);
-    }
+    // The only way mAnimating becomes true is if the mTimer is created
+    mAnimating = PR_TRUE;
+    mTimer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*, this),
+                             timeout, nsITimer::TYPE_REPEATING_SLACK);
   }
 
   return NS_OK;
@@ -333,11 +325,7 @@ NS_IMETHODIMP imgContainerGIF::StopAnimation()
     return NS_OK;
 
   mTimer->Cancel();
-
   mTimer = nsnull;
-
-  // don't bother trying to change the frame (to 0, etc.) here.
-  // No one is listening.
 
   return NS_OK;
 }
@@ -352,8 +340,7 @@ NS_IMETHODIMP imgContainerGIF::ResetAnimation()
   PRBool oldAnimating = mAnimating;
 
   if (oldAnimating) {
-    nsresult rv;
-    rv = StopAnimation();
+    nsresult rv = StopAnimation();
     if (NS_FAILED(rv))
       return rv;
    }
@@ -414,9 +401,10 @@ NS_IMETHODIMP imgContainerGIF::SetLoopCount(PRInt32 aLoopCount)
 
 NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
 {
-  NS_ASSERTION(mTimer == timer, "uh");
+  NS_ASSERTION(mTimer == timer,
+               "imgContainerGIF::Notify called with incorrect timer");
 
-  if(!mAnimating || !mTimer)
+  if (!mAnimating || !mTimer)
     return NS_OK;
 
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
@@ -428,13 +416,13 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
 
   nsCOMPtr<gfxIImageFrame> nextFrame;
   PRInt32 timeout = 100;
-  PRUint32 numFrames = inlinedGetNumFrames();
-  if(!numFrames)
+  PRInt32 numFrames = inlinedGetNumFrames();
+  if (!numFrames)
     return NS_OK;
 
   // If we're done decoding the next frame, go ahead and display it now and reinit
   // the timer with the next frame's delay time.
-  PRUint32 previousAnimationFrameIndex = mCurrentAnimationFrameIndex;
+  PRInt32 previousAnimationFrameIndex = mCurrentAnimationFrameIndex;
   if (mCurrentFrameIsFinishedDecoding && !mDoneDecoding) {
     // If we have the next frame in the sequence set the timer callback from it
     inlinedGetFrameAt(mCurrentAnimationFrameIndex+1, getter_AddRefs(nextFrame));

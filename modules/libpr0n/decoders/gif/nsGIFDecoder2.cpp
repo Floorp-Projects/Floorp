@@ -378,13 +378,15 @@ int EndImageFrame(
   // If mImageFrame hasn't been initialized, call HaveDecodedRow to init it
   // One reason why it may not be initialized is because the frame
   // is out of the bounds of the image.
-  if (!decoder->mImageFrame)
+  if (!decoder->mImageFrame) {
     HaveDecodedRow(aClientData,nsnull,0,0,0,0,0,0);
-
-  // We actually have the timeout information before we get the lzw encoded image
-  // data, at least according to the spec, but we delay in setting the timeout for
-  // the image until here to help ensure that we have the whole image frame decoded before
-  // we go off and try to display another frame.
+  } else {
+    // We actually have the timeout information before we get the lzw encoded 
+    // image data, at least according to the spec, but we delay in setting the 
+    // timeout for the image until here to help ensure that we have the whole 
+    // image frame decoded before we go off and try to display another frame.
+    decoder->mImageFrame->SetTimeout(aDelayTimeout);
+  }
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
     
   if (decoder->mObserver && decoder->mImageFrame) {
