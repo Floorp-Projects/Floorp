@@ -717,13 +717,6 @@ function con_unload (e)
     detachDebugger();
 }
 
-console.onWindowKeyPress =
-function con_windowkpress (e)
-{
-    if (e.keyCode == 9) /* tab */
-        console._slInputElement.focus();
-}
-
 window.onresize =
 function ()
 {
