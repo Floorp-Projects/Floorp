@@ -224,6 +224,7 @@ sub SetOptionDefines($)
   $optiondefines->{"lowmem"}{"MOZ_MAC_LOWMEM"} = 1;
   $optiondefines->{"ldap_experimental"}{"MOZ_LDAP_XPCOM_EXPERIMENTAL"} = 1;
   $optiondefines->{"useimg2"}{"USE_IMG2"}     = 1;
+  $optiondefines->{"bidi"}{"IBMBIDI"}     = 1;
 }
 
 
