@@ -187,26 +187,26 @@
       </method>
       <field name="mRadioChildren">null</field>
       <method name="_getRadioChildren">
-        <parameter name="aNode" />
         <body>
         <![CDATA[
-          if (!aNode)
-            aNode = this;
-          if (aNode == this) {
-            if (this.mRadioChildren)
-              return this.mRadioChildren;
-            else
-              this.mRadioChildren = new Array();
-          }
-          else if (aNode.localName == "radio") {
-            this.mRadioChildren[this.mRadioChildren.length++] = aNode;
+          if (this.mRadioChildren)
             return this.mRadioChildren;
+
+          // Don't store the collected child nodes immediately,
+          // collecting the child nodes could trigger constructors
+          // which would blow away our list.
+          var radioChildren = [];
+          function _filterRadioGroup(aNode) {
+            switch (aNode.localName) {
+              case "radio": return NodeFilter.FILTER_ACCEPT;
+              case "radiogroup": return NodeFilter.FILTER_REJECT;
+              default: return NodeFilter.FILTER_SKIP;
+            }
           }
-          else if (aNode.localName == "radiogroup" && aNode != this)
-            return this.mRadioChildren;
-          for (var i = 0; i < aNode.childNodes.length; ++i)
-            this._getRadioChildren(aNode.childNodes[i]);
-          return this.mRadioChildren;
+          var iterator = this.ownerDocument.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, _filterRadioGroup, true);
+          while (iterator.nextNode())
+            radioChildren.push(iterator.currentNode);
+          return this.mRadioChildren = radioChildren;
         ]]>
         </body>
       </method>
@@ -313,7 +313,6 @@
           var val = this.selectedItem;
           if (!val || val.disabled || val.hidden || val.collapsed) {
             var children = this._getRadioChildren();
-            var i;
             for (var i = 0; i < children.length; ++i) {
               if (!children[i].hidden && !children[i].collapsed && !children[i].disabled) {
                 val = children[i];
