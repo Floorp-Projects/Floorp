@@ -499,7 +499,7 @@ nsTableCellFrame::SetSelected(nsPresContext* aPresContext,
     result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
     if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
       // Selection can affect content, border and outline
-      Invalidate(GetOutlineRect(), PR_FALSE);
+      Invalidate(GetOverflowRect(), PR_FALSE);
     }
   }
   return NS_OK;
@@ -860,7 +860,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
               kidOrigin.x, kidOrigin.y, 0, aStatus);
   SetLastBlockHeight(kidSize.height);
   if (isStyleChanged) {
-    Invalidate(GetOutlineRect(), PR_FALSE);
+    Invalidate(GetOverflowRect(), PR_FALSE);
   }
 
 #if defined DEBUG_TABLE_REFLOW_TIMING

@@ -1033,13 +1033,14 @@ public:
   void Invalidate(const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE) const;
 
   /**
-   * Computes a rect that includes this frame's outline. The returned rect is
-   * relative to this frame's origin.
+   * Computes a rect that includes this frame, all its descendant
+   * frames, this frame's outline (if any), and all descendant frames'
+   * outlines (if any). This is the union of everything that might be painted by
+   * this frame subtree.
    *
-   * @param if nonnull, we record whether this rect is bigger than the frame's bounds
    * @return the rect relative to this frame's origin
    */
-  nsRect GetOutlineRect(PRBool* aAnyOutline = nsnull, nsSize *aUseSize = nsnull) const;
+  nsRect GetOverflowRect() const;
 
   /**
    * Set/unset the NS_FRAME_OUTSIDE_CHILDREN flag and store the overflow area

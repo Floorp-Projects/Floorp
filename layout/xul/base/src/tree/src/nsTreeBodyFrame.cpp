@@ -642,7 +642,7 @@ nsTreeBodyFrame::Invalidate()
   if (mUpdateBatchNest)
     return NS_OK;
 
-  nsIFrame::Invalidate(GetOutlineRect(), PR_FALSE);
+  nsIFrame::Invalidate(GetOverflowRect(), PR_FALSE);
 
   return NS_OK;
 }
