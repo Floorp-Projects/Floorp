@@ -188,3 +188,12 @@ PR_IMPLEMENT(PRStatus) PR_SetFDInheritable(
     return PR_FAILURE;
 #endif
 }
+
+/*
+** This function only has a useful implementation in the debug build of
+** the pthreads version.
+*/
+PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
+{
+    /* do nothing */
+}  /* PT_FPrintStats */
