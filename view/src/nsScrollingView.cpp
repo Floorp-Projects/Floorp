@@ -27,6 +27,7 @@
 #include "nsWidgetsCID.h"
 #include "nsViewsCID.h"
 #include "nsIScrollableView.h"
+#include "nsIFrame.h"
 
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
@@ -326,6 +327,7 @@ nsScrollingView :: nsScrollingView()
   mCornerView = nsnull;
   mScrollPref = nsScrollPreference_kAuto;
   mClipX = mClipY = 0;
+  mScrollingTimer = nsnull;
 }
 
 nsScrollingView :: ~nsScrollingView()
@@ -761,6 +763,49 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
   NS_IF_RELEASE(scview);
 }
 
+
+void nsScrollingView :: Notify(nsITimer * aTimer)
+{
+  nscoord xoff, yoff;
+  nsIView *view = GetScrolledView();
+
+  // First do the scrolling of the view
+  view->GetScrollOffset(&xoff, &yoff);
+  printf("GetScrollOffset %d %d\n", xoff, yoff);
+
+  nscoord newPos = yoff+mScrollingDelta;
+  if (newPos < 0) {
+    newPos = 0;
+  }
+  ScrollTo(0, newPos, 0);
+
+
+  // Now fake a mouse event so the frames can process the selection event
+  nsRect        rect;
+  nsGUIEvent    event;
+  nsEventStatus retval;
+
+  event.message = NS_MOUSE_MOVE;
+
+  nsIPresContext  *cx   = mViewManager->GetPresContext();
+
+  GetBounds(rect);
+  event.point.x = rect.x;
+  event.point.y = mScrollingDelta > 0 ?rect.height - rect.y - 1 : 135;
+
+  //printf("timer %d %d\n", event.point.x, event.point.y);
+
+  mFrame->HandleEvent(*cx, &event, retval);
+
+  NS_RELEASE(cx);
+
+  NS_RELEASE(mScrollingTimer);
+
+  NS_NewTimer(&mScrollingTimer);
+
+  mScrollingTimer->Init(this, 25);
+}
+
 nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
   switch (aEvent->message) {
@@ -776,6 +821,80 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
       }
       break;
     }
+
+    case NS_MOUSE_MOVE:
+    {
+      nsRect  trect;
+      nscoord lx, ly;
+
+      GetBounds(trect);
+
+      lx = aEvent->point.x - trect.x;
+      ly = aEvent->point.y - trect.y;
+
+      //nscoord         xoff, yoff;
+      //GetScrolledView()->GetScrollOffset(&xoff, &yoff);
+      //printf("%d %d   %d\n", trect.y, trect.height, yoff);
+      //printf("mouse %d %d \n", aEvent->point.x, aEvent->point.y);
+
+      if (!trect.Contains(lx, ly)) {
+        if (mScrollingTimer == nsnull) {
+          if (nsnull != mFrame) {
+            if (ly < 0 || ly > trect.y) {
+              mScrollingDelta = ly < 0 ? -100 : 100;
+              NS_NewTimer(&mScrollingTimer);
+              mScrollingTimer->Init(this, 25);
+            }
+          }
+        }
+      } else if (mScrollingTimer != nsnull) {
+        mScrollingTimer->Cancel();
+        NS_RELEASE(mScrollingTimer);
+      }
+      break;
+    }
+
+    case NS_MOUSE_LEFT_BUTTON_UP:
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+    case NS_MOUSE_RIGHT_BUTTON_UP: 
+    {
+      if (mScrollingTimer != nsnull) {
+        mScrollingTimer->Cancel();
+        NS_RELEASE(mScrollingTimer);
+        mScrollingTimer = nsnull;
+      }
+
+      nsRect  trect;
+      nscoord lx, ly;
+
+      GetBounds(trect);
+
+      lx = aEvent->point.x - trect.x;
+      ly = aEvent->point.y - trect.y;
+
+      if (!trect.Contains(lx, ly)) {
+        nsEventStatus retval;
+        if (nsnull != mFrame)
+        {
+          nsIPresContext  *cx = mViewManager->GetPresContext();
+          nscoord         xoff, yoff;
+
+          GetScrollOffset(&xoff, &yoff);
+
+          aEvent->point.x += xoff;
+          aEvent->point.y += yoff;
+
+          mFrame->HandleEvent(*cx, aEvent, retval);
+
+          aEvent->point.x -= xoff;
+          aEvent->point.y -= yoff;
+
+          NS_RELEASE(cx);
+        }
+      }
+      break;
+    }
+
     default:
       break;
   }

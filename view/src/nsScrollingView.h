@@ -21,11 +21,13 @@
 
 #include "nsView.h"
 #include "nsIScrollableView.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 
 //this is a class that acts as a container for other views and provides
 //automatic management of scrolling of the views it contains.
 
-class nsScrollingView : public nsView, public nsIScrollableView
+class nsScrollingView : public nsView, public nsIScrollableView, public nsITimerCallback
 {
 public:
   nsScrollingView();
@@ -77,6 +79,10 @@ public:
 protected:
   virtual ~nsScrollingView();
 
+  // nsITimerCallback Interface
+  virtual void Notify(nsITimer *timer);
+
+
 protected:
   nscoord             mSizeX, mSizeY;
   nscoord             mOffsetX, mOffsetY;
@@ -85,6 +91,9 @@ protected:
   nsIView             *mCornerView;
   nsScrollPreference  mScrollPref;
   nscoord             mClipX, mClipY;
+
+  nsITimer            *mScrollingTimer;
+  nscoord             mScrollingDelta;
 };
 
 #endif
