@@ -231,6 +231,45 @@ function addEditorClickEventListener()
   } catch (e) {}
 }
 
+function DoWindowCommandControllerSetting(aEditor)
+{
+  // the following is similar to GetEditorController() in ComposerCommands.js but we need 
+  // the nsIEditorController not the nsIControllerCommandManager
+  // Also note that it gets the controllers from the window not window._content
+
+  var editorController;
+  var numControllers = window.controllers.getControllerCount();
+    
+  // count down to find a controller that supplies a nsIControllerCommandManager interface
+  for (var i = numControllers-1; i >= 0 ; i --)
+  {
+    var commandManager = null;
+    
+    try { 
+      var controller = window.controllers.getControllerAt(i);
+      
+      var interfaceRequestor = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+      commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
+      if (commandManager)
+      {
+        i = -1;  // get out of loop
+        editorController = controller.QueryInterface(Components.interfaces.nsIEditorController);
+      }
+    }
+    catch(ex) { }
+  }
+
+  // if we find an editor controller, set the command refcon to the editor
+  if (editorController)
+  {
+    var ISupportsEditor;
+    try {
+      ISupportsEditor = aEditor.QueryInterface(Components.interfaces.nsISupports);
+      editorController.SetCommandRefCon(ISupportsEditor);
+    } catch (e) {}
+  }
+}
+
 var MessageComposeDocumentStateListener =
 {
   NotifyDocumentCreated: function()
@@ -279,6 +318,8 @@ var DocumentStateListener =
   NotifyDocumentCreated: function()
   {
     gEditor = editorShell.editor;
+
+    DoWindowCommandControllerSetting(gEditor);
 
     // do all of our QI'ing here so we don't need to do it elsewhere
     DoAllQueryInterfaceOnEditor();
@@ -755,15 +796,6 @@ function onParagraphFormatChange(paraMenuList, commandID)
       }
     }
   }
-}
-
-function doStatefulCommand(commandID, newState)
-{
-  var commandNode = document.getElementById(commandID);
-  if (commandNode)
-      commandNode.setAttribute("state", newState);
-  gContentWindow.focus();   // needed for command dispatch to work
-  goDoCommand(commandID);
 }
 
 function onFontFaceChange(fontFaceMenuList, commandID)
