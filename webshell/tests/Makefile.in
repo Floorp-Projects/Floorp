@@ -30,9 +30,5 @@ include $(topsrcdir)/config/config.mk
 
 DIRS		= viewer
 
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= ComFactory
-endif
-
 include $(topsrcdir)/config/rules.mk
 
