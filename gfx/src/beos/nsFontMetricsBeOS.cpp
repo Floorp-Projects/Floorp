@@ -25,6 +25,7 @@
  *   Christian M Hoffman <chrmhoffmann@web.de>
  *   Makoto hamanaka <VYA04230@nifty.com>
  *   Paul Ashford <arougthopher@lizardland.net>
+ *   Sergei Dolgov <sergei_d@fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -61,7 +62,6 @@
 #undef REALLY_NOISY_FONTS
 
 nsFontMetricsBeOS::nsFontMetricsBeOS()
-  :mEmulateBold(PR_FALSE)
 {
 }
 
@@ -205,13 +205,10 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   	face |= B_STRIKEOUT_FACE;
   	
   mFontHandle.SetFace( face );
-  // emulate italic and bold if the selected family has no such style
+  // emulate italic the selected family has no such style
   if (aFont.style == NS_FONT_STYLE_ITALIC
     && !(mFontHandle.Face() & B_ITALIC_FACE)) 
     mFontHandle.SetShear(105.0);
-  if ( aFont.weight > NS_FONT_WEIGHT_NORMAL
-    && !(mFontHandle.Face() & B_BOLD_FACE)) 
-    mEmulateBold = PR_TRUE;
 
   mFontHandle.SetSize( rounded * app2dev );
   fflush(stdout);

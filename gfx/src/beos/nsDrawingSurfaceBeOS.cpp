@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Sergei Dolgov
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -65,7 +65,10 @@ nsDrawingSurfaceBeOS :: ~nsDrawingSurfaceBeOS()
   if(mBitmap)
   {
     // Deleting mBitmap will also remove and delete any child views
+    mBitmap->Unlock();
 	delete mBitmap;
+	mView = NULL;
+	mBitmap = NULL;
   }
 }
 
@@ -112,7 +115,6 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Lock(PRInt32 aX, PRInt32 aY,
 
   // Obtain an ximage from the pixmap.  ( I think this copy the bitmap ) 
        // FIX ME !!!!  We need to copy the part locked into the mImage 
-  mView->LockLooper(); 
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT 
   //  MOZ_TIMER_STOP(mLockTime); 
@@ -147,7 +149,7 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Unlock(void)
 
   // FIX ME!!! 
   // Destroy mImage 
-       mView->UnlockLooper();
+
 
   mLocked = PR_FALSE; 
  
@@ -190,19 +192,16 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView)
   if(aView->LockLooper()) 
   { 
     //remember dimensions 
-    mWidth=nscoord(aView->Bounds().Width()+1); 
-    mHeight=nscoord(aView->Bounds().Height()+1); 
+    BRect r = aView->Bounds();
+    mWidth = nscoord(r.IntegerWidth() + 1);
+    mHeight = nscoord(r.IntegerHeight() + 1);
     
     mView = aView;
-
     aView->UnlockLooper(); 
   } 
  
-  // XXX was i smoking crack when i wrote this comment? 
-  // this is definatly going to be on the screen, as it will be the window of a 
-  // widget or something. 
+  // onscreen View, attached to BWindow, acquired via GetNativeData() call in nsRendering
   mIsOffscreen = PR_FALSE; 
-
   return NS_OK;
 }
 
@@ -216,10 +215,12 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
   mHeight=aHeight;
   mFlags = aFlags; 
   
-  // we can draw on this offscreen because it has no parent 
+  //creating offscreen  backbuffer surface
   mIsOffscreen = PR_TRUE; 
-
+  //TODO: Maybe we should reuse BView by resizing it, 
+  //and also reuse BBitmap if new size is = < of current size
   BRect r(0,0, mWidth-1, mHeight-1);
+  //creating auxiliary BView to draw on offscreen BBitmap
   mView = new BView(r, "", 0, 0);
   if (!mView)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -228,6 +229,7 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
 //  (aWidth > 0) && (aHeight > 0))
   if(aWidth > 0 && aHeight > 0)
   {
+    ///creating offscreen BBitmap
     mBitmap = new BBitmap(r, B_RGBA32, true);
     if (!mBitmap)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -240,6 +242,11 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
       
       return NS_ERROR_FAILURE;
     }
+    
+    //NB! Locking bitmap for lifetime to avoid unneccessary locking at each
+    //drawing primitive call. Locking is quite time-expensive.
+    //To avoid it, we call surface->LockDrawable() instead LockLooper()
+    mBitmap->Lock();
     //Setting ViewColor transparent noticeably decreases AppServer load in DrawBitmp()
     //Applicable here, because Mozilla paints backgrounds explicitly, with images or filling areas.
 	mView->SetViewColor(B_TRANSPARENT_32_BIT);
@@ -257,10 +264,9 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: AcquireView(BView **aView)
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: AcquireBitmap(BBitmap **aBitmap)
 {
-  if(mBitmap && mBitmap->Lock())
+  if(mBitmap && mView)
   {
     mView->Sync();
-    mBitmap->Unlock();
   }
   *aBitmap = mBitmap;
 
@@ -275,4 +281,20 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: ReleaseView(void)
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: ReleaseBitmap(void)
 {
   return NS_OK;
+}
+
+bool nsDrawingSurfaceBeOS :: LockDrawable()
+{
+  //TODO: try to avoid exta locking also for onscreen BView.
+  //Perhaps it needs synchronization with widget through nsToolkit and lock counting.
+  bool rv = true;
+  if (!mBitmap)
+    rv = mView->LockLooper();
+  return rv;
+}
+
+void nsDrawingSurfaceBeOS :: UnlockDrawable()
+{
+  if (!mBitmap)
+    mView->UnlockLooper();
 }

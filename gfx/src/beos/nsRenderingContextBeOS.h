@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: 4; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -176,17 +176,7 @@ public:
 		const nsRect &aDestBounds, PRUint32 aCopyFlags);
 	NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 *ngd);
 	
-	void CreateClipRegion() {
-		static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-		if (mClipRegion) return;
-		PRUint32 w, h;
-		mSurface->GetSize(&w, &h);
-		mClipRegion = do_CreateInstance(kRegionCID);
-		if (mClipRegion) {
-			mClipRegion->Init();
-			mClipRegion->SetTo(0, 0, w, h);
-		}
-	}
+	void CreateClipRegion();
 
 #ifdef MOZ_MATHML
   /**
@@ -207,17 +197,18 @@ public:
   //LockAndUpdateView() - method, similar to UpdateGC (from gtk gfx).
   //Acquires "fresh" drawable mView (BView) from drawing surface, locks it (BeOS specifics),
   //updates font, color and sets clipping region. 
-  //In if() statement actually replaces (mView && mView->LockLooper);
-  //Each LockAndUpdateView() statement must have UnlockLooper() counterpart somewhere, 
-  //if returned true.
   bool LockAndUpdateView();	
+  //Each LockAndUpdateView() statement must have UnlockView() counterpart somewhere, 
+  //if returned true.
+  void UnlockView();
 
 protected:
 	NS_IMETHOD CommonInit();
 	
 	// ConditionRect is used to fix coordinate overflow problems for
 	// rectangles after they are transformed to screen coordinates
-	void ConditionRect(nscoord &x, nscoord &y, nscoord &w, nscoord &h) {
+	void ConditionRect(nscoord &x, nscoord &y, nscoord &w, nscoord &h)
+	{
 		if (y < -32766) y = -32766;
 		if (y + h > 32766) h = 32766 - y;
 		if (x < -32766) x = -32766;
@@ -232,6 +223,7 @@ protected:
 	nsVoidArray *mStateCache;
 	BView *mView;
 	nscolor mCurrentColor;
+	rgb_color mRGB_color;
 	BFont *mCurrentFont;
 	nsLineStyle mCurrentLineStyle;
 	float mP2T;
