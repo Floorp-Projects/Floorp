@@ -52,7 +52,7 @@
           <treerow>
             <treecell>
               <treeindentation />
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
+              <button value="rdf:http://home.netscape.com/NC-rdf#Name"
                             align="left" />
             </treecell>
           </treerow>

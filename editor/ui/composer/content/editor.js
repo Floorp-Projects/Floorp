@@ -1902,7 +1902,7 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
 
     if (colorWell && color)
     {
-      // Use setAttribute so colorwell can be a XUL element, such as titledbutton
+      // Use setAttribute so colorwell can be a XUL element, such as button
       colorWell.setAttribute("style", "background-color: " + color); 
     }
   }
