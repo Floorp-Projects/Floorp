@@ -454,7 +454,7 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
                 mDOMNode,
                 mWebShell);
 
-  GtkWidget *parent = GTK_WIDGET(mParent->GetNativeData(NS_NATIVE_WIDGET));
+  //GtkWidget *parent = GTK_WIDGET(mParent->GetNativeData(NS_NATIVE_WIDGET));
   gtk_menu_popup (GTK_MENU(mMenu),
                   (GtkWidget*)nsnull, (GtkWidget*)nsnull,
                   menu_popup_position,
