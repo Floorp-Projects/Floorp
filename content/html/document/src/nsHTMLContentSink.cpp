@@ -2135,6 +2135,8 @@ SinkContext::FlushTags(PRBool aNotify)
     content = mStack[stackPos].mContent;
     nsIHTMLContent* parent = mStack[stackPos-1].mContent;
     
+    mStack[stackPos].mFlags |= APPENDED;
+
     // If the parent has an insertion point, insert rather than
     // append.
     if (mStack[mStackPos-1].mInsertionPoint != -1) {
@@ -2145,7 +2147,6 @@ SinkContext::FlushTags(PRBool aNotify)
     else {
       parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
     }
-    mStack[stackPos].mFlags |= APPENDED;
 
     stackPos--;
   }
