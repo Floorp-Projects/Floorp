@@ -1842,7 +1842,8 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 #ifdef NECKO
   if ((aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer))
 #else
-  if ((aType == nsURLReload || aType == nsURLReloadFromHistory) && (nsnull != mContentViewer))
+  if ((aType == nsURLReload || aType == nsURLReloadFromHistory) && 
+    (nsnull != mContentViewer) && (nsnull == aPostData))
 #endif
   {
     nsCOMPtr<nsIDocumentViewer> docViewer;
