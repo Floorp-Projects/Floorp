@@ -42,7 +42,7 @@
 /**************************************************************
   Now define the token deallocator class...
  **************************************************************/
-class _TestDeque: public nsDequeFunctor{
+class _TestDeque {
 public:
   _TestDeque() {
     SelfTest();
@@ -52,11 +52,14 @@ public:
   nsresult OriginalFlaw();
   nsresult AssignFlaw();
   nsresult StupidIterations();
+};
+static _TestDeque sTestDeque;
+
+class _Dealloc: public nsDequeFunctor {
   virtual void* operator()(void* aObject) {
     return 0;
   }
 };
-static _TestDeque gDeallocator;
 
 /**
  * conduct automated self test for this class
@@ -79,7 +82,7 @@ nsresult _TestDeque::OriginalTest() {
   int count=sizeof(ints)/sizeof(int);
   int i=0;
   int* temp;
-  nsDeque theDeque(&gDeallocator); //construct a simple one...
+  nsDeque theDeque(new _Dealloc); //construct a simple one...
  
   for (i=0;i<count;i++) { //initialize'em
     ints[i]=10*(1+i);
@@ -110,7 +113,7 @@ nsresult _TestDeque::OriginalFlaw() {
   int count=sizeof(ints)/sizeof(int);
   int i=0;
   int* temp;
-  nsDeque secondDeque(&gDeallocator);
+  nsDeque secondDeque(new _Dealloc);
   /**
    * Test 1. Origin near end, semi full, call Peek().
    * you start, mCapacity is 8
@@ -148,7 +151,7 @@ nsresult _TestDeque::AssignFlaw() {
   int ints[200];
   int count=sizeof(ints)/sizeof(int);
   int i=0;
-  nsDeque src(&gDeallocator),dest(&gDeallocator);
+  nsDeque src(new _Dealloc),dest(new _Dealloc);
   /**
    * Test 2. Assignment doesn't do the right things.
    */
@@ -180,7 +183,7 @@ nsresult _TestDeque::StupidIterations() {
    * (a) doing its own peek
    * (b) peeking at an empty deque
    */
-  nsDeque stupid(&gDeallocator);
+  nsDeque stupid(new _Dealloc);
   stupid.End()++;
   ++stupid.End();
   stupid.End()--;
@@ -192,7 +195,7 @@ nsresult _TestDeque::StupidIterations() {
   return NS_OK;
 }
 
-int main (void){
+int main (void) {
   _TestDeque test;
   return 0;
 }
