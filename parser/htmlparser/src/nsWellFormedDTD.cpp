@@ -125,7 +125,7 @@ CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mFilename("") {
   NS_INIT_REFCNT();
   mParser=0;
   mSink=0;
-  mLineNumber=0;
+  mLineNumber=1;
   mTokenizer=0;
   mDTDState=NS_OK;
 }
@@ -208,7 +208,7 @@ NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifyS
 
   mSink=aSink;
   if((aNotifySink) && (mSink)) {
-    mLineNumber=0;
+    mLineNumber=1;
     result = mSink->WillBuildModel();
 
 #if 0

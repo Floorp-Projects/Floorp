@@ -126,7 +126,7 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
     XML_SetElementHandler(mExpatParser, HandleStartElement, HandleEndElement);    
     XML_SetCharacterDataHandler(mExpatParser, HandleCharacterData);
     XML_SetProcessingInstructionHandler(mExpatParser, HandleProcessingInstruction);
-    XML_SetDefaultHandlerExpand(mExpatParser, NULL);
+    XML_SetDefaultHandlerExpand(mExpatParser, HandleDefault);
     XML_SetUnparsedEntityDeclHandler(mExpatParser, HandleUnparsedEntityDecl);
     XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
     XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
@@ -462,7 +462,7 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Cha
   CToken* theToken=gTokenRecycler->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown);
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
-    theString.Append("<?");
+    theString. Append("<?");
     theString.Append((PRUnichar *) target);
     if(data) {
       theString.Append(" ");
@@ -477,7 +477,14 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Cha
 }
 
 void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len) {
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleDefault() not yet implemented.");
+  nsAutoString str((PRUnichar *)s, len);
+  PRInt32 offset = -1;
+  CToken* newLine = 0;
+  
+  while ((offset = str.FindChar('\n', PR_FALSE, offset + 1)) != -1) {
+    newLine = gTokenRecycler->CreateTokenOfType(eToken_newline, eHTMLTag_unknown);
+    AddToken(newLine, NS_OK, *gTokenDeque, gTokenRecycler);
+  }
 }
 
 void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData, 
