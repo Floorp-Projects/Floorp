@@ -39,15 +39,17 @@
 #include "nsAutoLock.h"
 #include "pratom.h"
 
+#include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(TimerThread, nsIRunnable)
+NS_IMPL_THREADSAFE_ISUPPORTS3(TimerThread, nsIRunnable, nsISupportsWeakReference, nsIObserver)
 
 TimerThread::TimerThread() :
   mLock(nsnull),
   mCondVar(nsnull),
   mShutdown(PR_FALSE),
   mWaiting(PR_FALSE),
+  mSleeping(PR_FALSE),
   mDelayLineCounter(0),
   mMinTimerPeriod(0),
   mTimeoutAdjustment(0)
@@ -68,6 +70,13 @@ TimerThread::~TimerThread()
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[n]);
     NS_RELEASE(timer);
   }
+
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->RemoveObserver(this, "sleep_notification");
+    observerService->RemoveObserver(this, "wake_notification");
+  }
+
 }
 
 nsresult TimerThread::Init()
@@ -95,7 +104,16 @@ nsresult TimerThread::Init()
                     PR_JOINABLE_THREAD,
                     PR_PRIORITY_NORMAL,
                     PR_GLOBAL_THREAD);
+  if (NS_FAILED(rv))
+    return rv;
 
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  observerService->AddObserver(this, "sleep_notification", PR_TRUE);
+  observerService->AddObserver(this, "wake_notification", PR_TRUE);
+  
   return rv;
 }
 
@@ -185,78 +203,83 @@ NS_IMETHODIMP TimerThread::Run()
   nsAutoLock lock(mLock);
 
   while (!mShutdown) {
-    PRIntervalTime now = PR_IntervalNow();
-    nsTimerImpl *timer = nsnull;
+    PRIntervalTime waitFor;
+    
+    if (mSleeping)
+      waitFor = PR_MillisecondsToInterval(100);   // sleep for 0.1 seconds while not firing timers
+    else {
+      waitFor = PR_INTERVAL_NO_TIMEOUT;
+      PRIntervalTime now = PR_IntervalNow();
+      nsTimerImpl *timer = nsnull;
 
-    if (mTimers.Count() > 0) {
-      timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[0]);
+      if (mTimers.Count() > 0) {
+        timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[0]);
 
-      if (!TIMER_LESS_THAN(now, timer->mTimeout + mTimeoutAdjustment)) {
-  next:
-        // NB: AddRef before the Release under RemoveTimerInternal to avoid
-        // mRefCnt passing through zero, in case all other refs than the one
-        // from mTimers have gone away (the last non-mTimers[i]-ref's Release
-        // must be racing with us, blocked in gThread->RemoveTimer waiting
-        // for TimerThread::mLock, under nsTimerImpl::Release.
+        if (!TIMER_LESS_THAN(now, timer->mTimeout + mTimeoutAdjustment)) {
+    next:
+          // NB: AddRef before the Release under RemoveTimerInternal to avoid
+          // mRefCnt passing through zero, in case all other refs than the one
+          // from mTimers have gone away (the last non-mTimers[i]-ref's Release
+          // must be racing with us, blocked in gThread->RemoveTimer waiting
+          // for TimerThread::mLock, under nsTimerImpl::Release.
 
-        NS_ADDREF(timer);
-        RemoveTimerInternal(timer);
+          NS_ADDREF(timer);
+          RemoveTimerInternal(timer);
 
-        // We release mLock around the Fire call, of course, to avoid deadlock.
-        lock.unlock();
+          // We release mLock around the Fire call, of course, to avoid deadlock.
+          lock.unlock();
 
 #ifdef DEBUG_TIMERS
-        if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-          PR_LOG(gTimerLog, PR_LOG_DEBUG,
-                 ("Timer thread woke up %dms from when it was supposed to\n",
-                  (now >= timer->mTimeout)
-                  ? PR_IntervalToMilliseconds(now - timer->mTimeout)
-                  : -(PRInt32)PR_IntervalToMilliseconds(timer->mTimeout - now))
-                );
+          if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+            PR_LOG(gTimerLog, PR_LOG_DEBUG,
+                   ("Timer thread woke up %dms from when it was supposed to\n",
+                    (now >= timer->mTimeout)
+                    ? PR_IntervalToMilliseconds(now - timer->mTimeout)
+                    : -(PRInt32)PR_IntervalToMilliseconds(timer->mTimeout - now))
+                  );
+          }
+#endif
+
+          // We are going to let the call to PostTimerEvent here handle the release of the
+          // timer so that we don't end up releasing the timer on the TimerThread
+          // instead of on the thread it targets.
+          timer->PostTimerEvent();
+          timer = nsnull;
+
+          lock.lock();
+          if (mShutdown)
+            break;
+
+          // Update now, as PostTimerEvent plus the locking may have taken a tick or two,
+          // and we may goto next below.
+          now = PR_IntervalNow();
         }
-#endif
-
-        // We are going to let the call to PostTimerEvent here handle the release of the
-        // timer so that we don't end up releasing the timer on the TimerThread
-        // instead of on the thread it targets.
-        timer->PostTimerEvent();
-        timer = nsnull;
-
-        lock.lock();
-        if (mShutdown)
-          break;
-
-        // Update now, as PostTimerEvent plus the locking may have taken a tick or two,
-        // and we may goto next below.
-        now = PR_IntervalNow();
       }
-    }
 
-    PRIntervalTime waitFor = PR_INTERVAL_NO_TIMEOUT;
+      if (mTimers.Count() > 0) {
+        timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[0]);
 
-    if (mTimers.Count() > 0) {
-      timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[0]);
+        PRIntervalTime timeout = timer->mTimeout + mTimeoutAdjustment;
 
-      PRIntervalTime timeout = timer->mTimeout + mTimeoutAdjustment;
-
-      // Don't wait at all (even for PR_INTERVAL_NO_WAIT) if the next timer is
-      // due now or overdue.
-      if (!TIMER_LESS_THAN(now, timeout))
-        goto next;
-      waitFor = timeout - now;
-    }
+        // Don't wait at all (even for PR_INTERVAL_NO_WAIT) if the next timer is
+        // due now or overdue.
+        if (!TIMER_LESS_THAN(now, timeout))
+          goto next;
+        waitFor = timeout - now;
+      }
 
 #ifdef DEBUG_TIMERS
-    if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-      if (waitFor == PR_INTERVAL_NO_TIMEOUT)
-        PR_LOG(gTimerLog, PR_LOG_DEBUG,
-               ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
-      else
-        PR_LOG(gTimerLog, PR_LOG_DEBUG,
-               ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
-    }
+      if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
+        if (waitFor == PR_INTERVAL_NO_TIMEOUT)
+          PR_LOG(gTimerLog, PR_LOG_DEBUG,
+                 ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
+        else
+          PR_LOG(gTimerLog, PR_LOG_DEBUG,
+                 ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
+      }
 #endif
-
+    }
+    
     mWaiting = PR_TRUE;
     PR_WaitCondVar(mCondVar, waitFor);
     mWaiting = PR_FALSE;
@@ -351,4 +374,39 @@ PRBool TimerThread::RemoveTimerInternal(nsTimerImpl *aTimer)
   aTimer->mArmed = PR_FALSE;
   NS_RELEASE(aTimer);
   return PR_TRUE;
+}
+
+void TimerThread::DoBeforeSleep()
+{
+  mSleeping = PR_TRUE;
+}
+
+void TimerThread::DoAfterSleep()
+{
+  for (PRInt32 i = 0; i < mTimers.Count(); i ++)
+  {
+    nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[i]);
+    // get and set the delay to cause its timeout to be recomputed
+    PRUint32 delay;
+    timer->GetDelay(&delay);
+    timer->SetDelay(delay);
+  }
+  
+  // nuke the stored adjustments, so they get recalibrated
+  mTimeoutAdjustment = 0;
+  mDelayLineCounter = 0;
+  mSleeping = PR_FALSE;
+}
+
+
+/* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
+NS_IMETHODIMP
+TimerThread::Observe(nsISupports* /* aSubject */, const char *aTopic, const PRUnichar* /* aData */)
+{
+  if (strcmp(aTopic, "sleep_notification") == 0)
+    DoBeforeSleep();
+  else if (strcmp(aTopic, "wake_notification") == 0)
+    DoAfterSleep();
+
+  return NS_OK;
 }
