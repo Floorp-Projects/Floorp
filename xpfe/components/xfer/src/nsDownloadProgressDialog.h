@@ -34,8 +34,8 @@
 | to an output file and indicates the progress to the user as it does so.      |
 ------------------------------------------------------------------------------*/
 class nsDownloadProgressDialog : public nsIXULWindowCallbacks,
-                                 public nsIStreamListener,
-                                 public nsIDocumentObserver {
+                                        nsIStreamListener,
+                                        nsIDocumentObserver {
 public:
     // Declare implementation of ISupports stuff.
     NS_DECL_ISUPPORTS
