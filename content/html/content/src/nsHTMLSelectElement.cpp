@@ -131,6 +131,13 @@ public:
    */
   void DropReference();
 
+  /**
+   * See nsISelectElement.idl for documentation on this method
+   */
+  nsresult GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
+                          PRInt32 aStartIndex, PRBool aForward,
+                          PRInt32* aIndex);
+
 private:
   /** The list of options (holds strong references) */
   nsCOMArray<nsIDOMHTMLOptionElement> mElements;
@@ -1110,34 +1117,7 @@ nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
                                     PRInt32 aStartIndex, PRBool aForward,
                                     PRInt32* aIndex)
 {
-  NS_ENSURE_ARG_POINTER(aIndex);
-
-  PRUint32 numOptions;
-
-  nsresult rv = GetLength(&numOptions);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  aStartIndex = PR_MIN(aStartIndex, (PRInt32)numOptions - 1);
-  aStartIndex = PR_MAX(0, aStartIndex);
-
-  nsCOMPtr<nsIDOMNode> node;
-
-  for (PRInt32 i = aStartIndex;
-       (aForward ? i < (PRInt32)numOptions : i != -1);
-       i += (aForward ? 1 : -1)) {
-    rv = Item(i, getter_AddRefs(node));
-    if (NS_SUCCEEDED(rv) && node) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
-      if (option && option.get() == aOption) {
-        *aIndex = i;
-        return NS_OK;
-      }
-    }
-  }
-
-  return NS_ERROR_FAILURE;
+  return mOptions->GetOptionIndex(aOption, aStartIndex, aForward, aIndex);
 }
 
 PRBool
@@ -2087,6 +2067,39 @@ nsHTMLOptionCollection::DropReference()
   // Drop our (non ref-counted) reference
   mSelect = nsnull;
 }
+
+nsresult
+nsHTMLOptionCollection::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
+                                       PRInt32 aStartIndex,
+                                       PRBool aForward,
+                                       PRInt32* aIndex)
+{
+  PRInt32 index;
+
+  // Make the common case fast
+  if (aStartIndex == 0 && aForward) {
+    index = mElements.IndexOf(aOption);
+    if (index == -1) {
+      return NS_ERROR_FAILURE;
+    }
+    
+    *aIndex = index;
+    return NS_OK;
+  }
+
+  PRInt32 high = mElements.Count();
+  PRInt32 step = aForward ? 1 : -1;
+
+  for (index = aStartIndex; index < high && index > -1; index += step) {
+    if (mElements[index] == aOption) {
+      *aIndex = index;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 
 // nsISupports
 
