@@ -88,8 +88,9 @@ nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
   GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  // NOTE: the Remove will delete the drag capturer
-  reciever->RemoveEventListenerByIID((nsIDOMDragListener *)mDragCapturer, nsIDOMDragListener::GetIID());
+  // NOTE: the last Remove will delete the drag capturer
+  reciever->RemoveEventListener("dragover", mDragCapturer, PR_TRUE);
+  reciever->RemoveEventListener("dragexit", mDragCapturer, PR_TRUE);
 
   NS_IF_RELEASE(mContentChain);
 }
