@@ -55,7 +55,7 @@
       <menuitem name="Print Preview" onclick=""/>
       <menuitem name="Print" onclick="BrowserPrint()"/>
       <separator />
-      <menuitem name="Close" onclick="BrowserClose();"/>
+      <menuitem name=".Close" onclick="BrowserClose();"/>
       <menuitem name="Quit" onclick="BrowserExit();"/>
     </menu>
 	<menu name="Edit"> 
