@@ -241,6 +241,11 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     // Return our desired size
     ComputeDesiredSize(desiredRect, rsp->maxSize, borderPadding, aDesiredSize);
 
+    // XXX This code is really temporary; the lower level frame
+    // classes need to contribute to the area that needs damage
+    // repair. This class should only worry about damage repairing
+    // it's border+padding area.
+
     // Decide how much to repaint based on the reflow type.
     // Note: we don't have to handle the initial reflow case and the
     // resize reflow case, because they're handled by the root content
@@ -254,7 +259,11 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
         damageArea.y = kidOldRect.YMost();
         damageArea.width = aDesiredSize.width;
         damageArea.height = aDesiredSize.height - kidOldRect.height;
-  
+        if (desiredRect.height == kidOldRect.height) {
+          // Since we don't know what changed, assume it all changed.
+          damageArea.y = 0;
+          damageArea.height = aDesiredSize.height;
+        }
       } else {
         // Ideally the frame that is the target of the reflow command
         // (or its parent frame) would generate a damage rect, but
