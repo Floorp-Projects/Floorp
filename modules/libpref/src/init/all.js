@@ -444,6 +444,8 @@ pref("network.protocol-handler.external.ms-help", false);
 pref("network.protocol-handler.external.vnd.ms.radio", false);
 pref("network.protocol-handler.external.help", false);
 pref("network.protocol-handler.external.disk", false);
+pref("network.protocol-handler.external.disks", false);
+pref("network.protocol-handler.external.afp", false);
 
 // An exposed protocol handler is one that can be used in all contexts.  A
 // non-exposed protocol handler is one that can only be used internally by the
@@ -645,7 +647,7 @@ pref("security.directory",              "");
 pref("signed.applets.codebase_principal_support", false);
 pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
-// security-sensitive dialogs should delay focus. In milliseconds.
+// security-sensitive dialogs should delay button enabling. In milliseconds.
 pref("security.dialog_enable_delay", 2000);
 
 // Modifier key prefs: default to Windows settings,

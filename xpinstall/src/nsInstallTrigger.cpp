@@ -50,6 +50,12 @@
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsIPermissionManager.h"
+#include "nsIDocShell.h"
+#include "nsNetUtil.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIPrincipal.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -112,70 +118,295 @@ nsInstallTrigger::SetScriptObject(void *aScriptObject)
 NS_IMETHODIMP
 nsInstallTrigger::HandleContent(const char * aContentType,
                                 nsIInterfaceRequestor* aWindowContext,
-                                nsIRequest* request)
+                                nsIRequest* aRequest)
 {
     nsresult rv = NS_OK;
-    if (!request) return NS_ERROR_NULL_POINTER;
+    if (!aRequest)
+        return NS_ERROR_NULL_POINTER;
 
-    if (nsCRT::strcasecmp(aContentType, "application/x-xpinstall") == 0) {
-        nsCOMPtr<nsIURI> uri;
-        nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-        rv = aChannel->GetURI(getter_AddRefs(uri));
-        if (NS_FAILED(rv)) return rv;
-
-        request->Cancel(NS_BINDING_ABORTED);
-
-        if (uri) {
-            nsCAutoString spec;
-            rv = uri->GetSpec(spec);
-            if (NS_FAILED(rv))
-                return NS_ERROR_NULL_POINTER;
-
-            nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner = do_QueryInterface(aWindowContext);
-            if (globalObjectOwner)
-            {
-                nsCOMPtr<nsIScriptGlobalObject> globalObject;
-                globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
-                if (globalObject)
-                {
-                    PRBool value;
-                    rv = StartSoftwareUpdate(globalObject, NS_ConvertUTF8toUCS2(spec), 0, &value);
-
-                    if (NS_SUCCEEDED(rv) && value)
-                        return NS_OK;
-                }
-            }
-        }
-    } else {
-        // The content-type was not application/x-xpinstall
+    if (nsCRT::strcasecmp(aContentType, "application/x-xpinstall") != 0)
+    {
+        // We only support content-type application/x-xpinstall
         return NS_ERROR_WONT_HANDLE_CONTENT;
     }
 
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
-{
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    if ( prefBranch )
+    // Save the URI so nsXPInstallManager can re-load it later
+    nsCOMPtr<nsIURI> uri;
+    nsCAutoString    urispec;
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+    if (channel)
     {
-        nsresult rv = prefBranch->GetBoolPref( (const char*) XPINSTALL_ENABLE_PREF, aReturn);
+        rv = channel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv) && uri)
+            rv = uri->GetSpec(urispec);
+    }
+    if (NS_FAILED(rv))
+        return rv;
+    if (urispec.IsEmpty())
+        return NS_ERROR_ILLEGAL_VALUE;
 
-        if (NS_FAILED(rv))
+
+#ifdef NS_DEBUG
+    // XXX: if only the owner weren't always null this is what I'd want to do
+
+    // Get the owner of the channel to perform permission checks.
+    //
+    // It's OK if owner is null, this means it was a top level
+    // load and we want to allow installs in that case.
+    nsCOMPtr<nsISupports>  owner;
+    nsCOMPtr<nsIPrincipal> principal;
+    nsCOMPtr<nsIURI>       ownerURI;
+
+    channel->GetOwner( getter_AddRefs( owner ) );
+    if ( owner )
+    {
+        principal = do_QueryInterface( owner );
+        if ( principal )
         {
-            *aReturn = PR_FALSE;
+            principal->GetURI( getter_AddRefs( ownerURI ) );
         }
+    }
+#endif
+
+    // Save the referrer if any, for permission checks
+    PRBool trustReferrer = PR_FALSE;
+    nsCOMPtr<nsIURI> referringURI;
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+    if ( httpChannel )
+    {
+        httpChannel->GetReferrer(getter_AddRefs(referringURI));
+
+        // see if we should trust the referrer (which can be null):
+        //  - we are an httpChannel (we are if we're here)
+        //  - user has not turned off the feature
+        PRInt32 referrerLevel = 0;
+        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+        if ( prefBranch)
+        {
+            rv = prefBranch->GetIntPref( (const char*)"network.http.sendRefererHeader",
+                                         &referrerLevel );
+            trustReferrer = ( NS_SUCCEEDED(rv) && (referrerLevel >= 2) );
+        }
+    }
+
+
+    // Cancel the current request. nsXPInstallManager restarts the download
+    // under its control (shared codepath with InstallTrigger)
+    aRequest->Cancel(NS_BINDING_ABORTED);
+
+
+    // Get the global object of the target window for StartSoftwareUpdate
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner = 
+                                         do_QueryInterface(aWindowContext);
+    if ( globalObjectOwner )
+    {
+        globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    }
+    if ( !globalObject )
+        return NS_ERROR_INVALID_ARG;
+
+
+    // We have what we need to start an XPInstall, now figure out if we are
+    // going to honor this request based on PermissionManager settings
+    PRBool enabled = PR_FALSE;
+
+    if ( trustReferrer )
+    {
+        // easiest and most common case: base decision on http referrer
+        //
+        // NOTE: the XPI itself may be from elsewhere; the user can decide if
+        // they trust the actual source when they get the install confirmation
+        // dialog. The decision we're making here is whether the triggering
+        // site is one which is allowed to annoy the user with modal dialogs
+
+        enabled = AllowInstall( referringURI );
     }
     else
     {
-        // no prefs manager: we're in the install wizard and always work
-        *aReturn = PR_TRUE;
+        // Now we're stumbing in the dark. In the most likely case the user
+        // simply clicked on an FTP link (no referrer) and it's perfectly
+        // sane to use the current window.
+        //
+        // On the other hand the user might be opening a non-http XPI link
+        // in an unrelated existing window (typed in location bar, bookmark,
+        // dragged link ...) in which case the current window is irrelevant.
+        // If we knew it was one of these explicit user actions we'd like to
+        // allow it, but we have no way of knowing that here.
+        //
+        // But there's no way to distinguish the innocent cases from a clever
+        // malicious site. If we used the target window then evil.com could
+        // embed a presumed allowed site (e.g. mozilla.org) in a frame, then
+        // change the location to the XPI and trigger the install. Or evil.com
+        // could do the same thing in a new window (more work to get around
+        // popup blocking, but possible).
+        //
+        // Our choices appear to be block this type of load entirely or to
+        // trust only the install URI. The former is unacceptably restrictive,
+        // the latter allows malicious sites to pester people with modal
+        // dialogs. As long as the trusted sites don't host bad content that's
+        // no worse than an endless stream of alert()s -- already possible.
+        // If the trusted sites don't even have an ftp server then even this
+        // level of annoyance is not possible.
+        //
+        // If a trusted site hosts an install with an exploitable flaw it
+        // might be possible that a malicious site would attempt to trick
+        // people into installing it, hoping to turn around and exploit it.
+        // This is not entirely far-fetched (it's been done with ActiveX
+        // controls) and will require community policing of the default
+        // trusted sites.
+
+        enabled = AllowInstall( uri );
+    }
+
+
+    if ( enabled )
+    {
+        rv = StartSoftwareUpdate( globalObject,
+                                  NS_ConvertUTF8toUTF16(urispec),
+                                  0,
+                                  &enabled);
+    }
+    else
+    {
+        // TODO: fire event signaling blocked Install attempt
+        rv = NS_ERROR_ABORT;
+    }
+
+    return rv;
+}
+
+
+// updateWhitelist
+//
+// Helper function called by nsInstallTrigger::AllowInstall().
+// Interprets the pref as a comma-delimited list of hosts and adds each one
+// to the permission manager using the given action. Clear pref when done.
+static void updatePermissions( const char* aPref,
+                               PRUint32 aPermission,
+                               nsIPermissionManager* aPermissionManager,
+                               nsIPrefBranch*        aPrefBranch)
+{
+    NS_PRECONDITION(aPref && aPermissionManager && aPrefBranch, "Null arguments!");
+
+    nsXPIDLCString hostlist;
+    nsresult rv = aPrefBranch->GetCharPref( aPref, getter_Copies(hostlist));
+    if (NS_SUCCEEDED(rv) && !hostlist.IsEmpty())
+    {
+        nsCAutoString host;
+        PRInt32 start=0, match=0;
+        nsresult rv;
+        nsCOMPtr<nsIURI> uri;
+
+        do {
+            match = hostlist.FindChar(',', start);
+
+            host = Substring(hostlist, start, match-start);
+            host.CompressWhitespace();
+            host.Insert("http://", 0);
+
+            rv = NS_NewURI(getter_AddRefs(uri), host);
+            if (NS_SUCCEEDED(rv))
+            {
+                aPermissionManager->Add( uri, XPI_PERMISSION, aPermission );
+            }
+            start = match+1;
+        } while ( match > 0 );
+
+        // save empty list, we don't need to do this again
+        aPrefBranch->SetCharPref( aPref, "");
+    }
+}
+
+
+// Check whether an Install is allowed. The launching URI can be null,
+// in which case only the global pref-setting matters.
+PRBool
+nsInstallTrigger::AllowInstall(nsIURI* aLaunchURI)
+{
+    // Check the global setting.
+    PRBool xpiEnabled = PR_FALSE;
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if ( !prefBranch)
+    {
+        return PR_TRUE; // no pref service in native install, it's OK
+    }
+
+    prefBranch->GetBoolPref( XPINSTALL_ENABLE_PREF, &xpiEnabled);
+    if ( !xpiEnabled )
+    {
+        // globally turned off
+        return PR_FALSE;
+    }
+
+
+    // Check permissions for the launching host if we have one
+    nsCOMPtr<nsIPermissionManager> permissionMgr =
+                            do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+
+    if ( permissionMgr && aLaunchURI )
+    {
+        PRBool isChrome = PR_FALSE;
+        PRBool isFile = PR_FALSE;
+        aLaunchURI->SchemeIs( "chrome", &isChrome );
+        aLaunchURI->SchemeIs( "file", &isFile );
+
+        // file: and chrome: don't need whitelisted hosts
+        if ( !isChrome && !isFile )
+        {
+            // check prefs for permission updates before testing URI
+            updatePermissions( XPINSTALL_WHITELIST_ADD,
+                               nsIPermissionManager::ALLOW_ACTION,
+                               permissionMgr, prefBranch );
+            updatePermissions( XPINSTALL_BLACKLIST_ADD,
+                               nsIPermissionManager::DENY_ACTION,
+                               permissionMgr, prefBranch );
+
+            PRBool requireWhitelist = PR_TRUE;
+            prefBranch->GetBoolPref( XPINSTALL_WHITELIST_REQUIRED, &requireWhitelist );
+
+            PRUint32 permission = nsIPermissionManager::UNKNOWN_ACTION;
+            permissionMgr->TestPermission( aLaunchURI, XPI_PERMISSION, &permission );
+
+            if ( permission == nsIPermissionManager::DENY_ACTION )
+            {
+                xpiEnabled = PR_FALSE;
+            }
+            else if ( requireWhitelist &&
+                      permission != nsIPermissionManager::ALLOW_ACTION )
+            {
+                xpiEnabled = PR_FALSE;
+            }
+        }
+    }
+
+    return xpiEnabled;
+}
+
+
+NS_IMETHODIMP
+nsInstallTrigger::UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool* aReturn)
+{
+    *aReturn = PR_FALSE;
+    NS_ENSURE_ARG_POINTER(aGlobalObject);
+
+    // find the current site
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(aGlobalObject));
+    if ( window )
+    {
+        window->GetDocument(getter_AddRefs(domdoc));
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
+        if ( doc )
+        {
+            *aReturn = AllowInstall( doc->GetDocumentURI() );
+        }
     }
 
     return NS_OK;
 }
+
+
 
 NS_IMETHODIMP
 nsInstallTrigger::Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRBool* aReturn)
@@ -183,14 +414,7 @@ nsInstallTrigger::Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo
     NS_ASSERTION(aReturn, "Invalid pointer arg");
     *aReturn = PR_FALSE;
 
-    PRBool enabled;
-    nsresult rv = UpdateEnabled(&enabled);
-    if (NS_FAILED(rv) || !enabled)
-    {
-        delete aTrigger;
-        return NS_OK;
-    }
-
+    nsresult rv;
     nsXPInstallManager *mgr = new nsXPInstallManager();
     if (mgr)
     {
@@ -218,15 +442,9 @@ nsInstallTrigger::InstallChrome(nsIScriptGlobalObject* aGlobalObject, PRUint32 a
     *aReturn = PR_FALSE;
 
 
-    // make sure we're allowing installs
-    PRBool enabled;
-    nsresult rv = UpdateEnabled(&enabled);
-    if (NS_FAILED(rv) || !enabled)
-        return NS_OK;
-
-
     // The Install manager will delete itself when done, once we've called
     // InitManager. Before then **WE** must delete it
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     nsXPInstallManager *mgr = new nsXPInstallManager();
     if (mgr)
     {
@@ -252,13 +470,8 @@ nsInstallTrigger::InstallChrome(nsIScriptGlobalObject* aGlobalObject, PRUint32 a
 NS_IMETHODIMP
 nsInstallTrigger::StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)
 {
-    PRBool enabled;
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     *aReturn = PR_FALSE;
-
-    UpdateEnabled(&enabled);
-    if (!enabled)
-        return NS_OK;
 
     // The Install manager will delete itself when done, once we've called
     // InitManager. Before then **WE** must delete it
@@ -317,12 +530,6 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
 {
     *aReturn = NOT_FOUND;  // assume failure.
 
-    PRBool enabled;
-
-    UpdateEnabled(&enabled);
-    if (!enabled)
-        return NS_OK;
-
     VERSION              cVersion;
     NS_ConvertUCS2toUTF8 regName(aRegName);
     REGERR               status;
@@ -350,12 +557,6 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
 NS_IMETHODIMP
 nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
 {
-    PRBool enabled;
-
-    UpdateEnabled(&enabled);
-    if (!enabled)
-        return NS_OK;
-
     VERSION              cVersion;
     NS_ConvertUCS2toUTF8 regName(component);
     REGERR               status;
