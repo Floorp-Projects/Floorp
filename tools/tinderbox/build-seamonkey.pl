@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.16 $ ';
+$Version = '$Revision: 1.17 $ ';
 
 
 sub PrintUsage {
@@ -728,16 +728,16 @@ sub RunBloatTest {
   print LOG "$Binary\n";
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
   $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/apprunner";
-  $BinaryLog = $BuildDir . '/runlog';
+  $BinaryLog = $BuildDir . '/bloat-cur.log';
   
-  rename ($BinaryLog, "$BuildDir/runlog.prev");
+  rename ($BinaryLog, "$BuildDir/bloat-prev.log");
   
   # Fork off a child process.
   $pid = fork;
 
   unless ($pid) { # child
     chdir $BinaryDir;
-    unlink $BinaryLog;
+
     $SaveHome = $ENV{HOME};
     $ENV{HOME} = $BinaryDir;
     open STDOUT, ">$BinaryLog";
@@ -782,7 +782,7 @@ sub RunBloatTest {
   print LOG "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
 
   
-  open DIFF, "$BuildDir/../bloatdiff.pl $BuildDir/runlog.prev $BinaryLog |" or die "Unable to run bloatdiff.pl";
+  open DIFF, "$BuildDir/../bloatdiff.pl $BuildDir/bloat-prev.log $BinaryLog |" or die "Unable to run bloatdiff.pl";
 
   while (my $line = <DIFF>) {
     print LOG $line;
