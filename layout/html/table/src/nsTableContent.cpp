@@ -99,8 +99,23 @@ nsTablePart* nsTableContent::GetTable ()
   return mTable;
 }
 
+void nsTableContent::SetTableForChildren(nsTablePart *aTable)
+{
+ if (aTable != nsnull)
+  {
+    PRInt32 count = ChildCount();
+    for (PRInt32 index = 0; index < count; index++)
+      SetTableForTableContent(ChildAt(index),aTable);
+  }
+}
+
+
 void nsTableContent::SetTable (nsTablePart *aTable)
 {
+  // Check to see if the current table was null, if it was, then call
+  // method to reset children
+  if (mTable == nsnull)
+    SetTableForChildren(aTable);
   mTable = aTable;
 }
 
