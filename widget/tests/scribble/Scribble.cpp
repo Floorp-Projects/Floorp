@@ -884,7 +884,7 @@ char *str;
     nscolor white;
 
     MyObserver *observer = new MyObserver();
-    NS_ColorNameToRGB("white", &white);
+    NS_ColorNameToRGB(nsAutoString("white"), &white);
     gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
 }
 
