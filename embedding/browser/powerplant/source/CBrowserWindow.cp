@@ -29,12 +29,13 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
-#include "nsIContentViewer.h"
-#include "nsIMarkupDocumentViewer.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIWindowCreator.h"
 #include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMWindowInternal.h"
 
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
@@ -77,11 +78,12 @@ static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 // ---------------------------------------------------------------------------
 
 CBrowserWindow::CBrowserWindow() :
+    mIsChromeWindow(false),
     mBrowserShell(NULL), mBrowserChrome(NULL),
     mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
     mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
     mProgressBar(NULL), mBusy(false),
-    mInitialLoadComplete(false), mShowOnInitialLoad(false),
+    mInitialLoadComplete(false), mVisible(false),
     mSizeToContent(true),
     mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE)
 {
@@ -100,13 +102,15 @@ CBrowserWindow::CBrowserWindow(LCommander*		inSuperCommander,
                                ConstStringPtr	inTitle,
                                SInt16			inProcID,
                                UInt32			inAttributes,
-                               WindowPtr		inBehind) :
+                               WindowPtr		inBehind,
+                               Boolean          inIsChromeWindow) :
     LWindow(inSuperCommander, inGlobalBounds, inTitle, inProcID, inAttributes, inBehind),
+    mIsChromeWindow(inIsChromeWindow),
     mBrowserShell(NULL), mBrowserChrome(NULL),
     mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
     mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
     mProgressBar(NULL), mBusy(false),
-    mInitialLoadComplete(false), mShowOnInitialLoad(false),
+    mInitialLoadComplete(false), mVisible(false),
     mSizeToContent(true),
     mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE)
 {
@@ -122,11 +126,12 @@ CBrowserWindow::CBrowserWindow(LCommander*		inSuperCommander,
 
 CBrowserWindow::CBrowserWindow(LStream*	inStream) :
     LWindow(inStream),
+    mIsChromeWindow(false),
     mBrowserShell(NULL), mBrowserChrome(NULL),
     mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
     mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
     mProgressBar(NULL), mBusy(false),
-    mInitialLoadComplete(false), mShowOnInitialLoad(false),
+    mInitialLoadComplete(false), mVisible(false),
     mSizeToContent(true),
     mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE)
 {
@@ -205,7 +210,8 @@ CBrowserWindow* CBrowserWindow::CreateWindow(PRUint32 chromeFlags, PRInt32 width
                 windowAttrs |= windAttr_CloseBox;
         }
 
-        theWindow = new CBrowserWindow(LCommander::GetTopCommander(), globalBounds, "\p", windowDefProc, windowAttrs, window_InFront);
+        Boolean isChrome = (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) != 0;
+        theWindow = new CBrowserWindow(LCommander::GetTopCommander(), globalBounds, "\p", windowDefProc, windowAttrs, window_InFront, isChrome);
         ThrowIfNil_(theWindow);
         theWindow->SetUserCon(wind_BrowserWindow);
         
@@ -546,14 +552,13 @@ NS_METHOD CBrowserWindow::GetIWebBrowserChrome(nsIWebBrowserChrome **aChrome)
 
 NS_METHOD CBrowserWindow::SizeToContent()
 {
-  nsCOMPtr<nsIContentViewer> aContentViewer;
-  mBrowserShell->GetContentViewer(getter_AddRefs(aContentViewer));
-  NS_ENSURE_TRUE(aContentViewer, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(aContentViewer));
-  NS_ENSURE_TRUE(markupViewer, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(markupViewer->SizeToContent(), NS_ERROR_FAILURE);
-
-  return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  rv = mBrowserChrome->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDOMWindowInternal> domWindowInternal(do_QueryInterface(domWindow, &rv));
+  if (NS_FAILED(rv)) return rv;
+  return domWindowInternal->SizeToContent();
 }
 
 NS_METHOD CBrowserWindow::Stop()
@@ -635,20 +640,25 @@ NS_METHOD CBrowserWindow::OnStatusNetStop(nsIWebProgress *progress, nsIRequest *
 	if (mStopButton)
 		mStopButton->Disable();
 		
-    // If this is our first load, check to see if we need to be sized/shown.    
-    if (!mInitialLoadComplete) {
-    	if (mSizeToContent) {
+    // If this is a chrome window and it's first load, do some things.    
+    if (mIsChromeWindow && !mInitialLoadComplete) {
+    
+        // If we don't have a title yet, see if we can get one from the DOM
+        LStr255 windowTitle;
+        GetDescriptor(windowTitle);
+        if (!windowTitle.Length())
+            SetTitleFromDOMDocument();
+        
+        // If we are being sized intrinsically, do it now    
+    	if (mSizeToContent)
     	    SizeToContent();
-    	    mSizeToContent = false;
-        }
-        if (mShowOnInitialLoad) {
+        
+        // If we deferred showing ourselves because waiting to be sized, do it now
+        if (mVisible && !IsVisible())
             Show();
-            Select();
-            mShowOnInitialLoad = false;
-        }
-	    mInitialLoadComplete = true;
+
     }
-	
+	mInitialLoadComplete = true;	
 	mBusy = false;
 		
 	// Inform any other interested parties
@@ -680,6 +690,12 @@ NS_METHOD CBrowserWindow::OnProgressChange(nsIWebProgress *progress, nsIRequest 
    }
    return NS_OK;
 }
+
+NS_METHOD CBrowserWindow::GetVisibility(PRBool *aVisibility)
+{
+    *aVisibility = mVisible;
+    return NS_OK;
+}
   
 NS_METHOD CBrowserWindow::SetVisibility(PRBool aVisibility)
 {
@@ -687,15 +703,13 @@ NS_METHOD CBrowserWindow::SetVisibility(PRBool aVisibility)
     // defer making ourselves visible until the load completes.
     
     if (aVisibility) { 
-        if (!mSizeToContent || mInitialLoadComplete) {
+        if (mInitialLoadComplete)
             Show();
-            Select();
-        }
-        else
-            mShowOnInitialLoad = true;
     }
     else
         Hide();
+
+    mVisible = aVisibility;
         
     return NS_OK;
 }
@@ -761,6 +775,33 @@ NS_METHOD CBrowserWindow::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent 
     return NS_OK;
 }
 
+NS_METHOD CBrowserWindow::SetTitleFromDOMDocument()
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    rv = mBrowserChrome->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    rv = domWindow->GetDocument(getter_AddRefs(domDoc));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDOMElement> domDocElem;
+    rv = domDoc->GetDocumentElement(getter_AddRefs(domDocElem));
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString windowTitle;
+    domDocElem->GetAttribute(NS_LITERAL_STRING("title"), windowTitle);
+    if (!windowTitle.IsEmpty()) {
+        Str255 pStr;
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(windowTitle, pStr);
+        SetDescriptor(pStr);
+    }
+    else
+        rv = NS_ERROR_FAILURE;
+        
+    return rv;
+}
+
 // ---------------------------------------------------------------------------
 //	Window Creator
 // ---------------------------------------------------------------------------
@@ -799,8 +840,6 @@ NS_IMETHODIMP CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 	// but since windows on the Mac don't have parents anyway...
 	try {
 		theWindow = CBrowserWindow::CreateWindow(aChromeFlags, -1, -1);
-		theWindow->SetSizeToContent(false);
-		theWindow->Show();
 		theWindow->GetIWebBrowserChrome(_retval);
 	} catch(...) {
 		return NS_ERROR_FAILURE;

@@ -84,7 +84,8 @@ public:
                                                ConstStringPtr	inTitle,
                                                SInt16			inProcID,
                                                UInt32			inAttributes,
-                                               WindowPtr		inBehind);
+                                               WindowPtr		inBehind,
+                                               Boolean          inIsChromeWindow);
                                 CBrowserWindow(LStream*	inStream);
 
 	virtual				        ~CBrowserWindow();
@@ -147,16 +148,24 @@ protected:
     NS_METHOD                   OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
                                                  PRInt32 curSelfProgress, PRInt32 maxSelfProgress, 
                                                  PRInt32 curTotalProgress, PRInt32 maxTotalProgress);
-                                                 
+    
+    NS_METHOD                   GetVisibility(PRBool *aVisibility);                                             
     NS_METHOD                   SetVisibility(PRBool aVisibility);
     
     NS_METHOD                   OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
 
     NS_METHOD                   GetIWebBrowserChrome(nsIWebBrowserChrome **aChrome);
 
+   // -----------------------------------
+   // Internal
+   // -----------------------------------
+   
+   NS_METHOD                    SetTitleFromDOMDocument();
+
 protected:
     nsCOMPtr<nsIWidget>         mWindow;
 
+	Boolean                     mIsChromeWindow;
 	CBrowserShell*		        mBrowserShell;
 	CWebBrowserChrome*          mBrowserChrome;
 	LEditText*			        mURLField;
@@ -165,7 +174,8 @@ protected:
 	LBevelButton			    *mBackButton, *mForwardButton, *mStopButton;
 	LProgressBar*               mProgressBar;
 	Boolean                     mBusy;
-	Boolean                     mInitialLoadComplete, mShowOnInitialLoad;
+	Boolean                     mInitialLoadComplete;
+	Boolean                     mVisible; // whether we are visible according to Get/SetVisibility
 	Boolean                     mSizeToContent;
 	
 	PRUint32                    mContextMenuContext;
