@@ -1146,6 +1146,28 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					NewConfig(curWidget, CString(parms),"Create Copy");
 			}
 #endif
+			// Delete a configuration
+			else if (strcmp(pcmd, "DeleteConfig") ==0)	
+			{
+				if (curWidget)
+				{
+					CString rootPath	= GetGlobal("Root");
+					CString configName	= replaceVars(parms,NULL);
+					CString configPath	= rootPath + "Configs\\" + configName;
+					EraseDirectory(configPath);
+					SetCurrentDirectory(rootPath);
+					if (!SetCurrentDirectory(rootPath))
+					{
+						ShowLastError();
+						return FALSE;
+					}
+					if (!RemoveDirectory(configPath))
+					{
+						ShowLastError();
+						return FALSE;
+					}
+				}
+			}
 			else if (strcmp(pcmd, "CopyDir") == 0)
 			{
 				char *p2 = strchr(parms, ',');
