@@ -662,7 +662,9 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	    rv = SECSuccess;
 	}
     }
-    CERT_DestroyCertList(certs);
+    if (certs) {
+        CERT_DestroyCertList(certs);
+    }
     if (rv) {
 	SECU_PrintError(progName, "problem printing certificate nicknames");
 	return SECFailure;
