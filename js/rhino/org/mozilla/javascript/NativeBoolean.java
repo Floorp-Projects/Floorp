@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Igor Bukanov
  * Mike McCabe
  *
  * Alternatively, the contents of this file may be used under the
@@ -41,7 +42,7 @@ package org.mozilla.javascript;
  * See ECMA 15.6.
  * @author Norris Boyd
  */
-public class NativeBoolean extends ScriptableObject {
+public class NativeBoolean extends IdScriptable {
 
     /**
      * Zero-parameter constructor: just used to create Boolean.prototype
@@ -61,32 +62,87 @@ public class NativeBoolean extends ScriptableObject {
         // This is actually non-ECMA, but will be proposed
         // as a change in round 2.
         if (typeHint == ScriptRuntime.BooleanClass)
-	    return booleanValue ? Boolean.TRUE : Boolean.FALSE;
+            return wrap_boolean(booleanValue);
         return super.getDefaultValue(typeHint);
     }
 
-    public static Object jsConstructor(Context cx, Object[] args, 
-                                       Function ctorObj, boolean inNewExpr)
+    public int methodArity(int methodId, IdFunction function) {
+        if (methodId == CONSTRUCTOR_ID) {
+            return 1;
+        }
+        return 0;
+    }
+
+    public Object execMethod
+        (int methodId, IdFunction f,
+         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+        throws JavaScriptException
     {
-        boolean b = args.length >= 1
-                    ? ScriptRuntime.toBoolean(args[0])
-                    : false;
-    	if (inNewExpr) {
-    	    // new Boolean(val) creates a new boolean object.
-    	    return new NativeBoolean(b);
-    	}
+        switch (methodId) {
+        case CONSTRUCTOR_ID:
+            return jsConstructor(args, thisObj == null);
 
-    	// Boolean(val) converts val to a boolean.
-    	return b ? Boolean.TRUE : Boolean.FALSE;
+        case Id_toString:
+            return realThis(thisObj, f).jsFunction_toString();
+
+        case Id_valueOf: 
+            return wrap_boolean(realThis(thisObj, f).jsFunction_valueOf());
+        }
+
+        return Scriptable.NOT_FOUND;
     }
 
-    public String jsFunction_toString() {
-	    return booleanValue ? "true" : "false";
+    private NativeBoolean realThis(Scriptable thisObj, IdFunction f) {
+        while (!(thisObj instanceof NativeBoolean)) {
+            thisObj = nextInstanceCheck(thisObj, f, true);
+        }
+        return (NativeBoolean)thisObj;
     }
 
-    public boolean jsFunction_valueOf() {
-	    return booleanValue;
+
+    private Object jsConstructor(Object[] args, boolean inNewExpr) {
+        boolean b = ScriptRuntime.toBoolean(args, 0);
+        if (inNewExpr) {
+            // new Boolean(val) creates a new boolean object.
+            return new NativeBoolean(b);
+        }
+
+        // Boolean(val) converts val to a boolean.
+        return wrap_boolean(b);
     }
+
+    private String jsFunction_toString() {
+        return booleanValue ? "true" : "false";
+    }
+
+    private boolean jsFunction_valueOf() {
+        return booleanValue;
+    }
+
+    protected int getMaxPrototypeMethodId() { return MAX_PROTOTYPE_METHOD; }
+
+// #string_id_map#
+
+    protected int mapNameToMethodId(String s) {
+        int id;
+// #generated# Last update: 2001-03-26 18:00:51 GMT+02:00
+        L0: { id = 0; String X = null;
+            int s_length = s.length();
+            if (s_length==7) { X="valueOf";id=Id_valueOf; }
+            else if (s_length==8) { X="toString";id=Id_toString; }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
+    }
+
+    private static final int
+        Id_toString             =  1,
+        Id_valueOf              =  2,
+        MAX_PROTOTYPE_METHOD    =  2;
+
+// #/string_id_map#
 
     private boolean booleanValue;
+
 }

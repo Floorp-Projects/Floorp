@@ -114,6 +114,10 @@ public class ScriptRuntime {
         throw errorWithClassName("msg.invalid.type", val);
     }
 
+    public static boolean toBoolean(Object[] args, int index) {
+        return (0 <= index && index < args.length) 
+            ? toBoolean(args[index]) : false;
+    }
     /**
      * Convert the value to a number.
      *

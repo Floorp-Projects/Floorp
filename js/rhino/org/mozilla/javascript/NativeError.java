@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Igor Bukanov
  * Roger Lawrence
  * 
  * Alternatively, the contents of this file may be used under the
@@ -42,13 +43,46 @@ package org.mozilla.javascript;
  *
  *  ECMA 15.11
  */
-public class NativeError extends ScriptableObject {
+public class NativeError extends IdScriptable {
 
-    public NativeError() {
+    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
+        defineProperty("message", "", ScriptableObject.EMPTY);
+        defineProperty("name", "Error", ScriptableObject.EMPTY);
+        super.scopeInit(cx, scope, sealed);
     }
     
-    public static Object jsConstructor(Context cx, Object[] args, 
-                                       Function funObj, boolean inNewExpr)
+    public int methodArity(int methodId, IdFunction function) {
+        if (methodId == CONSTRUCTOR_ID) {
+            return 1;
+        }
+        return 0;
+    }
+
+    public Object execMethod
+        (int methodId, IdFunction f,
+         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
+        switch (methodId) {
+        case CONSTRUCTOR_ID: 
+            return jsConstructor(cx, args, f, thisObj == null);
+
+        case Id_toString: 
+            return realThis(thisObj, f).jsFunction_toString();
+        }
+
+        return Scriptable.NOT_FOUND;
+    }
+
+    private NativeError realThis(Scriptable thisObj, IdFunction f) {
+        while (!(thisObj instanceof NativeError)) {
+            thisObj = nextInstanceCheck(thisObj, f, true);
+        }
+        return (NativeError)thisObj;
+    }
+
+    private static Object jsConstructor(Context cx, Object[] args, 
+                                        Function funObj, boolean inNewExpr)
     {
         NativeError result = new NativeError();
         if (args.length >= 1) 
@@ -65,7 +99,7 @@ public class NativeError extends ScriptableObject {
         return getName() + ": " + getMessage();
     }
     
-    public String jsFunction_toString() {
+    private String jsFunction_toString() {
         return toString();
     }
     
@@ -78,15 +112,26 @@ public class NativeError extends ScriptableObject {
         return ScriptRuntime.toString(
                 ScriptRuntime.getProp(this, "message", this));
     }    
-    
-    public static void finishInit(Scriptable scope, FunctionObject ctor,
-                                  Scriptable proto)
-        throws PropertyException
-    {
-        ((ScriptableObject) proto).defineProperty("message", "", 
-                                                  ScriptableObject.EMPTY);
-        ((ScriptableObject) proto).defineProperty("name", "Error", 
-                                                  ScriptableObject.EMPTY);
+
+    protected int getMaxPrototypeMethodId() { return MAX_PROTOTYPE_METHOD; }
+
+// #string_id_map#
+
+    protected int mapNameToMethodId(String s) {
+        int id;
+// #generated# Last update: 2001-03-29 15:13:30 GMT+02:00
+        L0: { id = 0; String X = null;
+            if (s.length()==8) { X="toString";id=Id_toString; }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
     }
 
+    private static final int
+        Id_toString              = 1,
+        MAX_PROTOTYPE_METHOD     = 1;
+
+// #/string_id_map#
+    
 }
