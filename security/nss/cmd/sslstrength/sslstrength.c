@@ -610,6 +610,10 @@ PRInt32 main(PRInt32 argc,char **argv, char **envp)
 
   PR_Close(s);
 
+  if (NSS_Shutdown() != SECSuccess) {
+    exit(1);
+  }
+
   return(0);
 
 } /* main */
