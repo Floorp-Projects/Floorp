@@ -229,7 +229,7 @@ nsIOThreadPool::ThreadFunc(void *arg)
 
     // XXX not using a nsAutoLock here because we need to temporarily unlock
     // and relock in the inner loop.  nsAutoLock has a bug, causing it to warn
-    // of a bogus deadlock, which makes us avoid it here.
+    // of a bogus deadlock, which makes us avoid it here.  (see bug 221331)
     PR_Lock(pool->mLock);
 
     for (;;) {
