@@ -326,7 +326,7 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
 
    surf->Init( mPrintPS, mWidth, mHeight, 0);
 
-   nsresult rc = pContext->Init( this, (void*)((nsDrawingSurfaceOS2 *) surf));
+   nsresult rc = pContext->Init(this, surf);
 
    if( NS_OK != rc)
    {
