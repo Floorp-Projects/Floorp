@@ -46,10 +46,10 @@ $(JAVAXPIDLSRCS) :
 #what is the best solution?
 #idk@eng.sun.com (04/02/2001)
 
-exclude:
+exclude: idl2java
 	rm -f nsISupportsPRTime.java
 
-java2class: 	
+java2class: idl2java
 	mkdir -p $(DEPTH)/dist/classes	
 	$(JDKHOME)/bin/javac -classpath ".:../classes/:$(CLASSPATH)" -d $(DEPTH)/dist/classes *.java
 
