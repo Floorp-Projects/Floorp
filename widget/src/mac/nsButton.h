@@ -24,17 +24,20 @@
 #include "nsIButton.h"
 
 /**
- * Native Motif button wrapper
+ * Native Mac button wrapper
  */
-
-class nsButton :  public nsWindow
+ 
+class nsButton :  public nsWindow, public nsIButton
 {
 
 public:
-  nsButton(nsISupports *aOuter);
+  nsButton();
   virtual ~nsButton();
 
-  NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+	// nsISupports
+	NS_IMETHOD_(nsrefcnt) AddRef();
+	NS_IMETHOD_(nsrefcnt) Release();
+	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -51,19 +54,14 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-
     // nsIButton part
-  virtual void   SetLabel(const nsString& aText);
-  virtual void   GetLabel(nsString& aBuffer);
+  NS_IMETHOD     SetLabel(const nsString& aText);
+  NS_IMETHOD     GetLabel(nsString& aBuffer);
+
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
   virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
-  
-  // Mac specific methods
-  void LocalToWindowCoordinate(nsPoint& aPoint);
-  void LocalToWindowCoordinate(nsRect& aRect);
-	//ControlHandle GetControl() { return mControl; } 
-	
+  	
   
   // Overriden from nsWindow
   virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
@@ -71,34 +69,9 @@ public:
 
 private:
 
-	void StringToStr255(const nsString& aText, Str255& aStr255);
 	void DrawWidget(PRBool	aMouseInside);
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsButton,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIButton interface to nsButton w/o using multiple
-  // inheritance.
-  class AggButton : public nsIButton {
-  public:
-    AggButton();
-    virtual ~AggButton();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsIButton
-    virtual void SetLabel(const nsString &aText);
-    virtual void GetLabel(nsString &aBuffer);
-
-  };
-  AggButton mAggWidget;
-  friend class AggButton;
-  
-  Str255				mLabel;
+ 
+  nsString		  mLabel;
   PRBool				mMouseDownInButton;
   PRBool				mWidgetArmed;
 

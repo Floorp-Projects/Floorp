@@ -29,54 +29,40 @@
 #include <quickdraw.h>
 
 
-#define DBG 0
+NS_IMPL_ADDREF(nsButton)
+NS_IMPL_RELEASE(nsButton)
+
 //-------------------------------------------------------------------------
 //
 // nsButton constructor
 //
 //-------------------------------------------------------------------------
-nsButton::nsButton(nsISupports *aOuter) : nsWindow(aOuter)
+nsButton::nsButton()
 {
   strcpy(gInstanceClassName, "nsButton");
   mWidgetArmed = PR_FALSE;
 }
 
-
-/*
- * Convert an nsPoint into mac local coordinated.
- * The tree hierarchy is navigated upwards, changing
- * the x,y offset by the parent's coordinates
- *
- */
-void nsButton::LocalToWindowCoordinate(nsPoint& aPoint)
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+*/ 
+nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-	nsIWidget* 	parent = GetParent();
-  nsRect 			bounds;
-  
-	while (parent)
-	{
-		parent->GetBounds(bounds);
-		aPoint.x += bounds.x;
-		aPoint.y += bounds.y;	
-		parent = parent->GetParent();
-	}
-}
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
 
-/* 
- * Convert an nsRect's local coordinates to global coordinates
- */
-void nsButton::LocalToWindowCoordinate(nsRect& aRect)
-{
-	nsIWidget* 	parent = GetParent();
-  nsRect 			bounds;
-  
-	while (parent)
-	{
-		parent->GetBounds(bounds);
-		aRect.x += bounds.x;
-		aRect.y += bounds.y;	
-		parent = parent->GetParent();
-	}
+    static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
+    if (aIID.Equals(kIButton)) {
+        *aInstancePtr = (void*) ((nsIButton*)this);
+        AddRef();
+        return NS_OK;
+    }
+
+    return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
 
@@ -90,8 +76,6 @@ void nsButton::Create(nsIWidget *aParent,
 {
   mParent = aParent;
   aParent->AddChild(this);
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
 	
 	WindowPtr window = nsnull;
 
@@ -111,16 +95,6 @@ void nsButton::Create(nsIWidget *aParent,
 	{
 	  InitToolkit(aToolkit, aParent);
 	  // InitDeviceContext(aContext, parentWidget);
-
-	  if (DBG) fprintf(stderr, "Parent 0x%x\n", window);
-
-		// NOTE: CREATE MACINTOSH CONTROL HERE
-		Str255  title = "";
-		Boolean visible = PR_TRUE;
-		PRInt16 initialValue = 0;
-		PRInt16 minValue = 0;
-		PRInt16 maxValue = 1;
-		PRInt16 ctrlType = pushButProc;
 		
 		// Set the bounds to the local rect
 		SetBounds(aRect);
@@ -135,9 +109,6 @@ void nsButton::Create(nsIWidget *aParent,
 
 		mWindowRegion = NewRgn();
 		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
-
-
-	  //if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mControl, this);
 
 	  // save the event callback function
 	  mEventCallback = aHandleEventFunction;
@@ -170,67 +141,7 @@ nsButton::~nsButton()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
-{
-  static NS_DEFINE_IID(kIButtonIID,    NS_IBUTTON_IID);
 
-  if (aIID.Equals(kIButtonIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
-}
-
-//-------------------------------------------------------------------------
-//
-// Convert a nsString to a PascalStr255
-//
-//-------------------------------------------------------------------------
-void nsButton::StringToStr255(const nsString& aText, Str255& aStr255)
-{
-  char buffer[256];
-	
-	aText.ToCString(buffer,255);
-		
-	PRInt32 len = strlen(buffer);
-	memcpy(&aStr255[1],buffer,len);
-	aStr255[0] = len;
-	
-}
-
-//-------------------------------------------------------------------------
-//
-// Set this button label
-//
-//-------------------------------------------------------------------------
-void nsButton::SetLabel(const nsString& aText)
-{
-
-	NS_ASSERTION(mControl != nsnull,"Control must not be null");
-	//if (mControl != nsnull)
-	//{
-		StringToStr255(aText,mLabel);
-		//SetControlTitle(mControl,s);
-	//}
-}
-
-
-
-//-------------------------------------------------------------------------
-//
-// Get this button label
-//
-//-------------------------------------------------------------------------
-void nsButton::GetLabel(nsString& aBuffer)
-{
-
-}
 
 //-------------------------------------------------------------------------
 //
@@ -247,19 +158,6 @@ PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 PRBool nsButton::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
-}
-
-
-#define GET_OUTER() ((nsButton*) ((char*)this - nsButton::GetOuterOffset()))
-
-void nsButton::AggButton::GetLabel(nsString& aBuffer)
-{
-  GET_OUTER()->GetLabel(aBuffer);
-}
-
-void nsButton::AggButton::SetLabel(const nsString& aText)
-{
-  GET_OUTER()->SetLabel(aText);
 }
 
 /*
@@ -346,9 +244,12 @@ RgnHandle						thergn;
 	::EraseRoundRect(&macrect,10,10);
 	::PenSize(1,1);
 	::FrameRoundRect(&macrect,10,10); 
+
+  Str255 label;	
+	StringToStr255(mLabel, label);
 	
 	
-	width = ::StringWidth(mLabel);
+	width = ::StringWidth(label);
 	x = (macrect.left+macrect.right)/2 - (width/2);
 	
 	::TextFont(0);
@@ -359,7 +260,7 @@ RgnHandle						thergn;
 	//height = 6;
 	y = (macrect.top+macrect.bottom)/2 + 6;
 	::MoveTo(x,y);
-	::DrawString(mLabel);
+	::DrawString(label);
 		
 	if(mMouseDownInButton && aMouseInside)
 		 ::InvertRoundRect(&macrect,10,10);
@@ -369,9 +270,33 @@ RgnHandle						thergn;
 	::SetPort(theport);
 }
 
+/** nsIButton Implementation **/
+
+/**
+	* Set the label for this object to be equal to aText
+	*
+	* @param  Set the label to aText
+	* @result NS_Ok if no errors
+	*/
+NS_METHOD nsButton::SetLabel(const nsString& aText)
+{
+	mLabel = aText;
+	return NS_OK;
+}
+
+/**
+	* Set a buffer to be equal to this objects label
+	*
+	* @param  Put the contents of the label into aBuffer
+	* @result NS_Ok if no errors
+	*/
+NS_METHOD nsButton::GetLabel(nsString& aBuffer)
+{
+	aBuffer = mLabel;
+  return NS_OK;
+}
+
+
 //-------------------------------------------------------------------------
-
-
-BASE_IWIDGET_IMPL(nsButton, AggButton);
 
 

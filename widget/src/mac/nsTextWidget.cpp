@@ -22,16 +22,20 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 
+
+NS_IMPL_ADDREF(nsTextWidget)
+NS_IMPL_RELEASE(nsTextWidget)
+
 #define DBG 0
 
 
-//=================================================================
+// ----------------------------------------------------------------
 /*  Constructor
  *  @update  dc 09/10/98
  *  @param   aOuter -- nsISupports object
  *  @return  NONE
  */
-nsTextWidget::nsTextWidget(nsISupports *aOuter): nsWindow(aOuter)
+nsTextWidget::nsTextWidget(): nsWindow()
 {
   mIsPasswordCallBacksInstalled = PR_FALSE;
   mMakeReadOnly=PR_FALSE;
@@ -40,7 +44,7 @@ nsTextWidget::nsTextWidget(nsISupports *aOuter): nsWindow(aOuter)
   //mBackground = NS_RGB(124, 124, 124);
 }
 
-//=================================================================
+// ----------------------------------------------------------------
 /*  Destructor
  *  @update  dc 09/10/98
  *  @param   NONE
@@ -52,7 +56,7 @@ nsTextWidget::~nsTextWidget()
 		WEDispose(mTE_Data);
 }
 
-//=================================================================
+// ----------------------------------------------------------------
 /*  Function to create the TextWidget and all its neccisary data
  *  @update  dc 09/10/98
  *  @param   aParent --
@@ -123,7 +127,7 @@ GrafPtr			curport;
 
 }
 
-//=================================================================
+// ----------------------------------------------------------------
 /*  Function to create the TextWidget and all its neccisary data
  *  @update  dc 09/10/98
  *  @param   aParent --
@@ -151,16 +155,16 @@ void nsTextWidget::Create(nsNativeWidget aParent,
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsTextWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
+nsresult nsTextWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 
   if (aIID.Equals(kITextWidgetIID)) {
     AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
+    *aInstancePtr = (void**)(nsITextWidget*)this;
     return NS_OK;
   }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+  return nsWindow::QueryInterface(aIID, aInstancePtr);
 }
 
 
@@ -260,11 +264,11 @@ PRBool nsTextWidget::OnResize(nsSizeEvent &aEvent)
 }
 
 //--------------------------------------------------------------
-void nsTextWidget::SetPassword(PRBool aIsPassword)
+NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
 {
   if ( aIsPassword) {
     mMakePassword = PR_TRUE;
-    return;
+    return NS_OK;
   }
 
   if (aIsPassword) 
@@ -282,26 +286,25 @@ void nsTextWidget::SetPassword(PRBool aIsPassword)
     	}
   	}
   //mHelper->SetPassword(aIsPassword);
+  return NS_OK;
 }
 
 //--------------------------------------------------------------
-PRBool  nsTextWidget::SetReadOnly(PRBool aReadOnlyFlag)
+NS_METHOD  nsTextWidget::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 {
-  if ( aReadOnlyFlag) 
-  	{
-    mMakeReadOnly = PR_TRUE;
-    return PR_TRUE;
-  	}
-  	
+	aOldFlag = mMakeReadOnly;
+  mMakeReadOnly = aReadOnlyFlag;
+	return NS_OK;  	
 }
 
 //--------------------------------------------------------------
-void nsTextWidget::SetMaxTextLength(PRUint32 aChars)
+NS_METHOD nsTextWidget::SetMaxTextLength(PRUint32 aChars)
 {
+  return NS_OK;
 }
 
 //--------------------------------------------------------------
-PRUint32  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) 
+NS_METHOD  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aSize) 
 {
 Handle				thetext;
 PRInt32 			len,i;
@@ -319,11 +322,12 @@ char					*str;
   aTextBuffer.SetLength(0);
   aTextBuffer.Append(str);
 	delete str;
-	return aTextBuffer.Length();
+	aSize = aTextBuffer.Length();
+	return NS_OK;
 }
 
 //--------------------------------------------------------------
-PRUint32  nsTextWidget::SetText(const nsString& aText)
+PRUint32  nsTextWidget::SetText(const nsString& aText, PRUint32& aSize)
 { 
 char buffer[256];
 PRInt32 len;
@@ -334,11 +338,12 @@ PRInt32 len;
 
 	WEInsert(buffer,len,0,0,mTE_Data);
 
-	return len;
+	aSize = len;
+  return NS_OK;
 }
 
 //--------------------------------------------------------------
-PRUint32  nsTextWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
+PRUint32  nsTextWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aSize)
 { 
 char buffer[256];
 PRInt32 len;
@@ -347,46 +352,53 @@ PRInt32 len;
 	len = strlen(buffer);
 	
 	WEInsert(buffer,len,0,0,mTE_Data);
-	return(len);
+	aSize = len;
+  return NS_OK;
 }
 
 //--------------------------------------------------------------
-void  nsTextWidget::RemoveText()
+NS_METHOD  nsTextWidget::RemoveText()
 {
 	WESetSelection(0, 32000,mTE_Data);
 	WEDelete(mTE_Data);
+  return NS_OK;
 }
 
 //--------------------------------------------------------------
-void nsTextWidget::SelectAll()
+NS_METHOD nsTextWidget::SelectAll()
 {
 	WESetSelection(0, 32000,mTE_Data);
+  return NS_OK;
 }
 
 
 //--------------------------------------------------------------
-void  nsTextWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
+NS_METHOD  nsTextWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
   WESetSelection(aStartSel, aEndSel,mTE_Data);
+  return NS_OK;
 }
 
 
 //--------------------------------------------------------------
-void  nsTextWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
+NS_METHOD  nsTextWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
 	WEGetSelection((long*)aStartSel,(long*)aEndSel,mTE_Data);
+  return NS_OK;
 }
 
 //--------------------------------------------------------------
-void  nsTextWidget::SetCaretPosition(PRUint32 aPosition)
+NS_METHOD  nsTextWidget::SetCaretPosition(PRUint32 aPosition)
 {
   //mHelper->SetCaretPosition(aPosition);
+  return NS_OK;
 }
 
 //--------------------------------------------------------------
-PRUint32  nsTextWidget::GetCaretPosition()
+NS_METHOD nsTextWidget::GetCaretPosition(PRUint32& aPos)
 {
   //return mHelper->GetCaretPosition();
+  return NS_OK;
 }
 
 //--------------------------------------------------------------
@@ -397,90 +409,4 @@ PRBool nsTextWidget::AutoErase()
 
 
 
-//--------------------------------------------------------------
-#define GET_OUTER() ((nsTextWidget*) ((char*)this - nsTextWidget::GetOuterOffset()))
-
-
-//--------------------------------------------------------------
-void nsTextWidget::AggTextWidget::SetMaxTextLength(PRUint32 aChars)
-{
-  GET_OUTER()->SetMaxTextLength(aChars);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextWidget::AggTextWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
-  return GET_OUTER()->GetText(aTextBuffer, aBufferSize);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextWidget::AggTextWidget::SetText(const nsString& aText)
-{ 
-  return GET_OUTER()->SetText(aText);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextWidget::AggTextWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
-{ 
-  return GET_OUTER()->InsertText(aText, aStartPos, aEndPos);
-}
-
-//--------------------------------------------------------------
-void  nsTextWidget::AggTextWidget::RemoveText()
-{
-  GET_OUTER()->RemoveText();
-}
-
-//--------------------------------------------------------------
-void  nsTextWidget::AggTextWidget::SetPassword(PRBool aIsPassword)
-{
-  GET_OUTER()->SetPassword(aIsPassword);
-}
-
-//--------------------------------------------------------------
-PRBool  nsTextWidget::AggTextWidget::SetReadOnly(PRBool aReadOnlyFlag)
-{
-  return GET_OUTER()->SetReadOnly(aReadOnlyFlag);
-}
-
-//--------------------------------------------------------------
-void nsTextWidget::AggTextWidget::SelectAll()
-{
-  GET_OUTER()->SelectAll();
-}
-
-
-//--------------------------------------------------------------
-void  nsTextWidget::AggTextWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
-{
-  GET_OUTER()->SetSelection(aStartSel, aEndSel);
-}
-
-
-//--------------------------------------------------------------
-void  nsTextWidget::AggTextWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
-{
-  GET_OUTER()->GetSelection(aStartSel, aEndSel);
-}
-
-//--------------------------------------------------------------
-void  nsTextWidget::AggTextWidget::SetCaretPosition(PRUint32 aPosition)
-{
-  GET_OUTER()->SetCaretPosition(aPosition);
-}
-
-//--------------------------------------------------------------
-PRUint32  nsTextWidget::AggTextWidget::GetCaretPosition()
-{
-  return GET_OUTER()->GetCaretPosition();
-}
-
-PRBool nsTextWidget::AggTextWidget::AutoErase()
-{
-  return GET_OUTER()->AutoErase();
-}
-
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsTextWidget, AggTextWidget);
 

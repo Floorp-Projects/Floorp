@@ -17,22 +17,23 @@
  */
 
 #include "nsFileWidget.h"
-#include <Xm/FileSB.h>
-#include "nsXtEventHandler.h"
 #include "nsStringUtil.h"
+#include <StandardFile.h>
 
 #define DBG 0
-extern XtAppContext gAppContext;
+
+NS_IMPL_ADDREF(nsFileWidget)
+NS_IMPL_RELEASE(nsFileWidget)
+
 
 //-------------------------------------------------------------------------
 //
 // nsFileWidget constructor
 //
 //-------------------------------------------------------------------------
-nsFileWidget::nsFileWidget(nsISupports *aOuter) : nsWindow(aOuter),
-  mIOwnEventLoop(PR_FALSE)
+nsFileWidget::nsFileWidget()
 {
-  //mWnd = NULL;
+  mIOwnEventLoop = PR_FALSE;
   mNumberOfFilters = 0;
 }
 
@@ -44,7 +45,7 @@ void nsFileWidget::Create(nsIWidget        *aParent,
                           nsIToolkit       *aToolkit,
                           nsWidgetInitData *aInitData) 
 {
-  nsString title("Load");
+  nsString title("Open");
   Create(aParent, title, eMode_load, aContext, aAppShell, aToolkit, aInitData);
 }
 
@@ -58,41 +59,47 @@ void   nsFileWidget:: Create(nsIWidget  *aParent,
                              nsIToolkit *aToolkit,
                              void       *aInitData)
 {
-  //mWnd = (aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0;
-  mTitle.SetLength(0);
-  mTitle.Append(aTitle);
+  mTitle = aTitle;
   mMode = aMode;
-
-  Widget parentWidget = nsnull;
+	WindowPtr window = nsnull;
 
   if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (Widget) aInitData ;
+    window = (WindowPtr) aParent->GetNativeData(NS_NATIVE_WIDGET);
+  } else if (aAppShell) {
+    window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
 
   InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
+  InitDeviceContext(aContext, (nsNativeWidget)mWindowPtr);
 
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
-  mWidget = XmCreateFileSelectionDialog(parentWidget, "filesb", NULL, 0);
-
-  NS_ALLOC_STR_BUF(title, aTitle, 256);
-  XmString str;
-  str = XmStringCreate(title, XmFONTLIST_DEFAULT_TAG);
-  XtVaSetValues(mWidget, XmNdialogTitle, str, nsnull);
-  NS_FREE_STR_BUF(title);
-  XmStringFree(str);
-
-
-  XtAddCallback(mWidget, XmNcancelCallback, nsXtWidget_FSBCancel_Callback, this);
-  XtAddCallback(mWidget, XmNokCallback, nsXtWidget_FSBOk_Callback, this);
-
-  //XtManageChild(mWidget);
 }
+
+
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+*/ 
+nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
+    if (aIID.Equals(kIFileWidgetIID)) {
+        *aInstancePtr = (void*) ((nsIFileWidget*)this);
+        AddRef();
+        return NS_OK;
+    }
+
+    return nsWindow::QueryInterface(aIID,aInstancePtr);
+}
+
+
 
 void nsFileWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
@@ -104,23 +111,6 @@ void nsFileWidget::Create(nsNativeWidget aParent,
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsFileWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
-{
-  static NS_DEFINE_IID(kIFileWidgetIID,    NS_IFILEWIDGET_IID);
-
-  if (aIID.Equals(kIFileWidgetIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -129,7 +119,6 @@ nsresult nsFileWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 void nsFileWidget::OnOk()
 {
-  XtUnmanageChild(mWidget);
   mWasCancelled  = PR_FALSE;
   mIOwnEventLoop = PR_FALSE;
 }
@@ -141,7 +130,6 @@ void nsFileWidget::OnOk()
 //-------------------------------------------------------------------------
 void nsFileWidget::OnCancel()
 {
-  XtUnmanageChild(mWidget);
   mWasCancelled  = PR_TRUE;
   mIOwnEventLoop = PR_FALSE;
 }
@@ -152,79 +140,37 @@ void nsFileWidget::OnCancel()
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
-void nsFileWidget::Show(PRBool bState)
+PRBool nsFileWidget::Show()
 {
-  nsresult result = nsEventStatus_eIgnore;
-  XtManageChild(mWidget);
-
-  // XXX Kludge: gAppContext is a global set in nsAppShell
-  XEvent event;
-  mIOwnEventLoop = PR_TRUE;
-  while (mIOwnEventLoop) {
-    XtAppNextEvent(gAppContext, &event);
-    XtDispatchEvent(&event);
-  }
-
-  if (!mWasCancelled) {
-    XmString str;
-    char *   fileBuf;
-    XtVaGetValues(mWidget, XmNdirSpec, &str, nsnull);
-    if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &fileBuf)) {
-      // Set user-selected location of file or directory
-      mFile.SetLength(0);
-      mFile.Append(fileBuf);
-      XmStringFree(str);
-      XtFree(fileBuf);
-    }
-  }
-
-  /*char fileBuffer[MAX_PATH];
-  fileBuffer[0] = '\0';
-  OPENFILENAME ofn;
-  memset(&ofn, 0, sizeof(ofn));
-
-  ofn.lStructSize = sizeof(ofn);
-
   nsString filterList;
   GetFilterListArray(filterList);
   char *filterBuffer = filterList.ToNewCString();
-  char *title = mTitle.ToNewCString();
-  ofn.lpstrTitle = title;
-  ofn.lpstrFilter = filterBuffer;
-  ofn.nFilterIndex = 1;
-  ofn.hwndOwner = mWnd;
-  ofn.lpstrFile = fileBuffer;
-  ofn.nMaxFile = MAX_PATH;
-  ofn.Flags = OFN_SHAREAWARE | OFN_NOCHANGEDIR | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
-  
-  BOOL result;
 
-    // Save current directory, so we can reset if it changes.
-  char* currentDirectory = new char[MAX_PATH+1];
-  VERIFY(::GetCurrentDirectory(MAX_PATH, currentDirectory) > 0);
+  Str255 title;
+  Str255 defaultName;
+  StringToStr255(mTitle,title);
+  StringToStr255(mDefault,defaultName);
+    
+  StandardFileReply reply;
 
   if (mMode == eMode_load) {
-    result = GetOpenFileName(&ofn);
+    PRInt32 numTypes = -1; 				// DO NO FILTERING FOR NOW! -1 on the Mac means no filtering is done
+    SFTypeList typeList;
+    StandardGetFile (nsnull, numTypes, typeList, &reply );
   }
   else if (mMode == eMode_save) {
-    result = GetSaveFileName(&ofn);
+  	StandardPutFile (title, defaultName, &reply );
   }
   else {
     NS_ASSERTION(0, "Only load and save are supported modes"); 
   }
-
-  VERIFY(::SetCurrentDirectory(currentDirectory));
-  
    // Clean up filter buffers
   delete filterBuffer;
-  delete title;
 
    // Set user-selected location of file or directory
-  mFile.SetLength(0);
-  if (result==PR_TRUE) {
-    mFile.Append(fileBuffer);
-  }
- */ 
+  Str255ToString(reply.sfFile.name,mFile);  
+  
+  return reply.sfGood;
 }
 
 //-------------------------------------------------------------------------
@@ -294,61 +240,4 @@ void  nsFileWidget::SetDefaultString(nsString& aString)
 nsFileWidget::~nsFileWidget()
 {
 }
-
-#define GET_OUTER() ((nsFileWidget*) ((char*)this - nsFileWidget::GetOuterOffset()))
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL_NO_SHOW(nsFileWidget, AggFileWidget);
-
-void nsFileWidget::AggFileWidget::Create( nsIWidget *aParent,
-                                      nsString& aTitle,
-                                      nsMode aMode,
-                                      nsIDeviceContext *aContext,
-                                      nsIAppShell *aAppShell,
-                                      nsIToolkit *aToolkit,
-                                      void *aInitData)
-{
-  GET_OUTER()->Create(aParent, aTitle, aMode, aContext, aAppShell, aToolkit, aInitData);
-}
-
-void nsFileWidget::AggFileWidget::OnOk()
-{
-  GET_OUTER()->OnOk();
-}
-
-void nsFileWidget::AggFileWidget::OnCancel()
-{
-  GET_OUTER()->OnCancel();
-}
-
-void nsFileWidget::AggFileWidget::Show(PRBool bState)
-{
-  GET_OUTER()->Show(bState);
-}
-
-void nsFileWidget::AggFileWidget::GetFile(nsString& aFile)
-{
-  GET_OUTER()->GetFile(aFile);
-}
-
-void nsFileWidget::AggFileWidget::SetDefaultString(nsString& aFile)
-{
-  GET_OUTER()->SetDefaultString(aFile);
-}
-
-
-void nsFileWidget::AggFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
-                                                const nsString aTitles[],
-                                                const nsString aFilters[])
-{
-  GET_OUTER()->SetFilterList(aNumberOfFilters, aTitles, aFilters);
-}
-
-PRBool nsFileWidget::AggFileWidget::Show()
-{
-  GET_OUTER()->Show(PR_TRUE);
-  return PR_TRUE;
-}
-
 

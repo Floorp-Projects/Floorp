@@ -22,18 +22,20 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
+NS_IMPL_ADDREF(nsCheckButton)
+NS_IMPL_RELEASE(nsCheckButton)
+
 #define DBG 0
 //-------------------------------------------------------------------------
 //
-// nsCheckButton constructor
+// nsButton constructor
 //
 //-------------------------------------------------------------------------
-nsCheckButton::nsCheckButton(nsISupports *aOuter) : nsWindow(aOuter)
+nsCheckButton::nsCheckButton() : nsWindow(), nsICheckButton()
 {
   strcpy(gInstanceClassName, "nsCheckButton");
   mButtonSet = PR_FALSE;
 }
-
 
 /*
  * Convert an nsPoint into mac local coordinated.
@@ -150,21 +152,25 @@ nsCheckButton::~nsCheckButton()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsCheckButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
-{
-  static NS_DEFINE_IID(kICheckButtonIID,    NS_ICHECKBUTTON_IID);
 
-  if (aIID.Equals(kICheckButtonIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+*/ 
+nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
+    if (aIID.Equals(kICheckButtonIID)) {
+        *aInstancePtr = (void*) ((nsICheckButton*)this);
+        AddRef();
+        return NS_OK;
+    }
 }
 
 //-------------------------------------------------------------------------
@@ -184,27 +190,6 @@ void nsCheckButton::StringToStr255(const nsString& aText, Str255& aStr255)
 	
 }
 
-//-------------------------------------------------------------------------
-//
-// Set this button label
-//
-//-------------------------------------------------------------------------
-void nsCheckButton::SetLabel(const nsString& aText)
-{
-	mLabel = aText;
-}
-
-
-
-//-------------------------------------------------------------------------
-//
-// Get this button label
-//
-//-------------------------------------------------------------------------
-void nsCheckButton::GetLabel(nsString& aBuffer)
-{
-	aBuffer = mLabel;
-}
 
 //-------------------------------------------------------------------------
 //
@@ -224,17 +209,6 @@ PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
 }
 
 
-#define GET_OUTER() ((nsCheckButton*) ((char*)this - nsCheckButton::GetOuterOffset()))
-
-void nsCheckButton::AggCheckButton::GetLabel(nsString& aBuffer)
-{
-  GET_OUTER()->GetLabel(aBuffer);
-}
-
-void nsCheckButton::AggCheckButton::SetLabel(const nsString& aText)
-{
-  GET_OUTER()->SetLabel(aText);
-}
 
 /*
  *  @update  gpk 08/27/98
@@ -353,51 +327,62 @@ Str255		tempstring;
 	::SetPort(theport);
 }
 
+/** nsICheckButton Implementation **/
 
-//-------------------------------------------------------------------------
-//
-// Set this button label
-//
-//-------------------------------------------------------------------------
-void nsCheckButton::SetState(PRBool aState) 
+/**
+ * Set the check state.
+ * @param aState PR_TRUE show as checked. PR_FALSE show unchecked.
+ * @result set to NS_OK if method successful
+ */
+
+NS_METHOD nsCheckButton::SetState(PRBool aState) 
 {
   int state = aState;
   
   mButtonSet = aState;
   DrawWidget(PR_FALSE);
   
+  return NS_OK;
+  
+  //if (mIsArmed) {
+    //mNewValue    = aState;
+    //mValueWasSet = PR_TRUE;
+  //}
 }
 
-//-------------------------------------------------------------------------
-//
-// Set this button label
-//
-//-------------------------------------------------------------------------
-PRBool nsCheckButton::GetState()
+/**
+ * Get the check state.
+ * @param aState PR_TRUE if checked. PR_FALSE if unchecked.
+ * @result set to NS_OK if method successful
+ */
+NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-
-	return(mButtonSet);
+	aState = mButtonSet;
+  return NS_OK;
 }
 
-//----------------------------------------------------------------------
 
 
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-
-#define GET_OUTER() \
-  ((nsCheckButton*) ((char*)this - nsCheckButton::GetOuterOffset()))
-
-PRBool nsCheckButton::AggCheckButton::GetState()
+/**
+	* Set the label for this object to be equal to aText
+	*
+	* @param  Set the label to aText
+	* @result NS_Ok if no errors
+	*/
+NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
-  return GET_OUTER()->GetState();
+	mLabel = aText;
+	return NS_OK;
 }
 
-void nsCheckButton::AggCheckButton::SetState(PRBool aState)
+/**
+	* Set a buffer to be equal to this objects label
+	*
+	* @param  Put the contents of the label into aBuffer
+	* @result NS_Ok if no errors
+	*/
+NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
 {
-  GET_OUTER()->SetState(aState);
+	aBuffer = mLabel;
+  return NS_OK;
 }
-
-
-BASE_IWIDGET_IMPL(nsCheckButton, AggCheckButton);
-

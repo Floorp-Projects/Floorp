@@ -26,7 +26,7 @@
  * Native Motif Listbox wrapper
  */
 
-class nsComboBox :   public nsWindow
+class nsComboBox :   public nsWindow, public nsIComboBox
 {
 
 public:
@@ -80,41 +80,6 @@ protected:
     int       mMaxNumItems;
     int       mNumItems;
 
-private:
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsComboBox,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIComboBox interface to nsComboBox w/o using multiple
-  // inheritance.
-  class AggComboBox : public nsIComboBox {
-  public:
-    AggComboBox();
-    virtual ~AggComboBox();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsIComboBox
-    void      SetMultipleSelection(PRBool aMultipleSelections);
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
-    PRInt32   GetSelectedCount();
-    void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
-
-  };
-  AggComboBox mAggWidget;
-  friend class AggComboBox;
 
 };
 

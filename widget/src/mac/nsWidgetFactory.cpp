@@ -141,11 +141,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     nsWindow *inst = nsnull;
     if (aIID.Equals(kCWindow)) 
     	{
-      inst = new nsWindow(aOuter);
+      inst = new nsWindow();
     	}
 	 	else if (aIID.Equals(kIWidget)) 
     	{
-     	inst = new nsWindow(aOuter);
+     	inst = new nsWindow();
     	}
     else if (mClassID.Equals(kCAppShellCID)) 
 			{
@@ -162,51 +162,51 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
 			return res;
 			}
     else if ( mClassID.Equals(kCButtonCID)) {
-        inst = new nsButton(aOuter);
+        inst = new nsButton();
     }
     else if (aIID.Equals(kIWidget)) {
-        inst = new nsWindow(aOuter);
+        inst = new nsWindow();
     }
     else if (mClassID.Equals(kCChild)) {
-        inst = new ChildWindow(aOuter);
+        inst = new ChildWindow();
     }
     else if ( mClassID.Equals(kCRadioButtonCID )) {
-        inst = new nsRadioButton(aOuter);
+        inst = new nsRadioButton();
     }
     else if ( mClassID.Equals(kCCheckButtonCID)) {
-        inst = new nsCheckButton(aOuter);
+        inst = new nsCheckButton();
     }
     else if (mClassID.Equals(kCTextWidgetCID)) {
-        inst = new nsTextWidget(aOuter);
+        inst = new nsTextWidget();
     }
     
     
     
 #ifdef NOTNOW
     else if (mClassID.Equals(kCVertScrollbarCID)) {
-        inst = new nsScrollbar(aOuter, PR_TRUE);
+        inst = new nsScrollbar(, PR_TRUE);
     }
     else if (mClassID.Equals(kCHorzScrollbarCID)) {
-        inst = new nsScrollbar(aOuter, PR_FALSE);
+        inst = new nsScrollbar(, PR_FALSE);
     }
     else if (aIID.Equals(kIScrollbar)) {
         inst = nsnull;
         fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
     }
     else if (mClassID.Equals(kCTextAreaWidgetCID)) {
-        inst = new nsTextAreaWidget(aOuter);
+        inst = new nsTextAreaWidget();
     }
     else if (mClassID.Equals(kCListBoxCID)) {
-        inst = new nsListBox(aOuter);
+        inst = new nsListBox();
     }
     else if (mClassID.Equals(kCComboBoxCID)) {
-        inst = new nsComboBox(aOuter);
+        inst = new nsComboBox();
     }
     else if (mClassID.Equals(kCFileWidgetCID)) {
-        inst = new nsFileWidget(aOuter);
+        inst = new nsFileWidget();
     }
     else if (mClassID.Equals(kCLookAndFeelCID)) {
-        nsLookAndFeel *laf = new nsLookAndFeel(aOuter);
+        nsLookAndFeel *laf = new nsLookAndFeel();
         if (laf == NULL) {  
             return NS_ERROR_OUT_OF_MEMORY;  
         }  
@@ -233,7 +233,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         return NS_ERROR_OUT_OF_MEMORY;  
     }
         
-    nsresult res = inst->QueryObject(aIID, aResult);
+    nsresult res = inst->QueryInterface(aIID, aResult);
 
     if (res != NS_OK) {
         delete inst;         
