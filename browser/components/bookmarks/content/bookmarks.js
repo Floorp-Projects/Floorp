@@ -624,11 +624,9 @@ var BookmarksCommand = {
   createNewFolder: function (aTarget)
   {
     var name      = BookmarksUtils.getLocaleString("ile_newfolder");
-    dump("name:"+name+"\n")
     var rFolder   = BMSVC.createFolder(name);
     var selection = BookmarksUtils.getSelectionFromResource(rFolder);
     var ok        = BookmarksUtils.insertSelection("newfolder", selection, aTarget);
-    dump("Value:"+selection.item[0].Value+", "+BookmarksUtils.getProperty(selection.item[0],NC_NS+"Name")+"\n")
     if (ok)
       this.openBookmark(selection, "properties");
   },
@@ -1072,14 +1070,13 @@ var BookmarksUtils = {
   /////////////////////////////////////////////////////////////////////////////
   // Returns true if aResource is a folder group
   isFolderGroup: function (aResource) {
-    return this.getProperty(aResource, NC_NS+"FolderGroup") == "true"? true:false
+    return this.getProperty(aResource, NC_NS+"FolderGroup") == "true"
   },
 
   /////////////////////////////////////////////////////////////////////////////
   // Returns true if aResource is the Personal Toolbar Folder
   isPersonalToolbarFolder: function (aResource) {
-    return this.getProperty(aResource, NC_NS+"FolderType") == "NC:PersonalToolbarFolder"? 
-           true:false
+    return this.getProperty(aResource, NC_NS+"FolderType") == "NC:PersonalToolbarFolder"
   },
 
   /////////////////////////////////////////////////////////////////////////////
