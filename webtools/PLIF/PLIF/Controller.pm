@@ -151,8 +151,6 @@ sub getServiceList {
             push(@services, $service);
         }
     }
-    local $" = '\', \'';
-    $self->dump(10, "Created a service list for '$name' containing: '@services'");
     return @services;
 }
 
@@ -167,7 +165,6 @@ sub getObjectList {
             push(@services, $service);
         }
     }
-    $self->dump(10, "Created an object list for '$name' containing: '@services'");
     return @services;
 }
 
@@ -236,7 +233,6 @@ sub dispatchMethod {
     my $self = shift;
     my($service, $prefix, $method, @arguments) = @_;
     # the \u makes the first letter of the $command uppercase
-    $self->dump(10, "dispatching method '$prefix\u$method'...");
     return ($self->getSelectingServiceList($service)->dispatch($self, "$prefix\u$method", @arguments) or 
             $self->getSelectingObjectList($service)->dispatch($self, "$prefix\u$method", @arguments));
 }

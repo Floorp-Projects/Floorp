@@ -66,10 +66,8 @@ my $LOCKED = 0; # set to '1' while we are calling the error reporting code
 sub create {
     my $class = shift;
     if (ref($class)) {
-        $class->dump(10, "Tried to call constructor of already existing object $class, so returning same object");
         return $class; # already created, return self
     } else {
-        $class->dump(10, "Called constructor of class $class, creating object...");
         my $self = $class->bless(@_); # call our real constructor
         $self->serviceInit(@_);
         return $self;
@@ -83,7 +81,6 @@ sub serviceCreate {
     if (ref($class)) {
         $class = ref($class);
     }
-    $class->dump(10, "Called service constructor of class $class, creating object...");
     my $self = $class->bless(@_); # call our real constructor
     $self->serviceInstanceInit(@_);
     return $self;
@@ -109,7 +106,6 @@ sub objectCreate {
     if (ref($class)) {
         $class = ref($class);
     }
-    $class->dump(10, "Called object constructor of class $class, creating object...");
     my $self = $class->bless(@_); # call our real constructor
     $self->objectInit(@_);
     return $self;
@@ -132,20 +128,14 @@ sub AUTOLOAD {
     $name =~ s/^.*://o; # strip fully-qualified portion
     if ($self->propertyImpliedAccessAllowed($name)) {
         if (scalar(@_) == 1) {
-            $self->dump(10, "setting implied property '$name' in '$self'");
             return $self->propertySet($name, @_);
         } elsif (scalar(@_) == 0) {
             if ($self->propertyExists($name)) {
-                $self->dump(10, "getting implied property '$name' in '$self'");
                 return $self->propertyGet($name);
             } else {
-                $self->dump(10, "not getting non-existent implied property '$name' in '$self'");
                 return $self->propertyGetUndefined($name);
             }
         }
-        $self->dump(10, "neither setting nor getting implied property '$name' in '$self'");
-    } else {
-        $self->dump(10, "not treating '$name' in '$self' as an implied property, regardless of its existence");
     }
     $self->methodMissing($name, @_);
 }
@@ -162,7 +152,6 @@ sub propertyExists {
     my $self = shift;
     my($name) = @_;
     $self->assert($name, 0, 'propertyExists() cannot be called without arguments');
-    $self->dump(10, "checking for existence of property '$name' in '$self'");
     return exists($self->{$name});
 }
 
