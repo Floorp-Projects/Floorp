@@ -228,15 +228,6 @@ function addEditorClickEventListener()
   } catch (e) {}
 }
 
-function removeEditorClickEventListener()
-{
-  try {
-    var bodyelement = GetBodyElement();
-    if (bodyelement)
-      bodyelement.removeEventListener("click", EditorClick, false);
-  } catch (e) {}
-}
-
 var MessageComposeDocumentStateListener =
 {
   NotifyDocumentCreated: function()
@@ -246,6 +237,9 @@ var MessageComposeDocumentStateListener =
 
   NotifyDocumentWillBeDestroyed: function()
   {
+    // note that the editorshell seems to be gone at this point 
+    // so we don't have a way to remove the click listener.
+    // hopefully it is being cleaned up with all listeners
   },
 
   NotifyDocumentStateChanged:function()
@@ -294,6 +288,9 @@ var DocumentStateListener =
       addEditorClickEventListener();
   },
 
+    // note that the editorshell seems to be gone at this point 
+    // so we don't have a way to remove the click listener.
+    // hopefully it is being cleaned up with all listeners
   NotifyDocumentWillBeDestroyed: function() {},
 
   NotifyDocumentStateChanged:function( isNowDirty )
