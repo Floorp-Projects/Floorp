@@ -25,30 +25,36 @@ static NS_DEFINE_IID(kIEventQueueIID, NS_IEVENTQUEUE_IID);
 class nsEventQueueImpl : public nsIEventQueue
 {
 public:
-  nsEventQueueImpl();
-  virtual ~nsEventQueueImpl();
+    nsEventQueueImpl();
+    virtual ~nsEventQueueImpl();
 
   // nsISupports interface...
-  NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
   // nsIEventQueue interface...
 	NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent);
 	NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult);
 
-  NS_IMETHOD ProcessPendingEvents();
+    NS_IMETHOD ProcessPendingEvents();
 	NS_IMETHOD EventLoop();
 
-  NS_IMETHOD EventAvailable(PRBool& aResult);
+    NS_IMETHOD EventAvailable(PRBool& aResult);
 	NS_IMETHOD GetEvent(PLEvent** aResult);
 
-  NS_IMETHOD_(PRInt32) GetEventQueueSelectFD();
+    NS_IMETHOD_(PRInt32) GetEventQueueSelectFD();
 
 	NS_IMETHOD Init();
 	NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue);
 
+    NS_IMETHOD EnterMonitor();
+    NS_IMETHOD ExitMonitor();
+
+    NS_IMETHOD RevokeEvents(void* owner);
+
+    NS_IMETHOD GetPLEventQueue(PLEventQueue** aEventQueue);
+
 	// Helpers
-	static NS_METHOD
-  Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 	static const nsCID& CID() { static nsCID cid = NS_EVENTQUEUE_CID; return cid; }
 
