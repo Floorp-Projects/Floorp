@@ -250,7 +250,7 @@
 <!ENTITY historyButton.tooltip          "Displays pages you've viewed recently">
 
 <!ENTITY newTabButton.tooltip           "Opens a new tab">
-<!ENTITY newWindowButton.tooltip        "Opens a new tab">
+<!ENTITY newWindowButton.tooltip        "Opens a new window">
 
 <!ENTITY findOnSearchBarCmd.label       "Find in this Page">
 <!ENTITY currentDownloads.label          "Current Downloads">
