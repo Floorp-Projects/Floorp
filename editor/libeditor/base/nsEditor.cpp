@@ -737,8 +737,8 @@ class nsAutoMoveNodeSelNotify
                             PRInt32 aNewOffset) :
     mSel(aSelState)
     ,mOldParent(aOldParent)
-    ,mOldOffset(aOldOffset)
     ,mNewParent(aNewParent)
+    ,mOldOffset(aOldOffset)
     ,mNewOffset(aNewOffset)
     {
       if (mSel) mSel->WillMoveNode();
@@ -4760,7 +4760,14 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   if (NS_FAILED(result)) return result;
   
   result = ps->GetStyleContextFor(frame, getter_AddRefs(styleContext));
-  if (NS_FAILED(result)) return result;
+  if (NS_FAILED(result))
+  {
+    // Consider nodes without a style context to be NOT preformatted:
+    // For instance, this is true of JS tags inside the body (which show
+    // up as #text nodes but have no style context).
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
 
   styleText = (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
 
