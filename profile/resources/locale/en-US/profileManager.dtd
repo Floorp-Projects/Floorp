@@ -1,10 +1,10 @@
 <!-- extracted from pm.xul -->
 
 <!ENTITY reg.gif "reg.gif">
-<!ENTITY intro "Communicator stores information about your settings, preferences, bookmarks, and stored messages in your personal Netscape Name.">
-<!ENTITY intro.new "Click New to create a new Netscape Name."> 
-<!ENTITY intro.delete "Click Delete to remove a selected Netscape Name."> 
-<!ENTITY intro.rename "Click Rename to change the name of a selected Netscape Name.">
+<!ENTITY intro "Mozilla stores information about your settings, preferences, bookmarks, and stored messages in your personal Mozilla Name.">
+<!ENTITY intro.new "Click New to create a new Mozilla Name."> 
+<!ENTITY intro.delete "Click Delete to remove a selected Mozilla Name."> 
+<!ENTITY intro.rename "Click Rename to change the name of a selected Mozilla Name.">
 <!ENTITY migration.label "Migration">
 <!ENTITY user.label "User Name">
 <!ENTITY newCmd.label "New...">
