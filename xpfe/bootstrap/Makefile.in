@@ -164,5 +164,5 @@ CFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+install:: $(PROGRAM)
 	$(INSTALL) $(EXPORT_RESOURCES) $(DIST)/bin/res/toolbar
