@@ -701,6 +701,17 @@ char * apply_rfc2047_encoding(const char *_src, PRBool structured, const char *c
     else {
       for (; list && (outputlen > 0); list = list->next) {
         if (list->displayname) {
+          if (list->asciionly && list->addrspec) {
+            PRInt32 len = cursor + strlen(list->displayname) + strlen(list->addrspec);
+            if (foldlen < len && len < 998) { /* see RFC 2822 for magic number 998 */
+              PR_snprintf(outputtail, outputlen - 1, (list == listhead || cursor == 1) ? "%s %s%s" : "\r\n %s %s%s", list->displayname, list->addrspec, list->next ? ",\r\n " : "");
+              usedlen = strlen(outputtail);
+              outputtail += usedlen;
+              outputlen -= usedlen;
+              cursor = 1;
+              continue;
+            }
+          }
           cursor = generate_encodedwords(list->displayname, charset, method, outputtail, outputlen, cursor, foldlen, list->asciionly);
           if (cursor < 0) {
             PR_Free(output);
