@@ -66,6 +66,11 @@ public:
                                     nsICacheListener *         listener,
                                     nsICacheEntryDescriptor ** result);
 
+    nsresult         EvictEntriesForSession(nsCacheSession *   session);
+
+    nsresult         EvictEntriesForClient(const char *          clientID,
+                                           nsCacheStoragePolicy  storagePolicy);
+
     /**
      * Methods called by nsCacheEntryDescriptor
      */

@@ -97,5 +97,5 @@ NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const char *key,
 
 NS_IMETHODIMP nsCacheSession::EvictEntries()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsCacheService::GlobalInstance()->EvictEntriesForSession(this);
 }

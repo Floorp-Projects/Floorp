@@ -327,7 +327,7 @@ nsCacheService::CreateSession(const char *          clientID,
 {
     *result = nsnull;
 
-    if (!(mEnableDiskDevice || mEnableMemoryDevice))
+    if ((this == nsnull) || !(mEnableDiskDevice || mEnableMemoryDevice))
         return NS_ERROR_NOT_AVAILABLE;
 
     nsCacheSession * session = new nsCacheSession(clientID, storagePolicy, streamBased);
@@ -339,7 +339,48 @@ nsCacheService::CreateSession(const char *          clientID,
 }
 
 
-/* void visitEntries (in nsICacheVisitor visitor); */
+nsresult
+nsCacheService::EvictEntriesForSession(nsCacheSession * session)
+{
+    return EvictEntriesForClient(session->ClientID()->get(),
+                                 session->StoragePolicy());
+}
+
+
+nsresult
+nsCacheService::EvictEntriesForClient(const char *          clientID,
+                                      nsCacheStoragePolicy  storagePolicy)
+{
+    if (this == nsnull) return NS_ERROR_NOT_AVAILABLE;
+    nsAutoLock lock(mCacheServiceLock);
+    nsresult rv = NS_OK;
+
+    if (storagePolicy == nsICache::STORE_ANYWHERE ||
+        storagePolicy == nsICache::STORE_ON_DISK) {
+
+        if (mEnableDiskDevice) {
+            if (!mDiskDevice) {
+                rv = CreateDiskDevice();
+                if (NS_FAILED(rv)) return rv;
+            }
+            rv = mDiskDevice->EvictEntries(clientID);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    if (storagePolicy == nsICache::STORE_ANYWHERE ||
+        storagePolicy == nsICache::STORE_IN_MEMORY) {
+
+        if (mEnableMemoryDevice) {
+            rv = mMemoryDevice->EvictEntries(clientID);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
     nsAutoLock lock(mCacheServiceLock);
@@ -374,31 +415,7 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 
 NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
 {
-    nsresult rv;
-
-    nsAutoLock lock(mCacheServiceLock);
-    
-    // XXX what should we do about error handling?
-    
-    if (storagePolicy == nsICache::STORE_ANYWHERE || storagePolicy == nsICache::STORE_ON_DISK) {
-        if (mEnableDiskDevice) {
-            if (!mDiskDevice) {
-                rv = CreateDiskDevice();
-                if (NS_FAILED(rv)) return rv;
-            }
-            rv = mDiskDevice->EvictEntries(nsnull);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    if (storagePolicy == nsICache::STORE_ANYWHERE || storagePolicy == nsICache::STORE_IN_MEMORY) {
-        if (mEnableMemoryDevice) {
-            rv = mMemoryDevice->EvictEntries(nsnull);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-    
-    return NS_OK;
+    return  EvictEntriesForClient(nsnull, storagePolicy);
 }
 
 
