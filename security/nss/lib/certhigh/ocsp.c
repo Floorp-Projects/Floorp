@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.17 2003/10/24 17:17:37 wchang0222%aol.com Exp $
+ * $Id: ocsp.c,v 1.18 2004/01/28 23:23:44 nelsonb%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -3066,7 +3066,7 @@ CERT_GetOCSPAuthorityInfoAccessLocation(CERTCertificate *cert)
     if (arena == NULL)
 	goto loser;
 
-    authInfoAccess = cert_DecodeAuthInfoAccessExtension(arena,
+    authInfoAccess = CERT_DecodeAuthInfoAccessExtension(arena,
 							encodedAuthInfoAccess);
     if (authInfoAccess == NULL)
 	goto loser;

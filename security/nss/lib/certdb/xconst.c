@@ -63,17 +63,19 @@ static const SEC_ASN1Template CERTIA5TypeTemplate[] = {
 
 static const SEC_ASN1Template CERTPrivateKeyUsagePeriodTemplate[] = {
     { SEC_ASN1_SEQUENCE,
-      0, NULL, sizeof(PKUPEncodedContext) },
+      0, NULL, sizeof(CERTPrivKeyUsagePeriod) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC  | 0,	
-	  offsetof(PKUPEncodedContext, notBefore), SEC_GeneralizedTimeTemplate},
+	  offsetof(CERTPrivKeyUsagePeriod, notBefore), 
+	  SEC_GeneralizedTimeTemplate},
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC  | 1,
-	  offsetof(PKUPEncodedContext, notAfter), SEC_GeneralizedTimeTemplate},
+	  offsetof(CERTPrivKeyUsagePeriod, notAfter), 
+	  SEC_GeneralizedTimeTemplate},
     { 0, } 
 };
 
 
 const SEC_ASN1Template CERTAltNameTemplate[] = {
-    { SEC_ASN1_CONSTRUCTED, offsetof(AltNameEncodedContext, encodedGenName), 
+    { SEC_ASN1_CONSTRUCTED, offsetof(CERTAltNameEncodedContext, encodedGenName), 
       CERT_GeneralNamesTemplate}
 };
 
@@ -115,7 +117,9 @@ CERT_EncodeSubjectKeyID(PRArenaPool *arena, char *value, int len, SECItem *encod
 
 
 SECStatus
-CERT_EncodePublicKeyUsagePeriod(PRArenaPool *arena, PKUPEncodedContext *pkup, SECItem *encodedValue)
+CERT_EncodePrivateKeyUsagePeriod(PRArenaPool *arena, 
+                                CERTPrivKeyUsagePeriod *pkup, 
+				SECItem *encodedValue)
 {
     SECStatus rv = SECSuccess;
 
@@ -124,6 +128,40 @@ CERT_EncodePublicKeyUsagePeriod(PRArenaPool *arena, PKUPEncodedContext *pkup, SE
 	rv = SECFailure;
     }
     return(rv);
+}
+
+CERTPrivKeyUsagePeriod *
+CERT_DecodePrivKeyUsagePeriodExtension(PLArenaPool *arena, SECItem *extnValue)
+{
+    SECStatus rv;
+    CERTPrivKeyUsagePeriod *pPeriod;
+    SECItem newExtnValue;
+
+    /* allocate the certificate policies structure */
+    pPeriod = PORT_ArenaZNew(arena, CERTPrivKeyUsagePeriod);
+    if ( pPeriod == NULL ) {
+	goto loser;
+    }
+    
+    pPeriod->arena = arena;
+
+    /* copy the DER into the arena, since Quick DER returns data that points
+       into the DER input, which may get freed by the caller */
+    rv = SECITEM_CopyItem(arena, &newExtnValue, extnValue);
+    if ( rv != SECSuccess ) {
+	goto loser;
+    }
+
+    rv = SEC_QuickDERDecodeItem(arena, pPeriod, 
+                                CERTPrivateKeyUsagePeriodTemplate,
+			        &newExtnValue);
+    if ( rv != SECSuccess ) {
+	goto loser;
+    }
+    return pPeriod;
+    
+loser:
+    return NULL;
 }
 
 
@@ -167,10 +205,10 @@ CERTGeneralName *
 CERT_DecodeAltNameExtension(PRArenaPool *arena, SECItem *EncodedAltName)
 {
     SECStatus              rv = SECSuccess;
-    AltNameEncodedContext  encodedContext;
+    CERTAltNameEncodedContext  encodedContext;
 
     encodedContext.encodedGenName = NULL;
-    PORT_Memset(&encodedContext, 0, sizeof(AltNameEncodedContext));
+    PORT_Memset(&encodedContext, 0, sizeof(CERTAltNameEncodedContext));
     rv = SEC_ASN1DecodeItem (arena, &encodedContext, CERT_GeneralNamesTemplate,
 			     EncodedAltName);
     if (rv == SECFailure) {
@@ -202,12 +240,12 @@ CERTNameConstraints *
 CERT_DecodeNameConstraintsExtension(PRArenaPool          *arena,
 				    SECItem              *encodedConstraints)
 {
-    return  cert_DecodeNameConstraints(arena, encodedConstraints);
+    return cert_DecodeNameConstraints(arena, encodedConstraints);
 }
 
 
 CERTAuthInfoAccess **
-cert_DecodeAuthInfoAccessExtension(PRArenaPool *arena,
+CERT_DecodeAuthInfoAccessExtension(PRArenaPool *arena,
 				   SECItem     *encodedExtension)
 {
     CERTAuthInfoAccess **info = NULL;

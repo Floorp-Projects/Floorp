@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.24 2003/09/19 04:08:48 jpierre%netscape.com Exp $
+ * $Id: certt.h,v 1.25 2004/01/28 23:23:43 nelsonb%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -88,6 +88,7 @@ typedef struct CERTNameStr                       CERTName;
 typedef struct CERTNameConstraintStr             CERTNameConstraint;
 typedef struct CERTNameConstraintsStr            CERTNameConstraints;
 typedef struct CERTOKDomainNameStr               CERTOKDomainName;
+typedef struct CERTPrivKeyUsagePeriodStr         CERTPrivKeyUsagePeriod;
 typedef struct CERTPublicKeyAndChallengeStr      CERTPublicKeyAndChallenge;
 typedef struct CERTRDNStr                        CERTRDN;
 typedef struct CERTSignedCrlStr                  CERTSignedCrl;
@@ -656,6 +657,13 @@ struct CERTNameConstraintsStr {
     SECItem             **DERExcluded;
 };
 
+
+/* Private Key Usage Period extension struct. */
+struct CERTPrivKeyUsagePeriodStr {
+    SECItem notBefore;
+    SECItem notAfter;
+    PRArenaPool *arena;
+};
 
 /* X.509 v3 Authority Key Identifier extension.  For the authority certificate
    issuer field, we only support URI now.

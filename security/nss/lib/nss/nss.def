@@ -783,3 +783,18 @@ SEC_DupCrl;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.10 { 	# NSS 3.10 release
+;+    global:
+CERT_DecodeAltNameExtension;
+CERT_DecodeAuthInfoAccessExtension;
+CERT_DecodeAuthKeyID;
+CERT_DecodeCRLDistributionPoints;
+CERT_DecodeNameConstraintsExtension;
+CERT_DecodePrivKeyUsagePeriodExtension;
+CERT_GetNextGeneralName;
+CERT_GetNextNameConstraint;
+CERT_GetPrevGeneralName;
+CERT_GetPrevNameConstraint;
+;+    local:
+;+       *;
+;+};
