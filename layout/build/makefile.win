@@ -51,7 +51,8 @@ LCFLAGS = \
         $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
-	-I$(PUBLIC)\js -I..\..\style\src -I..\html\base\src -I..\base\src \
+	-I$(PUBLIC)\js -I..\html\base\src -I..\base\src \
+	-I..\html\style\src \
 	-I..\xul\content\src \
 	-I..\xul\base\src \
 !ifdef MOZ_MATHML

@@ -42,7 +42,7 @@
 //#include "nsSliderFrame.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsIView.h"

@@ -42,7 +42,6 @@
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
 #include "nsIDocumentLoader.h"
-#include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"

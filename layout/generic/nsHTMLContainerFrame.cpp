@@ -43,7 +43,7 @@
 #include "nsViewsCID.h"
 #include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
 #include "nsIStyleSet.h"

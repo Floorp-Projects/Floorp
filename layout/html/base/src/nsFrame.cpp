@@ -34,7 +34,7 @@
 #include "nsIPresContext.h"
 #include "nsCRT.h"
 #include "nsGUIEvent.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
 #include "prlog.h"
@@ -45,7 +45,6 @@
 #include "nsIFrameManager.h"
 
 #include "nsIDOMText.h"
-#include "nsDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsIEventStateManager.h"

@@ -38,7 +38,7 @@
 #include "nsIURL.h"
 
 #include "nsIEventStateManager.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsNetUtil.h"
 
 #include "nsCOMPtr.h"

@@ -38,7 +38,7 @@
 
 #include "nsIFormControlFrame.h"
 #include "nsIEventStateManager.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsISizeOfHandler.h"
 #include "nsIDocument.h"
 

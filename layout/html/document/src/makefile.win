@@ -55,8 +55,8 @@ EXPORTS =					\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\base\src -I..\..\forms\src \
-  -I..\..\style\src -I..\..\table\src -I$(PUBLIC)\dom \
+  -I..\..\base\src \
+  -I$(PUBLIC)\dom \
   -I..\..\content\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
 

@@ -41,10 +41,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIImage.h"
 #include "nsStyleUtil.h"
-#include "nsDOMEvent.h"
 #include "nsStyleConsts.h"
-#include "nsIHTMLAttributes.h"
-#include "nsGenericHTMLElement.h"
 #include "nsFormFrame.h"
 #include "nsFormControlFrame.h"
 

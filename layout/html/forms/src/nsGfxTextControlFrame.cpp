@@ -40,7 +40,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIStyleContext.h"
 #include "nsFont.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIFormControl.h"
 #include "nsFormFrame.h"
 #include "nsIFrameManager.h"

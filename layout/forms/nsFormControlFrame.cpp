@@ -37,7 +37,6 @@
 #include "nsViewsCID.h"
 #include "nsIComponentManager.h"
 #include "nsGUIEvent.h"
-#include "nsDOMEvent.h"
 #include "nsIFontMetrics.h"
 #include "nsIFormControl.h"
 #include "nsIDeviceContext.h"

@@ -32,11 +32,8 @@ LIBRARY_NAME = gkmathmlbase_s
 REQUIRES = xpcom js dom widget webshell locale view htmlparser necko docshell webbrwsr
 
 LOCAL_INCLUDES = \
-	-I$(srcdir)/../../../base/src		\
-	-I$(srcdir)/../../../base/public \
 	-I$(srcdir)/../../../html/style/src \
 	-I$(srcdir)/../../../html/base/src \
-        -I$(srcdir)/../../../html/content/src \
         -I$(srcdir)/../../../html/table/src \
 	-I$(srcdir)/../../content/src \
 	$(NULL)

@@ -50,7 +50,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIViewManager.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsDocument.h"
+#include "nsIDocument.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIScrollbarListener.h"
 #include "nsIScrollbarMediator.h"

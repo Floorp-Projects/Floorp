@@ -55,10 +55,10 @@
 #include "nsIWidget.h"
 #include "nsVoidArray.h"
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLAttributes.h"
 #include "nsCRT.h"
 #include "nsIURL.h"
 #include "nsIHTMLDocument.h"
+#include "nsIScriptGlobalObject.h"
 
 #include "nsIFormProcessor.h"
 
@@ -69,7 +69,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIDocument.h"
 #include "nsILinkHandler.h"
 #include "nsGfxRadioControlFrame.h"
-#include "nsDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsDOMError.h"

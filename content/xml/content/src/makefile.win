@@ -46,11 +46,9 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsXMLNamedNodeMap.obj \
 	$(NULL)
 
-EXPORTS =					\
+LINCS= \
+	-I..\..\..\base\src \
 	$(NULL)
-
-LINCS= -I..\..\..\html\style\src -I..\..\..\html\base\src \
-  -I..\..\..\html\document\src -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

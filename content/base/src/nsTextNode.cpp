@@ -26,7 +26,6 @@
 #include "nsIContent.h"
 #include "nsITextContent.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsFrame.h"
 #include "nsIDocument.h"
 #include "nsCRT.h"
 #include "nsLayoutAtoms.h"

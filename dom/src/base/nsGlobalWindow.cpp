@@ -38,7 +38,7 @@
 #include "nsReadableUtils.h"
 
 // Other Classes
-#include "nsEventListenerManager.h"
+#include "nsIEventListenerManager.h"
 #include "nsEscape.h"
 #include "nsDOMPropEnums.h"
 #include "nsStyleCoord.h"

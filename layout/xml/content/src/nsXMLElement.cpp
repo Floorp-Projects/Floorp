@@ -28,7 +28,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIWebShell.h"
 #include "nsIEventStateManager.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"

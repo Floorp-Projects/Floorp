@@ -47,7 +47,6 @@
 #include "nsLayoutUtils.h"
 #include "nsIWebShell.h"
 #include "nsIFrame.h"
-#include "nsImageFrame.h"
 #include "nsLayoutAtoms.h"
 
 

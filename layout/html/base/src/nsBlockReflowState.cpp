@@ -45,7 +45,7 @@
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLValue.h"
-#include "nsDOMEvent.h"
+#include "nsIDOMEvent.h"
 #include "nsIHTMLContent.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"

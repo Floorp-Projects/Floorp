@@ -36,22 +36,10 @@ include $(topsrcdir)/config/config.mk
 
 DEFINES += -D_IMPL_NS_HTML
 
-INCLUDES += \
-	-I$(srcdir)/../../../base/src		\
-	$(NULL)
-
 CPPSRCS =				\
 	nsMathMLAtoms.cpp  \
         nsMathMLOperators.cpp \
 	$(NULL)
-
-
-EXPORTS =				\
-  nsMathMLOperators.h  \
-  nsMathMLOperatorList.h  \
-  $(NULL)
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 
 MKSHLIB :=

@@ -23,10 +23,10 @@
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsIPresContext.h"
-#include "nsGenericHTMLElement.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
+#include "nsINameSpaceManager.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"
