@@ -80,14 +80,9 @@ nsMimeEmitter::nsMimeEmitter()
 printf("Prefs not working on multiple threads...must find a solution\n"); 
 #endif
 
-  return;
-
   nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(mPrefs));
   if (! (mPrefs && NS_SUCCEEDED(rv)))
     return;
-  mPrefs->Startup("prefs50.js");
-
-  // mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
 }
 
 nsMimeEmitter::~nsMimeEmitter(void)
