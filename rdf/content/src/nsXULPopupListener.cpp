@@ -151,7 +151,7 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       // Check for right mouse button down
       aMouseEvent->GetButton(&button);
       // XXX: Handle Mac 
-      if (button == 2) {
+      if (button == 3) {
         // Time to launch a context menu.
         LaunchPopup(aMouseEvent);
       }
