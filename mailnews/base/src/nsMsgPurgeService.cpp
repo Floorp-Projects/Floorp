@@ -313,7 +313,8 @@ nsresult nsMsgPurgeService::PerformPurge()
         }
       }
     }
-    rv = SearchFolderToPurge(folderToPurge, purgeIntervalToUse);
+    if (folderToPurge)
+      rv = SearchFolderToPurge(folderToPurge, purgeIntervalToUse);
   }
     
   // set up timer to check accounts again
