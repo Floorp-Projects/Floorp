@@ -895,7 +895,7 @@ Contributor(s):
               ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
               onclick="return contentAreaClick(event);"/>
 
-  <statusbar class="chromeclass-status"
+  <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="statusbar-display" label="&statusText.label;" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress">
