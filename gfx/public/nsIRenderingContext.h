@@ -40,6 +40,9 @@ class nsIRegion;
 struct nsFont;
 struct nsPoint;
 struct nsRect;
+#ifdef MOZ_MATHML
+struct nsBoundingMetrics;
+#endif
 
 //cliprect/region combination methods
 
@@ -591,6 +594,35 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags) = 0;
   //~~~
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd) = 0;
+
+#ifdef MOZ_MATHML
+  /**
+   * Returns bounding metrics (in app units) of an 8-bit character string
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @return aBoundingMetrics struct that contains various metrics (see below)
+   * @return error status
+   */
+  NS_IMETHOD
+  GetBoundingMetrics(const char*        aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics) = 0;
+  /**
+   * Returns bounding metrics (in app units) of an Unicode character string
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @param aFontID an optional out parameter used to store a
+   *        font identifier that can be passed into the GetBoundingMetrics()
+   *        methods to speed measurements
+   * @return aBoundingMetrics struct that contains various metrics (see below)
+   * @return error status
+   */
+  NS_IMETHOD
+  GetBoundingMetrics(const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics,
+                     PRInt32*           aFontID = nsnull) = 0;
+#endif
 };
 
 //modifiers for text rendering
@@ -639,5 +671,97 @@ public:
 //be removed once all of the platform specific nsRenderingContext's
 //stop using it.
 #define NS_COPYBITS_TO_BACK_BUFFER          0x0008
+
+
+#ifdef MOZ_MATHML
+/* Struct used for accurate measurements of a string in order
+   to allow precise positionning when processing MathML.
+*/
+struct nsBoundingMetrics {
+
+  ///////////
+  // Metrics that _exactly_ enclose the text:
+
+  // The origin of the character coordinate system is the same
+  // as that of PostScript and Win32, i.e., the origin is located
+  // at the intersection of the baseline with the left of the
+  // character's cell. Any value below can be positive or negative.
+  
+  nscoord leftBearing;
+       /* The horizontal distance from the origin of the drawing
+          operation to the left-most part of the drawn string. */
+
+  nscoord rightBearing;
+       /* The horizontal distance from the origin of the drawing
+          operation to the right-most part of the drawn string.
+          The _exact_ width of the string is therefore:
+          rightBearing - leftBearing */
+  
+  nscoord ascent;
+       /* The vertical distance from the origin of the drawing 
+          operation to the top-most part of the drawn string. */
+
+  nscoord descent;
+       /* The vertical distance from the origin of the drawing 
+          operation to the bottom-most part of the drawn string.
+          The _exact_ height of the string is therefore:
+          ascent - descent */
+
+  //////////
+  // Metrics for placing other surrounding text:
+
+  nscoord width;
+       /* The horizontal distance from the origin of the drawing
+          operation to the correct origin for drawing another string
+          to follow the current one. Depending on the font, this
+          could be greater than or less than the right bearing. */
+
+  nscoord supItalicCorrection, subItalicCorrection;
+       /* The horizontal gaps between the string in slanted style
+          (italic) and the same string in upright style (normal).
+
+          If the font was designed with a slant angle (suh as that
+          provided by the XA_ITALIC_ANGLE property on X), then the
+          supItalicCorrection (useful for attaching a superscript) 
+          is obtained by multiplying cos(slantAngle) by the last
+          character's ascent, and the subItalicCorrection (useful 
+          for attaching a subscript) is obtained by multiplying 
+          cos(slantAngle) by the last character's descent.
+
+          These values are of opposite sign. For a forward-slanted
+          font (italic style), supItalicCorrection >= 0 and 
+          subItalicCorrection <= 0.
+
+          For a back-slanted font, supItalicCorrection <= 0 
+          and subItalicCorrection >= 0.
+       */
+
+  //////////
+  // Utility methods and operators:
+
+  /* Set all member data to zero */
+  void 
+  Clear() {
+    leftBearing = rightBearing = 0;
+    ascent = descent = width = 0;
+    supItalicCorrection = subItalicCorrection = 0;
+  }
+
+  /* Append another bounding metrics */
+  /* Notice that leftBearing is not set. The user must set
+     leftBearing on initialization and (repeatedly) use this 
+     operator to append other bounding metrics on the right.
+   */
+  void 
+  operator += (const nsBoundingMetrics& bm) {
+    if (ascent < bm.ascent) ascent = bm.ascent;
+    if (descent > bm.descent) descent = bm.descent;   
+    rightBearing = width + bm.rightBearing;
+    width += bm.width;
+    supItalicCorrection = bm.supItalicCorrection;
+    subItalicCorrection = bm.subItalicCorrection;
+  }
+};
+#endif // MOZ_MATHML
 
 #endif /* nsIRenderingContext_h___ */
