@@ -1749,6 +1749,9 @@ if ($next_bug) {
         my $bug = new Bug($next_bug, $::userid);
         ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 
+        # next.html.tmpl includes edit.html.tmpl, and therefore we
+        # need $bug defined in $vars.
+        $vars->{'bug'} = $bug;
         $template->process("bug/process/next.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
 
