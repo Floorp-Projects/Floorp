@@ -101,6 +101,7 @@
       border-right          : 1px solid threedhighlight;
       border-bottom         : 1px solid threedhighlight;
       padding               : 3px 6px 1px 7px;
+      color                 : #000080;
     }
     
   .menubutton-dual-ex-button[disabled="true"]:hover:active
