@@ -56,8 +56,9 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsVoidArray.h"
-#include "nsHashtable.h"
+#include "nsHashSets.h"
 #include "nsCRT.h"
+#include "nsPrintfCString.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -78,9 +79,6 @@
                        //Uses PR_LOG except on Mac where
                        //we always write out to our own
                        //file.
-
-#define HASH_STRING_KEY(buf,size,host,port) PR_snprintf((buf),(size),"%s:%d",(host),(port))
-
 
 /* SSM_UserCertChoice: enum for cert choice info */
 typedef enum {ASK, AUTO} SSM_UserCertChoice;
@@ -103,7 +101,7 @@ nsNSS_SSLGetClientAuthData(void *arg, PRFileDesc *socket,
 static PRBool firstTime = PR_TRUE;
 static PRDescIdentity nsSSLIOLayerIdentity;
 static PRIOMethods nsSSLIOLayerMethods;
-static nsHashtable *gTLSIntolerantSites = nsnull;
+static nsCStringHashSet *gTLSIntolerantSites = nsnull;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -151,9 +149,10 @@ nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nsnull),
     mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
     mForSTARTTLS(PR_FALSE),
-    mFirstWrite(PR_TRUE),
+    mHandshakePending(PR_TRUE),
     mCanceled(PR_FALSE),
     mHasCleartextPhase(PR_FALSE),
+    mHandshakeInProgress(PR_FALSE),
     mPort(0),
     mCAChain(nsnull)
 { 
@@ -174,16 +173,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSSocketInfo,
                               nsISSLStatusProvider)
 
 nsresult
-nsNSSSocketInfo::GetFirstWrite(PRBool *aFirstWrite)
+nsNSSSocketInfo::GetHandshakePending(PRBool *aHandshakePending)
 {
-  *aFirstWrite = mFirstWrite;
+  *aHandshakePending = mHandshakePending;
   return NS_OK;
 }
 
 nsresult
-nsNSSSocketInfo::SetFirstWrite(PRBool aFirstWrite)
+nsNSSSocketInfo::SetHandshakePending(PRBool aHandshakePending)
 {
-  mFirstWrite = aFirstWrite;
+  mHandshakePending = aHandshakePending;
   return NS_OK;
 }
 
@@ -357,7 +356,7 @@ nsresult nsNSSSocketInfo::ActivateSSL()
   if (SECSuccess != SSL_ResetHandshake(mFd, PR_FALSE))
     return NS_ERROR_FAILURE;
 
-  mFirstWrite = PR_TRUE;
+  mHandshakePending = PR_TRUE;
 
   return NS_OK;
 }
@@ -885,6 +884,29 @@ nsSSLIOLayerAvailable(PRFileDesc *fd)
   return bytesAvailable;
 }
 
+// Call this function to report a site that is possibly TLS intolerant.
+// This function will return true, if the given socket is currently using TLS.
+static PRBool
+rememberPossibleTLSProblemSite(PRFileDesc* fd, nsNSSSocketInfo *socketInfo)
+{
+  PRBool currentlyUsesTLS = PR_FALSE;
+
+  SSL_OptionGet(fd->lower, SSL_ENABLE_TLS, &currentlyUsesTLS);
+  if (currentlyUsesTLS) {
+    // Add this site to the list of TLS intolerant sites.
+    PRInt32 port;
+    nsXPIDLCString host;
+    socketInfo->GetPort(&port);
+    socketInfo->GetHostName(getter_Copies(host));
+    nsCAutoString key;
+    key = host + NS_LITERAL_CSTRING(":") + nsPrintfCString("%d", port);
+    // If it's in the set, that means it's TLS intolerant.
+    gTLSIntolerantSites->Put(key);
+  }
+  
+  return currentlyUsesTLS;
+}
+
 static PRStatus PR_CALLBACK
 nsSSLIOLayerClose(PRFileDesc *fd)
 {
@@ -894,11 +916,17 @@ nsSSLIOLayerClose(PRFileDesc *fd)
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Shutting down socket\n", (void*)fd));
 
   PRFileDesc* popped = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
+  nsNSSSocketInfo *infoObject = (nsNSSSocketInfo *)popped->secret;
+
+  if (infoObject->GetHandshakeInProgress()) {
+    rememberPossibleTLSProblemSite(fd, infoObject);
+  }
+
   PRStatus status = fd->methods->close(fd);
   if (status != PR_SUCCESS) return status;
   
   popped->identity = PR_INVALID_IO_LAYER;
-  nsNSSSocketInfo *infoObject = (nsNSSSocketInfo *)popped->secret;
+
   NS_RELEASE(infoObject);
   popped->dtor(popped);
   
@@ -961,74 +989,29 @@ nsDumpBuffer(unsigned char *buf, PRIntn len)
 #define DEBUG_DUMP_BUFFER(buf,len)
 #endif
 
-static PRInt32 PR_CALLBACK
-nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
+static PRBool
+isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
 {
-  if (!fd || !fd->lower)
-    return PR_FAILURE;
-
-  nsNSSSocketInfo *socketInfo = nsnull;
-  socketInfo = (nsNSSSocketInfo*)fd->secret;
-  NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
-  if (socketInfo->GetCanceled()) {
-    return PR_FAILURE;
+  switch (err)
+  {
+    case PR_CONNECT_RESET_ERROR:
+      if (!withInitialCleartext)
+        return PR_TRUE;
+      break;
+    
+    case PR_END_OF_FILE_ERROR:
+    case SSL_ERROR_BAD_MAC_ALERT:
+    case SSL_ERROR_BAD_MAC_READ:
+      return PR_TRUE;
   }
-
-  PRInt32 bytesRead = fd->lower->methods->read(fd->lower, buf, amount);
-#ifdef DEBUG_SSL_VERBOSE
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] read %d bytes\n", (void*)fd, bytesRead));
-  DEBUG_DUMP_BUFFER((unsigned char*)buf, bytesRead);
-#endif
-
-  if (bytesRead == -1) {
-    PRInt32 err = PR_GetError();
-    if (IS_SSL_ERROR(err) || IS_SEC_ERROR(err)) {
-      nsHandleSSLError(socketInfo, err);
-    }
-  }
-
-  return bytesRead;
+  
+  return PR_FALSE;
 }
 
-static PRInt32 PR_CALLBACK
-nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
+static PRInt32
+checkHandshake(PRBool calledFromRead, PRInt32 bytesTransfered, 
+               PRFileDesc* fd, nsNSSSocketInfo *socketInfo)
 {
-  if (!fd || !fd->lower)
-    return PR_FAILURE;
-
-#ifdef DEBUG_SSL_VERBOSE
-  DEBUG_DUMP_BUFFER((unsigned char*)buf, amount);
-#endif
-  nsNSSSocketInfo *socketInfo = nsnull;
-  PRBool firstWrite;
-  socketInfo = (nsNSSSocketInfo*)fd->secret;
-  NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
-
-  if (socketInfo->GetCanceled()) {
-    return PR_FAILURE;
-  }
-
-  socketInfo->GetFirstWrite(&firstWrite);
-  PRBool oldBlockVal = PR_FALSE;
-  PRBool oldBlockReset = PR_FALSE;
-  PRSocketOptionData sockopt;
-
-  if (firstWrite) {
-    // We only want the first write to be blocking so that we
-    // can trap the case of the TLS intolerant server.
-    sockopt.option = PR_SockOpt_Nonblocking;
-    PR_GetSocketOption(fd, &sockopt);
-    oldBlockVal = sockopt.value.non_blocking;
-    sockopt.value.non_blocking = PR_FALSE;
-    PR_SetSocketOption(fd, &sockopt);
-  }
-
-  PRInt32 bytesWritten = fd->lower->methods->write(fd->lower, buf, amount);
-
-#ifdef DEBUG_SSL_VERBOSE
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n", (void*)fd, bytesWritten));
-#endif
-
   // This is where we work around all of those SSL servers that don't 
   // conform to the SSL spec and shutdown a connection when we request
   // SSL v3.1 (aka TLS).  The spec says the client says what version
@@ -1043,70 +1026,109 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   // there are enough broken servers out there that such a gross work-around
   // is necessary.  :(
 
-  if (bytesWritten == -1 && firstWrite) {
+  PRBool handleHandshakeResultNow;
+  socketInfo->GetHandshakePending(&handleHandshakeResultNow);
+
+  if (0 > bytesTransfered && handleHandshakeResultNow) {
+    PRInt32 err = PR_GetError();
+
     // Let's see if there was an error set by the SSL libraries that we
     // should tell the user about.
-    PRInt32 err = PR_GetError();
-    PRBool wantRetry = PR_FALSE;
-    PRBool withInitialCleartext = socketInfo->GetHasCleartextPhase();
+    if (PR_WOULD_BLOCK_ERROR == err) {
+      // we are not yet ready to handle the result code from the 
+      // first transfer after the handshake
+      handleHandshakeResultNow = PR_FALSE;
+      socketInfo->SetHandshakeInProgress(PR_TRUE);
+    }
+    else {
+      PRBool wantRetry = PR_FALSE;
+      PRBool withInitialCleartext = socketInfo->GetHasCleartextPhase();
 
-    // When not using a proxy we'll see a connection reset error.
-    // When using a proxy, we'll see an end of file error.
+      // When not using a proxy we'll see a connection reset error.
+      // When using a proxy, we'll see an end of file error.
+      // In addition check for some error codes where it is reasonable
+      // to retry without TLS.
 
-    if ((!withInitialCleartext && PR_CONNECT_RESET_ERROR == err)
-        ||
-        (withInitialCleartext && PR_END_OF_FILE_ERROR == err)) {
+      if (isTLSIntoleranceError(err, withInitialCleartext)) {
+        wantRetry = rememberPossibleTLSProblemSite(fd, socketInfo);
 
-      PRBool tlsOn;
-      SSL_OptionGet(fd->lower, SSL_ENABLE_TLS, &tlsOn);
-      if (tlsOn) {
-        // We don't want to communicate over this socket any longer.
-        // Mark it as canceled, and make both our read and write
-        // functions return failure.
-        socketInfo->SetCanceled(PR_TRUE);
-        // Now let's add this site to the list of TLS intolerant
-        // sites.
-        char buf[1024];
-        PRInt32 port;
-        nsXPIDLCString host;
-        socketInfo->GetPort(&port);
-        socketInfo->GetHostName(getter_Copies(host));
-        HASH_STRING_KEY(buf,1024,host.get(),port);
-        nsCStringKey key (buf);
-        // We don't really wanna associate a value.  If it's
-        // in the table, that means it's TLS intolerant and
-        // we don't really need to know anything else.
-        gTLSIntolerantSites->Put(&key, nsnull);
-        
-        wantRetry = PR_TRUE;
-
-        // We want to cause the network layer to retry the connection.
-        // It won't retry on an end of file error.
-        // If we were using a proxy, change the error code
-        // to the connection reset error.
-        if (withInitialCleartext && PR_END_OF_FILE_ERROR == err) {
-          PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+        if (wantRetry) {
+          // We want to cause the network layer to retry the connection.
+          if (calledFromRead) {
+            // This will cause a premature EOF
+            bytesTransfered = 0;
+          }
+          else { // called from write
+            PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+          }
         }
       }
-    }
 
-    if (!wantRetry && (IS_SSL_ERROR(err) || IS_SEC_ERROR(err))) {
-      nsHandleSSLError(socketInfo, err);
+      if (!wantRetry && (IS_SSL_ERROR(err) || IS_SEC_ERROR(err))) {
+        nsHandleSSLError(socketInfo, err);
+      }
     }
   }
 
-  // TLS intolerant servers only cause the first write to fail, so let's 
-  // set the fristWrite attribute to false so that we don't try the logic
-  // above again in a subsequent write.
-  if (firstWrite) {
-    socketInfo->SetFirstWrite(PR_FALSE);
-    if (!oldBlockReset) {
-      sockopt.option = PR_SockOpt_Nonblocking;
-      sockopt.value.non_blocking = oldBlockVal;
-      PR_SetSocketOption(fd, &sockopt);
-    }
+  // TLS intolerant servers only cause the first transfer to fail, so let's 
+  // set the HandshakePending attribute to false so that we don't try the logic
+  // above again in a subsequent transfer.
+  if (handleHandshakeResultNow) {
+    socketInfo->SetHandshakePending(PR_FALSE);
+    socketInfo->SetHandshakeInProgress(PR_FALSE);
   }
-  return bytesWritten;
+  
+  return bytesTransfered;
+}
+
+static PRInt32 PR_CALLBACK
+nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
+{
+  if (!fd || !fd->lower) {
+    return PR_FAILURE;
+  }
+
+  nsNSSSocketInfo *socketInfo = nsnull;
+  socketInfo = (nsNSSSocketInfo*)fd->secret;
+  NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
+
+  if (socketInfo->GetCanceled()) {
+    return PR_FAILURE;
+  }
+  
+  PRInt32 bytesRead = fd->lower->methods->read(fd->lower, buf, amount);
+#ifdef DEBUG_SSL_VERBOSE
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] read %d bytes\n", (void*)fd, bytesRead));
+  DEBUG_DUMP_BUFFER((unsigned char*)buf, bytesRead);
+#endif
+
+  return checkHandshake(PR_TRUE, bytesRead, fd, socketInfo);
+}
+
+static PRInt32 PR_CALLBACK
+nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
+{
+  if (!fd || !fd->lower) {
+    return PR_FAILURE;
+  }
+
+#ifdef DEBUG_SSL_VERBOSE
+  DEBUG_DUMP_BUFFER((unsigned char*)buf, amount);
+#endif
+  nsNSSSocketInfo *socketInfo = nsnull;
+  socketInfo = (nsNSSSocketInfo*)fd->secret;
+  NS_ASSERTION(socketInfo,"nsNSSSocketInfo was null for an fd");
+
+  if (socketInfo->GetCanceled()) {
+    return PR_FAILURE;
+  }
+
+  PRInt32 bytesWritten = fd->lower->methods->write(fd->lower, buf, amount);
+#ifdef DEBUG_SSL_VERBOSE
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n", (void*)fd, bytesWritten));
+#endif
+
+  return checkHandshake(PR_FALSE, bytesWritten, fd, socketInfo);
 }
 
 static void InitNSSMethods()
@@ -1133,8 +1155,10 @@ nsSSLIOLayerNewSocket(const char *host,
   // XXX - this code is duplicated in nsSSLIOLayerAddToSocket
   if (firstTime) {
     InitNSSMethods();
-    gTLSIntolerantSites =  new nsHashtable(16, PR_TRUE);
-    if (!gTLSIntolerantSites) return NS_ERROR_OUT_OF_MEMORY;
+    gTLSIntolerantSites =  new nsCStringHashSet();
+    if (!gTLSIntolerantSites)
+      return NS_ERROR_OUT_OF_MEMORY;
+    gTLSIntolerantSites->Init(1);
     firstTime = PR_FALSE;
   }
 
@@ -2178,10 +2202,9 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forSTARTTLS,
 
   // Let's see if we're trying to connect to a site we know is
   // TLS intolerant.
-  char buf[1024];
-  HASH_STRING_KEY(buf,1024,host,port);
-  nsCStringKey key (buf);
-  if (gTLSIntolerantSites->Exists(&key) && 
+  nsCAutoString key;
+  key = nsDependentCString(host) + NS_LITERAL_CSTRING(":") + nsPrintfCString("%d", port);
+  if (gTLSIntolerantSites->Contains(key) && 
       SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS, PR_FALSE)) {
     return NS_ERROR_FAILURE;
   }
@@ -2220,8 +2243,10 @@ nsSSLIOLayerAddToSocket(const char* host,
   // XXX - this code is duplicated in nsSSLIONewSocket
   if (firstTime) {
     InitNSSMethods();
-    gTLSIntolerantSites =  new nsHashtable(16, PR_TRUE);
-    if (!gTLSIntolerantSites) return NS_ERROR_OUT_OF_MEMORY;
+    gTLSIntolerantSites =  new nsCStringHashSet();
+    if (!gTLSIntolerantSites)
+      return NS_ERROR_OUT_OF_MEMORY;
+    gTLSIntolerantSites->Init(1);
     firstTime = PR_FALSE;
   }
 
@@ -2265,7 +2290,7 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   // We are going use a clear connection first //
   if (forSTARTTLS || proxyHost) {
-    infoObject->SetFirstWrite(PR_FALSE);
+    infoObject->SetHandshakePending(PR_FALSE);
   }
 
   return NS_OK;

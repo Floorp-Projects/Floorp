@@ -62,8 +62,8 @@ public:
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
 
-  nsresult GetFirstWrite(PRBool *aFirstWrite);
-  nsresult SetFirstWrite(PRBool aFirstWrite);
+  nsresult GetHandshakePending(PRBool *aHandshakePending);
+  nsresult SetHandshakePending(PRBool aHandshakePending);
 
   nsresult GetHostName(char **aHostName);
   nsresult SetHostName(const char *aHostName);
@@ -76,6 +76,9 @@ public:
   
   void SetHasCleartextPhase(PRBool aHasCleartextPhase);
   PRBool GetHasCleartextPhase();
+  
+  void SetHandshakeInProgress(PRBool aIsIn) { mHandshakeInProgress = aIsIn; }
+  PRBool GetHandshakeInProgress() { return mHandshakeInProgress; }
 
   nsresult RememberCAChain(CERTCertList *aCertList);
 
@@ -88,9 +91,10 @@ protected:
   PRUint32 mSecurityState;
   nsString mShortDesc;
   PRPackedBool mForSTARTTLS;
-  PRPackedBool mFirstWrite;
+  PRPackedBool mHandshakePending;
   PRPackedBool mCanceled;
   PRPackedBool mHasCleartextPhase;
+  PRPackedBool mHandshakeInProgress;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
   CERTCertList *mCAChain;
