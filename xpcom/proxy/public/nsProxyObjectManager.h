@@ -91,14 +91,14 @@ public:
     NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               REFNSIID aIID, 
                               nsISupports* aObj, 
-                              PRInt32 proxyType,
+                              ProxyType proxyType,
                               void** aProxyObject) = 0;
     
     NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               const nsCID &aClass, 
                               nsISupports *aDelegate, 
                               const nsIID &aIID,
-                              PRInt32 proxyType,
+                              ProxyType proxyType,
                               void** aProxyObject) = 0;
 };
 

@@ -137,7 +137,7 @@ nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInst
 
 
 NS_IMETHODIMP 
-nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, PRInt32 proxyType, void** aProxyObject)
+nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, ProxyType proxyType, void** aProxyObject)
 {
     nsIEventQueue *postQ = destQueue;
 
@@ -171,7 +171,7 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
 
     // check to see if the eventQ is on our thread.  If so, just return the real object.
     
-    if (postQ != nsnull && !(proxyType & PROXY_ASYNC) && !(proxyType & PROXY_ALWAYS))
+    if (postQ != nsnull && proxyType != PROXY_ASYNC)
     {
         PRBool aResult;
         postQ->IsQueueOnCurrentThread(&aResult);
@@ -198,7 +198,7 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue,
                                      const nsCID &aClass, 
                                      nsISupports *aDelegate, 
                                      const nsIID &aIID, 
-                                     PRInt32 proxyType, 
+                                     ProxyType proxyType, 
                                      void** aProxyObject)
 {
     *aProxyObject = nsnull;

@@ -37,7 +37,7 @@
 
 nsProxyEventObject* 
 nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
-                                      PRInt32 proxyType, 
+                                      ProxyType proxyType, 
                                       nsISupports *aObj,
                                       REFNSIID aIID)
 {
@@ -153,7 +153,7 @@ return_wrapper:
 
 
 nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
-                                       PRInt32 proxyType,
+                                       ProxyType proxyType,
                                        nsISupports* aObj,
                                        nsProxyEventClass* aClass,
                                        nsProxyEventObject* root)
