@@ -83,7 +83,7 @@ class nsRegionMac : public nsIRegion
 {
 public:
   nsRegionMac();
-  ~nsRegionMac();
+  virtual ~nsRegionMac();
 
   NS_DECL_ISUPPORTS
 
