@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.44 2002/11/16 03:19:48 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.45 2003/01/23 17:27:34 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1323,6 +1323,49 @@ ssl3_ComputeRecordMAC(
     return rv;
 }
 
+PRBool
+ssl_ClientAuthTokenPresent(sslSocket *ss) {
+    sslSessionID *sid;
+    PRIntervalTime thisTime;
+    static PRIntervalTime timeout = 0;
+    PK11SlotInfo *slot = NULL;
+    PRBool rv = PR_TRUE;
+
+
+    if (timeout == 0) {
+	timeout = PR_SecondsToInterval(10);
+    }
+    sid = ss->sec.ci.sid;
+
+    /* we only care if we are doing client auth */
+    if (!sid || !sid->u.ssl3.clAuthValid) {
+	return PR_TRUE;
+    }
+
+    /* Limit how often we really check the token */
+    thisTime = PR_IntervalNow();
+    if (thisTime - ss->sec.lastTime < timeout) {
+	return PR_TRUE;
+    }
+
+    /* get the slot */
+    slot = SECMOD_LookupSlot(sid->u.ssl3.clAuthModuleID,
+	                             sid->u.ssl3.clAuthSlotID);
+    ss->sec.lastTime = thisTime;
+    if (slot == NULL ||
+        !PK11_IsPresent(slot) ||
+	sid->u.ssl3.clAuthSeries     != PK11_GetSlotSeries(slot) ||
+	sid->u.ssl3.clAuthSlotID     != PK11_GetSlotID(slot)     ||
+	sid->u.ssl3.clAuthModuleID   != PK11_GetModuleID(slot)   ||
+               !PK11_IsLoggedIn(slot, NULL)) {
+	rv = PR_FALSE;
+    }
+    if (slot) {
+	PK11_FreeSlot(slot);
+    }
+    return rv;
+}
+
 /* Process the plain text before sending it.
  * Returns the number of bytes of plaintext that were succesfully sent
  * 	plus the number of bytes of plaintext that were copied into the
@@ -1365,6 +1408,12 @@ ssl3_SendRecord(   sslSocket *        ss,
 	if (rv != SECSuccess) {
 	    return SECFailure;	/* ssl3_InitState has set the error code. */
     	}
+    }
+
+/* check for Token Presence */
+    if (!ssl_ClientAuthTokenPresent(ss)) {
+	/* PORT_SetError() */
+	return SECFailure;
     }
 
     while (bytes > 0) {
@@ -7411,6 +7460,8 @@ const ssl3BulkCipherDef *cipher_def;
     }
 
     ssl3 = ss->ssl3;
+
+/* Check for TOKEN presence */
 
     /* cText is NULL when we're called from ssl3_RestartHandshakeAfterXXX().
      * This implies that databuf holds a previously deciphered SSL Handshake
