@@ -40,10 +40,15 @@
 #define nsIDNService_h__
 
 #include "nsIIDNService.h"
+#include "nsCOMPtr.h"
+#include "nsIUnicodeNormalizer.h"
+#include "nsIDNKitInterface.h"
 
 //-----------------------------------------------------------------------------
 // nsIDNService
 //-----------------------------------------------------------------------------
+
+#define kACEPrefixLen 6 
 
 class nsIDNService : public nsIIDNService
 {
@@ -53,6 +58,17 @@ public:
 
   nsIDNService();
   virtual ~nsIDNService();
+
+private:
+  void normalizeFullStops(nsAString& s);
+  nsresult stringPrepAndACE(const nsAString& in, nsACString& out);
+  nsresult encodeToACE(const nsAString& in, nsACString& out);
+  nsresult stringPrep(const nsAString& in, nsAString& out);
+  
+  PRBool mMultilingualTestBed;  // if true generates extra node for mulitlingual testbed 
+  idn_nameprep_t mNamePrepHandle;
+  nsCOMPtr<nsIUnicodeNormalizer> mNormalizer;
+  char mACEPrefix[kACEPrefixLen+1];
 };
 
 #endif  // nsIDNService_h__
