@@ -7,7 +7,7 @@
 </style>
 
 </head>
-<body bgcolor="#FFFFFF">
+<body>
 
 <h2>Here's the deal...</h2>
 
@@ -32,7 +32,25 @@ was written when I was eleven years old, but is remarkably similar to
 the writings of my later "hard-livin" years.  It's titled "Reruns":
 </p>
 
-<blockquote>
+<p class="note">
+&quot;This paragraph has &quot;class=note&quot;, so that we can play with styles.&quot;
+For example, we might insert generated content, like &quot;Note:  &quot; before this
+paragraph.
+</p>
+
+<div>
+<p>
+This paragraph is inside a &lt;div&gt;. Here is some very run-o-the-mill text in
+a paragraph tag, for those
+of you who are into that kind of thing. I think at this point I shall
+regale you with some of my inestimable poetry, which will be presented
+in blockquote mode for your reading pleasure.  This particular sample
+was written when I was eleven years old, but is remarkably similar to 
+the writings of my later "hard-livin" years.  It's titled "Reruns":
+</p>
+</div>
+
+<blockquote class="poem">
 <h4>Reruns</h4>
 Reruns are about as much fun,<br>
 as your dad taking all your mun,<br>
@@ -65,6 +83,30 @@ This  text  has  two  spaces  between  every  word
 <li>list item 3</li>
 </ol>
 
+<ol class="roman">
+<li>list item with child paragraphs
+    <p>
+    First child paragraph
+	</p>
+    <p>
+    Second child paragraph
+	</p>
+    <p>
+    Third child paragraph
+	</p>
+</li>
+<li>
+Another list item
+</li>
+<li>
+Something else.
+</li>
+<li>
+Another thing.
+</li>
+</ol>
+
+
 <table BORDER>
 <tr><td>cell 1 </td><td>cell 2 </td><td>cell 3 </td></tr>
 <tr><td>cell 4 </td><td>cell 5 </td><td>cell 6 </td></tr>
@@ -72,7 +114,7 @@ This  text  has  two  spaces  between  every  word
 </table>
 
 
-<table BORDER>
+<table BORDER id="bigtable">
 <tr><td>big cell 1 </td>
 <td>
 	<table BORDER>

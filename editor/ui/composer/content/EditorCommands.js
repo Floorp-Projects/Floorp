@@ -311,6 +311,12 @@ function EditorRemoveLinks()
   contentWindow.focus();
 }
 
+function EditorApplyStyleSheet(styleSheetURL)
+{
+  window.editorShell.ApplyStyleSheet(styleSheetURL);
+}
+
+
 // --------------------------- Output ---------------------------
 
 function EditorGetText()

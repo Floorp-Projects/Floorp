@@ -274,6 +274,18 @@
         <menuitem name="Definition term"        onclick="EditorSetParagraphFormat('dt')"/>
         <menuitem name="Definition description" onclick="EditorSetParagraphFormat('dd')"/>
       </menu>
+      <separator />
+      <menu name="Apply Style Sheet">
+        <menuitem name="Editor Styles 1"       onclick="EditorApplyStyleSheet('chrome://editor/content/EditorStyles1.css')"/>
+        <separator />
+        <menuitem name="Oldstyle"              onclick="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
+        <menuitem name="Modernist"             onclick="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Modernist')"/>
+        <menuitem name="Midnight"              onclick="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Midnight')"/>
+        <menuitem name="Ultramarine"           onclick="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Ultramarine')"/>
+        <menuitem name="Chocolate"             onclick="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Chocolate')"/>
+        <menuitem name="Steely"                onclick="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Steely')"/>
+      </menu>
+      
     </menu>
     <menu name="Tools">
       <menuitem name="New Browser Window" onclick="EditorNewBrowser()"/>
