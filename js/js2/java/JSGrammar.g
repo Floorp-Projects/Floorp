@@ -45,14 +45,14 @@ options {
 // ********* Identifiers **********
 identifier returns [ExpressionNode e]
     { e = null; }
-	:	opI:IDENT       { e = new JSValue("object", opI.getText()); }
-	|	"version"       { e = new JSValue("object", "version"); }
-	|	"override"      { e = new JSValue("object", "override"); }
-	|	"method"        { e = new JSValue("object", "method"); }
-	|	"getter"        { e = new JSValue("object", "getter"); }
-	|	"setter"        { e = new JSValue("object", "setter"); }
-	|	"traditional"   { e = new JSValue("object", "traditional"); }
-	|	"constructor"   { e = new JSValue("object", "constructor"); }
+	:	opI:IDENT       { e = new JSObject("object", opI.getText()); }
+	|	"version"       { e = new JSObject("object", "version"); }
+	|	"override"      { e = new JSObject("object", "override"); }
+	|	"method"        { e = new JSObject("object", "method"); }
+	|	"getter"        { e = new JSObject("object", "getter"); }
+	|	"setter"        { e = new JSObject("object", "setter"); }
+	|	"traditional"   { e = new JSObject("object", "traditional"); }
+	|	"constructor"   { e = new JSObject("object", "constructor"); }
 	;
 
 qualified_identifier returns [ExpressionNode e]
@@ -79,15 +79,15 @@ primary_expression[boolean initial] returns [ExpressionNode e]
 
 simple_expression returns [ExpressionNode e]
     { e = null; }
-	:	"null"      { e = new JSValue("object", "null"); }
-	|	"true"      { e = new JSValue("boolean", "true"); }
-	|	"false"     { e = new JSValue("boolean", "false"); }
-	|	opN:NUMBER  { e = new JSValue("number", opN.getText()); }
-	|	opS:STRING  { e = new JSValue("number", opS.getText()); }
-	|	"this"      { e = new JSValue("object", "this"); }
-	|	"super"     { e = new JSValue("object", "super"); }
+	:	"null"      { e = new JSObject("object", "null"); }
+	|	"true"      { e = new JSBoolean("true"); }
+	|	"false"     { e = new JSBoolean("false"); }
+	|	opN:NUMBER  { e = new JSDouble(opN.getText()); }
+	|	opS:STRING  { e = new JSString(opS.getText()); }
+	|	"this"      { e = new JSObject("object", "this"); }
+	|	"super"     { e = new JSObject("object", "super"); }
 	|	e = qualified_identifier_or_parenthesized_expression
-	|	opR:REGEXP  { e = new JSValue("regexp", opR.getText()); }
+	|	opR:REGEXP  { e = new JSObject("regexp", opR.getText()); }
 	|	e = array_literal
 	;
 
@@ -227,9 +227,9 @@ additive_expression[boolean initial] returns [ExpressionNode e]
 shift_expression[boolean initial] returns [ExpressionNode e]
     { e = null;  ExpressionNode r = null; }
 	:	e = additive_expression[initial] (
-	    ("<<" r = additive_expression[false] { e = new ArithmeticNode("<<", e, r); } )
-	|	(">>" r = additive_expression[false] { e = new ArithmeticNode(">>", e, r); } )
-	|	(">>>" r = additive_expression[false] { e = new ArithmeticNode(">>>", e, r); } )
+	    ("<<" r = additive_expression[false] { e = new BitwiseNode("<<", e, r); } )
+	|	(">>" r = additive_expression[false] { e = new BitwiseNode(">>", e, r); } )
+	|	(">>>" r = additive_expression[false] { e = new BitwiseNode(">>>", e, r); } )
 	    )*
 	;
 
@@ -273,32 +273,32 @@ equality_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
 bitwise_and_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
     { e = null; ExpressionNode r = null; }
 	:	e = equality_expression[initial, allowIn]
-		("&" r = equality_expression[false, allowIn] { e = new ArithmeticNode("&", e, r); } )*
+		("&" r = equality_expression[false, allowIn] { e = new BitwiseNode("&", e, r); } )*
 	;
 
 bitwise_xor_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
     { e = null; ExpressionNode r = null; }
 	:	e = bitwise_and_expression[initial, allowIn]
-		("^" (r = bitwise_and_expression[false, allowIn] { e = new BinaryNode("^", e, r); } | "*" | "?"))*
+		("^" (r = bitwise_and_expression[false, allowIn] { e = new BitwiseNode("^", e, r); } | "*" | "?"))*
 	;
 
 bitwise_or_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
     { e = null; ExpressionNode r = null; }
 	:	e = bitwise_xor_expression[initial, allowIn]
-		("|" (r = bitwise_xor_expression[false, allowIn] { e = new BinaryNode("|", e, r); } | "*" | "?"))*
+		("|" (r = bitwise_xor_expression[false, allowIn] { e = new BitwiseNode("|", e, r); } | "*" | "?"))*
 	;
 
 // ********* Binary Logical Operators **********
 logical_and_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
     { e = null; ExpressionNode r = null; }
 	:	e = bitwise_or_expression[initial, allowIn]
-	    ("&&" r = bitwise_or_expression[false, allowIn] { e = new BinaryNode("&&", e, r); } )*
+	    ("&&" r = bitwise_or_expression[false, allowIn] { e = new LogicalNode("&&", e, r); } )*
 	;
 
 logical_or_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
     { e = null; ExpressionNode r = null; }
 	:	e = logical_and_expression[initial, allowIn]
-	    ("||" r = logical_and_expression[false, allowIn] { e = new BinaryNode("||", e, r); } )*
+	    ("||" r = logical_and_expression[false, allowIn] { e = new LogicalNode("||", e, r); } )*
 	;
 
 // ********* Conditional Operators **********
@@ -454,7 +454,7 @@ statements[int scope, ControlNodeGroup container]
 // ********* Labeled Statements **********
 labeled_statement[boolean non_empty, ControlNodeGroup container]
     { ExpressionNode e = null; }
-	:	e = identifier ":" code_statement[non_empty, container, ((JSValue)e).value]
+	:	e = identifier ":" code_statement[non_empty, container, ((JSObject)e).value]
 	;
 
 if_statement[boolean non_empty, ControlNodeGroup container]
