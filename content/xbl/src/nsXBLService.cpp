@@ -659,7 +659,6 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
 
     if (styleBinding) {
       // Clear out the script references.
-      nsCOMPtr<nsIDocument> document = aContent->GetDocument();
       styleBinding->UnhookEventHandlers();
       styleBinding->ChangeDocument(document, nsnull);
     }
