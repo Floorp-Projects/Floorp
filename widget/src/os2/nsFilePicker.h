@@ -32,6 +32,8 @@
 #include "nsdefs.h"
 #include "nsIFileChannel.h"
 
+static char lastPath[CCHMAXPATH] = { 0 };
+
 /**
  * Native Windows FileSelector wrapper
  */

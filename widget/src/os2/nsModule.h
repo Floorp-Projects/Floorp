@@ -79,9 +79,9 @@ class nsWidgetModuleData : public nsISupports
    ATOM GetAtom( const char *atomname);
    ATOM GetAtom( const nsString &atomname);
 
-   ULONG GetCurrentDirectory(ULONG bufLen, PSZ dirString);
-
    int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
+   const char *DBCSstrchr( const char *string, int c );
+   const char *DBCSstrrchr( const char *string, int c );
 
 #if 0
    HWND     GetWindowForPrinting( PCSZ pszClass, ULONG ulStyle);

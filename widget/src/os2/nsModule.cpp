@@ -453,42 +453,6 @@ HWND nsWidgetModuleData::GetWindowForPrinting( PCSZ pszClass, ULONG ulStyle)
 
 #endif
 
-ULONG nsWidgetModuleData::GetCurrentDirectory(ULONG bufLen, PSZ dirString)
-{
-   ULONG drivemap,currentdisk;
-   const char * strPtr = dirString +3;
-
-   // We need extra space for the 'x:\'.
-   if (bufLen < 3)
-   {
-      return 0;
-   }
-
-   ULONG len = bufLen - 3;
-
-   APIRET rc = DosQueryCurrentDir(0, (PBYTE)strPtr, &len);
-   if (rc != ERROR_BUFFER_OVERFLOW)
-   {
-      if (rc)
-         return 0;
-      len = strlen(strPtr) + 3;
-
-      // Directory does not start with 'x:\', so add it.
-      DosQueryCurrentDisk (&currentdisk, &drivemap);
-
-      // Follow the case of the first letter in the path.
-      if (isupper(dirString[3]))
-         dirString[0] = (char)('A' - 1 + currentdisk);
-      else
-         dirString[0] = (char)('a' - 1 + currentdisk);
-      dirString[1] = ':';
-      dirString[2] = '\\';
-   }
-   else
-      len += 3;   // Add three extra spaces for the 'x:\'.
-   return len;
-}
-
 int nsWidgetModuleData::WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
 {
   UconvObject* pConverter = 0;
@@ -530,6 +494,32 @@ int nsWidgetModuleData::WideCharToMultiByte( int CodePage, const PRUnichar *pTex
   }
 #endif
   return ulSize - cplen;
+}
+
+const char *nsWidgetModuleData::DBCSstrchr( const char *string, int c )
+{
+   const char* p = string;
+   do {
+       if (*p == c)
+           break;
+       p  = WinNextChar(0,0,0,(char*)p);
+   } while (*p); /* enddo */
+   // Result is p or NULL
+   return *p ? p : (char*)NULL;
+}
+
+
+const char *nsWidgetModuleData::DBCSstrrchr( const char *string, int c )
+{
+   int length = strlen(string);
+   const char* p = string+length;
+   do {
+       if (*p == c)
+           break;
+       p  = WinPrevChar(0,0,0,(char*)string,(char*)p);
+   } while (p > string); /* enddo */
+   // Result is p or NULL
+   return (*p == c) ? p : (char*)NULL;
 }
 
 nsWidgetModuleData *gWidgetModuleData = nsnull;

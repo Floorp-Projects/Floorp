@@ -147,7 +147,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     if (initialDir[0]) {
       strcpy(filedlg.szFullFile, initialDir);
       strcat(filedlg.szFullFile, "\\");
+    } else if (lastPath[0]) {
+      strcpy(filedlg.szFullFile, lastPath);
+      strcat(filedlg.szFullFile, "\\");
     }
+
     strcat(filedlg.szFullFile, fileBuffer);
 
     int i;
@@ -232,11 +236,12 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       result = PR_TRUE;
       mFile.Append(filedlg.szFullFile);
 
+      char* temp = (char*)gWidgetModuleData->DBCSstrrchr(filedlg.szFullFile, '\\');
+      *temp = '\0';
+      strcpy(lastPath, filedlg.szFullFile);
+
       // Store the current directory in mDisplayDirectory
-      char* newCurrentDirectory = NS_STATIC_CAST( char*, nsMemory::Alloc( MAX_PATH+1 ) );
-      VERIFY(gWidgetModuleData->GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
-      mDisplayDirectory->InitWithPath(newCurrentDirectory);
-      nsMemory::Free( newCurrentDirectory );
+      mDisplayDirectory->InitWithPath(filedlg.szFullFile);
       mSelectedType = (PRInt16)pmydata->ulCurExt;
     }
   }
