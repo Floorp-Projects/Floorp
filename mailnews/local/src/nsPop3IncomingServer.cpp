@@ -45,6 +45,8 @@ public:
 
     NS_IMETHOD GetDeleteMailLeftOnServer(PRBool *);
     NS_IMETHOD SetDeleteMailLeftOnServer(PRBool);
+
+    NS_IMETHOD GetServerURI(char * *uri);
     
 private:
     char *m_rootFolderPath;
@@ -83,6 +85,24 @@ NS_IMPL_SERVERPREF_INT(nsPop3IncomingServer,
                        DeleteMailLeftOnServer,
                        "delete_mail_left_on_server")
 
+nsresult
+nsPop3IncomingServer::GetServerURI(char **uri)
+{
+    nsresult rv;
+    char *hostname;
+    
+    rv = GetHostName(&hostname);
+    if (NS_FAILED(rv)) return rv;
+
+    const char* urischema ="mailbox:/";
+
+    // eventually, we want this to be mailbox://hostname/
+    *uri = PL_strdup(urischema);
+
+    PR_Free(hostname);
+    return rv;
+}
+    
 nsresult NS_NewPop3IncomingServer(const nsIID& iid,
                                   void **result)
 {

@@ -40,6 +40,8 @@ public:
     NS_IMETHOD GetRootFolderPath(char **);
     NS_IMETHOD SetRootFolderPath(char *);
 
+    NS_IMETHOD GetServerURI(char * *uri);
+    
 private:
     char *m_rootFolderPath;
 };
@@ -64,6 +66,23 @@ nsNntpIncomingServer::~nsNntpIncomingServer()
 NS_IMPL_SERVERPREF_STR(nsNntpIncomingServer,
                        RootFolderPath,
                        "directory")
+
+nsresult
+nsNntpIncomingServer::GetServerURI(char **uri)
+{
+    nsresult rv;
+    char *hostname;
+    
+    rv = GetHostName(&hostname);
+    if (NS_FAILED(rv)) return rv;
+
+    const char* urischema ="news://";
+
+    *uri = PR_smprintf("news://%s", hostname);
+
+    PR_Free(hostname);
+    return rv;
+}
 
 nsresult NS_NewNntpIncomingServer(const nsIID& iid,
                                   void **result)
