@@ -1553,6 +1553,14 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( LPBYTE value, DWORD len ) {
 // unfortunately (if you can fix that, please do).
 void
 nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
+
+    // if initial hidden window is still being displayed, we need to ignore requests
+    // because such requests might not function properly.  See bug 147223 for details
+
+    if (mInitialWindow) {
+      return;
+    }
+
     // Parse command line.
 
     nsCOMPtr<nsICmdLineService> args;
