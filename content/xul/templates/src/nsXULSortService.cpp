@@ -1155,7 +1155,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	{
 		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))
 		{
-            sortInfo.db = cds;
+			sortInfo.db = cds;
 		}
 	}
 
