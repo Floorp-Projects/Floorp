@@ -386,7 +386,6 @@ extern PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, c
 #define _MD_SETSOCKOPT		_MD_setsockopt
 
 #define _MD_SOCKETAVAILABLE	_MD_socketavailable
-#define _MD_PIPEAVAILABLE(fd) -1
 #define _MD_ACCEPT			_MD_accept
 #define _MD_CONNECT			_MD_connect
 #define _MD_SEND			_MD_send
