@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+-->
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
+
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/mailheader.css" type="text/css"?>
+
+<overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:html="http://www.w3.org/TR/REC-html40"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script src="chrome://messenger/content/msgHdrViewOverlay.js"/>
+<html:script src="chrome://messenger/content/mime.js"/>
+
+	<toolbox id="msgHeaderView">
+		<toolbar id="headerPart1" hide="true">
+			<box class="header-splitter" align="horizontal" flex="1">
+				<box class="header-part1" align="vertical" flex="1">
+					<box id="SubjectBox" class="headerBox" align="horizontal" hide="true">
+              <html:div class="headerdisplayname">&subjectField.label;</html:div>
+	            <html:div class="headerValue" id="SubjectValue" flex="1">*</html:div>
+					</box>
+		      
+					<box id="FromBox" class="headerBox" align="horizontal" hide="true">
+              <html:div class="headerdisplayname">&fromField.label;</html:div>
+							<html:div class="headerValue" id="FromValue" flex="1">*</html:div>
+					</box>
+
+					<box id = "DateBox" class="headerBox" align="horizontal" hide="true">
+              <html:div class="headerdisplayname">&dateField.label;</html:div>
+							<html:div class="headerValue" id="DateValue" flex="1">*</html:div>
+					</box>
+				</box>
+
+        <box class="header-part1" align="horizontal">
+          <spring class="buttonSpacer"/>
+            <box align="vertical">
+             <spring class="buttonTopSpacer"/>
+             <titledbutton id="addToAddressBookButton" class="push"
+                onclick="AddSenderToAddressBook();"/>
+             <spring flex="1"/>
+            </box>
+          <spring class="buttonSpacer"/>
+        </box>
+
+        <box id="attachmentBox" class="header-part1" align="horizontal" hide="true">
+          <spring class="buttonSpacer"/>
+            <box align="vertical">
+               <spring class="buttonTopSpacer"/>
+               <menu id="attachmentMenu" class="attachment-menu">
+                  <titledbutton id="attachmentButton" class="push" value="1" align="right"/>
+                  <menupopup id="attachmentPopup">
+                    <menuseparator/>
+                    <menuitem value="Save All..." oncommand="SaveAllAttachmentsDialog()"/>
+                  </menupopup>
+               </menu>
+              <spring flex="1"/>
+          </box>
+          <spring class="buttonSpacer"/>
+        </box>
+      </box>
+		</toolbar>
+
+		<toolbar id="headerPart2" hide="true">
+			<box class="header-part2" align="vertical" flex="1">
+				<box id="ToBox" class="headerBox" align="horizontal" hide="true">
+            <html:div class="headerdisplayname">&toField.label;</html:div>
+						<html:div class="headerValue" id="ToValue" flex="1">*</html:div>
+				</box>
+
+			    <box id="CcBox" class="headerBox" align="horizontal" hide="true">
+            <html:div class="headerdisplayname">&ccField.label;</html:div>
+						<html:div class="headerValue" id="CcValue" flex="1">*</html:div>
+				</box>
+        	<box id="NewsgroupBox" class="headerBox" align="horizontal" hide="true">
+            <html:div class="headerdisplayname">&newsgroupsField.label;</html:div>
+						<html:div class="headerValue" id="NewsgroupValue" flex="1">*</html:div>
+				</box>
+			</box>
+		</toolbar>
+
+    <toolbar id="headerPart3" hide="true">
+			<box class="header-part3" align="vertical" flex="1">
+				<box id="UserAgentBox" class="headerBox" align="horizontal" hide="true">
+            <html:div class="headerdisplayname">&userAgentField.label;</html:div>
+						<html:div class="headerValue" id="UserAgentValue" flex="1">*</html:div>
+				</box>
+			</box>
+		</toolbar>
+
+	</toolbox>
+</overlay>
