@@ -253,7 +253,7 @@ char * tests[] = {
     "a = { f1: 1, f2: 2}; print(a.f2++, \" should be 2\"); print(a.f2 <<= 1, \" should be 6\"); return;"
 };
 
-void testCompile()
+static void testCompile()
 {
     JSScope glob;
     Context cx(world, &glob);
