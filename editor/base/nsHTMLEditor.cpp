@@ -6057,7 +6057,7 @@ nsHTMLEditor::SetTextPropertiesForNode(nsIDOMNode  *aNode,
         child = GetChildAt(parent, aStartOffset);
         // XXX: need to loop for aStartOffset!=aEndOffset-1?
         PRInt32 offsetInParent = aStartOffset; // remember where aNode was in aParent
-        if (NS_SUCCEEDED(result))
+        if (NS_SUCCEEDED(result) && child)
         { // remove child from parent
           result = nsEditor::DeleteNode(child);
           if (NS_SUCCEEDED(result)) 
