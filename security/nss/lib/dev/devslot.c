@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.17 $ $Date: 2003/07/11 21:52:04 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devslot.c,v $ $Revision: 1.18 $ $Date: 2003/08/01 02:02:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -178,8 +178,7 @@ nssSlot_Destroy (
 )
 {
     if (slot) {
-	PR_AtomicDecrement(&slot->base.refCount);
-	if (slot->base.refCount == 0) {
+	if (PR_AtomicDecrement(&slot->base.refCount) == 0) {
 	    PZ_DestroyLock(slot->base.lock);
 #ifdef PURE_STAN_BUILD
 	    nssToken_Destroy(slot->token);

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devmod.c,v $ $Revision: 1.4 $ $Date: 2003/07/01 00:32:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devmod.c,v $ $Revision: 1.5 $ $Date: 2003/08/01 02:02:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -714,8 +714,7 @@ nssModule_Destroy (
 )
 {
     PRUint32 i, numSlots;
-    PR_AtomicDecrement(&mod->base.refCount);
-    if (mod->base.refCount == 0) {
+    if (PR_AtomicDecrement(&mod->base.refCount) == 0) {
 	if (mod->numSlots == 0) {
 	    (void)nssModule_Unload(mod);
 	    return nssArena_Destroy(mod->base.arena);
