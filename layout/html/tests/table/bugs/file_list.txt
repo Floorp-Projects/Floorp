@@ -131,12 +131,5 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug9024.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug963.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug965.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug16252.html
-
-
-
-
-
-
-
-
-
+file:///s:/mozilla/layout/html/tests/table/bugs/bug13196.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug14489.html
