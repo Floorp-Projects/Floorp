@@ -29,7 +29,11 @@ include $(DEPTH)/config/autoconf.mk
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 DIRS		= win
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+DIRS		= mac
+else
 DIRS		= unix
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
