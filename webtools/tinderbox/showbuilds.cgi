@@ -182,8 +182,8 @@ sub print_page_head {
   print "Content-type: text/html\n\n<HTML>\n" unless $form{static};
 
   use POSIX qw(strftime);
-  # Print time in format, "HH:MM timezone"
-  my $now = strftime("%H:%M %Z", localtime);
+  # Print time in format "YYYY-MM-DD HH:MM timezone"
+  my $now = strftime("%Y-%m-%d %H:%M %Z", localtime);
 
   EmitHtmlTitleAndHeader("tinderbox: $::tree", "tinderbox",
                          "tree: $::tree ($now)");
