@@ -49,7 +49,7 @@ class nsHTTPRequest;
 class nsHTTPResponse;
 class nsICachedNetData;
 
-#define LOOPING_REDIRECT_ERROR_URI  "chrome://packages/core/necko/content/redirect_loop.xul"
+#define LOOPING_REDIRECT_ERROR_URI  "chrome://necko/content/redirect_loop.xul"
 
 // Utility functions- TODO share from nsURLHelpers...
 nsresult           
