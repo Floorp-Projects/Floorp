@@ -2,6 +2,10 @@ java/Makefile
 java/util/Makefile
 java/util/classes/Makefile
 java/build/Makefile
+java/dom/Makefile
+java/dom/classes/Makefile
+java/dom/jni/Makefile
+java/dom/src/Makefile
 java/webclient/Makefile
 java/webclient/classes_spec/Makefile
 java/webclient/src_share/Makefile
