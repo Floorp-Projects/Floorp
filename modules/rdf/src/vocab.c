@@ -27,9 +27,16 @@
 
 
 	/* globals */
+#ifdef XP_MAC
+#pragma export on
+#endif
 RDF_WDVocab gWebData = NULL;
 RDF_NCVocab gNavCenter = NULL;
 RDF_CoreVocab gCoreVocab = NULL;
+#ifdef XP_MAC
+#pragma export off
+#endif
+
 size_t gCoreVocabSize = 0;
 RDF_Resource* gAllVocab;
 
