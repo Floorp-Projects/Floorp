@@ -33,8 +33,6 @@
 
 #include <stdlib.h>
 #include <signal.h>
-//#include <unistd.h>
-//#include "nsTraceRefcnt.h"
 
 #include "plevent.h"
 #include "resources.h"
@@ -133,14 +131,6 @@ void abnormal_exit_handler(int signum)
   /* Free any shared memory that has been allocated */
   PgShmemCleanup();
 
-  signal(SIGTERM, abnormal_exit_handler);
-  signal(SIGQUIT, abnormal_exit_handler);
-  signal(SIGINT,  abnormal_exit_handler);
-  signal(SIGHUP,  abnormal_exit_handler);
-  signal(SIGSEGV, abnormal_exit_handler);
-  signal(SIGILL,  abnormal_exit_handler);
-  signal(SIGABRT, abnormal_exit_handler);
-  
 #if 1
   if (    (signum == SIGSEGV)
        || (signum == SIGILL)
