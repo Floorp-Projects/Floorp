@@ -57,10 +57,17 @@ treechildren:-moz-tree-cell-text(COMMENT_NODE) {
   color: #228b22;
 }
 
+treechildren:-moz-tree-cell-text(DOCUMENT_NODE) {
+  color: #800080;
+}
+
+treechildren:-moz-tree-cell-text(PROCESSING_INSTRUCTION_NODE) {
+  color: #808080;
+}
+
 treechildren:-moz-tree-cell-text(anonymous) {
   color: #ff0000;
 }
-
 
 treechildren:-moz-tree-cell-text(selected, focus) {
   color: #FFFFFF;
