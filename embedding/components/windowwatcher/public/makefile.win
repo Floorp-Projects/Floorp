@@ -23,7 +23,9 @@ DEPTH=..\..\..\..
 MODULE=windowwatcher
 
 XPIDLSRCS = \
+    .\nsIDialogParamBlock.idl \
     .\nsIPromptService.idl \
+    .\nsPIPromptService.idl \
     .\nsIWindowWatcher.idl \
     .\nsPIWindowWatcher.idl \
     $(NULL)

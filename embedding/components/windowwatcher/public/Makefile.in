@@ -29,7 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= windowwatcher
 XPIDL_MODULE	= windowwatcher
 
-XPIDLSRCS	= nsIPromptService.idl \
+XPIDLSRCS	= nsIDialogParamBlock.idl \
+                  nsIPromptService.idl \
+                  nsPIPromptService.idl \
                   nsIWindowWatcher.idl \
                   nsPIWindowWatcher.idl \
                   $(NULL)
