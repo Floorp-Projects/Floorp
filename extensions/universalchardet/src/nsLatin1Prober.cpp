@@ -91,7 +91,7 @@ static unsigned char Latin1_CharToClass[] =
    2 : normal 
    3 : very likely
 */
-static char Latin1ClassModel[] = 
+static unsigned char Latin1ClassModel[] = 
 {
 /*      UDF OTH ASC ASS ACV ACO ASV ASO  */
 /*UDF*/  0,  0,  0,  0,  0,  0,  0,  0,
@@ -161,11 +161,11 @@ nsProbingState nsLatin1Prober::HandleData(const char* aBuf, PRUint32 aLen)
     newLen1 = aLen;
   }
   
-  char charClass;
-  char freq;
+  unsigned char charClass;
+  unsigned char freq;
   for (PRUint32 i = 0; i < newLen1; i++)
   {
-    charClass = Latin1_CharToClass[newBuf1[i]];
+    charClass = Latin1_CharToClass[(unsigned char)newBuf1[i]];
     freq = Latin1ClassModel[mLastCharClass*CLASS_NUM + charClass];
     if (freq == 0) {
       mState = eNotMe;
