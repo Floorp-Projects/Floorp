@@ -54,3 +54,8 @@ particular environments. */
 
 /* Enable Unicode string processing in expat */
 #define XML_UNICODE
+
+/* Enable external paramter entity parsing in expat */
+#ifndef XML_DTD
+#define XML_DTD 1
+#endif

@@ -17,13 +17,17 @@
 
 #
 
-DEFINES=-DXML_DTD
 DEPTH= ..\..
 
-OBJS=                                   \
-		  .\$(OBJDIR)\xmltok.obj      \
-		  .\$(OBJDIR)\xmlrole.obj     \
-		  $(NULL)
+CPPSRCS=				\
+	xmltok.c			\
+	xmlrole.c			\
+	$(NULL)
+
+CPP_OBJS=				\
+	.\$(OBJDIR)\xmltok.obj      	\
+	.\$(OBJDIR)\xmlrole.obj     	\
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -18,16 +18,21 @@
 #
 
 DEPTH= ..\..
-DEFINES=-DXML_DTD
 MODULE = expat
 EXPORTS = xmlparse.h
 
-LINCS=-I..\xmltok
 
-OBJS=                                   \
-		  .\$(OBJDIR)\xmlparse.obj      \
-		  .\$(OBJDIR)\hashtable.obj     \
-		  $(NULL)
+CPPSRCS=					\
+	xmlparse.c				\
+	hashtable.c				\
+	$(NULL)
+
+CPP_OBJS=                                   	\
+	.\$(OBJDIR)\xmlparse.obj      		\
+	.\$(OBJDIR)\hashtable.obj     		\
+	$(NULL)
+
+LINCS=-I..\xmltok
 
 include <$(DEPTH)\config\rules.mak>
 
