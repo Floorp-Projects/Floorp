@@ -1644,6 +1644,48 @@
 			settings = {
 			};
 		};
+		F522EFC502F73CF901A96654 = {
+			isa = PBXFileReference;
+			name = nsBaseClipboard.cpp;
+			path = ../widget/src/xpwidgets/nsBaseClipboard.cpp;
+			refType = 2;
+		};
+		F522EFC602F73CF901A96654 = {
+			isa = PBXFileReference;
+			name = nsBaseDragService.cpp;
+			path = ../widget/src/xpwidgets/nsBaseDragService.cpp;
+			refType = 2;
+		};
+		F522EFC702F73CF901A96654 = {
+			isa = PBXFileReference;
+			name = nsBaseWidget.cpp;
+			path = ../widget/src/xpwidgets/nsBaseWidget.cpp;
+			refType = 2;
+		};
+		F522EFC802F73CF901A96654 = {
+			isa = PBXFileReference;
+			name = nsClipboardHelper.cpp;
+			path = ../widget/src/xpwidgets/nsClipboardHelper.cpp;
+			refType = 2;
+		};
+		F522EFC902F73CF901A96654 = {
+			isa = PBXFileReference;
+			name = nsDataFlavor.cpp;
+			path = ../widget/src/xpwidgets/nsDataFlavor.cpp;
+			refType = 2;
+		};
+		F522EFCA02F73CF901A96654 = {
+			isa = PBXFileReference;
+			name = nsPrimitiveHelpers.cpp;
+			path = ../widget/src/xpwidgets/nsPrimitiveHelpers.cpp;
+			refType = 2;
+		};
+		F522EFCB02F73CF901A96654 = {
+			isa = PBXFileReference;
+			name = nsTransferable.cpp;
+			path = ../widget/src/xpwidgets/nsTransferable.cpp;
+			refType = 2;
+		};
 		F5247C2D02289FD9013DD99A = {
 			isa = PBXFileReference;
 			path = alert.nib;
@@ -7422,6 +7464,13 @@
 				F5EA337C02EF889001A96654,
 				F5EA337D02EF889001A96654,
 				F5EA337E02EF889001A96654,
+				F522EFC502F73CF901A96654,
+				F522EFC602F73CF901A96654,
+				F522EFC702F73CF901A96654,
+				F522EFC802F73CF901A96654,
+				F522EFC902F73CF901A96654,
+				F522EFCA02F73CF901A96654,
+				F522EFCB02F73CF901A96654,
 			);
 			isa = PBXGroup;
 			name = widget;

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+
 #import "CHBrowserWrapper.h"
 #import "BrowserWindowController.h"
 #import "BookmarksService.h"
@@ -358,7 +360,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   NSString* newTitle = nil;
   if (mOffline) {
     if (title && ![title isEqualToString:@""])
-        newTitle = [title stringByAppendingString: @" [Working Offline]"];
+        newTitle = [title stringByAppendingString: @" [Working Offline]"];	// XXX localize me
     else
         newTitle = [NSString stringWithString:@"Untitled [Working Offline]"];
     mTitle = [newTitle retain];
@@ -368,12 +370,13 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
       title = [NSString stringWithString:NSLocalizedString(@"UntitledPageTitle", @"")];
     mTitle = [title retain];
   }
+
   if ( mIsPrimary && mWindowController )
-    [[mWindowController window] setTitle:mTitle];
+    [[mWindowController window] setTitle:[mTitle stringByTruncatingTo:80 at:kTruncateAtEnd]];
   
   // Always set the tab.
   if (title && ![title isEqualToString:@""])
-    [mTab setLabel:title];
+    [mTab setLabel:title];		// tab titles get truncated when setting them to tabs
   else
     [mTab setLabel:NSLocalizedString(@"UntitledPageTitle", @"")];
 }

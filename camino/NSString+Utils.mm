@@ -117,4 +117,53 @@
   return cleanString;
 }
 
+- (NSString*)stringByTruncatingTo:(int)maxCharacters at:(ETruncationType)truncationType
+{
+  unichar ellipsisChar = 0x2026;
+  NSString*	ellipsisString = [NSString stringWithCharacters:&ellipsisChar length:1]; // @"...";
+  
+  if ([self length] > maxCharacters)
+  {
+      NSMutableString *croppedString = [NSMutableString stringWithCapacity:maxCharacters + [ellipsisString length]];
+      
+      switch (truncationType)
+      {
+        case kTruncateAtStart:
+          [croppedString appendString:ellipsisString];
+          [croppedString appendString:[self substringWithRange:NSMakeRange([self length] - maxCharacters, maxCharacters)]];
+          break;
+
+        case kTruncateAtMiddle:
+          {
+            int len1 = maxCharacters / 2;
+            int len2 = maxCharacters - len1;
+            NSString *part1 = [self substringWithRange:NSMakeRange(0, len1)];
+            NSString *part2 = [self substringWithRange:NSMakeRange([self length] - len2, len2)];
+            [croppedString appendString:part1];
+            [croppedString appendString:ellipsisString];
+            [croppedString appendString:part2];
+          }
+          break;
+
+        case kTruncateAtEnd:
+          [croppedString appendString:[self substringWithRange:NSMakeRange(0, maxCharacters)]];
+          [croppedString appendString:ellipsisString];
+          break;
+
+        default:
+#if DEBUG
+          NSLog(@"Unknown truncation type in stringByTruncatingTo::");
+#endif          
+          break;
+      }
+      
+      return croppedString;
+  }
+  else
+  {
+    return [[self copy] autorelease];
+  }
+}
+
+
 @end

@@ -287,7 +287,8 @@ BookmarksService::BookmarkChanged(nsIContent* aItem, bool shouldFlush = true)
       NSMenuItem* childItem = [menu itemWithTag: contentID];
       nsAutoString name;
       aItem->GetAttr(kNameSpaceID_None, gNameAtom, name);
-      [childItem setTitle: [NSString stringWith_nsAString: name]];
+      NSString* bookmarkTitle = [[NSString stringWith_nsAString: name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
+      [childItem setTitle: bookmarkTitle];
     }
     
   }
@@ -740,7 +741,7 @@ BookmarksService::AddMenuBookmark(NSMenu* aMenu, nsIContent* aParent, nsIContent
 {
   nsAutoString name;
   aChild->GetAttr(kNameSpaceID_None, gNameAtom, name);
-  NSString* title = [NSString stringWith_nsAString: name];
+  NSString* title = [[NSString stringWith_nsAString: name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
 
   // Create a menu or menu item for the child.
   NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];

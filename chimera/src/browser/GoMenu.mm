@@ -41,9 +41,7 @@ static const int kDividerTag = 4000;
 // the maximum number of history entry menuitems to display
 static const int kMaxItems = 15;
 // the maximum number of characters in a menu title before cropping it
-static const unsigned int kMaxTitleLength = 60;
-// the ellipsis string to insert into cropped strings
-static const NSString *kEllipsis = @"...";
+static const unsigned int kMaxTitleLength = 80;
 
 @implementation CHGoMenu
 
@@ -134,21 +132,7 @@ static const NSString *kEllipsis = @"...";
 
     nsXPIDLString textStr;
     entry->GetTitle(getter_Copies(textStr));
-    NSString* title = [NSString stringWith_nsAString: textStr];
-    
-    // if the title is too long, crop it in the middle
-    if ([title length] > kMaxTitleLength) {
-      NSMutableString *croppedTitle = [NSMutableString stringWithCapacity:kMaxTitleLength+[kEllipsis length]];
-      int len1 = kMaxTitleLength/2;
-      int len2 = kMaxTitleLength - len1;
-      NSString *part1 = [title substringWithRange:NSMakeRange(0, len1)];
-      NSString *part2 = [title substringWithRange:NSMakeRange([title length]-len2, len2)];
-      [croppedTitle appendString:part1];
-      [croppedTitle appendString:kEllipsis];
-      [croppedTitle appendString:part2];
-      title = croppedTitle;
-    }
-    
+    NSString* title = [[NSString stringWith_nsAString: textStr] stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];    
     NSMenuItem *newItem = [self addItemWithTitle:title action:@selector(historyItemAction:) keyEquivalent:@""];
     [newItem setTarget:self];
     [newItem setTag:kDividerTag+1+i];

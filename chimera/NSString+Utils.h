@@ -40,6 +40,14 @@
 
 class nsAString;
 
+typedef enum
+{
+  kTruncateAtStart,
+  kTruncateAtMiddle,
+  kTruncateAtEnd
+} ETruncationType;
+
+
 // a category to extend NSString
 @interface NSString (ChimeraStringUtils)
 
@@ -49,5 +57,6 @@ class nsAString;
 
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
 - (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
+- (NSString*)stringByTruncatingTo:(int)maxCharacters at:(ETruncationType)truncationType;
 
 @end
