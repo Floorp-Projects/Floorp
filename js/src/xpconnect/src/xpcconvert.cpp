@@ -782,13 +782,14 @@ XPCConvert::JSObject2NativeInterface(JSContext* cx,
 /***************************************************************************/
 /***************************************************************************/
 
-static nsIXPCException*
-ConstructException(nsresult rv, const char* message,
-                   const char* ifaceName, const char* methodName,
-                   nsISupports* data)
+// static 
+nsIXPCException*
+XPCConvert::ConstructException(nsresult rv, const char* message,
+                               const char* ifaceName, const char* methodName,
+                               nsISupports* data)
 {
     nsIXPCException* e;
-    const char format[] = "%s [%s::%s]";
+    static const char format[] = "%s [%s::%s]";
     const char * msg = message;
     char* sz = nsnull;
 
@@ -861,7 +862,8 @@ XPCConvert::JSValToXPCException(JSContext* cx,
                 JSString* str;
                 if(nsnull != (str = JS_ValueToString(cx, s)))
                     message = JS_GetStringBytes(str);
-                return JSErrorToXPCException(cx, message, report);
+                return JSErrorToXPCException(cx, message, ifaceName, 
+                                             methodName, report);
             }
 
 
@@ -978,6 +980,8 @@ XPCConvert::JSValToXPCException(JSContext* cx,
 nsIXPCException*
 XPCConvert::JSErrorToXPCException(JSContext* cx,
                                   const char* message,
+                                  const char* ifaceName,
+                                  const char* methodName,
                                   const JSErrorReport* report)
 {
     nsIXPCException* result;
@@ -998,7 +1002,7 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
             formattedMsg = nsnull;
 
         result = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS,
-                                  formattedMsg, nsnull, nsnull, data);
+                                  formattedMsg, ifaceName, methodName, data);
 
         if(formattedMsg)
             nsAllocator::Free(formattedMsg);
@@ -1007,7 +1011,7 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
     else
     {
         result = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR,
-                                    nsnull, nsnull, nsnull, nsnull);
+                                    nsnull, ifaceName, methodName, nsnull);
     }
     return result;
 }

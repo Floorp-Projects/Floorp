@@ -1103,7 +1103,13 @@ public:
 
     static nsIXPCException* JSErrorToXPCException(JSContext* cx,
                                                   const char* message,
+                                                  const char* ifaceName,
+                                                  const char* methodName,
                                                   const JSErrorReport* report);
+
+    static nsIXPCException* ConstructException(nsresult rv, const char* message,
+                               const char* ifaceName, const char* methodName,
+                               nsISupports* data);
 
 private:
     XPCConvert(); // not implemented
