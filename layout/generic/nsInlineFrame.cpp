@@ -754,20 +754,25 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
 
   if (aState.mComputeMaxElementSize) {
     // Adjust max-element size if this frame's no-wrap flag is set.
+    nscoord maxWidth;
+    nscoord maxHeight;
     if (aState.mNoWrap) {
-      aMetrics.maxElementSize->width = aMetrics.width;
-      aMetrics.maxElementSize->height = aMetrics.height;
+      maxWidth = aMetrics.width;
+      maxHeight = aMetrics.height;
     }
     else {
-      *aMetrics.maxElementSize = aInlineReflow.GetMaxElementSize();
+      const nsSize& maxSize = aInlineReflow.GetMaxElementSize();
+      maxWidth = maxSize.width;
+      maxHeight = maxSize.height;
     }
 
     // Add in our border and padding to the max-element-size so that
     // we don't shrink too far.
-    aMetrics.maxElementSize->width += aState.mBorderPadding.left +
-      aState.mBorderPadding.right;
-    aMetrics.maxElementSize->height += aState.mBorderPadding.top +
-      aState.mBorderPadding.bottom;
+    maxWidth += aState.mBorderPadding.left + aState.mBorderPadding.right;
+    maxHeight += aState.mBorderPadding.top + aState.mBorderPadding.bottom;
+
+    aMetrics.maxElementSize->width = maxWidth;
+    aMetrics.maxElementSize->height = maxHeight;
   }
 
   // See if the combined area of our children exceeds the bounds of
