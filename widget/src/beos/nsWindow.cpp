@@ -1540,18 +1540,16 @@ NS_WARNING("nsWindow::SetColorMap - not implemented");
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-	BRect	src;
-	BRect	dest;
-
 	if(mView && mView->LockLooper())
 	{
+		BRect src;
 		BRect b = mView->Bounds();
 		if(aClipRect)
 		{
 			src.left = aClipRect->x;
 			src.top = aClipRect->y;
-			src.right = aClipRect->XMost();
-			src.bottom = aClipRect->YMost();
+			src.right = aClipRect->XMost() - 1;
+			src.bottom = aClipRect->YMost() - 1;
 		}
 		else
 			src = b;
@@ -1563,19 +1561,14 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		// so we don't trigger a BView invalidate
 		if(src.left + aDx < 0)
 			src.left = -aDx;
-		if(src.right + aDy > b.right)
-			src.right = b.right - aDy;
+		if(src.right + aDx > b.right)
+			src.right = b.right - aDx;
 		if(src.top + aDy < 0)
 			src.top = -aDy;
 		if(src.bottom + aDy > b.bottom)
 			src.bottom = b.bottom - aDy;
 
-		dest = src;
-		dest.left += aDx;
-		dest.right += aDx;
-		dest.top += aDy;
-		dest.bottom += aDy;
-
+		BRect dest = src.OffsetByCopy(aDx, aDy);
 		mView->ConstrainClippingRegion(0);
 		if(src.IsValid() && dest.IsValid())
 			mView->CopyBits(src, dest);
