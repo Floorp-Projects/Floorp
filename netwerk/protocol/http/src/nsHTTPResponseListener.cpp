@@ -478,8 +478,9 @@ nsHTTPServerListener::OnDataAvailable(nsIRequest *request,
                         mResponseDataListener,
                         request,
                         getter_AddRefs(converterListener));
-                if (NS_FAILED(rv)) return rv;
-                mResponseDataListener = converterListener;
+                if (NS_SUCCEEDED(rv)) {
+                  mResponseDataListener = converterListener;
+                }
             }
         }
 
