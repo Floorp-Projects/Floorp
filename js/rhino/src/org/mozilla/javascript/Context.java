@@ -493,6 +493,12 @@ public final class Context {
                 Class adapterClass = Class.forName(adapterName);
                 ScriptableObject.defineClass(scope, adapterClass, sealed);
             } catch (ClassNotFoundException e) {
+            } catch (SecurityException e) {
+                  // Ignore AccessControlExceptions that may occur if a
+                  //    SecurityManager is installed:
+                  //  java.lang.RuntimePermission createClassLoader
+                  //  java.util.PropertyPermission 
+                  //        org.mozilla.javascript.JavaAdapter read
             }
             
             // This creates the Packages and java package roots.
