@@ -72,22 +72,26 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType, nsURIL
    const char* aWindowTarget, nsIChannel* aOpenedChannel,
    nsIStreamListener** aContentHandler, PRBool* aAbortProcess)
 {
-   NS_ENSURE_ARG_POINTER(aContentHandler && aAbortProcess);
+   NS_ENSURE_ARG_POINTER(aContentHandler);
+   if(aAbortProcess)
+      *aAbortProcess = PR_FALSE;
 
-   if(HandleInCurrentDocShell(aContentType, aCommand, aWindowTarget, 
-      aOpenedChannel, aContentHandler))
-      { 
-      // In this condition content will start to be directed here.
-      nsCOMPtr<nsIURI> uri;
+   // determine if the channel has just been retargeted to us...
+   nsLoadFlags loadAttribs = 0;
+   aOpenedChannel->GetLoadAttributes(&loadAttribs);
 
-      //XXXQ Do we want the original or the current URI?
-      aOpenedChannel->GetOriginalURI(getter_AddRefs(uri));
-      // XXXIMPL Session history set this page as a page that has been visited
-      mDocShell->SetCurrentURI(uri);
-      }
-   else if(mParentContentListener)
-      return mParentContentListener->DoContent(aContentType, aCommand, 
-         aWindowTarget, aOpenedChannel, aContentHandler, aAbortProcess);
+   if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+      mDocShell->StopCurrentLoads();
+
+   nsCOMPtr<nsIURI> aUri;
+   aOpenedChannel->GetURI(getter_AddRefs(aUri));
+   mDocShell->AddCurrentSiteToHistories();
+   mDocShell->SetCurrentURI(aUri);
+
+   // XX mDocShell->CreateContentViewer();
+
+   if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+      mDocShell->SetFocus();
 
    return NS_OK;
 }
@@ -200,20 +204,6 @@ nsDSURIContentListener::SetLoadCookie(nsISupports * aLoadCookie)
 //*****************************************************************************
 // nsDSURIContentListener: Helpers
 //*****************************************************************************   
-
-PRBool nsDSURIContentListener::HandleInCurrentDocShell(const char* aContentType,
-   nsURILoadCommand aCommand, const char* aWindowTarget, nsIChannel* aOpenedChannel,
-   nsIStreamListener** aContentHandler)
-{
-   NS_ENSURE_TRUE(mDocShell, PR_FALSE);
-
-   //XXXQ Should we have to match the windowTarget???
-
-   NS_ENSURE_SUCCESS(mDocShell->CreateContentViewer(aContentType, aCommand,
-      aOpenedChannel, aContentHandler), PR_FALSE);
-
-   return PR_TRUE;
-}
 
 //*****************************************************************************
 // nsDSURIContentListener: Accessors

@@ -45,9 +45,6 @@ protected:
    nsDocShell* DocShell();
    void GetPresContext(nsIPresContext** aPresContext);
    void SetPresContext(nsIPresContext* aPresContext);
-   PRBool HandleInCurrentDocShell(const char* aContentType, 
-      nsURILoadCommand aCommand, const char* aWindowTarget, 
-      nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
 
 protected:
    nsDocShell*                      mDocShell;
