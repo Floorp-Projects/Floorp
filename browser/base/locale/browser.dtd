@@ -1,0 +1,299 @@
+<!-- LOCALIZATION NOTE : FILE This file contains the browser main menu items --> 
+<!-- LOCALIZATION NOTE : FILE Do not translate accesskey and commandkey --> 
+
+<!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE --> 
+<!ENTITY mainWindow.title "&brandShortName; {&buildId.label;}"> 
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
+<!ENTITY mainWindow.titlemodifier "&brandShortName; {&buildId.label;}"> 
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+<!ENTITY viewsourcetitle.preface "Source for: ">
+
+<!ENTITY nothingAvailable.label "(Nothing Available)">
+
+<!ENTITY tabCmd.label "New Navigator Tab">
+<!ENTITY tabCmd.accesskey "T">
+<!ENTITY tabCmd.commandkey "t">
+<!ENTITY openCmd.label "Open Web Location...">
+<!ENTITY openCmd.accesskey "l">
+<!ENTITY openCmd.commandkey "l">
+<!ENTITY openFileCmd.label "Open File...">
+<!ENTITY openFileCmd.accesskey "o">
+<!ENTITY openFileCmd.commandkey "o">
+<!ENTITY editPageCmd.label "Edit Page">
+<!ENTITY editPageCmd.accesskey "E">
+<!ENTITY editPageCmd.commandkey "e">
+<!ENTITY editFrameCmd.label "Edit Frame">
+<!ENTITY editFrameCmd.accesskey "m">
+<!ENTITY editFrameSetCmd.label "Edit Frameset">
+<!ENTITY editFrameSetCmd.accesskey "t">
+
+<!ENTITY printSetupCmd.label "Page Setup...">
+<!ENTITY printSetupCmd.accesskey "u">
+<!ENTITY printPreviewCmd.label "Print Preview">
+<!ENTITY printPreviewCmd.accesskey "v">
+<!ENTITY printCmd.label "Print...">
+<!ENTITY printCmd.accesskey "p">
+<!ENTITY printCmd.commandkey "p">
+
+<!ENTITY navbarCmd.label "Navigation Toolbar">
+<!ENTITY navbarCmd.accesskey "N">
+<!ENTITY personalbarCmd.label "Personal Toolbar">
+<!ENTITY personalbarCmd.accesskey "p">
+<!ENTITY tabbarCmd.label "Tab Bar">
+<!ENTITY tabbarCmd.accesskey "T">
+<!ENTITY taskbarCmd.label "Status Bar">
+<!ENTITY taskbarCmd.accesskey "S">
+<!ENTITY componentbarCmd.label "Component Bar">
+<!ENTITY componentbarCmd.accesskey "C">
+
+<!ENTITY pageSourceCmd.label "Page Source">
+<!ENTITY pageSourceCmd.accesskey "o">
+<!ENTITY pageSourceCmd.commandkey "u">
+<!ENTITY pageInfoCmd.label "Page Info">
+<!ENTITY pageInfoCmd.accesskey "i">
+<!ENTITY pageInfoCmd.commandkey "i">
+<!ENTITY fullScreenCmd.label "Full Screen">
+<!ENTITY fullScreenCmd.accesskey "f">
+<!ENTITY translateMenu.label "Translate">
+<!ENTITY translateMenu.accesskey "T">
+<!ENTITY translate.commandKey "t">
+
+<!ENTITY closeWindow.label "Close Window">
+
+
+<!ENTITY webContentMenu.label "Languages and Web Content">
+<!ENTITY webContentMenu.accesskey "l">
+<!ENTITY downloadMore.label "Download More">
+<!ENTITY downloadMore.accesskey "D">
+<!ENTITY applyTheme.label "Apply Theme"> 
+<!ENTITY applyTheme.accesskey "A"> 
+<!ENTITY themePreferencesCmd.label "Theme Preferences..."> 
+<!ENTITY themePreferencesCmd.accesskey "T"> 
+<!ENTITY getNewThemesCmd.label "Get New Themes">
+<!ENTITY getNewThemesCmd.accesskey "G">
+<!ENTITY searchMenu.label "Search">
+<!ENTITY searchMenu.accesskey "S">
+<!ENTITY findOnCmd.label "Find in This Page...">
+<!ENTITY findOnCmd.accesskey "f">
+<!ENTITY findOnCmd.commandkey "f">
+<!ENTITY findAgainCmd.label "Find Again">
+<!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.commandkey "g">
+
+<!ENTITY goMenu.label "Go">
+<!ENTITY goMenu.accesskey "g">
+<!ENTITY goHomeCmd.label "Home">
+<!ENTITY goHomeCmd.accesskey "h">
+
+<!ENTITY bookmarksMenu.label "Bookmarks">
+<!ENTITY bookmarksMenu.accesskey "B">
+<!ENTITY addCurPageAsCmd.label "Add to Bookmarks...">
+<!ENTITY addCurPageAsCmd.accesskey "A">
+<!ENTITY addCurPageAsCmd.commandkey "d">
+<!ENTITY addCurTabsAsCmd.label "Bookmark This Group of Tabs...">
+<!ENTITY addCurTabsAsCmd.accesskey "G">
+<!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
+<!ENTITY manBookmarksCmd.accesskey "M">
+<!ENTITY manBookmarksCmd.commandkey "b">
+<!ENTITY emptyItem.label "(Empty)">
+
+<!ENTITY helpMenuCmd.label "Help">
+<!ENTITY helpMenuCmd.accesskey "h">
+<!ENTITY helpContentsCmd.label "Help Contents">
+
+<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; test case --> 
+<!ENTITY languages.label "Languages">
+<!ENTITY en-US.label "English (en-US)">
+<!ENTITY da-DK-file.label "Danish (da-DK; file)">
+<!ENTITY da-DK-http.label "Danish (da-DK; http)">
+<!-- LOCALIZATION NOTE END   : DO not localize the entities above; test case --> 
+
+<!-- Toolbar items --> 
+<!ENTITY backButton.label             "Back">
+<!ENTITY backButton.tooltip           "Go back one page">
+<!ENTITY forwardButton.label          "Forward">
+<!ENTITY forwardButton.tooltip        "Go forward one page">
+<!ENTITY reloadButton.label           "Reload">
+<!ENTITY reloadButton.tooltip         "Reload current page">
+<!ENTITY stopButton.label             "Stop">
+<!ENTITY stopButton.tooltip           "Stop loading this page">
+<!ENTITY searchButton.label           "Search">
+<!ENTITY searchButton.tooltip         "Type a word in the field to the left, then click Search">
+<!ENTITY goButton.label               "Go">
+<!ENTITY goButton.tooltip             "Type a location in the field to the left, then click Go">
+<!ENTITY printButton.label            "Print">
+<!ENTITY printButton.tooltip          "Print this page">
+
+<!ENTITY throbber.tooltip             "Go to the &vendorShortName; home page">
+
+<!ENTITY locationBar.tooltip          "Enter search term, keyword, or web address">
+<!ENTITY proxyIcon.tooltip            "Drag and drop this icon to create a link to this page">
+<!ENTITY internetKeyword.tooltip      "Return to previously viewed page or choose keyword">
+
+<!-- Toolbar items --> 
+<!ENTITY  bookmarksButton.label       "Bookmarks">
+<!ENTITY  bookmarksButton.tooltip     "Bookmarks list">
+<!ENTITY  homeButton.label            "Home">
+
+<!-- Statusbar -->
+<!ENTITY  statusText.label            "Document: Done">
+
+<!ENTITY historyCmd.label           "History">  
+<!ENTITY historyCmd.accesskey       "i">
+<!ENTITY history.commandKey       "h">
+
+<!ENTITY tasksMenu.label "Tools">
+<!ENTITY tasksMenu.accesskey "T"> 
+
+<!ENTITY downloadManagerCmd.label "Download Manager">
+<!ENTITY downloadManagerCmd.accesskey "D">
+
+<!ENTITY javaConsoleCmd.label         "Java Console">
+<!ENTITY javaConsoleCmd.accesskey       "j">
+
+<!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey       "S">
+
+<!ENTITY privacyMenu.label "Privacy &amp; Security">
+<!ENTITY privacyMenu.accesskey "p">
+
+<!ENTITY webDevelopment.label "Web Development">
+<!ENTITY webDevelopment.accesskey "W">
+
+<!ENTITY  offlineGoOfflineCmd.label                 "Work Offline">
+<!ENTITY  offlineGoOfflineCmd.accesskey             "w">
+
+<!ENTITY fileMenu.label         "File"> 
+<!ENTITY fileMenu.accesskey       "f">
+<!ENTITY newMenu.label            "New">
+<!ENTITY newMenu.accesskey          "N">
+<!ENTITY newNavigatorCmd.label        "New Navigator Window">
+<!ENTITY newNavigatorCmd.key        "N">
+<!ENTITY newNavigatorCmd.accesskey      "N">
+
+<!ENTITY editMenu.label         "Edit"> 
+<!ENTITY editMenu.accesskey       "e"> 
+<!ENTITY undoCmd.label            "Undo">  
+<!ENTITY undoCmd.key            "Z">  
+<!ENTITY undoCmd.accesskey          "u"> 
+<!ENTITY redoCmd.label            "Redo">  
+<!ENTITY redoCmd.key            "Y">  
+<!ENTITY redoCmd.accesskey          "r"> 
+<!ENTITY cutCmd.label           "Cut">  
+<!ENTITY cutCmd.key             "X">  
+<!ENTITY cutCmd.accesskey         "t"> 
+<!ENTITY copyCmd.label            "Copy">  
+<!ENTITY copyCmd.key            "C">  
+<!ENTITY copyCmd.accesskey          "c"> 
+<!ENTITY pasteCmd.label           "Paste">  
+<!ENTITY pasteCmd.key           "V">  
+<!ENTITY pasteCmd.accesskey         "p"> 
+<!ENTITY deleteCmd.label          "Delete">  
+<!ENTITY deleteCmd.key            "D">  
+<!ENTITY deleteCmd.accesskey        "d"> 
+<!ENTITY selectAllCmd.label         "Select All">  
+<!ENTITY selectAllCmd.key         "A">  
+<!ENTITY selectAllCmd.accesskey       "a"> 
+<!ENTITY preferencesCmd.label       "Preferences...">
+<!ENTITY preferencesCmd.key         "E">  
+<!ENTITY preferencesCmd.accesskey     "e"> 
+
+<!ENTITY viewMenu.label         "View"> 
+<!ENTITY viewMenu.accesskey       "v"> 
+<!ENTITY viewToolbarsMenu.label       "Show/Hide"> 
+<!ENTITY viewToolbarsMenu.accesskey     "w"> 
+<!ENTITY showTaskbarCmd.label         "Status Bar">  
+<!ENTITY showTaskbarCmd.accesskey       "S"> 
+
+<!ENTITY helpMenu.label         "Help"> 
+<!ENTITY helpMenu.accesskey       "h"> 
+
+<!ENTITY releaseCmd.label       "Release Notes">
+<!ENTITY releaseCmd.accesskey       "r">
+<!ENTITY aboutCmd.label         "About &brandShortName;">
+<!ENTITY aboutCmd.accesskey       "A">
+<!ENTITY aboutCommPluginsCmd.label      "About Plug-ins">
+<!ENTITY aboutCommPluginsCmd.accesskey      "p">
+
+<!-- Context Menu -->
+<!ENTITY openLinkCmd.label            "Open Link in New Window">
+<!ENTITY openLinkCmd.accesskey        "W">
+<!ENTITY openLinkCmdInTab.label       "Open Link in New Tab">
+<!ENTITY openLinkCmdInTab.accesskey   "T">
+<!ENTITY openLinkInWindowCmd.label    "Open">
+<!ENTITY openLinkInWindowCmd.accesskey "p">
+<!ENTITY openFrameCmd.label           "Open Frame in New Window">
+<!ENTITY openFrameCmd.accesskey       "W">
+<!ENTITY openFrameCmdInTab.label      "Open Frame in New Tab">
+<!ENTITY openFrameCmdInTab.accesskey  "T">
+<!ENTITY showOnlyThisFrameCmd.label     "Show Only This Frame">
+<!ENTITY showOnlyThisFrameCmd.accesskey "w">
+<!ENTITY addToBookmarksCmd.label      "Bookmark This Page">
+<!ENTITY addToBookmarksCmd.accesskey  "B">
+<!ENTITY goBackCmd.label              "Back">
+<!ENTITY goBackCmd.accesskey          "b">
+<!ENTITY goForwardCmd.label           "Forward">
+<!ENTITY goForwardCmd.accesskey       "f">
+<!ENTITY reloadCmd.label              "Reload">
+<!ENTITY reloadCmd.accesskey          "r">
+<!ENTITY reloadCmd.commandkey         "r">
+<!ENTITY stopCmd.label                "Stop">
+<!ENTITY stopCmd.accesskey            "S">
+<!ENTITY reloadFrameCmd.label         "Reload Frame">
+<!ENTITY reloadFrameCmd.accesskey     "r">
+<!ENTITY viewPartialSourceForSelectionCmd.label "View Selection Source">
+<!ENTITY viewPartialSourceForMathMLCmd.label    "View MathML Source">
+<!ENTITY viewPartialSourceCmd.accesskey "e">
+<!ENTITY viewPageSourceCmd.label      "View Page Source">
+<!ENTITY viewPageSourceCmd.accesskey  "v">
+<!ENTITY viewFrameSourceCmd.label     "View Frame Source">
+<!ENTITY viewFrameSourceCmd.accesskey "v">
+<!ENTITY viewPageInfoCmd.label        "View Page Info">
+<!ENTITY viewPageInfoCmd.accesskey    "I">
+<!ENTITY viewFrameInfoCmd.label       "View Frame Info">
+<!ENTITY viewFrameInfoCmd.accesskey   "i">
+<!ENTITY viewImageCmd.label           "View Image">
+<!ENTITY viewImageCmd.accesskey       "I">
+<!ENTITY viewBGImageCmd.label         "View Background Image">
+<!ENTITY viewBGImageCmd.accesskey     "w">
+<!ENTITY setWallpaperCmd.label        "Set As Wallpaper">
+<!ENTITY setWallpaperCmd.accesskey    "S">
+<!ENTITY bookmarkPageCmd.label        "Bookmark This Page...">
+<!ENTITY bookmarkPageCmd.accesskey    "m">
+<!ENTITY bookmarkLinkCmd.label        "Bookmark This Link...">
+<!ENTITY bookmarkLinkCmd.accesskey    "L">
+<!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame...">
+<!ENTITY bookmarkFrameCmd.accesskey   "f">
+<!ENTITY savePageCmd.label            "Save Page As...">
+<!ENTITY savePageCmd.accesskey        "A">
+<!ENTITY savePageCmd.commandkey       "s">
+<!ENTITY saveFrameCmd.label           "Save Frame As...">
+<!ENTITY saveFrameCmd.accesskey       "f">
+<!ENTITY saveLinkCmd.label            "Save Link Target As...">
+<!ENTITY saveLinkCmd.accesskey        "r">
+<!ENTITY saveImageCmd.label           "Save Image As...">
+<!ENTITY saveImageCmd.accesskey       "v">
+<!ENTITY copyCmd.label                "Copy">
+<!ENTITY copyCmd.accesskey            "c">
+<!ENTITY selectAllCmd.label           "Select All">
+<!ENTITY selectAllCmd.accesskey       "A">
+<!ENTITY copyLinkCmd.label            "Copy Link Location">
+<!ENTITY copyLinkCmd.accesskey        "C">
+<!ENTITY copyImageCmd.label           "Copy Image Location">
+<!ENTITY copyImageCmd.accesskey       "o">
+<!ENTITY metadataCmd.label            "Properties">
+<!ENTITY metadataCmd.accesskey        "P">
+<!ENTITY copyEmailCmd.label           "Copy Email Address">
+<!ENTITY copyEmailCmd.accesskey       "E">
+<!ENTITY pasteCmd.label               "Paste">
+<!ENTITY pasteCmd.accesskey           "p">
+<!ENTITY cutCmd.label                 "Cut">
+<!ENTITY cutCmd.accesskey             "t">
+<!ENTITY deleteCmd.label              "Delete">
+<!ENTITY deleteCmd.accesskey          "D">
+<!ENTITY undoCmd.label                "Undo">
+<!ENTITY undoCmd.accesskey            "U">
+<!ENTITY thisFrameMenu.label              "This Frame">
+<!ENTITY thisFrameMenu.accesskey          "h">
+<!ENTITY search.accesskey             "W">
