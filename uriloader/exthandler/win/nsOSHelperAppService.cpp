@@ -28,6 +28,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsMimeTypes.h"
 #include "nsILocalFile.h"
+#include "nsIProcess"
 
 // we need windows.h to read out registry information...
 #include <windows.h>
@@ -62,7 +63,13 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
       // if we were given an application to use then use it....otherwise
       // make the registry call to launch the app
       const char * strPath = (const char *) path;
-      application->Spawn(&strPath, 1);
+      nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
+      nsresult rv;
+      if (NS_FAILED(rv = process->Init(application)))
+        return rv;
+      PRUint32 pid;
+      if (NS_FAILED(rv = process->Run(PR_FALSE, &strPath, 1, &pid)))
+        return rv;
     }    
     else // use the system default
     {

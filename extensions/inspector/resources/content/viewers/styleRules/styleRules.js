@@ -190,8 +190,13 @@ StyleRulesViewer.prototype =
         try {
           var exe = XPCU.createInstance("@mozilla.org/file/local;1", "nsILocalFile");
           exe.initWithPath("c:\\windows\\notepad.exe");
-          exe = exe.nsIFile;
-          exe.spawn([url], 1);
+          exe      = exe.nsIFile;
+          var C    = Components;
+          var proc = C.classes['@mozilla.org/process/util;1'].createInstance
+                       (C.interfaces.nsIProcess);
+          proc.init(exe);
+          var pid = {};
+          proc.run(false, [url], 1, pid);
         } catch (ex) {
           alert("Unable to open editor.");
         }
