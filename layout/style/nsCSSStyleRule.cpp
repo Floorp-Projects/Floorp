@@ -77,7 +77,7 @@
 #include "nsContentUtils.h"
 
 // #define DEBUG_REFS
-
+ 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
