@@ -730,6 +730,12 @@ NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIPresConte
   if (!mLoads[0].mRequest)
     return NS_OK; // if mLoads[0].mRequest is null, this isn't for the first one, so we don't care about it.
 
+  const nsStyleVisibility* vis;
+  ::GetStyleData(this, &vis);
+
+  if (!vis->IsVisible())
+    return NS_OK;
+
   nsCOMPtr<imgIContainer> con;
   mLoads[0].mRequest->GetImage(getter_AddRefs(con));
   if (aContainer == con.get()) {
