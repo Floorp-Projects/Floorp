@@ -344,6 +344,8 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   nsIBox* boxParent;
   if (aParent)
     CallQueryInterface(aParent, &boxParent);
+  // |newContext| to Release the reference after the call to nsBoxFrame::Init
+  nsCOMPtr<nsIStyleContext> newContext;
   if (boxParent) {
     PRBool isHorizontal;
     boxParent->GetOrientation(isHorizontal);
@@ -353,7 +355,10 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
       if (str.IsEmpty()) {
         aContent->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                           NS_LITERAL_STRING("vertical"), PR_FALSE);
-        aPresContext->ResolveStyleContextFor(aContent, aContext->GetParent(), PR_FALSE, &aContext);
+        nsCOMPtr<nsIStyleContext> parent = dont_AddRef(aContext->GetParent());
+        aPresContext->ResolveStyleContextFor(aContent, parent, PR_FALSE,
+                                             getter_AddRefs(newContext));
+        aContext = newContext;
       }
     }
   }
