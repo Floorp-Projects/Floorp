@@ -341,7 +341,7 @@ class Tracer : public Context::Listener {
 char * tests[] = {
     "function fact(n) { if (n > 1) return n * fact(n-1); else return 1; } print(fact(6), \" should be 720\"); return;" ,
     "a = { f1: 1, f2: 2}; print(a.f2++, \" should be 2\"); print(a.f2 <<= 1, \" should be 6\"); return;" ,
-    "class A { static var b = 3; static function s() { return b++; } }  var a:A = new A; print(a.s()); print(A.b); return;"
+    "class A { static var b = 3; static function s() { return b++; } }  var a:A = new A; print(a.s(), \" should be 3\"); print(A.b, \" should be 4\"); return;"
 };
 
 static void testCompile()

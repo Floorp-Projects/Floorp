@@ -10,6 +10,7 @@
         BRANCH_FALSE, /* target label, condition */
         BRANCH_TRUE, /* target label, condition */
         CALL, /* result, target, name, args */
+        CAST, /* dest, rvalue, toType */
         COMPARE_EQ, /* dest, source1, source2 */
         COMPARE_GE, /* dest, source1, source2 */
         COMPARE_GT, /* dest, source1, source2 */
@@ -154,6 +155,22 @@
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << ArgList(mOp4, registers);
+            return f;
+        }
+    };
+
+    class Cast : public Instruction_3<TypedRegister, TypedRegister, JSType*> {
+    public:
+        /* dest, rvalue, toType */
+        Cast (TypedRegister aOp1, TypedRegister aOp2, JSType* aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, JSType*>
+            (CAST, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[CAST] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
@@ -550,11 +567,11 @@
         }
     };
 
-    class NewFunction : public Instruction_2<TypedRegister, ICodeModule *> {
+    class NewFunction : public Instruction_2<TypedRegister, ICodeModule*> {
     public:
         /* dest, ICodeModule */
-        NewFunction (TypedRegister aOp1, ICodeModule * aOp2) :
-            Instruction_2<TypedRegister, ICodeModule *>
+        NewFunction (TypedRegister aOp1, ICodeModule* aOp2) :
+            Instruction_2<TypedRegister, ICodeModule*>
             (NEW_FUNCTION, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[NEW_FUNCTION] << "\t" << "R" << mOp1.first << ", " << "ICodeModule";
@@ -1035,6 +1052,7 @@
         "BRANCH_FALSE    ",
         "BRANCH_TRUE     ",
         "CALL            ",
+        "CAST            ",
         "COMPARE_EQ      ",
         "COMPARE_GE      ",
         "COMPARE_GT      ",

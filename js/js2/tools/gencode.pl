@@ -136,7 +136,7 @@ $ops{"NEW_FUNCTION"} =
   {
    super  => "Instruction_2",
    rem    => "dest, ICodeModule", 
-   params => [ ("TypedRegister", "ICodeModule *") ]
+   params => [ ("TypedRegister", "ICodeModule*") ]
   };
 $ops{"NEW_ARRAY"} =
   {
@@ -342,6 +342,12 @@ $ops{"WITHOUT"} =
    super  => "Instruction",
    rem    => "without this object",
   };
+$ops{"CAST"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, rvalue, toType",
+   params => [ ("TypedRegister", "TypedRegister", "JSType*") ]
+  };
 
 #
 # nasty perl code, you probably don't need to muck around below this line
@@ -538,6 +544,8 @@ sub get_print_body {
         } elsif ($type eq "Label*") {
             push (@oplist, "\"Offset \" << ((mOp$op) ? mOp$op->mOffset : NotAnOffset)")
         } elsif ($type =~ /String/) {
+            push (@oplist, "\"'\" << *mOp$op << \"'\"");
+        } elsif ($type =~ /JSType\*/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } elsif ($type =~ /bool/) {
             push (@oplist, "\"'\" << ((mOp$op) ? \"true\" : \"false\") << \"'\"");

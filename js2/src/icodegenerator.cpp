@@ -482,6 +482,14 @@ TypedRegister ICodeGenerator::super()
     return dest;
 }
 
+TypedRegister ICodeGenerator::cast(TypedRegister arg, JSType *toType)
+{
+    TypedRegister dest(getTempRegister(), toType);
+    Cast *instr = new Cast(dest, arg, toType);
+    iCode->push_back(instr);
+    return dest;
+}
+
 void ICodeGenerator::branch(Label *label)
 {
     Branch *instr = new Branch(label);
@@ -1216,17 +1224,6 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             ret = genExpr(b->op2);
             if (b->op1->getKind() == ExprNode::identifier) {
                 ret = handleIdentifier(static_cast<IdentifierExprNode *>(b->op1), p->getKind(), xcrementOp, ret, NULL);
-/*
-                if (!isWithinWith()) {
-                    TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
-                    if (v.first != NotARegister)
-                        move(v, ret);
-                    else
-                        saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
-                }
-                else
-                    saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
-*/
             }
             else
                 if (b->op1->getKind() == ExprNode::dot) {
@@ -1259,27 +1256,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             ret = genExpr(b->op2);
             if (b->op1->getKind() == ExprNode::identifier) {
-                
                 ret = handleIdentifier(static_cast<IdentifierExprNode *>(b->op1), p->getKind(), xcrementOp, ret, NULL);
-/*
-                if (!isWithinWith()) {
-                    TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
-                    if (v.first != NotARegister) {
-                        ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
-                        move(v, ret);
-                    }
-                    else {
-                        v = loadName((static_cast<IdentifierExprNode *>(b->op1))->name);
-                        ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
-                        saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
-                    }
-                }
-                else {
-                    TypedRegister v = loadName((static_cast<IdentifierExprNode *>(b->op1))->name);
-                    ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
-                    saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
-                }
-*/
             }
             else
                 if (b->op1->getKind() == ExprNode::dot) {
@@ -1463,6 +1440,31 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         }
         break;
 
+    case ExprNode::at:
+        {
+            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            // for now, just handle simple identifiers on the rhs.
+            ret = genExpr(b->op1);
+            if (b->op2->getKind() == ExprNode::identifier) {
+                TypedRegister t;
+                uint32 slotIndex;
+                const StringAtom &name = (static_cast<IdentifierExprNode *>(b->op2))->name;
+                LValueKind lvk = resolveIdentifier(name, t, slotIndex);
+                ASSERT(t.second == &Type_Type);
+                const JSValue &v = mGlobal->getVariable(name);
+                ASSERT(v.isType());
+                JSClass *clazz = dynamic_cast<JSClass*>(v.type);
+                if (clazz)
+                    ret = cast(ret, clazz);
+                else
+                    ret = cast(ret, t.second);
+            }
+            else
+                NOT_REACHED("Anything more complex than <expr>@<name> is not implemented");
+        }
+        break;
+
+    
     default:
         {
             NOT_REACHED("Unsupported ExprNode kind");

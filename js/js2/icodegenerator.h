@@ -260,6 +260,8 @@ namespace ICG {
         TypedRegister newArray();
         TypedRegister newFunction(ICodeModule *icm);
         TypedRegister newClass(JSClass *clazz);
+
+        TypedRegister cast(TypedRegister arg, JSType *toType);
         
         TypedRegister super();
         TypedRegister loadName(const StringAtom &name);
