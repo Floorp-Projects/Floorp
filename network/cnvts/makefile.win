@@ -39,7 +39,6 @@ LLIBS=  \
 	$(NULL)
 MISCDEP=$(LLIBS)
 OBJS=   \
-	.\$(OBJDIR)\magic.obj	\
 	.\$(OBJDIR)\cvplugin.obj	\
 	.\$(OBJDIR)\nsNetConverterStream.obj	\
 	.\$(OBJDIR)\cvactive.obj	\
@@ -57,7 +56,6 @@ OBJS=   \
 	$(NULL)
 
 CPPSRCS = \
-    magic.cpp \
     cvplugin.cpp \
     nsNetConverterStream.cpp \
     $(NULL)
@@ -100,8 +98,6 @@ EXPORTS= \
 	cvsimple.h 	\
 	cvunzip.h 	\
 	cvjscfg.h 	\
-	magic.h		\
-	magicCID.h	\
 	nsINetPlugin.h	\
 	nsINetPluginInstance.h	\
 	nsINetOStream.h	
