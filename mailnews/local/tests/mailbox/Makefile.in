@@ -54,6 +54,9 @@ LIBS = \
 	-lxp	\
 	-lpref	\
 	-lmozjs	\
+	-lmailnewsmsgdb \
+	-lmork \
+	-lmsgbaseutil \
 	-lraptorbase \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
