@@ -35,6 +35,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsNetUtil.h"
+#include "ProxyJNI.h"
+#include "nsCNullSecurityContext.h"
 
 /**
  * Obtain the URL of the document of the currently running script. This will
@@ -103,28 +105,41 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
     if (NS_FAILED(rv)) return rv;
     
     jstring jspec = env->NewStringUTF(spec);
-    if (!spec) {
+    if (!jspec) {
         env->ExceptionClear();
         return NS_ERROR_FAILURE;
     }
-    jclass netscape_oji_ProxyClassLoader = env->FindClass("netscape/oji/ProxyClassLoader");
-    if (!netscape_oji_ProxyClassLoader) {
+    jclass netscape_oji_ProxyClassLoaderFac = env->FindClass("netscape/oji/ProxyClassLoaderFactory");
+    if (!netscape_oji_ProxyClassLoaderFac) {
         env->ExceptionClear();
         return NS_ERROR_FAILURE;
     }
-    jmethodID constructorID = env->GetMethodID(netscape_oji_ProxyClassLoader, "<init>", "(Ljava/lang/String;)V");
-    if (!constructorID) {
+    jmethodID staticMethodID = env->GetStaticMethodID(netscape_oji_ProxyClassLoaderFac, "createClassLoader", 
+						      "(Ljava/lang/String;)Ljava/lang/ClassLoader;");
+    if (!staticMethodID) {
         env->ExceptionClear();
         return NS_ERROR_FAILURE;
     }
-    *classloader = env->NewObject(netscape_oji_ProxyClassLoader, constructorID, jspec);
+    // In order to have permission to create classloader, we need to grant enough permission
+    nsISecurityContext* origContext = nsnull;
+    if (NS_FAILED(GetSecurityContext(env, &origContext))) {
+	return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsISecurityContext> nullContext(new nsCNullSecurityContext());
+    if (!nullContext) {
+	return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    SetSecurityContext(env, nullContext);
+    *classloader = env->CallStaticObjectMethod(netscape_oji_ProxyClassLoaderFac, staticMethodID, jspec);
+    SetSecurityContext(env, origContext);
     if (!*classloader) {
         env->ExceptionClear();
         return NS_ERROR_FAILURE;
     }
 
     env->DeleteLocalRef(jspec);
-    env->DeleteLocalRef(netscape_oji_ProxyClassLoader);
+    env->DeleteLocalRef(netscape_oji_ProxyClassLoaderFac);
     
     // now, cache the class loader in "window.navigator.javaclasses"
     if (JSJ_ConvertJavaObjectToJSValue(cx, *classloader, &javaclasses)) {
@@ -140,19 +155,26 @@ jclass ProxyFindClass(JNIEnv* env, const char* name)
         // TODO:  prevent recursive call to ProxyFindClass, if netscape.oji.ProxyClassLoader
         // isn't found by getScriptClassLoader().
         jobject classloader;
+        jthrowable jException = env->ExceptionOccurred();
+        if (jException != NULL) {
+            // Clean up exception
+            env->ExceptionClear();
+            // Release local ref
+            env->DeleteLocalRef(jException);
+        }
         nsresult rv = getScriptClassLoader(env, &classloader);
         if (NS_FAILED(rv)) break;
 
         jclass netscape_oji_ProxyClassLoader = env->GetObjectClass(classloader);
         jmethodID loadClassID = env->GetMethodID(netscape_oji_ProxyClassLoader, "loadClass",
-                                                 "(Ljava/lang/String;Z)Ljava/lang/Class;");
+                                                 "(Ljava/lang/String;)Ljava/lang/Class;");
         env->DeleteLocalRef(netscape_oji_ProxyClassLoader);
         if (!loadClassID) {
             env->ExceptionClear();
             break;
         }
         jstring jname = env->NewStringUTF(name);
-        jvalue jargs[2]; jargs[0].l = jname, jargs[1].z = JNI_TRUE;
+        jvalue jargs[1]; jargs[0].l = jname;
         jclass c = (jclass) env->CallObjectMethodA(classloader, loadClassID, jargs);
         env->DeleteLocalRef(jname);
         return c;
