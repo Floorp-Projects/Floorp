@@ -657,7 +657,8 @@ nsGfxScrollFrame::GetScrollbarStyles() const
   PRUint8 overflow;
   if (GetParent() && GetParent()->GetType() == nsLayoutAtoms::viewportFrame &&
       // Make sure we're actually the root scrollframe
-      GetParent()->GetFirstChild(nsnull) == this) {
+      GetParent()->GetFirstChild(nsnull) ==
+        NS_STATIC_CAST(const nsIFrame*, this)) {
     overflow = GetPresContext()->GetViewportOverflowOverride();
   } else {
     overflow = GetStyleDisplay()->mOverflow;
