@@ -25,6 +25,7 @@
 interface nsIDocShell;
 interface nsIInterfaceRequestor;
 interface nsIWebBrowserChrome;
+interface nsIURIContentListener;
 
 /**
  * The nsIWebBrowser
@@ -75,6 +76,13 @@ interface nsIWebBrowser : nsISupports
 	must set topLevelWindow to nsnull.
 	*/
 	attribute nsIWebBrowserChrome topLevelWindow;
+
+	/*
+	URI content listener parent.  This is not refcounted and is assumed to be
+	nulled out by the parent when the parent is going away.
+	*/
+	attribute nsIURIContentListener parentURIContentListener;
+
 
 	/*
 		The root docShell of the browserWindow. 
