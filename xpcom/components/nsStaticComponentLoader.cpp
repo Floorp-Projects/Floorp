@@ -37,6 +37,7 @@
 
 #include "nsStaticComponent.h"
 #include "nsIComponentLoader.h"
+#include "nsVoidArray.h"
 #include "pldhash.h"
 #include NEW_H
 #include <stdio.h>
@@ -56,6 +57,10 @@ public:
         mAutoRegistered(PR_FALSE), mLoadedInfo(PR_FALSE) {
 	}
 
+    static NS_HIDDEN_(PLDHashOperator) PR_CALLBACK
+    info_RegisterSelf(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                      PRUint32 number, void *arg);
+
 private:
     ~nsStaticComponentLoader() {
         if (mInfoHash.ops)
@@ -71,6 +76,7 @@ protected:
     nsCOMPtr<nsIComponentManager> mComponentMgr;
     PLDHashTable                  mInfoHash;
     static PLDHashTableOps        sInfoHashOps;
+    nsVoidArray                   mDeferredComponents;
 };
 
 PR_STATIC_CALLBACK(void)
@@ -178,11 +184,14 @@ nsStaticComponentLoader::Init(nsIComponentManager *mgr, nsISupports *aReg)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
-info_RegisterSelf(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                  PRUint32 number, void *arg)
+PLDHashOperator PR_CALLBACK
+nsStaticComponentLoader::info_RegisterSelf(PLDHashTable *table,
+                                           PLDHashEntryHdr *hdr,
+                                           PRUint32 number, void *arg)
 {
-    nsIComponentManager *mgr = NS_STATIC_CAST(nsIComponentManager *, arg);
+    nsStaticComponentLoader *loader = NS_STATIC_CAST(nsStaticComponentLoader *,
+                                                     arg);
+    nsIComponentManager *mgr = loader->mComponentMgr;
     StaticModuleInfo *info = NS_STATIC_CAST(StaticModuleInfo *, hdr);
     
     nsresult rv;
@@ -201,7 +210,8 @@ info_RegisterSelf(PLDHashTable *table, PLDHashEntryHdr *hdr,
     fprintf(stderr, "nSCL: autoreg of \"%s\": %lx\n", info->info.name, rv);
 #endif
 
-    // XXX handle deferred registration
+    if (rv == NS_ERROR_FACTORY_REGISTER_AGAIN)
+        loader->mDeferredComponents.AppendElement(info);
 
     return PL_DHASH_NEXT;
 }
@@ -221,7 +231,7 @@ nsStaticComponentLoader::AutoRegisterComponents(PRInt32 when, nsIFile *dir)
     if (NS_FAILED(rv = GetModuleInfo()))
         return rv;
 
-    PL_DHashTableEnumerate(&mInfoHash, info_RegisterSelf, mComponentMgr.get());
+    PL_DHashTableEnumerate(&mInfoHash, info_RegisterSelf, this);
 
     mAutoRegistered = PR_TRUE;
     return NS_OK;
@@ -246,9 +256,24 @@ nsStaticComponentLoader::AutoRegisterComponent(PRInt32 when, nsIFile *component,
 
 NS_IMETHODIMP
 nsStaticComponentLoader::RegisterDeferredComponents(PRInt32 when,
-                                                    PRBool *retval)
+                                                    PRBool *aRegistered)
 {
-    *retval = PR_FALSE;
+    *aRegistered = PR_FALSE;
+    if (!mDeferredComponents.Count())
+        return NS_OK;
+
+    for (int i = mDeferredComponents.Count() - 1; i >= 0; i--) {
+        StaticModuleInfo *info = NS_STATIC_CAST(StaticModuleInfo *,
+                                                mDeferredComponents[i]);
+        nsresult rv = info->module->RegisterSelf(mComponentMgr, nsnull,
+                                                 info->info.name,
+                                                 staticComponentType);
+        if (rv != NS_ERROR_FACTORY_REGISTER_AGAIN) {
+            if (NS_SUCCEEDED(rv))
+                *aRegistered = PR_TRUE;
+            mDeferredComponents.RemoveElementAt(i);
+        }
+    }
     return NS_OK;
 }
 
