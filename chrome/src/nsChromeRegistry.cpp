@@ -268,7 +268,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
 
     nsString chromeBase;
     if (NS_FAILED(rv = GetChromeResource(chromeBase, chromeResource, kCHROME_base))) {
-        NS_ERROR("Unable to retrieve codebase for chrome entry. The RDF file was misparsed or malformed.");
+        NS_ERROR("Unable to retrieve codebase for chrome entry.");
         return rv;
     }
 
@@ -297,7 +297,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
         // Append the "main" entry.
         nsString mainFile;
         if (NS_FAILED(rv = GetChromeResource(mainFile, chromeResource, kCHROME_main))) {
-            NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.\n The RDF file was misparsed or malformed.");
+            NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
             return rv;
         }
         chromeBase += mainFile;
@@ -361,7 +361,7 @@ nsChromeRegistry::GetChromeResource(nsString& aResult,
     }
 
     if (chromeBase == nsnull)
-      return NS_ERROR_FAILURE;
+      return NS_OK;
 
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
