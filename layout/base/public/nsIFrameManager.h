@@ -29,6 +29,7 @@ class nsIPresShell;
 class nsIStyleSet;
 class nsIStyleContext;
 class nsILayoutHistoryState;
+class nsStyleChangeList;
 
 #define NS_IFRAMEMANAGER_IID     \
 { 0xa6cf9107, 0x15b3, 0x11d2, \
@@ -100,6 +101,13 @@ public:
                                   nsIFrame* aFrame, 
                                   nsIStyleContext* aNewParentContext) = 0;
 
+  // Re-resolve style contexts for frame tree
+  NS_IMETHOD ComputeStyleChangeFor(nsIPresContext& aPresContext,
+                                   nsIFrame* aFrame, 
+                                   nsStyleChangeList& aChangeList,
+                                   PRInt32 aMinChange,
+                                   PRInt32& aTopLevelChange) = 0;
+
   /**
    * Capture/restore frame state for the frame subtree rooted at aFrame.
    * aState is the document state storage object onto which each frame 
@@ -107,6 +115,13 @@ public:
    */
   NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
   NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
+
+#ifdef NS_DEBUG
+  /**
+   * DEBUG ONLY method to verify integrity of style tree versus frame tree
+   */
+  NS_IMETHOD DebugVerifyStyleTree(nsIFrame* aFrame) = 0;
+#endif
 };
 
 /**
