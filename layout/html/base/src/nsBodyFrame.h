@@ -96,8 +96,7 @@ protected:
   void ReflowAbsoluteItems(nsIPresContext& aPresContext,
                            const nsHTMLReflowState& aReflowState);
 
-  nsIView* CreateAbsoluteView(const nsStylePosition* aPosition,
-                              const nsStyleDisplay*  aDisplay) const;
+  nsIView* CreateAbsoluteView(nsIStyleContext* aStyleContext) const;
 
   void TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const;
 
