@@ -96,7 +96,7 @@ NS_ScriptErrorReporter(JSContext *cx,
       const char *category = "XUL/Content JavaScript";
 
       if (errorObject == nsnull) {
-        return NS_ERROR_NOT_AVAILABLE;
+        return;
       }
       else {
         nsresult rv = NS_ERROR_FAILURE;
