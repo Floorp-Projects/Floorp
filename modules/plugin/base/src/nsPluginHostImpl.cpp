@@ -3650,6 +3650,21 @@ nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
   if (!catMan)
     return;
 
+  // XXX temporary for testing transition
+  static nsCOMPtr<nsIPrefService> sPrefService;
+  static PRBool sLoadViaPlugin = PR_FALSE;
+  if (!sPrefService) {
+    sPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (sPrefService) {
+      nsCOMPtr<nsIPrefBranch> prefBranch;
+      sPrefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+      if (prefBranch)
+        prefBranch->GetBoolPref("plugin.disable_load_full_page_via_content", &sLoadViaPlugin);
+    }
+  }
+  
+  const char *contractId = sLoadViaPlugin ? "@mozilla.org/plugin/doc-loader/factory;1" :
+                                            "@mozilla.org/content/plugin/document-loader-factory;1";
   for(int i = 0; i < mVariants; i++) {
     if (aType == ePluginUnregister) {
       nsXPIDLCString value;
@@ -3657,7 +3672,7 @@ nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
                                                 mMimeTypeArray[i],
                                                 getter_Copies(value)))) {
         // Only delete the entry if a plugin registered for it
-        if (strcmp(value, "@mozilla.org/plugin/doc-loader/factory;1") == 0) {
+        if (strcmp(value, contractId) == 0) {
           catMan->DeleteCategoryEntry("Gecko-Content-Viewers",
                                       mMimeTypeArray[i],
                                       PR_TRUE);
@@ -3666,7 +3681,7 @@ nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
     } else {
       catMan->AddCategoryEntry("Gecko-Content-Viewers",
                                mMimeTypeArray[i],
-                               "@mozilla.org/plugin/doc-loader/factory;1",
+                               contractId,
                                PR_FALSE, /* persist: broken by bug 193031 */
                                aOverrideInternalTypes, /* replace if we're told to */
                                nsnull);

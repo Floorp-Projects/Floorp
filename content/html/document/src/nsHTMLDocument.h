@@ -250,6 +250,8 @@ protected:
 
   nsresult BaseResetToURI(nsIURI* aURI);
 
+  nsresult RetrieveRelevantHeaders(nsIChannel *aChannel);
+
   nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
   nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
   nsIURI*     mBaseURL;
