@@ -117,15 +117,15 @@ public:
   NS_IMETHOD GetParagraphFormat(nsString& aParagraphFormat);
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat);
 
-  NS_IMETHOD Indent(nsString& aIndent);
-  NS_IMETHOD Align(nsString& aAlign);
+  NS_IMETHOD Indent(const nsString& aIndent);
+  NS_IMETHOD Align(const nsString& aAlign);
   NS_IMETHOD InsertLink(nsString& aURL);
   NS_IMETHOD InsertImage(nsString& aURL,
                          nsString& aWidth, nsString& aHeight,
                          nsString& aHspace, nsString& aVspace,
                          nsString& aBorder,
                          nsString& aAlt, nsString& aAlignment);
-  NS_IMETHOD InsertList(nsString& aListType);
+  NS_IMETHOD InsertList(const nsString& aListType);
 
   // This should replace InsertLink and InsertImage once it is working
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);

@@ -1172,7 +1172,7 @@ nsHTMLEditor::RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRan
 
 
 NS_IMETHODIMP
-nsHTMLEditor::Indent(nsString& aIndent)
+nsHTMLEditor::Indent(const nsString& aIndent)
 {
   nsresult res = nsEditor::BeginTransaction();
   if (NS_FAILED(res)) return res;
@@ -1289,7 +1289,7 @@ nsHTMLEditor::Indent(nsString& aIndent)
 
 
 NS_IMETHODIMP
-nsHTMLEditor::Align(nsString& aAlignType)
+nsHTMLEditor::Align(const nsString& aAlignType)
 {
   nsresult res = nsEditor::BeginTransaction();
   if (NS_FAILED(res)) return res;
@@ -1340,7 +1340,7 @@ nsHTMLEditor::Align(nsString& aAlignType)
 
 
 NS_IMETHODIMP
-nsHTMLEditor::InsertList(nsString& aListType)
+nsHTMLEditor::InsertList(const nsString& aListType)
 {
   nsresult res = nsEditor::BeginTransaction();
   if (NS_FAILED(res)) return res;
