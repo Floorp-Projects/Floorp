@@ -430,9 +430,14 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsISimpleEnumerator* *result)
     {
         if (!m_haveDiscoveredAllFolders)
         {
-            rv = CreateClientSubfolderInfo("Inbox");
-            if (NS_FAILED(rv)) 
-				return rv;
+            PRBool hasSubFolders = PR_FALSE;
+            GetHasSubFolders(&hasSubFolders);
+            if (!hasSubFolders)
+            {
+                rv = CreateClientSubfolderInfo("Inbox");
+                if (NS_FAILED(rv)) 
+                    return rv;
+            }
             m_haveDiscoveredAllFolders = PR_TRUE;
         }
         selectFolder = PR_FALSE;
@@ -2645,22 +2650,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         if (m_transactionManager && m_copyState->m_undoMsgTxn)
                             m_transactionManager->Do(m_copyState->m_undoMsgTxn);
                         ClearCopyState(aExitCode);
-                    }
-                }
-                break;
-            case nsIImapUrl::nsImapCreateFolder:
-                {
-                    char *path = nsnull;
-                    rv = imapUrl->CreateCanonicalSourceFolderPathString(&path);
-                    if (NS_SUCCEEDED(rv))
-                    {
-                        nsCOMPtr<nsIMsgImapMailFolder> imapFolder;
-                        rv = QueryInterface(nsCOMTypeInfo
-                                            <nsIMsgImapMailFolder>::GetIID(),
-                                            getter_AddRefs(imapFolder));
-                        if (NS_SUCCEEDED(rv))
-                            imapFolder->CreateClientSubfolderInfo(path);
-                        PR_FREEIF(path);
                     }
                 }
                 break;
