@@ -300,7 +300,6 @@ PRIVATE Bool override_proxy (CONST char * URL);
 HG52422
 
 PRIVATE void net_FreeURLAllHeaders(URL_Struct * URL_s);
-PRIVATE void NET_InitAboutProtocol(void);
 
 PRIVATE NET_TimeBombActive = FALSE;
 
@@ -1439,7 +1438,7 @@ net_CheckForWaitingURL(MWContext * window_id, int protocol, Bool was_background)
 		if(!was_background)
 		{
 			ET_SendLoadEvent(window_id, EVENT_XFER_DONE, 
-					 NULL, NULL, LO_DOCUMENT_LAYER_ID,
+					 NULL, NULL, 0,
 					 FALSE);
 			FE_AllConnectionsComplete(window_id);
 		}
