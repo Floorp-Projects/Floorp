@@ -25,6 +25,22 @@
     </content>
   </binding>
 
+  <binding id="menulist-editable" extends="chrome://global/content/menulistBindings.xml#menulist-editable">
+    <content includes="menupopup">
+      <xul:box class="menulist-internal-box" flex="1">
+        <xul:box class="menulist-display-box" flex="1" valign="middle" autostretch="never">
+          <xul:image class="menulist-icon" inherits="src"/>
+          <html:input type="text" class="menulist-editable-text" inherits="value,accesskey" flex="1"/>
+        </xul:box>
+        <xul:box class="menulist-dropmarker-box-1" valign="middle" inherits="open">
+          <xul:box class="menulist-dropmarker-box-2" flex="1" autostretch="never" valign="middle" inherits="open">
+            <xul:image class="menulist-dropmarker" inherits="disabled"/>
+          </xul:box>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+  
   <binding id="menulistpopup">
     <content>
       <xul:box class="menulistpopup-internal-box" orient="vertical" flex="1" style="overflow: auto">
@@ -42,6 +58,7 @@
       </xul:box>
     </content>
   </binding>
+   
    
    
 </bindings>

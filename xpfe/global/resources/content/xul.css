@@ -448,7 +448,8 @@ colorpicker[type="button"] {
   
   menulist[editable="true"] 
     {
-      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menulist-editable");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menulist-editable") !important;
+      -moz-user-focus: ignore;
     }
   
   menubutton
