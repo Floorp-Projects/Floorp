@@ -2835,10 +2835,10 @@ _SAVE_LIBS=$LIBS
 CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 LIBS="-lfullsoft $LIBS"
-AC_MSG_CHECKING("for FC_Initialize in -lfullsoft");
+AC_MSG_CHECKING("for FCInitialize in -lfullsoft");
 AC_TRY_LINK([ #include <stdio.h>
 	      #include "fullcircle.h" ],
-            [ FC_Initialize(); exit(0); ],
+            [ FCInitialize(); exit(0); ],
             [FULLCIRCLE_LIBS="-I${FULLCIRCLE_DIR} -L${FULLCIRCLE_DIR} -lfullsoft" result="yes"],
             [MISSING_FULLCIRCLE=1 result="no"])
 AC_MSG_RESULT("$result")

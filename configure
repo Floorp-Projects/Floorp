@@ -9613,15 +9613,15 @@ _SAVE_LIBS=$LIBS
 CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 LIBS="-lfullsoft $LIBS"
-echo $ac_n "checking "for FC_Initialize in -lfullsoft"""... $ac_c" 1>&6
-echo "configure:9618: checking "for FC_Initialize in -lfullsoft"" >&5;
+echo $ac_n "checking "for FCInitialize in -lfullsoft"""... $ac_c" 1>&6
+echo "configure:9618: checking "for FCInitialize in -lfullsoft"" >&5;
 cat > conftest.$ac_ext <<EOF
 #line 9620 "configure"
 #include "confdefs.h"
  #include <stdio.h>
 	      #include "fullcircle.h" 
 int main() {
- FC_Initialize(); exit(0); 
+ FCInitialize(); exit(0); 
 ; return 0; }
 EOF
 if { (eval echo configure:9628: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
