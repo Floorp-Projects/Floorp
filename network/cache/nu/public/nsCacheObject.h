@@ -70,8 +70,8 @@ public:
                 LastModified(void) const;
 	void        LastModified(PRIntervalTime i_lastModified);
 
-    PRInt16     Module(void) const;
-    void        Module(PRUint16 i_m);
+        PRInt16     Module(void) const;
+        void        Module(PRUint16 i_m);
 
 	PRUint32    Size(void) const;
 	void        Size(PRUint32 s);
