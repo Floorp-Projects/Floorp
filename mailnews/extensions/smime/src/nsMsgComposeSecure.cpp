@@ -191,6 +191,7 @@ char
 NS_IMPL_ISUPPORTS1(nsMsgSMIMEComposeFields, nsIMsgSMIMECompFields)
 
 nsMsgSMIMEComposeFields::nsMsgSMIMEComposeFields()
+:mSignMessage(PR_FALSE), mAlwaysEncryptMessage(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -346,11 +347,13 @@ void nsMsgComposeSecure::InitializeSMIMEBundle()
 nsresult nsMsgComposeSecure::ExtractEncryptionState(nsIMsgIdentity * aIdentity, nsIMsgCompFields * aComposeFields, PRBool * aSignMessage, PRBool * aEncrypt)
 {
   if (!aComposeFields && !aIdentity)
-    return NS_OK; // kick out...invalid args....
+    return NS_ERROR_FAILURE; // kick out...invalid args....
 
   nsCOMPtr<nsISupports> securityInfo;
   if (aComposeFields)
     aComposeFields->GetSecurityInfo(getter_AddRefs(securityInfo));
+
+  // XXX Later we need to handle the special "encrypt if possible case" in here
 
   if (securityInfo) // if we were given security comp fields, use them.....
   {
@@ -360,14 +363,25 @@ nsresult nsMsgComposeSecure::ExtractEncryptionState(nsIMsgIdentity * aIdentity, 
       smimeCompFields->GetSignMessage(aSignMessage);
       smimeCompFields->GetAlwaysEncryptMessage(aEncrypt);
     }
+    return NS_OK;
   }
   else if (aIdentity)  // get the default info from the identity....
   {
-    aIdentity->GetBoolAttribute("encrypt_mail_always", aEncrypt);
+    PRInt32 ep = 0;
+    nsresult testrv = aIdentity->GetIntAttribute("encryptionpolicy", &ep);
+    if (NS_FAILED(testrv)) {
+      *aEncrypt = PR_FALSE;
+    }
+    else {
+      *aEncrypt = (ep > 0);
+    }
+    
     aIdentity->GetBoolAttribute("sign_mail", aSignMessage);
+    return NS_OK;
   }
-
-  return NS_OK;
+  else {
+    return NS_ERROR_FAILURE;
+  }
 }
 
 /* void beginCryptoEncapsulation (in nsOutputFileStream aStream, in boolean aEncrypt, in boolean aSign, in string aRecipeints, in boolean aIsDraft); */
