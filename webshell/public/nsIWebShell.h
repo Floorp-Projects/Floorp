@@ -33,6 +33,7 @@ class nsIDocumentLoader;
 class nsIWebShell;
 class nsIWebShellContainer;
 class nsIPref;
+class nsIURLListener;
 
 // Interface ID for nsIWebShell
 #define NS_IWEB_SHELL_IID \
@@ -180,9 +181,19 @@ public:
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer) = 0;
 
   /**
+   * Set the nsIURLListener for the WebShell.
+   */
+  NS_IMETHOD SetURLListener(nsIURLListener* anUrlListener) = 0;
+
+  /**
    * Return the current nsIWebShellContainer.
    */
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
+
+  /**
+   * Return the current nsIURLListener.
+   */
+  NS_IMETHOD GetURLListener(nsIURLListener*& aResult) = 0;
 
   /**
    * Set the nsIStreamObserver which receives all notifications from URLs 
