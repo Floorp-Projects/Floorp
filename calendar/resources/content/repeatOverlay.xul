@@ -162,7 +162,7 @@
              
         
         <hbox id="repeat-extenstions-month"
-              diabled="true"
+              disabled="true"
               collapsed="true"
               align="center">
             <vbox align="center">
