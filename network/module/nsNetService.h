@@ -50,11 +50,26 @@ public:
     NS_IMETHOD SetCookieString(nsIURL *aURL, const nsString& aCookie);
 
 #ifdef SingleSignon
+    NS_IMETHOD SI_DisplaySignonInfoAsHTML();
     NS_IMETHOD SI_RememberSignonData
         (char* URLName, LO_FormSubmitData *submit);
     NS_IMETHOD SI_RestoreSignonData
         (char* URLNAME, char* name, char** value);
 #endif
+
+#ifdef CookieManagement
+    NS_IMETHOD NET_DisplayCookieInfoAsHTML();
+#ifdef PrivacySiteInfo
+    NS_IMETHOD 	NET_DisplayCookieInfoOfSiteAsHTML(char * URLName);
+    NS_IMETHOD  NET_CookiePermission(char* URLName, PRInt32* permission);
+    NS_IMETHOD  NET_CookieCount(char* URLName, PRInt32* count);
+#endif
+#endif
+
+    NS_IMETHOD NET_AnonymizeCookies();
+    NS_IMETHOD NET_UnanonymizeCookies();
+    NS_IMETHOD SI_AnonymizeSignons();
+    NS_IMETHOD SI_UnanonymizeSignons();
 
     NS_IMETHOD GetProxyHTTP(nsString& aProxyHTTP);
     NS_IMETHOD SetProxyHTTP(nsString& aProxyHTTP);
