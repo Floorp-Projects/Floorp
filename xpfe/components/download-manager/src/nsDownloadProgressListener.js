@@ -36,8 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
-var dialog = new Object;
-dialog.strings = new Array;
+var gStrings = new Array;
 const interval = 500; // Update every 500 milliseconds.
 
 function nsDownloadProgressListener() {
@@ -70,7 +69,7 @@ nsDownloadProgressListener.prototype = {
         var timeRemainingCol = elt.nextSibling.nextSibling.nextSibling;
         timeRemainingCol.setAttribute("label", "");
         
-        var speedCol = timeRemaining.nextSibling.nextSibling;
+        var speedCol = timeRemainingCol.nextSibling.nextSibling;
         speedCol.setAttribute("label", "");
       }
     },
@@ -172,10 +171,10 @@ nsDownloadProgressListener.prototype = {
       else
        rateMsg = replaceInsert( rateMsg, 1, "??.?" );
 
-      var progress = elt.nextSibling.nextSibling.nextSibling;
+      var timeRemainingCol = elt.nextSibling.nextSibling.nextSibling;
 
       // Update status msg.
-      var statusCol = progress.nextSibling;
+      var statusCol = timeRemainingCol.nextSibling;
       statusCol.setAttribute("label", status);
 
       var speedCol = statusCol.nextSibling;
@@ -196,10 +195,10 @@ nsDownloadProgressListener.prototype = {
       {
         var rem = ( aMaxTotalProgress - aCurTotalProgress ) / rate;
         rem = parseInt( rem + .5 );
-        progressCol.setAttribute("label", formatSeconds( rem, this.doc ));
+        timeRemainingCol.setAttribute("label", formatSeconds( rem, this.doc ));
       }
       else
-        progressCol.setAttribute("label", getString( "unknownTime", this.doc ));
+        timeRemainingCol.setAttribute("label", getString( "unknownTime", this.doc ));
     },
     onLocationChange: function(aWebProgress, aRequest, aLocation, aDownloadItem)
     {
@@ -269,9 +268,9 @@ function replaceInsert( text, index, value ) {
 
 function getString( stringId, doc ) {
    // Check if we've fetched this string already.
-   if ( !dialog.strings[ stringId ] ) {
+   if ( !gStrings[ stringId ] ) {
       // Try to get it.
-      var elem = doc.getElementById( "dialog.strings."+stringId );
+      var elem = doc.getElementById( "strings."+stringId );
       try {
         if ( elem
            &&
@@ -280,14 +279,14 @@ function getString( stringId, doc ) {
            elem.childNodes[0]
            &&
            elem.childNodes[0].nodeValue ) {
-         dialog.strings[ stringId ] = elem.childNodes[0].nodeValue;
+         gStrings[ stringId ] = elem.childNodes[0].nodeValue;
         } else {
           // If unable to fetch string, use an empty string.
-          dialog.strings[ stringId ] = "";
+          gStrings[ stringId ] = "";
         }
-      } catch (e) { dialog.strings[ stringId ] = ""; }
+      } catch (e) { gStrings[ stringId ] = ""; }
    }
-   return dialog.strings[ stringId ];
+   return gStrings[ stringId ];
 }
 
 function formatSeconds( secs, doc )
