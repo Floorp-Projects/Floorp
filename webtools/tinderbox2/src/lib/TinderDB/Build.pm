@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.18 $ 
-# $Date: 2001/03/26 14:05:37 $ 
+# $Revision: 1.19 $ 
+# $Date: 2001/03/30 15:37:44 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -193,6 +193,8 @@ sub build_names {
 
 # The admin tree program needs to know all the build names so it can
 # set ignore_builds.
+
+# note that the admintree.cgi program calls this function directly.
 
 sub all_build_names {
   my ($tree) = (@_);

@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.13 $ 
-# $Date: 2001/03/26 14:08:42 $ 
+# $Revision: 1.14 $ 
+# $Date: 2001/03/30 15:37:23 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -185,7 +185,7 @@ sub get_build_names  {
     
     $build_obj->loadtree_db($tree);
     
-    @build_names = sort $build_obj->all_build_names($tree);
+    @build_names = TinderDB::Build::all_build_names($tree);
   };
 
   return @build_names;
