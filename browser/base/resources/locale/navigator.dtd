@@ -54,7 +54,7 @@
 <!ENTITY closeWindow.label "Close Window">
 
 <!ENTITY findOnCmd.label "Find in This Page...">
-<!ENTITY findOnCmd.accesskey "f">
+<!ENTITY findOnCmd.accesskey "F">
 <!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">

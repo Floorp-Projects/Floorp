@@ -472,9 +472,6 @@ Contributor(s): ______________________________________. -->
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
             <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="cmd_stop" key="key_stop"/>
             <menuseparator/>
-            <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
-            <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
-            <menuseparator/>
             <menu id="menu_textZoom" accesskey="&textZoomMenu.accesskey;" observes="isImage">
               <menupopup id="menu_textZoomPopup" onpopupshowing="updateTextZoomMenu();">
                 <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;" command="cmd_textZoomReduce"/>
@@ -582,6 +579,9 @@ Contributor(s): ______________________________________. -->
                 <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
                 </menupopup>
             </menu>
+            <menuseparator/>
+            <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
+            <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
           </menupopup>
         </menu>
     
