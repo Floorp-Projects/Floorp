@@ -81,9 +81,15 @@ endif
 
 REPORT_BUILD = @echo $(notdir $<)
 
+ifeq ($(OS_ARCH),OS2)
+EXEC			=
+else
+EXEC			= exec
+endif
+
 # ELOG prints out failed command when building silently (gmake -s).
 ifneq (,$(findstring s,$(MAKEFLAGS)))
-  ELOG := exec sh $(BUILD_TOOLS)/print-failed-commands.sh
+  ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
   ELOG :=
 endif
@@ -455,44 +461,16 @@ export:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 ##############################################
-ifeq ($(OS_ARCH),OS2)
-# Leave DLL-making for the install loop to ensure all libs required for linkage have been built
-libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(IMPORT_LIBRARY) $(SHARED_LIBRARY_LIBS)
-ifndef NO_STATIC_LIB
-ifdef LIBRARY
-	@echo "***** OS2 libs chkpt-STATIC LIBRARY *****"
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(IMPORT_LIBRARY) $(DIST)/lib
-endif
-endif
-ifdef SHARED_LIBRARY
-ifdef IS_COMPONENT
-	@echo "***** OS2 libs chkpt-SHARED_LIB COMPONENT *****"
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
-else
-	@echo "***** OS2 libs chkpt-SHARED_LIBRARY *****"
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
-endif
-endif
-	+$(LOOP_OVER_DIRS)
-endif # OS2
-
-ifeq ($(OS_ARCH),OS2)
-# Leave DLL-making for the install loop to ensure all libs required for linkage have been built
-install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(IMPORT_LIBRARY) $(SHARED_LIBRARY_LIBS) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS)
-	@echo "**** OS2 install *****"
-else
 install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
-endif
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
 ifeq ($(OS_ARCH),OS2)
-	@echo "**** OS2 install LIBRARY *****"
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(IMPORT_LIBRARY) $(DIST)/lib
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
 else
 ifdef IS_COMPONENT
-	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib/components
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib/components
 else
-	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
+	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
 endif
 endif # OS2
 endif
@@ -503,24 +481,22 @@ endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
 ifeq ($(OS_ARCH),OS2)
-	@echo "**** OS2 install SHARED_LIBRARY COMPONENT *****"
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
 else
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib/components
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
-endif # OS2
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/components
+endif
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/components
 ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
 endif
 else # ! IS_COMPONENT
 ifeq ($(OS_ARCH),OS2)
-	@echo "**** OS2-M14 install NON COMPONENT *****"
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
 else
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
-endif # OS2
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
+endif
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin
 ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin
@@ -543,20 +519,6 @@ ifdef HOST_LIBRARY
 	$(INSTALL) $(IFLAGS1) $(HOST_LIBRARY) $(DIST)/host/lib
 endif
 	+$(LOOP_OVER_DIRS)
-
-#####  Old OS2 install loop for DLL
-ifeq ($(OS_ARCH),OS2)
-install:: $(SUBMAKEFILES) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
-	@echo "**** OS2 install *****"
-ifdef SHARED_LIBRARY
-ifdef IS_COMPONENT
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/components
-else
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin
-endif
-endif
-	+$(LOOP_OVER_DIRS)
-endif # OS2
 
 checkout:
 	$(MAKE) -C $(topsrcdir) -f client.mk checkout
