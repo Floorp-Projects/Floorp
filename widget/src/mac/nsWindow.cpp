@@ -75,9 +75,9 @@
 #endif
 
 #ifdef MAC_OS_X_VERSION_10_3
-const short PANTHER_RESIZE_UP_CURSOR     = kThemeResizeUpCursor;
-const short PANTHER_RESIZE_DOWN_CURSOR   = kThemeResizeDownCursor;
-const short PANTHER_RESIZE_UPDOWN_CURSOR = kThemeResizeUpDownCursor;
+const short PANTHER_RESIZE_UP_CURSOR     = 19;
+const short PANTHER_RESIZE_DOWN_CURSOR   = 20;
+const short PANTHER_RESIZE_UPDOWN_CURSOR = 21;
 #else
 //19, 20, 21 from Appearance.h in 10.3
 const short PANTHER_RESIZE_UP_CURSOR     = 19; // kThemeResizeUpCursor
