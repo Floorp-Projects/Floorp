@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,370 +20,487 @@
  * Contributor(s): 
  */
 
+var NC = "http://home.netscape.com/NC-rdf#";
 
 function debug(msg)
 {
-	// uncomment for noise
-	// dump(msg+"\n");
+    // Uncomment for noise
+    //dump(msg+"\n");
+}
+
+var BookmarksController = {
+    supportsCommand: function(command)
+    {
+        debug("in supports with " + command);
+        switch(command)
+        {
+            case "cmd_undo":
+            case "cmd_redo":
+                return false;
+            case "cmd_cut":
+            case "cmd_copy":
+            case "cmd_paste":
+            case "cmd_delete":
+            case "cmd_selectAll":
+                return true;
+            default:
+                return false;
+        }
+    },
+    isCommandEnabled: function(command)
+    {
+        debug("in enabled with " + command);
+        switch(command)
+        {
+            case "cmd_undo":
+            case "cmd_redo":
+                return false;
+            case "cmd_cut":
+            case "cmd_copy":
+            case "cmd_paste":
+            case "cmd_delete":
+            case "cmd_selectAll":
+                return true;
+            default:
+                return false;
+        }
+    },
+    doCommand: function(command)
+    {
+        debug("in do with " + command);
+        switch(command)
+        {
+            case "cmd_undo":
+            case "cmd_redo":
+                break;
+            case "cmd_cut":
+                doCut();
+                break;
+            case "cmd_copy":
+                doCopy();
+                break;
+            case "cmd_paste":
+                doPaste();
+                break;
+            case "cmd_delete":
+                doDelete();
+                break;
+            case "cmd_selectAll":
+                doSelectAll();
+                break;
+        }
+    },
+    onEvent: function(event)
+    {
+        debug("in event");
+        // On blur events set the menu item texts back to the normal values
+        /*if (event == 'blur' )
+          {
+          goSetMenuValue('cmd_undo', 'valueDefault');
+          goSetMenuValue('cmd_redo', 'valueDefault');
+          }*/
+    }
+};
+
+function Init() {
+    var tree = document.getElementById("bookmarksTree");
+    debug("adding controller to tree");
+    tree.controllers.appendController(BookmarksController);
+    var children = document.getElementById('treechildren-bookmarks');
+    tree.selectItem(children.firstChild);
+}
+
+function CommandUpdate_Bookmarks()
+{
+    debug("CommandUpdate_Bookmarks()");
+    //goUpdateCommand('button_delete');
+	
+    // get selection info from dir pane
+    /*
+    var oneAddressBookSelected = false;
+    if ( dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1) )
+        oneAddressBookSelected = true;
+    
+    // get selection info from results pane
+    var selectedCards = GetSelectedAddresses();
+    var oneOrMoreCardsSelected = false;
+    if ( selectedCards )
+        oneOrMoreCardsSelected = true;
+    */
+    // set commands to enabled / disabled
+    //goSetCommandEnabled('cmd_PrintCard', oneAddressBookSelected);
+    goSetCommandEnabled('bm_cmd_find', true/*oneAddressBookSelected*/);
 }
 
 
 function copySelectionToClipboard()
 {
-	var treeNode = document.getElementById("bookmarksTree");
-	if (!treeNode)    return(false);
-	var select_list = treeNode.selectedItems;
-	if (!select_list)	return(false);
-	if (select_list.length < 1)    return(false);
-	debug("# of Nodes selected: " + select_list.length + "\n");
+    var treeNode = document.getElementById("bookmarksTree");
+    if (!treeNode) return false;
+    var select_list = treeNode.selectedItems;
+    if (!select_list) return false;
+    if (select_list.length < 1) return false;
+    debug("# of Nodes selected: " + select_list.length + "\n");
 
-	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-	if (!RDF)	return(false);
+    var rdf_uri = "component://netscape/rdf/rdf-service"
+    var RDF = Components.classes[rdf_uri].getService();
+    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+    if (!RDF) return false;
 
-	var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
-	if (!Bookmarks)	return(false);
+    var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+    if (!Bookmarks) return false;
 
-	var nameRes = RDF.GetResource("http://home.netscape.com/NC-rdf#Name");
-	if (!nameRes)	return(false);
+    var nameRes = RDF.GetResource(NC + "Name");
+    if (!nameRes) return false;
 
-	// build a url that encodes all the select nodes as well as their parent nodes
-	var url="";
-	var text="";
-	var html="";
+    // Build a url that encodes all the select nodes 
+    // as well as their parent nodes
+    var url = "";
+    var text = "";
+    var html = "";
 
-	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
-	{
-		var node = select_list[nodeIndex];
-		if (!node)    continue;
+    for (var nodeIndex = 0; nodeIndex < select_list.length; nodeIndex++)
+    {
+        var node = select_list[nodeIndex];
+        if (!node) continue;
 
-		var ID = getAbsoluteID("bookmarksTree", node);
-		if (!ID)    continue;
-		
-		var IDRes = RDF.GetResource(ID);
-		if (!IDRes)	continue;
-		var nameNode = Bookmarks.GetTarget(IDRes, nameRes, true);
-		var theName = "";
-		if (nameNode) nameNode = nameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
-		if (nameNode)	theName = nameNode.Value;
+        var ID = getAbsoluteID("bookmarksTree", node);
+        if (!ID) continue;
+        
+        var IDRes = RDF.GetResource(ID);
+        if (!IDRes) continue;
+        var nameNode = Bookmarks.GetTarget(IDRes, nameRes, true);
+        var theName = "";
+        if (nameNode)
+            nameNode = 
+                nameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        if (nameNode) theName = nameNode.Value;
 
-		debug("Node " + nodeIndex + ": " + ID + "    name: " + theName);
-		url += "ID:{" + ID + "};";
-		url += "NAME:{" + theName + "};";
+        debug("Node " + nodeIndex + ": " + ID + "    name: " + theName);
+        url += "ID:{" + ID + "};";
+        url += "NAME:{" + theName + "};";
 
-		var isContainerFlag = node.getAttribute("container") == "true" ? true:false;
-		if (isContainerFlag == false)
-		{
-			var type = node.getAttribute("type");
-			if (type == "http://home.netscape.com/NC-rdf#BookmarkSeparator")
-			{
-				// Note: can't encode separators in text, just html
-				html += "<hr><p>";
-			}
-			else
-			{
-				text += ID + "\r";
-			
-				html += "<a href='" + ID + "'>";
-				if (theName != "")
-				{
-					html += theName;
-				}
-				html += "</a><p>";
-			}
-		}
-	}
+        if (node.getAttribute("container") == "true")
+        {
+            var type = node.getAttribute("type");
+            if (type == NC + "BookmarkSeparator")
+            {
+                // Note: can't encode separators in text, just html
+                html += "<hr><p>";
+            }
+            else
+            {
+                text += ID + "\r";
+            
+                html += "<a href='" + ID + "'>";
+                if (theName != "")
+                {
+                    html += theName;
+                }
+                html += "</a><p>";
+            }
+        }
+    }
 
-	if (url == "")	return(false);
-	debug("Copy URL: " + url);
+    if (url == "") return false;
+    debug("Copy URL: " + url);
 
-	// get some useful components
-	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
-	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
-	if ( !trans )	return(false);
+    // get some useful components
+    var trans_uri = "component://netscape/widget/transferable";
+    var trans = Components.classes[trans_uri].createInstance();
+    if (trans) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+    if (!trans) return false;
 
-	var clip = Components.classes["component://netscape/widget/clipboard"].createInstance();
-	if ( clip ) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
-	if (!clip)	return(false);
-	clip.emptyClipboard();
+    var clip_uri = "component://netscape/widget/clipboard";
+    var clip = Components.classes[clip_uri].createInstance();
+    if (clip) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
+    if (!clip) return false;
+    clip.emptyClipboard(Components.interfaces.nsIClipboard.kGlobalClipboard);
 
-	// save bookmark's ID
-	trans.addDataFlavor("moz/bookmarkclipboarditem");
-	var data = Components.classes["component://netscape/supports-wstring"].createInstance();
-	if ( data )	data = data.QueryInterface(Components.interfaces.nsISupportsWString);
-	if (!data)	return(false);
-	data.data = url;
-	trans.setTransferData ( "moz/bookmarkclipboarditem", data, url.length*2 );			// double byte data
+    // save bookmark's ID
+    trans.addDataFlavor("moz/bookmarkclipboarditem");
+    var data_uri = "component://netscape/supports-wstring";
+    var data = Components.classes[data_uri].createInstance();
+    if (data) {
+        data = data.QueryInterface(Components.interfaces.nsISupportsWString);
+    }
+    if (!data) return false;
+    data.data = url;
+    // double byte data
+    trans.setTransferData("moz/bookmarkclipboarditem", data, url.length*2);
+    
+    if (text != "")
+    {
+        trans.addDataFlavor("text/unicode");
 
-	if (text != "")
-	{
-		trans.addDataFlavor("text/unicode");
+        var textData_uri = "component://netscape/supports-wstring";
+        var textData = Components.classes[textData_uri].createInstance();
+        if (textData) textData = textData.QueryInterface(Components.interfaces.nsISupportsWString);
+        if (!textData) return false;
+        textData.data = text;
+        // double byte data
+        trans.setTransferData("text/unicode", textData, text.length*2);
+    }
+    if (html != "")
+    {
+        trans.addDataFlavor("text/html");
 
-		var textData = Components.classes["component://netscape/supports-wstring"].createInstance();
-		if ( textData )	textData = textData.QueryInterface(Components.interfaces.nsISupportsWString);
-		if (!textData)	return(false);
-		textData.data = text;
-		trans.setTransferData ( "text/unicode", textData, text.length*2 );			// double byte data
-	}
-
-	if (html != "")
-	{
-		trans.addDataFlavor("text/html");
-
-		var htmlData = Components.classes["component://netscape/supports-wstring"].createInstance();
-		if ( htmlData )	htmlData = htmlData.QueryInterface(Components.interfaces.nsISupportsWString);
-		if (!htmlData)	return(false);
-		htmlData.data = html;
-		trans.setTransferData ( "text/html", htmlData, html.length*2 );			// double byte data
-	}
-
-	clip.setData(trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard);
-
-	return(true);
+        var wstring_uri = "component://netscape/supports-wstring";
+        var htmlData = Components.classes[string_uri].createInstance();
+        if (htmlData) {
+            var wstring_interface = Components.interfaces.nsISupportsWString;
+            htmlData = htmlData.QueryInterface(wstring_interface);
+        }
+        if (!htmlData) return false;
+        htmlData.data = html;
+        // double byte data
+        trans.setTransferData("text/html", htmlData, html.length*2);
+    }
+    debug("Write bookmarks to clipboard");
+    clip.setData(trans, null,
+                 Components.interfaces.nsIClipboard.kGlobalClipboard);
+    return true;
 }
-
-
 
 function doCut()
 {
-	if (copySelectionToClipboard() == true)
-	{
-		doDelete(false);
-	}
-	return(true);
+    if (copySelectionToClipboard() == true) {
+        doDelete(false);
+    }
+    return true;
 }
-
-
 
 function doCopy()
 {
-	copySelectionToClipboard();
-	return(true);
+    copySelectionToClipboard();
+    return true;
 }
-
-
 
 function doPaste()
 {
-	var treeNode = document.getElementById("bookmarksTree");
-	if (!treeNode)    return(false);
-	var select_list = treeNode.selectedItems;
-	if (!select_list)	return(false);
-	if (select_list.length != 1)    return(false);
-	
-	var pasteNodeID = select_list[0].getAttribute("id");
-	debug("Paste onto " + pasteNodeID);
-	var isContainerFlag = select_list[0].getAttribute("container") == "true" ? true:false;
-	debug("Container status: " + ((isContainerFlag) ? "true" : "false"));
+    var treeNode = document.getElementById("bookmarksTree");
+    if (!treeNode) return false;
+    var select_list = treeNode.selectedItems;
+    if (!select_list) return false;
+    if (select_list.length != 1) return false;
+    
+    var pasteNodeID = select_list[0].getAttribute("id");
+    debug("Paste onto " + pasteNodeID);
+    var isContainerFlag = (select_list[0].getAttribute("container") == "true");
+    debug("Container status: " + ((isContainerFlag) ? "true" : "false"));
 
-	var clip = Components.classes["component://netscape/widget/clipboard"].createInstance();
-	if ( clip ) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
-	if (!clip)	return(false);
+    var clip_uri = "component://netscape/widget/clipboard";
+    var clip = Components.classes[clip_uri].createInstance();
+    if (clip) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
+    if (!clip) return false;
 
-	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
-	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
-	if ( !trans )	return(false);
-	trans.addDataFlavor("moz/bookmarkclipboarditem");
+    var trans_uri = "component://netscape/widget/transferable";
+    var trans = Components.classes[trans_uri].createInstance();
+    if (trans) {
+        trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+    }
+    if (!trans) return false;
+    trans.addDataFlavor("moz/bookmarkclipboarditem");
 
-	clip.getData(trans, Components.interfaces.nsIClipboard.kGlobalClipboard);
-	var data = new Object();
-	var dataLen = new Object();
-	trans.getTransferData("moz/bookmarkclipboarditem", data, dataLen);
-	if (data)	data = data.value.QueryInterface(Components.interfaces.nsISupportsWString);
-	var url=null;
-	if (data)	url = data.data.substring(0, dataLen.value / 2);	// double byte data
-	if (!url)	return(false);
+    clip.getData(trans, Components.interfaces.nsIClipboard.kGlobalClipboard);
+    var data = new Object();
+    var dataLen = new Object();
+    trans.getTransferData("moz/bookmarkclipboarditem", data, dataLen);
+    if (data) {
+        var data_interface = Components.interfaces.nsISupportsWString
+        data = data.value.QueryInterface(data_interface);
+    }
+    var url = null;
+   // double byte data
+    if (data) url = data.data.substring(0, dataLen.value / 2); 
+    if (!url) return false;
 
-	var strings = url.split(";");
-	if (!strings)	return(false);
+    var strings = url.split(";");
+    if (!strings) return false;
 
-	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-	if (!RDF)	return(false);
-	var RDFC = Components.classes["component://netscape/rdf/container"].getService();
-	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
-	if (!RDFC)	return(false);
-	var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
-	if (!Bookmarks)	return(false);
+    var rdf_uri = "component://netscape/rdf/rdf-service";
+    var RDF = Components.classes[rdf_uri].getService();
+    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+    if (!RDF) return false;
+    var rdfc_uri = "component://netscape/rdf/container";
+    var RDFC = Components.classes[rdfc_uri].getService();
+    RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
+    if (!RDFC) return false;
+    var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+    if (!Bookmarks) return false;
 
-	var nameRes = RDF.GetResource("http://home.netscape.com/NC-rdf#Name");
-	if (!nameRes)	return(false);
+    var nameRes = RDF.GetResource(NC + "Name");
+    if (!nameRes) return false;
 
-	pasteNodeRes = RDF.GetResource(pasteNodeID);
-	if (!pasteNodeRes)	return(false);
-	var pasteContainerRes = null;
-	var pasteNodeIndex = -1;
-	if (isContainerFlag == true)
-	{
-		pasteContainerRes = pasteNodeRes;
-	}
-	else
-	{
-		var parID = select_list[0].parentNode.parentNode.getAttribute("ref");
-		if (!parID)	parID = select_list[0].parentNode.parentNode.getAttribute("id");
-		if (!parID)	return(false);
-		pasteContainerRes = RDF.GetResource(parID);
-		if (!pasteContainerRes)	return(false);
-	}
-	RDFC.Init(Bookmarks, pasteContainerRes);
+    pasteNodeRes = RDF.GetResource(pasteNodeID);
+    if (!pasteNodeRes) return false;
+    var pasteContainerRes = null;
+    var pasteNodeIndex = -1;
+    if (isContainerFlag == true)
+    {
+        pasteContainerRes = pasteNodeRes;
+    }
+    else
+    {
+        var parID = select_list[0].parentNode.parentNode.getAttribute("ref");
+        if (!parID) {
+            parID = select_list[0].parentNode.parentNode.getAttribute("id");
+        }
+        if (!parID) return false;
+        pasteContainerRes = RDF.GetResource(parID);
+        if (!pasteContainerRes) return false;
+    }
+    RDFC.Init(Bookmarks, pasteContainerRes);
 
-	debug("Inited RDFC");
+    debug("Inited RDFC");
 
-	if (isContainerFlag == false)
-	{
-		pasteNodeIndex = RDFC.IndexOf(pasteNodeRes);
-		if (pasteNodeIndex < 0)	return(false);			// how did that happen?
-	}
+    if (isContainerFlag == false)
+    {
+        pasteNodeIndex = RDFC.IndexOf(pasteNodeRes);
+        if (pasteNodeIndex < 0) return false; // how did that happen?
+    }
 
-	debug("Loop over strings");
+    debug("Loop over strings");
 
-	var dirty = false;
+    var dirty = false;
+    for (var x=0; x<strings.length; x=x+2)
+    {
+        var theID = strings[x];
+        var theName = strings[x+1];
+        if ((theID.indexOf("ID:{") == 0) && (theName.indexOf("NAME:{") == 0))
+        {
+            theID = theID.substr(4, theID.length-5);
+            theName = theName.substr(6, theName.length-7);
+            debug("Paste  ID: " + theID + "    NAME: " + theName);
 
-	for (var x=0; x<strings.length; x=x+2)
-	{
-		var theID = strings[x];
-		var theName = strings[x+1];
-		if ((theID.indexOf("ID:{") == 0) && (theName.indexOf("NAME:{") == 0))
-		{
-			theID = theID.substr(4, theID.length-5);
-			theName = theName.substr(6, theName.length-7);
-			debug("Paste  ID: " + theID + "    NAME: " + theName);
+            var IDRes = RDF.GetResource(theID);
+            if (!IDRes) continue;
 
-			var IDRes = RDF.GetResource(theID);
-			if (!IDRes)	continue;
-
-			if (RDFC.IndexOf(IDRes) > 0)
-			{
-				debug("Unable to add ID:'" + theID + "' as its already in this folder.\n");
-				continue;
-			}
-
-			if (theName != "")
-			{
-				var NameLiteral = RDF.GetLiteral(theName);
-				if (NameLiteral)
-				{
-					Bookmarks.Assert(IDRes, nameRes, NameLiteral, true);
-					dirty = true;
-				}
-			}
-
-			if (isContainerFlag == true)
-			{
-				RDFC.AppendElement(IDRes);
-				debug("Appended node onto end of container");
-			}
-			else
-			{
-				RDFC.InsertElementAt(IDRes, pasteNodeIndex++, true);
-				debug("Pasted at index # " + pasteNodeIndex);
-			}
-			dirty = true;
-		}
-	}
-
-	if (dirty == true)
-	{
-		var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-		if (remote)
-		{
-			remote.Flush();
-			debug("Wrote out bookmark changes.");
-		}
-	}
-
-	return(true);
+            if (RDFC.IndexOf(IDRes) > 0)
+            {
+                debug("Unable to add ID:'" + theID +
+                      "' as its already in this folder.\n");
+                continue;
+            }
+            if (theName != "")
+            {
+                var NameLiteral = RDF.GetLiteral(theName);
+                if (NameLiteral)
+                {
+                    Bookmarks.Assert(IDRes, nameRes, NameLiteral, true);
+                    dirty = true;
+                }
+            }
+            if (isContainerFlag == true)
+            {
+                RDFC.AppendElement(IDRes);
+                debug("Appended node onto end of container");
+            }
+            else
+            {
+                RDFC.InsertElementAt(IDRes, pasteNodeIndex++, true);
+                debug("Pasted at index # " + pasteNodeIndex);
+            }
+            dirty = true;
+        }
+    }
+    if (dirty == true)
+    {
+        var rdf_ds_interface = Components.interfaces.nsIRDFRemoteDataSource;
+        var remote = Bookmarks.QueryInterface(rdf_ds_interface);
+        if (remote)
+        {
+            remote.Flush();
+            debug("Wrote out bookmark changes.");
+        }
+    }
+    return true;
 }
-
-
 
 function doDelete(promptFlag)
 {
-	var treeNode = document.getElementById("bookmarksTree");
-	if (!treeNode)    return(false);
-	var select_list = treeNode.selectedItems;
-	if (!select_list)	return(false);
-	if (select_list.length < 1)    return(false);
+    var treeNode = document.getElementById("bookmarksTree");
+    if (!treeNode) return false;
+    var select_list = treeNode.selectedItems;
+    if (!select_list) return false;
+    if (select_list.length < 1) return false;
 
-	debug("# of Nodes selected: " + select_list.length);
+    debug("# of Nodes selected: " + select_list.length);
 
-	if (promptFlag == true)
-	{
-		var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
-		var deleteStr = bundle.GetStringFromName("DeleteItems");
-		var ok = confirm(deleteStr);
-		if (!ok)	return(false);
-	}
+    if (promptFlag == true)
+    {
+        var deleteStr = get_localized_string("DeleteItems");
+        var ok = confirm(deleteStr);
+        if (!ok) return false;
+    }
 
-	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-	if (!RDF)	return(false);
+    var RDF_uri = "component://netscape/rdf/rdf-service";
+    var RDF = Components.classes[RDF_uri].getService();
+    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+    if (!RDF) return false;
 
-	var RDFC = Components.classes["component://netscape/rdf/container"].getService();
-	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
-	if (!RDFC)	return(false);
+    var RDFC_uri = "component://netscape/rdf/container";
+    var RDFC = Components.classes[RDFC_uri].getService();
+    RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
+    if (!RDFC) return false;
 
-	var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
-	if (!Bookmarks)	return(false);
+    var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+    if (!Bookmarks) return false;
 
-	var dirty = false;
+    var dirty = false;
 
-	// note: backwards delete so that we handle odd deletion cases such as
-	//       deleting a child of a folder as well as the folder itself
-	for (var nodeIndex=select_list.length-1; nodeIndex>=0; nodeIndex--)
-	{
-		var node = select_list[nodeIndex];
-		if (!node)    continue;
-		var ID = node.getAttribute("id");
-		if (!ID)    continue;
+    // note: backwards delete so that we handle odd deletion cases such as
+    //       deleting a child of a folder as well as the folder itself
+    for (var nodeIndex=select_list.length-1; nodeIndex>=0; nodeIndex--)
+    {
+        var node = select_list[nodeIndex];
+        if (!node) continue;
+        var ID = node.getAttribute("id");
+        if (!ID) continue;
 
-		// don't allow deletion of various "special" folders
-		if ((ID == "NC:BookmarksRoot") || (ID == "NC:IEFavoritesRoot"))
-		{
-			continue;
-		}
+        // don't allow deletion of various "special" folders
+        if ((ID == "NC:BookmarksRoot") || (ID == "NC:IEFavoritesRoot"))
+        {
+            continue;
+        }
 
-		var parentID = node.parentNode.parentNode.getAttribute("ref");
-		if (!parentID)	parentID = node.parentNode.parentNode.getAttribute("id");
-		if (!parentID)	continue;
+        var parentID = node.parentNode.parentNode.getAttribute("ref");
+        if (!parentID) parentID = node.parentNode.parentNode.getAttribute("id");
+        if (!parentID) continue;
 
-		debug("Node " + nodeIndex + ": " + ID);
-		debug("Parent Node " + nodeIndex + ": " + parentID);
+        debug("Node " + nodeIndex + ": " + ID);
+        debug("Parent Node " + nodeIndex + ": " + parentID);
 
-		var IDRes = RDF.GetResource(ID);
-		if (!IDRes)	continue;
-		var parentIDRes = RDF.GetResource(parentID);
-		if (!parentIDRes)	continue;
+        var IDRes = RDF.GetResource(ID);
+        if (!IDRes) continue;
+        var parentIDRes = RDF.GetResource(parentID);
+        if (!parentIDRes) continue;
 
-		RDFC.Init(Bookmarks, parentIDRes);
-		RDFC.RemoveElement(IDRes, true);
-		dirty = true;
-	}
+        RDFC.Init(Bookmarks, parentIDRes);
+        RDFC.RemoveElement(IDRes, true);
+        dirty = true;
+    }
 
-	if (dirty == true)
-	{
-		var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-		if (remote)
-		{
-			remote.Flush();
-			debug("Wrote out bookmark changes.");
-		}
-	}
+    if (dirty == true)
+    {
+        var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+        if (remote)
+        {
+            remote.Flush();
+            debug("Wrote out bookmark changes.");
+        }
+    }
 
-	return(true);
+    return true;
 }
-
-
 
 function doSelectAll()
 {
-	var treeNode = document.getElementById("bookmarksTree");
-	if (!treeNode)    return(false);
-	treeNode.selectAll();
-	return(true);
+    var treeNode = document.getElementById("bookmarksTree");
+    if (!treeNode) return false;
+    treeNode.selectAll();
+    return true;
 }
-
-
 
 function doUnload()
 {
@@ -394,207 +511,208 @@ function doUnload()
     var w = window.outerWidth;
 
     // Store these into the window attributes (for persistence).
-    var win = document.getElementById( "bookmark-window" );
-    win.setAttribute( "x", x );
-    win.setAttribute( "y", y );
-    win.setAttribute( "height", h );
-    win.setAttribute( "width", w );
+    var win = document.getElementById("bookmark-window");
+    win.setAttribute("x", x);
+    win.setAttribute("y", y);
+    win.setAttribute("height", h);
+    win.setAttribute("width", w);
 }
-
-
 
 function BookmarkProperties()
 {
-  var treeNode = document.getElementById('bookmarksTree');
-  var select_list = treeNode.selectedItems;
+    var treeNode = document.getElementById('bookmarksTree');
+    var select_list = treeNode.selectedItems;
   
-  if (select_list.length >= 1)
-    {
-      // don't bother showing properties on bookmark separators
-      var type = select_list[0].getAttribute('type');
-      if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
-        {
-          window.openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
-                            "_blank", "centerscreen,chrome,menubar",
-                            select_list[0].getAttribute("id"));
+    if (select_list.length >= 1) {
+        // don't bother showing properties on bookmark separators
+        var type = select_list[0].getAttribute('type');
+        if (type != NC + "BookmarkSeparator") {
+            window.openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
+                              "_blank", "centerscreen,chrome,menubar",
+                              select_list[0].getAttribute("id"));
         }
     }
-  return(true);
+    return true;
 }
 
 
 
 function OpenBookmarksFind()
 {
-	window.openDialog("chrome://communicator/content/bookmarks/bm-find.xul", "FindBookmarksWindow", "centerscreen,dialog=no,close,chrome,resizable");
-	return(true);
+    window.openDialog("chrome://communicator/content/bookmarks/bm-find.xul",
+                      "FindBookmarksWindow",
+                      "centerscreen,dialog=no,close,chrome,resizable");
+    return true;
 }
 
 
 
 function getAbsoluteID(root, node)
 {
-	var url = node.getAttribute("ref");
-	if ((url == null) || (url == ""))
-	{
-		url = node.getAttribute("id");
-	}
-	try
-	{
-		var rootNode = document.getElementById(root);
-		var ds = null;
-		if (rootNode)
-		{
-			ds = rootNode.database;
-		}
+    var url = node.getAttribute("ref");
+    if ((url == null) || (url == ""))
+    {
+        url = node.getAttribute("id");
+    }
+    try
+    {
+        var rootNode = document.getElementById(root);
+        var ds = null;
+        if (rootNode)
+        {
+            ds = rootNode.database;
+        }
 
-		// add support for anonymous resources such as Internet Search results,
-		// IE favorites under Win32, and NetPositive URLs under BeOS
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-		if (rdf && ds)
-		{
-			var src = rdf.GetResource(url, true);
-			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-			var target = ds.GetTarget(src, prop, true);
-			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-			if (target)	target = target.Value;
-			if (target)	url = target;
-		}
-	}
-	catch(ex)
-	{
-	}
-	return(url);
+        // add support for anonymous resources such as Internet Search results,
+        // IE favorites under Win32, and NetPositive URLs under BeOS
+        var rdf_uri = "component://netscape/rdf/rdf-service";
+        var rdf = Components.classes[rdf_uri].getService();
+        if (rdf) rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+        if (rdf && ds)
+        {
+            var src = rdf.GetResource(url, true);
+            var prop = rdf.GetResource(NC + "URL",
+                                       true);
+            var target = ds.GetTarget(src, prop, true);
+            if (target) target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+            if (target) target = target.Value;
+            if (target) url = target;
+        }
+    }
+    catch(ex)
+    {
+    }
+    return url;
 }
-
-
 
 function OpenURL(event, node, root)
 {
-	if ((event.button != 1) || (event.clickCount != 2) || (node.nodeName != "treeitem"))
-		return(false);
+    if ((event.button != 1) || (event.clickCount != 2)
+        || (node.nodeName != "treeitem"))
+        return false;
 
-	if (node.getAttribute("container") == "true")
-		return(false);
+    if (node.getAttribute("container") == "true")
+        return false;
 
-	var url = getAbsoluteID(root, node);
+    var url = getAbsoluteID(root, node);
 
-	// Ignore "NC:" urls.
-	if (url.substring(0, 3) == "NC:")
-		return(false);
+    // Ignore "NC:" urls.
+    if (url.substring(0, 3) == "NC:")
+        return false;
 
-	// get right sized window
-	window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
-	return(true);
+    // get right sized window
+    window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+    return true;
 }
 
 function doSort(sortColName)
 {
-	var node = document.getElementById(sortColName);
-	// determine column resource to sort on
-	var sortResource = node.getAttribute('resource');
-	if (!node)	return(false);
+    var node = document.getElementById(sortColName);
+    // determine column resource to sort on
+    var sortResource = node.getAttribute('resource');
+    if (!node) return false;
 
-	var sortDirection="ascending";
-	var isSortActive = node.getAttribute('sortActive');
-	if (isSortActive == "true")
-	{
-		var currentDirection = node.getAttribute('sortDirection');
-		if (currentDirection == "ascending")
-			sortDirection = "descending";
-		else if (currentDirection == "descending")
-			sortDirection = "natural";
-		else	sortDirection = "ascending";
-	}
+    var sortDirection="ascending";
+    var isSortActive = node.getAttribute('sortActive');
+    if (isSortActive == "true")
+    {
+        var currentDirection = node.getAttribute('sortDirection');
+        if (currentDirection == "ascending")
+            sortDirection = "descending";
+        else if (currentDirection == "descending")
+            sortDirection = "natural";
+        else    sortDirection = "ascending";
+    }
 
-	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
-	if (!isupports)    return(false);
-	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
-	if (!xulSortService)    return(false);
-	try
-	{
-		xulSortService.Sort(node, sortResource, sortDirection);
-	}
-	catch(ex)
-	{
-		debug("Exception calling xulSortService.Sort()");
-	}
-	return(false);
+    var isupports_uri = "component://netscape/rdf/xul-sort-service";
+    var isupports = Components.classes[isupports_uri].getService();
+    if (!isupports) return false;
+    var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+    if (!xulSortService) return false;
+    try
+    {
+        xulSortService.Sort(node, sortResource, sortDirection);
+    }
+    catch(ex)
+    {
+        debug("Exception calling xulSortService.Sort()");
+    }
+    return false;
 }
-
-
 
 function fillContextMenu(name)
 {
-    if (!name)    return(false);
+    if (!name) return false;
     var popupNode = document.getElementById(name);
-    if (!popupNode)    return(false);
+    if (!popupNode) return false;
     // remove the menu node (which tosses all of its kids);
     // do this in case any old command nodes are hanging around
-	while (popupNode.childNodes.length)
-	{
-	  popupNode.removeChild(popupNode.childNodes[0]);
-	}
+    while (popupNode.childNodes.length)
+    {
+      popupNode.removeChild(popupNode.childNodes[0]);
+    }
 
     var treeNode = document.getElementById("bookmarksTree");
-    if (!treeNode)    return(false);
+    if (!treeNode) return false;
     var db = treeNode.database;
-    if (!db)    return(false);
+    if (!db) return false;
     
     var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    if (!compositeDB)    return(false);
+    if (!compositeDB) return false;
 
-    var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
-    if (!isupports)    return(false);
+    var isupports_uri = "component://netscape/rdf/rdf-service";
+    var isupports = Components.classes[isupports_uri].getService();
+    if (!isupports) return false;
     var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
-    if (!rdf)    return(false);
+    if (!rdf) return false;
 
     var target_item = document.popupNode.parentNode.parentNode;
     if (target_item && target_item.nodeName == "treeitem")
     {
-	    if (target_item.getAttribute('selected') != 'true') {
-	      treeNode.selectItem(target_item);
-	    }
+        if (target_item.getAttribute('selected') != 'true') {
+          treeNode.selectItem(target_item);
+        }
     }
 
     var select_list = treeNode.selectedItems;
     debug("# of Nodes selected: " + treeNode.selectedItems.length + "\n");
 
-    var separatorResource = rdf.GetResource("http://home.netscape.com/NC-rdf#BookmarkSeparator");
-    if (!separatorResource)	return(false);
+    var separatorResource =
+        rdf.GetResource(NC + "BookmarkSeparator");
+    if (!separatorResource) return false;
 
     // perform intersection of commands over selected nodes
     var cmdArray = new Array();
     var selectLength = select_list.length;
-    if (selectLength == 0)	selectLength = 1;
+    if (selectLength == 0) selectLength = 1;
     for (var nodeIndex=0; nodeIndex < selectLength; nodeIndex++)
     {
-    	var id = null;
+        var id = null;
 
-	// if nothing is selected, get commands for the "ref" of the bookmarks root
-    	if (select_list.length == 0)
-    	{
-		id = treeNode.getAttribute("ref");
-	        if (!id)    break;
-    	}
-    	else
-    	{
-	        var node = select_list[nodeIndex];
-	        if (!node)    break;
-	        id = node.getAttribute("id");
-	        if (!id)    break;
-	}
+        // If nothing is selected, get commands for the "ref"
+        // of the bookmarks root
+        if (select_list.length == 0)
+        {
+            id = treeNode.getAttribute("ref");
+            if (!id) break;
+        }
+        else
+        {
+            var node = select_list[nodeIndex];
+            if (!node) break;
+            id = node.getAttribute("id");
+            if (!id) break;
+        }
         var rdfNode = rdf.GetResource(id);
-        if (!rdfNode)    break;
+        if (!rdfNode) break;
         var cmdEnum = db.GetAllCmds(rdfNode);
-        if (!cmdEnum)    break;
+        if (!cmdEnum) break;
 
         var nextCmdArray = new Array();
         while (cmdEnum.HasMoreElements())
         {
             var cmd = cmdEnum.GetNext();
-            if (!cmd)    break;
+            if (!cmd) break;
 
             if (nodeIndex == 0)
             {
@@ -610,8 +728,10 @@ function fillContextMenu(name)
             // perform command intersection calculation
             for (var cmdIndex = 0; cmdIndex < cmdArray.length; cmdIndex++)
             {
-                var    cmdFound = false;
-                for (var nextCmdIndex = 0; nextCmdIndex < nextCmdArray.length; nextCmdIndex++)
+                var cmdFound = false;
+                for (var nextCmdIndex = 0;
+                     nextCmdIndex < nextCmdArray.length;
+                     nextCmdIndex++)
                 {
                     if (nextCmdArray[nextCmdIndex] == cmdArray[cmdIndex])
                     {
@@ -621,354 +741,369 @@ function fillContextMenu(name)
                 }
                 if ((cmdFound == false) && (cmdArray[cmdIndex]))
                 {
-			var cmdResource = cmdArray[cmdIndex].QueryInterface(Components.interfaces.nsIRDFResource);
-                	if ((cmdResource) && (cmdResource != separatorResource))
-                	{
-				cmdArray[cmdIndex] = null;
-			}
+                    var cmdResource = cmdArray[cmdIndex].QueryInterface(Components.interfaces.nsIRDFResource);
+                    if ((cmdResource) && (cmdResource != separatorResource))
+                    {
+                        cmdArray[cmdIndex] = null;
+                    }
                 }
             }
         }
     }
 
     // need a resource to ask RDF for each command's name
-    var rdfNameResource = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
-    if (!rdfNameResource)        return(false);
+    var rdfNameResource = rdf.GetResource(NC + "Name");
+    if (!rdfNameResource) return false;
 
 /*
     // build up menu items
-    if (cmdArray.length < 1)    return(false);
+    if (cmdArray.length < 1) return false;
 */
 
     var lastWasSep = false;
     for (var cmdIndex = 0; cmdIndex < cmdArray.length; cmdIndex++)
     {
         var cmd = cmdArray[cmdIndex];
-        if (!cmd)        continue;
+        if (!cmd) continue;
         var cmdResource = cmd.QueryInterface(Components.interfaces.nsIRDFResource);
-        if (!cmdResource)    break;
+        if (!cmdResource) break;
 
-	// handle separators
-	if (cmdResource == separatorResource)
-	{
-		if (lastWasSep != true)
-		{
-			lastWasSep = true;
-		        var menuItem = document.createElement("menuseparator");
-		        popupNode.appendChild(menuItem);
-		}
-		continue;
-	}
-
-	lastWasSep = false;
-
-        var cmdNameNode = compositeDB.GetTarget(cmdResource, rdfNameResource, true);
-        if (!cmdNameNode)    break;
-        cmdNameLiteral = cmdNameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
-        if (!cmdNameLiteral)    break;
-        cmdName = cmdNameLiteral.Value;
-        if (!cmdName)        break;
-
-        debug("Command #" + cmdIndex + ": id='" + cmdResource.Value + "'  name='" + cmdName + "'");
-
-        var menuItem = document.createElement("menuitem");
-        menuItem.setAttribute("value", cmdName);        
-        popupNode.appendChild(menuItem);
-        // work around bug # 26402 by setting "oncommand" attribute AFTER appending menuitem
-        menuItem.setAttribute("oncommand", "return doContextCmd('" + cmdResource.Value + "');");
+    // handle separators
+    if (cmdResource == separatorResource)
+    {
+        if (lastWasSep != true)
+        {
+            lastWasSep = true;
+                var menuItem = document.createElement("menuseparator");
+                popupNode.appendChild(menuItem);
+        }
+        continue;
     }
 
-	// strip off leading/trailing menuseparators
-	while (popupNode.childNodes.length > 0)
-	{
-		if (popupNode.childNodes[0].tagName != "menuseparator")
-			break;
-		popupNode.removeChild(popupNode.childNodes[0]);
-	}
-	while (popupNode.childNodes.length > 0)
-	{
-		if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
-			break;
-		popupNode.removeChild(popupNode.childNodes[popupNode.childNodes.length - 1]);
-	}
+    lastWasSep = false;
 
-	// if one and only one node is selected
-	if (treeNode.selectedItems.length == 1)
-	{
-		// and its a bookmark or a bookmark folder (there can be other types,
-		// not just separators, so check explicitly for what we allow)
-		var type = select_list[0].getAttribute("type");
-		if ((type == "http://home.netscape.com/NC-rdf#Bookmark") ||
-			(type == "http://home.netscape.com/NC-rdf#Folder"))
-		{
-			// then add a menu separator (if necessary)
-			if (popupNode.childNodes.length > 0)
-			{
-				if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
-				{
-					var menuSep = document.createElement("menuseparator");
-					popupNode.appendChild(menuSep);
-				}
-			}
+        var cmdNameNode = compositeDB.GetTarget(cmdResource, rdfNameResource, 
+                                                true);
+        if (!cmdNameNode) break;
+        cmdNameLiteral = cmdNameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        if (!cmdNameLiteral) break;
+        cmdName = cmdNameLiteral.Value;
+        if (!cmdName) break;
 
-			// and then add a "Properties" menu items
-			var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
-			var propMenuName = bundle.GetStringFromName("BookmarkProperties");
-			var menuItem = document.createElement("menuitem");
-			menuItem.setAttribute("value", propMenuName);
-			popupNode.appendChild(menuItem);
-		        // work around bug # 26402 by setting "oncommand" attribute AFTER appending menuitem
-			menuItem.setAttribute("oncommand", "return BookmarkProperties();");
-		}
-	}
+        debug("Command #" + cmdIndex + ": id='" + cmdResource.Value +
+              "'  name='" + cmdName + "'");
 
-    return(true);
+        var menuItem = document.createElement("menuitem");
+        menuItem.setAttribute("value", cmdName);
+        popupNode.appendChild(menuItem);
+        // Work around bug #26402 by setting "oncommand" attribute
+        // AFTER appending menuitem
+        menuItem.setAttribute("oncommand",
+                              "return doContextCmd('"+cmdResource.Value+"');");
+    }
+
+    // strip off leading/trailing menuseparators
+    while (popupNode.childNodes.length > 0)
+    {
+        if (popupNode.childNodes[0].tagName != "menuseparator")
+            break;
+        popupNode.removeChild(popupNode.childNodes[0]);
+    }
+    while (popupNode.childNodes.length > 0)
+    {
+        if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
+            break;
+        popupNode.removeChild(popupNode.childNodes[popupNode.childNodes.length - 1]);
+    }
+
+    // if one and only one node is selected
+    if (treeNode.selectedItems.length == 1)
+    {
+        // and its a bookmark or a bookmark folder (there can be other types,
+        // not just separators, so check explicitly for what we allow)
+        var type = select_list[0].getAttribute("type");
+        if ((type == NC + "Bookmark") ||
+            (type == NC + "Folder"))
+        {
+            // then add a menu separator (if necessary)
+            if (popupNode.childNodes.length > 0)
+            {
+                if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
+                {
+                    var menuSep = document.createElement("menuseparator");
+                    popupNode.appendChild(menuSep);
+                }
+            }
+
+            // And then add a "Properties" menu items
+            var propMenuName = get_localized_string("BookmarkProperties");
+            var menuItem = document.createElement("menuitem");
+            menuItem.setAttribute("value", propMenuName);
+            popupNode.appendChild(menuItem);
+            // Work around bug # 26402 by setting "oncommand" attribute
+            // AFTER appending menuitem
+            menuItem.setAttribute("oncommand", "return BookmarkProperties();");
+        }
+    }
+
+    return true;
 }
-
 
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
-
-
 function doContextCmd(cmdName)
 {
-	debug("doContextCmd start: cmd='" + cmdName + "'");
+    debug("doContextCmd start: cmd='" + cmdName + "'");
 
-	var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
+    // Do some prompting/confirmation for various bookmark
+    // commands that we know about.
+    // If we have values to pass it, they are added to the arguments array
 
-	// do some prompting/confirmation for various bookmark commands that we know about;
-	// if we have values to pass it, they are added to the arguments array
+    var nameVal = "";
+    var urlVal = "";
 
-	var	nameVal = "", urlVal = "";
+    if (cmdName == NC + "command?cmd=newbookmark")
+    {
+        while (true)
+        {
+            var promptStr = get_localized_string("NewBookmarkURLPrompt");
+            urlVal = prompt(promptStr, "");
+            if (!urlVal || urlVal=="") return false;
+            
+            // ensure we get a fully qualified URL (protocol colon address)
+            var colonOffset = urlVal.indexOf(":");
+            if (colonOffset > 0) break;
+            alert(get_localized_string("NeedValidURL"));
+        }
 
-	if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=newbookmark")
-	{
-		while (true)
-		{
-			var promptStr = bundle.GetStringFromName("NewBookmarkURLPrompt");
-			urlVal = prompt(promptStr, "");
-			if (!urlVal || urlVal=="")	return(false);
-			
-			// ensure we get a fully qualified URL (protocol colon address)
-			var colonOffset = urlVal.indexOf(":");
-			if (colonOffset > 0)	break;
-			alert(bundle.GetStringFromName("NeedValidURL"));
-		}
+        promptStr = get_localized_string("NewBookmarkNamePrompt");
+        nameVal = prompt(promptStr, "");
+        if (!nameVal || nameVal=="") return false;
+    }
+    else if (cmdName == NC + "command?cmd=newfolder")
+    {
+        var promptStr = get_localized_string("NewFolderNamePrompt");
+        nameVal = prompt(promptStr, "");
+        if (!nameVal || nameVal=="") return false;
+    }
+    else if ((cmdName == NC + "command?cmd=deletebookmark") ||
+         (cmdName == NC + "command?cmd=deletebookmarkfolder") ||
+         (cmdName == NC + "command?cmd=deletebookmarkseparator"))
+    {
+        var promptStr = get_localized_string("DeleteItems");
+        if (!confirm(promptStr)) return false;
+    }
+    else if (cmdName == NC + "command?cmd=import")
+    {
+        try
+        {
+            var picker_uri = "component://netscape/filespecwithui";
+            var filePicker = Components.classes[picker_uri].createInstance();
+            if (filePicker) {
+                filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
+            }
+            if (!filePicker) return false;
 
-		promptStr = bundle.GetStringFromName("NewBookmarkNamePrompt");
-		nameVal = prompt(promptStr, "");
-		if (!nameVal || nameVal=="")	return(false);
-	}
-	else if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=newfolder")
-	{
-		var promptStr = bundle.GetStringFromName("NewFolderNamePrompt");
-		nameVal = prompt(promptStr, "");
-		if (!nameVal || nameVal=="")	return(false);
-	}
-	else if ((cmdName == "http://home.netscape.com/NC-rdf#command?cmd=deletebookmark") ||
-		 (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=deletebookmarkfolder") ||
-		 (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=deletebookmarkseparator"))
-	{
-		var promptStr = bundle.GetStringFromName("DeleteItems");
-		if (!confirm(promptStr))	return(false);
-	}
-	else if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=import")
-	{
-		try
-		{
-			var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
-	                if (filePicker)	filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
-	                if (!filePicker)	return(false);
+            var promptStr = get_localized_string("SelectImport");
+            // 2 = html filter
+            filePicker.chooseInputFile(promptStr, 2, "", "");
+            var filespec = filePicker.QueryInterface(Components.interfaces.nsIFileSpec);
+            if (!filespec) return false;
+            var filename = filespec.URLString;
+            if ((!filename) || (filename == "")) return false;
 
-			var promptStr = bundle.GetStringFromName("SelectImport");
+            debug("Import: '" + filename + "'\n");
+            urlVal = filename;
+        }
+        catch(ex)
+        {
+            return false;
+        }
+    }
+    else if (cmdName == NC + "command?cmd=export")
+    {
+        try
+        {
+            var picker_uri = "component://netscape/filespecwithui";
+            var filePicker = Components.classes[picker_uri].createInstance();
+            if (filePicker) {
+                filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
+            }
+            if (!filePicker) return false;
 
-			filePicker.chooseInputFile(promptStr, 2, "", "");		// 2 = html filter
-			var filespec = filePicker.QueryInterface(Components.interfaces.nsIFileSpec);
-			if (!filespec)		return(false);
-			var filename = filespec.URLString;
-			if ((!filename) || (filename == ""))	return(false);
+            var promptStr = get_localized_string("EnterExport");
+            // 2 = html filter
+            filePicker.chooseOutputFile(promptStr, "bookmarks.html", 2); 
 
-			debug("Import: '" + filename + "'\n");
-			urlVal = filename;
-		}
-		catch(ex)
-		{
-			return(false);
-		}
-	}
-	else if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=export")
-	{
-		try
-		{
-			var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
-	                if (filePicker)	filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
-	                if (!filePicker)	return(false);
+            var filespec = filePicker.QueryInterface(Components.interfaces.nsIFileSpec);
+            if (!filespec) return false;
+            var filename = filespec.URLString;
+            if ((!filename) || (filename == "")) return false;
 
-			var promptStr = bundle.GetStringFromName("EnterExport");
+            debug("Export: '" + filename + "'\n");
+            urlVal = filename;
+        }
+        catch(ex)
+        {
+            return false;
+        }
+    }
 
-			filePicker.chooseOutputFile(promptStr, "bookmarks.html", 2);	// 2 = html filter
-			var filespec = filePicker.QueryInterface(Components.interfaces.nsIFileSpec);
-			if (!filespec)		return(false);
-			var filename = filespec.URLString;
-			if ((!filename) || (filename == ""))	return(false);
+    var treeNode = document.getElementById("bookmarksTree");
+    if (!treeNode) return false;
+    var db = treeNode.database;
+    if (!db) return false;
 
-			debug("Export: '" + filename + "'\n");
-			urlVal = filename;
-		}
-		catch(ex)
-		{
-			return(false);
-		}
-	}
+    var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    if (!compositeDB) return false;
 
-	var treeNode = document.getElementById("bookmarksTree");
-	if (!treeNode)    return(false);
-	var db = treeNode.database;
-	if (!db)    return(false);
+    var isupports_uri = "component://netscape/rdf/rdf-service";
+    var isupports = Components.classes[isupports_uri].getService();
+    if (!isupports) return false;
+    var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
+    if (!rdf) return false;
 
-	var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	if (!compositeDB)    return(false);
+    // need a resource for the command
+    var cmdResource = rdf.GetResource(cmdName);
+    if (!cmdResource) return false;
+    cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
+    if (!cmdResource) return false;
 
-	var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
-	if (!isupports)    return(false);
-	var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
-	if (!rdf)    return(false);
+    // set up selection nsISupportsArray
+    var selection_uri = "component://netscape/supports-array";
+    var selectionInstance = Components.classes[selection_uri].createInstance();
+    var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
-	// need a resource for the command
-	var cmdResource = rdf.GetResource(cmdName);
-	if (!cmdResource)        return(false);
-	cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
-	if (!cmdResource)        return(false);
+    // set up arguments nsISupportsArray
+    var arguments_uri = "component://netscape/supports-array";
+    var argumentsInstance = Components.classes[arguments_uri].createInstance();
+    var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
-	// set up selection nsISupportsArray
-	var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
-	var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
+    // get various arguments (parent, name)
+    var parentArc = rdf.GetResource(NC + "parent");
+    if (!parentArc) return false;
+    var nameArc = rdf.GetResource(NC + "Name");
+    if (!nameArc) return false;
+    var urlArc = rdf.GetResource(NC + "URL");
+    if (!urlArc) return false;
 
-	// set up arguments nsISupportsArray
-	var argumentsInstance = Components.classes["component://netscape/supports-array"].createInstance();
-	var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
+    var select_list = treeNode.selectedItems;
+    debug("# of Nodes selected: " + select_list.length);
 
-	// get various arguments (parent, name)
-	var parentArc = rdf.GetResource("http://home.netscape.com/NC-rdf#parent");
-	if (!parentArc)	return(false);
-	var nameArc = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
-	if (!nameArc)	return(false);
-	var urlArc = rdf.GetResource("http://home.netscape.com/NC-rdf#URL");
-	if (!urlArc)	return(false);
+    if (select_list.length < 1)
+    {
+        // if nothing is selected, default to using the "ref"
+        // on the root of the tree
+        var uri = treeNode.getAttribute("ref");
+        if (!uri || uri=="") return false;
+        var rdfNode = rdf.GetResource(uri);
+        // add node into selection array
+        if (rdfNode)
+        {
+            selectionArray.AppendElement(rdfNode);
+        }
 
-	var select_list = treeNode.selectedItems;
-	debug("# of Nodes selected: " + select_list.length);
+        // add singular arguments into arguments array
+        if ((nameVal) && (nameVal != ""))
+        {
+            var nameLiteral = rdf.GetLiteral(nameVal);
+            if (!nameLiteral) return false;
+            argumentsArray.AppendElement(nameArc);
+            argumentsArray.AppendElement(nameLiteral);
+        }
+        if ((urlVal) && (urlVal != ""))
+        {
+            var urlLiteral = rdf.GetLiteral(urlVal);
+            if (!urlLiteral) return false;
+            argumentsArray.AppendElement(urlArc);
+            argumentsArray.AppendElement(urlLiteral);
+        }
+    }
+    else for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+    {
+        var node = select_list[nodeIndex];
+        if (!node) break;
+        var uri = node.getAttribute("ref");
+        if ((uri) || (uri == ""))
+        {
+            uri = node.getAttribute("id");
+        }
+        if (!uri) return false;
 
-	if (select_list.length < 1)
-	{
-		// if nothing is selected, default to using the "ref" on the root of the tree
-		var	uri = treeNode.getAttribute("ref");
-		if (!uri || uri=="")    return(false);
-		var rdfNode = rdf.GetResource(uri);
-		// add node into selection array
-		if (rdfNode)
-		{
-			selectionArray.AppendElement(rdfNode);
-		}
+        var rdfNode = rdf.GetResource(uri);
+        if (!rdfNode) break;
 
-		// add singular arguments into arguments array
-		if ((nameVal) && (nameVal != ""))
-		{
-			var nameLiteral = rdf.GetLiteral(nameVal);
-			if (!nameLiteral)	return(false);
-			argumentsArray.AppendElement(nameArc);
-			argumentsArray.AppendElement(nameLiteral);
-		}
-		if ((urlVal) && (urlVal != ""))
-		{
-			var urlLiteral = rdf.GetLiteral(urlVal);
-			if (!urlLiteral)	return(false);
-			argumentsArray.AppendElement(urlArc);
-			argumentsArray.AppendElement(urlLiteral);
-		}
-	}
-	else for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
-	{
-		var node = select_list[nodeIndex];
-		if (!node)    break;
-		var	uri = node.getAttribute("ref");
-		if ((uri) || (uri == ""))
-		{
-			uri = node.getAttribute("id");
-		}
-		if (!uri)    return(false);
+        // add node into selection array
+        selectionArray.AppendElement(rdfNode);
 
-		var rdfNode = rdf.GetResource(uri);
-		if (!rdfNode)    break;
+        // get the parent's URI
+        var parentURI = "";
+        var theParent = node;
+        while (theParent)
+        {
+            theParent = theParent.parentNode;
 
-		// add node into selection array
-		selectionArray.AppendElement(rdfNode);
+            parentURI = theParent.getAttribute("ref");
+            if ((!parentURI) || (parentURI == ""))
+            {
+                parentURI = theParent.getAttribute("id");
+            }
+            if (parentURI != "") break;
+        }
+        if (parentURI == "") return false;
 
-		// get the parent's URI
-		var parentURI="";
-		var	theParent = node;
-		while (theParent)
-		{
-			theParent = theParent.parentNode;
+        var parentNode = rdf.GetResource(parentURI, true);
+        if (!parentNode) return false;
 
-			parentURI = theParent.getAttribute("ref");
-			if ((!parentURI) || (parentURI == ""))
-			{
-				parentURI = theParent.getAttribute("id");
-			}
-			if (parentURI != "")	break;
-		}
-		if (parentURI == "")    return(false);
+        // add multiple arguments into arguments array
+        argumentsArray.AppendElement(parentArc);
+        argumentsArray.AppendElement(parentNode);
 
-		var parentNode = rdf.GetResource(parentURI, true);
-		if (!parentNode)	return(false);
+        if ((nameVal) && (nameVal != ""))
+        {
+            var nameLiteral = rdf.GetLiteral(nameVal);
+            if (!nameLiteral) return false;
+            argumentsArray.AppendElement(nameArc);
+            argumentsArray.AppendElement(nameLiteral);
+        }
+        if ((urlVal) && (urlVal != ""))
+        {
+            var urlLiteral = rdf.GetLiteral(urlVal);
+            if (!urlLiteral) return false;
+            argumentsArray.AppendElement(urlArc);
+            argumentsArray.AppendElement(urlLiteral);
+        }
+    }
 
-		// add multiple arguments into arguments array
-		argumentsArray.AppendElement(parentArc);
-		argumentsArray.AppendElement(parentNode);
+    // do the command
+    compositeDB.DoCommand(selectionArray, cmdResource, argumentsArray);
 
-		if ((nameVal) && (nameVal != ""))
-		{
-			var nameLiteral = rdf.GetLiteral(nameVal);
-			if (!nameLiteral)	return(false);
-			argumentsArray.AppendElement(nameArc);
-			argumentsArray.AppendElement(nameLiteral);
-		}
-		if ((urlVal) && (urlVal != ""))
-		{
-			var urlLiteral = rdf.GetLiteral(urlVal);
-			if (!urlLiteral)	return(false);
-			argumentsArray.AppendElement(urlArc);
-			argumentsArray.AppendElement(urlLiteral);
-		}
-	}
-
-	// do the command
-	compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
-
-	debug("doContextCmd ends.");
-	return(true);
+    debug("doContextCmd ends.");
+    return true;
 }
-
-
 
 function bookmarkSelect()
 {
-	var tree = document.getElementById( "bookmarksTree" );
-	var status = document.getElementById( "statusbar-text" );
-	var val = "";
-	if( tree.selectedItems.length == 1 )
-	{
-		val = getAbsoluteID("bookmarksTree", tree.selectedItems[0]);
+    var tree = document.getElementById("bookmarksTree");
+    var status = document.getElementById("statusbar-text");
+    var val = "";
+    if (tree.selectedItems.length == 1)
+    {
+        val = getAbsoluteID("bookmarksTree", tree.selectedItems[0]);
 
-		// Ignore "NC:" urls.
-		if (val.substring(0, 3) == "NC:")
-		{
-			val = "";
-		}
-	}
-	status.setAttribute( "value", val );
-	return(true);
+        // Ignore "NC:" urls.
+        if (val.substring(0, 3) == "NC:")
+        {
+            val = "";
+        }
+    }
+    status.setAttribute("value", val);
+    return true;
 }
 
+function get_localized_string(name) {
+    var uri = "chrome://communicator/locale/bookmarks/bookmark.properties";
+    var bundle = srGetStrBundle(uri);
+    return bundle.GetStringFromName(name);
+}

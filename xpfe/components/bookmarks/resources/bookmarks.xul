@@ -35,6 +35,7 @@
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   width="630" height="400" x="20" y="20" persist="width height x y" align="vertical"
+  onload="Init();"
   ondraggesture="return TopLevelDrag(event);"
   windowtype="bookmarks:manager"
   >
@@ -45,24 +46,61 @@
   <html:script src="chrome://global/content/strres.js"/>
   <html:script src="chrome://global/content/globalOverlay.js"/>
 
+<commands id="commands">
+  <commandset id="CommandUpdate_Bookmarks"
+    commandupdater="true"
+    events="focus,tree-select"
+    oncommandupdate="CommandUpdate_Bookmarks()"/>
+  <commandset id="globalEditMenuItems">
+    <command id="bm_cmd_find" oncommand="return OpenBookmarksFind();"/>
+    <command id="bm_cmd_properties" oncommand="return BookmarkProperties();"/>
+  </commandset>
+</commands>
+
 <broadcasterset id="broadcasterset">
-	<!-- File Menu -->
-	<broadcaster id="cmd_newNavigator"/>
-	<broadcaster id="cmd_newMessage"/>
-	<broadcaster id="cmd_newEditor"/>
-	<broadcaster id="cmd_close"/>
+  <!-- File Menu -->
+  <broadcaster id="cmd_newNavigator"/>
+  <broadcaster id="cmd_newMessage"/>
+  <broadcaster id="cmd_newEditor"/>
+  <broadcaster id="cmd_close"/>
+  <broadcaster id="cmd_quit"/>
+  <broadcaster id="bm_cmd_saveas"/>
+  <!-- Edit Menu -->
+  <broadcaster id="cmd_undo"/>
+  <broadcaster id="cmd_redo"/>
+  <broadcaster id="cmd_cut"/>
+  <broadcaster id="cmd_copy"/>
+  <broadcaster id="cmd_paste"/>
+  <broadcaster id="cmd_delete"/>
+  <broadcaster id="cmd_selectAll"/>
 </broadcasterset>
+
 <keyset id="keyset">
-	<!-- File Menu -->
-	<key id="key_newNavigator"/>
-	<key id="key_newMessage"/>
-	<key id="key_close"/>
+  <!-- File Menu -->
+  <key id="key_newNavigator"/>
+  <key id="key_newMessage"/>
+  <key id="key_newEditor"/>
+  <key id="key_close"/>
+  <key id="key_quit"/>
+  <key id="bm_key_saveas" xulkey="true" key="&file.saveas.keybinding;"
+    observes="bm_cmd_saveas"/>
+  <!-- Edit Menu -->
+  <key id="key_undo"/>
+  <key id="key_redo"/>
+  <key id="key_cut"/>
+  <key id="key_copy"/>
+  <key id="key_paste"/>
+  <key id="key_delete"/>
+  <key id="key_selectAll"/>
+  <key id="bm_key_find" xulkey="true" key="&edit.find.keybinding;"/>
+  <key id="bm_key_properties" xulkey="true"
+    key="&edit.properties.keybinding;"/>
 </keyset>
 
 <menubar>
   <menu id="menu_File">
     <menupopup id="menu_FilePopup">
-      <menuitem value="&menuitem.newBookmark.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newbookmark');" />
+      <menuitem accesskey="&menuitem.newBookmark.accesskey;" value="&menuitem.newBookmark.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newbookmark');" />
       <menu id="menu_New">
         <menupopup id="menu_NewPopup">
           <menuitem value="&menuitem.newFolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newfolder');"/>
@@ -75,26 +113,32 @@
         </menupopup>
       </menu>
       <menuseparator/>
+      <menuitem id="menu_close"/>
+      <menuitem observes="bm_cmd_saveas" key="bm_key_saveas"
+        accesskey="&menuitem.saveas.accesskey;" 
+        value="&menuitem.saveas.label;" disabled="true" />
+      <menuseparator/>
       <menuitem value="&menuitem.import.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=import');" />
       <menuitem value="&menuitem.export.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=export');" />
       <menuseparator/>
-      <menuitem id="menu_close"/>
     </menupopup>
   </menu>
 
   <menu id="menu_Edit">
     <menupopup>
-      <menuitem value="&menuitem.undo.label;" disabled="true" />
+      <menuitem id="menu_undo" disabled="true" />
       <menuseparator/>
-      <menuitem value="&menuitem.cut.label;" oncommand="return doCut()" />
-      <menuitem value="&menuitem.copy.label;" oncommand="return doCopy()" />
-      <menuitem value="&menuitem.paste.label;" oncommand="return doPaste()" />
-      <menuitem value="&menuitem.delete.label;" oncommand="return doDelete(true)" />
-      <menuitem value="&menuitem.selectAll.label;" oncommand="return doSelectAll()" />
+      <menuitem id="menu_cut"/>
+      <menuitem id="menu_copy"/>
+      <menuitem id="menu_paste"/>
+      <menuitem id="menu_delete"/>
+      <menuitem id="menu_selectAll"/>
       <menuseparator/>
-      <menuitem value="&menuitem.find.label;" oncommand="return OpenBookmarksFind();"/>
+      <menuitem observes="bm_cmd_find" key="bm_key_find"
+        value="&menuitem.find.label;"/>
       <menuseparator/>
-      <menuitem value="&menuitem.properties.label;" oncommand="return BookmarkProperties();"/>
+      <menuitem observes="bm_cmd_properties" key="bm_key_properties" 
+        value="&menuitem.properties.label;" />
     </menupopup>
   </menu>
 
@@ -232,7 +276,7 @@
       </treecell>
     </treerow>
   </treehead>
-  <treechildren onclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"/>
+  <treechildren id="treechildren-bookmarks" onclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"/>
 </tree>
 
 <!--

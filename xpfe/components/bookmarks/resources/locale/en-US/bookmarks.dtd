@@ -22,20 +22,20 @@
 <!-- extracted from ./bookmarks.xul -->
 
 <!ENTITY menuitem.newBookmark.label     "New Bookmark">
+<!ENTITY menuitem.newBookmark.accesskey "N">
 <!ENTITY menuitem.newFolder.label       "New Folder">
 <!ENTITY menuitem.newSeparator.label    "New Separator">
-<!ENTITY menuitem.import.label          "Import...">
-<!ENTITY menuitem.export.label          "Export...">
-
-<!ENTITY menuitem.undo.label            "Undo">
-<!ENTITY menuitem.redo.label            "Redo">
-<!ENTITY menuitem.cut.label             "Cut">
-<!ENTITY menuitem.copy.label            "Copy">
-<!ENTITY menuitem.paste.label           "Paste">
-<!ENTITY menuitem.delete.label          "Delete">
-<!ENTITY menuitem.selectAll.label       "Select All">
+<!ENTITY menuitem.saveas.label          "Save As...">
+<!ENTITY menuitem.saveas.accesskey      "S">
+<!ENTITY file.saveas.keybinding         "s">
+<!ENTITY menuitem.import.label          "Import Bookmarks...">
+<!ENTITY menuitem.export.label          "Export Bookmarks...">
 <!ENTITY menuitem.find.label            "Find...">
+<!ENTITY menuitem.find.accesskey        "F">
+<!ENTITY edit.find.keybinding           "f">
 <!ENTITY menuitem.properties.label      "Properties...">
+<!ENTITY menuitem.properties.accesskey  "o">
+<!ENTITY edit.properties.keybinding     "e">
 
 <!ENTITY menuitem.newbookmarkfolder.label         "Set as New Bookmark Folder">
 <!ENTITY menuitem.newinternetsearchfolder.label   "Set as New Internet Search Folder">
