@@ -36,10 +36,6 @@
 <!ENTITY formatMenu.label "Format">
 <!ENTITY formatmenu.accesskey "o">
 
-<!-- Table menu items -->
-<!ENTITY tableMenu.label "Table">
-<!ENTITY tablemenu.accesskey "t">
-
 <!ENTITY helpMenu.label "Help">
 <!ENTITY aboutCmd.label ".About">
 

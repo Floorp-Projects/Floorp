@@ -235,6 +235,9 @@
 <!ENTITY insertbreak.accesskey "b">
 
 <!-- Format Menu -->
+<!ENTITY formatMenu.label "Format">
+<!ENTITY formatmenu.accesskey "o">
+
 <!-- Font Face SubMenu -->
 <!ENTITY fontfaceMenu.label "Font Face">
 <!ENTITY formatfontmenu.accesskey "f">
@@ -406,6 +409,12 @@
 <!ENTITY colorsandbackground.accesskey "k">
 
 <!-- Table Menu -->
+<!ENTITY tableMenu.label "Table">
+<!ENTITY tablemenu.accesskey "t">
+<!-- Select submenu -->
+<!ENTITY tableSelectMenu.label "Select">
+<!ENTITY tableselectmenu.accesskey "s">
+
 <!-- Insert SubMenu -->
 <!ENTITY tableInsertMenu.label "Insert">
 <!ENTITY tableinsertmenu.accesskey "i">
@@ -437,7 +446,7 @@
 <!ENTITY tablejoin.accesskey "j">
 <!-- These may be shared in other menus -->
 <!ENTITY properties.label "Properties...">
-<!ENTITY properties.accesskey "p">
+<!ENTITY properties.accesskey "o">
 
 <!-- Tools Menu -->
 <!ENTITY toolsmenu.accesskey "l">

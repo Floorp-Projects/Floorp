@@ -260,8 +260,9 @@ protected:
 
 
   // Return TRUE if aElement is a table-related elemet and caret was set
-  PRBool     SetCaretInTableCell(nsIDOMElement* aElement);
-  PRBool     IsElementInBody(nsIDOMElement* aElement);
+  PRBool SetCaretInTableCell(nsIDOMElement* aElement);
+  PRBool IsElementInBody(nsIDOMElement* aElement);
+
 
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
@@ -270,12 +271,16 @@ protected:
 
 // Table Editing (implemented in EditTable.cpp)
 
+  // Table utilities
+
+  NS_IMETHOD DeleteTable(nsCOMPtr<nsIDOMElement> &table, nsCOMPtr<nsIDOMSelection> &selection);
   // Helper used to get nsITableLayout interface for methods implemented in nsTableFrame
   NS_IMETHOD GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject);
-
-  // Table utilities
+  // Helpers to do appropriate deleting when last cell or row is about to be deleted
+  PRBool IsOnlyCellInRow(nsCOMPtr<nsIDOMElement> &aCell, nsIDOMElement** aParentRow);
+  PRBool IsOnlyRowInTable(nsCOMPtr<nsIDOMElement> &aRow, nsCOMPtr<nsIDOMElement> &aTable);
   
-  // All of the above need to get the same basic context data
+  // Most insert methods need to get the same basic context data
   NS_IMETHOD GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
                             nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMElement> &aCell, 
                             nsCOMPtr<nsIDOMNode> &aCellParent, PRInt32& aCellOffset, 
@@ -284,9 +289,10 @@ protected:
   // Use the selection iterator to find the first cell in the selection
   NS_IMETHOD GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell);
 
+  
   // Setting caret to a logical place can get tricky,
   //  especially after deleting table stuff
-  typedef enum { ePreviousColumn, ePreviousRow } SetCaretSearchDirection;
+  typedef enum { eNoSearch, ePreviousColumn, ePreviousRow } SetCaretSearchDirection;
   
   NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aCol, PRInt32 aRow, SetCaretSearchDirection aDirection);
     

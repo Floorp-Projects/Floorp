@@ -160,10 +160,10 @@
     <broadcaster id="Editor:ToggleCompositionToolbar" value="&hideCompositionToolbarCmd.label;" showing="true" oncommand="_EditorNotImplemented()"/>
     <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()"/>
   
-    <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"    oncommand="EditorInsertLink()"/>
-    <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;"  oncommand="EditorInsertNamedAnchor()"/>
-    <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"   oncommand="EditorInsertImage()"/>
-    <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"   oncommand="EditorInsertHLine()"/>
+    <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"    oncommand="EditorInsertOrEditLink()"/>
+    <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;"  oncommand="EditorInsertOrEditNamedAnchor()"/>
+    <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"   oncommand="EditorInsertOrEditImage()"/>
+    <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"   oncommand="EditorInsertOrEditHLine()"/>
     <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"   oncommand="EditorInsertTable()"/>
     <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"   oncommand="EditorInsertHTML()"/>
     <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"    oncommand="_EditorNotImplemented()"/>
@@ -330,29 +330,35 @@
       <menuitem accesskey="&insertbreak.accesskey;"                              observes="Editor:InsertBreakAll"/>
     </menupopup>
     </menu>
-
-    <!-- random format menu items -->
-      <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
-      				accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
-      				oncommand="EditorRemoveStyle('all')"/>
-      <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
-      				accesskey="&formatremovelinks.accesskey;"
-      				oncommand="EditorRemoveLinks()"/>
-
+    
+    <!-- Format Menu -->
+  <menupopup id="formatMenuPopup">
     <!-- Font face submenu -->
-    <menu id="fontFaceMenu" value="&fontfaceMenu.label;" accesskey="&formatfontmenu.accesskey;">
+    <menu id="fontFaceMenu" value="&fontfaceMenu.label;" 
+          accesskey="&formatfontmenu.accesskey;" position="1">
     <menupopup>
-      <menuitem value="&defaultVariableWidthCmd.label;" accesskey="&fontvarwidth.accesskey;"    oncommand="EditorSetFontFace('')"/>
-      <menuitem value="&defaultFixedWidthCmd.label;" oncommand="EditorSetFontFace('tt')"/>
+      <menuitem value="&defaultVariableWidthCmd.label;" 
+                accesskey="&fontvarwidth.accesskey;"
+                oncommand="EditorSetFontFace('')"/>
+      <menuitem value="&defaultFixedWidthCmd.label;"
+                oncommand="EditorSetFontFace('tt')"/>
       <menuseparator/>
-      <menuitem value="&arialHelveticaFont.label;"  accesskey="&fonthelvetica.accesskey;"   oncommand="EditorSetFontFace('Arial, Helvetica, sans-serif')"/>
-      <menuitem value="&timesFont.label;"           accesskey="&fonttimes.accesskey;"       oncommand="EditorSetFontFace('Times New Roman, Times, serif')"/>
-      <menuitem value="&courierFont.label;"         accesskey="&fontcourier.accesskey;"     oncommand="EditorSetFontFace('Courier New, Courier, mono')"/>
+      <menuitem value="&arialHelveticaFont.label;"
+                accesskey="&fonthelvetica.accesskey;"
+                oncommand="EditorSetFontFace('Arial, Helvetica, sans-serif')"/>
+      <menuitem value="&timesFont.label;"
+                accesskey="&fonttimes.accesskey;"
+                oncommand="EditorSetFontFace('Times New Roman, Times, serif')"/>
+      <menuitem value="&courierFont.label;"
+                accesskey="&fontcourier.accesskey;"
+                oncommand="EditorSetFontFace('Courier New, Courier, mono')"/>
     </menupopup>
     </menu>
 
     <!-- Font size submenu -->
-    <menu id="fontSizeMenu" value="&fontsizeMenu.label;" accesskey="&formatsizemenu.accesskey;">
+    <menu id="fontSizeMenu" value="&fontsizeMenu.label;"
+          accesskey="&formatsizemenu.accesskey;" 
+          position="2">
     <menupopup>
       <menuitem value="&size-2Cmd.label;" accesskey="&size-2.accesskey;" oncommand="EditorSetFontSize('-2')"/>
       <menuitem value="&size-1Cmd.label;" accesskey="&size-1.accesskey;" oncommand="EditorSetFontSize('-1')"/>
@@ -365,7 +371,9 @@
     </menu>
 
     <!-- Font style submenu -->
-    <menu id="fontStyleMenu" value="&fontStyleMenu.label;" accesskey="&formatstylemenu.accesskey;">
+    <menu id="fontStyleMenu" value="&fontStyleMenu.label;" 
+          accesskey="&formatstylemenu.accesskey;"
+          position="3">
     <menupopup>
       <menuitem value="&styleBoldCmd.label;"        accesskey="&stylebold.accesskey;"        key="boldkb"      observes="Editor:Bold"/>
       <menuitem value="&styleItalicCmd.label;"      accesskey="&styleitalic.accesskey;"      key="italickb"    observes="Editor:Italic"/>
@@ -377,9 +385,12 @@
       <menuitem value="&styleNonbreakingCmd.label;" accesskey="&stylenonbreaking.accesskey;" oncommand="EditorApplyStyle('nobr')"/>
     </menupopup>
     </menu>
-
-   <!-- Font color submenu -->
-    <menu id="fontColorMenu" value="&fontColorMenu.label;" accesskey="&formatcolormenu.accesskey;">
+    
+    <!-- TODO: REPLACE WITH COLORPICKER -->
+    <!-- Font color submenu -->
+    <menu id="fontColorMenu" value="&fontColorMenu.label;"
+          accesskey="&formatcolormenu.accesskey;"
+          position="4">
     <menupopup>
         <menuitem value="&colorBlackCmd.label;"   accesskey="&colorblack.accesskey;"   oncommand="EditorSetFontColor('black')"/>
         <menuitem value="&colorGrayCmd.label;"    accesskey="&colorgray.accesskey;"    oncommand="EditorSetFontColor('gray')"/>
@@ -393,9 +404,10 @@
         <menuitem value="&colorMagentaCmd.label;" accesskey="&colormagenta.accesskey;" oncommand="EditorSetFontColor('magenta')"/>
     </menupopup>
     </menu>
-
-   <!-- Background color submenu -->
-    <menu id="backgroundColorMenu" value="&backgroundColorMenu.label;"     accesskey="&formatbkgdcolormenu.accesskey;">
+    <!-- Background color submenu -->
+    <menu id="backgroundColorMenu" value="&backgroundColorMenu.label;" 
+          accesskey="&formatbkgdcolormenu.accesskey;"
+          position="5">
     <menupopup>
       <menuitem value="&colorBlackCmd.label;"     accesskey="&colorblack.accesskey;"    oncommand="EditorSetBackgroundColor('black')"/>
       <menuitem value="&colorGrayCmd.label;"      accesskey="&colorgray.accesskey;"     oncommand="EditorSetBackgroundColor('gray')"/>
@@ -410,8 +422,18 @@
     </menupopup>
     </menu>
 
+    <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
+      			accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
+      			oncommand="EditorRemoveStyle('all')" position="6"/>
+    <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
+      			accesskey="&formatremovelinks.accesskey;"
+      			oncommand="EditorRemoveLinks()" position="7"/>
+    <menuseparator position="8"/>
+
     <!-- Heading submenu -->
-    <menu id="headingMenu" value="&headingMenu.label;" accesskey="&formatheadingmenu.accesskey;">
+    <menu id="headingMenu" value="&headingMenu.label;"
+          accesskey="&formatheadingmenu.accesskey;"
+          position="9">
     <menupopup>
       <menuitem value="&headingNormalCmd.label;"  accesskey="&headingnone.accesskey;"   oncommand="EditorSetParagraphFormat('normal')"/>
       <menuitem value="&heading1Cmd.label;"       accesskey="&heading1.accesskey;"      oncommand="EditorSetParagraphFormat('h1')"/>
@@ -424,7 +446,9 @@
     </menu>
 
     <!-- Paragraph Style submenu -->
-    <menu id="paragraphMenu" value="&paragraphMenu.label;" accesskey="&formatparagraphmenu.accesskey;">
+    <menu id="paragraphMenu" value="&paragraphMenu.label;"
+          accesskey="&formatparagraphmenu.accesskey;"
+          position="10">
     <menupopup>
       <menuitem value="&paragraphNormalCmd.label;"      accesskey="&paragraphnormal.accesskey;"     oncommand="EditorSetParagraphFormat('normal')"/>
       <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  oncommand="EditorSetParagraphFormat('p')"/>
@@ -437,10 +461,16 @@
     </menu>
 
     <!-- List Style (opens dialog)  -->
-    <menuitem id="listProps" value="&listProps.label;"  accesskey="&formatlistmenu.accesskey;"      oncommand="EditorListProperties()"/>
+    <menuitem id="listProps" value="&listProps.label;"
+              accesskey="&formatlistmenu.accesskey;"
+              oncommand="EditorListProperties()"
+              position="11"/>
+    <menuseparator position="12"/>
 
     <!-- Stylesheet submenu -->
-    <menu id="stylesheetMenu" value="&stylesheetMenu.label;" accesskey="&formatstylesheetmenu.accesskey;">
+    <menu id="stylesheetMenu" value="&stylesheetMenu.label;"
+          accesskey="&formatstylesheetmenu.accesskey;"
+          position="13">
     <menupopup>
       <menuitem value="&stylesheetEditorOneCmd.label;"     accesskey="&sseditor1.accesskey;"     oncommand="EditorApplyStyleSheet('chrome://editor/content/EditorStyles1.css')"/>
       <menuseparator />
@@ -454,7 +484,9 @@
     </menu>
 
     <!-- Align submenu -->
-    <menu id="alignMenu" value="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;">
+    <menu id="alignMenu" value="&alignMenu.label;"
+          accesskey="&formatalignmenu.accesskey;"
+          position="14">
     <menupopup>
       <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    oncommand="EditorAlign('left')"/>
       <menuitem value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  oncommand="EditorAlign('center')"/>
@@ -462,18 +494,45 @@
       <menuitem value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" oncommand="EditorAlign('justify')"/>
     </menupopup>
     </menu>
+    <menuseparator position="15"/>
 
-    <menuitem id="increaseIndent" value="&increaseIndent.label;" accesskey="&increaseindent.accesskey;" key="increaseindentkb" oncommand="EditorIndent('indent')"/>
-    <menuitem id="decreaseIndent" value="&decreaseIndent.label;" accesskey="&decreaseindent.accesskey;" key="decreaseindentkb" oncommand="EditorIndent('outdent')"/>
+    <menuitem id="increaseIndent" value="&increaseIndent.label;"
+              accesskey="&increaseindent.accesskey;" 
+              key="increaseindentkb"
+              oncommand="EditorIndent('indent')"
+              position="16"/>
+    <menuitem id="decreaseIndent" value="&decreaseIndent.label;"
+              accesskey="&decreaseindent.accesskey;"
+              key="decreaseindentkb"
+              oncommand="EditorIndent('outdent')"
+              position="17"/>
+    <menuseparator position="18"/>
+    <menuitem id="objectProperties" value="&properties.label;"
+              accesskey="&properties.accesskey;"
+              oncommand="EditorObjectProperties()"
+              position="19"/>
+    <menuitem id="colorsAndBackground" value="&colorsAndBackground.label;"
+              accesskey="&colorsandbackground.accesskey;"
+              oncommand="EditorPageProperties('1')"
+              position="20"/>
+    <!-- Merge page property items here -->
+  </menupopup>
 
-    <menuitem id="pageProperties"      value="&pageProperties.label;"      accesskey="&pageproperties.accesskey;"      oncommand="EditorPageProperties('0')"/>
-    <menuitem id="colorsAndBackground" value="&colorsAndBackground.label;" accesskey="&colorsandbackground.accesskey;" oncommand="EditorPageProperties('1')"/>
+  <menuitem id="pageProperties" value="&pageProperties.label;"
+            accesskey="&pageproperties.accesskey;"
+            oncommand="EditorPageProperties('0')"/>
 
-    <!-- Random table menu items -->
-    <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;" accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()"/>
-    <menuitem id="tablePropertiesMenuitem" value="&properties.label;"     accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
-
-    <!-- Table insert submenu  TODO: Should we use "above", "below"; "before", "after" versions for rows and cols? -->
+  <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
+  <menupopup>
+    <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
+          accesskey="&tableselectmenu.accesskey;">
+    <menupopup>
+        <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorSelectTable()"/>
+        <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorSelectTableRow()"/>
+        <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorSelectTableColumn()"/>
+        <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorSelectTableCell()"/>
+    </menupopup>
+    </menu>
     <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
     <menupopup>
         <menuitem value="&tableTable.label;"        accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
@@ -488,50 +547,26 @@
         <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"   oncommand="EditorInsertTableCell(true)"/>
     </menupopup>
     </menu>
-
-    <!-- Table delete submenu -->
     <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
     <menupopup>
         <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorDeleteTable()"/>
-        <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorDeleteTableRow()"/>
-        <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorDeleteTableColumn()"/>
-        <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorDeleteTableCell()"/>
+        <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorDeleteTableRow(1)"/>
+        <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorDeleteTableColumn(1)"/>
+        <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorDeleteTableCell(1)"/>
     </menupopup>
     </menu>
-
-    <!-- Toolbar popups -->
-    <!-- TODO: REPLACE WITH COLOR WIDGET -->
-    <menupopup id="BackColorPopup">
-       <menuitem value="&colorBlackCmd.label;"     oncommand="EditorSetBackgroundColor('black')"/>
-       <menuitem value="&colorGrayCmd.label;"      oncommand="EditorSetBackgroundColor('gray')"/>
-       <menuitem value="&colorSilverCmd.label;"    oncommand="EditorSetBackgroundColor('silver')"/>
-       <menuitem value="&colorWhiteCmd.label;"     oncommand="EditorSetBackgroundColor('white')"/>
-       <menuitem value="&colorRedCmd.label;"       oncommand="EditorSetBackgroundColor('red')"/>
-       <menuitem value="&colorBlueCmd.label;"      oncommand="EditorSetBackgroundColor('blue')"/>
-       <menuitem value="&colorGreenCmd.label;"     oncommand="EditorSetBackgroundColor('green')"/>
-       <menuitem value="&colorCyanCmd.label;"      oncommand="EditorSetBackgroundColor('cyan')"/>
-       <menuitem value="&colorYellowCmd.label;"    oncommand="EditorSetBackgroundColor('yellow')"/>
-       <menuitem value="&colorMagentaCmd.label;"   oncommand="EditorSetBackgroundColor('magenta')"/>
-    </menupopup>
-   
-    <menupopup id="TextColorPopup">
-       <menuitem value="&colorBlackCmd.label;"     oncommand="EditorSetFontColor('black')"/>
-       <menuitem value="&colorGrayCmd.label;"      oncommand="EditorSetFontColor('gray')"/>
-       <menuitem value="&colorSilverCmd.label;"    oncommand="EditorSetFontColor('silver')"/>
-       <menuitem value="&colorWhiteCmd.label;"     oncommand="EditorSetFontColor('white')"/>
-       <menuitem value="&colorRedCmd.label;"       oncommand="EditorSetFontColor('red')"/>
-       <menuitem value="&colorBlueCmd.label;"      oncommand="EditorSetFontColor('blue')"/>
-       <menuitem value="&colorGreenCmd.label;"     oncommand="EditorSetFontColor('green')"/>
-       <menuitem value="&colorCyanCmd.label;"      oncommand="EditorSetFontColor('cyan')"/>
-       <menuitem value="&colorYellowCmd.label;"    oncommand="EditorSetFontColor('yellow')"/>
-       <menuitem value="&colorMagentaCmd.label;"   oncommand="EditorSetFontColor('magenta')"/>
-    </menupopup>
+    <menuseparator />
+    <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;" accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()"/>
+    <menuitem id="tablePropertiesMenuitem" value="&properties.label;"     accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
+  </menupopup>
+  </menu>
 
     <popup id="TextColorPicker">
       <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
   		<!-- TODO: Add "Last color picked" button and text -->
       <colorpicker palettename="standard" onclick="EditorSelectTextColor(); window.close()"/>
     </popup>
+
     <popup id="BackColorPicker">
       <!-- Text Caption is filled in at runtime -->
   		<!-- TODO: Add "Last color picked" button and text -->
@@ -556,16 +591,16 @@
     
     <!-- InsertPopup is used by messengercompose.xul -->
     <menupopup id="InsertPopup">
-      <menuitem oncommand="EditorInsertLink()">
+      <menuitem oncommand="EditorInsertOrEditLink()">
        <titledbutton id="linkButton-dark" darkcolor="true" align="left" value="&linkToolbarCmd.label;"/>
       </menuitem>
-      <menuitem oncommand="EditorInsertNamedAnchor()">
+      <menuitem oncommand="EditorInsertOrEditNamedAnchor()">
        <titledbutton id="namedAnchorButton-dark" align="left" value="&anchorToolbarCmd.label;"/>
       </menuitem>
-      <menuitem oncommand="EditorInsertImage()">
+      <menuitem oncommand="EditorInsertOrEditImage()">
        <titledbutton id="imageButton-dark" align="left" value="&imageToolbarCmd.label;"/>
       </menuitem>
-      <menuitem oncommand="EditorInsertHLine()">
+      <menuitem oncommand="EditorInsertOrEditHLine()">
        <titledbutton id="hlineButton-dark" align="left" value="&hruleToolbarCmd.label;"/>
       </menuitem>
       <menuitem oncommand="EditorInsertOrEditTable(true)">
@@ -582,11 +617,11 @@
     <titledbutton id="findButton"        class="other28"  observes="Editor:Find"/>
     <titledbutton id="spellingButton"    class="other28"  value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
 
-    <titledbutton id="imageButton"       class="other28" value="&imageToolbarCmd.label;"  onclick="EditorInsertImage()"/>
-    <titledbutton id="hlineButton"       class="other28" value="&hruleToolbarCmd.label;"  onclick="EditorInsertHLine()"/>
+    <titledbutton id="imageButton"       class="other28" value="&imageToolbarCmd.label;"  onclick="EditorInsertOrEditImage()"/>
+    <titledbutton id="hlineButton"       class="other28" value="&hruleToolbarCmd.label;"  onclick="EditorInsertOrEditHLine()"/>
     <titledbutton id="tableButton"       class="other28" value="&tableToolbarCmd.label;"  onclick="EditorInsertOrEditTable(true)"/>
-    <titledbutton id="linkButton"        class="other28" value="&linkToolbarCmd.label;"   onclick="EditorInsertLink()"/>
-    <titledbutton id="namedAnchorButton" class="other28" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
+    <titledbutton id="linkButton"        class="other28" value="&linkToolbarCmd.label;"   onclick="EditorInsertOrEditLink()"/>
+    <titledbutton id="namedAnchorButton" class="other28" value="&anchorToolbarCmd.label;" onclick="EditorInsertOrEditNamedAnchor()"/>
 
     <!-- Formatting toolbar items -->
     <html:select class="toolbar" id="ParagraphSelect" size="1" onchange="EditorSelectParagraphFormat()">

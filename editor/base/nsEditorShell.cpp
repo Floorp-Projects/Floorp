@@ -2820,28 +2820,6 @@ nsEditorShell::SetSelectionAfterElement(nsIDOMElement* aElement)
 }
 
 /* Table Editing */
-
-NS_IMETHODIMP    
-nsEditorShell::InsertTableCell(PRInt32 aNumber, PRBool bAfter)
-{
-  nsresult  result = NS_NOINTERFACE;
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-      {
-        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
-        if (tableEditor)
-          result = tableEditor->InsertTableCell(aNumber, bAfter);
-      }
-      break;
-
-    case ePlainTextEditorType:
-    default:
-      result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
-}
-
 NS_IMETHODIMP    
 nsEditorShell::InsertTableRow(PRInt32 aNumber, PRBool bAfter)
 {
@@ -2876,6 +2854,27 @@ nsEditorShell::InsertTableColumn(PRInt32 aNumber, PRBool bAfter)
           result = tableEditor->InsertTableColumn(aNumber,bAfter);
       }
       break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::InsertTableCell(PRInt32 aNumber, PRBool bAfter)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->InsertTableCell(aNumber, bAfter);
+      }
+      break;
+
+    case ePlainTextEditorType:
     default:
       result = NS_ERROR_NOT_IMPLEMENTED;
   }

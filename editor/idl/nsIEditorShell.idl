@@ -60,6 +60,14 @@ interface nsIEditorShell : nsISupports
     eDisplayModeEdit,
     eDisplayModeBrowserPreview
   };
+
+  enum {
+    eTable,
+    eTableRow,
+    eTableColumn,
+    eTableCell,
+    eTableCaption
+  };
 %}
   readonly attribute boolean              documentModified;
   readonly attribute boolean              documentIsEmpty;
@@ -274,7 +282,7 @@ interface nsIEditorShell : nsISupports
 
   void SelectElement(in nsIDOMElement element);
   void SetSelectionAfterElement(in nsIDOMElement element);
-
+  
   /** Table insert and delete methods.  Done relative to selected cell or
    * cell containing the selection anchor.
    */
