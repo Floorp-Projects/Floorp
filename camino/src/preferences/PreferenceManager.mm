@@ -325,7 +325,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
   char *buf = nsnull;
   nsresult rv = NS_ERROR_FAILURE;
   if (mPrefs)
-    mPrefs->GetCharPref(prefName, &buf);
+    rv = mPrefs->GetCharPref(prefName, &buf);
 
   if (NS_SUCCEEDED(rv) && buf) {
     // prefs are UTF-8
