@@ -81,8 +81,9 @@
                 <stack>
                   <button id="TextButton" class="dialog color-button" onclick="GetColorAndUpdate('textCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="textCW" class="color-well"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
                 <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value" wsm_attributes="value"/>
@@ -92,8 +93,9 @@
                 <stack>
                   <button id="LinkButton" class="dialog color-button" onclick="GetColorAndUpdate('linkCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="linkCW" class="color-well"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
                 <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value" wsm_attributes="value"/>
@@ -103,8 +105,9 @@
                 <stack>
                   <button id="ActiveLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('activeCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="activeCW" class="color-well"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
                 <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
@@ -114,8 +117,9 @@
                 <stack>
                   <button id="VisitedLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('visitedCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="visitedCW" class="color-well"/>
+                    <spring flex="1"/>
                   </box>
                   <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
                 </stack>
@@ -125,8 +129,9 @@
                 <stack>
                   <button id="BackgroundButton" class="dialog color-button" onclick="GetColorAndUpdate('backgroundCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="backgroundCW" class="color-well"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
                 <data id="backgroundColorData" pref="true" preftype="color" prefstring="editor.background_color" prefattribute="value" wsm_attributes="value"/>
