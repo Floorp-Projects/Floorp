@@ -42,6 +42,8 @@ include <$(DEPTH)/config/rules.mak>
 !ifdef MOZILLA_OFFICIAL
 export:: 
     $(PERL) set-timebomb.pl 0 30
+    $(PERL) bdate.pl > $@
+    $(PERL) aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
 !endif
 
 #//
