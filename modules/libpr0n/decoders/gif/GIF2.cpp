@@ -1122,6 +1122,8 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
                 gs->requested_buffer_fullness = GETINT32(q + 1);
                 GETN(gs->requested_buffer_fullness, gif_wait_for_buffer_full);
             }
+            else  
+                gs->state = gif_error; // 0,3-7 are yet to be defined netscape extension codes
 
             break;
         }
