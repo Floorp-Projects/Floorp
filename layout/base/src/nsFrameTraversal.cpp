@@ -784,8 +784,7 @@ NS_IMETHODIMP
         result = parent;
         break;
       }
-      else if ((result = parent->GetParent()) != nsnull) {
-        result = nsnull;
+      else if (!(result = parent->GetParent())) {
         break;
       }
       else 
