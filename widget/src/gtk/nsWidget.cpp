@@ -189,7 +189,9 @@ nsWidget::nsWidget()
     sTimeCBSet = PR_TRUE;
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
     if (!dragService) {
+#ifdef DEBUG
       g_print("*** warning: failed to get the drag service. this is a _bad_ thing.\n");
+#endif
       sTimeCBSet = PR_FALSE;
     }
     nsCOMPtr<nsIDragSessionGTK> dragServiceGTK;
@@ -664,7 +666,9 @@ NS_IMETHODIMP nsWidget::SetFont(const nsFont &aFont)
   if (gdk_font) {
     // FIXME avoid fontset problems....
     if (gdk_font->type == GDK_FONT_FONTSET) {
+#ifdef DEBUG
       g_print("nsWidget:SetFont - got a FontSet.. ignoring\n");
+#endif
       return NS_ERROR_FAILURE;
     }
 
@@ -1038,7 +1042,9 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
     return (void *)NS_STATIC_CAST(nsToolkit*,mToolkit)->GetSharedGC();
 
   default:
+#ifdef DEBUG
     g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
+#endif
     break;
   }
   return nsnull;
@@ -1440,7 +1446,9 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
         break;
 
     case NS_DRAGDROP_DROP:
+#ifdef DEBUG 
       printf("nsWidget::DispatchMouseEvent, NS_DRAGDROP_DROP\n");
+#endif
       break;
 
     default:
@@ -2018,7 +2026,9 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
 /* virtual */ void
 nsWidget::OnRealize(GtkWidget *aWidget)
 {
+#ifdef DEBUG
   printf("nsWidget::OnRealize(%p)\n", NS_STATIC_CAST(void *, this));
+#endif
 }
 //////////////////////////////////////////////////////////////////////
 
@@ -2547,7 +2557,9 @@ static void setDebugWindow(void)
 
   sscanf(&text[2], "%x", &val);
 
+#ifdef DEBUG
   printf("setting value to 0x%x\n", val);
+#endif
   nsWidget::debugWidget = (nsWidget *)val;
 
   g_free(text);

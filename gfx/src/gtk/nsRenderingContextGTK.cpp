@@ -238,7 +238,9 @@ NS_IMETHODIMP nsRenderingContextGTK::GetDrawingSurface(nsDrawingSurface *aSurfac
 
 NS_IMETHODIMP nsRenderingContextGTK::Reset()
 {
+#ifdef DEBUG
   g_print("nsRenderingContextGTK::Reset() called\n");
+#endif
   return NS_OK;
 }
 
@@ -616,7 +618,9 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
       }
     }
   } else {
+#ifdef DEBUG
     printf("null clip region, can't make a valid copy\n");
+#endif
     rv = NS_ERROR_FAILURE;
   }
 
@@ -859,7 +863,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
     mTranMatrix->TransformCoord(&p.x,&p.y);
     pts[i].x = p.x;
     pts[i].y = p.y;
+#ifdef DEBUG
     printf("(%i,%i)\n", p.x, p.y);
+#endif
   }
 
   UpdateGC();

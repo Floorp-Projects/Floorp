@@ -439,7 +439,9 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetClipRegion(nsIRegion **aRegion)
       }
     }
   } else {
+#ifdef DEBUG
     printf("null clip region, can't make a valid copy\n");
+#endif
     rv = NS_ERROR_FAILURE;
 		}
 
@@ -666,7 +668,9 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolyline(const nsPoint aPoints[], PRIn
     mTranMatrix->TransformCoord(&p.x,&p.y);
     pts[i].x = p.x;
     pts[i].y = p.y;
+#ifdef DEBUG
     printf("(%i,%i)\n", p.x, p.y);
+#endif
 	}
 
   UpdateView();
@@ -1360,11 +1364,12 @@ nsRenderingContextBeOS::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 					destview->UnlockLooper();
 				}
       srcview->UnlockLooper();
+      }
+    } else {
+#ifdef DEBUG
+      printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: should render from surface without bitmap!?!?!\n");
+#endif
     }
-			}
-			else
-				printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: should render from surface without bitmap!?!?!\n");
-
 			// kill the source bitmap
 			((nsDrawingSurfaceBeOS *)aSrcSurf)->ReleaseBitmap();
 			((nsDrawingSurfaceBeOS *)aSrcSurf)->ReleaseView();

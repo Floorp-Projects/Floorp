@@ -48,10 +48,12 @@ gfxImageFrame::~gfxImageFrame()
 /* void init (in nscoord aX, in nscoord aY, in nscoord aWidth, in nscoord aHeight, in gfx_format aFormat); */
 NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, gfx_format aFormat)
 {
+
   if (aWidth <= 0 || aHeight <= 0) {
-    printf("error - negative image size\n");
+    NS_ASSERTION(0, "error - negative image size\n");
     return NS_ERROR_FAILURE;
   }
+
 
   if (mInitalized)
     return NS_ERROR_FAILURE;
@@ -78,7 +80,9 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
 
   case gfxIFormats::BGRA:
   case gfxIFormats::RGBA:
+#ifdef DEBUG
     printf("we can't do this with the old image code\n");
+#endif
     maskReq = nsMaskRequirements_kNeeds8Bit;
     break;
 
@@ -93,7 +97,9 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
     break;
 
   default:
+#ifdef DEBUG
     printf("unsupposed gfx_format\n");
+#endif
     break;
   }
 

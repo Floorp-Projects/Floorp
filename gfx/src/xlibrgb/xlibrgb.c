@@ -584,6 +584,7 @@ xlib_rgb_score_visual (XVisualInfo *visual)
   
   pseudo = (visual->class == PseudoColor || visual->class == TrueColor);
 
+#ifdef DEBUG
   if (xlib_rgb_verbose)
     printf ("Visual 0x%x, type = %s, depth = %d, %ld:%ld:%ld%s; score=%x\n",
 	    (int)visual->visualid,
@@ -594,7 +595,7 @@ xlib_rgb_score_visual (XVisualInfo *visual)
 	    visual->blue_mask,
 	    sys ? " (system)" : "",
 	    (quality << 12) | (speed << 8) | (sys << 4) | pseudo);
-  
+#endif
   return (quality << 12) | (speed << 8) | (sys << 4) | pseudo;
 }
 

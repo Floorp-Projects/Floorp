@@ -72,14 +72,18 @@ nsFilePicker::~nsFilePicker()
 
 static void file_ok_clicked(GtkWidget *w, PRBool *ret)
 {
+#ifdef DEBUG
   g_print("user hit ok\n");
+#endif
   *ret = PR_TRUE;
   gtk_main_quit();
 }
 
 static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
 {
+#ifdef DEBUG
   g_print("user hit cancel\n");
+#endif
   *ret = PR_FALSE;
   gtk_main_quit();
 }
@@ -87,9 +91,11 @@ static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
 #ifdef SET_FILTER_LIST_IS_WORKING
 static void filter_item_activated(GtkWidget *w, gpointer data)
 {
+#ifdef DEBUG
   //  nsFilePicker *f = (nsFilePicker*)data;
   gchar *foo = (gchar*)gtk_object_get_data(GTK_OBJECT(w), "filters");
   g_print("filter_item_activated(): %s\n", foo);
+#endif
 }
 #endif /* SET_FILTER_LIST_IS_WORKING */
 
@@ -166,9 +172,13 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
   for(unsigned int i=0; i < aNumberOfFilters; i++)
   {
     // we need *.{htm, html, xul, etc}
-    char *foo = aTitles[i].ToNewCString();
+
     char *filters = aFilters[i].ToNewCString();
+#ifdef DEBUG
+    char *foo = aTitles[i].ToNewCString();
     printf("%20s %s\n", foo, filters);
+    nsCRT::free(foo);
+#endif
 
     menu_item = gtk_menu_item_new_with_label(nsCAutoString(aTitles[i]));
 
@@ -182,7 +192,7 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
     gtk_menu_append(GTK_MENU(mFilterMenu), menu_item);
     gtk_widget_show(menu_item);
 
-    nsCRT::free(foo);
+    nsCRT::free(filters);
   }
 #endif /* SET_FILTER_LIST_IS_WORKING */
   return NS_OK;

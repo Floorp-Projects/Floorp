@@ -374,9 +374,11 @@ NS_METHOD nsContextMenu::RemoveAll()
         if (gtkmenuitem) {
           gtk_widget_ref(GTK_WIDGET(gtkmenuitem));
           //gtk_widget_destroy(GTK_WIDGET(gtkmenuitem));
+#ifdef DEBUG
           g_print("%p, %p\n",
                   GTK_WIDGET(GTK_CONTAINER(GTK_MENU_SHELL(GTK_MENU(mMenu)))),
                   GTK_WIDGET(GTK_WIDGET(gtkmenuitem)->parent));
+#endif
           gtk_container_remove(GTK_CONTAINER(GTK_MENU_SHELL(GTK_MENU(mMenu))),
                                GTK_WIDGET(gtkmenuitem));
         }
@@ -392,8 +394,9 @@ NS_METHOD nsContextMenu::RemoveAll()
             menu->GetNativeData(&gtkmenu);
  
             if(gtkmenu){
+#ifdef DEBUG
               g_print("nsMenu::RemoveAll() trying to remove nsMenu");
- 
+#endif
               //gtk_menu_item_remove_submenu (GTK_MENU_ITEM (item));
             }
           }

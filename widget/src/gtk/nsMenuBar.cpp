@@ -159,7 +159,9 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   }
 
   char *foo = Label.ToNewCString();
+#ifdef DEBUG
   g_print("%s\n", foo);
+#endif
   nsCRT::free(foo);
 
   widget = nsMenuItem::CreateLocalized(Label);
@@ -212,11 +214,15 @@ NS_METHOD nsMenuBar::RemoveAll()
         //  gtk_container_remove (GTK_CONTAINER (mMenuBar), GTK_WIDGET(gtkmenu) );
         //}
         NS_RELEASE(menu);
-	
+
+#ifdef DEBUG	
         g_print("menu release \n");
+#endif
         int num =((nsISupports*)mMenusVoidArray[i-1])->Release();
         while(num) {
+#ifdef DEBUG
           g_print("menu release again!\n");
+#endif
           num = ((nsISupports*)mMenusVoidArray[i-1])->Release();
         }
       }

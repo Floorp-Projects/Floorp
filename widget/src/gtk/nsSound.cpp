@@ -126,7 +126,9 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
             if (uri) {
                 char* uriSpec;
                 uri->GetSpec(&uriSpec);
+#ifdef DEBUG
                 printf("Failed to load %s\n", uriSpec ? uriSpec : "");
+#endif
                 CRTFREEIF(uriSpec);
             }
         }
@@ -142,7 +144,9 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 
 
   if (PL_strncmp(string, "RIFF", 4)) {
+#ifdef DEBUG
     printf("We only support WAV files currently.\n");
+#endif
     return NS_ERROR_FAILURE;
   }
 

@@ -447,7 +447,9 @@ nsWindow::DestroyNativeChildren(void)
 void
 nsWindow::ShowCrossAtLocation(guint x, guint y)
 {
+#ifdef DEBUG
   g_print("ShowCrossAtLocation %d, %d\n", x, y);
+#endif
   if (mSuperWin) {
     GdkGC *gc = 0;
     GdkColor white;
@@ -1436,8 +1438,9 @@ nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
   GTK_WIDGET_SET_FLAGS(mMozArea, GTK_HAS_FOCUS);
 
   nsGUIEvent event;
-  
+#ifdef DEBUG  
   printf("send NS_GOTFOCUS from nsWindow::OnFocusInSignal\n");
+#endif
   event.message = NS_GOTFOCUS;
   event.widget  = this;
 
@@ -1774,8 +1777,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
       topLevelParent =
         GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parentWidget)));
     }
+#ifdef DEBUG
     else
       g_print("warning: attempted to CreateNative() width a non-superwin and non gtk container parent\n");
+#endif
   }
 
   switch(mWindowType)
@@ -2575,7 +2580,9 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
   if (aCapture)
   {
     if (!grabWidget) {
+#ifdef DEBUG
       g_print("nsWindow::CaptureMouse on NULL grabWidget\n");
+#endif
       return NS_ERROR_FAILURE;
     }
 
