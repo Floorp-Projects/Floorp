@@ -934,13 +934,13 @@ TraceMallocEnable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 }
 
 static JSBool
-TraceMallocChangeLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+TraceMallocOpenLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    int fd, oldfd;
+    int fd;
     JSString *str;
     char *filename;
 
-    if (JSVAL_IS_VOID(argv[0])) {
+    if (argc == 0) {
         fd = -1;
     } else {
         str = JS_ValueToString(cx, argv[0]);
@@ -953,17 +953,36 @@ TraceMallocChangeLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
             return JS_FALSE;
         }
     }
-    oldfd = NS_TraceMallocChangeLogFD(fd);
+    *rval = INT_TO_JSVAL(fd);
+    return JS_TRUE;
+}
+
+static JSBool
+TraceMallocChangeLogFD(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    int fd, oldfd;
+
+    if (argc == 0) {
+        oldfd = -1;
+    } else {
+        if (!JS_ValueToECMAInt32(cx, argv[0], &fd))
+            return JS_FALSE;
+        oldfd = NS_TraceMallocChangeLogFD(fd);
+        if (oldfd == -2) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
+    }
     *rval = INT_TO_JSVAL(oldfd);
     return JS_TRUE;
 }
 
 static JSBool
-TraceMallocCloseLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+TraceMallocCloseLogFD(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     int32 fd;
 
-    if (JSVAL_IS_VOID(argv[0]))
+    if (argc == 0)
         return JS_TRUE;
     if (!JS_ValueToECMAInt32(cx, argv[0], &fd))
         return JS_FALSE;
@@ -974,8 +993,9 @@ TraceMallocCloseLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 static JSFunctionSpec TraceMallocFunctions[] = {
     {"TraceMallocDisable",        TraceMallocDisable,       0, 0, 0},
     {"TraceMallocEnable",         TraceMallocEnable,        0, 0, 0},
-    {"TraceMallocChangeLogFile",  TraceMallocChangeLogFile, 1, 0, 0},
-    {"TraceMallocCloseLogFile",   TraceMallocCloseLogFile,  1, 0, 0},
+    {"TraceMallocOpenLogFile",    TraceMallocOpenLogFile,   1, 0, 0},
+    {"TraceMallocChangeLogFD",    TraceMallocChangeLogFD,   1, 0, 0},
+    {"TraceMallocCloseLogFD",     TraceMallocCloseLogFD,    1, 0, 0},
     {NULL,                        NULL,                     0, 0, 0}
 };
 
