@@ -721,7 +721,7 @@ $(DEF_FILE): $(DEF_OBJS)
 ifeq ($(XPCOM_SWITCH),1)
 	$(FILTER) $(DEF_OBJS) >> $(DEF_FILE)
 else
-	$(FILTER) $(DEF_OBJS) | grep -v getter_Copies__FR| grep -v getc | grep -v putc | grep -v __ctime >> $(DEF_FILE)
+	$(FILTER) $(DEF_OBJS) | grep -v getter_Copies__FR| grep -v " getc" | grep -v " putc" | grep -v __ctime >> $(DEF_FILE)
 endif
 	$(ADD_TO_DEF_FILE)
 $(IMPORT_LIBRARY): $(OBJS) $(DEF_FILE)
