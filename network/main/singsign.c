@@ -795,7 +795,8 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
     /* discard this if the password is empty */
     for (i=0; i<submit->value_cnt; i++) {
         if ((((uint8*)submit->type_array)[i] == FORM_TYPE_PASSWORD) &&
-                (XP_STRLEN( ((char **)(submit->value_array)) [i])) == 0) {
+                (!((char **)(submit->value_array))[i] ||
+                    !XP_STRLEN( ((char **)(submit->value_array)) [i])) ) {
             return;
         }
     }
