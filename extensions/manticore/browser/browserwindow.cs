@@ -138,9 +138,9 @@ namespace Silverstone.Manticore.BrowserWindow
 
     public void Open()
     {
-      OpenDialog dlg = new OpenDialog(0);
+      OpenDialog dlg = new OpenDialog();
       if (dlg.ShowDialog() == DialogResult.OK)
-        Console.WriteLine(dlg.URL);
+        webBrowser.LoadURL(dlg.URL, false);
     }
   }
 
