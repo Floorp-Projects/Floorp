@@ -451,7 +451,9 @@ nsMessenger::OpenURL(const char * url)
           else
           {
 			nsString urlStr(unescapedUrl);
-			mWebShell->LoadURL(urlStr.GetUnicode());
+			if (mWebShell) {
+				mWebShell->LoadURL(urlStr.GetUnicode());
+			}
           }
           PL_strfree(unescapedUrl);
         }
