@@ -73,8 +73,8 @@ public:
 	static nsICommandManager * GetCommandMgrWithContractIDObject();
 	void IsCommandSupportedTest(const char *);
 	void IsCommandEnabledTest(const char *);
-	void GetCommandStateTest(const char *, const char *);
-	void DoCommandTest(const char *, const char *);
+	void GetCommandStateTest(const char *);
+	void DoCommandTest(const char *);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();
 // Operations
@@ -92,6 +92,17 @@ public:
 	// Generated message map functions
 protected:
 
+};
+
+struct CommandTest
+{
+	const char *mCmdName;
+	const char *mDoCmdParam;
+	const char *mGetCmdStateParam1;
+	const char *mGetCmdStateParam2;
+	const char *mGetCmdStateParam3;
+	const char *mGetCmdStateParam4;
+	PRBool		mGetCmdParamValue;
 };
 
 /////////////////////////////////////////////////////////////////////////////

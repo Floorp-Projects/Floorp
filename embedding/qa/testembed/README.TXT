@@ -132,12 +132,14 @@ QAUtils.cpp
 	output data, and retrieving the name of an nsI request are stored
 	here.
 
-makefile.win
+makefile.in
 	- We define "_AFXDLL" and for the compiler and specify
 	"-SUBSYSTEM:windows" for the linker using LCFLAGS and 
 	LLFLAGS, respectively
 	- We also define "USE_SINGLE_SIGN_ON" to enable the
 	single sign-on support
+	- Also need REQUIRES for all modules to be included
+	- Place all .cpp files for compiling in CPPSRCS section.
 
 testembed.dsp and testembed.dsw
 	- These VisualStudio workspace/project files can be used
@@ -146,9 +148,26 @@ testembed.dsp and testembed.dsw
 Instructions for building:
 	1) Open a dos shell.
 	2) cd ../mozilla/embedding/qa/testembed	   // testEmbed directory
-	3) nmake -f makefile.win		   // compile testEmbed
-	4) cd ../../../dist/WIN32_D.OBJ/bin/	   // navigate to the bin dir
-	5) testembed.exe			   // run testEmbed.exe
+	3) Copy the makefile.in file and call it makefile. Place in same directory.
+	4) Change the top few lines in 'makefile' to indicate local pathway. Example:
+		DEPTH		= ../../..
+		topsrcdir	= d:/mozilla_src/mozilla
+		srcdir		= d:/mozilla_src/mozilla/embedding/qa/testembed
+		VPATH		= d:/mozilla_src/mozilla/embedding/qa/testembed
+	5) cd components			  // components directory
+	6) Copy the makefile.in file and call it makefile. Place in same directory.
+	7) Change the top few lines in 'makefile' to indicate local pathway. Example:
+		DEPTH		= ../../../..
+		topsrcdir    = d:/mozilla_src/mozilla
+		srcdir       = d:/mozilla_src/mozilla/embedding/qa/testembed/components
+		VPATH        = d:/mozilla_src/mozilla/embedding/qa/testembed/components
+	8) make				   	// compile 'makefile.in' in components
+	9) cd ..				// return to testembed folder
+	10) make				// compile 'makefile.in' in testembed
+	11) cd ../../../dist/bin/	   	// navigate to the bin dir
+	12) testembed.exe			// run testEmbed.exe
+
+	note: if 'make' doesn't work above, try 'make -f makefile.in'
 
 A few suggestions:
 	1) Don't run nsIWebNavigation tests after turning on the Web
@@ -162,8 +181,5 @@ A few suggestions:
 	That will create a session history. The same applies for the
 	nsIWebNavigation interfaces tests. One loaded url will enable
 	back/forward navigation.
-	4) nsIRequest tests are in progress. They are implemented in
-	BrowserImplWebPrgrsLstnr.cpp. A menu item was created under
-	"Interfaces". This basically does the setup for nsIRequest
-	tests: turns on web progress listener, and prompts user for
-	a url. 
+	4) Currently, nsIUriContentListener is registered from the "Tools" >
+	"Test Your Method" menu. That will change soon. 
