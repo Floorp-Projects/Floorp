@@ -1173,8 +1173,16 @@ nsGlobalHistory::HidePage(const char *aURL)
     if (NS_FAILED(rv)) return rv;
   }
 
-  return SetRowValue(row, kToken_HiddenColumn, 1);
+  rv = SetRowValue(row, kToken_HiddenColumn, 1);
+  if (NS_FAILED(rv)) return rv;
 
+  // now pretend as if this row was deleted
+  // HasAssertion() correctly checks the Hidden column to show that
+  // the row is hidden
+  nsCOMPtr<nsIRDFResource> urlResource;
+  rv = gRDFService->GetResource(aURL, getter_AddRefs(urlResource));
+  if (NS_FAILED(rv)) return rv;
+  return NotifyFindUnassertions(urlResource, row);
 }
 
 //----------------------------------------------------------------------
@@ -1825,7 +1833,7 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
     nsCOMPtr<nsIMdbRow> row;
     rv = FindRow(kToken_URLColumn, uri, getter_AddRefs(row));
     // not even in history. don't bother trying
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv) || HasCell(mEnv, row, kToken_HiddenColumn)) {
       *aHasAssertion = PR_FALSE;
       return NS_OK;
     }
