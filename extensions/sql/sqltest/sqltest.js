@@ -1,4 +1,4 @@
-const alias = "urn:aliases:sqltest";
+const aliasName = "sqltest";
 const complete = Components.interfaces.mozISqlRequest.STATUS_COMPLETE;
 
 var connection;
@@ -53,7 +53,8 @@ function init() {
   var service = Components.classes["@mozilla.org/sql/service;1"]
                 .getService(Components.interfaces.mozISqlService);
 
-  if (!service.hasAlias(alias)) {
+  var alias = service.getAlias(aliasName);
+  if (!alias) {
     alert("The alias for the sqltest was not defined.");
     return;
   }
