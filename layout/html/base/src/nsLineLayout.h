@@ -136,6 +136,7 @@ struct nsLineLayout {
   nsBlockReflowState& mBlockReflowState;
   nsISpaceManager* mSpaceManager;
   nsIContent* mBlockContent;
+  PRBool mNoWrap;
 
   // The line we are reflowing
   nsLineData* mLine;
