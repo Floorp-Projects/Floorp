@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.32 $ 
-# $Date: 2002/04/26 22:04:55 $ 
+# $Revision: 1.33 $ 
+# $Date: 2002/04/26 22:40:09 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -1146,8 +1146,8 @@ sub status_table_row {
     if ($current_rec->{'print'}) {
         $links .= (
                    "\t\t". 
-                   BuildStatus::get_TinderboxPrint_separator().
-                   $current_rec->{'print'}."\n".
+                   $current_rec->{'print'}.
+                   "\n".
                    "");
     }
 
