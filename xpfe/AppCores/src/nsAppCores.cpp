@@ -42,7 +42,6 @@ static PRInt32 gInstanceCnt = 0;
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kDOMPropsCoreCID,    NS_DOMPROPSCORE_CID);
-static NS_DEFINE_IID(kPrefsCoreCID,       NS_PREFSCORE_CID);
 static NS_DEFINE_IID(kSignonCoreCID,      NS_SIGNONCORE_CID);
 static NS_DEFINE_IID(kCookieCoreCID,      NS_COOKIECORE_CID);
 static NS_DEFINE_IID(kWalletCoreCID,      NS_WALLETCORE_CID);
@@ -71,7 +70,6 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     printf("*** AppCores object is being registered\n");
     nsComponentManager::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kDOMPropsCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kPrefsCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kSignonCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kCookieCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kWalletCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
@@ -91,7 +89,6 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     
     nsComponentManager::UnregisterComponent(kAppCoresManagerCID, path);
     nsComponentManager::UnregisterComponent(kDOMPropsCoreCID, path);
-    nsComponentManager::UnregisterComponent(kPrefsCoreCID, path);
     nsComponentManager::UnregisterComponent(kSignonCoreCID, path);
     nsComponentManager::UnregisterComponent(kCookieCoreCID, path);
     nsComponentManager::UnregisterComponent(kWalletCoreCID, path);
@@ -129,10 +126,6 @@ NSGetFactory(nsISupports* serviceMgr,
     else if ( aClass.Equals(kDOMPropsCoreCID) )
     {
         inst = new nsDOMPropsCoreFactory();      
-    }
-    else if ( aClass.Equals(kPrefsCoreCID) )
-    {
-        inst = new nsPrefsCoreFactory();
     }
     else if ( aClass.Equals(kSignonCoreCID) )
     {
