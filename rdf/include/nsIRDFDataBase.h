@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,54 +20,30 @@
 #define nsIRDFDataBase_h__
 
 /*
-  This file contains the interface definition for an RDF database.
 
   RDF databases aggregate RDF data sources (see nsIRDFDataSource.h)
+
+  XXX This needs to be thought about real hard. It seems really wrong
+  to me to have to hard code the data sources that a database knows
+  about.
+
 */
 
 #include "nsISupports.h"
 #include "nsIRDFDataSource.h"
-#include "rdf.h"
 
+class nsIRDFDataSource;
 
 // 96343820-307c-11d2-bc15-00805f912fe7
 #define NS_IRDFDATABASE_IID \
-{ \
-  0x96343820, \
-  0x307c, \
-  0x11d2, \
-  { 0xb, 0x15, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } \
-}
-
+{ 0x96343820, 0x307c, 0x11d2, { 0xb, 0x15, 0x00, 0x80, 0x5f, 0x91, 0x2f, 0xe7 } }
 
 class nsIRDFDataBase : public nsIRDFDataSource {
 public:
-
-#ifdef RDF_NOT_IMPLEMENTED
-  NS_IMETHOD Initialize(nsIRDFResourceManager* r) = 0;
-#endif
-
-
-#ifdef RDF_NOT_IMPLEMENTED
-  /*
-    Add a data source for the specified URL to the database.
-
-    Parameters:
-      dataSource -- a ptr to the data source to add
-
-    Returns:
-  */
-  NS_IMETHOD AddDataSource(nsIRDFDataSource* dataSource) = 0;
-
-  NS_IMETHOD RemoveDataSource(nsIRDFDataSource* dataSource) = 0;
-
-  NS_IMETHOD GetDataSource(RDF_String url,
-                           nsIRDFDataSource **source /* out */ ) = 0;
-#endif
-
-  // XXX move these to datasource?
-  NS_IMETHOD DeleteAllArcs(RDF_Resource resource) = 0;
-
+    // XXX This is really a hack. I wish that the database was just a
+    // plain old data source that was smart import the data sources
+    // that it needed.
+    NS_IMETHOD AddDataSource(nsIRDFDataSource* source) = 0;
 };
 
 

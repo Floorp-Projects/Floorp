@@ -23,6 +23,26 @@
 #include "nspr.h"
 #include "nsError.h"
 
+/*
+ * The following macros are to aid in vocabulary definition.
+ * They creates const char*'s for "kURI[prefix]_[name]" and
+ * "kTag[prefix]_[name]", with appropriate complete namespace
+ * qualification on the URI, e.g.,
+ *
+ * #define RDF_NAMESPACE_URI "http://www.w3.org/TR/WD-rdf-syntax#"
+ * DEFINE_RDF_ELEMENT(RDF_NAMESPACE_URI, RDF, ID);
+ *
+ * will define:
+ *
+ * kURIRDF_ID to be "http://www.w3.org/TR/WD-rdf-syntax#ID", and
+ * kTagRDF_ID to be "ID"
+ */
+
+#define DEFINE_RDF_VOCAB(namespace, prefix, name) \
+static const char  kURI##prefix##_##name [] = ##namespace #name ;\
+static const char* kTag##prefix##_##name    = kURI##prefix##_##name## + sizeof(##namespace) - 1
+
+
 typedef int RDF_Error;
 
 #define RDF_ERROR_ILLEGAL_ASSERT 1 /* NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_RDF,1) */
@@ -57,17 +77,6 @@ typedef struct RDF_BlobStruct {
   void* data;
 } *RDF_Blob;
 #endif
-
-typedef struct RDF_NodeStruct {
-  RDF_ValueType type;
-  union {
-    RDF_Resource r;
-    RDF_String s;
-#ifdef RDF_BLOB
-    RDF_Blob b;
-#endif
-  } value;
-} *RDF_Node;
 
 typedef PRUint32 RDF_EventType;
 #define RDF_ASSERT_NOTIFY	((RDF_EventType)0x00000001)
