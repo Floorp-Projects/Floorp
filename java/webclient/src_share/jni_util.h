@@ -24,6 +24,8 @@
  *               Ed Burns <edburns@acm.org>
  *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
 
@@ -37,6 +39,28 @@
 #define jni_util_h
 
 #include <jni.h>
+
+
+//    
+// added for 1.1.x compatibility
+//
+#ifdef JNI_VERSION_1_2
+
+#ifndef JNI_VERSION
+#define JNI_VERSION JNI_VERSION_1_2
+#endif
+
+#else
+
+#ifndef JNI_VERSION_1_1
+#define JNI_VERSION_1_1 0x00010001 
+#endif
+
+#ifndef JNI_VERSION
+#define JNI_VERSION JNI_VERSION_1_1
+#endif
+
+#endif // END: JNI_VERSION_1_2
 
 //
 // String constants, defined in jni_util.cpp

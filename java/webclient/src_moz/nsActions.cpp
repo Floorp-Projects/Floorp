@@ -23,6 +23,8 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
 /*
@@ -718,7 +720,7 @@ wsDeallocateInitContextEvent::handleEvent ()
     mInitContext->embeddedThread = nsnull;
     mInitContext->env = nsnull;
     if (nsnull != mInitContext->nativeEventThread) {
-        ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), 
+        ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION), 
                                mInitContext->nativeEventThread);
         mInitContext->nativeEventThread = nsnull;
     }

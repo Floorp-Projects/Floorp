@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): Ed Burns <edburns@acm.org>
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  *               
  */
 
@@ -201,7 +203,7 @@ util_InitializeEventMaskValuesFromClass(const char *className,
     }
 
     if (nsnull != gVm) {
-        env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+        env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     }
 
     jclass clazz = ::util_FindClass(env, className);

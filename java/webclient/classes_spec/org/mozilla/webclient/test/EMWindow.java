@@ -54,7 +54,7 @@ import org.w3c.dom.Document;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.19 2000/09/15 00:15:01 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.20 2000/09/19 00:18:13 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -220,7 +220,6 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		    }
 		});
 	 
-        //		pack();
 		show();
 		toFront();
 

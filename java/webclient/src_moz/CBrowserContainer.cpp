@@ -20,6 +20,8 @@
  *
  * Contributor(s): Ashutosh Kulkarni <ashuk@eng.sun.com>
  *                 Ed Burns <edburns@acm.org>
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
 
@@ -68,7 +70,7 @@ CBrowserContainer::~CBrowserContainer()
     mMouseTarget = nsnull;
     mDomEventTarget = nsnull;
     inverseDepth = -1;
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     if (properties) {
         ::util_DeleteGlobalRef(env, properties);
     }
@@ -645,7 +647,7 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
         // IMPORTANT: do not use initContext->env here since it comes
         // from another thread.  Use JNU_GetEnv instead.
 
-        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
         
         aURL->GetSpec(&urlStr);
         if (nsnull != urlStr) {
@@ -782,7 +784,7 @@ CBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader,
     // IMPORTANT: do not use initContext->env here since it comes
     // from another thread.  Use JNU_GetEnv instead.
     
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     jstring statusMessage = ::util_NewString(env, (const jchar *) 
                                              aMsg.GetUnicode(), length);
     
@@ -877,7 +879,7 @@ CBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
     
     getPropertiesFromEvent(aMouseEvent);
 
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     ::util_StoreIntoPropertiesObject(env, properties,  CLICK_COUNT_KEY,
                                      ONE_VALUE, (jobject) 
                                      &(mInitContext->shareContext));
@@ -902,7 +904,7 @@ CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
     
     getPropertiesFromEvent(aMouseEvent);
 
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     ::util_StoreIntoPropertiesObject(env, properties,  CLICK_COUNT_KEY,
                                      TWO_VALUE, (jobject)
                                      &(mInitContext->shareContext));
@@ -1001,7 +1003,7 @@ NS_IMETHODIMP CBrowserContainer::RemoveMouseListener()
     }
 
 
-    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), mMouseTarget);
+    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION), mMouseTarget);
     mMouseTarget = nsnull;
     return rv;
 }
@@ -1013,7 +1015,7 @@ NS_IMETHODIMP CBrowserContainer::RemoveDocumentLoadListener()
         return NS_ERROR_FAILURE;
     }
 
-    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), mDocTarget);
+    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION), mDocTarget);
     mDocTarget = nsnull;
     return rv;
 }
@@ -1030,8 +1032,8 @@ NS_IMETHODIMP CBrowserContainer::RemoveAllListeners()
         mDomEventTarget = nsnull;
     }   
 
-    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), mDocTarget);
-    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), mMouseTarget);
+    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION), mDocTarget);
+    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION), mMouseTarget);
 
     mMouseTarget = nsnull;
     mDocTarget = nsnull;
@@ -1080,7 +1082,7 @@ jobject JNICALL CBrowserContainer::getPropertiesFromEvent(nsIDOMEvent *event)
         return properties;
     }
     inverseDepth = 0;
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 
     if (properties) {
         util_ClearPropertiesObject(env, properties, (jobject) 
@@ -1122,7 +1124,7 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
     PRBool boolVal;
     char buf[20];
     jstring strVal;
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     
     // PENDING(edburns): perhaps use a macro to speed this up?
     rv = mouseEvent->GetScreenX(&intVal);
@@ -1223,7 +1225,7 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
     CBrowserContainer *curThis = nsnull;
     const PRUint32 depthStrLen = 20;
     //    char depthStr[depthStrLen];
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 
     PR_ASSERT(nsnull != myObject);
     curThis = (CBrowserContainer *) myObject;

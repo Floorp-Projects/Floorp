@@ -24,6 +24,8 @@
  *               Ed Burns <edburns@acm.org>
  *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
 #include "jni_util.h"
@@ -247,7 +249,7 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
         return;
     }
 
-	JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+	JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 
     if (nsnull == env) {
       return;
@@ -451,7 +453,7 @@ void util_SetIntValueForInstance(JNIEnv *env, jobject obj,
     }
     
     env->SetIntField(obj, fieldID, newValue);
-#endif;
+#endif
 }
 
 jobject util_CreatePropertiesObject(JNIEnv *env, jobject initContextObj)
@@ -598,8 +600,13 @@ JNU_CallMethodByNameV(JNIEnv *env,
 	
     result.i = 0;
 	
+#ifdef JNI_VERSION_1_2
+
     if (env->EnsureLocalCapacity(3) < 0)
         goto done2;
+
+#endif
+
     clazz = env->GetObjectClass(obj);
     mid = env->GetMethodID(clazz, name, signature);
     if (mid == 0)
@@ -643,8 +650,19 @@ JNU_CallMethodByNameV(JNIEnv *env,
     env->DeleteLocalRef(clazz);
   done2:
     if (hasException) {
+#ifdef JNI_VERSION_1_2
         *hasException = env->ExceptionCheck();
-    }
+#else
+        jthrowable exception = env->ExceptionOccurred();
+        if ( exception != NULL ) {
+            *hasException = true;
+            env->DeleteLocalRef( exception );
+        }
+        else {
+            *hasException = false;
+        }
+#endif
+    } // END
     return result;    
 }
 
@@ -656,7 +674,14 @@ JNU_GetEnv(JavaVM *vm, jint version)
     JNIEnv *result = nsnull;
 #ifdef BAL_INTERFACE
 #else
+
+#ifdef JNI_VERSION_1_2
     vm->AttachCurrentThread((void **)&result, (void *) version);
+#else
+    vm->AttachCurrentThread( &result, ( void * )version);
++
+#endif
+
 #endif
     return result;
 }

@@ -21,6 +21,8 @@
  *               Ian Wilkinson <iw@ennoble.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
 package org.mozilla.webclient.test;
@@ -55,7 +57,7 @@ import java.util.Stack;
  * A dom viewer Frame
 
  *
- * @version $Id: DOMViewerFrame.java,v 1.4 2000/07/15 18:56:30 edburns%acm.org Exp $
+ * @version $Id: DOMViewerFrame.java,v 1.5 2000/09/19 00:18:13 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -188,7 +190,8 @@ protected void selectNodeInTree(Node node)
     }
 
     if (null != pathStack) {
-        pathStack.clear();
+        // use removeAllElements instead of clear for jdk1.1.x compatibility.
+        pathStack.removeAllElements();
     }
     populatePathStackFromNode(node);
     if (null == pathStack || pathStack.isEmpty()) {

@@ -14,6 +14,9 @@
  * Inc. All Rights Reserved. 
  *
  * Contributor(s): Igor Kushnirskiy <idk@eng.sun.com>
+ *      Ed Burns <edburns@acm.org>
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
 package org.mozilla.webclient.test;
@@ -35,7 +38,8 @@ class DOMTreeModel implements TreeModel, DOMTreeNotifier {
 	rootNode = node;
     }
     public void addTreeModelListener(TreeModelListener l) {
-	treeModelListeners.add(l);	
+	// use addElement instead of add for jdk1.1.x compatibility.
+	treeModelListeners.addElement(l);	
     }
     public void removeTreeModelListener(TreeModelListener l) {
 	treeModelListeners.removeElement(l);

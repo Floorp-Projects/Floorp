@@ -19,6 +19,8 @@
  *
  * Contributor(s):  Ed Burns <edburns@acm.org>
  *                  Ashutosh Kulkarni <ashuk@eng.sun.com>
+ *      Jason Mawdsley <jason@macadamian.com>
+ *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
 package org.mozilla.webclient.wrapper_native;
@@ -233,7 +235,9 @@ public void run()
                     nativeAddListener(nativeWebShell,tempListener.listener, 
                                       tempListener.listenerClassName);
                 }
-                listenersToAdd.clear();
+                // use removeAllElements instead of clear for jdk1.1.x
+                // compatibility.
+                listenersToAdd.removeAllElements();
             }
             doRemoveListeners();
             
@@ -278,7 +282,9 @@ private void doRemoveListeners()
                 
             }
         }
-        listenersToRemove.clear();
+        // use removeAllElements instead of clear for jdk1.1.x
+        // compatibility.
+        listenersToRemove.removeAllElements();
     }
 }
 
@@ -310,7 +316,9 @@ void addListener(WCEventListenerWrapper newListener)
         if (null == listenersToAdd) {
             listenersToAdd = new Vector();
         }
-        listenersToAdd.add(newListener);
+        // use addElement instead of add for jdk1.1.x
+        // compatibility.
+        listenersToAdd.addElement(newListener);
     }
 }
 
@@ -333,10 +341,14 @@ void removeListener(WCEventListenerWrapper newListener)
         }
         if (null == newListener) {
             String all = "all";
-            listenersToRemove.add(all);
+            // use addElement instead of add for jdk1.1.x
+            // compatibility.
+            listenersToRemove.addElement(all);
         }
         else {
-            listenersToRemove.add(newListener);
+            // use addElement instead of add for jdk1.1.x
+            // compatibility.
+            listenersToRemove.addElement(newListener);
         }
     }
     
