@@ -173,6 +173,8 @@ private:
   nsPoint    mLocation;          // alpha mask location
   GdkPixmap  *mImagePixmap;
 
+  GdkGC      *mGC;
+
   PRUint8    mFlags;             // flags set by ImageUpdated
 };
 

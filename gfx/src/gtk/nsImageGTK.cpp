@@ -69,6 +69,7 @@ nsImageGTK::nsImageGTK()
   mAlphaHeight = 0;
   mAlphaWidth = 0;
   mConvertedBits = nsnull;
+  mGC = nsnull;
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::nsImageGTK(this=%p)\n",
          this);
@@ -95,6 +96,10 @@ nsImageGTK::~nsImageGTK()
 
   if (mImagePixmap) {
     gdk_pixmap_unref(mImagePixmap);
+  }
+
+  if (mGC) {
+    gdk_gc_unref(mGC);
   }
 
 #ifdef TRACE_IMAGE_ALLOCATION
@@ -865,16 +870,19 @@ void nsImageGTK::DrawImageOffscreen(PRInt32 validX, PRInt32 validY, PRInt32 vali
 void nsImageGTK::SetupGCForAlpha(GdkGC *aGC, PRInt32 aX, PRInt32 aY)
 {
   // XXX should use (different?) GC cache here
-  if (mAlphaPixmap)
-  {
+  if (mAlphaPixmap) {
     // Setup gc to use the given alpha-pixmap for clipping
     XGCValues xvalues;
     memset(&xvalues, 0, sizeof(XGCValues));
     unsigned long xvalues_mask = 0;
     xvalues.clip_x_origin = aX;
     xvalues.clip_y_origin = aY;
-    xvalues.clip_mask = GDK_WINDOW_XWINDOW(mAlphaPixmap);
-    xvalues_mask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
+    xvalues_mask = GCClipXOrigin | GCClipYOrigin;
+
+    if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
+      xvalues.clip_mask = GDK_WINDOW_XWINDOW(mAlphaPixmap);
+      xvalues_mask |= GCClipMask;
+    }
 
     XChangeGC(GDK_DISPLAY(), GDK_GC_XGC(aGC), xvalues_mask, &xvalues);
   }
@@ -953,13 +961,20 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   gPixmapTime = PR_Now();
 #endif
 
-  // make a copy of the GC so that we can completly restore the things we are about to change
   GdkGC *copyGC;
   if (mAlphaPixmap) {
-    copyGC = gdk_gc_new(drawing->GetDrawable());
-    GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
-    gdk_gc_copy(copyGC, gc);
-    gdk_gc_unref(gc);
+
+    if (mGC) {
+      copyGC = gdk_gc_ref(mGC);
+    } else {
+      mGC = gdk_gc_new(drawing->GetDrawable());
+      GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+      gdk_gc_copy(mGC, gc);
+      gdk_gc_unref(gc); // unref the one we got
+      gdk_gc_ref(mGC); // we're holding on to this one
+      copyGC = gdk_gc_ref(mGC);
+    }
+    
     SetupGCForAlpha(copyGC, aX, aY);
   } else {
     // don't make a copy... we promise not to change it
