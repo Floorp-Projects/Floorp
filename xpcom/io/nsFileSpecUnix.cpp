@@ -477,7 +477,10 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
-    
+    PRInt64 bytes; /* XXX dougt needs to fix this */
+    LL_I2L(bytes , LONG_MAX); // initialize to all the space in the world?
+
+
 #if defined(HAVE_SYS_STATFS_H) || defined(HAVE_SYS_STATVFS_H)
 
     char curdir [MAXPATHLEN];
