@@ -43,5 +43,7 @@ protected:
 	static void		rdfNotifyProc(
 						HT_Notification	notifyStruct,
 						HT_Resource		node,
-						HT_Event		event);
+						HT_Event		event,
+						void *param,	
+						uint32 tokenType);
 };
