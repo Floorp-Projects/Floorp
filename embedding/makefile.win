@@ -22,7 +22,7 @@
 DEPTH=..
 
 DIRS=base components browser
-!if !defined(DISABLE_TESTS)
+!if !defined(DISABLE_TESTS) || defined(MOZILLA_OFFICIAL)
 DIRS=$(DIRS) tests
 !endif
 
