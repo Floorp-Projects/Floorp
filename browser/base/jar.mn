@@ -19,6 +19,7 @@ browser.jar:
         content/browser/pageInfo.css                  (content/pageInfo.css)
 
 classic.jar:
+        skin/classic/browser/aboutDialog.css          (skin/aboutDialog.css)
         skin/classic/browser/browser.css              (skin/browser.css)
         skin/classic/browser/browser.xml              (skin/browser.xml)
         skin/classic/browser/contents.rdf             (skin/contents.rdf)

@@ -1,0 +1,33 @@
+#aboutDialog {
+  padding: 0px 0px 10px 0px;
+}
+
+#clientBox {
+  background-color: #FFFFFF;
+}
+
+#brandName {
+  font-weight: bold; font-size: larger;
+} 
+
+#detailsBox {
+  padding: 8px 10px 10px 8px;
+}
+
+#userAgent {
+  margin: 3px 5px;
+  background-color: #FFFFFF;
+  padding: 1px 0px 1px 2px;
+  -moz-appearance: none;
+  border: none;
+}
+
+#copyright {
+  color: blue;
+  text-decoration: underline;
+}
+
+#groove {
+  margin-top: 0px;
+}
+
