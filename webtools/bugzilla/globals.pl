@@ -1108,6 +1108,16 @@ sub UserInGroup {
     return 0;
 }
 
+sub BugInGroup {
+    my ($bugid, $groupname) = (@_);
+    my $groupbit = GroupNameToBit($groupname);
+    PushGlobalSQLState();
+    SendSQL("SELECT (bugs.groupset & $groupbit) != 0 FROM bugs WHERE bugs.bug_id = $bugid");
+    my $bugingroup = FetchOneColumn();
+    PopGlobalSQLState();
+    return $bugingroup;
+}
+
 sub GroupExists {
     my ($groupname) = (@_);
     ConnectToDatabase();
@@ -1116,11 +1126,25 @@ sub GroupExists {
     return $count;
 }
 
+# Given the name of an existing group, returns the bit associated with it.
+# If the group does not exist, returns 0.
+# !!! Remove this function when the new group system is implemented!
+sub GroupNameToBit {
+    my ($groupname) = (@_);
+    ConnectToDatabase();
+    PushGlobalSQLState();
+    SendSQL("SELECT bit FROM groups WHERE name = " . SqlQuote($groupname));
+    my $bit = FetchOneColumn() || 0;
+    PopGlobalSQLState();
+    return $bit;
+}
+
 # Determines whether or not a group is active by checking 
 # the "isactive" column for the group in the "groups" table.
 # Note: This function selects groups by bit rather than by name.
 sub GroupIsActive {
     my ($groupbit) = (@_);
+    $groupbit ||= 0;
     ConnectToDatabase();
     SendSQL("select isactive from groups where bit=$groupbit");
     my $isactive = FetchOneColumn();

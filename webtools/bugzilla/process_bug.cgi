@@ -108,7 +108,19 @@ if ( Param("strictvaluechecks") ) {
     }
 }
 
-if ($::FORM{'product'} ne $::dontchange) {
+ConnectToDatabase();
+
+# Figure out whether or not the user is trying to change the product
+# (either the "product" variable is not set to "don't change" or the
+# user is changing a single bug and has changed the bug's product),
+# and make the user verify the version, component, target milestone,
+# and bug groups if so.
+if ( $::FORM{'id'} ) {
+    SendSQL("SELECT product FROM bugs WHERE bug_id = $::FORM{'id'}");
+    $::oldproduct = FetchSQLData();
+}
+if ( ($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
+       || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange) ) {
     if ( Param("strictvaluechecks") ) {
         CheckFormField(\%::FORM, 'product', \@::legal_product);
     }
@@ -130,42 +142,105 @@ if ($::FORM{'product'} ne $::dontchange) {
        $mok = lsearch($::target_milestone{$prod}, $::FORM{'target_milestone'}) >= 0;
     }
 
-    if (!$vok || !$cok || !$mok) {
-        print "<H1>Changing product means changing version, target milestone and component.</H1>\n";
-        print "You have chosen a new product, and now the version, target milestone and/or\n";
-        print "component fields are not correct.  (Or, possibly, the bug did\n";
-        print "not have a valid target milestone, component or version field in the first place.)\n";
-        print "Anyway, please set the version, target milestone and component now.<p>\n";
-        print "<form>\n";
-        print "<table>\n";
-        print "<tr>\n";
-        print "<td align=right><b>Product:</b></td>\n";
-        print "<td>$prod</td>\n";
-        print "</tr><tr>\n";
-        print "<td align=right><b>Version:</b></td>\n";
-        print "<td>" . Version_element($::FORM{'version'}, $prod) . "</td>\n";
-        print "</tr><tr>\n";
+    # If anything needs to be verified, generate a form for verifying it.
+    if (!$vok || !$cok || !$mok || (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
 
-        if ( Param("usetargetmilestone") ) {
-            print "<td align=right><b>Target Milestone:</b></td>\n";
-            print "<td>" . Milestone_element($::FORM{'target_milestone'}, $prod) . "</td>\n";
-            print "</tr><tr>\n";
-        }
+        # Start the form.
+        print qq|<form action="process_bug.cgi" method="post">\n|;
 
-        print "<td align=right><b>Component:</b></td>\n";
-        print "<td>" . Component_element($::FORM{'component'}, $prod) . "</td>\n";
-        print "</tr>\n";
-        print "</table>\n";
+        # Add all form fields to the form as hidden fields (except those 
+        # being verified), so the user's changes are preserved.
         foreach my $i (keys %::FORM) {
             if ($i ne 'version' && $i ne 'component' && $i ne 'target_milestone') {
-                print "<input type=hidden name=$i value=\"" .
-                value_quote($::FORM{$i}) . "\">\n";
+                print qq|<input type="hidden" name="$i" value="| . value_quote($::FORM{$i}) . qq|">\n|;
             }
         }
-        print "<input type=submit value=Commit>\n";
-        print "</form>\n";
-        print "</hr>\n";
-        print "<a href=query.cgi>Cancel all this and go to the query page.</a>\n";
+
+        # Display UI for verifying the version, component, and target milestone fields.
+        if (!$vok || !$cok || !$mok) {
+            my ($sectiontitle, $sectiondescription);
+            if ( Param('usetargetmilestone') ) {
+                $sectiontitle = "Verify Version, Component, Target Milestone";
+                $sectiondescription = qq|
+                  You are moving the bug(s) to the product <b>$prod</b>, and now the 
+                  version, component, and/or target milestone fields are not correct 
+                  (or perhaps they were not correct in the first place).  In any case, 
+                  please set the correct version, component, and target milestone now:
+                |;
+            } else {
+                $sectiontitle = "Verify Version, Component";
+                $sectiondescription = qq|
+                  You are moving the bug(s) to the product <b>$prod</b>, and now the 
+                  version, and component fields are not correct (or perhaps they were 
+                  not correct in the first place).  In any case, please set the correct 
+                  version and component now:
+                |;
+            }
+
+            my $versionmenu = Version_element($::FORM{'version'}, $prod);
+            my $componentmenu = Component_element($::FORM{'component'}, $prod);
+
+            print qq|
+              <h3>$sectiontitle</h3>
+
+              <p>
+                $sectiondescription
+              <p>
+
+              <table><tr>
+              <td>
+                <b>Version:</b><br>
+                $versionmenu
+              </td>
+              <td>
+                <b>Component:</b><br>
+                $componentmenu
+              </td>
+            |;
+
+            if ( Param("usetargetmilestone") ) {
+                my $milestonemenu = Milestone_element($::FORM{'target_milestone'}, $prod);
+                print qq|
+                  <td>
+                    <b>Target Milestone:</b><br>
+                    $milestonemenu
+                  </td>
+                |;
+            }
+
+            print qq|
+              </tr></table>
+            |;
+        }
+
+        # Display UI for determining whether or not to remove the bug from 
+        # its old product's group and/or add it to its new product's group.
+        if (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'})) {
+            print qq|
+              <h3>Verify Bug Group</h3>
+
+              <p>
+                Do you want to add the bug to its new product's group (if any)?
+              </p>
+
+              <p>
+                <input type="radio" name="addtonewgroup" value="no"><b>no</b><br>
+                <input type="radio" name="addtonewgroup" value="yes"><b>yes</b><br>
+                <input type="radio" name="addtonewgroup" value="yesifinold" checked>
+                  <b>yes, but only if the bug was in its old product's group</b><br>
+              </p>
+            |;
+        }
+
+        # End the form.
+        print qq|
+          <input type="submit" value="Commit">
+          </form>
+          <hr>
+          <a href="query.cgi">Cancel and Return to the Query Page</a>
+        |;
+
+        # End the page and stop processing.
         PutFooter();
         exit;
     }
@@ -453,7 +528,6 @@ if (defined $::FORM{'qa_contact'}) {
 }
 
 
-ConnectToDatabase();
 
 my $removedCcString = "";
 my $duplicate = 0;
@@ -993,6 +1067,92 @@ The changes made were:
         }
     }
 
+    # When a bug changes products and the old or new product is associated
+    # with a bug group, it may be necessary to remove the bug from the old
+    # group or add it to the new one.  There are a very specific series of
+    # conditions under which these activities take place, more information
+    # about which can be found in comments within the conditionals below.
+    if ( 
+      # the "usebuggroups" parameter is on, indicating that products
+      # are associated with groups of the same name;
+      Param('usebuggroups')
+
+      # the user has changed the product to which the bug belongs;
+      && defined $::FORM{'product'} 
+        && $::FORM{'product'} ne $::dontchange 
+          && $::FORM{'product'} ne $oldhash{'product'} 
+    ) {
+        # DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
+        print qq|<p>\n|;
+        print qq|<em>usebuggroups</em> is enabled and this bug has changed from the 
+          <em>$oldhash{'product'}</em> to the <em>$::FORM{'product'}</em> product,
+          so it is time to check if we have to remove the bug from its old product
+          group or add it to its new product group.<br>\n|;
+        # END DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
+        if (
+          # the user wants to add the bug to the new product's group;
+          ($::FORM{'addtonewgroup'} eq 'yes' 
+            || ($::FORM{'addtonewgroup'} eq 'yesifinold' 
+                  && GroupNameToBit($oldhash{'product'}) & $oldhash{'groupset'})) 
+
+          # the new product is associated with a group;
+          && GroupExists($::FORM{'product'})
+
+          # the bug is not already in the group; (This can happen when the user
+          # goes to the "edit multiple bugs" form with a list of bugs at least
+          # one of which is in the new group.  In this situation, the user can
+          # simultaneously change the bugs to a new product and move the bugs
+          # into that product's group, which happens earlier in this script
+          # and thus is already done.  If we didn't check for this, then this
+          # situation would cause us to add the bug to the group twice, which
+          # would result in the bug being added to a totally different group.)
+          && !BugInGroup($id, $::FORM{'product'})
+
+          # the user is a member of the associated group, indicating they
+          # are authorized to add bugs to that group, *or* the "usebuggroupsentry"
+          # parameter is off, indicating that users can add bugs to a product 
+          # regardless of whether or not they belong to its associated group;
+          && (UserInGroup($::FORM{'product'}) || !Param('usebuggroupsentry'))
+
+          # the associated group is active, indicating it can accept new bugs;
+          && GroupIsActive(GroupNameToBit($::FORM{'product'}))
+        ) { 
+            # Add the bug to the group associated with its new product.
+            my $groupbit = GroupNameToBit($::FORM{'product'});
+            # DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
+            print qq|
+              The user specified <em>addtonewgroup</em>, there is a group
+              associated with the new product, the user is a member of that
+              group (or <em>usebuggroupsentry</em> is off), and the group 
+              is active, so we have to add the product to the group:<br>
+              <code>UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id</code><br>
+              |;
+            # END DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
+            SendSQL("UPDATE bugs SET groupset = groupset + $groupbit WHERE bug_id = $id");
+        }
+
+        if ( 
+          # the old product is associated with a group;
+          GroupExists($oldhash{'product'})
+
+          # the bug is a member of that group;
+          && BugInGroup($id, $oldhash{'product'}) 
+        ) { 
+            # Remove the bug from the group associated with its old product.
+            # DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
+            my $groupbit = GroupNameToBit($oldhash{'product'});
+            print qq|
+              There is a group associated with the old product, the bug is a 
+              member of that group, so remove the bug from the group:<br>
+              UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id<br>
+              |;
+            # END DEBUGGING INSTRUCTIONS THAT WILL GO AWAY ONCE THIS PATCH IS READY
+            SendSQL("UPDATE bugs SET groupset = groupset - $groupbit WHERE bug_id = $id");
+        }
+
+        print qq|</p>|;
+    }
+  
     # get a snapshot of the newly set values out of the database, 
     # and then generate any necessary bug activity entries by seeing 
     # what has changed since before we wrote out the new values.
