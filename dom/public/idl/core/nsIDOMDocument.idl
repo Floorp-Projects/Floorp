@@ -40,6 +40,21 @@
 
 #include "nsIDOMNode.idl"
 
+/**
+ * The nsIDOMDocument interface represents the entire HTML or XML document.
+ * Conceptually, it is the root of the document tree, and provides the 
+ * primary access to the document's data.
+ * Since elements, text nodes, comments, processing instructions, etc. 
+ * cannot exist outside the context of a Document, the nsIDOMDocument 
+ * interface also contains the factory methods needed to create these 
+ * objects.
+ *
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-2-Core/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf9075-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMDocument : nsIDOMNode
 {
