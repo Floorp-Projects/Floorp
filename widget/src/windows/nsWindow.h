@@ -143,7 +143,7 @@ public:
 
     NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
-    NS_IMETHOD              Flash();
+    NS_IMETHOD              GetAttention();
 
     // nsIKBStateControl interface 
 

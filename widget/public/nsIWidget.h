@@ -728,7 +728,7 @@ class nsIWidget : public nsISupports {
    * in the foreground and should be dismissed when the user brings this window
    * to the foreground.
    */
-  NS_IMETHOD Flash() = 0;
+  NS_IMETHOD GetAttention() = 0;
 
 };
 

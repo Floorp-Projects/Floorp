@@ -158,6 +158,8 @@ public:
 
   NS_IMETHOD    SizeToContent()=0;
 
+  NS_IMETHOD    GetAttention()=0;
+
   NS_IMETHOD    Scroll(PRInt32 aXScroll, PRInt32 aYScroll)=0;
 
   NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)=0;
@@ -256,6 +258,7 @@ public:
   NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight);  \
   NS_IMETHOD    ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif);  \
   NS_IMETHOD    SizeToContent();  \
+  NS_IMETHOD    GetAttention();  \
   NS_IMETHOD    Scroll(PRInt32 aXScroll, PRInt32 aYScroll);  \
   NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll);  \
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif);  \
@@ -338,6 +341,7 @@ public:
   NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight) { return _to ResizeTo(aWidth, aHeight); }  \
   NS_IMETHOD    ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif) { return _to ResizeBy(aWidthDif, aHeightDif); }  \
   NS_IMETHOD    SizeToContent() { return _to SizeToContent(); }  \
+  NS_IMETHOD    GetAttention() { return _to GetAttention(); }  \
   NS_IMETHOD    Scroll(PRInt32 aXScroll, PRInt32 aYScroll) { return _to Scroll(aXScroll, aYScroll); }  \
   NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll) { return _to ScrollTo(aXScroll, aYScroll); }  \
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif) { return _to ScrollBy(aXScrollDif, aYScrollDif); }  \
