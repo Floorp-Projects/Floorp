@@ -117,6 +117,11 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,
+                              nsIFrame** aFrame);
+
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
@@ -230,22 +235,6 @@ public:
                                PRBool& aBailOnHeight);
   // AccessKey Helper function
   static nsresult RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg);
-
-  /**
-   * Helper routine to allow controls to have focus border using pseudo-style rule
-   * where focus has a border and non-focus does not. Call in Paint if you have the focus
-   *
-   * @param aPresContext
-   * @param aRenderingContext
-   * @param aFrame - the frame that we are painting
-   * @param aDirtyRect - the dirty area
-   * @param aRect - the area to paint within the dirty area
-   */
-  static nsresult PaintSpecialBorder(nsIPresContext* aPresContext, 
-                                     nsIRenderingContext& aRenderingContext,
-                                     nsIFrame *aFrame,
-                                     const nsRect& aDirtyRect,
-                                     const nsRect& aRect);
 
   /**
    * Helper routine to that returns the height of the screen

@@ -113,7 +113,6 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessib
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    nsIAccessible* acc = nsnull;
     return accService->CreateHTMLCheckboxAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
@@ -403,7 +402,7 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext*   aPresContext,
   }
 
   // Paint the background
-  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  nsresult rv = nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     PRBool doDefaultPainting = PR_TRUE;
     // Paint the checkmark 
@@ -436,9 +435,7 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext*   aPresContext,
       PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
     }
   }
-  
-  // Call to the base class to draw selection borders when appropriate
-  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  return rv;
 }
 
 //------------------------------------------------------------
