@@ -367,7 +367,11 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                         else 
                         	if (buf.Equals(image)) 
 	                        	{
+#ifdef XP_MAC
+                            char szFile[256] = "Macintosh%20HD/Source331%20Build%20Environment/mozilla/webshell/tests/viewer/samples/raptor.jpg";
+#else
                             char szFile[256] = "S:\\mozilla\\dist\\WIN32_D.OBJ\\bin\\res\\samples\\raptor.jpg";
+#endif
 
                             // put up an image
                             MyLoadImage(szFile);
@@ -760,7 +764,12 @@ MyObserver::Notify(nsIImageRequest *aImageRequest,
 
 	    if (gImage) 
 	      { 
-	      drawCtx->DrawImage(gImage, 0, 0, gImage->GetWidth(), gImage->GetHeight()); 
+	      nsRect	rect;
+        scribbleData.drawPane->GetBounds(rect);
+        nscoord	x = rect.x;
+        nscoord	y = rect.y;
+
+	      drawCtx->DrawImage(gImage,x, y, gImage->GetWidth(), gImage->GetHeight()); 
 	      } 
 	   } 
 	   break; 
