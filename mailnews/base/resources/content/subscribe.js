@@ -176,6 +176,24 @@ function SetSubscribeState(state)
   }
 }
 
+function ReverseStateFromNode(node)
+{
+	var stateStr;
+	var state;
+
+	if (node.getAttribute('Subscribed') == "true") {
+		stateStr = "false";
+		state = false;
+	}
+	else {
+		stateStr = "true";
+		state = true;
+	}
+	
+	var uri = node.getAttribute('id');
+	SetState(uri, state, stateStr);
+}
+
 function ReverseState(uri)
 {
 	dump("ReverseState("+uri+")\n");
@@ -184,8 +202,7 @@ function ReverseState(uri)
 function SubscribeOnClick(event)
 {
 	if (event.clickCount == 2) {
-		var uri = event.target.parentNode.parentNode.getAttribute("id");
-		ReverseState(uri);
+		ReverseStateFromNode(event.target.parentNode.parentNode);
 	}
 }
 

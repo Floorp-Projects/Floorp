@@ -20,10 +20,8 @@
 
 treeitem[Subscribed="false"] > treerow > treecell.subscribedcol > .tree-button {
  list-style-image: url("chrome://messenger/skin/dot.gif");
- min-height: 14px;
 }
 
 treeitem[Subscribed="true"] > treerow > treecell.subscribedcol > .tree-button {
  list-style-image: url("chrome://messenger/skin/check.gif");
- min-height: 14px;
 }     
