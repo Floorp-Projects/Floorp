@@ -37,7 +37,7 @@ PRInt32 nsInputFileFrame::gSpacing = 40;
 nsString* nsInputFile::gFILE_TYPE = new nsString("file");
 
 nsInputFileFrame::nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsCSSInlineFrame(aContent, aParentFrame)
+  : nsHTMLContainerFrame(aContent, aParentFrame)
 {
 }
 
@@ -102,88 +102,30 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
   NS_RELEASE(textWidget);
 }
 
-// XXX this method is 100% wrong; if nsInputFileFrame really is a
-// container then it's children's coordinates will be relative to the
-// container, and when the container is moved the children will
-// (therefore) automatically move with it.
 
-NS_IMETHODIMP
-nsInputFileFrame::MoveTo(nscoord aX, nscoord aY)
-{
-  //if ( ((aX == 0) && (aY == 0)) || (aX != mRect.x) || (aY != mRect.y)) {
-  if ((aX != mRect.x) || (aY != mRect.y)) {
-    nsIFrame* childFrame = mFirstChild;
-    nscoord x = aX;
-    nscoord y = aY;
-    while (nsnull != childFrame) {
-      nsresult result = childFrame->MoveTo(x, y);
-      nsSize childSize;
-      ((nsInputFrame *)childFrame)->GetWidgetSize(childSize);
-      x = x + childSize.width + gSpacing;
-      childFrame->GetNextSibling(childFrame);
-    }
-  }
-  return NS_OK;
-}
-
-// XXX this shouldn't need to be done either
-
-NS_IMETHODIMP
-nsInputFileFrame::SizeTo(nscoord aWidth, nscoord aHeight)
-{
-  mRect.width = aWidth;
-  mRect.height = aHeight;
-
-  // Let the view know the correct size
-  nsIView* view = nsnull;
-  GetView(view);
-  if (nsnull != view) {
-    view->SetDimensions(aWidth, aHeight);
-  }
-  return NS_OK;
-}
-
-// XXX hey chris: nsInlineFrame doesn't implement this anymore; this
-// needs to be reworked to deal with the new inline frame code
-
-NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aCX, 
+NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aPresContext, 
                                        nsReflowMetrics&     aDesiredSize,
                                        const nsReflowState& aReflowState, 
                                        nsReflowStatus&      aStatus)
 {
-  nsIFrame* childFrame;
   PRInt32 numChildren;
-  ChildCount(numChildren);  
-  if (0 == numChildren) { // create the children frames 
-    nsInputFile* content = (nsInputFile *)mContent;
-    numChildren = content->ChildCount();
-    NS_ASSERTION(2 == numChildren, "nsInputFile must contain 2 children");
-    nsInput* childContent;
-    if (nsnull == mStyleContext) {
-      GetStyleContext(&aCX, mStyleContext);
+  ChildCount(numChildren); 
+  
+  nsInputFile* content = (nsInputFile*)mContent;
+  nsIFrame* childFrame;
+
+  if (0 == numChildren) {
+    nsInputText* textField = content->GetTextField();
+    nsInput* browseButton = content->GetBrowseButton();
+    if ((nsnull != textField) && (nsnull != browseButton))  {
+      textField->CreateFrame(&aPresContext, this, mStyleContext, childFrame);
+      mFirstChild = childFrame;
+      browseButton->CreateFrame(&aPresContext, this, mStyleContext, childFrame);
+      mFirstChild->SetNextSibling(childFrame);
+      mChildCount = 2;
     }
-    for (int i = 0; i < numChildren; i++) {
-      childContent = (nsInput *)content->ChildAt(i);
-      // Use this style context for the children. They will not modify it.
-      // XXX When IStyleContext provides an api for cloning/inheriting, it could be used instead.
-      childContent->CreateFrame(&aCX, this, mStyleContext, childFrame);
-      if (0 == i) {
-        mFirstChild = childFrame;
-        PRInt32 contentIndex;
-        mFirstChild->GetContentIndex(contentIndex);
-        SetFirstContentOffset(contentIndex);
-      }
-      else {
-        mFirstChild->SetNextSibling(childFrame);
-        // XXX We shouldn't be setting this inside of a loop. Plus using
-        // GetContentIndex() is very slow...
-        PRInt32 contentIndex;
-        childFrame->GetContentIndex(contentIndex);
-        SetLastContentOffset(contentIndex);
-      }
-      NS_RELEASE(childContent);
-      mChildCount++;
-    }
+    NS_IF_RELEASE(textField);
+    NS_IF_RELEASE(browseButton);
   }
 
   nsSize maxSize = aReflowState.maxSize;
@@ -191,17 +133,20 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aCX,
   aDesiredSize.width = gSpacing; 
   aDesiredSize.height = 0;
   childFrame = mFirstChild;
-  while (nsnull != childFrame) {
+  nsPoint offset(0,0);
+  while (nsnull != childFrame) {  // reflow, place, size the children
     nsReflowState   reflowState(childFrame, aReflowState, maxSize);
-    nsresult result = childFrame->Reflow(aCX, desiredSize, reflowState, aStatus);
-    // XXX check aStatus ??
-    if (NS_OK != result) {
-      break;
-    }
+    childFrame->WillReflow(aPresContext);
+    nsresult result = childFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+    nsRect rect(offset.x, offset.y, desiredSize.width, desiredSize.height);
+    childFrame->SetRect(rect);
+    childFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     maxSize.width  -= desiredSize.width;
     aDesiredSize.width  += desiredSize.width; 
     aDesiredSize.height = desiredSize.height;
     childFrame->GetNextSibling(childFrame);
+    offset.x += desiredSize.width + gSpacing;
   }
 
   aDesiredSize.ascent = aDesiredSize.height;
@@ -216,6 +161,11 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aCX,
   return NS_OK;
 }
 
+PRIntn
+nsInputFileFrame::GetSkipSides() const
+{
+  return 0;
+}
 
 
 //----------------------------------------------------------------------
@@ -224,11 +174,42 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aCX,
 nsInputFile::nsInputFile(nsIAtom* aTag, nsIFormManager* aManager)
   : nsInput(aTag, aManager) 
 {
+  mTextField    = nsnull;
+  mBrowseButton = nsnull;
 }
 
 nsInputFile::~nsInputFile()
 {
+  NS_IF_RELEASE(mTextField);
+  NS_IF_RELEASE(mBrowseButton);
 }
+
+nsInputText* nsInputFile::GetTextField() 
+{
+  NS_IF_ADDREF(mTextField);
+  return mTextField;
+}
+
+void nsInputFile::SetTextField(nsInputText* aTextField)
+{
+  NS_IF_RELEASE(mTextField);
+  NS_IF_ADDREF(aTextField);
+  mTextField = aTextField;
+}
+
+nsInput* nsInputFile::GetBrowseButton() 
+{
+  NS_IF_ADDREF(mBrowseButton);
+  return mBrowseButton;
+}
+
+void nsInputFile::SetBrowseButton(nsInput* aBrowseButton)
+{
+  NS_IF_RELEASE(mBrowseButton);
+  NS_IF_ADDREF(aBrowseButton);
+  mBrowseButton = aBrowseButton;
+}
+
 
 nsresult
 nsInputFile::CreateFrame(nsIPresContext* aPresContext,
@@ -264,13 +245,11 @@ nsInputFile::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   if ((aMaxNumValues <= 0) || (nsnull == mName)) {
     return PR_FALSE;
   }
-  nsInput* text = (nsInput *)ChildAt(0);
   // use our name and the text widgets value 
   aNames[0] = *mName;
-  nsITextWidget* textWidget = (nsITextWidget *)text->GetWidget();
+  nsITextWidget* textWidget = (nsITextWidget *)mTextField->GetWidget();
   textWidget->GetText(aValues[0], 0);  // the last parm is not used
 
-  NS_IF_RELEASE(text);
   aNumValues = 1;
 
   return PR_TRUE;
@@ -279,14 +258,12 @@ nsInputFile::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 void nsInputFile::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
   // get the text and set its relevant attributes 
-  nsInput* text = (nsInput *)ChildAt(0);
   if ((aAttribute == nsHTMLAtoms::size) || (aAttribute == nsHTMLAtoms::maxlength) || 
       (aAttribute == nsHTMLAtoms::value) || 
       (aAttribute == nsHTMLAtoms::disabled) || (aAttribute == nsHTMLAtoms::readonly)) 
   {
-    text->SetAttribute(aAttribute, aValue);
+    mTextField->SetAttribute(aAttribute, aValue);
   }
-  NS_RELEASE(text);
  
   nsInputFileSuper::SetAttribute(aAttribute, aValue); 
 }
@@ -300,24 +277,27 @@ NS_NewHTMLInputFile(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIHTMLContent* inputFile = new nsInputFile(aTag, aManager);
+  nsInputFile* inputFile = new nsInputFile(aTag, aManager);
   if (nsnull == inputFile) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsIHTMLContent* child;
-  nsresult status = NS_NewHTMLInputText(&child, aTag, aManager);
+  nsInputText* textField;
+  // pass in a null form manager, since this text field is not part of the content model
+  nsresult status = NS_NewHTMLInputText((nsIHTMLContent**)&textField, aTag, nsnull);
   if (NS_OK != status) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  inputFile->AppendChild(child, PR_FALSE);
-  NS_RELEASE(child);
+  inputFile->SetTextField(textField);
+  NS_RELEASE(textField);
 
-  status = NS_NewHTMLInputBrowse(&child, aTag, aManager);
+  nsInput* browseButton;
+  // pass in a null form manager, since this browse button is not part of the content model
+  status = NS_NewHTMLInputBrowse((nsIHTMLContent**)&browseButton, aTag, nsnull);
   if (NS_OK != status) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  inputFile->AppendChild(child, PR_FALSE);
-  NS_RELEASE(child);
+  inputFile->SetBrowseButton(browseButton);
+  NS_RELEASE(browseButton);
 
   return inputFile->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
