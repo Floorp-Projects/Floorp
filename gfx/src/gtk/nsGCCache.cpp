@@ -21,8 +21,8 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsGCCache.h"
 #include <stdio.h>
+#include "nsGCCache.h"
 /* The GC cache is shared among all windows, since it doesn't hog
    any scarce resources (like colormap entries.) */
 static struct GCData gc_cache [30] = { { 0, }, };
