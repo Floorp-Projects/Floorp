@@ -26,7 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 OS2_LIBRARYNAME	= wdgtres
 DLL		= wdgtres.dll
 
-RCOPTS		= -n -x2 -i .
+RCOPTS		= -n -x2 -I .
 
 ifneq ($(MOZ_OS2_TOOLS),VACPP)
 OMF_FLAG	= -Zomf
@@ -49,11 +49,22 @@ endif
 	rc $(RCOPTS) wdgtres.res $@
 
 wdgtres.res: wdgtres.rc
-	rc $(RCOPTS) -r -I $(srcdir) -I $(topsrcdir)/widget/src/os2 $(srcdir)/wdgtres.rc $@
+	cp $(topsrcdir)/widget/src/os2/resID.h ./resID.h
+ifneq ($(DEPTH),$(topsrcdir))
+	cp $(srcdir)/frame.ico ./frame.ico
+	cp $(srcdir)/folder.ico ./folder.ico
+	cp $(srcdir)/dragitem.ico ./dragitem.ico
+	cp $(srcdir)/*.ptr .
+	cp $(srcdir)/wdgtres.def ./wdgtres.def
+endif
+	rc $(RCOPTS) -r $(srcdir)/wdgtres.rc $@
 
 wdgtres.obj: wdgtres.C
 	$(CC) -o $@ -s -c $(CFLAGS) $(OMF_FLAG) $<
 
 realclean clean::
 	rm -rf $(DLL) *.res *.obj
+ifneq ($(DEPTH),$(topsrcdir))
+	rm -rf *.ico *.h *.def
+endif
 
