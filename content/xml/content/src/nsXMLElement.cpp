@@ -258,7 +258,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
           nsCOMPtr<nsIURI> uri;
           rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
                                                          value,
-                                                         GetCurrentDoc(),
+                                                         GetOwnerDoc(),
                                                          base);
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsPresContext> pc;
@@ -415,6 +415,25 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
 
   return ret;
 }
+
+PRBool
+nsXMLElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  nsCOMPtr<nsIURI> linkURI = nsContentUtils::GetLinkURI(this);
+  if (linkURI) {
+    if (aTabIndex) {
+      *aTabIndex = ((sTabFocusModel & eTabFocus_linksMask) == 0 ? -1 : 0);
+    }
+    return PR_TRUE;
+  }
+
+  if (aTabIndex) {
+    *aTabIndex = -1;
+  }
+
+  return PR_FALSE;
+}
+
 
 NS_IMETHODIMP
 nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
