@@ -718,14 +718,22 @@ PRUint32 nsMessengerWinIntegration::GetToolTipSize()
 void nsMessengerWinIntegration::SetToolTipStringOnIconData(const PRUnichar * aToolTipString)
 {
   if (!aToolTipString) return;
+
+  PRUint32 toolTipBufSize = GetToolTipSize();
   
   if (mUseWideCharBiffIcon)
-    ::wcsncpy( mWideBiffIconData.szTip, aToolTipString, GetToolTipSize() );
+  {
+    ::wcsncpy( mWideBiffIconData.szTip, aToolTipString, toolTipBufSize);
+    if (wcslen(aToolTipString) >= toolTipBufSize)
+      mWideBiffIconData.szTip[toolTipBufSize - 1] = 0;
+  }
   else
   {
     nsCString asciiToolTip;
     asciiToolTip.AssignWithConversion(aToolTipString);
     ::strncpy( mAsciiBiffIconData.szTip, asciiToolTip.get(), GetToolTipSize() );
+    if (asciiToolTip.Length() >= toolTipBufSize)
+      mAsciiBiffIconData.szTip[toolTipBufSize - 1] = 0;
   }
 }
 
