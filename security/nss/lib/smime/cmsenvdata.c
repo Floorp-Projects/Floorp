@@ -34,7 +34,7 @@
 /*
  * CMS envelopedData methods.
  *
- * $Id: cmsenvdata.c,v 1.7 2002/01/25 19:08:18 relyea%netscape.com Exp $
+ * $Id: cmsenvdata.c,v 1.8 2003/11/20 02:00:04 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -360,7 +360,11 @@ NSS_CMSEnvelopedData_Decode_BeforeData(NSSCMSEnvelopedData *envd)
 
     cinfo = &(envd->contentInfo);
     bulkalgtag = NSS_CMSContentInfo_GetContentEncAlgTag(cinfo);
-    bulkkey = NSS_CMSRecipientInfo_UnwrapBulkKey(ri,recipient->subIndex,
+    if (bulkalgtag == SEC_OID_UNKNOWN) {
+	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+    } else 
+	bulkkey = 
+	    NSS_CMSRecipientInfo_UnwrapBulkKey(ri,recipient->subIndex,
 						    recipient->cert,
 						    recipient->privkey,
 						    bulkalgtag);
