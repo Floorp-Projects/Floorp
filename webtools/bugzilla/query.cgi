@@ -410,8 +410,9 @@ if (!($cgi->param('query_format') || $cgi->param('format'))) {
     }
 }
 
-# Set cookie from format unless it's a report
-if ($vars->{'format'} !~ /^report-/i) {
+# Set cookie to current format as default, but only if the format
+# one that we should remember.
+if (grep { $_ eq $vars->{'format'} } qw(specific advanced)) {
     $cgi->send_cookie(-name => 'DEFAULTFORMAT',
                       -value => $vars->{'format'},
                       -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
