@@ -41,6 +41,7 @@ function SetupHTMLEditorCommands()
   
   gHTMLEditorCommandManager.registerCommand("cmd_find",       nsFindCommand);
   gHTMLEditorCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
+  gHTMLEditorCommandManager.registerCommand("cmd_replace",    nsReplaceCommand);
   gHTMLEditorCommandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
 
   gHTMLEditorCommandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
@@ -539,6 +540,20 @@ var nsFindNextCommand =
   doCommand: function(aCommand)
   {
     window.editorShell.FindNext();
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsReplaceCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell != null);
+  },
+
+  doCommand: function(aCommand)
+  {
+    window.editorShell.Replace();
   }
 };
 

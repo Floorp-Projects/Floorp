@@ -2920,7 +2920,7 @@ nsEditorShell::DoFind(PRBool aFindNext)
       return NS_ERROR_NOT_INITIALIZED;
     nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return NS_ERROR_NOT_INITIALIZED;
-    rv = findComponent->CreateContext(cwP, nsnull, getter_AddRefs(mSearchContext));
+    rv = findComponent->CreateContext(cwP, this, getter_AddRefs(mSearchContext));
   }
   
   if (NS_SUCCEEDED(rv))
@@ -2944,6 +2944,34 @@ NS_IMETHODIMP
 nsEditorShell::FindNext()
 {
   return DoFind(PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsEditorShell::Replace()
+{
+  if (!mContentAreaDocShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // Get find component.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
+  NS_ASSERTION(((NS_SUCCEEDED(rv)) && findComponent), "GetService failed for find component.");
+  if (NS_FAILED(rv)) { return rv; }
+
+  // make the search context if we need to
+  if (!mSearchContext)
+  {
+    if(!mContentWindow)
+      return NS_ERROR_NOT_INITIALIZED;
+    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
+    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
+    rv = findComponent->CreateContext(cwP, this, getter_AddRefs(mSearchContext));
+  }
+  
+  if (NS_SUCCEEDED(rv))
+    rv = findComponent->Replace(mSearchContext);
+
+  return rv;
 }
 
 /* Get localized strings for UI from the Editor's string bundle */

@@ -93,6 +93,7 @@
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY editfindnext.accesskey "n">
 <!ENTITY editfindnext.keybinding "g">
+<!ENTITY replaceCmd.label "Replace...">
 <!ENTITY checkSpellingCmd.label "Check Spelling">
 <!ENTITY editcheckspelling.accesskey "s">
 <!ENTITY editcheckspelling.keybinding "k">

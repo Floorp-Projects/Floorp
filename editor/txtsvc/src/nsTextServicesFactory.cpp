@@ -23,7 +23,14 @@
 #include "nsIGenericFactory.h"
 
 #include "nsTextServicesDocument.h"
+#include "nsFindAndReplace.h"
 #include "nsTextServicesCID.h"
+
+#define NS_TEXTSERVICESFINDANDREPLACE_CID       \
+{ /* 8B0EEFE1-C4AE-11d4-A401-000064657374 */    \
+0x8b0eefe1, 0xc4ae, 0x11d4,                     \
+{ 0xa4, 0x1, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -31,6 +38,7 @@
 // NOTE: This creates an instance of objects by using the default constructor
 //
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindAndReplace)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -38,7 +46,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
 // class name.
 //
 static nsModuleComponentInfo components[] = {
-  { NULL, NS_TEXTSERVICESDOCUMENT_CID, NULL, nsTextServicesDocumentConstructor },
+  { NULL, NS_TEXTSERVICESDOCUMENT_CID, "@mozilla.org/textservices/textservicesdocument;1", nsTextServicesDocumentConstructor },
+  { NULL, NS_TEXTSERVICESFINDANDREPLACE_CID, NS_FINDANDREPLACE_CONTRACTID, nsFindAndReplaceConstructor },
 };
 
 ////////////////////////////////////////////////////////////////////////

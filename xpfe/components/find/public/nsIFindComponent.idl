@@ -89,15 +89,6 @@ interface nsIFindComponent : nsIAppShellComponent
     --------------------------------------------------------------------------*/
     boolean find( in nsISupports aContext );
 
-    /*--------------------------------- Replace -----------------------------------
-    | Replace the currently selected text. It is intended that the string used |
-    | for replacement is sourced internally to the component (e.g. from a      |
-    | search/replace dialog).                                                  |
-    |                                                                          |
-    | Returns an error if the current context does not allow replacement.      |
-    --------------------------------------------------------------------------*/
-    void replace( in nsISupports aContext );
-
     /*------------------------------- FindNext ---------------------------------
     | Finds the next occurrence (of the previously searched for string) in     |
     | the given search context (document).                                     |
@@ -106,6 +97,23 @@ interface nsIFindComponent : nsIAppShellComponent
     | find component will use the last find performed for any context.         |
     --------------------------------------------------------------------------*/
     boolean findNext( in nsISupports aContext );
+
+    /*--------------------------------- Replace --------------------------------
+    | Replace the currently selected text. It is intended that the string used |
+    | for replacement is sourced internally to the component (e.g. from a      |
+    | search/replace dialog).                                                  |
+    |                                                                          |
+    | Returns an error if the current context does not allow replacement.      |
+    --------------------------------------------------------------------------*/
+    void replace( in nsISupports aContext );
+
+    /*------------------------------- ReplaceNext ------------------------------
+    | Replaces the currently selected text, then searches for next occurrence  |
+    | (of previously searched for string) in the given search context          |
+    | (document). If allOccurrences is TRUE, all occurrences of previously     |
+    | searched for string will be replaced during this method call.
+    --------------------------------------------------------------------------*/
+    boolean replaceNext( in nsISupports aContext, in boolean allOccurrences );
 
     /*----------------------------- ResetContext -------------------------------
     | Reset the given search context to search a new web shell.  Generally,    |

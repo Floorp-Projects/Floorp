@@ -25,12 +25,14 @@ DEPTH=..\..\..
 LIBRARY_NAME=txtsvc
 
 CPPSRCS =				\
+	nsFindAndReplace.cpp	\
 	nsTextServicesDocument.cpp	\
 	nsTextServicesFactory.cpp	\
 	nsTSDNotifier.cpp	\
 	$(NULL)
 
 CPP_OBJS =					\
+	.\$(OBJDIR)\nsFindAndReplace.obj	\
 	.\$(OBJDIR)\nsTextServicesDocument.obj	\
 	.\$(OBJDIR)\nsTextServicesFactory.obj	\
 	.\$(OBJDIR)\nsTSDNotifier.obj	\

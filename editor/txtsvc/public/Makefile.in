@@ -35,6 +35,10 @@ EXPORTS		= \
 		nsTextServicesCID.h \
 		$(NULL)
 
+XPIDLSRCS	= \
+		nsIFindAndReplace.idl \
+		$(NULL)
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk

@@ -22,6 +22,8 @@
 #include "nsIAppShellComponentImpl.h"
 #include "nsIFindComponent.h"
 #include "nsISearchContext.h"
+#include "nsCOMPtr.h"
+#include "nsIFindAndReplace.h"
 
 class nsITextServicesDocument;
 
@@ -50,37 +52,37 @@ public:
     // "Context" for this implementation.
     class Context : public nsISearchContext
     {
-    	public:
+        public:
         NS_DECL_ISUPPORTS
         NS_DECL_NSISEARCHCONTEXT
         
-										Context();
-				virtual 		~Context();
-				NS_IMETHOD	Init( nsIDOMWindowInternal *aWindow,
-				               nsIEditorShell* aEditorShell,
-			                 const nsString& lastSearchString,
-			                 const nsString& lastReplaceString,
-			                 PRBool lastCaseSensitive,
-			                 PRBool lastSearchBackwards,
-			                 PRBool lastWrapSearch);
+        Context();
+        virtual ~Context();
+        NS_IMETHOD Init( nsIDOMWindowInternal *aWindow,
+                         nsIEditorShell* aEditorShell,
+                         const nsString& lastSearchString,
+                         const nsString& lastReplaceString,
+                         PRBool lastCaseSensitive,
+                         PRBool lastSearchBackwards,
+                         PRBool lastWrapSearch);
 
-				NS_IMETHOD	Reset(nsIDOMWindowInternal *aNewWindow);
-				NS_IMETHOD	DoFind(PRBool *aDidFind);
-				NS_IMETHOD	DoReplace();
+         NS_IMETHOD Reset(nsIDOMWindowInternal *aNewWindow);
+         NS_IMETHOD DoFind(PRBool *aDidFind);
+         NS_IMETHOD DoReplace(PRBool aAllOccurrences, PRBool *aDidFind);
 
         // Utility to construct new TS document from our webshell.
         NS_IMETHOD  MakeTSDocument(nsIDOMWindowInternal* aWindow, nsITextServicesDocument** aDoc);
-        NS_IMETHOD  GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex);
-        NS_IMETHOD  SetupDocForSearch(nsITextServicesDocument *aDoc, PRInt32 *outBlockOffset);
-				
-        nsIDOMWindowInternal*     mTargetWindow;			// weak link. Don't hold a reference
-        nsIEditorShell*   mEditorShell;						// weak link. Don't hold a reference
+
+        nsIDOMWindowInternal*     mTargetWindow; // weak link. Don't hold a reference
+        nsIEditorShell*   mEditorShell;          // weak link. Don't hold a reference
+        nsCOMPtr<nsIFindAndReplace> mTSFind;
         nsString       mSearchString;
         nsString       mReplaceString;
         PRBool         mCaseSensitive;
         PRBool         mSearchBackwards;
         PRBool         mWrapSearch;
         nsIDOMWindowInternal*  mFindDialog;
+        nsIDOMWindowInternal*  mReplaceDialog;
 
     }; // nsFindComponent::Context
 
