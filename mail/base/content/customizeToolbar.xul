@@ -55,6 +55,12 @@
 
 <stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
 
+<keyset>
+  <key id="cmd_close_sheet" keycode="VK_ESCAPE" oncommand="onCancel();" />
+  <key id="cmd_close_sheet" keycode="VK_RETURN" oncommand="onAccept();" />
+  <key id="cmd_close_sheet" keycode="VK_ENTER" oncommand="onAccept();" />
+</keyset>
+
 <vbox id="main-box" flex="1" collapsed="true">
   <description id="instructions">
   &instructions.description;
