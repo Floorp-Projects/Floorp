@@ -56,6 +56,7 @@ static const char* kColumnsTag  = "COLUMNS";
 static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFContentIID,             NS_IRDFCONTENT_IID);
 static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 
@@ -160,6 +161,14 @@ public:
     PRBool
     IsRootColumnsProperty(nsIRDFContent* parent,
                           nsIRDFResource* property);
+
+
+    /**
+     * Determine if the specified node is the root of the content
+     * tree.
+     */
+	PRBool
+	IsRoot(nsIRDFContent* parent);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -300,6 +309,12 @@ RDFTreeBuilderImpl::OnAssert(nsIRDFContent* parent,
         // fall through and add as a property
         NS_RELEASE(resource);
     }
+
+    // XXX don't add properties to the root. Properties that hang off
+    // of the root end up in the root's COLUMNS tag, which makes them
+    // appear as dummy columns.
+	if (IsRoot(parent))
+        return NS_OK;
 
     rv = AddPropertyChild(parent, property, value);
     return rv;
@@ -734,6 +749,7 @@ RDFTreeBuilderImpl::IsRootColumnsProperty(nsIRDFContent* parent,
 
     nsIDocument* doc         = nsnull;
     nsIContent* rootContent  = nsnull;
+    nsIRDFContent* rdfContent = nsnull;
 
     PRBool isColumnsProperty = PR_FALSE;;
 
@@ -743,14 +759,51 @@ RDFTreeBuilderImpl::IsRootColumnsProperty(nsIRDFContent* parent,
     if ((rootContent = doc->GetRootContent()) == nsnull)
         goto done;
             
-    if (parent != rootContent)
+	if (NS_FAILED(rv = rootContent->QueryInterface(kIRDFContentIID, (void**) &rdfContent)))
+		goto done;
+
+    if (parent != rdfContent)
         goto done;
 
     if (NS_FAILED(property->EqualsString(kURINC_Columns, &isColumnsProperty)))
         goto done;
 
 done:
+    NS_IF_RELEASE(rdfContent);
     NS_IF_RELEASE(rootContent);
     NS_IF_RELEASE(doc);
     return isColumnsProperty;
+}
+
+
+PRBool
+RDFTreeBuilderImpl::IsRoot(nsIRDFContent* node)
+{
+    nsresult rv;
+
+    nsIDocument* doc         = nsnull;
+    nsIContent* rootContent  = nsnull;
+	nsIRDFContent* rdfContent = nsnull;
+
+    PRBool isRoot = PR_FALSE;;
+
+    if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID, (void**) &doc)))
+        goto done;
+
+    if ((rootContent = doc->GetRootContent()) == nsnull)
+        goto done;
+
+	if (NS_FAILED(rv = rootContent->QueryInterface(kIRDFContentIID, (void**) &rdfContent)))
+		goto done;
+
+    if (node != rdfContent)
+        goto done;
+
+	isRoot = PR_TRUE;
+
+ done:
+	NS_IF_RELEASE(rdfContent);
+    NS_IF_RELEASE(rootContent);
+    NS_IF_RELEASE(doc);
+    return isRoot;
 }
