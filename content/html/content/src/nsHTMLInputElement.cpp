@@ -239,7 +239,6 @@ protected:
                             PRBool aCheckSecurity);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
-  nsresult MouseClickForAltText(nsIPresContext* aPresContext);
   //Helper method
 #ifdef ACCESSIBILITY
   nsresult FireEventForAccessibility(nsIPresContext* aPresContext,
@@ -1233,38 +1232,6 @@ nsHTMLInputElement::Click()
   return NS_OK;
 }
 
-nsresult
-nsHTMLInputElement::MouseClickForAltText(nsIPresContext* aPresContext)
-{
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  PRBool disabled;
-
-  nsresult rv = GetDisabled(&disabled);
-  if (NS_FAILED(rv) || disabled) {
-    return rv;
-  }
-
-  // Generate a submit event targeted at the form content
-  nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
-
-  if (form) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    if (shell) {
-      nsCOMPtr<nsIContent> formControl = this; // kungFuDeathGrip
-
-      nsFormEvent event;
-      event.eventStructType = NS_FORM_EVENT;
-      event.message         = NS_FORM_SUBMIT;
-      event.originator      = formControl;
-      nsEventStatus status  = nsEventStatus_eIgnore;
-      shell->HandleDOMEventWithTarget(form, &event, &status);
-    }
-  }
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
@@ -1498,14 +1465,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   // Bugscape 2369: type might have changed during event handler
   GetType(&type);
-
-  if (type == NS_FORM_INPUT_IMAGE && 
-      aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && 
-      nsEventStatus_eIgnore == *aEventStatus &&
-      aFlags & NS_EVENT_FLAG_BUBBLE) {
-    // Tell the frame about the click
-    return MouseClickForAltText(aPresContext);
-  }
 
   if ((NS_OK == rv) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
