@@ -23,7 +23,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-NS_NET nsresult
+nsresult
 NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
 {
     nsresult rv;
@@ -34,7 +34,16 @@ NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
     return rv;
 }
 
-NS_NET nsresult
+nsresult
+NS_NewURI(nsIURI* *result, nsString2& spec, nsIURI* baseURI)
+{
+    char* specStr = spec.ToNewCString();
+    nsresult rv = NS_NewURI(result, specStr, baseURI);
+    nsCRT::free(specStr);
+    return rv;
+}
+
+nsresult
 NS_OpenURI(nsIURI* uri, nsIInputStream* *result)
 {
     nsresult rv;
@@ -54,8 +63,8 @@ NS_OpenURI(nsIURI* uri, nsIInputStream* *result)
     return rv;
 }
 
-NS_NET nsresult
-NS_OpenURI(nsIURL* uri, nsIStreamListener* aConsumer)
+nsresult
+NS_OpenURI(nsIURI* uri, nsIStreamListener* aConsumer)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -72,28 +81,26 @@ NS_OpenURI(nsIURL* uri, nsIStreamListener* aConsumer)
     return rv;
 }
 
-NS_NET nsresult
-NS_MakeAbsoluteURI(const char* spec, nsIURI* base, char* *result)
+nsresult
+NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    return serv->MakeAbsolute(spec, base, result);
+    return serv->MakeAbsolute(spec, baseURI, result);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-NS_NET nsresult
-NS_NewURL(nsIURL* *result, const char* spec, nsIURL* baseURL)
+nsresult
+NS_MakeAbsoluteURI(nsString2& spec, nsIURI* baseURI, nsString2& result)
 {
-    nsresult rv;
-    nsIURI* uri;
-    rv = NS_NewURI(&uri, spec, baseURL);
+    char* specStr = spec.ToNewCString();
+    char* resultStr;
+    nsresult rv = NS_MakeAbsoluteURI(specStr, baseURI, &resultStr);
+    nsCRT::free(specStr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)result);
-    NS_RELEASE(uri);
+    result = resultStr;
     return rv;
 }
 
