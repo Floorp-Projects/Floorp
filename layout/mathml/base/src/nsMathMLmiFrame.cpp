@@ -83,6 +83,12 @@ nsMathMLmiFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
+static PRBool
+IsStyleInvariant(PRUnichar aChar)
+{
+  return nsMathMLOperators::LookupInvariantChar(aChar);
+}
+
 // if our content is not a single character, we turn the font to normal
 NS_IMETHODIMP
 nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
@@ -94,14 +100,14 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // First, let the base class do its work
   rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
-  // Get the length of the text content that we enclose  
+  // Get text content that we enclose  and its length
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to make sure that we are only looking at text-nodes...
+  nsAutoString data;
   PRInt32 length = 0;
   PRInt32 numKids;
   mContent->ChildCount(numKids);
-  //nsAutoString data;
-  for (PRInt32 kid=0; kid<numKids; kid++) {
+  for (PRInt32 kid = 0; kid < numKids; kid++) {
     nsCOMPtr<nsIContent> kidContent;
     mContent->ChildAt(kid, *getter_AddRefs(kidContent));
     if (kidContent.get()) {      	
@@ -110,15 +116,16 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
       	PRUint32 kidLength;
         kidText->GetLength(&kidLength);
         length += kidLength;        
-      	//nsAutoString kidData;
-        //kidText->GetData(kidData);
-        //data += kidData;
+      	nsAutoString kidData;
+        kidText->GetData(kidData);
+        data += kidData;
       }
     }
   }
 
+  PRBool isStyleInvariant = (1 == length) && IsStyleInvariant(data[0]);
   nsIFrame* firstChild = mFrames.FirstChild();
-  if (firstChild && 1 < length) {
+  if (firstChild && ((1 < length) || isStyleInvariant)) {
     // we are going to switch the font to normal ...
 
     // we don't switch if we are in the scope of a mstyle frame with an 
