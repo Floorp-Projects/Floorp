@@ -51,7 +51,14 @@ public interface SymmetricKey {
 
     public byte[] getKeyData() throws NotExtractableException;
 
-    public static class NotExtractableException extends Exception { }
+    public static class NotExtractableException extends Exception {
+        public NotExtractableException() {
+            super();
+        }
+        public NotExtractableException(String mesg) {
+            super(mesg);
+        }
+    }
 
     String getAlgorithm();
 
