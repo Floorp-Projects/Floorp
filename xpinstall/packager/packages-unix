@@ -217,7 +217,6 @@ bin/res/charsetalias.properties
 bin/res/acceptlanguage.properties
 bin/res/unixcharset.properties
 bin/res/charsetData.properties
-bin/res/charsetTitles.properties
 bin/res/langGroups.properties
 bin/res/language.properties
 bin/res/html.css
