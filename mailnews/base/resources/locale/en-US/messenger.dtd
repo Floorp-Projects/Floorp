@@ -134,8 +134,11 @@ Rights Reserved.
 <!ENTITY showLocationToolbarCmd.accesskey "L">
 <!ENTITY showMessageCmd.label "Message">
 <!ENTITY showMessageCmd.accesskey "e">
+
+<!-- sortMenu is also used by addressbook -->
 <!ENTITY sortMenu.label "Sort by">
-<!ENTITY sortMenu.accesskey "b">
+<!ENTITY sortMenu.accesskey "t">
+
 <!ENTITY sortByDateCmd.label "Date">
 <!ENTITY sortByDateCmd.accesskey "e">
 <!ENTITY sortByFlagCmd.label "Flag">

@@ -60,6 +60,9 @@ Rights Reserved.
 <!ENTITY showAbToolbarCmd.label                         "Address Book Toolbar"> 
 <!ENTITY showAbToolbarCmd.accesskey                     "o">  
 
+<!-- override sortMenu.accesskey from messenger.dtd -->
+<!ENTITY sortMenu.accesskey "S">
+
 <!ENTITY showCardPane.label                             "Card Summary Pane">
 <!ENTITY showCardPane.accesskey                         "C">
   
@@ -71,7 +74,6 @@ Rights Reserved.
 <!ENTITY lastFirstCmd.accesskey				"l"> 
 <!ENTITY displayNameCmd.label				"Display Name">  
 <!ENTITY displayNameCmd.accesskey			"d"> 
-<!ENTITY sortMenu.label                                 "Sort by"> 
 
 <!ENTITY stopSearchingCmd.label                         ".Stop Searching"> 
 
