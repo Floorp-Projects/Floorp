@@ -72,13 +72,9 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
   mRDFService->UnregisterDataSource(this);
 
   PL_strfree(mURI);
-  if (mObservers) {
-      for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
-          nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-          NS_RELEASE(obs);
-      }
-      delete mObservers;
-  }
+
+  delete mObservers; // we only hold a weak ref to each observer
+
   nsrefcnt refcnt;
 
   NS_RELEASE2(kNC_Subject, refcnt);
