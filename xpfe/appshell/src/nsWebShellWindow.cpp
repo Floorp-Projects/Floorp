@@ -1398,6 +1398,15 @@ nsWebShellWindow::Show(PRBool aShow)
   {
    	windowMediator->UpdateWindowTimeStamp( this ); 
   } 
+  // Hide splash screen (if there is one).
+  static PRBool splashScreenGone = PR_FALSE;
+  if ( !splashScreenGone ) {
+      NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv);
+      if ( NS_SUCCEEDED(rv) && appShellService ) {
+          appShellService->HideSplashScreen();
+      } 
+      splashScreenGone = PR_TRUE;
+  }
   mDebuting = PR_FALSE;
   return NS_OK;
 }

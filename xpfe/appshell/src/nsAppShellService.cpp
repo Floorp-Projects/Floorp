@@ -53,11 +53,6 @@
 #include "prprf.h"    
 #endif
 
-/* For Javascript Namespace Access */
-#include "nsDOMCID.h"
-#include "nsIScriptNameSetRegistry.h"
-#include "nsAppShellNameSet.h"
-
 #include "nsWidgetsCID.h"
 #include "nsIStreamObserver.h"
 
@@ -75,7 +70,6 @@
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
 
@@ -117,6 +111,7 @@ protected:
   nsIWindowMediator* mWindowMediator;
   nsCOMPtr<nsIWebShellWindow> mHiddenWindow;
   PRBool mDeleteCalled;
+  nsISplashScreen *mSplashScreen;
 
   // The mShutdownTimer is set in Quit() to asynchronously call the
   // ExitCallback(). This allows one last pass through any events in
@@ -133,6 +128,7 @@ nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
   mWindowList   = nsnull;
   mCmdLineService = nsnull;
   mDeleteCalled		= PR_FALSE;
+  mSplashScreen = nsnull;
 }
 
 nsAppShellService::~nsAppShellService()
@@ -141,6 +137,7 @@ nsAppShellService::~nsAppShellService()
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mWindowList);
   NS_IF_RELEASE(mCmdLineService);
+  NS_IF_RELEASE(mSplashScreen);
   if (mHiddenWindow)
     mHiddenWindow->Close(); // merely releasing the ref isn't enough!
   if (mWindowMediator)
@@ -168,7 +165,8 @@ NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP
-nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
+nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
+                               nsISplashScreen *aSplashScreen )
 {
   nsresult rv;
   
@@ -180,6 +178,10 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
   mCmdLineService = aCmdLineService;
   NS_IF_ADDREF( mCmdLineService );
 
+  // Remember the splash screen.
+  mSplashScreen = aSplashScreen;
+  NS_IF_ADDREF( mSplashScreen );
+
   // Create the Event Queue for the UI thread...
   nsIEventQueueService* eventQService;
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
@@ -189,20 +191,6 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
     // XXX: What if this fails?
     rv = eventQService->CreateThreadEventQueue();
   }
-
-  // Register the nsAppShellNameSet with the global nameset registry...
-  nsIScriptNameSetRegistry *registry;
-  rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                    NS_GET_IID(nsIScriptNameSetRegistry),
-                                    (nsISupports **)&registry);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
-  
-  nsAppShellNameSet* nameSet;
-  nameSet = new nsAppShellNameSet();
-  registry->AddExternalNameSet(nameSet);
-  /* XXX: do we need to release this service?  When we do, it get deleted,and our name is lost. */
 
   // Create the toplevel window list...
   rv = NS_NewISupportsArray(&mWindowList);
@@ -946,3 +934,12 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
   }
 }
 
+NS_IMETHODIMP
+nsAppShellService::HideSplashScreen() {
+    // Hide the splash screen (and release it) if there is one.
+    if ( mSplashScreen ) {
+        mSplashScreen->Hide();
+        NS_RELEASE( mSplashScreen );
+    }
+    return NS_OK;
+}

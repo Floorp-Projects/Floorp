@@ -121,13 +121,16 @@ static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined (XP_MAC )
-void NS_ShowSplashScreen()
+#if !defined (XP_MAC ) && ( !defined( XP_PC ) || !defined( WIN32 ) )
+nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
 {	
-}
-
-void NS_HideSplashScreen()
-{
+    nsresult rv = NS_OK;
+    if ( aResult ) {
+        *aResult = 0;
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
 }
 
 PRBool NS_CanRun() 
@@ -470,7 +473,10 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 #include <floatingpoint.h>
 #endif
 
-static nsresult main1(int argc, char* argv[])
+// Note: splashScreen is an owning reference that this function has responsibility
+//       to release.  This responsibility is delegated to the app shell service
+//       (see nsAppShellService::Initialize call, below).
+static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
 {
   nsresult rv;
 
@@ -525,10 +531,13 @@ static nsresult main1(int argc, char* argv[])
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get the appshell service");
   if (NS_FAILED(rv)) {
+    splashScreen->Hide();
     return rv;
   }
 
-  rv = appShell->Initialize( cmdLineArgs );
+  rv = appShell->Initialize( cmdLineArgs, splashScreen );
+  // We are done with the splash screen here; the app shell owns it now.
+  NS_IF_RELEASE( splashScreen );
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
   if ( NS_FAILED(rv) ) return rv; 
 
@@ -592,7 +601,6 @@ static nsresult main1(int argc, char* argv[])
   if ( NS_SUCCEEDED(rv) )
       walletService->WALLET_FetchFromNetCenter();
 
-  NS_HideSplashScreen();
   // Start main event loop
   rv = appShell->Run();
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
@@ -667,7 +675,15 @@ int main(int argc, char* argv[])
 
   if( !NS_CanRun() )
     return 1; 
-  NS_ShowSplashScreen();
+  // Note: this object is not released here.  It is passed to main1 which
+  //       has responsibility to release it.
+  nsISplashScreen *splash = 0;
+  rv = NS_CreateSplashScreen( &splash );
+  NS_ASSERTION( NS_SUCCEEDED(rv), "NS_CreateSplashScreen failed" );
+  // If the platform has a splash screen, show it ASAP.
+  if ( splash ) {
+      splash->Show();
+  }
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
@@ -687,9 +703,7 @@ int main(int argc, char* argv[])
       su->StartupTasks();
   }
   
-
-  nsresult result = main1( argc, argv );
-
+  nsresult result = main1( argc, argv, splash );
 
   {
         // Scoping this in a block to force the pref service to be           
@@ -722,3 +736,12 @@ int main(int argc, char* argv[])
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return TranslateReturnValue( result );
 }
+
+#if defined( XP_PC ) && defined( WIN32 )
+// We need WinMain in order to not be a console app.  This function is
+// unused if we are a console application.
+int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int ) {
+    // Do the real work.
+    return main( __argc, __argv );
+}
+#endif // XP_PC && WIN32
