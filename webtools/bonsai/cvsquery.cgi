@@ -223,9 +223,11 @@ my $menu = "
 <a href=cvsqueryform.cgi?$ENV{QUERY_STRING}>Modify Query</a>
 ";
 if ($pCount) {
+    my $persons = "people";
+    $persons = "person" if ($pCount == 1);
     $menu .= "
 <br><a href=mailto:$s>Mail everyone on this page</a>
-<NOBR>($pCount people)</NOBR>
+<NOBR>($pCount $persons)</NOBR>
 <br><a href=cvsquery.cgi?$ENV{QUERY_STRING}&generateBackoutCVSCommands=1>Show commands which could be used to back out these changes</a>
 ";
 }
