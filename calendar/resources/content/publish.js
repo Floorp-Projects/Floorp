@@ -168,13 +168,10 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
     try {
        switch(destChannel.URI.scheme)
        {
-	   case 'http':
+         case 'http':
+         case 'https':
 	       return destChannel.QueryInterface(
 		   Components.interfaces.nsIHttpChannel
-		);
-	   case 'https':
-	       return destChannel.QueryInterface(
-		   Components.interfaces.nsIHttpsChannel
 		);
 	   case 'ftp':
 	       return destChannel.QueryInterface(
