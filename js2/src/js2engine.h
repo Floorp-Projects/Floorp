@@ -238,12 +238,14 @@ public:
     js2val posInfValue;
     js2val negInfValue;
 
-    js2val allocString(const String *s)       { return STRING_TO_JS2VAL(allocStringPtr(s)); }
-    js2val allocString(const String &s)       { return allocString(&s); }
-    js2val allocString(const char *s)         { return STRING_TO_JS2VAL(allocStringPtr(s)); }
-    js2val allocString(const String *s, uint32 index, uint32 length)         { return STRING_TO_JS2VAL(allocStringPtr(s, index, length)); }
+    js2val allocString(const String *s)                                 { return STRING_TO_JS2VAL(allocStringPtr(s)); }
+    js2val allocString(const String &s)                                 { return allocString(&s); }
+    js2val allocString(const char *s)                                   { return STRING_TO_JS2VAL(allocStringPtr(s)); }
+    js2val allocString(const char16 *s, uint32 length)                  { return STRING_TO_JS2VAL(allocStringPtr(s, length)); }
+    js2val allocString(const String *s, uint32 index, uint32 length)    { return STRING_TO_JS2VAL(allocStringPtr(s, index, length)); }
     String *allocStringPtr(const String *s);
     String *allocStringPtr(const char *s);
+    String *allocStringPtr(const char16 *s, uint32 length);
     String *allocStringPtr(const String *s, uint32 index, uint32 length);
     String *concatStrings(const String *s1, const String *s2);
 

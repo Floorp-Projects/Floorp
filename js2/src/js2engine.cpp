@@ -97,6 +97,11 @@ namespace MetaData {
         DEFINE_ROOTKEEPER(rk2, astr);
         DEFINE_ROOTKEEPER(rk3, bstr);
 
+        DEFINE_ROOTKEEPER(rk4, a);
+        DEFINE_ROOTKEEPER(rk5, b);
+        DEFINE_ROOTKEEPER(rk6, baseVal);
+        DEFINE_ROOTKEEPER(rk7, indexVal);
+
         retval = JS2VAL_VOID;
         while (true) {
             try {
@@ -125,6 +130,7 @@ namespace MetaData {
                     // one that matches the handler's. The bytecode container, pc and
                     // sp are all reset appropriately, and execution continues.
                     HandlerData *hndlr = (HandlerData *)mTryStack.top();
+//                    mTryStack.pop();
                     ActivationFrame *curAct = (activationStackEmpty()) ? NULL : (activationStackTop - 1);
                 
                     js2val x = JS2VAL_UNDEFINED;
@@ -244,6 +250,13 @@ namespace MetaData {
             (*result)[i] = widen(s[i]);
         }
 //        std::transform(s, s+len, result->begin(), widen);
+        return result; 
+    }
+
+    String *JS2Engine::allocStringPtr(const char16 *s, uint32 length)
+    { 
+        String *p = (String *)(JS2Object::alloc(sizeof(String), PondScum::StringFlag));
+        String *result = new (p) String(s, length);
         return result; 
     }
 
@@ -977,7 +990,8 @@ namespace MetaData {
     // jump to start of new bytecodeContainer
     void JS2Engine::jsr(Phase execPhase, BytecodeContainer *new_bCon, uint32 stackBase, js2val returnVal, Environment *env)
     {
-        ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
+        if (activationStackTop >= (activationStack + MAX_ACTIVATION_STACK))
+            meta->reportError(Exception::internalError, "out of activation stack", meta->engine->errorPos());
         activationStackTop->bCon = bCon;
         activationStackTop->pc = pc;
         activationStackTop->phase = phase;

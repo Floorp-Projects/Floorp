@@ -84,8 +84,7 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
         }
         Multiname *mn = new Multiname(meta->engine->length_StringAtom, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        LookupKind lookup(false, JS2VAL_NULL);
-        defaultWriteProperty(meta, OBJECT_TO_JS2VAL(obj), meta->arrayClass, mn, &lookup, true, result, false);
+        defaultWriteProperty(meta, OBJECT_TO_JS2VAL(obj), meta->arrayClass, mn, meta->env, true, result, false);
     }
     else {
         JS2Class *c = meta->objectType(obj);
@@ -227,6 +226,7 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
 
     js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
+    DEFINE_ROOTKEEPER(rk, A);
     uint32 n = 0;
     uint32 i = 0;
 
@@ -383,6 +383,7 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
 
     js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
+    DEFINE_ROOTKEEPER(rk, A);
 
     uint32 length = getLength(meta, thisObj);
 
@@ -583,25 +584,22 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
     JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
     uint32 length = getLength(meta, thisObj);
 
-    if (length > 0) {
-        uint32 i;
-        js2val *vec = new js2val[length];
-        
-        JS2Class *c = meta->objectType(thisObj);
-        // XXX Need to root the Strings somewhere, this'll do for now..
-        Multiname *mn1 = new Multiname(meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk1, mn1);
-        for (i = 0; i < length; i++) {
-            mn1->name = meta->engine->numberToString(i);
-            c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &vec[i]);                
-        }
+    uint32 i;
+    // XXX bogus! new[] was supposed to behave itself, not just assert fail or crash
+    if (length > 0x1000000)
+        meta->reportError(Exception::internalError, "out of memory", meta->engine->errorPos());
 
-        js_qsort(vec, length, &ca);
+    js2val *vec = new js2val[length];
+    
+    JS2Class *c = meta->objectType(thisObj);
+    for (i = 0; i < length; i++) {
+        c->readPublic(meta, &thatValue, c, meta->engine->numberToString(i), RunPhase, &vec[i]);                
+    }
 
-        for (i = 0; i < length; i++) {
-            mn1->name = meta->engine->numberToString(i);
-            c->writePublic(meta, thatValue, c, mn1->name, true, vec[i]);
-        }
+    js_qsort(vec, length, &ca);
+
+    for (i = 0; i < length; i++) {
+        c->writePublic(meta, thatValue, c, meta->engine->numberToString(i), true, vec[i]);
     }
     return thatValue;
 }
@@ -618,6 +616,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
         js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
         ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
+        DEFINE_ROOTKEEPER(rk, A);
 
         int32 arg0 = meta->toInteger(argv[0]);
         uint32 start;

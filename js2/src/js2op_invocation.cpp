@@ -65,11 +65,8 @@
                     // stack is out of balance anyway...
                     js2val protoVal = OBJECT_TO_JS2VAL(meta->objectClass->prototype);
                     Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
-                    LookupKind lookup(true, JS2VAL_NULL);   // make it a lexical lookup since we want it to
-                                                            // fail if 'prototype' hasn't been defined
-                                                            // XXX (prototype should always exist for functions)
                     JS2Class *limit = meta->objectType(a);
-                    if (limit->read(meta, &a, limit, &mn, &lookup, RunPhase, &protoVal)) {
+                    if (limit->read(meta, &a, limit, &mn, meta->env, RunPhase, &protoVal)) {
                         if (!JS2VAL_IS_OBJECT(protoVal))
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
                     }
@@ -291,11 +288,8 @@
 
                     js2val b_protoVal;
                     Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
-                    LookupKind lookup(true, JS2VAL_NULL);   // make it a lexical lookup since we want it to
-                                                            // fail if 'prototype' hasn't been defined
-                                                            // XXX (prototype should always exist for functions)
                     JS2Class *limit = meta->objectType(b);
-                    if (limit->read(meta, &b, limit, &mn, &lookup, RunPhase, &b_protoVal)) {
+                    if (limit->read(meta, &b, limit, &mn, meta->env, RunPhase, &b_protoVal)) {
                         if (!JS2VAL_IS_OBJECT(b_protoVal))
                             meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
                     }

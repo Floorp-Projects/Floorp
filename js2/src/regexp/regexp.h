@@ -41,14 +41,8 @@
  */
 
 
-typedef uint32 jsint;
 typedef char16 jschar;
-typedef bool JSBool;
-typedef uint32 uintN;
-typedef int32 intN;
 typedef uint8 jsbytecode;
-typedef char16 JSString;
-typedef char16 JSSubString;
 
 
 typedef struct RECharSet {

@@ -2813,6 +2813,20 @@ doUnary:
         return false;
     }
 
+    js2val Environment::readImplicitThis(JS2Metadata *meta)
+    {
+        ParameterFrame *pFrame = getEnclosingParameterFrame();
+        if (pFrame == NULL)
+            meta->reportError(Exception::referenceError, "Can't access instance members outside an instance method without supplying an instance object", meta->engine->errorPos());
+        js2val thisVal = pFrame->thisObject;
+        if ((!JS2VAL_IS_OBJECT(thisVal) || JS2VAL_IS_NULL(thisVal)) || !pFrame->isInstance || !pFrame->isConstructor)
+            meta->reportError(Exception::referenceError, "Can't access instance members inside a non-instance method without supplying an instance object", meta->engine->errorPos());
+        if (!pFrame->superConstructorCalled)
+            meta->reportError(Exception::uninitializedError, "Can't access instance members from within a constructor before the superconstructor has been called", meta->engine->errorPos());
+        return thisVal;
+    }
+
+
     // Read the value of a lexical reference - it's an error if that reference
     // doesn't have a binding somewhere.
     // Attempt the read in each frame in the current environment, stopping at the
@@ -2822,7 +2836,6 @@ doUnary:
     {
         js2val a = JS2VAL_VOID;
         findThis(meta, false, &a);
-        LookupKind lookup(true, a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2832,7 +2845,7 @@ doUnary:
                 {
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
                     js2val frame = OBJECT_TO_JS2VAL(*fi);
-                    result = limit->read(meta, &frame, limit, multiname, &lookup, phase, rval);
+                    result = limit->read(meta, &frame, limit, multiname, this, phase, rval);
                 }
                 break;
             case SystemKind:
@@ -2850,7 +2863,7 @@ doUnary:
                     // XXX uninitialized 'with' object?
                     js2val withVal = OBJECT_TO_JS2VAL(wf->obj);
                     JS2Class *limit = meta->objectType(withVal);
-                    result = limit->read(meta, &withVal, limit, multiname, &lookup, phase, rval);
+                    result = limit->read(meta, &withVal, limit, multiname, this, phase, rval);
                     if (result && base)
                         *base = withVal;
                 }
@@ -2869,7 +2882,6 @@ doUnary:
     {
         js2val a = JS2VAL_VOID;
         findThis(meta, false, &a);
-        LookupKind lookup(true, a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2878,7 +2890,7 @@ doUnary:
             case PackageKind:
                 {
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, &lookup, false, newValue, false);
+                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, this, false, newValue, false);
                 }
                 break;
             case SystemKind:
@@ -2897,7 +2909,7 @@ doUnary:
                     WithFrame *wf = checked_cast<WithFrame *>(*fi);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, &lookup, false, newValue, false);
+                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, this, false, newValue, false);
                 }
                 break;
             }
@@ -2908,7 +2920,7 @@ doUnary:
         if (createIfMissing) {
             Package *pkg = getPackageFrame();
             JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(pkg));
-            result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, &lookup, true, newValue, false);
+            result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, this, true, newValue, false);
             if (result)
                 return;
         }
@@ -2923,7 +2935,6 @@ doUnary:
     {
         js2val a = JS2VAL_VOID;
         findThis(meta, false, &a);
-        LookupKind lookup(true, a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2932,7 +2943,7 @@ doUnary:
             case PackageKind:
                 {
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, &lookup, false, newValue, true);
+                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, this, false, newValue, true);
                 }
                 break;
             case SystemKind:
@@ -2951,7 +2962,7 @@ doUnary:
                     WithFrame *wf = checked_cast<WithFrame *>(*fi);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, &lookup, false, newValue, true);
+                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, this, false, newValue, true);
                 }
                 break;
             }
@@ -2963,7 +2974,7 @@ doUnary:
         ASSERT(false);
         Package *pkg = getPackageFrame();
         JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(pkg));
-        result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, &lookup, true, newValue, true);
+        result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, this, true, newValue, true);
         if (result)
             return;
     }
@@ -2974,7 +2985,6 @@ doUnary:
     {
         js2val a = JS2VAL_VOID;
         findThis(meta, false, &a);
-        LookupKind lookup(true, a);
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2983,7 +2993,7 @@ doUnary:
             case PackageKind:
                 {
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    if (limit->deleteProperty(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, &lookup, &result))
+                    if (limit->deleteProperty(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, this, &result))
                         return result;
                 }
                 break;
@@ -3001,7 +3011,7 @@ doUnary:
                     WithFrame *wf = checked_cast<WithFrame *>(*fi);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    if (limit->deleteProperty(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, &lookup, &result))
+                    if (limit->deleteProperty(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, this, &result))
                         return result;
                 }
                 break;
@@ -3773,16 +3783,16 @@ static const uint8 urlCharType[256] =
         return thisValue;
     }
 
-bool nullClass_ReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval) { return false; }
+bool nullClass_ReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval) { return false; }
 bool nullClass_ReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval) { return false; }
-bool nullClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval) { return false; }
-bool nullClass_arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue) { return false; }
-bool nullClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag) { return false; }
+bool nullClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval) { return false; }
+bool nullClass_arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue) { return false; }
+bool nullClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag) { return false; }
 bool nullClass_WritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue) { return false; }
-bool nullClass_BracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue) { return false; }
-bool nullClass_DeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result) { return false; }
+bool nullClass_BracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, js2val newValue) { return false; }
+bool nullClass_DeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool *result) { return false; }
 bool nullClass_DeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result) { return false; }
-bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result) { return false; }
+bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, bool *result) { return false; }
     
 #define MAKEBUILTINCLASS(c, super, dynamic, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, final, name); c->complete = true; c->defaultValue = defaultVal;
 
@@ -3823,6 +3833,8 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Mu
         integerClass->is = integerIs;
         MAKEBUILTINCLASS(characterClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Character"]), JS2VAL_ZERO);
         MAKEBUILTINCLASS(stringClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["String"]), JS2VAL_NULL);
+        stringClass->bracketRead = stringClass_BracketRead;
+        
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["namespace"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(attributeClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["attribute"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(classClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);
@@ -3955,8 +3967,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 /*** ECMA 3  Array Class ***/
         MAKEBUILTINCLASS(arrayClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Array"]), JS2VAL_NULL);
-        arrayClass->write = arrayWriteProperty;
-        arrayClass->writePublic = arrayWritePublic;
+        arrayClass->write = arrayClass_WriteProperty;
+        arrayClass->writePublic = arrayClass_WritePublic;
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, &world.identifiers["Array"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
@@ -4852,10 +4864,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         JS2Object *result = this;
         DEFINE_ROOTKEEPER(rk1, result);
 
-        JS2Object *obj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
-        DEFINE_ROOTKEEPER(rk2, obj);
+        JS2Object *protoObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
+        DEFINE_ROOTKEEPER(rk2, protoObj);
 
-        meta->createDynamicProperty(this, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(obj), ReadWriteAccess, true, false);
+        meta->createDynamicProperty(this, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(protoObj), ReadWriteAccess, true, false);
+        meta->createDynamicProperty(protoObj, &meta->world.identifiers["constructor"], OBJECT_TO_JS2VAL(this), ReadWriteAccess, true, false);
     }
 
 
@@ -5106,28 +5119,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  ************************************************************************************/
 
     Pond JS2Object::pond(POND_SIZE, NULL);
-#ifdef DEBUG
     std::list<RootKeeper *> JS2Object::rootList;
-#else
-    std::list<PondScum **> JS2Object::rootList;
-#endif
 
     // Add a pointer to the (address of a) gc-allocated object to the root list
     // (Note - we hand out an iterator, so it's essential to
     // use something like std::list that doesn't mess with locations)
-#ifdef DEBUG
     JS2Object::RootIterator JS2Object::addRoot(RootKeeper *t)
     {
         return rootList.insert(rootList.end(), t);
     }
-#else
-    JS2Object::RootIterator JS2Object::addRoot(void *t)
-    {
-        PondScum **p = (PondScum **)t;
-        ASSERT(p);
-        return rootList.insert(rootList.end(), p);
-    }
-#endif
 
     // Remove a root pointer
     void JS2Object::removeRoot(RootIterator ri)
@@ -5152,22 +5152,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             PondScum *scum = NULL;
             if (r->is_js2val) {
                 js2val *valp = (js2val *)(r->p);
-                if (JS2VAL_IS_OBJECT(*valp))
-                    scum = ((PondScum *)(JS2VAL_TO_OBJECT(*valp))) - 1;
+                markJS2Value(*valp);
             }
             else {
-                JS2Object *objp = (JS2Object *)(r->p);
-                if (objp)
-                    scum = ((PondScum *)objp - 1);
-            }
-            if (scum) {
-                ASSERT(scum->owner && (scum->getSize() >= sizeof(PondScum)) && (scum->owner->sanity == POND_SANITY));
-                if (scum->isJS2Object()) {
-                    JS2Object *obj = (JS2Object *)(scum + 1);
-                    GCMARKOBJECT(obj)
+                JS2Object **objp = (JS2Object **)(r->p);
+                if (*objp) {
+                    scum = ((PondScum *)(*objp) - 1);
+                    ASSERT(scum->owner && (scum->getSize() >= sizeof(PondScum)) && (scum->owner->sanity == POND_SANITY));
+                    if (scum->isJS2Object()) {
+                        JS2Object *obj = (JS2Object *)(scum + 1);
+                        GCMARKOBJECT(obj)
+                    }
+                    else
+                        mark(scum + 1);
                 }
-                else
-                    mark(scum + 1);
             }
         }
         return pond.moveUnmarkedToFreeList();

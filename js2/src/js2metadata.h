@@ -56,7 +56,6 @@ class StringInstance;
 class FunctionInstance;
 class ArrayInstance;
 class RegExpInstance;
-class LookupKind;
 class Package;
 
 typedef void (Invokable)();
@@ -64,35 +63,37 @@ typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
-typedef bool (Read)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+typedef bool (Read)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
 typedef bool (ReadPublic)(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
-typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag);
+typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
 typedef bool (WritePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
-typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
+typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool *result);
 typedef bool (DeletePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
-typedef bool (BracketRead)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
-typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
-typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
+typedef bool (BracketRead)(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval);
+typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, js2val newValue);
+typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, bool *result);
 typedef js2val (ImplicitCoerce)(JS2Metadata *meta, js2val newValue, JS2Class *toClass);
 typedef js2val (Is)(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 
-bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
 bool defaultReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
-bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
-bool arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag);
-bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag);
+bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval);
+bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
 bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
-bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
-bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
+bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, js2val newValue);
+bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool *result);
 bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
-bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
-bool arrayWritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
+bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, bool *result);
+
+bool arrayClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
+bool arrayClass_WritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
+
 js2val defaultImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 js2val defaultIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 js2val integerImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 js2val integerIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 
-
+bool stringClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval);
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
@@ -253,10 +254,16 @@ public:
     static void markJS2Value(js2val v);
 };
 
+#ifdef DEBUG
 #define ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(type **p, int line, char *pfile) : is_js2val(false), p(p) { init(line, pfile); }
+#define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj, __LINE__, __FILE__);
+#else
+#define ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(type **p) : is_js2val(false), p(p) { ri = JS2Object::addRoot(this); }
+#define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj);
+#endif
+
 class RootKeeper {
 public:
-#ifdef DEBUG
 
     ROOTKEEPER_CONSTRUCTOR(JS2Object)
     ROOTKEEPER_CONSTRUCTOR(RegExpInstance)
@@ -274,22 +281,18 @@ public:
     ROOTKEEPER_CONSTRUCTOR(FunctionInstance)
     ROOTKEEPER_CONSTRUCTOR(DateInstance)
 
-    RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), p(p)
-    {
-        init(line, pfile);
-    }
+#ifdef DEBUG
+    RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), p(p)    { init(line, pfile); }
     ~RootKeeper() { JS2Object::removeRoot(ri); delete file; }
-
-    void RootKeeper::init(int line, char *pfile)
+    void RootKeeper::init(int ln, char *pfile)
     {
-        line = line;
+        line = ln;
         file = new char[strlen(pfile) + 1];
         strcpy(file, pfile);
         ri = JS2Object::addRoot(this);
     }
 #else
-    RootKeeper(JS2Object **p) : is_js2val(false), p(p), { ri = JS2Object::addRoot(p); }
-    RootKeeper(js2val *p) : is_js2val(true), p(p) { ri = JS2Object::addRoot(p); }
+    RootKeeper(js2val *p) : is_js2val(true), p(p)    { ri = JS2Object::addRoot(this); }
     ~RootKeeper() { JS2Object::removeRoot(ri); }
 #endif
 
@@ -303,11 +306,6 @@ public:
 #endif
 };
 
-#ifdef DEBUG
-#define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj, __LINE__, __FILE__);
-#else
-#define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj);
-#endif
 
 class Attribute : public JS2Object {
 public:
@@ -740,6 +738,7 @@ public:
     void removeTopFrame()                   { frameList.pop_front(); }
 
     bool findThis(JS2Metadata *meta, bool allowPrototypeThis, js2val *result);
+    js2val readImplicitThis(JS2Metadata *meta);
     void lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing);
     void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
@@ -1240,6 +1239,7 @@ public:
                 prototype(prototype), 
                 buildArguments(false),
                 isConstructor(false),
+                isInstance(false),
                 callsSuperConstructor(false),
                 superConstructorCalled(true)
                     { }    
@@ -1249,6 +1249,7 @@ public:
                 prototype(pluralFrame->prototype), 
                 buildArguments(pluralFrame->buildArguments),
                 isConstructor(pluralFrame->isConstructor),
+                isInstance(pluralFrame->isInstance),
                 callsSuperConstructor(pluralFrame->callsSuperConstructor),
                 superConstructorCalled(false)  // initialized to false for each construction of a singular frame
                                                // and then set true when/if the call occurs
@@ -1262,6 +1263,7 @@ public:
     bool prototype;                 // true if this function is not an instance method but defines this anyway
     bool buildArguments;
     bool isConstructor;
+    bool isInstance;
     bool callsSuperConstructor;
     bool superConstructorCalled;
 
@@ -1283,17 +1285,6 @@ public:
 
     virtual void instantiate(Environment *env);
     virtual ~BlockFrame()           { }
-};
-
-
-class LookupKind {
-public:
-    LookupKind(bool isLexical, js2val thisObject) : isLexical(isLexical), thisObject(thisObject) { }
-    
-    bool isPropertyLookup() { return !isLexical; }
-
-    bool isLexical;         // if isLexical, use the 'this' below. Otherwise it's a propertyLookup
-    js2val thisObject;
 };
 
 

@@ -34,7 +34,6 @@
     // Read a multiname property from a base object, push the value onto the stack
     case eDotRead:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
@@ -43,12 +42,12 @@
             if (JS2VAL_IS_OBJECT(b) && (JS2VAL_TO_OBJECT(b)->kind == LimitedInstanceKind)) {
                 LimitedInstance *li = checked_cast<LimitedInstance *>(JS2VAL_TO_OBJECT(b));
                 b = OBJECT_TO_JS2VAL(li->instance);
-                if (!li->limit->read(meta, &b, li->limit, mn, &lookup, RunPhase, &a))
+                if (!li->limit->read(meta, &b, li->limit, mn, NULL, RunPhase, &a))
                     meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             }
             else {
                 JS2Class *limit = meta->objectType(b);
-                if (!limit->read(meta, &b, limit, mn, &lookup, RunPhase, &a))
+                if (!limit->read(meta, &b, limit, mn, NULL, RunPhase, &a))
                     meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             }
             push(a);
@@ -57,13 +56,12 @@
 
     case eDotDelete:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
             bool result;
             JS2Class *limit = meta->objectType(b);
-            if (!limit->deleteProperty(meta, b, limit, mn, &lookup, &result))
+            if (!limit->deleteProperty(meta, b, limit, mn, NULL, &result))
                 push(JS2VAL_FALSE);
             else
                 push(BOOLEAN_TO_JS2VAL(result));
@@ -75,7 +73,6 @@
     case eDotWrite:
         {
             a = pop();
-            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
@@ -84,14 +81,14 @@
             if (JS2VAL_IS_OBJECT(b) && (JS2VAL_TO_OBJECT(b)->kind == LimitedInstanceKind)) {
                 LimitedInstance *li = checked_cast<LimitedInstance *>(JS2VAL_TO_OBJECT(b));
                 b = OBJECT_TO_JS2VAL(li->instance);
-                if (!li->limit->write(meta, b, li->limit, mn, &lookup, true, a, false)) {
+                if (!li->limit->write(meta, b, li->limit, mn, NULL, true, a, false)) {
                     if (!meta->cxt.E3compatibility)
                         meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
                 }
             }
             else {
                 JS2Class *limit = meta->objectType(b);
-                if (!limit->write(meta, b, limit, mn, &lookup, true, a, false)) {
+                if (!limit->write(meta, b, limit, mn, NULL, true, a, false)) {
                     if (!meta->cxt.E3compatibility)
                         meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
                 }
@@ -103,12 +100,11 @@
     // Read the multiname property, but leave the base and the value on the stack
     case eDotRef:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->read(meta, &b, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &b, limit, mn, NULL, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(b);
             push(a);
@@ -175,32 +171,25 @@
         {
             indexVal = pop();
             b = pop();
-            astr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, &b, limit, &mn, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketRead(meta, &b, limit, indexVal, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             push(a);
             indexVal = JS2VAL_VOID;
-            astr = NULL;
         }
         break;
 
     case eBracketDelete:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = pop();
-            astr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             bool result;
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketDelete(meta, b, limit, &mn, &result))
+            if (!limit->bracketDelete(meta, b, limit, indexVal, &result))
                 push(JS2VAL_FALSE);
             else
                 push(BOOLEAN_TO_JS2VAL(result));
             indexVal = JS2VAL_VOID;
-            astr = NULL;
         }
         break;
 
@@ -211,48 +200,40 @@
             a = pop();
             indexVal = pop();
             b = pop();
-            astr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketWrite(meta, b, limit, &mn, a)) {
+            if (!limit->bracketWrite(meta, b, limit, indexVal, a)) {
                 if (!meta->cxt.E3compatibility)
-                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             }
             push(a);
             indexVal = JS2VAL_VOID;
-            astr = NULL;
         }
         break;
 
     // Leave the base object on the stack and push the property value
     case eBracketRef:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = top();
-            astr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, &b, limit, &mn, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketRead(meta, &b, limit, indexVal, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             push(a);
             indexVal = JS2VAL_VOID;
-            astr = NULL;
         }
         break;
     
     // Leave the base object and index value, push the value
     case eBracketReadForRef:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             b = top();
             astr = meta->toString(indexVal);
-            push(STRING_TO_JS2VAL(astr));
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
+            indexVal = STRING_TO_JS2VAL(astr);
+            push(indexVal);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, &b, limit, &mn, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketRead(meta, &b, limit, indexVal, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), astr);
             push(a);
             indexVal = JS2VAL_VOID;
             astr = NULL;
@@ -262,16 +243,14 @@
     // Beneath the value is a reference pair (base and index), write to that location but leave just the value
     case eBracketWriteRef:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             a = pop();
             indexVal = pop();
-            ASSERT(JS2VAL_IS_STRING(indexVal));
+            ASSERT(JS2VAL_IS_STRING(indexVal)); // because the readForRef above will have executed first
             b = pop();
-            Multiname mn(&meta->world.identifiers[*JS2VAL_TO_STRING(indexVal)], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketWrite(meta, b, limit, &mn, a)) {
+            if (!limit->bracketWrite(meta, b, limit, indexVal, a)) {
                 if (!meta->cxt.E3compatibility)
-                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), JS2VAL_TO_STRING(indexVal));
             }
             push(a);
             indexVal = JS2VAL_VOID;

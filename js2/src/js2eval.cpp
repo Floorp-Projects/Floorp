@@ -625,7 +625,7 @@ namespace MetaData {
     }
 
 
-    bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
+    bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval)
     {
         InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, ReadAccess);
         if (mBase)
@@ -635,9 +635,10 @@ namespace MetaData {
 
         Member *m = meta->findCommonMember(base, multiname, ReadAccess, false);
         if (m == NULL) {
-            if (lookupKind->isPropertyLookup() && JS2VAL_IS_OBJECT(*base) 
-                    && ( (JS2VAL_TO_OBJECT(*base)->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(*base))->sealed)
-                        || ( (JS2VAL_TO_OBJECT(*base)->kind == PackageKind) && !checked_cast<Package *>(JS2VAL_TO_OBJECT(*base))->sealed) ) {
+            if ((env == NULL) 
+                    && JS2VAL_IS_OBJECT(*base) 
+                    && (( (JS2VAL_TO_OBJECT(*base)->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(*base))->sealed)
+                        || ( (JS2VAL_TO_OBJECT(*base)->kind == PackageKind) && !checked_cast<Package *>(JS2VAL_TO_OBJECT(*base))->sealed) ) ) {
                 if (phase == CompilePhase)
                     meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
                 else {
@@ -661,14 +662,12 @@ namespace MetaData {
         case Member::InstanceMethodMember:
         case Member::InstanceGetterMember:
         case Member::InstanceSetterMember:
-            if ( (JS2VAL_IS_OBJECT(*base) && (JS2VAL_TO_OBJECT(*base)->kind != ClassKind))
-                    || lookupKind->isPropertyLookup())
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            if (JS2VAL_IS_VOID(lookupKind->thisObject))
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            if (JS2VAL_IS_UNINITIALIZED(lookupKind->thisObject))
-                meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
-            return meta->readInstanceMember(lookupKind->thisObject, meta->objectType(lookupKind->thisObject), checked_cast<InstanceMember *>(m), phase, rval);
+            {
+                if (!JS2VAL_IS_OBJECT(*base) || (JS2VAL_TO_OBJECT(*base)->kind != ClassKind) || (env == NULL))
+                    meta->reportError(Exception::referenceError, "Can't read an instance member without supplying an instance", meta->engine->errorPos());
+                js2val thisVal = env->readImplicitThis(meta);
+                return meta->readInstanceMember(thisVal, meta->objectType(thisVal), checked_cast<InstanceMember *>(m), phase, rval);
+            }
         default:
             NOT_REACHED("bad member kind");
             return false;
@@ -679,44 +678,44 @@ namespace MetaData {
     {
         // XXX could speed up by pushing knowledge of single namespace?
         DEFINE_ROOTKEEPER(rk1, name);
-        LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return defaultReadProperty(meta, base, limit, mn, &lookup, phase, rval);
+        return defaultReadProperty(meta, base, limit, mn, NULL, phase, rval);
     }
 
     bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result)
     {
         DEFINE_ROOTKEEPER(rk1, name);
-        // XXX could speed up by pushing knowledge of single namespace & lookup?
-        LookupKind lookup(false, JS2VAL_NULL);
+        // XXX could speed up by pushing knowledge of single namespace?
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return defaultDeleteProperty(meta, base, limit, mn, &lookup, result);
+        return defaultDeleteProperty(meta, base, limit, mn, NULL, result);
     }
 
     bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
     {
         DEFINE_ROOTKEEPER(rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
-        LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return defaultWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue, false);
+        return defaultWriteProperty(meta, base, limit, mn, NULL, createIfMissing, newValue, false);
     }
 
-    bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval)
+    bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval)
     {
-        LookupKind lookup(false, JS2VAL_NULL);
-        return limit->read(meta, base, limit, multiname, &lookup, phase, rval);
+        const String *indexStr = meta->toString(indexVal);
+        DEFINE_ROOTKEEPER(rk, indexStr);
+        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(rk1, mn);
+        return limit->read(meta, base, limit, mn, NULL, phase, rval);
     }
 
-    bool arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag)
+    bool arrayClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {
         ASSERT(JS2VAL_IS_OBJECT(base));
         JS2Object *obj = JS2VAL_TO_OBJECT(base);
 
-        bool result = defaultWriteProperty(meta, base, limit, multiname, lookupKind, createIfMissing, newValue, false);
+        bool result = defaultWriteProperty(meta, base, limit, multiname, env, createIfMissing, newValue, false);
         if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
             const char16 *numEnd;        
             float64 f = stringToDouble(multiname->name->data(), multiname->name->data() + multiname->name->length(), numEnd);
@@ -735,17 +734,16 @@ namespace MetaData {
         return result;
     }    
 
-    bool arrayWritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
+    bool arrayClass_WritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
     {
         DEFINE_ROOTKEEPER(rk1, name);
         // XXX could speed up by pushing knowledge of single namespace?
-        LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return arrayWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue, false);
+        return arrayClass_WriteProperty(meta, base, limit, mn, meta->env, createIfMissing, newValue, false);
     }
 
-    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag)
+    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {
         InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
         if (mBase) {
@@ -794,26 +792,29 @@ namespace MetaData {
         case Member::InstanceMethodMember:
         case Member::InstanceGetterMember:
         case Member::InstanceSetterMember:
-            if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind))
-                    || lookupKind->isPropertyLookup())
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            if (JS2VAL_IS_VOID(lookupKind->thisObject))
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            meta->writeInstanceMember(lookupKind->thisObject, meta->objectType(lookupKind->thisObject), checked_cast<InstanceMember *>(m), newValue);
-            return true;
+            {
+                if ( !JS2VAL_IS_OBJECT(base) || (JS2VAL_TO_OBJECT(base)->kind != ClassKind) || (env == NULL))
+                    meta->reportError(Exception::referenceError, "Can't write an instance member withoutsupplying an instance", meta->engine->errorPos());
+                js2val thisVal = env->readImplicitThis(meta);
+                meta->writeInstanceMember(thisVal, meta->objectType(thisVal), checked_cast<InstanceMember *>(m), newValue);
+                return true;
+            }
         default:
             NOT_REACHED("bad member kind");
             return false;
         }
     }
 
-    bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue)
+    bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, js2val newValue)
     {
-        LookupKind lookup(false, JS2VAL_NULL);
-        return limit->write(meta, base, limit, multiname, &lookup, true, newValue, false);
+        const String *indexStr = meta->toString(indexVal);
+        DEFINE_ROOTKEEPER(rk, indexStr);
+        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(rk1, mn);
+        return limit->write(meta, base, limit, mn, NULL, true, newValue, false);
     }
 
-    bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result)
+    bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool *result)
     {
         InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
         if (mBase) {
@@ -882,12 +883,11 @@ VariableMemberCommon:
         case Member::InstanceMethodMember:
         case Member::InstanceGetterMember:
         case Member::InstanceSetterMember:
-            if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind)) || lookupKind->isPropertyLookup()) {
+            if ( (!JS2VAL_IS_OBJECT(base) || (JS2VAL_TO_OBJECT(base)->kind != ClassKind)) || (env == NULL)) {
                 *result = false;
                 return true;
             }
-            if (JS2VAL_IS_VOID(lookupKind->thisObject))
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
+            env->readImplicitThis(meta);
             *result = false;
             return true;
         default:
@@ -896,10 +896,13 @@ VariableMemberCommon:
         }
     }
 
-    bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result)
+    bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, bool *result)
     {
-        LookupKind lookup(false, JS2VAL_NULL);
-        return limit->deleteProperty(meta, base, limit, multiname, &lookup, result);
+        const String *indexStr = meta->toString(indexVal);
+        DEFINE_ROOTKEEPER(rk, indexStr);
+        Multiname *mn = new Multiname(indexStr, meta->publicNamespace);
+        DEFINE_ROOTKEEPER(rk1, mn);
+        return limit->deleteProperty(meta, base, limit, mn, NULL, result);
     }
 
     js2val defaultImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
@@ -942,6 +945,32 @@ VariableMemberCommon:
         }        
         return BOOLEAN_TO_JS2VAL(result);
     }
+
+    bool stringClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval)
+    {
+        if (JS2VAL_IS_INT(indexVal)) {
+            const String *str = NULL;
+            if (JS2VAL_IS_STRING(*base)) {
+                str = JS2VAL_TO_STRING(*base);
+            }
+            else {
+                ASSERT(JS2VAL_IS_OBJECT(*base));
+                JS2Object *obj = JS2VAL_TO_OBJECT(*base);
+                ASSERT((obj->kind == SimpleInstanceKind) && (checked_cast<SimpleInstance *>(obj)->type == meta->stringClass));
+                StringInstance *a = checked_cast<StringInstance *>(obj);
+                str = a->mValue;
+            }
+            int32 i = JS2VAL_TO_INT(indexVal);
+            if ((i >= 0) && (i < str->length()))
+                *rval = meta->engine->allocString(&(*str)[i], 1);
+            else
+                *rval = JS2VAL_UNDEFINED;
+            return true;
+        }
+        else
+            return defaultBracketRead(meta, base, limit, indexVal, phase, rval);
+    }
+
 
 
 }; // namespace MetaData

@@ -108,7 +108,6 @@ js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, u
 {
     js2val thatValue = thisValue;
     js2val result;
-    LookupKind lookup(false, JS2VAL_NULL);
     Multiname mn(&meta->world.identifiers["message"], meta->publicNamespace);
 
     JS2Class *c = meta->objectType(thatValue);

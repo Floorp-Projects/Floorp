@@ -964,15 +964,14 @@
 
     case eDotPostInc:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &baseVal, limit, mn, NULL, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
-            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, allocNumber(num + 1.0), false))
+            if (!limit->write(meta, baseVal, limit, mn, NULL, true, allocNumber(num + 1.0), false))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             pushNumber(num);
             baseVal = JS2VAL_VOID;
@@ -980,15 +979,14 @@
         break;
     case eDotPostDec:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &baseVal, limit, mn, NULL, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
-            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, allocNumber(num - 1.0), false))
+            if (!limit->write(meta, baseVal, limit, mn, NULL, true, allocNumber(num - 1.0), false))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             pushNumber(num);
             baseVal = JS2VAL_VOID;
@@ -996,32 +994,30 @@
         break;
     case eDotPreInc:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &baseVal, limit, mn, NULL, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, a, false))
+            if (!limit->write(meta, baseVal, limit, mn, NULL, true, a, false))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             baseVal = JS2VAL_VOID;
         }
         break;
     case eDotPreDec:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &baseVal, limit, mn, NULL, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, a, false))
+            if (!limit->write(meta, baseVal, limit, mn, NULL, true, a, false))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             baseVal = JS2VAL_VOID;
         }
@@ -1029,36 +1025,29 @@
 
     case eBracketPostInc:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
-            astr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->bracketRead(meta, &baseVal, limit, &mn, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketRead(meta, &baseVal, limit, indexVal, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             float64 num = meta->toFloat64(a);
-            if (!limit->bracketWrite(meta, baseVal, limit, &mn, allocNumber(num + 1.0)))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketWrite(meta, baseVal, limit, indexVal, allocNumber(num + 1.0)))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             pushNumber(num);
             baseVal = JS2VAL_VOID;
             indexVal = JS2VAL_VOID;
-            astr = NULL;
         }
         break;
     case eBracketPostDec:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
-            astr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->bracketRead(meta, &baseVal, limit, &mn, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketRead(meta, &baseVal, limit, indexVal, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             float64 num = meta->toFloat64(a);
-            if (!limit->bracketWrite(meta, baseVal, limit, &mn, allocNumber(num - 1.0)))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketWrite(meta, baseVal, limit, indexVal, allocNumber(num - 1.0)))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             pushNumber(num);
             baseVal = JS2VAL_VOID;
             indexVal = JS2VAL_VOID;
@@ -1067,18 +1056,15 @@
         break;
     case eBracketPreInc:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
-            astr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->bracketRead(meta, &baseVal, limit, &mn, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketRead(meta, &baseVal, limit, indexVal, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            if (!limit->bracketWrite(meta, baseVal, limit, &mn, a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketWrite(meta, baseVal, limit, indexVal, a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             baseVal = JS2VAL_VOID;
             indexVal = JS2VAL_VOID;
             astr = NULL;
@@ -1086,18 +1072,15 @@
         break;
     case eBracketPreDec:
         {
-            LookupKind lookup(false, JS2VAL_NULL);
             indexVal = pop();
             baseVal = pop();
-            astr = meta->toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->bracketRead(meta, &baseVal, limit, &mn, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketRead(meta, &baseVal, limit, indexVal, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            if (!limit->bracketWrite(meta, baseVal, limit, &mn, a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketWrite(meta, baseVal, limit, indexVal, a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), meta->toString(indexVal));
             baseVal = JS2VAL_VOID;
             indexVal = JS2VAL_VOID;
             astr = NULL;
