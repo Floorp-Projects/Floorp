@@ -99,6 +99,8 @@ pref("browser.chrome.toolbar_tips",         true);
 
 pref("browser.turbo.enabled", false);
 
+pref("browser.formfill.enable", true);
+
 pref("browser.helperApps.alwaysAsk.force",  false);
 pref("browser.helperApps.neverAsk.saveToDisk", "");
 pref("browser.helperApps.neverAsk.openFile", "");
