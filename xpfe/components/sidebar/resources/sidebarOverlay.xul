@@ -65,9 +65,12 @@
             exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
             hidden="true"/>
           <box uri="rdf:*" flex='1*' hidden="true" orient="vertical">
-            <box flex='1'>
-              <image class="loading-image"/>
-              <text class="loading-image" value="&sidebar.loading.label;"/>
+            <box flex='1' orient="vertical">
+              <box orient="horizontal" flex="1" autostretch="never">
+                <image class="loading-image"/>
+                <text class="loading-image" value="&sidebar.loading.label;"/>
+              </box>
+              <spring flex="100%"/>
             </box>
             <iframe class="panel-frame" flex='1*'
               hidden="true" collapsed="true"
