@@ -2837,6 +2837,20 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
       }
       mParent = holdParent;
     }
+  } else {
+    // In strict mode, we still have to support one "quirky" thing
+    // for tables.  HTML's alignment attributes have always worked
+    // so they don't inherit into tables, but instead align the
+    // tables.  We should keep doing this, because HTML alignment
+    // is just weird, and we shouldn't force it to match CSS.
+    if (GETSCDATA(Display).mDisplay == NS_STYLE_DISPLAY_TABLE) {
+      // -moz-center and -moz-right are used for HTML's alignment
+      if ((GETSCDATA(Text).mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) ||
+          (GETSCDATA(Text).mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT))
+      {
+        GETSCDATA(Text).mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
+      }
+    }
   }
 
   RecalcAutomaticData(aPresContext);

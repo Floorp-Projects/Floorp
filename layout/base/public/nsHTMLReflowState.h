@@ -34,6 +34,7 @@ class nsLineLayout;
 struct nsStyleDisplay;
 struct nsStylePosition;
 struct nsStyleSpacing;
+struct nsStyleText;
 struct nsHypotheticalBox;
 
 /**
@@ -206,6 +207,7 @@ struct nsHTMLReflowState {
   const nsStyleDisplay* mStyleDisplay;
   const nsStylePosition* mStylePosition;
   const nsStyleSpacing* mStyleSpacing;
+  const nsStyleText* mStyleText;
 
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.

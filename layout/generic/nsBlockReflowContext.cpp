@@ -185,39 +185,26 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
       }
       else if (eStyleUnit_Auto != rightUnit) {
         // The block/table doesn't have auto margins.
-        PRBool doCSS = PR_TRUE;
-        if (mIsTable) {
-          const nsStyleText* styleText;
-          mOuterReflowState.frame->GetStyleData(eStyleStruct_Text,
-                                       (const nsStyleStruct*&)styleText);
-          // This is a navigator compatability case: tables are
-          // affected by the text alignment of the containing
-          // block. CSS doesn't do this, so we use special
-          // text-align attribute values to signal these
-          // compatability cases.
-          switch (styleText->mTextAlign) {
-            case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
-            case NS_STYLE_TEXT_ALIGN_RIGHT:
-              aAlign.mXOffset += remainingSpace;
-              doCSS = PR_FALSE;
-              break;
-            case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
-            case NS_STYLE_TEXT_ALIGN_CENTER:
-              {
-                nsCompatibility mode;
-                mPresContext->GetCompatibilityMode(&mode);
-                if (eCompatibility_NavQuirks == mode) {
-                  aAlign.mXOffset += remainingSpace / 2;
-                  doCSS = PR_FALSE;
-                }
-              }
-              break;
-          }
-        }
-        if (doCSS) {
-// XXX It's not clear we can ever get here because for normal blocks,
-// their size will be well defined by the nsHTMLReflowState logic
-// (maybe width=0 cases get here?)
+
+        // For normal (non-table) blocks we don't get here because
+        // nsHTMLReflowState::CalculateBlockSideMargins handles this.
+        // (I think there may be an exception to that, though...)
+
+        // We use a special value of the text-align property for
+        // HTML alignment (the CENTER element and DIV ALIGN=...)
+        // since it acts on blocks and tables rather than just
+        // being a text-align.
+        // So, check the text-align value from the parent to see if
+        // it has one of these special values.
+        const nsStyleText* styleText = mOuterReflowState.mStyleText;
+        if (styleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT) {
+          aAlign.mXOffset += remainingSpace;
+        } else if (styleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
+          aAlign.mXOffset += remainingSpace / 2;
+        } else {
+          // If we don't have a special text-align value indicating
+          // HTML alignment, then use the CSS rules.
+
           // When neither margin is auto then the block is said to
           // be over constrained, Depending on the direction, choose
           // which margin to treat as auto.
@@ -226,9 +213,9 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
             // The left margin becomes auto
             aAlign.mXOffset += remainingSpace;
           }
-          else {
+          //else {
             // The right margin becomes auto which is a no-op
-          }
+          //}
         }
       }
     }
