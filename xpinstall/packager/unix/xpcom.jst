@@ -1,22 +1,12 @@
 function upgradeCleanup()
 {
-  var fComponentReg;
-  var fXpti;
-
-  fComponentReg = getFolder("Program", "component.reg");
-  logComment("component.reg file: " + fComponentReg);
-  if(File.exists(fComponentReg))
-    fileDelete(fComponentReg);
-
-  fXpti = getFolder("Components", "xpti.dat");
-  logComment("xpti.dat file: " + fXpti);
-  if(File.exists(fXpti))
-    fileDelete(fXpti);
-
-  fXpti = getFolder("Components", "xptitemp.dat");
-  logComment("xptitemp.dat file: " + fXpti);
-  if(File.exists(fXpti))
-    fileDelete(fXpti);
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Program",    "component.reg");
+  deleteThisFile("Program",    "libjsdom.so");
+  deleteThisFile("Program",    "libz.so");
+  deleteThisFile("Components", "xpti.dat");
+  deleteThisFile("Components", "xptitemp.dat");
 }
 
 var srDest = $SpaceRequired$;
@@ -29,6 +19,10 @@ logComment("communicatorFolder: " + communicatorFolder);
 
 if (verifyDiskSpace(communicatorFolder, srDest))
 {
+    // Call upgradeCleanup() before addDirectory() in case we accidentaly
+    // delete files that we happen to be also installing.  This way, if we do,
+    // it will just get reinstalled.  This is for safety measure.
+    upgradeCleanup();
     err = addDirectory("Program",
                        "$Version$",
                        "bin",              // jar source folder 
@@ -40,7 +34,6 @@ if (verifyDiskSpace(communicatorFolder, srDest))
 
     if (err==SUCCESS)
     {
-      upgradeCleanup();
 	    err = performInstall(); 
 	    logComment("performInstall() returned: " + err);
     }

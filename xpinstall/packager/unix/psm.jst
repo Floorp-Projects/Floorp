@@ -1,3 +1,10 @@
+function upgradeCleanup()
+{
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFolder("Communicator", "psm");
+}
+
 var srDest = $SpaceRequired$;
 var err;
 
@@ -10,6 +17,10 @@ logComment("communicatorFolder: " + communicatorFolder);
 
 if(verifyDiskSpace(communicatorFolder, srDest))
 {
+  // Call upgradeCleanup() before addDirectory() in case we accidentaly
+  // delete files that we happen to be also installing.  This way, if we do,
+  // it will just get reinstalled.  This is for safety measure.
+  upgradeCleanup();
   err = addDirectory("Program",          // reg entry
                      "$Version$",        // version
                      "bin",              // jar source

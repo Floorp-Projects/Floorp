@@ -1,3 +1,17 @@
+function upgradeCleanup()
+{
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Components", "libmozucth.so");
+  deleteThisFile("Components", "libpsmglue.so");
+  deleteThisFile("Components", "libsample.so");
+  deleteThisFile("Components", "nsSample.js");
+  deleteThisFile("Program",    "defaults/wallet/URLFieldSchema.tbl");
+  deleteThisFile("Program",    "libcmt.so");
+  deleteThisFile("Program",    "libjpeg.so");
+  deleteThisFile("Program",    "libprotocol.so");
+}
+
 var srDest = $SpaceRequired$;
 
 var err = initInstall("Mozilla Seamonkey", "Seamonkey", "$Version$"); 
@@ -8,6 +22,10 @@ logComment("communicatorFolder: " + communicatorFolder);
 
 if (verifyDiskSpace(communicatorFolder, srDest))
 {
+    // Call upgradeCleanup() before addDirectory() in case we accidentaly
+    // delete files that we happen to be also installing.  This way, if we do,
+    // it will just get reinstalled.  This is for safety measure.
+    upgradeCleanup();
     err = addDirectory("Program",
                        "$Version$",
                        "bin",              // jar source folder
