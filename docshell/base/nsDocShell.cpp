@@ -5110,16 +5110,15 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // Only abort the load if a content policy listener explicitly vetos it!
     //
     nsCOMPtr<nsIDOMElement> requestingElement;
+    // Use nsPIDOMWindow since we _want_ to cross the chrome boundary if needed
+    nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(mScriptGlobal));
+    if (privateWin)
+        requestingElement = privateWin->GetFrameElementInternal();
 
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
     PRUint32 contentType;
     if (IsFrame()) {
-        nsCOMPtr<nsIDOMWindowInternal> intWin(do_QueryInterface(mScriptGlobal));
-        if (intWin)
-            intWin->GetFrameElement(getter_AddRefs(requestingElement));
-#ifdef DEBUG_riceman
         NS_ASSERTION(requestingElement, "A frame but no DOM element!?");
-#endif
         contentType = nsIContentPolicy::TYPE_SUBDOCUMENT;
     } else {
         contentType = nsIContentPolicy::TYPE_DOCUMENT;
