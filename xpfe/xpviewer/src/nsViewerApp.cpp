@@ -654,6 +654,7 @@ extern "C" NS_EXPORT int DebugRobot(
   int imax, char * verify_dir,
   void (*yieldProc)(const char *));
 
+#ifdef MOZ_DEBUG
 void yieldProc(const char * str)
 {
   // Process messages
@@ -670,6 +671,7 @@ void yieldProc(const char * str)
     }
   }
 }
+#endif // MOZ_DEBUG
 #endif
 
 
@@ -1234,6 +1236,7 @@ static void DestroyConsole()
   }
 }
 
+#ifdef MOZ_DEBUG
 static void ShowConsole(nsBrowserWindow* aWindow)
 {
     HWND hWnd = (HWND)aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
@@ -1268,12 +1271,13 @@ static void ShowConsole(nsBrowserWindow* aWindow)
       }
     }
 }
+#endif // MOZ_DEBUG
 #endif
 
 NS_IMETHODIMP
 nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
 {
-#ifdef XP_PC
+#if defined( XP_PC ) && defined( MOZ_DEBUG )
   if (nsnull == gConsole) {
     ShowConsole(aWindow);
   }

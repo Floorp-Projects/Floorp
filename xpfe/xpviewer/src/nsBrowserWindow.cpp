@@ -275,17 +275,21 @@ ButtonCreateInfo gMiniAppsDialogInfo[] = {
 };
 
 ButtonCreateInfo gPersonalToolbarInfo[] = {
-{10, 18, 18, PR_TRUE, kPersonalCmd,  "Phone Book", "http://phonebook/",      "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
-{2,  18, 18, PR_TRUE, kPersonalCmd+1,  "Stocks",   "http://quicken.excite.com/", "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
+{10, 18, 18, PR_TRUE, kPersonalCmd,  "People", "http://home.netscape.com/netcenter/whitepages.html?cp=xpviewerDR1",      "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
+{2,  18, 18, PR_TRUE, kPersonalCmd+1,  "Stocks",   "http://personalfinance.netscape.com/finance/", "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
 {2,  18, 18, PR_TRUE, kPersonalCmd+2,  "Weather",  "http://www.weather.com",   "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
-{2,  18, 18, PR_TRUE, kPersonalCmd+3,  "Sports",   "http://cnnsi.com/",      "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
-{2,  18, 18, PR_TRUE, kPersonalCmd+4,  "News",     "http://www.cnn.com/",    "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
-{2,  18, 18, PR_TRUE, kPersonalCmd+5,  "IMDB",     "www.imdb.com",         "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
+{2,  18, 18, PR_TRUE, kPersonalCmd+3,  "Sports",   "http://excite.netscape.com/sports/",      "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
+{2,  18, 18, PR_TRUE, kPersonalCmd+4,  "News",     "http://home.netscape.com/news/index.html?cp=xpviewerDR1",    "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
+{2,  18, 18, PR_TRUE, kPersonalCmd+5,  "IMDB",     "http://us.imdb.com/Title?You%27ve+Got+Mail+(1998)",         "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif",  "TB_PersonalIcon.gif"},
 {0,   0,  0, PR_FALSE, 0, NULL, NULL, NULL, NULL, NULL}
 };
 
-char * gPersonalURLS[] = {"http://phonebook/", "http://quicken.excite.com/", "http://www.weather.com", 
-              "http://cnnsi.com/", "http://www.cnn.com/", "www.imdb.com"};
+char * gPersonalURLS[] = { "http://home.netscape.com/netcenter/whitepages.html?cp=xpviewerDR1",
+                           "http://personalfinance.netscape.com/finance/",
+                           "http://excite.netscape.com/weather/", 
+                           "http://excite.netscape.com/sports/",
+                           "http://home.netscape.com/news/index.html?cp=xpviewerDR1",
+                           "http://us.imdb.com/Title?You%27ve+Got+Mail+(1998)"};
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -3387,7 +3391,7 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
   CreateMenuItem(samplesMenu, buf, VIEWER_DEMO0+i);
   }
 
-  CreateMenuItem(fileMenu, "Top 100 Sites", VIEWER_TOP100);
+  CreateMenuItem(fileMenu, "Test Sites", VIEWER_TOP100);
 
 #ifdef NOT_YET
   nsIMenu * printMenu = CreateMenu(fileMenu, "Print Preview", 'P');

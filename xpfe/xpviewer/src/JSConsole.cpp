@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include "jsapi.h"
 
+#ifdef MOZ_DEBUG
 HINSTANCE JSConsole::sAppInstance = 0;
 HACCEL JSConsole::sAccelTable = 0;
 CHAR JSConsole::sDefaultCaption[] = "JavaScript Console";
@@ -965,5 +966,5 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                     MB_OK | MB_ICONSTOP);
     }
 }
-
+#endif // MOZ_DEBUG
 
