@@ -21,8 +21,6 @@
 #include "IEHtmlElement.h"
 #include "IEHtmlElementCollection.h"
 
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-
 CIEHtmlElement::CIEHtmlElement()
 {
 }

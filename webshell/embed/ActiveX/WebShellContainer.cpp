@@ -22,13 +22,6 @@
 
 #include "WebShellContainer.h"
 
-
-static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-/* static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID); */
-
-
 CWebShellContainer::CWebShellContainer(CMozillaBrowser *pOwner)
 {
 	NS_INIT_REFCNT();
@@ -200,10 +193,6 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt
 	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
 
 
-	// Fire a DownloadComplete event
-	m_pEvents1->Fire_DownloadComplete();
-	m_pEvents2->Fire_DownloadComplete();
-
 	m_pOwner->m_bBusy = FALSE;
 	SysFreeString(bstrURL);
 
@@ -277,5 +266,10 @@ CWebShellContainer::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnicha
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::OnStopBinding(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
+
+	// Fire a DownloadComplete event
+	m_pEvents1->Fire_DownloadComplete();
+	m_pEvents2->Fire_DownloadComplete();
+
 	return NS_OK;
 }

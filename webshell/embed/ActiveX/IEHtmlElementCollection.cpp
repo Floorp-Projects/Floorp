@@ -73,6 +73,10 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode,
 		{
 			nsIDOMNode *pChildNode = nsnull;
 			pIDOMNodeList->Item(i, &pChildNode);
+			if (pChildNode == nsnull)
+			{
+				continue;
+			}
 
 			// Create an equivalent IE element
 			CIEHtmlElementInstance *pElement = NULL;
@@ -83,11 +87,7 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode,
 				pElement->SetParentNode(pCollection->m_pIDispParent);
 				pCollection->AddNode(pElement);
 			}
-
-			if (pChildNode)
-			{
-				pChildNode->Release();
-			}
+			pChildNode->Release();
 		}
 		pIDOMNodeList->Release();
 	}
@@ -104,8 +104,10 @@ HRESULT CIEHtmlElementCollection::AddNode(IDispatch *pNode)
 {
 	if (pNode == NULL)
 	{
+		NG_ASSERT(0);
 		return E_INVALIDARG;
 	}
+
 	m_cNodeList.push_back(pNode);
 
 	return S_OK;
@@ -146,6 +148,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get_length(long __RPC_FAR *p
 	return S_OK;
 }
 
+typedef CComObject<CComEnum<IEnumVARIANT, &IID_IEnumVARIANT, VARIANT, _Copy<VARIANT> > > CComEnumVARIANT;
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_FAR *__RPC_FAR *p)
 {
@@ -155,8 +158,50 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_
 	}
 
 	*p = NULL;
-	// TODO Create a new IEnumVARIANT containing each member of the collection
-	return E_NOTIMPL;
+
+	// Create a new IEnumVARIANT object
+	CComEnumVARIANT *pEnumVARIANT = NULL;
+	CComEnumVARIANT::CreateInstance(&pEnumVARIANT);
+	if (pEnumVARIANT == NULL)
+	{
+		NG_ASSERT(0);
+		return E_OUTOFMEMORY;
+	}
+
+	int nObject;
+	int nObjects = m_cNodeList.size();
+
+	// Create an array of VARIANTs
+	VARIANT *avObjects = new VARIANT[nObjects];
+	if (avObjects == NULL)
+	{
+		NG_ASSERT(0);
+		return E_OUTOFMEMORY;
+	}
+
+	// Copy the contents of the collection to the array
+	for (nObject = 0; nObject < nObjects; nObject++)
+	{
+		VARIANT *pVariant = &avObjects[nObject];
+		IUnknown *pUnkObject = m_cNodeList[nObject];
+		VariantInit(pVariant);
+		pVariant->vt = VT_UNKNOWN;
+		pVariant->punkVal = pUnkObject;
+		pUnkObject->AddRef();
+	}
+
+	// Copy the variants to the enumeration object
+	pEnumVARIANT->Init(&avObjects[0], &avObjects[nObjects], NULL, AtlFlagCopy);
+
+	// Cleanup the array
+	for (nObject = 0; nObject < nObjects; nObject++)
+	{
+		VARIANT *pVariant = &avObjects[nObject];
+		VariantClear(pVariant);
+	}
+	delete []avObjects;
+
+	return pEnumVARIANT->QueryInterface(IID_IUnknown, (void**) p);
 }
 
 
@@ -166,10 +211,15 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::item(VARIANT name, VARIANT i
 	{
 		return E_INVALIDARG;
 	}
+	
 	*pdisp = NULL;
 
+	// Note: parameter "name" contains the index unless its a string
+	//       in which case index does. Sensible huh?
+
 	CComVariant vIndex;
-	if (SUCCEEDED(vIndex.ChangeType(VT_I4, &index)))
+	if (SUCCEEDED(vIndex.ChangeType(VT_I4, &name)) ||
+		SUCCEEDED(vIndex.ChangeType(VT_I4, &index)))
 	{
 		// Test for stupid values
 		int nIndex = vIndex.lVal;
@@ -210,9 +260,12 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::tags(VARIANT tagName, IDispa
 	{
 		return E_INVALIDARG;
 	}
+	
 	*pdisp = NULL;
+
 	// TODO
 	// iterate through collection looking for elements with matching tags
+	
 	return E_NOTIMPL;
 }
 

@@ -19,7 +19,6 @@
 #include "IEHtmlDocument.h"
 #include "IEHtmlElementCollection.h"
 
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 CIEHtmlDocument::CIEHtmlDocument()
 {
@@ -51,6 +50,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_Script(IDispatch __RPC_FAR *__RPC
 
 ///////////////////////////////////////////////////////////////////////////////
 // IHTMLDocument2 methods
+
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_all(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
 	// Validate parameters

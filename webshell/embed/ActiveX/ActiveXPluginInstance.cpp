@@ -17,11 +17,6 @@
  */
 #include "stdafx.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-//static NS_DEFINE_IID(kIEventHandlerIID, NS_IEVENTHANDLER_IID);
-
-
 ///////////////////////////////////////////////////////////////////////////////
 
 CActiveXPluginInstance::CActiveXPluginInstance()

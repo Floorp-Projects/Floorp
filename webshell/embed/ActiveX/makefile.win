@@ -35,6 +35,7 @@ DEFFILE = MozillaControl.def
 
 OBJS =                                 \
 	.\$(OBJDIR)\StdAfx.obj             \
+	.\$(OBJDIR)\guids.obj              \
 	.\$(OBJDIR)\nsSetupRegistry.obj    \
 	.\$(OBJDIR)\MozillaControl.obj     \
 	.\$(OBJDIR)\MozillaBrowser.obj     \
@@ -141,6 +142,8 @@ MozillaControl.cpp \
 MozillaBrowser.cpp \
 WebShellContainer.cpp \
 StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
+
+guids.cpp: StdAfx.h guids.h
 
 clobber::
 	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
