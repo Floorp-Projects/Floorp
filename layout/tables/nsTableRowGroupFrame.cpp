@@ -1157,7 +1157,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     }
     else
     {
-      rv = mFrames.RemoveFrame(objectFrame);
+      rv = mFrames.DeleteFrame(aPresContext, objectFrame);
     }
     break;
 
@@ -1326,7 +1326,7 @@ NS_METHOD nsTableRowGroupFrame::IR_RowRemoved(nsIPresContext&      aPresContext,
                                               nsTableRowFrame *    aDeletedFrame)
 {
   if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_RowRemoved\n");
-  nsresult rv = mFrames.RemoveFrame((nsIFrame *)aDeletedFrame);
+  nsresult rv = mFrames.DeleteFrame(aPresContext, (nsIFrame *)aDeletedFrame);
   if (NS_SUCCEEDED(rv))
   {
     aReflowState.tableFrame->InvalidateCellMap();
