@@ -240,6 +240,12 @@ function createAccount(hash) {
             smtpService.defaultServer.hostname = hash[i];
     }
     
+    /* new nntp identities should use plain text by default
+     * we wan't that GNKSA (The Good Net-Keeping Seal of Approval) */
+    if (type == "nntp") {
+	identity.composeHtml = false;
+    }
+
     var account = am.createAccount();
     account.incomingServer = server;
     account.addIdentity(identity);
