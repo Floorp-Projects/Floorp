@@ -62,6 +62,7 @@
 #define PROFILE_HOME_ENVIRONMENT_VARIABLE "PROFILE_HOME"
 #elif defined (XP_MAC)
 #define OLD_REGISTRY_FILE_NAME "Netscape Registry"
+#elif defined (XP_BEOS)
 #else /* assume XP_PC */
 #include <direct.h>
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
@@ -1650,6 +1651,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
         }
 
     oldReg->Close();
+#elif defined (XP_BEOS)
 #else
     /* XP_UNIX */
     char *unixProfileName = PR_GetEnv(PROFILE_NAME_ENVIRONMENT_VARIABLE);
