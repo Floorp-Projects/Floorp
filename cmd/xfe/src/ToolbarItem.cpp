@@ -35,6 +35,7 @@
 #include "intl_csi.h"		// For INTL_ functions
 
 #include <Xfe/ToolTip.h>
+#include <Xfe/Primitive.h>
 
 //////////////////////////////////////////////////////////////////////////
 XFE_ToolbarItem::XFE_ToolbarItem(XFE_Frame *	frame,
@@ -114,6 +115,8 @@ XFE_ToolbarItem::setBaseWidget(Widget w)
 				  XFE_ToolbarItem::freeNameCB,
 				  (XtPointer) m_name);
 	
+    XtVaSetValues(w, XmNinstancePointer, this, NULL);
+
 	// Add tooltip support
 	addToolTipSupport();
 

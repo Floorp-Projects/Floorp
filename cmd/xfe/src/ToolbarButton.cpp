@@ -104,7 +104,6 @@ XFE_ToolbarButton::createBaseWidget(Widget			parent,
 	button = XtVaCreateWidget(name,
 							  xfeButtonWidgetClass,
 							  parent,
-							  XmNinstancePointer,	this,
 							  NULL);
 
 	return button;
