@@ -107,6 +107,23 @@ void CDragBarContainer::FinishCreateSelf(void)
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
+void
+CDragBarContainer::AddBar( CDragBar* inBar )
+	{
+		if ( inBar->IsDocked() )
+			mDock->AddBarToDock(inBar);
+		mBars.InsertItemsAt(1, LArray::index_Last, &inBar);
+		inBar->AddListener(this);
+
+		AdjustContainer();
+		AdjustDock();
+		RepositionBars();
+	}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
 void CDragBarContainer::ListenToMessage(
 	MessageT			inMessage,
 	void*				ioParam)
@@ -165,23 +182,27 @@ void CDragBarContainer::RestorePlace(LStream *inPlace)
 		*inPlace >> bIsAvailable;
 		
 		CDragBar* theBar = dynamic_cast<CDragBar*>(FindPaneByID(thePaneID));
-		Assert_(theBar != NULL);
+
+		// Assert_(theBar != NULL); -- oops! theBar might legitimately not exist yet
+		if ( theBar )
+			{
+				// First we want to place the bar in the same position in the
+				// bar array as it was before.  We can tell that by its position
+				// from when it was saved out.	
+				ArrayIndexT theBarIndex = mBars.FetchIndexOf(&theBar);
+				Assert_(theBarIndex != LArray::index_Bad);
+				mBars.MoveItem(theBarIndex, theIndex);
+				
+				// Now we need to sync the state of the bar properly.
+				if (bIsDocked && !theBar->IsDocked())
+					mDock->AddBarToDock(theBar);
+				if (bIsAvailable)
+					theBar->Show();
+				else
+					theBar->Hide();
+				theBar->SetAvailable(bIsAvailable);
+			}
 	
-		// First we want to place the bar in the same position in the
-		// bar array as it was before.  We can tell that by its position
-		// from when it was saved out.	
-		ArrayIndexT theBarIndex = mBars.FetchIndexOf(&theBar);
-		Assert_(theBarIndex != LArray::index_Bad);
-		mBars.MoveItem(theBarIndex, theIndex);
-		
-		// Now we need to sync the state of the bar properly.
-		if (bIsDocked && !theBar->IsDocked())
-			mDock->AddBarToDock(theBar);
-		if (bIsAvailable)
-			theBar->Show();
-		else
-			theBar->Hide();
-		theBar->SetAvailable(bIsAvailable);
 	}
 	
 

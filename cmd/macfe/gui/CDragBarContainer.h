@@ -57,6 +57,8 @@ class CDragBarContainer :
 		virtual void			ShowBar(CDragBar* inBar, Boolean inRefresh = false);
 	protected:
 
+		virtual void			AddBar(CDragBar* inBar);
+
 		virtual	void			NoteCollapseBar(CDragBar* inBar);
 		virtual	void			NoteExpandBar(CDragBar* inBar);
 	
