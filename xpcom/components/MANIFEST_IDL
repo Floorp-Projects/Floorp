@@ -1,2 +1,3 @@
 nsIFactory.idl
 nsIComponentLoader.idl
+nsIComponentManager.idl

@@ -50,121 +50,7 @@ extern const char fileSizeValueName[];
 class nsComponentManagerImpl : public nsIComponentManager {
 public:
     NS_DECL_ISUPPORTS
-
-    // nsIComponentManager methods:
-    NS_IMETHOD FindFactory(const nsCID &aClass,
-                           nsIFactory **aFactory);
-
-    // nsIComponentManager methods:
-    NS_IMETHOD GetClassObject(const nsCID &aClass, const nsIID &aIID,
-                              void **aResult);
-
-    // Finds a class ID for a specific Program ID
-    NS_IMETHOD ProgIDToCLSID(const char *aProgID,
-                             nsCID *aClass);
-  
-    // Finds a Program ID for a specific class ID
-    // caller frees the result with delete[]
-    NS_IMETHOD CLSIDToProgID(nsCID *aClass,
-                             char* *aClassName,
-                             char* *aProgID);
-  
-    // Creates a class instance for a specific class ID
-    NS_IMETHOD CreateInstance(const nsCID &aClass, 
-                              nsISupports *aDelegate,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    // Convenience routine, creates a class instance for a specific ProgID
-    NS_IMETHOD CreateInstance(const char *aProgID,
-                              nsISupports *aDelegate,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    // Manually registry a factory for a class
-    NS_IMETHOD RegisterFactory(const nsCID &aClass,
-                               const char *aClassName,
-                               const char *aProgID,
-                               nsIFactory *aFactory,
-                               PRBool aReplace);
-
-  // Register the component loader for a given type.
-    NS_IMETHOD RegisterComponentLoader(const char *aType,
-                                       const char *aProgID,
-                                       PRBool aReplace);
-
-    // Manually register a dynamically loaded component.
-    // The libraryPersistentDescriptor is what gets passed to the library
-    // self register function from ComponentManager. The format of this string
-    // is the same as nsIFileSpec::GetPersistentDescriptorString()
-    //
-    // This function will go away in favour of RegisterComponentSpec. In fact,
-    // it internally turns around and calls RegisterComponentSpec.
-    NS_IMETHOD RegisterComponent(const nsCID &aClass,
-                                 const char *aClassName,
-                                 const char *aProgID,
-                                 const char *aLibraryPersistentDescriptor,
-                                 PRBool aReplace,
-                                 PRBool aPersist);
-
-    // Register a component using its FileSpec as its identification
-    // This is the more prevalent use.
-    NS_IMETHOD RegisterComponentSpec(const nsCID &aClass,
-                                 const char *aClassName,
-                                 const char *aProgID,
-                                 nsIFileSpec *aLibrary,
-                                 PRBool aReplace,
-                                 PRBool aPersist);
-
-    // Register a component using its dllName. This could be a dll name with
-    // no path so that LD_LIBRARY_PATH on unix or PATH on win can load it. Or
-    // this could be a code fragment name on the Mac.
-    NS_IMETHOD RegisterComponentLib(const nsCID &aClass,
-                                    const char *aClassName,
-                                    const char *aProgID,
-                                    const char *adllName,
-                                    PRBool aReplace,
-                                    PRBool aPersist);
-
-    // Manually unregister a factory for a class
-    NS_IMETHOD UnregisterFactory(const nsCID &aClass,
-                                 nsIFactory *aFactory);
-
-    // Manually unregister a dynamically loaded component
-    NS_IMETHOD UnregisterComponent(const nsCID &aClass,
-                                   const char *aLibrary);
-
-    // Manually unregister a dynamically loaded component
-    NS_IMETHOD UnregisterComponentSpec(const nsCID &aClass,
-                                       nsIFileSpec *aLibrary);
-
-    // Unload dynamically loaded factories that are not in use
-    NS_IMETHOD FreeLibraries(void);
-
-    // Is the given CID currently registered?
-    NS_IMETHOD IsRegistered(const nsCID &aClass,
-                            PRBool *aRegistered);
-
-    // Get an enumeration of all the CIDs
-    NS_IMETHOD EnumerateCLSIDs(nsIEnumerator** aEmumerator);
-    
-    // Get an enumeration of all the ProgIDs
-    NS_IMETHOD EnumerateProgIDs(nsIEnumerator** aEmumerator);
-
-    //////////////////////////////////////////////////////////////////////////////
-    // DLL registration support
-    // Autoregistration will try only files with these extensions.
-    // All extensions are case insensitive.
-    // ".dll",    // Windows
-    // ".dso",    // Unix
-    // ".so",     // Unix
-    // ".sl",     // Unix: HP
-    // ".shlb",	// Mac
-    // ".dlm",    // new for all platforms
-    //
-    //
-    NS_IMETHOD AutoRegister(RegistrationTime when, nsIFileSpec *directory);
-    NS_IMETHOD AutoRegisterComponent(RegistrationTime when, nsIFileSpec *component);
+    NS_DECL_NSICOMPONENTMANAGER
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
@@ -190,7 +76,7 @@ protected:
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
     nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, PRBool checkRegistry);
 
-    nsresult SyncComponentsInDir(RegistrationTime when, nsIFileSpec *dirSpec);
+    nsresult SyncComponentsInDir(PRInt32 when, nsIFileSpec *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult HashProgID(const char *aprogID, const nsCID &aClass);
@@ -204,7 +90,7 @@ protected:
     nsresult PlatformUnregister(const char *cidString, const char *aLibrary);
     nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
     nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
-    nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);
+    nsresult PlatformCLSIDToProgID(const nsCID *aClass, char* *aClassName, char* *aProgID);
 
 protected:
     nsObjectHashtable*  mFactories;

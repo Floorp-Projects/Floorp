@@ -1,7 +1,7 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
+ * Version 1.1 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
  *
@@ -16,20 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsIComponentManager_h__
-#define nsIComponentManager_h__
-
-#include "prtypes.h"
-#include "nsCom.h"
-#include "nsID.h"
-#include "nsError.h"
-#include "nsISupports.h"
-#include "nsIFactory.h"
-
-// XXX Need to substitute these includes with 
-// XXX equivalent forward declarations.
-#include "nsIFileSpec.h"
-#include "nsIEnumerator.h"
+#ifndef nsComponentManagerUtils_h__
+#define nsComponentManagerUtils_h__
 
 #ifndef OBSOLETE_MODULE_LOADING
 /*
@@ -58,14 +46,6 @@ typedef nsresult (*nsRegisterProc)(nsISupports* aServMgr, const char *path);
 typedef nsresult (*nsUnregisterProc)(nsISupports* aServMgr, const char *path);
 #endif /* OBSOLETE_MODULE_LOADING */
 
-#define NS_ICOMPONENTMANAGER_IID                     \
-{ /* 8458a740-d5dc-11d2-92fb-00e09805570f */         \
-    0x8458a740,                                      \
-    0xd5dc,                                          \
-    0x11d2,                                          \
-    {0x92, 0xfb, 0x00, 0xe0, 0x98, 0x05, 0x57, 0x0f} \
-}
-
 #define NS_COMPONENTMANAGER_CID                      \
 { /* 91775d60-d5dc-11d2-92fb-00e09805570f */         \
     0x91775d60,                                      \
@@ -73,148 +53,6 @@ typedef nsresult (*nsUnregisterProc)(nsISupports* aServMgr, const char *path);
     0x11d2,                                          \
     {0x92, 0xfb, 0x00, 0xe0, 0x98, 0x05, 0x57, 0x0f} \
 }
-
-/*
- * nsIComponentManager interface
- */
-
-class nsIComponentManager : public nsISupports {
-public:
-
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMPONENTMANAGER_IID)
-
-  // Get the factory for creation of the CID
-  NS_IMETHOD FindFactory(const nsCID &aClass,
-                         nsIFactory **aFactory) = 0;
-
-  // Get the singleton class object that implements the CID aClass
-  NS_IMETHOD GetClassObject(const nsCID &aClass, const nsIID &aIID,
-                            void **aResult) = 0;
-
-  // Finds a class ID for a specific Program ID
-  NS_IMETHOD ProgIDToCLSID(const char *aProgID,
-                           nsCID *aClass) = 0;
-  
-  // Finds a Program ID for a specific class ID
-  // caller frees the result with delete[]
-  NS_IMETHOD CLSIDToProgID(nsCID *aClass,
-                           char* *aClassName,
-                           char* *aProgID) = 0;
-
-  // Creates a class instance for a specific class ID
-  NS_IMETHOD CreateInstance(const nsCID &aClass, 
-                            nsISupports *aDelegate,
-                            const nsIID &aIID,
-                            void **aResult) = 0;
-
-  // Convenience routine, creates a class instance for a specific ProgID
-  NS_IMETHOD CreateInstance(const char *aProgID,
-                            nsISupports *aDelegate,
-                            const nsIID &aIID,
-                            void **aResult) = 0;
-
-  // Manually registry a factory for a class
-  NS_IMETHOD RegisterFactory(const nsCID &aClass,
-                             const char *aClassName,
-                             const char *aProgID,
-                             nsIFactory *aFactory,
-                             PRBool aReplace) = 0;
-
-  // Register the component loader for a given type.
-  NS_IMETHOD RegisterComponentLoader(const char *aType,
-                                     const char *aProgID,
-                                     PRBool aReplace) = 0;
-
-  // Manually register a dynamically loaded component.
-  // The libraryPersistentDescriptor is what gets passed to the library
-  // self register function from ComponentManager. The format of this string
-  // is the same as nsIFileSpec::GetPersistentDescriptorString()
-  //
-  // WARNING: OBSOLETE
-  // This function will go away in favour of RegisterComponentSpec. In fact,
-  // it internally turns around and calls RegisterComponentSpec.
-  NS_IMETHOD RegisterComponent(const nsCID &aClass,
-                               const char *aClassName,
-                               const char *aProgID,
-                               const char *aLibraryPersistentDescriptor,
-                               PRBool aReplace,
-                               PRBool aPersist) = 0;
-
-  // Register a component using its FileSpec as its identification
-  // This is the more prevalent use.
-  NS_IMETHOD RegisterComponentSpec(const nsCID &aClass,
-                                   const char *aClassName,
-                                   const char *aProgID,
-                                   nsIFileSpec *aLibrary,
-                                   PRBool aReplace,
-                                   PRBool aPersist) = 0;
-  
-  // Register a component using its dllName. This could be a dll name with
-  // no path so that LD_LIBRARY_PATH on unix or PATH on win can load it. Or
-  // this could be a code fragment name on the Mac.
-  NS_IMETHOD RegisterComponentLib(const nsCID &aClass,
-                                  const char *aClassName,
-                                  const char *aProgID,
-                                  const char *adllName,
-                                  PRBool aReplace,
-                                  PRBool aPersist) = 0;
-  
-  // Manually unregister a factory for a class
-  NS_IMETHOD UnregisterFactory(const nsCID &aClass,
-                               nsIFactory *aFactory) = 0;
-
-  // Manually unregister a dynamically loaded component
-  //
-  // WARNING: OBSOLETE
-  // This function will go away in favour of UnregisterComponentSpec.
-  NS_IMETHOD UnregisterComponent(const nsCID &aClass,
-                                 const char *aLibrary) = 0;
-
-  // Manually unregister a dynamically loaded component
-  NS_IMETHOD UnregisterComponentSpec(const nsCID &aClass,
-                                     nsIFileSpec *aLibrarySpec) = 0;
-
-  // Unload dynamically loaded factories that are not in use
-  NS_IMETHOD FreeLibraries(void) = 0;
-
-  //////////////////////////////////////////////////////////////////////////////
-  // DLL registration support
-  // Autoregistration will try only files with these extensions.
-  // All extensions are case insensitive.
-  // ".dll",    // Windows
-  // ".dso",    // Unix
-  // ".so",     // Unix
-  // ".sl",     // Unix: HP
-  // ".shlb",	// Mac
-  // ".dlm",    // new for all platforms
-  //
-  // Directory and fullname are what NSPR will accept. For eg.
-  //	MAC		/Hard drive/mozilla/dist/bin
-  // 	WIN		y:\Hard drive\mozilla\dist\bin (or) y:/Hard drive/mozilla/dist/bin
-  //	UNIX	/Hard drive/mozilla/dist/bin
-  //
-  enum RegistrationTime {
-	NS_Startup = 0,
-	NS_Script = 1,
-	NS_Timer = 2
-  };
-
-  NS_IMETHOD AutoRegister(RegistrationTime when, nsIFileSpec* directory) = 0;
-  NS_IMETHOD AutoRegisterComponent(RegistrationTime when, nsIFileSpec *component) = 0;
-
-  // Is the given CID currently registered?
-  NS_IMETHOD IsRegistered(const nsCID &aClass,
-                          PRBool *aRegistered) = 0;
-
-  // Get an enumeration of all the CIDs
-  NS_IMETHOD EnumerateCLSIDs(nsIEnumerator** aEmumerator) = 0;
-    
-  // Get an enumeration of all the ProgIDs
-  NS_IMETHOD EnumerateProgIDs(nsIEnumerator** aEmumerator) = 0;
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
 
 extern NS_COM nsresult
 NS_GetGlobalComponentManager(nsIComponentManager* *result);
@@ -318,10 +156,8 @@ public:
   // If directory is NULL, then AutoRegister will try registering components
   // in the default components directory which is got by
   // nsSpecialSystemDirectory(XPCOM_CurrentProcessComponentDirectory)
-  static nsresult AutoRegister(nsIComponentManager::RegistrationTime when,
-                               nsIFileSpec* directory);
-  static nsresult AutoRegisterComponent(nsIComponentManager::RegistrationTime when,
-                                        nsIFileSpec *component);
+  static nsresult AutoRegister(PRInt32 when, nsIFileSpec* directory);
+  static nsresult AutoRegisterComponent(PRInt32 when, nsIFileSpec *component);
 
   // Is the given CID currently registered?
   static nsresult IsRegistered(const nsCID &aClass,
@@ -335,6 +171,4 @@ public:
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-#endif
+#endif /* nsComponentManagerUtils_h__ */

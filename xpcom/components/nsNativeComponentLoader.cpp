@@ -864,10 +864,6 @@ nsNativeComponentLoader::RegistryNameForSpec(nsIFileSpec *aSpec,
          * Who knew?
          */
         const char *nativePath;
-        nsFileSpec spec;
-        rv = aSpec->GetFileSpec(&spec);
-        if (NS_FAILED(rv))
-            return rv;
         nativePath = spec.GetNativePathCString();
         nativePath += mComponentsDirLen;
 #ifdef XP_MAC                   // XXX move relativize-fragment logic to nsFileSpec?

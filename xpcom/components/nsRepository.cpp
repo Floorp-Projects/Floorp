@@ -62,7 +62,7 @@ nsComponentManager::CLSIDToProgID(nsCID *aClass,
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->CLSIDToProgID(aClass, aClassName, aProgID);
+    return cm->CLSIDToProgID(*aClass, aClassName, aProgID);
 }
   
 nsresult
@@ -86,7 +86,7 @@ nsComponentManager::CreateInstance(const char *aProgID,
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
     if (NS_FAILED(rv)) return rv;
-    return cm->CreateInstance(aProgID, aDelegate, aIID, aResult);
+    return cm->CreateInstanceByProgID(aProgID, aDelegate, aIID, aResult);
 }
 
 nsresult
@@ -188,8 +188,7 @@ nsComponentManager::FreeLibraries(void)
 }
 
 nsresult
-nsComponentManager::AutoRegister(nsIComponentManager::RegistrationTime when,
-                                 nsIFileSpec *directory)
+nsComponentManager::AutoRegister(PRInt32 when, nsIFileSpec *directory)
 {
     nsIComponentManager* cm;
     nsresult rv = NS_GetGlobalComponentManager(&cm);
@@ -198,7 +197,7 @@ nsComponentManager::AutoRegister(nsIComponentManager::RegistrationTime when,
 }
 
 nsresult
-nsComponentManager::AutoRegisterComponent(nsIComponentManager::RegistrationTime when,
+nsComponentManager::AutoRegisterComponent(PRInt32 when,
                                           nsIFileSpec *fullname)
 {
     nsIComponentManager* cm;

@@ -1,0 +1,80 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIFileSpec.idl"
+#include "nsIFactory.idl"
+#include "nsIEnumerator.idl"
+
+/* should this be in nsroot.idl? */
+native nsCID(nsCID);
+
+[scriptable, uuid(8458a740-d5dc-11d2-92fb-00e09805570f)]
+interface nsIComponentManager : nsISupports
+{
+    nsIFactory findFactory(in nsCIDRef aClass);
+    [noscript] voidStar   getClassObject(in nsCIDRef aClass, in nsIIDRef aIID);
+
+    [noscript] void      progIDToCLSID(in string aProgID, out nsCID aClass);
+    string     CLSIDToProgID(in nsCIDRef aClass, out string aClassName);
+
+    [noscript] voidStar   createInstance(in nsCIDRef aClass,
+                                         in nsISupports aDelegate,
+                                         in nsIIDRef aIID);
+    [noscript] voidStar   createInstanceByProgID(in string aProgID,
+                                                 in nsISupports aDelegate,
+                                                 in nsIIDRef IID);
+
+    void       registerFactory(in nsCIDRef aClass, in string aClassName,
+                               in string aProgID, in nsIFactory aFactory,
+                               in boolean aReplace);
+    void       registerComponentLoader(in string aType, in string aProgID,
+                                       in boolean aReplace);
+    void       registerComponent(in nsCIDRef aClass, in string aClassName,
+                                 in string aProgID, in string aLocation,
+                                 in boolean aReplace, in boolean aPersist);
+    void       registerComponentSpec(in nsCIDRef aClass, in string aClassName,
+                                     in string aProgID, in nsIFileSpec aLibrary,
+                                     in boolean aReplace, in boolean aPersist);
+    void       registerComponentLib(in nsCIDRef aClass, in string aClassName,
+                                    in string aProgID, in string adllName,
+                                    in boolean aReplace, in boolean aPersist);
+    
+    void       unregisterFactory(in nsCIDRef aClass, in nsIFactory aFactory);
+    void       unregisterComponent(in nsCIDRef aClass, in string aLibrary);
+    void       unregisterComponentSpec(in nsCIDRef aClass,
+                                       in nsIFileSpec aLibrarySpec);
+
+    void       freeLibraries();
+    const long NS_Startup = 0;
+    const long NS_Script = 1;
+    const long NS_Timer = 2;
+
+    void       autoRegister(in long when, in nsIFileSpec directory);
+    void       autoRegisterComponent(in long when, in nsIFileSpec component);
+
+    boolean    isRegistered(in nsCIDRef aClass);
+    nsIEnumerator	enumerateCLSIDs();
+    nsIEnumerator	enumerateProgIDs();
+};
+
+%{ C++
+/* include after the class def'n, because it needs to see it. */
+#include "nsComponentManagerUtils.h"
+%} C++
+
