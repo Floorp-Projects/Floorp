@@ -1732,6 +1732,8 @@ function setCurrentObject (obj)
 
     if (client.PRINT_DIRECTION == 1)
         scrollDown(obj.frame, false);    
+
+    client.input.focus();
 }
 
 function checkScroll(frame)
