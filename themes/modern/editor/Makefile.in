@@ -36,7 +36,6 @@ EXPORT_RESOURCE_SAMPLES = \
         EdImageMap.css \
         EditorDialog.css  \
         editor.css \
-		manifest.rdf \
 		$(NULL)
 
 DIRS =  images 

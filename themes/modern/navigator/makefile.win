@@ -49,4 +49,3 @@ install::
 	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\$(THEME)\navigator\skin

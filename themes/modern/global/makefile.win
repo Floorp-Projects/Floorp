@@ -148,4 +148,3 @@ install::
 	$(MAKE_INSTALL) tree.css $(DIST)\bin\chrome\$(THEME)\global\skin
 	$(MAKE_INSTALL) wizardOverlay.css $(DIST)\bin\chrome\$(THEME)\global\skin
 	$(MAKE_INSTALL) loading.gif $(DIST)\bin\chrome\$(THEME)\global\skin
-	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\$(THEME)\global\skin

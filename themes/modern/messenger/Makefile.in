@@ -129,7 +129,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	winwide.gif \
 	wizard.css \
 	importDialog.css \
-	manifest.rdf \
 	$(NULL)
 
 DIRS = addressbook messengercompose

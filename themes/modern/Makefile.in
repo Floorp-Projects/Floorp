@@ -35,8 +35,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(NULL)
 
 DIRS  = communicator global navigator editor messenger 
-# extensions, need to deal with this soon.
-DIRS += chatzilla xmlterm
 
 include $(topsrcdir)/config/rules.mk
 
