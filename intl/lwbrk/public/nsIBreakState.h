@@ -52,7 +52,7 @@ class name : public nsIBreakState {                          \
      mText = aText; mLen = aLen;                             \
      mPos = 0; mPriv = 0; mDone = PR_FALSE;                  \
   } ;                                                        \
-  ~name () { }  ;                                            \
+  virtual ~name () { }  ;                                    \
                                                              \
 public:                                                      \
   NS_IMETHOD Set (PRUint32 aPos, PRBool aDone)               \

@@ -39,7 +39,7 @@ class nsLWBrkFactory : public nsIFactory {
     NS_INIT_REFCNT();
     PR_AtomicIncrement(&g_InstanceCount);
   };
-  ~nsLWBrkFactory() {
+  virtual ~nsLWBrkFactory() {
     PR_AtomicDecrement(&g_InstanceCount);
   };
 
