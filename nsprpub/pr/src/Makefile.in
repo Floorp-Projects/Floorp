@@ -385,7 +385,7 @@ endif
 # Version information generation (begin)
 #
 ECHO = echo
-INCLUDES = -I$(DIST)/include
+INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
 TINC = $(OBJDIR)/_pr_bld.h
 PROD = $(notdir $(SHARED_LIBRARY))
 NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
