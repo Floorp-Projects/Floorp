@@ -2749,7 +2749,7 @@ nsFontXlibSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
     if (gFontSubConverter) {
       res = gFontSubConverter->Init("ISO-8859-1",
                              nsISaveAsCharset::attr_FallbackQuestionMark +
-                               nsISaveAsCharset::attr_EntityBeforeCharsetConv,
+                               nsISaveAsCharset::attr_EntityAfterCharsetConv,
                              nsIEntityConverter::transliterate);
       if (NS_FAILED(res))
         NS_RELEASE(gFontSubConverter);
