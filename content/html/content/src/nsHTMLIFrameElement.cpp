@@ -345,13 +345,17 @@ NS_IMETHODIMP
 nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
                                  PRBool aCompileEventHandlers)
 {
-  nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                                           aCompileEventHandlers);
+  const nsIDocument *old_doc = mDocument;
+
+  nsresult rv =
+    nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                               aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // When document is being set to null on the element's destruction, do not
-  // call LoadSrc().
-  if (!mParent || !mDocument) {
+  // When document is being set to null on the element's destruction,
+  // or when the document is being set to what the document already
+  // is, do not call LoadSrc().
+  if (!mParent || !mDocument || aDocument == old_doc) {
     return NS_OK;
   }
 
