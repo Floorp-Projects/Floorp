@@ -267,7 +267,7 @@
 <!ENTITY increaseFontSize.keybinding "]">
 
 <!ENTITY fontsizeMenu.label "Size">
-<!ENTITY formatsizemenu.accesskey "s">
+<!ENTITY formatsizemenu.accesskey "z">
 <!ENTITY size-xx-smallCmd.label "xx-small">
 <!ENTITY size-xx-small.accesskey "a">
 <!ENTITY size-x-smallCmd.label "x-small">
@@ -285,7 +285,7 @@
 
 <!-- Font Style SubMenu -->
 <!ENTITY fontStyleMenu.label "Style">
-<!ENTITY formatstylemenu.accesskey "t">
+<!ENTITY formatstylemenu.accesskey "s">
 <!ENTITY styleBoldCmd.label "Bold">
 <!ENTITY stylebold.accesskey "b">
 <!ENTITY stylebold.keybinding "b">
@@ -379,7 +379,7 @@
 
 <!-- Style Sheet submenu -->
 <!ENTITY stylesheetMenu.label "Apply Style Sheet">
-<!ENTITY formatstylesheetmenu.accesskey "e">
+<!ENTITY formatstylesheetmenu.accesskey "y">
 <!ENTITY stylesheetOldstyleCmd.label "Oldstyle">
 <!ENTITY ssoldstyle.accesskey "o">
 <!ENTITY stylesheetModernistCmd.label "Modernist">
@@ -406,14 +406,16 @@
 <!ENTITY alignjustify.accesskey "j">
 
 <!ENTITY increaseIndent.label "Increase indent">
-<!ENTITY increaseindent.accesskey "i">
+<!ENTITY increaseindent.accesskey "n">
+<!ENTITY increaseindentkb "=">
 <!ENTITY decreaseIndent.label "Decrease indent">
-<!ENTITY decreaseindent.accesskey "d">
+<!ENTITY decreaseindent.accesskey "e">
+<!ENTITY decreaseindentkb "-">
 
 <!ENTITY pageProperties.label "Page Title and Properties...">
 <!ENTITY pageproperties.accesskey "g">
 <!ENTITY colorsAndBackground.label "Page Colors and Background...">
-<!ENTITY colorsandbackground.accesskey "k">
+<!ENTITY colorsandbackground.accesskey "u">
 
 <!-- Table Menu -->
 <!ENTITY tableMenu.label "Table">
