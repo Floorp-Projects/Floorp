@@ -39,7 +39,6 @@
 #include "nsWeakReference.h"
 #include "nsIHTTPChannel.h"
 
-#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 
@@ -650,35 +649,145 @@ PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem, nsIDocShellTreeItem*
   return SameOrSubdomainOfTarget(originDocumentURI, targetPrincipalURI, documentDomainSet);
 }
 
-NS_IMETHODIMP nsURILoader::GetTarget(const char *aWindowName,
+NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel *channel, nsCString &aWindowTarget, 
                                      nsISupports * aWindowContext,
                                      nsISupports ** aRetargetedWindowContext)
 {
-  nsresult rv = NS_OK;
-  nsAutoString name; name.AssignWithConversion(aWindowName);
-
-  nsCOMPtr<nsIDocShell> docShellContext(do_QueryInterface(aWindowContext));
-  nsCOMPtr<nsIDocShell> targetDocShell;
-
+  nsAutoString name; name.AssignWithConversion(aWindowTarget);
+  nsCOMPtr<nsIDocShellTreeItem> windowCtxtAsTreeItem (do_GetInterface(aWindowContext));
+  nsCOMPtr<nsIDocShellTreeItem>  treeItem;
   *aRetargetedWindowContext = nsnull;
 
-  if (docShellContext) {
-    rv = docShellContext->FindTarget(name.get(), getter_AddRefs(targetDocShell));
+  PRBool mustMakeNewWindow = PR_FALSE;
 
-    if (NS_SUCCEEDED(rv)) {
-      *aRetargetedWindowContext = targetDocShell.get();
+  if(!name.Length() || name.EqualsIgnoreCase("_self"))
+  {
+      *aRetargetedWindowContext = aWindowContext;
+  }
+  else if (name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
+  {
+      mustMakeNewWindow = PR_TRUE;
+      aWindowTarget.Assign("");
+  }
+  else if(name.EqualsIgnoreCase("_parent"))
+  {
+      windowCtxtAsTreeItem->GetSameTypeParent(getter_AddRefs(treeItem));
+      if(!treeItem)
+        *aRetargetedWindowContext = aWindowContext;
+  }
+  else if(name.EqualsIgnoreCase("_top"))
+  {
+      windowCtxtAsTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(treeItem));
+      if(!treeItem)
+        *aRetargetedWindowContext = aWindowContext;
+  }
+  else if(name.EqualsIgnoreCase("_content"))
+  {
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    windowCtxtAsTreeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+
+    if (treeOwner)
+       treeOwner->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
+    else
+    {
+      NS_ERROR("Someone isn't setting up the tree owner.  You might like to try that."
+          "Things will.....you know, work.");
     }
   }
-  // The window context is NOT a DocShell...  This means that no targeting
-  // can occur.
-  else {
-    NS_ASSERTION(!name.Length(), "Cannot have a target name without a context!");
+  else
+  {
+    windowCtxtAsTreeItem->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
 
-    *aRetargetedWindowContext = aWindowContext;
+    // The named window cannot be found so it must be created to receive the
+    // channel data.
+
+    if (!treeItem) {
+      mustMakeNewWindow = PR_TRUE;
+    }
+
+    // Bug 13871: Prevent frameset spoofing
+    //     See BugSplat 336170, 338737 and XP_FindNamedContextInList in the classic codebase
+    //     Per Nav's behaviour:
+    //         - pref controlled: "browser.frame.validate_origin" (mValidateOrigin)
+    //         - allow load if host of target or target's parent is same as host of origin
+    //         - allow load if target is a top level window
+
+    // Check to see if pref is true
+    if (mValidateOrigin && windowCtxtAsTreeItem && treeItem) {
+
+       // Is origin frame from the same domain as target frame?
+       if (! ValidateOrigin(windowCtxtAsTreeItem, treeItem)) {
+
+         // No.  Is origin frame from the same domain as target's parent?
+         nsCOMPtr<nsIDocShellTreeItem> targetParentTreeItem;
+         nsresult rv = treeItem->GetSameTypeParent(getter_AddRefs(targetParentTreeItem));
+         if (NS_SUCCEEDED(rv) && targetParentTreeItem) {
+           if (! ValidateOrigin(windowCtxtAsTreeItem, targetParentTreeItem)) {
+
+             // Neither is from the origin domain, send load to a new window (_blank)
+             *aRetargetedWindowContext = aWindowContext;
+             aWindowTarget.Assign("_blank");
+           } // else (target's parent from origin domain) allow this load
+         } // else (no parent) allow this load since shell is a toplevel window
+       } // else (target from origin domain) allow this load
+     } // else (pref is false) allow this load
+  }
+
+  if (mustMakeNewWindow) {
+      nsCOMPtr<nsIDOMWindowInternal> parentWindow;
+      JSContext* jsContext = nsnull;
+
+      if (aWindowContext)
+      {
+        parentWindow = do_GetInterface(aWindowContext);
+        if (parentWindow)
+        {
+          nsCOMPtr<nsIScriptGlobalObject> sgo;     
+          sgo = do_QueryInterface( parentWindow );
+          if (sgo)
+          {
+            nsCOMPtr<nsIScriptContext> scriptContext;
+            sgo->GetContext( getter_AddRefs( scriptContext ) );
+            if (scriptContext)
+              jsContext = (JSContext*)scriptContext->GetNativeContext();
+          }
+        }
+      }
+      if (!parentWindow || !jsContext)
+      {
+          return NS_ERROR_FAILURE;
+      }
+
+      // Create a new window (context) so that the uri loader has a proper
+      // target to push the content into.
+
+      void* mark;
+      jsval* argv;
+
+      nsAutoString uriValue; // Empty
+      argv = JS_PushArguments(jsContext, &mark, "Ws",
+          uriValue.GetUnicode(), aWindowTarget.get());
+      NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIDOMWindowInternal> newWindow;
+      parentWindow->Open(jsContext, argv, 2, getter_AddRefs(newWindow));
+      JS_PopArguments(jsContext, mark);
+
+      nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(newWindow);
+      nsIDocShell *docShell = nsnull;
+      sgo->GetDocShell(&docShell);
+
+      *aRetargetedWindowContext = (nsISupports *) docShell;
+  }
+
+  nsCOMPtr<nsISupports> treeItemCtxt (do_QueryInterface(treeItem));
+  if (!*aRetargetedWindowContext)  
+  {
+    *aRetargetedWindowContext = treeItemCtxt;
   }
 
   NS_IF_ADDREF(*aRetargetedWindowContext);
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel *channel, 
@@ -714,7 +823,7 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel *channel,
 
   nsCAutoString windowTarget(aWindowTarget);
   nsCOMPtr<nsISupports> retargetedWindowContext;
-  NS_ENSURE_SUCCESS(GetTarget(aWindowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetTarget(channel, windowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
 
   NS_NEWXPCOM(loader, nsDocumentOpenInfo);
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
@@ -903,59 +1012,69 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIURIContentListener> listenerToUse = aContentListener;
-
-  PRBool foundContentHandler = PR_FALSE;
-  if (listenerToUse)
-    foundContentHandler = ShouldHandleContent(listenerToUse,
-                                              aContentType, 
-                                              aCommand,
-                                              aWindowTarget,
-                                              aContentTypeToUse);
+  PRBool skipRetargetingSearch = PR_FALSE;
+  // How do we determine whether we need to ask any registered content
+  // listeners if they want a crack at the content?
+  // (1) if the window target is blank or new, then we don't want to
+  //     ask...
+  if (!nsCRT::strcasecmp(aWindowTarget, "_blank") || !nsCRT::strcasecmp(aWindowTarget, "_new"))
+    skipRetargetingSearch = PR_TRUE;
+  else
+  {
+    // (2) if the original content listener is NULL and we have a
+    //     target name then we must not be a window open with that
+    //     target name so skip the content listener search and skip to
+    //     the part that brings up the new window.
+    if (aWindowTarget && *aWindowTarget && !aContentListener)
+      skipRetargetingSearch = PR_TRUE;
+  }
+  
+  // find a content handler that can and will handle the content
+  if (!skipRetargetingSearch)
+  {
+    PRBool foundContentHandler = PR_FALSE;
+    if (listenerToUse)
+      foundContentHandler = ShouldHandleContent(listenerToUse, aContentType, 
+                                                aCommand, aWindowTarget, aContentTypeToUse);
                                             
 
-  // if it can't handle the content, scan through the list of
-  // registered listeners
-  if (!foundContentHandler)
-  {
-    PRUint32 count = 0;
-    PRInt32 i;
-    
-    // keep looping until we get a content listener back
-    m_listeners->Count(&count);
-    for(i = 0; i < (PRInt32)count && !foundContentHandler; i++)
+    // if it can't handle the content, scan through the list of
+    // registered listeners
+    if (!foundContentHandler)
     {
-      //nsIURIContentListener's aren't refcounted.
-      nsWeakPtr weakListener;
-      nsCOMPtr<nsIURIContentListener> listener;
-
-      m_listeners->QueryElementAt(i, NS_GET_IID(nsIWeakReference),
-                                  getter_AddRefs(weakListener));
+       PRInt32 i = 0;
+       // keep looping until we get a content listener back
+       PRUint32 count; m_listeners->Count(&count);
+       for(i = 0; i < PRInt32(count) && !foundContentHandler; i++)
+       {
+          //nsIURIContentListener's aren't refcounted.
+          nsWeakPtr weakListener;
+          m_listeners->QueryElementAt(i, NS_GET_IID(nsIWeakReference),
+                                      getter_AddRefs(weakListener));
          
-      listener = do_QueryReferent(weakListener);
-      if (listener)
-      {
-        foundContentHandler = ShouldHandleContent(listener,
-                                                  aContentType, 
-                                                  aCommand,
-                                                  aWindowTarget,
-                                                  aContentTypeToUse);
-        if (foundContentHandler) {
-          listenerToUse = listener;
-        }
-      } else {
-        // remove from the listener list, and reset i
-        m_listeners->RemoveElementAt(i);
-        i--;
-      }
-    } // for loop
-  } // if we can't handle the content
+          nsCOMPtr<nsIURIContentListener> listener =
+            do_QueryReferent(weakListener);
+          if (listener)
+          {
+              foundContentHandler = ShouldHandleContent(listener, aContentType, 
+                                                        aCommand, aWindowTarget, aContentTypeToUse);
+              if (foundContentHandler)
+                listenerToUse = listener;
+          } else {
+            // remove from the listener list, and reset i
+            m_listeners->RemoveElementAt(i);
+            i--;
+          }
+      } // for loop
+    } // if we can't handle the content
 
 
-  if (foundContentHandler && listenerToUse)
-  {
-    *aContentListenerToUse = listenerToUse;
-    NS_IF_ADDREF(*aContentListenerToUse);
-    return rv;
+    if (foundContentHandler && listenerToUse)
+    {
+      *aContentListenerToUse = listenerToUse;
+      NS_IF_ADDREF(*aContentListenerToUse);
+      return rv;
+    }
   }
 
   // no registered content listeners to handle this type!!! so go to the register 
