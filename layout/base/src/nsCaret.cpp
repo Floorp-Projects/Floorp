@@ -577,7 +577,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
       else
       {
         theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                  (void**)&newBidiLevel, sizeof(PRUint8) );
+                                  (void**)&newBidiLevel, sizeof(newBidiLevel) );
         presShell->SetCursorBidiLevel(newBidiLevel);
         bidiLevel = newBidiLevel;
       }
@@ -624,14 +624,14 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
                 // paragraph level, and put the caret at the end of the frame before that.
                 PRUint8 baseLevel;
                 frameAfter->GetBidiProperty(presContext, nsLayoutAtoms::baseLevel,
-                                            (void**)&baseLevel, sizeof(PRUint8) );
+                                            (void**)&baseLevel, sizeof(baseLevel) );
                 if (baseLevel != levelAfter)
                 {
                   if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, baseLevel, &theFrame)))
                   {
                     theFrame->GetOffsets(start, end);
                     theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                              (void**)&levelAfter, sizeof(PRUint8) );
+                                              (void**)&levelAfter, sizeof(levelAfter) );
                     if (baseLevel & 1) // RTL paragraph: caret to the right of the rightmost character
                       theFrameOffset = (levelAfter & 1) ? start : end;
                     else               // LTR paragraph: caret to the left of the leftmost character
@@ -665,14 +665,14 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
                 // paragraph level, and put the caret at the end of the frame after that.
                 PRUint8 baseLevel;
                 frameBefore->GetBidiProperty(presContext, nsLayoutAtoms::baseLevel,
-                                             (void**)&baseLevel, sizeof(PRUint8) );
+                                             (void**)&baseLevel, sizeof(baseLevel) );
                 if (baseLevel != levelBefore)
                 {
                   if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, baseLevel, &theFrame)))
                   {
                     theFrame->GetOffsets(start, end);
                     theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                              (void**)&levelBefore, sizeof(PRUint8) );
+                                              (void**)&levelBefore, sizeof(levelBefore) );
                     if (baseLevel & 1) // RTL paragraph: caret to the left of the leftmost character
                       theFrameOffset = (levelBefore & 1) ? end : start;
                     else               // RTL paragraph: caret to the right of the rightmost character
@@ -690,7 +690,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
             {
               theFrame->GetOffsets(start, end);
               theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                        (void**)&levelAfter, sizeof(PRUint8) );
+                                        (void**)&levelAfter, sizeof(levelAfter) );
               if (bidiLevel & 1) // c8: caret to the right of the rightmost character
                 theFrameOffset = (levelAfter & 1) ? start : end;
               else               // c7: caret to the left of the leftmost character
@@ -705,7 +705,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
             {
               theFrame->GetOffsets(start, end);
               theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
-                                        (void**)&levelBefore, sizeof(PRUint8) );
+                                        (void**)&levelBefore, sizeof(levelBefore) );
               if (bidiLevel & 1) // c12: caret to the left of the leftmost character
                 theFrameOffset = (levelBefore & 1) ? end : start;
               else               // c11: caret to the right of the rightmost character
