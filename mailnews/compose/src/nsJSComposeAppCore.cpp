@@ -17,7 +17,6 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#include "jsapi.h"
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
@@ -171,6 +170,38 @@ ResolveComposeAppCore(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
+// Native method Dispose
+//
+PR_STATIC_CALLBACK(JSBool)
+ComposeAppCoreDispose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Dispose()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function Dispose requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+//
 // Native method SetWindow
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -313,7 +344,7 @@ ComposeAppCoreNewMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     return JS_TRUE;
   }
 
-  if (argc >= 6) {
+  if (argc >= 5) {
 
    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -339,7 +370,7 @@ ComposeAppCoreNewMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function NewMessage requires 6 parameters");
+    JS_ReportError(cx, "Function NewMessage requires 5 parameters");
     return JS_FALSE;
   }
 
@@ -419,7 +450,7 @@ ComposeAppCoreSendMessage2(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     *rval = (jsval) b0;
   }
   else {
-    JS_ReportError(cx, "Function SendMessage requires 1 parameters");
+    JS_ReportError(cx, "Function SendMessage requires 0 parameter");
     return JS_FALSE;
   }
 
@@ -460,11 +491,12 @@ static JSPropertySpec ComposeAppCoreProperties[] =
 // ComposeAppCore class methods
 //
 static JSFunctionSpec ComposeAppCoreMethods[] = 
-{
+{	
+//  {"Dispose",				ComposeAppCoreDispose,			0},
   {"SetWindow",				ComposeAppCoreSetWindow,		1},
   {"SetEditor",				ComposeAppCoreSetEditor,		1},
   {"CompleteCallback",		ComposeAppCoreCompleteCallback,	1},
-  {"NewMessage",			ComposeAppCoreNewMessage,		6},
+  {"NewMessage",			ComposeAppCoreNewMessage,		5},
   {"SendMessage",			ComposeAppCoreSendMessage,		5},
   {"SendMessage2",			ComposeAppCoreSendMessage2,		0},
   {0}
