@@ -93,7 +93,7 @@ interface nsIDownloadManager : nsISupports {
   *  @return The download with the specified persistent descriptor.
   */
 
-  nsIDownload getDownload(in string aPersistentDescriptor);
+  nsIDownload getDownload(in wstring aPersistentDescriptor);
 
   /**
   * Cancels the download with the specified persistent descriptor if it's
@@ -107,7 +107,7 @@ interface nsIDownloadManager : nsISupports {
   *                              be cancelled.
   */
 
-  void cancelDownload(in string aPersistentDescriptor);
+  void cancelDownload(in wstring aPersistentDescriptor);
 
   /**
   * Removes the download with the specified persistent descriptor if it's not
@@ -118,7 +118,7 @@ interface nsIDownloadManager : nsISupports {
   *                              be removed.
   */
 
-  void removeDownload(in string aPersistentDescriptor);
+  void removeDownload(in wstring aPersistentDescriptor);
 
   // UI-related methods
 
@@ -131,7 +131,7 @@ interface nsIDownloadManager : nsISupports {
   * @param aParent The parent, or opener, of the front end (optional).
   */
 
-  void openProgressDialogFor(in string aPersistentDescriptor, in nsIDOMWindow aParent);
+  void openProgressDialogFor(in wstring aPersistentDescriptor, in nsIDOMWindow aParent);
 
   /**
   * Indicate that a batch update (e.g. mass removal) is about to start.

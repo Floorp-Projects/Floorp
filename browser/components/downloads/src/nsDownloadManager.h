@@ -76,14 +76,14 @@ public:
   virtual ~nsDownloadManager();
 
   static PRInt32 PR_CALLBACK CancelAllDownloads(nsHashKey* aKey, void* aData, void* aClosure);
-  nsresult DownloadEnded(const char* aPersistentDescriptor, const PRUnichar* aMessage); 
+  nsresult DownloadEnded(const PRUnichar* aPersistentDescriptor, const PRUnichar* aMessage); 
 
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(nsCString& aDownloadsFileURL);
   nsresult GetDataSource(nsIRDFDataSource** aDataSource);
-  nsresult DownloadStarted(const char* aPersistentDescriptor);
-  nsresult AssertProgressInfoFor(const char* aPersistentDescriptor);
+  nsresult DownloadStarted(const PRUnichar* aPersistentDescriptor);
+  nsresult AssertProgressInfoFor(const PRUnichar* aPersistentDescriptor);
 
 private:
   nsCOMPtr<nsIRDFDataSource> mDataSource;

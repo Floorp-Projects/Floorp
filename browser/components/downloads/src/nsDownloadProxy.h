@@ -77,8 +77,8 @@ public:
     PRBool useProgressDialogs = PR_TRUE;
     branch->GetBoolPref(USE_PROGRESS_DIALOGS_PREF, &useProgressDialogs);
     if (useProgressDialogs) {
-      nsCAutoString path;
-      rv = aTarget->GetNativePath(path);
+      nsAutoString path;
+      rv = aTarget->GetPath(path);
       if (NS_FAILED(rv)) return rv;
       return dm->OpenProgressDialogFor(path.get(), nsnull);
     }
