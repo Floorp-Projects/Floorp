@@ -41,9 +41,9 @@ function OnLoad()
 	doSetOKCancel(OkButtonCallback, CancelButtonCallback);
 
 	if (window.arguments && window.arguments[0]) {
-        dump ("param = " + window.arguments[0] + "\n");
+        //dump ("param = " + window.arguments[0] + "\n");
         param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock );
-        dump ("after QI param = " + window.arguments[0] + "\n");
+        //dump ("after QI param = " + window.arguments[0] + "\n");
     
 		newmessages = param.GetInt(2);
 		newsgroupname = param.GetString(0);
@@ -52,9 +52,9 @@ function OnLoad()
         param.SetInt(0, 0); /* by default, act like the user hit cancel */
         param.SetInt(1, 0); /* by default, act like the user did not select download all */
 
-		dump("new message count = " + newmessages + "\n");
-		dump("newsgroup name = " + newsgroupname + "\n");
-		dump("serverid = " + serverid + "\n");
+		//dump("new message count = " + newmessages + "\n");
+		//dump("newsgroup name = " + newsgroupname + "\n");
+		//dump("serverid = " + serverid + "\n");
 
 		var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 		server = accountManager.getIncomingServer(serverid);
@@ -67,7 +67,7 @@ function OnLoad()
 		// doesn't JS have a printf?
 		window.title = downloadHeadersTitlePrefix + " " + newsgroupname;
 		var infotext = downloadHeadersInfoText1 + " " + newmessages + " " + downloadHeadersInfoText2;
-		setDivText('info',infotext);
+		setText('info',infotext);
 	}
 
 
@@ -80,21 +80,20 @@ function OnLoad()
 	return true;
 }
 
-function setDivText(divname, value) {
-    var div = document.getElementById(divname);
-    if (!div) return;
-    if (div.firstChild)
-        div.removeChild(div.firstChild);
-    div.appendChild(document.createTextNode(value));
+function setText(id, value) {
+    var element = document.getElementById(id);
+    if (!element) return;
+ 	element.setAttribute('value',value);
 }
 
 function OkButtonCallback() {
 	nntpServer.maxArticles = numberElement.value;
+	//dump("mark read checked?="+markreadElement.checked+"\n");
 	nntpServer.markOldRead = markreadElement.checked;
 
     var radio = document.getElementById("all");
     if (radio) {
-        dump("radio value " + radio.checked + "\n");
+        //dump("all radio value " + radio.checked + "\n");
         if (radio.checked) {
             param.SetInt(1, 1); /* the user selected download all */
         }

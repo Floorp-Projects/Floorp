@@ -25,33 +25,33 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/downloadheaders.dtd">
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical"
+        orient="vertical"
 		onload="OnLoad()">
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/downloadheaders.js"/> 
+<script language="JavaScript" src="chrome://global/content/strres.js" />
+<script language="JavaScript" src="chrome://messenger/content/downloadheaders.js" />
 
-	<box align="vertical">
+	<box orient="vertical">
 		<spring flex="100%"/>
-		<html:div id="info"/>
-		<box align="horizontal" flex="100%">
-			<html:input type="radio" id="all" name="download"/>
-			<html:label for="all">&all.label;</html:label>
-		</box>
+		<text id="info"/>
+		<radiogroup orient="vertical">
+			<box orient="horizontal">
+				<radio id="all" /> 
+				<text value="&all.label;" />
+			</box>
+			<box orient="horizontal">
+				<radio id="some" checked="true" />
+				<text value="&download.label;" />
+				<textfield id="number" size="10"/>
+				<text value="&headers.label;" />
+			</box>
+		</radiogroup>
 
-		<box align="horizontal" flex="100%">
-			<html:input type="radio" id="some" name="download" checked="true"/>
-			<html:label for="some">&download.label;</html:label>
-			<html:input type="text" id="number" size="10"/>
-			<html:label>&headers.label;</html:label>
-		</box>
-
-		<box align="horizontal" flex="100%">
-			<html:input type="checkbox" id="markread"/>
-			<html:label>&mark.label;</html:label>
+		<box orient="horizontal" flex="100%">
+			<checkbox id="markread"/>
+			<text value="&mark.label;" />
 		</box>
 
 		<spring flex="100%"/>
