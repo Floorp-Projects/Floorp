@@ -26,6 +26,7 @@
 
 class nsIDOMElement;
 class nsIDOMStyleSheetCollection;
+class nsIDOMRange;
 
 #define NS_IDOMNSDOCUMENT_IID \
  { 0xa6cf90cd, 0x15b3, 0x11d2, \
@@ -38,18 +39,22 @@ public:
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)=0;
 
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn)=0;
+
+  NS_IMETHOD    CreateRange(nsIDOMRange** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMNSDOCUMENT   \
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);  \
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMNSDOCUMENT(_to)  \
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets) { return _to GetStyleSheets(aStyleSheets); } \
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
+  NS_IMETHOD    CreateRange(nsIDOMRange** aReturn) { return _to CreateRange(aReturn); }  \
 
 
 #endif // nsIDOMNSDocument_h__

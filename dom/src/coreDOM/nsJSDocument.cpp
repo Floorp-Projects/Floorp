@@ -39,6 +39,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsIDOMRange.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMNodeList.h"
 
@@ -59,6 +60,7 @@ static NS_DEFINE_IID(kIEntityReferenceIID, NS_IDOMENTITYREFERENCE_IID);
 static NS_DEFINE_IID(kINSDocumentIID, NS_IDOMNSDOCUMENT_IID);
 static NS_DEFINE_IID(kICommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
+static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
@@ -75,6 +77,7 @@ NS_DEF_PTR(nsIDOMEntityReference);
 NS_DEF_PTR(nsIDOMNSDocument);
 NS_DEF_PTR(nsIDOMComment);
 NS_DEF_PTR(nsIDOMDocumentFragment);
+NS_DEF_PTR(nsIDOMRange);
 NS_DEF_PTR(nsIDOMEventCapturer);
 NS_DEF_PTR(nsIDOMNodeList);
 
@@ -611,6 +614,46 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
 
 
 //
+// Native method CreateRange
+//
+PR_STATIC_CALLBACK(JSBool)
+NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *privateThis = (nsIDOMDocument*)JS_GetPrivate(cx, obj);
+  nsIDOMNSDocument *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSDocument");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsIDOMRange* nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->CreateRange(&nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function createRange requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CaptureEvent
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -740,6 +783,7 @@ static JSFunctionSpec DocumentMethods[] =
   {"createEntityReference",          DocumentCreateEntityReference,     1},
   {"getElementsByTagName",          DocumentGetElementsByTagName,     1},
   {"createElementWithNameSpace",          NSDocumentCreateElementWithNameSpace,     2},
+  {"createRange",          NSDocumentCreateRange,     0},
   {"captureEvent",          EventCapturerCaptureEvent,     1},
   {"releaseEvent",          EventCapturerReleaseEvent,     1},
   {0}

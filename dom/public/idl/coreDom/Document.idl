@@ -29,7 +29,7 @@
      readonly attribute StyleSheetCollection styleSheets;
      Element                   createElementWithNameSpace(in DOMString tagName,
                                                           in DOMString nameSpace)
-                                                          raises(DOMException);     
+                                                          raises(DOMException);     Range                     createRange();
    };
 
    interface EventCapturer : EventReceiver {
