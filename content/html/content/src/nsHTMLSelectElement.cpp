@@ -38,6 +38,7 @@
 #include "nsGenericDOMHTMLCollection.h"
 #include "nsIJSScriptObject.h"
 #include "nsISelectElement.h"
+#include "nsISelectControlFrame.h"
 #include "nsCOMPtr.h"
 
 // Notify/query select frame for selectedIndex
@@ -647,40 +648,49 @@ nsHTMLSelectElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
 NS_IMETHODIMP
 nsHTMLSelectElement::AddOption(nsIContent* aContent)
 {
-  if (nsnull != mOptions) {
-    mOptions->AddOption(aContent);
-  }
+  // When first populating the select, this will be null but that's ok
+  // as we will manually update the widget at frame construction time.
+  if (!mOptions) return NS_OK;
+
+  // Add the option to the option list.
+  mOptions->AddOption(aContent);
 
   // Update the widget
-  nsIFormControlFrame* selectFrame = nsnull;
-  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, selectFrame);
-  if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
-    nsString action("a");
-    action.Append(mOptions->IndexOf(aContent),10);
-    selectFrame->SetProperty(nsHTMLAtoms::option, action);
+  nsIFormControlFrame* fcFrame = nsnull;
+  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame);
+  if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+    nsISelectControlFrame* selectFrame = nsnull;
+    result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
+    if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+      result = selectFrame->AddOption(mOptions->IndexOf(aContent));
+    }
   }
   
-  // When first populating, GetPrimaryFrame will fail but it's ok
-  return NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP 
 nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
 {
-  // We can't get our index if we've already been replaced in the OptionList.
-  // If we couldn't get our index, pass -1, remove all options and recreate
-  PRInt32 index = mOptions->IndexOf(aContent);
-  if (nsnull != mOptions) {
-    mOptions->RemoveOption(aContent);
-  }
+  // When first populating the select, this will be null but that's ok
+  // as we will manually update the widget at frame construction time.
+  if (!mOptions) return NS_OK;
+
+  // Remove the option from the options list
+  mOptions->RemoveOption(aContent);
 
   // Update the widget
-  nsIFormControlFrame* selectFrame = nsnull;
-  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, selectFrame);
-  if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
-    nsString action("r");
-    action.Append(index,10);
-    selectFrame->SetProperty(nsHTMLAtoms::option, action);
+  nsIFormControlFrame* fcFrame = nsnull;
+  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame);
+  if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+    nsISelectControlFrame* selectFrame = nsnull;
+    result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
+    if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+      // We can't get our index if we've already been replaced in the OptionList.
+      // If we couldn't get our index, pass -1, remove all options and recreate
+      // Coincidentally, IndexOf returns -1 if the option isn't found in the list
+      result = selectFrame->RemoveOption(mOptions->IndexOf(aContent));
+    }
   }
 
   return result;
@@ -1042,7 +1052,7 @@ nsOptionList::SetProperty(JSContext *aContext,
   // propogation in this method???
 
   if (JSVAL_IS_INT(aID) && (nsnull != mSelect)) {
-    PRInt32 index = JSVAL_TO_INT(aID);
+    PRInt32 indx = JSVAL_TO_INT(aID);
     nsresult result;
 
     // Update the options list
@@ -1052,12 +1062,12 @@ nsOptionList::SetProperty(JSContext *aContext,
     
     PRInt32 length = mElements.Count();
 
-    // If the index is within range
-    if ((index >= 0) && (index <= length)) {
+    // If the indx is within range
+    if ((indx >= 0) && (indx <= length)) {
 
       // if the value is null, remove this option
       if (JSVAL_IS_NULL(*aVp)) {
-        mSelect->Remove(index);
+        mSelect->Remove(indx);
       }
       else {
         JSObject* jsobj = JSVAL_TO_OBJECT(*aVp); 
@@ -1070,12 +1080,12 @@ nsOptionList::SetProperty(JSContext *aContext,
           nsIDOMNode* ret;
 
           if (NS_OK == supports->QueryInterface(kIDOMNodeIID, (void **)&option)) {
-            if (index == length) {
+            if (indx == length) {
               result = mSelect->AppendChild(option, &ret);
               NS_IF_RELEASE(ret);
             }
             else {
-              refChild = (nsIDOMNode*)mElements.ElementAt(index);
+              refChild = (nsIDOMNode*)mElements.ElementAt(indx);
               if (nsnull != refChild) {
                 result = refChild->GetParentNode(&parent);
                 if (NS_SUCCEEDED(result) && (nsnull != parent)) {
