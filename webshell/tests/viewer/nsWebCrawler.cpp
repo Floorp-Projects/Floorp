@@ -208,7 +208,8 @@ nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL,
 NS_IMETHODIMP
 nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                 nsIURL* aURL,
-                                PRInt32 aStatus)
+                                PRInt32 aStatus,
+                                nsIDocumentLoaderObserver * aObserver)
 {
   if (nsnull == aURL) {
     return NS_OK;

@@ -46,7 +46,8 @@ public:
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL,
                                  const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aURL,
-                               PRInt32 aStatus);
+                               PRInt32 aStatus, 
+                               nsIDocumentLoaderObserver * aObserver);
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL,
                             const char* aContentType, 
                             nsIContentViewer* aViewer);
