@@ -40,7 +40,7 @@ REQUIRES	= xpcom \
 		  js \
 		  $(NULL)
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+DEFINES=-DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS=		\
     .\$(OBJDIR)\nsTreeBoxObject.obj \

@@ -28,7 +28,6 @@ REQUIRES	= xpcom \
 MAKE_OBJ_TYPE = EXE
 PROG1 = .\$(OBJDIR)\DetectCharset.exe
 PROGRAMS = $(PROG1)
-LCFLAGS=-DUSE_NSREG
 
 
 LLIBS= \

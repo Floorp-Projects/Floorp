@@ -29,7 +29,7 @@ PROG1 = .\$(OBJDIR)\xpt_dump.exe
 PROG2 = .\$(OBJDIR)\xpt_link.exe
 PROGRAMS = $(PROG1) $(PROG2)
 
-LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN -DEXPORT_XPT_API 
+LCFLAGS=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPT_API 
 
 LLIBS=                      \
  $(DIST)\lib\xpcomxpt_s.lib \

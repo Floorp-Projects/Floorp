@@ -75,7 +75,7 @@ PROGRAMS = $(PROG1) \
            $(PROG24) \
            $(NULL)
 
-LCFLAGS=-DUSE_NSREG -GX
+LCFLAGS=-GX
 
 
 LINCS=                     \

@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layouthtmlforms_s 
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+DEFINES=-DWIN32_LEAN_AND_MEAN
 MODULE=layout
 REQUIRES	= xpcom \
 		  string \

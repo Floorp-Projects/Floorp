@@ -56,7 +56,7 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DJS_THREADSAFE -DUSE_NSREG
+DEFINES		+= -DJS_THREADSAFE
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
 endif

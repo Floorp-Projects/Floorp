@@ -32,8 +32,6 @@ REQUIRES	= xpcom \
 
 MAKE_OBJ_TYPE = EXE
 
-LCFLAGS=-DUSE_NSREG
-
 EXENAME=TestCookie
 PDBFILE=TestCookie.pdb
 MAPFILE=TestCookie.map

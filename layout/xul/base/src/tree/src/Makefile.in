@@ -62,8 +62,6 @@ EXPORTS = \
  nsTreeContentView.h \
  $(NULL)
 
-DEFINES += -D_IMPL_NS_HTML
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../../../../base/src \

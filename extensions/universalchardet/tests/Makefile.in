@@ -37,8 +37,6 @@ CPPSRCS		= \
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
-DEFINES		+= -DUSE_NSREG
-
 include $(topsrcdir)/config/config.mk
 
 LIBS		+= \

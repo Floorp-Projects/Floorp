@@ -45,8 +45,6 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DUSE_NSREG
-
 ifeq ($(OS_ARCH),WINNT)
 LDFLAGS		+= -SUBSYSTEM:CONSOLE
 ifdef MOZ_NO_DEBUG_RTL

@@ -38,7 +38,7 @@ REQUIRES	= xpcom \
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=raptorhtmlpars 
-DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN -DXML_DTD
+DEFINES=-DWIN32_LEAN_AND_MEAN -DXML_DTD
 
 LIBRARY_NAME  = gkparser
 MODULE_NAME   = nsParserModule

@@ -121,8 +121,6 @@ LDFLAGS        += -Wl,-LD_LAYOUT:lgot_buffer=80
 endif
 endif
 
-DEFINES		+= -D_IMPL_NS_HTML
-
 LOCAL_INCLUDES	= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../html/base/src \
 		   -I$(srcdir)/../html/style/src \

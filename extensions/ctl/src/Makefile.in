@@ -48,8 +48,6 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DUSE_NSREG
-
 LOCAL_INCLUDES += -I$(srcdir)/pangoLite
 
 CXXFLAGS  += $(GLIB_CFLAGS)

@@ -52,8 +52,6 @@
 // 98-09-25 mlm - turn on javascript thread safety
 #define JS_THREADSAFE 1
 
-#define USE_NSREG 1
-
 // External DTD support for XML
 #define XML_DTD
 

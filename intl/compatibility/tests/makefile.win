@@ -27,8 +27,6 @@ MAKE_OBJ_TYPE = EXE
 PROG1 = .\$(OBJDIR)\TestI18nCompatibility.exe
 PROGRAMS = $(PROG1)
 
-LCFLAGS=-DUSE_NSREG
-
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib \

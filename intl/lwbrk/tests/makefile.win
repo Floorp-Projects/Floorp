@@ -31,8 +31,6 @@ MAKE_OBJ_TYPE = EXE
 PROG1 = .\$(OBJDIR)\TestLineBreak.exe
 PROGRAMS = $(PROG1)
 
-LCFLAGS=-DUSE_NSREG
-
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib \

@@ -48,8 +48,6 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DUSE_NSREG
-
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 # Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.

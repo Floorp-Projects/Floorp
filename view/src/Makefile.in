@@ -61,6 +61,3 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -D_IMPL_NS_VIEW
-
