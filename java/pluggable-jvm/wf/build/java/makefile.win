@@ -15,7 +15,7 @@
 # Portions created by Sun Microsystems Inc are Copyright (C) 2001
 # All Rights Reserved.
 #
-# $Id: makefile.win,v 1.1 2001/05/10 18:12:22 edburns%acm.org Exp $
+# $Id: makefile.win,v 1.2 2001/05/11 23:31:35 edburns%acm.org Exp $
 #
 # 
 # Contributor(s): 
@@ -34,7 +34,6 @@ BUILDDIR=.
 JAVASRCDIR=..\..\java
 ADDCLASSPATH=..\win32\classes
 PATH_SEP=;
-SUBDIRS=ext
 
 !include FileListCommon.mk
 !include FileListWin.mk
@@ -47,13 +46,9 @@ FILES_class = $(FILES_class:netscape/javascript=../win32/classes/netscape/javasc
 !include rules.mk
 
 
-all: classes exts
+all: classes 
 
 release: all wf.jar
-
-exts:
-	@ cd ext
-	@ $(MAKE) -f makefile.win -nologo all
 
 wf.jar: 
 	@ echo "Creating wf.jar file"	

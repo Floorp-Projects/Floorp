@@ -15,7 +15,7 @@
 # Portions created by Sun Microsystems Inc are Copyright (C) 2001
 # All Rights Reserved.
 #
-# $Id: GNUmakefile,v 1.1 2001/05/10 18:12:22 edburns%acm.org Exp $
+# $Id: GNUmakefile,v 1.2 2001/05/11 23:31:33 edburns%acm.org Exp $
 #
 # 
 # Contributor(s): 
@@ -34,7 +34,6 @@ JAVASRCDIR = ../../java
 CLASSDESTDIR = ../unix/classes
 ADDCLASSPATH = ../unix/classes
 PATH_SEP=:
-SUBDIRS = ext
 
 default: all
 
@@ -45,7 +44,7 @@ include $(BUILDDIR)/Defs.gmk
 include $(BUILDDIR)/Rules.gmk
 endif
 
-all: classes exts
+all: classes
 
 release: all wf.jar
 
@@ -55,10 +54,5 @@ wf.jar:
 	$(JAR_CMD) cf wf.jar sun netscape ; \
 	$(MV) wf.jar ..; \
 	echo "  done."
-
-exts:
-	@echo "Making Waterfall extension components"
-	@cd ext; \
-	$(MAKE)  all
 
 .PHONY : all classes clean exts
