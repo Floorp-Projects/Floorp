@@ -122,6 +122,13 @@ public:
                              PRBool &aFirst, PRBool &aAny, PRBool &aAll)=0;
 
   /**
+   * RemoveAllInlineProperties() deletes all the inline properties from all 
+   * text in the current selection.
+   */
+  NS_IMETHOD RemoveAllInlineProperties()=0;
+
+
+  /**
    * RemoveInlineProperty() deletes the properties from all text in the current selection.
    * If aProperty is not set on the selection, nothing is done.
    *
