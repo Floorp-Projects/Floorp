@@ -5021,11 +5021,13 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 
         // Compute the element's class list if the element has a 'class' attribute.
         nsAutoString value;
-        if (NS_SUCCEEDED(GetAttr(kNameSpaceID_None, nsXULAtoms::clazz, value)))
+        if (NS_CONTENT_ATTR_HAS_VALUE ==
+                GetAttr(kNameSpaceID_None, nsXULAtoms::clazz, value))
             rv |= nsClassList::ParseClasses(&mClassList, value);
 
         // Parse the element's 'style' attribute
-        if (NS_SUCCEEDED(GetAttr(kNameSpaceID_None, nsXULAtoms::style, value))) {
+        if (NS_CONTENT_ATTR_HAS_VALUE ==
+                GetAttr(kNameSpaceID_None, nsXULAtoms::style, value)) {
             nsICSSParser* parser = GetCSSParser();
 
             rv |= parser->ParseStyleAttribute(value, aDocumentURI,
