@@ -121,8 +121,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 //-------------------------------------------------------------------------
 nsWindow::nsWindow() 
 {
-  //  NS_INIT_REFCNT();
-  mFontMetrics = nsnull;
   mShell = nsnull;
   mResized = PR_FALSE;
   mVisible = PR_FALSE;
@@ -130,7 +128,6 @@ nsWindow::nsWindow()
   mLowerLeft = PR_FALSE;
   mWindowType = eWindowType_child;
   mBorderStyle = eBorderStyle_default;
-  mFont = nsnull;
   mSuperWin = 0;
   mMozArea = 0;
   mMozAreaClosestParent = 0;

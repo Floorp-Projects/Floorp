@@ -223,13 +223,9 @@ protected:
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkObject *parentWidget);
 
-  nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
   PRBool      mDisplayed;
   PRBool      mIsTooSmall;
-
-  // XXX Temporary, should not be caching the font
-  nsFont *    mFont;
 
   // Resize event management
   nsRect mResizeRect;
