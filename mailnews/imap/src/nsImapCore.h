@@ -24,7 +24,7 @@ class nsImapProtocol;
 class nsImapFlagAndUidState;
 
 /* imap message flags */
-typedef uint16 imapMessageFlagsType;
+typedef PRUint16 imapMessageFlagsType;
 
 /* used for communication between libmsg and libnet */
 #define kNoFlags     0x00	/* RFC flags */
