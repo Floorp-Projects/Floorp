@@ -48,5 +48,6 @@ interface nsIZip : nsISupports
 	PRInt32 Extract(in string aFilename, in string aOutname);
 	nsISimpleEnumerator Find(in string aPattern);
     nsIInputStream GetInputStream(in string aFilename);
+    PRUint32 ItemSize(in string aFilename);
 };
 

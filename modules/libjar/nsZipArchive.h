@@ -36,6 +36,7 @@
 
 class nsZipFind;
 class nsZipRead;
+class nsZipItemMetadata;
 
 /**
  * nsZipItem -- a helper class for nsZipArchive
@@ -62,7 +63,6 @@ public:
   nsZipItem();
   ~nsZipItem();
 
-  PRInt32 Init(nsZipItem* other);
 
 private:
   //-- prevent copies and assignments
@@ -70,8 +70,6 @@ private:
   nsZipItem(const nsZipItem& rhs);
 
 };
-
-
 
 
 /** 
@@ -115,7 +113,7 @@ public:
    * @param   aFilename Name of file in the archive
    * @return  status code
    */
-  PRInt32 GetItem(const char * aFilename, nsZipItem *result);
+  PRInt32 GetItem(const char * aFilename, nsZipItem** result);
   
   /** 
    * ReadInit
@@ -222,20 +220,19 @@ private:
  */
 class nsZipRead
 {
-  friend class nsZipArchive;
 
 public:
 
   nsZipRead( nsZipArchive* aZip, nsZipItem* item );
   ~nsZipRead();
 
-private:
   nsZipArchive* mArchive;
   nsZipItem*    mItem;
   PRUint32      mCurPos;
   char*         mInflatedFileBuffer;
   PRUint32      mCRC32;
 
+private:
   //-- prevent copies and assignments
   nsZipRead& operator=(const nsZipRead& rhs);
   nsZipRead(const nsZipFind& rhs);

@@ -29,6 +29,7 @@
 
 interface nsISimpleEnumerator;
 interface nsIInputStream;
+interface nsIPrincipal;
 interface nsIFile;
 
 [scriptable, uuid(6ca5e43e-9632-11d3-8cd9-0060b0fc14a3)]
@@ -55,6 +56,12 @@ interface nsIZipReader : nsISupports
 	void open();
 
     /**
+     * Parses meta-information for the jar format. Must be called before calls 
+     * to getPrincipal and verifyExternalFile.
+     */
+	void parseManifest();
+
+    /**
      * Closes a zip reader. Subsequent attempts to extract files or read from
      * its input stream will result in an error.
      */
@@ -79,6 +86,27 @@ interface nsIZipReader : nsISupports
      * Returns an input stream containing the contents of the specified zip entry.
      */
     nsIInputStream getInputStream(in string zipEntry);
+
+    /**
+     * Returns an object describing the owner (origin and/or signer) of 
+     * an entry. parseManifest must be called first. If aEntryName is an
+     * entry in the jar, it must have been read to its end by an input
+     * stream returned through getInputStream. If aEntryName is an external
+     * file with meta-information stored in the jar, verifyExternalFile 
+     * must be called before getPrincipal.
+     */
+    nsIPrincipal getPrincipal(in string aEntryName);
+
+    /**
+     * Compares a file which is not in the jar to meta-information
+     * about the file which is stored in the jar. Must be called after 
+     * parseManifest and before 
+     * calling getPrincipal on an external file (such as inline Javascript).
+     * There must be an "external" entry in the manifest corresponding to
+     * aFilename.
+     */
+    void verifyExternalFile(in string aFilename, in string aBuf, 
+                            in unsigned long aBufLength);
 };
 
 %{C++

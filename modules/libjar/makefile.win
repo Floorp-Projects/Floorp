@@ -20,6 +20,7 @@
 #
 # Contributor(s): 
 #     Daniel Veditz <dveditz@netscape.com>
+#     Mitch Stoltz  <mstoltz@netscape.com>
 
 
 
@@ -45,6 +46,8 @@ OBJS=.\$(OBJDIR)\nsZipArchive.obj \
      .\$(OBJDIR)\nsJARFactory.obj \
      .\$(OBJDIR)\nsJARInputStream.obj \
      .\$(OBJDIR)\nsWildCard.obj	\
+     .\$(OBJDIR)\nsJARStubs.obj	\
+     $(NULL)
 
 LINCS=                         \
     -I$(XPDIST)\public\nspr    \

@@ -296,7 +296,7 @@ PRInt32 nsZipArchive::OpenArchiveWithFileDesc(PRFileDesc* fd)
     return ZIP_ERR_PARAM;
 
   //-- not allowed to do two opens on the same object!
-  if ( mFd != 0 )
+   if ( mFd != 0 )
     return ZIP_ERR_GENERAL;
 
   mFd = fd;
@@ -331,26 +331,29 @@ PRInt32 nsZipArchive::CloseArchive()
 }
 
 //---------------------------------------------
-// nsZipArchive::ItemSize
+// nsZipArchive::GetItem
 //---------------------------------------------
-PRInt32 nsZipArchive::GetItem( const char * aFilename, nsZipItem *result)
+PRInt32 nsZipArchive::GetItem( const char * aFilename, nsZipItem **result)
 {
 	//-- Parameter validity check
 	if (aFilename == 0)
 		return ZIP_ERR_PARAM;
 
 	//PRInt32 result;
-	nsZipItem* aItem;
+	nsZipItem* item;
 
 	//-- find file information
-	aItem = GetFileItem( aFilename );
-	if ( aItem == 0 )
+	item = GetFileItem( aFilename );
+	if ( item == 0 )
 	{
 		return ZIP_ERR_FNF;
 	}
 
-    return result->Init(aItem);
+
+    *result = item; // Return a pointer to the struct
+	return ZIP_OK;
 }
+
 
 //---------------------------------------------
 // nsZipArchive::ReadInit
@@ -1237,7 +1240,7 @@ nsZipArchive::~nsZipArchive()
 MOZ_DECL_CTOR_COUNTER(nsZipItem);
 #endif
 
-nsZipItem::nsZipItem() : name(0),next(0) 
+nsZipItem::nsZipItem() : name(0), next(0) 
 {
 #ifndef STANDALONE
   MOZ_COUNT_CTOR(nsZipItem);
@@ -1252,28 +1255,6 @@ nsZipItem::~nsZipItem()
 #ifndef STANDALONE
   MOZ_COUNT_DTOR(nsZipItem);
 #endif
-}
-
-PRInt32
-nsZipItem::Init(nsZipItem* other)
-{
-  if (name) delete[] name;
-  name = (char*)PR_Malloc(other->namelen);
-  if (name == 0)
-    return ZIP_ERR_MEMORY;
-  memcpy(name, other->name, other->namelen);
-  
-  namelen = other->namelen;
-  offset = other->offset;
-  headerloc = other->headerloc;
-  compression = other->compression;
-  size = other->size;
-  realsize = other->realsize;
-  crc32 = other->crc32;
-  mode = other->mode;
-  next = 0;        // don't copy next
-
-  return ZIP_OK;
 }
 
 //------------------------------------------

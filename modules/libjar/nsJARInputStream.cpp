@@ -49,13 +49,44 @@ NS_IMETHODIMP
 nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *_retval)
 {
   if (mZip == nsnull)
-    *_retval = 0;
-  else
   {
-    if( (mZip->Read(mReadInfo, buf, count, _retval)) != ZIP_OK )
-      return NS_ERROR_FAILURE;
+    *_retval = 0;
+    return NS_OK;
   }
 
+  if( (mZip->Read(mReadInfo, buf, count, _retval)) != ZIP_OK )
+    return NS_ERROR_FAILURE;
+  
+  // Pass the buffer on to the JAR parser
+  if (mJAR && mJAR->SupportsRSAVerification())
+  {
+    nsStringKey key(mEntryName);
+    nsJARManifestItem* manItem = 
+      (nsJARManifestItem*)mJAR->mManifestData.Get(&key);
+    if (manItem && !manItem->entryDigestsCalculated)
+    {
+      nsresult rv = NS_OK;
+      if (digestContexts[0] == 0)
+	for (PRInt32 b=0; b<JAR_DIGEST_COUNT && NS_SUCCEEDED(rv); b++)
+	  rv = mJAR->DigestBegin(&digestContexts[b], b);
+      for (PRInt32 c=0; c<JAR_DIGEST_COUNT && NS_SUCCEEDED(rv); c++)
+	rv = mJAR->DigestData(digestContexts[c], buf, *_retval);
+      if (NS_SUCCEEDED(rv))
+      {
+	PRUint32 available;
+	rv = Available(&available);
+	if (available == 0)
+        {
+	  for (PRInt32 d=0; d<JAR_DIGEST_COUNT && NS_SUCCEEDED(rv); d++)
+	    rv = mJAR->CalculateDigest(digestContexts[d], 
+				       &(manItem->calculatedEntryDigests[d]));
+	  if (NS_SUCCEEDED(rv))
+	    manItem->entryDigestsCalculated = PR_TRUE;
+	}
+      }
+      return rv;
+    }
+  }
   return NS_OK;
 }
 
@@ -67,13 +98,18 @@ nsJARInputStream::Close()
 }
 
 nsresult 
-nsJARInputStream::Init(nsZipArchive* aZip, const char* aFilename)
+nsJARInputStream::Init(nsJAR* aJAR, nsZipArchive* aZip, const char* aFilename)
 {
-  if (aZip == 0 || aFilename == nsnull)
+  if (!(aZip && aFilename))
     return NS_ERROR_NULL_POINTER;
   mZip = aZip;
+  mJAR = aJAR;
+  mEntryName = (char*)aFilename;
+  for (PRInt32 a=0; a<JAR_DIGEST_COUNT; a++)
+    digestContexts[a] = 0;
+
   PRInt32 result; 
-  result = mZip->ReadInit(aFilename, &mReadInfo);
+  result = mZip->ReadInit(mEntryName, &mReadInfo);
   if (result != ZIP_OK)
     return NS_ERROR_FAILURE;
   else
@@ -96,15 +132,15 @@ nsJARInputStream::Create(nsISupports* ignored, const nsIID& aIID, void* *aResult
 // nsJARInputStream constructor and destructor
 //----------------------------------------------
 
-nsJARInputStream::nsJARInputStream(): mZip(0), mReadInfo(0)
+nsJARInputStream::nsJARInputStream()
 {
   NS_INIT_REFCNT();
+  mJAR = nsnull;
 }
 
 nsJARInputStream::~nsJARInputStream()
 {
-  if (mReadInfo != 0)
-    delete mReadInfo;
+  Close();
 }
 
 
