@@ -71,10 +71,6 @@ template <class CharT> class basic_nsAWritableString;
 template <class CharT> class basic_nsLiteralString;
   // ...because we sometimes use them as in params to force the conversion of |CharT*|s
 
-template <class CharT> class nsPromiseConcatenation;
-template <class CharT> class nsPromiseSubstring;
-template <class CharT> PRBool SameImplementation( const basic_nsAReadableString<CharT>&, const basic_nsAReadableString<CharT>& );
-
 
 enum nsFragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
 
@@ -238,61 +234,29 @@ class basic_nsAReadableString
       ...
     */
   {
-    protected:
-
-      friend PRBool SameImplementation<CharT>( const basic_nsAReadableString<CharT>&, const basic_nsAReadableString<CharT>& );
-      virtual const void* Implementation() const;
-
-      friend class nsReadingIterator<CharT>;
-      friend class nsPromiseConcatenation<CharT>;
-      friend class nsPromiseSubstring<CharT>;
-      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
-
-
     public:
-
       typedef nsReadingIterator<CharT> ConstIterator;
 
-      nsReadingIterator<CharT>
-      BeginReading( PRUint32 aOffset = 0 ) const
-        {
-          nsReadableFragment<CharT> fragment;
-          const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, aOffset);
-          return nsReadingIterator<CharT>(fragment, startPos, *this);
-        }
 
-      nsReadingIterator<CharT>
-      EndReading( PRUint32 aOffset = 0 ) const
-        {
-          nsReadableFragment<CharT> fragment;
-          const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
-          return nsReadingIterator<CharT>(fragment, startPos, *this);
-        }
-
-    public:
       virtual ~basic_nsAReadableString() { }
         // ...yes, I expect to be sub-classed.
 
-      virtual PRUint32 Length() const = 0;
+      nsReadingIterator<CharT>  BeginReading( PRUint32 aOffset = 0 ) const;
+      nsReadingIterator<CharT>  EndReading( PRUint32 aOffset = 0 ) const;
 
-      PRBool
-      IsEmpty() const
-        {
-          return Length() == 0;
-        }
+      virtual PRUint32  Length() const = 0;
+      PRBool  IsEmpty() const;
 
+      CharT  CharAt( PRUint32 ) const;
+      CharT  operator[]( PRUint32 ) const;
+      CharT  First() const;
+      CharT  Last() const;
 
+      PRUint32  CountChar( CharT ) const;
 
-      CharT CharAt( PRUint32 ) const;
-      CharT operator[]( PRUint32 ) const;
-      CharT First() const;
-      CharT Last() const;
-
-      PRUint32 CountChar( CharT ) const;
-
-      PRUint32 Left( basic_nsAWritableString<CharT>&, PRUint32 ) const;
-      PRUint32 Mid( basic_nsAWritableString<CharT>&, PRUint32, PRUint32 ) const;
-      PRUint32 Right( basic_nsAWritableString<CharT>&, PRUint32 ) const;
+      PRUint32  Left( basic_nsAWritableString<CharT>&, PRUint32 ) const;
+      PRUint32  Mid( basic_nsAWritableString<CharT>&, PRUint32, PRUint32 ) const;
+      PRUint32  Right( basic_nsAWritableString<CharT>&, PRUint32 ) const;
 
       // Find( ... ) const;
       // FindChar( ... ) const;
@@ -301,23 +265,21 @@ class basic_nsAReadableString
       // RFindChar( ... ) const;
       // RFindCharInSet( ... ) const;
 
-      int Compare( const basic_nsAReadableString<CharT>& rhs ) const;
-      int Compare( const basic_nsLiteralString<CharT>& rhs ) const;
 
+      int  Compare( const basic_nsAReadableString<CharT>& rhs ) const;
+      int  Compare( const basic_nsLiteralString<CharT>& rhs ) const;
 
         // |Equals()| is a synonym for |Compare()|
+      PRBool  Equals( const basic_nsAReadableString<CharT>& rhs ) const;
+      PRBool  Equals( const basic_nsLiteralString<CharT>& rhs ) const;
 
-      PRBool
-      Equals( const basic_nsAReadableString<CharT>& rhs ) const
-        {
-          return Compare(rhs) == 0;
-        }
-
-      PRBool
-      Equals( const basic_nsLiteralString<CharT>& rhs ) const
-        {
-          return Compare(rhs) == 0;
-        }
+        // Comparison operators are all synonyms for |Compare()|
+      PRBool  operator!=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)!=0; }
+      PRBool  operator< ( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)< 0; }
+      PRBool  operator<=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)<=0; }
+      PRBool  operator==( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)==0; }
+      PRBool  operator>=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)>=0; }
+      PRBool  operator> ( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)> 0; }
 
 
         /*
@@ -358,16 +320,9 @@ class basic_nsAReadableString
       // IsOrdered
       // BinarySearch
 
-
-
-        // Comparison operators are all synonyms for |Compare()|
-
-      PRBool operator!=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)!=0; }
-      PRBool operator< ( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)< 0; }
-      PRBool operator<=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)<=0; }
-      PRBool operator==( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)==0; }
-      PRBool operator>=( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)>=0; }
-      PRBool operator> ( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)> 0; }
+    // protected:
+      virtual const void* Implementation() const;
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
   };
 
 template <class CharT>
@@ -388,6 +343,50 @@ nsReadingIterator<CharT>::normalize_backward()
     if ( mPosition == mFragment.mStart )
       if ( mOwningString->GetReadableFragment(mFragment, kPrevFragment) )
         mPosition = mFragment.mEnd;
+  }
+
+template <class CharT>
+inline
+nsReadingIterator<CharT>
+basic_nsAReadableString<CharT>::BeginReading( PRUint32 aOffset ) const
+  {
+    nsReadableFragment<CharT> fragment;
+    const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, aOffset);
+    return nsReadingIterator<CharT>(fragment, startPos, *this);
+  }
+
+template <class CharT>
+inline
+nsReadingIterator<CharT>
+basic_nsAReadableString<CharT>::EndReading( PRUint32 aOffset ) const
+  {
+    nsReadableFragment<CharT> fragment;
+    const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
+    return nsReadingIterator<CharT>(fragment, startPos, *this);
+  }
+
+template <class CharT>
+inline
+PRBool
+basic_nsAReadableString<CharT>::IsEmpty() const
+  {
+    return Length() == 0;
+  }
+
+template <class CharT>
+inline
+PRBool
+basic_nsAReadableString<CharT>::Equals( const basic_nsAReadableString<CharT>& rhs ) const
+  {
+    return Compare(rhs) == 0;
+  }
+
+template <class CharT>
+inline
+PRBool
+basic_nsAReadableString<CharT>::Equals( const basic_nsLiteralString<CharT>& rhs ) const
+  {
+    return Compare(rhs) == 0;
   }
 
 
