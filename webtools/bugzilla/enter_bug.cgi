@@ -83,28 +83,33 @@ sub pickplatform {
     if ($value ne "") {
         return $value;
     }
-    for ($ENV{'HTTP_USER_AGENT'}) {
-        /Mozilla.*\(Windows/ && do {return "PC";};
-        /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
-        /Mozilla.*\(Win/ && do {return "PC";};
-        /Mozilla.*Linux.*86/ && do {return "PC";};
-        /Mozilla.*Linux.*alpha/ && do {return "DEC";};
-        /Mozilla.*OSF/ && do {return "DEC";};
-        /Mozilla.*HP-UX/ && do {return "HP";};
-        /Mozilla.*IRIX/ && do {return "SGI";};
-        /Mozilla.*(SunOS|Solaris)/ && do {return "Sun";};
-        # default
-        return "Other";
+    if ( Param('usebrowserinfo') ) {
+	for ($ENV{'HTTP_USER_AGENT'}) {
+	    /Mozilla.*\(Windows/ && do {return "PC";};
+	    /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
+	    /Mozilla.*\(Win/ && do {return "PC";};
+	    /Mozilla.*Linux.*86/ && do {return "PC";};
+	    /Mozilla.*Linux.*alpha/ && do {return "DEC";};
+	    /Mozilla.*OSF/ && do {return "DEC";};
+	    /Mozilla.*HP-UX/ && do {return "HP";};
+	    /Mozilla.*IRIX/ && do {return "SGI";};
+	    /Mozilla.*(SunOS|Solaris)/ && do {return "Sun";};
+		}
     }
+	# default
+	return "Other";
 }
 
 
 
 sub pickversion {
     my $version = formvalue('version');
-    if ($version eq "") {
-        if ($ENV{'HTTP_USER_AGENT'} =~ m@Mozilla[ /]([^ ]*)@) {
-            $version = $1;
+
+    if ( Param('usebrowserinfo') ) {
+	if ($version eq "") {
+	    if ($ENV{'HTTP_USER_AGENT'} =~ m@Mozilla[ /]([^ ]*)@) {
+		$version = $1;
+	    }
         }
     }
     
@@ -135,24 +140,26 @@ sub pickos {
     if (formvalue('op_sys') ne "") {
         return formvalue('op_sys');
     }
-    for ($ENV{'HTTP_USER_AGENT'}) {
-        /Mozilla.*\(.*;.*; IRIX.*\)/    && do {return "IRIX";};
-        /Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
-        /Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
-        /Mozilla.*\(.*;.*; 68K.*\)/     && do {return "Mac System 8.5";};
-        /Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5";};
-        /Mozilla.*\(.*;.*; OSF.*\)/     && do {return "OSF/1";};
-        /Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
-        /Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
-        /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
-        /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
-        /Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
-        /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
-        /Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
-        /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
-        # default
-        return "other";
+    if ( Param('usebrowserinfo') ) {
+		for ($ENV{'HTTP_USER_AGENT'}) {
+			/Mozilla.*\(.*;.*; IRIX.*\)/    && do {return "IRIX";};
+			/Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
+			/Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
+			/Mozilla.*\(.*;.*; 68K.*\)/     && do {return "Mac System 8.5";};
+			/Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5";};
+			/Mozilla.*\(.*;.*; OSF.*\)/     && do {return "OSF/1";};
+			/Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
+			/Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
+			/Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
+			/Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
+			/Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
+			/Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
+			/Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
+			/Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
+		}
     }
+	# default
+	return "other";
 }
 
 
@@ -226,10 +233,10 @@ print "
   <tr>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned To:</A></B></TD>
     <TD colspan=5>$assign_element
-    (Leave blank to assign to default owner for component)</td>
+    (Leave blank to assign to default component owner)</td>
   </tr>
   <tr>
-    <TD ALIGN=RIGHT ><B>Cc:</B></TD>
+    <TD ALIGN=RIGHT><B>Cc:</B></TD>
     <TD colspan=5>$cc_element</TD>
   </tr>
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
@@ -247,9 +254,8 @@ print "
     value_quote(formvalue('short_desc')) .
     "\"></TD>
   </TR>
-  <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
+  <tr><td align=right valign=top><B>Description:</b></tr>
   <tr>
-    <td align=right valign=top><B>Description:</b>
     <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>" .
     value_quote(formvalue('comment')) .
     "</TEXTAREA><BR></td>
@@ -266,9 +272,11 @@ print "
   </tr>
   </TABLE>
   <INPUT TYPE=hidden name=form_name VALUE=enter_bug>
-</FORM>
+</FORM>\n";
 
-Some fields initialized from your user-agent, <b>$ENV{'HTTP_USER_AGENT'}</b>.
-If you think it got it wrong, please tell " . Param('maintainer') . " what it should have been.
+if ( Param('usebrowserinfo') ) {
+	print "Some fields initialized from your user-agent, <b>$ENV{'HTTP_USER_AGENT'}</b>.
+	       If you think it got it wrong, please tell " . Param('maintainer') . " what it should have been.";
+}
+print "</BODY></HTML>\n";
 
-</BODY></HTML>";
