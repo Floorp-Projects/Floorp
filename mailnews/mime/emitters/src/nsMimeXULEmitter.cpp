@@ -790,7 +790,7 @@ nsMimeXULEmitter::DumpBody()
   if (mBodyFileSpec)
     url = nsMimePlatformFileToURL(*mBodyFileSpec);
 
-  UtilityWrite("<html:iframe id=\"mail-body-frame\" src=\"");
+  UtilityWrite("<html:iframe id=\"mail-body-frame\" type=\"content-primary\" src=\"");
   UtilityWrite(url);
   UtilityWriteCRLF("\" border=\"0\" scrolling=\"auto\" resize=\"yes\" width=\"100%\" height=\"100%\"/>");
   PR_FREEIF(url);
