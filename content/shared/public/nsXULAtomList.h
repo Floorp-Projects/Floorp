@@ -148,7 +148,7 @@ XUL_ATOM(broadcasterset, "broadcasterset")
 XUL_ATOM(commands, "commands")
 XUL_ATOM(commandset, "commandset")
 
-XUL_ATOM(progressbar, "progressbar")
+XUL_ATOM(progressmeter, "progressmeter")
 XUL_ATOM(crop, "crop")
 
 XUL_ATOM(mode, "mode")

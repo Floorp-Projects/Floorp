@@ -10,10 +10,8 @@
     </resources>
 
     <content>
-      <xul:progressbar class="progressmeter-progressbar" inherits="value,mode" flex="1">
-        <xul:box class="progress-bar" inherits="mode"/>
-        <xul:box class="progress-remainder" inherits="mode"/>
-      </xul:progressbar>
+      <xul:spacer class="progress-bar" inherits="mode"/>
+      <xul:spacer class="progress-remainder" inherits="mode"/>
     </content>
     
     <implementation implements="nsIAccessibleProvider">     
