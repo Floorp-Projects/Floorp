@@ -18,5 +18,18 @@
 
 
 GOOD { border-top-style: inherit; } 
-GOOD { border-top-style: ; } 
+GOOD { border-top-style: none; } 
+GOOD { border-top-style: hidden; } 
+GOOD { border-top-style: dotted; } 
+GOOD { border-top-style: dashed; } 
+GOOD { border-top-style: solid; } 
+GOOD { border-top-style: double; } 
+GOOD { border-top-style: groove; } 
+GOOD { border-top-style: ridge; } 
+GOOD { border-top-style: inset; } 
+GOOD { border-top-style: outset; } 
 BAD { border-top-style: very-far-right; }
+BAD { border-top-style: inherit dotted; }
+BAD { border-top-style: dashed solid; }
+BAD { border-top-style: null; }
+BAD { border-top-style: empty; }
