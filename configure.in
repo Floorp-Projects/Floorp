@@ -396,15 +396,17 @@ AC_SUBST(MOZ_DOM)
 AC_SUBST(USE_PTHREADS)
 
 dnl Checks for X libraries.
+dnl Ordering is important.
+dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
 AC_CHECK_LIB(X11, XDrawLines,,
 	[MISSING_X="$MISSING_X -lX11"])
-AC_CHECK_LIB(Xt, XtFree,,
-	[MISSING_X="$MISSING_X -lXt"], -lX11)
 AC_CHECK_LIB(Xext, XextAddDisplay,,
 	[MISSING_X="$MISSING_X -lXext"], -lX11)
 AC_CHECK_LIB(ICE, IceFlush,,, -lX11)
 AC_CHECK_LIB(SM, SmcCloseConnection,,, -lICE -lX11)
+AC_CHECK_LIB(Xt, XtFree,,
+	[MISSING_X="$MISSING_X -lXt"], -lX11)
 AC_CHECK_LIB(Xmu, XmuLookupString,,
 	[MISSING_X="$MISSING_X -lXmu"], -lXt -lX11)
 AC_CHECK_LIB(Xpm, XpmWriteFileFromImage,,
