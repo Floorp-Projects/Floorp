@@ -402,6 +402,16 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
         placeholderOffset += origin;
         parent->GetParent(parent);
       }
+
+      // Offsets are relative to the containing block's padding edge, so translate
+      // from the frame's edge to the padding edge
+      nsMargin              blockBorder;
+      const nsStyleSpacing* blockSpacing;
+
+      cbrs->frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)blockSpacing);
+      blockSpacing->GetBorder(blockBorder);
+      placeholderOffset.x -= blockBorder.top;
+      placeholderOffset.y -= blockBorder.bottom;
     }
   }
 
