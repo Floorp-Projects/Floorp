@@ -1,5 +1,5 @@
 help.jar:
-   locale/en-US/help/firebirdhelp.rdf              (locale/en-US/firebirdhelp.rdf)
+   locale/en-US/help/help.rdf                      (locale/en-US/firebirdhelp.rdf)
    locale/en-US/help/firebird-index1.rdf           (locale/en-US/firebird-index1.rdf)
    locale/en-US/help/firebird-toc.rdf              (locale/en-US/firebird-toc.rdf)
    locale/en-US/help/cookies.xhtml                 (locale/en-US/cookies.xhtml)
