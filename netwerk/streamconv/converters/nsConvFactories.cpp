@@ -19,11 +19,14 @@
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsIRegistry.h"
 
 #include "nsFTPDirListingConv.h"
 #include "nsMultiMixedConv.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,       NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kRegistryCID,               NS_REGISTRY_CID);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,19 +62,55 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 {
     nsresult rv;
 
+    NS_WITH_SERVICE(nsIRegistry, registry, kRegistryCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // open the registry
+    rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_FAILED(rv)) return rv;
+
+    // set the key
+    nsIRegistry::Key key, key1;
+
+    // root key addition
+    rv = registry->AddSubtree(nsIRegistry::Common, NS_ISTREAMCONVERTER_KEY, &key);
+    if (NS_FAILED(rv)) return rv;
+
     NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
+
+    // FTP dir listings
     rv = compMgr->RegisterComponent(kFTPDirListingConverterCID,  
                                     "FTPDirListingConverter",
-                                    "component:||netscape|streamConverters|ftpdirlistingconverter",
+                                    NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-unix?to=application/http-index-format",
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
+    rv = registry->AddSubtreeRaw(key, "?from=text/ftp-dir-unix?to=application/http-index-format", &key1);
+    if (NS_FAILED(rv)) return rv;
+
+
+    rv = compMgr->RegisterComponent(kFTPDirListingConverterCID,  
+                                    "FTPDirListingConverter",
+                                    NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-nt?to=application/http-index-format",
+                                    aPath, PR_TRUE, PR_TRUE);
+
+    rv = registry->AddSubtreeRaw(key, "?from=text/ftp-dir-nt?to=application/http-index-format", &key1);
+    if (NS_FAILED(rv)) return rv;
+    // END FTP dir listings
+
+    // multi-mixed-replace
     rv = compMgr->RegisterComponent(kMultiMixedConverterCID,
                                     "MultiMixedConverter",
-                                    "component:||netscape|streamConverters|multimixedconverter",
+                                    NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=text/html",
                                     aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = registry->AddSubtreeRaw(key, "?from=multipart/x-mixed-replace?to=text/html", &key1);
+    if (NS_FAILED(rv)) return rv;
+    // END mutli-mixed-replace
+
     return rv;
 }
 

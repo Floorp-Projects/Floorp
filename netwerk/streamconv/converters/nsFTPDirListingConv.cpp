@@ -37,7 +37,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kDateTimeCID, NS_DATETIMEFORMAT_CID);
 
-
 #if defined(PR_LOGGING)
 //
 // Log module for FTP dir listing stream converter logging...
@@ -226,6 +225,12 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
         // XXX we need to handle comments in the raw stream.
 
+        // special case windows servers who masquerade as unix servers
+        if (NT == mServerType && !NET_IS_SPACE(line[8]))
+            mServerType = UNIX;
+
+
+        char *escName = nsnull;
         switch (mServerType) {
 
         case UNIX:
@@ -289,7 +294,10 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         case NCSA:
         case TCPC:
         {
-            thisEntry->mName = nsEscape(line, url_Path);
+            escName = nsEscape(line, url_Path);
+            thisEntry->mName = escName;
+            nsAllocator::Free(escName);
+
             if (thisEntry->mName.Last() == '/')
                 thisEntry->mType = Dir;
 
@@ -298,7 +306,9 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
         case CMS:
         {
-            thisEntry->mName = nsEscape(line, url_Path);
+            escName = nsEscape(line, url_Path);
+            thisEntry->mName = escName;
+            nsAllocator::Free(escName);
             break; // END CMS
         }
         case VMS:
@@ -332,8 +342,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         {
 			char *date, *size_s, *name;
 
-			if(PL_strlen(line) > 37)
-			  {
+			if(PL_strlen(line) > 37) {
 				date = line;
 				line[17] = '\0';
 				size_s = &line[18];
@@ -350,17 +359,20 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
                 ConvertDOSDate(date, thisEntry->mMDTM);
 
-                thisEntry->mName = nsEscape(name, url_Path);
-			  }
-			else
-			  {
-                thisEntry->mName = nsEscape(line, url_Path);
-			  }
+                escName = nsEscape(name, url_Path);
+                thisEntry->mName = escName;
+            } else {
+                escName = nsEscape(line, url_Path);
+                thisEntry->mName = escName;
+			}
+            nsAllocator::Free(escName);
             break; // END NT
         }
         default:
         {
-            thisEntry->mName = nsEscape(line, url_Path);
+            escName = nsEscape(line, url_Path);
+            thisEntry->mName = escName;
+            nsAllocator::Free(escName);
             break; // END default (catches GENERIC, DCTS)
         }
 
@@ -391,7 +403,10 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         nsString lDate;
         nsStr::Initialize(lDate, eOneByte);
         rv = mDateTimeFormat->FormatPRTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, thisEntry->mMDTM, lDate);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+            NS_DELETEXPCOM(thisEntry);
+            return rv;
+        }
 
         char *escapedDate = nsEscape(lDate.GetBuffer(), url_Path);
 
@@ -424,14 +439,13 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             line = eol+1;
     } // end while(eol)
 
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %x bytes...\n\n%s\n\n", 
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
         indexFormat.Length(), indexFormat.GetBuffer()) );
-  
 
     // if there's any data left over, buffer it.
     if (line && *line) {
         mBuffer.Append(line);
-        PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() buffering the following %x bytes...\n\n%s\n\n",
+        PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() buffering the following %d bytes...\n\n%s\n\n",
             PL_strlen(line), line) );
     }
 
@@ -656,6 +670,10 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
 
     char *bcol = aCStr;         /* Column begin */
     char *ecol;                   /* Column end */
+
+    // defaults
+    curTime.tm_usec = 0;
+    curTime.tm_sec  = 0;
  
     // MONTH
     char tmpChar = bcol[3];
@@ -674,15 +692,14 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
     PRInt32 error;
     nsCAutoString day(bcol);
     curTime.tm_mday = day.ToInteger(&error, 10);
-    curTime.tm_wday     = 0;
-    curTime.tm_yday = 0;
+    //curTime.tm_wday     = 0;
+    //curTime.tm_yday = 0;
 
     // YEAR
     bcol = ++ecol;
     if ((ecol = PL_strchr(bcol, ':')) == NULL) {
         nsCAutoString intStr(bcol);
         curTime.tm_year = intStr.ToInteger(&error, 10);
-    	curTime.tm_sec  = 0;
     	curTime.tm_min  = 0;
         curTime.tm_hour = 0;
     } else { 
@@ -692,12 +709,13 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
          *	if the date parsed is future or not. 
 		 */
     	*ecol = '\0';
-        curTime.tm_sec = 0;
         nsCAutoString intStr(++ecol);
         curTime.tm_min = intStr.ToInteger(&error, 10);   // Right side of ':' 
 
         intStr = bcol;
         curTime.tm_hour = intStr.ToInteger(&error, 10);  // Left side of ':' 
+
+        curTime.tm_year = curTime.tm_year;
     	//if (mktime(time_info) > curtime)
         //	--time_info->tm_year;
       }
@@ -791,7 +809,7 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
     PRInt32 base=1;
 	PRInt32 size_num=0;
 	char save_char;
-	char *ptr;
+	char *ptr, *escName;
 
     for (ptr = &aLine[PL_strlen(aLine) - 1];
             (ptr > aLine+13) && (!NET_IS_SPACE(*ptr) || !IsLSDate(ptr-12)); ptr--)
@@ -810,12 +828,16 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 				*ptr = '\0';
 				break;
             }
-        aEntry->mName = nsEscape(aLine, url_Path);
+        escName = nsEscape(aLine, url_Path);
+        aEntry->mName = escName;
+        nsAllocator::Free(escName);
 	
 		return NS_OK;
     }
 
-    aEntry->mName = nsEscape(ptr+1, url_Path);
+    escName = nsEscape(ptr+1, url_Path);
+    aEntry->mName = escName;
+    nsAllocator::Free(escName);
 
 	// parse size
 	if(ptr > aLine+15) {
@@ -835,7 +857,7 @@ nsresult
 nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
         int i, j;
         int32 ialloc;
-        char *cp, *cpd, *cps, date[64], *sp = " ";
+        char *cp, *cpd, *cps, date[64], *sp = " ", *escName;
         static char ThisYear[5];
         static PRBool HaveYear = PR_FALSE; 
 
@@ -849,7 +871,9 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
 
         // Cut out file or directory name at VMS version number. 
     	*cp++ ='\0';
-        aEntry->mName = nsEscape(aLine, url_Path);
+        escName = nsEscape(aLine, url_Path);
+        aEntry->mName = escName;
+        nsAllocator::Free(escName);
 
         // Cast VMS file and directory names to lowercase. 
         aEntry->mName.ToLowerCase();
