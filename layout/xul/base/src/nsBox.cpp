@@ -281,6 +281,11 @@ nsBox::MarkStyleChange(nsBoxLayoutState& aState)
   // iterate through all children making them dirty
   MarkChildrenStyleChange();
 
+  nsCOMPtr<nsIBoxLayout> layout;
+  GetLayoutManager(getter_AddRefs(layout));
+  if (layout)
+    layout->BecameDirty(this, aState);
+
   nsIBox* parent = nsnull;
   GetParentBox(&parent);
   if (parent)

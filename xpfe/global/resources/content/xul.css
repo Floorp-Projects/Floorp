@@ -286,6 +286,15 @@ treeitem[open="true"] > treechildren {
   display: block;
 }
 
+treecol[hidden="true"] {
+  display: block;
+  visibility: collapse;
+}
+
+treecell[hidden="true"] {
+  display: block;
+  visibility: collapse;
+}
 
 /********** Tab widget *********/
 

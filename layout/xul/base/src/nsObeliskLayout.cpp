@@ -281,6 +281,7 @@ nsObeliskLayout::BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState)
   parent->DesecrateMonuments(aBox, aState);
   */
 
+  UpdateMonuments(aBox, aState);
   if (mOtherMonumentList)
      mOtherMonumentList->MarkDirty(aState);
 
