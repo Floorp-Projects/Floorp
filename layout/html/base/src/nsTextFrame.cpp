@@ -3013,6 +3013,8 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
     NS_ASSERTION(0,"offset less than this frame has in GetPointFromOffset");
     inOffset = 0;
   }
+  if (inOffset >= mContentLength)
+    inOffset = mContentLength;
   TextStyle ts(aPresContext, *inRendContext, mStyleContext);
 
   // Make enough space to transform
@@ -3042,34 +3044,46 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
     inOffset = mContentLength;
   }
 
+  while (inOffset >=0 && ip[inOffset] < mContentOffset) //buffer has shrunk
+    inOffset --;
   nscoord width = mRect.width;
-  if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) || ts.mJustifying)
+  if (inOffset <0)
   {
-    GetWidth(*inRendContext, ts,
-             paintBuffer.mBuffer, ip[inOffset]-mContentOffset,
-             &width);
+    NS_ASSERTION(0, "invalid offset passed to GetPointFromOffset");
+    inOffset=0;
+    width = 0;
   }
   else
   {
-    inRendContext->GetWidth(paintBuffer.mBuffer, ip[inOffset]-mContentOffset,width);
+    if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) || ts.mJustifying)
+    {
+      GetWidth(*inRendContext, ts,
+               paintBuffer.mBuffer, ip[inOffset]-mContentOffset,
+               &width);
+    }
+    else
+    {
+      if (inOffset >=0)
+        inRendContext->GetWidth(paintBuffer.mBuffer, ip[inOffset]-mContentOffset,width);
+    }
+    if (inOffset > textLength && (TEXT_TRIMMED_WS & mState)){
+      //
+      // Offset must be after a space that has
+      // been trimmed off the end of the frame.
+      // Add the width of the trimmed space back
+      // to the total width, so the caret appears
+      // in the proper place!
+      //
+      // NOTE: the trailing whitespace includes the word spacing!!
+      width += ts.mSpaceWidth + ts.mWordSpacing;
+    }
   }
-  if (inOffset > textLength && (TEXT_TRIMMED_WS & mState)){
-    //
-    // Offset must be after a space that has
-    // been trimmed off the end of the frame.
-    // Add the width of the trimmed space back
-    // to the total width, so the caret appears
-    // in the proper place!
-    //
-    // NOTE: the trailing whitespace includes the word spacing!!
-    width += ts.mSpaceWidth + ts.mWordSpacing;
-  }
-
   outPoint->x = width;
   outPoint->y = 0;
 
   return NS_OK;
 }
+
 
 
 NS_IMETHODIMP
