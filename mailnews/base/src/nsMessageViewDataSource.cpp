@@ -36,9 +36,17 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 
 nsIRDFResource* nsMessageViewDataSource::kNC_MessageChild;
+nsIRDFResource* nsMessageViewDataSource::kNC_Subject;
+nsIRDFResource* nsMessageViewDataSource::kNC_Sender;
+nsIRDFResource* nsMessageViewDataSource::kNC_Date;
+nsIRDFResource* nsMessageViewDataSource::kNC_Status;
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, MessageChild);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Date);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Status);
 
 //This really needs to be some place else so that all datasources can use it.
 static PRBool
@@ -111,6 +119,10 @@ nsMessageViewDataSource::~nsMessageViewDataSource (void)
 	}
 	nsrefcnt refcnt;
 	NS_RELEASE2(kNC_MessageChild, refcnt);
+	NS_RELEASE2(kNC_Subject, refcnt);
+	NS_RELEASE2(kNC_Date, refcnt);
+	NS_RELEASE2(kNC_Sender, refcnt);
+	NS_RELEASE2(kNC_Status, refcnt);
 	nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
 	mRDFService = nsnull;
 
@@ -129,6 +141,10 @@ NS_IMETHODIMP nsMessageViewDataSource::Init(const char* uri)
 
 	if (! kNC_MessageChild) {
 		mRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
+		mRDFService->GetResource(kURINC_Subject,		&kNC_Subject);
+		mRDFService->GetResource(kURINC_Date,			&kNC_Date);
+		mRDFService->GetResource(kURINC_Sender,			&kNC_Sender);
+		mRDFService->GetResource(kURINC_Status		,   &kNC_Status);
 	}
 	mInitialized = PR_TRUE;
 
@@ -184,6 +200,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 	nsresult rv = NS_ERROR_FAILURE;
 
 	nsIMsgFolder* folder;
+	nsIMessage *message;
 	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 	{
 		if (peq(kNC_MessageChild, property))
@@ -230,6 +247,46 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 		if(NS_SUCCEEDED(rv))
 			return rv;
 	}
+	else if (mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
+	{
+		if(peq(kNC_MessageChild, property))
+		{
+			nsIMsgFolder *folder;
+			rv = nsGetFolderFromMessage(message, &folder);
+			if(NS_SUCCEEDED(rv))
+			{
+				nsIMsgThread *thread;
+				rv =folder->GetThreadForMessage(message, &thread);
+				if(NS_SUCCEEDED(rv))
+				{
+					nsIEnumerator *messages;
+					nsMsgKey msgKey;
+					message->GetMessageKey(&msgKey);
+					thread->EnumerateMessages(msgKey, &messages);
+					nsMessageViewMessageEnumerator * messageEnumerator = 
+						new nsMessageViewMessageEnumerator(messages, mShowStatus);
+					if(!messageEnumerator)
+						return NS_ERROR_OUT_OF_MEMORY;
+					nsRDFEnumeratorAssertionCursor* cursor =
+						new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, messageEnumerator);
+					NS_IF_RELEASE(messages);
+					if (cursor == nsnull)
+						return NS_ERROR_OUT_OF_MEMORY;
+					NS_ADDREF(cursor);
+					*targets = cursor;
+					rv = NS_OK;
+
+					NS_IF_RELEASE(thread);
+				}
+				NS_IF_RELEASE(folder);
+			}
+
+		}
+		NS_IF_RELEASE(message);
+		if(NS_SUCCEEDED(rv))
+			return rv;
+	}
+
 	if(mDataSource)
 		return mDataSource->GetTargets(source, property, tv, targets);
 	else
@@ -299,6 +356,53 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsIn(nsIRDFNode* node,
 NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 						  nsIRDFArcsOutCursor** labels)
 {
+	
+	nsIMessage *message;
+	if(mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
+	{
+		nsresult rv;
+		nsISupportsArray *arcs;
+		NS_NewISupportsArray(&arcs);
+		if (arcs == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+
+	    arcs->AppendElement(kNC_Subject);
+		arcs->AppendElement(kNC_Sender);
+		arcs->AppendElement(kNC_Date);
+		arcs->AppendElement(kNC_Status);
+
+		nsIMsgFolder *folder;
+		rv = nsGetFolderFromMessage(message, &folder);
+		if(NS_SUCCEEDED(rv))
+		{
+			nsIMsgThread *thread;
+			rv =folder->GetThreadForMessage(message, &thread);
+			if(NS_SUCCEEDED(rv))
+			{
+				nsIEnumerator *messages;
+				nsMsgKey msgKey;
+				message->GetMessageKey(&msgKey);
+				thread->EnumerateMessages(msgKey, &messages);
+				nsMessageViewMessageEnumerator * messageEnumerator = 
+					new nsMessageViewMessageEnumerator(messages, VIEW_SHOW_ALL);
+				if(!messageEnumerator)
+					return NS_ERROR_OUT_OF_MEMORY;
+				if(NS_SUCCEEDED(messageEnumerator->First()))
+					arcs->AppendElement(kNC_MessageChild);
+				NS_IF_RELEASE(thread);
+			}
+			NS_IF_RELEASE(folder);
+		}
+		NS_IF_RELEASE(message);
+		nsRDFArrayArcsOutCursor* cursor =
+			new nsRDFArrayArcsOutCursor(this, source, arcs);
+		NS_RELEASE(arcs);
+		if (cursor == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+		NS_ADDREF(cursor);
+		*labels = cursor;
+		return NS_OK;
+	}
 	if(mDataSource)
 		return mDataSource->ArcLabelsOut(source, labels);
 	else
@@ -650,8 +754,9 @@ nsresult nsMessageViewThreadEnumerator::GetMessagesForCurrentThread()
 		if(NS_SUCCEEDED(rv = currentItem->QueryInterface(nsIMsgThread::GetIID(), (void**)&thread)))
 		{
 			NS_IF_RELEASE(mMessages);
-			thread->EnumerateMessages(nsMsgKey_None, &mMessages);
-			rv = mMessages->First();
+			rv = thread->EnumerateMessages(nsMsgKey_None, &mMessages);
+			if(NS_SUCCEEDED(rv))
+				rv = mMessages->First();
 			NS_IF_RELEASE(thread);
 		}
 		NS_IF_RELEASE(currentItem);

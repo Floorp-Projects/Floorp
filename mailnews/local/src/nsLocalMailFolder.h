@@ -60,6 +60,8 @@ public:
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetMessages(nsIEnumerator* *result);
 	NS_IMETHOD GetThreads(nsIEnumerator** threadEnumerator);
+	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
+
 
 	NS_IMETHOD CreateSubfolder(char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos);
 

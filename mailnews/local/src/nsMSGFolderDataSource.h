@@ -121,7 +121,6 @@ protected:
 	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
 														nsIRDFNode *object, PRBool assert);
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
-	nsresult  GetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder);
 
 
   static nsIRDFResource* kNC_Child;

@@ -827,7 +827,7 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
       if (peq(aCommand, kNC_Delete)) {
 				nsIMsgFolder *folder;
-				if (rv = NS_SUCCEEDED(GetFolderFromMessage(message, &folder))) {
+				if (rv = NS_SUCCEEDED(nsGetFolderFromMessage(message, &folder))) {
 					rv = folder->DeleteMessage(message);
 				}
       }
@@ -897,34 +897,4 @@ NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, co
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsMSGFolderDataSource::GetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder)
-{
-	nsresult rv;
-
-  nsXPIDLCString uri;
-	nsIRDFResource *resource;
-	if(NS_SUCCEEDED( rv = message->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
-	{
-		resource->GetValue( getter_Copies(uri) );
-		nsString messageFolderURIStr;
-		nsMsgKey key;
-		nsParseLocalMessageURI(uri, messageFolderURIStr, &key);
-		nsString folderOnly, folderURIStr;
-		messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kMessageRootURI));
-		folderURIStr = kMailboxRootURI;
-		folderURIStr+= folderOnly;
-
-		nsIRDFResource *folderResource;
-		char *folderURI = folderURIStr.ToNewCString();
-		gRDFService->GetResource(folderURI, &folderResource);
-		delete[] folderURI;
-
-		rv = NS_SUCCEEDED(folderResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)folder));
-
-		NS_RELEASE(resource);
-		NS_RELEASE(folderResource);
-	}
-	return rv;
-
-}
 

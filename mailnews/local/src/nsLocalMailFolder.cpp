@@ -390,6 +390,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetThreads(nsIEnumerator** threadEnumerator)
 		return rv;
 }
 
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
+{
+	nsresult rv = GetDatabase();
+	if(NS_SUCCEEDED(rv))
+		return mMailDatabase->GetThreadContainingMsgHdr(message, thread);
+	else
+		return rv;
+
+}
 
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
 {

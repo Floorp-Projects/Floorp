@@ -6,6 +6,7 @@
 #define __gen_nsIMsgFolder_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsIMsgThread.h" /* interface nsIMsgThread */
 #include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
@@ -45,6 +46,9 @@ class nsIMsgFolder : public nsIFolder {
 
   /* nsIEnumerator GetThreads (); */
   NS_IMETHOD GetThreads(nsIEnumerator **_retval) = 0;
+
+  /* nsIMsgThread GetThreadForMessage (in nsIMessage message); */
+  NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **_retval) = 0;
 
   /* nsIEnumerator GetVisibleSubFolders (); */
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator **_retval) = 0;

@@ -36,6 +36,9 @@
 #include "nsEscape.h"
 #include "nsFileSpec.h"
 
+class nsIMessage;
+class nsIMsgFolder;
+
 // include common interfaces such as the service manager and the repository....
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -145,6 +148,9 @@ nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
 
 extern nsresult
 nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri);
+
+extern nsresult 
+nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder);
 
 ////////////////////////////////////////////////////////////////////////////////
 

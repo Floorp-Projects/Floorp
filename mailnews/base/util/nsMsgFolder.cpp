@@ -26,6 +26,10 @@
 #include "nsIDBFolderInfo.h"
 #include "nsISupportsArray.h"
 #include "nsIPref.h"
+#include "nsIRDFService.h"
+#include "nsIServiceManager.h"
+#include "nsRDFCID.h"
+#include "nsXPIDLString.h"
 
 // stuff for temporary root folder hack
 #include "nsIMsgMailSession.h"
@@ -33,6 +37,7 @@
 #include "nsIPop3IncomingServer.h"
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -174,6 +179,12 @@ nsMsgFolder::GetThreads(nsIEnumerator ** threadEnumerator)
 {
   // XXX should this return an empty enumeration?
 	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
+{
+	return NS_ERROR_FAILURE;	
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1667,6 +1678,48 @@ nsresult nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri
 
 	return NS_OK;
 
+
+}
+
+nsresult nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder)
+{
+	nsresult rv;
+
+  nsXPIDLCString uri;
+	nsIRDFResource *resource;
+	if(NS_SUCCEEDED( rv = message->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
+	{
+		resource->GetValue( getter_Copies(uri) );
+		nsString messageFolderURIStr;
+		nsMsgKey key;
+		nsParseLocalMessageURI(uri, messageFolderURIStr, &key);
+		nsString folderOnly, folderURIStr;
+		messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kMessageRootURI));
+		folderURIStr = kMailboxRootURI;
+		folderURIStr+= folderOnly;
+
+		nsIRDFResource *folderResource;
+		char *folderURI = folderURIStr.ToNewCString();
+
+
+		nsIRDFService* rdfService;
+		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                             nsIRDFService::GetIID(),
+                                             (nsISupports**) &rdfService); 
+		if(NS_SUCCEEDED(rv))
+		{
+			rdfService->GetResource(folderURI, &folderResource);
+			nsServiceManager::ReleaseService(kRDFServiceCID, rdfService); 
+		}
+
+		delete[] folderURI;
+
+		rv = NS_SUCCEEDED(folderResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)folder));
+
+		NS_RELEASE(resource);
+		NS_RELEASE(folderResource);
+	}
+	return rv;
 
 }
 
