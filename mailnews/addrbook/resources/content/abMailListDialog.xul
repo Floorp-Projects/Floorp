@@ -57,7 +57,7 @@ Rights Reserved.
 
   <spring style="height:1em"/>
 
-  <hbox id="editlist"/>
+  <vbox id="editlist"/>
     
   <spring style="height:1em"/>
     
