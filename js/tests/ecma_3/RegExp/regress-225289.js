@@ -126,7 +126,7 @@ pattern = /((?:a|[^a])*)/g;
   status = inSection(10);
   string = 'a';
   actualmatch = string.match(pattern);
-  expectedmatch = Array('a', 'a');
+  expectedmatch = Array('a', '');
   addThis();
 
   status = inSection(11);
@@ -138,7 +138,7 @@ pattern = /((?:a|[^a])*)/g;
   status = inSection(12);
   string = '()';
   actualmatch = string.match(pattern);
-  expectedmatch = Array('()', ')');
+  expectedmatch = Array('()', '');
   addThis();
 
 
