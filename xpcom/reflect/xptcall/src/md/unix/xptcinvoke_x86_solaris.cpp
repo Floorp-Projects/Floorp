@@ -1,21 +1,19 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "MPL"); you may not use this file except in
+ * compliance with the MPL.  You may obtain a copy of the MPL at
+ * http://www.mozilla.org/MPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the MPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the MPL
+ * for the specific language governing rights and limitations under the
+ * MPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the MPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
  *
  * Contributor(s): 
  */
@@ -138,6 +136,45 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     );
     
   return result;
+#elif defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
+
+asm(
+	"\n\t /: PRUint32 n = invoke_count_words (paramCount, params) * 4;"
+
+	"\n\t pushl %ebx / preserve ebx"
+	"\n\t pushl %esi / preserve esi"
+	"\n\t movl  %esp, %ebx / save address of pushed esi and ebx"
+
+	"\n\t pushl 20(%ebp) / \"params\""
+	"\n\t pushl 16(%ebp) / \"paramCount\""
+	"\n\t call  invoke_count_words"
+	"\n\t mov   %ebx, %esp / restore esp"
+
+	"\n\t sall  $2,%eax"
+	"\n\t subl  %eax, %esp / make room for arguments"
+	"\n\t movl  %esp, %esi / save new esp"
+
+	"\n\t pushl %esp"
+	"\n\t pushl 20(%ebp) / \"params\""
+	"\n\t pushl 16(%ebp) / \"paramCount\""
+	"\n\t call  invoke_copy_to_stack  /  copy params"
+	"\n\t movl  %esi, %esp / restore new esp"
+
+	"\n\t movl  8(%ebp),%ecx / \"that\""
+	"\n\t pushl %ecx / \"that\""
+	"\n\t movl  (%ecx), %edx" 
+	"\n\t movl  12(%ebp), %eax / function index: \"methodIndex\""
+	"\n\t movl  8(%edx,%eax,4), %edx"
+
+	"\n\t call  *%edx"
+	"\n\t mov   %ebx, %esp"
+	"\n\t popl  %esi"
+	"\n\t popl  %ebx"
+);
+
+/* result == %eax */
+  if(0) /* supress "*** is expected to return a value." error */
+     return 0;
 
 #else
 #error "can't find a compiler to use"

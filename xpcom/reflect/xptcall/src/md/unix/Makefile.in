@@ -42,15 +42,9 @@ include $(topsrcdir)/config/config.mk
 #
 # Lots of Unixish x86 flavors
 #
-ifneq (,$(filter SunOS Linux FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
+ifneq (,$(filter Linux FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
-endif
-# 28817: if Solaris Intel OS, and native compiler, always build optimised.
-ifeq ($(OS_ARCH),SunOS)
-ifndef GNU_CC
-OS_CXXFLAGS += -O
-endif
 endif
 endif
 #
@@ -64,6 +58,22 @@ endif
 #
 ifeq ($(OS_TARGET)$(OS_TEST),NTOx86)
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+endif
+
+######################################################################
+# Solaris/Intel
+######################################################################
+#
+# Solaris/Intel
+#
+ifeq ($(OS_ARCH),SunOS)
+ifeq ($(OS_TEST),i86pc)
+CPPSRCS		:= xptcinvoke_x86_solaris.cpp xptcstubs_x86_solaris.cpp
+# 28817: if Solaris Intel OS, and native compiler, always build optimised.
+ifndef GNU_CC
+OS_CXXFLAGS += -O
+endif
+endif
 endif
 
 ######################################################################
