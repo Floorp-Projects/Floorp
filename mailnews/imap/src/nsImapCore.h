@@ -202,7 +202,8 @@ typedef struct _StreamInfo {
 
 typedef struct _ProgressInfo {
 	PRUnichar *message;
-	int percent;
+  PRInt32 currentProgress;
+  PRInt32 maxProgress;
 } ProgressInfo;
 
 typedef struct _StatusMessageInfo {

@@ -1176,12 +1176,15 @@ PercentProgressProxyEvent::PercentProgressProxyEvent(
     if (aInfo)
     {
         m_progressInfo.message = (aInfo->message) ? nsCRT::strdup(aInfo->message) : nsnull;
-        m_progressInfo.percent = aInfo->percent;
+        m_progressInfo.currentProgress = aInfo->currentProgress;
+        m_progressInfo.maxProgress = aInfo->maxProgress;
     }
     else
     {
         m_progressInfo.message = nsnull;
-        m_progressInfo.percent = 0;
+        m_progressInfo.maxProgress = -1;
+        m_progressInfo.currentProgress = 0;
+
     }
 }
 

@@ -50,7 +50,6 @@
 #include "nsICopyMsgStreamListener.h"
 #include "nsImapStringBundle.h"
 #include "nsIMsgFolderCacheElement.h"
-#include "nsIMsgStatusFeedback.h"
 #include "nsTextFormatter.h"
 #include "nsIPref.h"
 
@@ -66,6 +65,8 @@
 #include "nsXPIDLString.h"
 #include "nsIImapFlagAndUidState.h"
 #include "nsIMessenger.h"
+#include "nsIImapMockChannel.h"
+#include "nsIProgressEventSink.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
@@ -3524,62 +3525,61 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
     aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
     if (imapUrl)
     {
-      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
-      if (mailnewsUrl)
+      nsCOMPtr<nsIImapMockChannel> mockChannel;
+      imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
+      if (mockChannel)
       {
-        nsCOMPtr <nsIMsgStatusFeedback> feedback;
-        mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
-
-        if (extraInfo)
+        nsCOMPtr<nsIProgressEventSink> progressSink;
+        mockChannel->GetProgressEventSink(getter_AddRefs(progressSink));
+        if (progressSink)
         {
-          PRUnichar *printfString = nsTextFormatter::smprintf(progressMsg, extraInfo);
-          if (printfString)
+          if (extraInfo)
           {
-            progressMsg = nsCRT::strdup(printfString);  
-            nsTextFormatter::smprintf_free(printfString);
-
+            PRUnichar *printfString = nsTextFormatter::smprintf(progressMsg, extraInfo);
+            if (printfString)
+            {
+              progressMsg = nsCRT::strdup(printfString);  
+              nsTextFormatter::smprintf_free(printfString);
+            }
           }
+          progressSink->OnStatus(mockChannel, nsnull, progressMsg);
         }
-        if (feedback)
-          feedback->ShowStatusString(progressMsg);
       }
     }
   }
   PR_FREEIF(progressMsg);
-
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
                                   ProgressInfo* aInfo)
 {
-#ifdef DEBUG_bienvenu1
-  nsCString message(aInfo->message);
-  printf("progress: %d %s\n", aInfo->percent, message.GetBuffer());
-#endif
   if (aProtocol)
   {
     nsCOMPtr <nsIImapUrl> imapUrl;
     aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
     if (imapUrl)
     {
-      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
-      if (mailnewsUrl)
+      nsCOMPtr<nsIImapMockChannel> mockChannel;
+      imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
+      if (mockChannel)
       {
-        nsCOMPtr <nsIMsgStatusFeedback> feedback;
-        mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
-        if (feedback)
+        nsCOMPtr<nsIProgressEventSink> progressSink;
+        mockChannel->GetProgressEventSink(getter_AddRefs(progressSink));
+        if (progressSink)
         {
-          feedback->ShowProgress(aInfo->percent);
+          progressSink->OnProgress(mockChannel, nsnull, aInfo->currentProgress, aInfo->maxProgress);
           if (aInfo->message)
-            feedback->ShowStatusString(aInfo->message);
+            progressSink->OnStatus(mockChannel, nsnull, aInfo->message);
+
         }
+
       }
     }
   }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

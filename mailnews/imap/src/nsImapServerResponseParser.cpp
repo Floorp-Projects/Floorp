@@ -2369,7 +2369,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 				{
 					fServerConnection.ProgressEventFunctionUsingId(IMAP_DOWNLOADING_MESSAGE);
 					if (fTotalDownloadSize > 0)
-						fServerConnection.PercentProgressUpdateEvent(0,(100*(charsReadSoFar + origin))/fTotalDownloadSize);
+						fServerConnection.PercentProgressUpdateEvent(0,charsReadSoFar + origin, fTotalDownloadSize);
 				}
 				if (charsReadSoFar > numberOfCharsInThisChunk)
 				{	// this is rare.  If this msg ends in the middle of a line then only display the actual message.
