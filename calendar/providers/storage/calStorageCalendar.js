@@ -379,7 +379,7 @@ calStorageCalendar.prototype = {
             return;
 
         var itemsFound = Array();
-        var startTime = 0;
+        var startTime = -0x7fffffffffffffff;
         // endTime needs to be the max value a PRTime can be
         var endTime = 0x7fffffffffffffff;
         if (aRangeStart)

@@ -58,6 +58,7 @@ function makeOccurrence(item, start, end)
 }
 
 // END_OF_TIME needs to be the max value a PRTime can be
+const START_OF_TIME = -0x7fffffffffffffff;
 const END_OF_TIME = 0x7fffffffffffffff;
 
 calMemoryCalendar.prototype = {
@@ -290,7 +291,7 @@ calMemoryCalendar.prototype = {
         const calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
 
         var itemsFound = Array();
-        var startTime = 0;
+        var startTime = START_OF_TIME;
         var endTime = END_OF_TIME;
         if (aRangeStart)
             startTime = aRangeStart.nativeTime;
@@ -340,8 +341,10 @@ calMemoryCalendar.prototype = {
             var tmpitem = item;
             if (item instanceof calIEvent) {
                 tmpitem = item.QueryInterface(calIEvent);
-                itemStartTime = item.startDate.nativeTime || 0;
-                itemEndTime = item.endDate.nativeTime || END_OF_TIME;
+                itemStartTime = item.startDate.valid ? item.startDate.nativeTime :
+                                                       START_OF_TIME;
+                itemEndTime = item.endDate.valid ? item.endDate.nativeTime :
+                                                   END_OF_TIME
             } else if (item instanceof calITodo) {
                 // if it's a todo, also filter based on completeness
                 if (item.percentComplete == 100 && !itemCompletedFilter)
