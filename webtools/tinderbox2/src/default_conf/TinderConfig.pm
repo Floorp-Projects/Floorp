@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.46 $ 
-# $Date: 2002/05/10 23:23:05 $ 
+# $Revision: 1.47 $ 
+# $Date: 2003/05/26 14:26:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -41,23 +41,32 @@
 
 package TinderConfig;
 
-# This package must not use any tinderbox specific libraries.  It is
+# This package must not use any Tinderbox specific libraries.  It is
 # intended to be a base class.
 
 
 
+# set the path for Tinderbox.
+
+$ENV{'PATH'}=  (
+                '/bin'.
+                ':/usr/bin'.
+                ':/usr/local/bin'.
+                ':/opt/gnu/bin/'.
+                '');
+
 # How do we run the unzip command?
 # All log files are stored in compressed format.
 
-@GZIP = ("/opt/gnu/bin/gzip",);
+@GZIP = ("gzip",);
 
-@GUNZIP = ("/opt/gnu/bin/gzip", "--uncompress", "--to-stdout",);
+@GUNZIP = ("gzip", "--uncompress", "--to-stdout",);
 
 
-# The GNU UUDECODE will use these arugments, Solaris uudecode is
+# The GNU UUDECODE will use these arguments, Solaris uudecode is
 # different. UUDECODE is only used if the build machines send binary
 # files inside the build log messages.  This option is probably not
-# used by most tinderbox installations.
+# used by most Tinderbox installations.
 
 @UUDECODE = ("/error/notinstalled/uudecode", "-o",);
 
@@ -67,7 +76,6 @@ package TinderConfig;
 
 $TINDERBOX_UID=3310;
 $TINDERBOX_GID=3310;
-
 
 # The url to the tinderbox server binary directory
 
@@ -90,13 +98,12 @@ $TINDERBOX_HTML_DIR = "/opt/apache/htdocs/tinderbox2";
 # $TINDERBOX_HTML_DIR and set Persistence::Dumper.  This setting will
 # allow a browser can look at the internal data structures. For
 # production use it is more secure to keep internal tinderbox data
-# outside of the HTML tree so that the webserver can not send the
+# outside of the HTML tree so that the web server can not send the
 # internal data over the network.
 
 #$TINDERBOX_DATA_DIR = "/home/httpd/html/tinderbox";
 #$TINDERBOX_DATA_DIR = "/var/spool/tinderbox";
 $TINDERBOX_DATA_DIR = "/export2/tbox2-data";
-
 
 # Where to store the compressed HTML converted log files. Typically
 # this is either the DATA_DIR or the HTML dir, though it can be
@@ -119,7 +126,7 @@ $GLOBAL_INDEX_FILE = "index.html";
 
 # Tinderbox can be run without any images.  Set GIF_URL to null to
 # disable images. If you install the traditional tinderbox images on
-# your webserver then set GIF_URL to the url needed to find the
+# your web server then set GIF_URL to the url needed to find the
 # images. Images are used for the Notices and in the BuildStatus
 # 'header_background_gif'.
 
@@ -141,17 +148,33 @@ $REFRESH_TIME = (60 * 15);
 # Pick how you wish to the Tinderbox popup windows to be implemented:
 # Uncomment only one HTMLPopUp implementation.
 
-# MajorCoolWindow: Should be portable to all browsers
-# MozillaLayers:   Will not display on any browser other then Netscape
-# None:            A null implementation which will not use any popups
-#                  provide no popup windows. Use this if you do not run
-#                  JavaScript in your browsers.
+# I am moving twards popup libraries which appear "on click" and away
+# from the "on mouse over" libraries.  So consider some of these
+# libraries deprecated. You may wish to run the test vcdisplay.tst to
+# see samples of all the windows.
+
+# Overlib : this library is a bit larger then the rest but I am
+#            particularly fond of the portable and supported 
+#	     windows it creates.
+# MozillaClick: Should be bortable to all browsers written my the
+#		netscape GUI guru <mgalli@netscape.com>
+# MajorCoolWindow: Should be portable to all browsers, came from major cool. 
+#                  Not recommended, on click seems to redirect.
+# None:         A null implementation which will not use any popups
+#               provide no popup windows. Use this if you do not run
+#               JavaScript in your browsers.
  
 $PopUpImpl = (
+
+              'HTMLPopUp::OverLib',
+	      # 'HTMLPopUp::MajorCoolWindow',
+	      # 'HTMLPopUp::MozillaClick',
+	      # 'HTMLPopUp::None',
+
+              # ----- deprecated mouseover libraries -----
+
 	      # 'HTMLPopUp::MozillaLayers',
               #'HTMLPopUp::MajorCoolPermanent',
-	       'HTMLPopUp::MajorCoolWindow',
-	      # 'HTMLPopUp::None',
 	      # 'HTMLPopUp::PortableLayers',
 	     );
 
@@ -171,16 +194,30 @@ $PopUpImpl = (
 @DBImpl = (
 	   'TinderDB::Time',
 
-           # the notice board is a special column, you may not wish to
-           # include it.
+           # The notice board is a special column, you may not wish to
+           # include it. If you do not have a notice column you can
+           # still have notices appear, they will just appear in the
+           # other columns.
 
 #	   'TinderDB::Notice',
+
+           # version control systems
+
 #	   'TinderDB::VC_CVS',
 	   'TinderDB::VC_Bonsai',
 #          'TinderDB::VC_Perforce',
+
 	   'TinderDB::Build',
+
+           # Bug Tracking systems
+
 #	   'TinderDB::BT_Generic',
 #	   'TinderDB::BT_Req',
+
+           # You may wish to have the time column on both sides of the
+           # table.
+
+	   # 'TinderDB::Time',
 	  );
 
 # What border should the status legends use?  new browsers allow us to
@@ -192,19 +229,27 @@ $DB_LEGEND_BORDER = "";
 
 # Should the vector of times, which represent the rows use a uniform
 # spacing or should we put one row for each time we have data for.  It
-# is recomended to set this to uniform vertical length anywhere on the
+# is recommended to set this to uniform vertical length anywhere on the
 # table corresponds to the same amount of elapsed time.
 
-#$ROW_SPACING_DISIPLINE = 'uniform';
+$ROW_SPACING_DISIPLINE = (
 
-# use all event times to create times column.
+                          # Use round numbers spaced 5 minutes apart.
+                          # This keeps the cell box sizes independent
+                          # of the amount of data.
 
-#$ROW_SPACING_DISIPLINE = 'event_driven';
+                          #'uniform',
 
-# use build event times to create times column.
-# traditional Tinderbox1 discipline.
+                          # Use build event times to create times column.
+                          # This is traditional Tinderbox1 discipline.
 
-$ROW_SPACING_DISIPLINE = 'build_event_driven';
+                          'build_event_driven',
+
+                          # Use all event times to create times column.
+
+                          #'event_driven',
+
+                          );
 
 # Spacing on html page (in minutes), this restricts the
 # minimum time between builds (to this value plus 5 minutes).
@@ -224,8 +269,8 @@ $DB_MAX_UPDATES_SINCE_TRIM = 50;
 
 $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 
-# Eforce clock syncronization on the client machines.  Reject data
-# which has been sent to the webserver and the time stamp and current
+# Enforce clock synchronization on the client machines.  Reject data
+# which has been sent to the web server and the time stamp and current
 # time are out side of the bounds.
 
 # set this to determine the maximum transit time for client data.
@@ -242,7 +287,7 @@ $SECONDS_FROM_NOW_ACCEPTABLE = (60 * 10);
 # This is helpful for users of text based browsers, since text based
 # browsers can not render cell colors additional information needs to
 # be encoded into the HTML page.  Some users may object to the use of
-# extra and perhaps unnneded characters in an already wide table.  It
+# extra and perhaps unneeded characters in an already wide table.  It
 # is recommended to set this to 1 so that users can use a text browser
 # if they choose.
 
@@ -263,7 +308,7 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
 
 #	       'TinderHeader::TreeState',
 
-               # Get states from Bonsai tool and set the Bosai states via
+               # Get states from Bonsai tool and set the Bonsai states via
                # Tinderbox admin page.
 
 #	       'TinderHeader::TreeState_Bonsai',
@@ -297,11 +342,14 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
 
 # Pick one display system if your VC system can display via a web
 # server then VCDisplay module that you wish to use, otherwise pick
-# 'None'.
+# 'None'. I would be very interested in a module to work with this
+# bonsai work alike tool http://viewcvs.sourceforge.net/ but I do not
+# have time not to investigate it.
 
 $VCDisplayImpl = (
 		  #'VCDisplay::None',
 		  'VCDisplay::Bonsai',
+		  #'VCDisplay::Perforce_P4DB',
 		 );
 
 # The name of the version control system as it should appear on the
@@ -324,21 +372,27 @@ $VC_BUGNUM_REGEXP = '(\d\d\d+)';
 
 $PersistenceImpl = (
                     #'Persistence::Dumper',
-                     'Persistence::Storable',
+                    'Persistence::Storable',
                    );
 
 # Do you wish the main status page to display the number of errors
-# which the error parser found in the build logs.
+# which the error parser found in the build logs? Use zero for no one
+# for yes.
 
 $DISPLAY_BUILD_ERRORS = 0;
 
-# If you your using VCDisplay:Bonsai we need to know how to make HTML
-# to point to the bonsai CGI programs.
+# If you your using one of the VCDisplay modules we need to know how
+# to make HTML to point to the bonsai CGI programs. We do not need to
+# have this link point to the same webserver as tinderbox.
 
 $BONSAI_URL = "http://bonsai.mozilla.org/";
 
-# If we query bonsai data we need to know the directory which bonsai
-# is installed in.
+$P4DB_URL =  "http://public.perforce.com/cgi-bin/p4db";
+
+# If we query bonsai data (e.g., DBImpl above is set to Bonsai), we
+# need to know the directory which bonsai is installed in. Tinderbox
+# needs to be able to see the bonsai directories to get bonsai checkin
+# and treestate data.
 
 #$BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
 $BONSAI_DIR = "/opt/apache/htdocs/webtools/bonsai";
@@ -365,7 +419,7 @@ $DEFAULT_DISPLAY_HOURS = 6;
 $DEFAULT_HTML_PAGE = 'status.html';
 
 # The indicator that a notice is available for a given notice cell is
-# configurable.  Traditionally it is a star gif however if you wish to
+# configurable.  Traditionally it is a star GIF however if you wish to
 # run entirely without images I suggest you set it to "X" or "*".
 # This is used in TinderDB::Notice.pm
 
