@@ -186,7 +186,8 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   void * menuHandle;
   aMenu->GetNativeData(menuHandle);
   ::InsertMenu((MenuHandle)menuHandle, hierMenu);
-  ::SetMenuItemHierarchicalID((MenuHandle) mMacMenuHandle, mNumMenuItems, --mMacMenuIDCount);
+  PRInt16 temp = mMacMenuIDCount;
+  ::SetMenuItemHierarchicalID((MenuHandle) mMacMenuHandle, mNumMenuItems, --temp);
   return NS_OK;
 }
 
