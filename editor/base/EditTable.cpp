@@ -45,10 +45,13 @@
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 PRBool nsHTMLEditor::IsOnlyCellInRow(nsCOMPtr<nsIDOMElement> &aCell, nsIDOMElement** aParentRow)
 {
+  return PR_FALSE;
+#if 0
   if (!aParentRow) return NS_ERROR_NULL_POINTER;
 
   PRBool oneCellFound = PR_FALSE;
-  nsresult res = GetElementOrParentByTagName("tr", aCell, aParentRow);
+  nsCOMPtr<nsIDOMNode> cell = aCell;
+  nsresult res = GetElementOrParentByTagName("tr", cell, aParentRow);
   if (NS_SUCCEEDED(res) && aParentRow)
   {
     PRBool done = PR_FALSE;
@@ -86,6 +89,7 @@ PRBool nsHTMLEditor::IsOnlyCellInRow(nsCOMPtr<nsIDOMElement> &aCell, nsIDOMEleme
     //NS_ASSERTION(oneCellFound, "Cell Not Found!");
   }
   return oneCellFound;
+#endif
 }
 
 PRBool nsHTMLEditor::IsOnlyRowInTable(nsCOMPtr<nsIDOMElement> &aRow, nsCOMPtr<nsIDOMElement> &aTable)
