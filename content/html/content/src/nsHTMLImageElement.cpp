@@ -258,6 +258,7 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Border, border)
 NS_IMPL_PIXEL_ATTR(nsHTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_PIXEL_ATTR(nsHTMLImageElement, Vspace, vspace)
 
