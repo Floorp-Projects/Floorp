@@ -19,6 +19,7 @@
 #include "nsBaseWidget.h"
 #include "nsIAppShell.h"
 #include "nsIDeviceContext.h"
+#include "nsCOMPtr.h"
 
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
@@ -221,34 +222,35 @@ nsIWidget* nsBaseWidget::GetParent(void)
 nsIEnumerator* nsBaseWidget::GetChildren()
 {
   if (mChildren) {
-    // Reset the current position to 0
+    // Reset the current position to 0 and check if there is something to copy
     mChildren->First();
-    nsISupports   * child;
-    if (!NS_SUCCEEDED(mChildren->CurrentItem(&child))) {
-      return NULL;
-    }
+    nsCOMPtr<nsISupports> firstChild;
+    if ( !NS_SUCCEEDED(mChildren->CurrentItem(getter_AddRefs(firstChild))) )
+      return nsnull;
+
     // Make a copy of our enumerator
-    Enumerator * children = new Enumerator;
-    NS_ADDREF(children);
+    Enumerator * children = new Enumerator;  //*** BUG: created with refcnt = 1 already
+    if ( !children )
+    	return nsnull;
+    NS_ADDREF(children);                     //*** this is wrong, given the bug above, but should remain
+                                             //***  because we need to addref it in the correct case
     do
     {
-      nsIWidget *widget;
-      if (!NS_SUCCEEDED(mChildren->CurrentItem(&child))) {
+      nsCOMPtr<nsISupports> currentChild;
+      if (!NS_SUCCEEDED(mChildren->CurrentItem(getter_AddRefs(currentChild)))) {
         delete children;
-        return NULL;
+        return nsnull;
       }
-      if (NS_OK == child->QueryInterface(kIWidgetIID, (void**)&widget)) {
+      nsCOMPtr<nsIWidget> widget ( currentChild );
+      if ( widget )
         children->Append(widget);
-        NS_IF_RELEASE(widget);
-      }
-      NS_IF_RELEASE(child);
     }
     while (NS_SUCCEEDED(mChildren->Next()));
 
     return (nsIEnumerator*)children;
   }
 
-  return NULL;
+  return nsnull;
 }
 
 
