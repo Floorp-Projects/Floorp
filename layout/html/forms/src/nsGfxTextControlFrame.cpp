@@ -1568,3 +1568,4 @@ EnderTempObserver::SetFrame(nsGfxTextControlFrame *aFrame)
   mFrame = aFrame;
   return NS_OK;
 }
+
