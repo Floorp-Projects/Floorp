@@ -1,0 +1,105 @@
+
+/******** Outliner widget **********/
+
+/** basic outliner ****************************************************
+ *  basic outliner widget for use in main windows where no decoration
+ *  is required.
+ **/
+
+outliner {
+  border: none;
+  border-spacing: 0px;
+  background-color: #ffffff;
+  color: #000000;
+}
+
+outlinerbody {
+  background-color: white;
+  color: black;
+}
+
+:-moz-outliner-row
+{
+  height: 19px;
+  border-right: 1px solid transparent;
+  border-left: 1px solid transparent;
+}
+
+:-moz-outliner-cell
+{
+  
+}
+
+:-moz-outliner-cell-text
+{
+  color: inherit;
+}
+
+
+.outlinercell-header, 
+.outlinercell-inset-header, 
+.outlinercell-header-image { 
+  border-left: 1px solid #EDEDED !important;
+  border-top: 1px solid #EDEDED !important;
+  border-right: 1px solid #6E7070 !important;
+  border-bottom: 1px solid #6E7070 !important;
+  padding: 0px;
+  background-color: #C2D0D0; 
+  color: #000000;
+}
+
+.outlinercell-header-box,
+.outlinercell-header-image-box {
+  border-left: 1px solid #C2D0D0;
+  border-top: 1px solid #C2D0D0;
+  border-right: 1px solid #A4ACAC;
+  border-bottom: 1px solid #A4ACAC;
+  vertical-align: middle;
+}  
+
+.outlinercell-header-box {
+  padding: 0px 4px 0px 4px;
+}
+
+.outlinercell-header-image-box {
+  padding: 0px 1px 0px 1px;
+}
+  
+.outlinercell-header:hover:active,
+.outlinercell-header-image:hover:active,
+.outlinercell-inset-header:hover:active {
+  border: 1px solid #A4ACAC !important;
+}
+
+.outlinercell-header:hover:active > .outlinercell-header-box,
+.outlinercell-inset-header:hover:active > .outlinercell-header-box,
+.outlinercell-header-image:hover:active > .outlinercell-header-image-box {
+  border-top: 1px solid transparent;
+  border-right: none;
+  border-bottom: none;
+  border-left: 1px solid transparent;
+}
+  
+.outlinercell-header:hover:active > .outlinercell-header-box,
+.outlinercell-inset-header:hover:active > .outlinercell-header-box {
+  padding: 1px 4px 0px 5px;
+}
+
+.outlinercell-header-image:hover:active > .outlinercell-header-image-box {
+  padding: 1px 1px 0px 2px;
+}
+
+
+/* outliner header with sort direction indicators */
+
+.outliner-header-sortdirection {
+  list-style-image: none;
+}
+
+.sortDirectionIndicator[sortDirection="ascending"] > .outlinercell-header-box > .outliner-header-sortdirection {
+  list-style-image: url("chrome://global/skin/sortAscending.gif");
+}
+
+.sortDirectionIndicator[sortDirection="descending"] > .outlinercell-header-box > .outliner-header-sortdirection {
+  list-style-image: url("chrome://global/skin/sortDescending.gif");
+}
