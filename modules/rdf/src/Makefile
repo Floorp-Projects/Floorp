@@ -26,6 +26,10 @@ LIBXP		= $(DIST)/lib/libxp.$(LIB_SUFFIX)
 
 REQUIRES	= nspr dbm java js htmldlgs util img layer pref ldap network parse
 
+ifdef NU_CACHE
+REQUIRES 	+= cache
+endif
+
 JNI_GEN		= netscape.rdf.core.NativeRDF netscape.rdf.core.NativeRDFEnumeration
 
 CSRCS		= \
