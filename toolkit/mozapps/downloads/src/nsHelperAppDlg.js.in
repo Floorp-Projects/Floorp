@@ -267,13 +267,13 @@ nsUnknownContentTypeDialog.prototype = {
       while (aLocalFile.exists()) {
         var parts = /.+-(\d+)(\..*)?$/.exec(aLocalFile.leafName);
         if (parts) {
-          aLocalFile.leafName = aLocalFile.leafName.replace(/((\d+)\.)/, 
-                                                            function (str, p1, part, s) { 
-                                                              return (parseInt(part) + 1) + "."; 
+          aLocalFile.leafName = aLocalFile.leafName.replace(/((\d+)\.)|((\d+)$)/,
+                                                            function (str, dot, dotNum, noDot, noDotNum, pos, s) {
+                                                              return (parseInt(str) + 1) + (dot ? "." : "");
                                                             });
         }
         else {
-          aLocalFile.leafName = aLocalFile.leafName.replace(/\./, "-1$&");
+          aLocalFile.leafName = aLocalFile.leafName.replace(/\.|$/, "-1$&");
         }
       }
       
