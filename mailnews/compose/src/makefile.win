@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  windowwatcher \
 		  content \
+		  webBrowser_core \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

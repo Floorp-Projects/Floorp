@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  content \
 		  dom \
 		  widget \
+      webBrowser_core \
 		  unicharutil \
 		  $(NULL)
 

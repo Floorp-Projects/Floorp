@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  mimetype \
 		  windowwatcher \
+		  webBrowser_core \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  imglib2 \
 		  unicharutil \
+                  webBrowser_core \
 		  $(NULL)
 
 CPPSRCS		= \

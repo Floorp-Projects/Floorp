@@ -62,6 +62,7 @@ REQUIRES    = xpcom \
               content_xul \
               imglib2 \
               gfx2 \
+              webBrowser_core \
               unicharutil \
               $(NULL)
 

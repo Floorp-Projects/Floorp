@@ -2011,6 +2011,10 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
     aDisplayingSelection = (aSelectionValue > nsISelectionController::SELECTION_HIDDEN);
   }
 
+  PRInt16 textSel=0; 
+  (*aSelectionController)->GetSelectionFlags(&textSel);
+  if (!(textSel & nsISelectionDisplay::DISPLAY_TEXT))
+    aDisplayingSelection = false;
 
   // Transform text from content into renderable form
   // XXX If the text fragment is already Unicode and text text wasn't

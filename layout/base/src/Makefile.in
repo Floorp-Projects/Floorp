@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  imglib2 \
 		  gfx2 \
+		  webBrowser_core \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -611,12 +611,15 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FAILED(result))
     return result;
 
-  PRBool displaySelection = PR_TRUE;
-  result = shell->GetDisplayNonTextSelection(&displaySelection);
-  if (NS_FAILED(result))
-    return result;
-  if (!displaySelection)
-    return NS_OK;
+  PRInt16 displaySelection = nsISelectionDisplay::DISPLAY_ALL;
+  if (aFlags != nsISelectionDisplay::DISPLAY_IMAGES)
+  {
+    result = shell->GetSelectionFlags(&displaySelection);
+    if (NS_FAILED(result))
+      return result;
+    if (!(displaySelection == nsISelectionDisplay::DISPLAY_FRAMES))
+      return NS_OK;
+  }
 
 //check frame selection state
   PRBool isSelected;
@@ -987,8 +990,11 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   // if we are in Navigator and the click is in a link, we don't want to start
   // selection because we don't want to interfere with a potential drag of said
   // link and steal all its glory.
-  PRBool isEditor = PR_FALSE;
-  shell->GetDisplayNonTextSelection ( &isEditor );
+  PRInt16 isEditor = 0;
+  shell->GetSelectionFlags ( &isEditor );
+  //weaaak. only the editor can display frame selction not just text and images
+  isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
+
   nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
   if (!isEditor && !keyEvent->isAlt) {
     nsCOMPtr<nsIContent> content;
@@ -2878,12 +2884,13 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
 
         //special check. if we allow non-text selection then we can allow a hit location to fall before a table. 
         //otherwise there is no way to get and click signal to fall before a table (it being a line iterator itself)
-        PRBool isEditor = PR_FALSE;
+        PRInt16 isEditor = 0;
         nsCOMPtr<nsIPresShell> shell;
         aPresContext->GetShell(getter_AddRefs(shell));
         if (!shell)
           return NS_ERROR_FAILURE;
-        shell->GetDisplayNonTextSelection ( &isEditor );
+        shell->GetSelectionFlags ( &isEditor );
+        isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
         if ( isEditor ) 
         {
           nsIAtom *resultFrameType;

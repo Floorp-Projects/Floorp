@@ -38,6 +38,8 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  gfx2 \
 		  content \
+		  gfx \
+		  webBrowser_core \
       gfx \
 		  $(NULL)
 

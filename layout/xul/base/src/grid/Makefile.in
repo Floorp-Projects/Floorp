@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  view \
 		  necko \
+		  webBrowser_core \
 		  $(NULL)
 
 CPPSRCS	= \

@@ -36,6 +36,7 @@ REQUIRES        = xpcom \
                   pref \
                   gfx \
                   widget \
+                  webBrowser_core \
                   $(NULL)
 
 CPP_OBJS =                                    \
