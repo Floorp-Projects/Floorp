@@ -482,6 +482,8 @@ xpfe/browser/src/Makefile
 xpfe/browser/resources/Makefile
 xpfe/browser/resources/content/Makefile
 xpfe/browser/resources/skin/Makefile
+xpfe/browser/resources/locale/Makefile
+xpfe/browser/resources/locale/en-US/Makefile
 xpfe/global/Makefile
 xpfe/global/resources/Makefile
 xpfe/global/resources/skin/Makefile
