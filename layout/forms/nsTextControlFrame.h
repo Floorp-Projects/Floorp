@@ -65,6 +65,8 @@ protected:
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
+  PRInt32 GetDefaultColumnWidth() const { return (PRInt32)(20); } // this was DEFAULT_PIXEL_WIDTH
+
 
 
 /* ---------- abstract methods derived class must implement ---------- */
