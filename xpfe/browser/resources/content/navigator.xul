@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
 
 <!-- The contents of this file are subject to the Netscape Public
 License Version 1.1 (the "License"); you may not use this file
@@ -622,26 +622,40 @@ Contributor(s): ______________________________________. -->
           datasources="rdf:bookmarks" id="PersonalToolbar" ref="NC:PersonalToolbarFolder" 
           ondraggesture="return BeginDragPersonalToolbar(event);"
           ondragdrop="return DropPersonalToolbar(event);"
-          ondragover="return DragOverPersonalToolbar(event);">
+          ondragover="return DragOverPersonalToolbar(event);"
+          onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')">
+
+          <!-- This template builds content from the bookmarks datasource -->
           <template>
+            <!-- Rules for content hanging _directly_ off the toolbar -->
+            <rule parent="toolbar" iscontainer="true">
+              <menu uri="...">
+                <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+              </menu>
+            </rule>
+            <rule parent="toolbar">
+              <titledbutton uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+            </rule>
+
+            <!-- Recursive rules for nested folders -->
             <rule iscontainer="true">
-              <titledbutton uri="..." src="resource:/res/rdf/folder-closed.gif"
-                value="rdf:http://home.netscape.com/NC-rdf#Name" align="left"
-                popup="bookmark-popup" />
+              <menupopup>
+                <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+              </menupopup>
             </rule>
             <rule>
-              <titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif"
-                value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" 
-                onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')" />
+              <menupopup>
+                <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+              </menupopup>
             </rule>
           </template>
 
-          <titledbutton id="home-button" align="left"
+        <titledbutton id="home-button" align="left"
             value="&homeButton.label;" 
             defaultURL="&defaultHomepage.url;"
-            onclick="BrowserHome()"/>
+            onclick="BrowserHome(); event.preventBubble();"/>
         <titledbutton id="netscape-button" align="left" value="&netscapeButton.label;" 
-            onclick="window.content.location.href='&myNetscape.url;'"/>
+            onclick="window.content.location.href='&myNetscape.url;'; event.preventBubble();"/>
           <spring flex="100%"/>
         </toolbar>
       </toolbox>

@@ -104,3 +104,22 @@ iframe#content-frame {
 input[type="text"]#urlbar {
    min-width: 10em;
 }
+
+
+/* Rules for the personal toolbar. The <titledbutton> and <menu> elements
+   that are direct children of the <toolbar> are slightly different than
+   recursively generated submenus */
+
+toolbar.main-bar > titledbutton,
+toolbar.main-bar .menu-left
+{
+  list-style-image: url('resource:/res/toolbar/TB_Location.gif');
+}
+
+toolbar.main-bar > menu > titledbutton,
+toolbar.main-bar menu > .menu-left
+{
+  list-style-image: url('resource:/res/toolbar/TB_Location_mo.gif');
+}
+
+
