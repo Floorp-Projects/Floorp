@@ -784,7 +784,7 @@ nsresult
 nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 {
   mXSLTProcessor =
-    do_CreateInstance("@mozilla.org/document-transformer;1?type=text/xslt");
+    do_CreateInstance("@mozilla.org/document-transformer;1?type=xslt");
   if (!mXSLTProcessor) {
     // No XSLT processor available, continue normal document loading
     return NS_OK;

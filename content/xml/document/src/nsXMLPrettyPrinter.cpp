@@ -148,7 +148,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
 
     // Transform the document
     nsCOMPtr<nsIXSLTProcessor> transformer =
-        do_CreateInstance("@mozilla.org/document-transformer;1?type=text/xsl", &rv);
+        do_CreateInstance("@mozilla.org/document-transformer;1?type=xslt", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = transformer->ImportStylesheet(xslDocument);
