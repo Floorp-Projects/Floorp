@@ -8,7 +8,6 @@
 ; 
 ; Sample App + launch script
 ; 
-gtkEmbed
 TestGtkEmbed
 run-mozilla.sh
 
