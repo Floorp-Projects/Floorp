@@ -1197,14 +1197,6 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
      chromeFlags->copy_history
    */
 
-  /* Allow disabling of commands only if there is no menubar */
-  /*if(!chromeFlags & NS_CHROME_MENU_BAR_ON) {
-     chromeFlags->disable_commands = !WinHasOption(aFeatures, "hotkeys");
-     if(XP_STRCASESTR(aFeatures,"hotkeys")==NULL)
-     chromeFlags->disable_commands = FALSE;
-     }
-   */
-
   //Check security state for use in determing window dimensions
   nsCOMPtr<nsIScriptSecurityManager>
     securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
@@ -1219,6 +1211,7 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
   if (NS_FAILED(res) || !enabled) {
     //If priv check fails, set all elements to minimum reqs., else leave them alone.
     chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
     chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
     //XXX Temporarily removing this check to allow modal dialogs to be
