@@ -263,9 +263,12 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsIBrowserProfileMigrator** aMig
   bpm->GetSourceExists(&exists);
   if (!exists) {
     bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
+    key->SetData(NS_LITERAL_STRING("seamonkey"));
     bpm->GetSourceExists(&exists);
-    if (!exists)
-      bpm = nsnull;
+    if (!exists) {
+      bpm = nsnull; 
+      key = nsnull;
+    }
   }
   
   NS_IF_ADDREF(*aKey = key);
