@@ -68,17 +68,27 @@ my $cgi = Bugzilla->cgi;
 # Main Body Execution
 ################################################################################
 
-# All calls to this script should contain an "action" variable whose value
-# determines what the user wants to do.  The code below checks the value of
-# that variable and runs the appropriate code.
+# All calls to this script should contain an "action" variable whose
+# value determines what the user wants to do.  The code below checks
+# the value of that variable and runs the appropriate code. If none is
+# supplied, we default to 'view'.
 
 # Determine whether to use the action specified by the user or the default.
 my $action = $::FORM{'action'} || 'view';
 
+# Slight awkward extra checks for the case when we came here from the
+# attachment/choose.html.tmpl page
+if ($action eq 'View') {
+    $action = 'view';
+}
+elsif ($action eq 'Edit') {
+    $action = 'edit';
+}
+
 if ($action eq "view")  
-{ 
+{
   validateID();
-  view(); 
+  view();
 }
 elsif ($action eq "interdiff")
 {
@@ -164,6 +174,17 @@ exit;
 sub validateID
 {
     my $param = @_ ? $_[0] : 'id';
+
+    # Only do this check for no 'id' parameter if we are trying to
+    # validate the 'id' parameter
+    if ($param eq 'id' && !$cgi->param('id')) {
+
+        print Bugzilla->cgi->header();
+        $template->process("attachment/choose.html.tmpl", $vars) ||
+            ThrowTemplateError($template->error());
+        exit;
+      
+    }
 
     # Validate the value of the "id" form field, which must contain an
     # integer that is the ID of an existing attachment.

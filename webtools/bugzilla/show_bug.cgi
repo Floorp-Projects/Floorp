@@ -46,7 +46,7 @@ my $single = !$cgi->param('format')
   && (!$cgi->param('ctype') || $cgi->param('ctype') eq 'html');
 
 # If we don't have an ID, _AND_ we're only doing a single bug, then prompt
-if (!defined $cgi->param('id') && $single) {
+if (!$cgi->param('id') && $single) {
     print Bugzilla->cgi->header();
     $template->process("bug/choose.html.tmpl", $vars) ||
       ThrowTemplateError($template->error());
