@@ -159,8 +159,12 @@ static NS_DEFINE_IID(kIUrlDispatcherIID,     NS_IURLDISPATCHER_IID);
 #define DEBUG_MENUSDEL 1
 #endif
 #include "nsICommonDialogs.h"
+
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 static NS_DEFINE_IID( kIPromptIID, NS_IPROMPT_IID );
+static NS_DEFINE_IID( kINetPromptIID, NS_INETPROMPT_IID );
+#include "nsIWalletService.h"
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIWebShell.h"
 
 const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
@@ -310,6 +314,11 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kINetPromptIID )) {
+    *aInstancePtr = (void*)(nsINetPrompt*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(nsISupportsWeakReference::GetIID())) {
     *aInstancePtr = (void*)NS_STATIC_CAST(nsISupportsWeakReference *, this);
     NS_ADDREF_THIS();
@@ -438,6 +447,31 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 NS_METHOD
 nsWebShellWindow::Close()
 {
+  #ifdef XP_MAC // Anyone still using native menus should add themselves here.
+  // unregister as document listener
+  // this is needed for menus
+  nsCOMPtr<nsIContentViewer> cv;
+  if ( mWebShell )
+ 	 mWebShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+   
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+    if (!docv)
+      return NS_OK;
+
+    nsCOMPtr<nsIDocument> doc;
+    docv->GetDocument(*getter_AddRefs(doc));
+    if (!doc)
+      return NS_OK;
+
+    doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+  }
+#endif
+  nsresult rv;
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv)
+  if (NS_SUCCEEDED(rv))
+   appShell->UnregisterTopLevelWindow(this);
+   
   // let's make sure the window doesn't get deleted out from under us
   // while we are trying to close....this can happen if the webshell
   // we close ends up being the last owning reference to this webshell
@@ -451,17 +485,11 @@ nsWebShellWindow::Close()
     NS_RELEASE(mWebShell);
   }
 
+ 
+   	
   NS_IF_RELEASE(mWindow);
-  nsIAppShellService* appShell;
-  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                  kIAppShellServiceIID,
-                                  (nsISupports**)&appShell);
-  if (NS_FAILED(rv))
-    return rv;
   
-  rv = appShell->UnregisterTopLevelWindow(this);
-  if (NS_SUCCEEDED(rv))
-  	nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+
 
   return rv;
 }
@@ -3078,3 +3106,37 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmCheckYN(const PRUnichar *text, const PRUn
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+
+NS_IMETHODIMP nsWebShellWindow::Alert(const char *url, const PRUnichar *title, const PRUnichar *text)
+{
+	return Alert( text );
+}
+
+
+NS_IMETHODIMP nsWebShellWindow::Confirm(const char *url, const PRUnichar *title, const PRUnichar *text, PRBool *_retval)
+{
+	return Confirm( text, _retval );
+}
+
+NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const char *url, const PRUnichar *title, const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+{
+	nsresult res;
+   NS_WITH_SERVICE(nsIWalletService, wallet, kWalletServiceCID, &res);
+   if (NS_FAILED(res)) {
+	     return PromptUsernameAndPassword(text,user, pwd, _retval);
+   }
+   nsCOMPtr<nsIPrompt> prompter = this;
+   return wallet->PromptUsernameAndPasswordURL(text,user, pwd, url, prompter, _retval);
+}
+
+NS_IMETHODIMP nsWebShellWindow::PromptPassword(const char *url, const PRUnichar *title, const PRUnichar *text, PRUnichar **pwd, PRBool *_retval)
+{
+   nsresult res;
+   NS_WITH_SERVICE(nsIWalletService, wallet, kWalletServiceCID, &res);
+   if (NS_FAILED(res)) {
+	     return PromptPassword(text, pwd, _retval);
+   }
+   nsCOMPtr<nsIPrompt> prompter = this;
+   return wallet->PromptPasswordURL(text, pwd, url, prompter,  _retval);
+}

@@ -32,7 +32,7 @@
 #include "nsIUrlDispatcher.h"
 
 #include "nsIPrompt.h"
-
+#include "nsINetPrompt.h"
 // can't use forward class decl's because of template bugs on Solaris 
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -64,6 +64,7 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIDocumentObserver,
                          public nsIUrlDispatcher,
                          public nsIPrompt,
+                         public nsINetPrompt,
                          public nsSupportsWeakReference
 
 {
@@ -243,6 +244,8 @@ public:
   // nsIPrompt
   NS_DECL_NSIPROMPT
 
+	// nsINetPrompt
+  NS_DECL_NSINETPROMPT
 protected:
   
   PRInt32 GetDocHeight(nsIDocument * aDoc);
