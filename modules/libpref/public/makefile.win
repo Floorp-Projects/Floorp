@@ -24,14 +24,7 @@ MODULE=pref
 DEPTH=..\..\.. 
 EXPORTS=prefldap.h
 
-XPIDLSRCS = \
-    .\nsIPref.idl	\
-    .\nsIPrefBranch.idl \
-    .\nsIPrefBranchInternal.idl	\
-    .\nsIPrefLocalizedString.idl	\
-    .\nsIPrefService.idl \
-    .\nsISecurityPref.idl \
-    $(NULL)
+XPIDLSRCS = .\nsIPref.idl .\nsISecurityPref.idl
 
 include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>

@@ -72,9 +72,6 @@ LLIBS	= \
 OBJS =							\
 	.\$(OBJDIR)\prefapi.obj	\
 	.\$(OBJDIR)\nsPref.obj	\
-	.\$(OBJDIR)\nsPrefBranch.obj	\
-	.\$(OBJDIR)\nsPrefService.obj	\
-	.\$(OBJDIR)\nsPrefsFactory.obj	\
 	$(NULL)
 
 #//------------------------------------------------------------------------

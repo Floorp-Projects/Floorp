@@ -184,6 +184,7 @@ nsViewerApp::Destroy()
   }
 
   if (nsnull != mPrefs) {
+    mPrefs->ShutDown();
     NS_RELEASE(mPrefs);
   }
 }
@@ -319,7 +320,8 @@ nsViewerApp::Initialize(int argc, char** argv)
   if (NS_OK != rv) {
     return rv;
   }
-  mPrefs->ReadUserPrefs(nsnull);
+  mPrefs->StartUp();
+  mPrefs->ReadUserPrefs();
 
   // Load Fullcircle Talkback crash-reporting mechanism.
   // http://www.fullcirclesoftware.com for more details.

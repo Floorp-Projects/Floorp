@@ -1616,7 +1616,7 @@ nsresult nsProfile::LoadNewProfilePrefs()
     if (NS_FAILED(rv)) return rv;
     
     prefs->ResetUserPrefs();
-    prefs->ReadUserPrefs(nsnull);
+    prefs->ReadUserPrefs();
 
     return NS_OK;
 }
