@@ -143,7 +143,7 @@ int nm2tsv(Options* inOptions)
 */
 {
     int retval = 0;
-    char lineBuffer[0x400];
+    char lineBuffer[4096];  // yes, the are some very large symbols
     char* module = NULL;
     char* size = NULL;
     char* type = NULL;
@@ -157,7 +157,7 @@ int nm2tsv(Options* inOptions)
         trimWhite(lineBuffer);
 
         /*
-        ** Find the various peices of information we'll be looking for.
+        ** Find the various pieces of information we'll be looking for.
         */
         size = strchr(lineBuffer, ':');
         if(NULL != size)
