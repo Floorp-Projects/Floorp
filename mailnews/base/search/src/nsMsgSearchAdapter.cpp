@@ -1249,3 +1249,5 @@ nsresult nsMsgSearchValidityManager::InitLocalABTable()
 
   return rv;
 }
+
+
