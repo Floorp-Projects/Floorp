@@ -386,31 +386,24 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
 
   NS_ENSURE_TRUE(mWorkingDir, NS_ERROR_NOT_INITIALIZED);
 
+  // First, we try to init the argument as an absolute file path. If this doesn't
+  // work, it is an absolute or relative URI.
+
   nsCOMPtr<nsIIOService> io = do_GetIOService();
   NS_ENSURE_TRUE(io, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ConvertUTF16toUTF8 cargument(aArgument);
-
-  // If there appears to be a URI scheme at the beginning of the argument,
-  // it is not a file arg, don't even try.
-
-  nsCAutoString scheme;
-  rv = io->ExtractScheme(cargument, scheme);
-
-  if (NS_FAILED(rv)) {
-    // pretend it's an absolute file path
-    nsCOMPtr<nsIFile> file;
-    rv = ResolveFile(aArgument, getter_AddRefs(file));
-    if (NS_SUCCEEDED(rv)) {
-      return io->NewFileURI(file, aResult);
-    }
+  nsCOMPtr<nsILocalFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+  rv = lf->InitWithPath(aArgument);
+  if (NS_SUCCEEDED(rv)) {
+    lf->Normalize();
+    return io->NewFileURI(lf, aResult);
   }
 
   nsCOMPtr<nsIURI> workingDirURI;
   rv = io->NewFileURI(mWorkingDir, getter_AddRefs(workingDirURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return io->NewURI(cargument,
+  return io->NewURI(NS_ConvertUTF16toUTF8(aArgument),
                     nsnull,
                     workingDirURI,
                     aResult);
