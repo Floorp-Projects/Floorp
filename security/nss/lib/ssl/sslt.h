@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslt.h,v 1.2 2001/11/02 04:24:21 nelsonb%netscape.com Exp $
+ * $Id: sslt.h,v 1.3 2002/03/22 21:43:43 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslt_h_
@@ -156,7 +156,9 @@ typedef struct SSLCipherSuiteInfoStr {
     PRUint16             macBits;
 
     PRUintn              isFIPS       : 1;
-    PRUintn              reservedBits :31;
+    PRUintn              isExportable : 1;
+    PRUintn              nonStandard  : 1;
+    PRUintn              reservedBits :29;
 
 } SSLCipherSuiteInfo;
 
