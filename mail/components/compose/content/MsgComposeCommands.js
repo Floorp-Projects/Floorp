@@ -1317,6 +1317,9 @@ function ComposeStartup(recycled, aParams)
           onFontColorChange();
           onBackgroundColorChange();
         }
+
+        // reset the priorty field for recycled windows
+        updatePriorityToolbarButton('normal');
       } 
       else 
       {
@@ -1843,20 +1846,38 @@ function MessageFcc(menuItem)
   }
 }
 
+function updatePriorityMenu()
+{
+  if (gMsgCompose)
+  {
+    var msgCompFields = gMsgCompose.compFields;
+    if (msgCompFields && msgCompFields.priority)
+    {
+      var priorityMenu = document.getElementById('priorityMenu' ); 
+      priorityMenu.getElementsByAttribute( "checked", 'true' )[0].removeAttribute('checked');
+      priorityMenu.getElementsByAttribute( "value", msgCompFields.priority )[0].setAttribute('checked', 'true');
+    }
+
+  }
+}
+
+function updatePriorityToolbarButton(newPriorityValue)
+{
+  var prioritymenu = document.getElementById('priorityMenu-button');
+  if (prioritymenu)
+    prioritymenu.value = newPriorityValue;
+}
+
 function PriorityMenuSelect(target)
 {
   if (gMsgCompose)
   {
     var msgCompFields = gMsgCompose.compFields;
     if (msgCompFields)
-      switch (target.getAttribute('id'))
-      {
-        case "priority_lowest":  msgCompFields.priority = "lowest";   break;
-        case "priority_low":     msgCompFields.priority = "low";      break;
-        case "priority_normal":  msgCompFields.priority = "normal";   break;
-        case "priority_high":    msgCompFields.priority = "high";     break;
-        case "priotity_highest": msgCompFields.priority = "highest";  break;
-      }
+      msgCompFields.priority = target.getAttribute('value');
+
+    // keep priority toolbar button in synch with possible changes via the menu item
+    updatePriorityToolbarButton(target.getAttribute('value'));
   }
 }
 
