@@ -686,6 +686,7 @@ printf("manager getvalue %d called\n", variable);
 
 nsresult nsPluginHostImpl :: ReloadPlugins(PRBool reloadPages)
 {
+  mPluginsLoaded = PR_FALSE;
   return LoadPlugins();
 }
 
@@ -1211,6 +1212,8 @@ printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS
 #endif
 #endif
 
+  mPluginsLoaded = PR_TRUE;
+
   return NS_OK;
 }
 
@@ -1219,6 +1222,9 @@ nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIURL *aU
 {
   nsPluginTag *plugins = nsnull;
   PRInt32     variants, cnt;
+
+  if (PR_FALSE == mPluginsLoaded)
+    LoadPlugins();
 
   if (nsnull != aMimeType)
   {

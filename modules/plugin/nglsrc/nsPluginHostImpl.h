@@ -169,6 +169,7 @@ private:
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   nsIMalloc   *mMalloc;
+  PRBool      mPluginsLoaded;
 };
 
 #endif
