@@ -188,6 +188,7 @@ protected:
   float                  mP2T;
   GdkWChar*              mDrawStringBuf;
   PRUint32               mDrawStringSize;
+  PRBool                 mClipIsSet;
 
  // graphic state stack (GraphicsState)
   nsVoidArray           *mStateCache;
@@ -197,6 +198,7 @@ protected:
   nsLineStyle            mCurrentLineStyle;
 
 private:
+  void DoSetClipRegion();
   // ConditionRect is used to fix coordinate overflow problems for
   // rectangles after they are transformed to screen coordinates
   NS_IMETHOD ConditionRect( nscoord &x, nscoord &y, nscoord &w, nscoord &h );
