@@ -99,8 +99,8 @@ RemoveJSGCRoot(void* aScriptObjectRef)
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod);
 
-nsXBLProtoImplMethod::nsXBLProtoImplMethod(const nsAReadableString& aName)
-:nsXBLProtoImplMember(&aName), 
+nsXBLProtoImplMethod::nsXBLProtoImplMethod(const PRUnichar* aName)
+:nsXBLProtoImplMember(aName), 
  mUncompiledMethod(nsnull)
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplMethod);

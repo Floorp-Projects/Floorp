@@ -459,16 +459,9 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts)
   // All of our pointers are now filled in.  Construct our handler with all of these
   // parameters.
   nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-  NS_NewXBLPrototypeHandler(event? &nsDependentString(event):0, 
-                            phase? &nsDependentString(phase):0,
-                            action? &nsDependentString(action):0, 
-                            command? &nsDependentString(command):0, 
-                            keycode? &nsDependentString(keycode):0, 
-                            charcode? &nsDependentString(charcode):0, 
-                            modifiers? &nsDependentString(modifiers):0, 
-                            button? &nsDependentString(button):0, 
-                            clickcount? &nsDependentString(clickcount):0,
-                            getter_AddRefs(newHandler));
+  NS_NewXBLPrototypeHandler(event, phase, action, command, 
+                            keycode, charcode, modifiers, button,
+                            clickcount, getter_AddRefs(newHandler));
   if (newHandler) {
     // Add this handler to our chain of handlers.
     if (mHandler)
@@ -538,7 +531,7 @@ nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
     }
   }
 
-  NS_NewXBLProtoImpl(mBinding, name? &nsDependentString(name):0, &mImplementation);
+  NS_NewXBLProtoImpl(mBinding, name, &mImplementation);
 }
 
 void
@@ -568,8 +561,7 @@ nsXBLContentSink::ConstructField(const PRUnichar **aAtts)
 
   // All of our pointers are now filled in.  Construct our field with all of these
   // parameters.
-  mField = new nsXBLProtoImplField(name? &nsDependentString(name):0, 
-                                   readonly? &nsDependentString(readonly):0);
+  mField = new nsXBLProtoImplField(name, readonly);
   if (mField) {
     // Add this member to our chain.
     if (mImplMember)
@@ -617,10 +609,7 @@ nsXBLContentSink::ConstructProperty(const PRUnichar **aAtts)
 
   // All of our pointers are now filled in.  Construct our property with all of these
   // parameters.
-  mProperty = new nsXBLProtoImplProperty(name? &nsDependentString(name):0, 
-                                         onget? &nsDependentString(onget):0, 
-                                         onset? &nsDependentString(onset):0, 
-                                         readonly? &nsDependentString(readonly):0);
+  mProperty = new nsXBLProtoImplProperty(name, onget, onset, readonly);
   if (mProperty) {
     // Add this member to our chain.
     if (mImplMember)
@@ -650,7 +639,7 @@ nsXBLContentSink::ConstructMethod(const PRUnichar **aAtts)
 
     // Is this attribute one of the ones we care about?
     if (nameAtom == nsXBLAtoms::name) {
-      mMethod = new nsXBLProtoImplMethod(nsDependentString(aAtts[1]));
+      mMethod = new nsXBLProtoImplMethod(aAtts[1]);
       break;
     }
   }

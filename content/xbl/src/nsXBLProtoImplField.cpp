@@ -49,7 +49,7 @@
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplField);
 
-nsXBLProtoImplField::nsXBLProtoImplField(const nsAReadableString* aName, const nsAReadableString* aReadOnly)
+nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly)
   : nsXBLProtoImplMember(aName),
     mFieldText(nsnull),
     mFieldTextLength(0)

@@ -50,10 +50,10 @@
 class nsXBLProtoImplProperty: public nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplProperty(const nsAReadableString* aName,
-                         const nsAReadableString* aGetter, 
-                         const nsAReadableString* aSetter,
-                         const nsAReadableString* aReadOnly);
+  nsXBLProtoImplProperty(const PRUnichar* aName,
+                         const PRUnichar* aGetter, 
+                         const PRUnichar* aSetter,
+                         const PRUnichar* aReadOnly);
  
   virtual ~nsXBLProtoImplProperty();
   virtual void Destroy(PRBool aIsCompiled);

@@ -99,10 +99,10 @@ RemoveJSGCRoot(void* aScriptObjectRef)
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplProperty);
 
-nsXBLProtoImplProperty::nsXBLProtoImplProperty(const nsAReadableString* aName,
-                                               const nsAReadableString* aGetter, 
-                                               const nsAReadableString* aSetter,
-                                               const nsAReadableString* aReadOnly)
+nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
+                                               const PRUnichar* aGetter, 
+                                               const PRUnichar* aSetter,
+                                               const PRUnichar* aReadOnly)
 :nsXBLProtoImplMember(aName), 
  mGetterText(nsnull),
  mSetterText(nsnull)
@@ -117,9 +117,9 @@ nsXBLProtoImplProperty::nsXBLProtoImplProperty(const nsAReadableString* aName,
   }
 
   if (aGetter)
-    AppendGetterText(*aGetter);
+    AppendGetterText(nsDependentString(aGetter));
   if (aSetter)
-    AppendSetterText(*aSetter);
+    AppendSetterText(nsDependentString(aSetter));
 }
 
 nsXBLProtoImplProperty::~nsXBLProtoImplProperty()

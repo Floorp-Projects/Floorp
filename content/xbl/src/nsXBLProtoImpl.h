@@ -85,13 +85,13 @@ public:
 
 static nsresult
 NS_NewXBLProtoImpl(nsIXBLPrototypeBinding* aBinding, 
-                   const nsAReadableString* aClassName, 
+                   const PRUnichar* aClassName, 
                    nsXBLProtoImpl** aResult) {
   nsXBLProtoImpl* impl = new nsXBLProtoImpl();
   if (!impl)
     return NS_ERROR_OUT_OF_MEMORY;
-  if (aClassName && !aClassName->IsEmpty())
-    impl->mClassName.AssignWithConversion(*aClassName);
+  if (aClassName)
+    impl->mClassName.AssignWithConversion(aClassName);
   else
     aBinding->GetBindingURI(impl->mClassName);
   aBinding->SetImplementation(impl);

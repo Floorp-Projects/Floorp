@@ -50,7 +50,7 @@
 class nsXBLProtoImplField: public nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplField(const nsAReadableString* aName, const nsAReadableString* aReadOnly);
+  nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly);
   virtual ~nsXBLProtoImplField();
   virtual void Destroy(PRBool aIsCompiled);
 
