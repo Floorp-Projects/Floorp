@@ -9,7 +9,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>Thunderbird APP_VERSION, © 2003 The Mozilla Organization</string>
 	<key>CFBundleIconFile</key>
-	<string>mach</string>
+	<string>thunderbird</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.thunderbird</string>
 	<key>CFBundleInfoDictionaryVersion</key>
