@@ -2190,20 +2190,22 @@ public class Interpreter extends LabelTable {
                 case TokenStream.UNDEFINED :
                     stack[++stackTop] = Undefined.instance;
                     break;
-                case TokenStream.THROW :
-                    result = stack[stackTop];
-                    if (result == DBL_MRK)
-                        result = doubleWrap(sDbl[stackTop]);
+                case TokenStream.THROW : {
+                    Object exception = stack[stackTop];
+                    if (exception == DBL_MRK)
+                        exception = doubleWrap(sDbl[stackTop]);
                     --stackTop;
-                    throw new JavaScriptException(result);
-                case TokenStream.JTHROW :
-                    result = stack[stackTop];
-                    // No need to check for DBL_MRK: result is Exception
+                    throw new JavaScriptException(exception);
+                }
+                case TokenStream.JTHROW : {
+                    Object exception = stack[stackTop];
+                    // No need to check for DBL_MRK: exception must be Exception
                     --stackTop;
-                    if (result instanceof JavaScriptException)
-                        throw (JavaScriptException)result;
+                    if (exception instanceof JavaScriptException)
+                        throw (JavaScriptException)exception;
                     else
-                        throw (RuntimeException)result;
+                        throw (RuntimeException)exception;
+                }
                 case TokenStream.ENTERWITH : {
                     Object lhs = stack[stackTop];
                     if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
