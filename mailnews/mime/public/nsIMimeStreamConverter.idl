@@ -61,7 +61,6 @@ interface nsMimeOutput
 	const long nsMimeMessageRaw = 5;
 	const long nsMimeMessageDraftOrTemplate = 6;
 	const long nsMimeMessageEditorTemplate = 7;
-	const long nsMimeMessageXULDisplay = 8;
 	const long nsMimeMessagePrintOutput = 9;
   const long nsMimeMessageSaveAs = 10;
   const long nsMimeMessageSource = 11;

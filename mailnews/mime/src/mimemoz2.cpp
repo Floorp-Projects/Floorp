@@ -1500,7 +1500,6 @@ mime_bridge_create_display_stream(
 		case nsMimeOutput::nsMimeMessageSplitDisplay:   // the wrapper HTML output to produce the split header/body display
 		case nsMimeOutput::nsMimeMessageHeaderDisplay:  // the split header/body display
 		case nsMimeOutput::nsMimeMessageBodyDisplay:    // the split header/body display
-    case nsMimeOutput::nsMimeMessageXULDisplay:
       msd->options->fancy_headers_p = PR_TRUE;
       msd->options->output_vcard_buttons_p = PR_TRUE;
       msd->options->fancy_links_p = PR_TRUE;

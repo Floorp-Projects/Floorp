@@ -51,11 +51,9 @@
 #include "nsMimeHtmlEmitter.h"
 #include "nsMimeRawEmitter.h"
 #include "nsMimeXmlEmitter.h"
-#include "nsMimeXULEmitter.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXULEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMimeHtmlDisplayEmitter, Init);
 
 
@@ -100,13 +98,6 @@ static nsModuleComponentInfo components[] =
     NS_RAW_MIME_EMITTER_CID,
     NS_RAW_MIME_EMITTER_CONTRACTID,
     nsMimeRawEmitterConstructor,
-    RegisterMimeEmitter,
-    UnRegisterMimeEmitter
-  },
-  { "XUL MIME Emitter",
-    NS_XUL_MIME_EMITTER_CID,
-    NS_XUL_MIME_EMITTER_CONTRACTID,
-    nsMimeXULEmitterConstructor,
     RegisterMimeEmitter,
     UnRegisterMimeEmitter
   }

@@ -74,8 +74,6 @@
 #define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
 #define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
 
-#define PREF_MAIL_MIME_XUL_OUTPUT "mail.mime_xul_output"
-
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 ////////////////////////////////////////////////////////////////
@@ -446,24 +444,9 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
     }
     else
     {
-      // okay, we are just doing a regular message display url
-      // since we didn't have any special extensions after the url...
-      // we need to know if we need to use the application/vnd.mozilla.xul+xml
-      // or text/html emitter.
-      // check the desired output content type that was passed into AsyncConvertData.
-
-      if (mDesiredOutputType && Compare(nsDependentString(mDesiredOutputType), NS_LITERAL_STRING("application/vnd.mozilla.xul+xml"),nsCaseInsensitiveStringComparator()) == 0)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("application/vnd.mozilla.xul+xml");
-        *aNewType = nsMimeOutput::nsMimeMessageXULDisplay;
-      }
-      else
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/html");
-        *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
-      }
+      CRTFREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("text/html");
+      *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
     }
   }
   else // this is a part that should just come out raw!
@@ -596,10 +579,6 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   mOutputType = newType;  
   switch (newType)
   {
-    case nsMimeOutput::nsMimeMessageXULDisplay:
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("application/vnd.mozilla.xul+xml");
-    break;
 		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
       mWrapperOutput = PR_TRUE;
       CRTFREEIF(mOutputFormat);

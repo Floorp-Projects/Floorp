@@ -752,10 +752,7 @@ nsMimeBaseEmitter::WriteHTMLHeaders()
 
   // Now, we need to either append the headers we built up to the 
   // overall body or output to the stream.
-  if ( (!mDocHeader) && (mFormat == nsMimeOutput::nsMimeMessageXULDisplay) )
-    mBody.Append(mHTMLHeaders);
-  else
-    UtilityWriteCRLF(mHTMLHeaders.get());
+  UtilityWriteCRLF(mHTMLHeaders.get());
 
   mHTMLHeaders = "";
 
