@@ -37,8 +37,6 @@
 
 function loadReporterWizard()
 {
-  window.openDialog("chrome://reporter/content/reportWizard.xul", "", "chrome,centerscreen,wmodal,dialog,resizable=no,width=535,height=442",getBrowser().currentURI.spec);
+  window.openDialog("chrome://reporter/content/reportWizard.xul", "", "chrome,centerscreen,dialog,resizable=no,width=535,height=442",getBrowser().currentURI.spec);
   return true;
 }
-
-

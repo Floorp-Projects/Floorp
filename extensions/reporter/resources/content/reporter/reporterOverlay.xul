@@ -47,17 +47,19 @@
 
   <!-- Firefox -->
   <menupopup id="menu_HelpPopup">
-    <menuitem id="reportertoolmenu" position="9" label="&reporterMenu.title;" accesskey="&reporterMenu.accesskey;" insertbefore="menu_HelpPopup"
-        oncommand="loadReporterWizard()" />
+    <menuitem id="reportertoolmenu" label="&reporterMenu.title;" accesskey="&reporterMenu.accesskey;" insertbefore="aboutName"
+              oncommand="loadReporterWizard()"/>
+    <menuseparator insertbefore="aboutName"/>
   </menupopup>
 
-  <!-- SeaMonkey -->
-<!--  <menupopup id="helpPopup">
-    <menuitem id="reportertoolmenu" position="9" label="&reporterMenu.title;" accesskey="&reporterMenu.accesskey;" insertbefore="menu_HelpPopup"
-        oncommand="loadReporterWizard()" />
-  </menupopup>     -->
-
   <toolbarpalette id="BrowserToolbarPalette">
-    <toolbarbutton id="reporterMenuButton" oncommand="loadReporterWizard();" class="toolbarbutton-1" label="Reporter" tooltiptext="Report Broken Websites"/>
+    <toolbarbutton id="reporterMenuButton" oncommand="loadReporterWizard();" class="toolbarbutton-1" label="&reporterMenu.title;" tooltiptext="&reporterMenu.tooltip;"/>
   </toolbarpalette>
+
+  <!-- SeaMonkey -->
+  <menupopup id="helpPopup">
+    <menuitem id="reportertoolmenu" label="&reporterMenu.title;" accesskey="&reporterMenu.accesskey;" insertafter="menu_HelpAboutSeparator"
+              oncommand="loadReporterWizard()"/>
+    <menuseparator insertafter="reportertoolmenu"/>
+  </menupopup>
 </overlay>

@@ -16,17 +16,17 @@
   </RDF:Description>
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
-    <RDF:li resource="chrome://browser/content/browser.xul" />
+    <RDF:li resource="chrome://help/content/helpMenuOverlay.xul" />
+    <RDF:li resource="chrome://communicator/content/utilityOverlay.xul" />
+    <RDF:li resource="chrome://global/content/customizeToolbar.xul"/>
   </RDF:Seq>
-  <RDF:Seq about="chrome://browser/content/browser.xul">
+  <RDF:Seq about="chrome://help/content/helpMenuOverlay.xul">
     <RDF:li>chrome://reporter/content/reporterOverlay.xul</RDF:li>
   </RDF:Seq>
-  <!-- Fix -->
-  <RDF:Seq about="urn:mozilla:overlays">
-    <RDF:li resource="chrome://global/content/customizeToolbar.xul"/>
+  <RDF:Seq about="chrome://communicator/content/utilityOverlay.xul">
+    <RDF:li>chrome://reporter/content/reporterOverlay.xul</RDF:li>
   </RDF:Seq>
   <RDF:Seq about="chrome://global/content/customizeToolbar.xul">
     <RDF:li>chrome://reporter/content/reporterOverlay.xul</RDF:li>
   </RDF:Seq>
-  <!-- /Fix -->
 </RDF:RDF>
