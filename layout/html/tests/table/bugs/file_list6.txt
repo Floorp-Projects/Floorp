@@ -90,3 +90,4 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug97138.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug101674.html
 # bug 141021 below does not fail as a local file
 http://bugzilla.mozilla.org/attachment.cgi?id=81602&action=view
+file:///s|/mozilla/layout/html/tests/table/bugs/bug157890.html
