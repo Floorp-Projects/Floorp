@@ -12,7 +12,9 @@
 ;
 ; en-US
 bin/chrome/en-US.jar
+bin/chrome/en-mac.jar
 bin/chrome/en-unix.jar
+bin/chrome/en-win.jar
 
 [regus]
 ;
