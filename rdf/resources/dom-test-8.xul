@@ -29,6 +29,7 @@
 
 -->
 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -95,38 +96,8 @@
   </box>
 
 <!--  <tree id="tree" flex="100%" datasources="rdf:bookmarks rdf:mailnewsfolders rdf:msgaccountmanager" style="height:100%;"> -->
-  <html:div flex="100%">
-  <tree id="tree" flex="100%" style="height:100%;">
-    <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-         <treechildren>
-           <treeitem uri="...">
-             <treerow>
-               <treecell>
-                 <html:hr width="75%" align="center" size="1" />
-               </treecell>
-             </treerow>
-           </treeitem>  		
-         </treechildren>
-       </rule>
-
-       <rule>
-         <treechildren>
-           <treeitem uri="...">
-             <treerow>
-               <treecell>
-                 <treeindentation />
-                 <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
-               </treecell>
-               <treecell>
-                 <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="left" style="list-style-image: none;" />
-               </treecell>
-             </treerow>
-           </treeitem>
-         </treechildren>
-       </rule>
-    </template>
-
+  <html:div style="width:100px;height:100px">
+  <tree id="tree" style="width:100%;height:100%;">
     <treehead>
       <treerow>
         <treecell>Name</treecell>
@@ -137,29 +108,29 @@
     <treechildren id="1">
       <treeitem id="treeroot" ref="NC:BookmarksRoot" open="true">
         <treerow>
-          <treecell>Bookmarks</treecell>
-          <treecell></treecell>
+          <treecell value="Bookmarks" />
+          <treecell />
         </treerow>
 
         <treechildren id="2" open="true">
           <treeitem id="beetle">
             <treerow>
-              <treecell><treeindentation/>XUL Child #1 (Beetle)</treecell>
-              <treecell></treecell>
+              <treecell value="XUL Child #1 (Beetle)" />
+              <treecell />
             </treerow>
 
             <treechildren id="3" open="true">
               <treeitem id="4">
                 <treerow id="4_1">
-                  <treecell id="4_1_1"><treeindentation/>XUL Child #1.1</treecell>
-                  <treecell id="4_1_2"></treecell>
+                  <treecell id="4_1_1" value="XUL Child #1.1" />
+                  <treecell id="4_1_2" />
                 </treerow>
               </treeitem>
 
               <treeitem id="5">
                 <treerow id="5_1">
-                  <treecell id="5_1_1"><treeindentation/>XUL Child #1.2</treecell>
-                  <treecell id="5_1_2"></treecell>
+                  <treecell id="5_1_1" value="XUL Child #1.2" />
+                  <treecell id="5_1_2" />
                 </treerow>
               </treeitem>
             </treechildren>
@@ -167,8 +138,8 @@
 
           <treeitem id="6">
             <treerow id="6_1">
-              <treecell id="6_1_1"><treeindentation/>XUL Child #2</treecell>
-              <treecell id="6_1_2"></treecell>
+              <treecell id="6_1_1" value="XUL Child #2" />
+              <treecell id="6_1_2" />
             </treerow>
           </treeitem>
 
