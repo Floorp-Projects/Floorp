@@ -31,7 +31,8 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  width="500" height="400" x="20" y="20" persist="width height x y" align="vertical">
+  width="500" height="400" x="20" y="20" persist="width height x y" align="vertical"
+  ondraggesture="return TopLevelDrag(event);">
 
   <html:script src="chrome://bookmarks/content/bookmarks.js"/>
 
@@ -80,7 +81,8 @@
        onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"
        style="width:100%;height:100%"
        ondragover="return DragOverTree(event);"
-       ondraggesture="return BeginDragTree(event);">
+       ondraggesture="return BeginDragTree(event);"
+       ondragdrop="return DropOnTree(event);">
 
   <template>
     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">

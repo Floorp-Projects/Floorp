@@ -24,7 +24,13 @@
   Script for the bookmarks properties window
 */
 
-
+  function TopLevelDrag ( event )
+  {
+    dump("TOP LEVEL bookmarks window got a drag\n");
+    return true;
+  }
+  
+  
   function BeginDragTree ( event )
   {
     //XXX we rely on a capturer to already have determined which item the mouse was over
@@ -142,7 +148,22 @@ this doesn't work anymore (target is null), not sure why.
 
   } // DragOverTree
 
-
+  function DropOnTree ( event )
+  {
+    // id (url) is on the <treeitem> which is two levels above the <treecell> which is
+    // the target of the event.
+    var treeItem = event.target.parentNode.parentNode;
+    var id = treeItem.getAttribute("id");
+    var dropBefore = treeItem.getAttribute("dd-droplocation");
+    var dropOn = treeItem.getAttribute("dd-dropon");
+    dump("**** before is " + dropBefore + " on is " + dropOn + "\n");
+    var beforeString = "before";
+    if ( dropBefore == "false" )
+      beforeString = "after";
+    dump ( "*** tree drop " + beforeString + " target [" + id + "]\n" );
+        
+    return false;
+  }
 
 function copySelectionToClipboard()
 {
