@@ -557,47 +557,49 @@ PRBool nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurn
   return result;
 }
 
-NS_IMETHODIMP nsFrame::Paint(nsIPresContext&      aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect&        aDirtyRect)
+NS_IMETHODIMP
+nsFrame::Paint(nsIPresContext&      aPresContext,
+               nsIRenderingContext& aRenderingContext,
+               const nsRect&        aDirtyRect,
+               nsFramePaintLayer    aWhichLayer)
 {
-  if (DisplaySelection(aPresContext) == PR_FALSE)
-    return NS_OK;
+  if (eFramePaintLayer_Overlay == aWhichLayer) {
+    if (DisplaySelection(aPresContext) == PR_FALSE)
+      return NS_OK;
 
-  PRBool clearAfterPaint = PR_FALSE;
+    PRBool clearAfterPaint = PR_FALSE;
 
-  // Get Content
-  nsIContent * content;
-  GetContent(content);
-  PRInt32 n;
-  content->ChildCount(n);
-  if (n > 0) {
+    // Get Content
+    nsIContent* content;
+    nsresult rv = GetContent(content);
+    if (NS_FAILED(rv) || (nsnull == content)) {
+      return rv;
+    }
+
+    PRInt32 n;
+    content->ChildCount(n);
+    if ((n == 0) && mSelected) {
+      nsRect rect;
+      GetRect(rect);
+      rect.width--;
+      rect.height--;
+      aRenderingContext.SetColor(NS_RGB(0,0,255));
+      aRenderingContext.DrawRect(rect);
+      aRenderingContext.DrawLine(rect.x, rect.y, rect.XMost(), rect.YMost());
+      aRenderingContext.DrawLine(rect.x, rect.YMost(), rect.XMost(), rect.y);
+    }
     NS_RELEASE(content);
-    return NS_OK;
   }
-
-  if (content && mSelected) {
-    nsRect rect;
-    GetRect(rect);
-    rect.width--;
-    rect.height--;
-    aRenderingContext.SetColor(NS_RGB(0,0,255));
-    aRenderingContext.DrawRect(rect);
-    aRenderingContext.DrawLine(rect.x, rect.y, rect.x+rect.width, rect.y+rect.height);
-    aRenderingContext.DrawLine(rect.x, rect.y+rect.height, rect.x+rect.width, rect.y);
-  }
-
-  NS_IF_RELEASE(content);
-
   return NS_OK;
 }
 
 /**
   *
  */
-NS_IMETHODIMP nsFrame::HandleEvent(nsIPresContext& aPresContext, 
-                               nsGUIEvent*     aEvent,
-                               nsEventStatus&  aEventStatus)
+NS_IMETHODIMP
+nsFrame::HandleEvent(nsIPresContext& aPresContext, 
+                     nsGUIEvent*     aEvent,
+                     nsEventStatus&  aEventStatus)
 {
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
     return NS_OK;

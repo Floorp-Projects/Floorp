@@ -203,10 +203,10 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
           nsHTMLReflowState kidReflowState(aPresContext, cellFrame,
                                            aReflowState, nsSize(cellFrameSize.width, cellHeight),
                                            eReflowReason_Resize);
-          nsReflowStatus status;
           //XXX: the following reflow is necessary for any content of the cell
           //     whose height is a percent of the cell's height (maybe indirectly.)
           //     But some content crashes when this reflow is issued, to be investigated
+          //XXX nsReflowStatus status;
           //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
           ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild();
         }
@@ -252,7 +252,8 @@ void nsTableRowFrame::SetMaxChildHeight(nscoord aChildHeight, nscoord aTopMargin
 
 NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
                                  nsIRenderingContext& aRenderingContext,
-                                 const nsRect& aDirtyRect)
+                                 const nsRect& aDirtyRect,
+                                 nsFramePaintLayer aWhichLayer)
 {
   /*
   const nsStyleColor* myColor =
@@ -264,7 +265,7 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
   }
   */
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
 
@@ -285,8 +286,9 @@ nsTableRowFrame::GetSkipSides() const
   * we don't want to clip our children, so a cell can do a rowspan
   */
 void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
-                                     nsIRenderingContext& aRenderingContext,
-                                     const nsRect&        aDirtyRect)
+                                    nsIRenderingContext& aRenderingContext,
+                                    const nsRect&        aDirtyRect,
+                                    nsFramePaintLayer aWhichLayer)
 {
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
@@ -306,8 +308,10 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
                              damageArea.width, damageArea.height);
         aRenderingContext.PushState();
         aRenderingContext.Translate(kidRect.x, kidRect.y);
-        kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
-        if (nsIFrame::GetShowFrameBorders()) {
+        kid->Paint(aPresContext, aRenderingContext, kidDamageArea,
+                   aWhichLayer);
+        if ((eFramePaintLayer_Overlay == aWhichLayer) &&
+            GetShowFrameBorders()) {
           aRenderingContext.SetColor(NS_RGB(255,0,0));
           aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
         }

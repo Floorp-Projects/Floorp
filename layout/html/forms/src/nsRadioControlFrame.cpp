@@ -314,8 +314,8 @@ void nsRadioControlFrame::GetCurrentRadioState(PRBool *aState)
 
 void
 nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+                                      nsIRenderingContext& aRenderingContext,
+                                      const nsRect& aDirtyRect)
 {
   aRenderingContext.PushState();
 
@@ -350,10 +350,12 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
 
 NS_METHOD 
 nsRadioControlFrame::Paint(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+                           nsIRenderingContext& aRenderingContext,
+                           const nsRect& aDirtyRect,
+                           nsFramePaintLayer aWhichLayer)
 {
-  PaintRadioButton(aPresContext, aRenderingContext, aDirtyRect);
-
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    PaintRadioButton(aPresContext, aRenderingContext, aDirtyRect);
+  }
   return NS_OK;
 }

@@ -70,7 +70,8 @@ public:
                                
   NS_METHOD Paint(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect);
+                  const nsRect& aDirtyRect,
+                  nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("FieldSet", aResult);
@@ -172,42 +173,45 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
                        nsIRenderingContext& aRenderingContext,
-                       const nsRect& aDirtyRect)
+                       const nsRect& aDirtyRect,
+                       nsFramePaintLayer aWhichLayer)
 {
-  // Paint our background and border
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    // Paint our background and border
+    const nsStyleDisplay* disp =
+      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
-  if (disp->mVisible && mRect.width && mRect.height) {
-    PRIntn skipSides = GetSkipSides();
-    const nsStyleColor* color =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    if (disp->mVisible && mRect.width && mRect.height) {
+      PRIntn skipSides = GetSkipSides();
+      const nsStyleColor* color =
+        (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleSpacing* spacing =
+        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
-    nsRect backgroundRect(0, 0, mRect.width, mRect.height);
-    // XXX our parent doesn't account for top and bottom margins yet, if we are inline
-    if (mInline) {
-      nsMargin margin;
-      spacing->CalcMarginFor(this, margin); 
-      nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - margin.top - 
-                  margin.bottom - mTopBorderOffset);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, 0, 0);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, skipSides, &mTopBorderGap);
-    } else {
-      nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - mTopBorderOffset);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, 0, 0);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, skipSides, &mTopBorderGap);
-    } 
+      nsRect backgroundRect(0, 0, mRect.width, mRect.height);
+      // XXX our parent doesn't account for top and bottom margins yet, if we are inline
+      if (mInline) {
+        nsMargin margin;
+        spacing->CalcMarginFor(this, margin); 
+        nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - margin.top - 
+                    margin.bottom - mTopBorderOffset);
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *color, 0, 0);
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *spacing, skipSides, &mTopBorderGap);
+      } else {
+        nsRect rect(0, mTopBorderOffset, mRect.width, mRect.height - mTopBorderOffset);
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *color, 0, 0);
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *spacing, skipSides, &mTopBorderGap);
+      } 
+    }
   }
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
-  if (nsIFrame::GetShowFrameBorders()) {
+  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
     nsIView* view;
     GetView(view);
     if (nsnull != view) {

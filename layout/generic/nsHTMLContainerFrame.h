@@ -31,7 +31,8 @@ class nsHTMLContainerFrame : public nsContainerFrame {
 public:
   NS_IMETHOD  Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect);
+                    const nsRect& aDirtyRect,
+                    nsFramePaintLayer aWhichLayer);
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame);
   nsAbsoluteFrame* CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContext,

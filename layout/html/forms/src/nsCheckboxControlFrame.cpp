@@ -79,12 +79,13 @@ public:
   virtual void GetCurrentCheckState(PRBool* aState);
 
   virtual void PaintCheckBox(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect);
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect);
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
   //End of GFX-rendering methods
   
 protected:
@@ -296,8 +297,8 @@ nsCheckboxControlFrame::Reset()
 
 void
 nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect)
+                                      nsIRenderingContext& aRenderingContext,
+                                      const nsRect& aDirtyRect)
 {
   aRenderingContext.PushState();
 
@@ -326,11 +327,13 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
 
 NS_METHOD 
 nsCheckboxControlFrame::Paint(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect)
+                              nsIRenderingContext& aRenderingContext,
+                              const nsRect& aDirtyRect,
+                              nsFramePaintLayer aWhichLayer)
 {
-  PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect);
-
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect);
+  }
   return NS_OK;
 }
 

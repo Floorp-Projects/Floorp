@@ -41,7 +41,8 @@ nsTableColFrame::nsTableColFrame()
 
 NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
                                  nsIRenderingContext& aRenderingContext,
-                                 const nsRect& aDirtyRect)
+                                 const nsRect& aDirtyRect,
+                                 nsFramePaintLayer aWhichLayer)
 {
   if (gsDebug==PR_TRUE)
     printf("nsTableColFrame::Paint\n");

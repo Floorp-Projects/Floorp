@@ -100,8 +100,9 @@ public:
   // Expect this code to repackaged and moved to a new location in the future.
   //
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect);
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
  
   virtual void PaintSelectControl(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
@@ -649,7 +650,8 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
   aRenderingContext.PushState();
 
 
-  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            eFramePaintLayer_Content);
 
   /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
@@ -820,10 +822,12 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
 NS_METHOD 
 nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect)
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect,
+                            nsFramePaintLayer aWhichLayer)
 {
-  PaintSelectControl(aPresContext, aRenderingContext, aDirtyRect);
-
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    PaintSelectControl(aPresContext, aRenderingContext, aDirtyRect);
+  }
   return NS_OK;
 }

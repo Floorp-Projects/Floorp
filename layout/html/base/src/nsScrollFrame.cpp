@@ -66,7 +66,8 @@ public:
 
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
@@ -452,18 +453,27 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 NS_IMETHODIMP
 nsScrollFrame::Paint(nsIPresContext&      aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect)
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer)
 {
-  // Paint our border only (no background)
-  const nsStyleSpacing* spacing =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    // Only paint the border and background if we're visible
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->mVisible) {
+      // Paint our border only (no background)
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
-  nsRect  rect(0, 0, mRect.width, mRect.height);
-  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, rect, *spacing, 0);
+      nsRect  rect(0, 0, mRect.width, mRect.height);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, 0);
+    }
+  }
 
   // Paint our children
-  return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                                 aWhichLayer);
 }
 
 PRIntn

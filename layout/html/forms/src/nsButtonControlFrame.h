@@ -25,8 +25,9 @@ class nsFileControlFrame;
 class nsButtonControlFrame : public nsFormControlFrame {
 public:
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect);
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

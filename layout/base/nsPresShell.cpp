@@ -1191,9 +1191,10 @@ PresShell::FindFrameWithContent(nsIContent* aContent)
 
 //nsIViewObserver
 
-NS_IMETHODIMP PresShell :: Paint(nsIView              *aView,
-                                 nsIRenderingContext& aRenderingContext,
-                                 const nsRect&        aDirtyRect)
+NS_IMETHODIMP
+PresShell::Paint(nsIView              *aView,
+                 nsIRenderingContext& aRenderingContext,
+                 const nsRect&        aDirtyRect)
 {
   void*     clientData;
   nsIFrame* frame;
@@ -1205,7 +1206,12 @@ NS_IMETHODIMP PresShell :: Paint(nsIView              *aView,
   frame = (nsIFrame *)clientData;
 
   if (nsnull != frame) {
-    rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect);
+    rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
+                      eFramePaintLayer_Underlay);
+    rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
+                      eFramePaintLayer_Content);
+    rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
+                      eFramePaintLayer_Overlay);
 #ifdef NS_DEBUG
     // Draw a border around the frame
     if (nsIFrame::GetShowFrameBorders()) {
@@ -1219,9 +1225,10 @@ NS_IMETHODIMP PresShell :: Paint(nsIView              *aView,
   return rv;
 }
 
-NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
-                                       nsGUIEvent*     aEvent,
-                                       nsEventStatus&  aEventStatus)
+NS_IMETHODIMP
+PresShell::HandleEvent(nsIView         *aView,
+                       nsGUIEvent*     aEvent,
+                       nsEventStatus&  aEventStatus)
 {
   void*     clientData;
   nsIFrame* frame;
@@ -1281,7 +1288,8 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
   return rv;
 }
 
-NS_IMETHODIMP PresShell :: Scrolled(nsIView *aView)
+NS_IMETHODIMP
+PresShell::Scrolled(nsIView *aView)
 {
   void*     clientData;
   nsIFrame* frame;
@@ -1300,7 +1308,8 @@ NS_IMETHODIMP PresShell :: Scrolled(nsIView *aView)
   return rv;
 }
 
-NS_IMETHODIMP PresShell :: ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP
+PresShell::ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight)
 {
   return ResizeReflow(aWidth, aHeight);
 }
@@ -1311,8 +1320,6 @@ NS_IMETHODIMP PresShell :: ResizeReflow(nsIView *aView, nscoord aWidth, nscoord 
 #include "nsIScrollableView.h"
 #include "nsIDeviceContext.h"
 #include "nsIURL.h"
-//#include "nsICSSParser.h"
-//#include "nsIStyleSheet.h"
 
 static NS_DEFINE_IID(kViewManagerCID, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kIViewManagerIID, NS_IVIEWMANAGER_IID);

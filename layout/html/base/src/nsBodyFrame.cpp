@@ -186,14 +186,16 @@ nsBodyFrame::BandData::ComputeAvailSpaceRect()
 NS_IMETHODIMP
 nsBodyFrame::Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect)
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer)
 {
   // Note: all absolutely positioned elements have views so we don't
   // need to worry about painting them
   nsresult rv = nsBlockFrame::Paint(aPresContext, aRenderingContext,
-                                    aDirtyRect);
+                                    aDirtyRect, aWhichLayer);
 
-  if (nsIFrame::GetShowFrameBorders()) {
+  if ((eFramePaintLayer_Overlay == aWhichLayer) &&
+      nsIFrame::GetShowFrameBorders()) {
     // Render the bands in the spacemanager
     BandData band;
     nsISpaceManager* sm = mSpaceManager;

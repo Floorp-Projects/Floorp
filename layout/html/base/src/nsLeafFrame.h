@@ -32,7 +32,8 @@ public:
   // nsIFrame replacements
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,

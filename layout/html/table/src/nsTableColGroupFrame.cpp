@@ -154,10 +154,11 @@ nsTableColGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
-                                      const nsRect&        aDirtyRect)
+                                      const nsRect&        aDirtyRect,
+                                      nsFramePaintLayer aWhichLayer)
 {
   if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::Paint\n");
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
 

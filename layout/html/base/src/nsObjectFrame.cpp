@@ -147,7 +147,8 @@ public:
                        nsDidReflowStatus aStatus);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
   NS_IMETHOD Scrolled(nsIView *aView);
 
   //local methods
@@ -550,25 +551,28 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsObjectFrame::Paint(nsIPresContext& aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect)
+                     const nsRect& aDirtyRect,
+                     nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleFont* font =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    const nsStyleFont* font = (const nsStyleFont*)
+      mStyleContext->GetStyleData(eStyleStruct_Font);
 
-  aRenderingContext.SetFont(font->mFont);
-  aRenderingContext.SetColor(NS_RGB(192, 192, 192));
-  aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
-  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-  aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-  float p2t = aPresContext.GetPixelsToTwips();
-  nscoord px3 = NSIntPixelsToTwips(3, p2t);
-  nsAutoString tmp;
-  nsIAtom* atom;
-  mContent->GetTag(atom);
-  if (nsnull != atom) {
-    atom->ToString(tmp);
-    NS_RELEASE(atom);
-    aRenderingContext.DrawString(tmp, px3, px3, 0);
+    aRenderingContext.SetFont(font->mFont);
+    aRenderingContext.SetColor(NS_RGB(192, 192, 192));
+    aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
+    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
+    float p2t = aPresContext.GetPixelsToTwips();
+    nscoord px3 = NSIntPixelsToTwips(3, p2t);
+    nsAutoString tmp;
+    nsIAtom* atom;
+    mContent->GetTag(atom);
+    if (nsnull != atom) {
+      atom->ToString(tmp);
+      NS_RELEASE(atom);
+      aRenderingContext.DrawString(tmp, px3, px3, 0);
+    }
   }
   return NS_OK;
 }

@@ -68,8 +68,9 @@ public:
   // Expect this code to repackaged and moved to a new location in the future.
   //
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect);
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
  
   virtual void PaintTextControl(nsIPresContext& aPresContext,
                                 nsIRenderingContext& aRenderingContext,

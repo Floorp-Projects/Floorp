@@ -40,7 +40,8 @@ public:
   // Painting
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
 
   /**
    * Find the correct child frame.
@@ -92,14 +93,16 @@ protected:
                                  nsIAtom*       aList,
                                  nsIFrame**     aFrame);
 
-  virtual void  PaintChildren(nsIPresContext&      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              const nsRect&        aDirtyRect);
+  virtual void PaintChildren(nsIPresContext&      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer);
 
   virtual void PaintChild(nsIPresContext&      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
-                          nsIFrame*            aFrame);
+                          nsIFrame*            aFrame,
+                          nsFramePaintLayer    aWhichLayer);
 
   /**
    * Queries the child frame for the nsIHTMLReflow interface and if it's

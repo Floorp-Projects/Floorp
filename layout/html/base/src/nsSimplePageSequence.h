@@ -37,7 +37,8 @@ public:
   // nsIFrame
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect);
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer);
 
   // nsIPageSequenceFrame
   NS_IMETHOD  Print(nsIPresContext&         aPresContext,
@@ -51,7 +52,8 @@ protected:
   virtual void PaintChild(nsIPresContext&      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
-                          nsIFrame*            aFrame);
+                          nsIFrame*            aFrame,
+                          nsFramePaintLayer    aWhichLayer);
 
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}

@@ -81,7 +81,8 @@ public:
   
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -119,7 +120,8 @@ public:
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -476,10 +478,12 @@ nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint,
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Paint(nsIPresContext& aPresContext,
                            nsIRenderingContext& aRenderingContext,
-                           const nsRect& aDirtyRect)
+                           const nsRect& aDirtyRect,
+                           nsFramePaintLayer aWhichLayer)
 {
   //printf("frameset paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
+                                     aDirtyRect, aWhichLayer);
 }
 
 void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs) 
@@ -1486,8 +1490,12 @@ nsHTMLFramesetBorderFrame::Reflow(nsIPresContext&          aPresContext,
 NS_METHOD
 nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
-                                 const nsRect&        aDirtyRect)
+                                 const nsRect&        aDirtyRect,
+                                 nsFramePaintLayer    aWhichLayer)
 {
+  if (eFramePaintLayer_Content != aWhichLayer) {
+    return NS_OK;
+  }
   //printf("border frame paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   nscolor WHITE    = NS_RGB(255, 255, 255);
   nscolor bgColor  = NS_RGB(200,200,200);
@@ -1649,8 +1657,12 @@ nsHTMLFramesetBlankFrame::Reflow(nsIPresContext&          aPresContext,
 NS_METHOD
 nsHTMLFramesetBlankFrame::Paint(nsIPresContext&      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
-                                const nsRect&        aDirtyRect)
+                                const nsRect&        aDirtyRect,
+                                nsFramePaintLayer    aWhichLayer)
 {
+  if (eFramePaintLayer_Content != aWhichLayer) {
+    return NS_OK;
+  }
   nscolor white = NS_RGB(255,255,255);
   aRenderingContext.SetColor (white);
   // XXX FillRect doesn't seem to work

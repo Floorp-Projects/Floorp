@@ -3837,13 +3837,14 @@ nsBaseIBFrame::GetSkipSides() const
 NS_IMETHODIMP
 nsBaseIBFrame::Paint(nsIPresContext&      aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect)
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer)
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
   // Only paint the border and background if we're visible
-  if (disp->mVisible) {
+  if ((eFramePaintLayer_Underlay == aWhichLayer) && disp->mVisible) {
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color = (const nsStyleColor*)
       mStyleContext->GetStyleData(eStyleStruct_Color);
@@ -3869,20 +3870,25 @@ nsBaseIBFrame::Paint(nsIPresContext&      aPresContext,
 
   // Child elements have the opportunity to override the visibility
   // property and display even if the parent is hidden
-  PaintFloaters(aPresContext, aRenderingContext, aDirtyRect);
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  PaintFloaters(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     PRBool clipState;
     aRenderingContext.PopState(clipState);
+  }
+
+  if (eFramePaintLayer_Overlay == aWhichLayer) {
+    // XXX CSS2's outline handling goes here
   }
   return NS_OK;
 }
 
 void
 nsBaseIBFrame::PaintFloaters(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect,
+                             nsFramePaintLayer aWhichLayer)
 {
   for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
     nsVoidArray* floaters = line->mFloaters;
@@ -3893,15 +3899,16 @@ nsBaseIBFrame::PaintFloaters(nsIPresContext& aPresContext,
     for (i = 0; i < n; i++) {
       nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 ph->GetAnchoredItem());
+                 ph->GetAnchoredItem(), aWhichLayer);
     }
   }
 }
 
 void
 nsBaseIBFrame::PaintChildren(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect,
+                             nsFramePaintLayer aWhichLayer)
 {
   for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
     // If the line has outside children or if the line intersects the
@@ -3911,7 +3918,8 @@ nsBaseIBFrame::PaintChildren(nsIPresContext& aPresContext,
       nsIFrame* kid = line->mFirstChild;
       PRInt32 n = line->ChildCount();
       while (--n >= 0) {
-        PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid);
+        PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid,
+                   aWhichLayer);
         kid->GetNextSibling(kid);
       }
     }
@@ -4852,17 +4860,21 @@ nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 void
 nsBlockFrame::PaintChildren(nsIPresContext&      aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            const nsRect&        aDirtyRect)
+                            const nsRect&        aDirtyRect,
+                            nsFramePaintLayer    aWhichLayer)
 {
-  if (nsnull != mBullet) {
-    // Paint outside bullets manually
-    const nsStyleList* list = (const nsStyleList*)
-    mStyleContext->GetStyleData(eStyleStruct_List);
-    if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == list->mListStylePosition) {
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect, mBullet);
+  if (eFramePaintLayer_Content == aWhichLayer) {
+    if (nsnull != mBullet) {
+      // Paint outside bullets manually
+      const nsStyleList* list = (const nsStyleList*)
+        mStyleContext->GetStyleData(eStyleStruct_List);
+      if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == list->mListStylePosition) {
+        PaintChild(aPresContext, aRenderingContext, aDirtyRect, mBullet,
+                   aWhichLayer);
+      }
     }
   }
   nsBlockFrameSuper::PaintChildren(aPresContext,
                                    aRenderingContext,
-                                   aDirtyRect);
+                                   aDirtyRect, aWhichLayer);
 }

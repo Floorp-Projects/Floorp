@@ -62,7 +62,8 @@ public:
                                    nsIFrame*&       aContinuingFrame) = 0;
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const = 0;
   NS_IMETHOD VerifyTree() const;
@@ -250,12 +251,15 @@ protected:
 
   //----------------------------------------
   //XXX
-  void PaintChildren(nsIPresContext& aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  virtual void PaintChildren(nsIPresContext& aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect,
+                             nsFramePaintLayer aWhichLayer);
+
   void PaintFloaters(nsIPresContext& aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+                     const nsRect& aDirtyRect,
+                     nsFramePaintLayer aWhichLayer);
 
   nsLineBox* FindLineFor(nsIFrame* aFrame, PRBool& aIsFloaterResult);
 
@@ -334,7 +338,8 @@ protected:
   // nsContainerFrame overrides
   virtual void PaintChildren(nsIPresContext&      aPresContext,
                              nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect);
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer);
 
   // nsBaseIBFrame overrides
   virtual void ComputeFinalSize(nsBlockReflowState&  aState,
