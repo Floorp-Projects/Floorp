@@ -354,13 +354,16 @@ namespace JSTypes {
     typedef gc_allocator<char16> JSStringAllocator;
 #endif
 
+    typedef std::basic_string<char16, JSCharTraits, JSStringAllocator> JSStringBase;
+
     /**
      * Garbage collectable UNICODE string.
      */
-    class JSString : public std::basic_string<char16, JSCharTraits, JSStringAllocator>, public gc_base {
+    class JSString : public JSStringBase, public gc_base {
     public:
         JSString() {}
-        explicit JSString(const JSString& str) : basic_string(str) {}
+        explicit JSString(const JSStringBase& str) : JSStringBase(str) {}
+        explicit JSString(const JSStringBase* str) : JSStringBase(*str) {}
         explicit JSString(const String& str);
         explicit JSString(const String* str);
         explicit JSString(const char* str);
