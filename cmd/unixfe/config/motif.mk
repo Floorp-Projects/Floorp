@@ -61,7 +61,7 @@ MOZILLA_XFE_MOTIF_FLAGS = $(MOZILLA_XFE_MOTIF_DYNAMIC_FLAGS)
 
 else
 
-error	"Motif library (static or dynamic) required"
+error "Motif library (static or dynamic) required"
 
 endif
 
