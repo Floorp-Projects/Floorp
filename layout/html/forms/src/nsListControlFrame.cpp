@@ -163,6 +163,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
 {
+#ifdef DEBUG_rods
   printf("nsListControlFrame::Reflow    Reason: ");
   switch (aReflowState.reason) {
     case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
@@ -170,6 +171,8 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
     case eReflowReason_StyleChange:printf("eReflowReason_StyleChange\n");break;
   }
+#endif // DEBUG_rods
+
    // Strategy: Let the inherited reflow happen as though the width and height of the
    // ScrollFrame are big enough to allow the listbox to
    // shrink to fit the longest option element line in the list.
@@ -1934,13 +1937,15 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     nsIContent * content;
     stateManager->GetEventTargetContent(&content);
     ///////////////////
-    {
-  nsCOMPtr<nsIDOMHTMLOptionElement> optElem;
-  if (NS_SUCCEEDED(content->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) getter_AddRefs(optElem)))) {      
-    nsAutoString val;
-    optElem->GetValue(val);
-    printf("val [%s]\n", val.ToNewCString());
-  }
+  {
+    nsCOMPtr<nsIDOMHTMLOptionElement> optElem;
+    if (NS_SUCCEEDED(content->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) getter_AddRefs(optElem)))) {      
+      nsAutoString val;
+      optElem->GetValue(val);
+#ifdef DEBUG_rods
+      printf("val [%s]\n", val.ToNewCString());
+#endif
+    }
   }
     ///////////////////
     nsIContent * optionContent = GetOptionFromContent(content);
