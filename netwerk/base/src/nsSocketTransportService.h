@@ -29,7 +29,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIInputStream.h"
 
-#if defined(XP_PC) || defined(XP_UNIX)
+#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
 //
 // Both Windows and Unix support PR_PollableEvents which are used to break
 // the socket transport thread out of calls to PR_Poll(...) when new
