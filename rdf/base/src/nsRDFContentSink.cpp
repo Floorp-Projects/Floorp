@@ -711,21 +711,6 @@ static const char kContentModelBuilderPI[] = "<?rdf-builder";
 
         rv = mDataSource->AddNamedDataSourceURI(uri);
     }
-    else if (0 == text.Find(kContentModelBuilderPI)) {
-        nsAutoString cidStr;
-        rv = rdf_GetQuotedAttributeValue(text, "cid", cidStr);
-        if (NS_FAILED(rv) || (0 == cidStr.Length()))
-            return rv;
-
-        char buf[256];
-        cidStr.ToCString(buf, sizeof(buf));
-
-        nsID cid;
-        if (! cid.Parse(buf))
-            return NS_ERROR_FAILURE;
-
-        rv = mDataSource->SetContentModelBuilderCID(&cid);
-    }
 
     return rv;
 }

@@ -30,7 +30,9 @@
 
 #include "nsISupports.h"
 
-class nsIRDFContent;
+class nsIContent;
+class nsIRDFCompositeDataSource;
+class nsIRDFContent; // XXX get rid of these...
 class nsIRDFDocument;
 class nsIRDFNode;
 class nsIRDFResource;
@@ -50,32 +52,20 @@ public:
      */
     NS_IMETHOD SetDocument(nsIRDFDocument* aDocument) = 0;
 
+    NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase) = 0;
+    NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource** aDataBase) = 0;
+
     /**
-     * Called to instruct the content model builder to construct the root
-     * document element. The content model builder should construct an
-     * nsIContent object and set the document's content root to that object
-     * via the nsIDocument::SetDocumentRoot() method.
+     * Set the root element from which this content model will
+     * operate.
      */
-    NS_IMETHOD CreateRoot(nsIRDFResource* aResource) = 0;
+    NS_IMETHOD CreateRootContent(nsIRDFResource* aResource) = 0;
+    NS_IMETHOD SetRootContent(nsIContent* aElement) = 0;
 
     /**
      * Construct the contents for a container element.
      */
-    NS_IMETHOD CreateContents(nsIRDFContent* aElement) = 0;
-
-    /**
-     * Called when a new assertion is made to the RDF graph that affects an
-     * element in the content model. The content model builder should update
-     * the document's content model as appropriate.
-     */
-    NS_IMETHOD OnAssert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue) = 0;
-
-    /**
-     * Called when an assertion is removed from the RDF graph that affects
-     * an element in the content model. The content model builder should
-     * update the document's content model as appropriate.
-     */
-    NS_IMETHOD OnUnassert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue) = 0;
+    NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
 };
 
 

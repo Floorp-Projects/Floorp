@@ -29,7 +29,8 @@ LIBRARY_NAME = rdfdatasource_s
 CPPSRCS =				\
         nsBookmarkDataSource.cpp	\
 	nsMailDataSource.cpp		\
-	nsXULDataSource.cpp \
+	nsXULContentSink.cpp		\
+	nsXULDataSource.cpp		\
 	$(NULL)
 
 EXPORTS = \

@@ -22,13 +22,17 @@ LIBRARY_NAME=rdfcontent_s
 CPP_OBJS=\
         .\$(OBJDIR)\nsRDFContentUtils.obj         \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
-        .\$(OBJDIR)\nsRDFDocument.obj             \
         .\$(OBJDIR)\nsRDFGenericElement.obj       \
         .\$(OBJDIR)\nsRDFHTMLBuilder.obj          \
         .\$(OBJDIR)\nsRDFResourceElement.obj      \
         .\$(OBJDIR)\nsRDFTreeBuilder.obj          \
         .\$(OBJDIR)\nsRDFXULBuilder.obj           \
+        .\$(OBJDIR)\nsXULDocument.obj             \
 	$(NULL)
+
+# XXX we are including layout\html\base\src to get HTML elements
+# constructed directly from Raptor. The hope is that this'll
+# eventually be replaced by a DOM-based mechanism.
 
 LINCS=  -I$(PUBLIC)\rdf          \
         -I$(PUBLIC)\xpcom        \
@@ -37,9 +41,7 @@ LINCS=  -I$(PUBLIC)\rdf          \
         -I$(PUBLIC)\js           \
         -I$(PUBLIC)\dom          \
         -I$(DEPTH)\rdf\base\src  \
-!if 0   # XXX need to link against layout.dll for this
         -I$(DEPTH)\layout\html\base\src \
-!endif
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -22,7 +22,8 @@ LIBRARY_NAME=rdfdatasource_s
 CPP_OBJS=\
         .\$(OBJDIR)\nsBookmarkDataSource.obj    \
         .\$(OBJDIR)\nsMailDataSource.obj        \
-		.\$(OBJDIR)\nsXULDataSource.obj			\
+        .\$(OBJDIR)\nsXULContentSink.obj        \
+        .\$(OBJDIR)\nsXULDataSource.obj         \
 	$(NULL)
 
 # XXX Note the dependency on $(DEPTH)\rdf\base\src: we use rdfutil.h over

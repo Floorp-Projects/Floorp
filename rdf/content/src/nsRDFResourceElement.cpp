@@ -780,14 +780,22 @@ RDFResourceElementImpl::GetDocument(nsIDocument*& aResult) const
 NS_IMETHODIMP
 RDFResourceElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
+    nsresult rv;
+    nsCOMPtr<nsIRDFDocument> rdfDoc;
+
     if (mDocument) {
-        nsIRDFDocument* rdfDoc;
-        if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, (void**) &rdfDoc))) {
-            rdfDoc->UnMapResource(mResource, NS_STATIC_CAST(nsIRDFContent*, this));
-            NS_RELEASE(rdfDoc);
+        if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
+            rv = rdfDoc->RemoveElementForResource(mResource, this);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "error unmapping resource from element");
         }
     }
     mDocument = aDocument; // not refcounted
+    if (mDocument) {
+        if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, getter_AddRefs(rdfDoc)))) {
+            rv = rdfDoc->AddElementForResource(mResource, this);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "error mapping resource to element");
+        }
+    }
 
     if (aDeep && mChildren) {
         for (PRInt32 i = mChildren->Count() - 1; i >= 0; --i) {
@@ -806,13 +814,6 @@ RDFResourceElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
             }
 
             NS_RELEASE(obj);
-        }
-    }
-    if (mDocument) {
-        nsIRDFDocument* rdfDoc;
-        if (NS_SUCCEEDED(mDocument->QueryInterface(kIRDFDocumentIID, (void**) &rdfDoc))) {
-            rdfDoc->MapResource(mResource, NS_STATIC_CAST(nsIRDFContent*, this));
-            NS_RELEASE(rdfDoc);
         }
     }
     return NS_OK;
@@ -1532,11 +1533,7 @@ RDFResourceElementImpl::EnsureContentsGenerated(void) const
                                                  (void**) getter_AddRefs(rdfDoc))))
         return rv;
 
-    nsCOMPtr<nsIRDFContentModelBuilder> builder;
-    if (NS_FAILED(rv = rdfDoc->GetContentModelBuilder(getter_AddRefs(builder))))
-        return rv;
-
-    rv = builder->CreateContents(unconstThis);
+    rv = rdfDoc->CreateContents(unconstThis);
     NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
     return rv;
 }

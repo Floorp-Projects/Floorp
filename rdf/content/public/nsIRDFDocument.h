@@ -57,24 +57,9 @@ public:
   NS_IMETHOD SetContentType(const char* aContentType) = 0;
 
   /**
-   * Set the document's content model builder.
-   */
-  NS_IMETHOD SetContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
-
-  /**
-   * Get the document's content model builder.
-   */
-  NS_IMETHOD GetContentModelBuilder(nsIRDFContentModelBuilder** aBuilder) = 0;
-
-  /**
    * Set the document's "root" resource.
    */
   NS_IMETHOD SetRootResource(nsIRDFResource* aResource) = 0;
-
-  /**
-   * Retrieve the document's RDF data base.
-   */
-  NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource*& rDataBase) = 0;
 
   // XXX the following two methods should probably accept strings as
   // parameters so you can mess with them via JS. Also, should they
@@ -82,31 +67,20 @@ public:
   // of the content model should be informed that the content model is
   // invalid?
 
-  /**
-   * Add a property to the set of "tree properties" that the document
-   * should use when constructing the content model from the RDF
-   * graph.
-   */
-  NS_IMETHOD AddTreeProperty(nsIRDFResource* resource) = 0;
-
-  /**
-   * Remove a property from the set of "tree properties" that the
-   * document should use when constructing the content model from the
-   * RDF graph.
-   */
-  NS_IMETHOD RemoveTreeProperty(nsIRDFResource* resource) = 0;
-
-  /**
-   * Determine whether the specified property is a "tree" property.
-   */
-  NS_IMETHOD IsTreeProperty(nsIRDFResource* aProperty, PRBool* aResult) const = 0;
-
-  NS_IMETHOD MapResource(nsIRDFResource* aResource, nsIRDFContent* aContent) = 0;
-  NS_IMETHOD UnMapResource(nsIRDFResource* aResource, nsIRDFContent* aContent) = 0;
   NS_IMETHOD SplitProperty(nsIRDFResource* aResource, PRInt32* aNameSpaceID, nsIAtom** aTag) = 0;
+
+  NS_IMETHOD AddElementForResource(nsIRDFResource* aResource, nsIRDFContent* aElement) = 0;
+
+  NS_IMETHOD RemoveElementForResource(nsIRDFResource* aResource, nsIRDFContent* aElement) = 0;
+
+  NS_IMETHOD GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements) = 0;
+
+  NS_IMETHOD CreateContents(nsIRDFContent* aElement) = 0;
+
+  NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
 };
 
 // factory functions
-nsresult NS_NewRDFDocument(nsIRDFDocument** result);
+nsresult NS_NewXULDocument(nsIRDFDocument** result);
 
 #endif // nsIRDFDocument_h___
