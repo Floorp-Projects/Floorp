@@ -48,10 +48,12 @@ extern void DumpAllocatorMemoryStats(PRFileHandle outFile);		/* this is in LowLe
 
 #include "MemoryTracker.h"
 
-#define	DEBUG_ALLOCATION_CHUNKS	0
-#define	DEBUG_MAC_ALLOCATORS	0
-#define	DEBUG_DONT_TRACK_MALLOC	0
-#define	DEBUG_TRACK_MACOS_MEMS	1
+#define DEBUG_ALLOCATION_CHUNKS 0
+#define DEBUG_MAC_ALLOCATORS    0
+#define DEBUG_DONT_TRACK_MALLOC 0
+#define DEBUG_TRACK_MACOS_MEMS  1
+
+#define GROW_SMALL_BLOCKS 1
 
 //##############################################################################
 //##############################################################################
@@ -216,6 +218,8 @@ UInt32		gTotalLargeHeapMaxUsed = 0;						// max space used
 
 static void* LargeBlockGrow(LargeBlockHeader* blockHeader, size_t newSize, void* refcon); // forward
 static void* LargeBlockShrink(LargeBlockHeader* blockHeader, size_t newSize, void* refcon); // forward
+static void* SmallBlockGrow(void* address, size_t newSize, void* refcon); // forward
+static void* SmallBlockShrink(void* address, size_t newSize, void* refcon); // forward
 
 /*
  * These are kinda ugly as all the DEBUG code is ifdefed inside here, but I really
@@ -647,9 +651,33 @@ static Boolean resize_block(void* block, size_t newSize)
                 
                 /* Otherwise, we can reuse the same block! */
         }
+#ifdef GROW_SMALL_BLOCKS
+        else if (descriptor->freeRoutine == SmallHeapFree)
+        {
+                size_t newAllocSize = ((newSize + 3) & 0xFFFFFFFC);
+                size_t oldAllocSize = ((memsize(block) + 3) & 0xFFFFFFFC);
+                if (newAllocSize > oldAllocSize)
+                {
+                        /*      If the new size would require a "large block", give up */
+                        if (newAllocSize > kMaxTableAllocatedBlockSize)
+                                return false;
+                        block = SmallBlockGrow(block, newSize, descriptor->refcon);
+                }
+                else if (newAllocSize < oldAllocSize)
+                {
+                        /* If the new size should be handled as a fixed block, give up */
+                        AllocMemoryBlockDescriptor* newAllocator = gFastMemSmallSizeAllocators + (newAllocSize >> 2);
+                        if (newAllocator->heapFreeSpaceRoutine != SmallBlockHeapFree)
+                                return false;
+                        block = SmallBlockShrink(block, newSize, descriptor->refcon);
+                }
+
+                /* Otherwise, we can reuse the same block! */
+        }
+#endif // GROW_SMALL_BLOCKS
         else
         {
-                return false; // Don't do small heap yet
+                return false;
         }
                 
 #if DEBUG_HEAP_INTEGRITY
@@ -2099,10 +2127,208 @@ tryAlloc:
 		}
 	
 		chunk = (SmallHeapChunk *) chunk->header.next;
-	}	// while (chunk != NULL)
-		
-	return NULL;
+        }       // while (chunk != NULL)
+                
+        return NULL;
 }
+
+#ifdef GROW_SMALL_BLOCKS
+static void* SmallBlockGrow(void* address, size_t newSize, void* refcon)
+{
+        SmallHeapChunk                  *chunk = (SmallHeapChunk *)refcon;
+        SmallHeapRoot                   *root = (SmallHeapRoot *)chunk->header.root;
+        SmallHeapBlock                  *growBlock = MemoryPtrToSmallHeapBlock(address);
+        SmallHeapBlock                  *blockToCarve = NextSmallHeapBlock(growBlock);
+
+#if DEBUG_HEAP_INTEGRITY
+        {
+                MemoryBlockTag headerTag = growBlock->info.inUseInfo.freeProc.headerTag;
+                if (headerTag == kFreeBlockHeaderTag)
+                {
+                        DebugStr("\pfastmem: attempt to grow a freed block");
+                        return false;
+                }
+                else
+                {
+                        size_t exactOldSize = growBlock->info.inUseInfo.freeProc.blockSize;
+                        MemoryBlockTrailer* blockTrailer = (MemoryBlockTrailer *)((char*)address + exactOldSize);
+                        
+                        if (headerTag != kUsedBlockHeaderTag || blockTrailer->trailerTag != kUsedBlockTrailerTag)
+                        {
+                                DebugStr("\pfastmem: attempt to grow illegal block");
+                                return false;
+                        }
+                }
+        }
+#endif
+        if (SmallHeapBlockNotInUse(blockToCarve))
+        {
+                //      Round up allocation to nearest 4 bytes.
+                
+                size_t                          blockSize = (newSize + 3) & 0xFFFFFFFC;
+                size_t                          oldSize = (growBlock->blockSize & ~kBlockInUseFlag);
+                size_t                          oldPhysicalSize = TotalSmallHeapBlockUsage(growBlock);
+                size_t                          newPhysicalSize = sizeof(SmallHeapBlock) + MEMORY_BLOCK_TAILER_SIZE + blockSize;
+                size_t                          blockToCarveSize;
+                size_t                          blockToCarvePhysicalSize;
+                SInt32                          leftovers;
+                
+                if (blockSize == oldSize)
+                        return address;
+
+                blockToCarveSize = blockToCarve->blockSize; // does not have "in use" flag set.
+                blockToCarvePhysicalSize = TotalSmallHeapBlockUsage(blockToCarve);
+                leftovers = (SInt32)oldPhysicalSize + blockToCarvePhysicalSize - newPhysicalSize;
+                
+                // enough space to grow into the free block?
+                if (leftovers < 0)
+                        return nil;
+
+                //      Remove the block from the free list... we will
+                //      be using it for the allocation...
+                
+                RemoveSmallHeapBlockFromFreeList(chunk, blockToCarve);
+
+                //      If taking our current allocation out of
+                //      the overflow block would still leave enough
+                //      room for another allocation out of the 
+                //      block, then split the block up.
+                        
+                if (leftovers >= sizeof(SmallHeapBlock) + kDefaultSmallHeadMinSize + MEMORY_BLOCK_TAILER_SIZE)
+                {
+                        //      Create a new block out of the leftovers
+                        SmallHeapBlock* leftoverBlock = (SmallHeapBlock *)((char *)growBlock + newPhysicalSize);
+                        SmallHeapBlock* nextBlock = NextSmallHeapBlock(blockToCarve);
+                
+                        //      Add the block to linked list of blocks in this raw
+                        //      allocation chunk.
+                
+                        nextBlock->prevBlock = leftoverBlock;   
+                        growBlock->blockSize = blockSize | kBlockInUseFlag; // rounded-up size, just as alloc does (?!)
+                        leftoverBlock->prevBlock = growBlock;
+                        leftoverBlock->blockSize = leftovers - sizeof(SmallHeapBlock) - MEMORY_BLOCK_TAILER_SIZE;
+                        
+                        //      And add the block to a free list, which will either be
+                        //      one of the sized bins or the overflow list, depending
+                        //      on its size.
+                
+                        AddSmallHeapBlockToFreeList(chunk, leftoverBlock);                                      
+                }
+                else
+                {
+                        SmallHeapBlock* nextBlock = NextSmallHeapBlock(blockToCarve);
+                        nextBlock->prevBlock = growBlock;
+                        // If we're using the entire free block, then because growBlock->blockSize
+                        // is used to calculate the start of the next block, it must be
+                        // adjusted so that still does this.
+                        growBlock->blockSize += blockToCarvePhysicalSize;
+                }
+
+
+        #if STATS_MAC_MEMORY                    
+                gTotalSmallHeapUsed -= oldPhysicalSize;
+                gTotalSmallHeapUsed += TotalSmallHeapBlockUsage(growBlock);
+                        
+                if (gTotalSmallHeapUsed > gTotalSmallHeapMaxUsed)
+                        gTotalSmallHeapMaxUsed = gTotalSmallHeapUsed;
+
+        #endif
+
+                return address;
+        }
+
+        return nil;
+} // SmallBlockGrow
+#endif // GROW_SMALL_BLOCKS
+
+#ifdef GROW_SMALL_BLOCKS
+static void* SmallBlockShrink(void* address, size_t newSize, void* refcon)
+{
+        SmallHeapChunk                  *chunk = (SmallHeapChunk *)refcon;
+        SmallHeapRoot                   *root = (SmallHeapRoot *)chunk->header.root;
+        SmallHeapBlock                  *shrinkBlock = MemoryPtrToSmallHeapBlock(address);
+
+#if DEBUG_HEAP_INTEGRITY
+        {
+                MemoryBlockTag headerTag = shrinkBlock->info.inUseInfo.freeProc.headerTag;
+                if (headerTag == kFreeBlockHeaderTag)
+                {
+                        DebugStr("\pfastmem: attempt to shrink a freed block");
+                        return false;
+                }
+                else
+                {
+                        size_t exactOldSize = shrinkBlock->info.inUseInfo.freeProc.blockSize;
+                        MemoryBlockTrailer* blockTrailer = (MemoryBlockTrailer *)((char*)address + exactOldSize);
+                        
+                        if (headerTag != kUsedBlockHeaderTag || blockTrailer->trailerTag != kUsedBlockTrailerTag)
+                        {
+                                DebugStr("\pfastmem: attempt to shrink illegal block");
+                                return false;
+                        }
+                }
+        }
+#endif
+        {
+                SmallHeapBlock          *nextBlock = NextSmallHeapBlock(shrinkBlock);
+                SmallHeapBlock          *leftoverBlock;
+                size_t                          blockSize = (newSize + 3) & 0xFFFFFFFC;
+                size_t                          oldSize = (shrinkBlock->blockSize & ~kBlockInUseFlag);
+                size_t                          oldPhysicalSize;
+                size_t                          newPhysicalSize;
+                SInt32                          leftovers;
+
+                if (blockSize == oldSize)
+                        return address;
+
+                oldPhysicalSize = TotalSmallHeapBlockUsage(shrinkBlock);
+                newPhysicalSize = sizeof(SmallHeapBlock) + MEMORY_BLOCK_TAILER_SIZE + blockSize;
+                leftovers = (SInt32)oldPhysicalSize - newPhysicalSize;
+
+                PR_ASSERT(leftovers > 0);
+
+                if (SmallHeapBlockNotInUse(nextBlock))
+                {
+                        // coalesce
+                        leftovers += TotalSmallHeapBlockUsage(nextBlock); // augmented leftovers.
+                        RemoveSmallHeapBlockFromFreeList(chunk, nextBlock);
+                        nextBlock = NextSmallHeapBlock(nextBlock);
+                }
+                else
+                {                       
+                        // enough space to turn into a free block?
+                        if (leftovers < sizeof(SmallHeapBlock) + kDefaultSmallHeadMinSize + MEMORY_BLOCK_TAILER_SIZE)
+                                return address;
+                }       
+
+                //      Create a new block out of the leftovers (or augmented leftovers)
+                leftoverBlock = (SmallHeapBlock *)((char *)shrinkBlock + newPhysicalSize);
+        
+                //      Add the block to linked list of blocks in this raw
+                //      allocation chunk.
+        
+                nextBlock->prevBlock = leftoverBlock;   
+                shrinkBlock->blockSize = blockSize | kBlockInUseFlag; // rounded-up size, just as alloc does (?!)
+                leftoverBlock->prevBlock = shrinkBlock;
+                leftoverBlock->blockSize = leftovers - sizeof(SmallHeapBlock) - MEMORY_BLOCK_TAILER_SIZE;
+                
+                //      And add the block to a free list, which will either be
+                //      one of the sized bins or the overflow list, depending
+                //      on its size.
+        
+                AddSmallHeapBlockToFreeList(chunk, leftoverBlock);                                      
+
+#if STATS_MAC_MEMORY                    
+                gTotalSmallHeapUsed -= oldPhysicalSize;
+                gTotalSmallHeapUsed += TotalSmallHeapBlockUsage(shrinkBlock);
+#endif
+
+                return address;
+        }
+
+        return nil;
+} // SmallBlockShrink
+#endif // GROW_SMALL_BLOCKS
 
 void SmallHeapFree(void *address, void *refcon)
 {
