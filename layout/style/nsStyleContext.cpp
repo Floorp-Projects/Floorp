@@ -238,6 +238,8 @@ struct StylePositionImpl: public nsStylePosition {
     mHeightFlags = NS_STYLE_POSITION_VALUE_AUTO;
     mHeight = 0;
     mZIndex = 0;
+    mClipFlags = NS_STYLE_CLIP_AUTO;
+    mClip.SizeTo(0,0,0,0);
   }
 
   ~StylePositionImpl(void)

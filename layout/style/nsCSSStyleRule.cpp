@@ -1017,6 +1017,32 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         } else if (ourPosition->mZIndex.GetUnit() == eCSSUnit_Absolute) {
           position->mZIndex = ourPosition->mZIndex.GetIntValue();
         }
+
+        // clip property
+        if (nsnull != ourPosition->mClip) {
+          position->mClipFlags = NS_STYLE_CLIP_RECT;
+
+          if (ourPosition->mClip->mTop.GetUnit() == eCSSUnit_Enumerated) {
+            position->mClip.top = ourPosition->mClip->mTop.GetIntValue();
+          } else if (ourPosition->mClip->mTop.IsLengthUnit()) {
+            position->mClip.top = CalcLength(ourPosition->mClip->mTop, font, aPresContext);
+          }
+          if (ourPosition->mClip->mRight.GetUnit() == eCSSUnit_Enumerated) {
+            position->mClip.right = ourPosition->mClip->mRight.GetIntValue();
+          } else if (ourPosition->mClip->mRight.IsLengthUnit()) {
+            position->mClip.right = CalcLength(ourPosition->mClip->mRight, font, aPresContext);
+          }
+          if (ourPosition->mClip->mBottom.GetUnit() == eCSSUnit_Enumerated) {
+            position->mClip.bottom = ourPosition->mClip->mBottom.GetIntValue();
+          } else if (ourPosition->mClip->mBottom.IsLengthUnit()) {
+            position->mClip.bottom = CalcLength(ourPosition->mClip->mBottom, font, aPresContext);
+          }
+          if (ourPosition->mClip->mLeft.GetUnit() == eCSSUnit_Enumerated) {
+            position->mClip.left = ourPosition->mClip->mLeft.GetIntValue();
+          } else if (ourPosition->mClip->mLeft.IsLengthUnit()) {
+            position->mClip.left = CalcLength(ourPosition->mClip->mLeft, font, aPresContext);
+          }
+        }
       }
     }
 

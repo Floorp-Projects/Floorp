@@ -70,9 +70,6 @@
 #define NS_STYLE_CLEAR_COLUMN                   6
 #define NS_STYLE_CLEAR_PAGE                     7
 
-// See nsStyleXXX
-#define NS_STYLE_CLIP_AUTO                      0
-
 // See nsStyleColor
 #define NS_STYLE_CURSOR_INHERIT                 0
 #define NS_STYLE_CURSOR_DEFAULT                 1
