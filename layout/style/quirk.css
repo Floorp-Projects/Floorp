@@ -71,6 +71,13 @@ li > ol:first-node {
   padding-top: 1em;
 }
 
+/* Quirk: prevent bullet from resizing with the list item
+ *   see bug 97351
+ */
+li:-moz-list-bullet {
+  font-size: -moz-initial;
+}
+
 /* Quirk: cut off all font inheritance in tables and captions except for family. */
 table, caption {
   font-size: -moz-initial;
@@ -148,6 +155,53 @@ td > ol:last-node {
   margin-bottom: 0;
 }
 
+/* Similar as above, but for empty elements
+ *  collapse the bottom or top margins of empty elements
+ *  - see bug 97361
+ */
+body > form:empty:first-node, td > form:empty:first-node,
+body > p:empty:first-node, td > p:empty:first-node,
+body > dl:empty:first-node, td > dl:empty:first-node,
+body > multicol:empty:first-node, td > multicol:empty:first-node,
+body > blockquote:empty:first-node, td > blockquote:empty:first-node,
+body > h1:empty:first-node, td > h1:empty:first-node,
+body > h2:empty:first-node, td > h2:empty:first-node,
+body > h3:empty:first-node, td > h3:empty:first-node,
+body > h4:empty:first-node, td > h4:empty:first-node,
+body > h5:empty:first-node, td > h5:empty:first-node,
+body > h6:empty:first-node, td > h6:empty:first-node,
+body > listing:empty:first-node, td > listing:empty:first-node,
+body > plaintext:empty:first-node, td > plaintext:empty:first-node,
+body > xmp:empty:first-node, td > xmp:empty:first-node,
+body > pre:empty:first-node, td > pre:empty:first-node,
+body > ul:empty:first-node, td > ul:empty:first-node,
+body > menu:empty:first-node, td > menu:empty:first-node,
+body > dir:empty:first-node, td > dir:empty:first-node,
+body > ol:empty:first-node, td > ol:empty:first-node {
+  margin-bottom: 0;
+}
+
+td > form:empty:last-node,
+td > p:empty:last-node,
+td > dl:empty:last-node,
+td > multicol:empty:last-node,
+td > blockquote:empty:last-node,
+td > h1:empty:last-node,
+td > h2:empty:last-node,
+td > h3:empty:last-node,
+td > h4:empty:last-node,
+td > h5:empty:last-node,
+td > h6:empty:last-node,
+td > listing:empty:last-node,
+td > plaintext:empty:last-node,
+td > xmp:empty:last-node,
+td > pre:empty:last-node,
+td > ul:empty:last-node,
+td > menu:empty:last-node,
+td > dir:empty:last-node,
+td > ol:empty:last-node {
+  margin-top: 0;
+}
 
 /* Quirk: support the ways of making PRE have wrapping */
 pre[wrap], pre[cols], pre[width] {
