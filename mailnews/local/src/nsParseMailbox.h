@@ -258,6 +258,7 @@ protected:
   virtual int   MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
   void          LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
   nsCOMPtr <nsIMsgFilterList> m_filterList;
+  nsCOMPtr <nsIMsgFilterList> m_deferredToServerFilterList;
   nsCOMPtr <nsIMsgFolder> m_rootFolder;
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
   nsCOMPtr <nsIMsgFolder> m_downloadFolder;

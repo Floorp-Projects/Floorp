@@ -1471,7 +1471,18 @@ nsParseNewMailState::Init(nsIMsgFolder *serverFolder, nsIMsgFolder *downloadFold
     if (m_filterList) 
     {
       rv = server->ConfigureTemporaryFilters(m_filterList);
-//      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to configure temp filters");
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to configure temp filters");
+    }
+    // check if this server defers to another server, in which case
+    // we'll use that server's filters as well.
+    nsCOMPtr <nsIMsgFolder> deferredToRootFolder;
+    server->GetRootMsgFolder(getter_AddRefs(deferredToRootFolder));
+    if (rootMsgFolder != deferredToRootFolder)
+    {
+      nsCOMPtr <nsIMsgIncomingServer> deferredToServer;
+      deferredToRootFolder->GetServer(getter_AddRefs(deferredToServer));
+      if (deferredToServer)
+        deferredToServer->GetFilterList(aMsgWindow, getter_AddRefs(m_deferredToServerFilterList));
     }
   }
   m_disableFilters = PR_FALSE;
@@ -1596,6 +1607,11 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, 
       if (m_filterList)
         matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule,
                     msgHdr, downloadFolder, m_mailDB, headers, headersSize, this, msgWindow);
+      if (!m_msgMovedByFilter && m_deferredToServerFilterList)
+      {
+        matchTermStatus = m_deferredToServerFilterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule,
+                    msgHdr, downloadFolder, m_mailDB, headers, headersSize, this, msgWindow);
+      }
     }
   }
   if (pMoved)
