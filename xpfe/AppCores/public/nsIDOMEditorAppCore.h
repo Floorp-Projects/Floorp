@@ -41,7 +41,11 @@ public:
 
   NS_IMETHOD    SetEditorType(const nsString& aEditorType)=0;
 
-  NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue)=0;
+  NS_IMETHOD    SetTextProperty(const nsString& aAttr)=0;
+
+  NS_IMETHOD    RemoveTextProperty(const nsString& aAttr)=0;
+
+  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas)=0;
 
   NS_IMETHOD    Undo()=0;
 
@@ -54,6 +58,10 @@ public:
   NS_IMETHOD    Paste()=0;
 
   NS_IMETHOD    SelectAll()=0;
+
+  NS_IMETHOD    BeginBatchChanges()=0;
+
+  NS_IMETHOD    EndBatchChanges()=0;
 
   NS_IMETHOD    ShowClipboard()=0;
 
@@ -77,13 +85,17 @@ public:
   NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);  \
   NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);  \
   NS_IMETHOD    SetEditorType(const nsString& aEditorType);  \
-  NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue);  \
+  NS_IMETHOD    SetTextProperty(const nsString& aAttr);  \
+  NS_IMETHOD    RemoveTextProperty(const nsString& aAttr);  \
+  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas);  \
   NS_IMETHOD    Undo();  \
   NS_IMETHOD    Redo();  \
   NS_IMETHOD    Cut();  \
   NS_IMETHOD    Copy();  \
   NS_IMETHOD    Paste();  \
   NS_IMETHOD    SelectAll();  \
+  NS_IMETHOD    BeginBatchChanges();  \
+  NS_IMETHOD    EndBatchChanges();  \
   NS_IMETHOD    ShowClipboard();  \
   NS_IMETHOD    InsertText(const nsString& aTextToInsert);  \
   NS_IMETHOD    InsertLink();  \
@@ -99,13 +111,17 @@ public:
   NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText) { return _to##GetContentsAsText(aContentsAsText); } \
   NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML) { return _to##GetContentsAsHTML(aContentsAsHTML); } \
   NS_IMETHOD    SetEditorType(const nsString& aEditorType) { return _to##SetEditorType(aEditorType); }  \
-  NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue) { return _to##SetAttribute(aAttr, aValue); }  \
+  NS_IMETHOD    SetTextProperty(const nsString& aAttr) { return _to##SetTextProperty(aAttr); }  \
+  NS_IMETHOD    RemoveTextProperty(const nsString& aAttr) { return _to##RemoveTextProperty(aAttr); }  \
+  NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aAnyHas, PRBool* aAllHas) { return _to##GetTextProperty(aAttr, aAnyHas, aAllHas); }  \
   NS_IMETHOD    Undo() { return _to##Undo(); }  \
   NS_IMETHOD    Redo() { return _to##Redo(); }  \
   NS_IMETHOD    Cut() { return _to##Cut(); }  \
   NS_IMETHOD    Copy() { return _to##Copy(); }  \
   NS_IMETHOD    Paste() { return _to##Paste(); }  \
   NS_IMETHOD    SelectAll() { return _to##SelectAll(); }  \
+  NS_IMETHOD    BeginBatchChanges() { return _to##BeginBatchChanges(); }  \
+  NS_IMETHOD    EndBatchChanges() { return _to##EndBatchChanges(); }  \
   NS_IMETHOD    ShowClipboard() { return _to##ShowClipboard(); }  \
   NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to##InsertText(aTextToInsert); }  \
   NS_IMETHOD    InsertLink() { return _to##InsertLink(); }  \

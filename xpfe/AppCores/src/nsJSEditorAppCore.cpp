@@ -195,15 +195,14 @@ EditorAppCoreSetEditorType(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
 
 //
-// Native method SetAttribute
+// Native method SetTextProperty
 //
 PR_STATIC_CALLBACK(JSBool)
-EditorAppCoreSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+EditorAppCoreSetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
-  nsAutoString b1;
 
   *rval = JSVAL_NULL;
 
@@ -212,20 +211,100 @@ EditorAppCoreSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  if (argc >= 1) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
-
-    if (NS_OK != nativeThis->SetAttribute(b0, b1)) {
+    if (NS_OK != nativeThis->SetTextProperty(b0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function setAttribute requires 2 parameters");
+    JS_ReportError(cx, "Function setTextProperty requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method RemoveTextProperty
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreRemoveTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->RemoveTextProperty(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function removeTextProperty requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetTextProperty
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  PRBool b1;
+  PRBool b2;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b1, cx, argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->GetTextProperty(b0, &b1, &b2)) {		// idlc bug
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function getTextProperty requires 3 parameters");
     return JS_FALSE;
   }
 
@@ -424,6 +503,72 @@ EditorAppCoreSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   else {
     JS_ReportError(cx, "Function selectAll requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method BeginBatchChanges
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreBeginBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->BeginBatchChanges()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function beginBatchChanges requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method EndBatchChanges
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreEndBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->EndBatchChanges()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function endBatchChanges requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -760,13 +905,17 @@ static JSPropertySpec EditorAppCoreProperties[] =
 static JSFunctionSpec EditorAppCoreMethods[] = 
 {
   {"setEditorType",          EditorAppCoreSetEditorType,     1},
-  {"setAttribute",          EditorAppCoreSetAttribute,     2},
+  {"setTextProperty",          EditorAppCoreSetTextProperty,     1},
+  {"removeTextProperty",          EditorAppCoreRemoveTextProperty,     1},
+  {"getTextProperty",          EditorAppCoreGetTextProperty,     3},
   {"undo",          EditorAppCoreUndo,     0},
   {"redo",          EditorAppCoreRedo,     0},
   {"cut",          EditorAppCoreCut,     0},
   {"copy",          EditorAppCoreCopy,     0},
   {"paste",          EditorAppCorePaste,     0},
   {"selectAll",          EditorAppCoreSelectAll,     0},
+  {"beginBatchChanges",          EditorAppCoreBeginBatchChanges,     0},
+  {"endBatchChanges",          EditorAppCoreEndBatchChanges,     0},
   {"showClipboard",          EditorAppCoreShowClipboard,     0},
   {"insertText",          EditorAppCoreInsertText,     1},
   {"insertLink",          EditorAppCoreInsertLink,     0},
