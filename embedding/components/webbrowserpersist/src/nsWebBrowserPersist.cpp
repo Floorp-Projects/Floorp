@@ -2216,6 +2216,11 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
     nsresult rv = aNode->GetAttributes(getter_AddRefs(attrMap));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
+    if (mPersistFlags & PERSIST_FLAGS_DONT_FIXUP_LINKS)
+    {
+        return NS_OK;
+    }
+
     // Make all anchor links absolute so they point off onto the Internet
     nsString attribute(NS_LITERAL_STRING("href"));
     rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
@@ -2225,8 +2230,8 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
         attrNode->GetNodeValue(oldValue);
         nsCString oldCValue; oldCValue.AssignWithConversion(oldValue);
 
-        // Skip self-referencing bookmarks
-        if (oldCValue.Length() > 0 && oldCValue.CharAt(0) == '#')
+        // Skip empty values and self-referencing bookmarks
+        if (oldCValue.IsEmpty() || oldCValue.CharAt(0) == '#')
         {
             return NS_OK;
         }
