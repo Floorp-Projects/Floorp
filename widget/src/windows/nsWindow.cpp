@@ -19,8 +19,8 @@
  *
  * Contributor(s): 
  *   Michael Lowe <michael.lowe@bigfoot.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Bajusz <hyp-x@inf.bme.hu>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   
  */
@@ -1246,25 +1246,38 @@ nsIWidget* nsWindow::GetParent(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-    if (mWnd) {
-        if (bState) {
-          DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
-          if (mIsVisible || mWindowType == eWindowType_popup) {
-             flags |= SWP_NOZORDER;
-          }
-
-          if (mWindowType == eWindowType_popup) {
-            flags |= SWP_NOACTIVATE;
-            ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
-          } else {
-            ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
-          }
+  if (mWnd) {
+    if (bState) {
+      if (!mIsVisible && mWindowType == eWindowType_toplevel) {
+        int mode;
+        switch (mSizeMode) {
+          case nsSizeMode_Maximized :
+            mode = SW_SHOWMAXIMIZED;
+            break;
+          case nsSizeMode_Minimized :
+            mode = SW_SHOWMINIMIZED;
+            break;
+          default :
+            mode = SW_SHOWNORMAL;
         }
-        else
-            ::ShowWindow(mWnd, SW_HIDE);
-    }
-    mIsVisible = bState;
-    return NS_OK;
+        ::ShowWindow(mWnd, mode);
+      } else {
+        DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
+        if (mIsVisible || mWindowType == eWindowType_popup)
+          flags |= SWP_NOZORDER;
+
+        if (mWindowType == eWindowType_popup) {
+          flags |= SWP_NOACTIVATE;
+          ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
+        } else {
+          ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
+        }
+      }
+    } else
+      ::ShowWindow(mWnd, SW_HIDE);
+  }
+  mIsVisible = bState;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1305,12 +1318,9 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
 
   // save the requested state
   rv = nsBaseWidget::SetSizeMode(aMode);
-  if (NS_SUCCEEDED(rv)) {
-    int        mode;
+  if (NS_SUCCEEDED(rv) && mIsVisible) {
+    int mode;
 
-    // note we do this regardless of the window's visibility, and it will
-    // make the window visible. this saves us flashing the window visible
-    // at an incorrect size.
     switch (aMode) {
       case nsSizeMode_Maximized :
         mode = SW_MAXIMIZE;
@@ -1322,7 +1332,6 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
         mode = SW_RESTORE;
     }
     ::ShowWindow(mWnd, mode);
-    mIsVisible = PR_TRUE;
   }
   return rv;
 }
