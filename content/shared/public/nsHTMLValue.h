@@ -65,7 +65,7 @@ public:
   void  SetPixelValue(PRInt32 aValue);
   void  SetPercentValue(float aValue);
   void  SetStringValue(const nsString& aValue);
-  void  SetSupportsValue(nsISupports* aValue);
+  void  SetISupportsValue(nsISupports* aValue);
   void  SetColorValue(nscolor aValue);
   void  SetEmptyValue(void);
 
