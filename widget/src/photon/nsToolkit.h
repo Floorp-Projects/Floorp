@@ -30,18 +30,18 @@ class nsToolkit : public nsIToolkit
 {
 
 public:
+  nsToolkit();
+  virtual ~nsToolkit();
 
   NS_DECL_ISUPPORTS
 
-               nsToolkit();
   NS_IMETHOD   Init( PRThread *aThread );
 
+  PhDrawContext_t *GetDefaultPhotonDrawContext();
+
 private:
-               ~nsToolkit();
-  PtWidget_t*  mWidget;
-
-protected:
-
+                   
+  static PhDrawContext_t *mDefaultPhotonDrawContext;
 };
 
 

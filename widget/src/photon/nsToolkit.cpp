@@ -21,16 +21,14 @@
  */
 
 #include "nsToolkit.h"
-#include "nsWindow.h"
-#include "prmon.h"
-#include "prtime.h"
-#include "nsGUIEvent.h"
-#include <Pt.h>
+#include "nscore.h"
+
 #include "nsPhWidgetLog.h"
 
+/* Set our static member to NULL */
+PhDrawContext_t * nsToolkit::mDefaultPhotonDrawContext = nsnull;
 
-NS_DEFINE_IID(kIToolkitIID,  NS_ITOOLKIT_IID);
-NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
+NS_IMPL_ISUPPORTS1(nsToolkit,nsIToolkit);
 
 //-------------------------------------------------------------------------
 //
@@ -39,8 +37,14 @@ NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()  
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::nsToolkit this=<%p>\n", this));
+
   NS_INIT_REFCNT();
-  mWidget = NULL;
+  
+  if (mDefaultPhotonDrawContext == nsnull)
+  {
+    mDefaultPhotonDrawContext = PhDCGetCurrent();  
+  }
 }
 
 
@@ -51,7 +55,7 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::~nsToolkit\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::~nsToolkit this=<%p>\n", this));
 }
 
 
@@ -62,14 +66,16 @@ nsToolkit::~nsToolkit()
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::Init this=<%p> aThread=<%p>\n", this, aThread));
-  if( aThread )
-  {  
-    /* No idea what this is for */
-  }
-  else
+  return NS_OK;
+}
+
+PhDrawContext_t *nsToolkit::GetDefaultPhotonDrawContext()
+{
+  if (mDefaultPhotonDrawContext == NULL)
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::Init - ERROR: Wants to create a thread!\n"));
+    NS_ASSERTION(mDefaultPhotonDrawContext, "nsToolkit::GetDefaultPhotonDrawContext mDefaultPhotonDrawContext is NULL");
+    abort();  
   }
 
-  return NS_OK;
+  return mDefaultPhotonDrawContext;
 }
