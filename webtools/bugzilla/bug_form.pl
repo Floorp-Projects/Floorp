@@ -190,6 +190,7 @@ if (@row = FetchSQLData()) {
         print "<H1>Bug not found</H1>\n";
         print "There does not seem to be a bug numbered $id.\n";
     }
+    PutFooter();
     exit;
 }
 
