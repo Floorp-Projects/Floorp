@@ -40,11 +40,15 @@ static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 
 #include "watcomfx.h"
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2_VACPP)
 #include <sys/param.h>
 #endif
 
 #if !defined(macintosh)
+#ifdef XP_OS2_EMX
+#include <sys/types.h>
+#include "xp_mcom.h" /* For strdup. */
+#endif
 #include <sys/stat.h>
 #endif
 
@@ -58,8 +62,13 @@ static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2_VACPP)
 #include <unistd.h>
+#endif
+
+#ifdef XP_OS2_VACPP
+#include "types.h"
+#define EPERM SOCEPERM
 #endif
 
 #ifdef DEBUG
@@ -183,7 +192,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 
 	if (file) {				 
 
-#if defined(_WIN32) || defined(_WINDOWS) || defined (macintosh)
+#if defined(_WIN32) || defined(_WINDOWS) || defined (macintosh)  || defined(XP_OS2_VACPP)
 		if ((hashp->fp = DBFILE_OPEN(file, flags | O_BINARY, mode)) == -1)
 			RETURN_ERROR(errno, error0);
 #else
@@ -411,7 +420,7 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
 		if (stat(file, &statbuf))
 			return (NULL);
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(VMS)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(VMS) && !defined(XP_OS2)
 #ifdef __QNX__
 		hashp->BSIZE = statbuf.st_size;
 #else

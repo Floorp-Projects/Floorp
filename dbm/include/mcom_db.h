@@ -201,7 +201,6 @@ XP_END_PROTOS
 
 #if defined(XP_OS2)
 #include <xp_mcom.h>
-#include <pros2os.h>
 XP_BEGIN_PROTOS
 int mkstemp(char *path);
 XP_END_PROTOS
