@@ -178,16 +178,16 @@
 #define MAX_CORE_CONS  6
 
 #define SCRIPT_ENGINE_NAME  "DvngScriptEngineX"
-#define PANGO_RENDER_TYPE_X "PangoRenderX"
+#define PANGO_RENDER_TYPE_X "PangoliteRenderX"
 
 #define ucs2dvng(ch) (gunichar2)((gunichar2)(ch) - 0x0900)
 
-typedef guint16 PangoXSubfont;
+typedef guint16 PangoliteXSubfont;
 #define PANGO_MOZ_MAKE_GLYPH(index) ((guint32)0 | (index))
 
 /* We handle the following ranges between U+0901 to U+0970 exactly
  */
-static PangoEngineRange dvng_ranges[] = {
+static PangoliteEngineRange dvng_ranges[] = {
   { 0x0901, 0x0903, "*" },
   { 0x0905, 0x0939, "*" },
   { 0x093c, 0x094d, "*" },
@@ -195,7 +195,7 @@ static PangoEngineRange dvng_ranges[] = {
   { 0x0958, 0x0970, "*" }, /* Hindi Ranges */
 };
 
-static PangoEngineInfo script_engines[] = {
+static PangoliteEngineInfo script_engines[] = {
   {
     SCRIPT_ENGINE_NAME,
     PANGO_ENGINE_TYPE_SHAPE,
@@ -228,7 +228,7 @@ typedef struct {
 struct _DvngFontInfo
 {
   DvngFontType  type;
-  PangoXSubfont subfont;
+  PangoliteXSubfont subfont;
 };
 
 typedef long DvngCls;
@@ -929,7 +929,7 @@ static const DvngGlyphEntry sunGlyphTbl[MAP_SIZE] = {
 };
 
 /* Returns a structure with information we will use to render given the
- * #PangoFont. This is computed once per font and cached for retrieval.
+ * #PangoliteFont. This is computed once per font and cached for retrieval.
  */
 static DvngFontInfo *
 get_font_info(const char *fontCharset)
@@ -949,7 +949,7 @@ get_font_info(const char *fontCharset)
   for (i = 0; i < G_N_ELEMENTS(charsets); i++) {
     if (strcmp(fontCharset, charsets[i]) == 0) {    
       font_info->type = (DvngFontType)charset_types[i];
-      font_info->subfont = (PangoXSubfont)i;
+      font_info->subfont = (PangoliteXSubfont)i;
       break;
     }
   }
@@ -958,14 +958,14 @@ get_font_info(const char *fontCharset)
 }
 
 static void
-add_glyph(PangoGlyphString *glyphs,
+add_glyph(PangoliteGlyphString *glyphs,
           gint              clusterStart, 
-          PangoGlyph        glyph,
+          PangoliteGlyph        glyph,
           gboolean          combining)
 {
   gint index = glyphs->num_glyphs;
 
-  pango_glyph_string_set_size (glyphs, index + 1);  
+  pangolite_glyph_string_set_size (glyphs, index + 1);  
   glyphs->glyphs[index].glyph = glyph;
   glyphs->glyphs[index].attr.is_cluster_start = combining ? 0 : 1;
   glyphs->log_clusters[index] = clusterStart;
@@ -974,7 +974,7 @@ add_glyph(PangoGlyphString *glyphs,
 static void
 GetBaseConsGlyphs(gunichar2  *cluster,
                   gint       numCoreCons,
-                  PangoGlyph *glyphList,
+                  PangoliteGlyph *glyphList,
                   gint       *nGlyphs)
 {
   int i, j, delta, nMin, nMaxRuleCt, ruleIdx;
@@ -1039,7 +1039,7 @@ static gint
 get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
                          gunichar2    *cluster,
                          gint         nChars,
-                         PangoGlyph   *gLst,
+                         PangoliteGlyph   *gLst,
                          StateType    *DvngClusterState)
 {
   int i, k, len;
@@ -1302,16 +1302,16 @@ static gint
 get_glyphs_list(DvngFontInfo *fontInfo,
                 gunichar2    *cluster,
                 gint          numChars,
-                PangoGlyph   *glyphLst,
+                PangoliteGlyph   *glyphLst,
                 StateType    *clustState)
 {
-  PangoGlyph glyph;
+  PangoliteGlyph glyph;
   gint       i;
 
   switch (fontInfo->type) {
   case DVNG_FONT_NONE:
     for (i = 0; i < numChars; i++)
-      glyphLst[i] = 0; /*pango_x_get_unknown_glyph(fontInfo->font);*/
+      glyphLst[i] = 0; /*pangolite_x_get_unknown_glyph(fontInfo->font);*/
     return numChars;
     
   case DVNG_FONT_SUN:
@@ -1323,13 +1323,13 @@ get_glyphs_list(DvngFontInfo *fontInfo,
 
 static void
 add_cluster(DvngFontInfo     *fontInfo,
-            PangoGlyphString *glyphs,
+            PangoliteGlyphString *glyphs,
             gint              clusterBeg,
             gunichar2        *cluster,
             gint              numChars,
             StateType        *clustState)
 {
-  PangoGlyph glyphsList[MAX_GLYPHS];
+  PangoliteGlyph glyphsList[MAX_GLYPHS];
   gint       i, numGlyphs;
   
   numGlyphs = get_glyphs_list(fontInfo, cluster, numChars, glyphsList, clustState);
@@ -1371,8 +1371,8 @@ static void
 dvng_engine_shape(const char       *fontCharset,
                   const gunichar2  *text,
                   gint             length,
-                  PangoAnalysis    *analysis,
-                  PangoGlyphString *glyphs)
+                  PangoliteAnalysis    *analysis,
+                  PangoliteGlyphString *glyphs)
 {
   DvngFontInfo    *fontInfo;
   const gunichar2 *p, *log_cluster;
@@ -1380,7 +1380,7 @@ dvng_engine_shape(const char       *fontCharset,
   gint            num_chrs;
   StateType       aSt = St0;
 
-  pango_glyph_string_set_size(glyphs, 0);
+  pangolite_glyph_string_set_size(glyphs, 0);
   fontInfo = get_font_info(fontCharset);
 
   p = text;
@@ -1392,55 +1392,55 @@ dvng_engine_shape(const char       *fontCharset,
   }
 }
 
-static PangoCoverage *
+static PangoliteCoverage *
 dvng_engine_get_coverage(const char *fontCharset,
                          const char *lang)
 {
-  PangoCoverage *result = pango_coverage_new ();  
+  PangoliteCoverage *result = pangolite_coverage_new ();  
   DvngFontInfo  *fontInfo = get_font_info (fontCharset);
   
   if (fontInfo->type != DVNG_FONT_NONE) {
     gunichar2 wc;
  
     for (wc = 0x901; wc <= 0x903; wc++)
-      pango_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
+      pangolite_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
     for (wc = 0x905; wc <= 0x939; wc++)
-      pango_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
+      pangolite_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
     for (wc = 0x93c; wc <= 0x94d; wc++)
-      pango_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
+      pangolite_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
     for (wc = 0x950; wc <= 0x954; wc++)
-      pango_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
+      pangolite_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
     for (wc = 0x958; wc <= 0x970; wc++)
-      pango_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
-    /*    pango_coverage_set (result, ZWJ, PANGO_COVERAGE_EXACT); */
+      pangolite_coverage_set (result, wc, PANGO_COVERAGE_EXACT);
+    /*    pangolite_coverage_set (result, ZWJ, PANGO_COVERAGE_EXACT); */
   }
   
   return result;
 }
 
-static PangoEngine *
+static PangoliteEngine *
 dvng_engine_x_new ()
 {
-  PangoEngineShape *result;
+  PangoliteEngineShape *result;
   
-  result = g_new (PangoEngineShape, 1);
+  result = g_new (PangoliteEngineShape, 1);
   result->engine.id = SCRIPT_ENGINE_NAME;
   result->engine.type = PANGO_ENGINE_TYPE_SHAPE;
   result->engine.length = sizeof (result);
   result->script_shape = dvng_engine_shape;
   result->get_coverage = dvng_engine_get_coverage;
-  return (PangoEngine *)result;
+  return (PangoliteEngine *)result;
 }
 
 /* The following three functions provide the public module API for
- * Pango. If we are compiling it is a module, then we name the
+ * Pangolite. If we are compiling it is a module, then we name the
  * entry points script_engine_list, etc. But if we are compiling
- * it for inclusion directly in Pango, then we need them to
+ * it for inclusion directly in Pangolite, then we need them to
  * to have distinct names for this module, so we prepend
- * _pango_thai_x_
+ * _pangolite_thai_x_
  */
 #ifdef X_MODULE_PREFIX
-#define MODULE_ENTRY(func) _pango_dvng_x_##func
+#define MODULE_ENTRY(func) _pangolite_dvng_x_##func
 #else
 #define MODULE_ENTRY(func) func
 #endif
@@ -1448,7 +1448,7 @@ dvng_engine_x_new ()
 /* List the engines contained within this module
  */
 void 
-MODULE_ENTRY(script_engine_list) (PangoEngineInfo **engines, gint *n_engines)
+MODULE_ENTRY(script_engine_list) (PangoliteEngineInfo **engines, gint *n_engines)
 {
   *engines = script_engines;
   *n_engines = G_N_ELEMENTS (script_engines);
@@ -1456,7 +1456,7 @@ MODULE_ENTRY(script_engine_list) (PangoEngineInfo **engines, gint *n_engines)
 
 /* Load a particular engine given the ID for the engine
  */
-PangoEngine *
+PangoliteEngine *
 MODULE_ENTRY(script_engine_load) (const char *id)
 {
   if (!strcmp (id, SCRIPT_ENGINE_NAME))
@@ -1466,7 +1466,7 @@ MODULE_ENTRY(script_engine_load) (const char *id)
 }
 
 void 
-MODULE_ENTRY(script_engine_unload) (PangoEngine *engine)
+MODULE_ENTRY(script_engine_unload) (PangoliteEngine *engine)
 {
 }
 

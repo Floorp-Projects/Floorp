@@ -61,18 +61,18 @@ nsULE::~nsULE() {
 NS_IMPL_ISUPPORTS1(nsULE, nsILE);
 
 /* Caller needs to ensure that GetEngine is called with valid state */
-PangoEngineShape* 
+PangoliteEngineShape* 
 nsULE::GetShaper(const PRUnichar *inBuf,
                  PRUint32        aLength,
                  const char      *lang)
 {
-  PangoEngineShape *aEngine = NULL;
-  PangoMap         *aMap = NULL;
+  PangoliteEngineShape *aEngine = NULL;
+  PangoliteMap         *aMap = NULL;
   guint            engine_type_id = 0, render_type_id = 0;
   PRUnichar        wc = inBuf[0];
 
   if ((inBuf == (PRUnichar*)NULL) || (aLength <= 0)) {
-    aEngine = (PangoEngineShape*)NULL;
+    aEngine = (PangoliteEngineShape*)NULL;
   }
   else {
 
@@ -82,8 +82,8 @@ nsULE::GetShaper(const PRUnichar *inBuf,
     }
 
     // Do not care about lang for now
-    aMap = pango_find_map("en_US", engine_type_id, render_type_id);  
-    aEngine = (PangoEngineShape*)pango_map_get_engine(aMap, (PRUint32)wc);
+    aMap = pangolite_find_map("en_US", engine_type_id, render_type_id);  
+    aEngine = (PangoliteEngineShape*)pangolite_map_get_engine(aMap, (PRUint32)wc);
   }
   return aEngine;
 }
@@ -96,13 +96,13 @@ nsULE::ScriptsByRun(const PRUnichar *aSrcBuf,
   int              ct = 0, start = 0;
   PRBool           sameCtlRun = PR_FALSE;
   struct textRun   *tmpChunk;
-  PangoEngineShape *curEngine = NULL, *prevEngine = NULL;
-  PangoMap         *aMap = NULL;
+  PangoliteEngineShape *curEngine = NULL, *prevEngine = NULL;
+  PangoliteMap         *aMap = NULL;
   guint            engine_type_id = 0, render_type_id = 0;
 
   engine_type_id = g_quark_from_static_string(PANGO_ENGINE_TYPE_SHAPE);
   render_type_id = g_quark_from_static_string(PANGO_RENDER_TYPE_X);
-  aMap = pango_find_map("en_US", engine_type_id, render_type_id);
+  aMap = pangolite_find_map("en_US", engine_type_id, render_type_id);
 
   for (ct = 0; ct < aSrcLen;) {
     tmpChunk = new textRun;
@@ -116,15 +116,15 @@ nsULE::ScriptsByRun(const PRUnichar *aSrcBuf,
     
     tmpChunk->start = &aSrcBuf[ct];
     start = ct;
-    curEngine = (PangoEngineShape*)
-      pango_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
+    curEngine = (PangoliteEngineShape*)
+      pangolite_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
     sameCtlRun = (curEngine != NULL);
     prevEngine = curEngine;
 
     if (sameCtlRun) {
       while (sameCtlRun && ct < aSrcLen) {
-        curEngine = (PangoEngineShape*)
-          pango_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
+        curEngine = (PangoliteEngineShape*)
+          pangolite_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
         sameCtlRun = ((curEngine != NULL) && (curEngine == prevEngine));
         if (sameCtlRun)
           ct++;
@@ -133,8 +133,8 @@ nsULE::ScriptsByRun(const PRUnichar *aSrcBuf,
     }
     else {
       while (!sameCtlRun && ct < aSrcLen) {
-        curEngine = (PangoEngineShape*)
-          pango_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
+        curEngine = (PangoliteEngineShape*)
+          pangolite_map_get_engine(aMap, (PRUint32)aSrcBuf[ct]);
         sameCtlRun = (curEngine != NULL);       
         if (!sameCtlRun)
           ct++;
@@ -148,7 +148,7 @@ nsULE::ScriptsByRun(const PRUnichar *aSrcBuf,
 }
 
 // Default font encoding by code-range
-// At the moment pangoLite only supports 2 shapers/scripts
+// At the moment pangoliteLite only supports 2 shapers/scripts
 const char*
 nsULE::GetDefaultFont(const PRUnichar aString)
 {
@@ -165,11 +165,11 @@ nsULE::GetDefaultFont(const PRUnichar aString)
 PRInt32
 nsULE::GetCtlData(const PRUnichar  *aString,
                   PRUint32         aLength,
-                  PangoGlyphString *aGlyphs,
+                  PangoliteGlyphString *aGlyphs,
                   const char       *fontCharset)
 {
-  PangoEngineShape *aShaper = GetShaper(aString, aLength, (const char*)NULL);
-  PangoAnalysis    aAnalysis;  
+  PangoliteEngineShape *aShaper = GetShaper(aString, aLength, (const char*)NULL);
+  PangoliteAnalysis    aAnalysis;  
 
   aAnalysis.shape_engine = aShaper;
   aAnalysis.aDir = PANGO_DIRECTION_LTR;
@@ -199,7 +199,7 @@ nsULE::GetPresentationForm(const PRUnichar *aString,
                            char            *aGlyphs,
                            PRSize          *aOutLength)
 {
-  PangoGlyphString *tmpGlyphs = pango_glyph_string_new();
+  PangoliteGlyphString *tmpGlyphs = pangolite_glyph_string_new();
 
   GetCtlData(aString, aLength, tmpGlyphs, fontCharset);
     
@@ -235,7 +235,7 @@ nsULE::NextCluster(const PRUnichar *aString,
   textRun          *aPtr, *aTmpPtr;
   PRInt32          aStrCt=0;
   PRBool           isBoundary=PR_FALSE;
-  PangoGlyphString *aGlyphData=pango_glyph_string_new();
+  PangoliteGlyphString *aGlyphData=pangolite_glyph_string_new();
  
   if (aIndex >= aLength-1) {
     *nextOffset = aLength; // End
@@ -310,7 +310,7 @@ nsULE::PrevCluster(const PRUnichar *aString,
   textRunList      aRun;
   textRun          *aPtr, *aTmpPtr;
   PRInt32          aStrCt=0, startCt=0, glyphct=0;
-  PangoGlyphString *aGlyphData=pango_glyph_string_new();
+  PangoliteGlyphString *aGlyphData=pangolite_glyph_string_new();
  
   if (aIndex<=1) {
     *prevOffset=0; // End
@@ -404,7 +404,7 @@ nsULE::GetRangeOfCluster(const PRUnichar *aString,
   textRunList      aRun;
   textRun          *aPtr, *aTmpPtr;
   PRInt32          aStrCt=0, startCt=0,j;
-  PangoGlyphString *aGlyphData=pango_glyph_string_new();
+  PangoliteGlyphString *aGlyphData=pangolite_glyph_string_new();
 
   *aStart = *aEnd = 0;
   aRun.numRuns=0;

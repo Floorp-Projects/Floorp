@@ -41,31 +41,31 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef struct _PangoCoverage PangoCoverage;
+typedef struct _PangoliteCoverage PangoliteCoverage;
 
 typedef enum {
   PANGO_COVERAGE_NONE,
   PANGO_COVERAGE_FALLBACK,
   PANGO_COVERAGE_APPROXIMATE,
   PANGO_COVERAGE_EXACT
-} PangoCoverageLevel;
+} PangoliteCoverageLevel;
 
-PangoCoverage *    pango_coverage_new     (void);
-PangoCoverage *    pango_coverage_ref     (PangoCoverage      *coverage);
-void               pango_coverage_unref   (PangoCoverage      *coverage);
-PangoCoverage *    pango_coverage_copy    (PangoCoverage      *coverage);
-PangoCoverageLevel pango_coverage_get     (PangoCoverage      *coverage,
+PangoliteCoverage *    pangolite_coverage_new     (void);
+PangoliteCoverage *    pangolite_coverage_ref     (PangoliteCoverage      *coverage);
+void               pangolite_coverage_unref   (PangoliteCoverage      *coverage);
+PangoliteCoverage *    pangolite_coverage_copy    (PangoliteCoverage      *coverage);
+PangoliteCoverageLevel pangolite_coverage_get     (PangoliteCoverage      *coverage,
 					   int                 index);
-void               pango_coverage_set     (PangoCoverage      *coverage,
+void               pangolite_coverage_set     (PangoliteCoverage      *coverage,
 					   int                 index,
-					   PangoCoverageLevel  level);
-void               pango_coverage_max     (PangoCoverage      *coverage,
-					   PangoCoverage      *other);
+					   PangoliteCoverageLevel  level);
+void               pangolite_coverage_max     (PangoliteCoverage      *coverage,
+					   PangoliteCoverage      *other);
 
-void           pango_coverage_to_bytes   (PangoCoverage  *coverage,
+void           pangolite_coverage_to_bytes   (PangoliteCoverage  *coverage,
 					  guchar        **bytes,
 					  int            *n_bytes);
-PangoCoverage *pango_coverage_from_bytes (guchar         *bytes,
+PangoliteCoverage *pangolite_coverage_from_bytes (guchar         *bytes,
 					  int             n_bytes);
 
 #ifdef __cplusplus

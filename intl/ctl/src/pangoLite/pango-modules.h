@@ -41,29 +41,29 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef struct _PangoMap PangoMap;
-typedef struct _PangoMapEntry PangoMapEntry;
+typedef struct _PangoliteMap PangoliteMap;
+typedef struct _PangoliteMapEntry PangoliteMapEntry;
 
-struct _PangoMapEntry 
+struct _PangoliteMapEntry 
 {
-  PangoEngineInfo *info;
+  PangoliteEngineInfo *info;
   gboolean        is_exact;
 };
 
-typedef struct _PangoIncludedModule PangoIncludedModule;
+typedef struct _PangoliteIncludedModule PangoliteIncludedModule;
 
-struct _PangoIncludedModule
+struct _PangoliteIncludedModule
 {
-  void        (*list) (PangoEngineInfo **engines, int *n_engines);
-  PangoEngine *(*load) (const char *id);
-  void        (*unload) (PangoEngine *engine);
+  void        (*list) (PangoliteEngineInfo **engines, int *n_engines);
+  PangoliteEngine *(*load) (const char *id);
+  void        (*unload) (PangoliteEngine *engine);
 };
 
-PangoMap      *pango_find_map(const char *lang, guint engine_type_id, 
+PangoliteMap      *pangolite_find_map(const char *lang, guint engine_type_id, 
                               guint render_type_id);
-PangoMapEntry *pango_map_get_entry(PangoMap *map, guint32 wc);
-PangoEngine   *pango_map_get_engine(PangoMap *map, guint32 wc);
-void          pango_module_register(PangoIncludedModule *module);
+PangoliteMapEntry *pangolite_map_get_entry(PangoliteMap *map, guint32 wc);
+PangoliteEngine   *pangolite_map_get_engine(PangoliteMap *map, guint32 wc);
+void          pangolite_module_register(PangoliteIncludedModule *module);
 
 #ifdef __cplusplus
 }

@@ -36,16 +36,16 @@
 #include "pango-glyph.h"
 
 /**
- * pango_glyph_string_new:
+ * pangolite_glyph_string_new:
  *
- * Create a new PangoGlyphString.
+ * Create a new PangoliteGlyphString.
  *
- * Returns the new PangoGlyphString
+ * Returns the new PangoliteGlyphString
  */
-PangoGlyphString *
-pango_glyph_string_new(void)
+PangoliteGlyphString *
+pangolite_glyph_string_new(void)
 {
-  PangoGlyphString *string = g_new(PangoGlyphString, 1);
+  PangoliteGlyphString *string = g_new(PangoliteGlyphString, 1);
   
   string->num_glyphs = 0;
   string->space = 0;
@@ -55,14 +55,14 @@ pango_glyph_string_new(void)
 }
 
 /**
- * pango_glyph_string_set_size:
- * @string:    a PangoGlyphString.
+ * pangolite_glyph_string_set_size:
+ * @string:    a PangoliteGlyphString.
  * @new_len:   the new length of the string.
  *
  * Resize a glyph string to the given length.
  */
 void
-pango_glyph_string_set_size(PangoGlyphString *string, gint new_len)
+pangolite_glyph_string_set_size(PangoliteGlyphString *string, gint new_len)
 {
   g_return_if_fail (new_len >= 0);
 
@@ -74,24 +74,24 @@ pango_glyph_string_set_size(PangoGlyphString *string, gint new_len)
     
     if (string->space < 0)
       g_error("%s: glyph string length overflows maximum integer size", 
-              "pango_glyph_string_set_size");
+              "pangolite_glyph_string_set_size");
   }
   
   string->glyphs = g_realloc(string->glyphs, 
-                             string->space * sizeof(PangoGlyphInfo));
+                             string->space * sizeof(PangoliteGlyphInfo));
   string->log_clusters = g_realloc(string->log_clusters, 
                                    string->space * sizeof (gint));
   string->num_glyphs = new_len;
 }
 
 /**
- * pango_glyph_string_free:
- * @string:    a PangoGlyphString.
+ * pangolite_glyph_string_free:
+ * @string:    a PangoliteGlyphString.
  *
  *  Free a glyph string and associated storage.
  */
 void
-pango_glyph_string_free(PangoGlyphString *string)
+pangolite_glyph_string_free(PangoliteGlyphString *string)
 {
   g_free(string->glyphs);
   g_free(string->log_clusters);

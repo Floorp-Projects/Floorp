@@ -45,53 +45,53 @@ extern "C" {
 
 /* Module API */
 
-#define PANGO_ENGINE_TYPE_SHAPE "PangoEngineShape"
-#define PANGO_RENDER_TYPE_X    "PangoRenderX"
-#define PANGO_RENDER_TYPE_NONE "PangoRenderNone"
+#define PANGO_ENGINE_TYPE_SHAPE "PangoliteEngineShape"
+#define PANGO_RENDER_TYPE_X    "PangoliteRenderX"
+#define PANGO_RENDER_TYPE_NONE "PangoliteRenderNone"
 
-typedef struct _PangoEngineInfo PangoEngineInfo;
-typedef struct _PangoEngineRange PangoEngineRange;
-typedef struct _PangoEngine PangoEngine;
+typedef struct _PangoliteEngineInfo PangoliteEngineInfo;
+typedef struct _PangoliteEngineRange PangoliteEngineRange;
+typedef struct _PangoliteEngine PangoliteEngine;
 
-struct _PangoEngineRange 
+struct _PangoliteEngineRange 
 {
   guint32 start;
   guint32 end;
   gchar   *langs;
 };
 
-struct _PangoEngineInfo
+struct _PangoliteEngineInfo
 {
   gchar            *id;
   gchar            *engine_type;
   gchar            *render_type;
-  PangoEngineRange *ranges;
+  PangoliteEngineRange *ranges;
   gint             n_ranges;
 };
 
-struct _PangoEngine
+struct _PangoliteEngine
 {
   gchar *id;
   gchar *type;
   gint  length;
 };
 
-struct _PangoEngineShape
+struct _PangoliteEngineShape
 {
-  PangoEngine engine;
+  PangoliteEngine engine;
   void (*script_shape) (const char       *fontCharset, 
                         const gunichar2  *text, 
                         int              length, 
-                        PangoAnalysis    *analysis, 
-                        PangoGlyphString *glyphs);
-  PangoCoverage *(*get_coverage) (const char *fontCharset, const char *lang);
+                        PangoliteAnalysis    *analysis, 
+                        PangoliteGlyphString *glyphs);
+  PangoliteCoverage *(*get_coverage) (const char *fontCharset, const char *lang);
 
 };
 
 /* A module should export the following functions */
-void         script_engine_list(PangoEngineInfo **engines, int *n_engines);
-PangoEngine *script_engine_load(const char *id);
-void         script_engine_unload(PangoEngine *engine);
+void         script_engine_list(PangoliteEngineInfo **engines, int *n_engines);
+PangoliteEngine *script_engine_load(const char *id);
+void         script_engine_unload(PangoliteEngine *engine);
 
 #ifdef __cplusplus
 }

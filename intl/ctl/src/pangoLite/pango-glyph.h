@@ -41,35 +41,35 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef struct _PangoGlyphVisAttr PangoGlyphVisAttr;
-typedef struct _PangoGlyphInfo PangoGlyphInfo;
-typedef struct _PangoGlyphString PangoGlyphString;
+typedef struct _PangoliteGlyphVisAttr PangoliteGlyphVisAttr;
+typedef struct _PangoliteGlyphInfo PangoliteGlyphInfo;
+typedef struct _PangoliteGlyphString PangoliteGlyphString;
 
 /* 1000ths of a device unit */
-typedef gint32 PangoGlyphUnit;
+typedef gint32 PangoliteGlyphUnit;
 
 /* Visual attributes of a glyph
  */
-struct _PangoGlyphVisAttr
+struct _PangoliteGlyphVisAttr
 {
   guint is_cluster_start : 1;
 };
 
 /* A single glyph 
  */
-struct _PangoGlyphInfo
+struct _PangoliteGlyphInfo
 {
-  PangoGlyph        glyph;
-  PangoGlyphVisAttr attr;
+  PangoliteGlyph        glyph;
+  PangoliteGlyphVisAttr attr;
 };
 
 /* A string of glyphs with positional information and visual attributes -
  * ready for drawing
  */
-struct _PangoGlyphString {
+struct _PangoliteGlyphString {
   gint num_glyphs;
 
-  PangoGlyphInfo *glyphs;
+  PangoliteGlyphInfo *glyphs;
 
   /* This is a memory inefficient way of representing the information
    * here - each value gives the byte index within the text
@@ -82,32 +82,32 @@ struct _PangoGlyphString {
   gint space;
 };
 
-PangoGlyphString *pango_glyph_string_new(void);
-void pango_glyph_string_set_size(PangoGlyphString *string, gint new_len);
-void pango_glyph_string_free(PangoGlyphString *string);
+PangoliteGlyphString *pangolite_glyph_string_new(void);
+void pangolite_glyph_string_set_size(PangoliteGlyphString *string, gint new_len);
+void pangolite_glyph_string_free(PangoliteGlyphString *string);
 
-void pango_glyph_string_index_to_x(PangoGlyphString *glyphs,
+void pangolite_glyph_string_index_to_x(PangoliteGlyphString *glyphs,
                                    char             *text,
                                    int              length,
-                                   PangoAnalysis    *analysis,
+                                   PangoliteAnalysis    *analysis,
                                    int              index,
                                    gboolean         trailing,
                                    int              *x_pos);
-void pango_glyph_string_x_to_index(PangoGlyphString *glyphs,
+void pangolite_glyph_string_x_to_index(PangoliteGlyphString *glyphs,
                                    char             *text,
                                    int              length,
-                                   PangoAnalysis    *analysis,
+                                   PangoliteAnalysis    *analysis,
                                    int              x_pos,
                                    int              *index,
                                    int              *trailing);
 
 /* Turn a string of characters into a string of glyphs */
-void pango_shape(const gunichar2  *text,
+void pangolite_shape(const gunichar2  *text,
                  gint             length,
-                 PangoAnalysis    *analysis,
-                 PangoGlyphString *glyphs);
+                 PangoliteAnalysis    *analysis,
+                 PangoliteGlyphString *glyphs);
 
-GList *pango_reorder_items(GList *logical_items);
+GList *pangolite_reorder_items(GList *logical_items);
 
 #ifdef __cplusplus
 }

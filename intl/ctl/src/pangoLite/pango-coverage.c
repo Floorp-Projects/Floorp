@@ -36,71 +36,71 @@
 
 #include "pango-coverage.h"
 
-typedef struct _PangoBlockInfo PangoBlockInfo;
+typedef struct _PangoliteBlockInfo PangoliteBlockInfo;
 
 #define N_BLOCKS_INCREMENT 256
 
-/* The structure of a PangoCoverage object is a two-level table, 
+/* The structure of a PangoliteCoverage object is a two-level table, 
    with blocks of size 256. Each block is stored as a packed array of 2 bit 
    values for each index, in LSB order.
  */
 
-struct _PangoBlockInfo
+struct _PangoliteBlockInfo
 {
   guchar *data;		
-  PangoCoverageLevel level;	/* Used if data == NULL */
+  PangoliteCoverageLevel level;	/* Used if data == NULL */
 };
 
-struct _PangoCoverage
+struct _PangoliteCoverage
 {
   guint ref_count;
   int n_blocks;
   int data_size;
   
-  PangoBlockInfo *blocks;
+  PangoliteBlockInfo *blocks;
 };
 
 /**
- * pango_coverage_new:
+ * pangolite_coverage_new:
  * 
- * Create a new #PangoCoverage
+ * Create a new #PangoliteCoverage
  * 
- * Return value: a new PangoCoverage object, initialized to
+ * Return value: a new PangoliteCoverage object, initialized to
  *               %PANGO_COVERAGE_NONE with a reference count of 0.
  **/
-PangoCoverage *
-pango_coverage_new (void)
+PangoliteCoverage *
+pangolite_coverage_new (void)
 {
-  PangoCoverage *coverage = g_new (PangoCoverage, 1);
+  PangoliteCoverage *coverage = g_new (PangoliteCoverage, 1);
 
   coverage->n_blocks = N_BLOCKS_INCREMENT;
-  coverage->blocks = g_new0 (PangoBlockInfo, coverage->n_blocks);
+  coverage->blocks = g_new0 (PangoliteBlockInfo, coverage->n_blocks);
   coverage->ref_count = 1;
   
   return coverage;
 }
 
 /**
- * pango_coverage_copy:
- * @coverage: a #PangoCoverage
+ * pangolite_coverage_copy:
+ * @coverage: a #PangoliteCoverage
  * 
- * Copy an existing #PangoCoverage. (This function may now be unecessary 
+ * Copy an existing #PangoliteCoverage. (This function may now be unecessary 
  * since we refcount the structure. Mail otaylor@redhat.com if you
  * use it.)
  * 
  * Return value: a copy of @coverage with a reference count of 1
  **/
-PangoCoverage *
-pango_coverage_copy (PangoCoverage *coverage)
+PangoliteCoverage *
+pangolite_coverage_copy (PangoliteCoverage *coverage)
 {
   int i;
-  PangoCoverage *result;
+  PangoliteCoverage *result;
 
   g_return_val_if_fail (coverage != NULL, NULL);
 
-  result = g_new (PangoCoverage, 1);
+  result = g_new (PangoliteCoverage, 1);
   result->n_blocks = coverage->n_blocks;
-  result->blocks = g_new (PangoBlockInfo, coverage->n_blocks);
+  result->blocks = g_new (PangoliteBlockInfo, coverage->n_blocks);
   result->ref_count = 1;
 
   for (i=0; i<coverage->n_blocks; i++) {
@@ -118,15 +118,15 @@ pango_coverage_copy (PangoCoverage *coverage)
 }
 
 /**
- * pango_coverage_ref:
- * @coverage: a #PangoCoverage
+ * pangolite_coverage_ref:
+ * @coverage: a #PangoliteCoverage
  * 
- * Increase the reference count on the #PangoCoverage by one
+ * Increase the reference count on the #PangoliteCoverage by one
  *
  * Returns: @coverage
  **/
-PangoCoverage *
-pango_coverage_ref (PangoCoverage *coverage)
+PangoliteCoverage *
+pangolite_coverage_ref (PangoliteCoverage *coverage)
 {
   g_return_val_if_fail (coverage != NULL, NULL);
 
@@ -135,14 +135,14 @@ pango_coverage_ref (PangoCoverage *coverage)
 }
 
 /**
- * pango_coverage_unref:
- * @coverage: a #PangoCoverage
+ * pangolite_coverage_unref:
+ * @coverage: a #PangoliteCoverage
  * 
- * Increase the reference count on the #PangoCoverage by one.
+ * Increase the reference count on the #PangoliteCoverage by one.
  * if the result is zero, free the coverage and all associated memory.
  **/
 void
-pango_coverage_unref (PangoCoverage *coverage)
+pangolite_coverage_unref (PangoliteCoverage *coverage)
 {
   int i;
   
@@ -163,16 +163,16 @@ pango_coverage_unref (PangoCoverage *coverage)
 }
 
 /**
- * pango_coverage_get:
- * @coverage: a #PangoCoverage
+ * pangolite_coverage_get:
+ * @coverage: a #PangoliteCoverage
  * @index: the index to check
  * 
  * Determine whether a particular index is covered by @coverage
  * 
  * Return value: 
  **/
-PangoCoverageLevel
-pango_coverage_get (PangoCoverage *coverage, int index)
+PangoliteCoverageLevel
+pangolite_coverage_get (PangoliteCoverage *coverage, int index)
 {
   int block_index;
   
@@ -196,16 +196,16 @@ pango_coverage_get (PangoCoverage *coverage, int index)
 }
 
 /**
- * pango_coverage_set:
- * @coverage: a #PangoCoverage
+ * pangolite_coverage_set:
+ * @coverage: a #PangoliteCoverage
  * @index: the index to modify
  * @level: the new level for @index
  * 
  * Modify a particular index within @coverage
  **/
-void pango_coverage_set (PangoCoverage     *coverage,
+void pangolite_coverage_set (PangoliteCoverage     *coverage,
                          int                index,
-                         PangoCoverageLevel level)
+                         PangoliteCoverageLevel level)
 {
   int block_index, i;
   guchar *data;
@@ -221,9 +221,9 @@ void pango_coverage_set (PangoCoverage     *coverage,
     coverage->n_blocks =
       N_BLOCKS_INCREMENT * ((block_index + N_BLOCKS_INCREMENT - 1) / N_BLOCKS_INCREMENT);
     
-    coverage->blocks = g_renew (PangoBlockInfo, coverage->blocks, coverage->n_blocks);
+    coverage->blocks = g_renew (PangoliteBlockInfo, coverage->blocks, coverage->n_blocks);
     memset (coverage->blocks + old_n_blocks, 0,
-            sizeof (PangoBlockInfo) * (coverage->n_blocks - old_n_blocks));
+            sizeof (PangoliteBlockInfo) * (coverage->n_blocks - old_n_blocks));
   }
   
   data = coverage->blocks[block_index].data;
@@ -249,15 +249,15 @@ void pango_coverage_set (PangoCoverage     *coverage,
 }
 
 /**
- * pango_coverage_max:
- * @coverage: a #PangoCoverage
- * @other: another #PangoCoverage
+ * pangolite_coverage_max:
+ * @coverage: a #PangoliteCoverage
+ * @other: another #PangoliteCoverage
  * 
  * Set the coverage for each index in @coverage to be the max (better)
  * value of the current coverage for the index and the coverage for
  * the corresponding index in @other.
  **/
-void pango_coverage_max (PangoCoverage *coverage, PangoCoverage *other)
+void pangolite_coverage_max (PangoliteCoverage *coverage, PangoliteCoverage *other)
 {
   int block_index, i;
   int old_blocks;
@@ -268,7 +268,7 @@ void pango_coverage_max (PangoCoverage *coverage, PangoCoverage *other)
   
   if (other->n_blocks > coverage->n_blocks) {
     coverage->n_blocks = other->n_blocks;
-    coverage->blocks = g_renew (PangoBlockInfo, coverage->blocks, coverage->n_blocks);
+    coverage->blocks = g_renew (PangoliteBlockInfo, coverage->blocks, coverage->n_blocks);
     
     for (block_index = old_blocks; block_index < coverage->n_blocks; 
          block_index++) {
@@ -337,15 +337,15 @@ void pango_coverage_max (PangoCoverage *coverage, PangoCoverage *other)
 #define PANGO_COVERAGE_MAGIC 0xc89dbd5e
 
 /**
- * pango_coverage_to_bytes:
- * @coverage: a #PangoCoverage
+ * pangolite_coverage_to_bytes:
+ * @coverage: a #PangoliteCoverage
  * @bytes: location to store result (must be freed with g_free())
  * @n_bytes: location to store size of result
  * 
- * Convert a PangoCoverage structure into a flat binary format
+ * Convert a PangoliteCoverage structure into a flat binary format
  **/
 void
-pango_coverage_to_bytes(PangoCoverage  *coverage,
+pangolite_coverage_to_bytes(PangoliteCoverage  *coverage,
                         guchar        **bytes,
                         int            *n_bytes)
 {
@@ -406,7 +406,7 @@ pango_coverage_to_bytes(PangoCoverage  *coverage,
 }
 
 static guint32
-pango_coverage_get_uint32 (guchar **ptr)
+pangolite_coverage_get_uint32 (guchar **ptr)
 {
   guint32 val;
   
@@ -417,20 +417,20 @@ pango_coverage_get_uint32 (guchar **ptr)
 }
 
 /**
- * pango_coverage_from_bytes:
- * @bytes: binary data representing a #PangoCoverage
+ * pangolite_coverage_from_bytes:
+ * @bytes: binary data representing a #PangoliteCoverage
  * @n_bytes: the size of @bytes in bytes
  * 
- * Convert data generated from pango_converage_to_bytes() back
- * to a #PangoCoverage
+ * Convert data generated from pangolite_converage_to_bytes() back
+ * to a #PangoliteCoverage
  * 
- * Return value: a newly allocated #PangoCoverage, or NULL if
+ * Return value: a newly allocated #PangoliteCoverage, or NULL if
  *               the data was invalid.
  **/
-PangoCoverage *
-pango_coverage_from_bytes (guchar *bytes, int n_bytes)
+PangoliteCoverage *
+pangolite_coverage_from_bytes (guchar *bytes, int n_bytes)
 {
-  PangoCoverage *coverage = g_new0 (PangoCoverage, 1);
+  PangoliteCoverage *coverage = g_new0 (PangoliteCoverage, 1);
   guchar *ptr = bytes;
   int i;
   
@@ -439,11 +439,11 @@ pango_coverage_from_bytes (guchar *bytes, int n_bytes)
   if (n_bytes < 8)
     goto error;
   
-  if (pango_coverage_get_uint32 (&ptr) != PANGO_COVERAGE_MAGIC)
+  if (pangolite_coverage_get_uint32 (&ptr) != PANGO_COVERAGE_MAGIC)
     goto error;
   
-  coverage->n_blocks = pango_coverage_get_uint32 (&ptr);
-  coverage->blocks = g_new0 (PangoBlockInfo, coverage->n_blocks);
+  coverage->n_blocks = pangolite_coverage_get_uint32 (&ptr);
+  coverage->blocks = g_new0 (PangoliteBlockInfo, coverage->n_blocks);
   
   for (i = 0; i < coverage->n_blocks; i++) {
     guint val;
@@ -451,7 +451,7 @@ pango_coverage_from_bytes (guchar *bytes, int n_bytes)
     if (ptr + 4 > bytes + n_bytes)
       goto error;
     
-    val = pango_coverage_get_uint32 (&ptr);
+    val = pangolite_coverage_get_uint32 (&ptr);
     if (val == (guint32)-1) {
       if (ptr + 64 > bytes + n_bytes)
         goto error;
@@ -468,6 +468,6 @@ pango_coverage_from_bytes (guchar *bytes, int n_bytes)
   
  error:
   
-  pango_coverage_unref (coverage);
+  pangolite_coverage_unref (coverage);
   return NULL;
 }

@@ -94,8 +94,8 @@ public:
   void CleanUp(void);
 
   const char*       GetDefaultFont(const PRUnichar);
-  PangoEngineShape* GetShaper(const PRUnichar *, PRUint32, const char *);  
-  PRInt32           GetCtlData(const PRUnichar*, PRUint32, PangoGlyphString*, const char* = (const char*)NULL);
+  PangoliteEngineShape* GetShaper(const PRUnichar *, PRUint32, const char *);  
+  PRInt32           GetCtlData(const PRUnichar*, PRUint32, PangoliteGlyphString*, const char* = (const char*)NULL);
   PRInt32           ScriptsByRun(const PRUnichar*, PRInt32, textRunList*);
 };
 #endif /* !nsULE_H */
