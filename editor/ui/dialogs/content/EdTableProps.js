@@ -1025,7 +1025,7 @@ function ApplyTableAttributes()
   }
 
   var countDelta;
-  var foundcell;
+  var foundCell;
   var i;
 
   if (gNewRowCount != gRowCount)
