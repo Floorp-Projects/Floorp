@@ -79,6 +79,9 @@ BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 LLIBS   = \
     $(LIBNSPR) \
     $(DIST)\lib\xpcom.lib \
+    $(DIST)\lib\js3250.lib        \
+    $(DIST)\lib\jsdombase_s.lib   \
+    $(DIST)\lib\jsdomevents_s.lib   \
     $(NULL)
 
 #//------------------------------------------------------------------------
