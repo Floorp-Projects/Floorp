@@ -50,13 +50,18 @@ public:
    */
   NS_IMETHOD_(PRUint32) Count(void) const = 0;
 
-  /** AddItem will take an ISupports and keep track of it 
-   *  @param aItem is the Item to be added WILL BE ADDREFFED
+  /**
+   * AppendElement will take an ISupports and keep track of it 
+   * @param aItem is the Item to be added WILL BE ADDREFFED
+   * @return NS_OK if successfully added
+   * @return NS_ERROR_FAILURE otherwise
    */
   NS_IMETHOD AppendElement(nsISupports *aItem) = 0;
 
-  /** RemoveItem will take an nsISupports and remove it from the collection
-   *  @param aItem is the item to be removed  WILL BE RELEASED
+  /** RemoveElement will take an nsISupports and remove it from the collection
+   * @param aItem is the item to be removed  WILL BE RELEASED
+   * @return NS_OK if successfully added
+   * @return NS_ERROR_FAILURE otherwise
    */
   NS_IMETHOD RemoveElement(nsISupports *aItem) = 0;
 

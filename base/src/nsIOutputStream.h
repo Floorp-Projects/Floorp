@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #ifndef nsIOutputStream_h___
 #define nsIOutputStream_h___
 
@@ -32,8 +33,8 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_IOUTPUTSTREAM_IID; return iid; }
 
     /** Write data into the stream.
-     *  @param aBuf the buffer into which the data is read
-     *  @param aCount the maximum number of bytes to read
+     *  @param aBuf the buffer from which the data is read
+     *  @param aCount the maximum number of bytes to write
      *  @param aWriteCount out parameter to hold the number of
      *         bytes written. if an error occurs, the writecount
      *         is undefined
