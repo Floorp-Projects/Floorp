@@ -68,7 +68,6 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  mimetype \
 		  uriloader \
-		  dom \
 		  necko \
 		  rdf \
 		  webshell \
@@ -76,7 +75,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  intl \
 		  uconv \
-		  windowwatcher \
 		  docshell \
 		  $(NULL)
 
