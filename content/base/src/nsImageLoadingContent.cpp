@@ -39,7 +39,6 @@
 #include "nsImageLoadingContent.h"
 #include "nsContentErrors.h"
 #include "nsIContent.h"
-#include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIScriptGlobalObject.h"

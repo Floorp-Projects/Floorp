@@ -60,7 +60,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
-#include "nsIHTMLContent.h"
 #include "nsISupportsArray.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"

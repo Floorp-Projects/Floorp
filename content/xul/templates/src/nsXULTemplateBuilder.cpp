@@ -74,7 +74,6 @@
 #include "nsIDocument.h"
 #include "nsIBindingManager.h"
 #include "nsIDOMNodeList.h"
-#include "nsIHTMLContent.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"

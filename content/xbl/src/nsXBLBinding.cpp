@@ -59,9 +59,7 @@
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIXMLContent.h"
 #ifdef MOZ_XUL
-#include "nsIXULContent.h"
 #include "nsIXULDocument.h"
 #endif
 #include "nsIXMLContentSink.h"

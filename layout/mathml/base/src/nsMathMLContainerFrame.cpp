@@ -23,7 +23,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"

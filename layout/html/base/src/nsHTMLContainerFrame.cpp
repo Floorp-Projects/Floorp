@@ -51,7 +51,6 @@
 #include "nsIDocument.h"
 #include "nsIURL.h"
 #include "nsPlaceholderFrame.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"

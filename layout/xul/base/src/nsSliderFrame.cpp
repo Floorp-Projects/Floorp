@@ -67,7 +67,6 @@
 #include "nsIScrollbarMediator.h"
 #include "nsIScrollbarFrame.h"
 #include "nsISupportsArray.h"
-#include "nsIXMLContent.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsIScrollableView.h"

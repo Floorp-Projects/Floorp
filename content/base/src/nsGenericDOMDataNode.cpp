@@ -58,15 +58,6 @@
 #include "pldhash.h"
 #include "prprf.h"
 
-// static
-void
-nsGenericDOMDataNode::Shutdown()
-{
-}
-
-
-//----------------------------------------------------------------------
-
 nsGenericDOMDataNode::nsGenericDOMDataNode()
   : mText()
 {

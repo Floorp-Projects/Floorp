@@ -45,7 +45,6 @@
 #include "nsISelection.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
-#include "nsIHTMLContent.h"
 #include "nsIURI.h"
 #include "nsINodeInfo.h"
 
@@ -106,7 +105,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsINodeInfo.h"
 #include "nsIDocument.h"
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLContent.h"
 #include "nsIWebShell.h"
 
 // Focus

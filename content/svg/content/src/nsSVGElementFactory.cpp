@@ -122,33 +122,26 @@ nsSVGElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
   
   if (name == nsSVGAtoms::polyline)
     return NS_NewSVGPolylineElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::polygon)
+  if (name == nsSVGAtoms::polygon)
     return NS_NewSVGPolygonElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::circle)
+  if (name == nsSVGAtoms::circle)
     return NS_NewSVGCircleElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::ellipse)
+  if (name == nsSVGAtoms::ellipse)
     return NS_NewSVGEllipseElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::line)
+  if (name == nsSVGAtoms::line)
     return NS_NewSVGLineElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::rect)
+  if (name == nsSVGAtoms::rect)
     return NS_NewSVGRectElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::svg)
+  if (name == nsSVGAtoms::svg)
     return NS_NewSVGSVGElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::g)
+  if (name == nsSVGAtoms::g)
     return NS_NewSVGGElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::foreignObject)
+  if (name == nsSVGAtoms::foreignObject)
     return NS_NewSVGForeignObjectElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::path)
+  if (name == nsSVGAtoms::path)
     return NS_NewSVGPathElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
-  nsCOMPtr<nsIContent> xmlContent;
-  nsresult rv;
-  rv = NS_NewXMLElement(getter_AddRefs(xmlContent), aNodeInfo);
-  
-  *aResult = xmlContent;
-  NS_IF_ADDREF(*aResult);
-  
-  return rv;
+  return NS_NewXMLElement(aResult, aNodeInfo);
 }
 

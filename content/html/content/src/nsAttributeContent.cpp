@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsGenericElement.h"
 #include "nsIDocument.h"
-#include "nsIDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"

@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
 #include "nsFrame.h"
 #include "nsLineLayout.h"
 #include "nsIPresContext.h"

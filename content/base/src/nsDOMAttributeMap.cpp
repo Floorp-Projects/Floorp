@@ -233,7 +233,7 @@ nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
                                            &nameSpaceID,
                                            getter_AddRefs(nameAtom),
                                            getter_AddRefs(prefix)))) {
-    nsAutoString value, name;
+    nsAutoString value;
     mContent->GetAttr(nameSpaceID, nameAtom, value);
 
     nsINodeInfo *contentNi = mContent->GetNodeInfo();

@@ -41,7 +41,6 @@
 #include "nsIPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIContent.h"
 #include "nsTableFrame.h"

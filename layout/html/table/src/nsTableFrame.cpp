@@ -50,7 +50,7 @@
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsTableOuterFrame.h"
-#include "nsIHTMLContent.h"
+#include "nsHTMLValue.h"
 
 #include "BasicTableLayoutStrategy.h"
 #include "FixedTableLayoutStrategy.h"

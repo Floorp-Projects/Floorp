@@ -245,8 +245,6 @@ public:
   void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 #endif
 
-  static void Shutdown();
-
 protected:
   nsTextFragment mText;
 

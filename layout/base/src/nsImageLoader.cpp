@@ -37,8 +37,6 @@
 
 #include "imgIContainer.h"
 
-#include "nsIHTMLContent.h"
-
 #include "nsIViewManager.h"
 
 #include "nsStyleContext.h"

@@ -46,7 +46,6 @@
 #include "nsIImage.h"
 #include "nsIWidget.h"
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsStyleContext.h"

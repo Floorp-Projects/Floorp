@@ -54,7 +54,6 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLContent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"

@@ -62,6 +62,7 @@ class nsIXULPrototypeDocument;
 class nsIXULTemplateBuilder;
 class nsIURI;
 class nsIContent;
+class nsIRDFDataSource;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IXULDOCUMENT_IID \
@@ -70,9 +71,6 @@ class nsIContent;
 /**
  * XUL extensions to nsIDocument
  */
-
-class nsIRDFDataSource;
-class nsIXULPrototypeDocument;
 
 class nsIXULDocument : public nsISupports
 {
