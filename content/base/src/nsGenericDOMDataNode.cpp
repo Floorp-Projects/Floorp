@@ -211,6 +211,43 @@ nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   }
 }
 
+nsresult
+nsGenericDOMDataNode::GetNamespaceURI(nsString& aNamespaceURI)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::GetPrefix(nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::SetPrefix(const nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_DOM_NAMESPACE_ERR;
+}
+
+nsresult
+nsGenericDOMDataNode::Normalize()
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::Supports(const nsString& aFeature,
+                               const nsString& aVersion,
+                               PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #if 0
 nsresult
 nsGenericDOMDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)

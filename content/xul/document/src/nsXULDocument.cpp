@@ -3134,6 +3134,38 @@ nsXULDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 
 
 NS_IMETHODIMP
+nsXULDocument::GetNamespaceURI(nsString& aNamespaceURI)
+{ 
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULDocument::GetPrefix(nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULDocument::SetPrefix(const nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULDocument::GetLocalName(nsString& aLocalName)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return GetNodeName(aLocalName);
+}
+
+
+NS_IMETHODIMP
 nsXULDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
     NS_NOTREACHED("nsXULDocument::InsertBefore");
@@ -3171,6 +3203,23 @@ nsXULDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     // We don't allow cloning of a document
     *aReturn = nsnull;
     return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULDocument::Normalize()
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULDocument::Supports(const nsString& aFeature, const nsString& aVersion,
+                        PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

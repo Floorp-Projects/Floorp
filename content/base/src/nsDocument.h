@@ -355,24 +355,7 @@ public:
   NS_IMETHOD    GetHeight(PRInt32* aHeight);
                      
   // nsIDOMNode interface
-  NS_IMETHOD    GetNodeName(nsString& aNodeName);
-  NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
-  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);
-  NS_IMETHOD    GetNodeType(PRUint16* aNodeType);
-  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);
-  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_IMETHOD    HasChildNodes(PRBool* aHasChildNodes);
-  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild);
-  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);
-  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
-  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);
-  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
-  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
-  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
-  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
-  NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+  NS_DECL_IDOMNODE
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);

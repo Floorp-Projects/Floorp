@@ -91,6 +91,13 @@ public:
   NS_IMETHOD    HasChildNodes(PRBool* aReturn)
     { return mInner.HasChildNodes(aReturn); }
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+  NS_IMETHOD    GetPrefix(nsString& aPrefix);
+  NS_IMETHOD    SetPrefix(const nsString& aPrefix);
+  NS_IMETHOD    GetNamespaceURI(nsString& aNamespaceURI);
+  NS_IMETHOD    GetLocalName(nsString& aLocalName);
+  NS_IMETHOD    Normalize();
+  NS_IMETHOD    Supports(const nsString& aFeature, const nsString& aVersion,
+                         PRBool* aReturn);
 
   // interface nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -335,6 +342,35 @@ nsDocumentFragment::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   }
 }
 
+NS_IMETHODIMP
+nsDocumentFragment::GetNamespaceURI(nsString& aNamespaceURI)
+{ 
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::GetPrefix(nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  aPrefix.Truncate();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::SetPrefix(const nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::GetLocalName(nsString& aLocalName)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return GetNodeName(aLocalName);
+}
 
 NS_IMETHODIMP    
 nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
@@ -346,6 +382,22 @@ nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
 //XXX  mInner.CopyInnerTo(this, &it->mInner);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::Normalize()
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsDocumentFragment::Supports(const nsString& aFeature, const nsString& aVersion,
+                             PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 

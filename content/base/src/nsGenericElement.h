@@ -136,6 +136,8 @@ public:
   nsresult    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
   nsresult    GetNextSibling(nsIDOMNode** aNextSibling);
   nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
+  nsresult    GetLocalName(nsString& aLocalName);
+  nsresult    Normalize();
 
   // Implementation for nsIDOMElement
   nsresult    GetTagName(nsString& aTagName);
@@ -148,7 +150,6 @@ public:
   nsresult    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
   nsresult    GetElementsByTagName(const nsString& aTagname,
                                    nsIDOMNodeList** aReturn);
-  nsresult    Normalize();
 
   // nsIScriptObjectOwner interface
   nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -343,6 +344,9 @@ public:
  *
  * Note that classes using this macro will need to implement:
  *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+ * Note:
+ * GetNamespaceURI, GetPrefix, SetPrefix, Normalize and Supports must be
+ * implemented in a super class of this one.
  */
 #define NS_IMPL_IDOMNODE_USING_GENERIC(_g)                              \
   NS_IMETHOD GetNodeName(nsString& aNodeName) {                         \
@@ -381,6 +385,18 @@ public:
   NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes) {          \
     return _g.GetAttributes(aAttributes);                               \
   }                                                                     \
+  NS_IMETHOD GetNamespaceURI(nsString& aNamespaceURI) {                 \
+    return _g.GetNamespaceURI(aNamespaceURI);                           \
+  }                                                                     \
+  NS_IMETHOD GetPrefix(nsString& aPrefix) {                             \
+    return _g.GetPrefix(aPrefix);                                       \
+  }                                                                     \
+  NS_IMETHOD SetPrefix(const nsString& aPrefix) {                       \
+    return _g.SetPrefix(aPrefix);                                       \
+  }                                                                     \
+  NS_IMETHOD GetLocalName(nsString& aLocalName) {                       \
+    return _g.GetLocalName(aLocalName);                                 \
+  }                                                                     \
   NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, \
                              nsIDOMNode** aReturn) {                    \
     return _g.InsertBefore(aNewChild, aRefChild, aReturn);              \
@@ -398,7 +414,14 @@ public:
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {        \
     return _g.GetOwnerDocument(aOwnerDocument);                         \
   }                                                                     \
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);             \
+  NS_IMETHOD Normalize() {                                              \
+    return _g.Normalize();                                              \
+  }                                                                     \
+  NS_IMETHOD Supports(const nsString& aFeature,                         \
+                      const nsString& aVersion, PRBool* aReturn) {      \
+    return _g.Supports(aFeature, aVersion, aReturn);                    \
+  }
 
 /**
  * Implement the nsIDOMElement API by forwarding the methods to a
@@ -431,9 +454,6 @@ public:
   NS_IMETHOD GetElementsByTagName(const nsString& aTagname,                   \
                                   nsIDOMNodeList** aReturn) {                 \
     return _g.GetElementsByTagName(aTagname, aReturn);                        \
-  }                                                                           \
-  NS_IMETHOD Normalize() {                                                    \
-    return _g.Normalize();                                                    \
   }
 
 /**

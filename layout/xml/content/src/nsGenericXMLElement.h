@@ -39,6 +39,13 @@ public:
                        nsGenericXMLElement* aDest,
                        PRBool aDeep);
 
+  nsresult GetNamespaceURI(nsString& aNamespaceURI);
+  nsresult GetPrefix(nsString& aPrefix);
+  nsresult SetPrefix(const nsString& aPrefix);
+  nsresult GetLocalName(nsString& aLocalName);
+  nsresult Supports(const nsString& aFeature, const nsString& aVersion,
+                    PRBool* aReturn);
+
   // Implementation for nsIDOMElement
   nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
   {
@@ -82,8 +89,6 @@ public:
   // nsIScriptObjectOwner
   nsresult GetScriptObject(nsIScriptContext* aContext, 
                            void** aScriptObject);
-
-
 
   nsINameSpace* mNameSpace;
   nsIAtom* mNameSpacePrefix;

@@ -78,6 +78,13 @@ public:
 
   NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument)=0;
 
+  NS_IMETHOD    GetNamespaceURI(nsString& aNamespaceURI)=0;
+
+  NS_IMETHOD    GetPrefix(nsString& aPrefix)=0;
+  NS_IMETHOD    SetPrefix(const nsString& aPrefix)=0;
+
+  NS_IMETHOD    GetLocalName(nsString& aLocalName)=0;
+
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)=0;
 
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)=0;
@@ -89,6 +96,10 @@ public:
   NS_IMETHOD    HasChildNodes(PRBool* aReturn)=0;
 
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    Normalize()=0;
+
+  NS_IMETHOD    Supports(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn)=0;
 };
 
 
@@ -105,12 +116,18 @@ public:
   NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);  \
   NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);  \
   NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);  \
+  NS_IMETHOD    GetNamespaceURI(nsString& aNamespaceURI);  \
+  NS_IMETHOD    GetPrefix(nsString& aPrefix);  \
+  NS_IMETHOD    SetPrefix(const nsString& aPrefix);  \
+  NS_IMETHOD    GetLocalName(nsString& aLocalName);  \
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    HasChildNodes(PRBool* aReturn);  \
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    Normalize();  \
+  NS_IMETHOD    Supports(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn);  \
 
 
 
@@ -127,12 +144,18 @@ public:
   NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling) { return _to GetNextSibling(aNextSibling); } \
   NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes) { return _to GetAttributes(aAttributes); } \
   NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument) { return _to GetOwnerDocument(aOwnerDocument); } \
+  NS_IMETHOD    GetNamespaceURI(nsString& aNamespaceURI) { return _to GetNamespaceURI(aNamespaceURI); } \
+  NS_IMETHOD    GetPrefix(nsString& aPrefix) { return _to GetPrefix(aPrefix); } \
+  NS_IMETHOD    SetPrefix(const nsString& aPrefix) { return _to SetPrefix(aPrefix); } \
+  NS_IMETHOD    GetLocalName(nsString& aLocalName) { return _to GetLocalName(aLocalName); } \
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn) { return _to InsertBefore(aNewChild, aRefChild, aReturn); }  \
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to ReplaceChild(aNewChild, aOldChild, aReturn); }  \
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to RemoveChild(aOldChild, aReturn); }  \
   NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) { return _to AppendChild(aNewChild, aReturn); }  \
   NS_IMETHOD    HasChildNodes(PRBool* aReturn) { return _to HasChildNodes(aReturn); }  \
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn) { return _to CloneNode(aDeep, aReturn); }  \
+  NS_IMETHOD    Normalize() { return _to Normalize(); }  \
+  NS_IMETHOD    Supports(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn) { return _to Supports(aFeature, aVersion, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype);

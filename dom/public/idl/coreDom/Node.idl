@@ -27,6 +27,7 @@
    readonly attribute  Node                 previousSibling;
    readonly attribute  Node                 nextSibling;
    readonly attribute  NamedNodeMap         attributes;
+   // Modified in DOM Level 2:
    readonly attribute  Document             ownerDocument;
    Node                      insertBefore(in Node newChild, 
                                           in Node refChild)
@@ -40,7 +41,20 @@
                                          raises(DOMException);
    boolean                   hasChildNodes();
    Node                      cloneNode(in boolean deep);
- };
+   // Introduced in DOM Level 2:
+   void                      normalize();
+   // Introduced in DOM Level 2:
+   boolean                   supports(in DOMString feature, 
+                                      in DOMString version);
+   // Introduced in DOM Level 2:
+   readonly attribute DOMString        namespaceURI;
+   // Introduced in DOM Level 2:
+            attribute DOMString        prefix;
+                                         // raises(DOMException) on setting
+
+   // Introduced in DOM Level 2:
+   readonly attribute DOMString        localName;
+};
 
  interface EventTarget {
  /* IID: { 0x1c773b30, 0xd1cf, 0x11d2, \

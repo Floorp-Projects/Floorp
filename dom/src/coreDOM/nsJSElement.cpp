@@ -469,41 +469,6 @@ ElementGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 }
 
 
-//
-// Native method Normalize
-//
-PR_STATIC_CALLBACK(JSBool)
-ElementNormalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *nativeThis = (nsIDOMElement*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ELEMENT_NORMALIZE, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->Normalize();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
 /***********************************************************************/
 //
 // class for Element
@@ -546,7 +511,6 @@ static JSFunctionSpec ElementMethods[] =
   {"setAttributeNode",          ElementSetAttributeNode,     1},
   {"removeAttributeNode",          ElementRemoveAttributeNode,     1},
   {"getElementsByTagName",          ElementGetElementsByTagName,     1},
-  {"normalize",          ElementNormalize,     0},
   {0}
 };
 

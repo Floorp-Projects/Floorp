@@ -364,11 +364,17 @@ public:
     NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);
     NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
     NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
+    NS_IMETHOD    GetNamespaceURI(nsString& aNamespaceURI);
+    NS_IMETHOD    GetPrefix(nsString& aPrefix);
+    NS_IMETHOD    SetPrefix(const nsString& aPrefix);
+    NS_IMETHOD    GetLocalName(nsString& aLocalName);
     NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
     NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
     NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
     NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
     NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+    NS_IMETHOD    Normalize();
+    NS_IMETHOD    Supports(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn);
 
     // nsIJSScriptObject interface
     virtual PRBool AddProperty(JSContext *aContext, JSObject *aObj, 

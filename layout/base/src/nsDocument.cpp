@@ -2150,7 +2150,11 @@ nsDocument::GetPixelDimensions(nsIPresShell* aShell,
 NS_IMETHODIMP    
 nsDocument::GetWidth(PRInt32* aWidth)
 {
-  nsresult result;
+  NS_ENSURE_ARG_POINTER(aWidth);
+
+  *aWidth = 0;
+
+  nsresult result = NS_OK;
   nsCOMPtr<nsIPresShell> shell;
 
   // We make the assumption that the first presentation shell
@@ -2311,6 +2315,34 @@ nsDocument::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
   *aAttributes = nsnull;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetNamespaceURI(nsString& aNamespaceURI)
+{ 
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetPrefix(nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::SetPrefix(const nsString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetLocalName(nsString& aLocalName)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
@@ -2522,6 +2554,20 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocument::Normalize()
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::Supports(const nsString& aFeature, const nsString& aVersion,
+                     PRBool* aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP    
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)

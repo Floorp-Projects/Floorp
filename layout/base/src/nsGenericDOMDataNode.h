@@ -118,6 +118,12 @@ struct nsGenericDOMDataNode {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
   nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
+  nsresult    GetNamespaceURI(nsString& aNamespaceURI);
+  nsresult    GetPrefix(nsString& aPrefix);
+  nsresult    SetPrefix(const nsString& aPrefix);
+  nsresult    Normalize();
+  nsresult    Supports(const nsString& aFeature, const nsString& aVersion,
+                       PRBool* aReturn);
 
   // Implementation for nsIDOMCharacterData
   nsresult    GetData(nsString& aData);
@@ -273,6 +279,9 @@ struct nsGenericDOMDataNode {
  */
 #define NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(_g)                     \
   NS_IMETHOD GetNodeName(nsString& aNodeName);                          \
+  NS_IMETHOD GetLocalName(nsString& aLocalName) {                       \
+    return GetNodeName(aLocalName);                                     \
+  }                                                                     \
   NS_IMETHOD GetNodeValue(nsString& aNodeValue) {                       \
     return _g.GetNodeValue(aNodeValue);                                 \
   }                                                                     \
@@ -320,6 +329,22 @@ struct nsGenericDOMDataNode {
   }                                                                     \
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {        \
     return _g.GetOwnerDocument(aOwnerDocument);                         \
+  }                                                                     \
+  NS_IMETHOD GetNamespaceURI(nsString& aNamespaceURI) {                 \
+    return _g.GetNamespaceURI(aNamespaceURI);                           \
+  }                                                                     \
+  NS_IMETHOD GetPrefix(nsString& aPrefix) {                             \
+    return _g.GetPrefix(aPrefix);                                       \
+  }                                                                     \
+  NS_IMETHOD SetPrefix(const nsString& aPrefix) {                       \
+    return _g.SetPrefix(aPrefix);                                       \
+  }                                                                     \
+  NS_IMETHOD Normalize() {                                              \
+    return NS_OK;                                                       \
+  }                                                                     \
+  NS_IMETHOD Supports(const nsString& aFeature, const nsString& aVersion,\
+                      PRBool* aReturn) {                                \
+    return _g.Supports(aFeature, aVersion, aReturn);                    \
   }                                                                     \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 

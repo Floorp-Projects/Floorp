@@ -1348,6 +1348,30 @@ nsHTMLDocument::GetNodeType(PRUint16* aNodeType)
   return nsDocument::GetNodeType(aNodeType); 
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::GetNamespaceURI(nsString& aNamespaceURI)
+{ 
+  return nsDocument::GetNamespaceURI(aNamespaceURI);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetPrefix(nsString& aPrefix)
+{
+  return nsDocument::GetPrefix(aPrefix);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetPrefix(const nsString& aPrefix)
+{
+  return nsDocument::SetPrefix(aPrefix);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetLocalName(nsString& aLocalName)
+{
+  return nsDocument::GetLocalName(aLocalName);
+}
+
 NS_IMETHODIMP    
 nsHTMLDocument::GetParentNode(nsIDOMNode** aParentNode)
 { 
@@ -1382,6 +1406,19 @@ NS_IMETHODIMP
 nsHTMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 { 
   return nsDocument::CloneNode(aDeep, aReturn);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::Normalize()
+{
+  return nsDocument::Normalize();
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::Supports(const nsString& aFeature, const nsString& aVersion,
+                        PRBool* aReturn)
+{
+  return nsDocument::Supports(aFeature, aVersion, aReturn);
 }
 
 
