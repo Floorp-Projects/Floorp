@@ -1524,6 +1524,8 @@ function UpdatePageProxyState()
 
 function SetPageProxyState(aState, aURI)
 {
+  if (!gURLBar)
+    return;
   if (!gProxyButton)
     gProxyButton = document.getElementById("page-proxy-button");
   if (!gProxyFavIcon)
@@ -1556,6 +1558,8 @@ function SetPageProxyState(aState, aURI)
 
 function PageProxyDragGesture(aEvent)
 {
+  if (!gURLBar)
+    return;
   if (gProxyButton.getAttribute("pageproxystate") == "valid") {
     nsDragAndDrop.startDrag(aEvent, proxyIconDNDObserver);
     return true;
