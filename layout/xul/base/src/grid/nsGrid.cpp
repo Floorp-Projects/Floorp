@@ -1365,13 +1365,18 @@ nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aCo
   if (mNeedsRebuild || mMarkingDirty)
     return;
 
+  NeedsRebuild(aState);
+
+  // This code does not work with trees when rows are
+  // dynamically inserted, the cache values are invalid.
+  /*
   mMarkingDirty = PR_TRUE;
 
   // index out of range. Rebuild it all
   if (aRowIndex >= GetRowCount(aIsHorizontal) || aColumnIndex >= GetColumnCount(aIsHorizontal))
   {
-     NeedsRebuild(aState);
-     return;
+    NeedsRebuild(aState);
+    return;
   }
 
   // dirty our 2 outer nsGridRows. (one for columns and one for rows)
@@ -1395,6 +1400,7 @@ nsGrid::RowChildIsDirty(nsBoxLayoutState& aState, PRInt32 aRowIndex, PRInt32 aCo
 
 
   mMarkingDirty = PR_FALSE;
+  */
 }
 
 /**
