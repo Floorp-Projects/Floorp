@@ -209,7 +209,7 @@
                             <label for="uri-field" value="&newevent.uri.label;"/>
                         </hbox>
                         <hbox>
-                          <textbox id="uri-field" type="autocomplete" searchSessions="history" timeout="50" flex="1"/>
+                          <textbox id="uri-field" type="autocomplete" searchSessions="history" flex="1"/>
                           <button label="&newevent.uri.visit.label;" oncommand="launchBrowser()"/>
                         </hbox>
                      </row>
@@ -242,7 +242,7 @@
                            <hbox id="alarm-box-email" align="center">
                                <spacer width="15"/>
                                <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
-                               <textbox id="alarm-email-field" size="39" value="" />
+                               <textbox type="autocomplete" searchSessions="addrbook" id="alarm-email-field" size="39" value="" />
                            </hbox>       
                         </vbox>
                      </row>
