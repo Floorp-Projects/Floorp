@@ -313,3 +313,12 @@ function WalletDialog( which )
       break;
   }
 }
+
+function toImport()
+{
+	window.openDialog( 	"chrome://messenger/content/importDialog.xul", 
+						"importDialog", 
+						"chrome, modal", 
+						{importType: "addressbook"});
+}
+
