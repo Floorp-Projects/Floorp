@@ -78,7 +78,7 @@ function downloadCompleted(aDownload)
     
     rdfc.Init(db, rdf.GetResource("NC:DownloadsRoot"));
 
-    var id = aDownload.target.persistentDescriptor;
+    var id = aDownload.target.path;
     var dlRes = rdf.GetUnicodeResource(id);
   
     var insertIndex = gDownloadManager.activeDownloadCount + 1;
