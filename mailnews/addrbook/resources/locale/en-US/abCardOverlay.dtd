@@ -44,8 +44,8 @@ Rights Reserved.
 		<!ENTITY HomeAddress.label		"Address:"> 
 		<!ENTITY HomeAddress2.label		""> 
 		<!ENTITY HomeCity.label			"City:"> 
-		<!ENTITY HomeState.label		"State:"> 
-		<!ENTITY HomeZipCode.label		"Zip:"> 
+		<!ENTITY HomeState.label		"State/Province:"> 
+		<!ENTITY HomeZipCode.label		"Zip/Postal Code:"> 
 		<!ENTITY HomeCountry.label		"Country:">
 		<!ENTITY HomeWebPage.label		"Web Page:"> 
 	<!ENTITY Work.box				"Work"> 
@@ -55,8 +55,8 @@ Rights Reserved.
 		<!ENTITY WorkAddress.label		"Address:"> 
 		<!ENTITY WorkAddress2.label		""> 
 		<!ENTITY WorkCity.label			"City:"> 
-		<!ENTITY WorkState.label		"State:"> 
-		<!ENTITY WorkZipCode.label		"Zip:"> 
+		<!ENTITY WorkState.label		"State/Province:"> 
+		<!ENTITY WorkZipCode.label		"Zip/Postal Code:"> 
 		<!ENTITY WorkCountry.label		"Country:">
 		<!ENTITY WorkWebPage.label		"Web Page:"> 
 	
