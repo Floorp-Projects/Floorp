@@ -216,7 +216,7 @@ sub GetGroupsByUserId {
 
     while (MoreSQLData()) {
         my $group = {};
-        ($group->{'bug_id'}, $group->{'name'},
+        ($group->{'id'}, $group->{'name'},
          $group->{'description'}, $group->{'isactive'}) = FetchSQLData();
         push(@groups, $group);
     }
