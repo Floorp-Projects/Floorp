@@ -50,30 +50,30 @@
 <!ENTITY prefWindow.category         "Categorie">
 
 <!ENTITY pref.mainbox.label         "Impostazioni Generali" >
-<!ENTITY pref.alarmgoesoff.label "Quando scatta un allarme:">
+<!ENTITY pref.alarmgoesoff.label "Quando scatta un alarme:">
 <!ENTITY pref.playasound  "Emetti un suono" >
 
 <!ENTITY pref.alarmbox.label    "Alarmi" >
 <!ENTITY pref.showalarmbox    "Mostra una finestra di alarme" >
-<!ENTITY pref.defaultemail.label "Indirizzo predefinito a cui inviare l'allarme:">
-<!ENTITY pref.defaulttext.label "Testo predefinito per gli allarmi:">
+<!ENTITY pref.defaultemail.label "E-mail predefinita a cui inviare l'alarme:">
+<!ENTITY pref.defaulttext.label "Testo predefinito per gli alarmi:">
 <!ENTITY pref.missedalarms    "Mostra alarmi mancati" >
 <!ENTITY pref.defalarm4events.label "Impostazioni predefinite alarmi per gli eventi:">
-<!ENTITY pref.defalarm4todos.label "Impostazioni predefinite allarmi per gli impegni:">
+<!ENTITY pref.defalarm4todos.label "Impostazioni predefinite alarmi per gli compiti:">
 <!ENTITY pref.alarm.on "Attivato">
 <!ENTITY pref.alarm.off "Disattivato">
-<!ENTITY pref.defalarmlen4events.label "Tempo predefinito prima che un allarme scatti per un evento:">
-<!ENTITY pref.defalarmlen4todos.label "Tempo predefinito prima che un allarme scatti per un impegno:">
+<!ENTITY pref.defalarmlen4events.label "Anticipo predefinito prima che un alarme scatti per un evento:">
+<!ENTITY pref.defalarmlen4todos.label "Anticipo predefinito prima che un alarme scatti per un compito:">
 
 <!ENTITY pref.dateformat.label      "Formato testuale data:" >
 <!ENTITY pref.dateformat.long       "Lungo" >
 <!ENTITY pref.dateformat.short      "Corto"  >
 <!ENTITY pref.dateformat.storeingmt "Salva le date in Universal Time" >
-<!ENTITY pref.defaultlength.label   "Lunghezza predefinita dell'evento:" >
-<!ENTITY pref.defaultsnoozelength.label   "Proponi di rimandare gli allarmi di:" >
+<!ENTITY pref.defaultlength.label   "Durata predefinita dell'evento:" >
+<!ENTITY pref.defaultsnoozelength.label   "Proponi di rimandare gli alarmi di:" >
 
 <!ENTITY pref.weekstarts.label     "Primo giorno della settimana:" >
-<!ENTITY pref.daysoff.label     "Giorno(i) Liberi Ogni Settimana:" >
+<!ENTITY pref.daysoff.label     "Giorno(i) liberi ogni settimana:" >
 
 <!ENTITY pref.numberofweeks.label     "Numero totale predefinito delle settimane:" >
 <!ENTITY pref.numberofweeks.0      "Nessuna" >
@@ -85,7 +85,7 @@
 <!ENTITY pref.numberofweeks.6      "6 Settimane" >
 <!ENTITY pref.numberofpreviousweeks.label     "Numero delle settimane precedenti:" >
 
-<!ENTITY pref.hour.help.description    "Sovrascrivi se gli eventi sono fuori da questi orari" >
+<!ENTITY pref.hour.help.description    "Nascondi gli eventi fuori da questo intervallo" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
 <!ENTITY pref.hour.02    "02:00" >

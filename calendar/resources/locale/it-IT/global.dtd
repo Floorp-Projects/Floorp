@@ -103,8 +103,8 @@
 <!ENTITY time.AM "AM" >
 <!ENTITY time.PM "PM" >
 
-<!ENTITY more.label "PIU" >
-<!ENTITY less.label "MENO" >
+<!ENTITY more.label "ALTRI" >
+<!ENTITY less.label "RIDUCI" >
 
 <!ENTITY add.label     "Aggiungi">
 <!ENTITY edit.label    "Modifica">

@@ -45,7 +45,7 @@
 <!ENTITY event.new.event.key                    "N">
 <!ENTITY event.new.event.accesskey              "E">
 
-<!ENTITY event.new.todo                         "Nuovo Impegno…">
+<!ENTITY event.new.todo                         "Nuovo Compito…">
 <!ENTITY event.new.todo.key                     "T">
 <!ENTITY event.new.todo.accesskey               "I">
 
@@ -64,7 +64,7 @@
 <!ENTITY event.delete.event                     "Elimina Evento(i) Selezionato(i)">
 <!ENTITY event.delete.event.accesskey           "E">
 
-<!ENTITY event.delete.tasks                     "Elimina Impegno(i) Selezionato(i)">
+<!ENTITY event.delete.tasks                     "Elimina Compito(i) Selezionato(i)">
 <!ENTITY event.delete.tasks.accesskey           "I">
 
 <!ENTITY event.mail.event                       "Invia Evento Selezionato via E-mail…">
@@ -134,7 +134,7 @@
 <!ENTITY goNextCmd.label                        "Successivo ">
 <!ENTITY goNextCmd.accesskey                    "S">
 
-<!ENTITY taskMenu.label                         "Impegni ">
+<!ENTITY taskMenu.label                         "Compiti ">
 <!ENTITY taskMenu.accesskey                     "I">
 
 <!ENTITY toolsMenu.label                        "Strumenti ">
@@ -176,8 +176,8 @@
 <!ENTITY aboutCmd.accesskey                     "A">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
-<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY windowMenu.label                       "Finestra">
+<!ENTITY minimizeWindow.label                   "Ridimensiona">
+<!ENTITY zoomWindow.label                       "Ripristina">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Porta Tutto Davanti">

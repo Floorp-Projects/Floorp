@@ -46,9 +46,9 @@
 <!ENTITY alarm.units.hours    "Ore" >
 <!ENTITY alarm.units.days     "Giorni" >
 
-<!ENTITY alarm.units.minutes.singular  "Minuti" >
-<!ENTITY alarm.units.hours.singular    "Ore" >
-<!ENTITY alarm.units.days.singular     "Giorni" >
+<!ENTITY alarm.units.minutes.singular  "Minuto" >
+<!ENTITY alarm.units.hours.singular    "Ora" >
+<!ENTITY alarm.units.days.singular     "Giorno" >
 
 
 <!ENTITY repeat.units.days     "Giorni" >
@@ -77,16 +77,16 @@
 <!ENTITY newevent.startdate.label    "Inizio" >
 <!ENTITY newevent.enddate.label      "Fine" >
 <!ENTITY newevent.end.label          "Fine" >
-<!ENTITY newevent.alldayevent.label  "Questo evento ricorre tutti i giorni." >
+<!ENTITY newevent.alldayevent.label  "Questo evento dura tutto il giorno." >
 <!ENTITY newevent.description.label  "Nota" >
 <!ENTITY newevent.uri.label          "URL" >
 <!ENTITY newevent.uri.visit.label    "Visita URL" >
 <!ENTITY newevent.private.label      "Privato" >
 <!ENTITY newevent.private.note       "Questo evento e' privato." >
-<!ENTITY newevent.alarm.label        "Allarme" >
+<!ENTITY newevent.alarm.label        "Alarme" >
 <!ENTITY newevent.server.label       "File di calendario" >
 <!ENTITY newevent.invite.label       "Invita" >
-<!ENTITY newevent.email.label        "Invia allarme via E-mail a:" >
+<!ENTITY newevent.email.label        "Invia alarme via E-mail a:" >
 <!ENTITY newevent.beforealarm.label  "prima che l'evento inizi" >
 <!ENTITY newevent.beforealarmends.label  "prima che l'evento finisca" >
 <!ENTITY newevent.repeat.label       "Ripeti ogni" >
@@ -95,8 +95,8 @@
 <!ENTITY newevent.numberoftimes.label "Numero di volte" >
 <!ENTITY newevent.category.label      "Categoria" >
 <!ENTITY newevent.exceptions.caption "Eccezioni">
-<!ENTITY newevent.addexceptions.label "Aggiungi eccezzione">
-<!ENTITY newevent.deleteexceptions.label "Elimina eccezzione">
+<!ENTITY newevent.addexceptions.label "Aggiungi eccezione">
+<!ENTITY newevent.deleteexceptions.label "Elimina eccezione">
 <!ENTITY newevent.endtime.warning    "L'ora di inizio e' successiva all'ora di fine.">
 <!ENTITY newevent.enddate.warning    "La data di inizio e' successiva alla data di fine.">
 <!ENTITY newevent.repeatdate.tooltip    "Scegli una data di termine" >
@@ -139,7 +139,7 @@
 <!ENTITY newtodo.completed.label "Completato">
 <!ENTITY newtodo.duedate.label "Data richiesta">
 <!ENTITY newtodo.startdate.label "Data Inizio">
-<!ENTITY newtodo.priority.label "PrioritÃ ">
+<!ENTITY newtodo.priority.label "Priorita' ">
 <!ENTITY newtodo.percentcomplete.label "&#037; completato">
 <!ENTITY newtodo.categories.label "Categorie">
 <!ENTITY newtodo.starttime.warning "La data di inizio e' posteriore alla data richiesta.">
@@ -158,7 +158,7 @@
 
 <!ENTITY event.alarm.checkbox.label "Ricordamelo ancora tra " >
 
-<!ENTITY event.title.alarm         "Allarme" >
+<!ENTITY event.title.alarm         "Alarme" >
 <!ENTITY event.title.new         "Nuovo Evento" >
 <!ENTITY event.title.edit        "Modifica Evento" >
 <!ENTITY event.title.heading        "Alarme Calendario" >
@@ -168,14 +168,14 @@
 <!ENTITY ofthemonth-text       " del mese.">
 
 
-<!ENTITY todo.title.new         "Nuovo Impegno">
-<!ENTITY todo.title.edit        "Modifica Impegno">
+<!ENTITY todo.title.new         "Nuovo Compito">
+<!ENTITY todo.title.edit        "Modifica Compito">
 
 <!ENTITY event.tip.new         "Crea un nuovo evento." >
 <!ENTITY event.tip.edit        "Modifica un evento esistente." >
-<!ENTITY todo.tip.new         "Crea un nuovo impegno." >
-<!ENTITY todo.tip.edit        "Modifica un impegno esistente." >
-<!ENTITY event.tip.alert       "Allarme!" >
+<!ENTITY todo.tip.new         "Crea un nuovo compito." >
+<!ENTITY todo.tip.edit        "Modifica un compito esistente." >
+<!ENTITY event.tip.alert       "Alarme!" >
 
 
 <!ENTITY calendar.flat.topbar.new              "Nuovo Evento" >
@@ -187,21 +187,21 @@
 <!ENTITY calendar.weekview.accesskey           "s" >
 <!ENTITY calendar.flat.topbar.monthview        "Vista Mese" >
 <!ENTITY calendar.monthview.accesskey          "m" >
-<!ENTITY calendar.flat.topbar.multiweekview   "Settimane multiple" >
-<!ENTITY calendar.multiweekview.accesskey     "e" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Vista Settimane Multiple" >
+<!ENTITY calendar.multiweekview.accesskey      "e" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Elimina Evento" >
 <!ENTITY calendar.tools.modify.tooltip         "Modifica Evento" >
 
-<!ENTITY calendar.newtask.button.tooltip          "Crea un Nuovo Impegno" >
+<!ENTITY calendar.newtask.button.tooltip          "Crea un Nuovo Compito" >
 <!ENTITY calendar.newevent.button.tooltip         "Crea evento di Calendario" >
 <!ENTITY calendar.delete.button.tooltip           "Elimina evento selezionato" >
 <!ENTITY calendar.edit.button.tooltip             "Modifica evento selezionato" >
 
-<!ENTITY calendar.unifinder.withalarms.label      "Con Allarmi" >
+<!ENTITY calendar.unifinder.withalarms.label      "Con Alarmi" >
 <!ENTITY calendar.unifinder.todayandfuture.label  "Nascondi eventi passati" >
-<!ENTITY calendar.unifinder.todoitems.label       "Impegni" >
-<!ENTITY calendar.unifinder.hidecompletedtodos.label "Nascondi impegni completati">
+<!ENTITY calendar.unifinder.todoitems.label       "Compiti" >
+<!ENTITY calendar.unifinder.hidecompletedtodos.label "Nascondi compiti completati">
 
 <!ENTITY calendar.calendartab.label "Calendario">
 <!ENTITY calendar.listofcalendarstab.label "Calendari">
@@ -216,10 +216,10 @@
 <!ENTITY calendar.events.filter.month.label "Eventi del mese prossimo">
 <!ENTITY calendar.events.filter.future.label "Tutti gli eventi futuri">
 <!ENTITY calendar.events.filter.current.label "Giorno selezionato">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Eventi nei prossimi 7 Giorni">
+<!ENTITY calendar.events.filter.next14Days.label "Eventi nei prossimi 14 Giorni">
+<!ENTITY calendar.events.filter.next31Days.label "Eventi nei prossimi 31 Giorni">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Eventi in questo Mese Calendario">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Fatto">
 <!ENTITY calendar.unifinder.tree.priority.label      "PrioritÃ ">
@@ -240,7 +240,7 @@
 <!ENTITY calendar.dayview.button.tooltip          "Passa a vista giorno" >
 <!ENTITY calendar.weekview.button.tooltip         "Passa a vista settimana" >
 <!ENTITY calendar.monthview.button.tooltip        "Passa a vista mese" >
-<!ENTITY calendar.multiweekview.button.tooltip        "Passa a vista multisettimana" >
+<!ENTITY calendar.multiweekview.button.tooltip    "Passa a vista settimane multiple" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Giorno successivo" >
 <!ENTITY calendar.prevday.button.tooltip        "Giorno precedente" >
@@ -249,7 +249,7 @@
 <!ENTITY calendar.nextmonth.button.tooltip      "Mese prossimo" >
 <!ENTITY calendar.prevmonth.button.tooltip      "Mese precedente" >
 
-<!ENTITY calendar.newtask.button.label          "Nuovo Impegno" >
+<!ENTITY calendar.newtask.button.label          "Nuovo Compito" >
 <!ENTITY calendar.newevent.button.label         "Nuovo Evento" >
 <!ENTITY calendar.delete.button.label           "Elimina" >
 <!ENTITY calendar.edit.button.label             "Modifica" >
@@ -269,7 +269,7 @@
 <!ENTITY calendar.import.button.tooltip            "Importa: Importa eventi da un file locale." >
 <!ENTITY calendar.export.button.tooltip            "Esporta: Esporta eventi in un file locale." >
 <!ENTITY calendar.subscribe.button.tooltip         "Sottoscrivi: Sottoscrivi un file calendario da una postazione remota." >
-<!ENTITY calendar.publish.button.tooltip            "Pubblica: Plubblica eventi in una postazione remota." >
+<!ENTITY calendar.publish.button.tooltip            "Pubblica: Pubblica eventi in una postazione remota." >
 
 <!ENTITY calendar.import.button.label              "Importa" >
 <!ENTITY calendar.export.button.label              "Esporta" >
@@ -279,10 +279,10 @@
 <!ENTITY calendar.dayview.button.label          "Giorno" >
 <!ENTITY calendar.weekview.button.label         "Settimana" >
 <!ENTITY calendar.monthview.button.label        "Mese" >
-<!ENTITY calendar.multiweekview.button.label        "Settimane multiple" >
+<!ENTITY calendar.multiweekview.button.label    "Settimane Multiple" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Solo Lunedi-Venerdi " >
 <!ENTITY calendar.onlyworkday.checkbox.accesskey  "L" >
-<!ENTITY calendar.displaytodos.checkbox.label   "Mostra Impegni " >
+<!ENTITY calendar.displaytodos.checkbox.label   "Mostra Compiti " >
 <!ENTITY calendar.displaytodos.checkbox.accesskey "I" >
 
 <!ENTITY calendar.menu.options.modify           "Modifica" >
@@ -331,15 +331,15 @@
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Nuovo Evento ">
 <!ENTITY calendar.context.newevent.accesskey          "E">
-<!ENTITY calendar.context.newtodo.label               "Nuovo Impegno ">
+<!ENTITY calendar.context.newtodo.label               "Nuovo Compito ">
 <!ENTITY calendar.context.newtodo.accesskey           "I">
 <!ENTITY calendar.context.modifyevent.label           "Modifica evento selezionato ">
 <!ENTITY calendar.context.modifyevent.accesskey       "E">
-<!ENTITY calendar.context.modifytask.label            "Modifica impegno ">
+<!ENTITY calendar.context.modifytask.label            "Modifica compito ">
 <!ENTITY calendar.context.modifytask.accesskey        "E">
 <!ENTITY calendar.context.deleteevent.label           "Elimina evento selezionato ">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
-<!ENTITY calendar.context.deletetask.label            "Elimina Impegno ">
+<!ENTITY calendar.context.deletetask.label            "Elimina compito ">
 <!ENTITY calendar.context.deletetask.accesskey        "l">
 <!ENTITY calendar.context.cutevent.label              "Taglia ">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
@@ -357,19 +357,19 @@
 <!ENTITY calendar.context.weekview.accesskey          "S">
 <!ENTITY calendar.context.monthview.label             "Passa a Vista Mese ">
 <!ENTITY calendar.context.monthview.accesskey         "M">
-<!ENTITY calendar.context.multiweekview.label        "Passa a Vista Multisettimana ">
-<!ENTITY calendar.context.multiweekview.accesskey    "u">
+<!ENTITY calendar.context.multiweekview.label         "Passa a Vista Settimane Multiple">
+<!ENTITY calendar.context.multiweekview.accesskey     "u">
 <!ENTITY calendar.context.reload.label                "Ricarica ">
 <!ENTITY calendar.context.reload.accesskey            "R">
 <!ENTITY calendar.context.emailevent.label            "Invia e-mail per evento(i) selezionato(i) ">
 <!ENTITY calendar.context.emailevent.accesskey        "m">
-<!ENTITY calendar.context.emailtask.label             "Invia e-mail per impegno ">
+<!ENTITY calendar.context.emailtask.label             "Invia e-mail per compito ">
 <!ENTITY calendar.context.emailtask.accesskey         "m">
 
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Progresso ">
 <!ENTITY calendar.context.progress.accesskey          "P">
-<!ENTITY calendar.context.priority.label              "PrioritÃ  ">
+<!ENTITY calendar.context.priority.label              "Priorita'  ">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
 <!ENTITY percnt "&#037;" ><!--=percent sign-->
@@ -407,9 +407,9 @@
 
 
 <!-- Calendar Alarm Dialog -->
-<!ENTITY calendar.alarm.acknowledge.label           "OK (spegni allarme)" >
+<!ENTITY calendar.alarm.acknowledge.label           "OK (spegni alarme)" >
 <!ENTITY calendar.alarm.editevent.label             "Modifica Evento" >
-<!ENTITY calendar.alarm.acknowledgeall.label        "Accetta tutti gli allarmi" >
+<!ENTITY calendar.alarm.acknowledgeall.label        "Accetta tutti gli alarmi" >
 <!ENTITY calendar.alarm.snooze.label                "Rimanda" >
 
 
@@ -451,7 +451,7 @@
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
                   copied from outlook csv file headers -->
 <!ENTITY calendar.importoutlook.dialog.title "Importazione Outlook CSV" >
-<!ENTITY calendar.importoutlook.mapconcepts.label "Per favore rimappa i seguenti concetti con i equivalenti di Outlook CSV" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Per favore rimappa i seguenti concetti con gli equivalenti di Outlook CSV" >
 <!ENTITY calendar.importoutlook.outlooksubject.label "Soggetto" >
 <!ENTITY calendar.importoutlook.outlookstartdate.label "Data inizio" >
 <!ENTITY calendar.importoutlook.outlookstarttime.label "Ora inizio" >
@@ -473,7 +473,7 @@
 <!ENTITY calendar.print.window.title "Stampa un Calendario">
 <!ENTITY calendar.print.selectoptions.label "Seleziona le tue opzioni seguenti e premi OK per stampare">
 <!ENTITY calendar.print.selectviews.label "Seleziona Vista per stampare">
-<!ENTITY calendar.print.listselected.label "Mosta lista degli eventi selezionati">
+<!ENTITY calendar.print.listselected.label "Mostra lista degli eventi selezionati">
 <!ENTITY calendar.print.onlyitemsstatus.label "Stampa solo voci con questo stato:">
 <!ENTITY calendar.print.onlyitemscategory.label "Stampa solo voci di questa categoria:">
 
