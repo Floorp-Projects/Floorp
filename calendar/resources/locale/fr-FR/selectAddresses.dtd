@@ -46,7 +46,7 @@
 <!ENTITY ab-selectAddressesDialogCcButton.label "Cc ">
 <!ENTITY ab-selectAddressesDialogBccButton.label "Bcc ">
 <!ENTITY ab-selectAddressesDialogRemoveButton.label "Ôter">
-<!ENTITY ab-selectAddressesDialogAddressTo.label "Adresser le message à:">
+<!ENTITY ab-selectAddressesDialogAddressTo.label "Adresser le message à :">
 <!ENTITY ab-selectAddressesDialogPrefixTo.label "À : ">
 <!ENTITY ab-selectAddressesDialogPrefixCc.label "CC : ">
 <!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc : ">

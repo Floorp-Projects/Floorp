@@ -66,8 +66,8 @@
 <!ENTITY pref.defalarmlen4todos.label "Temps de désactivation par défaut d'une alarme avant une tâche :">
 
 <!ENTITY pref.dateformat.label      "Format texte pour la date :" >
-<!ENTITY pref.dateformat.long       "Long " >
-<!ENTITY pref.dateformat.short      "Court "  >
+<!ENTITY pref.dateformat.long       "Long" >
+<!ENTITY pref.dateformat.short      "Court"  >
 <!ENTITY pref.dateformat.storeingmt "Enregistrer les dates en temps universel" >
 <!ENTITY pref.defaultlength.label   "Durée par défaut des événements :" >
 <!ENTITY pref.defaultsnoozelength.label   "Durée par défaut du report d'alarme :" >

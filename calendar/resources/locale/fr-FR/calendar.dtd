@@ -61,14 +61,14 @@
 <!ENTITY repeat.units.months.singular   "Mois" >
 <!ENTITY repeat.units.years.singular    "Année" >
 
-<!ENTITY priority.level.none              "Aucune">
-<!ENTITY priority.level.none.accesskey    "A">
-<!ENTITY priority.level.low               "Basse">
-<!ENTITY priority.level.low.accesskey     "B">
-<!ENTITY priority.level.medium            "Moyenne">
-<!ENTITY priority.level.medium.accesskey  "M">
-<!ENTITY priority.level.high              "Élevée">
-<!ENTITY priority.level.high.accesskey    "v">
+<!ENTITY priority.level.none             "Aucune" >
+<!ENTITY priority.level.none.accesskey   "A" >
+<!ENTITY priority.level.low              "Basse" >
+<!ENTITY priority.level.low.accesskey    "B" >
+<!ENTITY priority.level.medium           "Moyenne" >
+<!ENTITY priority.level.medium.accesskey "M" >
+<!ENTITY priority.level.high             "Élevée" >
+<!ENTITY priority.level.high.accesskey   "v" >
 
 <!ENTITY newevent.title.label        "Titre" >
 <!ENTITY newevent.location.label     "Lieu" >
@@ -153,8 +153,8 @@
 <!ENTITY newtodo.duedate.warning   "La date de début est après la date de fin.">
 <!ENTITY newtodo.repeatstart.warning "La récurrence requiert une date de début.">
 
-<!ENTITY calendar.confirm.deleteevent "Êtes-vous sûr de vouloir supprimer l'événement intitulé : " >
-<!ENTITY calendar.confirm.deleteuntitledevent "Êtes vous sûr de vouloir supprimer cet événement sans titre ?" >
+<!ENTITY calendar.confirm.deleteevent "Voulez-vous vraiment supprimer l'événement intitulé : " >
+<!ENTITY calendar.confirm.deleteuntitledevent "Voulez-vous vraiment supprimer cet événement sans titre ?" >
 
 <!ENTITY event.alarm.checkbox.label "Me rappeler dans " >
 
@@ -264,7 +264,7 @@
 
 <!ENTITY calendar.import.button.tooltip            "Importer : Importer des événements à partir d'un fichier local." >
 <!ENTITY calendar.export.button.tooltip            "Exporter : Exporter événements vers un fichier local." >
-<!ENTITY calendar.subscribe.button.tooltip         "Souscrire : Souscrire � un fichier de calendrier sur une machine distante." >
+<!ENTITY calendar.subscribe.button.tooltip         "Souscrire : Souscrire à un fichier de calendrier sur une machine distante." >
 <!ENTITY calendar.publish.button.tooltip            "Publier : Publier des événements sur une machine distante." >
 
 <!ENTITY calendar.import.button.label              "Importer" >
@@ -415,7 +415,7 @@
 <!ENTITY calendar.server.dialog.publish.label       "Publier automatiquement les modifications ? Pour les calendriers distants, on ira chercher une nouvelle version avant chaque ajout, modification ou suppression d'un événement. Votre action sera effectuée, puis le nouveau fichier sera publié sur le serveur.">
 <!ENTITY calendar.server.dialog.location.label      "Adresse">
 <!ENTITY calendar.server.dialog.local.location.label "Adresse du fichier local">
-<!ENTITY calendar.server.dialog.browse.label        "Parcourir à la recherche du fichier local...">
+<!ENTITY calendar.server.dialog.browse.label        "Parcourir à la recherche du fichier local…">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Vous avez la possibilité de préciser une adresse de fichier où le calendrier devra être créé.">
 <!ENTITY calendar.server.dialog.help.label          "Vous pouvez entrer un chemin local, ou un chemin distant comme http://www.mozilla.org/projects/calendar/caldata/FranceHolidays.ics">
 

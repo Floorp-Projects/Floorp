@@ -61,28 +61,28 @@
 <!ENTITY event.mail.event        "Envoyer le(s) événement(s) par courriel">
 <!ENTITY event.mail.event.accesskey        "m">
 
-<!ENTITY calendar.print.label        "Imprimer le(s) calendrier(s) actif(s)...">
+<!ENTITY calendar.print.label        "Imprimer le(s) calendrier(s) actif(s)…">
 <!ENTITY calendar.print.accesskey        "r">
 
 <!ENTITY calendar.printpreview.label        "Aperçu avant impression">
 <!ENTITY calendar.printpreview.accesskey        "v">
 
-<!ENTITY calendar.pagesetup.label        "Mise en page...">
+<!ENTITY calendar.pagesetup.label        "Mise en page…">
 <!ENTITY calendar.pagesetup.accesskey        "p">
 
-<!ENTITY calendar.import.label        "Importer depuis le fichier...">
+<!ENTITY calendar.import.label        "Importer depuis le fichier…">
 <!ENTITY calendar.import.accesskey        "i">
 
 <!ENTITY calendar.wizard.label        "Lancer l'assistant">
 <!ENTITY calendar.wizard.accesskey        "a">
 
-<!ENTITY calendar.export.label        "Exporter les événements sélectionnés...">
+<!ENTITY calendar.export.label        "Exporter les événements sélectionnés…">
 <!ENTITY calendar.export.accesskey        "e">
 
-<!ENTITY calendar.subscribe.label "Souscrire à un calendrier distant...">
+<!ENTITY calendar.subscribe.label "Souscrire à un calendrier distant…">
 <!ENTITY calendar.subscribe.accesskey "s">
 
-<!ENTITY calendar.publish.label "Publier les événements sélectionnés...">
+<!ENTITY calendar.publish.label "Publier les événements sélectionnés…">
 <!ENTITY calendar.publish.accesskey "p">
 
 <!ENTITY calendar.about.label        "À propos de Calendar">
@@ -100,7 +100,7 @@
 <!ENTITY calendar.selectall.label        "Tout sélectionner">
 <!ENTITY calendar.selectall.accesskey        "t">
 
-<!ENTITY calendar.preferences.label        "Préférences...">
+<!ENTITY calendar.preferences.label        "Préférences…">
 <!ENTITY calendar.preferences.accesskey        "p">
 
 <!ENTITY goMenu.label                   "Aller à">
@@ -148,7 +148,7 @@
 
 <!ENTITY editMenu.label         "Edition">
 <!ENTITY editMenu.accesskey       "E">
-<!ENTITY preferencesCmd.label       "Options...">
+<!ENTITY preferencesCmd.label       "Options…">
 <!ENTITY preferencesCmd.accesskey     "O">
 
 <!ENTITY viewMenu.label         "Affichage">
