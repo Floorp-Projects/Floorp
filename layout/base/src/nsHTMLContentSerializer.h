@@ -84,15 +84,25 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRInt32   mColPos;
   PRBool    mInBody;
   PRUint32  mFlags;
-  
+
   PRBool    mDoFormat;
   PRBool    mDoHeader;
   PRBool    mBodyOnly;
   PRInt32   mPreLevel;
-  PRBool    mInScriptOrStyle;
-  
+
+  /*
+   * mInCDATA is set to PR_TRUE while the serializer is serializing
+   * the content of a element whose content is considerd CDATA by the
+   * serializer (such elements are 'script', 'style', 'noscript' and
+   * possibly others) This doesn't have anything to do with if the
+   * element is defined as CDATA in the DTD, it simply means we'll
+   * output the content of the element without doing any entity encoding
+   * what so ever.
+   */
+  PRBool mInCDATA;
+
   PRInt32   mMaxColumn;
-  
+
   nsString  mLineBreak;
 };
 
