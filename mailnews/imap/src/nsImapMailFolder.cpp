@@ -2481,7 +2481,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxStatus(
 
 NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImapHeaderXferInfo *aHdrXferInfo)
 {
-  PRUint32 numHdrs;
+  PRInt32 numHdrs;
   nsCOMPtr <nsIImapHeaderInfo> headerInfo;
 
   nsresult rv = aHdrXferInfo->GetNumHeaders(&numHdrs);

@@ -49,7 +49,7 @@ interface nsIImapHeaderInfo : nsISupports {
 
 [scriptable, uuid(f0842eda-af29-4ecd-82e1-fba91bd65d66)]
 interface nsIImapHeaderXferInfo : nsISupports {
-  readonly attribute unsigned long numHeaders;
+  readonly attribute long numHeaders;
   nsIImapHeaderInfo  getHeader(in long hdrIndex);
 };
 
