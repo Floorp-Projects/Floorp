@@ -1198,7 +1198,100 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *f[])
 	_PR_MD_MAKE_NONBLOCK(f[0]);
 	_PR_MD_MAKE_NONBLOCK(f[1]);
 	return PR_SUCCESS;
-#else /* XP_UNIX */
+#elif defined(WINNT)
+    /*
+     * A socket pair is often used for interprocess communication,
+     * so we need to make sure neither socket is associated with
+     * the I/O completion port; otherwise it can't be used by a
+     * child process.
+     *
+     * The default implementation below cannot be used for NT
+     * because PR_Accept would have associated the I/O completion
+     * port with the listening and accepted sockets.
+     */
+    SOCKET listenSock;
+    SOCKET osfd[2];
+    struct sockaddr_in selfAddr;
+    int addrLen;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
+    osfd[0] = osfd[1] = INVALID_SOCKET;
+    listenSock = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenSock == INVALID_SOCKET) {
+        goto failed;
+    }
+    selfAddr.sin_family = AF_INET;
+    selfAddr.sin_port = 0;
+    selfAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addrLen = sizeof(selfAddr);
+    if (bind(listenSock, (struct sockaddr *) &selfAddr,
+            addrLen) == SOCKET_ERROR) {
+        goto failed;
+    }
+    if (getsockname(listenSock, (struct sockaddr *) &selfAddr,
+            &addrLen) == SOCKET_ERROR) {
+        goto failed;
+    }
+    if (listen(listenSock, 5) == SOCKET_ERROR) {
+        goto failed;
+    }
+    osfd[0] = socket(AF_INET, SOCK_STREAM, 0);
+    if (osfd[0] == INVALID_SOCKET) {
+        goto failed;
+    }
+    selfAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+    /*
+     * Only a thread is used to do the connect and accept.
+     * I am relying on the fact that connect returns
+     * successfully as soon as the connect request is put
+     * into the listen queue (but before accept is called).
+     * This is the behavior of the BSD socket code.  If
+     * connect does not return until accept is called, we
+     * will need to create another thread to call connect.
+     */
+    if (connect(osfd[0], (struct sockaddr *) &selfAddr,
+            addrLen) == SOCKET_ERROR) {
+        goto failed;
+    }
+    osfd[1] = accept(listenSock, NULL, NULL);
+    if (osfd[1] == INVALID_SOCKET) {
+        goto failed;
+    }
+    closesocket(listenSock);
+
+    f[0] = PR_AllocFileDesc(osfd[0], PR_GetTCPMethods());
+    if (!f[0]) {
+        closesocket(osfd[0]);
+        closesocket(osfd[1]);
+        /* PR_AllocFileDesc() has invoked PR_SetError(). */
+        return PR_FAILURE;
+    }
+    f[1] = PR_AllocFileDesc(osfd[1], PR_GetTCPMethods());
+    if (!f[1]) {
+        PR_Close(f[0]);
+        closesocket(osfd[1]);
+        /* PR_AllocFileDesc() has invoked PR_SetError(). */
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+
+failed:
+    if (listenSock != INVALID_SOCKET) {
+        closesocket(listenSock);
+    }
+    if (osfd[0] != INVALID_SOCKET) {
+        closesocket(osfd[0]);
+    }
+    if (osfd[1] != INVALID_SOCKET) {
+        closesocket(osfd[1]);
+    }
+    return PR_FAILURE;
+#else /* not Unix or NT */
+    /*
+     * default implementation
+     */
     PRFileDesc *listenSock;
     PRNetAddr selfAddr;
     PRUint16 port;
@@ -1253,7 +1346,7 @@ failed:
         PR_Close(f[0]);
     }
     return PR_FAILURE;
-#endif /* XP_UNIX */
+#endif
 }
 
 PR_IMPLEMENT(PRInt32)
