@@ -169,8 +169,20 @@ NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDSURIContentListener::GetParentContentListener(nsIURIContentListener**
+NS_IMETHODIMP nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  *aLoadCookie = mDocShell->mLoadCookie;
+  NS_IF_ADDREF(*aLoadCookie);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDSURIContentListener::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  mDocShell->mLoadCookie = aLoadCookie;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDSURIContentListener::GetParentContentListener(nsIURIContentListener**
    aParentListener)
 {
    *aParentListener = mParentContentListener;
@@ -178,28 +190,12 @@ nsDSURIContentListener::GetParentContentListener(nsIURIContentListener**
    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDSURIContentListener::SetParentContentListener(nsIURIContentListener* 
+NS_IMETHODIMP nsDSURIContentListener::SetParentContentListener(nsIURIContentListener* 
    aParentListener)
 {
    // Weak Reference, don't addref
    mParentContentListener = aParentListener;
    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
-{
-  *aLoadCookie = mDocShell->mLoadCookie;
-  NS_IF_ADDREF(*aLoadCookie);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDSURIContentListener::SetLoadCookie(nsISupports * aLoadCookie)
-{
-  mDocShell->mLoadCookie = aLoadCookie;
-  return NS_OK;
 }
 
 //*****************************************************************************
