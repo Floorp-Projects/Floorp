@@ -182,6 +182,9 @@ protected:
                                      const nsString  &aValue,
                                      nsIDOMSelection *aSelection);
 
+  /** replaces newllines with breaks, if needed.  acts on doc portion in aRange */
+  nsresult ReplaceNewlines(nsIDOMRange *aRange);
+  
   /** creates a bogus text node if the document has no editable content */
   nsresult CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection);
 

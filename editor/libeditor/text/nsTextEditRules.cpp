@@ -37,8 +37,10 @@
 #include "nsLayoutCID.h"
 #include "nsIEditProperty.h"
 #include "nsEditorUtils.h"
+#include "EditTxn.h"
 
-static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
+static NS_DEFINE_CID(kContentIteratorCID,   NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
@@ -82,6 +84,24 @@ nsTextEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   mEditor->GetSelection(getter_AddRefs(selection));
   NS_ASSERTION(selection, "editor cannot get selection");
   nsresult res = CreateBogusNodeIfNeeded(selection);   // this method handles null selection, which should never happen anyway
+
+  // create a range that is the entire body contents
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_FAILED(res)) return res;
+  if (!bodyElement) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+  if (!bodyNode) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMRange> wholeDoc;
+  res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange), 
+                                           getter_AddRefs(wholeDoc));
+  if (NS_FAILED(res)) return res;
+  res = wholeDoc->SelectNode(bodyNode);
+  if (NS_FAILED(res)) return res;
+
+  // replace newlines in that range with breaks
+  res = ReplaceNewlines(wholeDoc);
   return res;
 }
 
@@ -1261,6 +1281,101 @@ nsresult
 nsTextEditRules::DidOutputText(nsIDOMSelection *aSelection, nsresult aResult)
 {
   return NS_OK;
+}
+
+
+nsresult
+nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
+{
+  if (!aRange) return NS_ERROR_NULL_POINTER;
+  
+  // convert any newlines in editable, preformatted text nodes 
+  // into normal breaks.  this is because layout wont give us a place 
+  // to put the cursor on empty lines otherwise.
+
+  nsCOMPtr<nsIContentIterator> iter;
+  nsCOMPtr<nsISupports> isupports;
+  PRUint32 nodeCount,j;
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  
+  // make an isupportsArray to hold a list of nodes
+  nsresult res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
+  if (NS_FAILED(res)) return res;
+
+  // need an iterator
+  res = nsComponentManager::CreateInstance(kContentIteratorCID,
+                                        nsnull,
+                                        NS_GET_IID(nsIContentIterator), 
+                                        getter_AddRefs(iter));
+  if (NS_FAILED(res)) return res;
+  res = iter->Init(aRange);
+  if (NS_FAILED(res)) return res;
+  
+  // gather up a list of editable preformatted text nodes
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  {
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> content;
+    res = iter->CurrentNode(getter_AddRefs(content));
+    if (NS_FAILED(res)) return res;
+    node = do_QueryInterface(content);
+    if (!node) return NS_ERROR_FAILURE;
+    
+    if (mEditor->IsTextNode(node) && mEditor->IsEditable(node))
+    {
+      PRBool isPRE;
+      res = mEditor->IsPreformatted(node, &isPRE);
+      if (NS_FAILED(res)) return res;
+      if (isPRE)
+      {
+        isupports = do_QueryInterface(node);
+        arrayOfNodes->AppendElement(isupports);
+      }
+    }
+    res = iter->Next();
+    if (NS_FAILED(res)) return res;
+  }
+  
+  // replace newlines with breaks.  have to do this left to right,
+  // since inserting the break can split the text node, and the
+  // original node becomes the righthand node.
+  char newlineChar[] = {'\n',0};
+  res = arrayOfNodes->Count(&nodeCount);
+  if (NS_FAILED(res)) return res;
+  for (j = 0; j < nodeCount; j++)
+  {
+    isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    nsCOMPtr<nsIDOMNode> brNode, theNode( do_QueryInterface(isupports) );
+    nsCOMPtr<nsIDOMCharacterData> textNode( do_QueryInterface(theNode) );
+    arrayOfNodes->RemoveElementAt(0);
+    // find the newline
+    PRInt32 offset;
+    nsAutoString tempString;
+    do 
+    {
+      textNode->GetData(tempString);
+      offset = tempString.FindCharInSet(newlineChar);
+      if (offset == -1) break; // done with this node
+      
+      // delete the newline
+      EditTxn *txn;
+      // note 1: we are not telling edit listeners about these because they don't care
+      // note 2: we are not wrapping these in a placeholder because we know they already are,
+      //         or, failing that, undo is disabled
+      res = mEditor->CreateTxnForDeleteText(textNode, offset, 1, (DeleteTextTxn**)&txn);
+      if (NS_FAILED(res))  return res; 
+      if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
+      res = mEditor->Do(txn); 
+      if (NS_FAILED(res))  return res; 
+      // The transaction system (if any) has taken ownwership of txn
+      NS_IF_RELEASE(txn);
+      
+      // insert a break
+      res = mEditor->CreateBR(textNode, offset, &brNode);
+      if (NS_FAILED(res)) return res;
+    } while (1);  // break used to exit while loop
+  }
+  return res;
 }
 
 
