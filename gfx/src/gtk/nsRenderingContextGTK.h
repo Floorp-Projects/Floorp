@@ -42,7 +42,6 @@
 #include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
-#include "nsIFontMetrics.h"
 #include "nsPoint.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -55,11 +54,9 @@
 #include "nsGfxCIID.h"
 #include "nsDrawingSurfaceGTK.h"
 #include "nsRegionGTK.h"
+#include "nsIFontMetricsGTK.h"
 
 #include <gtk/gtk.h>
-
-class nsFontGTK;
-class nsXFont;
 
 class nsRenderingContextGTK : public nsRenderingContextImpl
 {
@@ -174,7 +171,7 @@ public:
   NS_IMETHOD GetTextDimensions(const char* aString, PRUint32 aLength,
                                nsTextDimensions& aDimensions);
   NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
-                               nsTextDimensions& aDimensions, PRInt32 *aFontID);
+                               nsTextDimensions& aDimensions,PRInt32 *aFontID);
   NS_IMETHOD GetTextDimensions(const char*       aString,
                                PRInt32           aLength,
                                PRInt32           aAvailWidth,
@@ -183,7 +180,7 @@ public:
                                nsTextDimensions& aDimensions,
                                PRInt32&          aNumCharsFit,
                                nsTextDimensions& aLastWordDimensions,
-                               PRInt32*          aFontID = nsnull);
+                               PRInt32*          aFontID);
   NS_IMETHOD GetTextDimensions(const PRUnichar*  aString,
                                PRInt32           aLength,
                                PRInt32           aAvailWidth,
@@ -192,7 +189,7 @@ public:
                                nsTextDimensions& aDimensions,
                                PRInt32&          aNumCharsFit,
                                nsTextDimensions& aLastWordDimensions,
-                               PRInt32*          aFontID = nsnull);
+                               PRInt32*          aFontID);
 
   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
@@ -251,20 +248,19 @@ public:
     return gdk_gc_ref(mGC);
   }
 
-  // handle drawing 8 bit data with a 16 bit font
-  static void Widen8To16AndDraw(GdkDrawable *drawable,
-                               nsXFont     *font,
-                               GdkGC       *gc,
-                               gint         x,
-                               gint         y,
-                               const gchar *text,
-                               gint         text_length);
+  // cause the GC to be updated
+  void UpdateGC();
+
+  // Get a pointer to the trans matrix
+  nsTransform2D *GetTranMatrix() {
+    return mTranMatrix;
+  }
 
 private:
   nsDrawingSurfaceGTK   *mOffscreenSurface;
   nsDrawingSurfaceGTK   *mSurface;
   nsIDeviceContext      *mContext;
-  nsIFontMetrics        *mFontMetrics;
+  nsIFontMetricsGTK     *mFontMetrics;
   nsCOMPtr<nsIRegion>    mClipRegion;
   float                  mP2T;
   GdkWChar*              mDrawStringBuf;
@@ -279,10 +275,8 @@ private:
   char                   mDashList[2];
   int                    mDashes;
   nscolor                mCurrentColor;
-  nsFontGTK             *mCurrentFont;
   nsLineStyle            mCurrentLineStyle;
 
-  void UpdateGC();
   // ConditionRect is used to fix coordinate overflow problems for
   // rectangles after they are transformed to screen coordinates
   void ConditionRect(nscoord &x, nscoord &y, nscoord &w, nscoord &h) {

@@ -44,7 +44,6 @@
 #include "nsGfxCIID.h"
 
 #include "nsBlender.h"
-#include "nsFontMetricsGTK.h"
 #include "nsRenderingContextGTK.h"
 #include "nsDeviceContextGTK.h"
 // aka    nsDeviceContextSpecGTK.h
@@ -62,12 +61,18 @@
 #ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
 #endif
+#ifdef MOZ_ENABLE_XFT
+#include "nsFontMetricsXft.h"
+#endif
+#ifdef MOZ_ENABLE_COREXFONTS
+#include "nsFontMetricsGTK.h"
+#endif
+#include "nsFontMetricsUtils.h"
 #include "nsPrintSession.h"
 #include "gfxImageFrame.h"
 
 // objects that just require generic constructors
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRenderingContextGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageGTK)
@@ -75,7 +80,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryGTK)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsGTK)
@@ -85,7 +89,80 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
+
 // our custom constructors
+
+static nsresult
+nsFontMetricsConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsIFontMetrics *result;
+
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+#ifdef MOZ_ENABLE_XFT
+  if (NS_IsXftEnabled()) {
+    result = new nsFontMetricsXft();
+    if (!result)
+      return NS_ERROR_OUT_OF_MEMORY;
+  } else {
+#endif
+#ifdef MOZ_ENABLE_COREXFONTS
+    result = new nsFontMetricsGTK();
+    if (!result)
+      return NS_ERROR_OUT_OF_MEMORY;
+#endif
+#ifdef MOZ_ENABLE_XFT
+  }
+#endif
+
+  NS_ADDREF(result);
+  nsresult rv = result->QueryInterface(aIID, aResult);
+  NS_RELEASE(result);
+
+  return rv;
+}
+
+static nsresult
+nsFontEnumeratorConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsIFontEnumerator *result;
+
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+#ifdef MOZ_ENABLE_XFT
+  if (NS_IsXftEnabled()) {
+    result = new nsFontEnumeratorXft();
+    if (!result)
+      return NS_ERROR_OUT_OF_MEMORY;
+  } else {
+#endif
+#ifdef MOZ_ENABLE_COREXFONTS
+    result = new nsFontEnumeratorGTK();
+    if (!result)
+      return NS_ERROR_OUT_OF_MEMORY;
+#endif
+#ifdef MOZ_ENABLE_XFT
+  }
+#endif
+
+  NS_ADDREF(result);
+  nsresult rv = result->QueryInterface(aIID, aResult);
+  NS_RELEASE(result);
+
+  return rv;
+}
 
 static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -134,7 +211,7 @@ static const nsModuleComponentInfo components[] =
     NS_FONT_METRICS_CID,
     //    "@mozilla.org/gfx/font_metrics/gtk;1",
     "@mozilla.org/gfx/fontmetrics;1",
-    nsFontMetricsGTKConstructor },
+    nsFontMetricsConstructor },
   { "Gtk Device Context",
     NS_DEVICE_CONTEXT_CID,
     //    "@mozilla.org/gfx/device_context/gtk;1",
@@ -183,7 +260,7 @@ static const nsModuleComponentInfo components[] =
     NS_FONT_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/font_enumerator/gtk;1",
     "@mozilla.org/gfx/fontenumerator;1",
-    nsFontEnumeratorGTKConstructor },
+    nsFontEnumeratorConstructor },
   { "Font List",  
     NS_FONTLIST_CID,
     //    "@mozilla.org/gfx/fontlist;1"

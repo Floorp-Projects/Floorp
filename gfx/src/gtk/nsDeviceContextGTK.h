@@ -119,5 +119,13 @@ private:
   nsresult GetSystemFontInfo(GdkFont* iFont, nsSystemFontID anID, nsFont* aFont) const;
 };
 
+// used by several files
+
+#define NS_TO_GDK_RGB(ns) \
+  ((ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff))
+#define GDK_COLOR_TO_NS_RGB(c) \
+  ((nscolor) NS_RGB(c.red, c.green, c.blue))
+
+
 #endif /* nsDeviceContextGTK_h___ */
 

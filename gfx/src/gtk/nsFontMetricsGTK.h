@@ -51,6 +51,7 @@
 #include "nsRenderingContextGTK.h"
 #include "nsICharRepresentable.h"
 #include "nsCompressedCharMap.h"
+#include "nsIFontMetricsGTK.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -75,6 +76,7 @@ class nsXFont;
 class nsFontGTKUserDefined;
 class nsFontMetricsGTK;
 class nsFreeTypeFace;
+class nsFontGTK;
 
 struct nsFontStretch
 {
@@ -218,7 +220,7 @@ typedef PRBool (*PR_CALLBACK nsFontSwitchCallbackGTK)
                 PRUint32               aSubstringLength,
                 void                  *aData);
 
-class nsFontMetricsGTK : public nsIFontMetrics
+class nsFontMetricsGTK : public nsIFontMetricsGTK
 {
 public:
   nsFontMetricsGTK();
@@ -282,7 +284,65 @@ public:
                                PRUnichar aChar,
                                const char *aName);
 
+  // nsIFontMetricsGTK (calls from the font rendering layer)
+  virtual nsresult GetWidth(const char* aString, PRUint32 aLength,
+                            nscoord& aWidth,
+                            nsRenderingContextGTK *aContext);
+  virtual nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                            nscoord& aWidth, PRInt32 *aFontID,
+                            nsRenderingContextGTK *aContext);
+  
+  virtual nsresult GetTextDimensions(const PRUnichar* aString,
+                                     PRUint32 aLength,
+                                     nsTextDimensions& aDimensions, 
+                                     PRInt32* aFontID,
+                                     nsRenderingContextGTK *aContext);
+  virtual nsresult GetTextDimensions(const char*         aString,
+                                     PRInt32             aLength,
+                                     PRInt32             aAvailWidth,
+                                     PRInt32*            aBreaks,
+                                     PRInt32             aNumBreaks,
+                                     nsTextDimensions&   aDimensions,
+                                     PRInt32&            aNumCharsFit,
+                                     nsTextDimensions&   aLastWordDimensions,
+                                     PRInt32*            aFontID,
+                                     nsRenderingContextGTK *aContext);
+  virtual nsresult GetTextDimensions(const PRUnichar*    aString,
+                                     PRInt32             aLength,
+                                     PRInt32             aAvailWidth,
+                                     PRInt32*            aBreaks,
+                                     PRInt32             aNumBreaks,
+                                     nsTextDimensions&   aDimensions,
+                                     PRInt32&            aNumCharsFit,
+                                     nsTextDimensions&   aLastWordDimensions,
+                                     PRInt32*            aFontID,
+                                     nsRenderingContextGTK *aContext);
+
+  virtual nsresult DrawString(const char *aString, PRUint32 aLength,
+                              nscoord aX, nscoord aY,
+                              const nscoord* aSpacing,
+                              nsRenderingContextGTK *aContext,
+                              nsDrawingSurfaceGTK *aSurface);
+  virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
+                              nscoord aX, nscoord aY,
+                              PRInt32 aFontID,
+                              const nscoord* aSpacing,
+                              nsRenderingContextGTK *aContext,
+                              nsDrawingSurfaceGTK *aSurface);
+
+  virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                      nsBoundingMetrics &aBoundingMetrics,
+                                      nsRenderingContextGTK *aContext);
+  virtual nsresult GetBoundingMetrics(const PRUnichar *aString,
+                                      PRUint32 aLength,
+                                      nsBoundingMetrics &aBoundingMetrics,
+                                      PRInt32 *aFontID,
+                                      nsRenderingContextGTK *aContext);
+
+  virtual GdkFont* GetCurrentGDKFont(void);
+
   static nsresult FamilyExists(nsIDeviceContext *aDevice, const nsString& aName);
+  static PRUint32 GetHints(void);
 
   //friend struct nsFontGTK;
 
@@ -311,6 +371,7 @@ protected:
   nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
   nsFontGTK           *mWesternFont;
+  nsFontGTK           *mCurrentFont;
 
   nscoord             mLeading;
   nscoord             mEmHeight;
