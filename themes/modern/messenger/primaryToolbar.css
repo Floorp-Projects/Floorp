@@ -59,11 +59,11 @@
   -moz-image-region: rect(102px 49px 135px 0);
 }
 
-#button-getmsg[buttonover] {
+#button-getmsg:hover {
   -moz-image-region: rect(102px 99px 135px 50px);
 } 
 
-#button-getmsg[buttondown] {
+#button-getmsg:hover:active {
   -moz-image-region: rect(102px 149px 135px 100px);
 } 
 
@@ -192,11 +192,11 @@
   -moz-image-region: rect(136px 49px 169px 0);
 }
 
-#button-mark[buttonover] {
+#button-mark:hover {
   -moz-image-region: rect(136px 99px 169px 50px);
 } 
 
-#button-mark[buttondown] {
+#button-mark:hover:active {
   -moz-image-region: rect(136px 149px 169px 100px);
 } 
 
@@ -225,11 +225,11 @@
   -moz-image-region: rect(34px 49px 67px 0);
 }
 
-#button-print[buttonover] {
+#button-print:hover {
   -moz-image-region: rect(34px 99px 67px 50px);
 }
 
-#button-print[buttondown] {
+#button-print:hover:active {
   -moz-image-region: rect(34px 149px 67px 100px);
 }
 
@@ -273,4 +273,3 @@
   margin-left: 0.3ex;
   list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");
 }
-

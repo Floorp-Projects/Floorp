@@ -92,11 +92,11 @@
   -moz-image-region: rect(340px 49px 373px 0);
 }
 
-#button-attach[buttonover="true"] {
+#button-attach:hover {
   -moz-image-region: rect(340px 99px 373px 50px);
 } 
 
-#button-attach[buttondown="true"] {
+#button-attach:hover:active {
   -moz-image-region: rect(340px 149px 373px 100px);
 } 
 
@@ -126,11 +126,11 @@
   -moz-image-region: rect(238px 49px 271px 0);
 }
 
-#button-save[buttonover="true"] {
+#button-save:hover {
   -moz-image-region: rect(238px 99px 271px 50px);
 } 
 
-#button-save[buttondown="true"] {
+#button-save:hover:active {
   -moz-image-region: rect(238px 149px 271px 100px);
 } 
 

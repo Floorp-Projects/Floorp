@@ -51,11 +51,11 @@
   -moz-image-region: rect(105px 23px 126px 0px);
 }
 
-#button-getmsg[buttonover] {
+#button-getmsg:hover {
   -moz-image-region: rect(105px 46px 126px 23px);
 } 
 
-#button-getmsg[buttondown] {
+#button-getmsg:hover:active {
   -moz-image-region: rect(105px 69px 126px 46px);
 } 
 
@@ -180,11 +180,11 @@
   -moz-image-region: rect(336px 23px 357px 0);
 }
 
-#button-mark[buttonover] {
+#button-mark:hover {
   -moz-image-region: rect(336px 46px 357px 23px);
 } 
 
-#button-mark[buttondown] {
+#button-mark:hover:active {
   -moz-image-region: rect(336px 69px 357px 46px);
 } 
 
@@ -213,11 +213,11 @@
   -moz-image-region: rect(0px 23px 21px 0px);
 }
 
-#button-print[buttonover] {
+#button-print:hover {
   -moz-image-region: rect(0px 46px 21px 23px);
 }
 
-#button-print[buttondown] {
+#button-print:hover:active {
   -moz-image-region: rect(0px 69px 21px 46px);
 }
 
