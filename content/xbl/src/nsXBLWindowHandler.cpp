@@ -97,11 +97,11 @@ public:
   nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {};
 };
 
-const char nsXBLSpecialDocInfo::sHTMLBindingStr[] = "resource:///res/builtin/htmlBindings.xml";
-const char nsXBLSpecialDocInfo::sPlatformHTMLBindingStr[] = "resource:///res/builtin/platformHTMLBindings.xml";
+const char nsXBLSpecialDocInfo::sHTMLBindingStr[] = "resource://gre/res/builtin/htmlBindings.xml";
+const char nsXBLSpecialDocInfo::sPlatformHTMLBindingStr[] = "resource://gre/res/builtin/platformHTMLBindings.xml";
 // Allow for a userHTMLBindings.xml.
-// XXX Should be in the user profile directory, when we have a urlspec for that
-const char nsXBLSpecialDocInfo::sUserHTMLBindingStr[] = "resource:///res/builtin/userHTMLBindings.xml";
+// XXXbsmedberg Should be in the profile chrome directory, when we have a resource mapping for that
+const char nsXBLSpecialDocInfo::sUserHTMLBindingStr[] = "resource://gre/res/builtin/userHTMLBindings.xml";
 
 void nsXBLSpecialDocInfo::LoadDocInfo()
 {

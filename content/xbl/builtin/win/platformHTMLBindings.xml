@@ -4,7 +4,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
-  <binding id="inputFields" extends="resource:///res/builtin/htmlBindings.xml#inputFieldsBase">
+  <binding id="inputFields" extends="resource://gre/res/builtin/htmlBindings.xml#inputFieldsBase">
     <handlers>
       <handler event="keypress" keycode="VK_UP" command="cmd_charPrevious"/>
       <handler event="keypress" keycode="VK_DOWN" command="cmd_charNext"/>
@@ -48,7 +48,7 @@
     </handlers>
   </binding>
 
-  <binding id="textAreas" extends="resource:///res/builtin/htmlBindings.xml#textAreasBase">
+  <binding id="textAreas" extends="resource://gre/res/builtin/htmlBindings.xml#textAreasBase">
     <handlers>
       <handler event="keypress" keycode="VK_HOME" 
         command="cmd_beginLine"/>

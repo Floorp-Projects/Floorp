@@ -32,7 +32,7 @@ function write()
 {
   sample.WriteValue("here is what I'm writing!");
 
-  var Bundle = JS_GetStrBundle("resource:/res/strres.properties", null);
+  var Bundle = JS_GetStrBundle("resource://gre/res/strres.properties", null);
   var	ostr1 = Bundle.GetStringFromName("file");
   dump("\n--** strBundle GetStringFromName file=" + ostr1 + " **--\n");
   var	ostr2 = Bundle.GetStringFromID(123);

@@ -961,10 +961,11 @@ static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filenam
 
   directoryService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = directoryService->Get(NS_APP_RES_DIR,
+    rv = directoryService->Get(NS_GRE_DIR,
                                NS_GET_IID(nsIFile),
                                getter_AddRefs(fileName));
     if (NS_SUCCEEDED(rv) && fileName) {
+      fileName->AppendNative(NS_LITERAL_CSTRING("res"));
       fileName->AppendNative(nsDependentCString(alert_filename));
       PRFileDesc* fd = 0;
       fileName->OpenNSPRFileDesc(PR_RDONLY, 0664, &fd);

@@ -68,7 +68,6 @@ bin\jpeg3250.dll
 bin\mozilla.exe
 bin\regxpcom.exe
 bin\xpicleanup.exe
-bin\res\cmessage.txt
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appcomps.dll
@@ -209,11 +208,6 @@ bin\chrome\icons\default\main-window.ico
 ; to prevent migration bugs
 bin\defaults\pref\*
 bin\defaults\autoconfig\*
-bin\res\ua.css
-bin\res\html.css
-bin\res\quirk.css
-bin\res\forms.css
-bin\res\platform-forms.css
 bin\res\EditorOverride.css
 bin\res\grabber.gif
 bin\res\table-add-column-after-active.gif
@@ -234,14 +228,6 @@ bin\res\table-remove-column.gif
 bin\res\table-remove-row-active.gif
 bin\res\table-remove-row-hover.gif
 bin\res\table-remove-row.gif
-bin\res\viewsource.css
-bin\res\mathml.css
-bin\res\arrow.gif
-bin\res\loading-image.gif
-bin\res\broken-image.gif
-bin\res\html\*
-bin\res\fonts\*
-bin\res\dtd\*
 bin\defaults\wallet\VcardSchema.tbl
 bin\defaults\wallet\FieldSchema.tbl
 bin\defaults\wallet\SchemaConcat.tbl
@@ -249,12 +235,6 @@ bin\defaults\wallet\DistinguishedSchema.tbl
 bin\defaults\wallet\SchemaStrings.tbl
 bin\defaults\wallet\PositionalSchema.tbl
 bin\defaults\wallet\StateSchema.tbl
-bin\res\wincharset.properties
-bin\res\charsetalias.properties
-bin\res\charsetData.properties
-bin\res\langGroups.properties
-bin\res\language.properties
-bin\res\entityTables\*
 bin\res\rdf\article.gif
 bin\res\rdf\document.gif
 bin\res\rdf\folder-closed.gif
@@ -263,8 +243,6 @@ bin\res\rdf\loading.gif
 bin\res\throbber\*
 ;debug menus reference samples dir - remove for actual releases:
 bin\res\samples\*
-bin\res\builtin\htmlBindings.xml
-bin\res\builtin\platformHTMLBindings.xml
 
 ; download progress
 bin\components\nsProgressDialog.js

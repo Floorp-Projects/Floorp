@@ -53,7 +53,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 //
-#define TEST_URL "resource:/res/strres.properties"
+#define TEST_URL "resource://gre/res/strres.properties"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //

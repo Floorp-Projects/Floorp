@@ -11,18 +11,6 @@
 [gre_app_support]
 
 ;
-; layout
-;
-res\dtd\xhtml11.dtd
-
-;
-; MathML Support
-;
-; http://bugzilla.mozilla.org/show_bug.cgi?id=137029
-;
-res\dtd\mathml.dtd
-
-;
 ; wallet
 ;
 defaults\wallet\DistinguishedSchema.tbl
@@ -37,4 +25,3 @@ defaults\wallet\StateSchema.tbl
 ; XP Install Support
 ;
 defaults\pref\xpinstall.js
-res\cmessage.txt

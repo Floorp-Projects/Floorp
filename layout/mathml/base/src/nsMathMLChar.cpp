@@ -139,7 +139,7 @@ AlertMissingFonts(nsString& aMissingFonts)
     return;
 
   nsCOMPtr<nsIStringBundle> sb;
-  sbs->CreateBundle("resource:/res/fonts/mathfont.properties", getter_AddRefs(sb));
+  sbs->CreateBundle("resource://gre/res/fonts/mathfont.properties", getter_AddRefs(sb));
   if (!sb)
     return;
 
@@ -195,7 +195,7 @@ LoadProperties(const nsString& aName,
                nsCOMPtr<nsIPersistentProperties>& aProperties)
 {
   nsAutoString uriStr;
-  uriStr.Assign(NS_LITERAL_STRING("resource:/res/fonts/mathfont"));
+  uriStr.Assign(NS_LITERAL_STRING("resource://gre/res/fonts/mathfont"));
   uriStr.Append(aName);
   uriStr.StripWhitespace(); // that may come from aName
   uriStr.Append(NS_LITERAL_STRING(".properties"));
@@ -360,7 +360,7 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
     nsresult rv = LoadProperties(*mFontName[0], mGlyphProperties);
 #ifdef NS_DEBUG
     nsCAutoString uriStr;
-    uriStr.Assign(NS_LITERAL_CSTRING("resource:/res/fonts/mathfont"));
+    uriStr.Assign(NS_LITERAL_CSTRING("resource://gre/res/fonts/mathfont"));
     uriStr.Append(NS_LossyConvertUCS2toASCII(*mFontName[0]));
     uriStr.StripWhitespace(); // that may come from mFontName
     uriStr.Append(NS_LITERAL_CSTRING(".properties"));

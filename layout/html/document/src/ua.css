@@ -34,9 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url(resource:/res/html.css);
+@import url(resource://gre/res/html.css);
 @import url(chrome://global/content/xul.css);
-@import url(resource:/res/quirk.css);
+@import url(resource://gre/res/quirk.css);
 
 @namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
 

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com>
+ *   Benjamin Smedberg <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -93,7 +94,18 @@ nsResURL::GetFile(nsIFile **result)
     rv = gResHandler->ResolveURI(this, spec);
     if (NS_FAILED(rv)) return rv;
 
-    return net_GetFileFromURLSpec(spec, result);
+    rv = net_GetFileFromURLSpec(spec, result);
+#ifdef DEBUG_bsmedberg
+    if (NS_SUCCEEDED(rv)) {
+        PRBool exists = PR_TRUE;
+        (*result)->Exists(&exists);
+        if (!exists) {
+            printf("resource %s doesn't exist!\n", spec.get());
+        }
+    }
+#endif
+
+    return rv;
 }
 
 //----------------------------------------------------------------------------
@@ -101,7 +113,6 @@ nsResURL::GetFile(nsIFile **result)
 //----------------------------------------------------------------------------
 
 nsResProtocolHandler::nsResProtocolHandler()
-    : mSubstitutions(32)
 {
 #if defined(PR_LOGGING)
     gResLog = PR_NewLogModule("nsResProtocol");
@@ -117,54 +128,43 @@ nsResProtocolHandler::~nsResProtocolHandler()
 }
 
 nsresult
+nsResProtocolHandler::AddSpecialDir(const char* aSpecialDir, const nsACString& aSubstitution)
+{
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_GetSpecialDirectory(aSpecialDir, getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> uri;
+    rv = mIOService->NewFileURI(file, getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return SetSubstitution(aSubstitution, uri);
+}
+
+nsresult
 nsResProtocolHandler::Init()
 {
+    if (!mSubstitutions.Init(32))
+        return NS_ERROR_UNEXPECTED;
+
     nsresult rv;
 
     mIOService = do_GetIOService(&rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // set up initial mappings
-    rv = SetSpecialDir("programdir", NS_OS_CURRENT_PROCESS_DIR);
-    if (NS_FAILED(rv)) return rv;
+    //
+    // make resource:/// point to the application directory
+    //
+    rv = AddSpecialDir(NS_OS_CURRENT_PROCESS_DIR, NS_LITERAL_CSTRING(""));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // make "res:///" == "resource:/"
-    rv = SetSpecialDir("", NS_XPCOM_CURRENT_PROCESS_DIR);
-    if (NS_FAILED(rv)) return rv;
+    //
+    // make resource://gre/ point to the GRE directory
+    //
+    return AddSpecialDir(NS_GRE_DIR, NS_LITERAL_CSTRING("gre"));
 
-    rv = SetSpecialDir("tempdir", NS_OS_TEMP_DIR);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetSpecialDir("componentsdir", NS_XPCOM_COMPONENT_DIR);
-    if (NS_FAILED(rv)) return rv;
-
-    // Set up the "Resource" root to point to the old resource location 
-    // such that:
-    //     resource://<path>  ==  res://Resource/<path>
-    rv = SetSpecialDir("resource", NS_XPCOM_CURRENT_PROCESS_DIR);
-    if (NS_FAILED(rv)) return rv;
-
-    return rv;
-}
-
-//----------------------------------------------------------------------------
-// nsResProtocolHandler <private>
-//----------------------------------------------------------------------------
-
-nsresult
-nsResProtocolHandler::SetSpecialDir(const char *root, const char *dir)
-{
-    LOG(("nsResProtocolHandler::SetSpecialDir [root=\"%s\" dir=%s]\n", root, dir));
-
-    nsresult rv;
-    nsCOMPtr<nsIFile> file;
-    rv = NS_GetSpecialDirectory(dir, getter_AddRefs(file));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIURI> uri;
-    mIOService->NewFileURI(file, getter_AddRefs(uri));
-
-    return SetSubstitution(root, uri);
+    //XXXbsmedberg Neil wants a resource://pchrome/ for the profile chrome dir...
+    // but once I finish multiple chrome registration I'm not sure that it is needed
 }
 
 //----------------------------------------------------------------------------
@@ -250,37 +250,30 @@ nsResProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retva
 //----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsResProtocolHandler::SetSubstitution(const char *root, nsIURI *baseURI)
+nsResProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *baseURI)
 {
-    NS_ENSURE_ARG_POINTER(root);
+    if (!baseURI) {
+        mSubstitutions.Remove(root);
+        return NS_OK;
+    }
 
-    nsCStringKey key(root);
-    if (baseURI)
-        mSubstitutions.Put(&key, baseURI);
-    else
-        mSubstitutions.Remove(&key);
-    return NS_OK;
+    return mSubstitutions.Put(root, baseURI) ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsResProtocolHandler::GetSubstitution(const char *root, nsIURI **result)
+nsResProtocolHandler::GetSubstitution(const nsACString& root, nsIURI **result)
 {
-    NS_ENSURE_ARG_POINTER(root);
     NS_ENSURE_ARG_POINTER(result);
 
-    nsCStringKey key(root);
-    *result = NS_STATIC_CAST(nsIURI *, mSubstitutions.Get(&key));
-    return *result ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+    return mSubstitutions.Get(root, result) ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsResProtocolHandler::HasSubstitution(const char *root, PRBool *result)
+nsResProtocolHandler::HasSubstitution(const nsACString& root, PRBool *result)
 {
-    NS_ENSURE_ARG_POINTER(root);
     NS_ENSURE_ARG_POINTER(result);
 
-    nsCStringKey key(root);
-    *result = mSubstitutions.Exists(&key);
+    *result = mSubstitutions.Get(root, nsnull);
     return NS_OK;
 }
 
@@ -298,14 +291,13 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURI> baseURI;
-    rv = GetSubstitution(host.get() ?  host.get() : "", getter_AddRefs(baseURI));
+    rv = GetSubstitution(host, getter_AddRefs(baseURI));
     if (NS_FAILED(rv)) return rv;
 
-    const char *p = path.get();
-    if (path[0] == '/')
-        p++;
+    const char *p = path.get() + 1; // path always starts with a slash
+    NS_ASSERTION(*(p-1) == '/', "Path did not begin with a slash!");
 
-    rv = baseURI->Resolve(nsDependentCString(p), result);
+    rv = baseURI->Resolve(nsDependentCString(p, path.Length()-1), result);
 
 #if defined(PR_LOGGING)
     if (PR_LOG_TEST(gResLog, PR_LOG_DEBUG)) {

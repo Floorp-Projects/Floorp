@@ -63,7 +63,7 @@ nsEntityConverter::~nsEntityConverter()
 NS_IMETHODIMP 
 nsEntityConverter::LoadVersionPropertyFile()
 {
-    NS_NAMED_LITERAL_CSTRING(url, "resource:/res/entityTables/htmlEntityVersions.properties");
+    NS_NAMED_LITERAL_CSTRING(url, "resource://gre/res/entityTables/htmlEntityVersions.properties");
 	nsresult rv;
     nsCOMPtr<nsIStringBundleService> bundleService =
         do_CreateInstance(NS_STRINGBUNDLE_CONTRACTID, &rv);
@@ -108,7 +108,7 @@ nsEntityConverter::LoadVersionPropertyFile()
 already_AddRefed<nsIStringBundle>
 nsEntityConverter::LoadEntityBundle(PRUint32 version)
 {
-  nsCAutoString url(NS_LITERAL_CSTRING("resource:/res/entityTables/"));
+  nsCAutoString url(NS_LITERAL_CSTRING("resource://gre/res/entityTables/"));
   const PRUnichar *versionName = NULL;
   nsresult rv;
 

@@ -94,7 +94,7 @@ input {
   letter-spacing: normal;
   cursor: text;
   -moz-user-focus: normal;
-  -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
+  -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#inputFields");
 }
 
 textarea {
@@ -111,7 +111,7 @@ textarea {
   vertical-align: text-bottom;
   cursor: text;
   -moz-user-focus: normal;
-  -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
+  -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield;
 }
 

@@ -82,7 +82,7 @@ nsPlatformCharset::InitInfo()
   PR_AtomicIncrement(&gCnt); // count for gInfo
 
   if (gInfo == nsnull) {
-    nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource:/res/wincharset.properties"));
+    nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource://gre/res/wincharset.properties"));
 
     NS_ASSERTION(info , "cannot open properties file");
     NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);

@@ -4,7 +4,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
-  <binding id="inputFields" extends="resource:///res/builtin/htmlBindings.xml#inputFieldsBase">
+  <binding id="inputFields" extends="resource://gre/res/builtin/htmlBindings.xml#inputFieldsBase">
     <handlers>
     <!-- Emacsish single-line motion and delete keys -->
     <handler event="keypress" key="a" modifiers="control"
@@ -77,7 +77,7 @@
     </handlers>
   </binding>
 
-  <binding id="textAreas" extends="resource:///res/builtin/htmlBindings.xml#textAreasBase">
+  <binding id="textAreas" extends="resource://gre/res/builtin/htmlBindings.xml#textAreasBase">
     <handlers>
 
     <!-- Emacsish single-line motion and delete keys -->

@@ -790,13 +790,15 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
     }
+    // the GRE components directory is relative to the GRE directory
+    // by default; applications may override this behavior in special
+    // cases
     else if (inAtom == nsDirectoryService::sGRE_ComponentDirectory)
     {
-        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
+        rv = Get(NS_GRE_DIR, nsILocalFile::GetIID(), getter_AddRefs(localFile));
         if (localFile)
              localFile->AppendNative(COMPONENT_DIRECTORY);
     }
-
     else if (inAtom == nsDirectoryService::sComponentDirectory)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
