@@ -155,7 +155,7 @@ nsBuffer::Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount)
 
     *readCount = 0;
     while (bufLen > 0) {
-        rv = GetReadBuffer(&readBufferLen, &readBuffer);
+        rv = GetReadBuffer(0, &readBuffer, &readBufferLen);
         if (rv == NS_BASE_STREAM_EOF)      // all we're going to get
             return *readCount > 0 ? NS_OK : NS_BASE_STREAM_EOF;
         if (NS_FAILED(rv)) return rv;
@@ -181,7 +181,9 @@ nsBuffer::Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount)
 }
 
 NS_IMETHODIMP
-nsBuffer::GetReadBuffer(PRUint32 *readBufferLength, char* *result)
+nsBuffer::GetReadBuffer(PRUint32 startPosition, 
+                        char* *result,
+                        PRUint32 *readBufferLength)
 {
     if (mReadSegment == nsnull) {
         if (PR_CLIST_IS_EMPTY(&mSegments)) {
@@ -229,7 +231,7 @@ nsBuffer::Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount)
     while (bufLen > 0) {
         PRUint32 writeBufLen;
         char* writeBuf;
-        rv = GetWriteBuffer(&writeBufLen, &writeBuf);
+        rv = GetWriteBuffer(0, &writeBuf, &writeBufLen);
         if (NS_FAILED(rv)) {
             // if we failed to allocate a new segment, we're probably out
             // of memory, but we don't care -- just report what we were
@@ -254,7 +256,7 @@ nsBuffer::Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount)
 }
 
 NS_IMETHODIMP
-nsBuffer::Write(nsIInputStream* fromStream, PRUint32 *writeCount)
+nsBuffer::WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount)
 {
     nsresult rv;
 
@@ -262,10 +264,10 @@ nsBuffer::Write(nsIInputStream* fromStream, PRUint32 *writeCount)
         return NS_BASE_STREAM_EOF;
 
     *writeCount = 0;
-    while (PR_TRUE) {
+    while (count > 0) {
         PRUint32 writeBufLen;
         char* writeBuf;
-        rv = GetWriteBuffer(&writeBufLen, &writeBuf);
+        rv = GetWriteBuffer(0, &writeBuf, &writeBufLen);
         if (NS_FAILED(rv)) {
             // if we failed to allocate a new segment, we're probably out
             // of memory, but we don't care -- just report what we were
@@ -274,13 +276,14 @@ nsBuffer::Write(nsIInputStream* fromStream, PRUint32 *writeCount)
         }
 
         PRUint32 readCount;
-        rv = fromStream->Read(writeBuf, writeBufLen, &readCount);
+        rv = fromStream->Read(writeBuf, PR_MIN(writeBufLen, count), &readCount);
         if (NS_FAILED(rv)) {
             // if we failed to read just report what we were
             // able to write so far
             return NS_OK;
         }
         *writeCount += readCount;
+        count -= readCount;
         // set the write cursor after the data is valid
         if (mWriteCursor + readCount == mWriteSegmentEnd) {
             mWriteSegment = nsnull;      // allocate a new segment next time around
@@ -294,7 +297,9 @@ nsBuffer::Write(nsIInputStream* fromStream, PRUint32 *writeCount)
 }
 
 NS_IMETHODIMP
-nsBuffer::GetWriteBuffer(PRUint32 *writeBufferLength, char* *result)
+nsBuffer::GetWriteBuffer(PRUint32 startPosition,
+                         char* *result,
+                         PRUint32 *writeBufferLength)
 {
     if (mEOF)
         return NS_BASE_STREAM_EOF;
