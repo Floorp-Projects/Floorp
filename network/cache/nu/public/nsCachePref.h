@@ -30,6 +30,7 @@ public:
     
     // should really be protected/private
     nsCachePref(void);
+    ~nsCachePref();
 
     enum Refresh 
     {

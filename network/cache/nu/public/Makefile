@@ -15,10 +15,16 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../../..
+DEPTH=../../../..
 
 EXPORTS =               \
-	nsCacheObject.h	\
+	nsMemModule.h 		\
+	nsCacheManager.h 	\
+    nsDiskModule.h 		\
+	nsCacheModule.h 	\
+	nsMemCacheObject.h  \
+	nsCacheObject.h	    \
+	nsCachePref.h		\
         $(NULL)
 
 MODULE = cache
