@@ -1,0 +1,110 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is nsICacheEntryDescriptor.idl, released
+ * February 10, 2001.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *    Gordon Sheridan, 10-February-2001
+ */
+
+#include "nsITransport.idl"
+
+interface nsISimpleEnumerator;
+interface nsICacheListener;
+
+
+[scriptable, uuid(49c1a11d-f5d2-4f09-8262-551e64908ada)]
+interface nsICacheEntryDescriptor : nsITransport
+{
+    /**
+     * attributes from cache entry
+     */
+    
+    readonly attribute string            clientID;
+    readonly attribute string            key;
+    readonly attribute PRTime            lastValidated;
+    readonly attribute PRTime            lastFetch;
+    readonly attribute unsigned long     fetchCount;
+
+    attribute PRTime                     expiresDate;
+    attribute boolean                    streamBased;
+
+    /**
+     * For accessing non-persistent cached objects
+     */
+    attribute nsISupports                cacheElement;
+    
+    
+    /**
+     * Access granted to this descriptor. (see nsICacheService.idl)
+     */
+    readonly attribute unsigned long accessGranted;
+    
+    /**
+     * Storage flags
+     */
+    
+    const unsigned long DONT_CACHE                 = 0;
+    const unsigned long ALLOW_IN_MEMORY            = 1;
+    const unsigned long ALLOW_ON_DISK              = 2;
+    const unsigned long ALLOW_IN_MEMORY_OR_ON_DISK = 3;
+    
+    attribute unsigned long storageFlags;
+    
+    /* and/or */
+    
+    attribute boolean allowInMemory;
+    attribute boolean allowOnDisk;
+    
+    
+    /**
+     * Doom the cache entry this descriptor references in order to slate it for 
+     * removal.  Once doomed a cache entry cannot be undoomed.
+     */
+    void doom();
+    void doomAndFailPendingRequests(in nsresult status);
+    
+    /**
+     * Data in an existing cache object may only be appended to.  Therefore,
+     * a writer wishing to replace existing cache data should first truncate
+     * the existing data to the appropriate length.
+     */ 
+    void truncateExistingData(in unsigned long newLength);
+    
+    /**
+     * Set internal flag so we know more data is expected than what is there currently.
+     *
+     */
+    void appendToExistingData();
+    
+    /**
+     * A writer must validate this cache object before any readers are given
+     * a descriptor to the object.
+     */
+    void markValid();
+    
+    /**
+     * Methods for accessing  MetaData.
+     */
+    string  getMetaDataElement(in string  key);
+    void    setMetadataElement(in string  key, in string  value);
+    
+    nsISimpleEnumerator  getMetaDataEnumerator();
+
+};
+

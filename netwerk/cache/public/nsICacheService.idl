@@ -1,0 +1,88 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is nsICacheService.idl, released February 10, 2001.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *    Gordon Sheridan, 10-February-2001
+ */
+
+
+#include "nsISupports.idl"
+#include "nsICacheEntryDescriptor.idl"
+
+
+interface nsISimpleEnumerator;
+interface nsICacheListener;
+
+
+[scriptable, uuid(0ebec4c7-742f-4f27-8e7b-7c8a0cc76348)]
+interface nsICacheService : nsISupports
+{
+
+    void init();
+    void shutdown();
+
+    /**
+     * Access flags.
+     */
+    const unsigned long NO_ACCESS  = 0;
+    const unsigned long READ       = 1;
+    const unsigned long WRITE      = 2;
+    const unsigned long READ_WRITE = 3;
+
+    /*
+     * Synchronous cache access. This returns a unique descriptor each
+     * time it is called, even if the same key is specified. When
+     * called by multiple threads for write access, only one writeable
+     * descriptor will be granted.
+     */
+    nsICacheEntryDescriptor  openCacheEntry(in string         clientID,
+                                            in string         key,
+                                            in unsigned long  accessFlagsRequested,
+                                            in boolean        streamBased);
+
+
+    /*
+     * Asynchronous cache access. Does not block the calling thread.
+     */
+    void asyncOpenCacheEntry(in string           clientID,
+                             in string           key,
+                             in unsigned long    accessFlagsRequested,
+                             in boolean          streamBased,
+                             in nsICacheListener listener);
+
+
+    /*
+     * methods for implementing about:cache
+     */
+    nsISimpleEnumerator enumerateDeviceIDs();
+    nsISimpleEnumerator enumerateClientIDs();
+    nsISimpleEnumerator enumerateEntries(in string deviceID,
+                                         in string clientID);
+
+};
+
+%{C++
+
+#define NS_ERROR_CACHE_KEY_NOT_FOUND        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 60)
+#define NS_ERROR_CACHE_DATA_IS_STREAM       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 61)
+#define NS_ERROR_CACHE_DATA_IS_NOT_STREAM   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 62)
+#define NS_ERROR_CACHE_WAIT_FOR_VALIDATION  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 63)
+#define NS_ERROR_CACHE_ENTRY_DOOMED         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 64)
+
+%}
