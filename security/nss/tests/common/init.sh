@@ -3,6 +3,8 @@
 #  Initialize a bunch of variables that may tests would be interested in
 #
 #
+
+
 mozilla_root=`(cd ../../../..; pwd)`
 common=`(cd ../common; pwd)`
 MOZILLA_ROOT=${MOZILLA_ROOT-$mozilla_root}
@@ -12,10 +14,19 @@ SECURITY_ROOT=${SECURITY_ROOT-${MOZILLA_ROOT}/security/nss}
 TESTDIR=${TESTDIR-${MOZILLA_ROOT}/tests_results/security}
 OBJDIR=`cd ../common; gmake objdir_name` 
 OS_ARCH=`cd ../common; gmake os_arch`
-if [ ${OS_ARCH} = "WINNT" ]; then
-PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
+if [ -z "$PATH_CONTAINS_BIN" -o "$PATH_CONTAINS_BIN" != TRUE ]
+then
+	if [ ${OS_ARCH} = "WINNT" ]; then
+		PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$ALL_SH_BASEPATH
+	else
+		PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$ALL_SH_BASEPATH
+	fi
 else
-PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
+	if [ ${OS_ARCH} = "WINNT" ]; then
+		PATH=${DIST}/${OBJDIR}/lib\;$ALL_SH_BASEPATH
+	else
+		PATH=${DIST}/${OBJDIR}/lib:$ALL_SH_BASEPATH
+	fi
 fi
 export PATH
 LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
