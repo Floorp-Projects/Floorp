@@ -37,6 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <ole2.h>
+#include <oleidl.h>
+#include <shlobj.h>
+
+// shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <shellapi.h>
+
 #include "nsDragService.h"
 #include "nsITransferable.h"
 #include "nsDataObj.h"
@@ -49,13 +56,6 @@
 #include "nsDataObjCollection.h"
 
 #include "nsAutoPtr.h"
-
-#include <ole2.h>
-#include <oleidl.h>
-#include <shlobj.h>
-
-// shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
-#include <shellapi.h>
 
 
 //-------------------------------------------------------------------------

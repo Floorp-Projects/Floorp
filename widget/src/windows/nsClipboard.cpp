@@ -211,14 +211,16 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         // the "file" flavors so that the win32 shell knows to create an internet
         // shortcut when it sees one of these beasts.
         FORMATETC shortcutFE;
-        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTOR), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORA), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kURLMime, &shortcutFE);      
+        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);      
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);  
-#ifdef CFSTR_SHELLURL
-        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_SHELLURL), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLA), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);      
-#endif
+        SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
+        dObj->AddDataFlavor(kURLMime, &shortcutFE);      
       }
       else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
                   strcmp(flavorStr, kGIFImageMime) == 0 || strcmp(flavorStr, kNativeImageMime) == 0  ) {
@@ -425,7 +427,8 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
   // Currently this is only handling TYMED_HGLOBAL data
   // For Text, Dibs, Files, and generic data (like HTML)
   if (S_OK == hres) {
-    static CLIPFORMAT fileDescriptorFlavor = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTOR ); 
+    static CLIPFORMAT fileDescriptorFlavorA = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORA ); 
+    static CLIPFORMAT fileDescriptorFlavorW = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORW ); 
     static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
     switch (stm.tymed) {
      case TYMED_HGLOBAL: 
@@ -507,7 +510,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
               } break;
 
             default: {
-              if ( fe.cfFormat == fileDescriptorFlavor || fe.cfFormat == fileFlavor ) {
+              if ( fe.cfFormat == fileDescriptorFlavorA || fe.cfFormat == fileDescriptorFlavorW || fe.cfFormat == fileFlavor ) {
                 NS_WARNING ( "Mozilla doesn't yet understand how to read this type of file flavor" );
               } 
               else {
