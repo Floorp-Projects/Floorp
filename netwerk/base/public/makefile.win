@@ -50,7 +50,7 @@ XPIDLSRCS =                             \
         .\nsIProxyAutoConfigUtils.idl   \
         .\nsIProxy.idl                  \
         .\nsIRequest.idl                \
-        .\nsITransprt.idl               \
+        .\nsITransport.idl               \
         .\nsISocketTransport.idl        \
         .\nsISocketTransportService.idl \
         .\nsIStreamIO.idl               \
