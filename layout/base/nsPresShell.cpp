@@ -2125,6 +2125,9 @@ static void CheckForFocus(nsIDocument* aDocument)
   nsCOMPtr<nsIDOMWindowInternal> rootWindow;
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
   ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+  NS_ASSERTION(rootWindow , "cannot get rootWindow");
+  if(nsnull == rootWindow)
+    return;
   nsCOMPtr<nsIDOMDocument> rootDocument;
   rootWindow->GetDocument(getter_AddRefs(rootDocument));
 
