@@ -1901,6 +1901,7 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 {
   nsMouseEvent event;
+  nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
 
 #if defined(DEBUG_pavlov) || defined(DEBUG_akkana)
@@ -1952,6 +1953,30 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
       eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
       break;
 
+    case 4:
+    case 5:
+      if (aGdkButtonEvent->button == 4)
+        scrollEvent.deltaLines = -3;
+      else
+        scrollEvent.deltaLines = 3;
+
+      scrollEvent.message = NS_MOUSE_SCROLL;
+      scrollEvent.widget = this;
+      scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+
+      scrollEvent.point.x = nscoord(aGdkButtonEvent->x);
+      scrollEvent.point.y = nscoord(aGdkButtonEvent->y);
+      
+      scrollEvent.isShift = (aGdkButtonEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+      scrollEvent.isControl = (aGdkButtonEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+      scrollEvent.isAlt = (aGdkButtonEvent->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+      scrollEvent.time = aGdkButtonEvent->time;
+      AddRef();
+      if (mEventCallback)
+        DispatchWindowEvent(&scrollEvent);
+      Release();
+      return;
+
       // Single-click default.
     default:
       eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
@@ -2001,6 +2026,12 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
   case 3:
     eventType = NS_MOUSE_RIGHT_BUTTON_UP;
     break;
+
+  case 4:
+  case 5:
+    // We don't really need to do anything here, but we don't want
+    // LEFT_BUTTON_UP to happen
+    return;
 
   default:
     eventType = NS_MOUSE_LEFT_BUTTON_UP;
