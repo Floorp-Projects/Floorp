@@ -26,7 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= embedcomponents
 LIBRARY_NAME	= embedcomponents
 IS_COMPONENT	= 1
-REQUIRES	= xpcom windowwatcher_s
+REQUIRES	= xpcom windowwatcher
 
 CPPSRCS		= nsModule.cpp
 
