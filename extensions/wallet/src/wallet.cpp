@@ -623,7 +623,7 @@ wallet_GetWalletNotificationPref(void) {
 
 #define PROPERTIES_URL "chrome://wallet/locale/wallet.properties"
 
-PUBLIC char*
+PUBLIC PRUnichar *
 Wallet_Localize(char* genericString) {
   nsresult ret;
   nsAutoString v("");
@@ -641,7 +641,7 @@ Wallet_Localize(char* genericString) {
 
   if (NS_FAILED(ret)) {
     printf("cannot get net service\n");
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
   nsIURI *url = nsnull;
 
@@ -656,7 +656,7 @@ Wallet_Localize(char* genericString) {
   if (NS_FAILED(ret)) {
     printf("cannot create URI\n");
     nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
 
   ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
@@ -666,7 +666,7 @@ Wallet_Localize(char* genericString) {
 
   if (NS_FAILED(ret)) {
     printf("cannot create URL\n");
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
 
   /* create a bundle for the localization */
@@ -675,7 +675,7 @@ Wallet_Localize(char* genericString) {
     kIStringBundleServiceIID, (nsISupports**) &pStringService);
   if (NS_FAILED(ret)) {
     printf("cannot get string service\n");
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
   nsILocale* locale = nsnull;
   nsIStringBundle* bundle = nsnull;
@@ -692,7 +692,7 @@ Wallet_Localize(char* genericString) {
 #ifdef NECKO
     nsCRT::free(spec);
 #endif /* NECKO */
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
   ret = pStringService->CreateBundle(spec, locale, &bundle);
 #ifdef NECKO
@@ -704,7 +704,7 @@ Wallet_Localize(char* genericString) {
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
   nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
 
@@ -721,9 +721,9 @@ Wallet_Localize(char* genericString) {
   NS_RELEASE(bundle);
   if (NS_FAILED(ret)) {
     printf("cannot get string from name\n");
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
-  return v.ToNewCString();
+  return v.ToNewUnicode();
 }
 
 /**********************/
@@ -731,7 +731,7 @@ Wallet_Localize(char* genericString) {
 /**********************/
 
 PUBLIC PRBool
-Wallet_Confirm(char * szMessage)
+Wallet_Confirm(PRUnichar * szMessage)
 {
   PRBool retval = PR_TRUE; /* default value */
 
@@ -748,7 +748,7 @@ Wallet_Confirm(char * szMessage)
 }
 
 PUBLIC PRBool
-Wallet_ConfirmYN(char * szMessage)
+Wallet_ConfirmYN(PRUnichar * szMessage)
 {
   PRBool retval = PR_TRUE; /* default value */
 
@@ -769,7 +769,7 @@ Wallet_ConfirmYN(char * szMessage)
 }
 
 PUBLIC PRInt32
-Wallet_3ButtonConfirm(char * szMessage)
+Wallet_3ButtonConfirm(PRUnichar * szMessage)
 {
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
@@ -802,7 +802,7 @@ Wallet_3ButtonConfirm(char * szMessage)
 }
 
 PUBLIC void
-Wallet_Alert(char * szMessage)
+Wallet_Alert(PRUnichar * szMessage)
 {
 #ifdef NECKO
   nsresult res;  
@@ -831,7 +831,7 @@ Wallet_Alert(char * szMessage)
 }
 
 PUBLIC PRBool
-Wallet_CheckConfirmYN(char * szMessage, char * szCheckMessage, PRBool* checkValue)
+Wallet_CheckConfirmYN(PRUnichar * szMessage, char * szCheckMessage, PRBool* checkValue)
 {
 #ifdef NECKO
   PRBool retval = PR_TRUE; /* default value */
@@ -880,7 +880,7 @@ Wallet_CheckConfirmYN(char * szMessage, char * szCheckMessage, PRBool* checkValu
 #endif
 }
 
-char * wallet_GetString(char * szMessage)
+char * wallet_GetString(PRUnichar * szMessage)
 {
 #ifdef NECKO
   nsString password;
@@ -930,7 +930,7 @@ char * wallet_GetString(char * szMessage)
 #endif
 }
 
-char * wallet_GetDoubleString(char * szMessage, char * szMessage2, PRBool& matched)
+char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage2, PRBool& matched)
 {
   nsString password, password2;
   PRBool retval;
@@ -1209,8 +1209,8 @@ Wallet_KeySet() {
   return keySet;
 }
 
-PRIVATE PRBool
-wallet_KeyTimedOut() {
+PUBLIC PRBool
+Wallet_KeyTimedOut() {
   time_t curTime = time(NULL);
   if (Wallet_KeySet() && (curTime > keyExpiresTime)) {
     keySet = PR_FALSE;
@@ -1219,8 +1219,8 @@ wallet_KeyTimedOut() {
   return PR_FALSE;
 }
 
-PRIVATE void
-wallet_KeyResetTime() {
+PUBLIC void
+Wallet_KeyResetTime() {
   if (Wallet_KeySet()) {
     keyExpiresTime = time(NULL) + keyDuration;
   }
@@ -1319,9 +1319,9 @@ Wallet_SetKey(PRBool isNewkey) {
   PRBool useDefaultKey = PR_FALSE;
 
   if (Wallet_KeySize() < 0) { /* no key has yet been established */
-    char * message = Wallet_Localize("firstPassword");
-    char * message2 = Wallet_Localize("confirmPassword");
-    char * mismatch = Wallet_Localize("confirmFailed_TryAgain?");
+    PRUnichar * message = Wallet_Localize("firstPassword");
+    PRUnichar * message2 = Wallet_Localize("confirmPassword");
+    PRUnichar * mismatch = Wallet_Localize("confirmFailed_TryAgain?");
     PRBool matched;
     for (;;) {
       newkey = wallet_GetDoubleString(message, message2, matched);
@@ -1330,9 +1330,9 @@ Wallet_SetKey(PRBool isNewkey) {
       }
       /* password confirmation failed, ask user if he wants to try again */
       if ((newkey == NULL) || (!Wallet_Confirm(mismatch))) {
-        PR_FREEIF(mismatch);
-        PR_FREEIF(message);
-        PR_FREEIF(message2);
+        Recycle(mismatch);
+        Recycle(message);
+        Recycle(message2);
         keyCancel = PR_TRUE;
         return FALSE; /* user does not want to try again */
       }    
@@ -1341,7 +1341,7 @@ Wallet_SetKey(PRBool isNewkey) {
     PR_FREEIF(message);
     PR_FREEIF(message2);
   } else { /* key has previously been established */
-    char * message;
+    PRUnichar * message;
     if (isNewkey) { /* user is changing his key */
       message = Wallet_Localize("newPassword");
     } else {
@@ -1353,12 +1353,12 @@ Wallet_SetKey(PRBool isNewkey) {
     } else { /* ask the user for his key */
       newkey = wallet_GetString(message);
       if (newkey == NULL) {
-        PR_FREEIF(message);
+        Recycle(message);
         keyCancel = PR_TRUE;
         return PR_FALSE; /* user pressed cancel -- does not want to enter a new key */
       }
     }
-    PR_FREEIF(message);
+    Recycle(message);
   }
 
   if (PL_strlen(newkey) == 0) { /* user entered a zero-length key */
@@ -2101,26 +2101,26 @@ wallet_Initialize(PRBool fetchTables) {
   }
 
   /* see if key has timed out */
-  if (wallet_KeyTimedOut()) {
+  if (Wallet_KeyTimedOut()) {
     wallet_keyInitialized = PR_FALSE;
   }
 
   if (!wallet_keyInitialized) {
     Wallet_RestartKey();
-    char * message = Wallet_Localize("IncorrectKey_TryAgain?");
+    PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
     while (!Wallet_SetKey(PR_FALSE)) {
       if (Wallet_CancelKey() || (Wallet_KeySize() < 0) || !Wallet_Confirm(message)) {
-        PR_FREEIF(message);
+        Recycle(message);
         return;
       }
     }
-    PR_FREEIF(message);
+    Recycle(message);
     wallet_ReadFromFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
     wallet_keyInitialized = PR_TRUE;
   }
 
   /* restart key timeout period */
-  wallet_KeyResetTime();
+  Wallet_KeyResetTime();
 
 #if DEBUG
 //    fprintf(stdout,"Field to Schema table \n");
@@ -2402,8 +2402,8 @@ wallet_OKToCapture(char* urlName) {
   }
 
   /* ask user if we should capture the values on this form */
-  char * message = Wallet_Localize("WantToCaptureForm?");
-  char * checkMessage = Wallet_Localize("NeverSave");
+  PRUnichar * message = Wallet_Localize("WantToCaptureForm?");
+  PRUnichar * checkMessage = Wallet_Localize("NeverSave");
   PRBool checkValue;
   PRBool result = Wallet_CheckConfirmYN(message, checkMessage, &checkValue);
   if (!result) {
@@ -2416,8 +2416,8 @@ wallet_OKToCapture(char* urlName) {
       delete url;
     }
   }
-  PR_FREEIF(checkMessage);
-  PR_FREEIF(message);
+  Recycle(checkMessage);
+  Recycle(message);
   return result;
 }
 #endif
@@ -2935,9 +2935,9 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
   /* return if no elements were put into the list */
   if (LIST_COUNT(wallet_PrefillElement_list) == 0) {
     if (Wallet_KeySet()) {
-      char * message = Wallet_Localize("noPrefills");
+      PRUnichar * message = Wallet_Localize("noPrefills");
       Wallet_Alert(message);
-      PR_FREEIF(message);
+      Recycle(message);
     }
     return NS_ERROR_FAILURE; // indicates to caller not to display preview screen
   }
@@ -3209,16 +3209,14 @@ WLLT_OnSubmit(nsIContent* formNode) {
       if ((count>=3) && !wallet_GetWalletNotificationPref()) {
 
         /* conditions all met, now give notification */
-        char* notification = 0;
-        char * message = Wallet_Localize("WalletNotification1");
-        StrAllocCopy(notification, message);
-        PR_FREEIF(message);
-        message = Wallet_Localize("WalletNotification2");
-        StrAllocCat(notification, message);
-        PR_FREEIF(message);
+        PRUnichar * notification1 = Wallet_Localize("WalletNotification1");
+        PRUnichar * notification2 = Wallet_Localize("WalletNotification2");
+        nsString s = nsString(notification1) + nsString(notification2);
+        PRUnichar * message = (PRUnichar*)(s.GetUnicode());
         wallet_SetWalletNotificationPref(PR_TRUE);
-        Wallet_Alert(notification);
-        PR_Free (notification);
+        Wallet_Alert(message);
+        Recycle(notification1);
+        Recycle(notification2);
       }
 #else
       /* save form if it meets all necessary conditions */

@@ -32,6 +32,7 @@
 
 #include "nsIPref.h"
 #include "prefapi.h"
+#include "nsTextFormater.h"
 
 extern "C" {
 #include "prmon.h"
@@ -172,7 +173,7 @@ Local_SACat(char **destination, const char *source)
 }
 
 PRBool
-cookie_CheckConfirmYN(char * szMessage, char * szCheckMessage, PRBool* checkValue) {
+cookie_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue) {
 #ifdef REAL_DIALOG
   PRBool retval = PR_TRUE; /* default value */
   nsresult res;  
@@ -229,7 +230,7 @@ cookie_CheckConfirmYN(char * szMessage, char * szCheckMessage, PRBool* checkValu
 #endif
 }
 
-PRIVATE char*
+PRIVATE PRUnichar*
 cookie_Localize(char* genericString) {
   nsresult ret;
   nsAutoString v("");
@@ -241,7 +242,7 @@ cookie_Localize(char* genericString) {
 
   if (NS_FAILED(ret)) {
     printf("cannot get net service\n");
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
   nsIURI *url = nsnull;
 
@@ -250,7 +251,7 @@ cookie_Localize(char* genericString) {
   if (NS_FAILED(ret)) {
     printf("cannot create URI\n");
     nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
 
   ret = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
@@ -258,7 +259,7 @@ cookie_Localize(char* genericString) {
 
   if (NS_FAILED(ret)) {
     printf("cannot create URL\n");
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
 
   /* create a bundle for the localization */
@@ -267,7 +268,7 @@ cookie_Localize(char* genericString) {
     kIStringBundleServiceIID, (nsISupports**) &pStringService);
   if (NS_FAILED(ret)) {
     printf("cannot get string service\n");
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
   nsILocale* locale = nsnull;
   nsIStringBundle* bundle = nsnull;
@@ -277,14 +278,14 @@ cookie_Localize(char* genericString) {
     printf("cannot get url spec\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
     nsCRT::free(spec);
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
   ret = pStringService->CreateBundle(spec, locale, &bundle);
   nsCRT::free(spec);
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
   nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
 
@@ -297,9 +298,9 @@ cookie_Localize(char* genericString) {
   NS_RELEASE(bundle);
   if (NS_FAILED(ret)) {
     printf("cannot get string from name\n");
-    return v.ToNewCString();
+    return v.ToNewUnicode();
   }
-  return v.ToNewCString();
+  return v.ToNewUnicode();
 }
 
 PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
@@ -1357,9 +1358,9 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     /* the user wants to know about cookies so let them know about every one that
      * is set and give them the choice to accept it or not
      */
-    char * new_string=0;
+    PRUnichar * new_string=0;
     int count;
-    char * remember_string = cookie_Localize("RememberThisDecision");
+    PRUnichar * remember_string = cookie_Localize("RememberThisDecision");
 
     /* find out how many cookies this host has already set */
     count = cookie_Count(host_from_header);
@@ -1367,21 +1368,21 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     prev_cookie = cookie_CheckForPrevCookie
       (path_from_header, host_from_header, name_from_header);
     cookie_UnlockCookieList();
-    char * message;
+    PRUnichar * message;
     if (prev_cookie) {
       message = cookie_Localize("PermissionToModifyCookie");
-      new_string = PR_smprintf(message, host_from_header ? host_from_header : "");
+      new_string = nsTextFormater::smprintf(message, host_from_header ? host_from_header : "");
     } else if (count>1) {
       message = cookie_Localize("PermissionToSetAnotherCookie");
-      new_string = PR_smprintf(message, host_from_header ? host_from_header : "", count);
+      new_string = nsTextFormater::smprintf(message, host_from_header ? host_from_header : "", count);
     } else if (count==1){
       message = cookie_Localize("PermissionToSetSecondCookie");
-      new_string = PR_smprintf(message, host_from_header ? host_from_header : "");
+      new_string = nsTextFormater::smprintf(message, host_from_header ? host_from_header : "");
     } else {
       message = cookie_Localize("PermissionToSetACookie");
-      new_string = PR_smprintf(message, host_from_header ? host_from_header : "");
+      new_string = nsTextFormater::smprintf(message, host_from_header ? host_from_header : "");
     }
-    PR_FREEIF(message);
+    Recycle(message);
 
     /* 
      * Who knows what thread we are on.  Only the mozilla thread
@@ -1393,7 +1394,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
       PRBool userHasAccepted =
         cookie_CheckConfirmYN(new_string, remember_string, &cookie_rememberChecked);
       PR_FREEIF(new_string);
-      PR_FREEIF(remember_string);
+      Recycle(remember_string);
       if (cookie_rememberChecked) {
         cookie_PermissionStruct * cookie_permission2;
         cookie_permission2 = PR_NEW(cookie_PermissionStruct);
@@ -2228,7 +2229,7 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
 
 PUBLIC void
 COOKIE_GetCookieListForViewer(nsString& aCookieList) {
-  char *buffer = (char*)PR_Malloc(BUFLEN2);
+  PRUnichar *buffer = (PRUnichar*)PR_Malloc(BUFLEN2);
   int g = 0, cookieNum;
   cookie_CookieStruct * cookie;
 
@@ -2248,14 +2249,14 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     char *fixed_value = cookie_FixQuoted(cookie->cookie);
     char *fixed_domain_or_host = cookie_FixQuoted(cookie->host);
     char *fixed_path = cookie_FixQuoted(cookie->path);
-    char * Domain = cookie_Localize("Domain");
-    char * Host = cookie_Localize("Host");
-    char * Yes = cookie_Localize("Yes");
-    char * No = cookie_Localize("No");
-    char * AtEnd = cookie_Localize("AtEndOfSession");
+    PRUnichar * Domain = cookie_Localize("Domain");
+    PRUnichar * Host = cookie_Localize("Host");
+    PRUnichar * Yes = cookie_Localize("Yes");
+    PRUnichar * No = cookie_Localize("No");
+    PRUnichar * AtEnd = cookie_Localize("AtEndOfSession");
 
-    g += PR_snprintf(buffer+g, BUFLEN2-g,
-      "%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c%s",
+    g += nsTextFormater::snprintf(buffer+g, BUFLEN2-g,
+      nsString("%c%d%c%s%c%s%c%S%c%s%c%s%c%S%c%S").GetUnicode(),
       BREAK, cookieNum,
       BREAK, fixed_name,
       BREAK, fixed_value,
@@ -2263,18 +2264,18 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
       BREAK, fixed_domain_or_host,
       BREAK, fixed_path,
       BREAK, cookie->xxx ? Yes : No,
-      BREAK,  cookie->expires ? ctime(&(cookie->expires)) : AtEnd
+      BREAK, cookie->expires ? (nsString(ctime(&(cookie->expires))).GetUnicode()) : AtEnd
     );
     cookieNum++;
     PR_FREEIF(fixed_name);
     PR_FREEIF(fixed_value);
     PR_FREEIF(fixed_domain_or_host);
     PR_FREEIF(fixed_path);
-    PR_FREEIF(Domain);
-    PR_FREEIF(Host);
-    PR_FREEIF(Yes);
-    PR_FREEIF(No);
-    PR_FREEIF(AtEnd);
+    Recycle(Domain);
+    Recycle(Host);
+    Recycle(Yes);
+    Recycle(No);
+    Recycle(AtEnd);
   }
   aCookieList = buffer;
   PR_FREEIF(buffer);

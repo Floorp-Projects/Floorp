@@ -99,17 +99,17 @@ extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
  * Dialogs *
  ***********/
 
-extern PRBool Wallet_ConfirmYN(char * szMessage);
+extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage);
 
 PRIVATE PRBool
-si_ConfirmYN(char * szMessage) {
+si_ConfirmYN(PRUnichar * szMessage) {
   return Wallet_ConfirmYN(szMessage);
 }
 
-extern PRInt32 Wallet_3ButtonConfirm(char * szMessage);
+extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage);
 
 PRIVATE PRInt32
-si_3ButtonConfirm(char * szMessage) {
+si_3ButtonConfirm(PRUnichar * szMessage) {
   return Wallet_3ButtonConfirm(szMessage);
 }
 
@@ -253,7 +253,7 @@ si_Prompt(char *szMessage, char* szDefaultUsername) {
 }
 
 PRIVATE PRBool
-si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount) {
+si_SelectDialog(const PRUnichar* szMessage, char** pList, PRInt32* pCount) {
   PRBool retval = PR_TRUE; /* default value */
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
@@ -294,9 +294,11 @@ si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount) {
 extern void Wallet_RestartKey();
 extern char Wallet_GetKey();
 extern PRBool Wallet_KeySet();
+extern void Wallet_KeyResetTime();
+extern PRBool Wallet_KeyTimedOut();
 extern PRBool Wallet_SetKey(PRBool newkey);
 extern PRInt32 Wallet_KeySize();
-extern char * Wallet_Localize(char * genericString);
+extern PRUnichar * Wallet_Localize(char * genericString);
 extern PRBool Wallet_CancelKey();
 
 char* signonFileName = nsnull;
@@ -319,6 +321,16 @@ si_KeySet() {
 PRIVATE PRBool
 si_SetKey() {
   return Wallet_SetKey(PR_FALSE);
+}
+
+PRIVATE void
+si_KeyResetTime() {
+  Wallet_KeyResetTime();
+}
+
+PRIVATE PRBool
+si_KeyTimedOut() {
+  return Wallet_KeyTimedOut();
 }
 
 PRIVATE PRInt32
@@ -1021,7 +1033,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
       }
 
       /* have user select a username from the list */
-      char * selectUser = Wallet_Localize("SelectUser");
+      PRUnichar * selectUser = Wallet_Localize("SelectUser");
       if (user_count == 0) {
         /* not first data node for any saved user, so simply pick first user */
         if (url->chosen_user) {
@@ -1045,7 +1057,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
       } else {
         user = NULL;
       }
-      PR_FREEIF(selectUser);
+      Recycle(selectUser);
       url->chosen_user = user;
       PR_Free(list);
       PR_Free(users);
@@ -1139,7 +1151,7 @@ si_GetURLAndUserForChangeForm(char* password)
   }
 
   /* query user */
-  char * msg = Wallet_Localize("SelectUserWhosePasswordIsBeingChanged");
+  PRUnichar * msg = Wallet_Localize("SelectUserWhosePasswordIsBeingChanged");
   if (user_count && si_SelectDialog(msg, list, &user_count)) {
     user = users[user_count];
     url = urls[user_count];
@@ -1155,7 +1167,7 @@ si_GetURLAndUserForChangeForm(char* password)
   } else {
     user = NULL;
   }
-  PR_FREEIF(msg);
+  Recycle(msg);
 
   /* free allocated strings */
   while (--list2 > list) {
@@ -1680,12 +1692,18 @@ SI_LoadSignonData(PRBool fullLoad) {
 
   if (fullLoad) {
     si_RestartKey();
-    char * message = Wallet_Localize("IncorrectKey_TryAgain?");
+    PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
+    if (si_KeyTimedOut()) {
+      si_RemoveAllSignonData();
+    }
     while (!si_SetKey()) {
       if ((Wallet_CancelKey() || Wallet_KeySize() < 0) || !si_ConfirmYN(message)) {
+        Recycle(message);
         return 1;
       }
     }
+    Recycle(message);
+    si_KeyResetTime();
   }
 
   nsInputFileStream strmx(dirSpec + signonFileName);
@@ -1837,12 +1855,18 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   if (fullSave) {
     si_RestartKey();
-    char * message = Wallet_Localize("IncorrectKey_TryAgain?");
+    PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
+    if (si_KeyTimedOut()) {
+      si_RemoveAllSignonData();
+    }
     while (!si_SetKey()) {
       if (Wallet_CancelKey() || (Wallet_KeySize() < 0) || !si_ConfirmYN(message)) {
+        Recycle(message);
         return 1;
       }
     }
+    Recycle(message);
+    si_KeyResetTime();
 
     /* do not save signons if user didn't know the key */
     if (!si_KeySet()) {
@@ -1978,21 +2002,18 @@ si_OkToSave(char *URLName, char *userName) {
   }
 
   if (!si_RememberSignons && !si_GetNotificationPref()) {
-    char* notification = 0;
-    char * message = Wallet_Localize("PasswordNotification1");
-    StrAllocCopy(notification, message);
-    PR_FREEIF(message);
-    message = Wallet_Localize("PasswordNotification2");
-    StrAllocCat(notification, message);
-    PR_FREEIF(message);
+    PRUnichar * notification1 = Wallet_Localize("PasswordNotification1");
+    PRUnichar * notification2 = Wallet_Localize("PasswordNotification2");
+    nsString s = nsString(notification1) + nsString(notification2);
+    PRUnichar * message = (PRUnichar*)(s.GetUnicode());
+    Recycle(notification1);
+    Recycle(notification2);
     si_SetNotificationPref(PR_TRUE);
-    if (!si_ConfirmYN(notification)) {
-      PR_Free (notification);
+    if (!si_ConfirmYN(message)) {
       SI_SetBoolPref(pref_rememberSignons, PR_FALSE);
       return PR_FALSE;
     }
-    SI_SetBoolPref(pref_rememberSignons, PR_TRUE); /* this is unnecessary */
-    PR_Free (notification);
+    SI_SetBoolPref(pref_rememberSignons, PR_TRUE);
   }
 
   strippedURLName = si_StrippedURL(URLName);
@@ -2001,17 +2022,17 @@ si_OkToSave(char *URLName, char *userName) {
     return PR_FALSE;
   }
 
-  char * message = Wallet_Localize("WantToSavePassword?");
+  PRUnichar * message = Wallet_Localize("WantToSavePassword?");
   PRInt32 button;
   if ((button = si_3ButtonConfirm(message)) != 1) {
     if (button == -1) {
       si_PutReject(strippedURLName, userName, PR_TRUE);
     }
     PR_Free(strippedURLName);
-    PR_FREEIF(message);
+    Recycle(message);
     return PR_FALSE;
   }
-  PR_FREEIF(message);
+  Recycle(message);
   PR_Free(strippedURLName);
   return PR_TRUE;
 }
@@ -2363,8 +2384,6 @@ SINGSIGN_PromptUsernameAndPassword
   }
 
   /* cleanup and return */
-  PR_FREEIF(user);
-  PR_FREEIF(pwd);
   PR_FREEIF(username);
   PR_FREEIF(password);
   PR_FREEIF(host);
