@@ -43,61 +43,10 @@
 #error "This code is for Win32 only"
 #endif
 
-// Remember that on Win32 these 'words' are 32bit DWORDS
-
-static uint32 __stdcall
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
-{
-    PRUint32 result = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
-    {
-        if(s->IsPtrData())
-        {
-            result++;
-            continue;
-        }
-        switch(s->type)
-        {
-        case nsXPTType::T_I8     :
-        case nsXPTType::T_I16    :
-        case nsXPTType::T_I32    :
-            result++;
-            break;
-        case nsXPTType::T_I64    :
-            result+=2;
-            break;
-        case nsXPTType::T_U8     :
-        case nsXPTType::T_U16    :
-        case nsXPTType::T_U32    :
-            result++;
-            break;
-        case nsXPTType::T_U64    :
-            result+=2;
-            break;
-        case nsXPTType::T_FLOAT  :
-            result++;
-            break;
-        case nsXPTType::T_DOUBLE :
-            result+=2;
-            break;
-        case nsXPTType::T_BOOL   :
-        case nsXPTType::T_CHAR   :
-        case nsXPTType::T_WCHAR  :
-            result++;
-            break;
-        default:
-            // all the others are plain pointer types
-            result++;
-            break;
-        }
-    }
-    return result;
-}
-
 static void __stdcall
 invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 {
-    for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
+    for(; paramCount > 0; paramCount--, d++, s++)
     {
         if(s->IsPtrData())
         {
@@ -128,21 +77,25 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 }
 
 #pragma warning(disable : 4035) // OK to have no return value
-XPTC_PUBLIC_API(nsresult)
+__declspec(naked) XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params)
 {
     __asm {
-        push    params
-        push    paramCount
-        call    invoke_count_words  // stdcall, result in eax
-        shl     eax,2               // *= 4
+        push    ebp
+        mov     ebp,esp
+        mov     eax,paramCount 
+        cmp     eax,0               // maybe we don't have any params to copy
+        jz      noparams
+        mov     ecx,eax             // save paramCount for later
+        shl     eax,3               // *= 8 (max possible param size)
         sub     esp,eax             // make space for params
         mov     edx,esp
         push    params
-        push    paramCount
+        push    ecx                 // paramCount
         push    edx
         call    invoke_copy_to_stack // stdcall
+noparams:
         mov     ecx,that            // instance in ecx
         push    ecx                 // push this
         mov     edx,[ecx]           // vtable in edx
@@ -150,6 +103,9 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
         shl     eax,2               // *= 4
         add     edx,eax
         call    [edx]               // stdcall, i.e. callee cleans up stack.
+        mov     esp,ebp
+        pop     ebp
+        ret
     }
 }
 #pragma warning(default : 4035) // restore default
