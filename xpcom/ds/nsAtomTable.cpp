@@ -158,12 +158,12 @@ NS_COM nsIAtom* NS_NewAtom(const PRUnichar* us)
   PLHashEntry* he = *hep;
   if (nsnull != he) {
     nsIAtom* id = (nsIAtom*) he->value;
-    NS_ADDREF(id);
+    NS_IF_ADDREF(id);
     return id;
   }
   AtomImpl* id = new(us, uslen) AtomImpl();
   PL_HashTableRawAdd(gAtomHashTable, hep, hashCode, id->mString, id);
-  NS_ADDREF(id);
+  NS_IF_ADDREF(id);
   return id;
 }
 
