@@ -1,9 +1,0 @@
-/* Default Icon */
-
-titledbutton[loading="true"] {
-	list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
-}
-
-titledbutton.iconic {
-	list-style-image: url("resource:/res/rdf/document.gif");
-}
