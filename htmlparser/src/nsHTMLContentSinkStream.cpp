@@ -657,6 +657,10 @@ nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
 }
 
 
+
+// XXX OpenHTML never gets called; AddStartTag gets called on
+// XXX the html tag from OpenContainer, from nsXIFDTD::StartTopOfStack,
+// XXX from nsXIFDTD::HandleStartToken.
 /**
   * This method is used to open the outer HTML container.
   *
@@ -898,7 +902,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   if (mDoFormat && tag == eHTMLTag_style)
   {
-    Write(">");
+    Write(kGreaterThan);
     Write(NS_LINEBREAK);
     const   nsString& data = aNode.GetSkippedContent();
     PRInt32 size = data.Length();
@@ -1110,8 +1114,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   {
     if (!mDoFormat || preformatted)
     {
-      const nsString& text = aNode.GetText();
-      Write(text);
+      Write(NS_LINEBREAK);
       mColPos = 0;
     }
   }
