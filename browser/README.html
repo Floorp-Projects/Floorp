@@ -93,23 +93,23 @@
 
   <h2>Building mozilla/browser </h2>
 
-  <h3>UNIX</h3>
+  <h3>UNIX, Windows (gmake), Mac (mach-o)</h3>
 
   <ol>
    <li>Get a bog standard Mozilla tree built.</li>
    <li>Go to the root of your mozilla tree.</li>
    <li><kbd>cvs up -Pd browser</kbd></li>
+   <li>if you have MOZ_OBJDIR set in your mozconfig file, <kbd>cd</kbd>
+   to that directory</li>
+   <li><kbd>sh -c "CONFIG_FILES=browser/Makefile ./config.status"</kbd></li>
    <li><kbd>cd browser</kbd></li>
-   <li><kbd>../build/autoconf/make-makefile</kbd></li>
    <li><kbd>make</kbd></li>
    <li>Run mozilla with arguments <kbd>-chrome chrome://browser/</kbd></li>
   </ol>
 
-  <h2>Windows</h2>
+  Note that steps 4 and 5 need only be run once.
 
-  <p>...</p>
-
-  <h2>Mac</h2>
+  <h2>Mac (CodeWarrior)</h2>
 
   <p>...</p>
 
