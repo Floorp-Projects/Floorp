@@ -18,10 +18,11 @@
 
 #include "nsViewer.h"
 
-nsresult ExecuteViewer(nsViewer* aViewer)
+
+nsresult ExecuteViewer(nsViewer* aViewer, int argc, char **argv)
 {
   nsIWidget *mainWindow = nsnull;
-  nsDocLoader* dl = aViewer->SetupViewer(&mainWindow);
+  nsDocLoader* dl = aViewer->SetupViewer(&mainWindow, argc, argv);
   nsresult result = aViewer->Run();
   aViewer->CleanupViewer(dl);
 
@@ -33,6 +34,6 @@ void main(int argc, char **argv)
   nsViewer* viewer = new nsViewer();
   SetViewer(viewer);
   viewer->ProcessArguments(argc, argv);
-  ExecuteViewer(viewer);
+  ExecuteViewer(viewer, argc, argv);
 }
 

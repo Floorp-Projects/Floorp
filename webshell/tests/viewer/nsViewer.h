@@ -133,7 +133,8 @@ class nsViewer : public nsDispatchListener {
     virtual void CrtSetDebug(PRUint32 aNewFlags);
     virtual void ExitViewer();
 
-    virtual nsDocLoader* SetupViewer(nsIWidget **aMainWindow);
+
+    virtual nsDocLoader* SetupViewer(nsIWidget **aMainWindow,int argc, char **argv);
     virtual void CleanupViewer(nsDocLoader* aDl);
     virtual nsEventStatus DispatchMenuItem(nsGUIEvent *aEvent);
     virtual nsresult ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns);
