@@ -908,6 +908,23 @@ handle_gdk_event (GdkEvent *event, gpointer data)
 void
 dispatch_superwin_event(GdkEvent *event, nsWindow *window)
 {
+  if (event->type == GDK_KEY_PRESS || event->type == GDK_KEY_RELEASE)
+  {
+    // Check to see whether or not we need to send this to the
+    // toplevel window to get passed to the GtkWidget with focus.
+    // This happens in the embedding case.
+    if (!window->focusWindow) 
+    {
+      GtkWidget *mozArea = window->GetMozArea();
+      if (mozArea)
+      {
+        gtk_propagate_event(mozArea, event);
+      }
+      else
+        g_print("dispatch_superwin_event: aeii! failed to get the mozarea!\n");
+    }
+  }
+
   switch (event->type)
   {
   case GDK_KEY_PRESS:
