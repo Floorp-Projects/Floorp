@@ -86,7 +86,7 @@ sub BuildMozilla()
 		BuildProject(":modules:security:freenav:macbuild:NoSecurity.mcp",			"PPC Shared Library$D");
 		MakeAlias(":modules:security:freenav:macbuild:NoSecurity".$LibD."Lib", "$dist_dir");
 		
-		BuildProject(":xpcom:macbuild:xpcomPPC$Lib.mcp");
+		BuildProject(":xpcom:macbuild:xpcomPPC".$LibD.".mcp");
 		MakeAlias(":xpcom:macbuild:xpcomPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":lib:mac:PowerPlant:PowerPlant.mcp");		
