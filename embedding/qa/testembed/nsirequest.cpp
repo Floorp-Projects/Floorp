@@ -112,9 +112,9 @@ void CNsIRequest::RunIndividualTests(UINT nMenuID)
 	for (i=0; i<6; i++)
 	{
 		theSpec = UrlTable_Temp[i].theUrl;
-		FormatAndPrintOutput("the uri spec = ", theSpec, 2);
+		FormatAndPrintOutput("the uri spec = ", theSpec.get(), 2);
 
-		rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
+		rv = NS_NewURI(getter_AddRefs(theURI), theSpec.get());
 		if (!theURI)
 		{
 		   QAOutput("We didn't get the URI. Test failed.", 1);
@@ -207,9 +207,9 @@ void CNsIRequest::RunAllTests()
 	for (i=0; i<6; i++)
 	{
 		theSpec = UrlTable_Temp[i].theUrl;
-		FormatAndPrintOutput("the uri spec = ", theSpec, 2);
+		FormatAndPrintOutput("the uri spec = ", theSpec.get(), 2);
 
-		rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
+		rv = NS_NewURI(getter_AddRefs(theURI), theSpec.get());
 		if (!theURI)
 		{
 		   QAOutput("We didn't get the URI. Test failed.", 1);

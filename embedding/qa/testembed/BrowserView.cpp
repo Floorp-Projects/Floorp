@@ -669,7 +669,7 @@ void CBrowserView::OnFileSaveAs()
         "Web Page, Complete (*.htm;*.html)|*.htm;*.html|" 
         "Text File (*.txt)|*.txt||";
 
-	CFileDialog cf(FALSE, "htm", (const char *)fileName, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+	CFileDialog cf(FALSE, "htm", fileName.get(), OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
 					lpszFilter, this);
 
 	if(cf.DoModal() == IDOK)

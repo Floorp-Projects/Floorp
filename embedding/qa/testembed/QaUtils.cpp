@@ -221,7 +221,7 @@ void WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
 	if (!theDOMWindow)
 		QAOutput(totalStr1.get(), displayMethod);
 	else
-		RvTestResult(rv, totalStr2, displayMethod);
+		RvTestResult(rv, totalStr2.get(), displayMethod);
 }
 
 void GetTheUri(nsIURI *theUri, int displayMethod)
