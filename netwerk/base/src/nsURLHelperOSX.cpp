@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -53,40 +54,40 @@ static PRBool pathBeginsWithVolName(const nsACString& path, nsACString& firstPat
   // This needs to be done as quickly as possible, so we cache a list of volume names.
   // XXX Register an event handler to detect drives being mounted/unmounted?
   
-    static nsCStringArray gVolumeList; // We will leak this - one for the life of the app :-/
+  static nsCStringArray gVolumeList; // We will leak this - one for the life of the app :-/
 
-    // Cache a list of volume names
-    if (!gVolumeList.Count()) {
-      OSErr err;
-      ItemCount volumeIndex = 1;
-      
-      do {
-        HFSUniStr255 volName;
-        FSRef rootDirectory;
-        err = ::FSGetVolumeInfo(0, volumeIndex, NULL, kFSVolInfoNone, NULL, &volName, &rootDirectory);
-        if (err == noErr) {
-          nsCString volNameStr = NS_ConvertUCS2toUTF8(Substring((PRUnichar *)volName.unicode,
-                                  (PRUnichar *)volName.unicode + volName.length));
-          gVolumeList.AppendCString(volNameStr);
-          volumeIndex++;
-        }
-      } while (err == noErr);
-    }
+  // Cache a list of volume names
+  if (!gVolumeList.Count()) {
+    OSErr err;
+    ItemCount volumeIndex = 1;
     
-    // Extract the first component of the path
-    nsACString::const_iterator start;
-    path.BeginReading(start);
-    start.advance(1); // path begins with '/'
-    nsACString::const_iterator directory_end;
-    path.EndReading(directory_end);
-    nsACString::const_iterator component_end(start);
-    FindCharInReadable('/', component_end, directory_end);
-    
-    nsCAutoString flatComponent((Substring(start, component_end)));
-    NS_UnescapeURL(flatComponent);
-    PRInt32 foundIndex = gVolumeList.IndexOf(flatComponent);
-    firstPathComponent = flatComponent;
-    return (foundIndex != -1);
+    do {
+      HFSUniStr255 volName;
+      FSRef rootDirectory;
+      err = ::FSGetVolumeInfo(0, volumeIndex, NULL, kFSVolInfoNone, NULL, &volName, &rootDirectory);
+      if (err == noErr) {
+        nsCString volNameStr = NS_ConvertUCS2toUTF8(Substring((PRUnichar *)volName.unicode,
+                                (PRUnichar *)volName.unicode + volName.length));
+        gVolumeList.AppendCString(volNameStr);
+        volumeIndex++;
+      }
+    } while (err == noErr);
+  }
+  
+  // Extract the first component of the path
+  nsACString::const_iterator start;
+  path.BeginReading(start);
+  start.advance(1); // path begins with '/'
+  nsACString::const_iterator directory_end;
+  path.EndReading(directory_end);
+  nsACString::const_iterator component_end(start);
+  FindCharInReadable('/', component_end, directory_end);
+  
+  nsCAutoString flatComponent((Substring(start, component_end)));
+  NS_UnescapeURL(flatComponent);
+  PRInt32 foundIndex = gVolumeList.IndexOf(flatComponent);
+  firstPathComponent = flatComponent;
+  return (foundIndex != -1);
 }
 
 static nsresult convertHFSPathtoPOSIX(const nsACString& hfsPath, nsACString& posixPath)
@@ -155,18 +156,16 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
   // contains semicolons we need to manually escape them.
   escPath.ReplaceSubstring(";", "%3b");
 
-  // XXX this should be unnecessary
+  // if this file references a directory, then we need to ensure that the
+  // URL ends with a slash.  this is important since it affects the rules
+  // for relative URL resolution when this URL is used as a base URL.
+  // if the file does not exist, then we make no assumption about its type,
+  // and simply leave the URL unmodified.
   if (escPath.Last() != '/') {
     PRBool dir;
     rv = aFile->IsDirectory(&dir);
-    if (NS_FAILED(rv))
-      NS_WARNING(PromiseFlatCString(
-          NS_LITERAL_CSTRING("Cannot tell if ") + escPath +
-          NS_LITERAL_CSTRING(" is a directory or file")).get());
-    else if (dir) {
-      // make sure we have a trailing slash
+    if (NS_SUCCEEDED(rv) && dir)
       escPath += "/";
-    }
   }
   
   result = escPath;
@@ -176,71 +175,71 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 nsresult
 net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 {
-    // NOTE: See also the implementation in nsURLHelperUnix.cpp
-    // This matches it except for the HFS path handling.
+  // NOTE: See also the implementation in nsURLHelperUnix.cpp
+  // This matches it except for the HFS path handling.
 
-    nsresult rv;
+  nsresult rv;
 
-    nsCOMPtr<nsILocalFile> localFile;
-    rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(localFile));
-    if (NS_FAILED(rv))
-      return rv;
-    
-    nsCAutoString directory, fileBaseName, fileExtension, path;
-    PRBool bHFSPath = PR_FALSE;
+  nsCOMPtr<nsILocalFile> localFile;
+  rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(localFile));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  nsCAutoString directory, fileBaseName, fileExtension, path;
+  PRBool bHFSPath = PR_FALSE;
 
-    rv = net_ParseFileURL(aURL, directory, fileBaseName, fileExtension);
-    if (NS_FAILED(rv))
-      return rv;
+  rv = net_ParseFileURL(aURL, directory, fileBaseName, fileExtension);
+  if (NS_FAILED(rv))
+    return rv;
 
-    if (!directory.IsEmpty()) {
-      NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
+  if (!directory.IsEmpty()) {
+    NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
 
-      // The canonical form of file URLs on OSX use POSIX paths:
-      //   file:///path-name.
-      // But, we still encounter file URLs that use HFS paths:
-      //   file:///volume-name/path-name
-      // Determine that here and normalize HFS paths to POSIX.
-      nsCAutoString possibleVolName;
-      if (pathBeginsWithVolName(directory, possibleVolName)) {        
-        // Though we know it begins with a volume name, it could still
-        // be a valid POSIX path if the boot drive is named "Mac HD"
-        // and there is a directory "Mac HD" at its root. If such a
-        // directory doesn't exist, we'll assume this is an HFS path.
-        FSRef testRef;
-        possibleVolName.Insert("/", 0);
-        if (::FSPathMakeRef((UInt8*)possibleVolName.get(), &testRef, nsnull) != noErr)
-          bHFSPath = PR_TRUE;
-      }
-
-      if (bHFSPath) {
-        // "%2F"s need to become slashes, while all other slashes need to
-        // become colons. If we start out by changing "%2F"s to colons, we
-        // can reply on SwapSlashColon() to do what we need
-        path.ReplaceSubstring("%2F", ":");
-        path.Cut(0, 1); // directory begins with '/'
-        SwapSlashColon((char *)path.get());
-        // At this point, path is an HFS path made using the same
-        // algorithm as nsURLHelperMac. We'll convert to POSIX below.
-      }
-    }
-    if (!fileBaseName.IsEmpty())
-      NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path);
-    if (!fileExtension.IsEmpty()) {
-      path += '.';
-      NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path);
+    // The canonical form of file URLs on OSX use POSIX paths:
+    //   file:///path-name.
+    // But, we still encounter file URLs that use HFS paths:
+    //   file:///volume-name/path-name
+    // Determine that here and normalize HFS paths to POSIX.
+    nsCAutoString possibleVolName;
+    if (pathBeginsWithVolName(directory, possibleVolName)) {        
+      // Though we know it begins with a volume name, it could still
+      // be a valid POSIX path if the boot drive is named "Mac HD"
+      // and there is a directory "Mac HD" at its root. If such a
+      // directory doesn't exist, we'll assume this is an HFS path.
+      FSRef testRef;
+      possibleVolName.Insert("/", 0);
+      if (::FSPathMakeRef((UInt8*)possibleVolName.get(), &testRef, nsnull) != noErr)
+        bHFSPath = PR_TRUE;
     }
 
-    NS_UnescapeURL(path);
+    if (bHFSPath) {
+      // "%2F"s need to become slashes, while all other slashes need to
+      // become colons. If we start out by changing "%2F"s to colons, we
+      // can reply on SwapSlashColon() to do what we need
+      path.ReplaceSubstring("%2F", ":");
+      path.Cut(0, 1); // directory begins with '/'
+      SwapSlashColon((char *)path.get());
+      // At this point, path is an HFS path made using the same
+      // algorithm as nsURLHelperMac. We'll convert to POSIX below.
+    }
+  }
+  if (!fileBaseName.IsEmpty())
+    NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path);
+  if (!fileExtension.IsEmpty()) {
+    path += '.';
+    NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path);
+  }
 
-    if (bHFSPath)
-      convertHFSPathtoPOSIX(path, path);
+  NS_UnescapeURL(path);
 
-    // assuming path is encoded in the native charset
-    rv = localFile->InitWithNativePath(path);
-    if (NS_FAILED(rv))
-      return rv;
+  if (bHFSPath)
+    convertHFSPathtoPOSIX(path, path);
 
-    NS_ADDREF(*result = localFile);
-    return NS_OK;
+  // assuming path is encoded in the native charset
+  rv = localFile->InitWithNativePath(path);
+  if (NS_FAILED(rv))
+    return rv;
+
+  NS_ADDREF(*result = localFile);
+  return NS_OK;
 }

@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -82,18 +83,16 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     // contains semicolons we need to manually escape them.
     escPath.ReplaceSubstring(";", "%3b");
 
-    // XXX this should be unnecessary
-    if (escPath[escPath.Length() - 1] != '/') {
+    // if this file references a directory, then we need to ensure that the
+    // URL ends with a slash.  this is important since it affects the rules
+    // for relative URL resolution when this URL is used as a base URL.
+    // if the file does not exist, then we make no assumption about its type,
+    // and simply leave the URL unmodified.
+    if (escPath.Last() != '/') {
         PRBool dir;
         rv = aFile->IsDirectory(&dir);
-        if (NS_FAILED(rv))
-            NS_WARNING(PromiseFlatCString(
-                NS_LITERAL_CSTRING("Cannot tell if ") + escPath +
-                NS_LITERAL_CSTRING(" is a directory or file")).get());
-        else if (dir) {
-            // make sure we have a trailing slash
+        if (NS_SUCCEEDED(rv) && dir)
             escPath += "/";
-        }
     }
 
     result = escPath;
