@@ -90,7 +90,11 @@ public:
 	GetClassPath(const char* *result) = 0;
 
 	NS_IMETHOD
-	GetJavaWrapper(JNIEnv* jenv, long obj, jobject *jobj) = 0;
+#if PR_BYTES_PER_LONG == 8
+	GetJavaWrapper(JNIEnv* jenv, jlong obj, jobject *jobj) = 0;
+#else
+	GetJavaWrapper(JNIEnv* jenv, jint obj, jobject *jobj) = 0;
+#endif
 
 	/**
 	 * This creates a new secure communication channel with Java. The second parameter,
@@ -110,7 +114,11 @@ public:
 	SpendTime(PRUint32 timeMillis) = 0;
 
 	NS_IMETHOD
-	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, long* obj) = 0;
+#if PR_BYTES_PER_LONG == 8
+	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jlong* obj) = 0;
+#else
+	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj) = 0;
+#endif
 
  	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMPLUGIN_IID)
 };
