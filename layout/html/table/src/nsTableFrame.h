@@ -370,10 +370,6 @@ public:
                        PRBool&                  aDidBalance,
                        nsReflowStatus&          aStatus);
 
-  NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
-                                           nsIFrame** aProviderFrame, 
-                                           nsContextProviderRelationship& aRelationship);
-
   static nsMargin GetPadding(const nsHTMLReflowState& aReflowState,
                              const nsTableCellFrame*  aCellFrame);
 

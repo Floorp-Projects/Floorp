@@ -1756,39 +1756,6 @@ nsTableFrame::SetColumnDimensions(nsIPresContext* aPresContext,
 
 // SEC: TODO need to worry about continuing frames prev/next in flow for splitting across pages.
 
-// GetParentStyleContextProvider:
-//  The grandparent frame is he parent style context provider
-//  That is, the parent of the outerTableFrame is the frame that has our parent style context
-//  NOTE: if ther is a placeholder frame for the outer table, then we use its grandparent frame.
-//
-NS_IMETHODIMP 
-nsTableFrame::GetParentStyleContextProvider(nsIPresContext* aPresContext,
-                                            nsIFrame** aProviderFrame, 
-                                            nsContextProviderRelationship& aRelationship)
-{
-  NS_ASSERTION(aProviderFrame, "null argument aProviderFrame");
-  if (aProviderFrame) {
-    nsIFrame* f;
-    GetParent(&f);
-    NS_ASSERTION(f,"TableFrame has no parent frame");
-    if (f) {
-      // see if there is a placeholder frame representing our parent's place in the frame tree
-      // if there is, we get the parent of that frame as our surrogate grandparent
-      nsIFrame* placeholder = nsnull;
-      GetPlaceholderFor(*aPresContext,*f,&placeholder);
-      if (placeholder) {
-        f = placeholder;
-      } 
-      f->GetParent(&f);
-      NS_ASSERTION(f,"TableFrame has no grandparent frame");
-    }
-    // parent context provider is the grandparent frame
-    *aProviderFrame = f;
-    aRelationship = eContextProvider_Ancestor;
-  }
-  return ((aProviderFrame != nsnull) && (*aProviderFrame != nsnull)) ? NS_OK : NS_ERROR_FAILURE;
-}
-
 // XXX this could be made more general to handle row modifications that change the
 // table height, but first we need to scrutinize every Invalidate
 static void
