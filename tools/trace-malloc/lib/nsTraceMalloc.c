@@ -1671,7 +1671,7 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
 
 #ifdef XP_WIN32
     /* Register listeners for win32. */
-    {
+    if (suppress_tracing == 0) {
         StartupHooker();
     }
 #endif
@@ -1816,8 +1816,7 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
         }
     }
 
-    if (logfd >= 0)
-        NS_TraceMallocStartup(logfd);
+    NS_TraceMallocStartup(logfd);
     return argc;
 }
 
@@ -1855,7 +1854,9 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
         PR_DestroyMonitor(mon);
     }
 #ifdef XP_WIN32
-    ShutdownHooker();
+    if (suppress_tracing == 0) {
+        ShutdownHooker();
+    }
 #endif
 }
 
