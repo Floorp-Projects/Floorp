@@ -11,6 +11,8 @@ interface EditorAppCore : BaseAppCore
 	readonly attribute Selection   editorSelection;
   readonly attribute DOMString   ParagraphFormat;
 	
+	attribute int wrapColumn;
+	
 	void EditorAppCore();
 	
 	void setEditorType(in DOMString editorType);
