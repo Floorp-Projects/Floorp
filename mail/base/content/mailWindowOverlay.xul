@@ -391,6 +391,8 @@
 
   <!-- Mac Window keys -->
   <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
+
+<key id="key_macHelp" key="&hintsAndTips.commandkey;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');" modifiers="accel"/>
 #endif
 </keyset>
 
@@ -1621,6 +1623,16 @@
 #endif
       
       <!-- Help -->  
+#ifdef XP_MACOSX
+<!-- Different order for OS X. Also remove "About ..." -->
+
+      <menu label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
+        <menupopup id="menu_HelpPopup">
+          <menuitem id="hintsAndTips" label="&hintsAndTips.label;" key="key_macHelp" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
+          <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
+        </menupopup>
+      </menu>
+#else
       <menu label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
         <menupopup id="menu_HelpPopup">
           <menuitem id="releaseNotes" accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
@@ -1631,6 +1643,8 @@
                     oncommand="window.openDialog('chrome://messenger/content/aboutDialog.xul', 'About', 'modal,centerscreen,chrome,resizable=no');"/>
         </menupopup>
       </menu>
+#endif
+
       <spacer flex="100%"/>
       </menubar>
     </toolbaritem>
