@@ -269,6 +269,8 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     rv = mXULAppDir->Clone(getter_AddRefs(file));
   }
   else if (mProfileDir) {
+    // We need to allow component, xpt, and chrome registration to
+    // occur prior to the profile-after-change notification.
     if (!strcmp(aProperty, NS_XPCOM_COMPONENT_REGISTRY_FILE)) {
       rv = mProfileDir->Clone(getter_AddRefs(file));
       rv |= file->AppendNative(NS_LITERAL_CSTRING("compreg.dat"));
@@ -277,7 +279,11 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
       rv = mProfileDir->Clone(getter_AddRefs(file));
       rv |= file->AppendNative(NS_LITERAL_CSTRING("xpti.dat"));
     }
-    if (mProfileNotified) {
+    else if (!strcmp(aProperty, NS_APP_USER_CHROME_DIR)) {
+      rv = mProfileDir->Clone(getter_AddRefs(file));
+      rv |= file->AppendNative(NS_LITERAL_CSTRING("chrome"));
+    }
+    else if (mProfileNotified) {
       if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) ||
           !strcmp(aProperty, NS_APP_PREFS_50_DIR)) {
         return mProfileDir->Clone(aFile);
@@ -289,10 +295,6 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
       // XXXbsmedberg this needs rethinking... many of these are app-specific,
       // and apps are going to add new stuff. I don't have a good solution,
       // yet.
-      else if (!strcmp(aProperty, NS_APP_USER_CHROME_DIR)) {
-        rv = mProfileDir->Clone(getter_AddRefs(file));
-        rv |= file->AppendNative(NS_LITERAL_CSTRING("chrome"));
-      }
       else if (!strcmp(aProperty, NS_APP_LOCALSTORE_50_FILE)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
