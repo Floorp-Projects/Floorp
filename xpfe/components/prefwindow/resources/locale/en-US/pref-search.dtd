@@ -9,4 +9,4 @@
 <!ENTITY  rHeader "Configure Search">
 <!ENTITY  legendHeader "When clicking the 'Search' button:">
 <!ENTITY  browserSearchButtonText.label "use a single search engine:">
-<!ENTITY  enablePowerSearch.label "open the Smart Search window">
+<!ENTITY  enablePowerSearch.label "open the Search window (search multiple engines)">
