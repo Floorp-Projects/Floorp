@@ -52,6 +52,7 @@
 #include "nsFileSpec.h"
 #include "nsIFile.h"
 #include "nsIScriptableUConv.h"
+#include "nsConverterInputStream.h"
 
 #include "nsUCvMinSupport.h"
 #include "nsISO88591ToUnicode.h"
@@ -156,6 +157,7 @@ UnregisterConverter(nsIComponentManager* aCompMgr,
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
 
 // The list of components we register
 static nsModuleComponentInfo gComponents[] = {
@@ -181,6 +183,9 @@ static nsModuleComponentInfo gComponents[] = {
 
   { "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
     NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, nsScriptableUnicodeConverterConstructor },
+
+  { "Unicode converter input stream", NS_CONVERTERINPUTSTREAM_CID,
+    NS_CONVERTERINPUTSTREAM_CONTRACTID, nsConverterInputStreamConstructor },
 
   // Converters
   { "ISO-8859-1 To Unicode Converter", NS_ISO88591TOUNICODE_CID,
