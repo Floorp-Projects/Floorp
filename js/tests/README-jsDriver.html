@@ -243,13 +243,15 @@
           <dd>
             Directory holding the JavaScript shell.  This can be used to override
             the automatic shell location <b>jsDriver.pl</b> performs based on
-            you OS and engine type.  <b>Do not</b> include the name of the
-            executable, only the path.  In <b>Rhino</b>, this path will be
-            appended to your <a href="#classpath">CLASSPATH</a>.  For the 
+            you OS and engine type.  For Non <b>Rhino</b> engines, this 
+            includes the name of the executable as well as the path.  In
+            <b>Rhino</b>, this path will be appended to your 
+            <a href="#classpath">CLASSPATH</a>.  For the 
             <b>SpiderMonkey</b> shells, this value defaults to
-            ../src/&lt;Platform-and-buildtype-specific-directory&gt;, for the
+            ../src/&lt;Platform-and-buildtype-specific-directory&gt;/[js|jsshell],
+            for the
             <b>LiveConnect</b> shells,
-            ../src/liveconnect/src/&lt;Platform-and-buildtype-specific-directory&gt;
+            ../src/liveconnect/src/&lt;Platform-and-buildtype-specific-directory&gt;/lschell
             and for the <b>xpcshell</b> the default is the value of your 
             <code>MOZILLA_FIVE_HOME</code> environment variable.  There is no
             default (as it is usually not needed) for the <b>Rhino</b> shell.
@@ -298,7 +300,7 @@
     <address><a href="mailto:rginda@netscape.com">Robert Ginda</a></address>
 <!-- Created: Thu Dec  2 19:08:05 PST 1999 -->
 <!-- hhmts start -->
-Last modified: Thu Dec  2 19:08:05 PST 1999
+Last modified: Tue Dec  7 11:46:36 PST 1999
 <!-- hhmts end -->
   </body>
 </html>

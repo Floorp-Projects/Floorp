@@ -513,12 +513,13 @@ sub get_sm_engine_command {
     # Look for Makefile.ref style make first.
     # (On Windows, spidermonkey can be made by two makefiles, each putting the
     # executable in a diferent directory, under a different name.)
+
     if ($opt_shell_path) {
+        # if the user provided a path to the shell, return that.
         $retval = $opt_shell_path;
-        if (!($retval =~ /[\/\\]$/)) {
-            $retval .= "/";
-        }
+
     } else {
+
         $retval = $opt_suite_path . "../src/";
         opendir (SRC_DIR_FILES, $retval);
         local @src_dir_files = readdir(SRC_DIR_FILES);
@@ -545,36 +546,36 @@ sub get_sm_engine_command {
         
         $retval .= $object_dir . "/";
 
-    }
-        
-    if (!(-x $retval . "js") && ($os_type eq "WIN")) {
-        # On windows, you can build with js.mak as well as Makefile.ref
-        # (Can you say WTF boys and girls?  I knew you could.)
-        # So, if the exe the would have been built by Makefile.ref isn't 
-        # here, check for the js.mak version before dying.
-        if ($opt_shell_path) {
-            $retval = $opt_shell_path;
-            if (!($retval =~ /[\/\\]$/)) {
-                $retval .= "/";
-            }
-        } else {
-            if ($opt_engine_type eq "smopt") {
-                $retval = "../src/Release/";
+        if (!(-x $retval . "js") && ($os_type eq "WIN")) {
+            # On windows, you can build with js.mak as well as Makefile.ref
+            # (Can you say WTF boys and girls?  I knew you could.)
+            # So, if the exe the would have been built by Makefile.ref isn't 
+            # here, check for the js.mak version before dying.
+            if ($opt_shell_path) {
+                $retval = $opt_shell_path;
+                if (!($retval =~ /[\/\\]$/)) {
+                    $retval .= "/";
+                }
             } else {
-                $retval = "../src/Debug/";
+                if ($opt_engine_type eq "smopt") {
+                    $retval = "../src/Release/";
+                } else {
+                    $retval = "../src/Debug/";
+                }
             }
+            
+            $retval .= "jsshell.exe";
+            
+        } else {
+            $retval . "js";
         }
 
-        $retval .= "jsshell.exe";
-        
-    } else {
-        $retval . "js";
-    }
+    } # (user provided a path)
 
     if (!(-x $retval)) {
         die ("$retval is not a valid executable on this system.\n");
     }
-    
+  
     return $retval;
     
 }
@@ -587,9 +588,6 @@ sub get_lc_engine_command {
         
     if ($opt_shell_path) {
         $retval = $opt_shell_path;
-        if (!($retval =~ /[\/\\]$/)) {
-            $retval .= "/";
-        }
     } else {
         $retval = $opt_suite_path . "../src/liveconnect/";
         opendir (SRC_DIR_FILES, $retval);
@@ -614,13 +612,14 @@ sub get_lc_engine_command {
             }
         
         $retval .= $object_dir . "/";
+
+        if ($os_type eq "WIN") {
+            $retval .= "lcshell.exe";
+        } else {
+            $retval .= "lcshell";
+        }
     }
     
-    if ($os_type eq "WIN") {
-        $retval .= "lcshell.exe";
-    } else {
-        $retval .= "lcshell";
-    }
 
     if (!(-x $retval)) {
         die ("$retval is not a valid executable on this system.\n");
