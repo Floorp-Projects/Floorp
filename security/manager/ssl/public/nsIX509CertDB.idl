@@ -64,6 +64,13 @@ native nsCertCompareFunc(nsCertCompareFunc);
 native nsAutoString(nsAutoString);
 [ref] native nsAutoStringRef(nsAutoString);
 
+[scriptable, uuid(96b2f5ae-4334-11d5-ba27-00108303b117)]
+interface nsIOCSPResponder : nsISupports {
+  readonly attribute wstring responseSigner;
+  readonly attribute wstring serviceURL;
+};
+
+
 [scriptable, uuid(da48b3c0-1284-11d5-ac67-000064657374)]
 interface nsIX509CertDB : nsISupports {
 
@@ -182,6 +189,12 @@ interface nsIX509CertDB : nsISupports {
                         in PRUint32 count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
                         //[array, size_is(count)] in wstring aCertNames);
+  /*
+   * getOCSPResponders
+   *
+   * Export a set of OCSP responders i.e. CA names and (optional) URLs.
+   */
+  nsISupportsArray getOCSPResponders();
 
 };
 

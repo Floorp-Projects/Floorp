@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.22 2001/05/15 14:56:42 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.23 2001/05/15 17:35:33 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -64,6 +64,7 @@ extern "C" {
 #include "secasn1.h"
 #include "secder.h"
 }
+#include "ocsp.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -2539,6 +2540,210 @@ nsNSSCertificateDB::ExportPKCS12File(nsIPK11Token     *aToken,
   //blob.LoadCerts(aCertNames, count);
   //return blob.ExportToFile(aFile);
   return blob.ExportToFile(aFile, certs, count);
+}
+
+/* Header file */
+class nsOCSPResponder : public nsIOCSPResponder
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOCSPRESPONDER
+
+  nsOCSPResponder();
+  nsOCSPResponder(const PRUnichar*, const PRUnichar*);
+  virtual ~nsOCSPResponder();
+  /* additional members */
+  static PRInt32 CmpCAName(nsIOCSPResponder *a, nsIOCSPResponder *b);
+  static PRInt32 CompareEntries(nsIOCSPResponder *a, nsIOCSPResponder *b);
+  static PRBool IncludeCert(CERTCertificate *aCert);
+private:
+  nsString mCA;
+  nsString mURL;
+};
+
+/* Implementation file */
+NS_IMPL_ISUPPORTS1(nsOCSPResponder, nsIOCSPResponder)
+
+nsOCSPResponder::nsOCSPResponder()
+{
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+}
+
+nsOCSPResponder::nsOCSPResponder(const PRUnichar * aCA, const PRUnichar * aURL)
+{
+  NS_INIT_ISUPPORTS();
+  mCA.Assign(aCA);
+  mURL.Assign(aURL);
+}
+
+nsOCSPResponder::~nsOCSPResponder()
+{
+  /* destructor code */
+}
+
+/* readonly attribute */
+NS_IMETHODIMP nsOCSPResponder::GetResponseSigner(PRUnichar** aCA)
+{
+  NS_ENSURE_ARG(aCA);
+  *aCA = mCA.ToNewUnicode();
+  return NS_OK;
+}
+
+/* readonly attribute */
+NS_IMETHODIMP nsOCSPResponder::GetServiceURL(PRUnichar** aURL)
+{
+  NS_ENSURE_ARG(aURL);
+  *aURL = mURL.ToNewUnicode();
+  return NS_OK;
+}
+
+PRBool nsOCSPResponder::IncludeCert(CERTCertificate *aCert)
+{
+  CERTCertTrust *trust;
+  char *nickname;
+
+  trust = aCert->trust;
+  nickname = aCert->nickname;
+
+  if ( ( ( trust->sslFlags & CERTDB_INVISIBLE_CA ) ||
+         (trust->emailFlags & CERTDB_INVISIBLE_CA ) ||
+         (trust->objectSigningFlags & CERTDB_INVISIBLE_CA ) ) ||
+       nickname == NULL) {
+      return PR_FALSE;
+  }
+  if ((trust->sslFlags & CERTDB_VALID_CA) ||
+      (trust->emailFlags & CERTDB_VALID_CA) ||
+      (trust->objectSigningFlags & CERTDB_VALID_CA)) {
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+// CmpByCAName
+//
+// Compare two responders their token name.  Returns -1, 0, 1 as
+// in strcmp.  No token name (null) is treated as >.
+PRInt32 nsOCSPResponder::CmpCAName(nsIOCSPResponder *a, nsIOCSPResponder *b)
+{
+  PRInt32 cmp1;
+  nsXPIDLString aTok, bTok;
+  a->GetResponseSigner(getter_Copies(aTok));
+  b->GetResponseSigner(getter_Copies(bTok));
+  if (aTok != nsnull && bTok != nsnull) {
+    nsAutoString aStr(aTok);
+    cmp1 = aStr.CompareWithConversion(bTok);
+  } else {
+    cmp1 = (aTok == nsnull) ? 1 : -1;
+  }
+  return cmp1;
+}
+
+// ocsp_compare_entries
+//
+// Compare two responders.  Returns -1, 0, 1 as
+// in strcmp.  Entries with urls come before those without urls.
+PRInt32 nsOCSPResponder::CompareEntries(nsIOCSPResponder *a, nsIOCSPResponder *b)
+{
+  nsXPIDLString aURL, bURL;
+  nsAutoString aURLAuto, bURLAuto;
+
+  a->GetServiceURL(getter_Copies(aURL));
+  aURLAuto.Assign(aURL);
+  b->GetServiceURL(getter_Copies(bURL));
+  bURLAuto.Assign(bURL);
+
+  if (aURLAuto.Length() > 0 ) {
+    if (bURLAuto.Length() > 0) {
+      return nsOCSPResponder::CmpCAName(a, b);
+    } else {
+      return -1;
+    }
+  } else {
+    if (bURLAuto.Length() > 0) {
+      return 1;
+    } else {
+      return nsOCSPResponder::CmpCAName(a, b);
+    }
+  }
+}
+
+static SECStatus GetOCSPResponders (CERTCertificate *aCert,
+                          SECItem         *aDBKey,
+                          void            *aArg)
+{
+  nsISupportsArray *array = NS_STATIC_CAST(nsISupportsArray*, aArg);
+  PRUnichar* nn = nsnull;
+  PRUnichar* url = nsnull;
+  char *serviceURL = nsnull;
+  char *nickname = nsnull;
+  PRUint32 i, count;
+  nsresult rv;
+
+  // Are we interested in this cert //
+  if (!nsOCSPResponder::IncludeCert(aCert)) {
+    return SECSuccess;
+  }
+
+  // Get the AIA and nickname //
+  serviceURL = CERT_GetOCSPAuthorityInfoAccessLocation(aCert);
+  if (serviceURL) {
+	url = NS_ConvertASCIItoUCS2(serviceURL).ToNewUnicode();
+  }
+
+  nickname = aCert->nickname;
+  nn = NS_ConvertASCIItoUCS2(nickname).ToNewUnicode();
+
+  nsCOMPtr<nsIOCSPResponder> new_entry = new nsOCSPResponder(nn, url);
+
+  // Sort the items according to nickname //
+  rv = array->Count(&count);
+  for (i=0; i < count; ++i) {
+    nsCOMPtr<nsISupports> isupport = getter_AddRefs(array->ElementAt(i));
+    nsCOMPtr<nsIOCSPResponder> entry = do_QueryInterface(isupport);
+    if (nsOCSPResponder::CompareEntries(new_entry, entry) < 0) {
+      array->InsertElementAt(new_entry, i);
+      break;
+    }
+  }
+  if (i == count) {
+    array->AppendElement(new_entry);
+  }
+  return SECSuccess;
+}
+
+/*
+ * getOCSPResponders
+ *
+ * Export a set of certs and keys from the database to a PKCS#12 file.
+*/
+NS_IMETHODIMP 
+nsNSSCertificateDB::GetOCSPResponders(nsISupportsArray ** aResponders)
+{
+  SECStatus sec_rv;
+  nsCOMPtr<nsISupportsArray> respondersArray;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(respondersArray));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  sec_rv = SEC_TraversePermCerts(CERT_GetDefaultCertDB(),
+                              ::GetOCSPResponders,
+                              respondersArray);
+  if (sec_rv == SECSuccess) {
+    sec_rv = PK11_TraverseSlotCerts(::GetOCSPResponders,
+                                 respondersArray,
+                                 nsnull);
+  }
+  if (sec_rv != SECSuccess) {
+    goto loser;
+  }
+
+  *aResponders = respondersArray;
+  NS_IF_ADDREF(*aResponders);
+  return NS_OK;
+loser:
+  return NS_ERROR_FAILURE;
 }
 
 /*
