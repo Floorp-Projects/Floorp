@@ -40,6 +40,7 @@
 #endif
 #include "nsILayoutHistoryState.h"
 #include "nsIStatefulFrame.h"
+#include "nsIPresState.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 
@@ -1385,7 +1386,7 @@ CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHi
         nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
         rv = statefulFrame->GetStateType(aPresContext, &type);
         if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsISupports> frameState;
+          nsCOMPtr<nsIPresState> frameState;
           rv = statefulFrame->SaveState(aPresContext, getter_AddRefs(frameState));
           if (NS_SUCCEEDED(rv)) {
             rv = aState->AddState(ID, frameState, type);            
@@ -1446,10 +1447,14 @@ RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHi
         nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
         rv = statefulFrame->GetStateType(aPresContext, &type);
         if (NS_SUCCEEDED(rv)) {
-          nsISupports* frameState = nsnull;
-          rv = aState->GetState(ID, &frameState, type);          
-          if (NS_SUCCEEDED(rv) && nsnull != frameState) {
-            rv = statefulFrame->RestoreState(aPresContext, frameState);  
+          nsCOMPtr<nsIPresState> frameState;
+          rv = aState->GetState(ID, getter_AddRefs(frameState), type);          
+          if (NS_SUCCEEDED(rv) && frameState) {
+            // First restore the state.
+            rv = statefulFrame->RestoreState(aPresContext, frameState);
+            
+            // Now remove the state from the state table.
+            aState->RemoveState(ID, type);
           }
         }
       }

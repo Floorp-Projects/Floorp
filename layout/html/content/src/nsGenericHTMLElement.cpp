@@ -57,6 +57,10 @@
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
 
+#include "nsIStatefulFrame.h"
+#include "nsIPresState.h"
+#include "nsILayoutHistoryState.h"
+
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
 #include "nsString.h"
@@ -1603,6 +1607,31 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
   }
  
   return res;
+}         
+
+nsresult 
+nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
+                                          nsIStatefulFrame::StateType aStateType,
+                                          nsIPresState** aPresState)
+{
+   // Get the document
+  nsCOMPtr<nsIDocument> doc;
+  aContent->GetDocument(*getter_AddRefs(doc));
+  if (doc) {
+     // Get presentation shell 0
+    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+    if (presShell) {
+      nsCOMPtr<nsILayoutHistoryState> history;
+      presShell->GetHistoryState(getter_AddRefs(history));
+      if (history) {
+        PRUint32 ID;
+        aContent->GetContentID(&ID);
+        history->GetState(ID, aPresState, aStateType);
+      }
+    }
+  }
+ 
+  return NS_OK;
 }         
 
 // XXX This creates a dependency between content and frames

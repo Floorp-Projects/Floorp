@@ -30,6 +30,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsFormFrame.h"
 #include "nsIStatefulFrame.h"
+#include "nsIPresState.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 
@@ -421,36 +422,24 @@ NS_IMETHODIMP nsCheckboxControlFrame::GetStateType(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP nsCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
-                                                nsISupports** aState)
+                                                nsIPresState** aState)
 {
-  nsISupportsString* value = nsnull;
-  nsresult res = NS_OK;
-  nsAutoString string;
-  GetCheckboxControlFrameState(string);
-  char* chars = string.ToNewCString();
-  if (chars) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                         NS_GET_IID(nsISupportsString), (void**)&value);
-    if (NS_SUCCEEDED(res) && value) {
-      value->SetData(chars);
-    }
-    nsCRT::free(chars);
-  } else {
-    res = NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aState = (nsISupports*)value;
-  return res;
+  // Construct a pres state.
+  NS_NewPresState(aState); // The addref happens here.
+  
+  // This string will hold a single item, whether or not we're checked.
+  nsAutoString stateString;
+  GetCheckboxControlFrameState(stateString);
+  (*aState)->SetStateProperty("checked", stateString);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsCheckboxControlFrame::RestoreState(nsIPresContext* aPresContext,
-                                                   nsISupports* aState)
+                                                   nsIPresState* aState)
 {
-  char* chars = nsnull;
-  nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
-  if (NS_SUCCEEDED(res) && chars) {
-    nsAutoString string(chars);
-    SetCheckboxControlFrameState(aPresContext, string);
-    nsCRT::free(chars);
-  }
-  return res;
+  nsAutoString string;
+  aState->GetStateProperty("checked", string);
+  SetCheckboxControlFrameState(aPresContext, string);
+  return NS_OK;
 }

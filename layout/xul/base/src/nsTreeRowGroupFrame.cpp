@@ -69,11 +69,6 @@ void GetRowStartAndCount(nsIFrame* aFrame,
   NS_IF_RELEASE(fType);
 }
 
-static nsILayoutHistoryState*
-GetStateStorageObject(nsTreeRowGroupFrame* aTreeRowGroupFrame, 
-                      nsTableFrame* aTableFrame);
-
-
 // define this to get some help
 #undef DEBUG_tree
 
@@ -239,7 +234,7 @@ void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext*
     
     nsIFrame* nextFrame;
     GetNextFrame(childFrame, &nextFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame, GetStateStorageObject(this, aTableFrame));
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame, nsnull);
     mFrames.DestroyFrame(aPresContext, childFrame);
     // remove the row from the table after it is removed from the sibling chain
     if (rowIndex >= 0) {
@@ -279,7 +274,7 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresC
     
     nsIFrame* prevFrame;
     prevFrame = mFrames.GetPrevSiblingFor(childFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame, GetStateStorageObject(this, aTableFrame));
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame, nsnull);
     mFrames.DestroyFrame(aPresContext, childFrame);
     // remove the row from the table after it is removed from the sibling chain
     if (rowIndex >= 0) {
@@ -762,7 +757,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
     PRInt32 startRowIndex, numRows;
     GetRowStartAndCount(this, startRowIndex, numRows);
 
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, this, GetStateStorageObject(this, tableFrame));
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, this, nsnull);
     mFrames.DestroyFrames(aPresContext);
 
     // remove the rows from the table after removing from the sibling chain
@@ -1266,7 +1261,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext* aPresContext)
 
     mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, nsnull, startContent,
                                                &mTopFrame, isAppend, PR_FALSE, 
-                                               GetStateStorageObject(this, tableFrame));
+                                               nsnull);
     
     // XXX Can be optimized if we detect that we're appending a row.
     // Also the act of appending or inserting a row group is harmless.
@@ -1352,7 +1347,7 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFram
       }
       mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, prevFrame, nextContent,
                                                  aResult, isAppend, PR_FALSE,
-                                                 GetStateStorageObject(this, tableFrame));
+                                                 nsnull);
 
       // XXX Can be optimized if we detect that we're appending a row to the end of the tree.
       // Also the act of appending or inserting a row group is harmless.
@@ -1470,8 +1465,7 @@ void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFra
   while (currFrame) {
     nsIFrame* nextFrame;
     currFrame->GetNextSibling(&nextFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame, 
-      GetStateStorageObject(this, NULL));
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame, nsnull);
     // get the starting row index and row count
     PRInt32 startRowIndex, numRows;
     GetRowStartAndCount(currFrame, startRowIndex, numRows);
@@ -2089,21 +2083,3 @@ nsTreeRowGroupFrame :: Paint ( nsIPresContext* aPresContext, nsIRenderingContext
   return res;
   
 } // Paint
-
-static nsILayoutHistoryState*
-GetStateStorageObject(nsTreeRowGroupFrame* aTreeRowGroupFrame, nsTableFrame* aTableFrame)
-{
-  nsILayoutHistoryState* object = nsnull;
-  nsTableFrame* tableFrame = nsnull;
-
-  if (aTableFrame)
-    tableFrame = aTableFrame;
-  else
-    nsTableFrame::GetTableFrame(aTreeRowGroupFrame, tableFrame);
-
-  if (tableFrame) {
-    nsTreeFrame* treeFrame = (nsTreeFrame*) tableFrame;
-    treeFrame->GetFrameStateStorageObject(&object);
-  }
-  return object;
-}

@@ -29,6 +29,7 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsIStatefulFrame.h"
 
+class nsIPresState;
 class nsButtonControlFrame;
 class nsTextControlFrame;
 class nsFormFrame;
@@ -166,8 +167,8 @@ public:
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 protected:
   nsIWidget* GetWindowTemp(nsIView *aView); // XXX temporary

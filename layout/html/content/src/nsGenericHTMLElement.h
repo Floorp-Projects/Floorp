@@ -31,6 +31,8 @@
 #include "nsIJSScriptObject.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 
+#include "nsIStatefulFrame.h"
+
 extern const nsIID kIDOMHTMLElementIID;
 extern const nsIID kIHTMLContentIID;
 
@@ -53,6 +55,7 @@ class nsIURI;
 class nsIFormControlFrame;
 class nsIFormControl;
 class nsIForm;
+class nsIPresState;
 
 class nsGenericHTMLElement : public nsGenericElement {
 public:
@@ -281,9 +284,12 @@ public:
   static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 
-  //XXX These two creates a dependency between content and frames 
+  //XXX These three create a dependency between content and frames 
   static nsresult GetPrimaryFrame(nsIHTMLContent* aContent,
                                   nsIFormControlFrame *&aFormControlFrame);
+  static nsresult GetPrimaryPresState(nsIHTMLContent* aContent,
+                                          nsIStatefulFrame::StateType aStateType,
+                                          nsIPresState** aPresState);
   static nsresult GetPresContext(nsIHTMLContent* aContent, nsIPresContext** aPresContext);
 
   static nsresult GetBaseURL(const nsHTMLValue& aBaseHref,
