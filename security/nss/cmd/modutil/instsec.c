@@ -172,7 +172,7 @@ PR_fgets(char *buf, int size, PRFileDesc *file)
  * m y S E C U _ E r r o r S t r i n g
  *
  */
-char* mySECU_ErrorString(int16 errnum)
+const char* mySECU_ErrorString(int16 errnum)
 {
 	return SECU_Strerror(errnum);
 }

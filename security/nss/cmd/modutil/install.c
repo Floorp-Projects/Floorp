@@ -52,7 +52,7 @@ extern /*"C"*/
 short Pk11Install_UserVerifyJar(JAR *jar, PRFileDesc *out,
 	PRBool query);
 extern /*"C"*/
-char* mySECU_ErrorString(int16);
+const char* mySECU_ErrorString(int16);
 extern 
 int Pk11Install_yyparse();
 
