@@ -168,8 +168,9 @@ nsHTMLEditor::nsHTMLEditor()
 
 nsHTMLEditor::~nsHTMLEditor()
 {
-  // remove the rules as an action listener.  Else we get a bad ownership loop later on.
-  // it's ok if the rules aren't a listener; we ignore the error.
+  // remove the rules as an action listener.  Else we get a bad
+  // ownership loop later on.  it's ok if the rules aren't a listener;
+  // we ignore the error.
   nsCOMPtr<nsIEditActionListener> mListener = do_QueryInterface(mRules);
   RemoveEditActionListener(mListener);
   
@@ -195,11 +196,12 @@ nsHTMLEditor::~nsHTMLEditor()
   NS_IF_RELEASE(mTypeInState);
   mSelectionListenerP = nsnull;
 
-  if (mHTMLCSSUtils)
-    delete mHTMLCSSUtils;
-  
+  delete mHTMLCSSUtils;
+
   // free any default style propItems
   RemoveAllDefaultProperties();
+
+  RemoveEventListeners();
 }
 
 /* static */
@@ -315,120 +317,61 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   return result;
 }
 
-NS_IMETHODIMP 
-nsHTMLEditor::PostCreate()
+nsresult
+nsHTMLEditor::CreateEventListeners()
 {
-  nsresult result = InstallEventListeners();
-  if (NS_FAILED(result)) return result;
+  nsresult rv = NS_OK;
 
-  result = nsEditor::PostCreate();
-  return result;
-}
-
-NS_IMETHODIMP 
-nsHTMLEditor::InstallEventListeners()
-{
-  NS_ASSERTION(mDocWeak, "no document set on this editor");
-  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
-
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-
-  nsresult result;
-  // get a key listener
-  result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
-  }
-  
-  // get a mouse listener
-  result = NS_NewHTMLEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
-  }
-
-  // get a text listener
-  result = NS_NewEditorTextListener(getter_AddRefs(mTextListenerP),this);
-  if (NS_FAILED(result)) { 
-#ifdef DEBUG_TAGUE
-printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
-#endif
-    HandleEventListenerError();
-    return result;
-  }
-
-  // get a composition listener
-  result = NS_NewEditorCompositionListener(getter_AddRefs(mCompositionListenerP),this);
-  if (NS_FAILED(result)) { 
-#ifdef DEBUG_TAGUE
-printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
-#endif
-    HandleEventListenerError();
-    return result;
-  }
-
-  // get a drag listener
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
-  result = NS_NewEditorDragListener(getter_AddRefs(mDragListenerP), presShell, this);
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
-  }
-
-  // get a focus listener
-  result = NS_NewEditorFocusListener(getter_AddRefs(mFocusListenerP), this);
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
-  }
-
-  nsCOMPtr<nsIDOMEventReceiver> erP;
-  result = GetDOMEventReceiver(getter_AddRefs(erP));
-
-  //end hack
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
-    return result;
-  }
-
-  // register the event listeners with the DOM event reveiver
-  nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  if (NS_SUCCEEDED(erP->GetSystemEventGroup(getter_AddRefs(sysGroup)))) {
-    result = dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), mKeyListenerP, PR_FALSE, sysGroup);
-    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register key listener in system group");
-  }
-
-  if (NS_SUCCEEDED(result))
+  if (!mMouseListenerP)
   {
-    result = erP->AddEventListenerByIID(mMouseListenerP, NS_GET_IID(nsIDOMMouseListener));
-    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register mouse listener");
-    if (NS_SUCCEEDED(result))
+    // get a mouse listener
+    rv = NS_NewHTMLEditorMouseListener(getter_AddRefs(mMouseListenerP), this);
+
+    if (NS_FAILED(rv))
     {
-      result = erP->AddEventListenerByIID(mFocusListenerP, NS_GET_IID(nsIDOMFocusListener));
-      NS_ASSERTION(NS_SUCCEEDED(result), "failed to register focus listener");
-      if (NS_SUCCEEDED(result))
-      {
-        result = erP->AddEventListenerByIID(mTextListenerP, NS_GET_IID(nsIDOMTextListener));
-        NS_ASSERTION(NS_SUCCEEDED(result), "failed to register text listener");
-        if (NS_SUCCEEDED(result))
-        {
-          result = erP->AddEventListenerByIID(mCompositionListenerP, NS_GET_IID(nsIDOMCompositionListener));
-          NS_ASSERTION(NS_SUCCEEDED(result), "failed to register composition listener");
-          if (NS_SUCCEEDED(result))
-          {
-            result = erP->AddEventListenerByIID(mDragListenerP, NS_GET_IID(nsIDOMDragListener));
-            NS_ASSERTION(NS_SUCCEEDED(result), "failed to register drag listener");
-          }
-        }
-      }
+      return rv;
     }
   }
-  if (NS_FAILED(result)) {
-    HandleEventListenerError();
+
+  return nsPlaintextEditor::CreateEventListeners();
+}
+
+void
+nsHTMLEditor::RemoveEventListeners()
+{
+  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+
+  if (erP)
+  {
+    // Both mMouseMotionListenerP and mResizeEventListenerP can be
+    // registerd with other targets than the DOM event receiver that
+    // we can reach from here. But nonetheless, unregister the event
+    // listeners with the DOM event reveiver (if it's registerd with
+    // other targets, it'll get unregisterd once the target goes
+    // away).
+
+    if (mMouseMotionListenerP)
+    {
+      // mMouseMotionListenerP might be registerd either by IID or
+      // name, unregister by both.
+      erP->RemoveEventListenerByIID(mMouseMotionListenerP,
+                                    NS_GET_IID(nsIDOMMouseMotionListener));
+
+      erP->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
+                               mMouseMotionListenerP, PR_TRUE);
+    }
+
+    if (mResizeEventListenerP)
+    {
+      erP->RemoveEventListener(NS_LITERAL_STRING("resize"),
+                               mResizeEventListenerP, PR_FALSE);
+    }
   }
-  return result;
+
+  mMouseMotionListenerP = nsnull;
+  mResizeEventListenerP = nsnull;
+
+  nsPlaintextEditor::RemoveEventListeners();
 }
 
 NS_IMETHODIMP 
@@ -472,9 +415,7 @@ NS_IMETHODIMP nsHTMLEditor::BeginningOfDocument()
     return NS_ERROR_NOT_INITIALIZED;
     
   // get the root element 
-  nsCOMPtr<nsIDOMElement> rootElement; 
-  res = GetRootElement(getter_AddRefs(rootElement)); 
-  if (NS_FAILED(res)) return res; 
+  nsIDOMElement *rootElement = GetRoot(); 
   if (!rootElement)   return NS_ERROR_NULL_POINTER; 
   
   // find first editable thingy
@@ -1604,63 +1545,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
 }
 
 nsresult 
-nsHTMLEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver) 
-{ 
-  if (!aEventReceiver) 
-    return NS_ERROR_NULL_POINTER; 
-
-  *aEventReceiver = 0; 
-
-  nsCOMPtr<nsIDOMElement> rootElement; 
-
-  nsresult result = GetRootElement(getter_AddRefs(rootElement)); 
-
-  if (NS_FAILED(result)) 
-    return result; 
-
-  if (!rootElement) 
-    return NS_ERROR_FAILURE; 
-
-  // Now hack to make sure we are not anonymous content. 
-  // If we are grab the parent of root element for our observer. 
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement); 
-
-  if (content) 
-  { 
-    nsIContent* parent = content->GetParent();
-    if (parent)
-    { 
-      if (parent->IndexOf(content) < 0)
-      { 
-        rootElement = do_QueryInterface(parent); //this will put listener on the form element basically 
-        result = CallQueryInterface(rootElement, aEventReceiver); 
-      } 
-      else 
-        rootElement = 0; // Let the event receiver work on the document instead of the root element 
-    } 
-  } 
-  else 
-    rootElement = 0; 
-
-  if (!rootElement && mDocWeak) 
-  { 
-    // Don't use getDocument here, because we have no way of knowing if 
-    // Init() was ever called.  So we need to get the document ourselves, 
-    // if it exists. 
-
-    nsCOMPtr<nsIDOMDocument> domdoc = do_QueryReferent(mDocWeak); 
-
-    if (!domdoc) 
-      return NS_ERROR_FAILURE; 
-
-    result = domdoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void **)aEventReceiver); 
-  } 
-
-  return result; 
-} 
-  
-nsresult 
 nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
@@ -1815,8 +1699,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  res = GetRootElement(getter_AddRefs(bodyElement));
+  nsIDOMElement *bodyElement = GetRoot();
   if (NS_FAILED(res)) return res;
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
 
@@ -2476,7 +2359,6 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
   res = NodeIsBlockStatic(nodeToExamine, &isBlock);
   if (NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsIDOMHTMLHtmlElement> htmlElement;
   nsCOMPtr<nsIDOMNode> tmp;
 
   if (aBlockLevel) {
@@ -2488,15 +2370,15 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
     }
     do {
       // retrieve the computed style of background-color for blockParent
-      mHTMLCSSUtils->GetComputedProperty(blockParent, nsEditProperty::cssBackgroundColor,
+      mHTMLCSSUtils->GetComputedProperty(blockParent,
+                                         nsEditProperty::cssBackgroundColor,
                                          aOutColor);
-      tmp = blockParent;
+      tmp.swap(blockParent);
       res = tmp->GetParentNode(getter_AddRefs(blockParent));
-      htmlElement = do_QueryInterface(tmp);
       // look at parent if the queried color is transparent and if the node to
       // examine is not the root of the document
-    } while ( aOutColor.EqualsLiteral("transparent") && htmlElement );
-    if (!htmlElement && aOutColor.EqualsLiteral("transparent")) {
+    } while (aOutColor.EqualsLiteral("transparent") && blockParent);
+    if (aOutColor.EqualsLiteral("transparent")) {
       // we have hit the root of the document and the color is still transparent !
       // Grumble... Let's look at the default background color because that's the
       // color we are looking for
@@ -2529,11 +2411,10 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
           break;
         }
       }
-      res = nodeToExamine->GetParentNode(getter_AddRefs(tmp));
+      tmp.swap(nodeToExamine);
+      res = tmp->GetParentNode(getter_AddRefs(nodeToExamine));
       if (NS_FAILED(res)) return res;
-      nodeToExamine = tmp;
-      htmlElement = do_QueryInterface(tmp);
-    } while ( aOutColor.EqualsLiteral("transparent") && htmlElement );
+    } while ( aOutColor.EqualsLiteral("transparent") && nodeToExamine );
   }
   return NS_OK;
 }
@@ -2578,8 +2459,7 @@ nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAString &aOutColor)
   }
 
   // If no table or cell found, get page body
-  res = nsEditor::GetRootElement(getter_AddRefs(element));
-  if (NS_FAILED(res)) return res;
+  element = GetRoot();
   if (!element) return NS_ERROR_NULL_POINTER;
 
   return element->GetAttribute(styleName, aOutColor);
@@ -3504,8 +3384,7 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
     // If we failed to find a cell, fall through to use originally-found element
   } else {
     // No table element -- set the background color on the body tag
-    res = nsEditor::GetRootElement(getter_AddRefs(element));
-    if (NS_FAILED(res)) return res;
+    element = GetRoot();
     if (!element)       return NS_ERROR_NULL_POINTER;
   }
   // Use the editor method that goes through the transaction system
@@ -3519,22 +3398,18 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
 
 NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsAString& aAttribute, const nsAString& aValue)
 {
-  nsresult res;
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
 
   NS_ASSERTION(mDocWeak, "Missing Editor DOM Document");
   
   // Set the background color attribute on the body tag
-  nsCOMPtr<nsIDOMElement> bodyElement;
+  nsIDOMElement *bodyElement = GetRoot();
 
-  res = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
-  if (!bodyElement) res = NS_ERROR_NULL_POINTER;
-  if (NS_SUCCEEDED(res))
-  {
-    // Use the editor method that goes through the transaction system
-    res = SetAttribute(bodyElement, aAttribute, aValue);
-  }
-  return res;
+  if (!bodyElement)
+    return NS_ERROR_NULL_POINTER;
+
+  // Use the editor method that goes through the transaction system
+  return SetAttribute(bodyElement, aAttribute, aValue);
 }
 
 NS_IMETHODIMP
@@ -4009,8 +3884,7 @@ nsCOMPtr<nsIDOMNode> nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIDOMNode> resultNode;  // starts out empty
   nsCOMPtr<nsIDOMNode> node = aNode;
-  nsCOMPtr<nsIDOMElement>root;
-  GetRootElement(getter_AddRefs(root));
+  nsIDOMElement *root = GetRoot();
   if (!nsEditorUtils::IsDescendantOf(aNode, root))
     return nsnull;
 
@@ -4403,31 +4277,23 @@ nsHTMLEditor::TagCanContainTag(const nsAString& aParentTag, const nsAString& aCh
 NS_IMETHODIMP 
 nsHTMLEditor::SelectEntireDocument(nsISelection *aSelection)
 {
-  nsresult res;
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
   
-  // get body node
-  nsCOMPtr<nsIDOMElement>bodyElement;
-  res = GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
-  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
-  if (!bodyNode) return NS_ERROR_FAILURE;
+  // get editor root node
+  nsIDOMElement *rootElement = GetRoot();
   
   // is doc empty?
   PRBool bDocIsEmpty;
-  res = mRules->DocumentIsEmpty(&bDocIsEmpty);
+  nsresult res = mRules->DocumentIsEmpty(&bDocIsEmpty);
   if (NS_FAILED(res)) return res;
     
   if (bDocIsEmpty)
   {
     // if its empty dont select entire doc - that would select the bogus node
-    return aSelection->Collapse(bodyNode, 0);
+    return aSelection->Collapse(rootElement, 0);
   }
-  else
-  {
-    return nsEditor::SelectEntireDocument(aSelection);
-  }
-  return res;
+
+  return nsEditor::SelectEntireDocument(aSelection);
 }
 
 
@@ -4525,10 +4391,10 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
     nsCOMPtr<nsIDOMNode>temp;
     result = node->GetParentNode(getter_AddRefs(temp));
     if (NS_SUCCEEDED(result) && temp) {
-      node = do_QueryInterface(temp);
+      node = temp;
     }
     else {
-      node = do_QueryInterface(nsnull);
+      node = nsnull;
     }
   }
 }
@@ -4718,17 +4584,6 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 }
 #endif /* PRE_NODE_IN_BODY */
 
-void nsHTMLEditor::HandleEventListenerError()
-{
-  // null out the nsCOMPtrs
-  mKeyListenerP = nsnull;
-  mMouseListenerP = nsnull;
-  mTextListenerP = nsnull;
-  mDragListenerP = nsnull;
-  mCompositionListenerP = nsnull;
-  mFocusListenerP = nsnull;
-}
-
 /* this method scans the selection for adjacent text nodes
  * and collapses them into a single text node.
  * "adjacent" means literally adjacent siblings of the same parent.
@@ -4843,14 +4698,11 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
 NS_IMETHODIMP 
 nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
 {
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = GetRootElement(getter_AddRefs(bodyElement));  
-  if (NS_SUCCEEDED(res))
-  {
-    if (!bodyElement) return NS_ERROR_NULL_POINTER;
-    res = aSelection->Collapse(bodyElement,0);
-  }
-  return res;
+  nsIDOMElement *rootElement = GetRoot();  
+  if (!rootElement)
+    return NS_ERROR_NULL_POINTER;
+
+  return aSelection->Collapse(rootElement,0);
 }
 
 #ifdef XP_MAC
@@ -5061,7 +4913,7 @@ nsHTMLEditor::GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPt
 ///////////////////////////////////////////////////////////////////////////
 // GetPriorHTMLNode: returns the previous editable leaf node, if there is
 //                   one within the <body>
-//                       
+//
 nsresult
 nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, PRBool bNoBlockCrossing)
 {

@@ -336,12 +336,11 @@ nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
   mResizedObject = aResizedElement;
 
   // the resizers and the shadow will be anonymous children of the body
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
+  nsIDOMElement *bodyElement = GetRoot();
   if (!bodyElement)   return NS_ERROR_NULL_POINTER;
 
   // let's create the resizers
+  nsresult res;
   res = CreateResizer(getter_AddRefs(mTopLeftHandle),
                       nsIHTMLObjectResizer::eTopLeft,     bodyElement);
   if (NS_FAILED(res)) return res;
@@ -409,7 +408,7 @@ nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
   if (!global) { return NS_ERROR_NULL_POINTER; }
 
   mResizeEventListenerP = new DocumentResizeEventListener(this);
-  if (!mResizeEventListenerP) { return NS_ERROR_NULL_POINTER; }
+  if (!mResizeEventListenerP) { return NS_ERROR_OUT_OF_MEMORY; }
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(global);
   res = target->AddEventListener(NS_LITERAL_STRING("resize"), mResizeEventListenerP, PR_FALSE);
 
@@ -432,10 +431,7 @@ nsHTMLEditor::HideResizers(void)
 
   // get the root content node.
 
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = GetRootElement(getter_AddRefs(bodyElement));
-  if (NS_FAILED(res)) return res;
-  if (!bodyElement)   return NS_ERROR_NULL_POINTER;
+  nsIDOMElement *bodyElement = GetRoot();
 
   nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
   if (!bodyContent) return NS_ERROR_FAILURE;
@@ -463,10 +459,10 @@ nsHTMLEditor::HideResizers(void)
 
   // don't forget to remove the listeners !
 
-  nsCOMPtr<nsIDOMEventReceiver> erP;
-  res = GetDOMEventReceiver(getter_AddRefs(erP));
+  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+  nsresult res;
 
-  if (NS_SUCCEEDED(res) && erP && mMouseMotionListenerP)
+  if (erP && mMouseMotionListenerP)
   {
     res = erP->RemoveEventListener(NS_LITERAL_STRING("mousemove"), mMouseMotionListenerP, PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to remove mouse motion listener");
@@ -593,17 +589,17 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
   // add a mouse move listener to the editor
   if (!mMouseMotionListenerP) {
     mMouseMotionListenerP = new ResizerMouseMotionListener(this);
-    if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
-
-    nsCOMPtr<nsIDOMEventReceiver> erP;
-    result = GetDOMEventReceiver(getter_AddRefs(erP));
-    if (NS_SUCCEEDED(result) && erP)
-    {
-      result = erP->AddEventListener(NS_LITERAL_STRING("mousemove"), mMouseMotionListenerP, PR_TRUE);
-      NS_ASSERTION(NS_SUCCEEDED(result), "failed to register mouse motion listener");
+    if (!mMouseMotionListenerP) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    else
-      HandleEventListenerError();
+
+    nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+    NS_ENSURE_TRUE(erP, NS_ERROR_FAILURE);
+
+    result = erP->AddEventListener(NS_LITERAL_STRING("mousemove"),
+                                   mMouseMotionListenerP, PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(result),
+                 "failed to register mouse motion listener");
   }
   return result;
 }

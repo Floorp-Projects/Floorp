@@ -170,7 +170,7 @@ protected:
   nsresult ReplaceNewlines(nsIDOMRange *aRange);
   
   /** creates a trailing break in the text doc if there is not one already */
- nsresult CreateTrailingBRIfNeeded();
+  nsresult CreateTrailingBRIfNeeded();
   
  /** creates a bogus text node if the document has no editable content */
   nsresult CreateBogusNodeIfNeeded(nsISelection *aSelection);
@@ -195,6 +195,8 @@ protected:
                                      PRInt32               aSelOffset, 
                                      nsIEditor::EDirection aAction,
                                      PRBool               *aCancel);
+
+  nsIDOMNode *GetBody();
 
   // data members
   nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor

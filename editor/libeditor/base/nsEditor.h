@@ -85,6 +85,7 @@ class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
 class nsIFile;
 class nsISelectionController;
+class nsIDOMEventReceiver;
 
 #define kMOZEditorBogusNodeAttr NS_LITERAL_STRING("_moz_editor_bogus_node")
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
@@ -331,6 +332,16 @@ protected:
 
   // Get nsIKBStateControl interface
   nsresult GetKBStateControl(nsIKBStateControl **aKBSC);
+
+
+  // install the event listeners for the editor 
+  nsresult InstallEventListeners();
+
+  virtual nsresult CreateEventListeners() = 0;
+
+  // unregister and release our event listeners
+  virtual void RemoveEventListeners();
+
 public:
 
   /** All editor operations which alter the doc should be prefaced
@@ -558,6 +569,11 @@ public:
                                     nsIDOMNode *aEndNode,
                                     PRInt32 aEndOffset);
 
+  already_AddRefed<nsIDOMEventReceiver> GetDOMEventReceiver();
+
+  // Fast non-refcounting editor root element accessor
+  nsIDOMElement *GetRoot();
+
 public:
   // Argh!  These transaction names are used by PlaceholderTxn and
   // nsPlaintextEditor.  They should be localized to those classes.
@@ -583,7 +599,7 @@ protected:
   nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
   nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
   PRBool            mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
-  nsCOMPtr<nsIDOMElement> mBodyElement;    // cached body node
+  nsCOMPtr<nsIDOMElement> mRootElement;    // cached root node
   PRInt32           mAction;             // the current editor action
   EDirection        mDirection;          // the current direction of editor action
   
@@ -607,6 +623,13 @@ protected:
   nsCOMPtr<nsIDTD> mDTD;
 
   nsString* mPhonetic;
+
+  nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
+  nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
+  nsCOMPtr<nsIDOMEventListener> mTextListenerP;
+  nsCOMPtr<nsIDOMEventListener> mCompositionListenerP;
+  nsCOMPtr<nsIDOMEventListener> mDragListenerP;
+  nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
 
   static PRInt32 gInstanceCount;
 

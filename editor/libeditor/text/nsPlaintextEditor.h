@@ -111,9 +111,6 @@ public:
 
   NS_IMETHOD SetDocumentCharacterSet(const nsACString & characterSet);
 
-  /** we override this here to install event listeners */
-  NS_IMETHOD PostCreate();
-
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
@@ -180,13 +177,9 @@ protected:
   NS_IMETHOD  InitRules();
   void        BeginEditorInit();
   nsresult    EndEditorInit();
-  
-  /** install the event listeners for the editor 
-    * used to be part of Init, but now broken out into a separate method
-    * called by PostCreate, giving the caller the chance to interpose
-    * their own listeners before we install our own backstops.
-    */
-  NS_IMETHOD InstallEventListeners();
+
+  // Create the event listeners for the editor to install.
+  virtual nsresult CreateEventListeners();
 
   /** returns the layout object (nsIFrame in the real world) for aNode
     * @param aNode          the content to get a frame for
@@ -222,13 +215,8 @@ protected:
   /** shared outputstring; returns whether selection is collapsed and resulting string */
   nsresult SharedOutputString(PRUint32 aFlags, PRBool* aIsCollapsed, nsAString& aResult);
 
-  /** simple utility to handle any error with event listener allocation or registration */
-  void HandleEventListenerError();
-
   /* small utility routine to test the eEditorReadonly bit */
   PRBool IsModifiable();
-
-  nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 
   //XXX Kludge: Used to suppress spurious drag/drop events (bug 50703)
   PRBool   mIgnoreSpuriousDragEvent;
@@ -238,12 +226,6 @@ protected:
 protected:
 
   nsCOMPtr<nsIEditRules>        mRules;
-  nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
-  nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
-  nsCOMPtr<nsIDOMEventListener> mTextListenerP;
-  nsCOMPtr<nsIDOMEventListener> mCompositionListenerP;
-  nsCOMPtr<nsIDOMEventListener> mDragListenerP;
-  nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool  mWrapToWindow;
   PRInt32 mWrapColumn;
   PRInt32 mMaxTextLength;
