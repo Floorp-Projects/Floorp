@@ -26,9 +26,8 @@
 ac_add_options() {
   for _opt
   do
-    # Escape shell characters, space, tab, dollar, quote, backslash,
-    # and substitute '@<word>@' with '$(<word)'.
-    _opt=`echo $_opt | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g;'`
+    # Escape special url characters
+    _opt=`echo $_opt | sed -e 's/%/%25/g;s/ /%20/g;s/&/%26/g;'`
     case "$_opt" in
       --*-*= ) query_string="$query_string$_opt&"     ;;
       --*-* )  query_string="$query_string$_opt=yes&" ;;
@@ -39,9 +38,10 @@ ac_add_options() {
 mk_add_options() {
   for _opt
   do
-    # Escape shell characters, space, tab, dollar, quote, backslash,
-    # and substitute '@<word>@' with '$(<word)'.
-    query_string=$query_string`echo "$_opt&" | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g;'`
+    # Escape special url characters
+    # Escape special url characters
+    _opt=`echo $_opt | sed -e 's/%/%25/g;s/ /%20/g;s/&/%26/g;'`
+    query_string="$query_string$_opt&"
   done
 }
 
