@@ -39,9 +39,9 @@ class nsGfxScrollFrameInner;
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsGfxScrollFrame : public nsIAnonymousContentCreator,
-                         public nsBoxFrame,
-                         public nsIScrollableFrame {
+class nsGfxScrollFrame : public nsBoxFrame,
+                         public nsIScrollableFrame,
+                         public nsIAnonymousContentCreator {
 public:
   friend nsresult NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
                                        nsIDocument* aDocument, PRBool aIsRoot);
