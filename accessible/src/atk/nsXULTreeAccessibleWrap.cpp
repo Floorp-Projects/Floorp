@@ -338,10 +338,10 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::IsCellSelected(PRInt32 aRow, PRInt32 aCol
 // --------------------------------------------------------
 // nsXULTreeAccessibleWrap Accessible
 // --------------------------------------------------------
-NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeColumnsAccessibleWrap, nsAccessible, nsIAccessibleTable)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeColumnsAccessibleWrap, nsXULTreeColumnsAccessible, nsIAccessibleTable)
 
 nsXULTreeColumnsAccessibleWrap::nsXULTreeColumnsAccessibleWrap(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
-nsAccessibleWrap(aDOMNode, aShell)
+nsXULTreeColumnsAccessible(aDOMNode, aShell)
 {
   mCaption = nsnull;
 }
@@ -353,6 +353,7 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetCaption(nsIAccessible **aCaptio
 
   return NS_OK;
 }
+
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::SetCaption(nsIAccessible *aCaption)
 {
   mCaption = aCaption;
@@ -364,6 +365,7 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetSummary(nsAString &aSummary)
   aSummary = mSummary;
   return NS_OK;
 }
+
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::SetSummary(const nsAString &aSummary)
 {
   mSummary = aSummary;

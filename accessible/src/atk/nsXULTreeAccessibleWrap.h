@@ -58,7 +58,7 @@ private:
   nsString mSummary;
 };
 
-class nsXULTreeColumnsAccessibleWrap : public nsAccessibleWrap,
+class nsXULTreeColumnsAccessibleWrap : public nsXULTreeColumnsAccessible,
                                        public nsIAccessibleTable
 {
 public:
