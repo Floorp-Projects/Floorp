@@ -179,9 +179,6 @@ TestWriteObserver::OnStopBinding(nsISupports* context,
 }
 
 
-
-
-
 int
 main(int argc, char* argv[])
 {
@@ -244,7 +241,6 @@ main(int argc, char* argv[])
 
   rv = outStr->Close();
 #else
-
   if (NS_SUCCEEDED(rv)) {
     TestWriteObserver* observer = new TestWriteObserver(transport);
 
@@ -257,8 +253,11 @@ main(int argc, char* argv[])
 
   if (NS_FAILED(rv)) return rv;
 
+  PLEvent *gEvent;
+
   // Enter the message pump to allow the URL load to proceed.
   while ( gKeepRunning ) {
+
 #ifdef WIN32
     MSG msg;
 
@@ -268,9 +267,15 @@ main(int argc, char* argv[])
     } else {
       gKeepRunning = FALSE;
     }
+#else
+#ifdef XP_MAC
+    /* Mac stuff is missing here! */
+#else
+    rv = gEventQ->GetEvent(&gEvent);
+    PL_HandleEvent(gEvent);
+#endif
 #endif
   }
-
 
   PRTime endTime;
   endTime = PR_Now();
