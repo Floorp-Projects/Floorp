@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,146 +24,254 @@
   Script for the bookmarks properties window
 */
 
-  function TopLevelDrag ( event )
-  {
-    dump("TOP LEVEL bookmarks window got a drag\n");
-    return true;
-  }
-  
-  
-  function BeginDragTree ( event )
-  {
-    //XXX we rely on a capturer to already have determined which item the mouse was over
-    //XXX and have set an attribute.
+
+
+function TopLevelDrag ( event )
+{
+	dump("TOP LEVEL bookmarks window got a drag\n");
+	return(true);
+}
+
+
+
+function BeginDragTree ( event )
+{
+	//XXX we rely on a capturer to already have determined which item the mouse was over
+	//XXX and have set an attribute.
     
-    // if the click is on the tree proper, ignore it. We only care about clicks on
-    // items.
-    var tree = document.getElementById("bookmarksTree");
-    if ( event.target == tree )
-      return true;  // continue propagating the event
+	// if the click is on the tree proper, ignore it. We only care about clicks on items.
+
+	var tree = document.getElementById("bookmarksTree");
+	if ( event.target == tree )
+		return(true);					// continue propagating the event
     
-    var childWithDatabase = tree;
-    if ( ! childWithDatabase )
-      return false;
+	var childWithDatabase = tree;
+	if ( ! childWithDatabase )
+		return(false);
     
-    var dragStarted = false;
-    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
-    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-    if ( dragService ) {
-      var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
-      if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
-      if ( trans ) {
-//        trans.addDataFlavor("moz/toolbaritem");
-        var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
-        if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
+	var dragStarted = false;
+
+	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+	if ( !dragService )	return(false);
+
+	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+	if ( !trans )		return(false);
+
+	var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
+	if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
+	if (!genData)		return(false);
+
+	var genTextData = Components.classes["component://netscape/supports-string"].createInstance();
+	if ( genTextData ) genTextData = genTextData.QueryInterface(Components.interfaces.nsISupportsString);
+	if (!genTextData)	return(false);
+
         trans.addDataFlavor("text/plain");
-        var genTextData = Components.classes["component://netscape/supports-string"].createInstance();
-        if ( genTextData ) genTextData = genTextData.QueryInterface(Components.interfaces.nsISupportsString);
         
-        if ( genData && genTextData ) {
-        
-        // id (url) is on the <treeitem> which is two levels above the <treecell> which is
-        // the target of the event.
-		var id = event.target.parentNode.parentNode.getAttribute("id");
-		genData.data = id;
-        genTextData.data = id;
-        
-		dump("ID: " + id + "\n");
+	// id (url) is on the <treeitem> which is two levels above the <treecell> which is
+	// the target of the event.
+	var id = event.target.parentNode.parentNode.getAttribute("id");
+	genData.data = id;
+	genTextData.data = id;
+	dump("ID: " + id + "\n");
 
-		var database = childWithDatabase.database;
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-		if ((!rdf) || (!database))	{ dump("CAN'T GET DATABASE\n"); return(false); }
+	var database = childWithDatabase.database;
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+	if ((!rdf) || (!database))	{ dump("CAN'T GET DATABASE\n"); return(false); }
 
-		// make sure its a bookmark, bookmark separator, or bookmark folder
-		var src = rdf.GetResource(id, true);
-		var prop = rdf.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", true);
-		var target = database.GetTarget(src, prop, true);
-/*
-pinkerton
-this doesn't work anymore (target is null), not sure why.
-		if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFResource);
-		if (target)	target = target.Value;
-		if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
+	// make sure its a bookmark, bookmark separator, or bookmark folder
+	var src = rdf.GetResource(id, true);
+	var prop = rdf.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", true);
+	var target = database.GetTarget(src, prop, true);
 
-		dump("Type: '" + target + "'\n");
+	if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFResource);
+	if (target)	target = target.Value;
+	if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
+	dump("Type: '" + target + "'\n");
 
-		if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
-		   (target != "http://home.netscape.com/NC-rdf#Bookmark") &&
-		   (target != "http://home.netscape.com/NC-rdf#Folder"))	return(false);
-*/
-
-//        trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
-          trans.setTransferData ( "text/plain", genTextData, id.length );  // single byte data
-          var transArray = Components.classes["component://netscape/supports-array"].createInstance();
-          if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
-          if ( transArray ) {
-            // put it into the transferable as an |nsISupports|
-            var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-            transArray.AppendElement(genTrans);
-            var nsIDragService = Components.interfaces.nsIDragService;
-            dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
-                                                nsIDragService.DRAGDROP_ACTION_MOVE );
-            dragStarted = true;
-          }
-        } // if data object
-      } // if transferable
-    } // if drag service
-
-    return !dragStarted;  // don't propagate the event if a drag has begun
-
-  } // BeginDragTree
+	if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
+		(target != "http://home.netscape.com/NC-rdf#Bookmark") &&
+		(target != "http://home.netscape.com/NC-rdf#Folder"))	return(false);
 
 
-  function DragOverTree ( event )
-  {
-    var validFlavor = false;
-    var dragSession = null;
-    var retVal = true;
+//	trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
+	trans.setTransferData ( "text/plain", genTextData, id.length );  // single byte data
 
-    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
-    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-    if ( dragService ) {
-      dragSession = dragService.getCurrentSession();
-      if ( dragSession ) {
-        if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )
-          validFlavor = true;
-        else if ( dragSession.isDataFlavorSupported("text/plain") )
-          validFlavor = true;
-        //XXX other flavors here...
+	var transArray = Components.classes["component://netscape/supports-array"].createInstance();
+	if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
+	if ( !transArray )	return(false);
 
-        // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
-        if ( validFlavor ) {
-          //XXX this is really slow and likes to refresh N times per second.
-          var rowGroup = event.target.parentNode.parentNode;
-          rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
-          dragSession.canDrop = true;
-          // necessary??
-          retVal = false; // do not propagate message
-        }
-      }
-    }
+	// put it into the transferable as an |nsISupports|
+	var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+	transArray.AppendElement(genTrans);
+	var nsIDragService = Components.interfaces.nsIDragService;
+	dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+		nsIDragService.DRAGDROP_ACTION_MOVE );
+	dragStarted = true;
 
-    return retVal;
+	return(!dragStarted);  // don't propagate the event if a drag has begun
+}
 
-  } // DragOverTree
 
-  function DropOnTree ( event )
-  {
-    // id (url) is on the <treeitem> which is two levels above the <treecell> which is
-    // the target of the event.
-    var treeItem = event.target.parentNode.parentNode;
-    var id = treeItem.getAttribute("id");
-    var dropBefore = treeItem.getAttribute("dd-droplocation");
-    var dropOn = treeItem.getAttribute("dd-dropon");
-    dump("**** before is " + dropBefore + " on is " + dropOn + "\n");
-    var beforeString = "before";
-    if ( dropBefore == "false" )
-      beforeString = "after";
-    dump ( "*** tree drop " + beforeString + " target [" + id + "]\n" );
-        
-    return false;
-  }
+
+function DragOverTree ( event )
+{
+	var validFlavor = false;
+	var dragSession = null;
+	var retVal = true;
+
+	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+	if ( !dragService )	return(false);
+
+	dragSession = dragService.getCurrentSession();
+	if ( !dragSession )	return(false);
+
+	if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )	validFlavor = true;
+	else if ( dragSession.isDataFlavorSupported("text/plain") )	validFlavor = true;
+	//XXX other flavors here...
+
+	// touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
+	if ( validFlavor )
+	{
+		//XXX this is really slow and likes to refresh N times per second.
+		var rowGroup = event.target.parentNode.parentNode;
+		rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+		dragSession.canDrop = true;
+		// necessary??
+		retVal = false; // do not propagate message
+	}
+	return(retVal);
+}
+
+
+
+function DropOnTree ( event )
+{
+	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (RDF)	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+	if (!RDF)	return(false);
+	var RDFC = Components.classes["component://netscape/rdf/container"].getService();
+	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
+	if (!RDFC)	return(false);
+
+	var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
+	if (!Bookmarks)	return(false);
+
+	var treeRoot = document.getElementById("bookmarksTree");
+	if (!treeRoot)	return(false);
+	var treeDatabase = treeRoot.database;
+	if (!treeDatabase)	return(false);
+
+	// target is the <treecell>, and "id" is on the <treeitem> two levels above
+	var treeItem = event.target.parentNode.parentNode;
+	if (!treeItem)	return(false);
+	var targetID = getAbsoluteID(treeRoot, treeItem);
+	if (!targetID)	return(false);
+	var targetNode = RDF.GetResource(targetID, true);
+	if (!targetNode)	return(false);
+
+	// get drop hint attributes
+	var dropBefore = treeItem.getAttribute("dd-droplocation");
+	var dropOn = treeItem.getAttribute("dd-dropon");
+
+	// calculate drop action
+	var dropAction;
+	if (dropBefore == "true")	dropAction = "before";
+	else if (dropOn == "true")	dropAction = "on";
+	else				dropAction = "after";
+
+	// calculate parent container node
+	var containerItem = treeItem;
+	if (dropAction != "on")
+		containerItem = treeItem.parentNode.parentNode;
+
+	var containerID = getAbsoluteID(treeRoot, containerItem);
+	if (!containerID)	return(false);
+	var containerNode = RDF.GetResource(containerID);
+	if (!containerNode)	return(false);
+
+	var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+	if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+	if ( !dragService )	return(false);
+	
+	var dragSession = dragService.getCurrentSession();
+	if ( !dragSession )	return(false);
+
+	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+	if ( !trans )		return(false);
+	trans.addDataFlavor("text/plain");
+
+	var bookmarksChangedFlag = false;
+	for ( var i = 0; i < dragSession.numDropItems; ++i )
+	{
+		dragSession.getData ( trans, i );
+		var dataObj = new Object();
+		var bestFlavor = new Object();
+		var len = new Object();
+		trans.getAnyTransferData ( bestFlavor, dataObj, len );
+		if ( dataObj )	dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+		if ( !dataObj )	continue;
+
+		// pull the URL out of the data object
+		var sourceID = dataObj.data.substring(0, len.value);
+		if (!sourceID)	continue;
+
+		dump("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'\n");
+
+		var sourceNode = RDF.GetResource(sourceID, true);
+		if (!sourceNode)	continue;
+		
+		// Prevent dropping of a node before, after, or on itself
+		if (sourceNode == targetNode)	continue;
+
+		RDFC.Init(Bookmarks, containerNode);
+
+		if ((dropAction == "before") || (dropAction == "after"))
+		{
+			// drop before or after
+			var nodeIndex;
+
+			nodeIndex = RDFC.IndexOf(sourceNode);
+			if (nodeIndex >= 1)
+			{
+				// moving a node around inside of the container
+				// so remove, then re-add the node
+				RDFC.RemoveElementAt(nodeIndex, true, sourceNode);
+			}
+			
+			nodeIndex = RDFC.IndexOf(targetNode);
+			if (nodeIndex < 1)	return(false);
+			if (dropAction == "after")	++nodeIndex;
+
+			RDFC.InsertElementAt(sourceNode, nodeIndex, true);
+			bookmarksChangedFlag = true;
+		}
+		else
+		{
+			// drop on
+			RDFC.AppendElement(sourceNode);
+			bookmarksChangedFlag = true;
+		}
+	}
+
+	if (bookmarksChangedFlag == true)
+	{
+		var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+		if (remote)
+		{
+			remote.Flush();
+			dump("Wrote out bookmark changes.\n");
+		}
+	}
+
+	return(false);
+}
+
+
 
 function copySelectionToClipboard()
 {
@@ -314,7 +422,7 @@ function doPaste()
 		if (!pasteContainerRes)	return(false);
 	}
 	RDFC.Init(Bookmarks, pasteContainerRes);
-dump("Inited RDFC\n");
+	dump("Inited RDFC\n");
 
 	if (isContainerFlag == false)
 	{
@@ -322,7 +430,7 @@ dump("Inited RDFC\n");
 		if (pasteNodeIndex < 0)	return(false);			// how did that happen?
 	}
 
-dump("Loop over strings\n");
+	dump("Loop over strings\n");
 
 	for (var x=0; x<strings.length; x=x+2)
 	{
@@ -498,15 +606,13 @@ function OpenSearch(tabName)
 
 
 
-function OpenURL(event, node, root)
+function getAbsoluteID(root, node)
 {
-	if (node.getAttribute('container') == "true")	return(false);
-
-	var url = node.getAttribute('id');
-
-	// Ignore "NC:" urls.
-	if (url.substring(0, 3) == "NC:")	return(false);
-
+	var url = node.getAttribute("ref");
+	if ((url == null) || (url == ""))
+	{
+		url = node.getAttribute("id");
+	}
 	try
 	{
 		var rootNode = document.getElementById(root);
@@ -515,30 +621,41 @@ function OpenURL(event, node, root)
 		{
 			ds = rootNode.database;
 		}
-		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
+
+		// add support for anonymous resources such as Internet Search results,
+		// IE favorites under Win32, and NetPositive URLs under BeOS
 		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-		if (rdf)
+		if (rdf && ds)
 		{
-			if (ds)
-			{
-				var src = rdf.GetResource(url, true);
-				var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-				var target = ds.GetTarget(src, prop, true);
-				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-				if (target)	target = target.Value;
-				if (target)	url = target;
-				
-			}
+			var src = rdf.GetResource(url, true);
+			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+			var target = ds.GetTarget(src, prop, true);
+			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if (target)	target = target.Value;
+			if (target)	url = target;
 		}
 	}
 	catch(ex)
 	{
 	}
+	return(url);
+}
 
-	// window.open(url,'bookmarks');
- window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); // get right sized window
- return(true);
+
+
+function OpenURL(event, node, root)
+{
+	if (node.getAttribute('container') == "true")	return(false);
+
+	var url = getAbsoluteID(root, node);
+
+	// Ignore "NC:" urls.
+	if (url.substring(0, 3) == "NC:")	return(false);
+
+ 	// get right sized window
+ 	window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+	return(true);
 }
 
 
