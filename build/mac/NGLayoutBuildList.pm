@@ -655,9 +655,6 @@ sub MakeResourceAliases()
         _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",                            "$globalContent");
         _InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",                        "$globalContent");
 
-        _InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",                        "$chrome_dir");
-        _InstallResources(":mozilla:xpfe:global:resources:skin:mac:MANIFEST",               "$chrome_dir");
-        
         _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",                       "$globalLocale", 0);
         _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",           "$globalLocale", 0);
 
