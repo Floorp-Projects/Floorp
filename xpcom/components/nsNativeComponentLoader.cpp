@@ -104,7 +104,7 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
 
     /* Should this all live in xcDll? */
     nsDll *dll;
-    rv = CreateDll(nsnull, aLocation, &dll);
+    rv = CreateDll(nsnull, aLocation, 0, 0, &dll);
     if (NS_FAILED(rv))
         return rv;
 
@@ -216,6 +216,48 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 #endif            
             return NS_ERROR_OUT_OF_MEMORY;
         }
+    }
+
+
+    // Read in all dll entries and populate the mDllStore
+    nsCOMPtr<nsIEnumerator> dllEnum;
+    rv = mRegistry->EnumerateSubtrees( mXPCOMKey, getter_AddRefs(dllEnum));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = dllEnum->First();
+    for (; NS_SUCCEEDED(rv) && !dllEnum->IsDone(); (rv = dllEnum->Next()))
+    {
+        nsCOMPtr<nsISupports> base;
+        rv = dllEnum->CurrentItem(getter_AddRefs(base));
+        if (NS_FAILED(rv))  continue;
+
+        // Get specific interface.
+        nsIID nodeIID = NS_IREGISTRYNODE_IID;
+        nsCOMPtr<nsIRegistryNode> node;
+        rv = base->QueryInterface( nodeIID, getter_AddRefs(node) );
+        if (NS_FAILED(rv)) continue;
+
+        // Get library name
+        char *library = NULL;
+        rv = node->GetName(&library);
+        if (NS_FAILED(rv)) continue;
+        autoStringFree delete_library(library, autoStringFree::nsCRT_String_Delete);
+
+        // Get key associated with library
+        nsIRegistry::Key libKey;
+        rv = node->GetKey(&libKey);
+        if (NS_FAILED(rv)) continue;
+
+        // Create nsDll with this name
+        nsDll *dll = NULL;
+        PRUint32 lastModTime = 0;
+        PRUint32 fileSize = 0;
+        GetRegistryDllInfo(libKey, &lastModTime, &fileSize);
+        rv = CreateDll(NULL, library, lastModTime, fileSize, &dll);
+        if (NS_FAILED(rv)) continue;
+#ifdef DEBUG_dp
+        printf("Populating dll: %s, %d, %d\n", library, lastModTime, fileSize);
+#endif
     }
 
     return NS_OK;
@@ -624,9 +666,9 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 
     nsStringKey key(persistentDescriptor);
 
-    // Check if dll is one that we have already seen
+    // Get the registry representation of the dll, if any
     nsDll *dll;
-    rv = CreateDll(component, persistentDescriptor, &dll);
+    rv = CreateDll(component, persistentDescriptor, 0, 0, &dll);
     if (NS_FAILED(rv))
         return rv;
 
@@ -737,53 +779,6 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     return ret;
 }
 
-#if 0
-nsDll*
-nsNativeComponentLoader::CreateCachedDll(const char *location,
-                                         PRUint32 modificationDate,
-                                         PRUint32 fileSize)
-{
-    // Check our dllCollection for a dll with matching name
-    nsStringKey key(location);
-    nsDll *dll = (nsDll *) mDllStore->Get(&key);
-    
-    if (dll == NULL)
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsNativeComponentLoader: New dll \"%s\".", location));
-
-            // Add a new Dll into the nsDllStore
-            dll = new nsDll(location, modificationDate, fileSize);
-            if (dll == NULL) return NULL;
-            if (dll->GetStatus() != DLL_OK) {
-                // Cant create a nsDll. Backoff.
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                       ("nsNativeComponentLoader: ERROR in creating nsDll from \"%s\".",
-                        location));
-                delete dll;
-                dll = NULL;
-            } else {
-                PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                       ("nsNativeComponentLoader: Adding New dll \"%s\" to mDllStore.",
-                        location));
-
-                mDllStore->Put(&key, (void *)dll);
-            }
-        }
-    else
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-                   ("nsComponentManager: Found in mDllStore \"%s\".", location));
-            // XXX We found the dll in the dllCollection.
-            // XXX Consistency check: dll needs to have the same
-            // XXX lastModTime and fileSize. If not that would mean
-            // XXX that the dll wasn't registered properly.
-        }
-
-    return dll;
-}
-#endif
-
 nsresult
 nsNativeComponentLoader::OnRegister(const nsIID &aCID, const char *aType,
                                     const char *aClassName,
@@ -802,9 +797,6 @@ nsNativeComponentLoader::UnloadAll(PRInt32 aWhen)
     return NS_OK;
 }
 
-/*
- * There are no interesting failures here, so we don't propagate errors back.
- */
 nsresult
 nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
                                             PRUint32 *lastModifiedTime,
@@ -812,15 +804,20 @@ nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
 {
     nsresult rv;
 
-    *lastModifiedTime = 0;
-    *fileSize = 0;
-
     nsIRegistry::Key key;
     rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLocation, &key);
     if (NS_FAILED(rv)) return rv;
 
+    return GetRegistryDllInfo(key, lastModifiedTime, fileSize);
+}
+
+nsresult
+nsNativeComponentLoader::GetRegistryDllInfo(nsIRegistry::Key key,
+                                            PRUint32 *lastModifiedTime,
+                                            PRUint32 *fileSize)
+{
     int32 lastMod;
-    rv = mRegistry->GetInt(key, lastModValueName, &lastMod);
+    nsresult rv = mRegistry->GetInt(key, lastModValueName, &lastMod);
     if (NS_FAILED(rv)) return rv;
     *lastModifiedTime = lastMod;
         
@@ -847,12 +844,30 @@ nsNativeComponentLoader::SetRegistryDllInfo(const char *aLocation,
     rv = mRegistry->SetInt(key, fileSizeValueName, fileSize);
     return rv;
 }
- 
+
+//
+// CreateDll
+// The only way to create a dll or get it from the dll cache. This will
+// be called in multiple situations:
+//
+// 1. Autoregister will create one for each dll it is trying to register. This
+//		call will be passing a spec in.
+//		{spec, NULL, 0, 0}
+//
+// 2. GetFactory() This will call CreateDll() with a null spec but will give
+//		the registry represented name of the dll. If modtime and size are zero,
+//		we will go the registry to find the right modtime and size.
+//		{NULL, rel:libpref.so, 0, 0}
+//
+// 3. Prepopulation of dllCache A dll object created off a registry entry.
+//		Specifically dll name is stored	in rel: or abs: or lib: formats in the
+//		registry along with its	lastModTime and fileSize.
+//		{NULL, rel:libpref.so, 8985659, 20987}
 nsresult
-nsNativeComponentLoader::CreateDll(nsIFileSpec *aSpec,
-                                   const char *aLocation, nsDll **aDll)
+nsNativeComponentLoader::CreateDll(nsIFileSpec *aSpec, const char *aLocation,
+                                   PRUint32 modificationTime, PRUint32 fileSize,
+                                   nsDll **aDll)
 {
-    PRUint32 modificationTime = 0, fileSize = 0;
     nsDll *dll;
     nsFileSpec dllSpec;
     nsCOMPtr<nsIFileSpec> spec;
@@ -885,12 +900,11 @@ nsNativeComponentLoader::CreateDll(nsIFileSpec *aSpec,
 
     if (!dll)
         {
-            rv = NS_OK;
-            if (mRegistry)
-                rv = GetRegistryDllInfo(aLocation, &modificationTime, &fileSize);
-            else
-                PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-                       ("nsNativeComponentLoader: no registry, eep!"));
+            if (modificationTime == 0 && fileSize == 0)
+                {
+                    // Get the modtime and filesize from the registry
+                    rv = GetRegistryDllInfo(aLocation, &modificationTime, &fileSize);
+                }
             dll = new nsDll(spec, aLocation, modificationTime, fileSize);
         }
 
