@@ -96,7 +96,6 @@ CPPSRCS		= \
 		  HistoryMenu.cpp \
 		  HTMLDrag.cpp \
 		  HTMLView.cpp \
-		  HistoryFrame.cpp \
 		  IconGroup.cpp \
 		  Image.cpp \
 		  LocationDrag.cpp \
