@@ -181,6 +181,24 @@ class UGraphicGizmos
 								Boolean			inDoTruncate = false,
 								TruncCode		inTruncWhere = truncMiddle);
 								
+		static void		DrawUTF8TextString(	const char*		inText, 
+								const FontInfo*	inFontInfo,
+								SInt16			inMargin,
+								const Rect&		inBounds,
+								SInt16			inJustification = teFlushLeft,
+								Boolean			doTruncate = true,
+								TruncCode		truncWhere = truncMiddle);
+
+		static void 	PlaceUTF8TextInRect(
+								const char* 	inText,
+								Uint32			inTextLength,
+								const Rect 		&inRect,
+								Int16			inHorizJustType = teCenter,
+								Int16			inVertJustType = teCenter,
+								const FontInfo*	inFontInfo = NULL,
+								Boolean			inDoTruncate = false,
+								TruncCode		inTruncWhere = truncMiddle);	
+
 		static Point	CalcStringPosition(
 								const Rect		&inRect,
 								Int16			inStringWidth,

@@ -30,6 +30,9 @@
 
 #include "mfinder.h" // needed for workaround function to bug in Appe's
 					 // ::TruncText and ::TruncString - andrewb 6/20/97
+#include "UPropFontSwitcher.h"
+#include "UUTF8TextHandler.h"
+
 
 #ifndef __PALETTES__
 #include <Palettes.h>
@@ -1053,6 +1056,67 @@ void UGraphicGizmos::PlaceTextInRect(
 	::DrawText(text, 0, length);
 }	
 
+//----------------------------------------------------------------------------------------
+void UGraphicGizmos::DrawUTF8TextString(
+	const char*		inText, 
+	const FontInfo*	inFontInfo,
+	SInt16			inMargin,
+	const Rect&		inBounds,
+	SInt16			inJustification,
+	Boolean			inDoTruncate,
+	TruncCode		inTruncWhere)
+//----------------------------------------------------------------------------------------
+{
+	Rect r = inBounds;
+	
+	r.left  += inMargin;
+	r.right -= inMargin;
+	
+	PlaceUTF8TextInRect(inText, 
+									strlen(inText),
+									r,
+									inJustification,
+									teCenter,
+									inFontInfo,
+									inDoTruncate,
+									inTruncWhere );			
+}
+
+//----------------------------------------------------------------------------------------
+void UGraphicGizmos::PlaceUTF8TextInRect(
+	const char* 	inText,
+	Uint32			inTextLength,
+	const Rect 		&inRect,
+	Int16			inHorizJustType,
+	Int16			inVertJustType,
+	const FontInfo*	/*inFontInfo*/,
+	Boolean			inDoTruncate,
+	TruncCode		/*inTruncWhere*/)
+//----------------------------------------------------------------------------------------
+{
+	FontInfo 			utf8FontInfo;
+	UFontSwitcher *fs;
+	UMultiFontTextHandler *th;
+	th = UUTF8TextHandler::Instance();
+	fs = UPropFontSwitcher::Instance();
+	th->GetFontInfo(fs, &utf8FontInfo);
+	
+	const char* text = inText;
+	short length = inTextLength;
+	if (inDoTruncate)
+	{
+		// ¥¥ Fix ME: Don't know how to do text truncation for UTF8 now.
+	}
+	Point thePoint = UGraphicGizmos::CalcStringPosition(
+		 	inRect,
+		 	th->TextWidth(fs, (char*)text, length),
+		 	inHorizJustType,
+		 	inVertJustType,
+		 	&utf8FontInfo);
+	::MoveTo(thePoint.h, thePoint.v);
+	th->DrawText(fs, (char*)text ,length);	
+} // CThreadView::PlaceUTF8TextInRect
+
 
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -1210,13 +1274,13 @@ void UGraphicGizmos::FindInColorTable(CTabHandle inColorTable, Int16 inColorID, 
 	RGBColor theFoundColor = { 0, 0, 0 };
 	
 	for (Int16 theIndex = (**inColorTable).ctSize; theIndex > 0; theIndex--)
-		{
+	{
 		if ((**inColorTable).ctTable[theIndex].value == inColorID)
-			{
+		{
 			theFoundColor = (**inColorTable).ctTable[theIndex].rgb;	
 			break;
-			}
 		}
+	}
 	
 	outColor = theFoundColor;
 }
