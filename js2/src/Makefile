@@ -15,7 +15,9 @@ objs = 	hash.o \
 	vmtypes.o \
 	debugger.o
 
-test_objs = 	hash.o \
+test_objs = hash.o \
+	icodeasm.o \
+	ica_test.o \
 	icodegenerator.o \
 	interpreter.o \
 	jsmath.o \
@@ -44,8 +46,8 @@ gc.a:
 gctest: gc_allocator.o
 	$(CC) -o $@ -ggdb $^ $(libs)
 
-ica_test:
-	$(CC) $(CFLAGS) -o ica_test ica_test.cpp icodeasm.cpp $(test_objs) $(libs)
+ica_test: $(test_objs)
+	$(CC) $(CFLAGS) -o $@ $(test_objs) $(libs)
 
 clean:
 	rm -f $(objs)

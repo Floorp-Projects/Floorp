@@ -38,7 +38,8 @@
 
 namespace JavaScript {
 namespace ICodeASM {
-
+    static char *keyword_offset = "offset";
+    
     int cmp_nocase (const string& s1, string::const_iterator s2_begin,
                     string::const_iterator s2_end)
     {
@@ -102,11 +103,21 @@ namespace ICodeASM {
                     tl.begin = curpos;
                     return tl;
 
+                case '-':
+                    tl.estimate = teMinus;
+                    tl.begin = curpos;
+                    return tl;
+                    
+                case '+':
+                    tl.estimate = tePlus;
+                    tl.begin = curpos;
+                    return tl;
+                    
                 case ',':
                     tl.estimate = teComma;
                     tl.begin = curpos;
                     return tl;
-
+                    
                 case '"':
                 case '\'':
                     tl.estimate = teString;
@@ -131,7 +142,7 @@ namespace ICodeASM {
     }
 
     iter
-    ICodeParser::ParseAlpha (iter begin, iter end, string *rval)
+    ICodeParser::ParseAlpha (iter begin, iter end, string **rval)
     {
         iter curpos;
         string *str = new string();
@@ -152,7 +163,7 @@ namespace ICodeASM {
         }
       scan_done:
 
-        rval = str;
+        *rval = str;
         return curpos;
     }
 
@@ -187,16 +198,31 @@ namespace ICodeASM {
     ICodeParser::ParseDouble (iter begin, iter end, double *rval)
     {
         /* XXX add overflow checking */
+        *rval = 0;
         uint32 integer;
+        int sign = 1;
+
+        /* pay no attention to the assignment of sign in the test condition :O */
+        if (*begin == '+' || (*begin == '-' && (sign = -1)) {
+            TokenLocation tl = SeekTokenStart (++begin, end);
+            if (tl.estimate != teNumeric)
+                throw new ICodeParseException ("Expected double value");
+            begin = tl.begin;
+        }
+
+
         iter curpos = ParseUInt32 (begin, end, &integer);
         *rval = static_cast<double>(integer);
         if (*curpos != '.')
+        {
+            *rval *= sign;
             return curpos;
+        }
 
         ++curpos;
-        uint32 position = 0;
+        int32 position = 0;
         
-        for (curpos = begin; curpos < end; ++curpos) {
+        for (; curpos < end; ++curpos) {
             switch (*curpos)
             {
                 case '0'...'9':
@@ -209,19 +235,44 @@ namespace ICodeASM {
         }
       scan_done:
 
+        *rval *= sign;
+        
         return curpos;
     }
         
     iter
-    ICodeParser::ParseString (iter begin, iter end, string *rval)
+    ICodeParser::ParseInt32 (iter begin, iter end, int32 *rval)
+    {
+        *rval = 0;
+        int sign = 1;
+        
+        /* pay no attention to the assignment of sign in the test condition :O */
+        if ((*begin == '+') || (*begin == '-' && (sign = -1))) {
+            TokenLocation tl = SeekTokenStart (++begin, end);
+            if (tl.estimate != teNumeric)
+                throw new ICodeParseException ("Expected int32 value");
+            begin = tl.begin;
+        }
+
+        end = ParseUInt32 (begin, end, rval);
+        
+        *rval *= sign;
+        
+        return end;
+    }
+
+    iter
+    ICodeParser::ParseString (iter begin, iter end, string **rval)
     {
         char delim = *begin;
         bool isTerminated = false;
         /* XXX not exactly exception safe, string may never get deleted */
         string *str = new string();
+        *rval = 0;
         
         if (delim != '\'' && delim != '"') {
             ASSERT ("|begin| does not point at a string");
+            delete str;
             return 0;
         }
 
@@ -303,7 +354,7 @@ namespace ICodeASM {
             throw new ICodeParseException ("Unterminated string literal.");
         }
 
-        rval = str;
+        *rval = str;
         return curpos;
     }
     
@@ -311,7 +362,8 @@ namespace ICodeASM {
     ICodeParser::ParseUInt32 (iter begin, iter end, uint32 *rval)
     {
         /* XXX add overflow checking */
-        int32 position = 0;
+        *rval = 0;
+        int32 position = -1;
         iter curpos;
         
         for (curpos = begin; curpos < end; ++curpos) {
@@ -334,11 +386,17 @@ namespace ICodeASM {
         return curpos;
     }
 
-    iter ICodeParser::ParseInstruction (uint icodeID, iter start, iter end)
+    iter ICodeParser::ParseInstruction (uint icodeID, iter begin, iter end)
     {
-        iter curpos = start;
+        iter curpos = begin;
         StatementNode *node = new StatementNode();
+        node->begin = begin;
         node->icodeID = icodeID;
+
+        /* add the node now, so the parse*operand functions can see it (to add
+         * it to the fixup vector, for example.)
+         */
+        mStatementNodes.push_back (node);
         
 #       define CASE_TYPE(T)                                                \
            case ot##T:                                                     \
@@ -370,7 +428,7 @@ namespace ICodeASM {
         }
 
 #       undef CASE_TYPE
-        
+
         return curpos;
     }
 
@@ -444,7 +502,7 @@ namespace ICodeASM {
         if (tl.estimate != teString)
             throw new ICodeParseException ("Expected BinaryOp as a quoted string.");
         string *str;
-        end = ParseString (tl.begin, end, str);
+        end = ParseString (tl.begin, end, &str);
         o->asString = str;
         return end;
     }
@@ -461,11 +519,15 @@ namespace ICodeASM {
     }
 
     iter
-    ICodeParser::ParseDoubleOperand (iter begin, iter /*end*/,
-                                     AnyOperand */*o*/)
+    ICodeParser::ParseDoubleOperand (iter begin, iter end, AnyOperand *o)
     {
-        ASSERT ("Not Implemented.");
-        return begin;
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if ((tl.estimate != teNumeric) && (tl.estimate != teMinus) &&
+            (tl.estimate != tePlus))
+            throw new ICodeParseException ("Expected double value.");
+
+        return ParseDouble (tl.begin, end, &o->asDouble);
     }
 
     iter
@@ -477,49 +539,101 @@ namespace ICodeASM {
             throw new ICodeParseException ("Expected ICode Module as a quoted string.");
 
         string *str;
-        end = ParseString (tl.begin, end, str);
+        end = ParseString (tl.begin, end, &str);
         o->asString = str;
         return end;
     }
     
     iter
-    ICodeParser::ParseJSClassOperand (iter begin, iter /*end*/,
-                                      AnyOperand */*o*/)
+    ICodeParser::ParseJSClassOperand (iter begin, iter end, AnyOperand *o)
     {
-        ASSERT ("Not Implemented.");
-        return begin;
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teString)
+            throw new ICodeParseException ("Expected JSClass as a quoted string.");
+
+        string *str;
+        end = ParseString (tl.begin, end, &str);
+        o->asString = str;
+        return end;
     }
 
     iter
-    ICodeParser::ParseJSStringOperand (iter begin, iter /*end*/,
-                                       AnyOperand */*o*/)
+    ICodeParser::ParseJSStringOperand (iter begin, iter end, AnyOperand *o)
     {
-        ASSERT ("Not Implemented.");
-        return begin;
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teString)
+            throw new ICodeParseException ("Expected JSString as a quoted string.");
+
+        string *str;
+        end = ParseString (tl.begin, end, &str);
+        o->asString = str;
+        return end;
     }
     
     iter
-    ICodeParser::ParseJSFunctionOperand (iter begin, iter /*end*/,
-                                         AnyOperand */*o*/)
+    ICodeParser::ParseJSFunctionOperand (iter begin, iter end, AnyOperand *o)
     {
-        ASSERT ("Not Implemented.");
-        return begin;
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teString)
+            throw new ICodeParseException ("Expected JSFunction as a quoted string.");
+
+        string *str;
+        end = ParseString (tl.begin, end, &str);
+        o->asString = str;
+        return end;
     }
 
     iter
-    ICodeParser::ParseJSTypeOperand (iter begin, iter /*end*/,
-                                     AnyOperand */*o*/)
+    ICodeParser::ParseJSTypeOperand (iter begin, iter end, AnyOperand *o)
     {
-        ASSERT ("Not Implemented.");
-        return begin;
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teString)
+            throw new ICodeParseException ("Expected JSType as a quoted string.");
+        string *str;
+        end = ParseString (tl.begin, end, &str);
+        o->asString = str;
+        return end;
     }
 
     iter
-    ICodeParser::ParseLabelOperand (iter begin, iter /*end*/,
-                                    AnyOperand */*o*/)
+    ICodeParser::ParseLabelOperand (iter begin, iter end, AnyOperand *o)
     {
-        ASSERT ("Not Implemented.");
-        return begin;
+        TokenLocation tl = SeekTokenStart (begin, end);
+
+        if (tl.estimate != teAlpha)
+            throw new ICodeParseException ("Expected Label Identifier or Offset keyword.");
+
+        string *str;
+        begin = ParseAlpha (tl.begin, end, &str);
+
+        if (cmp_nocase(*string, keyword_offset, keyword_offset +
+                       strlen(keyword_offset) + 1) == 0) {
+            /* label expressed as "Offset +/-N" */
+            tl = SeekTokenStart (begin, end);
+
+            if ((tl.estimate != teNumeric) && (tl.estimate != teMinus) &&
+                (tl.estimate != tePlus)) 
+                throw new ICodeParseException ("Expected numeric value after Offset keyword.");
+
+            begin = ParseInt32 (tl.begin, end, &(o->asInt32));
+            return begin;
+        } else {
+            /* label expressed as "label_name" */
+            LabelMap::const_iterator l = mLabels.find(str->c_string());
+            if (l == mLabels.end())
+            {
+                /* if we can't find the label, mark it as a fixup for later */
+                o->asString = str;
+                mFixupNodes.push_back (mStatementNodes.back());
+                return begin;
+            }
+            /* XXX continue here... */
+        }
+        
     }
 
     iter

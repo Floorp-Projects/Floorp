@@ -46,7 +46,9 @@ namespace ICodeASM {
         teUnknown,
         teIllegal,
         teComma,
+        teMinus,
         teNumeric,
+        tePlus,
         teAlpha,
         teString,
         teNotARegister
@@ -84,6 +86,7 @@ namespace ICodeASM {
         /* eww */
         double asDouble;
         uint32 asUInt32;
+        int32 asInt32;
         VM::Register asRegister;
         bool asBoolean;
         VM::ArgumentList *asArgumentList;
@@ -91,6 +94,7 @@ namespace ICodeASM {
     };
         
     struct StatementNode {
+        iter pos;
         uint icodeID;
         AnyOperand operand[3];
     };
@@ -100,7 +104,9 @@ namespace ICodeASM {
     private:
         uint mMaxRegister;
         std::vector<StatementNode *> mStatementNodes;
-        std::map<string, StatementNode **> mLabels;
+        std::vector<StatementNode *> mFixupNodes;
+        typedef std::map<const char *, StatementNode **> LabelMap;
+        LabelMap mLabels;
 
     public:
         void ParseSourceFromString (const string source);
@@ -108,12 +114,17 @@ namespace ICodeASM {
         /* locate the beginning of the next token, and guess what it might be */
         TokenLocation SeekTokenStart (iter begin, iter end);
 
-        /* general purpose parse functions */
-        iter ParseAlpha (iter begin, iter end, string *rval);
+        /* general purpose parse functions; |begin| is expected to point
+         * at the start of the token to be processed (eg, these routines
+         * don't call |SeekTokenStart|, and (currently, this might change) no
+         * initial check is done to ensure that |begin| != |end|.
+         */
+        iter ParseAlpha (iter begin, iter end, string **rval);
         iter ParseBool (iter begin, iter end, bool *rval);
-        iter ParseDouble  (iter begin, iter end, double *rval);
-        iter ParseString  (iter begin, iter end, string *rval);
-        iter ParseUInt32  (iter begin, iter end, uint32 *rval);
+        iter ParseDouble (iter begin, iter end, double *rval);
+        iter ParseInt32 (iter begin, iter end, uint32 *rval);
+        iter ParseString (iter begin, iter end, string **rval);
+        iter ParseUInt32 (iter begin, iter end, uint32 *rval);
 
         /* "high level" parse functions */
         iter ParseInstruction (uint icodeID, iter start, iter end);
