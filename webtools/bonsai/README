@@ -96,26 +96,19 @@ This is a rough first pass at cataloging and documenting the Bonsai
 sources.  Many hands have been in this code over the years, and it has
 accreted wildly.  There is probably quite a lot of dead code in here.
 
-THIS LIST IS PRETTY OLD AND OUT OF DATE.  In particular, we don't have
-any more TCL code; it's all either gone or ported to Perl.
-
-
-CGI.tcl			???
-
-Makefile:		builds the "trapdoor" program.  Also has a
-			"make install" that lets you specify where you store
-			perl and mysqltcl on your system.
+Makefile.in:		"make install" lets you specify where you store
+			perl and bonsai on your system.
 
 SourceChecker.cgi	scc wrote to help sanitize code.  DELETE
 			Called by: nobody
 
-SourceChecker.pm	???
+SourceChecker.pm	Callled by: SourceChecker.cgi
 
-addcheckin.tcl		TCL. Add a checkin to a Bonsai hook. Determines
+addcheckin.pl		Perl. Add a checkin to a Bonsai hook. Determines
 			if the tree was open or closed at the time, shunts
 			checkin to proper tree.
 
-admin.cgi		TCL.  Select from various administrative tasks 
+admin.cgi		Perl.  Select from various administrative tasks 
 			(which require a password.)
 
 			Called by: toplevel.cgi
@@ -147,10 +140,6 @@ admin.cgi		TCL.  Select from various administrative tasks
 					command=repophook
 					startfrom=<time-text>
 
-				rebuildtaginfo.cgi password=<text>
-					treeid=<text>
-					command=rebuildtaginfo
-
 				rebuildcvshistory.cgi password=<text>
 					treeid=<text>
 					command=rebuildcvs
@@ -165,24 +154,24 @@ admin.cgi		TCL.  Select from various administrative tasks
 					newpassword2=<text>
 					doglobal=<radio>
 
-adminfuncs.tcl		TCL. Collection of functions to administrate a Bonsai
+adminfuncs.pl		Perl. Collection of functions to administrate a Bonsai
 			hook.
 
-adminmail.tcl		TCL. Set of routines for opening and closing the
+adminmail.pl		Perl. Set of routines for opening and closing the
 			Bonsai hook based on receipt of e-mail.
 
 bonsai.gif		a bonsai tree.
 
-changebar.tcl		???
-
 closemessage	 	HTML, text that gets sent to all people on the hook
 			when the tree is closed.	
 
-configure/		???
+configure		Configure script (generated from configure.in?)
 
-contacthelp.html	???
+configure.in		Configure.in script
 
-countcheckins.cgi	TCL.  Draws a graph of checkins for the various
+contacthelp.html	HTML, explanation of how to change someone's contact info
+
+countcheckins.cgi	Perl.  Draws a graph of checkins for the various
 			Bonsai 'hooks'.
 			Called by: toplevel.cgi
 			Calls: nobody
@@ -195,13 +184,22 @@ cvsblame.cgi		Runs through a CVS file and tells you who changed what.
 				cvsblame.cgi file= rev= root= mark=
 				cvsblame.cgi set_line= (cookie magic?)
 				cvsblame.cgi root= file= rev= use_html=
+				cvsgraph.cgi file=
+				cvsview2.cgi subdir= files= rev=
+				cvsview2.cgi root= subdir= files= rev1= rev2=
+				cvsqueryform.cgi
 			Called by:
+				cvsgraph.cgi
 				cvsguess.cgi
-				moduleanalyse.cgi
-			Used to be called by:
 				cvslog.cgi
+				cvsview2.cgi
+				moduleanalyse.cgi
 
-cvsblame.pl		???
+cvsblame.pl			Runs through a CVS file and tells you who changed what.
+			Called by:
+				cvsblame.cgi
+				cvslog.cgi
+			Calls: nobody
 
 cvsguess.cgi		Given a file name, try to figure out what directory 
 			it's in.  then link to cvsblame.cgi.  parameters are
@@ -215,7 +213,7 @@ cvsguess.cgi		Given a file name, try to figure out what directory
 
 			Calls:
 				cvsblame.cgi file= rev= mark= #
-			Called by: nobody
+			Called by: *tinderbox
 
 cvsindex.pl		???
 
@@ -237,6 +235,10 @@ cvslog.cgi		Web interface to "cvs log".
 
 			Used to call:
 				cvsblame.cgi file= rev= root=
+			Called by:
+				cvsgraph.cgi
+				cvsblame.cgi
+				cvslog.cgi
 
 cvsmenu.pl		???
 
@@ -256,7 +258,13 @@ cvsquery.cgi		Displays the results of a query entered in cvsqueryform
 				../registry/who.cgi email=
 				http://scopus.mcom.com/bugsplat/show_bug.cgi
 
+cvsquery.gi		???
+			Calls:
+				cvsquery.pl
+
 cvsquery.pl		???
+			Called by: 
+				cvsquery.cgi
 
 cvsqueryform.cgi	Main screen to let you query the CVS database.
 			Called by:
@@ -306,33 +314,33 @@ cvsview2.cgi		Lets you view CVS diffs.
 				cvsview2.cgi subdir= command=LOG
 					root= file= rev=
 
-doadmin.cgi		TCL.  Executes admin things asked for in admin.cgi
+doadmin.cgi		Perl.  Executes admin things asked for in admin.cgi
 			Called by:
 				admin.cgi
 			Calls:
 				mailto:clienteng
 
-doeditcheckin.cgi	TCL.  Edits a checkin on the hook.
+doeditcheckin.cgi	Perl.  Edits a checkin on the hook.
 			Called by:
 				editcheckin.cgi
 			Calls:
 				nobody
 
-doeditmessage.cgi	TCL.  Edits one of the email messages that bonsai sends
+doeditmessage.cgi	Perl.  Edits one of the email messages that bonsai sends
 			people.
 			Called by:
 				editmessage.cgi
 			Calls:
 				nobody
 
-doeditprofile.cgi	TCL.  Edit peoples contact info.  Left-over code from
+doeditprofile.cgi	Perl.  Edit peoples contact info.  Left-over code from
 			before we started getting this info from LDAP.
 			Called by:
 				editprofile.cgi
 			Calls:
 				nobody
 
-doeditwhiteboard.cgi	TCL.  Edits the free-for-all whiteboard.
+doeditwhiteboard.cgi	Perl.  Edits the free-for-all whiteboard.
 			Called by:
 				editwhiteboard.cgi
 			Calls:
@@ -342,52 +350,52 @@ dolog.pl		Perl.  Magic file that causes CVS to send mail to
 			Bonsai whenever someone makes a change.  Please read
 			the comments towards the beginning for more clues.
 
-dotweak.cgi		TCL.  Tweaks a bunch of checkins in ahook at once.
+dotweak.cgi		Perl.  Tweaks a bunch of checkins in ahook at once.
 			Called by:
 				show2.cgi
 				showcheckins.cgi
 			Calls:
 				nobody
 
-editcheckin.cgi		TCL.  Edits a checkin on the hook.
+editcheckin.cgi		Perl.  Edits a checkin on the hook.
 			Called by:
 				show2.cgi
 				showcheckins.cgi
 			Calls:
 				doeditcheckin.cgi
 
-editmessage.cgi		TCL.  Edits one of the email messages that bonsai sends
+editmessage.cgi		Perl.  Edits one of the email messages that bonsai sends
 			people.
 			Called by:
 				admin.cgi
 			Calls:
 				doeditmessage.cgi
 
-editprofile.cgi		TCL.  Edit peoples contact info.  Left-over code from
+editprofile.cgi		Perl.  Edit peoples contact info.  Left-over code from
 			before we started getting this info from LDAP.
 			Called by:
 				localprofile.cgi
 			Calls:
 				doeditprofile.cgi
 
-editwhiteboard.cgi	TCL.  Edits the free-for-all whiteboard.
+editwhiteboard.cgi	Perl.  Edits the free-for-all whiteboard.
 			Called by:
 				toplevel.cgi
 			Calls:
 				doeditwhiteboard.cgi
 
-globals.tcl		???
+globals.pl		???
 
-handleAdminMail.tcl 	TCL. Mail is piped to this script and parsed.  
+handleAdminMail.pl 	Perl. Mail is piped to this script and parsed.  
 			Calls:
-				adminfuncs.tcl	
+				adminfuncs.pl	
 
-handleCheckinMail.tcl	TCL. Mail is piped to this script and parsed. It
+handleCheckinMail.pl	Perl. Mail is piped to this script and parsed. It
 			then adds a checkin to a Bonsai hook.
 
 header.pl		???
 
-index.html		???
+index.html		loads cvsqueryform.cgi
 
 indextest.pl		???
 
@@ -396,7 +404,7 @@ lloydcgi.pl		parses CGI args from $QUERY_STRING and leaves them
 			Calls: nobody
 			Called by: everybody
 
-localprofile.cgi	TCL.  Display peoples contact info.  Left-over code
+localprofile.cgi	Perl.  Display peoples contact info.  Left-over code
 			from before we started getting this info from LDAP.
 			Called by:
 				nobody
@@ -429,15 +437,15 @@ multidiff.cgi		Implements the "Show me ALL the Diffs" button
 			Calls:
 				nobody
 
-myglobrecur.tcl		???
+myglobrecur.pl		???
 
 openmessage		???
 
-perlifyconfig.tcl	???
+perlifyconfig.pl	???
 
 processqueue.pl		???
 
-profile.cgi		TCL.  Stupid interface to LDAP to show all the info
+profile.cgi		Perl.  Stupid interface to LDAP to show all the info
 			about a person.
 			Called by:
 				localprofile.cgi
@@ -445,21 +453,16 @@ profile.cgi		TCL.  Stupid interface to LDAP to show all the info
 			Calls:
 				profile.cgi person=
 
-rebuildcvshistory.cgi	TCL.  Admin script to go rebuild the bonsai database 
+rebuildcvshistory.cgi	Perl.  Admin script to go rebuild the bonsai database 
 			from CVS.
 			Called by:
 				admin.cgi
 			Calls:
 				nobody
 
-rebuilddatabase.tcl	???
+rebuilddatabase.pl	???
 
-rebuildtaginfo.cgi	TCL.  Half-written piece of junk to try and remember 
-			things about tags.   Should probably nuke it.
-			Called by:
-				admin.cgi
-
-repophook.cgi		TCL.  Rebuilds a bonsai hook from the bonsai database.
+repophook.cgi		Perl.  Rebuilds a bonsai hook from the bonsai database.
 			Called by:
 				admin.cgi
 			Calls:
@@ -480,21 +483,7 @@ rview.cgi		Lets you browse a directory in a CVS repository.
 				&make_cgi_args ???
 				../registry/file.cgi cvsroot= file= dir=
 
-show2.cgi		TCL.  This seems to be a variant on showcheckins.cgi?
-			Called by:
-				nobody
-			Calls:
-				dotweak.cgi
-				showcheckins.cgi [various funky args]
-				editcheckin.cgi id= [various funky args]w
-				profile.cgi person= [various funky args]
-				cvsview2.cgi subdir= files= command=DIRECTORY
-					branch=
-				http://w3/cgi/cvsview2.cgi subdir= files=
-					command=DIRECTORY
-				multidiff.cgi allchanges=
-
-showcheckins.cgi	TCL.  Shows some set of checkins in a bonsai hook.
+showcheckins.cgi	Perl.  Shows some set of checkins in a bonsai hook.
 			Called by:
 				admin.cgi
 				show2.cgi
@@ -512,7 +501,7 @@ showcheckins.cgi	TCL.  Shows some set of checkins in a bonsai hook.
 
 status/			???
 
-switchtree.cgi		TCL.  Lets you choose a different bonsai branch.
+switchtree.cgi		Perl.  Lets you choose a different bonsai branch.
 			Called by:
 				toplevel.cgi
 			Calls:
@@ -520,9 +509,9 @@ switchtree.cgi		TCL.  Lets you choose a different bonsai branch.
 
 testlock.pl		???
 
-toplevel.cgi		TCL.  Main interface to the bonsai hook.
+toplevel.cgi		Perl.  Main interface to the bonsai hook.
 			Called by:
-				CGI.tcl
+				CGI.pl
 				contacthelp.html
 				index.html
 				sheriff2.html
@@ -549,7 +538,7 @@ trapdoor.c		???
 
 utils.pl		???
 
-viewold.cgi		TCL.  Lets you choose an old bonsai hook to view.
+viewold.cgi		Perl.  Lets you choose an old bonsai hook to view.
 			Called by:
 				toplevel.cgi
 			Calls:
@@ -581,4 +570,4 @@ Hook			The 'hook' is actually the oldest part of the Bonsai
 	Maintainer
 	==========
 
-The current primary maintainer of Bonsai is Terry Weissman <terry@mozilla.org>.
+The current primary maintainer of Bonsai is Tara Hernandez <tara@tequilarista.org
