@@ -1927,8 +1927,10 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     /* Hack for BSD Mailbox delimiter. */
     if (i == 0 && head[0] == 'F' && !PL_strncmp(head, "From ", 5))
     {
-      colon = head + 4;
-      contents = colon + 1;
+      /* For now, we don't really want this header to be output so
+         we are going to just continue */
+      continue;
+      /* colon = head + 4; contents = colon + 1; */
     }
     else
     {
