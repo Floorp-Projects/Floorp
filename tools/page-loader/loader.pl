@@ -143,6 +143,8 @@ sub redirectToReport {
     my $loc = "Location: " . $proto . $cgi->var("SERVER_NAME");
     $cgi->var("SCRIPT_NAME") =~ /^(.*\/).*$/;
     $loc  .= $1 . "report.pl?id=" . $params{id};
+    # To use for a tinderbox, comment out the line above and uncomment this:
+    # $loc  .= $1 . "dump.pl?id=" . $params{id} . "&purge=1";
     print $loc, "\n\n";
 }
 
