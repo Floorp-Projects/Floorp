@@ -357,22 +357,6 @@
 							<key>Status</key>
 							<integer>0</integer>
 							<key>Title</key>
-							<string>Netscape DevEdge</string>
-							<key>URL</key>
-							<string>http://devedge.netscape.com/</string>
-							<key>VisitCount</key>
-							<integer>0</integer>
-						</dict>
-						<dict>
-							<key>Description</key>
-							<string></string>
-							<key>Keyword</key>
-							<string></string>
-							<key>LastVisitedDate</key>
-							<date>2003-07-26T04:23:34Z</date>
-							<key>Status</key>
-							<integer>0</integer>
-							<key>Title</key>
 							<string>The World Wide Web Consortium</string>
 							<key>URL</key>
 							<string>http://www.w3.org/</string>
@@ -407,7 +391,7 @@
 							<key>Title</key>
 							<string>W3C Document Object Model</string>
 							<key>URL</key>
-							<string>http://www.w3.org/DOM/#what</string>
+							<string>http://www.w3.org/DOM/</string>
 							<key>VisitCount</key>
 							<integer>0</integer>
 						</dict>
@@ -424,22 +408,6 @@
 							<string>Cascading Style Sheets</string>
 							<key>URL</key>
 							<string>http://www.w3.org/Style/CSS/</string>
-							<key>VisitCount</key>
-							<integer>0</integer>
-						</dict>
-						<dict>
-							<key>Description</key>
-							<string></string>
-							<key>Keyword</key>
-							<string></string>
-							<key>LastVisitedDate</key>
-							<date>2003-07-26T04:23:34Z</date>
-							<key>Status</key>
-							<integer>0</integer>
-							<key>Title</key>
-							<string>WebReview.com: Style Sheet Reference Guide</string>
-							<key>URL</key>
-							<string>http://www.webreview.com/style/</string>
 							<key>VisitCount</key>
 							<integer>0</integer>
 						</dict>
