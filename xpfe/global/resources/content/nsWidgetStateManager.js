@@ -84,7 +84,9 @@ function nsWidgetStateManager ( aFrameID )
         checkbox:
           {  get: wsm.get_Checkbox,    set: wsm.set_Checkbox      },
         textbox:
-          {  get: wsm.get_Textbox,     set: wsm.set_Textbox},
+          {  get: wsm.get_Textbox,     set: wsm.set_Textbox       },
+        listitem:
+          {  get: wsm.get_Listitem,    set: wsm.set_Listitem      },
         default_handler:
           {  get: wsm.get_Default,     set: wsm.set_Default       }
       }
@@ -303,7 +305,7 @@ nsWidgetStateManager.prototype =
           var dataObject = wsm.generic_Get( element );
           if( dataObject )
             {
-              dataObject.value = wsm.contentArea.document.getElementById( aElementID ).value;
+              dataObject.value = element.value;
               return dataObject;
             }
           return null;
@@ -328,8 +330,32 @@ nsWidgetStateManager.prototype =
           var dataObject = wsm.generic_Get( element );
           if( dataObject )
             {
-              var checked = wsm.contentArea.document.getElementById( aElementID ).checked;
+              var checked = element.checked;
               dataObject.checked = element.getAttribute("reversed") == "true" ? !checked : checked;
+              return dataObject;
+            }
+          return null;
+        },
+
+    // <listitem>
+    set_Listitem:
+      function ( aElementID, aDataObject )
+        {
+          var element = wsm.contentArea.document.getElementById( aElementID );
+          wsm.generic_Set( element, aDataObject );
+        },
+
+    get_Listitem:
+      function ( aElementID )
+        {
+          var element = wsm.contentArea.document.getElementById( aElementID );
+          var dataObject = wsm.generic_Get( element );
+          if( dataObject )
+            {
+              if( element.getAttribute("type") == "checkbox" )
+                {
+                  dataObject.checked = element.checked;
+                }
               return dataObject;
             }
           return null;
