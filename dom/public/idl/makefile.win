@@ -18,26 +18,17 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
+DIRS=coreDom
 MODULE=raptor 
 
 IDLSRCS =  \
-	Attribute.idl  \
-	AttributeList.idl \
-	Comment.idl \
-	DOM.idl \
-	Document.idl \
-	DocumentContext.idl \
-	DocumentFragment.idl \
-	Element.idl \
-        Navigator.idl \
-	Node.idl \
-	NodeIterator.idl \
-	PI.idl \
-	Text.idl \
-        TreeIterator.idl
+        Navigator.idl
 
-XPCOM_DESTDIR=$(DEPTH)\dom\public\coreDom
+GLOBAL_IDLSRC = Window.idl
+
+XPCOM_DESTDIR=$(DEPTH)\dom\public
 JSSTUB_DESTDIR=$(DEPTH)\dom\src
+IIDDIRS=$(DIRS: =/genx )/$(GENXDIR) $(GENXDIR) 
 
 GENXDIR=genx
 GENJSDIR=genjs
@@ -56,12 +47,17 @@ GENIID=$(DIST)\bin\geniid.pl
 export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
 	@echo +++ make: generating xpcom headers
 	$(IDLC) -d $(GENXDIR) -x $(IDLSRCS)
-	@echo +++ make: generating interface ids
-  	$(PERL) $(GENIID) $(GENXDIR) 
+	$(IDLC) -d $(GENXDIR) -g -x $(GLOBAL_IDLSRC)
 	@echo +++ make: generating JavaScript stubs
 	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
+	$(IDLC) -d $(GENJSDIR) -g -j $(GLOBAL_IDLSRC)
+	@echo +++ make: generating interface ids
+	@echo +++ make: directories $(IIDDIRS)
+  	$(PERL) $(GENIID) $(IIDDIRS) 
 	
 install::
-	for %g in ($(IDLSRCS:.idl=.h)) do $(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM%g $(XPCOM_DESTDIR)
+	for %g in ($(DIRS)) do $(MAKE_INSTALL:/=\) %g\$(GENXDIR)\*.h $(XPCOM_DESTDIR)\%g
+	$(MAKE_INSTALL:/=\) $(GENXDIR)\*.h $(XPCOM_DESTDIR)
 	for %g in ($(IDLSRCS:.idl=.cpp)) do $(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS%g $(JSSTUB_DESTDIR)
+	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS$(GLOBAL_IDLSRC:.idl=.cpp) $(JSSTUB_DESTDIR)
 
