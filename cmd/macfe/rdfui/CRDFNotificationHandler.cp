@@ -30,42 +30,42 @@ CRDFNotificationHandler::CreateNotificationStruct()
 	return notifyStruct;
 }
 
-HT_Pane
+auto_ptr<_HT_PaneStruct>
 CRDFNotificationHandler::CreateHTPane()
 {
 	HT_Notification notifyStruct = CreateNotificationStruct();
 	if (notifyStruct)
-		return HT_NewPane(notifyStruct);
+		return auto_ptr<_HT_PaneStruct>(HT_NewPane(notifyStruct));
 	else
-		return NULL;
+		return auto_ptr<_HT_PaneStruct>();
 }
 
-HT_Pane
+auto_ptr<_HT_PaneStruct>
 CRDFNotificationHandler::CreateHTPane ( HT_Resource inResource )
 {
-	return CreateHTPane ( HT_GetRDFResource(inResource) );
+	return auto_ptr<_HT_PaneStruct>(CreateHTPane(HT_GetRDFResource(inResource)));
 }
 
-HT_Pane
+auto_ptr<_HT_PaneStruct>
 CRDFNotificationHandler::CreateHTPane ( RDF_Resource inResource )
 {
 	HT_Notification notifyStruct = CreateNotificationStruct();
 	if (notifyStruct)
-		return HT_PaneFromResource(inResource, notifyStruct, false, true, true);
+		return auto_ptr<_HT_PaneStruct>(HT_PaneFromResource(inResource, notifyStruct, false, true, true));
 	else
-		return NULL;
+		return auto_ptr<_HT_PaneStruct>();
 }
 
-HT_Pane
+auto_ptr<_HT_PaneStruct>
 CRDFNotificationHandler::CreateHTPane ( const char* inURL, unsigned int inCount, 
 										char** inParamNames, char** inParamValues )
 {
 	HT_Notification notifyStruct = CreateNotificationStruct();
 	if (notifyStruct)
-		return HT_PaneFromURL ( NULL, const_cast<char*>(inURL), NULL, notifyStruct, false, inCount,
-									inParamNames, inParamValues );
+		return auto_ptr<_HT_PaneStruct>(HT_PaneFromURL(NULL, const_cast<char*>(inURL), NULL, notifyStruct, false, inCount,
+											inParamNames, inParamValues));
 	else
-		return NULL;
+		return auto_ptr<_HT_PaneStruct>();
 }
 
 void

@@ -27,16 +27,17 @@
 #pragma once
 
 #include "htrdf.h"
+#include "auto_HT_pane.h"
 
 class CRDFNotificationHandler
 {
 protected:
 
-	virtual HT_Pane CreateHTPane ( HT_Resource inResource ) ;
-	virtual HT_Pane CreateHTPane ( RDF_Resource inResource ) ;
-	virtual HT_Pane CreateHTPane ( const char* inURL, unsigned int inCount, 
+	virtual auto_ptr<_HT_PaneStruct> CreateHTPane ( HT_Resource inResource ) ;
+	virtual auto_ptr<_HT_PaneStruct> CreateHTPane ( RDF_Resource inResource ) ;
+	virtual auto_ptr<_HT_PaneStruct> CreateHTPane ( const char* inURL, unsigned int inCount, 
 										char** inParamNames, char** inParamValues ) ;
-	virtual HT_Pane	CreateHTPane();
+	virtual auto_ptr<_HT_PaneStruct> CreateHTPane();
 
 	virtual	HT_Notification	CreateNotificationStruct();
 
