@@ -18,6 +18,10 @@ var subscribeDS = RDF.GetDataSource("rdf:subscribe");
 var lastTreeChildrenValue = null;
 var lastTreeChildren = null;
 
+function goDoCommand()
+{
+}
+
 function Stop()
 {
 	//dump("Stop()\n")
