@@ -81,7 +81,6 @@ LAYOUT_ATOM(htmlFrameOuterFrame, "htmlFrameOuterFrame")
 LAYOUT_ATOM(imageFrame, "ImageFrame")
 LAYOUT_ATOM(inlineFrame, "InlineFrame")
 LAYOUT_ATOM(letterFrame, "LetterFrame")
-LAYOUT_ATOM(lineBox, "LineBox")
 LAYOUT_ATOM(lineFrame, "LineFrame")
 LAYOUT_ATOM(pageFrame, "PageFrame")
 LAYOUT_ATOM(placeholderFrame, "PlaceholderFrame")
@@ -94,5 +93,11 @@ LAYOUT_ATOM(tableRowGroupFrame, "TableRowGroupFrame")
 LAYOUT_ATOM(tableRowFrame, "TableRowFrame")
 LAYOUT_ATOM(tableCellFrame, "TableCellFrame")
 LAYOUT_ATOM(textFrame, "TextFrame")
-LAYOUT_ATOM(textRun, "TextRun")
 LAYOUT_ATOM(viewportFrame, "ViewportFrame")
+
+#ifdef DEBUG
+  // Alphabetical list of atoms used by debugging code
+LAYOUT_ATOM(imageMap, "ImageMap")
+LAYOUT_ATOM(lineBox, "LineBox")
+LAYOUT_ATOM(textRun, "TextRun")
+#endif
