@@ -560,8 +560,16 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(scope->ownercx != cx);
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
-    if ((scope->ownercx && ClaimScope(scope, cx)) ||
-        CX_THREAD_IS_RUNNING_GC(cx)) {
+
+    /*
+     * Avoid locking if called from the GC (see GC_AWARE_GET_SLOT in jsobj.h).
+     * Also avoid locking an object owning a sealed scope.  If neither of those
+     * special cases applies, try to claim scope's flyweight lock from whatever
+     * context may have had it in an earlier request.
+     */
+    if (CX_THREAD_IS_RUNNING_GC(cx) ||
+        (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
+        (scope->ownercx && ClaimScope(scope, cx))) {
         return obj->slots[slot];
     }
 
@@ -642,8 +650,16 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(scope->ownercx != cx);
     JS_ASSERT(obj->slots && slot < obj->map->freeslot);
-    if ((scope->ownercx && ClaimScope(scope, cx)) ||
-        CX_THREAD_IS_RUNNING_GC(cx)) {
+
+    /*
+     * Avoid locking if called from the GC (see GC_AWARE_GET_SLOT in jsobj.h).
+     * Also avoid locking an object owning a sealed scope.  If neither of those
+     * special cases applies, try to claim scope's flyweight lock from whatever
+     * context may have had it in an earlier request.
+     */
+    if (CX_THREAD_IS_RUNNING_GC(cx) ||
+        (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
+        (scope->ownercx && ClaimScope(scope, cx))) {
         obj->slots[slot] = v;
         return;
     }
@@ -1034,9 +1050,9 @@ js_LockScope(JSContext *cx, JSScope *scope)
 
     JS_ASSERT(me == CurrentThreadId());
     JS_ASSERT(scope->ownercx != cx);
-    if (scope->ownercx && ClaimScope(scope, cx))
-        return;
     if (CX_THREAD_IS_RUNNING_GC(cx))
+        return;
+    if (scope->ownercx && ClaimScope(scope, cx))
         return;
 
     if (Thin_RemoveWait(ReadWord(scope->lock.owner)) == me) {
