@@ -60,6 +60,7 @@ expect = false;
 addThis();
 
 
+
 status = inSection(2);
 switch(true)
 {
@@ -74,8 +75,9 @@ expect = false;
 addThis();
 
 
+
 status = inSection(3);
-function g(x)
+function f3(x)
 {
   var res = false;
 
@@ -92,13 +94,14 @@ function g(x)
   return res;
 }
 
-actual = g(undefined);
+actual = f3(undefined);
 expect = false;
 addThis();
 
 
+
 status = inSection(4);
-function f(arr)
+function f4(arr)
 {
   var elt = '';
   var res = false;
@@ -122,9 +125,56 @@ function f(arr)
 }
 
 var arr = Array('a', undefined);
-actual = f(arr);
+actual = f4(arr);
 expect = false;
 addThis();
+
+
+
+status = inSection(5);
+function f5(arr)
+{
+  var len = arr.length;
+
+  for(var i=0; (arr[i]===undefined) && (i<len); i++)
+    ; //do nothing
+  
+  return i;
+}
+
+/*
+ * An array of 5 undefined elements. Note:
+ *
+ * The return value of eval(a STATEMENT) is undefined.
+ * A non-existent PROPERTY is undefined, not a ReferenceError.
+ * No undefined element exists AFTER trailing comma at end.
+ *
+ */
+var arrUndef = [ , undefined, eval('var x = 0'), this.NOT_A_PROPERTY, , ];
+actual = f5(arrUndef);
+expect = 5;
+addThis();
+
+
+
+status = inSection(6);
+function f6(arr)
+{
+  var len = arr.length;
+
+  for(var i=0; (arr[i]===null) && (i<len); i++)
+    ; //do nothing
+
+  return i;
+}
+
+/*
+ * Use same array as above. This time we're comparing to |null|, so we expect 0
+ */
+actual = f6(arrUndef);
+expect = 0;
+addThis();
+
 
 
 
