@@ -738,6 +738,12 @@ nsWSRunObject::GetWSNodes()
       PRInt32 pos;
       for (pos=mOffset-1; pos>=0; pos--)
       {
+        // sanity bounds check the char position.  bug 136165
+        if (pos >= textFrag->GetLength())
+        {
+          NS_NOTREACHED("looking beyond end of text fragment");
+          continue;
+        }
         PRUnichar theChar = textFrag->CharAt(pos);
         if (!nsCRT::IsAsciiSpace(theChar))
         {
@@ -801,6 +807,12 @@ nsWSRunObject::GetWSNodes()
           PRInt32 pos;
           for (pos=len-1; pos>=0; pos--)
           {
+            // sanity bounds check the char position.  bug 136165
+            if (pos >= textFrag->GetLength())
+            {
+              NS_NOTREACHED("looking beyond end of text fragment");
+              continue;
+            }
             PRUnichar theChar = textFrag->CharAt(pos);
             if (!nsCRT::IsAsciiSpace(theChar))
             {
@@ -862,6 +874,12 @@ nsWSRunObject::GetWSNodes()
       PRInt32 pos;
       for (pos=mOffset; pos<len; pos++)
       {
+        // sanity bounds check the char position.  bug 136165
+        if ((pos<0) || (pos>=textFrag->GetLength()))
+        {
+          NS_NOTREACHED("looking beyond end of text fragment");
+          continue;
+        }
         PRUnichar theChar = textFrag->CharAt(pos);
         if (!nsCRT::IsAsciiSpace(theChar))
         {
@@ -927,6 +945,12 @@ nsWSRunObject::GetWSNodes()
           PRInt32 pos;
           for (pos=0; pos<len; pos++)
           {
+            // sanity bounds check the char position.  bug 136165
+            if (pos >= textFrag->GetLength())
+            {
+              NS_NOTREACHED("looking beyond end of text fragment");
+              continue;
+            }
             PRUnichar theChar = textFrag->CharAt(pos);
             if (!nsCRT::IsAsciiSpace(theChar))
             {
@@ -1891,9 +1915,7 @@ nsWSRunObject::GetCharAt(nsITextContent *aTextNode, PRInt32 aOffset)
   nsresult res = aTextNode->GetText(&textFrag);
   NS_ENSURE_SUCCESS(res, 0);
   
-  PRInt32 len;
-  res = aTextNode->GetTextLength(&len);
-  NS_ENSURE_SUCCESS(res, 0);
+  PRInt32 len = textFrag->GetLength();
   if (!len) 
     return 0;
   if (aOffset>=len) 
