@@ -112,7 +112,7 @@ public: // morkRowCellCursor construction & destruction
   // { ----- begin cell iteration methods -----
   NS_IMETHOD NextCell( // get next cell in the row
     nsIMdbEnv* ev, // context
-    nsIMdbCell* ioCell, // changes to the next cell in the iteration
+    nsIMdbCell** acqCell, // changes to the next cell in the iteration
     mdb_column* outColumn, // column for this particular cell
     mdb_pos* outPos); // position of cell in row sequence
     

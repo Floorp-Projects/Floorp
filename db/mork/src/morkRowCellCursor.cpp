@@ -95,6 +95,7 @@ morkRowCellCursor::CloseMorkNode(morkEnv* ev) // CloseRowCellCursor() only if op
 /*public virtual*/
 morkRowCellCursor::~morkRowCellCursor() // CloseRowCellCursor() executed earlier
 {
+  CloseMorkNode(mMorkEnv);
   MORK_ASSERT(this->IsShutNode());
 }
 
@@ -278,12 +279,37 @@ morkRowCellCursor::SeekCell( // same as SetRow() followed by MakeCell()
 NS_IMETHODIMP
 morkRowCellCursor::NextCell( // get next cell in the row
   nsIMdbEnv* mev, // context
-  nsIMdbCell* ioCell, // changes to the next cell in the iteration
+  nsIMdbCell** acqCell, // changes to the next cell in the iteration
   mdb_column* outColumn, // column for this particular cell
   mdb_pos* outPos)
 {
-  NS_ASSERTION(PR_FALSE, "not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  mdb_column col = 0;
+  mdb_pos pos = mRowCellCursor_Col;
+  if ( pos < 0 )
+    pos = 0;
+  else
+    ++pos;
+
+  morkCell* cell = mRowCellCursor_RowObject->mRowObject_Row->CellAt(ev, pos);
+  if ( cell )
+  {
+    col = cell->GetColumn();
+    *acqCell = mRowCellCursor_RowObject->mRowObject_Row->AcquireCellHandle(ev, cell, col, pos);
+  }
+  else
+  {
+    *acqCell = nsnull;
+    pos = -1;
+  }
+ if ( outPos )
+   *outPos = pos;
+ if ( outColumn )
+   *outColumn = col;
+     
+  mRowCellCursor_Col = pos;
+  *outPos = pos;
+  return NS_OK;
 }
   
 NS_IMETHODIMP
