@@ -129,10 +129,15 @@ int main(int argc, char* argv[])
   PRInt32 widthVal  = 790;
   PRInt32 heightVal = 580;
 
-  nsIAppShellService* appShell;
-  nsIDOMAppCoresManager *appCoresManager;
-  nsIURL* url;
-  nsIPref *prefs;
+  /* 
+   * initialize all variables that are NS_IF_RELEASE(...) during
+   * cleanup...
+   */
+
+  nsIAppShellService* appShell = nsnull;
+  nsIDOMAppCoresManager *appCoresManager = nsnull;
+  nsIURL* url = nsnull;
+  nsIPref *prefs = nsnull;
 
   // initialization for Full Circle
 #ifdef MOZ_FULLCIRCLE
@@ -177,16 +182,6 @@ int main(int argc, char* argv[])
 	nsIProfile *profileService = nsnull;
 	char *profstr = nsnull;
 #endif // defined(NS_USING_PROFILES)
-
-  /* 
-   * initialize all variables that are NS_IF_RELEASE(...) during
-   * cleanup...
-   */
-  url             = nsnull;
-  prefs           = nsnull;
-  appShell        = nsnull;
-  cmdLineArgs     = nsnull;
-  appCoresManager = nsnull;
 
   char* cmdResult = nsnull;
 
@@ -576,31 +571,20 @@ int main(int argc, char* argv[])
 		rv = nsServiceManager::GetService(kAppShellServiceCID,
                                     kIAppShellServiceIID,
                                     (nsISupports**)&profAppShell);
-		if (NS_FAILED(rv)) {
+		if (NS_FAILED(rv))
 			goto done;
-		}
 
 		profileService->GetProfileCount(&numProfiles); 
 
-		NS_ASSERTION(numProfiles > 0, "Oops, no profiles yet!"); 
-    
 		if (!profstr)
 		{
-			if (numProfiles == 1)
-			{
-				char* profileName = nsnull;
-				profileService->GetCurrentProfile(&profileName);
-          
-				if (profileName && strcmp(profileName, "default") == 0)
-				{
-					profstr = "resource:/res/profile/cpw.xul"; 
-				}
-			}
-
-			if (numProfiles > 1)
-			{
+			// This means that there was no command-line argument to force
+			// profile UI to come up. But we need the UI anyway if there
+			// are no profiles yet, or if there is more than one.
+			if (numProfiles == 0)
+				profstr = "resource:/res/profile/cpw.xul"; 
+			else if (numProfiles > 1)
 				profstr = "resource:/res/profile/profileManagerContainer.xul"; 
-			}	
 		}
 
 		if (profstr)
