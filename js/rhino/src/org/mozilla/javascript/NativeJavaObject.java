@@ -667,7 +667,9 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 reportConversionError(value, type, !useErrorHandler);
             }
             else if (type.isInterface()) {
-                if (value instanceof Function && adapter_makeIFGlue != null) {
+                if (value instanceof Function
+                    && interfaceAdapter_create != null)
+                {
                     // Try to wrap function into interface with single method.
                     Function f = (Function)value;
 
@@ -689,7 +691,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                         Object glue;
                         Object[] args = { type, f };
                         try {
-                            glue = adapter_makeIFGlue.invoke(null, args);
+                            glue = interfaceAdapter_create.invoke(null, args);
                         } catch (Exception ex) {
                             throw Context.throwAsScriptRuntimeEx(ex);
                         }
@@ -988,20 +990,16 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     private transient Hashtable fieldAndMethods;
 
     private static final Object COERCED_INTERFACE_KEY = new Object();
-    private static Method adapter_makeIFGlue;
+    private static Method interfaceAdapter_create;
     private static Method adapter_writeAdapterObject;
     private static Method adapter_readAdapterObject;
 
     static {
         // Reflection in java is verbose
+        Class[] sig2 = new Class[2];
         Class cl = Kit.classOrNull("org.mozilla.javascript.JavaAdapter");
         if (cl != null) {
-            Class[] sig2 = new Class[2];
             try {
-                sig2[0] = ScriptRuntime.ClassClass;
-                sig2[1] = ScriptRuntime.FunctionClass;
-                adapter_makeIFGlue = cl.getMethod("makeIFGlue", sig2);
-
                 sig2[0] = ScriptRuntime.ObjectClass;
                 sig2[1] = Kit.classOrNull("java.io.ObjectOutputStream");
                 adapter_writeAdapterObject = cl.getMethod("writeAdapterObject",
@@ -1013,10 +1011,17 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                                                          sig2);
 
             } catch (Exception ex) {
-                adapter_makeIFGlue = null;
                 adapter_writeAdapterObject = null;
                 adapter_readAdapterObject = null;
             }
+        }
+        cl = Kit.classOrNull("org.mozilla.javascript.InterfaceAdapter");
+        if (cl != null) {
+            try {
+                sig2[0] = ScriptRuntime.ClassClass;
+                sig2[1] = ScriptRuntime.FunctionClass;
+                interfaceAdapter_create = cl.getMethod("create", sig2);
+            } catch (Exception ex) { }
         }
     }
 

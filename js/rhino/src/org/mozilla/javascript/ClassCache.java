@@ -62,7 +62,7 @@ public class ClassCache
 
     Hashtable javaAdapterGeneratedClasses = new Hashtable();
 
-    Hashtable javaAdapterIFGlueMasters = new Hashtable();
+    private Hashtable interfaceAdapterCache;
 
     private int generatedClassSerial;
 
@@ -117,11 +117,11 @@ public class ClassCache
     {
         classTable = new Hashtable();
         javaAdapterGeneratedClasses = new Hashtable();
-        javaAdapterIFGlueMasters = new Hashtable();
         Invoker im = invokerMaster;
         if (im != null) {
             im.clearMasterCaches();
         }
+        interfaceAdapterCache = null;
     }
 
     /**
@@ -187,5 +187,27 @@ public class ClassCache
     public final synchronized int newClassSerialNumber()
     {
         return ++generatedClassSerial;
+    }
+
+    Object getInterfaceAdapter(Class cl)
+    {
+        Object result;
+        Hashtable cache = interfaceAdapterCache;
+        if (cache == null) {
+            result = null;
+        } else {
+            result = cache.get(cl);
+        }
+        return result;
+    }
+
+    synchronized void cacheInterfaceAdapter(Class cl, Object iadapter)
+    {
+        if (cachingIsEnabled) {
+            if (interfaceAdapterCache == null) {
+                interfaceAdapterCache = new Hashtable();
+            }
+            interfaceAdapterCache.put(cl, iadapter);
+        }
     }
 }
