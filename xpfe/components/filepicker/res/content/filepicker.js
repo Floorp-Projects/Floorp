@@ -37,7 +37,6 @@ var sfile = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalF
 var retvals;
 var filePickerMode;
 var currentFilter;
-var lastClicked;
 var dirHistory;
 var homeDir;
 
@@ -69,11 +68,17 @@ function onLoad() {
     if (initialText) {
       textInput.value = initialText;
     }
-    /* build filter popup */
-    var filterPopup = document.createElement("menupopup");
+  }
+
+  if ((filePickerMode == nsIFilePicker.modeOpen) ||
+      (filePickerMode == nsIFilePicker.modeSave)) {
 
     currentFilter = filterTypes[0];
     applyFilter();
+
+    /* build filter popup */
+    var filterPopup = document.createElement("menupopup");
+
     for (var i = 0; i < numFilters; i++) {
       var menuItem = document.createElement("menuitem");
       menuItem.setAttribute("value", filterTitles[i] + " (" + filterTypes[i] + ")");
@@ -83,8 +88,13 @@ function onLoad() {
 
     var filterMenuList = document.getElementById("filterMenuList");
     filterMenuList.appendChild(filterPopup);
+    var filterBox = document.getElementById("filterBox");
+    filterBox.removeAttribute("hidden");
+  } else if (filePickerMode == nsIFilePicker.modeGetFolder) {
+     // This applies a special filter to only show directories
+     applyDirectoryFilter();
   }
-  
+
   try {
     var buttonLabel;
     switch (filePickerMode) {
@@ -219,8 +229,8 @@ function onOK()
   }
 
   if (file.exists()) {
-    var isDir = file.isDirectory();
-    var isFile = file.isFile();
+    isDir = file.isDirectory();
+    isFile = file.isFile();
   }
 
   switch(filePickerMode) {
@@ -253,8 +263,10 @@ function onOK()
   case nsIFilePicker.modeGetFolder:
     if (isDir) {
       retvals.directory = file.parent.path;
-      ret = nsIFilePicker.returnOK;
+    } else { // if nothing selected, the current directory will be fine
+      retvals.directory = sfile.path;
     }
+    ret = nsIFilePicker.returnOK;
     break;
   }
 
@@ -299,9 +311,10 @@ function onSelect(e) {
     return;
   var file = URLpathToFile(e.target.selectedItems[0].firstChild.getAttribute("path"));
 
-  if (file.isFile()) {
+  if (file.isFile() || (filePickerMode == nsIFilePicker.modeGetFolder)) {
+    /* Note, if we're in GetFolder mode, everything in the display list
+       will be a directory, so we don't need an extra check */
     textInput.value = file.leafName;
-    lastClicked = file.leafName;
   }
 }
 
@@ -378,3 +391,15 @@ function URLpathToFile(aURLstr) {
   fileURL.spec = aURLstr;
   return fileURL.file;
 }
+
+function applyDirectoryFilter() {
+  var ruleNode = document.getElementById("matchRule.0");
+
+  // A file can never have an extension of ".", because the extension is
+  // by definition everything after the last dot.  So, this rule will
+  // cause only directories to show up.
+  ruleNode.setAttributeNS(NC_NAMESPACE_URI, "extension", ".");
+
+  directoryTree.builder.rebuild();
+}
+

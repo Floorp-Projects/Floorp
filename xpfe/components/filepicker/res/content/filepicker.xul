@@ -100,7 +100,7 @@
   <textfield id="textInput" flex="1"/>
 </box>
 
-<box autostretch="never">
+<box autostretch="never" id="filterBox" hidden="true">
   <text value="&filterMenuList.label;"/>
   <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
 </box>
