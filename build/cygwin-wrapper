@@ -7,7 +7,7 @@ shift
 if test -z "$prog"; then
     exit 0
 fi
-mountpoint=`mount -p | awk '{ if (/^\//) print $1 }' | head -1`
+mountpoint=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
 if test -z "$mountpoint"; then
    print "Cannot determine cygwin mount points. Exiting"
    exit 1
