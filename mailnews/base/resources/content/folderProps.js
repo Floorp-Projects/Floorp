@@ -186,15 +186,7 @@ function getEnclosingContainer(startNode)
 
 function onOfflineFolderDownload()
 {
-    var offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
-    offlineManager.synchronizeForOffline(false, true, false, false, null);
-    window.close();
+  // we need to create a progress window and pass that in as the second parameter here.
+  gMsgFolder.downloadAllForOffline(null, null);
 }
 
-function onOfflineNewsgroupDownload()
-{
-    var offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
-    // download news, download mail, send unsent messages, go offline when done, msg window
-    offlineManager.synchronizeForOffline(true, false, false, false, null);
-    window.close();
-}

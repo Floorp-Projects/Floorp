@@ -3228,6 +3228,7 @@ NS_IMETHODIMP nsImapMailFolder::DownloadAllForOffline(nsIUrlListener *listener, 
     nsMsgKeyArray msgsToDownload;
 
     GetDatabase(msgWindow);
+    m_downloadingFolderForOfflineUse = PR_TRUE;
     GetBodysToDownload(&msgsToDownload);
     if (msgsToDownload.GetSize() == 0)
     {

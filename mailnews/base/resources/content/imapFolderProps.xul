@@ -86,7 +86,7 @@
                     class="dialog" oncommand="onOfflineFolderDownload();" 
                     id="offline.offlineFolderDownloadButton" hidefor="nntp" orient="right"/>
             <button iscontrolcontainer="true" hidable="true" label="&offlineNewsgroup.button.label;" 
-                    class="dialog" oncommand="onOfflineNewsgroupDownload();" 
+                    class="dialog" oncommand="onOfflineFolderDownload();" 
                     id="offline.offlineNewsgroupDownloadButton" hidefor="pop3,imap" orient="right"/>
     </titledbox>
   </tabpanels>
