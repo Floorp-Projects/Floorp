@@ -382,6 +382,70 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
   return ARG_NONE;
 }
 
+
+static const nsXREAppData* LoadAppData(const char* appDataFile)
+{
+  static char vendor[256], name[256], version[32], buildID[32], copyright[512];
+  static const nsXREAppData data = {
+    vendor, name, version, buildID, copyright, PR_FALSE
+  };
+  
+  nsCOMPtr<nsILocalFile> lf;
+  NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
+  if (!lf)
+    return nsnull;
+
+  nsINIParser parser; 
+  if (NS_FAILED(parser.Init(lf)))
+    return nsnull;
+
+  // Ensure that this file specifies a compatible XRE version.
+  char xreVersion[32];
+  nsresult rv = parser.GetString("XRE", "Version", xreVersion, sizeof(xreVersion));
+  if (NS_FAILED(rv) || xreVersion[0] != '0' || xreVersion[1] != '.') {
+    fprintf(stderr, "Error: XRE version requirement not met.\n");
+    return nsnull;
+  }
+
+  const struct {
+    const char* key;
+    char* buf;
+    size_t bufLen;
+    PRBool required;
+  } fields[] = {
+    { "Vendor",    vendor,    sizeof(vendor),    PR_FALSE },
+    { "Name",      name,      sizeof(name),      PR_TRUE  },
+    { "Version",   version,   sizeof(version),   PR_FALSE },
+    { "BuildID",   buildID,   sizeof(buildID),   PR_TRUE  },
+    { "Copyright", copyright, sizeof(copyright), PR_FALSE }
+  };
+
+  for (int i=0; i<5; ++i) {
+    rv = parser.GetString("App", fields[i].key, fields[i].buf, fields[i].bufLen);
+    if (NS_FAILED(rv)) {
+      if (fields[i].required) {
+        fprintf(stderr, "Error: %x: No \"%s\" field.\n", rv, fields[i].key);
+        return nsnull;
+      } else {
+        fields[i].buf[0] = '\0';
+      }
+    }
+  } 
+
+#ifdef DEBUG
+  printf("---------------------------------------------------------\n");
+  printf("     Vendor %s\n", data.appVendor);
+  printf("       Name %s\n", data.appName);
+  printf("    Version %s\n", data.appVersion);
+  printf("    BuildID %s\n", data.appBuildID);
+  printf("  Copyright %s\n", data.copyright);
+  printf("---------------------------------------------------------\n");
+#endif
+
+  return &data;
+}
+
+
 static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
                            const nsAFlatString& aAppArgs,
                            PRInt32 aWidth, PRInt32 aHeight);
@@ -1678,8 +1742,6 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   fpsetmask(0);
 #endif
 
-  gAppData = aAppData;
-
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   if (!GetBinaryPath(argv[0]))
     return 1;
@@ -1687,6 +1749,17 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   gArgc = argc;
   gArgv = argv;
+
+  // allow -app argument to override default app data
+  const char *appDataFile = nsnull;
+  if (CheckArg("app", &appDataFile))
+    aAppData = LoadAppData(appDataFile);
+
+  if (!aAppData) {
+    fprintf(stderr, "Error: Invalid or missing application data!\n");
+    return 1;
+  }
+  gAppData = aAppData;
 
   gRestartArgc = argc;
   gRestartArgv = (char**) malloc(sizeof(char*) * (argc + 1));
@@ -1739,9 +1812,19 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
   nsXREDirProvider dirProvider;
-  rv = dirProvider.Initialize();
-  if (NS_FAILED(rv))
-    return 1;
+  {
+    nsCOMPtr<nsIFile> xulAppDir;
+
+    if (appDataFile) {
+      nsCOMPtr<nsILocalFile> lf;
+      NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
+      lf->GetParent(getter_AddRefs(xulAppDir));
+    }
+
+    rv = dirProvider.Initialize(xulAppDir);
+    if (NS_FAILED(rv))
+      return 1;
+  }
 
   // Check for -register, which registers chrome and then exits immediately.
   if (CheckArg("register")) {

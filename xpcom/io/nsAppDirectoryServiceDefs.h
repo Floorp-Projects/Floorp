@@ -76,6 +76,7 @@
 #define NS_APP_PLUGINS_DIR                      "APlugns"       // Deprecated - use NS_APP_PLUGINS_DIR_LIST
 #define NS_APP_SEARCH_DIR                       "SrchPlugns"
 
+#define NS_APP_CHROME_DIR_LIST                  "AChromDL"
 #define NS_APP_PLUGINS_DIR_LIST                 "APluginsDL"
 
 // --------------------------------------------------------------------------------------

@@ -58,13 +58,8 @@ public:
     NS_DECL_NSIPROTOCOLHANDLER
 
     // nsChromeProtocolHandler methods:
-    nsChromeProtocolHandler();
-    virtual ~nsChromeProtocolHandler();
-
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-    nsresult Init();
+    nsChromeProtocolHandler() {}
+    ~nsChromeProtocolHandler() {}
 };
 
 #endif /* nsChromeProtocolHandler_h___ */

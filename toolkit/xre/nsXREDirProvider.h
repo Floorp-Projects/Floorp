@@ -57,7 +57,7 @@ public:
   NS_DECL_NSIPROFILESTARTUP
 
   nsXREDirProvider();
-  nsresult Initialize();
+  nsresult Initialize(nsIFile *aXULAppDir);
   ~nsXREDirProvider();
 
   // We only set the profile dir, we don't ensure that it exists;
@@ -86,6 +86,7 @@ protected:
   void EnsureProfileFileExists(nsIFile* aFile);
 
   nsCOMPtr<nsILocalFile> mAppDir;
+  nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
   PRBool                 mProfileNotified;
   PRBool                 mRegisterExtraComponents;

@@ -48,6 +48,7 @@
 #include "nsChromeRegistry.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsChromeRegistry, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -61,7 +62,7 @@ static const nsModuleComponentInfo components[] =
     { "Chrome Protocol Handler", 
       NS_CHROMEPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", 
-      nsChromeProtocolHandler::Create
+      nsChromeProtocolHandlerConstructor
     }
 };
 
