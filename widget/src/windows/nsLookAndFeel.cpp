@@ -223,12 +223,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_WindowTitleHeight:
         aMetric = ::GetSystemMetrics(SM_CYCAPTION);
         break;
+#ifndef WINCE
     case eMetric_WindowBorderWidth:
         aMetric = ::GetSystemMetrics(SM_CXFRAME);
         break;
     case eMetric_WindowBorderHeight:
         aMetric = ::GetSystemMetrics(SM_CYFRAME);
         break;
+#endif
     case eMetric_Widget3DBorder:
         aMetric = ::GetSystemMetrics(SM_CXEDGE);
         break;
@@ -300,6 +302,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
           sSubmenuDelay = 300;
 
+#ifndef WINCE
           result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
                    "Control Panel\\Desktop", 0, KEY_READ, &key);
 
@@ -320,6 +323,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
               }
             }
           }
+#endif
         }
         aMetric = sSubmenuDelay;
         }
@@ -331,6 +335,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_DragFullWindow:
         {
         static PRInt32 sDragFullWindow = -1;
+#ifndef WINCE
         if (sDragFullWindow == -1) {
           HKEY key;
           char value[100];
@@ -355,11 +360,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
               sDragFullWindow = str.ToInteger(&errorCode);         
             }
           }
-        }        
+        } 
+#endif
         aMetric = sDragFullWindow ? 1 : 0;
         }
         break;
 
+#ifndef WINCE
     case eMetric_DragThresholdX:
         // The system metric is the number of pixels at which a drag should
         // start.  Our look and feel metric is the number of pixels you can
@@ -385,6 +392,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
           aMetric = 0;
         }
         break;
+#endif
     case eMetric_ScrollArrowStyle:
         aMetric = eMetric_ScrollArrowStyleSingle;
         break;

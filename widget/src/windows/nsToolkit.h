@@ -131,7 +131,9 @@ public:
     static NS_RegisterClass     mRegisterClass;
     static NS_UnregisterClass   mUnregisterClass;
     static NS_SHGetPathFromIDList mSHGetPathFromIDList;
+#ifndef WINCE
     static NS_SHBrowseForFolder   mSHBrowseForFolder;
+#endif
 };
 
 #define WM_CALLMETHOD   (WM_USER+1)
@@ -151,6 +153,7 @@ class  nsWindow;
  * mouse pointer to see if it is within the outer most window.
  */ 
 
+#ifndef WINCE
 class MouseTrailer {
 
 public:
@@ -202,6 +205,6 @@ private:
     //@}
 
 };
-
+#endif // WINCE
 
 #endif  // TOOLKIT_H

@@ -195,6 +195,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
         // Windows 95 or earlier: assume it's not Bidi
         gBidiInfo = DONT_INIT;
       }
+#ifndef WINCE
       else if (os.dwMajorVersion >= 4) {
         // Windows 98 or later
         UINT cp = ::GetACP();
@@ -205,6 +206,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
           gBidiInfo = GCP_REORDER;
         }
       }
+#endif
     }
   }
 
@@ -433,15 +435,19 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   ::SetTextColor(aNewDC, PALETTERGB_COLORREF(mColor));
   mCurrTextColor = mCurrentColor;
   ::SetBkMode(aNewDC, TRANSPARENT);
+#ifndef WINCE
   ::SetPolyFillMode(aNewDC, WINDING);
+#endif
   // Temporary fix for bug 135226 until we do better decode-time
   // dithering and paletized storage of images.
   nsPaletteInfo palInfo;
   mContext->GetPaletteInfo(palInfo);
+#ifndef WINCE
   if (palInfo.isPaletteDevice)
     ::SetStretchBltMode(aNewDC, HALFTONE);
   else
     ::SetStretchBltMode(aNewDC, COLORONCOLOR);                                  
+#endif
 
   ::SetTextAlign(aNewDC, TA_BASELINE);
 
@@ -533,7 +539,9 @@ NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY
     if(palInfo.isPaletteDevice && palInfo.palette){
       ::SelectPalette(mDC,(HPALETTE)palInfo.palette,PR_TRUE);
       ::RealizePalette(mDC);
+#ifndef WINCE
       ::UpdateColors(mDC);                                                      
+#endif
     }
   }
 
@@ -559,8 +567,10 @@ NS_IMETHODIMP nsRenderingContextWin :: UnlockDrawingSurface(void)
     mCurrTextColor = mCurrentColor;
 
     ::SetBkMode(mDC, TRANSPARENT);
+#ifndef WINCE
     ::SetPolyFillMode(mDC, WINDING);
     ::SetStretchBltMode(mDC, COLORONCOLOR);
+#endif
 
     mOrigSolidBrush = (HBRUSH)::SelectObject(mDC, mCurrBrush);
     mOrigFont = (HFONT)::SelectObject(mDC, mCurrFont);
@@ -629,7 +639,9 @@ nsRenderingContextWin :: GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
   
+#ifndef WINCE
   result |= NS_RENDERING_HINT_FAST_MEASURE;
+#endif
 
   if (gIsWIN95)
     result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
@@ -637,10 +649,12 @@ nsRenderingContextWin :: GetHints(PRUint32& aResult)
   if (NOT_SETUP == gBidiInfo) {
     InitBidiInfo();
   }
+#ifndef WINCE
   if (GCP_REORDER == (gBidiInfo & GCP_REORDER) )
     result |= NS_RENDERING_HINT_BIDI_REORDERING;
   if (GCP_GLYPHSHAPE == (gBidiInfo & GCP_GLYPHSHAPE) )
     result |= NS_RENDERING_HINT_ARABIC_SHAPING;
+#endif
   
   aResult = result;
 
@@ -1347,7 +1361,9 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawArc(nscoord aX, nscoord aY, nscoord a
   ey = (PRInt32)(cy - distance * sin(anglerad));
 
   // this just makes it consitent, on windows 95 arc will always draw CC, nt this sets direction
+#ifndef WINCE
   ::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
+#endif
 
   ::Arc(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
 
@@ -1388,8 +1404,9 @@ NS_IMETHODIMP nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord a
 
   // this just makes it consistent, on windows 95 arc will always draw CC,
   // on NT this sets direction
+#ifndef WINCE
   ::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
-
+#endif
   ::Pie(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
 
   return NS_OK;
@@ -2438,7 +2455,9 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsIDrawingSurface* aSrc
         // road until I can get all this figured out.. and completed correctly.
         // Opened bug #153367 to take care of this palette issue.
         //::RealizePalette(destdc);
+#ifndef WINCE
         ::UpdateColors(mDC);                                                      
+#endif
       }
 
       if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
@@ -2678,7 +2697,14 @@ HPEN nsRenderingContextWin :: SetupDottedPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mDottedPen))
   {
-    HPEN  tpen = ::CreatePen(PS_DOT, 0, PALETTERGB_COLORREF(mColor));
+    HPEN  tpen = ::CreatePen(
+#ifndef WINCE
+                             PS_DOT, 
+#else
+                             PS_DASH,
+#endif
+                             0, PALETTERGB_COLORREF(mColor));
+
 
     ::SelectObject(mDC, tpen);
 
@@ -2834,6 +2860,7 @@ nsRenderingContextWin::ReleaseBackbuffer(void) {
 NS_IMETHODIMP
 nsRenderingContextWin::SetRightToLeftText(PRBool aIsRTL)
 {
+#ifndef WINCE
   // Only call SetTextAlign if the new value is different from the
   // current value
   if (aIsRTL != mRightToLeftText) {
@@ -2848,6 +2875,7 @@ nsRenderingContextWin::SetRightToLeftText(PRBool aIsRTL)
   }
 
   mRightToLeftText = aIsRTL;
+#endif
   return NS_OK;
 }
 
@@ -2858,6 +2886,7 @@ nsRenderingContextWin::SetRightToLeftText(PRBool aIsRTL)
 void
 nsRenderingContextWin::InitBidiInfo()
 {
+#ifndef WINCE
   if (NOT_SETUP == gBidiInfo) {
     gBidiInfo = DONT_INIT;
 
@@ -2900,6 +2929,7 @@ nsRenderingContextWin::InitBidiInfo()
       }
     }
   }
+#endif //WINCE
 }
 
 

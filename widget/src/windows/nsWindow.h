@@ -120,6 +120,7 @@ public:
   }
 
   nsIMM(const char* aModuleName="IMM32.DLL") {
+#ifndef WINCE
     mInstance=::LoadLibrary(aModuleName);
     NS_ASSERTION(mInstance!=NULL, "nsIMM.LoadLibrary failed.");
 
@@ -158,6 +159,36 @@ public:
 
     mSetOpenStatus=(mInstance) ? (SetOpenStatusPtr)GetProcAddress(mInstance,"ImmSetOpenStatus") : 0;
     NS_ASSERTION(mSetOpenStatus!=NULL, "nsIMM.ImmSetOpenStatus failed.");
+#elif WINCE_EMULATOR
+    mInstance=NULL;
+    mGetCompositionStringA=NULL;
+    mGetCompositionStringW=NULL;
+    mGetContext=NULL;
+    mReleaseContext=NULL;
+    mNotifyIME=NULL;
+    mSetCandiateWindow=NULL;
+    mGetCompositionWindow=NULL;
+    mSetCompositionWindow=NULL;
+    mGetProperty=NULL;
+    mGetDefaultIMEWnd=NULL;
+    mGetOpenStatus=NULL;
+    mSetOpenStatus=NULL;
+#else // WinCE
+    mInstance=NULL;
+
+    mGetCompositionStringA=NULL;
+    mGetCompositionStringW=(GetCompStrPtr)ImmGetCompositionStringW;
+    mGetContext=(GetContextPtr)ImmGetContext;
+    mReleaseContext=(RelContextPtr)ImmReleaseContext;
+    mNotifyIME=(NotifyIMEPtr)ImmNotifyIME;
+    mSetCandiateWindow=(SetCandWindowPtr)ImmSetCandidateWindow;
+    mGetCompositionWindow=(GetCompWindowPtr)ImmGetCompositionWindow;
+    mSetCompositionWindow=(SetCompWindowPtr)ImmSetCompositionWindow;
+    mGetProperty=(GetPropertyPtr)ImmGetProperty;
+    mGetDefaultIMEWnd=(GetDefaultIMEWndPtr)ImmGetDefaultIMEWnd;
+    mGetOpenStatus=(GetOpenStatusPtr)ImmGetOpenStatus;
+    mSetOpenStatus=(SetOpenStatusPtr)ImmSetOpenStatus;
+#endif
   }
 
   ~nsIMM() {
@@ -396,6 +427,9 @@ public:
   PRBool                  BlurEventsSuppressed();
 
 protected:
+
+#ifndef WINCE
+
   // special callback hook methods for pop ups
   static LRESULT CALLBACK MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK MozSpecialWndProc(int code, WPARAM wParam, LPARAM lParam);
@@ -405,6 +439,8 @@ protected:
 
   static void             RegisterSpecialDropdownHooks();
   static void             UnregisterSpecialDropdownHooks();
+
+#endif
 
   static BOOL             DealWithPopups (HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult);
 

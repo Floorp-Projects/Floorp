@@ -80,12 +80,16 @@ CPPSRCS		= \
 		nsDeviceContextSpecFactoryW.cpp \
 		nsScreenWin.cpp \
 		nsScreenManagerWin.cpp \
-		nsPrintOptionsWin.cpp \
-		nsPrintSettingsWin.cpp \
 		nsGfxFactoryWin.cpp \
 		nsNativeThemeWin.cpp \
 		nsUnicodeRange.cpp \
 		$(NULL)
+
+ifneq ($(OS_ARCH), WINCE)
+CPPSRCS +=  nsPrintOptionsWin.cpp  \
+			nsPrintSettingsWin.cpp \
+			$(NULL)
+endif
 
 EXPORTS	= nsIRenderingContextWin.h nsIDrawingSurfaceWin.h
 

@@ -69,22 +69,27 @@ REQUIRES	= xpcom \
 			$(NULL)
 
 CPPSRCS		= \
-	nsNativeDragTarget.cpp  \
-	nsNativeDragSource.cpp  \
-	nsDragService.cpp  \
 	L_Ienumfe.cpp  \
-	nsDataObj.cpp  \
-	nsDataObjCollection.cpp  \
-	nsClipboard.cpp  \
 	nsWindow.cpp         \
-	nsFilePicker.cpp     \
 	nsAppShell.cpp       \
 	nsLookAndFeel.cpp    \
 	nsToolkit.cpp        \
-	nsSound.cpp          \
+	$(NULL)
+
+ifneq ($(OS_ARCH), WINCE)
+CPPSRCS += \
+	nsDataObj.cpp  \
+	nsDataObjCollection.cpp  \
+	nsClipboard.cpp  \
+	nsNativeDragTarget.cpp  \
+	nsNativeDragSource.cpp  \
+	nsDragService.cpp  \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
+	nsFilePicker.cpp     \
+	nsSound.cpp          \
 	$(NULL)
+endif
 
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_AIMM -DMOZ_UNICODE 

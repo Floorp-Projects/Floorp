@@ -1116,25 +1116,12 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       (*aResult).height = ::GetSystemMetrics(SM_CYHSCROLL);
       *aIsOverridable = PR_FALSE;
       break;
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:        
-      (*aResult).width = ::GetSystemMetrics(SM_CYVTHUMB);
-      (*aResult).height = (*aResult).width >> 1;
-      *aIsOverridable = PR_FALSE;
-      break;
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-      (*aResult).height = ::GetSystemMetrics(SM_CXHTHUMB);
-      (*aResult).width = (*aResult).height >> 1;
-      *aIsOverridable = PR_FALSE;
-      break;
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
       // XXX HACK We should be able to have a minimum height for the scrollbar
       // track.  However, this causes problems when uncollapsing a scrollbar
       // inside a tree.  See bug 201379 for details.
 
         //      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB) << 1;
-      break;
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-      (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
       break;
     case NS_THEME_DROPDOWN_BUTTON:
       (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
@@ -1160,6 +1147,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
     case NS_THEME_TAB_PANELS:
       // no minimum widget size
       break;
+#ifndef WINCE
     case NS_THEME_RESIZER: {     
       NONCLIENTMETRICS nc;
       nc.cbSize = sizeof(nc);
@@ -1168,7 +1156,21 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       else
         (*aResult).width = (*aResult).height = 15;
       break;
+    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:        
+      (*aResult).width = ::GetSystemMetrics(SM_CYVTHUMB);
+      (*aResult).height = (*aResult).width >> 1;
+      *aIsOverridable = PR_FALSE;
+      break;
+    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+      (*aResult).height = ::GetSystemMetrics(SM_CXHTHUMB);
+      (*aResult).width = (*aResult).height >> 1;
+      *aIsOverridable = PR_FALSE;
+      break;
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+      (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
+      break;
     }
+#endif
     default:
       return NS_ERROR_FAILURE;
   }  
@@ -1196,8 +1198,10 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           const nsStyleUserInterface *uiData = aFrame->GetStyleUserInterface();
           // The down state is flat if the button is focusable
           if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
+#ifndef WINCE
             if (!aFrame->GetContent()->IsContentOfType(nsIContent::eHTML))
               aState |= DFCS_FLAT;
+#endif
             aFocused = PR_TRUE;
           }
         }
@@ -1294,8 +1298,10 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         aState |= DFCS_INACTIVE;
       else {     
         PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+#ifndef WINCE
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-        aState |= DFCS_PUSHED | DFCS_FLAT;
+          aState |= DFCS_PUSHED | DFCS_FLAT;
+#endif
       }
 
       return NS_OK;
@@ -1326,8 +1332,10 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         aState |= DFCS_INACTIVE;
       else {
         contentState = GetContentState(aFrame, aWidgetType);
+#ifndef WINCE
         if (contentState & NS_EVENT_STATE_HOVER && contentState & NS_EVENT_STATE_ACTIVE)
           aState |= DFCS_PUSHED | DFCS_FLAT;      
+#endif
       }
 
       return NS_OK;
@@ -1356,10 +1364,12 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
 
       return NS_OK;    
     }
+#ifndef WINCE
     case NS_THEME_RESIZER:    
       aPart = DFC_SCROLL;
       aState = DFCS_SCROLLSIZEGRIP;
       return NS_OK;
+#endif
   }
   return NS_ERROR_FAILURE;
 }
@@ -1609,7 +1619,9 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
             oldForeColor = ::SetTextColor(hdc, ::GetSysColor(COLOR_3DHILIGHT));
             oldBackColor = ::SetBkColor(hdc, color3D);
 
+#ifndef WINCE
             ::UnrealizeObject(brush);
+#endif
             ::SetBrushOrgEx(hdc, widgetRect.left, widgetRect.top, NULL);
             oldBrush = (HBRUSH) ::SelectObject(hdc, brush);
 
