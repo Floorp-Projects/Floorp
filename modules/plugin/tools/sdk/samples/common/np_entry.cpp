@@ -187,7 +187,7 @@ char * NP_GetMIMEDescription(void)
 
 NPError NP_GetValue(void *future, NPPVariable aVariable, void *aValue)
 {
-  return NPP_GetValue((NPP_t *)future, aVariable, aValue);
+  return NS_PluginGetValue(aVariable, aValue);
 }
 
 #endif //XP_UNIX

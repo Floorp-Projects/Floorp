@@ -37,7 +37,7 @@ CPPSRCS = nsScriptablePeer.cpp \
 
 XPIDLSRCS = nsISimplePlugin.idl
 
-SHARED_LIBRARY_LIBS = ../common/plugingate_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = ../common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX)
 
 ifeq ($(OS_ARCH),WINNT)
 DEFFILE = npsimple.def

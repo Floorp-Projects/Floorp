@@ -46,11 +46,12 @@
 
 #define MIME_TYPES_HANDLED  "application/scriptable-plugin"
 #define PLUGIN_NAME         "Scriptable Example Plugin for Mozilla"
-#define PLUGIN_DESCRIPTION  MIME_TYPES_HANDLED":scr:"PLUGIN_NAME
+#define MIME_TYPES_DESCRIPTION  MIME_TYPES_HANDLED":scr:"PLUGIN_NAME
+#define PLUGIN_DESCRIPTION  PLUGIN_NAME " (Plug-ins SDK sample)"
 
 char* NPP_GetMIMEDescription(void)
 {
-    return(PLUGIN_DESCRIPTION);
+    return(MIME_TYPES_DESCRIPTION);
 }
 
 //////////////////////////////////////
@@ -65,6 +66,25 @@ NPError NS_PluginInitialize()
 void NS_PluginShutdown()
 {
 }
+
+// get values per plugin
+NPError NS_PluginGetValue(NPPVariable aVariable, void *aValue)
+{
+  NPError err = NPERR_NO_ERROR;
+  switch (aVariable) {
+    case NPPVpluginNameString:
+      *((char **)aValue) = PLUGIN_NAME;
+      break;
+    case NPPVpluginDescriptionString:
+      *((char **)aValue) = PLUGIN_DESCRIPTION;
+      break;
+    default:
+      err = NPERR_INVALID_PARAM;
+      break;
+  }
+  return err;
+}
+
 
 /////////////////////////////////////////////////////////////
 //

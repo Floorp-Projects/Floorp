@@ -88,4 +88,9 @@ void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin);
 NPError NS_PluginInitialize();
 void NS_PluginShutdown();
 
+#ifdef XP_UNIX
+// global to get plugins name & description 
+NPError NS_PluginGetValue(NPPVariable aVariable, void *aValue);
+#endif
+
 #endif // __PLUGININSTANCEBASE_H__

@@ -38,13 +38,14 @@
 #include "plugin.h"
 
 #define MIME_TYPES_HANDLED  "application/basic-plugin"
-#define PLUGIN_NAME         "Basic Example Plugin for Mozilla"
-#define PLUGIN_DESCRIPTION  MIME_TYPES_HANDLED":bsc:"PLUGIN_NAME
+#define PLUGIN_NAME         "Basic Example Plug-in for Mozilla"
+#define MIME_TYPES_DESCRIPTION  MIME_TYPES_HANDLED":bsc:"PLUGIN_NAME
+fine PLUGIN_DESCRIPTION  PLUGIN_NAME " (Plug-ins SDK sample)"
 
 
 char* NPP_GetMIMEDescription(void)
 {
-    return(PLUGIN_DESCRIPTION);
+    return(MIME_TYPES_DESCRIPTION);
 }
 
 /////////////////////////////////////
@@ -57,6 +58,24 @@ NPError NS_PluginInitialize()
 
 void NS_PluginShutdown()
 {
+}
+
+// get values per plugin
+NPError NS_PluginGetValue(NPPVariable aVariable, void *aValue)
+{
+  NPError err = NPERR_NO_ERROR;
+  switch (aVariable) {
+    case NPPVpluginNameString:
+      *((char **)aValue) = PLUGIN_NAME;
+      break;
+    case NPPVpluginDescriptionString:
+      *((char **)aValue) = PLUGIN_DESCRIPTION;
+      break;
+    default:
+      err = NPERR_INVALID_PARAM;
+      break;
+  }
+  return err;
 }
 
 /////////////////////////////////////////////////////////////
@@ -161,15 +180,15 @@ NPError nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
   NPError err = NPERR_NO_ERROR;
   switch (aVariable) {
     case NPPVpluginNameString:
-      *((char **)aValue) = PLUGIN_NAME;
-      break;
     case NPPVpluginDescriptionString:
-      *((char **)aValue) = PLUGIN_DESCRIPTION;
+      return NS_PluginGetValue(aVariable, aValue) ;
       break;
     default:
+      err = NPERR_INVALID_PARAM;
       break;
   }
   return err;
+
 }
 
 NPError nsPluginInstance::SetWindow(NPWindow* aWindow)
