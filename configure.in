@@ -599,23 +599,15 @@ MOZ_ARG_ENABLE_BOOL(tests,
 dnl build mozilla/xpfe by default
 MOZ_BUILD_XPFE=1
 
-MOZ_ARG_ENABLE_BOOL(build-xpfe,
-[  --enable-build-xpfe     build mozilla/xpfe],
-  MOZ_BUILD_XPFE=1)
-
 MOZ_ARG_DISABLE_BOOL(build-xpfe,
-[  --disable-build-xpfe          dont build mozilla/xpfe],
+[  --disable-build-xpfe    dont build mozilla/xpfe],
   MOZ_BUILD_XPFE= )
 
 dnl build mozilla/nsprpub by default
 MOZ_BUILD_NSPR=1
 
-MOZ_ARG_ENABLE_BOOL(build-nspr,
-[  --enable-build-nspr           build mozilla/nsprpub],
-  MOZ_BUILD_NSPR=1)
-
 MOZ_ARG_DISABLE_BOOL(build-nspr,
-[  --disable-build-nspr          dont build mozilla/nsprpub],
+[  --disable-build-nspr    dont build mozilla/nsprpub],
   MOZ_BUILD_NSPR= )
 
 MOZ_ARG_ENABLE_STRING(homedir,
@@ -1199,6 +1191,15 @@ if test "$MOZ_EDITOR"; then
   AC_DEFINE(NGEDITOR)
 fi
 
+# Used for LD_LIBRARY_PATH of run_viewer target
+LIBS_PATH=
+for lib_arg in $NSPR_LIBS $TK_LIBS; do
+  case $lib_arg in
+    -L* ) LIBS_PATH="${LIBS_PATH:+$LIBS_PATH:}"`expr $lib_arg : "-L\(.*\)"` ;;
+      * ) ;;
+  esac
+done
+AC_SUBST(LIBS_PATH)
 
 dnl Spit out some output
 dnl ========================================================
