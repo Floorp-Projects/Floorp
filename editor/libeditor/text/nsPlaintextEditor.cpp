@@ -1902,7 +1902,7 @@ NS_IMETHODIMP nsPlaintextEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports 
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult result;
+  nsresult result = NS_ERROR_NULL_POINTER;
   if (aNode)
   { // get the content interface
     nsCOMPtr<nsIContent> nodeAsContent( do_QueryInterface(aNode) );
@@ -1912,9 +1912,6 @@ NS_IMETHODIMP nsPlaintextEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports 
       *aLayoutObject = nsnull;
       result = ps->GetLayoutObjectFor(nodeAsContent, aLayoutObject);
     }
-  }
-  else {
-    result = NS_ERROR_NULL_POINTER;
   }
 
   return result;
