@@ -47,7 +47,7 @@ class ChildWindow : public nsWindow
 {
  public:
   ChildWindow();
-  virtual IsChild() { return PR_TRUE; };
+  virtual PRInt32 IsChild() { return PR_TRUE; };
 };
 
 #endif
