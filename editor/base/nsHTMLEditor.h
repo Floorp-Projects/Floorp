@@ -541,7 +541,9 @@ protected:
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
                                 PRInt32 *aOffset,
                                 nsIAtom *aProperty, 
-                                const nsString *aAttribute);
+                                const nsString *aAttribute,
+                                nsCOMPtr<nsIDOMNode> *outLeftNode = nsnull,
+                                nsCOMPtr<nsIDOMNode> *outRightNode = nsnull);
   nsresult RemoveStyleInside(nsIDOMNode *aNode, 
                              nsIAtom *aProperty, 
                              const nsString *aAttribute, 
