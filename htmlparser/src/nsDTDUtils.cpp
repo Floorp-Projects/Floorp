@@ -462,11 +462,6 @@ void CTokenRecycler::RecycleToken(CToken* aToken) {
     PRInt32 theType=aToken->GetTokenType();
     CTokenFinder finder(aToken);
     CToken* theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(finder);
-#ifdef NS_DEBUG
-    if(theMatch) {
-      int x=5;
-    }
-#endif
     mTokenCache[theType-1]->Push(aToken);
   }
 }
@@ -643,13 +638,13 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
 
 CObserverDictionary::CObserverDictionary() {
 
+  nsCRT::zero(mObservers,sizeof(mObservers));
+
   nsAutoString theHTMLTopic("htmlparser");
   RegisterObservers(theHTMLTopic);
 
   nsAutoString theXMLTopic("xmlparser");
   RegisterObservers(theXMLTopic);
-
-  nsCRT::zero(mObservers,sizeof(mObservers));
 
 }
 
