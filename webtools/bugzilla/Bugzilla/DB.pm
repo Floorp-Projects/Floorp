@@ -152,8 +152,12 @@ sub _connect {
                              Password => $db_pass,
                              ShowErrorStatement => 1,
                              HandleError => \&_handle_error,
-                             FetchHashKeyName => 'NAME_lc',
                              TaintIn => 1,
+                             FetchHashKeyName => 'NAME',  
+                             # Note: NAME_lc causes crash on ActiveState Perl
+                             # 5.8.4 (see Bug 253696)
+                             # XXX - This will likely cause problems in DB
+                             # back ends that twiddle column case (Oracle?)
                            });
 
     return $dbh;
