@@ -1296,7 +1296,7 @@ nsFontGTK::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics)
     }
     mFont = gdkFont;
     mActualSize = xFont->max_bounds.ascent + xFont->max_bounds.descent;
-    if (aCharSet->mInfo->mSpecialUnderline) {
+    if (aCharSet->mInfo->mSpecialUnderline && aMetrics->mFontHandle) {
       XFontStruct* asciiXFont =
         (XFontStruct*) GDK_FONT_XFONT(aMetrics->mFontHandle);
       unsigned long positionX2;
