@@ -53,7 +53,7 @@ function onLoad() {
 }
 
 function onAccept() {
-  var zoom = parseInt(dialog.input.value);
+  var zoom = parseFloat(dialog.input.value);
   if (!isNaN(zoom) && zoom >= args.zoomMin && zoom <= args.zoomMax) {
     args.value = zoom;
     args.zoomOK = true;
@@ -64,7 +64,7 @@ function onAccept() {
 function doEnabling() {
   var enable = false;
   if (dialog.input.value) {
-    var zoom = parseInt(dialog.input.value);
+    var zoom = parseFloat(dialog.input.value);
     if (!isNaN(zoom) && zoom >= args.zoomMin && zoom <= args.zoomMax)
       enable = true;
   }
