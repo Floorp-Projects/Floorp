@@ -323,10 +323,14 @@ pref("font.min-size.fixed.zh-TW", 10);
 //     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
 
 /* reject font if accept pattern does not match it... */
-//pref("print.xprint.font.acceptfontpattern", ".*");
-/* reject font if reject pattern matches it... */
-//pref("print.xprint.font.rejectfontpattern", 
-//     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
+pref("print.xprint.font.acceptfontpattern", ".*");
+/* reject font if reject pattern matches it...
+ * Current bans:
+ * - bug 148470 ("Ban "-dt-*" (bitmap!!) fonts from Xprint")
+ *   pattern="fname=-dt-.*;scalable=.*;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*"
+ */
+pref("print.xprint.font.rejectfontpattern", 
+     "fname=-dt-.*;scalable=.*;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
 
 /* Xprint print module prefs */
 pref("print.xprint.font.force_outline_scaled_fonts", true);
