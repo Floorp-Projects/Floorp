@@ -523,6 +523,7 @@ nsLayer::StoreEvent(VEvent& addEvent)
   if (CAPI_ERR_OK != capiStatus)
     return 1;   /* XXX: really need to fix this up */
 
+    return NS_OK;
 }
 
 
