@@ -5,6 +5,6 @@ comm.jar:
     content/communicator/xpinstall/institems.js (content/institems.js)
 
 en-US.jar:
-    locale/en-US/communicator/xpinstall/xpinstall.properties (locale/en-US/xpinstall.properties)
+    locale/en-US/global/xpinstall/xpinstall.properties (/toolkit/locales/en-US/chrome/global/xpinstall.properties)
     locale/en-US/communicator/xpinstall/xpistatus.dtd (locale/en-US/xpistatus.dtd)
     locale/en-US/communicator/xpinstall/institems.dtd (locale/en-US/institems.dtd)

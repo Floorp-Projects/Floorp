@@ -46,6 +46,7 @@
 + locale/@AB_CD@/global/viewSource.properties           (@AB_CD@/chrome/global/viewSource.properties)
 + locale/@AB_CD@/global/wizard.properties               (@AB_CD@/chrome/global/wizard.properties)
   locale/@AB_CD@/global/history/history.properties      (@AB_CD@/chrome/global/history/history.properties)
+  locale/@AB_CD@/global/xpinstall/xpinstall.properties  (@AB_CD@/chrome/global/xpinstall/xpinstall.properties)
 * locale/@AB_CD@/global-region/contents.rdf             (generic/chrome/global-region/contents.rdf)
 + locale/@AB_CD@/global-region/region.dtd               (@AB_CD@/chrome/global-region/region.dtd)
 + locale/@AB_CD@/global-region/region.properties        (@AB_CD@/chrome/global-region/region.properties)
