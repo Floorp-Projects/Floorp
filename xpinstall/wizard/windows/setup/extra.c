@@ -5808,18 +5808,22 @@ HRESULT ShowMessageAndQuitProcess(HWND aHwndFW, char *aMsgQuitProcess, char *aMs
   switch(sgProduct.mode)
   {
     case NORMAL:
+    {
       char msgTitleStr[MAX_BUF];
       GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", msgTitleStr, sizeof(msgTitleStr), szFileIniInstall);
       MessageBox(hWndMain, aMsgQuitProcess, msgTitleStr, MB_ICONEXCLAMATION);
       break;
+    }
 
     case AUTO:
+    {
       /* Setup mode is AUTO.  Show message, timeout, then auto close
        * all the windows associated with the process */
       ShowMessage(aMsgQuitProcess, TRUE);
       Delay(5);
       ShowMessage(aMsgQuitProcess, FALSE);
       break;
+    }
 
     case SILENT:
       break;
