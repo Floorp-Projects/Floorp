@@ -89,8 +89,6 @@ XFE_RDFMenuToolbarBase::XFE_RDFMenuToolbarBase( XFE_Frame *  frame,
 /* virtual */
 XFE_RDFMenuToolbarBase::~XFE_RDFMenuToolbarBase()
 {
-    HT_DeletePane(_ht_pane);
-
     XFE_MozillaApp::theApp()->unregisterInterest(
         XFE_MozillaApp::updateToolbarAppearance,
         this,
@@ -1811,6 +1809,7 @@ XFE_RDFMenuToolbarBase::setItemLabelString(Widget item,HT_Resource entry)
 void
 XFE_RDFMenuToolbarBase::notify(HT_Resource n, HT_Event whatHappened)
 {
+  D(debugEvent(n, whatHappened,"MTB"););
   switch (whatHappened) {
   case HT_EVENT_VIEW_SELECTED:
       _ht_view = HT_GetSelectedView(_ht_pane);
