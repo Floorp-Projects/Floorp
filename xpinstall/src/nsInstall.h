@@ -62,8 +62,9 @@ class nsInstallInfo
     PRBool    IsMultipleTrigger();
   
   private:
-    DeleteVector(nsVector* vector);
-    MakeTempFile(nsString aURL, nsString& tempFileString);
+    
+    void DeleteVector(nsVector* vector);
+    void MakeTempFile(nsString aURL, nsString& tempFileString);
 
     nsString *mLocalFile;
     nsString *mFromURL;
