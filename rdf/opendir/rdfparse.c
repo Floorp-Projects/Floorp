@@ -312,6 +312,7 @@ fcopyString (char* str) {
 }
 
 
+
 void
 addElementProps (char** attlist, char* elementName, RDFT f, RDF_Resource obj)
 {
@@ -319,8 +320,12 @@ addElementProps (char** attlist, char* elementName, RDFT f, RDF_Resource obj)
   while (count < 2*MAX_ATTRIBUTES) {
     char* attName = attlist[count++];
     char* attValue = attlist[count++];
+    char* baseName = strchr(attName, ':');
     if ((attName == NULL) || (attValue == NULL)) break;
-    if (!stringEquals(attName, "resource") && 
+    if baseName attName = baseName + 1;
+    if (startsWith("xmlns", attName)) {
+      /* addNameSpace(attName, attValue, f); */
+    } else if (!stringEquals(attName, "resource") && 
         !stringEquals(attName, "rdf:resource")  && 
         !stringEquals(attName, "about") && 
         !stringEquals(attName, "rdf:about") && 
@@ -429,6 +434,7 @@ tokenizeElement (char* attr, char** attlist, char** elementName)
   char c ;
   size_t m = 0;
   size_t atc = 0;
+  char* base;
   int emptyTagp =  (attr[s-2] == '/');
   int inAttrNamep = 1;
   c = attr[n++]; 
@@ -436,6 +442,8 @@ tokenizeElement (char* attr, char** attlist, char** elementName)
     c = attr[n++];
   }
   *elementName = &attr[n-1];
+  base = strchr(*elementName, ':');
+  if (base) *elementName = base+1;
   while (n < s) {
     if (wsCharp(c)) break;
     c = attr[n++];
