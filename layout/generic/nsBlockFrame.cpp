@@ -67,6 +67,7 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef REFLOW_STATUS_COVERAGE
 #undef NOISY_FINAL_SIZE
 #undef NOISY_REMOVE_FRAME
+#undef NOISY_DAMAGE_REPAIR
 #else
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
@@ -77,6 +78,7 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef REFLOW_STATUS_COVERAGE
 #undef NOISY_FINAL_SIZE
 #undef NOISY_REMOVE_FRAME
+#undef NOISY_DAMAGE_REPAIR
 #endif
 
 //----------------------------------------------------------------------
@@ -1186,50 +1188,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     if (ymost > y1) {
       y1 = ymost;
     }
-
-    // If the line has floaters, factor those in as well
-    nsVoidArray* floaters = line->mFloaters;
-    if (nsnull != floaters) {
-      PRInt32 i, n = floaters->Count();
-      for (i = 0; i < n; i++) {
-        nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
-        nsIFrame* frame = ph->GetAnchoredItem();
-        // XXX This is wrong! The floater may have a combined area
-        // that exceeds its bounding box!
-        nsRect r;
-        frame->GetRect(r);
-        x = r.x;
-        y = r.y;
-        xmost = x + r.width;
-        ymost = y + r.height;
-        if (x < x0) {
-          x0 = x;
-        }
-        if (xmost > x1) {
-          x1 = xmost;
-        }
-        if (y < y0) {
-          y0 = y;
-        }
-        if (ymost > y1) {
-          y1 = ymost;
-        }
-      }
-    }
     line = line->mNext;
-  }
-
-  if (nsnull != mBullet) {
-    nsRect r;
-    mBullet->GetRect(r);
-    nscoord x = r.x;
-    nscoord y = r.y;
-    nscoord xmost = x + r.width;
-    nscoord ymost = y + r.height;
-    if (x < x0) x0 = x;
-    if (xmost > x1) x1 = xmost;
-    if (y < y0) y0 = y;
-    if (ymost > y1) y1 = ymost;
   }
 
   // If the combined area of our children exceeds our bounding box
@@ -2925,6 +2884,46 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     lineLayout->RemoveBulletFrame(mBullet);
   }
 
+  // When a line has floaters, factor them into the combined-area
+  // computations.
+  if (nsnull != aLine->mFloaters) {
+    nscoord x0 = aLine->mCombinedArea.x;
+    nscoord y0 = aLine->mCombinedArea.y;
+    nscoord x1 = x0 + aLine->mCombinedArea.width;
+    nscoord y1 = y0 + aLine->mCombinedArea.height;
+    nsRect r;
+    nsVoidArray& floaters = *aLine->mFloaters;
+    PRInt32 i, n = floaters.Count();
+    for (i = 0; i < n; i++) {
+      // XXX This is an approximation! The floater may have a combined
+      // area that exceeds its bounding box!
+      // XXX Move this logic into the ReflowFloater pathway...
+      nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters[i];
+      nsIFrame* floater = ph->GetAnchoredItem();
+      floater->GetRect(r);
+      nscoord x = r.x;
+      nscoord y = r.y;
+      nscoord xmost = x + r.width;
+      nscoord ymost = y + r.height;
+      if (x < x0) {
+        x0 = x;
+      }
+      if (xmost > x1) {
+        x1 = xmost;
+      }
+      if (y < y0) {
+        y0 = y;
+      }
+      if (ymost > y1) {
+        y1 = ymost;
+      }
+    }
+    aLine->mCombinedArea.x = x0;
+    aLine->mCombinedArea.y = y0;
+    aLine->mCombinedArea.width = x1 - x0;
+    aLine->mCombinedArea.height = y1 - y0;
+  }
+
   // Calculate the bottom margin for the line.
   nscoord lineBottomMargin = 0;
   if (0 == aLine->mBounds.height) {
@@ -4344,6 +4343,22 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer)
 {
+#ifdef NOISY_DAMAGE_REPAIR
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    PRInt32 depth = 0;
+    nsIFrame* parent = mParent;
+    while (nsnull != parent) {
+      parent->GetParent(&parent);
+      depth++;
+    }
+    nsFrame::IndentBy(stdout, depth);
+    ListTag(stdout);
+    printf(": bounds=%d,%d,%d,%d dirty=%d,%d,%d,%d\n",
+           mRect.x, mRect.y, mRect.width, mRect.height,
+           aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  }
+#endif  
+
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
@@ -4387,6 +4402,7 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
   if (eFramePaintLayer_Overlay == aWhichLayer) {
     // XXX CSS2's outline handling goes here
   }
+
   return NS_OK;
 }
 
@@ -4412,15 +4428,35 @@ nsBlockFrame::PaintFloaters(nsIPresContext& aPresContext,
 
 void
 nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect,
-                             nsFramePaintLayer aWhichLayer)
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect,
+                            nsFramePaintLayer aWhichLayer)
 {
+#ifdef NOISY_DAMAGE_REPAIR
+  PRInt32 depth = 0;
+  if (eFramePaintLayer_Underlay == aWhichLayer) {
+    nsIFrame* parent = mParent;
+    while (nsnull != parent) {
+      parent->GetParent(&parent);
+      depth++;
+    }
+  }
+#endif
   for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
     // If the line has outside children or if the line intersects the
     // dirty rect then paint the children in the line.
     if (!((line->mCombinedArea.YMost() <= aDirtyRect.y) ||
           (line->mCombinedArea.y >= aDirtyRect.YMost()))) {
+#ifdef NOISY_DAMAGE_REPAIR
+      if (eFramePaintLayer_Underlay == aWhichLayer) {
+        nsFrame::IndentBy(stdout, depth+1);
+        printf("draw line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
+               line, line->mBounds.x, line->mBounds.y,
+               line->mBounds.width, line->mBounds.height,
+               line->mCombinedArea.x, line->mCombinedArea.y,
+               line->mCombinedArea.width, line->mCombinedArea.height);
+      }
+#endif
       nsIFrame* kid = line->mFirstChild;
       PRInt32 n = line->ChildCount();
       while (--n >= 0) {
@@ -4429,6 +4465,18 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
         kid->GetNextSibling(&kid);
       }
     }
+#ifdef NOISY_DAMAGE_REPAIR
+    else {
+      if (eFramePaintLayer_Underlay == aWhichLayer) {
+        nsFrame::IndentBy(stdout, depth+1);
+        printf("skip line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
+               line, line->mBounds.x, line->mBounds.y,
+               line->mBounds.width, line->mBounds.height,
+               line->mCombinedArea.x, line->mCombinedArea.y,
+               line->mCombinedArea.width, line->mCombinedArea.height);
+      }
+    }
+#endif  
   }
 
   if (eFramePaintLayer_Content == aWhichLayer) {
