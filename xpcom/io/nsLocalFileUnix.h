@@ -30,6 +30,7 @@
 #define _nsLocalFileUNIX_H_
 
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "nscore.h"
