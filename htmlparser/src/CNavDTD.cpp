@@ -564,71 +564,78 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
  * @return 
  */
 nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
-  nsresult result= NS_OK;
+  nsresult result=NS_OK;
+  if(aSink) { 
+    mSink=nsnull; 
+    result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink); 
+    NS_ADDREF(mSink); 
 
-  if((NS_OK==anErrorCode) && (!mHadBody) && (!mHadFrameset)) {
-    CStartToken theToken(eHTMLTag_body);  //open the body container...
-    result=HandleStartToken(&theToken);
-    mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content
-    result=BuildModel(aParser,mTokenizer,0,aSink);
-  }
+    if((NS_OK==anErrorCode) && (!mHadBody) && (!mHadFrameset)) { 
+      CStartToken theToken(eHTMLTag_body);  //open the body container... 
+      result=HandleStartToken(&theToken); 
+      mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content 
+      result=BuildModel(aParser,mTokenizer,0,aSink); 
+    } 
 
-  if(aParser){
-    if(aNotifySink && aSink){
-      if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
-        eHTMLTags theTarget;
-        while(mBodyContext->GetCount() > 0) {
-          theTarget = mBodyContext->Last();
-          if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch))
-            result = HandleSavedTokensAbove(theTarget);
-          CloseContainersTo(theTarget,PR_FALSE);
-        }
-        //result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
-      }
-
-#ifdef RGESS_DEBUG
-      PRTime theEnd= PR_Now();
-      PRTime creates, ustoms;
-      LL_I2L(ustoms, 1000);
-      LL_SUB(creates, theEnd, gStartTime);
-      LL_DIV(creates, creates, ustoms);
-      printf("End parse elapsed: %lldms\n",creates);
-#endif
-
-        //let's only grab this state once!
-      if(!gShowCRC) {
-        gShowCRC=1; //this only indicates we'll not initialize again.
-        char* theEnvString = PR_GetEnv("RICKG_CRC");
-        if(theEnvString){
-          if(('1'==theEnvString[0]) || ('Y'==theEnvString[0]) || ('y'==theEnvString[0])){
-            gShowCRC=2;  //this indicates that the CRC flag was found in the environment.
-          }
-        }
-      }
-
-      if(2==gShowCRC) {
-        if(mComputedCRC32!=mExpectedCRC32) {
-          if(mExpectedCRC32!=0) {
-            printf("CRC Computed: %u  Expected CRC: %u\n,",mComputedCRC32,mExpectedCRC32);
-            result = aSink->DidBuildModel(2);
+    if(aParser){ 
+      if(aNotifySink && aSink){ 
+        if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) { 
+          eHTMLTags theTarget; 
+          while(mBodyContext->GetCount() > 0) { 
+            theTarget = mBodyContext->Last(); 
+            if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch)) 
+              result = HandleSavedTokensAbove(theTarget); 
+            CloseContainersTo(theTarget,PR_FALSE); 
           } 
-          else {
-            printf("Computed CRC: %u.\n",mComputedCRC32);
-            result = aSink->DidBuildModel(3);
-          }
-        }
-        else result = aSink->DidBuildModel(0);
-      }
-      else result=aSink->DidBuildModel(0);
+          //result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE); 
+        } 
 
-      if(mDTDDebug) {
-        mDTDDebug->DumpVectorRecord();
-      }
-    }
+  #ifdef RGESS_DEBUG 
+        PRTime theEnd= PR_Now(); 
+        PRTime creates, ustoms; 
+        LL_I2L(ustoms, 1000); 
+        LL_SUB(creates, theEnd, gStartTime); 
+        LL_DIV(creates, creates, ustoms); 
+        printf("End parse elapsed: %lldms\n",creates); 
+  #endif 
+
+          //let's only grab this state once! 
+        if(!gShowCRC) { 
+          gShowCRC=1; //this only indicates we'll not initialize again. 
+          char* theEnvString = PR_GetEnv("RICKG_CRC"); 
+          if(theEnvString){ 
+            if(('1'==theEnvString[0]) || ('Y'==theEnvString[0]) || ('y'==theEnvString[0])){ 
+              gShowCRC=2;  //this indicates that the CRC flag was found in the environment. 
+            } 
+          } 
+        } 
+
+        if(2==gShowCRC) { 
+          if(mComputedCRC32!=mExpectedCRC32) { 
+            if(mExpectedCRC32!=0) { 
+              printf("CRC Computed: %u  Expected CRC: %u\n,",mComputedCRC32,mExpectedCRC32); 
+              result = aSink->DidBuildModel(2); 
+            } 
+            else { 
+              printf("Computed CRC: %u.\n",mComputedCRC32); 
+              result = aSink->DidBuildModel(3); 
+            } 
+          } 
+          else result = aSink->DidBuildModel(0); 
+        } 
+        else result=aSink->DidBuildModel(0); 
+
+        if(mDTDDebug) { 
+          mDTDDebug->DumpVectorRecord(); 
+        } 
+      } 
+    } 
+
+    NS_IF_RELEASE(mSink); 
+    mSink=nsnull; 
   }
   return result;
 }
-
 /**
  *  This big dispatch method is used to route token handler calls to the right place.
  *  What's wrong with it? This table, and the dispatch methods themselves need to be 
