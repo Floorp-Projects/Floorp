@@ -139,9 +139,10 @@ my $i = 0;
 foreach (@sortedcount)
 {
 	my $id = $_;
-	SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc FROM " . 
-												   "bugs WHERE bug_id = $id");
-	my ($component, $severity, $op_sys, $milestone, $summary) = FetchSQLData();
+	SendSQL("SELECT component, bug_severity, op_sys, target_milestone, short_desc, groupset " .
+                 " FROM bugs WHERE bug_id = $id");
+	my ($component, $severity, $op_sys, $milestone, $summary, $groupset) = FetchSQLData();
+        next unless $groupset == 0;
         $summary = html_quote($summary);
 	print "<tr>";
 	print '<td><center><A HREF="show_bug.cgi?id=' . $id . '">';

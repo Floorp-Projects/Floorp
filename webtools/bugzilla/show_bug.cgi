@@ -47,9 +47,9 @@ if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+\s*$/) {
 
 GetVersionTable();
 
-SendSQL("select short_desc from bugs where bug_id = $::FORM{'id'}");
-my $summary = FetchOneColumn();
-if( $summary ) {
+SendSQL("select short_desc, groupset from bugs where bug_id = $::FORM{'id'}");
+my ($summary, $groupset) = FetchSQLData();
+if( $summary && $groupset == 0) {
     $summary = html_quote($summary);
     PutHeader("Bug $::FORM{'id'} - $summary", "Bugzilla Bug $::FORM{'id'}", $summary );
 }else {

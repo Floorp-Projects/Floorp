@@ -775,9 +775,9 @@ sub GetBugLink {
     PushGlobalSQLState();
     
     # Get this bug's info from the SQL Database
-    SendSQL("select bugs.bug_status, resolution, short_desc
+    SendSQL("select bugs.bug_status, resolution, short_desc, groupset
              from bugs where bugs.bug_id = $bug_num");
-    my ($bug_stat, $bug_res, $bug_desc) = (FetchSQLData());
+    my ($bug_stat, $bug_res, $bug_desc, $bug_grp) = (FetchSQLData());
     
     # Format the retrieved information into a link
     if ($bug_stat eq "UNCONFIRMED") { $link_return .= "<i>" }
@@ -786,7 +786,8 @@ sub GetBugLink {
     $link_text = value_quote($link_text);
     $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
     if ($bug_res ne "") {$link_return .= " $bug_res"}
-    $link_return .= qq{ - $bug_desc">$link_text</a>};
+    if ($bug_grp == 0) { $link_return .= " - $bug_desc" }
+    $link_return .= qq{">$link_text</a>};
     if ($bug_res ne "") { $link_return .= "</strike>" }
     if ($bug_stat eq "UNCONFIRMED") { $link_return .= "</i>"}
     
