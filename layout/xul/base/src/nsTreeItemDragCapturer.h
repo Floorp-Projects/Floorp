@@ -31,8 +31,8 @@ class nsIPresContext;
 class nsIDOMEvent;
 class nsIFrame;
 class nsXULTreeGroupFrame;
-class nsPoint;
-class nsRect;
+struct nsPoint;
+struct nsRect;
 
 class nsTreeItemDragCapturer : public nsIDOMDragListener
 {
