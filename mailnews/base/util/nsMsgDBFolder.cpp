@@ -444,7 +444,7 @@ NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
   {
     nsMsgKeyArray *newMessageKeys = nsnull;
     rv = mDatabase->GetNewList(&newMessageKeys);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && newMessageKeys)
       m_saveNewMsgs.CopyArray(newMessageKeys);
     NS_DELETEXPCOM (newMessageKeys);
     rv = mDatabase->ClearNewList(PR_TRUE);
@@ -1814,7 +1814,8 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
   if (mFlags & (MSG_FOLDER_FLAG_JUNK | MSG_FOLDER_FLAG_TRASH |
                MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_QUEUE |
                MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_TEMPLATES |
-               MSG_FOLDER_FLAG_IMAP_PUBLIC | MSG_FOLDER_FLAG_IMAP_OTHER_USER))
+               MSG_FOLDER_FLAG_IMAP_PUBLIC | MSG_FOLDER_FLAG_IMAP_OTHER_USER)
+       && !(mFlags & MSG_FOLDER_FLAG_INBOX))
     return NS_OK;
 
   nsresult rv = GetServer(getter_AddRefs(server));
