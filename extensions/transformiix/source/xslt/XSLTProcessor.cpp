@@ -25,7 +25,7 @@
  * Pierre Phaneuf, pp@ludusdesign.com
  *    -- fixed some XPCOM usage.
  *
- * $Id: XSLTProcessor.cpp,v 1.4 2000/04/12 10:15:34 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.cpp,v 1.5 2000/04/12 11:00:37 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -38,7 +38,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/04/12 10:15:34 $
+ * @version $Revision: 1.5 $ $Date: 2000/04/12 11:00:37 $
 **/
 
 /**
@@ -59,7 +59,7 @@ XSLTProcessor::XSLTProcessor() {
 
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
-    appVersion.append("1.0 [beta v20000405]");
+    appVersion.append("1.0 [beta v20000412]");
 
 
     //-- create XSL element types
@@ -84,6 +84,7 @@ XSLTProcessor::XSLTProcessor() {
     xslTypes.put(PI,              new XSLType(XSLType::PI));
     xslTypes.put(PRESERVE_SPACE,  new XSLType(XSLType::PRESERVE_SPACE));
     xslTypes.put(STRIP_SPACE,     new XSLType(XSLType::STRIP_SPACE));
+    xslTypes.put(SORT,            new XSLType(XSLType::SORT));
     xslTypes.put(TEMPLATE,        new XSLType(XSLType::TEMPLATE));
     xslTypes.put(TEXT,            new XSLType(XSLType::TEXT));
     xslTypes.put(VALUE_OF,        new XSLType(XSLType::VALUE_OF));
@@ -865,8 +866,21 @@ void XSLTProcessor::processAction
                 if ( exprResult->getResultType() == ExprResult::NODESET ) {
                     nodeSet = (NodeSet*)exprResult;
 
-					//-- make sure nodes are in DocumentOrder
+				    //-- make sure nodes are in DocumentOrder
                     ps->sortByDocumentOrder(nodeSet);
+
+                    //-- look for xsl:sort elements
+                    Node* child = actionElement->getFirstChild();
+                    while (child) {
+                        if (child->getNodeType() == Node::ELEMENT_NODE) {
+                            DOMString nodeName = child->getNodeName();
+                            if (getElementType(nodeName, ps) == XSLType::SORT) {
+                                NodeSorter::sort(nodeSet, (Element*)child, node, ps);
+                                break;
+                            }
+                        }
+                        child = child->getNextSibling();
+                    }
 
                     //-- push nodeSet onto context stack
                     ps->getNodeSetStack()->push(nodeSet);
@@ -1111,10 +1125,10 @@ void XSLTProcessor::processAction
                 ps->addToResultTree(resultDoc->createTextNode(result));
                 break;
             }
-	    //-- xsl:param
-	    case XSLType::PARAM:
-	      //-- ignore in this loop already processed
-	      break;
+	          //-- xsl:param
+	          case XSLType::PARAM:
+	          //-- ignore in this loop already processed
+	              break;
             //-- xsl:processing-instruction
             case XSLType::PI:
             {
@@ -1156,6 +1170,9 @@ void XSLTProcessor::processAction
                 }
                 break;
             }
+            case XSLType::SORT:
+                //-- ignore in this loop
+                break;
             //-- xsl:text
             case XSLType::TEXT :
             {
