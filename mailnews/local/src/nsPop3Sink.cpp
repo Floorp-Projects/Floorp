@@ -63,7 +63,7 @@ nsPop3Sink::nsPop3Sink()
     m_senderAuthed = PR_FALSE;
     m_outputBuffer = nsnull;
     m_outputBufferSize = 0;
-    m_newMailParser = NULL;
+    m_newMailParser = nsnull;
 #ifdef DEBUG
     m_fileCounter = 0;
 #endif
@@ -238,6 +238,10 @@ nsPop3Sink::EndMailDelivery()
     delete m_outFileStream;
     m_outFileStream = 0;
   }
+
+  // tell the parser to mark the db valid *after* closing the mailbox.
+  if (m_newMailParser)
+    m_newMailParser->UpdateDBFolderInfo();
 
   nsresult rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
