@@ -45,6 +45,10 @@
 #include "intl_csi.h"
 /* #include "netcache.h" */
 
+#ifdef LAYPROBE_API
+#include "layprobe.h"
+#endif /* LAYPROBE_API */
+
 QueueStackElement * et_TopQueue = NULL;
 
 PRIVATE PRMonitor * lm_queue_monitor = NULL;
@@ -341,6 +345,20 @@ JSBool
 ET_SendEvent(MWContext * pContext, LO_Element *pElement, JSEvent *pEvent, 
              ETClosureFunc fnClosure, void * whatever) 
 {
+#ifdef LAYPROBE_API
+	LAPIEventInfo ei;
+	ei.type = pEvent->type;
+	ei.x = pEvent->x;
+	ei.y = pEvent->y;
+	ei.docx = pEvent->docx;
+	ei.docy = pEvent->docy;
+	ei.screenx = pEvent->screenx;
+	ei.screeny = pEvent->screeny;
+	ei.Context = pContext;
+	ei.lo_element = pElement;
+	LAPINotificationHandler(&ei);
+#endif /* LAYPROBE_API */
+
     /* make sure we are able to process Mocha events before bothering */
     if (!LM_CanDoJS(pContext) || EDT_IS_EDITOR(pContext)) {
 	ETEventStatus     status = EVENT_OK;
