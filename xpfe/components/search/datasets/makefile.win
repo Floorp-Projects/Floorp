@@ -24,7 +24,6 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
-	category.rdf			\
 	Jobs.gif			\
 	Jobs.src			\
 	Music_Artist.gif		\
@@ -44,4 +43,4 @@ FILES=\
         $(NULL)
 
 install:: $(FILES:/=\)
-	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\rdf\datasets
+	!@$(MAKE_INSTALL) $** $(DIST)\bin\searchplugins
