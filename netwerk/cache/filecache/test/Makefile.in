@@ -30,16 +30,11 @@ CPPSRCS		= \
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
-ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
-endif
-
 LIBS		= \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
-        -lmozdbm_s \
+	        -lmozdbm_s \
 		$(MOZ_NECKO_UTIL_LIBS) \
-		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -39,7 +39,6 @@ include $(topsrcdir)/config/config.mk
 LIBS		= \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
-		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -34,19 +34,10 @@ LIBS		= \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(TK_LIBS) \
-		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
-
-ifeq ($(OS_ARCH)$(OS_TEST),NetBSDarm32)
-NO_LD_ARCHIVE_FLAGS := 1
-endif
-
-ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxpcomio_s -lxptinfo -lmozreg_s
-endif
 
 include $(topsrcdir)/config/rules.mk
 
