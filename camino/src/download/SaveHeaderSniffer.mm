@@ -55,6 +55,8 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIMIMEHeaderParam.h"
 #include "nsIDownload.h"
+#include "nsIExternalHelperAppService.h"
+#include "nsCExternalHandlerService.h"
 
 const char* const persistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
 
@@ -107,6 +109,8 @@ nsHeaderSniffer::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aReques
       httpChannel->GetResponseHeader(nsCAutoString("content-disposition"), mContentDisposition);
     
     mPersist->CancelSave();
+    mPersist = nsnull;
+
     PRBool exists;
     mTmpFile->Exists(&exists);
     if (exists)
@@ -374,8 +378,8 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
   webPersist->SetPersistFlags(flags);
   
   if (sourceURI)
-  { // Tell web persist we want no decoding on this data
-    flags |= nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION;
+  {
+    flags |= nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
     webPersist->SetPersistFlags(flags);
     rv = webPersist->SaveURI(sourceURI, nsnull, nsnull, mPostData, nsnull, destURI);
   }
