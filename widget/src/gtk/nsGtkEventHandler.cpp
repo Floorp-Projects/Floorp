@@ -21,6 +21,7 @@
  */
 
 #include "nsWidget.h"
+#include "keysym2ucs.h"
 #include "nsWindow.h"
 
 #include "nsScrollbar.h"
@@ -361,10 +362,20 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     // XXX
     anEvent.isMeta = PR_FALSE; //(aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
 
-    if(aGEK->length)
+    if(aGEK->length) {
        anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
-    else 
+    } else  {
        anEvent.charCode = 0;
+       // now, let's handle some keysym which XmbLookupString didn't handle
+       // because they are not part of the locale encoding
+       if( (aGEK->keyval >= 0xa0 && (aGEK->keyval <= 0xf000) ||
+           (aGEK->keyval & 0xff000000U) == 0x01000000))
+       {
+          long ucs = keysym2ucs(aGEK->keyval);
+          if( (-1 != ucs ) && ( ucs < 0x10000))
+             anEvent.charCode = ucs;
+       }
+    }
 
     if (anEvent.charCode) {
       anEvent.keyCode = 0;
