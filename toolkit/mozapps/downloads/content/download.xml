@@ -306,12 +306,14 @@
             </xul:vbox>
             <xul:vbox pack="start">
               <xul:label value="&cmd.cancel.label;" class="link"
-                        onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"/>          
+                         onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"
+                         onkeypress="if (event.keyCode == 13) this.onclick();"/>
             </xul:vbox>
           </xul:hbox>                              
           <xul:hbox align="center">
             <xul:label value="&cmd.resume.label;" class="link"
-                       onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('resume');"/>
+                       onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('resume');"
+                       onkeypress="if (event.keyCode == 13) this.onclick();"/>
             <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
           </xul:hbox>                            
         </xul:vbox>
@@ -342,9 +344,11 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cmd.open.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('open');"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('open');"
+                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
           <xul:label value="&cmd.remove.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"
+                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -364,9 +368,11 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cmd.retry.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"
+                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
           <xul:label value="&cmd.remove.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"
+                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -386,9 +392,11 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cmd.retry.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"
+                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
           <xul:label value="&cmd.remove.label;" class="link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"
+                     onkeypress="if (event.keyCode == 13) this.onclick();"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -503,6 +511,11 @@
       </method>
     </implementation>
     <handlers>
+      <handler event="focus">
+      <![CDATA[
+        this.selected = event.target;
+      ]]>
+      </handler>
       <handler event="click">
       <![CDATA[
         if (event.ctrlKey) {
