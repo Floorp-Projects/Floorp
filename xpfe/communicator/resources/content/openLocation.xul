@@ -55,10 +55,6 @@
   <keyset id="dialogKeys"/>
 
   <hbox>
-    <vbox>
-      <image class="question-icon"/>
-      <spring flex="1"/>
-    </vbox>
     <separator orient="vertical" class="thin"/>
     <vbox flex="1">
       <html>&enter.label;</html>
