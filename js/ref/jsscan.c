@@ -43,12 +43,13 @@
 #include "jsscan.h"
 
 #define RESERVE_JAVA_KEYWORDS
+#define RESERVE_ECMA_KEYWORDS
 
 static struct keyword {
     char        *name;
     int16       tokentype;      /* JSTokenType */
     int8        op;             /* JSOp */
-    int8        version;        /* JSVersion */
+    uint8       version;        /* JSVersion */
 } keywords[] = {
     {"break",           TOK_BREAK,              JSOP_NOP},
     {"case",            TOK_CASE,               JSOP_NOP},
@@ -124,6 +125,11 @@ static struct keyword {
     {"volatile",        TOK_RESERVED,           JSOP_NOP},
 #endif
 
+#ifdef RESERVE_ECMA_KEYWORDS
+    {"debugger",       TOK_RESERVED,            JSOP_NOP,       JSVERSION_1_3},
+    {"enum",           TOK_RESERVED,            JSOP_NOP,       JSVERSION_1_3},
+#endif
+
     {0}
 };
 
@@ -137,7 +143,8 @@ js_InitScanner(JSContext *cx)
 	atom = js_Atomize(cx, kw->name, strlen(kw->name), ATOM_PINNED);
 	if (!atom)
 	    return JS_FALSE;
-	atom->kwindex = (kw->version <= cx->version) ? kw - keywords : -1;
+	atom->kwindex = (JSVERSION_IS_ECMA(cx->version)
+                         || kw->version <= cx->version) ? kw - keywords : -1;
     }
     return JS_TRUE;
 }
