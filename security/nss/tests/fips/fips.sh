@@ -122,7 +122,7 @@ fips_140_1()
 
   echo "$SCRIPTNAME: Delete the certificate and key from the FIPS module"
   echo "certutil -d ${FIPSDIR} -F -n ${FIPSCERTNICK} -f ${FIPSPWFILE}"
-  certutil -d ${FIPSDIR} -D -n ${FIPSCERTNICK} 2>&1
+  certutil -d ${FIPSDIR} -F -n ${FIPSCERTNICK} -f ${FIPSPWFILE} 2>&1
   html_msg $? 0 "Delete the certificate and key from the FIPS module (certutil -D)"
 
   echo "$SCRIPTNAME: List the FIPS module certificates -----------------"
