@@ -33,6 +33,10 @@
  * This class represents a FunctionCall as defined by the XSL Working Draft
 **/
 
+FunctionCall::FunctionCall()
+{
+}
+
 /**
  * Destructor
 **/
@@ -52,14 +56,10 @@ FunctionCall::~FunctionCall()
  * Adds the given parameter to this FunctionCall's parameter list
  * @param expr the Expr to add to this FunctionCall's parameter list
 **/
-nsresult
-FunctionCall::addParam(nsAutoPtr<Expr> aExpr)
+nsresult FunctionCall::addParam(Expr* aExpr)
 {
-    nsresult rv = params.add(aExpr);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aExpr.forget();
-    
+    if (aExpr)
+        params.add(aExpr);
     return NS_OK;
 } //-- addParam
 

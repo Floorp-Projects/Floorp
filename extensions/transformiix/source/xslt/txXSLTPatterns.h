@@ -131,7 +131,12 @@ private:
         {
         }
 
-        nsAutoPtr<txPattern> pattern;
+        ~Step()
+        {
+            delete pattern;
+        }
+
+        txPattern* pattern;
         MBool isChild;
     };
 
@@ -193,9 +198,12 @@ public:
     {
     }
 
+    ~txStepPattern();
+
     TX_DECL_PATTERN;
 
-    nsAutoPtr<txNodeTest> mNodeTest;
+private:
+    txNodeTest* mNodeTest;
     MBool mIsAttr;
 };
 

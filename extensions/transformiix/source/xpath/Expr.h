@@ -119,7 +119,7 @@ public:
      * Adds the given parameter to this FunctionCall's parameter list
      * @param expr the Expr to add to this FunctionCall's parameter list
     **/
-    nsresult addParam(nsAutoPtr<Expr> aExpr);
+    nsresult addParam(Expr* aExpr);
 
     /**
      * Check if the number of parameters falls within a range.
@@ -139,6 +139,8 @@ public:
 protected:
 
     txList params;
+
+    FunctionCall();
 
     /*
      * Evaluates the given Expression and converts its result to a String.
@@ -177,12 +179,15 @@ protected:
 class AttributeValueTemplate: public Expr {
 
 public:
+
+    AttributeValueTemplate();
+
     virtual ~AttributeValueTemplate();
 
     /**
      * Adds the given Expr to this AttributeValueTemplate
     **/
-    nsresult addExpr(nsAutoPtr<Expr> expr);
+    void addExpr(Expr* expr);
 
     TX_DECL_EXPR;
 
@@ -227,8 +232,11 @@ public:
     txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
                Node::NodeType aNodeType);
 
+    ~txNameTest();
+
     TX_DECL_NODE_TEST;
 
+private:
     nsCOMPtr<nsIAtom> mPrefix;
     nsCOMPtr<nsIAtom> mLocalName;
     PRInt32 mNamespace;
@@ -253,6 +261,8 @@ public:
      */
     txNodeTypeTest(NodeType aNodeType);
 
+    ~txNodeTypeTest();
+
     /*
      * Sets the name of the node to match. Only availible for pi nodes
      */
@@ -272,6 +282,11 @@ private:
 class PredicateList  {
 
 public:
+
+    /**
+     * Creates a new PredicateList
+    **/
+    PredicateList();
     /**
      * Destructor, will delete all Expressions in the list, so remove
      * any you may need
@@ -282,7 +297,7 @@ public:
      * Adds the given Expr to the list
      * @param expr the Expr to add to the list
     **/
-    nsresult add(nsAutoPtr<Expr> aExpr);
+    void add(Expr* expr);
 
     nsresult evaluatePredicates(NodeSet* aNodes, txIMatchContext* aContext);
 
@@ -358,12 +373,17 @@ public:
      * Creates a new FilterExpr using the given Expr
      * @param expr the Expr to use for evaluation
     **/
-    FilterExpr(nsAutoPtr<Expr> aExpr);
+    FilterExpr(Expr* aExpr);
+
+    /**
+     * Destructor, will delete all predicates and the given Expr
+    **/
+    virtual ~FilterExpr();
 
     TX_DECL_EXPR;
 
 private:
-    nsAutoPtr<Expr> expr;
+    Expr* expr;
 
 }; //-- FilterExpr
 
@@ -393,15 +413,15 @@ public:
     //-- LF, changed from static const short to enum
     enum _AdditiveExprType { ADDITION = 1, SUBTRACTION };
 
-     AdditiveExpr(nsAutoPtr<Expr> aLeftExpr, nsAutoPtr<Expr> aRightExpr,
-                  short aOp);
+     AdditiveExpr(Expr* leftExpr, Expr* rightExpr, short op);
+     ~AdditiveExpr();
 
     TX_DECL_EXPR;
 
 private:
     short op;
-    nsAutoPtr<Expr> leftExpr;
-    nsAutoPtr<Expr> rightExpr;
+    Expr* leftExpr;
+    Expr* rightExpr;
 }; //-- AdditiveExpr
 
 /**
@@ -411,12 +431,13 @@ class UnaryExpr : public Expr {
 
 public:
 
-    UnaryExpr(nsAutoPtr<Expr> aExpr);
+     UnaryExpr(Expr* expr);
+     ~UnaryExpr();
 
     TX_DECL_EXPR;
 
 private:
-    nsAutoPtr<Expr> expr;
+    Expr* expr;
 }; //-- UnaryExpr
 
 /**
@@ -430,15 +451,15 @@ public:
     //-- BooleanExpr Types
     enum _BooleanExprType { AND = 1, OR };
 
-    BooleanExpr(nsAutoPtr<Expr> aLeftExpr, nsAutoPtr<Expr> aRightExpr,
-                short aOp);
+     BooleanExpr(Expr* leftExpr, Expr* rightExpr, short op);
+     ~BooleanExpr();
 
     TX_DECL_EXPR;
 
 private:
     short op;
-    nsAutoPtr<Expr> leftExpr;
-    nsAutoPtr<Expr> rightExpr;
+    Expr* leftExpr;
+    Expr* rightExpr;
 }; //-- BooleanExpr
 
 /**
@@ -457,15 +478,15 @@ public:
     //-- LF, changed from static const short to enum
     enum _MultiplicativeExprType { DIVIDE = 1, MULTIPLY, MODULUS };
 
-    MultiplicativeExpr(nsAutoPtr<Expr> aLeftExpr, nsAutoPtr<Expr> aRightExpr,
-                       short aOp);
+     MultiplicativeExpr(Expr* leftExpr, Expr* rightExpr, short op);
+     ~MultiplicativeExpr();
 
     TX_DECL_EXPR;
 
 private:
     short op;
-    nsAutoPtr<Expr> leftExpr;
-    nsAutoPtr<Expr> rightExpr;
+    Expr* leftExpr;
+    Expr* rightExpr;
 }; //-- MultiplicativeExpr
 
 /**
@@ -490,8 +511,7 @@ public:
         GREATER_OR_EQUAL
     };
 
-    RelationalExpr(nsAutoPtr<Expr> aLeftExpr, nsAutoPtr<Expr> aRightExpr,
-                   RelationalExprType aOp);
+    RelationalExpr(Expr* aLeftExpr, Expr* aRightExpr, RelationalExprType aOp);
 
     TX_DECL_EXPR;
 
@@ -513,6 +533,7 @@ class VariableRefExpr : public Expr {
 public:
 
     VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID);
+    ~VariableRefExpr();
 
     TX_DECL_EXPR;
 
@@ -535,6 +556,11 @@ public:
     enum PathOperator { RELATIVE_OP, DESCENDANT_OP };
 
     /**
+     * Creates a new PathExpr
+    **/
+    PathExpr();
+
+    /**
      * Destructor, will delete all Expressions
     **/
     virtual ~PathExpr();
@@ -543,13 +569,13 @@ public:
      * Adds the Expr to this PathExpr
      * @param expr the Expr to add to this PathExpr
     **/
-    nsresult addExpr(nsAutoPtr<Expr> aExpr, PathOperator aPathOp);
+    void addExpr(Expr* expr, PathOperator pathOp);
 
     TX_DECL_EXPR;
 
 private:
     struct PathExprItem {
-        nsAutoPtr<Expr> expr;
+        Expr* expr;
         PathOperator pathOp;
     };
 
@@ -594,6 +620,11 @@ class UnionExpr : public Expr {
 public:
 
     /**
+     * Creates a new UnionExpr
+    **/
+    UnionExpr();
+
+    /**
      * Destructor, will delete all Path Expressions
     **/
     virtual ~UnionExpr();
@@ -602,7 +633,7 @@ public:
      * Adds the PathExpr to this UnionExpr
      * @param expr the Expr to add to this UnionExpr
     **/
-    nsresult addExpr(nsAutoPtr<Expr> aExpr);
+    void addExpr(Expr* expr);
 
     TX_DECL_EXPR;
 
