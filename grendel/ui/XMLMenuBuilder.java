@@ -176,7 +176,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
   /**
    * @return the menubar built by this builder
    */
-  public JMenuBar getComponent() {
+  public MenuBarCtrl getComponent() {
     return component;
   }
 
