@@ -174,41 +174,29 @@ XFE_RDFTreeView::XFE_RDFTreeView(XFE_Component *	toplevel,
 		registerCommand(my_commands, new RdfPopupCommand);
 	}
 	
+	// Main form
+	Widget rdfMainForm = XtVaCreateWidget("rdfMainForm",
+									   xmFormWidgetClass,
+									   parent,
+									   XmNshadowThickness,		0,
+									   NULL);
 
-	// Create the tree widget
-	Widget tree = 
-		XtVaCreateWidget(TREE_NAME,
-						 xmlTreeWidgetClass,
-						 parent,
-						 XmNshadowThickness,		0,
-						 XmNhorizontalSizePolicy,	XmRESIZE_IF_POSSIBLE,
-						 XmNallowColumnResize,		True,
-						 XmNselectionPolicy,		XmSELECT_MULTIPLE_ROW,
-						 XmNheadingRows,			1,
-						 XmNvisibleRows,			14,
-						 XmNhideUnhideButtons,		True,
-						 NULL);
-	
-	setBaseWidget(tree);
-	
-	XtVaSetValues(m_widget, XmNcellAlignment, XmALIGNMENT_LEFT, NULL);
-	
-	XtVaSetValues(m_widget,
-				  XmNcellDefaults, True,
-				  XmNcellAlignment, XmALIGNMENT_LEFT,
-				  NULL);
-	
+	setBaseWidget(rdfMainForm);
+
+    createTree();
+    doAttachments();
+
 	init_pixmaps();
 	
-	XtAddCallback(m_widget, XmNexpandCallback, expand_row_cb, this);
-	XtAddCallback(m_widget, XmNcollapseCallback, collapse_row_cb, this);
-	XtAddCallback(m_widget, XmNdeleteCallback, delete_cb, NULL);
-	XtAddCallback(m_widget, XmNactivateCallback, activate_cb, this);
-	XtAddCallback(m_widget, XmNresizeCallback, resize_cb, this);
-	XtAddCallback(m_widget, XmNeditCallback, edit_cell_cb, this);
-	XtAddCallback(m_widget, XmNselectCallback, select_cb, this);
-	XtAddCallback(m_widget, XmNdeselectCallback, deselect_cb, this);
-	XtAddCallback(m_widget, XmNpopupCallback, popup_cb, this);
+	XtAddCallback(_tree, XmNexpandCallback, expand_row_cb, this);
+	XtAddCallback(_tree, XmNcollapseCallback, collapse_row_cb, this);
+	XtAddCallback(_tree, XmNdeleteCallback, delete_cb, NULL);
+	XtAddCallback(_tree, XmNactivateCallback, activate_cb, this);
+	XtAddCallback(_tree, XmNresizeCallback, resize_cb, this);
+	XtAddCallback(_tree, XmNeditCallback, edit_cell_cb, this);
+	XtAddCallback(_tree, XmNselectCallback, select_cb, this);
+	XtAddCallback(_tree, XmNdeselectCallback, deselect_cb, this);
+	XtAddCallback(_tree, XmNpopupCallback, popup_cb, this);
 	
 	//fe_AddTipStringCallback(outline, XFE_Outliner::tip_cb, this);
 }
@@ -224,11 +212,49 @@ XFE_RDFTreeView::~XFE_RDFTreeView()
 }
 //////////////////////////////////////////////////////////////////////////
 void
+XFE_RDFTreeView::createTree()
+{
+	// Create the tree widget
+	_tree = 
+		XtVaCreateWidget(TREE_NAME,
+						 xmlTreeWidgetClass,
+						 getBaseWidget(),
+						 XmNshadowThickness,		0,
+						 XmNhorizontalSizePolicy,	XmRESIZE_IF_POSSIBLE,
+						 XmNallowColumnResize,		True,
+						 XmNselectionPolicy,		XmSELECT_MULTIPLE_ROW,
+						 XmNheadingRows,			1,
+						 XmNvisibleRows,			14,
+						 XmNhideUnhideButtons,		True,
+						 NULL);
+	
+	XtVaSetValues(_tree, XmNcellAlignment, XmALIGNMENT_LEFT, NULL);
+	
+	XtVaSetValues(_tree,
+				  XmNcellDefaults, True,
+				  XmNcellAlignment, XmALIGNMENT_LEFT,
+				  NULL);
+	
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFTreeView::doAttachments()
+{
+    XtVaSetValues(_tree,
+                  XmNtopAttachment,		XmATTACH_FORM,
+                  XmNrightAttachment,	XmATTACH_FORM,
+                  XmNleftAttachment,	XmATTACH_FORM,
+                  XmNbottomAttachment,	XmATTACH_FORM,
+                  NULL);
+                  
+}
+//////////////////////////////////////////////////////////////////////////
+void
 XFE_RDFTreeView::init_pixmaps(void)
 {
     Pixel bg_pixel;
     
-    XtVaGetValues(m_widget, XmNbackground, &bg_pixel, 0);
+    XtVaGetValues(_tree, XmNbackground, &bg_pixel, 0);
 
     Widget  shell = XfeAncestorFindByClass(getToplevel()->getBaseWidget(),
                                            shellWidgetClass,
@@ -294,8 +320,8 @@ XFE_RDFTreeView::resize(XtPointer callData)
 {
 	XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct*)callData;
 
-	XP_ASSERT(m_widget);
-	if(!m_widget)
+	XP_ASSERT(_tree);
+	if(!_tree)
 		return;
 
 	if (cbs->reason == XmCR_RESIZE_COLUMN)
@@ -332,7 +358,7 @@ XFE_RDFTreeView::refresh(HT_Resource node)
   {
       int row = HT_GetNodeIndex(_ht_view, node);
 
-      XmLTreeDeleteChildren(m_widget, row);
+      XmLTreeDeleteChildren(_tree, row);
   }
 }
 
@@ -349,8 +375,8 @@ XFE_RDFTreeView::edit_cell_cb(Widget,
 void
 XFE_RDFTreeView::edit_cell(XtPointer callData)
 {
-	XP_ASSERT(m_widget);
-	if(!m_widget)
+	XP_ASSERT(_tree);
+	if(!_tree)
 		return;
 
 	XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct*)callData;
@@ -358,19 +384,19 @@ XFE_RDFTreeView::edit_cell(XtPointer callData)
 
 	if (node && cbs->reason == XmCR_EDIT_COMPLETE)
     {
-        XmLGridColumn column = XmLGridGetColumn(m_widget, XmCONTENT,
+        XmLGridColumn column = XmLGridGetColumn(_tree, XmCONTENT,
                                                 cbs->column);
         RDFColumnData *column_data = NULL;
 
-        XtVaGetValues(m_widget, 
+        XtVaGetValues(_tree, 
                       XmNcolumnPtr, column,
                       XmNcolumnUserData, &column_data,
                       NULL);
 
-        XmLGridRow row = XmLGridGetRow(m_widget, XmCONTENT, cbs->row);
+        XmLGridRow row = XmLGridGetRow(_tree, XmCONTENT, cbs->row);
         XmString cell_string;
 
-        XtVaGetValues(m_widget,
+        XtVaGetValues(_tree,
                       XmNcolumnPtr, column,
                       XmNrowPtr, row,
                       XmNcellString, &cell_string,
@@ -431,16 +457,13 @@ XFE_RDFTreeView::deselect_row(int row)
 void
 XFE_RDFTreeView::notify(HT_Resource n, HT_Event whatHappened)
 {
+  D(debugEvent(n, whatHappened,"RTV"););
   switch (whatHappened) {
   case HT_EVENT_NODE_ADDED:
-    D(printf("RDFTreeView::HT_Event: %s on %s\n","NODE_ADDED",
-             HT_GetNodeName(n)););
     add_row(n);
     break;
   case HT_EVENT_NODE_DELETED_NODATA:
     {
-    D(printf("RDFTreeView::HT_Event: %s on %s\n","NODE_DELETED_NODATA",
-             HT_GetNodeName(n)););
 #ifdef UNDEF
        // Is this a container node?
        Boolean expands =    HT_IsContainer(n);
@@ -458,8 +481,6 @@ XFE_RDFTreeView::notify(HT_Resource n, HT_Event whatHappened)
     }
   case HT_EVENT_NODE_OPENCLOSE_CHANGED: 
     {
-      D(printf("RDFView::HT_Event: %s on %s\n","NODE_OPENCLOSE_CHANGED",
-               HT_GetNodeName(n)););
         refresh(n); 
 
       Boolean expands =    HT_IsContainer(n);
@@ -474,13 +495,13 @@ XFE_RDFTreeView::notify(HT_Resource n, HT_Event whatHappened)
          if (isExpanded)   // The node has been opened
          {
             // Expand the row
-            XtVaSetValues(m_widget, XmNrow, row, 
+            XtVaSetValues(_tree, XmNrow, row, 
                           XmNrowIsExpanded, True, NULL);
          }
          else
          {
             // collapse the row
-           XtVaSetValues(m_widget, XmNrow, row,
+           XtVaSetValues(_tree, XmNrow, row,
                          XmNrowIsExpanded, False, NULL);           
          }
       }
@@ -494,7 +515,7 @@ XFE_RDFTreeView::notify(HT_Resource n, HT_Event whatHappened)
   case HT_EVENT_NODE_EDIT:
     {
         int row = HT_GetNodeIndex(_ht_view, n);
-        XmLGridEditBegin(m_widget, True, row, 0);
+        XmLGridEditBegin(_tree, True, row, 0);
         break;
     }
   case HT_EVENT_VIEW_REFRESH:
@@ -508,9 +529,9 @@ XFE_RDFTreeView::notify(HT_Resource n, HT_Event whatHappened)
        {
          if (n == HT_TopNode(_ht_view))
            /* It is the top most node. Delete all rows */
-           XmLGridDeleteAllRows(m_widget, XmCONTENT);
+           XmLGridDeleteAllRows(_tree, XmCONTENT);
          else
-           XmLTreeDeleteChildren(m_widget, row);
+           XmLTreeDeleteChildren(_tree, row);
        }
 
         refresh(n);
@@ -534,8 +555,8 @@ XFE_RDFTreeView::updateRoot()
 void
 XFE_RDFTreeView::fill_tree()
 {
-  XP_ASSERT(m_widget);
-  if (!_ht_view || !m_widget)
+  XP_ASSERT(_tree);
+  if (!_ht_view || !_tree)
       return;
   
   int item_count =  HT_GetItemListCount(_ht_view);
@@ -547,17 +568,17 @@ XFE_RDFTreeView::fill_tree()
   else
     _isCellEditable = False;
 
-  XtVaSetValues(m_widget,
+  XtVaSetValues(_tree,
                 XmNlayoutFrozen, True,
                 XmNcolumns, 1,
                 NULL);
 
-  XmLGridDeleteAllRows(m_widget, XmCONTENT);
+  XmLGridDeleteAllRows(_tree, XmCONTENT);
 
   // Set default values for column headings
   //  (Should make so that the grid widget has separate defaults
   //     for headings and content cells)
-  XtVaSetValues(m_widget,
+  XtVaSetValues(_tree,
                 XmNcellDefaults, True,
                 XmNcellLeftBorderType, XmBORDER_LINE,
                 XmNcellRightBorderType, XmBORDER_LINE,
@@ -580,7 +601,7 @@ XFE_RDFTreeView::fill_tree()
   HT_DeleteColumnCursor(column_cursor);
 
   // Set default values for new content cells
-  XtVaSetValues(m_widget,
+  XtVaSetValues(_tree,
                 XmNcellDefaults, True,
                 XmNcellMarginLeft, 1,
                 XmNcellMarginRight, 1,
@@ -596,7 +617,7 @@ XFE_RDFTreeView::fill_tree()
     add_row(ii);
   }
 
-  XtVaSetValues(m_widget,
+  XtVaSetValues(_tree,
                 XmNlayoutFrozen, False,
                 NULL);
 }
@@ -643,7 +664,7 @@ XFE_RDFTreeView::add_row
 
   	XmString xmstr = XmStringCreateSimple(name);
 
-    XmLTreeAddRow(m_widget,
+    XmLTreeAddRow(_tree,
 				  depth,
 				  expands,
 				  isExpanded,
@@ -656,13 +677,13 @@ XFE_RDFTreeView::add_row
 
     int column_count;
     // Should only need to do this for visible columns
-    XtVaGetValues(m_widget, XmNcolumns, &column_count, NULL);
+    XtVaGetValues(_tree, XmNcolumns, &column_count, NULL);
     RDFColumnData *column_data;
     void *data;
     for (int ii = 0; ii < column_count; ii++) 
     {
-        XmLGridColumn column = XmLGridGetColumn(m_widget, XmCONTENT, ii);
-        XtVaGetValues(m_widget, 
+        XmLGridColumn column = XmLGridGetColumn(_tree, XmCONTENT, ii);
+        XtVaGetValues(_tree, 
                       XmNcolumnPtr, column,
                       XmNcolumnUserData, &column_data,
                       NULL);
@@ -672,7 +693,7 @@ XFE_RDFTreeView::add_row
                                                     column_data->token_type);
 */
         Boolean is_editable = _isCellEditable;
-        XtVaSetValues(m_widget,
+        XtVaSetValues(_tree,
                       XmNrow,          row,
                       XmNcolumn,       ii,
                       XmNcellEditable, is_editable,
@@ -705,7 +726,7 @@ XFE_RDFTreeView::add_row
 				break;
             }
             /*D(fprintf(stderr,"Node data (%d, %d) = '%s'\n",row,ii,buffer););*/
-            XmLGridSetStringsPos(m_widget, 
+            XmLGridSetStringsPos(_tree, 
                                  XmCONTENT, row,
                                  XmCONTENT, ii, 
                                  buffer);
@@ -722,7 +743,7 @@ void
 XFE_RDFTreeView::delete_row(int row)
 {
   
-   XmLGridDeleteRows(m_widget, XmCONTENT, row, 1);
+   XmLGridDeleteRows(_tree, XmCONTENT, row, 1);
 
 }
 
@@ -734,18 +755,18 @@ XFE_RDFTreeView::add_column(int index, char *name, uint32 width,
              index, name,width););
 
   if (index > 0) {
-      XmLGridAddColumns(m_widget, XmCONTENT, index, 1);
+      XmLGridAddColumns(_tree, XmCONTENT, index, 1);
   }
 
   RDFColumnData *column_data = new RDFColumnData(token, token_type);
-  XtVaSetValues(m_widget,
+  XtVaSetValues(_tree,
                 XmNcolumn, index,
                 XmNcolumnSizePolicy, XmCONSTANT,
                 XmNcolumnWidth, width,
                 XmNcolumnUserData, column_data,
                 NULL);
 
-  XmLGridSetStringsPos(m_widget, 
+  XmLGridSetStringsPos(_tree, 
                        XmHEADING, 0,
                        XmCONTENT, index, 
                        name);
@@ -906,13 +927,13 @@ XFE_RDFPopupMenu::PushButtonActivate(Widget /* w */, XtPointer userData)
 void
 XFE_RDFTreeView::setStandAloneState(XP_Bool state)
 {
-	XP_ASSERT( XfeIsAlive(m_widget) );
+	XP_ASSERT( XfeIsAlive(_tree) );
 
 	_standAloneState = state;
 
 	int visibleColumns = (_standAloneState ? 0 : 1);
 
-	XtVaSetValues(m_widget,
+	XtVaSetValues(_tree,
 				  XmNvisibleColumns,		visibleColumns,
 				  NULL);
 }
@@ -984,12 +1005,12 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
       if (rdfImage) {
          image = rdfImage->getPixmap();
          mask = rdfImage->getMask();
-         XtVaSetValues(m_widget, XmNbackgroundPixmap, image, NULL);
+         XtVaSetValues(_tree, XmNbackgroundPixmap, image, NULL);
       }
       else {
 
-         rdfImage = new XFE_RDFImage(m_toplevel, (void *) this, (char *) data, CONTEXT_DATA(m_contextData)->colormap, m_widget);
-         rdfImage->setCompleteCallback((completeCallbackPtr)treeview_bg_image_cb, (void *) m_widget);
+         rdfImage = new XFE_RDFImage(m_toplevel, (void *) this, (char *) data, CONTEXT_DATA(m_contextData)->colormap, _tree);
+         rdfImage->setCompleteCallback((completeCallbackPtr)treeview_bg_image_cb, (void *) _tree);
          rdfImage->loadImage();
       }
       

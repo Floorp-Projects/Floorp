@@ -47,6 +47,8 @@ protected:
   HT_Pane m_pane;
 };
 
+//////////////////////////////////////////////////////////////////////////
+
 class XFE_RDFTreeView : public XFE_View,
                         public XFE_RDFBase
 {
@@ -85,6 +87,10 @@ public:
     // Set HT Properties
     void setHTTreeViewProperties(HT_View); 
 
+protected:
+    // The XmL tree widget
+    Widget                  _tree;
+
 private:
 
 	// The popup menu
@@ -100,6 +106,9 @@ private:
   static fe_icon bookmark;
   static fe_icon openedFolder;
   static fe_icon closedFolder;
+
+  void createTree();
+  void doAttachments();
 
   void init_pixmaps();
 
