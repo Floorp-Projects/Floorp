@@ -25,6 +25,11 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 
+#ifdef NS_DEBUG
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+#endif
+
 // nsBaseWidget
 NS_IMPL_ISUPPORTS1(nsBaseWidget, nsIWidget)
 
@@ -728,7 +733,8 @@ NS_METHOD nsBaseWidget::SetModal(void)
   return NS_ERROR_FAILURE;
 }
 
-#ifdef DEBUG
+#ifdef NS_DEBUG
+//////////////////////////////////////////////////////////////
 //
 // Convert a GUI event message code to a string.
 // Makes it a lot easier to debug events.
@@ -737,25 +743,28 @@ NS_METHOD nsBaseWidget::SetModal(void)
 // for a DebugPrintEvent() function that uses
 // this.
 //
-nsAutoString
-nsBaseWidget::GuiEventToString(nsGUIEvent & aEvent)
+//////////////////////////////////////////////////////////////
+/* static */ nsAutoString
+nsBaseWidget::debug_GuiEventToString(nsGUIEvent * aGuiEvent)
 {
-  nsString eventName = "UNKNOWN";
+  NS_ASSERTION(nsnull != aGuiEvent,"cmon, null gui event.");
+
+  nsAutoString eventName = "UNKNOWN";
 
 #define _ASSIGN_eventName(_value,_name)\
 case _value: eventName = _name ; break
 
-  switch(aEvent.message)
+  switch(aGuiEvent->message)
   {
     _ASSIGN_eventName(NS_BLUR_CONTENT,"NS_BLUR_CONTENT");
     _ASSIGN_eventName(NS_CONTROL_CHANGE,"NS_CONTROL_CHANGE");
     _ASSIGN_eventName(NS_CREATE,"NS_CREATE");
     _ASSIGN_eventName(NS_DESTROY,"NS_DESTROY");
-    _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DRAGDROP_GESTURE");
-    _ASSIGN_eventName(NS_DRAGDROP_DROP,"NS_DRAGDROP_DROP");
-    _ASSIGN_eventName(NS_DRAGDROP_ENTER,"NS_DRAGDROP_ENTER");
-    _ASSIGN_eventName(NS_DRAGDROP_EXIT,"NS_DRAGDROP_EXIT");
-    _ASSIGN_eventName(NS_DRAGDROP_OVER,"NS_DRAGDROP_OVER");
+    _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
+    _ASSIGN_eventName(NS_DRAGDROP_DROP,"NS_DND_DROP");
+    _ASSIGN_eventName(NS_DRAGDROP_ENTER,"NS_DND_ENTER");
+    _ASSIGN_eventName(NS_DRAGDROP_EXIT,"NS_DND_EXIT");
+    _ASSIGN_eventName(NS_DRAGDROP_OVER,"NS_DND_OVER");
     _ASSIGN_eventName(NS_FOCUS_CONTENT,"NS_FOCUS_CONTENT");
     _ASSIGN_eventName(NS_FORM_SELECTED,"NS_FORM_SELECTED");
     _ASSIGN_eventName(NS_FORM_CHANGE,"NS_FORM_CHANGE");
@@ -772,19 +781,19 @@ case _value: eventName = _name ; break
     _ASSIGN_eventName(NS_MENU_SELECTED,"NS_MENU_SELECTED");
     _ASSIGN_eventName(NS_MOUSE_ENTER,"NS_MOUSE_ENTER");
     _ASSIGN_eventName(NS_MOUSE_EXIT,"NS_MOUSE_EXIT");
-    _ASSIGN_eventName(NS_MOUSE_LEFT_BUTTON_DOWN,"NS_MOUSE_LEFT_BUTTON_DOWN");
-    _ASSIGN_eventName(NS_MOUSE_LEFT_BUTTON_UP,"NS_MOUSE_LEFT_BUTTON_UP");
+    _ASSIGN_eventName(NS_MOUSE_LEFT_BUTTON_DOWN,"NS_MOUSE_LEFT_BTN_DOWN");
+    _ASSIGN_eventName(NS_MOUSE_LEFT_BUTTON_UP,"NS_MOUSE_LEFT_BTN_UP");
     _ASSIGN_eventName(NS_MOUSE_LEFT_CLICK,"NS_MOUSE_LEFT_CLICK");
-    _ASSIGN_eventName(NS_MOUSE_LEFT_DOUBLECLICK,"NS_MOUSE_LEFT_DOUBLECLICK");
-    _ASSIGN_eventName(NS_MOUSE_MIDDLE_BUTTON_DOWN,"NS_MOUSE_MIDDLE_BUTTON_DOWN");
-    _ASSIGN_eventName(NS_MOUSE_MIDDLE_BUTTON_UP,"NS_MOUSE_MIDDLE_BUTTON_UP");
+    _ASSIGN_eventName(NS_MOUSE_LEFT_DOUBLECLICK,"NS_MOUSE_LEFT_DBLCLICK");
+    _ASSIGN_eventName(NS_MOUSE_MIDDLE_BUTTON_DOWN,"NS_MOUSE_MIDDLE_BTN_DOWN");
+    _ASSIGN_eventName(NS_MOUSE_MIDDLE_BUTTON_UP,"NS_MOUSE_MIDDLE_BTN_UP");
     _ASSIGN_eventName(NS_MOUSE_MIDDLE_CLICK,"NS_MOUSE_MIDDLE_CLICK");
-    _ASSIGN_eventName(NS_MOUSE_MIDDLE_DOUBLECLICK,"NS_MOUSE_MIDDLE_DOUBLECLICK");
+    _ASSIGN_eventName(NS_MOUSE_MIDDLE_DOUBLECLICK,"NS_MOUSE_MIDDLE_DBLCLICK");
     _ASSIGN_eventName(NS_MOUSE_MOVE,"NS_MOUSE_MOVE");
-    _ASSIGN_eventName(NS_MOUSE_RIGHT_BUTTON_DOWN,"NS_MOUSE_RIGHT_BUTTON_DOWN");
-    _ASSIGN_eventName(NS_MOUSE_RIGHT_BUTTON_UP,"NS_MOUSE_RIGHT_BUTTON_UP");
+    _ASSIGN_eventName(NS_MOUSE_RIGHT_BUTTON_DOWN,"NS_MOUSE_RIGHT_BTN_DOWN");
+    _ASSIGN_eventName(NS_MOUSE_RIGHT_BUTTON_UP,"NS_MOUSE_RIGHT_BTN_UP");
     _ASSIGN_eventName(NS_MOUSE_RIGHT_CLICK,"NS_MOUSE_RIGHT_CLICK");
-    _ASSIGN_eventName(NS_MOUSE_RIGHT_DOUBLECLICK,"NS_MOUSE_RIGHT_DOUBLECLICK");
+    _ASSIGN_eventName(NS_MOUSE_RIGHT_DOUBLECLICK,"NS_MOUSE_RIGHT_DBLCLICK");
     _ASSIGN_eventName(NS_MOVE,"NS_MOVE");
     _ASSIGN_eventName(NS_PAGE_LOAD,"NS_PAGE_LOAD");
     _ASSIGN_eventName(NS_PAGE_UNLOAD,"NS_PAGE_UNLOAD");
@@ -792,11 +801,11 @@ case _value: eventName = _name ; break
     _ASSIGN_eventName(NS_MENU_CREATE,"NS_MENU_CREATE");
     _ASSIGN_eventName(NS_MENU_DESTROY,"NS_MENU_DESTROY");
     _ASSIGN_eventName(NS_MENU_ACTION, "NS_MENU_ACTION");
-    _ASSIGN_eventName(NS_SCROLLBAR_LINE_NEXT,"NS_SCROLLBAR_LINE_NEXT");
-    _ASSIGN_eventName(NS_SCROLLBAR_LINE_PREV,"NS_SCROLLBAR_LINE_PREV");
-    _ASSIGN_eventName(NS_SCROLLBAR_PAGE_NEXT,"NS_SCROLLBAR_PAGE_NEXT");
-    _ASSIGN_eventName(NS_SCROLLBAR_PAGE_PREV,"NS_SCROLLBAR_PAGE_PREV");
-    _ASSIGN_eventName(NS_SCROLLBAR_POS,"NS_SCROLLBAR_POS");
+    _ASSIGN_eventName(NS_SCROLLBAR_LINE_NEXT,"NS_SB_LINE_NEXT");
+    _ASSIGN_eventName(NS_SCROLLBAR_LINE_PREV,"NS_SB_LINE_PREV");
+    _ASSIGN_eventName(NS_SCROLLBAR_PAGE_NEXT,"NS_SB_PAGE_NEXT");
+    _ASSIGN_eventName(NS_SCROLLBAR_PAGE_PREV,"NS_SB_PAGE_PREV");
+    _ASSIGN_eventName(NS_SCROLLBAR_POS,"NS_SB_POS");
     _ASSIGN_eventName(NS_SIZE,"NS_SIZE");
 
 #undef _ASSIGN_eventName
@@ -805,13 +814,209 @@ case _value: eventName = _name ; break
     {
       char buf[32];
       
-      sprintf(buf,"UNKNOWN: %d",aEvent.message);
+      sprintf(buf,"UNKNOWN: %d",aGuiEvent->message);
       
       eventName = buf;
     }
     break;
   }
-
+  
   return nsAutoString(eventName);
 }
-#endif
+//////////////////////////////////////////////////////////////
+//
+// The idea here is to get the prefs service once and cache it.
+// The reason being that this code gets called from OnPaint() 
+// which we dont want to slow down.
+//
+// So, gPrefs will leak when the beast shutdowns.
+//
+// debug_CleanupCrapSoThatBruceAndPurifyAreHappy() can be called from
+// the widget dll unloading hook to cleanup...
+//
+// But then again, its only debug code, so...
+//
+//////////////////////////////////////////////////////////////
+static nsIPref * gPrefs = nsnull;
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+static nsIPref *
+_GetPrefService()
+{
+  if (!gPrefs)
+  {
+    nsresult rv = nsServiceManager::GetService(kPrefCID, 
+                                               NS_GET_IID(nsIPref),
+                                               (nsISupports**) &gPrefs);
+    
+    NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
+    NS_ASSERTION(nsnull != gPrefs,"Prefs services is null.");
+  }
+
+  return gPrefs;
+}
+//////////////////////////////////////////////////////////////
+static PRBool
+_GetBoolPref(const char * aPrefName)
+{
+  NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
+
+  PRBool value = PR_FALSE;
+
+  nsIPref * prefs = _GetPrefService();
+
+  if (prefs)
+    prefs->GetBoolPref(aPrefName,&value);
+
+  return value;
+}
+//////////////////////////////////////////////////////////////
+static PRInt32
+_GetPrintCount()
+{
+  static PRInt32 sCount = 0;
+  
+  return ++sCount;
+}
+//////////////////////////////////////////////////////////////
+/* static */ PRBool
+nsBaseWidget::debug_WantPaintFlashing()
+{
+  return _GetBoolPref("nglayout.debug.paint_flashing");
+}
+//////////////////////////////////////////////////////////////
+/* static */ void
+nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
+                              nsIWidget *           aWidget,
+                              nsGUIEvent *          aGuiEvent,
+                              const nsCAutoString & aWidgetName,
+                              PRInt32               aWindowID)
+{
+  // NS_PAINT is handled by debug_DumpPaintEvent()
+  if (aGuiEvent->message == NS_PAINT)
+    return;
+
+  if (aGuiEvent->message == NS_MOUSE_MOVE)
+  {
+    if (!_GetBoolPref("nglayout.debug.motion_event_dumping"))
+      return;
+  }
+  
+  if (aGuiEvent->message == NS_MOUSE_ENTER || 
+      aGuiEvent->message == NS_MOUSE_EXIT)
+  {
+    if (!_GetBoolPref("nglayout.debug.crossing_event_dumping"))
+      return;
+  }
+
+  if (!_GetBoolPref("nglayout.debug.event_dumping"))
+    return;
+  
+  fprintf(aFileOut,
+          "%4d %-26s widget=%-8p name=%-12s id=%-8p pos=%d,%d\n",
+          _GetPrintCount(),
+          (const char *) nsCAutoString(debug_GuiEventToString(aGuiEvent)),
+          (void *) aWidget,
+          (const char *) aWidgetName,
+          (void *) (aWindowID ? aWindowID : 0x0),
+          aGuiEvent->point.x,
+          aGuiEvent->point.y);
+}
+//////////////////////////////////////////////////////////////
+/* static */ void
+nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
+                                   nsIWidget *           aWidget,
+                                   nsPaintEvent *        aPaintEvent,
+                                   const nsCAutoString & aWidgetName,
+                                   PRInt32               aWindowID)
+{
+  NS_ASSERTION(nsnull != aFileOut,"cmon, null output FILE");
+  NS_ASSERTION(nsnull != aWidget,"cmon, the widget is null");
+  NS_ASSERTION(nsnull != aPaintEvent,"cmon, the paint event is null");
+
+  if (!_GetBoolPref("nglayout.debug.paint_dumping"))
+    return;
+  
+  fprintf(aFileOut,
+          "%4d PAINT      widget=%p name=%-12s id=%-8p rect=", 
+          _GetPrintCount(),
+          (void *) aWidget,
+          (const char *) aWidgetName,
+          (void *) aWindowID);
+  
+  if (aPaintEvent->rect) 
+  {
+    fprintf(aFileOut,
+            "%3d,%-3d %3d,%-3d",
+            aPaintEvent->rect->x, 
+            aPaintEvent->rect->y,
+            aPaintEvent->rect->width, 
+            aPaintEvent->rect->height);
+  }
+  else
+  {
+    fprintf(aFileOut,"none");
+  }
+  
+  fprintf(aFileOut,"\n");
+}
+//////////////////////////////////////////////////////////////
+/* static */ void
+nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
+                                   nsIWidget *           aWidget,
+                                   const nsRect *        aRect,
+                                   PRBool                aIsSynchronous,
+                                   const nsCAutoString & aWidgetName,
+                                   PRInt32               aWindowID)
+{
+  if (!_GetBoolPref("nglayout.debug.invalidate_dumping"))
+    return;
+
+  NS_ASSERTION(nsnull != aFileOut,"cmon, null output FILE");
+  NS_ASSERTION(nsnull != aWidget,"cmon, the widget is null");
+
+  fprintf(aFileOut,
+          "%4d Invalidate widget=%p name=%-12s id=%-8p",
+          _GetPrintCount(),
+          (void *) aWidget,
+          (const char *) aWidgetName,
+          (void *) aWindowID);
+
+  if (aRect) 
+  {
+    fprintf(aFileOut,
+            " rect=%3d,%-3d %3d,%-3d",
+            aRect->x, 
+            aRect->y,
+            aRect->width, 
+            aRect->height);
+  }
+  else
+  {
+    fprintf(aFileOut,
+            " rect=%-15s",
+            "none");
+  }
+
+  fprintf(aFileOut,
+          " sync=%s",
+          (const char *) (aIsSynchronous ? "yes" : "no "));
+  
+  fprintf(aFileOut,"\n");
+}
+//////////////////////////////////////////////////////////////
+/* static */ void
+nsBaseWidget::debug_CleanupCrapSoThatBruceAndPurifyAreHappy()
+{
+  if (gPrefs)
+  {
+    nsServiceManager::ReleaseService(kPrefCID, gPrefs);
+
+    gPrefs = nsnull;
+  }
+}
+//////////////////////////////////////////////////////////////
+
+#endif // NS_DEBUG
+

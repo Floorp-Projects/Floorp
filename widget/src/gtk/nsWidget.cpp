@@ -412,7 +412,8 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 #if 0
   printf("nsWidget::Resize %s (%p) to %d %d\n",
-         mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+         (const char *) debug_GetName(mWidget),
+         this,
          aWidth, aHeight);
 #endif
   mBounds.width  = aWidth;
@@ -474,7 +475,7 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
     nsGUIEvent event;
 #if 0
     printf("nsWidget::OnMove %s (%p)\n",
-           mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)",
+           (const char *) debug_GetName(mWidget),
            this);
 #endif
     InitEvent(event, NS_MOVE);
@@ -659,12 +660,6 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
 
-#undef TRACE_INVALIDATE
-
-#ifdef TRACE_INVALIDATE
-static PRInt32 sInvalidatePrintCount = 0;
-#endif
-
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
   if (!mWidget)
@@ -676,17 +671,14 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
   if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
 
-#ifdef TRACE_INVALIDATE
-  GdkWindow * renderWindow = GetRenderWindow();
-  Window      xid = renderWindow ? GDK_WINDOW_XWINDOW(renderWindow) : 0;
-
-  printf("%4d nsWidget::Invalidate(this=%p,name=%s,xid=%p,sync=%s)\n",
-         sInvalidatePrintCount++,
-         (void *) this,
-         gtk_widget_get_name(mWidget),
-         (void *) xid,
-         aIsSynchronous ? "yes" : "no");
-#endif
+#ifdef NS_DEBUG
+  debug_DumpInvalidate(stdout,
+                       this,
+                       nsnull,
+                       aIsSynchronous,
+                       debug_GetName(mWidget),
+                       debug_GetRenderXID(mWidget));
+#endif // NS_DEBUG
 
   if (aIsSynchronous) {
     ::gtk_widget_draw(mWidget, (GdkRectangle *) NULL);
@@ -710,21 +702,14 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
 
-#ifdef TRACE_INVALIDATE
-  GdkWindow * renderWindow = GetRenderWindow();
-  Window      xid = renderWindow ? GDK_WINDOW_XWINDOW(renderWindow) : 0;
-
-  printf("%4d nsWidget::Invalidate(this=%p,name=%s,xid=%p,sync=%s,rect=%d,%d,%d,%d)\n",
-         sInvalidatePrintCount++,
-         (void *) this,
-         gtk_widget_get_name(mWidget),
-         (void *) xid,
-         aIsSynchronous ? "yes" : "no",
-         aRect.x, 
-         aRect.y,
-         aRect.width, 
-         aRect.height);
-#endif
+#ifdef NS_DEBUG
+  debug_DumpInvalidate(stdout,
+                       this,
+                       &aRect,
+                       aIsSynchronous,
+                       debug_GetName(mWidget),
+                       debug_GetRenderXID(mWidget));
+#endif // NS_DEBUG
 
   if (aIsSynchronous)
   {
@@ -1081,83 +1066,27 @@ PRBool nsWidget::DispatchFocus(nsGUIEvent &aEvent)
 //
 //////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////
-//
-// Turning TRACE_EVENTS on will cause printfs for all
-// mouse events that are dispatched.
-//
-// These are extra noisy, and thus have their own switch:
-//
-// NS_MOUSE_MOVE
-// NS_PAINT
-// NS_MOUSE_ENTER, NS_MOUSE_EXIT
-//
-//////////////////////////////////////////////////////////////////
-
-#undef TRACE_EVENTS
-#undef TRACE_EVENTS_MOTION
-#undef TRACE_EVENTS_PAINT
-#undef TRACE_EVENTS_CROSSING
-
-#ifdef DEBUG_pavlov
-#define EVENT_SPAM
-#endif
-
-#if defined(EVENT_SPAM)
-#define TRACE_EVENTS 1
-#define TRACE_EVENTS_MOTION 1
-#define TRACE_EVENTS_PAINT 1
-#define TRACE_EVENTS_CROSSING 1
-#endif
-
-#ifdef DEBUG
-void
-nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
-                          GtkWidget *    aGtkWidget)
+#ifdef NS_DEBUG
+PRInt32
+nsWidget::debug_GetRenderXID(GtkWidget * aGtkWidget)
 {
-#ifndef TRACE_EVENTS_MOTION
-  if (aEvent.message == NS_MOUSE_MOVE)
-  {
-    return;
-  }
-#endif
-
-#ifndef TRACE_EVENTS_PAINT
-  if (aEvent.message == NS_PAINT)
-  {
-    return;
-  }
-#endif
-
-#ifndef TRACE_EVENTS_CROSSING
-  if (aEvent.message == NS_MOUSE_ENTER || aEvent.message == NS_MOUSE_EXIT)
-  {
-    return;
-  }
-#endif
-
-  static int sPrintCount=0;
-
-  printf("%4d %-26s(this=%-8p , name=%-12s",
-         sPrintCount++,
-         (const char *) nsAutoCString(GuiEventToString(aEvent)),
-         this,
-         aGtkWidget ? gtk_widget_get_name(aGtkWidget) : "null");
-         
-  Window win = 0;
+  GdkWindow * renderWindow = GetRenderWindow(aGtkWidget);
   
-  if (aGtkWidget && GTK_WIDGET_REALIZED(aGtkWidget))
-  {
-    win = GDK_WINDOW_XWINDOW(aGtkWidget->window);
-  }
+  Window      xid = renderWindow ? GDK_WINDOW_XWINDOW(renderWindow) : 0x0;
   
-  printf(" , xid=%-8p",(void *) win);
-  
-  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
-
-  printf("\n");
+  return (PRInt32) xid;
 }
-#endif // DEBUG
+
+nsCAutoString
+nsWidget::debug_GetName(GtkWidget * aGtkWidget)
+{
+  if (nsnull != aGtkWidget)
+    return nsCAutoString(gtk_widget_get_name(aGtkWidget));
+  
+  return nsCAutoString("null");
+}
+
+#endif // NS_DEBUG
 //////////////////////////////////////////////////////////////////
 
 //-------------------------------------------------------------------------
@@ -1166,30 +1095,36 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
+NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *aEvent,
                                       nsEventStatus &aStatus)
 {
-  NS_ADDREF(event->widget);
+  NS_ADDREF(aEvent->widget);
 
-#ifdef TRACE_EVENTS
-  DebugPrintEvent(*event,mWidget);
-#endif
+#ifdef NS_DEBUG
+  GtkWidget * gw = (GtkWidget *) aEvent->widget->GetNativeData(NS_NATIVE_WIDGET);
+
+  debug_DumpEvent(stdout,
+                  aEvent->widget,
+                  aEvent,
+                  debug_GetName(gw),
+                  (PRInt32) debug_GetRenderXID(gw));
+#endif // NS_DEBUG
 
   if (nsnull != mMenuListener) {
-    if (NS_MENU_EVENT == event->eventStructType)
-      aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *event));
+    if (NS_MENU_EVENT == aEvent->eventStructType)
+      aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *aEvent));
   }
 
   aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {
-    aStatus = (*mEventCallback)(event);
+    aStatus = (*mEventCallback)(aEvent);
   }
 
   // Dispatch to event listener if event was not consumed
   if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
-    aStatus = mEventListener->ProcessEvent(*event);
+    aStatus = mEventListener->ProcessEvent(*aEvent);
   }
-  NS_RELEASE(event->widget);
+  NS_RELEASE(aEvent->widget);
 
   return NS_OK;
 }
@@ -2333,19 +2268,19 @@ nsWidget::GetWindowForSetBackground()
 }
 
 /* virtual */ GdkWindow *
-nsWidget::GetRenderWindow()
+nsWidget::GetRenderWindow(GtkWidget * aGtkWidget)
 {
   GdkWindow * renderWindow = nsnull;
 
-  if (mWidget)
+  if (aGtkWidget)
   {
-    if (GTK_IS_LAYOUT(mWidget))
+    if (GTK_IS_LAYOUT(aGtkWidget))
     {
-      renderWindow = GTK_LAYOUT(mWidget)->bin_window;
+      renderWindow = GTK_LAYOUT(aGtkWidget)->bin_window;
     }
     else
     {
-      renderWindow = mWidget->window;
+      renderWindow = aGtkWidget->window;
     }
   }
 

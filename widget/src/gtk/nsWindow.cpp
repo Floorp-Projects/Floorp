@@ -38,9 +38,6 @@
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
-#include "nsIServiceManager.h"
-#include "nsIPref.h"
-
 #include "stdio.h"
 
 //-------------------------------------------------------------------------
@@ -408,9 +405,6 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   return NS_OK;
 }
 
-// Uncommenting this will cause OnPaint() to printf what it is doing
-#undef TRACE_PAINT
-
 /**
  * Processes an Expose Event
  *
@@ -418,76 +412,27 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
   nsresult result ;
-
+  
   // call the event callback
-  if (mEventCallback) {
-
+  if (mEventCallback) 
+  {
     event.renderingContext = nsnull;
 
-#ifdef TRACE_PAINT
-	static PRInt32 sPrintCount = 0;
-
-	GdkWindow * renderWindow = GetRenderWindow();
-	Window      xid = renderWindow ? GDK_WINDOW_XWINDOW(renderWindow) : 0;
-
-    if (event.rect) 
-	{
-      printf("%4d nsWindow::OnPaint   (this=%p,name=%s,xid=%p,rect=%d,%d,%d,%d)\n", 
-			 sPrintCount++,
-			 (void *) this,
-			 gtk_widget_get_name(mWidget),
-			 (void *) xid,
-			 event.rect->x, 
-			 event.rect->y,
-			 event.rect->width, 
-			 event.rect->height);
-    }
-    else 
-	{
-      printf("%4d nsWindow::OnPaint   (this=%p,name=%s,xid=%p,rect=none)\n", 
-			 sPrintCount++,
-			 (void *) this,
-			 gtk_widget_get_name(mWidget),
-			 (void *) xid);
-    }
-#endif
-
+#ifdef NS_DEBUG
+    debug_DumpPaintEvent(stdout,
+                         this,
+                         &event,
+                         debug_GetName(mWidget),
+                         (PRInt32) debug_GetRenderXID(mWidget));
+#endif // NS_DEBUG
+    
     event.renderingContext = GetRenderingContext();
     result = DispatchWindowEvent(&event);
-
+    
 #ifdef NS_DEBUG
-    // The idea here is to create this widget debugging thing
-    // only once, otherwise we will slow down painting significantly.
-    //
-    // However, it will cause wd to leak.  It should probably be 
-    // cleaned up in the dll unloading magic
-    //
-    // But, its debug only code...
-    static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-    
-    static nsIPref * sPrefs = nsnull;
-    
-    PRBool flashing = PR_FALSE;
-    
-    if (!sPrefs)
+    if (debug_WantPaintFlashing())
     {
-      nsresult rv = nsServiceManager::GetService(kPrefCID, 
-                                                 NS_GET_IID(nsIPref),
-                                                 (nsISupports**) &sPrefs);
-      
-      NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-    }
-    
-    if (sPrefs)
-    {
-      sPrefs->GetBoolPref("nglayout.widget.flash_invalidate_areas",&flashing);
-    }
-    
-    //nsServiceManager::ReleaseService(kPrefCID, sPrefs);
-    
-    if (flashing)
-    {
-      GdkWindow *    gw = GetRenderWindow();
+      GdkWindow *    gw = GetRenderWindow(mWidget);
       
       if (gw)
       {
@@ -508,7 +453,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
         nsGtkUtils::gdk_window_flash(gw,1,100000,area);
       }
     }
-#endif
+#endif // NS_DEBUG
   }
   return result;
 }
@@ -563,7 +508,8 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
     {
 #if 0
       printf("nsWidget::Show %s (%p) bState = %i, mWindowType = %i\n",
-             mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+             (const char *) debug_GetName(mWidget),
+             this,
              bState, mWindowType);
 #endif
 
@@ -648,7 +594,8 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
 #if 0
   printf("nsWindow::Move %s (%p) to %d %d\n",
-         mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+         (const char *) debug_GetName(mWidget),
+         this,
          aX, aY);
 #endif
   // not implimented for toplevel windows
@@ -692,7 +639,8 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 #if 0
   printf("nsWindow::Resize %s (%p) to %d %d\n",
-         mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+         (const char *) debug_GetName(mWidget),
+         this,
          aWidth, aHeight);
 #endif
 

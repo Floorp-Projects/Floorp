@@ -89,6 +89,7 @@ public:
     NS_IMETHOD              EnableDragDrop(PRBool aEnable);
     virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
     virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
+
 protected:
 
     virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext,
@@ -162,8 +163,32 @@ protected:
         CREATE_HACK
     };
 
-#ifdef DEBUG
-  static nsAutoString GuiEventToString(nsGUIEvent & aEvent);
+#ifdef NS_DEBUG
+protected:
+  static nsAutoString debug_GuiEventToString(nsGUIEvent * aGuiEvent);
+  static PRBool debug_WantPaintFlashing();
+
+  static void debug_DumpInvalidate(FILE *                aFileOut,
+                                   nsIWidget *           aWidget,
+                                   const nsRect *        aRect,
+                                   PRBool                aIsSynchronous,
+                                   const nsCAutoString & aWidgetName,
+                                   PRInt32               aWindowID);
+
+  static void debug_DumpEvent(FILE *                aFileOut,
+                              nsIWidget *           aWidget,
+                              nsGUIEvent *          aGuiEvent,
+                              const nsCAutoString & aWidgetName,
+                              PRInt32               aWindowID);
+  
+  static void debug_DumpPaintEvent(FILE *                aFileOut,
+                                   nsIWidget *           aWidget,
+                                   nsPaintEvent *        aPaintEvent,
+                                   const nsCAutoString & aWidgetName,
+                                   PRInt32               aWindowID);
+
+public:
+  static void debug_CleanupCrapSoThatBruceAndPurifyAreHappy();
 #endif
 };
 
