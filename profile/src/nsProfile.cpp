@@ -1067,7 +1067,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   }
   saltStr.Append(SALT_EXTENSION);
 #ifdef DEBUG_profile_verbose
-  PRINTF("directory name: %s\n",(const char *)saltStr);
+  printf("directory name: %s\n",(const char *)saltStr);
 #endif
 
   rv = aDir->Append((const char *)saltStr);
@@ -1506,7 +1506,7 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
 
     // flush the stringbundle cache first
 #if defined(DEBUG_tao)
-    PRINTF("\n--> nsProfile::StartApprunner: FlushBundles() \n");
+    printf("\n--> nsProfile::StartApprunner: FlushBundles() \n");
 #endif
     nsCOMPtr<nsIStringBundleService> bundleService =
         do_GetService(kStringBundleServiceCID, &rv);
