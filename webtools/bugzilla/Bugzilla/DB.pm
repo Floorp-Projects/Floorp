@@ -196,7 +196,7 @@ sub import {
 }
 
 # note that when multiple databases are supported, version number does not
-# make sense anymore (as it is DB dependant). This needs to be removed in
+# make sense anymore (as it is DB-dependent). This needs to be removed in
 # the future and places where it's used fixed.
 my $cached_server_version;
 sub server_version {
