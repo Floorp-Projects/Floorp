@@ -574,7 +574,9 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   // all table cells have the same top and bottom margins, namely cellSpacingY
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
-  // iterate children and for each row get the height of the tallest cell
+  // iterate children and for each row get the height of the tallest cell. Keep
+  // track of whether any of the rows have a cell that spans into the row
+  PRBool  hasRowSpanningCell = PR_FALSE;
   PRInt32 numRows;
   GetRowCount(numRows, PR_FALSE);
   nscoord *rowHeights = new nscoord[numRows];
@@ -610,6 +612,13 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
       // only the top row has a top margin. Other rows start at the bottom of the prev row's bottom margin.
       // save the row height for pass 2 below
       rowHeights[rowIndex] = maxRowHeight;
+
+      // See if a cell spans into the row. If so we'll have to do step 2
+      if (!hasRowSpanningCell) {
+        if (tableFrame->RowIsSpannedInto(rowIndex + startRowIndex)) {
+          hasRowSpanningCell = PR_TRUE;
+        }
+      }
       rowIndex++;
     }
     // Get the next row
@@ -617,7 +626,8 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   }
   
 
-  /* Step 2:  Now account for cells that span rows.
+  /* Step 2:  Now account for cells that span rows. We only do this if there are cells
+   *          that span rows.
    *          A spanning cell's height is the sum of the heights of the rows it spans,
    *          or it's own desired height, whichever is greater.
    *          If the cell's desired height is the larger value, resize the rows and contained
@@ -629,134 +639,122 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
    *          Since we are guaranteed to have found the max height spanners the first time through, 
    *          we know we only need two passes, not an arbitrary number.
    */
-  /* TODO
-   * 1. optimization, if (PR_TRUE==atLeastOneRowSpanningCell) ... otherwise skip this step entirely
-   *    we can get this info trivially from the cell map
-   */
-
-  PRInt32 rowGroupHeight;
-  nscoord deltaY = 0;
-  for (PRInt32 counter=0; counter<2; counter++)
-  {
-    rowGroupHeight = 0;
-    rowFrame = GetFirstFrame();
-    rowIndex = 0;
-    while (nsnull != rowFrame)
+  if (hasRowSpanningCell) {
+    nscoord deltaY = 0;
+    for (PRInt32 counter=0; counter<2; counter++)
     {
-      rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-      if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+      rowFrame = GetFirstFrame();
+      rowIndex = 0;
+      while (nsnull != rowFrame)
       {
-        // check this row for a cell with rowspans
-        nsIFrame *cellFrame;
-        rowFrame->FirstChild(nsnull, &cellFrame);
-        while (nsnull != cellFrame)
+        rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+        if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
         {
-          const nsStyleDisplay *cellChildDisplay;
-          cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellChildDisplay));
-          if (NS_STYLE_DISPLAY_TABLE_CELL == cellChildDisplay->mDisplay)
+          // check this row for a cell with rowspans
+          nsIFrame *cellFrame;
+          rowFrame->FirstChild(nsnull, &cellFrame);
+          while (nsnull != cellFrame)
           {
-            PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex + startRowIndex,
-                                                              (nsTableCellFrame*)cellFrame);
-            if (rowSpan > 1)
-            { // found a cell with rowspan > 1, determine the height of the rows it
-              // spans
-              nscoord heightOfRowsSpanned = 0;
-              PRInt32 i;
-              for (i = 0; i < rowSpan; i++) {
-                heightOfRowsSpanned += rowHeights[rowIndex + i];
-              }
-              // reduce the height by top and bottom margins
-              nscoord availHeightOfRowsSpanned = heightOfRowsSpanned - cellSpacingY - cellSpacingY;
-
-              // see if the cell's height fits within the rows it spans. If this is
-              // pass 1 then use the cell's desired height and not the current height
-              // of its frame. That way this works for incremental reflow, too
-              nsSize  cellFrameSize;
-              cellFrame->GetSize(cellFrameSize);
-              if (0 == counter) {
-                nsSize cellDesiredSize = ((nsTableCellFrame*)cellFrame)->GetDesiredSize();
-                cellFrameSize.height = cellDesiredSize.height;
-              }
-
-              if (availHeightOfRowsSpanned >= cellFrameSize.height)
-              {
-                // yes the cell's height fits with the available space of the rows it
-                // spans. Set the cell frame's height
-                cellFrame->SizeTo(cellFrameSize.width, availHeightOfRowsSpanned);
-                // Realign cell content based on new height
-                ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild();
-              }
-              else
-              {
-                // the cell's height is larger than the available space of the rows it
-                // spans so distribute the excess height to the rows affected
-                PRInt32 excessHeight = cellFrameSize.height - availHeightOfRowsSpanned;
-
-                // for every row starting at the row with the spanning cell and down
-                // to the last row spanned by the cell
-                nsTableRowFrame *rowFrameToBeResized = (nsTableRowFrame *)rowFrame;
-                nscoord excessAllocated = 0;
-                for (i = rowIndex; i < (rowIndex + rowSpan); i++) {
-                  // The amount of additional space each row gets is based on the
-                  // percentage of space it occupies, i.e. they don't all get the
-                  // same amount of available space
-                  float percent = ((float)rowHeights[i]) / ((float)heightOfRowsSpanned);
-                  
-                  // give rows their percentage, except for the last row which gets
-                  // the remainder
-                  nscoord excessForRow = ((i + 1) == (rowIndex + rowSpan)) ?
-                                         excessHeight - excessAllocated  :
-                                         NSToCoordRound(((float)(excessHeight)) * percent);
-                  excessAllocated += excessForRow;
-
-                  // update the row height
-                  rowHeights[i] += excessForRow;
-
-                  // Get the next row frame
-                  GetNextRowSibling((nsIFrame**)&rowFrameToBeResized);
+            const nsStyleDisplay *cellChildDisplay;
+            cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellChildDisplay));
+            if (NS_STYLE_DISPLAY_TABLE_CELL == cellChildDisplay->mDisplay)
+            {
+              PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex + startRowIndex,
+                                                                (nsTableCellFrame*)cellFrame);
+              if (rowSpan > 1)
+              { // found a cell with rowspan > 1, determine the height of the rows it
+                // spans
+                nscoord heightOfRowsSpanned = 0;
+                PRInt32 i;
+                for (i = 0; i < rowSpan; i++) {
+                  heightOfRowsSpanned += rowHeights[rowIndex + i];
                 }
-                NS_ASSERTION(excessAllocated == excessHeight, "excess distribution failed");
+                // reduce the height by top and bottom margins
+                nscoord availHeightOfRowsSpanned = heightOfRowsSpanned - cellSpacingY - cellSpacingY;
+  
+                // see if the cell's height fits within the rows it spans. If this is
+                // pass 1 then use the cell's desired height and not the current height
+                // of its frame. That way this works for incremental reflow, too
+                nsSize  cellFrameSize;
+                cellFrame->GetSize(cellFrameSize);
+                if (0 == counter) {
+                  nsSize cellDesiredSize = ((nsTableCellFrame*)cellFrame)->GetDesiredSize();
+                  cellFrameSize.height = cellDesiredSize.height;
+                }
+  
+                if (availHeightOfRowsSpanned >= cellFrameSize.height)
+                {
+                  // yes the cell's height fits with the available space of the rows it
+                  // spans. Set the cell frame's height
+                  cellFrame->SizeTo(cellFrameSize.width, availHeightOfRowsSpanned);
+                  // Realign cell content based on new height
+                  ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild();
+                }
+                else
+                {
+                  // the cell's height is larger than the available space of the rows it
+                  // spans so distribute the excess height to the rows affected
+                  PRInt32 excessHeight = cellFrameSize.height - availHeightOfRowsSpanned;
+  
+                  // for every row starting at the row with the spanning cell and down
+                  // to the last row spanned by the cell
+                  nsTableRowFrame *rowFrameToBeResized = (nsTableRowFrame *)rowFrame;
+                  nscoord excessAllocated = 0;
+                  for (i = rowIndex; i < (rowIndex + rowSpan); i++) {
+                    // The amount of additional space each row gets is based on the
+                    // percentage of space it occupies, i.e. they don't all get the
+                    // same amount of available space
+                    float percent = ((float)rowHeights[i]) / ((float)heightOfRowsSpanned);
+                    
+                    // give rows their percentage, except for the last row which gets
+                    // the remainder
+                    nscoord excessForRow = ((i + 1) == (rowIndex + rowSpan)) ?
+                                           excessHeight - excessAllocated  :
+                                           NSToCoordRound(((float)(excessHeight)) * percent);
+                    excessAllocated += excessForRow;
+  
+                    // update the row height
+                    rowHeights[i] += excessForRow;
+  
+                    // Get the next row frame
+                    GetNextRowSibling((nsIFrame**)&rowFrameToBeResized);
+                  }
+                  NS_ASSERTION(excessAllocated == excessHeight, "excess distribution failed");
+                }
               }
             }
+            // Get the next row child (cell frame)
+            cellFrame->GetNextSibling(&cellFrame);
           }
-          // Get the next row child (cell frame)
-          cellFrame->GetNextSibling(&cellFrame);
+  
+          // If this is pass 2 then resize the row to its final size and move the
+          // row's position if the previous rows have caused a shift
+          if (1 == counter) {
+            nsRect  rowBounds;
+            rowFrame->GetRect(rowBounds);
+  
+            // Move the row to the correct position
+            rowBounds.y += deltaY;
+  
+            // Adjust our running delta
+            deltaY += rowHeights[rowIndex] - rowBounds.height;
+  
+            // Resize the row to its final size and position
+            rowBounds.height = rowHeights[rowIndex];
+            rowFrame->SetRect(rowBounds);
+          }
+          
+          rowIndex++;
         }
-
-        // If this is pass 2 then resize the row to its final size and move the
-        // row's position if the previous rows have caused a shift
-        if (1 == counter) {
-          nsRect  rowBounds;
-          rowFrame->GetRect(rowBounds);
-
-          // Move the row to the correct position
-          rowBounds.y += deltaY;
-
-          // Adjust our running delta
-          deltaY += rowHeights[rowIndex] - rowBounds.height;
-
-          // Resize the row to its final size and position
-          rowBounds.height = rowHeights[rowIndex];
-          rowFrame->SetRect(rowBounds);
-        }
-        
-        // Update the running row group height
-        rowGroupHeight += rowHeights[rowIndex];
-        rowIndex++;
+  
+        // Get the next rowgroup child (row frame)
+        GetNextFrame(rowFrame, &rowFrame);
       }
-      else {
-        // Anything that isn't a row contributes to the row group's total height.
-        nsSize frameSize;
-        rowFrame->GetSize(frameSize);
-        rowGroupHeight += frameSize.height;
-      }
-
-      // Get the next rowgroup child (row frame)
-      GetNextFrame(rowFrame, &rowFrame);
     }
   }
 
   // step 3: notify the rows of their new heights
+  nscoord rowGroupHeight = 0;
   rowFrame = GetFirstFrame();
   rowIndex = 0;
   while (nsnull != rowFrame)
@@ -767,6 +765,13 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
       // Notify the row of the new size
       ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
     }
+
+    // Update the running row group height. The height includes frames that
+    // aren't rows as well
+    nsSize  rowSize;
+    rowFrame->GetSize(rowSize);
+    rowGroupHeight += rowSize.height;
+
     // Get the next row
     GetNextFrame(rowFrame, &rowFrame);
     rowIndex++;
