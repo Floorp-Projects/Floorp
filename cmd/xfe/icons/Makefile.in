@@ -171,13 +171,17 @@ MKICONS_DSOS = \
 
 MKICONS_EXTRA	= $(NSPR_LDFLAGS) $(NSPR_LIBS) $(MKICONS_DSOS) $(OS_LIBS) -lm
 
+ifndef NO_STATIC_LIB
+CFLAGS_STATIC	= -static
+endif
+
 #######################################################################
 # Rules to build mkicons program and then icondata.c
 
 # XXX We need to reach into the Image Library modules's source directory to 
 # get the file if.h
 $(MKICONS_EXE): mkicons.cpp $(MKICONS_LIB)
-	$(CCC) $(CFLAGS) -o $@ -I$(topsrcdir)/modules/libimg/src $< $(XFE_MKICONS_BIN_LDPATH) $(MKICONS_LIB) $(MKICONS_EXTRA)
+	$(CCC) $(CFLAGS_STATIC) $(CFLAGS) -o $@ -I$(topsrcdir)/modules/libimg/src $< $(XFE_MKICONS_BIN_LDPATH) $(MKICONS_LIB) $(MKICONS_EXTRA)
 
 $(ICONLIST): $(ICONS)
 	@echo Adding icons to $@
