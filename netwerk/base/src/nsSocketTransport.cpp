@@ -621,7 +621,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
         rv = pProviderService->GetSocketProvider(mSocketType, getter_AddRefs(pProvider));
 
       if (NS_SUCCEEDED(rv))
-        rv = pProvider->NewSocket(&mSocketFD);
+        rv = pProvider->NewSocket(mHostName, &mSocketFD);
       }
 
     if (mSocketFD) {
