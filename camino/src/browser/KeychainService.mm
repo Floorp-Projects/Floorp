@@ -777,8 +777,7 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     if ( ![username length] || ![password length] )      // bail if either is empty
       return NS_OK;
 
-    nsCOMPtr<nsIDocument> doc;
-    node->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = node->GetDocument();
     if (!doc)
       return NS_OK;
     
