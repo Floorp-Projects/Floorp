@@ -459,7 +459,7 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   case nsIReflowCommand::FrameRemoved :
     if (mCaptionFrame==objectFrame)
     {
-      rv = IR_CaptionDeleted(aPresContext, aDesiredSize, aReflowState, aStatus);
+      rv = IR_CaptionRemoved(aPresContext, aDesiredSize, aReflowState, aStatus);
     }
     else
     {
@@ -469,8 +469,9 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     break;
 
   case nsIReflowCommand::StyleChanged :
-      rv = NS_ERROR_NOT_IMPLEMENTED;
-      if (PR_TRUE==gsDebugIR) printf("TOF IR: StyleChanged not implemented.\n");
+    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+    if (PR_TRUE==gsDebugIR) printf("TOF IR: StyleChanged not implemented.\n");
     break;
 
   case nsIReflowCommand::ContentChanged :
@@ -482,6 +483,7 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   case nsIReflowCommand::PushReflow:
   case nsIReflowCommand::CheckPullupReflow :
   case nsIReflowCommand::UserDefined :
+    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
     if (PR_TRUE==gsDebugIR) printf("TOF IR: reflow command not implemented.\n");
     break;
@@ -706,12 +708,12 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
   return rv;
 }
 
-nsresult nsTableOuterFrame::IR_CaptionDeleted(nsIPresContext&        aPresContext,
+nsresult nsTableOuterFrame::IR_CaptionRemoved(nsIPresContext&        aPresContext,
                                               nsHTMLReflowMetrics&   aDesiredSize,
                                               OuterTableReflowState& aReflowState,
                                               nsReflowStatus&        aStatus)
 {
-  if (PR_TRUE==gsDebugIR) printf("TOF IR: CaptionDeleted\n");
+  if (PR_TRUE==gsDebugIR) printf("TOF IR: CaptionRemoved\n");
   nsresult rv = NS_OK;
   if (nsnull!=mCaptionFrame)
   {

@@ -131,7 +131,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
       lastChild->SetNextSibling(firstImplicitColFrame);
     }
   }
-  SetStyleContextForFirstPass(&aPresContext);
+  SetStyleContextForFirstPass(aPresContext);
 
   return rv;
 }
@@ -229,7 +229,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
 }
 
 // Subclass hook for style post processing
-NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPresContext)
+NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPresContext)
 {
   // get the table frame
   nsIFrame* tableFrame=nsnull;
@@ -260,7 +260,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
       {
         nsIStyleContextPtr colStyleContext;
         nsStylePosition * colPosition=nsnull;
-        colFrame->GetStyleContext(aPresContext, colStyleContext.AssignRef());
+        colFrame->GetStyleContext(&aPresContext, colStyleContext.AssignRef());
         colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
         if (colIndex<numCols)
         {
@@ -271,13 +271,13 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
         {
           colPosition->mWidth.SetCoordValue(0);
         }
-        colStyleContext->RecalcAutomaticData(aPresContext);
+        colStyleContext->RecalcAutomaticData(&aPresContext);
         colIndex++;
       }
       colFrame->GetNextSibling(colFrame);
     }
 
-    mStyleContext->RecalcAutomaticData(aPresContext);
+    mStyleContext->RecalcAutomaticData(&aPresContext);
   }
   return NS_OK;
 }

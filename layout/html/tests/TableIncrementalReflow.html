@@ -6,7 +6,7 @@ function insertIt() {
     var body = document.documentElement.childNodes[1];
     var table = document.getElementsByTagName("TABLE")[0];
 	var otherCaption = document.getElementsByTagName("CAPTION")[0];
-	var attrList = otherCaption.attributes
+	var attrList = otherCaption.attributes;
     var caption = document.createElement("CAPTION", attrList);
 	var text = document.createTextNode("here is the new caption text");
 	caption.appendChild(text);

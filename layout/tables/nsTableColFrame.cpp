@@ -60,12 +60,11 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
 }
 
 
-NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
+NS_METHOD nsTableColFrame::Reflow(nsIPresContext&      aPresContext,
                                   nsHTMLReflowMetrics& aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&      aStatus)
 {
-  NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   aDesiredSize.width=0;
   aDesiredSize.height=0;
   if (nsnull!=aDesiredSize.maxElementSize)
