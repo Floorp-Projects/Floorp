@@ -27,7 +27,7 @@ pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search
 
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
-pref("general.useragent.locale", "en-US");
+pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.misc", "m17");
 
 pref("general.startup.browser",             true);
@@ -104,7 +104,7 @@ pref("browser.prefWindowModal", true);
 pref("browser.show_about_as_stupid_modal_window", false);
 
 // various default search settings
-pref("browser.search.defaulturl", "http://search.netscape.com/cgi-bin/search?search=");
+pref("browser.search.defaulturl", "chrome://navigator/locale/navigator.properties");
 pref("browser.search.opensidebarsearchpanel", true);
 pref("browser.search.last_search_category", "NC:SearchCategory?category=urn:search:category:1");
 pref("browser.search.mode", 0);
@@ -284,13 +284,13 @@ pref("network.padPacURL",                   ""); // The proxy autodiscovery url
 pref("wallet.captureForms",                 true);
 pref("wallet.notified",                     false);
 pref("wallet.fetchPatches",                 false);
-pref("wallet.Server",                       "http://www.mozilla.org/wallet/tables/");
+pref("wallet.Server",                       "chrome://navigator/locale/navigator.properties");
 pref("wallet.version",                      "1");
 pref("wallet.enabled",                      true);
 pref("wallet.crypto",                       false);
 pref("imageblocker.enabled",                true);
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
-pref("intl.accept_languages",               "en");
+pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
 pref("intl.collationKeyAsCodePoint",        false);
 
