@@ -20,10 +20,10 @@
 
 extern "C" {
 
-static void java_stdout(JMSessionRef session, const void *message, UInt32 messageLengthInBytes);
-static void java_stderr(JMSessionRef session, const void *message, UInt32 messageLengthInBytes);
+static void java_stdout(JMSessionRef session, const void *message, SInt32 messageLengthInBytes);
+static void java_stderr(JMSessionRef session, const void *message, SInt32 messageLengthInBytes);
 static SInt32 java_stdin(JMSessionRef session, void *buffer, SInt32 maxBufferLength);
-static Boolean java_exit(JMSessionRef session, int value);
+static Boolean java_exit(JMSessionRef session, SInt32 status);
 static Boolean java_authenticate(JMSessionRef session, const char *url, const char *realm,
 									char userName[255], char password[255]);
 static void java_lowmem(JMSessionRef session);
@@ -93,9 +93,9 @@ void JavaSession::addClassPath(const char* jarFilePath)
 
 // OBLIGATORY JMSession callbacks.
 
-static void java_stdout(JMSessionRef session, const void *message, UInt32 messageLengthInBytes)
+static void java_stdout(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
 {
-	char* msg = (char*)message;
+	const char* msg = (const char*)message;
 	while (messageLengthInBytes--) {
 		char c = *msg++;
 		if (c == '\r')
@@ -104,9 +104,9 @@ static void java_stdout(JMSessionRef session, const void *message, UInt32 messag
 	}
 }
 
-static void java_stderr(JMSessionRef session, const void *message, UInt32 messageLengthInBytes)
+static void java_stderr(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
 {
-	char* msg = (char*)message;
+	const char* msg = (const char*)message;
 	while (messageLengthInBytes--) {
 		char c = *msg++;
 		if (c == '\r')
@@ -120,7 +120,7 @@ static SInt32 java_stdin(JMSessionRef session, void *buffer, SInt32 maxBufferLen
 	return -1;
 }
 
-static Boolean java_exit(JMSessionRef session, int value) { return false; }
+static Boolean java_exit(JMSessionRef session, SInt32 status) { return false; }
 
 static Boolean java_authenticate(JMSessionRef session, const char *url, const char *realm,
 									char userName[255], char password[255])
