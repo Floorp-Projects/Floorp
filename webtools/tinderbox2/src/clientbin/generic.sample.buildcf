@@ -24,8 +24,8 @@
 # variables substituted.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2003/12/23 12:59:11 $ 
+# $Revision: 1.11 $ 
+# $Date: 2004/01/07 01:48:33 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
@@ -351,6 +351,7 @@ sub error_parser_name {
   my (%args) = @_;
 
   my $parser_name =  $args{'build_type'};
+  $parser_name = 'unix';
 
   return  $parser_name;
 }
@@ -376,7 +377,7 @@ sub build_name {
 
   my ($build_name) = join('-', 
 			  $args{'hostname'},
-                          $args{'buildtype'},
+                          $args{'build_type'},
                           $os, $osver, 
 			  );
   $build_name =~ s/\.\.+/\./g;
@@ -391,7 +392,9 @@ sub build_name {
 sub build_administrator {
   my (%args) = @_;
 
-  return "your.mailing.address\@company.com";
+  my $admin = "your.mailing.address\@company.com";
+
+  return $admin;
 }
 
 # addressing information for the build messages
@@ -399,20 +402,27 @@ sub build_administrator {
 sub mail_to {
   my (%args) = @_;
 
-  return "tinderbox_builds\@mail.yourcompany.com";
+  my $mail_to "tinderbox_builds\@mail.yourcompany.com";
+
+  return $mail_to;
 }
 
 
 sub mail_from {
   my (%args) = @_;
 
-  return "tinderbox-build-daemon\@".$args{'hostname'};
+  my $mail_from = "tinderbox-build-daemon\@".$args{'hostname'};
+
+  return $mail_from;
 }
 
 sub mailer {
   my (%args) = @_;
 
   my $mailer = 'HTTPPost http://localhost/cgi-bin/cgiwrap/tbox/processmail_builds.cgi';
+  # $mailer = 'cat > /tmp/mail.out';
+  # $mailer = '/export/home/tinderbox2/bin/processmail_builds';
+  # $mailer = '/usr/lib/sendmail -oi -t';
 
   return $mailer;
 }
