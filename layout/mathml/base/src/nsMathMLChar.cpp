@@ -31,7 +31,9 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
@@ -1145,12 +1147,17 @@ InitGlobals(nsIPresContext* aPresContext)
 
   // Get the default list of mathfonts to be used for stretchy characters
   nsFont font(nsnull, 0, 0, 0, 0, 0);
-  nsXPIDLString familyList;
-  nsCOMPtr<nsIPref> pref;
-  pref = do_GetService(NS_PREF_CONTRACTID);
-  if (pref) {
+  nsAutoString familyList;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
     // first, try to see if the user has a value in the pref
-    pref->CopyUnicharPref("font.mathfont-family", getter_Copies(familyList));
+    nsCOMPtr<nsISupportsString> prefString;
+    prefBranch->GetComplexValue("font.mathfont-family",
+                                NS_GET_IID(nsISupportsString),
+                                getter_AddRefs(prefString));
+    if (prefString) {
+      prefString->GetData(familyList);
+    }
   }
   if (familyList.IsEmpty()) {
     // fallback to the default list
