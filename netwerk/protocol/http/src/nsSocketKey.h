@@ -22,13 +22,13 @@
 #include "nsHashtable.h" // also defines nsCStringKey
 #include "plstr.h"
 
-class nsSocketKey : public nsCStringKey 
+class nsSocketKey : public nsStringKey 
 {
   
 public:
     // Constructor and Destructor
     nsSocketKey(const char* i_Host, const PRInt32 i_port)
-        : nsCStringKey(i_Host), m_Port(i_port)
+        : nsStringKey(i_Host), m_Port(i_port)
     {
     }
   
@@ -44,7 +44,7 @@ public:
     PRBool Equals(const nsHashKey* i_Key) const 
     {
         return (m_Port == ((nsSocketKey*)i_Key)->m_Port) && 
-                nsCStringKey::Equals(i_Key);
+                nsStringKey::Equals(i_Key);
     }
 
     PRBool operator==(const nsSocketKey& i_Key) const
