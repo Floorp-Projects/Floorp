@@ -72,11 +72,11 @@ CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) :
   if(aCreateStream) {
     char buffer[513];
     aFilename.ToCString(buffer,sizeof(buffer)-1);
-    #if defined(XP_UNIX) && (defined(IRIX) || defined(MKLINUX))
-      /* XXX: IRIX does not support ios::binary */
-      mFileStream=new fstream(buffer,ios::in);
-    #else
+    #if defined(HAVE_IOS_BINARY) || !defined(XP_UNIX)
+      /* XXX: HAVE_IOS_BINARY needs to be set for mac & win */
       mFileStream=new fstream(buffer,ios::in|ios::binary);
+    #else
+      mFileStream=new fstream(buffer,ios::in|ios::bin);
     #endif
   } //if
 }
