@@ -530,8 +530,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // here again:
     
     NS_IF_RELEASE(servMgr);
-    NS_RELEASE2(nsServiceManager::mGlobalServiceManager, cnt);
-    NS_ASSERTION(cnt == 0, "Service Manager being held past XPCOM shutdown.");
+
+    // Shutdown global servicemanager
+    nsServiceManager::ShutdownGlobalServiceManager(NULL);
 
     // Release the global case converter
     NS_IF_RELEASE(gCaseConv);
