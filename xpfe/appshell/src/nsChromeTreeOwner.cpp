@@ -61,6 +61,7 @@ NS_INTERFACE_MAP_BEGIN(nsChromeTreeOwner)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
 
@@ -310,6 +311,42 @@ NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const PRUnichar* aTitle)
    // XXX Don't need to fully qualify this once I remove nsWebShellWindow::SetTitle
    // return mXULWindow->SetTitle(title.GetUnicode());
    return mXULWindow->nsXULWindow::SetTitle(aTitle);
+}
+
+//*****************************************************************************
+// nsChromeTreeOwner::nsIWebProgressListener
+//*****************************************************************************   
+
+NS_IMETHODIMP nsChromeTreeOwner::OnProgressChange(nsIChannel* aChannel,
+   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
+   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeTreeOwner::OnChildProgressChange(nsIChannel* aChannel,
+   PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
+{
+   return NS_OK;   
+}
+
+NS_IMETHODIMP nsChromeTreeOwner::OnStatusChange(nsIChannel* aChannel,
+   PRInt32 aProgressStatusFlags)
+{
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeTreeOwner::OnChildStatusChange(nsIChannel* aChannel,
+   PRInt32 aProgressStatusFlags)
+{
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIURI* aLocation)
+{
+   // If loading a new root .xul document, then redo chrome.
+   mXULWindow->mChromeLoaded = PR_FALSE;
+   return NS_OK;
 }
 
 //*****************************************************************************

@@ -30,12 +30,14 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIWebProgressListener.h"
 
 class nsXULWindow;
 
 class nsChromeTreeOwner : public nsIDocShellTreeOwner,
-                                  public nsIBaseWindow, 
-                                  public nsIInterfaceRequestor
+                          public nsIBaseWindow, 
+                          public nsIInterfaceRequestor,
+                          public nsIWebProgressListener
 {
 friend class nsXULWindow;
 
@@ -45,6 +47,7 @@ public:
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIDOCSHELLTREEOWNER
+   NS_DECL_NSIWEBPROGRESSLISTENER
 
 protected:
    nsChromeTreeOwner();
