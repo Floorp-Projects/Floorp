@@ -36,6 +36,7 @@ static PRBool gsDebugBalance = PR_FALSE;
 static PRBool gsDebugAssign  = PR_TRUE;
 static PRBool gsDebugBalance = PR_TRUE;
 #endif
+static PRInt32 gsDebugCount = 0;
 
 PRBool CanAllocate(PRInt32          aTypeToAllocate,
                    PRInt32          aTypeAlreadyAllocated,
@@ -165,7 +166,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
                                               const nsHTMLReflowState& aReflowState,
                                               nscoord                  aMaxWidthIn)
 {
-  if (gsDebugBalance) {printf("BalanceColumnWidths en max=%d\n", aMaxWidthIn); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugBalance) {printf("BalanceColumnWidths en max=%d count=%d \n", aMaxWidthIn, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
 
   ContinuingFrameCheck();
   if (!aTableStyle) {
@@ -209,15 +210,11 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
     perAdjTableWidth = AssignPercentageColumnWidths(maxWidth - mCellSpacingTotal, tableIsAutoWidth);
   }
 
-  PRBool recomputedAdjMin = RecomputeAdjMinIfNecessary();
   // set the table's columns to the min width
   for (colX = 0; colX < numCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     nscoord colMinWidth = colFrame->GetMinWidth();
     mTableFrame->SetColumnWidth(colX, colMinWidth);
-  }
-  if (recomputedAdjMin) {
-    SetMinAndMaxTableContentWidths();
   }
 
   // if the max width available is less than the min content width for fixed table, we're done
@@ -697,7 +694,7 @@ BasicTableLayoutStrategy::ComputeColspanWidths(PRInt32           aWidthIndex,
 PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,
                                                                nscoord         aMaxWidth)
 {
-  if (gsDebugAssign) {printf("AssignPrelimColWidths en max=%d\n", aMaxWidth); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugAssign) {printf("AssignPrelimColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   PRBool rv = PR_FALSE;
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount();
@@ -1229,76 +1226,6 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
   delete [] colPcts;
   return basis;
 }
-
-
-// if there are cols with cells originating in them that are not percent based but span
-// cells which are percent based then the ADJ_MIN needs to be recomputed for the spanned cols.
-// this code was derived from AssignPreliminaryColumnWidths
-PRBool BasicTableLayoutStrategy::RecomputeAdjMinIfNecessary()
-{
-  PRInt32 numRows  = mTableFrame->GetRowCount();
-  PRInt32 numCols  = mTableFrame->GetColCount();
-  PRInt32 colX, rowX, spanX;
-
-  PRBool spansPercent = PR_FALSE;
-  for (colX = numCols - 1; colX >= 0; colX--) { 
-    for (rowX = 0; rowX < numRows; rowX++) {
-      PRBool originates;
-      PRInt32 colSpan;
-      mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
-      if (!originates || (1 == colSpan)) {
-        continue;
-      }
-      PRBool cellSpansPercent = PR_FALSE;
-      // see if any of the spanned cols are percent based
-      for (spanX = 0; spanX < colSpan; spanX++) {
-        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-        if (colFrame->GetWidth(PCT) > 0) {
-          cellSpansPercent = PR_TRUE;
-          spansPercent = PR_TRUE;
-          break;
-        }
-      }
-      if (cellSpansPercent) {
-        for (spanX = 0; spanX < colSpan; spanX++) {
-          nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-          colFrame->SetWidth(MIN_ADJ, WIDTH_NOT_SET);
-        }
-      }
-    }
-  }
-
-  if (!spansPercent) {
-    return PR_FALSE;
-  }
-
-  for (colX = numCols - 1; colX >= 0; colX--) { 
-    for (rowX = 0; rowX < numRows; rowX++) {
-      PRBool originates;
-      PRInt32 colSpan;
-      nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
-      if (!originates || (1 == colSpan)) {
-        continue;
-      }
-      PRBool cellSpansPercent = PR_FALSE;
-
-      // see if any of the spanned cols are percent based
-      for (spanX = 0; spanX < colSpan; spanX++) {
-        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-        if (colFrame->GetWidth(PCT) > 0) {
-          cellSpansPercent = PR_TRUE;
-          break;
-        }
-      }
-
-      if (cellSpansPercent) {
-        ComputeColspanWidths(MIN_CON, cellFrame, colX, colSpan, PR_TRUE);
-      }
-    }
-  }
-  return PR_TRUE;
-}
-
 
 void BasicTableLayoutStrategy::SetMinAndMaxTableContentWidths()
 {

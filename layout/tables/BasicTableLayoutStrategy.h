@@ -196,8 +196,6 @@ protected:
                             nscoord                 aPrevCellMin,
                             nscoord                 aPrevCellDes) const;
 
-  PRBool RecomputeAdjMinIfNecessary();
-
 #ifdef DEBUG
   void  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     *aResult = sizeof(*this);
