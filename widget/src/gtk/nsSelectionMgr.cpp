@@ -129,11 +129,11 @@ void nsSelectionMgr::SelectionClearCB( GtkWidget *widget,
                                        gpointer data)
 {
   if (data)
-    ((nsSelectionMgr*)data)->SelectionClear(widget, event);
+    ((nsSelectionMgr*)data)->SelectionClearor(widget, event);
 }
 
-void nsSelectionMgr::SelectionClear( GtkWidget *w,
-                                     GdkEventSelection *event )
+void nsSelectionMgr::SelectionClearor( GtkWidget *w,
+                                       GdkEventSelection *event )
 {
   // Delete the copy stream, since we don't need it any more:
   if (mCopyStream)
