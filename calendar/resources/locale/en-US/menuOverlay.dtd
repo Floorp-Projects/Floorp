@@ -114,3 +114,8 @@
 
 <!ENTITY goNextCmd.label                "Next">
 <!ENTITY goNextCmd.accesskey            "N">
+
+<!ENTITY taskMenu.label                "Tools">
+<!ENTITY taskMenu.accesskey            "T">
+
+<!ENTITY helpMenu.accesskey            "H">

@@ -40,12 +40,10 @@
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
 <!DOCTYPE overlay 
 [
-	<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" > %navigatorDTD;
    <!ENTITY % calendarDTD SYSTEM "chrome://calendar/locale/calendar.dtd" > %calendarDTD;
 	<!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
 ]>
@@ -87,15 +85,6 @@
     <key id="key_delete"/>
     <key id="key_selectAll"/>
   
-    <!-- Search Menu -->  
-    <key id="key_find"
-         key="&findOnCmd.commandkey;"
-         command="Browser:Find"
-         modifiers="accel"/>
-    <key id="key_findAgain"
-         key="&findAgainCmd.commandkey;"
-         command="Browser:FindAgain"
-         modifiers="accel"/>
   </keyset>
   <keyset id="tasksKeys">
       <key id="key_quit"/>
@@ -276,7 +265,9 @@
       </menupopup>
    </menu>
    
-   <menu id="tasksMenu">
+   <menu id="tasksMenu"
+         label="&taskMenu.label;"
+         accesskey="&taskMenu.accesskey;" >                                                                                       
       <menupopup id="taskPopup">
          <menuitem id="calendar-wizard-menu"
                    key="wizard_key"
@@ -301,17 +292,13 @@
                    label="&calendar.publish.label;"
                    accesskey="&calendar.publish.accesskey;"
                    observes="publish_events_command"/>
-         <menuseparator/>
       </menupopup>
    </menu>
-   
-   <menu id="windowMenu"/>
-  
-   <menu accesskey="&helpMenuCmd.accesskey;"
-         id="menu_Help">
+
+   <menu id="menu_Help"
+         accesskey="&helpMenu.accesskey;"
+         >
       <menupopup id="helpPopup">
-         <menuitem id="releaseUrl"/>
-         <menuseparator id="menu_HelpAboutSeparator"/>
          <menuitem id="calendar-about-menu-item"
                    label="&calendar.about.label;"
                    accesskey="&calendar.about.accesskey;"
