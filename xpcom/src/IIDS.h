@@ -701,7 +701,7 @@ nsIDOMCSSStyleRuleCollection = { /* a6cf90c0-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-nsIDOMCSSStyleRuleSimple = { /* a6cf90c1-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSRule = { /* a6cf90c1-15b3-11d2-932e-00805f8add32 */
     0xa6cf90c1,
     0x15b3,
     0x11d2,
@@ -785,19 +785,19 @@ nsIRange = { /* a6cf90ce-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90cf-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSImportRule = { /* a6cf90cf-15b3-11d2-932e-00805f8add32 */
     0xa6cf90cf,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90d0-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSSUnknownRule = { /* a6cf90d0-15b3-11d2-932e-00805f8add32 */
     0xa6cf90d0,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90d1-15b3-11d2-932e-00805f8add32 */
+nsIDOMCSS2Properties = { /* a6cf90d1-15b3-11d2-932e-00805f8add32 */
     0xa6cf90d1,
     0x15b3,
     0x11d2,
