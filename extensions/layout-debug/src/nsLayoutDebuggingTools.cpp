@@ -468,6 +468,7 @@ static
 void
 DumpViewsRecur(nsIDocShell* aDocShell, FILE* out)
 {
+#ifdef DEBUG
     if (aDocShell) {
         fprintf(out, "docshell=%p \n", NS_STATIC_CAST(void*, aDocShell));
         nsCOMPtr<nsIViewManager> vm(view_manager(aDocShell));
@@ -495,6 +496,7 @@ DumpViewsRecur(nsIDocShell* aDocShell, FILE* out)
             }
         }
     }
+#endif // DEBUG
 }
 
 NS_IMETHODIMP
