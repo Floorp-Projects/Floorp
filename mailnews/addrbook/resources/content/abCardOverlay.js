@@ -326,7 +326,10 @@ function InitEditCard()
 
   // get specific prefs that editCard will need
   try {
-    editCard.displayLastNameFirst = gPrefs.getBoolPref("mail.addr_book.displayName.lastnamefirst");
+    var displayLastNameFirst =
+        gPrefs.getComplexValue("mail.addr_book.displayName.lastnamefirst", 
+                               Components.interfaces.nsIPrefLocalizedString).data;
+    editCard.displayLastNameFirst = (displayLastNameFirst == "true");
     editCard.generateDisplayName = gPrefs.getBoolPref("mail.addr_book.displayName.autoGeneration");
   }
   catch (ex) {
