@@ -2363,8 +2363,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
   if (nsnull != mContext) {
     nsCOMPtr<nsIPresShell> shell;
     mContext->GetShell(getter_AddRefs(shell));
-
-    rv = shell->GetDocument(aDocument);
+    if (shell)
+      rv = shell->GetDocument(aDocument);
   }
   return rv;
 }
@@ -3014,10 +3014,11 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   nsAutoString data;
   nsCOMPtr<nsIAtom> tag;
   content->GetTag(*getter_AddRefs(tag));
-  if (nsHTMLAtoms::object == tag.get() &&
-      !content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src) &&
-      NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)))
-    mNumCachedAttrs++;
+  if (nsHTMLAtoms::object == tag.get() 
+    && !content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src)
+    && NS_CONTENT_ATTR_NOT_THERE != content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)) {
+      mNumCachedAttrs++;
+  }
 
   // now lets make the arrays
   mCachedAttrParamNames  = (char **)PR_Calloc(sizeof(char *) * (mNumCachedAttrs + 1 + mNumCachedParams), 1);
