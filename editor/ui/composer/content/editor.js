@@ -1069,8 +1069,8 @@ function initLocalFontFaceMenu(menuPopup)
         if (useRadioMenuitems) {
           itemNode.setAttribute("type", "radio");
           itemNode.setAttribute("name", "2");
+          itemNode.setAttribute("observes", "cmd_renderedHTMLEnabler");
         }
-        itemNode.setAttribute("observes", "cmd_renderedHTMLEnabler");
         menuPopup.appendChild(itemNode);
       }
     }
