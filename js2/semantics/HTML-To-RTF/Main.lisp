@@ -47,7 +47,7 @@
             (push (if (equal dir-name "..") :up dir-name) directories)
             (setq filename (subseq filename (1+ slash))))
           (return (if directories
-                    (make-pathname :directory (cons ':relative (nreverse directories)) :name filename #+lispworks :type #+lispworks "lisp")
+                    (make-pathname :directory (cons :relative (nreverse directories)) :name filename #+lispworks :type #+lispworks "lisp")
                     #-lispworks filename
                     #+lispworks (make-pathname :name filename :type "lisp"))))))))
 
