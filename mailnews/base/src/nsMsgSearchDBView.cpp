@@ -100,7 +100,7 @@ NS_IMETHODIMP nsMsgSearchDBView::Close()
 
 NS_IMETHODIMP nsMsgSearchDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue)
 {
-  if (aColID[0] == 'l') // location
+  if (aColID[0] == 'l' && aColID[1] == 'o') // location, need to check for "lo" not just "l" to avoid "label" column
   {
     return FetchLocation(aRow, aValue);
   }
