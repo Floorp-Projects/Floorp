@@ -314,12 +314,12 @@
     </content>
     <interface>
       <method name="openPopup">
-        <arg name="element"/>
-        <arg name="xpos"/>
-        <arg name="ypos"/>
-        <arg name="popuptype"/>
-        <arg name="anchoralignment"/>
-        <arg name="popupalignment"/>
+        <argument name="element"/>
+        <argument name="xpos"/>
+        <argument name="ypos"/>
+        <argument name="popuptype"/>
+        <argument name="anchoralignment"/>
+        <argument name="popupalignment"/>
         <body>
         <![CDATA[
           try {
