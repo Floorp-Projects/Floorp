@@ -129,9 +129,7 @@ static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
 extern nsICaseConversion * gCaseConv;
 
-#ifdef STANDALONE_STRING_TESTS
 static nsICaseConversion* gCaseConv;
-#endif
 
 static void CheckCaseConversion()
 {
