@@ -84,30 +84,18 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     . ./init.sh
 fi
 
-if [ -z "O_CRON" -o "$O_CRON" != "ON" ]
-then
-    tail -f ${LOGFILE}  &
-    TAILPID=$!
-fi
-
 for i in ${TESTS}
 do
     SCRIPTNAME=${i}.sh
     echo "Running Tests for $i"
-    (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file >> ${LOGFILE} 2>&1)
+    if [ "$O_CRON" = "ON" ]
+    then
+        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file >> ${LOGFILE} 2>&1)
+    else
+        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file 2>&1 | tee -a ${LOGFILE})
+    fi
 done
 
 SCRIPTNAME=all.sh
-
-if [ -z "O_CRON" -o "$O_CRON" != "ON" ]
-then
-    kill ${TAILPID}
-    if [ -n "$os_name" -a "$os_name" = "Windows" ]
-    then
-        echo "MKS special - killing the tail -f"
-        kill `ps | grep "tail -f ${LOGFILE}" | grep -v grep | 
-            sed -e "s/^ *//" -e "s/ .*//"`
-    fi
-fi
 
 . ${QADIR}/common/cleanup.sh
