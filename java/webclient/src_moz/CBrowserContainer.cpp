@@ -61,7 +61,7 @@ char *CBrowserContainer::DOMMouseListener_maskNames[] = {
     nsnull
 };
 
-static jboolean PROPERTIES_KEYS_INITED = JNI_FALSE;
+static jboolean STRING_CONSTANTS_INITED = JNI_FALSE;
 static jobject SCREEN_X_KEY = nsnull;
 static jobject SCREEN_Y_KEY = nsnull;
 static jobject CLIENT_X_KEY = nsnull;
@@ -77,6 +77,36 @@ static jobject FALSE_VALUE = nsnull;
 static jobject ONE_VALUE = nsnull;
 static jobject TWO_VALUE = nsnull;
 
+/**
+
+ * How to create a new listener type on the native side: <P>
+
+ * 1. add an entry in the gSupportedListenerInterfaces array defined in
+ * ns_util.cpp <P>
+
+ * 2. add a corresponding entry in the LISTENER_CLASSES enum in
+ * ns_util.h <P>
+
+ * 3. add a jstring to the string constant list in
+ * CBrowserContainer.cpp, below.
+
+ * 4. Initialize this jstring constant in CBrowserContainer.cpp
+ * initStringConstants() <P>
+
+ * 5. add an entry to the switch statement in NativeEventThread.cpp
+ * native{add,remove}Listener <P>
+
+ */
+
+/**
+
+ * We need one of these for each of the classes in
+ * gSupportedListenerInterfaces, defined in ns_util.cpp
+
+ */
+static jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
+static jstring MOUSE_LISTENER_CLASSNAME;
+
 #if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
 
 #define WC_ITOA(intVal, buf, radix) sprintf(buf, "%d", intVal)
@@ -91,7 +121,7 @@ static jobject TWO_VALUE = nsnull;
 
  */ 
 
-jboolean initPropertiesKeys();
+jboolean initStringConstants();
 
 CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
                                      WebShellInitContext *yourInitContext) :
@@ -102,6 +132,10 @@ CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
   	NS_INIT_REFCNT();
 	if (nsnull == gVm) { // declared in ../src_share/jni_util.h
         ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
+    }
+    // initialize the string constants (including properties keys)
+    if (!STRING_CONSTANTS_INITED) {
+        initStringConstants();
     }
 }
 
@@ -702,6 +736,7 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
     }  
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
                          DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
                          urlJStr);
     
@@ -749,6 +784,7 @@ CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCha
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
                          DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], 
                          nsnull);
     
@@ -773,6 +809,7 @@ CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChanne
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
                          DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], 
                          nsnull);
     
@@ -795,6 +832,7 @@ CBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aCha
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
                          DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], 
                          nsnull);
     
@@ -829,6 +867,7 @@ CBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader,
     
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, 
                          mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
                          DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
                          (jobject) statusMessage);
     
@@ -856,6 +895,7 @@ CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, 
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
                          DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], nsnull);
     
 	return NS_OK; 
@@ -881,6 +921,7 @@ CBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
+                         MOUSE_LISTENER_CLASSNAME,
                          DOMMouseListener_maskValues[MOUSE_DOWN_EVENT_MASK], 
                          properties);
 	return NS_OK; 
@@ -899,6 +940,7 @@ CBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
+                         MOUSE_LISTENER_CLASSNAME,
                          DOMMouseListener_maskValues[MOUSE_UP_EVENT_MASK], 
                          properties);
 	return NS_OK; 
@@ -922,6 +964,7 @@ CBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
+                         MOUSE_LISTENER_CLASSNAME,
                          DOMMouseListener_maskValues[MOUSE_CLICK_EVENT_MASK], 
                          properties);
 	return NS_OK; 
@@ -946,6 +989,7 @@ CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
+                         MOUSE_LISTENER_CLASSNAME,
                          DOMMouseListener_maskValues[MOUSE_DOUBLE_CLICK_EVENT_MASK], 
                          properties);
 	return NS_OK; 
@@ -964,6 +1008,7 @@ CBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
+                         MOUSE_LISTENER_CLASSNAME,
                          DOMMouseListener_maskValues[MOUSE_OVER_EVENT_MASK], 
                          properties);
 	return NS_OK; 
@@ -982,6 +1027,7 @@ CBrowserContainer::MouseOut(nsIDOMEvent* aMouseEvent)
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
+                         MOUSE_LISTENER_CLASSNAME,
                          DOMMouseListener_maskValues[MOUSE_OUT_EVENT_MASK], 
                          properties);
 	return NS_OK; 
@@ -1135,7 +1181,8 @@ jobject JNICALL CBrowserContainer::getPropertiesFromEvent(nsIDOMEvent *event)
 
 void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent)
 {
-    if (!properties) {
+    // if the initialization failed, don't modify the properties
+    if (!properties || !STRING_CONSTANTS_INITED) {
         return;
     }
     nsresult rv;
@@ -1148,13 +1195,7 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
     if (NS_FAILED(rv)) {
         return;
     }
-    // initialize the standard properties keys
-    if (!PROPERTIES_KEYS_INITED) {
-        // if the initialization failed, don't modify the properties
-        if (!initPropertiesKeys()) {
-            return;
-        }
-    }
+
     PRInt32 intVal;
     PRUint16 int16Val;
     PRBool boolVal;
@@ -1394,7 +1435,7 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
 // Local functions
 //
 
-jboolean initPropertiesKeys()
+jboolean initStringConstants()
 {
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
 
@@ -1469,6 +1510,18 @@ jboolean initPropertiesKeys()
                                        ::util_NewStringUTF(env, "2")))) {
         return JNI_FALSE;
     }
+    if (nsnull == (DOCUMENT_LOAD_LISTENER_CLASSNAME = (jstring)
+                   ::util_NewGlobalRef(env, 
+                                       ::util_NewStringUTF(env, 
+                                                           gSupportedListenerInterfaces[DOCUMENT_LOAD_LISTENER])))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (MOUSE_LISTENER_CLASSNAME = (jstring)
+                   ::util_NewGlobalRef(env, 
+                                       ::util_NewStringUTF(env, 
+                                                           gSupportedListenerInterfaces[MOUSE_LISTENER])))) {
+        return JNI_FALSE;
+    }
 
-    return PROPERTIES_KEYS_INITED = JNI_TRUE;
+    return STRING_CONSTANTS_INITED = JNI_TRUE;
 }

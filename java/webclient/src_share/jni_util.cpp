@@ -87,6 +87,7 @@ void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 
 void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
                           jobject webclientEventListener, 
+                          jstring eventListenerClassName,
                           jlong eventType, jobject eventData)
 {
 #ifdef BAL_INTERFACE
@@ -113,9 +114,10 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
 
     jclass clazz = env->GetObjectClass(nativeEventThread);
     jmethodID mid = env->GetMethodID(clazz, "nativeEventOccurred", 
-                                     "(Lorg/mozilla/webclient/WebclientEventListener;JLjava/lang/Object;)V");
+                                     "(Lorg/mozilla/webclient/WebclientEventListener;Ljava/lang/String;JLjava/lang/Object;)V");
     if ( mid != nsnull) {
         env->CallVoidMethod(nativeEventThread, mid, webclientEventListener,
+                            eventListenerClassName,
                             eventType, eventData);
     } else {
         util_LogMessage(3, "cannot call the Java Method!\n");

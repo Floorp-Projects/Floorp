@@ -30,6 +30,20 @@
 
 #include "ns_util.h"
 
+/**
+
+ * a null terminated array of listener interfaces we support.  This is
+ * used in NativeEventThread.cpp nativeAddListener,
+ * nativeRemoveListener, and in CBrowserContainer.cpp 
+
+ */
+
+const char *gSupportedListenerInterfaces[] = {
+    "org.mozilla.webclient.DocumentLoadListener",
+    "java.awt.event.MouseListener",
+    nsnull
+};
+
 void util_PostEvent(WebShellInitContext * initContext, PLEvent * event)
 {
     PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);

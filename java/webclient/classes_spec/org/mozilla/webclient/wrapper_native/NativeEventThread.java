@@ -351,20 +351,22 @@ void removeListener(WCEventListenerWrapper newListener)
 
  */
 
-void nativeEventOccurred(WebclientEventListener target, long eventType, 
+void nativeEventOccurred(WebclientEventListener target, 
+                         String targetClassName, long eventType, 
                          Object eventData)
 {
     ParameterCheck.nonNull(target);
+    ParameterCheck.nonNull(targetClassName);
 
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != windowControl);
     
     WebclientEvent event = null;
     
-    if (target instanceof DocumentLoadListener) {
+    if (DocumentLoadListener.class.getName().equals(targetClassName)) {
         event = new DocumentLoadEvent(this, eventType, eventData);
     }
-    else if (target instanceof MouseListener) {
+    else if (MouseListener.class.getName().equals(targetClassName)) {
         Assert.assert(target instanceof WCMouseListenerImpl);
         
         // We create a plain vanilla WebclientEvent, which the

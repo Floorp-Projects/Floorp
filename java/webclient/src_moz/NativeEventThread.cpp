@@ -85,7 +85,7 @@ static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static const char *NS_DOCSHELL_PROGID = "component://netscape/docshell/html";
 //static const char *NS_WEBBROWSER_PROGID = "component://netscape/embedding/browser/nsWebBrowser";
 
-extern const char * gBinDir;
+extern const char * gBinDir; // defined in WrapperFactoryImpl.cpp
 
 #ifdef XP_PC
 
@@ -159,27 +159,6 @@ char * errorMessages[] = {
 	"Unable to initialize the WebShell instance.",
 	"Unable to show the WebShell."
 };
-
-/**
-
- * a null terminated array of listener interfaces we support.
-
- */
-
-const char *gSupportedListenerInterfaces[] = {
-    "org.mozilla.webclient.DocumentLoadListener",
-    "java.awt.event.MouseListener",
-    nsnull
-};
-
-// these index into the gSupportedListenerInterfaces array
-
-typedef enum {
-    DOCUMENT_LOAD_LISTENER = 0,
-    MOUSE_LISTENER,
-    LISTENER_NOT_FOUND
-} LISTENER_CLASSES;
-
 
 //
 // JNI methods
