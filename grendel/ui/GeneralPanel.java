@@ -19,6 +19,7 @@
  * Created: Will Scullin <scullin@netscape.com>, 13 Oct 1997.
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.ui;
