@@ -53,6 +53,7 @@
 #define PK11_ARG_MODULE_PARAMETER "parameters="
 #define PK11_ARG_NSS_PARAMETER "NSS="
 #define PK11_ARG_FORTEZZA_FLAG "FORTEZZA"
+#define PK11_ARG_ESCAPE '\\'
 
 struct pk11argSlotFlagTable {
     char *name;
@@ -130,6 +131,22 @@ static PRBool pk11_argIsQuote(char c) {
     default: break;
     }
     return PR_FALSE;
+}
+
+static PRBool pk11_argHasChar(char *v, char c)
+{
+   for ( ;*v; v++) {
+	if (*v == c) return PR_TRUE;
+   }
+   return PR_FALSE;
+}
+
+static PRBool pk11_argHasBlanks(char *v)
+{
+   for ( ;*v; v++) {
+	if (pk11_argIsBlank(*v)) return PR_TRUE;
+   }
+   return PR_FALSE;
 }
 
 static char *pk11_argStrip(char *c) {
@@ -423,11 +440,10 @@ pk11_argDecodeSingleSlotInfo(char *name,char *params,PK11PreSlotInfo *slotInfo)
     	    slotInfo->askpw = 1;
 	} 
 	PORT_Free(askpw);
+	slotInfo->defaultFlags |= PK11_OWN_PW_DEFAULTS;
     }
-#ifdef notdef
-    slotInfo->hasRoots = pk11_argHasFlag("rootFlags","hasRoots",params);
-    slotInfo->isTrusted = pk11_argHasFlag("rootFlags","rootTrust",params);
-#endif
+    slotInfo->hasRootCerts = pk11_argHasFlag("rootFlags","hasRootCerts",params);
+    slotInfo->hasRootTrust = pk11_argHasFlag("rootFlags","hasRootTrust",params);
 }
 
 static char *
@@ -499,6 +515,78 @@ pk11_argParseSlotInfo(PRArenaPool *arena, char *slotParams, int *retCount)
     }
     *retCount = count;
     return slotInfo;
+}
+
+static char *pk11_nullString = "";
+
+static char *
+pk11_formatValue(char *value,char quote)
+{
+    char *vp,*vp2,*retval;
+    int size = 0, escapes = 0;
+
+    for (vp=value; *vp ;vp++) {
+	if ((*vp == quote) || (*vp == PK11_ARG_ESCAPE)) escapes++;
+	size++;
+    }
+    retval = PORT_ZAlloc(size+escapes+1);
+    if (retval == NULL) return NULL;
+    vp2 = retval;
+    for (vp=value; *vp; vp++) {
+	if ((*vp == quote) || (*vp == PK11_ARG_ESCAPE)) 
+				*vp2++ = PK11_ARG_ESCAPE;
+	*vp2++ = *vp;
+    }
+    return retval;
+}
+    
+static char *pk11_formatPair(char *name,char *value, char quote)
+{
+    char openQuote = quote;
+    char closeQuote = pk11_argGetPair(quote);
+    char *newValue = NULL;
+    char *returnValue;
+    PRBool need_quote = PR_FALSE;
+
+    if (!value || (*value == 0)) return pk11_nullString;
+
+    if (pk11_argHasBlanks(value) || pk11_argIsQuote(value[0]))
+							 need_quote=PR_TRUE;
+
+    if ((need_quote && pk11_argHasChar(value,closeQuote))
+				 || pk11_argHasChar(value,PK11_ARG_ESCAPE)) {
+	value = newValue = pk11_formatValue(value,quote);
+	if (newValue == NULL) return pk11_nullString;
+    }
+    if (need_quote) {
+    	returnValue = PR_smprintf("%s=%c%s%c",name,openQuote,value,closeQuote);
+    } else {
+    	returnValue = PR_smprintf("%s=%s",name,value);
+    }
+    if (returnValue == NULL) returnValue = pk11_nullString;
+
+    if (newValue) PORT_Free(newValue);
+
+    return returnValue;
+}
+
+static char *pk11_formatIntPair(char *name,unsigned long value, unsigned long def)
+{
+    char *returnValue;
+
+    if (value == def) return pk11_nullString;
+
+    returnValue = PR_smprintf("%s=%d",name,value);
+
+    return returnValue;
+}
+
+static void
+pk11_freePair(char *pair)
+{
+    if (pair && pair != pk11_nullString) {
+	PR_smprintf_free(pair);
+    }
 }
 
 #define MAX_FLAG_SIZE  sizeof("internal")+sizeof("FIPS")+sizeof("moduleDB")+\
@@ -577,7 +665,6 @@ pk11_makeCipherFlags(unsigned long ssl0, unsigned long ssl1)
 	}
     }
 
-    if (cipher == NULL) cipher = PR_smprintf("");
     return cipher;
 }
 
@@ -611,8 +698,6 @@ pk11_makeSlotFlags(unsigned long defaultFlags)
 	}
     }
 
-    if (flags == NULL) flags = PR_smprintf("");
-
     return flags;
 }
 
@@ -642,6 +727,7 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
 		  unsigned long timeout, unsigned char askpw_in,
 		  unsigned char hasRootCerts, unsigned char hasRootTrust) {
     char *askpw,*flags,*rootFlags,*slotString;
+    char *flagPair,*rootFlagsPair;
 	
     switch (askpw_in) {
     case 0xff:
@@ -656,9 +742,17 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
     }
     flags = pk11_makeSlotFlags(defaultFlags);
     rootFlags = pk11_makeRootFlags(hasRootCerts,hasRootTrust);
-    slotString = PR_smprintf("0x%08x=[slotFlags=%s askpw=%s timeout=%d rootFlags=%s]",slotID,flags,askpw,timeout,rootFlags);
-    PORT_Free(flags);
-    PORT_Free(rootFlags);
+    flagPair=pk11_formatPair("slotFlags",flags,'\'');
+    rootFlagsPair=pk11_formatPair("rootFlags",rootFlags,'\'');
+    if (flags) PR_smprintf_free(flags);
+    if (rootFlags) PORT_Free(rootFlags);
+    if (defaultFlags & PK11_OWN_PW_DEFAULTS) {
+    	slotString = PR_smprintf("0x%08x=[%s askpw=%s timeout=%d %s]",slotID,flagPair,askpw,timeout,rootFlagsPair);
+    } else {
+    	slotString = PR_smprintf("0x%08x=[%s %s]",slotID,flagPair,rootFlagsPair);
+    }
+    pk11_freePair(flags);
+    pk11_freePair(rootFlags);
     return slotString;
 }
 
@@ -668,7 +762,9 @@ pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
 	  unsigned long trustOrder, unsigned long cipherOrder,
 				unsigned long ssl0, unsigned long ssl1) {
     int slotLen, i;
-    char *slotParams, *ciphers, *nss, *nssFlags;
+    char *slotParams, *ciphers, *nss, *nssFlags, *tmp;
+    char *trustOrderPair,*cipherOrderPair,*slotPair,*cipherPair,*flagPair;
+
 
     /* now let's build up the string
      * first the slot infos
@@ -695,28 +791,47 @@ pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
 							isCritical); 
 	/* for now only the internal module is critical */
     ciphers = pk11_makeCipherFlags(ssl0, ssl1);
-    nss = PR_smprintf("trustOrder=%d cipherOrder=%d Flags='%s' slotParams={%s} ciphers='%s'",trustOrder,cipherOrder,nssFlags,slotParams,ciphers);
-    PORT_Free(nssFlags);
-    PR_smprintf_free(ciphers);
 
+    trustOrderPair=pk11_formatIntPair("trustOrder",trustOrder,0);
+    cipherOrderPair=pk11_formatIntPair("cipherOrder",cipherOrder,0);
+    slotPair=pk11_formatPair("slotParams",slotParams,'{'); /* } */
+    cipherPair=pk11_formatPair("ciphers",ciphers,'\'');
+    if (ciphers) PR_smprintf_free(ciphers);
+    flagPair=pk11_formatPair("Flags",nssFlags,'\'');
+    if (nssFlags) PORT_Free(nssFlags);
+    nss = PR_smprintf("%s %s %s %s %s",trustOrderPair,
+			cipherOrderPair,slotPair,cipherPair,flagPair);
+    pk11_freePair(trustOrderPair);
+    pk11_freePair(cipherOrderPair);
+    pk11_freePair(slotPair);
+    pk11_freePair(cipherPair);
+    pk11_freePair(flagPair);
+    tmp = pk11_argStrip(nss);
+    if (*tmp == '\0') {
+	PR_smprintf_free(nss);
+	nss = NULL;
+    }
     return nss;
 }
 
 static char *
 pk11_mkNewModuleSpec(char *dllName, char *commonName, char *parameters, 
-								char *nss) {
+								char *NSS) {
     char *moduleSpec;
+    char *lib,*name,*param,*nss;
 
-    if (dllName == NULL) dllName="";
-    if (nss == NULL) nss="";
     /*
      * now the final spec
      */
-    if (parameters) {
-	moduleSpec = PR_smprintf("library=\"%s\" name=\"%s\" parameters=\"%s\" NSS=\"%s\"",dllName,commonName,parameters,nss);
-    } else {
-	moduleSpec = PR_smprintf("library=\"%s\" name=\"%s\" NSS=\"%s\"",dllName,commonName,nss);
-    }
+    lib = pk11_formatPair("library",dllName,'\"');
+    name = pk11_formatPair("name",commonName,'\"');
+    param = pk11_formatPair("parameters",parameters,'\"');
+    nss = pk11_formatPair("NSS",NSS,'\"');
+    moduleSpec = PR_smprintf("%s %s %s %s", lib,name,param,nss);
+    pk11_freePair(lib);
+    pk11_freePair(name);
+    pk11_freePair(param);
+    pk11_freePair(nss);
     return (moduleSpec);
 }
 
