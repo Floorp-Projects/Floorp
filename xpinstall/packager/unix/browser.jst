@@ -75,6 +75,7 @@ if (verifyDiskSpace(communicatorFolder, srDest))
     registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/messenger/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/navigator/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"help.jar"),"content/help/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/xbl-marquee/");
 
     if (err==SUCCESS)
     {
