@@ -74,6 +74,8 @@ class mozXMLTerminal : public mozIXMLTerminal,
 
   NS_IMETHOD GetDocument(nsIDOMDocument** aDoc);
 
+  NS_IMETHOD GetWebShell(nsIWebShell** aWebShell);
+
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell);
 
   // nsIDocumentLoaderObserver interface
@@ -121,6 +123,9 @@ class mozXMLTerminal : public mozIXMLTerminal,
 
   /** initial input string to be sent to LineTerm */
   nsString           mFirstInput;
+
+  /** first input lock */
+  PRLock* mFirstInputLock;
 
   /** non-owning reference to containing XMLTermShell object */
   mozIXMLTermShell*  mXMLTermShell;

@@ -77,6 +77,7 @@ LtermGlobal ltermGlobal;
 
 
 int ltermClose(struct lterms *lts);
+static int ltermShellInit(struct lterms *lts);
 static int ltermCreatePipe(FILEDESC *writePIPE, FILEDESC *readPIPE);
 static int ltermCreateProcess(struct LtermProcess *ltp,
                               char *const argv[], int nostderr, int noexport);
@@ -388,7 +389,8 @@ int lterm_open(int lterm, char *const argv[], const char* cookie,
   /* TTY options */
   lts->options = options;
   lts->noTTYEcho = (options & LTERM_NOECHO_FLAG) != 0;
-  lts->disabledInputEcho = 0;
+  lts->disabledInputEcho = 1;
+  lts->restoreInputEcho = 1;
 
   nostderr = (options & LTERM_NOSTDERR_FLAG) != 0;
 
@@ -523,6 +525,38 @@ int lterm_open(int lterm, char *const argv[], const char* cookie,
   }
 
   LTERM_LOG(lterm_open,11,("cookie='%s'\n",lts->cookie));
+
+  /* Shell initialization string */
+  if (lts->processType == LTERM_UNKNOWN_PROCESS) {
+    lts->shellInitStr[0] = '\0';
+
+  } else {
+    int result;
+    char* shellInitFormat;
+
+    if ((lts->processType == LTERM_CSH_PROCESS) ||
+      (lts->processType == LTERM_TCSH_PROCESS)) {
+      /* C-shell family */
+      shellInitFormat = "setenv LTERM_COOKIE '%s'\n";
+
+    } else {
+      /* Bourne-shell family */
+      shellInitFormat = "LTERM_COOKIE='%s'; export LTERM_COOKIE\n";
+    }
+
+    if (strlen(shellInitFormat)+strlen(lts->cookie) <= MAXSHELLINITSTR+1) {
+      sprintf(lts->shellInitStr, shellInitFormat, lts->cookie);
+    } else {
+      LTERM_WARNING("lterm_open: Warning - shell initialization string too long\n");
+      lts->shellInitStr[0] = '\0';
+    }
+
+  }
+
+  LTERM_LOG(lterm_open,11,("shellInitStr='%s'\n",lts->shellInitStr));
+
+  /* Shell initialization commands have not been sent yet */
+  lts->shellInitFlag = 0;
 
   /* Initialize regular expression string matching command prompt */
   if ((ucslen(prompt_regexp) == 0) ||
@@ -813,7 +847,16 @@ int lterm_setecho(int lterm, int echo_flag)
     return -2;
   }
 
+  if (!lts->shellInitFlag) {
+    /* send shell initialization string */
+    if (ltermShellInit(lts) != 0) {
+      GLOBAL_UNLOCK;
+      return -1;
+    }
+  }
+
   lts->disabledInputEcho = !echo_flag;
+  lts->restoreInputEcho = 0;
 
   GLOBAL_UNLOCK;
 
@@ -849,6 +892,20 @@ int lterm_write(int lterm, const UNICHAR *buf, int count, int dataType)
 
   /* Save copy of input buffer file descriptor */
   writeBUFFER = lts->writeBUFFER;
+
+  if (lts->restoreInputEcho == 1) {
+    /* Restore TTY echo on input */
+    lts->restoreInputEcho = 0;
+    lts->disabledInputEcho = 0;
+  }
+
+  if (!lts->shellInitFlag) {
+    /* send shell initialization string */
+    if (ltermShellInit(lts) != 0) {
+      GLOBAL_UNLOCK;
+      return -1;
+    }
+  }
 
   GLOBAL_UNLOCK;
 
@@ -913,6 +970,8 @@ int lterm_write(int lterm, const UNICHAR *buf, int count, int dataType)
 
   return 0;
 }
+
+
 /** Reads a (possibly incomplete) line from LTERM
  * (documented in the LTERM interface)
  */
@@ -980,9 +1039,59 @@ int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
 
   RELEASE_UNILOCK(outputMutex,outputMutexLocked)
 
-  LTERM_LOG(lterm_read,11,("return code = %d\n", returnCode));
+  GLOBAL_LOCK;
+  if ((*opcodes != 0) && !lts->shellInitFlag) {
+    /* send shell initialization string */
+    if (ltermShellInit(lts) != 0) {
+      GLOBAL_UNLOCK;
+      return -1;
+    }
+  }
+  GLOBAL_UNLOCK;
+
+  LTERM_LOG(lterm_read,11,("return code = %d, opcodes=0x%x\n",
+                           returnCode, *opcodes));
 
   return returnCode;
+}
+
+
+/** Sends shell initialization string
+ * (WORKS UNDER GLOBAL_LOCK)
+ * @return 0 on success and -1 on error.
+ */
+static int ltermShellInit(struct lterms *lts)
+{
+  int shellInitLen = strlen(lts->shellInitStr);
+
+  LTERM_LOG(ltermShellInit,20,("sending shell initialization string\n"));
+
+  lts->shellInitFlag = 1;
+
+  if (shellInitLen > 0) {
+    /* Send shell initialization string */
+    UNICHAR temLine[PIPEHEADER+MAXCOL];
+    int remaining, encoded, byteCount;
+
+    utf8toucs(lts->shellInitStr, shellInitLen,
+              temLine+PIPEHEADER, MAXCOL,
+              1, &remaining, &encoded);
+    if (remaining > 0) {
+      LTERM_ERROR("ltermShellInit: Shell initialization string too long\n");
+      return -1;
+    }
+
+    temLine[0]         = (UNICHAR) encoded;
+    temLine[PHDR_TYPE] = (UNICHAR) LTERM_WRITE_PLAIN_INPUT;
+    byteCount = (PIPEHEADER+encoded)*sizeof(UNICHAR);
+
+    if (WRITE(lts->writeBUFFER, temLine, (SIZE_T)byteCount) != byteCount) {
+      LTERM_ERROR("ltermShellInit: Error in writing to input pipe buffer\n");
+      return -1;
+    }
+  }
+
+  return 0;
 }
 
 

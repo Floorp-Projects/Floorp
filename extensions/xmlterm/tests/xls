@@ -26,7 +26,8 @@ $imgdir = "file:/usr/share/pixmaps/mc";
 $ncols = 5;
 $ncols = $opt_cols if ($opt_cols);
 
-print "\e{S\a";                         # HTML stream escape sequence
+$cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
+print "\e{S$cookie\a";                  # HTML stream escape sequence
 print "<TABLE FRAME=none BORDER=0>";
 print "<COLGROUP COLSPAN=$ncols WIDTH=1*>";
 

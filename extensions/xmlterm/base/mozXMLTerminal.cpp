@@ -92,6 +92,7 @@ mozXMLTerminal::mozXMLTerminal() :
 
   mCommand(""),
   mPromptExpr(""),
+
   mFirstInput(""),
 
   mXMLTermShell(nsnull),
@@ -109,6 +110,7 @@ mozXMLTerminal::mozXMLTerminal() :
   mDragListener(nsnull)
 {
   NS_INIT_REFCNT();
+  mFirstInputLock = PR_NewLock();
 }
 
 
@@ -117,6 +119,8 @@ mozXMLTerminal::~mozXMLTerminal()
   if (mInitialized) {
     Finalize();
   }
+
+  PR_DestroyLock(mFirstInputLock);
 }
 
 
@@ -341,10 +345,12 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   result = mozXMLTermUtils::ConvertWebShellToDOMWindow(mWebShell,
                                               getter_AddRefs(outerDOMWindow));
 
-  if (NS_FAILED(result) || !outerDOMWindow)
+  if (NS_FAILED(result) || !outerDOMWindow) {
+    fprintf(stderr, "mozXMLTerminal::Activate: Failed to convert webshell\n");
     return NS_ERROR_FAILURE;
+  }
 
-  result = stream->Open(outerDOMWindow, "iframe1", "chrome://dummy",
+  result = stream->Open(outerDOMWindow, "iframet", "chrome://dummy",
                         "text/html", 800);
   if (NS_FAILED(result)) {
     fprintf(stderr, "mozXMLTerminal::Activate: Failed to open stream\n");
@@ -450,13 +456,6 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   // Save cookie
   mCookie = cookie;
 
-  if (mFirstInput.Length() > 0) {
-    // Send first input command line
-    result = SendTextAux(mFirstInput);
-    if (NS_FAILED(result))
-      return result;
-  }
-
   // Get the DOM event receiver for document
   nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
   result = mDOMDocument->QueryInterface(nsIDOMEventReceiver::GetIID(),
@@ -547,12 +546,26 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
   if (!mLineTermAux)
     return NS_ERROR_FAILURE;
 
+  nsAutoString sendStr = aString;
+
   // Preprocess string and check if it is to be consumed
   PRBool consumed = false;
-  result = mXMLTermSession->Preprocess(aString, consumed);
+  result = mXMLTermSession->Preprocess(sendStr, consumed);
 
   if (!consumed) {
-    result = mLineTermAux->Write(aString.GetUnicode(), aCookie);
+
+    PR_Lock(mFirstInputLock);
+
+    if (mFirstInput.Length() > 0) {
+      result = mLineTermAux->Write(mFirstInput.GetUnicode(), aCookie);
+      if (NS_FAILED(result))
+        return result;
+      mFirstInput = "";
+    }
+
+    PR_Unlock(mFirstInputLock);
+
+    result = mLineTermAux->Write(sendStr.GetUnicode(), aCookie);
     if (NS_FAILED(result)) {
       // Close LineTerm
       mLineTermAux->Close(aCookie);
@@ -642,7 +655,29 @@ NS_IMETHODIMP mozXMLTerminal::Poll(void)
 
   XMLT_LOG(mozXMLTerminal::Poll,20,("\n"));
 
-  return mXMLTermSession->ReadAll(mLineTermAux);
+  nsresult result;
+  PRBool processedData;
+
+  result = mXMLTermSession->ReadAll(mLineTermAux, processedData);
+  if (NS_FAILED(result))
+    return result;
+
+  if (processedData && (mFirstInput.Length() > 0)) {
+    // Send first input command line(s)
+
+    PR_Lock(mFirstInputLock);
+
+    result = mLineTermAux->Write(mFirstInput.GetUnicode(),
+                                 mCookie.GetUnicode());
+    mFirstInput = "";
+
+    PR_Unlock(mFirstInputLock);
+
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  return NS_OK;
 }
 
 
@@ -654,7 +689,9 @@ NS_IMETHODIMP mozXMLTerminal::Observe(nsISupports *aSubject,
   nsCOMPtr<mozILineTermAux> lineTermAux = do_QueryInterface(aSubject);
   PR_ASSERT(lineTermAux != nsnull);
 
-  return mXMLTermSession->ReadAll(lineTermAux);
+  PR_ASSERT(lineTermAux.get() == mLineTermAux.get());
+
+  return Poll();
 }
 
 
@@ -673,6 +710,21 @@ NS_IMETHODIMP mozXMLTerminal::GetDocument(nsIDOMDocument** aDoc)
 }
 
 
+// Returns web shell associated with XMLTerm
+NS_IMETHODIMP mozXMLTerminal::GetWebShell(nsIWebShell** aWebShell)
+{
+  if (!aWebShell)
+    return NS_ERROR_NULL_POINTER;
+  *aWebShell = nsnull;
+
+  NS_PRECONDITION(mWebShell, "bad state, null mWebShell");
+  if (!mWebShell)
+    return NS_ERROR_NOT_INITIALIZED;
+  return mWebShell->QueryInterface(nsIWebShell::GetIID(),
+                                    (void **)aWebShell);
+}
+
+
 // Returns presentation shell associated with XMLTerm
 NS_IMETHODIMP mozXMLTerminal::GetPresShell(nsIPresShell** aPresShell)
 {
@@ -686,6 +738,7 @@ NS_IMETHODIMP mozXMLTerminal::GetPresShell(nsIPresShell** aPresShell)
   return mPresShell->QueryInterface(nsIPresShell::GetIID(),
                                     (void **)aPresShell);
 }
+
 
 // nsIDocumentLoaderObserver methods
 NS_IMETHODIMP

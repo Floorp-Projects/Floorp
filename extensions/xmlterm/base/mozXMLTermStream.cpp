@@ -55,7 +55,7 @@
 #include "nsIDocument.h"
 
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 #include "mozXMLT.h"
 #include "mozXMLTermUtils.h"
@@ -92,11 +92,15 @@ mozXMLTermStream::mozXMLTermStream() :
   mUTF8Offset(0),
   mMaxResizeHeight(0),
   mDOMWindow( nsnull ),
+#ifdef NO_WORKAROUND
   mDOMIFrameElement( nsnull ),
   mContext( nsnull ),
   mLoadGroup( nsnull ),
   mChannel( nsnull ),
   mStreamListener( nsnull )
+#else // !NO_WORKAROUND
+  mDOMHTMLDocument( nsnull )
+#endif // !NO_WORKAROUND
 {
   NS_INIT_REFCNT();
 }
@@ -247,9 +251,8 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
   if (NS_FAILED(result) || !webShell)
     return NS_ERROR_FAILURE;
 
-  NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &result);
-  if (NS_FAILED(result))
-    return result;
+#ifdef NO_WORKAROUND
+  printf("mozXMLTermStream::Open, NO_WORKAROUND\n");
 
   nsCOMPtr<nsIInputStream> inputStream = this;
 
@@ -258,14 +261,17 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
   if (NS_FAILED(result))
     return result;
 
-  result = NS_NewLoadGroup(nsnull, nsnull, nsnull, getter_AddRefs(mLoadGroup));
+  result = NS_NewLoadGroup(nsnull, getter_AddRefs(mLoadGroup));
   if (NS_FAILED(result))
     return result;
 
   PRInt32 contentLength = 1024; // ??? What's this length
-  result = ioService->NewInputStreamChannel(uri, contentType, contentLength,
-                                            inputStream, mLoadGroup, nsnull,
-                                            getter_AddRefs(mChannel));
+  result = NS_NewInputStreamChannel(uri, contentType, contentLength,
+                                    inputStream, mLoadGroup,
+                                    nsnull,  // notificationCallbacks
+                                    nsIChannel::LOAD_NORMAL, 
+                                    nsnull, 0, 0,
+                                    getter_AddRefs(mChannel));
   if (NS_FAILED(result))
     return result;
 
@@ -314,6 +320,25 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
   result = mStreamListener->OnStartRequest(mChannel, mContext);
   if (NS_FAILED(result))
     return result;
+#else // !NO_WORKAROUND
+  printf("mozXMLTermStream::Open, WORKAROUND\n");
+
+  nsCOMPtr<nsIDOMDocument> innerDOMDoc;
+  result = mDOMWindow->GetDocument(getter_AddRefs(innerDOMDoc));
+  printf("mozXMLTermStream::Open,check1, 0x%x\n", result);
+  if (NS_FAILED(result) || !innerDOMDoc)
+    return NS_ERROR_FAILURE;
+
+  mDOMHTMLDocument = do_QueryInterface(innerDOMDoc);
+  printf("mozXMLTermStream::Open,check2, 0x%x\n", result);
+  if (!mDOMHTMLDocument)
+    return NS_ERROR_FAILURE;
+
+  result = mDOMHTMLDocument->Open();
+  printf("mozXMLTermStream::Open,check3, 0x%x\n", result);
+  if (NS_FAILED(result))
+    return result;
+#endif // !NO_WORKAROUND
 
   XMLT_LOG(mozXMLTermStream::Open,21,("returning\n"));
 
@@ -331,6 +356,7 @@ NS_IMETHODIMP mozXMLTermStream::Close(void)
   mUTF8Buffer = "";
   mUTF8Offset = 0;
 
+#ifdef NO_WORKAROUND
   PRUint32 sourceOffset = 0;
   PRUint32 count = 0;
   result = mStreamListener->OnDataAvailable(mChannel, mContext,
@@ -345,6 +371,17 @@ NS_IMETHODIMP mozXMLTermStream::Close(void)
   if (NS_FAILED(result))
     return result;
 
+  mContext = nsnull;
+  mLoadGroup = nsnull;
+  mChannel = nsnull;
+  mStreamListener = nsnull;
+
+#else // !NO_WORKAROUND
+  result = mDOMHTMLDocument->Close();
+  if (NS_FAILED(result))
+    return result;
+#endif // !NO_WORKAROUND
+
   if (mMaxResizeHeight && mDOMIFrameElement) {
     // Size frame to content
     result = SizeToContentHeight(mMaxResizeHeight);
@@ -354,10 +391,6 @@ NS_IMETHODIMP mozXMLTermStream::Close(void)
   // Release interfaces etc
   mDOMWindow = nsnull;
   mDOMIFrameElement = nsnull;
-  mContext = nsnull;
-  mLoadGroup = nsnull;
-  mChannel = nsnull;
-  mStreamListener = nsnull;
 
   return NS_OK;
 }
@@ -551,6 +584,7 @@ NS_IMETHODIMP mozXMLTermStream::Write(const PRUnichar* buf)
 
   mUTF8Offset = 0;
 
+#ifdef NO_WORKAROUND
   PRUint32 sourceOffset = 0;
 
   while (mUTF8Offset < mUTF8Buffer.Length()) {
@@ -560,6 +594,14 @@ NS_IMETHODIMP mozXMLTermStream::Write(const PRUnichar* buf)
     if (NS_FAILED(result))
       return result;
   }
+
+#else // !NO_WORKAROUND
+  result = mDOMHTMLDocument->Write(strBuf);
+  if (NS_FAILED(result))
+    return result;
+#endif // !NO_WORKAROUND
+
+  printf("mozXMLTermStream::Write: str=%s\n", mUTF8Buffer.GetBuffer());
 
   XMLT_LOG(mozXMLTermStream::Write,51,("returning mUTF8Offset=%d\n",
                                        mUTF8Offset));

@@ -111,7 +111,12 @@ public:
    */
   NS_IMETHOD GetDocument(nsIDOMDocument** aDoc) = 0;
 
-  /** Gets presentation shell with XMLterm
+  /** Gets web shell associated with XMLterm
+   * @param aWebShell (output) web shell
+   */
+  NS_IMETHOD GetWebShell(nsIWebShell** aWebShell) = 0;
+
+  /** Gets presentation shell associated with XMLterm
    * @param aPresShell (output) presentation shell
    */
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell) = 0;

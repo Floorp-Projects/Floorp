@@ -25,10 +25,8 @@
 
 #include <gtk/gtk.h>
 
-#if 0 // USE_SUPERWIN
 #include "gtkmozarea.h"
 #include "gdksuperwin.h"
-#endif // USE_SUPERWIN 
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -109,15 +107,8 @@ static gint event_processor_quit(gpointer data,
 int main( int argc, char *argv[] )
 {
   GtkWidget *mainWin = NULL;
-  GtkWidget *vertBox = NULL;
-  GtkWidget *horBox = NULL;
-  GtkWidget *testButton = NULL;
-#if 0 // USE_SUPERWIN
-  GdkSuperWin *termWidget = NULL;
-  GtkWidget *mozArea;
-#else // USE_SUPERWIN 
-  GtkWidget *termWidget = NULL;
-#endif // !USE_SUPERWIN 
+  GtkWidget *mozArea = NULL;
+  GdkSuperWin *superWin = NULL;
 
   nsIEventQueue *mEventQueue = nsnull;
 
@@ -144,7 +135,7 @@ int main( int argc, char *argv[] )
   }
 
   // Get the event queue for the thread.
-  result = eventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+  result = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                               &mEventQueue);
 
   if (!mEventQueue) {
@@ -156,14 +147,14 @@ int main( int argc, char *argv[] )
   }
 
     // Get the event queue for the thread
-    result = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &mEventQueue);
+    result = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
     if (NS_FAILED(result)) {
       NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
       return result;
     }
   }
 
-  // Creat pref object
+  // Create pref object
   nsCOMPtr<nsIPref> mPref = nsnull;
   result = nsComponentManager::CreateInstance(kPrefCID, NULL, 
                                              kIPrefIID, getter_AddRefs(mPref));
@@ -185,46 +176,23 @@ int main( int argc, char *argv[] )
   mainWin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size( GTK_WINDOW(mainWin), 600, 400);
   gtk_window_set_title(GTK_WINDOW(mainWin), "XMLterm");
-
-  // VBox top level
-  vertBox = gtk_vbox_new(FALSE, 0);
-  gtk_container_add(GTK_CONTAINER(mainWin), vertBox);
-  gtk_widget_show(vertBox);
-
-  // HBox for toolbar
-  horBox = gtk_hbox_new(FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(vertBox), horBox, FALSE, FALSE, 0);
-
-  testButton = gtk_button_new_with_label("Test");
-  gtk_box_pack_start (GTK_BOX (horBox), testButton, FALSE, FALSE, 0);
-  gtk_widget_show(testButton);
-
-  gtk_widget_show(horBox);
-
-#if 0 // USE_SUPERWIN
-  gtk_window_set_policy(GTK_WINDOW(mainWin), PR_TRUE, PR_TRUE, PR_FALSE);
+  
   mozArea = gtk_mozarea_new();
   gtk_container_add(GTK_CONTAINER(mainWin), mozArea);
-  gtk_widget_realize(GTK_WIDGET(mozArea));
-  termWidget = GTK_MOZAREA(mozArea)->superwin;
+  gtk_widget_realize(mozArea);
+  gtk_widget_show(mozArea);
+  superWin = GTK_MOZAREA(mozArea)->superwin;
 
-#else // USE_SUPERWIN 
-
-  // XMLterm layout widget
-  termWidget = gtk_layout_new(NULL, NULL);
-  GTK_WIDGET_SET_FLAGS(termWidget, GTK_CAN_FOCUS);
-  gtk_widget_set_app_paintable(termWidget, TRUE);
-
-  gtk_box_pack_start(GTK_BOX(vertBox), termWidget, TRUE, TRUE, 0);
-  gtk_widget_show_all(termWidget);
+  gdk_window_show(superWin->bin_window);                                       
+  gdk_window_show(superWin->shell_window);
 
   gtk_widget_show(mainWin);
-#endif // !USE_SUPERWIN 
+
 
   // Configure event handler
   gtk_signal_connect_after( GTK_OBJECT(mainWin), "configure_event",
                             GTK_SIGNAL_FUNC(event_processor_configure),
-                            termWidget);
+                            mainWin);
 
   // Cleanup and exit when window is deleted
   gtk_signal_connect( GTK_OBJECT(mainWin), "delete_event",
@@ -245,10 +213,10 @@ int main( int argc, char *argv[] )
   }
 
   // Determine window dimensions
-  GtkAllocation *alloc = &GTK_WIDGET(termWidget)->allocation;
+  GtkAllocation *alloc = &GTK_WIDGET(mainWin)->allocation;
     
-  // Initialize container to hold a web shell
-  result = gSimpleContainer->Init((nsNativeWidget *) termWidget,
+  // Initialize container it to hold a web shell
+  result = gSimpleContainer->Init((nsNativeWidget *) superWin,
                               alloc->width, alloc->height, mPref);
 
   if (NS_FAILED(result)) {

@@ -891,6 +891,7 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
     }
     return 0;
 
+  case U_J_CHAR:    /* Switch to null-terminated Javascript stream mode */
   case U_S_CHAR:    /* Switch to null-terminated stream mode, with cookie */
 
     if (lto->outputMode == LTERM1_SCREEN_MODE) {
@@ -904,14 +905,21 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
     /* Set stream codes */
     streamOpcodes = 0;
 
-    if (param1)
-      streamOpcodes |= LTERM_XMLSTREAM_CODE;
+    if (termChar == U_J_CHAR) {
+      /* Javascript stream */
+      streamOpcodes |= LTERM_JSSTREAM_CODE;
 
-    if (param2)
-      streamOpcodes |= LTERM_DOCSTREAM_CODE;
+    } else {
+      /* HTML/XML stream */
+      if (param1)
+        streamOpcodes |= LTERM_DOCSTREAM_CODE;
 
-    if (param3)
-      streamOpcodes |= LTERM_WINSTREAM_CODE;
+      if (param2)
+        streamOpcodes |= LTERM_XMLSTREAM_CODE;
+
+      if (param3)
+        streamOpcodes |= LTERM_WINSTREAM_CODE;
+    }
 
     /* Check if cookie matches */
     if ((strLength > 0) && (strcmp(paramCString, lts->cookie) == 0)) {

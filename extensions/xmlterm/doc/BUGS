@@ -1,9 +1,13 @@
 Known bugs
 ----------
 
-10 Nov 1999
+25 Dec 1999
 
 
-1. Command line completion output duplicates command line
+1. Early use of "xls -i" does not scroll properly
 
-2. Early use of "xls -i" does not scroll properly
+2. DOM/IFRAME bug: window.document object not defined for dynamically
+   created IFRAME elements using DOM
+
+3. Typing text in text input element causes input to be duplicated
+   in the command line

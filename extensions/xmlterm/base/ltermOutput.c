@@ -424,7 +424,7 @@ int ltermSwitchToStreamMode(struct lterms *lts, int streamOpcodes,
   struct LtermOutput *lto = &(lts->ltermOutput);
   int strLength;
 
-  LTERM_LOG(ltermSwitchToStreamMode,40,("streamOpcodes=0x%s\n",streamOpcodes));
+  LTERM_LOG(ltermSwitchToStreamMode,40,("streamOpcodes=0x%x\n",streamOpcodes));
 
   if (streamTerminator != NULL) {
     /* Save terminator string (may be null) */
@@ -846,7 +846,7 @@ static int ltermDecode(const char *rawBuf, int n_total,
   }
 
   LTERM_LOG(ltermDecode,41,("result=%d, incomplete=%d, n_decoded=%d\n",
-                            result, rawIncompleteBytes, n_decoded));
+                            result, *rawIncompleteBytes, n_decoded));
   LTERM_LOGUNICODE(ltermDecode,42,(decodedBuf, n_decoded));
 
   return n_decoded;

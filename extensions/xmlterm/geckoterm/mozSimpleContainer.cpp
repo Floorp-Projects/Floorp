@@ -30,6 +30,7 @@
 #include "nsISupports.h"
 
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
@@ -168,7 +169,11 @@ NS_IMETHODIMP mozSimpleContainer::Init(nsNativeWidget aNativeWidget,
   if (aPref) {
     mWebShell->SetPrefs(aPref);
   }
-  mWebShell->Show();
+
+  nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mWebShell);
+  if (window) {
+    window->SetVisibility(PR_TRUE);
+  }
 
   return NS_OK;
 }
@@ -290,7 +295,10 @@ NS_IMETHODIMP mozSimpleContainer::Resize(PRInt32 aWidth, PRInt32 aHeight)
 {
   if (!mWebShell) return NS_ERROR_FAILURE;
 
-  mWebShell->SetBounds(0, 0, aWidth, aHeight);
+  nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mWebShell);
+  if (window) {
+    window->SetPositionAndSize(0, 0, aWidth, aHeight, PR_FALSE);
+  }
   return NS_OK;
 }
 

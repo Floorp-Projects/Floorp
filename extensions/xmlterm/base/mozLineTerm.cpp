@@ -667,6 +667,8 @@ NS_IMETHODIMP mozLineTerm::SetEchoFlag(PRBool aEchoFlag)
     return NS_ERROR_FAILURE;
   }
 
+  XMLT_LOG(mozLineTerm::SetEchoFlag,70,("aEchoFlag=0x%x\n", aEchoFlag));
+
   if (aEchoFlag) {
     result = lterm_setecho(mLTerm, 1);
   } else {

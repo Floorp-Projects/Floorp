@@ -86,6 +86,7 @@ CPPSRCS = \
 	mozXMLTermSession.cpp    \
 	mozXMLTermListeners.cpp	 \
 	mozXMLTermShell.cpp	 \
+	mozXMLTermStream.cpp	 \
 	mozXMLTermFactory.cpp    \
 	$(NULL)
 
@@ -93,8 +94,8 @@ MODULE = xmlterm
 IS_COMPONENT = 1
 
 EXTRA_DSO_LDOPTS = $(TK_LIBS) \
-                   -L$(DIST)/bin $(NSPR_LIBS) \
-                   -L$(DIST)/bin -lxpcom
+                   $(MOZ_COMPONENT_LIBS) \
+                   $(NULL)
 
 XPIDLSRCS = \
 	mozILineTerm.idl     \
