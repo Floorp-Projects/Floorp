@@ -75,12 +75,12 @@ parseNextRDFXMLBlob (NET_StreamClass *stream, char* blob, int32 size)
     char c = blob[n];
     m = 0;
     somethingseenp = 0;
-    memset(f->line, '\0', RDF_BUF_SIZE);
+    memset(f->line, '\0', RDF_BUF_SIZE-1);
     if (f->holdOver[0] != '\0') {
       memcpy(f->line, f->holdOver, strlen(f->holdOver));
       m = strlen(f->holdOver);
       somethingseenp = 1;
-      memset(f->holdOver, '\0', RDF_BUF_SIZE);
+      memset(f->holdOver, '\0', RDF_BUF_SIZE-1);
     }   
     while ((n < size) && (wsc(c))) {c = blob[++n];}
   /*  f->line[m++] = c;

@@ -79,20 +79,17 @@ getTranslator (char* url)
     ans = MakeSCookDB(url);
   } else if (startsWith("rdf:CookieStore", url)) {
     ans = MakeCookieStore(url);
-    return MakeCookieStore(url);
   } else if (startsWith("rdf:find", url)) {
-    return MakeFindStore(url);
+    ans = MakeFindStore(url);
   } 
 #endif
-  if (ans) {
-    PL_HashTableAdd(dataSourceHash, url, ans);
-    return ans;
-  } else if (startsWith("http://", url)) {
-	  ans = MakeFileDB(url);
-	  return(ans);
-  } else
-    return NULL;
-  
+    else if (startsWith("http://", url)) {
+	  ans = MakeFileDB(url); 
+  } else {
+	  ans = NULL;
+  }
+  if (ans) PL_HashTableAdd(dataSourceHash, ans->url, ans);
+  return ans;
 }
 
 
@@ -1092,6 +1089,10 @@ void
 sendNotifications2 (RDFT r, RDF_EventType opType, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv)
 {
   RDFL rl = r->rdf;
+  if ((opType == RDF_ASSERT_NOTIFY) &&
+      (nlocalStoreHasAssertion(gLocalStore, u, s, v, type, !tv))) {
+	  return;
+  }
   while (rl) {
     sendNotifications(rl->rdf, opType, u, s, v, type, tv, r->url);
     rl = rl->next;

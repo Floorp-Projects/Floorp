@@ -240,7 +240,7 @@ addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v,
    }
    if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)) {
      f->genlAdded = true; 
-     if (strstr(resourceID(u), ".rdf")) {
+     if (strstr(resourceID(u), ".rdf") && startsWith("http", resourceID(u))) {
        RDFL rl = f->db->rdf;
        char* dburl = getBaseURL(resourceID(u));
        if (!startsWith(dburl, resourceID((RDF_Resource)v))) {
