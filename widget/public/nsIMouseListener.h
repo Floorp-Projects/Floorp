@@ -35,21 +35,21 @@ class nsIMouseListener {
     /**
      * Processes a mouse pressed event
      * @param aMouseEvent @see nsGUIEvent.h 
-     * @returns whether the event was consumed or ignored. @see nsEventStatus
+     * @return whether the event was consumed or ignored. @see nsEventStatus
      */
     virtual nsEventStatus MousePressed(const nsGUIEvent & aMouseEvent) = 0;
 
     /**
      * Processes a mouse release event
      * @param aMouseEvent @see nsGUIEvent.h 
-     * @returns whether the event was consumed or ignored. @see nsEventStatus
+     * @return whether the event was consumed or ignored. @see nsEventStatus
      */
     virtual nsEventStatus MouseReleased(const nsGUIEvent & aMouseEvent) = 0;
 
     /**
      * Processes a mouse clicked event
      * @param aMouseEvent @see nsGUIEvent.h 
-     * @returns whether the event was consumed or ignored. @see nsEventStatus
+     * @return whether the event was consumed or ignored. @see nsEventStatus
      *
      */
     virtual nsEventStatus MouseClicked(const nsGUIEvent & aMouseEvent) = 0;
@@ -57,7 +57,7 @@ class nsIMouseListener {
     /**
      * Processes a mouse moved event
      * @param aMouseEvent @see nsGUIEvent.h 
-     * @returns whether the event was consumed or ignored. @see nsEventStatus
+     * @return whether the event was consumed or ignored. @see nsEventStatus
      */
     virtual nsEventStatus MouseMoved(const nsGUIEvent & aMouseEvent) = 0;
 

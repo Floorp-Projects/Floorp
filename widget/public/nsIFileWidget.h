@@ -34,7 +34,7 @@ enum nsMode { eMode_load, eMode_save };
 
 /**
  * File selector widget.
- * Modally select files for loading or saving.
+ * Modally selects files for loading or saving from a list.
  */
 
 class nsIFileWidget : public nsISupports 
@@ -48,7 +48,7 @@ public:
   * @param aTitle the title of the widget
   * @param aMode the mode of the widget
   * @param aContext context for displaying widget
-  * @praam aToolkit toolkit associated with file widget
+  * @param aToolkit toolkit associated with file widget
   */ 
 
   virtual void  Create( nsIWidget *aParent,
@@ -72,7 +72,7 @@ public:
  /**
   * Show File Dialog. The dialog is displayed modally.
   *
-  * @returns     true if user selects <OK>, false if <CANCEL> is selected
+  * @return     PR_TRUE if user selects <OK>, PR_FALSE if <CANCEL> is selected
   *
   */
 
@@ -81,7 +81,7 @@ public:
  /**
   * Get the file or directory including the full path.
   *
-  * @param aFile file or directory selected
+  * @param aFile on exit it contains the file or directory selected
   */
   
   virtual void GetFile(nsString& aFile) = 0;
