@@ -29,6 +29,7 @@
  */
  
 interface nsIURI;
+interface nsIInputStream;
 interface nsISHEntry;
 
 typedef long nsDocShellInfoLoadType;
@@ -74,4 +75,6 @@ interface nsIDocShellLoadInfo : nsISupports
 	 attribute nsISHEntry SHEntry;
 
   attribute string target; // like _content, _blank etc
+
+    attribute nsIInputStream postDataStream;
 };

@@ -31,6 +31,7 @@
 // Interfaces Needed
 #include "nsIDocShellLoadInfo.h"
 #include "nsIURI.h"
+#include "nsIInputStream.h"
 #include "nsISHEntry.h"
 
 class nsDocShellLoadInfo : public nsIDocShellLoadInfo
@@ -52,6 +53,7 @@ protected:
    nsDocShellInfoLoadType           mLoadType;
    nsCOMPtr<nsISHEntry>             mSHEntry;
    nsCString mTarget;
+   nsCOMPtr<nsIInputStream>         mPostDataStream;
 };
 
 #endif /* nsDocShellLoadInfo_h__ */

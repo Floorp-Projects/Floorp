@@ -67,7 +67,7 @@ nsBrowserContentListener.prototype =
         throw Components.results.NS_NOINTERFACE;
 
     },
-    onStartURIOpen: function(uri, windowTarget)
+    onStartURIOpen: function(uri)
     {
         // ignore and don't abort
         return false;
@@ -78,8 +78,7 @@ nsBrowserContentListener.prototype =
         return null;
     },
 
-    doContent: function(contentType, command, windowTarget,
-                        request, contentHandler)
+    doContent: function(contentType, command, request, contentHandler)
     {
         // forward the doContent to our content area webshell
         var docShell = this.contentWindow.docShell;
@@ -94,12 +93,11 @@ nsBrowserContentListener.prototype =
         
         if (!contentListener) return false;
         
-        return contentListener.doContent(contentType, command, windowTarget, request, contentHandler);
+        return contentListener.doContent(contentType, command, request, contentHandler);
         
     },
 
-    isPreferred: function(contentType, command,
-                          windowTarget, desiredContentType)
+    isPreferred: function(contentType, command, desiredContentType)
     {
         // seems like we should be getting this from helper apps or something
         switch(contentType) {
@@ -118,8 +116,7 @@ nsBrowserContentListener.prototype =
         }
         return false;
     },
-    canHandleContent: function(contentType, command,
-                               windowTarget, desiredContentType)
+    canHandleContent: function(contentType, command, desiredContentType)
     {
         var docShell = this.contentWindow.docShell;
         var contentListener;
@@ -131,7 +128,7 @@ nsBrowserContentListener.prototype =
         }
         if (!contentListener) return false;
         
-        return contentListener.canHandleContent(contentType, command, windowTarget, desiredContentType);
+        return contentListener.canHandleContent(contentType, command, desiredContentType);
     },
     convertWindowToDocShell: function(win) {
         // don't know how to do this

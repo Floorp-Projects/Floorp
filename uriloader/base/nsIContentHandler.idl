@@ -27,15 +27,10 @@ interface nsIRequest;
 interface nsIContentHandler : nsISupports
 {
   /* HandleContent works as the name implies =).
-     aSourceContext --> The context associated with the originator of the content we are
-						trying to display. When is this typically used? Well, if handle
-						content needs to create a new window in order to display the content,
-						it needs to know about the dom window where the content originated from.
 	 aRequest is a request whose content type is already known (aContentType) */
   void handleContent(in string aContentType,
                      in string aCommand,
-                     in string aWindowTarget,
-					 in nsISupports aSourceContext,
+                     in nsISupports aWindowContext,
                      in nsIRequest aRequest);
 };
 

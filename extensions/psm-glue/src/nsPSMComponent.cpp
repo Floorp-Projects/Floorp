@@ -913,8 +913,7 @@ CertContentListener::init()
 }
 
 NS_IMETHODIMP
-CertContentListener::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget,
-                                    PRBool *aAbortOpen)
+CertContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
 {
   //if we don't want to handle the URI, return PR_TRUE in
   //*aAbortOpen
@@ -933,18 +932,16 @@ CertContentListener::GetProtocolHandler(nsIURI *aURI,
 NS_IMETHODIMP
 CertContentListener::IsPreferred(const char * aContentType,
                                  nsURILoadCommand aCommand,
-                                 const char * aWindowTarget,
                                  char ** aDesiredContentType,
                                  PRBool * aCanHandleContent)
 {
-  return CanHandleContent(aContentType, aCommand, aWindowTarget, 
+  return CanHandleContent(aContentType, aCommand,
                           aDesiredContentType, aCanHandleContent);
 }
 
 NS_IMETHODIMP
 CertContentListener::CanHandleContent(const char * aContentType,
                                       nsURILoadCommand aCommand,
-                                      const char * aWindowTarget,
                                       char ** aDesiredContentType,
                                       PRBool * aCanHandleContent)
 {
@@ -962,7 +959,6 @@ CertContentListener::CanHandleContent(const char * aContentType,
 NS_IMETHODIMP
 CertContentListener::DoContent(const char * aContentType,
                                nsURILoadCommand aCommand,
-                               const char * aWindowTarget,
                                nsIRequest * request,
                                nsIStreamListener ** aContentHandler,
                                PRBool * aAbortProcess)

@@ -774,11 +774,12 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                                  nsIInputStream* aPostDataStream,
                                  nsIInputStream* aHeadersDataStream)
 {
-  nsCAutoString target; target.AssignWithConversion(aTargetSpec);
+  nsresult rv;
+  nsAutoString target(aTargetSpec);
 
   switch(aVerb) {
     case eLinkVerb_New:
-      target = "_blank";
+      target.AssignWithConversion("_blank");
       // Fall into replace case
     case eLinkVerb_Undefined:
       // Fall through, this seems like the most reasonable action
@@ -799,7 +800,6 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
             nsCOMPtr<nsIURIContentListener> listener = do_QueryInterface(mContentListener);
             nsCAutoString spec; spec.AssignWithConversion(aURLSpec);
             PRBool abort = PR_FALSE;
-            nsresult rv;
             uri = do_CreateInstance(kSimpleURICID, &rv);
             NS_ASSERTION(NS_SUCCEEDED(rv), "can't create simple uri");
             if (NS_SUCCEEDED(rv))
@@ -808,14 +808,22 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                 NS_ASSERTION(NS_SUCCEEDED(rv), "spec is invalid");
                 if (NS_SUCCEEDED(rv))
                 {
-                    listener->OnStartURIOpen(uri, target, &abort);
+                    listener->OnStartURIOpen(uri, &abort);
                 }
             }
             return;
         }
 
-		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, PR_FALSE, target, aPostDataStream, 
-                 aHeadersDataStream, LOAD_LINK, nsnull); 
+        rv = InternalLoad(uri,                // New URI
+                          mCurrentURI,        // Referer URI
+                          nsnull,             // No onwer
+                          PR_TRUE,            // Inherit owner from document
+                          PR_FALSE,           // Do not stop active document
+                          target.GetUnicode(),// Window target
+                          aPostDataStream,    // Post data stream
+                          aHeadersDataStream, // Headers stream
+                          LOAD_LINK,          // Load type
+                          nsnull);            // No SHEntry
       }
       break;
     case eLinkVerb_Embed:
@@ -1120,8 +1128,16 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
           {
              postDataRandomAccess->Seek(PR_SEEK_SET, 0);
           }
-          InternalLoad(url, referrer, nsnull, PR_TRUE, PR_FALSE, nsnull, inputStream, 
-                    nsnull, LOAD_RELOAD_BYPASS_PROXY_AND_CACHE, nsnull); 
+          InternalLoad(url,                               // URI
+                       referrer,                          // Refering URI
+                       nsnull,                            // Owner
+                       PR_TRUE,                           // Inherit owner
+                       PR_FALSE,                          // Do not stop active Doc
+                       nsnull,                            // No window target
+                       inputStream,                       // Post data stream
+                       nsnull,                            // No headers stream
+                       LOAD_RELOAD_BYPASS_PROXY_AND_CACHE,// Load type
+                       nsnull);                           // No SHEntry
             
           }
         }

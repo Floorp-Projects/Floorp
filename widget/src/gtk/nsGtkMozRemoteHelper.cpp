@@ -1,4 +1,4 @@
-/*
+\/*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -109,7 +109,6 @@ RemoteHelperContentListener::~RemoteHelperContentListener()
 
 NS_IMETHODIMP
 RemoteHelperContentListener::OnStartURIOpen(nsIURI *aURI, 
-					    const char *aWindowTarget,
 					    PRBool *aAbortOpen)
 {
   return NS_OK;
@@ -126,7 +125,6 @@ RemoteHelperContentListener::GetProtocolHandler(nsIURI *aURI,
 NS_IMETHODIMP
 RemoteHelperContentListener::DoContent(const char *aContentType,
 				       nsURILoadCommand aCommand,
-				       const char *aWindowTarget,
 				       nsIRequest *aOpenedRequest,
 				       nsIStreamListener **aContentHandler,
 				       PRBool *aAbortProcess)
@@ -138,7 +136,6 @@ RemoteHelperContentListener::DoContent(const char *aContentType,
 NS_IMETHODIMP
 RemoteHelperContentListener::IsPreferred(const char *aContentType,
 					 nsURILoadCommand aCommand,
-					 const char *aWindowTarget,
 					 char **aDesiredContentType,
 					 PRBool *_retval)
 {
@@ -149,7 +146,6 @@ RemoteHelperContentListener::IsPreferred(const char *aContentType,
 NS_IMETHODIMP
 RemoteHelperContentListener::CanHandleContent(const char *aContentType,
 					      nsURILoadCommand aCommand,
-					      const char *aWindowTarget,
 					      char **aDesiredContentType,
 					      PRBool *_retval)
 {

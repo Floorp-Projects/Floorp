@@ -47,7 +47,6 @@ EmbedContentListener::Init(EmbedPrivate *aOwner)
 
 NS_IMETHODIMP
 EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
-				     const char *aWindowTarget,
 				     PRBool     *aAbortOpen)
 {
   nsresult rv;
@@ -78,7 +77,6 @@ EmbedContentListener::GetProtocolHandler(nsIURI              *aURI,
 NS_IMETHODIMP
 EmbedContentListener::DoContent(const char         *aContentType,
 				nsURILoadCommand    aCommand,
-				const char         *aWindowTarget,
 				nsIRequest         *aRequest,
 				nsIStreamListener **aContentHandler,
 				PRBool             *aAbortProcess)
@@ -89,7 +87,6 @@ EmbedContentListener::DoContent(const char         *aContentType,
 NS_IMETHODIMP
 EmbedContentListener::IsPreferred(const char        *aContentType,
 				  nsURILoadCommand   aCommand,
-				  const char        *aWindowTarget,
 				  char             **aDesiredContentType,
 				  PRBool            *aCanHandleContent)
 {
@@ -119,7 +116,6 @@ EmbedContentListener::IsPreferred(const char        *aContentType,
 NS_IMETHODIMP
 EmbedContentListener::CanHandleContent(const char        *aContentType,
 				       nsURILoadCommand   aCommand,
-				       const char        *aWindowTarget,
 				       char             **aDesiredContentType,
 				       PRBool            *_retval)
 {

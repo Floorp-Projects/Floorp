@@ -45,9 +45,6 @@ protected:
   // when they go away. This array stores weak references
   nsCOMPtr<nsISupportsArray> m_listeners;
 
-  // If set, we will try to prevent frame spoofing (set by pref in constructor)
-  PRBool mValidateOrigin;
-
   // prepare the load cookie for the window context
   nsresult SetupLoadCookie(nsISupports * aWindowContext, nsIInterfaceRequestor ** aLoadCookie);
 
@@ -55,12 +52,7 @@ protected:
   PRBool ShouldHandleContent(nsIURIContentListener * aCntListener, 
                              const char * aContentType,
                              nsURILoadCommand aCommand,
-                             const char * aWindowTarget,
                              char ** aContentTypeToUse);
-
-  NS_IMETHOD GetTarget(nsIChannel * aChannel, nsCString &aWindowTarget, 
-                       nsISupports * aWindowContext,
-                       nsISupports ** aRetargetedWindowContext);
 };
 
 #endif /* nsURILoader_h__ */

@@ -39,6 +39,7 @@
 #include "nsWeakReference.h"
 #include "nsIHttpChannel.h"
 
+#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
 
@@ -50,17 +51,6 @@
 
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 
-// Following are for Bug 13871: Prevent frameset spoofing
-#include "nsIPref.h"
-#include "nsIWebNavigation.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsICodebasePrincipal.h"
-#include "nsIHTMLDocument.h"
-
-#include "nsIScriptGlobalObject.h"
-
-static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 
@@ -75,14 +65,10 @@ class nsDocumentOpenInfo : public nsIStreamListener
 public:
     nsDocumentOpenInfo();
 
-    nsresult Init(nsISupports * aRetargetedWindowContext, 
-                  nsISupports * aOriginalWindowContext);
-
     NS_DECL_ISUPPORTS
 
     nsresult Open(nsIChannel* channel, 
                   nsURILoadCommand aCommand,
-                  const char * aWindowTarget,
                   nsISupports * aWindowContext);
 
     nsresult DispatchContent(nsIRequest *request, nsISupports * aCtxt);
@@ -108,7 +94,6 @@ protected:
     nsCOMPtr<nsIStreamListener> m_targetStreamListener;
     nsCOMPtr<nsISupports> m_originalContext;
     nsURILoadCommand mCommand;
-    nsCString m_windowTarget;
     PRBool  mOnStopFired;
 };
 
@@ -131,16 +116,6 @@ nsDocumentOpenInfo::~nsDocumentOpenInfo()
 {
 }
 
-nsresult nsDocumentOpenInfo::Init(nsISupports * aCurrentWindowContext, 
-                                  nsISupports * aOriginalWindowContext)
-{
-  // ask the window context if it has a uri content listener...
-  nsresult rv = NS_OK;
-  m_contentListener = do_GetInterface(aCurrentWindowContext, &rv);
-  m_originalContext = aOriginalWindowContext;
-  return rv;
-}
-
 nsDocumentOpenInfo* nsDocumentOpenInfo::Clone()
 {
   nsDocumentOpenInfo* newObject;
@@ -149,7 +124,6 @@ nsDocumentOpenInfo* nsDocumentOpenInfo::Clone()
   if (newObject) {
     newObject->m_contentListener = m_contentListener;
     newObject->mCommand          = mCommand;
-    newObject->m_windowTarget    = m_windowTarget;
     newObject->m_originalContext = m_originalContext;
   }
 
@@ -185,7 +159,6 @@ PRBool nsDocumentOpenInfo::ProcessCanceledCase(nsIRequest *request)
 
 nsresult nsDocumentOpenInfo::Open(nsIChannel *aChannel,  
                                   nsURILoadCommand aCommand,
-                                  const char * aWindowTarget,
                                   nsISupports * aWindowContext)
 {
    // this method is not complete!!! Eventually, we should first go
@@ -196,9 +169,15 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel *aChannel,
   // But for now, I'm going to let necko do the work for us....
 
   nsresult rv = NS_OK;
+
   // store any local state
-  m_windowTarget = aWindowTarget;
   mCommand = aCommand;
+
+  m_originalContext = aWindowContext;
+
+  // ask the window context if it has a uri content listener...
+  m_contentListener = do_GetInterface(aWindowContext, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   // now just open the channel!
   if (aChannel){
@@ -286,7 +265,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   nsCOMPtr<nsIStreamListener> contentStreamListener;
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
   if (!aChannel) {
-      printf(">>> QI for channel from request failed!!\n");
       return NS_ERROR_FAILURE;
   }
 
@@ -294,7 +272,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   if (NS_FAILED(rv)) return rv;
 
    // go to the uri dispatcher and give them our stuff...
-  NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
+  nsCOMPtr<nsIURILoader> uriLoader;
+  uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsIURIContentListener> contentListener;
@@ -305,13 +284,13 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     //              content type.
     //
     PRBool abortDispatch = PR_FALSE;
-    rv = pURILoader->DispatchContent(contentType, mCommand, m_windowTarget, 
-                                     request, aCtxt, 
-                                     m_contentListener, 
-                                     m_originalContext,
-                                     getter_Copies(desiredContentType), 
-                                     getter_AddRefs(contentListener),
-                                     &abortDispatch);  
+    rv = uriLoader->DispatchContent(contentType, mCommand, 
+                                    request, aCtxt, 
+                                    m_contentListener, 
+                                    m_originalContext,
+                                    getter_Copies(desiredContentType), 
+                                    getter_AddRefs(contentListener),
+                                    &abortDispatch);  
 
     // if the uri loader says to abort the dispatch then someone
     // else must have stepped in and taken over for us...so stop..
@@ -366,7 +345,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
         aChannel->SetLoadFlags(loadFlags);
       }
 
-      rv = contentListener->DoContent(contentTypeToUse, mCommand, m_windowTarget, 
+      rv = contentListener->DoContent(contentTypeToUse, mCommand, 
                                     request, getter_AddRefs(contentStreamListener),
                                     &bAbortProcess);
 
@@ -456,13 +435,6 @@ nsURILoader::nsURILoader()
 {
   NS_INIT_ISUPPORTS();
   NS_NewISupportsArray(getter_AddRefs(m_listeners));
- 
-  // Check pref to see if we should prevent frameset spoofing
-  mValidateOrigin = PR_TRUE; // secure by default, pref disables check
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  NS_ASSERTION(prefs,"nsURILoader: could not get prefs service!\n");
-  if (prefs)
-    prefs->GetBoolPref("browser.frame.validate_origin", &mValidateOrigin);
 }
 
 nsURILoader::~nsURILoader()
@@ -505,275 +477,14 @@ NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aCo
 
 NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel, 
                                    nsURILoadCommand aCommand,
-                                   const char * aWindowTarget,
                                    nsISupports * aWindowContext)
 {
-  return OpenURIVia(channel, aCommand, aWindowTarget, aWindowContext, 0 /* ip address */); 
-}
-
-//
-// Bug 13871: Prevent frameset spoofing
-// Check if origin document uri is the equivalent to target's principal.
-// This takes into account subdomain checking if document.domain is set for
-// Nav 4.x compatability.
-//
-// The following was derived from nsCodeBasePrincipal::Equals but in addition
-// to the host PL_strcmp, it accepts a subdomain (nsHTMLDocument::SetDomain)
-// if the document.domain was set.
-//
-static
-PRBool SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI, PRBool aDocumentDomainSet)
-{
-  nsXPIDLCString targetScheme;
-  nsresult rv = aTargetURI->GetScheme(getter_Copies(targetScheme));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetScheme, PR_TRUE);
-
-  nsXPIDLCString originScheme;
-  rv = aOriginURI->GetScheme(getter_Copies(originScheme));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originScheme, PR_TRUE);
-
-  if (PL_strcmp(targetScheme, originScheme))
-    return PR_FALSE; // Different schemes - check fails
-
-  if (! PL_strcmp(targetScheme, "file"))
-    return PR_TRUE; // All file: urls are considered to have the same origin.
-
-  if (! PL_strcmp(targetScheme, "imap") ||
-      ! PL_strcmp(targetScheme, "mailbox") ||
-      ! PL_strcmp(targetScheme, "news"))
-  {
-
-    // Each message is a distinct trust domain; use the whole spec for comparison
-    nsXPIDLCString targetSpec;
-    rv =aTargetURI->GetSpec(getter_Copies(targetSpec));
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetSpec, PR_TRUE);
-
-    nsXPIDLCString originSpec;
-    rv = aOriginURI->GetSpec(getter_Copies(originSpec));
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originSpec, PR_TRUE);
-
-    return (! PL_strcmp(targetSpec, originSpec)); // True if full spec is same, false otherwise
-  }
-
-  // Compare ports.
-  int targetPort, originPort;
-  rv = aTargetURI->GetPort(&targetPort);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
-
-  rv = aOriginURI->GetPort(&originPort);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
-
-  if (targetPort != originPort)
-    return PR_FALSE; // Different port - check fails
-
-  // Need to check the hosts
-  nsXPIDLCString targetHost;
-  rv = aTargetURI->GetHost(getter_Copies(targetHost));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetHost, PR_TRUE);
-
-  nsXPIDLCString originHost;
-  rv = aOriginURI->GetHost(getter_Copies(originHost));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originHost, PR_TRUE);
-
-  if (!PL_strcmp(targetHost, originHost))
-    return PR_TRUE; // Hosts are the same - check passed
-  
-  // If document.domain was set, do the relaxed check
-  // Right align hostnames and compare - ensure preceeding char is . or /
-  if (aDocumentDomainSet)
-  {
-    int targetHostLen = PL_strlen(targetHost);
-    int originHostLen = PL_strlen(originHost);
-    int prefixChar = originHostLen-targetHostLen-1;
-
-    return ((originHostLen > targetHostLen) &&
-            (! PL_strcmp((originHost+prefixChar+1), targetHost)) &&
-            (originHost[prefixChar] == '.' || originHost[prefixChar] == '/'));
-  }
-
-  return PR_FALSE; // document.domain not set and hosts not same - check failed
-}
-
-//
-// Bug 13871: Prevent frameset spoofing
-//
-// This routine answers: 'Is origin's document from same domain as target's document?'
-// Be optimistic that domain is same - error cases all answer 'yes'.
-//
-// We have to compare the URI of the actual document loaded in the origin,
-// ignoring any document.domain that was set, with the principal URI of the
-// target (including any document.domain that was set).  This puts control
-// of loading in the hands of the target, which is more secure. (per Nav 4.x)
-//
-static
-PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem, nsIDocShellTreeItem* aTargetTreeItem)
-{
-  // Get origin document uri (ignoring document.domain)
-  nsCOMPtr<nsIWebNavigation> originWebNav(do_QueryInterface(aOriginTreeItem));
-  NS_ENSURE_TRUE(originWebNav, PR_TRUE);
-
-  nsCOMPtr<nsIURI> originDocumentURI;
-  nsresult rv = originWebNav->GetCurrentURI(getter_AddRefs(originDocumentURI));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originDocumentURI, PR_TRUE);
-
-  // Get target principal uri (including document.domain)
-  nsCOMPtr<nsIDOMDocument> targetDOMDocument(do_GetInterface(aTargetTreeItem));
-  NS_ENSURE_TRUE(targetDOMDocument, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocument> targetDocument(do_QueryInterface(targetDOMDocument));
-  NS_ENSURE_TRUE(targetDocument, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIPrincipal> targetPrincipal;
-  rv = targetDocument->GetPrincipal(getter_AddRefs(targetPrincipal));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipal, rv);
-
-  nsCOMPtr<nsICodebasePrincipal> targetCodebasePrincipal(do_QueryInterface(targetPrincipal));
-  NS_ENSURE_TRUE(targetCodebasePrincipal, PR_TRUE);
-
-  nsCOMPtr<nsIURI> targetPrincipalURI;
-  rv = targetCodebasePrincipal->GetURI(getter_AddRefs(targetPrincipalURI));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipalURI, PR_TRUE);
-
-  // Find out if document.domain was set for HTML documents
-  PRBool documentDomainSet = PR_FALSE;
-  nsCOMPtr<nsIHTMLDocument> targetHTMLDocument(do_QueryInterface(targetDocument));
-
-  // If we don't have an HTML document, fall through with documentDomainSet false
-  if (targetHTMLDocument) {
-    targetHTMLDocument->WasDomainSet(&documentDomainSet);
-  }
-
-  // Is origin same principal or a subdomain of target's document.domain
-  // Compare actual URI of origin document, not origin principal's URI. (Per Nav 4.x)
-  return SameOrSubdomainOfTarget(originDocumentURI, targetPrincipalURI, documentDomainSet);
-}
-
-NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel *channel, nsCString &aWindowTarget, 
-                                     nsISupports * aWindowContext,
-                                     nsISupports ** aRetargetedWindowContext)
-{
-  nsAutoString name; name.AssignWithConversion(aWindowTarget);
-  nsCOMPtr<nsIDocShellTreeItem> windowCtxtAsTreeItem (do_GetInterface(aWindowContext));
-  nsCOMPtr<nsIDocShellTreeItem>  treeItem;
-  *aRetargetedWindowContext = nsnull;
-
-  PRBool mustMakeNewWindow = PR_FALSE;
-
-  if(!name.Length() || name.EqualsIgnoreCase("_self"))
-  {
-      *aRetargetedWindowContext = aWindowContext;
-  }
-  else if (name.EqualsIgnoreCase("_blank") || name.EqualsIgnoreCase("_new"))
-  {
-      mustMakeNewWindow = PR_TRUE;
-      aWindowTarget.Assign("");
-  }
-  else if(name.EqualsIgnoreCase("_parent"))
-  {
-      windowCtxtAsTreeItem->GetSameTypeParent(getter_AddRefs(treeItem));
-      if(!treeItem)
-        *aRetargetedWindowContext = aWindowContext;
-  }
-  else if(name.EqualsIgnoreCase("_top"))
-  {
-      windowCtxtAsTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(treeItem));
-      if(!treeItem)
-        *aRetargetedWindowContext = aWindowContext;
-  }
-  else if(name.EqualsIgnoreCase("_content"))
-  {
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-    windowCtxtAsTreeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-
-    if (treeOwner)
-       treeOwner->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
-    else
-    {
-      NS_ERROR("Someone isn't setting up the tree owner.  You might like to try that."
-          "Things will.....you know, work.");
-    }
-  }
-  else
-  {
-    windowCtxtAsTreeItem->FindItemWithName(name.GetUnicode(), nsnull, getter_AddRefs(treeItem));
-
-    // The named window cannot be found so it must be created to receive the
-    // channel data.
-
-    if (!treeItem) {
-      mustMakeNewWindow = PR_TRUE;
-    }
-
-    // Bug 13871: Prevent frameset spoofing
-    //     See BugSplat 336170, 338737 and XP_FindNamedContextInList in the classic codebase
-    //     Per Nav's behaviour:
-    //         - pref controlled: "browser.frame.validate_origin" (mValidateOrigin)
-    //         - allow load if host of target or target's parent is same as host of origin
-    //         - allow load if target is a top level window
-
-    // Check to see if pref is true
-    if (mValidateOrigin && windowCtxtAsTreeItem && treeItem) {
-
-       // Is origin frame from the same domain as target frame?
-       if (! ValidateOrigin(windowCtxtAsTreeItem, treeItem)) {
-
-         // No.  Is origin frame from the same domain as target's parent?
-         nsCOMPtr<nsIDocShellTreeItem> targetParentTreeItem;
-         nsresult rv = treeItem->GetSameTypeParent(getter_AddRefs(targetParentTreeItem));
-         if (NS_SUCCEEDED(rv) && targetParentTreeItem) {
-           if (! ValidateOrigin(windowCtxtAsTreeItem, targetParentTreeItem)) {
-
-             // Neither is from the origin domain, send load to a new window (_blank)
-             *aRetargetedWindowContext = aWindowContext;
-             aWindowTarget.Assign("_blank");
-           } // else (target's parent from origin domain) allow this load
-         } // else (no parent) allow this load since shell is a toplevel window
-       } // else (target from origin domain) allow this load
-     } // else (pref is false) allow this load
-  }
-
-  if (mustMakeNewWindow) {
-      nsCOMPtr<nsIDOMWindowInternal> parentWindow;
-
-      if (aWindowContext)
-      {
-        parentWindow = do_GetInterface(aWindowContext);
-
-        if (!parentWindow)
-        {
-          return NS_ERROR_FAILURE;
-        }
-      }
-
-      // Create a new window (context) so that the uri loader has a proper
-      // target to push the content into.
-
-      nsCOMPtr<nsIDOMWindow> newWindow;
-      parentWindow->Open(NS_LITERAL_STRING(""),
-                         NS_ConvertASCIItoUCS2(aWindowTarget),
-                         nsLiteralString(nsnull) /* NULL string*/, getter_AddRefs(newWindow));
-
-      nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(newWindow);
-      nsIDocShell *docShell = nsnull;
-      sgo->GetDocShell(&docShell);
-
-      *aRetargetedWindowContext = (nsISupports *) docShell;
-  }
-
-  nsCOMPtr<nsISupports> treeItemCtxt (do_QueryInterface(treeItem));
-  if (!*aRetargetedWindowContext)  
-  {
-    *aRetargetedWindowContext = treeItemCtxt;
-  }
-
-  NS_IF_ADDREF(*aRetargetedWindowContext);
-  return NS_OK;
+  return OpenURIVia(channel, aCommand, aWindowContext, 0 /* ip address */); 
 }
 
 NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel *channel, 
                                       nsURILoadCommand aCommand,
-                                      const char * aWindowTarget,
-                                      nsISupports * aOriginalWindowContext,
+                                      nsISupports * aWindowContext,
                                       PRUint32 aLocalIP)
 {
   // we need to create a DocumentOpenInfo object which will go ahead and open the url
@@ -785,37 +496,29 @@ NS_IMETHODIMP nsURILoader::OpenURIVia(nsIChannel *channel,
 
   // Let the window context's uriListener know that the open is starting.  This
   // gives that window a chance to abort the load process.
-  nsCOMPtr<nsIURIContentListener> winContextListener(do_GetInterface(aOriginalWindowContext));
-  if(winContextListener)
-    {
+  nsCOMPtr<nsIURIContentListener> winContextListener(do_GetInterface(aWindowContext));
+  if(winContextListener) {
       // get channel from request
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
-    if(uri)
-      {
+    if(uri) {
       PRBool doAbort = PR_FALSE;
-      winContextListener->OnStartURIOpen(uri, aWindowTarget, &doAbort);
+      winContextListener->OnStartURIOpen(uri, &doAbort);
          
       if(doAbort)
          return NS_OK;
-      }   
-    }
-
-  nsCAutoString windowTarget(aWindowTarget);
-  nsCOMPtr<nsISupports> retargetedWindowContext;
-  NS_ENSURE_SUCCESS(GetTarget(channel, windowTarget, aOriginalWindowContext, getter_AddRefs(retargetedWindowContext)), NS_ERROR_FAILURE);
+    }   
+  }
 
   NS_NEWXPCOM(loader, nsDocumentOpenInfo);
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(loader);
 
   nsCOMPtr<nsIInterfaceRequestor> loadCookie;
-  SetupLoadCookie(retargetedWindowContext, getter_AddRefs(loadCookie));
-
-  loader->Init(retargetedWindowContext, aOriginalWindowContext);    // Extra Info
+  SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookie));
 
   // now instruct the loader to go ahead and open the url
-  rv = loader->Open(channel, aCommand, windowTarget, retargetedWindowContext);
+  rv = loader->Open(channel, aCommand, aWindowContext);
   NS_RELEASE(loader);
 
   return rv;
@@ -947,16 +650,15 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext,
 PRBool nsURILoader::ShouldHandleContent(nsIURIContentListener * aCntListener, 
                                         const char * aContentType,
                                         nsURILoadCommand aCommand,
-                                        const char * aWindowTarget,
                                         char ** aContentTypeToUse)
 {
   PRBool foundContentHandler = PR_FALSE;
   if (aCommand == nsIURILoader::viewUserClick)
-    aCntListener->IsPreferred(aContentType, aCommand, aWindowTarget, 
+    aCntListener->IsPreferred(aContentType, aCommand,
                                 aContentTypeToUse, 
                                 &foundContentHandler);
   else
-    aCntListener->CanHandleContent(aContentType, aCommand, aWindowTarget, 
+    aCntListener->CanHandleContent(aContentType, aCommand,
                                    aContentTypeToUse, 
                                    &foundContentHandler);
   return foundContentHandler;
@@ -964,7 +666,6 @@ PRBool nsURILoader::ShouldHandleContent(nsIURIContentListener * aCntListener,
 
 NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
                                            nsURILoadCommand aCommand,
-                                           const char * aWindowTarget,
                                            nsIRequest *request, 
                                            nsISupports * aCtxt, 
                                            nsIURIContentListener * aContentListener,
@@ -992,69 +693,57 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIURIContentListener> listenerToUse = aContentListener;
-  PRBool skipRetargetingSearch = PR_FALSE;
-  // How do we determine whether we need to ask any registered content
-  // listeners if they want a crack at the content?
-  // (1) if the window target is blank or new, then we don't want to
-  //     ask...
-  if (!nsCRT::strcasecmp(aWindowTarget, "_blank") || !nsCRT::strcasecmp(aWindowTarget, "_new"))
-    skipRetargetingSearch = PR_TRUE;
-  else
-  {
-    // (2) if the original content listener is NULL and we have a
-    //     target name then we must not be a window open with that
-    //     target name so skip the content listener search and skip to
-    //     the part that brings up the new window.
-    if (aWindowTarget && *aWindowTarget && !aContentListener)
-      skipRetargetingSearch = PR_TRUE;
-  }
-  
-  // find a content handler that can and will handle the content
-  if (!skipRetargetingSearch)
-  {
-    PRBool foundContentHandler = PR_FALSE;
-    if (listenerToUse)
-      foundContentHandler = ShouldHandleContent(listenerToUse, aContentType, 
-                                                aCommand, aWindowTarget, aContentTypeToUse);
+
+  PRBool foundContentHandler = PR_FALSE;
+  if (listenerToUse)
+    foundContentHandler = ShouldHandleContent(listenerToUse,
+                                              aContentType, 
+                                              aCommand,
+                                              aContentTypeToUse);
                                             
 
-    // if it can't handle the content, scan through the list of
-    // registered listeners
-    if (!foundContentHandler)
+  // if it can't handle the content, scan through the list of
+  // registered listeners
+  if (!foundContentHandler)
+  {
+    PRUint32 count = 0;
+    PRInt32 i;
+    
+    // keep looping until we get a content listener back
+    m_listeners->Count(&count);
+    for(i = 0; i < (PRInt32)count && !foundContentHandler; i++)
     {
-       PRInt32 i = 0;
-       // keep looping until we get a content listener back
-       PRUint32 count; m_listeners->Count(&count);
-       for(i = 0; i < PRInt32(count) && !foundContentHandler; i++)
-       {
-          //nsIURIContentListener's aren't refcounted.
-          nsWeakPtr weakListener;
-          m_listeners->QueryElementAt(i, NS_GET_IID(nsIWeakReference),
-                                      getter_AddRefs(weakListener));
+      //nsIURIContentListener's aren't refcounted.
+      nsWeakPtr weakListener;
+      nsCOMPtr<nsIURIContentListener> listener;
+
+      m_listeners->QueryElementAt(i, NS_GET_IID(nsIWeakReference),
+                                  getter_AddRefs(weakListener));
          
-          nsCOMPtr<nsIURIContentListener> listener =
-            do_QueryReferent(weakListener);
-          if (listener)
-          {
-              foundContentHandler = ShouldHandleContent(listener, aContentType, 
-                                                        aCommand, aWindowTarget, aContentTypeToUse);
-              if (foundContentHandler)
-                listenerToUse = listener;
-          } else {
-            // remove from the listener list, and reset i
-            m_listeners->RemoveElementAt(i);
-            i--;
-          }
-      } // for loop
-    } // if we can't handle the content
+      listener = do_QueryReferent(weakListener);
+      if (listener)
+      {
+        foundContentHandler = ShouldHandleContent(listener,
+                                                  aContentType, 
+                                                  aCommand,
+                                                  aContentTypeToUse);
+        if (foundContentHandler) {
+          listenerToUse = listener;
+        }
+      } else {
+        // remove from the listener list, and reset i
+        m_listeners->RemoveElementAt(i);
+        i--;
+      }
+    } // for loop
+  } // if we can't handle the content
 
 
-    if (foundContentHandler && listenerToUse)
-    {
-      *aContentListenerToUse = listenerToUse;
-      NS_IF_ADDREF(*aContentListenerToUse);
-      return rv;
-    }
+  if (foundContentHandler && listenerToUse)
+  {
+    *aContentListenerToUse = listenerToUse;
+    NS_IF_ADDREF(*aContentListenerToUse);
+    return rv;
   }
 
   // no registered content listeners to handle this type!!! so go to the register 
@@ -1067,10 +756,10 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   handlerContractID += aContentType;
   
   nsCOMPtr<nsIContentHandler> aContentHandler;
-  rv = nsComponentManager::CreateInstance(handlerContractID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
+  aContentHandler = do_CreateInstance(handlerContractID, &rv);
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
   {
-      rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aSrcWindowContext, request);
+      rv = aContentHandler->HandleContent(aContentType, "view", aSrcWindowContext, request);
       *aAbortProcess = PR_TRUE;
   }
   

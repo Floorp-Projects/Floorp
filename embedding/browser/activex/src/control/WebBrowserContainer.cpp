@@ -293,8 +293,8 @@ CWebBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress,
 ///////////////////////////////////////////////////////////////////////////////
 // nsIURIContentListener
 
-/* void onStartURIOpen (in nsIURI aURI, in string aWindowTarget, out boolean aAbortOpen); */
-NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, const char *aWindowTarget, PRBool *aAbortOpen)
+/* void onStartURIOpen (in nsIURI aURI, out boolean aAbortOpen); */
+NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortOpen)
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebBrowserContainer::OnStartURIOpen(...)\n"));
@@ -316,6 +316,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, const char *aWi
 	vPostDataRef.vt = VT_BYREF | VT_VARIANT;
 	vPostDataRef.pvarVal = &vPostData;
 	// TODO get the post data passed in via the original call to Navigate()
+
 
 	// Fire a BeforeNavigate event
 	BSTR bstrURI = SysAllocString(A2OLE((const char *)aURI));
@@ -376,22 +377,22 @@ NS_IMETHODIMP CWebBrowserContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocol
 }
 
 
-/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIRequest request, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in nsIRequest request, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
+NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
-NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
+NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
-NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
+/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
+NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
