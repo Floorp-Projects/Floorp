@@ -2517,7 +2517,8 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileSt
 {
 	nsresult		rv;
 	nsCOMPtr<nsIRDFNode>	node;
-	if (NS_SUCCEEDED(rv = ds->GetTarget(child, property, PR_TRUE, getter_AddRefs(node))))
+	if (NS_SUCCEEDED(rv = ds->GetTarget(child, property, PR_TRUE, getter_AddRefs(node)))
+		&& (rv != NS_RDF_NO_VALUE))
 	{
 		nsAutoString	literalString;
 		if (NS_SUCCEEDED(rv = GetTextForNode(node, literalString)))
