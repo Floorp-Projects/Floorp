@@ -335,9 +335,6 @@ nsPermissionManager::TestPermission(nsIURI *aURI,
   permission_HostStruct *hostStruct;
   permission_TypeStruct *typeStruct;
 
-  //TODO: Look for the specific host, if not found check its domains
-  //      Do we want that? Currenty, it is not actually done
-
   // find host name within list
   PRInt32 hostCount = mPermissionList.Count();
   PRUint32 offset = 0;
@@ -365,9 +362,11 @@ nsPermissionManager::TestPermission(nsIURI *aURI,
     }
     offset = hostPort.FindChar('.', offset) + 1;
 
-  // XXX Only walk up the domaintree for popups for now 
-  // XXX clean this up. bug 199216.
-  } while ((offset > 0) && (aType == nsIPermissionManager::POPUP_TYPE));
+  // walk up the domaintree (we stop as soon as we find a match,
+  // which will be the most specific domain we have an entry for).
+  // this is new behavior; we only used to do this for popups.
+  // see bug 176950.
+  } while (offset > 0);
 
   return NS_OK;
 }
