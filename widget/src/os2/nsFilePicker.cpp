@@ -38,6 +38,7 @@
 #include "nsIFileURL.h"
 #include "nsIStringBundle.h"
 #include "nsModule.h"
+#include "nsCRT.h"
 
 /* Item structure */
 typedef struct _MyData
@@ -528,7 +529,7 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 
   // converts from the file system charset to unicode
   if (NS_SUCCEEDED(rv)) {
-    PRInt32 inLength = nsCRT::strlen(inString);
+    PRInt32 inLength = strlen(inString);
     PRInt32 outLength;
     rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
