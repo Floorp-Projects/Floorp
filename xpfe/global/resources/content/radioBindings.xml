@@ -44,7 +44,6 @@
             {
               if( groupElements[i] != aDOMElement && groupElements[i].checked )
                 {
-                  dump("*** unchecking element " + i + "\n");
                   groupElements[i].checked = false;
                   groupElements[i].removeAttribute( "checked" );
                 }
@@ -59,7 +58,9 @@
        <![CDATA[
         try
           {
-            if( !event.target.disabled && event.target.localName == "radio" )
+            if (!event.target.disabled && 
+                event.target.localName == "radio" &&
+                event.button == 1)
               this.selectedItem = event.target;
           }
         catch(e)
@@ -71,7 +72,7 @@
        <![CDATA[
         try
           {
-            if( !event.target.disabled && event.target.localName == "radio" )
+            if (!event.target.disabled && event.target.localName == "radio")
               this.selectedItem = event.target;
           }
         catch(e)

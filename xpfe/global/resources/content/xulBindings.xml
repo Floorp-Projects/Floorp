@@ -152,7 +152,7 @@
                                          if (v == 'true') return true; return false;"/>
     </interface>
     <handlers>
-      <handler type="click" value="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler type="click" value="if (!this.disabled && this.button == 1) this.checked = !this.checked;"/>
       <handler type="keypress" key=" " value="if (!this.disabled) this.checked = !this.checked;"/>
     </handlers>
   </binding>
