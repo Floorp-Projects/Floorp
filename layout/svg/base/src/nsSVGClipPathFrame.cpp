@@ -120,14 +120,14 @@ NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult, nsIURI *aURI, nsIContent *a
   CopyUTF8toUTF16(idC, id);
 
   // Get document
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aContent->GetDocument());
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aContent->GetCurrentDoc());
   NS_ASSERTION(doc, "Content doesn't reference a dom Document");
   if (!doc)
     return NS_ERROR_FAILURE;
 
   // Get element
   nsCOMPtr<nsIDOMElement> element;
-  nsCOMPtr<nsIPresShell> ps = do_QueryInterface(aContent->GetDocument()->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> ps = do_QueryInterface(aContent->GetCurrentDoc()->GetShellAt(0));
   rv = doc->GetElementById(id, getter_AddRefs(element));
   if (!NS_SUCCEEDED(rv) || element == nsnull)
     return rv;
@@ -135,6 +135,8 @@ NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult, nsIURI *aURI, nsIContent *a
   nsIFrame *frame;
   nsCOMPtr<nsIContent> content = do_QueryInterface(element);
   rv = ps->GetPrimaryFrameFor(content, &frame);
+  if (!frame)
+    return NS_ERROR_FAILURE;
 
   nsSVGClipPathFrame *cpframe;
   CallQueryInterface(frame, &cpframe);
