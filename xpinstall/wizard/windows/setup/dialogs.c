@@ -41,42 +41,6 @@ static BOOL    gbProcessingXpnstallFiles;
 static DWORD   gdwACFlag;
 static DWORD   gdwIndexLastSelected;
 
-/* List of Dialog Item IDs from the Download dialog
- * that need to be repositioned (up) when the banner
- * in the dialog is hidden.
- */
-const int DownloadDlgItemList[] = {IDPAUSE,
-                                   IDRESUME,
-                                   IDCANCEL,
-                                   IDC_MESSAGE0,
-                                   IDC_STATIC3,
-                                   IDC_STATUS_URL,
-                                   IDC_STATIC1,
-                                   IDC_STATUS_STATUS,
-                                   IDC_STATIC2,
-                                   IDC_STATUS_FILE,
-                                   IDC_GAUGE_FILE,
-                                   IDC_PERCENTAGE,
-                                   IDC_STATIC4,
-                                   IDC_STATUS_TO,
-                                   -2};  /* -1 is used by IDC_STATIC.  Even though
-                                          * there shouldn't be any IDC_STATIC in
-                                          * list, we shouldn't use it.
-                                          */
-
-/* List of Dialog Item IDs from the Install Progress dialog
- * that need to be repositioned (up) when the banner
- * in the dialog is hidden.
-*/
-const int InstallProgressDlgItemList[] = {IDC_STATUS0,
-                                          IDC_GAUGE_ARCHIVE,
-                                          IDC_STATUS3,
-                                          IDC_GAUGE_FILE,
-                                          -2};  /* -1 is used by IDC_STATIC.  Even though
-                                                 * there shouldn't be any IDC_STATIC in
-                                                 * list, we shouldn't use it.
-                                                 */
-
 BOOL AskCancelDlg(HWND hDlg)
 {
   char szDlgQuitTitle[MAX_BUF];
@@ -119,136 +83,11 @@ void DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose)
     EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
 }
 
-/* Function: MoveDlgItem()
- *
- *       in: HWND  aWndDlg     : handle to a dialog containing items in aIDList.
- *           const int *aIDList: list of dlg item IDs that require moving.
- *           DWORD aWidth      : width to move the dlg items by (+/-).
- *           DWORD aHeight     : height to move the dlg items by (+/-).
- *           
- *  purpose: To move dialog items (given a list of item ids) +aWidth/+aHeight from
- *           its current position.
- *           This is for when the banner logo in the download/install process
- *           dialogs are not to be displayed, it leaves an empty area above
- *           the dialog items/controls.  So this helps move them up by the
- *           height of the banner.
- *           The resizing of the window given the lack of the banner is done
- *           RepositionWindow().
- */
-void MoveDlgItem(HWND aWndDlg, const int *aIDList, DWORD aWidth, DWORD aHeight)
-{
-  RECT rect;
-  HWND hDlgItem;
-  int i;
-  int id;
-
-  i  = 0;
-  id = aIDList[i];
-  while(id != -2)
-  {
-    hDlgItem = GetDlgItem(aWndDlg, id);
-    if(hDlgItem)
-    {
-      GetWindowRect(hDlgItem, &rect);
-      SetWindowPos(hDlgItem, NULL, rect.left + aWidth, rect.top + aHeight,
-                   -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-    }
-    id = aIDList[++i];
-  }
-}
-
-/* Function: RepositionWindow()
- *
- *       in: HWND  aHwndDlg    : Window handle to reposition.
- *           DWORD aBannerImage: Integer indicating which dialog needs to have
- *                               it's dlg items moved.
- *                               There are only 3 types:
- *                                 NO_BANNER_IMAGE
- *                                 BANNER_IMAGE_DOWNLOAD
- *                                 BANNER_IMAGE_INSTALLING
- *
- *  purpose: To reposition a window given the screen position of the previous
- *           window.  The previous window position is saved in:
- *             gSystemInfo.lastWindowPosCenterX
- *             gSystemInfo.lastWindowPosCenterY
- *
- *           aHwndDlg is the window handle to the dialog to reposition.
- *           aBannerImage is a DWORD value that indicates which dialog
- *           the banner is displayed in.  There are only two possible dialogs:
- *             Download dialog
- *             Install dialog
- *
- *           This function also hides the banner image normally displayed in
- *           the Download and Install Process dialgs.  Once hidden, it also
- *           moves all of their dialog items up by the height of the hidden
- *           banner image and resizes the dialogs so it'll look nice.
- */
-void RepositionWindow(HWND aHwndDlg, DWORD aBannerImage)
-{
-  RECT  rect;
-  int   iLeft, iTop;
-  DWORD width = -1;
-  DWORD height = -1;
-  DWORD windowFlags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE;
-
-  GetWindowRect(aHwndDlg, &rect);
-  if(aBannerImage && !gShowBannerImage)
-  {
-    RECT  rLogo;
-    HWND  hwndBanner;
-
-    hwndBanner = GetDlgItem(aHwndDlg, IDB_BITMAP_BANNER);
-    GetWindowRect(hwndBanner, &rLogo);
-    ShowWindow(hwndBanner, SW_HIDE);
-    width = rect.right;
-    height = rect.bottom - rLogo.bottom + rLogo.top;
-    windowFlags = SWP_NOZORDER | SWP_NOACTIVATE;
-
-    /* aBannerImage indicates which dialog we need to move it's dlg items
-     * up to fit the resized window.
-     */
-    switch(aBannerImage)
-    {
-      case BANNER_IMAGE_DOWNLOAD:
-        MoveDlgItem(aHwndDlg, DownloadDlgItemList, 0, -rLogo.bottom);
-        break;
-
-      case BANNER_IMAGE_INSTALLING:
-        MoveDlgItem(aHwndDlg, InstallProgressDlgItemList, 0, -rLogo.bottom);
-        break;
-
-      default:
-        break;
-    }
-  }
-
-  iLeft = (gSystemInfo.lastWindowPosCenterX - ((rect.right - rect.left) / 2));
-  iTop  = (gSystemInfo.lastWindowPosCenterY - ((rect.bottom - rect.top) / 2));
-  SetWindowPos(aHwndDlg, NULL, iLeft, iTop, width, height, windowFlags);
-}
-
-/* Function: SaveWindowPosition()
- *
- *       in: HWND aDlg: Window handle to remember the position of.
- *
- *  purpose: Saves the current window's position so that it can be
- *           used to position the next window created.
- */
-void SaveWindowPosition(HWND aDlg)
-{
-  RECT rectDlg;
-
-  if(GetWindowRect(aDlg, &rectDlg))
-  {
-    gSystemInfo.lastWindowPosCenterX = ((rectDlg.right - rectDlg.left) / 2) + rectDlg.left;
-    gSystemInfo.lastWindowPosCenterY = ((rectDlg.bottom - rectDlg.top) / 2) + rectDlg.top;
-  }
-}
-
 LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   char szBuf[MAX_BUF];
-
+  RECT rDlg;
+  
   switch(msg)
   {
     case WM_INITDIALOG:
@@ -260,7 +99,14 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SetDlgItemText(hDlg, IDC_STATIC1, diWelcome.szMessage1);
       SetDlgItemText(hDlg, IDC_STATIC2, diWelcome.szMessage2);
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
@@ -275,7 +121,6 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(NEXT_DLG);
           break;
@@ -301,6 +146,7 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   DWORD           dwBytesRead;
   HANDLE          hFLicense;
   FILE            *fLicense;
+  RECT            rDlg;
 
   switch(msg)
   {
@@ -331,7 +177,14 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
         }
       }
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szAccept_);
@@ -348,13 +201,11 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(NEXT_DLG);
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
@@ -387,6 +238,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 {
   DWORD dwIndex;
   DWORD dwLoop;
+  RECT  rDlg;
   char  szBuf[MAX_BUF];
   char  szBufIndex[MAX_BUF];
   char  szPath[MAX_BUF];
@@ -394,11 +246,18 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
   switch(message)
   {
-    case WM_INITDIALOG:
+    case WM_INITDIALOG:		
       hwndLBFolders  = GetDlgItem(hDlg, 1121);
       SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath);
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       OldListBoxWndProc    = SubclassWindow(hwndLBFolders, (WNDPROC)ListBoxBrowseWndProc);
       gdwIndexLastSelected = SendDlgItemMessage(hDlg, 1121, LB_GETCURSEL, 0, (LPARAM)0);
@@ -454,7 +313,6 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
           break;
 
         case IDOK:
-          SaveWindowPosition(hDlg);
           GetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf, MAX_BUF);
           if(*szBuf == '\0')
           {
@@ -490,7 +348,6 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
               if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
-                char szEMessageTitle[MAX_BUF];
 
                 lstrcpy(szBufTemp, "\n\n");
                 lstrcat(szBufTemp, sgProduct.szPath);
@@ -500,9 +357,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                 if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
                   wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
-                GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
-
-                MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
+                MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
                 break;
               }
 
@@ -663,6 +518,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   HWND          hStaticSt3;
   HWND          hReadme;
   HWND          hDestinationPath;
+  RECT          rDlg;
   char          szBuf[MAX_BUF];
   char          szBufTemp[MAX_BUF];
   char          szBufTemp2[MAX_BUF];
@@ -765,7 +621,14 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           break;
       }
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       if((*diSetupType.szReadmeFilename == '\0') || (FileExists(diSetupType.szReadmeFilename) == FALSE))
         ShowWindow(hReadme, SW_HIDE);
@@ -806,7 +669,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       switch(LOWORD(wParam))
       {
         case IDC_BUTTON_BROWSE:
-          SaveWindowPosition(hDlg);
           if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST0)      == BST_CHECKED)
             dwTempSetupType = ST_RADIO0;
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST1) == BST_CHECKED)
@@ -831,7 +693,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           break;
 
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           lstrcpy(sgProduct.szPath, szTempSetupPath);
 
           /* append a backslash to the path because CreateDirectoriesAll()
@@ -861,7 +722,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
               if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
-                char szEMessageTitle[MAX_BUF];
 
                 lstrcpy(szBufTemp, "\n\n");
                 lstrcat(szBufTemp, sgProduct.szPath);
@@ -871,9 +731,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
                 if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
                   wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
-                GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
-
-                MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
+                MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
                 break;
               }
 
@@ -931,7 +789,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           dwTempSetupType = dwSetupType;
           lstrcpy(szTempSetupPath, sgProduct.szPath);
           DestroyWindow(hDlg);
@@ -1215,6 +1072,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   DWORD               dwIndex;
   DWORD               dwItems = MAX_BUF;
   HWND                hwndLBComponents;
+  RECT                rDlg;
   TCHAR               tchBuffer[MAX_BUF];
   LPDRAWITEMSTRUCT    lpdis;
   ULONGLONG           ullDSBuf;
@@ -1248,7 +1106,14 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE, AC_COMPONENTS));
       }
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
          returns value in kbytes */
@@ -1292,7 +1157,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       if(lpdis->itemID == -1)
         break;
 
-      DrawLBText(lpdis, AC_COMPONENTS);
+	  DrawLBText(lpdis, AC_COMPONENTS);
       DrawCheck(lpdis, AC_COMPONENTS);
 
       // draw the focus rect on the selected item
@@ -1324,13 +1189,11 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
           break;
 
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(NEXT_DLG);
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
@@ -1355,6 +1218,7 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
   DWORD               dwIndex;
   DWORD               dwItems = MAX_BUF;
   HWND                hwndLBComponents;
+  RECT                rDlg;
   TCHAR               tchBuffer[MAX_BUF];
   LPDRAWITEMSTRUCT    lpdis;
   ULONGLONG           ullDSBuf;
@@ -1388,7 +1252,14 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
         SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE, AC_ADDITIONAL_COMPONENTS));
       }
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
          returns value in kbytes */
@@ -1464,13 +1335,11 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
           break;
 
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(NEXT_DLG);
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
@@ -1494,6 +1363,7 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
   HWND hcbCheck1;
   HWND hcbCheck2;
   HWND hcbCheck3;
+  RECT rDlg;
 
   hcbCheck0 = GetDlgItem(hDlg, IDC_CHECK0);
   hcbCheck1 = GetDlgItem(hDlg, IDC_CHECK1);
@@ -1544,7 +1414,14 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
       else
         ShowWindow(hcbCheck3, SW_HIDE);
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
@@ -1564,7 +1441,6 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           if(IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED)
           {
           }
@@ -1606,7 +1482,6 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
@@ -1629,6 +1504,7 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
   HANDLE          hDir;
   DWORD           dwIndex;
   WIN32_FIND_DATA wfdFindFileData;
+  RECT            rDlg;
 
   switch(msg)
   {
@@ -1655,7 +1531,14 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
         FindClose(hDir);
       }
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szProgramFolder_);
       SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szExistingFolder_);
@@ -1676,7 +1559,6 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           GetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, szBuf, MAX_BUF);
           if(*szBuf == '\0')
           {
@@ -1693,7 +1575,6 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
@@ -1728,6 +1609,7 @@ void SaveDownloadProtocolOption(HWND hDlg)
 
 LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
+  RECT  rDlg;
   char  szBuf[MAX_BUF];
 
   switch(msg)
@@ -1741,7 +1623,14 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_USER,   diAdvancedSettings.szProxyUser);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_PASSWD, diAdvancedSettings.szProxyPasswd);
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       GetPrivateProfileString("Strings", "IDC Use Ftp", "", szBuf, sizeof(szBuf), szFileIniConfig);
       SetDlgItemText(hDlg, IDC_USE_FTP, szBuf);
@@ -1802,7 +1691,6 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           /* get the proxy server and port information */
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer, MAX_BUF);
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort,   MAX_BUF);
@@ -1816,7 +1704,6 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
 
         case IDWIZBACK:
         case IDCANCEL:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
@@ -1852,6 +1739,7 @@ void SaveAdditionalOptions(HWND hDlg, HWND hwndCBSiteSelector)
 
 LRESULT CALLBACK DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
+  RECT  rDlg;
   char  szBuf[MAX_BUF];
   HWND  hwndCBSiteSelector;
   int   iIndex;
@@ -1876,7 +1764,7 @@ LRESULT CALLBACK DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LO
       }
 
       if(GetTotalArchivesToDownload() == 0)
-      {
+     {
         ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE1),  SW_HIDE);
         ShowWindow(GetDlgItem(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES),  SW_HIDE);
         ShowWindow(GetDlgItem(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH), SW_HIDE);
@@ -1911,7 +1799,14 @@ LRESULT CALLBACK DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LO
       SendDlgItemMessage (hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       ssiTemp = ssiSiteSelector;
       do
@@ -1952,21 +1847,18 @@ LRESULT CALLBACK DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LO
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
           DlgSequence(NEXT_DLG);
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
 
         case IDC_BUTTON_ADDITIONAL_SETTINGS:
-          SaveWindowPosition(hDlg);
           SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
           DlgSequence(OTHER_DLG_1);
@@ -2255,6 +2147,7 @@ LPSTR GetStartInstallMessage()
 
 LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
+  RECT  rDlg;
   LPSTR szMessage = NULL;
   char  szBuf[MAX_BUF];
 
@@ -2279,11 +2172,20 @@ LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
       SendDlgItemMessage (hDlg, IDC_MESSAGE2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_CHECK_TURBO_MODE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diQuickLaunch.szMessage0);
-      SetDlgItemText(hDlg, IDC_MESSAGE1, diQuickLaunch.szMessage1);
-      SetDlgItemText(hDlg, IDC_MESSAGE2, diQuickLaunch.szMessage2);
+      {
+        SetDlgItemText(hDlg, IDC_MESSAGE0, diQuickLaunch.szMessage0);
+        SetDlgItemText(hDlg, IDC_MESSAGE1, diQuickLaunch.szMessage1);
+        SetDlgItemText(hDlg, IDC_MESSAGE2, diQuickLaunch.szMessage2);
+      }
 
       if(diQuickLaunch.bTurboModeEnabled)
         ShowWindow(GetDlgItem(hDlg, IDC_CHECK_TURBO_MODE),  SW_SHOW);
@@ -2304,7 +2206,6 @@ LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           if(diQuickLaunch.bTurboModeEnabled)
           {
             if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED)
@@ -2318,7 +2219,6 @@ LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           /* remember the last state of the TurboMode checkbox */
           if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED) {
             diQuickLaunch.bTurboMode = TRUE;
@@ -2344,6 +2244,7 @@ LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
 
 LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
+  RECT  rDlg;
   LPSTR szMessage = NULL;
 
   switch(msg)
@@ -2363,7 +2264,14 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_CURRENT_SETTINGS, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
  
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       if((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0))
       {
@@ -2388,13 +2296,11 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(NEXT_DLG);
           break;
 
         case IDWIZBACK:
-          SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
           DlgSequence(PREV_DLG);
           break;
@@ -2416,6 +2322,7 @@ LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   HANDLE            hToken;
   TOKEN_PRIVILEGES  tkp;
   HWND              hRadioYes;
+  RECT              rDlg;
 
   hRadioYes = GetDlgItem(hDlg, IDC_RADIO_YES);
 
@@ -2426,9 +2333,15 @@ LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       CheckDlgButton(hDlg, IDC_RADIO_YES, BST_CHECKED);
       SetFocus(hRadioYes);
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
-      SetWindowText(hDlg, sgInstallGui.szRestart);
       SetDlgItemText(hDlg, 202, sgInstallGui.szSetupMessage);
       SetDlgItemText(hDlg, IDC_RADIO_YES, sgInstallGui.szYesRestart);
       SetDlgItemText(hDlg, IDC_RADIO_NO, sgInstallGui.szNoRestart);
@@ -2440,7 +2353,6 @@ LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       break;
 
     case WM_COMMAND:
-      SaveWindowPosition(hDlg);
       switch(LOWORD(wParam))
       {
         case IDOK:
@@ -2513,14 +2425,21 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
         lstrcpy(szBuf, sgProduct.szProductName);
 
       SetWindowText(hDlg, szBuf);
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
+
       break;
 
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
         case IDC_MESSAGE:
-          SaveWindowPosition(hDlg);
           hdcSTMessage = GetWindowDC(hSTMessage);
 
           SystemParametersInfo(SPI_GETICONTITLELOGFONT,
@@ -2537,12 +2456,12 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
           DeleteObject(hfontTmp);
           ReleaseDC(hSTMessage, hdcSTMessage);
 
-          SetWindowPos(hDlg, NULL,
-                      (gSystemInfo.lastWindowPosCenterX)-((sizeString.cx + 55)/2),
-                      (gSystemInfo.lastWindowPosCenterY)-((sizeString.cy + 50)/2),
+          SetWindowPos(hDlg, HWND_TOP,
+                      (gSystemInfo.dwScreenX/2)-((sizeString.cx + 55)/2),
+                      (gSystemInfo.dwScreenY/2)-((sizeString.cy + 50)/2),
                       sizeString.cx + 55,
                       sizeString.cy + 50,
-                      SWP_SHOWWINDOW|SWP_NOZORDER);
+                      SWP_SHOWWINDOW);
 
           if(GetClientRect(hDlg, &rDlg))
             SetWindowPos(hSTMessage,
@@ -2551,7 +2470,7 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
                          rDlg.top,
                          rDlg.right,
                          rDlg.bottom,
-                         SWP_SHOWWINDOW|SWP_NOZORDER);
+                         SWP_SHOWWINDOW);
 
           SetDlgItemText(hDlg, IDC_MESSAGE, (LPSTR)lParam);
           break;
@@ -2576,12 +2495,9 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
 {
   char szBuf[MAX_BUF];
  
-  if(!hDlgMessage ||!szMessage)
-    return;
-
   if(sgProduct.mode != SILENT)
   {
-    if(bShow)
+    if((bShow) && (hDlgMessage == NULL))
     {
       ZeroMemory(szBuf, sizeof(szBuf));
       GetPrivateProfileString("Messages", "MB_MESSAGE_STR", "", szBuf, sizeof(szBuf), szFileIniInstall);
@@ -2589,9 +2505,8 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
       SendMessage(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (LPARAM)szMessage);
       SendDlgItemMessage (hDlgMessage, IDC_MESSAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     }
-    else
+    else if(!bShow && hDlgMessage)
     {
-      SaveWindowPosition(hDlgMessage);
       DestroyWindow(hDlgMessage);
       hDlgMessage = NULL;
     }

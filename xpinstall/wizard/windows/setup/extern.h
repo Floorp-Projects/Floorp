@@ -78,7 +78,6 @@ extern BOOL             gbDownloadTriggered;
 extern BOOL             gbAllowMultipleInstalls;
 extern BOOL             gbForceInstall;
 extern BOOL             gbForceInstallGre;
-extern BOOL             gShowBannerImage;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;

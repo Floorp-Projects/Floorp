@@ -116,11 +116,7 @@ GRE Type=Shared
 ; config.ini file) will be appended as follows:
 ;
 ;   Software\mozilla.org\GRE_1.4a_0000000000_PRIVATE_[Product Name Internal]
-GRE Private Key=Software\mozilla.org\GRE_$GreUniqueID$_PRIVATE_$ProductNameInternal$
-
-; Controls the display of the banner image in the download and install progress dialogs.
-; Default value is TRUE.
-Show Banner Image=TRUE
+GRE Private Key=Software\mozilla.org\GRE_$GreUniqueID$_PRIVATE
 
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
@@ -1161,7 +1157,7 @@ Message Cancel Setup AUTO mode=Canceling Setup, please wait...
 ;*** LOCALIZE ME BABY ***
 Error File Uncompress=Error uncompressing file %s: %d
 ;*** LOCALIZE ME BABY ***
-UsageMsg Usage=Usage: %s [options]\n	[options] can be any of the following combination:\n		-h: This help.\n		-a [path]: Alternate archive search path.\n		-app [app id]: ID of application which is launching the installer (shared installs)\n		-app_path [app]: Points to (full path) representative file of application (Shared installs)\n	*	-dd [path]: Suggested install destination directory. (Shared installs)\n	*	-greLocal: Forces GRE to be installed into the application dir.\n	*	-greShared: Forces GRE to be installed into a global, shared dir (normally)\n			c:\program files\common files\mozilla.org\GRE\n		-reg_path [path]: Where to make entries in the Windows registry. (Shared installs)\n		-f: Force install of GRE installer (Shared installs), though it'll work\n			for non GRE installers too.\n		-greForce: Force 'Component GRE' to be downloaded, run, and installed.  This\n			bypasses GRE's logic of determining when to install by running its\n			installer with a '-f' flag.\n		-n [filename]: Setup's parent's process filename.\n	*	-ma: Run setup in Auto mode.\n	*	-ms: Run setup in Silent mode.\n		-ira: Ignore the [RunAppX] sections\n		-ispf: Ignore the [Program FolderX] sections that show\n			the Start Menu shortcut folder at the end of installation.\n	*	-showBanner: Show the banner image in the download and install progress dialogs\n	*	-hideBanner: Hide the banner image in the download and install progress dialogs\n\n	* means it will override config.ini
+UsageMsg Usage=Usage: %s [options]%s	[options] can be any of the following combination:%s		-h:		This help.%s		-a [path]:		Alternate archive search path.%s		-n [filename]:	Setup's parent's process filename.%s		-ma:		Run setup in Auto mode.%s		-ms:		Run setup in Silent mode.%s		-ira:		Ignore the [RunAppX] sections%s		-ispf:		Ignore the [Program FolderX] sections that show%s				the Start Menu shortcut folder at the end of installation.
 ;*** LOCALIZE ME BABY ***
 IDC Use FTP=Use &FTP for downloading files
 ;*** LOCALIZE ME BABY ***

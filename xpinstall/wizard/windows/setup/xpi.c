@@ -442,6 +442,21 @@ void cbXPIFinal(const char *URL, PRInt32 finalStatus)
 /////////////////////////////////////////////////////////////////////////////
 // Progress bar
 
+// Centers the specified window over the desktop. Assumes the window is
+// smaller both horizontally and vertically than the desktop
+static void
+CenterWindow(HWND hWndDlg)
+{
+	RECT	rect;
+	int		iLeft, iTop;
+
+	GetWindowRect(hWndDlg, &rect);
+	iLeft = (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2;
+	iTop  = (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2;
+
+	SetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
 // Window proc for dialog
 LRESULT CALLBACK
 ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -450,7 +465,7 @@ ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
   {
 		case WM_INITDIALOG:
       DisableSystemMenuItems(hWndDlg, TRUE);
-			RepositionWindow(hWndDlg, BANNER_IMAGE_INSTALLING);
+			CenterWindow(hWndDlg);
       SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
       SendDlgItemMessage (hWndDlg, IDC_GAUGE_ARCHIVE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
       SendDlgItemMessage (hWndDlg, IDC_STATUS3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
@@ -824,7 +839,6 @@ void DeInitProgressDlg()
 {
   if(sgProduct.mode != SILENT)
   {
-    SaveWindowPosition(dlgInfo.hWndDlg);
     DestroyWindow(dlgInfo.hWndDlg);
     UnregisterClass("GaugeFile", hInst);
     UnregisterClass("GaugeArchive", hInst);

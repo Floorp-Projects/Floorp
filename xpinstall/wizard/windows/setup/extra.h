@@ -169,8 +169,7 @@ LPSTR             GetArgV(LPSTR lpszCommandLine,
                           int iIndex,
                           LPSTR lpszDest,
                           int iDestSize);
-DWORD             ParseCommandLine(LPSTR aMessageToClose, LPSTR lpszCmdLine);
-DWORD             ParseForStartupOptions(LPSTR aCmdLine);
+DWORD             ParseCommandLine(LPSTR lpszCmdLine);
 void              SetSetupRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
 void              UnsetSetupState(void);
@@ -225,7 +224,6 @@ HRESULT           ProcessXpinstallEngine(void);
 void              GetXpinstallPath(char *aPath, int aPathBufSize);
 int               AddGrePathToApplicationAppPathsKey(void);
 BOOL              GreInstallerNeedsReboot(void);
-void              ReplacePrivateProfileStrCR(LPSTR aInputOutputStr);
 
 #endif /* _EXTRA_H_ */
 

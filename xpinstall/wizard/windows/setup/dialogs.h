@@ -64,8 +64,6 @@ WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
 LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void              DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose);
 void              CommitInstall(void);
-void              RepositionWindow(HWND aHwndDlg, DWORD aBannerImage);
-void              SaveWindowPosition(HWND aDlg);
 
 #endif /* _DIALOGS_H_ */
 

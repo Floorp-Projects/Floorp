@@ -16,7 +16,7 @@
 #define IDI_SETUP                       105
 #define IDB_BITMAP_WELCOME              108
 #define DLG_MESSAGE                     110
-#define IDB_BITMAP_BANNER               114
+#define IDB_BITMAP_DOWNLOAD_LOGO        114
 #define IDB_QUICK_LAUNCH                115
 #define DLG_BROWSE_DIR                  503
 #define IDC_STATUS                      1001
@@ -141,7 +141,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1079
+#define _APS_NEXT_CONTROL_VALUE         1078
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
