@@ -259,7 +259,9 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
   aPlaceholderFrame = nsnull;
 
   // See if the element wants to be floated or absolutely positioned
-  PRBool  isFloated = NS_STYLE_FLOAT_NONE != aDisplay->mFloats;
+  PRBool  isFloated =
+    (NS_STYLE_FLOAT_LEFT == aDisplay->mFloats) ||
+    (NS_STYLE_FLOAT_RIGHT == aDisplay->mFloats);
   PRBool  isAbsolute = NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition;
 
   if (isFloated || isAbsolute) {
