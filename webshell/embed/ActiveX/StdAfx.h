@@ -90,6 +90,7 @@ typedef long int32;
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
 
 #ifdef NECKO
 #include "nsIHTTPChannel.h"
@@ -101,8 +102,11 @@ typedef long int32;
 #include "nsIContentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+
 #include "nsEditorCID.h"
 #include "nsIEditor.h"
+#include "nsIHtmlEditor.h"
+
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentLoaderObserver.h" 

@@ -550,6 +550,10 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 
 HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 {
+	static nsIAtom * propB = NS_NewAtom("b");       
+	static nsIAtom * propI = NS_NewAtom("i");     
+	static nsIAtom * propU = NS_NewAtom("u");     
+
 	if (!m_bEditorMode)
 	{
 		return E_UNEXPECTED;
@@ -560,13 +564,24 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 		return E_UNEXPECTED;
 	}
 
+	nsCOMPtr<nsIHTMLEditor> pHtmlEditor = do_QueryInterface(m_pEditor);
+
+	bool bToggleInlineProperty = false;
+	nsIAtom *pInlineProperty = nsnull;
+
 	switch (nCmdID)
 	{
 	case IDM_BOLD:
+		pInlineProperty = propB;
+		bToggleInlineProperty = true;
 		break;
 	case IDM_ITALIC:
+		pInlineProperty = propI;
+		bToggleInlineProperty = true;
 		break;
 	case IDM_UNDERLINE:
+		pInlineProperty = propU;
+		bToggleInlineProperty = true;
 		break;
 	
 	// TODO add the rest!
@@ -574,6 +589,25 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 	default:
 		// DO NOTHING
 		break;
+	}
+
+	// Does the instruction involve toggling something? e.g. B, U, I
+	if (bToggleInlineProperty)
+	{
+		PRBool bFirst = PR_TRUE;
+		PRBool bAny = PR_TRUE;
+		PRBool bAll = PR_TRUE;
+
+		// Set or remove
+		pHtmlEditor->GetInlineProperty(pInlineProperty, nsnull, nsnull, bFirst, bAny, bAll);
+		if (bAny)
+		{
+			pHtmlEditor->RemoveInlineProperty(pInlineProperty, nsnull);
+		}
+		else
+		{
+			pHtmlEditor->SetInlineProperty(pInlineProperty, nsnull, nsnull);
+		}
 	}
 
 	return S_OK;
