@@ -40,6 +40,17 @@
 
 #include "domstubs.idl"
 
+/**
+ * The nsIDOMNode interface is the primary datatype for the entire 
+ * Document Object Model.
+ * It represents a single node in the document tree.
+ *
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-2-Core/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf907c-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNode : nsISupports
 {

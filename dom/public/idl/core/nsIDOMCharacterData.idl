@@ -40,6 +40,16 @@
 
 #include "nsIDOMNode.idl"
 
+/**
+ * The nsIDOMCharacterData interface extends nsIDOMNode with a set of 
+ * attributes and methods for accessing character data in the DOM.
+ * 
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-2-Core/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf9072-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCharacterData : nsIDOMNode
 {

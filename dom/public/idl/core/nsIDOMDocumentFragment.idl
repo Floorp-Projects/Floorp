@@ -39,6 +39,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMNode.idl"
+    
+/**
+ * DocumentFragment is a "lightweight" or "minimal" Document object.
+ * nsIDOMDocumentFragment is used in situations where the Document
+ * interface can potentially be a heavyweight interface.
+ *
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-2-Core/
+ *
+ * @status FROZEN
+ */
 
 [scriptable, uuid(a6cf9076-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMDocumentFragment : nsIDOMNode

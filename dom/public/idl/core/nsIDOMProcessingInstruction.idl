@@ -40,6 +40,17 @@
 
 #include "nsIDOMNode.idl"
 
+/**
+ * The nsIDOMProcessingInstruction interface represents a 
+ * "processing instruction", used in XML as a way to keep processor-specific 
+ * information in the text of the document.
+ *
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-2-Core/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf907f-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMProcessingInstruction : nsIDOMNode
 {

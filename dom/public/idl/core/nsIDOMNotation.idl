@@ -40,6 +40,17 @@
 
 #include "nsIDOMNode.idl"
 
+/**
+ * The nsIDOMNotation interface represents a notation declared in the DTD.
+ * A notation  either declares, by name, the format of an unparsed entity, 
+ * or is used for formal declaration of processing instruction targets.
+ *
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-2-Core/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf907e-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNotation : nsIDOMNode
 {
