@@ -2550,126 +2550,20 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAlignment(const char* *result)
   
 NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
 {
-  nsresult    rv;
-  const char  *width;
+  NS_ENSURE_ARG_POINTER(result);
 
-  rv = GetAttribute("WIDTH", &width);
+  *result = mPluginWindow.width;
 
-  if (NS_OK == rv)
-  {
-    if (*result != 0)
-    {
-      *result = 0;
-
-      PRInt32 attr = atol(width);
-
-      if(nsnull == strchr(width, '%'))
-        *result = (PRUint32)attr;
-      else
-      {
-        if(mContext == nsnull)
-          return NS_ERROR_FAILURE;
-        
-        attr = (attr > 100) ? 100 : attr;
-        attr = (attr < 0) ? 0 : attr;
-
-        float t2p;
-
-        mContext->GetTwipsToPixels(&t2p);
-
-        nsRect rect;
-        mContext->GetVisibleArea(rect);
-
-        nscoord w = rect.width;
-
-        if(mOwner == nsnull)
-        {
-          *result = NSTwipsToIntPixels(attr*w/100, t2p);
-          return NS_OK;
-        }
-
-        // now make it nicely fit counting margins
-        nsIFrame *containingBlock=nsnull;
-        rv = GetContainingBlock(mOwner, &containingBlock);
-        if (NS_SUCCEEDED(rv) && containingBlock)
-        {
-          containingBlock->GetRect(rect);
-          w -= 2*rect.x;
-          // XXX: this math seems suspect to me.  Is the parent's margin really twice the x-offset?
-          //      in CSS, a frame can have independent left and right margins
-        }
-        *result = NSTwipsToIntPixels(attr*w/100, t2p);
-      }
-    }
-    else
-      *result = 0;
-  }
-  else
-    *result = 0;
-
-  return rv;
+  return NS_OK;
 }
   
 NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
 {
-  nsresult    rv;
-  const char  *height;
+  NS_ENSURE_ARG_POINTER(result);
 
-  rv = GetAttribute("HEIGHT", &height);
+  *result = mPluginWindow.height;
 
-  if (NS_OK == rv)
-  {
-    if (*result != 0)
-    {
-      *result = 0;
-
-      PRInt32 attr = atol(height);
-
-      if(nsnull == strchr(height, '%'))
-        *result = (PRUint32)attr;
-      else
-      {
-        if(mContext == nsnull)
-          return NS_ERROR_FAILURE;
-        
-        attr = (attr > 100) ? 100 : attr;
-        attr = (attr < 0) ? 0 : attr;
-
-        float t2p;
-
-        mContext->GetTwipsToPixels(&t2p);
-
-        nsRect rect;
-        mContext->GetVisibleArea(rect);
-
-        nscoord h = rect.height;
-
-        if(mOwner == nsnull)
-        {
-          *result = NSTwipsToIntPixels(attr*h/100, t2p);
-          return NS_OK;
-        }
-
-        // now make it nicely fit counting margins
-        nsIFrame *containingBlock=nsnull;
-        rv = GetContainingBlock(mOwner, &containingBlock);
-        if (NS_SUCCEEDED(rv) && containingBlock)
-        {
-          containingBlock->GetRect(rect);
-          h -= 2*rect.y;
-          // XXX: this math seems suspect to me.  Is the parent's margin really twice the x-offset?
-          //      in CSS, a frame can have independent top and bottom margins
-        }
-        *result = NSTwipsToIntPixels(attr*h/100, t2p);
-      }
-    }
-    else
-      *result = 0;
-  }
-  else
-    *result = 0;
-
-  return rv;
+  return NS_OK;
 }
 
 // it would indicate a serious error in the frame model if aContainingBlock were null when 
