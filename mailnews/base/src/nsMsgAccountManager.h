@@ -55,6 +55,7 @@ private:
   PRBool m_accountsLoaded;
   
   nsCOMPtr <nsIMsgFolderCache>	m_msgFolderCache;
+  nsCOMPtr<nsIAtom> kDefaultServerAtom;
   nsISupportsArray *m_accounts;
   nsHashtable m_identities;
   nsHashtable m_incomingServers;
@@ -84,6 +85,10 @@ private:
 
   // sets the pref for the defualt server
   nsresult setDefaultAccountPref(nsIMsgAccount *aDefaultAccount);
+
+  // fires notifications to the appropriate root folders
+  nsresult notifyDefaultServerChange(nsIMsgAccount *aOldAccount,
+                                     nsIMsgAccount *aNewAccount);
     
   // hash table enumerators
 
@@ -144,9 +149,30 @@ private:
   static char *getUniqueAccountKey(const char* prefix,
                                    nsISupportsArray *accounts);
 
+  
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
  
   nsresult getPrefService();
   nsIPref *m_prefs;
+
+  //
+  // root folder listener stuff
+  //
+  
+  // this array is for folder listeners that are supposed to be listening
+  // on the root folders.
+  // When a new server is created, all of the the folder listeners
+  //    should be added to the new server
+  // When a new listener is added, it should be added to all root folders.
+  // similar for when servers are deleted or listeners removed
+  nsCOMPtr<nsISupportsArray> mFolderListeners;
+  
+  // add and remove listeners from the given server
+  static PRBool addListener(nsHashKey *aKey, void *element, void *aData);
+  static PRBool removeListener(nsHashKey *aKey, void *element, void *aData);
+  
+  // folder listener enumerators
+  static PRBool addListenerToFolder(nsISupports *element, void *data);
+  static PRBool removeListenerFromFolder(nsISupports *element, void *data);
 };
 

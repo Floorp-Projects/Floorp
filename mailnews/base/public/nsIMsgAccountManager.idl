@@ -28,6 +28,7 @@
 #include "nsIIncomingServerListener.idl"
 
 interface nsIMsgFolderCache;
+interface nsIFolderListener;
 
 [scriptable, uuid(6ed2cc00-e623-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgAccountManager : nsISupports {
@@ -131,8 +132,14 @@ interface nsIMsgAccountManager : nsISupports {
 
   void CloseCachedConnections();
 
+  void addRootFolderListener(in nsIFolderListener listener);
+  void removeRootFolderListener(in nsIFolderListener listener);
+
+  // these are going away in favor of add/removeRootFolderListener
   void AddIncomingServerListener(in nsIIncomingServerListener serverListener);
   void RemoveIncomingServerListener(in nsIIncomingServerListener serverListener);
+
+  // these are going away in favor of nsIFolder::NotifyEvent(in nsIAtom event);
   void NotifyServerLoaded(in nsIMsgIncomingServer server);
   void NotifyServerUnloaded(in nsIMsgIncomingServer server);
 };

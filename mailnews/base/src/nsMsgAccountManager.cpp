@@ -54,6 +54,7 @@
 #include "nsString.h"
 #include "nsIMsgBiffManager.h"
 #include "nsIObserverService.h"
+#include "nsIMsgMailSession.h"
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -77,6 +78,7 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
@@ -153,6 +155,8 @@ nsresult nsMsgAccountManager::Init()
 
   rv = NS_NewISupportsArray(getter_AddRefs(m_incomingServerListeners));
   if(NS_FAILED(rv)) return rv;
+
+  rv = NS_NewISupportsArray(getter_AddRefs(mFolderListeners));
 
   NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
   if (NS_SUCCEEDED(rv))
@@ -313,7 +317,7 @@ nsMsgAccountManager::createKeyedIdentity(const char* key,
   
   nsStringKey hashKey(key);
 
-  // addref for the hash table
+  // addref for the hash table`
   nsISupports* idsupports = identity;
   NS_ADDREF(idsupports);
   m_identities.Put(&hashKey, (void *)idsupports);
@@ -435,10 +439,40 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   NS_ADDREF(serversupports);
   m_incomingServers.Put(&hashKey, serversupports);
 
+  // now add all listeners that are supposed to be
+  // waiting on root folders
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+  mFolderListeners->EnumerateForwards(addListenerToFolder, (void *)rootFolder);
+
   *aServer = server;
   NS_ADDREF(*aServer);
   
   return NS_OK;
+}
+
+PRBool
+nsMsgAccountManager::addListenerToFolder(nsISupports *element, void *data)
+{
+  nsresult rv;
+  nsIFolder *rootFolder = (nsIFolder *)data;
+  nsCOMPtr<nsIFolderListener> listener = do_QueryInterface(element, &rv);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  rootFolder->AddFolderListener(listener);
+  return PR_TRUE;
+}
+
+PRBool
+nsMsgAccountManager::removeListenerFromFolder(nsISupports *element, void *data)
+{
+  nsresult rv;
+  nsIFolder *rootFolder = (nsIFolder *)data;
+  nsCOMPtr<nsIFolderListener> listener = do_QueryInterface(element, &rv);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  rootFolder->RemoveFolderListener(listener);
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -498,7 +532,13 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     // remove reference from hashtable
     NS_IF_RELEASE(removedServer);
     
+    nsCOMPtr<nsIFolder> rootFolder;
+    server->GetRootFolder(getter_AddRefs(rootFolder));
+    mFolderListeners->EnumerateForwards(removeListenerFromFolder,
+                                        (void*)rootFolder);
+    
     NotifyServerUnloaded(server);
+
 
     rv = server->RemoveFiles();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove the files associated with server");
@@ -622,15 +662,50 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
 NS_IMETHODIMP
 nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
 {
-  // TODO make sure it's in the account list
-  if (aDefaultAccount)
-    m_defaultAccount = dont_QueryInterface(aDefaultAccount);
-  else
-    m_defaultAccount = nsnull;
+  nsCOMPtr<nsIMsgAccount> oldAccount = m_defaultAccount;
+
+  m_defaultAccount = aDefaultAccount;
 
   // it's ok if this fails
   setDefaultAccountPref(aDefaultAccount);
+
+  // ok if notifications fail
+  notifyDefaultServerChange(oldAccount, aDefaultAccount);
   
+  return NS_OK;
+}
+
+// fire notifications
+nsresult
+nsMsgAccountManager::notifyDefaultServerChange(nsIMsgAccount *aOldAccount,
+                                               nsIMsgAccount *aNewAccount)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsCOMPtr<nsIFolder> rootFolder;
+  
+  // first tell old server it's no longer the default
+  if (aOldAccount) {
+    rv = aOldAccount->GetIncomingServer(getter_AddRefs(server));
+    if (NS_SUCCEEDED(rv) && server) {
+      rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+      if (NS_SUCCEEDED(rv) && rootFolder)
+        rootFolder->NotifyBoolPropertyChanged(kDefaultServerAtom,
+                                                        PR_TRUE, PR_FALSE);
+    }
+  }
+    
+    // now tell new server it is.
+  if (aNewAccount) {
+    rv = aNewAccount->GetIncomingServer(getter_AddRefs(server));
+    if (NS_SUCCEEDED(rv) && server) {
+      rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+      if (NS_SUCCEEDED(rv) && rootFolder)
+        rootFolder->NotifyBoolPropertyChanged(kDefaultServerAtom,
+                                              PR_FALSE, PR_TRUE);
+    }
+  }
   return NS_OK;
 }
 
@@ -908,6 +983,8 @@ nsMsgAccountManager::LoadAccounts()
   // for now safeguard multiple calls to this function
   if (m_accountsLoaded)
     return NS_OK;
+
+  kDefaultServerAtom = NS_NewAtom("DefaultServer");
   
   //Ensure biff service has started
   NS_WITH_SERVICE(nsIMsgBiffManager, biffService, kMsgBiffManagerCID, &rv);
@@ -991,6 +1068,7 @@ nsresult
 nsMsgAccountManager::UnloadAccounts()
 {
   // release the default account
+  kDefaultServerAtom = nsnull;
   m_defaultAccount=nsnull;
   m_incomingServers.Enumerate(hashUnloadServer, this);
 
@@ -1475,6 +1553,71 @@ nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
     }
   }
 
+  return PR_TRUE;
+}
+
+nsresult
+nsMsgAccountManager::AddRootFolderListener(nsIFolderListener *aListener)
+{
+  nsresult rv;
+  
+  // first add listener to the list
+  rv = mFolderListeners->AppendElement(aListener);
+  
+  // now add the listener to all loaded accounts
+  m_incomingServers.Enumerate(addListener, (void *)aListener);
+
+  return NS_OK;
+}
+
+nsresult
+nsMsgAccountManager::RemoveRootFolderListener(nsIFolderListener *aListener)
+{
+  nsresult rv;
+  
+  // remove the listener from the notification list
+  rv = mFolderListeners->RemoveElement(aListener);
+  
+  // remove the listener from the individual folders
+  m_incomingServers.Enumerate(removeListener, (void *)aListener);
+
+  return NS_OK;
+}
+
+// enumeration functions
+PRBool
+nsMsgAccountManager::addListener(nsHashKey *aKey, void *element, void *aData)
+{
+  nsIMsgIncomingServer *server = (nsIMsgIncomingServer *)element;
+  nsIFolderListener* listener = (nsIFolderListener *)aData;
+
+  nsresult rv;
+  
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  rv = rootFolder->AddFolderListener(listener);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  
+  return PR_TRUE;
+}
+
+PRBool
+nsMsgAccountManager::removeListener(nsHashKey *aKey, void *element, void *aData)
+{
+  nsIMsgIncomingServer *server = (nsIMsgIncomingServer *)element;
+  nsIFolderListener* listener = (nsIFolderListener *)aData;
+
+  nsresult rv;
+  
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+
+  rv = rootFolder->RemoveFolderListener(listener);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  
   return PR_TRUE;
 }
 
