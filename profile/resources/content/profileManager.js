@@ -72,6 +72,7 @@ function RenameProfile()
   var profileList = document.getElementById( "profiles" );
   var selected = profileList.view.getItemAtIndex(profileList.currentIndex);
   var profilename = selected.getAttribute("profile_name");
+  var errorMessage = null;
   if( selected.getAttribute("rowMigrate") == "no" ) {
     // migrate if the user wants to
     lString = gProfileManagerBundle.getString("migratebeforerename");
@@ -84,7 +85,7 @@ function RenameProfile()
         profileDir = profileDir.QueryInterface( Components.interfaces.nsIFile );
         if (profileDir) {
           if (!profileDir.exists()) {
-            var errorMessage = gProfileManagerBundle.getString("sourceProfileDirMissing");
+            errorMessage = gProfileManagerBundle.getString("sourceProfileDirMissing");
             var profileDirMissingTitle = gProfileManagerBundle.getString("sourceProfileDirMissingTitle");
             promptService.alert(window, profileDirMissingTitle, errorMessage);
             return false;
@@ -111,7 +112,7 @@ function RenameProfile()
         if (newName == oldName)
           return false;
 
-        var errorMessage = checkProfileName(newName);
+        errorMessage = checkProfileName(newName);
         if (errorMessage) {
           var profileNameInvalidTitle = gProfileManagerBundle.getString("profileNameInvalidTitle");
           promptService.alert(window, profileNameInvalidTitle, errorMessage);
@@ -277,7 +278,7 @@ function ChangeCaption( aCaption )
 {
   var caption = document.getElementById( "header" );
   caption.setAttribute( "value", aCaption );
-  window.title = aCaption;
+  document.title = aCaption;
 }
 
 // do button enabling based on tree selection
