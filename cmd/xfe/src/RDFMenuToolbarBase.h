@@ -192,7 +192,6 @@ private:
 
     // Format item blah blah blah
     static XmString  formatItem         (HT_Resource        entry, 
-                                         Boolean            no_indent,
                                          int16              charset);
 
     // Obtain an internationallized XmString from an entry
