@@ -242,6 +242,7 @@ protected:
     nsresult Init();
     RDFXMLDataSourceImpl(void);
     virtual ~RDFXMLDataSourceImpl(void);
+    nsresult rdfXMLFlush(nsIURI *aURI);
 
     friend nsresult
     NS_NewRDFXMLDataSource(nsIRDFDataSource** aResult);
@@ -428,6 +429,10 @@ protected:
 
 PRInt32         RDFXMLDataSourceImpl::gRefCnt = 0;
 nsIRDFService*  RDFXMLDataSourceImpl::gRDFService;
+
+static const char kFileURIPrefix[] = "file:";
+static const char kResourceURIPrefix[] = "resource:";
+
 
 //----------------------------------------------------------------------
 
@@ -624,9 +629,6 @@ RDFXMLDataSourceImpl::GetLoaded(PRBool* _result)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Init(const char* uri)
 {
-static const char kFileURIPrefix[] = "file:";
-static const char kResourceURIPrefix[] = "resource:";
-
     NS_PRECONDITION(mInner != nsnull, "not initialized");
     if (! mInner)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -781,18 +783,10 @@ RDFXMLDataSourceImpl::Move(nsIRDFResource* aOldSource,
     return rv;
 }
 
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::Flush(void)
+
+nsresult
+RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
 {
-    if (!mIsWritable || !mIsDirty)
-        return NS_OK;
-
-    NS_PRECONDITION(mOriginalURLSpec != nsnull, "not initialized");
-    if (! mOriginalURLSpec)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] flush(%s)", this, mOriginalURLSpec.get()));
 
     nsresult rv;
 
@@ -810,7 +804,7 @@ RDFXMLDataSourceImpl::Flush(void)
 
     // Is it a file? If so, we can write to it. Some day, it'd be nice
     // if we didn't care what kind of stream this was...
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mURL);
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI);
     
     if (fileURL) {
         nsCOMPtr<nsIFile> file;
@@ -831,11 +825,56 @@ RDFXMLDataSourceImpl::Flush(void)
         }
     }
 
-    mIsDirty = PR_FALSE;
-
 done:
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+RDFXMLDataSourceImpl::FlushTo(const char *aURI)
+{
+    NS_PRECONDITION(aURI != nsnull, "not initialized");
+    if (!aURI)
+        return NS_ERROR_NULL_POINTER;
+
+    // XXX this is a hack: any "file:" URI is considered writable. All
+    // others are considered read-only.
+    if ((PL_strncmp(aURI, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
+        (PL_strncmp(aURI, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0))
+    {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    nsCOMPtr<nsIURI>  url;
+    nsresult rv = NS_NewURI(getter_AddRefs(url), aURI);
+    if (NS_FAILED(rv))
+      return rv;
+    rv = rdfXMLFlush(url);
+    return rv;
+}
+
+
+NS_IMETHODIMP
+RDFXMLDataSourceImpl::Flush(void)
+{
+    if (!mIsWritable || !mIsDirty)
+        return NS_OK;
+
+    NS_PRECONDITION(mOriginalURLSpec != nsnull, "not initialized");
+    if (! mOriginalURLSpec)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml[%p] flush(%s)", this, mOriginalURLSpec.get()));
+
+    nsresult rv;
+    if (NS_SUCCEEDED(rv = rdfXMLFlush(mURL)))
+    {
+      mIsDirty = PR_FALSE;
+    }
+    return rv;
+}
+
 
 //----------------------------------------------------------------------
 //

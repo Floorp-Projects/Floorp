@@ -2210,6 +2210,13 @@ nsGlobalHistory::Flush()
 }
 
 NS_IMETHODIMP
+nsGlobalHistory::FlushTo(const char *aURI)
+{
+  // Do not ever implement this (security)
+  return(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+NS_IMETHODIMP
 nsGlobalHistory::StartBatchUpdate()
 {
   nsresult rv = NS_OK;

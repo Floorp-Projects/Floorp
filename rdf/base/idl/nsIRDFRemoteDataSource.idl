@@ -71,5 +71,6 @@ interface nsIRDFRemoteDataSource : nsISupports
      * permanent storage, if applicable.
      */
     void Flush();
+    void FlushTo(in string aURI);
 };
 

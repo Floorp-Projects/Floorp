@@ -4493,13 +4493,39 @@ nsBookmarksService::exportBookmarks(nsISupportsArray *aArguments)
 	pathLiteral->GetValueConst(&pathUni);
 	if (!pathUni)	return(NS_ERROR_NULL_POINTER);
 
-	nsAutoString		fileName(pathUni);
-	nsFileURL		fileURL(fileName);
-	nsFileSpec		fileSpec(fileURL);
+	// determine file type to export; default to HTML unless told otherwise
+	nsAutoString formatStr;
+	if (NS_SUCCEEDED(rv = getArgumentN(aArguments, kRDF_type, 0, getter_AddRefs(aNode))))
+	{
+		nsCOMPtr<nsIRDFLiteral>		exportType = do_QueryInterface(aNode);
+		if (exportType)
+		{
+			const PRUnichar *exportUni = NULL;
+			exportType->GetValueConst(&exportUni);
+			if (exportUni)
+			{
+				formatStr = exportUni;
+			}
+		}
+	}
 
-	// write 'em out
-	rv = WriteBookmarks(&fileSpec, mInner, kNC_BookmarksRoot);
+	nsAutoString	fileName(pathUni);
+	nsFileURL		  fileURL(fileName);
+	if (formatStr.EqualsIgnoreCase("RDF"))
+	{
+		nsCOMPtr<nsIRDFRemoteDataSource> remoteDS = do_QueryInterface(mInner);
+		if (remoteDS)
+		{
+			remoteDS->FlushTo(fileURL.GetURLString());
+		}
+	}
+	else
+	{
+		nsFileSpec		fileSpec(fileURL);
 
+		// write 'em out
+		rv = WriteBookmarks(&fileSpec, mInner, kNC_BookmarksRoot);
+	}
 	return(rv);
 }
 
@@ -4639,6 +4665,15 @@ nsBookmarksService::Flush()
 
 
 
+NS_IMETHODIMP
+nsBookmarksService::FlushTo(const char *aURI)
+{
+  // Do not ever implement this (security)
+  return(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
@@ -4769,9 +4804,12 @@ nsBookmarksService::initDatasource()
 	// so we need to forget about any previous bookmarks
   NS_IF_RELEASE(mInner);
 
-  rv = CallCreateInstance(kRDFInMemoryDataSourceCID, &mInner);
-	if (NS_FAILED(rv))
-		return rv;
+  // create an xml-ds instead of an in-memory ds to allow for RDF serialization out
+  nsCOMPtr<nsIRDFDataSource> temp;
+  temp = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "xml-datasource", &rv);
+  if (NS_FAILED(rv)) return rv;
+  mInner = temp;
+  NS_ADDREF(mInner);
 
 	rv = mInner->AddObserver(this);
 	if (NS_FAILED(rv)) return rv;
@@ -4800,6 +4838,11 @@ nsBookmarksService::LoadBookmarks()
 
 	PRBool foundIERoot = PR_FALSE;
 
+  nsCOMPtr<nsIPrefService> prefSvc(do_GetService(NS_PREF_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch> bookmarksPrefs;
+  if (prefSvc)
+    prefSvc->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
+
 #ifdef	DEBUG
   PRTime now;
 #ifdef	XP_MAC
@@ -4810,11 +4853,6 @@ nsBookmarksService::LoadBookmarks()
   printf("Start reading in bookmarks.html\n");
 #endif
   
-  nsCOMPtr<nsIPrefService> prefSvc(do_GetService(NS_PREF_CONTRACTID));
-  nsCOMPtr<nsIPrefBranch> bookmarksPrefs;
-  if (prefSvc)
-    prefSvc->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
-
   // System Bookmarks Strategy
   //
   // * By default, we do a one-off import of system bookmarks when the browser 
