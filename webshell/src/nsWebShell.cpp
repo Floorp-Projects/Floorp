@@ -1245,7 +1245,7 @@ nsWebShell::ChildAt(PRInt32 aIndex, nsIWebShell*& aResult)
 NS_IMETHODIMP
 nsWebShell::GetName(const PRUnichar** aName)
 {
-  *aName = mName;
+  *aName = mName.GetUnicode();
   return NS_OK;
 }
 
@@ -1276,7 +1276,7 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
       }
 
       // See if child contains the shell with the given name
-      nsresult rv = child->FindChildWithName(aName, aResult);
+      nsresult rv = child->FindChildWithName(aName.GetUnicode(), aResult);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1527,7 +1527,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 
   // Tell web-shell-container we are loading a new url
   if (nsnull != mContainer) {
-    nsresult rv = mContainer->BeginLoadURL(this, aUrlSpec);
+    nsresult rv = mContainer->BeginLoadURL(this, aUrlSpec.GetUnicode());
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1606,7 +1606,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
-    rv = mContainer->WillLoadURL(this, urlSpec, nsLoadURL);
+    rv = mContainer->WillLoadURL(this, urlSpec.GetUnicode(), nsLoadURL);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1679,7 +1679,7 @@ NS_IMETHODIMP nsWebShell::Reload(nsURLReloadType aType)
   nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
   if (nsnull != s) {
     // XXX What about the post data?
-    return LoadURL(*s, nsnull, PR_FALSE, aType);
+    return LoadURL(s->GetUnicode(), nsnull, PR_FALSE, aType);
   }
   return NS_ERROR_FAILURE;
 }
@@ -1723,7 +1723,7 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     // Give web-shell-container right of refusal
     nsAutoString urlSpec(*s);
     if (nsnull != mContainer) {
-      rv = mContainer->WillLoadURL(this, urlSpec, nsLoadHistory);
+      rv = mContainer->WillLoadURL(this, urlSpec.GetUnicode(), nsLoadHistory);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1774,7 +1774,7 @@ nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
       (aHistoryIndex <= mHistory.Count() - 1)) {
     nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
     if (nsnull != s) {
-      *aURLResult = *s;
+      *aURLResult = s->GetUnicode();
     }
     rv = NS_OK;
   }
@@ -1831,7 +1831,7 @@ nsWebShell::SetTitle(const PRUnichar* aTitle)
 NS_IMETHODIMP
 nsWebShell::GetTitle(const PRUnichar** aResult)
 {
-  *aResult = mTitle;
+  *aResult = mTitle.GetUnicode();
   return NS_OK;
 }
 
@@ -1974,8 +1974,7 @@ struct OnLinkClickEvent : public PLEvent {
   ~OnLinkClickEvent();
 
   void HandleEvent() {
-    mHandler->HandleLinkClickEvent(mContent, mVerb, *mURLSpec, *
-                                   mTargetSpec, mPostData);
+    mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->GetUnicode(), mTargetSpec->GetUnicode(), mPostData);
   }
 
   nsWebShell*  mHandler;
@@ -2355,7 +2354,7 @@ nsWebShell::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
      if (NS_SUCCEEDED(rv)) {
        urlString = spec;
        if (nsnull != mContainer) {
-          rv = mContainer->EndLoadURL(this, urlString, /* XXX */ 0 );
+          rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), /* XXX */ 0 );
        }  
      }
   }
@@ -2542,7 +2541,7 @@ void refreshData::Notify(nsITimer *aTimer)
 {
   NS_PRECONDITION((nsnull != mShell), "Null pointer...");
   if (nsnull != mShell) {
-    mShell->LoadURL(mUrlSpec, nsnull, PR_TRUE, nsURLReload);
+    mShell->LoadURL(mUrlSpec.GetUnicode(), nsnull, PR_TRUE, nsURLReload);
   }
   /* 
    * LoadURL(...) will cancel all refresh timers... This causes the Timer and
@@ -2861,7 +2860,7 @@ nsWebShell::SelectNone(void)
 NS_IMETHODIMP 
 nsWebShell::GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet)
 {
-  *aDefaultCharacterSet = mDefaultCharacterSet;
+  *aDefaultCharacterSet = mDefaultCharacterSet.GetUnicode();
   return NS_OK;
 }
 NS_IMETHODIMP 
