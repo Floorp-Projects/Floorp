@@ -96,7 +96,9 @@ paths.</td>
 
 <td>3/22/1999 Started.
 <br>- checked in a fixed xpcom initialization sequence.
-<br>- Now got to fix all code statically calling it. I know Netlib does.</td>
+<br>- Now got to fix all code statically calling it. I know Netlib does.
+<br>- 4/1/1999 Fixed netlib on unix from static intialization. WIN&nbsp;is
+left.</td>
 </tr>
 
 <tr>
@@ -124,9 +126,11 @@ Possibly move autoreg out of xpcom</li>
 
 <td>P3</td>
 
-<td></td>
+<td><a href="mailto:dp@netscape.com">Suresh Duddi</a></td>
 
-<td></td>
+<td>4/5/1999 Fixed regExport to accurately dump the registry on win and
+unix.
+<br>- regExport needs to be compiled on the mac.</td>
 </tr>
 
 <tr>
@@ -149,8 +153,8 @@ Possibly move autoreg out of xpcom</li>
 <td></td>
 </tr>
 
-<tr>
-<td>Code Cleanup:
+<tr BGCOLOR="#33CCFF" NOSAVE>
+<td NOSAVE>Code Cleanup:
 <ul>
 <li>
 Registry path strings in nsComponentManager.cpp #defined</li>
@@ -161,7 +165,9 @@ Registry path strings in nsComponentManager.cpp #defined</li>
 
 <td>Nick Ambrose &lt;<a href="mailto:nicka87@hotmail.com">nicka87@hotmail.com</a>></td>
 
-<td>4/1/1999 started</td>
+<td>4/1/1999 started
+<br>4/5/1999 Patch submitted and checked in
+<br><b>DONE</b></td>
 </tr>
 
 <tr>
