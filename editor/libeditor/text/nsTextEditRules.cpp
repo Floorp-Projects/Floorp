@@ -132,6 +132,7 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
       mEditor->SetBodyWrapWidth(72);
     }
   }
+  
   mFlags = aFlags;
   return NS_OK;
 }
@@ -519,7 +520,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   *aCancel = PR_FALSE;
   *aHandled = PR_TRUE;
   *aOutString = *aInString;
-  
+  PRInt32 start=0;  PRInt32 end=0;  
+
   // handle docs with a max length
   res = TruncateInsertionIfNeeded(aSelection, aInString, aOutString, aMaxLength);
   if (NS_FAILED(res)) return res;
@@ -527,7 +529,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // handle password field docs
   if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
   {
-    res = EchoInsertionToPWBuff(aSelection, aOutString);
+    res = mEditor->GetTextSelectionOffsets(aSelection, start, end);
+    NS_ASSERTION((NS_SUCCEEDED(res)), "getTextSelectionOffsets failed!");
     if (NS_FAILED(res)) return res;
   }
 
@@ -547,6 +550,15 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
+
+  // handle password field data
+  // this has the side effect of changing all the characters in aOutString
+  // to the replacement character
+  if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
+  {
+    res = EchoInsertionToPWBuff(start, end, aOutString);
+    if (NS_FAILED(res)) return res;
+  }
 
   // if we're a single line control, pretreat the input string to remove returns
   // this is unnecessary if we use <BR>'s for breaks in "plain text", because
@@ -1507,19 +1519,12 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsIDOMSelection *aSelection,
 
 
 nsresult
-nsTextEditRules::EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aOutString)
+nsTextEditRules::EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *aOutString)
 {
-  if (!aSelection || !aOutString) {return NS_ERROR_NULL_POINTER;}
+  if (!aOutString) {return NS_ERROR_NULL_POINTER;}
 
   // manage the password buffer
-  PRInt32 start, end;
-  nsresult res = mEditor->GetTextSelectionOffsets(aSelection, start, end);
-  NS_ASSERTION((NS_SUCCEEDED(res)), "getTextSelectionOffsets failed!");
-  if (end!=start)
-  {
-    mPasswordText.Cut(start, end-start);
-  }
-  mPasswordText.Insert(*aOutString, start);
+  mPasswordText.Insert(*aOutString, aStart);
 
 #ifdef DEBUG_jfrancis
     char *password = mPasswordText.ToNewCString();
@@ -1534,7 +1539,7 @@ nsTextEditRules::EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aO
   for (i=0; i<length; i++)
     *aOutString += '*';
 
-  return res;
+  return NS_OK;
 }
 
 

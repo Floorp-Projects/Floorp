@@ -198,7 +198,7 @@ protected:
   
   /** Echo's the insertion text into the password buffer, and converts
       insertion text to '*'s */                                        
-  nsresult EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aOutString);
+  nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsString *aOutString);
 
   /** do the actual text insertion */
   nsresult DoTextInsertion(nsIDOMSelection *aSelection, 
