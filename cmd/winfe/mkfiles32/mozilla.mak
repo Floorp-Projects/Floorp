@@ -701,6 +701,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\layout\laymocha.c
 	$(DEPTH)\lib\layout\layobj.c
 	$(DEPTH)\lib\layout\layout.c  
+	$(DEPTH)\lib\layout\layprobe.c  
 	$(DEPTH)\lib\layout\layscrip.c
 	$(DEPTH)\lib\layout\laystyle.c
 	$(DEPTH)\lib\layout\laysel.c  
