@@ -2161,8 +2161,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrMarked(nsIMsgDBHdr *msgHdr, PRBool mark,
 NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 {
   nsresult		rv;
-  nsMsgHdr		*pHeader;
-  PRInt32			numChanged = 0;
+  nsMsgHdr  *pHeader;
   
   nsCOMPtr <nsISimpleEnumerator> hdrs;
   rv = EnumerateMessages(getter_AddRefs(hdrs));
@@ -2176,15 +2175,20 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
     NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
     if (NS_FAILED(rv)) 
       break;
-    
-    if (thoseMarked) 
+
+    PRBool isRead;
+    IsHeaderRead(pHeader, &isRead);
+
+    if (!isRead)
     {
-      nsMsgKey key;
-      (void)pHeader->GetMessageKey(&key);
-      thoseMarked->Add(key);
+      if (thoseMarked) 
+      {
+        nsMsgKey key;
+        (void)pHeader->GetMessageKey(&key);
+        thoseMarked->Add(key);
+      }
+      rv = MarkHdrRead(pHeader, PR_TRUE, nsnull); 	// ### dmb - blow off error?
     }
-    rv = MarkHdrRead(pHeader, PR_TRUE, nsnull); 	// ### dmb - blow off error?
-    numChanged++;
     NS_RELEASE(pHeader);
   }
   
@@ -2201,9 +2205,8 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, nsMsgKeyArray *markedIds)
 {
   nsresult rv;
-  nsMsgHdr	*pHeader;
-  //ListContext		*listContext = NULL;
-  PRInt32			numChanged = 0;
+  nsMsgHdr  *pHeader;
+  PRInt32 numChanged = 0;
   
   nsISimpleEnumerator* hdrs;
   rv = EnumerateMessages(&hdrs);
