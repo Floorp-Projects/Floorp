@@ -1019,31 +1019,37 @@ NS_IMETHODIMP nsEditor::SelectAll()
   nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
-    nsCOMPtr<nsIDOMNodeList>nodeList;
-    nsAutoString bodyTag = "body";
-    result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-    if ((NS_SUCCEEDED(result)) && nodeList)
+    result = SelectEntireDocument(selection);
+  }
+  return result;
+}
+
+NS_IMETHODIMP nsEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
+{
+  nsresult result;
+  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
+  nsCOMPtr<nsIDOMElement>bodyElement;
+  result = GetBodyElement(getter_AddRefs(bodyElement));
+  if ((NS_SUCCEEDED(result)) && bodyElement)
+  {
+    nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+    if (bodyNode)
     {
-      PRUint32 count;
-      nodeList->GetLength(&count);
-      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
-      nsCOMPtr<nsIDOMNode>bodyNode;
-      result = nodeList->Item(0, getter_AddRefs(bodyNode));
-      if ((NS_SUCCEEDED(result)) && bodyNode)
+      result = aSelection->Collapse(bodyNode, 0);
+      if (NS_SUCCEEDED(result))
       {
-        result = selection->Collapse(bodyNode, 0);
-        if (NS_SUCCEEDED(result))
+        PRInt32 numBodyChildren=0;
+        nsCOMPtr<nsIDOMNode>lastChild;
+        result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
+        if ((NS_SUCCEEDED(result)) && lastChild)
         {
-          PRInt32 numBodyChildren=0;
-          nsCOMPtr<nsIDOMNode>lastChild;
-          result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
-          if ((NS_SUCCEEDED(result)) && lastChild)
-          {
-            GetChildOffset(lastChild, bodyNode, numBodyChildren);
-            result = selection->Extend(bodyNode, numBodyChildren+1);
-          }
+          GetChildOffset(lastChild, bodyNode, numBodyChildren);
+          result = aSelection->Extend(bodyNode, numBodyChildren+1);
         }
       }
+    }
+    else {
+      return NS_ERROR_NO_INTERFACE;
     }
   }
   return result;
