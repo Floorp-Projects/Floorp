@@ -43,7 +43,7 @@ class nsHTTPResponse;
 
     -Gagan Saksena 02/25/99
 */
-class nsHTTPConnection : public nsIHTTPConnection , public nsIProtocolConnection
+class nsHTTPConnection : public nsIHTTPConnection //, public nsIProtocolConnection
 {
 
 public:
@@ -96,6 +96,8 @@ public:
     NS_IMETHOD              EventSink(nsIHTTPEventSink* *o_EventSink) const { if (o_EventSink) *o_EventSink = m_pEventSink; return NS_OK; };
     
     nsIEventQueue*          EventQueue(void) const { return m_pEventQ; };
+
+    NS_IMETHOD              SetResponse(nsHTTPResponse* i_pResp) { if (i_pResp) m_pResponse = i_pResp; return NS_OK;};
 
 private:
     nsCOMPtr<nsIURL>            m_pURL;

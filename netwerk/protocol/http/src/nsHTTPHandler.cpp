@@ -98,6 +98,9 @@ nsHTTPHandler::NewConnection(nsIURL* i_URL,
 
             // Verify that the event sink is http
             nsCOMPtr<nsIHTTPEventSink>  httpEventSink (do_QueryInterface(i_eventSink));
+            // This doesn't seem right... a caller cant know if its going to be http!  
+            // so how do we do this right?
+            NS_ASSERTION(httpEventSink, "Bad interface passed for httpEventSink");
 
             // Create one
             nsHTTPConnection* pNewInstance = new nsHTTPConnection(

@@ -28,6 +28,7 @@
 #include "nsITransport.h"
 #include "nsHTTPConnection.h"
 #include "nsHTTPResponseListener.h"
+#include "nsCRT.h"
 
 nsHTTPRequest::nsHTTPRequest(nsIUrl* i_pURL, HTTPMethod i_Method, nsITransport* i_pTransport):
     m_pURI(i_pURL),
@@ -59,9 +60,9 @@ nsHTTPRequest::~nsHTTPRequest()
         delete m_Request;
         m_Request = 0;
     }
-/*
     if (m_pTransport)
         NS_RELEASE(m_pTransport);
+/*
     if (m_pConnection)
         NS_RELEASE(m_pConnection);
 */
@@ -88,7 +89,11 @@ nsHTTPRequest::Build()
         NS_ASSERTION(m_pURI, "No URL to build request for!");
         rv = m_pURI->GetPath(&filename);
         PL_strcat(lineBuffer, filename);
-        PL_strcat(lineBuffer, " HTTP/1.1\n");
+        PL_strcat(lineBuffer, " HTTP/1.0");
+        PL_strcat(lineBuffer, CRLF);
+        
+        rv = m_Request->Fill(lineBuffer, PL_strlen(lineBuffer), &bytesWritten);
+        if (NS_FAILED(rv)) return rv;
         
 /*        switch (m_Method)
         {
@@ -111,6 +116,7 @@ nsHTTPRequest::Build()
                 break;
         }
 */
+
         // Write the request method and HTTP version
         
         // Add additional headers if any
@@ -125,7 +131,7 @@ nsHTTPRequest::Build()
                 element->atom->ToString(lineBuffStr);
                 lineBuffStr.Append(": ");
                 lineBuffStr.Append((const nsString&)*element->value);
-                lineBuffStr.Append('\n');
+                lineBuffStr.Append(CRLF);
                 NS_ASSERTION((lineBuffStr.Length() <= 1024), "Increase line buffer length!");
                 lineBuffStr.ToCString(lineBuffer, lineBuffStr.Length());
                 lineBuffer[lineBuffStr.Length()] = '\0';
@@ -134,6 +140,12 @@ nsHTTPRequest::Build()
                 lineBuffer[0] = '\0';
             }
         }
+        // Send the final \n
+        lineBuffer[0] = CR;
+        lineBuffer[1] = LF;
+        lineBuffer[2] = '\0';
+        rv = m_Request->Fill(lineBuffer, PL_strlen(lineBuffer), &bytesWritten);
+        if (NS_FAILED(rv)) return rv;
 
     }
 
@@ -876,6 +888,10 @@ nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
         //TODO check this portion here...
         return pListener ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
+    else
+    {
+        NS_ERROR("Failed to write to server!");
+    }
 
     /*
         Somewhere here we need to send a message up the event sink 
@@ -890,6 +906,7 @@ nsHTTPRequest::SetTransport(nsITransport* i_pTransport)
 {
     NS_ASSERTION(!m_pTransport, "Transport being overwritten!");
     m_pTransport = i_pTransport;
+    NS_ADDREF(m_pTransport);
     return NS_OK;
 }
 
