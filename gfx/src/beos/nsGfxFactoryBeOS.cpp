@@ -37,6 +37,7 @@
 #include "nsIImageManager.h" 
 #include "nsDeviceContextBeOS.h" 
 #include "nsImageBeOS.h" 
+#include "nsFontList.h"
 
 // objects that just require generic constructors 
 
@@ -49,6 +50,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionBeOS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecBeOS) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryBeOS) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorBeOS) 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerBeOS) 
  
 // our custom constructors 
@@ -166,6 +168,11 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/font_enumerator/beos;1", 
     "@mozilla.org/gfx/fontenumerator;1", 
     nsFontEnumeratorBeOSConstructor }, 
+  { "Font List",  
+    NS_FONTLIST_CID,
+    //    "@mozilla.org/gfx/fontlist;1"
+    NS_FONTLIST_CONTRACTID,
+    nsFontListConstructor },
   { "BeOS Screen Manager", 
     NS_SCREENMANAGER_CID, 
     //    "@mozilla.org/gfx/screenmanager/beos;1", 

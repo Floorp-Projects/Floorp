@@ -38,6 +38,7 @@
 #include "nsImageOS2.h"
 #include "nsRegionOS2.h"
 #include "nsPrintOptionsOS2.h"
+#include "nsFontList.h"
 
 // objects that just require generic constructors
 
@@ -50,6 +51,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsOS2)
 
@@ -173,6 +175,11 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/font_enumerator/gtk;1",
     "@mozilla.org/gfx/fontenumerator;1",
     nsFontEnumeratorOS2Constructor },
+  { "Font List",  
+    NS_FONTLIST_CID,
+    //    "@mozilla.org/gfx/fontlist;1"
+    NS_FONTLIST_CONTRACTID,
+    nsFontListConstructor },
   { "OS/2 Screen Manager",
     NS_SCREENMANAGER_CID,
     //    "@mozilla.org/gfx/screenmanager/gtk;1",

@@ -38,6 +38,7 @@
 #include "nsDeviceContextGTK.h"
 #include "nsImageGTK.h"
 #include "nsPrintOptionsGTK.h"
+#include "nsFontList.h"
 
 // objects that just require generic constructors
 
@@ -50,6 +51,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorGTK)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsGTK)
 
@@ -173,6 +175,11 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/font_enumerator/gtk;1",
     "@mozilla.org/gfx/fontenumerator;1",
     nsFontEnumeratorGTKConstructor },
+  { "Font List",  
+    NS_FONTLIST_CID,
+    //    "@mozilla.org/gfx/fontlist;1"
+    NS_FONTLIST_CONTRACTID,
+    nsFontListConstructor },
   { "Gtk Screen Manager",
     NS_SCREENMANAGER_CID,
     //    "@mozilla.org/gfx/screenmanager/gtk;1",

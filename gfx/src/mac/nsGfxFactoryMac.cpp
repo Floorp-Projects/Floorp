@@ -23,6 +23,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsIFontList.h"
 #include "nsGfxCIID.h"
 #include "nsFontMetricsMac.h"
 #include "nsRenderingContextMac.h"
@@ -46,6 +47,7 @@
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
+static NS_DEFINE_IID(kCFontList, NS_FONTLIST_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
@@ -157,6 +159,11 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
     nsFontEnumeratorMac* fe;
     NS_NEWXPCOM(fe, nsFontEnumeratorMac);
     inst = (nsISupports *)fe;
+  } 
+	else if (mClassID.Equals(kCFontList)) {
+    nsFontList* fl;
+    NS_NEWXPCOM(fl, nsFontList);
+    inst = (nsISupports *)fl;
   } 
 	else if (mClassID.Equals(kCScreenManager)) {
 		NS_NEWXPCOM(inst, nsScreenManagerMac);
