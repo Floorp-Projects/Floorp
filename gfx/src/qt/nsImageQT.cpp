@@ -152,7 +152,7 @@ nsresult nsImageQT::Init(PRInt32 aWidth,PRInt32 aHeight,
         mRequestDepth = aDepth;
     }
     else {
-        NS_ASSERTION(PR_FALSE, "unexpected image depth");
+        NS_NOTREACHED("unexpected image depth");
         return NS_ERROR_UNEXPECTED;
     }
     mWidth = aWidth;
@@ -194,6 +194,7 @@ nsresult nsImageQT::Init(PRInt32 aWidth,PRInt32 aHeight,
         mAlphaHeight = aHeight;
         break;
     }
+    PR_LOG(gQTLogModule, QT_BASIC, ("nsImageQT::Init succeeded"));
     return NS_OK;
 }
 

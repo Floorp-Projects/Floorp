@@ -53,6 +53,7 @@
 #include "nsImageQT.h"
 #include "nsFontList.h"
 #include "nsPrintSession.h"
+#include "gfxImageFrame.h"
 
 #include "qtlog.h"
 
@@ -73,6 +74,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorQT)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQT)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 // our custom constructors
 static nsresult nsScriptableRegionConstructor(nsISupports *aOuter,REFNSIID aIID,void **aResult)
@@ -159,6 +161,10 @@ static const nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
     nsScreenManagerQTConstructor },
+  { "shared image frame",
+    GFX_IMAGEFRAME_CID,
+    "@mozilla.org/gfx/image/frame;2",
+    gfxImageFrameConstructor, },
   { "Print Session",
     NS_PRINTSESSION_CID,
     "@mozilla.org/gfx/printsession;1",
