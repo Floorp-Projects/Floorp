@@ -339,7 +339,7 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
             // if we failed to allocate a new segment, we're probably out
             // of memory, but we don't care -- just report what we were
             // able to write so far
-            return NS_OK;
+          return (*writeCount == 0) ? NS_BASE_STREAM_FULL : NS_OK;
         }
 
         writeBufLen = PR_MIN(writeBufLen, count);
@@ -351,6 +351,10 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
                 // nsBuffer::Read later notices it.
                 SetEOF();
                 return NS_OK;
+            }
+            else if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+              // If no more data is available then return...
+              return rv;
             }
             else if (NS_FAILED(rv)) {
                 // if we failed to read just report what we were
