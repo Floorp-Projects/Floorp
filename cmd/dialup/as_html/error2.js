@@ -21,12 +21,7 @@ function go( msg )
 {
 	if ( parent.parent.globals.document.vars.editMode.value != "yes" )
 	{
-		if ( msg == parent.parent.globals.document.vars.path.value )
-		{
-			parent.parent.globals.document.vars.tryAgain.value = "yes";
-			return checkData();
-		}
-		return false;
+		return true;
 	}
 	else
 	{
@@ -34,11 +29,6 @@ function go( msg )
 			alert( "Sorry, you cannot connect while in using the Account Setup Editor." );
 		return false;
 	}
-}
-
-function checkData()
-{
-	return true;
 }
 
 function showErrorLayer()
