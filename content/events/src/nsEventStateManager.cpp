@@ -1925,21 +1925,23 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       // the Ender widget case.
       nsCOMPtr<nsIDocument> doc;
       gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
-      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
-      nsCOMPtr<nsIPresContext> oldPresContext;
-      shell->GetPresContext(getter_AddRefs(oldPresContext));
+      if(doc) {
+        nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+        nsCOMPtr<nsIPresContext> oldPresContext;
+        shell->GetPresContext(getter_AddRefs(oldPresContext));
 
-      //fire blur
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_BLUR_CONTENT;
+        //fire blur
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_BLUR_CONTENT;
 
-      nsCOMPtr<nsIEventStateManager> esm;
-      oldPresContext->GetEventStateManager(getter_AddRefs(esm));
-      esm->SetFocusedContent(gLastFocusedContent);
-      gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-      esm->SetFocusedContent(nsnull);
+        nsCOMPtr<nsIEventStateManager> esm;
+        oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+        esm->SetFocusedContent(gLastFocusedContent);
+        gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+        esm->SetFocusedContent(nsnull);
+      }
     }
 
     // Go ahead and fire a blur on the window.
