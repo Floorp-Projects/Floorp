@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.16 $ 
-# $Date: 2001/03/19 23:32:43 $ 
+# $Revision: 1.17 $ 
+# $Date: 2001/03/26 13:36:00 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -1073,8 +1073,8 @@ sub status_table_row {
       # If the current build is broken, show what to see what has
       # changed in VC during the last build.
 
-      my ($maxdate) = $current_rec->{'previousbuildtime'};
-      my ($mindate) = $current_rec->{'starttime'};
+      my ($maxdate) = $current_rec->{'starttime'};
+      my ($mindate) = $current_rec->{'previousbuildtime'};
 
       $links .= (
                  "\n". 
