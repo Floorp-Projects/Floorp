@@ -69,8 +69,8 @@ nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
 
     src = (const unsigned char *) str;
 
- 	char tempBuffer[100];
- 	int tempBufferPos = 0;
+    char tempBuffer[100];
+    unsigned int tempBufferPos = 0;
 
     char c1[] = " ";
     char c2[] = " ";
@@ -79,9 +79,11 @@ nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
 
     for (i = 0; i < len; i++)
     {
-
       c1[0] = *(src+1);
-      c2[0] = *(src+2);
+      if (*(src+1) == '\0') 
+          c2[0] = '\0';
+      else
+          c2[0] = *(src+2);
       unsigned char c = *src++;
 
       /* if the char has not to be escaped or whatever follows % is 
@@ -94,22 +96,22 @@ nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
       else 
           /* do the escape magic */
       {
-		    tempBuffer[tempBufferPos++] = HEX_ESCAPE;
-        tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
-        tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
+          tempBuffer[tempBufferPos++] = HEX_ESCAPE;
+          tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
+          tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
       }
  	  
-    if(tempBufferPos >= sizeof(tempBuffer) - 4)
- 		{
- 			tempBuffer[tempBufferPos] = '\0';
- 	    result += tempBuffer;
- 			tempBufferPos = 0;
- 		}
+      if(tempBufferPos >= sizeof(tempBuffer) - 4)
+ 	  {
+          tempBuffer[tempBufferPos] = '\0';
+          result += tempBuffer;
+          tempBufferPos = 0;
+ 	  }
 	}
  	
-  tempBuffer[tempBufferPos] = '\0';
- 	result += tempBuffer;
-  return NS_OK;
+    tempBuffer[tempBufferPos] = '\0';
+    result += tempBuffer;
+    return NS_OK;
 }
 
 /* helper call function */
@@ -145,7 +147,10 @@ nsURLUnescape(char* str, char **result)
     while (*src) {
 
         c1[0] = *(src+1);
-        c2[0] = *(src+2);
+        if (*(src+1) == '\0') 
+            c2[0] = '\0';
+        else
+            c2[0] = *(src+2);
 
         /* check for valid escaped sequence */
         if (*src != HEX_ESCAPE || PL_strpbrk(pc1, hexChars) == 0 || 
