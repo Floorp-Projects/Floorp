@@ -54,6 +54,12 @@ class InterpretedFunction extends NativeFunction {
         version = (short)cx.getLanguageVersion();   
     }
     
+    InterpretedFunction(InterpretedFunction theOther, Scriptable theScope)
+    {
+        itsData = theOther.itsData;
+        itsClosure = theScope;
+    }
+    
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args)
         throws JavaScriptException
@@ -61,12 +67,16 @@ class InterpretedFunction extends NativeFunction {
         if (itsData.itsNeedsActivation)
             scope = ScriptRuntime.initVarObj(cx, scope, this, thisObj, args);
         itsData.itsCX = cx;
-        itsData.itsScope = scope;
+        if (itsClosure == null)
+            itsData.itsScope = scope;
+        else
+            itsData.itsScope = itsClosure;
         itsData.itsThisObj = thisObj;
         itsData.itsInArgs = args;
         return Interpreter.interpret(itsData);    
     }
 
     InterpreterData itsData;
+    Scriptable itsClosure;
 }
     
