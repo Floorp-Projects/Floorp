@@ -796,7 +796,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
       PRInt32 aPos=theOutput.RFind("</endnote>");
       if(-1<aPos)
         theOutput.Truncate(aPos);
-      result=!theOutput.IsEmpty();
+      result=PRBool(0==theOutput.Length());
     }
   }
   return result;
