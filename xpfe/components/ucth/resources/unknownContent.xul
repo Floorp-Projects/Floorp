@@ -7,45 +7,39 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&unknownWindow.title;"
         onload="onLoad()"
-        onunload="onUnload()">
+        onunload="onUnload()"
+        class="dialog"
+        align="vertical">
 
     <html:script src="chrome://global/content/unknownContent.js"/>
 
-    <html:table style="width:100%;">
-        <html:tr>
-            <html:td colspan="4">
-                &startDownload;
-                <!-- This should be removed when putting it in the .dtd works. -->
-                <html:strong>
-                    <html:div id="dialog.contentType" style="display:inline;"> 
-                        placeholder
-                    </html:div>
-                </html:strong>
-            </html:td>
-        </html:tr>
-    
-        <html:tr>
-            <html:td style="width:25%">
-                <html:button id="dialog.more" onclick="more()">
-                    &dialogMore.label;
-                </html:button>
-            </html:td>
-            <html:td style="width:25%">
-                <html:button id="dialog.pick" onclick="pick()">
-                    &dialogPick.label;
-                </html:button>
-            </html:td>
-            <html:td style="width:25%">
-                <html:button id="dialog.save" onclick="save()">
-                    &dialogSave.label;
-                </html:button>
-            </html:td>
-            <html:td style="width:25%">
-                <html:button id="dialog.cancel" onclick="cancel()">
-                    &dialogCancel.label;
-                </html:button>
-            </html:td>
-        </html:tr>
-    </html:table>
+    <box align="horizontal" style="width: 32em; height: 100%;">
+		
+		<html:div style="width: 45px; margin: 5px;">
+			<html:img src="chrome://global/skin/message-icon.gif" width="32" height="32" border="0"/>
+		</html:div>
+		
+		<box align="vertical" flex="100%">    
+		   <html:div>
+				&startDownload;
+			</html:div>
+			<html:div id="dialog.contentType" style="width: 100%; margin-bottom: 0.5em; font-weight: bold;">
+				placeholder
+			</html:div>
+			<html:div style="margin-bottom: 0.5em;">
+				&helpText;
+			</html:div> 
+			
+			<box align="horizontal" style="width: 100%">
+				
+						
+				<titledbutton id="dialog.more" value="&dialogMore.label;" onclick="more()"/>
+				<spring flex="100%"/>
+		      <titledbutton id="dialog.pick" value="&dialogPick.label;" onclick="pick()"/>
+				<titledbutton id="dialog.save" value="&dialogSave.label;" onclick="save()"/>
+		      <titledbutton id="dialog.cancel" value="&dialogCancel.label;" onclick="cancel()"/>
+			</box>
+		</box>
+	</box>
 
 </window>
