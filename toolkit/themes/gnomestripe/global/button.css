@@ -19,7 +19,6 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
- *   Kevin Gerich (webmail@kmgerich.com)
  */
 
 /* ===== button.css =====================================================
@@ -32,12 +31,20 @@
 
 button {
   -moz-appearance: button;
-  -moz-user-focus: ignore;
-  margin: 6px;
+  margin: 1px 5px 2px 5px;
   min-width: 6.3em;
-  -moz-appearance: button;
- padding: 0px 4px;
-  color: #000000;
+  border: 3px solid;
+  -moz-border-top-colors: transparent ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: transparent ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: transparent ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: transparent ThreeDHighlight ThreeDLightShadow;
+  background-color: ThreeDFace;
+  color: ButtonText;
+}
+
+.button-box {
+  border: 1px solid transparent;
+  padding: 1px 4px 2px 3px;
 }
 
 .button-text {
@@ -45,8 +52,26 @@ button {
   text-align: center;
 }
 
-button[type="default"] {
-	font: menu;
+/* .......... focused state .......... */
+
+button:focus {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight transparent;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight transparent;
+}
+
+button:focus > .button-box {
+  border: 1px dotted ThreeDDarkShadow;
+}
+
+/* .......... default state .......... */
+
+button[default="true"] {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
 }
 
 /* .......... hover state .......... */
@@ -55,26 +80,37 @@ button:hover {
   color: -moz-gtk2-hovertext;
 }
 
-button:hover:active[disabled="true"] {
-  color: GrayText;
-}
-
 /* .......... active/open/checked state .......... */
 
-button[buttondown="true"],
+button:hover:active,
 button[open="true"],
 button[checked="true"] {
-color: ButtonText;
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  color: ButtonText;
+}
+
+button:hover:active > .button-box,
+button[open="true"] > .button-box,
+button[checked="true"] > .button-box {
+  padding: 2px 3px 1px 4px;
 }
 
 /* .......... disabled state .......... */
 
-button[disabled="true"] {
-  color: #777777 !important;
-  -moz-border-top-colors: #cccccc #eeeeee #fdfdfd;
-  -moz-border-right-colors: #cccccc #d9d9d9;
-  -moz-border-bottom-colors: #cccccc #eeeeee #fdfdfd;
-  -moz-border-left-colors: #cccccc #d9d9d9;
+button[disabled="true"],
+button[disabled="true"]:hover:active {
+  -moz-border-top-colors: transparent ThreeDHighlight ThreeDLightShadow !important;
+  -moz-border-right-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-bottom-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-left-colors: transparent ThreeDHighlight ThreeDLightShadow !important;
+  color: GrayText;
+}
+
+button[disabled="true"] > .button-box {
+  padding: 1px 4px 2px 3px !important;
 }
 
 /* ::::: menu/menu-button buttons ::::: */
@@ -89,39 +125,39 @@ button[type="menu-button"] {
 .button-menu-dropmarker,
 .button-menubutton-dropmarker {
   margin: 1px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+  background-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  min-width:11px;
+  min-height:11px;
 }
   
 .button-menu-dropmarker[disabled="true"],
 .button-menubutton-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.png");
+  background-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
 
 .button-menubutton-dropmarker[open="true"] {
-  /* margin: 2px 0px 0px 2px; */
+  margin: 2px 0px 0px 2px;
 }
 
 /* ::::: plain buttons ::::: */
 
 button.plain {
+  border: 0px !important;
   margin: 0px !important;
   padding: 0px !important;
 }
 
-/* ::::: close button ::::: */
-
-.close-button {
-  list-style-image: url("chrome://global/skin/icons/close-button.gif");
+button[type="disclosure"] {
+  border: 0px !important;
+  margin: 0px !important;
+  padding: 0px !important;
+  -moz-appearance: none;
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
+  min-width: 0px !important;
+  background-color: transparent;
 }
 
-.close-button > .toolbarbutton-icon {
-  margin: 0;
+button[type="disclosure"][open="true"] {
+  list-style-image: url("chrome://global/skin/tree/twisty-open.png"); 
 }
 
-.close-button > .toolbarbutton-text {
-  display: none;
-}
-
-.dialog-button {
-	font: menu;
-}
