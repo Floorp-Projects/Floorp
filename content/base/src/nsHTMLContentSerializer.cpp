@@ -936,6 +936,7 @@ nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
       (aName == nsHTMLAtoms::tr) ||
       (aName == nsHTMLAtoms::ul) ||
       (aName == nsHTMLAtoms::ol) ||
+      (aName == nsHTMLAtoms::dl) ||
       (aName == nsHTMLAtoms::tbody) ||
       (aName == nsHTMLAtoms::form) ||
       (aName == nsHTMLAtoms::frameset) ||
@@ -957,9 +958,13 @@ nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
       (aName == nsHTMLAtoms::tr) ||
       (aName == nsHTMLAtoms::ul) ||
       (aName == nsHTMLAtoms::ol) ||
+      (aName == nsHTMLAtoms::dl) ||
       (aName == nsHTMLAtoms::li) ||
       (aName == nsHTMLAtoms::tbody) ||
       (aName == nsHTMLAtoms::form) ||
+      (aName == nsHTMLAtoms::blockquote) ||
+      (aName == nsHTMLAtoms::dt) ||
+      (aName == nsHTMLAtoms::dd) ||
       (aName == nsHTMLAtoms::frameset)) {
     mIndent--;
   }
