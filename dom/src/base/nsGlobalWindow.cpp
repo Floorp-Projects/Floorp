@@ -4512,17 +4512,24 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
       const char *options_ptr = aOptions.IsEmpty() ? nsnull : options.get();
       const char *name_ptr = aName.IsEmpty() ? nsnull : name.get();
 
-      if (argc) {
-        nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
-        NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
+      {
+        // Reset popup state while opening a window to prevent the
+        // current state from being active the whole time a modal
+        // dialog is open.
+        nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
-        PRUint32 extraArgc = argc >= 3 ? argc - 3 : 0;
-        rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
-                                   aDialog, extraArgc, argv + 3,
-                                   getter_AddRefs(domReturn));
-      } else {
-        rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
-                                aExtraArgument, getter_AddRefs(domReturn));
+        if (argc) {
+          nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
+          NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
+
+          PRUint32 extraArgc = argc >= 3 ? argc - 3 : 0;
+          rv = pwwatch->OpenWindowJS(this, url.get(), name_ptr, options_ptr,
+                                     aDialog, extraArgc, argv + 3,
+                                     getter_AddRefs(domReturn));
+        } else {
+          rv = wwatch->OpenWindow(this, url.get(), name_ptr, options_ptr,
+                                  aExtraArgument, getter_AddRefs(domReturn));
+        }
       }
 
       if (domReturn) {
