@@ -70,7 +70,9 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug18359.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug19356.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug19599.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2050.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug20579.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2065.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug20804.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2123.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug21299.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug21518.html
