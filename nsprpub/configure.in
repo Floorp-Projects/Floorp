@@ -291,6 +291,16 @@ OS_ARCH=`uname -s | sed -e 's|/|_|g'`
 OS_RELEASE=`uname -r`
 OS_TEST=`uname -m`
 
+if test "${OS_ARCH}" = "IRIX64"; then
+    OS_ARCH=IRIX
+fi
+
+if test "${OS_TARGET}" = "IRIX64"; then
+    OS_TARGET=IRIX
+fi
+
+dnl ========================================================
+
 dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
