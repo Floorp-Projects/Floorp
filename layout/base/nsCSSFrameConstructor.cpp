@@ -3191,8 +3191,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
   }
   
   // get the document
-  nsIDocument* doc = nsnull;
-  nsresult rv = aParent->GetDocument(doc);
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = aParent->GetDocument(*getter_AddRefs(doc));
   if (NS_FAILED(rv) || !doc)
     return rv;
 
