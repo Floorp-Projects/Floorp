@@ -1,0 +1,116 @@
+interface Install
+{
+/* IID: { 0x18c2f988, 0xb09f, 0x11d2, \
+  {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}} */
+
+	const int SUERR_BAD_PACKAGE_NAME          = -200;
+	const int SUERR_UNEXPECTED_ERROR          = -201;
+	const int SUERR_ACCESS_DENIED             = -202;
+	const int SUERR_TOO_MANY_CERTIFICATES     = -203; /* Installer file must have 1 certificate */
+	const int SUERR_NO_INSTALLER_CERTIFICATE  = -204; /* Installer file must have a certificate */
+	const int SUERR_NO_CERTIFICATE            = -205; /* Extracted file is not signed */
+	const int SUERR_NO_MATCHING_CERTIFICATE   = -206; /* Extracted file does not match installer certificate */
+	const int SUERR_UNKNOWN_JAR_FILE          = -207; /* JAR file has not been opened */
+	const int SUERR_INVALID_ARGUMENTS         = -208; /* Bad arguments to a function */
+	const int SUERR_ILLEGAL_RELATIVE_PATH     = -209; /* Illegal relative path */
+	const int SUERR_USER_CANCELLED            = -210; /* User cancelled */
+	const int SUERR_INSTALL_NOT_STARTED       = -211;
+	const int SUERR_SILENT_MODE_DENIED        = -212;
+	const int SUERR_NO_SUCH_COMPONENT         = -213; /* no such component in the registry. */
+	const int SUERR_FILE_DOES_NOT_EXIST       = -214; /* File cannot be deleted as it does not exist */
+	const int SUERR_FILE_READ_ONLY            = -215; /* File cannot be deleted as it is read only. */
+	const int SUERR_FILE_IS_DIRECTORY         = -216; /* File cannot be deleted as it is a directory */
+	const int SUERR_NETWORK_FILE_IS_IN_USE    = -217; /* File on the network is in-use */
+	const int SUERR_APPLE_SINGLE_ERR          = -218; /* error in AppleSingle unpacking */
+	const int SUERR_INVALID_PATH_ERR          = -219; /* GetFolder() did not like the folderID */
+	const int SUERR_PATCH_BAD_DIFF            = -220; /* error in GDIFF patch */
+	const int SUERR_PATCH_BAD_CHECKSUM_TARGET = -221; /* source file doesn't checksum  */
+	const int SUERR_PATCH_BAD_CHECKSUM_RESULT = -222; /* final patched file fails checksum  */
+	const int SUERR_UNINSTALL_FAILED          = -223; /* error while uninstalling a package  */
+	const int SUERR_GESTALT_UNKNOWN_ERR       = -5550;         
+	const int SUERR_GESTALT_INVALID_ARGUMENT  = -5551;
+
+	const int SU_SUCCESS					  = 0;
+	const int SU_REBOOT_NEEDED                = 999;
+
+	/* install types */
+	const int SU_LIMITED_INSTALL              = 0;
+	const int SU_FULL_INSTALL                 = 1;
+	const int SU_NO_STATUS_DLG				  = 2;
+	const int SU_NO_FINALIZE_DLG			  = 4;
+
+	
+	/* message IDs*/
+	const int SU_INSTALL_FILE_UNEXPECTED_MSG_ID  = 0;
+	const int SU_DETAILS_REPLACE_FILE_MSG_ID  = 1;
+	const int SU_DETAILS_INSTALL_FILE_MSG_ID  = 2;
+
+	
+	readonly attribute wstring UserPackageName;
+	readonly attribute wstring RegPackageName;
+
+	void Install();
+
+	void AbortInstall();
+
+	long AddDirectory(	   in wstring regName, 
+						   in wstring version, 
+						   in wstring jarSource,         
+						   in InstallFolder folder, 
+						   in wstring subdir, 
+						   in boolean forceMode );
+
+
+	long AddSubcomponent(  in wstring regName, 
+						   in InstallVersion version, 
+						   in wstring jarSource,         
+						   in InstallFolder folder, 
+						   in wstring targetName, 
+						   in boolean forceMode );
+
+	long DeleteComponent(  in wstring registryName);
+
+	long DeleteFile(       in InstallFolder folder,
+						   in wstring relativeFileName );
+	
+	long DiskSpaceAvailable( in InstallFolder folder );
+	
+	long Execute(in wstring jarSource, in wstring args);
+	
+	long FinalizeInstall();
+
+	long Gestalt (in wstring selector);
+
+	InstallFolder GetComponentFolder( in wstring regName, 
+						              in wstring subdirectory);
+
+	InstallFolder GetFolder(in InstallFolder targetFolder, 
+				            in wstring subdirectory);
+
+	long GetLastError();
+
+	long GetWinProfile(in InstallFolder folder, in wstring file);
+	
+	long GetWinRegistry();
+
+	long Patch( in wstring regName, 
+				in wstring version, 
+				in wstring jarSource,
+				in InstallFolder folder, 
+				in wstring targetName );
+	
+	void ResetError();
+
+	void SetPackageFolder( in InstallFolder folder );
+	
+	long StartInstall( in wstring userPackageName,
+					   in wstring packageName, 
+					   in wstring version, 
+					   in long flags );
+
+	long Uninstall( in wstring packageName);
+
+	void ExtractFileFromJar(in wstring jarfile, in wstring finalFile, out wstring tempFile, out wstring errorMsg);
+
+
+};
