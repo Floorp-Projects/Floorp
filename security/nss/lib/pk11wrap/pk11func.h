@@ -165,6 +165,36 @@ PRBool PK11_UserDisableSlot(PK11SlotInfo *slot);
 /* Allow all mechanisms that are ON before UserDisableSlot() */
 /* was called to be available again */
 PRBool PK11_UserEnableSlot(PK11SlotInfo *slot);
+/*
+ * wait for a specific slot event.
+ * event is a specific event to wait for. Currently only 
+ *    PK11TokenChangeOrRemovalEvent and PK11TokenPresentEvents are defined.
+ * timeout can be an interval time to wait, PR_INTERVAL_NO_WAIT (meaning only
+ * poll once), or PR_INTERVAL_NO_TIMEOUT (meaning block until a change).
+ * pollInterval is a suggested pulling interval value. '0' means use the 
+ *  default. Future implementations that don't poll may ignore this value.
+ * series is the current series for the last slot. This should be the series 
+ *  value for the slot the last time you read persistant information from the
+ *  slot. For instance, if you publish a cert from the slot, you should obtain
+ *  the slot series at that time. Then PK11_WaitForTokenEvent can detect a 
+ *  a change in the slot between the time you publish and the time 
+ *  PK11_WaitForTokenEvent is called, elliminating potential race conditions.
+ *
+ * The current status that is returned is:
+ *   PK11TokenNotRemovable - always returned for any non-removable token.
+ *   PK11TokenPresent - returned when the token is present and we are waiting
+ *     on a PK11TokenPresentEvent. Then next event to look for is a 
+ *     PK11TokenChangeOrRemovalEvent.
+ *   PK11TokenChanged - returned when the old token has been removed and a new
+ *     token ad been inserted, and we are waiting for a 
+ *     PK11TokenChangeOrRemovalEvent. The next event to look for is another
+ *     PK11TokenChangeOrRemovalEvent.
+ *   PK11TokenRemoved - returned when the token is not present and we are 
+ *     waiting for a PK11TokenChangeOrRemovalEvent. The next event to look for 
+ *     is a PK11TokenPresentEvent.
+ */
+PK11TokenStatus PK11_WaitForTokenEvent(PK11SlotInfo *slot, PK11TokenEvent event,
+	PRIntervalTime timeout, PRIntervalTime pollInterval, int series);
 
 PRBool PK11_NeedPWInit(void);
 PRBool PK11_NeedPWInitForSlot(PK11SlotInfo *slot);

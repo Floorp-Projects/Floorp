@@ -419,7 +419,7 @@ PK11_NewSlotInfo(void)
     slot->isInternal = PR_FALSE;
     slot->isThreadSafe = PR_FALSE;
     slot->disabled = PR_FALSE;
-    slot->series = 0;
+    slot->series = 1;
     slot->wrapKey = 0;
     slot->wrapMechanism = CKM_INVALID_MECHANISM;
     slot->refKeys[0] = CK_INVALID_HANDLE;
@@ -4606,3 +4606,51 @@ PK11_SetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
     }
     return SECSuccess;
 }
+
+/*
+ * wait for a token to change it's state. The application passes in the expected
+ * new state in event. 
+ */
+PK11TokenStatus
+PK11_WaitForTokenEvent(PK11SlotInfo *slot, PK11TokenEvent event, 
+	PRIntervalTime timeout, PRIntervalTime latency, int series)
+{
+   PRIntervalTime first_time = 0;
+   PRBool first_time_set = PR_FALSE;
+   PRBool waitForRemoval;
+
+   if (slot->isPerm) {
+	return PK11TokenNotRemovable;
+   }
+   if (latency == 0) {
+	latency = PR_SecondsToInterval(5);
+   }
+   waitForRemoval = (PRBool) (event == PK11TokenRemovedOrChangedEvent);
+
+   if (series == 0) {
+	series = PK11_GetSlotSeries(slot);
+   }
+   while (PK11_IsPresent(slot) == waitForRemoval ) {
+	PRIntervalTime interval;
+
+	if (waitForRemoval && series != PK11_GetSlotSeries(slot)) {
+	    return PK11TokenChanged;
+	}
+	if (timeout == PR_INTERVAL_NO_WAIT) {
+	    return waitForRemoval ? PK11TokenPresent : PK11TokenRemoved;
+	}
+	if (timeout == PR_INTERVAL_NO_TIMEOUT ) {
+	    interval = PR_IntervalNow();
+	    if (!first_time_set) {
+		first_time = interval;
+		first_time_set = PR_TRUE;
+	    }
+	    if ((interval-first_time) > timeout) {
+		return waitForRemoval ? PK11TokenPresent : PK11TokenRemoved;
+	    }
+	}
+	PR_Sleep(latency);
+   }
+   return waitForRemoval ? PK11TokenRemoved : PK11TokenPresent;
+}
+	

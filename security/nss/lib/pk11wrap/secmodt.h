@@ -245,4 +245,19 @@ struct SECKEYEncryptedPrivateKeyInfoStr {
 };
 typedef struct SECKEYEncryptedPrivateKeyInfoStr SECKEYEncryptedPrivateKeyInfo;
 
+/*
+ * token removal detection
+ */
+typedef enum {
+   PK11TokenNotRemovable = 0,
+   PK11TokenPresent = 1,
+   PK11TokenChanged = 2,
+   PK11TokenRemoved = 3
+} PK11TokenStatus;
+
+typedef enum {
+   PK11TokenRemovedOrChangedEvent = 0,
+   PK11TokenPresentEvent = 1
+} PK11TokenEvent;
+
 #endif /*_SECMODT_H_ */
