@@ -68,6 +68,7 @@ class nsINameSpaceManager;
 class nsIDocument;
 class nsIURI;
 class nsIPrincipal;
+class nsISupportsArray;
 
 
 // IID for the nsINodeInfo interface
@@ -384,6 +385,10 @@ public:
    */
   NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
   
+  /**
+   * Returns an nsISupportsArray of all nsINodeInfos managed by this manager
+   */
+  NS_IMETHOD GetNodeInfoArray(nsISupportsArray** aArray) = 0;
 };
 
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);

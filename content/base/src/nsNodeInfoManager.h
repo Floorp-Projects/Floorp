@@ -74,6 +74,7 @@ public:
   NS_IMETHOD GetDocument(nsIDocument*& aDocument);
   NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal);
   NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
+  NS_IMETHOD GetNodeInfoArray(nsISupportsArray** aArray);
 
   // nsNodeInfoManager
   nsNodeInfoManager();
@@ -88,6 +89,9 @@ private:
                                                     const void *key2);
   static PLHashNumber PR_CALLBACK GetNodeInfoInnerHashValue(const void *key);
 
+  PR_STATIC_CALLBACK(PRIntn) GetNodeInfoArrayEnumerator(PLHashEntry* he,
+                                                        PRIntn i,
+                                                        void* arg);
 
   PLHashTable *mNodeInfoHash;
   nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
