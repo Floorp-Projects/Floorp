@@ -4760,8 +4760,12 @@ nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
   mPresContext->GetShell(getter_AddRefs(presShell));
 
   // Make caret visible or not, depending on what's appropriate
-  if (presShell)
-    return SetContentCaretVisible(presShell, mCurrentFocus, *aBrowseWithCaret && gLastFocusedDocument == mDocument);
+  if (presShell) {
+    return SetContentCaretVisible(presShell, mCurrentFocus,
+                                  *aBrowseWithCaret &&
+                                  (!gLastFocusedDocument ||
+                                   gLastFocusedDocument == mDocument));
+  }
 
   return NS_ERROR_FAILURE;
 }
