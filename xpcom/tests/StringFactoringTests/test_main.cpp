@@ -5,7 +5,6 @@
 
 
 #include "nsString.h"
-#include "nsSharedString.h"
 #include "nsFragmentedString.h"
 #include "nsReadableUtils.h"
 #include "nsSlidingString.h"
@@ -528,10 +527,6 @@ main()
 
       nsStdString s14( s7 + s8 + s9 );
       tests_failed += test_readable_hello(s14);
-
-      nsSharedString* s15 = new_nsSharedString( s7 + s8 + s9 );
-      tests_failed += test_readable_hello(*s15);
-      // cout << "Here's a string: \""; print_string(*s15) << "\"" << endl;
 
       nsCString         s10("He");
       nsLiteralCString  s11("l");
