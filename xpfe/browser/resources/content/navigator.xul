@@ -246,6 +246,8 @@ Contributor(s): ______________________________________. -->
 <!ENTITY xptk8Cmd.label "Sound">
 <!ENTITY xptk9Cmd.label "XP Menus">
 
+<!-- DO not localize strresCmd.label; test case --> 
+<!ENTITY strresCmd.label "Strres Test">
 
 <!ENTITY QA.label "QA">
 <!ENTITY QABugCmd.label "Bug Writing">
@@ -683,6 +685,8 @@ Contributor(s): ______________________________________. -->
         <menuitem name="&QATempCmd.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/bug-template.html'"/>
         <menuitem name="&QASmokeCmd.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
         <menuitem name="&QAKnownBugCmd.label;" onclick="window.content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
+		<separator />
+      	<menuitem name="&strresCmd.label;" onclick="window.content.location.href='resource:/res/strres-test.xul'"/>
 		</menu>
   </menubar>
   
