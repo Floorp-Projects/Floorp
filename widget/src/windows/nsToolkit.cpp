@@ -93,11 +93,7 @@ IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
 PRInt32        nsToolkit::gAIMMCount = 0;
 
 #ifndef WINCE
-nsWindow     *MouseTrailer::mCaptureWindow  = NULL;
-nsWindow     *MouseTrailer::mHoldMouse      = NULL;
-MouseTrailer *MouseTrailer::theMouseTrailer = NULL;
-PRBool        MouseTrailer::gIgnoreNextCycle(PR_FALSE);
-PRBool        MouseTrailer::mIsInCaptureMode(PR_FALSE);
+MouseTrailer MouseTrailer::mSingleton;
 #endif
 
 #if !defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_ENABLE_LIBXUL)
@@ -934,51 +930,31 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
 //
 //
 //-------------------------------------------------------------------------
-MouseTrailer * MouseTrailer::GetMouseTrailer(DWORD aThreadID) {
-  if (nsnull == MouseTrailer::theMouseTrailer) {
-    MouseTrailer::theMouseTrailer = new MouseTrailer();
-  }
-  return MouseTrailer::theMouseTrailer;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-nsWindow * MouseTrailer::GetMouseTrailerWindow() {
-  return MouseTrailer::mHoldMouse;
-}
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-void MouseTrailer::SetMouseTrailerWindow(nsWindow * aNSWin) {
-  MouseTrailer::mHoldMouse = aNSWin;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-MouseTrailer::MouseTrailer()
+MouseTrailer::MouseTrailer() : mHoldMouseWindow(nsnull), mCaptureWindow(nsnull),
+  mIsInCaptureMode(PR_FALSE), mIgnoreNextCycle(PR_FALSE)
 {
-  mHoldMouse       = NULL;
 }
-
-
 //-------------------------------------------------------------------------
 //
 //
 //-------------------------------------------------------------------------
 MouseTrailer::~MouseTrailer()
 {
-    DestroyTimer();
-    if (mHoldMouse) {
-        NS_RELEASE(mHoldMouse);
-    }
+  DestroyTimer();
 }
-
-
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void MouseTrailer::SetMouseTrailerWindow(nsWindow * aNSWin) 
+{
+  if (mHoldMouseWindow != aNSWin && mTimer) {
+    // Make sure TimerProc is fired at least once for the old window
+    TimerProc(nsnull, nsnull);
+  }
+  mHoldMouseWindow = aNSWin;
+  CreateTimer();
+}
 //-------------------------------------------------------------------------
 //
 //
@@ -993,7 +969,7 @@ nsresult MouseTrailer::CreateTimer()
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mTimer->InitWithFuncCallback(MouseTrailer::TimerProc, nsnull, 200,
+  return mTimer->InitWithFuncCallback(TimerProc, nsnull, 200,
                                       nsITimer::TYPE_REPEATING_SLACK);
 }
 
@@ -1020,8 +996,6 @@ void MouseTrailer::SetCaptureWindow(nsWindow * aNSWin)
     mIsInCaptureMode = PR_TRUE;
   }
 }
-
-#define TIMER_DEBUG 1
 //-------------------------------------------------------------------------
 //
 //
@@ -1033,48 +1007,48 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
   // Capture could end outside our window
   // Also, for some reason when the mouse is on the frame it thinks that
   // it is inside the window that is being captured.
-  if (nsnull != MouseTrailer::mCaptureWindow) {
-    if (MouseTrailer::mCaptureWindow != MouseTrailer::mHoldMouse) {
+  if (nsnull != mSingleton.mCaptureWindow) {
+    if (mSingleton.mCaptureWindow != mSingleton.mHoldMouseWindow) {
       return;
     }
   } else {
-    if (mIsInCaptureMode) {
-      // the mHoldMouse could be bad from rolling over the frame, so clear 
+    if (mSingleton.mIsInCaptureMode) {
+      // The mHoldMouse could be bad from rolling over the frame, so clear 
       // it if we were capturing and now this is the first timer call back 
       // since we canceled the capture
-      MouseTrailer::mHoldMouse = nsnull;
-      mIsInCaptureMode = PR_FALSE;
+      mSingleton.mHoldMouseWindow = nsnull;
+      mSingleton.mIsInCaptureMode = PR_FALSE;
       return;
     }
   }
 
-    if (MouseTrailer::mHoldMouse && ::IsWindow(MouseTrailer::mHoldMouse->GetWindowHandle())) {
-      if (gIgnoreNextCycle) {
-        gIgnoreNextCycle = PR_FALSE;
-      }
-      else {
-        POINT mp;
-        DWORD pos = ::GetMessagePos();
-        mp.x = GET_X_LPARAM(pos);
-        mp.y = GET_Y_LPARAM(pos);
-
-        if (::WindowFromPoint(mp) != mHoldMouse->GetWindowHandle()) {
-            ::ScreenToClient(mHoldMouse->GetWindowHandle(), &mp);
-
-            //notify someone that a mouse exit happened
-            if (nsnull != MouseTrailer::mHoldMouse) {
-              MouseTrailer::mHoldMouse->DispatchMouseEvent(NS_MOUSE_EXIT);
-            }
-  
-            // we are out of this window and of any window, destroy timer
-            MouseTrailer::theMouseTrailer->DestroyTimer();
-            MouseTrailer::mHoldMouse = NULL;
-        }
-      }
-    } else {
-      MouseTrailer::theMouseTrailer->DestroyTimer();
-      MouseTrailer::mHoldMouse = NULL;
+  if (mSingleton.mHoldMouseWindow && ::IsWindow(mSingleton.mHoldMouseWindow->GetWindowHandle())) {
+    if (mSingleton.mIgnoreNextCycle) {
+      mSingleton.mIgnoreNextCycle = PR_FALSE;
     }
+    else {
+      POINT mp;
+      DWORD pos = ::GetMessagePos();
+      mp.x = GET_X_LPARAM(pos);
+      mp.y = GET_Y_LPARAM(pos);
+
+      if (::WindowFromPoint(mp) != mSingleton.mHoldMouseWindow->GetWindowHandle()) {
+          ::ScreenToClient(mSingleton.mHoldMouseWindow->GetWindowHandle(), &mp);
+
+          //notify someone that a mouse exit happened
+          if (nsnull != mSingleton.mHoldMouseWindow) {
+            mSingleton.mHoldMouseWindow->DispatchMouseEvent(NS_MOUSE_EXIT);
+          }
+
+          // we are out of this window and of any window, destroy timer
+          mSingleton.DestroyTimer();
+          mSingleton.mHoldMouseWindow = nsnull;
+      }
+    }
+  } else {
+    mSingleton.DestroyTimer();
+    mSingleton.mHoldMouseWindow = nsnull;
+  }
 }
 
 #endif

@@ -901,9 +901,8 @@ nsWindow::~nsWindow()
   }
 
 #ifndef WINCE
-  MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-  if (mouseTrailer->GetMouseTrailerWindow() == this) {
-    mouseTrailer->DestroyTimer();
+  if (MouseTrailer::GetSingleton().GetMouseTrailerWindow() == this) {
+    MouseTrailer::GetSingleton().DestroyTimer();
   }
 #endif
 
@@ -939,12 +938,12 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
   if (aCapture) {
 #ifndef WINCE
-    MouseTrailer::SetCaptureWindow(this);
+    MouseTrailer::GetSingleton().SetCaptureWindow(this);
 #endif
     ::SetCapture(mWnd);
   } else {
 #ifndef WINCE
-    MouseTrailer::SetCaptureWindow(NULL);
+    MouseTrailer::GetSingleton().SetCaptureWindow(NULL);
 #endif
     ::ReleaseCapture();
   }
@@ -5501,10 +5500,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
       // set that window into the mouse trailer timer.
       if (!mIsInMouseCapture) {
 #ifndef WINCE
-        MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-        mouseTrailer->TimerProc(nsnull, nsnull);
-        MouseTrailer::SetMouseTrailerWindow(this);
-        mouseTrailer->CreateTimer();
+        MouseTrailer::GetSingleton().SetMouseTrailerWindow(this);
 #endif
       } else {
         POINT mp;
@@ -5535,10 +5531,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         // only set the window into the mouse trailer if we have a good window
         if (nsnull != someWindow) {
 #ifndef WINCE
-          MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-          mouseTrailer->TimerProc(nsnull, nsnull);
-          MouseTrailer::SetMouseTrailerWindow(someWindow);
-          mouseTrailer->CreateTimer();
+          MouseTrailer::GetSingleton().SetMouseTrailerWindow(someWindow);
 #endif
         }
       }
@@ -5552,7 +5545,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
           if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
 #ifndef WINCE
-            MouseTrailer::IgnoreNextCycle();
+            MouseTrailer::GetSingleton().IgnoreNextCycle();
 #endif
             gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam, gCurrentWindow->GetLastPoint());
           }
