@@ -86,32 +86,32 @@ public:
   virtual nsIStyleRule* GetStyleRule(void);
 
   // nsIScriptObjectOwner interface
-  virtual nsresult  GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
 
   // nsIDOMElement interface
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  virtual nsresult              GetNodeType(PRInt32 *aType);
-  virtual nsresult              GetParentNode(nsIDOMNode **aNode);
-  virtual nsresult              GetChildNodes(nsIDOMNodeIterator **aIterator);
-  virtual nsresult              HasChildNodes();
-  virtual nsresult              GetFirstChild(nsIDOMNode **aNode);
-  virtual nsresult              GetPreviousSibling(nsIDOMNode **aNode);
-  virtual nsresult              GetNextSibling(nsIDOMNode **aNode);
-  virtual nsresult              InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
-  virtual nsresult              ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild);
-  virtual nsresult              RemoveChild(nsIDOMNode *oldChild);
-  virtual nsresult              GetTagName(nsString &aName);
-  virtual nsresult              GetAttributes(nsIDOMAttributeList **aAttributeList);
-  virtual nsresult              GetDOMAttribute(nsString &aName, nsString &aValue);
-  virtual nsresult              SetDOMAttribute(nsString &aName, nsString &aValue);
-  virtual nsresult              RemoveAttribute(nsString &aName);
-  virtual nsresult              GetAttributeNode(nsString &aName, nsIDOMAttribute **aAttribute);
-  virtual nsresult              SetAttributeNode(nsIDOMAttribute *aAttribute);
-  virtual nsresult              RemoveAttributeNode(nsIDOMAttribute *aAttribute);
-  virtual nsresult              GetElementsByTagName(nsString &aName,nsIDOMNodeIterator **aIterator);
-  virtual nsresult              Normalize();
+  NS_IMETHOD GetNodeType(PRInt32 *aType);
+  NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
+  NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
+  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
+  NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
+  NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);
+  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
+  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild);
+  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
+  NS_IMETHOD GetTagName(nsString &aName);
+  NS_IMETHOD GetAttributes(nsIDOMAttributeList **aAttributeList);
+  NS_IMETHOD GetDOMAttribute(nsString &aName, nsString &aValue);
+  NS_IMETHOD SetDOMAttribute(nsString &aName, nsString &aValue);
+  NS_IMETHOD RemoveAttribute(nsString &aName);
+  NS_IMETHOD GetAttributeNode(nsString &aName, nsIDOMAttribute **aAttribute);
+  NS_IMETHOD SetAttributeNode(nsIDOMAttribute *aAttribute);
+  NS_IMETHOD RemoveAttributeNode(nsIDOMAttribute *aAttribute);
+  NS_IMETHOD GetElementsByTagName(nsString &aName,nsIDOMNodeIterator **aIterator);
+  NS_IMETHOD Normalize();
 
   // Utility routines for making attribute parsing easier
 

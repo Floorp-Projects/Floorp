@@ -30,8 +30,8 @@
 class nsIDOMComment : public nsIDOMNode {
 public:
   //attribute UniString        data;
-  virtual nsresult            GetData(nsString &aData) = 0;
-  virtual nsresult            SetData(nsString &aData) = 0;
+  NS_IMETHOD GetData(nsString &aData) = 0;
+  NS_IMETHOD SetData(nsString &aData) = 0;
 };
 
 #endif // nsIDOMComment_h__

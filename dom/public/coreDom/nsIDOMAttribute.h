@@ -53,7 +53,7 @@ public:
    * @param aName [out]     The attribute name
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetName(nsString &aName) = 0;
+  NS_IMETHOD GetName(nsString &aName) = 0;
 
   /**
    * Return the value of this attribute. 
@@ -61,7 +61,7 @@ public:
    * @param aName [out]     The attribute value
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetValue(nsString &aName) = 0;
+  NS_IMETHOD GetValue(nsString &aName) = 0;
 
   /**
    * Set the value of this attribute. 
@@ -69,7 +69,7 @@ public:
    * @param aName [in]      The attribute value
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            SetValue(nsString &aName) = 0;
+  NS_IMETHOD SetValue(nsString &aName) = 0;
 
   /**
    * If this attribute was explicitly given a value in the original document, 
@@ -77,7 +77,7 @@ public:
    *
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetSpecified() = 0;
+  NS_IMETHOD GetSpecified() = 0;
 
   /**
    * Set the specified value
@@ -85,7 +85,7 @@ public:
    * @param specified [in]  The specified value
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            SetSpecified(PRBool specified) = 0;
+  NS_IMETHOD SetSpecified(PRBool specified) = 0;
 
   /**
    * Returns the attribute as a string. Character and general entity 
@@ -94,7 +94,7 @@ public:
    * @param aString [out]   The attribute as a string
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            ToString(nsString &aString) = 0;
+  NS_IMETHOD ToString(nsString &aString) = 0;
 };
 
 #define NS_IDOMATTRIBUTELIST_IID \
@@ -118,7 +118,7 @@ public:
    * @param aAttribute [out]  The returned attribute
    * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetAttribute(nsString &aAttrName, nsIDOMAttribute** aAttribute) = 0;
+  NS_IMETHOD GetAttribute(nsString &aAttrName, nsIDOMAttribute** aAttribute) = 0;
 
   /**
    * Add a new attribute to the end of the list and associate it with the given name. 
@@ -130,7 +130,7 @@ public:
    * @param aAttribute [in]   The attribute to set
    * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            SetAttribute(nsIDOMAttribute *attr) = 0;
+  NS_IMETHOD SetAttribute(nsIDOMAttribute *attr) = 0;
 
   /**
    * Removes the Attribute instance named name from the list and returns it.
@@ -139,7 +139,7 @@ public:
    * @param aAttribute [out]  The removed attribute
    * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            Remove(nsString &attrName, nsIDOMAttribute** aAttribute) = 0;
+  NS_IMETHOD Remove(nsString &attrName, nsIDOMAttribute** aAttribute) = 0;
 
   /**
    * Returns the (zero-based) indexth Attribute item in the collection. 
@@ -148,7 +148,7 @@ public:
    * @param aAttribute [out]  The attribute at that index
    * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute) = 0;
+  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute) = 0;
 
   /**
    * Returns the number of Attributes in the AttributeList instance. 
@@ -156,7 +156,7 @@ public:
    * @param aLength [out]   The attribute list length
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult            GetLength(PRUint32 *aLength) = 0;
+  NS_IMETHOD GetLength(PRUint32 *aLength) = 0;
 };
 
 

@@ -52,7 +52,7 @@ public:
    * @param aDocument [out] The root node of a Document Object Model
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                GetDocument(nsIDOMDocument **aDocument) = 0;
+  NS_IMETHOD GetDocument(nsIDOMDocument **aDocument) = 0;
 
   /**
    * Set the root node of a Document Object Model. 
@@ -60,7 +60,7 @@ public:
    * @param aDocument [in]  The root node of a Document Object Model
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                SetDocument(nsIDOMDocument *aDocument) = 0;
+  NS_IMETHOD SetDocument(nsIDOMDocument *aDocument) = 0;
 };
 
 #define NS_IDOMDOCUMENTFRAGMENT_IID \
@@ -81,7 +81,7 @@ public:
    * @param aDocument [out] The main Document
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                GetMasterDoc(nsIDOMDocument **aDocument) = 0;
+  NS_IMETHOD GetMasterDoc(nsIDOMDocument **aDocument) = 0;
 
   /**
    * Set the Document object associated with this DocumentFragment 
@@ -89,7 +89,7 @@ public:
    * @param aDocument [in]  The main Document
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                SetMasterDoc(nsIDOMDocument *aDocument) = 0;
+  NS_IMETHOD SetMasterDoc(nsIDOMDocument *aDocument) = 0;
 };
 
 #define NS_IDOMDOCUMENT_IID \
@@ -116,7 +116,7 @@ public:
    * @param aDocType [out]  The document type
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                GetDocumentType(nsIDOMNode **aDocType) = 0;            
+  NS_IMETHOD GetDocumentType(nsIDOMNode **aDocType) = 0;            
 
   /**
    * For XML, this sets the Document Type Definition (see DocumentType) 
@@ -126,7 +126,7 @@ public:
    * @param aDocType [in]   The document type
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                SetDocumentType(nsIDOMNode *aNode) = 0;            
+  NS_IMETHOD SetDocumentType(nsIDOMNode *aNode) = 0;            
   
   /**
    * This is a "convenience" function to jump directly to the child node 
@@ -135,7 +135,7 @@ public:
    * @param aElement [out]  The root element
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                GetDocumentElement(nsIDOMElement **aElement) = 0;            
+  NS_IMETHOD GetDocumentElement(nsIDOMElement **aElement) = 0;            
 
   /**
    * This is a "convenience" function to set the child node 
@@ -144,7 +144,7 @@ public:
    * @param aElement [out]  The root element
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                SetDocumentElement(nsIDOMElement *aElement) = 0;            
+  NS_IMETHOD SetDocumentElement(nsIDOMElement *aElement) = 0;            
 
   /**
    * Return the DocumentContext 
@@ -152,7 +152,7 @@ public:
    * @param aContext [out]  The DocumentContext
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                GetDocumentContext(nsIDOMDocumentContext **aDocContext) = 0;            
+  NS_IMETHOD GetDocumentContext(nsIDOMDocumentContext **aDocContext) = 0;            
 
   /**
    * Set the DocumentContext 
@@ -160,7 +160,7 @@ public:
    * @param aContext [in]   The DocumentContext
    * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                SetDocumentContext(nsIDOMDocumentContext *aContext) = 0;            
+  NS_IMETHOD SetDocumentContext(nsIDOMDocumentContext *aContext) = 0;            
 
   /**
    * Create and return a new DocumentContext. 
@@ -168,7 +168,7 @@ public:
    * @param aDocContext [out]   The new context
    * @return <b>NS_OK</b>       iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                CreateDocumentContext(nsIDOMDocumentContext **aDocContext) = 0;
+  NS_IMETHOD CreateDocumentContext(nsIDOMDocumentContext **aDocContext) = 0;
 
   /**
    * Create an element based on the tagName. Note that the instance returned may 
@@ -180,7 +180,7 @@ public:
    * @param aElement [out]      The new element
    * @return <b>NS_OK</b>       iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                CreateElement(nsString &aTagName, 
+  NS_IMETHOD CreateElement(nsString &aTagName, 
                                                 nsIDOMAttributeList *aAttributes, 
                                                 nsIDOMElement **aElement) = 0;
 
@@ -191,7 +191,7 @@ public:
    * @param aTextNode [out]     The new text node
    * @return <b>NS_OK</b>       iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                CreateTextNode(nsString &aData, nsIDOMText** aTextNode) = 0;
+  NS_IMETHOD CreateTextNode(nsString &aData, nsIDOMText** aTextNode) = 0;
 
   /**
    * Create a Comment node given the specified string 
@@ -200,7 +200,7 @@ public:
    * @param aComment [out]      The new Comment object.
    * @return <b>NS_OK</b>       iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                CreateComment(nsString &aData, nsIDOMComment **aComment) = 0;
+  NS_IMETHOD CreateComment(nsString &aData, nsIDOMComment **aComment) = 0;
 
   /**
    * Create a PI node given the specified name and data strings. 
@@ -210,7 +210,7 @@ public:
    * @param aPI [out]           The new PI object
    * @return <b>NS_OK</b>       iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                CreatePI(nsString &aName, nsString &aData, nsIDOMPI **aPI) = 0;
+  NS_IMETHOD CreatePI(nsString &aName, nsString &aData, nsIDOMPI **aPI) = 0;
 
   /**
    * Create an Attribute of the given name and specified value. Note that the 
@@ -221,7 +221,7 @@ public:
    * @param aAttribute [out]    A new Attribute object.
    * @return <b>NS_OK</b>       iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                CreateAttribute(nsString &aName, 
+  NS_IMETHOD CreateAttribute(nsString &aName, 
                                                   nsIDOMNode *value, 
                                                   nsIDOMAttribute **aAttribute) = 0;
   
@@ -231,7 +231,7 @@ public:
    * @param aAttributesList [out]     The new AttributeList
    * @return <b>NS_OK</b>             iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                CreateAttributeList(nsIDOMAttributeList **aAttributesList) = 0;
+  NS_IMETHOD CreateAttributeList(nsIDOMAttributeList **aAttributesList) = 0;
 
   /**
    * Create a TreeIterator anchored on a given node.  
@@ -240,7 +240,7 @@ public:
    * @param aTreeIterator [out]   A new TreeIterator object.
    * @return <b>NS_OK</b>         iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator **aTreeIterator) = 0;
+  NS_IMETHOD CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator **aTreeIterator) = 0;
 
   /**
    * Returns an iterator through all subordinate Elements with a given tag name. 
@@ -249,7 +249,7 @@ public:
    * @param aIterator [out]       A new NodeIterator object.
    * @return <b>NS_OK</b>         iff the function succeeds, otherwise an error code
    */
-  virtual nsresult                GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator **aIterator) = 0;
+  NS_IMETHOD GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator **aIterator) = 0;
 };
 
 #endif // nsIDOMDocument_h__

@@ -95,8 +95,8 @@ public:
   virtual nsresult GetScriptContext(nsIScriptContext **aContext);
   virtual nsresult ReleaseScriptContext();
 
-  virtual nsresult GetScriptObject(JSContext *aContext, void** aScriptObject);
-  virtual nsresult ResetScriptObject();
+  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
 
 private:
   nsresult ProvideDefaultHandlers();

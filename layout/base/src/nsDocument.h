@@ -163,41 +163,41 @@ public:
 
 public:
   
-  virtual nsresult            GetScriptObject(JSContext *aContext, void** aScriptObject);
-  virtual nsresult            ResetScriptObject();
+  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
 
   // nsIDOMDocument interface
-  virtual nsresult            GetNodeType(PRInt32 *aType);
-  virtual nsresult            GetParentNode(nsIDOMNode **aNode);
-  virtual nsresult            GetChildNodes(nsIDOMNodeIterator **aIterator);
-  virtual nsresult            HasChildNodes();
-  virtual nsresult            GetFirstChild(nsIDOMNode **aNode);
-  virtual nsresult            GetPreviousSibling(nsIDOMNode **aNode);
-  virtual nsresult            GetNextSibling(nsIDOMNode **aNode);
-  virtual nsresult            InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
-  virtual nsresult            ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild);
-  virtual nsresult            RemoveChild(nsIDOMNode *oldChild);
-  virtual nsresult            GetMasterDoc(nsIDOMDocument **aDocument);
-  virtual nsresult            SetMasterDoc(nsIDOMDocument *aDocument);
-  virtual nsresult            GetDocumentType(nsIDOMNode **aDocType); 
-  virtual nsresult            SetDocumentType(nsIDOMNode *aNode); 
-  virtual nsresult            GetDocumentElement(nsIDOMElement **aElement);
-  virtual nsresult            SetDocumentElement(nsIDOMElement *aElement); 
-  virtual nsresult            GetDocumentContext(nsIDOMDocumentContext **aDocContext);
-  virtual nsresult            SetDocumentContext(nsIDOMDocumentContext *aContext);
-  virtual nsresult            CreateDocumentContext(nsIDOMDocumentContext **aDocContext);
-  virtual nsresult            CreateElement(nsString &aTagName, 
+  NS_IMETHOD GetNodeType(PRInt32 *aType);
+  NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
+  NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
+  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
+  NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
+  NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);
+  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
+  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild);
+  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
+  NS_IMETHOD GetMasterDoc(nsIDOMDocument **aDocument);
+  NS_IMETHOD SetMasterDoc(nsIDOMDocument *aDocument);
+  NS_IMETHOD GetDocumentType(nsIDOMNode **aDocType); 
+  NS_IMETHOD SetDocumentType(nsIDOMNode *aNode); 
+  NS_IMETHOD GetDocumentElement(nsIDOMElement **aElement);
+  NS_IMETHOD SetDocumentElement(nsIDOMElement *aElement); 
+  NS_IMETHOD GetDocumentContext(nsIDOMDocumentContext **aDocContext);
+  NS_IMETHOD SetDocumentContext(nsIDOMDocumentContext *aContext);
+  NS_IMETHOD CreateDocumentContext(nsIDOMDocumentContext **aDocContext);
+  NS_IMETHOD CreateElement(nsString &aTagName, 
                                             nsIDOMAttributeList *aAttributes, 
                                             nsIDOMElement **aElement);
-  virtual nsresult            CreateTextNode(nsString &aData, nsIDOMText** aTextNode);
-  virtual nsresult            CreateComment(nsString &aData, nsIDOMComment **aComment);
-  virtual nsresult            CreatePI(nsString &aName, nsString &aData, nsIDOMPI **aPI);
-  virtual nsresult            CreateAttribute(nsString &aName, 
+  NS_IMETHOD CreateTextNode(nsString &aData, nsIDOMText** aTextNode);
+  NS_IMETHOD CreateComment(nsString &aData, nsIDOMComment **aComment);
+  NS_IMETHOD CreatePI(nsString &aName, nsString &aData, nsIDOMPI **aPI);
+  NS_IMETHOD CreateAttribute(nsString &aName, 
                                               nsIDOMNode *value, 
                                               nsIDOMAttribute **aAttribute);
-  virtual nsresult            CreateAttributeList(nsIDOMAttributeList **aAttributesList);
-  virtual nsresult            CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator **aTreeIterator);
-  virtual nsresult            GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator **aIterator);
+  NS_IMETHOD CreateAttributeList(nsIDOMAttributeList **aAttributesList);
+  NS_IMETHOD CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator **aTreeIterator);
+  NS_IMETHOD GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator **aIterator);
 
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
