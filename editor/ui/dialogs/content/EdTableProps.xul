@@ -177,13 +177,13 @@
             <columns><column/><column/><column/></columns>
             <rows>
               <row valign="middle" autostretch="never">
-                <checkbox id="CellHeightCheckbox" value="&tableHeight.label;"/>
+                <checkbox id="CellHeightCheckbox" label="&tableHeight.label;"/>
                 <textbox class="narrow" id="CellHeightInput"
                          oninput="ChangeIntTextbox(this.id,'CellHeightCheckbox');"/>
                 <menulist id="CellHeightUnits" oncommand="SetCheckbox('CellHeightCheckbox');"/>
               </row>
               <row valign="middle" autostretch="never">
-                <checkbox id="CellWidthCheckbox" value="&tableWidth.label;"/>
+                <checkbox id="CellWidthCheckbox" label="&tableWidth.label;"/>
                 <textbox class="narrow" id="CellWidthInput"
                          oninput="ChangeIntTextbox(this.id,'CellWidthCheckbox');"/>
                 <menulist id="CellWidthUnits" oncommand="SetCheckbox('CellWidthCheckbox');"/>
@@ -211,7 +211,7 @@
         <!-- Alignment -->
         <titledbox valign="middle" autostretch="never">
           <label value="&cellContentAlignment.label;"/>
-          <checkbox id="CellHAlignCheckbox" value="&cellHorizontal.label;"/>
+          <checkbox id="CellHAlignCheckbox" label="&cellHorizontal.label;"/>
           <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
             <menupopup>
               <menuitem label="&AlignLeft.label;"        value="left"/>
@@ -221,7 +221,7 @@
             </menupopup>
           </menulist>
           <spring class="spacer"/>
-          <checkbox id="CellVAlignCheckbox" value="&cellVertical.label;"/>
+          <checkbox id="CellVAlignCheckbox" label="&cellVertical.label;"/>
           <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
             <menupopup>
               <menuitem label="&cellAlignTop.label;"    value="top"/>
@@ -232,7 +232,7 @@
         </titledbox>
         <spring class="spacer"/>
         <box valign="middle" autostretch="never">
-          <checkbox id="CellStyleCheckbox" value="&cellStyle.label;"/>
+          <checkbox id="CellStyleCheckbox" label="&cellStyle.label;"/>
           <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
             <menupopup>
               <menuitem label="&cellNormal.label;" value="td"/>
@@ -240,7 +240,7 @@
             </menupopup>
           </menulist>
           <spring class="bigspacer"/>
-          <checkbox id="TextWrapCheckbox" value="&cellTextWrap.label;"/>
+          <checkbox id="TextWrapCheckbox" label="&cellTextWrap.label;"/>
           <menulist id="TextWrapList" oncommand="SetCheckbox('TextWrapCheckbox');">
             <menupopup>
               <menuitem label="&cellWrap.label;" value="wrap"/>
