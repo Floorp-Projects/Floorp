@@ -50,8 +50,9 @@ nsMsgFolder::nsMsgFolder(void)
     mNumTotalMessages(-1),
     mDepth(0), 
     mPrefFlags(0),
-	mBiffState(nsMsgBiffState_NoMail),
-	mNumNewBiffMessages(0)
+    mBiffState(nsMsgBiffState_NoMail),
+    mNumNewBiffMessages(0),
+    mIsServer(PR_FALSE)
 	{
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -95,7 +96,8 @@ NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsCOMTypeInfo<nsIMsgFolder>::GetIID()) || aIID.Equals(nsCOMTypeInfo<nsIFolder>::GetIID()))
+	if (aIID.Equals(nsCOMTypeInfo<nsIMsgFolder>::GetIID()) ||
+      aIID.Equals(nsCOMTypeInfo<nsIFolder>::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgFolder*, this);
 	}              
@@ -107,6 +109,35 @@ NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 	}
 
 	return nsRDFResource::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::Init(const char* aURI)
+{
+  nsresult rv;
+
+  // this parsing is totally hacky. we really should generalize this,
+  // but I'm not going to do this until we can eliminate the
+  // nsXXX2Name/etc routines
+  // -alecf
+  
+  // do initial parsing of the URI
+  const char *cp=aURI;
+
+  // skip to initial //
+  while (*cp && (*cp != '/'))
+    cp++;
+
+  // skip past //
+  while (*cp && (*cp == '/'))
+    cp++;
+
+  if (PL_strchr(cp, '/'))
+    mIsServer = PR_FALSE;
+  else
+    mIsServer = PR_TRUE;
+
+  return nsRDFResource::Init(aURI);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,6 +326,12 @@ NS_IMETHODIMP nsMsgFolder::BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url
 
 NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 {
+
+  /* this should really just:
+     - truncate the URI
+     - GetResource on the URI
+     - QueryInterface to nsIMsgIncomingServer::GetIID()
+  */
 	nsresult rv = NS_OK; 
 	if (!m_server) // if we haven't fetched the server yet....
 	{
@@ -338,6 +375,14 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 		rv = NS_ERROR_NULL_POINTER;
 
 	return rv;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetIsServer(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mIsServer;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
@@ -1324,20 +1369,20 @@ NS_IMETHODIMP nsMsgFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, 
 #if 0
 NS_IMETHODIMP nsMsgFolder::GetUsername(char **userName)
 {
-	if(!userName)
-		return NS_ERROR_NULL_POINTER;
-
-	*userName = "";
-	return NS_OK;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+  
+  return server->GetUsername(userName);
 }
 
 NS_IMETHODIMP nsMsgFolder::GetHostname(char **hostName)
 {
-	if(!hostName)
-		return NS_ERROR_NULL_POINTER;
-
-	*hostName = "";
-	return NS_OK;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+  
+  return server->GetHostname(hostName);
 }
 #endif
 

@@ -61,6 +61,7 @@ interface nsIMsgFolder : nsIFolder {
 	readonly attribute boolean showDeletedMessages;
 
   readonly attribute nsIMsgIncomingServer server;
+  readonly attribute boolean isServer;
   
 	void OnCloseFolder ();
 	void Delete ();

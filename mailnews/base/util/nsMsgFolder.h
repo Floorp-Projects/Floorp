@@ -45,6 +45,10 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  // nsIRDFResource
+
+  NS_IMETHOD Init(const char *aURI);
+  
   // nsICollection methods:
   NS_IMETHOD Count(PRUint32 *result) {
     return mSubFolders->Count(result);
@@ -93,6 +97,7 @@ public:
   NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
 
   NS_IMETHOD GetServer(nsIMsgIncomingServer ** aServer);
+  NS_IMETHOD GetIsServer(PRBool *aResult);
 
 
   NS_IMETHOD GetPrettyName(PRUnichar ** name);
@@ -345,6 +350,7 @@ protected:
   PRInt32	mNumNewBiffMessages;
 
   PRBool mIsCachable;
+  PRBool mIsServer;
 };
 
 #endif
