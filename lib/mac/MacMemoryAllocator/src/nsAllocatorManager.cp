@@ -564,7 +564,7 @@ void *calloc(size_t nele, size_t elesize)
 	size_t	space = nele * elesize;
 	void	*newBlock = ::malloc(space);
 	if (newBlock)
-		BlockZero(newBlock, space);
+		memset(newBlock, 0, space);
 	return newBlock;
 }
 
