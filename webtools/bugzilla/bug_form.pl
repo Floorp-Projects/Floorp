@@ -140,8 +140,6 @@ GetVersionTable();
 # These should be read from the database ...
 #
 
-my $resolution_popup = make_options(\@::settable_resolution,
-				    $bug{'resolution'});
 my $platform_popup = make_options(\@::legal_platform, $bug{'rep_platform'});
 my $priority_popup = make_options(\@::legal_priority, $bug{'priority'});
 my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'});
@@ -445,6 +443,8 @@ if ($canedit || $::userid == $assignedtoid ||
             print "<b>$bug{'resolution'}</b>)<br>\n";
             $knum++;
         }
+        my $resolution_popup = make_options(\@::settable_resolution,
+                                            $bug{'resolution'});
         print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
         Resolve bug, changing <A HREF=\"bug_status.html\">resolution</A> to
         <SELECT NAME=resolution
