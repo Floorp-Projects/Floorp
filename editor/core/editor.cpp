@@ -41,6 +41,7 @@
 
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
+#include "EditAggregateTxn.h"
 #include "ChangeAttributeTxn.h"
 #include "CreateElementTxn.h"
 #include "DeleteElementTxn.h"
@@ -68,6 +69,7 @@ static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
 // transactions
+static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
 static NS_DEFINE_IID(kCreateElementTxnIID,  CREATE_ELEMENT_TXN_IID);
@@ -87,7 +89,6 @@ static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
 #define TRANSACTION_MANAGER_DLL "libtxmgr.so"
 #endif
 #endif
-
 
 
 PRInt32 nsEditor::gInstanceCount = 0;
@@ -350,20 +351,32 @@ nsEditor::GetProperties(Properties **aProperties)
 nsresult 
 nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, const nsString& aValue)
 {
-  nsresult result;
-  if (nsnull != aElement)
-  {
-    ChangeAttributeTxn *txn;
-    result = TransactionFactory::GetNewTransaction(kChangeAttributeTxnIID, (EditTxn **)&txn);
-    if (nsnull!=txn)
-    {
-      txn->Init(this, aElement, aAttribute, aValue, PR_FALSE);
-      result = Do(txn);  
-    }
+  ChangeAttributeTxn *txn;
+  nsresult result = CreateTxnForSetAttribute(aElement, aAttribute, aValue, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
   }
   return result;
 }
 
+
+nsresult 
+nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement, 
+                                   const nsString& aAttribute, 
+                                   const nsString& aValue,
+                                   ChangeAttributeTxn ** aTxn)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (nsnull != aElement)
+  {
+    result = TransactionFactory::GetNewTransaction(kChangeAttributeTxnIID, (EditTxn **)aTxn);
+    if (nsnull!=*aTxn)
+    {
+      result = (*aTxn)->Init(this, aElement, aAttribute, aValue, PR_FALSE);
+    }
+  }
+  return result;
+}
 
 nsresult 
 nsEditor::GetAttributeValue(nsIDOMElement *aElement, 
@@ -389,16 +402,27 @@ nsEditor::GetAttributeValue(nsIDOMElement *aElement,
 nsresult 
 nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute)
 {
-  nsresult result;
+  ChangeAttributeTxn *txn;
+  nsresult result = CreateTxnForRemoveAttribute(aElement, aAttribute, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
+  }
+  return result;
+}
+
+nsresult 
+nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
+                                      const nsString& aAttribute,
+                                      ChangeAttributeTxn ** aTxn)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
   if (nsnull != aElement)
   {
-    ChangeAttributeTxn *txn;
-    result = TransactionFactory::GetNewTransaction(kChangeAttributeTxnIID, (EditTxn **)&txn);
-    if (nsnull!=txn)
+    result = TransactionFactory::GetNewTransaction(kChangeAttributeTxnIID, (EditTxn **)aTxn);
+    if (nsnull!=*aTxn)
     {
       nsAutoString value;
-      txn->Init(this, aElement, aAttribute, value, PR_TRUE);
-      result = Do(txn);  
+      result = (*aTxn)->Init(this, aElement, aAttribute, value, PR_TRUE);
     }
   }
   return result;
@@ -651,49 +675,76 @@ nsresult nsEditor::CreateElement(const nsString& aTag,
                                  nsIDOMNode *    aParent,
                                  PRInt32         aPosition)
 {
-  nsresult result;
+  CreateElementTxn *txn;
+  nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
+  }
+  return result;
+}
+
+nsresult nsEditor::CreateTxnForCreateElement(const nsString& aTag,
+                                             nsIDOMNode     *aParent,
+                                             PRInt32         aPosition,
+                                             CreateElementTxn ** aTxn)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
   if (nsnull != aParent)
   {
-    CreateElementTxn *txn;
-    result = TransactionFactory::GetNewTransaction(kCreateElementTxnIID, (EditTxn **)&txn);
-    if (nsnull!=txn)
+    result = TransactionFactory::GetNewTransaction(kCreateElementTxnIID, (EditTxn **)aTxn);
+    if (nsnull != *aTxn)
     {
-      txn->Init(mDomInterfaceP, aTag, aParent, aPosition);
-      result = Do(txn);
+      (*aTxn)->Init(mDomInterfaceP, aTag, aParent, aPosition);
     }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
   }
-  else
-    result = NS_ERROR_INVALID_ARG;
-
   return result;
 }
 
 nsresult nsEditor::DeleteElement(nsIDOMNode * aParent,
                                  nsIDOMNode * aElement)
 {
-  nsresult result;
+  DeleteElementTxn *txn;
+  nsresult result = CreateTxnForDeleteElement(aParent, aElement, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
+  }
+  return result;
+}
+
+nsresult nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aParent,
+                                             nsIDOMNode * aElement,
+                                             DeleteElementTxn ** aTxn)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
   if ((nsnull != aParent) && (nsnull != aElement))
   {
-    DeleteElementTxn *txn;
-    result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
-    if (nsnull!=txn)
+    result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)aTxn);
+    if (nsnull!=*aTxn)
     {
-      txn->Init(aElement, aParent);
-      result = Do(txn);  
+      (*aTxn)->Init(aElement, aParent);
     }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
   }
-  else
-    result = NS_ERROR_INVALID_ARG;
 
   return result;
 }
 
-// XXX; factor -- should call BuildInsertTextTransaction to do most of the work
-nsresult nsEditor::InsertText(const nsString& aStringToInsert)
+nsresult 
+nsEditor::InsertText(const nsString& aStringToInsert)
+{
+  InsertTextTxn *txn;
+  nsresult result = CreateTxnForInsertText(aStringToInsert, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
+  }
+  return result;
+}
+
+nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
+                                          InsertTextTxn ** aTxn)
 {
   nsresult result;
   nsISelection* selection;
@@ -723,12 +774,10 @@ nsresult nsEditor::InsertText(const nsString& aStringToInsert)
             {
               PRInt32 offset;
               range->GetStartOffset(&offset);
-              InsertTextTxn *txn;
-              result = TransactionFactory::GetNewTransaction(kInsertTextTxnIID, (EditTxn **)&txn);
-              if (nsnull!=txn)
+              result = TransactionFactory::GetNewTransaction(kInsertTextTxnIID, (EditTxn **)aTxn);
+              if (nsnull!=*aTxn)
               {
-                txn->Init(nodeAsText, offset, aStringToInsert);
-                result = Do(txn);
+                (*aTxn)->Init(nodeAsText, offset, aStringToInsert);
               }
               else
                 result = NS_ERROR_OUT_OF_MEMORY;
@@ -739,42 +788,61 @@ nsresult nsEditor::InsertText(const nsString& aStringToInsert)
     }
   }
   else
-    result = NS_ERROR_INVALID_ARG;
+    result = NS_ERROR_NULL_POINTER;
 
   return result;
 }
 
-// XXX; factor -- should call BuildDeleteTextTransaction to do most of the work
 nsresult nsEditor::DeleteText(nsIDOMCharacterData *aElement,
                               PRUint32             aOffset,
                               PRUint32             aLength)
 {
-  nsresult result=NS_OK;
+  DeleteTextTxn *txn;
+  nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
+  }
+  return result;
+}
+
+
+nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
+                                          PRUint32             aOffset,
+                                          PRUint32             aLength,
+                                          DeleteTextTxn      **aTxn)
+{
+  nsresult result=NS_ERROR_NULL_POINTER;
   if (nsnull != aElement)
   {
-    DeleteTextTxn *txn;
-    result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)&txn);
-    if (nsnull!=txn)
+    result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)aTxn);
+    if (nsnull!=*aTxn)
     {
-      txn->Init(aElement, aOffset, aLength);
-      result = Do(txn);
+      (*aTxn)->Init(aElement, aOffset, aLength);
     }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
   }
-  else
-    result = NS_ERROR_INVALID_ARG;
-
   return result;
 }
 
-// XXX; factor -- should call DeleteSelectionTransaction to do most of the work
-// XXX: these should get wrapped up in a single composite transaction
-// rather than executing each individually, maybe I should alloc a generic aggregate
-// and stick each in there, then execute the aggregate
-nsresult nsEditor::DeleteSelection()
+nsresult 
+nsEditor::DeleteSelection()
+{
+  EditAggregateTxn *txn;
+  nsresult result = CreateTxnForDeleteSelection(&txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
+  }
+  return result;
+}
+
+nsresult nsEditor::CreateTxnForDeleteSelection(EditAggregateTxn ** aTxn)
 {
   nsresult result;
+  // allocate the out-param transaction
+  result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
+  if (NS_FAILED(result))
+    return result;
   nsISelection* selection;
   result = mPresShell->GetSelection(&selection);
   if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
@@ -786,7 +854,7 @@ nsresult nsEditor::DeleteSelection()
       enumerator->First();  
       nsISupports *currentItem;
       result = enumerator->CurrentItem(&currentItem);
-      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      while ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
         nsCOMPtr<nsIDOMRange> range = currentItem;
         DeleteRangeTxn *txn;
@@ -794,7 +862,7 @@ nsresult nsEditor::DeleteSelection()
         if (nsnull!=txn)
         {
           txn->Init(range);
-          result = Do(txn);  
+          (*aTxn)->AppendChild(txn);
         }
         else
           result = NS_ERROR_OUT_OF_MEMORY;
@@ -810,7 +878,11 @@ nsresult nsEditor::DeleteSelection()
     }
   }
   else
-    result = NS_ERROR_INVALID_ARG;
+    result = NS_ERROR_NULL_POINTER;
+
+  // if we didn't build the transaction correctly, destroy the out-param transaction so we don't leak it.
+  if (NS_FAILED(result))
+    NS_IF_RELEASE(*aTxn);
 
   return result;
 }

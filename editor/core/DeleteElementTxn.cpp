@@ -21,6 +21,12 @@
 #include "nsIDOMElement.h"
 #endif
 
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_FALSE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
+
 
 DeleteElementTxn::DeleteElementTxn()
   : EditTxn()
@@ -64,7 +70,8 @@ nsresult DeleteElementTxn::Do(void)
   p = parentElementTag.ToNewCString();
   if (c&&p)
   {
-    printf("DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
+    if (gNoisy)
+      printf("DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
     delete [] c;
     delete [] p;
   }
