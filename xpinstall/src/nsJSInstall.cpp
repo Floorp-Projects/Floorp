@@ -1464,27 +1464,37 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
 
   // Now validate the arguments
-  *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
-  uint32 chromeType = CHROME_ALL;
+  PRBool goodargs = PR_FALSE;
+  uint32 chromeType;
   nsIFile* chrome = nsnull;
-  if ( argc >=1 )
+  if ( argc >=2 )
   {
-    if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0]))
-      return JS_TRUE;
+    JS_ValueToECMAUint32(cx, argv[0], &chromeType);
 
-    JSObject* jsObj = JSVAL_TO_OBJECT(argv[0]);
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
-      return JS_TRUE;
-
-    nsInstallFolder* folder = (nsInstallFolder*)JS_GetPrivate(cx,jsObj);
-    if (folder)
-        chrome = folder->GetFileSpec();
-
-    if (argc >= 2)
-      JS_ValueToECMAUint32(cx,argv[1],&chromeType);
+    if (argv[1] != JSVAL_NULL && JSVAL_IS_OBJECT(argv[1]))
+    {
+      JSObject* jsObj = JSVAL_TO_OBJECT(argv[1]);
+      if (JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+      {
+        nsInstallFolder* folder = (nsInstallFolder*)JS_GetPrivate(cx,jsObj);
+        if (folder)
+        {
+          chrome = folder->GetFileSpec();
+          goodargs = PR_TRUE;
+        }
+      }
+    }
   }
 
-  *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType));
+  if (goodargs)
+  {
+    *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType));
+  }
+  else
+  {
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    nativeThis->SaveError(nsInstall::INVALID_ARGUMENTS);
+  }
 
   return JS_TRUE;
 }
@@ -1857,17 +1867,13 @@ static JSConstDoubleSpec install_constants[] =
 
     { nsInstall::UNABLE_TO_LOCATE_LIB_FUNCTION, "UNABLE_TO_LOCATE_LIB_FUNCTION"},
     { nsInstall::UNABLE_TO_LOAD_LIBRARY,     "UNABLE_TO_LOAD_LIBRARY"       },
+    { nsInstall::CHROME_REGISTRY_ERROR,      "CHROME_REGISTRY_ERROR"        },
 
     { nsInstall::GESTALT_UNKNOWN_ERR,        "GESTALT_UNKNOWN_ERR"          },
     { nsInstall::GESTALT_INVALID_ARGUMENT,   "GESTALT_INVALID_ARGUMENT"     },
 
     { nsInstall::SUCCESS,                    "SUCCESS"                      },
     { nsInstall::REBOOT_NEEDED,              "REBOOT_NEEDED"                },
-
-    { nsInstall::LIMITED_INSTALL,            "LIMITED_INSTALL"              },
-    { nsInstall::FULL_INSTALL,               "FULL_INSTALL"                 },
-    { nsInstall::NO_STATUS_DLG ,             "NO_STATUS_DLG"                },
-    { nsInstall::NO_FINALIZE_DLG,            "NO_FINALIZE_DLG"              },
 
     // these are bitwise values supported by addFile
     { nsInstall::DO_NOT_UNINSTALL,           "DO_NOT_UNINSTALL"             },
@@ -1877,6 +1883,9 @@ static JSConstDoubleSpec install_constants[] =
     { CHROME_LOCALE,                         "LOCALE"                       },
     { CHROME_CONTENT,                        "CONTENT"                      },
     { CHROME_ALL,                            "PACKAGE"                      },
+    { CHROME_PROFILE,                        "PROFILE_CHROME"               },
+    { CHROME_DELAYED,                        "DELAYED_CHROME"               },
+    { CHROME_SELECT,                         "SELECT_CHROME"                },
 
     {0}
 };

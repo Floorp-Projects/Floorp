@@ -29,48 +29,16 @@
 #include "nsXPIDLString.h"
 #include "nsInstallTrigger.h"
 #include "nsIChromeRegistry.h"
+#include "nsIDirectoryService.h"
 
 MOZ_DECL_CTOR_COUNTER(nsRegisterItem);
 
 nsRegisterItem:: nsRegisterItem(  nsInstall* inInstall,
                                   nsIFile* chrome,
                                   PRUint32 chromeType )
-: nsInstallObject(inInstall), mChromeType(chromeType)
+: nsInstallObject(inInstall), mChrome(chrome), mChromeType(chromeType)
 {
     MOZ_COUNT_CTOR(nsRegisterItem);
-
-    // construct an URL from the chrome argument. If it's not
-    // a directory then it's an archive and we need a jar: URL
-    nsCOMPtr<nsIURI> pURL;
-    PRBool isDir;
-
-    chrome->IsDirectory(&isDir);
-    mURL.SetCapacity(200);
-
-    if (!isDir)
-        mURL.Append("jar:");
-
-    nsresult rv = NS_NewURI(getter_AddRefs(pURL), "file:");
-    if (NS_SUCCEEDED(rv)) 
-    {
-        nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(pURL);
-        if (fileURL)
-        {
-            rv = fileURL->SetFile(chrome);
-            if (NS_SUCCEEDED(rv))
-            {
-                nsXPIDLCString localURL;
-                rv = fileURL->GetSpec(getter_Copies(localURL));
-                int len = nsCRT::strlen(localURL);
-                mURL.Append(localURL);
-            }
-        }
-    }
-
-    if (!isDir)
-        mURL.Append("!/");
-    else
-        mURL.Append("/");
 }
 
 
@@ -82,6 +50,50 @@ nsRegisterItem::~nsRegisterItem()
 
 PRInt32 nsRegisterItem::Prepare()
 {
+    // The chrome must exist
+    PRBool exists;
+    mChrome->Exists(&exists);
+    if (!exists)
+        return nsInstall::DOES_NOT_EXIST;
+
+    // if we're registering now we need to make sure we can construct a URL
+    if ( mInstall->GetChromeRegistry() && !(mChromeType & CHROME_DELAYED) )
+    {
+        // If not a directory then it's an archive and we need a jar: URL
+        nsCOMPtr<nsIURI> pURL;
+        PRBool isDir;
+
+        mURL.SetCapacity(200);
+
+        mChrome->IsDirectory(&isDir);
+        if (!isDir)
+            mURL = "jar:";
+
+        nsXPIDLCString localURL;
+        nsresult rv = NS_NewURI(getter_AddRefs(pURL), "file:");
+        if (NS_SUCCEEDED(rv)) 
+        {
+            nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(pURL);
+            if (fileURL)
+            {
+                rv = fileURL->SetFile(mChrome);
+                if (NS_SUCCEEDED(rv))
+                {
+                    rv = fileURL->GetSpec(getter_Copies(localURL));
+                    mURL.Append(localURL);
+                }
+            }
+        }
+
+        if (!localURL)
+            return nsInstall::UNEXPECTED_ERROR;
+
+        if (!isDir)
+            mURL.Append("!/");
+        else
+            mURL.Append("/");
+    }
+
     return nsInstall::SUCCESS;
 }
 
@@ -89,28 +101,138 @@ PRInt32 nsRegisterItem::Complete()
 {
     nsresult rv;
     PRInt32 result = nsInstall::SUCCESS;
+    PRBool  isProfile = mChromeType & CHROME_PROFILE;
     nsIChromeRegistry* reg = mInstall->GetChromeRegistry();
 
-    if (reg)
+    if ( reg && !(mChromeType & CHROME_DELAYED) )
     {
         if (mChromeType & CHROME_SKIN)
-            rv = reg->InstallSkin(mURL.GetBuffer(), PR_FALSE);
+            rv = reg->InstallSkin(mURL.GetBuffer(), isProfile);
 
         if (mChromeType & CHROME_LOCALE)
-            rv = reg->InstallLocale(mURL.GetBuffer(), PR_FALSE);
+            rv = reg->InstallLocale(mURL.GetBuffer(), isProfile);
 
         if (mChromeType & CHROME_CONTENT)
-            rv = reg->InstallPackage(mURL.GetBuffer(), PR_FALSE);
+            rv = reg->InstallPackage(mURL.GetBuffer(), isProfile);
     }
     else
     {
-        // Couldn't get chrome registry, probably during the wizard.
-        // XXX: Must save this for later processing somehow.
+        // Couldn't get the chrome registry (probably during the wizard),
+        // so we need to save this info into the magic startup file
         result = nsInstall::REBOOT_NEEDED;
+
+        // First find the "bin" diretory of the install
+        PRFileDesc* fd = nsnull;
+        nsCOMPtr<nsILocalFile> startupFile;
+        nsCOMPtr<nsIFile> progDir = nsSoftwareUpdate::GetProgramDirectory();
+        if (!progDir)
+        {
+            // not in the wizard, so ask the directory service where it is
+            NS_WITH_SERVICE(nsIProperties, directoryService,
+                            NS_DIRECTORY_SERVICE_PROGID, &rv);
+            if(NS_SUCCEEDED(rv) && directoryService)
+            {
+                directoryService->Get("xpcom.currentProcess",
+                            NS_GET_IID(nsIFile), getter_AddRefs(progDir));
+            }
+        }
+
+        if (progDir)
+        {
+            // we got one... construct a reference to the magic file
+            nsCOMPtr<nsIFile> tmp;
+            rv = progDir->Clone(getter_AddRefs(tmp));
+            if (NS_SUCCEEDED(rv))
+                startupFile = do_QueryInterface(tmp, &rv);
+
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = startupFile->Append("chrome");
+                if (NS_SUCCEEDED(rv))
+                {
+                    rv = startupFile->Append("installed-chrome.txt");
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        rv = startupFile->OpenNSPRFileDesc(
+                                        PR_CREATE_FILE | PR_WRONLY,
+                                        0744,
+                                        &fd);
+                    }
+                }
+            }
+        }
+
+        if ( NS_SUCCEEDED(rv) && fd )
+        {
+            PR_Seek(fd, 0, PR_SEEK_END);
+            char* location = (mChromeType & CHROME_PROFILE) ? "profile" : "install";
+
+            nsXPIDLCString path;
+            rv = mChrome->GetPath(getter_Copies(path));
+            if (NS_SUCCEEDED(rv) && path)
+            {
+                PRInt32 written, actual;
+                char* installStr = nsnull;
+                if (mChromeType & CHROME_SKIN)
+                {
+                    installStr = PR_smprintf("skin,%s,path,%s\n",
+                                             location, (const char*)path);
+                    if (installStr)
+                    {
+                        actual = strlen(installStr);
+                        written = PR_Write(fd, installStr, actual);
+                        if ( written != actual ) 
+                        {
+                            result = nsInstall::CHROME_REGISTRY_ERROR;
+                        }
+                        PR_smprintf_free(installStr);
+                    }
+                    else 
+                        result = nsInstall::OUT_OF_MEMORY;
+                }
+
+                if (mChromeType & CHROME_LOCALE)
+                {
+                    installStr = PR_smprintf("locale,%s,path,%s\n",
+                                             location, (const char*)path);
+                    if (installStr)
+                    {
+                        actual = strlen(installStr);
+                        written = PR_Write(fd, installStr, actual);
+                        if ( written != actual ) 
+                        {
+                            result = nsInstall::CHROME_REGISTRY_ERROR;
+                        }
+                        PR_smprintf_free(installStr);
+                    }
+                    else
+                        result = nsInstall::OUT_OF_MEMORY;
+                }
+
+                if (mChromeType & CHROME_CONTENT)
+                {
+                    installStr = PR_smprintf("content,%s,path,%s\n",
+                                             location, (const char*)path);
+                    if (installStr)
+                    {
+                        actual = strlen(installStr);
+                        written = PR_Write(fd, installStr, actual);
+                        if ( written != actual ) 
+                        {
+                            result = nsInstall::CHROME_REGISTRY_ERROR;
+                        }
+                        PR_smprintf_free(installStr);
+                    }
+                    else
+                        result = nsInstall::OUT_OF_MEMORY;
+                }
+            }
+            PR_Close(fd);
+        }
     }
 
     if (NS_FAILED(rv))
-        result = nsInstall::UNEXPECTED_ERROR;
+        result = nsInstall::CHROME_REGISTRY_ERROR;
 
     return result;
 }
@@ -127,7 +249,7 @@ char* nsRegisterItem::toString()
     if (buffer == nsnull || !mInstall)
         return nsnull;
 
-    switch (mChromeType)
+    switch (mChromeType & CHROME_ALL)
     {
     case CHROME_SKIN:
         rsrcVal = mInstall->GetResourcedString(
@@ -149,7 +271,7 @@ char* nsRegisterItem::toString()
 
     if (rsrcVal)
     {
-        PR_snprintf(buffer, 1024, mURL.GetBuffer());
+        PR_snprintf(buffer, 1024, rsrcVal, mURL.GetBuffer());
         nsCRT::free(rsrcVal);
     }
 

@@ -157,6 +157,8 @@ class nsInstall
 
             UNABLE_TO_LOCATE_LIB_FUNCTION = -237,
             UNABLE_TO_LOAD_LIBRARY        = -238,
+
+            CHROME_REGISTRY_ERROR       = -239,
             
             OUT_OF_MEMORY               = -299,
 
@@ -166,11 +168,6 @@ class nsInstall
             SUCCESS                     = 0,
             REBOOT_NEEDED               = 999,
             
-            LIMITED_INSTALL             = 0,
-            FULL_INSTALL                = 1,
-            NO_STATUS_DLG               = 2,
-            NO_FINALIZE_DLG             = 4,
-
             INSTALL_FILE_UNEXPECTED_MSG_ID = 0,
             DETAILS_REPLACE_FILE_MSG_ID = 1,
             DETAILS_INSTALL_FILE_MSG_ID = 2,
