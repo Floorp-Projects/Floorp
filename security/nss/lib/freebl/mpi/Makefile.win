@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile.win,v 1.1 2000/09/02 05:38:51 nelsonb%netscape.com Exp $
+## $Id: Makefile.win,v 1.2 2001/01/18 01:39:13 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -181,6 +181,8 @@ mpi.lib: $(LIBOBJS)
 	ar -cvr mpi.lib $(LIBOBJS)
 	$(RANLIB) mpi.lib
 
+lib libs: mpi.lib
+
 #---------------------------------------
 
 MPTESTOBJS = mptest1.obj mptest2.obj mptest3.obj mptest3a.obj mptest4.obj \
@@ -252,8 +254,8 @@ doc:
 	(cd doc; ./build)
 
 clean:
-	rm -f *.obj *.lib *.pdb
-	rm -f utils/*.obj
+	rm -f *.obj *.lib *.pdb *.ilk
+	cd utils; rm -f *.obj *.lib *.pdb *.ilk
 
 distclean: clean
 	rm -f mptest? mpi-test metime mulsqr karatsuba

@@ -443,14 +443,31 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
   MP_DIGITS(&q) = 0;
   MP_CHECKOK( mp_init(&trial) );
   MP_CHECKOK( mp_init(&q)     );
-  if (nBits >= 1024) {
+  /* values taken from table 4.4, HandBook of Applied Cryptography */
+  if (nBits >= 1300) {
+    num_tests = 2;
+  } else if (nBits >= 850) {
+    num_tests = 3;
+  } else if (nBits >= 650) {
+    num_tests = 4;
+  } else if (nBits >= 550) {
     num_tests = 5;
-  } else if (nBits >= 512) {
+  } else if (nBits >= 450) {
+    num_tests = 6;
+  } else if (nBits >= 400) {
     num_tests = 7;
-  } else if (nBits >= 384) {
+  } else if (nBits >= 350) {
+    num_tests = 8;
+  } else if (nBits >= 300) {
     num_tests = 9;
-  } else if (nBits >= 256) {
-    num_tests = 13;
+  } else if (nBits >= 250) {
+    num_tests = 12;
+  } else if (nBits >= 200) {
+    num_tests = 15;
+  } else if (nBits >= 150) {
+    num_tests = 18;
+  } else if (nBits >= 100) {
+    num_tests = 27;
   } else
     num_tests = 50;
 
