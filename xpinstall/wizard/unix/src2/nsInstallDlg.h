@@ -60,8 +60,8 @@ public:
 
     int             Parse(nsINIParser* aParser);
 
-    int             Show(int aDirection);
-    int             Hide(int aDirection);
+    int             Show();
+    int             Hide();
     int             ShowTable();
     int             HideTable();
 

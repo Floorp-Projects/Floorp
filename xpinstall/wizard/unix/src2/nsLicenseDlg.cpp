@@ -62,22 +62,8 @@ nsLicenseDlg::Back(GtkWidget *aWidget, gpointer aData)
         return;
     }
     
-// XXX call gCtx->me->Shutdown() ?
     gtk_main_quit();
     return;
-
-#if 0
-    // hide this notebook page
-    gCtx->ldlg->Hide(nsXInstallerDlg::BACKWARD_MOVE);
-
-    // disconnect this dlg's nav btn signal handlers
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
-
-    // show the prev dlg
-    gCtx->wdlg->Show(nsXInstallerDlg::BACKWARD_MOVE);
-    gCtx->bMoving = TRUE;
-#endif
 }
 
 void
@@ -92,14 +78,10 @@ nsLicenseDlg::Next(GtkWidget *aWidget, gpointer aData)
     }
 
     // hide this notebook page
-    gCtx->ldlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
-
-    // disconnect this dlg's nav btn signal handlers
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+    gCtx->ldlg->Hide();
 
     // show the next dlg
-    gCtx->sdlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+    gCtx->sdlg->Show();
     gCtx->bMoving = TRUE;
 }
 
@@ -141,7 +123,7 @@ BAIL:
 }
 
 int
-nsLicenseDlg::Show(int aDirection)
+nsLicenseDlg::Show()
 {
     int err = OK;
     char *licenseContents = NULL;
@@ -205,14 +187,7 @@ nsLicenseDlg::Show(int aDirection)
     gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "clicked",
                    GTK_SIGNAL_FUNC(nsLicenseDlg::Next), gCtx->ldlg);
 
-    // show back button if we came from the welcome dlg
-    if (aDirection == nsXInstallerDlg::FORWARD_MOVE)
-        if (gCtx->back)
-            gtk_widget_show(gCtx->back); 
-
     // always change the button titles to Accept/Decline
-    gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
-    gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
     gCtx->acceptLabel = gtk_label_new(gCtx->Res("ACCEPT"));
     gCtx->declineLabel = gtk_label_new(gCtx->Res("DECLINE"));
     gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->acceptLabel);
@@ -228,11 +203,21 @@ BAIL:
 }
 
 int
-nsLicenseDlg::Hide(int aDirection)
+nsLicenseDlg::Hide()
 {
     // hide all this dlg's widgets
     gtk_widget_hide(mTable);
 
+    // disconnect and remove this dlg's nav btns
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+
+    gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->declineLabel);
+    gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->acceptLabel);
+
+    gtk_widget_hide(gCtx->back);
+    gtk_widget_hide(gCtx->next);
+    
     return OK;
 }
 

@@ -71,14 +71,11 @@ nsComponentsDlg::Back(GtkWidget *aWidget, gpointer aData)
     }
 
     // hide this notebook page
-    gCtx->cdlg->Hide(nsXInstallerDlg::BACKWARD_MOVE);
+    gCtx->cdlg->Hide();
 
-    // disconnect this dlg's nav btn signal handlers
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+    gCtx->sdlg->Show();
 
-    gCtx->sdlg->Show(nsXInstallerDlg::BACKWARD_MOVE);
-    gCtx->bMoving = TRUE;
+    // don't set bMoving since setuptype has no "back"
 }
 
 void
@@ -96,14 +93,10 @@ nsComponentsDlg::Next(GtkWidget *aWidget, gpointer aData)
 	    return;
 
     // hide this notebook page
-    gCtx->cdlg->Hide(nsXInstallerDlg::FORWARD_MOVE);
-
-    // disconnect this dlg's nav btn signal handlers
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+    gCtx->cdlg->Hide();
 
     // show the next dlg
-    gCtx->idlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+    gCtx->idlg->Show();
     gCtx->bMoving = TRUE;
 }
 
@@ -275,7 +268,7 @@ BAIL:
 }
 
 int
-nsComponentsDlg::Show(int aDirection)
+nsComponentsDlg::Show()
 {
     int err = OK;
     int customSTIndex = 0, i;
@@ -421,25 +414,33 @@ nsComponentsDlg::Show(int aDirection)
     gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "clicked",
                    GTK_SIGNAL_FUNC(nsComponentsDlg::Next), gCtx->cdlg);
 
-    // show back btn again after setup type dlg where we couldn't go back
+    // show both back and next buttons
+    gCtx->backLabel = gtk_label_new(gCtx->Res("BACK"));
+    gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
+    gtk_container_add(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
+    gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
+    gtk_widget_show(gCtx->backLabel);
+    gtk_widget_show(gCtx->nextLabel);
     gtk_widget_show(gCtx->back);
-
-    if (aDirection == nsXInstallerDlg::BACKWARD_MOVE) // from install dlg
-    {
-        gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->installLabel);
-        gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
-        gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
-        gtk_widget_show(gCtx->nextLabel);
-        gtk_widget_show(gCtx->next);
-    }     
+    gtk_widget_show(gCtx->next);
 
     return err;
 }
 
 int
-nsComponentsDlg::Hide(int aDirection)
+nsComponentsDlg::Hide()
 {
     gtk_widget_hide(mTable);
+
+    // disconnect and remove this dlg's nav btns
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
+    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
+
+    gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->backLabel); 
+    gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->nextLabel); 
+
+    gtk_widget_hide(gCtx->back);
+    gtk_widget_hide(gCtx->next);
 
     return OK;
 }

@@ -68,8 +68,8 @@ public:
 
     virtual int     Parse(nsINIParser *aParser) = 0;
 
-    virtual int     Show(int aDirection) = 0;
-    virtual int     Hide(int aDirection) = 0;
+    virtual int     Show() = 0;
+    virtual int     Hide() = 0;
 
 /*-------------------------------------------------------------------*
  *   INI Properties
@@ -85,10 +85,7 @@ public:
     enum
     {
         SKIP_DIALOG     = 0,
-        SHOW_DIALOG     = 1,
-
-        FORWARD_MOVE    = 555,
-        BACKWARD_MOVE   = -555
+        SHOW_DIALOG     = 1
     };
 
 protected:

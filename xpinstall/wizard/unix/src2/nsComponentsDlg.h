@@ -60,8 +60,8 @@ public:
 
     int             Parse(nsINIParser* aParser);
 
-    int             Show(int aDirection);
-    int             Hide(int aDirection);
+    int             Show();
+    int             Hide();
     
     static void     RowSelected(GtkWidget *aWidget, gint aRow, gint aColumn,
                                GdkEventButton *aEvent, gpointer aData);

@@ -221,7 +221,7 @@ nsXInstaller::RunWizard(int argc, char **argv)
     if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
     {
         // show welcome dlg
-        gCtx->wdlg->Show(nsXInstallerDlg::FORWARD_MOVE); 
+        gCtx->wdlg->Show(); 
 
         // pop over to main event loop
         gtk_main();
@@ -231,7 +231,7 @@ nsXInstaller::RunWizard(int argc, char **argv)
     {
         // show install dlg
         if (gCtx->opt->mMode == nsXIOptions::MODE_AUTO)
-            gCtx->idlg->Show(nsXInstallerDlg::FORWARD_MOVE);
+            gCtx->idlg->Show();
         gCtx->idlg->Next((GtkWidget *)NULL, (gpointer) gCtx->idlg);
     }
 
@@ -317,16 +317,8 @@ nsXInstaller::DrawNavButtons()
 
     gCtx->next = gtk_button_new();  
     gCtx->back = gtk_button_new(); 
-    gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
-    gCtx->backLabel = gtk_label_new(gCtx->Res("BACK"));
     XI_VERIFY(gCtx->next);
     XI_VERIFY(gCtx->back);
-    gtk_widget_show(gCtx->next);
-    gtk_widget_show(gCtx->back);
-    gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
-    gtk_container_add(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
-    gtk_widget_show(gCtx->nextLabel);
-    gtk_widget_show(gCtx->backLabel);
     GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
     gtk_widget_grab_default(gCtx->next);
     
