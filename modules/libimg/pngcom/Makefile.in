@@ -29,7 +29,7 @@ LIBRARY_NAME	= nspng
 IS_COMPONENT 	= 1
 
 LOCAL_INCLUDES	= -I$(srcdir) 
-EXTRA_LIBS	= 
+EXTRA_LIBS =
 
 CPPSRCS		= \
 	ipng.cpp \
@@ -40,10 +40,10 @@ CPPSRCS		= \
 	$(NULL)
 
 
-CPPSRCS		+=  \
-		  $(NULL)
-
 REQUIRES	+= util png zlib xpcom img
+
+EXTRA_DSO_LDOPTS += $(PNG_LIBS) 
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) 
 
 EXTRA_LIBS	+= $(NSPR_LIBS)
 
