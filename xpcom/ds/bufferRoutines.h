@@ -94,20 +94,11 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
  * @param   aCount is the number of chars to be "cut"
  */
 void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
-  //PRUint32 theMax=aLength-anOffset;
-  //PRUint32 theLength=(theMax<aCount) ? theMax : aCount;
+  PRUnichar* root=(PRUnichar*)aDest;
+  PRUnichar* dst = root+anOffset;
+  PRUnichar* src = root+anOffset+aCount;
 
-  PRUnichar* theBuf=(PRUnichar*)aDest;
-  PRUnichar* first= theBuf+anOffset+aCount;
-  PRUnichar* last = theBuf+aLength;
-  PRUnichar* to   = theBuf+anOffset;
-
-  //now loop over characters, shifting them left...
-  while(first<=last) {
-    *to=*first;  
-    to++;
-    first++;
-  }
+  memmove(dst,src,sizeof(PRUnichar)*(aLength-anOffset));
 }
 
 
