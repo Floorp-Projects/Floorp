@@ -105,12 +105,14 @@ nsMacMessagePump::DoMessagePump()
 	
 	// calculate the region to watch
 	RgnHandle mouseRgn = ::NewRgn();
-	::SetRectRgn(mouseRgn, -32000, -32000, -32001, -32001);
 	
 	while (mRunning)
 	{			
 		::LMSetSysEvtMask(eventMask);	// we need keyUp events
 		haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mouseRgn);
+
+		Point globalMouse = theEvent.where;
+		::SetRectRgn(mouseRgn, globalMouse.h, globalMouse.v, globalMouse.h + 1, globalMouse.v + 1);
 
 		if (haveEvent)
 		{
