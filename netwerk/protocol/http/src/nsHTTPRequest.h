@@ -143,6 +143,8 @@ protected:
     HTTPMethod                  mMethod;
     nsCOMPtr<nsIURL>            mURI;
     PRUint32					mVersion;
+    PRUint32                    mKeepAliveTimeout;
+    PRBool                      mDoKeepAlive;
     nsCOMPtr<nsIChannel>        mTransport;
     nsHTTPChannel*              mConnection;
 

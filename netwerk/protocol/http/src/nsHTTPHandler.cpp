@@ -31,6 +31,7 @@
 #include "nsIURLParser.h"
 #include "nsIChannel.h"
 #include "nsISocketTransportService.h"
+#include "nsISocketTransport.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIHTTPEventSink.h"
@@ -392,6 +393,40 @@ nsHTTPHandler::GetHttpVersion (unsigned int * o_HttpVersion)
 }
 
 NS_IMETHODIMP
+nsHTTPHandler::SetKeepAliveTimeout (unsigned int i_keepAliveTimeout) 
+{
+	mKeepAliveTimeout = i_keepAliveTimeout;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetKeepAliveTimeout (unsigned int * o_keepAliveTimeout)
+{
+    if (!o_keepAliveTimeout)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_keepAliveTimeout = mKeepAliveTimeout;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::SetDoKeepAlive (PRBool i_doKeepAlive) 
+{
+	mDoKeepAlive = i_doKeepAlive;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetDoKeepAlive (PRBool * o_doKeepAlive)
+{
+    if (!o_doKeepAlive)
+        return NS_ERROR_NULL_POINTER;
+
+    *o_doKeepAlive = mDoKeepAlive;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTTPHandler::GetAuthEngine(nsAuthEngine** o_AuthEngine)
 {
   *o_AuthEngine = &mAuthEngine;
@@ -555,6 +590,7 @@ nsHTTPHandler::nsHTTPHandler():
     mAcceptLanguages(nsnull),
 	mHttpVersion(HTTP_ONE_ZERO),
     mDoKeepAlive(PR_FALSE),
+    mKeepAliveTimeout(2*60),
     mReferrerLevel(0)
 {
     NS_INIT_REFCNT();
@@ -778,14 +814,32 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     PRInt32 port;
     nsXPIDLCString host;
 
-    rv = i_Uri->GetHost(getter_Copies(host));
-    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString proxy;
+    PRInt32 proxyPort = -1;
 
-    rv = i_Uri->GetPort(&port);
-    if (NS_FAILED(rv)) return rv;
+    // Ask the channel for proxy info... since that overrides
+    PRBool usingProxy = PR_FALSE;
+    i_Channel -> GetUsingProxy(&usingProxy);
 
-    if (port == -1)
-        GetDefaultPort(&port);
+    if (usingProxy)
+    {
+        rv = i_Channel->GetProxyHost(getter_Copies(proxy));
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = i_Channel->GetProxyPort(&proxyPort);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else
+    {
+        rv = i_Uri->GetHost(getter_Copies(host));
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = i_Uri->GetPort(&port);
+        if (NS_FAILED(rv)) return rv;
+        
+        if (port == -1)
+            GetDefaultPort(&port);
+    }
 
     nsIChannel* trans = nsnull;
     // Check in the idle transports for a host/port match
@@ -793,6 +847,21 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     PRInt32 index = 0;
     if (mDoKeepAlive)
     {
+        mIdleTransports->Count(&count);
+
+        // remove old and dead transports first
+
+        for (index=count-1; index >= 0; --index)
+        {
+            nsCOMPtr<nsIURI> uri;
+            nsISocketTransport * trans = NS_STATIC_CAST (nsISocketTransport *, mIdleTransports -> ElementAt (index));
+            
+            PRBool isAlive = PR_FALSE;
+            if (trans && NS_SUCCEEDED (trans -> IsAlive (mKeepAliveTimeout, &isAlive))
+                && !isAlive)
+                mIdleTransports -> RemoveElement (trans);
+        }
+
         mIdleTransports->Count(&count);
 
         for (index=count-1; index >= 0; --index, trans = nsnull)
@@ -805,7 +874,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                 nsXPIDLCString idlehost;
                 if (NS_SUCCEEDED(uri->GetHost(getter_Copies(idlehost))))
                 {
-                    if (0 == PL_strcasecmp(host, idlehost))
+                    if (0 == PL_strcasecmp (usingProxy ? proxy : host, idlehost))
                     {
                         PRInt32 idleport;
                         if (NS_SUCCEEDED(uri->GetPort(&idleport)))
@@ -813,7 +882,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                             if (idleport == -1)
                                 GetDefaultPort(&idleport);
 
-                            if (idleport == port)
+                            if (idleport == usingProxy ? proxyPort : port)
                             {
                                 // Addref it before removing it!
                                 NS_ADDREF(trans);
@@ -914,23 +983,21 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
 
     if (mDoKeepAlive)
     {
-        // if this transport is to be kept alive 
-        // then add it to mIdleTransports
-        NS_WITH_SERVICE(nsISocketTransportService, sts, 
-                kSocketTransportServiceCID, &rv);
-        // don't bother about failure of this one...
-        if (NS_SUCCEEDED(rv))
+        nsresult rv;
+        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (i_pTrans, &rv);
+
+        if (NS_SUCCEEDED (rv))
         {
-            PRBool reuse = PR_FALSE;
-            rv = sts->ReuseTransport(i_pTrans, &reuse);
-            // Delibrately ignoring the return value of AppendElement 
-            // if we can't append a transport we just won't have keep-alive
-            // but life goes on... assert in debug though
-            if (NS_SUCCEEDED(rv) && reuse)
+            PRBool alive = PR_FALSE;
+            rv = trans -> IsAlive (0, &alive);
+        
+            if (NS_SUCCEEDED (rv) && alive)
             {
-                PRBool added = mIdleTransports->AppendElement(i_pTrans);
+                PRBool added = mIdleTransports -> AppendElement (trans);
                 NS_ASSERTION(added, 
                     "Failed to add a socket to idle transports list!");
+
+                trans -> SetReuseConnection (PR_TRUE);
             }
         }
     }
@@ -1065,12 +1132,11 @@ nsHTTPHandler::PrefsChanged(const char* pref)
 
     nsresult rv = NS_OK;
 
-#if 1   // only for keep alive TODO
-        // This stuff only till Keep-Alive is not switched on by default
-        PRInt32 keepalive = -1;
-        rv = mPrefs->GetIntPref("network.http.keep-alive", &keepalive);
-        mDoKeepAlive = (keepalive == 1);
-#endif  // remove till here
+    PRInt32 keepalive = -1;
+    rv = mPrefs->GetIntPref("network.http.keep-alive", &keepalive);
+    mDoKeepAlive = (keepalive == 1);
+
+    rv = mPrefs->GetIntPref("network.http.keep-alive.timeout", &mKeepAliveTimeout);
 
     if (bChangedAll || !PL_strcmp(pref, "network.sendRefererHeader"))
     {

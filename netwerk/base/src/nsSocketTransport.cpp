@@ -139,7 +139,9 @@ nsSocketTransport::nsSocketTransport():
     mWriteBuffer(nsnull),
     mWriteBufferIndex(0),
     mWriteBufferLength(0),
-    mBytesExpected(-1)
+    mBytesExpected(-1),
+    mReuseCount(0),
+    mLastReuseCount(0)
 {
   NS_INIT_REFCNT();
 
@@ -410,25 +412,23 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         
         mSelectFlags = PR_POLL_EXCEPT;
 
-#if 0
-        // investigating 32002
-
         // XXX/ruslan: in case of keel-alive we need to check whether the connection is still alive;
         //  this is ugly, but so as this state machine. It's too late in doWrite to do anything; let
         //  me know if someone sees a better solution
-        if (!mCloseConnectionOnceDone)
+
+        if (mReuseCount > 0 && mReuseCount > mLastReuseCount)
         {
-            PRNetAddr peerAddr;
-            if (PR_GetPeerName (mSocketFD, &peerAddr) != PR_SUCCESS)
+            PRBool isalive = PR_FALSE;
+            if (NS_SUCCEEDED (IsAlive (0, &isalive)) && !isalive)
             {
                 CloseConnection ();
                 mCloseConnectionOnceDone = PR_FALSE;
 
                 mCurrentState = eSocketState_WaitConnect;
+                mLastReuseCount = mReuseCount;
                 continue;
             }
         }
-#endif
 
         if (GetReadType() != eSocketRead_None) {
           // Set the select flags for non-blocking reads...
@@ -474,6 +474,8 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
                ("Transport [%s:%d %x] is in done state.\n", 
                 mHostName, mPort, this));
 
+        mBytesExpected = -1;
+
         if (GetFlag(eSocketRead_Done)) {
           // Fire a notification that the read has finished...
           if (mReadListener) {
@@ -515,7 +517,6 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
           if (mCloseConnectionOnceDone)
             CloseConnection();
 
-          mBytesExpected = -1;
         }
 
         //
@@ -1299,7 +1300,10 @@ nsSocketTransport::GetReuseConnection(PRBool *_retval)
 NS_IMETHODIMP
 nsSocketTransport::SetReuseConnection(PRBool aReuse)
 {
-    mCloseConnectionOnceDone = !aReuse;
+    if (aReuse)
+    {
+        mReuseCount++;
+    }
     return NS_OK;
 }
 
@@ -1317,8 +1321,8 @@ nsSocketTransport::GetBytesExpected (PRInt32 * bytes)
 NS_IMETHODIMP
 nsSocketTransport::SetBytesExpected (PRInt32 bytes)
 {
-#if 0
-    // investigating 32002
+    nsAutoLock alock (mLock);
+
     if (mCurrentState == eSocketState_WaitReadWrite)
     {
         mBytesExpected = bytes;
@@ -1326,7 +1330,6 @@ nsSocketTransport::SetBytesExpected (PRInt32 bytes)
         if (mBytesExpected == 0)
             mService -> Wakeup (this);
     }
-#endif
     return NS_OK;
 }
 
@@ -2059,6 +2062,39 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
                     : NS_ERROR_FAILURE;
 }
 
+
+NS_IMETHODIMP
+nsSocketTransport::IsAlive (PRUint32 seconds, PRBool *alive)
+{
+    *alive = PR_TRUE;
+
+    if (mSocketFD)
+    {
+        if (seconds > 0 && mLastActiveTime != PR_INTERVAL_NO_WAIT)
+        {
+            PRUint32  now = PR_IntervalToSeconds (PR_IntervalNow ());
+            PRUint32 last = PR_IntervalToSeconds ( mLastActiveTime );
+
+            if (now - last > seconds)
+                *alive = PR_FALSE;
+        }
+
+        static char c;
+        PRInt32 rval = PR_Read (mSocketFD, &c, 0);
+        
+        if (rval <= 0)
+        {
+            PRErrorCode code = PR_GetError ();
+
+            if (rval == 0 || code == PR_WOULD_BLOCK_ERROR)
+                *alive = PR_FALSE;
+        }
+    }
+    else
+        *alive = PR_FALSE;
+
+    return NS_OK;
+}
 
 //TODO l10n and i18n stuff here!
 nsresult

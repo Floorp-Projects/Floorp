@@ -54,7 +54,9 @@ extern nsresult DupString(char* *o_Dest, const char* i_Src);
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method):
     mMethod(i_Method),
     mVersion(HTTP_ONE_ZERO),
-    mRequestSpec(0)
+    mRequestSpec(0),
+    mDoKeepAlive(PR_FALSE),
+    mKeepAliveTimeout (2*60)
 {
     NS_INIT_REFCNT();
 
@@ -123,7 +125,9 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method):
             SetHeader(nsHTTPAtoms::Accept_Language, acceptLanguages);
     }
 
-    httpHandler -> GetHttpVersion (&mVersion);
+    httpHandler -> GetHttpVersion      (  &mVersion  );
+    httpHandler -> GetDoKeepAlive      (&mDoKeepAlive);
+    httpHandler -> GetKeepAliveTimeout (&mKeepAliveTimeout);
 }
     
 
@@ -226,6 +230,14 @@ nsresult nsHTTPRequest::WriteRequest()
         // path to the origin server to revalidate its own entry, if any, with
         // the next cache or server.
         SetHeader(nsHTTPAtoms::Cache_Control, "max-age=0");
+    }
+
+    if (mDoKeepAlive)
+    {
+        char *p = PR_smprintf ("%d", mKeepAliveTimeout);
+        
+        SetHeader (nsHTTPAtoms::Keep_Alive, p);
+        PR_smprintf_free (p);
     }
 
 

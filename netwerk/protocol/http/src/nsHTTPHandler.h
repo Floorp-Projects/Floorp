@@ -107,6 +107,7 @@ protected:
     PRUint32			mHttpVersion;
     nsAuthEngine        mAuthEngine;
     PRBool              mDoKeepAlive;
+    PRInt32             mKeepAliveTimeout;
     nsCOMPtr<nsIPref>   mPrefs;
     nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
     PRUint32            mReferrerLevel;
