@@ -165,7 +165,7 @@ public:
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
 
 // MHTML helper methods
-  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray* aNodeList);
+  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
 
 // Table Editing (implemented in EditTable.cpp)
   NS_IMETHOD CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn);

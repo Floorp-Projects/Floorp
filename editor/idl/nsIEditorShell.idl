@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 #include "nsIFileSpec.idl"
+#include "nsISupportsArray.idl"
 
 %{C++
 
@@ -103,6 +104,9 @@ interface nsIEditorShell : nsISupports
   void    InsertLinkAroundSelection(in nsIDOMElement anchorElement);
   void    SelectElement(in nsIDOMElement element);
   void    SetSelectionAfterElement(in nsIDOMElement element);
+
+  /* Get list of embedded objects, e.g. for mail compose */
+  nsISupportsArray GetEmbeddedObjects();
 
   /* Formatting */
   void SetTextProperty(in wstring prop, in wstring attr, in wstring value);
