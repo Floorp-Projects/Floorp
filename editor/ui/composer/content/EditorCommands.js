@@ -171,16 +171,22 @@
     }
   }
 
-  function EditorInsertLink()
+function EditorInsertLink()
   {
+    dump("Starting Insert Link...\n");
     appCore = XPAppCoresManager.Find(editorName);  
     if (appCore != null) {
-      dump("Inserting link\n");
-      appCore.insertLink();
+	    dump("Link Properties Dialog starting...\n");
+      var toolkitCore = GetToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.ShowModalDialog("chrome://editordialogs/content/EdLinkProps.xul",
+            window);
+      }
     } else {
       dump("EditorAppCore has not been created!\n");
     }
   }
+
 
   function EditorInsertList(listType)
   {
@@ -298,3 +304,13 @@
 			dump("Can't find bold broadcaster!\n");
 		}
 	}
+
+  function GetToolkitCore() {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore)
+        toolkitCore.Init("ToolkitCore");
+    }
+    return toolkitCore;
+  }
