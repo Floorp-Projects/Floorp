@@ -220,6 +220,11 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
         return rv;
     }
 
+    if (mLoadGroup) {
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     rv = mPool->DispatchRequest((nsIRunnable*)mConnThread);
 
     if (NS_FAILED(rv)) return rv;
@@ -263,6 +268,11 @@ nsFTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 
     mConnected = PR_TRUE;
     mAsyncOpen = PR_TRUE;
+
+    if (mLoadGroup) {
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     return mPool->DispatchRequest((nsIRunnable*)mConnThread);
 }
@@ -321,6 +331,11 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
             return rv;
         }
 
+        if (mLoadGroup) {
+            rv = mLoadGroup->AddChannel(this, nsnull);
+            if (NS_FAILED(rv)) return rv;
+        }
+
         rv = mPool->DispatchRequest((nsIRunnable*)mConnThread);
 
         mConnected = PR_TRUE;
@@ -361,6 +376,11 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
     rv = mConnThread->SetStreamObserver(observer, ctxt);
     if (NS_FAILED(rv))
         NS_RELEASE(mConnThread);
+
+    if (mLoadGroup) {
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     rv = mPool->DispatchRequest((nsIRunnable*)mConnThread);
 
