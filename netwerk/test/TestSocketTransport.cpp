@@ -18,7 +18,7 @@
 #include <stdio.h>
 
 #ifdef WIN32
-#define USE_TIMERS  // Only use nsITimer on Windows (for now...)
+//#define USE_TIMERS  // Only use nsITimer on Windows (for now...)
 #include <windows.h>
 #endif
 
@@ -304,21 +304,15 @@ TestConnection::Run(void)
       }
       Pump_PLEvents();    
     }
-/*
-    while (NS_SUCCEEDED(rv)) {
-      rv = WriteBuffer();
+    else {
+      while (NS_SUCCEEDED(rv)) {
+        rv = WriteBuffer();
 
-      if (NS_SUCCEEDED(rv)) {
-        rv = ReadBuffer();
-      }
-
-      if (mBufferChar == 'z') {
-        mBufferChar = 'a';
-      } else {
-        mBufferChar++;
+        if (NS_SUCCEEDED(rv)) {
+          rv = ReadBuffer();
+        }
       }
     }
-*/
   }
 
   printf("Transport thread exiting...\n");
@@ -376,6 +370,7 @@ nsresult TestConnection::WriteBuffer(void)
     //
     else if (mOutStream) {
       rv = mOutStream->Write(buffer, size, &bytesWritten);
+      NS_ASSERTION(size == bytesWritten, "Not enough was written...");
     }
     PR_Free(buffer);
   } else {
@@ -400,8 +395,13 @@ nsresult TestConnection::ReadBuffer(void)
     buffer = (char*)PR_Malloc(mBufferLength + 4);
 
     if (buffer) {
-      rv = mInStream->Read(buffer, mBufferLength+2, &bytesRead);
+      rv = mInStream->Read(buffer, mBufferLength, &bytesRead);
 
+      if (NS_SUCCEEDED(rv)) {
+        buffer[bytesRead] = '\0';
+        printf("TestConnection::ReadBuffer.  Read %d bytes\n", bytesRead);
+        puts(buffer);
+      }
       PR_Free(buffer);
     }
   }
@@ -504,13 +504,21 @@ main(int argc, char* argv[])
 ///      return -1;
 ///  }
 
-  char* hostName;
-  int port = 80;
+  PRBool bIsAsync = PR_TRUE;
+  char* hostName = nsnull;
+  int i;
 
-  if (argc < 2) {
+  for (i=1; i<argc; i++) {
+    // Turn on synchronous mode...
+    if (PL_strcasecmp(argv[i], "-sync") == 0) {
+      bIsAsync = PR_FALSE;
+      continue;
+    } 
+
+    hostName = argv[i];
+  }
+  if (!hostName) {
     hostName = "chainsaw";
-  } else {
-    hostName = argv[1];
   }
   printf("Using %s as echo server...\n", hostName);
    
@@ -532,13 +540,11 @@ main(int argc, char* argv[])
 
   eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
 
-  int i;
-
   //
   // Create the connections and threads...
   //
   for (i=0; i<NUM_TEST_THREADS; i++) {
-    gConnections[i] = new TestConnection(hostName, 7, PR_TRUE);
+    gConnections[i] = new TestConnection(hostName, 7, bIsAsync);
     rv = NS_NewThread(&gThreads[i], gConnections[i]);
   }
 
