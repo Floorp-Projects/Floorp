@@ -38,10 +38,6 @@
 
 //mmptemp
 
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
-
 static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
 
@@ -146,7 +142,7 @@ nsView :: ~nsView()
   NS_IF_RELEASE(mDirtyRegion);
 }
 
-nsresult nsView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
+nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -154,10 +150,7 @@ nsresult nsView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
   
   *aInstancePtr = nsnull;
   
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kClassIID, kIViewIID);
-
-  if (aIID.Equals(kClassIID) || (aIID.Equals(kISupportsIID))) {
+  if (aIID.Equals(NS_GET_IID(nsIView)) || (aIID.Equals(NS_GET_IID(nsISupports)))) {
     *aInstancePtr = (void*)(nsIView*)this;
     return NS_OK;
   }
@@ -192,7 +185,7 @@ nsIView* nsView::GetViewFor(nsIWidget* aWidget)
 #ifdef NS_DEBUG
       // Verify the pointer is really a view
       nsView* widgetView;
-      NS_ASSERTION((NS_SUCCEEDED(view->QueryInterface(kIViewIID, (void **)&widgetView))) &&
+      NS_ASSERTION((NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIView), (void **)&widgetView))) &&
                    (widgetView == view), "bad client data");
 #endif
     }  
@@ -1431,7 +1424,7 @@ static void calc_extents(nsIView *view, nsRect *extents, nscoord ox, nscoord oy)
 
     cview = nsnull;
 
-    kid->QueryInterface(kIClipViewIID, (void **)&cview);
+    kid->QueryInterface(NS_GET_IID(nsIClipView), (void **)&cview);
 
     if (!cview)
       calc_extents(kid, extents, bounds.x, bounds.y);
