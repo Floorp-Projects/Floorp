@@ -42,43 +42,38 @@ function con_load (e)
 
     init();
     
-    display ("testing 1 2 3", "TEST");
-    display ("{ line1\n  line2\nline3 }", "TEST");
-    display ("testing 1 2 3", "TEST");
-    
 }
 
 console.onInputCommand =
 function con_icommand (e)
 {
     
-    var ary = console.commands.list (e.command);
+    var ary = console._commands.list (e.command);
     
     switch (ary.length)
     {            
         case 0:
-            display ("Unknown command ``" + e.command + "''.", "ERROR");
+            display (getMsg(MSN_ERR_NO_COMMAND, e.command), MT_ERROR);
             break;
             
         case 1:
             if (typeof console[ary[0].func] == "undefined")        
-                display ("Sorry, ``" + ary[0].name +
-                         "'' has not been implemented.", "ERROR");
+                display (getMsg(MSN_ERR_NOTIMPLEMENTED, ary[0].name), MT_ERROR);
             else
             {
                 e.commandEntry = ary[0];
                 if (!console[ary[0].func](e))
-                    display ("USAGE" + ary[0].name + " " + ary[0].usage,
-                             "USAGE");
+                    display (ary[0].name + " " + ary[0].usage,
+                             MT_USAGE);
             }
             break;
             
         default:
-            display ("Ambiguous command: ``" + e.command + "''", "ERROR");
             var str = "";
             for (var i in ary)
                 str += str ? ", " + ary[i].name : ary[i].name;
-            display (ary.length + " commands match: " + str, "ERROR");
+            display (getMsg (MSN_ERR_AMBIGCOMMAND, [e.command, ary.length, str]),
+                     MT_ERROR);
     }
 
 }
@@ -120,7 +115,8 @@ function con_ieval (e)
     {
         display (e.inputData, "EVAL-IN");
         var rv = String(console.doEval (e.inputData));
-        display (rv, "EVAL-OUT");
+        if (typeof rv != "undefined")
+            display (rv, "EVAL-OUT");
     }
     catch (ex)
     {
@@ -130,9 +126,13 @@ function con_ieval (e)
         {
             if (!ex.name)
                 ex.name = "Error";    
+            
             /* if it looks like a normal exception, print all the bits */
-            str = getMsg (MSN_EVAL_ERROR, [ex.name, ex.fileName, ex.lineNumber,
-                                           ex.message]);
+            str = getMsg (MSN_EVAL_ERROR, [ex.name, ex.fileName, ex.lineNumber]);
+            if (ex.functionName)
+                str += " (" + ex.functionName + ")";
+
+            str += ": " + ex.message;
         }
         else
             /* otherwise, just convert to a string */
@@ -141,6 +141,84 @@ function con_ieval (e)
         display (str, MT_ERROR);
     }
     
+    return true;
+}
+
+console.onInputFrame =
+function con_iframe (e)
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+
+    var idx = parseInt(e.inputData);
+    
+    if (idx >= 0)
+    {
+        console.currentFrame = console.frames[idx];
+        displayFrame (console.frames[idx], idx);
+    }
+    else
+        displayFrame (console.currentFrame);
+    
+    return true;
+}
+            
+console.onInputHelp =
+function cli_ihelp (e)
+{
+    var ary = console._commands.list (e.inputData);
+ 
+    if (ary.length == 0)
+    {
+        display (getMsg(MSN_ERR_NO_COMMAND, e.inputData), MT_ERROR);
+        return false;
+    }
+
+    for (var i in ary)
+    {        
+        display (ary[i].name + " " + ary[i].usage, MT_USAGE);
+        display (ary[i].help, MT_HELP);
+    }
+
+    return true;    
+}
+
+console.onInputScope =
+function con_iscope (e)
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+    
+    if (console.currentFrame.scope.propertyCount == 0)
+        display (getMsg (MSN_NO_PROPERTIES, MSG_VAL_SCOPE + " 0"));
+    else
+        displayProperties (console.currentFrame.scope);
+    
+    return true;
+}
+
+console.onInputQuit =
+function con_iquit (e)
+{
+    window.close();
+}
+
+console.onInputWhere =
+function con_iwhere (e)
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+    
+    displayCallStack();
     return true;
 }
 
