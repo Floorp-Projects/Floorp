@@ -16,31 +16,14 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#ifndef nsTitledButtonFrame_h___
+#define nsTitledButtonFrame_h___
 
-/**
-
- 
-**/
-
-#include "nsHTMLImage.h"
+#include "nsHTMLImageLoader.h"
 #include "nsLeafFrame.h"
 #include "nsButtonFrameRenderer.h"
 
 class nsIPopUpMenu;
-
-class nsTitledButtonImageLoader : public nsHTMLImageLoader {
-public:
-
-  void GetDesiredSize(nsIPresContext* aPresContext,
-                      const nsHTMLReflowState& aReflowState,
-                      nsIFrame* aTargetFrame,
-                      nsFrameImageLoaderCB aCallBack,
-                      nsHTMLReflowMetrics& aDesiredSize);
-
-  void StopLoadImage(nsIPresContext& aPresContext,
-                     nsIFrame* aTargetFrame);
-
-};
 
 class nsTitledButtonFrame : public nsLeafFrame
 {
@@ -50,13 +33,13 @@ public:
 
   friend nsresult NS_NewTitledButtonFrame(nsIFrame*& aNewFrame);
 
-    NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
 
-      NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
@@ -72,7 +55,7 @@ public:
 
   virtual void UpdateAttributes(nsIPresContext&  aPresContext);
 
-    // nsIHTMLReflow overrides
+  // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -90,44 +73,55 @@ public:
  
 protected:
 
-	  NS_IMETHOD  PaintTitle(nsIPresContext& aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD  PaintTitle(nsIPresContext& aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect,
+                         nsFramePaintLayer aWhichLayer);
 
-      NS_IMETHOD  PaintImage(nsIPresContext& aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD  PaintImage(nsIPresContext& aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect,
+                         nsFramePaintLayer aWhichLayer);
 
-      virtual void LayoutTitleAndImage(nsIPresContext& aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
+  virtual void LayoutTitleAndImage(nsIPresContext& aPresContext,
+                                   nsIRenderingContext& aRenderingContext,
+                                   const nsRect& aDirtyRect,
+                                   nsFramePaintLayer aWhichLayer);
 
-	  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
 
- void DisplayAltFeedback(nsIPresContext&      aPresContext,
+  void DisplayAltFeedback(nsIPresContext&      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRInt32              aIconId);
- void DisplayAltText(nsIPresContext&      aPresContext,
+  void DisplayAltText(nsIPresContext&      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsString&      aAltText,
                       const nsRect&        aRect);
 
- void MeasureString(const PRUnichar*     aString,
+  void MeasureString(const PRUnichar*     aString,
                      PRInt32              aLength,
                      nscoord              aMaxWidth,
                      PRUint32&            aMaxFit,
                      nsIRenderingContext& aContext);
 
   nsTitledButtonFrame();
+
   virtual void CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth);
+
   virtual void GetTextSize(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize);
+
   virtual void SetDisabled(nsAutoString aDisabled);
+
+  static nsresult UpdateImageFrame(nsIPresContext* aPresContext,
+                                   nsHTMLImageLoader* aLoader,
+                                   nsIFrame* aFrame,
+                                   void* aClosure,
+                                   PRUint32 aStatus);
+
+  void GetImageSource(nsString& aResult);
 
 private:
 
@@ -136,7 +130,7 @@ private:
   nsString mTitle;
   nsString mTruncatedTitle;
 
-  nsTitledButtonImageLoader mImageLoader;
+  nsHTMLImageLoader mImageLoader;
   PRBool mSizeFrozen;
   nsMargin mBorderPadding;
   nsRect mImageRect;
@@ -149,8 +143,7 @@ private:
 
   nsIPopUpMenu * mPopUpMenu;
   PRBool         mMenuIsPoppedUp;
-
- 
  
 }; // class nsTitledButtonFrame
 
+#endif /* nsTitledButtonFrame_h___ */
