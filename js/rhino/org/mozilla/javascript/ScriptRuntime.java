@@ -1744,10 +1744,9 @@ public class ScriptRuntime {
                 ScriptRuntime.getMessage("msg.instanceof.not.object", null), a);
         }
         String s = getStringId(a);
-        Object result = s != null
-            ? ScriptableObject.getProperty((Scriptable) b, s)
-            : ScriptableObject.getProperty((Scriptable) b, getIntId(a));
-        return result != Scriptable.NOT_FOUND;
+        return s != null
+            ? ScriptableObject.hasProperty((Scriptable) b, s)
+            : ScriptableObject.hasProperty((Scriptable) b, getIntId(a));
     }
 
     public static Boolean cmp_LTB(Object val1, Object val2) {

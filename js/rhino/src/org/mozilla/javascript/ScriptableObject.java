@@ -1329,7 +1329,8 @@ public abstract class ScriptableObject implements Scriptable {
     public boolean isSealed() {
         return count == -1;
     }
-    
+
+        
     /**
      * Gets a named property from an object or any object in its prototype chain.
      * <p>
@@ -1379,6 +1380,48 @@ public abstract class ScriptableObject implements Scriptable {
             obj = obj.getPrototype();
         } while (obj != null);
         return result;
+    }
+    
+    /**
+     * Returns whether a named property is defined in an object or any object 
+     * in its prototype chain.
+     * <p>
+     * Searches the prototype chain for a property named <code>name</code>.
+     * <p>
+     * @param obj a JavaScript object 
+     * @param name a property name 
+     * @return the true if property was found
+     * @since 1.5R2
+     */
+    public static boolean hasProperty(Scriptable obj, String name) {
+        Scriptable start = obj;
+        do {
+            if (obj.has(name, start))
+                return true;
+            obj = obj.getPrototype();
+        } while (obj != null);
+        return false;
+    }
+    
+    /**
+     * Returns whether an indexed property is defined in an object or any object 
+     * in its prototype chain.
+     * <p>
+     * Searches the prototype chain for a property with index <code>index</code>.
+     * <p>
+     * @param obj a JavaScript object 
+     * @param index a property index 
+     * @return the true if property was found
+     * @since 1.5R2
+     */
+    public static boolean hasProperty(Scriptable obj, int index) {
+        Scriptable start = obj;
+        do {
+            if (obj.has(index, start))
+                return true;
+            obj = obj.getPrototype();
+        } while (obj != null);
+        return false;
     }
 
     /**
