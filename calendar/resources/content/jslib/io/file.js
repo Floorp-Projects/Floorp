@@ -151,18 +151,16 @@ const JS_FILE_DEFAULT_PERMS            = 0644;
 
 const JS_FILE_OK                       = true;
 
-const JS_FILE_FileChannel  = new C.Constructor
-( JS_FILE_F_CHANNEL_CID, JS_FILE_I_FILE_CHANNEL );
-
 const JS_FILE_InputStream  = new C.Constructor
 ( JS_FILE_I_STREAM_CID, JS_FILE_I_SCRIPTABLE_IN_STREAM );
 
 // The File Transport Service provides nsITransport objects 
 // which can supply nsIOutputStream objects for writing to files.
+/*
 const JS_FILE_FileTransportService =
 C.classes[JS_FILE_F_TRANSPORT_SERVICE_CID].
 getService(C.interfaces.nsIFileTransportService);
-
+*/
 // Possible values for the ioFlags parameter to FileTransportService.createTransport.
 // From http://lxr.mozilla.org/seamonkey/source/netwerk/base/public/nsIFileChannel.idl
 
@@ -267,7 +265,11 @@ File.prototype.open = function(aMode, aPerms)
     case JS_FILE_APPEND_MODE: {
       try {
         if (!this.mFileChannel)
-          this.mFileChannel=new JS_FILE_FileChannel();
+           Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+           var nsiuri = ioService.newURI(this.mPath, null, null);
+          if (!nsiuri)
+            return null;
+          this.mFileChannel = ioService.newChannelFromURI(nsiuri);
       } catch(e)    {
         jslibError(e, "open("+this.mMode+") (unable to get nsIFileChannel)", 
                       "NS_ERROR_FAILURE", 
@@ -338,7 +340,13 @@ File.prototype.open = function(aMode, aPerms)
       }
       this.mMode=JS_FILE_READ_MODE;
       try {
-        this.mFileChannel        = new JS_FILE_FileChannel();
+        Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+           var nsiuri = ioService.newURI(this.mPath, null, null);
+          if (!nsiuri)
+            return null;
+          this.mFileChannel = ioService.newChannelFromURI(nsiuri);
+          
+          //this.mFileChannel        = new JS_FILE_FileChannel( this.mPath );
         this.mInputStream        = new JS_FILE_InputStream();    
         this.mLineBuffer         = new Array();
         this.mFileChannel.init(this.mFileInst, JS_FILE_READ, this.permissions);
