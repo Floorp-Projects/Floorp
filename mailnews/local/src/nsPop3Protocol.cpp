@@ -31,8 +31,8 @@ static NS_DEFINE_IID(kIPop3URLIID, NS_IPOP3URL_IID);
 #if 1
 // This is a temporary thing.
 
-#ifndef XP_STRTOK
-#define XP_STRTOK strtok
+#ifndef strtok
+#define strtok strtok
 #endif 
 
 #ifndef LINEBREAK 
@@ -160,9 +160,9 @@ net_pop3_load_state(const char* searchhost,
 	  if (buf[0] == '*') {
         /* It's a host&user line. */
         current = NULL;
-        host = XP_STRTOK(buf + 1, " \t\r\n");
+        host = strtok(buf + 1, " \t\r\n");
         /* XP_FileReadLine uses LF on all platforms */
-        user = XP_STRTOK(NULL, " \t\r\n");
+        user = strtok(NULL, " \t\r\n");
         if (host == NULL || user == NULL) continue;
         for (tmp = result ; tmp ; tmp = tmp->next) {
             if (PL_strcmp(host, tmp->host) == 0 &&
@@ -191,8 +191,8 @@ net_pop3_load_state(const char* searchhost,
 	  } else {
         /* It's a line with a UIDL on it. */
         if (current) {
-            flags = XP_STRTOK(buf, " \t\r\n");		/* XP_FileReadLine uses LF on all platforms */
-            uidl = XP_STRTOK(NULL, " \t\r\n");
+            flags = strtok(buf, " \t\r\n");		/* XP_FileReadLine uses LF on all platforms */
+            uidl = strtok(NULL, " \t\r\n");
             if (flags && uidl) {
                 PR_ASSERT((flags[0] == KEEP) || (flags[0] == DELETE_CHAR) ||
                           (flags[0] == TOO_BIG)); 
@@ -1118,11 +1118,11 @@ nsPop3Protocol::GetStat()
      *
      *  grab the first and second arg of stat response
      */
-    num = XP_STRTOK(m_pop3ConData->command_response, " ");
+    num = strtok(m_pop3ConData->command_response, " ");
 
     m_pop3ConData->number_of_messages = atol(num);
 
-    num = XP_STRTOK(NULL, " ");
+    num = strtok(NULL, " ");
 
     m_pop3ConData->total_folder_size = (PRInt32) atol(num);
     m_pop3ConData->really_new_messages = 0;
@@ -1272,14 +1272,14 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
         return(0);
 	  }
     
-	token = XP_STRTOK(line, " ");
+	token = strtok(line, " ");
 	if (token)
 	{
-		msg_num = atol(XP_STRTOK(line, " "));
+		msg_num = atol(strtok(line, " "));
 
 		if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0)
 		{
-			token = XP_STRTOK(NULL, " ");
+			token = strtok(NULL, " ");
 			if (token)
 				m_pop3ConData->msg_info[msg_num-1].size = atol(token);
 		}
@@ -1401,12 +1401,12 @@ nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
     {
         /* we are looking for a string of the form
 		   Message-Id: <199602071806.KAA14787@neon.netscape.com> */
-        char *firstToken = XP_STRTOK(line, " ");
+        char *firstToken = strtok(line, " ");
         int state = 0;
         
         if (firstToken && !PL_strcasecmp(firstToken, "MESSAGE-ID:") )
         {
-            char *message_id_token = XP_STRTOK(NULL, " ");
+            char *message_id_token = strtok(NULL, " ");
             state = (int) XP_Gethash(m_pop3ConData->uidlinfo->hash, message_id_token, 0);
             
             if (!m_pop3ConData->only_uidl && message_id_token && (state == 0))
@@ -1423,7 +1423,7 @@ nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
                 {
                     m_pop3ConData->number_of_messages_not_seen_before++;
                     m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl = 
-                        XP_STRDUP(message_id_token);
+                        PL_strdup(message_id_token);
                     if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
                         return MK_OUT_OF_MEMORY;
                 }
@@ -1434,7 +1434,7 @@ nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
                 m_pop3ConData->last_accessed_msg = m_pop3ConData->current_msg_to_top - 1;
                 m_pop3ConData->found_new_message_boundary = PR_TRUE;
                 m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl =
-                    XP_STRDUP(message_id_token);
+                    PL_strdup(message_id_token);
                 if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
                     return MK_OUT_OF_MEMORY;
             }
@@ -1562,11 +1562,11 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
         return(0);
 	  }
     
-    msg_num = atol(XP_STRTOK(line, " "));
+    msg_num = atol(strtok(line, " "));
 
     if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0) {
-/*	  char *eatMessageIdToken = XP_STRTOK(NULL, " ");	*/
-        char *uidl = XP_STRTOK(NULL, " ");/* not really a uidl but a unique token -km */
+/*	  char *eatMessageIdToken = strtok(NULL, " ");	*/
+        char *uidl = strtok(NULL, " ");/* not really a uidl but a unique token -km */
 
         if (!uidl)
             /* This is bad.  The server didn't give us a UIDL for this message.
@@ -1683,10 +1683,10 @@ nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
         return(0);
 	  }
 
-    msg_num = atol(XP_STRTOK(line, " "));
+    msg_num = atol(strtok(line, " "));
     
     if(msg_num <= m_pop3ConData->number_of_messages && msg_num > 0) {
-        char *uidl = XP_STRTOK(NULL, " ");
+        char *uidl = strtok(NULL, " ");
 
         if (!uidl)
             /* This is bad.  The server didn't give us a UIDL for this message.
@@ -2106,7 +2106,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         }
         else
             m_pop3ConData->cur_msg_size =
-                atol(XP_STRTOK(m_pop3ConData->command_response, " "));
+                atol(strtok(m_pop3ConData->command_response, " "));
         /* RETR complete message */
 
         if (m_pop3ConData->sender_info)
@@ -2311,7 +2311,7 @@ nsPop3Protocol::RetrHandleLine(char *line, PRUint32 line_length, void *closure)
     {
         if (line_length > 6 && !XP_MEMCMP("From: ", line, 6))
         {
-            /* Zzzzz XP_STRSTR only works with NULL terminated string. Since,
+            /* Zzzzz PL_strstr only works with NULL terminated string. Since,
              * the last character of a line is either a carriage return
              * or a linefeed. Temporary setting the last character of the
              * line to NULL and later setting it back should be the right 
@@ -2565,7 +2565,7 @@ nsPop3Protocol::ProcessPop3State (nsIURL* aURL, nsIInputStream* aInputStream,
                 }
                 
                 net_set_pop3_password(password);
-                XP_MEMSET(password, 0, PL_strlen(password));
+                memset(password, 0, PL_strlen(password));
                 PR_Free(password);
                 
                 net_pop3_password_pending = PR_TRUE;

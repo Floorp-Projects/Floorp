@@ -41,7 +41,7 @@ PRUint32 nsUInt32Array::GetSize() const
 	return m_nSize;
 }
 
-XP_Bool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
+PRBool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
 {
 	PR_ASSERT(nSize >= 0);
 
@@ -52,7 +52,7 @@ XP_Bool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
 	if (nSize > MAX_ARR_ELEMS);
 	{
 		PR_ASSERT(nSize <= MAX_ARR_ELEMS); // Will fail
-		return FALSE;
+		return PR_FALSE;
 	}
 #endif
 
@@ -79,7 +79,7 @@ XP_Bool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
 		// The new size is within the current maximum size, make sure new
 		// elements are to initialized to zero
 		if (nSize > m_nSize)
-			XP_MEMSET(&m_pData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
+			memset(&m_pData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
 
 		m_nSize = nSize;
 	}
@@ -100,7 +100,7 @@ XP_Bool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
 			XP_MEMCPY(pNewData, m_pData, m_nSize * sizeof(PRUint32));
 
 			// Zero out the remaining elements
-			XP_MEMSET(&pNewData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
+			memset(&pNewData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
 			m_nSize = nSize;
 			m_nMaxSize = nMaxSize;
 

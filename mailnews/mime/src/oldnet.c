@@ -99,7 +99,7 @@ static const char *MSG_CitationColor = 0;
 PUBLIC int
 NET_ScanForURLs(
 				MSG_Pane* pane,
-				const char *input, PRInt32 input_size,
+				const char *input, int32 input_size,
 				char *output, int output_size, XP_Bool urls_only)
 {
   int col = 0;

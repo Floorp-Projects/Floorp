@@ -639,7 +639,7 @@ nsresult nsMsgDatabase::GetMsgHdrStructFromnsMsgHdr(nsMsgHdr *msgHdr, MessageHdr
 {
 	nsresult	err = NS_OK;
 
-	if (nsMsgHdr)
+	if (msgHdr)
 	{
 		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_subjectColumnToken, hdrStruct.m_subject);
 		err = RowCellColumnTonsString(msgHdr->GetMDBRow(), m_senderColumnToken, hdrStruct.m_author);
