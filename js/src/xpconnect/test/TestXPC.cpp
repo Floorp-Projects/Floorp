@@ -289,6 +289,8 @@ public:
                                   nsID**   p14,
                                   char**   p15,
                                   uint16** p16);
+    NS_IMETHOD MethodWithNative(int p1, void* p2);
+
     MyEcho();
 private: 
     nsIEcho* mReciever;
@@ -411,6 +413,11 @@ MyEcho::SendInOutManyTypes(int8*    p1,
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+MyEcho::MethodWithNative(int p1, void* p2)
+{
+    return NS_OK;
+}    
 
 /***************************************************************************/
 

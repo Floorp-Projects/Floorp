@@ -18,10 +18,10 @@
 
 /* The InterfaceInfo support public stuff. */
 
-#include "xpt_struct.h"
-
 #ifndef xpt_cpp_h___
 #define xpt_cpp_h___
+
+#include "xpt_struct.h"
 
 // Everything here is dependent upon - and sensitive to changes in -
 // xpcom/libxpt/xpt_struct.h!
@@ -118,7 +118,7 @@ public:
     nsIInterfaceInfo* GetInterface() const ;
 
     // a *little* simpler than the above
-    nsIID* GetInterfaceIID() const ;
+    const nsIID* GetInterfaceIID() const ;
 
 private:
     nsXPTParamInfo();   // no implementation

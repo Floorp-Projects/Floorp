@@ -36,7 +36,6 @@ nsXPCArbitraryScriptable::Create(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     return NS_OK;
 }
 
@@ -52,7 +51,6 @@ nsXPCArbitraryScriptable::LookupProperty(JSContext *cx, JSObject *obj, jsid id,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.lookupProperty(cx, obj, id, objp, propp
 #if defined JS_THREADSAFE && defined DEBUG
 			    , "unknown file", 1
@@ -75,7 +73,6 @@ nsXPCArbitraryScriptable::DefineProperty(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.defineProperty(cx, obj, id, value, getter, setter,
                                           attrs, propp);
     return NS_OK;
@@ -93,7 +90,6 @@ nsXPCArbitraryScriptable::GetProperty(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.getProperty(cx, obj, id, vp);
     return NS_OK;
 }
@@ -110,7 +106,6 @@ nsXPCArbitraryScriptable::SetProperty(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.setProperty(cx, obj, id, vp);
     return NS_OK;
 }
@@ -127,7 +122,6 @@ nsXPCArbitraryScriptable::GetAttributes(JSContext *cx, JSObject *obj, jsid id,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.getAttributes(cx, obj, id, prop, attrsp);
     return NS_OK;
 }
@@ -144,7 +138,6 @@ nsXPCArbitraryScriptable::SetAttributes(JSContext *cx, JSObject *obj, jsid id,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.setAttributes(cx, obj, id, prop, attrsp);
     return NS_OK;
 }
@@ -161,7 +154,6 @@ nsXPCArbitraryScriptable::DeleteProperty(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.deleteProperty(cx, obj, id, vp);
     return NS_OK;
 }
@@ -178,7 +170,6 @@ nsXPCArbitraryScriptable::DefaultValue(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.defaultValue(cx, obj, type, vp);
     return NS_OK;
 }
@@ -196,7 +187,6 @@ nsXPCArbitraryScriptable::Enumerate(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
     return NS_OK;
 }
@@ -213,7 +203,6 @@ nsXPCArbitraryScriptable::CheckAccess(JSContext *cx, JSObject *obj, jsid id,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.checkAccess(cx, obj, id, mode, vp, attrsp);
     return NS_OK;
 }
@@ -231,7 +220,6 @@ nsXPCArbitraryScriptable::Call(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.call(cx, obj, argc, argv, rval);
     return NS_OK;
 }
@@ -249,7 +237,6 @@ nsXPCArbitraryScriptable::Construct(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     *retval = js_ObjectOps.construct(cx, obj, argc, argv, rval);
     return NS_OK;
 }
@@ -263,7 +250,6 @@ nsXPCArbitraryScriptable::Finalize(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    NS_PRECONDITION(cx==REAL_WRAPPER(wrapper)->GetClass()->GetJSContext(), "bad param");
     JS_FinalizeStub(cx, obj);
     return NS_OK;
 }

@@ -302,7 +302,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     // build the args
     for(i = 0; i < argc; i++)
     {
-        nsID* conditional_iid = NULL;
+        const nsID* conditional_iid = NULL;
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
         jsval val;
@@ -421,7 +421,7 @@ pre_call_clean_up:
         {
             jsval val;
             nsIAllocator* conditional_al = NULL;
-            nsID* conditional_iid = NULL;
+            const nsID* conditional_iid = NULL;
             const nsXPTType& type = param.GetType();
             nsXPCMiniVariant* pv;
 

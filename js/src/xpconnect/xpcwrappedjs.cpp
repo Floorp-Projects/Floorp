@@ -34,7 +34,10 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if(aIID.Equals(nsIXPConnectWrappedJSMethods::IID()))
     {
         if(!mMethods && !(mMethods = new nsXPCWrappedJSMethods(this)))
+        {
+            *aInstancePtr = NULL;
             return NS_ERROR_OUT_OF_MEMORY;
+        }
         // intentional second addref
         NS_ADDREF(mMethods);
         *aInstancePtr = (void*) mMethods;

@@ -21,6 +21,8 @@
 #ifndef nsIInterfaceInfoManager_h___
 #define nsIInterfaceInfoManager_h___
 
+#include "nsIInterfaceInfo.h"
+
 // This should be implemented as a Service
 
 // {8B161900-BE2B-11d2-9831-006008962422}
@@ -38,6 +40,7 @@ public:
     NS_IMETHOD GetInfoForName(const char* name, nsIInterfaceInfo** info) = 0;
 
     // name <-> IID mapping services
+    // NOTE: these return IAllocatator alloc'd copies of the data
     NS_IMETHOD GetIIDForName(const char* name, nsIID** iid) = 0;
     NS_IMETHOD GetNameForIID(const nsIID* iid, char** name) = 0;
 
@@ -46,7 +49,7 @@ public:
 };
 
 /***************************************************************************/
-// XXX XXX Removed this block and switch XPC_PUBLIC_API to XPT_PUBLIC_API
+// XXX XXX Remove this block and switch XPC_PUBLIC_API to XPT_PUBLIC_API
 //         when this code is moved to libxpt
 #include "jsapi.h"
 #ifdef EXPORT_XPC_API

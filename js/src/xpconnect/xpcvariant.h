@@ -21,7 +21,6 @@
 #ifndef xpcvariant_h___
 #define xpcvariant_h___
 
-// this is used only for WrappedJS stub param repackaging
 struct nsXPCMiniVariant
 {
 // No ctors or dtors so that we can use arrays of these on the stack

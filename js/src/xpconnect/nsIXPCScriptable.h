@@ -21,7 +21,6 @@
 #ifndef nsIXPCScriptable_h___
 #define nsIXPCScriptable_h___
 
-#include "nsISupports.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 

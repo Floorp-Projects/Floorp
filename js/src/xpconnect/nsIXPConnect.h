@@ -43,13 +43,7 @@
 #define XPC_FRIEND_API(t)    XPC_PUBLIC_API(t)
 #define XPC_FRIEND_DATA(t)   XPC_PUBLIC_DATA(t)
 
-#ifndef NS_DEFINE_STATIC_IID_ACCESSOR
-#define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
-  public: \
-  static const nsIID& IID() {static nsIID iid = the_iid; return iid;}
-#endif
-
-// XXX break these up into separate files...
+// XXX break these up into separate files?
 // XXX declare them in XPIDL :)
 
 /***************************************************************************/
@@ -67,15 +61,14 @@ class nsIXPConnectWrappedNative : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_NATIVE_IID)
 
-    // XXX add the rest of the fun methods
     NS_IMETHOD GetDynamicScriptable(nsIXPCScriptable** p) = 0;
     NS_IMETHOD GetArbitraryScriptable(nsIXPCScriptable** p) = 0;
-
     NS_IMETHOD GetJSObject(JSObject** aJSObj) = 0;
     NS_IMETHOD GetNative(nsISupports** aObj) = 0;
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
     NS_IMETHOD GetIID(nsIID** iid) = 0; // returns IAllocatator alloc'd copy
     NS_IMETHOD DebugDump(int depth) = 0;
+    // XXX other methods?
 };
 
 /***************************************************************************/
@@ -91,8 +84,9 @@ class nsIXPConnectWrappedJS : public nsISupports
     //
     // To manipulate this wrapper (as opposed to manipulating the wrapped
     // JSObject via this wrapper) do a QueryInterface for the
-    // nsIXPConnectWrappedJSMethods interface and use the methods on that
-    // interface. (see below)
+    // nsIXPConnectWrappedJSMethods interface 
+    // i.e. 'nsIXPConnectWrappedJSMethods::IID()'
+    // and use the methods on that interface. (see below)
 };
 
 /******************************************/
@@ -107,11 +101,11 @@ class nsIXPConnectWrappedJSMethods : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_METHODS_IID)
 
-    // XXX add the rest of the fun methods
     NS_IMETHOD GetJSObject(JSObject** aJSObj) = 0;
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
     NS_IMETHOD GetIID(nsIID** iid) = 0; // returns IAllocatator alloc'd copy
     NS_IMETHOD DebugDump(int depth) = 0;
+    // XXX other methods?
 };
 
 /***************************************************************************/
@@ -133,6 +127,8 @@ public:
                           REFNSIID aIID,
                           nsIXPConnectWrappedNative** aWrapper) = 0;
 
+    // XXX add 'AbandonJSContext' method and all that implies?
+
     NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
@@ -148,12 +144,11 @@ public:
                                     nsIXPConnectWrappedNative** aWrapper) = 0;
 
     NS_IMETHOD DebugDump(int depth) = 0;
-    // other stuff...
-
+    // XXX other methods?
 };
 
 JS_BEGIN_EXTERN_C
-// XXX remove this and use ServiceManager instead
+// XXX Add support for this to be a service?
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect();
 
