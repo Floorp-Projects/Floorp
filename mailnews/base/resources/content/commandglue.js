@@ -110,14 +110,8 @@ function setTitleFromFolder(msgfolder, subject)
     else
       title = "";
 
-    if (msgfolder.isServer)
-    {
-      if (server.type == "none")
-        title += server.prettyName;
-      else
-       // <hostname>
-        title += server.hostName;
-    }
+    if (msgfolder.isServer) 
+      title += server.prettyName;
     else {
         var middle;
         var end;
@@ -742,6 +736,10 @@ function FolderPaneSelectionChange()
                 searchInput.value = "";
             }
             ClearMessagePane();
+            if (gSearchEmailAddress)
+              viewFlags |= nsMsgViewFlagsType.kDeferPopulatingView;
+            else
+              viewFlags &= ~nsMsgViewFlagsType.kDeferPopulatingView; 
             ChangeFolderByURI(folderResource.Value, viewType, viewFlags, sortType, sortOrder);
         }
     }

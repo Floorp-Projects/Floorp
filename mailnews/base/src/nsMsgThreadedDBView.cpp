@@ -61,6 +61,9 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
   nsresult rv = nsMsgDBView::Open(folder, sortType, sortOrder, viewFlags, aTreatRecipientAsAuthor, pCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (viewFlags & nsMsgViewFlagsType::kDeferPopulatingView)
+    return NS_OK;
+
   // Preset msg hdr cache size for performance reason.
   if (m_db)
   {
@@ -101,6 +104,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Close()
 NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
 {
   mIsSearchView = PR_FALSE;
+  m_viewFlags &= ~nsMsgViewFlagsType::kDeferPopulatingView; //clearing out this flag, only used to load folder w/ quick search view
   m_searchSession = nsnull;
   m_sortValid = PR_FALSE;  //force a sort
   nsresult rv = NS_OK;

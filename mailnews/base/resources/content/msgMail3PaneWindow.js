@@ -52,7 +52,7 @@ var gNextMessageViewIndexAfterDelete = -2;
 var gCurrentlyDisplayedMessage=nsMsgViewIndex_None;
 var gStartFolderUri = null;
 var gStartMsgKey = -1;
-var gEmailAddress = null;
+var gSearchEmailAddress = null;
 var gRightMouseButtonDown = false;
 // Global var to keep track of which row in the thread pane has been selected
 // This is used to make sure that the row with the currentIndex has the selection
@@ -209,10 +209,10 @@ var folderListener = {
                 }
              }
              //folder loading is over, now issue quick search if there is an email address
-             if (gEmailAddress)
+             if (gSearchEmailAddress)
              {
-               Search(gEmailAddress);
-               gEmailAddress = null;
+               Search(gSearchEmailAddress);
+               gSearchEmailAddress = null;
              } 
            }
          }
@@ -547,14 +547,14 @@ function OnLoadMessenger()
   {
     gStartFolderUri = window.arguments[0];
     gStartMsgKey = window.arguments[1];
-    gEmailAddress = window.arguments[2];
+    gSearchEmailAddress = window.arguments[2];
 
   }
   else
   {
     gStartFolderUri = null;
     gStartMsgKey = -1;
-    gEmailAddress = null;
+    gSearchEmailAddress = null;
   }
 
   setTimeout("loadStartFolder(gStartFolderUri);", 0);
