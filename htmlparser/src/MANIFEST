@@ -20,3 +20,5 @@ nsHTMLTags.h
 nsParserCIID.h
 nsHTMLEntities.h
 nsWellFormedDTD.h
+nsExpatDTD.h
+nsIExpatTokenizer.h
