@@ -87,7 +87,10 @@ EXPORTS		= jsapi.h \
 		  jsxdrapi.h \
 		  $(NULL)
 
+# when using gcc the assembly is inlined in the C-file (see jslock.c)
+ifdef NS_USE_NATIVE
 ASFILES = $(wildcard *_$(OS_ARCH).s)
+endif
 
 JS_SAFE_ARENA = 1
 
