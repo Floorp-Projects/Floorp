@@ -1274,32 +1274,34 @@ nsresult
 HTMLContentSink::ProcessOPTIONTagContent(const nsIParserNode& aNode)
 {
   if ((nsnull != mCurrentSelect) && (nsnull != mCurrentOption)) {
-    nsIFormControl* control;
-    nsresult rv = mCurrentOption->QueryInterface(kIFormControlIID, (void **)&control);
-    nsAutoString currentText;
-    control->GetContent(currentText); // why do we need to do this
+    nsIFormControl* control = nsnull;
+    mCurrentOption->QueryInterface(kIFormControlIID, (void **)&control);
+    if (nsnull != control) {
+      // Get current content and append on the new content
+      nsAutoString currentText;
+      control->GetContent(currentText);
 
-    switch (aNode.GetTokenType()) {
-    case eToken_text:
-    case eToken_whitespace:
-    case eToken_newline:
-      currentText.Append(aNode.GetText());
-      break;
+      switch (aNode.GetTokenType()) {
+      case eToken_text:
+      case eToken_whitespace:
+      case eToken_newline:
+        currentText.Append(aNode.GetText());
+        break;
 
-    case eToken_entity:
-      {
-        nsAutoString tmp2("");
-        PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
-        if (unicode < 0) {
-          currentText.Append(aNode.GetText());
-        } else {
-          currentText.Append(tmp2);
+      case eToken_entity:
+        {
+          nsAutoString tmp2("");
+          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
+          if (unicode < 0) {
+            currentText.Append(aNode.GetText());
+          } else {
+            currentText.Append(tmp2);
+          }
         }
+        break;
       }
-      break;
+      control->SetContent(currentText);
     }
-
-    control->SetContent(currentText);
   }
   return NS_OK;
 }
