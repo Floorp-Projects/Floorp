@@ -22,7 +22,7 @@
 
 
 
-#if DEBUG_toshok
+#if DEBUG_slamm
 #define D(x) x
 #else
 #define D(x)
@@ -47,23 +47,10 @@ extern "C"
 	Colormap fe_getColormap(fe_colormap *colormap);
 }
 
-XFE_PopupMenu::XFE_PopupMenu(String			name,
-							 XFE_Frame *	parent_frame,
-							 Widget			parent,
-							 MenuSpec *		spec) :
-	XFE_Menu(parent_frame,
-			 NULL,
-			 NULL)
+XFE_PopupMenuBase::XFE_PopupMenuBase(String name, Widget parent)
 {
 	// Create the popup menu
-	Widget popup_menu = XFE_PopupMenu::CreatePopupMenu(parent,name,NULL,0);
-
-	setBaseWidget(popup_menu);
-
-	setMenuSpec(spec);
-
-	if (spec)
-		createWidgets(spec);
+	m_popup_menu = XFE_PopupMenuBase::CreatePopupMenu(parent,name,NULL,0);
 }
 
 static XtPointer
@@ -82,7 +69,7 @@ fe_popup_destroy_mappee(Widget widget, XtPointer data)
     return 0;
 }
 
-XFE_PopupMenu::~XFE_PopupMenu()
+XFE_PopupMenuBase::~XFE_PopupMenuBase()
 {
 	//
 	// we need to destroy the shell parent of our base widget, which
@@ -90,29 +77,20 @@ XFE_PopupMenu::~XFE_PopupMenu()
 	// In case the popup has submenus, walk the tree following
 	// cascade/sub-menu linkages.
 	// 
-	fe_WidgetTreeWalk(XtParent(m_widget), fe_popup_destroy_mappee, NULL);
-
-	m_widget = NULL;
+	fe_WidgetTreeWalk(XtParent(m_popup_menu), fe_popup_destroy_mappee, NULL);
 }
 
 void
-XFE_PopupMenu::position(XEvent *event)
+XFE_PopupMenuBase::position(XEvent *event)
 {
   XP_ASSERT(event->type == ButtonPress);
+  XP_ASSERT( XfeIsAlive(m_popup_menu) );
   
-  XmMenuPosition(m_widget, (XButtonPressedEvent*)event);
-}
-
-void
-XFE_PopupMenu::show()
-{
-  update();
-
-  XFE_Menu::show();
+  XmMenuPosition(m_popup_menu, (XButtonPressedEvent*)event);
 }
 
 /* static */ Widget
-XFE_PopupMenu::CreatePopupMenu(Widget pw,String name,ArgList av,Cardinal ac)
+XFE_PopupMenuBase::CreatePopupMenu(Widget pw,String name,ArgList av,Cardinal ac)
 {
 	Widget			popup;
 	ArgList			new_av;
@@ -167,21 +145,21 @@ static char _leftRightTranslations[] = "\
 :<Key>osfRight:			";
 
 void
-XFE_PopupMenu::removeLeftRightTranslations()
+XFE_PopupMenuBase::removeLeftRightTranslations()
 {
 	WidgetList	children;
 	Cardinal	num_children;
 	Cardinal	i;
 
-	XP_ASSERT( XfeIsAlive(m_widget) );
-	XP_ASSERT( XmIsRowColumn(m_widget) );
+	XP_ASSERT( XfeIsAlive(m_popup_menu) );
+	XP_ASSERT( XmIsRowColumn(m_popup_menu) );
 
-	if (!XfeIsAlive(m_widget))
+	if (!XfeIsAlive(m_popup_menu))
 	{
 		return;
 	}
 	
-	XfeChildrenGet(m_widget,&children,&num_children);
+	XfeChildrenGet(m_popup_menu,&children,&num_children);
 
 	if (!children || !num_children)
 	{
@@ -198,10 +176,98 @@ XFE_PopupMenu::removeLeftRightTranslations()
 }
 
 void
-XFE_PopupMenu::raise()
+XFE_PopupMenuBase::raise()
 {
-	XP_ASSERT( isAlive() );
+	XP_ASSERT( XfeIsAlive(m_popup_menu) );
 
-	XRaiseWindow(XtDisplay(XtParent(m_widget)),
-				 XtWindow(XtParent(m_widget)));
+	XRaiseWindow(XtDisplay(XtParent(m_popup_menu)),
+				 XtWindow(XtParent(m_popup_menu)));
+}
+
+//////////////////////////////////////////////////////////////////////
+XFE_PopupMenu::XFE_PopupMenu(String			name,
+							 XFE_Frame *	parent_frame,
+							 Widget			parent,
+							 MenuSpec *		spec)
+    : XFE_Menu(parent_frame,NULL,NULL), XFE_PopupMenuBase(name,parent)
+{
+    setBaseWidget(m_popup_menu);
+	setMenuSpec(spec);
+
+	if (spec)
+		createWidgets(spec);
+}
+#if 0
+// Not sure if this is needed
+XFE_PopupMenu::~XFE_PopupMenu()
+{
+	m_widget = NULL;
+}
+#endif
+//////////////////////////////////////////////////////////////////////
+
+XFE_SimplePopupMenu::XFE_SimplePopupMenu(String name, Widget parent)
+	: XFE_PopupMenuBase(name,parent)
+{
+    ; // Nothing to do.
+}
+
+void
+XFE_SimplePopupMenu::show()
+{
+      XtManageChild(m_popup_menu);
+}
+
+void 
+XFE_SimplePopupMenu::addSeparator()
+{
+    Widget sep = XtCreateWidget("separator",
+                                xmSeparatorGadgetClass,
+                                m_popup_menu,
+                                NULL, 0);
+
+    XtManageChild(sep);
+}
+
+void 
+XFE_SimplePopupMenu::addPushButton(String name, void *userData, Boolean isSensitive)
+{
+    Widget button = XtCreateWidget("push",
+                                   xmPushButtonWidgetClass,
+                                   m_popup_menu,
+                                   NULL, 0);
+				
+    XmString str;
+    str = XmStringCreate(name, XmFONTLIST_DEFAULT_TAG);
+
+    XtVaSetValues(button,
+                  XmNuserData, (XtPointer)userData,
+                  XmNsensitive, isSensitive,
+                  XmNlabelString, str,
+                  NULL);
+
+    XtAddCallback(button, XmNactivateCallback, pushb_activate_cb, this);
+
+    XtManageChild(button);
+}
+
+void
+XFE_SimplePopupMenu::pushb_activate_cb(Widget w,
+                                       XtPointer clientData, XtPointer callData)
+{
+  XFE_SimplePopupMenu* obj = (XFE_SimplePopupMenu*)clientData;
+  //XmPushButtonCallbackStruct* cd = (XmPushButtonCallbackStruct *)callData;
+
+  XtPointer userData;
+  XtVaGetValues(w,
+                XmNuserData, &userData,
+                NULL);
+
+  obj->PushButtonActivate(w,userData);
+}
+
+void
+XFE_SimplePopupMenu::PushButtonActivate(Widget w, XtPointer userData)
+{
+    ; // Do nothing for now.
 }

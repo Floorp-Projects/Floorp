@@ -27,24 +27,51 @@
 
 #include "Menu.h"
 
-class XFE_PopupMenu : public XFE_Menu
+class XFE_PopupMenuBase
 {
 public:
-  XFE_PopupMenu(String name,XFE_Frame *frame, Widget parent, MenuSpec * menu_spec = NULL);
-  virtual ~XFE_PopupMenu();
+  XFE_PopupMenuBase(String name, Widget parent);
+  virtual ~XFE_PopupMenuBase();
 
   void position(XEvent *event);
   void raise();
   
-  virtual void show();
-
   void removeLeftRightTranslations();
 
   static Widget CreatePopupMenu(Widget pw,String name,ArgList av,Cardinal ac);
+
+protected:
+  Widget m_popup_menu;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class XFE_PopupMenu : public XFE_Menu, public XFE_PopupMenuBase
+{
+public:
+
+  XFE_PopupMenu(String name, XFE_Frame *frame, Widget parent,
+                MenuSpec * menu_spec = NULL);
 
 private:
 
   static MenuSpec title_spec[];
 };
 
+//////////////////////////////////////////////////////////////////////
+
+class XFE_SimplePopupMenu : public XFE_PopupMenuBase
+{
+public:
+  XFE_SimplePopupMenu(String name, Widget parent);
+
+  void show();
+
+  void addSeparator();
+  void addPushButton(String name, void *userData = NULL, Boolean isSensitive = True);
+
+  static void pushb_activate_cb(Widget w, XtPointer clientData, XtPointer callData);
+
+  virtual void PushButtonActivate(Widget w, XtPointer userData);
+};
 #endif /* _xfe_popupmenu_h */
