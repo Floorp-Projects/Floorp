@@ -70,13 +70,6 @@
 #include "WindowCreator.h"
 #include "resource.h"
 
-// Printing header files
-#include "nsIPrintSettings.h"
-#include "nsIWebBrowserPrint.h"
-
-
-#define MAX_LOADSTRING 100
-
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -85,8 +78,6 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
 
-static PRBool sRunCondition = PR_TRUE;
-const TCHAR *szWindowClass = _T("WINEMBED");
 
 // Foward declarations of functions included in this code module:
 static BOOL    CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -99,10 +90,10 @@ static nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome);
 static nsresult StartupProfile();
 
 // Global variables
-static UINT gDialogCount = 0;
+static PRBool    gRunCondition = PR_TRUE;
+static UINT      gDialogCount = 0;
 static HINSTANCE ghInstanceApp = NULL;
-static HWND      g_hwndCB = NULL;
-static char gFirstURL[1024];
+static BOOL      gActive = TRUE;
 
 // A list of URLs to populate the URL drop down list with
 static const TCHAR *gDefaultURLs[] = 
@@ -125,66 +116,23 @@ static const TCHAR *gDefaultURLs[] =
     _T("http://www.javasoft.com/")
 };
 
-static HWND SetupShellStuff(HWND hwnd)
-{
-	SHMENUBARINFO mbi;
-    memset(&mbi, 0, sizeof(SHMENUBARINFO));
-	mbi.cbSize     = sizeof(SHMENUBARINFO);
-	mbi.hwndParent = hwnd;
-	mbi.nToolBarId = IDR_MENUBAR1;
-	mbi.hInstRes   = ghInstanceApp;
-	mbi.nBmpId     = 0;
-	mbi.cBmpImages = 0;
-
-	SHCreateMenuBar(&mbi);
-
-    SHINITDLGINFO hidi;
-    hidi.dwMask  = SHIDIM_FLAGS;
-    hidi.hDlg    = hwnd;
-    hidi.dwFlags = SHIDIF_FULLSCREENNOMENUBAR;
-    SHInitDialog( &hidi );
-
-    SHFullScreen(hwnd, SHFS_SHOWTASKBAR | SHFS_SHOWSIPBUTTON );
-
-	return mbi.hwndMB;
-}
-
 int main(int argc, char *argv[])
 {
+    const HWND hWndExistingInstance = FindWindowW(NULL, L"Minimo");
+
+    if (hWndExistingInstance)
+	{
+        //Notify other instance and exit
+        SetForegroundWindow (hWndExistingInstance);    
+		return FALSE;
+	}
+
 #ifdef WINCE
     _wfreopen(L"COM1:", L"w+",stdout);
     _wfreopen(L"COM1:", L"w",stderr);
 #endif
 
-    printf("You are embedded, man!\n\n");
-    printf("******************************************************************\n");
-    printf("*                                                                *\n");
-    printf("*  IMPORTANT NOTE:                                               *\n");
-    printf("*                                                                *\n");
-    printf("*  WinEmbed is not supported!!! Do not raise bugs on it unless   *\n");
-    printf("*  it is badly broken (e.g. crash on start/exit, build errors)   *\n");
-    printf("*  or you have the patch to make it better! MFCEmbed is now our  *\n");
-    printf("*  embedding test application on Win32 and all testing should    *\n");
-    printf("*  be done on that.                                              *\n");
-    printf("*                                                                *\n");
-    printf("******************************************************************\n");
-    printf("\n\n");
-    
-    // Sophisticated command-line parsing in action
-    char *szFirstURL = "http://www.google.com";
-
-	int argn;
-    for (argn = 1; argn < argc; argn++)
-    {
-		szFirstURL = argv[argn];
-    }
-    strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
-
     ghInstanceApp = GetModuleHandle(NULL);
-
-    // Initialize global strings
-    TCHAR szTitle[MAX_LOADSTRING];
-    LoadString(ghInstanceApp, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 
 #ifdef _BUILD_STATIC_BIN
     // Initialize XPCOM's module info table
@@ -200,19 +148,18 @@ int main(int argc, char *argv[])
         NS_TermEmbedding();
         return 1;
     }
-    WPARAM rv;
-    {   
-		InitializeWindowCreator();
 
-        // Open the initial browser window
-        OpenWebPage(gFirstURL);
+    InitializeWindowCreator();
+    
+    // Open the initial browser window
+    OpenWebPage("http://www.google.com");
+    
+    // Main message loop.
+    // NOTE: We use a fake event and a timeout in order to process idle stuff for
+    //       Mozilla every 1/10th of a second.
+    
+    WPARAM rv = AppCallbacks::RunEventLoop(gRunCondition);
 
-        // Main message loop.
-        // NOTE: We use a fake event and a timeout in order to process idle stuff for
-        //       Mozilla every 1/10th of a second.
-
-        rv = AppCallbacks::RunEventLoop(sRunCondition);
-    }
     // Close down Embedding APIs
     NS_TermEmbedding();
 
@@ -309,95 +256,6 @@ HWND GetBrowserDlgFromChrome(nsIWebBrowserChrome *aChrome)
 
 
 //
-//  FUNCTION: SaveWebPage()
-//
-//  PURPOSE: Saves the contents of the web page to a file
-//
-void SaveWebPage(nsIWebBrowser *aWebBrowser)
-{
-    // Use the browser window title as the initial file name
-    nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(aWebBrowser);
-    nsXPIDLString windowTitle;
-    webBrowserAsWin->GetTitle(getter_Copies(windowTitle));
-    nsCString fileName; fileName.AssignWithConversion(windowTitle);
-
-    // Sanitize the title of all illegal characters
-    fileName.CompressWhitespace();     // Remove whitespace from the ends
-    fileName.StripChars("\\*|:\"><?"); // Strip illegal characters
-    fileName.ReplaceChar('.', L'_');   // Dots become underscores
-    fileName.ReplaceChar('/', L'-');   // Forward slashes become hyphens
-
-    // Copy filename to a character buffer
-    char szFile[_MAX_PATH];
-    memset(szFile, 0, sizeof(szFile));
-    PL_strncpyz(szFile, fileName.get(), sizeof(szFile) - 1); // XXXldb probably should be just sizeof(szfile)
-
-    // Initialize the file save as information structure
-    OPENFILENAME saveFileNameInfo;
-    memset(&saveFileNameInfo, 0, sizeof(saveFileNameInfo));
-    saveFileNameInfo.lStructSize = sizeof(saveFileNameInfo);
-    saveFileNameInfo.hwndOwner = NULL;
-    saveFileNameInfo.hInstance = NULL;
-    saveFileNameInfo.lpstrFilter =
-        "Web Page, HTML Only (*.htm;*.html)\0*.htm;*.html\0"
-        "Web Page, Complete (*.htm;*.html)\0*.htm;*.html\0"
-        "Text File (*.txt)\0*.txt\0"; 
-    saveFileNameInfo.lpstrCustomFilter = NULL; 
-    saveFileNameInfo.nMaxCustFilter = NULL; 
-    saveFileNameInfo.nFilterIndex = 1; 
-    saveFileNameInfo.lpstrFile = szFile; 
-    saveFileNameInfo.nMaxFile = sizeof(szFile); 
-    saveFileNameInfo.lpstrFileTitle = NULL;
-    saveFileNameInfo.nMaxFileTitle = 0; 
-    saveFileNameInfo.lpstrInitialDir = NULL; 
-    saveFileNameInfo.lpstrTitle = NULL; 
-    saveFileNameInfo.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT; 
-    saveFileNameInfo.nFileOffset = NULL; 
-    saveFileNameInfo.nFileExtension = NULL; 
-    saveFileNameInfo.lpstrDefExt = "htm"; 
-    saveFileNameInfo.lCustData = NULL; 
-    saveFileNameInfo.lpfnHook = NULL; 
-    saveFileNameInfo.lpTemplateName = NULL; 
-
-    if (GetSaveFileName(&saveFileNameInfo))
-    {
-        // Does the user want to save the complete document including
-        // all frames, images, scripts, stylesheets etc. ?
-        char *pszDataPath = NULL;
-        if (saveFileNameInfo.nFilterIndex == 2) // 2nd choice means save everything
-        {
-            static char szDataFile[_MAX_PATH];
-            char szDataPath[_MAX_PATH];
-            char drive[_MAX_DRIVE];
-            char dir[_MAX_DIR];
-            char fname[_MAX_FNAME];
-            char ext[_MAX_EXT];
-
-            _splitpath(szFile, drive, dir, fname, ext);
-            sprintf(szDataFile, "%s_files", fname);
-            _makepath(szDataPath, drive, dir, szDataFile, "");
-
-            pszDataPath = szDataPath;
-       }
-
-        // Save away
-        nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(aWebBrowser));
-
-        nsCOMPtr<nsILocalFile> file;
-        NS_NewNativeLocalFile(nsDependentCString(szFile), TRUE, getter_AddRefs(file));
-
-        nsCOMPtr<nsILocalFile> dataPath;
-        if (pszDataPath)
-        {
-            NS_NewNativeLocalFile(nsDependentCString(pszDataPath), TRUE, getter_AddRefs(dataPath));
-        }
-
-        persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);
-    }
-}
-
-
-//
 //  FUNCTION: ResizeEmbedding()
 //
 //  PURPOSE: Resizes the webbrowser window to fit its container.
@@ -479,6 +337,36 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
 }
 
 
+VOID APIENTRY HandlePopupMenu(HWND hwnd, nsIWebNavigation* webBrowser)
+{
+    PRBool canCopy = PR_FALSE;
+    PRBool canPaste = PR_FALSE;
+
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
+    if (clipCmds)
+    {
+        clipCmds->CanCopySelection(&canCopy);
+        clipCmds->CanPaste(&canPaste);
+    }
+
+    UINT copyFlags  = canCopy  ? MF_GRAYED : MF_ENABLED;
+    UINT pasteFlags = canPaste ? MF_GRAYED : MF_ENABLED;
+    
+    HMENU hMenu = CreatePopupMenu();
+
+    AppendMenuW(hMenu, copyFlags  | MF_STRING, MOZ_Copy,      L"Copy");
+    AppendMenuW(hMenu, pasteFlags | MF_STRING, MOZ_Paste,     L"Paste");
+    AppendMenuW(hMenu, MF_ENABLED | MF_STRING, MOZ_SelectAll, L"Select All");
+
+    AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
+
+    AppendMenuW(hMenu, MF_ENABLED | MF_STRING, MOZ_Copy,      L"aaaaa");
+
+    TrackPopupMenu(hMenu, 0, 20, 20, 0, hwnd, NULL);
+    
+    DestroyMenu(hMenu);
+}
+
 //
 //  FUNCTION: BrowserDlgProc()
 //
@@ -499,20 +387,29 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     }
     nsCOMPtr<nsIWebBrowser> webBrowser;
     nsCOMPtr<nsIWebNavigation> webNavigation;
-    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
     if (chrome)
     {
         chrome->GetWebBrowser(getter_AddRefs(webBrowser));
         webNavigation = do_QueryInterface(webBrowser);
-        webBrowserPrint = do_GetInterface(webBrowser);
     }
 
     // Test the message
     switch (uMsg)
     {
     case WM_INITDIALOG:
-        SetupShellStuff(hwndDlg);
-        return TRUE;
+    {
+        SHINITDLGINFO hidi;
+        hidi.dwMask  = SHIDIM_FLAGS;
+        hidi.hDlg    = hwndDlg;
+        hidi.dwFlags = SHIDIF_FULLSCREENNOMENUBAR;
+        SHInitDialog( &hidi );
+
+        SetForegroundWindow(hwndDlg);
+        SHFullScreen(hwndDlg, SHFS_HIDETASKBAR | SHFS_HIDESIPBUTTON);
+
+        SetWindowTextW(hwndDlg, L"Minimo");
+    }
+    return TRUE;
 
     case WM_SYSCOMMAND:
         if (wParam == SC_CLOSE)
@@ -522,10 +419,16 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
         break;
 
+    case WM_CLOSE:
+        gActive = FALSE;
+        gRunCondition = FALSE;
+
+        DestroyWindow(hwndDlg);
+        return 0;
+
     case WM_DESTROY:
         PostQuitMessage(0);
-        sRunCondition = FALSE;
-        return TRUE;
+        return 0;
 
     case WM_COMMAND:
         if (!webBrowser)
@@ -562,6 +465,11 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             UpdateUI(chrome);
             break;
 
+        case IDC_FUNCTIONS:
+            HandlePopupMenu(hwndDlg, webNavigation);
+            break;
+
+
         case IDC_RELOAD:
             webNavigation->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
             break;
@@ -570,37 +478,6 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             PostMessage(hwndDlg, WM_SYSCOMMAND, SC_CLOSE, 0);
             break;
 
-        // File menu commands
-
-        case MOZ_NewBrowser:
-            OpenWebPage(gFirstURL);
-            break;
-
-        case MOZ_Save:
-            SaveWebPage(webBrowser);
-            break;
-
-        case MOZ_Print:
-            {
-                // NOTE: Embedding code shouldn't need to get the docshell or
-                //       contentviewer AT ALL. This code below will break one
-                //       day but will have to do until the embedding API has
-                //       a cleaner way to do the same thing.
-              if (webBrowserPrint)
-              {
-                  nsCOMPtr<nsIPrintSettings> printSettings;
-                  webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
-                  NS_ASSERTION(printSettings, "You can't PrintPreview without a PrintSettings!");
-                  if (printSettings) 
-                  {
-                      printSettings->SetPrintSilent(PR_TRUE);
-                      webBrowserPrint->Print(printSettings, (nsIWebProgressListener*)nsnull);
-                  }
-              }
-            }
-            break;
-
-        // Edit menu commands
 
         case MOZ_Cut:
             {
@@ -630,13 +507,6 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             break;
 
-        case MOZ_SelectNone:
-            {
-                nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
-                clipCmds->SelectNone();
-            }
-            break;
-
         // Go menu commands
         case IDC_BACK:
         case MOZ_GoBack:
@@ -650,16 +520,6 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             UpdateUI(chrome);
             break;
 
-        // Help menu commands
-        case MOZ_About:
-            {
-                TCHAR szAboutTitle[MAX_LOADSTRING];
-                TCHAR szAbout[MAX_LOADSTRING];
-                LoadString(ghInstanceApp, IDS_ABOUT_TITLE, szAboutTitle, MAX_LOADSTRING);
-                LoadString(ghInstanceApp, IDS_ABOUT, szAbout, MAX_LOADSTRING);
-                MessageBox(NULL, szAbout, szAboutTitle, MB_OK);
-            }
-            break;
         }
 
         return TRUE;
@@ -675,9 +535,11 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 {
                 case WA_ACTIVE:
                     focus->Activate();
+                    gActive = TRUE;
                     break;
                 case WA_INACTIVE:
                     focus->Deactivate();
+                    gActive = FALSE;
                     break;
                 default:
                     break;
@@ -816,6 +678,15 @@ nativeWindow WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
                               BrowserDlgProc);
   if (!hwndDialog)
     return NULL;
+
+  RECT rtDesktop;
+  SystemParametersInfo(SPI_GETWORKAREA, 0, &rtDesktop, NULL);
+
+
+  int screenH = GetSystemMetrics(SM_CYSCREEN) - 20;
+  int screenW = GetSystemMetrics(SM_CXSCREEN) ;
+
+  MoveWindow(hwndDialog, 0, 0, screenW, screenH, TRUE);
 
   // Add some interesting URLs to the address drop down
   HWND hwndAddress = GetDlgItem(hwndDialog, IDC_ADDRESS);
@@ -1114,10 +985,13 @@ PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
 
   eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
 
-  while (aRunCondition ) {
+  while (aRunCondition ) 
+  {
     // Process pending messages
-    while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-      if (!::GetMessage(&msg, NULL, 0, 0)) {
+    while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) 
+    {
+      if (!::GetMessage(&msg, NULL, 0, 0)) 
+      {
         // WM_QUIT
         aRunCondition = PR_FALSE;
         break;
@@ -1135,9 +1009,11 @@ PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
     }
 
     // Do idle stuff
-    ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 100, QS_ALLEVENTS);
-    eventQ->ProcessPendingEvents();
-
+    if (gActive)
+    {
+        ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 100, QS_ALLEVENTS);
+        eventQ->ProcessPendingEvents();
+    }
   }
   ::CloseHandle(hFakeEvent);
   return msg.wParam;
