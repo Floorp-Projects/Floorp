@@ -878,7 +878,8 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
 
           if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
           {
-            PRUint32  oldpos = scrollv->GetPosition();
+            PRUint32  oldpos = 0;
+            scrollv->GetPosition(oldpos);
             nsRect rect;
             GetBounds(rect);
             nscoord newPos = 0;
@@ -901,8 +902,10 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
 
           if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
           {
-            PRUint32  oldpos  = scrollv->GetPosition();
-            PRUint32  lineInc = scrollv->GetLineIncrement();
+            PRUint32  oldpos  = 0;
+            scrollv->GetPosition(oldpos);
+            PRUint32  lineInc = 0;
+            scrollv->GetLineIncrement(lineInc);
             nscoord newPos = 0;
             if (keyEvent->keyCode == NS_VK_DOWN) {
               newPos = oldpos+lineInc;
@@ -1076,7 +1079,8 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
 
           //now update the scroller position for the new size
 
-          PRUint32  oldpos = scrollv->GetPosition();
+          PRUint32  oldpos = 0;
+          scrollv->GetPosition(oldpos);
           float     p2t;
 
           px->GetDevUnitsToAppUnits(p2t);
@@ -1131,7 +1135,8 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
 
           //now update the scroller position for the new size
 
-          PRUint32  oldpos = scrollh->GetPosition();
+          PRUint32  oldpos = 0;
+          scrollh->GetPosition(oldpos);
           float     p2t;
 
           px->GetDevUnitsToAppUnits(p2t);
