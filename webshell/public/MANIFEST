@@ -2,13 +2,9 @@
 # This is a list of local files which get copied to the mozilla:dist:webshell directory
 #
 
-nsIClipboardCommands.h
 nsIContentViewer.h
-nsIContentViewerContainer.h
 nsIDocStreamLoaderFactory.h
-nsIDocumentLoaderFactory.h
 nsILinkHandler.h
-nsIRefreshURI.h
 nsIUrlDispatcher.h
 nsIWebShell.h
 nsIWebShellServices.h
