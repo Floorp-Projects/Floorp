@@ -331,19 +331,19 @@ EmbedPrompter::GetConfirmValue(PRBool *aConfirmValue)
 void
 EmbedPrompter::GetTextValue(PRUnichar **aTextValue)
 {
-    *aTextValue = ToNewUnicode(mTextValue);
+    *aTextValue = UTF8ToNewUnicode(mTextValue);
 }
 
 void
 EmbedPrompter::GetUser(PRUnichar **aUser)
 {
-    *aUser = ToNewUnicode(mUser);
+    *aUser = UTF8ToNewUnicode(mUser);
 }
 
 void
 EmbedPrompter::GetPassword(PRUnichar **aPass)
 {
-    *aPass = ToNewUnicode(mPass);
+    *aPass = UTF8ToNewUnicode(mPass);
 }
 
 void
