@@ -1484,8 +1484,14 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
     
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
 
-    if((mMacMenuID <= 5) && (mMacMenuID >= 2)) 
+    // if we're a submenu, we don't have to go through all the gymnastics below
+    // to remove ourselves from the menubar and re-add the menu. We just invalidate
+    // our parent to change the text of the item.
+    if((mMacMenuID <= 5) && (mMacMenuID >= 2)) {
+      nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mParent);
+      listener->SetRebuild(PR_TRUE);
       return NS_OK;
+    }
     
     ::DeleteMenu(mMacMenuID);
     
