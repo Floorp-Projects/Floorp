@@ -1785,21 +1785,22 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
 
   for (i = 0; i < n; i++) {
     nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
-    nsIWebShell *ws;
+    nsCOMPtr<nsIWebShell> ws;
     
-    if (NS_OK == bw->GetWebShell(ws)) {
+    if (NS_OK == bw->GetWebShell(*getter_AddRefs(ws))) {
       const PRUnichar *name;
       if (NS_OK == ws->GetName(&name)) {
-	if (aNameStr.Equals(name)) {
-	  aResult = ws;
-	  NS_ADDREF(aResult);
-	  return NS_OK;
-	}
+        if (aNameStr.Equals(name)) {
+          aResult = ws;
+          NS_ADDREF(aResult);
+          return NS_OK;
+        }
       }      
-    }
-    if (NS_OK == ws->FindChildWithName(aName, aResult)) {
-      if (nsnull != aResult) {
-	return NS_OK;
+
+      if (NS_OK == ws->FindChildWithName(aName, aResult)) {
+        if (nsnull != aResult) {
+          return NS_OK;
+        }
       }
     }
   }
