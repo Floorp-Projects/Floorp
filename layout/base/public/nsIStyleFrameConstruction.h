@@ -202,7 +202,8 @@ public:
     */
   NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
                                   nsIContent* aContent1,
-                                  nsIContent* aContent2) = 0;
+                                  nsIContent* aContent2,
+                                  nsIAtom* aChangedPseudoClass) = 0;
 
   /**
     * Notification that an attribute was changed for a content node

@@ -206,7 +206,8 @@ public:
                             nsISupports* aSubContent);
   NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
                                   nsIContent* aContent1,
-                                  nsIContent* aContent2);
+                                  nsIContent* aContent2,
+                                  nsIAtom* aChangedPseudoClass);
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
@@ -1476,9 +1477,11 @@ StyleSetImpl::ContentChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 StyleSetImpl::ContentStatesChanged(nsIPresContext* aPresContext, 
                                    nsIContent* aContent1,
-                                   nsIContent* aContent2)
+                                   nsIContent* aContent2,
+                                   nsIAtom* aChangedPseudoClass)
 {
-  return mFrameConstructor->ContentStatesChanged(aPresContext, aContent1, aContent2);
+  return mFrameConstructor->ContentStatesChanged(aPresContext, aContent1, aContent2,
+                                                 aChangedPseudoClass);
 }
 
 

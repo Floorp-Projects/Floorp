@@ -1933,11 +1933,13 @@ nsXULDocument::ContentChanged(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsXULDocument::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2)
+nsXULDocument::ContentStatesChanged(nsIContent* aContent1,
+                                    nsIContent* aContent2,
+                                    nsIAtom* aChangedPseudoClass)
 {
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->ContentStatesChanged(this, aContent1, aContent2);
+        observer->ContentStatesChanged(this, aContent1, aContent2, aChangedPseudoClass);
     }
     return NS_OK;
 }

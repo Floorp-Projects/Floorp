@@ -91,7 +91,8 @@ class nsOutlinerContentView : public nsIOutlinerView,
 
     NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
                                     nsIContent* aContent1,
-                                    nsIContent* aContent2);
+                                    nsIContent* aContent2,
+                                    nsIAtom* aChangedPseudo);
 
     NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,

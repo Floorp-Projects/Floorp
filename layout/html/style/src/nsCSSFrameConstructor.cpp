@@ -10064,7 +10064,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext, 
                                             nsIContent* aContent1,
-                                            nsIContent* aContent2)
+                                            nsIContent* aContent2,
+                                            nsIAtom* aChangedPseudoClass)
 {
   nsresult  result = NS_OK;
 

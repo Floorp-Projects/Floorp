@@ -41,6 +41,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
+#include "nsCSSAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMDocument.h"
 #include "nsIBoxObject.h"
@@ -221,8 +222,13 @@ nsOutlinerContentView::SetSelection(nsIOutlinerSelection* aSelection)
     mSelection->SetSelectEventsSuppressed(PR_TRUE);
     for (PRInt32 i = 0; i < mRows.Count(); ++i) {
       Row* row = (Row*)mRows[i];
-      if (row->mContent->HasAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo))
-        mSelection->ToggleSelect(i);
+      nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(row->mContent);
+      if (optEl) {
+        PRBool isSelected;
+        optEl->GetSelected(&isSelected);
+        if (isSelected)
+          mSelection->ToggleSelect(i);
+      }
     }
     mSelection->SetSelectEventsSuppressed(PR_FALSE);
   }
@@ -648,8 +654,22 @@ nsOutlinerContentView::ContentChanged(nsIDocument *aDocument,
 NS_IMETHODIMP
 nsOutlinerContentView::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent1,
-                                           nsIContent* aContent2)
+                                           nsIContent* aContent2,
+                                           nsIAtom* aChangedPseudoClass)
 {
+  if (!aContent1 || !mSelection || !aContent1->IsContentOfType(nsIContent::eHTML) ||
+      aChangedPseudoClass != nsCSSAtoms::checkedPseudo)
+    return NS_OK;
+        
+  nsCOMPtr<nsIAtom> contentTag;
+  aContent1->GetTag(*getter_AddRefs(contentTag));   
+  if (contentTag == nsHTMLAtoms::option) {
+    // update the selected state for this node
+    PRInt32 index = FindContent(aContent1);
+    if (index >= 0)
+      mSelection->ToggleSelect(index);
+  }
+  
   return NS_OK;
 }
 
@@ -663,6 +683,10 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
 {
   // First, get the element on which the attribute has changed
   // and then try to find content item in our array of rows.
+
+  if (!aContent->IsContentOfType(nsIContent::eXUL))
+    return NS_OK;
+
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
 
@@ -734,16 +758,6 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
       }
     }
   }
-  else if (tag == nsHTMLAtoms::option) {
-    if (aAttribute == nsLayoutAtoms::optionSelectedPseudo) {
-      PRInt32 index = FindContent(aContent);
-      if (index >= 0) {
-        NS_ASSERTION(mSelection, "Need to handle optionSelected change with no OutlinerSelection");
-        if (mSelection)
-          mSelection->ToggleSelect(index);
-      }
-    }
-  }
 
   return NS_OK;
 }
@@ -771,12 +785,17 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
   nsCOMPtr<nsIAtom> childTag;
   aChild->GetTag(*getter_AddRefs(childTag));
 
-  if ((childTag != nsXULAtoms::outlineritem) &&
-      (childTag != nsXULAtoms::outlinerseparator) &&
-      (childTag != nsHTMLAtoms::option) &&
-      (childTag != nsXULAtoms::outlinerchildren) &&
-      (childTag != nsXULAtoms::outlinerrow) &&
-      (childTag != nsXULAtoms::outlinercell))
+  if (aChild->IsContentOfType(nsIContent::eHTML)) {
+    if (childTag != nsHTMLAtoms::option)
+      return NS_OK;
+  } else if (aChild->IsContentOfType(nsIContent::eXUL)) {
+    if (childTag != nsXULAtoms::outlineritem &&
+        childTag != nsXULAtoms::outlinerseparator &&
+        childTag != nsXULAtoms::outlinerchildren &&
+        childTag != nsXULAtoms::outlinerrow &&
+        childTag != nsXULAtoms::outlinercell)
+      return NS_OK;
+  } else
     return NS_OK;
 
   // If we have a legal tag, go up to the outliner/select and make sure
@@ -786,7 +805,8 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
   
   while (element) {
     element->GetTag(*getter_AddRefs(parentTag));
-    if (parentTag == nsXULAtoms::outliner || parentTag == nsHTMLAtoms::select)
+    if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::outliner) ||
+        (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select))
       if (element == mRoot) // this is for us, stop looking
         break;
       else // this is not for us, we can bail out
@@ -874,12 +894,17 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
   nsCOMPtr<nsIAtom> tag;
   aChild->GetTag(*getter_AddRefs(tag));
 
-  if ((tag != nsXULAtoms::outlineritem) &&
-      (tag != nsXULAtoms::outlinerseparator) &&
-      (tag != nsHTMLAtoms::option) &&
-      (tag != nsXULAtoms::outlinerchildren) &&
-      (tag != nsXULAtoms::outlinerrow) &&
-      (tag != nsXULAtoms::outlinercell))
+  if (aChild->IsContentOfType(nsIContent::eHTML)) {
+    if (tag != nsHTMLAtoms::option)
+      return NS_OK;
+  } else if (aChild->IsContentOfType(nsIContent::eXUL)) {
+    if (tag != nsXULAtoms::outlineritem &&
+        tag != nsXULAtoms::outlinerseparator &&
+        tag != nsXULAtoms::outlinerchildren &&
+        tag != nsXULAtoms::outlinerrow &&
+        tag != nsXULAtoms::outlinercell)
+      return NS_OK;
+  } else
     return NS_OK;
 
   // If we have a legal tag, go up to the outliner/select and make sure
@@ -889,7 +914,8 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
   
   while (element) {
     element->GetTag(*getter_AddRefs(parentTag));
-    if (parentTag == nsXULAtoms::outliner || parentTag == nsHTMLAtoms::select)
+    if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::outliner) || 
+        (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select))
       if (element == mRoot) // this is for us, stop looking
         break;
       else // this is not for us, we can bail out
@@ -1010,12 +1036,15 @@ nsOutlinerContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRI
     nsCOMPtr<nsIAtom> tag;
     content->GetTag(*getter_AddRefs(tag));
     PRInt32 count = aRows.Count();
-    if (tag == nsXULAtoms::outlineritem)
-      SerializeItem(content, aParentIndex, aIndex, aRows);
-    else if (tag == nsXULAtoms::outlinerseparator)
-      SerializeSeparator(content, aParentIndex, aIndex, aRows);
-    else if (tag == nsHTMLAtoms::option)
-      SerializeOption(content, aParentIndex, aIndex, aRows);
+    if (content->IsContentOfType(nsIContent::eXUL)) {
+      if (tag == nsXULAtoms::outlineritem)
+        SerializeItem(content, aParentIndex, aIndex, aRows);
+      else if (tag == nsXULAtoms::outlinerseparator)
+        SerializeSeparator(content, aParentIndex, aIndex, aRows);
+    } else if (content->IsContentOfType(nsIContent::eHTML)) {
+      if (tag == nsHTMLAtoms::option)
+        SerializeOption(content, aParentIndex, aIndex, aRows);
+    }
     *aIndex += aRows.Count() - count;
   }
 }
@@ -1074,7 +1103,10 @@ nsOutlinerContentView::SerializeOption(nsIContent* aContent, PRInt32 aParentInde
   // This will happen before the OutlinerSelection is hooked up.  So, cache the selected
   // state in the row properties and update the selection when it is attached.
 
-  if (aContent->HasAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo))
+  nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(aContent);
+  PRBool isSelected;
+  optEl->GetSelected(&isSelected);
+  if (isSelected)
     mUpdateSelection = PR_TRUE;
 }
 

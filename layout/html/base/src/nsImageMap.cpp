@@ -1116,7 +1116,8 @@ nsImageMap::ContentChanged(nsIDocument *aDocument,
 NS_IMETHODIMP
 nsImageMap::ContentStatesChanged(nsIDocument* aDocument,
                                  nsIContent* aContent1,
-                                 nsIContent* aContent2)
+                                 nsIContent* aContent2,
+                                 nsIAtom* aChangedPseudoClass)
 {
   return NS_OK;
 }

@@ -229,7 +229,8 @@ public:
                             nsISupports* aSubContent) = 0;
   NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
                                   nsIContent* aContent1,
-                                  nsIContent* aContent2) = 0;
+                                  nsIContent* aContent2,
+                                  nsIAtom* aChangedPseudoClass) = 0;
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,

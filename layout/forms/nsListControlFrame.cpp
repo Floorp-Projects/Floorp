@@ -93,11 +93,7 @@ const PRInt32 kNothingSelected          = -1;
 const PRInt32 kMaxZ                     = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 const PRInt32 kNoSizeSpecified          = -1;
 
-//XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
-// -moz-option-selected in the ua.css style sheet. This will not be needed when
-//The event state manager is functional. KMM
-//const char * kMozSelected = "-moz-option-selected";
-// it is now using "nsLayoutAtoms::optionSelectedPseudo"
+// We now use the :checked pseudoclass for the option selected state
 
 //---------------------------------------------------------
 nsresult
@@ -1678,11 +1674,13 @@ nsListControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRInt32 aIndex)
 PRBool 
 nsListControlFrame::IsContentSelected(nsIContent* aContent)
 {
-  nsAutoString value;
-  //nsIAtom * selectedAtom = NS_NewAtom("selected");
-  nsresult result = aContent->GetAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, value);
+  PRBool isSelected = PR_FALSE;
 
-  return (NS_CONTENT_ATTR_NOT_THERE == result ? PR_FALSE : PR_TRUE);
+  nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(aContent);
+  if (optEl)
+    optEl->GetSelected(&isSelected);
+
+  return isSelected;
 }
 
 

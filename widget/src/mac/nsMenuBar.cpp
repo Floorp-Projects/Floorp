@@ -664,7 +664,8 @@ nsMenuBar::ContentChanged( nsIDocument * aDocument, nsIContent * aContent, nsISu
 }
 
 NS_IMETHODIMP
-nsMenuBar::ContentStatesChanged( nsIDocument * aDocument, nsIContent  * aContent1, nsIContent  * aContent2)
+nsMenuBar::ContentStatesChanged( nsIDocument * aDocument, nsIContent  * aContent1,
+                                 nsIContent  * aContent2, nsIAtom * aChangedPseudoClass)
 {
   return NS_OK;
 }

@@ -438,7 +438,7 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
 
     // Actually select the options if the added options warrant it
     nsCOMPtr<nsIDOMNode> optionNode;
-    nsCOMPtr<nsIOptionElement> option;
+    nsCOMPtr<nsIDOMHTMLOptionElement> option;
     for (PRInt32 i=aListIndex;i<insertIndex;i++) {
       // Notify the frame that the option is added
       if (selectFrame) {
@@ -449,7 +449,7 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
       option = do_QueryInterface(optionNode);
       if (option) {
         PRBool selected;
-        option->GetSelectedInternal(&selected);
+        option->GetSelected(&selected);
         if (selected) {
           // Clear all other options
           PRBool isMultiple;

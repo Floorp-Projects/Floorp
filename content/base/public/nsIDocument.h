@@ -318,7 +318,8 @@ public:
   // notify that one or two content nodes changed state
   // either may be nsnull, but not both
   NS_IMETHOD ContentStatesChanged(nsIContent* aContent1,
-                                  nsIContent* aContent2) = 0;
+                                  nsIContent* aContent2,
+                                  nsIAtom* aChangedPseudoClass) = 0;
   NS_IMETHOD AttributeWillChange(nsIContent* aChild,
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute) = 0;

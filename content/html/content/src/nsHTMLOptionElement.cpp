@@ -68,7 +68,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
-
+#include "nsCSSAtoms.h"
 
 class nsHTMLOptionElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLOptionElement,
@@ -108,7 +108,6 @@ public:
 #endif
 
   // nsIOptionElement
-  NS_IMETHOD GetSelectedInternal(PRBool* aValue);
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
   NS_IMETHOD GetValueOrText(nsAString& aValue);
 
@@ -121,7 +120,8 @@ protected:
   // there's a select associated with this option or not.
   void GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const;
 
-  PRBool mIsInitialized;
+  PRPackedBool mIsInitialized;
+  PRPackedBool mIsSelected;
 };
 
 nsresult
@@ -170,8 +170,9 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
 
 
 nsHTMLOptionElement::nsHTMLOptionElement()
+  : mIsInitialized(PR_FALSE),
+    mIsSelected(PR_FALSE)
 {
-  mIsInitialized = PR_FALSE;
 }
 
 nsHTMLOptionElement::~nsHTMLOptionElement()
@@ -242,42 +243,15 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::GetSelectedInternal(PRBool* aValue)
-{
-  // If it's not initialized, initialize it.
-  if (!mIsInitialized) {
-    mIsInitialized = PR_TRUE;
-    PRBool selected;
-    GetDefaultSelected(&selected);
-    // This does not need to be SetSelected (which sets selected in the select)
-    // because we *will* be initialized when we are placed into a select.  Plus
-    // it seems like that's just inviting an infinite loop.
-    SetSelectedInternal(selected, PR_TRUE);
-  }
-  nsAutoString tmpVal;
-  nsresult rv = GetAttr(kNameSpaceID_None,
-                        nsLayoutAtoms::optionSelectedPseudo,
-                        tmpVal);
-  *aValue = !(NS_FAILED(rv) || NS_CONTENT_ATTR_NOT_THERE == rv);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
 {
   mIsInitialized = PR_TRUE;
+  mIsSelected = aValue;
 
-  // This affects the display, but what the hey, it's a good place for it
-  if (aValue) {
-    return SetAttr(kNameSpaceID_None,
-                   nsLayoutAtoms::optionSelectedPseudo,
-                   NS_LITERAL_STRING(""),
-                   aNotify);
-  } else {
-    return UnsetAttr(kNameSpaceID_None,
-                     nsLayoutAtoms::optionSelectedPseudo,
-                     aNotify);
-  }
+  if (aNotify && mDocument)
+    mDocument->ContentStatesChanged(this, nsnull, nsCSSAtoms::checkedPseudo);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -309,8 +283,19 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = PR_FALSE;
 
-  // If there is no select element, return the selected
-  return GetSelectedInternal(aValue);
+  // If it's not initialized, initialize it.
+  if (!mIsInitialized) {
+    mIsInitialized = PR_TRUE;
+    PRBool selected;
+    GetDefaultSelected(&selected);
+    // This does not need to be SetSelected (which sets selected in the select)
+    // because we *will* be initialized when we are placed into a select.  Plus
+    // it seems like that's just inviting an infinite loop.
+    SetSelectedInternal(selected, PR_TRUE);
+  }
+
+  *aValue = mIsSelected;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
