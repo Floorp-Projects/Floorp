@@ -52,7 +52,6 @@
 #include "nsRDFCID.h"
 #include "nsIDocShell.h"
 #include "nsMsgFolderCompactor.h"
-#include "nsTextFormatter.h"
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIMsgLocalMailFolder.h"

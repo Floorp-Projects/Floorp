@@ -56,6 +56,8 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
+#include "mozITXTToHTMLConv.h"
+
 #define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
 
 #define   CARD_ATTRS_COUNT      37
@@ -1046,13 +1048,22 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLData(PRUnichar **aXMLSubstr)
   rv = abSession->GenerateNameFromCard(this, generatedNameFormat, getter_Copies(generatedName));
   NS_ENSURE_SUCCESS(rv,rv);
   
+  nsCOMPtr<mozITXTToHTMLConv> conv = do_CreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   xmlStr.Append(NS_LITERAL_STRING("<GeneratedName>\n").get());
-  xmlStr.Append(generatedName.get());
+
+  // use ScanTXT to convert < > & to safe values.
+  nsXPIDLString safeText;
+  rv = conv->ScanTXT(generatedName.get(), mozITXTToHTMLConv::kEntities , getter_Copies(safeText));
+  NS_ENSURE_SUCCESS(rv,rv);
+  xmlStr.Append(safeText.get());
+
   xmlStr.Append(NS_LITERAL_STRING("</GeneratedName>\n").get());
   
   PRUint32 i;
   for (i=0;i<CARD_ATTRS_COUNT;i++) {
-    rv = AppendData(CARD_ATTRS_ARRAY[i], xmlStr);
+    rv = AppendData(CARD_ATTRS_ARRAY[i], conv, xmlStr);
     NS_ENSURE_SUCCESS(rv,rv);
   }
  
@@ -1086,7 +1097,13 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLData(PRUnichar **aXMLSubstr)
           NS_ENSURE_SUCCESS(rv,rv);
 
           xmlStr.Append(NS_LITERAL_STRING("<PrimaryEmail>\n").get());
-          xmlStr.Append(primaryEmail.get());
+
+          // use ScanTXT to convert < > & to safe values.
+          nsXPIDLString safeText;
+          rv = conv->ScanTXT(primaryEmail.get(), mozITXTToHTMLConv::kEntities, getter_Copies(safeText));
+          NS_ENSURE_SUCCESS(rv,rv);
+          xmlStr.Append(safeText.get());
+          
           xmlStr.Append(NS_LITERAL_STRING("</PrimaryEmail>\n").get());
         }
       }
@@ -1099,28 +1116,32 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLData(PRUnichar **aXMLSubstr)
   *aXMLSubstr = ToNewUnicode(xmlStr);
   return NS_OK;
 }
-
-nsresult nsAbCardProperty::AppendData(const char *attrName, nsString &result)
+ 
+nsresult nsAbCardProperty::AppendData(const char *aAttrName, mozITXTToHTMLConv *aConv, nsString &aResult)
 {
   nsXPIDLString attrValue;
-  nsresult rv = GetCardValue(attrName, getter_Copies(attrValue));
+  nsresult rv = GetCardValue(aAttrName, getter_Copies(attrValue));
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (attrValue.IsEmpty())
     return NS_OK;
 
   nsAutoString attrNameStr;
-  attrNameStr.AssignWithConversion(attrName);
+  attrNameStr.AssignWithConversion(aAttrName);
+  
+  aResult.Append(NS_LITERAL_STRING("<").get());
+  aResult.Append(attrNameStr.get());
+  aResult.Append(NS_LITERAL_STRING(">").get());
 
-  result.Append(NS_LITERAL_STRING("<").get());
-  result.Append(attrNameStr.get());
-  result.Append(NS_LITERAL_STRING(">").get());
+  // use ScanTXT to convert < > & to safe values.
+  nsXPIDLString safeText;
+  rv = aConv->ScanTXT(attrValue.get(), mozITXTToHTMLConv::kEntities, getter_Copies(safeText));
+  NS_ENSURE_SUCCESS(rv,rv);
+  aResult.Append(safeText.get());
 
-  result.Append(attrValue.get());
-
-  result.Append(NS_LITERAL_STRING("</").get());
-  result.Append(attrNameStr.get());
-  result.Append(NS_LITERAL_STRING(">").get());
+  aResult.Append(NS_LITERAL_STRING("</").get());
+  aResult.Append(attrNameStr.get());
+  aResult.Append(NS_LITERAL_STRING(">").get());
 
   return NS_OK;
 }

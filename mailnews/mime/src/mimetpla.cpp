@@ -53,7 +53,6 @@
 #include "prprf.h"
 #include "nsMsgI18N.h"
 
-static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
 
 #define MIME_SUPERCLASS mimeInlineTextClass

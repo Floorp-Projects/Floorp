@@ -50,6 +50,8 @@
 #include "nsCOMPtr.h"
 #include "nsIAddressBook.h"
 
+class mozITXTToHTMLConv;
+
  /* 
   * Address Book Card Property
   */ 
@@ -112,7 +114,7 @@ protected:
 	char*    m_MailListURI;
 
 private:
-  nsresult AppendData(const char *attrName, nsString &result);
+  nsresult AppendData(const char *aAttrName, mozITXTToHTMLConv *aConv, nsString &aResult);
 };
 
 #endif

@@ -107,7 +107,6 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
-static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
 #define PREF_MAIL_SEND_STRUCT "mail.send_struct"
 #define PREF_MAIL_STRICTLY_MIME "mail.strictly_mime"
@@ -1405,10 +1404,8 @@ nsMsgComposeAndSend::GetBodyFromEditor()
 
   if (doConversion)
   {
-    nsCOMPtr<mozITXTToHTMLConv> conv;
-    rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
-      NULL, NS_GET_IID(mozITXTToHTMLConv),
-      (void **) getter_AddRefs(conv));
+    nsCOMPtr<mozITXTToHTMLConv> conv = do_CreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID, &rv);
+
     if (NS_SUCCEEDED(rv)) 
     {
       PRUint32 whattodo = mozITXTToHTMLConv::kURLs;

@@ -95,9 +95,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #define LOCK_LAST_CACHED_MESSAGE
 #endif
 
-// Text Scanning...
-static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
-
 void                 ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs);
 
 static MimeHeadersState MIME_HeaderType;
@@ -1484,7 +1481,7 @@ mime_bridge_create_display_stream(
   }
 
   // Need the text converter...
-  rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
+  rv = nsComponentManager::CreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID,
                                           NULL, NS_GET_IID(mozITXTToHTMLConv),
                                           (void **)&(msd->options->conv));
   if (NS_FAILED(rv))

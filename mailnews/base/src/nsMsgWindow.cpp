@@ -566,7 +566,8 @@ nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *b
     htmlStr.Append(NS_LITERAL_STRING("</body></html>").get());
 
     char *encodedHtml = PL_Base64Encode(NS_ConvertUCS2toUTF8(htmlStr).get(), 0, nsnull);
-    if (!encodedHtml) return NS_ERROR_OUT_OF_MEMORY;
+    if (!encodedHtml)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     nsCString dataSpec;
     dataSpec = "data:text/html;base64,";
