@@ -431,7 +431,9 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   if (data->self) {
     MimeObject *walker = data->self;
     while (walker) {
-      if (mime_typep(walker, (MimeObjectClass *) &mimeMessageClass)) {
+      // Crypto mime objects are transparent wrt nesting.
+      if (!mime_typep(walker, (MimeObjectClass *) &mimeEncryptedClass)
+          && !mime_typep(walker, (MimeObjectClass *) &mimeMultipartSignedClass)) {
         ++aNestLevel;
       }
       walker = walker->parent;

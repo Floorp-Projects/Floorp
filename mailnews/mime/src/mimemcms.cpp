@@ -142,6 +142,7 @@ typedef struct MimeMultCMSdata
   }
 } MimeMultCMSdata;
 
+extern MimeObjectClass mimeEncryptedClass;
 
 static void
 MimeMultCMS_get_content_info(MimeObject *obj,
@@ -441,7 +442,9 @@ MimeMultCMS_generate (void *crypto_closure)
   if (data->self) {
     MimeObject *walker = data->self;
     while (walker) {
-      if (mime_typep(walker, (MimeObjectClass *) &mimeMessageClass)) {
+      // Crypto mime objects are transparent wrt nesting.
+      if (!mime_typep(walker, (MimeObjectClass *) &mimeEncryptedClass)
+          && !mime_typep(walker, (MimeObjectClass *) &mimeMultipartSignedClass)) {
         ++aNestLevel;
       }
       walker = walker->parent;
