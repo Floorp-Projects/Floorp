@@ -212,7 +212,7 @@ nsMimeEmitter::WriteXMLTag(const char *tagName, const char *value)
 
   UtilityWrite("</header>");
 
-  PR_FREEIF(upCaseTag);
+  delete[] upCaseTag;
   PR_FREEIF(newValue);
 
   return NS_OK;
