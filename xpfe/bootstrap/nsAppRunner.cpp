@@ -1139,7 +1139,7 @@ int main(int argc, char* argv[])
   nsresult mainResult = main1(argc, argv, nativeApp ? (nsISupports*)nativeApp : (nsISupports*)splash);
 
   /* if main1() didn't succeed, then don't bother trying to shut down clipboard, etc */
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(mainResult)) {
     rv = DoOnShutdown();
     NS_ASSERTION(NS_SUCCEEDED(rv), "DoOnShutdown failed");
   }
