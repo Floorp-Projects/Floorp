@@ -46,6 +46,7 @@ CSRCS =          \
 	w95thred.c \
 	w95io.c \
 	w95cv.c \
+	w32rng.c \
 	w95sock.c \
 	win32_errors.c \
     w32ipcsem.c \
@@ -65,6 +66,7 @@ CSRCS =          \
 	win32_errors.c \
     w32ipcsem.c \
     w32poll.c \
+	w32rng.c \
     w32shm.c \
     $(NULL)
 endif

@@ -30,6 +30,7 @@ CSRCS =          \
 	unix.c    \
 	unix_errors.c    \
 	uxproces.c \
+	uxrng.c \
 	uxshm.c \
 	uxwrap.c \
 	$(NULL)
@@ -245,6 +246,10 @@ endif
 
 ifeq ($(OS_ARCH), IRIX)
     ASFILES   = os_Irix.s
+endif
+
+ifeq ($(OS_ARCH), HP-UX)
+    ASFILES   = os_HPUX.s
 endif
 
 TARGETS		= $(OBJS)

@@ -16,39 +16,33 @@
  * Reserved.
  */
 
-#ifndef nspr_h___
-#define nspr_h___
-
-#include "pratom.h"
-#include "prbit.h"
-#include "prclist.h"
-#include "prcmon.h"
-#include "prcvar.h"
-#include "prdtoa.h"
-#include "prenv.h"
-#include "prerror.h"
-#include "prinet.h"
-#include "prinit.h"
-#include "prinrval.h"
-#include "prio.h"
-#include "pripcsem.h"
-#include "prlink.h"
-#include "prlock.h"
-#include "prlog.h"
-#include "prlong.h"
-#include "prmem.h"
-#include "prmon.h"
-#include "prmwait.h"
-#include "prnetdb.h"
-#include "prprf.h"
-#include "prproces.h"
+#include "primpl.h"
 #include "prrng.h"
-#include "prrwlock.h"
-#include "prshm.h"
-#include "prshma.h"
-#include "prsystem.h"
-#include "prthread.h"
-#include "prtime.h"
-#include "prtypes.h"
 
-#endif /* nspr_h___ */
+
+extern PRSize _pr_CopyLowBits( 
+    void *dst, 
+    PRSize dstlen, 
+    void *src, 
+    PRSize srclen )
+{
+    if (srclen <= dstlen) {
+    	memcpy(dst, src, srclen);
+	    return srclen;
+    }
+#if defined IS_BIG_ENDIAN
+    memcpy(dst, (char*)src + (srclen - dstlen), dstlen);
+#else
+    memcpy(dst, src, dstlen);
+#endif
+    return dstlen;
+}    
+
+PR_EXTERN(PRSize) PR_GetRandomNoise( 
+    void    *buf,
+    PRSize  size
+)
+{
+    return( _PR_MD_GET_RANDOM_NOISE( buf, size ));
+} /* end PR_GetRandomNoise() */
+/* end prrng.c */

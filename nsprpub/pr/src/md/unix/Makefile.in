@@ -258,6 +258,10 @@ ifeq ($(OS_ARCH), IRIX)
     ASFILES   = os_Irix.s
 endif
 
+ifeq ($(OS_ARCH), HP-UX)
+    ASFILES   = os_HPUX.s
+endif
+
 TARGETS		= $(OBJS)
 
 ifeq ($(OS_ARCH),AIX)

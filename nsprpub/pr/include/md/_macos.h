@@ -576,4 +576,9 @@ extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 extern void SetLogFileTypeCreator(const char *logFile);
 extern int _MD_mac_get_nonblocking_connect_error(PRInt32 osfd);
 
+/* GetRandomNoise() */
+/* XXX Remove the re-definition after porting for Mac */
+#undef _PR_MD_GET_RANDOM_NOISE
+#define _PR_MD_GET_RANDOM_NOISE(buf,size) 0
+
 #endif /* prmacos_h___ */

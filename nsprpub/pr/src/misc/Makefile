@@ -44,6 +44,7 @@ CSRCS = \
 	prlong.c   \
 	prnetdb.c  \
 	prolock.c  \
+	prrng.c  \
 	prsystem.c \
 	prtime.c   \
 	prthinfo.c \
