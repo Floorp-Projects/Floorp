@@ -53,6 +53,7 @@
 // Interfaces Needed
 #include "nsISHistory.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebProgress.h"
 
 
 class nsDocShellInitInfo
@@ -69,6 +70,7 @@ class nsDocShell : public nsIDocShell,
                    public nsIDocShellTreeItem, 
                    public nsIDocShellTreeNode,
                    public nsIWebNavigation,
+                   public nsIWebProgress,
                    public nsIBaseWindow, 
                    public nsIScrollable, 
                    public nsITextScroll, 
@@ -85,6 +87,7 @@ public:
    NS_DECL_NSIDOCSHELLTREEITEM
    NS_DECL_NSIDOCSHELLTREENODE
    NS_DECL_NSIWEBNAVIGATION
+   NS_DECL_NSIWEBPROGRESS
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
@@ -198,6 +201,7 @@ protected:
    PRBool                     mUpdateHistoryOnLoad;
    PRBool                     mInitialPageLoad;
    PRBool                     mAllowPlugins;
+   PRInt32                    mViewMode;
    // this flag is for bug #21358. a docshell may load many urls
    // which don't result in new documents being created (i.e. a new content viewer)
    // we want to make sure we don't call a on load event more than once for a given
