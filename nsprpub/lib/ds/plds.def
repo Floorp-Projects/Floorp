@@ -1,0 +1,33 @@
+# nm -n -C -p libplds4.so | awk '/[^ ]* T PL_/ {print $3}'
+NSPR_4.0 {
+    global:
+PL_ArenaAllocate;
+PL_ArenaFinish;
+PL_ArenaGrow;
+PL_ArenaRelease;
+PL_CompactArenaPool;
+PL_CompareStrings;
+PL_CompareValues;
+PL_FinishArenaPool;
+PL_FreeArenaPool;
+PL_HashString;
+PL_HashTableAdd;
+PL_HashTableDestroy;
+PL_HashTableDump;
+PL_HashTableEnumerateEntries;
+PL_HashTableLookup;
+PL_HashTableRawAdd;
+PL_HashTableRawLookup;
+PL_HashTableRawRemove;
+PL_HashTableRemove;
+PL_InitArenaPool;
+PL_NewHashTable;
+libVersionPoint;
+    local: *;
+};
+
+NSPR_4.1 {
+    global:
+PL_HashTableLookupConst;
+PL_HashTableRawLookupConst;
+} NSPR_4.0;
