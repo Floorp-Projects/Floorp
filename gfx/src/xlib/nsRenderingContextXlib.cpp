@@ -1724,39 +1724,7 @@ NS_IMETHODIMP nsRenderingContextXp::DrawScaledImage(imgIContainer *aImage, const
                                   dr.x, dr.y,
                                   dr.width, dr.height);
 }
-
-// this method of DrawTile is not implemented in nsRenderingContextImpl
-
-NS_IMETHODIMP
-nsRenderingContextXp::DrawTile(nsIImage *aImage,
-                               nscoord aSrcXOffset, nscoord aSrcYOffset,
-                               const nsRect &aTileRect)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawTile()\n"));
-
-  NS_NOTREACHED("nsRenderingContextXlib::DrawTile() not yet implemented");
-  return NS_OK;
-}
 #endif /* USE_XPRINT */
-
-NS_IMETHODIMP
-nsRenderingContextXlib::DrawTile(nsIImage *aImage,
-                                nscoord aSrcXOffset, nscoord aSrcYOffset,
-                                const nsRect &aTileRect)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawTile()\n"));
-  nsRect tileRect(aTileRect);
-  nsRect srcRect(0, 0, aSrcXOffset, aSrcYOffset);
-  mTranMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width,
-                           &srcRect.height);
-  mTranMatrix->TransformCoord(&tileRect.x, &tileRect.y,
-                           &tileRect.width, &tileRect.height);
-
-  if((tileRect.width > 0) && (tileRect.height > 0))
-    ((nsImageXlib*)aImage)->DrawTile(*this, mRenderingSurface, srcRect.width, srcRect.height, tileRect);
-
-  return NS_OK;
-}
 
 #ifdef USE_XPRINT
 NS_IMETHODIMP
