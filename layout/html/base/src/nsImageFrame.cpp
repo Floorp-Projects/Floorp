@@ -329,6 +329,17 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
     rv = HandleLoadError(loadBlocked ? NS_ERROR_IMAGE_BLOCKED : NS_ERROR_FAILURE,
                          presShell);
   }
+  // If we already have an image container, OnStartContainer won't be called
+  // Set the animation mode here
+  nsCOMPtr<imgIContainer> image;
+  if (currentRequest)
+    currentRequest->GetImage(getter_AddRefs(image));
+  if (image) {
+    PRUint16 animateMode = imgIContainer::kNormalAnimMode; //default value
+    nsresult rv = mPresContext->GetImageAnimationMode(&animateMode);
+    if (NS_SUCCEEDED(rv))
+      image->SetAnimationMode(animateMode);
+  }
   
   return rv;
 }
