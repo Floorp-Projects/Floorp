@@ -2043,6 +2043,7 @@ SinkContext::AddText(const nsAReadableString& aText)
 
   // Copy data from string into our buffer; flush buffer when it fills up
   PRInt32 offset = 0;
+  PRBool  isLastCharCR = PR_FALSE;
   while (0 != addLen) {
     PRInt32 amount = mTextSize - mTextLength;
     if (amount > addLen) {
@@ -2058,7 +2059,8 @@ SinkContext::AddText(const nsAReadableString& aText)
     mTextLength += nsContentUtils::CopyNewlineNormalizedUnicodeTo(aText, 
                                                                  offset, 
                                                                  &mText[mTextLength], 
-                                                                 amount);
+                                                                 amount,
+                                                                 isLastCharCR);
     offset += amount;
     addLen -= amount;
   }
@@ -4500,18 +4502,22 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
       // the preference.
       if(!mInsideNoXXXTag) {
 
-        // set any HTTP-EQUIV data into document's header data as well as url
-        nsAutoString header;
-        it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
-        if (header.Length() > 0) {
-          nsAutoString result;
-          it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
-          if (result.Length() > 0) {
-            header.ToLowerCase();
-            nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
-            rv=ProcessHeaderData(fieldAtom,result,it); 
-          }//if (result.Length() > 0) 
-        }//if (header.Length() > 0) 
+        // Bug 40072: Don't evaluate METAs after FRAMESET.
+        if (!mFrameset) {
+
+          // set any HTTP-EQUIV data into document's header data as well as url
+          nsAutoString header;
+          it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
+          if (header.Length() > 0) {
+            nsAutoString result;
+            it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
+            if (result.Length() > 0) {
+              header.ToLowerCase();
+              nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
+              rv=ProcessHeaderData(fieldAtom,result,it); 
+            }//if (result.Length() > 0) 
+          }//if (header.Length() > 0) 
+        }//if (!mFrameset || !mDocument)
       }//if(!mInsideNoXXXTag)
     }//if (NS_OK == rv) 
   }//if (nsnull != parent)

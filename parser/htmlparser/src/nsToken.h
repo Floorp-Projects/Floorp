@@ -59,6 +59,9 @@
 #include "nsFileSpec.h"
 #include "nsFixedSizeAllocator.h"
 
+#define NS_HTMLTOKENS_NOT_AN_ENTITY \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_HTMLPARSER,2000)
+
 class nsScanner;
 class nsTokenAllocator;
 

@@ -232,7 +232,7 @@ class CEntityToken : public CHTMLToken {
     virtual PRInt32     GetTokenType(void);
             PRInt32     TranslateToUnicodeStr(nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-    static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
+    static  nsresult    ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
     static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
     virtual  void       DebugDumpSource(nsOutputStream& out);
     virtual const nsAReadableString& GetStringValue(void);
@@ -281,7 +281,7 @@ class CTextToken: public CHTMLToken {
                         CTextToken(const nsAReadableString& aString);
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
             nsresult    ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
-                                     nsString& aTerminalString,PRInt32 aMode,PRBool& aFlushTokens);
+                                     nsString& aEndTagName,PRInt32 aMode,PRBool& aFlushTokens);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
     virtual PRInt32     GetTextLength(void);

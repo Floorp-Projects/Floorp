@@ -184,9 +184,10 @@ class nsScanner {
       nsresult ReadIdentifier(nsReadingIterator<PRUnichar>& aStart,
                               nsReadingIterator<PRUnichar>& aEnd,
                               PRBool allowPunct=PR_FALSE);
-      nsresult ReadNumber(nsString& aString);
+      nsresult ReadNumber(nsString& aString,PRInt32 aBase);
       nsresult ReadNumber(nsReadingIterator<PRUnichar>& aStart, 
-                          nsReadingIterator<PRUnichar>& aEnd);
+                          nsReadingIterator<PRUnichar>& aEnd,
+                          PRInt32 aBase);
       nsresult ReadWhitespace(nsString& aString);
       nsresult ReadWhitespace(nsReadingIterator<PRUnichar>& aStart, 
                               nsReadingIterator<PRUnichar>& aEnd);

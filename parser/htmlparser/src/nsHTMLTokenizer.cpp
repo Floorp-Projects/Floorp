@@ -752,14 +752,12 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         
         //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         if(gHTMLElements[theTag].CanContainType(kCDATA)) {
-          nsAutoString endText, endTagName; 
+          nsAutoString endTagName; 
           endTagName.AssignWithConversion(nsHTMLTags::GetStringValue(theTag));
-          endText.Assign(endTagName);
-          endText.InsertWithConversion("</",0,2);
 
           CToken*     text=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
           CTextToken* textToken=NS_STATIC_CAST(CTextToken*,text);
-          result=textToken->ConsumeUntil(0,theTag!=eHTMLTag_script,aScanner,endText,mFlags,aFlushTokens);  //tell new token to finish consuming text...    
+          result=textToken->ConsumeUntil(0,theTag!=eHTMLTag_script,aScanner,endTagName,mFlags,aFlushTokens);  //tell new token to finish consuming text...    
           
           // Fix bug 44186
           // Support XML like syntax, i.e., <script src="external.js"/> == <script src="external.js"></script>
@@ -841,35 +839,24 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
    nsresult result=aScanner.Peek(theChar, 1);
 
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
-  if(NS_OK==result) {
-    if(nsCRT::IsAsciiAlpha(theChar)) { //handle common enity references &xxx; or &#000.
-       // Get the "&"
-       aScanner.GetChar(theChar);
-       aToken = theAllocator->CreateTokenOfType(eToken_entity,eHTMLTag_entity);
+  if (NS_SUCCEEDED(result)) {
+    if (nsCRT::IsAsciiAlpha(theChar) || theChar==kHashsign) {
+      aToken = theAllocator->CreateTokenOfType(eToken_entity,eHTMLTag_entity);
+      result=aToken->Consume(theChar,aScanner,mFlags);
 
-       // Get the first entity character
-       aScanner.GetChar(theChar);
-       result = aToken->Consume(theChar,aScanner,mFlags);  //tell new token to finish consuming text...    
-    }
-    else if(kHashsign==theChar) {
-       // Get the "&"
-       aScanner.GetChar(theChar);
-       aToken = theAllocator->CreateTokenOfType(eToken_entity,eHTMLTag_entity);
-
-       // Get the first numerical entity character
-       aScanner.GetChar(theChar);
-       result=aToken->Consume(theChar,aScanner,mFlags);
-    }
-    else {
-       //oops, we're actually looking at plain text...
-       return ConsumeText(aToken,aScanner);
-    }//if
-    if(aToken){
-      if(mIsFinalChunk && (kEOF==result)) {
-        result=NS_OK; //use as much of the entity as you can get.
+      if (result == NS_HTMLTOKENS_NOT_AN_ENTITY) {
+        IF_FREE(aToken, mTokenAllocator);
       }
-      AddToken(aToken,result,&mTokenDeque,theAllocator);
+      else {
+        if (mIsFinalChunk && result == kEOF) {
+          result=NS_OK; //use as much of the entity as you can get.
+        }
+        AddToken(aToken,result,&mTokenDeque,theAllocator);
+        return result;
+      }
     }
+    // oops, we're actually looking at plain text...
+    result = ConsumeText(aToken,aScanner);
   }//if
   return result;
 }
