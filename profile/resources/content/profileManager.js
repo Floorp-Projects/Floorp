@@ -336,7 +336,7 @@ function HandleKeyEvent( aEvent )
 
 function HandleClickEvent( aEvent )
 {
-  if (aEvent.button == 0 && event.target.parentNode.view.selection.count) {
+  if (aEvent.button == 0 && aEvent.target.parentNode.view.selection.count) {
     if (!onStart())
       return false;
     window.close();
