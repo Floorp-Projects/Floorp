@@ -2505,7 +2505,12 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
     pref->GetBoolPref("mail.mime_xul_output", &mimeXULOutput);
 
   if (!mimeXULOutput)
-    status = MimeHeaders_write_all_headers (hdrs, opt, TRUE);
+  {
+    mimeEmitterStartAttachment(opt, lname, content_type, lname_url);
+    status = MimeHeaders_write_all_headers (hdrs, opt, PR_TRUE);
+    mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, lname_url);
+    mimeEmitterEndAttachment(opt);
+  }
 
   if (status < 0) 
     return status;
