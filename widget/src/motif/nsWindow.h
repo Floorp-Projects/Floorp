@@ -137,12 +137,29 @@ public:
     char gInstanceClassName[256];
 protected:
   void InitCallbacks(char * aName = nsnull);
+
+  void CreateGC();
   void CreateWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData);
+
+  void CreateMainWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData);
+
+  void CreateChildWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData);
+
 
   void InitToolkit(nsIToolkit *aToolkit, nsIWidget * aWidgetParent);
   void InitDeviceContext(nsIDeviceContext *aContext, Widget aWidgetParent);

@@ -277,6 +277,180 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
 
 }
 
+
+void nsWindow::CreateGC()
+{
+  // Create a Writeable GC for this Widget. Unfortunatley, 
+  // the Window for the Widget is not created properly at this point and
+  // we Need the GC prior to the Rendering Context getting created, so
+  // we create a small dummy window of the default depth as our dummy Drawable
+  // to create a compatible GC
+
+  if (nsnull == mGC) {
+
+    XGCValues values;
+    Window w;
+    Display * d = XtDisplay(mWidget);
+    
+    w = ::XCreateSimpleWindow(d,
+			      RootWindow(d,DefaultScreen(d)),
+			      0,0,1,1,0,
+			      BlackPixel(d,DefaultScreen(d)),
+			      WhitePixel(d,DefaultScreen(d)));
+    mGC = ::XCreateGC(d, w, nsnull, &values);
+    
+    ::XDestroyWindow(d,w);
+  }
+}
+
+void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent, 
+                      nsIWidget *aWidgetParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+  Widget mainWindow = 0, frame = 0;
+  mBounds = aRect;
+
+  InitToolkit(aToolkit, aWidgetParent);
+  
+  // save the event callback function
+  mEventCallback = aHandleEventFunction;
+
+  InitDeviceContext(aContext, (Widget)aInitData);
+  
+  Widget frameParent = 0;
+
+  if (gFirstTopLevelWindow == 0) {
+    mainWindow = ::XtVaCreateManagedWidget("mainWindow",
+ 					   xmMainWindowWidgetClass,
+					   (Widget)aInitData, 
+  					   nsnull);
+       gFirstTopLevelWindow = mainWindow;
+  }
+  else {
+    Widget shell = ::XtVaCreatePopupShell(" ",
+        xmDialogShellWidgetClass,
+        (Widget)aInitData, 0);
+    XtVaSetValues(shell, 
+             XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
+    mainWindow = ::XtVaCreateManagedWidget("mainWindow",
+					   xmMainWindowWidgetClass,
+					   shell, 
+  					   nsnull);
+    XtVaSetValues(mainWindow, XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
+  }
+
+  frame = ::XtVaCreateManagedWidget("frame",
+				    xmDrawingAreaWidgetClass,
+				    mainWindow,
+				    XmNwidth, aRect.width,
+				    XmNheight, aRect.height,
+				    XmNmarginHeight, 0,
+				    XmNmarginWidth, 0,
+				    nsnull);
+
+
+  mWidget = frame ;
+
+  if (mainWindow) {
+    XmMainWindowSetAreas(mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
+  }
+    
+  if (aWidgetParent) {
+    aWidgetParent->AddChild(this);
+  }
+
+  // Force cursor to default setting
+  mCursor = eCursor_select;
+  SetCursor(eCursor_standard);
+
+  InitCallbacks();
+
+  XtAddCallback(mWidget,
+                XmNresizeCallback,
+                nsXtWidget_Resize_Callback,
+                this);
+
+
+  CreateGC();
+}
+
+
+void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent, 
+                      nsIWidget *aWidgetParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+  mBounds = aRect;
+
+  InitToolkit(aToolkit, aWidgetParent);
+  
+  // save the event callback function
+  mEventCallback = aHandleEventFunction;
+  
+  InitDeviceContext(aContext, (Widget)aNativeParent);
+
+  mWidget = ::XtVaCreateManagedWidget("frame",
+				    xmDrawingAreaWidgetClass,
+				    (Widget)aNativeParent,
+				    XmNwidth, aRect.width,
+				    XmNheight, aRect.height,
+				    XmNmarginHeight, 0,
+				    XmNmarginWidth, 0,
+				    nsnull);
+
+
+  if (aWidgetParent) {
+    aWidgetParent->AddChild(this);
+  }
+
+  // Force cursor to default setting
+  mCursor = eCursor_select;
+  SetCursor(eCursor_standard);
+
+  InitCallbacks();
+
+  XtAddCallback(mWidget,
+                XmNresizeCallback,
+                nsXtWidget_Resize_Callback,
+                this);
+
+
+  CreateGC();
+}
+
+//-------------------------------------------------------------------------
+//
+// Create a window.
+//
+// Note: aNativeParent is always non-null if aWidgetParent is non-null.
+// aNativeaParent is set regardless if the parent for the Create() was an 
+// nsIWidget or a Native widget. 
+// aNativeParent is equal to aWidgetParent->GetNativeData(NS_NATIVE_WIDGET)
+//-------------------------------------------------------------------------
+
+void nsWindow::CreateWindow(nsNativeWidget aNativeParent, 
+                      nsIWidget *aWidgetParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+  if (0==aNativeParent)
+    CreateMainWindow(aNativeParent, aWidgetParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+  else
+    CreateChildWindow(aNativeParent, aWidgetParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData);
+
+}
+
+#if 0
 //-------------------------------------------------------------------------
 //
 // Create a window.
@@ -403,7 +577,7 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
   }
   
 }
-
+#endif
 
 
 //-------------------------------------------------------------------------
