@@ -793,9 +793,10 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar*
     docinfo.cbSize = sizeof(docinfo);
     docinfo.lpszDocName = title != nsnull?title:"Mozilla Document";
 
-#if defined(DEBUG_rods) && defined(MOZ_LAYOUTDEBUG)
+#ifdef DEBUG_rods
     docinfo.lpszOutput = "\\p.ps";
 
+#ifdef MOZ_LAYOUTDEBUG
     // This is for overriding the above when doing the runtime checking
     char * tempFileName = nsnull;
     nsCOMPtr<nsIDebugObject>debugObj = do_GetService("@mozilla.org/debug/debugobject;1");
@@ -815,6 +816,8 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar*
         docinfo.lpszOutput = tempFileName;
       }
     }
+#endif
+
 #else
     docinfo.lpszOutput = docName;
 #endif
