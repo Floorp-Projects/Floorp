@@ -34,6 +34,10 @@ ifeq ($(OS_ARCH), IRIX)
     endif
 endif
 
+ifeq ($(OS_ARCH), BeOS)
+    CFLAGS += -frtti -fexceptions
+endif
+
 INCLUDES = -I$(DIST)/include
 
 HEADERS = *.h
@@ -97,6 +101,9 @@ ifeq ($(OS_ARCH),NCR)
 endif
 ifeq ($(OS_ARCH),SCOOS)
     EXTRA_LIBS =
+endif
+ifeq ($(OS_ARCH),BeOS)
+    EXTRA_LIBS = -lstdc++.r4 -L$(DIST)/lib -lnspr$(MOD_VERSION)
 endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
