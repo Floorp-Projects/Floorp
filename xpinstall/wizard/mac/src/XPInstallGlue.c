@@ -301,7 +301,9 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 							HUnlock(gControls->cfg->comp[i].shortDesc);
 						}
 						
-						RunXPI(xpiSpec, &xpi_installProc);
+						err = RunXPI(xpiSpec, &xpi_installProc);
+						if (err != NS_OK)
+						    break;
 						
 						// update progess bar
 						if (gControls->tw->allProgressBar)
@@ -334,7 +336,7 @@ RunXPI(FSSpec& aXPI, XPI_InstallProc *xpi_installProc)
 	long		flags = 0x1000; /* XPI_NO_NEW_THREAD = 0x1000 from nsISoftwareUpdate.h */
 	Boolean		indeterminateFlag = true;
 	
-	rv = (*xpi_installProc)( aXPI, "", flags );
+	XPI_ERR_CHECK((*xpi_installProc)( aXPI, "", flags ));
 	
 	/* reset progress bar to barber poll */
 	bMaxDiscovered = false;
