@@ -5082,6 +5082,16 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
                       NS_ERROR_FAILURE);
     return selCont->ScrollHorizontal(PR_FALSE);
   }
+  else if (nsCAutoString(sScrollTopString).EqualsWithConversion(aCommand)) {
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
+                      NS_ERROR_FAILURE);
+    return selCont->CompleteScroll(PR_FALSE);
+  }
+  else if (nsCAutoString(sScrollBottomString).EqualsWithConversion(aCommand)) {
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
+                      NS_ERROR_FAILURE);
+    return selCont->CompleteScroll(PR_TRUE);
+  }
 
   return NS_OK;
 }
