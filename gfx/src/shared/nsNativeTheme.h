@@ -147,6 +147,7 @@ protected:
   nsCOMPtr<nsIAtom> mDisabledAtom;
   nsCOMPtr<nsIAtom> mCheckedAtom;
   nsCOMPtr<nsIAtom> mSelectedAtom;
+  nsCOMPtr<nsIAtom> mReadOnlyAtom;
 
   // these should be set to appropriate platform values by the subclass, to
   // match the values in platform-forms.css.  These defaults match forms.css
@@ -154,6 +155,8 @@ protected:
   static nsMargin sButtonDisabledBorderSize;
   static nsMargin sTextfieldBorderSize;
   static PRBool   sTextfieldBGTransparent;
+  static nsMargin sListboxBorderSize;
+  static PRBool   sListboxBGTransparent;
 
 private:
   nsCOMPtr<nsIAtom> mFocusedAtom;
@@ -163,5 +166,4 @@ private:
   nsCOMPtr<nsIAtom> mModeAtom;
   nsCOMPtr<nsIAtom> mClassAtom;
   nsCOMPtr<nsIAtom> mSortDirectionAtom;
-  nsCOMPtr<nsIAtom> mReadOnlyAtom;
 };
