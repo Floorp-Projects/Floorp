@@ -477,7 +477,9 @@ real_fast-update:
 	  if test -f $$failed; then false; else true; fi; }; \
 	fast_update $(CVSCO_NSPR) && \
 	cd $(ROOTDIR) && \
+	failed=mozilla/.fast_update-failed.tmp && \
 	cvs_co $(CVSCO_NSS) && \
+	failed=.fast_update-failed.tmp && \
 	cd mozilla && \
 	fast_update $(CVSCO_PSM) && \
 	fast_update $(CVSCO_LDAPCSDK) && \
