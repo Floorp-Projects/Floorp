@@ -205,8 +205,6 @@ Rights Reserved.
           <separator/>
     			<menuitem name="UTF-8" onclick="SetDocumentCharacterSet('UTF-8');"/>
           <separator/>
-    			<menuitem name="UTF-7" onclick="SetDocumentCharacterSet('UTF-7');"/>
-          <separator/>
     			<menuitem name="Cyrillic (KOI8-R)" onclick="SetDocumentCharacterSet('KOI8-R');"/>
           <separator/>
     			<menuitem name="Ukrainian (KOI8-U)" onclick="SetDocumentCharacterSet('KOI8-U');"/>
