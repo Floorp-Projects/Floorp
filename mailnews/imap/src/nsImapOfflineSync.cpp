@@ -1015,10 +1015,14 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
       imapFolder = do_QueryInterface(m_currentFolder);
     m_currentFolder->GetFlags(&folderFlags);
 		// need to check if folder has offline events, or is configured for offline
-		if (imapFolder && folderFlags & MSG_FOLDER_FLAG_OFFLINE)
-      return m_currentFolder->DownloadAllForOffline(this, m_window);
-    else
-      AdvanceToNextFolder();
+    if (imapFolder && folderFlags & MSG_FOLDER_FLAG_OFFLINE)
+    {
+      rv = m_currentFolder->DownloadAllForOffline(this, m_window);
+      if (NS_SUCCEEDED(rv) || rv == NS_BINDING_ABORTED)
+        return rv;
+      // if this fails and the user didn't cancel/stop, fall through to code that advances to next folder
+    }
+    AdvanceToNextFolder();
   }
   if (m_listener)
     m_listener->OnStopRunningUrl(nsnull, NS_OK);

@@ -3567,6 +3567,8 @@ NS_IMETHODIMP nsImapMailFolder::DownloadAllForOffline(nsIUrlListener *listener, 
     if (NS_SUCCEEDED(rv))
       m_urlRunning = PR_TRUE;
   }
+  else
+    return NS_MSG_FOLDER_UNREADABLE;
   return rv;
 }
 
