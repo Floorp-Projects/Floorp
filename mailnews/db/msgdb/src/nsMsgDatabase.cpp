@@ -102,11 +102,11 @@ nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, n
     if (NS_FAILED(rv)) return rv;
 
     char* msgURI = PR_smprintf("%s#%d", folderURI, key);
-    delete[] folderURI;
+	delete folderURI;
 
     nsIRDFResource* res;
     rv = rdf->GetResource(msgURI, &res);
-    delete[] msgURI;
+    PR_smprintf_free(msgURI);
     if (NS_FAILED(rv)) return rv;
     
     nsMsgHdr* msgHdr = (nsMsgHdr*)res;
