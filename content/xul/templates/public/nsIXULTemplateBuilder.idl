@@ -23,6 +23,7 @@
  *  Chris Waterson <waterson@netscape.com>
  *  Ben Goodger <ben@netscape.com>
  *  Jan Varga <varga@nixcorp.com>
+ *  Benjamin Smedberg <bsmedberg@covad.net>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -48,7 +49,7 @@ interface nsIXULBuilderListener;
 
 [ptr] native nsIContent_ptr(nsIContent);
 
-[scriptable, uuid(fb744f8e-1dd1-11b2-a5d7-935c9ab60602)]
+[scriptable, uuid(9da147a7-5854-49e3-a397-22ecdd93e96d)]
 interface nsIXULTemplateBuilder : nsISupports
 {
     /**
@@ -66,6 +67,15 @@ interface nsIXULTemplateBuilder : nsISupports
      * Force the template builder to rebuild its content.
      */
     void rebuild();
+
+    /**
+     * Reload any of our RDF datasources that support nsIRDFRemoteDatasource. 
+     *
+     * @note This is a temporary hack so that remote-XUL authors can
+     *       reload remote datasources. When RDF becomes remote-scriptable,
+     *       this will no longer be necessary.
+     */
+    void refresh();
 
     /**
      * Called to initialize a XUL content builder on a particular root

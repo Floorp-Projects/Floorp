@@ -240,7 +240,7 @@ public:
                    void* aClosure);
 
     nsresult
-    LoadDataSources();
+    LoadDataSources(nsIDocument* aDoc);
 
     nsresult
     InitHTMLTemplateRoot();
