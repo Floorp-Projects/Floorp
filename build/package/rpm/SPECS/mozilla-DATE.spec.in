@@ -21,6 +21,7 @@ Source12:    mozilla-mail.desktop
 Source13:    mozilla-mail-icon.gif
 Source14:    mozilla-compose.desktop
 Source15:    mozilla-compose-icon.gif
+Source17:    mozilla-psm-exclude-list
 Source18:    mozilla-xpcom-exclude-list
 Source19:    mozilla-redhat-default-bookmarks.html
 Source20:    mozilla-1.2.1-xft-prefs.js
@@ -245,11 +246,18 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 
 pushd .
 cd $RPM_BUILD_ROOT%{_libdir}/mozilla-%{version}
-# copy nspr
+# move nspr
 mv -v \
   libnspr4.so libplc4.so libplds4.so \
   $RPM_BUILD_ROOT%{_libdir}/
 
+# move psm
+mv -v \
+  libnss3.so libsmime3.so libsoftokn3.so libssl3.so \
+  $RPM_BUILD_ROOT%{_libdir}/
+
+# libnssckbi.so must be in both places
+cp -v libnssckbi.so $RPM_BUILD_ROOT%{_libdir}/
 popd
 
 /bin/rm -f %{builddir}/mozilla-nspr.list
@@ -263,6 +271,9 @@ popd
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/%{_libdir} \
     --install-root %{_libdir}
+
+# manually add the libnssckbi.so file
+echo %{_libdir}/mozilla-%{version}/libnssckbi.so >> %{builddir}/mozilla-nss.list
 
 # build all of the default browser components
 # base mozilla package (mozilla.list)
@@ -303,6 +314,7 @@ popd
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
     --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
     --install-root %{_libdir}/mozilla-%{version} \
+    --exclude-file=%{SOURCE17}
 
 # mozilla chat (mozilla-chat.list)
 %{SOURCE7} --package chatzilla --output-file %{builddir}/mozilla-chat.list \
