@@ -153,7 +153,6 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id)
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
-JSTaskState *       gMochaTaskState = NULL;
 JSContext *         gMochaContext = NULL;
 JSObject *          gMochaPrefObject = NULL;
 JSObject *          gGlobalConfigObject = NULL;
@@ -410,6 +409,7 @@ PRBool PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE;
     extern JSRuntime* PREF_GetJSRuntime(void);
+    JSTaskState *       mochaTaskState = NULL;
 
     /* --ML hash test */
     if (!gHashTable)
@@ -427,12 +427,11 @@ PRBool PREF_Init(const char *filename)
     }
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
-    if (!gMochaTaskState)
-        gMochaTaskState = PREF_GetJSRuntime();
+    mochaTaskState = PREF_GetJSRuntime();
 
     if (!gMochaContext)
     {
-        gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
+        gMochaContext = JS_NewContext(mochaTaskState, 8192);  /* ???? What size? */
         if (!gMochaContext)
             return PR_FALSE;
 
@@ -538,19 +537,7 @@ void PREF_Cleanup()
 /* Frees up all the objects except the callback list. */
 void PREF_CleanupPrefs()
 {
-    gMochaTaskState = NULL; /* We -don't- destroy this. */
-
-    if (gMochaContext) {
-        gMochaPrefObject = NULL;
-
-        if (gGlobalConfigObject) {
-            JS_SetGlobalObject(gMochaContext, NULL);
-            gGlobalConfigObject = NULL;
-        }
-
-        JS_DestroyContext(gMochaContext);
-        gMochaContext = NULL;
-    }
+    PREF_CleanupJSState();
 
     if (gHashTable)
         PR_HashTableDestroy(gHashTable);
@@ -565,6 +552,19 @@ void PREF_CleanupPrefs()
         PL_strfree(gFileName);
     gFileName = NULL;
 #endif
+}
+
+/* cleans out JSContexts, etc, that were used to read in prefs.js & friends */
+void PREF_CleanupJSState()
+{
+    if (gMochaContext) {
+        gMochaPrefObject = NULL;
+        
+        gGlobalConfigObject = NULL;
+
+        JS_DestroyContext(gMochaContext);
+        gMochaContext = NULL;
+    }
 }
 
 PrefResult
