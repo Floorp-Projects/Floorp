@@ -555,7 +555,8 @@ rdfSortCallback(const void *data1, const void *data2, void *sortData)
 
 	nsCOMPtr<nsIRDFResource> res1 = nsnull;
 	nsCOMPtr<nsIRDFResource> res2 = nsnull;
-	PRUnichar	*uniStr1 = nsnull, *uniStr2 = nsnull;
+	const PRUnichar	*uniStr1 = nsnull;
+	const PRUnichar	*uniStr2 = nsnull;
 
 	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) getter_AddRefs(res1))))
 	{
@@ -565,7 +566,7 @@ rdfSortCallback(const void *data1, const void *data2, void *sortData)
 			nsCOMPtr<nsIRDFLiteral> literal1 = nsnull;
 			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) getter_AddRefs(literal1))))
 			{
-				// literal1->GetValue(&uniStr1);
+				literal1->GetValue(&uniStr1);
 			}
 		}
 	}
@@ -577,7 +578,7 @@ rdfSortCallback(const void *data1, const void *data2, void *sortData)
 			nsCOMPtr<nsIRDFLiteral> literal2 = nsnull;
 			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) getter_AddRefs(literal2))))
 			{
-				// literal2->GetValue(&uniStr2);
+				literal2->GetValue(&uniStr2);
 			}
 		}
 	}
