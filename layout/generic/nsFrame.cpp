@@ -2825,9 +2825,9 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       for (;lineFrameCount > 1;lineFrameCount --){
         //result = lastFrame->GetNextSibling(&lastFrame, searchingLine);
         result = it->GetNextSiblingOnLine(lastFrame, searchingLine);
-        if (NS_FAILED(result)){
+        if (NS_FAILED(result) || !lastFrame){
           NS_ASSERTION(0,"should not be reached nsFrame\n");
-          continue;
+          return NS_ERROR_FAILURE;
         }
       }
       GetLastLeaf(aPresContext, &lastFrame);
@@ -3597,8 +3597,8 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
 
     lastFrame = firstFrame;
     for (;lineFrameCount > 1;lineFrameCount --){
-      result = lastFrame->GetNextSibling(&lastFrame);
-      if (NS_FAILED(result)){
+      result = it->GetNextSiblingOnLine(lastFrame, thisLine);
+      if (NS_FAILED(result) || !lastFrame){
         NS_ASSERTION(0,"should not be reached nsFrame\n");
         return NS_ERROR_FAILURE;
       }
@@ -3735,8 +3735,8 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
 
       lastFrame = firstFrame;
       for (;lineFrameCount > 1;lineFrameCount --){
-        result = lastFrame->GetNextSibling(&lastFrame);
-        if (NS_FAILED(result)){
+        result = it->GetNextSiblingOnLine(lastFrame, thisLine);
+        if (NS_FAILED(result) || !lastFrame){
           NS_ASSERTION(0,"should not be reached nsFrame\n");
           return NS_ERROR_FAILURE;
         }
