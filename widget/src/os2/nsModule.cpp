@@ -366,8 +366,8 @@ int nsWidgetModuleData::TranslateKey( VSCAN scan, UniChar *pChar, VDKEY *vdkey)
 
    if( WinIsKeyDown(VK_SHIFT))   sstate |= KBD_SHIFT;
    if( WinIsKeyDown(VK_CTRL))    sstate |= KBD_CTRL;
-// if( WinIsKeyDown(VK_ALT))     sstate |= KBD_ALT;
-// if( WinIsKeyDown(VK_ALTGRAF)) sstate |= KBD_ALTGR;
+   if( WinIsKeyDown(VK_ALT))     sstate |= KBD_ALT;
+   if( WinIsKeyDown(VK_ALTGRAF)) sstate |= KBD_ALTGR;
 
    #define TOGGLED(vk) (WinGetKeyState(HWND_DESKTOP,vk) & 1)
 
