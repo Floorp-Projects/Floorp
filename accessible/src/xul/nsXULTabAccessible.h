@@ -80,12 +80,20 @@ class nsXULTabPanelsAccessible : public nsAccessible
 {
 public:
   nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval); 
+  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccName(nsAString& _retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
+
 protected:
+  nsresult GetAccPluginChild(nsIAccessible **_retval);
+
+  // data members
   nsCOMPtr<nsIDOMNode> mGParentDOMNode;
   nsCOMPtr<nsIDOMNode> mParentDOMNode;
+  nsCOMPtr<nsIAccessibilityService> mAccService;
 };
 
 /** merely a container of tab obejcts */

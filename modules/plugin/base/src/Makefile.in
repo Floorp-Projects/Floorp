@@ -88,6 +88,7 @@ EXPORTS		= \
 		nsPluginsCID.h \
 		nsIPluginHost.h \
 		nsIPluginInstanceOwner.h \
+    nsPluginViewer.h \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

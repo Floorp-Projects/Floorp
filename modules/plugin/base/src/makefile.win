@@ -22,9 +22,11 @@
 DEPTH=..\..\..\..
 
 EXPORTS =	\
-        nsPluginsCID.h          \
-	nsIPluginHost.h         \
-	nsIPluginInstanceOwner.h
+  nsIPluginHost.h \
+  nsIPluginInstanceOwner.h \
+  nsPluginsCID.h \
+  nsPluginViewer.h \
+	$(NULL)
 
 MODULE		= plugin
 LIBRARY_NAME	= gkplugin

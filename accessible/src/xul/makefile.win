@@ -23,6 +23,7 @@ DEPTH = ..\..\..
 MODULE = accessibility
 LIBRARY_NAME = accessibility_xul_s
 REQUIRES = \
+  appshell \
   content \
   docshell \
   dom \
@@ -35,6 +36,8 @@ REQUIRES = \
   plugin \
   pref \
   string \
+  webBrowser_core \
+  webshell \
   widget \
   xpcom \
   $(NULL)
@@ -55,6 +58,10 @@ EXPORTS = \
 LINCS = \
   -I..\base \
   -I..\html \
+  -I..\..\..\layout\html\forms\public \
+  -I..\..\..\layout\html\forms\src \
+  -I..\..\..\layout\html\base\src \
+  -I..\..\..\widget\src\windows \
   $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

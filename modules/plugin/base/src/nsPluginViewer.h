@@ -38,8 +38,72 @@
 #ifndef nsPluginViewer_h__
 #define nsPluginViewer_h__
 
+#include "nsCOMPtr.h"
+#include "nscore.h"
+#include "nsCRT.h"
+#include "nsIContentViewer.h"
+#include "nsIContentViewerEdit.h"
+#include "nsIWebBrowserPrint.h"
+#include "nsIWidget.h"
+#include "nsIPluginViewer.h"
+
 class nsIStreamListener;
 class nsIContentViewer;
+class pluginInstanceOwner;
+
+class PluginViewerImpl : public nsIPluginViewer,
+                         public nsIContentViewer,
+                         public nsIContentViewerEdit,
+                         public nsIWebBrowserPrint
+{
+public:
+  PluginViewerImpl(const char* aCommand);
+  nsresult Init(nsIStreamListener** aDocListener);
+    
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIPluginViewer
+  NS_IMETHOD StartLoad(nsIRequest* request, nsIStreamListener*& aResult);
+
+  // nsIContentViewer
+  NS_DECL_NSICONTENTVIEWER
+
+  // nsIContentViewerEdit
+  NS_DECL_NSICONTENTVIEWEREDIT
+
+  // nsIWebBrowserPrint
+  NS_DECL_NSIWEBBROWSERPRINT
+
+#ifdef XP_WIN
+  NS_IMETHOD GetPluginPort(HWND *aPort);
+#endif
+
+  virtual ~PluginViewerImpl();
+
+  nsresult CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const nsRect& aBounds,
+                        nsIStreamListener*& aResult);
+
+  nsresult MakeWindow(nsNativeWidget aParent,
+                      nsIDeviceContext* aDeviceContext,
+                      const nsRect& aBounds);
+
+  void ForceRefresh(void);
+
+  nsresult GetURI(nsIURI* *aURI);
+
+  nsresult GetDocument(nsIDocument* *aDocument);
+
+  nsIWidget* mWindow;
+  nsIDocument* mDocument;
+  nsCOMPtr<nsISupports> mContainer;
+  nsIChannel* mChannel;
+  pluginInstanceOwner *mOwner;
+  PRBool mEnableRendering;
+
+};
 
 extern nsresult
 NS_NewPluginContentViewer(const char* aCommand,

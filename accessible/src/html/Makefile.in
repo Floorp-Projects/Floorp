@@ -28,26 +28,28 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = accessibility
 LIBRARY_NAME = accessibility_html_s
-REQUIRES	= content \
-		  docshell \
-		  dom \
-		  editor \
-		  gfx \
-		  gfx2 \
-		  htmlparser \
-		  imglib2 \
-		  intl \
-		  layout \
-		  locale \
-		  necko \
-		  plugin \
-		  string \
-		  uriloader \
-		  view \
-		  webshell \
-		  widget \
-		  xpcom \
-		  $(NULL)
+REQUIRES = \
+  appshell \
+  content \
+  docshell \
+  dom \
+  editor \
+  gfx \
+  gfx2 \
+  htmlparser \
+  imglib2 \
+  intl \
+  layout \
+  locale \
+  necko \
+  plugin \
+  string \
+  uriloader \
+  view \
+  webshell \
+  widget \
+  xpcom \
+  $(NULL)
 
 CPPSRCS = \
   nsHTMLAreaAccessible.cpp \
