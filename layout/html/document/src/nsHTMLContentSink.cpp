@@ -183,6 +183,8 @@ protected:
                          const nsIParserNode& aNode);
   nsresult ProcessSPACERTag(nsIHTMLContent** aInstancePtrResult,
                             const nsIParserNode& aNode);
+  nsresult ProcessCOLTag(nsIHTMLContent** aInstancePtrResult,
+                         const nsIParserNode& aNode);
   nsresult ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
                               const nsIParserNode& aNode);
   nsresult ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
@@ -767,10 +769,6 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   case eHTMLTag_colgroup:
     rv = NS_NewTableColGroupPart(&container, atom);
-    break;
-
-  case eHTMLTag_col:
-    rv = NS_NewTableColPart(&container, atom);
     break;
 
   case eHTMLTag_td:
@@ -1379,6 +1377,9 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
       FlushText();
       rv = ProcessEMBEDTag(&leaf, aNode);
       break;
+    case eHTMLTag_col:
+      rv = ProcessCOLTag(&leaf, aNode);
+      break;
     }
     break;
 
@@ -1810,6 +1811,19 @@ nsresult HTMLContentSink::ProcessSPACERTag(nsIHTMLContent** aInstancePtrResult,
   nsAutoString tmp("SPACER");
   nsIAtom* atom = NS_NewAtom(tmp);
   nsresult rv = NS_NewHTMLSpacer(aInstancePtrResult, atom);
+  if (NS_OK == rv) {
+    rv = AddAttributes(aNode, *aInstancePtrResult);
+  }
+  NS_RELEASE(atom);
+  return rv;
+}
+
+nsresult HTMLContentSink::ProcessCOLTag(nsIHTMLContent** aInstancePtrResult,
+                                        const nsIParserNode& aNode)
+{
+  nsAutoString tmp("COL");
+  nsIAtom* atom = NS_NewAtom(tmp);
+  nsresult rv = NS_NewTableColPart(aInstancePtrResult, atom);
   if (NS_OK == rv) {
     rv = AddAttributes(aNode, *aInstancePtrResult);
   }
