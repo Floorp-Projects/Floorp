@@ -194,7 +194,7 @@ private:
 	                       nsIView *aTopView = nsnull, nscoord aX = 0, nscoord aY = 0);
 	PRBool AddToDisplayList(nsIView *aView, DisplayZTreeNode* &aParent, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY);
     void ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex);
-	nsresult OptimizeDisplayList(const nsRect& aDamageRect);
+	nsresult OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect);
     // Remove redundant PUSH/POP_CLIP pairs.
     void OptimizeDisplayListClipping(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex,
                                      PRBool& aAnyRendered);
@@ -337,6 +337,9 @@ private:
   static nsDrawingSurface  gBlack;
   static nsDrawingSurface  gWhite;
   static nsSize            gOffScreenSize;
+
+  //Rendering context used to cleanup the blending buffers
+  static nsIRenderingContext* gCleanupContext;
 
   // Largest requested offscreen size if larger than a full screen.
   static nsSize            gLargestRequestedSize;
