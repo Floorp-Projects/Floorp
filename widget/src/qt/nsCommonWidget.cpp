@@ -554,13 +554,18 @@ nsCommonWidget::IsEnabled(PRBool *aState)
 }
 
 NS_IMETHODIMP
-nsCommonWidget::SetFocus(PRBool aSet)
+nsCommonWidget::SetFocus(PRBool aRaise)
 {
+#ifdef DEBUG_WIDGETS
+    qDebug("SetFocus mWidget=%p, mContainer=%p, focuswidget=%p (%d)",
+           (void*)mWidget, (void*)mContainer, (void*)mWidget->focusWidget());
+#endif
     if (mWidget) {
-        if (aSet)
-            mWidget->setFocus();
-        else
-            mWidget->clearFocus();
+        if (aRaise)
+            mWidget->raise();
+        mWidget->setFocus();
+
+        DispatchGotFocusEvent();
     }
 
     return NS_OK;
@@ -1028,23 +1033,31 @@ nsCommonWidget::keyReleaseEvent(QKeyEvent *e)
 bool
 nsCommonWidget::focusInEvent(QFocusEvent *)
 {
-    //qDebug("focusInEvent mWidget=%p", (void*)mWidget);
-    // dispatch a got focus event
+    if (!mWidget)
+        return FALSE;
+
+#ifdef DEBUG_WIDGETS
+    qDebug("focusInEvent mWidget=%p, mContainer=%p", (void*)mWidget, (void*)mContainer);
+#endif
+
     DispatchGotFocusEvent();
 
-    // send the activate event if it wasn't already sent via any
-    // SetFocus() calls that were the result of the GOTFOCUS event
-    // above.
-    if (mContainer)
-        DispatchActivateEvent();
+    DispatchActivateEvent();
+
     return FALSE;
 }
 
 bool
 nsCommonWidget::focusOutEvent(QFocusEvent *)
 {
-    //qDebug("focusOutEvent mWidget=%p", (void*)mWidget);
+#ifdef DEBUG_WIDGETS
+    qDebug("focusOutEvent mWidget=%p,mContainer = %p", (void*)mWidget, (void*)mContainer);
+#endif
+
     DispatchLostFocusEvent();
+    if (mContainer)
+        DispatchDeactivateEvent();
+
     return FALSE;
 }
 
