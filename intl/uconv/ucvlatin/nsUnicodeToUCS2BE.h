@@ -56,8 +56,4 @@ protected:
       PRInt32 * aDestLength);
 };
 
-nsresult NEW_UnicodeToUTF16BE(nsISupports **Result);
-nsresult NEW_UnicodeToUTF16LE(nsISupports **Result);
-nsresult NEW_UnicodeToUTF16(nsISupports **Result);
-
 #endif /* nsUnicodeToUCS2BE_h___ */
