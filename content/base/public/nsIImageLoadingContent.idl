@@ -41,6 +41,7 @@
 interface imgIRequest;
 interface nsIChannel;
 interface nsIStreamListener;
+interface nsIURI;
 
 /**
  * This interface represents a content node that loads images.  The interface
@@ -140,6 +141,13 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    * @throws NS_ERROR_UNEXPECTED if aRequest is not known
    */
   long getRequestType(in imgIRequest aRequest);
+
+  /**
+   * Gets the URI of the current request, if available.
+   * Otherwise, returns the last URI that this content tried to load, or
+   * null if there haven't been any such attempts.
+   */
+  readonly attribute nsIURI currentURI;
 
   /**
    * loadImageWithChannel allows data from an existing channel to be

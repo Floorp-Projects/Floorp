@@ -156,6 +156,7 @@ private:
 protected:
   nsCOMPtr<imgIRequest> mCurrentRequest;
   nsCOMPtr<imgIRequest> mPendingRequest;
+  nsCOMPtr<nsIURI>      mCurrentURI;
 
   // Cache for the io service and image loader
   static imgILoader* sImgLoader;

@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -442,16 +441,6 @@ public:
    * Get link location.
    */
   NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
-
-  /**
-   * Get image location.
-   */
-  NS_IMETHOD GetImageLocation(nsIDOMNode* aNode, nsAString& aLocation) = 0;
-
-  /**
-   * Copy image.
-   */
-  NS_IMETHOD DoCopyImageContents(nsIDOMNode* aNode) = 0;
 
   /**
    * Get the doc or the selection as text or html.

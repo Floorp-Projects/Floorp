@@ -70,6 +70,26 @@
 
 #include "nsContentUtils.h"
 
+#ifdef DEBUG_chb
+static void PrintReqURL(imgIRequest* req) {
+  if (!req) {
+    printf("(null req)\n");
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  req->GetURI(getter_AddRefs(uri));
+  if (!uri) {
+    printf("(null uri)\n");
+    return;
+  }
+
+  nsCAutoString spec;
+  uri->GetSpec(spec);
+  printf("spec='%s'\n", spec.get());
+}
+#endif /* DEBUG_chb */
+
 // Statics
 imgILoader* nsImageLoadingContent::sImgLoader = nsnull;
 nsIIOService* nsImageLoadingContent::sIOService = nsnull;
@@ -349,6 +369,16 @@ nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
 }
 
 NS_IMETHODIMP
+nsImageLoadingContent::GetCurrentURI(nsIURI** aURI)
+{
+  if (mCurrentRequest)
+    return mCurrentRequest->GetURI(aURI);
+
+  *aURI = mCurrentURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
                                             nsIStreamListener** aListener)
 {
@@ -404,6 +434,10 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Remember the URL of this request, in case someone asks us for it later
+  // But this only matters if we are affecting the current request
+  if (!mCurrentRequest)
+    mCurrentURI = imageURI;
   
   // If we'll be loading a new image, we want to cancel our existing
   // requests; the question is what reason to pass in.  If everything
@@ -441,6 +475,11 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   
   rv = nsContentUtils::LoadImage(imageURI, doc, this, nsIRequest::LOAD_NORMAL,
                                  getter_AddRefs(req));
+  // If we now have a current request, we don't need to store the URI, since
+  // we can get it off the request. Release it.
+  if (mCurrentRequest) {
+    mCurrentURI = nsnull;
+  }
 
   if (!mayNeedReframe) {
     // We're all set

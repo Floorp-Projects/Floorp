@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -164,9 +163,6 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMHTMLInputElement.h"
-#include "nsIFormControl.h"
 #include "nsITimer.h"
 #include "nsITimerInternal.h"
 #ifdef ACCESSIBILITY
@@ -1181,8 +1177,6 @@ public:
   
   NS_IMETHOD DoCopy();
   NS_IMETHOD GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString);
-  NS_IMETHOD GetImageLocation(nsIDOMNode* aNode, nsAString& aLocationString);
-  NS_IMETHOD DoCopyImageContents(nsIDOMNode* aNode);
   NS_IMETHOD DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& outValue);
 
   NS_IMETHOD CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState, PRBool aLeavingPage);
@@ -4490,58 +4484,6 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
   }
 
   // if no link, fail.
-  return NS_ERROR_FAILURE;
-}
-
-// GetImageLocation: copy image location to clipboard
-NS_IMETHODIMP
-PresShell::GetImageLocation(nsIDOMNode* aNode, nsAString& aLocationString)
-{
-  NS_ENSURE_ARG_POINTER(aNode);
-  aLocationString.Truncate();
-
-  // Is aNode an image?
-  nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(aNode));
-
-  if (img) {
-    // aNode is an image, return its source.
-
-    return img->GetSrc(aLocationString);
-  }
-
-  // aNode is not an image, check if it's an <input type=image>...
-  nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(aNode));
-
-  if (form_control && form_control->GetType() == NS_FORM_INPUT_IMAGE) {
-    // aNode is an <input type=image>, return its source.
-
-    nsCOMPtr<nsIDOMHTMLInputElement> input(do_QueryInterface(aNode));
-    NS_ASSERTION(input, "Whaaa, image form control is not an "
-                        "nsIDOMHTMLInputElement!");
-
-    return input->GetSrc(aLocationString);
-  }
-
-  // aNode is not an image, return an empty location.
-
-  return NS_OK;
-}
-
-// DoCopyImageContents: copy image contents to clipboard
-NS_IMETHODIMP PresShell::DoCopyImageContents(nsIDOMNode* aNode)
-{
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  nsresult rv;
-  // are we an image?
-  nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(aNode, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (img) {
-    // call the copy code
-    return nsCopySupport::ImageCopy(img, nsIClipboard::kGlobalClipboard);
-  }
-
-  // if no image, fail.
   return NS_ERROR_FAILURE;
 }
 

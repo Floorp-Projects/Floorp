@@ -64,6 +64,7 @@ REQUIRES	= commandhandler \
 		  widget \
 		  xpcom \
 		  xuldoc \
+		  imglib2 \
 		  $(NULL)
 
 CPPSRCS = \

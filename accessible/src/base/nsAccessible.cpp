@@ -83,6 +83,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIFocusController.h"
 #include "nsAccessibleTreeWalker.h"
+#include "nsIURI.h"
+#include "nsIImageLoadingContent.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -1066,10 +1068,16 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
         textEquivalent.Truncate();
     }
     if (textEquivalent.IsEmpty() && imageContent) {
-      nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
-      nsCOMPtr<nsIDOMNode> imageNode(do_QueryInterface(aContent));
-      if (imageNode && presShell)
-        presShell->GetImageLocation(imageNode, textEquivalent);
+      nsCOMPtr<nsIImageLoadingContent> imageNode(do_QueryInterface(aContent));
+      if (imageNode) {
+        nsCOMPtr<nsIURI> uri;
+        imageNode->GetCurrentURI(getter_AddRefs(uri));
+        if (uri) {
+          nsCAutoString spec;
+          uri->GetSpec(spec);
+          CopyUTF8toUTF16(spec, textEquivalent);
+        }
+      }
     }
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("src"), textEquivalent);

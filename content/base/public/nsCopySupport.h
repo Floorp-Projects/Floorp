@@ -35,17 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsCopySupport_h__
+#define nsCopySupport_h__
+
 #include "nscore.h"
 #include "nsCOMPtr.h"
 
 class nsISelection;
 class nsIDocument;
-class nsIDOMNode;
-class nsIDOMHTMLImageElement;
+class nsIImageLoadingContent;
 class nsIContent;
-class nsIPresContext;
-class nsIPresShell;
-class nsIImageFrame;
 class nsIImage;
 class nsITransferable;
  
@@ -63,11 +62,13 @@ class nsCopySupport
     // doc.
     static nsresult GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata);
     
-    static nsresult ImageCopy(nsIDOMHTMLImageElement* imageElement, PRInt16 aClipboardID);
+    static nsresult ImageCopy(nsIImageLoadingContent* imageElement, PRInt16 aClipboardID);
 
   protected:
   
     // these are ripped from nsContentAreaDragDrop. This so needs factoring.    
-    static nsresult GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage**outImage);
+    static nsresult GetImageFromDOMNode(nsIImageLoadingContent* inNode, nsIImage**outImage);
 
 };
+
+#endif
