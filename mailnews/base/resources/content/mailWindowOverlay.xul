@@ -105,6 +105,7 @@ Rights Reserved.
 	<broadcaster id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')" disabled="true"/>
 	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>
 	<broadcaster id="cmd_viewPageSource" oncommand="goDoCommand('cmd_viewPageSource')" disabled="true"/>
+	<broadcaster id="cmd_setFolderCharset" oncommand="goDoCommand('cmd_setFolderCharset')" />
 	<broadcaster id="cmd_reload" oncommand="goDoCommand('cmd_reload')" disabled="true"/>
 	<broadcaster id="cmd_getNewMessages" oncommand="goDoCommand('cmd_getNewMessages')" disabled="true"/>
 	<broadcaster id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
@@ -786,6 +787,7 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem value="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
 			<menuseparator/>
+			<menuitem value="&folderCharset.label;" accesskey="&folderCharset.accesskey;" observes="cmd_setFolderCharset"/>
 			<menu id = "mailviewCharsetMenu" />
 		</menupopup>
 	</menu>

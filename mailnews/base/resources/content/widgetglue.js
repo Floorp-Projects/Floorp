@@ -310,4 +310,39 @@ function LastToClose()
         return false;
 }
 
+function MsgSetFolderCharset() 
+{
+  var preselectedURI = GetSelectedFolderURI();
+  var selectedFolder = GetResourceFromUri(preselectedURI);
+  var msgFolder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
+//    dump("preselectedURI = " + preselectedURI + "\n");
+  var dialog = window.openDialog(
+              "chrome://messenger/content/folderCharsetDialog.xul",
+              "",
+              "chrome,centerscreen,titlebar,modal",
+              {preselectedURI: preselectedURI, 
+              okCallback: SetFolderCharset, 
+              folderCharset: msgFolder.charset, 
+              folderCharsetOverride: msgFolder.charsetOverride});
+}
+
+function SetFolderCharset(override, charset, uri)
+{
+//  dump("uri,charset,override = " + uri + "," + charset + "," + override + "\n");
+  var folderTree = GetFolderTree();
+  if (folderTree) {
+    if (uri && charset) {
+      var selectedFolder = GetResourceFromUri(uri);
+      var msgFolder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+      if (msgFolder) {
+        msgFolder.charset = charset;
+        msgFolder.charsetOverride = override;
+      }
+
+      ClearThreadPane();
+      ClearMessagePane();
+      folderTree.clearItemSelection();
+    }
+  }
+}

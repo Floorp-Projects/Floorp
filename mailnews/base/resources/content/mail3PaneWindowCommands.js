@@ -208,6 +208,7 @@ var DefaultController =
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
+			case "cmd_setFolderCharset":
 			case "cmd_reload":
 			case "cmd_getNewMessages":
 			case "cmd_getNextNMessages":
@@ -325,6 +326,8 @@ var DefaultController =
 				return IsEmptyTrashEnabled();
 			case "cmd_compactFolder":
 				return IsCompactFolderEnabled();
+			case "cmd_setFolderCharset":
+				return IsFolderCharsetEnabled();
 			default:
 				return false;
 		}
@@ -436,6 +439,9 @@ var DefaultController =
 			case "cmd_viewPageSource":
 				MsgViewPageSource();
 				return;
+			case "cmd_setFolderCharset":
+				MsgSetFolderCharset();
+				return;
 			case "cmd_reload":
 				MsgReload();
 				return;
@@ -536,6 +542,7 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_expandAllThreads');
 	goUpdateCommand('cmd_collapseAllThreads');
 	goUpdateCommand('cmd_renameFolder');
+	goUpdateCommand('cmd_setFolderCharset');
 	goUpdateCommand('cmd_getNewMessages');
 	goUpdateCommand('cmd_getNextNMessages');
 	goUpdateCommand('cmd_find');
@@ -747,6 +754,11 @@ function IsRenameFolderEnabled()
 	else
 		return false;
 
+}
+
+function IsFolderCharsetEnabled()
+{
+  return IsFolderSelected();
 }
 
 function IsViewNavigationItemEnabled()

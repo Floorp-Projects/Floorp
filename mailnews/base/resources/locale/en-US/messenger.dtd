@@ -169,6 +169,8 @@ Rights Reserved.
 <!ENTITY pageSourceCmd.label "Message Source">  
 <!ENTITY pageSourceCmd.accesskey "o">  
 <!ENTITY pageSourceCmd.key "u">  
+<!ENTITY folderCharset.label "Folder Character Coding...">
+<!ENTITY folderCharset.accesskey "f">
 <!ENTITY translateMenu.label ".Translate"> 
 <!ENTITY dcharMenu.label "Character Set  ISO">
 <!ENTITY dcharMenu1.label "Character Set  Multibyte">

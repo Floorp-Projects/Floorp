@@ -668,16 +668,6 @@ function GetSelectedFolderResource()
 
 }
 
-function SetFolderCharset(folderResource, aCharset)
-{
-	var db = GetFolderDatasource();
-
-	var charsetResource = RDF.GetLiteral(aCharset);
-	var charsetProperty = RDF.GetResource("http://home.netscape.com/NC-rdf#Charset");
-
-	db.Assert(folderResource, charsetProperty, charsetResource, true);
-}
-
 
 
 function ToggleMessageRead(treeItem)
