@@ -878,8 +878,7 @@ nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
 
             // This channel is associated with the entire document...
             mDocumentChannel = aChannel;
-// omit next line until we can figure out why it causes a leak
-//            mLoadGroup->SetDefaultLoadChannel(mDocumentChannel); 
+            mLoadGroup->SetDefaultLoadChannel(mDocumentChannel); 
             FireOnStartDocumentLoad(this, uri);
         } 
         else {
@@ -959,6 +958,15 @@ nsDocLoaderImpl::CreateLoadGroupListener(nsIStreamListener *aListener,
 
 void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
 {
+  if (mParent) { 
+      mParent->DocLoaderIsEmpty(aStatus); 
+      // 
+      // New code to break the circular reference between 
+      // the load group and the docloader... 
+      // 
+      mLoadGroup->SetDefaultLoadChannel(nsnull); 
+  } 
+
   if (mIsLoadingDocument) {
     PRBool busy = PR_FALSE;
     /* In the unimagineably rude circumstance that onload event handlers
