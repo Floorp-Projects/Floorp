@@ -970,7 +970,12 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
   if(keyGenHandler == nsnull) {
     goto loser;
   }
+#if 0
   nsJSUtils::nsGetCallingLocation(cx, &fileName, &lineNo);
+#else
+  fileName = nsnull;
+  lineNo   = 0;
+#endif
   principals = GetScriptPrincipal(cx);
 
   keyGenHandler->result        = CMTFailure;
