@@ -403,15 +403,13 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   if ( (filePath.IsEmpty()) && (contentType.get() && *contentType.get()) ) // if we have a content type without a file extension...then use it!
   {
     nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-    nsCOMPtr<nsIMIMEInfo> mimeObject;
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mimeService->GetFromTypeAndExtension(contentType.get(), nsnull, getter_AddRefs(mimeObject));
-    if (mimeObject)
+    nsXPIDLCString fileExt;
+    rv = mimeService->GetPrimaryExtension(contentType.get(), nsnull, getter_Copies(fileExt));
+    if (NS_SUCCEEDED(rv))
     {
-      nsXPIDLCString fileExt;
-      mimeObject->GetPrimaryExtension(getter_Copies(fileExt));
-      // we need to insert a '.' b4 the extension...
+      // we need to insert a '.' before the extension...
       filePath = NS_LITERAL_CSTRING(".") + fileExt;
     }
   }

@@ -766,10 +766,7 @@ function GetExtensionBasedOnMimeType(aMIMEType)
     mimeService = Components.classes["@mozilla.org/mime;1"].getService();
     mimeService = mimeService.QueryInterface(Components.interfaces.nsIMIMEService);
 
-    var mimeInfo = mimeService.getFromTypeAndExtension(aMIMEType, null);
-    if (!mimeInfo) return "";
-
-    var fileExtension = mimeInfo.primaryExtension;
+    var fileExtension = mimeService.getPrimaryExtension(aMIMEType, null);
 
     // the MIME service likes to give back ".htm" for text/html files,
     // so do a special-case fix here.
