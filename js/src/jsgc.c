@@ -1173,7 +1173,9 @@ restart:
                 }
                 GC_MARK(cx, fp->thisp, "this", NULL);
                 if (fp->argv) {
-                    nslots = JS_MAX(fp->argc, fp->fun->nargs);
+                    nslots = fp->argc;
+                    if (fp->fun && fp->fun->nargs > nslots)
+                        nslots = fp->fun->nargs;
                     GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");
                 }
                 if (JSVAL_IS_GCTHING(fp->rval))
