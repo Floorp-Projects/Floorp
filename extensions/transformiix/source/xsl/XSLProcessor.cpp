@@ -3,21 +3,21 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is TransforMiiX XSLT processor.
- * 
+ *
  * The Initial Developer of the Original Code is The MITRE Corporation.
  * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
  * Portions created by Keith Visco as a Non MITRE employee,
  * (C) 1999 Keith Visco. All Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  * Bob Miller, kbob@oblix.com
@@ -25,7 +25,7 @@
  * Pierre Phaneuf, pp@ludusdesign.com
  *    -- fixed some XPCOM usage.
  *
- * $Id: XSLProcessor.cpp,v 1.6 2000/01/11 20:47:47 pp%ludusdesign.com Exp $
+ * $Id: XSLProcessor.cpp,v 1.7 2000/02/17 03:29:30 kvisco%ziplink.net Exp $
  */
 
 #include "XSLProcessor.h"
@@ -38,7 +38,7 @@
 /**
  * XSLProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/01/11 20:47:47 $
+ * @version $Revision: 1.7 $ $Date: 2000/02/17 03:29:30 $
 **/
 
 /**
@@ -109,7 +109,7 @@ XSLProcessor::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 {
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
-  
+
     XSLProcessor* xslp = new XSLProcessor();
     if (xslp == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -140,7 +140,7 @@ void XSLProcessor::addErrorObserver(ErrorObserver& errorObserver) {
 
 #ifndef MOZILLA
 void XSLProcessor::print
-    (Document& document, OutputFormat* format, ostream& out) 
+    (Document& document, OutputFormat* format, ostream& out)
 {
 
     XMLPrinter* xmlPrinter = 0;
@@ -156,7 +156,7 @@ void XSLProcessor::print
     }
     else {
         //-- try to determine output method
-        Element* element = document.getDocumentElement();        
+        Element* element = document.getDocumentElement();
         String name;
         if (element) name = element->getNodeName();
         name.toUpperCase();
@@ -370,7 +370,7 @@ Document* XSLProcessor::process(istream& xmlInput, String& documentBase) {
  * Processes the Top level elements for an XSL stylesheet
 **/
 void XSLProcessor::processTopLevel
-   (Document* xslDocument, ProcessorState* ps) 
+   (Document* xslDocument, ProcessorState* ps)
 {
 
     if (!xslDocument) return;
@@ -401,7 +401,7 @@ void XSLProcessor::processTopLevel
                         break;
                     }
 
-                    ExprResult* exprResult 
+                    ExprResult* exprResult
                         = processVariable(node, element, ps);
 
                     bindVariable(name, exprResult, MB_TRUE, ps);
@@ -420,21 +420,21 @@ void XSLProcessor::processTopLevel
                         break;
 		    }
 
-                    //-- get document base                    
+                    //-- get document base
                     String documentBase;
-                    String currentHref; 
+                    String currentHref;
                     //ps->getDocumentHref(element->getOwnerDocument(),
 		    //		currentHref);
                     if (currentHref.length() == 0) {
 		      documentBase.append(ps->getDocumentBase());
 		    }
-                    else {                        
+                    else {
 		      URIUtils::getDocumentBase(currentHref, documentBase);
 		    }
 
                     String errMsg;
 
-                    istream* xslInput 
+                    istream* xslInput
 		      = URIUtils::getInputStream(href,documentBase,errMsg);
 		    Document* xslDoc = 0;
                     XMLParser xmlParser;
@@ -466,7 +466,7 @@ void XSLProcessor::processTopLevel
 
                     attValue = element->getAttribute(VERSION_ATTR);
                     if (attValue.length() > 0) format->setVersion(attValue);
-                    
+
                     attValue = element->getAttribute(ENCODING_ATTR);
                     if (attValue.length() > 0) format->setEncoding(attValue);
 
@@ -477,11 +477,11 @@ void XSLProcessor::processTopLevel
 		    }
 
                     attValue = element->getAttribute(DOCTYPE_PUBLIC_ATTR);
-                    if (attValue.length() > 0) 
+                    if (attValue.length() > 0)
 		        format->setDoctypePublic(attValue);
 
                     attValue = element->getAttribute(DOCTYPE_SYSTEM_ATTR);
-                    if (attValue.length() > 0) 
+                    if (attValue.length() > 0)
 		        format->setDoctypeSystem(attValue);
 
 		    break;
@@ -538,7 +538,7 @@ void XSLProcessor::processTopLevel
  * and returns the result tree
 **/
 Document* XSLProcessor::process
-   (Document& xmlDocument, Document& xslDocument, String& documentBase) 
+   (Document& xmlDocument, Document& xslDocument, String& documentBase)
 {
 
     Document* result = new Document();
@@ -557,7 +557,7 @@ Document* XSLProcessor::process
       //-------------------------------------------------------/
      //- index templates and process top level xsl elements -/
     //-------------------------------------------------------/
-    
+
     processTopLevel(&xslDocument, &ps);
 
       //----------------------------------------/
@@ -575,10 +575,10 @@ Document* XSLProcessor::process
  * and prints the results to the given ostream argument
 **/
 void XSLProcessor::process
-   (  Document& xmlDocument, 
-      Document& xslDocument, 
-      ostream& out, 
-      String& documentBase  ) 
+   (  Document& xmlDocument,
+      Document& xslDocument,
+      ostream& out,
+      String& documentBase  )
 {
 
 
@@ -598,7 +598,7 @@ void XSLProcessor::process
       //-------------------------------------------------------/
      //- index templates and process top level xsl elements -/
     //-------------------------------------------------------/
-    
+
     processTopLevel(&xslDocument, &ps);
 
       //----------------------------------------/
@@ -621,7 +621,7 @@ void XSLProcessor::process
  * will not close the ostream argument
 **/
 void XSLProcessor::process
-   (istream& xmlInput, ostream& out, String& documentBase) 
+   (istream& xmlInput, ostream& out, String& documentBase)
 {
 
     XMLParser xmlParser;
@@ -662,7 +662,7 @@ void XSLProcessor::process
  * will not close the ostream argument
 **/
 void XSLProcessor::process
-   (istream& xmlInput, istream& xslInput, ostream& out, String& documentBase) 
+   (istream& xmlInput, istream& xslInput, ostream& out, String& documentBase)
 {
     //-- read in XML Document
     XMLParser xmlParser;
@@ -1106,7 +1106,14 @@ void XSLProcessor::processAction
             case XSLType::MESSAGE :
             {
                 String message;
-                XMLDOMUtils::getNodeValue(actionElement, &message);
+
+                DocumentFragment* dfrag = resultDoc->createDocumentFragment();
+                ps->getNodeStack()->push(dfrag);
+                processTemplate(node, actionElement, ps);
+                ps->getNodeStack()->pop();
+                XMLDOMUtils::getNodeValue(dfrag, &message);
+                delete dfrag;
+
                 //-- we should add a MessageObserver class
                 cout << "xsl:message - "<< message << endl;
                 break;
@@ -1525,7 +1532,7 @@ void XSLProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
 
 #ifdef MOZILLA
 NS_IMETHODIMP
-XSLProcessor::TransformDocument(nsIDOMElement* aSourceDOM, 
+XSLProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
                                nsIDOMElement* aStyleDOM,
                                nsIDOMDocument* aOutputDoc,
                                nsIObserver* aObserver)
