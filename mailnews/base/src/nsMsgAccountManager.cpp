@@ -780,7 +780,8 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
           NS_ENSURE_SUCCESS(rv,rv);
           
           PRBool canBeDefaultServer = PR_FALSE;
-          server->GetCanBeDefaultServer(&canBeDefaultServer);
+          if (server)
+            server->GetCanBeDefaultServer(&canBeDefaultServer);
           
           // if this can serve as default server, set it as default and
           // break outof the loop.
