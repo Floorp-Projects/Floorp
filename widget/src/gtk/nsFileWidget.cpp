@@ -29,7 +29,9 @@ NS_IMPL_ISUPPORTS(nsFileWidget, nsIFileWidget::GetIID());
 nsFileWidget::nsFileWidget() : nsIFileWidget()
 {
   NS_INIT_REFCNT();
-  mWidget = NULL;
+  mWidget = nsnull;
+  mFilterMenu = nsnull;
+  mOptionMenu = nsnull;
   mNumberOfFilters = 0;
 }
 
@@ -40,6 +42,18 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 //-------------------------------------------------------------------------
 nsFileWidget::~nsFileWidget()
 {
+  GtkWidget *menu_item;
+  GList *list = g_list_first(GTK_MENU_SHELL(mFilterMenu)->children);
+
+  for (;list; list = list->next)
+  {
+    menu_item = GTK_WIDGET(list->data);
+    gchar *data = (gchar*)gtk_object_get_data(GTK_OBJECT(menu_item), "filters");
+
+    if (data)
+      delete[] data;
+  }
+
   gtk_widget_destroy(mWidget);
 }
 
@@ -70,7 +84,9 @@ PRBool nsFileWidget::Show()
     // make things shorter
     GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
 
-    gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
+    gtk_option_menu_set_menu(GTK_OPTION_MENU(mOptionMenu), mFilterMenu);
+
+    //    gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
     gtk_widget_show(mWidget);
 
     // handle close, destroy, etc on the dialog
@@ -99,9 +115,31 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
 				      const nsString aTitles[],
 				      const nsString aFilters[])
 {
+  GtkWidget *menu_item;
+
   mNumberOfFilters  = aNumberOfFilters;
   mTitles           = aTitles;
   mFilters          = aFilters;
+
+  mFilterMenu = gtk_menu_new();
+
+  for(unsigned int i=0; i < aNumberOfFilters; i++)
+  {
+    // we need *.{htm, html, xul, etc}
+    const char *foo = aTitles[i].ToNewCString();
+    char *filters = aFilters[i].ToNewCString();
+    printf("%20s %s\n", foo, filters);
+
+    menu_item = gtk_menu_item_new_with_label(nsAutoCString(aTitles[i]));
+
+    gtk_object_set_data(GTK_OBJECT(menu_item), "filters", filters);
+
+    gtk_menu_append(GTK_MENU(mFilterMenu), menu_item);
+    gtk_widget_show(menu_item);
+
+    delete[] foo;
+  }
+
   return NS_OK;
 }
 
@@ -180,9 +218,17 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
                      GTK_SIGNAL_FUNC(DestroySignal),
                      this);
 
+  gtk_button_box_set_layout(GTK_BUTTON_BOX(GTK_FILE_SELECTION(mWidget)->button_area), GTK_BUTTONBOX_SPREAD);
+
+  mOptionMenu = gtk_option_menu_new();
+
+  gtk_box_pack_start(GTK_BOX(GTK_FILE_SELECTION(mWidget)->main_vbox), mOptionMenu, PR_FALSE, PR_FALSE, 0);
+  gtk_widget_show(mOptionMenu);
+
+
   // Hide the file column for the folder case.
   if (aMode == eMode_getfolder) {
-    gtk_widget_hide((((GtkFileSelection *) mWidget)->file_list)->parent);
+    gtk_widget_hide((GTK_FILE_SELECTION(mWidget)->file_list)->parent);
   }
 
   return NS_OK;
