@@ -1178,7 +1178,9 @@ PresShell::EndLoad(nsIDocument *aDocument)
   nsresult rv = NS_OK;
   nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
   if (NS_SUCCEEDED(rv) && watch) {
+    printf("Style resolution time: ");
     watch->PrintTimer(NS_TIMER_STYLE_RESOLUTION);
+    printf("\n");
   }
 #endif
   return NS_OK;
