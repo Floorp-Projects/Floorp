@@ -4,8 +4,6 @@
 # 
 # Unfixed bugs:
 #
-# bug 191633 - skip this test until bug is fixed; the failure output is enormous.
-js1_5/Regress/regress-191633.js
 # bug 152646 Will not fix this in Rhino; too much of a corner case
 js1_5/Regress/regress-152646.js
 # bug 59861
