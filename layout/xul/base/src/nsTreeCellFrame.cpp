@@ -184,8 +184,12 @@ nsTreeCellFrame::HandleEvent(nsIPresContext& aPresContext,
                              nsEventStatus&  aEventStatus)
 {
   aEventStatus = nsEventStatus_eConsumeDoDefault;
-	if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
-		HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
+  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    if (((nsMouseEvent*)aEvent)->clickCount == 2)
+		  HandleDoubleClickEvent(aPresContext, aEvent, aEventStatus);
+    else 
+		  HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
+  }
   else if (aEvent->message == NS_MOUSE_ENTER)
     HandleMouseEnterEvent(aPresContext, aEvent, aEventStatus);
   else if (aEvent->message == NS_MOUSE_EXIT)

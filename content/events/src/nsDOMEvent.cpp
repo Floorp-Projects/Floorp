@@ -497,10 +497,26 @@ NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::GetClickcount(PRUint16* aClickcount) 
+NS_METHOD nsDOMEvent::GetClickCount(PRUint16* aClickCount) 
 {
-  //XXX implement me.
-  *aClickcount = 1;
+  switch (mEvent->message) {
+  case NS_MOUSE_LEFT_BUTTON_UP:
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+  case NS_MOUSE_LEFT_CLICK:
+  case NS_MOUSE_LEFT_DOUBLECLICK:
+  case NS_MOUSE_MIDDLE_BUTTON_UP:
+  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+  case NS_MOUSE_MIDDLE_CLICK:
+  case NS_MOUSE_MIDDLE_DOUBLECLICK:
+  case NS_MOUSE_RIGHT_BUTTON_UP:
+  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+  case NS_MOUSE_RIGHT_CLICK:
+  case NS_MOUSE_RIGHT_DOUBLECLICK:
+    *aClickCount = ((nsMouseEvent*)mEvent)->clickCount;
+    break;
+  default:
+    break;
+  }
   return NS_OK;
 }
 

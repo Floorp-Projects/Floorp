@@ -784,7 +784,12 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
     }
   } 
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    HandlePress(aPresContext, aEvent, aEventStatus);
+    if (((nsMouseEvent*)aEvent)->clickCount > 1) {
+      HandleMultiplePress(aPresContext, aEvent, aEventStatus);
+    }
+    else {
+      HandlePress(aPresContext, aEvent, aEventStatus);
+    }
   }
   else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK) {
     HandleMultiplePress(aPresContext, aEvent, aEventStatus);

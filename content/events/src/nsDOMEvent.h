@@ -114,7 +114,7 @@ public:
 
   NS_IMETHOD    GetButton(PRUint16* aButton);
 
-  NS_IMETHOD    GetClickcount(PRUint16* aClickcount);  
+  NS_IMETHOD    GetClickCount(PRUint16* aClickCount);  
     
   // nsIDOMNSUIEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);

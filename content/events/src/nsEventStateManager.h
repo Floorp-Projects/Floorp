@@ -63,6 +63,7 @@ protected:
   void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
   void GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
   NS_IMETHOD DispatchKeyPressEvent(nsIPresContext& aPresContext, nsKeyEvent *aEvent, nsEventStatus& aStatus);  
+  NS_IMETHOD SetClickCount(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
   PRBool ChangeFocus(nsIContent* aFocus, PRBool aSetFocus);
   void ShiftFocus(PRBool foward);
@@ -101,6 +102,11 @@ protected:
 
   nsIPresContext* mPresContext;      // Not refcnted
   nsIDocument* mDocument;            // [OWNER], but doesn't need to be.
+
+  PRUint32 mLClickCount;
+  PRUint32 mMClickCount;
+  PRUint32 mRClickCount;
+
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);

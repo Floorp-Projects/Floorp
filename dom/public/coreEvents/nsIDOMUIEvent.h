@@ -170,7 +170,7 @@ public:
 
   NS_IMETHOD    GetButton(PRUint16* aButton)=0;
 
-  NS_IMETHOD    GetClickcount(PRUint16* aClickcount)=0;
+  NS_IMETHOD    GetClickCount(PRUint16* aClickCount)=0;
 };
 
 
@@ -186,7 +186,7 @@ public:
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode);  \
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);  \
   NS_IMETHOD    GetButton(PRUint16* aButton);  \
-  NS_IMETHOD    GetClickcount(PRUint16* aClickcount);  \
+  NS_IMETHOD    GetClickCount(PRUint16* aClickCount);  \
 
 
 
@@ -202,7 +202,7 @@ public:
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode) { return _to GetCharCode(aCharCode); } \
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode) { return _to GetKeyCode(aKeyCode); } \
   NS_IMETHOD    GetButton(PRUint16* aButton) { return _to GetButton(aButton); } \
-  NS_IMETHOD    GetClickcount(PRUint16* aClickcount) { return _to GetClickcount(aClickcount); } \
+  NS_IMETHOD    GetClickCount(PRUint16* aClickCount) { return _to GetClickCount(aClickCount); } \
 
 
 extern "C" NS_DOM nsresult NS_InitUIEventClass(nsIScriptContext *aContext, void **aPrototype);

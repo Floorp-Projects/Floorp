@@ -71,6 +71,9 @@ nsEventStateManager::nsEventStateManager()
   mIsTrackingDragGesture = PR_FALSE;
   mGestureDownFrame = nsnull;
 
+  mLClickCount = 0;
+  mMClickCount = 0;
+  mRClickCount = 0;
   mActiveContent = nsnull;
   mHoverContent = nsnull;
   mDragOverContent = nsnull;
@@ -131,9 +134,22 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
     BeginTrackingDragGesture ( aEvent, aTargetFrame );
+    mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
+    SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+    break;
+  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    mMClickCount = ((nsMouseEvent*)aEvent)->clickCount;
+    SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+    break;
+  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+    mRClickCount = ((nsMouseEvent*)aEvent)->clickCount;
+    SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
   case NS_MOUSE_LEFT_BUTTON_UP:
     StopTrackingDragGesture();
+  case NS_MOUSE_MIDDLE_BUTTON_UP:
+  case NS_MOUSE_RIGHT_BUTTON_UP:
+    SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
     break;
   case NS_MOUSE_MOVE:
     GenerateDragGesture(aPresContext, aEvent);
@@ -351,8 +367,6 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
-      ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-
       if (nsEventStatus_eConsumeNoDefault != aStatus) {
         nsIContent* newFocus;
         mCurrentTarget->GetContent(&newFocus);
@@ -402,6 +416,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_RIGHT_BUTTON_UP:
     {
       ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
+
       SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
       nsCOMPtr<nsIPresShell> shell;
       nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
@@ -825,12 +840,11 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
 }
 
 NS_IMETHODIMP
-nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext, 
-                                              nsMouseEvent *aEvent,
-                                              nsEventStatus& aStatus)
+nsEventStateManager::SetClickCount(nsIPresContext& aPresContext, 
+                                   nsMouseEvent *aEvent,
+                                   nsEventStatus& aStatus)
 {
   nsresult ret = NS_OK;
-  nsMouseEvent event;
   nsCOMPtr<nsIContent> mouseContent;
   PRBool fireClick = PR_FALSE;
 
@@ -845,8 +859,11 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
 
   case NS_MOUSE_LEFT_BUTTON_UP:
     if (mLastLeftMouseDownContent == mouseContent.get()) {
-      fireClick = PR_TRUE;
-      event.message = NS_MOUSE_LEFT_CLICK;
+      aEvent->clickCount = mLClickCount;
+      mLClickCount = 0;
+    }
+    else {
+      aEvent->clickCount = 0;
     }
     NS_IF_RELEASE(mLastLeftMouseDownContent);
     break;
@@ -859,8 +876,11 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
 
   case NS_MOUSE_MIDDLE_BUTTON_UP:
     if (mLastMiddleMouseDownContent == mouseContent.get()) {
-      fireClick = PR_TRUE;
-      event.message = NS_MOUSE_MIDDLE_CLICK;
+      aEvent->clickCount = mMClickCount;
+      mMClickCount = 0;
+    }
+    else {
+      aEvent->clickCount = 0;
     }
     NS_IF_RELEASE(mLastMiddleMouseDownContent);
     break;
@@ -873,21 +893,54 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
 
   case NS_MOUSE_RIGHT_BUTTON_UP:
     if (mLastRightMouseDownContent == mouseContent.get()) {
-      fireClick = PR_TRUE;
-      event.message = NS_MOUSE_RIGHT_CLICK;
+      aEvent->clickCount = mRClickCount;
+      mRClickCount = 0;
+    }
+    else {
+      aEvent->clickCount = 0;
     }
     NS_IF_RELEASE(mLastRightMouseDownContent);
     break;
   }
 
-  if (fireClick) {
+  return ret;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext, 
+                                              nsMouseEvent *aEvent,
+                                              nsEventStatus& aStatus)
+{
+  nsresult ret = NS_OK;
+  nsMouseEvent event;
+  nsCOMPtr<nsIContent> mouseContent;
+  PRBool fireClick = PR_FALSE;
+
+  mCurrentTarget->GetContent(getter_AddRefs(mouseContent));
+
+  //If mouse is still over same element, clickcount will be > 1.
+  //If it has moved it will be zero, so no click.
+  if (0 != aEvent->clickCount) {
     //fire click
+    switch (aEvent->message) {
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      event.message = NS_MOUSE_LEFT_CLICK;
+      break;
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+      event.message = NS_MOUSE_MIDDLE_CLICK;
+      break;
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+      event.message = NS_MOUSE_RIGHT_CLICK;
+      break;
+    }
+
     event.eventStructType = NS_MOUSE_EVENT;
     event.widget = aEvent->widget;
     event.point.x = aEvent->point.x;
     event.point.y = aEvent->point.y;
     event.refPoint.x = aEvent->refPoint.x;
     event.refPoint.y = aEvent->refPoint.y;
+    event.clickCount = aEvent->clickCount;
 
     if (mouseContent) {
       ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull,
