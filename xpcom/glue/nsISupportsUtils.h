@@ -76,6 +76,20 @@ typedef unsigned long nsrefcnt;
 typedef PRUint32 nsrefcnt;
 #endif
 
+/**
+ * "Bloaty" is a facility to dump statistics on object allocations and
+ * refcounting. To turn it on, you must define BLOATY in this file, and 
+ * rebuild the world. (That seems easier than hacking makefiles to ensure
+ * that environment variables get checked everywhere.)
+ */
+#ifdef DEBUG_warrenx
+#define BLOATY  1
+#endif
+
+#ifdef BLOATY
+#define MOZ_LOG_REFCNT  1
+#endif
+
 #include "nsTraceRefcnt.h"
 
 /**
@@ -768,10 +782,10 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 
 #ifdef MOZ_LOG_REFCNT
 #define NS_LOG_ADDREF(_ptr, _refcnt, _class) \
-  nsTraceRefcnt::LogAddRef((_ptr), (_refcnt), (_class))
+  nsTraceRefcnt::LogAddRef((_ptr), (_refcnt), (_class), (sizeof(*this)))
 
 #define NS_LOG_RELEASE(_ptr, _refcnt, _class) \
-  nsTraceRefcnt::LogRelease((_ptr), (_refcnt), (_class))
+  nsTraceRefcnt::LogRelease((_ptr), (_refcnt), (_class), (sizeof(*this)))
 
 #else
 #define NS_LOG_ADDREF(_ptr, _refcnt, _class)

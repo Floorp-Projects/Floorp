@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+
 #include "nsISupports.h"
 #include "nsVoidArray.h"
 #include "prprf.h"
@@ -54,6 +55,119 @@ static PRLock* gTraceLock;
 
 static PRLogModuleInfo* gTraceRefcntLog;
 
+#ifdef BLOATY
+#include "plhash.h"
+#include <math.h>
+
+PLHashTable* gBloatView;
+
+class BloatEntry {
+public:
+  BloatEntry(const char* className, PRUint32 classSize)
+    : mClassName(className), mClassSize(classSize) { 
+    Clear();
+  }
+  ~BloatEntry() {}
+  void Clear() {
+    mAddRefs = 0;
+    mReleases = 0;
+    mRefsOutstandingTotal = 0;
+    mRefsOutstandingVariance = 0;
+    mCreates = 0;
+    mDestroys = 0;
+    mObjsOutstandingTotal = 0;
+    mObjsOutstandingVariance = 0;
+  }
+  void AddRef(nsrefcnt refcnt) {
+    mAddRefs++;
+    if (refcnt == 1) {
+      mCreates++;
+      AccountObjs();
+    }
+    AccountRefs();
+  }
+  void Release(nsrefcnt refcnt) {
+    mReleases++;
+    if (refcnt == 0) {
+      mDestroys++;
+      AccountObjs();
+    }
+    AccountRefs();
+  }
+  void AccountRefs() {
+    PRInt32 cnt = (mAddRefs - mReleases);
+    //    NS_ASSERTION(cnt >= 0, "too many releases");
+    mRefsOutstandingTotal += cnt;
+    mRefsOutstandingVariance += cnt * cnt;
+  }
+  void AccountObjs() {
+    PRInt32 cnt = (mAddRefs - mReleases);
+    //    NS_ASSERTION(cnt >= 0, "too many releases");
+    mObjsOutstandingTotal += cnt;
+    mObjsOutstandingVariance += cnt * cnt;
+  }
+  static PRIntn DumpEntry(PLHashEntry *he, PRIntn i, void *arg) {
+    BloatEntry* entry = (BloatEntry*)he->value;
+    entry->Dump(i, (FILE*)arg);
+    return HT_ENUMERATE_NEXT;
+  }
+  void Dump(PRIntn i, FILE* fp) {
+#if 1
+    double meanRefCnts = mRefsOutstandingTotal / (mAddRefs + mReleases);
+    double varRefCnts = fabs(mRefsOutstandingVariance /
+                             mRefsOutstandingTotal - meanRefCnts * meanRefCnts);
+    double meanObjs = mObjsOutstandingTotal / (mCreates + mDestroys);
+    double varObjs = fabs(mObjsOutstandingVariance /
+                             mObjsOutstandingTotal - meanObjs * meanObjs);
+    fprintf(fp, "%4d %-20.20s %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f) %8d %8d\n",
+            i, mClassName, 
+            (mAddRefs - mReleases),
+            mAddRefs,
+            meanRefCnts,
+            sqrt(varRefCnts),
+            (mCreates - mDestroys),
+            mCreates,
+            meanObjs,
+            sqrt(varObjs),
+            mClassSize,
+            (mCreates - mDestroys) * mClassSize);
+#else
+    fprintf(fp, "%4d %-20.20s %8d %8d %8d %8d %8d %8d\n",
+            i, mClassName, 
+            mCreates,
+            (mCreates - mDestroys),
+            mAddRefs,
+            (mAddRefs - mReleases),
+            mClassSize,
+            (mCreates - mDestroys) * mClassSize);
+#endif
+  }
+protected:
+  const char*   mClassName;
+  PRUint32      mClassSize;
+  PRInt32       mAddRefs;
+  PRInt32       mReleases;
+  double        mRefsOutstandingTotal;
+  double        mRefsOutstandingVariance;
+  PRInt32       mCreates;
+  PRInt32       mDestroys;
+  double        mObjsOutstandingTotal;
+  double        mObjsOutstandingVariance;
+};
+  
+extern "C" void
+NS_DumpBloatStatistics(void)
+{
+//  fprintf(stdout, "     Name                  AddRefs    [mean / stddev] Objects    [mean / stddev]    Size TotalSize\n");
+//  fprintf(stdout, "     Name                 Tot-Objs Rem-Objs Tot-Adds Rem-Adds Obj-Size  Mem-Use\n");
+  fprintf(stdout, "                                           Bloaty: Refcounting and Memory Bloat Statistics\n");
+  fprintf(stdout, "     |<-------Name------>|<--------------References-------------->|<----------------Objects---------------->|<------Size----->|\n");
+  fprintf(stdout, "                               Rem    Total      Mean       StdDev       Rem    Total      Mean       StdDev Per-Class      Rem\n");
+  PL_HashTableDump(gBloatView, BloatEntry::DumpEntry, stdout);
+}
+
+#endif
+
 static void InitTraceLog(void)
 {
   if (0 == gTraceRefcntLog) {
@@ -62,6 +176,15 @@ static void InitTraceLog(void)
 #if defined(NS_MT_SUPPORTED)
     gTraceLock = PR_NewLock();
 #endif /* NS_MT_SUPPORTED */
+
+#ifdef BLOATY
+    gBloatView = PL_NewHashTable(256, 
+                                 PL_HashString,
+                                 PL_CompareStrings,
+                                 PL_CompareValues,
+                                 NULL, NULL);
+    NS_ASSERTION(gBloatView, "out of memory");
+#endif
   }
 }
 
@@ -449,8 +572,8 @@ nsTraceRefcnt::Create(void* aPtr,
 
 NS_COM void
 nsTraceRefcnt::Destroy(void* aPtr,
-                      const char* aFile,
-                      PRIntn aLine)
+                       const char* aFile,
+                       PRIntn aLine)
 {
 #ifdef MOZ_TRACE_XPCOM_REFCNT
   InitTraceLog();
@@ -471,30 +594,68 @@ nsTraceRefcnt::Destroy(void* aPtr,
 NS_COM void
 nsTraceRefcnt::LogAddRef(void* aPtr,
                          nsrefcnt aRefCnt,
-                         const char* aClazz)
+                         const char* aClazz,
+                         PRUint32 classSize)
 {
   InitTraceLog();
+#ifdef BLOATY
+  LOCK_TRACELOG();
+  BloatEntry* entry =
+    (BloatEntry*)PL_HashTableLookup(gBloatView, aClazz);
+  if (entry == NULL) {
+    entry = new BloatEntry(aClazz, classSize);
+    PLHashEntry* e = PL_HashTableAdd(gBloatView, aClazz, entry);
+    if (e == NULL) {
+      delete entry;
+      entry = NULL;
+    }
+  }
+  if (entry) {
+    entry->AddRef(aRefCnt);
+  }
+  UNLOCK_TRACELOG();
+#else
   if (PR_LOG_TEST(gTraceRefcntLog, PR_LOG_DEBUG)) {
     char sb[16384];
     WalkTheStack(sb, sizeof(sb));
     // Can't use PR_LOG(), b/c it truncates the line
     printf("%s\t%p\tAddRef\t%d\t%s\n", aClazz, aPtr, aRefCnt, sb);
   }
+#endif
 }
 
 
 NS_COM void
 nsTraceRefcnt::LogRelease(void* aPtr,
-                         nsrefcnt aRefCnt,
-                         const char* aClazz)
+                          nsrefcnt aRefCnt,
+                          const char* aClazz,
+                          PRUint32 classSize)
 {
   InitTraceLog();
+#ifdef BLOATY
+  LOCK_TRACELOG();
+  BloatEntry* entry =
+    (BloatEntry*)PL_HashTableLookup(gBloatView, aClazz);
+  if (entry == NULL) {
+    entry = new BloatEntry(aClazz, classSize);
+    PLHashEntry* e = PL_HashTableAdd(gBloatView, aClazz, entry);
+    if (e == NULL) {
+      delete entry;
+      entry = NULL;
+    }
+  }
+  if (entry) {
+    entry->Release(aRefCnt);
+  }
+  UNLOCK_TRACELOG();
+#else
   if (PR_LOG_TEST(gTraceRefcntLog, PR_LOG_DEBUG)) {
     char sb[16384];
     WalkTheStack(sb, sizeof(sb));
     // Can't use PR_LOG(), b/c it truncates the line
     printf("%s\t%p\tRelease\t%d\t%s\n", aClazz, aPtr, aRefCnt, sb);
   }
+#endif
 }
 
 // This thing is exported by libiberty.a (-liberty)
