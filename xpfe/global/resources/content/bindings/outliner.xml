@@ -559,7 +559,7 @@
       </handler>
       <handler event="keypress">
         <![CDATA[
-         if (event.keyCode == ' ') {
+         if (event.keyCode == ' '.charCodeAt(0)) {
            var c = this.currentIndex;
            if (!this.outlinerBoxObject.selection.isSelected(c))
              this.outlinerBoxObject.selection.toggleSelect(c);

@@ -590,7 +590,7 @@
       </handler>
       <handler event="keypress">
         <![CDATA[
-          if (event.keyCode == ' ') {
+          if (event.keyCode == ' '.charCodeAt(0)) {
             event.preventDefault();
             var c = this.currentIndex;
             var selection = this.outlinerBoxObject.selection;
