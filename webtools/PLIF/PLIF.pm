@@ -170,7 +170,7 @@ sub dump {
     my($level, @data) = @_;
     if ($self->isAtDebugLevel($level)) {
         foreach (@data) {
-            print STDERR "$0: $_\n";
+            print STDERR "$0: ($level) $_\n";
         }
     }
 }
