@@ -57,6 +57,7 @@ class nsDeviceContextOS2 : public DeviceContextImpl
    NS_IMETHOD GetPaletteInfo( nsPaletteInfo &);
    NS_IMETHOD ConvertPixel( nscolor aColor, PRUint32 & aPixel);
    NS_IMETHOD GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt32 &aHeight);
+   NS_IMETHOD GetClientRect(nsRect &aRect);
    NS_IMETHOD SupportsNativeWidgets( PRBool &aSupportsWidgets);
    NS_IMETHOD GetCanonicalPixelScale( float &aScale) const;
    NS_IMETHOD GetDeviceContextFor( nsIDeviceContextSpec *aDevice,

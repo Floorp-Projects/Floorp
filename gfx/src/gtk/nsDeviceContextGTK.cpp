@@ -390,6 +390,18 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextGTK::GetClientRect(nsRect &aRect)
+{
+  PRInt32 width, height;
+  nsresult rv;
+  rv = GetDeviceSurfaceDimensions(width, height);
+  aRect.x = 0;
+  aRect.y = 0;
+  aRect.width = width;
+  aRect.height = height;
+  return rv;
+}
+
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                       nsIDeviceContext *&aContext)
 {

@@ -335,6 +335,21 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
 }
 
 
+NS_IMETHODIMP nsDeviceContextPh :: GetClientRect(nsRect &aRect)
+{
+  PRInt32 width, height;
+  nsresult rv;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetClientRect\n"));
+
+  rv = GetDeviceSurfaceDimensions(width, height);
+  aRect.x = 0;
+  aRect.y = 0;
+  aRect.width = width;
+  aRect.height = height;
+  return rv;
+}
+
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {

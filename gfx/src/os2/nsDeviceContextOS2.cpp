@@ -456,6 +456,18 @@ nsresult nsDeviceContextOS2::GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt3
    return NS_OK;
 }
 
+nsresult nsDeviceContextOS2::GetClientRect(nsRect &aRect)
+{
+  PRInt32 width, height;
+  nsresult rv;
+  rv = GetDeviceSurfaceDimensions(width, height);
+  aRect.x = 0;
+  aRect.y = 0;
+  aRect.width = width;
+  aRect.height = height;
+  return rv;
+}
+
 nsresult nsDeviceContextOS2::GetDepth( PRUint32& aDepth)
 {
    aDepth = mDepth;

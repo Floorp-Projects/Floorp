@@ -576,6 +576,15 @@ NS_IMETHODIMP nsDeviceContextMotif::GetDeviceSurfaceDimensions(PRInt32 &aWidth, 
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsDeviceContextMotif::GetClientRect(nsRect &aRect)
+{
+  aRect.x = 0;
+  aRect.y = 0;
+  aRect.width = 0;
+  aRect.height = 0;
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsDeviceContextMotif::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {

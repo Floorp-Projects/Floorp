@@ -330,6 +330,17 @@ public:
   NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight) = 0;
 
   /**
+   * Get the size of the content area of the output device in app units.
+   * This corresponds on a screen device, for instance, to the area reported
+   * by GetDeviceSurfaceDimensions, minus the taskbar (Windows) or menubar
+   * (Macintosh).
+   * @param aRect out parameter for client rect. Position (x,y) will be (0,0)
+   *              adjusted for any upper/left non-client space if present.
+   * @return error status
+   */
+  NS_IMETHOD GetClientRect(nsRect &aRect) = 0;
+
+  /**
    * Returns a new nsIDeviceContext suitable for the device context
    * specification passed in.
    * @param aDevice a device context specification. this is a platform

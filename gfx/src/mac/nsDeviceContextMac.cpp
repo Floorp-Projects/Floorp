@@ -335,6 +335,21 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 }
 
 
+NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
+{
+	// FIXME: equally as broken as GetDeviceSurfaceDimensions,
+	// this doesn't do what you want with multiple screens.
+	RgnHandle grayRgn = ::GetGrayRgn();
+	Rect bounds = (**grayRgn).rgnBBox;
+
+	aRect.x = NSToIntRound(bounds.left * mDevUnitsToAppUnits);
+	aRect.y = NSToIntRound(bounds.top * mDevUnitsToAppUnits);
+	aRect.width = NSToIntRound((bounds.right - bounds.left) * mDevUnitsToAppUnits);
+	aRect.height = NSToIntRound((bounds.bottom - bounds.top) * mDevUnitsToAppUnits);
+	
+	return NS_OK;	
+}
+
 #pragma mark -
 //------------------------------------------------------------------------
 
