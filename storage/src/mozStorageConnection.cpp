@@ -269,7 +269,7 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
     char *buf;
     int buflen = 0;
 
-    buflen = snprintf(nsnull, 0, "CREATE TABLE %s (%s)", aTableName, aTableSchema);
+    buflen = PR_snprintf(nsnull, 0, "CREATE TABLE %s (%s)", aTableName, aTableSchema);
     if (buflen <= 0)
         return NS_ERROR_FAILURE;
 
@@ -277,7 +277,7 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
     if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    buflen = snprintf(buf, buflen+1, "CREATE TABLE %s (%s)", aTableName, aTableSchema);
+    buflen = PR_snprintf(buf, buflen+1, "CREATE TABLE %s (%s)", aTableName, aTableSchema);
     if (buflen <= 0) {
         nsMemory::Free(buf);
         return NS_ERROR_FAILURE;
