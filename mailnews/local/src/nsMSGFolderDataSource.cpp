@@ -494,16 +494,20 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
     arcs->AppendElement(kNC_Name);
 #if 1
     nsIEnumerator* subFolders;
-    folder->GetSubFolders(&subFolders);
-    if(NS_SUCCEEDED(subFolders->First()))
-      arcs->AppendElement(kNC_Child);
-    NS_RELEASE(subFolders);
+    if(NS_SUCCEEDED(folder->GetSubFolders(&subFolders)))
+	{
+	    if(NS_SUCCEEDED(subFolders->First()))
+		  arcs->AppendElement(kNC_Child);
+		NS_RELEASE(subFolders);
+	}
 
     nsIEnumerator* messages;
-    folder->GetMessages(&messages);
-    if(NS_SUCCEEDED(messages->First()))
-      arcs->AppendElement(kNC_MessageChild);
-    NS_RELEASE(messages);
+    if(NS_SUCCEEDED(folder->GetMessages(&messages)))
+	{
+		if(NS_SUCCEEDED(messages->First()))
+		  arcs->AppendElement(kNC_MessageChild);
+		NS_RELEASE(messages);
+	}
 #else
     arcs->AppendElement(kNC_Child);
     arcs->AppendElement(kNC_MessageChild);
