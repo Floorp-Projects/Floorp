@@ -196,7 +196,7 @@ public:
   // Called when the replaced element can not be rendered, and we should
   // instead render the element's contents.
   // The content object associated with aFrame should either be a IMG
-  // element or an OBJECT element.
+  // element, an OBJECT element, or an APPLET element
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame) = 0;
 
