@@ -29,7 +29,8 @@ NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
 
 gfxImageFrame::gfxImageFrame() :
   mTimeout(-1),
-  mInitalized(PR_FALSE)
+  mInitalized(PR_FALSE),
+  mDisposalMethod(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -215,20 +216,24 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
 
   PRInt32 row_stride = mImage->GetLineStride();
 
+  mImage->LockImagePixels(PR_FALSE);
   PRUint8 *imgData = mImage->GetBits();
   PRInt32 imgLen = row_stride * mSize.height;
 
-  if (((aOffset + (PRInt32)aLength) > imgLen) || !imgData)
+  if (((aOffset + (PRInt32)aLength) > imgLen) || !imgData) {
+    mImage->UnlockImagePixels(PR_FALSE);
     return NS_ERROR_FAILURE;
+  }
 
-  PRInt32 offset;
+  PRInt32 newOffset;
 #ifdef XP_PC
-  PRInt32 offset = ((mSize.height - 1) * row_stride) - aOffset;
+  newOffset = ((mSize.height - 1) * row_stride) - aOffset;
 #else
-  offset = aOffset;
+  newOffset = aOffset;
 #endif
 
-  memcpy(imgData + offset, aData, aLength);
+  memcpy(imgData + newOffset, aData, aLength);
+  mImage->UnlockImagePixels(PR_FALSE);
 
   PRInt32 row = (aOffset / row_stride);
   mImage->SetDecodedRect(0, 0, mSize.width, row + 1);
@@ -238,6 +243,30 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   mImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
   return NS_OK;
+}
+
+/* attribute long frameDisposalMethod; */
+NS_IMETHODIMP gfxImageFrame::GetFrameDisposalMethod(PRInt32 *aFrameDisposalMethod)
+{
+    *aFrameDisposalMethod = mDisposalMethod;
+    return NS_OK;
+}
+NS_IMETHODIMP gfxImageFrame::SetFrameDisposalMethod(PRInt32 aFrameDisposalMethod)
+{
+    mDisposalMethod = aFrameDisposalMethod;
+    return NS_OK;
+}
+
+/* attribute gfx_color backgroundColor; */
+NS_IMETHODIMP gfxImageFrame::GetBackgroundColor(gfx_color *aBackgroundColor)
+{
+    *aBackgroundColor = mBackgroundColor;
+    return NS_OK;
+}
+NS_IMETHODIMP gfxImageFrame::SetBackgroundColor(gfx_color aBackgroundColor)
+{
+    mBackgroundColor = aBackgroundColor;
+    return NS_OK;
 }
 
 /* readonly attribute unsigned long alphaBytesPerRow; */
@@ -280,11 +309,14 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
 
   PRInt32 row_stride = mImage->GetAlphaLineStride();
 
+  mImage->LockImagePixels(PR_TRUE);
   PRUint8 *alphaData = mImage->GetAlphaBits();
   PRInt32 alphaLen = row_stride * mSize.height;
 
-  if (((aOffset + (PRInt32)aLength) > alphaLen) || !alphaData)
+  if (((aOffset + (PRInt32)aLength) > alphaLen) || !alphaData) {
+    mImage->UnlockImagePixels(PR_TRUE);
     return NS_ERROR_FAILURE;
+  }
 
   PRInt32 offset;
 #ifdef XP_PC
@@ -294,9 +326,29 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
 #endif
 
   memcpy(alphaData + offset, aData, aLength);
-
+  mImage->UnlockImagePixels(PR_TRUE);
   return NS_OK;
 }
+
+/* void lockImagePixels (in boolean mask); */
+NS_IMETHODIMP gfxImageFrame::LockImagePixels(PRBool mask)
+{
+  return mImage->LockImagePixels(mask);
+}
+
+/* void unlockImagePixels (in boolean mask); */
+NS_IMETHODIMP gfxImageFrame::UnlockImagePixels(PRBool mask)
+{
+  return mImage->UnlockImagePixels(mask);
+}
+
+/* void drawTo */
+NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+{
+  nsCOMPtr<nsIImage> img(do_GetInterface(aDst));
+  return mImage->DrawToImage(img, aDX, aDY, aDWidth, aDHeight);
+}
+
 
 
 NS_IMETHODIMP gfxImageFrame::GetInterface(const nsIID & aIID, void * *result)
