@@ -59,8 +59,8 @@ DIRS = \
   intl                          \
   caps                          \
   lib\xp			\
-  lib\libpwcac			\
 !if !defined(NECKO)
+  lib\libpwcac			\
   network			\
 !endif
   profile			\

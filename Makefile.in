@@ -50,7 +50,9 @@ endif
 ifdef NECKO
 DIRS += netwerk
 else
-DIRS += network
+DIRS += network		\
+  lib/libpwcac			\
+  $(NULL)
 endif
 
 DIRS +=				\
@@ -65,7 +67,6 @@ DIRS +=				\
   modules/libjar		\
   caps				\
   lib/xp			\
-  lib/libpwcac			\
   htmlparser			\
   expat             \
   gfx				\
