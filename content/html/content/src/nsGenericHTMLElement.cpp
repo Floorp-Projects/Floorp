@@ -101,6 +101,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
@@ -1401,6 +1402,18 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
 
   if (NS_FAILED(ret))
     return ret;
+
+  // Ensure that this is a trusted DOM event before going further.
+  // XXXldb Why can aDOMEvent by null?
+  if (aDOMEvent && *aDOMEvent) {
+    nsCOMPtr<nsIDOMNSEvent> nsEvent = do_QueryInterface(*aDOMEvent);
+    NS_ENSURE_TRUE(nsEvent, NS_OK);
+    PRBool isTrusted;
+    ret = nsEvent->GetIsTrusted(&isTrusted);
+    NS_ENSURE_SUCCESS(ret, NS_OK);
+    if (!isTrusted)
+      return NS_OK;
+  }
 
   if ((*aEventStatus == nsEventStatus_eIgnore ||
        (*aEventStatus != nsEventStatus_eConsumeNoDefault &&

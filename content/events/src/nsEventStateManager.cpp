@@ -2914,6 +2914,8 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     event.isControl = aEvent->isControl;
     event.isAlt = aEvent->isAlt;
     event.isMeta = aEvent->isMeta;
+    event.internalAppFlags |=
+      aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
 
     nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
     if (presShell) {
