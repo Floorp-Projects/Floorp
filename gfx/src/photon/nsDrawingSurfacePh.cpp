@@ -89,7 +89,6 @@ nsDrawingSurfacePh :: nsDrawingSurfacePh( )
 nsDrawingSurfacePh :: ~nsDrawingSurfacePh( ) 
 {
 	if(mDrawContext) {
-		mDrawContext->gc = nsnull; /* because we do not own mGC and mDrawContext->gc, do not allow PhDCRelease to release this, as it belongs to upper classes */
 		PhDCRelease( mDrawContext ); /* the mDrawContext->gc will be free by the upper classes */
 		mDrawContext = nsnull;
 	}
@@ -171,6 +170,8 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock( PRInt32 aX, PRInt32 aY,
 		case Pg_IMAGE_DIRECT_555:
 			bpl = 2;
 			break;
+		default:
+		    return NS_ERROR_FAILURE;
 		}
 	*aStride = *aWidthBytes = bpl * dst_area.size.w;
 
@@ -224,18 +225,19 @@ NS_IMETHODIMP nsDrawingSurfacePh :: GetPixelFormat( nsPixelFormat *aFormat ) {
 	}
 
 
-NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC ) {
+NS_IMETHODIMP nsDrawingSurfacePh :: Init( ) {
 
-	mGC = aGC;
-
+	mGC = PgCreateGC(0);
+	if( !mGC )
+		    return NS_ERROR_FAILURE;
+//	PgSetDrawBufferSize(65000);
 	// this is definatly going to be on the screen, as it will be the window of a widget or something
 	mIsOffscreen = PR_FALSE;
 	mDrawContext = nsnull;
 	return NS_OK;
 	}
 
-NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags ) {
-	mGC = aGC;
+NS_IMETHODIMP nsDrawingSurfacePh :: Init(PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags ) {
 	mWidth = aWidth;
 	mHeight = aHeight;
 	mFlags = aFlags;
@@ -249,15 +251,15 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth, PRUint
 	if( !mDrawContext ) return NS_ERROR_FAILURE;
 	dc = PhDCSetCurrent(mDrawContext);
 	PgSetDrawBufferSize(65000);
-/// HACK HACK until photon lib is fixed
+#if 1
+	/// HACK HACK until photon lib is fixed
 	if (mDrawContext->gin.cmd_buffer_size < 12) {
 		mDrawContext->gin.cmd_buffer_size = 12;
 		mDrawContext->gin.cmd_ptr = mDrawContext->gin.cmd_buffer + 3;
 	}
+#endif	
+	mGC = PgGetGC();
 	PhDCSetCurrent(dc);
-	/* use the gc provided */
-	PgDestroyGC( mDrawContext->gc );
-	mDrawContext->gc = mGC;
 	
  	return NS_OK;
 	}
@@ -279,22 +281,23 @@ int nsDrawingSurfacePh::prefChanged(const char *aPref, void *aClosure)
 	}
 	if(surface->mDrawContext) {
 		PhDrawContext_t *dc;
-		surface->mDrawContext->gc = nsnull; /* because we do not own mGC and mDrawContext->gc, do not allow PhDCRelease to release this, as it belongs to upper classes */
-		PhDCRelease( surface->mDrawContext ); /* the mDrawContext->gc will be free by the upper classes */
-		surface->mDrawContext = nsnull;
+		surface->mDrawContext->gc = nsnull; /* because we do not want to destroy the one we have since other have it */
+		PhDCRelease( surface->mDrawContext ); 
 		surface->mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, surface->mWidth, surface->mHeight, 0);
 		if( !surface->mDrawContext ) return NS_ERROR_FAILURE;
 		dc = PhDCSetCurrent(surface->mDrawContext);
 		PgSetDrawBufferSize(65000);
+#if 1
 		/// HACK HACK until photon lib is fixed
 		if (surface->mDrawContext->gin.cmd_buffer_size < 12) {
 			surface->mDrawContext->gin.cmd_buffer_size = 12;
 			surface->mDrawContext->gin.cmd_ptr = surface->mDrawContext->gin.cmd_buffer + 3;
 		}
+#endif	
 		PhDCSetCurrent(dc);
-		/* use the gc provided */
-		PgDestroyGC( surface->mDrawContext->gc );
+		PgDestroyGC(surface->mDrawContext->gc);
 		surface->mDrawContext->gc = surface->mGC;
+		/* use the gc provided */
 	}
 	return 0;
 }

@@ -211,6 +211,7 @@ private:
    void StopDrawing();
 #endif   
 protected:
+   PhDrawContext_t    *mPtDC;
    PhGC_t             *mGC;
    PhGC_t             *mholdGC;
    nscolor            mCurrentColor;

@@ -225,7 +225,6 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
 	}
 
 NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *&aContext ) {
-  /* I stole this code from windows but its not working yet! */
   nsIRenderingContext *pContext;
   nsresult             rv;
   nsDrawingSurfacePh  *surf;
@@ -237,10 +236,7 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *
 
 	  surf = new nsDrawingSurfacePh();
 	  if( nsnull != surf ) {
-			/* I think this is a good idea... not sure if mDC is the right one tho... */
-			PhGC_t * aGC = (PhGC_t *) mDC;
-		
-			rv = surf->Init(aGC);
+			rv = surf->Init();
 			if( NS_OK == rv ) rv = pContext->Init(this, surf);
 			else rv = NS_ERROR_OUT_OF_MEMORY;
 			}
