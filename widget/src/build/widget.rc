@@ -76,7 +76,7 @@ BEGIN
     CONTROL         "C&ollate",chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP |
                     WS_TABSTOP,240,130,36,12
     GROUPBOX        "Print Frames",grp3,8,160,144,61,WS_GROUP
-    CONTROL         "As &layed out on the screen",rad4,"Button",
+    CONTROL         "As &laid out on the screen",rad4,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,174,100,10
     CONTROL         "The selected &frame",rad5,"Button",
                     BS_AUTORADIOBUTTON | WS_TABSTOP,16,189,77,10
