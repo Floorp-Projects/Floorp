@@ -57,7 +57,7 @@
 
 #include "nsDynamicMDEF.h"
 
-const PRInt16 kMacMenuIDX = 1; 
+const PRInt16 kMacMenuIDX = nsMenuBarX::kAppleMenuID + 1;
 static PRInt16 gMacMenuIDCountX = kMacMenuIDX;
 static PRBool gConstructingMenu = PR_FALSE;
   
