@@ -292,7 +292,7 @@ void nsPref::useDefaultPrefFile()
             
             emailStr = PR_smprintf("%s@netscape.com",currProfileName);
 #ifdef XP_UNIX
-            imapDirStr = PR_smprintf("/u/%s/mozillaImapMail", currProfileName);
+            imapDirStr = PR_smprintf("/u/%s/ImapMail", currProfileName);
             newsDirStr = PR_smprintf("/u/%s", currProfileName);
 #else
 #ifdef XP_MAC
