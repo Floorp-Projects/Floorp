@@ -44,6 +44,11 @@ public:
                                    PRInt32 aParentChange,
                                    nsStyleChangeList* aChangeList,
                                    PRInt32* aLocalChange);
+  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame,
+                          nsIFrame*       aNewFrame);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIHTMLReflow overrides

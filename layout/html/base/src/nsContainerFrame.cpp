@@ -365,6 +365,32 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsContainerFrame::ReplaceFrame(nsIPresContext& aPresContext,
+                               nsIPresShell&   aPresShell,
+                               nsIAtom*        aListName,
+                               nsIFrame*       aOldFrame,
+                               nsIFrame*       aNewFrame)
+{
+  nsIFrame* prevFrame;
+  nsIFrame* firstChild;
+  nsresult  rv;
+
+  // Get the old frame's previous sibling frame
+  FirstChild(aListName, &firstChild);
+  nsFrameList frames(firstChild);
+  NS_ASSERTION(frames.ContainsFrame(aOldFrame), "frame is not a valid child frame");
+  prevFrame = frames.GetPrevSiblingFor(aOldFrame);
+
+  // Default implementation treats it like two separate operations
+  rv = RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  if (NS_SUCCEEDED(rv)) {
+    rv = InsertFrames(aPresContext, aPresShell, aListName, prevFrame, aNewFrame);
+  }
+
+  return rv;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Helper member functions
 

@@ -238,7 +238,7 @@ public:
 
   /**
    * This method is responsible for appending frames to the frame
-   * list.  The implementation should append the frames to the appropriate
+   * list.  The implementation should append the frames to the specified
    * child list and then generate a reflow command.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
@@ -256,7 +256,7 @@ public:
 
   /**
    * This method is responsible for inserting frames into the frame
-   * list.  The implementation should insert the new frames into the appropriate
+   * list.  The implementation should insert the new frames into the specified
    * child list and then generate a reflow command.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
@@ -292,6 +292,26 @@ public:
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame) = 0;
+
+  /**
+   * This method is responsible for replacing the old frame with the
+   * new frame. The old frame should be destroyed and the new frame inserted
+   * in its place in the specified child list.
+   *
+   * @param   aListName the name of the child list. A NULL pointer for the atom
+   *            name means the unnamed principal child list
+   * @param   aOldFrame the frame to remove
+   * @param   aNewFrame the frame to replace it with
+   * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
+   *            name,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame
+   *          NS_OK otherwise
+   */
+  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame,
+                          nsIFrame*       aNewFrame) = 0;
 
   /**
    * Get the content object associated with this frame. Adds a reference to
