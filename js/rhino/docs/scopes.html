@@ -65,7 +65,7 @@ the scripts are responsible for coordinating any accesses to shared variables.
 </p>
 <p>A top-level scope is created by calling <tt>Context.initStandardObjects</tt>
  to create all the standard objects: </p>
-<pre>&nbsp;&nbsp;&nbsp; Scriptable scope = cx.initStandardObjects(null);</pre>
+<pre>&nbsp;&nbsp;&nbsp; Scriptable scope = cx.initStandardObjects();</pre>
  The easiest way to embed Rhino is just to create a new scope this way whenever 
 you need one. However, <tt>initStandardObjects</tt> is an expensive method 
 to call and it allocates a fair amount of memory. We'll see below that there
