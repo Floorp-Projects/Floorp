@@ -487,7 +487,13 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
         if (!XPT_GetStringForType(header, &md->result->type, &param_type)) {
             return PR_FALSE;
         }
-        fprintf(stdout, "%*s%s %s(", indent, " ", param_type, md->name);
+        fprintf(stdout, "%*s%c%c%c%c%c %s %s(", indent - 6, " ",
+                XPT_MD_IS_GETTER(md->flags) ? 'G' : ' ',
+                XPT_MD_IS_SETTER(md->flags) ? 'S' : ' ',
+                XPT_MD_IS_HIDDEN(md->flags) ? 'H' : ' ',
+                XPT_MD_IS_VARARGS(md->flags) ? 'V' : ' ',
+                XPT_MD_IS_CTOR(md->flags) ? 'C' : ' ',
+                param_type, md->name);
         for (i=0; i<md->num_args; i++) {
             if (i!=0) {
                 fprintf(stdout, ", ");
@@ -535,7 +541,10 @@ XPT_GetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
     } else {
         if (tag == TD_INTERFACE_TYPE) {
             int index = td->type.interface;
-            *type_string = header->interface_directory[index].name;
+            if (!index || index > header->num_interfaces)
+                *type_string = "UNKNOWN_INTERFACE";
+            else
+                *type_string = header->interface_directory[index-1].name;
         } else {
             *type_string = type_array[tag];
         }
