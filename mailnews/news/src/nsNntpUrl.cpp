@@ -110,7 +110,7 @@ nsresult nsNntpUrl::SetNntpHost (nsINNTPHost * newsHost)
 	return NS_OK;
 }
 
-nsresult nsNntpUrl::GetNntpHost (nsINNTPHost ** newsHost) const
+nsresult nsNntpUrl::GetNntpHost (nsINNTPHost ** newsHost)
 {
     NS_LOCK_INSTANCE();
 	if (newsHost)
@@ -135,7 +135,7 @@ nsresult nsNntpUrl::SetNntpArticleList (nsINNTPArticleList * articleList)
 	return NS_OK;
 }
 
-nsresult nsNntpUrl::GetNntpArticleList (nsINNTPArticleList ** articleList) const
+nsresult nsNntpUrl::GetNntpArticleList (nsINNTPArticleList ** articleList)
 {
 	NS_LOCK_INSTANCE();
 	if (articleList)
@@ -160,7 +160,7 @@ nsresult nsNntpUrl::SetNewsgroup (nsINNTPNewsgroup * newsgroup)
 	return NS_OK;
 }
 
-nsresult nsNntpUrl::GetNewsgroup (nsINNTPNewsgroup ** newsgroup) const
+nsresult nsNntpUrl::GetNewsgroup (nsINNTPNewsgroup ** newsgroup)
 {
 	NS_LOCK_INSTANCE();
 	if (newsgroup)
@@ -185,7 +185,7 @@ nsresult nsNntpUrl::SetOfflineNewsState (nsIMsgOfflineNewsState * offlineNews)
 	return NS_OK;
 }
 
-nsresult nsNntpUrl::GetOfflineNewsState (nsIMsgOfflineNewsState ** offlineNews) const
+nsresult nsNntpUrl::GetOfflineNewsState (nsIMsgOfflineNewsState ** offlineNews) 
 {
 	NS_LOCK_INSTANCE();
 	if (offlineNews)
@@ -210,7 +210,7 @@ nsresult nsNntpUrl::SetNewsgroupList (nsINNTPNewsgroupList * newsgroupList)
 	return NS_OK;
 }
 
-nsresult nsNntpUrl::GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList) const
+nsresult nsNntpUrl::GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList) 
 {
 	NS_LOCK_INSTANCE();
 	if (newsgroupList)

@@ -29,19 +29,19 @@ class nsNntpUrl : public nsINntpUrl, public nsMsgMailNewsUrl, public nsIMsgUriUr
 public:
 	// From nsINntpUrl
 	NS_IMETHOD SetNntpHost (nsINNTPHost * newsHost);
-	NS_IMETHOD GetNntpHost (nsINNTPHost ** newsHost) const;
+	NS_IMETHOD GetNntpHost (nsINNTPHost ** newsHost);
 
 	NS_IMETHOD SetNntpArticleList (nsINNTPArticleList * articleList);
-	NS_IMETHOD GetNntpArticleList (nsINNTPArticleList ** articleList) const;
+	NS_IMETHOD GetNntpArticleList (nsINNTPArticleList ** articleList);
 
 	NS_IMETHOD SetNewsgroup (nsINNTPNewsgroup * newsgroup);
-	NS_IMETHOD GetNewsgroup (nsINNTPNewsgroup ** newsgroup) const;
+	NS_IMETHOD GetNewsgroup (nsINNTPNewsgroup ** newsgroup);
 
 	NS_IMETHOD SetOfflineNewsState (nsIMsgOfflineNewsState * offlineNews);
-	NS_IMETHOD GetOfflineNewsState (nsIMsgOfflineNewsState ** offlineNews) const ;
+	NS_IMETHOD GetOfflineNewsState (nsIMsgOfflineNewsState ** offlineNews);
 
 	NS_IMETHOD SetNewsgroupList (nsINNTPNewsgroupList * newsgroupList);
-	NS_IMETHOD GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList) const;
+	NS_IMETHOD GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList);
 
     NS_IMETHOD SetMessageToPost(nsINNTPNewsgroupPost *post);
     NS_IMETHOD GetMessageToPost(nsINNTPNewsgroupPost **post);

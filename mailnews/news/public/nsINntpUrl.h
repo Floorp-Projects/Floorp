@@ -54,19 +54,19 @@ public:
 	///////////////////////////////////////////////////////////////////////////////
 
 	NS_IMETHOD SetNntpHost (nsINNTPHost * newsHost) = 0;
-	NS_IMETHOD GetNntpHost (nsINNTPHost ** newsHost) const = 0;
+	NS_IMETHOD GetNntpHost (nsINNTPHost ** newsHost) = 0;
 
 	NS_IMETHOD SetNntpArticleList (nsINNTPArticleList * articleList) = 0;
-	NS_IMETHOD GetNntpArticleList (nsINNTPArticleList ** articleList) const = 0;
+	NS_IMETHOD GetNntpArticleList (nsINNTPArticleList ** articleList) = 0;
 
 	NS_IMETHOD SetNewsgroup (nsINNTPNewsgroup * newsgroup) = 0;
-	NS_IMETHOD GetNewsgroup (nsINNTPNewsgroup ** newsgroup) const = 0;
+	NS_IMETHOD GetNewsgroup (nsINNTPNewsgroup ** newsgroup) = 0;
 
 	NS_IMETHOD SetOfflineNewsState (nsIMsgOfflineNewsState * offlineNews) = 0;
-	NS_IMETHOD GetOfflineNewsState (nsIMsgOfflineNewsState ** offlineNews) const = 0;
+	NS_IMETHOD GetOfflineNewsState (nsIMsgOfflineNewsState ** offlineNews) = 0;
 
 	NS_IMETHOD SetNewsgroupList (nsINNTPNewsgroupList * xoverParser) = 0;
-	NS_IMETHOD GetNewsgroupList (nsINNTPNewsgroupList ** xoverParser) const = 0;
+	NS_IMETHOD GetNewsgroupList (nsINNTPNewsgroupList ** xoverParser) = 0;
 
     NS_IMETHOD SetMessageToPost (nsINNTPNewsgroupPost *post) = 0;
     NS_IMETHOD GetMessageToPost (nsINNTPNewsgroupPost **post) = 0;
