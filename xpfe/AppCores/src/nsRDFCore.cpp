@@ -128,12 +128,7 @@ nsRDFCore::Init(const nsString& aId)
 {
    
   nsBaseAppCore::Init(aId);
-
-	nsAppCoresManager* sdm = new nsAppCoresManager();
-        sdm->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
-	delete sdm;
-
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
