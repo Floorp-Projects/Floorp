@@ -48,11 +48,14 @@
   <!-- Fancy panel header -->
   <box class="box-smallheader" title="&validation.title;" description="&validation.description;"/>
 
-  <!--
-  <titledbox orient="horizontal">
+  <titledbox orient="vertical">
     <label value="&validation.crl.label;"/>
+    <html> &validation.crl.description; </html>
+    <box halign="left" autostretch="never">
+      <button class="dialog" label="&validation.managecrls.button;" disabled="false"
+        oncommand="openCrlManager();" />
+    </box>
   </titledbox>
-  -->
 
   <titledbox orient="vertical" autostretch="never" >
     <label value="&validation.ocsp.label;"/>

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.25 2001/05/15 23:15:08 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.26 2001/05/19 01:20:17 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -53,6 +53,7 @@
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsILocaleService.h"
+#include "nsIURI.h"
 
 #include "nspr.h"
 extern "C" {
@@ -64,6 +65,7 @@ extern "C" {
 #include "secasn1.h"
 #include "secder.h"
 }
+#include "ssl.h"
 #include "ocsp.h"
 
 #ifdef PR_LOGGING
@@ -2864,3 +2866,231 @@ nsNSSCertificateDB::getCertType(CERTCertificate *cert)
   return nsIX509Cert::UNKNOWN_CERT;
 }
 
+
+NS_IMETHODIMP 
+nsNSSCertificateDB::ImportCrl (char *aData, PRUint32 aLength, nsIURI * aURI, PRUint32 aType)
+{
+  PRArenaPool *arena = NULL;
+  CERTCertificate *caCert;
+  SECItem derName = { siBuffer, NULL, 0 };
+  SECItem derCrl;
+  CERTSignedData sd;
+  SECStatus sec_rv;
+  CERTSignedCrl *crl;
+  nsXPIDLCString url;
+  aURI->GetSpec(getter_Copies(url));
+  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if (!arena) {
+    goto loser;
+  }
+  memset(&sd, 0, sizeof(sd));
+
+  derCrl.data = (unsigned char*)aData;
+  derCrl.len = aLength;
+  sec_rv = CERT_KeyFromDERCrl(arena, &derCrl, &derName);
+  if (sec_rv != SECSuccess) {
+    goto loser;
+  }
+
+  caCert = CERT_FindCertByName(CERT_GetDefaultCertDB(), &derName);
+  if (!caCert) {
+    if (aType == SEC_KRL_TYPE){
+      goto loser;
+    }
+  } else {
+    sec_rv = SEC_ASN1DecodeItem(arena,
+                            &sd, CERT_SignedDataTemplate, 
+                            &derCrl);
+    if (sec_rv != SECSuccess) {
+      goto loser;
+    }
+    sec_rv = CERT_VerifySignedData(&sd, caCert, PR_Now(),
+                               nsnull);
+    if (sec_rv != SECSuccess) {
+      goto loser;
+    }
+  }
+    
+  crl = SEC_NewCrl(CERT_GetDefaultCertDB(), (char*)url.get(), &derCrl,
+                   aType);
+  if (!crl) {
+    goto loser;
+  }
+  SSL_ClearSessionCache();
+  SEC_DestroyCrl(crl);
+  return NS_OK;
+loser:
+  return NS_ERROR_FAILURE;;
+}
+
+/* Header file */
+class nsCrlEntry : public nsICrlEntry
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICRLENTRY
+
+  nsCrlEntry();
+  nsCrlEntry(const PRUnichar*, const PRUnichar*, const PRUnichar*);
+  virtual ~nsCrlEntry();
+  /* additional members */
+private:
+  nsString mName;
+  nsString mLastUpdate;
+  nsString mNextUpdate;
+};
+
+/* Implementation file */
+NS_IMPL_ISUPPORTS1(nsCrlEntry, nsICrlEntry)
+
+nsCrlEntry::nsCrlEntry()
+{
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+}
+
+nsCrlEntry::nsCrlEntry(const PRUnichar * aName, const PRUnichar * aLastUpdate, const PRUnichar *aNextUpdate)
+{
+  NS_INIT_ISUPPORTS();
+  mName.Assign(aName);
+  mLastUpdate.Assign(aLastUpdate);
+  mNextUpdate.Assign(aNextUpdate);
+}
+
+nsCrlEntry::~nsCrlEntry()
+{
+  /* destructor code */
+}
+
+/* readonly attribute */
+NS_IMETHODIMP nsCrlEntry::GetName(PRUnichar** aName)
+{
+  NS_ENSURE_ARG(aName);
+  *aName = mName.ToNewUnicode();
+  return NS_OK;
+}
+
+/* readonly attribute */
+NS_IMETHODIMP nsCrlEntry::GetLastUpdate(PRUnichar** aLastUpdate)
+{
+  NS_ENSURE_ARG(aLastUpdate);
+  *aLastUpdate = mLastUpdate.ToNewUnicode();
+  return NS_OK;
+}
+
+/* readonly attribute */
+NS_IMETHODIMP nsCrlEntry::GetNextUpdate(PRUnichar** aNextUpdate)
+{
+  NS_ENSURE_ARG(aNextUpdate);
+  *aNextUpdate = mNextUpdate.ToNewUnicode();
+  return NS_OK;
+}
+
+/*
+ * getCRLs
+ *
+ * Export a set of certs and keys from the database to a PKCS#12 file.
+*/
+NS_IMETHODIMP 
+nsNSSCertificateDB::GetCrls(nsISupportsArray ** aCrls)
+{
+  SECStatus sec_rv;
+  CERTCrlHeadNode *head = nsnull;
+  CERTCrlNode *node = nsnull;
+  CERTCertificate *caCert = nsnull;
+  nsAutoString name;
+  nsAutoString nextUpdate;
+  nsAutoString lastUpdate;
+  PRTime tmpDate;
+  nsCOMPtr<nsISupportsArray> crlsArray;
+  nsresult rv;
+  rv = NS_NewISupportsArray(getter_AddRefs(crlsArray));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+     do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // Get the list of certs //
+  sec_rv = SEC_LookupCrls(CERT_GetDefaultCertDB(), &head, -1);
+  if (sec_rv != SECSuccess) {
+    goto loser;
+  }
+
+  if (head) {
+    for (node=head->first; node != nsnull; node = node->next) {
+      // Get the information we need here //
+
+      // Name (this is the OU of the CA)
+      caCert = CERT_FindCertByName(CERT_GetDefaultCertDB(), &(node->crl->crl.derName));
+      if (caCert) {
+        char *orgunit = CERT_GetOrgUnitName(&caCert->subject);
+        if (orgunit) {
+          name = NS_ConvertASCIItoUCS2(orgunit);
+        }
+      }
+
+      // Last Update time
+      sec_rv = DER_UTCTimeToTime(&tmpDate, &(node->crl->crl.lastUpdate));
+      if (sec_rv == SECSuccess) {
+        dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
+                              tmpDate, lastUpdate);
+      }
+
+      // Next update time
+      sec_rv = DER_UTCTimeToTime(&tmpDate, &(node->crl->crl.nextUpdate));
+      if (sec_rv == SECSuccess) {
+        dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
+                              tmpDate, nextUpdate);
+      }
+      nsCOMPtr<nsICrlEntry> entry = new nsCrlEntry(name.get(), lastUpdate.get(), nextUpdate.get());
+      crlsArray->AppendElement(entry);
+    }
+    PORT_FreeArena(head->arena, PR_FALSE);
+  }
+
+  *aCrls = crlsArray;
+  NS_IF_ADDREF(*aCrls);
+  return NS_OK;
+loser:
+  return NS_ERROR_FAILURE;;
+}
+
+/*
+ * deletetCrl
+ *
+ * Delete a Crl entry from the cert db.
+*/
+NS_IMETHODIMP 
+nsNSSCertificateDB::DeleteCrl(PRUint32 aCrlIndex)
+{
+  CERTSignedCrl *realCrl = nsnull;
+  CERTCrlHeadNode *head = nsnull;
+  CERTCrlNode *node = nsnull;
+  SECStatus sec_rv;
+  PRUint32 i;
+
+  // Get the list of certs //
+  sec_rv = SEC_LookupCrls(CERT_GetDefaultCertDB(), &head, -1);
+  if (sec_rv != SECSuccess) {
+    goto loser;
+  }
+
+  if (head) {
+    for (i = 0, node=head->first; node != nsnull; i++, node = node->next) {
+      if (i != aCrlIndex) {
+        continue;
+      }
+      realCrl = SEC_FindCrlByName(CERT_GetDefaultCertDB(), &(node->crl->crl.derName), node->type);
+      SEC_DeletePermCRL(realCrl);
+      SEC_DestroyCrl(realCrl);
+      SSL_ClearSessionCache();
+    }
+    PORT_FreeArena(head->arena, PR_FALSE);
+  }
+  return NS_OK;
+loser:
+  return NS_ERROR_FAILURE;;
+}

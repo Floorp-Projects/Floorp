@@ -44,6 +44,8 @@ pippki.jar:
     content/pippki/escrowWarn.js             (content/escrowWarn.js)
     content/pippki/pref-validation.xul       (content/pref-validation.xul)
     content/pippki/pref-validation.js        (content/pref-validation.js)
+    content/pippki/crlManager.xul            (content/crlManager.xul)
+    content/pippki/crlManager.js             (content/crlManager.js)
     locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
     locale/en-US/pippki/pippki.dtd           (locale/en-US/pippki.dtd)
     locale/en-US/pippki/pref-ssl.dtd         (locale/en-US/pref-ssl.dtd)
