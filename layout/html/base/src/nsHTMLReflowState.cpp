@@ -1391,19 +1391,32 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
     if (nsLayoutAtoms::blockFrame == frameType ||
         nsLayoutAtoms::areaFrame == frameType ||
         nsLayoutAtoms::scrollFrame == frameType) {
+      
       if (nsLayoutAtoms::areaFrame == frameType) {
+        // Skip over scrolled-content area frames
         if (rs->frame->GetStyleContext()->GetPseudoType() ==
             nsCSSAnonBoxes::scrolledContent) {
           continue;
         }
       }
+
       if (aRestrictToFirstLevel && firstAncestorRS && secondAncestorRS) {
         break;
       }
+      
       secondAncestorRS = firstAncestorRS;
       firstAncestorRS = (nsHTMLReflowState*)rs;
+
+      // If the current frame we're looking at is positioned, we don't want to
+      // go any further (see bug 221784).  The behavior we want here is: 1) If
+      // not auto-height, use this as the percentage base.  2) If auto-height,
+      // keep looking, unless the frame is positioned.
       if (NS_AUTOHEIGHT == rs->mComputedHeight) {
-        continue;
+        if (rs->frame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+          break;
+        } else {
+          continue;
+        }
       }
     }
     else if (nsLayoutAtoms::canvasFrame == frameType) {
