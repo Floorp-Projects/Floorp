@@ -20,7 +20,7 @@
  * Contributor(s): 
  * syd@netscape.com 2/12/00. 
  * pavlov@netscape.com 2/13/00.
- * bryner@netscape.com 11/20/01.
+ * bryner@brianryner.com 11/20/01.
  */
 
 #include "nsNativeAppSupportBase.h"

@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@netscape.com>
+ *  Brian Ryner <bryner@brianryner.com>
  *  Terry Hayes <thayes@netscape.com>
 */
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.

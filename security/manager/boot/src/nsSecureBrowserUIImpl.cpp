@@ -23,7 +23,7 @@
  *   Hubbie Shaw
  *   Doug Turner <dougt@netscape.com>
  *   Stuart Parmenter <pavlov@netscape.com>
- *   Brian Ryner <bryner@netscape.com>
+ *   Brian Ryner <bryner@brianryner.com>
  *   Terry Hayes <thayes@netscape.com>
  *   Kai Engert <kaie@netscape.com>
  *

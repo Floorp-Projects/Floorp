@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  *  Stuart Parmenter <pavlov@netscape.com>
- *  Brian Ryner <bryner@netscape.com>
+ *  Brian Ryner <bryner@brianryner.com>
  *  Jan Varga <varga@utcru.sk>
  *  Peter Annema <disttsc@bart.nl>
  *  Johann Petrak <johann@ai.univie.ac.at>

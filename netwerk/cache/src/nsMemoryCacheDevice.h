@@ -19,7 +19,7 @@
  * 
  * Contributor(s): 
  *    Gordon Sheridan, 20-February-2001
- *    Brian Ryner <bryner@netscape.com>
+ *    Brian Ryner <bryner@brianryner.com>
  */
 
 #ifndef _nsMemoryCacheDevice_h_

@@ -18,7 +18,7 @@
  * 
  * Contributor(s):
  *   David W. Hyatt <hyatt@netscape.com> (Original Author)
- *   Brian Ryner <bryner@netscape.com>
+ *   Brian Ryner <bryner@brianryner.com>
  */
 
 #ifndef nsTreeSelection_h__

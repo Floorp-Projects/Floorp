@@ -19,7 +19,7 @@
  *
  * Contributor(s):
  *   Doug Turner <dougt@netscape.com>
- *   Brian Ryner <bryner@netscape.com>
+ *   Brian Ryner <bryner@brianryner.com>
 */
 
 #include "nsISupports.idl"

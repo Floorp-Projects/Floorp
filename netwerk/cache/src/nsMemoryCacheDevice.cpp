@@ -20,7 +20,7 @@
  * Contributor(s): 
  *    Gordon Sheridan, <gordon@netscape.com>
  *    Patrick C. Beard <beard@netscape.com>
- *    Brian Ryner <bryner@netscape.com>
+ *    Brian Ryner <bryner@brianryner.com>
  */
 
 #include "nsMemoryCacheDevice.h"

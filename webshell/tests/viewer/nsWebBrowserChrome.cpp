@@ -18,7 +18,7 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
- *   Brian Ryner <bryner@netscape.com>
+ *   Brian Ryner <bryner@brianryner.com>
  */
 
 // Local Includes

@@ -25,7 +25,7 @@
  *  Joe Hewitt <hewitt@netscape.com>
  *  Jan Varga <varga@utcru.sk>
  *  Dean Tessman <dean_tessman@hotmail.com>
- *  Brian Ryner <bryner@netscape.com>
+ *  Brian Ryner <bryner@brianryner.com>
  *  Blake Ross <blaker@netscape.com>
  *  Pierre Chanial <pierrechanial@netscape.net>
  *  Rene Pronk <r.pronk@its.tudelft.nl>
