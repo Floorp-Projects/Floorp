@@ -23,4 +23,8 @@ extern "C" NS_DOM
 nsresult
 NS_NewScriptMsgAppCore(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
+extern "C" NS_DOM
+nsresult
+NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
+
 #endif
