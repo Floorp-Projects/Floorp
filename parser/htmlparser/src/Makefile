@@ -39,6 +39,7 @@ CPPSRCS =     \
   nsHTMLTags.cpp \
   prstrm.cpp \
   nsHTMLContentSinkStream.cpp \
+  nsXIFDTD.cpp \
   $(NULL)
 
 EXPORTS =     \
@@ -57,6 +58,7 @@ EXPORTS =     \
   nsWellFormedDTD.h \
   nsValidDTD.h \
   CRtfDTD.h \
+  nsXIFDTD.h \
   $(NULL)
 
 EXTRA_EXPORTS =					\

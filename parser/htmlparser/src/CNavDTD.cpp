@@ -597,7 +597,7 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
             nsCParserNode theNode((CHTMLToken*)aToken);
             result=OpenHead(theNode);
             if(kNoError==result)
-              result=AddLeaf(theNode);
+              result=AddLeaf(attrNode);
             if(kNoError==result)
               result=CloseHead(theNode);
           }

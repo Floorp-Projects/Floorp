@@ -34,6 +34,12 @@
 #include "nsIScriptContextOwner.h"
 #include "nsITimer.h"
 
+
+#include <fstream.h>
+#include "nsIParser.h"
+#include "nsHTMLContentSinkStream.h"
+#include "nsXIFDTD.h"
+
 // Debug Robot options
 static int gDebugRobotLoads = 5000;
 static char gVerifyDir[_MAX_PATH];
@@ -61,6 +67,7 @@ class nsWin32Viewer : public nsViewer {
     virtual void AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview);
     virtual void ShowConsole(WindowData* aWindata);
     virtual void DoDebugRobot(WindowData* aWindata);
+    virtual void DoDebugSave(WindowData* aWindata);
     virtual void DoSiteWalker(WindowData* aWindata);
     virtual void CopySelection(WindowData* aWindata);
     virtual void Destroy(WindowData* wd);
@@ -262,6 +269,55 @@ void nsWin32Viewer::DoDebugRobot(WindowData* aWindata)
           }
 }
 
+
+
+void nsWin32Viewer::DoDebugSave(WindowData* aWindata)
+{
+  if ((nsnull != aWindata) && (nsnull != aWindata->observer)) 
+  {
+    nsIDocument* doc = aWindata->observer->mWebWidget->GetDocument();
+ 
+    if (doc != nsnull)
+    {
+      nsString buffer;
+      doc->ToXIF(buffer,PR_FALSE);
+
+
+      nsIParser* parser;
+      nsresult rv = NS_NewParser(&parser);
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+        
+        rv = NS_New_HTML_ContentSinkStream(&sink);
+
+        if (NS_OK == rv) {
+
+#if defined(WIN32)
+/*
+          const char* filename="c:\\temp\\save.html";
+          ofstream    out(filename);
+          sink->SetOutputStream(out);
+*/
+#endif
+          parser->SetContentSink(sink);
+          
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
+          if (NS_OK == rv) 
+          {
+            parser->RegisterDTD(dtd);
+            dtd->SetContentSink(sink);
+            dtd->SetParser(parser);
+            parser->Parse(buffer, PR_TRUE);           
+           }
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
+        }
+        NS_RELEASE(parser);
+      }
+    }
+  }
+}
 
 // Selects all the Content
 void nsWin32Viewer::CopyTextContent(WindowData* wd, HWND aHWnd)
