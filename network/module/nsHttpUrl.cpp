@@ -275,6 +275,8 @@ NS_METHOD nsHttpUrlImpl::AddMimeHeader(const char *name, const char *value)
 				aName, 
 				aVal,
 				TRUE);
+    PR_Free(aName);
+    PR_Free(aVal);
     return NS_OK;
 }
 
