@@ -1,3 +1,9 @@
+A:link {color: #0000DD}
+A:visited {color: #551188}
+A:hover {color: #3333FF}
+A:active {color: #FF00FF}
+A * {text-decoration: inherit}
+
 .title1 {font-family: "Times New Roman", Times, serif; font-size: 36pt; font-weight: bold; color: #000000; white-space: nowrap}
 .title2 {font-family: "Times New Roman", Times, serif; font-size: 18pt; font-weight: bold; color: #000000; white-space: nowrap}
 .top-title {color: #009900}
@@ -9,6 +15,11 @@
 .indent {margin-left: 0.5in}
 .issue {color: #FF0000}
 
+BODY {background-color: #FFFFFF; color: #000000}
+DL {margin-left: 18pt}
+DD {margin-bottom: 6pt}
+DT {font-style: italic; margin-top: 3pt}
+
 .grammar-rule {margin-left: 18pt; margin-top: 6pt; margin-bottom: 6pt}
 .grammar-lhs {}
 .grammar-rhs {margin-left: 9pt;}
@@ -16,20 +27,38 @@
 .semantics {margin-left: 9pt; margin-top: 3pt; margin-bottom: 3pt}
 .semantics-next {margin-left: 27pt; margin-bottom: 3pt}
 
-.symbol {font-family: "Symbol"}
-VAR, VAR A {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: normal; font-style: italic; color: #336600}
-CODE {font-family: "Courier New", Courier, mono; color: #0000FF}
-PRE {font-family: "Courier New", Courier, mono; color: #0000FF; margin-left: 0.5in}
-.control {font-family: "Times New Roman", Times, serif; font-weight: normal; color: #000099}
-.terminal {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: bold; color: #009999}
+.symbol {font-family: Symbol}
+.unicode {font-family: "Lucida Sans Unicode", serif}
+VAR, VAR A:link, VAR A:visited {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: normal; font-style: italic; color: #336600}
+A:hover VAR, VAR A:hover {color: #003300}
+A:active VAR, VAR A:active {color: #00FF00}
+CODE, PRE {font-family: "Courier New", Courier, mono; color: #0000FF}
+PRE {margin-left: 0.5in}
+A:hover CODE {color: #3333CC}
+A:active CODE {color: #6666FF}
+.control, A.control {font-family: "Times New Roman", Times, serif; font-weight: normal; color: #000099}
+A.control:hover, A:hover .control {color: #333366}
+A.control:active, A:active .control {color: #3333FF}
+.terminal, A.terminal {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: bold; color: #009999}
+A.terminal:hover, A:hover .terminal {color: #336666}
+A.terminal:active, A:active .terminal {color: #00FFFF}
 .terminal-keyword {font-weight: bold}
-.nonterminal, .nonterminal A {color: #009900}
-.nonterminal-attribute {font-style: normal}
-.nonterminal-argument {font-style: normal}
+.nonterminal, A.nonterminal, .nonterminal A {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: normal; font-style: italic; color: #009900}
+A.nonterminal:hover, .nonterminal A:hover, A:hover .nonterminal {color: #336633}
+A.nonterminal:active, .nonterminal A:active, A:active .nonterminal {color: #00FF00}
+.nonterminal-attribute, .nonterminal-argument {font-style: normal}
 .semantic-keyword {font-family: "Times New Roman", Times, serif; font-weight: bold}
-.type-expression {font-family: "Times New Roman", Times, serif; color: #CC0000}
-.type-name {font-family: "Times New Roman", Times, serif; font-variant: small-caps; color: #CC0000}
-.field-name {font-family: Arial, Helvetica, sans-serif; color: #FF0000}
-.global-variable {font-family: "Times New Roman", Times, serif; color: #006600}
-.local-variable {font-family: "Times New Roman", Times, serif; color: #009900}
-.action-name {font-family: "Zapf Chancery", "Comic Sans MS", Script, serif; color: #660066}
+.type-expression, A.type-expression, .type-name, A.type-name {font-family: "Times New Roman", Times, serif; color: #CC0000}
+A.type-expression:hover, A:hover .type-expression, A.type-name:hover, A:hover .type-name {color: #990000}
+A.type-expression:active, A:active .type-expression, A.type-name:active, A:active .type-name {color: #FF6666}
+.type-name {font-variant: small-caps}
+.field-name, A.field-name {font-family: Arial, Helvetica, sans-serif; color: #FF0000}
+A.field-name:hover, A:hover .field-name {color: #CC3333}
+A.field-name:active, A:active .field-name {color: #FF6666}
+.global-variable, A.global-variable {font-family: "Times New Roman", Times, serif; color: #006600}
+.local-variable, A.local-variable {font-family: "Times New Roman", Times, serif; color: #009900}
+A.global-variable:hover, A:hover .global-variable, A.local-variable:hover, A:hover .local-variable {color: #336633}
+A.global-variable:active, A:active .global-variable, A.local-variable:active, A:active .local-variable {color: #00FF00}
+.action-name, A.action-name {font-family: "Zapf Chancery", "Comic Sans MS", Script, serif; color: #660066}
+A.action-name:hover, A:hover .action-name {color: #663366}
+A.action-name:active, A:active .action-name {color: #FF00FF}
