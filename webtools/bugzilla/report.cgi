@@ -230,6 +230,7 @@ elsif ($action eq "plot") {
     # If action is "plot", we will be using a format as normal (pie, bar etc.)
     # and a ctype as normal (currently only png.)
     $vars->{'cumulate'} = $cgi->param('cumulate') ? 1 : 0;
+    $vars->{'x_labels_vertical'} = $cgi->param('x_labels_vertical') ? 1 : 0;
     $vars->{'data'} = \@image_data;
 }
 else {

@@ -87,10 +87,14 @@
   <tr>
     <td>
     </td>
-    <td align="center">
+    <td align="left">
       <b>Horizontal Axis:</b>
-      [% PROCESS select name = 'x_axis_field' %]
-    </td>
+      [% PROCESS select name = 'x_axis_field' %]<br>
+      <label for="x_labels_vertical"><b>Vertical labels:</b></label>         
+      <input type="checkbox" name="x_labels_vertical" id="x_labels_vertical" 
+             value="1"
+         [% " checked" IF default.x_labels_vertical.0 == "1" %]>
+     </td>
     <td>
     </td>
   </tr>

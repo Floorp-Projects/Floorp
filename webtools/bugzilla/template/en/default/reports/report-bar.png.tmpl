@@ -28,19 +28,20 @@
 [% FILTER null;
   USE graph = GD.Graph.bars(width, height);
 
-  graph.set(x_label          => col_field_disp,
-            y_label          => y_label,
-            y_tick_number    => 8, 
-            y_number_format  => "%d", 
-            x_label_position => 0.5,
-            bar_spacing      => 8,
-            shadow_depth     => 4, 
-            shadowclr        => 'dred',
-            show_values      => 1,    
-            legend_placement => "RT");
+  graph.set(x_label           => col_field_disp,
+            y_label           => y_label,
+            y_tick_number     => 8, 
+            y_number_format   => "%d", 
+            x_label_position  => 0.5,
+            x_labels_vertical => x_labels_vertical,
+            bar_spacing       => 8,
+            shadow_depth      => 4, 
+            shadowclr         => 'dred',
+            show_values       => 1,    
+            legend_placement  => "RT");
   
-  graph.set(cumulate         => "true",
-            show_values      => 0) IF cumulate;
+  graph.set(cumulate          => "true",
+            show_values       => 0) IF cumulate;
   
   # Workaround for the fact that set_legend won't take row_names directly, 
   # because row_names is an array reference rather than an array.

@@ -33,12 +33,13 @@
 [% END %]
 
 [% FILTER null;
-  graph.set(x_label          => col_field_disp,
-            y_label          => y_label,
-            y_tick_number    => 8, 
-            x_label_position => 0.5,
-            legend_placement => "RT",
-            line_width       => 2);
+  graph.set(x_label           => col_field_disp,
+            y_label           => y_label,
+            y_tick_number     => 8, 
+            x_label_position  => 0.5,
+            x_labels_vertical => x_labels_vertical,
+            legend_placement  => "RT",
+            line_width        => 2);
   
   # Workaround for the fact that set_legend won't take row_names directly, 
   # because row_names is an array reference rather than an array.
