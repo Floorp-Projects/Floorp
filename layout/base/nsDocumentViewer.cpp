@@ -72,6 +72,7 @@
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsGenericHTMLElement.h"
+#include "nsLayoutStylesheetCache.h"
 
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
@@ -86,8 +87,11 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
+#include "nsNetUtil.h"
+#include "nsIChromeEventHandler.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIContentViewerFile.h"
+#include "nsICSSLoader.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -112,7 +116,6 @@
 #include "nsIXULDocument.h"  // Temporary code for Bug 136185
 #endif
 
-#include "nsIChromeRegistry.h"
 #include "nsIClipboardHelper.h"
 
 #include "nsIEventQueueService.h"
@@ -1719,6 +1722,8 @@ DocumentViewerImpl::ForceRefresh()
   mWindow->Invalidate(PR_TRUE);
 }
 
+NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
+
 nsresult
 DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
                                    nsStyleSet** aStyleSet)
@@ -1754,42 +1759,68 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     }
   }
 
-  nsCOMPtr<nsIChromeRegistry> chromeRegistry =
-    do_GetService("@mozilla.org/chrome/chrome-registry;1");
+  // Now handle the user sheets.
+  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
+  PRInt32 shellType;
+  docShell->GetItemType(&shellType);
+  nsICSSStyleSheet* sheet = nsnull;
+  if (shellType == nsIDocShellTreeItem::typeChrome) {
+    sheet = nsLayoutStylesheetCache::UserChromeSheet();
+  }
+  else {
+    sheet = nsLayoutStylesheetCache::UserContentSheet();
+  }
 
-  if (chromeRegistry) {
-    nsCOMPtr<nsISupportsArray> sheets;
+  if (sheet)
+    styleSet->PrependStyleSheet(nsStyleSet::eUserSheet, sheet);
 
-    // Now handle the user sheets.
-    nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
-    PRInt32 shellType;
-    docShell->GetItemType(&shellType);
-    PRBool isChrome = (shellType == nsIDocShellTreeItem::typeChrome);
-    chromeRegistry->GetUserSheets(isChrome, getter_AddRefs(sheets));
-    if (sheets) {
-      nsCOMPtr<nsICSSStyleSheet> sheet;
-      PRUint32 count;
-      sheets->Count(&count);
-      // Insert the user sheets at the front of the user sheet list
-      // so that they are most significant user sheets.
-      for (PRUint32 i=0; i<count; i++) {
-        sheets->GetElementAt(i, getter_AddRefs(sheet));
-        styleSet->PrependStyleSheet(nsStyleSet::eUserSheet, sheet);
+  // Append chrome sheets (scrollbars + forms).
+  PRBool shouldOverride = PR_FALSE;
+  nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+  nsCOMPtr<nsICSSLoader> cssLoader( do_GetService(kCSSLoaderCID) );
+  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsICSSStyleSheet> csssheet;
+
+  ds->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+  if (chromeHandler) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(chromeHandler));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
+    if (elt && content) {
+      nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+
+      nsAutoString sheets;
+      elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
+      if (!sheets.IsEmpty() && baseURI) {
+        char *str = ToNewCString(sheets);
+        char *newStr;
+        char *token = str;
+        while ( (token = nsCRT::strtok(token, ", ", &newStr)) ) {
+          NS_NewURI(getter_AddRefs(uri), nsDependentCString(token), nsnull,
+                    baseURI);
+          if (!uri) continue;
+
+          cssLoader->LoadAgentSheet(uri, getter_AddRefs(csssheet));
+          if (!sheet) continue;
+
+          styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, csssheet);
+          shouldOverride = PR_TRUE;
+        }
+        nsMemory::Free(str);
       }
     }
+  }
 
-    // Append chrome sheets (scrollbars + forms).
-    nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
-    chromeRegistry->GetAgentSheets(ds, getter_AddRefs(sheets));
-    if (sheets) {
-      nsCOMPtr<nsICSSStyleSheet> sheet;
-      PRUint32 count;
-      sheets->Count(&count);
-      for (PRUint32 i=0; i<count; i++) {
-        sheets->GetElementAt(i, getter_AddRefs(sheet));
-        styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
-      }
+  if (!shouldOverride) {
+    sheet = nsLayoutStylesheetCache::ScrollbarsSheet();
+    if (sheet) {
+      styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
+  }
+
+  sheet = nsLayoutStylesheetCache::FormsSheet();
+  if (sheet) {
+    styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
   }
 
   if (mUAStyleSheet) {
@@ -3620,8 +3651,6 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   }
 
   // Get the current size of what is being viewed
-  nsRect area = mPresContext->GetVisibleArea();
-
   nsRect bounds;
   mWindow->GetBounds(bounds);
 
@@ -3725,8 +3754,6 @@ DocumentViewerImpl::InstallNewPresentation()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   // Get the current size of what is being viewed
-  nsRect area = mPresContext->GetVisibleArea();
-
   nsRect bounds;
   mWindow->GetBounds(bounds);
 

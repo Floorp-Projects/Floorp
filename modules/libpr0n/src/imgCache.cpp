@@ -58,11 +58,14 @@ nsresult imgCache::Init()
   imgCache* cache = new imgCache();
   if(!cache) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
-  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv) && os)
-    rv = os->AddObserver(cache, "memory-pressure", PR_TRUE);
-  return rv;
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+  if (os) {
+    os->AddObserver(cache, "memory-pressure", PR_FALSE);
+    os->AddObserver(cache, "chrome-flush-skin-caches", PR_FALSE);
+    os->AddObserver(cache, "chrome-flush-caches", PR_FALSE);
+  }
+  
+  return NS_OK;
 }
 
 /* void clearCache (in boolean chrome); */
@@ -301,7 +304,9 @@ PRBool imgCache::Remove(nsIURI *aKey)
 NS_IMETHODIMP
 imgCache::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
 {
-  if (strcmp(aTopic, "memory-pressure") == 0)
+  if (strcmp(aTopic, "memory-pressure") == 0 ||
+      strcmp(aTopic, "chrome-flush-skin-caches") == 0 ||
+      strcmp(aTopic, "chrome-flush-caches") == 0)
     ClearCache(PR_TRUE);
 
   return NS_OK;

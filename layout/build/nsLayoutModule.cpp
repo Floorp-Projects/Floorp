@@ -48,6 +48,7 @@
 #include "nsContentDLF.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
+#include "nsLayoutStylesheetCache.h"
 #include "nsDOMCID.h"
 #include "nsCSSOMFactory.h"
 #include "nsInspectorCSSUtils.h"
@@ -406,6 +407,7 @@ Shutdown(nsIModule* aSelf)
   nsGenericHTMLElement::Shutdown();
 
   nsContentUtils::Shutdown();
+  nsLayoutStylesheetCache::Shutdown();
   NS_NameSpaceManagerShutdown();
   nsImageLoadingContent::Shutdown();
   nsStyleSet::FreeGlobals();

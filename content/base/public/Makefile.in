@@ -60,6 +60,7 @@ nsIXPathEvaluatorInternal.h \
 mozISanitizingSerializer.h \
 nsIContentList.h \
 nsIFrameLoader.h \
+nsLayoutStylesheetCache.h \
 nsContentCID.h \
 $(NULL)
 

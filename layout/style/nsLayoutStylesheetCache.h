@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,11 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Minimo.
+ * The Original Code is Mozilla Gecko Layout
  *
  * The Initial Developer of the Original Code is
- * Doug Turner <dougt@meer.net>.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * Benjamin Smedberg <bsmedberg@covad.net>
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,21 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsSimpleChromeRegistry_h___
-#define nsSimpleChromeRegistry_h___
+#ifndef nsLayoutStylesheetCache_h__
+#define nsLayoutStylesheetCache_h__
 
-#include "nsIChromeRegistry.h"
 #include "nsICSSStyleSheet.h"
-#include "nsICSSLoader.h"
+#include "nsCOMPtr.h"
+#include "nsIObserver.h"
 
-class nsSimpleChromeRegistry : public nsIChromeRegistry
+class nsIFile;
+
+
+class nsLayoutStylesheetCache
+ : public nsIObserver
 {
-public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICHROMEREGISTRY
+  NS_DECL_NSIOBSERVER
 
-  nsSimpleChromeRegistry();
-  virtual ~nsSimpleChromeRegistry();
+  static nsICSSStyleSheet* ScrollbarsSheet();
+  static nsICSSStyleSheet* FormsSheet();
+  static nsICSSStyleSheet* UserContentSheet();
+  static nsICSSStyleSheet* UserChromeSheet();
+
+  static void Shutdown();
+
+private:
+  nsLayoutStylesheetCache();
+  ~nsLayoutStylesheetCache();
+
+  static void EnsureGlobal();
+  void InitFromSkin();
+  void InitFromProfile();
+  static void LoadSheetFile(nsIFile* aFile, nsCOMPtr<nsICSSStyleSheet> &aSheet);
+  static void LoadSheet(nsIURI* aURI, nsCOMPtr<nsICSSStyleSheet> &aSheet);
+
+  static nsLayoutStylesheetCache* gStyleCache;
+  nsCOMPtr<nsICSSStyleSheet> mScrollbarsSheet;
+  nsCOMPtr<nsICSSStyleSheet> mFormsSheet;
+  nsCOMPtr<nsICSSStyleSheet> mUserContentSheet;
+  nsCOMPtr<nsICSSStyleSheet> mUserChromeSheet;
 };
 
 #endif
