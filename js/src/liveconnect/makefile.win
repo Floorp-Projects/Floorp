@@ -60,6 +60,10 @@ LLIBS=$(LIBNSPR) $(DIST)\lib\jrt$(MOZ_BITS)$(VERSION_NUMBER).lib \
 LLIBS=$(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib
 !endif
 
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
+!endif
+
 #//------------------------------------------------------------------------
 #// 
 #// Define the files necessary to build the target (ie. OBJS)
