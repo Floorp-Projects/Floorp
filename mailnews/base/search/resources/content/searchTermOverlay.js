@@ -161,8 +161,14 @@ function createSearchRow(index, scope, searchTerm)
     gSearchRowContainer.appendChild(searchrow);
 
     searchTermElement.searchScope = scope;
+    // the search term will initialize the searchTerm element, including
+    // .booleanAnd
     if (searchTerm)
         searchTermElement.searchTerm = searchTerm;
+    
+    // here, we don't have a searchTerm, so it's probably a new element -
+    // we'll initialize the .booleanAnd from the existing setting in
+    // the UI
     else
         searchTermElement.booleanAnd = getBooleanAnd();
 
