@@ -402,6 +402,12 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
       nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(newChannel));
 
       if (cacheChan) {
+        // since this channel supports nsICachingChannel, we can ask it
+        // to only stream us data if the data comes off the net.
+        PRUint32 loadFlags;
+        if (NS_SUCCEEDED(newChannel->GetLoadFlags(&loadFlags)))
+            newChannel->SetLoadFlags(loadFlags | nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
+
         rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX,
                                       requestFlags, aRequest, _retval);
 
@@ -909,10 +915,8 @@ NS_IMETHODIMP httpValidateChecker::OnStartRequest(nsIRequest *aRequest, nsISuppo
 {
   nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(aRequest));
   if (cacheChan) {
-    PRBool isFromCache = PR_FALSE;
-    cacheChan->IsFromCache(&isFromCache);
-
-    if (isFromCache) {
+    PRBool isFromCache;
+    if (NS_SUCCEEDED(cacheChan->IsFromCache(&isFromCache)) && isFromCache) {
 
       PRUint32 count;
       mProxies.Count(&count);
@@ -924,11 +928,6 @@ NS_IMETHODIMP httpValidateChecker::OnStartRequest(nsIRequest *aRequest, nsISuppo
       }
 
       mRequest->SetLoadId(mContext);
-
-      // XXX see bug 113959
-      // Don't call cancel here because it makes the HTTP cache entry go away.
-      aRequest->Cancel(NS_BINDING_ABORTED);
-
       mRequest->mValidator = nsnull;
 
       NS_RELEASE(mRequest);
@@ -1021,6 +1020,15 @@ static NS_METHOD dispose_of_data(nsIInputStream* in, void* closure,
 /* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
 NS_IMETHODIMP httpValidateChecker::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
+#ifdef DEBUG
+  nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(aRequest));
+  if (cacheChan) {
+    PRBool isFromCache;
+    if (NS_SUCCEEDED(cacheChan->IsFromCache(&isFromCache)) && isFromCache)
+      NS_ERROR("OnDataAvailable not suppressed by LOAD_ONLY_IF_MODIFIED load flag");
+  }
+#endif
+
   if (!mDestListener) {
     // XXX see bug 113959
     PRUint32 _retval;

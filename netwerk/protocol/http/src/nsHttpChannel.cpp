@@ -72,7 +72,6 @@ nsHttpChannel::nsHttpChannel()
     , mIsPending(PR_FALSE)
     , mApplyConversion(PR_TRUE)
     , mAllowPipelining(PR_TRUE)
-    , mFromCacheOnly(PR_FALSE)
     , mCachedContentIsValid(PR_FALSE)
     , mCachedContentIsPartial(PR_FALSE)
     , mResponseHeadersModified(PR_FALSE)
@@ -203,6 +202,61 @@ nsHttpChannel::Init(nsIURI *uri,
 //-----------------------------------------------------------------------------
 
 nsresult
+nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
+{
+    nsCOMPtr<nsIEventQueueService> eqs;
+    nsCOMPtr<nsIEventQueue> eventQ;
+
+    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
+    if (eqs)
+        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(eventQ));
+    if (!eventQ)
+        return NS_ERROR_FAILURE;
+
+    nsAsyncCallEvent *event = new nsAsyncCallEvent;
+    if (!event)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    event->mFuncPtr = funcPtr;
+
+    NS_ADDREF_THIS();
+
+    PL_InitEvent(event, this,
+                 nsHttpChannel::AsyncCall_EventHandlerFunc,
+                 nsHttpChannel::AsyncCall_EventCleanupFunc);
+
+    PRStatus status = eventQ->PostEvent(event);
+    if (status != PR_SUCCESS) {
+        delete event;
+        NS_RELEASE_THIS();
+        return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
+void *PR_CALLBACK
+nsHttpChannel::AsyncCall_EventHandlerFunc(PLEvent *ev)
+{
+    nsHttpChannel *chan =
+        NS_STATIC_CAST(nsHttpChannel *, PL_GetEventOwner(ev));
+
+    nsAsyncCallEvent *ace = (nsAsyncCallEvent *) ev;
+    nsAsyncCallback funcPtr = ace->mFuncPtr;
+
+    if (chan) {
+        (chan->*funcPtr)();
+        NS_RELEASE(chan);
+    }
+    return nsnull;
+}
+
+void PR_CALLBACK
+nsHttpChannel::AsyncCall_EventCleanupFunc(PLEvent *ev)
+{
+    delete (nsAsyncCallEvent *) ev;
+}
+
+nsresult
 nsHttpChannel::Connect(PRBool firstTime)
 {
     nsresult rv;
@@ -221,7 +275,7 @@ nsHttpChannel::Connect(PRBool firstTime)
 
         ioService->GetOffline(&offline);
         if (offline)
-            mFromCacheOnly = PR_TRUE;
+            mLoadFlags |= LOAD_ONLY_FROM_CACHE;
 
         // open a cache entry for this channel...
         rv = OpenCacheEntry(offline, &delayed);
@@ -230,7 +284,7 @@ nsHttpChannel::Connect(PRBool firstTime)
             LOG(("OpenCacheEntry failed [rv=%x]\n", rv));
             // if this channel is only allowed to pull from the cache, then
             // we must fail if we were unable to open a cache entry.
-            if (mFromCacheOnly)
+            if (mLoadFlags & LOAD_ONLY_FROM_CACHE)
                 return NS_ERROR_DOCUMENT_NOT_CACHED;
             // otherwise, let's just proceed without using the cache.
         }
@@ -251,7 +305,7 @@ nsHttpChannel::Connect(PRBool firstTime)
         if (mCachedContentIsValid) {
             return ReadFromCache();
         }
-        else if (mFromCacheOnly) {
+        else if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
             // the cache contains the requested resource, but it must be 
             // validated before we can reuse it.  since we are not allowed
             // to hit the net, there's nothing more to do.  the document
@@ -302,51 +356,6 @@ nsHttpChannel::AsyncAbort(nsresult status)
     return NS_OK;
 }
 
-nsresult
-nsHttpChannel::AsyncRedirect()
-{
-    nsCOMPtr<nsIEventQueueService> eqs;
-    nsCOMPtr<nsIEventQueue> eventQ;
-
-    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
-    if (eqs)
-        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(eventQ));
-    if (!eventQ)
-        return NS_ERROR_FAILURE;
-
-    PLEvent *event = new PLEvent;
-    if (!event)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF_THIS();
-
-    PL_InitEvent(event, this,
-            nsHttpChannel::AsyncRedirect_EventHandlerFunc,
-            nsHttpChannel::AsyncRedirect_EventCleanupFunc);
-
-    PRStatus status = eventQ->PostEvent(event);
-    return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
-}
-
-void *PR_CALLBACK
-nsHttpChannel::AsyncRedirect_EventHandlerFunc(PLEvent *ev)
-{
-    nsHttpChannel *chan =
-        NS_STATIC_CAST(nsHttpChannel *, PL_GetEventOwner(ev));
-
-    if (chan) {
-        chan->HandleAsyncRedirect();
-        NS_RELEASE(chan);
-    }
-    return nsnull;
-}
-
-void PR_CALLBACK
-nsHttpChannel::AsyncRedirect_EventCleanupFunc(PLEvent *ev)
-{
-    delete ev;
-}
-
 void
 nsHttpChannel::HandleAsyncRedirect()
 {
@@ -376,6 +385,26 @@ nsHttpChannel::HandleAsyncRedirect()
     // close the cache entry... blow it away if we couldn't process
     // the redirect for some reason.
     CloseCacheEntry(rv);
+
+    mIsPending = PR_FALSE;
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+}
+
+void
+nsHttpChannel::HandleAsyncNotModified()
+{
+    LOG(("nsHttpChannel::HandleAsyncNotModified [this=%p]\n", this));
+
+    if (mListener) {
+        mListener->OnStartRequest(this, mListenerContext);
+        mListener->OnStopRequest(this, mListenerContext, mStatus);
+        mListener = 0;
+        mListenerContext = 0;
+    }
+
+    CloseCacheEntry(NS_OK);
 
     mIsPending = PR_FALSE;
 
@@ -1237,7 +1266,13 @@ nsHttpChannel::ReadFromCache()
     // header, otherwise we'll have to treat this like a normal 200 response.
     if (mResponseHead && (mResponseHead->Status() / 100 == 3) 
                       && (mResponseHead->PeekHeader(nsHttp::Location)))
-        return AsyncRedirect();
+        return AsyncCall(&nsHttpChannel::HandleAsyncRedirect);
+
+    // have we been configured to skip reading from the cache?
+    if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !mCachedContentIsPartial) {
+        LOG(("skipping read from cache based on LOAD_ONLY_IF_MODIFIED load flag\n"));
+        return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
+    }
 
     // Get a transport to the cached data...
     rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
@@ -3149,12 +3184,11 @@ nsHttpChannel::GetCacheKey(nsISupports **key)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetCacheKey(nsISupports *key, PRBool fromCacheOnly)
+nsHttpChannel::SetCacheKey(nsISupports *key)
 {
     nsresult rv;
 
-    LOG(("nsHttpChannel::SetCacheKey [this=%x key=%x fromCacheOnly=%d]\n",
-        this, key, fromCacheOnly));
+    LOG(("nsHttpChannel::SetCacheKey [this=%x key=%x]\n", this, key));
 
     // can only set the cache key if a load is not in progress
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
@@ -3169,8 +3203,6 @@ nsHttpChannel::SetCacheKey(nsISupports *key, PRBool fromCacheOnly)
         rv = container->GetData(&mPostID);
         if (NS_FAILED(rv)) return rv;
     }
-
-    mFromCacheOnly = fromCacheOnly;
     return NS_OK;
 }
 
@@ -3210,9 +3242,15 @@ nsHttpChannel::GetCacheFile(nsIFile **cacheFile)
 NS_IMETHODIMP
 nsHttpChannel::IsFromCache(PRBool *value)
 {
+    if (!mIsPending)
+        return NS_ERROR_NOT_AVAILABLE;
+
     // return false if reading a partial cache entry; the data isn't entirely
     // from the cache!
-    *value = (mCacheReadRequest && !mCachedContentIsPartial);
+
+    *value = (mCacheReadRequest || (mLoadFlags & LOAD_ONLY_IF_MODIFIED)) &&
+              mCachedContentIsValid && !mCachedContentIsPartial;
+
     return NS_OK;
 }
 
@@ -3245,7 +3283,7 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
         LOG(("channel was canceled [this=%x status=%x]\n", this, mStatus));
         rv = mStatus;
     }
-    else if (mFromCacheOnly && NS_FAILED(status))
+    else if ((mLoadFlags & LOAD_ONLY_FROM_CACHE) && NS_FAILED(status))
         // if this channel is only allowed to pull from the cache, then
         // we must fail if we were unable to open a cache entry.
         rv = NS_ERROR_DOCUMENT_NOT_CACHED;

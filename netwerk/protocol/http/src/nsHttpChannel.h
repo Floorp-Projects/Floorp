@@ -94,10 +94,21 @@ public:
                   nsIProxyInfo* proxyInfo);
 
 private:
+    typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
+
+    //
+    // AsyncCall may be used to call a member function asynchronously.
+    //
+    struct nsAsyncCallEvent : PLEvent
+    {
+        nsAsyncCallback mFuncPtr;
+    };
+    nsresult AsyncCall(nsAsyncCallback funcPtr);
+
     nsresult Connect(PRBool firstTime = PR_TRUE);
     nsresult AsyncAbort(nsresult status);
-    nsresult AsyncRedirect();
     void     HandleAsyncRedirect();
+    void     HandleAsyncNotModified();
     nsresult SetupTransaction();
     void     ApplyContentConversions();
     nsresult ProcessResponse();
@@ -136,8 +147,8 @@ private:
     nsresult GetCurrentPath(nsACString &);
     void     ClearPasswordManagerEntry(const char *host, PRInt32 port, const char *realm, const PRUnichar *user);
 
-    static void *PR_CALLBACK AsyncRedirect_EventHandlerFunc(PLEvent *);
-    static void  PR_CALLBACK AsyncRedirect_EventCleanupFunc(PLEvent *);
+    static void *PR_CALLBACK AsyncCall_EventHandlerFunc(PLEvent *);
+    static void  PR_CALLBACK AsyncCall_EventCleanupFunc(PLEvent *);
 
 private:
     nsCOMPtr<nsIURI>                  mOriginalURI;
@@ -193,7 +204,6 @@ private:
     PRPackedBool                      mIsPending;
     PRPackedBool                      mApplyConversion;
     PRPackedBool                      mAllowPipelining;
-    PRPackedBool                      mFromCacheOnly;
     PRPackedBool                      mCachedContentIsValid;
     PRPackedBool                      mCachedContentIsPartial;
     PRPackedBool                      mResponseHeadersModified;

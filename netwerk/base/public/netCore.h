@@ -98,6 +98,11 @@
 #define NS_ERROR_REDIRECT_LOOP \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 31)
 
+/**
+ * nsresult passed through onStopRequest if the document could not be fetched from the cache.
+ */
+#define NS_ERROR_DOCUMENT_NOT_CACHED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 70)
+
 // Where most necko status messages come from:
 #define NECKO_MSGS_URL  "chrome://necko/locale/necko.properties"
 
