@@ -88,10 +88,9 @@ function toOpenWindowByType( inType, uri )
 function OpenBrowserWindow()
 {
   dump("In OpenBrowserWindw()...\n");
-  var handler = Components.classes['component://netscape/appshell/component/browser/cmdhandler'];
+  var handler = Components.classes['component://netscape/commandlinehander/general-startup-browser'];
   handler = handler.getService();
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
-                    startpage = handler.defaultArgs;
   var startpage = handler.defaultArgs;
   var url = handler.chromeUrlForTask;
   window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage );
