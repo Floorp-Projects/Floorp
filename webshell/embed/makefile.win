@@ -18,6 +18,10 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS= ActiveX
+DIRS= ActiveX \
+!if defined(NGPREFS)
+      ngprefs \
+!endif
+      $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
