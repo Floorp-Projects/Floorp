@@ -63,30 +63,30 @@
     <key id="fooKey" key="s"   event="keydown" oncommand="foo()" modifiers="accel, shift"/>
   </keyset>
 
-  <box class="box-header" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>
+  <hbox class="box-header" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>
   
-  <box class="wizard-box" flex="1">
+  <hbox class="wizard-box" flex="1">
 
     <!-- instructions -->
     <deck id="prattle">
       <html id="intro" style="width: 17em;border:1px solid transparent;" flex="1">&introgeneral.label;</html>
-      <box orient="vertical" id="manager">
+      <vbox id="manager">
         <html style="width: 17em;" class="label">&pmTextA.label;</html>
         <separator/>
-        <box>
-          <box orient="vertical" flex="1" id="managebuttons">
+        <hbox>
+          <vbox flex="1" id="managebuttons">
             <button id="newbutton" label="&newButton.label;" oncommand="CreateProfileWizard();"/>
             <button id="renbutton" label="&renameButton.label;" oncommand="RenameProfile();"/>
             <button id="delbutton" label="&deleteButton.label;" oncommand="ConfirmDelete();"/>
-          </box>
+          </vbox>
           <spring flex="2"/>
-        </box>
-      </box>
+        </hbox>
+      </vbox>
     </deck>  
       
     <separator class="thin" orient="vertical"/>
     
-    <box orient="vertical" flex="1">
+    <vbox flex="1">
       <tree id="profiles" class="inset" flex="1" style="height: 0px;"
             onclick="HandleClickEvent( event );"
             onselect="DoEnabling();"
@@ -101,22 +101,22 @@
         </treehead>
         <treechildren id="profilekids" flex="1"/>
       </tree>    
-      <box autostretch="never">
+      <hbox autostretch="never">
         <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
-      </box>
-    </box>
-  </box>
+      </hbox>
+    </vbox>
+  </hbox>
   
-  <box class="selection">
+  <hbox class="selection">
     <separator class="thin" orient="vertical"/>
     <button id="manage" label="&manage.label;" oncommand="SwitchProfileManagerMode();"/>
     <spring flex="1"/>
-    <box id="okCancelButtons"/>
+    <hbox id="okCancelButtons"/>
     <separator class="thin" orient="vertical"/>
-  </box>
+  </hbox>
   
   <separator class="thin" />
   
-  <box id="profileManager-status" class="box-status" value="&profilemanager.label;" progress=""/>
+  <hbox id="profileManager-status" class="box-status" value="&profilemanager.label;" progress=""/>
   
 </window>

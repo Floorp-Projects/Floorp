@@ -71,11 +71,11 @@
       </row>
       <row>
         <spring/>
-        <box>
+        <hbox>
           <spring flex="1"/>
           <button label="&browse.label;" accesskey="&browse.accesskey;" 
                   oncommand="chooseApp();"/>
-        </box>
+        </hbox>
       </row>
     </rows>
   </grid>
@@ -88,7 +88,7 @@
   
   <separator/>
   
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
   
 </window>
         

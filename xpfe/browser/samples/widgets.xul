@@ -31,7 +31,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         style="width: 250px;"
-        align="vertical"> 
+        orient="vertical"> 
               
   <script>
   <![CDATA[
@@ -51,27 +51,27 @@
   ]]>
   </script>              
               
-  <box autostretch="never" valign="center">
+  <hbox autostretch="never" valign="center">
     <text class="label" value="Foo Label 1:" for="nerp1"/>
     <textbox flex="1" id="nerp1" disabled="true" value="disabled"/>
     <button label="Test Property APIs" oncommand="testProperty('nerp1');"/>
-  </box>
-  <box autostretch="never" valign="center">
+  </hbox>
+  <hbox autostretch="never" valign="center">
     <text class="label" value="Foo Label 2:" for="nerp2"/>
     <textbox flex="1" id="nerp2" readonly="true" value="readonly"/>
     <button label="Test Property APIs" oncommand="testProperty('nerp2');"/>
-  </box>
-  <box autostretch="never" valign="center">
+  </hbox>
+  <hbox autostretch="never" valign="center">
     <text class="label" value="Foo Label 2:" for="nerp2r"/>
     <textbox flex="1" id="nerp2r" readonly="true" disabled="true" value="readonly disabled"/>
     <button label="Test Property APIs" oncommand="testProperty('nerp2r');"/>
-  </box>
-  <box autostretch="never" valign="center">
+  </hbox>
+  <hbox autostretch="never" valign="center">
     <text class="label" value="Foo Label 3:" for="nerp3"/>
     <textbox flex="1" id="nerp3" value="regular"/>
     <button label="Test Property APIs" oncommand="testProperty('nerp3');"/>
-  </box>
-  <box autostretch="never" valign="center">
+  </hbox>
+  <hbox autostretch="never" valign="center">
     <text class="label" value="Foo Label 5:" for="nerp4"/>
     <menubutton label="regular menubutton">
       <menupopup>
@@ -87,9 +87,9 @@
         <menuitem label="foo 3"/>
       </menupopup>
     </menubutton>    
-  </box>
+  </hbox>
   
-  <box autostretch="never" valign="center">
+  <hbox autostretch="never" valign="center">
     <text class="label" value="Foo Label 5:" for="nerp4"/>
     <menulist label="regular menulist">
       <menupopup>
@@ -105,64 +105,64 @@
         <menuitem label="foo 3"/>
       </menupopup>
     </menulist>    
-  </box>  
+  </hbox>  
   
-  <box>
+  <hbox>
     <text class="label" value="Foo Label 4:"/>
-    <box orient="vertical" flex="1">
+    <vbox flex="1">
       <textbox flex="1"/>
-      <box orient="vertical" autostretch="never">
-        <box flex="1">
+      <vbox autostretch="never">
+        <hbox flex="1">
           <checkbox label="Checkbox 1" id="checkbox1"/>
           <spring flex="1"/>
           <button label="Test Property APIs" oncommand="testProperty('checkbox1');"/>
-        </box>
+        </hbox>
         <checkbox label="Checkbox 2" disabled="true" checked="true"/>
         <checkbox label="Checkbox 3"/>
-      </box>
+      </vbox>
       <separator class="groove"/>
       <radiogroup id="group" orient="vertical">
-        <box>
+        <hbox>
           <radio group="group" label="Radio 1" id="radio1"/>
           <spring flex="1"/>
           <button label="Test Property APIs" oncommand="testProperty('radio1');"/>
-        </box>
+        </hbox>
         <radio group="group" label="Radio 2"/>
         <radio group="group" label="Radio 3" disabled="true" checked="true"/>
       </radiogroup>
-    </box>
-  </box>
+    </vbox>
+  </hbox>
 
   <separator/>
   
-  <box autostretch="never" valign="center">
+  <hbox autostretch="never" valign="center">
     <text class="label" value="Foo Label 7:"/>
     <button label="Standard XUL Button"/>
     <button class="dialog" label="Dialog XUL Button"/>
     <button class="dialog" disabled="true" default="true" label="Disabled Button"/>
-  </box>
+  </hbox>
         
   <separator/>
   
-  <box>
-    <box orient="vertical">
+  <hbox>
+    <vbox>
       <text class="label" value="Foo Label 6:"/>
       <spring flex="1"/>
-    </box>
+    </vbox>
     <textbox id="textarea" rows="3" multiline="true" value="Regular multiline textbox"/>
-    <box orient="vertical">
+    <vbox>
       <button label="Test Property APIs" oncommand="testProperty('textarea');"/>
       <spring flex="1"/>
-    </box>
-  </box>
+    </vbox>
+  </hbox>
   
-  <box>
-    <box orient="vertical">
+  <hbox>
+    <vbox>
       <text class="label" value="Foo Label 6:"/>
       <spring flex="1"/>
-    </box>
+    </vbox>
     <textbox rows="3" multiline="true" disabled="true" value="Disabled multiline textbox"/>
-  </box>
+  </hbox>
   
   <separator/>
 
@@ -188,10 +188,10 @@
   </script>
   
   
-  <box autostretch="never" valign="center">
+  <hbox autostretch="never" valign="center">
     <progressmeter id="normal" mode="normal" flex="1"/>
     <button label="Advance Progress" oncommand="advanceProgress();"/>
-  </box>
+  </hbox>
   
   <separator/>
   

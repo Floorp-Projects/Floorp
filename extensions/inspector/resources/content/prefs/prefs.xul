@@ -18,5 +18,5 @@
     <tabpanels id="tabpanelsPrefs" flex="1"/>
   </tabbox>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 </window>

@@ -17,20 +17,20 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
   
-  <box orient="vertical">
-    <box autostretch="never">
+  <vbox>
+    <hbox autostretch="never">
       <text id="txSearchFor" value="&txSearchFor.label;"/>
       <textbox id="txfSearchFor" style="width: 25em;" persist="true"/>
-    </box>
-    <box autostretch="never">
+    </hbox>
+    <hbox autostretch="never">
       <text id="txSearchPath" value="&txSearchPath.label;"/>
       <textbox id="txfSearchPath" style="width: 25em;" persist="true"/>
       <button id="btnSearchPathBrowser" label="Browse" onclick="dialog.browse()" persist="true"/>
-    </box>
-    <box autostretch="never">
+    </hbox>
+    <hbox autostretch="never">
       <checkbox id="cbRecurse" label="&cbRecurse.label;"/>
-    </box>    
-  </box>
+    </hbox>    
+  </vbox>
 
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 </window>

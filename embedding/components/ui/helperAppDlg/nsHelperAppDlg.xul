@@ -42,7 +42,7 @@
         onload="dialog.initDialog()"
         style="width: 40em;"
         class="dialog"
-        align="vertical">
+        orient="vertical">
 
             
     <keyset id="dialogKeys"/>
@@ -60,44 +60,44 @@
       <separator orient="horizontal" class="thin"/>
       <radiogroup id="mode" orient="vertical" oncommand="dialog.toggleChoice()">
         <hbox flex="1">
-          <box autostretch="never" flex = "1">
+          <hbox autostretch="never" flex="1">
             <radio id="openUsing" flex="1"
                    group="mode"
                    label="&openUsing.label;"
                    accesskey="&openUsing.accesskey;"/>
-          </box>
+          </hbox>
                
-          <box class="indent" autostretch="never">
+          <hbox class="indent" autostretch="never">
             <button id="chooseApp"
                     class="dialog"
                     label="&chooseApp.label;"
                     accesskey="&chooseApp.accesskey;"
                     oncommand="dialog.chooseApp()"/>
-          </box>
+          </hbox>
         </hbox>
         <vbox>
-          <box autostretch="never">
+          <hbox autostretch="never">
             <radio id="saveToDisk"
                        group="mode"
                        label="&saveToDisk.label;"
                        accesskey="&saveToDisk.accesskey;"/>
-          </box>
+          </hbox>
         </vbox>
       </radiogroup>
       <separator orient="horizontal" class="thin"/>
-      <box autostretch="never">
+      <hbox autostretch="never">
         <checkbox id="alwaysAskMe" label="&alwaysAsk.label;" accesskey="&alwaysAsk.accesskey;"/>
-      </box>
+      </hbox>
     </vbox>
 
     <separator class="groove"/>
 
-    <box>
+    <hbox>
       <button class="dialog" id="default.set" label="&default.set.label;" accesskey="&default.set.accesskey;"
         oncommand="dialog.setDefault()"/>
       <spring flex="1"/>
-      <box id="okCancelButtonsRight"/>
-    </box>
+      <hbox id="okCancelButtonsRight"/>
+    </hbox>
            
     <!-- Localizable strings (from .dtd) -->
     <strings style="display:none;">

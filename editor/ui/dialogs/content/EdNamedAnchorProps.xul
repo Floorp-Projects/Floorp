@@ -52,8 +52,8 @@
              tooltip="aTooltip" tooltiptext="&nameInput.tooltip;"/>
   <spring class="spacer"/>
   <!-- from EdDialogOverlay -->
-  <box id="AdvancedEdit"/>
+  <hbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/> 
+  <hbox id="okCancelButtons"/> 
 
 </window>

@@ -43,23 +43,23 @@
       <tab label="Node"/>
     </tabs>
     <tabpanels flex="1">
-      <box id="bxDocPane" flex="1" orient="vertical">
-        <box id="bxDocHeader" autostretch="never">
+      <vbox id="bxDocPane" flex="1">
+        <hbox id="bxDocHeader" autostretch="never">
           <menubutton class="viewer-list" ins-role="viewer-list" disabled="true"/>
           <text class="viewer-title" ins-role="viewer-title" flex="1"/>
           <menubutton class="viewer-menu" ins-role="viewer-menu" disabled="true"/>
-        </box>
+        </hbox>
         <iframe id="ifDocViewer" class="viewer-iframe" flex="1" ins-role="viewer-iframe"/>
-      </box>
+      </vbox>
       
-      <box id="bxObjectPane" flex="1" orient="vertical">
-        <box id="bxObjHeader" autostretch="never">
+      <vbox id="bxObjectPane" flex="1">
+        <hbox id="bxObjHeader" autostretch="never">
           <menubutton class="viewer-list" ins-role="viewer-list" disabled="true"/>
           <text class="viewer-title" ins-role="viewer-title" flex="1"/>
           <menubutton class="viewer-menu" ins-role="viewer-menu" disabled="true"/>
-        </box>
+        </hbox>
         <iframe id="ifObjViewer" class="viewer-iframe" flex="1" ins-role="viewer-iframe"/>
-      </box>
+      </vbox>
     </tabpanels>
   </tabbox>
 </window>

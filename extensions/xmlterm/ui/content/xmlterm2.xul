@@ -29,7 +29,7 @@
 <window id="xmlterm-window" xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="StartupXMLTerm();"
-        title="xmlterm2" align="vertical" width="740" height="484">
+        title="xmlterm2" orient="vertical" width="740" height="484">
   
   <script type="application/x-javascript" src="chrome://xmlterm/content/XMLTermChrome.js"/>
 

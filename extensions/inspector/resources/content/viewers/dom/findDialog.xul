@@ -24,7 +24,7 @@
     <key id="kClose" keycode="VK_ESCAPE" observes="cmdClose"/>
   </keyset>
 
-  <box orient="vertical" autostretch="never">
+  <vbox autostretch="never">
     <grid>
       <columns>
         <column/>
@@ -41,27 +41,27 @@
         </row>
       </rows>
     </grid>
-    <box orient="horizontal" autostretch="never" style="vertical-align: top">
-      <titledbox id="tbxType">
+    <hbox autostretch="never" style="vertical-align: top">
+      <groupbox id="tbxType">
         <label value="Search By"/>
         <radiogroup id="rgType" orient="vertical">
           <radio id="rdType_id" label="ID" oncommand="dialog.toggleType('id')"/>
           <radio id="rdType_tag" label="Tag" oncommand="dialog.toggleType('tag')"/>
           <radio id="rdType_attr" label="Attribute" oncommand="dialog.toggleType('attr')"/>
         </radiogroup>
-      </titledbox>
-      <titledbox id="tbxDirection" hide="true">
+      </groupbox>
+      <groupbox id="tbxDirection" hide="true">
         <label value="Direction"/>
         <radiogroup id="rgDirection" orient="horizontal">
           <radio id="rdDir_up" label="Up"/>
           <radio id="rdDir_down" label="Down"/>
         </radiogroup>
-      </titledbox>
-    </box>
-  </box>
+      </groupbox>
+    </hbox>
+  </vbox>
 
-  <box orient="vertical">
+  <vbox>
     <button label="Find" observes="cmdFind" default="true"/>
     <button label="Close" observes="cmdClose"/>
-  </box>
+  </vbox>
 </window>

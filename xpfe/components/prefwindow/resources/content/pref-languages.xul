@@ -44,18 +44,18 @@
                 prefstring="intl.accept_languages"/>
 
                 
-    <box class="box-smallheader" title="&languages.customize.lHeader;"/>
+    <hbox class="box-smallheader" title="&languages.customize.lHeader;"/>
     <!--
       description="&languages.customize.rHeader;    
     -->
 
-  <titledbox orient="vertical" flex="1">
+  <groupbox orient="vertical" flex="1">
     <label value="&langtitle.label;"/>
 
     <html>&languages.customize.prefLangDescript;</html>
 
     <html>&languages.customize.active.label;</html>
-    <box flex="1">
+    <hbox flex="1">
       <tree class="inset" id="active_languages" flex="1" style="width: 0px; height: 0px;"
             pref="true" preftype="string" prefstring="intl.accept_languages" prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
             datasources="rdf:null" multiple="true" onselect="SelectLanguage();">
@@ -64,7 +64,7 @@
         </treecolgroup>
         <treechildren id="active_languages_root" flex="1"/>
       </tree>
-      <box orient="vertical">
+      <vbox>
         <button oncommand="MoveUp();" id="up" class="up" disabled="true"
                 label="&languages.customize.moveUp.label;"
                 accesskey="&languages.customize.moveUp.accesskey;"
@@ -86,10 +86,10 @@
                 oncommand="RemoveActiveLanguage();"
                 pref="true" preftype="bool"
                 prefstring="pref.browser.language.disable_button.remove" prefattribute="disabled"/>
-      </box>
-    </box>
-  </titledbox>
-  <titledbox orient="vertical" autostretch="never">
+      </vbox>
+    </hbox>
+  </groupbox>
+  <groupbox orient="vertical" autostretch="never">
     <label value="&languages.customize.Charset.grouplabel;"/>
     <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
     <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
@@ -101,5 +101,5 @@
           </menupopup>
         </template>
     </menulist>       
-  </titledbox>
+  </groupbox>
 </window>

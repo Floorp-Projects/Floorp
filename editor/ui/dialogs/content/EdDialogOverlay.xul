@@ -28,15 +28,15 @@
      xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<box id="AdvancedEdit" orient="vertical"  flex="1">
-  <box flex="1" style="margin-top: 0.2em" autostretch="never">
+<vbox id="AdvancedEdit"  flex="1">
+  <hbox flex="1" style="margin-top: 0.2em" autostretch="never">
     <!-- This will right-align the button -->
     <spring flex="1"/>
     <button class="dialog" id="AdvancedEditButton1" oncommand="onAdvancedEdit()" label="&AdvancedEditButton.label;"
             tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;"/>
-  </box>
+  </hbox>
   <separator class="groove"/>
-</box>
+</vbox>
 
 <!-- Extra buttons to use when just button is needed
      E.g. Image Properties Dialog switches position between 2 locations

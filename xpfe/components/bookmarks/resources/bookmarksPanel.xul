@@ -67,14 +67,14 @@
   <!-- bookmarks & edit commands -->
   <commandset id="bookmarksItems"/>
   
-  <box id="panel-bar" class="toolbar">
+  <hbox id="panel-bar" class="toolbar">
     <button class="button-toolbar" label="&command.addBookmark.label;"
             oncommand="gBookmarksShell.addBookmark();"/>
     <button class="button-toolbar" label="&command.manageBookmarks.label;"
             oncommand="gBookmarksShell.manageBookmarks();"/>
     <button class="button-toolbar" label="&command.findBookmarks.label;"
             oncommand="gBookmarksShell.findInBookmarks();"/>
-  </box>
+  </hbox>
   
   <tree id="bookmarksTree" context="bmContext" ref="NC:BookmarksRoot" class="sidebarTree"
         datasources="rdf:bookmarks rdf:files rdf:httpindex rdf:localsearch rdf:internetsearch"

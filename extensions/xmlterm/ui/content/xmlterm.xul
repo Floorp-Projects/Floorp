@@ -33,7 +33,7 @@ NOTE: Put all the skin stuff in the content directory for the moment
 <window id="xmlterm-window" xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="StartupXMLTerm();"
-        title="xmlterm" align="vertical" width="586" height="412">
+        title="xmlterm" orient="vertical" width="586" height="412">
   
   <script src="chrome://xmlterm/content/XMLTermChrome.js"></script>
 

@@ -129,6 +129,6 @@
   </vbox>
 
   <!-- XXX - need to use an "Add Bookmark" string here -->
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>        

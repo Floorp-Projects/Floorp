@@ -33,11 +33,11 @@
   <script type="application/x-javascript" src="chrome://global/content/wizardManager.js"/>
   <script type="application/x-javascript" src="chrome://global/content/widgetStateManager.js"/>
 
-  <box class="box-header" id="header" title="&window.title.label;" description="&profileWizard.title;"/>
-  <box class="wizard-box" flex="1">
+  <hbox class="box-header" id="header" title="&window.title.label;" description="&profileWizard.title;"/>
+  <hbox class="wizard-box" flex="1">
     <html:iframe src="about:blank" style="width: 40em; height: 23em; overflow: auto;" name="content" id="content" flex="1"/>
-  </box>
+  </hbox>
   <separator class="groove"/>
-  <box id="wizardButtons"/>
+  <hbox id="wizardButtons"/>
 
 </window>

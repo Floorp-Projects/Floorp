@@ -28,12 +28,12 @@
 
   ]]/>
 
-  <box class="box-smallheader" title="&Inspector.label;"/>
+  <hbox class="box-smallheader" title="&Inspector.label;"/>
 
-  <box id="bxGeneralPrefs">
-    <titledbox>
+  <hbox id="bxGeneralPrefs">
+    <groupbox>
       <label value="Element Blinking"/>
-      <box orient="vertical">
+      <vbox>
         <grid>
           <columns>
             <column/>
@@ -42,42 +42,42 @@
           <rows>
             <row autostretch="never">
               <text value="Border Color"/>
-              <box autostretch="never">
+              <hbox autostretch="never">
                 <colorpicker id="cprElBorderColor" type="button"
                   pref="true" preftype="color" prefstring="inspector.blink.border-color" prefattribute="color"/>
-              </box>
+              </hbox>
             </row>
             <row autostretch="never">
               <text value="Border Width"/>
-              <box autostretch="never">
+              <hbox autostretch="never">
                 <textbox id="txfElBorderWidth" style="width: 4em"
                   pref="true" preftype="int" prefstring="inspector.blink.border-width" prefattribute="value"/>
                 <text value="(px)"/>
-              </box>
+              </hbox>
             </row>
             <row autostretch="never">
               <text value="Blink Duration"/>
-              <box autostretch="never">
+              <hbox autostretch="never">
                 <textbox id="txfElDuration" style="width: 4em"
                   pref="true" preftype="int" prefstring="inspector.blink.duration" prefattribute="value"/>
                 <text value="(s)"/>
-              </box>
+              </hbox>
             </row>
             <row autostretch="never">
               <text value="Blink Speed"/>
-              <box autostretch="never">
+              <hbox autostretch="never">
                 <textbox id="txfElSpeed" style="width: 4em"
                   pref="true" preftype="int" prefstring="inspector.blink.speed" prefattribute="value"/>
                 <text value="(ms)"/>
-               </box>
+               </hbox>
             </row>
           </rows>
         </grid>
-        <box autostretch="never">
+        <hbox autostretch="never">
           <checkbox id="cbElOn" label="Blink Selected Element"
               pref="true" preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
-        </box>
-      </box>
-    </titledbox>
-  </box>
+        </hbox>
+      </vbox>
+    </groupbox>
+  </hbox>
 </window>

@@ -65,6 +65,6 @@
     </menulist>       
 
   <separator/>  
-  <box id="okCancelButtonsRight"/>
+  <hbox id="okCancelButtonsRight"/>
         
 </window>        

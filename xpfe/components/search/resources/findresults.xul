@@ -4,7 +4,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/findresults.dtd">
 
-<window class="dialog" title="&window.title.label;" style="width:100%; height:100%; background-color:white" align="vertical"
+<window class="dialog" title="&window.title.label;" style="width:100%; height:100%; background-color:white" orient="vertical"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -68,7 +68,7 @@
 
     <treechildren open="true" flex="1"/>
   </tree>
-  <spring flex="100%" align="horizontal" />
+  <spring flex="100%" orient="horizontal" />
 
 <!--
 This extra "status" bar is necessary because the bottom right corner of the window on MacOS is
@@ -78,7 +78,7 @@ combat this, we can just stick in a 15px high bar to bump up the bottom of the t
 the scrollbar is visible. Yes, I know this is not necessary for win32 or gtk, but we can
 use this area for information (maybe full URL of selected item or the like) in the future.
 -->
-  <box id="status-bar" style="min-height:15px; max-height:15px;">
+  <hbox id="status-bar" style="min-height:15px; max-height:15px;">
     <button class="status-bar" align="left" label=""/>
-  </box>
+  </hbox>
 </window>

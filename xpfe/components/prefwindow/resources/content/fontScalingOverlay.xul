@@ -29,7 +29,7 @@ Contributor(s): ______________________________________. -->
          >
 
   <window id="fontPanel">
-    <titledbox orient="vertical">
+    <groupbox orient="vertical">
       <label value="&fontScaling;"/>
       <html:div>&fontScalingIntro;</html:div>
       <spring style="height: 10px;"/>
@@ -39,6 +39,6 @@ Contributor(s): ______________________________________. -->
                     prefstring="browser.display.screen_resolution" value="&defaultScaling;" size="3"/>
         <html:label>&fontScalingExample;</html:label>
       </html:div>
-    </titledbox>
+    </groupbox>
   </window>
 </overlay>

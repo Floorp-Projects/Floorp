@@ -43,19 +43,19 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
   <vbox>
     <text class="label small-margin" value="&authorName.label;"/>
-    <box>
+    <hbox>
       <textbox id="editorAuthor" flex="1"
                  pref="true" preftype="string" prefstring="editor.author"
                  prefattribute="value"/>
       <spring flex="1"/>
-    </box>
+    </hbox>
   </vbox>
   <spring class="smallspacer"/>
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&pageColorHeader;"/> 
     <radiogroup id="useCustomColors" orient="vertical" autostretch="never"  
                 pref="true" preftype="bool" prefstring="editor.use_custom_colors"
@@ -70,7 +70,7 @@
           accesskey="&customColors.accesskey;" 
           oncommand="UseCustomColors()"/>
     </radiogroup>
-    <box class="big-left-margin">
+    <hbox class="big-left-margin">
       <grid>
         <columns><column/><column/></columns>
         <rows>
@@ -78,11 +78,11 @@
             <text class="label" id="Text" value="&normalText.label;&colon.character;" />
             <stack>
               <button id="TextButton" class="dialog color-button" oncommand="GetColorAndUpdate('textCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="textCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
             <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value" wsm_attributes="value"/>
           </row>
@@ -90,11 +90,11 @@
             <text class="label" id="Link" value="&linkText.label;&colon.character;" />
             <stack>
               <button id="LinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('linkCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="linkCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
             <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
@@ -102,11 +102,11 @@
             <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
             <stack>
               <button id="ActiveLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('activeCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="activeCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
             <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
@@ -114,11 +114,11 @@
             <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
             <stack>
               <button id="VisitedLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('visitedCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="visitedCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
               <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
             </stack>
           </row>
@@ -126,11 +126,11 @@
             <text class="label" id="Background" value="&background.label;" />
             <stack>
               <button id="BackgroundButton" class="dialog color-button" oncommand="GetColorAndUpdate('backgroundCW');"/>
-              <box autostretch="never" valign="middle" mousethrough="always">
+              <hbox autostretch="never" valign="middle" mousethrough="always">
                 <spring flex="1"/>
                 <spring id="backgroundCW" class="color-well"/>
                 <spring flex="1"/>
-              </box>
+              </hbox>
             </stack>
             <data id="backgroundColorData" pref="true" preftype="color" prefstring="editor.background_color" prefattribute="value" wsm_attributes="value"/>
           </row>
@@ -148,10 +148,10 @@
         <spring flex="1"/>
       </vbox>
       <spring flex="1"/>
-    </box>
+    </hbox>
     <spring class="spacer"/>
     <text class="label small-margin" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
-    <box valign="middle" autostretch="never">
+    <hbox valign="middle" autostretch="never">
       <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width: 23em" flex="1">
         <observes element="backgroundImageData" attribute="disabled"/>
       </textbox>
@@ -160,6 +160,6 @@
         <observes element="backgroundImageData" attribute="disabled"/>
       </button>
       <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 </window>

@@ -48,7 +48,7 @@
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
   
-  <titledbox orient="vertical"><label value="&dimensionsBox.label;"/>
+  <groupbox orient="vertical"><label value="&dimensionsBox.label;"/>
     <grid>
       <columns><column/><column/><column /></columns>
       <rows>
@@ -66,24 +66,24 @@
       </rows>
     </grid>        
     <checkbox id="3dShading" label="&threeDShading.label;" />
-  </titledbox>
-  <titledbox><label align="left" value="&alignmentBox.label;"/>
+  </groupbox>
+  <groupbox><label align="left" value="&alignmentBox.label;"/>
     <radiogroup id="alignmentGroup" orient="horizontal">
       <spring class="spacer"/>
       <radio group="alignmentGroup" id="leftAlign" label="&leftRadio.value;" />
       <radio group="alignmentGroup" id="centerAlign" label="&centerRadio.value;" />
       <radio group="alignmentGroup" id="rightAlign" label="&rightRadio.value;" />
     </radiogroup>
-  </titledbox>
+  </groupbox>
   <spring class="spacer"/>
-  <box>
+  <hbox>
     <button class="dialog"  id="SaveDefault" label="&saveSettings.label;" 
          oncommand="onSaveDefault()"
          tooltip="aTooltip" tooltiptext="&saveSettings.tooltip;" />
     <spring flex="1"/>
     <button id="AdvancedEditButton"/>
-  </box>
+  </hbox>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 </window>

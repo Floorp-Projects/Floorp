@@ -101,13 +101,13 @@
   ]]>
   </script>
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
   
   <!-- history -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&header3.label;"/>
     <html>&historyPages.label;</html>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&pageHis.label;" accesskey="&pageHis.accesskey;" for="histDay"/>
       <textbox id="histDay" size="3" wsm_persist="true"
                  pref="true" preftype="int" prefstring="browser.history_expire_days"
@@ -118,36 +118,36 @@
         oncommand="prefClearGlobalHistory();"
         id="browserClearHistory" pref="true" preftype="bool"
         prefstring="pref.browser.history.disable_button.clear_hist" prefattribute="disabled"/>
-    </box>
-  </titledbox>  
+    </hbox>
+  </groupbox>  
   
   <!-- no honey, I haven't been viewing porn, honest! -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&locationBarHistory.label;"/>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <html flex="1">&clearLocationBar.label;</html>
-      <box autostretch="never" halign="right">
+      <hbox autostretch="never" halign="right">
         <button class="dialog" id="ClearUrlBarHistoryButton" label="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
          oncommand="prefClearUrlbarHistory();"
          pref="true" preftype="bool"
          prefstring="pref.browser.history.disable_button.clear_urlbar" prefattribute="disabled"/>
-      </box>
-    </box>
-  </titledbox>  
+      </hbox>
+    </hbox>
+  </groupbox>  
 
 
   <!-- Session History -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&shistory.label;"/>
     <html>&shistoryDescription1.label;</html>
-    <box autostretch="never">
+    <hbox autostretch="never">
       <text class="label" value="&shistoryDescription2.label;" accesskey="&shistory.accesskey;" for="shistMax"/>
       <textbox id="shistMax" size="3" wsm_persist="true"
                   pref="true" preftype="int" prefstring="browser.sessionhistory.max_entries"
                   prefattribute="value"/>      
       <spring flex="1"/>
-    </box>
-  </titledbox>  
+    </hbox>
+  </groupbox>  
 
 </window>
 

@@ -36,8 +36,8 @@
                'NC:EditorSidebarRoot');" orient="vertical">
 
 <script src="chrome://communicator/content/sidebar/sidebar.js" />
-<box id="sidebox" orient="vertical" flex="1">
- <box class="sidebartitle">
+<vbox id="sidebox" flex="1">
+ <hbox class="sidebartitle">
   <spring flex="1"/>
   <button class="dialog borderless paneltitle" 
         label="&sidebar.reload.label;"
@@ -45,6 +45,6 @@
   <button class="borderless paneltitle" 
         label="&sidebar.customize.label;" 
         oncommand="var dialogWindow=customize();" />
- </box>
-</box>
+ </hbox>
+</vbox>
 </window>

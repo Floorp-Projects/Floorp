@@ -59,10 +59,10 @@
       </row>
       <row valign="middle" autostretch="never">
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
-        <box valign="middle" autostretch="never" flex="1">
+        <hbox valign="middle" autostretch="never" flex="1">
           <textbox id="ReplaceWordInput" oninput="ChangeReplaceWord()"/>
           <button class="dialog" id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
-        </box>
+        </hbox>
       </row>
     </rows>
   </grid>
@@ -77,7 +77,7 @@
             <treecol flex="1"/>
           </treecolgroup>
         </tree>
-        <box orient="vertical">
+        <vbox>
           <grid flex="1" autostretch="never">
             <columns><column class="spell-check" flex="1"/><column class="spell-check" flex="1"/></columns>
             <rows>
@@ -93,11 +93,11 @@
           </grid>
           <spring flex="1"/>
           <text class="label" value="&userDictionary.label;"/>
-          <box flex="1" autostretch="never">
+          <hbox flex="1" autostretch="never">
             <button class="dialog spell-check" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;" />
             <button class="dialog spell-check" id="EditDictionary"  oncommand="EditDictionary()" label="&editUserDictionaryButton.label;"   />
-          </box>
-        </box>
+          </hbox>
+        </vbox>
       </row>
       <row>
         <text class="label" value ="&languagePopup.label;"/>
@@ -106,10 +106,10 @@
       <row>
         <menulist id="LanguageMenulist" oncommand="SelectLanguage()"/>
          <!-- contents are appended by JS -->
-        <box flex="1">
+        <hbox flex="1">
           <button class="dialog spell-check" id="Recheck" label="&recheckButton.label;" oncommand="Recheck()"/>
           <button class="dialog spell-check" id="Close"   label="&closeButton.label;"   oncommand="onClose()"/>
-        </box>
+        </hbox>
       </row>
     </rows>
   </grid>

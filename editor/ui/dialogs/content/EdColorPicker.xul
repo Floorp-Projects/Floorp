@@ -44,53 +44,53 @@
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
 
   <keyset id="dialogKeys"/>
-  <box id="TableOrCellGroup" valign="middle" autostretch="never" collapsed="true">
+  <hbox id="TableOrCellGroup" valign="middle" autostretch="never" collapsed="true">
     <text value="&background.label;"/>
     <radiogroup id="1" orient="horizontal">
       <radio group="1" id="TableRadio" label="&table.label;"/>
       <radio group="1" id="CellRadio"  label="&cell.label;"/>
   </radiogroup>
-  </box>
+  </hbox>
   <colorpicker id="ColorPicker" palettename="standard" 
     persist="palettename"
     onselect="SelectColor();"/>
 <!-- Web palette is not implemented???
-  <box valign="middle" autostretch="never">
+  <hbox valign="middle" autostretch="never">
     <text class="label" value="&palette.label;"/>
     <radio id="StandardPalette" label="&standardPalette.label;" oncommand="ChangePalette('standard')"/>
     <radio id="WebPalette" label="&webPalette.label;" oncommand="ChangePalette('web')"/>
-  </box>
+  </hbox>
 -->
   <spring class="spacer"/>
-  <box orient="vertical" flex="1">
+  <vbox flex="1">
     <stack valign="middle" autostretch="never">
       <button id="LastPickedButton" class="dialog" label="&lastPickedColor.label;" 
         style="margin-left:0px; margin-right: 0px;"
         onclick="SelectLastPickedColor();"/>
-      <box style="margin-left: 5px"  mousethrough="always">
-        <box orient="vertical" autostretch="never">
+      <hbox style="margin-left: 5px"  mousethrough="always">
+        <vbox autostretch="never">
           <spring flex="1"/>
           <spring id="LastPickedColor"
                       LastTextColor="" LastBackgroundColor=""
                       persist="LastTextColor LastBackgroundColor"/>
           <spring flex="1"/>
-        </box>
+        </vbox>
         <spring flex="1"/>
-      </box>
+      </hbox>
     </stack>
     <text class="label" value="&setColor1.label;"/>
     <text class="label" value="&setColor2.label;"/>
     <text class="label" value="&setColorExample.label;"/>
-    <box valign="middle" autostretch="never" flex="1=">
+    <hbox valign="middle" autostretch="never" flex="1=">
       <textbox id="ColorInput" style="width: 8em" oninput="SetColorSwatch()"/>
       <spring flex="1"/>
       <spring id="ColorPickerSwatch"/>
       <spring flex="1"/>
       <button id="DefaultColorButton" class="dialog" label="&default.label;" 
         style="margin-right:0px;" oncommand="RemoveColor()"/>
-    </box>
-  </box>
+    </hbox>
+  </vbox>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/> 
+  <hbox id="okCancelButtons"/> 
 </window>

@@ -36,9 +36,9 @@
   <script type="application/x-javascript" 
           src="chrome://communicator/content/pref/pref-fonts.js"/>
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
   
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label>
       <text class="label small-margin" 
             value="&language.label;" 
@@ -74,12 +74,12 @@
       
       <rows>
         <row autostretch="never" valign="middle">
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label small-margin" 
                   value="&proportional.label;" 
                   accesskey="&proportional.accesskey;" 
                   for="proportionalFont"/>
-          </box>
+          </hbox>
           <menulist id="proportionalFont" class="small-margin"  flex="1" style="width: 0px;" 
                     preftype="string" prefstring="font.default">
             <menupopup>
@@ -119,60 +119,60 @@
           <separator class="thin"/>
         </row>
         <row autostretch="never" valign="middle">
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label small-margin" 
                   value="&serif.label;" 
                   accesskey="&serif.accesskey;" 
                   for="serif"/>
-          </box>
+          </hbox>
           <menulist id="serif" class="small-margin" flex="1" style="width: 0px;">
             <menupopup/>
           </menulist>
           <spring/>
         </row>
         <row autostretch="never" valign="middle">
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label small-margin" 
                   value="&sans-serif.label;" 
                   accesskey="&sans-serif.accesskey;" 
                   for="sans-serif"/>
-          </box>
+          </hbox>
           <menulist id="sans-serif" class="small-margin" flex="1" style="width: 0px;">
             <menupopup/>
           </menulist>
           <spring/>
         </row>
         <row autostretch="never" valign="middle">
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label small-margin" 
                   value="&cursive.label;" 
                   accesskey="&cursive.accesskey;" 
                   for="cursive"/>
-          </box>
+          </hbox>
           <menulist id="cursive" class="small-margin">
             <menupopup/>
           </menulist>
           <spring/>
         </row>
         <row autostretch="never" valign="middle">
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label small-margin" 
                   value="&fantasy.label;" 
                   accesskey="&fantasy.accesskey;" 
                   for="fantasy"/>
-          </box>
+          </hbox>
           <menulist id="fantasy" class="small-margin">
             <menupopup/>
           </menulist>
           <spring/>
         </row>
         <row autostretch="never" valign="middle">
-          <box autostretch="never" halign="right">
+          <hbox autostretch="never" halign="right">
             <text class="label small-margin" 
                   value="&monospace.label;" 
                   accesskey="&monospace.accesskey;" 
                   for="monospace"/>
-          </box>
+          </hbox>
           <menulist id="monospace" class="small-margin"
                     flex="1" style="width: 0px;" crop="right">
             <menupopup/>
@@ -205,21 +205,21 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
 
   <separator class="thin"/>
   
-  <box autostretch="never">
+  <hbox autostretch="never">
     <!-- Unchecking this removes the ability to select dynamic fonts -->
     <checkbox id="browserUseDocumentFonts" 
               clas="small-margin"
               label="&useDocumentFonts.label;" 
               accesskey="&useDocumentFonts.accesskey;"/>
-  </box>
+  </hbox>
 
   <separator class="thin"/>
   
-  <box autostretch="never" valign="middle">
+  <hbox autostretch="never" valign="middle">
     <text class="label small-margin" 
           value="&resolution.label;" 
           accesskey="&resolution.accesskey;" 
@@ -244,6 +244,6 @@
       </menupopup>
     </menulist>
 
-  </box>
+  </hbox>
 
 </window>

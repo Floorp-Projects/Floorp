@@ -27,22 +27,22 @@ Contributor(s): ______________________________________. -->
 <window
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-  align="vertical"
+  orient="vertical"
   onload="selectDialogOnLoad()"
   class="dialog">
 
   <script type="application/x-javascript" src="chrome://global/content/selectDialog.js" />
   <keyset id="dialogKeys"/>
-  <box align="vertical" style="width: 24em;margin: 5px;">
+  <vbox style="width: 24em;margin: 5px;">
     <text id="info.txt" class="label"/>
-    <box orient="vertical">
+    <vbox>
       <tree rows="4" class="list" id="list" flex="1">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
         <treechildren flex="1" id="child"/>
       </tree>
-    </box>
-  </box>
-  <box id="okCancelButtons"/>
+    </vbox>
+  </vbox>
+  <hbox id="okCancelButtons"/>
 </window>

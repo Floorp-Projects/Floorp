@@ -43,12 +43,12 @@
         
   <popupset id="aTooltipSet" />
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
   <!-- Recent files menu -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&recentFiles.title;"/>
-    <box align="horizontal" autostretch="never" valign="middle">
+    <hbox autostretch="never" valign="middle">
       <text value="&documentsInMenu;"/>
       <textbox
         id="recentFiles"
@@ -61,11 +61,11 @@
         prefstring="editor.history.url_maximum"
         prefattribute="value"
       />
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
 <!-- HTML formatting on output -->
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&savingFiles.title;"/>
     <spring class="spacer"/>
     <radiogroup orient="vertical" autostretch="never"
@@ -91,9 +91,9 @@
         tooltiptext= "&reformat.tooltip;"
       />
     </radiogroup>
-  </titledbox>
+  </groupbox>
   
-  <titledbox orient="vertical" autostretch="never">
+  <groupbox orient="vertical" autostretch="never">
     <label value="&tableEditing.label;"/>
     <checkbox 
       label     = "&maintainTableStructure.label;"
@@ -106,7 +106,7 @@
       prefattribute="checked"
     />
     <separator class = "thin"/>
-    <box autostretch="never" valign="top">
+    <hbox autostretch="never" valign="top">
       <text class="label"
         value="&pressingTheDeleteKey.label;" 
         tooltip = "aTooltip" tooltiptext="&pressingTheDeleteKey.tooltip;"
@@ -121,13 +121,13 @@
         <radio group="tableDeleteKey" value="0" label="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
         <radio group="tableDeleteKey" value="1" label="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
       </radiogroup>
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 
 <!-- Take out Auto-Save; not supported at this time
-  <titledbox orient="vertical">
+  <groupbox orient="vertical">
     <label value="&saving;"/>
-    <box align="horizontal" valign="middle">
+    <hbox valign="middle">
       <checkbox 
         label      = "&AutoSaveCheck;"
         id         = "shouldAutoSave"
@@ -149,14 +149,14 @@
         prefattribute="value"
       />
       <text value="&minText;" />
-    </box>
-  </titledbox>
+    </hbox>
+  </groupbox>
 -->
 
 <!-- External Editors are not supported at this time
-    <titledbox orient="vertical">
+    <groupbox orient="vertical">
           <label value="&exterLegend.label;"/> 
-    <box>
+    <hbox>
       <checkbox 
         name  = "htmlSourceEditorCheckbox"
         label = "&htmlSource;"
@@ -176,9 +176,9 @@
         name  = ""
         label = "&chooseButton.label;"
       />
-    </box>
+    </hbox>
 
-    <box>
+    <hbox>
       <checkbox 
         name  = "htmlImageEditorCheckbox" 
         label = "&imageeditor;"
@@ -195,8 +195,8 @@
         prefstring = "editor.image_editor"
       />
       <button class="dialog" label="&chooseButton.label;" />
-    </box> 
+    </hbox> 
 
-  </titledbox>
+  </groupbox>
   -->
 </window>

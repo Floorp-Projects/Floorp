@@ -33,14 +33,14 @@ Contributor(s): Kin Blas <kin@netscape.com>
   onunload="onUnload();"
   title="&replaceDialog.title;"
   class="dialog"
-  align="vertical"
+  orient="vertical"
   persist="screenX screenY"
   screenX="24" screenY="24">
 
   <script type="application/x-javascript" src="chrome://global/content/replacedialog.js"/>
   <stringbundle id="replaceBundle" src="chrome://global/locale/finddialog.properties"/>
    
-  <box>
+  <hbox>
   
     <!-- hack. we seem to need this separator to get it to render -->
     <separator orient="vertical" class="thin"/>
@@ -66,7 +66,7 @@ Contributor(s): Kin Blas <kin@netscape.com>
       <button class="dialog" id="replaceAll" label="&replaceAllButton.label;" oncommand="onReplaceAll();"/>
       <button class="dialog" id="close" label="&closeButton.label;" oncommand="close();"/>
     </vbox>
-  </box>
+  </hbox>
 
   <separator/>
 

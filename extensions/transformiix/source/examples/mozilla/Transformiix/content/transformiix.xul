@@ -34,19 +34,19 @@
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical" onload="onLoadTransformiix();">
+        orient="vertical" onload="onLoadTransformiix();">
 
 <script type="application/x-javascript" src="chrome://Transformiix/content/transformiix.js"/>
 <script type="application/x-javascript" src="resource:/res/samples/DumpDOM.js"/>
 
-<box id="tool-box" flex="1" align="horizontal">
-</box>
-<box flex="10" align="horizontal">
-   <box flex="50" align="vertical">
-     <iframe id="xml-source" class="doc-container" align="horizontal" src="about:blank" flex="1"/>
-    <iframe id="xsl-source" class="doc-container" align="horizontal" src="about:blank" flex="1"/>
-  </box>
-  <iframe id="result-doc" class="doc-container" align="vertical" src="about:blank" flex="50"/>
-</box>
+<hbox id="tool-box" flex="1">
+</hbox>
+<hbox flex="10">
+   <vbox flex="50">
+     <iframe id="xml-source" class="doc-container" orient="horizontal" src="about:blank" flex="1"/>
+    <iframe id="xsl-source" class="doc-container" orient="horizontal" src="about:blank" flex="1"/>
+  </vbox>
+  <iframe id="result-doc" class="doc-container" orient="vertical" src="about:blank" flex="50"/>
+</hbox>
 
 </window>

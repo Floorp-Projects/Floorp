@@ -35,7 +35,7 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
   title="&printDialog.title;"
   debug="false"
   class="dialog"
-  align="vertical"
+  orient="vertical"
   persist="screenX screenY"
   screenX="24" screenY="24">
 
@@ -59,10 +59,10 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
       </row>
       <row valign="baseline">
         <text id="fileLabel" class="label" value="&fileInput.label;"/>
-        <box>
+        <hbox>
           <textbox id="fileInput" flex ="1" onblur="stripTrailingWhitespace(this)"/>
           <button id="chooseFile" label = "&chooseButton.label;" oncommand = "onChooseFile()"/>
-        </box>
+        </hbox>
       </row>
       <row>
         <text class="label" value="&reverseGroup.label;" flex ="1"/>
@@ -91,13 +91,13 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
         <text class="label" value="&printrangeGroup.label;" flex ="1"/>
         <radiogroup id="printrangeGroup" orient="vertical">
           <radio group = "printrangeGroup" id = "allpagesRadio" label = "&allpagesRadio.label;" onclick = "doPrintRange(0);"/>
-          <box orient="horizontal" autostretch="never">
+          <hbox autostretch="never">
             <radio group = "printrangeGroup" id = "rangeRadio" label = "&rangeRadio.label;" onclick = "doPrintRange(1);"/>
             <text class = "label" id = "frompageLabel" for = "frompageInput" value = "&frompageInput.label;" />
             <textbox id = "frompageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
             <text class = "label" id = "topageLabel" for = "topageInput" value = "&topageInput.label;" />
             <textbox id = "topageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
-          </box>
+          </hbox>
           <radio group = "printrangeGroup" id = "selectionRadio" label = "&selectionRadio.label;" onclick = "doPrintRange(2);"/>
         </radiogroup>
       </row>
@@ -111,24 +111,24 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
       </row>
       <row>
         <text class="label" value="&marginInput.label;" flex ="1"/>
-        <box orient="horizontal">
-          <box orient="horizontal" autostretch="never">
+        <hbox>
+          <hbox autostretch="never">
             <text class = "label" id = "topLabel" for = "topInput" value = "&topInput.label;" />
             <textbox id = "topInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
-          </box>
-          <box orient="horizontal" autostretch="never">
+          </hbox>
+          <hbox autostretch="never">
             <text class = "label" id = "bottomLabel" for = "bottomInput" value = "&bottomInput.label;" />
             <textbox id = "bottomInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
-          </box>
-          <box orient="horizontal" autostretch="never">
+          </hbox>
+          <hbox autostretch="never">
             <text class = "label" id = "leftLabel" for = "leftInput" value = "&leftInput.label;" />
             <textbox id = "leftInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
-          </box>
-          <box orient="horizontal" autostretch="never">
+          </hbox>
+          <hbox autostretch="never">
             <text class = "label" id = "rightLabel" for = "rightInput" value = "&rightInput.label;" />
             <textbox id = "rightInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
-          </box>
-        </box>
+          </hbox>
+        </hbox>
       </row>
     </rows>
   </grid>
@@ -142,7 +142,7 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
   <separator/>
 
   <!-- Places to overlay common dialog buttons and keyset -->
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
   <keyset id="keyset"/>
 
 </window>

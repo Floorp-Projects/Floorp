@@ -61,14 +61,14 @@
         <tree rows="8" class="list" id="DictionaryList" flex="1">
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
-        <box orient="vertical" flex="1">
+        <vbox flex="1">
           <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" label="&ReplaceButton.label;"/>
           <spring class="spacer"/>
           <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" label="&RemoveButton.label;"/>
           <spring class="spacer"/>
           <spring flex="1"/>
           <button class="exit-dialog" id="close" label="&CloseButton.label;" default="true" oncommand="Close();"/>  
-        </box>
+        </vbox>
       </row>
     </rows>
   </grid>

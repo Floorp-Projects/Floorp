@@ -3,7 +3,7 @@
 
 <!DOCTYPE window> 
 
-<window align="vertical" xmlns:html="http://www.w3.org/1999/xhtml"
+<window orient="vertical" xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onConstruction="Startup()"> 
 
@@ -28,11 +28,11 @@
 	  <button id="home-button"    align="top" value="Home"/>
 	  <button id="print-button"   align="top" value="Print"/> 
 
-          <box align="vertical" flex="100%">
+          <vbox flex="100%">
             <spring flex="100%"/>
             <html:input id="urlbar" type="text"/>   
 	    <spring flex="100%"/>
-          </box>
+          </vbox>
 
           <button src="resource:/res/throbber/anims00.gif" align="right"/>
     

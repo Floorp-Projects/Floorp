@@ -1,7 +1,7 @@
 <?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-align="vertical" style="width:100%;height:100%">
+orient="vertical" style="width:100%;height:100%">
 <tree flex="1">
   <treecolgroup>
     <treecol flex="1"/>

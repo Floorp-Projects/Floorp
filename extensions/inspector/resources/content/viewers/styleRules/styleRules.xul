@@ -43,7 +43,7 @@
 
   <!--============================= CONTENT ============================== -->
 
-  <box orient="vertical">
+  <vbox>
     <tree id="trStyleRules"
       flex="1" context="ppStyleRuleContext"
       onselect="viewer.onRuleSelect()"
@@ -99,7 +99,7 @@
 
       <treechildren flex="1"/>
     </tree>
-  </box>
+  </vbox>
 
   <splitter orient="horizontal" collapse="after">
     <grippy/>

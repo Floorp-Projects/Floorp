@@ -42,7 +42,7 @@ Contributor(s):
   style="width: 30em;"
   title="&findDialog.title;"
   class="dialog"
-  align="vertical"
+  orient="vertical"
   persist="screenX screenY">
 
   <script type="application/x-javascript" src="chrome://global/content/finddialog.js"/>
@@ -79,7 +79,7 @@ Contributor(s):
   <separator/>
 
   <!-- Places to overlay common dialog buttons and keyset -->
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
   <keyset id="dialogKeys"/>
 
 </window>

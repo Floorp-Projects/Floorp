@@ -8,11 +8,11 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
     <spring flex="1"/>
-    <box id="bxOuter" orient="horizontal" flex="1">
+    <hbox id="bxOuter" flex="1">
       <spring flex="1"/>
-      <box id="bxCenter" autostretch="never"/>
+      <hbox id="bxCenter" autostretch="never"/>
       <spring flex="1"/>
-    </box>
+    </hbox>
     <spring flex="1"/>
 
 </window>

@@ -39,12 +39,12 @@ Contributor(s):
     <script src="chrome://communicator/content/xpinstall/institems.js"/>
     <keyset id="keyset"/>
     
-    <box orient="vertical" id="mainBox">
-        <box id="interiorTitleBox" orient="horizontal" autostretch="never">
+    <vbox id="mainBox">
+        <hbox id="interiorTitleBox" autostretch="never">
             <text class="headline" id="interiorTitle" value="&items.label;"/>
             <spring flex="100%"/>
             <image src="chrome://global/skin/animthrob_single.gif" />
-        </box>      
+        </hbox>      
 
         <spring class="vertical-small-spacer"/>
         <separator class="groove" flex="100%"/>            
@@ -56,7 +56,7 @@ Contributor(s):
         <text class="label" id="componentList" value="&componentList.label;"/>
         <spring class="vertical-small-spacer"/>
         <spring class="vertical-small-spacer"/>            
-        <box orient="vertical" id="treebox">
+        <vbox id="treebox">
                 <tree id="modulesTree" class="inset">
                     <treecolgroup>
                       <treecol flex="1"/>
@@ -74,11 +74,11 @@ Contributor(s):
                     <treechildren id="theTreeBody" flex="1">
                     </treechildren>
                 </tree>
-        </box>
+        </vbox>
 
         <separator class="groove" flex="100%"/>
-        <box class="selection" id="okCancelButtonsRight"/>
-    </box>
+        <hbox class="selection" id="okCancelButtonsRight"/>
+    </vbox>
 
 
 </window>

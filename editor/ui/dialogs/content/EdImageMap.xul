@@ -42,8 +42,8 @@
     width="640" height="480">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js" />
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js" />
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <!-- Methods for Image Map only -->
@@ -140,16 +140,16 @@
 </toolbar> 
 </toolbox>
 
-<box id="outer-box" flex="1">
+<hbox id="outer-box" flex="1">
 
   <toolbar id="toolbox" orient="vertical">
-  <box orient="vertical">
+  <vbox>
     <button id="pointerButton" class="tool" toggled="1" oncommand="changeTool(event, 'pointer');"/>
     <button id="rectButton" class="tool" oncommand="changeTool(event, 'rect');"/>
     <button id="cirButton" class="tool" oncommand="changeTool(event, 'cir');"/>
     <button id="polyButton" class="tool" oncommand="changeTool(event, 'poly');"/>
     <spring flex="1"/>
-  </box>
+  </vbox>
   </toolbar>
 
   <!-- Content Area -->
@@ -160,15 +160,15 @@
     onclick="top.clickMouse(event)" 
   />
 
-</box>
+</hbox>
 
   <!-- from EdDialogOverlay -->
   <!-- not sure if this is needed, but put it in just in case 
-  <box id="AdvancedEditButton"/> -->
+  <hbox id="AdvancedEditButton"/> -->
 
   <separator class="groove"/>
 
   <!-- from global dialogOverlay -->
-  <box id="okCancelHelpButtonsRight"/>
+  <hbox id="okCancelHelpButtonsRight"/>
 
 </window>

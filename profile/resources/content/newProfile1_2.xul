@@ -48,20 +48,20 @@
   <html>&pnl2.pdir.label;</html> 
 
 
-  <box id="dirbox">
+  <hbox id="dirbox">
     <html class="indent" id="ProfileDir" flex="1" style="overflow: auto;"/>
-    <box orient="vertical" valign="top">
+    <vbox valign="top">
       <button label="&button.choosefolder.label;" oncommand="chooseProfileFolder();"/>
       <button id="useDefault" label="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
-    </box>
-  </box>
+    </vbox>
+  </hbox>
 
   <separator/>
 
-  <box autostretch="never">
+  <hbox autostretch="never">
     <spring flex="1"/>
     <button label="&langSelection.label;" oncommand="showLangDialog();"/>
-  </box>
+  </hbox>
 
   <spring flex="1"/>
 

@@ -42,7 +42,7 @@
 
     <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
     
-    <box class="box-smallheader" title="&title.label;"/>
+    <hbox class="box-smallheader" title="&title.label;"/>
 
     <!-- File types -->
     <text class="label" value="&files.text;"/>
@@ -140,9 +140,9 @@
     <separator/>
 
     <!-- Misc -->
-    <box autostretch="never">
+    <hbox autostretch="never">
         <checkbox id="showDialog" label="&showDialog.label;" accesskey="&showDialog.accesskey;"/>     
-    </box>
+    </hbox>
     <spring flex="1"/>
     
 </window>

@@ -35,13 +35,13 @@ Contributor(s):
          xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
     
-    <box align="vertical">
+    <vbox>
         <html:td align="center">
 		    <html:label>&expireText.label;</html:label>
         </html:td>
         <html:td align="center">
 		    <html:button onclick="return window.close();">&okButton.label;</html:button>
         </html:td>
-    </box>
+    </vbox>
 
 </window>

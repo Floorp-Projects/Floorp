@@ -51,17 +51,17 @@
 
   <toolbar id="tbInspectorPrimary">
 
-    <box id="bxURLBar" flex="1" autostretch="never" valign="middle">
+    <hbox id="bxURLBar" flex="1" autostretch="never" valign="middle">
       <text id="txDocument" class="toolbar-header1" value="&txDocument.label;"/>
-      <box id="bxURLBarContainer" flex="1">
-        <box autostretch="never" valign="middle" flex="1">
+      <hbox id="bxURLBarContainer" flex="1">
+        <hbox autostretch="never" valign="middle" flex="1">
           <image id="imgURLBarIcon"/>
 
           <textbox
             id="tfURLBar" class="plain" flex="1" 
             observes="cmdGotoURL"
             tooltip="PPTooltip" tooltiptext="Enter a URL to inspect"/>  
-        </box>
+        </hbox>
 
         <menubutton id="mbHistory" class="menubutton-icon">
 
@@ -87,10 +87,10 @@
           </menupopup>
 
         </menubutton>
-      </box>
+      </hbox>
 
       <button class="button-toolbar-3" label="&btnInspect.label;" observes="cmdGotoURL"/>
-    </box>
+    </hbox>
 
   </toolbar>
 

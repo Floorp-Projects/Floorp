@@ -45,7 +45,7 @@
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
 
-  <titledbox orient="vertical" flex="1">
+  <groupbox orient="vertical" flex="1">
     <label id="titleInput" value="&link.label;"/>
 
     <grid>
@@ -66,9 +66,9 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
 
-  <titledbox orient="vertical" flex="1">
+  <groupbox orient="vertical" flex="1">
     <label id="targetLabel" value="&targetFieldset.label;"/>
     <grid>
       <columns><column/><column/><column/></columns>
@@ -94,8 +94,8 @@
         </row>
       </rows>
     </grid>
-  </titledbox>
+  </groupbox>
 
   <!-- from global dialogOverlay -->
-  <box id="okCancelButtons"/>
+  <hbox id="okCancelButtons"/>
 </window>

@@ -59,10 +59,10 @@
 
   <broadcaster id="args" value=""/>
 
-  <box autostretch="never">
+  <hbox autostretch="never">
     <text class="label" value="&currentattributesfor.label;"/>
     <text class="label header" id="tagLabel"/>
-  </box>
+  </hbox>
   
   <separator class="thin"/>
   
@@ -76,7 +76,7 @@
       <!-- ============================================================== -->
       <!--                        HTML Attributes                         -->
       <!-- ============================================================== -->
-      <box flex="1" orient="vertical">
+      <vbox flex="1">
         <tree id="HTMLATree" 
           class="AttributesTree inset" 
           flex="1"
@@ -96,11 +96,11 @@
           </treehead>
           <treechildren id="HTMLAList" flex="1"/>
         </tree>
-        <box valign="middle" autostretch="never" flex="1">
+        <hbox valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spring flex="1"/>
           <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveHTMLAttribute();"/>
-        </box>
+        </hbox>
         <grid>
           <columns>
             <column flex="1"/><column flex="1"/>
@@ -124,11 +124,11 @@
             </row>
           </rows>
         </grid>
-      </box>
+      </vbox>
       <!-- ============================================================== -->
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
-      <box flex="1" orient="vertical">
+      <vbox flex="1">
         <tree id="CSSATree" class="AttributesTree inset" flex="1"
           onselect="onSelectCSSTreeItem();"
           onclick="onSelectCSSTreeItem();"
@@ -146,11 +146,11 @@
           </treehead>
           <treechildren id="CSSAList" flex="1"/>
         </tree>
-        <box valign="middle" autostretch="never" flex="1">
+        <hbox valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spring flex="1"/>
           <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveCSSAttribute();"/>
-        </box>
+        </hbox>
         <grid>
           <columns>
             <column flex="1"/><column flex="1"/>
@@ -169,11 +169,11 @@
             </row>
           </rows>
         </grid>
-      </box>
+      </vbox>
       <!-- ============================================================== -->
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
-      <box flex="1" orient="vertical">
+      <vbox flex="1">
         <tree id="JSEATree" class="AttributesTree inset" flex="1"
           onselect="onSelectJSETreeItem();"
           onclick="onSelectJSETreeItem();"
@@ -191,11 +191,11 @@
           </treehead>
           <treechildren id="JSEAList" flex="1"/>
         </tree>
-        <box valign="middle" autostretch="never" flex="1">
+        <hbox valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spring flex="1"/>
           <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveJSEAttribute()"/>
-        </box>
+        </hbox>
         <grid>
           <columns>
             <column flex="1"/><column flex="1"/>
@@ -214,10 +214,10 @@
             </row>
           </rows>
         </grid>
-      </box>
+      </vbox>
     </tabpanels>
   </tabbox>
   <spring class="spacer"/>
-  <box id="okCancelHelpButtonsRight"/> 
+  <hbox id="okCancelHelpButtonsRight"/> 
 
 </window>

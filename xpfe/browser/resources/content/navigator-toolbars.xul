@@ -70,12 +70,12 @@
 
     <!--    
     <rule NC:Element="box">
-      <box uri="..."
-           class="http://home.netscape.com/NC-rdf#Class"
-           value="http://home.netscape.com/NC-rdf#Name"
-           content="http://home.netscape.com/NC-rdf#URL"
-           src="http://home.netscape.com/NC-rdf#Icon"
-           type="http://home.netscape.com/NC-rdf#Type"/>
+      <hbox uri="..."
+            class="http://home.netscape.com/NC-rdf#Class"
+            value="http://home.netscape.com/NC-rdf#Name"
+            content="http://home.netscape.com/NC-rdf#URL"
+            src="http://home.netscape.com/NC-rdf#Icon"
+            type="http://home.netscape.com/NC-rdf#Type"/>
     </rule>
     -->
 
@@ -108,8 +108,8 @@
                  object="?item-URL"/>
       </bindings>
       <action>
-        <box uri="?item" class="?item-class" value="?item-name" 
-             src="?item-icon" content="?item-URL" type="?item-type"/>
+        <hbox uri="?item" class="?item-class" value="?item-name" 
+              src="?item-icon" content="?item-URL" type="?item-type"/>
       </action>
     </rule>   
 
