@@ -87,22 +87,29 @@ function initializeDialog(filter)
     var filterRowContainer = document.getElementById("filterTermList");
     var numTerms = filter.numTerms;
     for (var i=0; i<numTerms; i++) {
-      var filterRow = createFilterRow(filter, i);
+      var filterRow = createFilterRow(i);
       filterRowContainer.appendChild(filterRow);
 
       // now that it's been added to the document, we can initialize it.
       var filterTermObject = document.getElementById("searchTerm" + i);
 
-      filterTermObject.searchScope = scope;
-      var searchTerm =
-          filter.searchTerms.QueryElementAt(i, Components.interfaces.nsIMsgSearchTerm);
-      if (searchTerm)
-          filterTermObject.searchTerm = searchTerm;
+      if (filterTermObject) {
+          filterTermObject.searchScope = scope;
+          var searchTerm =
+              filter.searchTerms.QueryElementAt(i, Components.interfaces.nsIMsgSearchTerm);
+          if (searchTerm)
+              filterTermObject.searchTerm = searchTerm;
+
+      }
+      else {
+
+          dump("Ack! Can't find searchTerm" + i + "!\n");
+      }
     }
 
 }
 
-function createFilterRow(filter, index)
+function createFilterRow(index)
 {
     var searchAttr = document.createElement("searchattribute");
     var searchOp = document.createElement("searchoperator");
@@ -115,7 +122,10 @@ function createFilterRow(filter, index)
 
     searchAttr.setAttribute("for", searchOp.id + "," + searchVal.id);
 
-    var rowdata = new Array(null, searchAttr, null, searchOp, null, searchVal, null);
+    var rowdata = new Array(null, searchAttr,
+                            null, searchOp,
+                            null, searchVal,
+                            null);
     var searchrow = constructRow(rowdata);
 
     searchrow.id = "searchRow" + index;
@@ -130,15 +140,22 @@ function createFilterRow(filter, index)
     searchtermContainer.appendChild(searchTerm);
     // now re-find the inserted element
     searchTerm = document.getElementById(searchTerm.id);
-
     
     searchTerm.searchattribute = searchAttr;
     searchTerm.searchoperator = searchOp;
     searchTerm.searchvalue = searchVal;
 
-    // probably a noop?
-    //    searchTerm.initialize(filter, index);
-
+    // this is scary - basically we want to take every other
+    // treecell, which will be a text label, and set the searchTerm's
+    // booleanNodes to that
+    var stringNodes = new Array;
+    var treecells = searchrow.firstChild.childNodes;
+    var j=0;
+    for (var i=0; i<treecells.length; i+=2) {
+        stringNodes[j++] = treecells[i];
+    }
+    searchTerm.booleanNodes = stringNodes;
+    
 
     // now return the row
     return searchrow;
@@ -152,11 +169,12 @@ function constructRow(treeCellChildren)
     var row = document.createElement("treerow");
     for (var i = 0; i<treeCellChildren.length; i++) {
       var treecell = document.createElement("treecell");
-      treecell.setAttribute("allowevents", "true");
+      
       // it's ok to have empty cells
       if (treeCellChildren[i]) {
-        treeCellChildren[i].setAttribute("flex", "1");
-        treecell.appendChild(treeCellChildren[i]);
+          treecell.setAttribute("allowevents", "true");
+          treeCellChildren[i].setAttribute("flex", "1");
+          treecell.appendChild(treeCellChildren[i]);
       }
       row.appendChild(treecell);
     }

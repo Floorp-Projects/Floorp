@@ -33,7 +33,6 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
-<script src="resource:/res/samples/DumpDOM.js"/>
 <keyset id="keyset"/>
 
   <box orient="horizontal" class="padded">
@@ -60,13 +59,13 @@ Rights Reserved.
                 searchoperator="searchOp"
                 searchvalue="searchValue"/>
     </searchterms>
-    <tree class="inset" flex="1">
-      <treecol id="preSearchAttr" width="0*"/>
-      <treecol id="searchAttr" width="1*"/>
+    <tree class="inset" flex="1" id="searchTermTree">
+      <treecol id="preSearchAttr" width="1*"/>
+      <treecol id="searchAttr" width="4*"/>
       <treecol id="preSearchOp" width="0*"/>
-      <treecol id="searchOp" width="1*"/>
+      <treecol id="searchOp" width="4*"/>
       <treecol id="preSearchValue" width="0*"/>
-      <treecol id="searchValue" width="1*"/>
+      <treecol id="searchValue" width="4*"/>
       <treecol id="postSearchValue" width="0*"/>
         
       <treechildren id="filterTermList">
@@ -141,7 +140,6 @@ Rights Reserved.
       <menupopup/>
     </menulist>
   </titledbox>
-  <button onclick="DumpDOM(document.getElementById('actionTargetFolder'))" value="dump"/>
   <separator class="groove"/>
   <box id="okCancelButtons"/>
 </window>
