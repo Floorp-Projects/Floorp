@@ -209,7 +209,7 @@ void nsDocLoader::CallTest()
   {
     CancelAll();
 
-    printf("Finished Running Tests");
+    printf("Finished Running Tests \n");
     if (mPostExit)
     {
       printf("QUITTING APPLICATION \n");
