@@ -435,10 +435,34 @@ void CWizardUI::EnableWidget(WIDGET *curWidget)
 	{
 		// Cheat the interpret overhead since this is called a lot!
 		CString enableStr = theInterpreter->replaceVars(curWidget->action.onInit,NULL);	
+		char *commandName = strtok((char *)(LPCTSTR)enableStr, "(");
+		
 		if (enableStr == "Enable(0)")
 			enabled = FALSE;
 		else if (enableStr == "Enable2()")
 			enabled = FALSE;
+		else if (strcmp(commandName,"DisableWidget") == 0)
+		{
+			// Disable widget for certain platform options
+			int i=0;
+			char *platformOption[5];
+			platformOption[i] = strtok(NULL, ",)");
+			while ((platformOption[i] != NULL) && (i<4))
+			{
+				i++;
+				platformOption[i] = strtok(NULL, ",)");
+			}
+			for (int optioncnt=1; optioncnt<i; optioncnt++)
+			{
+				if (strcmp(platformOption[0],platformOption[optioncnt])==0)
+				{
+					enabled = FALSE;
+					break;
+				}
+				else
+					enabled = TRUE;
+			}
+		}
 		curWidget->control->EnableWindow(enabled);
 	}
 }
