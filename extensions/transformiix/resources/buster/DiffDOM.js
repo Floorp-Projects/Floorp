@@ -50,13 +50,13 @@ function DiffNodeAndChildren(node1, node2)
     for (var index = 0; index < attributes.length; index++) {
       item = attributes.item(index);
       ns = item.namespaceURI;
-      if (ns=="") {
-        name = item.nodeName;
-        otherValue = node2.getAttribute(name);
-      }
-      else {
+      if (ns) {
         name = item.localName;
         otherValue = node2.getAttributeNS(ns, name);
+      }
+      else {
+        name = item.nodeName;
+        otherValue = node2.getAttribute(name);
       }
       value = item.nodeValue;
       if (!nsreg.test(name) && otherValue!=value) {
