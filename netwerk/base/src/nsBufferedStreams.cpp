@@ -302,7 +302,11 @@ nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PR
         if (amt > 0) {
             PRUint32 read = 0;
             rv = writer(this, closure, mBuffer + mCursor, mCursor, amt, &read);
-            if (NS_FAILED(rv)) break;
+            if (NS_FAILED(rv)) {
+                // errors returned from the writer end here!
+                rv = NS_OK;
+                break;
+            }
             *result += read;
             count -= read;
             mCursor += read;

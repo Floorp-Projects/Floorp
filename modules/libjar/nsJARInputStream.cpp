@@ -75,6 +75,9 @@ nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint3
      // XXX _retval may be less than nBytes!!  This is the wrong
      // way to synthesize ReadSegments.
      NS_ASSERTION(*_retval == nBytes, "data loss");
+
+     // errors returned from the writer end here! 
+     rv = NS_OK;
    }
  
    nsMemory::Free(readBuf);

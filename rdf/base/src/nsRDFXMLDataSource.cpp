@@ -184,9 +184,11 @@ public:
 
         *_retval = 0;
         nsresult rv = writer (this, closure, mBuffer+mIndex, mIndex, readCount, _retval);
-        mIndex += *_retval;
+        if (NS_SUCCEEDED(rv))
+            mIndex += *_retval;
 
-        return rv;
+        // do not propogate errors returned from writer!
+        return NS_OK;
     }
 
     NS_IMETHOD IsNonBlocking(PRBool *aNonBlocking) {
