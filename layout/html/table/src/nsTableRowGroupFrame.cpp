@@ -184,6 +184,10 @@ void nsTableRowGroupFrame::PlaceChild( nsIPresContext*    aPresContext,
 																			 nsSize*            aMaxElementSize,
 																			 nsSize&            aKidMaxElementSize)
 {
+  if (PR_TRUE==gsDebug1)
+    printf ("rowgroup: placing row at %d, %d, %d, %d\n",
+           aKidRect.x, aKidRect.y, aKidRect.width, aKidRect.height);
+
   // Place and size the child
   aKidFrame->SetRect(aKidRect);
 
@@ -715,7 +719,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
     nscoord bottomMargin = kidMol->margin.bottom;
 
-    nsIFrame*       kidFrame;
+    nsIFrame* kidFrame;
 
     // Create a child frame
     if (nsnull == kidPrevInFlow) {

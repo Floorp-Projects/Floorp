@@ -366,7 +366,8 @@ void nsTableOuterFrame::PlaceChild( OuterTableReflowState& aState,
                                     nsSize*            aMaxElementSize,
                                     nsSize&            aKidMaxElementSize)
 {
-  if (PR_TRUE==gsDebug) printf ("place child: %p with aKidRect %d %d %d %d\n", 
+  if (PR_TRUE==gsDebug) 
+    printf ("outer table place child: %p with aKidRect %d %d %d %d\n", 
                                  aKidFrame, aKidRect.x, aKidRect.y,
                                  aKidRect.width, aKidRect.height);
   // Place and size the child

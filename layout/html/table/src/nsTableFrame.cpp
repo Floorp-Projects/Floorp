@@ -589,9 +589,13 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
 
       // SEC: TODO:  when content is appended or deleted, be sure to clear out the frame hierarchy!!!!
 
-      nsIFrame* kidFrame;
+      // get next frame, creating one if needed
+      nsIFrame* kidFrame=nsnull;
+      if (nsnull!=prevKidFrame)
+        prevKidFrame->GetNextSibling(kidFrame);  // no need to check for an error, just see if it returned null...
+      else
+        ChildAt(0, kidFrame);
 
-      ChildAt(kidIndex, kidFrame);
       // if this is the first time, allocate the caption frame
       if (nsnull==kidFrame)
       {
@@ -828,6 +832,9 @@ void nsTableFrame::PlaceChild(nsIPresContext*    aPresContext,
                               nsSize*            aMaxElementSize,
                               nsSize&            aKidMaxElementSize)
 {
+  if (PR_TRUE==gsDebug)
+    printf ("table: placing row group at %d, %d, %d, %d\n",
+           aKidRect.x, aKidRect.y, aKidRect.width, aKidRect.height);
   // Place and size the child
   aKidFrame->SetRect(aKidRect);
 
@@ -1660,7 +1667,7 @@ PRBool nsTableFrame::BalanceProportionalColumnsForSpecifiedWidthTable(nsIPresCon
     if (gsDebug) printf ("  * min table does not fit, calling SetColumnsToMinWidth\n");
     result = SetColumnsToMinWidth(aPresContext);
   }
-  else if (aMaxTableWidth < aMaxWidth)
+  else if (aMaxTableWidth <= aMaxWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * table desired size fits, calling BalanceColumnsTableFits\n");
     result = BalanceColumnsTableFits(aPresContext, aTableStyleMol, aAvailWidth);
@@ -1693,7 +1700,7 @@ PRBool nsTableFrame::BalanceProportionalColumnsForAutoWidthTable( nsIPresContext
     if (gsDebug) printf ("  * min table does not fit, calling SetColumnsToMinWidth\n");
     result = SetColumnsToMinWidth(aPresContext);
   }
-  else if (aMaxTableWidth < aMaxWidth)
+  else if (aMaxTableWidth <= aMaxWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * table desired size fits, calling BalanceColumnsTableFits\n");
     result = BalanceColumnsTableFits(aPresContext, aTableStyleMol, aAvailWidth);
