@@ -171,7 +171,7 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 #
 # Relative pathname from top-of-tree to current source directory
 #
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+ifneq ($(OS_ARCH),OS2)
 REVDEPTH	= $(CONFIG_TOOLS)/revdepth
 endif
 
@@ -221,21 +221,7 @@ NSINSTALL	= nsinstall
 INSTALL		= $(NSINSTALL)
 PATH_SEPARATOR	:= \;
 else
-ifeq ($(OS_ARCH),WINNT)
 PATH_SEPARATOR	:= :
-RC		= rc$(BIN_SUFFIX)
-LIB_SUFFIX	= lib
-DLL_SUFFIX	= dll
-BIN_SUFFIX	= .exe
-AR		= lib -NOLOGO -OUT:"$@"
-DLLFLAGS	= $(XLFLAGS) -OUT:"$@"
-LFLAGS		= $(OBJS) $(DEPLIBS) $(EXTRA_LIBS) -OUT:"$@"
-NSINSTALL	= nsinstall
-INSTALL		= $(NSINSTALL)
-JAVA_PROG	= java
-else
-PATH_SEPARATOR	:= :
-LIB_SUFFIX	= a
 ifeq ($(AWT_11),1)
 JAVA_PROG	= $(NS_BIN)java
 JAVAC_ZIP	= $(NS_LIB)/classes.zip
@@ -248,8 +234,7 @@ JAVAC_ZIP	= $(JAVA_LIB)/javac.zip
 endif
 endif
 TAR		= tar
-endif
-endif
+endif # OS2
 
 ifeq ($(OS_ARCH),OpenVMS)
 include $(topsrcdir)/config/$(OS_ARCH).mk
@@ -284,11 +269,7 @@ LIBNSPR		= $(DIST)/lib/pr$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
 LIBXP		= $(DIST)/lib/libxp.$(LIB_SUFFIX)
 endif
 else
-ifeq ($(OS_ARCH),WINNT)
-LIBNSJAVA	= $(DIST)/lib/jrt3221.$(LIB_SUFFIX)
-else
 LIBNSJAVA	= $(DIST)/lib/nsjava32.$(LIB_SUFFIX)
-endif
 endif
 
 CFLAGS		= $(OS_CFLAGS)
