@@ -1,9 +1,37 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+ * Generate XPCOM headers from XPIDL.
+ */
+
 #include "xpidl.h"
 
+/* is this node from an aggregate type (interface)? */
+#define UP_IS_AGGREGATE(node)						      \
+    (IDL_NODE_UP(node) &&						      \
+     IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_INTERFACE)
+
 /* is this type output in the form "<foo> *"? */
-#define STARRED_TYPE(type) ( ((type) == IDLN_TYPE_STRING ||		      \
-			      (type) == IDLN_TYPE_WIDE_STRING ||	      \
-			      (type) == IDLN_IDENT) )
+#define STARRED_TYPE(node) (IDL_NODE_TYPE(node) == IDLN_TYPE_STRING ||	      \
+			    IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||   \
+			    (IDL_NODE_TYPE(node) == IDLN_IDENT &&	      \
+			     UP_IS_AGGREGATE(node)) )
 
 static gboolean
 ident(TreeState *state)
@@ -168,7 +196,9 @@ xpcom_type(TreeState *state)
 	fputs("PRBool", state->file);
 	break;
       case IDLN_IDENT:
-	fprintf(state->file, "%s *", IDL_IDENT(state->tree).str);
+	fputs(IDL_IDENT(state->tree).str, state->file);
+	if (UP_IS_AGGREGATE(state->tree))
+	    fputs(" *", state->file);
 	break;
       default:
 	fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
@@ -225,6 +255,9 @@ type(TreeState *state)
       case IDLN_TYPE_BOOLEAN:
 	fputs("boolean", state->file);
 	return TRUE;
+      case IDLN_IDENT:
+	fputs(IDL_IDENT(state->tree).str, state->file);
+	break;
       default:
 	fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
 	return TRUE;
@@ -297,7 +330,7 @@ attr_accessor(TreeState *state, gboolean getter)
 	    return FALSE;
 	state->tree = orig;
 	fprintf(state->file, "%s%sa%c%s);\n",
-		(STARRED_TYPE(ATTR_TYPE(orig)) ? "" : " "),
+		(STARRED_TYPE(orig) ? "" : " "),
 		getter ? "*" : "",
 		toupper(attrname[0]), attrname + 1);
     }
@@ -324,6 +357,23 @@ attr_dcl(TreeState *state)
     return attr_accessor(state, TRUE) && (ro || attr_accessor(state, FALSE));
 }
 
+static gboolean
+do_enum(TreeState *state)
+{
+    IDL_tree enumb = state->tree, iter;
+    
+    fprintf(state->file, "\nenum %s {\n",
+	    IDL_IDENT(IDL_TYPE_ENUM(enumb).ident).str);
+
+    for (iter = IDL_TYPE_ENUM(enumb).enumerator_list;
+	 iter; iter = IDL_LIST(iter).next)
+	fprintf(state->file, "  %s%s\n", IDL_IDENT(IDL_LIST(iter).data).str,
+		IDL_LIST(iter).next ? ",": "");
+
+    fputs("};\n", state->file);
+    return TRUE;
+}
+
 /*
  * param generation:
  * in string foo	-->	nsString * foo
@@ -338,14 +388,14 @@ xpcom_param(TreeState *state)
     state->tree = IDL_PARAM_DCL(param).param_type_spec;
 
     /* in params that are pointers should be const */
-    if (STARRED_TYPE(IDL_NODE_TYPE(state->tree)) &&
+    if (STARRED_TYPE(state->tree) &&
 	IDL_PARAM_DCL(param).attr == IDL_PARAM_IN)
 	fputs("const ", state->file);
 
     if (!xpcom_type(state))
 	return FALSE;
     fprintf(state->file, "%s%s",
-	    STARRED_TYPE(IDL_NODE_TYPE(state->tree))  ? "" : " ",
+	    STARRED_TYPE(state->tree)  ? "" : " ",
 	    IDL_PARAM_DCL(param).attr == IDL_PARAM_IN ? "" : "*");
     fprintf(state->file, "%s",
 	    IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
@@ -418,7 +468,7 @@ nodeHandler headerDispatch[] = {
   type,            /* IDLN_TYPE_OCTET */
   type,            /* IDLN_TYPE_ANY */
   type,            /* IDLN_TYPE_OBJECT */
-  type,            /* IDLN_TYPE_ENUM */
+  do_enum,            /* IDLN_TYPE_ENUM */
   type,            /* IDLN_TYPE_SEQUENCE */
   type,            /* IDLN_TYPE_ARRAY */
   type,            /* IDLN_TYPE_STRUCT */
