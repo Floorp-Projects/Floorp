@@ -27,6 +27,7 @@
 #include "parser.h"
 #include "dialogs.h"
 #include "ifuncns.h"
+#include "process.h"
 #include <winver.h>
 
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
@@ -618,7 +619,7 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
 
   if((szInput != NULL) && (szOutput != NULL))
   {
-    bFound        = TRUE;
+    bFound        = FALSE;
     dwInputLen    = lstrlen(szInput);
     ZeroMemory(szOutput, dwOutputSize);
 
@@ -1024,152 +1025,311 @@ int PreCheckInstance(char *szSection, char *szIniFile)
   char  *ptrName = NULL;
   HKEY  hkeyRoot;
   int   iRv = WIZ_OK;
+  DWORD dwCounter = 0;
+  BOOL  bContinue = TRUE;
+  char  szExtraCmd[] = "Extra Cmd";
+  char  szExtraCmdKey[MAX_BUF];
 
-  /* Read the win reg key path */
-  GetPrivateProfileString(szSection,
-                          "Extra Cmd Reg Key",
-                          "",
-                          szKey,
-                          sizeof(szKey),
-                          szIniFile);
-  if(*szKey == '\0')
-    return(iRv);
-
-  /* Read the win reg root key */
-  GetPrivateProfileString(szSection,
-                          "Extra Cmd Reg Key Root",
-                          "",
-                          szBuf,
-                          sizeof(szBuf),
-                          szIniFile);
-  if(*szBuf == '\0')
-    return(iRv);
-  hkeyRoot = ParseRootKey(szBuf);
-
-  /* Read the win reg name value */
-  GetPrivateProfileString(szSection,
-                          "Extra Cmd Reg Name",
-                          "",
-                          szName,
-                          sizeof(szName),
-                          szIniFile);
-  if(*szName == '\0')
-    ptrName = NULL;
-  else
-    ptrName = szName;
-
-  /* Read the parameter to use for quitting the browser's turbo mode */
-  GetPrivateProfileString(szSection,
-                          "Extra Cmd Parameter",
-                          "",
-                          szParameter,
-                          sizeof(szParameter),
-                          szIniFile);
-
-  /* Read the win reg key that contains the path to the browser */
-  GetWinReg(hkeyRoot, szKey, ptrName, szFile, sizeof(szFile));
-  ParsePath(szFile, szPath, sizeof(szPath), PP_PATH_ONLY);
-
-  /* Make sure the file exists */
-  if(FileExists(szFile))
+  do
   {
-    /* Run the file */
-    WinSpawn(szFile, szParameter, szPath, SW_HIDE, TRUE);
+    /* Read the win reg key path */
+    wsprintf(szExtraCmdKey, "%s%d Reg Key", szExtraCmd, dwCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdKey,
+                            "",
+                            szKey,
+                            sizeof(szKey),
+                            szIniFile);
+    if(*szKey == '\0')
+    {
+      bContinue = FALSE;
+      continue;
+    }
 
-    /* Even though WinSpawn is suppose to wait for the app to finish, this
-     * does not really work that way for trying to quit the browser when
-     * it's in turbo mode, so we wait 2 secs for it to complete. */
-    Delay(2);
-  }
+    /* Read the win reg root key */
+    wsprintf(szExtraCmdKey, "%s%d Reg Key Root", szExtraCmd, dwCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdKey,
+                            "",
+                            szBuf,
+                            sizeof(szBuf),
+                            szIniFile);
+    if(*szBuf == '\0')
+    {
+      bContinue = FALSE;
+      continue;
+    }
+    hkeyRoot = ParseRootKey(szBuf);
+
+    /* Read the win reg name value */
+    wsprintf(szExtraCmdKey, "%s%d Reg Name", szExtraCmd, dwCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdKey,
+                            "",
+                            szName,
+                            sizeof(szName),
+                            szIniFile);
+    if(*szName == '\0')
+      ptrName = NULL;
+    else
+      ptrName = szName;
+
+    /* Read the parameter to use for quitting the browser's turbo mode */
+    wsprintf(szExtraCmdKey, "%s%d Parameter", szExtraCmd, dwCounter);
+    GetPrivateProfileString(szSection,
+                            szExtraCmdKey,
+                            "",
+                            szParameter,
+                            sizeof(szParameter),
+                            szIniFile);
+
+    /* Read the win reg key that contains the path to the browser */
+    GetWinReg(hkeyRoot, szKey, ptrName, szFile, sizeof(szFile));
+    ParsePath(szFile, szPath, sizeof(szPath), PP_PATH_ONLY);
+
+    /* Make sure the file exists */
+    if(FileExists(szFile))
+    {
+      // we've found a file, so let's execute it and stop.  No need to look
+      // for other keys to parse.  We only want to do that if the file is
+      // _not_ found.  This is for when we change the name of the browser
+      // app file and still need to deal with locating it and calling
+      // -kill on it. ie.
+      //   previous name: netscp6.exe
+      //   new name: netscp.exe
+      // We only need to call one of them, not both.
+      bContinue = FALSE;
+
+      /* Run the file */
+      WinSpawn(szFile, szParameter, szPath, SW_HIDE, WS_WAIT);
+
+      /* Even though WinSpawn is suppose to wait for the app to finish, this
+       * does not really work that way for trying to quit the browser when
+       * it's in turbo mode, so we wait 2 secs for it to complete. */
+      Delay(2);
+    }
+
+    ++dwCounter;
+  } while(bContinue);
 
   return(iRv);
 }
 
+HRESULT GetCheckInstanceQuitMessage(char *aSection, char *aMessage, DWORD aMessageBufSize)
+{
+  *aMessage = '\0';
+  GetPrivateProfileString(aSection, "Message", "", aMessage, aMessageBufSize, szFileIniUninstall);
+  return(WIZ_OK);
+}
+
+HRESULT ShowMessageAndQuitProcess(HWND aHwndFW, char *aMsgQuitProcess, char *aMsgWait, BOOL aCloseAllWindows, char *aProcessName, BOOL aForceQuit)
+{
+  switch(ugUninstall.mode)
+  {
+    case NORMAL:
+    {
+      char msgTitleStr[MAX_BUF];
+      GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", msgTitleStr, sizeof(msgTitleStr), szFileIniUninstall);
+      MessageBox(hWndMain, aMsgQuitProcess, msgTitleStr, MB_ICONEXCLAMATION | MB_SETFOREGROUND);
+      break;
+    }
+
+    case AUTO:
+    {
+      /* Setup mode is AUTO.  Show message, timeout, then auto close
+       * all the windows associated with the process */
+      ShowMessage(aMsgQuitProcess, TRUE);
+      Delay(5);
+      ShowMessage(aMsgQuitProcess, FALSE);
+      break;
+    }
+
+    case SILENT:
+      break;
+  }
+
+  if(aForceQuit)
+  {
+    assert(aProcessName);
+    FindAndKillProcess(aProcessName, KP_KILL_PROCESS);
+  }
+  else
+  {
+    assert(aHwndFW);
+    /* First try sending a WM_QUIT message to the window because this is the
+     * preferred way to quit a process.  If it works, then we're good and
+     * CloseAllWindowsOfWindowHandle() will have nothing to do.
+     * If it doesn't work, then CloseAllWindowsOfWindowHandle will try to
+     * quit the process. */
+    SendMessageTimeout(aHwndFW, WM_QUIT, (WPARAM)1, (LPARAM)0, SMTO_NORMAL, WM_CLOSE_TIMEOUT_VALUE, NULL);
+    if(aCloseAllWindows)
+      CloseAllWindowsOfWindowHandle(aHwndFW, aMsgWait);
+  }
+  Delay(2);
+  return(WIZ_OK);
+}
+
 HRESULT CheckInstances()
 {
-  char  szSection[MAX_BUF];
-  char  szClassName[MAX_BUF];
-  char  szWindowName[MAX_BUF];
-  char  szMessage[MAX_BUF];
-  char  szIndex[MAX_BUF];
-  int   iIndex;
+  char  section[MAX_BUF];
+  char  processName[MAX_BUF];
+  char  className[MAX_BUF];
+  char  windowName[MAX_BUF];
+  char  closeAllWindows[MAX_BUF];
+  char  message[MAX_BUF];
+  char  msgTitleStr[MAX_BUF];
+  char  prettyName[MAX_BUF];
+  char  buf[MAX_BUF];
+  char  msgWait[MAX_BUF];
+  int   index;
+  int   killProcessTries = 0;
+  int   instanceOfFoundProcess = 0;
   BOOL  bContinue;
+  BOOL  bCloseAllWindows;
   HWND  hwndFW;
   LPSTR szWN;
   LPSTR szCN;
   DWORD dwRv0;
   DWORD dwRv1;
 
+  GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", msgTitleStr, sizeof(msgTitleStr), szFileIniUninstall);
   bContinue = TRUE;
-  iIndex    = -1;
+  index    = -1;
   while(bContinue)
   {
-    ZeroMemory(szClassName,  sizeof(szClassName));
-    ZeroMemory(szWindowName, sizeof(szWindowName));
-    ZeroMemory(szMessage,    sizeof(szMessage));
+    *className  = '\0';
+    *windowName = '\0';
+    *message    = '\0';
 
-    ++iIndex;
-    itoa(iIndex, szIndex, 10);
-    lstrcpy(szSection, "Check Instance");
-    lstrcat(szSection, szIndex);
+    wsprintf(section, "Check Instance%d", ++index);
+    GetPrivateProfileString(section, "Process Name", "", processName, sizeof(processName), szFileIniUninstall);
+    GetPrivateProfileString(section, "Pretty Name", "", prettyName, sizeof(prettyName), szFileIniUninstall);
+    GetPrivateProfileString(section, "Message Wait", "", msgWait, sizeof(msgWait), szFileIniUninstall);
+    GetPrivateProfileString(section, "Close All Process Windows", "", closeAllWindows, sizeof(closeAllWindows), szFileIniUninstall);
+    if(lstrcmpi(closeAllWindows, "TRUE") == 0)
+      bCloseAllWindows = TRUE;
+    else
+      bCloseAllWindows = FALSE;
 
-    GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniUninstall);
+    if(instanceOfFoundProcess != index)
+    {
+      killProcessTries = 0;
+      instanceOfFoundProcess = index;
+    }
 
-    /* Process Name= key did not exist, so look for other keys */
-    dwRv0 = GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniUninstall);
-    dwRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniUninstall);
-    if((dwRv0 == 0L) &&
-       (dwRv1 == 0L))
+    if((killProcessTries == 1) && (*processName != '\0'))
+    {
+      if(FindAndKillProcess(processName, KP_DO_NOT_KILL_PROCESS))
+      {
+        /* found process, display warning message, then kill process */
+        GetPrivateProfileString("Messages", "MSG_FORCE_QUIT_PROCESS", "", message, sizeof(message), szFileIniUninstall);
+        if(*message != '\0')
+        {
+          wsprintf(buf, message, prettyName, processName, prettyName, prettyName);
+          ShowMessageAndQuitProcess(NULL, buf, msgWait, bCloseAllWindows, processName, CI_FORCE_QUIT_PROCESS);
+          ++killProcessTries;
+          instanceOfFoundProcess = index--;
+        }
+      }
+      continue;
+    }
+    else if(killProcessTries == MAX_KILL_PROCESS_RETRIES)
+    {
+      GetPrivateProfileString("Messages", "MSG_FORCE_QUIT_PROCESS_FAILED", "", message, sizeof(message), szFileIniUninstall);
+      if(*message != '\0')
+      {
+        wsprintf(buf, message, prettyName, processName, prettyName);
+        switch(ugUninstall.mode)
+        {
+          case NORMAL:
+            MessageBox(hWndMain, buf, msgTitleStr, MB_ICONEXCLAMATION | MB_SETFOREGROUND);
+            break;
+
+          case AUTO:
+            /* Setup mode is AUTO.  Show message, timeout, then auto close
+             * all the windows associated with the process */
+            ShowMessage(buf, TRUE);
+            Delay(5);
+            ShowMessage(buf, FALSE);
+            break;
+
+          default:
+            break;
+        }
+      }
+
+      /* can't kill the process for some unknown reason.  Stop the installation. */
+      return(TRUE);
+    }
+    else if((killProcessTries > 1) &&
+            (killProcessTries < MAX_KILL_PROCESS_RETRIES) &&
+            (*processName != '\0'))
+    {
+      if(FindAndKillProcess(processName, KP_KILL_PROCESS))
+      {
+        ++killProcessTries;
+        instanceOfFoundProcess = index--;
+      }
+      continue;
+    }
+
+    dwRv0 = GetPrivateProfileString(section, "Class Name",  "", className,  sizeof(className), szFileIniUninstall);
+    dwRv1 = GetPrivateProfileString(section, "Window Name", "", windowName, sizeof(windowName), szFileIniUninstall);
+    if((dwRv0 == 0L) && (dwRv1 == 0L) && (*processName == '\0'))
     {
       bContinue = FALSE;
     }
-    else if((*szClassName != '\0') || (*szWindowName != '\0'))
+    else if((*className != '\0') || (*windowName != '\0'))
     {
-      if(*szClassName == '\0')
+      if(*className == '\0')
         szCN = NULL;
       else
-        szCN = szClassName;
+        szCN = className;
 
-      if(*szWindowName == '\0')
+      if(*windowName == '\0')
         szWN = NULL;
       else
-        szWN = szWindowName;
+        szWN = windowName;
 
-      /* If an instance is found, call PreCheckInstance first. */
+      /* If an instance is found, call PreCheckInstance first.
+       * PreCheckInstance will try to disable the browser's
+       * QuickLaunch feature. If the browser was in QuickLaunch
+       * mode without any windows open, PreCheckInstance would
+       * shutdown the browser, thus a second call to FindAndKillProcess
+       * is required to see if the process is still around. */
       if((hwndFW = FindWindow(szCN, szWN)) != NULL)
-        PreCheckInstance(szSection, szFileIniUninstall);
+        PreCheckInstance(section, szFileIniUninstall);
 
       if((hwndFW = FindWindow(szCN, szWN)) != NULL)
       {
-        if(*szMessage != '\0')
+        GetCheckInstanceQuitMessage(section, message, sizeof(message));
+        if(*message != '\0')
         {
-          switch(ugUninstall.mode)
-          {
-            case NORMAL:
-              switch(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_RETRYCANCEL))
-              {
-                case IDCANCEL:
-                  /* User selected to cancel Setup */
-                  return(TRUE);
+          ShowMessageAndQuitProcess(hwndFW, message, msgWait, bCloseAllWindows, processName, CI_CLOSE_PROCESS);
+          ++killProcessTries;
+          instanceOfFoundProcess = index--;
+        }
+        else
+        {
+          /* No message to display.  Assume cancel because we can't allow user to continue */
+          return(TRUE);
+        }
+      }
+    }
 
-                case IDRETRY:
-                  /* User selected to retry.  Reset counter */
-                  iIndex = -1;
-                  break;
-              }
-              break;
-
-            case AUTO:
-              ShowMessage(szMessage, TRUE);
-              Delay(5);
-              ShowMessage(szMessage, FALSE);
-
-              /* Setup mode is AUTO.  Show message, timeout, then cancel because we can't allow user to continue */
-              return(TRUE);
-
-            case SILENT:
-              return(TRUE);
-          }
+    if((killProcessTries == 0) && (*processName != '\0'))
+    {
+      /* The first attempt used FindWindow(), but sometimes the browser can be
+       * in a state where there's no window open and still not fully shutdown.
+       * In this case, we need to check for the process itself and kill it. */
+      if(FindAndKillProcess(processName, KP_DO_NOT_KILL_PROCESS))
+      {
+        GetCheckInstanceQuitMessage(section, message, sizeof(message));
+        if(*message != '\0')
+        {
+          ShowMessageAndQuitProcess(hwndFW, message, msgWait, bCloseAllWindows, processName, CI_FORCE_QUIT_PROCESS);
+          ++killProcessTries;
+          instanceOfFoundProcess = index--;
         }
         else
         {
