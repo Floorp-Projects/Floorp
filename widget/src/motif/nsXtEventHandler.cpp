@@ -820,7 +820,7 @@ void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, 
   aKeyEvent.isShift   = PR_FALSE; // modout | ShiftMask; // Fix later
   aKeyEvent.isControl = PR_FALSE; // modout | ControlMask;
   aKeyEvent.isAlt     = PR_FALSE; // Fix later
-printf("KEY Event type %d %d shift %d control %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl);
+// printf("KEY Event type %d %d shift %d control %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl);
 }
 
 void nsXtWidget_KeyPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
