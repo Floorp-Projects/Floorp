@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   emk <VYV03354@nifty.ne.jp>
  */
 
 
@@ -920,8 +921,17 @@ PRBool nsImageWin::CanAlphaBlend(void)
   static PRBool alreadyChecked = PR_FALSE;
 
   if (!alreadyChecked) {
-    gAlphaBlend = (ALPHABLENDPROC)::GetProcAddress(::LoadLibrary("msimg32"),
-            "AlphaBlend");
+    OSVERSIONINFO os;
+    
+    os.dwOSVersionInfoSize = sizeof(os);
+    ::GetVersionEx(&os);
+    // If running on Win98, disable using AlphaBlend()
+    // to avoid Win98 AlphaBlend() bug
+    if (VER_PLATFORM_WIN32_WINDOWS != os.dwPlatformId ||
+        os.dwMajorVersion != 4 || os.dwMinorVersion != 10) {
+      gAlphaBlend = (ALPHABLENDPROC)::GetProcAddress(::LoadLibrary("msimg32"),
+              "AlphaBlend");
+    }
     alreadyChecked = PR_TRUE;
   }
 
