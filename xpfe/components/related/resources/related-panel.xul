@@ -11,69 +11,23 @@
   implied. See the License for the specific language governing
   rights and limitations under the License.
  
-  The Original Code is mozilla.org code.
+  The Original Code is from Alexa Internet (www.alexa.com).
  
-  The Initial Developer of the Original Code is Netscape
-  Communications Corporation.  Portions created by Netscape are
-  Copyright (C) 1998 Netscape Communications Corporation. All
-  Rights Reserved.
+  The Initial Developer of the Original Code is Alexa Internet.
+  Portions created by Alexa Internet are Copyright (C) 2000 Alexa
+  Internet. All Rights Reserved.
  
   Contributor(s): 
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/related/related.css" type="text/css"?>
-
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/related/related-panel.dtd" >
 <window
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical">
+  >
 
-  <script src="chrome://communicator/content/related/related-panel.js"></script>
+  <script src="chrome://communicator/content/related/related-panel.js" />
 
-  <!--
-     Note that the empty "datasources='rdf:null'" will ensure that a composite
-     datasource is created and a content model builder is installed, even
-     though there is no datasource from which to build content yet.
-  -->
-
-  <tree id="Tree" ref="NC:RelatedLinks" container="true" flex="1"
-        datasources="rdf:null" onclick="openURL(event, 'Tree');"
-        onkeypress="openURL(event, 'Tree');">
-    
-
-    <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-        <treechildren flex="1">
-          <treeitem uri="..."
-                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <treerow class="relatedseparator">
-              <treecell>
-                <separator class="groove" flex="1"/>
-              </treecell>
-            </treerow>
-          </treeitem>
-        </treechildren>
-      </rule>
-
-      <rule>
-        <treechildren flex="1">
-          <treeitem uri="..."
-                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <treerow class="relatedresult">
-              <treecell class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon" />
-            </treerow>
-          </treeitem>
-        </treechildren>
-      </rule>
-    </template>
-
-    <treecolgroup>
-      <treecol flex="1" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-    </treecolgroup>
-  </tree>
+  <iframe id="daFrame" src="about:blank" flex="1" />
 </window>

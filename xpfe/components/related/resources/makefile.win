@@ -33,7 +33,6 @@ CHROME_CONTENT = \
 	$(NULL)
 
 CHROME_L10N = \
-	.\locale\en-US\related-panel.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
