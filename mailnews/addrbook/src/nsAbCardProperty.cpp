@@ -70,6 +70,7 @@ nsAbCardProperty::nsAbCardProperty(void)
 
 nsAbCardProperty::~nsAbCardProperty(void)
 {
+  PR_FREEIF(m_MailListURI);
 }
 
 NS_IMPL_ADDREF(nsAbCardProperty)
