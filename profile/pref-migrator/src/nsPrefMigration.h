@@ -40,7 +40,7 @@
 #define IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x "%s Rules" 
 #endif
 
-class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
+class nsPrefMigration: public nsIPrefMigration
 {
     public:
       NS_DEFINE_STATIC_CID_ACCESSOR(NS_PREFMIGRATION_CID) 
@@ -54,9 +54,6 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 
       NS_DECL_NSIPREFMIGRATION
 
-	    /* nsIShutdownListener methods */
-	    NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
-	  
       // todo try to move this to private.  We need this because we need to call this
       // from a thread.
 

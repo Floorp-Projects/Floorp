@@ -231,32 +231,7 @@ nsPrefMigration::getPrefService()
   return NS_OK;   
 }
 
-NS_IMETHODIMP 
-nsPrefMigration::QueryInterface(const nsIID& iid,void** result)
-{
-  nsresult rv = NS_NOINTERFACE;
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
-
-  void *res = nsnull;
-  if (iid.Equals(nsCOMTypeInfo<nsIPrefMigration>::GetIID()) ||
-      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-    res = NS_STATIC_CAST(nsIPrefMigration*, this);
-  else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
-    res = NS_STATIC_CAST(nsIShutdownListener*, this);
-
-  if (res) {
-    NS_ADDREF(this);
-    *result = res;
-    rv = NS_OK;
-  }
-
-  return rv;
-}
-
-NS_IMPL_ADDREF(nsPrefMigration)
-NS_IMPL_RELEASE(nsPrefMigration)
-
+NS_IMPL_ISUPPORTS(nsPrefMigration, NS_GET_IID(nsIPrefMigration))
 
 NS_IMETHODIMP
 nsPrefMigration::AddProfilePaths(const char * oldProfilePathStr, const char * newProfilePathStr)
@@ -1422,18 +1397,6 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path
 	rv = m_prefs->SetFilePref(premigration_pref, path, PR_FALSE /* set default */);
 	PR_FREEIF(premigration_pref);   
 	return rv;
-}
-
-/* called if the prefs service goes offline */
-NS_IMETHODIMP
-nsPrefMigration::OnShutdown(const nsCID& aClass, nsISupports *service)
-{
-  if (aClass.Equals(kPrefServiceCID)) {
-    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
-    m_prefs = nsnull;
-  }
-
-  return NS_OK;
 }
 
 /* This works.  Saving for reference 
