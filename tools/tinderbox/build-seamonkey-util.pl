@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.218 $ ';
+$::UtilsVersion = '$Revision: 1.219 $ ';
 
 package TinderUtils;
 
@@ -1983,7 +1983,7 @@ sub CodesizeTest {
     # Print out Zdiff if not zero.  Testing "zero" by looking for "+0 ".
     my $zdiff_sample = substr($zdiff_data,0,3);
     if (not ($zdiff_sample eq "+0 ")) {
-      print_log "<a title=\"Change from last $zee value (+added/-subtracted)\" TinderboxPrint:Zdiff:$zdiff_data</a>\n";
+      print_log "<a title=\"Change from last $zee value (+added/-subtracted)\" TinderboxPrint:" . $zee . "diff:$zdiff_data</a>\n";
     }
     
     # Get ready for next cycle.
