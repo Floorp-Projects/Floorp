@@ -12,5 +12,5 @@ else
     DYLD_LIBRARY_PATH=${1}/lib
     export DYLD_LIBRARY_PATH
 fi
-echo ./${2}/shlibsign -i ${4}
-./${2}/shlibsign -i ${4}
+echo ./${2}/shlibsign -v -i ${4}
+./${2}/shlibsign -v -i ${4}

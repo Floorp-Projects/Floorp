@@ -34,8 +34,12 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.1 2003/01/28 18:53:22 relyea%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.2 2003/02/04 23:18:07 relyea%netscape.com Exp $
  */
+
+#ifdef XP_UNIX
+#define USES_LINKS 1
+#endif
 
 #include "nspr.h"
 #include "string.h"
@@ -49,6 +53,13 @@
 #include "secrng.h"
 #include "shsign.h"
 
+#ifdef USES_LINKS
+#include "libgen.h"
+#include "unistd.h"
+#include "sys/types.h"
+#include "sys/stat.h"
+#endif
+
 static void
 usage (char *program_name)
 {
@@ -56,7 +67,7 @@ usage (char *program_name)
 
     pr_stderr = PR_STDERR;
     PR_fprintf (pr_stderr, "Usage:");
-    PR_fprintf (pr_stderr, "%s shared_library_name\n", program_name);
+    PR_fprintf (pr_stderr, "%s [-v] -i shared_library_name\n", program_name);
 }
 
 static char *
@@ -132,15 +143,21 @@ main (int argc, char **argv)
     PRFileDesc *fd;
     int bytesRead;
     int bytesWritten;
-    unsigned char buf[512];
+    unsigned char file_buf[512];
     unsigned char hash_buf[SHA1_LENGTH];
     unsigned char sign_buf[40]; /* DSA_LENGTH */
     SECItem hash,sign;
     PK11Context *hashcx;
-    int ks;
+    int ks, count=0;
     int keySize = 1024;
     PQGParams *pqgParams = NULL;
     PQGVerify *pqgVerify = NULL;
+#ifdef USES_LINKS
+    int ret;
+    struct stat stat_buf;
+    char link_buf[MAXPATHLEN];
+    char *link_file = NULL;
+#endif
 
     hash.len = sizeof(hash_buf); hash.data = hash_buf;
     sign.len = sizeof(sign_buf); sign.data = sign_buf;
@@ -188,9 +205,6 @@ main (int argc, char **argv)
 	usage(program_name);
 	return -1;
     }
-    if (output_file == NULL) {
-	output_file = mkoutput(input_file);
-    }
 
     /*
      * Initialize the Security libraries.
@@ -236,6 +250,36 @@ main (int argc, char **argv)
 	lperror(input_file);
 	goto loser;
     }
+#ifdef USES_LINKS
+    ret = lstat(input_file, &stat_buf);
+    if (ret < 0) {
+	perror(input_file);
+	goto loser;
+    }
+    if (S_ISLNK(stat_buf.st_mode)) {
+	char *path,*dirpath;
+	ret = readlink(input_file, link_buf, sizeof(link_buf));
+	if (ret < 0) {
+	   perror(input_file);
+	   goto loser;
+	}
+	link_buf[ret] = 0;
+	link_file = mkoutput(input_file);
+	path = PORT_Strdup(input_file);
+	dirpath = dirname(path);
+	ret = chdir(dirpath);
+	if (ret < 0) {
+	   perror(dirpath);
+	   goto loser;
+	}
+	PORT_Free(path);
+	input_file = link_buf;
+	link_file = basename(link_file);
+    }
+#endif
+    if (output_file == NULL) {
+	output_file = mkoutput(input_file);
+    }
 
     hashcx = PK11_CreateDigestContext(SEC_OID_SHA1);
     if (hashcx == NULL) {
@@ -244,8 +288,9 @@ main (int argc, char **argv)
     }
 
     /* hash the file */
-    while ((bytesRead = PR_Read(fd,buf,sizeof(buf))) > 0) {
-	PK11_DigestOp(hashcx,buf,bytesRead);
+    while ((bytesRead = PR_Read(fd,file_buf,sizeof(file_buf))) > 0) {
+	PK11_DigestOp(hashcx,file_buf,bytesRead);
+	count += bytesRead;
     }
 
     PR_Close(fd);
@@ -270,6 +315,33 @@ main (int argc, char **argv)
 	goto loser;
     }
 
+    if (verbose) {
+	int i,j;
+	fprintf(stderr,"Library File: %s %d bytes\n",input_file, count);
+	fprintf(stderr,"Check File: %s\n",output_file);
+#ifdef USES_LINKS
+	if (link_file) {
+	    fprintf(stderr,"Link: %s\n",link_file);
+	}
+#endif
+	fprintf(stderr,"  hash: %d bytes\n", hash.len);
+#define STEP 10
+	for (i=0; i < hash.len; i += STEP) {
+	   fprintf(stderr,"   ");
+	   for (j=0; j < STEP && (i+j) < hash.len; j++) {
+		fprintf(stderr," %02x", hash.data[i+j]);
+	   }
+	   fprintf(stderr,"\n");
+	}
+	fprintf(stderr,"  signature: %d bytes\n", sign.len);
+	for (i=0; i < sign.len; i += STEP) {
+	   fprintf(stderr,"   ");
+	   for (j=0; j < STEP && (i+j) < sign.len; j++) {
+		fprintf(stderr," %02x", sign.data[i+j]);
+	   }
+	   fprintf(stderr,"\n");
+	}
+    }
 
     /* open the target signature file */
     fd = PR_OpenFile(output_file,PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE,0666);
@@ -286,13 +358,13 @@ main (int argc, char **argv)
      * freebl libraries.
      */
 
-    buf[0] = NSS_SIGN_CHK_MAGIC1;
-    buf[1] = NSS_SIGN_CHK_MAGIC2;
-    buf[2] = NSS_SIGN_CHK_MAJOR_VERSION;
-    buf[3] = NSS_SIGN_CHK_MINOR_VERSION;
-    encodeInt(&buf[4],12);			/* offset to data start */
-    encodeInt(&buf[8],CKK_DSA);
-    bytesWritten = PR_Write(fd,buf, 12);
+    file_buf[0] = NSS_SIGN_CHK_MAGIC1;
+    file_buf[1] = NSS_SIGN_CHK_MAGIC2;
+    file_buf[2] = NSS_SIGN_CHK_MAJOR_VERSION;
+    file_buf[3] = NSS_SIGN_CHK_MINOR_VERSION;
+    encodeInt(&file_buf[4],12);			/* offset to data start */
+    encodeInt(&file_buf[8],CKK_DSA);
+    bytesWritten = PR_Write(fd,file_buf, 12);
     if (bytesWritten != 12) {
 	lperror(output_file);
 	goto loser;
@@ -310,6 +382,16 @@ main (int argc, char **argv)
     if (rv != SECSuccess) goto loser;
 
     PR_Close(fd);
+
+#ifdef USES_LINKS
+    if (link_file) {
+	ret = symlink(output_file, link_file);
+	if (ret < 0) {
+	   perror(output_file);
+	   goto loser;
+	}
+    }
+#endif
 
 
 loser:
