@@ -53,14 +53,17 @@ CVSCO = cvs -q co -P
 
 # Branch tags we use
 IMGLIB_BRANCH = MODULAR_IMGLIB_BRANCH
-XPCOM_BRANCH = XPCOM_BRANCH
+PLUGIN_BRANCH = OJI_19980618_BRANCH
+LIBPREF_BRANCH = XPCOM_BRANCH
 
 # CVS commands to pull the appropriate branch versions
-CVSCO_XPCOM = $(CVSCO) -r $(XPCOM_BRANCH)
+CVSCO_XPCOM = $(CVSCO)
+CVSCO_LIBPREF = $(CVSCO) -r $(LIBPREF_BRANCH)
 CVSCO_IMGLIB = $(CVSCO) -r $(IMGLIB_BRANCH)
 CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 CVSCO_NETWORK = $(CVSCO)
+CVSCO_PLUGIN = $(CVSCO) -r $(PLUGIN_BRANCH)
 
 # The list of directories that need to be built to build the
 # standalone nglayout test program. The order is important. The
@@ -81,6 +84,7 @@ DIST_DIRS =			\
   modules\security\freenav	\
   modules\libpref		\
   modules\libimg		\
+  modules\plugin		\
   base                          \
   lib\xp			\
   lib\libpwcac			\
@@ -152,12 +156,13 @@ pull_lizard:
 	$(CVSCO_LIZARD) $(MOZ_TOP)/nav-java
 	$(CVSCO_LIZARD) $(MOZ_TOP)/js
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/security/freenav
-	$(CVSCO_XPCOM) $(MOZ_TOP)/modules/libpref
+	$(CVSCO_LIBPREF) $(MOZ_TOP)/modules/libpref
+	$(CVSCO_PLUGIN) $(MOZ_TOP)/modules/plugin
 
 pull_xpcom:
 	@cd $(MOZ_SRC)\.
-	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libreg 
-	$(CVSCO_LIZARD) $(MOZ_TOP)/xpcom
+	$(CVSCO_XPCOM) $(MOZ_TOP)/modules/libreg 
+	$(CVSCO_XPCOM) $(MOZ_TOP)/xpcom
 
 pull_imglib:
 	@cd $(MOZ_SRC)\.
