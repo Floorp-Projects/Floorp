@@ -68,6 +68,7 @@ void _PR_CleanupThread(PRThread *thread)
 
     PR_DELETE(thread->errorString);
     thread->errorStringSize = 0;
+    thread->errorStringLength = 0;
     thread->environment = NULL;
 }
 
