@@ -85,7 +85,7 @@ MOZ_WINCONSOLE = 0
 
 include $(topsrcdir)/config/rules.mk
 
-_OS_LIBS 	= ole32 comdlg32 shell32 shlwapi version
+_OS_LIBS 	= ole32 comdlg32 shell32 version
 ifdef GNU_CC
 _OS_LIBS	+= gdi32 ws2_32 uuid
 endif
