@@ -60,11 +60,11 @@
     <label value="&whatsRelated.label;"/>
 
     <html class="small-margin" id="doNotAcceptText">&doNotDecp.label;</html>
-    
+    <separator class="thin"/>
     <grid flex="1">
       <columns>
-        <column flex="4"/>
-        <column flex="3"/>
+        <column flex="5"/>
+        <column/>
       </columns>
       <rows>
         <row>
@@ -73,10 +73,13 @@
             <textbox class="small-margin" id="addDomain" flex="1" oninput="doButtonEnabling();"
                      prefstring="pref.browser.smartbrowsing.disable_textbox.add" prefattribute="disabled"/>
           </hbox>
-          <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
-                  oncommand="addDomain();" pref="true" preftype="bool"
-                  prefstring="pref.browser.smartbrowsing.disable_button.add" prefattribute="disabled"/>
+          <vbox align="center">
+            <button disabled="true" class="dialog" id="addDomainButton" label="&addDomain.label;" accesskey="&addDomain.accesskey;"
+                    oncommand="addDomain();" pref="true" preftype="bool"
+                    prefstring="pref.browser.smartbrowsing.disable_button.add" prefattribute="disabled"/>
+          </vbox>
         </row>
+        <separator class="thin"/>
         <row flex="1">
           <tree class="inset" id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 0px; width: 0px;" flex="1">
             <treecolgroup>
@@ -84,7 +87,7 @@
             </treecolgroup>
             <treechildren id="disabledKids" flex="1"/>
           </tree>
-          <vbox>
+          <vbox align="center">
             <button class="dialog" id="removeDomain" label="&removeDomain.label;" accesskey="&removeDomain.accesskey;"
                     oncommand="removeDomain();" pref="true" preftype="bool"
                     prefstring="pref.browser.smartbrowsing.disable_button.remove" prefattribute="disabled"/>
