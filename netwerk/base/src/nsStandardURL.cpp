@@ -651,9 +651,9 @@ nsStandardURL::GetHost(char **result)
     nsresult rv;
     // strip []'s if hostname is an IPv6 address literal
     if (mSpec.CharAt(mHostname.mPos) == '[')
-        rv = NewSubstring(mHostname.mPos + 1, mHostname.mLen - 2, result, PR_TRUE);
+        rv = NewSubstring(mHostname.mPos + 1, mHostname.mLen - 2, result);
     else
-        rv = NewSubstring(mHostname, result, PR_TRUE);
+        rv = NewSubstring(mHostname, result);
     return rv;
 }
 
