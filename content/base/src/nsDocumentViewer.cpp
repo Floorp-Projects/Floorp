@@ -422,6 +422,7 @@ protected:
   PRPackedBool  mEnableRendering;
   PRPackedBool  mStopped;
   PRPackedBool  mLoaded;
+  PRPackedBool  mDeferredWindowClose;
   PRInt16 mNumURLStarts;
   PRInt16 mDestroyRefCount;     // a second "refcount" for the document viewer's "destroy"
 
@@ -486,6 +487,7 @@ void DocumentViewerImpl::PrepareToStartLoad()
   mEnableRendering  = PR_TRUE;
   mStopped          = PR_FALSE;
   mLoaded           = PR_FALSE;
+  mDeferredWindowClose = PR_FALSE;
 
 #ifdef NS_PRINTING
   mPrintIsPending        = PR_FALSE;
@@ -1584,6 +1586,21 @@ DocumentViewerImpl::GetEnableRendering(PRBool* aResult)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+DocumentViewerImpl::RequestWindowClose(PRBool* aCanClose)
+{
+#ifdef NS_PRINTING
+  if (mPrintIsPending || (mPrintEngine && mPrintEngine->GetIsPrinting())) {
+    *aCanClose = PR_FALSE;
+    mDeferredWindowClose = PR_TRUE;
+  } else
+#endif
+    *aCanClose = PR_TRUE;
+
+  return NS_OK;
+}
+
 
 void
 DocumentViewerImpl::ForceRefresh()
@@ -3817,7 +3834,12 @@ DocumentViewerImpl::OnDonePrinting()
     }
 
     // We are done printing, now cleanup 
-    if (mClosingWhilePrinting) {
+    if (mDeferredWindowClose) {
+      mDeferredWindowClose = PR_FALSE;
+      nsCOMPtr<nsIDOMWindowInternal> win = do_GetInterface(mContainer);
+      if (win)
+        win->Close();
+    } else if (mClosingWhilePrinting) {
       if (mDocument) {
         mDocument->SetScriptGlobalObject(nsnull);
         mDocument = nsnull;
