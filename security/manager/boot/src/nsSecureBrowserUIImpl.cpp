@@ -134,6 +134,7 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 {
   NS_INIT_ISUPPORTS();
   mTransferringRequests.ops = nsnull;
+  mNewToplevelSecurityState = STATE_IS_INSECURE;
   ResetStateTracking();
   
 #if defined(PR_LOGGING)
@@ -363,7 +364,6 @@ nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress* aWebProgress,
 
 void nsSecureBrowserUIImpl::ResetStateTracking()
 {
-  mNewToplevelSecurityState = STATE_IS_INSECURE;
   mInfoTooltip.Truncate();
   mDocumentRequestsInProgress = 0;
   mMultipleTopLevelRequestsSeen = PR_FALSE;
