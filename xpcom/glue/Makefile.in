@@ -40,7 +40,6 @@ LOCAL_INCLUDES	= \
 
 CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS) \
-		nsDebug.cpp              \
 		$(NULL)
 
 SDK_HEADERS     = \

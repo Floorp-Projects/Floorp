@@ -57,7 +57,6 @@ CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS)     \
 		nsXPCOMGlue.cpp              \
 		nsGREDirServiceProvider.cpp  \
-		nsDebugGlue.cpp		     \
 		$(NULL)
 
 SDK_HEADERS     = \
