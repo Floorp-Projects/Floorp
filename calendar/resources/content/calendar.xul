@@ -22,7 +22,7 @@
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Mike Potter <mikep@oeone.com>
    -                 Colin Phillips <colinp@oeone.com>
-   -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 Chris Charabaruk <coldacid@djfly.org>
    -                 Karl Guertin <grayrest@grayrest.com> 
    -                 Dan Parent <danp@oeone.com> 
    -                 ArentJan Banck <ajbanck@planet.nl> 
@@ -381,7 +381,7 @@
             </tabpanel>
             </tabpanels>
          </tabbox>
-         <splitter id="calendar-todo-splitter" collapse="after" persist="state"
+         <splitter id="calendar-todo-splitter" collapse="before" persist="state"
             class="chromeclass-extrachrome" orient="vertical">
             <grippy/>
          </splitter>
