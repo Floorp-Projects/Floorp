@@ -953,6 +953,7 @@ nsSpaceManager::ClearRegions()
 {
   ClearFrameInfo();
   mBandList.Clear();
+  mLowestTop = NSCOORD_MIN;
 }
 
 void
