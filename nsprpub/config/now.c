@@ -39,7 +39,9 @@
 #include <sys/timeb.h>
 #elif defined(XP_UNIX) || defined(XP_OS2_EMX) || defined(XP_BEOS)
 #include <sys/time.h>
-#elif defined(WIN32) || defined(XP_OS2_VACPP)
+#elif defined(WIN32)
+#include <windows.h>
+#elif defined(XP_OS2_VACPP)
 #include <sys/timeb.h>
 #else
 #error "Architecture not supported"
@@ -86,11 +88,14 @@ int main(int argc, char **argv)
 
 #elif defined(WIN32)
     __int64 now;
-    struct timeb b;
-    ftime(&b);
-    now = b.time;
-    now *= 1000000;
-    now += (1000 * b.millitm);
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    CopyMemory(&now, &ft, sizeof(now));
+    /*
+     * 116444736000000000 is the number of 100-nanosecond intervals
+     * between Jan. 1, 1601 and Jan. 1, 1970.
+     */
+    now = (now - 116444736000000000i64) / 10i64;
     fprintf(stdout, "%I64d", now);
 
 #elif defined(XP_OS2_VACPP)

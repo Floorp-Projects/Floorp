@@ -579,7 +579,7 @@ _PR_MD_DELETE(const char *name)
     }
 }
 
-static void
+void
 _PR_FileTimeToPRTime(const FILETIME *filetime, PRTime *prtm)
 {
     PR_ASSERT(sizeof(FILETIME) == sizeof(PRTime));
