@@ -3701,21 +3701,6 @@ function asyncFocusSearchBox(event)
   sidebar.removeEventListener("load", asyncFocusSearchBox, true);
  }
 
-function openPreferences()
-{
-  var instantApply = gPrefService.getBoolPref("browser.preferences.instantApply");
-  var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
-
-  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("Browser:Preferences");
-  if (win)
-    win.focus();
-  else 
-    openDialog("chrome://browser/content/preferences/preferences.xul", 
-               "Preferences", features);
-}
-
 var gHomeButton = {
   prefDomain: "browser.startup.homepage",
   observe: function (aSubject, aTopic, aPrefName)
