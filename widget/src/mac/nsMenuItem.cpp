@@ -84,6 +84,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mDOMElement  = nsnull;
   mDOMNode     = nsnull;
   mKeyEquivalent = " ";
+  mEnabled     = PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -251,12 +252,14 @@ NS_METHOD nsMenuItem::SetLabel(nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetEnabled(PRBool aIsEnabled)
 {
+  mEnabled = aIsEnabled;
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 {
+  *aIsEnabled = mEnabled;
   return NS_OK;
 }
 

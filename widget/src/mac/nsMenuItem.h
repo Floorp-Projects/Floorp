@@ -110,7 +110,8 @@ protected:
   nsIDOMElement *   mDOMElement;
   nsIDOMNode    *   mDOMNode;
   
-   PRUint8           mModifiers;
+  PRUint8           mModifiers;
+  PRBool            mEnabled;
 };
 
 #endif // nsMenuItem_h__
