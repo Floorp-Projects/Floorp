@@ -124,7 +124,7 @@ class CHTMLView :
 									Int8 					inScrollMode,
 									Boolean					inRefresh = false);
 		
-		virtual	Boolean			GetScrollMode(void) const;
+		virtual	Int8			GetScrollMode(void) const;
 
 		void					SetDefaultScrollMode(Int8 inScrollMode) {mDefaultScrollMode = inScrollMode; }
 		void					SetEraseBackground(Boolean inErase)	{mEraseBackground = inErase; }

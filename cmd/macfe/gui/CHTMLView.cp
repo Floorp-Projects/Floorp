@@ -703,7 +703,7 @@ void CHTMLView::SetScrollMode(
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-Boolean CHTMLView::GetScrollMode(void) const
+Int8 CHTMLView::GetScrollMode(void) const
 {
 	return mScrollMode;
 }
