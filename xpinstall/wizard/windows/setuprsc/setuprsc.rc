@@ -325,7 +325,7 @@ BEGIN
                             "Setup has detected insufficient disk space on: %s Required: %s Available: %sfor the selection[s] chosen.  Would you like to go back and make changes to either the destination folder or other selection[s]?"
     IDS_ERROR_CREATE_DIRECTORY 
                             "Could not create folder: %sMake sure you have access to create the folder."
-    IDS_STR_FILE_NUMBER     "File #:"
+    IDS_STR_FILE_NUMBER     "File count:"
     IDS_STR_FILENAME        "Filename:"
     IDS_MSG_SMARTUPDATE_START "Initializing SmartUpdate, please wait..."
     IDS_MSG_CONFIGURING     "Configuring %s, please wait..."
