@@ -86,7 +86,7 @@ Contributor(s): ______________________________________. -->
 </broadcasterset>
 
 
-<!--menu id="menu_File">
+<menu id="menu_File">
     <menupopup>
       <menuitem accesskey="&browserCmd.accesskey;" key="newBrowserKb" observes="Browser:NewWindow" />
 	    <menu value="&newMenu.label;" accesskey="&newMenu.accesskey;">
@@ -121,7 +121,7 @@ Contributor(s): ______________________________________. -->
       <menuseparator />
       <menuitem accesskey="&quitCmd.accesskey;" key="quitKb" observes="Browser:Quit"/>
   </menupopup>
-</menu-->
+</menu>
 
   <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" >
 	  <menupopup>
