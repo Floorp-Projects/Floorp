@@ -15,7 +15,8 @@ class CUrlDialog : public CDialog
 // Construction
 public:
 	CUrlDialog(CWnd* pParent = NULL);   // standard constructor
-    unsigned long m_flagvalue ;
+//    unsigned long m_flagvalue ;
+    PRUint32 m_flagvalue;
 // Dialog Data
 	//{{AFX_DATA(CUrlDialog)
 	enum { IDD = IDD_URLDIALOG };

@@ -163,23 +163,27 @@ NS_IMETHODIMP CBrowserImpl::GetInterface(const nsIID &aIID, void** aInstancePtr)
 //
 NS_IMETHODIMP CBrowserImpl::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 {
+//  QAOutput("nsIWebBrowserChrome::SetStatus().", 1);
+
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->UpdateStatusBarText(aStatus);
-    //QAOutput("nsIWebBrowserChrome::SetStatus().", 1);
 
 	return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
+   QAOutput("nsIWebBrowserChrome::GetWebBrowser().", 1);
+
    NS_ENSURE_ARG_POINTER(aWebBrowser);
 
    *aWebBrowser = mWebBrowser;
+   if (!aWebBrowser)
+      QAOutput("aWebBrowser is null", 1);
 
    NS_IF_ADDREF(*aWebBrowser);
-   QAOutput("nsIWebBrowserChrome::GetWebBrowser().", 1);
 
    return NS_OK;
 }
@@ -189,23 +193,38 @@ NS_IMETHODIMP CBrowserImpl::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 //
 NS_IMETHODIMP CBrowserImpl::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 {
+   QAOutput("nsIWebBrowserChrome::SetWebBrowser().", 1);
+
    NS_ENSURE_ARG_POINTER(aWebBrowser);
 
+   if (!aWebBrowser)
+      QAOutput("aWebBrowser is null", 1);
+
    mWebBrowser = aWebBrowser;
-   QAOutput("nsIWebBrowserChrome::SetWebBrowser().", 1);
 
    return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::GetChromeFlags(PRUint32* aChromeMask)
 {
+    QAOutput("nsIWebBrowserChrome::GetChromeFlags().", 1);
+
 	*aChromeMask = nsIWebBrowserChrome::CHROME_ALL;
+    if (!aChromeMask)
+      QAOutput("aChromeMask is null", 1);
 
 	return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::SetChromeFlags(PRUint32 aChromeMask)
 {
+    QAOutput("nsIWebBrowserChrome::SetChromeFlags().", 1);
+
+    if (!aChromeMask)
+      QAOutput("aChromeMask is null", 1);
+
+	mChromeMask = aChromeMask;
+
 	return NS_OK;
 }
 
@@ -262,18 +281,18 @@ NS_IMETHODIMP CBrowserImpl::DestroyBrowserWindow()
 //
 NS_IMETHODIMP CBrowserImpl::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
+	QAOutput("nsIWebBrowserChrome::SizeBrowserTo(): Browser sized.", 1);
+
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->SetBrowserFrameSize(aCX, aCY);
-	QAOutput("nsIWebBrowserChrome::SizeBrowserTo(): Browser sized.", 1);
 
 	return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::ShowAsModal(void)
 {
-//   return NS_ERROR_NOT_IMPLEMENTED;
 	QAOutput("inside nsIWebBrowserChrome::ShowAsModal()", 2);
 
 	return NS_OK;
@@ -281,6 +300,8 @@ NS_IMETHODIMP CBrowserImpl::ShowAsModal(void)
 
 NS_IMETHODIMP CBrowserImpl::IsWindowModal(PRBool *retval)
 {
+  QAOutput("inside nsIWebBrowserChrome::IsWindowModal()", 1);
+
   // We're not modal
   *retval = PR_FALSE;
 
@@ -289,6 +310,8 @@ NS_IMETHODIMP CBrowserImpl::IsWindowModal(PRBool *retval)
 
 NS_IMETHODIMP CBrowserImpl::ExitModalEventLoop(nsresult aStatus)
 {
+  QAOutput("inside nsIWebBrowserChrome::ExitModalEventLoop()", 1);
+
   return NS_OK;
 }
 
@@ -298,12 +321,16 @@ NS_IMETHODIMP CBrowserImpl::ExitModalEventLoop(nsresult aStatus)
 
 NS_IMETHODIMP CBrowserImpl::FocusNextElement()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	QAOutput("inside nsIWebBrowserChromeFocus::FocusNextElement()", 1);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::FocusPrevElement()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	QAOutput("inside nsIWebBrowserChromeFocus::FocusPrevElement()", 1);
+
+    return NS_OK;
 }
 
 //*****************************************************************************
@@ -312,6 +339,8 @@ NS_IMETHODIMP CBrowserImpl::FocusPrevElement()
 
 NS_IMETHODIMP CBrowserImpl::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
+	QAOutput("inside nsIEmbeddingSiteWindow::SetDimensions()", 1);
+
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
@@ -339,6 +368,8 @@ NS_IMETHODIMP CBrowserImpl::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y,
 
 NS_IMETHODIMP CBrowserImpl::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
+	QAOutput("inside nsIEmbeddingSiteWindow::GetDimensions()", 1);
+
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
     
@@ -357,6 +388,8 @@ NS_IMETHODIMP CBrowserImpl::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *
 
 NS_IMETHODIMP CBrowserImpl::GetSiteWindow(void** aSiteWindow)
 {
+  QAOutput("inside nsIEmbeddingSiteWindow::GetSiteWindow()", 1);
+
   if (!aSiteWindow)
     return NS_ERROR_NULL_POINTER;
 
@@ -370,6 +403,8 @@ NS_IMETHODIMP CBrowserImpl::GetSiteWindow(void** aSiteWindow)
 
 NS_IMETHODIMP CBrowserImpl::SetFocus()
 {
+    QAOutput("inside nsIEmbeddingSiteWindow::SetFocus()", 1);
+
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
@@ -380,6 +415,8 @@ NS_IMETHODIMP CBrowserImpl::SetFocus()
 
 NS_IMETHODIMP CBrowserImpl::GetTitle(PRUnichar** aTitle)
 {
+    QAOutput("inside nsIEmbeddingSiteWindow::GetTitle()", 1);
+
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
@@ -390,6 +427,8 @@ NS_IMETHODIMP CBrowserImpl::GetTitle(PRUnichar** aTitle)
 
 NS_IMETHODIMP CBrowserImpl::SetTitle(const PRUnichar* aTitle)
 {
+    QAOutput("inside nsIEmbeddingSiteWindow::SetTitle()", 1);
+
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
@@ -400,6 +439,8 @@ NS_IMETHODIMP CBrowserImpl::SetTitle(const PRUnichar* aTitle)
 
 NS_IMETHODIMP CBrowserImpl::GetVisibility(PRBool *aVisibility)
 {
+    QAOutput("inside nsIEmbeddingSiteWindow::GetVisibility()", 1);
+
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
@@ -410,6 +451,8 @@ NS_IMETHODIMP CBrowserImpl::GetVisibility(PRBool *aVisibility)
 
 NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
 {
+    QAOutput("inside nsIEmbeddingSiteWindow::SetVisibility()", 1);
+
     if(! m_pBrowserFrameGlue)
         return NS_ERROR_FAILURE;
 
@@ -487,6 +530,7 @@ NS_IMETHODIMP CBrowserImpl::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 
 	GetTheUri(aURI, 1);
 	*_retval = PR_TRUE;
+	FormatAndPrintOutput("_retval set to = ", *_retval, 1);
 
 	return NS_OK;
 }
@@ -503,7 +547,9 @@ NS_IMETHODIMP CBrowserImpl::DoContent(const char *aContentType, PRBool aIsConten
 //	*aContentHandler = nsnull;
 	QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
 
-	*_retval = PR_TRUE;
+	*_retval = PR_FALSE;
+	FormatAndPrintOutput("_retval set to = ", *_retval, 1);
+
 	return NS_OK;
 }
 NS_IMETHODIMP CBrowserImpl::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
@@ -514,7 +560,10 @@ NS_IMETHODIMP CBrowserImpl::IsPreferred(const char *aContentType, char **aDesire
 
 	FormatAndPrintOutput("IsPreferred() content type = ", *aContentType, 1);
 	*aDesiredContentType = nsCRT::strdup("text/html");
+	FormatAndPrintOutput("aDesiredContentType set to = ", *aDesiredContentType, 1);
 	*_retval = PR_TRUE;
+	FormatAndPrintOutput("_retval set to = ", *_retval, 1);
+
 	return NS_OK;
 }
 
@@ -525,14 +574,20 @@ NS_IMETHODIMP CBrowserImpl::CanHandleContent(const char *aContentType, PRBool aI
 	FormatAndPrintOutput("CanHandleContent() content type = ", *aContentType, 1);
 	FormatAndPrintOutput("CanHandleContent() preferred content type = ", aIsContentPreferred, 1);
 	*aDesiredContentType = nsCRT::strdup("text/html");
+	FormatAndPrintOutput("aDesiredContentType set to = ", *aDesiredContentType, 1);
 	*_retval = PR_TRUE;
+	FormatAndPrintOutput("_retval set to = ", *_retval, 1);
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::GetLoadCookie(nsISupports * *aLoadCookie)
+NS_IMETHODIMP CBrowserImpl::GetLoadCookie(nsISupports **aLoadCookie)
 {
 	QAOutput("nsIURIContentListener->GetLoadCookie()",1);
-	*aLoadCookie = nsnull;
+
+	if (!aLoadCookie)
+		QAOutput("aLoadCookie object is null",1);
+	*aLoadCookie = mLoadCookie;
+	NS_IF_ADDREF(*aLoadCookie);
 
 	return NS_OK;
 }
@@ -541,14 +596,23 @@ NS_IMETHODIMP CBrowserImpl::SetLoadCookie(nsISupports * aLoadCookie)
 {
 	QAOutput("nsIURIContentListener->SetLoadCookie()",1);
 
+	if (!aLoadCookie)
+		QAOutput("aLoadCookie object is null",1);
+	mLoadCookie = aLoadCookie;
+
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
+NS_IMETHODIMP CBrowserImpl::GetParentContentListener(nsIURIContentListener **aParentContentListener)
 {
 	QAOutput("nsIURIContentListener->GetParentContentListener()",1);
-//	*aParentContentListener = nsnull;
-	QueryInterface(NS_GET_IID(nsIURIContentListener), (void **) aParentContentListener);
+
+	if (!aParentContentListener)
+		QAOutput("aParentContentListener object is null",1);
+	*aParentContentListener = mParentContentListener;
+	NS_IF_ADDREF(*aParentContentListener);
+
+//	QueryInterface(NS_GET_IID(nsIURIContentListener), (void **) aParentContentListener);
 
 	return NS_OK;
 }
@@ -556,6 +620,10 @@ NS_IMETHODIMP CBrowserImpl::GetParentContentListener(nsIURIContentListener * *aP
 NS_IMETHODIMP CBrowserImpl::SetParentContentListener(nsIURIContentListener * aParentContentListener)
 {
 	QAOutput("nsIURIContentListener->SetParentContentListener()",1);
+
+	if (!aParentContentListener)
+		QAOutput("aParentContentListener object is null",1);
+	mParentContentListener = aParentContentListener;
 
 	return NS_OK;	
 }

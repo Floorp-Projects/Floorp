@@ -207,23 +207,31 @@ void CnsICommandMgr::DoCommandTest(const char *aCommandName)
 	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
 	cmdParamObj = CnsICmdParams::GetCommandParamObject();
 	if (!cmdMgrObj) {
-        QAOutput("Didn't get nsICommandManager object.");
+        QAOutput("Didn't get nsICommandManager object. Tests fail");
 		return;
 	}
-	else if (!cmdMgrObj) {
-        QAOutput("Didn't get nsICommandParam object.");
+	if (!cmdMgrObj) {
+        QAOutput("Didn't get nsICommandParam object. Test fail");
 		return;
 	}
-	else {
-		if  (strcmp(aCommandName,"cmd_fontColor") == 0 ||
-			 strcmp(aCommandName,"cmd_backgroundColor") == 0 ||
-			 strcmp(aCommandName,"cmd_fontFace") == 0 ||
-			 strcmp(aCommandName,"cmd_align") == 0)
-			cmdParamObj->SetCStringValue("state_attribute", value.get());
-		rv = cmdMgrObj->DoCommand(aCommandName, cmdParamObj);
-		RvTestResult(rv, "DoCommand() test", 2);
+	if  (strcmp(aCommandName,"cmd_fontColor") == 0 ||
+		 strcmp(aCommandName,"cmd_backgroundColor") == 0 ||
+		 strcmp(aCommandName,"cmd_fontFace") == 0 ||
+		 strcmp(aCommandName,"cmd_align") == 0)
+	{
+		if (strcmp(aCommandName,"cmd_fontColor") == 0 ||
+		    strcmp(aCommandName,"cmd_backgroundColor") == 0)
+			value = "#FF0000";
+		else if (strcmp(aCommandName,"cmd_fontFace") == 0)
+			value = "Helvetica, Ariel, san-serif";
+		else
+			value = "left";
+		cmdParamObj->SetCStringValue("state_attribute", value.get());
 	}
+	rv = cmdMgrObj->DoCommand(aCommandName, cmdParamObj);
+	RvTestResult(rv, "DoCommand() test", 2);
 }
+
 
 void CnsICommandMgr::OnStartTests(UINT nMenuID)
 {
@@ -245,7 +253,7 @@ void CnsICommandMgr::OnStartTests(UINT nMenuID)
 			IsCommandEnabledTest("cmd_bold");
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_GETCOMMANDSTATE :
-			GetCommandStateTest("cmd_copy");
+			GetCommandStateTest("cmd_charSet");
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_DOCOMMAND :
 			DoCommandTest("cmd_fontColor");
