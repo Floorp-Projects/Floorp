@@ -31,8 +31,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel);
-
   gDialog.sepRadioGroup      = document.getElementById("SepRadioGroup");
   gDialog.sepCharacterInput  = document.getElementById("SepCharacterInput");
   gDialog.deleteSepCharacter = document.getElementById("DeleteSepCharacter");
@@ -87,7 +85,7 @@ function SelectCharacter(radioGroupIndex)
   SetElementEnabledById("CollapseSpaces", gIndex == gSpaceIndex);
 }
 
-function onOK()
+function onAccept()
 {
   var sepCharacter = "";
   switch ( gIndex )

@@ -24,10 +24,10 @@
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPersonalDictionary.dtd">
-<window class="dialog" title="&windowTitle.label;"
+<dialog buttons="cancel" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    onunload="Close()">
+    ondialogcancel="return onClose();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
@@ -67,9 +67,9 @@
           <button  id="RemoveWord" oncommand="RemoveWord()" label="&RemoveButton.label;"/>
           <spacer class="spacer"/>
           <spacer flex="1"/>
-          <button class="exit-dialog" id="close" label="&CloseButton.label;" default="true" oncommand="Close();"/>  
+          <button dlgtype="cancel" class="exit-dialog" id="close" label="&CloseButton.label;" default="true" oncommand="Close();"/>  
         </vbox>
       </row>
     </rows>
   </grid>
-</window>
+</dialog>

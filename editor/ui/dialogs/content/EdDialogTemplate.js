@@ -31,8 +31,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel);
-
   // gDialog is declared in EdDialogCommon.js
   // Set commonly-used widgets like this:
   gDialog.fooButton = document.getElementById("fooButton");
@@ -52,7 +50,7 @@ function InitDialog()
   // e.g., get attributes from an element for property dialog
 }
 
-function onOK()
+function onAccept()
 {
   // Validate all user data and set attributes and possibly insert new element here
   // If there's an error the user must correct, return false to keep dialog open.

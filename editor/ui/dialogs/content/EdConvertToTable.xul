@@ -32,10 +32,11 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EdConvertToTable.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    onload = "Startup()"
-   onunload="onCancel()"
+   ondialogaccept="return onAccept();"
+   ondialogcancel="return onCancel();"
    style="min-width:20em">
 
   <!-- Methods common to all editor dialogs -->
@@ -46,8 +47,6 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdConvertToTable.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
-  <keyset id="dialogKeys"/>
-  <popupset id="aTooltipSet"/>
   <description class="wrap" flex="1">&instructions1.label;</description>
   <description class="wrap" flex="1">&instructions2.label;</description>
   <radiogroup id="SepRadioGroup" persist="index character" index="0" character="">
@@ -66,6 +65,4 @@
   <spacer class="spacer"/>
   <checkbox id="DeleteSepCharacter" label="&deleteCharCheck.label;" checked="true" persist="checked"/>
   <separator class="groove"/>
-  <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtonsRight"/>
-</window>
+</dialog>

@@ -30,10 +30,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditConflict.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
-   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   onload = "Startup()"
-   onunload="PreventCancel()">
+<dialog buttons="cancel" title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload = "Startup()"
+    ondialogcancel="return onClose();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
@@ -42,7 +42,6 @@
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
-  <keyset id="dialogKeys"/>
   
   <label value ="&conflictWarning.label;"/>
   <spacer class="bigspacer"/>
@@ -56,9 +55,9 @@
   </hbox>
   <hbox flex="1">
     <spacer class="bigspacer"/>
-    <button label="&useOtherPageButton.label;"
+    <button dlgtype="cancel"
+            label="&useOtherPageButton.label;"
             oncommand="UseOtherPage()"/>
     <spacer class="bigspacer"/>
   </hbox>
-
-</window>
+</dialog>

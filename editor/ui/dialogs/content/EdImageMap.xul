@@ -36,13 +36,13 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMap.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
-<window title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    onunload=""
-    orient="vertical"
-    width="640" height="480">
+    buttons="accept,cancel,help"
+    ondialogaccept="return finishMap();"
+    ondialogcancel="return onCancel();"
+    ondialoghelp="return doHelpButton();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
@@ -171,8 +171,4 @@
   <hbox id="AdvancedEditButton"/> -->
 
   <separator class="groove"/>
-
-  <!-- from global dialogOverlay -->
-  <hbox id="okCancelHelpButtonsRight"/>
-
-</window>
+</dialog>

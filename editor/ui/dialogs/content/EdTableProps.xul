@@ -45,7 +45,6 @@
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
-  <keyset id="dialogKeys"/>
 
   <tabbox>
     <tabs flex="1">

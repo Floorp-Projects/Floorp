@@ -53,8 +53,8 @@ function Startup()
   gDialog.CellOrTableGroup = document.getElementById("CellOrTableGroup");
   gDialog.TableRadio       = document.getElementById("TableRadio");
   gDialog.CellRadio        = document.getElementById("CellRadio");
-  gDialog.Ok               = document.getElementById("ok");
   gDialog.ColorSwatch      = document.getElementById("ColorPickerSwatch");
+  gDialog.Ok               = document.documentElement.getButton("accept");
   
   // The type of color we are setting: 
   //  text: Text, Link, ActiveLink, VisitedLink, 
@@ -135,8 +135,6 @@ function Startup()
   }
   gDialog.LastPickedColor.setAttribute("style","background-color: "+LastPickedColor);
 
-  doSetOKCancel(onOK, onCancelColor);
-
   // Set method to detect clicking on OK button
   //  so we don't get fooled by changing "default" behavior
   gDialog.Ok.setAttribute("onclick", "SetDefaultToOk()");
@@ -193,7 +191,7 @@ function SelectColorByKeypress(aEvent)
 function SelectLastPickedColor()
 {
   SetCurrentColor(LastPickedColor);
-  if ( onOK() )
+  if ( onAccept() )
     //window.close();
     return true;
 }
@@ -252,7 +250,7 @@ function ValidateData()
   return true;
 }
 
-function onOK()
+function onAccept()
 {
   if (!ValidateData())
     return false;

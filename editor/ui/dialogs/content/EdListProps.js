@@ -35,8 +35,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel);
-
   gDialog.ListTypeList = document.getElementById("ListType");
   gDialog.BulletStyleList = document.getElementById("BulletStyle");
   gDialog.BulletStyleLabel = document.getElementById("BulletStyleLabel");
@@ -314,7 +312,7 @@ function ValidateData()
   return true;
 }
 
-function onOK()
+function onAccept()
 {
   if (ValidateData())
   {

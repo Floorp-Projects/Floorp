@@ -28,10 +28,11 @@
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorListProperties.dtd">
-<window class="dialog" title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    onunload="onCancel()">
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancel();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
@@ -39,7 +40,6 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdListProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
-  <keyset id="dialogKeys"/>
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
@@ -74,7 +74,4 @@
   </groupbox>
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>
-  <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtonsRight"/> 
-
-</window>
+</dialog>

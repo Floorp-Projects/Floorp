@@ -27,8 +27,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel); // Map OK/Cancel to relevant functions
-
   gDialog.urlInput = document.getElementById("urlInput");
   gDialog.targetInput = document.getElementById("targetInput");
   gDialog.altInput = document.getElementById("altInput");
@@ -57,7 +55,7 @@ function Startup()
   SetWindowLocation();
 }
 
-function onOK()
+function onAccept()
 {
   dump(window.arguments[0].id+"\n");
   window.arguments[0].setAttribute("hsHref", gDialog.urlInput.value);

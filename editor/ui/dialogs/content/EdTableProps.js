@@ -1257,7 +1257,7 @@ function doHelpButton()
   openHelp("chrome://help/content/help.xul?table_properties");
 }
 
-function onOK()
+function onAccept()
 {
   // Do same as Apply and close window if ValidateData succeeded
   var retVal = Apply();
