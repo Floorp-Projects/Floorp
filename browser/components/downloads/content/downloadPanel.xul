@@ -49,22 +49,20 @@
         </rule>
       </template>
     </vbox>
-    <splitter style="min-height: 3px; height: 3px; border-right: 0px"/>
+    <splitter id="download-splitter" style="min-height: 3px; height: 3px;"/>
     <vbox flex="1">
       <sidebarheader align="center">
         <label value="&finishedDownloads.label;"/>
-      </sidebarheader>   
-      <toolbox id="toolbox">
-        <toolbar id="download-toolbar" tbalign="stretch" class="chromeclass-toolbar" persist="collapsed">
-          <toolbarbutton label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
-                         command="cmd_remove"/>
-          <toolbarseparator/>
-          <toolbarbutton id="btn_openfile" label="&cmd.openfile.label;" accesskey="&cmd.openfile.accesskey;"
-                         command="cmd_openfile"/>
-          <toolbarbutton id="btn_showinshell" label="&cmd.show.label;"
-                         accesskey="&cmd.show.accesskey;" command="cmd_showinshell"/>
-        </toolbar>
-      </toolbox>
+      </sidebarheader>
+      <toolbar id="download-toolbar" tbalign="stretch" class="chromeclass-toolbar" persist="collapsed">
+        <toolbarbutton label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
+                       command="cmd_remove"/>
+        <toolbarseparator/>
+        <toolbarbutton id="btn_openfile" label="&cmd.openfile.label;" accesskey="&cmd.openfile.accesskey;"
+                       command="cmd_openfile"/>
+        <toolbarbutton id="btn_showinshell" label="&cmd.show.label;"
+                       accesskey="&cmd.show.accesskey;" command="cmd_showinshell"/>
+      </toolbar>
 
       <listbox id="downloadHistoryView" flex="1" class="plain" seltype="multiple"
                 datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"

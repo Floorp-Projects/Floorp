@@ -1,4 +1,6 @@
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
+const NC_NS = "http://home.netscape.com/NC-rdf#";
+
 var gDownloadView;
 var gDownloadManager;
 var gDownloadHistoryView;
