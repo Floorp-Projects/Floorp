@@ -175,7 +175,7 @@ void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
 /**
  * This method truncates this string to given length.
  *
- * @update  gess 01/04/99
+ * @update  rickg 03.23.2000
  * @param   anIndex -- new length of string
  * @return  nada
  */
@@ -192,10 +192,12 @@ void nsCString::SetLength(PRUint32 anIndex) {
  * @param   aLength -- contains new length for mStr
  */
 void nsCString::SetCapacity(PRUint32 aLength) {
-  if(aLength>mCapacity) {
-    GrowCapacity(*this,aLength);
+  if(aLength) {
+    if(aLength>mCapacity) {
+      GrowCapacity(*this,aLength);
+    }
+    AddNullTerminator(*this);
   }
-  AddNullTerminator(*this);
 }
 
 /**********************************************************************

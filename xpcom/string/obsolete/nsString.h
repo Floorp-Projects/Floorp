@@ -584,9 +584,9 @@ public:
    *  @param   aCount tells us how many iterations to make starting at the given offset
    *  @return  offset in string, or -1 (kNotFound)
    */
-  PRInt32 Find(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-  PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-  PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 Find(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
+  PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
+  PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
 
   /**
    *  Search for given char within this string
@@ -597,7 +597,7 @@ public:
    *  @param   aCount tells us how many iterations to make starting at the given offset
    *  @return  find pos in string, or -1 (kNotFound)
    */
-  PRInt32 FindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 FindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
 
   /**
    * This method searches this string for the first character
@@ -606,9 +606,9 @@ public:
    * @param anOffset tells us where to start searching in this
    * @return -1 if not found, else the offset in this
    */
-  PRInt32 FindCharInSet(const char* aString,PRInt32 anOffset=-1) const;
-  PRInt32 FindCharInSet(const PRUnichar* aString,PRInt32 anOffset=-1) const;
-  PRInt32 FindCharInSet(const nsStr& aString,PRInt32 anOffset=-1) const;
+  PRInt32 FindCharInSet(const char* aString,PRInt32 anOffset=0) const;
+  PRInt32 FindCharInSet(const PRUnichar* aString,PRInt32 anOffset=0) const;
+  PRInt32 FindCharInSet(const nsStr& aString,PRInt32 anOffset=0) const;
 
 
   /**
