@@ -322,7 +322,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     while (aCopyListener->mCopyInProgress)
     {
         PR_CEnterMonitor(aCopyListener);
-        PR_CWait(aCopyListener, 1000UL);
+        PR_CWait(aCopyListener, PR_MicrosecondsToInterval(1000UL));
         PR_CExitMonitor(aCopyListener);
         if (eventQueue)
             eventQueue->ProcessPendingEvents();
