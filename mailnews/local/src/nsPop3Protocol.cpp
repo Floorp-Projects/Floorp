@@ -2204,6 +2204,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 
 	PRBool pauseForMoreData = PR_FALSE;
 	char * line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+    PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
 	buffer_size = status;
     
     if(status == 0 && !line)  // no bytes read in...
@@ -2242,7 +2243,6 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 		status = buffer_size;
 		do
 		{
-            PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
 			PRInt32 res = BufferInput(line, buffer_size);
             if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
 			// BufferInput(CRLF, 2);
@@ -2255,6 +2255,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 			PR_FREEIF(line);
 		    line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
                                                     pauseForMoreData);
+            PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
 			status += (buffer_size+2); // including CRLF
 		} while (/* !pauseForMoreData && */ line);
     }
