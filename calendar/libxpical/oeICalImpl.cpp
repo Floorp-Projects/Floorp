@@ -54,6 +54,7 @@ extern "C" {
 
 icaltimetype ConvertFromPrtime( PRTime indate );
 PRTime ConvertToPrtime ( icaltimetype indate );
+void AlarmTimerCallback(nsITimer *aTimer, void *aClosure);
 
 /* event enumerator */
 class
@@ -251,7 +252,7 @@ oeICalImpl::oeICalImpl()
         if( NS_FAILED( rv ) )
             m_alarmtimer = nsnull;
         else
-            m_alarmtimer->Init( nsnull, this, 0, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
+            m_alarmtimer->Init( AlarmTimerCallback, this, 0, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
 }
 
 oeICalImpl::~oeICalImpl()
