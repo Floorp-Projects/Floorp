@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -762,8 +763,49 @@ nsSocketTransport::Init(const char **types, PRUint32 typeCount,
 }
 
 nsresult
+nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const PRNetAddr *addr)
+{
+    NS_ASSERTION(!mFD, "already initialized");
+
+    char buf[64];
+    PR_NetAddrToString(addr, buf, sizeof(buf));
+    mHost.Assign(buf);
+
+    PRUint16 port;
+    if (addr->raw.family == PR_AF_INET)
+        port = addr->inet.port;
+    else
+        port = addr->ipv6.port;
+    mPort = PR_ntohs(port);
+
+    memcpy(&mNetAddr, addr, sizeof(PRNetAddr));
+
+    mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
+    mState = STATE_TRANSFERRING;
+
+    mFD = fd;
+    mFDref = 1;
+    mFDconnected = 1;
+
+    // make sure new socket is non-blocking
+    PRSocketOptionData opt;
+    opt.option = PR_SockOpt_Nonblocking;
+    opt.value.non_blocking = PR_TRUE;
+    PR_SetSocketOption(mFD, &opt);
+
+    LOG(("nsSocketTransport::InitWithConnectedSocket [this=%p addr=%s:%hu]\n",
+        this, mHost.get(), mPort));
+
+    // jump to InitiateSocket to get ourselves attached to the STS poll list.
+    return PostEvent(MSG_RETRY_INIT_SOCKET);
+}
+
+nsresult
 nsSocketTransport::PostEvent(PRUint32 type, nsresult status, nsISupports *param)
 {
+    LOG(("nsSocketTransport::PostEvent [this=%p type=%u status=%x param=%p]\n",
+        this, type, status, param));
+
     PLEvent *event = new nsSocketEvent(this, type, status, param);
     if (!event)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -949,6 +991,16 @@ nsSocketTransport::InitiateSocket()
         rv = gSocketTransportService->NotifyWhenCanAttachSocket(event);
         if (NS_FAILED(rv))
             PL_DestroyEvent(event);
+        return rv;
+    }
+
+    //
+    // if we already have a connected socket, then just attach and return.
+    //
+    if (mFD) {
+        rv = gSocketTransportService->AttachSocket(mFD, this);
+        if (NS_SUCCEEDED(rv))
+            mAttached = PR_TRUE;
         return rv;
     }
 

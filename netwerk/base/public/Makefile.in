@@ -66,6 +66,7 @@ XPIDLSRCS	= \
 		nsITransport.idl \
 		nsISocketTransport.idl \
 		nsISocketTransportService.idl \
+		nsIServerSocket.idl \
 		nsIResumableChannel.idl \
 		nsIResumableEntityID.idl \
 		nsIRequestObserverProxy.idl \

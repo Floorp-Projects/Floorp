@@ -86,6 +86,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamTransportService)
 #undef LOG_ENABLED
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSocketTransportService, Init)
 
+#include "nsServerSocket.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsServerSocket)
+
 #include "nsAsyncStreamCopier.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAsyncStreamCopier)
 
@@ -588,6 +591,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_SOCKETTRANSPORTSERVICE_CID,
       NS_SOCKETTRANSPORTSERVICE_CONTRACTID,
       nsSocketTransportServiceConstructor },
+    { NS_SERVERSOCKET_CLASSNAME,
+      NS_SERVERSOCKET_CID,
+      NS_SERVERSOCKET_CONTRACTID,
+      nsServerSocketConstructor },
     { NS_SOCKETPROVIDERSERVICE_CLASSNAME,
       NS_SOCKETPROVIDERSERVICE_CID,
       NS_SOCKETPROVIDERSERVICE_CONTRACTID,

@@ -374,6 +374,19 @@
     {0x92, 0xb6, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} \
 }
 
+// component implementing nsIServerSocket
+#define NS_SERVERSOCKET_CLASSNAME \
+    "nsServerSocket"
+#define NS_SERVERSOCKET_CONTRACTID \
+    "@mozilla.org/network/server-socket;1"
+#define NS_SERVERSOCKET_CID                          \
+{ /* 2ec62893-3b35-48fa-ab1d-5e68a9f45f08 */         \
+    0x2ec62893,                                      \
+    0x3b35,                                          \
+    0x48fa,                                          \
+    {0xab, 0x1d, 0x5e, 0x68, 0xa9, 0xf4, 0x5f, 0x08} \
+}
+
 #define NS_FILETRANSPORTSERVICE_CLASSNAME \
     "nsFileTransportService"
 #define NS_FILETRANSPORTSERVICE_CONTRACTID \

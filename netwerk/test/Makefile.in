@@ -55,6 +55,7 @@ CPPSRCS		= \
 		TestIOThreads.cpp \
 		TestOpen.cpp \
 		TestCookie.cpp \
+		TestServ.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
