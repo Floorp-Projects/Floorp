@@ -111,20 +111,11 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, 
   presShell->CreateRenderingContext(frame, getter_AddRefs(rcontext));
 
   // get view bounds in case this frame is being scrolled
-  nsIFrame* parentFrame = nsnull;
-  frame->GetParentWithView(presContext, &parentFrame);
-  if (!parentFrame)
-    return NS_OK;
-  nsIView* parentView = nsnull;
-  parentFrame->GetView(presContext, &parentView);
-  nsRect bounds;
-  parentView->GetBounds(bounds);
-
   nsRect rect;
   frame->GetRect(rect);
-  nsPoint origin = inLayoutUtils::GetClientOrigin(frame);
-  rect.x = origin.x + bounds.x;
-  rect.y = origin.y + bounds.y;
+  nsPoint origin = inLayoutUtils::GetClientOrigin(presContext, frame);
+  rect.x = origin.x;
+  rect.y = origin.y;
   mCSSUtils->AdjustRectForMargins(frame, rect);
   
   nsAutoString colorStr;
