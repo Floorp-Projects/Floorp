@@ -75,7 +75,8 @@ EXPORTS         += nsTraceMalloc.h
 DEFINES         += -DNS_TRACE_MALLOC
 SIMPLE_PROGRAMS = bloatblame
 
-LIBS            += $(NSPR_LIBS)
+LIBS            += tmreader.o $(NSPR_LIBS)
+EXTRA_DEPS      = tmreader.o
 endif
 
 XPIDLSRCS	= \
