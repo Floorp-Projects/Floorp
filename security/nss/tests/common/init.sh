@@ -28,6 +28,13 @@ if [ ! -d ${TESTDIR} ]; then
    mkdir -p ${TESTDIR}
 fi
 
+if [ -z "${HOST}" ]; then 
+  echo "HOST environment variable is not defined."; exit 1
+fi
+if [ -z "${DOMSUF}" ]; then 
+  echo "DOMSUF environment variable is not defined."; exit 1
+fi
+
 if [ ! -s "${HOSTDIR}" ]; then
     version=1
     if [ -f ${TESTDIR}/${HOST} ]; then
