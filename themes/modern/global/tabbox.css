@@ -51,12 +51,12 @@ tabs {
 /* ::::: tabpanels ::::: */
 
 tabpanels {
-  border-top: 0px;
-  background-color: #BBBBBB;
   border-left: 1px solid #313948;
   border-right: 1px solid #313948;
   border-bottom: 1px solid #313948;
+  border-top: none;
   padding: 5px;
+  background-color: #C7D0D9;
 }
 
 /* ::::: tab ::::: */
@@ -64,7 +64,7 @@ tabpanels {
 tab { 
   margin: 0px;
   padding: 0px;
-  color: #ffffff;
+  color: #000000;
   font: menu;
 }
 
@@ -88,7 +88,7 @@ tab {
 
 .tab-image-mid {
   background: url("chrome://global/skin/tabcontrol/tab-usel-mid-top.gif") repeat-x top;
-  background-color: #5D5F65;
+  background-color: #8B9AAD;
 }
 
 .tab-image-mid-mid {
@@ -125,7 +125,7 @@ tab {
 /* ..... active state ..... */
 
 tab:hover:active {
-  color: #EEEEEE;
+  color: #FFFFFF;
 }
 
 tab:hover:active > .tab-image-left > .tab-image-left-top { 
@@ -139,7 +139,7 @@ tab:hover:active > .tab-image-left > .tab-image-left-mid {
 tab:hover:active > .tab-image-mid { 
   margin-top: 1px;
   background-image: url("chrome://global/skin/tabcontrol/tab-act-mid-top.gif");
-  background-color: #3D3F45;
+  background-color: #8B9AAD;
 }
 
 tab:hover:active > .tab-image-mid > .tab-image-mid-mid { 
@@ -158,7 +158,7 @@ tab:hover:active > box > .tab-image-right-mid {
 
 tab[selected="true"], tab:hover:active[selected="true"],
 tab[selected="1"], tab:hover:active[selected="1"] {
-  color: #1C1D1F;
+  color: #000000;
 }
 
 .tab-image-left-top[selected="true"],
@@ -180,7 +180,7 @@ tab:hover:active[selected="true"] > box > .tab-image-left-btm {
 tab:hover:active[selected="true"] > .tab-image-mid { 
   margin-top: 0px;
   background-image: url("chrome://global/skin/tabcontrol/tab-sel-mid-top.gif");
-  background-color: #BBBBBB;
+  background-color: #C7D0D9;
 }
 
 .tab-image-mid-mid[selected="true"],
@@ -192,7 +192,7 @@ tab:hover:active[selected="true"] > box > .tab-image-mid-mid {
 .tab-image-mid-btm[selected="true"],
 tab:hover:active[selected="true"] > box > .tab-image-mid-btm { 
   background-image: none;
-  background-color: #BBBBBB;
+  background-color: #C7D0D9;
 }
 
 .tab-image-right-top[selected="true"],
@@ -309,13 +309,13 @@ tab:hover:active[selected="true"] > box >  .tab-image-right-btm {
 .tab-bottom:hover:active[selected="true"] > .tab-image-mid { 
   margin: 0px;
   background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-mid-top.gif");
-  background-color: #BBBBBB;
+  background-color: #C7D0D9;
 }
 
 .tab-bottom[selected="true"] > .tab-image-mid > .tab-image-mid-top,
 .tab-bottom:hover:active[selected="true"] > .tab-image-mid > .tab-image-mid-top { 
   background-image: none;
-  background-color: #BBBBBB;
+  background-color: #C7D0D9;
 }
 
 .tab-bottom[selected="true"] > .tab-image-mid > .tab-image-mid-mid,

@@ -434,16 +434,17 @@ statusbar,
 }
 
 .sidebarheader-main {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#treecell-header") !important;
+  border-top: none;
   border-bottom: 1px solid #63676B;
   border-left: 1px solid #63676B;
   padding: 0px;
+  background-color: #C7D0D9;
 }
 
-.sidebarheader-main > .treecell-header-box {
-  border-left: 1px solid #EEF0F3;
+.sidebarheader-main > .sidebarheader-internal-box {
   border-top: 1px solid #EEF0F3;
-  padding: 2px 0px 2px 16px;
+  border-left: 1px solid #EEF0F3;
+  color: #000000;
 }
 
 /* ..... tree adjustments ..... */

@@ -147,7 +147,7 @@ menupopup > menuitem[menuactive="true"],
 popup > menu[menuactive="true"],
 popup > menuitem[menuactive="true"] {
   background-color: #9499AC;
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */

@@ -252,6 +252,11 @@
 
 /* ::::: formatting buttons ::::: */
 
+#FormatToolbar > .button-toolbar {
+  border: none;
+  padding: 0px;
+}
+
 #FormatToolbar > .button-toolbar[toggled="true"] {
   background-color: transparent;
 }

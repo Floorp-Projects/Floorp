@@ -74,6 +74,14 @@
   color: inherit;
 }
 
+.button-toolbar:hover {
+  border: 1px outset #C7D0D9;
+}
+
+.button-toolbar:hover:active {
+  border-style: inset;
+}
+
 .button-toolbar:hover:active > .button-internal-box {
   padding: 2px 1px 0px 3px;
 }
@@ -93,32 +101,8 @@
 .button-toolbar[toggled="true"],
 .button-toolbar[toggled="true"]:hover,
 .button-toolbar[toggled="true"]:hover:active {
-  background-color: #D1D5E4;
-}
-
-/* ::::: standard toolbar buttons on a tabpanels ::::: */
-
-.button-toolbar.tabpanels,
-.button-toolbar.tabpanels:hover,
-.button-toolbar.tabpanels:hover:active {
-  padding: 2px;
-  background-color: transparent;
-  color: #000000;
-}
-
-.button-toolbar.tabpanels,
-.button-toolbar.tabpanels[disabled="true"],
-.button-toolbar.tabpanels[disabled="true"]:hover,
-.button-toolbar.tabpanels[disabled="true"]:hover:active {
-  border: 1px solid transparent;
-}
-
-.button-toolbar.tabpanel:hover {
-  border: 1px outset #BBBBBB;
-}
-
-.button-toolbar.tabpanels:hover:active {
-  border-style: inset;
+  background-color: #8998AA;
+  color: #FFFFFF;
 }
 
 /* ::::: the largest type of toolbar buttons ::::: */

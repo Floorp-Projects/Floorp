@@ -6,13 +6,27 @@
 
   <binding id="sidebar-tab" extends="xul:button">
     <content>
-      <xul:image class="sidebar-tab-leftcap" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
-      <xul:box class="sidebar-tab-mid" inherits="selected,first-panel-after-selected,top-panel,last-panel">
+      <xul:spring class="sidebar-tab-leftcap" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+      <xul:stack class="sidebar-tab-mid-stack" flex="1">
+        <xul:box class="sidebar-tab-mid">
+          <xul:spring class="sidebar-tab-mid1" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+          <xul:spring class="sidebar-tab-mid2" inherits="selected,first-panel-after-selected,top-panel,last-panel" flex="1"/>
+        </xul:box>
         <xul:text class="sidebar-tab-text" inherits="value=label" crop="right"/>
-      </xul:box>
-      <xul:image class="sidebar-tab-rightcap" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
-      <xul:spring class="sidebar-tab-right" inherits="selected,first-panel-after-selected,top-panel,last-panel" flex="1"/>
+      </xul:stack>
+      <xul:spring class="sidebar-tab-rightcap" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
     </content>
   </binding>
 
+  <binding id="sidebarheader">
+    <content>
+      <xul:box class="sidebarheader-internal-box" flex="1" autostretch="never">
+        <xul:text class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
+        <xul:box>
+          <children/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+    
 </bindings>

@@ -31,7 +31,6 @@
 
 #sidebar-box {
   margin-top: 0px;
-  border-top: 1px solid #C7D0D9;
   background-color: #C7D0D9;
 }
 
@@ -42,14 +41,17 @@
 /* ::::: sidebar header ::::: */
 
 .sidebarheader-main {
-  padding: 2px 0px 2px 16px;
-  background-color: #C7D0D9;
-  color: #000000;
+  -moz-binding: url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebarheader") !important;
+  border-top: 1px solid #4B5C6C;
+  border-right: 1px solid #6E7A89;
+  background-color: #8998AA;
+  color: #4B5C6C;
   font-weight: bold;
 }
 
-.sidebarheader-main > .sidebar-header-grippy {
-  min-height: 8px;
+.sidebarheader-internal-box {
+  border-top: 1px solid #788595;
+  padding: 0px 0px 2px 16px;
 }
 
 /* ..... picker button ..... */
@@ -59,12 +61,12 @@
   margin-top: 1px;
   border: 1px solid transparent;
   padding: 2px;
-  color: #3B414F;
+  color: #000000;
   -moz-border-radius: 0px;
 }
 
 #sidebar-panel-picker:hover {
-  border: 1px outset #94ACC1;
+  border: 1px outset #8998AA;
 }
 
 #sidebar-panel-picker[menuactive="true"],
@@ -107,7 +109,7 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
 /* ::::: sidebar panel ::::: */
 
 .iframe-panel {
-  border-bottom: 1px solid #94ACC1;
+  border-left: 1px solid #8998AA;
 }
 
 /* ::::: sidebar tabs ::::: */
@@ -116,120 +118,137 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
  
 .box-texttab {
   -moz-binding: url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebar-tab");
-  border-bottom: 3px solid #94ACC1;
-  min-height: 22px;
-  background-color: #94ACC1;
-  color: #3B414F;
+  height: 26px;
+  color: #000000;
 }
    
 .sidebar-tab-leftcap {
-  background: url("chrome://communicator/skin/sidebar/sbtab-dod-lftcap.gif") no-repeat top;
-  width: 11px;
+  background: url("chrome://communicator/skin/sidebar/sbtab-lft.gif") no-repeat top;
+  width: 16px;
 }
 
 .sidebar-tab-text {
-  margin-top: 6px;
+  margin: 10px 0px 0px 3px;
 }
   
 .sidebar-tab-mid {
   min-width: 100px;
-  background: url("chrome://communicator/skin/sidebar/sbtab-dod-mid.gif") repeat-x top;
 }
 
-.sidebar-tab-rightcap {
-  background: url("chrome://communicator/skin/sidebar/sbtab-dod-ritcap.gif") no-repeat top;
-  width: 18px;
+.sidebar-tab-mid1 {
+  background: url("chrome://communicator/skin/sidebar/sbtab-mid1.gif") no-repeat top;
+  width: 81px;
+}
+
+.sidebar-tab-mid2 {
+  background: url("chrome://communicator/skin/sidebar/sbtab-mid2.gif") repeat-x top;
 }
 
 .sidebar-tab-right {
-  background: url("chrome://communicator/skin/sidebar/sbtab-dod-rit.gif") repeat-x top;
+  background: url("chrome://communicator/skin/sidebar/sbtab-rit.gif") repeat-x top;
 }
 
-/* ..... active state ..... */
-
-.box-texttab:hover:active > .sidebar-tab-leftcap {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dod-lftcap-act.gif");
+.sidebar-tab-rightcap {
+  background: url("chrome://communicator/skin/sidebar/sbtab-rit.gif") no-repeat top;
+  width: 31px;
 }
 
- .box-texttab:hover:active > .sidebar-tab-mid {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dod-mid-act.gif");
+/* ..... hover state ..... */
+
+.box-texttab:hover > .sidebar-tab-leftcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-hov.gif");
 }
 
- .box-texttab:hover:active > .sidebar-tab-rightcap {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dod-ritcap-act.gif");
+.box-texttab:hover > .sidebar-tab-mid-stack > .sidebar-tab-mid > .sidebar-tab-mid1 {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid1-sel.gif");
 }
 
-/* ..... bottom tab ..... */
+.box-texttab:hover > .sidebar-tab-mid-stack > .sidebar-tab-mid > .sidebar-tab-mid2 {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid2-sel.gif");
+}
 
-.box-texttab[last-panel="true"] {
-  border-bottom: 1px solid #1D1F26;
-  padding-bottom: 7px;
-  background-color: #94ACC1;
-} 
-
-.box-texttab[last-panel="true"][selected="true"] {
-  border-bottom-width: 3px;
-} 
+.box-texttab:hover > .sidebar-tab-rightcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-sel.gif");
+}
 
 /* ..... selected tab ..... */
 
-.box-texttab[selected="true"] {
-  border-bottom: 2px solid black;
-  min-height: 23px;
-  background-color: #587B98;
-  color: #ffffff;
-}
-    
 .sidebar-tab-leftcap[selected="true"],
-.box-texttab:hover:active > .sidebar-tab-leftcap[selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lod-lftcap.gif");
+.box-texttab:hover > .sidebar-tab-leftcap[selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-sel.gif");
 }
 
-.sidebar-tab-mid[selected="true"],
-.box-texttab:hover:active > .sidebar-tab-mid[selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lod-mid.gif");
+.sidebar-tab-mid1[selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid1-sel.gif");
 }
 
-.sidebar-tab-rightcap[selected="true"],
-.box-texttab:hover:active > .sidebar-tab-rightcap[selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lod-ritcap.gif");
+.sidebar-tab-mid2[selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid2-sel.gif");
 }
 
-.sidebar-tab-right[selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lod-rit.gif");
-}    
-
-/* ..... first tab after selected ..... */
-
-.box-texttab[first-panel-after-selected="true"] {
-  min-height: 23px;
+.sidebar-tab-rightcap[selected="true"] {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-sel.gif");
 }
 
-.sidebar-tab-leftcap[first-panel-after-selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-lftcap.gif");
+/* ..... top tab ..... */
+
+.box-texttab[top-panel="true"] {
+  height: 24px;
 }
 
-.sidebar-tab-mid[first-panel-after-selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-mid.gif");
-}
-    
-.sidebar-tab-rightcap[first-panel-after-selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-ritcap.gif");
+.box-texttab[top-panel="true"] > .sidebar-tab-mid-stack > .sidebar-tab-text {
+  margin-top: 8px;
 }
 
-.sidebar-tab-right[first-panel-after-selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-rit.gif");
-}
-    
-.box-texttab:hover:active > .sidebar-tab-leftcap[first-panel-after-selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-lftcap-act.gif");
+.box-texttab[top-panel="true"] > .sidebar-tab-leftcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-lft.gif");
 }
 
-.box-texttab:hover:active > .sidebar-tab-mid[first-panel-after-selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-mid-act.gif");
+.box-texttab[top-panel="true"] > .sidebar-tab-mid-stack > .sidebar-tab-mid > .sidebar-tab-mid1 {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-mid1.gif");
 }
-    
-.box-texttab:hover:active > .sidebar-tab-rightcap[first-panel-after-selected="true"] {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-dol-ritcap-act.gif");
+
+.box-texttab[top-panel="true"] > .sidebar-tab-mid-stack > .sidebar-tab-mid > .sidebar-tab-mid2 {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-mid2.gif");
+}
+
+.box-texttab[top-panel="true"] > .sidebar-tab-rightcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-rit.gif");
+}
+
+/* ..... top tab hover ..... */
+
+.box-texttab[top-panel="true"]:hover > .sidebar-tab-leftcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-lft-hov.gif");
+}
+
+.box-texttab[top-panel="true"]:hover > .sidebar-tab-mid-stack > .sidebar-tab-mid > .sidebar-tab-mid1 {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-mid1-sel.gif");
+}
+
+.box-texttab[top-panel="true"]:hover > .sidebar-tab-mid-stack > .sidebar-tab-mid > .sidebar-tab-mid2 {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-mid2-sel.gif");
+}
+
+.box-texttab[top-panel="true"]:hover > .sidebar-tab-rightcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-rit-sel.gif");
+}
+
+/* ..... top tab selected ..... */
+
+.box-texttab[top-panel="true"][selected="true"] > .sidebar-tab-leftcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-lft-sel.gif");
+}
+
+.box-texttab[top-panel="true"][selected="true"] > .sidebar-tab-mid-stack > .sidebar-tab-mid > .sidebar-tab-mid1 {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-mid1-sel.gif");
+}
+
+.box-texttab[top-panel="true"][selected="true"] > .sidebar-tab-mid-stack > .sidebar-tab-mid > .sidebar-tab-mid2 {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-mid2-sel.gif");
+}
+
+.box-texttab[top-panel="true"][selected="true"] > .sidebar-tab-rightcap {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-first-rit-sel.gif");
 }
 

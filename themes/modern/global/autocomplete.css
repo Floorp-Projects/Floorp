@@ -61,7 +61,7 @@ textbox[type="autocomplete"] {
 .autocomplete-history-popup,
 .autocomplete-result-popup {
   border: 1px solid #6B747E;
-  background-color: #E9F5FF !important;
+  background-color: #FFFFFF !important;
 }
 
 .autocomplete-history-popup {
@@ -82,10 +82,11 @@ textbox[type="autocomplete"] {
 
 .autocomplete-outlinerbody:-moz-outliner-cell-text {
   padding-left: 8px;
+  color: #000000;
 }
 
 .autocomplete-outlinerbody:-moz-outliner-row(menuactive) {
-  background-color: #486380;
+  background-color: #9499AC;
 }
 
 .autocomplete-outlinerbody:-moz-outliner-cell-text(menuactive) {

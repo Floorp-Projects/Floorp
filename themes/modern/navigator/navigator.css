@@ -305,7 +305,7 @@
 
 .urlbar-mid-mid {
   background: url("chrome://navigator/skin/toolbar/urlbar-mid-mid.gif") bottom repeat-x;
-  background-color: #E9F5FF;
+  background-color: #EDF5F7;
 }
 
 .urlbar-mid-btm {
@@ -401,7 +401,7 @@
 }
 
 .autocomplete-search-engine[menuactive="true"] {
-  background-color: #486380;
+  background-color: #9499AC;
   color: #FFFFFF;
 }
 
@@ -420,7 +420,26 @@
 
 /* ::::: sidebar splitter ::::: */
 
-#sidebar-splitter > .splitter-internal-box {
-  border-bottom: none;
+#sidebar-splitter {
+  background-color: #B1BDC9;
+  border-left: 1px solid #95A0AD;
 }
+
+#sidebar-splitter > .splitter-internal-box {
+  border-top: 1px solid #DEE7EE;
+  border-right: 1px solid #95A0AD;
+  border-bottom: 1px solid #95A0AD;
+  border-left: 1px solid #DEE7EE;
+}
+
+#sidebar-splitter > grippy {
+  width: 6px;
+  height: 54px;
+  background-image: url("chrome://communicator/skin/sidebar/grip-sidebar-before.gif");
+}
+
+#sidebar-splitter[state="collapsed"] > grippy {
+  background-image: url("chrome://communicator/skin/sidebar/grip-sidebar-after.gif");
+}
+
 

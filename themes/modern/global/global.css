@@ -29,29 +29,7 @@
 @import url("chrome://global/locale/intl.css");
 
 @import url("chrome://global/skin/formatting.css");
-/*
-@import url("chrome://global/content/bindings/outliner.css");
-@import url("chrome://global/content/bindings/popup.css");
-@import url("chrome://global/content/bindings/scrollbar.css");
-@import url("chrome://global/content/bindings/tree.css");
 
-@import url("chrome://global/skin/button.css");
-@import url("chrome://global/skin/checkbox.css");
-@import url("chrome://global/skin/colorpicker.css");
-@import url("chrome://global/skin/menu.css");
-@import url("chrome://global/skin/menubutton.css");
-@import url("chrome://global/skin/menulist.css");
-@import url("chrome://global/skin/outliner.css");
-@import url("chrome://global/skin/popup.css");
-@import url("chrome://global/skin/progressmeter.css");
-@import url("chrome://global/skin/radio.css");
-@import url("chrome://global/skin/scrollbox.css");
-@import url("chrome://global/skin/splitter.css");
-@import url("chrome://global/skin/tabcontrol.css");
-@import url("chrome://global/skin/textbox.css");
-@import url("chrome://global/skin/toolbar.css");
-@import url("chrome://global/skin/tree.css");
-*/
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: bindings ::::: */
