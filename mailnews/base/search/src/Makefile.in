@@ -38,13 +38,13 @@ CPPSRCS		= \
 		nsMsgLocalSearch.cpp \
 		nsMsgSearchAdapter.cpp \
 		nsMsgSearchSession.cpp \
-		nsMsgImapSearch.obj\
+		nsMsgImapSearch.cpp \
 		nsMsgFilterDataSource.cpp \
 		nsMsgFilterDelegateFactory.cpp \
 		$(NULL)
 
 EXPORTS		= nsMsgFilterService.h \
-			nsMsgSearchSession.h
+			nsMsgSearchSession.h \
 				nsMsgFilterDataSource.h \
 				nsMsgFilterDelegateFactory.h \
 				$(NULL)
