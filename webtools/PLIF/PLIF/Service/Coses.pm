@@ -177,24 +177,14 @@ sub expand {
                     # useful if xml:space is set to 'default'
                     $result .= $self->escape($app, "\n", $scope);
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}include') {
-                    if ((not exists($attributes->{'parse'})) or ($attributes->{'parse'} eq 'xml')) {
+                    if ((not exists($attributes->{'parse'})) or ($attributes->{'parse'} eq 'x-auto')) {
                         # This is similar to an XInclude, but is done
                         # later (during processing of the infoset, not
                         # while it is being made) and doesn't support
                         # any value for 'href'. Plus it has an
-                        # extension to the 'parse' attribute.
-                        push(@index, $index);
-                        push(@stack, $stack);
-                        $index = 0;
-                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys));
-                        $self->assert($type eq 'COSES', 1, 'Tried to include a non-COSES string as COSES data. Set the \'parse\' attribute to \'text\' or \'x-auto\' to handle this correctly.');
-                        $stack = $xmlService->parseNS($string);
-                        push(@scope, $superscope);
-                    } elsif ($attributes->{'parse'} eq 'text') {
-                        # raw text inclusion
-                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys));
-                        $result .= $self->escape($app, $string, $scope);
-                    } elsif ($attributes->{'parse'} eq 'x-auto') {
+                        # extension to the 'parse' attribute and uses
+                        # that as the default.
+                        #
                         # Get the string expanded automatically and
                         # insert it into the result.
                         # XXX the nested string will have a corrupted
@@ -202,6 +192,18 @@ sub expand {
                         $result .= $self->escape($app, $app->getService('dataSource.strings')->getExpandedString($app, $session, $protocol,
                                                                                                                  $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys), $scope),
                                                  $scope);
+                    } elsif ($attributes->{'parse'} eq 'text') {
+                        # raw text inclusion
+                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys));
+                        $result .= $self->escape($app, $string, $scope);
+                    } elsif ($attributes->{'parse'} eq 'xml') {
+                        push(@index, $index);
+                        push(@stack, $stack);
+                        $index = 0;
+                        my($type, $version, $string) = $app->getService('dataSource.strings')->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'href'}, $scope, $originalKeys));
+                        $self->assert($type eq 'COSES', 1, 'Tried to include a non-COSES string as COSES data. Set the \'parse\' attribute to \'text\' or \'x-auto\' to handle this correctly.');
+                        $stack = $xmlService->parseNS($string);
+                        push(@scope, $superscope);
                     }
                     next node; # skip default handling
                 } elsif ($node eq '{http://bugzilla.mozilla.org/coses}else') {
