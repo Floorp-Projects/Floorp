@@ -3830,16 +3830,12 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
   
 
   mDocumentURL->GetSpec(getter_Copies(originalSpec));
-  nsCOMPtr<nsIIOService> ioService(do_GetService("@mozilla.org/network/io-service;1", &rv));
-  if (ioService) {
-    ioService->ExtractUrlPart(originalSpec.get(), nsIIOService::url_Path, 0, 0, getter_Copies(urlPart));
-  }
   
   // Generate the wyciwyg url
-  url.AssignWithConversion( "wyciwyg://" );
+  url.Assign(NS_LITERAL_STRING( "wyciwyg://" ));
   url.AppendInt(mWyciwygSessionCnt++, 10);
-  url.AppendWithConversion("/");
-  url.AppendWithConversion(urlPart);
+  url.Append(NS_LITERAL_STRING("/"));
+  url.Append(NS_ConvertUTF8toUCS2(originalSpec));
 
   nsCOMPtr<nsIURI> wcwgURI;
   NS_NewURI(getter_AddRefs(wcwgURI), url);
