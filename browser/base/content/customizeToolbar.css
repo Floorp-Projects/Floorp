@@ -26,3 +26,12 @@
   padding-top: 8px;
   padding-bottom: 8px;
 }
+
+#cloned-bar-container {
+  margin: 5px;
+}
+
+#palette-box {
+  overflow:auto; 
+  margin:0px 15px 10px 15px;
+}
