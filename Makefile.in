@@ -82,6 +82,10 @@ DIRS +=				\
 
 DIRS += xpfe
 
+ifdef MOZ_MAIL_NEWS
+DIRS += mailnews
+endif
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
