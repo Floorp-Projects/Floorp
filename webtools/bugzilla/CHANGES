@@ -22,9 +22,14 @@ You must feed the following to MySQL:
 	alter table bugs drop column area;
 	alter table bugs add column votes mediumint not null, add index (votes);
 
-If you have been using the voting feature at all, then you will need
-to update the cache.  You can do this by visiting the sanitycheck.cgi
-page, and taking it up on its offer to rebuild the votes stuff.
+You then *must* delete the data/versioncache file when you make this
+change, as it contains references to the "area" field.  Deleting it is safe,
+bugzilla will correctly regenerate it.
+
+If you have been using the voting feature at all, then you will then
+need to update the voting cache.  You can do this by visiting the
+sanitycheck.cgi page, and taking it up on its offer to rebuild the
+votes stuff.
 
 
 10/7/99 Added voting ability.  You must run the new script
