@@ -60,40 +60,7 @@ interface nsIDOMBarProp : nsISupports {};
 interface nsIDOMWindowCollection : nsISupports {};
 
 [scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMWindow : nsISupports {
-    readonly attribute  nsIDOMWindow window;
-    readonly attribute  nsIDOMWindow self;
-    readonly attribute  nsIDOMDocument document;
-    readonly attribute  nsIDOMNavigator navigator;
-    readonly attribute  nsIDOMScreen screen;
-    readonly attribute  nsIDOMHistory history;
-    readonly attribute  nsIDOMWindow parent;
-    readonly attribute  nsIDOMWindow top;
-    readonly attribute  nsIDOMBarProp menubar;
-    readonly attribute  nsIDOMBarProp toolbar;
-    readonly attribute  nsIDOMBarProp locationbar;
-    readonly attribute  nsIDOMBarProp personalbar;
-    readonly attribute  nsIDOMBarProp statusbar;
-    readonly attribute  nsIDOMBarProp scrollbars;
-    readonly attribute  nsIDOMBarProp directories;
-    readonly attribute  boolean closed;
-    readonly attribute  nsIDOMWindowCollection frames;
-             attribute  nsIDOMWindow opener;
-             attribute  wstring status;
-             attribute  wstring defaultStatus;
-             attribute  wstring name;
-             attribute  long innerWidth;
-             attribute  long innerHeight;
-             attribute  long outerWidth;
-             attribute  long outerHeight;
-             attribute  long screenX;
-             attribute  long screenY;
-             attribute  long pageXOffset;
-             attribute  long pageYOffset;
-
-    boolean Equals(in nsIDOMWindow aWindow);
-};
-
+interface nsIDOMWindow : nsISupports {};
 
 [scriptable, uuid(a6cf9076-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMDocumentFragment : nsIDOMNode {};
