@@ -22,6 +22,7 @@ DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 CPPSRCS=				\
+ nsComFactory.cpp			\
  nsDLLFactory.cpp			\
  nsDocumentViewer.cpp			\
  nsDocLoader.cpp			\
@@ -30,6 +31,7 @@ CPPSRCS=				\
  $(NULL)
 
 CPP_OBJS=				\
+ .\$(OBJDIR)\nsComFactory.obj		\
  .\$(OBJDIR)\nsDLLFactory.obj		\
  .\$(OBJDIR)\nsDocumentViewer.obj	\
  .\$(OBJDIR)\nsDocLoader.obj		\
@@ -39,11 +41,14 @@ CPP_OBJS=				\
 
 LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib \
-	  -I$(PUBLIC)\plugin -I$(PUBLIC)\java -I$(PUBLIC)\pref
+      -I$(PUBLIC)\plugin -I$(PUBLIC)\java -I$(PUBLIC)\pref \
+      -I$(PUBLIC)\js -I$(DEPTH)\include
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorweb
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+DEFFILE=webshell.def
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -61,7 +66,8 @@ LLIBS=				\
  $(DIST)\lib\libplc21.lib    \
  $(DIST)\lib\jsdom.lib       \
  $(DIST)\lib\netlib.lib       \
- $(LIBNSPR)  
+ $(LIBNSPR)                   \
+ OLE32.LIB
 
 include <$(DEPTH)\config\rules.mak>
 
