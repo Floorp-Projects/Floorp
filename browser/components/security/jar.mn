@@ -1,5 +1,0 @@
-pippki.jar:
-+  content/pippki/contents.rdf           (content/contents.rdf)
-
-en-US.jar:
-+  locale/en-US/pippki/contents.rdf      (locale/contents.rdf)

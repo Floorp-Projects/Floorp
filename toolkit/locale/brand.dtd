@@ -1,9 +1,0 @@
-<!-- Don't modify this file. Use it as a template for your application -->
-
-<!ENTITY  lang.version          "0.0">
-<!ENTITY  brandShortName        "Application">
-<!ENTITY  brandFullName         "Mozilla Application">
-<!ENTITY  version               "0.0">
-<!ENTITY  vendorShortName       "Mozilla">
-
-<!ENTITY  releaseURL            "http://">
