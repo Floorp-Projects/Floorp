@@ -2917,7 +2917,8 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                 nsAutoString bytesStr; bytesStr.AppendInt(mBytesReceived);
 		
                 const PRUnichar *formatStrings[] = { bytesStr.GetUnicode() };
-				const PRUnichar *propertyTag = NS_LITERAL_STRING("bytesReceived");
+        NS_NAMED_LITERAL_STRING(literalPropertyTag, "bytesReceived");
+				const PRUnichar *propertyTag = literalPropertyTag.get();
                 rv = bundle->FormatStringFromName(propertyTag,
                                                   formatStrings, 1,
                                                   getter_Copies(statusString));
@@ -3674,7 +3675,9 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
                 nsAutoString totalGroupStr; totalGroupStr.AppendInt((long) m_newsRCListCount);
 
                 const PRUnichar *formatStrings[] = { thisGroupStr.GetUnicode(),totalGroupStr.GetUnicode() };
-                const PRUnichar *propertyTag = NS_LITERAL_STRING("checkingForNewNews");
+
+                NS_NAMED_LITERAL_STRING(literalPropertyTag, "checkingForNewNews");
+                const PRUnichar *propertyTag = literalPropertyTag.get();
                 rv = bundle->FormatStringFromName(propertyTag,
                                                   formatStrings, 2,
                                                   getter_Copies(statusString));
