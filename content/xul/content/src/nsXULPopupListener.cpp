@@ -321,7 +321,8 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
     nsIFrame* targetFrame;
     shell->GetPrimaryFrameFor(content, &targetFrame);
-  
+    if (!targetFrame) return NS_ERROR_FAILURE;
+      
     PRBool suppressBlur = PR_FALSE;
     const nsStyleUserInterface* ui;
     targetFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
