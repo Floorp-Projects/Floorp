@@ -243,6 +243,8 @@ public:
                                      const nsRect& aDirtyRect,
                                      const nsRect& aRect);
 
+  static nsresult GetScreenHeight(nsIPresContext* aPresContext, nscoord& aHeight);
+
 protected:
 
   virtual ~nsFormControlFrame();
