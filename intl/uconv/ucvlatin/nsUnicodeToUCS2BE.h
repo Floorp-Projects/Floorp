@@ -42,11 +42,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToUCS2BE();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
   
   NS_IMETHOD FillInfo(PRUint32* aInfo);
 
@@ -62,5 +57,48 @@ protected:
 nsresult NEW_UnicodeToUTF16BE(nsISupports **Result);
 nsresult NEW_UnicodeToUTF16LE(nsISupports **Result);
 nsresult NEW_UnicodeToUTF16(nsISupports **Result);
+
+//============== above code is obsolete ==============================
+
+class nsUnicodeToUTF16BE: public nsBasicEncoder
+{
+public:
+  nsUnicodeToUTF16BE() { mBOM = 0;};
+
+  //--------------------------------------------------------------------
+  // Interface nsIUnicodeEncoder [declaration]
+
+  NS_IMETHOD Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+      char * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Finish(char * aDest, PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
+  NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
+      nsIUnicharEncoder * aEncoder, PRUnichar aChar);
+
+  //--------------------------------------------------------------------
+  // Interface nsICharRepresentable [declaration]
+  NS_IMETHOD FillInfo(PRUint32 *aInfo);
+
+protected:
+  PRUnichar mBOM;
+  NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, PRInt32 aLen  );
+};
+
+class nsUnicodeToUTF16LE: public nsUnicodeToUTF16BE
+{
+public:
+  nsUnicodeToUTF16LE() { mBOM = 0;};
+
+protected:
+  NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, PRInt32 aLen  );
+};
+
+class nsUnicodeToUTF16: public nsUnicodeToUTF16BE
+{
+public:
+  nsUnicodeToUTF16() { mBOM = 0xFEFF;};
+};
 
 #endif /* nsUnicodeToUCS2BE_h___ */

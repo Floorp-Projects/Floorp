@@ -43,12 +43,6 @@ nsMacRomanToUnicode::nsMacRomanToUnicode()
 {
 }
 
-nsresult nsMacRomanToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsMacRomanToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
 

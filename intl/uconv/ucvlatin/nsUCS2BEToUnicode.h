@@ -59,4 +59,55 @@ protected:
 };
 nsresult NEW_UTF16BEToUnicode(nsISupports **Result);
 nsresult NEW_UTF16LEToUnicode(nsISupports **Result);
+
+//============== above code is obsolete ==============================
+
+class nsUTF16BEToUnicode : public nsBasicDecoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUTF16BEToUnicode() { Reset();};
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength); 
+  NS_IMETHOD Reset();
+
+protected:
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+protected:
+  PRUint8 mState;
+  PRUint8 mData;
+};
+
+class nsUTF16LEToUnicode : public nsBasicDecoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUTF16LEToUnicode() { Reset();};
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength); 
+  NS_IMETHOD Reset();
+
+protected:
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+protected:
+  PRUint8 mState;
+  PRUint8 mData;
+};
+
 #endif /* nsUCS2BEToUnicode_h___ */

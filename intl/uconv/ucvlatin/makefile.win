@@ -38,8 +38,12 @@ CPPSRCS =				\
 	nsISO88594ToUnicode.cpp		\
 	nsISO88595ToUnicode.cpp		\
 	nsISO88596ToUnicode.cpp		\
+	nsISO88596EToUnicode.cpp		\
+	nsISO88596IToUnicode.cpp		\
 	nsISO88597ToUnicode.cpp		\
 	nsISO88598ToUnicode.cpp		\
+	nsISO88598EToUnicode.cpp		\
+	nsISO88598IToUnicode.cpp		\
 	nsISO88599ToUnicode.cpp		\
 	nsISO885910ToUnicode.cpp	\
 	nsISO885913ToUnicode.cpp	\
@@ -91,8 +95,12 @@ CPPSRCS =				\
 	nsUnicodeToISO88594.cpp		\
 	nsUnicodeToISO88595.cpp		\
 	nsUnicodeToISO88596.cpp		\
+	nsUnicodeToISO88596E.cpp		\
+	nsUnicodeToISO88596I.cpp		\
 	nsUnicodeToISO88597.cpp		\
 	nsUnicodeToISO88598.cpp		\
+	nsUnicodeToISO88598E.cpp		\
+	nsUnicodeToISO88598I.cpp		\
 	nsUnicodeToISO88599.cpp		\
 	nsUnicodeToISO885910.cpp	\
 	nsUnicodeToISO885913.cpp	\
@@ -150,9 +158,13 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsISO88593ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88594ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88595ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO88596EToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO88596IToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88596ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88597ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88598ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO88598EToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO88598IToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88599ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO885910ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO885913ToUnicode.obj 		\
@@ -204,8 +216,12 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToISO88594.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88595.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88596.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO88596E.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO88596I.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88597.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88598.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO88598E.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO88598I.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88599.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO885910.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO885913.obj		\

@@ -43,12 +43,6 @@ nsUnicodeToISOIR111::nsUnicodeToISOIR111()
 {
 }
 
-nsresult nsUnicodeToISOIR111::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder *) new nsUnicodeToISOIR111();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

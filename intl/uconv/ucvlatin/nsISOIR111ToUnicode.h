@@ -43,10 +43,6 @@ public:
    */
   nsISOIR111ToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsISOIR111ToUnicode_h___ */

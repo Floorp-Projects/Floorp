@@ -43,12 +43,6 @@ nsUnicodeToUserDefined::nsUnicodeToUserDefined()
 {
 }
 
-nsresult nsUnicodeToUserDefined::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder *) new nsUnicodeToUserDefined();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

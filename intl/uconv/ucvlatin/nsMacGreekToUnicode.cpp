@@ -43,12 +43,6 @@ nsMacGreekToUnicode::nsMacGreekToUnicode()
 {
 }
 
-nsresult nsMacGreekToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsMacGreekToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
 

@@ -43,10 +43,6 @@ public:
    */
   nsUserDefinedToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsUserDefinedToUnicode_h___ */

@@ -43,10 +43,6 @@ public:
    */
   nsMacUkrainianToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsMacUkrainianToUnicode_h___ */

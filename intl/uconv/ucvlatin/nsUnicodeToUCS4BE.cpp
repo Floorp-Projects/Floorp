@@ -44,12 +44,6 @@ nsUnicodeToUCS4BE::nsUnicodeToUCS4BE()
 {
 }
 
-nsresult nsUnicodeToUCS4BE::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToUCS4BE();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

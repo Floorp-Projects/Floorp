@@ -23,6 +23,39 @@
 #ifndef nsUEscapeToUnicode_h___
 #define nsUEscapeToUnicode_h___
 #include "nsISupports.h"
+
+#include "nsUEscapeToUnicode.h"
+#include "nsUCvLatinSupport.h"
+
+//----------------------------------------------------------------------
+// Class nsUEscapeToUnicode [declaration]
+
+class nsUEscapeToUnicode : public nsBasicDecoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUEscapeToUnicode() { Reset();};
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength); 
+  NS_IMETHOD Reset();
+ 
+protected:
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+private:
+  PRUint8 mState;
+  PRUint16 mData;
+  PRUnichar mBuffer[2];
+  PRUint32  mBufferLen;
+};
+
 nsresult NEW_UEscapeToUnicode(nsISupports **Result);
 
 

@@ -20,48 +20,7 @@
  * Contributor(s): 
  */
 
-
 #include "nsUEscapeToUnicode.h"
-#include "nsUCvLatinSupport.h"
-
-//----------------------------------------------------------------------
-// Class nsUEscapeToUnicode [declaration]
-
-class nsUEscapeToUnicode : public nsBasicDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUEscapeToUnicode() { Reset();};
-
-  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength); 
-  NS_IMETHOD Reset();
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
-protected:
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-private:
-  PRUint8 mState;
-  PRUint16 mData;
-  PRUnichar mBuffer[2];
-  PRUint32  mBufferLen;
-};
-
-nsresult nsUEscapeToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsUEscapeToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
 
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
@@ -175,6 +134,8 @@ NS_IMETHODIMP nsUEscapeToUnicode::Reset()
   mBufferLen =0;
   return NS_OK;
 }
+
+
 nsresult NEW_UEscapeToUnicode(nsISupports **aResult)
 {
    *aResult = new nsUEscapeToUnicode();

@@ -43,8 +43,3 @@ nsKOI8RToUnicode::nsKOI8RToUnicode()
 {
 }
 
-nsresult nsKOI8RToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsKOI8RToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

@@ -43,12 +43,6 @@ nsMacTurkishToUnicode::nsMacTurkishToUnicode()
 {
 }
 
-nsresult nsMacTurkishToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsMacTurkishToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
 

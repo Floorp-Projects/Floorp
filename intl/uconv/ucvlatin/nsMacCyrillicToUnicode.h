@@ -43,10 +43,6 @@ public:
    */
   nsMacCyrillicToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsMacCyrillicToUnicode_h___ */

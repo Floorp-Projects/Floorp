@@ -45,12 +45,6 @@ nsUnicodeToUTF8::nsUnicodeToUTF8()
 {
 }
 
-nsresult nsUnicodeToUTF8::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToUTF8();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

@@ -43,10 +43,6 @@ public:
    */
   nsMacIcelandicToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsMacIcelandicToUnicode_h___ */

@@ -91,11 +91,6 @@ public:
    */
   nsUnicodeToUTF7();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   virtual PRBool DirectEncodable(PRUnichar aChar);

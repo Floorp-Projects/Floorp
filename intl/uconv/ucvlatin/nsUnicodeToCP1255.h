@@ -43,11 +43,6 @@ public:
    */
   nsUnicodeToCP1255();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   //--------------------------------------------------------------------

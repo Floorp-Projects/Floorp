@@ -43,10 +43,6 @@ public:
    */
   nsAsciiToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsAsciiToUnicode_h___ */

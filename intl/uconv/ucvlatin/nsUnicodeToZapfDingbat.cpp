@@ -43,12 +43,6 @@ nsUnicodeToZapfDingbat::nsUnicodeToZapfDingbat()
 {
 }
 
-nsresult nsUnicodeToZapfDingbat::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToZapfDingbat();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

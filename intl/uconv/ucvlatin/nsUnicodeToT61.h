@@ -42,11 +42,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToT61();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
   
 protected:
 

@@ -42,9 +42,3 @@ nsAsciiToUnicode::nsAsciiToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsAsciiToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsAsciiToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

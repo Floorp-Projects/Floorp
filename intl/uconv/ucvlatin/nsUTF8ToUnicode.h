@@ -46,12 +46,6 @@ public:
    */
   nsUTF8ToUnicode();
 
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
    PRUint32 mState;	// cached expected number of bytes per UTF8 character sequence

@@ -46,12 +46,6 @@ nsT61ToUnicode::nsT61ToUnicode()
 {
 }
 
-nsresult nsT61ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsT61ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
 

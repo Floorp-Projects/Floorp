@@ -42,9 +42,3 @@ nsMacUkrainianToUnicode::nsMacUkrainianToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsMacUkrainianToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsMacUkrainianToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

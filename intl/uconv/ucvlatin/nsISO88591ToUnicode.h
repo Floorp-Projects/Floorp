@@ -43,10 +43,6 @@ public:
    */
   nsISO88591ToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsISO88591ToUnicode_h___ */

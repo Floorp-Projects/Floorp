@@ -43,12 +43,6 @@ nsUnicodeToMacCyrillic::nsUnicodeToMacCyrillic()
 {
 }
 
-nsresult nsUnicodeToMacCyrillic::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToMacCyrillic();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

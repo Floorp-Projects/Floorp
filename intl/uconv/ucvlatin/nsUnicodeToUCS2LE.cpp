@@ -44,12 +44,6 @@ nsUnicodeToUCS2LE::nsUnicodeToUCS2LE()
 {
 }
 
-nsresult nsUnicodeToUCS2LE::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToUCS2LE();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

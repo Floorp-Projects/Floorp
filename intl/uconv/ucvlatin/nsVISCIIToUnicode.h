@@ -43,10 +43,6 @@ public:
    */
   nsVISCIIToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsVISCIIToUnicode_h___ */

@@ -43,10 +43,6 @@ public:
    */
   nsMacCroatianToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsMacCroatianToUnicode_h___ */

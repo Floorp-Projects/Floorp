@@ -43,10 +43,6 @@ public:
    */
   nsKOI8UToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsKOI8UToUnicode_h___ */

@@ -43,10 +43,6 @@ public:
    */
   nsVPSToUnicode();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsVPSToUnicode_h___ */

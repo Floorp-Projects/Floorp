@@ -42,9 +42,3 @@ nsISOIR111ToUnicode::nsISOIR111ToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsISOIR111ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsISOIR111ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

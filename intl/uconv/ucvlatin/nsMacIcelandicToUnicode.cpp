@@ -42,9 +42,3 @@ nsMacIcelandicToUnicode::nsMacIcelandicToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsMacIcelandicToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsMacIcelandicToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
