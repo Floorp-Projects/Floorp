@@ -214,29 +214,7 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
 
   if (aNamespaceID == kNameSpaceID_None && IsEventName(aName)) {
     nsCOMPtr<nsIEventListenerManager> manager;
-    if (aName == nsSVGAtoms::onload) {
-      // If we have a document, and it has a script global, add the
-      // event listener on the global.
-
-      // Until we figure out how to handle multiple onloads, only
-      // onload on the root element (least surprise, hopefully).
-      // This test isn't ideal, as it's really checking for an
-      // empty document, which could happen with javascript DOM
-      // creation as well as for the root element of a document
-      // we're parsing.  But in famous last words, this code will
-      // be changing soon to allow multiple onloads per document.
-      nsIDocument *document = GetCurrentDoc();
-      if (document && !document->GetRootContent()) {
-        nsCOMPtr<nsIDOMEventReceiver> receiver =
-          do_QueryInterface(document->GetScriptGlobalObject());
-        if (receiver) {
-          receiver->GetListenerManager(getter_AddRefs(manager));
-        }
-      }
-    }
-    else {
-      GetListenerManager(getter_AddRefs(manager));
-    }
+    GetListenerManager(getter_AddRefs(manager));
     if (manager) {
       manager->AddScriptEventListener(NS_STATIC_CAST(nsIContent*, this), aName,
                                       aValue, PR_TRUE);
@@ -864,6 +842,7 @@ nsSVGElement::IsGraphicElementEventName(nsIAtom* aName)
   }
 
   return (aName == nsSVGAtoms::onclick     ||
+          aName == nsSVGAtoms::onload      ||
           aName == nsSVGAtoms::onmousedown ||
           aName == nsSVGAtoms::onmouseup   ||
           aName == nsSVGAtoms::onmouseover ||
