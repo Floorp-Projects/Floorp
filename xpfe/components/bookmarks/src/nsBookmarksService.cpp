@@ -3291,11 +3291,11 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
 NS_IMETHODIMP
 nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
 {
-  nsresult rv;
-
   gImportedSystemBookmarks = PR_TRUE;
 
 #ifdef XP_WIN
+  nsresult rv;
+
   nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1", &rv));
   if (NS_FAILED(rv)) 
     return rv;
@@ -3309,7 +3309,6 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
   // read Favorites folder if it exists on the machine. 
   if (favoritesDirectory) 
     return ParseFavoritesFolder(favoritesDirectory, aParentFolder);
-
 #elif XP_MAC
   nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
   ieFavoritesFile += "Explorer";
@@ -3320,9 +3319,8 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
   BeginUpdateBatch(this);
   parser.Parse(aParentFolder, kNC_Bookmark);
   EndUpdateBatch(this);
-
-  return NS_OK;
 #endif
+
   return NS_OK;
 }
 

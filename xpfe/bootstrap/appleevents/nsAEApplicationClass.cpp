@@ -665,11 +665,6 @@ void AEApplicationClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredT
 void AEApplicationClass::SetDataForObject(const AEDesc *token, AEDesc *data)
 {
 	OSErr				err			= noErr;
-
-	long					numItems;
-	long					index;
-	AEKeyword 			theAEKeyword;
-	
 	ConstAETokenDesc			tokenDesc(token);
 	Boolean				usePropertyCode     = tokenDesc.UsePropertyCode();
 	DescType				propertyCode;
@@ -678,13 +673,16 @@ void AEApplicationClass::SetDataForObject(const AEDesc *token, AEDesc *data)
 	{
 		propertyCode = tokenDesc.GetPropertyCode();
 		
+#if !TARGET_CARBON
+		long			numItems;
+#endif
 		switch (propertyCode)
 		{
 			// the clipboard is the only writeable property for the application object
 			case pClipboard:
 				//	The data should be an AE list containing a series of things to be placed on the
 				//	clipboard. The data type of each item is also the clipboard type for that data
-#if !TARGET_CARBON				
+#if !TARGET_CARBON
 				err = ZeroScrap();
 				ThrowIfOSErr(err);
 				
@@ -692,9 +690,10 @@ void AEApplicationClass::SetDataForObject(const AEDesc *token, AEDesc *data)
 				
 				//  Copy each item onto the clipboard
 				
-				for (index = 1; index <= numItems; index++) 
+				for (long index = 1; index <= numItems; index++) 
 				{
 					StAEDesc		currentItemDesc;
+					AEKeyword 		theAEKeyword;
 					err = AEGetNthDesc(data, index, typeWildCard, &theAEKeyword, &currentItemDesc);
 					ThrowIfOSErr(err);
 						

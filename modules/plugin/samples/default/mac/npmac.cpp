@@ -456,13 +456,7 @@ jobject Private_GetJavaClass(void)
 void SetUpQD(void);
 void SetUpQD(void)
 {
-	ProcessSerialNumber PSN;
-	FSSpec				myFSSpec;
-	Str63				name;
-	ProcessInfoRec		infoRec;
 	OSErr				result = noErr;
-	CFragConnectionID	connID;
-	Str255 				errName;
 	
 	//
 	// Memorize the plugin’s resource file 
@@ -477,7 +471,8 @@ void SetUpQD(void)
 	long response;
 	OSErr err = Gestalt(gestaltCFMAttr, &response);
 	Boolean hasCFM = BitTst(&response, 31-gestaltCFMPresent);
-			
+
+	ProcessInfoRec infoRec;
 	if (hasCFM)
 	{
 		//
@@ -485,10 +480,13 @@ void SetUpQD(void)
 		// will give us back the name and FSSpec of the application.
 		// See the Process Manager in IM.
 		//
+		Str63 name;
+		FSSpec myFSSpec;
 		infoRec.processInfoLength = sizeof(ProcessInfoRec);
 		infoRec.processName = name;
 		infoRec.processAppSpec = &myFSSpec;
 		
+		ProcessSerialNumber PSN;
 		PSN.highLongOfPSN = 0;
 		PSN.lowLongOfPSN = kCurrentProcess;
 		
@@ -502,6 +500,7 @@ void SetUpQD(void)
 		//
 		result = -1;		
 		
+	CFragConnectionID connID;
 	if (result == noErr)
 	{
 		//
@@ -511,6 +510,7 @@ void SetUpQD(void)
 		// returns an error, we assume the app must be 68K.
 		//
 		Ptr mainAddr; 	
+		Str255 errName;
 		result =  GetDiskFragment(infoRec.processAppSpec, 0L, 0L, infoRec.processName,
 								  kLoadCFrag, &connID, (Ptr*)&mainAddr, errName);
 	}
