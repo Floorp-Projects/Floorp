@@ -54,6 +54,7 @@
 #include "nsGUIEvent.h"
 
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 
