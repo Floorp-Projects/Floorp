@@ -355,15 +355,15 @@ distclean::
 
 ifeq ($(OS_ARCH),WINNT)
 rebase:
-ifdef $(MOZILLA_OFFICIAL)
+ifdef MOZILLA_OFFICIAL
 	echo rebasing $(DIST)
 	/bin/find $(DIST) -name "*.dll" > rebase.lst
 	rebase -b 60000000 -R . -G rebase.lst
-        rm rebase.lst
+	rm rebase.lst
 endif
 
 splitsymbols:
-ifdef $(MOZILLA_OFFICIAL)
+ifdef MOZILLA_OFFICIAL
 	echo splitting symbols out of binaries
 	/bin/find $(DIST) -name "*.dll" -exec splitsym {} \;
 	/bin/find $(DIST) -name "*.exe" -exec splitsym {} \;
