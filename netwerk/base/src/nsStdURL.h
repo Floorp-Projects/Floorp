@@ -33,6 +33,15 @@
 class nsStdURL : public nsIURL
 {
 public:
+    ////////////////////////////////////////////////////////////////////////////
+    // nsStdURL methods:
+
+    nsStdURL(const char* i_Spec, nsISupports* outer=nsnull);
+    virtual ~nsStdURL();
+
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
     NS_DECL_AGGREGATED
 
     ////////////////////////////////////////////////////////////////////////////
@@ -86,15 +95,6 @@ public:
     /* attribute string Ref; */
     NS_IMETHOD GetRef(char * *aRef);
     NS_IMETHOD SetRef(char * aRef);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsStdURL methods:
-
-    nsStdURL(const char* i_Spec, nsISupports* outer=nsnull);
-    virtual ~nsStdURL();
-
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
     nsresult Parse(void);
