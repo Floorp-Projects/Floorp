@@ -815,8 +815,8 @@ if [ test -n "${PNG_DIR}" && test -d "${PNG_DIR}" && test "$SYSTEM_PNG" = 1 ]; t
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
-dnl system FullCircle/Talkback support
-dnl ========================================================
+dnl system FullCircle/Talkback support (Crash-reporting mechanism)
+dnl ==============================================================
 
 AC_ARG_WITH(fullcircle,
 [  --with-fullcircle=\$dir        location of FullCircle headers and libraries],
