@@ -20,17 +20,11 @@
  * Contributor(s): 
  */
 
-#include "nsISupports.idl"
-#include "nsrootidl.idl"
-
-interface nsIAbAutoCompleteListener;
-interface nsIMsgIdentity;
+#include "nsIAutoCompleteSession.idl"
+#include "nsIMsgIdentity.idl"
 
 [scriptable, uuid(CA2A6B07-3625-11d3-988E-001083010E9B)]
-interface nsIAbAutoCompleteSession : nsISupports {
-	void autoComplete(in nsIMsgIdentity relativeId,
-                      in nsISupports aParam,
-                      in wstring aSearchString,
-                      in nsIAbAutoCompleteListener aResultListener);
+interface nsIAbAutoCompleteSession : nsIAutoCompleteSession {
+    attribute wstring defaultDomain;
 };
 
