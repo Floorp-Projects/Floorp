@@ -35,7 +35,7 @@ public:
 
 	static nsresult GetObserverService(nsIObserverService** anObserverService);
     
-    NS_DECL_IOBSERVERSERVICE
+    NS_DECL_NSIOBSERVERSERVICE
    
   nsObserverService();
   virtual ~nsObserverService(void);

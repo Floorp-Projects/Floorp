@@ -128,7 +128,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
 
     // nsIObserver
-    NS_DECL_IOBSERVER
+    NS_DECL_NSIOBSERVER
 
 
 	// nsISessionHistory methods 

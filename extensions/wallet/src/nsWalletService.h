@@ -57,7 +57,7 @@ public:
   NS_IMETHOD SI_SignonViewerReturn(nsAutoString results);
 
   // nsIObserver
-  NS_DECL_IOBSERVER
+  NS_DECL_NSIOBSERVER
   NS_IMETHOD Notify(nsIContent* formNode);
 
   // nsIDocumentLoaderObserver

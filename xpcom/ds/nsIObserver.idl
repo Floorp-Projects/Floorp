@@ -41,7 +41,4 @@ interface nsIObserver : nsISupports {
 
 #define NS_OBSERVER_CLASSNAME "Observer"
 
-#define NS_DECL_IOBSERVER \
-    NS_IMETHOD Observe( nsISupports*, const PRUnichar*, const PRUnichar* );
-
 %}
