@@ -2256,7 +2256,7 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
       color = nscolor(value->GetColorValue());
       PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
                   NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
-      aResult.Assign(NS_ConvertASCIItoUCS2(cbuf));
+      CopyASCIItoUTF16(cbuf, aResult);
       break;
 
     default:
@@ -4410,12 +4410,14 @@ nsGenericHTMLElement::SetHostInHrefString(const nsAString &aHref,
   uri->GetUserPass(userpass);
   uri->GetPath(path);
 
-  if (!userpass.IsEmpty())
-    userpass.Append('@');
-
-  aResult.Assign(NS_ConvertUTF8toUCS2(scheme) + NS_LITERAL_STRING("://") +
-                 NS_ConvertUTF8toUCS2(userpass) + aHost +
-                 NS_ConvertUTF8toUCS2(path));
+  CopyASCIItoUTF16(scheme, aResult);
+  aResult.Append(NS_LITERAL_STRING("://"));
+  if (!userpass.IsEmpty()) {
+    AppendUTF8toUTF16(userpass, aResult);
+    aResult.Append(PRUnichar('@'));
+  }
+  aResult.Append(aHost);
+  AppendUTF8toUTF16(path, aResult);
 
   return NS_OK;
 }
@@ -4519,7 +4521,7 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
     ioService->ExtractScheme(NS_ConvertUCS2toUTF8(aHref), protocol);
 
   if (NS_SUCCEEDED(rv)) {
-    aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol) + NS_LITERAL_STRING(":"));
+    CopyASCIItoUTF16(protocol, aProtocol);
   } else {
     // set the protocol to the protocol of the base URI.
 
@@ -4533,12 +4535,12 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
     if (protocol.IsEmpty()) {
       // set the protocol to http since it is the most likely protocol
       // to be used.
-
-      CopyASCIItoUCS2(nsDependentCString("http:"), aProtocol);
+      aProtocol.Assign(NS_LITERAL_STRING("http"));
     } else {
-      CopyASCIItoUCS2(protocol + NS_LITERAL_CSTRING(":"), aProtocol);
+      CopyASCIItoUTF16(protocol, aProtocol);
     }
   }
+  aProtocol.Append(PRUnichar(':'));
 
   return NS_OK;
 }
@@ -4709,7 +4711,9 @@ nsGenericHTMLElement::GetHashFromHrefString(const nsAString& aHref,
     return rv;
   NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
 
-  if (!ref.IsEmpty())
-    aHash.Assign(NS_LITERAL_STRING("#") + NS_ConvertASCIItoUCS2(ref));
+  if (!ref.IsEmpty()) {
+    aHash.Assign(PRUnichar('#'));
+    AppendASCIItoUTF16(ref, aHash);
+  }
   return NS_OK;
 }
