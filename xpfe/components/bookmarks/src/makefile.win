@@ -27,6 +27,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  widget \
 		  necko \
+		  nkcache \
 		  uconv \
 		  pref \
 		  timer \
