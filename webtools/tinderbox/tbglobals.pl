@@ -121,14 +121,14 @@ sub tb_load_data {
   $cvs_root = '/m/src' if $cvs_root eq '';
   $td->{cvs_root} = $cvs_root;
 
-  $build_list = &load_buildlog($td);
+  $build_list = load_buildlog($td);
   
-  &get_build_name_index($build_list);
-  &get_build_time_index($build_list);
+  get_build_name_index($build_list);
+  get_build_time_index($build_list);
   
-  &load_who($td, $who_list);
+  load_who($td, $who_list);
 
-  &make_build_table($td, $build_list);
+  make_build_table($td, $build_list);
 
   $td->{bloaty} = load_bloaty($td);
   $td->{warnings} = load_warnings($td);
@@ -354,7 +354,7 @@ sub load_who {
 
     # Find the time slice where this checkin belongs.
     for (my $ii = $time_count - 1; $ii >= 0; $ii--) {
-      if ($checkin_time <= $build_time_times->[$ii]) {
+      if ($checkin_time < $build_time_times->[$ii]) {
         $who_list->[$ii+1]->{$email} = 1;
         last;
       }
