@@ -119,15 +119,7 @@ ImageURLImpl::QueryInterface(const nsIID& aIID,
 }
 
 NS_IMPL_ADDREF(ImageURLImpl)
-
-nsrefcnt ImageURLImpl::Release(void)                         
-{                                                      
-  if (--mRefCnt == 0) {                                
-    NS_DELETEXPCOM(this);
-    return 0;                                          
-  }                                                    
-  return mRefCnt;                                      
-}
+NS_IMPL_RELEASE(ImageURLImpl)
 
 void 
 ImageURLImpl::SetReader(ilINetReader *aReader)
