@@ -326,8 +326,8 @@ sub setupInstall {
             $app->output($contact, $user)->loginDetails($address, $password);
         }
 
-        # add the user to group 1 as an administrator (so he's an administrator of administrators)
-        $user->joinGroup(1, 2); # XXX HARDCODED CONSTANT ALERT
+        # add the user to group 1 as an owner (so he's the owner of administrators)
+        $user->joinGroup(1, 3); # XXX HARDCODED CONSTANT ALERT
 
         # add an adminMessage to the user
         $user->adminMessage('Logged in with administrative privileges, please be careful.');
