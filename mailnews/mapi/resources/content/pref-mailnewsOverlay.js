@@ -18,9 +18,27 @@
  * 
  * Contributor(s): 
  * Srilatha Moturi <srilatha@netscape.com>
+ * Rajiv Dayal <rdayal@netscape.com>
  */
 
+function mailnewsOverlayStartup() {
+    mailnewsOverlayInit();
 parent.hPrefWindow.registerOKCallbackFunc( onOK );
+    if (!("mapiPref" in parent)) {
+        parent.mapiPref = new Object;
+        parent.mapiPref.isDefaultMailClient = 
+               document.getElementById("mailnewsEnableMapi").checked;
+    }
+    else { 
+        // when we switch between different panes
+        // set the checkbox based on the saved state
+        var mailnewsEnableMapi = document.getElementById("mailnewsEnableMapi");
+        if (parent.mapiPref.isDefaultMailClient)
+            mailnewsEnableMapi.setAttribute("checked", "true");
+        else
+            mailnewsEnableMapi.setAttribute("checked", "false");
+    }
+}
 
 function mailnewsOverlayInit() {
     try {
@@ -42,11 +60,8 @@ function mailnewsOverlayInit() {
                           .getService()
                           .QueryInterface(Components.interfaces.nsIPrefService);
             var prefBranch = prefService.getBranch(prefbase);
-            if (prefBranch && prefBranch.prefIsLocked("default_mail_client")) {
-                if (prefBranch.getBoolPref("default_mail_client"))
-                    mapiRegistry.setDefaultMailClient();
-                else
-                    mapiRegistry.unsetDefaultMailClient();
+            if (prefBranch && prefBranch.prefIsLocked("defaultMailClient")) {
+                mapiRegistry.isDefaultMailClient = prefBranch.getBoolPref("defaultMailClient") ;
                 mailnewsEnableMapi.setAttribute("disabled", "true");
            }
         }
@@ -54,10 +69,17 @@ function mailnewsOverlayInit() {
         if (mapiRegistry.isDefaultMailClient)
             mailnewsEnableMapi.setAttribute("checked", "true");
         else
-            mailnewsEnableMapi.removeAttribute("checked");
+            mailnewsEnableMapi.setAttribute("checked", "false");
     }
     else
         mailnewsEnableMapi.setAttribute("disabled", "true");
+}
+
+function onEnableMapi() {
+    // save the state of the checkbox
+    if ("mapiPref" in parent)
+        parent.mapiPref.isDefaultMailClient = 
+               document.getElementById("mailnewsEnableMapi").checked;
 }
 
 function onOK()
@@ -69,10 +91,12 @@ function onOK()
     catch(ex){
         mapiRegistry = null;
     } 
-    if (mapiRegistry) { 
-        if (document.getElementById("mailnewsEnableMapi").checked)
-            mapiRegistry.setDefaultMailClient();
-        else
-            mapiRegistry.unsetDefaultMailClient();
-    }  
+    if (mapiRegistry &&
+        ("mapiPref" in parent) && 
+        (mapiRegistry.isDefaultMailClient != parent.mapiPref.isDefaultMailClient)) { 
+        mapiRegistry.isDefaultMailClient = parent.mapiPref.isDefaultMailClient ;
+    }
 }
+
+// Install the onload handler
+addEventListener("load", mailnewsOverlayStartup, false);

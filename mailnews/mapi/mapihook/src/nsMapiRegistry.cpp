@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Srilatha Moturi <srilatha@netscape.com>
+ * Rajiv Dayal <rdayal@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -167,16 +168,7 @@ nsMapiRegistry::ShowMailIntegrationDialog(nsIDOMWindow *aParentWindow) {
 
         m_ShowDialog = PR_FALSE;
         if (!buttonPressed)
-        {
-            // set the pref when OK is clicked on Mail Integration dialog, 
-            // setDefaultMailClient is called from the Observer.
-            nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-            NS_ENSURE_SUCCESS(rv,rv);
-            nsCOMPtr<nsIPrefBranch> prefBranch;
-            rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-            NS_ENSURE_SUCCESS(rv,rv);
-            prefBranch->SetBoolPref(MAILNEWS_ALLOW_DEFAULT_MAIL_CLIENT, PR_TRUE) ;
-        }
+            rv = SetIsDefaultMailClient(PR_TRUE);
     }
     return rv;
 }

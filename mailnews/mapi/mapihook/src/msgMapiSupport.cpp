@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Krishna Mohan Khandrika (kkhandrika@netscape.com)
+ *                 Rajiv Dayal <rdayal@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -86,23 +87,6 @@ nsMapiSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
     if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
         return ShutdownMAPISupport();
 
-    if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
-    {
-        nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject, &rv);
-        if (NS_FAILED(rv))  return rv;
-        // which preference changed?
-        if (!nsCRT::strcmp(MAILNEWS_ALLOW_DEFAULT_MAIL_CLIENT, NS_ConvertUCS2toUTF8(aData).get()))
-        {
-            PRBool bIsDefault = PR_FALSE ;
-            rv = prefs->GetBoolPref(MAILNEWS_ALLOW_DEFAULT_MAIL_CLIENT, &bIsDefault);
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr <nsIMapiRegistry> mapiRegistry = do_CreateInstance(NS_IMAPIREGISTRY_CONTRACTID, &rv) ;
-            if (NS_FAILED(rv)) return rv;
-            return mapiRegistry->SetIsDefaultMailClient(bIsDefault) ;
-        }
-        return rv ;
-    }
-
     nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
     if (NS_FAILED(rv)) return rv;
  
@@ -112,15 +96,6 @@ nsMapiSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
     rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
     if (NS_FAILED(rv))  return rv;
 
-     nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))  return rv;
-
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefs, &rv);
-    if (NS_FAILED(rv))  return rv;
-
-    rv = prefInternal->AddObserver(MAILNEWS_ALLOW_DEFAULT_MAIL_CLIENT, this, PR_FALSE);
-    if (NS_FAILED(rv))  return rv;
-           
     return rv;
 }
 
