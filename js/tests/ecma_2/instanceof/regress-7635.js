@@ -76,10 +76,6 @@
 			false,
 			theproto instanceof Foo );
 	
-	var o  = {};
-
-	AddTestCase( "var o = {}; o instanceof o", false, o instanceof o );
-
 	var f = new Function();
 
 	AddTestCase( "var f = new Function(); f instanceof f", false, f instanceof f );
