@@ -381,13 +381,22 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
   }
 
   aDesiredLayoutSize.width = desiredSize.width;
+  PRBool needScrollbar;
+#ifdef XP_MAC
+  needScrollbar = PR_TRUE;
+  scrollbarWidth = (mIsComboBox)
+    ? NSIntPixelsToTwips(25, p2t*scale)
+    : (scrollbarWidth + NSIntPixelsToTwips(2, p2t*scale));
+#else
+  needScrollbar = ((mNumRows < numOptions) || mIsComboBox);
+#endif
   // account for vertical scrollbar, if present  
-  if (!widthExplicit && ((mNumRows < numOptions) || mIsComboBox)) {
+  if (!widthExplicit && needScrollbar) {
     aDesiredLayoutSize.width += scrollbarWidth;
   }
   if (aDesiredLayoutSize.maxElementSize) {
     aDesiredLayoutSize.maxElementSize->width = minSize.width;
-    if (!widthExplicit && ((mNumRows < numOptions) || mIsComboBox)) {
+    if (!widthExplicit && needScrollbar) {
       aDesiredLayoutSize.maxElementSize->width += scrollbarWidth;
     }
   }
