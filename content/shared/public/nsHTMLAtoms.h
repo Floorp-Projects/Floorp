@@ -66,6 +66,7 @@ public:
   static nsIAtom* cellspacing;
   static nsIAtom* charset;
   static nsIAtom* checked;
+  static nsIAtom* cite;
   static nsIAtom* kClass;
   static nsIAtom* classid;
   static nsIAtom* clear;
@@ -81,6 +82,7 @@ public:
   static nsIAtom* coords;
 
   static nsIAtom* data;
+  static nsIAtom* datetime;
   static nsIAtom* defer;
   static nsIAtom* defaultchecked;
   static nsIAtom* defaultvalue;

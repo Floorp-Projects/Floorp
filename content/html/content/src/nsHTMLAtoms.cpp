@@ -43,6 +43,7 @@ nsIAtom* nsHTMLAtoms::cellpadding;
 nsIAtom* nsHTMLAtoms::cellspacing;
 nsIAtom* nsHTMLAtoms::charset;
 nsIAtom* nsHTMLAtoms::checked;
+nsIAtom* nsHTMLAtoms::cite;
 nsIAtom* nsHTMLAtoms::kClass;
 nsIAtom* nsHTMLAtoms::classid;
 nsIAtom* nsHTMLAtoms::clear;
@@ -56,6 +57,7 @@ nsIAtom* nsHTMLAtoms::columnPseudo;
 nsIAtom* nsHTMLAtoms::compact;
 nsIAtom* nsHTMLAtoms::content;
 nsIAtom* nsHTMLAtoms::coords;
+nsIAtom* nsHTMLAtoms::datetime;
 nsIAtom* nsHTMLAtoms::data;
 nsIAtom* nsHTMLAtoms::defer;
 nsIAtom* nsHTMLAtoms::defaultchecked;
@@ -216,6 +218,7 @@ void nsHTMLAtoms::AddrefAtoms()
     cellspacing = NS_NewAtom("CELLSPACING");
     charset = NS_NewAtom("CHARSET");
     checked = NS_NewAtom("CHECKED");
+    cite = NS_NewAtom("CITE");
     kClass = NS_NewAtom("CLASS");
     classid = NS_NewAtom("CLASSID");
     clear = NS_NewAtom("CLEAR");
@@ -236,6 +239,7 @@ void nsHTMLAtoms::AddrefAtoms()
     div = NS_NewAtom("DIV");
     disabled = NS_NewAtom("DISABLED");
     dl = NS_NewAtom("DL");
+    datetime = NS_NewAtom("DATETIME");
     data = NS_NewAtom("DATA");
     embed = NS_NewAtom("EMBED");
     encoding = NS_NewAtom("ENCODING");
@@ -385,6 +389,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(cellpadding);
     NS_RELEASE(cellspacing);
     NS_RELEASE(checked);
+    NS_RELEASE(cite);
     NS_RELEASE(kClass);
     NS_RELEASE(classid);
     NS_RELEASE(clear);
@@ -405,6 +410,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(disabled);
     NS_RELEASE(div);
     NS_RELEASE(dl);
+    NS_RELEASE(datetime);
     NS_RELEASE(data);
     NS_RELEASE(embed);
     NS_RELEASE(encoding);
