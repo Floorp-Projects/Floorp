@@ -661,9 +661,13 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
   mCols  = NS_STYLE_TABLE_COLS_NONE;
   mFrame = NS_STYLE_TABLE_FRAME_NONE;
   mRules = NS_STYLE_TABLE_RULES_NONE;
+  mBorderCollapse = NS_STYLE_TABLE_BORDER_COLLAPSE_SEPARATE;    //XXX: should inherit
+  mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_HIDE;                //XXX: should inherit
+  mCaptionSide = NS_SIDE_TOP;                                   //XXX: should inherit
   mCellPadding.Reset();
-  mCellSpacing.Reset();
-  mSpanWidth.Reset();
+  mBorderSpacingX.Reset();    //XXX: should inherit
+  mBorderSpacingY.Reset();    //XXX: should inherit  
+  mSpanWidth.Reset();         //XXX: should inherit
   mSpan=1;
 }
 
