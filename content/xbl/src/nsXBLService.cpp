@@ -1064,12 +1064,12 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
       ni = aBoundElement->GetNodeInfo();
 
     if (!info && bindingManager &&
-        (!ni || (!ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) &&
-                 !ni->Equals(nsXULAtoms::thumb, kNameSpaceID_XUL))) &&
-        (!ni || (!ni->Equals(nsHTMLAtoms::input) &&
-                 !ni->Equals(nsHTMLAtoms::select) &&
-                 !aBoundElement->IsContentOfType(nsIContent::eHTML))) &&
-         !aForceSyncLoad) {
+        (!ni || !(ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) ||
+                  ni->Equals(nsXULAtoms::thumb, kNameSpaceID_XUL) ||
+                  ((ni->Equals(nsHTMLAtoms::input) ||
+                    ni->Equals(nsHTMLAtoms::select)) &&
+                   aBoundElement->IsContentOfType(nsIContent::eHTML)))) &&
+        !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no
       // document yet, but we need to glom on our request so that it will be
