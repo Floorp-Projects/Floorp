@@ -837,9 +837,10 @@ sub BuildClientDist()
     #LDAP
     if ($main::options{ldap})
     {
-        InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST",      "$distdirectory:directory:");
-        InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST",       "$distdirectory:directory:");
-        InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST_IDL",   "$distdirectory:idl:");
+        InstallFromManifest(":mozilla:directory:c-sdk:ldap:include:MANIFEST",      		"$distdirectory:directory:");
+        InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST",       		"$distdirectory:directory:");
+        InstallFromManifest(":mozilla:directory:xpcom:base:public:MANIFEST_IDL",   		"$distdirectory:idl:");
+        InstallFromManifest(":mozilla:xpfe:component:autocomplete:public:MANIFEST_IDL",	"$distdirectory:idl:");
     }
 
     #XMLEXTRAS
@@ -1123,6 +1124,7 @@ sub BuildIDLProjects()
     if ($main::options{ldap})
     {
         BuildIDLProject(":mozilla:directory:xpcom:macbuild:mozldapIDL.mcp", "mozldap");
+        BuildIDLProject(":mozilla:xpfe:components:autocomplete:macbuild:ldapAutoCompleteIDL.mcp", "ldapAutoComplete");
     }
 
     if ($main::options{xmlextras})
