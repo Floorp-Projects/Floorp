@@ -284,4 +284,11 @@
   */
 #endif
 
+/* 
+ * Use these macros to do 64bit safe pointer conversions.
+ */
+
+#define NS_PTR_TO_INT32(x) ((char *)(x) - (char *)0)
+#define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
+
 #endif /* nscore_h___ */
