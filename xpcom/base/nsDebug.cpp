@@ -144,6 +144,7 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
 #if defined(_WIN32)
 #ifdef _M_IX86
    ::DebugBreak();
+   return;
 #else /* _M_ALPHA */
   PR_Abort();
 #endif
@@ -169,6 +170,12 @@ NS_COM PRBool nsDebug::WarnIfFalse(const char* aStr, const char* aExpr,
               "WARNING: %s: '%s', file %s, line %d",
               aStr, aExpr, aFile, aLine);
 
+  // Write out the warning message to the debug log
+  PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf));
+
+  // And write it out to the stdout
+  printf("%s\n", buf);
+
 #if defined(_WIN32)
   PRBool abortInstead = PR_FALSE;
   if (gWarningMessageBoxEnable) {
@@ -180,17 +187,10 @@ NS_COM PRBool nsDebug::WarnIfFalse(const char* aStr, const char* aExpr,
       abortInstead = PR_TRUE;
   }
   if (abortInstead) {
-    AbortIfFalse(aStr, aExpr, aFile, aLine);
+    ::DebugBreak();
     return PR_TRUE;
   }
 #endif
-
-  // Write out the warning message to the debug log
-  PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf));
-
-  // And write it out to the stdout
-  printf("%s\n", buf);
-
   return PR_TRUE;
 }
 
