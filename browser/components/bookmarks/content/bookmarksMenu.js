@@ -52,7 +52,6 @@ var BookmarksMenu = {
     element.setAttribute("id", "openintabs-menuitem")
     element.setAttribute("label", BookmarksUtils.getLocaleString("cmd_bm_openfolder"));
     element.setAttribute("accesskey", BookmarksUtils.getLocaleString("cmd_bm_openfolder_accesskey"));
-    element.setAttribute("oncommand", "BookmarksMenu.loadBookmark(event,event.target.parentNode.parentNode,this.database)");
     aTarget.appendChild(element);
   },
 
@@ -325,6 +324,9 @@ var BookmarksMenu = {
   // aTarget may not the aEvent target (see Open in tabs command)
   loadBookmark: function (aEvent, aTarget, aDS)
   {
+    if (aTarget.id == "openintabs-menuitem")
+      aTarget = aTarget.parentNode.parentNode;
+      
     // Check for invalid bookmarks (most likely a static menu item like "Manage Bookmarks")
     if (!this.isBTBookmark(aTarget.id))
       return;
