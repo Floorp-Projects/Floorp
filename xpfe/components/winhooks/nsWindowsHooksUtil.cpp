@@ -340,7 +340,8 @@ nsresult SavedRegistryEntry::set() {
         rv = RegistryEntry::set();
         if ( NS_SUCCEEDED( rv ) ) {
             // Save old.
-            RegistryEntry( HKEY_LOCAL_MACHINE, "Software\\Mozilla\\Desktop", fullName().get(), prev.get() ).set();
+            RegistryEntry tmp( HKEY_LOCAL_MACHINE, "Software\\Mozilla\\Desktop", fullName().get(), prev.get() );
+            tmp.set();
         }
     }
     return rv;
@@ -374,20 +375,23 @@ static void setWindowsXP() {
             // comes from nsINativeAppSupportWin.h.
             char buffer[ _MAX_PATH + 8 ]; // Path, plus '@', comma, minus, and digits (5)
             _snprintf( buffer, sizeof buffer, "@%s,-%d", thisApplication().get(), IDS_STARTMENU_APPNAME );
-            RegistryEntry( HKEY_LOCAL_MACHINE, 
+            RegistryEntry tmp_entry1( HKEY_LOCAL_MACHINE, 
                            subkey.get(),
                            "LocalizedString", 
-                           buffer ).set();
+                           buffer );
+            tmp_entry1.set();
             // Default icon (from .exe resource).
-            RegistryEntry( HKEY_LOCAL_MACHINE, 
+            RegistryEntry tmp_entry2( HKEY_LOCAL_MACHINE, 
                            nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\DefaultIcon" ) ).get(),
                            "", 
-                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( ",0" ) ).get() ).set();
+                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( ",0" ) ).get() );
+            tmp_entry2.set();
             // Command to open.
-            RegistryEntry( HKEY_LOCAL_MACHINE,
+            RegistryEntry tmp_entry3( HKEY_LOCAL_MACHINE,
                            nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\open\\command" ) ).get(),
                            "", 
-                           thisApplication().get() ).set();
+                           thisApplication().get() );
+            tmp_entry3.set();
             // "Properties" verb.  The default value is the text that will appear in the menu.
             // The default value under the command subkey is the name of this application, with
             // arguments to cause the Preferences window to appear.
@@ -399,15 +403,17 @@ static void setWindowsXP() {
                                                        getter_AddRefs( bundle ) ) ) &&
                  NS_SUCCEEDED( bundle->GetStringFromName( NS_LITERAL_STRING( "prefsLabel" ).get(), getter_Copies( label ) ) ) ) {
                 // Set the label that will appear in the start menu context menu.
-                RegistryEntry( HKEY_LOCAL_MACHINE,
+                RegistryEntry tmp_entry4( HKEY_LOCAL_MACHINE,
                                nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\properties" ) ).get(),
                                "", 
-                               NS_ConvertUCS2toUTF8( label ).get() ).set();
+                               NS_ConvertUCS2toUTF8( label ).get() );
+                tmp_entry4.set();
             }
-            RegistryEntry( HKEY_LOCAL_MACHINE,
+            RegistryEntry tmp_entry5( HKEY_LOCAL_MACHINE,
                            nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\properties\\command" ) ).get(),
                            "", 
-                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( "-chrome \"chrome://communicator/content/pref/pref.xul\"" ) ).get() ).set();
+                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( "-chrome \"chrome://communicator/content/pref/pref.xul\"" ) ).get() );
+            tmp_entry5.set();
 
             // Now we need to select our application as the default start menu internet application.
             // This is accomplished by first trying to store our subkey name in 
@@ -418,10 +424,11 @@ static void setWindowsXP() {
             // That may or may not have worked (depending on whether we have sufficient access).
             if ( hklmAppEntry.currentSetting() == hklmAppEntry.setting ) {
                 // We've set the hklm entry, so we can delete the one under hkcu.
-                SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", 0 ).set();
+                SavedRegistryEntry tmp_entry6( HKEY_CURRENT_USER, baseKey.get(), "", 0 );
+                tmp_entry6.set();
             } else {
                 // All we can do is set the default start menu internet app for this user.
-                SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", shortAppName().get() );
+                SavedRegistryEntry tmp_entry7( HKEY_CURRENT_USER, baseKey.get(), "", shortAppName().get() );
             }
             // Notify the system of the changes.
             ::SendMessageTimeout( HWND_BROADCAST,
@@ -516,15 +523,18 @@ static void resetWindowsXP() {
     NS_NAMED_LITERAL_CSTRING( baseKey, "Software\\Clients\\StartMenuInternet" );
     // First, try to restore the HKLM setting.  This will fail if either we didn't
     // set that, or, if we don't have access).
-    SavedRegistryEntry( HKEY_LOCAL_MACHINE, baseKey.get(), "", shortAppName().get() ).reset();
+    SavedRegistryEntry tmp_entry8( HKEY_LOCAL_MACHINE, baseKey.get(), "", shortAppName().get() );
+    tmp_entry8.reset();
 
     // The HKCU setting is trickier.  We may have set it, but we may also have
     // removed it (see setWindowsXP(), above).  We first try to reverse the
     // setting.  If we had removed it, then this will fail.
-    SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", shortAppName().get() ).reset();
+    SavedRegistryEntry tmp_entry9( HKEY_CURRENT_USER, baseKey.get(), "", shortAppName().get() );
+    tmp_entry9.reset();
     // Now, try to reverse the removal of this key.  This will fail if there is a  current
     // setting, and will only work if this key is unset, and, we have a saved value.
-    SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", 0 ).reset();
+    SavedRegistryEntry tmp_entry10( HKEY_CURRENT_USER, baseKey.get(), "", 0 );
+    tmp_entry10.reset();
 
     // Notify the system of the changes.
     ::SendMessageTimeout( HWND_BROADCAST,
