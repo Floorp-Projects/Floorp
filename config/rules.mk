@@ -942,10 +942,11 @@ export:: $(XPIDLSRCS) $(XPDIST)/idl
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(XPDIST)/include;
 # warn against overriding existing .h file.
-$(XPIDL_GEN_DIR):
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
-$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)
+# don't depend on $(XPIDL_GEN_DIR), because the modification date changes
+# with any addition to the directory, regenerating all .h files -> everything.
+$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE)
+	@if test ! -d $(XPIDL_GEN_DIR); then echo Creating $(XPIDL_GEN_DIR); rm -rf $(XPIDL_GEN_DIR); mkdir $(XPIDL_GEN_DIR); else true; fi
 	$(XPIDL_COMPILE) -m header -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
@@ -956,7 +957,8 @@ export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(XPDIST)/include
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(XPIDL_MODULE).xpt and export it to $(DIST)/bin/components.
-$(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)
+$(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE)
+	@if test ! -d $(XPIDL_GEN_DIR); then echo Creating $(XPIDL_GEN_DIR); rm -rf $(XPIDL_GEN_DIR); mkdir $(XPIDL_GEN_DIR); else true; fi
 	$(XPIDL_COMPILE) -m typelib -w -I $(XPDIST)/idl -I$(srcdir) -o $(XPIDL_GEN_DIR)/$* $<
 
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
