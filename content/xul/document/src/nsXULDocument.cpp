@@ -165,6 +165,15 @@ static NS_DEFINE_CID(kRangeCID,                  NS_RANGE_CID);
 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
+static PRBool IsChromeURI(nsIURI* aURI)
+{
+    // why is this check a member function of nsXULDocument? -gagan
+    PRBool isChrome=PR_FALSE;
+    if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::CHROME, &isChrome)) && isChrome)
+        return PR_TRUE;
+    return PR_FALSE;
+}
+
 //----------------------------------------------------------------------
 //
 // Miscellaneous Constants
@@ -6378,20 +6387,6 @@ nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
 
 
 
-PRBool
-nsXULDocument::IsChromeURI(nsIURI* aURI)
-{
-    nsresult rv;
-    nsXPIDLCString protocol;
-    rv = aURI->GetScheme(getter_Copies(protocol));
-    if (NS_SUCCEEDED(rv)) {
-        if (PL_strcmp(protocol, "chrome") == 0) {
-            return PR_TRUE;
-        }
-    }
-
-    return PR_FALSE;
-}
 
 void 
 nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)

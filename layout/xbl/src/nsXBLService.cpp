@@ -81,29 +81,19 @@ static NS_DEFINE_CID(kChromeRegistryCID,          NS_CHROMEREGISTRY_CID);
 
 static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 {
-  nsresult rv;
-  nsXPIDLCString protocol;
-  rv = aURI->GetScheme(getter_Copies(protocol));
-  if (NS_SUCCEEDED(rv)) {
-    if (!PL_strcmp(protocol, "chrome") || !PL_strcmp(protocol, "resource")) {
-      return PR_TRUE;
-    }
-  }
-
+  PRBool isChrome = PR_FALSE;
+  PRBool isResource = PR_FALSE;
+  if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::CHROME, &isChrome)) && 
+      NS_SUCCEEDED(aURI->SchemeIs(nsIURI::RESOURCE, &isResource)))
+      return (isChrome || isResource);
   return PR_FALSE;
 }
 
 static PRBool IsResourceURI(nsIURI* aURI)
 {
-  nsresult rv;
-  nsXPIDLCString protocol;
-  rv = aURI->GetScheme(getter_Copies(protocol));
-  if (NS_SUCCEEDED(rv)) {
-    if (!PL_strcmp(protocol, "resource")) {
-      return PR_TRUE;
-    }
-  }
-
+  PRBool isResource = PR_FALSE;
+  if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::RESOURCE, &isResource)) && isResource)
+      return PR_TRUE; 
   return PR_FALSE;
 }
 

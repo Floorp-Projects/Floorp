@@ -19,6 +19,7 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
+ * Contributor(s):
  */
 
 #include "nsCOMPtr.h"
@@ -199,9 +200,13 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     nsCOMPtr<nsIDocument> document;
     mHandlerElement->GetDocument(*getter_AddRefs(document));
     nsCOMPtr<nsIURI> url = getter_AddRefs(document->GetDocumentURL());
-    nsXPIDLCString scheme;
-    url->GetScheme(getter_Copies(scheme));
-    if (PL_strcmp(scheme, "chrome") != 0 && PL_strcmp(scheme, "resource") != 0)
+
+    PRBool isChrome = PR_FALSE;
+    PRBool isRes = PR_FALSE;
+
+    url->SchemeIs(nsIURI::CHROME, &isChrome);
+    url->SchemeIs(nsIURI::RESOURCE, &isRes);
+    if (!isChrome && !isRes)
       return NS_OK;
 
     // We are the default action for this command.

@@ -478,6 +478,10 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Equals(nsIURI *other, PRBool *_retval)
 	return m_baseURL->Equals(other, _retval);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::SchemeIs(PRUint32 aScheme, PRBool *_retval)
+{
+    return m_baseURL->SchemeIs(aScheme, _retval);
+}
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
 {

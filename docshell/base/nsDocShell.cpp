@@ -3259,10 +3259,10 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    // attribute execute in the correct window, this only works if the
    // target window exists when the link is clicked.
    if (aWindowTarget && *aWindowTarget) {
-     nsXPIDLCString urlScheme;
-     aURI->GetScheme(getter_Copies(urlScheme));
+     PRBool isJSURL = PR_FALSE;
      // do it only for javascript urls!
-     if (urlScheme && !nsCRT::strcasecmp(jsSchemeName, urlScheme)) {
+     if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::JAVASCRIPT, &isJSURL)) && isJSURL)
+     {
        nsAutoString targetName; targetName.AssignWithConversion(aWindowTarget);
 
        nsCOMPtr<nsIDocShellTreeItem> targetDocShell;
@@ -3328,9 +3328,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
           nsCOMPtr<nsIStreamIOChannel> ioChannel(do_QueryInterface(channel));
           if(ioChannel) // Might be a javascript: URL load, need to set owner
           {
-              nsXPIDLCString scheme;
-              aURI->GetScheme(getter_Copies(scheme));
-              isJSOrData = (PL_strcasecmp(scheme, jsSchemeName) == 0);
+              aURI->SchemeIs(nsIURI::JAVASCRIPT, &isJSOrData);
           }
           else
           { // Also set owner for data: URLs
@@ -3949,6 +3947,10 @@ void nsDocShell::SetReferrerURI(nsIURI* aURI)
 //*****************************************************************************   
 PRBool nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI)
 {
+    // I believe none of the about: urls should go in the history. But then
+    // that could just be me... If the intent is only deny about:blank then we
+    // should just do a spec compare, rather than two gets of the scheme and
+    // then the path.  -Gagan
   nsresult rv;
   nsXPIDLCString buffer;
   nsCAutoString schemeStr;
@@ -4249,28 +4251,36 @@ NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShould
    if(!mGlobalHistory || !aURI || (typeContent != mItemType))
       return NS_OK;
 
-   nsXPIDLCString scheme;
-   NS_ENSURE_SUCCESS(aURI->GetScheme(getter_Copies(scheme)), NS_ERROR_FAILURE);
-   
-   nsAutoString schemeStr; schemeStr.AssignWithConversion(scheme);
-
    // The model is really if we don't know differently then add which basically
    // means we are suppose to try all the things we know not to allow in and
    // then if we don't bail go on and allow it in.  But here lets compare
    // against the most common case we know to allow in and go on and say yes
    // to it.
-   if(schemeStr.EqualsWithConversion("http") || schemeStr.EqualsWithConversion("https"))
-      {
-      *aShouldAdd = PR_TRUE;
-      return NS_OK;
-      }
+   PRBool isHTTP = PR_FALSE;
+   PRBool isHTTPS = PR_FALSE;
+   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::HTTP, &isHTTP), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::HTTPS, &isHTTPS), NS_ERROR_FAILURE);
 
-   if(schemeStr.EqualsWithConversion("about") || schemeStr.EqualsWithConversion("imap") ||
-      schemeStr.EqualsWithConversion("news") || schemeStr.EqualsWithConversion("mailbox"))
+   if (isHTTP || isHTTPS)
+   {
+       *aShouldAdd = PR_TRUE;
+       return NS_OK;
+   }
+
+   PRBool isAbout = PR_FALSE;
+   PRBool isImap = PR_FALSE;
+   PRBool isNews = PR_FALSE;
+   PRBool isMailbox = PR_FALSE;
+
+   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::ABOUT, &isAbout), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::IMAP, &isImap), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::NEWS, &isNews), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(aURI->SchemeIs(nsIURI::MAILBOX, &isMailbox), NS_ERROR_FAILURE);
+
+   if (isAbout || isImap || isNews || isMailbox)
       return NS_OK;
 
    *aShouldAdd = PR_TRUE;
-
    return NS_OK;
 }
 

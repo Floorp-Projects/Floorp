@@ -562,7 +562,6 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
 		     PRBool 	      *aResult)
 {
   nsresult rv;
-  nsXPIDLCString scheme;
 
   if (!aFolderURI) return NS_ERROR_NULL_POINTER;
 
@@ -573,16 +572,9 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
   rv = url->SetSpec(aFolderURI);
   if (NS_FAILED(rv)) return rv;
  
-  rv = url->GetScheme(getter_Copies(scheme));
-  if (NS_FAILED(rv)) return rv;
-
   /* mailbox:/ means its local (on disk) */
-  if (PL_strcmp("mailbox", (const char *)scheme) == 0) {
-	*aResult = PR_TRUE;
-  }
-  else {
-	*aResult = PR_FALSE;
-  }
+  rv = url->SchemeIs(nsIURI::MAILBOX, aResult);
+  if (NS_FAILED(rv)) return rv;
   return NS_OK;
 }
 

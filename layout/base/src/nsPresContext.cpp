@@ -426,14 +426,15 @@ nsPresContext::SetShell(nsIPresShell* aShell)
         doc->GetBaseURL(*getter_AddRefs(mBaseURL));
 
         if (mBaseURL) {
-          char* scheme = 0;
-          mBaseURL->GetScheme(&scheme);
-          if (nsCRT::strncmp(scheme, "chrome", 6) &&
-              nsCRT::strncmp(scheme, "resource", 8))
+            PRBool isChrome = PR_FALSE;
+            PRBool isRes = PR_FALSE;
+            mBaseURL->SchemeIs(nsIURI::CHROME, &isChrome);
+            mBaseURL->SchemeIs(nsIURI::RESOURCE, &isRes);
+
+          if (!isChrome && !isRes)
             mImageAnimationMode = mImageAnimationModePref;
           else
             mImageAnimationMode = eImageAnimation_Normal;
-          nsMemory::Free(scheme);
         }
 
         if (mLangService) {

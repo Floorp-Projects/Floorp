@@ -51,6 +51,7 @@ public:
 protected:
     char*       mScheme;
     char*       mPath;
+    PRUint32    mSchemeType;
 };
 
 #endif // nsSimpleURI_h__

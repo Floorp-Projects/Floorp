@@ -1750,16 +1750,12 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
     }
 
     /* extract scheme -- we block loading of only http and https images */
-    char * scheme;
-    rv = uri->GetScheme(&scheme);
-    if (NS_FAILED(rv)) {
+    PRBool isHTTP = PR_FALSE;
+    PRBool isHTTPS = PR_FALSE;
+    if (NS_FAILED(uri->SchemeIs(nsIURI::HTTP, &isHTTP)) || 
+        NS_FAILED(uri->SchemeIs(nsIURI::HTTPS, &isHTTPS)) || 
+        (!isHTTP && !isHTTPS))
         return PR_TRUE;
-    }
-    if (PL_strcasecmp(scheme, "http") && PL_strcasecmp(scheme, "https")) {
-        Recycle(scheme);
-        return PR_TRUE;
-    }
-    Recycle(scheme);
 
     /* extract host */
     char * host;

@@ -17,6 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author: Gagan Saksena <gagan@netscape.com>
+ *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Christopher Blizzard <blizzard@mozilla.org>
@@ -196,19 +198,14 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
 {
     nsresult rv;
     nsHTTPChannel* pChannel = nsnull;
-    nsXPIDLCString scheme;
-    nsXPIDLCString handlerScheme;
 
     // Initial checks...
     if (!i_URL || !o_Instance) {
         return NS_ERROR_NULL_POINTER;
     }
 
-    i_URL->GetScheme(getter_Copies(scheme));
-    GetScheme(getter_Copies(handlerScheme));
-    
-    if (scheme != nsnull  && handlerScheme != nsnull  &&
-        0 == PL_strcasecmp(scheme, handlerScheme)) 
+    PRBool isHTTP = PR_FALSE;
+    if (NS_SUCCEEDED(i_URL->SchemeIs(nsIURI::HTTP, &isHTTP)) && isHTTP)
     {
         // Check for filtering
         nsCOMPtr<nsIWebFilters> filters = 

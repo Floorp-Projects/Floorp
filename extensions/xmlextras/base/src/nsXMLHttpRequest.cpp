@@ -699,11 +699,10 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   if (NS_FAILED(rv)) return rv;
 
   // Only http URLs are allowed
-  nsXPIDLCString protocol;
-  uri->GetScheme(getter_Copies(protocol)); 
-  if (nsCRT::strncmp("http", (const char*)protocol, 4) != 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  PRBool isHTTP = PR_FALSE;
+  uri->SchemeIs(nsIURI::HTTP, &isHTTP);
+  if (!isHTTP)
+      return NS_ERROR_INVALID_ARG;
 
   if (user) {
     nsCAutoString prehost;

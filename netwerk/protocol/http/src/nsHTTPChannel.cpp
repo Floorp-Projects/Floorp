@@ -17,6 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author: Gagan Saksena <gagan@netscape.com>
+ *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Mike Shaver <shaver@zeroknowledge.com>
@@ -116,9 +118,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
            ("Creating nsHTTPChannel [this=%x] for URI: %s.\n", 
             this, (const char *)urlCString));
 #endif
-    nsXPIDLCString scheme; 
-    mURI->GetScheme(getter_Copies(scheme));
-    if ( 0 == PL_strncasecmp((const char*)scheme, "https", 5) )
+    PRBool isHTTPS=PR_FALSE;
+    if (NS_SUCCEEDED(mURI->SchemeIs(nsIURI::HTTPS, &isHTTPS)) && isHTTPS)
         mLoadAttributes |= nsIChannel::INHIBIT_PERSISTENT_CACHING; 
 }
 

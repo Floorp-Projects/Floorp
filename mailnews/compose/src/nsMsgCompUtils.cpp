@@ -1799,16 +1799,11 @@ GenerateFileNameFromURI(nsIURI *aURL)
     if (!hostStr)
       hostStr = cp2;
 
-    nsXPIDLCString protocol;
-    if (NS_SUCCEEDED(aURL->GetScheme(getter_Copies(protocol))) && (protocol))
+    PRBool isHTTP = PR_FALSE;
+    if (NS_SUCCEEDED(aURL->SchemeIs(nsIURI::HTTP, &isHTTP)) && isHTTP)
     {
-      if (PL_strcasecmp(protocol, "http") == 0)
-      {
         returnString = PR_smprintf("%s.html", hostStr);
         PR_FREEIF(hostStr);
-      }
-      else
-        returnString = hostStr;
     }
     else
       returnString = hostStr;

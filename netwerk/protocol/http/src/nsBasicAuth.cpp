@@ -17,6 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author: Gagan Saksena <gagan@netscape.com>
+ *
  * Contributor(s): 
  *   Mike Shaver <shaver@zeroknowledge.com>
  *   Christopher Blizzard <blizzard@mozilla.org>
