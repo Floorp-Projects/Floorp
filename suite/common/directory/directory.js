@@ -109,7 +109,11 @@ function ToggleOpenState(treeitem)
 
     if (treeitem.getAttribute('open') == 'true') {
         var url = treeitem.getAttribute('id');
-        ReadDirectory(url);
+        if (!Read[url]) {
+            treeitem.setAttribute('loading', 'true');
+            ReadDirectory(url);
+            Read[url] = true;
+        }
     }
 }
 
@@ -119,10 +123,6 @@ var Read = new Array();
 
 function ReadDirectory(url)
 {
-    // Check to make sure we haven't read the directory yet...
-    if (Read[url])
-        return;
-
     debug('ReadDirectory(' + url + ')\n');
 
     var ios = Components.classes['component://netscape/network/net-service'].getService();
@@ -136,7 +136,6 @@ function ReadDirectory(url)
     // ...so that we can pipe it into a new HTTPIndex listener to
     // parse the directory's contents.
     channel.AsyncRead(0, -1, null, HTTPIndex.CreateListener());
-    Read[url] = true;
 }
 
 

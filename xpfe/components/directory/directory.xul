@@ -41,7 +41,9 @@
                template engine. We need to hack it this way because,
                if we don't, the tree control will assume that the item
                shouldn't have a twisty next to it -->
-          <treeitem uri="..." type="rdf:urn:http-index-format:File-Type" container="true">
+          <treeitem uri="..." type="rdf:urn:http-index-format:File-Type"
+                    loading="rdf:urn:http-index-format:Loading"
+                    container="true">
             <treerow>
               <treecell class="filename" indent="true"
                         value="rdf:urn:http-index-format:Filename"/>

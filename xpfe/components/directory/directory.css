@@ -31,6 +31,11 @@ treeitem[type="FILE"] > treerow > treecell > .tree-icon > .twisty {
   list-style-image: none;
 }
 
+/* Show an animated icon when a directory is loading */
+treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-icon > .twisty {
+  list-style-image: url("resource:/res/rdf/loading.gif");
+}
+
 /* Make a file look like a link */
 treeitem[type="FILE"] > treerow > treecell.filename {
   color: #666699;
