@@ -661,7 +661,7 @@ endif
 
 # Start the update. Split the output to the tty and a log file.
 real_fast-update:
-	@set -e;
+	@set -e; \
 	fast_update() { set -e; config/cvsco-fast-update.pl $$@ 2>&1 | tee -a $(CVSCO_LOGFILE); }; \
 	cvs_co() { set -e; echo "$$@" ; \
 	  "$$@" 2>&1 | tee -a $(CVSCO_LOGFILE); }; \
