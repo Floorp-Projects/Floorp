@@ -300,6 +300,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
   // If we don't yet have a view, see if we need a view
   if (nsnull == view) {
     PRInt32 zIndex = 0;
+    PRBool  autoZIndex = PR_FALSE;
     PRBool  fixedBackgroundAttachment = PR_FALSE;
 
     // Get nsStyleColor and nsStyleDisplay
@@ -336,6 +337,9 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
         // Get the z-index to use
         if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
           zIndex = position->mZIndex.GetIntValue();
+
+        } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+          autoZIndex = PR_TRUE;
         }
       
       } else if (position->IsAbsolutelyPositioned()) {
@@ -347,6 +351,9 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
         // Get the z-index to use
         if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
           zIndex = position->mZIndex.GetIntValue();
+
+        } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+          autoZIndex = PR_TRUE;
         }
       }
     }
@@ -407,6 +414,10 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
           scrollingView->SetScrolledView(view);
         } else {
           viewManager->InsertChild(parentView, view, zIndex);
+
+          if (autoZIndex) {
+            viewManager->SetViewAutoZIndex(view, PR_TRUE);
+          }
         }
 
         // See if the view should be hidden
