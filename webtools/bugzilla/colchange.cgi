@@ -112,10 +112,13 @@ if (defined $cgi->param('rememberedquery')) {
     # If we're running on Microsoft IIS, using cgi->redirect discards
     # the Set-Cookie lines -- workaround is to use the old-fashioned 
     # redirection mechanism. See bug 214466 for details.
-    if ($ENV{'SERVER_SOFTWARE'} =~ /Microsoft-IIS/) {
+    if ($ENV{'SERVER_SOFTWARE'} =~ /Microsoft-IIS/
+        || $ENV{'SERVER_SOFTWARE'} =~ /Sun ONE Web/)
+    {
       print $cgi->header(-type => "text/html",
                          -refresh => "0; URL=$vars->{'redirect_url'}");
-    } else {
+    }
+    else {
       print $cgi->redirect($vars->{'redirect_url'});
     }
     
