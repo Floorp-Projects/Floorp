@@ -6,9 +6,9 @@
 #          days set in TinderConfig.  This program should be 
 # 	   run from cron daily.
 
-# $Revision: 1.4 $ 
-# $Date: 2001/01/04 00:26:00 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/03/26 14:06:51 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/rmlogs,v $ 
 # $Name:  $ 
 
@@ -30,7 +30,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 

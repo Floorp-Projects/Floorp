@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.11 $ 
-# $Date: 2001/02/15 20:51:58 $ 
+# $Revision: 1.12 $ 
+# $Date: 2001/03/26 14:06:58 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -29,7 +29,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 

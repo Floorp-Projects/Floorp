@@ -22,7 +22,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 
@@ -38,7 +41,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 # Add an empty object, of this DB subclass, to end of the set of all
 # HTML columns.  This registers the subclass with TinderDB and defines

@@ -23,8 +23,8 @@
 
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/02/16 20:06:28 $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/03/26 14:06:36 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
@@ -48,7 +48,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 

@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.4 $ 
-# $Date: 2001/03/19 23:35:13 $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/03/26 14:06:44 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -37,7 +37,10 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes:
+#	 kestes@staff.mail.com Old work.
+#	 kestes@tradinglinx.com New work.
+#	 kestes@walrus.com Home.
 # Contributor(s): 
 
 

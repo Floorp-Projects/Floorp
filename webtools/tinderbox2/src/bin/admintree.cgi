@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2001/03/26 14:00:44 $ 
+# $Revision: 1.13 $ 
+# $Date: 2001/03/26 14:08:42 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -539,7 +539,7 @@ sub make_all_changes {
       # may play strange games with our ARGV and prevent us from
       # updating the state.
 
-      system( (basename($0).'tinder.cgi'), '--daemon-mode' );
+#      system( (basename($0).'tinder.cgi'), '--daemon-mode' );
     } else {
       push @results, "No changes attempted due to security issues.";
     }
