@@ -134,6 +134,30 @@ static int cookie_deferLockCount = 0;
 
 #define REAL_DIALOG 1
 
+static
+time_t
+get_current_time()
+    /*
+      We call this routine instead of |time()| because the latter returns
+      different values on the Mac than on all other platforms (i.e., based on
+      the Mac's 1900 epoch, vs all others 1970).  We can't call |PR_Now|
+      directly, since the value is 64bits and too hard to manipulate.
+      Hence, this cross-platform convenience routine.
+    */
+  {
+    PRInt64 usecPerSec;
+    LL_I2L(usecPerSec, 1000000L);
+
+    PRTime now_useconds = PR_Now();
+
+    PRInt64 now_seconds;
+    LL_DIV(now_seconds, now_useconds, usecPerSec);
+
+    // assert(!now_seconds.hi);
+
+    return now_seconds.lo;
+  }
+
 /* StrAllocCopy and StrAllocCat should really be defined elsewhere */
 #include "plstr.h"
 #include "prmem.h"
@@ -656,7 +680,7 @@ cookie_RemoveOldestCookie(void) {
 PRIVATE void
 cookie_RemoveExpiredCookies() {
   cookie_CookieStruct * cookie_s;
-  time_t cur_time = time(NULL);
+  time_t cur_time = get_current_time();
   
   if (cookie_cookieList == nsnull) {
     return;
@@ -847,6 +871,7 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
   prefs->RegisterCallback(cookie_warningPref, cookie_WarningPrefChanged, NULL);
 }
 
+
 /* returns PR_TRUE if authorization is required
 ** 
 **
@@ -859,7 +884,8 @@ COOKIE_GetCookie(char * address) {
   cookie_CookieStruct * cookie_s;
   PRBool first=PR_TRUE;
   PRBool xxx = PR_FALSE;
-  time_t cur_time = time(NULL);
+  time_t cur_time = get_current_time();
+
   int host_length;
   int domain_length;
 
@@ -1590,7 +1616,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     prev_cookie->name = name_from_header;
     prev_cookie->xxx = xxx;
     prev_cookie->isDomain = isDomain;
-    prev_cookie->lastAccessed = time(NULL);
+    prev_cookie->lastAccessed = get_current_time();
   } else {
     cookie_CookieStruct * tmp_cookie_ptr;
     size_t new_len;
@@ -1616,7 +1642,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     prev_cookie->expires = expires;
     prev_cookie->xxx = xxx;
     prev_cookie->isDomain = isDomain;
-    prev_cookie->lastAccessed = time(NULL);
+    prev_cookie->lastAccessed = get_current_time();
     if(!cookie_cookieList) {
       cookie_cookieList = new nsVoidArray();
       if(!cookie_cookieList) {
@@ -1727,15 +1753,15 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, char * setCookieH
   if (server_date) {
     sDate = cookie_ParseDate(server_date);
   } else {
-    sDate = time(NULL);
+    sDate = get_current_time();
   }
   if( sDate && expires ) {
     if( expires < sDate ) {
       gmtCookieExpires=1;
     } else {
-      gmtCookieExpires = expires - sDate + time(NULL);
+      gmtCookieExpires = expires - sDate + get_current_time();
       // if overflow 
-      if( gmtCookieExpires < time(NULL)) {
+      if( gmtCookieExpires < get_current_time()) {
         gmtCookieExpires = (((unsigned) (~0) << 1) >> 1); // max int 
       }
     }
@@ -1881,7 +1907,7 @@ cookie_LoadPermissions() {
 PRIVATE void
 cookie_SaveCookies() {
   cookie_CookieStruct * cookie_s;
-  time_t cur_date = time(NULL);
+  time_t cur_date = get_current_time();
   char date_string[36];
   if (COOKIE_GetBehaviorPref() == COOKIE_DontUse) {
     return;
