@@ -709,23 +709,12 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     // area, then size the view large enough to include those child
     // frames
     if ((kidState & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
-      vm->ResizeView(aView, *aCombinedArea);
+      vm->ResizeView(aView, *aCombinedArea, PR_TRUE);
     } else {
-      // If the width is unchanged and the height is not decreased
-      // then repaint only the newly exposed or contracted area,
-      // otherwise repaint the union of the old and new areas
-
-      // XXX: We currently invalidate the newly exposed areas only
-      // when the container frame's width is unchanged and the height
-      // is either unchanged or increased This is because some frames
-      // do not invalidate themselves properly. see bug 73825.  Once
-      // bug 73825 is fixed, we should always pass PR_TRUE instead of
-      // frameSize.width == width && frameSize.height >= height.
       nsSize frameSize;
       aFrame->GetSize(frameSize);
       nsRect newSize(0, 0, frameSize.width, frameSize.height);
-      vm->ResizeView(aView, newSize, 
-                     (frameSize.width == oldBounds.width && frameSize.height >= oldBounds.height));
+      vm->ResizeView(aView, newSize, PR_TRUE);
     }
 
     // Even if the size hasn't changed, we need to sync up the
