@@ -94,6 +94,7 @@ CMozABConduitRecord::CMozABConduitRecord(nsABCOMCardStruct &rec)
     m_csAddress = rec.homeAddress;
     m_csCity = rec.homeCity;
     m_csState = rec.homeState;
+    m_csZipCode = rec.homeZipCode;
     m_csCountry = rec.homeCountry;
 
     m_csNote = rec.notes;
