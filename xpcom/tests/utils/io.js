@@ -41,6 +41,9 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
 *       11.readDir(dirPath);              // returns an array listing of a dirs contents 
 *       12.permissions(path);             // returns the files permissions
 *       13.dateModified(path);            // returns the last modified date in locale string
+*       14.size(path);                    // returns the file size
+*       15.extension(path);               // returns a file extension if there is one
+*       16.help();                        // currently dumps a list of available functions 
 *
 *       Instructions:
 *
@@ -51,7 +54,7 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
 *       to open a file for reading<"r">, writing<"w"> or appending<"a">, 
 *       just call: 
 *
-*       file.open('/path/i/want/to/open', "w");
+*       file.open("/path/i/want/to/open", "w");
 *
 *       where in this case you will be creating a new file called:
 *       '/path/i/want/to/open'
@@ -59,7 +62,7 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
 *
 *       If you want to read from a file, just call:
 *
-*       file.open('/path/i/want/to/open', "r");
+*       file.open("/path/i/want/to/open", "r");
 *       
 *       var theFilesContents    = file.read();
 *
@@ -81,6 +84,15 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris
 const FilePath    = new Components.Constructor( "component://mozilla/file/local", "nsILocalFile", "initWithPath");
 const FileChannel = new Components.Constructor( "component://netscape/network/local-file-channel", "nsIFileChannel" );
 const InputStream = new Components.Constructor( "component://netscape/scriptableinputstream", "nsIScriptableInputStream" );
+
+const READ        = 0x01;     // 1
+const WRITE       = 0x08;     // 8
+const APPEND      = 0x10;     // 16
+
+const FILE        = 0x00;     // 0
+const DIRECTORY   = 0x01;     // 1
+
+const OK          = true;
 
 /****************** Globals **********************/
 
@@ -111,19 +123,22 @@ exists : function (path) {
     if(!path)
     {
       dump("io.js:exists:ERROR: Missing path argument\n\n");
-      return false;
+      return null;
     }
 
+    var retval;
     try
     { 
       var file                = new FilePath(path);
-      var fileExists          = file.exists();
-      return fileExists;
+      retval=file.exists();
     }
 
-    catch(e) { dump("io.js:exists:ERROR: "+e+"\n\n"); }
+    catch(e) { 
+      dump("io.js:exists:ERROR: "+e+"\n\n"); 
+      retval=null;
+    }
 
-  return null;
+  return retval;
 },
 
 /********************* EXISTS ***************************/
@@ -140,8 +155,10 @@ open : function(path, setMode) {
     if(!path)
     {
       dump("io.js:open:ERROR: Missing path argument\n\n");
-      return false;
+      return null;
     }
+
+  var retval;
 
   switch(setMode)
   {
@@ -162,18 +179,21 @@ open : function(path, setMode) {
 
     if (!fileExists)
     {
-      this.fileInst.create(0, 0644);
+      this.fileInst.create(FILE, 0644);
       fileExists=true;
     }
 
-    this.mode=8;
-    return true;
+    this.mode=WRITE;
+    retval=OK;
 
     }
 
-    catch (e){ dump("io.js:open:ERROR::"+e+"\n\n"); }
+    catch (e)
+    { 
+      dump("io.js:open:ERROR::"+e+"\n\n"); 
+      return null;
+    }
     break;
-
 
   case "a":
 
@@ -185,16 +205,20 @@ open : function(path, setMode) {
 
     if ( !fileExists )
     {
-      this.fileInst.create(0, 0644);
+      this.fileInst.create(FILE, 0644);
       fileExists=true;
     }
 
-    this.mode=16;
-    return true;
+    this.mode=APPEND;
+    retval=OK;
 
     }
 
-    catch (e){ dump("io.js:open:ERROR::"+e+"\n\n"); }
+    catch (e)
+    { 
+      dump("io.js:open:ERROR::"+e+"\n\n"); 
+      return null;
+    }
     break;
 
 
@@ -207,17 +231,23 @@ open : function(path, setMode) {
       this.fileInst                = new FilePath(path);
       this.fileChannel             = new FileChannel();
       this.inputStream             = new InputStream();    
+      retval=OK;
     }
         
-    catch (e){ dump("io.js:open:ERROR::"+e+"\n\n"); }
+    catch (e)
+    { 
+      dump("io.js:open:ERROR::"+e+"\n\n"); 
+      retval=null;
+    }
     break;
 
     default:
     dump("io.js:open:WARNING: \""+setMode+"\" is an Invalid file mode\n\n");
+    return null;
 
     }
 
-  return true;
+  return retval;
 
 },
 
@@ -231,7 +261,7 @@ write : function(buffer, perms) {
     if(!this.fileInst)
     {
       dump("io.js:write:ERROR: Please open a file handle first\n");
-      return false;
+      return null;
     }
     
     if(!buffer)
@@ -250,7 +280,7 @@ write : function(buffer, perms) {
 
     if(!checkPerms){
       dump("io.js:write:ERROR: Sorry invalid permissions set\n\n");
-      return false;
+      return null;
     }               
 
     }
@@ -270,9 +300,13 @@ write : function(buffer, perms) {
       outStream.flush();
     }
 
-    catch (e){ dump("io.js:write:ERROR: "+e+"\n\n"); }
+    catch (e)
+    { 
+      dump("io.js:write:ERROR: "+e+"\n\n"); 
+      return null;
+    }
 
-  return true;
+  return OK;
 
 },
 
@@ -282,6 +316,8 @@ write : function(buffer, perms) {
 /********************* READ *****************************/
 
 read : function() {
+
+    var retval;
 
     try 
     {
@@ -297,13 +333,13 @@ read : function() {
     if(!fileExists) 
     {
         dump("io.js:read:ERROR: \""+this.fileInst.path+"\" does not exist\n");
-        return false;
+        return null;
     }
 
     var offset              = this.fileInst.fileSize;
     var perm                = this.fileInst.permissions;     
 
-    this.fileChannel.init(this.fileInst, 1, perm);
+    this.fileChannel.init(this.fileInst, READ, perm);
 
     var inStream = this.fileChannel.openInputStream();
 
@@ -313,13 +349,17 @@ read : function() {
 
     inStream.close();
         
-    return fileContents;
+    retval=fileContents;
 
     }
 
-    catch (e){ dump("io.js:read:ERROR: "+e+"\n\n"); }
+    catch (e)
+    { 
+      dump("io.js:read:ERROR: "+e+"\n\n"); 
+      retval=null;
+    }
 
-    return false;
+    return retval;
 
 },
 
@@ -335,17 +375,17 @@ mkdir : function(path, permissions) {
   if(!path)
   {
     dump("io.js:rm:ERROR: Missing path argument\n\n");
-    return false;
+    return null;
   }
 
-  var fileExists  = this.exists(path);
+  var fileExists    = this.exists(path);
 
   if(permissions){
     var checkPerms  = this.validatePermissions(permissions);
 
   if(!checkPerms){
     dump("io.js:mkdir:ERROR: Sorry invalid permissions set\n\n");
-    return false;
+    return null;
   }               
 
   var baseTen       = permissions.toString(10);
@@ -354,6 +394,7 @@ mkdir : function(path, permissions) {
     permissions = 0+baseTen;
   }
 
+  var retval;
   try
   { 
     this.fileInst  = new FilePath(path);
@@ -363,18 +404,23 @@ mkdir : function(path, permissions) {
       if(!permissions)
         permissions     = 0755;
 
-    this.fileInst.create( 1, parseInt(permissions) ); 
+    this.fileInst.create( DIRECTORY, parseInt(permissions) ); 
+    retval=OK;
 
     }
 
     else 
-      return false; 
+      retval=false; 
   }
 
-  catch (e){ dump("io.js:mkdir:ERROR: "+e+"\n\n"); }
+  catch (e)
+  { 
+    dump("io.js:mkdir:ERROR: "+e+"\n\n"); 
+    return null;
+  }
 
   this.close();
-  return true;
+  return retval;
 
 },
 
@@ -390,15 +436,16 @@ rm : function (path) {
     if(!path)
     {
       dump("io.js:rm:ERROR: Missing path argument\n\n");
-      return false;
+      return null;
     }
 
     if(!this.exists(path))
     {
       dump("io.js:rm:ERROR: Sorry, file "+path+" doesn't exist\n\n");
-      return false;
+      return null;
     }
 
+    var retval;
     try
     { 
 
@@ -407,18 +454,22 @@ rm : function (path) {
       if(this.fileInst.isDirectory())
       {
         dump("io.js:rm:ERROR:Sorry file is a directory. Try rmdir() instead\n");
-        return false;
+        return null;
       }
 
     this.fileInst['delete'](false);
     this.close();
-    return true;
+    retval=OK;
 
     }
 
-    catch (e){ dump("io.js:rm:ERROR: ERROR:"+e+"\n\n"); }
+    catch (e)
+    { 
+      dump("io.js:rm:ERROR: ERROR:"+e+"\n\n"); 
+      retval=null;
+    }
 
-  return null;
+  return retval;
 
 },
 
@@ -434,26 +485,31 @@ rmdir : function (path) {
   if(!path)
   {
     dump("io.js:rmdir:ERROR: Missing path argument\n\n");
-    return false;
+    return null;
   }
 
   if(!this.exists(path))
   {
     dump("io.js:rmdir:ERROR: Sorry, file "+path+" doesn't exist\n\n");
-    return false;
+    return null;
   }
 
+  var retval;
   try
   { 
     this.fileInst            = new FilePath(path);
     this.fileInst['delete'](true);
     this.close();
-    return true;
+    retval=OK;
   }
 
-  catch (e){ dump("io.js:rmdir: ERROR: "+e+"\n\n"); }
+  catch (e)
+  { 
+    dump("io.js:rmdir: ERROR: "+e+"\n\n"); 
+    retval=null;
+  }
 
-  return null;
+  return retval;
 
 },
 
@@ -466,15 +522,16 @@ copy  : function (source, dest) {
   if(!source || !dest)
   {
     dump("io.js:copy:ERROR: Missing path argument\n\n");
-    return false;
+    return null;
   }
 
   if(!this.exists(source))
   {
     dump("io.js:copy:ERROR: Sorry, source file "+source+" doesn't exist\n\n");
-    return false;
+    return null;
   }
 
+  var retval;
   try
   { 
     var fileInst      = new FilePath(source);
@@ -485,25 +542,24 @@ copy  : function (source, dest) {
     if(fileInst.isDirectory())
     {
       dump("io.js:copy:NOT IMPLEMENTED: Sorry, you can't copy a directory yet\n\n");
-      return false;
+      return null;
     }
 
     if(!this.exists(dest) || !dir.isDirectory())
     {
       copyName          = dir.leafName;
-      dump(dir.path.replace(copyName,'')+'\n\n');
       dir               = new FilePath(dir.path.replace(copyName,''));
 
       if(!this.exists(dir.path))
       {
         dump("io.js:copy:ERROR: Sorry, dest directory "+dir.path+" doesn't exist\n\n");
-        return false;
+        return null;
       }
 
       if(!dir.isDirectory())
       {
         dump("io.js:copy:ERROR: Sorry, destination dir "+dir.path+" is not a valid dir path\n\n");
-        return false;
+        return null;
       }
 
     }
@@ -511,19 +567,23 @@ copy  : function (source, dest) {
     if(this.exists(this.append(dir.path, copyName)))
     {
       dump("io.js:copy:ERROR: Sorry destination file "+this.append(dir.path, copyName)+" already exists\n\n");
-      return false;
+      return null;
     }
 
     fileInst.copyTo(dir, copyName);
     dump('io.js:copy successful!\n\n');
     this.close();
-    return true;
+    retval=OK;
 
   }
 
-  catch (e){ dump("io.js:copy:ERROR: "+e+"\n\n"); }
+  catch (e)
+  { 
+    dump("io.js:copy:ERROR: "+e+"\n\n"); 
+    retval=null;
+  }
 
-  return null;  
+  return retval;
 
 },
 
@@ -537,24 +597,29 @@ leaf  : function (path) {
   if(!path)
   {
     dump("io.js:leaf:ERROR: Missing path argument\n\n");
-    return false;
+    return null;
   }
 
   if(!this.exists(path))
   {
     dump("io.js:leaf:ERROR: File doesn't exist\n\n");
-    return false;
+    return null;
   }
 
+  var retval;
   try
   {
     var fileInst = new FilePath(path);
-    return fileInst.leafName;
+    retval=fileInst.leafName;
   }
 
-  catch(e) { dump("io.js:leaf:ERROR: "+e+"\n\n"); }
+  catch(e)
+  { 
+    dump("io.js:leaf:ERROR: "+e+"\n\n"); 
+  retval=null;
+  }
   
-  return null;
+  return retval;
 
 },
 
@@ -568,15 +633,16 @@ readDir : function (dirPath) {
   if(!dirPath)
   {
     dump("io.js:readDir:ERROR: Missing path argument\n\n");
-    return false
+    return null;
   }
 
   if(!this.exists(dirPath))
   {
     dump("io.js:readDir:ERROR: Sorry, directory "+dirPath+" doesn't exist\n\n");
-    return false;
+    return null;
   }
 
+  var retval;
   try
   {
 
@@ -585,7 +651,7 @@ readDir : function (dirPath) {
     if(!file.isDirectory())
     {
       dump("io.js:readDir:ERROR: Sorry, "+dirPath+" is not a directory\n\n");
-      return false;
+      return null;
     }
 
     var files     = file.directoryEntries;
@@ -594,13 +660,17 @@ readDir : function (dirPath) {
     while(files.hasMoreElements())
     listings.push(files.getNext().QueryInterface(Components.interfaces.nsILocalFile).path);
 
-    return listings;
+    retval=listings;
 
   }
 
-  catch(e) { dump("io.js:readDir:ERROR: "+e+"\n\n"); }
+  catch(e)
+  { 
+    dump("io.js:readDir:ERROR: "+e+"\n\n"); 
+    retval=null;
+  }
   
-  return null;
+  return retval;
 
 },
 
@@ -614,26 +684,31 @@ append : function (dirPath, fileName) {
     if(!dirPath || !fileName)
     {
       dump("io.js:append:ERROR: Missing path argument\n\n");
-      return false;
+      return null;
     }
 
     if(!this.exists(dirPath))
     {
       dump("io.js:append:ERROR: File doesn't exist\n\n");
-      return false;
+      return null;
     }
 
+    var retval;
     try
     { 
       this.fileInst           = new FilePath(dirPath);
       var fileAppended        = this.fileInst.append(fileName);
       fileAppended            = this.fileInst.path;
-      return fileAppended;
+      retval=fileAppended;
     }
 
-    catch(e) { dump("io.js:append:ERROR: "+e+"\n\n"); }
+    catch(e)
+    { 
+      dump("io.js:append:ERROR: "+e+"\n\n"); 
+      retval=null;
+    }
 
-    return null;
+    return retval;
 },
 
 /********************* APPEND ***************************/
@@ -660,25 +735,29 @@ permissions : function (path) {
     if(!path)
     {
       dump("io.js:permissions:ERROR: Missing path argument\n\n");
-      return false;
+      return null;
     }
     
     if(!this.exists(path))
     {
       dump("io.js:permissions:ERROR: File doesn't exist\n\n");
-      return false;
+      return null;
     }
 
+    var retval;
     try
     { 
       var fileInst  = new FilePath(path); 
-      return fileInst.permissions.toString(8);
+      retval=fileInst.permissions.toString(8);
     }
 
     catch(e)
-      { dump("io.js:permissions:ERROR: "+e+"\n"); return false; }
+    { 
+      dump("io.js:permissions:ERROR: "+e+"\n"); 
+    retval=null;
+    }
 
-    return null;
+    return retval;
 
 },
 
@@ -692,30 +771,142 @@ dateModified  : function (path) {
     if(!path)
     {
       dump("io.js:dateModified:ERROR: Missing path argument\n\n");
-      return false;
+      return null;
     }
     
     if(!this.exists(path))
     {
       dump("io.js:dateModified:ERROR: File doesn't exist\n\n");
-      return false;
+      return null;
     }
 
+    var retval;
     try
     { 
       var fileInst  = new FilePath(path); 
       var date = new Date(fileInst.lastModificationDate).toLocaleString();
-      return date;
+      retval=date;
     }
 
     catch(e)
-      { dump("io.js:dateModified:ERROR: "+e+"\n"); return false; }
+    { 
+      dump("io.js:dateModified:ERROR: "+e+"\n"); 
+      retval=null;
+    }
 
-    return null;
+    return retval;
 
 },
 
 /********************* MODIFIED *************************/
+
+
+/********************* SIZE *****************************/
+
+size  : function (path) {
+
+    if(!path)
+    {
+      dump("io.js:size:ERROR: Missing path argument\n\n");
+      return null;
+    }
+    
+    if(!this.exists(path))
+    {
+      dump("io.js:size:ERROR: File doesn't exist\n\n");
+      return null;
+    }
+
+    var retval;
+    try
+    { 
+      var fileInst    = new FilePath(path); 
+      retval          = fileInst.fileSize;
+    }
+
+    catch(e)
+    { 
+      dump("io.js:size:ERROR: "+e+"\n"); 
+      retval=0;
+    }
+
+    return retval;
+
+},
+
+/********************* SIZE *****************************/
+
+
+/********************* EXTENSION ************************/
+
+extension  : function (path) {
+
+    if(!path)
+    {
+      dump("io.js:extension:ERROR: Missing path argument\n\n");
+      return null;
+    }
+    
+    if(!this.exists(path))
+    {
+      dump("io.js:extension:ERROR: File doesn't exist\n\n");
+      return null;
+    }
+
+    var retval;
+    try
+    { 
+      var fileInst  = new FilePath(path); 
+      var leafName  = fileInst.leafName; 
+      var dotIndex  = leafName.lastIndexOf('.'); 
+      retval=(dotIndex >= 0) ? leafName.substring(dotIndex+1) : ""; 
+    }
+
+    catch(e)
+    { 
+      dump("io.js:extension:ERROR: "+e+"\n");
+      retval=null;
+    }
+
+    return retval;
+
+},
+
+/********************* EXTENSION ************************/
+
+
+/********************* HELP *****************************/
+
+help  : function() {
+
+var help =
+
+"\n\nFunction List:\n"                        +
+"\n"                                          +
+"*       1. open(path, mode);\n"              +
+"*       2. exists(path);\n"                  +
+"*       3. read();\n"                        +
+"*       4. write(contents, permissions);\n"  +
+"*       5. append(dirPath, fileName);\n"     +
+"*       6. mkdir(path, permissions);\n"      +
+"*       7. rmdir(path);\n"                   +
+"*       8. rm(path);\n"                      +
+"*       9. copy(source, dest);\n"            +
+"*       10.leaf(path);\n"                    +
+"*       11.readDir(dirPath);\n"              +
+"*       12.permissions(path);\n"             +
+"*       13.dateModified(path);\n"            +
+"*       14.size(path);\n"                    +
+"*       15.extension(path);\n"               +
+"*       16.help();\n";
+
+dump(help+'\n');
+
+return "";
+
+},
+
+/********************* HELP *****************************/
 
 
 /********************* CLOSE ****************************/
@@ -729,7 +920,7 @@ close : function() {
     if(this.mode)           this.mode=null;
     /***************** Destroy Instances *********************/
   
-  return true;
+  return OK;
 
 }
 
@@ -745,6 +936,4 @@ close : function() {
 //file          = new File(); // commenting out for now, the user can initialize the object . . . 
 
 /************** Create an instance of file object *************/
-
-
 
