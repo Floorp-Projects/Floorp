@@ -1135,6 +1135,32 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
   Accessible::GetNSAccessibleFor(varChild, aAcc);
 }
 
+STDMETHODIMP RootAccessible::get_accChild( 
+      /* [in] */ VARIANT varChild,
+      /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild)
+{
+  *ppdispChild = NULL;
+
+  if (varChild.vt == VT_I4 && varChild.lVal < 0) {
+    // AccessibleObjectFromEvent() being called
+    // that's why the lVal < 0
+    nsCOMPtr<nsIAccessible> xpAccessible;
+    GetNSAccessibleFor(varChild, xpAccessible);
+    if (xpAccessible) {
+      IAccessible* msaaAccessible = NewAccessible(xpAccessible, nsnull, mWnd);
+      if (msaaAccessible) {
+        msaaAccessible->AddRef();
+        *ppdispChild = msaaAccessible;
+        return S_OK;
+      }
+    }
+    return E_FAIL;
+  }
+
+  // Otherwise, the normal get_accChild() will do
+  return Accessible::get_accChild(varChild, ppdispChild);
+}
+  
 NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible, AccessibleEventData* aData)
 {
 #ifdef SWALLOW_DOC_FOCUS_EVENTS
