@@ -262,6 +262,7 @@ public:
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
   NS_IMETHOD InternalContentChanged();
+  NS_IMETHOD DoesAttributeExist(nsIAtom *aAtt);
 
   void RemoveNewlines(nsString &aString);
 

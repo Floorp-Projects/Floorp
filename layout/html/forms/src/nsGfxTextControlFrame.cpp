@@ -298,9 +298,9 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
 
 NS_IMETHODIMP
 nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
-                                          nsIContent*     aChild,
-                                          nsIAtom*        aAttribute,
-                                          PRInt32         aHint)
+                                        nsIContent*     aChild,
+                                        nsIAtom*        aAttribute,
+                                        PRInt32         aHint)
 {
   if (PR_FALSE==IsInitialized()) {return NS_ERROR_NOT_INITIALIZED;}
   nsresult result = NS_OK;
@@ -318,16 +318,61 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   {
     PRInt32 maxLength;
     nsresult rv = GetMaxLength(&maxLength);
-    if (NS_CONTENT_ATTR_NOT_THERE != rv) {
+    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+    {  // set the maxLength attribute
       mEditor->SetMaxTextLength(maxLength);
+      // if maxLength>docLength, we need to truncate the doc content
+    }
+    else { // unset the maxLength attribute
+      mEditor->SetMaxTextLength(-1);
     }
   } 
   else if (nsHTMLAtoms::readonly == aAttribute) 
   {
-    PRBool readOnly = nsFormFrame::GetReadonly(this);
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));     
+    nsresult rv = DoesAttributeExist(nsHTMLAtoms::readonly);
     PRUint32 flags;
     mEditor->GetFlags(&flags);
-    flags |= readOnly;
+    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+    { // set readonly
+      flags |= TEXT_EDITOR_FLAG_READONLY;
+      presShell->SetCaretEnabled(PR_FALSE);
+    }
+    else 
+    { // unset readonly
+      flags &= ~(TEXT_EDITOR_FLAG_READONLY);
+      presShell->SetCaretEnabled(PR_TRUE);
+    }    
+    mEditor->SetFlags(flags);
+  }
+  else if (nsHTMLAtoms::disabled == aAttribute) 
+  {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));     
+    nsresult rv = DoesAttributeExist(nsHTMLAtoms::disabled);
+    PRUint32 flags;
+    mEditor->GetFlags(&flags);
+    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+    { // set readonly
+      flags |= TEXT_EDITOR_FLAG_DISABLED;
+      presShell->SetCaretEnabled(PR_FALSE);
+      nsCOMPtr<nsIDocument> doc; 
+      presShell->GetDocument(getter_AddRefs(doc));
+      NS_ASSERTION(doc, "null document");
+      if (!doc) { return NS_ERROR_NULL_POINTER; }
+      doc->SetDisplaySelection(PR_FALSE);
+    }
+    else 
+    { // unset readonly
+      flags &= ~(TEXT_EDITOR_FLAG_DISABLED);
+      presShell->SetCaretEnabled(PR_TRUE);
+      nsCOMPtr<nsIDocument> doc; 
+      presShell->GetDocument(getter_AddRefs(doc));
+      NS_ASSERTION(doc, "null document");
+      if (!doc) { return NS_ERROR_NULL_POINTER; }
+      doc->SetDisplaySelection(PR_TRUE);
+    }    
     mEditor->SetFlags(flags);
   }
   else if (nsHTMLAtoms::size == aAttribute) {
@@ -343,9 +388,25 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   if (mDummyFrame)
   {
     nsresult dummyResult = mDummyFrame->AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    NS_ASSERTION((NS_SUCCEEDED(dummyResult)), "dummy frame attribute changed failed.");
   }
 // END DUMMY
 
+  return result;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::DoesAttributeExist(nsIAtom *aAtt)
+{
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) 
+  {
+    nsHTMLValue value;
+    result = content->GetHTMLAttribute(aAtt, value);
+    NS_RELEASE(content);
+  }
   return result;
 }
 
@@ -401,8 +462,11 @@ nsGfxTextControlFrame::Reset()
 {
   nsAutoString value;
   nsresult valStatus = GetText(&value, PR_TRUE);
-  // XXX: error checking
-  SetTextControlFrameState(value);
+  NS_ASSERTION((NS_SUCCEEDED(valStatus)), "GetText failed");
+  if (NS_SUCCEEDED(valStatus))
+  {
+    SetTextControlFrameState(value);
+  }
 }  
 
 NS_METHOD 
@@ -744,6 +808,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     nsHTMLReflowState reflowState = aReflowState;
     nsReflowStatus status = aStatus;
     nsresult dummyResult = mDummyFrame->Reflow(aPresContext, metrics, reflowState, status);
+    NS_ASSERTION((NS_SUCCEEDED(dummyResult)), "dummy frame reflow failed.");
     if (aMetrics.width != metrics.width) 
     { 
       printf("CT: different widths\n"); 
@@ -1059,11 +1124,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     NS_RELEASE(bodySC);
 
     // now that the style context is initialized, initialize the content
-
     nsAutoString value;
-
-    nsITextAreaWidget* textArea = nsnull;
-    nsITextWidget* text = nsnull;
     if (PR_TRUE == IsSingleLineTextControl()) 
     {
 #ifdef SingleSignon
@@ -1130,7 +1191,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     mEditor->EnableUndo(PR_FALSE);
 
     PRInt32 maxLength;
-    nsresult result = GetMaxLength(&maxLength);
+    result = GetMaxLength(&maxLength);
     if (NS_CONTENT_ATTR_NOT_THERE != result) {
       mEditor->SetMaxTextLength(maxLength);
     }
@@ -1553,6 +1614,7 @@ EnderTempObserver::QueryInterface(const nsIID& aIID,
   }
   return NS_NOINTERFACE;
 }
+
 
 #ifndef NECKO
 NS_IMETHODIMP
