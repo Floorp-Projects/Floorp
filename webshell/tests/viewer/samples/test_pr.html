@@ -1,13 +1,84 @@
 <html>
 <head>
+<title>Example 8</title>
+<style>
+INPUT#input1 {
+  font-size: large;
+}
+INPUT#input2 {
+  font-size: medium;
+}
+TEXTAREA#textarea1 {
+  width: 300px;
+	height: 120px;
+  font-size: large;
+}
+SELECT#select1 {
+	font-size: large;
+}
+BUTTON {
+  background-image: url(rock_gra.gif);
+}
+</style>
 </head>
 <body>
 
-<P style="border-style:inset;">this is some text</P>
+<H1>Example 8: Forms</H1>
+
 <FORM METHOD="GET" ACTION="http://search.yahoo.com/bin/search" NAME="searchform">
-<input type=submit style="border-style:inset;" value="button">
-<label><input type=checkbox style="width:11px; height:11px; border-color:gray; border-width:2; border-style:inset; background-color:yellow; color:green;" name=check1 checked>checkbox 1</label>
-<label><input type=radio name=radio1 checked>radiobox 1</label>
-</form>
+<label><input type=checkbox style="width:11px; height:11px; border-color:gray; border-width:2; border-style:inset; color:green;" name=check1 checked>checkbox</label>
+<label><input type=radio name=radio1 checked>radiobox</label>
+</FORM>
+<BR>
+
+<BR>
+<FORM METHOD="GET" ACTION="http://search.yahoo.com/bin/search" NAME="searchform">
+Text Input:
+<INPUT type=text value=travel NAME="p" SIZE=15 MAXLENGTH=80 style="border: 2px inset #C0C0C0;margin-right:10px; background-color: rgb(255, 255, 255);">
+<BR>
+&nbsp
+<BR>
+TextArea:
+<textarea name=a rows=4 cols=10 value="Line One" style="border: 2px inset #C0C0C0;">01234567890123456789</textarea>
+<BR>
+&nbsp
+<BR>
+Password:<INPUT TYPE="PASSWORD" value="1234" style="border: 2px inset #C0C0C0;"> 
+<BR>
+&nbsp
+<BR>
+List:
+<select name=select2 id=select1 size=4 multiple style="border: 1px inset #C0C0C0;">
+  <option selected>option 1</option>
+  <option>option 2</option>
+  <option selected>option 3</option>
+  <option>option 4</option>
+  <option>option 5</option>
+  <option>option 6</option>
+</select>
+<BR>
+&nbsp
+<BR>
+No Scrollbar:
+<select name=select1 size=2 style="border: 1px inset #C0C0C0;">
+  <option selected>option 1</option>
+  <option>option 2</option>
+</select>
+
+<BR>
+&nbsp
+<BR>
+ComboBox:
+<select name=select3 size=1 style="border: 1px inset #C0C0C0;">
+  <option selected>option 1</option>
+  <option>option 2</option>
+</select>
+<BR>
+&nbsp
+<BR>
+<INPUT type=submit value="Go" style="border: 4px outset #C0C0C0;color:black;background-color: rgb(192, 192, 192);">
+
+</FORM>
+
 </body>
 </html>
