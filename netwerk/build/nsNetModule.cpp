@@ -42,6 +42,7 @@
 #include "nsAsyncStreamListener.h"
 #include "nsSyncStreamListener.h"
 #include "nsFileStreams.h"
+#include "nsBufferedStreams.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
@@ -123,6 +124,14 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_NOAUTHORITYURLPARSER_CID,
       "component://netscape/network/no-authority-urlparser",
       nsNoAuthURLParser::Create },
+    { NS_BUFFEREDINPUTSTREAM_CLASSNAME, 
+      NS_BUFFEREDINPUTSTREAM_CID,
+      NS_BUFFEREDINPUTSTREAM_PROGID,
+      nsBufferedInputStream::Create },
+    { NS_BUFFEREDOUTPUTSTREAM_CLASSNAME, 
+      NS_BUFFEREDOUTPUTSTREAM_CID,
+      NS_BUFFEREDOUTPUTSTREAM_PROGID,
+      nsBufferedOutputStream::Create }
 };
 
 NS_IMPL_NSGETMODULE("net", gNetModuleInfo)

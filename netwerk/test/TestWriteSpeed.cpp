@@ -26,11 +26,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#define MIN_SIZE        4096
-#define MAX_SIZE        (512 * 1024)
-#define SIZE_INCREMENT  4096
-#define ITERATIONS      10
-
 void 
 NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
                  double *meanResult, double *stdDevResult)
@@ -51,10 +46,11 @@ NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 }
 
 int
-Test(const char* filename)
+Test(const char* filename, PRInt32 minSize, PRInt32 maxSize, 
+     PRInt32 sizeIncrement, PRInt32 iterations)
 {
     fprintf(stdout, "      size  write:    mean     stddev      iters  total:    mean     stddev      iters\n");
-    for (PRInt32 size = MIN_SIZE; size <= MAX_SIZE; size += SIZE_INCREMENT) {
+    for (PRInt32 size = minSize; size <= maxSize; size += sizeIncrement) {
         // create a buffer of stuff to write
         char* buf = (char*)PR_Malloc(size);
         if (buf == NULL)
@@ -69,10 +65,12 @@ Test(const char* filename)
 
         double writeCount = 0, writeRate = 0, writeRateSquared = 0;
         double totalCount = 0, totalRate = 0, totalRateSquared = 0;
-        for (i = 0; i < ITERATIONS; i++) {
+        for (i = 0; i < iterations; i++) {
             PRIntervalTime start = PR_IntervalNow();
 
-            PRFileDesc* fd = PR_Open(filename, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0664);
+            char name[1024];
+            sprintf(name, "%s_%d", filename, i);
+            PRFileDesc* fd = PR_Open(name, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0664);
             if (fd == NULL)
                 return -1;
 
@@ -119,10 +117,17 @@ Test(const char* filename)
     return 0;
 }
 
-
-
-void
-main()
+int
+main(int argc, char* argv[])
 {
-    Test("y:\\foo");
+    if (argc != 5) {
+        printf("usage: %s <min buf size (K)> <max buf size (K)> <size increment (K)> <iterations>\n", argv[0]);
+        return -1;
+    }
+    Test("y:\\foo",
+         atoi(argv[1]) * 1024,
+         atoi(argv[2]) * 1024,
+         atoi(argv[3]) * 1024,
+         atoi(argv[4]));
+    return 0;
 }

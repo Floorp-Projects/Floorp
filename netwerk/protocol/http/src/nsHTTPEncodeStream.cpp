@@ -45,7 +45,7 @@ nsHTTPEncodeStream::~nsHTTPEncodeStream()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsHTTPEncodeStream, nsIInputStream, nsIRandomAccessStore);
+NS_IMPL_ISUPPORTS2(nsHTTPEncodeStream, nsIInputStream, nsISeekableStream);
 
 NS_METHOD
 nsHTTPEncodeStream::Create(nsIInputStream *rawStream, PRUint32 flags,
@@ -158,13 +158,13 @@ nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIRandomAccessStore methods:
+// nsISeekableStream methods:
 
 NS_IMETHODIMP
 nsHTTPEncodeStream::Seek(PRInt32 whence, PRInt32 offset)
 {
     nsresult rv;
-    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
+    nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mInput, &rv);
     if (NS_FAILED(rv)) return rv;
 
     mPushBackBuffer.SetLength(0);
@@ -172,35 +172,13 @@ nsHTTPEncodeStream::Seek(PRInt32 whence, PRInt32 offset)
 }
 
 NS_IMETHODIMP
-nsHTTPEncodeStream::Tell(PRInt32* outWhere)
+nsHTTPEncodeStream::Tell(PRUint32* outWhere)
 {
     nsresult rv;
-    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
+    nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mInput, &rv);
     if (NS_FAILED(rv)) return rv;
 
     return ras->Tell(outWhere);
 }
-
-#if 0
-NS_IMETHODIMP
-nsHTTPEncodeStream::GetAtEOF(PRBool* outAtEOF)
-{
-    nsresult rv;
-    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return ras->GetAtEOF(outAtEOF);
-}
-
-NS_IMETHODIMP
-nsHTTPEncodeStream::SetAtEOF(PRBool inAtEOF)
-{
-    nsresult rv;
-    nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mInput, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    return ras->SetAtEOF(inAtEOF);
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////

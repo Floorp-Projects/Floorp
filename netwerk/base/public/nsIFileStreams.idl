@@ -37,7 +37,7 @@ interface nsIFileOutputStream : nsIOutputStream
 };
 
 [scriptable, uuid(e9de5df0-c7ec-11d3-8cda-0060b0fc14a3)]
-interface nsIRandomAccessStore : nsISupports
+interface nsISeekableStream : nsISupports
 {
     // correspond to PRSeekWhence values
     const long NS_SEEK_SET = 0;
@@ -45,12 +45,26 @@ interface nsIRandomAccessStore : nsISupports
     const long NS_SEEK_END = 2;
     
     void seek(in long whence, in long offset);
-    long tell();
+    unsigned long tell();
+};
+
+[scriptable, uuid(616f5b48-da09-11d3-8cda-0060b0fc14a3)]
+interface nsIBufferedInputStream : nsIInputStream
+{
+    void init(in nsIInputStream fillFromStream,
+              in unsigned long bufferSize);
+};
+
+[scriptable, uuid(6476378a-da09-11d3-8cda-0060b0fc14a3)]
+interface nsIBufferedOutputStream : nsIOutputStream
+{
+    void init(in nsIOutputStream sinkToStream,
+              in unsigned long bufferSize);
 };
 
 %{C++
 
-#include "prio.h"       // for read/write modes, etc.
+////////////////////////////////////////////////////////////////////////////////
 
 #define NS_FILEINPUTSTREAM_CLASSNAME "File Input Stream"
 #define NS_FILEINPUTSTREAM_PROGID "component://netscape/network/file-input-stream"
@@ -74,6 +88,31 @@ interface nsIRandomAccessStore : nsISupports
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+#define NS_BUFFEREDINPUTSTREAM_CLASSNAME "Buffered Input Stream"
+#define NS_BUFFEREDINPUTSTREAM_PROGID "component://netscape/network/buffered-input-stream"
+
+#define NS_BUFFEREDINPUTSTREAM_CID                   \
+{ /* 9226888e-da08-11d3-8cda-0060b0fc14a3 */         \
+    0x9226888e,                                      \
+    0xda08,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+#define NS_BUFFEREDOUTPUTSTREAM_CLASSNAME "Buffered Output Stream"
+#define NS_BUFFEREDOUTPUTSTREAM_PROGID "component://netscape/network/buffered-output-stream"
+
+#define NS_BUFFEREDOUTPUTSTREAM_CID                  \
+{ /* 9868b4ce-da08-11d3-8cda-0060b0fc14a3 */         \
+    0x9868b4ce,                                      \
+    0xda08,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // move to nsNetUtil.h later...
 
 #include "nsILoadGroup.h"
@@ -84,6 +123,7 @@ interface nsIRandomAccessStore : nsISupports
 #include "nsILocalFile.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "prio.h"       // for read/write modes, etc.
 
 inline nsresult
 NS_NewFileChannel(nsIFile* file,
@@ -152,6 +192,48 @@ NS_NewFileOutputStream(nsIFile* file, PRInt32 flags, PRInt32 mode,
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = out->Init(localFile, flags, mode);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = out;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline nsresult
+NS_NewBufferedInputStream(nsIInputStream* str, PRUint32 bufferSize, 
+                          nsIInputStream* *result)
+{
+    nsresult rv;
+    nsCOMPtr<nsIBufferedInputStream> in;
+    static NS_DEFINE_CID(kBufferedInputStreamCID, NS_BUFFEREDINPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kBufferedInputStreamCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIBufferedInputStream),
+                                            getter_AddRefs(in));
+    if (NS_FAILED(rv)) return rv;
+    rv = in->Init(str, bufferSize);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = in;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+inline nsresult
+NS_NewBufferedOutputStream(nsIOutputStream* str, PRUint32 bufferSize,
+                           nsIOutputStream* *result)
+{
+    nsresult rv;
+    nsCOMPtr<nsIBufferedOutputStream> out;
+    static NS_DEFINE_CID(kBufferedOutputStreamCID, NS_BUFFEREDOUTPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kBufferedOutputStreamCID,
+                                            nsnull, 
+                                            NS_GET_IID(nsIBufferedOutputStream),
+                                            getter_AddRefs(out));
+    if (NS_FAILED(rv)) return rv;
+    rv = out->Init(str, bufferSize);
     if (NS_FAILED(rv)) return rv;
 
     *result = out;

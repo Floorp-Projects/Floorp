@@ -40,7 +40,7 @@ nsFileStream::~nsFileStream()
 
 NS_IMPL_ISUPPORTS2(nsFileStream, 
                    nsIBaseStream,
-                   nsIRandomAccessStore);
+                   nsISeekableStream);
 
 NS_IMETHODIMP
 nsFileStream::Close()
@@ -66,7 +66,7 @@ nsFileStream::Seek(PRInt32 whence, PRInt32 offset)
 }
 
 NS_IMETHODIMP
-nsFileStream::Tell(PRInt32 *result)
+nsFileStream::Tell(PRUint32 *result)
 {
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
@@ -168,6 +168,8 @@ NS_IMETHODIMP
 nsFileOutputStream::Init(nsILocalFile* file, PRInt32 flags, PRInt32 mode)
 {
     NS_ASSERTION(mFD == nsnull, "already inited");
+    if (mFD != nsnull)
+        return NS_ERROR_FAILURE;
     return file->OpenNSPRFileDesc(flags, mode, &mFD);
 }
 

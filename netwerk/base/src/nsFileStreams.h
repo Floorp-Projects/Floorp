@@ -32,12 +32,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsFileStream : public nsIBaseStream, 
-                     public nsIRandomAccessStore
+                     public nsISeekableStream
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIBASESTREAM
-    NS_DECL_NSIRANDOMACCESSSTORE
+    NS_DECL_NSISEEKABLESTREAM
 
     nsFileStream();
     virtual ~nsFileStream();
