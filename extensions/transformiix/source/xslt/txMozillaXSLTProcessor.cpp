@@ -281,12 +281,12 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     // Create a new ProcessorState. Must be done after creating the documents
     // so that C++ will ensure that it is destroyed before the documents.
-    ProcessorState ps(&sourceDocument, &xslDocument);
+    ProcessorState ps(sourceNode, &xslDocument);
 
     // XXX Need to add error observers
 
     // Set current txIEvalContext
-    txSingleNodeContext evalContext(&sourceDocument, &ps);
+    txSingleNodeContext evalContext(sourceNode, &ps);
     ps.setEvalContext(&evalContext);
 
     // Index templates and process top level xslt elements
@@ -348,12 +348,12 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     // Create a new ProcessorState. Must be done after creating the documents
     // so that C++ will ensure that it is destroyed before the documents.
-    ProcessorState ps(&sourceDocument, &xslDocument);
+    ProcessorState ps(sourceNode, &xslDocument);
 
     // XXX Need to add error observers
 
     // Set current txIEvalContext
-    txSingleNodeContext evalContext(&sourceDocument, &ps);
+    txSingleNodeContext evalContext(sourceNode, &ps);
     ps.setEvalContext(&evalContext);
 
     // Index templates and process top level xslt elements
@@ -444,12 +444,12 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
 
     // Create a new ProcessorState. Must be done after creating the documents
     // so that C++ will ensure that it is destroyed before the documents.
-    ProcessorState ps(&sourceDocument, &xslDocument);
+    ProcessorState ps(sourceNode, &xslDocument);
 
     // XXX Need to add error observers
 
     // Set current txIEvalContext
-    txSingleNodeContext evalContext(&sourceDocument, &ps);
+    txSingleNodeContext evalContext(sourceNode, &ps);
     ps.setEvalContext(&evalContext);
 
     // Index templates and process top level xslt elements
@@ -512,12 +512,12 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
 
     // Create a new ProcessorState. Must be done after creating the documents
     // so that C++ will ensure that it is destroyed before the documents.
-    ProcessorState ps(&sourceDocument, &xslDocument);
+    ProcessorState ps(sourceNode, &xslDocument);
 
     // XXX Need to add error observers
 
     // Set current txIEvalContext
-    txSingleNodeContext evalContext(&sourceDocument, &ps);
+    txSingleNodeContext evalContext(sourceNode, &ps);
     ps.setEvalContext(&evalContext);
 
     // Index templates and process top level xslt elements
