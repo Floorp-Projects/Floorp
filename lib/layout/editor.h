@@ -3146,6 +3146,10 @@ private:
     // Trying to figure out new new insert point is too complicated
     //   when moving a table, so we set this and delete AFTER inserting
     XP_Bool m_bDeleteTableAfterPasting;
+    // Record an element to be "watched" here
+    //  After every element deleted, CleanupForDeletedElement()
+    //  is called to set this to 0 if element was the one deleted
+    CEditElement *m_pWatchForDeletionElement;
 
     CEditInternalAnchorElement* m_pStartSelectionAnchor;
     CEditInternalAnchorElement* m_pEndSelectionAnchor;
@@ -3961,9 +3965,11 @@ public:
     // Clear any existing cells selected if current edit element is not inside selection
     void ClearCellSelectionIfNotInside();
 
-    // If the supplied element is in our Table or Selection list,
-    //  clear the selection. Call when deleting an element
-    void ClearTableIfContainsElement(CEditElement *pElement);
+    // Do stuff necessary before deleting an element:
+    // 1. If the supplied element is in our Table or Selection list,
+    //    clear the selection.
+    // 2. Clear saved pointer (m_pWatchForDeletionElement) if it = pElement
+    void CleanupForDeletedElement(CEditElement *pElement);
     
     XP_Bool IsTableSelected() {return m_pSelectedEdTable != NULL; }
     XP_Bool IsTableOrCellSelected() { return m_pSelectedEdTable ? TRUE : (m_SelectedEdCells.Size() > 0 ? TRUE : FALSE); }

@@ -1603,7 +1603,8 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_pNonTextSelectedTable(0),
         m_bImportText(bImportText),
         m_bFillNewCellWithSpace(FALSE),
-        m_iReplaceCSID(0)
+        m_iReplaceCSID(0),
+        m_pWatchForDeletionElement(0)
 {
     INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_pContext);
     m_originalWinCSID = INTL_GetCSIWinCSID(c);
@@ -5490,6 +5491,8 @@ EDT_CharacterData* CEditBuffer::GetCharacterDataSelection(EDT_CharacterData *pDa
     // Get current selection if not supplied
     if( selection.IsEmpty() )
         GetSelection( selection );
+    if( selection.IsEmpty() )
+        return 0;
 
     CEditElement *pElement = selection.m_start.m_pElement;
 
@@ -16927,10 +16930,15 @@ void CEditBuffer::ClearCellSelectionIfNotInside()
     }
 }
 
-void CEditBuffer::ClearTableIfContainsElement(CEditElement *pElement)
+void CEditBuffer::CleanupForDeletedElement(CEditElement *pElement)
 {
     if( pElement )
     {
+        // Clear the saved pointer for an element we want
+        //  to monitor for deletion
+        if(pElement == m_pWatchForDeletionElement)
+            m_pWatchForDeletionElement = 0;
+        
         // Depend on member flag being set correctly
         if( pElement->IsSelected() )
         {
@@ -17490,10 +17498,12 @@ CEditBuffer::ReplaceLoop(char *pReplaceText, XP_Bool bReplaceAll,
                *original_start_ele_loc, *original_end_ele_loc;
     int32       start_pos, end_pos,
                 original_start_pos, original_end_pos,
-                tlx, tly;
+                tlx, tly; 
+    int32       iInsertPointOffset = 0;
     CL_Layer*   layer;/* this will be ignored */
-    CEditLeafElement* origEditElement;//used for replace all to move insertion point back to the proper location
-
+    CEditLeafElement* origEditElement = 0;//used for replace all to move insertion point back to the proper location
+    CEditLeafElement* origBeforeElement = 0;
+    XP_Bool bFirstFind = TRUE;
     BeginBatchChanges(kGroupOfChangesCommandID);
 
 
@@ -17507,7 +17517,19 @@ CEditBuffer::ReplaceLoop(char *pReplaceText, XP_Bool bReplaceAll,
 
     if ( bReplaceAll )
     {
-        origEditElement = m_pCurrent;
+        // Save element at current insert point (m_pCurrent = 0 if there's a selection)
+        CEditInsertPoint ip;
+        GetInsertPoint(ip);
+        origEditElement = ip.m_pElement; 
+        if( origEditElement )
+        {
+            // Also save the element before in case origEditElement is deleted
+            //  during replacing
+            origBeforeElement = origEditElement->PreviousLeaf();
+            // Set this element to be monitored for deletion
+            m_pWatchForDeletionElement = origEditElement;
+            iInsertPointOffset = ip.m_iPos;
+        }
 
         NavigateDocument( FALSE, FALSE );
         LO_GetSelectionEndpoints( m_pContext,
@@ -17524,7 +17546,7 @@ CEditBuffer::ReplaceLoop(char *pReplaceText, XP_Bool bReplaceAll,
         start_pos = original_start_pos;
         end_pos = original_end_pos;
     }
-
+    
     XP_Bool     done = FALSE, Wrapped = FALSE;
     //if we are replacing all, start at top of doc. remember original insertion point.
     while ( !done )
@@ -17533,11 +17555,10 @@ CEditBuffer::ReplaceLoop(char *pReplaceText, XP_Bool bReplaceAll,
                             &start_pos, &end_ele_loc, &end_pos, !bCaseless, !bBackward);
         if ( found )
         {
-			LO_SelectText( m_pContext, start_ele_loc, start_pos,
+            LO_SelectText( m_pContext, start_ele_loc, start_pos,
 				           end_ele_loc, end_pos, &tlx, &tly);
 
             ReplaceOnce( pReplaceText , !bReplaceAll, !bReplaceAll); //do not relayout if we are replacing all!
-            //ReplaceOnce( pReplaceText , TRUE, TRUE); 
             if ( bReplaceAll )
             {/* We need to reset our starting position to our previous ending position */
                 //do not care to refresh anything now!!
@@ -17569,20 +17590,37 @@ CEditBuffer::ReplaceLoop(char *pReplaceText, XP_Bool bReplaceAll,
     }
     if (bReplaceAll) //need to relayout now that we are done.
     {
-        //set insertion point back to its old location, valid, or not.
-        /*call Reflow( CEditElement* pStartElement,
-                            int iEditOffset,
-                            CEditElement *pEndElement,
-                            intn relayoutFlags ){*/
         m_bLayoutBackpointersDirty = TRUE;//trust me
-
-        SetInsertPoint(origEditElement, original_start_pos, FALSE);
         Reduce(this->m_pRoot->GetFirstMostChild());//we must finish what we have begun...
+
+        // Check if original element at insert point was deleted
+        if( m_pWatchForDeletionElement == 0 )
+        {
+            //  Get the new replaced element based on the 
+            //  saved "previous" leaf
+            // (Note: the replaced text may end up appended to origBeforeElement,
+            //  so this will position new insert point AFTER that text.
+            //  Nothing we can do about that - its close enough to where we started.)
+            if( origBeforeElement )
+                origEditElement = origBeforeElement->NextLeaf();
+            else
+                // This happens when first element in page was replaced,
+                //   so just repostion back to the document start
+                origEditElement = m_pRoot->GetFirstMostChild()->Leaf();
+
+            // Assume offset at start of element
+            iInsertPointOffset = 0;
+        } 
+        else
+            m_pWatchForDeletionElement = 0;
+
+        SetInsertPoint(origEditElement, iInsertPointOffset, FALSE);
+
+        // (Note: Reduce call was here - moved above in case it deletes anything)
         // relayout the stream
-	    //Relayout(this->m_pRoot->GetFirstMostChild(), 0);
-        // More stable???
 	    Relayout(m_pRoot->GetFirstMostChild(), 0, m_pRoot->GetLastMostChild());
     }
+    EndBatchChanges();
 }
 
 

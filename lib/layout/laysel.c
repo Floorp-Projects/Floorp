@@ -4483,6 +4483,10 @@ void lo_HitLine(MWContext *context, lo_DocState *state, int32 x, int32 y, Bool r
             /* Last line. We know that the last line only has one element. */
             end = begin;
         }
+        /* How can this be? */
+        if( begin == 0 )
+            continue;
+
         /* Except for cases where the entire line is a line feed, don't select the end line-feed. */
         if ( begin->type != LO_LINEFEED && end->type == LO_LINEFEED ) {
             end = end->lo_any.prev;

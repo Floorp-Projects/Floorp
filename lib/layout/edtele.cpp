@@ -1807,8 +1807,14 @@ XP_Bool CEditElement::DeleteElement(CEditElement* pTellIfKilled){
     CEditElement *pKill = this;
     CEditElement *pParent;
     XP_Bool bKilled = FALSE;
-    // Delete the table/cell sellection if element is in the list
-    GetEditBuffer()->ClearTableIfContainsElement(pKill);
+    CEditBuffer *pBuffer = GetEditBuffer();
+    if( pBuffer )
+    {
+        // Clear the table/cell selection if element is 
+        //  the selected cell or table, or is contained in a cell or table
+        // Also clears element saved in buffer if = to "this"
+        pBuffer->CleanupForDeletedElement(pKill);
+    }
     do {
         pParent = pKill->GetParent();
         pKill->Unlink();
