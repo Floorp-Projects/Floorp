@@ -152,6 +152,9 @@ typedef int PRInt32;
 #define WIZ_SETUP_ALREADY_RUNNING       1029
 #define WIZ_TOO_MANY_NETWORK_ERRORS     1030
 
+/* E: Errors */
+#define E_REBOOT                        999
+
 /* FO: File Operation */
 #define FO_OK                           0
 #define FO_SUCCESS                      0
@@ -175,14 +178,16 @@ typedef int PRInt32;
 #define SM_MULTI                        1
 
 /* SIC: Setup Info Component*/
-#define SIC_SELECTED                    1
-#define SIC_INVISIBLE                   2
-#define SIC_LAUNCHAPP                   4
-#define SIC_DOWNLOAD_REQUIRED           8
-#define SIC_DOWNLOAD_ONLY               16
-#define SIC_ADDITIONAL                  32
-#define SIC_DISABLED                    64
-#define SIC_FORCE_UPGRADE               128
+#define SIC_SELECTED                    0x00000001
+#define SIC_INVISIBLE                   0x00000002
+#define SIC_LAUNCHAPP                   0x00000004
+#define SIC_DOWNLOAD_REQUIRED           0x00000008
+#define SIC_DOWNLOAD_ONLY               0x00000010
+#define SIC_ADDITIONAL                  0x00000020
+#define SIC_DISABLED                    0x00000040
+#define SIC_FORCE_UPGRADE               0x00000080
+#define SIC_IGNORE_DOWNLOAD_ERROR       0x00000100
+#define SIC_IGNORE_XPINSTALL_ERROR      0x00000200
 
 /* AC: Additional Components */
 #define AC_NONE                         0
@@ -191,14 +196,14 @@ typedef int PRInt32;
 #define AC_ALL                          3
 
 /* OS: Operating System */
-#define OS_WIN9x                        1
-#define OS_WIN95_DEBUTE                 2
-#define OS_WIN95                        4
-#define OS_WIN98                        8
-#define OS_NT                          16
-#define OS_NT3                         32
-#define OS_NT4                         64
-#define OS_NT5                        128
+#define OS_WIN9x                        0x00000001
+#define OS_WIN95_DEBUTE                 0x00000002
+#define OS_WIN95                        0x00000004
+#define OS_WIN98                        0x00000008
+#define OS_NT                           0x00000010
+#define OS_NT3                          0x00000020
+#define OS_NT4                          0x00000040
+#define OS_NT5                          0x00000080
 
 /* DSR: Disk Space Required */
 #define DSR_DESTINATION                 0
@@ -297,6 +302,7 @@ typedef struct dlgDownloadOptions
   BOOL  bSaveInstaller;
   DWORD dwUseProtocol;
   BOOL  bUseProtocolSettings;
+  BOOL  bShowProtocols;
 } diDO;
 
 typedef struct dlgAdvancedSettings
@@ -348,18 +354,7 @@ typedef struct setupStruct
   LPSTR     szProgramFolderPath;
   LPSTR     szAlternateArchiveSearchPath;
   LPSTR     szParentProcessFilename;
-  LPSTR     szSetupTitle0;
-  COLORREF  crSetupTitle0FontColor;
-  int       iSetupTitle0FontSize;
-  BOOL      bSetupTitle0FontShadow;
-  LPSTR     szSetupTitle1;
-  COLORREF  crSetupTitle1FontColor;
-  int       iSetupTitle1FontSize;
-  BOOL      bSetupTitle1FontShadow;
-  LPSTR     szSetupTitle2;
-  COLORREF  crSetupTitle2FontColor;
-  int       iSetupTitle2FontSize;
-  BOOL      bSetupTitle2FontShadow;
+  BOOL      bLockPath;
 } setupGen;
 
 typedef struct sinfoSmartDownload
@@ -411,6 +406,8 @@ struct sinfoComponent
   LPSTR           szParameter;
   LPSTR           szReferenceName;
   BOOL            bForceUpgrade;
+  int             iNetRetries;
+  int             iCRCRetries;
   siCD            *siCDDependencies;
   siCD            *siCDDependees;
   siC             *Next;
@@ -425,6 +422,44 @@ struct ssInfo
   LPSTR szIdentifier;
   ssi   *Next;
   ssi   *Prev;
+};
+
+/* structure message stream */
+typedef struct sEMsgStream sems;
+struct sEMsgStream
+{
+  char   szURL[MAX_BUF];
+  char   szConfirmationMessage[MAX_BUF];
+  char   *szMessage;
+  DWORD  dwMessageBufSize;
+  BOOL   bEnabled;
+  BOOL   bSendMessage;
+  BOOL   bShowConfirmation;
+};
+
+/* structure system info*/
+typedef struct sSysInfo sysinfo;
+struct sSysInfo
+{
+  DWORD dwOSType;
+  DWORD dwMajorVersion;
+  DWORD dwMinorVersion;
+  DWORD dwBuildNumber;
+  char  szExtraString[MAX_BUF];
+  DWORD dwMemoryTotalPhysical;
+  DWORD dwMemoryAvailablePhysical;
+  DWORD dwScreenX;
+  DWORD dwScreenY;
+};
+
+typedef struct diskSpaceNode dsN;
+struct diskSpaceNode
+{
+  ULONGLONG       ullSpaceRequired;
+  LPSTR           szPath;
+  LPSTR           szVDSPath;
+  dsN             *Next;
+  dsN             *Prev;
 };
 
 #endif /* _SETUP_H */

@@ -58,10 +58,6 @@ extern LPSTR            szSiteSelectorDescription;
 
 extern DWORD            dwWizardState;
 extern DWORD            dwSetupType;
-extern DWORD            dwScreenX;
-extern DWORD            dwScreenY;
-
-extern ULONG            ulOSType;
 
 extern DWORD            dwTempSetupType;
 extern DWORD            gdwUpgradeValue;
@@ -94,6 +90,9 @@ extern siCF             siCFXpcomFile;
 extern siC              *siComponents;
 extern ssi              *ssiSiteSelector;
 extern char             *SetupFileList[];
+extern sems             gErrorMessageStream;
+extern sysinfo          gSystemInfo;
+extern dsN              *gdsnComponentDSRequirement;
 
 #endif /* _EXTERN_H */
 

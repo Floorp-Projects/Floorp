@@ -169,7 +169,6 @@ function updateWinReg()
 
     subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
     winreg.createKey(subkey,"");
-
     valname = "CurrentVersion";
     value   = "$UserAgent$";
     err     = winreg.setValueString(subkey, valname, value);
@@ -179,7 +178,6 @@ function updateWinReg()
 
     subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
     winreg.createKey(subkey,"");
-
     valname = "Install Directory";
     value   = fProgram;
     err     = winreg.setValueString(subkey, valname, value);
@@ -194,6 +192,30 @@ function updateWinReg()
     valname = "Path";
     value   = fProgram;
     err     = winreg.setValueString(subkey, valname, value);
+
+
+    // We need to set HKEY_LOCAL_MACHINE\Software\Mozilla\Seamonkey\[ua]\Main
+    // because Sun's Java installer keys off of this key to locate mozilla's
+    // installation directory and populate it with java plugins.
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+    subkey  = "SOFTWARE\\Mozilla";
+    winreg.createKey(subkey,"");
+
+    subkey  = "SOFTWARE\\Mozilla\\Seamonkey";
+    winreg.createKey(subkey,"");
+    valname = "CurrentVersion";
+    value   = "$UserAgent$";
+    err     = winreg.setValueString(subkey, valname, value);
+
+    subkey  = "SOFTWARE\\Mozilla\\Seamonkey\\$UserAgent$";
+    winreg.createKey(subkey,"");
+
+    subkey  = "SOFTWARE\\Mozilla\\Seamonkey\\$UserAgent$\\Main";
+    winreg.createKey(subkey,"");
+    valname = "Install Directory";
+    value   = fProgram;
+    err     = winreg.setValueString(subkey, valname, value);
+
   }
 }
 

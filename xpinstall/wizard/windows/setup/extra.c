@@ -29,6 +29,8 @@
 #include "xpnetHook.h"
 #include "time.h"
 #include "xpi.h"
+#include "logging.h"
+#include "nsEscape.h"
 #include <winnls.h>
 #include <winver.h>
 #include <tlhelp32.h>
@@ -54,18 +56,23 @@ typedef PERF_INSTANCE_DEFINITION    PERF_INSTANCE,  *PPERF_INSTANCE;
 TCHAR   INDEX_PROCTHRD_OBJ[2*INDEX_STR_LEN];
 DWORD   PX_PROCESS;
 DWORD   PX_THREAD;
-static dsN *gdsnComponentDSRequirement = NULL;
-
-char *FontColorMap[] = {"WHITE", "0x00EEEEEE",
-                        "BLACK", "0x00000000",
-                        "GREEN", "0x00088808",
-                        ""};
 
 char *ArchiveExtensions[] = {"zip",
                              "xpi",
                              "jar",
                              ""};
 
+typedef struct structVer
+{
+  ULONGLONG ullMajor;
+  ULONGLONG ullMinor;
+  ULONGLONG ullRelease;
+  ULONGLONG ullBuild;
+} verBlock;
+
+void  TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion);
+BOOL  GetFileVersion(LPSTR szFile, verBlock *vbVersion);
+int   CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew);
 BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize);
 DWORD GetTitleIdx(HWND hWnd, LPTSTR Title[], DWORD LastIndex, LPTSTR Name);
 PPERF_OBJECT FindObject (PPERF_DATA pData, DWORD TitleIndex);
@@ -103,8 +110,8 @@ BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 
 BOOL InitInstance(HINSTANCE hInstance, DWORD dwCmdShow)
 {
-  dwScreenX = GetSystemMetrics(SM_CXSCREEN);
-  dwScreenY = GetSystemMetrics(SM_CYSCREEN);
+  gSystemInfo.dwScreenX = GetSystemMetrics(SM_CXSCREEN);
+  gSystemInfo.dwScreenY = GetSystemMetrics(SM_CYSCREEN);
 
   hInst = hInstance;
   hWndMain = NULL;
@@ -137,11 +144,31 @@ void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH)
   }
 }
 
+/* Windows API does offer a GlobalReAlloc() routine, but it kept
+ * returning an out of memory error for subsequent calls to it
+ * after the first time, thus the reason for this routine. */
+void *NS_GlobalReAlloc(HGLOBAL *hgMemory,
+                       DWORD dwMemoryBufSize,
+                       DWORD dwNewSize)
+{
+  HGLOBAL hgPtr = NULL;
+
+  if((hgPtr = NS_GlobalAlloc(dwNewSize)) == NULL)
+    return(NULL);
+  else
+  {
+    memcpy(hgPtr, *hgMemory, dwMemoryBufSize);
+    FreeMemory(hgMemory);
+    *hgMemory = hgPtr;
+    return(hgPtr);
+  }
+}
+
 void *NS_GlobalAlloc(DWORD dwMaxBuf)
 {
-  LPSTR szBuf = NULL;
+  void *vBuf = NULL;
 
-  if((szBuf = GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, dwMaxBuf)) == NULL)
+  if((vBuf = GlobalAlloc(GMEM_FIXED|GMEM_ZEROINIT, dwMaxBuf)) == NULL)
   {     
     if((szEGlobalAlloc == NULL) || (*szEGlobalAlloc == '\0'))
       PrintError(TEXT("Memory allocation error."), ERROR_CODE_HIDE);
@@ -151,7 +178,10 @@ void *NS_GlobalAlloc(DWORD dwMaxBuf)
     return(NULL);
   }
   else
-    return(szBuf);
+  {
+    ZeroMemory(vBuf, dwMaxBuf);
+    return(vBuf);
+  }
 }
 
 void FreeMemory(void **vPointer)
@@ -218,7 +248,8 @@ void SetDownloadState(void)
   wsprintf(szKey, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductName, sgProduct.szUserAgent);
   lstrcpy(szValue, "downloading");
 
-  SetWinReg(HKEY_LOCAL_MACHINE, szKey, TRUE, "Setup State", TRUE, REG_SZ, szValue, lstrlen(szValue));
+  SetWinReg(HKEY_LOCAL_MACHINE, szKey, TRUE, "Setup State", TRUE,
+            REG_SZ, szValue, lstrlen(szValue), FALSE, FALSE);
 }
 
 BOOL CheckForPreviousUnfinishedDownload()
@@ -264,7 +295,6 @@ BOOL UpdateFile(char *szInFilename, char *szOutFilename, char *szIgnoreStr)
     CharLower(szLCIgnoreShortStr);
   }
 
-  // read the entire file into memory
   while(fgets(szLineRead, sizeof(szLineRead), ifp) != NULL)
   {
     lstrcpy(szLCLineRead, szLineRead);
@@ -315,7 +345,7 @@ void ClearWinRegUninstallFileDeletion(void)
   CharLower(szLCUninstallFilenameLongBuf);
   CharLower(szLCUninstallFilenameShortBuf);
 
-  if(ulOSType & OS_NT)
+  if(gSystemInfo.dwOSType & OS_NT)
   {
     ZeroMemory(szInMultiStr,  sizeof(szInMultiStr));
     ZeroMemory(szOutMultiStr, sizeof(szOutMultiStr));
@@ -370,7 +400,9 @@ void ClearWinRegUninstallFileDeletion(void)
                   TRUE,
                   REG_MULTI_SZ,
                   szOutMultiStr,
-                  dwOutMultiStrLen);
+                  dwOutMultiStrLen,
+                  FALSE,
+                  FALSE);
       }
       else
         DeleteWinRegValue(HKEY_LOCAL_MACHINE,
@@ -397,7 +429,6 @@ HRESULT Initialize(HINSTANCE hInstance)
 {
   char szBuf[MAX_BUF];
 
-  bSDInit             = FALSE;
   bSDUserCanceled     = FALSE;
   hDlgMessage         = NULL;
 
@@ -415,9 +446,19 @@ HRESULT Initialize(HINSTANCE hInstance)
 
   if((hSetupRscInst = LoadLibraryEx("Setuprsc.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) == NULL)
   {
-    wsprintf(szBuf, szEDllLoad, "SetupRsc.dll");
-    PrintError(szBuf, ERROR_CODE_HIDE);
-    return(1);
+    char szFullFilename[MAX_BUF];
+
+    GetModuleFileName(NULL, szBuf, sizeof(szBuf));
+    ParsePath(szBuf, szFullFilename,
+              sizeof(szFullFilename), FALSE, PP_PATH_ONLY);
+    AppendBackSlash(szFullFilename, sizeof(szFullFilename));
+    lstrcat(szFullFilename, "Setuprsc.dll");
+    if((hSetupRscInst = LoadLibraryEx(szFullFilename, NULL, 0)) == NULL)
+    {
+      wsprintf(szBuf, szEDllLoad, szFullFilename);
+      PrintError(szBuf, ERROR_CODE_HIDE);
+      return(1);
+    }
   }
 
   dwWizardState         = DLG_NONE;
@@ -493,166 +534,6 @@ HRESULT Initialize(HINSTANCE hInstance)
   LogISTime(W_START);
   DetermineOSVersionEx();
   return(0);
-}
-
-void OutputSetupTitle(HDC hDC)
-{
-  HFONT     hfontTmp0;
-  HFONT     hfontTmp1;
-  HFONT     hfontTmp2;
-  HFONT     hfontOld;
-  LOGFONT   logFont;
-  int       nHeight0;
-  int       nHeight1;
-  int       nHeight2;
-  int       iLine0x;
-  int       iLine0y;
-  int       iLine1x;
-  int       iLine1y;
-  int       iLine2x;
-  int       iLine2y;
-  int       iShadowOffset;
-
-  SetBkMode(hDC, TRANSPARENT);
-
-
-/*
- * Setup Title Line 0
- */
-
-  /* Retrieve the default font used for the system.  Pass this font name to CreateFont.
-   * This is so the proper native characters will show up correctly under different
-   * language OSes such as Japanese */
-  SystemParametersInfo(SPI_GETICONTITLELOGFONT,
-                       sizeof(logFont),
-                       (PVOID)&logFont,
-                       0);
-
-  nHeight0  = -MulDiv(sgProduct.iSetupTitle0FontSize, 72, GetDeviceCaps(hDC, LOGPIXELSY));
-  hfontTmp0 = CreateFont(nHeight0,
-                        0,
-                        0,
-                        0,
-                        FW_BOLD,
-                        0,
-                        0,
-                        0,
-                        logFont.lfCharSet,
-                        OUT_DEFAULT_PRECIS,
-                        0,
-                        PROOF_QUALITY,
-                        logFont.lfPitchAndFamily,
-                        logFont.lfFaceName);
-
-  if(hfontTmp0)
-    hfontOld = SelectObject(hDC, hfontTmp0);
-
-  iLine0x = 20;
-  iLine0y = 20;
-
-  /* draw shadow */
-  if(sgProduct.bSetupTitle0FontShadow == TRUE)
-  {
-    /* Set shadow color to black and draw shadow */
-    SetTextColor(hDC, 0);
-    iShadowOffset = (int)(sgProduct.iSetupTitle0FontSize / 8);
-    TextOut(hDC, iLine0x + iShadowOffset, iLine0y + iShadowOffset, TEXT(sgProduct.szSetupTitle0), lstrlen(sgProduct.szSetupTitle0));
-  }
-
-  /* Set font color and draw; color format is 0x00bbggrr - where b is blue, g is green, and r is red */
-  /* 0x00088808 - green */
-  SetTextColor(hDC, sgProduct.crSetupTitle0FontColor);
-
-  /* draw text */
-  TextOut(hDC, iLine0x, iLine0y, TEXT(sgProduct.szSetupTitle0), lstrlen(sgProduct.szSetupTitle0));
-
-
-/*
- * Setup Title Line 1
- */
-  nHeight1  = -MulDiv(sgProduct.iSetupTitle1FontSize, 72, GetDeviceCaps(hDC, LOGPIXELSY));
-  hfontTmp1 = CreateFont(nHeight1,
-                        0,
-                        0,
-                        0,
-                        FW_BOLD,
-                        0,
-                        0,
-                        0,
-                        logFont.lfCharSet,
-                        OUT_DEFAULT_PRECIS,
-                        0,
-                        PROOF_QUALITY,
-                        logFont.lfPitchAndFamily,
-                        logFont.lfFaceName);
-  if(hfontTmp1)
-    SelectObject(hDC, hfontTmp1);
-
-  iLine1x = iLine0x;
-  iLine1y = iLine0y - nHeight0 + 7;
-
-  /* draw shadow */
-  if(sgProduct.bSetupTitle1FontShadow == TRUE)
-  {
-    /* Set shadow color to black and draw shadow */
-    SetTextColor(hDC, 0);
-    iShadowOffset = (int)(sgProduct.iSetupTitle1FontSize / 8);
-    TextOut(hDC, iLine1x + iShadowOffset, iLine1y + iShadowOffset, TEXT(sgProduct.szSetupTitle1), lstrlen(sgProduct.szSetupTitle1));
-  }
-
-  /* Set font color and draw; color format is 0x00bbggrr - where b is blue, g is green, and r is red */
-  /* 0x00088808 - green */
-  SetTextColor(hDC, sgProduct.crSetupTitle1FontColor);
-
-  /* draw text */
-  TextOut(hDC, iLine1x, iLine1y, TEXT(sgProduct.szSetupTitle1), lstrlen(sgProduct.szSetupTitle1));
-
-
-/*
- * Setup Title Line 2
- */
-  nHeight2  = -MulDiv(sgProduct.iSetupTitle2FontSize, 72, GetDeviceCaps(hDC, LOGPIXELSY));
-  hfontTmp2 = CreateFont(nHeight2,
-                        0,
-                        0,
-                        0,
-                        FW_BOLD,
-                        0,
-                        0,
-                        0,
-                        logFont.lfCharSet,
-                        OUT_DEFAULT_PRECIS,
-                        0,
-                        PROOF_QUALITY,
-                        logFont.lfPitchAndFamily,
-                        logFont.lfFaceName);
-  if(hfontTmp2)
-    SelectObject(hDC, hfontTmp2);
-
-  iLine2x = iLine1x;
-  iLine2y = iLine1y - nHeight1 + 7;
-
-  /* draw shadow */
-  if(sgProduct.bSetupTitle2FontShadow == TRUE)
-  {
-    /* Set shadow color to black and draw shadow */
-    SetTextColor(hDC, 0);
-
-    iShadowOffset = (int)(sgProduct.iSetupTitle2FontSize / 8);
-    TextOut(hDC, iLine2x + iShadowOffset, iLine2y + iShadowOffset, TEXT(sgProduct.szSetupTitle2), lstrlen(sgProduct.szSetupTitle2));
-  }
-
-  /* Set font color and draw; color format is 0x00bbggrr - where b is blue, g is green, and r is red */
-  /* 0x00088808 - green */
-  SetTextColor(hDC, sgProduct.crSetupTitle2FontColor);
-
-  /* draw text */
-  TextOut(hDC, iLine2x, iLine2y, TEXT(sgProduct.szSetupTitle2), lstrlen(sgProduct.szSetupTitle2));
-
-  SelectObject(hDC, hfontOld);
-  DeleteObject(hfontTmp0);
-  DeleteObject(hfontTmp1);
-  DeleteObject(hfontTmp2);
 }
 
 /* Function to remove quotes from a string */
@@ -1070,7 +951,7 @@ void SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize)
   char szFtp[]    = "ftp://";
   char szHttp[]   = "http://";
 
-  if(!szInUrl)
+  if((!szInUrl) || !diDownloadOptions.bUseProtocolSettings)
     return;
 
   ZeroMemory(szTmpBuf, sizeof(szTmpBuf));
@@ -1099,19 +980,72 @@ void SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize)
   }
 }
 
-HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSFile, char *szFileIdiGetArchives)
+int UpdateIdiFile(char  *szPartialUrl,
+                  DWORD dwPartialUrlBufSize,
+                  siC   *siCObject,
+                  char  *szSection,
+                  char  *szKey,
+                  char  *szFileIdiGetArchives)
+{
+  char      szUrl[MAX_BUF];
+  char      szBuf[MAX_BUF];
+  char      szBufTemp[MAX_BUF];
+
+  SwapFTPAndHTTP(szPartialUrl, dwPartialUrlBufSize);
+  RemoveSlash(szPartialUrl);
+  wsprintf(szUrl, "%s/%s", szPartialUrl, siCObject->szArchiveName);
+  if(WritePrivateProfileString(szSection,
+                               szKey,
+                               szUrl,
+                               szFileIdiGetArchives) == 0)
+  {
+    char szEWPPS[MAX_BUF];
+
+    if(NS_LoadString(hSetupRscInst,
+                     IDS_ERROR_WRITEPRIVATEPROFILESTRING,
+                     szEWPPS,
+                     sizeof(szEWPPS)) == WIZ_OK)
+    {
+      wsprintf(szBufTemp,
+               "%s\n    [%s]\n    url=%s",
+               szFileIdiGetArchives,
+               szSection,
+               szUrl);
+      wsprintf(szBuf, szEWPPS, szBufTemp);
+      PrintError(szBuf, ERROR_CODE_SHOW);
+    }
+    return(1);
+  }
+  return(0);
+}
+
+HRESULT AddArchiveToIdiFile(siC *siCObject,
+                            char *szSection,
+                            char *szFileIdiGetArchives)
 {
   char      szFile[MAX_BUF];
   char      szBuf[MAX_BUF];
-  char      szBufTemp[MAX_BUF];
   char      szUrl[MAX_BUF];
   char      szIdentifier[MAX_BUF];
   char      szArchiveSize[MAX_ITOA];
+  char      szKey[MAX_BUF_TINY];
+  int       iIndex = 0;
   ssi       *ssiSiteSelectorTemp;
 
-  WritePrivateProfileString(szSFile, "desc", siCObject->szDescriptionShort, szFileIdiGetArchives);
+  WritePrivateProfileString(szSection,
+                            "desc",
+                            siCObject->szDescriptionShort,
+                            szFileIdiGetArchives);
   _ui64toa(siCObject->ullInstallSizeArchive, szArchiveSize, 10);
-  WritePrivateProfileString(szSFile, "size", szArchiveSize, szFileIdiGetArchives);
+  WritePrivateProfileString(szSection,
+                            "size",
+                            szArchiveSize,
+                            szFileIdiGetArchives);
+  itoa(siCObject->dwAttributes & SIC_IGNORE_DOWNLOAD_ERROR, szBuf, 10);
+  WritePrivateProfileString(szSection,
+                            "Ignore File Network Error",
+                            szBuf,
+                            szFileIdiGetArchives);
 
   lstrcpy(szFile, szTempDir);
   AppendBackSlash(szFile, sizeof(szFile));
@@ -1120,47 +1054,83 @@ HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSFile, char *szFileIdiGetArc
   ZeroMemory(szIdentifier, sizeof(szIdentifier));
   ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
 
-  GetPrivateProfileString("Redirect", "Status", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  GetPrivateProfileString("Redirect",
+                          "Status",
+                          "",
+                          szBuf,
+                          sizeof(szBuf),
+                          szFileIniConfig);
   if(lstrcmpi(szBuf, "ENABLED") != 0)
   {
     /* redirect.ini is *not* enabled, so use the url from the
      * config.ini's [Site Selector] section */
     if(*ssiSiteSelectorTemp->szDomain != '\0')
+    {
+      wsprintf(szKey, "url%d", iIndex);
       lstrcpy(szUrl, ssiSiteSelectorTemp->szDomain);
-    else
-      /* else use the url from the config.ini's [General] section */
-      GetPrivateProfileString("General", "url", "", szUrl, sizeof(szUrl), szFileIniConfig);
+      UpdateIdiFile(szUrl, sizeof(szUrl), siCObject, szSection, szKey, szFileIdiGetArchives);
+      ++iIndex;
+    }
+
+    /* use the url from the config.ini's [General] section as well */
+    GetPrivateProfileString("General",
+                            "url",
+                            "",
+                            szUrl,
+                            sizeof(szUrl),
+                            szFileIniConfig);
+    if(*szUrl != 0)
+    {
+      wsprintf(szKey, "url%d", iIndex);
+      UpdateIdiFile(szUrl, sizeof(szUrl), siCObject, szSection, szKey, szFileIdiGetArchives);
+    }
   }
   else if(FileExists(szFile))
   {
-    /* redirect.ini file is enabled *and* it exists */
-    GetPrivateProfileString("Site Selector", ssiSiteSelectorTemp->szIdentifier, "", szUrl, sizeof(szUrl), szFile);
-    if(*szUrl == '\0')
-      /* there was no info in the redirect.ini file,
-       * so fail over to the url from the config.ini's [General] section */
-      GetPrivateProfileString("General", "url", "", szUrl, sizeof(szUrl), szFileIniConfig);
+    /* redirect.ini is enabled *and* it exists */
+    GetPrivateProfileString("Site Selector",
+                            ssiSiteSelectorTemp->szIdentifier,
+                            "",
+                            szUrl,
+                            sizeof(szUrl),
+                            szFile);
+    if(*szUrl != '\0')
+    {
+      wsprintf(szKey, "url%d", iIndex);
+      UpdateIdiFile(szUrl, sizeof(szUrl), siCObject, szSection, szKey, szFileIdiGetArchives);
+      ++iIndex;
+    }
+
+    /* use the url from the config.ini's [General] section as well */
+    GetPrivateProfileString("General",
+                            "url",
+                            "",
+                            szUrl,
+                            sizeof(szUrl),
+                            szFileIniConfig);
+    if(*szUrl != 0)
+    {
+      wsprintf(szKey, "url%d", iIndex);
+      UpdateIdiFile(szUrl, sizeof(szUrl), siCObject, szSection, szKey, szFileIdiGetArchives);
+    }
   }
   else
+  {
     /* redirect.ini is enabled, but the file does not exist,
      * so fail over to the url from the config.ini's [General] section */
-    GetPrivateProfileString("General", "url", "", szUrl, sizeof(szUrl), szFileIniConfig);
-
-  SwapFTPAndHTTP(szUrl, sizeof(szUrl));
-  /* append a slash and the archive name to download */
-  AppendSlash(szUrl, sizeof(szUrl));
-  lstrcat(szUrl, siCObject->szArchiveName);
-  if(WritePrivateProfileString(szSFile, "url", szUrl, szFileIdiGetArchives) == 0)
-  {
-    char szEWPPS[MAX_BUF];
-
-    if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, sizeof(szEWPPS)) == WIZ_OK)
+    GetPrivateProfileString("General",
+                            "url",
+                            "",
+                            szUrl,
+                            sizeof(szUrl),
+                            szFileIniConfig);
+    if(*szUrl != 0)
     {
-      wsprintf(szBufTemp, "%s\n    [%s]\n    url=%s", szFileIdiGetArchives, szSFile, szUrl);
-      wsprintf(szBuf, szEWPPS, szBufTemp);
-      PrintError(szBuf, ERROR_CODE_SHOW);
+      wsprintf(szKey, "url%d", iIndex);
+      UpdateIdiFile(szUrl, sizeof(szUrl), siCObject, szSection, szKey, szFileIdiGetArchives);
     }
-    return(1);
   }
+
   return(0);
 }
 
@@ -1263,6 +1233,7 @@ long RetrieveRedirectFile()
                           diAdvancedSettings.szProxyUser,     /* proxy server user (optional)            */
                           diAdvancedSettings.szProxyPasswd,   /* proxy password (optional)               */
                           FALSE,                              /* show retry message                      */
+                          NULL,                               /* receive the number of network retries   */
                           TRUE,                               /* ignore network error                    */
                           NULL,                               /* buffer to store the name of failed file */
                           0);                                 /* size of failed file name buffer         */
@@ -1279,8 +1250,7 @@ int CRCCheckDownloadedArchives(char *szCorruptedArchiveList,
   char  szArchivePathWithFilename[MAX_BUF];
   char  szArchivePath[MAX_BUF];
   char  szMsgCRCCheck[MAX_BUF];
-  char  szSFile[MAX_INI_SK];
-  char  szFileCounter[MAX_ITOA];
+  char  szSection[MAX_INI_SK];
   int   iRv;
   int   iResult;
 
@@ -1301,9 +1271,9 @@ int CRCCheckDownloadedArchives(char *szCorruptedArchiveList,
   siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
-    if(siCObject->dwAttributes & SIC_SELECTED)
+    if((siCObject->dwAttributes & SIC_SELECTED) &&
+      !(siCObject->dwAttributes & SIC_IGNORE_DOWNLOAD_ERROR))
     {
-      /* only download jars if not already in the local machine */
       if((iRv = LocateJar(siCObject, szArchivePath, sizeof(szArchivePath), TRUE)) == AP_NOT_FOUND)
       {
         char szBuf[MAX_BUF];
@@ -1339,16 +1309,15 @@ int CRCCheckDownloadedArchives(char *szCorruptedArchiveList,
              * next restart, the file will be downloaded during the first attempt,
              * not after a VerifyArchive() call. */
             DeleteFile(szArchivePathWithFilename);
-
-            itoa(dwFileCounter, szFileCounter, 10);
-            lstrcpy(szSFile, "File");
-            lstrcat(szSFile, szFileCounter);
-
+            wsprintf(szSection, "File%d", dwFileCounter);
             ++dwFileCounter;
             if(szFileIdiGetArchives)
-              if((AddArchiveToIdiFile(siCObject, szSFile, szFileIdiGetArchives)) != 0)
+              if((AddArchiveToIdiFile(siCObject,
+                                      szSection,
+                                      szFileIdiGetArchives)) != 0)
                 return(WIZ_ERROR_UNDEFINED);
 
+            ++siCObject->iCRCRetries;
             if(szCorruptedArchiveList != NULL)
             {
               if((DWORD)(lstrlen(szCorruptedArchiveList) + lstrlen(siCObject->szArchiveName + 1)) < dwCorruptedArchiveListSize)
@@ -1379,28 +1348,27 @@ long RetrieveArchives()
   BOOL      bDownloadTriggered;
   siC       *siCObject = NULL;
   long      lResult;
-  char      szIndex0[MAX_BUF];
-  char      szFileCounter[MAX_ITOA];
   char      szFileIdiGetArchives[MAX_BUF];
-  char      szSFile[MAX_BUF];
+  char      szSection[MAX_BUF];
   char      szCorruptedArchiveList[MAX_BUF];
   char      szFailedFile[MAX_BUF];
-  int       iRetries;
+  char      szBuf[MAX_BUF];
+  int       iCRCRetries;
+  int       iNetRetries;
   int       iRv;
 
   /* retrieve the redirect.ini file */
   RetrieveRedirectFile();
 
+  ZeroMemory(szCorruptedArchiveList, sizeof(szCorruptedArchiveList));
   lstrcpy(szFileIdiGetArchives, szTempDir);
   AppendBackSlash(szFileIdiGetArchives, sizeof(szFileIdiGetArchives));
   lstrcat(szFileIdiGetArchives, FILE_IDI_GETARCHIVES);
 
   bDownloadTriggered = FALSE;
-  lResult   = WIZ_OK;
-  dwIndex0  = 0;
-  dwFileCounter = 0;
-  itoa(dwIndex0,  szIndex0,  10);
-  itoa(dwFileCounter, szFileCounter, 10);
+  lResult            = WIZ_OK;
+  dwIndex0           = 0;
+  dwFileCounter      = 0;
   siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
@@ -1411,28 +1379,27 @@ long RetrieveArchives()
        * Only download jars if not already in the local machine */
       if(LocateJar(siCObject, NULL, 0, gbPreviousUnfinishedDownload) == AP_NOT_FOUND)
       {
-        lstrcpy(szSFile, "File");
-        lstrcat(szSFile, szFileCounter);
-
-        if((lResult = AddArchiveToIdiFile(siCObject, szSFile, szFileIdiGetArchives)) != 0)
+        wsprintf(szSection, "File%d", dwFileCounter);
+        if((lResult = AddArchiveToIdiFile(siCObject,
+                                          szSection,
+                                          szFileIdiGetArchives)) != 0)
           return(lResult);
 
         ++dwFileCounter;
-        itoa(dwFileCounter, szFileCounter, 10);
       }
     }
 
     ++dwIndex0;
-    itoa(dwIndex0, szIndex0, 10);
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 
   SetDownloadState();
 
-  /* iRetries is initially set to 0 because the first attemp at downloading
+  /* iCRCRetries is initially set to 0 because the first attemp at downloading
    * the archives is not considered a "retry".  Subsequent downloads are
    * considered retries. */
-  iRetries = 0;
+  iCRCRetries = 0;
+  iNetRetries = 0;
   bDone = FALSE;
   do
   {
@@ -1447,7 +1414,8 @@ long RetrieveArchives()
                               diAdvancedSettings.szProxyPort,     /* proxy server port                       */
                               diAdvancedSettings.szProxyUser,     /* proxy server user (optional)            */
                               diAdvancedSettings.szProxyPasswd,   /* proxy password (optional)               */
-                              iRetries,                           /* show retry message                      */
+                              iCRCRetries,                        /* show retry message                      */
+                              &iNetRetries,                       /* receive the number of network retries   */
                               FALSE,                              /* ignore network error                    */
                               szFailedFile,                       /* buffer to store the name of failed file */
                               sizeof(szFailedFile));              /* size of failed file name buffer         */
@@ -1471,9 +1439,16 @@ long RetrieveArchives()
         }
       }
       else
+      {
+        int iComponentIndex = SiCNodeGetIndexDS(szFailedFile);
+        siC *siCObject      = SiCNodeGetObject(iComponentIndex, TRUE, AC_ALL);
+
+        ++siCObject->iNetRetries;
+
         /* Download failed.  Error message was already shown by DownloadFiles().
          * Simple exit loop here  */
         bDone = TRUE;
+      }
     }
     else
       /* no idi file, so exit loop */
@@ -1481,14 +1456,14 @@ long RetrieveArchives()
 
     if(!bDone)
     {
-      ++iRetries;
-      if(iRetries > MAX_CRC_FAILED_DOWNLOAD_RETRIES)
+      ++iCRCRetries;
+      if(iCRCRetries > MAX_CRC_FAILED_DOWNLOAD_RETRIES)
         bDone = TRUE;
     }
 
   } while(!bDone);
 
-  if(iRetries > MAX_CRC_FAILED_DOWNLOAD_RETRIES)
+  if(iCRCRetries > MAX_CRC_FAILED_DOWNLOAD_RETRIES)
   {
     /* too many retries from failed CRC checks */
     char szMsg[MAX_BUF];
@@ -1515,12 +1490,11 @@ long RetrieveArchives()
   }
   else if(bDownloadTriggered)
   {
-    char szBuf[MAX_BUF_TINY];
-
     wsprintf(szBuf, "failed: %d", lResult);
     LogISDownloadStatus(szBuf, szFailedFile);
   }
 
+  LogMSDownloadStatus(lResult);
   return(lResult);
 }
 
@@ -1804,327 +1778,37 @@ HRESULT LaunchApps()
   return(0);
 }
 
-/* Loging to install_status.log functions */
-void LogISTime(int iType)
+char *GetOSTypeString(char *szOSType, DWORD dwOSTypeBufSize)
 {
-  char       szBuf[MAX_BUF];
-  char       szTime[MAX_BUF_TINY];
-  char       szDate[MAX_BUF_TINY];
-  SYSTEMTIME stLocalTime;
+  ZeroMemory(szOSType, dwOSTypeBufSize);
 
-  GetLocalTime(&stLocalTime);
-  GetTimeFormat(LOCALE_NEUTRAL,
-                LOCALE_NOUSEROVERRIDE,
-                &stLocalTime,
-                NULL,
-                szTime,
-                sizeof(szTime));
-  GetDateFormat(LOCALE_NEUTRAL,
-                LOCALE_NOUSEROVERRIDE,
-                &stLocalTime,
-                NULL,
-                szDate,
-                sizeof(szDate));
-
-  if(iType == W_START)
-    wsprintf(szBuf, "Start Log: %s - %s\n", szDate, szTime);
+  if(gSystemInfo.dwOSType & OS_WIN95_DEBUTE)
+    lstrcpy(szOSType, "Win95 debute");
+  else if(gSystemInfo.dwOSType & OS_WIN95)
+    lstrcpy(szOSType, "Win95");
+  else if(gSystemInfo.dwOSType & OS_WIN98)
+    lstrcpy(szOSType, "Win98");
+  else if(gSystemInfo.dwOSType & OS_NT3)
+    lstrcpy(szOSType, "NT3");
+  else if(gSystemInfo.dwOSType & OS_NT4)
+    lstrcpy(szOSType, "NT4");
   else
-    wsprintf(szBuf, "End Log: %s - %s\n", szDate, szTime);
+    lstrcpy(szOSType, "NT5");
 
-  UpdateInstallStatusLog(szBuf);
+  return(szOSType);
 }
-
-void LogISProductInfo(void)
-{
-  char szBuf[MAX_BUF];
-
-  wsprintf(szBuf, "\n    Product Info:\n");
-  UpdateInstallStatusLog(szBuf);
-
-  switch(sgProduct.dwMode)
-  {
-    case SILENT:
-      wsprintf(szBuf, "        Install mode: Silent\n");
-      break;
-    case AUTO:
-      wsprintf(szBuf, "        Install mode: Auto\n");
-      break;
-    default:
-      wsprintf(szBuf, "        Install mode: Normal\n");
-      break;
-  }
-  UpdateInstallStatusLog(szBuf);
-
-  wsprintf(szBuf, "        Company name: %s\n        Product name: %s\n        Uninstall Filename: %s\n        UserAgent: %s\n        Alternate search path: %s\n",
-           sgProduct.szCompanyName,
-           sgProduct.szProductName,
-           sgProduct.szUninstallFilename,
-           sgProduct.szUserAgent,
-           sgProduct.szAlternateArchiveSearchPath);
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISDestinationPath(void)
-{
-  char szBuf[MAX_BUF];
-
-  wsprintf(szBuf, "\n    Destination Path:\n        Main: %s\n        SubPath: %s\n", sgProduct.szPath, sgProduct.szSubPath);
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISSetupType(void)
-{
-  char szBuf[MAX_BUF_TINY];
-
-  switch(dwSetupType)
-  {
-    case ST_RADIO3:
-      wsprintf(szBuf, "\n    Setup Type: %s\n",
-               diSetupType.stSetupType3.szDescriptionShort);
-      break;
-
-    case ST_RADIO2:
-      wsprintf(szBuf, "\n    Setup Type: %s\n",
-               diSetupType.stSetupType2.szDescriptionShort);
-      break;
-
-    case ST_RADIO1:
-      wsprintf(szBuf, "\n    Setup Type: %s\n",
-               diSetupType.stSetupType1.szDescriptionShort);
-      break;
-
-    default:
-      wsprintf(szBuf, "\n    Setup Type: %s\n",
-               diSetupType.stSetupType0.szDescriptionShort);
-      break;
-  }
-
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISComponentsSelected(void)
-{
-  char szBuf[MAX_BUF_TINY];
-  siC  *siCNode;
-  BOOL bFoundComponentSelected;
-
-  wsprintf(szBuf, "\n    Components selected:\n");
-  UpdateInstallStatusLog(szBuf);
-
-  bFoundComponentSelected = FALSE;
-  siCNode = siComponents;
-  do
-  {
-    if(siCNode == NULL)
-      break;
-
-    if(siCNode->dwAttributes & SIC_SELECTED)
-    {
-      if(!siCNode->bForceUpgrade)
-        wsprintf(szBuf, "        %s\n", siCNode->szDescriptionShort);
-      else
-        wsprintf(szBuf, "        %s (Required)\n", siCNode->szDescriptionShort);
-
-      UpdateInstallStatusLog(szBuf);
-      bFoundComponentSelected = TRUE;
-    }
-
-    siCNode = siCNode->Next;
-  } while((siCNode != NULL) && (siCNode != siComponents));
-
-  if(!bFoundComponentSelected)
-  {
-    wsprintf(szBuf, "        none\n");
-    UpdateInstallStatusLog(szBuf);
-  }
-}
-
-void LogISComponentsToDownload(void)
-{
-  char szBuf[MAX_BUF_TINY];
-  char szArchivePath[MAX_BUF_MEDIUM];
-  siC  *siCNode;
-  BOOL bFoundComponentSelected;
-  BOOL bFoundComponentsToDownload;
-
-  wsprintf(szBuf, "\n    Components to download:\n");
-  UpdateInstallStatusLog(szBuf);
-
-  bFoundComponentSelected = FALSE;
-  bFoundComponentsToDownload = FALSE;
-  siCNode = siComponents;
-  do
-  {
-    if(siCNode == NULL)
-      break;
-
-    if(siCNode->dwAttributes & SIC_SELECTED)
-    {
-
-      if(LocateJar(siCNode, szArchivePath, sizeof(szArchivePath), gbPreviousUnfinishedDownload) == AP_NOT_FOUND)
-      {
-        wsprintf(szBuf, "        %s will be downloaded\n", siCNode->szDescriptionShort);
-        bFoundComponentsToDownload = TRUE;
-      }
-      else
-        wsprintf(szBuf, "        %s found: %s\n", siCNode->szDescriptionShort, szArchivePath);
-
-      UpdateInstallStatusLog(szBuf);
-      bFoundComponentSelected = TRUE;
-    }
-
-    siCNode = siCNode->Next;
-  } while((siCNode != NULL) && (siCNode != siComponents));
-
-  if(!bFoundComponentSelected)
-  {
-    wsprintf(szBuf, "        none\n");
-    UpdateInstallStatusLog(szBuf);
-  }
-  if(!bFoundComponentsToDownload)
-  {
-    wsprintf(szBuf, "        **\n        ** All components have been found locally.  No components will be downloaded.\n        **\n");
-    UpdateInstallStatusLog(szBuf);
-  }
-}
-
-void LogISDownloadStatus(char *szStatus, char *szFailedFile)
-{
-  char szBuf[MAX_BUF];
-
-  if(szFailedFile)
-    wsprintf(szBuf, "\n    Download status:\n        %s\n          file: %s\n", szStatus, szFailedFile);
-  else
-    wsprintf(szBuf, "\n    Download status:\n        %s\n", szStatus);
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISComponentsFailedCRC(char *szList, int iWhen)
-{
-  char szBuf[MAX_BUF];
-
-  if(iWhen == W_STARTUP)
-  {
-    if(szList && (*szList != '\0'))
-      wsprintf(szBuf, "\n    Components corrupted (startup):\n%s", szList);
-    else
-      wsprintf(szBuf, "\n    Components corrupted (startup):\n        none\n");
-  }
-  else
-  {
-    if(szList && (*szList != '\0'))
-      wsprintf(szBuf, "\n    Components corrupted (download):\n%s", szList);
-    else
-      wsprintf(szBuf, "\n    Components corrupted (download):\n        none\n");
-  }
-
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISXPInstall(int iWhen)
-{
-  char szBuf[MAX_BUF];
-
-  if(iWhen == W_START)
-    wsprintf(szBuf, "\n    XPInstall Start\n");
-  else
-    wsprintf(szBuf, "    XPInstall End\n");
-
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISXPInstallComponent(char *szComponentName)
-{
-  char szBuf[MAX_BUF];
-
-  wsprintf(szBuf, "        %s", szComponentName);
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISXPInstallComponentResult(DWORD dwErrorNumber)
-{
-  char szBuf[MAX_BUF];
-  char szErrorString[MAX_BUF];
-
-  GetErrorString(dwErrorNumber, szErrorString, sizeof(szErrorString));
-  wsprintf(szBuf, ": %d %s\n", dwErrorNumber, szErrorString);
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISLaunchApps(int iWhen)
-{
-  char szBuf[MAX_BUF];
-
-  if(iWhen == W_START)
-    wsprintf(szBuf, "\n    Launch Apps Start\n");
-  else
-    wsprintf(szBuf, "    Launch Apps End\n");
-
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISLaunchAppsComponent(char *szComponentName)
-{
-  char szBuf[MAX_BUF];
-
-  wsprintf(szBuf, "        %s\n", szComponentName);
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISProcessXpcomFile(int iStatus, int iResult)
-{
-  char szBuf[MAX_BUF];
-
-  if(iStatus == LIS_SUCCESS)
-    wsprintf(szBuf, "\n    Uncompressing Xpcom Succeeded: %d\n", iResult);
-  else
-    wsprintf(szBuf, "\n    Uncompressing Xpcom Failed: %d\n", iResult);
-
-  UpdateInstallStatusLog(szBuf);
-}
-
-void LogISDiskSpace(void)
-{
-  ULONGLONG ullDSAvailable;
-  dsN       *dsnTemp = NULL;
-  char      szBuf[MAX_BUF];
-  char      szDSRequired[MAX_BUF_TINY];
-  char      szDSAvailable[MAX_BUF_TINY];
-
-  if(gdsnComponentDSRequirement != NULL)
-  {
-    wsprintf(szBuf, "\n    Disk Space Info:\n");
-    UpdateInstallStatusLog(szBuf);
-    dsnTemp = gdsnComponentDSRequirement;
-    do
-    {
-      if(!dsnTemp)
-        break;
-
-      ullDSAvailable = GetDiskSpaceAvailable(dsnTemp->szVDSPath);
-      _ui64toa(ullDSAvailable, szDSAvailable, 10);
-      _ui64toa(dsnTemp->ullSpaceRequired, szDSRequired, 10);
-      wsprintf(szBuf, "             Path: %s\n         Required: %sKB\n        Available: %sKB\n", dsnTemp->szVDSPath, szDSRequired, szDSAvailable);
-      UpdateInstallStatusLog(szBuf);
-
-      dsnTemp = dsnTemp->Next;
-    } while((dsnTemp != NULL) && (dsnTemp != gdsnComponentDSRequirement));
-  }
-}
-
-/* end of logging to install_status.log functions */
 
 void DetermineOSVersionEx()
 {
-  DWORD         dwBuildNumber;
   BOOL          bIsWin95Debute;
   char          szBuf[MAX_BUF];
-  char          szOsType[MAX_BUF];
+  char          szOSType[MAX_BUF];
   char          szESetupRequirement[MAX_BUF];
+  DWORD         dwStrLen;
   OSVERSIONINFO osVersionInfo;
   MEMORYSTATUS  msMemoryInfo;
 
-  ulOSType = 0;
+  gSystemInfo.dwOSType = 0;
   osVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   if(!GetVersionEx(&osVersionInfo))
   {
@@ -2132,7 +1816,10 @@ void DetermineOSVersionEx()
      * some complications during installation */
     char szEMsg[MAX_BUF_TINY];
 
-    if(NS_LoadString(hSetupRscInst, IDS_ERROR_GETVERSION, szEMsg, sizeof(szEMsg)) == WIZ_OK)
+    if(NS_LoadString(hSetupRscInst,
+                     IDS_ERROR_GETVERSION,
+                     szEMsg,
+                     sizeof(szEMsg)) == WIZ_OK)
       PrintError(szEMsg, ERROR_CODE_SHOW);
   }
 
@@ -2140,52 +1827,61 @@ void DetermineOSVersionEx()
   switch(osVersionInfo.dwPlatformId)
   {
     case VER_PLATFORM_WIN32_WINDOWS:
-      ulOSType |= OS_WIN9x;
+      gSystemInfo.dwOSType |= OS_WIN9x;
       if(osVersionInfo.dwMinorVersion == 0)
       {
-        ulOSType |= OS_WIN95;
-        lstrcpy(szOsType, "Win95");
+        gSystemInfo.dwOSType |= OS_WIN95;
         if(bIsWin95Debute)
-        {
-          ulOSType |= OS_WIN95_DEBUTE;
-          lstrcpy(szOsType, "Win95 debute");
-        }
+          gSystemInfo.dwOSType |= OS_WIN95_DEBUTE;
       }
       else
-        ulOSType |= OS_WIN98;
-        lstrcpy(szOsType, "Win98");
+        gSystemInfo.dwOSType |= OS_WIN98;
       break;
 
     case VER_PLATFORM_WIN32_NT:
-      ulOSType |= OS_NT;
+      gSystemInfo.dwOSType |= OS_NT;
       switch(osVersionInfo.dwMajorVersion)
       {
         case 3:
-          ulOSType |= OS_NT3;
-          lstrcpy(szOsType, "NT3");
+          gSystemInfo.dwOSType |= OS_NT3;
           break;
 
         case 4:
-          ulOSType |= OS_NT4;
-          lstrcpy(szOsType, "NT4");
+          gSystemInfo.dwOSType |= OS_NT4;
           break;
 
         default:
-          ulOSType |= OS_NT5;
-          lstrcpy(szOsType, "NT5");
+          gSystemInfo.dwOSType |= OS_NT5;
           break;
       }
       break;
 
     default:
-      if(NS_LoadString(hSetupRscInst, IDS_ERROR_SETUP_REQUIREMENT, szESetupRequirement, sizeof(szESetupRequirement)) == WIZ_OK)
+      if(NS_LoadString(hSetupRscInst,
+                       IDS_ERROR_SETUP_REQUIREMENT,
+                       szESetupRequirement,
+                       sizeof(szESetupRequirement)) == WIZ_OK)
         PrintError(szESetupRequirement, ERROR_CODE_HIDE);
       break;
   }
 
-  dwBuildNumber  = (DWORD)(LOWORD(osVersionInfo.dwBuildNumber));
+  gSystemInfo.dwMajorVersion = osVersionInfo.dwMajorVersion;
+  gSystemInfo.dwMinorVersion = osVersionInfo.dwMinorVersion;
+  gSystemInfo.dwBuildNumber  = (DWORD)(LOWORD(osVersionInfo.dwBuildNumber));
+
+  dwStrLen = sizeof(gSystemInfo.szExtraString) >
+                    lstrlen(osVersionInfo.szCSDVersion) ?
+                    lstrlen(osVersionInfo.szCSDVersion) :
+                    sizeof(gSystemInfo.szExtraString) - 1;
+  ZeroMemory(gSystemInfo.szExtraString, sizeof(gSystemInfo.szExtraString));
+  strncpy(gSystemInfo.szExtraString, osVersionInfo.szCSDVersion, dwStrLen);
+
   msMemoryInfo.dwLength = sizeof(MEMORYSTATUS);
   GlobalMemoryStatus(&msMemoryInfo);
+  gSystemInfo.dwMemoryTotalPhysical = msMemoryInfo.dwTotalPhys/1024;
+  gSystemInfo.dwMemoryAvailablePhysical = msMemoryInfo.dwAvailPhys/1024;
+
+  GetOSTypeString(szOSType, sizeof(szOSType));
   wsprintf(szBuf,
 "    System Info:\n\
         OS Type: %s\n\
@@ -2195,13 +1891,13 @@ void DetermineOSVersionEx()
         Extra String: %s\n\
         Total Physical Memory: %dKB\n\
         Total Available Physical Memory: %dKB\n",
-           szOsType,
-           osVersionInfo.dwMajorVersion,
-           osVersionInfo.dwMinorVersion,
-           dwBuildNumber,
-           osVersionInfo.szCSDVersion,
-           msMemoryInfo.dwTotalPhys/1024,
-           msMemoryInfo.dwAvailPhys/1024);
+           szOSType,
+           gSystemInfo.dwMajorVersion,
+           gSystemInfo.dwMinorVersion,
+           gSystemInfo.dwBuildNumber,
+           gSystemInfo.szExtraString,
+           gSystemInfo.dwMemoryTotalPhysical,
+           gSystemInfo.dwMemoryAvailablePhysical);
 
   UpdateInstallStatusLog(szBuf);
 }
@@ -2446,6 +2142,7 @@ HRESULT InitDlgDownloadOptions(diDO *diDialog)
   diDialog->bSaveInstaller        = FALSE;
   diDialog->dwUseProtocol         = UP_FTP;
   diDialog->bUseProtocolSettings  = TRUE;
+  diDialog->bShowProtocols        = TRUE;
   if((diDialog->szTitle           = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage0        = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -2553,6 +2250,7 @@ HRESULT InitSetupGeneral()
   sgProduct.dwMode               = NORMAL;
   sgProduct.dwCustomType         = ST_RADIO0;
   sgProduct.dwNumberOfComponents = 0;
+  sgProduct.bLockPath            = FALSE;
 
   if((sgProduct.szPath                        = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -2578,12 +2276,6 @@ HRESULT InitSetupGeneral()
     return(1);
   if((szTempSetupPath                         = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((sgProduct.szSetupTitle0                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((sgProduct.szSetupTitle1                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((sgProduct.szSetupTitle2                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
 
   if((szSiteSelectorDescription               = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -2608,9 +2300,6 @@ void DeInitSetupGeneral()
   FreeMemory(&(sgProduct.szAlternateArchiveSearchPath));
   FreeMemory(&(sgProduct.szParentProcessFilename));
   FreeMemory(&(szTempSetupPath));
-  FreeMemory(&(sgProduct.szSetupTitle0));
-  FreeMemory(&(sgProduct.szSetupTitle1));
-  FreeMemory(&(sgProduct.szSetupTitle2));
   FreeMemory(&(szSiteSelectorDescription));
 }
 
@@ -2704,6 +2393,9 @@ siC *CreateSiCNode()
     exit(1);
   if((siCNode->szReferenceName = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
+
+  siCNode->iNetRetries      = 0;
+  siCNode->iCRCRetries      = 0;
   siCNode->siCDDependencies = NULL;
   siCNode->siCDDependees    = NULL;
   siCNode->Next             = NULL;
@@ -3544,7 +3236,7 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
   DWORD           dwNumberOfFreeClusters;
   DWORD           dwTotalNumberOfClusters;
 
-  if((ulOSType & OS_WIN95_DEBUTE) && (NS_GetDiskFreeSpace != NULL))
+  if((gSystemInfo.dwOSType & OS_WIN95_DEBUTE) && (NS_GetDiskFreeSpace != NULL))
   {
     ParsePath(szPath, szTempPath, MAX_BUF, FALSE, PP_ROOT_ONLY);
     NS_GetDiskFreeSpace(szTempPath, 
@@ -3622,13 +3314,9 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
   _ui64toa(ullDSAvailable, szDSAvailable, 10);
   _ui64toa(ullDSRequired, szDSRequired, 10);
 
-  lstrcpy(szBuf1, "\n\n    ");
-  lstrcat(szBuf1, szBuf0);
-  lstrcat(szBuf1, "\n\n    ");
-  lstrcpy(szBuf2, szDSRequired);
-  lstrcat(szBuf2, " K\n    ");
-  lstrcpy(szBuf3, szDSAvailable);
-  lstrcat(szBuf3, " K\n\n");
+  wsprintf(szBuf1, "\n\n    %s\n\n    ", szBuf0);
+  wsprintf(szBuf2, "%s KB\n    ",        szDSRequired);
+  wsprintf(szBuf3, "%s KB\n\n",          szDSAvailable);
   wsprintf(szBufMsg, szDlgDiskSpaceCheckMsg, szBufRootPath, szBuf1, szBuf2, szBuf3);
 
   if((sgProduct.dwMode != SILENT) && (sgProduct.dwMode != AUTO))
@@ -3696,10 +3384,11 @@ void UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullSize, dsN **dsnCompo
   {
     ParsePath(szPath, szRootPath, sizeof(szRootPath), FALSE, PP_ROOT_ONLY);
 
-    if(ulOSType & OS_WIN95_DEBUTE)
+    if(gSystemInfo.dwOSType & OS_WIN95_DEBUTE)
       // check for Win95 debute version
       lstrcpy(szVDSPath, szRootPath);
-    else if((ulOSType & OS_NT5) && ContainsReparseTag(szPath, szReparsePath, sizeof(szReparsePath)))
+    else if((gSystemInfo.dwOSType & OS_NT5) &&
+             ContainsReparseTag(szPath, szReparsePath, sizeof(szReparsePath)))
     {
       // check for Reparse Tag (mount points under NT5 only)
       if(*szReparsePath == '\0')
@@ -3888,6 +3577,10 @@ HRESULT ParseComponentAttributes(char *szAttribute)
     dwAttributes &= ~SIC_SELECTED;
   if(strstr(szBuf, "FORCE_UPGRADE"))
     dwAttributes |= SIC_FORCE_UPGRADE;
+  if(strstr(szBuf, "IGNORE_DOWNLOAD_ERROR"))
+    dwAttributes |= SIC_IGNORE_DOWNLOAD_ERROR;
+  if(strstr(szBuf, "IGNORE_XPINSTALL_ERROR"))
+    dwAttributes |= SIC_IGNORE_XPINSTALL_ERROR;
 
   return(dwAttributes);
 }
@@ -4275,6 +3968,57 @@ void InitSiteSelector(char *szFileIni)
     ZeroMemory(szIdentifier,  sizeof(szIdentifier));
     GetPrivateProfileString("Site Selector", szKDescription, "", szDescription, MAX_BUF, szFileIni);
   }
+}
+
+void InitErrorMessageStream(char *szFileIni)
+{
+  char szBuf[MAX_BUF_TINY];
+
+  GetPrivateProfileString("Message Stream",
+                          "Status",
+                          "",
+                          szBuf,
+                          sizeof(szBuf),
+                          szFileIni);
+
+  if(lstrcmpi(szBuf, "disabled") == 0)
+    gErrorMessageStream.bEnabled = FALSE;
+  else
+    gErrorMessageStream.bEnabled = TRUE;
+
+  GetPrivateProfileString("Message Stream",
+                          "url",
+                          "",
+                          gErrorMessageStream.szURL,
+                          sizeof(gErrorMessageStream.szURL),
+                          szFileIni);
+
+  GetPrivateProfileString("Message Stream",
+                          "Show Confirmation",
+                          "",
+                          szBuf,
+                          sizeof(szBuf),
+                          szFileIni);
+  if(strcmpi(szBuf, "FALSE") == 0)
+    gErrorMessageStream.bShowConfirmation = FALSE;
+  else
+    gErrorMessageStream.bShowConfirmation = TRUE;
+
+  GetPrivateProfileString("Message Stream",
+                          "Confirmation Message",
+                          "",
+                          gErrorMessageStream.szConfirmationMessage,
+                          sizeof(szBuf),
+                          szFileIni);
+
+  gErrorMessageStream.bSendMessage = FALSE;
+  gErrorMessageStream.dwMessageBufSize = MAX_BUF;
+  gErrorMessageStream.szMessage = NS_GlobalAlloc(gErrorMessageStream.dwMessageBufSize);
+}
+
+void DeInitErrorMessageStream()
+{
+  FreeMemory(&gErrorMessageStream.szMessage);
 }
 
 #ifdef SSU_DEBUG
@@ -5206,149 +4950,6 @@ int StartupCheckArchives(void)
   return(iRv);
 }
 
-BOOL CheckLegacy(HWND hDlg)
-{
-  char      szSection[MAX_BUF];
-  char      szFilename[MAX_BUF];
-  LPSTR     szMessage[4];
-  char      szIndex[MAX_BUF];
-  char      szVersionNew[MAX_BUF];
-  char      szDecryptedFilePath[MAX_BUF];
-  int       iIndex;
-  BOOL      bContinue;
-  BOOL      bRv;
-  DWORD     dwRv0;
-  DWORD     dwRv1;
-  verBlock  vbVersionNew;
-  verBlock  vbVersionOld;
-
-  bRv             = FALSE;
-  gdwUpgradeValue = UG_NONE;
-  szMessage[0]    = NULL;
-  szMessage[1]    = NULL;
-  szMessage[2]    = NULL;
-  bContinue       = TRUE;
-  iIndex          = -1;
-  while(bContinue)
-  {
-    ZeroMemory(szFilename,      sizeof(szFilename));
-    ZeroMemory(szVersionNew,    sizeof(szVersionNew));
-
-    ++iIndex;
-    itoa(iIndex, szIndex, 10);
-    lstrcpy(szSection, "Legacy Check");
-    lstrcat(szSection, szIndex);
-
-    dwRv0 = GetPrivateProfileString(szSection, "Filename", "", szFilename, MAX_BUF, szFileIniConfig);
-    dwRv1 = GetPrivateProfileString(szSection, "Version", "", szVersionNew, MAX_BUF, szFileIniConfig);
-    if(dwRv0 == 0L)
-    {
-      bContinue = FALSE;
-    }
-    else if(*szFilename != '\0')
-    {
-      if((szMessage[0] = NS_GlobalAlloc(MAX_BUF)) == NULL)
-      {
-        bRv = TRUE;
-        break;
-      }
-      if((szMessage[1] = NS_GlobalAlloc(MAX_BUF)) == NULL)
-      {
-        bRv = TRUE;
-        break;
-      }
-      if((szMessage[2] = NS_GlobalAlloc(MAX_BUF)) == NULL)
-      {
-        bRv = TRUE;
-        break;
-      }
-      if((szMessage[3] = NS_GlobalAlloc(MAX_BUF)) == NULL)
-      {
-        bRv = TRUE;
-        break;
-      }
-
-      lstrcpy(szMessage[0], sgProduct.szPath);
-      if(*sgProduct.szSubPath != '\0')
-      {
-        AppendBackSlash(szMessage[0], MAX_BUF);
-        lstrcat(szMessage[0], sgProduct.szSubPath);
-      }
-
-      GetPrivateProfileString(szSection, "Message0", "", szMessage[1], MAX_BUF, szFileIniConfig);
-      GetPrivateProfileString(szSection, "Message1", "", szMessage[2], MAX_BUF, szFileIniConfig);
-      GetPrivateProfileString(szSection, "Message2", "", szMessage[3], MAX_BUF, szFileIniConfig);
-      if((*szMessage[1] == '\0') && (*szMessage[2] == '\0') && (*szMessage[3] == '\0'))
-        /* no message string input. so just continue with the next check */
-        continue;
-
-      DecryptString(szDecryptedFilePath, szFilename);
-      if((dwRv1 == 0L) || (*szVersionNew == '\0'))
-      {
-        if(FileExists(szDecryptedFilePath))
-        {
-          MessageBeep(MB_ICONEXCLAMATION);
-          if((gdwUpgradeValue = DialogBoxParam(hSetupRscInst, MAKEINTRESOURCE(DLG_UPGRADE), hDlgCurrent, DlgProcUpgrade, (LPARAM)szMessage)) == UG_GOBACK)
-          {
-            bRv = TRUE;
-            break;
-          }
-        }
-        /* file does not exist, so it's okay.  Continue with the next check */
-        continue;
-      }
-
-      if(GetFileVersion(szDecryptedFilePath, &vbVersionOld))
-      {
-        TranslateVersionStr(szVersionNew, &vbVersionNew);
-        if(CompareVersion(vbVersionOld, vbVersionNew) < 0)
-        {
-          MessageBeep(MB_ICONEXCLAMATION);
-          if((gdwUpgradeValue = DialogBoxParam(hSetupRscInst, MAKEINTRESOURCE(DLG_UPGRADE), hDlgCurrent, DlgProcUpgrade, (LPARAM)szMessage)) == UG_GOBACK)
-          {
-            bRv = TRUE;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  FreeMemory(&szMessage[0]);
-  FreeMemory(&szMessage[1]);
-  FreeMemory(&szMessage[2]);
-  FreeMemory(&szMessage[3]);
-
-  /* returning TRUE means the user wants to go back and choose a different destination path
-   * returning FALSE means the user is ignoring the warning
-   */
-  return(bRv);
-}
-
-COLORREF DecryptFontColor(LPSTR szColor)
-{
-  int  i = 0;
-  long lFontColor = 0x00EEEEEE;
-
-  while(TRUE)
-  {
-    if(*FontColorMap[i] == '\0')
-      break;
-
-    if(lstrcmpi(szColor, FontColorMap[i]) == 0)
-    {
-      if(*FontColorMap[i + 1] != '\0')
-        lFontColor = atol(FontColorMap[i + 1]);
-
-      break;
-    }
-
-    ++i;
-  }
-
-  return(lFontColor);
-}
-
 HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 {
   int  iRv;
@@ -5405,6 +5006,9 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("General", "User Agent",   "", sgProduct.szUserAgent,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Sub Path",     "", sgProduct.szSubPath,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Program Name", "", sgProduct.szProgramName, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("General", "Lock Path",    "", szBuf,                   MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    sgProduct.bLockPath = TRUE;
   
   /* get main install path */
   if(LocatePreviousPath("Locate Previous Product Path", szPreviousPath, sizeof(szPreviousPath)) == FALSE)
@@ -5484,52 +5088,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* get main program folder name */
   GetPrivateProfileString("General", "Program Folder Name", "", szBuf, MAX_BUF, szFileIniConfig);
   DecryptString(sgProduct.szProgramFolderName, szBuf);
-
-  /* get setup title strings */
-  GetPrivateProfileString("General", "Setup Title0", "", sgProduct.szSetupTitle0, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("General", "Setup Title1", "", sgProduct.szSetupTitle1, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("General", "Setup Title2", "", sgProduct.szSetupTitle2, MAX_BUF, szFileIniConfig);
-
-  /* get setup title font color */
-  GetPrivateProfileString("General", "Setup Title0 Font Color", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  sgProduct.crSetupTitle0FontColor = DecryptFontColor(szBuf);
-  GetPrivateProfileString("General", "Setup Title1 Font Color", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  sgProduct.crSetupTitle1FontColor = DecryptFontColor(szBuf);
-  GetPrivateProfileString("General", "Setup Title2 Font Color", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  sgProduct.crSetupTitle2FontColor = DecryptFontColor(szBuf);
-
-  /* get setup title font size */
-  sgProduct.iSetupTitle0FontSize = 42;
-  sgProduct.iSetupTitle1FontSize = 42;
-  sgProduct.iSetupTitle2FontSize = 42;
-  GetPrivateProfileString("General", "Setup Title0 Font Size", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(*szBuf != '\0')
-    sgProduct.iSetupTitle0FontSize = atoi(szBuf);
-  GetPrivateProfileString("General", "Setup Title1 Font Size", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(*szBuf != '\0')
-    sgProduct.iSetupTitle1FontSize = atoi(szBuf);
-  GetPrivateProfileString("General", "Setup Title2 Font Size", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(*szBuf != '\0')
-    sgProduct.iSetupTitle2FontSize = atoi(szBuf);
-
-  /* get setup title font shadow */
-  GetPrivateProfileString("General", "Setup Title0 Font Shadow", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(lstrcmpi(szBuf, "FALSE") == 0)
-    sgProduct.bSetupTitle0FontShadow = FALSE;
-  else
-    sgProduct.bSetupTitle0FontShadow = TRUE;
-
-  GetPrivateProfileString("General", "Setup Title1 Font Shadow", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(lstrcmpi(szBuf, "FALSE") == 0)
-    sgProduct.bSetupTitle1FontShadow = FALSE;
-  else
-    sgProduct.bSetupTitle1FontShadow = TRUE;
-
-  GetPrivateProfileString("General", "Setup Title2 Font Shadow", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(lstrcmpi(szBuf, "FALSE") == 0)
-    sgProduct.bSetupTitle2FontShadow = FALSE;
-  else
-    sgProduct.bSetupTitle2FontShadow = TRUE;
 
   /* Welcome dialog */
   GetPrivateProfileString("Dialog Welcome",             "Show Dialog",     "", szShowDialog,                  MAX_BUF, szFileIniConfig);
@@ -5618,18 +5176,26 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     diDownloadOptions.bSaveInstaller = TRUE;
 
   GetPrivateProfileString("Dialog Download Options",       "Use Protocol",   "", szBuf,                            sizeof(szBuf), szFileIniConfig);
-
   if(lstrcmpi(szBuf, "HTTP") == 0)
     diDownloadOptions.dwUseProtocol = UP_HTTP;
   else
     diDownloadOptions.dwUseProtocol = UP_FTP;
 
   GetPrivateProfileString("Dialog Download Options",       "Use Protocol Settings", "", szBuf,                     sizeof(szBuf), szFileIniConfig);
-
   if(lstrcmpi(szBuf, "DISABLED") == 0)
     diDownloadOptions.bUseProtocolSettings = FALSE;
   else
     diDownloadOptions.bUseProtocolSettings = TRUE;
+
+  GetPrivateProfileString("Dialog Download Options",
+                          "Show Protocols",
+                          "",
+                          szBuf,
+                          sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "FALSE") == 0)
+    diDownloadOptions.bShowProtocols = FALSE;
+  else
+    diDownloadOptions.bShowProtocols = TRUE;
 
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diDownloadOptions.bShowDialog = TRUE;
@@ -5728,6 +5294,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 
   InitSiComponents(szFileIniConfig);
   InitSiteSelector(szFileIniConfig);
+  InitErrorMessageStream(szFileIniConfig);
 
   /* get Default Setup Type */
   GetPrivateProfileString("General", "Default Setup Type", "", szBuf, MAX_BUF, szFileIniConfig);
@@ -5806,6 +5373,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     siCFXpcomFile.bCleanup = TRUE;
 
   LogISProductInfo();
+  LogMSProductInfo();
   CleanupXpcomFile();
   ShowMessage(szMsgInitSetup, FALSE);
 
@@ -6097,7 +5665,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "CONFIGPATH") == 0)
   {
     /* parse for the "c:\Windows\Config" directory */
-    if(ulOSType & OS_WIN9x)
+    if(gSystemInfo.dwOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_LOCAL_MACHINE, szWRMSCurrentVersion, "ConfigPath", szVariable, dwVariableSize);
     }
@@ -6110,7 +5678,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_STARTUP") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs\\Startup" directory */
-    if(ulOSType & OS_WIN9x)
+    if(gSystemInfo.dwOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, szWRMSShellFolders, "Startup", szVariable, dwVariableSize);
     }
@@ -6122,7 +5690,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_PROGRAMS") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs" directory */
-    if(ulOSType & OS_WIN9x)
+    if(gSystemInfo.dwOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, szWRMSShellFolders, "Programs", szVariable, dwVariableSize);
     }
@@ -6134,7 +5702,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_STARTMENU") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu" directory */
-    if(ulOSType & OS_WIN9x)
+    if(gSystemInfo.dwOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, szWRMSShellFolders, "Start Menu", szVariable, dwVariableSize);
     }
@@ -6146,7 +5714,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_DESKTOP") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Desktop" directory */
-    if(ulOSType & OS_WIN9x)
+    if(gSystemInfo.dwOSType & OS_WIN9x)
     {
       GetWinReg(HKEY_CURRENT_USER, szWRMSShellFolders, "Desktop", szVariable, dwVariableSize);
     }
@@ -6218,7 +5786,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "PERSONAL_PRINTHOOD") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\%USERNAME%\PrintHood" directory */
-    if(ulOSType & OS_NT)
+    if(gSystemInfo.dwOSType & OS_NT)
     {
       GetWinReg(HKEY_CURRENT_USER, szWRMSShellFolders, "PrintHood", szVariable, dwVariableSize);
     }
@@ -6525,7 +6093,7 @@ int ExtractDirEntries(char* directory, void* vZip)
       int prefix_length = 0;
       
       if(directory)
-        prefix_length = strlen(directory) - 1;
+        prefix_length = lstrlen(directory) - 1;
 
       if(prefix_length >= sizeof(buf)-1)
         return ZIP_ERR_GENERAL;
@@ -6747,6 +6315,67 @@ void DeInitialize()
 {
   char szBuf[MAX_BUF];
 
+  if(gErrorMessageStream.bEnabled && gErrorMessageStream.bSendMessage)
+  {
+    char *szPartialEscapedURL = NULL;
+
+    /* append to the message stream the list of components that either had
+     * network retries or crc retries */
+    LogMSDownloadFileStatus();
+
+    /* replace this function call with a call to xpnet */
+    if((szPartialEscapedURL = nsEscape(gErrorMessageStream.szMessage,
+                                       url_Path)) != NULL)
+    {
+      char  szMsg[MAX_BUF];
+      char  *szFullURL = NULL;
+      DWORD dwSize;
+
+      /* take into account '?' and '\0' chars */
+      dwSize = lstrlen(gErrorMessageStream.szURL) +
+               lstrlen(szPartialEscapedURL) + 2;
+      if((szFullURL = NS_GlobalAlloc(dwSize)) != NULL)
+      {
+        wsprintf(szFullURL,
+                 "%s?%s",
+                 gErrorMessageStream.szURL,
+                 szPartialEscapedURL);
+
+        wsprintf(szMsg,
+                 "UnEscapedURL: %s?%s\nEscapedURL: %s",
+                 gErrorMessageStream.szURL,
+                 gErrorMessageStream.szMessage,
+                 szFullURL);
+
+        if(gErrorMessageStream.bShowConfirmation &&
+          (*gErrorMessageStream.szConfirmationMessage != '\0'))
+        {
+          char szConfirmationMessage[MAX_BUF];
+
+          wsprintf(szBuf,
+                   "\n\n  %s",
+                   gErrorMessageStream.szMessage);
+          wsprintf(szConfirmationMessage,
+                   gErrorMessageStream.szConfirmationMessage,
+                   szBuf);
+          if(MessageBox(hWndMain,
+                        szConfirmationMessage,
+                        sgProduct.szProductName,
+                        MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
+            // PrintError(szMsg, ERROR_CODE_HIDE);
+            WGet(szFullURL);
+        }
+        else if(!gErrorMessageStream.bShowConfirmation)
+          //PrintError(szMsg, ERROR_CODE_HIDE);
+          WGet(szFullURL);
+
+        FreeMemory(&szFullURL);
+      }
+
+      FreeMemory(&szPartialEscapedURL);
+    }
+  }
+
   LogISTime(W_END);
   if(bCreateDestinationDir)
   {
@@ -6782,6 +6411,7 @@ void DeInitialize()
   DeInitDlgWelcome(&diWelcome);
   DeInitSetupGeneral();
   DeInitDSNode(&gdsnComponentDSRequirement);
+  DeInitErrorMessageStream();
 
   FreeMemory(&szTempDir);
   FreeMemory(&szOSTempDir);

@@ -28,6 +28,7 @@
 #include "shortcut.h"
 #include "ifuncns.h"
 #include "wizverreg.h"
+#include "logging.h"
 #include <logkeys.h>
 
 HRESULT TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile)
@@ -1237,7 +1238,16 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
       {
         lstrcat(szTarget, " ");
         lstrcat(szTarget, szParameters);
-        SetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", TRUE, "Netscape", TRUE, REG_SZ, szTarget, lstrlen(szTarget));
+        SetWinReg(HKEY_CURRENT_USER,
+                  "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+                  TRUE,
+                  "Netscape",
+                  TRUE,
+                  REG_SZ,
+                  szTarget,
+                  lstrlen(szTarget),
+                  FALSE,
+                  FALSE);
       }
       else
         WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
@@ -1270,6 +1280,36 @@ HKEY ParseRootKey(LPSTR szRootKey)
     hkRootKey = HKEY_CLASSES_ROOT;
 
   return(hkRootKey);
+}
+
+char *ParseRootKeyString(HKEY hkKey, LPSTR szRootKey, DWORD dwRootKeyBufSize)
+{
+  if(!szRootKey)
+    return(NULL);
+
+  ZeroMemory(szRootKey, dwRootKeyBufSize);
+  if((hkKey == HKEY_CURRENT_CONFIG) &&
+    ((long)dwRootKeyBufSize > lstrlen("HKEY_CURRENT_CONFIG")))
+    lstrcpy(szRootKey, "HKEY_CURRENT_CONFIG");
+  else if((hkKey == HKEY_CURRENT_USER) &&
+         ((long)dwRootKeyBufSize > lstrlen("HKEY_CURRENT_USER")))
+    lstrcpy(szRootKey, "HKEY_CURRENT_USER");
+  else if((hkKey == HKEY_LOCAL_MACHINE) &&
+         ((long)dwRootKeyBufSize > lstrlen("HKEY_LOCAL_MACHINE")))
+    lstrcpy(szRootKey, "HKEY_LOCAL_MACHINE");
+  else if((hkKey == HKEY_USERS) &&
+         ((long)dwRootKeyBufSize > lstrlen("HKEY_USERS")))
+    lstrcpy(szRootKey, "HKEY_USERS");
+  else if((hkKey == HKEY_PERFORMANCE_DATA) &&
+         ((long)dwRootKeyBufSize > lstrlen("HKEY_PERFORMANCE_DATA")))
+    lstrcpy(szRootKey, "HKEY_PERFORMANCE_DATA");
+  else if((hkKey == HKEY_DYN_DATA) &&
+         ((long)dwRootKeyBufSize > lstrlen("HKEY_DYN_DATA")))
+    lstrcpy(szRootKey, "HKEY_DYN_DATA");
+  else if((long)dwRootKeyBufSize > lstrlen("HKEY_CLASSES_ROOT"))
+    lstrcpy(szRootKey, "HKEY_CLASSES_ROOT");
+
+  return(szRootKey);
 }
 
 BOOL ParseRegType(LPSTR szType, DWORD *dwType)
@@ -1474,26 +1514,64 @@ DWORD GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, 
   return(dwType);
 }
 
-void SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BOOL bOverwriteName, DWORD dwType, LPBYTE lpbData, DWORD dwSize)
+void SetWinReg(HKEY hkRootKey,
+               LPSTR szKey,
+               BOOL bOverwriteKey,
+               LPSTR szName,
+               BOOL bOverwriteName,
+               DWORD dwType,
+               LPBYTE lpbData,
+               DWORD dwSize,
+               BOOL bLogForUninstall,
+               BOOL bDnu)
 {
   HKEY    hkResult;
   DWORD   dwErr;
   DWORD   dwDisp;
   BOOL    bKeyExists;
   BOOL    bNameExists;
+  char    szBuf[MAX_BUF];
+  char    szRootKey[MAX_BUF_TINY];
+
 
   bKeyExists  = WinRegKeyExists(hkRootKey, szKey);
   bNameExists = WinRegNameExists(hkRootKey, szKey, szName);
   dwErr       = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
 
   if(dwErr != ERROR_SUCCESS)
+  {
     dwErr = RegCreateKeyEx(hkRootKey, szKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hkResult, &dwDisp);
+    /* log the win reg command */
+    if(bLogForUninstall &&
+       ParseRootKeyString(hkRootKey, szRootKey, sizeof(szRootKey)))
+    {
+      wsprintf(szBuf, "%s\\%s []", szRootKey, szKey);
+      UpdateInstallLog(KEY_CREATE_REG_KEY, szBuf, bDnu);
+    }
+  }
 
   if(dwErr == ERROR_SUCCESS)
   {
     if((bNameExists == FALSE) ||
       ((bNameExists == TRUE) && (bOverwriteName == TRUE)))
+    {
       dwErr = RegSetValueEx(hkResult, szName, 0, dwType, lpbData, dwSize);
+      /* log the win reg command */
+      if(bLogForUninstall &&
+         ParseRootKeyString(hkRootKey, szRootKey, sizeof(szRootKey)))
+      {
+        if(ParseRegType(szBuf, &dwType))
+        {
+          wsprintf(szBuf, "%s\\%s [%s]", szRootKey, szKey, szName);
+          UpdateInstallLog(KEY_STORE_REG_STRING, szBuf, bDnu);
+        }
+        else
+        {
+          wsprintf(szBuf, "%s\\%s [%s]", szRootKey, szKey, szName);
+          UpdateInstallLog(KEY_STORE_REG_NUMBER, szBuf, bDnu);
+        }
+      }
+    }
 
     RegCloseKey(hkResult);
   }
@@ -1510,6 +1588,7 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
   char    szOverwriteName[MAX_BUF];
   char    szSection[MAX_BUF];
   HKEY    hRootKey;
+  BOOL    bDnu;
   BOOL    bOverwriteKey;
   BOOL    bOverwriteName;
   DWORD   dwIndex;
@@ -1567,17 +1646,30 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
       else
         dwSize = 0;
 
+      GetPrivateProfileString(szSection,
+                              "Do Not Uninstall",
+                              "",
+                              szBuf,
+                              sizeof(szBuf),
+                              szFileIniConfig);
+      if(lstrcmpi(szBuf, "TRUE") == 0)
+        bDnu = TRUE;
+      else
+        bDnu = FALSE;
+
       GetPrivateProfileString(szSection, "Type",                "", szBuf,           sizeof(szBuf), szFileIniConfig);
       if(ParseRegType(szBuf, &dwType))
       {
         /* create/set windows registry key here (string value)! */
-        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName, dwType, (CONST LPBYTE)szValue, lstrlen(szValue));
+        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
+                  dwType, (CONST LPBYTE)szValue, lstrlen(szValue), TRUE, bDnu);
       }
       else
       {
         iiNum = _atoi64(szValue);
         /* create/set windows registry key here (binary/dword value)! */
-        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName, dwType, (CONST LPBYTE)&iiNum, dwSize);
+        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
+                  dwType, (CONST LPBYTE)&iiNum, dwSize, TRUE, bDnu);
       }
     }
 

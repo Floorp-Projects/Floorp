@@ -28,6 +28,7 @@
 #include "xpistub.h"
 #include "xpi.h"
 #include "xperr.h"
+#include "logging.h"
 #include "ifuncns.h"
 
 #define BDIR_RIGHT 1
@@ -276,10 +277,12 @@ HRESULT SmartUpdateJars()
         LogISXPInstallComponent(siCObject->szDescriptionShort);
 
         hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
-        if(hrResult == 999)
+        if(hrResult == E_REBOOT)
           bReboot = TRUE;
-        else if(hrResult != WIZ_OK)
+        else if((hrResult != WIZ_OK) &&
+               !(siCObject->dwAttributes & SIC_IGNORE_XPINSTALL_ERROR))
         {
+          LogMSXPInstallStatus(siCObject->szArchiveName, hrResult);
           LogISXPInstallComponentResult(hrResult);
           if(NS_LoadString(hSetupRscInst, IDS_ERROR_XPI_INSTALL, szEXpiInstall, MAX_BUF) == WIZ_OK)
           {
@@ -298,6 +301,14 @@ HRESULT SmartUpdateJars()
         UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
         ProcessWindowsMessages();
         LogISXPInstallComponentResult(hrResult);
+
+        if((hrResult != WIZ_OK) &&
+          (siCObject->dwAttributes & SIC_IGNORE_XPINSTALL_ERROR))
+          /* reset the result to WIZ_OK if there was an error and the
+           * component's attributes contains SIC_IGNORE_XPINSTALL_ERROR.
+           * This should be done after LogISXPInstallComponentResult()
+           * because we still should log the error value. */
+          hrResult = WIZ_OK;
       }
 
       if(siCObject->dwAttributes & SIC_SELECTED)

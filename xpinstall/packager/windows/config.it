@@ -26,6 +26,12 @@ Path=[PROGRAMFILESDIR]\$CompanyName$\$ProductName$
 ;     actually created: [Path]\[Sub Path]
 ;     (where [Path] is the Path= key above)
 Sub Path=
+
+; Controls the Browse button that allows the user to 
+; change the destination path of the product.
+; Default value is FALSE;
+Lock Path=FALSE
+
 Program Name=$MainExeFile$
 
 ; Program Folder Path values:
@@ -62,8 +68,8 @@ Program Folder Path=[COMMON_PROGRAMS]
 
 Uninstall Filename=$UninstallFile$
 
-; This key is used as a fail over key.  The url here will be used
-; when the redirect.ini file is not found (ie. failed to download).
+; This key is used as a fail over key.  This url will be used when the
+; url in the Site Selector fails.
 url=$ArchiveUrl$
 
 ; Default Setup Type values:
@@ -73,23 +79,30 @@ url=$ArchiveUrl$
 ;   Setup Type 3 - fourth radio button (usually the Custom option)
 Default Setup Type=Setup Type 1
 
-; Default Font Size is 32
-; Default Font Color is WHITE (of BLACK and GREEN)
-; Default Font Shadow is TRUE
-;*** LOCALIZE ME BABY ***
-Setup Title0=$ProductName$ Setup
-Setup Title0 Font Size=
-Setup Title0 Font Color=
-Setup Title0 Font Shadow=TRUE
-;*** LOCALIZE ME BABY ***
-Setup Title1=Build $Version$
-Setup Title1 Font Size=12
-Setup Title1 Font Color=BLACK
-Setup Title1 Font Shadow=FALSE
-Setup Title2=
-Setup Title2 Font Size=
-Setup Title2 Font Color=
-Setup Title2 Font Shadow=TRUE
+; This section contains info on how to send error information in case of
+; either a download or xpinstall error.
+; By default, this feature is enabled, unless disabled.
+[Message Stream]
+; Values:
+;   Enabled
+;   Disabled
+;   default is Enabled.
+Status=Disabled
+
+; URL to cgi script to send error information to.  The information will
+; be appended to the url in the form of parameters to the cgi script.
+url=http://orb.mcom.com/install/error.cgi
+
+; Indicates whether to show a confirmation dialog or not.  If this
+; dialog is not shown, the error information will be *automatically*
+; sent without any indication to the user unless the Status= is set
+; to Disabled.
+;
+; Default value is TRUE if nothing is set.
+Show Confirmation=TRUE
+Confirmation Message=There was an error encountered during installation of $ProductName$.  The following information will be sent back to us to help us improve the product: %s
+
+
 
 ; HKey:              valid decryptable setup key is [Product CurrentVersion]
 ; Decrypt HKey:      there are times when '[' and ']' are valid part of windows registry key names.
@@ -104,19 +117,6 @@ Name=Install Directory
 Decrypt HKey=TRUE
 Contains Filename=FALSE
 Verify Existence=
-
-; This section checks for legacy files.
-; If the file(s), indicated by the Filename= key, is found to have a version of less than the value
-; indicated by the Version= key, then display the string in the Message= key.
-[Legacy Check0]
-Filename=[SETUP PATH]\$MainExeFile$
-Version=$XPInstallVersion$.0
-;*** LOCALIZE ME BABY ***
-Message0=The destination directory already contains an earlier version of $ProductName$. To avoid problems, the installer will delete the destination directory and all its files, and then re-create the directory and install $ProductName$.
-;*** LOCALIZE ME BABY ***
-Message1=If you wish to keep any files currently in the destination directory, either save them to a temporary directory and restore them after the install OR install to an alternate directory.
-;*** LOCALIZE ME BABY ***
-Message2=Click Delete to delete the directory when installation begins. If you prefer not to delete the directory, click Back to go back and choose a different destination directory.
 
 [Dialog Welcome]
 Show Dialog=TRUE
@@ -166,10 +166,8 @@ C3=Component Uninstaller
 C4=Component US English Profile Defaults
 C5=Component En US lang pack
 C6=Component US region pack
-; Make sure Component QFA is LAST because it is a place holder until
-; mozilla.org release team switches to the real .xpi file.  Also
-; because not every 3rd party developer might want this component, so
-; having this LAST will be easier to remove from the list.
+; Make sure Component QFA is LAST so 3rd party developers who might not want
+; this component can easily remove it.
 C7=Component QFA
 
 [Setup Type1]
@@ -190,10 +188,8 @@ C5=Component Chatzilla
 C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
-; Make sure Component QFA is LAST because it is a place holder until
-; mozilla.org release team switches to the real .xpi file.  Also
-; because not every 3rd party developer might want this component, so
-; having this LAST will be easier to remove from the list.
+; Make sure Component QFA is LAST so 3rd party developers who might not want
+; this component can easily remove it.
 C9=Component QFA
 
 [Setup Type2]
@@ -216,10 +212,8 @@ C5=Component Chatzilla
 C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
-; Make sure Component QFA is LAST because it is a place holder until
-; mozilla.org release team switches to the real .xpi file.  Also
-; because not every 3rd party developer might want this component, so
-; having this LAST will be easier to remove from the list.
+; Make sure Component QFA is LAST so 3rd party developers who might not want
+; this component can easily remove it.
 C9=Component QFA
 
 
@@ -289,6 +283,9 @@ Use Protocol=FTP
 ; Use FTP/Use HTTP radio buttons in the Download Dialog.
 ; Default value is ENABLED unless DISABLED is specified.
 Use Protocol Settings=ENABLED
+; Controls the radio buttons visibility
+; Default value is TRUE
+Show Protocols=TRUE
 
 [Dialog Advanced Settings]
 Show Dialog=TRUE
@@ -370,37 +367,54 @@ $InstallSizeArchive$:xpcom.xpi
 ;
 ;   SELECTED      - Component is selected to be installed by default.
 ;
+;   UNSELECTED    - Component is to be displayed unselected in the Options
+;                   dialog.  If the component is listed in the non-custom
+;                   Setup Type section, it will be assumed to be selected
+;                   by default.
+;
 ;   INVISIBLE     - Component is not shown in the Select Components dialog.
 ;
 ;   LAUNCHAPP     - Component is downloaded and simply run (like a .exe file)
-;                   after all the components have been downloaded and xpinstall'ed.
+;                   after all the components have been downloaded and
+;                   xpinstall'ed.
 ;
 ;   DOWNLOAD_ONLY - Component is to be only downloaded to the ns_temp folder,
 ;                   then deleted as Setup is quitting.
 ;
-;   ADDITIONAL    - Component will is to be shown in the Additional Options dialog
-;                   (2nd Options dialog) instead of the 1st Options dialog.
+;   ADDITIONAL    - Component will is to be shown in the Additional Options
+;                   dialog (2nd Options dialog) instead of the 1st Options
+;                   dialog.
 ;
-;   DISABLED      - Component is to be shown as disabled (greyed out) in either of
-;                   two Options dialog.
+;   DISABLED      - Component is to be shown as disabled (greyed out) in
+;                   either of two Options dialog.
 ;
-;   UNSELECTED    - Component it to be displayed unselected in the Options dialog.
-;                   If the component is listed in the non-custom Setup Type section,
-;                   it will be assumed to be selected by default.
-;
-;   FORCE_UPGRADE - Force Upgrade checks for a particular file or directory provided
-;                   in the Force Upgrade FileX= key(s).  If any of the listed file or
-;                   directory exists, then this component will have it's SELECTED and
-;                   DISABLED Attributes set automatically.  Force Upgrade will
-;                   override the following:
+;   FORCE_UPGRADE - Force Upgrade checks for a particular file or directory
+;                   provided in the Force Upgrade FileX= key(s).  If any of
+;                   the listed file or directory exists, then this component
+;                   will have its SELECTED and DISABLED Attributes set
+;                   automatically.  Force Upgrade will override the following:
 ;
 ;                       Random Install Percentage= setting
 ;                       UNSELECTED Attribute setting
 ;                       Dependency settings
 ;                       Dependee settings
-;                       Setup Type settings - meaning that even if this component is
-;                                             not listed in the selected Setup Type,
-;                                             it will be affected.
+;                       Setup Type settings - meaning that even if this
+;                                             component is not listed in the
+;                                             selected Setup Type, it will be
+;                                             affected.
+;
+;   IGNORE_DOWNLOAD_ERROR  - If the component needs to be downloaded from a
+;                            server, setting this attribute will indicate that
+;                            any download error encountered will be ignored
+;                            and treated as if there were no error.
+;                            If the component does not need to be downloaded,
+;                            then this attribute has no effect.
+;
+;   IGNORE_XPINSTALL_ERROR - If the component is a .xpi file, then any error
+;                            resulting from the installation of the .xpi file
+;                            will be ignored.  If the .xpi file is not to be
+;                            installed, then this attribute is ignored.
+;
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\xpcom.dll
 
@@ -441,22 +455,6 @@ Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
 ;This section overrides the default user-chosen path for Uninstaller only.
 [Component Uninstaller-Destination Path0]
 Path=[WINDIR]
-
-;Create an uninstaller shortcut for $ProductName$
-[Component Uninstaller-Program Folder0]
-Timing=post archive
-Show Folder=HIDE
-Program Folder=[Default Folder]
-
-[Component Uninstaller-Program Folder0-Shortcut0]
-File=[WINDIR]\$UninstallFile$
-;*** LOCALIZE ME BABY ***
-Arguments=/ua "$UserAgent$"
-Working Dir=[WINDIR]
-;*** LOCALIZE ME BABY ***
-Description=$ProductName$ Uninstaller
-Icon Path=[WINDIR]\$UninstallFile$
-Icon Id=0
 
 
 [Component Chatzilla]
@@ -703,6 +701,65 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
 
+; The following keys are to help JRE's installer locate where mozilla gets
+; installed to.  It has not been updated to look for the new keys.
+[Windows Registry3]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\Mozilla
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry4]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\Mozilla\Seamonkey
+Name=CurrentVersion
+Name Value=$UserAgent$
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry5]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\Mozilla\Seamonkey\$UserAgent$
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry6]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\Mozilla\Seamonkey\$UserAgent$\Main
+Name=Program Folder Path
+Name Value=[Default Folder]
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
 ;   MAXIMIZE         Maximizes the specified window.
@@ -822,11 +879,11 @@ Identifier0=Site0
 ;*** LOCALIZE ME BABY ***
 Description0=Default
 ;*** LOCALIZE ME BABY ***
-Domain0=$RedirIniUrl$
+Domain0=$ArchiveUrl$
 
 Identifier1=Site1
 ;*** LOCALIZE ME BABY ***
 Description1=North America
 ;*** LOCALIZE ME BABY ***
-Domain1=$RedirIniUrl$
+Domain1=$ArchiveUrl$
 

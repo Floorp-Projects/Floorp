@@ -61,8 +61,6 @@ DWORD           dwSetupType;
 DWORD           dwScreenX;
 DWORD           dwScreenY;
 
-ULONG           ulOSType;
-
 DWORD           dwTempSetupType;
 DWORD           gdwUpgradeValue;
 
@@ -93,6 +91,9 @@ siSD            siSDObject;
 siCF            siCFXpcomFile;
 siC             *siComponents;
 ssi             *ssiSiteSelector;
+sems            gErrorMessageStream;
+sysinfo         gSystemInfo;
+dsN             *gdsnComponentDSRequirement = NULL;
 
 /* do not add setup.exe to the list because we figure out the filename
  * by calling GetModuleFileName() */

@@ -28,6 +28,7 @@
 #include "ifuncns.h"
 #include "xpistub.h"
 #include "xpi.h"
+#include "logging.h"
 #include <shlobj.h>
 #include <logkeys.h>
 
@@ -78,97 +79,6 @@ void DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose)
     EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
 }
 
-void PaintGradientShade(HWND hWnd, HDC hdc)
-{
-  RECT    rectClient;        // Rectangle for entire client area
-  RECT    rectFill;          // Rectangle for filling band
-  HBRUSH  brush;
-  float   fStep;            // How large is each band?
-  int     iOnBand;  // Loop index
-
-  GetClientRect(hWnd, &rectClient);
-
-  // Determine how large each band should be in order to cover the
-  // client with 256 bands (one for every color intensity level)
-  fStep = (float)rectClient.bottom / 256.0f;
-
-  // Start filling bands
-  for (iOnBand = 0; iOnBand < 256; iOnBand++)
-  {
-
-    // Set the location of the current band
-    SetRect(&rectFill,
-            0,                           // Upper left X
-            (int)(iOnBand * fStep),      // Upper left Y
-            rectClient.right+1,          // Lower right X
-            (int)((iOnBand+1) * fStep)); // Lower right Y
-
-    // Create a brush with the appropriate color for this band
-    brush = CreateSolidBrush(RGB(0, 0, (255 - iOnBand)));
-
-    // Fill the rectangle
-    FillRect(hdc, &rectFill, brush);
-
-    // Get rid of the brush we created
-    DeleteObject(brush);
-  };
-}
-
-LRESULT CALLBACK DlgProcMain(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  HDC           hdc;
-  PAINTSTRUCT   ps;
-  BOOL          bReturn = FALSE;
-
-  switch(msg)
-  {
-    case WM_CREATE:
-      hWndMain = hWnd;
-      bReturn = FALSE;
-      break;
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDWIZNEXT:
-          DlgSequenceNext();
-          bReturn = FALSE;
-          break;
-
-        case IDWIZBACK:
-          DlgSequencePrev();
-          bReturn = FALSE;
-          break;
-
-        default:
-          bReturn = FALSE;
-          break;
-      }
-      break;
-
-    case WM_PAINT:
-      hdc = BeginPaint(hWnd, &ps);
-      // Add any drawing code here...
-
-      PaintGradientShade(hWnd, hdc);
-      OutputSetupTitle(hdc);
-
-      EndPaint(hWnd, &ps);
-      bReturn = FALSE;
-      break;
-
-    case WM_CLOSE:
-      if(gbProcessingXpnstallFiles == FALSE)
-        AskCancelDlg(hWnd);
-      bReturn = FALSE;
-      break;
-
-    default:
-      return(DefWindowProc(hWnd, msg, wParam, lParam));
-  }
-  return(bReturn);
-}
-
 LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   char szBuf[MAX_BUF];
@@ -186,7 +96,13 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SetDlgItemText(hDlg, IDC_STATIC2, diWelcome.szMessage2);
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       break;
 
@@ -251,7 +167,13 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       }
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       break;
 
@@ -270,53 +192,6 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
         case IDCANCEL:
           AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(0);
-}
-
-LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  char  szBuf[MAX_BUF];
-  LPSTR *szStrList;
-  RECT  rDlg;
-
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      NS_LoadString(hSetupRscInst, IDS_MB_WARNING_STR, szBuf, sizeof(szBuf));
-      SetWindowText(hDlg, szBuf);
-
-      szStrList = (LPSTR *)lParam;
-
-      SetDlgItemText(hDlg, IDC_DELETE_PATH, szStrList[0]);
-      SetDlgItemText(hDlg, IDC_MESSAGE0,    szStrList[1]);
-      SetDlgItemText(hDlg, IDC_MESSAGE1,    szStrList[2]);
-      SetDlgItemText(hDlg, IDC_MESSAGE2,    szStrList[3]);
-
-      if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
-
-      break;
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case ID_DELETE:
-          EndDialog(hDlg, UG_DELETE);
-          break;
-
-        case ID_IGNORE:
-          EndDialog(hDlg, UG_IGNORE);
-          break;
-
-        case IDWIZBACK:
-          EndDialog(hDlg, UG_GOBACK);
           break;
 
         default:
@@ -356,7 +231,13 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
       SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath);
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       OldListBoxWndProc    = SubclassWindow(hwndLBFolders, (WNDPROC)ListBoxBrowseWndProc);
       gdwIndexLastSelected = SendDlgItemMessage(hDlg, 1121, LB_GETCURSEL, 0, (LPARAM)0);
@@ -707,12 +588,23 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       }
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       if((*diSetupType.szReadmeFilename == '\0') || (FileExists(diSetupType.szReadmeFilename) == FALSE))
         ShowWindow(hReadme, SW_HIDE);
       else
         ShowWindow(hReadme, SW_SHOW);
+
+      if(sgProduct.bLockPath)
+        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_BROWSE), FALSE);
+      else
+        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_BROWSE), TRUE);
 
       break;
 
@@ -745,15 +637,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
 
         case IDWIZNEXT:
           lstrcpy(sgProduct.szPath, szTempSetupPath);
-
-#ifdef NUKE_FROM_ORBIT
-          /* check for legacy file.  We're trying not to install over an old incompatible version */
-          if(CheckLegacy(hDlg) == TRUE)
-          {
-            SetForegroundWindow(hDlg);
-            break;
-          }
-#endif /* NUKE_FROM_ORBIT */
 
           /* append a backslash to the path because CreateDirectoriesAll()
              uses a backslash to determine directories */
@@ -1087,7 +970,13 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       }
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
          returns value in kbytes */
@@ -1265,7 +1154,13 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
       }
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
          returns value in kbytes */
@@ -1456,7 +1351,13 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
         ShowWindow(hcbCheck3, SW_HIDE);
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       break;
 
@@ -1558,7 +1459,13 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
       }
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       break;
 
@@ -1623,7 +1530,13 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_PASSWD, diAdvancedSettings.szProxyPasswd);
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       break;
 
@@ -1708,7 +1621,13 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       SetDlgItemText(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, szBuf);
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       ssiTemp = ssiSiteSelector;
       do
@@ -1753,7 +1672,7 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
 
       }
 
-      if(diDownloadOptions.bUseProtocolSettings)
+      if((diDownloadOptions.bShowProtocols) && (diDownloadOptions.bUseProtocolSettings))
       {
         ShowWindow(GetDlgItem(hDlg, IDC_USE_FTP),  SW_SHOW);
         ShowWindow(GetDlgItem(hDlg, IDC_USE_HTTP), SW_SHOW);
@@ -2077,7 +1996,13 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       SetWindowText(hDlg, diStartInstall.szTitle);
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       if((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0))
       {
@@ -2146,7 +2071,13 @@ LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SetFocus(hRadioYes);
 
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       break;
 
@@ -2224,7 +2155,13 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
       SetWindowText(hDlg, szBuf);
       if(GetClientRect(hDlg, &rDlg))
-        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
 
       break;
 
@@ -2249,8 +2186,10 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
           ReleaseDC(hSTMessage, hdcSTMessage);
 
           SetWindowPos(hDlg, HWND_TOP,
-                      (dwScreenX/2)-((sizeString.cx + 55)/2), (dwScreenY/2)-((sizeString.cy + 50)/2),
-                      sizeString.cx + 55, sizeString.cy + 50,
+                      (gSystemInfo.dwScreenX/2)-((sizeString.cx + 55)/2),
+                      (gSystemInfo.dwScreenY/2)-((sizeString.cy + 50)/2),
+                      sizeString.cx + 55,
+                      sizeString.cy + 50,
                       SWP_SHOWWINDOW);
 
           if(GetClientRect(hDlg, &rDlg))
@@ -2496,7 +2435,7 @@ void DlgSequenceNext()
         LogISSetupType();
         LogISComponentsSelected();
         LogISComponentsToDownload();
-        LogISDiskSpace();
+        LogISDiskSpace(gdsnComponentDSRequirement);
 
         lstrcpy(szDestPath, sgProduct.szPath);
         if(*sgProduct.szSubPath != '\0')
@@ -2574,19 +2513,6 @@ void DlgSequenceNext()
             bDone = TRUE;
             break;
           }
-
-#ifdef NUKE_FROM_ORBIT
-          if(gdwUpgradeValue == UG_DELETE)
-          {
-            char szMessage[MAX_BUF];
-
-            NS_LoadString(hSetupRscInst, IDS_STR_DELETING_DESTINATION_DIR, szMessage, sizeof(szMessage));
-            ShowMessage(szMessage, TRUE);
-            DirectoryRemove(szDestPath, TRUE);
-            CreateDirectoriesAll(szDestPath, TRUE);
-            ShowMessage(szMessage, FALSE);
-          }
-#endif /* NUKE_FROM_ORBIT */
 
           lstrcat(szDestPath, "uninstall\\");
           CreateDirectoriesAll(szDestPath, TRUE);
