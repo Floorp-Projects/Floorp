@@ -29,12 +29,15 @@ interface nsIModule : nsISupports
     //		create new objects.
     // SingletonFactory can be queried off the Class Object. Services can be created
     //		using the singletonfactory.
-    [noscript] void GetClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
-                        in nsIIDRef aIID, out voidStar return_ClassObject);
+    void GetClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
+                        in nsIIDRef aIID,
+                        [retval, iid_is(aIID)] out nsQIResult result);
 
     // Component registration
-    void RegisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location);
-    void UnregisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location);
+    void RegisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
+                      in string registryLocation);
+    void UnregisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
+                        in string registryLocation);
 
     // Module load management
     // okToUnload: indicates to the caller if the module can be unloaded.

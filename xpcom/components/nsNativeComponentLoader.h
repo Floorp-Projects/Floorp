@@ -49,8 +49,6 @@ class nsNativeComponentLoader : public nsIComponentLoader {
     nsObjectHashtable*  mDllStore;
     NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
     nsIRegistry::Key mXPCOMKey;
-    nsSpecialSystemDirectory *mComponentsDir;
-    PRUint32 mComponentsDirLen;
 
  private:
     nsresult CreateDll(nsIFileSpec *spec, const char *aLocation, nsDll **aDll);

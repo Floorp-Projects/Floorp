@@ -35,10 +35,6 @@
 
 extern PRLogModuleInfo *nsComponentManagerLog;
 
-const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
-const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
-const static char XPCOM_LIB_PREFIX[]          = "lib:";
-
 /* XXX consolidate with one in nsComponentManager.cpp */
 //
 // To prevent leaks, we are using this class. Typical use would be
@@ -85,7 +81,6 @@ nsNativeComponentLoader::~nsNativeComponentLoader()
     mRegistry = nsnull;
     mCompMgr = nsnull;
 
-    delete mComponentsDir;
     delete mDllStore;
 }
     
@@ -202,12 +197,6 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 #endif
         return rv;
     }
-
-    mComponentsDir =
-        new nsSpecialSystemDirectory(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory);
-    if (!mComponentsDir)
-        return NS_ERROR_OUT_OF_MEMORY;
-    mComponentsDirLen = strlen(mComponentsDir->GetNativePathCString());
 
     if (!mDllStore) {
         mDllStore = new nsObjectHashtable(nsnull, nsnull, // never copy
@@ -445,7 +434,7 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll, const char *registryLocatio
             nsCOMPtr<nsIFileSpec> fs;
             res = dll->GetDllSpec(getter_AddRefs(fs));
             if (NS_SUCCEEDED(res))
-                res = mobj->RegisterSelf(mCompMgr, fs);
+                res = mobj->RegisterSelf(mCompMgr, fs, registryLocation);
             else
                 {
                     PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
@@ -504,7 +493,7 @@ nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
             nsCOMPtr<nsIFileSpec> fs;
             res = dll->GetDllSpec(getter_AddRefs(fs));
             if (NS_SUCCEEDED(res))
-                res = mobj->UnregisterSelf(mCompMgr, fs);
+                res = mobj->UnregisterSelf(mCompMgr, fs, /* XXX location */ "");
             else
                 {
                     PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
@@ -617,7 +606,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
      * Pink would be so proud.
      */
     char *persistentDescriptor;
-    rv = RegistryNameForSpec(component, &persistentDescriptor);
+    rv = mCompMgr->RegistryLocationForSpec(component, &persistentDescriptor);
     if (NS_FAILED(rv))
         return rv;
 
@@ -806,92 +795,6 @@ nsNativeComponentLoader::UnloadAll(PRInt32 aWhen)
 }
 
 /*
- * I want an efficient way to allocate a buffer to the right size
- * and stick the prefix and dllName in, then be able to hand that buffer
- * off to the FactoryEntry.  Is that so wrong?
- *
- * *regName is allocated on success.
- *
- * This should live in nsNativeComponentLoader.cpp, I think.
- */
-static nsresult
-MakeRegistryName(const char *aDllName, const char *prefix, char **regName)
-{
-    char *registryName;
-
-    PRUint32 len = nsCRT::strlen(prefix);
-
-    PRUint32 registryNameLen = nsCRT::strlen(aDllName) + len;
-    registryName = (char *)nsAllocator::Alloc(registryNameLen + 1);
-    
-    // from here on it, we want len sans terminating NUL
-
-    if (!registryName)
-        return NS_ERROR_OUT_OF_MEMORY;
-    
-    nsCRT::memcpy(registryName, prefix, len);
-    strcpy(registryName + len, aDllName); // no nsCRT::strcpy? for shame!
-    registryName[registryNameLen] = '\0';
-    *regName = registryName;
-
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "MakeRegistryName(%s, %s, &[%s])\n",
-            aDllName, prefix, *regName);
-#endif
-
-    return NS_OK;
-}
-
-nsresult
-nsNativeComponentLoader::RegistryNameForLib(const char *aLibName,
-                                            char **aRegistryName)
-{
-    return MakeRegistryName(aLibName, XPCOM_LIB_PREFIX, aRegistryName);
-}
-
-nsresult
-nsNativeComponentLoader::RegistryNameForSpec(nsIFileSpec *aSpec,
-                                             char **aRegistryName)
-{
-    nsresult rv;
-    nsFileSpec spec;
-    if (NS_FAILED(rv = aSpec->GetFileSpec(&spec)))
-        return rv;
-
-    if (spec.IsChildOf(*mComponentsDir)){
-        /*
-         * According to sfraser, this sort of string magic is ``Mac-safe''.
-         * Who knew?
-         */
-        const char *nativePath;
-        nativePath = spec.GetNativePathCString();
-        nativePath += mComponentsDirLen;
-#ifdef XP_MAC                   // XXX move relativize-fragment logic to nsFileSpec?
-        if (nativePath[0] != ':')
-            nativePath--;
-#else
-        char sep = PR_GetDirectorySeparator();
-        if (nativePath[0] == sep)
-            nativePath++;
-#endif
-        rv = MakeRegistryName(nativePath, XPCOM_RELCOMPONENT_PREFIX, aRegistryName);
-    } else {
-        /* absolute names include volume info on Mac, so use persistent descriptor */
-
-        char *persistentDescriptor;
-        rv = aSpec->GetPersistentDescriptorString(&persistentDescriptor);
-        if (NS_FAILED(rv))
-            return rv;
-        rv = MakeRegistryName(persistentDescriptor, XPCOM_ABSCOMPONENT_PREFIX,
-                              aRegistryName);
-        nsAllocator::Free(persistentDescriptor);
-    }
-        
-    return rv;
-
-}
-
-/*
  * There are no interesting failures here, so we don't propagate errors back.
  */
 nsresult
@@ -957,32 +860,15 @@ nsNativeComponentLoader::CreateDll(nsIFileSpec *aSpec,
 
     if (!aSpec)
         {
-            if (!nsCRT::strncmp(aLocation, XPCOM_LIB_PREFIX, 4))
-                {
-                    dll = new nsDll(aLocation+4, 1 /* dumb magic flag */);
-                    if (!dll) return NS_ERROR_OUT_OF_MEMORY;
-                }
-            else if (!nsCRT::strncmp(aLocation, XPCOM_ABSCOMPONENT_PREFIX, 4))
-                {
-                    rv = NS_NewFileSpec(getter_AddRefs(spec));
-                    if (NS_FAILED(rv)) return rv;
-                    rv = spec->SetPersistentDescriptorString((char *)aLocation+4);
-                    if (NS_FAILED(rv)) return rv;
-                }
-            else if (!nsCRT::strncmp(aLocation, XPCOM_RELCOMPONENT_PREFIX, 4))
-                {
-                    dllSpec = (*mComponentsDir);
-                    dllSpec += (aLocation + 4);
-                    rv = NS_NewFileSpecWithSpec(dllSpec, getter_AddRefs(spec));
-                    if (NS_FAILED(rv)) return rv;
-                }
-            else
-                {
-                    /* no prefix, what's with that? */
-                    fprintf(stderr, "unknown type for component location %s\n",
-                            aLocation);
-                    return NS_ERROR_INVALID_ARG;
-                }
+            if (!nsCRT::strncmp(aLocation, XPCOM_LIB_PREFIX, 4)) {
+                dll = new nsDll(aLocation+4, 1 /* dumb magic flag */);
+                if (!dll) return NS_ERROR_OUT_OF_MEMORY;
+            } else {
+                rv = mCompMgr->SpecForRegistryLocation(aLocation,
+                                                       getter_AddRefs(spec));
+                if (NS_FAILED(rv))
+                    return rv;
+            }
         }
     else
         {
