@@ -1545,3 +1545,19 @@ nsProfileAccess::ResetProfileMembers()
     return NS_OK;
 }
 
+nsresult
+nsProfileAccess::DetermineForceMigration(PRBool *forceMigration)
+{
+	if (!forceMigration) return NS_ERROR_NULL_POINTER;
+
+	*forceMigration = PR_FALSE;
+
+	if (mNumProfiles > 0) {
+		// we have some 6.0 profiles, don't force migration:
+		return NS_OK;
+	}
+
+	// even if we don't any 4.x profiles, running -installer is safe.  so do it
+	*forceMigration = PR_TRUE;
+	return NS_OK;
+}
