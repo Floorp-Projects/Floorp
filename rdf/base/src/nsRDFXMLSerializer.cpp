@@ -744,8 +744,10 @@ static const char kRDFUnknown[] = "><!-- unknown node type -->";
         rdf_BlockingWrite(aStream, kRDFUnknown, sizeof(kRDFUnknown) - 1);
     }
 
+    {
 static const char kRDFLIClose[] = "</RDF:li>\n";
-    rdf_BlockingWrite(aStream, kRDFLIClose, sizeof(kRDFLIClose) - 1);
+         rdf_BlockingWrite(aStream, kRDFLIClose, sizeof(kRDFLIClose) - 1);
+    }
 
  no_close_tag:
     return NS_OK;
