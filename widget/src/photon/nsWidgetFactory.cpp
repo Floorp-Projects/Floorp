@@ -50,7 +50,9 @@
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
+#ifdef PHOTON_DND
 #include "nsDragService.h"
+#endif
 #include "nsSound.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
@@ -71,7 +73,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+#ifdef PHOTON_DND
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 
@@ -121,10 +125,12 @@ static nsModuleComponentInfo components[] =
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter;1",
     nsHTMLFormatConverterConstructor },
+#ifdef PHOTON_DND
   { "Ph Drag Service",
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
+#endif
   { "Ph Sound",
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
