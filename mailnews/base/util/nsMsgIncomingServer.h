@@ -86,7 +86,7 @@ protected:
   // field. Callers should be using Get/Set Password
   NS_IMETHOD GetPrefPassword(char * *aPassword);
   NS_IMETHOD SetPrefPassword(const char * aPassword);
-  PRBool      PasswordProtectLocalCache();
+  PRBool     PasswordProtectLocalCache();
   
   nsCOMPtr <nsIMsgFolder> m_rootFolder;
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
@@ -97,6 +97,7 @@ protected:
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   
   nsresult CreateLocalFolder(nsIFileSpec *path, const char *folderName);
+  nsresult GetDeferredServers(nsIMsgIncomingServer *server, nsISupportsArray **_retval);
 
   nsresult CreateRootFolder();
 

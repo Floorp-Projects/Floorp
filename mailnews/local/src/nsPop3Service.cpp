@@ -235,6 +235,8 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
           aServer->SetServerBusy(PR_FALSE);
       }
     } 
+    else
+      rv = NS_ERROR_FAILURE;
   } // if server
   
   return rv;

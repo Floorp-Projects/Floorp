@@ -56,7 +56,7 @@ interface nsIUrlListener;
  * often you will want to add extra interfaces that give you server-specific
  * attributes and methods.
  */
-[scriptable, uuid(60dcb100-e3f2-11d2-b7fc-00805f05ffa5)]
+[scriptable, uuid(55569286-ee09-45ec-a83b-96d0273a5ed8)]
 interface nsIMsgIncomingServer : nsISupports {
 
   /**
@@ -389,6 +389,8 @@ interface nsIMsgIncomingServer : nsISupports {
   readonly attribute nsIMsgFilterPlugin spamFilterPlugin;
 
   nsIMsgFolder getMsgFolderFromURI(in nsIMsgFolder aFolderResource, in string aURI);
+
+  readonly attribute boolean isDeferredTo;
 };
 
 %{C++

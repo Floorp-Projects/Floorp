@@ -48,7 +48,7 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
         if (command == "http://home.netscape.com/NC-rdf#NewFolder") {
           throw(e); // so that the dialog does not automatically close.
         }
-        dump("Exception : In mail commands\n");
+        dump("Exception : In mail commands" + e + "\n");
       }
     }
 }
@@ -73,7 +73,7 @@ function GetNewMessages(selectedFolders, server, compositeDataSource)
 		if(compositeDataSource)
 		{
 			var folderResource = msgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		    var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+		  var folderArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 			folderArray.AppendElement(folderResource);
 		  var serverArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
       serverArray.AppendElement(server);

@@ -100,8 +100,8 @@ class nsMsgLocalMailFolder : public nsMsgDBFolder,
                              public nsIJunkMailClassificationListener
 {
 public:
-	nsMsgLocalMailFolder(void);
-	virtual ~nsMsgLocalMailFolder(void);
+  nsMsgLocalMailFolder(void);
+  virtual ~nsMsgLocalMailFolder(void);
   NS_DECL_NSICOPYMESSAGELISTENER
   NS_DECL_NSIMSGLOCALMAILFOLDER
   NS_DECL_NSIJUNKMAILCLASSIFICATIONLISTENER
@@ -109,35 +109,35 @@ public:
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
-	// nsIRDFResource methods:
-	NS_IMETHOD Init(const char *aURI);
+  // nsIRDFResource methods:
+  NS_IMETHOD Init(const char *aURI);
   
-	// nsICollection methods:
-	NS_IMETHOD Enumerate(nsIEnumerator* *result);
+  // nsICollection methods:
+  NS_IMETHOD Enumerate(nsIEnumerator* *result);
 
   // nsIUrlListener methods
-	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
-	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
+  NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
+  NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
 
-	// nsIMsgFolder methods:
-	NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
+  // nsIMsgFolder methods:
+  NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
 
-	NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
-	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
+  NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
+  NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 
-	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName ,nsIMsgWindow *msgWindow);
+  NS_IMETHOD CreateSubfolder(const PRUnichar *folderName ,nsIMsgWindow *msgWindow);
   NS_IMETHOD AddSubfolder(const nsAString& folderName, nsIMsgFolder** newFolder);
 
   NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow);
   NS_IMETHOD CompactAll(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray);
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
-	NS_IMETHOD Delete ();
+  NS_IMETHOD Delete ();
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
   NS_IMETHOD CreateStorageIfMissing(nsIUrlListener* urlListener);
-	NS_IMETHOD Rename (const PRUnichar *aNewName, nsIMsgWindow *msgWindow);
-    NS_IMETHOD RenameSubFolders (nsIMsgWindow *msgWindow, nsIMsgFolder *oldFolder);
+  NS_IMETHOD Rename (const PRUnichar *aNewName, nsIMsgWindow *msgWindow);
+  NS_IMETHOD RenameSubFolders (nsIMsgWindow *msgWindow, nsIMsgFolder *oldFolder);
 
-	NS_IMETHOD GetPrettyName(PRUnichar** prettyName);	// Override of the base, for top-level mail folder
+  NS_IMETHOD GetPrettyName(PRUnichar** prettyName);	// Override of the base, for top-level mail folder
   NS_IMETHOD SetPrettyName(const PRUnichar *aName);
 
   NS_IMETHOD GetFolderURL(char **url);
@@ -175,13 +175,13 @@ public:
   NS_IMETHOD GetName(PRUnichar **aName);
 
 protected:
-	nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
+  nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
 
-	nsresult CreateSubFolders(nsFileSpec &path);
-	nsresult AddDirectorySeparator(nsFileSpec &path);
-	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
-    nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
-    nsresult WriteStartOfNewMessage();
+  nsresult CreateSubFolders(nsFileSpec &path);
+  nsresult AddDirectorySeparator(nsFileSpec &path);
+  nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
+  nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
+  nsresult WriteStartOfNewMessage();
   nsresult IsChildOfTrash(PRBool *result);
   nsresult RecursiveSetDeleteIsMoveTrash(PRBool bVal);
   nsresult ConfirmFolderDeletion(nsIMsgWindow *aMsgWindow, PRBool *aResult);

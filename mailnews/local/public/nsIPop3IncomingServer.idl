@@ -39,6 +39,9 @@
 
 interface nsIPop3Protocol;
 interface nsISupportsArray;
+interface nsIMsgFolder;
+interface nsIUrlListener;
+interface nsIMsgWindow;
 
 [scriptable, uuid(758a8970-e628-11d2-b7fc-00805f05ffa5)]
 interface nsIPop3IncomingServer : nsISupports {
@@ -56,6 +59,13 @@ interface nsIPop3IncomingServer : nsISupports {
   attribute boolean authenticated;
   /* account to which this server defers storage, for global inbox */
   attribute string deferredToAccount;
+  // whether get new mail in deferredToAccount gets
+  // new mail with this server.
+  attribute boolean deferGetNewMail;
+  void downloadMailFromServers(in nsISupportsArray aServers, 
+                              in nsIMsgWindow aMsgWindow,
+                              in nsIMsgFolder aFolder, 
+                              in nsIUrlListener aListener);
 };
 
 

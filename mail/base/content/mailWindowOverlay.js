@@ -1869,12 +1869,14 @@ function GetFolderMessages()
   else if (serverType == "none") {
     // if "Local Folders" is selected
     // and the user does "Get Msgs"
+    // and LocalFolders is not deferred to,
     // get new mail for the default account
     //
     // XXX TODO
     // should shift click get mail for all (authenticated) accounts?
     // see bug #125885
-    folder = defaultAccountRootFolder;
+    if (!folder.server.isDeferredTo)
+      folder = defaultAccountRootFolder;
   }
 
   var folders = new Array(1);

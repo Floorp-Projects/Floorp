@@ -43,6 +43,7 @@
 #include "nsILocalMailIncomingServer.h"
 #include "nsMsgIncomingServer.h"
 #include "nsIPop3Protocol.h"
+#include "nsIMsgWindow.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsPop3IncomingServer : public nsMsgIncomingServer,

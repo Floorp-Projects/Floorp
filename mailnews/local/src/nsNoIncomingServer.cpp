@@ -52,6 +52,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccountManager.h"
+#include "nsIPop3IncomingServer.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
                             nsMsgIncomingServer,
@@ -101,38 +102,38 @@ nsNoIncomingServer::SetFlagsOnDefaultMailboxes()
 
 NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDisk, nsIFileSpec *parentDir)
 {
-	nsresult rv;
-    PRBool exists;
-	if (!folderNameOnDisk || !parentDir) return NS_ERROR_NULL_POINTER;
-
+  nsresult rv;
+  PRBool exists;
+  if (!folderNameOnDisk || !parentDir) return NS_ERROR_NULL_POINTER;
+  
   nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   // Get defaults directory for messenger files. MailSession service appends 'messenger' to the 
   // the app defaults folder and returns it. Locale will be added to the path, if there is one.
   nsCOMPtr<nsIFile> defaultMessagesFile;
   rv = mailSession->GetDataFilesDir("messenger", getter_AddRefs(defaultMessagesFile));
   NS_ENSURE_SUCCESS(rv,rv);
-
-	// check if bin/defaults/messenger/<folderNameOnDisk> 
-	// (or bin/defaults/messenger/<locale>/<folderNameOnDisk> if we had a locale provide) exists.
-	// it doesn't have to exist.  if it doesn't, return
-	rv = defaultMessagesFile->AppendNative(nsDependentCString(folderNameOnDisk));
-	if (NS_FAILED(rv)) return rv;
-    rv = defaultMessagesFile->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists) return NS_OK;
-	
-	// Make an nsILocalFile of the parentDir
-	nsFileSpec parentDirSpec;
-	nsCOMPtr<nsILocalFile> localParentDir;
-	
-	rv = parentDir->GetFileSpec(&parentDirSpec);
-	if (NS_FAILED(rv)) return rv;
-	rv = NS_FileSpecToIFile(&parentDirSpec, getter_AddRefs(localParentDir));
-	if (NS_FAILED(rv)) return rv;
-
-	// check if parentDir/<folderNameOnDisk> exists
+  
+  // check if bin/defaults/messenger/<folderNameOnDisk> 
+  // (or bin/defaults/messenger/<locale>/<folderNameOnDisk> if we had a locale provide) exists.
+  // it doesn't have to exist.  if it doesn't, return
+  rv = defaultMessagesFile->AppendNative(nsDependentCString(folderNameOnDisk));
+  if (NS_FAILED(rv)) return rv;
+  rv = defaultMessagesFile->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+  if (!exists) return NS_OK;
+  
+  // Make an nsILocalFile of the parentDir
+  nsFileSpec parentDirSpec;
+  nsCOMPtr<nsILocalFile> localParentDir;
+  
+  rv = parentDir->GetFileSpec(&parentDirSpec);
+  if (NS_FAILED(rv)) return rv;
+  rv = NS_FileSpecToIFile(&parentDirSpec, getter_AddRefs(localParentDir));
+  if (NS_FAILED(rv)) return rv;
+  
+  // check if parentDir/<folderNameOnDisk> exists
   {
     nsCOMPtr<nsIFile> testDir;
     rv = localParentDir->Clone(getter_AddRefs(testDir));
@@ -142,60 +143,27 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
     rv = testDir->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
   }
-
-	// if it exists add to the end, else copy
-	if (exists) {
-#ifdef DEBUG_sspitzer
-		printf("append default %s\n",folderNameOnDisk);
-#endif
-		// todo for bug #1181
-		// open folderFile, seek to end
-		// read defaultMessagesFile, write to folderFile
-	}
-	else {
-#ifdef DEBUG_sspitzer
-		printf("copy default %s\n",folderNameOnDisk);
-#endif
-		rv = defaultMessagesFile->CopyTo(localParentDir, nsString());
-		if (NS_FAILED(rv)) return rv;
-	}
-	return NS_OK;
-}
-
-PRBool nsNoIncomingServer::IsDeferredTo()
-{
-  nsCOMPtr<nsIMsgAccountManager> accountManager 
-    = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
-  if (accountManager)
+  
+  // if it exists add to the end, else copy
+  if (exists) 
   {
-    nsCOMPtr <nsIMsgAccount> thisAccount;
-    accountManager->FindAccountForServer(this, getter_AddRefs(thisAccount));
-    if (thisAccount)
-    {
-      nsCOMPtr <nsISupportsArray> allServers;
-      nsXPIDLCString accountKey;
-      thisAccount->GetKey(getter_Copies(accountKey));
-      accountManager->GetAllServers(getter_AddRefs(allServers));
-      if (allServers)
-      {
-        PRUint32 serverCount;
-        allServers->Count(&serverCount);
-        for (PRUint32 i = 0; i < serverCount; i++)
-        {
-          nsCOMPtr <nsIMsgIncomingServer> server (do_QueryElementAt(allServers, i));
-          if (server)
-          {
-            nsXPIDLCString deferredToAccount;
-            server->GetCharValue("deferred_to_account", getter_Copies(deferredToAccount));
-            if (deferredToAccount.Equals(accountKey))
-              return PR_TRUE;
-          }
-        }
-      }
-    }
+#ifdef DEBUG_sspitzer
+    printf("append default %s\n",folderNameOnDisk);
+#endif
+    // todo for bug #1181
+    // open folderFile, seek to end
+    // read defaultMessagesFile, write to folderFile
   }
-  return PR_FALSE;
+  else {
+#ifdef DEBUG_sspitzer
+    printf("copy default %s\n",folderNameOnDisk);
+#endif
+    rv = defaultMessagesFile->CopyTo(localParentDir, nsString());
+    if (NS_FAILED(rv)) return rv;
+  }
+  return NS_OK;
 }
+
 
 NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
@@ -206,7 +174,8 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
   // notice, no Inbox, unless we're deferred to...
    // need to have a leaf to start with
   rv = path->AppendRelativeUnixPath("Trash"); 
-  if (IsDeferredTo())
+  PRBool isDeferredTo;
+  if (NS_SUCCEEDED(GetIsDeferredTo(&isDeferredTo)) && isDeferredTo)
     CreateLocalFolder(path, "Inbox");
   CreateLocalFolder(path, "Trash");
   if (NS_FAILED(rv)) return rv;
@@ -230,13 +199,28 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *aInbox, nsIURI **aResult)
+NS_IMETHODIMP
+nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *aInbox, nsIURI **aResult)
 {
+  nsCOMPtr <nsISupportsArray> deferredServers;
+  nsresult rv = GetDeferredServers(this, getter_AddRefs(deferredServers));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRUint32 count;
+  deferredServers->Count(&count);
+  if (count > 0)
+  {
+    nsCOMPtr <nsIPop3IncomingServer> firstServer(do_QueryElementAt(deferredServers, 0));
+    if (firstServer)
+    {
+      rv = firstServer->DownloadMailFromServers(deferredServers, aMsgWindow,
+                              aInbox, 
+                              aUrlListener);
+    }
+  }
   // listener might be counting on us to send a notification.
-  if (aUrlListener)
+  else if (aUrlListener)
     aUrlListener->OnStopRunningUrl(nsnull, NS_OK);
-  // do nothing, there is no new mail for this incoming server, ever.
-  return NS_OK;
+  return rv;
 }
 
 // the "none" server does not support filters, because

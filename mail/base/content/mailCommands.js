@@ -35,7 +35,6 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 
 function GetNewMessages(selectedFolders, server, compositeDataSource)
 {
-dump("server = " + server + "\n");
 	var numFolders = selectedFolders.length;
 	if(numFolders > 0)
 	{
