@@ -38,18 +38,50 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../gtk -I$(srcdir)/.
 INCLUDES += $(FE_X_CFLAGS)
 
 CPPSRCS= \
-        nsAppShell.cpp \
-        nsButton.cpp \
-        nsCheckButton.cpp \
-        nsLabel.cpp \
-        nsRadioButton.cpp
+	nsAppShell.cpp \
+	nsComboBox.cpp \
+	nsLabel.cpp \
+	nsScrollbar.cpp \
+	nsButton.cpp \
+	nsListBox.cpp \
+	nsLookAndFeel.cpp \
+	nsTextAreaWidget.cpp \
+	nsCheckButton.cpp \
+	nsMenu.cpp \
+	nsTextHelper.cpp \
+	nsDialog.cpp \
+	nsMenuBar.cpp \
+	nsTextWidget.cpp \
+	nsFileWidget.cpp \
+	nsMenuItem.cpp \
+	nsToolkit.cpp \
+	nsGtkManageWidget.c \
+	nsGtkEventHandler.cpp \
+	nsRadioButton.cpp \
+	nsWindow.cpp
 
 CPP_OBJS= \
-        nsAppShell.o \
-        nsButton.o \
-        nsCheckButton.o \
-        nsLabel.o \
-        nsRadioButton.o \
+	nsAppShell.o \
+	nsComboBox.o \
+	nsLabel.o \
+	nsScrollbar.o \
+	nsButton.o \
+	nsListBox.o \
+	nsLookAndFeel.o \
+	nsTextAreaWidget.o \
+	nsCheckButton.o \
+	nsMenu.o \
+	nsTextHelper.o \
+	nsDialog.o \
+	nsMenuBar.o \
+	nsTextWidget.o \
+	nsFileWidget.o \
+	nsMenuItem.o \
+	nsToolkit.o \
+	nsGtkManageWidget.o \
+	nsGtkEventHandler.o \
+	nsRadioButton.o \
+	nsWindow.o \
         $(NULL)
 
 
