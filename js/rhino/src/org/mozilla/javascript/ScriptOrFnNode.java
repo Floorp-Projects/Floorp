@@ -47,10 +47,13 @@ public class ScriptOrFnNode extends Node {
         this.sourceName = sourceName;
     }
 
-    public final String getEncodedSource() { return encodedSource; }
+    public final int getEncodedSourceStart() { return encodedSourceStart; }
 
-    public final void setEncodedSource(String encodedSource) {
-        this.encodedSource = encodedSource;
+    public final int getEncodedSourceEnd() { return encodedSourceEnd; }
+
+    public final void setEncodedSourceBounds(int start, int end) {
+        this.encodedSourceStart = start;
+        this.encodedSourceEnd = end;
     }
 
     public final int getBaseLineno() { return baseLineno; }
@@ -175,7 +178,8 @@ public class ScriptOrFnNode extends Node {
 
     protected void finishParsing(IRFactory irFactory) { }
 
-    private String encodedSource;
+    private int encodedSourceStart;
+    private int encodedSourceEnd;
     private String sourceName;
     private int baseLineno = -1;
     private int endLineno = -1;
