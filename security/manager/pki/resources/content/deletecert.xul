@@ -25,18 +25,15 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<window
-  id="deleteCert" 
+<window id="deleteCert" 
   title="&certmgr.deletecert.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="setWindowName();"
-  persist="height width screenX screenY"
-  debug="false"
->
+  persist="height width screenX screenY">
 
-  <script src="deletecert.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/help.js" />
+  <script type="application/x-javascript" src="chrome://pippki/content/deletecert.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <keyset id="keys">
     <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
@@ -48,14 +45,14 @@
     <html>&certmgr.deletecert.beforename;</html>
     <text id="certname"/>
     <html>&certmgr.deletecert.aftername;</html>
-    <separator />
+    <separator/>
     <hbox align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
-           style="width: 8ex" oncommand="doOK();"/> 
+              oncommand="doOK();"/> 
       <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
-           style="width: 8ex" oncommand="window.close();" /> 
+              oncommand="window.close();"/> 
       <button id="help-button" class="dialog" label="&certmgr.help.label;"
-           style="width: 8ex" oncommand="openHelp('chrome://help/content/help.xul?delete_my_certs');" /> 
+              oncommand="openHelp('chrome://help/content/help.xul?delete_my_certs');"/> 
     </hbox>
   </vbox>
 

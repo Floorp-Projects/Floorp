@@ -20,18 +20,17 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
-<window
-  id="domainMismatch" title="&domainMismatch.title;"
+<window id="domainMismatch" title="&domainMismatch.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
   width="320"
-  onload="onLoad();"
->
-<script src="chrome://global/content/strres.js" />
-<script src="pippki.js" />
-<script src="domainMismatch.js" />
-<script type="application/x-javascript" src="chrome://help/content/help.js" />
+  onload="onLoad();">
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/domainMismatch.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 
 <keyset id="keys">
@@ -42,13 +41,13 @@
 
 <vbox style="margin: 5px;" flex="1">
 
-  <html id="message1" />
+  <html id="message1"/>
   <separator/>
   <html id="message2" flex="100%"/>
 
   <hbox>
   <button id="examineCert-button" class="dialog" label="&examineCert.label;"
-     onclick="viewCert();"/> 
+     oncommand="viewCert();"/> 
   </hbox>
   <separator/>
  
@@ -60,11 +59,11 @@
  
   <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;" primary="true"
-     style="width: 8ex" onclick="doOK();" disabled="false"/> 
+          oncommand="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
-     style="width: 8ex" onclick="doCancel();" /> 
+          oncommand="doCancel();"/> 
   <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 8ex" oncommand="openHelp('chrome://help/content/help.xul?bad_name_web_cert');" /> 
+          oncommand="openHelp('chrome://help/content/help.xul?bad_name_web_cert');"/> 
   </hbox>
 </vbox>
 </window>

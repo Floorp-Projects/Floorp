@@ -27,23 +27,20 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
-<?xul-overlay href="viewCertDetails.xul"?>
-<?xul-overlay href="certDump.xul"?>
+<?xul-overlay href="chrome://pippki/content/viewCertDetails.xul"?>
+<?xul-overlay href="chrome://pippki/content/certDump.xul"?>
 
 
-<window
-  id="certDetails" 
+<window id="certDetails" 
   title="&certmgr.certdetail.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="setWindowName();"
-  debug="tru1"
->
+  onload="setWindowName();">
 
-<script src="chrome://global/content/strres.js" />
-<script src="viewCertDetails.js" />
-<script src="pippki.js" />
-<script type="application/x-javascript" src="chrome://help/content/help.js" />
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/viewCertDetails.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 <keyset id="keys">
   <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close()"/>
@@ -51,12 +48,12 @@
 
   <grid flex="1">
     <column flex="1"/>
-    <rows autostretch="always" >
+    <rows autostretch="always">
       <row flex="1">
         <tabbox flex="1" orient="vertical">
           <tabs orient="horizontal">
-            <tab id="general_tab" label="&certmgr.detail.general_tab.title;" />
-            <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;" />
+            <tab id="general_tab" label="&certmgr.detail.general_tab.title;"/>
+            <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;"/>
           </tabs>
           <tabpanels flex="1">
             <vbox id="general_info" flex="1"/>
@@ -65,19 +62,18 @@
         </tabbox>
       </row>
       <row>
-        <separator class="thin" />
+        <separator class="thin"/>
       </row>
       <row>
         <hbox align="right" flex="1">
           <button id="HelpButton" class="normal" 
                   label="&certmgr.help.label;" 
-                  orient="horizontal" accesskey="h" 
-                  oncommand="openHelp('chrome://help/content/help.xul?cert_details');" />
+                  accesskey="h" 
+                  oncommand="openHelp('chrome://help/content/help.xul?cert_details');"/>
           <button id="closeButton" class="normal" 
                   label="&certmgr.close.label;" 
-                  orient="horizontal" accesskey="c"
-                  onclick="window.close();"
-                  onkeypress="window.close();"/>
+                  accesskey="c"
+                  oncommand="window.close();"/>
         </hbox>
       </row>
     </rows>

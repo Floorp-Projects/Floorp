@@ -29,28 +29,28 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <treechildren id="securityChildren">
-    <treeitem id="masterpassItem" >
+    <treeitem id="masterpassItem">
       <treerow>
         <treecell class="treecell-indent" url="chrome://pippki/content/pref-masterpass.xul"
-                  label="&masterpass.label;" />
+                  label="&masterpass.label;"/>
       </treerow>
     </treeitem>
-    <treeitem id="sslItem" >
+    <treeitem id="sslItem">
       <treerow>
         <treecell class="treecell-indent" url="chrome://pippki/content/pref-ssl.xul"
-                  label="&ssl.label;" />
+                  label="&ssl.label;"/>
       </treerow>
     </treeitem>
-    <treeitem id="certItem" >
+    <treeitem id="certItem">
       <treerow>
         <treecell class="treecell-indent" url="chrome://pippki/content/pref-certs.xul"
-                  label="&certs.label;" />
+                  label="&certs.label;"/>
       </treerow>
     </treeitem>
-    <treeitem id="validationItem" >
+    <treeitem id="validationItem">
       <treerow>
         <treecell class="treecell-indent" url="chrome://pippki/content/pref-validation.xul"
-                 label="&validation.label;" />
+                 label="&validation.label;"/>
       </treerow>
     </treeitem>
   </treechildren>

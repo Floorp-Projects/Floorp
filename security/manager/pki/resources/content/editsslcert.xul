@@ -30,35 +30,34 @@
         title="&certmgr.editcert.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="doLoadForSSLCert();"
-        persist="height width screenX screenY"
-        debug="false">
+        persist="height width screenX screenY">
 
-  <script src="chrome://global/content/strres.js" />
-  <script src="pippki.js" />
-  <script src="editcerts.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/help.js" />
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/editcerts.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 
   <vbox flex="1">
     <html id="certmsg"/>
     <html id="issuer"/>
-    <separator />
+    <separator/>
     <html>&certmgr.editsslcert.edittrust;</html>
     <vbox>
       <radiogroup id="sslTrustGroup" orient="vertical" flex="1">
         <radio label="&certmgr.editsslcert.dotrust;"
-          id="trustSSLCert" group="sslTrustGroup"/>
+               id="trustSSLCert" group="sslTrustGroup"/>
         <radio label="&certmgr.editsslcert.donttrust;"
-          id="dontTrustSSLCert" group="sslTrustGroup"/>
+               id="dontTrustSSLCert" group="sslTrustGroup"/>
       </radiogroup>
     </vbox>
     <hbox align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
-           style="width: 8ex" oncommand="doSSLOK();"/> 
+              oncommand="doSSLOK();"/> 
       <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
-           style="width: 8ex" oncommand="window.close();" /> 
+              oncommand="window.close();"/> 
       <button id="help-button" class="dialog" label="&certmgr.help.label;"
-           style="width: 8ex" oncommand="openHelp('chrome://help/content/help.xul?edit_web_certs');" />
+              oncommand="openHelp('chrome://help/content/help.xul?edit_web_certs');"/>
     </hbox>
   </vbox>
 

@@ -36,10 +36,10 @@
   onload="onLoad();"
   orient="vertical">
 
-<script type="application/x-javascript" src="chrome://global/content/strres.js" />
-<script type="application/x-javascript" src="pippki.js" />
-<script type="application/x-javascript" src="newserver.js" />
-<script type="application/x-javascript" src="chrome://help/content/help.js" />
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/newserver.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 <keyset id="dialogKeys"/>
 
@@ -56,7 +56,7 @@
 
       <vbox autostretch="never" flex="1" align="right">
         <button id="examineCert-button" label="&examineCert.label;"
-                onclick="viewCert();"/> 
+                oncommand="viewCert();"/> 
       </vbox>
 
       <checkbox checked="false" id="alwaysAccept" label="&alwaysAccept.label;"/>

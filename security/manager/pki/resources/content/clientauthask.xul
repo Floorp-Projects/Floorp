@@ -23,18 +23,16 @@
 ]>
 
 
-<window
-  id="ssl_warning" title="&clientAuthAsk.title;"
+<window id="ssl_warning" title="&clientAuthAsk.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
   height="360"
   width="400"
-  onload="onLoad();"
->
-<script src="chrome://global/content/strres.js" />
-<script src="pippki.js" />
-<script src="clientauthask.js" />
+  onload="onLoad();">
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/clientauthask.js"/>
 
 <keyset id="keys">
   <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
@@ -45,9 +43,9 @@
 <vbox style="margin: 5px;" flex="1">
     <groupbox orient="vertical">
     <html>&clientAuthAsk.message1;</html>
-    <html id="hostname" />
-    <html id="organization" />
-    <html id="issuer" />
+    <html id="hostname"/>
+    <html id="organization"/>
+    <html id="issuer"/>
     </groupbox>
     <groupbox orient="vertical">
     <html>&clientAuthAsk.message2;</html>
@@ -55,12 +53,12 @@
         <menupopup/>
     </menulist>
     </groupbox>
-  <separator />
+  <separator/>
   <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;"
-     style="width: 10ex" onclick="doOK();" disabled="false"/> 
+          oncommand="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
-     style="width: 10ex" onclick="doCancel();" /> 
+          oncommand="doCancel();"/> 
   </hbox>
 </vbox>
 </window>

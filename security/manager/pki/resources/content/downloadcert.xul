@@ -25,20 +25,17 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
-<window
-  id="download_cert" title="&downloadCert.title;"
+<window id="download_cert" title="&downloadCert.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
   height="320"
   width="460"
-  onload="onLoad();"
->
+  onload="onLoad();">
 
-<script src="chrome://global/content/strres.js" />
-<script src="downloadcert.js"/>
-<script src="pippki.js" />
-<script type="application/x-javascript" src="chrome://help/content/help.js" />
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/downloadcert.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 
 <vbox style="margin: 5px;" flex="1">
@@ -48,7 +45,7 @@
     <html>&downloadCert.message1;</html>
   </vbox>
 
-  <separator />
+  <separator/>
 
   <!--  checkboxes for trust bits
      -  "do you want to?"
@@ -59,14 +56,14 @@
   <vbox>
     <html id="message2"/>
     <checkbox label="&downloadCert.trustSSL;" checked="false" 
-     id="trustSSL"/>
+              id="trustSSL"/>
     <checkbox label="&downloadCert.trustEmail;" checked="false" 
-     id="trustEmail"/>
+              id="trustEmail"/>
     <checkbox label="&downloadCert.trustObjSign;" checked="false" 
-     id="trustObjSign"/>
+              id="trustObjSign"/>
   </vbox>
 
-  <separator />
+  <separator/>
 
   <!--  buttons for viewing cert and policies
      -  "suggested you view the following:"
@@ -75,41 +72,41 @@
     -->
   <vbox>
     <html>&downloadCert.message3;</html>
-    <separator />
+    <separator/>
     <grid>
       <columns>
-        <column />
-        <column />
+        <column/>
+        <column/>
       </columns>
       <rows>
         <row>
           <button id="viewC-button" class="dialog" 
                   label="&downloadCert.viewCert.label;"
-                  style="width: 8ex" oncommand="viewCert();"/> 
+                  oncommand="viewCert();"/> 
           <html>&downloadCert.viewCert.text;</html>
         </row>
         <row>
           <button id="viewP-button" class="dialog" 
                   label="&downloadCert.viewPolicy.label;"
-                  style="width: 8ex" oncommand="viewPolicy();" /> 
+                  oncommand="viewPolicy();"/> 
           <html>&downloadCert.viewPolicy.text;</html>
         </row>
       </rows>
     </grid>
   </vbox>
 
-  <separator />
+  <separator/>
 
   <!--  usual runaround
      -  <ok>  <cancel> <help>
     -->
   <hbox align="center">
     <button id="ok-button" class="dialog" label="&ok.label;"
-         style="width: 8ex" oncommand="doOK();"/> 
+            oncommand="doOK();"/> 
     <button id="cancel-button" class="dialog" label="&cancel.label;"
-         style="width: 8ex" oncommand="doCancel();" /> 
+            oncommand="doCancel();"/> 
     <button id="help-button" class="dialog" label="&help.label;"
-         style="width: 8ex" oncommand="openHelp('chrome://help/content/help.xul?new_ca');" /> 
+            oncommand="openHelp('chrome://help/content/help.xul?new_ca');"/> 
   </hbox>
 
 </vbox>

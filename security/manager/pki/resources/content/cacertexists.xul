@@ -25,30 +25,27 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
-<window
-  id="cacertexists" 
+<window id="cacertexists" 
   title="&caCertExists.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="setWindowName();"
-  debug="false"
->
+  onload="setWindowName();">
 
-  <script src="cacertexists.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/help.js" />
+  <script type="application/x-javascript" src="chrome://pippki/content/cacertexists.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 
   <vbox flex="1">
     <html>&caCertExists.message;</html>
     
-    <separator />
+    <separator/>
 
     <hbox align="center">
       <button id="ok-button" class="dialog" label="&ok.label;"
-           style="width: 8ex" oncommand="doOK();"/> 
+              oncommand="doOK();"/> 
     </hbox>
     
-    <separator />
+    <separator/>
 
   </vbox>
 

@@ -37,10 +37,10 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" title="certs.title;"
-        onload="parent.initPanel('chrome://pippki/content/pref-certs.xul');" >
+        onload="parent.initPanel('chrome://pippki/content/pref-certs.xul');">
 
   <!-- List elements to manage for prefs -->
-  <script type="application/x-javascript" src="pref-security.js"/>
+  <script type="application/x-javascript" src="chrome://pippki/content/pref-security.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = [ "certSelection" ];
@@ -55,7 +55,7 @@
     <html> &certselect.description; </html>
     <!-- Prefs -->
     <radiogroup id="certSelection" pref="true" preftype="string" 
-	prefstring="security.default_personal_cert" prefattribute="value">
+	        prefstring="security.default_personal_cert" prefattribute="value">
     <radio group="certSelection" label="&certselect.auto;" value="Select Automatically"/>
     <radio group="certSelection" label="&certselect.ask;" value="Ask Every Time"/>
     </radiogroup>
@@ -64,30 +64,26 @@
   <!-- Certificate manager -->
   <groupbox orient="vertical">
     <label value="&managecerts.label;"/>
-    <html>
-      &managecerts.text;
-    </html>
+    <html>&managecerts.text;</html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&managecerts.button;" disabled="false"
-        oncommand="openCertManager();" 
-        id="openCertManagerButton"
-        pref="true" preftype="bool" prefattribute="disabled"
-        prefstring="security.disable_button.openCertManager" />
+              oncommand="openCertManager();" 
+              id="openCertManagerButton"
+              pref="true" preftype="bool" prefattribute="disabled"
+              prefstring="security.disable_button.openCertManager"/>
     </hbox>
   </groupbox>
 
   <!-- Device manager -->
   <groupbox orient="vertical">
     <label value="&managedevices.label;"/>
-    <html>
-      &managedevices.text;
-    </html>
+    <html>&managedevices.text;</html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&managedevices.button;" disabled="false"
-        oncommand="openDeviceManager();"
-        id="openDeviceManagerButton"
-        pref="true" preftype="bool" prefattribute="disabled"
-        prefstring="security.disable_button.openDeviceManager" />
+              oncommand="openDeviceManager();"
+              id="openDeviceManagerButton"
+              pref="true" preftype="bool" prefattribute="disabled"
+              prefstring="security.disable_button.openDeviceManager"/>
     </hbox>
   </groupbox>
 

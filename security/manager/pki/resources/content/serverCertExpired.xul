@@ -20,18 +20,16 @@
 
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/pippki.dtd">
 
-<window
-  id="serverCertExpired"
+<window id="serverCertExpired"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
   width="300"
-  onload="onLoad();"
->
-<script src="chrome://global/content/strres.js" />
-<script src="pippki.js" />
-<script src="serverCertExpired.js" />
-<script type="application/x-javascript" src="chrome://help/content/help.js" />
+  onload="onLoad();">
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/x-javascript" src="chrome://pippki/content/serverCertExpired.js"/>
+<script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
 <keyset id="keys">
   <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK()"    />
@@ -49,16 +47,16 @@
   <separator/>
   <hbox>
   <button id="examineCert-button" class="dialog" label="&examineCert.label;"
-     onclick="viewCert();"/> 
+          oncommand="viewCert();"/> 
   </hbox>
   <separator/>
   <hbox>
   <button id="ok-button" class="dialog" label="&ok.label;" primary="true"
-     style="width: 10ex" onclick="doOK();" disabled="false"/> 
+          oncommand="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
-     style="width: 10ex" onclick="doCancel();" /> 
+          oncommand="doCancel();"/> 
   <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?exp_web_cert');" /> 
+          oncommand="openHelp('chrome://help/content/help.xul?exp_web_cert');"/> 
   </hbox>
 </vbox>
 </window>

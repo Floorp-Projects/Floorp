@@ -64,21 +64,21 @@
       <outlinerbody flex="1" ondblclick="viewCerts();"/>
     </outliner>
     <hbox>
-      <button id="mine_viewButton" class="normal" 
-              label="&certmgr.view.label;" orient="horizontal" 
-              disabled="true" onclick="viewCerts();"/>
-      <button id="mine_backupButton" class="normal" 
-              label="&certmgr.backup.label;" orient="horizontal" 
-              disabled="true" oncommand="backupCerts();"/>
-      <button id="mine_backupAllButton" class="normal" 
-              label="&certmgr.backupall.label;" orient="horizontal" 
-              onclick="backupAllCerts();"/>
-      <button id="mine_restoreButton" class="normal" 
-              label="&certmgr.restore.label;" orient="horizontal" 
-              onclick="restoreCerts();"/>
-      <button id="mine_deleteButton" class="normal" 
-              label="&certmgr.delete.label;" orient="horizontal" 
-              disabled="true" onclick="deleteCerts();"/>
+       <button id="mine_viewButton" class="normal" 
+               label="&certmgr.view.label;"
+               disabled="true" oncommand="viewCerts();"/>
+       <button id="mine_backupButton" class="normal" 
+               label="&certmgr.backup.label;"
+               disabled="true" oncommand="backupCerts();"/>
+       <button id="mine_backupAllButton" class="normal" 
+               label="&certmgr.backupall.label;"
+               oncommand="backupAllCerts();"/>
+       <button id="mine_restoreButton" class="normal" 
+               label="&certmgr.restore.label;"
+               oncommand="restoreCerts();"/>
+       <button id="mine_deleteButton" class="normal" 
+               label="&certmgr.delete.label;"
+               disabled="true" oncommand="deleteCerts();"/>
     </hbox>
   </vbox>
 </overlay>

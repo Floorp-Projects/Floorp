@@ -29,89 +29,89 @@
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <vbox class="box-padded" id="general_info">
-  <vbox id="verify_info_box" >
+  <vbox id="verify_info_box">
     <text class="header" id="verified"/>
   </vbox>
-  <separator class="groove" />
+  <separator class="groove"/>
   <vbox flex="1">
     <grid> 
       <columns>
-        <column />
-        <column />
+        <column/>
+        <column/>
       </columns>
       <rows>
         <row>
-          <text class="header" value="&certmgr.subjectinfo.label;" />
-          <spring />
-          <spring />
+          <text class="header" value="&certmgr.subjectinfo.label;"/>
+          <spring/>
+          <spring/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.cn;" /> 
+          <text class="label" value="&certmgr.certdetail.cn;"/> 
           <text id="commonname"/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.o;" /> 
+          <text class="label" value="&certmgr.certdetail.o;"/> 
           <text id="organization"/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.ou;" /> 
+          <text class="label" value="&certmgr.certdetail.ou;"/> 
           <text id="orgunit"/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.serialnumber;" /> 
-          <text id="serialnumber" />
+          <text class="label" value="&certmgr.certdetail.serialnumber;"/> 
+          <text id="serialnumber"/>
         </row>
         <row>
-          <separator class="thin" />
-          <spring />
+          <separator class="thin"/>
+          <spring/>
         </row>
         <row>
-          <text class="header" value="&certmgr.issuerinfo.label;" />
-          <spring />
+          <text class="header" value="&certmgr.issuerinfo.label;"/>
+          <spring/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.cn;" /> 
+          <text class="label" value="&certmgr.certdetail.cn;"/> 
           <text id="issuercommonname"/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.o;" /> 
+          <text class="label" value="&certmgr.certdetail.o;"/> 
           <text id="issuerorganization"/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.ou;" /> 
+          <text class="label" value="&certmgr.certdetail.ou;"/> 
           <text id="issuerorgunit"/>
         </row>
         <row>
-          <separator class="thin" />
-          <spring />
+          <separator class="thin"/>
+          <spring/>
         </row>
         <row>
-          <text class = "header" value="&certmgr.validity.label;" />
-          <spring />
+          <text class ="header" value="&certmgr.validity.label;"/>
+          <spring/>
         </row>
         <row>
-          <text class="label" value="&certmgr.issued;" />
-          <text id="validitystart" />
+          <text class="label" value="&certmgr.issued;"/>
+          <text id="validitystart"/>
         </row>
         <row>
-          <text class="label" value="&certmgr.expires;" />
-          <text id="validityend" />
+          <text class="label" value="&certmgr.expires;"/>
+          <text id="validityend"/>
         </row>
         <row>
-          <separator class="thin" />
-          <spring />
+          <separator class="thin"/>
+          <spring/>
         </row>
         <row>
-          <text class="header" value="&certmgr.fingerprints.label;" />
-          <spring />
+          <text class="header" value="&certmgr.fingerprints.label;"/>
+          <spring/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.sha1fingerprint;" /> 
-          <text id="sha1fingerprint" />
+          <text class="label" value="&certmgr.certdetail.sha1fingerprint;"/> 
+          <text id="sha1fingerprint"/>
         </row>
         <row>
-          <text class="label" value="&certmgr.certdetail.md5fingerprint;" /> 
-          <text id="md5fingerprint" />
+          <text class="label" value="&certmgr.certdetail.md5fingerprint;"/> 
+          <text id="md5fingerprint"/>
         </row>
       </rows>
     </grid>
