@@ -145,6 +145,8 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
                             info->outString,
                             info->typeInState,
                             info->maxLength);
+    case kInsertTextIME:
+      return WillInsert(aSelection, aCancel);
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction, aCancel);
     case kUndo:

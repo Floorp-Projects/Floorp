@@ -110,6 +110,9 @@ public:
 
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
 
+  /* ------------ nsIEditorIMESupport overrides -------------- */
+  
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
 
   /* ------------ nsIEditorStyleSheets methods -------------- */
 
