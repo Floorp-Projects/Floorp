@@ -384,6 +384,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   boolean matchOrChangeFilterDestination(in nsIMsgFolder folder, in boolean caseInsensitive);
   boolean confirmFolderDeletionForFilter(in nsIMsgWindow msgWindow);
   void alertFilterChanged(in nsIMsgWindow msgWindow);
+  void throwAlertMsg(in string msgName, in nsIMsgWindow msgWindow);
+  wstring getStringWithFolderNameFromBundle(in string msgName);
   void notifyCompactCompleted();
 
   attribute nsIMsgRetentionSettings retentionSettings;

@@ -251,7 +251,7 @@ public:
 										 PRBool *pMoved);
 #endif
 	// nsIMsgFilterHitNotification method(s)
-	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
+	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore);
 
 	nsOutputFileStream *GetLogFile();
 	virtual PRInt32	PublishMsgHeader(nsIMsgWindow *msgWindow);
@@ -263,7 +263,8 @@ protected:
 	virtual nsresult	MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
                                                 const char *destFolder,
-											   nsIMsgFilter *filter);
+                                            nsIMsgFilter *filter,
+                                            nsIMsgWindow *msgWindow);
 	virtual	int			MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
 			void		LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
 	nsCOMPtr <nsIMsgFilterList> m_filterList;

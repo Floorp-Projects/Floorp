@@ -70,9 +70,6 @@ public:
 
   nsresult GetMessage(nsIMsgDBHdr **message);
   nsresult BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);  
-  nsresult GetStatusFromMsgName(const char *statusMsgName, PRUnichar ** retval);
-  nsresult GetStringBundle(nsIStringBundle **stringBundle);
-  void ThrowAlertMsg(const char* alertMsgName);
   nsresult ShowStatusMsg(const PRUnichar *aMsg);
   nsresult ReleaseFolderLock();
   void     ShowCompactingStatusMsg();

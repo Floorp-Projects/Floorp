@@ -2693,7 +2693,7 @@ NS_IMETHODIMP nsImapMailFolder::EndMessage(nsMsgKey key)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore)
+NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore)
 {
   nsMsgRuleActionType actionType;
   nsXPIDLCString actionTargetFolderUri;
@@ -2808,7 +2808,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
             PR_FREEIF(tmp);
 #endif
           }
-          nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, actionTargetFolderUri, filter);
+          nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, actionTargetFolderUri, filter, msgWindow);
           if (NS_SUCCEEDED(err))
             m_msgMovedByFilter = PR_TRUE;
         }
@@ -2979,7 +2979,8 @@ NS_IMETHODIMP nsImapMailFolder::LiteSelect(nsIUrlListener *aUrlListener)
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                                                    nsIMsgDatabase *sourceDB, 
                                                    const char *destFolderUri,
-                                                   nsIMsgFilter *filter)
+                                                   nsIMsgFilter *filter,
+                                                   nsIMsgWindow *msgWindow)
 {
   nsresult err = NS_OK;
   
@@ -3008,6 +3009,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       if (!parentFolder || !canFileMessages)
       {
         filter->SetEnabled(PR_FALSE);
+        destIFolder->ThrowAlertMsg("filterDisabled",msgWindow);
         return NS_MSG_NOT_A_MAIL_FOLDER;
       }
       // put the header into the source db, since it needs to be there when we copy it

@@ -166,7 +166,7 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
 				{
 					PRBool applyMore;
 
-					ret  = listener->ApplyFilterHit(filter, &applyMore);
+					ret  = listener->ApplyFilterHit(filter, msgWindow, &applyMore);
 					if (!NS_SUCCEEDED(ret) || !applyMore)
 						break;
 				}

@@ -194,6 +194,8 @@ public:
   NS_IMETHOD NotifyCompactCompleted();
   NS_IMETHOD ConfirmFolderDeletionForFilter(nsIMsgWindow *msgWindow, PRBool *confirmed);
   NS_IMETHOD AlertFilterChanged(nsIMsgWindow *msgWindow);
+  NS_IMETHOD ThrowAlertMsg(const char* msgName, nsIMsgWindow *msgWindow);
+  NS_IMETHOD GetStringWithFolderNameFromBundle(const char* msgName, PRUnichar **aResult);
 
   // end NS_DECL_NSIMSGFOLDER
   

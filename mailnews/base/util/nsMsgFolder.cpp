@@ -2673,8 +2673,8 @@ nsMsgFolder::ThrowConfirmationPrompt(nsIMsgWindow *msgWindow, const PRUnichar *c
   return rv;
 }
 
-
-NS_IMETHODIMP nsMsgFolder::ConfirmFolderDeletionForFilter(nsIMsgWindow *msgWindow, PRBool *confirmed)
+NS_IMETHODIMP
+nsMsgFolder::GetStringWithFolderNameFromBundle(const char *msgName, PRUnichar **aResult)
 {
   nsCOMPtr <nsIStringBundle> bundle;
   nsresult rv = GetBaseStringBundle(getter_AddRefs(bundle));
@@ -2686,18 +2686,41 @@ NS_IMETHODIMP nsMsgFolder::ConfirmFolderDeletionForFilter(nsIMsgWindow *msgWindo
     {
       folderName
     };
-    nsXPIDLString confirmString;
-    rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2("confirmFolderDeletionForFilter").get(),
-                                      formatStrings, 1,
-                                      getter_Copies(confirmString));
+    rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(msgName).get(),
+                                      formatStrings, 1, aResult);
+  }
+  return rv;
+}
 
+NS_IMETHODIMP nsMsgFolder::ConfirmFolderDeletionForFilter(nsIMsgWindow *msgWindow, PRBool *confirmed)
+{
+  nsXPIDLString confirmString;
+  nsresult rv = GetStringWithFolderNameFromBundle("confirmFolderDeletionForFilter", getter_Copies(confirmString));
+  if (NS_SUCCEEDED(rv) && confirmString)
     rv = ThrowConfirmationPrompt(msgWindow, confirmString.get(), confirmed);
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgFolder::ThrowAlertMsg(const char*msgName, nsIMsgWindow *msgWindow)
+{
+  nsXPIDLString alertString;
+  nsresult rv = GetStringWithFolderNameFromBundle(msgName, getter_Copies(alertString));
+  if (NS_SUCCEEDED(rv) && alertString && msgWindow)
+  {
+    nsCOMPtr <nsIDocShell> docShell;
+    msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+    if (docShell)
+    {
+      nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+      if (dialog && alertString)
+        dialog->Alert(nsnull, alertString);
+  }
   }
   return rv;
 }
 
 NS_IMETHODIMP nsMsgFolder::AlertFilterChanged(nsIMsgWindow *msgWindow)
-{
+{  //this is a different alert i.e  alert w/ checkbox.
   nsresult rv = NS_OK;
   PRBool checkBox=PR_FALSE;
   GetWarnFilterChanged(&checkBox);

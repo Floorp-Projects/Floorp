@@ -1648,7 +1648,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow)
 		*pMoved = m_msgMovedByFilter;
 }
 
-NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore)
+NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore)
 {
 	nsMsgRuleActionType actionType;
     nsXPIDLCString actionTargetFolderUri;
@@ -1739,7 +1739,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 					tmp = (char*) cc.value;
 					PR_FREEIF(tmp);
 				}
-				nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter);
+				nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter, msgWindow);
 				if (NS_SUCCEEDED(err))
 					m_msgMovedByFilter = PR_TRUE;
 
@@ -1793,7 +1793,8 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
 											   const char *destFolderUri,
-											   nsIMsgFilter *filter)
+                                                      nsIMsgFilter *filter,
+                                                      nsIMsgWindow *msgWindow)
 {
 	nsresult err = 0;
 	nsIOFileStream *destFile;
@@ -1818,6 +1819,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   if (!parentFolder || !canFileMessages)
   {
     filter->SetEnabled(PR_FALSE);
+    destIFolder->ThrowAlertMsg("filterDisabled", msgWindow);
     return NS_MSG_NOT_A_MAIL_FOLDER;
   }
 
@@ -1836,7 +1838,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	// Make sure no one else is writing into this folder
 	if (destIFolder && (err = destIFolder->AcquireSemaphore (myISupports)) != 0)
   {
-    NS_ASSERTION(PR_FALSE, "why is this folder busy?");
+    destIFolder->ThrowAlertMsg("filterFolderDeniedLocked", msgWindow);
 		return err;
   }
 
@@ -1867,6 +1869,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 #endif
 		if (destIFolder)
 			destIFolder->ReleaseSemaphore (myISupports);
+    destIFolder->ThrowAlertMsg("filterFolderWriteFailed", msgWindow);
 		return  NS_MSG_ERROR_WRITING_MAIL_FOLDER;
 	}
 
@@ -1916,7 +1919,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 			if (destMailDB)
 				destMailDB->Close(PR_TRUE);
-
+      destIFolder->ThrowAlertMsg("filterFolderWriteFailed", msgWindow);
 			return NS_MSG_ERROR_WRITING_MAIL_FOLDER;   // caller (ApplyFilters) currently ignores error conditions
 		}
 			

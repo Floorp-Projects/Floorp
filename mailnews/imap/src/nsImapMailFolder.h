@@ -274,13 +274,14 @@ public:
                                    PRBool copySucceeded);
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	// nsIMsgFilterHitNotification method(s)
-	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
+	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore);
         NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
 
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 									   nsIMsgDatabase *sourceDB, 
                                      const char *destFolder,
-									   nsIMsgFilter *filter);
+                                   nsIMsgFilter *filter,
+                                   nsIMsgWindow *msgWindow);
   static nsresult  AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsCString &msgIds);
 protected:
     // Helper methods
