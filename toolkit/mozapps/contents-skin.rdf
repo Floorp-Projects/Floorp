@@ -18,6 +18,6 @@
 
   <!-- Version Information. -->
   <RDF:Description about="urn:mozilla:skin:classic/1.0:mozapps"
-                   chrome:skinVersion="fb0.7"/>
+                   chrome:skinVersion="tk0.1"/>
 
 </RDF:RDF>

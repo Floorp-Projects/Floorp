@@ -12,7 +12,7 @@
         chrome:displayName="Mozilla Application Support"
         chrome:author="mozilla.org"
         chrome:name="mozapps"
-        chrome:localeVersion="fb0.7">
+        chrome:localeVersion="tk0.1">
   </RDF:Description>
 
 </RDF:RDF>
