@@ -21,7 +21,62 @@
 use diagnostics;
 use strict;
 
-use HTML::FromText;
+
+# This routine quoteUrls contains inspirations from the HTML::FromText CPAN
+# module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
+# all that is really recognizable from the original is bits of the regular
+# expressions.
+
+sub quoteUrls {
+    my $text = shift;		# Take a copy; don't modify in-place.
+    return $text unless $text;
+
+    my $protocol = join '|',
+    qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
+
+    my %options = ( metachars => 1, @_ );
+
+    my $count = 0;
+
+    # Now, quote any "#" characters so they won't confuse stuff later
+    $text =~ s/#/%#/g;
+
+    # Next, find anything that looks like a URL or an email address and
+    # pull them out the the text, replacing them with a "##<digits>##
+    # marker, and writing them into an array.  All this confusion is
+    # necessary so that we don't match on something we've already replaced,
+    # which can happen if you do multiple s///g operations.
+
+    my @things;
+    while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@\w+(?:\.\w+)+)\b|
+                       (\b((?:$protocol):\S+[\w/])))%"##".$count."##"%exo) {
+        my $item = $&;
+
+        $item = value_quote($item);
+
+        if ($item !~ m/^$protocol:/o && $item !~ /^mailto:/) {
+            # We must have grabbed this one because it looks like an email
+            # address.
+            $item = qq{<A HREF="mailto:$item">$item</A>};
+        } else {
+            $item = qq{<A HREF="$item">$item</A>};
+        }
+
+        $things[$count++] = $item;
+    }
+
+    $text = value_quote($text);
+
+    # Stuff everything back from the array.
+    for (my $i=0 ; $i<$count ; $i++) {
+        $text =~ s/##$i##/$things[$i]/e;
+    }
+
+    # And undo the quoting of "#" characters.
+    $text =~ s/%#/#/g;
+
+    return $text;
+}
 
 quietly_check_login();
 
@@ -309,7 +364,7 @@ print "
 <HR>
 <PRE>
 ";
-print text2html($bug{'long_desc'}, email=>1, urls=>1);
+print quoteUrls($bug{'long_desc'}, email=>1, urls=>1);
 print "
 </PRE>
 <HR>\n";

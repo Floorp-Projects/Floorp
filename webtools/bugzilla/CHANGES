@@ -10,10 +10,11 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
-3/24/99 Added quoting of URLs and email addresses in bug descriptions.  This
-requires the use of the HTML::FromText CPAN module, which can be downloaded
-from ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/HTML/.
+3/25/99 Unfortunately, the HTML::FromText CPAN module had too many bugs, and
+so I had to roll my own.  We no longer use the HTML::FromText CPAN module.
 
+3/24/99 (This entry has been removed.  It used to say that we required the
+HTML::FromText CPAN module, but that's no longer true.)
 
 3/22/99 Added the ability to query by fields which have changed within a date
 range.  To make this perform a bit better, we need a new index:
