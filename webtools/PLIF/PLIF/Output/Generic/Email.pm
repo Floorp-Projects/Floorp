@@ -147,6 +147,6 @@ sub setupConfigure {
 sub hash {
     my $self = shift;
     return {
-            'address' => $self->address;
+            'address' => $self->address,
            };
 }
