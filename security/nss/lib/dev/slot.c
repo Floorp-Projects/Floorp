@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.3 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.4 $ $Date: 2001/09/19 19:08:29 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -182,12 +182,253 @@ NSSSlot_Destroy
     return PR_SUCCESS;
 }
 
+NSS_IMPLEMENT NSSUTF8 *
+NSSSlot_GetName
+(
+  NSSSlot *slot,
+  NSSArena *arenaOpt
+)
+{
+    if (slot->name) {
+	return nssUTF8_Duplicate(slot->name, arenaOpt);
+    }
+    return (NSSUTF8 *)NULL;
+}
+
+static PRStatus
+nssslot_login(NSSSlot *slot, nssSession *session, 
+              CK_USER_TYPE userType, NSSCallback pwcb)
+{
+    PRStatus nssrv;
+    PRUint32 attempts;
+    PRBool keepTrying;
+    NSSUTF8 *password = NULL;
+    CK_ULONG pwLen;
+    CK_RV ckrv;
+    if (!pwcb.getPW) {
+	/* set error INVALID_ARG */
+	return PR_FAILURE;
+    }
+    keepTrying = PR_TRUE;
+    nssrv = PR_FAILURE;
+    attempts = 0;
+    while (keepTrying) {
+	nssrv = pwcb.getPW(slot->name, &attempts, pwcb.arg, &password);
+	if (nssrv != PR_SUCCESS) {
+	    nss_SetError(NSS_ERROR_USER_CANCELED);
+	    break;
+	}
+	pwLen = (CK_ULONG)nssUTF8_Length(password, &nssrv); 
+	if (nssrv != PR_SUCCESS) {
+	    break;
+	}
+	nssSession_EnterMonitor(session);
+	ckrv = CKAPI(slot)->C_Login(session->handle, userType, 
+                                    (CK_CHAR_PTR)password, pwLen);
+	nssSession_ExitMonitor(session);
+	switch (ckrv) {
+	case CKR_OK:
+	case CKR_USER_ALREADY_LOGGED_IN:
+	    slot->authInfo.lastLogin = PR_Now();
+	    nssrv = PR_SUCCESS;
+	    keepTrying = PR_FALSE;
+	    break;
+	case CKR_PIN_INCORRECT:
+	    nss_SetError(NSS_ERROR_INVALID_PASSWORD);
+	    keepTrying = PR_TRUE; /* received bad pw, keep going */
+	    break;
+	default:
+	    nssrv = PR_FAILURE;
+	    keepTrying = PR_FALSE;
+	    break;
+	}
+	nss_ZFreeIf(password);
+	password = NULL;
+	++attempts;
+    }
+    nss_ZFreeIf(password);
+    return nssrv;
+}
+
+static PRStatus
+nssslot_init_password(NSSSlot *slot, nssSession *rwSession, NSSCallback pwcb)
+{
+    NSSUTF8 *userPW = NULL;
+    NSSUTF8 *ssoPW = NULL;
+    PRStatus nssrv;
+    CK_ULONG userPWLen, ssoPWLen;
+    CK_RV ckrv;
+    if (!pwcb.getInitPW) {
+	/* set error INVALID_ARG */
+	return PR_FAILURE;
+    }
+    /* Get the SO and user passwords */
+    nssrv = pwcb.getInitPW(slot->name, pwcb.arg, &ssoPW, &userPW);
+    if (nssrv != PR_SUCCESS) goto loser;
+    userPWLen = (CK_ULONG)nssUTF8_Length(userPW, &nssrv); 
+    if (nssrv != PR_SUCCESS) goto loser;
+    ssoPWLen = (CK_ULONG)nssUTF8_Length(ssoPW, &nssrv); 
+    if (nssrv != PR_SUCCESS) goto loser;
+    /* First log in as SO */
+    ckrv = CKAPI(slot)->C_Login(rwSession->handle, CKU_SO, 
+                                (CK_CHAR_PTR)ssoPW, ssoPWLen);
+    if (ckrv != CKR_OK) {
+	/* set error ...SO_LOGIN_FAILED */
+	goto loser;
+    }
+	/* Now change the user PIN */
+    ckrv = CKAPI(slot)->C_InitPIN(rwSession->handle, 
+                                  (CK_CHAR_PTR)userPW, userPWLen);
+    if (ckrv != CKR_OK) {
+	/* set error */
+	goto loser;
+    }
+    nss_ZFreeIf(ssoPW);
+    nss_ZFreeIf(userPW);
+    return PR_SUCCESS;
+loser:
+    nss_ZFreeIf(ssoPW);
+    nss_ZFreeIf(userPW);
+    return PR_FAILURE;
+}
+
+static PRStatus
+nssslot_change_password(NSSSlot *slot, nssSession *rwSession, NSSCallback pwcb)
+{
+    NSSUTF8 *userPW = NULL;
+    NSSUTF8 *newPW = NULL;
+    PRUint32 attempts;
+    PRStatus nssrv;
+    PRBool keepTrying = PR_TRUE;
+    CK_ULONG userPWLen, newPWLen;
+    CK_RV ckrv;
+    if (!pwcb.getNewPW) {
+	/* set error INVALID_ARG */
+	return PR_FAILURE;
+    }
+    attempts = 0;
+    while (keepTrying) {
+	nssrv = pwcb.getNewPW(slot->name, &attempts, pwcb.arg, 
+	                      &userPW, &newPW);
+	if (nssrv != PR_SUCCESS) {
+	    nss_SetError(NSS_ERROR_USER_CANCELED);
+	    break;
+	}
+	userPWLen = (CK_ULONG)nssUTF8_Length(userPW, &nssrv); 
+	if (nssrv != PR_SUCCESS) return nssrv;
+	newPWLen = (CK_ULONG)nssUTF8_Length(newPW, &nssrv); 
+	if (nssrv != PR_SUCCESS) return nssrv;
+	nssSession_EnterMonitor(rwSession);
+	ckrv = CKAPI(slot)->C_SetPIN(rwSession->handle,
+	                             (CK_CHAR_PTR)userPW, userPWLen,
+	                             (CK_CHAR_PTR)newPW, newPWLen);
+	nssSession_ExitMonitor(rwSession);
+	switch (ckrv) {
+	case CKR_OK:
+	    slot->authInfo.lastLogin = PR_Now();
+	    nssrv = PR_SUCCESS;
+	    keepTrying = PR_FALSE;
+	    break;
+	case CKR_PIN_INCORRECT:
+	    nss_SetError(NSS_ERROR_INVALID_PASSWORD);
+	    keepTrying = PR_TRUE; /* received bad pw, keep going */
+	    break;
+	default:
+	    nssrv = PR_FAILURE;
+	    keepTrying = PR_FALSE;
+	    break;
+	}
+	nss_ZFreeIf(userPW);
+	nss_ZFreeIf(newPW);
+	userPW = NULL;
+	newPW = NULL;
+	++attempts;
+    }
+    nss_ZFreeIf(userPW);
+    nss_ZFreeIf(newPW);
+    return nssrv;
+}
+
+NSS_IMPLEMENT PRStatus
+NSSSlot_Login
+(
+  NSSSlot *slot,
+  PRBool asSO,
+  NSSCallback pwcb
+)
+{
+    PRBool needsLogin, needsInit;
+    CK_USER_TYPE userType;
+    userType = (asSO) ? CKU_SO : CKU_USER;
+    needsInit = PR_FALSE; /* XXX */
+    needsLogin = PR_TRUE; /* XXX */
+    if (needsInit) {
+	return NSSSlot_SetPassword(slot, pwcb);
+    } else if (needsLogin) {
+	return nssslot_login(slot, slot->token->defaultSession, 
+	                     userType, pwcb);
+    }
+    return PR_SUCCESS; /* login not required */
+}
+
+NSS_IMPLEMENT PRStatus
+NSSSlot_Logout
+(
+  NSSSlot *slot,
+  nssSession *sessionOpt
+)
+{
+    nssSession *session;
+    PRStatus nssrv = PR_SUCCESS;
+    CK_RV ckrv;
+    session = (sessionOpt) ? sessionOpt : slot->token->defaultSession;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(slot)->C_Logout(session->handle);
+    nssSession_ExitMonitor(session);
+    if (ckrv != CKR_OK) {
+	/* translate the error */
+	nssrv = PR_FAILURE;
+    }
+    return nssrv;
+}
+
+NSS_IMPLEMENT void
+NSSSlot_SetPasswordDefaults
+(
+  NSSSlot *slot,
+  PRInt32 askPasswordTimes
+)
+{
+    slot->authInfo.askPasswordTimeout = askPasswordTimeout;
+}
+
+NSS_IMPLEMENT PRStatus
+NSSSlot_SetPassword
+(
+  NSSSlot *slot,
+  NSSCallback pwcb
+)
+{
+    PRStatus nssrv;
+    nssSession *rwSession;
+    PRBool needsInit;
+    needsInit = PR_FALSE; /* XXX */
+    rwSession = NSSSlot_CreateSession(slot, NULL, PR_TRUE);
+    if (needsInit) {
+	nssrv = nssslot_init_password(slot, rwSession, pwcb);
+    } else {
+	nssrv = nssslot_change_password(slot, rwSession, pwcb);
+    }
+    nssSession_Destroy(rwSession);
+    return nssrv;
+}
+
 NSS_IMPLEMENT nssSession *
 NSSSlot_CreateSession
 (
   NSSSlot *slot,
   NSSArena *arenaOpt,
-  PRBool readOnly /* so far, this is the only flag used */
+  PRBool readWrite /* so far, this is the only flag used */
 )
 {
     CK_RV ckrv;
@@ -195,7 +436,7 @@ NSSSlot_CreateSession
     CK_SESSION_HANDLE session;
     nssSession *rvSession;
     ckflags = s_ck_readonly_flags;
-    if (!readOnly) {
+    if (readWrite) {
 	ckflags |= CKF_RW_SESSION;
     }
     /* does the opening and closing of sessions need to be done in a
@@ -236,13 +477,15 @@ nssSession_Destroy
   nssSession *s
 )
 {
+    CK_RV ckrv = CKR_OK;
     if (s) {
+	ckrv = CKAPI(s->slot)->C_CloseSession(s->handle);
 	if (s->lock) {
 	    PZ_DestroyLock(s->lock);
 	}
 	nss_ZFreeIf(s);
     }
-    return PR_SUCCESS;
+    return (ckrv == CKR_OK) ? PR_SUCCESS : PR_FAILURE;
 }
 
 NSS_IMPLEMENT PRStatus

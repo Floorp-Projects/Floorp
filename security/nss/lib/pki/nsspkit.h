@@ -35,7 +35,7 @@
 #define NSSPKIT_H
 
 #ifdef DEBUG
-static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.3 $ $Date: 2001/09/13 22:16:22 $ $Name:  $";
+static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.4 $ $Date: 2001/09/19 19:08:32 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -232,8 +232,24 @@ typedef struct NSSAlgorithmAndParametersStr NSSAlgorithmAndParameters;
  * How OO do we want to make it?
  */
 
-struct NSSCallbackStr;
 typedef struct NSSCallbackStr NSSCallback;
+
+struct NSSCallbackStr {
+    /* Prompt for a password to initialize a slot.  */
+    PRStatus (* getInitPW)(NSSUTF8 *slotName, void *arg, 
+                           NSSUTF8 **ssoPW, NSSUTF8 **userPW); 
+    /* Prompt for oldPW and newPW in order to change the 
+     * password on a slot.  
+     */
+    PRStatus (* getNewPW)(NSSUTF8 *slotName, PRUint32 *retries, void *arg,
+                          NSSUTF8 **oldPW, NSSUTF8 **newPW); 
+    /* Prompt for slot password.  */
+    PRStatus (* getPW)(NSSUTF8 *slotName, PRUint32 *retries, void *arg,
+                       NSSUTF8 **password); 
+    void *arg;
+};
+
+/* set errors - user cancelled, ... */
 
 typedef PRUint32 NSSOperations;
 /* 1) Do we want these to be preprocessor definitions or constants? */
