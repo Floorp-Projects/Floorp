@@ -454,7 +454,6 @@ sub MakeResourceAliases()
 	_MakeAlias(":mozilla:intl:uconv:src:acceptlanguage.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:charsetData.properties",						"$resource_dir");
-	_MakeAlias(":mozilla:intl:uconv:src:charsetTitles.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:acceptlanguage.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:locale:src:langGroups.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:locale:src:language.properties",						"$resource_dir");
@@ -508,6 +507,7 @@ sub MakeResourceAliases()
 
 	my($aim_chrome_dir) = "$chrome_dir" . "aim:";
 
+	_MakeAlias(":mozilla:intl:uconv:src:charsetTitles.properties",						"$global_locale_chrome_dir");
 
 	# xpinstall lives inside of the top level communicator dist dir
 
