@@ -265,7 +265,13 @@ function doSearch()
 	if (!resultsTree)	return(false);
 	resultsTree.setAttribute("ref", searchURL);
 	// start off showing all engine results
-	resultsTree.removeAttribute("style");
+	resultsTree.setAttribute("style", "height: 70%; width: 100%;");
+	var contentArea = parent.frames[1].document.getElementById("content");
+	if (contentArea)
+	{
+		contentArea.setAttribute("style", "height: 100; width: 100%;");
+		parent.frames[1].frames[0].document.location = "default.htm";
+	}
 
 	// enable "Save Search" button
 	var searchButton = document.getElementById("SaveSearch");
