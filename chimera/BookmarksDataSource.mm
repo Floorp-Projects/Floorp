@@ -283,6 +283,35 @@
   if (index == -1)
     return;
 
+  // first, see how many items are selected
+  BOOL haveBookmarks = NO;
+  
+  NSEnumerator* testSelRows = [mOutlineView selectedRowEnumerator];
+  for (NSNumber* currIndex = [testSelRows nextObject];
+      currIndex != nil;
+      currIndex = [testSelRows nextObject])
+  {
+    index = [currIndex intValue];
+    BookmarkItem* item = [mOutlineView itemAtRow: index];
+    if ([mOutlineView isExpandable: item]) {
+      // dumb check to see if we're deleting an empty folder. Should really
+      // recurse down
+      if ([self outlineView:mOutlineView numberOfChildrenOfItem: item] > 0)
+        haveBookmarks = YES;
+    } else
+      haveBookmarks = YES;
+  }
+
+  // ideally, we should count the number of doomed bookmarks and tell the user
+  if (haveBookmarks) {
+    NSString *alert         = NSLocalizedString(@"DeteleBookmarksAlert",@"");
+    NSString *message       = NSLocalizedString(@"DeteleBookmarksMsg",@"");
+    NSString *okButton      = NSLocalizedString(@"DeteleBookmarksOKButton",@"");
+    NSString *cancelButton  = NSLocalizedString(@"DeteleBookmarksCancelButton",@"");
+    if (NSRunAlertPanel(alert, message, okButton, cancelButton, nil) != NSAlertDefaultReturn)
+      return;
+  }
+  
   // we'll run into problems if a parent item and one if its children are both selected.
   // A cheap way of having to avoid scanning the list to remove children is to have the
   // outliner collapse all items that are being deleted. This will cull the selection
