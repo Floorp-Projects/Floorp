@@ -426,50 +426,6 @@ void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
   }
 }
 
-#if 0
-void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
-                                const nsSize& aMaxSize, nsSize& aSize)
-{
-  nsInput* input;
-  GetContent((nsIContent *&) input); // this must be an nsInput
-  nsStylePosition* pos = (nsStylePosition*) 
-    mStyleContext->GetData(kStylePositionSID);
-
-  aSize.width  = GetStyleDim(aPresContext, aMaxSize.width, aMaxSize.width, pos->mWidth);
-  aSize.height = GetStyleDim(aPresContext, aMaxSize.height, aMaxSize.width, pos->mHeight);
-
-  NS_RELEASE(input);
-}
-
-nscoord 
-nsInputFrame::GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
-                          nscoord aMaxWidth, const nsStyleCoord& aCoord)
-{
-  nscoord result = 0;
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_Coord:
-      result = aCoord.GetCoordValue();
-      break;
-    case eStyleUnit_Inherit:
-      result = aMaxDim;  // XXX correct?? this needs to be the inherited value
-      break;
-    case eStyleUnit_Percent:
-      result = (nscoord)((float)aMaxWidth * aCoord.GetPercentValue());
-      break;
-    default:
-    case eStyleUnit_Auto:
-      result = CSS_NOTSET;
-      break;
-  }
-
-  if (result <= 0) {
-    result = CSS_NOTSET;
-  }
-
-  return result;
-}
-#endif
-
 nscoord 
 nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,
                           const nsString& aString, nsSize& aSize)
