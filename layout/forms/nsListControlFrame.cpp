@@ -1131,12 +1131,12 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // Compute the bounding box of the contents of the list using the area 
   // calculated by the first reflow as a starting point.
   //
-  // The nsGfxScrollFrame::Reflow adds in the scrollbar width and border dimensions
-  // to the maxElementWidth, so these need to be subtracted
-  nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.width - 
-                               (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
-  nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height - 
-                               (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
+  // The nsGfxScrollFrame::Reflow adds border and padding to the
+  // maxElementWidth, so these need to be subtracted
+  nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.width -
+    (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+  nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height -
+    (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
 
   // Set up max values
   mMaxWidth  = scrolledAreaWidth;
@@ -1336,37 +1336,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  const nsStyleVisibility* vis;
-  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
-
-#ifdef IBMBIDI
-  // Retrieve the scrollbar's width and height
-  float sbWidth  = 0.0;
-  float sbHeight = 0.0;;
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
-  dc->GetScrollBarDimensions(sbWidth, sbHeight);
-  // Convert to nscoord's by rounding
-  nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
-
-  if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
-    nscoord bidiScrolledAreaWidth = scrolledAreaDesiredSize.mMaxElementWidth;
-    firstPassState.reason = eReflowReason_StyleChange;
-    if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) {
-      bidiScrolledAreaWidth = aReflowState.mComputedWidth;
-    }
-    if (needsVerticalScrollbar) {
-      bidiScrolledAreaWidth -= scrollbarWidth;
-    }
-    bidiScrolledAreaWidth -= (aReflowState.mComputedBorderPadding.left +
-                              aReflowState.mComputedBorderPadding.right);
-
-    firstPassState.mComputedWidth  = bidiScrolledAreaWidth;
-    firstPassState.availableWidth = bidiScrolledAreaWidth;
-    nsGfxScrollFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
-  }
-#endif // IBMBIDI
-
    // Do a second reflow with the adjusted width and height settings
    // This sets up all of the frames with the correct width and height.
   secondPassState.mComputedWidth  = visibleWidth;
@@ -1384,8 +1353,11 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
     // Set the max element size to be the same as the desired element size.
   } else {
-    aDesiredSize.width  = visibleWidth;
-    aDesiredSize.height = visibleHeight;
+    // aDesiredSize is the desired frame size, so includes border and padding
+    aDesiredSize.width  = visibleWidth +
+      (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+    aDesiredSize.height = visibleHeight +
+      (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
     aDesiredSize.ascent =
       scrolledAreaDesiredSize.ascent + aReflowState.mComputedBorderPadding.top;
     aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
