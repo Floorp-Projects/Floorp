@@ -312,25 +312,9 @@ nsresult nsShellInstance::RegisterFactories()
   #define PARSER_DLL "libraptorhtmlpars.so"
   #define DOM_DLL    "libjsdom.so"
   #define LAYOUT_DLL "libraptorhtml.so"
+  #define XPFC_DLL   "libxpfc10.so"
   #define NETLIB_DLL "netlib.so"
 #endif
-
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-  nsRepository::RegisterFactory(kIWidgetIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-
-  // register graphics classes
-  static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
-  static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
-  static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
-  static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
-  static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
-  static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-
-  nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 #endif
 
 // Class ID's
@@ -605,7 +589,9 @@ nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
     
   } else if ((aEvent->message == NS_DESTROY) && (gShellInstance->GetApplicationWidget() == aEvent->widget))
   {
+#ifdef XP_PC
     ::PostQuitMessage(0);    
+#endif
   }
 
   return (gShellInstance->GetApplicationShell()->HandleEvent(aEvent));
