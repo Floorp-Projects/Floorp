@@ -430,16 +430,17 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   aElement->GetSrc(src);
   if (!src.IsEmpty()) {
     nsCOMPtr<nsIURI> baseURI, scriptURI;
-    
+
     // Use the SRC attribute value to load the URL
     nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
     NS_ASSERTION(content, "nsIDOMHTMLScriptElement not implementing nsIContent");
     content->GetBaseURL(getter_AddRefs(baseURI));
     rv = NS_NewURI(getter_AddRefs(scriptURI), src, nsnull, baseURI);
+
     if (NS_FAILED(rv)) {
       return FireErrorNotification(rv, aElement, aObserver);
     }
-    
+
     // Check that the containing page is allowed to load this URI.
     nsIURI *docURI = mDocument->GetDocumentURL();
     if (!docURI) {
@@ -460,7 +461,8 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       rv = NS_CheckContentLoadPolicy(nsIContentPolicy::SCRIPT,
                                      scriptURI, aElement, domWin, &shouldLoad);
       if (NS_SUCCEEDED(rv) && !shouldLoad) {
-        return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+        return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement,
+                                     aObserver);
       }
 
       request->mURI = scriptURI;
@@ -579,7 +581,7 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   FireScriptAvailable(NS_OK, aRequest, *script);
   nsresult rv = EvaluateScript(aRequest, *script);
   FireScriptEvaluated(rv, aRequest);
-  
+
   return rv;
 }
 
