@@ -377,7 +377,7 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
 
     nsXPIDLCString referrerCSpec;
     referrer->GetSpec(getter_Copies(referrerCSpec));
-    nsAutoString referrerSpec = referrerCSpec;
+    nsAutoString referrerSpec(referrerCSpec);
 
     // Load new URI.
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
