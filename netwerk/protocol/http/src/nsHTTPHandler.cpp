@@ -66,7 +66,10 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
+// TODO Add an Init method on the handler instead of doing everything 
+// in the constructor
 nsHTTPHandler::nsHTTPHandler():
+    mAcceptLanguages(nsnull),
     mDoKeepAlive(PR_FALSE),
     mProxy(nsnull),
     mUseProxy(PR_FALSE)
@@ -132,6 +135,7 @@ nsHTTPHandler::nsHTTPHandler():
 #endif  // remove till here
 
         nsXPIDLCString proxyServer;
+        nsXPIDLCString acceptLanguages;
         PRInt32 proxyPort = -1;
         PRInt32 type = -1;
         rv = prefs->GetIntPref("network.proxy.type", &type);
@@ -144,6 +148,8 @@ nsHTTPHandler::nsHTTPHandler():
         if (NS_FAILED(rv)) 
             return; //NS_ERROR("Failed to get the HTTP proxy server");
         rv = prefs->GetIntPref("network.proxy.http_port",&proxyPort);
+        if (NS_FAILED(rv))
+            return; // NS_ERROR("Failed to get the HTTP port");
 
         if (NS_SUCCEEDED(rv) && (proxyPort>0)) // currently a bug in IntPref
         {
@@ -151,6 +157,15 @@ nsHTTPHandler::nsHTTPHandler():
                 NS_ERROR("Failed to set the HTTP proxy server");
             if (NS_FAILED(SetProxyPort(proxyPort)))
                 NS_ERROR("Failed to set the HTTP proxy port");
+        }
+        rv = prefs->CopyCharPref("intl.accept_languages", 
+                getter_Copies(acceptLanguages));
+        if (NS_SUCCEEDED(rv))
+        {
+            if (NS_FAILED(SetAcceptLanguages(acceptLanguages)))
+            {
+                NS_ERROR("Failed to set the accept language");
+            }
         }
     }
 }
@@ -168,6 +183,7 @@ nsHTTPHandler::~nsHTTPHandler()
     // Release the Atoms used by the HTTP protocol...
     nsHTTPAtoms::ReleaseAtoms();
 
+    CRTFREEIF(mAcceptLanguages);
     CRTFREEIF(mProxy);
 
 }
@@ -621,4 +637,33 @@ nsHTTPHandler::GetAuthEngine(nsAuthEngine** o_AuthEngine)
 {
   *o_AuthEngine = &mAuthEngine;
   return NS_OK;
+}
+
+nsresult
+nsHTTPHandler::SetAcceptLanguages(const char* i_AcceptLanguages) 
+{
+    CRTFREEIF(mAcceptLanguages);
+    if (i_AcceptLanguages)
+    {
+        mAcceptLanguages = nsCRT::strdup(i_AcceptLanguages);
+        return (mAcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    return NS_OK;
+}
+
+nsresult
+nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
+{
+    if (!o_AcceptLanguages)
+        return NS_ERROR_NULL_POINTER;
+    if (mAcceptLanguages)
+    {
+        *o_AcceptLanguages = nsCRT::strdup(mAcceptLanguages);
+        return (*o_AcceptLanguages == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    else
+    {
+        *o_AcceptLanguages = nsnull;
+        return NS_OK;
+    }
 }

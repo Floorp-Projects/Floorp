@@ -128,6 +128,15 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
                     SetHeader(nsHTTPAtoms::Authorization, authStr);
             }
         }
+        nsXPIDLCString acceptLanguages;
+        // Add the Accept-Language header
+        rv = httpHandler->GetAcceptLanguages(
+                getter_Copies(acceptLanguages));
+        if (NS_SUCCEEDED(rv))
+        {
+            if (acceptLanguages && *acceptLanguages)
+                SetHeader(nsHTTPAtoms::Accept_Language, acceptLanguages);
+        }
       }
     }
 }

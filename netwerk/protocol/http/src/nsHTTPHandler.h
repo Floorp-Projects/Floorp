@@ -171,11 +171,12 @@ protected:
     // Transports that are idle (ready to be used again)
     nsCOMPtr<nsISupportsArray> mIdleTransports;
 
+    char*           mAcceptLanguages;
     PRBool          mDoKeepAlive;
     char*           mProxy;
     PRInt32         mProxyPort;
-    PRBool          mUseProxy; 
     PRTime          mSessionStartTime;
+    PRBool          mUseProxy; 
 };
 
 #endif /* _nsHTTPHandler_h_ */
