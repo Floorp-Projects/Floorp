@@ -2450,7 +2450,6 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
   mCurrentRelatedContent = aRelatedContent;
 
   BeforeDispatchEvent();
-  CurrentEventShepherd shepherd(this, &event);
   if (aTargetContent) {
     aTargetContent->HandleDOMEvent(aPresContext, &event, nsnull,
                                    NS_EVENT_FLAG_INIT, &status); 
@@ -2502,7 +2501,6 @@ nsEventStateManager::MaybeDispatchMouseEventToIframe(
           event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
           event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
 
-          CurrentEventShepherd shepherd(this, &event);
           parentShell->HandleDOMEventWithTarget(docContent, &event, &status);
         }
       }
@@ -4038,8 +4036,6 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
   if (previousFocus && !previousFocus->GetDocument())
     previousFocus = nsnull;
 
-  CurrentEventShepherd shepherd(this);
-
   if (nsnull != gLastFocusedPresContext) {
 
     nsCOMPtr<nsIContent> focusAfterBlur;
@@ -4073,7 +4069,6 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
           //fire blur
           nsEventStatus status = nsEventStatus_eIgnore;
           nsEvent event(NS_BLUR_CONTENT);
-          shepherd.SetCurrentEvent(&event);
 
           EnsureDocument(presShell);
           
@@ -4130,7 +4125,6 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
     if (gLastFocusedDocument && (gLastFocusedDocument != mDocument) && globalObject) {  
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent event(NS_BLUR_CONTENT);
-      shepherd.SetCurrentEvent(&event);
 
       // Make sure we're not switching command dispatchers, if so, surpress the blurred one
       if (mDocument) {
@@ -4217,7 +4211,6 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
     //fire focus
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(NS_FOCUS_CONTENT);
-    shepherd.SetCurrentEvent(&event);
 
     if (nsnull != mPresContext) {
       nsCxPusher pusher(aContent);
@@ -4239,7 +4232,6 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
     //see bugzilla bug 93521
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(NS_FOCUS_CONTENT);
-    shepherd.SetCurrentEvent(&event);
 
     if (nsnull != mPresContext && mDocument) {
       nsCxPusher pusher(mDocument);
