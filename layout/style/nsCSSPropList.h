@@ -60,17 +60,15 @@
   callers.  It must always be the same as 'name' except it must use
   InterCaps and all hyphens ('-') must be removed.
 
-  4. 'hint' says what needs to be recomputed when the property changes.
+  4. 'datastruct' says which nsRuleData* struct this property goes in.
 
-  5. 'datastruct' says which nsRuleData* struct this property goes in.
-
-  6. 'member' gives the name of the member variable in the nsRuleData
+  5. 'member' gives the name of the member variable in the nsRuleData
   struct.
 
-  7. 'type' gives the |nsCSSType| of the data in the nsRuleData struct
+  6. 'type' gives the |nsCSSType| of the data in the nsRuleData struct
   and in the nsCSSDeclaration backend.
 
-  8. 'iscoord' says whether the property is a coordinate property for
+  7. 'iscoord' says whether the property is a coordinate property for
   which we use an explicit inherit value in the *style structs* (since
   inheritance requires knowledge of layout).
 
