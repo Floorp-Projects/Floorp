@@ -114,13 +114,14 @@
 <html:script language="javascript" src="chrome://addressbook/content/resultPane.js"/>
 <html:script language="javascript" src="chrome://addressbook/content/cardviewPane.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/commandglue.js"/>
 <html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
 
   <menubar>
     <menu name="&fileMenu.label;">
       <menu name="&newMenu.label;">
         <menuitem name="&newNavCmd.label;" onclick="NewBrowserWindow();"/>
-        <menuitem name="&newMessageCmd.label;" onclick="MsgNewMessage();"/>
+        <menuitem name="&newMessageCmd.label;" onclick="NewMessage();"/>
         <menuitem name="&newBlankPageCmd.label;" onclick="NewBlankPage();"/>
         <separator/>
         <menuitem name="&newPageFromTemplate.label;" onclick="TemplatePage();"/>
@@ -225,7 +226,7 @@
 	  <titledbutton src="&newcardButton.img;" align="bottom" value="&newcardButton.label;" onclick="AbNewCard()"/>
 	  <titledbutton src="&newlistButton.img;" align="bottom" value="&newlistButton.label;" onclick="AbNewList()"/>
 	  <titledbutton src="&propertiesButton.img;" align="bottom" value="&propertiesButton.label;" onclick="AbProperties()"/>
-	  <titledbutton src="&newmsgButton.img;" align="bottom" value="&newmsgButton.label;" onclick="AbNewMsg()"/>
+	  <titledbutton src="&newmsgButton.img;" align="bottom" value="&newmsgButton.label;" onclick="NewMessage()"/>
 	  <titledbutton src="&deleteButton.img;" align="bottom" value="&deleteButton.label;" onclick="AbDelete()"/>
 
 	  <box align="vertical" flex="100%">
