@@ -206,7 +206,7 @@ function initializeSearchBar()
 
 function onEnterInSearchBar()
 {
-//  dump ("onEnterInSearchBar gSearchInput.value = " + gSearchInput.value + " showing criteria = " + gSearchInput.showingSearchCriteria +"\n");
+  viewDebug ("onEnterInSearchBar gSearchInput.value = " + gSearchInput.value + " showing criteria = " + gSearchInput.showingSearchCriteria +"\n");
    if (gSearchInput.value == "" || gSearchInput.showingSearchCriteria) 
    {
      if (gSearchInput.searchMode == kQuickSearchHighlight)
@@ -218,19 +218,19 @@ function onEnterInSearchBar()
        statusFeedback.showStatusString("");
        disableQuickSearchClearButton();
 
-//       dump ("onEnterInSearchBar gDefaultSearchViewTerms = " + gDefaultSearchViewTerms + "gVirtualFolderTerms = " 
-//        + gVirtualFolderTerms + "gXFVirtualFolderTerms = " + gXFVirtualFolderTerms + "\n");
+       viewDebug ("onEnterInSearchBar gDefaultSearchViewTerms = " + gDefaultSearchViewTerms + "gVirtualFolderTerms = " 
+        + gVirtualFolderTerms + "gXFVirtualFolderTerms = " + gXFVirtualFolderTerms + "\n");
        var addTerms = gDefaultSearchViewTerms || gVirtualFolderTerms || gXFVirtualFolderTerms;
        if (addTerms)
        {
-//           dump ("addTerms = " + addTerms + " count = " + addTerms.Count() + "\n");
+           viewDebug ("addTerms = " + addTerms + " count = " + addTerms.Count() + "\n");
            initializeSearchBar();
            onSearch(addTerms);
        }
-       else if (gPreQuickSearchView)
+       else
         restorePreSearchView();
      }
-     else if (gPreQuickSearchView && !gDefaultSearchViewTerms)// maybe a quick search from a cross-folder virtual folder
+     else if (gPreQuickSearchView && !gDefaultSearchViewTerms)// may be a quick search from a cross-folder virtual folder
       restorePreSearchView();
      
      gSearchInput.showingSearchCriteria = true;
@@ -360,6 +360,7 @@ function restorePreSearchView()
 
 function onSearch(aSearchTerms)
 {
+    viewDebug("in OnSearch, searchTerms = " + aSearchTerms + "\n");
     RerootThreadPane();
 
     if (aSearchTerms)
@@ -400,6 +401,7 @@ function createSearchTermsWithList(aTermsArray)
     {
       var dbFolderInfo = msgDatabase.dBFolderInfo;
       var srchFolderUri = dbFolderInfo.getCharPtrProperty("searchFolderUri");
+      viewDebug("createSearchTermsWithList xf vf scope = " + srchFolderUri + "\n");
       var srchFolderUriArray = srchFolderUri.split('|');
       for (var i in srchFolderUriArray) 
       {
@@ -414,10 +416,13 @@ function createSearchTermsWithList(aTermsArray)
     }
   }
   else
+  {
+    viewDebug ("in createSearchTermsWithList, adding scope term for selected folder\n");
     gSearchSession.addScopeTerm(gSearchInput.searchMode == kQuickSearchBody && 
                               !ioService.offline && 
                               selectedFolder.server.type == 'imap' ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail, 
                               selectedFolder);
+  }
   // add each item in termsArray to the search session
 
   var termsArray = aTermsArray.QueryInterface(Components.interfaces.nsISupportsArray);
@@ -499,8 +504,8 @@ function createSearchTerms()
 
   // now append the default view or virtual folder criteria to the quick search   
   // so we don't lose any default view information
-//  dump("gDefaultSearchViewTerms = " + gDefaultSearchViewTerms + "gVirtualFolderTerms = " + gVirtualFolderTerms + 
-//    "gXFVirtualFolderTerms = " + gXFVirtualFolderTerms + "\n");
+  viewDebug("gDefaultSearchViewTerms = " + gDefaultSearchViewTerms + "gVirtualFolderTerms = " + gVirtualFolderTerms + 
+    "gXFVirtualFolderTerms = " + gXFVirtualFolderTerms + "\n");
   var defaultSearchTerms = (gDefaultSearchViewTerms || gVirtualFolderTerms || gXFVirtualFolderTerms);
   if (defaultSearchTerms)
   {
@@ -603,20 +608,23 @@ function ClearQSIfNecessary()
   if (gSearchInput.value == "")
     return;
 
-  dump("clearing QS as Necessary\n");
+  viewDebug("clearing QS as Necessary\n");
   Search("");
 }
 
 function Search(str)
 {
-//  dump("in Search str = " + str + "gSearchInput.showingSearchCriteria = " + gSearchInput.showingSearchCriteria + "\n");
+  viewDebug("in Search str = " + str + "gSearchInput.showingSearchCriteria = " + gSearchInput.showingSearchCriteria + "\n");
   if (gSearchInput.showingSearchCriteria && str != "")
     return;
 
   GetSearchInput();
 
   if (str != gSearchInput.value)
+  {
     gQSViewIsDirty = true; 
+    viewDebug("in Search(), setting gQSViewIsDirty true\n");
+  }
 
   gSearchInput.value = str;  //on input does not get fired for some reason
   onSearchInput(true);
@@ -641,6 +649,7 @@ function onQuickSearchNewMsgLoaded()
 
 function changeQuickSearchMode(aMenuItem)
 {
+  viewDebug("changing quick search mode\n");
   // extract the label and set the search input to match it
   var oldSearchMode = gSearchInput.searchMode;
   gSearchInput.searchMode = aMenuItem.value;

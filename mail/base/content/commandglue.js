@@ -355,6 +355,7 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   // this is to kick off cross-folder searches for virtual folders.
   if (gSearchSession && !gVirtualFolderTerms) // another var might be better...
   {
+    viewDebug("doing a xf folder search in rerootFolder\n");
     gDBView.searchSession = gSearchSession;
     gSearchSession.search(msgWindow);
   }
@@ -835,6 +836,7 @@ function FolderPaneSelectionChange()
                       viewType = nsMsgViewType.eShowVirtualFolderResults;
                       gXFVirtualFolderTerms = CreateGroupedSearchTerms(tempFilter.searchTerms);
                       setupXFVirtualFolderSearch(srchFolderUriArray, gXFVirtualFolderTerms);
+                      gSearchInput.showingSearchCriteria = false;
                       // need to set things up so that reroot folder issues the search
                     }
                     else
@@ -880,7 +882,9 @@ function FolderPaneSelectionChange()
             }
             ClearMessagePane();
 
-            if (gSearchEmailAddress || gDefaultSearchViewTerms || gVirtualFolderTerms)
+            if (gXFVirtualFolderTerms)
+              viewType = nsMsgViewType.eShowVirtualFolderResults;
+            else if (gSearchEmailAddress || gDefaultSearchViewTerms || gVirtualFolderTerms) 
               viewType = nsMsgViewType.eShowQuickSearchResults;
             else if (viewType == nsMsgViewType.eShowQuickSearchResults)
               viewType = nsMsgViewType.eShowAllThreads;  //override viewType - we don't want to start w/ quick search
@@ -1136,3 +1140,12 @@ function CreateGroupedSearchTerms(searchTermsArray)
   }
   return searchTermsArrayForQS;
 }
+
+var gViewDebug = false;
+
+function viewDebug(str)
+{
+  if (gViewDebug)
+    dump(str);
+}
+
