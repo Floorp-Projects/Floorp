@@ -48,6 +48,8 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
 #include "nsIXPCSecurityManager.h"
+#include "nsIStringBundle.h"
+#include "nsIConsoleService.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -71,6 +73,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsINodeInfo.h"
+#include "nsContentUtils.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
@@ -348,6 +351,9 @@
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
+static const char kDOMStringBundleURL[] =
+  "chrome://communicator/locale/dom/dom.properties";
+
 // NOTE: DEFAULT_SCRIPTABLE_FLAGS and DOM_DEFAULT_SCRIPTABLE_FLAGS
 //       are defined in nsIDOMClassInfo.h.
 
@@ -409,6 +415,8 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 #define NS_DEFINE_CLASSINFO_DATA(_class, _helper, _flags)                     \
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _class, _helper, _flags)
 
+
+#define DOCUMENT_ALL_DID_WARN (1 << 30)
 
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
 // classes their correct behavior when used through XPConnect. The
@@ -902,6 +910,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
 nsIScriptSecurityManager *nsDOMClassInfo::sSecMan = nsnull;
 PRBool nsDOMClassInfo::sIsInitialized = PR_FALSE;
+PRBool nsDOMClassInfo::sDisableDocumentAllSupport = PR_FALSE;
 
 
 
@@ -969,6 +978,8 @@ jsval nsDOMClassInfo::sFrames_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sSelf_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sOpener_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sAdd_id             = JSVAL_VOID;
+jsval nsDOMClassInfo::sAll_id             = JSVAL_VOID;
+jsval nsDOMClassInfo::sTags_id            = JSVAL_VOID;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
@@ -1074,6 +1085,8 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sSelf_id,            cx, "self");
   SET_JSVAL_TO_STRING(sOpener_id,          cx, "opener");
   SET_JSVAL_TO_STRING(sAdd_id,             cx, "add");
+  SET_JSVAL_TO_STRING(sAll_id,             cx, "all");
+  SET_JSVAL_TO_STRING(sTags_id,            cx, "tags");
 
   return NS_OK;
 }
@@ -2443,6 +2456,9 @@ nsDOMClassInfo::Init()
   }
 
   RegisterExternalClasses();
+
+  sDisableDocumentAllSupport =
+    nsContentUtils::GetBoolPref("browser.dom.document.all.disabled");
 
   sIsInitialized = PR_TRUE;
 
@@ -5279,14 +5295,18 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (documentNeedsSecurityCheck(cx, wrapper)) {
+    PRUint32 accessType;
+
+    if (flags & JSRESOLVE_ASSIGNING)
+      accessType = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
+    else
+      accessType = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
+
     // Do a security check when resolving heretofore unknown string
     // properties on document objects to prevent detection of a
     // property's existence across origins.
-    rv = doCheckPropertyAccess(cx, obj, id, wrapper,
-                               (flags & JSRESOLVE_ASSIGNING) ?
-                               nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
-                               nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                               PR_FALSE);
+    rv = doCheckPropertyAccess(cx, obj, id, wrapper, accessType, PR_FALSE);
+
     if (NS_FAILED(rv)) {
       // Security check failed. The security manager set a JS exception,
       // we must make sure that exception is propagated, so return NS_OK
@@ -5479,6 +5499,356 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
   return NS_SUCCEEDED(rv);
 }
 
+
+static JSClass sHTMLDocumentAllClass = {
+  "HTML document.all class",
+  JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JS_PropertyStub, JS_PropertyStub, nsHTMLDocumentSH::DocumentAllGetProperty,
+  JS_PropertyStub, JS_EnumerateStub,
+  (JSResolveOp)nsHTMLDocumentSH::DocumentAllNewResolve, JS_ConvertStub,
+  nsHTMLDocumentSH::ReleaseDocument, nsnull, nsnull,
+  nsHTMLDocumentSH::CallToGetPropMapper
+};
+
+
+static JSClass sHTMLDocumentAllHelperClass = {
+  "HTML document.all helper class", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
+  JS_PropertyStub, JS_PropertyStub,
+  nsHTMLDocumentSH::DocumentAllHelperGetProperty,
+  JS_PropertyStub, JS_EnumerateStub,
+  (JSResolveOp)nsHTMLDocumentSH::DocumentAllHelperNewResolve, JS_ConvertStub,
+  JS_FinalizeStub
+};
+
+
+static JSClass sHTMLDocumentAllTagsClass = {
+  "HTML document.all.tags class",
+  JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_EnumerateStub, (JSResolveOp)nsHTMLDocumentSH::DocumentAllTagsNewResolve,
+  JS_ConvertStub, nsHTMLDocumentSH::ReleaseDocument, nsnull, nsnull,
+  nsHTMLDocumentSH::CallToGetPropMapper
+};
+
+
+JSBool JS_DLL_CALLBACK
+nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
+                                         jsval id, jsval *vp)
+{
+  nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
+
+  if (JSVAL_IS_STRING(id)) {
+    nsDependentJSString str(id);
+
+    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
+    nsCOMPtr<nsISupports> result;
+
+    {
+      nsCOMPtr<nsIDOMElement> element;
+      domdoc->GetElementById(str, getter_AddRefs(element));
+
+      result = element;
+    }
+
+    if (!result) {
+      doc->ResolveName(str, nsnull, getter_AddRefs(result));
+    }
+
+    if (result) {
+      nsresult rv = nsDOMClassInfo::WrapNative(cx, obj, result,
+                                               NS_GET_IID(nsISupports), vp);
+      if (NS_FAILED(rv)) {
+        nsDOMClassInfo::ThrowJSException(cx, rv);
+
+        return JS_FALSE;
+      }
+    }
+  }
+
+  return JS_TRUE;
+}
+
+JSBool JS_DLL_CALLBACK
+nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj,
+                                        jsval id, uintN flags, JSObject **objp)
+{
+  jsval v = JSVAL_VOID;
+
+  if (id == sTags_id) {
+    nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
+
+    JSObject *tags = ::JS_NewObject(cx, &sHTMLDocumentAllTagsClass, nsnull,
+                                    GetGlobalJSObject(cx, obj));
+    if (!tags) {
+      return JS_FALSE;
+    }
+
+    if (!::JS_SetPrivate(cx, tags, doc)) {
+      return JS_FALSE;
+    }
+
+    // The "tags" JSObject now also owns doc.
+    NS_ADDREF(doc);
+
+    v = OBJECT_TO_JSVAL(tags);
+  } else {
+    if (!DocumentAllGetProperty(cx, obj, id, &v)) {
+      return JS_FALSE;
+    }
+  }
+
+  if (v != JSVAL_VOID) {
+    // Only support resolving strings (including "tags") for now
+    JSString *str = JSVAL_TO_STRING(id);
+
+    if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                               ::JS_GetStringLength(str), v, nsnull, nsnull,
+                               0)) {
+      return JS_FALSE;
+    }
+
+    *objp = obj;
+  }
+
+  return JS_TRUE;
+}
+
+void JS_DLL_CALLBACK
+nsHTMLDocumentSH::ReleaseDocument(JSContext *cx, JSObject *obj)
+{
+  nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
+
+  NS_IF_RELEASE(doc);
+}
+
+JSBool JS_DLL_CALLBACK
+nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, JSObject *obj, uintN argc,
+                                      jsval *argv, jsval *rval)
+{
+  // Handle document.all("foo") style access to document.all.
+
+  if (argc != 1) {
+    // XXX: Should throw NS_ERROR_XPC_NOT_ENOUGH_ARGS for argc < 1,
+    // and create a new NS_ERROR_XPC_TOO_MANY_ARGS for argc > 1? IE
+    // accepts nothing other than one arg.
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_INVALID_ARG);
+
+    return JS_FALSE;
+  }
+
+  // Convert all types to string.
+  JSString *str = ::JS_ValueToString(cx, argv[0]);
+  if (!str) {
+    return JS_FALSE;
+  }
+
+  return ::JS_GetUCProperty(cx, JSVAL_TO_OBJECT(argv[-2]),
+                            ::JS_GetStringChars(str),
+                            ::JS_GetStringLength(str), rval);
+}
+
+
+static inline JSObject *
+GetDocumentAllHelper(JSContext *cx, JSObject *obj)
+{
+  while (obj && JS_GET_CLASS(cx, obj) != &sHTMLDocumentAllHelperClass) {
+    obj = ::JS_GetPrototype(cx, obj);
+  }
+
+  return obj;
+}
+
+static void
+PrintDocumentAllWarningOnConsole()
+{
+  nsCOMPtr<nsIStringBundleService>
+    stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  if (!stringService) {
+    return;
+  }
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  stringService->CreateBundle(kDOMStringBundleURL, getter_AddRefs(bundle));
+  if (!bundle) {
+    return;
+  }
+
+  nsXPIDLString msg;
+  bundle->GetStringFromName(NS_LITERAL_STRING("DocumentAllUsed").get(),
+                            getter_Copies(msg));
+
+  if (msg.IsEmpty()) {
+    NS_ERROR("Failed to get strings from dom.properties!");
+    return;
+  }
+
+  nsCOMPtr<nsIConsoleService> consoleService
+    (do_GetService("@mozilla.org/consoleservice;1"));
+
+  if (consoleService) {
+    consoleService->LogStringMessage(msg.get());
+  }
+}
+
+JSBool JS_DLL_CALLBACK
+nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
+                                               jsval id, jsval *vp)
+{
+  if (id != nsDOMClassInfo::sAll_id) {
+    return JS_TRUE;
+  }
+
+  JSObject *helper = GetDocumentAllHelper(cx, obj);
+
+  if (!helper) {
+    NS_ERROR("Uh, how'd we get here?");
+
+    // Let scripts continue, if we somehow did get here...
+
+    return JS_TRUE;
+  }
+
+  PRUint32 flags = JSVAL_TO_INT(PRIVATE_TO_JSVAL(::JS_GetPrivate(cx, helper)));
+
+  if (flags & JSRESOLVE_DETECTING || !(flags & JSRESOLVE_QUALIFIED)) {
+    // document.all is either being detected, e.g. if (document.all),
+    // or it was not being resolved with a qualified name. Claim that
+    // document.all is undefined.
+
+    *vp = JSVAL_VOID;
+  } else {
+    // document.all is not being detected, and it resolved with a
+    // qualified name. Expose the document.all collection.
+
+    if (!(flags & DOCUMENT_ALL_DID_WARN)) {
+      PrintDocumentAllWarningOnConsole();
+
+      // Remember that we've complained about document.all being used
+      // in this document already.
+      flags |= DOCUMENT_ALL_DID_WARN;
+
+      if (!::JS_SetPrivate(cx, helper,
+                           JSVAL_TO_PRIVATE(INT_TO_JSVAL(flags)))) {
+        return JS_FALSE;
+      }
+    }
+
+    if (!JSVAL_IS_OBJECT(*vp)) {
+      // First time through, create the collection, and set the
+      // document as its private nsISupports data.
+      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+      nsresult rv =
+        sXPConnect->GetWrappedNativeOfJSObject(cx, obj,
+                                               getter_AddRefs(wrapper));
+      if (NS_FAILED(rv)) {
+        nsDOMClassInfo::ThrowJSException(cx, rv);
+
+        return JS_FALSE;
+      }
+
+      nsCOMPtr<nsISupports> native;
+      rv = wrapper->GetNative(getter_AddRefs(native));
+      if (NS_FAILED(rv)) {
+        nsDOMClassInfo::ThrowJSException(cx, rv);
+
+        return JS_FALSE;
+      }
+
+      JSObject *all = ::JS_NewObject(cx, &sHTMLDocumentAllClass, nsnull,
+                                     GetGlobalJSObject(cx, obj));
+      if (!all) {
+        return JS_FALSE;
+      }
+
+      nsIHTMLDocument *doc;
+      CallQueryInterface(native, &doc);
+
+      // Let the JSObject take over ownership of doc.
+      if (!::JS_SetPrivate(cx, all, doc)) {
+        NS_RELEASE(doc);
+
+        return JS_FALSE;
+      }
+
+      *vp = OBJECT_TO_JSVAL(all);
+    }
+  }
+
+  return JS_TRUE;
+}
+
+JSBool JS_DLL_CALLBACK
+nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
+                                              jsval id, uintN flags,
+                                              JSObject **objp)
+{
+  if (id == nsDOMClassInfo::sAll_id) {
+    // document.all is resolved for the first time. Define it.
+    JSObject *helper = GetDocumentAllHelper(cx, obj);
+
+    if (helper) {
+      jsval v = JSVAL_VOID;
+      ::JS_SetProperty(cx, helper, "all", &v);
+
+      *objp = helper;
+    }
+  }
+
+  return JS_TRUE;
+}
+
+
+JSBool JS_DLL_CALLBACK
+nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSObject *obj,
+                                            jsval id, uintN flags,
+                                            JSObject **objp)
+{
+  if (JSVAL_IS_STRING(id)) {
+    nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
+
+    JSString *str = JSVAL_TO_STRING(id);
+
+    JSBool found;
+    if (!::JS_HasUCProperty(cx, ::JS_GetPrototype(cx, obj),
+                            ::JS_GetStringChars(str),
+                            ::JS_GetStringLength(str), &found)) {
+      return JS_FALSE;
+    }
+
+    if (found) {
+      return JS_TRUE;
+    }
+
+    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
+
+    nsCOMPtr<nsIDOMNodeList> tags;
+    domdoc->GetElementsByTagName(nsDependentJSString(str),
+                                 getter_AddRefs(tags));
+
+    if (tags) {
+      jsval v;
+      nsresult rv = nsDOMClassInfo::WrapNative(cx, obj, tags,
+                                               NS_GET_IID(nsISupports), &v);
+      if (NS_FAILED(rv)) {
+        nsDOMClassInfo::ThrowJSException(cx, rv);
+
+        return JS_FALSE;
+      }
+
+      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                 ::JS_GetStringLength(str), v, nsnull, nsnull,
+                                 0)) {
+        return JS_FALSE;
+      }
+
+      *objp = obj;
+    }
+  }
+
+  return JS_TRUE;
+}
+
+
 NS_IMETHODIMP
 nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, jsval id, PRUint32 flags,
@@ -5517,6 +5887,49 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       *objp = obj;
 
       return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
+    }
+
+    if (id == sAll_id && !sDisableDocumentAllSupport) {
+      JSObject *helper = GetDocumentAllHelper(cx, ::JS_GetPrototype(cx, obj));
+
+      // If we don't already have a helper, and we're
+      // resolving document.all qualified, and we're *not* detecting
+      // document.all, e.g. if (document.all), create a helper.
+      if (!helper && flags & JSRESOLVE_QUALIFIED &&
+          !(flags & JSRESOLVE_DETECTING)) {
+        helper = JS_NewObject(cx, &sHTMLDocumentAllHelperClass,
+                              ::JS_GetPrototype(cx, obj),
+                              GetGlobalJSObject(cx, obj));
+
+        if (!helper) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        // Insert the helper into our prototype chain. helper's prototype
+        // is already obj's current prototype.
+        if (!::JS_SetPrototype(cx, obj, helper)) {
+          nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+
+          return NS_ERROR_UNEXPECTED;
+        }
+      }
+
+      // If we have (or just created) a helper, pass the resolve flags
+      // to the helper as its private data.
+      if (helper) {
+        flags |=
+          (JSVAL_TO_INT(PRIVATE_TO_JSVAL(::JS_GetPrivate(cx, helper))) &
+           DOCUMENT_ALL_DID_WARN);
+
+        if (!::JS_SetPrivate(cx, helper,
+                             JSVAL_TO_PRIVATE(INT_TO_JSVAL(flags)))) {
+          nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+
+          return NS_ERROR_UNEXPECTED;
+        }
+      }
+
+      return NS_OK;
     }
   }
 
@@ -5622,7 +6035,8 @@ nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, JSString *str,
     nsCOMPtr<nsIContent> content(do_QueryInterface(aForm));
     nsCOMPtr<nsIDOMHTMLFormElement> form_element(do_QueryInterface(aForm));
 
-    nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(content->GetDocument()));
+    nsCOMPtr<nsIHTMLDocument> html_doc =
+      do_QueryInterface(content->GetDocument());
 
     if (html_doc && form_element) {
       html_doc->ResolveName(name, form_element, aResult);
@@ -6111,13 +6525,12 @@ nsHTMLExternalObjSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   const jschar *id_chars = ::JS_GetStringChars(id_str);
   size_t id_length = ::JS_GetStringLength(id_str);
 
-  jsval found;
-  *_retval = ::JS_LookupUCProperty(cx, pi_obj, id_chars, id_length, &found);
-  if (! *_retval) {
+  JSBool found;
+  if (!::JS_HasUCProperty(cx, pi_obj, id_chars, id_length, &found)) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (found == JSVAL_TRUE) {
+  if (found) {
     *_retval = ::JS_SetUCProperty(cx, pi_obj, id_chars, id_length, vp);
     return *_retval ? NS_OK : NS_ERROR_FAILURE;
   }
