@@ -53,7 +53,10 @@ enum {
   JS_STATUS,
   LOCATION,
   TITLE,
+  PROGRESS,
   NET_STATUS,
+  NET_START,
+  NET_STOP,
   LAST_SIGNAL
 };
 
@@ -115,6 +118,9 @@ gtk_moz_embed_handle_title_change(GtkMozEmbed *embed);
 
 static void
 gtk_moz_embed_handle_progress(GtkMozEmbed *embed, gint32 maxprogress, gint32 curprogress);
+
+static void
+gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint32 flags);
 
 static GtkBinClass *parent_class;
 
@@ -233,6 +239,13 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, title),
 		   gtk_marshal_NONE__NONE,
 		   GTK_TYPE_NONE, 0);
+  moz_embed_signals[PROGRESS] =
+    gtk_signal_new("progress",
+		   GTK_RUN_FIRST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, progress),
+		   gtk_marshal_NONE__INT,
+		   GTK_TYPE_NONE, 1, GTK_TYPE_INT);
   moz_embed_signals[NET_STATUS] =
     gtk_signal_new("net_status",
 		   GTK_RUN_FIRST,
@@ -240,6 +253,20 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_status),
 		   gtk_marshal_NONE__INT_INT,
 		   GTK_TYPE_NONE, 2, GTK_TYPE_INT, GTK_TYPE_INT);
+  moz_embed_signals[NET_START] =
+    gtk_signal_new("net_start",
+		   GTK_RUN_FIRST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_start),
+		   gtk_marshal_NONE__NONE,
+		   GTK_TYPE_NONE, 0);
+  moz_embed_signals[NET_STOP] =
+    gtk_signal_new("net_stop",
+		   GTK_RUN_FIRST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_stop),
+		   gtk_marshal_NONE__NONE,
+		   GTK_TYPE_NONE, 0);
 
   gtk_object_class_add_signals(object_class, moz_embed_signals, LAST_SIGNAL);
 
@@ -283,6 +310,8 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
 					       embed);
   embed_private->embed->SetProgressCallback((void (*)(void *, gint32, gint32))gtk_moz_embed_handle_progress,
 					    embed);
+  embed_private->embed->SetNetCallback((void (*)(void *, gint32))gtk_moz_embed_handle_net,
+				       embed);
 }
 
 GtkWidget *
@@ -316,6 +345,24 @@ gtk_moz_embed_load_url(GtkWidget *widget, const char *url)
   nsString URLString;
   URLString.AssignWithConversion(url);
   navigation->LoadURI(URLString.GetUnicode());
+}
+
+void
+gtk_moz_embed_stop_load (GtkWidget *widget)
+{
+  GtkMozEmbed        *embed;
+  GtkMozEmbedPrivate *embed_private;
+
+  g_return_if_fail (widget != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(widget));
+
+  embed = GTK_MOZ_EMBED(widget);
+
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  nsCOMPtr<nsIWebNavigation> navigation = do_QueryInterface(embed_private->webBrowser);
+  g_return_if_fail(navigation);
+  navigation->Stop();
 }
 
 char *
@@ -675,5 +722,20 @@ gtk_moz_embed_handle_progress(GtkMozEmbed *embed, gint32 maxprogress, gint32 cur
 {
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
   
-  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STATUS], maxprogress, curprogress);
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[PROGRESS], maxprogress, curprogress);
+}
+
+static void
+gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint32 flags)
+{
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+  
+  // if we've got the start flag, emit the signal
+  if (flags & gtk_moz_embed_flag_win_start)
+    gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_START]);
+  // for people who know what they are doing
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STATUS]);
+  // and for stop, too
+  if (flags & gtk_moz_embed_flag_win_stop)
+    gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STOP]);
 }
