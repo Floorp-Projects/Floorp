@@ -417,6 +417,7 @@ function printDayView(currentDate) {
 
 function printEventArray( calendarEventArray)
 {
+  gHtmlDocument.write("<table width=100%>");
   gHtmlDocument.write("<tr><td width=20%>Starts</td><td width=20%>Ends</td><td width=60%>Event</td></tr>");
   for (i in calendarEventArray)
   {
