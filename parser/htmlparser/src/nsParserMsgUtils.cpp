@@ -21,8 +21,6 @@
  */
 
 #include "nsIServiceManager.h"
-#include "nsIIOService.h"
-#include "nsIURI.h"
 #include "nsIStringBundle.h"
 #include "nsITextContent.h"
 #include "nsISupportsArray.h"
@@ -30,7 +28,6 @@
 #include "nsParserMsgUtils.h"
 #include "nsNetCID.h"
 
-static NS_DEFINE_CID(kIOServiceCID,            NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
 // This code is derived from nsFormControlHelper::GetLocalizedString()
@@ -40,27 +37,14 @@ static nsresult GetBundle(const char * aPropFileName, nsIStringBundle **aBundle)
   NS_ENSURE_ARG_POINTER(aPropFileName);
   NS_ENSURE_ARG_POINTER(aBundle);
 
-  // Create a URL for the string resource file
   // Create a bundle for the localization
   nsresult rv;
-  nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIURI> uri;
-    rv = pNetService->NewURI(aPropFileName, nsnull, getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv)) {
-
-      // Create bundle
-      nsCOMPtr<nsIStringBundleService> stringService = 
-               do_GetService(kStringBundleServiceCID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        nsXPIDLCString spec;
-        rv = uri->GetSpec(getter_Copies(spec));
-        if (NS_SUCCEEDED(rv) && spec) {
-          rv = stringService->CreateBundle(spec, aBundle);
-        }
-      }
-    }
-  }
+  
+  nsCOMPtr<nsIStringBundleService> stringService = 
+    do_GetService(kStringBundleServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    rv = stringService->CreateBundle(aPropFileName, aBundle);
+  
   return rv;
 }
 

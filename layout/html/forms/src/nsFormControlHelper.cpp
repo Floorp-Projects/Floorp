@@ -57,14 +57,11 @@
 
 // Needed for Localization
 #include "nsIServiceManager.h"
-#include "nsIIOService.h"
-#include "nsIURI.h"
 #include "nsIStringBundle.h"
 #include "nsITextContent.h"
 #include "nsISupportsArray.h"
 #include "nsXPIDLString.h"
 
-static NS_DEFINE_CID(kIOServiceCID,            NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 // done I10N
 
@@ -882,37 +879,24 @@ nsFormControlHelper::GetInputElementValue(nsIContent* aContent, nsString* aText,
 // Return localised string for resource string (e.g. "Submit" -> "Submit Query")
 // This code is derived from nsBookmarksService::Init() and cookie_Localize()
 nsresult
-nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const char* aKey, nsString& oVal)
+nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const PRUnichar* aKey, nsString& oVal)
 {
+  NS_ENSURE_ARG_POINTER(aKey);
+  
   nsresult rv;
+  
   nsCOMPtr<nsIStringBundle> bundle;
   
-  // Create a URL for the string resource file
   // Create a bundle for the localization
-  nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID, &rv));
-  if (NS_SUCCEEDED(rv) && pNetService) {
-    nsCOMPtr<nsIURI> uri;
-    rv = pNetService->NewURI(aPropFileName, nsnull, getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv) && uri) {
-
-      // Create bundle
-      nsCOMPtr<nsIStringBundleService> stringService = 
-               do_GetService(kStringBundleServiceCID, &rv);
-      if (NS_SUCCEEDED(rv) && stringService) {
-        nsXPIDLCString spec;
-        rv = uri->GetSpec(getter_Copies(spec));
-        if (NS_SUCCEEDED(rv) && spec) {
-          rv = stringService->CreateBundle(spec, getter_AddRefs(bundle));
-        }
-      }
-    }
-  }
+  nsCOMPtr<nsIStringBundleService> stringService = 
+    do_GetService(kStringBundleServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && stringService)
+    rv = stringService->CreateBundle(aPropFileName, getter_AddRefs(bundle));
 
   // Determine default label from string bundle
-  if (NS_SUCCEEDED(rv) && bundle && aKey) {
+  if (NS_SUCCEEDED(rv) && bundle) {
     nsXPIDLString valUni;
-    nsAutoString key; key.AssignWithConversion(aKey);
-    rv = bundle->GetStringFromName(key.get(), getter_Copies(valUni));
+    rv = bundle->GetStringFromName(aKey, getter_Copies(valUni));
     if (NS_SUCCEEDED(rv) && valUni) {
       oVal.Assign(valUni);
     } else {

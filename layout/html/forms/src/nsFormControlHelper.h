@@ -178,7 +178,7 @@ public:
   static nsresult GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp);
 
   // Localization Helper
-  static nsresult GetLocalizedString(const char * aPropFileName, const char* aKey, nsString& oVal);
+  static nsresult GetLocalizedString(const char * aPropFileName, const PRUnichar* aKey, nsString& oVal);
   static const char * GetHTMLPropertiesFileName() { return FORM_PROPERTIES; }
 
   static nsresult GetDisabled(nsIContent* aContent, PRBool* oIsDisabled);
