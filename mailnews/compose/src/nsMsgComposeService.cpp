@@ -103,6 +103,7 @@ static PRBool _just_to_be_sure_we_create_only_one_compose_service_ = PR_FALSE;
 
 #define PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS  "mail.compose.max_recycled_windows"
 
+#define MAIL_ROOT_PREF                             "mail."
 #define MAILNEWS_ROOT_PREF                         "mailnews."
 #define HTMLDOMAINUPDATE_VERSION_PREF_NAME         "global_html_domains.version"
 #define HTMLDOMAINUPDATE_DOMAINLIST_PREF_NAME      "global_html_domains"
@@ -379,6 +380,26 @@ nsMsgComposeService::DetermineComposeHTML(nsIMsgIdentity *aIdentity, MSG_Compose
         if (aFormat == nsIMsgCompFormat::OppositeOfDefault)
           *aComposeHTML = !*aComposeHTML;
       }
+      else
+      {
+        nsresult rv;
+
+        // default identity not found.  Use the mail.html_compose pref to determine
+        // message compose type (HTML or PlainText).
+        nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr<nsIPrefBranch> prefs;
+          rv = prefService->GetBranch(MAIL_ROOT_PREF, getter_AddRefs(prefs));
+          if (NS_SUCCEEDED(rv))        
+          {
+            PRBool useHTMLCompose;
+            rv = prefs->GetBoolPref("html_compose", &useHTMLCompose);
+            if (NS_SUCCEEDED(rv))        
+              *aComposeHTML = useHTMLCompose;
+          }
+        }
+      }
       break;
   }
 
@@ -486,13 +507,14 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
     rv = aURI->QueryInterface(NS_GET_IID(nsIMailtoUrl), getter_AddRefs(aMailtoUrl));
     if (NS_SUCCEEDED(rv))
     {
-      PRBool aHTMLBody = PR_FALSE;
+       MSG_ComposeFormat requestedComposeFormat = nsIMsgCompFormat::Default;
        nsXPIDLCString aToPart;
        nsXPIDLCString aCcPart;
        nsXPIDLCString aBccPart;
        nsXPIDLCString aSubjectPart;
        nsXPIDLCString aBodyPart;
        nsXPIDLCString aNewsgroup;
+       nsXPIDLCString aHTMLBodyPart;
 
        // we are explictly not allowing attachments to be specified in mailto: urls
        // as it's a potential security problem.
@@ -501,16 +523,23 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
                                     getter_Copies(aBccPart), nsnull /* from part */,
                                     nsnull /* follow */, nsnull /* organization */, 
                                     nsnull /* reply to part */, getter_Copies(aSubjectPart),
-                                    getter_Copies(aBodyPart), nsnull /* html part */, 
+                                    getter_Copies(aBodyPart), getter_Copies(aHTMLBodyPart) /* html part */, 
                                     nsnull /* a ref part */, nsnull /* attachment part, must always null, see #99055 */,
                                     nsnull /* priority */, getter_Copies(aNewsgroup), nsnull /* host */,
-                                    &aHTMLBody);
+                                    &requestedComposeFormat);
 
-      nsString rawBody = NS_ConvertUTF8toUCS2(aBodyPart);
       nsString sanitizedBody;
 
-      MSG_ComposeFormat format = nsIMsgCompFormat::PlainText;
-      if (aHTMLBody)
+      // Since there is a buffer for each of the body types ('body', 'html-body') and
+      // only one can be used, we give precedence to 'html-body' in the case where
+      // both 'body' and 'html-body' are found in the url.
+      nsString rawBody = NS_ConvertUTF8toUCS2(aHTMLBodyPart);
+      if(rawBody.IsEmpty())
+        rawBody = NS_ConvertUTF8toUCS2(aBodyPart);
+
+      PRBool composeHTMLFormat;
+      DetermineComposeHTML(NULL, requestedComposeFormat, &composeHTMLFormat);
+      if (!rawBody.IsEmpty() && composeHTMLFormat)
       {
         //For security reason, we must sanitize the message body before accepting any html...
 
@@ -544,8 +573,11 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
               parser->RegisterDTD(dtd);
 
               rv = parser->Parse(rawBody, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
-              if (NS_SUCCEEDED(rv))
-                format = nsIMsgCompFormat::HTML;
+              if (NS_FAILED(rv))
+                // Something went horribly wrong with parsing for html format
+                // in the body.  Set composeHTMLFormat to PR_FALSE so we show the
+                // plain text mail compose.
+                composeHTMLFormat = PR_FALSE;
             }
           }
         }
@@ -555,7 +587,7 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
       if (NS_SUCCEEDED(rv) && pMsgComposeParams)
       {
         pMsgComposeParams->SetType(nsIMsgCompType::MailToUrl);
-        pMsgComposeParams->SetFormat(format);
+        pMsgComposeParams->SetFormat(composeHTMLFormat ? nsIMsgCompFormat::HTML : nsIMsgCompFormat::PlainText);
 
 
         nsCOMPtr<nsIMsgCompFields> pMsgCompFields (do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv));
@@ -567,8 +599,7 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
           pMsgCompFields->SetBcc(NS_ConvertUTF8toUCS2(aBccPart).get());
           pMsgCompFields->SetNewsgroups(aNewsgroup);
           pMsgCompFields->SetSubject(NS_ConvertUTF8toUCS2(aSubjectPart).get());
-          pMsgCompFields->SetBody(format == nsIMsgCompFormat::HTML ? sanitizedBody.get() : rawBody.get());
-
+          pMsgCompFields->SetBody(composeHTMLFormat ? sanitizedBody.get() : rawBody.get());
           pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
           rv = OpenComposeWindowWithParams(aMsgComposeWindowURL, pMsgComposeParams);

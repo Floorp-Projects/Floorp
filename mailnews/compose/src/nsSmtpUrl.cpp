@@ -55,7 +55,7 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 /////////////////////////////////////////////////////////////////////////////////////
 nsMailtoUrl::nsMailtoUrl()
 {
-  m_htmlBody = PR_FALSE;
+  mFormat = nsIMsgCompFormat::Default;
   nsComponentManager::CreateInstance(kSimpleURICID, nsnull, 
                                      NS_GET_IID(nsIURI), 
                                      (void **) getter_AddRefs(m_baseURL));
@@ -141,10 +141,12 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 						m_fromPart = value;
 					break;
         case 'H':
-				  if (!nsCRT::strcasecmp(token, "html-part"))
-						  m_htmlPart = value;
-					else if (!nsCRT::strcasecmp (token, "html-body"))
-						m_htmlBody = PR_TRUE;
+          if (!nsCRT::strcasecmp(token, "html-part") || !nsCRT::strcasecmp (token, "html-body"))
+          {
+            // m_htmlPart holds the body for both html-part and html-body.
+            m_htmlPart = value;
+            mFormat = nsIMsgCompFormat::HTML;
+          }
           break;
 				case 'N':
 					if (!nsCRT::strcasecmp (token, "newsgroups"))
@@ -317,7 +319,7 @@ NS_IMETHODIMP nsMailtoUrl::GetMessageContents(char ** aToPart, char ** aCcPart, 
 		char ** aFromPart, char ** aFollowUpToPart, char ** aOrganizationPart, 
 		char ** aReplyToPart, char ** aSubjectPart, char ** aBodyPart, char ** aHtmlPart, 
 		char ** aReferencePart, char ** aAttachmentPart, char ** aPriorityPart, 
-		char ** aNewsgroupPart, char ** aNewsHostPart, PRBool * aHTMLBody)
+		char ** aNewsgroupPart, char ** aNewsHostPart, MSG_ComposeFormat * aFormat)
 {
 	if (aToPart)
 		*aToPart = ToNewCString(m_toPart);
@@ -349,8 +351,8 @@ NS_IMETHODIMP nsMailtoUrl::GetMessageContents(char ** aToPart, char ** aCcPart, 
 		*aNewsgroupPart = ToNewCString(m_newsgroupPart);
 	if (aNewsHostPart)
 		*aNewsHostPart = ToNewCString(m_newsHostPart);
-	if (aHTMLBody)
-		*aHTMLBody = m_htmlBody;
+	if (aFormat)
+		*aFormat = mFormat;
 	return NS_OK;
 }
 

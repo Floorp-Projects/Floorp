@@ -83,7 +83,7 @@ protected:
 	nsCString	m_replyToPart;
 	nsCString	m_priorityPart;
 
-  PRBool	  m_htmlBody;
+  MSG_ComposeFormat mFormat;
 };
 
 class nsSmtpUrl : public nsISmtpUrl, public nsMsgMailNewsUrl

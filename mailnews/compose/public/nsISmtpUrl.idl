@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIMsgComposeParams.idl"
 
 interface nsIMsgIdentity;
 interface nsIPrompt;
@@ -101,6 +102,6 @@ interface nsIMailtoUrl : nsISupports {
 		out string aFromPart, out string aFollowUpToPart, out string aOrganizationPart, 
 		out string aReplyToPart, out string aSubjectPart, out string aBodyPart, out string aHtmlPart, 
 		out string aReferencePart, out string aAttachmentPart, out string aPriorityPart, 
-		out string aNewsgroupPart, out string aNewsHostPart, out boolean aHTMLBody);
+		out string aNewsgroupPart, out string aNewsHostPart, out MSG_ComposeFormat aFormat);
 
 };
