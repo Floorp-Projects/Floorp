@@ -314,6 +314,9 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
       visibleWidth = scrolledAreaWidth;
     } else {
       visibleWidth = aReflowState.mComputedWidth - (border.left + border.right);
+      if (visibleWidth < scrolledAreaWidth) {
+        visibleWidth = scrolledAreaWidth;
+      }
     }
   } else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
@@ -1333,6 +1336,8 @@ nsListControlFrame::Reset(nsIPresContext* aPresContext)
   PRUint32 numOptions;
   options->GetLength(&numOptions);
 
+  mSelectedIndex = kNothingSelected;
+
   Deselect();
   PRUint32 i;
   for (i = 0; i < numOptions; i++) {
@@ -1609,14 +1614,37 @@ nsListControlFrame::ToggleSelected(PRInt32 aIndex)
 NS_IMETHODIMP
 nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
-  PRInt32 numOptions;
-  GetNumberOfOptions(&numOptions);
-
-//  PRInt32 oldSelectedIndex = mSelectedIndex;
-  GetSelectedIndexFromDOM(&mSelectedIndex); // comes from the DOM
+  PRInt32 oldSelection = mSelectedIndex;
 
   // Adding an option to the select can cause a change in selection
   // if the new option has it's selected attribute set.
+  // this code checks to see if it does
+  // if so then it resets the entire selection of listbox
+  PRBool wasReset = PR_FALSE;
+  nsIDOMHTMLCollection* options = GetOptions(mContent);
+  if (options) {
+    nsIDOMHTMLOptionElement* option = GetOption(*options, aIndex);
+    if (option) {
+      PRBool selected = PR_FALSE;
+      option->GetDefaultSelected(&selected);
+      if (selected) {
+        Reset(aPresContext);             // this sets mSelectedIndex to the defaulted selection
+        wasReset = PR_TRUE;
+      }
+      NS_RELEASE(option);
+    }
+  }
+
+  if (!wasReset) {
+    GetSelectedIndexFromDOM(&mSelectedIndex); // comes from the DOM
+  }
+
+  // if selection changed because of the new option being added 
+  // notify the combox if necessary
+  if (nsnull != mComboboxFrame && oldSelection != mSelectedIndex) {
+    mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
+  }
+
   // selectionChanged = (1 == numOptions ||
   // kNothingSelected == oldSelectedIndex || mSelectedIndex != oldSelectedIndex)
 
