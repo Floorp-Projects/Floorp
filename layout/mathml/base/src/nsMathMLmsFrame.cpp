@@ -38,6 +38,7 @@
 
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
+#include "nsLayoutAtoms.h"
 
 #include "nsMathMLmsFrame.h"
 
@@ -68,6 +69,38 @@ nsMathMLmsFrame::~nsMathMLmsFrame()
 {
 }
 
+static void
+SetQuote(nsIPresContext* aPresContext, 
+         nsIFrame*       aFrame, 
+         nsString&       aValue)
+{
+  nsIFrame* textFrame;
+  do {
+    // walk down the hierarchy of first children because they could be wrapped
+    aFrame->FirstChild(aPresContext, nsnull, &textFrame);
+    if (textFrame) {
+      nsCOMPtr<nsIAtom> frameType;
+      textFrame->GetFrameType(getter_AddRefs(frameType));
+      if (frameType && frameType.get() == nsLayoutAtoms::textFrame)
+        break;
+    }
+    aFrame = textFrame;
+  } while (textFrame);
+  if (textFrame) {
+    nsCOMPtr<nsIContent> quoteContent;
+    textFrame->GetContent(getter_AddRefs(quoteContent));
+    if (quoteContent.get()) {
+      nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
+      if (domText.get()) {
+        nsCOMPtr<nsITextContent> tc(do_QueryInterface(quoteContent));
+        if (tc) {
+          tc->SetText(aValue, PR_FALSE); // no notify since we don't want a reflow yet
+        }
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsMathMLmsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
@@ -95,41 +128,15 @@ nsMathMLmsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
     return NS_OK;
 
   nsAutoString value;
-  nsIFrame* textFrame;
-  nsCOMPtr<nsIContent> quoteContent;
   // lquote
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+  if (NS_CONTENT_ATTR_NOT_THERE != GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::lquote_, value)) {
-    leftFrame->FirstChild(aPresContext, nsnull, &textFrame);
-    if (textFrame) {
-      textFrame->GetContent(getter_AddRefs(quoteContent));
-      if (quoteContent.get()) {
-        nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
-        if (domText.get()) {
-          nsCOMPtr<nsITextContent> tc(do_QueryInterface(quoteContent));
-          if (tc) {
-            tc->SetText(value, PR_FALSE); // no notify since we don't want a reflow yet
-          }
-        }
-      }
-    }
+    SetQuote(aPresContext, leftFrame, value);
   }
   // rquote
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+  if (NS_CONTENT_ATTR_NOT_THERE != GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::rquote_, value)) {
-    rightFrame->FirstChild(aPresContext, nsnull, &textFrame);
-    if (textFrame) {
-      textFrame->GetContent(getter_AddRefs(quoteContent));
-      if (quoteContent.get()) {
-        nsCOMPtr<nsIDOMText> domText(do_QueryInterface(quoteContent));
-        if (domText.get()) {
-          nsCOMPtr<nsITextContent> tc(do_QueryInterface(quoteContent));
-          if (tc) {
-            tc->SetText(value, PR_FALSE); // no notify since we don't want a reflow yet
-          }
-        }
-      }
-    }
+    SetQuote(aPresContext, rightFrame, value);
   }
 
   return NS_OK;
