@@ -1996,7 +1996,7 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
                              JSPropertyOp getter, JSPropertyOp setter)
 {
     JSScope *scope;
-    
+
     JS_LOCK_OBJ(cx, obj);
     scope = js_GetMutableScope(cx, obj);
     if (!scope) {
@@ -2565,11 +2565,10 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSObject *pobj;
     JSScopeProperty *sprop;
-    JSRuntime *rt;
-    JSClass *clasp;
     JSScope *scope;
     uintN attrs, flags;
     intN shortid;
+    JSClass *clasp;
     JSPropertyOp getter, setter;
     jsval pval;
     uint32 slot;
@@ -2588,9 +2587,6 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         sprop = NULL;
     }
 
-    rt = cx->runtime;
-    clasp = OBJ_GET_CLASS(cx, obj);
-
     /*
      * Now either sprop is null, meaning id was not found in obj or one of its
      * prototypes; or sprop is non-null, meaning id was found in pobj's scope.
@@ -2602,8 +2598,10 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     attrs = JSPROP_ENUMERATE;
     flags = 0;
     shortid = 0;
+    clasp = OBJ_GET_CLASS(cx, obj);
     getter = clasp->getProperty;
     setter = clasp->setProperty;
+
     if (sprop) {
         /*
          * Set scope for use below.  It was locked by js_LookupProperty, and
@@ -2624,8 +2622,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             /*
              * We found id in a prototype object: prepare to share or shadow.
              * NB: Thanks to the immutable, garbage-collected property tree
-             * maintained by jsscope.c in rt, we need not worry about sprop
-             * going away behind our back after we've unlocked scope.
+             * maintained by jsscope.c in cx->runtime, we needn't worry about
+             * sprop going away behind our back after we've unlocked scope.
              */
             JS_UNLOCK_SCOPE(cx, scope);
 
@@ -2691,7 +2689,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (SPROP_HAS_VALID_SLOT(sprop, scope))
             LOCKED_OBJ_SET_SLOT(obj, sprop->slot, JSVAL_VOID);
 
-        PROPERTY_CACHE_FILL(&rt->propertyCache, obj, id, sprop);
+        PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     }
 
     /* Get the current property value from its slot. */
@@ -3167,7 +3165,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     OBJ_DROP_PROPERTY(cx, pobj, prop);
     return ok;
 }
- 
+
 #ifdef JS_THREADSAFE
 void
 js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
