@@ -50,6 +50,7 @@ public class PlugletInputStream extends InputStream {
     public synchronized void mark(int readlimit) {
     }
     public synchronized void reset() throws IOException {
+	throw new IOException("PlugletInputStream does not support mark");
     }
     public boolean markSupported() {
 	return false;
