@@ -31,9 +31,9 @@ include $(DEPTH)/config/autoconf.mk
 XPIDLSRCS	= \
 		nsCDocShell.idl			\
 		nsIDocShell.idl			\
-		nsIDocShellContainer.idl	\
 		nsIDocShellTreeItem.idl	\
 		nsIDocShellTreeNode.idl	\
+		nsIDocShellTreeOwner.idl	\
 		nsIMarkupDocumentViewer.idl	\
 		nsIScrollable.idl		\
 		nsITextScroll.idl		\
