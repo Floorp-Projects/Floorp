@@ -20,6 +20,7 @@
 #define nsIStreamObserver_h___
 
 #include "nsISupports.h"
+#include "plevent.h"
 
 class nsIUrl;
 class nsIString;
@@ -63,6 +64,15 @@ public:
                              nsIString* aMsg) = 0;
 
 };
+
+// An asynchronous stream observer is used to ship data over to another thread specified
+// by the thread's event queue. The receiver stream observer is then used to receive
+// the notifications on the other thread.
+extern nsresult
+NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
+                          PLEventQueue* eventQueue,
+                          nsIStreamObserver* receiver);
+
 
 // Generic status codes for OnStopBinding:
 #define NS_BINDING_SUCCEEDED    NS_OK

@@ -21,7 +21,9 @@ IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestFileInput.exe
-PROGRAMS = $(PROG1)
+PROG2 = .\$(OBJDIR)\TestSocketInput.exe
+PROG3 = .\$(OBJDIR)\TestSocketIO.exe
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -68,3 +70,6 @@ clobber::
 
 $(PROG1): $(OBJDIR) TestFileInput.cpp
 
+$(PROG2): $(OBJDIR) TestSocketInput.cpp
+
+$(PROG3): $(OBJDIR) TestSocketIO.cpp
