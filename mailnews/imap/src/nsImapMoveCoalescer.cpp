@@ -109,7 +109,8 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
   m_destFolders->Count(&numFolders);
   for (PRUint32 i = 0; i < numFolders; i++)
   {
-    // XXX todo
+    // XXX TODO
+    // JUNK MAIL RELATED
     // is this the right place to make sure dest folder exists
     // (and has proper flags?), before we start copying?
     nsCOMPtr <nsIMsgFolder> destFolder(do_QueryElementAt(m_destFolders, i));

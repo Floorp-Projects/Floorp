@@ -150,7 +150,9 @@ nsresult nsMsgPurgeService::AddServer(nsIMsgIncomingServer *server)
     return NS_OK;
 
   nsXPIDLCString junkFolderURI;
-  spamSettings->GetSpamFolderURI(getter_Copies(junkFolderURI));
+  rv = spamSettings->GetSpamFolderURI(getter_Copies(junkFolderURI));
+  NS_ENSURE_SUCCESS(rv,rv);
+
   if (junkFolderURI.IsEmpty())  
     return NS_OK;
 
@@ -363,10 +365,11 @@ nsresult nsMsgPurgeService::PurgeJunkFolder(nsPurgeEntry *entry)
     if (!purgeSpam)
       return NS_ERROR_FAILURE;   
     nsXPIDLCString junkFolderURI;
-    spamSettings->GetSpamFolderURI(getter_Copies(junkFolderURI));
+    rv = spamSettings->GetSpamFolderURI(getter_Copies(junkFolderURI));
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    if (junkFolderURI.IsEmpty())  //fatal error - return failure;
-      return NS_ERROR_FAILURE;
+    if (junkFolderURI.IsEmpty())
+      return NS_ERROR_UNEXPECTED;
 
     if (!entry->folderURI.Equals(junkFolderURI.get()))  //junkfolder changed, return NS_OK, will purge after a day
     {

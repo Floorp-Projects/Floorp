@@ -76,25 +76,27 @@ public:
 
 	NS_IMETHOD PerformBiff();
 	NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
-	NS_IMETHOD CloseCachedConnections();
-    NS_IMETHOD GetConstructedPrettyName(PRUnichar **retval);
-        NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
-NS_IMETHOD GetCanCompactFoldersOnServer(PRBool *canCompactFoldersOnServer);
-NS_IMETHOD GetCanUndoDeleteOnServer(PRBool *canUndoDeleteOnServer);
-        NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
+  NS_IMETHOD CloseCachedConnections();
+  NS_IMETHOD GetConstructedPrettyName(PRUnichar **retval);
+  NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
+  NS_IMETHOD GetCanCompactFoldersOnServer(PRBool *canCompactFoldersOnServer);
+  NS_IMETHOD GetCanUndoDeleteOnServer(PRBool *canUndoDeleteOnServer);
+  NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
   NS_IMETHOD GetCanEmptyTrashOnExit(PRBool *canEmptyTrashOnExit);
   NS_IMETHOD GetIsSecureServer(PRBool *isSecureServer);
-    NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
-    NS_IMETHOD GeneratePrettyNameForMigration(PRUnichar **aPrettyName);
-        NS_IMETHOD GetSupportsDiskSpace(PRBool *aSupportsDiskSpace);
-    NS_IMETHOD GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnServer);
-    NS_IMETHOD GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer);
-    NS_IMETHOD GetFilterScope(nsMsgSearchScopeValue *filterScope);
-    NS_IMETHOD GetSearchScope(nsMsgSearchScopeValue *searchScope);
+  NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
+  NS_IMETHOD GeneratePrettyNameForMigration(PRUnichar **aPrettyName);
+  NS_IMETHOD GetSupportsDiskSpace(PRBool *aSupportsDiskSpace);
+  NS_IMETHOD GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnServer);
+  NS_IMETHOD GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer);
+  NS_IMETHOD GetFilterScope(nsMsgSearchScopeValue *filterScope);
+  NS_IMETHOD GetSearchScope(nsMsgSearchScopeValue *searchScope);
   NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
   NS_IMETHOD OnUserOrHostNameChanged(const char *oldName, const char *newName);
   NS_IMETHOD GetNumIdleConnections(PRInt32 *aNumIdleConnections);
   NS_IMETHOD ForgetSessionPassword();
+  NS_IMETHOD GetMsgFolderFromURI(nsIMsgFolder *aFolderResource, const char *aURI, nsIMsgFolder **aFolder);
+
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
   nsresult ResetFoldersToUnverified(nsIFolder *parentFolder);

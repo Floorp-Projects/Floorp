@@ -1051,16 +1051,19 @@ nsresult nsImapIncomingServer::GetPFCForStringId(PRBool createIfMissing, PRInt32
   if (!*aFolder && createIfMissing)
   {
 		// get the URI from the incoming server
-	  nsCOMPtr<nsIRDFResource> res;
-	  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+	  nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIRDFResource> res;
 	  rv = rdf->GetResource(pfcMailUri.get(), getter_AddRefs(res));
 	  NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    
     parentToCreate->SetParent(pfcParent);
     parentToCreate->CreateStorageIfMissing(nsnull);
-    *aFolder = parentToCreate;
-    NS_IF_ADDREF(*aFolder);
+    NS_IF_ADDREF(*aFolder = parentToCreate);
   }
   return rv;
 }
@@ -3793,4 +3796,50 @@ NS_IMETHODIMP nsImapIncomingServer::SetTrashFolderName(const PRUnichar *chvalue)
   }
   
   return SetUnicharValue(PREF_TRASH_FOLDER_NAME, chvalue);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetMsgFolderFromURI(nsIMsgFolder *aFolderResource, const char *aURI, nsIMsgFolder **aFolder)
+{
+  nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+  nsresult rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!rootMsgFolder)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr <nsIMsgFolder> msgFolder;
+  PRBool namespacePrefixAdded = PR_FALSE;
+
+  // Make sure an specific IMAP folder has correct personal namespace
+  // See bugzilla bug 90494 (http://bugzilla.mozilla.org/show_bug.cgi?id=90494)
+  nsXPIDLCString folderUriWithNamespace;
+  GetUriWithNamespacePrefixIfNecessary(kPersonalNamespace, aURI, getter_Copies(folderUriWithNamespace));
+  if (!folderUriWithNamespace.IsEmpty()) {
+    namespacePrefixAdded = PR_TRUE;
+    rv = rootMsgFolder->GetChildWithURI(folderUriWithNamespace, PR_TRUE, PR_FALSE, getter_AddRefs(msgFolder));
+  }
+  else {
+    rv = rootMsgFolder->GetChildWithURI(aURI, PR_TRUE, PR_FALSE, getter_AddRefs(msgFolder));
+  }
+
+  if (NS_FAILED(rv) || !msgFolder) {
+    // we didn't find the folder so we will have to create new one.
+    if (namespacePrefixAdded)
+    {
+      nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      nsCOMPtr<nsIRDFResource> resource;
+      rv = rdf->GetResource(folderUriWithNamespace, getter_AddRefs(resource));
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      nsCOMPtr <nsIMsgFolder> folderResource;
+      folderResource = do_QueryInterface(resource, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }   
+    msgFolder = aFolderResource;
+  }
+
+  NS_IF_ADDREF(*aFolder = msgFolder);
+  return NS_OK;
 }

@@ -333,8 +333,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 	return rv;
 }
 
-  // nsIUrlListener methods
-
+// nsIUrlListener methods
 NS_IMETHODIMP
 nsMsgCopy::OnStartRunningUrl(nsIURI * aUrl)
 {
@@ -436,9 +435,9 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   if (!aFolderURI || !*aFolderURI) {
     return NS_ERROR_INVALID_ARG;
   }
-  
+
   // as long as it doesn't start with anyfolder://
-  if (PL_strncasecmp(ANY_SERVER, aFolderURI, PL_strlen(aFolderURI)) != 0) {
+  if (PL_strncasecmp(ANY_SERVER, aFolderURI, strlen(aFolderURI)) != 0) {
     nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
@@ -452,11 +451,19 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     folderResource = do_QueryInterface(resource, &rv);
     if (NS_SUCCEEDED(rv) && folderResource) 
     {
-        // don't check validity of folder - caller will handle creating it
-      nsCOMPtr<nsIMsgIncomingServer> server; //make sure that folder hierarchy is built so that legitimate parent-child relationship is established
-      folderResource->GetServer(getter_AddRefs(server));
+      // don't check validity of folder - caller will handle creating it
+      nsCOMPtr<nsIMsgIncomingServer> server; 
+      //make sure that folder hierarchy is built so that legitimate parent-child relationship is established
+      rv = folderResource->GetServer(getter_AddRefs(server));
+#if 0
+      // XXX TODO
+      // JUNK MAIL RELATED
+      // this should work, but I'm not going to turn it on until I test it more
+      NS_ENSURE_SUCCESS(rv,rv);
+      return server->GetMsgFolderFromURI(folderResource, aFolderURI, aMsgFolder);
+#else
       if (server)
-      {
+      { 
         nsCOMPtr<nsIMsgFolder> rootMsgFolder;
         server->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
         if (rootMsgFolder)
@@ -478,9 +485,9 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
               rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, PR_FALSE, msgFolder);
           }
           else
-            rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, imapServer == nsnull /*caseInsensitive*/, msgFolder);
-          /* we didn't find the folder so we will have to create new one.
-             CreateIfMissing does that provided we pass in a dummy folder */
+            rv = rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, PR_TRUE /*caseInsensitive*/, msgFolder);
+            /* we didn't find the folder so we will have to create new one.
+          CreateIfMissing does that provided we pass in a dummy folder */
           if (!*msgFolder)
           {
             if (namespacePrefixAdded)
@@ -488,11 +495,11 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
               nsCOMPtr<nsIRDFResource> resource;
               rv = rdf->GetResource(folderUriWithNamespace, getter_AddRefs(resource));
               if (NS_FAILED(rv)) return rv;
-
+              
               nsCOMPtr <nsIMsgFolder> folderResource;
               folderResource = do_QueryInterface(resource, &rv);
               if (NS_FAILED(rv)) return rv;
-
+              
               *msgFolder = folderResource;
               NS_ADDREF(*msgFolder);
             }
@@ -508,11 +515,12 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
           return NS_MSG_ERROR_FOLDER_MISSING;
       }
       else
-	      return NS_MSG_ERROR_FOLDER_MISSING;
+        return NS_MSG_ERROR_FOLDER_MISSING;
+#endif
     }
     else 
     {
-	    return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
     }
   }
   else 

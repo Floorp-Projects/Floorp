@@ -537,6 +537,11 @@ PRBool WeAreOffline()
 
 nsresult GetExistingFolder(const char *aFolderURI, nsIMsgFolder **aFolder)
 {
+  NS_ENSURE_ARG_POINTER(aFolderURI);
+  NS_ENSURE_ARG_POINTER(aFolder);
+
+  *aFolder = nsnull;
+
   nsresult rv;
   nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -639,3 +644,80 @@ nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult)
   *aResult = PR_TRUE;
   return NS_OK;
 }
+
+nsresult
+GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
+{
+  nsresult rv;
+  nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // get the corresponding RDF resource
+  // RDF will create the folder resource if it doesn't already exist
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = rdf->GetResource(nsCAutoString(aURI).get(), getter_AddRefs(resource));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr <nsIMsgFolder> folderResource;
+  folderResource = do_QueryInterface(resource, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // don't check validity of folder - caller will handle creating it
+  nsCOMPtr<nsIMsgIncomingServer> server; 
+  // make sure that folder hierarchy is built so that legitimate parent-child relationship is established
+  rv = folderResource->GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!server)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr <nsIMsgFolder> msgFolder;
+  rv = server->GetMsgFolderFromURI(folderResource, nsCAutoString(aURI).get(), getter_AddRefs(msgFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIFolder> parent;
+  rv = msgFolder->GetParent(getter_AddRefs(parent));
+  if (NS_FAILED(rv) || !parent)
+  {
+    nsCOMPtr <nsIFileSpec> folderPath;
+    // for local folders, path is to the berkeley mailbox. 
+    // for imap folders, path needs to have .msf appended to the name
+    msgFolder->GetPath(getter_AddRefs(folderPath));
+
+    nsXPIDLCString type;
+    rv = server->GetType(getter_Copies(type));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRBool isImapFolder = type.Equals("imap");
+    // if we can't get the path from the folder, then try to create the storage.
+    // for imap, it doesn't matter if the .msf file exists - it still might not
+    // exist on the server, so we should try to create it
+    PRBool exists = PR_FALSE;
+    if (!isImapFolder && folderPath)
+      folderPath->Exists(&exists);
+    if (!exists)
+    {
+      rv = msgFolder->CreateStorageIfMissing(aListener);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      // XXX TODO
+      // JUNK MAIL RELATED
+      // ugh, I hate this hack
+      // we have to do this (for now)
+      // because imap and local are different (one creates folder asynch, the other synch)
+      // one will notify the listener, one will not.
+      // I blame nsMsgCopy.  
+      // we should look into making it so no matter what the folder type
+      // we always call the listener
+      // this code should move into local folder's version of CreateStorageIfMissing()
+      if (!isImapFolder && aListener) {
+        rv = aListener->OnStartRunningUrl(nsnull);
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        rv = aListener->OnStopRunningUrl(nsnull, NS_OK);
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
+    }
+  }
+  return NS_OK;
+}
+

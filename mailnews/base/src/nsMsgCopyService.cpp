@@ -344,6 +344,11 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
   nsCOMPtr<nsISupports> aSupport;
   nsresult rv;
     
+  // XXX TODO 
+  // JUNK MAIL RELATED
+  // make sure dest folder exists
+  // and has proper flags, before we start copying?
+
   copyRequest = new nsCopyRequest();
   if (!copyRequest) 
     return NS_ERROR_OUT_OF_MEMORY;

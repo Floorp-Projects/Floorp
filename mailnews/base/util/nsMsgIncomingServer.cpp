@@ -81,8 +81,6 @@
 #include "nsMsgFolderFlags.h"
 #include "nsMsgUtils.h"
 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-
 #define PORT_NOT_SET -1
 
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)
@@ -362,7 +360,8 @@ nsMsgIncomingServer::CreateRootFolder()
   rv = GetServerURI(getter_Copies(serverUri));
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+  nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // get the corresponding RDF resource
   // RDF will create the server resource if it doesn't already exist
@@ -1845,6 +1844,25 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
 }
 
 NS_IMETHODIMP
+nsMsgIncomingServer::GetMsgFolderFromURI(nsIMsgFolder *aFolderResource, const char *aURI, nsIMsgFolder **aFolder)
+{
+  nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+  nsresult rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!rootMsgFolder)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr <nsIMsgFolder> msgFolder;
+  rv = rootMsgFolder->GetChildWithURI(aURI, PR_TRUE, PR_TRUE /*caseInsensitive*/, getter_AddRefs(msgFolder));
+  if (NS_FAILED(rv) || !msgFolder) {
+    msgFolder = aFolderResource;
+  }
+  
+  NS_IF_ADDREF(*aFolder = msgFolder);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
 {
   NS_ENSURE_ARG_POINTER(aSpamSettings);
@@ -1858,12 +1876,24 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  nsXPIDLCString junkFolderURI;  
-  mSpamSettings->GetSpamFolderURI(getter_Copies(junkFolderURI));
-  nsCOMPtr<nsIMsgFolder> junkFolder;
-  rv = GetExistingFolder(junkFolderURI.get(), getter_AddRefs(junkFolder));
-  if (NS_SUCCEEDED(rv) && junkFolder)  //remove the MSG_FOLDER_FLAG_JUNK on old junk folder
-    junkFolder->SetFlag(~MSG_FOLDER_FLAG_JUNK);
+  nsXPIDLCString oldJunkFolderURI;
+  rv = mSpamSettings->GetSpamFolderURI(getter_Copies(oldJunkFolderURI));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (!oldJunkFolderURI.IsEmpty()) {
+    nsCOMPtr<nsIMsgFolder> oldJunkFolder;
+    rv = GetExistingFolder(oldJunkFolderURI.get(), getter_AddRefs(oldJunkFolder));
+    if (NS_SUCCEEDED(rv) && oldJunkFolder) 
+    {
+      // remove the MSG_FOLDER_FLAG_JUNK on the old junk folder
+      // XXX TODO
+      // JUNK MAIL RELATED
+      // in SetFlag, we need to make sure that this folder
+      // is not a the junk folder for another account
+      // the same goes for set flag.  have fun with all that.
+      oldJunkFolder->SetFlag(~MSG_FOLDER_FLAG_JUNK);
+    }
+  }
 
   rv = mSpamSettings->Clone(aSpamSettings);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1899,13 +1929,18 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   rv = SetCharValue("spamActionTargetFolder", spamActionTargetFolder.get());
   NS_ENSURE_SUCCESS(rv,rv);
 
-  junkFolder = nsnull; 
-  junkFolderURI.Assign("");
-  mSpamSettings->GetSpamFolderURI(getter_Copies(junkFolderURI));
-  rv = GetExistingFolder(junkFolderURI.get(), getter_AddRefs(junkFolder)); 
-  if (NS_SUCCEEDED(rv) && junkFolder)  //set MSG_FOLDER_FLAG_JUNK on new junk folder
-    junkFolder->SetFlag(MSG_FOLDER_FLAG_JUNK);
-  
+  nsXPIDLCString newJunkFolderURI;
+  rv = mSpamSettings->GetSpamFolderURI(getter_Copies(newJunkFolderURI));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // as the url listener, the spam settings will set the MSG_FOLDER_FLAG_JUNK folder flag
+  // on the junk mail folder, after it is created
+  nsCOMPtr <nsIUrlListener> listener = do_QueryInterface(mSpamSettings, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = GetOrCreateFolder(newJunkFolderURI, listener);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   PRBool useWhiteList;
   rv = mSpamSettings->GetUseWhiteList(&useWhiteList);
   NS_ENSURE_SUCCESS(rv,rv);

@@ -87,5 +87,11 @@ NS_MSG_BASE nsresult CreateServicesForPasswordManager();
 
 NS_MSG_BASE nsresult IsRFC822HeaderFieldName(const char *aHdr, PRBool *aResult);
 
+  /**
+   * this needs a listener, because we might have to create the folder
+   * on the server, and that is asynchronous
+   */
+NS_MSG_BASE nsresult GetOrCreateFolder(const nsACString & aURI, nsIUrlListener *aListener);
+
 #endif
 
