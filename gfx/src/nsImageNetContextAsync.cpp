@@ -56,6 +56,8 @@ public:
   virtual ilINetContext* Clone();
 
   virtual NET_ReloadMethod GetReloadPolicy();
+  virtual NET_ReloadMethod SetReloadPolicy(NET_ReloadMethod ReloadPolicy);
+
 
   virtual void AddReferer(ilIURL *aUrl);
 
@@ -392,6 +394,13 @@ ImageNetContextImpl::GetReloadPolicy()
   return mReloadPolicy;
 }
 
+NET_ReloadMethod 
+ImageNetContextImpl::SetReloadPolicy(NET_ReloadMethod reloadpolicy)
+{
+  mReloadPolicy=reloadpolicy;
+  return mReloadPolicy;
+}
+
 void 
 ImageNetContextImpl::AddReferer(ilIURL *aUrl)
 {
@@ -478,6 +487,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     aURL->SetReader(aReader);
         
     // Find previously created ImageConsumer if possible
+    SetReloadPolicy(aLoadMethod);
 
     ImageConsumer *ic = new ImageConsumer(aURL, this);
     NS_ADDREF(ic);
