@@ -9,7 +9,7 @@ COSES
 
 <!-- HTTP Header -->
 <text>
-HTTP/1.1 <with variable="(response)"><text value="(response)"/></with><else>200 OK</else><br/>
+HTTP/1.1 <with variable="response"><text value="(response)"/></with><else>200 OK</else><br/>
 <with variable="headers"><text value="(headers)"/></with>Content-Type: text/html
 </text>
 
