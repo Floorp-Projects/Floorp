@@ -2894,7 +2894,7 @@ LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 LIBS="-lfullsoft $LIBS"
 AC_MSG_CHECKING("for FCInitialize in -lfullsoft");
 AC_TRY_LINK([ #include <stdio.h>
-	      #include "fullcircle.h" ],
+	      #include "fullsoft.h" ],
             [ FCInitialize(); exit(0); ],
             [FULLCIRCLE_LIBS="-I${FULLCIRCLE_DIR} -L${FULLCIRCLE_DIR} -lfullsoft" result="yes"],
             [MISSING_FULLCIRCLE=1 result="no"])
