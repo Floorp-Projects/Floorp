@@ -2582,7 +2582,7 @@ size_t JS::doubleToBaseStr(char *buffer, double value, uint base)
 
     char *p = buffer;		// Pointer to current position in the buffer
     if (value < 0.0
-#ifdef XP_PC
+#ifdef _WIN32
         && !((word0(value) & Exp_mask) == Exp_mask && ((word0(value) & Frac_mask) || word1(value))) // Visual C++ doesn't know how to compare against NaN
 #endif
        ) {
