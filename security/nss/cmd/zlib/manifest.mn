@@ -61,6 +61,8 @@ PROGRAMS = example minigzip
 
 # REQUIRES = nss
 
-DEFINES = -DNSPR20=1
+# Define verbose as -1 to turn off all zlib trace messages in
+# debug builds.
+DEFINES = -Dverbose=-1
 
 NO_MD_RELEASE = 1
