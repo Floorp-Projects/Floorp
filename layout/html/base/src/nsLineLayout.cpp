@@ -3052,9 +3052,28 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
           content->GetTag(*getter_AddRefs(tag));
           if (tag == nsHTMLAtoms::hr) {
             // get the alignment from the HR frame
+
+            // hack to get the HRFrame due to the wrapper frame for the
+            // quirks mode anonymous content
+            nsIFrame *hrFrame = psd->mFirstFrame->mFrame;
+            nsCOMPtr<nsIAtom> frameType;
+            hrFrame->GetFrameType(getter_AddRefs(frameType));
+            if (frameType != nsLayoutAtoms::hrFrame) {
+              // |hrFrame| is a wrapper frame, so the real frame is one
+              // of its children.
+              nsIFrame *child;
+              for (hrFrame->FirstChild(mPresContext, nsnull, &child);
+                   child; child->GetNextSibling(&child)) {
+                child->GetFrameType(getter_AddRefs(frameType));
+                if (frameType == nsLayoutAtoms::hrFrame) {
+                  hrFrame = child;
+                  break;
+                }
+              }
+            }
+
             const nsStyleMargin* margin;
-            psd->mFirstFrame->mFrame->GetStyleData(eStyleStruct_Margin,
-                                                   (const nsStyleStruct*&)margin);
+            ::GetStyleData(hrFrame, &margin);
             textAlign = NS_STYLE_TEXT_ALIGN_CENTER;
             nsStyleCoord zero(nscoord(0));
             nsStyleCoord temp;
