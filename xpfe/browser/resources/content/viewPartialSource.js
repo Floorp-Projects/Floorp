@@ -106,12 +106,20 @@ function viewPartialSourceForSelection(selection)
       ancestorContainer.nodeType == Node.CDATA_SECTION_NODE)
     ancestorContainer = ancestorContainer.parentNode;
 
+  // for selectAll, let's use the entire document, including <html>...</html>
+  // @see DocumentViewerImpl::SelectAll() for how selectAll is implemented
+  try {
+    if (ancestorContainer == doc.body)
+      ancestorContainer = doc.documentElement;
+  } catch (e) { }
+
   // each path is a "child sequence" (a.k.a. "tumbler") that
   // descends from the ancestor down to the boundary point
   var startPath = getPath(ancestorContainer, startContainer);
   var endPath = getPath(ancestorContainer, endContainer);
 
   // clone the fragment of interest and reset everything to be relative to it
+  // note: it is with the clone that we operate from now on
   ancestorContainer = ancestorContainer.cloneNode(true);
   startContainer = ancestorContainer;
   endContainer = ancestorContainer;
@@ -135,7 +143,7 @@ function viewPartialSourceForSelection(selection)
     // To get a neat output, the idea here is to remap the end point from:
     // 1. ...<tag>]...   to   ...]<tag>...
     // 2. ...]</tag>...  to   ...</tag>]...
-    if ((endOffset > 0 && endOffset < endContainer.data.length-1) ||
+    if ((endOffset > 0 && endOffset < endContainer.data.length) ||
         !endContainer.parentNode || !endContainer.parentNode.parentNode)
       endContainer.insertData(endOffset, MARK_SELECTION_END);
     else {
@@ -159,8 +167,9 @@ function viewPartialSourceForSelection(selection)
     // To get a neat output, the idea here is to remap the start point from:
     // 1. ...<tag>[...   to   ...[<tag>...
     // 2. ...[</tag>...  to   ...</tag>[...
-    if ((startOffset > 0 && startOffset < startContainer.data.length-1) ||
-        !startContainer.parentNode || !startContainer.parentNode.parentNode)
+    if ((startOffset > 0 && startOffset < startContainer.data.length) ||
+        !startContainer.parentNode || !startContainer.parentNode.parentNode ||
+        startContainer != startContainer.parentNode.lastChild)
       startContainer.insertData(startOffset, MARK_SELECTION_START);
     else {
       tmpNode = doc.createTextNode(MARK_SELECTION_START);
@@ -218,7 +227,7 @@ function getPath(ancestor, node)
 
 ////////////////////////////////////////////////////////////////////////////////
 // using special markers left in the serialized source, this helper makes the
-// underlying markup of the selected fragement to automatically appear as selected
+// underlying markup of the selected fragment to automatically appear as selected
 // on the inflated view-source DOM
 function drawSelection()
 {
@@ -245,7 +254,7 @@ function drawSelection()
   var findInst = getBrowser().webBrowserFind;
   findInst.matchCase = true;
   findInst.entireWord = false;
-  findInst.wrapFind = false;
+  findInst.wrapFind = true;
   findInst.findBackwards = false;
 
   // ...lookup the start mark
