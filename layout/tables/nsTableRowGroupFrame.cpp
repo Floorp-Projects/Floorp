@@ -34,6 +34,7 @@
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSRendering.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -220,22 +221,59 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame
   return NS_OK;
 }
 
-NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext& aPresContext,
+NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext&      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect,
-                                      nsFramePaintLayer aWhichLayer)
+                                      nsFramePaintLayer    aWhichLayer)
 {
+  nsresult rv;
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    nsCompatibility mode;
+    aPresContext.GetCompatibilityMode(&mode);
+    if (eCompatibility_Standard == mode) {
+      const nsStyleDisplay* disp =
+        (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+      if (disp->mVisible) {
+        const nsStyleSpacing* spacing =
+          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+        const nsStyleColor* color =
+          (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        nsTableFrame* tableFrame = nsnull;
+        rv = nsTableFrame::GetTableFrame(this, tableFrame);
+        if (NS_FAILED(rv) || (nsnull == tableFrame)) {
+          return rv;
+        }
+        nscoord halfCellSpacingY = 
+          NSToCoordRound(((float)tableFrame->GetCellSpacingY()) / (float)2);
+        // every row group is short by the ending cell spacing X
+        nsRect rect(0, 0, mRect.width, mRect.height);
+        nsIFrame* firstRowGroup = nsnull;
+        tableFrame->FirstChild(nsnull, &firstRowGroup);
+        // first row group may have gotten too much cell spacing Y
+        if (tableFrame->GetRowCount() != 1) {
+          if (this == firstRowGroup) { 
+            rect.height -= halfCellSpacingY;
+          }
+          else {
+            rect.height += halfCellSpacingY;
+            rect.y      -= halfCellSpacingY;
+          }
+        }
 
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *color, *spacing, 0, 0);
+      }
+    }
+  }
   // for debug...
-  /*
-  if (nsIFrame::GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(128,0,0));
+  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
+    aRenderingContext.SetColor(NS_RGB(0,255,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
-  */
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  return NS_OK;
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
 }
 
 PRIntn

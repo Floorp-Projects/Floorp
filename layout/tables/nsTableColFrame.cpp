@@ -23,6 +23,7 @@
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
+#include "nsCSSRendering.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -44,8 +45,25 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
                                  const nsRect& aDirtyRect,
                                  nsFramePaintLayer aWhichLayer)
 {
-  if (gsDebug==PR_TRUE)
-    printf("nsTableColFrame::Paint\n");
+  if (gsDebug==PR_TRUE) printf("nsTableColFrame::Paint\n");
+
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    nsCompatibility mode;
+    aPresContext.GetCompatibilityMode(&mode);
+    if (eCompatibility_Standard == mode) {
+      const nsStyleDisplay* disp =
+        (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+      if (disp->mVisible) {
+        const nsStyleSpacing* spacing =
+          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+        const nsStyleColor* color =
+          (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        nsRect rect(0, 0, mRect.width, mRect.height);
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *color, *spacing, 0, 0);
+      }
+    }
+  }
   return NS_OK;
 }
 

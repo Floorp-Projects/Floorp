@@ -29,6 +29,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsCOMPtr.h"
+#include "nsCSSRendering.h"
 
 NS_DEF_PTR(nsIContent);
 
@@ -136,12 +137,30 @@ nsTableColGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
   return result;
 }
 
-NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
+NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext&      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect,
-                                      nsFramePaintLayer aWhichLayer)
+                                      nsFramePaintLayer    aWhichLayer)
 {
   if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::Paint\n");
+
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    nsCompatibility mode;
+    aPresContext.GetCompatibilityMode(&mode);
+    if (eCompatibility_Standard == mode) {
+      const nsStyleDisplay* disp =
+        (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+      if (disp->mVisible) {
+        const nsStyleSpacing* spacing =
+          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+        const nsStyleColor* color =
+          (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        nsRect rect(0, 0, mRect.width, mRect.height);
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *color, *spacing, 0, 0);
+      }
+    }
+  }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
 }
