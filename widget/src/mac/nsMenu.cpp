@@ -247,7 +247,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   aMenu->GetLabel(label);
   char* menuLabel = label.ToNewCString();
   mNumMenuItems++;
-  ::InsertMenuItem(mMacMenuHandle, c2pstr("a"), mNumMenuItems);
+  ::InsertMenuItem(mMacMenuHandle, "\p ", mNumMenuItems);
   ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
   delete[] menuLabel;
   
