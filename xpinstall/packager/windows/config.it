@@ -134,6 +134,7 @@ C1=Component1
 C2=Component3
 C3=Component5
 C4=Component6
+C5=Component7
 
 [Setup Type1]
 Description Short=C&omplete
@@ -149,6 +150,7 @@ C3=Component3
 C4=Component4
 C5=Component5
 C6=Component6
+C7=Component7
 
 [Setup Type2]
 Description Short=C&ustom
@@ -166,6 +168,7 @@ C3=Component3
 C4=Component4
 C5=Component5
 C6=Component6
+C7=Component7
 
 ;[Setup Type3]
 ;Description Short=C&ustom
@@ -388,6 +391,26 @@ Domain0=$Domain$
 Server Path0=$ServerPath$
 
 [Component6]
+Description Short=English-US language pack
+Description Long=English-US language pack
+Archive=langenus.xpi
+$InstallSize$:langenus
+$InstallSizeSystem$
+$InstallSizeArchive$:langenus.xpi
+;Dependency0=
+; Attributes can be the following values:
+;   SELECTED  - the component is selected to be installed by default.
+;   INVISIBLE - the component is not shown in the Select Components dialog.
+Attributes=SELECTED|INVISIBLE
+Parameter=
+; url keys can be as many as needed.  url0 is attempted first.  if it fails,
+; the next url key is tried in sequential order.
+; The url should not contain the filename.  Setup will assemble the complete url
+; using the url keys and the Archive key.
+Domain0=$Domain$
+Server Path0=$ServerPath$
+
+[Component7]
 Description Short=English-GB language pack
 Description Long=English-GB language pack
 Archive=langengb.xpi
