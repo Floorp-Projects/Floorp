@@ -54,11 +54,6 @@ typedef PRUint32 nsOperatorFlags;
 #define NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT  (1<<10)
 
 
-// Enumerator callback function. Return PR_FALSE to stop
-typedef PRBool (*nsOperatorEnumFunc)(const nsString&       aOperator, 
-                                     const nsOperatorFlags aFlags, 
-                                     void*                 aData);
-
 class nsMathMLOperators {
 public:
   static void AddRefTable(void);
