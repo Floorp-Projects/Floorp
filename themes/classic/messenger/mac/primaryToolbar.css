@@ -229,6 +229,7 @@
 #button-print
   {
     list-style-image      : url("chrome://global/skin/print.gif");
+    margin-top: 1px;
   }
 
 #button-print[disabled="true"],

@@ -228,12 +228,8 @@
 
 #button-print {
 	list-style-image:url("chrome://global/skin/print.gif");
+	margin-top: 1px;
 }
-
-#button-print 
-  {
-    list-style-image      : url("chrome://global/skin/print.gif");
-  }
 
 #button-print[disabled="true"],
 #button-print[disabled="true"][buttonover="true"],
