@@ -314,6 +314,7 @@ NS_METHOD nsMenu::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+/*
   // Determine if this is the correct menu to handle the event
   PRInt16 menuID = HiWord(((nsMenuEvent)aMenuEvent).mCommand);
   if(mMacMenuID == menuID)
@@ -330,5 +331,6 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 	}
   }
   else
+  */
     return nsEventStatus_eIgnore;
 }
