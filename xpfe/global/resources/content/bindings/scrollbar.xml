@@ -10,8 +10,20 @@
       <xul:gripper/>
     </content>
   </binding>
+
+  <binding id="scrollbar-base">
+    <handlers>
+      <handler event="contextmenu" preventdefault="true"/>
+      <handler event="mousedown" action="event.preventBubble();"/>
+      <handler event="mouseup" action="event.preventBubble();"/>
+      <handler event="click" action="event.preventBubble();"/>
+      <handler event="dblclick" action="event.preventBubble();"/>
+      <handler event="mousemove" action="event.preventBubble();"/>
+      <handler event="contextmenu" action="event.preventBubble();"/>
+    </handlers>
+  </binding>
   
-  <binding id="scrollbar">
+  <binding id="scrollbar" extends="chrome://global/content/bindings/scrollbar.xml#scrollbar-base">
     <content>
       <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="sborient=orient"/>
       <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" hidden="true" xbl:inherits="sborient=orient"/>
@@ -68,18 +80,6 @@
         </body>
       </method>
     </implementation>
-
-    <handlers>
-      <handler event="contextmenu" preventdefault="true"/>
-      <handler event="mousedown" action="event.preventBubble();"/>
-      <handler event="mouseup" action="event.preventBubble();"/>
-      <handler event="click" action="event.preventBubble();"/>
-      <handler event="dblclick" action="event.preventBubble();"/>
-      <handler event="mouseover" action="event.preventBubble();"/>
-      <handler event="mouseout" action="event.preventBubble();"/>
-      <handler event="mousemove" action="event.preventBubble();"/>
-      <handler event="contextmenu" action="event.preventBubble();"/>
-    </handlers>
   </binding>
 </bindings>
 
