@@ -44,7 +44,7 @@
 
 (defparameter *semantic-keywords*
   '(not and or xor mod new
-    tag record
+    tag tuple record
     function
     begin end nothing
     if then elsif else
@@ -1170,7 +1170,7 @@
     (depict-logical-block (markup-stream 2)
       (let* ((tag (scan-tag world name))
              (mutable (tag-mutable tag)))
-        (depict-semantic-keyword markup-stream (if mutable 'record 'tag) :after)
+        (depict-semantic-keyword markup-stream (if mutable 'record (if fields 'tuple 'tag)) :after)
         (depict-tag-name markup-stream tag :definition)
         (when (or mutable fields)
           (depict-list
