@@ -260,7 +260,7 @@ do
 #
 	if [ ${OS_ARCH} = "WINNT" ]; then
 	    if [ $value -ne 0 ]; then
-		if [ $ret -ne 0]; then
+		if [ $ret -ne 0 ]; then
 			value=$ret
 		fi
 	    fi
