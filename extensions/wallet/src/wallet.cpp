@@ -1174,7 +1174,7 @@ Wallet_Decrypt(nsAutoString crypt, nsAutoString& text) {
     } else if ((c & 0xE0) == 0xC0) {
       text += (PRUnichar)(((c & 0x1F)<<6) + ((PRUnichar)UTF8textCString[i++] & 0x3F));
     } else if ((c & 0xF0) == 0xE0) {
-      text += (((c & 0x0F)<<12) + (((PRUnichar)UTF8textCString[i++] & 0x3F)<<6)
+      text.AppendInt(((c & 0x0F)<<12) + (((PRUnichar)UTF8textCString[i++] & 0x3F)<<6)
                                 + ((PRUnichar)UTF8textCString[i++] & 0x3F));
     } else {
       Recycle(UTF8textCString);
@@ -2796,7 +2796,7 @@ WLLT_PostEdit(nsAutoString walletList) {
 PUBLIC void
 WLLT_PreEdit(nsAutoString& walletList) {
   wallet_Initialize(PR_FALSE);
-  walletList = BREAK;
+  walletList.AssignWithConversion(BREAK);
   wallet_MapElement * ptr;
   PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
   for (PRInt32 i=0; i<count; i++) {
