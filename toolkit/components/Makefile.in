@@ -57,6 +57,7 @@ DIRS = 		\
 	history \
 	passwordmgr \
 	printing \
+	profile \
 	satchel \
 	viewconfig \
 	viewsource \
