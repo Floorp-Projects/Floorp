@@ -59,6 +59,8 @@ while ($_ = $ARGV[0], defined($_) && /^-./) {
         foreach (keys %ENV) {
             $stack->define($_, $ENV{$_});
         }
+    } elsif (/^-d$/os) { 
+        $stack->{'dependencies'} = 1;
     } else {
         die "$0: invalid argument: $_\n";
     }
@@ -101,7 +103,7 @@ sub include {
             # ignore it
         } elsif ($stack->enabled) {
             # print it, including any newlines
-            print filtered($stack, $_);
+            $stack->print(filtered($stack, $_));
         }
     }
     close(FILE);
@@ -155,7 +157,7 @@ sub new {
             'LINE' => 0, # the line number in the source file
             'DIRECTORY' => '', # current directory
             'FILE' => '', # source filename
-            '1' => 1, # for convenience
+            '1' => 1, # for convenience (the constant '1' is thus true)
         },
         'filters' => {
             # filters
@@ -163,6 +165,7 @@ sub new {
         'values' => [], # the value of the last condition evaluated at the nth lewel
         'lastPrinting' => [], # whether we were printing at the n-1th level
         'printing' => 1, # whether we are currently printing at the Nth level
+        'dependencies' => 0, # whether we are showing dependencies
     };
 }
 
@@ -241,6 +244,20 @@ sub expand {
     my($line) = @_;
     $line =~ s/__(\w+)__/$self->get($1)/gose;
     return $line;
+}
+
+sub print {
+    my $self = shift;
+    return if $self->{'dependencies'};
+    CORE::print(@_);
+}
+
+sub visit {
+    my $self = shift;
+    my($filename) = @_;
+    my $directory = $stack->{'variables'}->{'DIRECTORY'};
+    $filename = File::Spec->abs2rel(File::Spec->rel2abs($filename, $directory));
+    CORE::print("$filename\n");
 }
 
 ########################################################################
@@ -362,7 +379,7 @@ sub expand {
     return if $stack->disabled;
     die "argument expected\n" unless @_;
     my $line = $stack->expand(@_);
-    print "$line\n";
+    $stack->print("$line\n");
 }
 
 sub literal {
@@ -370,14 +387,19 @@ sub literal {
     return if $stack->disabled;
     die "argument expected\n" unless @_;
     my $line = shift;
-    print "$line\n";
+    $stack->print("$line\n");
 }
 
 sub include {
     my $stack = shift;
     return if $stack->disabled;
     die "argument expected\n" unless @_;
-    main::include($stack, File::Spec->catpath(File::Spec::Unix->splitpath(@_)));
+    my $filename = File::Spec->catpath(File::Spec::Unix->splitpath(@_));
+    if ($stack->{'dependencies'}) {
+        $stack->visit($filename);
+    } else {
+        main::include($stack, $filename);
+    }
 }
 
 sub filter {
