@@ -37,6 +37,7 @@ TEST_FILES      = \
 		plainnowrap.out \
 		simple.html \
 		simplecopy.out \
+		simplefmt.out \
 		entityxif.xif \
 		entityxif.out \
 		mailquote.html \

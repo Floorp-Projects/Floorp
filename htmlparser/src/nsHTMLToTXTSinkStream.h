@@ -174,6 +174,8 @@ protected:
   PRBool           mPreFormatted;
   PRBool           mCacheLine;   // If the line should be cached before output. This makes it possible to do smarter wrapping.
 
+  nsString         mURL;
+
   // The tag stack: the stack of tags we're operating on, so we can nest:
   nsHTMLTag       *mTagStack;
   PRUint32         mTagStackIndex;
