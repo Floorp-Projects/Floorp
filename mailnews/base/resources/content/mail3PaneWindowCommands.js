@@ -331,6 +331,10 @@ var DefaultController =
         loadedFolder = GetLoadedMsgFolder();
         if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
           return false;
+      case "cmd_saveAsFile":
+      case "cmd_saveAsTemplate":
+	      if ( GetNumSelectedMessages() > 1)
+          return false;
       case "cmd_reply":
       case "button_reply":
       case "cmd_replySender":
@@ -345,8 +349,6 @@ var DefaultController =
       case "cmd_openMessage":
       case "button_print":
       case "cmd_print":
-      case "cmd_saveAsFile":
-      case "cmd_saveAsTemplate":
       case "cmd_viewPageSource":
       case "cmd_reload":
 	      if ( GetNumSelectedMessages() > 0)
