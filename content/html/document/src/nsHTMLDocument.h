@@ -64,6 +64,10 @@ class nsIHTMLCSSStyleSheet;
 class nsIParser;
 class nsICSSLoader;
 class nsIURI;
+class nsIMarkupDocumentViewer;
+class nsIDocumentCharsetInfo;
+class nsICacheEntryDescriptor;
+class nsIHttpChannel;
 
 class nsHTMLDocument : public nsMarkupDocument,
                        public nsIHTMLDocument,
@@ -245,6 +249,35 @@ protected:
   
   static nsrefcnt gRefCntRDFService;
   static nsIRDFService* gRDF;
+  
+  static PRBool TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
+                               PRInt32& aCharsetSource, 
+                               nsAString& aCharset);
+  static PRBool TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
+                                     nsIDocumentCharsetInfo*  aDocInfo,
+                                     PRInt32& aCharsetSource, 
+                                     nsAString& aCharset);
+  static PRBool TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor, 
+                                PRInt32& aCharsetSource, 
+                                nsAString& aCharset);
+  static PRBool TryBookmarkCharset(nsXPIDLCString* aUrlSpec,
+                                   PRInt32& aCharsetSource, 
+                                   nsAString& aCharset);
+  static PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
+                                 PRInt32& charsetSource, 
+                                 nsAString& aCharset);
+  static PRBool TryWeakDocTypeDefault(PRInt32& aCharsetSource, 
+                                      nsAString& aCharset);
+  static PRBool TryHttpHeaderCharset(nsIHttpChannel *aHttpChannel, 
+                                     PRInt32& aCharsetSource, 
+                                     nsAString& aCharset);
+  static PRBool TryUserDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
+                                      PRInt32& aCharsetSource, 
+                                      nsAString& aCharset);
+
+  void nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, 
+                                          nsAString& aCharset,
+                                          const char* aCommand);
 
   PRUint32 mIsWriting : 1;
   PRUint32 mWriteLevel : 31;

@@ -191,8 +191,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       const PRUnichar *source =  (values->StringAt(numOfAttributes-2))->get();
       PRInt32 err;
       nsAutoString srcStr(source);
-      nsCharsetSource  src = (nsCharsetSource) srcStr.ToInteger(&err);
-      // if we cannot convert the string into nsCharsetSource, return error
+      PRInt32  src = srcStr.ToInteger(&err);
+      // if we cannot convert the string into PRInt32, return error
       NS_ASSERTION(NS_SUCCEEDED(err), "cannot get charset source");
       if(NS_FAILED(err))
           return NS_ERROR_ILLEGAL_VALUE;
@@ -357,8 +357,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
     {
       nsAutoString srcStr((values->StringAt(numOfAttributes-2))->get());
       PRInt32 err;
-      nsCharsetSource  src = (nsCharsetSource) srcStr.ToInteger(&err);
-      // if we cannot convert the string into nsCharsetSource, return error
+      PRInt32  src = srcStr.ToInteger(&err);
+      // if we cannot convert the string into PRInt32, return error
       if (NS_FAILED(err))
           return NS_ERROR_ILLEGAL_VALUE;
       

@@ -55,17 +55,17 @@ public:
 
   NS_IMETHOD LoadDocument(const char* aURL, 
                           const char* aCharset= nsnull , 
-                          nsCharsetSource aSource = kCharsetUninitialized) = 0;
+                          PRInt32 aSource = kCharsetUninitialized) = 0;
   NS_IMETHOD ReloadDocument(const char* aCharset = nsnull , 
-                            nsCharsetSource aSource = kCharsetUninitialized) = 0;
+                            PRInt32 aSource = kCharsetUninitialized) = 0;
   NS_IMETHOD StopDocumentLoad(void) = 0;
   NS_IMETHOD SetRendering(PRBool aRender) = 0;
 };
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIWEBSHELLSERVICES \
-  NS_IMETHOD LoadDocument(const char *aURL, const char *aCharset=nsnull, nsCharsetSource aSource=kCharsetUninitialized); \
-  NS_IMETHOD ReloadDocument(const char *aCharset=nsnull, nsCharsetSource aSource=kCharsetUninitialized); \
+  NS_IMETHOD LoadDocument(const char *aURL, const char *aCharset=nsnull, PRInt32 aSource=kCharsetUninitialized); \
+  NS_IMETHOD ReloadDocument(const char *aCharset=nsnull, PRInt32 aSource=kCharsetUninitialized); \
   NS_IMETHOD StopDocumentLoad(void); \
   NS_IMETHOD SetRendering(PRBool aRender); 
 

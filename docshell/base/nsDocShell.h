@@ -23,7 +23,6 @@
 #ifndef nsDocShell_h__
 #define nsDocShell_h__
 
-#include "nsIParser.h"  // for nsCharSetSource
 #include "nsIPresShell.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"

@@ -1517,7 +1517,7 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
     nsVoidArray*  theObservers = mObservers[theTag];
     if (theObservers) {
       nsAutoString      theCharsetValue;
-      nsCharsetSource   theCharsetSource;
+      PRInt32   theCharsetSource;
       aParser->GetDocumentCharset(theCharsetValue,theCharsetSource);
 
       PRInt32 theAttrCount = aNode->GetAttributeCount(); 

@@ -160,11 +160,11 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
       PRInt32 err;
       PRInt32 charsetSourceInt = charsetSourceStr.ToInteger(&err);
 
-      // if we cannot convert the string into nsCharsetSource, return error
+      // if we cannot convert the string into PRInt32, return error
       if(NS_FAILED(err))
          return NS_ERROR_ILLEGAL_VALUE;
 
-      nsCharsetSource currentCharsetSource = (nsCharsetSource)charsetSourceInt;
+      PRInt32 currentCharsetSource = charsetSourceInt;
 
       if(kCharsetFromMetaTag > currentCharsetSource)
       {

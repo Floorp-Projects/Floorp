@@ -1881,6 +1881,16 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     if (NS_FAILED(res))
         return NS_OK;
 
+    PRInt32 charsetSource;
+    res = doc->GetDocumentCharacterSetSource(&charsetSource);
+    if (NS_FAILED(res))
+        return NS_OK;
+
+    // set the child's parentCharset
+    res = dcInfo->SetParentCharsetSource(charsetSource);
+    if (NS_FAILED(res))
+        return NS_OK;
+
     // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", NS_LossyConvertUCS2toASCII(parentCS).get(), mItemType);
 
     return NS_OK;

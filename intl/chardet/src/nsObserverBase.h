@@ -40,8 +40,6 @@
 #ifndef nsObserverBase_h__
 #define nsObserverBase_h__
 
-
-#include "nsIParser.h"
 //========================================================================== 
 //
 // Class declaration for the class 
@@ -65,7 +63,7 @@ protected:
   NS_IMETHOD NotifyWebShell(nsISupports* aWebShell,
                             nsISupports* aChannel,
                             const char* charset, 
-                            nsCharsetSource source);
+                            PRInt32 source);
 
 };
 

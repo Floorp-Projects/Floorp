@@ -94,7 +94,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharsetSource aSource);
+      nsScanner(nsString& anHTMLString, const nsString& aCharset, PRInt32 aSource);
 
       /**
        *  Use this constructor if you want i/o to be based on 
@@ -106,7 +106,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, nsCharsetSource aSource);
+      nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, PRInt32 aSource);
 
       /**
        *  Use this constructor if you want i/o to be stream based.
@@ -117,7 +117,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename, nsInputStream& aStream, const nsString& aCharset, nsCharsetSource aSource);
+      nsScanner(nsString& aFilename, nsInputStream& aStream, const nsString& aCharset, PRInt32 aSource);
 
 
       ~nsScanner();
@@ -343,7 +343,7 @@ class nsScanner {
        *  @param   aCharsetSource- where the charset info came from
        *  @return  
        */
-      nsresult SetDocumentCharset(const nsString& aCharset, nsCharsetSource aSource);
+      nsresult SetDocumentCharset(const nsString& aCharset, PRInt32 aSource);
 
       void BindSubstring(nsSlidingSubstring& aSubstring, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd);
       void CurrentPosition(nsReadingIterator<PRUnichar>& aPosition);
@@ -393,7 +393,7 @@ class nsScanner {
       PRUint32        mTotalRead;
       PRBool          mOwnsStream;
       PRBool          mIncremental;
-      nsCharsetSource mCharsetSource;
+      PRInt32         mCharsetSource;
       nsString        mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
       PRInt32         mNewlinesSkipped;

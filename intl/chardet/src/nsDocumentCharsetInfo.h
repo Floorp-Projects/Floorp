@@ -54,6 +54,7 @@ public:
 private:
   nsCOMPtr<nsIAtom> mForcedCharset;
   nsCOMPtr<nsIAtom> mParentCharset;
+  PRInt32          mParentCharsetSource;
 };
 
 #endif // nsDocumentCharsetInfo_h__
