@@ -48,9 +48,6 @@ XPIDLSRCS	= \
 		nsISocketTransportService.idl \
 		nsIStatusCodeEventSink.idl \
 		nsIFileSystem.idl \
-		nsIContentHandler.idl \
-		nsIURIDispatcher.idl \
-		nsIURIContentListener.idl \
 		nsIUnicharStreamLoader.idl \
 		nsINetPrompt.idl \
 		$(NULL)
