@@ -24,6 +24,7 @@
 #define nsRenderingContextImpl_h___
 
 #include "nsIRenderingContext.h"
+#include "nsPoint.h"
 
 
 class nsRenderingContextImpl : public nsIRenderingContext
@@ -98,49 +99,6 @@ protected:
 
 public:
 
-};
-
-
-/** ---------------------------------------------------
- *  A point structure with floats for the Quadratic bezier curve
- *	@update 4/27/2000 dwc
- */
-struct nsFloatPoint {
-  float x, y;
-
-  // Constructors
-  nsFloatPoint() {}
-  nsFloatPoint(const nsFloatPoint& aPoint) {x = aPoint.x; y = aPoint.y;}
-  nsFloatPoint(float aX, float aY) {x = aX; y = aY;}
-
-  void MoveTo(float aX, float aY) {x = aX; y = aY;}
-  void MoveTo(nscoord aX, nscoord aY) {x = (float)aX; y = (float)aY;}
-  void MoveBy(float aDx, float aDy) {x += aDx; y += aDy;}
-
-  // Overloaded operators. Note that '=' isn't defined so we'll get the
-  // compiler generated default assignment operator
-  PRBool   operator==(const nsFloatPoint& aPoint) const {
-    return (PRBool) ((x == aPoint.x) && (y == aPoint.y));
-  }
-  PRBool   operator!=(const nsFloatPoint& aPoint) const {
-    return (PRBool) ((x != aPoint.x) || (y != aPoint.y));
-  }
-  nsFloatPoint operator+(const nsFloatPoint& aPoint) const {
-    return nsFloatPoint(x + aPoint.x, y + aPoint.y);
-  }
-  nsFloatPoint operator-(const nsFloatPoint& aPoint) const {
-    return nsFloatPoint(x - aPoint.x, y - aPoint.y);
-  }
-  nsFloatPoint& operator+=(const nsFloatPoint& aPoint) {
-    x += aPoint.x;
-    y += aPoint.y;
-    return *this;
-  }
-  nsFloatPoint& operator-=(const nsFloatPoint& aPoint) {
-    x -= aPoint.x;
-    y -= aPoint.y;
-    return *this;
-  }
 };
 
 
