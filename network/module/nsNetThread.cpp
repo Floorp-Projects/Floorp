@@ -32,6 +32,7 @@
 #include "nsIRelatedLinks.h"
 
 extern "C" {
+#include "sockstub.h"
 #include "mkutils.h"
 #include "mkgeturl.h"
 #include "mktrace.h"
@@ -74,6 +75,7 @@ PRThread* gNetlibThread = nsnull;
 
 extern "C" void NET_ClientProtocolInitialize()
 {
+    NET_InitSockStubProtocol();
     NET_InitFileProtocol();
     NET_InitHTTPProtocol();
 #ifdef NU_CACHE
@@ -289,7 +291,7 @@ void nsNetlibThread::NetlibMainLoop(void)
        * because a non-socket based protocol is being serviced (ie. file)
        */
       if (NET_IsCallNetlibAllTheTimeSet(NULL, NULL)) {
-    		NET_ProcessNet(NULL, NET_EVERYTIME_TYPE);
+            NET_ProcessNet(NULL, NET_EVERYTIME_TYPE);
         bIsMsg = PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);
       } else {
         bIsMsg = GetMessage(&msg, NULL, 0, 0);
