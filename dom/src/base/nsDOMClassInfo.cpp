@@ -50,6 +50,7 @@
 #include "nsIXPCSecurityManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "xptcall.h"
 #include "prprf.h"
 
@@ -5396,20 +5397,19 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
   nsCOMPtr<nsIDOMNSHTMLDocument> doc(do_QueryInterface(native));
   NS_ENSURE_TRUE(doc, JS_FALSE);
 
-  nsCAutoString contentType;
+  nsCAutoString contentType("text/html");
   if (argc > 0) {
     JSString* jsstr = JS_ValueToString(cx, argv[0]);
     if (!jsstr) {
       nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
       return JS_FALSE;
     }
-    CopyUTF16toUTF8(NS_REINTERPRET_CAST(const PRUnichar*,
-                                        ::JS_GetStringChars(jsstr)),
-                    contentType);
-    ToLowerCase(contentType);
-  }
-  if (!contentType.EqualsLiteral("text/plain")){
-    contentType = "text/html";
+    nsAutoString type;
+    type.Assign(nsDependentJSString(jsstr));
+    ToLowerCase(type);
+    if (!type.EqualsLiteral("text/html")) {
+      contentType = "text/plain";
+    }
   }
   
   PRBool replace = PR_FALSE;
