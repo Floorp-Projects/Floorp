@@ -2910,8 +2910,8 @@ nsBlockFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
        !IsBorderZero(border->mBorder.GetTopUnit(),
                      border->mBorder.GetTop(coord))) ||
       (border->IsBorderSideVisible(NS_SIDE_BOTTOM) &&
-       !IsBorderZero(border->mBorder.GetTopUnit(),
-                     border->mBorder.GetTop(coord))) ||
+       !IsBorderZero(border->mBorder.GetBottomUnit(),
+                     border->mBorder.GetBottom(coord))) ||
       !IsPaddingZero(padding->mPadding.GetTopUnit(),
                     padding->mPadding.GetTop(coord)) ||
       !IsPaddingZero(padding->mPadding.GetBottomUnit(),
