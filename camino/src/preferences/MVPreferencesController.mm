@@ -59,6 +59,11 @@ static MVPreferencesController *gSharedInstance = nil;
 
 NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
+static NSString* const CacheInfoPaneImageKey  = @"MVPreferencePaneImage";
+static NSString* const CacheInfoPaneLabelKey  = @"MVPreferencePaneLabel";
+static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // NSNumber with bool
+
+
 @interface NSToolbar (NSToolbarPrivate)
 
 - (NSView *) _toolbarView;
@@ -69,11 +74,16 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 
 @interface MVPreferencesController (MVPreferencesControllerPrivate)
 
-- (void) doUnselect:(NSNotification *) notification;
++ (NSString*)applicationSupportPathForDomain:(short)inDomain;
+
+- (void)loadPreferencePanesAtPath:(NSString*)inFolderPath;
+- (void)buildPrefPaneIdentifierList;
+- (void)doUnselect:(NSNotification *) notification;
 - (IBAction)selectPreferencePane:(id) sender;
 - (void)resizeWindowForContentView:(NSView *) view;
-- (NSImage *)imageForPaneBundle:(NSBundle *) bundle;
-- (NSString *)labelForPaneBundle:(NSBundle *) bundle;
+- (NSMutableDictionary*)infoCacheForPane:(NSString*)paneIdentifier;
+- (NSImage*)imageForPane:(NSString*)paneIdentifier;
+- (NSString*)labelForPane:(NSString*)paneIdentifier;
 - (id)currentPane;
 
 @end
@@ -102,25 +112,38 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 {
   if ((self = [super init]))
   {
+    mPaneBundles  = [[NSMutableArray alloc] initWithCapacity:16];
+    mLoadedPanes  = [[NSMutableDictionary dictionary] retain];
+    mPaneInfo     = [[NSMutableDictionary dictionary] retain];
+
     NSString* paneBundlesPath = [NSString stringWithFormat:@"%@/Contents/PreferencePanes", [[NSBundle mainBundle] bundlePath]];
-    NSArray* paneFiles = [[NSFileManager defaultManager] directoryContentsAtPath:paneBundlesPath];
+    [self loadPreferencePanesAtPath:paneBundlesPath];
 
-    mPanes = [[NSMutableArray alloc] initWithCapacity:[paneFiles count]];
+    // this matches code in -initMozillaPrefs
+    NSString* profileDirName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozNewProfileDirName"];
+    NSString* prefPanesSubpath = [profileDirName stringByAppendingPathComponent:@"PreferencePanes"];
 
-    NSEnumerator* panesEnum = [paneFiles objectEnumerator];
-    NSString* curPath;
-    while ((curPath = [panesEnum nextObject]))
+    NSString* userLibPath = [MVPreferencesController applicationSupportPathForDomain:kUserDomain];
+    if (userLibPath)
     {
-      NSBundle* curBundle = [NSBundle bundleWithPath:[paneBundlesPath stringByAppendingPathComponent:curPath]];
-      if ([curBundle load])
-        [mPanes addObject:curBundle];    // retains
+      userLibPath = [userLibPath stringByAppendingPathComponent:prefPanesSubpath];
+      [self loadPreferencePanesAtPath:[userLibPath stringByStandardizingPath]];
     }
-
-    mLoadedPanes = [[NSMutableDictionary dictionary] retain];
-    mPaneInfo = [[NSMutableDictionary dictionary] retain];
+    
+    NSString* globalLibPath = [MVPreferencesController applicationSupportPathForDomain:kLocalDomain];
+    if (globalLibPath)
+    {
+      globalLibPath = [globalLibPath stringByAppendingPathComponent:prefPanesSubpath];
+      [self loadPreferencePanesAtPath:[globalLibPath stringByStandardizingPath]];
+    }
+    
+    [self buildPrefPaneIdentifierList];
+    
     [NSBundle loadNibNamed:@"MVPreferences" owner:self];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(doUnselect:) name:NSPreferencePaneDoUnselectNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(doUnselect:)
+                                                 name:NSPreferencePaneDoUnselectNotification
+                                               object:nil];
   }
   return self;
 }
@@ -129,7 +152,7 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 {
   [mCurrentPaneIdentifier autorelease];
   [mLoadedPanes autorelease];
-  [mPanes autorelease];
+  [mPaneBundles autorelease];
   [mPaneInfo autorelease];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   
@@ -194,11 +217,11 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
     
     [mPendingPaneIdentifier autorelease];
     mPendingPaneIdentifier = nil;
-    [mLoadingImageView setImage:[self imageForPaneBundle:bundle]];
-    [mLoadingTextFeld setStringValue:[NSString stringWithFormat:NSLocalizedString( @"Loading %@...", nil ),
-        [self labelForPaneBundle:bundle]]];
+
+    [mLoadingImageView setImage:[self imageForPane:identifier]];
+    [mLoadingTextFeld setStringValue:[NSString stringWithFormat:NSLocalizedString( @"Loading %@...", nil ), [self labelForPane:identifier]]];
     
-    [mWindow setTitle:[self labelForPaneBundle:bundle]];
+    [mWindow setTitle:[self labelForPane:identifier]];
     [mWindow setContentView:mLoadingView];
     [mWindow display];
     
@@ -241,14 +264,14 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
     {
       NSRunCriticalAlertPanel( NSLocalizedString( @"Preferences Error", nil ),
         [NSString stringWithFormat:NSLocalizedString( @"Could not load %@", nil ),
-        [self labelForPaneBundle:bundle]], nil, nil, nil );
+        [self labelForPane:identifier]], nil, nil, nil );
     }
   }
 }
 
 - (BOOL) windowShouldClose:(id) sender
 {
-  if ( mCurrentPaneIdentifier && [[self currentPane] shouldUnselect] != NSUnselectNow )   	{
+  if ( mCurrentPaneIdentifier && [[self currentPane] shouldUnselect] != NSUnselectNow ) {
 #if DEBUG
     NSLog( @"can't unselect current" );
 #endif
@@ -269,7 +292,7 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
   nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
   NS_ASSERTION(prefService, "Could not get pref service, prefs unsaved");
   if ( prefService )
-    prefService->SavePrefFile(nsnull);			// nsnull means write to prefs.js
+    prefService->SavePrefFile(nsnull);      // nsnull means write to prefs.js
   [[NSUserDefaults standardUserDefaults] synchronize];
 
   // tell gecko that this window no longer needs it around.
@@ -292,41 +315,33 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 
 #pragma mark -
 
-- (NSToolbarItem *) toolbar:(NSToolbar *) toolbar
-    itemForItemIdentifier:(NSString *) itemIdentifier
-    willBeInsertedIntoToolbar:(BOOL) flag
+- (NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
 {
   NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
-  NSBundle *bundle = [NSBundle bundleWithIdentifier:itemIdentifier];
-  if (bundle) {
-    [toolbarItem setLabel:[self labelForPaneBundle:bundle]];
-    [toolbarItem setImage:[self imageForPaneBundle:bundle]];
-    [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector( selectPreferencePane: )];
-  } else toolbarItem = nil;
+
+  [toolbarItem setLabel:[self labelForPane:itemIdentifier]];
+  [toolbarItem setImage:[self imageForPane:itemIdentifier]];
+  [toolbarItem setTarget:self];
+  [toolbarItem setAction:@selector( selectPreferencePane: )];
+
   return toolbarItem;
 }
 
-- (NSArray *) toolbarDefaultItemIdentifiers:(NSToolbar *) toolbar
+- (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *) toolbar
 {
-  return [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"MVPreferencePaneDefaults" ofType:@"plist"]];
+  return mToolbarItemIdentifiers;
 }
 
-- (NSArray *) toolbarAllowedItemIdentifiers:(NSToolbar *) toolbar
+- (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *) toolbar
 {
-  NSMutableArray *items = [NSMutableArray array];
-  NSEnumerator *enumerator = [mPanes objectEnumerator];
-  id item = nil;
-  while ( ( item = [enumerator nextObject] ) )
-    [items addObject:[item bundleIdentifier]];
-  return items;
+  return mToolbarItemIdentifiers;
 }
 
 // For OS X 10.3, set the selectable toolbar items (draws a gray rect around the active icon in the toolbar)
 - (NSArray *) toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
 {
   NSMutableArray* items = [NSMutableArray array];
-  NSEnumerator* enumerator = [mPanes objectEnumerator];
+  NSEnumerator* enumerator = [mPaneBundles objectEnumerator];
   id item = nil;
   while ( ( item = [enumerator nextObject] ) )
     [items addObject:[item bundleIdentifier]];
@@ -339,9 +354,94 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 
 @implementation MVPreferencesController (MVPreferencesControllerPrivate)
 
++ (NSString*)applicationSupportPathForDomain:(short)inDomain
+{
+  FSRef   folderRef;
+  if (::FSFindFolder(inDomain, kApplicationSupportFolderType, kCreateFolder, &folderRef) == noErr)
+  {
+    CFURLRef theURL = ::CFURLCreateFromFSRef(kCFAllocatorDefault, &folderRef);
+    if (theURL)
+    {
+      NSString* folderPath = [(NSURL*)theURL path];
+      ::CFRelease(theURL);
+      return folderPath;
+    }
+  }
+  
+  return nil;
+}
+
 - (IBAction)selectPreferencePane:(id) sender
 {
   [self selectPreferencePaneByIdentifier:[sender itemIdentifier]];
+}
+
+- (void)loadPreferencePanesAtPath:(NSString*)inFolderPath
+{
+  NSArray* folderContents = [[NSFileManager defaultManager] directoryContentsAtPath:inFolderPath];
+
+  NSEnumerator* filesEnum = [folderContents objectEnumerator];
+  NSString* curPath;
+  while ((curPath = [filesEnum nextObject]))
+  {
+    NSString* bundlePath = [inFolderPath stringByAppendingPathComponent:curPath];
+    
+    if (![[NSWorkspace sharedWorkspace] isFilePackageAtPath:bundlePath])
+      continue;
+      
+    NSBundle* curBundle = [NSBundle bundleWithPath:bundlePath];
+    
+    // require the bundle signature to be 'CHIM'
+    NSString* bundleSig = [[curBundle infoDictionary] objectForKey:@"CFBundleSignature"];
+    if (![bundleSig isEqualToString:@"CHIM"])
+    {
+      NSLog(@"%@ not loaded as Camino pref pane: signature is not 'CHIM'", bundlePath);
+      continue;
+    }
+    
+    NSString* paneIdentifier = [curBundle bundleIdentifier];
+    if ([[self infoCacheForPane:paneIdentifier] objectForKey:CacheInfoPaneSeenKey])
+    {
+      NSLog(@"%@ not loaded as Camino pref pane: already loaded pane with identifier %@", bundlePath, paneIdentifier);
+      continue;
+    }
+    
+    if (![curBundle load])
+    {
+      NSLog(@"%@ not loaded as Camino pref pane: failed to load", bundlePath);
+      continue;
+    }
+
+    // require the principle class to be a subclass of NSPreferencePane
+    if (![[curBundle principalClass] isSubclassOfClass:[NSPreferencePane class]])
+    {
+      NSLog(@"%@ not loaded as Camino pref pane: principal class not a subclass of NSPreferencePane", bundlePath);
+      continue;
+    }
+    
+    [mPaneBundles addObject:curBundle];   // retains    
+    [[self infoCacheForPane:paneIdentifier] setObject:[NSNumber numberWithBool:YES] forKey:CacheInfoPaneSeenKey];
+  }
+}
+
+- (void)buildPrefPaneIdentifierList
+{
+  if (mToolbarItemIdentifiers)
+    return;
+
+  NSArray* builtinItems = [NSArray arrayWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"MVPreferencePaneDefaults" ofType:@"plist"]];
+  
+  NSMutableArray* addonItems = [NSMutableArray array];
+
+  NSEnumerator *enumerator = [mPaneBundles objectEnumerator];
+  id item;
+  while ((item = [enumerator nextObject]))
+  {
+    if (![builtinItems containsObject:[item bundleIdentifier]])
+      [addonItems addObject:[item bundleIdentifier]];
+  }
+  
+  mToolbarItemIdentifiers = [builtinItems arrayByAddingObjectsFromArray:addonItems];
 }
 
 - (void)doUnselect:(NSNotification *)notification
@@ -363,21 +463,26 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
   [mWindow setFrame:newWindowFrame display:YES animate:[mWindow isVisible]];
 }
 
-- (NSImage *)imageForPaneBundle:(NSBundle *)bundle
+- (NSMutableDictionary*)infoCacheForPane:(NSString*)paneIdentifier
 {
-  NSString*             paneIdentifier = [bundle bundleIdentifier];
   NSMutableDictionary*  cache = [mPaneInfo objectForKey:paneIdentifier];
-  // first, make sure we have a cache dict
   if (!cache)
   {
     cache = [NSMutableDictionary dictionary];
     [mPaneInfo setObject:cache forKey:paneIdentifier];
   }
+  return cache;
+}
+
+- (NSImage*)imageForPane:(NSString*)paneIdentifier
+{
+  NSMutableDictionary*  cache = [self infoCacheForPane:paneIdentifier];
   
-  NSImage* paneImage = [cache objectForKey:@"MVPreferencePaneImage"];
+  NSImage* paneImage = [cache objectForKey:CacheInfoPaneImageKey];
   if (!paneImage)
   {
-    NSDictionary *info = [bundle infoDictionary];
+    NSBundle*     bundle = [NSBundle bundleWithIdentifier:paneIdentifier];
+    NSDictionary* info   = [bundle infoDictionary];
     // try to get the icon for the bundle
     paneImage = [[NSImage alloc] initWithContentsOfFile:[bundle pathForImageResource:[info objectForKey:@"NSPrefPaneIconFile"]]];
     // if that failed, fall back on a generic icon
@@ -386,28 +491,23 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 
     if (paneImage)
     {
-      [cache setObject:paneImage forKey:@"MVPreferencePaneImage"];
+      [cache setObject:paneImage forKey:CacheInfoPaneImageKey];
       [paneImage release];
     }
   }
   return paneImage;
 }
 
-- (NSString *)labelForPaneBundle:(NSBundle *)bundle
+- (NSString*)labelForPane:(NSString*)paneIdentifier
 {
-  NSString*             paneIdentifier = [bundle bundleIdentifier];
-  NSMutableDictionary*  cache = [mPaneInfo objectForKey:[bundle bundleIdentifier]];
-  // first, make sure we have a cache dict
-  if (!cache)
-  {
-    cache = [NSMutableDictionary dictionary];
-    [mPaneInfo setObject:cache forKey:paneIdentifier];
-  }
+  NSMutableDictionary*  cache = [self infoCacheForPane:paneIdentifier];
   
-  NSString* paneLabel = [cache objectForKey:@"MVPreferencePaneLabel"];
+  NSString* paneLabel = [cache objectForKey:CacheInfoPaneLabelKey];
   if (!paneLabel)
   {
-    NSDictionary *info = [bundle infoDictionary];
+    NSBundle*     bundle = [NSBundle bundleWithIdentifier:paneIdentifier];
+    NSDictionary* info   = [bundle infoDictionary];
+
     paneLabel = NSLocalizedStringFromTableInBundle(@"PreferencePanelLabel", nil, bundle, nil);
 
     // if we failed to get the string
@@ -422,7 +522,7 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
       paneLabel = [bundle bundleIdentifier];
 
     if (paneLabel)
-      [cache setObject:paneLabel forKey:@"MVPreferencePaneLabel"];
+      [cache setObject:paneLabel forKey:CacheInfoPaneLabelKey];
   }
   return paneLabel;
 }

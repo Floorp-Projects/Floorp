@@ -40,22 +40,23 @@ extern NSString* const MVPreferencesWindowNotification;
 
 @interface MVPreferencesController : NSObject
 {
-	IBOutlet NSWindow*      mWindow;
-	IBOutlet NSView*        mLoadingView;
-	IBOutlet NSImageView*   mLoadingImageView;
-	IBOutlet NSTextField*   mLoadingTextFeld;
+    IBOutlet NSWindow*      mWindow;
+    IBOutlet NSView*        mLoadingView;
+    IBOutlet NSImageView*   mLoadingImageView;
+    IBOutlet NSTextField*   mLoadingTextFeld;
 
-	NSView*                 mMainView;
+    NSView*                 mMainView;
 
-	NSMutableArray*         mPanes;         // array of PreferencePaneBase
-	NSMutableDictionary*    mLoadedPanes;   // panes indexed by identifier
-	NSMutableDictionary*    mPaneInfo;      // mutable dicts indexed by identifier
+    NSMutableArray*         mPaneBundles;   // array of NSBundle*
+    NSMutableDictionary*    mLoadedPanes;   // panes indexed by identifier
+    NSMutableDictionary*    mPaneInfo;      // mutable dicts indexed by identifier
 
-	NSString*               mCurrentPaneIdentifier;
-	NSString*               mPendingPaneIdentifier;
+    NSString*               mCurrentPaneIdentifier;
+    NSString*               mPendingPaneIdentifier;
 
-	// BOOL                    mCloseWhenDoneWithSheet;
-	BOOL                    mCloseWhenPaneIsReady;
+    NSArray*                mToolbarItemIdentifiers;
+
+    BOOL                    mCloseWhenPaneIsReady;
 }
 
 + (MVPreferencesController *) sharedInstance;
