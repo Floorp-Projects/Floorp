@@ -96,8 +96,8 @@ class CTabControl : public LControl
 		virtual	void			DeactivateSelf(void);
 
 			// ¥ Control Behaviour
-		virtual Int16			FindHotSpot(Point inPoint);
-		virtual Boolean			PointInHotSpot(Point inPoint, Int16 inHotSpot);
+		virtual Int16			FindHotSpot(Point inPoint) const;
+		virtual Boolean			PointInHotSpot(Point inPoint, Int16 inHotSpot) const;
 
 		virtual void			HotSpotAction(
 										Int16			inHotSpot,

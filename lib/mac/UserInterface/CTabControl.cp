@@ -704,7 +704,7 @@ void CTabControl::DrawSides(void)
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-Int16 CTabControl::FindHotSpot(Point inPoint)
+Int16 CTabControl::FindHotSpot(Point inPoint) const
 {
 	Assert_(mCurrentTab != NULL);
 	
@@ -740,7 +740,7 @@ Int16 CTabControl::FindHotSpot(Point inPoint)
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-Boolean CTabControl::PointInHotSpot(Point inPoint, Int16 inHotSpot)
+Boolean CTabControl::PointInHotSpot(Point inPoint, Int16 inHotSpot) const
 {
 	Assert_(mCurrentTab != NULL);
 	Boolean bInHotSpot = false;
