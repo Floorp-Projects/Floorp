@@ -105,6 +105,7 @@
 #include "nsIExpatSink.h"
 #include "nsUnicharUtils.h"
 #include "nsXULAtoms.h"
+#include "nsHTMLAtoms.h"
 
 static const char kNameSpaceSeparator = ':';
 static const char kNameSpaceDef[] = "xmlns";
@@ -144,8 +145,6 @@ protected:
     // pseudo-constants
     static nsrefcnt               gRefCnt;
     static nsIXULPrototypeCache*  gXULCache;
-
-    static nsIAtom* kScriptAtom;
 
     PRUnichar* mText;
     PRInt32 mTextLength;
@@ -253,8 +252,6 @@ protected:
 nsrefcnt XULContentSinkImpl::gRefCnt;
 nsIXULPrototypeCache* XULContentSinkImpl::gXULCache;
 
-nsIAtom* XULContentSinkImpl::kScriptAtom;
-
 //----------------------------------------------------------------------
 
 XULContentSinkImpl::ContextStack::ContextStack()
@@ -339,8 +336,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
 {
 
     if (gRefCnt++ == 0) {
-        kScriptAtom = NS_NewAtom("script");
-
         rv = CallGetService(kXULPrototypeCacheCID, &gXULCache);
     }
 
@@ -426,7 +421,6 @@ XULContentSinkImpl::~XULContentSinkImpl()
     PR_FREEIF(mText);
 
     if (--gRefCnt == 0) {
-        NS_IF_RELEASE(kScriptAtom);
         NS_IF_RELEASE(gXULCache);
     }
 }
@@ -1273,8 +1267,8 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
 
     nsresult rv;
 
-    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XHTML) || 
-        aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XUL)) {
+    if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML) || 
+        aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XUL)) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xul: script tag not allowed as root content element"));
 
@@ -1353,8 +1347,8 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
 
     children->AppendElement(element);
 
-    if (aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XHTML) || 
-        aNodeInfo->Equals(kScriptAtom, kNameSpaceID_XUL)) {
+    if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML) || 
+        aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XUL)) {
         // Do scripty things now.  OpenScript will push the
         // nsPrototypeScriptElement onto the stack, so we're done after this.
         return OpenScript(aAttributes, aLineNumber);

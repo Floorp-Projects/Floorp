@@ -39,6 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsXBLContextMenuHandler.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -63,32 +64,21 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-PRUint32 nsXBLContextMenuHandler::gRefCnt = 0;
-nsIAtom* nsXBLContextMenuHandler::kContextMenuAtom = nsnull;
-
 nsXBLContextMenuHandler::nsXBLContextMenuHandler(nsIDOMEventReceiver* aReceiver,
                                                  nsXBLPrototypeHandler* aHandler)
   : nsXBLEventHandler(aReceiver, aHandler)
 {
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kContextMenuAtom = NS_NewAtom("contextmenu");
-  }
 }
 
 nsXBLContextMenuHandler::~nsXBLContextMenuHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kContextMenuAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLContextMenuHandler, nsXBLEventHandler, nsIDOMContextMenuListener)
 
 nsresult nsXBLContextMenuHandler::ContextMenu(nsIDOMEvent* aContextMenuEvent)
 {
-  return DoMouse(kContextMenuAtom, aContextMenuEvent);
+  return DoMouse(nsXBLAtoms::contextmenu, aContextMenuEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLDragHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIScriptContext.h"
@@ -62,64 +63,41 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-PRUint32 nsXBLDragHandler::gRefCnt = 0;
-nsIAtom* nsXBLDragHandler::kDragEnterAtom = nsnull;
-nsIAtom* nsXBLDragHandler::kDragOverAtom = nsnull;
-nsIAtom* nsXBLDragHandler::kDragExitAtom = nsnull;
-nsIAtom* nsXBLDragHandler::kDragDropAtom = nsnull;
-nsIAtom* nsXBLDragHandler::kDragGestureAtom = nsnull;
-
 nsXBLDragHandler::nsXBLDragHandler(nsIDOMEventReceiver* aReceiver,
                                    nsXBLPrototypeHandler* aHandler)
   : nsXBLEventHandler(aReceiver, aHandler)
 {
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kDragEnterAtom = NS_NewAtom("dragenter");
-    kDragOverAtom = NS_NewAtom("dragover");
-    kDragExitAtom = NS_NewAtom("dragexit");
-    kDragDropAtom = NS_NewAtom("dragdrop");
-    kDragGestureAtom = NS_NewAtom("draggesture");
-  }
 }
 
 nsXBLDragHandler::~nsXBLDragHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kDragEnterAtom);
-    NS_RELEASE(kDragOverAtom);
-    NS_RELEASE(kDragExitAtom);
-    NS_RELEASE(kDragDropAtom);
-    NS_RELEASE(kDragGestureAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLDragHandler, nsXBLEventHandler, nsIDOMDragListener)
 
 nsresult nsXBLDragHandler::DragEnter(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragEnterAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::dragenter, aMouseEvent);
 }
 
 nsresult nsXBLDragHandler::DragOver(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragOverAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::dragover, aMouseEvent);
 }
 
 nsresult nsXBLDragHandler::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragDropAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::dragdrop, aMouseEvent);
 }
 
 nsresult nsXBLDragHandler::DragExit(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragExitAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::dragexit, aMouseEvent);
 }
 
 nsresult nsXBLDragHandler::DragGesture(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kDragGestureAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::draggesture, aMouseEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIDOMNSUIEvent.h"
@@ -55,22 +56,10 @@
 #include "nsIDOMElement.h"
 #include "nsXBLAtoms.h"
 
-PRUint32 nsXBLWindowKeyHandler::gRefCnt = 0;
-nsIAtom* nsXBLWindowKeyHandler::kKeyDownAtom = nsnull;
-nsIAtom* nsXBLWindowKeyHandler::kKeyUpAtom = nsnull;
-nsIAtom* nsXBLWindowKeyHandler::kKeyPressAtom = nsnull;
-
 
 nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver)
   : nsXBLWindowHandler(aElement, aReceiver)
 {
-
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kKeyUpAtom = NS_NewAtom("keyup");
-    kKeyDownAtom = NS_NewAtom("keydown");
-    kKeyPressAtom = NS_NewAtom("keypress");
-  }
 }
 
 nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
@@ -78,13 +67,6 @@ nsXBLWindowKeyHandler::~nsXBLWindowKeyHandler()
   // If mElement is non-null, we created a prototype handler.
   if (mElement)
     delete mHandler;
-
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kKeyUpAtom);
-    NS_RELEASE(kKeyDownAtom);
-    NS_RELEASE(kKeyPressAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler, nsIDOMKeyListener)
@@ -184,17 +166,17 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
 
 nsresult nsXBLWindowKeyHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  return WalkHandlers(aKeyEvent, kKeyUpAtom);
+  return WalkHandlers(aKeyEvent, nsXBLAtoms::keyup);
 }
 
 nsresult nsXBLWindowKeyHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  return WalkHandlers(aKeyEvent, kKeyDownAtom);
+  return WalkHandlers(aKeyEvent, nsXBLAtoms::keydown);
 }
 
 nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  return WalkHandlers(aKeyEvent, kKeyPressAtom);
+  return WalkHandlers(aKeyEvent, nsXBLAtoms::keypress);
 }
 
 

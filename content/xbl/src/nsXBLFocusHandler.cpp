@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLFocusHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -61,41 +62,27 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-PRUint32 nsXBLFocusHandler::gRefCnt = 0;
-nsIAtom* nsXBLFocusHandler::kFocusAtom = nsnull;
-nsIAtom* nsXBLFocusHandler::kBlurAtom = nsnull;
-
 nsXBLFocusHandler::nsXBLFocusHandler(nsIDOMEventReceiver* aReceiver,
                                      nsXBLPrototypeHandler* aHandler)
   : nsXBLEventHandler(aReceiver, aHandler)
 {
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kFocusAtom = NS_NewAtom("focus");
-    kBlurAtom = NS_NewAtom("blur");
-  }
 }
 
 nsXBLFocusHandler::~nsXBLFocusHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kFocusAtom);
-    NS_RELEASE(kBlurAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLFocusHandler, nsXBLEventHandler, nsIDOMFocusListener)
 
 nsresult nsXBLFocusHandler::Focus(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kFocusAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::focus, aEvent);
 }
 
 
 nsresult nsXBLFocusHandler::Blur(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kBlurAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::blur, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

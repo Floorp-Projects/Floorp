@@ -71,14 +71,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:
-  static PRUint32 gRefCnt;
-  static nsIAtom* kDragEnterAtom;
-  static nsIAtom* kDragOverAtom;
-  static nsIAtom* kDragExitAtom;
-  static nsIAtom* kDragDropAtom;
-  static nsIAtom* kDragGestureAtom;
-
-protected:
   // Members
 };
 

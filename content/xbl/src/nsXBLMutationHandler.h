@@ -73,16 +73,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:
-  static PRUint32 gRefCnt;
-  static nsIAtom* kSubtreeModifiedAtom;
-  static nsIAtom* kAttrModifiedAtom;
-  static nsIAtom* kCharacterDataModifiedAtom;
-  static nsIAtom* kNodeInsertedAtom;
-  static nsIAtom* kNodeRemovedAtom;
-  static nsIAtom* kNodeInsertedIntoDocumentAtom;
-  static nsIAtom* kNodeRemovedFromDocumentAtom;
-
-protected:
   // Members
 };
 

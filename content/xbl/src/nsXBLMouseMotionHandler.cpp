@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLMouseMotionHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIScriptContext.h"
@@ -62,32 +63,21 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-PRUint32 nsXBLMouseMotionHandler::gRefCnt = 0;
-nsIAtom* nsXBLMouseMotionHandler::kMouseMoveAtom = nsnull;
-
 nsXBLMouseMotionHandler::nsXBLMouseMotionHandler(nsIDOMEventReceiver* aReceiver,
                                                  nsXBLPrototypeHandler* aHandler)
   : nsXBLEventHandler(aReceiver, aHandler)
 {
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kMouseMoveAtom = NS_NewAtom("mousemove");
-  }
 }
 
 nsXBLMouseMotionHandler::~nsXBLMouseMotionHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kMouseMoveAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLMouseMotionHandler, nsXBLEventHandler, nsIDOMMouseMotionListener)
 
 nsresult nsXBLMouseMotionHandler::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseMoveAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::mousemove, aMouseEvent);
 }
 
 

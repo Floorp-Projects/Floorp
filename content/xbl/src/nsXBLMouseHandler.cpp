@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLMouseHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIScriptContext.h"
@@ -62,72 +63,46 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-PRUint32 nsXBLMouseHandler::gRefCnt = 0;
-nsIAtom* nsXBLMouseHandler::kMouseDownAtom = nsnull;
-nsIAtom* nsXBLMouseHandler::kMouseUpAtom = nsnull;
-nsIAtom* nsXBLMouseHandler::kMouseClickAtom = nsnull;
-nsIAtom* nsXBLMouseHandler::kMouseDblClickAtom = nsnull;
-nsIAtom* nsXBLMouseHandler::kMouseOverAtom = nsnull;
-nsIAtom* nsXBLMouseHandler::kMouseOutAtom = nsnull;
-
 nsXBLMouseHandler::nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver,
                                      nsXBLPrototypeHandler* aHandler)
   : nsXBLEventHandler(aReceiver, aHandler)
 {
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kMouseDownAtom = NS_NewAtom("mousedown");
-    kMouseUpAtom = NS_NewAtom("mouseup");
-    kMouseClickAtom = NS_NewAtom("click");
-    kMouseDblClickAtom = NS_NewAtom("dblclick");
-    kMouseOverAtom = NS_NewAtom("mouseover");
-    kMouseOutAtom = NS_NewAtom("mouseout");
-  }
 }
 
 nsXBLMouseHandler::~nsXBLMouseHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kMouseUpAtom);
-    NS_RELEASE(kMouseDownAtom);
-    NS_RELEASE(kMouseClickAtom);
-    NS_RELEASE(kMouseDblClickAtom);
-    NS_RELEASE(kMouseOverAtom);
-    NS_RELEASE(kMouseOutAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLMouseHandler, nsXBLEventHandler, nsIDOMMouseListener)
 
 nsresult nsXBLMouseHandler::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseDownAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::mousedown, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseUpAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::mouseup, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseClickAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::click, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseDblClickAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::dblclick, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseOverAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::mouseover, aMouseEvent);
 }
 
 nsresult nsXBLMouseHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseOutAtom, aMouseEvent);
+  return DoMouse(nsXBLAtoms::mouseout, aMouseEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
