@@ -56,7 +56,7 @@ nsComboBox::nsComboBox() : nsWindow(), nsIListWidget(), nsIComboBox()
 NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
-  ::SendMessage(mWnd, CB_ADDSTRING, (int)aPosition, (LPARAM)(LPCTSTR)val); 
+  ::SendMessage(mWnd, CB_INSERTSTRING, (int)aPosition, (LPARAM)(LPCTSTR)val); 
   NS_FREE_STR_BUF(val);
   return NS_OK;
 }
