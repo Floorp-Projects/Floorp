@@ -293,6 +293,8 @@ public:
   PRTime mLastNotificationTime;    // Time of last notification
   nsCOMPtr<nsITimer> mNotificationTimer;    // Timer used for notification
 
+  PRInt32 mMaxTextRun;             // The maximum length of a text run
+
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
   nsIHTMLContent* mFrameset;
@@ -416,6 +418,7 @@ public:
   PRBool mPreAppend;
   PRInt32 mNotifyLevel;
   nsIContent* mLastTextNode;
+  PRInt32 mLastTextNodeSize;
 
   struct Node {
     nsHTMLTag mType;
@@ -1085,6 +1088,7 @@ SinkContext::SinkContext(HTMLContentSink* aSink)
   mTextLength = 0;
   mTextSize = 0;
   mLastTextNode = nsnull;
+  mLastTextNodeSize = 0;
 }
 
 SinkContext::~SinkContext()
@@ -1934,16 +1938,24 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
   PRBool didFlush = PR_FALSE;
   if (0 != mTextLength) {
     if (mLastTextNode) {
-      nsCOMPtr<nsIDOMCharacterData> cdata = do_QueryInterface(mLastTextNode, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        CBufDescriptor bd(mText, PR_TRUE, mTextSize+1, mTextLength);
-        bd.mIsConst = PR_TRUE;
-        nsAutoString str(bd);
-
-        rv = cdata->AppendData(str);
-        
-        mTextLength = 0;
-		    didFlush = PR_TRUE;
+      if ((mLastTextNodeSize + mTextLength) > mSink->mMaxTextRun) {
+        mLastTextNodeSize = 0;
+        NS_RELEASE(mLastTextNode);
+        FlushText(aDidFlush, aReleaseLast);
+      }
+      else {
+        nsCOMPtr<nsIDOMCharacterData> cdata = do_QueryInterface(mLastTextNode, &rv);
+        if (NS_SUCCEEDED(rv)) {
+          CBufDescriptor bd(mText, PR_TRUE, mTextSize+1, mTextLength);
+          bd.mIsConst = PR_TRUE;
+          nsAutoString str(bd);
+          
+          rv = cdata->AppendData(str);
+          
+          mLastTextNodeSize += mTextLength;
+          mTextLength = 0;
+          didFlush = PR_TRUE;
+        }
       }
     }
     else {
@@ -1958,7 +1970,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         content->QueryInterface(kITextContentIID, (void**) &text);
         text->SetText(mText, mTextLength, PR_FALSE);
         NS_RELEASE(text);
-
+        
         // Add text to its parent
         NS_ASSERTION(mStackPos > 0, "leaf w/o container");
         if (mStackPos <= 0) {
@@ -1976,6 +1988,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
 
         mLastTextNode = content;
 
+        mLastTextNodeSize += mTextLength;
 		    mTextLength = 0;
     		didFlush = PR_TRUE;
 
@@ -1988,6 +2001,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
   }
 
   if (aReleaseLast && mLastTextNode) {
+    mLastTextNodeSize = 0;
     NS_RELEASE(mLastTextNode);
   }
 #ifdef DEBUG
@@ -2152,6 +2166,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   mNotificationInterval = 1000000;
   prefs->GetIntPref("content.notify.interval", &mNotificationInterval);
+
+  mMaxTextRun = 8192;
+  prefs->GetIntPref("content.maxtextrun", &mMaxTextRun);
 
   nsIHTMLContentContainer* htmlContainer = nsnull;
   if (NS_SUCCEEDED(aDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
