@@ -57,7 +57,6 @@
 
   <!-- Shared Libraries -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"></script>
-
   <!-- XXX - This should SO become an XBL widget -->
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
   
@@ -66,11 +65,9 @@
   <!-- Bookmarks Window -->
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksManager.js"/>
 
-  <!-- Bookmarks Window Drag & Drop -->
+  <!-- Bookmarks Window Drag and Drop -->
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-
-  <popupset id="bookmarksPopupset"/>
 
   <commands id="commands">
     <commandset id="CommandUpdate_Bookmarks"
@@ -270,7 +267,7 @@
       <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
       <textbox id="search-box" flex="1"
                type="timed" timeout="500"
-               callback="searchBookmarks(gSearchBox.value);"/>
+               callback="document.getElementById('bookmarks-view').searchBookmarks(gSearchBox.value);"/>
     </toolbar>
 
   </toolbox>

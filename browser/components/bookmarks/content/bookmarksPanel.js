@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gSearchBox;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Get the two bookmarks utility libraries running, attach controllers, focus
@@ -44,10 +45,11 @@ function Startup()
 {
   var bookmarksView = document.getElementById("bookmarks-view");  
   bookmarksView.treeBoxObject.selection.select(0);
+  gSearchBox = document.getElementById("search-box");
 }
 
 function manageBookmarks() {
-  openDialog("chrome://communicator/content/bookmarks/bookmarksManager.xul", "", "chrome,dialog=no,resizable=yes");
+  openDialog("chrome://browser/content/bookmarks/bookmarksManager.xul", "", "chrome,dialog=no,resizable=yes");
 }
 
 function addBookmark() {

@@ -475,6 +475,7 @@ var BookmarksCommand = {
   // requires utilityOverlay.js if opening in new window for getTopWin()
   openOneBookmark: function (aURI, aTargetBrowser, aDS)
   {
+    var w, browser
     var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS)
     // Ignore "NC:" and empty urls.
     if (url == "" || url.substring(0,3) == "NC:")
@@ -484,19 +485,23 @@ var BookmarksCommand = {
       openTopWin(url);
       break;
     case "tab":
-      var w = getTopWin();
+      w = getTopWin();
       if (!w) {
         openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
         break;
       }
-      w.focus();
-      var browser = w.document.getElementById("content");
-      var tab     = browser.addTab(url);
+      browser = w.document.getElementById("content");
+      var tab = browser.addTab(url);
       browser.selectedTab = tab;
+      browser.focus();
       break;
     case "window":
       openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
       break;
+    case "properties":
+      openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul",
+         "", "centerscreen,chrome,resizable=no", url);
+
     }
   },
 
@@ -536,8 +541,7 @@ var BookmarksCommand = {
 
   showProperties: function (aSelection) 
   {
-    openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul",
-               "", "centerscreen,chrome,resizable=no", aSelection.item[0].Value);
+    this.openBookmark(aSelection, "properties");
   },
 
   findBookmark: function ()
@@ -1537,7 +1541,7 @@ var BookmarksUtils = {
   getBrowserTargetFromEvent: function (aEvent)
   {
     // note: modifier keys are ignored in menuitems (bug 126189)
-    var button = aEvent.type == "command"? 0:aEvent.button;
+    var button = aEvent.type == "command" || aEvent.type == "keypress"? 0:aEvent.button;
     if (button == 2)
       return "";
     if (aEvent.metaKey || aEvent.ctrlKey || button == 1)
@@ -1545,6 +1549,8 @@ var BookmarksUtils = {
         return "window";
       else
         return "tab";
+    else if (aEvent.altKey)
+      return "properties"
     else
       return "current";
   },

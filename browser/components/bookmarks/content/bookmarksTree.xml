@@ -427,6 +427,7 @@ dump("error in refresh sort:"+e)
             return;
           if (aClickCount == 1 && this.clickCount == 2 && aEvent.button != 1)
             return;
+
           var row = {};
           var col = {};
           var obj = {};
@@ -435,11 +436,9 @@ dump("error in refresh sort:"+e)
           if (row == -1 || obj.value == "twisty")
             return;
           var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
-          if (browserTarget != "current" && this.clickCount == aClickCount) {
-            if (!this.treeBoxObject.selection.isSelected(row)) {
-              this.treeBoxObject.selection.select(row)
-            }
-          }
+          if (this.clickCount == 1 || browserTarget != "current" && 
+              this.clickCount == aClickCount && !this.treeBoxObject.selection.isSelected(row))
+            this.treeBoxObject.selection.select(row)
 
           var selection = this.getTreeSelection();
           this._selection = selection;
@@ -447,21 +446,34 @@ dump("error in refresh sort:"+e)
           
           if (!isFolderGroup && selection.isContainer[0]) {
             if (this.clickCount == 1) {
-              if (row.value >= 0) {
-                this.treeBoxObject.view.toggleOpenState(row.value);
+              if (row >= 0) {
+                this.treeBoxObject.view.toggleOpenState(row);
               }
             }
-            if (selection.protocol[0] == "file")
-              BookmarksCommand.openBookmark(selection, browserTarget, this.db);
-            return;
-          }
-          
-          if (aEvent.altKey) {
-            BookmarksCommand.showProperties(selection);
-            return
-          }
-
+            if (selection.protocol[0] != "file")
+              return;
+          }          
           BookmarksCommand.openBookmark(selection, browserTarget, this.db);
+        ]]></body>
+      </method>
+
+      <method name="loadBookmarkBrowser">
+      <parameter name="aEvent"/>
+        <body><![CDATA[
+          var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+          BookmarksCommand.openBookmark(this._selection, browserTarget, this.db)
+        ]]></body>
+      </method>
+
+      <method name="searchBookmarks">
+      <parameter name="aInput"/>
+        <body><![CDATA[
+          this.treeBoxObject.selection.currentIndex=-1;
+          if (!aInput) 
+            this.tree.setAttribute("ref", "NC:BookmarksRoot");
+          else
+            this.tree.setAttribute("ref",
+                                   "find:datasource=rdf:bookmarks&match=http://home.netscape.com/NC-rdf#Name&method=contains&text=" + escape(aInput));
         ]]></body>
       </method>
 
@@ -583,6 +595,7 @@ dump("error in refresh sort:"+e)
           else
             BookmarksUtils.moveSelection  ("drag", selection, target);
           observer.endUpdateBatch(this.db);
+          this.mOuter.treeBoxObject.selection.currentIndex=-1;
           this.mOuter.treeBuilder.rebuild();
           // temporary hack: for an unknown reason, rebuilding cause a scroll to the bottom
           // if the first visible row is not 0
@@ -711,7 +724,7 @@ dump("ONSELECTION CHANGED\n")
       <vbox flex="1">
         <tree anonid="bookmarks-tree" flex="1" class="plain" enableColumnDrag="true"
                   datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
-                  onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event);"
+                  onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.loadBookmarkBrowser(event);"
                   onclick="this.parentNode.parentNode.openItem(event, 1);"
                   ondblclick="this.parentNode.parentNode.openItem(event, 2);"
                   ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
@@ -819,9 +832,9 @@ dump("ONSELECTION CHANGED\n")
                  onpopuphidden ="if (content) content.focus()"/>
       <tree anonid="bookmarks-tree" flex="1" hidecolumnpicker="true" class="plain"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
-                onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event); event.preventBubble();"
+                onkeypress="if (event.keyCode == 13) this.parentNode.loadBookmarkBrowser(event); if (content) content.focus()"
                 ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, this.parentNode.DNDObserver);"
-                onclick="this.parentNode.openItem(event);"
+                onclick="this.parentNode.openItem(event, 1); if (content) content.focus()"
                 onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
         <template xmlns:nc="http://home.netscape.com/NC-rdf#">
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
