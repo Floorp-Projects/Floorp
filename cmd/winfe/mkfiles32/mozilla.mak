@@ -911,7 +911,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\layout\laystyle.c
 	$(DEPTH)\lib\layout\laysel.c
 	$(DEPTH)\lib\layout\layspace.c
-	$(DEPTH)\lib\layout\layspan.c
 	$(DEPTH)\lib\layout\laysub.c
 	$(DEPTH)\lib\layout\laytable.c
 	$(DEPTH)\lib\layout\laytags.c
@@ -1048,10 +1047,8 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\lm_nav.c
 	$(DEPTH)\lib\libmocha\lm_plgin.c
 	$(DEPTH)\lib\libmocha\lm_screen.c
-	$(DEPTH)\lib\libmocha\lm_span.c
 	$(DEPTH)\lib\libmocha\lm_supdt.c
 	$(DEPTH)\lib\libmocha\lm_taint.c
-	$(DEPTH)\lib\libmocha\lm_trans.c
 	$(DEPTH)\lib\libmocha\lm_tree.c
 	$(DEPTH)\lib\libmocha\lm_trggr.c
 	$(DEPTH)\lib\libmocha\lm_url.c
