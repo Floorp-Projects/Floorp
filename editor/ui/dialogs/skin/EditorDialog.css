@@ -124,47 +124,9 @@ button.ChooseFile {
   margin-bottom: 2px;
 }
 
-
-/* IDs only one button per dialog */
-#okbutton {
-  width: 80px; 
-  height: 20px;
-  left: 385px;
-  top: 320px;
-  align: right;
-  font-style: normal; position: absolute; visibility: visible; z-index: auto
+input[type="file"] {
+	background-color: #CCCCCC; /* not working on Macintosh */ 
+  font-family: Sans-Serif;
+  font-size: 8pt;
 }
 
-#cancelbutton {
-  width: 80px;
-  height: 20px;
-  left: 295px;
-  top: 320px;
-  align: right;
-  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}
-
-#applybutton {
-  width: 80px;
-  height: 20px;
-  left: 205px;
-  top: 320px;
-  align: right;  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}
-
-#helpbutton {
-  width: 80px;
-  height: 20px;
-  left: 10px;
-  top: 320px;
-  align : left;
-  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}
-
-#extrahtmlbutton {
-  width: 80px;
-  height: 20px;
-  align: right;
-  left: 385px;
-  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}

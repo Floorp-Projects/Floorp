@@ -151,6 +151,7 @@ public:
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)=0;
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
 
 // Table editing Methods
   NS_IMETHOD InsertTable()=0;

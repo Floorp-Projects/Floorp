@@ -1413,21 +1413,22 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
 
               nsAutoString domTagName;
               selectedElement->GetNodeName(domTagName);
+              domTagName.ToLowerCase();
 
               // The "A" tag is a pain,
               //  used for both link(href is set) and "Named Anchor"
-              if (aTagName == "HREF" || (aTagName == "ANCHOR"))
+              if (aTagName == "href" || (aTagName == "anchor"))
               {
                 // We could use GetAttribute, but might as well use anchor element directly
                 nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(selectedElement);
                 if (anchor)
                 {
                   nsString tmpText;
-                  if( aTagName == "HREF")
+                  if( aTagName == "href")
                   {
                     if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                       bNodeFound = PR_TRUE;
-                  } else if (aTagName == "ANCHOR")
+                  } else if (aTagName == "anchor")
                   {
                     if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                       bNodeFound = PR_TRUE;
@@ -1563,6 +1564,53 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
   HACKForceRedraw();
   // END HACK
 
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
+{
+  nsresult result=NS_ERROR_UNEXPECTED;
+
+  if (!aAnchorElement)
+    return NS_ERROR_NULL_POINTER;
+
+  // We must have a real selection
+  nsCOMPtr<nsIDOMSelection> selection;
+  result = GetSelection(getter_AddRefs(selection));
+  if (!NS_SUCCEEDED(result) || !selection)
+    return result;
+
+  PRBool isCollapsed;
+  result = selection->GetIsCollapsed(&isCollapsed);
+  if (!NS_SUCCEEDED(result))
+    isCollapsed = PR_TRUE;
+  
+  if (isCollapsed)
+  {
+    printf("InsertLinkAroundSelection called but there is no selection!!!\n");     
+    return NS_OK;
+  }
+  
+  // Be sure we were given an anchor element
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aAnchorElement);
+  if (anchor)
+  {
+    nsAutoString href;
+    if (NS_SUCCEEDED(anchor->GetHref(href)) && href.GetUnicode() && href.Length() > 0)      
+    {
+      result = nsEditor::BeginTransaction();
+      if (NS_SUCCEEDED(result))
+      {
+        const nsString attribute("href");
+        SetTextProperty(nsIEditProperty::a, &attribute, &href);
+        //TODO: Enumerate through other properties of the anchor tag
+        // and set those as well. 
+        // Optimization: Modify SetTextProperty to set all attributes at once?
+      }
+      (void)nsEditor::EndTransaction();
+    }
+  }
   return result;
 }
 

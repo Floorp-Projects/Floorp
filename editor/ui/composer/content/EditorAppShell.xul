@@ -88,6 +88,7 @@
         <menuitem name="Heading 3" onclick="SetParagraphFormat('h3')"/>
         <menuitem name="Heading 4" onclick="SetParagraphFormat('h4')"/>
         <menuitem name="Heading 5" onclick="SetParagraphFormat('h5')"/>
+        <menuitem name="Heading 6" onclick="SetParagraphFormat('h6')"/>
         <menuitem name="Address"   onclick="SetParagraphFormat('address')"/>
         <menuitem name="Preformat" onclick="SetParagraphFormat('pre')"/>
         <menuitem name="List item" onclick="SetParagraphFormat('li')"/>
@@ -131,6 +132,7 @@
           <html:option onclick="SetParagraphFormat('h3')">Heading 3</html:option>
           <html:option onclick="SetParagraphFormat('h4')">Heading 4</html:option>
           <html:option onclick="SetParagraphFormat('h5')">Heading 5</html:option>
+          <html:option onclick="SetParagraphFormat('h6')">Heading 6</html:option>
           <html:option onclick="SetParagraphFormat('address')">Address</html:option>
           <html:option onclick="SetParagraphFormat('li')">List Item</html:option>
           <html:option onclick="SetParagraphFormat('dt')">Definition Term</html:option>
