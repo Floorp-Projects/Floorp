@@ -459,7 +459,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     if (docShell) {
       PRUint32 documentLoadType = 0;
       docShell->GetLoadType(&documentLoadType);
-      ScrollToRef(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY == 0);
+      ScrollToRef(!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY));
     }
 #else
     ScrollToRef(PR_TRUE);
