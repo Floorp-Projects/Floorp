@@ -208,15 +208,15 @@
   ]]>
   </script>
   <tabs id="tabs">
-    <tab id="securityTab" label="&pageInfo.securityTab;"
-         accesskey="&pageInfo.accesskey;"/>
+    <tab id="securityTab" label="&pageInfo.securityTab;"/>
   </tabs>
   <tabpanels id="tabpanels">
     <vbox id="securityPanel" flex="1">
       <label id="security-identity" class="header"/>
       <description id="security-identity-text" flex="1"/>
       <hbox align="center">
-        <button id="security-view-cert" label="&pageInfo.view.label;" 
+        <button id="security-view-cert" label="&pageInfo.view.label;"
+                accesskey="&pageInfo.view.accesskey;" 
                 oncommand="security.viewCert();"/>
         <description id="security-view-text" flex="1"/>
       </hbox>

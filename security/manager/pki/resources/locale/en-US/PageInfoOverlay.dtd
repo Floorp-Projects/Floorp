@@ -21,6 +21,6 @@
   -->
 
 <!ENTITY  pageInfo.securityTab    "Security">
-<!ENTITY  pageInfo.accesskey      "s">
 <!ENTITY  pageInfo.securityHeader "Security information for this page">
 <!ENTITY  pageInfo.view.label     "View">
+<!ENTITY  pageInfo.view.accesskey "V">
