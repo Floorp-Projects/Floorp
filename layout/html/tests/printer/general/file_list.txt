@@ -1,0 +1,1 @@
+file:///s|/mozilla/layout/html/tests/printer/general/test0.html
