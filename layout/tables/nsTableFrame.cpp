@@ -714,29 +714,10 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
   // make sure we've accounted for the COLS attribute
   AdjustColumnsForCOLSAttribute();
 
-  // find the first row group
-  nsIFrame * firstRowGroupFrame=mFrames.FirstChild();
-  nsIFrame * childFrame=firstRowGroupFrame;
-  while (nsnull!=childFrame)
-  {
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
-    {
-      if (nsnull==firstRowGroupFrame)
-      {
-        firstRowGroupFrame = childFrame;
-        if (PR_TRUE==gsDebug) printf("EC: found a row group %p\n", firstRowGroupFrame);
-        break;
-      }
-    }
-    childFrame->GetNextSibling(&childFrame);
-  }
-
   // count the number of column frames we already have
   PRInt32 actualColumns = 0;
   nsTableColGroupFrame *lastColGroupFrame = nsnull;
-  childFrame = mColGroups.FirstChild();
+  nsIFrame* childFrame = mColGroups.FirstChild();
   while (nsnull!=childFrame)
   {
     ((nsTableColGroupFrame*)childFrame)->SetStartColumnIndex(actualColumns);
@@ -4199,6 +4180,80 @@ nscoord nsTableFrame::GetEffectiveContainerHeight(const nsHTMLReflowState& aRefl
   we assume we are passed in the default table height==the sum of the heights of the table's rowgroups
   in aDesiredSize.height.
   */
+void nsTableFrame::DistributeSpaceToCells(nsIPresContext& aPresContext, 
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsIFrame* aRowGroupFrame)
+{
+  // now that all of the rows have been resized, resize the cells       
+  nsTableIterator iter2(*aRowGroupFrame, eTableLTR);
+  nsIFrame* rowFrame = iter2.First();
+  while (nsnull!=rowFrame) {
+    const nsStyleDisplay *rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) { 
+      ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
+    }
+    // The calling function, DistributeSpaceToRows, takes care of the recursive row
+    // group descent, which is why there's no NS_STYLE_DISPLAY_TABLE_ROW_GROUP case
+    // here.
+    rowFrame = iter2.Next();
+  }
+}
+
+void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
+                                  const nsHTMLReflowState& aReflowState,
+                                  nsIFrame* aRowGroupFrame, const nscoord& aSumOfRowHeights,
+                                  const nscoord& aExcess, const nsStyleTable* aTableStyle, 
+                                  nscoord& aExcessForRowGroup, 
+                                  nscoord& aRowGroupYPos)
+{
+  // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
+  // and the rowgroup itself needs to be expanded by SUM(row height deltas)
+  nsIFrame * rowFrame=nsnull;
+  nsTableIterator iter(*aRowGroupFrame, eTableLTR);
+  rowFrame = iter.First();
+  nscoord y = 0;
+  while (nsnull!=rowFrame)
+  {
+    const nsStyleDisplay *rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay) {
+      DistributeSpaceToRows(aPresContext, aReflowState, rowFrame, aSumOfRowHeights, 
+                            aExcess, aTableStyle, aExcessForRowGroup, y);
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
+    { // the row needs to be expanded by the proportion this row contributed to the original height
+      nsRect rowRect;
+      rowFrame->GetRect(rowRect);
+      float percent = ((float)(rowRect.height)) / ((float)(aSumOfRowHeights));
+      nscoord excessForRow = NSToCoordRound((float)aExcess*percent);
+      nsRect newRowRect(rowRect.x, y, rowRect.width, excessForRow+rowRect.height);
+      rowFrame->SetRect(newRowRect);
+      if (NS_STYLE_BORDER_COLLAPSE==aTableStyle->mBorderCollapse)
+      {
+        nsBorderEdge *border = (nsBorderEdge *)
+          (mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
+        border->mLength=newRowRect.height;
+        border = (nsBorderEdge *)
+          (mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
+        border->mLength=newRowRect.height;
+      }
+      // better if this were part of an overloaded row::SetRect
+      y += excessForRow+rowRect.height;
+      aExcessForRowGroup += excessForRow;
+    }
+    rowFrame = iter.Next();
+  }
+  nsRect rowGroupRect;
+  aRowGroupFrame->GetRect(rowGroupRect);
+  nsRect newRowGroupRect(rowGroupRect.x, aRowGroupYPos, rowGroupRect.width, aExcessForRowGroup+rowGroupRect.height);
+  aRowGroupFrame->SetRect(newRowGroupRect);
+
+  aRowGroupYPos += aExcessForRowGroup + rowGroupRect.height;
+
+  DistributeSpaceToCells(aPresContext, aReflowState, aRowGroupFrame);
+}
+
 nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
                                            const nsHTMLReflowState& aReflowState, 
                                            nscoord aDefaultHeight) 
@@ -4248,56 +4303,11 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
         const nsStyleDisplay *rowGroupDisplay;
         rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
         if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
-        { // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
-          // and the rowgroup itself needs to be expanded by SUM(row height deltas)
-          nscoord excessForRowGroup=0;
-          nsIFrame * rowFrame=nsnull;
-          nsTableIterator iter(*rowGroupFrame, eTableLTR);
-          rowFrame = iter.First();
-          while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
-          {
-            const nsStyleDisplay *rowDisplay;
-            rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-            if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
-            { // the row needs to be expanded by the proportion this row contributed to the original height
-              nsRect rowRect;
-              rowFrame->GetRect(rowRect);
-              float percent = ((float)(rowRect.height)) / ((float)(sumOfRowHeights));
-              nscoord excessForRow = NSToCoordRound((float)excess*percent);
-              nsRect newRowRect(rowRect.x, y, rowRect.width, excessForRow+rowRect.height);
-              rowFrame->SetRect(newRowRect);
-              if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse)
-              {
-                nsBorderEdge *border = (nsBorderEdge *)
-                  (mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
-                border->mLength=newRowRect.height;
-                border = (nsBorderEdge *)
-                  (mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
-                border->mLength=newRowRect.height;
-              }
-              // better if this were part of an overloaded row::SetRect
-              y += excessForRow+rowRect.height;
-              excessForRowGroup += excessForRow;
-            }
-            //rowFrame->GetNextSibling(&rowFrame);
-            rowFrame = iter.Next();
-          }
-          nsRect rowGroupRect;
-          rowGroupFrame->GetRect(rowGroupRect);
-          nsRect newRowGroupRect(rowGroupRect.x, rowGroupRect.y, rowGroupRect.width, excessForRowGroup+rowGroupRect.height);
-          rowGroupFrame->SetRect(newRowGroupRect);
-
-          // now that all of the rows have been resized, resize the cells       
-          nsTableIterator iter2(*rowGroupFrame, eTableLTR);
-          rowFrame = iter2.First();
-          while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame)) {
-            const nsStyleDisplay *rowDisplay;
-            rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-            if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) { 
-              ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
-            }
-            rowFrame = iter2.Next();
-          }
+        { 
+          nscoord excessForGroup = 0;
+          nscoord rowGroupYPos = 0;
+          DistributeSpaceToRows(aPresContext, aReflowState, rowGroupFrame, sumOfRowHeights, 
+                                excess, tableStyle, excessForGroup, rowGroupYPos);
         }
         rowGroupFrame->GetNextSibling(&rowGroupFrame);
       }
@@ -4496,6 +4506,38 @@ PRBool nsTableFrame::IsColumnWidthsSet()
  * Then we terminate that loop and start a second pass.
  * In the second pass, we build column and cell cache info.
  */
+void nsTableFrame::SetColumnStylesFromCells(nsIPresContext& aPresContext, nsIFrame* aRowGroupFrame)
+{
+  nsIFrame *rowFrame;
+  aRowGroupFrame->FirstChild(nsnull, &rowFrame);
+  while (nsnull!=rowFrame)
+  {
+    const nsStyleDisplay *rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay) {
+      SetColumnStylesFromCells(aPresContext, rowFrame);
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
+    {
+      nsIFrame *cellFrame;
+      rowFrame->FirstChild(nsnull, &cellFrame);
+      while (nsnull!=cellFrame)
+      {
+        /* this is the first time we are guaranteed to have both the cell frames
+         * and the column frames, so it's a good time to 
+         * set the column style from the cell's width attribute (if this is the first row)
+         */
+        const nsStyleDisplay *cellDisplay;
+        cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
+        if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
+          SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
+        cellFrame->GetNextSibling(&cellFrame);
+      }
+    }
+    rowFrame->GetNextSibling(&rowFrame);
+  }
+}
+
 void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
                                      nsHTMLReflowMetrics&     aDesiredSize,
                                      const nsHTMLReflowState& aReflowState,
@@ -4518,41 +4560,16 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   CacheColFramesInCellMap();
 
   // handle rowgroups
+  PRBool requiresPass1Layout = RequiresPass1Layout();
+
   nsIFrame * childFrame = mFrames.FirstChild();
   while (nsnull!=childFrame)
   { // in this loop, set column style info from cells
     const nsStyleDisplay *childDisplay;
     childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
+    if (PR_TRUE==IsRowGroup(childDisplay->mDisplay) && requiresPass1Layout)
     { // if it's a row group, get the cells and set the column style if appropriate
-      if (PR_TRUE==RequiresPass1Layout())
-      {
-        nsIFrame *rowFrame;
-        childFrame->FirstChild(nsnull, &rowFrame);
-        while (nsnull!=rowFrame)
-        {
-          const nsStyleDisplay *rowDisplay;
-          rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-          if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
-          {
-            nsIFrame *cellFrame;
-            rowFrame->FirstChild(nsnull, &cellFrame);
-            while (nsnull!=cellFrame)
-            {
-              /* this is the first time we are guaranteed to have both the cell frames
-               * and the column frames, so it's a good time to 
-               * set the column style from the cell's width attribute (if this is the first row)
-               */
-              const nsStyleDisplay *cellDisplay;
-              cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
-              if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
-                SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
-              cellFrame->GetNextSibling(&cellFrame);
-            }
-          }
-          rowFrame->GetNextSibling(&rowFrame);
-        }
-      }
+      SetColumnStylesFromCells(aPresContext, childFrame);
     }
     childFrame->GetNextSibling(&childFrame);
   }
