@@ -2353,7 +2353,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
 
     // See if we should skip leading whitespace
     if (0 != (mState & TEXT_SKIP_LEADING_WS)) {
-      while (XP_IS_SPACE(*text) && (textLength > 0)) {
+      while ((textLength > 0) && XP_IS_SPACE(*text)) {
         text++;
         textLength--;
       }
