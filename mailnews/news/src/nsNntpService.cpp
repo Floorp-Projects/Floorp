@@ -1165,4 +1165,4 @@ nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISu
   return rv;
 }
 
-CMDLINEHANDLER_IMPL(nsNntpService,"-news","general.startup.news","chrome://messenger/content/","Start with news window.",NS_NNTPSERVICE_PROGID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)
+CMDLINEHANDLER_IMPL(nsNntpService,"-news","general.startup.news","chrome://messenger/content/","Start with news.",NS_NNTPSERVICE_PROGID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)

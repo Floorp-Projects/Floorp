@@ -95,59 +95,14 @@ function toOpenWindowByType( inType, uri )
 function OpenBrowserWindow()
 {
   dump("In OpenBrowserWindw()...\n");
-  pref = Components.classes['component://netscape/preferences'];
-
-  // if all else fails, use trusty "about:blank" as the start page
-  var startpage = "about:blank";  
-  if (pref) {
-    pref = pref.getService(); 
-    pref = pref.QueryInterface(Components.interfaces.nsIPref);
-  }
-
-
-
-  if (pref) {
-    // from mozilla/modules/libpref/src/init/all.js
-    // 0 = blank 
-    // 1 = home (browser.startup.homepage)
-    // 2 = last 
-		choice = 1;
-	  try {
-      choice = pref.GetIntPref("browser.startup.page");
-	  }
-	  catch (ex) {
-		  dump("failed to get the browser.startup.page pref\n");
-	  }
-
-    switch (choice) {
-      case 0:
-        startpage = "about:blank";
-        break;
-      case 1:
-        try {
-          startpage = pref.CopyCharPref("browser.startup.homepage");
-        }
-        catch (ex) {
-	        dump("failed to get the browser.startup.homepage pref\n");
-	        startpage = "about:blank";
-        }
-                break;
-      case 2:
-        try {
-	        var history = Components.classes["component://netscape/browser/global-history"].getService();
-                        history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-	        startpage = history.GetLastPageVisted();
-        }
-        catch (ex) {
-	        dump(ex +"\n");
-        }
-                break;
-      default:
-                startpage = "about:blank";
-    }
-  }
-//	window.open(startpage); // This doesn't size the window properly.
-  window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", startpage );
+  dump("XXX toast\n");
+  var handler = Components.classes['component://netscape/appshell/component/browser/cmdhandler'];
+  handler = handler.getService();
+  handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
+                    startpage = handler.defaultArgs;
+  var startpage = handler.defaultArgs;
+  var url = handler.chromeUrlForTask;
+  window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage );
 }
 
 

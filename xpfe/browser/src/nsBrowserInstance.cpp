@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
+#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
@@ -89,7 +90,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsICmdLineHandler.h"
 
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 // Interface for "unknown content type handler" component/service.
 #include "nsIUnkContentTypeHandler.h"
@@ -123,10 +124,11 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_IID(kCGlobalHistoryCID,       NS_GLOBALHISTORY_CID);
-static NS_DEFINE_IID(kCSessionHistoryCID,       NS_SESSIONHISTORY_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kCGlobalHistoryCID,       NS_GLOBALHISTORY_CID);
+static NS_DEFINE_CID(kCSessionHistoryCID,       NS_SESSIONHISTORY_CID);
+static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
@@ -2425,9 +2427,49 @@ nsBrowserContentHandler::nsBrowserContentHandler()
 }
 
 nsBrowserContentHandler::~nsBrowserContentHandler()
-{}
+{
+}
 
-CMDLINEHANDLER_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser",NS_IBROWSERCMDLINEHANDLER_PROGID,"Browser Cmd Line Handler", PR_TRUE, "", PR_FALSE)
+CMDLINEHANDLER2_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser.",NS_IBROWSERCMDLINEHANDLER_PROGID,"Browser Cmd Line Handler", PR_TRUE, PR_FALSE)
+
+NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs) 
+{ 
+    if (!aDefaultArgs) return NS_ERROR_FAILURE; 
+
+    nsresult rv;
+    nsString args("about:blank");
+    NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
+    NS_WITH_SERVICE(nsIGlobalHistory, history, kCGlobalHistoryCID, &rv);
+    nsXPIDLCString url;
+
+    if (NS_SUCCEEDED(rv) && prefs) {
+        PRInt32 choice = 0;
+        rv = prefs->GetIntPref("browser.startup.page", &choice);
+        if (NS_SUCCEEDED(rv)) {
+            switch (choice) {
+                case 1:
+                    rv = prefs->CopyCharPref("browser.startup.homepage", getter_Copies(url));
+                    break;
+                case 2:
+                    if (NS_SUCCEEDED(rv)) {
+                        rv = history->GetLastPageVisted(getter_Copies(url));
+                    }
+                    break;
+                case 0:
+                default:
+                    args = "about:blank";
+                    break;
+            }
+        }
+    }
+
+    if (NS_SUCCEEDED(rv) && (const char *)url && (PL_strlen((const char *)url))) {              
+        args = (const char *) url;
+    }
+
+    *aDefaultArgs = args.ToNewUnicode(); 
+    return NS_OK;
+}
 
 NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
                                                      const char * aCommand,

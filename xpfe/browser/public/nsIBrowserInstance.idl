@@ -75,6 +75,17 @@ interface nsIBrowserInstance : nsISupports {
 };
 
 %{C++
+
 #define NS_IBROWSERINSTANCE_PROGID "component://netscape/appshell/component/browser/instance"
 #define NS_IBROWSERCMDLINEHANDLER_PROGID "component://netscape/appshell/component/browser/cmdhandler"
+
+// {c7bee75a-1dd1-11b2-9333-a38e085287cf}
+#define NS_BROWSERCONTROLLER_CID { 0xc7bee75a, 0x1dd1, 0x11b2, { 0x93, 0x33, 0xa3, 0x8e, 0x08, 0x52, 0x87, 0xcf } } 
+
+// {5551A1E0-5A66-11d3-806A-00600811A9C3}
+#define NS_BROWSERINSTANCE_CID {   0x5551a1e0, 0x5a66, 0x11d3, { 0x80, 0x6a, 0x0, 0x60, 0x08, 0x11, 0xa9, 0xc3 } }
+
+// {C2343730-DC2C-11d3-98B3-001083010E9B}
+#define NS_BROWSERCONTENTHANDLER_CID { 0xc2343730, 0xdc2c, 0x11d3, { 0x98, 0xb3, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
+
 %}

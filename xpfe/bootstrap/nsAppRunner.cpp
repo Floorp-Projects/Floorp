@@ -58,11 +58,14 @@
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
 
+#include "nsIContentHandler.h"
+#include "nsIBrowserInstance.h"
+
 #ifndef XP_MAC
 #include "nsTimeBomb.h"
 #endif
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_CMD_LINE
 #endif
 
@@ -70,6 +73,8 @@ static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
+static NS_DEFINE_CID(kBrowserContentHandlerCID, NS_BROWSERCONTENTHANDLER_CID);
+
 
 #ifndef XP_MAC
 static NS_DEFINE_CID(kTimeBombCID,     NS_TIMEBOMB_CID);
@@ -255,6 +260,12 @@ static void DumpArbitraryHelp()
           
           if ((const char *)commandLineArg) {
             printf("%s%s", HELP_SPACER_1,(const char *)commandLineArg);
+
+            PRBool handlesArgs = PR_FALSE;
+            rv = handler->GetHandlesArgs(&handlesArgs);
+            if (NS_SUCCEEDED(rv) && handlesArgs) {
+                printf(" <url>");
+            }
             if ((const char *)helpText) {
               printf("%s%s\n",HELP_SPACER_2,(const char *)helpText);
             }
@@ -401,6 +412,28 @@ static nsresult DoCommandLines( nsICmdLineService* cmdLine, PRBool heedGeneralSt
 	return rv;
 }
 
+static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
+{
+    printf("XXX: OpenBrowserWindow()\n");
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsICmdLineHandler, handler, NS_IBROWSERCMDLINEHANDLER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString chromeUrlForTask;
+    rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
+    if (NS_FAILED(rv)) return rv;
+
+    PRUnichar *defaultArgs;
+    rv = handler->GetDefaultArgs(&defaultArgs);
+    if (NS_FAILED(rv)) return rv;
+    rv = OpenWindow((const char *)chromeUrlForTask, defaultArgs);
+    if (NS_FAILED(rv)) return rv;
+
+    Recycle(defaultArgs);
+    return rv;
+}
+
 static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 {
 	nsresult rv;
@@ -435,8 +468,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       if (tempString)
         PR_sscanf(tempString, "%d", &height);
 				 
-				
-      rv = OpenChromURL("chrome://navigator/content/", height, width );
+      rv = OpenBrowserWindow(height, width);
     }
 	}
 	return rv;
