@@ -380,7 +380,7 @@ XULCommandDispatcherImpl::Blur(nsIDOMEvent* aEvent)
   aEvent->GetTarget(getter_AddRefs(t));
   nsCOMPtr<nsIDOMElement> target = do_QueryInterface(t);
   
-  if (target.get() == mCurrentElement) {
+  if (target == mCurrentElement) {
     SetFocusedElement(nsnull);
     UpdateCommands("blur");
   }
