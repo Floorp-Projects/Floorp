@@ -38,6 +38,9 @@
 
 #define ZIP_Seek(fd,p,m) (fseek((fd),(p),(m))==0)
 #else
+
+#define PL_ARENA_CONST_ALIGN_MASK 7
+#include "plarena.h"
 #define ZIP_Seek(fd,p,m) (PR_Seek((fd),((PROffset32)p),(m))==((PROffset32)p))
 #endif
 
@@ -111,6 +114,9 @@ class nsZipArchive
 public:
   /** cookie used to validate supposed objects passed from C code */
   const PRInt32 kMagic;
+
+  /** Block size by which Arena grows. Arena used by filelists */
+  const PRUint32 kArenaBlockSize;
 
   /** constructing does not open the archive. See OpenArchive() */
   nsZipArchive();
@@ -241,6 +247,9 @@ private:
 
   PRFileDesc    *mFd;
   nsZipItem*    mFiles[ZIP_TABSIZE];
+#ifndef STANDALONE
+  PLArenaPool   mArena;
+#endif
 
   //--- private methods ---
   
@@ -258,6 +267,7 @@ private:
                                  PRFileDesc* outFD,
                                  char* buf );
   PRInt32           TestItem( const nsZipItem *aItem );
+
 };
 
 /** 

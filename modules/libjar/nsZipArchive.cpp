@@ -55,6 +55,9 @@
 #define BY4ALLOC_ITEMS 320
 nsRecyclingAllocator *gZlibAllocator = NULL;
 
+// For placement new used for arena allocations of zip file list
+#include <new.h>
+
 #else /* STANDALONE */
 
 #ifdef XP_WIN
@@ -507,6 +510,17 @@ PRInt32 nsZipArchive::CloseArchive()
 	mFd = 0;
   }
 
+#ifndef STANDALONE
+  // delete arena for filelist
+  PL_FinishArenaPool(&mArena);
+
+  // CAUTION:
+  // We dont need to delete each of the nsZipItem as the memory for
+  // the zip item and the filename it holds are both allocated from the Arena.
+  // Hence, destroying the Arena is like destroying all the memory
+  // for all the nsZipItem in one shot. But if the ~nsZipItem is doing
+  // anything more than cleaning up memory, we should start calling it.
+#else
   // delete nsZipItems in table
   nsZipItem* pItem;
   for ( int i = 0; i < ZIP_TABSIZE; ++i)
@@ -519,6 +533,8 @@ PRInt32 nsZipArchive::CloseArchive()
       pItem = mFiles[i];
     }
   }
+#endif
+
   return ZIP_OK;
 }
 
@@ -963,8 +979,15 @@ PRInt32 nsZipArchive::BuildFileList()
     PRUint32 namelen = xtoint( central->filename_len );
     PRUint32 extralen = xtoint( central->extrafield_len );
     PRUint32 commentlen = xtoint( central->commentfield_len );
-    
+#ifndef STANDALONE
+    // Arena allocate the nsZipItem
+    void *mem;
+    PL_ARENA_ALLOCATE(mem, &mArena, sizeof nsZipItem);
+    // Use placement new to arena allcoate the nsZipItem
+    nsZipItem* item = mem ? new (mem) nsZipItem() : nsnull;
+#else
     nsZipItem* item = new nsZipItem();
+#endif
     if (!item)
     {
       status = ZIP_ERR_MEMORY;
@@ -996,7 +1019,19 @@ PRInt32 nsZipArchive::BuildFileList()
     //-------------------------------------------------------
     // get the item name
     //-------------------------------------------------------
+#ifndef STANDALONE
+    PL_ARENA_ALLOCATE(mem, &mArena, (namelen + 1));
+    item->name = (char *) mem;
+    if ( !item->name )
+    {
+      status = ZIP_ERR_MEMORY;
+      // No need to delete name. It gets deleted only when the entire arena
+      // goes away.
+      break;
+    }
+#else
     item->name = new char[namelen + 1];
+#endif
     if ( !item->name )
     {
       status = ZIP_ERR_MEMORY;
@@ -1275,7 +1310,7 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, PRFileDesc* fOut,
 #ifndef STANDALONE
   //-- ensure we have our zlib allocator for better performance
   if (!gZlibAllocator) {
-    gZlibAllocator = new nsRecyclingAllocator(NBUCKETS);
+    gZlibAllocator = new nsRecyclingAllocator(NBUCKETS, NS_DEFAULT_RECYCLE_TIMEOUT, "libjar");
   }
 
   zs.zalloc = zlibAlloc;
@@ -1574,15 +1609,17 @@ cleanup:
 MOZ_DECL_CTOR_COUNTER(nsZipArchive)
 
 nsZipArchive::nsZipArchive()
-  : kMagic(ZIP_MAGIC), mFd(0)
+  : kMagic(ZIP_MAGIC), kArenaBlockSize(1*1024), mFd(0)
 {
   MOZ_COUNT_CTOR(nsZipArchive);
 
   // initialize the table to NULL
-  for ( int i = 0; i < ZIP_TABSIZE; ++i) {
-    mFiles[i] = 0;
-  }
+  memset(mFiles, 0, sizeof mFiles);
 
+#ifndef STANDALONE
+  // Initialize our arena
+  PL_INIT_ARENA_POOL(&mArena, "ZipArena", kArenaBlockSize);
+#endif
 }
 
 nsZipArchive::~nsZipArchive()
@@ -1599,22 +1636,19 @@ nsZipArchive::~nsZipArchive()
 // nsZipItem constructor and destructor
 //------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsZipItem)
-
 nsZipItem::nsZipItem() : name(0), offset(0), next(0), flags(0)
 {
-  MOZ_COUNT_CTOR(nsZipItem);
 }
 
 nsZipItem::~nsZipItem()
 {
+#ifdef STANDALONE
   if (name != 0 )
   {
     delete [] name;
     name = 0;
   }
-
-  MOZ_COUNT_DTOR(nsZipItem);
+#endif
 }
 
 //------------------------------------------
