@@ -88,79 +88,6 @@ var gOldCloseHandler = null; // close handler before we went into print preview
 var gInPrintPreviewMode = false;
 var gWebProgress        = null;
 
-
-// Pref listener constants
-const gButtonPrefListener =
-{
-  domain: "browser.toolbars.showbutton",
-  observe: function(subject, topic, prefName)
-  {
-    // verify that we're changing a button pref
-    if (topic != "nsPref:changed")
-      return;
-
-    var buttonName = prefName.substr(this.domain.length+1);
-    var buttonId = buttonName + "-button";
-    var button = document.getElementById(buttonId);
-
-    // We need to explicitly set "hidden" to "false"
-    // in order for persistence to work correctly
-    var show = pref.getBoolPref(prefName);
-    if (show)
-      button.setAttribute("hidden","false");
-    else
-      button.setAttribute("hidden", "true");
-
-    // If all buttons before the separator are hidden, also hide the separator
-    if (allLeftButtonsAreHidden())
-      document.getElementById("home-bm-separator").setAttribute("hidden", "true");
-    else
-      document.getElementById("home-bm-separator").removeAttribute("hidden");
-  }
-};
-
-const gTabStripPrefListener =
-{
-  domain: "browser.tabs.autoHide",
-  observe: function(subject, topic, prefName)
-  {
-    // verify that we're changing the tab browser strip auto hide pref
-    if (topic != "nsPref:changed")
-      return;
-
-    var stripVisibility = !pref.getBoolPref(prefName);
-    if (gBrowser.mTabContainer.childNodes.length == 1) {
-      gBrowser.setStripVisibilityTo(stripVisibility);
-      pref.setBoolPref("browser.tabs.forceHide", false);
-    }
-  }
-};
-
-/**
-* Pref listener handler functions.
-* Both functions assume that observer.domain is set to 
-* the pref domain we want to start/stop listening to.
-*/
-function addPrefListener(observer)
-{
-  try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.addObserver(observer.domain, observer, false);
-  } catch(ex) {
-    dump("Failed to observe prefs: " + ex + "\n");
-  }
-}
-
-function removePrefListener(observer)
-{
-  try {
-    var pbi = pref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.removeObserver(observer.domain, observer);
-  } catch(ex) {
-    dump("Failed to remove pref observer: " + ex + "\n");
-  }
-}
-
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -277,21 +204,6 @@ function UpdateBackForwardButtons()
   }
 }
 
-// Function allLeftButtonsAreHidden
-// Returns true if all the buttons left of the separator in the personal
-// toolbar are hidden, false otherwise.
-// Used by nsButtonPrefListener to hide the separator if needed
-function allLeftButtonsAreHidden()
-{
-  var buttonNode = document.getElementById("PersonalToolbar").firstChild;
-  while(buttonNode.tagName != "toolbarseparator") {
-    if(!buttonNode.hasAttribute("hidden") || buttonNode.getAttribute("hidden") == "false")
-      return false;
-    buttonNode = buttonNode.nextSibling;
-  }
-  return true;
-}
-
 function RegisterTabOpenObserver()
 {
   const observer = {
@@ -316,7 +228,6 @@ function Startup()
   gBrandBundle = document.getElementById("bundle_brand");
   gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
   gBrandRegionBundle = document.getElementById("bundle_brand_region");
-  registerZoomManager();
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
   
@@ -360,9 +271,6 @@ function Startup()
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
 
-  addPrefListener(gButtonPrefListener); 
-  addPrefListener(gTabStripPrefListener);
-
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
   
@@ -372,7 +280,7 @@ function Startup()
   // Add a capturing event listener to the content area
   // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
   //  so we'll be notified when onloads complete.
-  var contentArea = document.getElementById("appcontent");
+  var contentArea = document.getElementById("browser");
   contentArea.addEventListener("load", loadEventHandlers, true);
   contentArea.addEventListener("focus", contentAreaFrameFocus, true);
 
@@ -555,10 +463,6 @@ function Shutdown()
   window.XULBrowserWindow = null;
 
   BrowserFlushBookmarksAndHistory();
-
-  // unregister us as a pref listener
-  removePrefListener(gButtonPrefListener);
-  removePrefListener(gTabStripPrefListener);
 
   window.browserContentListener.close();
   // Close the app core.
@@ -3570,4 +3474,3 @@ function BrowserCustomizeToolbar()
 {
   window.openDialog("chrome://browser/content/customizeToolbar.xul", "Customize Toolbar", "modal,chrome,resizable=yes");
 }
-
