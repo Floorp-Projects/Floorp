@@ -141,7 +141,15 @@ nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-//XXX  mInner.CopyInnerTo(this, &it->mInner);
+  nsAutoString data;
+  nsresult result = GetData(data);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  result = it->SetData(data);
+  if (NS_FAILED(result)) {
+    return result;
+  }
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
