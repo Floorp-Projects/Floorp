@@ -27,14 +27,14 @@ PUBLIC = $(DEPTH)\netwerk\dist\include
 
 XPIDL_MODULE = necko_http
 
-XPIDLSRCS =                  \
-        .\nsIHTTPChannel.idl \
-	.\nsIHttpNotify.idl  \
+XPIDLSRCS =                          \
+        .\nsIHTTPChannel.idl         \
+	.\nsIHttpNotify.idl          \
+	.\nsIHTTPProtocolHandler.idl \
         $(NULL)
 
 EXPORTS =                   \
         nsIHTTPEventSink.h  \
-        nsIHTTPHandler.h    \
         nsHTTPEnums.h       \
         $(NULL)
 

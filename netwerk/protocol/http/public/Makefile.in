@@ -25,14 +25,14 @@ VPATH		= @srcdir@
 
 XPIDL_MODULE = necko_http
 
-XPIDLSRCS =                  \
-        nsIHTTPChannel.idl \
-	nsIHttpNotify.idl  \
+XPIDLSRCS =			   \
+        nsIHTTPChannel.idl	   \
+	nsIHttpNotify.idl	   \
+	nsIHTTPProtocolHandler.idl \
         $(NULL)
 
 EXPORTS =                       \
         nsIHttpEventSink.h      \
-        nsIHTTPHandler.h 	\
 	nsHTTPEnums.h		\
         nsIHTTPCommonHeaders.h 	\
         nsIHTTPRequest.h 	\

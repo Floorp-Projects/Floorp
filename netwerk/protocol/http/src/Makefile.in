@@ -32,6 +32,7 @@ CPPSRCS =			   \
         nsHTTPRequest.cpp	   \
         nsHTTPResponseListener.cpp \
         nsHTTPResponse.cpp	   \
+        nsHTTPEncodeStream.cpp	   \
         $(NULL)
 
 EXPORTS=			\

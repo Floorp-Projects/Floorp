@@ -1,0 +1,59 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsIProtocolHandler.idl"
+
+interface nsIInputStream;
+
+[scriptable, uuid(ad1d53ae-3e25-11d3-8cd3-0060b0fc14a3)]
+interface nsIHTTPProtocolHandler : nsIProtocolHandler
+{
+    nsIChannel GetTransport(in string host, 
+                            in unsigned long port);
+
+    void ReleaseTransport(in string host,
+                          in unsigned long port, 
+                          in nsIChannel transport);
+
+    /**
+     *
+     */
+    nsIInputStream NewEncodeStream(in nsIInputStream rawStream);
+
+    /**
+     *
+     */
+    nsIInputStream NewDecodeStream(in nsIInputStream encodedStream);
+
+    /**
+     *
+     */
+    nsIInputStream NewPostDataStream(in boolean isFile, 
+                                     in string data);
+    
+};
+
+%{C++
+
+//Possible errors
+#define NS_ERROR_BAD_REQUEST    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 200);
+
+// Create (or get) HTTP Handler
+extern NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler);
+
+%}

@@ -56,6 +56,7 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsHTTPRequest.obj          \
 	.\$(OBJDIR)\nsHTTPResponseListener.obj \
 	.\$(OBJDIR)\nsHTTPResponse.obj         \
+	.\$(OBJDIR)\nsHTTPEncodeStream.obj     \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	
