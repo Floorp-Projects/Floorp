@@ -24,9 +24,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=control control_kicker
+DIRS = $(NULL)
 
-ifdef MOZ_ACTIVEX_SCRIPTING_SUPPORT
+ifneq (,$(MOZ_ACTIVEX_PLUGIN_SUPPORT)$(MOZ_ACTIVEX_PLUGIN_SUPPORT))
+DIRS += common
+endif
+
+ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+DIRS += control control_kicker
+endif
+
+ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
 DIRS += plugin
 endif
 
