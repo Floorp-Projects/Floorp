@@ -53,6 +53,8 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsISupports aPresShell);
   nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTableCellAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTableCaptionAccessible(in nsIDOMNode aDOMNode);
+  nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
 
