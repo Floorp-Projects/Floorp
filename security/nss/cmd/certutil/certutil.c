@@ -2939,9 +2939,8 @@ secuCommandFlag certutil_options[] =
      *  Certificate request
      */
 
-    /*  Make a cert request (-R or -S).  */
-    if (certutil.commands[cmd_CreateAndAddCert].activated ||
-         certutil.commands[cmd_CertReq].activated) {
+    /*  Make a cert request (-R).  */
+    if (certutil.commands[cmd_CertReq].activated) {
 	rv = CertReq(privkey, pubkey, keytype, hashAlgTag, subject,
 	             certutil.options[opt_PhoneNumber].arg,
 	             certutil.options[opt_ASCIIForIO].activated,
@@ -2963,10 +2962,26 @@ secuCommandFlag certutil_options[] =
      *  Certificate creation
      */
 
-    /*  If making and adding a cert, load the cert request file
+    /*  If making and adding a cert, create a cert request file first without
+     *  any extensions, then load it with the command line extensions
      *  and output the cert to another file.
      */
     if (certutil.commands[cmd_CreateAndAddCert].activated) {
+	rv = CertReq(privkey, pubkey, keytype, hashAlgTag, subject,
+	             certutil.options[opt_PhoneNumber].arg,
+	             certutil.options[opt_ASCIIForIO].activated,
+		     NULL,
+		     NULL,
+                     PR_FALSE,
+                     PR_FALSE,
+                     PR_FALSE,
+                     PR_FALSE,
+                     PR_FALSE,
+                     PR_FALSE,
+                     outFile ? outFile : PR_STDOUT);
+	if (rv) 
+	    goto shutdown;
+	privkey->wincx = &pwdata;
 	PR_Close(outFile);
 	inFile  = PR_Open(certreqfile, PR_RDONLY, 0);
 	if (!inFile) {
