@@ -222,7 +222,7 @@ pref("javascript.reflect_preferences",      false);     // for PE
 pref("advanced.always_load_images",         true);
 pref("security.enable_java",                 true);
 pref("css.allow",                           true);
-pref("advanced.mailftp",                    true);
+pref("advanced.mailftp",                    false);
 
 pref("offline.startup_state",            0);
 pref("offline.send.unsent_messages",            0);
