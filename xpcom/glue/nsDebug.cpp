@@ -191,7 +191,7 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
    fflush(stderr);
 
 #if defined(_WIN32)
-   char* assertBehavior = getenv("  ");
+   char* assertBehavior = getenv("XPCOM_DEBUG_BREAK");
    if (assertBehavior && strcmp(assertBehavior, "warn") == 0)
      return;
 
