@@ -134,7 +134,7 @@ namespace JavaScript {
         ExprNode *initializer;          // Initial value expression or nil if not provided
         bool constant;                  // true for const variables and parameters
 
-#ifdef DikDik
+#ifdef DIKDIK
         JS2Runtime::Property *prop;     // the sematics/codegen passes stuff their data in here.
         JS2Runtime::JSObject *scope;    // ditto
 #endif
