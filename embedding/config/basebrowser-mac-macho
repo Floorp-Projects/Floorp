@@ -22,7 +22,6 @@ libplds4.dylib
 ; Javascript:
 ; 
 libmozjs.dylib
-components/libjsloader.dylib
 
 
 ; 
@@ -82,9 +81,7 @@ components/libeditor.dylib
 components/editor.xpt
 
 ; embedding                   
-components/libmozbrwsr.dylib                 
-components/libwebbrwsr.dylib  ; wtf!  it is needed?!
-components/mozbrwsr.xpt                 
+components/libwebbrwsr.dylib
 components/webBrowser_core.xpt
 components/libembedcomponents.dylib
 components/windowwatcher.xpt
