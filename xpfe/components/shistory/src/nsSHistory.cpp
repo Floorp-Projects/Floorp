@@ -358,7 +358,9 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
 {
   if (mLength <= 0 || aEntries <= 0)
     return NS_ERROR_FAILURE;
-        
+
+  aEntries = PR_MIN(aEntries, mLength);
+  
   PRBool purgeHistory = PR_TRUE;
   // Notify the listener about the history purge
   if (mListener) {
@@ -375,16 +377,20 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
 
   PRInt32 cnt = 0;
   while (cnt < aEntries) {
-    nsCOMPtr<nsISHTransaction>  txn = mListRoot;
     nsCOMPtr<nsISHTransaction> nextTxn;
     if (mListRoot)
       mListRoot->GetNext(getter_AddRefs(nextTxn));
-    txn = nsnull;
     mListRoot = nextTxn;
     cnt++;        
   }
   mLength -= cnt;
   mIndex -= cnt;
+
+  // Now if we were not at the end of the history, mIndex could have
+  // become far too negative.  If so, just set it to -1.
+  if (mIndex < -1) {
+    mIndex = -1;
+  }
   return NS_OK;
 }
 
