@@ -82,25 +82,64 @@ typedef struct JSExnPrivate {
 } JSExnPrivate;
 
 /*
+ * Undo all the damage done by exn_newPrivate.
+ */
+static void
+exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
+{
+    JSErrorReport *report;
+    const jschar **args;
+
+    if (!privateData) 
+        return;
+    report = privateData->errorReport;
+    if (report) {
+        if (report->uclinebuf)
+	    JS_free(cx, (void *)report->uclinebuf);
+        if (report->filename)
+	    JS_free(cx, (void *)report->filename);
+        if (report->ucmessage)
+	    JS_free(cx, (void *)report->ucmessage);
+        if (report->messageArgs) {
+            args = report->messageArgs;
+            while (*args != NULL)
+                JS_free(cx, (void *)*args++);
+            JS_free(cx, (void *)report->messageArgs);
+        }
+        JS_free(cx, report);
+    }
+    JS_free(cx, privateData);
+}
+
+/*
  * Copy everything interesting about an error into allocated memory.
  */
 static JSExnPrivate *
-exn_initPrivate(JSContext *cx, JSErrorReport *report)
+exn_newPrivate(JSContext *cx, JSErrorReport *report)
 {
+    intN i;
     JSExnPrivate *newPrivate;
     JSErrorReport *newReport;
+    size_t capacity;
 
     newPrivate = (JSExnPrivate *)JS_malloc(cx, sizeof (JSExnPrivate));
+    if (!newPrivate)
+        return NULL;
+    memset(newPrivate, 0, sizeof (JSExnPrivate));
 
     /* Copy the error report */
     newReport = (JSErrorReport *)JS_malloc(cx, sizeof (JSErrorReport));
-
+    if (!newReport)
+        goto error;
+    memset(newReport, 0, sizeof (JSErrorReport));
+    newPrivate->errorReport = newReport;
+    
     if (report->filename != NULL) {
-	newReport->filename =
-	    (const char *)JS_malloc(cx, strlen(report->filename)+1);
-	strcpy((char *)newReport->filename, report->filename);
+        newReport->filename = JS_strdup(cx, report->filename);
+        if (!newReport->filename)
+            goto error;
     } else {
-	newReport->filename = NULL;
+        newReport->filename = NULL;
     }
 
     newReport->lineno = report->lineno;
@@ -120,10 +159,12 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report)
      * I know it's the desired API.
      */
     if (report->uclinebuf != NULL) {
-	jsint len = js_strlen(report->uclinebuf) + 1;
-	newReport->uclinebuf =
-	    (const jschar *)JS_malloc(cx, len * sizeof(jschar));
-	js_strncpy((jschar *)newReport->uclinebuf, report->uclinebuf, len);
+	capacity = js_strlen(report->uclinebuf) + 1;
+        newReport->uclinebuf =
+            (const jschar *)JS_malloc(cx, capacity * sizeof(jschar));
+        if (!newReport->uclinebuf)
+            goto error;
+	js_strncpy((jschar *)newReport->uclinebuf, report->uclinebuf, capacity);
 	newReport->uctokenptr = newReport->uclinebuf + (report->uctokenptr -
 							report->uclinebuf);
     } else {
@@ -131,24 +172,28 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report)
     }
 
     if (report->ucmessage != NULL) {
-        jsint len = js_strlen(report->ucmessage) + 1;
-        newReport->ucmessage = (const jschar *)JS_malloc(cx, len * sizeof(jschar));
-        js_strncpy((jschar *)newReport->ucmessage, report->ucmessage, len);
+        capacity = js_strlen(report->ucmessage) + 1;
+        newReport->ucmessage = (const jschar *)JS_malloc(cx, capacity * sizeof(jschar));
+        if (!newReport->ucmessage)
+            goto error;
+        js_strncpy((jschar *)newReport->ucmessage, report->ucmessage, capacity);
 
         if (report->messageArgs) {
-            intN i;
-
             for (i = 0; report->messageArgs[i] != NULL; i++)
                 ;
             JS_ASSERT(i);
             newReport->messageArgs =
                 (const jschar **)JS_malloc(cx, (i + 1) * sizeof(jschar *));
+            if (!newReport->messageArgs)
+                goto error;
             for (i = 0; report->messageArgs[i] != NULL; i++) {
-                len = js_strlen(report->messageArgs[i]) + 1;
+                capacity = js_strlen(report->messageArgs[i]) + 1;
                 newReport->messageArgs[i] =
-                    (const jschar *)JS_malloc(cx, len * sizeof(jschar));
+                    (const jschar *)JS_malloc(cx, capacity * sizeof(jschar));
+                if (!newReport->messageArgs[i])
+                    goto error;
                 js_strncpy((jschar *)(newReport->messageArgs[i]),
-                           report->messageArgs[i], len);
+                           report->messageArgs[i], capacity);
             }
             newReport->messageArgs[i] = NULL;
         } else {
@@ -163,35 +208,10 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report)
     /* Note that this is before it gets flagged with JSREPORT_EXCEPTION */
     newReport->flags = report->flags;
 
-    newPrivate->errorReport = newReport;
     return newPrivate;
-}
-
-/*
- * Undo all the damage done by exn_initPrivate.
- */
-static void
-exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
-{
-    JSErrorReport *report;
-    const jschar **args;
-
-    report = privateData->errorReport;
-    JS_ASSERT(report);
-    if (report->uclinebuf)
-	JS_free(cx, (void *)report->uclinebuf);
-    if (report->filename)
-	JS_free(cx, (void *)report->filename);
-    if (report->ucmessage)
-	JS_free(cx, (void *)report->ucmessage);
-    if (report->messageArgs) {
-        args = report->messageArgs;
-        while (*args != NULL)
-            JS_free(cx, (void *)*args++);
-        JS_free(cx, (void *)report->messageArgs);
-    }
-    JS_free(cx, report);
-    JS_free(cx, privateData);
+error:
+    exn_destroyPrivate(cx, newPrivate);
+    return NULL;
 }
 
 static void
@@ -316,6 +336,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         obj = js_NewObject(cx, &ExceptionClass, JSVAL_TO_OBJECT(pval), NULL);
         if (!obj)
             return JS_FALSE;
+        *rval = OBJECT_TO_JSVAL(obj);
     }
 
     /*
@@ -725,7 +746,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
      * handed in, because it's stack-allocated, and may point to transient
      * data in the JSTokenStream.
      */
-    privateData = exn_initPrivate(cx, reportp);
+    privateData = exn_newPrivate(cx, reportp);
     OBJ_SET_SLOT(cx, errObject, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(privateData));
 
     /* Set the generated Exception object as the current exception. */
