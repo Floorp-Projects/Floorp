@@ -166,6 +166,7 @@ private:
     nsresult ParseVMSLine(char *aLine, indexEntry *aEntry);
 
     void     InitPRExplodedTime(PRExplodedTime& aTime);
+    PRBool   ls_lCandidate(const char *aLine); 
     char*    DigestBufferLines(char *aBuffer, nsCString &aString);
 
     // member data

@@ -55,6 +55,13 @@
 #include "nsCRT.h"
 #include "nsMimeTypes.h"
 
+#define IS_LWS(c)   (PL_strchr(" \t\r\n",c) != 0)
+#define IS_FTYPE(c) (PL_strchr("-dlbcsp",c) != 0)
+#define IS_RPERM(c) (PL_strchr("r-",c) != 0)
+#define IS_WPERM(c) (PL_strchr("w-",c) != 0)
+#define IS_SPERM(c) (PL_strchr("sSx-",c) != 0)
+#define IS_TPERM(c) (PL_strchr("tTx-",c) != 0)
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
@@ -660,9 +667,19 @@ nsresult
 nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 
     PRInt32 base=1;
-	PRInt32 size_num=0;
-	char save_char;
-	char *ptr, *escName;
+    PRInt32 size_num=0;
+    char save_char;
+    char *ptr, *escName;
+
+    // insure that we have enough data to parse here
+    // using 27 for a minimal LIST line
+    if (PL_strlen(aLine) <= 27) {
+        NS_WARNING("ls -l is incorrectly formatted"); 
+        aEntry->mName.Adopt(nsEscape(aLine, url_Path));
+        // initialize the time struct to 0
+        InitPRExplodedTime(aEntry->mMDTM);
+        return NS_OK;
+    }
 
     for (ptr = &aLine[PL_strlen(aLine) - 1];
             (ptr > aLine+13) && (!nsCRT::IsAsciiSpace(*ptr) || !IsLSDate(ptr-12)); ptr--)
@@ -721,6 +738,53 @@ nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
     aTime.tm_params.tp_dst_offset = 0;
 }
 
+/**
+ *  Can this line possibly be a ls-l line?
+ * Ideally, one should parse the line into tokens, etc. but
+ * that's for later. At the moment, just test the line for
+ * length and examine the first token. An absolutely minimal
+ * line has the form
+ * -rwxrwxrwx 0 Dec 31 23:59 F
+ * which is 27 characters. If the line is at least 27 bytes
+ * long and the first token matches the regular expression
+ * [-dlbcps][r-][w-][sSx-][r-][w-][sSx-][r-][w-][tTx-]
+ * then accept the line *provided* there is another token on
+ * the line.
+
+ * As written, this function *assumes* leading whitespace has
+ * been removed. That's what the rest of the code assumes. It
+ * may not be a reasonable assumption.
+
+ * DigestBufferLines hints that the regular expression test should
+ * be done case insensitively. That would relax this test so it is
+ * *not* done. If definitive evidence exists of a server that does
+ * this, then it can be changed.
+
+ * This function uses a lot of macros for clarity. They probably
+ * should be improved.
+ */
+
+PRBool 
+nsFTPDirListingConv::ls_lCandidate(const char *lsLine) {
+
+    const char *cp;
+
+    if (PL_strlen(lsLine) < 27) return PR_FALSE;
+    if (!IS_FTYPE(lsLine[0])) return PR_FALSE;
+    // shorter tests first
+    if (!IS_RPERM(lsLine[1])) return PR_FALSE;
+    if (!IS_WPERM(lsLine[2])) return PR_FALSE;
+    if (!IS_RPERM(lsLine[4])) return PR_FALSE;
+    if (!IS_WPERM(lsLine[5])) return PR_FALSE;
+    if (!IS_RPERM(lsLine[7])) return PR_FALSE;
+    if (!IS_WPERM(lsLine[8])) return PR_FALSE;
+    if (!IS_SPERM(lsLine[3])) return PR_FALSE;
+    if (!IS_SPERM(lsLine[6])) return PR_FALSE;
+    for (cp = &lsLine[10]; *cp; ++cp)
+        if (!IS_LWS(*cp)) return PR_TRUE;
+    return PR_FALSE;
+}
+
 char *
 nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
     nsresult rv;
@@ -777,11 +841,16 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
 
             // check first character of ls -l output
             // For example: "dr-x--x--x" is what we're starting with.
-            if (line[0] == 'D' || line[0] == 'd') {
+            // sanity check for dir permission bits
+            if ((line[0] == 'D' || line[0] == 'd') && ls_lCandidate(line)) {
                 /* it's a directory */
                 thisEntry->mType = Dir;
                 thisEntry->mSupressSize = PR_TRUE;
-            } else if (line[0] == 'l') {
+            } else if ((line[0] == 'L' || line[0] == 'l') && ls_lCandidate(line)) {
+                /**  
+                 *  Dir Links are not displayed properly
+                 *  we need a more robust implementation 
+                 */
                 thisEntry->mType = Link;
                 thisEntry->mSupressSize = PR_TRUE;
 
@@ -1025,8 +1094,15 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         // the application/http-index-format specs
         // viewers of such a format can then reformat this into the
         // current locale (or anything else they choose)
-        PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
+
+        // make sure we don't have a null time struct
+        if ((thisEntry->mMDTM.tm_month + thisEntry->mMDTM.tm_mday +
+            thisEntry->mMDTM.tm_year + thisEntry->mMDTM.tm_hour +
+            thisEntry->mMDTM.tm_min) != nsnull) {
+            PR_FormatTimeUSEnglish(buffer, sizeof(buffer),
                                "%a, %d %b %Y %H:%M:%S", &thisEntry->mMDTM );
+        }
+
         char *escapedDate = nsEscape(buffer, url_Path);
 
         aString.Append(escapedDate);
