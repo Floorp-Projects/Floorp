@@ -290,6 +290,11 @@ nsBoxFrame::IsHorizontal() const
    return mState & NS_STATE_IS_HORIZONTAL;
 }
 
+PRBool 
+nsBoxFrame::IsNormalDirection() const
+{
+   return mState & NS_STATE_IS_DIRECTION_NORMAL;
+}
 
 /**
  * Initialize us. This is a good time to get the alignment of the box
@@ -369,6 +374,13 @@ nsBoxFrameInner::CacheAttributes()
     mOuter->mState |= NS_STATE_IS_HORIZONTAL;
   else
     mOuter->mState &= ~NS_STATE_IS_HORIZONTAL;
+
+  PRBool normal = PR_TRUE;
+  mOuter->GetInitialDirection(normal); 
+  if (normal)
+    mOuter->mState |= NS_STATE_IS_DIRECTION_NORMAL;
+  else
+    mOuter->mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
 
   mOuter->GetInitialVAlignment(mValign);
   mOuter->GetInitialHAlignment(mHalign);
@@ -631,6 +643,42 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
       aIsHorizontal = PR_FALSE;
     else if (value.EqualsIgnoreCase("horizontal"))
      aIsHorizontal = PR_TRUE;
+  }
+}
+
+void
+nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
+{
+  nsAutoString value;
+  nsCOMPtr<nsIContent> content;
+  GetContentOf(getter_AddRefs(content));
+
+  if (!content)
+    return;
+
+  if (IsHorizontal()) {
+    // For horizontal boxes only, we initialize our value based off the CSS 'direction' property.
+    // This means that BiDI users will end up with horizontally inverted chrome.
+    const nsStyleVisibility* vis;
+    GetStyleData(eStyleStruct_Visibility,
+                 (const nsStyleStruct*&)vis);
+    aIsNormal = (vis->mDirection == NS_STYLE_DIRECTION_LTR); // If text runs RTL then so do we.
+  }
+  else
+    aIsNormal = PR_TRUE; // Assume a normal direction in the vertical case.
+
+  // Now check the style system to see if we should invert aIsNormal.
+  const nsStyleXUL* boxInfo;
+  GetStyleData(eStyleStruct_XUL,
+               (const nsStyleStruct*&)boxInfo);
+  if (boxInfo->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE)
+    aIsNormal = !aIsNormal; // Invert our direction.
+  
+  // Now see if we have an attribute.  The attribute overrides
+  // the style system value.
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::dir, value)) {
+    if (value.EqualsIgnoreCase("reverse"))
+      aIsNormal = !aIsNormal; // Invert our direction.
   }
 }
 
@@ -1222,7 +1270,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsXULAtoms::equalsize ||
         aAttribute == nsXULAtoms::autostretch) {
 
-        if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
+       if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::dir || aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
           mInner->mValign = nsBoxFrame::vAlign_Top;
           mInner->mHalign = nsBoxFrame::hAlign_Left;
 
@@ -1232,6 +1280,13 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
             mState |= NS_STATE_IS_HORIZONTAL;
           else
             mState &= ~NS_STATE_IS_HORIZONTAL;
+
+          PRBool normal = PR_TRUE;
+          GetInitialDirection(normal);
+          if (normal)
+            mState |= NS_STATE_IS_DIRECTION_NORMAL;
+          else
+            mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
 
           GetInitialVAlignment(mInner->mValign);
           GetInitialHAlignment(mInner->mHalign);

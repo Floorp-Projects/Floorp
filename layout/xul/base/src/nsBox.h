@@ -59,6 +59,7 @@ public:
   NS_IMETHOD GetHAlign(Halignment& aAlign);
   NS_IMETHOD GetInset(nsMargin& aInset);
   NS_IMETHOD GetOrientation(PRBool& aIsHorizontal);
+  NS_IMETHOD GetDirection(PRBool& aIsNormal);
 
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
