@@ -83,8 +83,6 @@ nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 
   mIsBlock = PR_FALSE;
   mIsFirstChild = PR_FALSE;
-  mMaxAscent = 0;
-  mMaxDescent = 0;
   mFirstFrame = nsnull;
   mFrameNum = 0;
   mMaxElementSize.width = 0;
@@ -572,12 +570,6 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
   // Record ascent and update max-ascent and max-descent values
   SetFrameData(aMetrics);
   mFrameNum++;
-  if (aMetrics.ascent > mMaxAscent) {
-    mMaxAscent = aMetrics.ascent;
-  }
-  if (aMetrics.descent > mMaxDescent) {
-    mMaxDescent = aMetrics.descent;
-  }
 
   // If the band was updated during the reflow of that frame then we
   // need to adjust any prior frames that were reflowed.
@@ -653,14 +645,18 @@ nsInlineReflow::SetFrameData(const nsHTMLReflowMetrics& aMetrics)
 
 // XXX what about ebina's center vs. ncsa-center?
 void
-nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox)
+nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
+                                    nscoord& aMaxAscent,
+                                    nscoord& aMaxDescent)
 {
   nscoord x = mLeftEdge;
   nscoord y0 = mTopEdge;
   nscoord width = mX - mLeftEdge;
-  nscoord height = mMaxAscent + mMaxDescent;
 
-  if ((mFrameNum > 1) && !mIsBlock) {
+  GetScents(aMaxAscent, aMaxDescent);
+  nscoord height = aMaxAscent + aMaxDescent;
+
+  if (mFrameNum > 1) {
     // Only when we have more than one frame should we do vertical
     // alignment. Sometimes we will have 2 frames with the second one
     // being a block; we don't vertically align then either. This
@@ -704,7 +700,7 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox)
         // the bottom of the screen we reverse the sign. All of the
         // raising and lowering is done relative to the baseline, so
         // we start our adjustments there.
-        kidYTop = mMaxAscent - kidAscent;               // get baseline first
+        kidYTop = aMaxAscent - kidAscent;               // get baseline first
         kidYTop -= textStyle->mVerticalAlign.GetCoordValue();
         break;
 
@@ -719,7 +715,7 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox)
         default:
         case NS_STYLE_VERTICAL_ALIGN_BASELINE:
           // Align the kid's baseline at the max baseline
-          kidYTop = mMaxAscent - kidAscent;
+          kidYTop = aMaxAscent - kidAscent;
           break;
 
         case NS_STYLE_VERTICAL_ALIGN_TOP:
@@ -729,13 +725,13 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox)
         case NS_STYLE_VERTICAL_ALIGN_SUB:
           // Align the child's baseline on the superscript baseline
           fm->GetSubscriptOffset(fontParam);
-          kidYTop = mMaxAscent + fontParam - kidAscent;
+          kidYTop = aMaxAscent + fontParam - kidAscent;
           break;
 
         case NS_STYLE_VERTICAL_ALIGN_SUPER:
           // Align the child's baseline on the subscript baseline
           fm->GetSuperscriptOffset(fontParam);
-          kidYTop = mMaxAscent - fontParam - kidAscent;
+          kidYTop = aMaxAscent - fontParam - kidAscent;
           break;
 
         case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
@@ -746,24 +742,24 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox)
         case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
           // Align the midpoint of the box with 1/2 the parent's x-height
           fm->GetXHeight(fontParam);
-          kidYTop = mMaxAscent - (fontParam / 2) - (kidRect.height/2);
+          kidYTop = aMaxAscent - (fontParam / 2) - (kidRect.height/2);
           break;
 
         case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
           fm->GetMaxDescent(fontParam);
-          kidYTop = mMaxAscent + fontParam - kidRect.height;
+          kidYTop = aMaxAscent + fontParam - kidRect.height;
           break;
 
         case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
           fm->GetMaxAscent(fontParam);
-          kidYTop = mMaxAscent - fontParam;
+          kidYTop = aMaxAscent - fontParam;
           break;
         }
         break;
       
       default:
         // Align the kid's baseline at the max baseline
-        kidYTop = mMaxAscent - kidAscent;
+        kidYTop = aMaxAscent - kidAscent;
         break;
       }
 
@@ -811,7 +807,7 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox)
           // the bottom of the screen we reverse the sign. All of the
           // raising and lowering is done relative to the baseline, so
           // we start our adjustments there.
-          nscoord kidYTop = mMaxAscent - kidAscent;       // get baseline first
+          nscoord kidYTop = aMaxAscent - kidAscent;       // get baseline first
           kidYTop -=
             nscoord(textStyle->mVerticalAlign.GetPercentValue() * lineHeight);
           kid->GetRect(kidRect);
@@ -867,4 +863,20 @@ nsInlineReflow::RelativePositionFrames()
   nsCSSLayout::RelativePositionChildren(&mPresContext,
                                         mOuterFrame,
                                         mFirstFrame, mFrameNum);
+}
+
+void
+nsInlineReflow::GetScents(nscoord& aMaxAscent, nscoord& aMaxDescent)
+{
+  PerFrameData* pfd = mFrameData;
+  PerFrameData* end = pfd + mFrameNum;
+  nscoord maxAscent = 0;
+  nscoord maxDescent = 0;
+  while (pfd < end) {
+    if (pfd->mAscent > maxAscent) maxAscent = pfd->mAscent;
+    if (pfd->mDescent > maxDescent) maxDescent = pfd->mDescent;
+    pfd++;
+  }
+  aMaxAscent = maxAscent;
+  aMaxDescent = maxDescent;
 }

@@ -56,15 +56,15 @@ public:
 
   nsReflowStatus ReflowFrame(nsIFrame* aFrame);
 
-  void VerticalAlignFrames(nsRect& aLineBox);
+  void VerticalAlignFrames(nsRect& aLineBox,
+                           nscoord& aMaxAscent,
+                           nscoord& aMaxDescent);
 
   void HorizontalAlignFrames(const nsRect& aLineBox);
 
   void RelativePositionFrames();
 
-  nscoord GetMaxAscent() const { return mMaxAscent; }
-
-  nscoord GetMaxDescent() const { return mMaxDescent; }
+  void GetScents(nscoord& aMaxAscent, nscoord& aMaxDescent);
 
   PRInt32 GetCurrentFrameNum() const { return mFrameNum; }
 
@@ -151,9 +151,6 @@ protected:
   PerFrameData* mFrameData;
   PerFrameData mFrameDataBuf[20];
   PRIntn mNumFrameData;
-
-  nscoord mMaxAscent;
-  nscoord mMaxDescent;
 
   // Current frame state
   nsIFrame* mFrame;
