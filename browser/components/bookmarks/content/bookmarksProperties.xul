@@ -45,6 +45,15 @@
     </tabs>
     <tabpanels>
       <vbox>
+        <vbox id="description-box" hidden="true">
+          <separator class="thin"/>                                               
+          <hbox align="start">                                                    
+            <image class="message-icon"/>                                         
+            <separator class="thin" orient="vertical"/>                           
+            <description id="bookmarkDescription" flex="1"/> 
+          </hbox>                                                                 
+          <separator class="thin"/>
+        </vbox>
         <vbox class="box-padded">    
           <grid>
             <columns>

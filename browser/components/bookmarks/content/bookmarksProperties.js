@@ -56,23 +56,14 @@ function showDescription()
 
   gBookmarkID = window.arguments[0];
   var resource = RDF.GetResource(gBookmarkID);
-
-  // Check the description
-  var primaryType = BookmarksUtils.resolveType(resource);
-  var description = BookmarksUtils.getLocaleString("description_"+primaryType);
-  
-  var newBookmarkFolder = BookmarksUtils.getNewBookmarkFolder();
-  var newSearchFolder   = BookmarksUtils.getNewSearchFolder();
-
-  if (resource == newBookmarkFolder && resource == newSearchFolder)
-    description = description+" "+BookmarksUtils.getLocaleString("description_NewBookmarkAndSearchFolder")
-  else if (resource == newBookmarkFolder )
-    description = description+" "+BookmarksUtils.getLocaleString("description_NewBookmarkFolder")
-  else if (resource == newSearchFolder)
-    description = description+" "+BookmarksUtils.getLocaleString("description_NewSearchFolder");
-
-  var textNode = document.createTextNode(description);
-  document.getElementById("bookmarkDescription").appendChild(textNode);
+ 
+  if (BookmarksUtils.isPersonalToolbarFolder(resource)) {
+    var description = BookmarksUtils.getLocaleString("description_PersonalToolbarFolder");
+    var box = document.getElementById("description-box");
+    box.hidden = false;
+    var textNode = document.createTextNode(description);
+    document.getElementById("bookmarkDescription").appendChild(textNode);
+  }
 }
 
 function Init()
