@@ -1377,7 +1377,7 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
   *aCount = 0;
   if (NS_SUCCEEDED(rv)) {
     // Try to send the data to the network.
-    rv = nsWriteToSocket(nsnull, (void*)mSocketFD, mWriteBuffer, mWriteBufferIndex, 
+    rv = nsWriteToSocket(nsnull, (void*)mSocketFD, mWriteBuffer + mWriteBufferIndex, 0, 
                          mWriteBufferLength, aCount);
     // Update the buffer index and length with the actual amount of data
     // that was sent...
