@@ -32,6 +32,7 @@
 #include "nsSound.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsIPref.h"
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
@@ -111,6 +112,26 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 
 NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 {
-  return Beep();
+  nsresult rv;
+  nsCAutoString prefName("system.sound.");
+  prefName += aSoundAlias;
+
+  nsXPIDLCString soundPrefValue;
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv) && prefs)
+     rv = prefs->CopyCharPref(prefName.get(), getter_Copies(soundPrefValue));
+
+  if (NS_SUCCEEDED(rv) && soundPrefValue.Length() > 0) {
+    nsCOMPtr<nsIURI> soundURI;
+    rv = NS_NewURI(getter_AddRefs(soundURI), soundPrefValue);
+    nsCOMPtr<nsIURL> soundURL = do_QueryInterface(soundURI);
+//    rv = Play(soundURL);
+    rv = Beep();
+  }
+  else {
+    rv = Beep();
+  }
+  return rv;
 }
 
