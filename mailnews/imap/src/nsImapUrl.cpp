@@ -92,7 +92,10 @@ nsImapUrl::~nsImapUrl()
 }
   
 NS_IMPL_ADDREF_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
+
+
 NS_IMPL_RELEASE_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
+
 
 NS_IMETHODIMP
 nsImapUrl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -256,7 +259,7 @@ NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
 // End nsIImapUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsImapUrl::SetSpec(char * aSpec)
+NS_IMETHODIMP nsImapUrl::SetSpec(const char * aSpec)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
 	if (NS_SUCCEEDED(rv))
