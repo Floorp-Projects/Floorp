@@ -246,11 +246,21 @@ public abstract class ScriptableObject implements Scriptable {
                             break;
                         }
                     }
-                    getterSlot.setter.invoke(start, arg);
+                    Object v = getterSlot.setter.invoke(start, arg);
+                    if (getterSlot.setterReturnsValue) {
+                        slots[slotIndex].value = v;
+                        if (!(v instanceof Method))
+                            slots[slotIndex].flags = 0;
+                    }
                     return;
                 }
                 Object[] args = { this, actualArg };
-                getterSlot.setter.invoke(getterSlot.delegateTo, args);
+                Object v = getterSlot.setter.invoke(getterSlot.delegateTo, args);
+                if (getterSlot.setterReturnsValue) {
+                    slots[slotIndex].value = v;
+                    if (!(v instanceof Method))
+                        slots[slotIndex].flags = 0;
+                }
                 return;
             }
             catch (InvocationTargetException e) {
@@ -1183,6 +1193,7 @@ public abstract class ScriptableObject implements Scriptable {
         slot.delegateTo = delegateTo;
         slot.getter = getter;
         slot.setter = setter;
+        slot.setterReturnsValue = setter != null && setter.getReturnType() != Void.TYPE;
         slot.value = null;
         slot.attributes = (short) attributes;
         slot.flags = flags;
@@ -1551,6 +1562,7 @@ class GetterSlot extends Slot {
     Object delegateTo;  // OPT: merge with "value"
     Method getter;
     Method setter;
+    boolean setterReturnsValue;
 }
 
 

@@ -58,9 +58,12 @@ class LazilyLoadedCtor {
     }
 
     public Object getProperty(ScriptableObject obj) {
-        obj.delete(ctorName);
         try {
-            ScriptableObject.defineClass(obj, Class.forName(className));
+            synchronized (obj) {
+                if (!isReplaced)
+                    ScriptableObject.defineClass(obj, Class.forName(className));
+                isReplaced = true;
+            }
         }
         catch (ClassNotFoundException e) {
             throw WrappedException.wrapException(e);
@@ -83,11 +86,14 @@ class LazilyLoadedCtor {
         return obj.get(ctorName, obj);
     }
 
-    public void setProperty(ScriptableObject obj, Object val) {
-        obj.delete(ctorName);
-        obj.put(ctorName, obj, val);
+    public Object setProperty(ScriptableObject obj, Object val) {
+        synchronized (obj) {
+            isReplaced = true;
+            return val;
+        }
     }
 
     private String ctorName;
     private String className;
+    private boolean isReplaced;
 }
