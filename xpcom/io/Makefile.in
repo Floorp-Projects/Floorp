@@ -83,7 +83,8 @@ XPIDLSRCS	= \
 		nsIPipe.idl \
 		nsIScriptableInputStream.idl \
 		nsIStorageStream.idl \
-		$(NULL)
+		nsIDirectoryService.idl \
+                $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 

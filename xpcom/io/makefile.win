@@ -59,6 +59,7 @@ XPIDLSRCS =                         \
         .\nsIFileSpec.idl           \
         .\nsIFile.idl               \
         .\nsILocalFile.idl          \
+        .\nsIDirectoryService.idl   \
         $(NULL)
 
 ################################################################################
