@@ -1523,6 +1523,7 @@ viewsource|val:before {content: "="; color: black;}
 viewsource|entity  {color: maroon; font-weight:normal;} 
 
 viewsource|comment {color: green; font-style:italic; } 
+viewsource|cdata   {color: #CC0066;} 
 
 viewsource|doctype {color: green; font-style:italic;} 
 
