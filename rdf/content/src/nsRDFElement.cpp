@@ -121,13 +121,13 @@ static NS_DEFINE_CID(kRDFServiceCID,           NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
 static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
 
-static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
+static NS_DEFINE_IID(kIDOMMouseListenerIID,       NS_IDOMMOUSELISTENER_IID);
+static NS_DEFINE_IID(kIDOMKeyListenerIID,         NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
-static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
-static NS_DEFINE_IID(kIDOMFormListenerIID, NS_IDOMFORMLISTENER_IID);
-static NS_DEFINE_IID(kIDOMLoadListenerIID, NS_IDOMLOADLISTENER_IID);
-static NS_DEFINE_IID(kIDOMPaintListenerIID, NS_IDOMPAINTLISTENER_IID);
+static NS_DEFINE_IID(kIDOMFocusListenerIID,       NS_IDOMFOCUSLISTENER_IID);
+static NS_DEFINE_IID(kIDOMFormListenerIID,        NS_IDOMFORMLISTENER_IID);
+static NS_DEFINE_IID(kIDOMLoadListenerIID,        NS_IDOMLOADLISTENER_IID);
+static NS_DEFINE_IID(kIDOMPaintListenerIID,       NS_IDOMPAINTLISTENER_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -335,6 +335,50 @@ nsIAtom*             RDFElementImpl::kContextAtom;
 PRInt32              RDFElementImpl::kNameSpaceID_RDF;
 PRInt32              RDFElementImpl::kNameSpaceID_XUL;
 
+// This is a simple datastructure that maps an event handler attribute
+// name to an appropriate IID. Atoms are computed to improve
+// comparison efficiency. We do this because SetAttribute() ends up
+// being a pretty hot method.
+struct EventHandlerMapEntry {
+    const char*  mAttributeName;
+    nsIAtom*     mAttributeAtom;
+    const nsIID* mHandlerIID;
+};
+
+static EventHandlerMapEntry kEventHandlerMap[] = {
+    { "onclick",       nsnull, &kIDOMMouseListenerIID       },
+    { "ondblclick",    nsnull, &kIDOMMouseListenerIID       },
+    { "onmousedown",   nsnull, &kIDOMMouseListenerIID       },
+    { "onmouseup",     nsnull, &kIDOMMouseListenerIID       },
+    { "onmouseover",   nsnull, &kIDOMMouseListenerIID       },
+    { "onmouseout",    nsnull, &kIDOMMouseListenerIID       },
+
+    { "onmousemove",   nsnull, &kIDOMMouseMotionListenerIID },
+
+    { "onkeydown",     nsnull, &kIDOMKeyListenerIID         },
+    { "onkeyup",       nsnull, &kIDOMKeyListenerIID         },
+    { "onkeypress",    nsnull, &kIDOMKeyListenerIID         },
+
+    { "onload",        nsnull, &kIDOMLoadListenerIID        },
+    { "onunload",      nsnull, &kIDOMLoadListenerIID        },
+    { "onabort",       nsnull, &kIDOMLoadListenerIID        },
+    { "onerror",       nsnull, &kIDOMLoadListenerIID        },
+    { "oncreate",      nsnull, &kIDOMLoadListenerIID        },
+    { "ondestroy",     nsnull, &kIDOMLoadListenerIID        },
+
+
+    { "onfocus",       nsnull, &kIDOMFocusListenerIID       },
+    { "onblur",        nsnull, &kIDOMFocusListenerIID       },
+
+    { "onsubmit",      nsnull, &kIDOMFormListenerIID        },
+    { "onreset",       nsnull, &kIDOMFormListenerIID        },
+    { "onchange",      nsnull, &kIDOMFormListenerIID        },
+
+    { "onpaint",       nsnull, &kIDOMPaintListenerIID       },
+
+    { nsnull,          nsnull, nsnull                       }
+};
+
 ////////////////////////////////////////////////////////////////////////
 // RDFElementImpl
 
@@ -373,6 +417,12 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kPopupAtom     = NS_NewAtom("popup");
         kTooltipAtom   = NS_NewAtom("tooltip");
         kContextAtom   = NS_NewAtom("context");
+
+        EventHandlerMapEntry* entry = kEventHandlerMap;
+        while (entry->mAttributeName) {
+            entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
+            ++entry;
+        }
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                           nsnull,
@@ -454,6 +504,12 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kContextAtom);
         NS_IF_RELEASE(kTooltipAtom);
         NS_IF_RELEASE(gNameSpaceManager);
+
+        EventHandlerMapEntry* entry = kEventHandlerMap;
+        while (entry->mAttributeName) {
+            NS_IF_RELEASE(entry->mAttributeAtom);
+            ++entry;
+        }
     }
 
     delete mInnerXULElement;
@@ -1905,56 +1961,28 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     }
         
 
-    // Check for event handlers
-    nsAutoString attributeName;
-    aName->ToString(attributeName);
-
-    if (attributeName.EqualsIgnoreCase("onclick") ||
-        attributeName.EqualsIgnoreCase("ondblclick") ||
-        attributeName.EqualsIgnoreCase("onmousedown") ||
-        attributeName.EqualsIgnoreCase("onmouseup") ||
-        attributeName.EqualsIgnoreCase("onmouseover") ||
-        attributeName.EqualsIgnoreCase("onmouseout"))
-        AddScriptEventListener(aName, aValue, kIDOMMouseListenerIID);
-    else if (attributeName.EqualsIgnoreCase("onkeydown") ||
-             attributeName.EqualsIgnoreCase("onkeyup") ||
-             attributeName.EqualsIgnoreCase("onkeypress"))
-        AddScriptEventListener(aName, aValue, kIDOMKeyListenerIID);
-    else if (attributeName.EqualsIgnoreCase("onmousemove"))
-        AddScriptEventListener(aName, aValue, kIDOMMouseMotionListenerIID); 
-    else if (attributeName.EqualsIgnoreCase("onload") ||
-             attributeName.EqualsIgnoreCase("onunload") ||
-             attributeName.EqualsIgnoreCase("onabort") ||
-             attributeName.EqualsIgnoreCase("onerror") ||
-             attributeName.EqualsIgnoreCase("oncreate") ||
-             attributeName.EqualsIgnoreCase("ondestroy"))
-        AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID);
-    else if (attributeName.EqualsIgnoreCase("onfocus") ||
-             attributeName.EqualsIgnoreCase("onblur"))
-        AddScriptEventListener(aName, aValue, kIDOMFocusListenerIID);
-    else if (attributeName.EqualsIgnoreCase("onsubmit") ||
-             attributeName.EqualsIgnoreCase("onreset") ||
-             attributeName.EqualsIgnoreCase("onchange"))
-        AddScriptEventListener(aName, aValue, kIDOMFormListenerIID);
-    else if (attributeName.EqualsIgnoreCase("onpaint"))
-        AddScriptEventListener(aName, aValue, kIDOMPaintListenerIID); 
+    // Check for event handlers and add a script listener if necessary.
+    EventHandlerMapEntry* entry = kEventHandlerMap;
+    while (entry->mAttributeAtom) {
+        if (entry->mAttributeAtom == aName) {
+            AddScriptEventListener(aName, aValue, *entry->mHandlerIID);
+            break;
+        }
+        ++entry;
+    }
 
     // Notify any broadcasters that are listening to this node.
     if (mBroadcastListeners != nsnull)
     {
+        nsAutoString attribute;
+        aName->ToString(attribute);
         count = mBroadcastListeners->Count();
         for (i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
-            nsAutoString str;
-            aName->ToString(str);
-            if (xulListener->mAttribute == str) {
-                nsCOMPtr<nsIDOMElement> element;
-                element = do_QueryInterface(xulListener->mListener);
-                if (element) {
-                    // First we set the attribute in the observer.
-                    element->SetAttribute(str, aValue);
-                    ExecuteOnChangeHandler(element, str);
-                }
+            if ((xulListener->mAttribute == attribute) && (xulListener->mListener != nsnull)) {
+                // First we set the attribute in the observer.
+                xulListener->mListener->SetAttribute(attribute, aValue);
+                ExecuteOnChangeHandler(xulListener->mListener, attribute);
             }
         }
     }
