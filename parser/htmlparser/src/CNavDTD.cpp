@@ -49,7 +49,7 @@
 #endif
 #include "prmem.h"
 
-#define ENABLE_RESIDUALSTYLE  
+//#define ENABLE_RESIDUALSTYLE  
 //#define RICKG_DEBUG 
 //#define ENABLE_CRC
 #ifdef  RICKG_DEBUG
