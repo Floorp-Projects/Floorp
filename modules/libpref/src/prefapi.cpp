@@ -191,6 +191,7 @@ PRBool              gCallbacksEnabled = PR_FALSE;
 PRBool              gIsAnyPrefLocked = PR_FALSE;
 PRBool              gLockInfoRead = PR_FALSE;
 PLHashTable*        gHashTable = NULL;
+PRBool              gEnumeratingHashTable = PR_FALSE;
 char *              gSavedLine = NULL; 
 char *              gLockFileName = NULL;
 char *              gLockVendor = NULL;
@@ -231,7 +232,8 @@ JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 void pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
 void pref_Alert(char* msg);
 PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
-
+static void* pref_HashTableLookup(const void *key);
+  
 /* Computes the MD5 hash of the given buffer (not including the first line)
    and verifies the first line of the buffer expresses the correct hash in the form:
    // xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
@@ -292,8 +294,8 @@ PRBool PREF_Init(const char *filename)
 
     /* --ML hash test */
     if (!gHashTable)
-    gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
-            PR_CompareValues, &pref_HashAllocOps, NULL);
+    gHashTable = PL_NewHashTable(2048, PL_HashString, PL_CompareStrings,
+            PL_CompareValues, &pref_HashAllocOps, NULL);
     if (!gHashTable)
         return PR_FALSE;
 
@@ -440,7 +442,7 @@ void PREF_CleanupPrefs()
     }
 
     if (gHashTable)
-        PR_HashTableDestroy(gHashTable);
+        PL_HashTableDestroy(gHashTable);
     gHashTable = NULL;
 
     if (gSavedLine)
@@ -831,7 +833,7 @@ PRBool PREF_HasUserPref(const char *pref_name)
     if (!gHashTable && !pref_useDefaultPrefFile())
         return PR_FALSE;
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
+    pref = (PrefNode*) pref_HashTableLookup(pref_name);
 
     if (!pref) return PR_FALSE;
     
@@ -849,7 +851,7 @@ PrefResult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * l
     if (!gHashTable && !pref_useDefaultPrefFile())
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
+    pref = (PrefNode*) pref_HashTableLookup(pref_name);
 
     if (pref)
     {
@@ -883,7 +885,7 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_defau
     if (!gHashTable && !pref_useDefaultPrefFile())
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
+    pref = (PrefNode*) pref_HashTableLookup(pref_name);
 
     if (pref && (pref->flags & PREF_STRING))
     {
@@ -908,7 +910,7 @@ PrefResult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool ge
     if (!gHashTable && !pref_useDefaultPrefFile())
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
+    pref = (PrefNode*) pref_HashTableLookup(pref_name);
     if (pref && (pref->flags & PREF_INT))
     {
         if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
@@ -934,7 +936,7 @@ PrefResult PREF_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool
     if (!gHashTable && !pref_useDefaultPrefFile())
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);   
+    pref = (PrefNode*) pref_HashTableLookup(pref_name);   
     if (pref && (pref->flags & PREF_BOOL))
     {
         if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
@@ -1107,7 +1109,7 @@ PREF_DeleteBranch(const char *branch_name)
             return PREF_OUT_OF_MEMORY;
     }
 
-    PR_HashTableEnumerateEntries(gHashTable, pref_DeleteItem, (void*) branch_dot);
+    pref_HashTableEnumerateEntries(pref_DeleteItem, (void*) branch_dot);
     
     if (branch_dot != branch_name)
         PR_Free(branch_dot);
@@ -1124,7 +1126,7 @@ PREF_ClearUserPref(const char *pref_name)
     if (!gHashTable)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
+    pref = (PrefNode*) pref_HashTableLookup(pref_name);
     if (pref && PREF_HAS_USER_VALUE(pref))
     {
         pref->flags &= ~PREF_USERSET;
@@ -1146,6 +1148,7 @@ pref_ClearUserPref(PLHashEntry *he, int i, void *arg)
         pref->flags &= ~PREF_USERSET;
         if (gCallbacksEnabled)
             pref_DoCallback(he->key);
+        return HT_ENUMERATE_REMOVE;
     }
     return HT_ENUMERATE_NEXT;
 }
@@ -1156,7 +1159,7 @@ PREF_ClearAllUserPrefs()
     if (!gHashTable)
         return PREF_NOT_INITIALIZED;
     
-    PL_HashTableEnumerateEntries(gHashTable, pref_ClearUserPref, nsnull);
+    pref_HashTableEnumerateEntries(pref_ClearUserPref, nsnull);
     return PREF_OK;
 }
 
@@ -1176,7 +1179,7 @@ PrefResult
 PREF_CopyConfigString(const char *obj_name, char **return_buffer)
 {
     PrefResult success = PREF_ERROR;
-    PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, obj_name);
+    PrefNode* pref = (PrefNode*) pref_HashTableLookup(obj_name);
     
     if (pref && (pref->flags & PREF_STRING))
     {
@@ -1195,7 +1198,7 @@ PREF_CopyIndexConfigString(const char *obj_name,
     PrefNode* pref;
     char* setup_buf = PR_smprintf("%s_%d.%s", obj_name, indx, field);
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, setup_buf);
+    pref = (PrefNode*) pref_HashTableLookup(setup_buf);
     
     if (pref && (pref->flags & PREF_STRING))
     {
@@ -1211,7 +1214,7 @@ PrefResult
 PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 {
     PrefResult success = PREF_ERROR;
-    PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, obj_name);
+    PrefNode* pref = (PrefNode*) pref_HashTableLookup(obj_name);
     if (pref && (pref->flags & PREF_INT))
     {
         *return_int = pref->defaultPref.intVal;
@@ -1224,7 +1227,7 @@ PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 PrefResult
 PREF_GetConfigBool(const char *obj_name, PRBool *return_bool)
 {
-    PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, obj_name);  
+    PrefNode* pref = (PrefNode*) pref_HashTableLookup(obj_name);  
     if (pref && (pref->flags & PREF_BOOL))
     {
         *return_bool = pref->defaultPref.boolVal;
@@ -1239,7 +1242,7 @@ PrefResult pref_UnlockPref(const char *key)
     if (!gHashTable)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
+    pref = (PrefNode*) pref_HashTableLookup(key);
     if (!pref)
         return PREF_DOES_NOT_EXIST;
 
@@ -1258,7 +1261,7 @@ PrefResult pref_LockPref(const char *key)
     if (!gHashTable)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
+    pref = (PrefNode*) pref_HashTableLookup(key);
     if (!pref)
         return PREF_DOES_NOT_EXIST;
    
@@ -1304,6 +1307,24 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
     }
 }
 
+static void* pref_HashTableLookup(const void *key)
+{
+    return gEnumeratingHashTable ?
+        PL_HashTableLookupConst(gHashTable, key) :
+        PL_HashTableLookup(gHashTable, key);
+}
+
+PRIntn pref_HashTableEnumerateEntries(PLHashEnumerator f, void *arg)
+{
+    PRIntn result;
+    PRBool wasEnumerating = gEnumeratingHashTable;
+    
+    gEnumeratingHashTable = PR_TRUE;
+    result = PL_HashTableEnumerateEntries(gHashTable, f, arg);
+    gEnumeratingHashTable = wasEnumerating;
+    return result;
+}
+
 PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action)
 {
     PrefNode* pref;
@@ -1312,7 +1333,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
     if (!gHashTable && !pref_useDefaultPrefFile())
         return PREF_NOT_INITIALIZED;
     
-    pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
+    pref = (PrefNode*) pref_HashTableLookup(key);
     if (!pref)
     {
         pref = (PrefNode*) calloc(sizeof(PrefNode), 1);
@@ -1325,7 +1346,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
            this should really get fixed right by some out of band data */
         if (pref->flags & PREF_INT)
             pref->defaultPref.intVal = (PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE;
-        PR_HashTableAdd(gHashTable, PL_strdup(key), pref);
+        PL_HashTableAdd(gHashTable, PL_strdup(key), pref);
     }
     else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK))
     {
@@ -1402,7 +1423,7 @@ PREF_GetPrefType(const char *pref_name)
 {
     if (gHashTable)
     {
-        PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
+        PrefNode* pref = (PrefNode*) pref_HashTableLookup(pref_name);
         if (pref)
         {
             if (pref->flags & PREF_STRING)
@@ -1440,7 +1461,7 @@ JSBool PR_CALLBACK pref_NativeUnlockPref
     if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
     {
         const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
+        PrefNode* pref = (PrefNode*) pref_HashTableLookup(key);
         
         if (pref && PREF_IS_LOCKED(pref))
         {
@@ -1468,7 +1489,7 @@ JSBool PR_CALLBACK pref_NativeGetPref
     if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
     {
         const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
+        pref = (PrefNode*) pref_HashTableLookup(key);
         
         if (pref)
         {
@@ -1496,7 +1517,7 @@ PREF_PrefIsLocked(const char *pref_name)
 {
     PRBool result = PR_FALSE;
     if (gIsAnyPrefLocked) {
-        PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
+        PrefNode* pref = (PrefNode*) pref_HashTableLookup(pref_name);
         if (pref && PREF_IS_LOCKED(pref))
             result = PR_TRUE;
     }
@@ -1584,7 +1605,7 @@ PREF_CreateChildList(const char* parent_node, char **child_list)
         return PREF_OUT_OF_MEMORY;
     pcs.childList[0] = '\0';
 
-    PR_HashTableEnumerateEntries(gHashTable, pref_addChild, &pcs);
+    pref_HashTableEnumerateEntries(pref_addChild, &pcs);
 
     *child_list = pcs.childList;
     PR_Free(pcs.parent);
@@ -1933,7 +1954,7 @@ PREF_AboutConfig()
     pcs.childList[0] = '\0';
     PL_strcat(pcs.childList, "<HTML>"); 
 
-    PR_HashTableEnumerateEntries(gHashTable, pref_printDebugInfo, &pcs);
+    pref_HashTableEnumerateEntries(pref_printDebugInfo, &pcs);
     
     return pcs.childList;
 }

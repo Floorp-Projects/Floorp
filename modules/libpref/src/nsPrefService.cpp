@@ -515,7 +515,7 @@ static nsresult savePrefFile(nsIFile* aFile)
   stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
     
   /* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
-  PR_HashTableEnumerateEntries(gHashTable, (PLHashEnumerator)pref_savePref, valueArray);
+  pref_HashTableEnumerateEntries((PLHashEnumerator)pref_savePref, valueArray);
     
   /* Sort the preferences to make a readable file on disk */
   NS_QuickSort(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings, NULL);
