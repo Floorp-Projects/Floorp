@@ -301,9 +301,7 @@ LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
 LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
 LIBMMEDIA	= $(DIST)/lib/libmmedia.$(LIB_SUFFIX)
 
-NSPR20		= 1
 NSPRDIR		= nsprpub
-DEFINES		+= -DNSPR20
 INCLUDES	+= -I$(DIST)/include
 LIBNSPR		= $(DIST)/lib/libplds21.$(LIB_SUFFIX) $(DIST)/lib/libnspr21.$(LIB_SUFFIX)
 PURELIBNSPR	= $(DIST)/lib/purelibplds21.$(LIB_SUFFIX) $(DIST)/lib/purelibnspr21.$(LIB_SUFFIX)
