@@ -49,9 +49,25 @@ configdata: 	some TCL source that defines treelist, a list of trees you want
 	set treeinfo(newlayout,description) {New Layout -- Main Line}
 	set treeinfo(newlayout,shortdesc) {New Layout}
 
+		Also, you can specify where Bonsai will look for some utilities
+		on your system, and a couple other behaviors.  You will
+		probably have to override many of these; the default values are
+		not that reasonable.
+
+		The default values are:
+
+	set cvscommand /tools/ns/bin/cvs
+	set rlogcommand /tools/ns/bin/rlog
+	set rcsdiffcommand /tools/ns/bin/rcsdiff
+	set cocommand /tools/ns/bin/co
+	set lxr_base http://cvs-mirror.mozilla.org/webtools/lxr/source
+	set mozilla_lxr_kludge TRUE
+
+
 
 hidelist:	A list of regexps that define filenames that we don't want
-		to let people see via the bonsai pages.
+		to let people see via the bonsai pages.  A common use is to
+		just have one line that says "CVSROOT".
 
 	=================================
 	What's What in the Bonsai sources:
@@ -64,7 +80,9 @@ accreted wildly.  There is probably quite a lot of dead code in here.
 
 CGI.tcl			???
 
-Makefile:		builds the "trapdoor" program
+Makefile:		builds the "trapdoor" program.  Also has a
+			"make install" that lets you specify where you store
+			perl and mysqltcl on your system.
 
 SourceChecker.cgi	scc wrote to help sanitize code.  DELETE
 			Called by: nobody

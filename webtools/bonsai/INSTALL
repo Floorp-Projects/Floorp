@@ -2,6 +2,8 @@
 #
 # Author: Artem Belevich <abelevic@ctron.com> 
 #
+# (Changes have been made to Artem's original doc, as things evolve.)
+#
 #
 
 **********************************************************************
@@ -163,7 +165,8 @@ Bonsai scripts and see why the wouldn't work for you right now.
 
    First of all you have to change "#!/usr/bonsaitools" to wherever
 you've installed your binaries in all executable scripts in LXR and
-Bonsai directories. 
+Bonsai directories.  There is now a Makefile with a "make install"
+command that can make this easier.  See the Makefile for details.
 
 
 2.1 LXR
@@ -215,15 +218,13 @@ setup. You have to make a lot of changes until more portable
 configuration mechanism is introduced. 
 
    First of all, create data/ directory in your Bonsai dir. Then edit
-data/configuration file as described in README file. Create
+data/configdata file as described in README file. Create
 appropriate data/XXX directory for each tree XXX you've configured in
-'configuration'. Compile trapdoor program and place binary in data/
-dir. run 'trapdoor <admin password here> >data/passwd' it will set up
+'configdata'. Compile trapdoor program and place binary in the data/
+dir ('make install' will do this for you.).
+run 'trapdoor <admin password here> >data/passwd' it will set up
 admin's password. At least it should. It worked for me with empty
 password, but I still am unable to change it from the web.
-
-   file: createlegaldirs.tcl
-      change /tools/ns/bin/cvs to real path to your cvs command
 
    file: cvsblame.cgi
       @line 120: you may add your own translation to help find
@@ -233,8 +234,7 @@ password, but I still am unable to change it from the web.
 
    file: cvslog.cgi
       @line 90: the same tweaks to find RCS file for given source file
-      @ line 463: change $lxr_base from mozilla site to your own
-		  add translations to $lxr_path to help find source
+      @ line 463: add translations to $lxr_path to help find source
 		  file for given RCS file.
       TODO: This should be done using information in
             $CVSROOT/CVSROOT/modules file. Typical example is the
@@ -257,22 +257,7 @@ password, but I still am unable to change it from the web.
 	  but people @netscape.com 8-)
 
 
-   file: cvsview2.cgi
-      @line 393: set $rcsdiff to your real rcsdiff program
-      @line 469&658: set $lxr_base appropriately
-      @line 783: change path to "co" command
-
    file: dolog.pl
-      @line 177: change path to rlog program
-
-   file: multidiff.pl
-      @line 72: change path to rcsdiff program
-
-   file: rebuildcvshistory.cgi
-      @line 59: change path to rlog program
-      @line 211: change path to cvs program
-
-   file: rebuildtaginfo.cgi
       @line 42: change path to rlog program
 
    file: toplevel.cgi
@@ -304,8 +289,7 @@ there is no need to send/process email. Just set up a cron job that
 will periodically look for CVS tree changes and update database.
 
   b) Better configuration. One should not hardcode CVS tree <-> Source
-tree  translations. Also location of CVS/RCS binaries should be
-configurable. Another thing to configure - banners.
+tree  translations. Another thing to configure - banners.
 
   c) LXR could be improved in a number of ways. Using MySQL database
 instead of DB would probably be a good idea. It's unclear what impact
