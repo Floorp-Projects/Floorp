@@ -49,7 +49,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
    file operation routines */
 #define ABFileName_kPreviousSuffix ".na2" /* final v2 address book format */
 
-const char *kMainPersonalAddressBook = "abook.mab"; /* v3 main personal address book file */
+const char *kMainPersonalAddressBook = kPersonalAddressbook; /* v3 main personal address book file */
 const char *kMainLdapAddressBook = "ldap.mab"; /* v3 main ldap address book file */
 
 #define ABFileName_kCurrentSuffix ".mab" /* v3 address book extension */

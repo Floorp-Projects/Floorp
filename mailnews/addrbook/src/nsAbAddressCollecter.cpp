@@ -147,13 +147,13 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 						}
 						nsAutoString email; email.AssignWithConversion(curAddress);
 						senderCard->SetPrimaryEmail((PRUnichar*)email.GetUnicode());
-						senderCard->AddCardToDatabase("abdirectory://history.mab");
+						senderCard->AddCardToDatabase(kCollectedAddressbookUri);
 					}
 				}
 				else
 				{
 					SetNamesForCard(existingCard, curName);
-					existingCard->EditCardToDatabase("abdirectory://history.mab");
+					existingCard->EditCardToDatabase(kCollectedAddressbookUri);
 				}
 			}
 			curName += strlen(curName) + 1;
@@ -182,7 +182,7 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 	
 	if (dbPath)
 	{
-		(*dbPath) += "history.mab";
+		(*dbPath) += kCollectedAddressbook;
 
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
@@ -194,7 +194,7 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 		return rv;
 
 	nsCOMPtr <nsIRDFResource> resource;
-	rv = rdfService->GetResource("abdirectory://history.mab", getter_AddRefs(resource));
+	rv = rdfService->GetResource(kCollectedAddressbookUri, getter_AddRefs(resource));
 	if (NS_FAILED(rv)) 
 		return rv;
 

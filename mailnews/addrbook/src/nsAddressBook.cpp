@@ -62,8 +62,8 @@ static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 
-const char *kDirectoryDataSourceRoot = "abdirectory://";
-const char *kCardDataSourceRoot = "abcard://";
+const char *kDirectoryDataSourceRoot = kDirectoryRoot;
+const char *kCardDataSourceRoot = kCardRoot;
 
 
 

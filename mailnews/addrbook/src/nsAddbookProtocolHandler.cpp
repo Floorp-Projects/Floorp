@@ -257,7 +257,7 @@ nsAddbookProtocolHandler::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
 	if (dbPath)
 	{
     if (!aAbName)
-      (*dbPath) += "abook.mab";
+      (*dbPath) += kPersonalAddressbook;
     else
       (*dbPath) += aAbName;
 
@@ -406,9 +406,8 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
   if (NS_FAILED(rv))
     return rv;
 
-  // this should not be hardcoded to abook.mab
   // RICHIE - this works for any address book...not sure why
-  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
+  rv = rdfService->GetResource(kPersonalAddressbookUri, getter_AddRefs(resource));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
   
