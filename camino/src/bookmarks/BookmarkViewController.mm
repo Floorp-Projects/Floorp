@@ -417,7 +417,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   NSTextField* textField  = [mBrowserWindowController getAddBookmarkTitle];
   NSString* bookmarkTitle = titleString;
   NSString* cleanedTitle  = [bookmarkTitle stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
-
+  if (!cleanedTitle)
+    cleanedTitle = urlString;
   [textField setStringValue: cleanedTitle];
 
   [mBrowserWindowController cacheBookmarkVC: self];
