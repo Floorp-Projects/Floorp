@@ -803,6 +803,9 @@ Wallet_ConfirmYN(PRUnichar * szMessage) {
   return (buttonPressed == 0);
 }
 
+#define YES_BUTTON 0
+#define NO_BUTTON 1
+#define NEVER_BUTTON 2
 
 PUBLIC PRInt32
 Wallet_3ButtonConfirm(PRUnichar * szMessage)
@@ -825,8 +828,8 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage)
     szMessage, /* this is the main message */
     NULL, /* This is the checkbox message */
     yes_string, /* first button text */
-    never_string, /* second button text */
-    no_string, /* third button text */
+    no_string, /* second button text */
+    never_string, /* third button text */
     NULL, /* fourth button text */
     /* note: buttons are laid out as FIRST, THIRD, FOURTH, SECOND */
     NULL, /* first edit field label */
@@ -845,15 +848,7 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage)
   Recycle(never_string);
   Recycle(confirm_string);
 
-  if (buttonPressed == 0) {
-    return 1; /* YES button pressed */
-  } else if (buttonPressed == 2) {
-    return 0; /* NO button pressed */
-  } else if (buttonPressed == 1) {
-    return -1; /* NEVER button pressed */
-  } else {
-    return 0; /* should never happen */
-  }
+  return buttonPressed;
 }
 
 PUBLIC void
@@ -979,10 +974,9 @@ wallet_unlock(void) {
 /* The following routines are for Encyption/Decryption */
 /*******************************************************/
 
-#define SIMULATING_CRYPTO 1
-
 #include "nsISecretDecoderRing.h"
 nsISecretDecoderRing* gSecretDecoderRing;
+PRBool gEncryptionFailure = PR_FALSE;
 
 PRIVATE nsresult
 wallet_CryptSetup() {
@@ -1001,72 +995,74 @@ wallet_CryptSetup() {
   return NS_OK;
 }
 
-#if SIMULATING_CRYPTO
-#define USER_KNOWS_MASTER_PASSWORD 1
 #include "nsIPref.h"
 
 PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
 
-  /* use SecretDecoderRing if stealth pref is set */
-  nsresult rv;
+  /* use SecretDecoderRing if encryption pref is set */
   PRBool prefvalue = PR_FALSE;
+  nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
   if (NS_SUCCEEDED(rv) && 
-      NS_SUCCEEDED(prefs->GetBoolPref("crypto.enabled", &prefvalue)) &&
+      NS_SUCCEEDED(prefs->GetBoolPref("wallet.crypto", &prefvalue)) &&
       prefvalue) {
-    nsresult rv = wallet_CryptSetup();
+    rv = wallet_CryptSetup();
     if (NS_SUCCEEDED(rv)) {
       rv = gSecretDecoderRing->EncryptString(text, &crypt);
+    }
+    if (NS_FAILED(rv)) {
+      gEncryptionFailure = PR_TRUE;
     }
     return rv;
   }
 
-#if USER_KNOWS_MASTER_PASSWORD
-  crypt = (char *)PR_Malloc( PL_strlen("Encrypted:") + PL_strlen(text) + 1);
-  PL_strcpy(crypt, "Encrypted:");
-  PL_strcat(crypt, text);
-//  crypt = PL_strdup(text);
-//  for (PRUint32 i=0; i<PL_strlen(text); i++) {
-//      crypt[i] = text[i] + 1;
-//  }
+  /* otherwise do our own obscuring *
+   *   obscuring algorithm is as follows:
+   *   1. start with a prefix that is not in base64 so we can identify it as obscuring
+   *   2. xor each text character with 0x7f ('~')
+   *   3. break up each xor-ed character into a pair of nibbles
+   *   4. add each nibble to a base character and append to result
+   */
+#define PREFIX "~"
+#define BASE 'a'
+  crypt = (char *)PR_Malloc(PL_strlen(PREFIX) + 2*PL_strlen(text) + 1);
+  PRUint32 i;
+  for (i=0; i<PL_strlen(PREFIX); i++) {
+    crypt[i] = PREFIX[i];
+  }
+  for (i=0; i<PL_strlen(text); i++) {
+    char ret = text[i]^'~';
+    crypt[PL_strlen(PREFIX)+2*i] = BASE + (ret >> 4);
+    crypt[PL_strlen(PREFIX)+2*i+1] = BASE + (ret & 0x0F);
+  }
+  crypt[PL_strlen(PREFIX) + 2*PL_strlen(text)] = '\0';
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
 
-  /* use SecretDecoderRing if stealth pref is set */
-  nsresult rv;
-  PRBool prefvalue = PR_FALSE;
-  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
-  if (NS_SUCCEEDED(rv) && 
-      NS_SUCCEEDED(prefs->GetBoolPref("crypto.enabled", &prefvalue)) &&
-      prefvalue) {
+  /* use SecretDecoderRing if crypt doesn't starts with prefix */
+  if (crypt[0] != PREFIX[0]) {
     nsresult rv = wallet_CryptSetup();
     if (NS_SUCCEEDED(rv)) {
       rv = gSecretDecoderRing->DecryptString(crypt, &text);
     }
+    if (NS_FAILED(rv)) {
+      gEncryptionFailure = PR_TRUE;
+    }
     return rv;
   }
 
-#if USER_KNOWS_MASTER_PASSWORD
-  if (PL_strncmp(crypt, "Encrypted:", PL_strlen("Encrypted:")) != 0) {
-    return NS_ERROR_FAILURE;
+  /* otherwise do our own de-obscuring */
+  text = (char *)PR_Malloc((PL_strlen(crypt)-PL_strlen(PREFIX))/2 + 1);
+  for (PRUint32 i=0; i<(PL_strlen(crypt)-PL_strlen(PREFIX))/2; i++) {
+    text[i] =
+      (((crypt[PL_strlen(PREFIX)+2*i] - BASE)<<4) +
+        (crypt[PL_strlen(PREFIX)+2*i+1] - BASE))^'~';
   }
-  text = (char *)PR_Malloc( PL_strlen(crypt) - PL_strlen("Encrypted:") + 1);
-  PL_strcpy(text, &crypt[PL_strlen("Encrypted:")]);
-//  text = PL_strdup(crypt);
-//  for (PRUint32 i=0; i<PL_strlen(crypt); i++) {
-//      text[i] = crypt[i] - 1;
-//  }
+  text[(PL_strlen(crypt)-PL_strlen(PREFIX))/2] = '\0';
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
-#endif
 
 PUBLIC nsresult
 Wallet_Encrypt (nsAutoString text, nsAutoString& crypt) {
@@ -1091,14 +1087,7 @@ Wallet_Encrypt (nsAutoString text, nsAutoString& crypt) {
   /* encrypt text to crypt */
   char * cryptCString = nsnull;
   char * UTF8textCString = UTF8text.ToNewCString();
-#if SIMULATING_CRYPTO
   nsresult rv = EncryptString(UTF8textCString, cryptCString);
-#else
-  nsresult rv = wallet_CryptSetup();
-  if (NS_SUCCEEDED(rv)) {
-    rv = gSecretDecoderRing->EncryptString(UTF8textCString, &cryptCString);
-  }
-#endif
   Recycle (UTF8textCString);
   if NS_FAILED(rv) {
     return rv;
@@ -1115,14 +1104,7 @@ Wallet_Decrypt(nsAutoString crypt, nsAutoString& text) {
   char * cryptCString = crypt.ToNewCString();
   char * UTF8textCString = nsnull;
 
-#if SIMULATING_CRYPTO
   nsresult rv = DecryptString(cryptCString, UTF8textCString);
-#else
-  nsresult rv = wallet_CryptSetup();
-  if (NS_SUCCEEDED(rv)) {
-    rv = gSecretDecoderRing->DecryptString(cryptCString, &UTF8textCString);
-  }
-#endif
   Recycle(cryptCString);
   if NS_FAILED(rv) {
     return rv;
@@ -1474,25 +1456,6 @@ const char schemaConcatFileName[] = "SchemaConcat.tbl";
 const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
 #endif
 
-PRIVATE PRBool
-Wallet_IsKeySet() {
-  char * dummy;
-#if SIMULATING_CRYPTO
-  nsresult rv = EncryptString("dummy", dummy);
-#else
-  nsresult rv = wallet_CryptSetup();
-  if (NS_SUCCEEDED(rv)) {
-    rv = gSecretDecoderRing->EncryptString("dummy", &dummy);
-  }
-#endif
-  if (NS_SUCCEEDED(rv)) {
-    Recycle (dummy);
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
-}
-
 PUBLIC void
 WLLT_ExpirePassword() {
 }
@@ -1539,7 +1502,7 @@ Wallet_RandomName(char* suffix)
   return PL_strdup(name);
 }
 
-#define HEADER_VERSION_2a "#2a"
+#define HEADER_VERSION_2b "#2b"
 
 /*
  * get a line from a file
@@ -1580,7 +1543,7 @@ wallet_GetHeader(nsInputFileStream strm) {
   if (NS_FAILED(wallet_GetLine(strm, format))) {
     return PR_FALSE;
   }
-  if (!format.EqualsWithConversion(HEADER_VERSION_2a)) {
+  if (!format.EqualsWithConversion(HEADER_VERSION_2b)) {
     /* something's wrong */
     return PR_FALSE;
   }
@@ -1604,7 +1567,7 @@ wallet_PutHeader(nsOutputFileStream strm) {
   /* format revision number */
   {
     nsAutoString temp1;
-    temp1.AssignWithConversion(HEADER_VERSION_2a);
+    temp1.AssignWithConversion(HEADER_VERSION_2b);
     wallet_PutLine(strm, temp1);
   }
 }
@@ -2719,8 +2682,7 @@ wallet_OKToCapture(char* urlName) {
   PRUnichar * message = Wallet_Localize("WantToCaptureForm?");
 
   PRInt32 button = Wallet_3ButtonConfirm(message);
-  /* button 1 = YES, 0 = NO, -1 = NEVER */
-  if (button == -1) { /* NEVER button was pressed */
+  if (button == NEVER_BUTTON) {
     /* add URL to list with NO_CAPTURE indicator set */
     value.SetCharAt('y', NO_CAPTURE);
     if (wallet_WriteToList(url, value, dummy, wallet_URL_list, PR_FALSE, DUP_OVERWRITE)) {
@@ -2728,7 +2690,7 @@ wallet_OKToCapture(char* urlName) {
     }
   }
   Recycle(message);
-  return (button == 1);
+  return (button == YES_BUTTON);
 }
 #endif
 
@@ -3128,10 +3090,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
         NS_RELEASE(url);
       }
       wallet_Initialize(PR_TRUE);
-      if (!Wallet_IsKeySet()) {
-        NS_RELEASE(doc);
-        return NS_ERROR_FAILURE;
-      }
+      gEncryptionFailure = PR_FALSE;
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
       result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
@@ -3141,7 +3100,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
         if (nsnull != forms) {
           PRUint32 numForms;
           forms->GetLength(&numForms);
-          for (PRUint32 formX = 0; formX < numForms; formX++) {
+          for (PRUint32 formX = 0; (formX < numForms) && !gEncryptionFailure; formX++) {
             nsIDOMNode* formNode = nsnull;
             forms->Item(formX, &formNode);
             if (nsnull != formNode) {
@@ -3154,7 +3113,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
                   /* got to the form elements at long last */
                   PRUint32 numElements;
                   elements->GetLength(&numElements);
-                  for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+                  for (PRUint32 elementX = 0; (elementX < numElements) && !gEncryptionFailure; elementX++) {
                     nsIDOMNode* elementNode = nsnull;
                     elements->Item(elementX, &elementNode);
                     if (nsnull != elementNode) {
@@ -3162,7 +3121,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
                       PRInt32 index = 0;
                       wallet_PrefillElement * firstElement = nsnull;
                       PRUint32 numberOfElements = 0;
-                      for (;;) {
+                      for (; !gEncryptionFailure;) {
                         /* loop to allow for multiple values */
                         /* first element in multiple-value group will have its count
                          * field set to the number of elements in group.  All other
@@ -3217,7 +3176,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
 
   /* return if no elements were put into the list */
   if (LIST_COUNT(wallet_PrefillElement_list) == 0) {
-    if (Wallet_IsKeySet()) {
+    if (!gEncryptionFailure) {
       PRUnichar * message = Wallet_Localize("noPrefills");
       Wallet_Alert(message);
       Recycle(message);
@@ -3279,15 +3238,12 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
   /* starting with the present shell, get each form element and put them on a list */
   nsresult result;
   PRInt32 captureCount = 0;
+  gEncryptionFailure = PR_FALSE;
   if (nsnull != shell) {
     nsIDocument* doc = nsnull;
     result = shell->GetDocument(&doc);
     if (NS_SUCCEEDED(result)) {
       wallet_Initialize(PR_TRUE);
-      if (!Wallet_IsKeySet()) {
-        NS_RELEASE(doc);
-        return;
-      }
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
       result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
@@ -3297,7 +3253,7 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
         if (nsnull != forms) {
           PRUint32 numForms;
           forms->GetLength(&numForms);
-          for (PRUint32 formX = 0; formX < numForms; formX++) {
+          for (PRUint32 formX = 0; (formX < numForms) && !gEncryptionFailure; formX++) {
             nsIDOMNode* formNode = nsnull;
             forms->Item(formX, &formNode);
             if (nsnull != formNode) {
@@ -3312,7 +3268,7 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
                   /* now find out how many text fields are on the form */
                   PRUint32 numElements;
                   elements->GetLength(&numElements);
-                  for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
+                  for (PRUint32 elementY = 0; (elementY < numElements) && !gEncryptionFailure; elementY++) {
                     nsIDOMNode* elementNode = nsnull;
                     elements->Item(elementY, &elementNode);
                     if (nsnull != elementNode) {
@@ -3367,7 +3323,9 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
     }
   }
   PRUnichar * message;
-  if (captureCount) {
+  if (gEncryptionFailure) {
+    message = Wallet_Localize("UnableToCapture");
+  } else if (captureCount) {
     message = Wallet_Localize("Captured");
   } else {
     message = Wallet_Localize("NotCaptured");

@@ -101,6 +101,10 @@ si_ConfirmYN(PRUnichar * szMessage) {
   return Wallet_ConfirmYN(szMessage);
 }
 
+#define YES_BUTTON 0
+#define NO_BUTTON 1
+#define NEVER_BUTTON 2
+
 extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage);
 PRIVATE PRInt32
 si_3ButtonConfirm(PRUnichar * szMessage) {
@@ -1612,7 +1616,7 @@ si_PutData(const char * URLName, nsVoidArray * signonData, PRBool save) {
  * Managing the Signon Files *
  *****************************/
 
-#define HEADER_VERSION_2a "#2a"
+#define HEADER_VERSION_2b "#2b"
 
 extern void
 Wallet_UTF8Put(nsOutputFileStream strm, PRUnichar c);
@@ -1694,7 +1698,7 @@ SI_LoadSignonData() {
   if (NS_FAILED(si_ReadLine(strm, format))) {
     return -1;
   }
-  if (!format.EqualsWithConversion(HEADER_VERSION_2a)) {
+  if (!format.EqualsWithConversion(HEADER_VERSION_2b)) {
     /* something's wrong */
     return -1;
   }
@@ -1845,7 +1849,7 @@ si_SaveSignonDataLocked() {
 
   /* write out the format revision number */
 
-  si_WriteLine(strm, NS_ConvertToString(HEADER_VERSION_2a));
+  si_WriteLine(strm, NS_ConvertToString(HEADER_VERSION_2b));
 
   /* format for next part of file shall be:
    * URLName -- first url/username on reject list
@@ -1940,18 +1944,13 @@ si_OkToSave(char *URLName, nsAutoString userName) {
   }
 
   PRUnichar * message = Wallet_Localize("WantToSavePassword?");
-  PRInt32 button;
-  if ((button = si_3ButtonConfirm(message)) != 1) {
-    if (button == -1) {
-      si_PutReject(strippedURLName, userName, PR_TRUE);
-    }
-    PR_Free(strippedURLName);
-    Recycle(message);
-    return PR_FALSE;
+  PRInt32 button = si_3ButtonConfirm(message);
+  if (button == NEVER_BUTTON) {
+    si_PutReject(strippedURLName, userName, PR_TRUE);
   }
   Recycle(message);
   PR_Free(strippedURLName);
-  return PR_TRUE;
+  return (button == YES_BUTTON);
 }
 
 /*
@@ -2672,7 +2671,12 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
         buffer.AppendWithConversion(">");
         buffer.AppendWithConversion(url->URLName);
         buffer.AppendWithConversion(":");
-        buffer += data->isPassword ? nsAutoString() : userName; // in case all fields are passwords
+        if (!data->isPassword) { /* need this test in case all fields are passwords */
+          buffer += userName;
+          if (data->value.CharAt(0) != '~') { /* this was an encrypted value */
+            buffer.AppendWithConversion("(encrypted)");
+          }
+        }
         buffer.AppendWithConversion("</OPTION>\n");
         signonNum++;
       } else {
