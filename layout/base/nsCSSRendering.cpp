@@ -408,7 +408,8 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
     outsideBR = outside.YMost();
     break;
 
-  case NS_SIDE_RIGHT:
+  default:
+    NS_ASSERTION(whichSide == NS_SIDE_RIGHT, "whichSide is not a valid side");
     // the TL points are the top end; the BR points are the bottom end
     outsideEdge = outside.XMost();
     insideEdge = inside.XMost();
@@ -1855,7 +1856,8 @@ void nsCSSRendering::DrawCompositeSide(nsIRenderingContext& aRenderingContext,
     shrinkage = (aOuterRect.width+aOuterRect.x) - (aInnerRect.width+aInnerRect.x);
     startRadius = aBorderRadii[1];
     endRadius = aBorderRadii[2];
-  } else if (aWhichSide == NS_SIDE_LEFT) {
+  } else {
+    NS_ASSERTION(aWhichSide == NS_SIDE_LEFT, "incorrect aWhichSide");
     shrinkage = aInnerRect.x - aOuterRect.x;
     startRadius = aBorderRadii[0];
     endRadius = aBorderRadii[3];
