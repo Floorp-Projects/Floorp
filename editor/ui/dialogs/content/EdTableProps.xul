@@ -127,11 +127,11 @@
         <box valign="middle" autostretch="never">
           <text class="label" value="&backgroundColor.label;"/>
           <stack>
-            <button class="dialog color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');" flex="1"/>
+            <button class="dialog color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');"/>
     	      <box autostretch="never" valign="middle" mousethrough="always">
-              <spring class="smallspacer"/>
+              <spring flex="1"/>
               <spring id="tableBackgroundCW" class="color-well"/>
-              <image class="popup-trigger"/>
+              <spring flex="1"/>
             </box>
           </stack>
           <spring class="spacer"/>
@@ -258,9 +258,9 @@
           <stack>
             <button class="dialog color-button" oncommand="GetColorAndUpdate('cellBackgroundCW');" flex="1"/>
     	      <box autostretch="never" valign="middle" mousethrough="always">
-              <spring class="smallspacer"/>
+              <spring flex="1"/>
               <spring id="cellBackgroundCW" class="color-well"/>
-              <image class="popup-trigger"/>
+              <spring flex="1"/>
             </box>
           </stack>
           <spring class="spacer"/>

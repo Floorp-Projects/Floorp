@@ -57,7 +57,7 @@
             tooltip="aTooltip"     tooltiptext="&customColorsRadio.tooltip;" />
         </radiogroup>
         <spring class="spacer"/>
-        <box class="big-left-margin">
+        <box class="big-left-margin" autostretch="never">
           <grid>
             <columns><column/><column/></columns>
             <rows>
@@ -66,9 +66,9 @@
                 <stack>
                   <button id="TextButton" class="dialog color-button" oncommand="GetColorAndUpdate('textCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="textCW" class="color-well"/>
-                    <image class="popup-trigger"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
               </row>
@@ -77,9 +77,9 @@
                 <stack>
                   <button id="LinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('linkCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="linkCW" class="color-well"/>
-                    <image class="popup-trigger"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
               </row>
@@ -88,9 +88,9 @@
                 <stack>
                   <button id="ActiveLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('activeCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="activeCW" class="color-well"/>
-                    <image class="popup-trigger"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
               </row>
@@ -99,9 +99,9 @@
                 <stack>
                   <button id="VisitedLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('visitedCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="visitedCW" class="color-well"/>
-                    <image class="popup-trigger"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
               </row>
@@ -110,9 +110,9 @@
                 <stack>
                   <button id="BackgroundButton" class="dialog color-button" oncommand="GetColorAndUpdate('backgroundCW');"/>
     	            <box autostretch="never" valign="middle" mousethrough="always">
-                    <spring class="smallspacer"/>
+                    <spring flex="1"/>
                     <spring id="backgroundCW" class="color-well"/>
-                    <image class="popup-trigger"/>
+                    <spring flex="1"/>
                   </box>
                 </stack>
               </row>
