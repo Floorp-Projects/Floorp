@@ -835,7 +835,7 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
 }
 
 nsresult
-nsNntpService::CreateNewsAccount(const char *username, const char *hostname, nsIMsgIncomingServer **server)
+nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRBool isSecure, nsIMsgIncomingServer **server)
 {
 	nsresult rv;
 	// username can be null.
@@ -850,6 +850,9 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, nsI
 	if (NS_FAILED(rv)) return rv;
 
 	rv = accountManager->CreateIncomingServer(username, hostname, "nntp", server);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = (*server)->SetIsSecure(isSecure);
 	if (NS_FAILED(rv)) return rv;
 	
 	nsCOMPtr <nsIMsgIdentity> identity;
@@ -885,9 +888,12 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
 {
   nsXPIDLCString hostName;
   nsXPIDLCString userName;
-
-  nsresult rv = aUri->GetHost(getter_Copies(hostName));
+  nsXPIDLCString scheme;
+  nsresult rv;
+  
+  rv = aUri->GetHost(getter_Copies(hostName));
   rv = aUri->GetPreHost(getter_Copies(userName));
+  rv = aUri->GetScheme(getter_Copies(scheme));
 
   nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -902,7 +908,11 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
                                 getter_AddRefs(server));
 
   if (NS_FAILED(rv) || !server) {
-	  rv = CreateNewsAccount((const char *)userName,(const char *)hostName,getter_AddRefs(server));
+	  PRBool isSecure = PR_FALSE;
+	  if (nsCRT::strcasecmp("snews",(const char *)scheme) == 0) {
+		  isSecure = PR_TRUE;
+	  }
+	  rv = CreateNewsAccount((const char *)userName,(const char *)hostName,isSecure,getter_AddRefs(server));
   }
    
   if (NS_FAILED(rv)) return rv;

@@ -72,7 +72,7 @@ protected:
   
   // a convience routine used to put together news urls.
   nsresult ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsIUrlListener *aUrlListener,  nsIURI ** aUrl);
-  nsresult CreateNewsAccount(const char *username, const char *hostname, nsIMsgIncomingServer **server);
+  nsresult CreateNewsAccount(const char *username, const char *hostname, PRBool isSecure, nsIMsgIncomingServer **server);
   nsresult GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol);
   // a convience routine to run news urls
   nsresult RunNewsUrl (nsIURI * aUrl, nsIMsgWindow *aMsgWindow, nsISupports * aConsumer);
