@@ -991,14 +991,26 @@
                 this.setStripVisibilityTo(true);
             }
 
+            if (!this.mTabbedMode && this.mProgressListeners.length == 1) {
+              // If we are adding a 2nd progress listener, we need to enter tabbed mode
+              // because the browser status filter can only handle one progress listener.
+              // In tabbed mode, mTabProgressListener is used which will iterate over all listeners.
+              this.enterTabbedMode();
+            }
+
             this.mProgressListeners.push(aListener);
 
             if (!this.mTabbedMode) {
-              // hook a filter up to our first browser
-              const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
-                                       .createInstance(Components.interfaces.nsIWebProgress);
-              this.mTabFilters[0] = filter;
-              this.mCurrentBrowser.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+              // If someone does this:
+              // addProgressListener, removeProgressListener, addProgressListener
+              // don't create a new filter; reuse the existing filter.
+              if (this.mTabFilters.length == 0) {
+                // hook a filter up to our first browser
+                const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
+                                         .createInstance(Components.interfaces.nsIWebProgress);
+                this.mTabFilters[0] = filter;
+                this.mCurrentBrowser.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+              }
 
               // Directly hook the listener up to the filter for better performance
               this.mTabFilters[0].addProgressListener(aListener, aMask);
