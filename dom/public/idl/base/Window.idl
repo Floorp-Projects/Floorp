@@ -6,6 +6,8 @@
         readonly attribute  Window self;
         readonly attribute  Document document;
         readonly attribute  Navigator navigator;
+        readonly attribute  Screen screen;
+        readonly attribute  History history;
         readonly attribute  Window parent;
         readonly attribute  Window top;
         readonly attribute  boolean closed;
