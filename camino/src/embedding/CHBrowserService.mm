@@ -238,7 +238,7 @@ CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext,
   {
     NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(downloadFile));
     
-    nsCAutoString leafName;
+    nsAutoString leafName;
     inLauncher->GetSuggestedFileName(leafName);
     if (leafName.IsEmpty())
     {
