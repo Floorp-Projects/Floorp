@@ -17,6 +17,8 @@
   *
   * Contributor(s): Byron Jones <bugzilla@glob.com.au>
   *                 Christian Reis <kiko@async.com.br>
+  *                 Vitaly Harisov <vitaly@rathedg.com>
+  *                 Svetlana Harisova <light@rathedg.com>
   */
 
 /* banner (begin) */
@@ -70,6 +72,99 @@
         font-size: 85%;
     }
 /* banner (end) */
+
+/* footer (begin) */
+    #footer
+    {
+        float: left;
+    }
+
+    #footer form
+    {
+        background: #FFFFE0;
+        border: 1px solid #000;
+    }
+
+    #footer span
+    {
+        display: block;
+    }
+
+    #footer .btn, #footer .txt
+    {
+        font-size: 0.8em;
+    }
+
+    #footer #useful-links
+    {
+        padding: 0.3em;
+    }
+
+    /* hide from MSIE and NN4 */
+    [id]#footer #useful-links
+    {
+        margin: 0.3em;
+        display: table;
+    }
+
+    #footer .group
+    {
+        display: table-row;
+    }
+
+    #footer #link-action,
+    #footer #link-edit,
+    #footer #link-saved
+    {
+        width: 7.2em;
+        display: block;
+        float: left;
+
+        vertical-align: baseline;
+
+        padding: 0.1em 0.2em;
+    }
+
+    #footer #link-action
+    {
+        padding-top: 0.45em;
+    }
+
+    /* hide from MSIE and NN4 */
+    [id]#footer #link-action,
+    [id]#footer #link-edit,
+    [id]#footer #link-saved
+    {
+        display: table-cell;
+        float: none;
+        width: auto;
+
+        padding-top: 0;
+    }
+
+    #footer .links
+    {
+        display: block;
+
+        padding: 0.1em 0.2em;
+    }
+
+    /* hide from MSIE and NN4 */
+    [id]#footer .links
+    {
+        display: table-cell;
+
+        padding-top: 0;
+        
+        vertical-align: baseline;
+    }
+
+    /* hide from MSIE and NN4 */
+    #footer+*
+    {
+        clear: both;
+    }
+/* footer (end) */
 
 .bz_obsolete { text-decoration: line-through; }
 .bz_inactive { text-decoration: line-through; }

@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Svetlana Harisova <light@rathedg.com>
   #%]
 
 [%# INTERFACE:
@@ -30,13 +31,8 @@
   # 'footerhtml'
   #%]
 
-<table border="0">
-  <tr>
-    <td bgcolor="#000000" valign="top">
-      <table border="0" cellpadding="10" cellspacing="0" width="100%"
-             bgcolor="lightyellow">
-        <tr>
-          <td>
+<div id="footer">
+  <div class="intro"></div>
 
 [%# Migration note: the old param 'blurbhtml' goes here %]
 
@@ -44,11 +40,8 @@
 
            [% PROCESS "global/useful-links.html.tmpl" %]
 
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+  <div class="outro"></div>
+</div>
+
 </body>
 </html>

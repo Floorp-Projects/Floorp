@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Svetlana Harisova <light@rathedg.com>
   #%]
 
 [%# Migration note: this whole file corresponds to the old %commandmenu% 
@@ -25,18 +26,15 @@
 [% PROCESS global/variables.none.tmpl %]
 
 <form method="get" action="show_bug.cgi">
-  <table width="100%" cellspacing="4">
-    <tr>
-      <td>
-        Actions:
-      </td>
-      
-      <td valign="middle">
+<div id="useful-links">
+  <div class="group">
+    <div id="link-action">Actions:</div>
+    <div class="links">
         <a href="enter_bug.cgi">New</a> | 
         <a href="query.cgi">Search</a> |
         
-        <input type="submit" value="Find"> [% terms.bug %] # 
-        <input name="id" size="6"> | 
+        <input class="btn" type="submit" value="Find"> [% terms.bug %] # 
+        <input class="txt" name="id" size="6"> | 
         
         <a href="report.cgi">Reports</a> 
         
@@ -62,15 +60,14 @@
             [% END %]
             | <a href="query.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
         [% END %]
-      </td>
-    </tr>
+    </div>
+  </div>
       
     [% IF user.login %] 
-    <tr>
-      <td>
-        Edit:
-      </td>
-      <td valign="middle">
+  <div class="group">
+    <div id="link-edit">Edit:</div>
+    <div class="links">
+
         <a href="userprefs.cgi">Prefs</a>
         [% ' | <a href="editparams.cgi">Parameters</a>' 
                                                   IF user.groups.tweakparams %]
@@ -84,21 +81,20 @@
                                                  IF user.groups.creategroups %]
         [% ' | <a href="editkeywords.cgi">Keywords</a>' 
                                                  IF user.groups.editkeywords %]
-      </td>
-    </tr> 
+    </div>
+  </div>
     [% END %]
     
 
     [%# Saved searches %]
     
-    <tr>
+  <div class="group">
+    <div id="link-saved">
       [% IF user.showmybugslink OR user.queries.size %]
-        <td>
           Saved&nbsp;Searches:
-        </td>
       [% END %]
-      
-      <td valign="middle">
+    </div>
+    <div class="links">
         [% IF user.showmybugslink %]
           [% filtered_username = user.login FILTER url_quote %]
           <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My&nbsp;[% terms.Bugs %]</a>
@@ -112,8 +108,7 @@
             [% print_pipe = 1 %]
           [% END %]
         [% END %]
-      </td>
-    </tr>
-    
-  </table>
+    </div>
+  </div>
+</div>
 </form>
