@@ -686,6 +686,7 @@ case "$target" in
     if test "$GNU_CC"; then
        MKSHLIB_FORCE_ALL='-Wl,-all'
        MKSHLIB_UNFORCE_ALL='-Wl,-none'
+       CXXFLAGS="$CXXFLAGS -D_LANGUAGE_C_PLUS_PLUS"
     else
        MKSHLIB_FORCE_ALL='-all'
        MKSHLIB_UNFORCE_ALL='-none'
@@ -705,6 +706,7 @@ case "$target" in
        MKSHLIB_UNFORCE_ALL='-Wl,-none'
        _WARNINGS_CFLAGS="-Wall"
        _WARNINGS_CXXFLAGS="-Wall"
+       CXXFLAGS="$CXXFLAGS -D_LANGUAGE_C_PLUS_PLUS"
     else
        MKSHLIB_FORCE_ALL='-all'
        MKSHLIB_UNFORCE_ALL='-none'
