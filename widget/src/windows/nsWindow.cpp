@@ -2947,6 +2947,30 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
 				mIMECursorPosition = ::ImmGetCompositionString(hIMEContext,GCS_CURSORPOS,NULL,0);
 			}
+
+			//
+			// This catches a fixed result
+			//
+			if (lParam & GCS_RESULTSTR) {
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_RESULTSTR\n");
+#endif
+				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,NULL,0);
+				if (compStrLen+1>mIMECompositionStringSize) {
+					delete [] mIMECompositionString;
+					mIMECompositionString = new char[compStrLen+32];
+					mIMECompositionStringSize = compStrLen+32;
+				}
+				
+				::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,mIMECompositionString,mIMECompositionStringSize);
+				mIMECompositionStringLength = compStrLen;
+				mIMECompositionString[compStrLen]='\0';
+				result = PR_TRUE;
+				HandleTextEvent(hIMEContext, PR_FALSE);
+				HandleEndComposition();
+				HandleStartComposition(hIMEContext);
+                                bSendEvent = PR_TRUE;
+			}
 			//
 			// This provides us with a composition string
 			//
@@ -2968,38 +2992,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				result = PR_TRUE;
                                 bSendEvent = PR_TRUE;
 			}
-
-			//
-			// This catches a fixed result
-			//
-			if (lParam & GCS_RESULTSTR) {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_RESULTSTR\n");
-#endif
-				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,NULL,0);
-				if (compStrLen+1>mIMECompositionStringSize) {
-					delete [] mIMECompositionString;
-					mIMECompositionString = new char[compStrLen+32];
-					mIMECompositionStringSize = compStrLen+32;
-				}
-				
-				::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,mIMECompositionString,mIMECompositionStringSize);
-				mIMECompositionStringLength = compStrLen;
-				mIMECompositionString[compStrLen]='\0';
-				result = PR_TRUE;
-			        mIMEIsComposing = PR_FALSE;
-				HandleTextEvent(hIMEContext);
-				HandleEndComposition();
-				HandleStartComposition(hIMEContext);
-                                bSendEvent = PR_TRUE;
-			}
                         if(! bSendEvent)
                         {
 #if defined(DEBUG_tague) || defined(DEBUG_ftang)
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: haandle 0 length TextEvent. \n");
 #endif
 				mIMECompositionStringLength = 0;
-				HandleTextEvent(hIMEContext);
+				HandleTextEvent(hIMEContext,PR_FALSE);
                                 bSendEvent = PR_TRUE;
                         }
 			
@@ -3752,7 +3751,7 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 void
-nsWindow::HandleTextEvent(HIMC hIMEContext)
+nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 {
   nsTextEvent		event;
   nsPoint			point;
@@ -3783,7 +3782,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext)
   // mapped to the unicode text
   //
   
-  if(mIMEIsComposing) {
+  if(aCheckAttr) {
      MapDBCSAtrributeArrayToUnicodeOffsets(&(event.rangeCount),&(event.rangeArray));
   } else {
      event.rangeCount = 0;
