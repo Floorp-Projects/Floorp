@@ -374,8 +374,6 @@ MSG_CompositionPane::Initialize(MWContext* old_context,
 								MSG_CompositionFields* fields)
 {
 	m_print = new PrintSetup;
-	HG22658
-								// ###tw   Should do something if this failed!
 
 	InitializeHeaders(old_context, fields);
 	m_visible_headers = GetInterestingHeaders();
@@ -414,8 +412,6 @@ MSG_CompositionPane::~MSG_CompositionPane() {
 
 	delete m_print;
 	m_print = NULL;
-
-	HG28266
 
 	if (m_context) FE_DestroyMailCompositionContext(m_context);
 	m_context = NULL;
