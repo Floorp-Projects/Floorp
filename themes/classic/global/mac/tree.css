@@ -293,3 +293,25 @@ treechildren.gridlines::-moz-tree-cell {
 treechildren.gridlines::-moz-tree-row {
   border: none;
 }
+
+/* ::::: alternating background ::::: */
+
+treechildren[alternatingbackground="true"]::-moz-tree-row(odd) {
+  background-color: #f3f3f3;
+}
+
+treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected) {
+  background-color: -moz-Dialog;
+}
+
+treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected) {
+  color: -moz-DialogText;
+}
+
+treechildren[alternatingbackground="true"]::-moz-tree-row(odd, selected, focus) {
+  background-color: Highlight;
+}
+
+treechildren[alternatingbackground="true"]::-moz-tree-cell-text(odd, selected, focus) {
+  color: HighlightText;
+}
