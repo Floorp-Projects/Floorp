@@ -1138,6 +1138,8 @@ nsRDFDocument::SetRootResource(nsIRDFNode* aResource)
         return rv;
 
     SetRootContent(NS_STATIC_CAST(nsIContent*, root));
+
+    NS_RELEASE(root); // release our local reference
     return NS_OK;
 }
 
