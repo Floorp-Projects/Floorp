@@ -677,9 +677,12 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 	  {
 	  	if (cursor >= 128)
 	  	{
-				nsMacResources::OpenLocalResourceFile();
-		  	::SetCursor(*(::GetCursor(cursor)));
-				nsMacResources::CloseLocalResourceFile();
+        nsMacResources::OpenLocalResourceFile();
+        CursHandle cursHandle = ::GetCursor(cursor);
+        NS_ASSERTION ( cursHandle, "Can't load cursor, is the resource file installed correctly?" );
+        if ( cursHandle )
+          ::SetCursor(*cursHandle);
+        nsMacResources::CloseLocalResourceFile();
 			}
 			else
 	  		::SetThemeCursor(cursor);
@@ -724,14 +727,20 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 	  }
 	  if (cursor > 0)
 	  {
-	  	if (cursor >= 128)
-	  	{
-				nsMacResources::OpenLocalResourceFile();
-		  	::SetCursor(*(::GetCursor(cursor)));
-				nsMacResources::CloseLocalResourceFile();
-			}
-			else
-			  	::SetCursor(*(::GetCursor(cursor)));
+      if (cursor >= 128) {
+        nsMacResources::OpenLocalResourceFile();
+        CursHandle cursHandle = ::GetCursor(cursor);
+        NS_ASSERTION ( cursHandle, "Can't load cursor, is the resource file installed correctly?" );
+        if ( cursHandle )
+          ::SetCursor(*cursHandle);
+        nsMacResources::CloseLocalResourceFile();
+      }
+      else {
+        CursHandle cursHandle = ::GetCursor(cursor);
+        NS_ASSERTION ( cursHandle, "Can't load cursor, is the resource file installed correctly?" );
+        if ( cursHandle )
+          ::SetCursor(*cursHandle);
+      }
 	  }
   }
  
