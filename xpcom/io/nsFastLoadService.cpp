@@ -509,7 +509,8 @@ nsFastLoadService::ReadFastLoadPtr(nsIObjectInputStream* aInputStream,
     NS_ASSERTION(entry->mPtrAddr == nsnull, "duplicate nsFastLoadPtr?!");
 
     entry->mPtrAddr = aPtrAddr;
-    entry->mOffset = thisOffset;
+
+    LL_L2UI(entry->mOffset, thisOffset);
     return NS_OK;
 }
 

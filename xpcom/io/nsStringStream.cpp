@@ -267,7 +267,9 @@ NS_IMETHODIMP nsStringInputStream::Seek(PRInt32 whence, PRInt64 offset)
     mLastResult = NS_OK; // reset on a seek.
     const nsInt64 maxUint32 = PR_UINT32_MAX;
     nsInt64 offset64(offset);
-    PRInt32 offset32 = offset;
+    PRInt32 offset32;
+    LL_L2I(offset32, offset);
+
     NS_ASSERTION(maxUint32 > offset64, "string streams only support 32 bit offsets");
     mEOF = PR_FALSE; // reset on a seek.
     PRInt32 fileSize = LengthRemaining();
