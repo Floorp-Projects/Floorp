@@ -53,7 +53,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
-  virtual nsIDocument* GetDocument() const;
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
   virtual void SetDocument(nsIDocument* aDocument);
 
   virtual nsIContent* GetParent() const;
@@ -63,10 +63,11 @@ public:
   virtual PRInt32 ChildCount() const;
   virtual nsIContent* ChildAt(PRInt32 aIndex) const;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
-  virtual PRBool InsertChildAt(nsIContent* aKid, PRInt32 aIndex);
-  virtual PRBool ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex);
-  virtual PRBool AppendChild(nsIContent* aKid);
-  virtual PRBool RemoveChildAt(PRInt32 aIndex);
+
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD AppendChild(nsIContent* aKid, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
   NS_IMETHOD IsSynthetic(PRBool& aResult);
 
