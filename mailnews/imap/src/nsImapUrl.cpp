@@ -52,7 +52,8 @@ nsImapUrl::nsImapUrl()
 	m_sourceCanonicalFolderPathSubString = nsnull;
 	m_destinationCanonicalFolderPathSubString = nsnull;
 	m_listOfMessageIds = nsnull;
-    m_tokenPlaceHolder = nsnull;
+  m_tokenPlaceHolder = nsnull;
+  m_searchCriteriaString = nsnull;
 	m_idsAreUids = PR_FALSE;
 	m_mimePartSelectorDetected = PR_FALSE;
 	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
@@ -88,7 +89,7 @@ nsImapUrl::~nsImapUrl()
 	PR_FREEIF(m_listOfMessageIds);
 	PR_FREEIF(m_destinationCanonicalFolderPathSubString);
 	PR_FREEIF(m_sourceCanonicalFolderPathSubString);
-
+  PR_FREEIF(m_searchCriteriaString);
 }
   
 NS_IMPL_ADDREF_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
@@ -1118,8 +1119,43 @@ void nsImapUrl::ParseFolderPath(char **resultingCanonicalPath)
 
 void nsImapUrl::ParseSearchCriteriaString()
 {
-	m_searchCriteriaString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
-	if (!m_searchCriteriaString)
+	if (m_tokenPlaceHolder)
+	{
+		int quotedFlag = FALSE;
+
+		//skip initial separator
+		while (*m_tokenPlaceHolder == *IMAP_URL_TOKEN_SEPARATOR)
+			m_tokenPlaceHolder++;
+		
+     char *saveTokenPlaceHolder = m_tokenPlaceHolder;
+
+//		m_searchCriteriaString = m_tokenPlaceHolder;
+		
+		//looking for another separator outside quoted string
+		while (*m_tokenPlaceHolder)
+		{
+			if (*m_tokenPlaceHolder == '\\' && *(m_tokenPlaceHolder+1) == '"')
+				m_tokenPlaceHolder++;
+			else if (*m_tokenPlaceHolder == '"')
+				quotedFlag = !quotedFlag;
+			else if (!quotedFlag && *m_tokenPlaceHolder == *IMAP_URL_TOKEN_SEPARATOR)
+			{
+				*m_tokenPlaceHolder = '\0';
+				m_tokenPlaceHolder++;
+				break;
+			}
+			m_tokenPlaceHolder++;
+		}
+    m_searchCriteriaString = PL_strdup(saveTokenPlaceHolder);
+		if (*m_tokenPlaceHolder == '\0')
+			m_tokenPlaceHolder = NULL;
+
+		if (*m_searchCriteriaString == '\0')
+			m_searchCriteriaString = (char *)NULL;
+	}
+	else
+		m_searchCriteriaString = (char *)NULL;
+  if (!m_searchCriteriaString)
 		m_validUrl = PR_FALSE;
 }
 
