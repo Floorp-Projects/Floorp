@@ -77,13 +77,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_ColumnIconURL;
   RDF_Resource RDF_ColumnDataType;
   RDF_Resource RDF_smallIcon;				/* Small normal icon. */
-  RDF_Resource RDF_smallRolloverIcon;		/* The small icon to display on rollover. */
-  RDF_Resource RDF_smallPressedIcon;		/* The small icon to display on a press. */
-  RDF_Resource RDF_smallDisabledIcon;		/* The icon to display when disabled. */
   RDF_Resource RDF_largeIcon;				/* Large normal icon. */
-  RDF_Resource RDF_largeRolloverIcon;		/* Large rollover icon. */
-  RDF_Resource RDF_largePressedIcon;		/* Large pressed icon. */
-  RDF_Resource RDF_largeDisabledIcon;		/* Large disabled icon. */
   RDF_Resource RDF_Guide;
   RDF_Resource RDF_HTMLURL;
   RDF_Resource RDF_HTMLHeight;
@@ -149,6 +143,9 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource columnHeaderBGURL;
   RDF_Resource showColumnHeaders;
   RDF_Resource showColumnHeaderDividers;
+  RDF_Resource showTitleBar; /* Whether or not to show the title bar at all */
+  RDF_Resource showControlStrip; /* Whether or not to show the control strip at all. */
+
   RDF_Resource sortColumnFGColor;
   RDF_Resource sortColumnBGColor;
   RDF_Resource titleBarFGColor;
@@ -166,7 +163,6 @@ typedef struct _RDF_NCVocabStruct {
   
   RDF_Resource useInlineEditing;
   RDF_Resource useSingleClick;
-  RDF_Resource useSelection;	/* also marquee selection, drag and drop, context menus */
   RDF_Resource loadOpenState;
   RDF_Resource saveOpenState;
   
@@ -175,7 +171,11 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource toolbarDisplayMode;
   RDF_Resource toolbarCollapsed;
   RDF_Resource toolbarVisible;
-
+  RDF_Resource toolbarRolloverIcon;		/* The icon to display on rollover. */
+  RDF_Resource toolbarPressedIcon;		/* The icon to display on a press. */
+  RDF_Resource toolbarDisabledIcon;		/* The icon to display when disabled. */
+  RDF_Resource toolbarEnabledIcon;		/* THe icon to display when enabled. */
+ 
   /* Cookie Stuff */
   RDF_Resource cookieDomain;
   RDF_Resource cookieValue;
@@ -185,8 +185,6 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource cookieExpires;
 
   RDF_Resource toolbarButtonsFixedSize; /* Whether or not the buttons must be the same size ("yes"/"no") */
-  RDF_Resource buttonTooltipText;	/* The tooltip text for a button. */
-  RDF_Resource buttonStatusbarText;	/* The status bar text for a button. */
   RDF_Resource viewRolloverColor;   /* What to display when an item is rolled over in a view.*/
   RDF_Resource viewPressedColor; /* What to display when an item is pressed in a view. */
   RDF_Resource viewDisabledColor; /* Color to use when item is disabled in a view. */
@@ -194,11 +192,13 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource urlBarWidth; /* The width of the URL bar. */
   
   RDF_Resource buttonTreeState; /* The tree state (docked, popup) for a button. */
+  RDF_Resource buttonTooltipText;	/* The tooltip text for a button. */
+  RDF_Resource buttonStatusbarText;	/* The status bar text for a button. */
+  RDF_Resource buttonBorderStyle;	/* What type of border the button should have. */
 
   RDF_Resource controlStripFGColor; /* The tree's control strip foreground */
   RDF_Resource controlStripBGColor; /* The tree's control strip background */
   RDF_Resource controlStripBGURL; /* The tree's control strip BG URL */
-  RDF_Resource controlStripModeText; /* The text to display for switching modes in the control strip. */
   RDF_Resource controlStripCloseText; /* The text displayed for the close function in the control strip. */
 
   RDF_Resource pos;

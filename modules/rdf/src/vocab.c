@@ -239,7 +239,6 @@ createNavCenterVocab () {
   /* NavCenter behavior properties */
   gNavCenter->useInlineEditing = newResource("useInlineEditing", 0 /* XXX */);
   gNavCenter->useSingleClick = newResource("useSingleClick", 0 /* XXX */);
-  gNavCenter->useSelection = newResource("useSelection", 0 /* XXX */);
   gNavCenter->loadOpenState = newResource("loadOpenState", 0 /* XXX */);
   gNavCenter->saveOpenState = newResource("saveOpenState", 0 /* XXX */);
  
@@ -251,14 +250,13 @@ createNavCenterVocab () {
   gNavCenter->toolbarDisplayMode = newResource("toolbarDisplayMode", 0);
   gNavCenter->toolbarCollapsed = newResource("toolbarCollapsed", 0);
   gNavCenter->toolbarVisible = newResource("toolbarVisible", 0);
-  gNavCenter->RDF_smallDisabledIcon = newResource("smallDisabledIcon", 0 /* XXX */);
-  gNavCenter->RDF_largeDisabledIcon  = newResource("largeDisabledIcon", 0 /* XXX */);
-  gNavCenter->RDF_smallRolloverIcon = newResource("smallRolloverIcon", 0 /* XXX */);
-  gNavCenter->RDF_largeRolloverIcon  = newResource("largeRolloverIcon", 0 /* XXX */);
-  gNavCenter->RDF_smallPressedIcon = newResource("smallPressedIcon", 0 /* XXX */);
-  gNavCenter->RDF_largePressedIcon  = newResource("largePressedIcon", 0 /* XXX */);
+  gNavCenter->toolbarDisabledIcon = newResource("toolbarDisabledIcon", 0 /* XXX */);
+  gNavCenter->toolbarEnabledIcon  = newResource("toolbarEnabledIcon", 0 /* XXX */);
+  gNavCenter->toolbarRolloverIcon = newResource("toolbarRolloverIcon", 0 /* XXX */);
+  gNavCenter->toolbarPressedIcon  = newResource("toolbarPressedIcon", 0 /* XXX */);
   gNavCenter->buttonTooltipText = newResource("buttonTooltipText", 0 /* XXX */);
   gNavCenter->buttonStatusbarText = newResource("buttonStatusbarText", 0 /* XXX */);
+  gNavCenter->buttonBorderStyle = newResource("buttonBorderStyle", 0 /* XXX */);
   gNavCenter->urlBar = newResource("urlBar", 0 /* XXX */);
   gNavCenter->urlBarWidth = newResource("urlBarWidth", 0 /* XXX */);
   gNavCenter->pos = newResource("pos", 0 /* XXX */);
@@ -268,9 +266,10 @@ createNavCenterVocab () {
   gNavCenter->controlStripFGColor = newResource("controlStripFGColor", 0 /* XXX */);
   gNavCenter->controlStripBGColor = newResource("controlStripBGColor", 0 /* XXX */);
   gNavCenter->controlStripBGURL = newResource("controlStripBGURL", 0 /* XXX */);
-  gNavCenter->controlStripModeText = newResource("controlStripModeText", 0 /* XXX */);
   gNavCenter->controlStripCloseText = newResource("controlStripCloseText", 0 /* XXX */);
   gNavCenter->titleBarShowText = newResource("titleBarShowText", 0 /* XXX */);
+  gNavCenter->showTitleBar = newResource("showTitleBar", 0 /* XXX */);
+  gNavCenter->showControlStrip = newResource("showControlStrip", 0 /* XXX */);
 
   /* Buttons */
   gNavCenter->buttonTreeState = newResource("buttonTreeState", 0 /* XXX */);

@@ -121,9 +121,14 @@ void
 HT_Shutdown()
 {
 	/* Free templates */
-	HT_DeletePane(gNavigationTemplate);
-	HT_DeletePane(gChromeTemplate);
-	HT_DeletePane(gManagementTemplate);
+	if (gNavigationTemplate)
+		HT_DeletePane(gNavigationTemplate);
+	
+	if (gChromeTemplate)
+		HT_DeletePane(gChromeTemplate);
+	
+	if (gManagementTemplate)
+		HT_DeletePane(gManagementTemplate);
 
 	freeMenuCommandList();
 	gInited = PR_FALSE;
@@ -1333,7 +1338,7 @@ HT_PaneFromResource(RDF_Resource r, HT_Notification n, PRBool autoFlush, PRBool 
 
 
 PR_PUBLIC_API(HT_Pane)
-HT_PaneFromURL(void *pContext, char *url, HT_Notification n, PRBool autoFlush, int32 param_count, 
+HT_PaneFromURL(void *pContext, char *url, char* templateType, HT_Notification n, PRBool autoFlush, int32 param_count, 
                char** param_names, char** param_values)
 {
 	HT_Pane			pane = NULL;
@@ -1374,6 +1379,7 @@ HT_PaneFromURL(void *pContext, char *url, HT_Notification n, PRBool autoFlush, i
                              copyString(title), RDF_STRING_TYPE, 1);
               setContainerp(r, 1);
               pane = paneFromResource(db, r, n, autoFlush, 1, 0);
+			  pane->templateType = copyString(templateType);
               view = pane->viewList;
             }
 	}
@@ -1507,10 +1513,10 @@ struct	{
 	matches[1].name = "keyword";		matches[1].r = gWebData->RDF_keyword;
 	matches[2].name = "smallIcon";		matches[2].r = gNavCenter->RDF_smallIcon;
 	matches[3].name = "largeIcon";		matches[3].r = gNavCenter->RDF_largeIcon;
-	matches[4].name = "smallPressedIcon";	matches[4].r = gNavCenter->RDF_smallPressedIcon;
-	matches[5].name = "largePressedIcon";	matches[5].r = gNavCenter->RDF_largePressedIcon;
-	matches[6].name = "smallRolloverIcon";	matches[6].r = gNavCenter->RDF_smallRolloverIcon;
-	matches[7].name = "largeRolloverIcon";	matches[7].r = gNavCenter->RDF_largeRolloverIcon;
+	matches[4].name = "toolbarPressedIcon";		matches[4].r = gNavCenter->toolbarPressedIcon;
+	matches[5].name = "toolbarRolloverIcon";	matches[5].r = gNavCenter->toolbarRolloverIcon;
+	matches[6].name = "toolbarEnabledIcon";		matches[6].r = gNavCenter->toolbarEnabledIcon;
+	matches[7].name = "toolbarDisabledIcon";	matches[7].r = gNavCenter->toolbarDisabledIcon;
 	matches[8].name = NULL;			matches[8].r = NULL;
 
 	XP_ASSERT(context != NULL);
@@ -2318,6 +2324,21 @@ deleteHTNode(HT_Resource node)
 			freeMem(node->url[1]);
 			node->url[1] = NULL;
 		}
+		if (node->url[2] != NULL)
+		{
+			freeMem(node->url[2]);
+			node->url[2] = NULL;
+		}
+		if (node->url[3] != NULL)
+		{
+			freeMem(node->url[3]);
+			node->url[3] = NULL;
+		}
+		if (node->url[4] != NULL)
+		{
+			freeMem(node->url[4]);
+			node->url[4] = NULL;
+		}
 	}
 
 	if ((!node->view->refreshingItemListp) && (node->view->itemList != NULL))
@@ -2597,7 +2618,9 @@ htDeletePane(HT_Pane pane, PRBool saveWorkspaceOrderFlag)
 		paneList = &(*paneList)->next;
 	}
 
-	
+	if (pane->templatePane)
+		htDeletePane(pane->templatePane, PR_FALSE);
+
     PaneDeleteSBPCleanup (pane);
 	freeMem(pane);
 }
@@ -5404,17 +5427,29 @@ PR_PUBLIC_API(PRBool)
 HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData)
 {
 	void* data = NULL;
+	HT_Pane thePane = NULL;
+	HT_Pane templatePane = NULL;
 
 	if (HT_GetNodeData(node, token, tokenType, nodeData))
 		return PR_TRUE;
 	
 	/* Use the template instead */
-	
+	thePane = HT_GetPane(HT_GetView(node));
+
 	/* Figure out which template to use based on the current window state of this view. */
-	if (HT_GetPane(HT_GetView(node))->toolbar)
+	if (thePane->toolbar)
 		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gChromeTemplate)),
 							  token, tokenType, nodeData);
-	if (HT_GetPane(HT_GetView(node))->windowType == HT_STANDALONE_WINDOW)
+	else if (thePane->templateType != NULL)
+	{
+		/* Make sure we have a valid template to use. */
+		if (templatePane == NULL)
+			templatePane = newTemplatePane(thePane->templateType);
+
+		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(templatePane)),
+							  token, tokenType, nodeData);
+	}
+	else if (thePane->windowType == HT_STANDALONE_WINDOW)
 		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gManagementTemplate)),
 							  token, tokenType, nodeData);
 	else
@@ -5598,6 +5633,21 @@ HT_SetNodeData (HT_Resource node, void *token, uint32 tokenType, void *data)
 							freeMem(node->url[1]);
 							node->url[1] = NULL;
 						}
+						if (node->url[2] != NULL)
+						{
+							freeMem(node->url[2]);
+							node->url[2] = NULL;
+						}
+						if (node->url[3] != NULL)
+						{
+							freeMem(node->url[3]);
+							node->url[3] = NULL;
+						}
+						if (node->url[4] != NULL)
+						{
+							freeMem(node->url[4]);
+							node->url[4] = NULL;
+						}
 					}
 				}
 			}
@@ -5665,18 +5715,18 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 			(token == gNavCenter->toolbarBitmapPosition) || (token == gNavCenter->toolbarButtonsFixedSize) ||
 			(token == gNavCenter->toolbarDisplayMode) ||
 			(token == gNavCenter->toolbarCollapsed) || (token == gNavCenter->toolbarVisible) ||
-			(token == gNavCenter->RDF_smallDisabledIcon) || (token == gNavCenter->RDF_largeDisabledIcon) ||
-			(token == gNavCenter->RDF_smallRolloverIcon) || (token == gNavCenter->RDF_largeRolloverIcon) ||
-			(token == gNavCenter->RDF_smallPressedIcon) || (token == gNavCenter->RDF_largePressedIcon) ||
+			(token == gNavCenter->toolbarDisabledIcon) || (token == gNavCenter->toolbarEnabledIcon) ||
+			(token == gNavCenter->toolbarRolloverIcon) || (token == gNavCenter->toolbarPressedIcon) ||
 			(token == gNavCenter->buttonTooltipText) || (token == gNavCenter->buttonStatusbarText) ||
 			(token == gNavCenter->urlBar) || (token == gNavCenter->urlBarWidth) || 
-			(token == gNavCenter->buttonTreeState) ||
+			(token == gNavCenter->buttonTreeState) || (token == gNavCenter->buttonBorderStyle) ||
 			(token == gNavCenter->useInlineEditing) || (token == gNavCenter->useSingleClick) ||
 			(token == gNavCenter->loadOpenState) || (token == gNavCenter->saveOpenState) ||
-			(token == gNavCenter->useSelection) || (token == gNavCenter->controlStripFGColor) ||
+			(token == gNavCenter->controlStripFGColor) ||
 			(token == gNavCenter->controlStripBGColor) || (token == gNavCenter->controlStripBGURL) ||
-			(token == gNavCenter->controlStripModeText) || (token == gNavCenter->controlStripCloseText) ||
-			(token == gNavCenter->titleBarShowText) ||
+			(token == gNavCenter->controlStripCloseText) ||
+			(token == gNavCenter->titleBarShowText) || (token == gNavCenter->showTitleBar) ||
+			(token == gNavCenter->showControlStrip) ||
 		/*  ((token == gWebData->RDF_URL) && ht_isURLReal(node)) || */
 #ifdef	HT_PASSWORD_RTNS
 			(token == gNavCenter->RDF_Password) ||
@@ -5990,7 +6040,7 @@ buildInternalIconURL(HT_Resource node, PRBool *volatileURLFlag,
 
 
 char *
-getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFlag, int state)
+getIconURL( HT_Resource node, PRBool toolbarIconFlag, PRBool workspaceFlag, int state)
 {
 
 	RDF_Resource	res;
@@ -6000,32 +6050,28 @@ getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFlag, int st
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->node != NULL);
 
-	iconIndex = (largeIconFlag) ? 0:1;
+	iconIndex = 0;
+	if (toolbarIconFlag)
+		iconIndex = state;
 
-	switch (state)
+	switch (iconIndex)
 	{
 		case	0:
-		res = (largeIconFlag) ? gNavCenter->RDF_largeIcon : gNavCenter->RDF_smallIcon;
-		break;
-
+			res = gNavCenter->RDF_smallIcon;
+			break;
 		case	1:
-		res = (largeIconFlag) ? gNavCenter->RDF_largeRolloverIcon : gNavCenter->RDF_smallRolloverIcon;
-		break;
-
+			res = gNavCenter->toolbarEnabledIcon;
+			break;
 		case	2:
-		res = (largeIconFlag) ? gNavCenter->RDF_largePressedIcon : gNavCenter->RDF_smallPressedIcon;
-		break;
-
+			res = gNavCenter->toolbarDisabledIcon;
+			break;
 		case	3:
-		res = (largeIconFlag) ? gNavCenter->RDF_largeDisabledIcon : gNavCenter->RDF_smallDisabledIcon;
-		break;
-
-		default:
-		res = (largeIconFlag) ? gNavCenter->RDF_largeIcon : gNavCenter->RDF_smallIcon;
-		break;
+			res = gNavCenter->toolbarRolloverIcon;
+			break;
+		case	4:
+			res = gNavCenter->toolbarPressedIcon;
+			break;
 	}
-
-	iconIndex += 2*state;
 
 	/* if volatile URL, flush if needed and re-create */
 
@@ -6036,9 +6082,6 @@ getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFlag, int st
 		node->url[2] = NULL;
 		node->url[3] = NULL;
 		node->url[4] = NULL;
-		node->url[5] = NULL;
-		node->url[6] = NULL;
-		node->url[7] = NULL;
 	}
 
 	if (node->url[iconIndex] == NULL)
@@ -6052,7 +6095,7 @@ getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFlag, int st
 		else
 		{
 			node->url[iconIndex] = buildInternalIconURL(node,
-				&volatileURLFlag, largeIconFlag, workspaceFlag);
+				&volatileURLFlag, false, workspaceFlag);
 			if (volatileURLFlag)
 			{
 				node->flags |= HT_VOLATILE_URL_FLAG;
@@ -6069,9 +6112,9 @@ getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFlag, int st
 
 
 PR_PUBLIC_API(char *)
-HT_GetIconURL(HT_Resource r, PRBool isLargeIcon, PRBool isWorkspace, int state)
+HT_GetIconURL(HT_Resource r, PRBool isToolbarIcon, PRBool isWorkspace, int toolbarState)
 {
-	return getIconURL(r, isLargeIcon, isWorkspace, state);
+	return getIconURL(r, isToolbarIcon, isWorkspace, toolbarState);
 }
 
 
@@ -6079,7 +6122,7 @@ HT_GetIconURL(HT_Resource r, PRBool isLargeIcon, PRBool isWorkspace, int state)
 PR_PUBLIC_API(char *)
 HT_GetNodeLargeIconURL (HT_Resource r)
 {
-	return (getIconURL( r, true, false, 0));
+	return (getIconURL( r, false, false, 0));
 }
 
 
@@ -6097,7 +6140,7 @@ HT_GetWorkspaceLargeIconURL (HT_View view)
 {
 	XP_ASSERT(view != NULL);
 
-	return (getIconURL( view->top, true, true, 0));
+	return (getIconURL( view->top, false, true, 0));
 }
 
 
@@ -6152,18 +6195,18 @@ htIsPropertyInMoreOptions(RDF_Resource r)
 	    (r == gNavCenter->toolbarBitmapPosition) || (r == gNavCenter->toolbarButtonsFixedSize) ||
 	    (r == gNavCenter->toolbarDisplayMode) ||
 		(r == gNavCenter->toolbarCollapsed) || (r == gNavCenter->toolbarVisible) ||
-	    (r == gNavCenter->RDF_smallDisabledIcon) || (r == gNavCenter->RDF_largeDisabledIcon) ||
-	    (r == gNavCenter->RDF_smallRolloverIcon) || (r == gNavCenter->RDF_largeRolloverIcon) ||
-	    (r == gNavCenter->RDF_smallPressedIcon) || (r == gNavCenter->RDF_largePressedIcon) ||
+	    (r == gNavCenter->toolbarDisabledIcon) || (r == gNavCenter->toolbarEnabledIcon) ||
+	    (r == gNavCenter->toolbarRolloverIcon) || (r == gNavCenter->toolbarPressedIcon) ||
 	    (r == gNavCenter->buttonTooltipText) || (r == gNavCenter->buttonStatusbarText) ||
 	    (r == gNavCenter->urlBar) || (r == gNavCenter->urlBarWidth) || 
-		(r == gNavCenter->buttonTreeState) ||
+		(r == gNavCenter->buttonTreeState) || (r == gNavCenter->buttonBorderStyle) ||
 		(r == gNavCenter->useInlineEditing) || (r == gNavCenter->useSingleClick) ||
 		(r == gNavCenter->loadOpenState) || (r == gNavCenter->saveOpenState) ||
-		(r == gNavCenter->useSelection) || (r == gNavCenter->controlStripFGColor) ||
+		(r == gNavCenter->controlStripFGColor) ||
 		(r == gNavCenter->controlStripBGColor) || (r == gNavCenter->controlStripBGURL) ||
-		(r == gNavCenter->controlStripCloseText) || (r == gNavCenter->controlStripModeText) ||
-		(r == gNavCenter->titleBarShowText))
+		(r == gNavCenter->controlStripCloseText) ||
+		(r == gNavCenter->titleBarShowText) || (r == gNavCenter->showTitleBar) ||
+		(r == gNavCenter->showControlStrip))
 
 	{
 		retVal = PR_TRUE;

@@ -162,7 +162,8 @@ typedef HT_NotificationStruct* HT_Notification;
 
 PR_PUBLIC_API(HT_Pane) HT_PaneFromResource(RDF_Resource r, HT_Notification n, PRBool autoFlush, PRBool autoOpen, PRBool useColumns);
 
-PR_PUBLIC_API(HT_Pane) HT_PaneFromURL(void* context, char* url, HT_Notification n, PRBool autoFlush, int32 param_count,
+PR_PUBLIC_API(HT_Pane) HT_PaneFromURL(void* context, char* url, char* templateType,
+									  HT_Notification n, PRBool autoFlush, int32 param_count,
                                       char** param_names, char** param_values);
 
 /* NewQuickFilePane
@@ -316,7 +317,7 @@ PR_PUBLIC_API(char *)	HT_GetWorkspaceLargeIconURL (HT_View view);
 PR_PUBLIC_API(char *)	HT_GetWorkspaceSmallIconURL (HT_View view);
 PR_PUBLIC_API(char *)	HT_GetNodeLargeIconURL (HT_Resource r);
 PR_PUBLIC_API(char *)	HT_GetNodeSmallIconURL (HT_Resource r);
-PR_PUBLIC_API(char *)	HT_GetIconURL(HT_Resource r, PRBool isLargeIcon, PRBool isWorkspace, int buttonState);
+PR_PUBLIC_API(char *)	HT_GetIconURL(HT_Resource r, PRBool isToolbarIcon, PRBool isWorkspace, int buttonState);
 
 PR_PUBLIC_API(char *)	HT_GetLargeIconURL (HT_Resource r);	/* obsolete! */
 PR_PUBLIC_API(char *)	HT_GetSmallIconURL (HT_Resource r);	/* obsolete! */
