@@ -34,6 +34,11 @@ public:
     */
   virtual PRBool Initialize(nsSize* aMaxElementSize)=0;
 
+  /** compute the max-element-size for the table
+    * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
+    */
+  virtual void SetMaxElementSize(nsSize* aMaxElementSize)=0;
+
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.
     * @param aTableStyle      the resolved style for the table

@@ -480,6 +480,11 @@ public: /* ----- Cell Map public methods ----- */
   /** return the maximum width of the table caption.  Return 0 if the max width is unknown. */
   nscoord GetMaxTableWidth();
 
+  /** compute the max-element-size for the table
+    * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
+    */
+  void SetMaxElementSize(nsSize* aMaxElementSize);
+
 private:
   void DebugPrintCount() const; // Debugging routine
 

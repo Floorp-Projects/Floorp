@@ -22,6 +22,7 @@
 #include "nsContainerFrame.h"
 
 struct OuterTableReflowState;
+struct nsStyleText;
 
 /**
  * main frame for an nsTable content object, 
@@ -167,6 +168,13 @@ protected:
                              nsHTMLReflowMetrics&   aDesiredSize,
                              OuterTableReflowState& aReflowState,
                              nsReflowStatus&        aStatus);
+
+  PRBool IR_CaptionChangedAxis(const nsStyleText* aOldStyle, 
+                               const nsStyleText* aNewStyle) const;
+
+  nsresult SizeAndPlaceChildren(const nsSize &         aInnerSize, 
+                                const nsSize &         aCaptionSize,
+                                OuterTableReflowState& aReflowState);
 
   nsresult AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
                                      OuterTableReflowState& aReflowState,

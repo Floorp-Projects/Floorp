@@ -142,6 +142,16 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
   // set aMaxElementSize here because we compute mMinTableWidth in AssignPreliminaryColumnWidths
   if (nsnull!=aMaxElementSize)
   {
+    SetMaxElementSize(aMaxElementSize);
+  }
+
+  return result;
+}
+
+void BasicTableLayoutStrategy::SetMaxElementSize(nsSize* aMaxElementSize)
+{
+  if (nsnull!=aMaxElementSize)
+  {
     aMaxElementSize->height = 0;
     nsMargin borderPadding;
     const nsStylePosition* tablePosition;
@@ -165,8 +175,6 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
       printf("%p BTLS::Init setting aMaxElementSize->width = %d\n", 
               mTableFrame, aMaxElementSize->width);
   }
-
-  return result;
 }
 
 PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyle,

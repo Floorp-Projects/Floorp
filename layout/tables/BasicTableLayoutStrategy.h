@@ -86,11 +86,13 @@ public:
   /** call once every time any table thing changes (content, structure, or style) */
   virtual PRBool Initialize(nsSize* aMaxElementSize);
 
+  virtual void SetMaxElementSize(nsSize* aMaxElementSize);
+
   /** Called during resize reflow to determine the new column widths
     * @param aTableStyle - the resolved style for mTableFrame
-	* @param aReflowState - the reflow state for mTableFrame
-	* @param aMaxWidth - the computed max width for columns to fit into
-	*/
+	  * @param aReflowState - the reflow state for mTableFrame
+ 	  * @param aMaxWidth - the computed max width for columns to fit into
+	  */
   virtual PRBool BalanceColumnWidths(nsIStyleContext *    aTableStyle,
                                      const nsHTMLReflowState& aReflowState,
                                      nscoord              aMaxWidth);
