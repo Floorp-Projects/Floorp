@@ -96,9 +96,6 @@ public:
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
-  NS_IMETHOD GetDocTypeStr(nsString& aDocTypeString);
-  NS_IMETHOD AddDocTypeDecl(const nsString& aDocTypeString, nsDTDMode aMode);
-
   NS_IMETHOD SetHeaderData(nsIAtom* aHeaderField, const nsString& aData);
 
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
@@ -224,7 +221,6 @@ protected:
   nsDTDMode mDTDMode;
   nsVoidArray mImageMaps;
   nsICSSLoader* mCSSLoader;
-  nsString*    mDocTypeStr;
 
   nsContentList *mImages;
   nsContentList *mApplets;

@@ -198,7 +198,6 @@ nsHTMLDocument::nsHTMLDocument()
   mParser = nsnull;
   mDTDMode = eDTDMode_Nav;
   mCSSLoader = nsnull;
-  mDocTypeStr=nsnull;
 
   // Find/Search Init
   mSearchStr             = nsnull;
@@ -259,10 +258,6 @@ nsHTMLDocument::~nsHTMLDocument()
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();  // release weak ref
     NS_RELEASE(mCSSLoader);
-  }
-  if (nsnull != mDocTypeStr) {
-    delete mDocTypeStr;
-    mDocTypeStr = nsnull;
   }
 
   // These will be converted to a nsDeque
@@ -1053,106 +1048,6 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetDocTypeStr(nsString& aDocTypeString)
-{
-  if(mDocTypeStr) aDocTypeString = *mDocTypeStr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::AddDocTypeDecl(const nsString& aDocTypeString, nsDTDMode aMode)
-{
-  nsresult result=NS_OK;
-   
-  result=SetDTDMode(aMode);
-  if(result==NS_OK) {
-    if (mDocTypeStr == nsnull) {
-      if(aDocTypeString.Length()>0) {
-        mDocTypeStr = new nsString(aDocTypeString);
-        if (mDocTypeStr==nsnull) result=NS_ERROR_OUT_OF_MEMORY;
-      }
-    } 
-    else {
-      mDocTypeStr->SetLength(0);
-      mDocTypeStr->Append(aDocTypeString);
-    }
-  }
-
-  PRInt32 pos = aDocTypeString.Find("public", PR_TRUE);
-  nsAutoString publicId;
-
-  if (pos >= 0) {
-    aDocTypeString.Mid(publicId, pos + 6, aDocTypeString.Length() - pos);
-
-    publicId.CompressWhitespace();
-
-    PRUnichar ch = publicId.First();
-
-    if (ch == '"' || ch == '\'') {
-      publicId.Cut(0, 1);
-
-      pos = publicId.FindChar(ch);
-
-      if (pos >= 0) {
-        publicId.Truncate(pos);
-      } else {
-        publicId.Truncate();
-      }
-    }
-  }
-
-  if (publicId.Length()) {
-    nsCOMPtr<nsIDOMDocumentType> oldDocType;
-    nsCOMPtr<nsIDOMDocumentType> docType;
-
-    GetDoctype(getter_AddRefs(oldDocType));
-
-    nsCOMPtr<nsIDOMDOMImplementation> domImpl;
-
-    result = GetImplementation(getter_AddRefs(domImpl));
-
-    if (NS_FAILED(result) || !domImpl) {
-      return result;
-    }
-
-    result = domImpl->CreateDocumentType(nsAutoString("html"), publicId,
-                                         nsAutoString(""),
-                                         getter_AddRefs(docType));
-
-    if (NS_FAILED(result) || !docType) {
-      return result;
-    }
-
-    nsCOMPtr<nsIDOMNode> tmpNode;
-
-    if (oldDocType) {
-      /*
-       * If we already have a doctype we replace the old one.
-       */
-      result = ReplaceChild(oldDocType, docType, getter_AddRefs(tmpNode));
-    } else {
-      /*
-       * If we don't already have one we insert it as the first child,
-       * this might not be 100% correct but since this is called from
-       * the content sink we assume that this is what we want.
-       */
-      nsCOMPtr<nsIDOMNode> firstChild;
-
-      GetFirstChild(getter_AddRefs(firstChild));
-
-      /*
-       * If the above fails it must be because we don't have any child
-       * nodes, then firstChild will be 0 and InsertBefore() will append
-       */
-
-      result = InsertBefore(docType, firstChild, getter_AddRefs(tmpNode));
-    }
-  }
-
-  return result;
 }
 
 NS_IMETHODIMP

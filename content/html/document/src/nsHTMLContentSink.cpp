@@ -49,6 +49,9 @@
 
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDOMImplementation.h"
+#include "nsIDOMDocumentType.h"
 
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -3015,8 +3018,149 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   nsresult rv = NS_OK;
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddDocTypeDecl()\n"));
   MOZ_TIMER_START(mWatch);
-  
-  rv=mHTMLDocument->AddDocTypeDecl(aNode.GetText(),(nsDTDMode)aMode);
+
+  mHTMLDocument->SetDTDMode((nsDTDMode)aMode);
+
+  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mHTMLDocument));
+
+  if (!doc)
+    return NS_OK;
+
+  const nsString& docTypeStr = aNode.GetText(); 
+
+  PRInt32 publicStart = docTypeStr.Find("public", PR_TRUE);
+  nsAutoString name, publicId;
+
+  if (publicStart >= 0) {
+    /*
+     * We found 'PUBLIC' in the doctype, put everything before that in
+     * the name, and then cut out "DOCTYPE" from the name.
+     */
+    docTypeStr.Mid(name, 0, publicStart);
+
+    if (name.Equals("DOCTYPE", PR_TRUE, 7))
+      name.Cut(0, 7);
+
+    name.CompressWhitespace();
+
+    /*
+     * Check if name contains whitespace chars, if it does we simply
+     * ignore averything that follows the whitespace.
+     */
+    PRInt32 nameEnd = name.FindCharInSet(" \n\r\t");
+    if (nameEnd > 0) {
+      name.Truncate(nameEnd);
+    }
+
+    docTypeStr.Mid(publicId, publicStart + 6,
+                   docTypeStr.Length() - publicStart);
+    publicId.CompressWhitespace();
+
+    PRUnichar ch = publicId.First();
+
+    if (ch == '"' || ch == '\'') {
+      publicId.Cut(0, 1);
+
+      PRInt32 end = publicId.FindChar(ch);
+
+      if (end < 0) {
+        /*
+         * We didn't find an end quote, then we just make sure we cut of the
+         * '>' on the end of the doctype declaration
+         */
+
+        end = publicId.FindChar('>');
+      }
+
+      /*
+       * If we didn't find an closing quote nor a '>' we leave publicId as
+       * it is.
+       */
+      if (end >= 0) {
+        publicId.Truncate(end);
+      }
+    }
+  } else {
+    /*
+     * No 'PUBLIC' found, we assume we got a '<!DOCTYPE HTML "...">'
+     */
+    name = docTypeStr;
+
+    if (name.Equals("DOCTYPE", PR_TRUE, 7))
+      name.Cut(0, 7);
+
+    name.CompressWhitespace();
+
+    /*
+     * Check if the name contains whitespace chars, if it does we simply
+     * replace it with "HTML".
+     */
+    PRInt32 nameEnd = name.FindCharInSet(" \n\r\t");
+
+    if (nameEnd > 0) {
+      /*
+       * We found whitespace after the '<!DOCTYPE HTML' string, we put the
+       * following text, up to the '>' and put it in the public id, and then
+       * we remove quotes.
+       */
+      name.Mid(publicId, nameEnd, name.Length() - nameEnd);
+      publicId.Trim(">", PR_FALSE, PR_TRUE); // Remove trailing '>'
+      publicId.CompressWhitespace();
+      publicId.Trim("\"'");
+
+      name.Truncate(nameEnd);
+    }
+  }
+
+  if (publicId.Length() || name.Length()) {
+    nsCOMPtr<nsIDOMDocumentType> oldDocType;
+    nsCOMPtr<nsIDOMDocumentType> docType;
+
+    doc->GetDoctype(getter_AddRefs(oldDocType));
+
+    nsCOMPtr<nsIDOMDOMImplementation> domImpl;
+
+    rv = doc->GetImplementation(getter_AddRefs(domImpl));
+
+    if (NS_FAILED(rv) || !domImpl) {
+      return rv;
+    }
+
+    if (!name.Length()) {
+      name.SetString("HTML");
+    }
+
+    rv = domImpl->CreateDocumentType(name, publicId, nsAutoString(""),
+                                     getter_AddRefs(docType));
+
+    if (NS_FAILED(rv) || !docType) {
+      return rv;
+    }
+    nsCOMPtr<nsIDOMNode> tmpNode;
+
+    if (oldDocType) {
+      /*
+       * If we already have a doctype we replace the old one.
+       */
+      rv = doc->ReplaceChild(oldDocType, docType, getter_AddRefs(tmpNode));
+    } else {
+      /*
+       * If we don't already have one we insert it as the first child,
+       * this might not be 100% correct but since this is called from
+       * the content sink we assume that this is what we want.
+       */
+      nsCOMPtr<nsIDOMNode> firstChild;
+
+      doc->GetFirstChild(getter_AddRefs(firstChild));
+
+      /*
+       * If the above fails it must be because we don't have any child
+       * nodes, then firstChild will be 0 and InsertBefore() will append
+       */
+
+      rv = doc->InsertBefore(docType, firstChild, getter_AddRefs(tmpNode));
+    }
+  }
   
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::AddDocTypeDecl()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -4172,7 +4316,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   
   if (stringLen) {
 
-    PRUnichar *unicodeString;
+    PRUnichar *unicodeString = nsnull;
     PRInt32 unicodeLength;
     nsAutoString characterSet;
     nsICharsetConverterManager  *charsetConv = nsnull;

@@ -80,9 +80,6 @@ public:
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode) = 0;
   NS_IMETHOD SetDTDMode(nsDTDMode aMode) = 0;
 
-  NS_IMETHOD GetDocTypeStr(nsString& aDocTypeString)=0;
-  NS_IMETHOD AddDocTypeDecl(const nsString& aDocTypeString, nsDTDMode aMode)=0;
-
 };
 
 #endif /* nsIHTMLDocument_h___ */
