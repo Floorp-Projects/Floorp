@@ -607,6 +607,9 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
       case NS_MOUSE_EXIT:
         mLastMouseState = eMouseNone;
         break;
+      case NS_CONTROL_CHANGE:
+        ControlChanged(&aPresContext);
+        break;
     }
   }
 
