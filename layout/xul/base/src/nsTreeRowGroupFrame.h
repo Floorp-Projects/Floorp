@@ -19,18 +19,19 @@
 
 #include "nsTableRowGroupFrame.h"
 #include "nsVoidArray.h"
+#include "nsIScrollbarListener.h"
 
 class nsTreeFrame;
 class nsCSSFrameConstructor;
 
-class nsTreeRowGroupFrame : public nsTableRowGroupFrame
+class nsTreeRowGroupFrame : public nsTableRowGroupFrame, public nsIScrollbarListener
 {
 public:
   friend nsresult NS_NewTreeRowGroupFrame(nsIFrame** aNewFrame);
 
   virtual PRBool ExcludeFrameFromReflow(nsIFrame* aFrame);
 
-  void SetScrollbarFrame(nsIFrame* aFrame) { mIsLazy = PR_TRUE; mScrollbar = aFrame; };
+  void SetScrollbarFrame(nsIFrame* aFrame);
   void SetFrameConstructor(nsCSSFrameConstructor* aFrameConstructor) { mFrameConstructor = aFrameConstructor; };
 
   void MakeLazy() { mIsLazy = PR_TRUE; };
@@ -59,6 +60,11 @@ public:
   virtual void GetNextFrame(nsIFrame* aFrame, nsIFrame** aResult);
   virtual PRBool RowsDesireExcessSpace() { return PR_FALSE; };
   virtual PRBool RowGroupDesiresExcessSpace();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD PagedUpDown();
 
 protected:
   nsTreeRowGroupFrame();
