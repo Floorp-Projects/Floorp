@@ -335,6 +335,13 @@ Property *JSObject::defineVariable(Context *cx, const String &name, NamespaceLis
     mProperties.insert(e);
     return prop;
 }
+Property *JSObject::defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp)
+{
+    Property *prop = new Property(vp, type, attrFlags);
+    const PropertyMap::value_type e(name, new NamespacedProperty(prop, names));
+    mProperties.insert(e);
+    return prop;
+}
 
 
 
@@ -1247,7 +1254,16 @@ void ScopeChain::collectNames(StmtNode *p)
                 if (!m_cx->checkForPackage(packagePath)) {
                     m_cx->loadPackage(packagePath, packagePath + ".js");
 
-		    
+		    JSValue packageValue = getCompileTimeValue(packagePath, NULL);
+		    ASSERT(packageValue.isObject() && (packageValue.object->mType == Package_Type));
+		    Package *package = checked_cast<Package *>(packageValue.object);
+                    
+                    for (PropertyIterator it = package->mProperties.begin(), end = package->mProperties.end();
+                                (it != end); it++) {
+                    
+                        ASSERT(PROPERTY_KIND(it) == ValuePointer);
+                        defineAlias(m_cx, PROPERTY_NAME(it), PROPERTY_NAMESPACELIST(it), PROPERTY_ATTR(it), PROPERTY_TYPE(it), PROPERTY_VALUEPOINTER(it));
+                    }
 
                 }
 	    }
@@ -3242,15 +3258,15 @@ bool Context::checkForPackage(const String &packageName)
 }
 
 /*
-    Load the specified package
+    Load the specified package from the file
 */
-Package *Context::loadPackage(const String &packageName, const String &filename)
+void Context::loadPackage(const String &packageName, const String &filename)
 {
     // XXX need some rules for search path
+    // XXX need to extract just the target package from the file
 
     readEvalFile(filename);
     
-    return NULL;
  
 }
 

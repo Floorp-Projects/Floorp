@@ -605,6 +605,7 @@ XXX ...couldn't get this to work...
 
         virtual Property *defineVariable(Context *cx, const String &name, AttributeStmtNode *attr, JSType *type, const JSValue v);
         virtual Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v);
+        virtual Property *defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp);
         
         virtual Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
@@ -1129,6 +1130,11 @@ XXX ...couldn't get this to work...
             JSObject *top = mScopeStack.back();
             return top->defineVariable(cx, name, attr, type, v);
         }
+        Property *defineAlias(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, JSValue *vp)
+        {
+            JSObject *top = mScopeStack.back();
+            return top->defineAlias(cx, name, names, attrFlags, type, vp);
+        }
         Property *defineStaticVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type)
         {
             JSObject *top = mScopeStack.back();
@@ -1576,7 +1582,7 @@ XXX ...couldn't get this to work...
     public:
         typedef enum { OnItsWay, InHand } PackageStatus;
         
-        Package(const String &name) : mName(name), mStatus(OnItsWay) { }
+        Package(const String &name) : mName(name), mStatus(OnItsWay), JSObject(Package_Type) { }
 
         String mName;
         PackageStatus mStatus;
@@ -1823,7 +1829,7 @@ XXX ...couldn't get this to work...
 
         PackageList mPackages;  // the currently loaded packages, mPackages.back() is the current package
         bool checkForPackage(const String &packageName);    // return true if loaded, throw exception if loading
-        Package *loadPackage(const String &packageName, const String &filename);  // load package from file
+        void loadPackage(const String &packageName, const String &filename);  // load package from file
 
         JSValue readEvalFile(const String& fileName);
         JSValue readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const JSValue& thisValue);
