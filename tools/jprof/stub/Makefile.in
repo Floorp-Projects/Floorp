@@ -16,38 +16,27 @@
 # Fri Sep 24 23:44:10 PDT 1999 <mcafee@netscape.com>
 #
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-DIRS		= stub
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM = jprof
+MODULE		= jprof
+EXPORTS		=
+LIBRARY_NAME	= jprof
+EXPORT_LIBRARY	= 1
 
-CPPSRCS = \
-	bfd.cpp    \
-	coff.cpp   \
-	elf.cpp	   \
-	leaky.cpp  \
-	strset.cpp \
-	intcnt.cpp \
-	$(NULL)
+CPPSRCS		= \
+		libmalloc.cpp \
+		$(NULL)
 
-LIBS = \
-	-lbfd \
-	-liberty \
-	$(NULL)
+EXPORTS         = \
+                jprof.h \
+                $(NULL)
 
-HELPER_SCRIPTS	= jprofsig
-HELPER_SCRIPTS	:= $(addprefix $(srcdir)/, $(HELPER_SCRIPTS))
+EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+
 
 include $(topsrcdir)/config/rules.mk
-
-INCLUDES += \
-	-I$(srcdir)/stub \
-	$(NULL)
-
-install::
-	$(INSTALL) -m 555 $(HELPER_SCRIPTS)  $(DIST)/bin

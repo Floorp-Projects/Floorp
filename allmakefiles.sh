@@ -963,7 +963,8 @@ fi
 
 # tools/jprof
 if [ "$MOZ_JPROF" ]; then
-    MAKEFILES_jprof="tools/jprof/Makefile"
+    MAKEFILES_jprof="tools/jprof/Makefile
+        tools/jprof/stub/Makefile"
 fi
 
 # tools/leaky
