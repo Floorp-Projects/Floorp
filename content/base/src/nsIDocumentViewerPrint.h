@@ -71,6 +71,9 @@ public:
 
   virtual PRBool GetIsCreatingPrintPreview() = 0;
 
+  // The style set returned by CreateStyleSet is in the middle of an
+  // update batch so that the caller can add sheets to it if needed.
+  // Callers should call EndUpdate() on it when ready to use.
   virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsStyleSet** aStyleSet) = 0;
 
   virtual nsresult GetDocumentSelection(nsISelection **aSelection,

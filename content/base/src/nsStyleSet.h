@@ -154,8 +154,9 @@ class nsStyleSet
   // All sheet types are ordered most-significant-first.
   enum sheetType {
     eAgentSheet,
-    eUserSheet,
     ePresHintSheet,
+    eUserSheet,
+    eHTMLPresHintSheet,
     eDocSheet,
     eOverrideSheet,
     eSheetTypeCount
@@ -194,6 +195,20 @@ class nsStyleSet
   void AddImportantRules(nsRuleNode* aCurrLevelNode,
                          nsRuleNode* aLastPrevLevelNode);
 
+#ifdef DEBUG
+  // Just like AddImportantRules except it doesn't actually add anything; it
+  // just asserts that there are no important rules between aCurrLevelNode and
+  // aLastPrevLevelNode.
+  void AssertNoImportantRules(nsRuleNode* aCurrLevelNode,
+                              nsRuleNode* aLastPrevLevelNode);
+  
+  // Just like AddImportantRules except it doesn't actually add anything; it
+  // just asserts that there are no CSS rules between aCurrLevelNode and
+  // aLastPrevLevelNode.  Mostly useful for the preshint levels.
+  void AssertNoCSSRules(nsRuleNode* aCurrLevelNode,
+                        nsRuleNode* aLastPrevLevelNode);
+#endif
+  
   // Enumerate the rules in a way that cares about the order of the
   // rules.
   void FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,

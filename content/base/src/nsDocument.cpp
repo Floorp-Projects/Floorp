@@ -817,15 +817,6 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Add mAttrStyleSheet to all the style sets.  Prepend it, since it should be
-  // the most significant sheet in its level (whether UA or preshint).
-  PRInt32 count = mPresShells.Count();
-  for (indx = 0; indx < count; ++indx) {
-    NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
-      PrependStyleSheet(attrSheetType, mAttrStyleSheet);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Don't use AddStyleSheet, since it'll put the sheet into style
   // sets in the document level, which is not desirable here.
   InternalAddStyleSheet(mAttrStyleSheet, 0);
@@ -839,7 +830,17 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AddStyleSheet(mStyleAttrStyleSheet, 0);
+  // The loop over style sets below will handle putting this sheet
+  // into style sets as needed.
+  InternalAddStyleSheet(mStyleAttrStyleSheet, 0);
+  mStyleAttrStyleSheet->SetOwningDocument(this);
+
+  // Now set up our style sets
+  PRInt32 count = mPresShells.Count();
+  for (indx = 0; indx < count; ++indx) {
+    FillStyleSet(NS_STATIC_CAST(nsIPresShell*,
+                                mPresShells.ElementAt(indx))->StyleSet());
+  }
 
   return rv;
 }
@@ -847,7 +848,40 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 nsStyleSet::sheetType
 nsDocument::GetAttrSheetType()
 {
-  return nsStyleSet::eAgentSheet;
+  return nsStyleSet::ePresHintSheet;
+}
+
+void
+nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
+{
+  NS_PRECONDITION(aStyleSet, "Must have a style set");
+  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::ePresHintSheet) == 0,
+                  "Style set already has a preshint sheet?");
+  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eHTMLPresHintSheet) == 0,
+                  "Style set already has a HTML preshint sheet?");
+  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eDocSheet) == 0,
+                  "Style set already has document sheets?");
+  NS_PRECONDITION(mStyleAttrStyleSheet, "No style attr stylesheet?");
+  NS_PRECONDITION(mAttrStyleSheet, "No attr stylesheet?");
+  NS_PRECONDITION(mAttrStyleSheet == GetStyleSheetAt(0, PR_TRUE),
+                  "Unexpected first sheet");
+  
+  // First, place the attribute style sheet in the style set.  Prepend it,
+  // since it should be the most significant sheet in its level.
+  aStyleSet->PrependStyleSheet(GetAttrSheetType(), mAttrStyleSheet);
+
+  // Now that we've handled the attribute sheet, do the other sheets.  The
+  // attribute sheet should be at position 0, hence the loop termination
+  // condition.
+  PRInt32 index;
+  PRBool sheetApplicable;
+  for (index = GetNumberOfStyleSheets(PR_TRUE) - 1; index > 0; --index) {
+    nsIStyleSheet* sheet = GetStyleSheetAt(index, PR_TRUE);
+    sheet->GetApplicable(sheetApplicable);
+    if (sheetApplicable) {
+      aStyleSet->AddDocStyleSheet(sheet, this);
+    }
+  }
 }
 
 nsresult
@@ -1207,6 +1241,10 @@ nsDocument::doCreateShell(nsIPresContext* aContext,
                           nsCompatibility aCompatMode,
                           nsIPresShell** aInstancePtrResult)
 {
+  *aInstancePtrResult = nsnull;
+  
+  FillStyleSet(aStyleSet);
+  
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = NS_NewPresShell(getter_AddRefs(shell));
   if (NS_FAILED(rv)) {
@@ -1218,8 +1256,7 @@ nsDocument::doCreateShell(nsIPresContext* aContext,
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShells.AppendElement(shell);
-  *aInstancePtrResult = shell.get();
-  NS_ADDREF(*aInstancePtrResult);
+  shell.swap(*aInstancePtrResult);
 
   return NS_OK;
 }

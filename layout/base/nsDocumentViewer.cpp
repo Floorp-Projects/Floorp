@@ -647,6 +647,9 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     return rv;
   }
 
+  // We're done creating the style set
+  styleSet->EndUpdate();
+
   if (aDoInitialReflow) {
     // Since InitialReflow() will create frames for *all* items
     // that are currently in the document tree, we need to flush
@@ -1317,6 +1320,9 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
       return rv;
     }
 
+    // We're done creating the style set
+    styleSet->EndUpdate();
+
     // The pres shell owns the style set now.
 
     mPresShell->BeginObservingDocument();
@@ -1730,27 +1736,11 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRInt32 index = aDocument->GetNumberOfStyleSheets(PR_TRUE);
-
   styleSet->BeginUpdate();
-
-  while (0 < index--) {
-    nsIStyleSheet *sheet = aDocument->GetStyleSheetAt(index, PR_TRUE);
-
-    /*
-     * GetStyleSheetAt will return all style sheets in the document but
-     * we're only interested in the ones that are enabled.
-     */
-
-    PRBool styleApplicable;
-    sheet->GetApplicable(styleApplicable);
-
-    if (styleApplicable) {
-      styleSet->AddDocStyleSheet(sheet, aDocument);
-    }
-  }
-
-  // Now handle the user sheets.
+  
+  // The document will fill in the document sheets when we create the presshell
+  
+  // Handle the user sheets.
   nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
   PRInt32 shellType;
   docShell->GetItemType(&shellType);
@@ -1818,7 +1808,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, mUAStyleSheet);
   }
 
-  styleSet->EndUpdate();
+  // Caller will handle calling EndUpdate, per contract.
   *aStyleSet = styleSet;
   return NS_OK;
 }
