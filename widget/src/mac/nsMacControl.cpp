@@ -38,10 +38,10 @@ nsMacControl::nsMacControl() : nsWindow()
 	mLastHilite = 0;
 }
 
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
+/**-------------------------------------------------------------------------
+ * See documentation in nsMacControl.h
+ * @update -- 12/10/98 dwc
+ */
 NS_IMETHODIMP nsMacControl::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -59,8 +59,9 @@ NS_IMETHODIMP nsMacControl::Create(nsIWidget *aParent,
 	ctlRect.x = ctlRect.y = 0;
 	Rect macRect;
 	nsRectToMacRect(ctlRect, macRect);
-	mControl = ::NewControl(mWindowPtr, &macRect, "\p", true, 0, 0, 1, mControlType, nil);
-
+	if(nsnull != mWindowPtr){
+		mControl = ::NewControl(mWindowPtr, &macRect, "\p", true, 0, 0, 1, mControlType, nil);
+	}
 	mLastBounds = ctlRect;
 
 	return NS_OK;
