@@ -24,6 +24,7 @@
   -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/editorFormatToolbar.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
