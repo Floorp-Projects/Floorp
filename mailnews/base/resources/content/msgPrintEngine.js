@@ -26,6 +26,7 @@ var printEngineWindow;
 var printEngine;
 var printSettings = null;
 var doingPrintPreview = false;
+var gWebProgress;
 
 const kMsgBundle = "chrome://messenger/locale/messenger.properties";
 
