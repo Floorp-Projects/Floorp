@@ -265,7 +265,9 @@ protected:
 
   nsLineData* CreateLineForOverflowList(nsIFrame* aOverflowList);
 
+#ifdef NS_DEBUG
   nsresult VerifyLines(PRBool aFinalCheck) const;
+#endif
 
   nsresult PlaceLine(nsBlockReflowState& aState,
                      nsLineLayout&       aLineLayout,
