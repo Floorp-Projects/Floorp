@@ -112,8 +112,7 @@ function StartCommunicator()
 
 	if (migrate == "true")
 	{
-		dump("Migrate this profile before using it to start communicator.\n");
-		return;
+		profileCore.MigrateProfile(name);
 	}
 
 	dump("************name: "+name+"\n");
