@@ -687,7 +687,7 @@ nsPoint nsDOMEvent::GetClientPoint() {
     nsRect bounds;
     eventWidget->GetBounds(bounds);
     pt += bounds.TopLeft();
-    eventWidget = eventWidget->GetParent();
+    eventWidget = dont_AddRef(eventWidget->GetParent());
   }
   
   if (eventWidget != docWidget) {
