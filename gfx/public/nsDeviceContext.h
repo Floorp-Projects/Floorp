@@ -28,6 +28,8 @@
 #include "libimg.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsIStringBundle.h"
+
 
 class nsIImageRequest;
 class nsHashtable;
@@ -88,6 +90,9 @@ public:
   NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
   NS_IMETHOD GetPaletteInfo(nsPaletteInfo&);
+
+  static nsresult GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal);
+  static nsresult GetLocalizedBundle(const char * aPropFileName, nsIStringBundle** aStrBundle);
 
 protected:
   virtual ~DeviceContextImpl();
