@@ -79,7 +79,7 @@ nsKeywordProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aRes
 
 NS_IMETHODIMP
 nsKeywordProtocolHandler::GetScheme(nsACString &result) {
-    result = "keyword";
+    result.AssignLiteral("keyword");
     return NS_OK;
 }
 

@@ -194,7 +194,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsResProtocolHandler,
 NS_IMETHODIMP
 nsResProtocolHandler::GetScheme(nsACString &result)
 {
-    result = "resource";
+    result.AssignLiteral("resource");
     return NS_OK;
 }
 
@@ -282,7 +282,7 @@ nsResProtocolHandler::GetSubstitution(const nsACString& root, nsIURI **result)
     // try invoking the directory service for "resource:root"
 
     nsCAutoString key;
-    key.AppendLiteral("resource:");
+    key.AssignLiteral("resource:");
     key.Append(root);
 
     nsCOMPtr<nsIFile> file;

@@ -242,22 +242,22 @@ nsTXTToHTMLConv::Init()
     convToken *token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_FALSE;
-    token->token.Assign(NS_LITERAL_STRING("<"));
-    token->modText = NS_LITERAL_STRING("&lt;");
+    token->token.Assign(PRUnichar('<'));
+    token->modText.AssignLiteral("&lt;");
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_FALSE;
-    token->token.Assign(NS_LITERAL_STRING(">"));
-    token->modText = NS_LITERAL_STRING("&gt;");
+    token->token.Assign(PRUnichar('>'));
+    token->modText.AssignLiteral("&gt;");
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = PR_FALSE;
-    token->token.Assign(NS_LITERAL_STRING("&"));
-    token->modText = NS_LITERAL_STRING("&amp;");
+    token->token.Assign(PRUnichar('&'));
+    token->modText.AssignLiteral("&amp;");
     mTokens.AppendElement(token);
 
     token = new convToken;

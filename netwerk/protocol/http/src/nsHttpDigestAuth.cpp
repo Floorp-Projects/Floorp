@@ -341,8 +341,8 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                          cnonce, response_digest);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString authString("Digest ");
-  authString += "username=\"";
+  nsCAutoString authString;
+  authString.AssignLiteral("Digest username=\"");
   authString += cUser;
   authString.AppendLiteral("\", realm=\"");
   authString += realm;
@@ -351,38 +351,37 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   authString.AppendLiteral("\", uri=\"");
   authString += path;
   if (algorithm & ALGO_SPECIFIED) {
-    authString += "\", algorithm=";
+    authString.AppendLiteral("\", algorithm=");
     if (algorithm & ALGO_MD5_SESS)
-      authString += "MD5-sess";
+      authString.AppendLiteral("MD5-sess");
     else
-      authString += "MD5";
+      authString.AppendLiteral("MD5");
   } else {
-    authString += "\"";
+    authString += '\"';
   }
-  authString += ", response=\"";
+  authString.AppendLiteral(", response=\"");
   authString += response_digest;
 
   if (!opaque.IsEmpty()) {
-    authString += "\", opaque=\"";
+    authString.AppendLiteral("\", opaque=\"");
     authString += opaque;
   }
 
   if (qop) {
-    authString += "\", qop=";
+    authString.AppendLiteral("\", qop=");
     if (requireExtraQuotes)
-      authString += "\"";
+      authString += '\"';
+    authString.AppendLiteral("auth");
     if (qop & QOP_AUTH_INT)
-      authString += "auth-int";
-    else
-      authString += "auth";
+      authString.AppendLiteral("-int");
     if (requireExtraQuotes)
-      authString += "\"";
-    authString += ", nc=";
+      authString += '\"';
+    authString.AppendLiteral(", nc=");
     authString += nonce_count;
-    authString += ", cnonce=\"";
+    authString.AppendLiteral(", cnonce=\"");
     authString += cnonce;
   }
-  authString += "\"";
+  authString += '\"';
 
   *creds = ToNewCString(authString);
   return NS_OK;

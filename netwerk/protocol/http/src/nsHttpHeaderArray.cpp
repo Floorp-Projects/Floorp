@@ -84,7 +84,7 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
             entry->value.Append('\n');
         else
             // Delimit each value from the others using a comma (per HTTP spec)
-            entry->value.Append(", ");
+            entry->value.AppendLiteral(", ");
         entry->value.Append(value);
     }
     // Replace the existing string with the new value
@@ -214,9 +214,9 @@ nsHttpHeaderArray::Flatten(nsACString &buf, PRBool pruneProxyHeaders)
                                   (entry->header == nsHttp::Proxy_Connection)))
             continue;
         buf.Append(entry->header);
-        buf.Append(": ");
+        buf.AppendLiteral(": ");
         buf.Append(entry->value);
-        buf.Append("\r\n");
+        buf.AppendLiteral("\r\n");
     }
 }
 

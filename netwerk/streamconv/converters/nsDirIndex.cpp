@@ -66,7 +66,7 @@ nsDirIndex::GetContentType(char* *aContentType) {
 
 NS_IMETHODIMP
 nsDirIndex::SetContentType(const char* aContentType) {
-  mContentType.Adopt(nsCRT::strdup(aContentType));
+  mContentType = aContentType;
   return NS_OK;
 }
 
@@ -81,7 +81,7 @@ nsDirIndex::GetLocation(char* *aLocation) {
 
 NS_IMETHODIMP
 nsDirIndex::SetLocation(const char* aLocation) {
-  mLocation.Adopt(nsCRT::strdup(aLocation));
+  mLocation = aLocation;
   return NS_OK;
 }
 

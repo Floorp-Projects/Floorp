@@ -155,7 +155,8 @@ NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACStrin
       rv = stringPrepAndACE(Substring(ustr, offset, len - 1), encodedBuf);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      ace.Append(encodedBuf + NS_LITERAL_CSTRING("."));
+      ace.Append(encodedBuf);
+      ace.Append('.');
       offset += len;
       len = 0;
     }
@@ -163,7 +164,7 @@ NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACStrin
 
   // add extra node for multilingual test bed
   if (mMultilingualTestBed)
-    ace.Append("mltbd.");
+    ace.AppendLiteral("mltbd.");
   // encode the last node if non ASCII
   if (len) {
     rv = stringPrepAndACE(Substring(ustr, offset, len), encodedBuf);
@@ -204,7 +205,8 @@ NS_IMETHODIMP nsIDNService::ConvertACEtoUTF8(const nsACString & input, nsACStrin
         return NS_OK;
       }
 
-      _retval.Append(decodedBuf + NS_LITERAL_CSTRING("."));
+      _retval.Append(decodedBuf);
+      _retval.Append('.');
       offset += len;
       len = 0;
     }
@@ -354,7 +356,8 @@ static nsresult encodeToRACE(const char* prefix, const nsAString& in, nsACString
   if (idn_success != result)
     return NS_ERROR_FAILURE;
 
-  out.Assign(nsDependentCString(prefix) + nsDependentCString(encodedBuf));
+  out.Assign(prefix);
+  out.Append(encodedBuf);
 
   return NS_OK;
 }

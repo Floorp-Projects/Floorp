@@ -76,7 +76,7 @@ nsDataHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
 
 NS_IMETHODIMP
 nsDataHandler::GetScheme(nsACString &result) {
-    result = "data";
+    result.AssignLiteral("data");
     return NS_OK;
 }
 

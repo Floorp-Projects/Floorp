@@ -4103,7 +4103,7 @@ nsHttpChannel::ClearPasswordManagerEntry(const char      *scheme,
         domain.Append(':');
         domain.AppendInt(port);
 
-        domain.Append(" (");
+        domain.AppendLiteral(" (");
         domain.Append(realm);
         domain.Append(')');
 

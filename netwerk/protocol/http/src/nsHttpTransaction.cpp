@@ -209,7 +209,7 @@ nsHttpTransaction::Init(PRUint8 caps,
     // If the request body does not include headers or if there is no request
     // body, then we must add the header/body separator manually.
     if (!requestBodyHasHeaders || !requestBody)
-        mReqHeaderBuf.Append("\r\n");
+        mReqHeaderBuf.AppendLiteral("\r\n");
 
     // Create a string stream for the request header buf (the stream holds
     // a non-owning reference to the request header data, so we MUST keep

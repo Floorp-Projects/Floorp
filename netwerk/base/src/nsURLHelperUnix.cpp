@@ -77,7 +77,7 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
         PRBool dir;
         rv = aFile->IsDirectory(&dir);
         if (NS_SUCCEEDED(rv) && dir)
-            escPath += "/";
+            escPath += '/';
     }
     
     result = escPath;

@@ -407,7 +407,7 @@ net_ResolveRelativePath(const nsACString &relativePath,
             // fall through...
           case '/':
             // delimiter found
-            if (name.Equals("..")) {
+            if (name.EqualsLiteral("..")) {
                 // pop path
                 // If we already have the delim at end, then
                 //  skip over that when searching for next one to the left
@@ -421,17 +421,17 @@ net_ResolveRelativePath(const nsACString &relativePath,
                 else
                     path.Truncate();
             }
-            else if (name.Equals(".") || name.Equals("")) {
+            else if (name.IsEmpty() || name.EqualsLiteral(".")) {
                 // do nothing
             }
             else {
                 // append name to path
                 if (needsDelim)
-                    path += "/";
+                    path += '/';
                 path += name;
                 needsDelim = PR_TRUE;
             }
-            name = "";
+            name.Truncate();
             break;
 
           default:

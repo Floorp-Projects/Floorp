@@ -1021,7 +1021,7 @@ nsFtpState::S_user() {
     nsCAutoString usernameStr("USER ");
 
     if (mAnonymous) {
-        usernameStr.Append("anonymous");
+        usernameStr.AppendLiteral("anonymous");
     } else {
         if (mUsername.IsEmpty()) {
             if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
@@ -1232,7 +1232,7 @@ nsFtpState::R_pwd() {
             if (mServerType == FTP_VMS_TYPE)
                 ConvertDirspecFromVMS(respStr);
             if (respStr.Last() != '/')
-                respStr.Append("/");
+                respStr.Append('/');
             mPwd = respStr;
         }
     }
@@ -1508,9 +1508,9 @@ nsFtpState::S_list() {
 
     nsCAutoString listString;
     if (mServerType == FTP_VMS_TYPE)
-        listString.Append("LIST *.*;0" CRLF);
+        listString.AssignLiteral("LIST *.*;0" CRLF);
     else
-        listString.Append("LIST" CRLF);
+        listString.AssignLiteral("LIST" CRLF);
 
     return SendFTPCommand(listString);
 
@@ -2550,7 +2550,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
             if (fileString.Length() == 1) {
                 // Just a slash
                 fileString.Truncate();
-                fileString.Append("[]");
+                fileString.AppendLiteral("[]");
             }
             else {
                 // just copy the name part (drop the leading slash)
@@ -2565,7 +2565,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
             fileString.Truncate();
             fileString.Append(nsCRT::strtok(fileStringCopy.BeginWriting(), 
                               "/", &nextToken));
-            fileString.Append(":[");
+            fileString.AppendLiteral(":[");
             if (ntok > 2) {
                 for (int i=2; i<ntok; i++) {
                     if (i > 2) fileString.Append('.');
@@ -2574,7 +2574,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
                 }
             }
             else {
-                fileString.Append("000000");
+                fileString.AppendLiteral("000000");
             }
             fileString.Append(']');
             fileString.Append(nsCRT::strtok(nextToken, "/", &nextToken));
@@ -2591,7 +2591,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
             // Get another copy since the last one was written to.
             fileStringCopy = fileString;
             fileString.Truncate();
-            fileString.Append("[.");
+            fileString.AppendLiteral("[.");
             fileString.Append(nsCRT::strtok(fileStringCopy.BeginWriting(),
                               "/", &nextToken));
             if (ntok > 2) {
@@ -2619,7 +2619,7 @@ nsFtpState::ConvertDirspecToVMS(nsCString& dirSpec)
     LOG(("(%x) ConvertDirspecToVMS from: \"%s\"\n", this, dirSpec.get()));
     if (!dirSpec.IsEmpty()) {
         if (dirSpec.Last() != '/')
-            dirSpec.Append("/");
+            dirSpec.Append('/');
         // we can use the filespec routine if we make it look like a file name
         dirSpec.Append('x');
         ConvertFilespecToVMS(dirSpec);

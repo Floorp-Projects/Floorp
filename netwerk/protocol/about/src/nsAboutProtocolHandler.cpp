@@ -91,7 +91,7 @@ nsAboutProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 NS_IMETHODIMP
 nsAboutProtocolHandler::GetScheme(nsACString &result)
 {
-    result = "about";
+    result.AssignLiteral("about");
     return NS_OK;
 }
 

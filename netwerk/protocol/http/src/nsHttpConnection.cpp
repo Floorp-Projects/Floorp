@@ -701,7 +701,7 @@ nsHttpConnection::SetupSSLProxyConnect()
 
     buf.Truncate();
     request.Flatten(buf, PR_FALSE);
-    buf.Append("\r\n");
+    buf.AppendLiteral("\r\n");
 
     return NS_NewCStringInputStream(getter_AddRefs(mSSLProxyConnectStream), buf);
 }
