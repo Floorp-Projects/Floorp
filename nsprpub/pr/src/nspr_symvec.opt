@@ -1,6 +1,6 @@
 ! Fixed section of symbol vector for LIBNSPR4 (non-debug)
 !
-GSMATCH=LEQUAL,2,2
+GSMATCH=LEQUAL,2,3
 case_sensitive=YES
 !
 ! --------------------------------------------------------------------------
@@ -16,8 +16,11 @@ case_sensitive=YES
 !   PR_ResumeTest is now PR_VMS_Stub2
 !   PR_SuspendAllSuspended is PR_VMS_Stub3
 ! These are stub functions (defined in openvms.c) solely for the purpose of
-! occupying the slots in our fixed section of the symbol table. The solution
-! is a little kludgy, but what can I do?
+! occupying the slots in our fixed section of the symbol table. 
+! --------------------------------------------------------------------------
+! Ident 2,3 introduced for Mozilla 1.3
+! Previously we were missing some symbols from NSPR 4.0 and 4.1, so now we
+! include everything that's specified in nspr.def.
 ! --------------------------------------------------------------------------
 !
 SYMBOL_VECTOR=(PR_Accept=PROCEDURE)
@@ -224,8 +227,8 @@ SYMBOL_VECTOR=(PR_Poll=PROCEDURE)
 SYMBOL_VECTOR=(PR_PopIOLayer=PROCEDURE)
 SYMBOL_VECTOR=(PR_PostSem=PROCEDURE)
 SYMBOL_VECTOR=(PR_PostSemaphore=PROCEDURE)
-SYMBOL_VECTOR=(PR_ProcessAttrSetCurren1sb1r7b$=PROCEDURE)
-SYMBOL_VECTOR=(PR_ProcessAttrSetInheri3dpg1d0$=PROCEDURE)
+SYMBOL_VECTOR=(PR_ProcessAttrSetCurren1sb1r7b$=PROCEDURE) ! PR_ProcessAttrSetCurrentDirectory
+SYMBOL_VECTOR=(PR_ProcessAttrSetInheri3dpg1d0$=PROCEDURE) ! PR_ProcessAttrSetInheritableFileMap
 SYMBOL_VECTOR=(PR_ProcessAttrSetInheritableFD=PROCEDURE)
 SYMBOL_VECTOR=(PR_ProcessAttrSetStdioRedirect=PROCEDURE)
 SYMBOL_VECTOR=(PR_ProcessExit=PROCEDURE)
@@ -329,6 +332,88 @@ SYMBOL_VECTOR=(PR_vsmprintf=PROCEDURE)
 SYMBOL_VECTOR=(PR_vsnprintf=PROCEDURE)
 SYMBOL_VECTOR=(PR_vsprintf_append=PROCEDURE)
 SYMBOL_VECTOR=(PR_vsxprintf=PROCEDURE)
+!
+! Start of 2,3 additions
+!
+SYMBOL_VECTOR=(LL_MaxInt=PROCEDURE)
+SYMBOL_VECTOR=(LL_MinInt=PROCEDURE)
+SYMBOL_VECTOR=(LL_Zero=PROCEDURE)
+SYMBOL_VECTOR=(PR_Abort=PROCEDURE)
+SYMBOL_VECTOR=(PR_AddToCounter=PROCEDURE)
+SYMBOL_VECTOR=(PR_AddWaitFileDesc=PROCEDURE)
+SYMBOL_VECTOR=(PR_AtomicIncrement=PROCEDURE)
+SYMBOL_VECTOR=(PR_CEnterMonitor=PROCEDURE)
+SYMBOL_VECTOR=(PR_CeilingLog2=PROCEDURE)
+SYMBOL_VECTOR=(PR_CreateCounter=PROCEDURE)
+SYMBOL_VECTOR=(PR_CreateAlarm=PROCEDURE)
+SYMBOL_VECTOR=(PR_CreateFileMap=PROCEDURE)
+SYMBOL_VECTOR=(PR_CreateOrderedLock=PROCEDURE)
+SYMBOL_VECTOR=(PR_CreateTrace=PROCEDURE)
+SYMBOL_VECTOR=(PR_CreateThreadPool=PROCEDURE)
+SYMBOL_VECTOR=(PR_DecrementCounter=PROCEDURE)
+SYMBOL_VECTOR=(PR_DestroyCounter=PROCEDURE)
+SYMBOL_VECTOR=(PR_DestroyOrderedLock=PROCEDURE)
+SYMBOL_VECTOR=(PR_DestroyTrace=PROCEDURE)
+SYMBOL_VECTOR=(PR_ErrorToString=PROCEDURE)
+SYMBOL_VECTOR=(PR_ExplodeTime=PROCEDURE)
+SYMBOL_VECTOR=(PR_FindNextCounterQname=PROCEDURE)
+SYMBOL_VECTOR=(PR_FindNextCounterRname=PROCEDURE)
+SYMBOL_VECTOR=(PR_FindNextTraceQname=PROCEDURE)
+SYMBOL_VECTOR=(PR_FindNextTraceRname=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetDescType=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetDirectorySeparator=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetCounter=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetCounterHandleFromName=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetCounterNameFromHandle=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetEnv=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetGCRegisters=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetPageSize=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetRandomNoise=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetSpecialFD=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetUniqueIdentity=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetTraceEntries=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetTraceHandleFromName=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetTraceNameFromHandle=PROCEDURE)
+SYMBOL_VECTOR=(PR_GetTraceOption=PROCEDURE)
+SYMBOL_VECTOR=(PR_IntervalNow=PROCEDURE)
+SYMBOL_VECTOR=(PR_IncrementCounter=PROCEDURE)
+SYMBOL_VECTOR=(PR_Malloc=PROCEDURE)
+SYMBOL_VECTOR=(PR_LockOrderedLock=PROCEDURE)
+SYMBOL_VECTOR=(PR_NewLock=PROCEDURE)
+SYMBOL_VECTOR=(PR_NewPollableEvent=PROCEDURE)
+SYMBOL_VECTOR=(PR_NewRWLock=PROCEDURE)
+SYMBOL_VECTOR=(PR_NewThreadPrivateIndex=PROCEDURE)
+SYMBOL_VECTOR=(PR_Now=PROCEDURE)
+SYMBOL_VECTOR=(PR_OpenAnonFileMap=PROCEDURE)
+SYMBOL_VECTOR=(PR_OpenSharedMemory=PROCEDURE)
+SYMBOL_VECTOR=(PR_RecordTraceEntries=PROCEDURE)
+SYMBOL_VECTOR=(PR_SetConcurrency=PROCEDURE)
+SYMBOL_VECTOR=(PR_SetFDCacheSize=PROCEDURE)
+SYMBOL_VECTOR=(PR_SetLibraryPath=PROCEDURE)
+SYMBOL_VECTOR=(PR_SetCounter=PROCEDURE)
+SYMBOL_VECTOR=(PR_StringToNetAddr=PROCEDURE)
+SYMBOL_VECTOR=(PR_SetTraceOption=PROCEDURE)
+SYMBOL_VECTOR=(PR_SubtractFromCounter=PROCEDURE)
+SYMBOL_VECTOR=(PR_VersionCheck=PROCEDURE)
+SYMBOL_VECTOR=(PR_Trace=PROCEDURE)
+SYMBOL_VECTOR=(PR_UnlockOrderedLock=PROCEDURE)
+SYMBOL_VECTOR=(PR_fprintf=PROCEDURE)
+SYMBOL_VECTOR=(PR_snprintf=PROCEDURE)
+SYMBOL_VECTOR=(PR_sscanf=PROCEDURE)
+SYMBOL_VECTOR=(PR_strtod=PROCEDURE)
+SYMBOL_VECTOR=(PRP_DestroyNakedCondVar=PROCEDURE)
+SYMBOL_VECTOR=(PRP_NakedBroadcast=PROCEDURE)
+SYMBOL_VECTOR=(PRP_NakedNotify=PROCEDURE)
+SYMBOL_VECTOR=(PRP_NakedWait=PROCEDURE)
+SYMBOL_VECTOR=(PRP_NewNakedCondVar=PROCEDURE)
+SYMBOL_VECTOR=(PRP_TryLock=PROCEDURE)
+SYMBOL_VECTOR=(libVersionPoint=PROCEDURE)
+!
+! NSPR private
+!
+SYMBOL_VECTOR=(GetExecutionEnvironment=PROCEDURE)
+SYMBOL_VECTOR=(PT_FPrintStats=PROCEDURE)
+SYMBOL_VECTOR=(SetExecutionEnvironment=PROCEDURE)
 !
 ! --------------------------------------------------------------------------
 ! End of fixed section
