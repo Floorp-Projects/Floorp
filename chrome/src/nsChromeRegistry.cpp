@@ -65,7 +65,10 @@ void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, ch
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsChromeRegistry : public nsIChromeRegistry, public nsIRDFDataSource {
+class nsChromeRegistry : public nsIChromeRegistry,
+                         public nsIRDFDataSource,
+                         public nsIRDFRemoteDataSource
+{
 public:
     NS_DECL_ISUPPORTS
 
@@ -129,6 +132,11 @@ public:
     NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments)  ;
+
+    // nsIRDFRemoteDataSource methods
+    NS_IMETHOD Init(const char* aURI);
+    NS_IMETHOD Refresh(PRBool aBlocking);
+    NS_IMETHOD Flush();
 
     // nsChromeRegistry methods:
     nsChromeRegistry();
@@ -218,19 +226,23 @@ nsChromeRegistry::QueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsIChromeRegistry::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIChromeRegistry>::GetIID()) ||
         aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIChromeRegistry*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
-    if (aIID.Equals(kIRDFDataSourceIID)) {
+    else if (aIID.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
-        NS_ADDREF(this);
-        return NS_OK;
+    }
+    else if (aIID.Equals(nsCOMTypeInfo<nsIRDFRemoteDataSource>::GetIID())) {
+        *aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource*, this);
+    }
+    else {
+        *aResult = nsnull;
+        return NS_NOINTERFACE;
     }
 
-    return NS_NOINTERFACE;
+    NS_ADDREF(this);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -837,6 +849,40 @@ nsChromeRegistry::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 {
   return mInner->DoCommand(aSources, aCommand, aArguments);
 }
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFRemoteDataSource methods
+
+NS_IMETHODIMP
+nsChromeRegistry::Init(const char* aURI)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsChromeRegistry::Refresh(PRBool aBlocking)
+{
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+    if (! remote)
+        return NS_ERROR_UNEXPECTED;
+
+    return remote->Refresh(aBlocking);
+}
+
+
+NS_IMETHODIMP
+nsChromeRegistry::Flush()
+{
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+    if (! remote)
+        return NS_ERROR_UNEXPECTED;
+
+    return remote->Flush();
+}
+
+////////////////////////////////////////////////////////////////////////
 
 //
 // Path = provider/remaining
