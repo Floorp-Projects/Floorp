@@ -120,7 +120,7 @@
 #include <sys/endian.h>
 #endif
 
-#ifdef QNX
+#ifdef __QNX__
 #define LITTLE_ENDIAN	1234
 #define BIG_ENDIAN	4321
 #define BYTE_ORDER	LITTLE_ENDIAN

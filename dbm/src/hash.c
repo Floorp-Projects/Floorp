@@ -412,7 +412,7 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
 			return (NULL);
 
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
-#ifdef QNX
+#ifdef __QNX__
 		hashp->BSIZE = statbuf.st_size;
 #else
 		hashp->BSIZE = statbuf.st_blksize;
