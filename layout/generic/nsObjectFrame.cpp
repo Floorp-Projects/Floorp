@@ -3164,9 +3164,19 @@ nsresult nsPluginInstanceOwner::KeyUp(nsIDOMEvent* aKeyEvent)
 
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  return DispatchKeyToPlugin(aKeyEvent);
+  if (mInstance) {
+    // If this event is going to the plugin, we want to kill it.
+    // Not actually sending keypress to the plugin, since we didn't before.
+    aKeyEvent->PreventDefault();
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+    if (nsevent) {
+      nsevent->PreventBubble();
+    }
+    return NS_ERROR_FAILURE; // means consume event                             
+  }
+  return NS_OK;
 }
-    
+
 nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 {
 #ifndef XP_MAC
@@ -3240,6 +3250,15 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
     return NS_ERROR_FAILURE; // means consume event
   // continue only for cases without child window
 #endif
+
+  // if the plugin is windowless, we need to set focus ourselves
+  // otherwise, we might not get key events
+  if (mPluginWindow.type == nsPluginWindowType_Drawable) {
+    nsCOMPtr<nsIContent> content;
+    mOwner->GetContent(getter_AddRefs(content));
+    if (content)
+      content->SetFocus(mContext);
+  }
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
   if (privateEvent) {
