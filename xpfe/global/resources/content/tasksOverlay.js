@@ -25,7 +25,7 @@ function toNewsgroups()
 function toIRC() 
 {
 
-        window.open ("resource:///irc/tests/test3.xul", "test3", "resizable=1");
+	toOpenWindowByType("irc:chatzilla", "chrome://chatzilla/content/");
 
 }
 
