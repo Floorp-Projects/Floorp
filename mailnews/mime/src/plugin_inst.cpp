@@ -28,11 +28,6 @@
 // Need this for FO_NGLAYOUT
 #include "net.h"
 
-/* net.h includes xp_core.h which has trouble with "Bool" */
-#ifdef XP_UNIX
-#undef Bool
-#endif
-
 //
 // This should be passed in somehow, but for now, lets just 
 // hardcode this stuff.
