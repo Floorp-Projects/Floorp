@@ -87,6 +87,9 @@ nsDeviceContextPh :: ~nsDeviceContextPh( ) {
   mSurface = nsnull;
 
 	if( mFontLoadCache ) { 
+#ifdef DEBUG_Adrian
+printf( "\n\n\n!!!!!!!!!!!!!!!!! ~nsDeviceContextPh is unloading the mFontLoadCache!!!!!!!!!!!!!!!!!!!\n\n" );
+#endif
 		delete mFontLoadCache;
 		mFontLoadCache = nsnull;
 		}
@@ -206,7 +209,7 @@ void nsDeviceContextPh :: CommonInit( nsNativeDeviceContext aDC ) {
     	}
   	}
 
-  SetDPI( mDpi ); 
+  SetDPI( mDpi );
 
 	GetDisplayInfo(aWidth, aHeight, mDepth);
 
@@ -234,7 +237,7 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *
 
 	  surf = new nsDrawingSurfacePh();
 	  if( nsnull != surf ) {
-			rv = surf->Init();
+			rv = surf->Init( NULL );
 			if( NS_OK == rv ) rv = pContext->Init(this, surf);
 			else rv = NS_ERROR_OUT_OF_MEMORY;
 			}
@@ -264,44 +267,42 @@ NS_IMETHODIMP nsDeviceContextPh :: GetScrollBarDimensions( float &aWidth, float 
   return NS_OK;
 	}
 
-NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aFont) const {
+NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aFont) const
+{
+
+	aFont->style       = NS_FONT_STYLE_NORMAL | NS_FONT_STYLE_ANTIALIAS;
+	aFont->weight      = NS_FONT_WEIGHT_NORMAL;
+	aFont->decorations = NS_FONT_DECORATION_NONE;
+	aFont->size = NSIntPointsToTwips(9/*8*/);
+
   switch (aID) {
     case eSystemFont_Caption:      // css2
-	case eSystemFont_Icon:
-	case eSystemFont_Menu:
-	case eSystemFont_MessageBox:
-	case eSystemFont_SmallCaption:
-	case eSystemFont_StatusBar:
-	case eSystemFont_Window:       // css3
-	case eSystemFont_Document:
-	case eSystemFont_Workspace:
-	case eSystemFont_Desktop:
-	case eSystemFont_Info:
-	case eSystemFont_Dialog:
-	case eSystemFont_Button:
-	case eSystemFont_PullDownMenu:
-	case eSystemFont_List:
-	case eSystemFont_Field:
-	case eSystemFont_Tooltips:     // moz
-	case eSystemFont_Widget:
-	  aFont->style       = NS_FONT_STYLE_NORMAL;
-	  aFont->weight      = NS_FONT_WEIGHT_NORMAL;
-	  aFont->decorations = NS_FONT_DECORATION_NONE;
-	  aFont->size = NSIntPointsToTwips(8);
-	  aFont->name.Assign(NS_LITERAL_STRING("TextFont"));
-	  switch(aID) {
-		  case eSystemFont_MessageBox:
-		     aFont->name.Assign(NS_LITERAL_STRING("MessageFont"));
-			 break;
-		  case eSystemFont_Tooltips:
-		     aFont->name.Assign(NS_LITERAL_STRING("BalloonFont"));
-		     break;
-		  case eSystemFont_Menu:
-		     aFont->name.Assign(NS_LITERAL_STRING("MenuFont"));
-		     break;
-	  }
-	  break;
-  }
+		case eSystemFont_Icon:
+		case eSystemFont_SmallCaption:
+		case eSystemFont_StatusBar:
+		case eSystemFont_Window:       // css3
+		case eSystemFont_Document:
+		case eSystemFont_Workspace:
+		case eSystemFont_Desktop:
+		case eSystemFont_Info:
+		case eSystemFont_Dialog:
+		case eSystemFont_Button:
+		case eSystemFont_PullDownMenu:
+		case eSystemFont_List:
+		case eSystemFont_Field:
+		case eSystemFont_Widget:
+	  	aFont->name.Assign(NS_LITERAL_STRING("TextFont"));
+			break;
+		case eSystemFont_MessageBox:
+			aFont->name.Assign(NS_LITERAL_STRING("MessageFont"));
+			break;
+		case eSystemFont_Tooltips:     // moz
+			aFont->name.Assign(NS_LITERAL_STRING("BalloonFont"));
+			break;
+		case eSystemFont_Menu:
+			aFont->name.Assign(NS_LITERAL_STRING("MenuFont"));
+			break;
+  	}
 
   return NS_OK;
 }
@@ -326,43 +327,60 @@ NS_IMETHODIMP nsDeviceContextPh :: GetClientRect( nsRect &aRect ) {
 	return rv;
 	}
 
-/* I need to know the requested font size to finish this function */
 NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence( const nsString& aFontName ) {
-  nsresult    ret_code = NS_ERROR_FAILURE;
-  char        *fontName = ToNewCString(aFontName);
+  char *fontName = ToNewCString(aFontName);
 
   if( fontName ) {
-		FontID *id = NULL;
 
-#if (Ph_LIB_VERSION > 200) // a header changed in RTP 6.2
-		if( ( id = PfFindFont( (char *)fontName, 0, 0 ) ) ) {
-#else
-		if( ( id = PfFindFont( (uchar_t *)fontName, 0, 0 ) ) ) {
+#ifdef DEBUG_Adrian
+printf( "\tCheckFontExistence for fontName=%s\n", fontName );
 #endif
-			if( !mFontLoadCache ) mFontLoadCache = new nsHashtable();
 
-			nsCStringKey key((char *)(PfConvertFontID(id)));
-			if( !mFontLoadCache->Exists( &key ) ) {
-				char FullFontName[MAX_FONT_TAG];
-#if (Ph_LIB_VERSION > 200) // a header changed in RTP 6.2
-				PfGenerateFontName((char  *)fontName, nsnull, 8, (char *)FullFontName);
-#else
-				PfGenerateFontName((uchar_t  *)fontName, nsnull, 8, (uchar_t *)FullFontName);
+		if( !stricmp( fontName, "Verdana" ) ) {
+			delete [] fontName;
+			return NS_ERROR_FAILURE;
+			}
+
+		nsCStringKey key( fontName );
+		if( !mFontLoadCache ) mFontLoadCache = new nsHashtable();
+		else {
+			int value = ( int ) mFontLoadCache->Get( &key );
+			if( value == 1 ) { /* the font exists and you already asked this before */
+				delete [] fontName;
+#ifdef DEBUG_Adrian
+printf( "\t\tFound it in cache it exists\n" );
 #endif
-				PfLoadFont(FullFontName, PHFONT_LOAD_METRICS, nsnull);
-				PfLoadMetrics(FullFontName);
-				// add this font to the table
-				mFontLoadCache->Put(&key, nsnull);
+				return NS_OK;
 				}
-	
-			ret_code = NS_OK;
-			PfFreeFont(id);
+			else if( value == 2 ) { /* the font doesn't exist and you already asked this before */
+				delete [] fontName;
+#ifdef DEBUG_Adrian
+printf( "\t\tFound it in cache it doesnt exist\n" );
+#endif
+				return NS_ERROR_FAILURE;
+				}
+			/* else you didn't ask this before */
+#ifdef DEBUG_Adrian
+printf( "\t\t Not Found in cache\n" );
+#endif
+			}
+
+		/* here either the mFontLoadCache was not allocated ( first time ) or this is the first time you ask about it */
+		
+  	nsresult res;
+		if( PfFindFont( (char *)fontName, 0, 0 ) ) {
+			mFontLoadCache->Put( &key, (void*)1 );
+			res = NS_OK;
+			}
+		else {
+			mFontLoadCache->Put( &key, (void*)2 );
+			res = NS_ERROR_FAILURE;
 			}
 		delete [] fontName;
+		return res;
 		}
 
-	/* Return ok and we will map it to some other font later */  
-	return ret_code;
+	return NS_ERROR_FAILURE;
 	}
 
 NS_IMETHODIMP nsDeviceContextPh::GetDepth( PRUint32& aDepth ) {
@@ -429,10 +447,10 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor( nsIDeviceContextSpec *aD
 	}
 
 nsresult nsDeviceContextPh::SetDPI( PRInt32 aDpi ) {
-  const int pt2t = 72;
+  const int pt2t = 82;//72
 
   mDpi = aDpi;
-    
+
   // make p2t a nice round number - this prevents rounding problems
   mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(aDpi)));
   mTwipsToPixels = 1.0f / mPixelsToTwips;

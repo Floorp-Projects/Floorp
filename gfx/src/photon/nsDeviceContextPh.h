@@ -126,4 +126,6 @@ private:
 	nsCOMPtr<nsIScreenManager> mScreenManager;
 };
 
+#define	NS_FONT_STYLE_ANTIALIAS				0xf0
+
 #endif /* nsDeviceContextPh_h___ */

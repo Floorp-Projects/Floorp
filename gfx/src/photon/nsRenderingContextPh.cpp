@@ -67,43 +67,51 @@ PRLogModuleInfo *PhGfxLog = PR_NewLogModule("PhGfxLog");
 
 NS_IMPL_ISUPPORTS1(nsRenderingContextPh, nsIRenderingContext)
 
-/* The default Photon Drawing Context */
-PhGC_t *nsRenderingContextPh::mPtGC = nsnull;
 
 nsRenderingContextPh :: nsRenderingContextPh() 
 {
 	NS_INIT_ISUPPORTS();
 	
 	mGC               = nsnull;
-	mTranMatrix          = nsnull;
+	mTranMatrix       = nsnull;
 	mClipRegion       = nsnull;
 	mFontMetrics      = nsnull;
 	mSurface          = nsnull;
 	mOffscreenSurface = nsnull;
-	mDCOwner          = nsnull;
 	mContext          = nsnull;
 	mP2T              = 1.0f;
-	mWidget           = nsnull;
 	mPhotonFontName   = nsnull;
 	mCurrentColor     = NS_RGB(255, 255, 255);
 	mCurrentLineStyle = nsLineStyle_kSolid;
 	mStateCache       = new nsVoidArray();
+	mOwner						= PR_FALSE;
 	
-	if( mPtGC == nsnull ) mPtGC = PgGetGC();
-	mPtDC = PhDCGetCurrent();
-	mInitialized   = PR_FALSE;
 	PushState();
 }
 
+static int xxx;
+
 nsRenderingContextPh :: ~nsRenderingContextPh() 
 {
+
 	// Destroy the State Machine
 	if( mStateCache ) {
 	  PRInt32 cnt = mStateCache->Count();
 		
-		while( --cnt >= 0 ) {
-			PRBool  clipstate;
-			PopState( clipstate );
+		while( cnt > 0 ) {
+			/* because PopState() is, besides freeing the state, also applying it, we can avoid calling PopState() here */
+			/* and instead, release the state explicitely */
+			nsGraphicsState *state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
+			mStateCache->RemoveElementAt(cnt - 1);
+			if ( state->mMatrix) delete state->mMatrix;
+		
+    	// Delete this graphics state object
+#ifdef USE_GS_POOL
+    	nsGraphicsStatePool::ReleaseGS(state);
+#else
+    	delete state;
+#endif	
+			cnt--;
 		}
 		delete mStateCache;
 		mStateCache = nsnull;
@@ -117,12 +125,14 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
 	NS_IF_RELEASE( mContext );
 
 	/* Go back to the default Photon DrawContext */
-	/* This allows the photon widgets under Viewer to work right */
-	PhDCSetCurrent(mPtDC);
-	PgSetGC( mPtGC );
-	PgSetRegion( mPtGC->rid );
+	PgSetGC( NULL );
+
 	if( mPhotonFontName ) 
 		delete [] mPhotonFontName;
+
+	if( mOwner ) {
+		PgDestroyGC( mGC );
+		}
 }
 
 
@@ -133,33 +143,36 @@ NS_IMETHODIMP nsRenderingContextPh :: Init( nsIDeviceContext* aContext, nsIWidge
 	mContext = aContext;
 	NS_IF_ADDREF(mContext);
 	
-	mWidget = (PtWidget_t*) aWindow->GetNativeData( NS_NATIVE_WIDGET );
+	PtWidget_t *widget = (PtWidget_t*) aWindow->GetNativeData( NS_NATIVE_WIDGET );
 	
-	if( !mWidget ) {
+	if( !widget ) {
 		NS_IF_RELEASE( mContext ); // new
-		NS_ASSERTION(mWidget,"nsRenderingContext::Init (with a widget) mWidget is NULL!");
+		NS_ASSERTION(widget,"nsRenderingContext::Init (with a widget) widget is NULL!");
 		return NS_ERROR_FAILURE;
 	}
 	
-	PhRid_t rid = PtWidgetRid( mWidget );
+	PhRid_t rid = PtWidgetRid( widget );
 	if( rid ) {
 		mSurface = new nsDrawingSurfacePh();
 		if( mSurface ) {
-			res = mSurface->Init();
+
+			mGC = PgCreateGC( 0 );
+			mOwner = PR_TRUE;
+
+			res = mSurface->Init( mGC );
 			if( res != NS_OK )
 				return NS_ERROR_FAILURE;
 			
 			mOffscreenSurface = mSurface;
 			NS_ADDREF( mSurface );
-			mGC = mSurface->GetGC();
-			/* hack up code to setup new GC for on screen drawing */
+
 			PgSetGC( mGC );
 			PgSetRegion( rid );
 		}
 		else 
 			return NS_ERROR_FAILURE;
 	}
-	mInitialized = PR_TRUE;
+
 	return CommonInit();
 }
 
@@ -172,8 +185,8 @@ NS_IMETHODIMP nsRenderingContextPh :: Init( nsIDeviceContext* aContext, nsDrawin
 	NS_ADDREF(mSurface);
 	
 	mGC = mSurface->GetGC();
-	
-	mInitialized = PR_TRUE;
+	mOwner = PR_FALSE;
+
 	return CommonInit();
 }
 
@@ -239,8 +252,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetDrawingSurface( nsDrawingSurface *aSurf
 	*aSurface = (void *) mSurface;
 	return NS_OK;
 }
-
-NS_IMETHODIMP nsRenderingContextPh :: Reset( ) { return NS_OK; }
 
 NS_IMETHODIMP nsRenderingContextPh :: GetDeviceContext( nsIDeviceContext *&aContext ) 
 {
@@ -361,7 +372,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect( const nsRect& aRect, nsClipCo
 {
 	nsresult   res = NS_ERROR_FAILURE;
 	nsRect     trect = aRect;
-    PRUint32 cnt = mStateCache->Count();
+	PRUint32 cnt = mStateCache->Count();
 	nsGraphicsState *state = nsnull;
 	
 	if (cnt > 0) {
@@ -384,19 +395,19 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect( const nsRect& aRect, nsClipCo
 		mTranMatrix->TransformCoord( &trect.x, &trect.y,&trect.width, &trect.height );
 		switch( aCombine ) {
 			case nsClipCombine_kIntersect:
-			mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
-			break;
+				mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+				break;
 			case nsClipCombine_kUnion:
-			mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
-			break;
+				mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
+				break;
 			case nsClipCombine_kSubtract:
-			mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
-			break;
+				mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+				break;
 			case nsClipCombine_kReplace:
-			mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
-			break;
+				mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
+				break;
 			default:
-			break;
+				break;
 		}
 		
 		aClipEmpty = mClipRegion->IsEmpty();
@@ -405,13 +416,6 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect( const nsRect& aRect, nsClipCo
 	
 	return res;
 }
-
-#if 0
-NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion( PhTile_t *aTileList, nsClipCombine aCombine, PRBool &aClipEmpty ) {
-  nsRegionPh region( aTileList );
-  return SetClipRegion( region, aCombine, aClipEmpty );
-	}
-#endif
 
 NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion( const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty ) 
 {
@@ -436,28 +440,28 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion( const nsIRegion& aRegion, n
 	
 	switch( aCombine ) {
 		case nsClipCombine_kIntersect:
-		mClipRegion->Intersect(aRegion);
-		break;
+			mClipRegion->Intersect(aRegion);
+			break;
 		case nsClipCombine_kUnion:
-		mClipRegion->Union(aRegion);
-		break;
+			mClipRegion->Union(aRegion);
+			break;
 		case nsClipCombine_kSubtract:
-		mClipRegion->Subtract(aRegion);
-		break;
+			mClipRegion->Subtract(aRegion);
+			break;
 		case nsClipCombine_kReplace:
-		mClipRegion->SetTo(aRegion);
-		break;
+			mClipRegion->SetTo(aRegion);
+			break;
 	}
 	
 	aClipEmpty = mClipRegion->IsEmpty();
-//	ApplyClipping(mGC);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: CopyClipRegion( nsIRegion &aRegion ) 
 {
+	if( !mClipRegion ) return NS_ERROR_FAILURE;
 	aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
-	return NS_ERROR_FAILURE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion( nsIRegion **aRegion ) 
@@ -487,8 +491,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion( nsIRegion **aRegion )
 
 NS_IMETHODIMP nsRenderingContextPh :: SetColor( nscolor aColor ) 
 {
-	if( nsnull == mContext ) 
-		return NS_ERROR_FAILURE;
+// ATENTIE if( nsnull == mContext ) return NS_ERROR_FAILURE; 
 	mCurrentColor = aColor;
 	return NS_OK;
 }
@@ -505,19 +508,19 @@ NS_IMETHODIMP nsRenderingContextPh :: SetLineStyle( nsLineStyle aLineStyle )
 	mCurrentLineStyle = aLineStyle;
 	switch( mCurrentLineStyle ) {
 		case nsLineStyle_kSolid:
-		mLineStyle[0] = 0;
-		break;
+			mLineStyle[0] = 0;
+			break;
 		case nsLineStyle_kDashed:
-		mLineStyle[0] = 10;
-		mLineStyle[1] = 4;
-		break;
+			mLineStyle[0] = 10;
+			mLineStyle[1] = 4;
+			break;
 		case nsLineStyle_kDotted:
-		mLineStyle[0] = 1;
-		mLineStyle[1] = 0;
-		break;
+			mLineStyle[0] = 1;
+			mLineStyle[1] = 0;
+			break;
 		case nsLineStyle_kNone:
 		default:
-		break;
+			break;
 	}
 	return NS_OK;
 }
@@ -602,7 +605,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( const nsRect &aBound
 	nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
 	if( surf ) {
 		NS_ADDREF(surf);
-		surf->Init( aBounds.width, aBounds.height, aSurfFlags );
+		surf->Init( NULL, aBounds.width, aBounds.height, aSurfFlags ); /* we pass NULL as aGC here / it means use the default photon gc */
 	}
 	else 
 		return NS_ERROR_FAILURE;
@@ -929,38 +932,11 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, PRUint32 aLe
 	
 	if( nsnull != mFontMetrics ) 
 	{
-#if 0
-		PhRect_t      extentTail;
-		
-		//using "M" to get rid of the right bearing of the right most char of the string.
-		
-		nsCString strTail("M");
-		char* tail=(char*)strTail.ToNewUnicode();
-		PRUint32 tailLength=strlen(tail);	
-		char* text = (char*) nsMemory::Alloc(aLength + tailLength + 2);
-		
-		PRUint32 i;
-		for(i=0;i<aLength;i++)
-			text[i]=aString[i];
-		for(i=0;i<tailLength;i++)
-			text[aLength+i] = tail[i];
-		text[aLength+tailLength]='\0';
-		text[aLength+tailLength+1]='\0';
-		
-		if( PfExtentText( &extent, NULL, mPhotonFontName, text, aLength+tailLength ) &&
-		   PfExtentText( &extentTail, NULL, mPhotonFontName, tail, tailLength)) 
-		{
-			aWidth = NSToCoordRound((int) ((extent.lr.x - extent.ul.x -extentTail.lr.x + extentTail.ul.x) * mP2T));
-			ret_code = NS_OK;
-		}
-		nsMemory::Free(text);
-#else
 		if( PfExtentText( &extent, NULL, mPhotonFontName, aString, aLength ) )
 		{
 			aWidth = NSToCoordRound((int) ((extent.lr.x - extent.ul.x + 1) * mP2T));
 			ret_code = NS_OK;
 		}
-#endif		
 	}
 	else 
 		ret_code = NS_ERROR_FAILURE;
@@ -1179,7 +1155,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsDrawingSurface aSrcSu
 	darea.size.h = sarea.size.h;
 	PgContextBlitArea( (PdOffscreenContext_t *) ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(), &sarea,  
 					   (PdOffscreenContext_t *) ((nsDrawingSurfacePh *)destsurf)->GetDC(), &darea );
-	PgFlush();
+// ATENTIE	PgFlush();
 	return NS_OK;
 }
 
@@ -1216,16 +1192,12 @@ NS_IMETHODIMP nsRenderingContextPh::GetBoundingMetrics(const PRUnichar*   aStrin
 
 void nsRenderingContextPh::UpdateGC()
 {
-	PgSetGC(mGC);	/* new */
-	PgSetStrokeColor(NS_TO_PH_RGB(mCurrentColor));
-	PgSetTextColor(NS_TO_PH_RGB(mCurrentColor));
-	PgSetFillColor(NS_TO_PH_RGB(mCurrentColor));
-	PgSetStrokeDash(mLineStyle, strlen((char *)mLineStyle), 0x10000);
-	
-//	  valuesMask = GdkGCValuesMask(valuesMask | GDK_GC_FUNCTION);
-//	  values.function = mFunction;
-	
-	ApplyClipping(mGC);
+	PgSetGC( mGC );	/* new */
+	PgSetStrokeColor( NS_TO_PH_RGB( mCurrentColor ) );
+	PgSetTextColor( NS_TO_PH_RGB( mCurrentColor ) );
+	PgSetFillColor( NS_TO_PH_RGB( mCurrentColor ) );
+	PgSetStrokeDash( mLineStyle, strlen((char *)mLineStyle), 0x10000 );
+	ApplyClipping( mGC );
 }
 
 void nsRenderingContextPh::ApplyClipping( PhGC_t *gc ) 
@@ -1246,4 +1218,19 @@ void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 		}
 		else PgSetMultiClip( 0, NULL );
 	}
+}
+
+void nsRenderingContextPh::CreateClipRegion( )
+{
+	static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+	if( mClipRegion ) return;
+
+	PRUint32 w, h;
+	mSurface->GetSize(&w, &h);
+
+	mClipRegion = do_CreateInstance(kRegionCID);
+	if( mClipRegion ) {
+		mClipRegion->Init();
+		mClipRegion->SetTo(0,0,w,h);
+		}
 }

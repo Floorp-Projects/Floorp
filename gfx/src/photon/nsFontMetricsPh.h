@@ -63,30 +63,113 @@ public:
 
   NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
                    nsIDeviceContext* aContext);
-  NS_IMETHOD  Destroy();
 
-  NS_IMETHOD  GetXHeight(nscoord& aResult);
-  NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
-  NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
-  NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
-  NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
+  NS_IMETHOD	GetLangGroup(nsIAtom** aLangGroup);
 
-  NS_IMETHOD  GetHeight(nscoord &aHeight);
-  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight);
-  NS_IMETHOD  GetLeading(nscoord &aLeading);
-  NS_IMETHOD  GetEmHeight(nscoord &aHeight);
-  NS_IMETHOD  GetEmAscent(nscoord &aAscent);
-  NS_IMETHOD  GetEmDescent(nscoord &aDescent);
-  NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
-  NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
-  NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
-  NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
-	NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
-  NS_IMETHOD  GetFont(const nsFont *&aFont);
-  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
-  NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
+  NS_IMETHODIMP  Destroy()
+		{
+		mDeviceContext = nsnull;
+		return NS_OK;
+		}
 
-  NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
+  inline NS_IMETHODIMP  GetXHeight(nscoord& aResult)
+		{
+		aResult = mXHeight;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetSuperscriptOffset(nscoord& aResult)
+		{
+		aResult = mSuperscriptOffset;
+		return NS_OK;
+		}
+  inline NS_IMETHOD  GetSubscriptOffset(nscoord& aResult)
+		{
+		aResult = mSubscriptOffset;
+		return NS_OK;
+		}
+  inline NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize)
+		{
+		aOffset = mStrikeoutOffset;
+		aSize = mStrikeoutSize;
+		return NS_OK;
+		}
+  inline NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize)
+		{
+		aOffset = mUnderlineOffset;
+		aSize = mUnderlineSize;
+		return NS_OK;
+		}
+
+  inline NS_IMETHODIMP  GetHeight(nscoord &aHeight)
+		{
+		aHeight = mHeight;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetNormalLineHeight(nscoord &aHeight)
+		{
+		aHeight = mEmHeight + mLeading;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetLeading(nscoord &aLeading)
+		{
+		aLeading = mLeading;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetEmHeight(nscoord &aHeight)
+		{
+		aHeight = mEmHeight;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetEmAscent(nscoord &aAscent)
+		{
+		aAscent = mEmAscent;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetEmDescent(nscoord &aDescent)
+		{
+		aDescent = mEmDescent;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetMaxHeight(nscoord &aHeight)
+		{
+		aHeight = mMaxHeight;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetMaxAscent(nscoord &aAscent)
+		{
+		aAscent = mMaxAscent;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetMaxDescent(nscoord &aDescent)
+		{
+		aDescent = mMaxDescent;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetMaxAdvance(nscoord &aAdvance)
+		{
+		aAdvance = mMaxAdvance;
+		return NS_OK;
+		}
+	inline NS_IMETHODIMP  GetAveCharWidth(nscoord &aAveCharWidth)
+		{
+		aAveCharWidth = mAveCharWidth;
+		return NS_OK;
+		}
+	inline NS_IMETHODIMP  GetFont(const nsFont *&aFont)
+		{
+		aFont = mFont;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetFontHandle(nsFontHandle &aHandle)
+		{
+		aHandle = (nsFontHandle) mFontHandle;
+		return NS_OK;
+		}
+  inline NS_IMETHODIMP  GetSpaceWidth(nscoord &aSpaceWidth)
+		{
+		aSpaceWidth = mSpaceWidth;
+		return NS_OK;
+		}
   
 protected:
   void RealizeFont();

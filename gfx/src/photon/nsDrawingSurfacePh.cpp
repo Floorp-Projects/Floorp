@@ -49,12 +49,29 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+nsPixelFormat nsDrawingSurfacePh::mPixFormat = {
+	0, // mRedZeroMask;     //red color mask in zero position
+	0, // mGreenZeroMask;   //green color mask in zero position
+	0, // mBlueZeroMask;    //blue color mask in zero position
+	0, // mAlphaZeroMask;   //alpha data mask in zero position
+	0xff0000, // mRedMask;         //red color mask
+	0x00ff00, // mGreenMask;       //green color mask
+	0x0000ff, // mBlueMask;        //blue color mask
+	0, // mAlphaMask;       //alpha data mask
+	0, // mRedCount;        //number of red color bits
+	0, // mGreenCount;      //number of green color bits
+	0, // mBlueCount;       //number of blue color bits
+	0, // mAlphaCount;      //number of alpha data bits
+	16, // mRedShift;        //number to shift value into red position
+	8, // mGreenShift;      //number to shift value into green position
+	0, // mBlueShift;       //number to shift value into blue position
+	0 // mAlphaShift;      //number to shift value into alpha position
+	};
+
 NS_IMPL_ISUPPORTS2( nsDrawingSurfacePh, nsIDrawingSurface, nsIDrawingSurfacePh )
 
 nsDrawingSurfacePh :: nsDrawingSurfacePh( ) 
 {
-	nsresult rv;
-	
 	NS_INIT_ISUPPORTS();
 
 	mDrawContext = nsnull;
@@ -71,38 +88,25 @@ nsDrawingSurfacePh :: nsDrawingSurfacePh( )
 	mLockX = 0;
 	mLockY = 0;
 	mLocked = PR_FALSE;
-
-	mPixFormat.mRedMask = 0xff0000;
-	mPixFormat.mGreenMask = 0x00ff00;
-	mPixFormat.mBlueMask = 0x0000ff;
-	mPixFormat.mAlphaMask = 0;
-	mPixFormat.mRedShift = 16;
-	mPixFormat.mGreenShift = 8;
-	mPixFormat.mBlueShift = 0;
-	mPixFormat.mAlphaShift = 0;
-	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-	if (NS_SUCCEEDED(rv)) {
-		prefs->RegisterCallback("browser.display.internaluse.graphics_changed", prefChanged, (void *)this);
-	}
 }
 
 nsDrawingSurfacePh :: ~nsDrawingSurfacePh( ) 
 {
 	if(mDrawContext) {
+		mDrawContext->gc = NULL;
 		PhDCRelease( mDrawContext ); /* the mDrawContext->gc will be free by the upper classes */
-		mDrawContext = nsnull;
 	}
 	
 	if( mLockDrawContext ) {
 		PhDCRelease(mLockDrawContext);
-		mLockDrawContext = nsnull;
 	}
-	
-	mGC = nsnull; /* don't release the GC - it has not been allocated, it has only been instantiated to the current GC */
-	nsresult rv;
-	nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
-	if (NS_SUCCEEDED(rv)) {
-		prefs->UnregisterCallback("browser.display.internaluse.graphics_changed", prefChanged, (void *)this);
+
+	if( mIsOffscreen ) {
+		nsresult rv;
+		nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+		if (NS_SUCCEEDED(rv)) {
+			prefs->UnregisterCallback("browser.display.internaluse.graphics_changed", prefChanged, (void *)this);
+		}
 	}
 }
 
@@ -179,7 +183,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock( PRInt32 aX, PRInt32 aY,
 	}
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock( void ) {
-	PhArea_t    dst_area, src_area;
+	PhArea_t dst_area, src_area;
 
 	if( !mLocked ) return NS_ERROR_FAILURE;
 
@@ -209,66 +213,37 @@ NS_IMETHODIMP nsDrawingSurfacePh :: GetDimensions( PRUint32 *aWidth, PRUint32 *a
   return NS_OK;
 	}
 
-NS_IMETHODIMP nsDrawingSurfacePh :: IsOffscreen( PRBool *aOffScreen ) {
-  *aOffScreen = mIsOffscreen;
-  return NS_OK;
-	}
-
-NS_IMETHODIMP nsDrawingSurfacePh :: IsPixelAddressable( PRBool *aAddressable ) {
-  *aAddressable = PR_FALSE;
-  return NS_OK;
-	}
-
 NS_IMETHODIMP nsDrawingSurfacePh :: GetPixelFormat( nsPixelFormat *aFormat ) {
   *aFormat = mPixFormat;
   return NS_OK;
 	}
 
 
-NS_IMETHODIMP nsDrawingSurfacePh :: Init( ) {
-
-	mGC = PgCreateGC(0);
-	if( !mGC )
-		    return NS_ERROR_FAILURE;
-	PgSetDrawBufferSize(65000);
-	// this is definatly going to be on the screen, as it will be the window of a widget or something
+NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t *aGC ) {
+	mGC = aGC;
 	mIsOffscreen = PR_FALSE;
 	mDrawContext = nsnull;
 	return NS_OK;
 	}
 
-NS_IMETHODIMP nsDrawingSurfacePh :: Init(PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags ) {
+NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t *aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags ) {
 	mWidth = aWidth;
 	mHeight = aHeight;
 	mFlags = aFlags;
-	PhDrawContext_t *dc;
 	
-	// we can draw on this offscreen because it has no parent
+	mGC = aGC;
 	mIsOffscreen = PR_TRUE;
 
-	// create an offscreen context with the current video modes image depth
 	mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, mWidth, mHeight, 0);
 	if( !mDrawContext ) return NS_ERROR_FAILURE;
-	dc = PhDCSetCurrent(mDrawContext);
-	PgSetDrawBufferSize(65000);
-#if 1
-	/// HACK HACK until photon lib is fixed
-	if (mDrawContext->gin.cmd_buffer_size < 12) {
-		mDrawContext->gin.cmd_buffer_size = 12;
-		mDrawContext->gin.cmd_ptr = mDrawContext->gin.cmd_buffer + 3;
-	}
-#endif	
-	mGC = PgGetGC();
-	PhDCSetCurrent(dc);
-	
+
+	nsresult rv;
+	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+	if (NS_SUCCEEDED(rv)) {
+		prefs->RegisterCallback("browser.display.internaluse.graphics_changed", prefChanged, (void *)this);
+		}
+
  	return NS_OK;
-	}
-
-NS_IMETHODIMP nsDrawingSurfacePh :: Select( void ) {
-	PhDCSetCurrent( mDrawContext );
-	PgSetGC( mGC );
-
-	return NS_OK;
 	}
 
 int nsDrawingSurfacePh::prefChanged(const char *aPref, void *aClosure)
@@ -278,30 +253,17 @@ int nsDrawingSurfacePh::prefChanged(const char *aPref, void *aClosure)
 	if( surface->mLockDrawContext ) {
 		PhDCRelease(surface->mLockDrawContext);
 		surface->mLockDrawContext = nsnull;
-	}
+		}
+
 	if(surface->mDrawContext) {
-		PhDrawContext_t *dc;
 		surface->mDrawContext->gc = nsnull; /* because we do not want to destroy the one we have since other have it */
 		PhDCRelease( surface->mDrawContext ); 
 		surface->mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, surface->mWidth, surface->mHeight, 0);
 		if( !surface->mDrawContext ) return NS_ERROR_FAILURE;
-		dc = PhDCSetCurrent(surface->mDrawContext);
-		PgSetDrawBufferSize(65000);
-#if 1
-		/// HACK HACK until photon lib is fixed
-		if (surface->mDrawContext->gin.cmd_buffer_size < 12) {
-			surface->mDrawContext->gin.cmd_buffer_size = 12;
-			surface->mDrawContext->gin.cmd_ptr = surface->mDrawContext->gin.cmd_buffer + 3;
-		}
-#endif	
-		PhDCSetCurrent(dc);
+
 		PgDestroyGC(surface->mDrawContext->gc);
 		surface->mDrawContext->gc = surface->mGC;
 		/* use the gc provided */
 	}
 	return 0;
 }
-PhGC_t *nsDrawingSurfacePh::GetGC( void ) { return mGC; }
-PhDrawContext_t *nsDrawingSurfacePh::GetDC( void ) { return mDrawContext; }
-NS_IMETHODIMP nsDrawingSurfacePh::Flush(void) { return NS_OK; }
-PRBool nsDrawingSurfacePh::IsActive( void ) { return mDrawContext == PhDCGetCurrent() ? PR_TRUE : PR_FALSE; }
