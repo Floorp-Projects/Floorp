@@ -11,6 +11,10 @@
 #    ./mozilla
 #    <quit>
 #
+# Contributors:
+#    Suresh Duddi <dp@netscape.com>
+#    Vamsee Nalagandla <vamsee9@hotmail.com>
+#
 
 if [ $# -gt 0 ]
 then
