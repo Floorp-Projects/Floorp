@@ -79,22 +79,22 @@ public class NativeObject extends IdScriptable {
                     return jsConstructor(cx, args, f, thisObj == null);
 
                 case Id_toString:
-                    return jsFunction_toString(cx, thisObj);
+                    return js_toString(cx, thisObj);
 
                 case Id_toLocaleString:
-                    return jsFunction_toLocaleString(cx, thisObj);
+                    return js_toLocaleString(cx, thisObj);
 
                 case Id_valueOf:
-                    return jsFunction_valueOf(thisObj);
+                    return js_valueOf(thisObj);
 
                 case Id_hasOwnProperty:
-                    return jsFunction_hasOwnProperty(thisObj, args);
+                    return js_hasOwnProperty(thisObj, args);
 
                 case Id_propertyIsEnumerable:
-                    return jsFunction_propertyIsEnumerable(cx, thisObj, args);
+                    return js_propertyIsEnumerable(cx, thisObj, args);
 
                 case Id_isPrototypeOf:
-                    return jsFunction_isPrototypeOf(cx, thisObj, args);
+                    return js_isPrototypeOf(cx, thisObj, args);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
@@ -119,23 +119,20 @@ public class NativeObject extends IdScriptable {
     public String toString() {
         Context cx = Context.getCurrentContext();
         if (cx != null)
-            return jsFunction_toString(cx, this);
+            return js_toString(cx, this);
         else
             return "[object " + getClassName() + "]";
     }
 
-    private static String jsFunction_toString(Context cx, Scriptable thisObj)
-    {
+    private static String js_toString(Context cx, Scriptable thisObj) {
         if (cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE)) {
             return toSource(cx, thisObj);
         }
         return "[object " + thisObj.getClassName() + "]";
     }
 
-    private static String jsFunction_toLocaleString(Context cx,
-                                                    Scriptable thisObj)
-    {
-        return jsFunction_toString(cx, thisObj);
+    private static String js_toLocaleString(Context cx, Scriptable thisObj) {
+        return js_toString(cx, thisObj);
     }
 
     private static String toSource(Context cx, Scriptable thisObj)
@@ -187,12 +184,11 @@ public class NativeObject extends IdScriptable {
         return result.toString();
     }
 
-    private static Object jsFunction_valueOf(Scriptable thisObj) {
+    private static Object js_valueOf(Scriptable thisObj) {
         return thisObj;
     }
 
-    private static Object jsFunction_hasOwnProperty(Scriptable thisObj,
-                                                    Object[] args)
+    private static Object js_hasOwnProperty(Scriptable thisObj, Object[] args)
     {
         if (args.length != 0) {
             if (thisObj.has(ScriptRuntime.toString(args[0]), thisObj))
@@ -201,9 +197,9 @@ public class NativeObject extends IdScriptable {
         return Boolean.FALSE;
     }
 
-    private static Object jsFunction_propertyIsEnumerable(Context cx,
-                                                          Scriptable thisObj,
-                                                          Object[] args)
+    private static Object js_propertyIsEnumerable(Context cx,
+                                                  Scriptable thisObj,
+                                                  Object[] args)
     {
         try {
             if (args.length != 0) {
@@ -222,9 +218,8 @@ public class NativeObject extends IdScriptable {
         return Boolean.FALSE;
     }
 
-    private static Object jsFunction_isPrototypeOf(Context cx,
-                                                   Scriptable thisObj,
-                                                   Object[] args)
+    private static Object js_isPrototypeOf(Context cx, Scriptable thisObj,
+                                           Object[] args)
     {
         if (args.length != 0 && args[0] instanceof Scriptable) {
             Scriptable v = (Scriptable) args[0];
