@@ -304,12 +304,6 @@ nsWindow::DestroyNative(void)
   IMEDestroyIC();
 #endif // USE_XIM 
 
-  GtkWidget *top_mozarea = GetMozArea();
-  if (top_mozarea) {
-    GtkWidget *top_window = gtk_widget_get_toplevel(top_mozarea);
-    gtk_signal_disconnect_by_data(GTK_OBJECT(top_window), this);
-  }
-
   // destroy all of the children that are nsWindow() classes
   // preempting the gdk destroy system.
   DestroyNativeChildren();
@@ -1881,10 +1875,11 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   GtkWidget *top_mozarea = GetMozArea();
   if (top_mozarea) {
     GtkWidget *top_window = gtk_widget_get_toplevel(top_mozarea);
-    gtk_signal_connect_after(GTK_OBJECT(top_window),
-                             "configure_event",
-                             GTK_SIGNAL_FUNC(handle_invalidate_pos),
-                             this);
+    gtk_signal_connect_while_alive(GTK_OBJECT(top_window),
+                                   "configure_event",
+                                   GTK_SIGNAL_FUNC(handle_invalidate_pos),
+                                   this,
+                                   GTK_OBJECT(mSuperWin));
   }
   return NS_OK;
 }
