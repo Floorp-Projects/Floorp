@@ -99,6 +99,7 @@ protected:
 
   void ResetStateTracking();
   PRUint32 mNewToplevelSecurityState;
+  PRBool mNewToplevelSecurityStateKnown;
   nsXPIDLString mInfoTooltip;
   PRInt32 mDocumentRequestsInProgress;
   PRInt32 mSubRequestsInProgress;
