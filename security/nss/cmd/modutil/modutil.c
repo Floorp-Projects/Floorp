@@ -913,6 +913,7 @@ main(int argc, char *argv[])
 	}
 
 loser:
+        NSS_Shutdown();
 	PR_Cleanup();
 	return errcode;
 }
