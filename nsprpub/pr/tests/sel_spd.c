@@ -154,7 +154,7 @@ _server_thread(void *arg_id)
 
 	memset(&sa, 0 , sizeof(sa));
 	sa.inet.family = PR_AF_INET;
-	sa.inet.port = PORT_BASE + *id;
+	sa.inet.port = PR_htons(PORT_BASE + *id);
 	sa.inet.ip = PR_htonl(PR_INADDR_ANY);
 
 	if ( PR_Bind(sock, &sa) < 0) {
