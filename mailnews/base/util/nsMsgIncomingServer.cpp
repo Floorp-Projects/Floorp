@@ -1127,6 +1127,7 @@ nsMsgIncomingServer::ClearAllValues()
 {
     nsCAutoString rootPref("mail.server.");
     rootPref += m_serverKey;
+    rootPref += '.';
 
     PRUint32 childCount;
     char**   childArray;

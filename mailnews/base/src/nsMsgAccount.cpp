@@ -475,6 +475,7 @@ nsMsgAccount::ClearAllValues()
     nsresult rv;
     nsCAutoString rootPref("mail.account.");
     rootPref += m_accountKey;
+    rootPref += '.';
 
     rv = getPrefService();
     if (NS_FAILED(rv))

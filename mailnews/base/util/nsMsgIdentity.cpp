@@ -436,6 +436,7 @@ nsMsgIdentity::ClearAllValues()
 
     nsCAutoString rootPref("mail.identity.");
     rootPref += m_identityKey;
+    rootPref += '.';
 
     PRUint32 childCount;
     char**   childArray;
