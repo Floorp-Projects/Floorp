@@ -39,12 +39,7 @@
 #include <Appearance.h>
 #include <LCMAttachment.h>
 #include <UCMMUtils.h>
-
-#if PP_Target_Carbon
 #include <UNavServicesDialogs.h>
-#else
-#include <UConditionalDialogs.h>
-#endif
 
 #include "ApplIDs.h"
 #include "CBrowserWindow.h"
@@ -563,16 +558,7 @@ nsresult CBrowserApp::InitializePrefs()
 Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT	inCommand,
                                       FSSpec& outSpec)
 {
-		// LFileChooser presents the standard dialog for asking
-		// the user to open a file. It supports both StandardFile
-		// and Navigation Services. The latter allows opening
-		// multiple files.
-
-#if PP_Target_Carbon
 	UNavServicesDialogs::LFileChooser	chooser;
-#else
-	UConditionalDialogs::LFileChooser	chooser;
-#endif
 	
 	NavDialogOptions *theDialogOptions = chooser.GetDialogOptions();
 	if (theDialogOptions) {

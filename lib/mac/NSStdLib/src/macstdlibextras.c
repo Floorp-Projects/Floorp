@@ -48,6 +48,8 @@
 #include <TextServices.h>
 #include <Movies.h>
 
+#if !defined(__MSL__) || (__MSL__ < 0x7001)
+
 int strcmpcore(const char*, const char*, int, int);
 
 
@@ -152,6 +154,9 @@ char *strdup(const char *source)
 	return newAllocation;
 }
 
+#endif // !defined(__MSL__) || (__MSL__ < 0x7001)
+
+
 #pragma mark -
 
 
@@ -224,7 +229,6 @@ void InitializeSIOUX(unsigned char isStandAlone)
 	
 	//InstallConsole();
 }
-
 
 Boolean IsSIOUXWindow(WindowPtr inWindow)
 {

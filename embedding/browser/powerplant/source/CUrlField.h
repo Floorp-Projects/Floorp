@@ -16,7 +16,6 @@ public:
 	enum { class_ID = FOUR_CHAR_CODE('UrlF') };
 
 
-						CUrlField();
 						CUrlField(LStream*	inStream);
 
 	virtual				~CUrlField();

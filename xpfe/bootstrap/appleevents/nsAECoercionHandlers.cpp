@@ -59,7 +59,7 @@ AECoercionHandlers::AECoercionHandlers()
 	OSErr	err;
 	
 	// XXX: Note inconsistent type between NewAECoerceDescProc and AEInstallCoercionHandler. Buggy headers when using Carbon?
-	mTextDescToPascalString = NewAECoerceDescProc(TextToPascalStringCoercion);
+	mTextDescToPascalString = NewAECoerceDescUPP(TextToPascalStringCoercion);
 	ThrowIfNil(mTextDescToPascalString);
 
 	err = ::AEInstallCoercionHandler(typeChar, typePascalString,
@@ -69,7 +69,7 @@ AECoercionHandlers::AECoercionHandlers()
 								false );		/* Application table, not System */
 	ThrowIfOSErr(err);
 
-	mPascalStringDescToText = NewAECoerceDescProc(PascalStringToTextCoercion);
+	mPascalStringDescToText = NewAECoerceDescUPP(PascalStringToTextCoercion);
 	ThrowIfNil(mPascalStringDescToText);
 
 	err = ::AEInstallCoercionHandler(typePascalString, typeChar,

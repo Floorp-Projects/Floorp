@@ -65,8 +65,6 @@ public:
 	virtual void	         ShowSelf();
 	virtual void	         HideSelf();
 	virtual void            DrawSelf();
-   virtual void            AdjustCursorSelf(Point inPortPt,
-	                                         const EventRecord& inMacEvent);
 
    void                    ResizeFrameBy(SInt16		inWidthDelta,
                             				  SInt16		inHeightDelta,

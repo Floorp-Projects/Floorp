@@ -88,8 +88,14 @@ static void* getSystemFunction(CFStringRef functionName)
 // Useful Carbon-CFM debugging tool, printf that goes to the system console.
 
 typedef int (*io_proc_ptr) (int fd, void* buffer, long count);
+
+#if TARGET_CARBON
 static io_proc_ptr system_read = (io_proc_ptr) getSystemFunction(CFSTR("read"));
 static io_proc_ptr system_write = (io_proc_ptr) getSystemFunction(CFSTR("write"));
+#else
+static io_proc_ptr system_read = 0;
+static io_proc_ptr system_write = 0;
+#endif
 
 /*
  *	The following four functions provide the UI for the console package.

@@ -51,6 +51,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIXULWindow.h"
 
+using namespace nsWindowUtils;
 
 PRBool AEGetURLSuiteHandler::sReuseWindowPrefInited = PR_FALSE;
 PRBool AEGetURLSuiteHandler::sReuseWindow = PR_FALSE;

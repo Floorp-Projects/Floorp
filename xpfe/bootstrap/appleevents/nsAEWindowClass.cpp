@@ -52,6 +52,7 @@
 
 #include "nsAEWindowClass.h"
 
+using namespace nsWindowUtils;
 
 /*----------------------------------------------------------------------------
 	GetNumItems 
@@ -69,7 +70,7 @@ UInt32 AEWindowIterator::GetNumItems(const AEDesc* containerToken)
 AEClassIterator::ItemRef AEWindowIterator::GetNamedItemReference(const AEDesc* containerToken, const char *itemName)
 {
 	WindowPtr	wind;
-	wind = ::GetNamedOrFrontmostWindow(mWindowKind, itemName);
+	wind = GetNamedOrFrontmostWindow(mWindowKind, itemName);
 	return (wind) ? (ItemRef)wind : kNoItemRef;
 }
 
@@ -91,7 +92,7 @@ AEClassIterator::ItemRef AEWindowIterator::GetIndexedItemReference(const AEDesc*
 AEClassIterator::ItemID AEWindowIterator::GetNamedItemID(const AEDesc* containerToken, const char *itemName)
 {
 	WindowPtr	wind;
-	wind = ::GetNamedOrFrontmostWindow(mWindowKind, itemName);
+	wind = GetNamedOrFrontmostWindow(mWindowKind, itemName);
 	return (wind) ? (ItemRef)wind : kNoItemID;
 }
 
@@ -951,7 +952,7 @@ long AEWindowClass::CountWindows(TWindowKind windowKind)
 ----------------------------------------------------------------------------*/
 WindowPtr AEWindowClass::GetWindowByIndex(TWindowKind windowKind, long index)
 {
-	return ::GetIndexedWindowOfKind(windowKind, index);
+	return GetIndexedWindowOfKind(windowKind, index);
 }
 
 /*----------------------------------------------------------------------------
@@ -962,7 +963,7 @@ WindowPtr AEWindowClass::GetWindowByTitle(TWindowKind windowKind, ConstStr63Para
 {
 	CStr255		windowName;
 	CopyPascalToCString((const StringPtr)title, windowName, 255);
-	return ::GetNamedOrFrontmostWindow(windowKind, windowName);
+	return GetNamedOrFrontmostWindow(windowKind, windowName);
 }
 
 /*----------------------------------------------------------------------------
@@ -971,7 +972,7 @@ WindowPtr AEWindowClass::GetWindowByTitle(TWindowKind windowKind, ConstStr63Para
 ----------------------------------------------------------------------------*/
 long AEWindowClass::GetWindowIndex(TWindowKind windowKind, WindowPtr window)
 {
-	return ::GetWindowIndex(windowKind, window);
+	return nsWindowUtils::GetWindowIndex(windowKind, window);
 }
 
 

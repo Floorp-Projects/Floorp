@@ -44,8 +44,7 @@
         
         // PowerPlant definitions
 		#define PP_Uses_PowerPlant_Namespace		0
-        // not available in 0x2301 compiler		
-		#define PP_Supports_Function_Identifier     0
+		#define PP_Suppress_Notes_22                1
         		
         #if !defined(TARGET_CARBON) || !TARGET_CARBON
             #define ACCESSOR_CALLS_ARE_FUNCTIONS 1		
@@ -56,7 +55,6 @@
             #define PP_StdDialogs_Option	PP_StdDialogs_NavServicesOnly		
 		#else
             #define PP_StdDialogs_Option	PP_StdDialogs_Conditional
-		    #include <ControlDefinitions.h>
 		#endif
 		
 		

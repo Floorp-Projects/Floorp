@@ -18,6 +18,7 @@ __register_fragment
 __global_destructor_chain
 __destroy_global_chain
 __register_global_object
+__register_atexit
 __destroy_new_array2
 __destroy_new_array
 __destroy_arr

@@ -311,7 +311,7 @@ static char* synthesizeAppletElement(nsIPluginTagInfo* tagInfo)
     string parameters("");
     
 	nsIPluginTagInfo2* tagInfo2 = NULL;
-	if (tagInfo->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), &tagInfo2) == NS_OK) {
+	if (tagInfo->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), (void **)&tagInfo2) == NS_OK) {
 	    nsPluginTagType tagType = nsPluginTagType_Unknown;
 	    if (tagInfo2->GetTagType(&tagType) == NS_OK) {
 	        switch (tagType) {
@@ -351,9 +351,9 @@ void MRJContext::processAppletTag()
     // in general, to specify a separate CODEBASE.
 
 	nsIPluginTagInfo* tagInfo = NULL;
-	if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), &tagInfo) == NS_OK) {
+	if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), (void **)&tagInfo) == NS_OK) {
 		nsIPluginTagInfo2* tagInfo2 = NULL;
-		if (tagInfo->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), &tagInfo2) == NS_OK) {
+		if (tagInfo->QueryInterface(NS_GET_IID(nsIPluginTagInfo2), (void **)&tagInfo2) == NS_OK) {
     		nsPluginTagType tagType = nsPluginTagType_Unknown;
     		if (tagInfo2->GetTagType(&tagType) == NS_OK) {
     			// get the URL of the HTML document	containing the applet, and the
@@ -373,7 +373,7 @@ void MRJContext::processAppletTag()
 
 			// establish a page context for this applet to run in.
 			nsIJVMPluginTagInfo* jvmTagInfo = NULL;
-			if (mPeer->QueryInterface(NS_GET_IID(nsIJVMPluginTagInfo), &jvmTagInfo) == NS_OK) {
+			if (mPeer->QueryInterface(NS_GET_IID(nsIJVMPluginTagInfo), (void **)&jvmTagInfo) == NS_OK) {
 				PRUint32 documentID;
 				const char* codeBase;
 				const char* archive;
@@ -1662,7 +1662,7 @@ void MRJContext::setAppletHTML(const char* appletHTML, nsPluginTagType tagType)
     case nsPluginTagType_Embed:
         {
     	    nsIPluginTagInfo* tagInfo = NULL;
-    	    if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), &tagInfo) == NS_OK) {
+    	    if (mPeer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), (void **)&tagInfo) == NS_OK) {
     	        // just synthesize an <APPLET> element out of whole cloth.
     	        mAppletHTML = synthesizeAppletElement(tagInfo);
     	        NS_RELEASE(tagInfo);

@@ -38,3 +38,5 @@
 /* Common defines for both debug & non-debug versions NSStdLib */
 
 /* Nothing to do here */
+
+#define _MSL_IMP_EXP __declspec(export)

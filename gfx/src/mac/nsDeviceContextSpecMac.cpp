@@ -143,7 +143,7 @@ static pascal void MyBBoxDraw(WindowPtr theWindow, short aItemNo)
  *  this is the dialog hook, takes care of setting the dialog items
  *  @update   dc 12/02/98
  */
-static pascal void MyJobItems(TPPrDlg aDialog, short aItemNo)
+static pascal void MyJobItems(DialogPtr aDialog, short aItemNo)
 {
 short   myItem, firstItem, i, itemType;
 short   value;
@@ -156,7 +156,7 @@ Handle  itemH;
   if (myItem>0) {
     switch (myItem) {
       case ePrintSelectionCheckboxID:
-        ::GetDialogItem((DialogPtr)aDialog, firstItem, &itemType, &itemH, &itemBox);
+        ::GetDialogItem(aDialog, firstItem, &itemType, &itemH, &itemBox);
         gPrintSelection = !gPrintSelection;
         ::SetControlValue((ControlHandle)itemH, gPrintSelection);
         break;
@@ -165,7 +165,7 @@ Handle  itemH;
       case ePrintSelectedFrameCheckboxID:
       case ePrintAllFramesCheckboxID:
         for (i=ePrintFrameAsIsCheckboxID; i<=ePrintAllFramesCheckboxID; i++){
-          ::GetDialogItem((DialogPtr)aDialog, firstItem+i-1, &itemType, &itemH, &itemBox);
+          ::GetDialogItem(aDialog, firstItem+i-1, &itemType, &itemH, &itemBox);
           ::SetControlValue((ControlHandle)itemH, i==myItem);
         }
         break;
@@ -175,16 +175,16 @@ Handle  itemH;
     }
   } else {
     // chain to standard Item handler
-    CallPItemProc(prPItemProc, (DialogPtr)aDialog, aItemNo);
+    CallPItemProc(prPItemProc, aDialog, aItemNo);
     
-    if (aDialog->fDone)
+    if (((TPPrDlg)aDialog)->fDone)
     {
       nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
       // cleanup and set the print options to what we want
       if (printOptionsService)
       {
         // print selection
-        ::GetDialogItem((DialogPtr)aDialog, firstItem+ePrintSelectionCheckboxID-1, &itemType, &itemH, &itemBox);
+        ::GetDialogItem(aDialog, firstItem+ePrintSelectionCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
           printOptionsService->SetPrintRange(nsIPrintOptions::kRangeSelection);
@@ -193,21 +193,21 @@ Handle  itemH;
         }
         
         // print frames as is
-        ::GetDialogItem((DialogPtr)aDialog, firstItem+ePrintFrameAsIsCheckboxID-1, &itemType, &itemH, &itemBox);
+        ::GetDialogItem(aDialog, firstItem+ePrintFrameAsIsCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
           printOptionsService->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
         }
         
         // selected frame
-        ::GetDialogItem((DialogPtr)aDialog, firstItem+ePrintSelectedFrameCheckboxID-1, &itemType, &itemH, &itemBox);
+        ::GetDialogItem(aDialog, firstItem+ePrintSelectedFrameCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
           printOptionsService->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
         }
         
         // print all frames
-        ::GetDialogItem((DialogPtr)aDialog, firstItem+ePrintAllFramesCheckboxID-1, &itemType, &itemH, &itemBox);
+        ::GetDialogItem(aDialog, firstItem+ePrintAllFramesCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
           printOptionsService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);

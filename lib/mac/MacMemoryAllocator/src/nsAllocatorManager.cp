@@ -59,7 +59,6 @@
 
 #include "nsAllocatorManager.h"
 
-
 /*  prototypes  */
 
 #ifdef __cplusplus
@@ -75,7 +74,6 @@ pascal void __MemTerminate(void);
 #ifdef __cplusplus
 }
 #endif
-
 
 //--------------------------------------------------------------------
 nsHeapZoneHeader::nsHeapZoneHeader(Ptr zonePtr, Size ptrSize)
@@ -592,7 +590,7 @@ void WriteString(PRFileDesc *file, const char * string)
 
 
 //--------------------------------------------------------------------
-void *malloc(size_t blockSize)
+void *std::malloc(size_t blockSize)
 //--------------------------------------------------------------------
 {
     // local static copy is slightly faster
@@ -660,7 +658,7 @@ void *malloc(size_t blockSize)
 
 
 //--------------------------------------------------------------------
-void free(void *deadBlock)
+void std::free(void *deadBlock)
 //--------------------------------------------------------------------
 {
     if (!deadBlock) return;
@@ -685,7 +683,7 @@ void free(void *deadBlock)
 
 
 //--------------------------------------------------------------------
-void* realloc(void* block, size_t newSize)
+void* std::realloc(void* block, size_t newSize)
 //--------------------------------------------------------------------
 {
     void    *newBlock = nil;
@@ -713,25 +711,25 @@ void* realloc(void* block, size_t newSize)
         if (newBlock) return newBlock;
     } 
     
-    newBlock = ::malloc(newSize);
+    newBlock = malloc(newSize);
     if (!newBlock) return nil;
     
     if (block)
     {
         size_t      oldSize = nsAllocatorManager::GetBlockSize(block);
         BlockMoveData(block, newBlock, newSize < oldSize ? newSize : oldSize);
-        ::free(block);
+        free(block);
     }
     return newBlock;
 }
 
 
 //--------------------------------------------------------------------
-void *calloc(size_t nele, size_t elesize)
+void *std::calloc(size_t nele, size_t elesize)
 //--------------------------------------------------------------------
 {
     size_t  space = nele * elesize;
-    void    *newBlock = ::malloc(space);
+    void    *newBlock = malloc(space);
     if (newBlock)
         memset(newBlock, 0, space);
     return newBlock;

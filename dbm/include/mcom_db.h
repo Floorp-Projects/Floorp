@@ -212,11 +212,7 @@
 #define MAXPATHLEN 	1024              
 #endif
 
-#ifdef macintosh
-#include <unix.h>
-#else
 #include <fcntl.h>
-#endif
 
 #if defined(_WINDOWS) || defined(XP_OS2)
 #include <stdio.h>

@@ -46,11 +46,6 @@
 extern "C" {
 #endif
 
-void *malloc(size_t blockSize);
-void free(void *deadBlock);
-void* realloc(void* block, size_t newSize);
-void *calloc(size_t nele, size_t elesize);
-
 
 #if STATS_MAC_MEMORY
 void WriteString(PRFileDesc *file, const char * string);

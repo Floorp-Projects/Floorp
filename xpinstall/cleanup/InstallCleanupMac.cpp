@@ -381,25 +381,25 @@ RemoveAliasFromStartupItems(FSSpecPtr aAlias)
 // Apple event handlers to be installed
 //----------------------------------------------------------------------------
 
-static pascal OSErr DoAEOpenApplication(AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
+static pascal OSErr DoAEOpenApplication(const AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
 {
 #pragma unused (theAppleEvent, replyAppleEvent, refCon)
     return noErr;
 }
 
-static pascal OSErr DoAEOpenDocuments(AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
+static pascal OSErr DoAEOpenDocuments(const AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
 {
 #pragma unused (theAppleEvent, replyAppleEvent, refCon)
     return errAEEventNotHandled;
 }
 
-static pascal OSErr DoAEPrintDocuments(AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
+static pascal OSErr DoAEPrintDocuments(const AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
 {
 #pragma unused (theAppleEvent, replyAppleEvent, refCon)
     return errAEEventNotHandled;
 }
 
-static pascal OSErr DoAEQuitApplication(AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
+static pascal OSErr DoAEQuitApplication(const AppleEvent * theAppleEvent, AppleEvent * replyAppleEvent, long refCon)
 {
 #pragma unused (theAppleEvent, replyAppleEvent, refCon)
     gQuitFlag = true;
@@ -418,18 +418,18 @@ static void InitAppleEventsStuff(void)
     if (gAppleEventsFlag) {
 
         retCode = AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
-                    NewAEEventHandlerProc(DoAEOpenApplication), 0, false);
+                    NewAEEventHandlerUPP(DoAEOpenApplication), 0, false);
 
         if (retCode == noErr)
             retCode = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
-                    NewAEEventHandlerProc(DoAEOpenDocuments), 0, false);
+                    NewAEEventHandlerUPP(DoAEOpenDocuments), 0, false);
 
         if (retCode == noErr)
             retCode = AEInstallEventHandler(kCoreEventClass, kAEPrintDocuments,
-                    NewAEEventHandlerProc(DoAEPrintDocuments), 0, false);
+                    NewAEEventHandlerUPP(DoAEPrintDocuments), 0, false);
         if (retCode == noErr)
             retCode = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
-                    NewAEEventHandlerProc(DoAEQuitApplication), 0, false);
+                    NewAEEventHandlerUPP(DoAEQuitApplication), 0, false);
 
         if (retCode != noErr) DebugStr("\pInstall event handler failed");
         // a better way to indicate an error is to post a notification

@@ -55,7 +55,7 @@ AEGenericClass::AEGenericClass(DescType classType, DescType containerClass)
 {
 
 	// Window from null accessor used by the entire window hierarchy
-	mItemFromContainerAccessor = NewOSLAccessorProc(AEGenericClass::ItemFromContainerAccessor);
+	mItemFromContainerAccessor = NewOSLAccessorUPP(AEGenericClass::ItemFromContainerAccessor);
 	ThrowIfNil(mItemFromContainerAccessor);
 	
 	OSErr	err;

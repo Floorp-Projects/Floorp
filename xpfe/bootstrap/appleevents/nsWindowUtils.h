@@ -47,11 +47,13 @@
 
 class nsIXULWindow;
 
+namespace nsWindowUtils {
+
 long CountWindowsOfKind(TWindowKind windowKind);
 
 WindowPtr GetNamedOrFrontmostWindow(TWindowKind windowKind, const char* windowName);
 WindowPtr GetIndexedWindowOfKind(TWindowKind windowKind, TAEListIndex index);
-TAEListIndex GetWindowIndex(TWindowKind windowKind, WindowPtr theWindow);
+TAEListIndex GetWindowIndex(TWindowKind windowKind, WindowPtr theWindow); // GetWindowIndex is taken
 
 void GetCleanedWindowName(WindowPtr wind, char* outName, long maxLen);
 void GetWindowUrlString(WindowPtr wind, char** outUrlStringPtr);
@@ -68,6 +70,8 @@ Boolean WindowIsModal(WindowPtr wind);
 Boolean WindowIsCloseable(WindowPtr wind);
 Boolean WindowIsFloating(WindowPtr wind);
 Boolean WindowIsModified(WindowPtr wind);
+
+}
 
 
 #endif // nsWindowUtils_h_

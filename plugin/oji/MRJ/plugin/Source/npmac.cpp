@@ -56,7 +56,15 @@
 // globals for 68K (analagous to the function SetCurrentA5
 // defined by the toolbox).
 //
-#include <A4Stuff.h>
+// A4Stuff does not exist as of CW 7. Define them to nothing.
+//
+
+#if defined(__MWERKS__) && (__MWERKS__ >= 0x2400)
+	#define EnterCodeResource()
+	#define ExitCodeResource()
+#else
+    #include <A4Stuff.h>
+#endif
 
 #include "jri.h"
 #include "npapi.h"

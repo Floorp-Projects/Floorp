@@ -42,6 +42,10 @@
 
 #include "xpidl.h"
 
+#ifdef XP_MAC
+#include <stat.h>
+#endif
+
 static gboolean parsed_empty_file;
 
 /*
@@ -185,6 +189,19 @@ new_input_data(const char *filename, IncludePathEntry *include_path)
     if (!inputfile)
         return NULL;
 
+#ifdef XP_MAC
+    {
+        struct stat input_stat;
+        if (fstat(fileno(inputfile), &input_stat))
+            return NULL;
+        buffer = malloc(input_stat.st_size + 1);
+        if (!buffer)
+            return NULL;
+        offset = fread(buffer, 1, input_stat.st_size, inputfile);
+        if (ferror(inputfile))
+            return NULL;
+    }
+#else
     /*
      * Rather than try to keep track of many different varieties of state
      * around the boundaries of a circular buffer, we just read in the entire
@@ -207,6 +224,8 @@ new_input_data(const char *filename, IncludePathEntry *include_path)
         }
         offset += just_read;
     }
+#endif
+
     fclose(inputfile);
 
 #ifdef XP_MAC

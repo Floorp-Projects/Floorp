@@ -88,7 +88,7 @@ static NS_DEFINE_IID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static nsresult getGlobalComponentManager(nsIComponentManager* *result)
 {
     return theServiceManager->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManager),
-                                         (nsISupports**)result);
+                                         (void**)result);
 }
 
 nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
@@ -98,7 +98,7 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
     getGlobalComponentManager(&theComponentManager);
 
     nsresult result = theServiceManager->GetService(kLiveConnectCID, NS_GET_IID(nsILiveconnect),
-                                                    (nsISupports**)&theLiveConnectManager);
+                                                    (void**)&theLiveConnectManager);
     if (result != NS_OK)
         return result;
     
@@ -211,7 +211,7 @@ NS_NewURI(nsIURI* *result,
 {
     nsIIOService* ioService;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    nsresult rv = theServiceManager->GetService(kIOServiceCID, NS_GET_IID(nsIIOService), (nsISupports**)&ioService);
+    nsresult rv = theServiceManager->GetService(kIOServiceCID, NS_GET_IID(nsIIOService), (void**)&ioService);
     if (rv == NS_OK)
         rv = ioService->NewURI(spec, baseURI, result);
     NS_RELEASE(ioService);
@@ -354,7 +354,7 @@ void MessageRunnable::execute(JNIEnv* env)
     // because a spontaneous Java thread called us, we have to switch to the JavaScript thread
     // to handle this request.
     nsIThreadManager* threadManager = NULL;
-    if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIThreadManager), (nsISupports**)&threadManager) == NS_OK) {
+    if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIThreadManager), (void **)&threadManager) == NS_OK) {
         threadManager->PostEvent(mThreadID, this, PR_FALSE);
         NS_RELEASE(threadManager);
     }
@@ -363,7 +363,7 @@ void MessageRunnable::execute(JNIEnv* env)
 NS_IMETHODIMP MessageRunnable::Run()
 {
     nsIJVMManager* javaManager = NULL;
-    if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIJVMManager), (nsISupports**)&javaManager) == NS_OK) {
+    if (theServiceManager->GetService(nsIJVMManager::GetCID(), NS_GET_IID(nsIJVMManager), (void **)&javaManager) == NS_OK) {
         JNIEnv* proxyEnv = NULL;
         if (javaManager->GetProxyJNI(&proxyEnv) == NS_OK && proxyEnv != NULL)
             mMessage->execute(proxyEnv);
@@ -380,7 +380,7 @@ static PRUint32 getJavaScriptThread(JNIEnv* env)
         nsIPluginInstancePeer* peer;
         if (pluginInstance->GetPeer(&peer) == NS_OK) {
             nsIPluginInstancePeer2* peer2 = NULL;
-            if (peer->QueryInterface(NS_GET_IID(nsIPluginInstancePeer2), &peer2) == NS_OK) {
+            if (peer->QueryInterface(NS_GET_IID(nsIPluginInstancePeer2), (void **)&peer2) == NS_OK) {
                 if (peer2->GetJSThread(&threadID) != NS_OK)
                     threadID = 0;
                 NS_RELEASE(peer2);

@@ -104,7 +104,7 @@ LCommander* CPromptService::GetParentCommander(nsIDOMWindow* aDOMWindow)
 	if (NS_FAILED(rv)) return nsnull;
 	
 	WindowPtr macWindow;
-	rv = window->GetSiteWindow(&macWindow);
+	rv = window->GetSiteWindow((void **)&macWindow);
 	if (NS_FAILED(rv)) return nsnull;
 	
 	resultCommander = LWindow::FetchWindowObject(macWindow);
