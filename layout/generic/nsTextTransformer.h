@@ -28,6 +28,10 @@ class nsTextRun;
 class nsILineBreaker;
 class nsIWordBreaker;
 
+// XXX I'm sure there are other special characters
+#define CH_NBSP 160
+#define CH_SHY  173
+
 #define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 100
 
 // A growable text buffer that tries to avoid using malloc by having a
