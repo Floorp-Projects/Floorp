@@ -41,7 +41,7 @@ public:
     Uint8**		getBase()		{ return pFrame; }
     static int  getStackDepth();
 	
-	Method &getCallingJavaMethod();
+	Method &getCallingJavaMethod(int climbDepth = 1);
 
 	// returns the Method associated with the frame, or NULL if there is not one
 	Method*	getMethod();

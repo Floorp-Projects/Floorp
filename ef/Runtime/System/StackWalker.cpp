@@ -87,7 +87,7 @@ getStackDepth()
 //
 // Move the cursor of this frame to the closest Java frame and
 // return the method corresponding to that frame
-Method &Frame::getCallingJavaMethod()
+Method &Frame::getCallingJavaMethod(int climbDepth)
 {
 	Method *m;
 
@@ -100,7 +100,7 @@ Method &Frame::getCallingJavaMethod()
 			m = getMethodForPC(pMethodAddress);
 		}
 
-	} while ((m->getModifiers() & CR_METHOD_NATIVE));
+	} while ((m->getModifiers() & CR_METHOD_NATIVE) || --climbDepth);
 
 	return *m;
 }
