@@ -54,5 +54,7 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 # need a static lib for some components (pngcom, say)
 override NO_STATIC_LIB=
 
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
+
 include $(topsrcdir)/config/rules.mk
 

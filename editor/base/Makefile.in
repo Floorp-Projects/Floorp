@@ -68,6 +68,8 @@ CPPSRCS		= \
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_NECKO_UTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		-lmozjs \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
