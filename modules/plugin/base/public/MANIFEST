@@ -52,3 +52,5 @@ nsIPluginInputStream2.h
 nsPIPluginHost.h
 nsPluginLogging.h
 nsPluginError.h
+npapi.h
+npupp.h

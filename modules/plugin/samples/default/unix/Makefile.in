@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 #MODULE		= plugin
 LIBRARY_NAME	= nullplugin
 REQUIRES	= java \
+		  plugin \
 		  $(NULL)
 
 CSRCS		= \

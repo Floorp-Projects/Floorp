@@ -3,8 +3,6 @@
 #
 
 minicom.h
-npapi.h
-npupp.h
 platform.h
 xpassert.h
 xp_core.h
