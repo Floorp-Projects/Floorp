@@ -44,14 +44,29 @@
  * ====================================================
  */
 
-#include "jstypes.h"
+/* Modified defines start here.. */
+#undef __LITTLE_ENDIAN
 
 #ifdef _WIN32
 #define huge myhuge
+#define __LITTLE_ENDIAN
+#endif
+
+#if defined(linux) && defined(__i386__)
+#define __LITTLE_ENDIAN
+#endif
+
+/* End here. The rest is the standard file. */
+
+#ifdef __NEWVALID	/* special setup for Sun test regime */
+#if defined(i386) || defined(i486) || \
+	defined(intel) || defined(x86) || defined(i86pc)
+#define __LITTLE_ENDIAN
+#endif
 #endif
 
 typedef union {
-#ifdef IS_LITTLE_ENDIAN
+#ifdef __LITTLE_ENDIAN
     struct { int lo, hi; } ints;
 #else
     struct { int hi, lo; } ints;
