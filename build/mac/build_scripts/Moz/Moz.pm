@@ -49,6 +49,7 @@ use Moz::CodeWarriorLib;
 @ISA				= qw(Exporter);
 
 @EXPORT			= qw( LaunchCodeWarrior
+                  GetCodeWarriorRelativePath
                   current_directory
                   full_path_to
                   BuildProject
@@ -66,7 +67,7 @@ use Moz::CodeWarriorLib;
                   ActivateApplication
                   IsProcessRunning);
 
-@EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
+@EXPORT_OK	= qw(CloseErrorLog QUIET);
 
 
 sub current_directory()
@@ -90,22 +91,6 @@ sub full_path_to($)
 			}
 
 		return $path;
-	}
-
-=head2 Setup
-
-Pretty much, everything is taken care of for you.
-  However, B<Moz> does use a little compiled AppleScript library (the file CodeWarriorLib) for some of its communcication with CodeWarrior.
-  If this library isn't in the same directory as "Moz.pm", then you need to tell B<Moz> where to find it.
-  Call C<UseCodeWarriorLib($path_to_CodeWarriorLib)>.
-  This routine is not exported by default, nor are you likely to need it.
-
-=cut
-
-sub UseCodeWarriorLib($)
-	{
-#		($CodeWarriorLib) = @_;
-#		$CodeWarriorLib = full_path_to($CodeWarriorLib);
 	}
 
 $logging								= 0;
@@ -481,6 +466,16 @@ sub LaunchCodeWarrior($)
   
   chdir($cur_dir);
 }
+
+#//--------------------------------------------------------------------------------------------------
+#// GetCodeWarriorRelativePath
+#//--------------------------------------------------------------------------------------------------
+sub GetCodeWarriorRelativePath($)
+{
+  my($rel_path) = @_;
+  return Moz::CodeWarriorLib::getCodeWarriorPath($rel_path);
+}
+
 
 #//--------------------------------------------------------------------------------------------------
 #// RedirectOutputToFile
