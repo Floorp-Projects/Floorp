@@ -870,11 +870,11 @@ public:
 private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
-  void AssignWithConversion( PRUnichar );
-  void AssignWithConversion( const PRUnichar*, PRInt32=-1 );
-  void AppendWithConversion( PRUnichar );
-  void AppendWithConversion( const PRUnichar*, PRInt32=-1 );
-  void InsertWithConversion( const PRUnichar*, PRUint32, PRInt32=-1 );
+  void AssignWithConversion( PRUnichar ) { }
+  void AssignWithConversion( const PRUnichar*, PRInt32=-1 ) { }
+  void AppendWithConversion( PRUnichar ) { }
+  void AppendWithConversion( const PRUnichar*, PRInt32=-1 ) { }
+  void InsertWithConversion( const PRUnichar*, PRUint32, PRInt32=-1 ) { }
 };
 
 #if 0//def NEW_STRING_APIS
