@@ -117,7 +117,8 @@ nsHTTPHandler::nsHTTPHandler():mProxy(nsnull)
     {
         nsXPIDLCString proxyServer;
         PRInt32 proxyPort = -1;
-        rv = prefs->CopyCharPref("network.proxy.http", getter_Copies(proxyServer));
+        rv = prefs->CopyCharPref("network.proxy.http", 
+                getter_Copies(proxyServer));
         if (NS_FAILED(rv)) 
             return; //NS_ERROR("Failed to get the HTTP proxy server");
         rv = prefs->GetIntPref("network.proxy.http_port",&proxyPort);
@@ -188,14 +189,17 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         mConnections->Count(&count);
         for (index=count-1; index >= 0; --index) {
             //switch to static_cast...
-            pChannel = (nsHTTPChannel*)((nsIHTTPChannel*) mConnections->ElementAt(index));
+            pChannel = (nsHTTPChannel*)((nsIHTTPChannel*) 
+                mConnections->ElementAt(index));
             //Do other checks here as well... TODO
             rv = pChannel->GetURI(getter_AddRefs(channelURI));
             if (NS_SUCCEEDED(rv) && (channelURI.get() == i_URL))
             {
                 NS_ADDREF(pChannel);
                 *o_Instance = pChannel;
-                return NS_OK; // TODO return NS_USING_EXISTING... or NS_DUPLICATE_REQUEST something like that.
+                // TODO return NS_USING_EXISTING... 
+                // or NS_DUPLICATE_REQUEST something like that.
+                return NS_OK; 
             }
         }
 
@@ -207,7 +211,8 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         if (pChannel) {
             NS_ADDREF(pChannel);
             pChannel->Init(aGroup);
-            rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), (void**)o_Instance);
+            rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), 
+                    (void**)o_Instance);
             // add this instance to the active list of connections
             // TODO!
             NS_RELEASE(pChannel);
@@ -292,8 +297,9 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else
     {
-        rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURI),
-                                                (void**)&url);
+        rv = nsComponentManager::CreateInstance(kStandardUrlCID, 
+                                    nsnull, NS_GET_IID(nsIURI),
+                                    (void**)&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);
     }
@@ -320,15 +326,18 @@ nsHTTPHandler::NewEncodeStream(nsIInputStream *rawStream, PRUint32 encodeFlags,
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::NewDecodeStream(nsIInputStream *encodedStream, PRUint32 decodeFlags,
-                               nsIInputStream **result)
+nsHTTPHandler::NewDecodeStream(nsIInputStream *encodedStream, 
+                                PRUint32 decodeFlags,
+                                nsIInputStream **result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
-                                 nsIInputStream **result)
+nsHTTPHandler::NewPostDataStream(PRBool isFile, 
+                                const char *data, 
+                                PRUint32 encodeFlags,
+                                nsIInputStream **result)
 {
     nsresult rv;
     if (isFile) {
@@ -342,7 +351,9 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile, const char *data, PRUint32 encod
         NS_RELEASE(in);
         if (NS_FAILED(rv)) return rv;
 
-        rv = NewEncodeStream(rawStream, nsIHTTPProtocolHandler::ENCODE_NORMAL, result);
+        rv = NewEncodeStream(rawStream,     
+                nsIHTTPProtocolHandler::ENCODE_NORMAL, 
+                result);
         NS_RELEASE(rawStream);
         return rv;
     }
@@ -371,7 +382,10 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     count = 0;
     mTransportList->Count(&count);
     if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
-        rv = mPendingChannelList->AppendElement(i_Channel) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+
+        // XXX this method incorrectly returns a bool
+        rv = mPendingChannelList->AppendElement(i_Channel) 
+            ? NS_OK : NS_ERROR_FAILURE;  
         NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
 
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
@@ -436,11 +450,15 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     return rv;
 }
 
-nsresult nsHTTPHandler::CreateTransport(const char* host, PRInt32 port, nsIEventSinkGetter* i_ESG, nsIChannel** o_pTrans)
+nsresult nsHTTPHandler::CreateTransport(const char* host, 
+                            PRInt32 port, 
+                            nsIEventSinkGetter* i_ESG, 
+                            nsIChannel** o_pTrans)
 {
     nsresult rv;
 
-    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    NS_WITH_SERVICE(nsISocketTransportService, sts, 
+            kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     return sts->CreateTransport(host, port, i_ESG, o_pTrans);  

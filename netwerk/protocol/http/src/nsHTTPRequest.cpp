@@ -58,7 +58,20 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
         nsXPIDLCString host;
         NS_ASSERTION(mURI, "No URI for the request!!");
         mURI->GetHost(getter_Copies(host));
-        SetHeader(nsHTTPAtoms::Host, host);
+        PRInt32 port = -1;
+        mURI->GetPort(&port);
+        if (-1 != port)
+        {
+            char* tempHostPort = PR_smprintf("%s:%d", (const char*)host, port);
+            if (tempHostPort)
+            {
+                SetHeader(nsHTTPAtoms::Host, tempHostPort);
+                PR_smprintf_free(tempHostPort);
+                tempHostPort = 0;
+            }
+        }
+        else
+            SetHeader(nsHTTPAtoms::Host, host);
     }
 
     // Send */*. We're no longer chopping MIME-types for acceptance.
@@ -181,8 +194,6 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
     nsAutoString   autoString;
 
     mRequestBuffer.Truncate();
-
-    PRUint32 bytesWritten = 0;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPRequest::Build() [this=%x].  Building Request string.\n",
