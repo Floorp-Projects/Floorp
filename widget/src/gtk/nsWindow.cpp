@@ -37,9 +37,10 @@
 #include "stdio.h"
 
 #define DBG 0
-
+#if 0
+#define DEBUG_shaver 1
 #define DEBUG_pavlov 1
-
+#endif
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 extern GtkWidget *gAppContext;
@@ -209,7 +210,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     gtk_box_pack_end(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 0);
   } else {
 #ifdef DEBUG_shaver
-    fprintf(stderr, "StandardCreateWindow: creating GtkLayout subarea\n");
+    fprintf(stderr, "StandardCreateWindow: creating GtkLayout subarea (%d,%d)\n", aRect.x, aRect.y);
 #endif
     mainWindow = mWidget;
     gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
@@ -413,8 +414,9 @@ NS_METHOD nsWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-  NS_NOTYETIMPLEMENTED("nsWindow::Resize");
+  nsWidget::Resize(aWidth, aHeight,aRepaint);
 #if 0
+  NS_NOTYETIMPLEMENTED("nsWindow::Resize");
   if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n",
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
@@ -434,8 +436,10 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-  NS_NOTYETIMPLEMENTED("nsWindow::Resize");
+  nsWindow::Resize(aWidth, aHeight,aRepaint);
+  nsWidget::Move(aX,aY);
 #if 0
+  NS_NOTYETIMPLEMENTED("nsWindow::Resize");
   mBounds.x      = aX;
   mBounds.y      = aY;
   mBounds.width  = aWidth;

@@ -187,27 +187,28 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-    NS_NOTYETIMPLEMENTED("nsWidget::Move");
-#if 0
+  fprintf(stderr,"nsWidget::Move called (%d,%d)\n", aX, aY);
   mBounds.x = aX;
   mBounds.y = aY;
-  // TODO
-  // gtk_layout_move(GTK_LAYOUT(layout), mWidget, aX, aY);
-  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
-#endif
-    return NS_OK;
+  gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+  //XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-    NS_NOTYETIMPLEMENTED("nsWidget::Resize");
-    return NS_OK;
+  fprintf(stderr,"nsWidget::Resize called w,h(%d,%d)\n", aWidth, aHeight);
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+  gtk_widget_set_usize(mWidget,aWidth, aHeight);
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 			   PRUint32 aHeight, PRBool aRepaint)
 {
-    NS_NOTYETIMPLEMENTED("nsWidget::Resize");
+    Resize(aWidth, aHeight, aRepaint);
+    Move(aX, aY);
     return NS_OK;
 }
 
