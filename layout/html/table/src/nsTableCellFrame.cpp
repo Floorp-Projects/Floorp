@@ -380,7 +380,7 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
   * Update the border style to map to the HTML border style
   *
   */
-void nsTableCellFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth)
+void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth)
 {
   nsStyleCoord  width;
   width.SetCoordValue(aBorderWidth);
@@ -391,16 +391,48 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord
 
   aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_INSET; 
   aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_INSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_OUTSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_INSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_INSET; 
   
-  NS_ColorNameToRGB("white",&aSpacingStyle.mBorderColor[NS_SIDE_TOP]);
-  NS_ColorNameToRGB("white",&aSpacingStyle.mBorderColor[NS_SIDE_LEFT]);
+  nsTableFrame*     tableFrame = GetTableFrame();
+  nsIStyleContext*  styleContext = nsnull;
+  
+  tableFrame->GetStyleContext(aPresContext,styleContext);
+  
+  nsStyleColor*   colorData = (nsStyleColor*)styleContext->GetData(eStyleStruct_Color);
 
-  // This should be the background color of the tables 
-  // container
-  NS_ColorNameToRGB("gray",&aSpacingStyle.mBorderColor[NS_SIDE_BOTTOM]);
-  NS_ColorNameToRGB("gray",&aSpacingStyle.mBorderColor[NS_SIDE_RIGHT]);
+   // Look until we find a style context with a NON-transparent background color
+  while (styleContext)
+  {
+    if ((colorData->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)!=0)
+    {
+      nsIStyleContext* temp = styleContext;
+      styleContext = styleContext->GetParent();
+      NS_RELEASE(temp);
+      colorData = (nsStyleColor*)styleContext->GetData(eStyleStruct_Color);
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  // Yaahoo, we found a style context which has a background color 
+  
+  nscolor borderColor = 0xFFC0C0C0;
+
+  if (styleContext != nsnull)
+    borderColor = colorData->mBackgroundColor;
+
+  // if the border color is white, then shift to grey
+  if (borderColor == 0xFFFFFFFF)
+    borderColor = 0xFFC0C0C0;
+
+
+  aSpacingStyle.mBorderColor[NS_SIDE_TOP] = 
+  aSpacingStyle.mBorderColor[NS_SIDE_LEFT] = 
+  aSpacingStyle.mBorderColor[NS_SIDE_BOTTOM] = 
+  aSpacingStyle.mBorderColor[NS_SIDE_RIGHT] = borderColor;
 }
 
 
@@ -489,7 +521,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
       border = nscoord(p2t*(float)intValue); 
     }
   }
-  MapHTMLBorderStyle(*spacingData,border);
+  MapHTMLBorderStyle(aPresContext, *spacingData,border);
 }
 
 void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)

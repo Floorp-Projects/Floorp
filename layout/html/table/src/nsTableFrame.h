@@ -27,8 +27,10 @@ class nsVoidArray;
 class nsTableCellFrame;
 class CellData;
 class nsITableLayoutStrategy;
+class nsHTMLValue;
 struct InnerTableReflowState;
 struct nsStylePosition;
+struct nsStyleSpacing;
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
   * Used as a pseudo-frame within nsTableOuterFrame, 
@@ -292,6 +294,11 @@ protected:
 
   /** do post processing to setting up style information for the frame */
   virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
+
+  /** Support methods for DidSetStyleContext */
+  void      MapBorderMarginPadding(nsIPresContext* aPresContext);
+  void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
+  PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
 
 private:
