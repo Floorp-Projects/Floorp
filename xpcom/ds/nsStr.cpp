@@ -341,7 +341,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
     if(aEliminateTrailing) {
       theIndex=aDest.mLength;
       PRInt32 theNewLen=theIndex;
-      while(--theIndex>0) {
+      while(--theIndex>=0) {
         PRUnichar theChar=GetCharAt(aDest,theIndex);  //read at end now...
         PRInt32 thePos=gFindChars[eOneByte](aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound<thePos) 
