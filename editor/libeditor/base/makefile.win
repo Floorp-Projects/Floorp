@@ -39,7 +39,6 @@ REQUIRES        = xpcom \
                   gfx \
                   widget \
                   unicharutil \
-                  webBrowser_core \
 			commandhandler \
                   $(NULL)
 
