@@ -41,7 +41,7 @@ OBJS =                                 \
 	.\$(OBJDIR)\MozillaControl.obj     \
 	.\$(OBJDIR)\nsSetupRegistry.obj    \
 	.\$(OBJDIR)\MozillaBrowser.obj     \
-  .\$(OBJDIR)\WebShellContainer.obj  \
+	.\$(OBJDIR)\WebShellContainer.obj  \
 	.\$(OBJDIR)\IEHtmlNode.obj         \
 	.\$(OBJDIR)\IEHtmlElementCollection.obj \
 	.\$(OBJDIR)\IEHtmlElement.obj      \
@@ -90,7 +90,7 @@ WIN_LIBS = \
  $(NULL)
 
 
-LCFLAGS = /D "WIN32" /GX /FR /U "ClientWallet"
+LCFLAGS = /D "WIN32" /GX /U "ClientWallet"
 LLFLAGS = -SUBSYSTEM:windows /DLL
 
 include <$(DEPTH)\config\rules.mak>
@@ -102,6 +102,11 @@ LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 !endif
 
 LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT -DHACK_AROUND_NONREENTRANT_INITXPCOM
+
+# Make sure destination is in path so registration/deregistration
+# doesn't fall over.
+
+PATH=$(DIST)\bin;$(PATH)
 
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
