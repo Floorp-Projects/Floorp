@@ -567,8 +567,11 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     NS_RELEASE(mInnerWindow);
   }
   else {
+    nsWidgetInitData  widgetInit;
+
+    widgetInit.clipChildren = PR_FALSE;
     mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
-                    mDeviceContext, nsnull);
+                    mDeviceContext, nsnull, nsnull, &widgetInit);
     // Get rid of extra reference count
     mWindow->Release();
   }
