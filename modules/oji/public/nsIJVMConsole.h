@@ -35,6 +35,14 @@
 
 #include "nsIJVMWindow.h"
 
+#define NS_IJVMCONSOLE_IID                           \
+{ /* fefaf860-6220-11d2-8164-006008119d7a */         \
+    0xfefaf860,                                      \
+    0x6220,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // JVM Console Interface
 // This interface defines the API the browser needs to show and hide the JVM's
@@ -42,7 +50,6 @@
 
 class nsIJVMConsole : public nsIJVMWindow {
 public:
-
     NS_IMETHOD
     Show(void) = 0;
 
@@ -58,15 +65,8 @@ public:
     NS_IMETHOD
     Print(const char* msg, const char* encodingName = NULL) = 0;
     
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMCONSOLE_IID)
 };
-
-#define NS_IJVMCONSOLE_IID                           \
-{ /* fefaf860-6220-11d2-8164-006008119d7a */         \
-    0xfefaf860,                                      \
-    0x6220,                                          \
-    0x11d2,                                          \
-    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
