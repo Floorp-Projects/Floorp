@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: dsa.c,v 1.9 2003/01/31 02:39:36 nelsonb%netscape.com Exp $
+ * $Id: dsa.c,v 1.10 2003/01/31 22:26:56 nelsonb%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -179,7 +179,7 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     mp_int p, q, g;  /* PQG parameters */
     mp_int x, k;     /* private key & pseudo-random integer */
     mp_int r, s;     /* tuple (r, s) is signature) */
-    mp_err err;
+    mp_err err   = MP_OKAY;
     SECStatus rv = SECSuccess;
 
     /* FIPS-compliance dictates that digest is a SHA1 hash. */
