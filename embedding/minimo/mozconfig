@@ -2,15 +2,6 @@
 MINIMO=1
 mk_add_options MINIMO=1
 
-# cross compile for arm-linux
-#PATH=/opt/toolchain/bin:/opt/toolchain/arm-linux/local/bin:$PATH
-#CROSS_COMPILE=1
-#LIBIDL_CONFIG=/opt/toolchain/arm-linux/local/bin/libIDL-config-2
-#HOST_LIBIDL_CONFIG=/usr/bin/libIDL-config
-#ac_add_options --target=arm-linux
-#ac_add_options --x-includes=/opt/toolchain/arm-linux/local/X11R6/include
-#ac_add_options --x-libraries=/opt/toolchain/arm-linux/local/X11R6/lib
-
 # use GTK+-2 widget set with XFT font rendering
 ac_add_options --enable-default-toolkit=gtk2
 ac_add_options --enable-xft
@@ -70,4 +61,4 @@ ac_add_options --enable-static
 
 # remove link dependency on libstdc++.so
 LIBS=-lsupc++
-CXX=arm-linux-gcc
+CXX=gcc
