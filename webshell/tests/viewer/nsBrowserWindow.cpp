@@ -1444,7 +1444,9 @@ nsBrowserWindow::DoDebugSave()
         }
         NS_RELEASE(parser);
       }
+      NS_RELEASE(doc);
     }
+    NS_RELEASE(shell);
   }
 }
 
