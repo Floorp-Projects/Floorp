@@ -5426,25 +5426,34 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
       mState &= ~TEXT_OPTIMIZE_RESIZE;
     }
   }
+  nsLineLayout& lineLayout = *aReflowState.mLineLayout;
+  TextStyle ts(aPresContext, *aReflowState.rendContext, mStyleContext);
+
 #ifdef IBMBIDI
   if ( (mContentLength > 0) && (mState & NS_FRAME_IS_BIDI) ) {
     startingOffset = mContentOffset;
   }
-  PRBool bidiEnabled;
-  aPresContext->GetBidiEnabled(&bidiEnabled);
-  if (bidiEnabled) {
-    nsCharType charType = eCharType_LeftToRight;
-    PRUint32 hints = 0;
-    aReflowState.rendContext->GetHints(hints);
-    GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**)&charType, sizeof(charType));
-    PRBool isBidiSystem = (eCharType_RightToLeftArabic == charType) ?
-                           (hints & NS_RENDERING_HINT_ARABIC_SHAPING) :
-                           (hints & NS_RENDERING_HINT_BIDI_REORDERING);
-    aPresContext->SetIsBidiSystem(isBidiSystem);
+  if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)
+        || ts.mJustifying) {
+      // simulate a non-Bidi system for char-by-char measuring and
+      // rendering
+      aPresContext->SetIsBidiSystem(PR_FALSE);
+  }
+  else {
+    PRBool bidiEnabled;
+    aPresContext->GetBidiEnabled(&bidiEnabled);
+    if (bidiEnabled) {
+      nsCharType charType = eCharType_LeftToRight;
+      PRUint32 hints = 0;
+      aReflowState.rendContext->GetHints(hints);
+      GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**)&charType, sizeof(charType));
+      PRBool isBidiSystem = (eCharType_RightToLeftArabic == charType) ?
+                            (hints & NS_RENDERING_HINT_ARABIC_SHAPING) :
+                            (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+      aPresContext->SetIsBidiSystem(isBidiSystem);
+    }
   }
 #endif //IBMBIDI
-  nsLineLayout& lineLayout = *aReflowState.mLineLayout;
-  TextStyle ts(aPresContext, *aReflowState.rendContext, mStyleContext);
 
   // Clear out the reflow state flags in mState (without destroying
   // the TEXT_BLINK_ON bit).
