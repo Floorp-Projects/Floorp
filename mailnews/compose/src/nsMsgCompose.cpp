@@ -29,6 +29,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMDocument.h"
 #include "nsISelection.h"
+#include "nsISelectionController.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsMsgI18N.h"
 #include "nsICharsetConverterManager.h"
@@ -361,6 +362,12 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
       // This should set the cursor to the top!
       default	: editor->BeginningOfDocument();		break;
 	  }
+
+    nsCOMPtr<nsISelectionController> selCon;
+    editor->GetSelectionController(getter_AddRefs(selCon));
+
+    if (selCon)
+      selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION);
   }
 
   NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
