@@ -41,7 +41,6 @@
 
 #include "prtypes.h"
 #include "nsString.h"
-#include <iostream.h>
 #include "nsError.h"
 #include "nsFileSpec.h"
 #include "nsFixedSizeAllocator.h"
