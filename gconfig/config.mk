@@ -17,6 +17,10 @@
 # Configuration information for building in the "Core Components" source module
 #
 
+ifdef MOZ_DEBUG
+USE_DEBUG_RTL=1
+endif
+
 #######################################################################
 # [1.0] Master "Core Components" source and release <architecture>    #
 #       tags                                                          #
