@@ -14,6 +14,11 @@ a.venkman-link {
     text-decoration: none;
 }
 
+.msg-data[msg-type="ERROR"] a.venkman-link {
+    color: white;
+    font-weight: bold;
+}
+
 /* link hover effect */
 a.venkman-link:hover {
     text-decoration: underline;
