@@ -46,9 +46,13 @@
 XfeCascadeGetSubMenu(Widget w)
 {
     assert( w != NULL );
-    assert( (XmIsCascadeButton(w) || 
-			 XmIsCascadeButtonGadget(w) || 
-			 XfeIsCascade(w)) );
+
+    if (!XmIsCascadeButton(w) || 
+        !XmIsCascadeButtonGadget(w) || 
+        !XfeIsCascade(w))
+    {
+      return NULL;
+    }
 
 	if (XmIsCascadeButton(w))
 	{
