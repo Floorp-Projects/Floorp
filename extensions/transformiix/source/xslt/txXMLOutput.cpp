@@ -263,7 +263,10 @@ void txXMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)
         txAttribute* att;
         while ((att = (txAttribute*)iter.next())) {
             *mOut << SPACE;
-            *mOut << *(att->mName.mLocalName);
+            const PRUnichar* attrVal;
+            att->mName.mLocalName->GetUnicode(&attrVal);
+            // XXX consult the XML spec what we really wanna do here
+            *mOut << NS_ConvertUCS2toUTF8(nsDependentString(attrVal)).get();
             if (!att->mShorthand) {
                 *mOut << EQUALS << DOUBLE_QUOTE;
                 printWithXMLEntities(att->mValue, MB_TRUE);

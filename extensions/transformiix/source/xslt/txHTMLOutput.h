@@ -42,6 +42,10 @@
 #include "txXMLOutput.h"
 #include "Map.h"
 #include "Stack.h"
+#include "nsCOMArray.h"
+
+#define SHORTHAND_ATTR_COUNT 12
+#define EMPTY_ELEMENTS_COUNT 13
 
 class txHTMLOutput : public txXMLOutput
 {
@@ -104,8 +108,12 @@ private:
     MBool isShorthandElement(const String& aName);
     MBool isShorthandAttribute(const String& aLocalName);
 
-    Map mHTMLEmptyTags;
-    Map mHTMLEmptyAttributes;
+    nsCOMArray<nsIAtom> mHTMLEmptyTags;
+    struct EmptyAttrBag {
+        nsCOMPtr<nsIAtom> mAttrName;
+        nsCOMArray<nsIAtom> mElementList;
+    };
+    EmptyAttrBag mHTMLEmptyAttributes[SHORTHAND_ATTR_COUNT];
     Stack mCurrentElements;
 };
 

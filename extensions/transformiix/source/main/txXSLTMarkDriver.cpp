@@ -44,6 +44,7 @@
  */
 
 #include "txStandaloneXSLTProcessor.h"
+#include "nsXPCOM.h"
 #include "xmExternalDriver.hpp"
 
 class txDriverProcessor : public txStandaloneXSLTProcessor,
@@ -111,9 +112,11 @@ private:
 int main (int argc, char ** argv)
 {
     txDriverProcessor driver;
+    NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (!txDriverProcessor::txInit())
         return 1;
     driver.main (argc, argv);
     txDriverProcessor::txShutdown();
+    NS_ShutdownXPCOM(nsnull);
     return 0;
 }
