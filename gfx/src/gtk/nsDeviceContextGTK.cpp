@@ -81,50 +81,49 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   static int initialized = 0;
   if (!initialized) {
     initialized = 1;
+
+    // Set prefVal the value of the preference "browser.screen_resolution"
+    // or -1 if we can't get it.
+    // If it's negative, we pretend it's not set.
+    // If it's 0, it means force use of the operating system's logical resolution.
+    // If it's positive, we use it as the logical resolution
     nsIPref* prefs = nsnull;
+    PRInt32 prefVal = -1;
     nsresult res = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
       (nsISupports**) &prefs);
     if (NS_SUCCEEDED(res) && prefs) {
-      PRInt32 intVal = 96;
-      res = prefs->GetIntPref("browser.screen_resolution", &intVal);
-      if (NS_SUCCEEDED(res)) {
-        if (intVal) {
-          // if the pref is set to something nonzero, use it
-          dpi = intVal;
-        }
-        else {
-          // if the pref is set to 0, believe the system
-          // Compute dpi of display
-          float screenWidth = float(::gdk_screen_width());
-          float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-          dpi = nscoord(screenWidth / screenWidthIn);
-        }
+      res = prefs->GetIntPref("browser.screen_resolution", &prefVal);
+      if (! NS_SUCCEEDED(res)) {
+        prefVal = -1;
       }
       nsServiceManager::ReleaseService(kPrefCID, prefs);
     }
+
+    // Set OSVal to what the operating system thinks the logical resolution is.
+    float screenWidth = float(::gdk_screen_width());
+    float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
+    PRInt32 OSVal = nscoord(screenWidth / screenWidthIn);
+
+    if (prefVal > 0) {
+      // If there's a valid pref value for the logical resolution,
+      // use it.
+      dpi = prefVal;
+    } else if ((prefVal == 0) || (OSVal > 96)) {
+      // Either if the pref is 0 (force use of OS value) or the OS
+      // value is bigger than 96, use the OS value.
+      dpi = OSVal;
+    } else {
+      // if we couldn't get the pref or it's negative, and the OS
+      // value is under 96ppi, then use 96.
+      dpi = 96;
+    }
   }
-
-
-#if 0
-  // Now for some wacky heuristics. 
-  if (dpi < 84) dpi = 72;
-  else if (dpi < 108) dpi = 96;
-  else if (dpi < 132) dpi = 120;
-#endif
 
   int pt2t = 72;
 
   // make p2t a nice round number - this prevents rounding problems
   mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(dpi)));
   mTwipsToPixels = 1.0f / mPixelsToTwips;
-
-#if 0
-  mTwipsToPixels = ( ( ((float)::gdk_screen_width()) /
-                       ((float)::gdk_screen_width_mm()) * 25.4) /
-                     (float)NSIntPointsToTwips(72) );
-  
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
-#endif
 
   vis = gdk_rgb_get_visual();
   mDepth = vis->depth;
