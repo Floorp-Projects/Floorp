@@ -1968,7 +1968,8 @@ net_parse_http_mime_headers (ActiveEntry *ce)
 /* setup HTTP/1.1 specific protocol defaults */
 PRIVATE void
 net_setup_http11_defaults(ActiveEntry *ce) {
-    HTTPConData * cd = (HTTPConData *)ce->con_data;
+    HTTPConData * cd;
+    cd = (HTTPConData *)ce->con_data;
     ce->URL_s->can_reuse_connection = TRUE;
     return;
 }
