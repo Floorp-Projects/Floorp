@@ -35,6 +35,9 @@
 #include "mozILineTerm.h"
 #include "lineterm.h"
 
+#include <glibconfig.h>
+#include <gdk/gdk.h>
+
 #define MAXCOL 4096            // Maximum columns in line buffer
 
 class mozLineTerm : public mozILineTermAux
