@@ -29,9 +29,6 @@ extern "C" {
 #define XMLTOKAPI /* as nothing */
 #endif
 
-/* The following token may be returned by XmlContentTok */
-#define XML_TOK_TRAILING_RSQB -5 /* ] or ]] at the end of the scan; might be start of
-                                    illegal ]]> sequence */
 /* The following tokens may be returned by both XmlPrologTok and XmlContentTok */
 #define XML_TOK_NONE -4    /* The string to be scanned is empty */
 #define XML_TOK_TRAILING_CR -3 /* A CR at the end of the scan;
@@ -41,7 +38,7 @@ extern "C" {
 #define XML_TOK_INVALID 0
 
 /* The following tokens are returned by XmlContentTok; some are also
-  returned by XmlAttributeValueTok, XmlEntityTok, XmlCdataSectionTok */
+  returned by XmlAttributeValueTok and XmlEntityTok */
 
 #define XML_TOK_START_TAG_WITH_ATTS 1
 #define XML_TOK_START_TAG_NO_ATTS 2
@@ -50,7 +47,7 @@ extern "C" {
 #define XML_TOK_END_TAG 5
 #define XML_TOK_DATA_CHARS 6
 #define XML_TOK_DATA_NEWLINE 7
-#define XML_TOK_CDATA_SECT_OPEN 8
+#define XML_TOK_CDATA_SECTION 8
 #define XML_TOK_ENTITY_REF 9
 #define XML_TOK_CHAR_REF 10     /* numeric character reference */
 
@@ -88,25 +85,25 @@ extern "C" {
 #define XML_TOK_CLOSE_PAREN_PLUS 37 /* )+ */
 #define XML_TOK_COMMA 38
 
-/* The following token is returned only by XmlAttributeValueTok */
+  /* The following tokens is returned only by XmlAttributeValueTok */
 #define XML_TOK_ATTRIBUTE_VALUE_S 39
 
-/* The following token is returned only by XmlCdataSectionTok */
-#define XML_TOK_CDATA_SECT_CLOSE 40
-
-#define XML_N_STATES 3
+#define XML_N_STATES 2
 #define XML_PROLOG_STATE 0
 #define XML_CONTENT_STATE 1
-#define XML_CDATA_SECTION_STATE 2
 
 #define XML_N_LITERAL_TYPES 2
 #define XML_ATTRIBUTE_VALUE_LITERAL 0
 #define XML_ENTITY_VALUE_LITERAL 1
 
-/* The size of the buffer passed to XmlUtf8Encode must be at least this. */
-#define XML_UTF8_ENCODE_MAX 4
-/* The size of the buffer passed to XmlUtf16Encode must be at least this. */
-#define XML_UTF16_ENCODE_MAX 2
+#define XML_N_INTERNAL_ENCODINGS 1
+#define XML_UTF8_ENCODING 0
+#if 0
+#define XML_UTF16_ENCODING 1
+#define XML_UCS4_ENCODING 2
+#endif
+
+#define XML_MAX_BYTES_PER_CHAR 4
 
 typedef struct position {
   /* first line and first column are 0 not 1 */
@@ -142,26 +139,21 @@ struct encoding {
   int (*getAtts)(const ENCODING *enc, const char *ptr,
 	         int attsMax, ATTRIBUTE *atts);
   int (*charRefNumber)(const ENCODING *enc, const char *ptr);
-  int (*predefinedEntityName)(const ENCODING *, const char *, const char *);
   void (*updatePosition)(const ENCODING *,
 			 const char *ptr,
 			 const char *end,
 			 POSITION *);
   int (*isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
 		    const char **badPtr);
-  void (*utf8Convert)(const ENCODING *enc,
-		      const char **fromP,
-		      const char *fromLim,
-		      char **toP,
-		      const char *toLim);
-  void (*utf16Convert)(const ENCODING *enc,
-		       const char **fromP,
-		       const char *fromLim,
-		       unsigned short **toP,
-		       const unsigned short *toLim);
+  int (*encode)(const ENCODING *enc,
+		int charNum,
+		char *buf);
+  void (*convert[XML_N_INTERNAL_ENCODINGS])(const ENCODING *enc,
+					    const char **fromP,
+					    const char *fromLim,
+					    char **toP,
+					    const char *toLim);
   int minBytesPerChar;
-  char isUtf8;
-  char isUtf16;
 };
 
 /*
@@ -194,9 +186,6 @@ literals, comments and processing instructions.
 #define XmlContentTok(enc, ptr, end, nextTokPtr) \
    XmlTok(enc, XML_CONTENT_STATE, ptr, end, nextTokPtr)
 
-#define XmlCdataSectionTok(enc, ptr, end, nextTokPtr) \
-   XmlTok(enc, XML_CDATA_SECTION_STATE, ptr, end, nextTokPtr)
-
 /* This is used for performing a 2nd-level tokenization on
 the content of a literal that has already been returned by XmlTok. */ 
 
@@ -226,20 +215,17 @@ the content of a literal that has already been returned by XmlTok. */
 #define XmlCharRefNumber(enc, ptr) \
   (((enc)->charRefNumber)(enc, ptr))
 
-#define XmlPredefinedEntityName(enc, ptr, end) \
-  (((enc)->predefinedEntityName)(enc, ptr, end))
-
 #define XmlUpdatePosition(enc, ptr, end, pos) \
   (((enc)->updatePosition)(enc, ptr, end, pos))
 
 #define XmlIsPublicId(enc, ptr, end, badPtr) \
   (((enc)->isPublicId)(enc, ptr, end, badPtr))
 
-#define XmlUtf8Convert(enc, fromP, fromLim, toP, toLim) \
-  (((enc)->utf8Convert)(enc, fromP, fromLim, toP, toLim))
+#define XmlEncode(enc, ch, buf) \
+  (((enc)->encode)(enc, ch, buf))
 
-#define XmlUtf16Convert(enc, fromP, fromLim, toP, toLim) \
-  (((enc)->utf16Convert)(enc, fromP, fromLim, toP, toLim))
+#define XmlConvert(enc, targetEnc, fromP, fromLim, toP, toLim) \
+  (((enc)->convert[targetEnc])(enc, fromP, fromLim, toP, toLim))
 
 typedef struct {
   ENCODING initEnc;
@@ -257,17 +243,7 @@ int XMLTOKAPI XmlParseXmlDecl(int isGeneralTextEntity,
 			      int *standalonePtr);
 
 int XMLTOKAPI XmlInitEncoding(INIT_ENCODING *, const ENCODING **, const char *name);
-const ENCODING XMLTOKAPI *XmlGetUtf8InternalEncoding();
-const ENCODING XMLTOKAPI *XmlGetUtf16InternalEncoding();
-int XMLTOKAPI XmlUtf8Encode(int charNumber, char *buf);
-int XMLTOKAPI XmlUtf16Encode(int charNumber, unsigned short *buf);
-
-int XMLTOKAPI XmlSizeOfUnknownEncoding();
-ENCODING XMLTOKAPI *
-XmlInitUnknownEncoding(void *mem,
-		       int *table,
-		       int (*convert)(void *userData, const char *p),
-		       void *userData);
+const ENCODING XMLTOKAPI *XmlGetInternalEncoding(int);
 
 #ifdef __cplusplus
 }
