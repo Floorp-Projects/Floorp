@@ -507,8 +507,10 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
   // XXX do any other body processing here
 
   nsCOMPtr<nsIStyleContext> parentContext;
+  nsCOMPtr<nsIStyleContext> canvasContext;
   parentContext = getter_AddRefs(aContext->GetParent());
-  
+  canvasContext = getter_AddRefs(parentContext->GetParent());
+
   const nsStyleColor* parentStyleColor;
   const nsStyleColor* styleColor;
   styleColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
@@ -520,28 +522,49 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
   // for the BODY element
 
   // See if the BODY has a background specified
+  // or if the HTML element was previously propagated from its child (the BODY)
+  //
+  // XXX - I think we should be doing this *always*, to cover the cases where the 
+  // XXX - background is going to and from transparent... work is needed to handle 
+  // XXX - different settings on the HTML and BODY simoultaneously, however.
   if ((!styleColor->BackgroundIsTransparent()) || 
       (parentStyleColor->BackgroundIsTransparent() || 
        (NS_STYLE_BG_PROPAGATED_FROM_CHILD == (parentStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD))) ) {
-    // Have the parent (initial containing block) use the BODY's background
-    nsStyleColor* mutableStyleColor;
-    mutableStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
 
-    mutableStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
-    mutableStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags | NS_STYLE_BG_PROPAGATED_FROM_CHILD;
-    mutableStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
-    mutableStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
-    mutableStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
-    mutableStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
-    mutableStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
+    // We have three frames that have to get along here: 
+    //  - the BODY is the one the bg values are set on
+    //  - the HTML element is the body's parent
+    //  - the Canvas is the HTML element's frame's parent, and the frame that actually paints the bg
+    // So, we bubble the bg values up from BODY -> HTML -> Canvas, setting the propagation flags as we go
 
-    // Reset the BODY's background to transparent
-    mutableStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-    mutableStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-                                          NS_STYLE_BG_IMAGE_NONE |
-                                          NS_STYLE_BG_PROPAGATED_TO_PARENT;
-    mutableStyleColor->mBackgroundImage.SetLength(0);
-    mutableStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+    nsStyleColor* canvasStyleColor;
+    nsStyleColor* htmlStyleColor;
+    nsStyleColor* bodyStyleColor;
+    bodyStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+    htmlStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
+    canvasStyleColor = (nsStyleColor*)canvasContext->GetMutableStyleData(eStyleStruct_Color);
+
+    // set the canvas bg values from the body
+    canvasStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
+    canvasStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
+    canvasStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
+    canvasStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
+    canvasStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
+    canvasStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
+
+    // Reset the BODY's and HTML's background to transparent and propagated-to-parent
+    bodyStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+    bodyStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+                                       NS_STYLE_BG_IMAGE_NONE |
+                                       NS_STYLE_BG_PROPAGATED_TO_PARENT;
+    bodyStyleColor->mBackgroundImage.SetLength(0);
+    bodyStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+
+    htmlStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+                                       NS_STYLE_BG_IMAGE_NONE |
+                                       NS_STYLE_BG_PROPAGATED_TO_PARENT;
+    htmlStyleColor->mBackgroundImage.SetLength(0);
+    htmlStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   }
 
   nsCOMPtr<nsIPresShell> presShell;
