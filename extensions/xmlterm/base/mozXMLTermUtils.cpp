@@ -207,18 +207,15 @@ NS_EXPORT nsresult
 mozXMLTermUtils::GetScriptContext(nsIDOMDocument* aDOMDocument,
                                   nsIScriptContext** aScriptContext)
 {
-  nsresult result;
-
   XMLT_LOG(mozXMLTermUtils::GetScriptContext,20,("\n"));
 
   nsCOMPtr<nsIDocument> doc ( do_QueryInterface(aDOMDocument) );
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  result = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  nsIScriptGlobalObject *scriptGlobalObject = doc->GetScriptGlobalObject();
 
-  if (NS_FAILED(result) || !scriptGlobalObject)
+  if (!scriptGlobalObject)
     return NS_ERROR_FAILURE;
 
   return scriptGlobalObject->GetContext(aScriptContext);
@@ -245,10 +242,9 @@ mozXMLTermUtils::ExecuteScript(nsIDOMDocument* aDOMDocument,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPrincipal> docPrincipal;
-  result =  doc->GetPrincipal(getter_AddRefs(docPrincipal));
-  if (NS_FAILED(result)) 
-    return result;
+  nsIPrincipal *docPrincipal = doc->GetPrincipal();
+  if (!docPrincipal) 
+    return NS_ERROR_FAILURE;
 
   // Get document script context
   nsCOMPtr<nsIScriptContext> scriptContext;
