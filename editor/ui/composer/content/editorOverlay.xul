@@ -681,6 +681,12 @@
   <toolbarbutton id="previewButton" class="toolbarbutton-1"
                  label="&previewToolbarCmd.label;" observes="cmd_preview"
                  tooltiptext="&previewToolbarCmd.tooltip;"/>
+  <toolbarbutton id="cutButton" class="toolbarbutton-1"
+                 label="&cutCmd.label;" command="cmd_cut"/>
+  <toolbarbutton id="copyButton" class="toolbarbutton-1"
+                 label="&copyCmd.label;" command="cmd_copy"/>
+  <toolbarbutton id="pasteButton" class="toolbarbutton-1"
+                 label="&pasteCmd.label;" command="cmd_paste"/>
 
   <toolbarbutton id="printButton" type="menu-button" class="toolbarbutton-1"
                  label="&printToolbarCmd.label;"

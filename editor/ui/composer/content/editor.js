@@ -89,6 +89,55 @@ var gFontSizeNames = ["xx-small","x-small","small","medium","large","x-large","x
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
+const kEditorToolbarPrefs = "editor.toolbars.showbutton.";
+
+function ShowHideToolbarButton(prefName) {
+  var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
+  var button = document.getElementById(id);
+  if (button)
+    button.hidden = !gPrefs.getBoolPref(prefName);
+}
+
+function ShowHideToolbarButtons()
+{
+  var array = GetPrefs().getChildList(kEditorToolbarPrefs, {});
+  for (var i in array)
+    ShowHideToolbarButton(array[i]);
+}
+  
+function AddToolbarPrefListener()
+{
+  try {
+    var pbi = GetPrefs().QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.addObserver(kEditorToolbarPrefs, gEditorToolbarPrefListener, false);
+  } catch(ex) {
+    dump("Failed to observe prefs: " + ex + "\n");
+  }
+}
+
+function RemoveToolbarPrefListener()
+{
+  try {
+    var pbi = GetPrefs().QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.removeObserver(kEditorToolbarPrefs, gEditorToolbarPrefListener);
+  } catch(ex) {
+    dump("Failed to remove pref observer: " + ex + "\n");
+  }
+}
+
+// Pref listener constants
+const gEditorToolbarPrefListener =
+{
+  observe: function(subject, topic, prefName)
+  {
+    // verify that we're changing a button pref
+    if (topic != "nsPref:changed")
+      return;
+
+    ShowHideToolbarButton(prefName);
+  }
+};
+
 function nsButtonPrefListener()
 {
   try {
@@ -435,6 +484,9 @@ function EditorStartup()
   //  such as file-related commands, HTML Source editing, Edit Modes...
   SetupComposerWindowCommands();
 
+  ShowHideToolbarButtons();
+  AddToolbarPrefListener();
+
   gCSSPrefListener = new nsButtonPrefListener();
 
   // hide Highlight button if we are in an HTML editor with CSS mode off
@@ -570,6 +622,8 @@ function EditorResetFontAndColorAttributes()
 
 function EditorShutdown()
 {
+  RemoveToolbarPrefListener();
+
   try {
     var commandManager = GetCurrentCommandManager();
     commandManager.removeCommandObserver(gEditorDocumentObserver, "obs_documentCreated");

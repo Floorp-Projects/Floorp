@@ -61,6 +61,21 @@ pref("editor.htmlWrapColumn", 72);
 
 pref("editor.throbber.url","chrome://editor-region/locale/region.properties");
 
+pref("editor.toolbars.showbutton.new", true);
+pref("editor.toolbars.showbutton.open", true);
+pref("editor.toolbars.showbutton.save", true);
+pref("editor.toolbars.showbutton.publish", true);
+pref("editor.toolbars.showbutton.preview", true);
+pref("editor.toolbars.showbutton.cut", false);
+pref("editor.toolbars.showbutton.copy", false);
+pref("editor.toolbars.showbutton.paste", false);
+pref("editor.toolbars.showbutton.print", true);
+pref("editor.toolbars.showbutton.image", true);
+pref("editor.toolbars.showbutton.hline", false);
+pref("editor.toolbars.showbutton.table", true);
+pref("editor.toolbars.showbutton.link", true);
+pref("editor.toolbars.showbutton.namedAnchor", false);
+
 pref("editor.auto_save",                    false);
 pref("editor.auto_save_delay",              10);    // minutes
 pref("editor.use_html_editor",              0);
