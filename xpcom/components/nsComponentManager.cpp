@@ -251,7 +251,8 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) con
     error:
         *aInstancePtr = 0;
     }
-    *mErrorPtr = rv;
+    if (mErrorPtr)
+        *mErrorPtr = rv;
     return rv;
 }
 
