@@ -230,7 +230,7 @@ nsFtpProtocolHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo, ns
 NS_IMETHODIMP 
 nsFtpProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 {
-    if (port == 21)
+    if (port == 21 || port == 22)
         *_retval = PR_TRUE;
     else
         *_retval = PR_FALSE;
