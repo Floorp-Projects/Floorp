@@ -941,6 +941,13 @@ nsXULTemplateBuilder::ParseAttribute(const nsAString& aAttributeValue,
             (*aTextCallback)(this, Substring(mark, backup), aClosure);
         }
 
+        if (*iter == PRUnichar('?')) {
+            // Well, it was not really a variable, but "??". We use one
+            // question mark (the second one, actually) literally.
+            mark = iter;
+            continue;
+        }
+
         // Construct a substring that is the symbol we need to look up
         // in the rule's symbol table. The symbol is terminated by a
         // space character, a caret, or the end of the string,
