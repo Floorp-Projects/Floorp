@@ -301,7 +301,8 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
     {
         return NPERR_GENERIC_ERROR;
     }
-    pData->pContentType = (pluginType) ? strdup(pluginType) : NULL;
+    pData->szUrl = NULL;
+    pData->szContentType = (pluginType) ? strdup(pluginType) : NULL;
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
     pData->pScriptingPeer = NULL;
 #endif
@@ -326,8 +327,10 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
     // Test if plugin creation has succeeded and cleanup if it hasn't
     if (rv != NPERR_NO_ERROR)
     {
-        if (pData->pContentType)
-            free(pData->pContentType);
+        if (pData->szContentType)
+            free(pData->szContentType);
+        if (pData->szUrl)
+            free(pData->szUrl);
         delete pData;
         return rv;
     }
@@ -374,8 +377,10 @@ NPP_Destroy(NPP instance, NPSavedData** save)
         // TODO
     }
 
-    if (pData->pContentType)
-        free(pData->pContentType);
+    if (pData->szUrl)
+        free(pData->szUrl);
+    if (pData->szContentType)
+        free(pData->szContentType);
     delete pData;
 
     instance->pdata = 0;
@@ -598,6 +603,13 @@ NPP_Print(NPP instance, NPPrint* printInfo)
 void
 NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
+    PluginInstanceData *pData = (PluginInstanceData *) instance->pdata;
+    if (pData)
+    {
+        if (pData->szUrl)
+            free(pData->szUrl);
+        pData->szUrl = strdup(url);
+    }
 }
 
 NPError	NP_LOADDS

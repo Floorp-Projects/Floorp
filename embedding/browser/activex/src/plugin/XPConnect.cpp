@@ -78,6 +78,7 @@ NS_IMPL_RELEASE(nsScriptablePeer)
 
 NS_INTERFACE_MAP_BEGIN(nsScriptablePeer)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIClassInfo)
+    NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
     NS_INTERFACE_MAP_ENTRY(nsIMozAxPlugin)
 NS_INTERFACE_MAP_END
 
@@ -107,6 +108,33 @@ nsScriptablePeer::GetIDispatch(IDispatch **pdisp)
     (*pdisp)->AddRef();
 
     return S_OK;
+}
+
+nsresult
+nsScriptablePeer::HR2NS(HRESULT hr) const
+{
+    switch (hr)
+    {
+    case S_OK:
+        return NS_OK;
+    case E_NOTIMPL:
+        return NS_ERROR_NOT_IMPLEMENTED;
+    case E_NOINTERFACE:
+        return NS_ERROR_NO_INTERFACE;
+    case E_INVALIDARG:
+        return NS_ERROR_INVALID_ARG;
+    case E_ABORT:
+        return NS_ERROR_ABORT;
+    case E_UNEXPECTED:
+        return NS_ERROR_UNEXPECTED;
+    case E_OUTOFMEMORY:
+        return NS_ERROR_OUT_OF_MEMORY;
+    case E_POINTER:
+        return NS_ERROR_INVALID_POINTER;
+    case E_FAIL:
+    default:
+        return NS_ERROR_FAILURE;
+    }
 }
 
 HRESULT
@@ -587,7 +615,17 @@ nsScriptablePeer::SetProperty(const char *propertyName, nsIVariant *propertyValu
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_IID(kIMozAxPluginIID, NS_IMOZAXPLUGIN_IID);
+static nsScriptablePeer *
+GetPeerForCLSID(const CLSID &clsid)
+{
+    return new nsScriptablePeer();
+}
+
+static nsIID
+GetIIDForCLSID(const CLSID &clsid)
+{
+    return NS_GET_IID(nsIMozAxPlugin);
+}
 
 NPError
 xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
@@ -597,6 +635,8 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
         return NPERR_INVALID_INSTANCE_ERROR;
     }
 
+    PluginInstanceData *pData = (PluginInstanceData *) instance->pdata;
+
     // Happy happy fun fun - redefine some NPPVariable values that we might
     // be asked for but not defined by every PluginSDK 
 
@@ -605,10 +645,9 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
 
     if (variable == kVarScriptableInstance)
     {
-        PluginInstanceData *pData = (PluginInstanceData *) instance->pdata;
         if (!pData->pScriptingPeer)
         {
-            nsScriptablePeer *peer  = new nsScriptablePeer();
+            nsScriptablePeer *peer  = GetPeerForCLSID(pData->clsid);
             peer->AddRef();
             pData->pScriptingPeer = (nsIMozAxPlugin *) peer;
             peer->mPlugin = pData;
@@ -623,7 +662,7 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
     else if (variable == kVarScriptableIID)
     {
         nsIID *piid = (nsIID *) NPN_MemAlloc(sizeof(nsIID));
-        *piid = kIMozAxPluginIID;
+        *piid = GetIIDForCLSID(pData->clsid);
         *((nsIID **) value) = piid;
         return NPERR_NO_ERROR;
     }
