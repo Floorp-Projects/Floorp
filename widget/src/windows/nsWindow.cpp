@@ -5629,6 +5629,7 @@ static VOID CALLBACK nsGetAttentionTimerFunc( HWND hwnd, UINT uMsg, UINT idEvent
         // We're not in the foreground yet.
         FlashWindow( hwnd, TRUE );
     } else {
+        FlashWindow( hwnd, FALSE );
         KillTimer( hwnd, idEvent );
     }
 }
