@@ -343,7 +343,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
                                            nsAbsoluteItems& aAbsoluteItems,
                                            nsIFrame*&       aNewFrame,
                                            nsAbsoluteItems& aFixedItems,
-										   nsTableCreator&  aTableCreator)
+                                           nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
   nsIFrame* childList;
@@ -441,7 +441,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
         //childList->SetNextSibling(nonTableRelatedFrame);
         //NS_IF_RELEASE(tag);
         TableProcessChild(aPresContext, childContent, innerFrame, parentStyleContext,
-                          aAbsoluteItems, childFrame, aFixedItems);
+                          aAbsoluteItems, childFrame, aFixedItems, aTableCreator);
         break;
       }
 
@@ -472,7 +472,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
                                                      nsIFrame*&       aOuterFrame, 
                                                      nsIFrame*&       aInnerFrame, 
                                                      nsAbsoluteItems& aFixedItems,
-													 nsTableCreator&  aTableCreator)
+                                                     nsTableCreator&  aTableCreator)
 {
   nsresult result = NS_OK;
   if (NS_SUCCEEDED(result)) {
@@ -515,7 +515,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
                                                   nsIFrame*&       aNewTopMostFrame,
                                                   nsIFrame*&       aNewCaptionFrame,
                                                   nsAbsoluteItems& aFixedItems,
-												  nsTableCreator&  aTableCreator)
+                                                  nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_NewAreaFrame(aNewCaptionFrame, 0);
   if (NS_SUCCEEDED(rv)) {
@@ -561,7 +561,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
                                                 nsIFrame*&       aNewTopMostFrame, 
                                                 nsIFrame*&       aNewGroupFrame,
                                                 nsAbsoluteItems& aFixedItems,
-												                        nsTableCreator&  aTableCreator,
+                                                nsTableCreator&  aTableCreator,
                                                 nsDeque*         aToDo)   
 {
   nsresult rv = NS_OK;
@@ -632,7 +632,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
                                                     nsIFrame*&       aNewTopMostFrame, 
                                                     nsIFrame*&       aNewGroupFrame,
                                                     nsAbsoluteItems& aFixedItems,
-													nsTableCreator&  aTableCreator) 
+                                                    nsTableCreator&  aTableCreator) 
 {
   nsresult rv = NS_OK;
   const nsStyleDisplay* styleDisplay = 
@@ -677,7 +677,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
       nsFrameItems childItems;
       if (aIsRowGroup) {
         TableProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
-                             childItems, aFixedItems);
+                             childItems, aFixedItems, aTableCreator);
       } else {
         ProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
                         childItems, aFixedItems);
@@ -698,7 +698,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
                                               nsIFrame*&       aNewTopMostFrame,
                                               nsIFrame*&       aNewRowFrame,
                                               nsAbsoluteItems& aFixedItems,
-											  nsTableCreator&  aTableCreator,
+                                              nsTableCreator&  aTableCreator,
                                               nsDeque*         aToDo)
 {
   nsresult rv = NS_OK;
@@ -770,7 +770,7 @@ nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*  aPresContext,
                                                   PRBool           aProcessChildren,
                                                   nsIFrame*&       aNewRowFrame,
                                                   nsAbsoluteItems& aFixedItems,
-												  nsTableCreator&  aTableCreator)
+                                                  nsTableCreator&  aTableCreator)
 {
   nsresult rv = aTableCreator.CreateTableRowFrame(aNewRowFrame);
   if (NS_SUCCEEDED(rv)) {
@@ -778,7 +778,7 @@ nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*  aPresContext,
     if (aProcessChildren) {
       nsFrameItems childItems;
       rv = TableProcessChildren(aPresContext, aContent, aNewRowFrame, aAbsoluteItems, 
-                                childItems, aFixedItems);
+                                childItems, aFixedItems, aTableCreator);
       if (NS_SUCCEEDED(rv)) {
         aNewRowFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
       }
@@ -797,7 +797,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
                                               nsIFrame*&       aNewTopMostFrame,
                                               nsIFrame*&       aNewColFrame,
                                               nsAbsoluteItems& aFixedItems,
-											  nsTableCreator&  aTableCreator)
+                                              nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
 
@@ -846,7 +846,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                                nsIFrame*&       aNewTopMostFrame,
                                                nsIFrame*&       aNewCellFrame,
                                                nsAbsoluteItems& aFixedItems,
-											   nsTableCreator&  aTableCreator)
+                                               nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
 
@@ -909,7 +909,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext
                                                    nsAbsoluteItems& aAbsoluteItems,
                                                    nsIFrame*&       aNewFrame,
                                                    nsAbsoluteItems& aFixedItems,
-												   nsTableCreator&  aTableCreator)
+                                                   nsTableCreator&  aTableCreator)
 {
   nsresult rv;
 
@@ -962,7 +962,8 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresContext*  aPresContext,
                                             nsIFrame*        aParentFrame,
                                             nsAbsoluteItems& aAbsoluteItems,
                                             nsFrameItems&    aChildItems,
-                                            nsAbsoluteItems& aFixedItems)
+                                            nsAbsoluteItems& aFixedItems,
+                                            nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
   // Initialize OUT parameter
@@ -982,7 +983,7 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresContext*  aPresContext,
     
     aContent->ChildAt(i, *getter_AddRefs(childContent));
     rv = TableProcessChild(aPresContext, childContent, aParentFrame, parentStyleContext,
-                           aAbsoluteItems, childFrame, aFixedItems);
+                           aAbsoluteItems, childFrame, aFixedItems, aTableCreator);
 
     if (NS_SUCCEEDED(rv) && (nsnull != childFrame)) {
       aChildItems.AddChild(childFrame);
@@ -999,9 +1000,12 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
                                          nsIStyleContext* aParentStyleContext,
                                          nsAbsoluteItems& aAbsoluteItems,
                                          nsIFrame*&       aChildFrame,
-                                         nsAbsoluteItems& aFixedItems)
+                                         nsAbsoluteItems& aFixedItems,
+                                         nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
+  aChildFrame = nsnull;
+
   if (nsnull != aChildContent) {
     aChildFrame = nsnull;
     nsCOMPtr<nsIStyleContext> childStyleContext;
@@ -1020,9 +1024,10 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
       rv = ConstructFrame(aPresContext, aChildContent, aParentFrame, aAbsoluteItems, childItems, aFixedItems);
       aChildFrame = childItems.childList;
     } else {
-	    nsCOMPtr<nsIAtom> tag;
+      nsCOMPtr<nsIAtom> tag;
       aChildContent->GetTag(*getter_AddRefs(tag));
-      if (nsHTMLAtoms::form == tag) { 
+      // forms need a frame but it can't be a child of an inner table
+      if (nsHTMLAtoms::form == tag) {  
         // if the parent is a table, put the form in the outer table frame
         const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
           aParentStyleContext->GetStyleData(eStyleStruct_Display);
@@ -1038,29 +1043,97 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
                               aAbsoluteItems, childItems, aFixedItems);
         }
         aChildFrame = childItems.childList;
-      } else { // wrap it in a table cell, row, row group, table if it is not whitespace
-        PRBool needCell = PR_TRUE;
-        nsIDOMCharacterData* domData = nsnull;
-        nsresult rv2 = aChildContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
-        if ((NS_OK == rv2) && (nsnull != domData)) {
-          nsString charData;
-          domData->GetData(charData);
-          charData = charData.StripWhitespace();
-          if (charData.Length() <= 0) {
-            needCell = PR_FALSE;  // only contains whitespace, don't create cell
+      // wrap it in a table cell, row, row group, table if it is a valid tag or display
+      // and not whitespace. For example we don't allow map, head, body, etc.
+      } else { 
+        if (TableIsValidCellContent(aPresContext, aParentFrame, aChildContent)) {
+          PRBool needCell = PR_TRUE;
+          nsIDOMCharacterData* domData = nsnull;
+          nsresult rv2 = aChildContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+          if ((NS_OK == rv2) && (nsnull != domData)) {
+            nsString charData;
+            domData->GetData(charData);
+            charData = charData.StripWhitespace();
+            if ((charData.Length() <= 0) && (charData != " ")) { // XXX check this
+              needCell = PR_FALSE;  // only contains whitespace, don't create cell
+            }
+            NS_RELEASE(domData);
           }
-          NS_RELEASE(domData);
-        }
-        if (needCell) {
-          nsIFrame* cellFrame;
-		  nsTableCreator aTableCreator;
-          rv = ConstructTableCellFrame(aPresContext, aChildContent, aParentFrame, childStyleContext, 
-                                       aAbsoluteItems, aChildFrame, cellFrame, aFixedItems, aTableCreator);
+          if (needCell) {
+            nsIFrame* cellFrame;
+            rv = ConstructTableCellFrame(aPresContext, aChildContent, aParentFrame, childStyleContext, 
+                                         aAbsoluteItems, aChildFrame, cellFrame, aFixedItems, aTableCreator);
+          }
         }
       }
     }
   }
   return rv;
+}
+
+PRBool 
+nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
+                                               nsIFrame*       aParentFrame,
+                                               nsIContent*     aContent)
+{
+  nsCOMPtr<nsIAtom>  tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+
+  nsCOMPtr<nsIStyleContext> styleContext;
+
+  nsresult rv = ResolveStyleContext(aPresContext, aParentFrame, aContent, tag, getter_AddRefs(styleContext));
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
+
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    styleContext->GetStyleData(eStyleStruct_Display);
+
+  if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
+    return PR_FALSE;
+  } 
+   
+  // check tags first
+  if (  (nsHTMLAtoms::img      == tag) ||
+        (nsHTMLAtoms::hr       == tag) ||
+        (nsHTMLAtoms::br       == tag) ||
+        (nsHTMLAtoms::wbr      == tag) ||
+        (nsHTMLAtoms::input    == tag) ||
+        (nsHTMLAtoms::textarea == tag) ||
+        (nsHTMLAtoms::select   == tag) ||
+        (nsHTMLAtoms::applet   == tag) ||
+        (nsHTMLAtoms::embed    == tag) ||
+        (nsHTMLAtoms::fieldset == tag) ||
+        (nsHTMLAtoms::legend   == tag) ||
+        (nsHTMLAtoms::object   == tag) ||
+        (nsHTMLAtoms::form     == tag) ||
+        (nsHTMLAtoms::iframe   == tag) ||
+        (nsHTMLAtoms::spacer   == tag) ||
+        (nsHTMLAtoms::button   == tag) ||
+        (nsHTMLAtoms::label    == tag    )) {
+    return PR_TRUE;
+  }
+
+#ifdef INCLUDE_XUL
+  if (  (nsXULAtoms::button          == tag)  ||
+        (nsXULAtoms::checkbox        == tag)  ||
+        (nsXULAtoms::radio           == tag)  ||
+        (nsXULAtoms::text            == tag)  ||
+        (nsXULAtoms::widget          == tag)  ||
+        (nsXULAtoms::tree            == tag)  ||
+        (nsXULAtoms::treechildren    == tag)  ||
+        (nsXULAtoms::treeitem        == tag)  ||
+        (nsXULAtoms::treecell        == tag)  ||
+        (nsXULAtoms::treeindentation == tag)  ||
+        (nsXULAtoms::toolbox         == tag)  ||
+        (nsXULAtoms::toolbar         == tag)  ||
+        (nsXULAtoms::progressmeter   == tag    )) {
+    return PR_TRUE;
+  }
+#endif
+  
+  // we should check for display type as well - later
+  return PR_FALSE;
 }
 
 nsresult
@@ -2348,6 +2421,47 @@ nsCSSFrameConstructor::IsScrollable(nsIPresContext*       aPresContext,
   return PR_FALSE;
 }
 
+
+nsresult
+nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
+                                           nsIFrame*         aParentFrame,
+                                           nsIContent*       aContent,
+                                           nsIAtom*          aTag,
+                                           nsIStyleContext** aStyleContext)
+{
+  nsresult rv = NS_OK;
+  // Resolve the style context based on the content object and the parent
+  // style context
+  nsCOMPtr<nsIStyleContext> parentStyleContext;
+
+  aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
+  if (nsLayoutAtoms::textTagName == aTag) {
+    // Use a special pseudo element style context for text
+    nsCOMPtr<nsIContent> parentContent;
+    if (nsnull != aParentFrame) {
+      aParentFrame->GetContent(getter_AddRefs(parentContent));
+    }
+    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
+                                                    nsHTMLAtoms::textPseudo, 
+                                                    parentStyleContext,
+                                                    aStyleContext);
+  } else if (nsLayoutAtoms::commentTagName == aTag) {
+    // Use a special pseudo element style context for comments
+    nsCOMPtr<nsIContent> parentContent;
+    if (nsnull != aParentFrame) {
+      aParentFrame->GetContent(getter_AddRefs(parentContent));
+    }
+    rv = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
+                                                    nsHTMLAtoms::commentPseudo, 
+                                                    parentStyleContext,
+                                                    aStyleContext);
+  } else {
+    rv = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext,
+                                              aStyleContext);
+  }
+  return rv;
+}
+
 nsresult
 nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
                                       nsIContent*      aContent,
@@ -2364,6 +2478,10 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIAtom>  tag;
   aContent->GetTag(*getter_AddRefs(tag));
 
+  nsCOMPtr<nsIStyleContext> styleContext;
+  rv = ResolveStyleContext(aPresContext, aParentFrame, aContent, tag, getter_AddRefs(styleContext));
+
+#ifdef chris_needs_to_remove_this
   // Resolve the style context based on the content object and the parent
   // style context
   nsCOMPtr<nsIStyleContext> styleContext;
@@ -2394,6 +2512,7 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
     rv = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext,
                                               getter_AddRefs(styleContext));
   }
+#endif
 
   if (NS_SUCCEEDED(rv)) {
     // Pre-check for display "none" - if we find that, don't create
