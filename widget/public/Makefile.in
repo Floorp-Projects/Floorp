@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 DEFINES += -D_IMPL_NS_UI
 
 EXPORTS =               \
+  nsIFormatConverter.h \
   nsIClipboardOwner.h \
   nsIClipboard.h \
   nsIDragTarget.h \
