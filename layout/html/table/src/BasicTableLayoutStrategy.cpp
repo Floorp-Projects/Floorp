@@ -764,23 +764,26 @@ BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*         
           nsSize percentBase(aReflowState.mComputedWidth, 0);
           nsMargin padding = nsTableFrame::GetPadding(percentBase, cellFrame);
           nscoord newFixWidth = coordValue + padding.left + padding.right;
-          // 2nd part of condition is Nav Quirk like below
+          // 2nd part of condition is Nav/IE Quirk like below
           if ((newFixWidth > fixWidth) || ((newFixWidth == fixWidth) && (desContributor == cellFrame))) {
             fixWidth = newFixWidth;
             fixContributor = cellFrame;
           }
-          fixWidth = PR_MAX(fixWidth, minWidth);
         }
       }
     }
 
-    desWidth = PR_MAX(desWidth, minWidth);
-
-    // Nav Quirk like above
-    if ((fixWidth > 0) && (desWidth > fixWidth) && (fixContributor != desContributor)) {
-      fixWidth = WIDTH_NOT_SET;
-      fixContributor = nsnull;
+    // Nav/IE Quirk like above
+    if (fixWidth > 0) {
+      if ((desWidth > fixWidth) && (fixContributor != desContributor)) {
+        fixWidth = WIDTH_NOT_SET;
+        fixContributor = nsnull;
+      }
+      else {
+        fixWidth = PR_MAX(fixWidth, minWidth);
+      }
     }
+    desWidth = PR_MAX(desWidth, minWidth);
 
     // cache the computed column info
     colFrame->SetWidth(MIN_CON, minWidth);
