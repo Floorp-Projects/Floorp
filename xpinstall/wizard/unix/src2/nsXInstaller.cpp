@@ -285,7 +285,14 @@ nsXInstaller::ParseGeneral(nsINIParser *aParser)
     /* optional: destination directory can be specified in config.ini */
     err = aParser->GetStringAlloc(GENERAL, DEFAULT_LOCATION, &dest, &size);
     if (err == OK && size > 0)
-        gCtx->opt->mDestination = dest;
+    {
+        /* malloc MAXPATHLEN for consistency in behavior if destination
+         * directory is not specified in the config.ini
+         */
+        gCtx->opt->mDestination = (char *)malloc(MAXPATHLEN * sizeof(char));
+        strncpy(gCtx->opt->mDestination, dest, size);
+        XI_IF_FREE(dest);
+    }
     else
         err = OK; /* optional so no error if we didn't find it */
 
