@@ -17,12 +17,13 @@
  */
 
 /*
- * Generate nsIDispatch invoke glue for calling from JS or other places.
+ * Generate typelib files for use with InterfaceInfo.
+ * http://www.mozilla.org/scriptable/typelib_file.html
  */
 
 #include "xpidl.h"
 
-nodeHandler *invokeDispatch()
+nodeHandler *typelibDispatch()
 {
   static nodeHandler table[IDLN_LAST];
   static gboolean initialized = FALSE;

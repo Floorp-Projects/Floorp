@@ -39,7 +39,7 @@ extern gboolean enable_debug;
 extern gboolean enable_warnings;
 extern gboolean verbose_mode;
 extern gboolean generate_docs;
-extern gboolean generate_invoke;
+extern gboolean generate_typelib;
 extern gboolean generate_headers;
 extern gboolean generate_nothing;
 
@@ -59,7 +59,7 @@ typedef struct {
 } TreeState;
 
 #define TREESTATE_HEADER	0
-#define TREESTATE_INVOKE	1
+#define TREESTATE_TYPELIB	1
 #define TREESTATE_DOC		2
 #define TREESTATE_NUM		3
  
@@ -74,7 +74,7 @@ typedef gboolean (*nodeHandler)(TreeState *);
 extern nodeHandler *nodeDispatch[TREESTATE_NUM];
 
 extern nodeHandler *headerDispatch();
-extern nodeHandler *invokeDispatch();
+extern nodeHandler *typelibDispatch();
 extern nodeHandler *docDispatch();
 
 /*
