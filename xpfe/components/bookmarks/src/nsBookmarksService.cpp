@@ -1570,7 +1570,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 					 nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
 	PRBool   CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
 
-	nsresult getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res, PRInt32 offset, nsIRDFResource **argValue);
+	nsresult getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res, PRInt32 offset, nsIRDFNode **argValue);
 	nsresult insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType);
 	nsresult deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType);
 
@@ -3287,7 +3287,8 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 	{
 		cmdArray->AppendElement(kNC_BookmarkCommand_DeleteBookmark);
 	}
-	if (isBookmarkFolder && (source != kNC_BookmarksRoot))
+	if (isBookmarkFolder && (source != kNC_BookmarksRoot) &&
+	   (source != kNC_PersonalToolbarFolder) && (source != kNC_IEFavoritesRoot))
 	{
 		cmdArray->AppendElement(kNC_BookmarkCommand_DeleteBookmarkFolder);
 	}
@@ -3319,7 +3320,7 @@ nsBookmarksService::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSour
 
 nsresult
 nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res,
-				PRInt32 offset, nsIRDFResource **argValue)
+				PRInt32 offset, nsIRDFNode **argValue)
 {
 	nsresult		rv;
 	PRUint32		loop, numArguments;
@@ -3347,7 +3348,7 @@ nsBookmarksService::getArgumentN(nsISupportsArray *arguments, nsIRDFResource *re
 
 			nsCOMPtr<nsISupports>	aValue = arguments->ElementAt(loop + 1);
 			if (!aSource)	return(NS_ERROR_NULL_POINTER);
-			nsCOMPtr<nsIRDFResource>	val = do_QueryInterface(aValue);
+			nsCOMPtr<nsIRDFNode>	val = do_QueryInterface(aValue);
 			if (!val)	return(NS_ERROR_NO_INTERFACE);
 
 			*argValue = val;
@@ -3373,9 +3374,12 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 	}
 	else
 	{
+		nsCOMPtr<nsIRDFNode>	aNode;
 		if (NS_FAILED(rv = getArgumentN(aArguments, kNC_Parent,
-				parentArgIndex, getter_AddRefs(argParent))))
+				parentArgIndex, getter_AddRefs(aNode))))
 			return(rv);
+		argParent = do_QueryInterface(aNode);
+		if (!argParent)	return(NS_ERROR_NO_INTERFACE);
 	}
 	nsCOMPtr<nsIRDFContainer>	container;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
@@ -3390,19 +3394,61 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 			return(rv);
 	}
 
-	nsCOMPtr<nsIRDFResource>	newElement;
-	if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(&newElement)))
-		return(rv);
-
-	// set a default name for bookmarks/folders
 	nsAutoString			newName;
 
-	if (objType == kNC_Bookmark)	getLocaleString("NewBookmark", newName);
-	else if (objType == kNC_Folder)
+	if ((objType == kNC_Bookmark) || (objType == kNC_Folder))
+	{
+		nsCOMPtr<nsIRDFNode>	nameNode;
+		if (NS_SUCCEEDED(rv = getArgumentN(aArguments, kNC_Name, parentArgIndex, getter_AddRefs(nameNode))))
+		{
+			nsCOMPtr<nsIRDFLiteral>	nameLiteral = do_QueryInterface(nameNode);
+			if (nameLiteral)
+			{
+				const	PRUnichar	*nameUni = nsnull;
+				nameLiteral->GetValueConst(&nameUni);
+				if (nameUni)
+				{
+					newName = nameUni;
+				}
+			}
+		}
+	}
+	if (newName.Length() == 0)
+	{
+		// get a default name
+		if (objType == kNC_Bookmark)	getLocaleString("NewBookmark", newName);
+		else if (objType == kNC_Folder)	getLocaleString("NewFolder", newName);
+	}
+
+	nsCOMPtr<nsIRDFResource>	newElement;
+
+	if (objType == kNC_Bookmark)
+	{
+		nsCOMPtr<nsIRDFNode>	bookmarkNode;
+		if (NS_SUCCEEDED(rv = getArgumentN(aArguments, kNC_URL, parentArgIndex, getter_AddRefs(bookmarkNode))))
+		{
+			nsCOMPtr<nsIRDFLiteral>	bookmarkURLLiteral = do_QueryInterface(bookmarkNode);
+			if (!bookmarkURLLiteral)	return(NS_ERROR_NO_INTERFACE);
+			const	PRUnichar	*urlUni = nsnull;
+			bookmarkURLLiteral->GetValueConst(&urlUni);
+			if (urlUni)
+			{
+				rv = gRDF->GetUnicodeResource(urlUni, getter_AddRefs(newElement));
+				if (NS_FAILED(rv))	return(rv);
+			}
+		}
+	}
+
+	if (!newElement)
+	{
+		if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(&newElement)))
+			return(rv);
+	}
+
+	if (objType == kNC_Folder)
 	{
 		if (NS_FAILED(rv = gRDFC->MakeSeq(mInner, newElement, nsnull)))
 			return(rv);
-		getLocaleString("NewFolder", newName);
 	}
 
 	if (newName.Length() > 0)
@@ -3436,10 +3482,12 @@ nsBookmarksService::deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 {
 	nsresult			rv;
 
-	nsCOMPtr<nsIRDFResource>	argParent;
+	nsCOMPtr<nsIRDFNode>		aNode;
 	if (NS_FAILED(rv = getArgumentN(aArguments, kNC_Parent,
-			parentArgIndex, getter_AddRefs(argParent))))
+			parentArgIndex, getter_AddRefs(aNode))))
 		return(rv);
+	nsCOMPtr<nsIRDFResource>	argParent = do_QueryInterface(aNode);
+	if (!argParent)	return(NS_ERROR_NO_INTERFACE);
 
 	// make sure its an object of the correct type (bookmark, folder, separator, ...)
 	PRBool	isCorrectObjectType = PR_FALSE;

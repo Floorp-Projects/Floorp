@@ -336,6 +336,14 @@ function doDelete(promptFlag)
 		if (!node)    continue;
 		var ID = node.getAttribute("id");
 		if (!ID)    continue;
+
+		// don't allow deletion of various "special" folders
+		if ((ID == "NC:BookmarksRoot") || (ID == "NC:PersonalToolbarFolder") ||
+		    (ID == "NC:IEFavoritesRoot"))
+		{
+			continue;
+		}
+
 		var parentID = node.parentNode.parentNode.getAttribute("ref");
 		if (!parentID)	parentID = node.parentNode.parentNode.getAttribute("id");
 		if (!parentID)	continue;
@@ -691,6 +699,37 @@ function doContextCmd(cmdName)
 {
 	debug("doContextCmd start: cmd='" + cmdName + "'");
 
+	var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+
+	// do some prompting/confirmation for various bookmark commands that we know about;
+	// if we have values to pass it, they are added to the arguments array
+
+	var	nameVal = "", urlVal = "";
+
+	if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=newbookmark")
+	{
+		var promptStr = bundle.GetStringFromName("NewBookmarkURLPrompt");
+		urlVal = prompt(promptStr, "");
+		if (!urlVal || urlVal=="")	return(false);
+
+		promptStr = bundle.GetStringFromName("NewBookmarkNamePrompt");
+		nameVal = prompt(promptStr, "");
+		if (!nameVal || nameVal=="")	return(false);
+	}
+	else if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=newfolder")
+	{
+		var promptStr = bundle.GetStringFromName("NewFolderNamePrompt");
+		nameVal = prompt(promptStr, "");
+		if (!nameVal || nameVal=="")	return(false);
+	}
+	else if ((cmdName == "http://home.netscape.com/NC-rdf#command?cmd=deletebookmark") ||
+		 (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=deletebookmarkfolder") ||
+		 (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=deletebookmarkseparator"))
+	{
+		var promptStr = bundle.GetStringFromName("DeleteItems");
+		if (!confirm(promptStr))	return(false);
+	}
+
 	var treeNode = document.getElementById("bookmarksTree");
 	if (!treeNode)    return(false);
 	var db = treeNode.database;
@@ -718,9 +757,13 @@ function doContextCmd(cmdName)
 	var argumentsInstance = Components.classes["component://netscape/supports-array"].createInstance();
 	var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
-	// get argument (parent)
+	// get various arguments (parent, name)
 	var parentArc = rdf.GetResource("http://home.netscape.com/NC-rdf#parent");
-	if (!parentArc)        return(false);
+	if (!parentArc)	return(false);
+	var nameArc = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+	if (!nameArc)	return(false);
+	var urlArc = rdf.GetResource("http://home.netscape.com/NC-rdf#URL");
+	if (!urlArc)	return(false);
 
 	var select_list = treeNode.selectedItems;
 	debug("# of Nodes selected: " + select_list.length);
@@ -773,9 +816,24 @@ function doContextCmd(cmdName)
 		var parentNode = rdf.GetResource(parentURI, true);
 		if (!parentNode)	return(false);
 
-		// add parent arc and node into arguments array
+		// add arguments into arguments array
 		argumentsArray.AppendElement(parentArc);
 		argumentsArray.AppendElement(parentNode);
+
+		if ((nameVal) && (nameVal != ""))
+		{
+			var nameLiteral = rdf.GetLiteral(nameVal);
+			if (!nameLiteral)	return(false);
+			argumentsArray.AppendElement(nameArc);
+			argumentsArray.AppendElement(nameLiteral);
+		}
+		if ((urlVal) && (urlVal != ""))
+		{
+			var urlLiteral = rdf.GetLiteral(urlVal);
+			if (!urlLiteral)	return(false);
+			argumentsArray.AppendElement(urlArc);
+			argumentsArray.AppendElement(urlLiteral);
+		}
 	}
 
 	// do the command
@@ -783,19 +841,4 @@ function doContextCmd(cmdName)
 
 	debug("doContextCmd ends.");
 	return(true);
-}
-
-function dumpAttributes(node) {
-  debug("Attributes for " + node.nodeName);
-  debug("type=" + node.nodeType);
-  debug("value=" + node.nodeValue);
-
-  var attributes = node.attributes
-  if (!attributes || attributes.length == 0) {
-    debug("no attributes")
-  }
-  for (var ii=0; ii < attributes.length; ii++) {
-    var attr = attributes.item(ii)
-    debug("att "+ii+": "+ attr.name +"="+attr.value)
-  }
 }
