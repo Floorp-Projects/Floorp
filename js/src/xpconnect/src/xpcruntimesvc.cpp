@@ -33,11 +33,13 @@ nsJSRuntimeServiceImpl::nsJSRuntimeServiceImpl() :
 }
 
 nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {
-    if (mRuntime)
+    if (mRuntime) {
         JS_DestroyRuntime(mRuntime);
+        JS_ShutDown();
 #ifdef DEBUG_shaver
     fprintf(stderr, "nJRSI: destroyed runtime %p\n", mRuntime);
 #endif
+    }
 }
 
 NS_IMPL_ISUPPORTS1(nsJSRuntimeServiceImpl, nsIJSRuntimeService);
