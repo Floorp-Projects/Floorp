@@ -1455,7 +1455,7 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PaintSelf(aPresContext, aRenderingContext, aDirtyRect);
+    PaintSelf(aPresContext, aRenderingContext, aDirtyRect, 0, PR_FALSE);
   }
 
   nsCOMPtr<nsIAtom> frameType;

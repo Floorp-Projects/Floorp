@@ -213,8 +213,7 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
      tmpColor.mBackgroundColor = color->mColor;
      nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext,
                                            this, aDirtyRect, rect,
-                                           tmpColor, *myBorder, *myPadding,
-                                           0, 0);
+                                           tmpColor, *myBorder, *myPadding, PR_FALSE);
      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *myBorder, mRadioButtonFaceStyle, 0);
    }

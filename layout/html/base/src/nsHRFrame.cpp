@@ -70,6 +70,8 @@ public:
                    PRUint32             aFlags);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
+  virtual PRBool CanPaintBackground() { return PR_FALSE; }
+
 protected:
   PRBool GetNoShade();
 
@@ -194,7 +196,7 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
     
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
                                     this,aDirtyRect, rect,
-                                    *border, *padding, 0, 0, PR_FALSE);
+                                    *border, *padding, PR_FALSE);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext,
                                 this,aDirtyRect, rect, *border,
                                 mStyleContext, 0);

@@ -425,7 +425,7 @@ nsTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, aStyleBorder, aStylePadding,
-                                    0, 0, PR_TRUE);
+                                    PR_TRUE);
     // draw the border only when there is content or showing empty cells
     if (!GetContentEmpty() || NS_STYLE_TABLE_EMPTY_CELLS_SHOW == aCellTableStyle.mEmptyCells) {
       PRIntn skipSides = GetSkipSides();
@@ -1541,7 +1541,7 @@ nsBCTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(&aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, myBorder, aStylePadding,
-                                    0, 0, PR_TRUE);
+                                    PR_TRUE);
     // borders are painted by nsTableFrame
   }
 

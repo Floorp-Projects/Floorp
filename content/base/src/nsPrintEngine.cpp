@@ -133,6 +133,7 @@ static const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprom
 #include "nsLayoutCID.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIPresShell.h"
+#include "nsLayoutUtils.h"
 
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
@@ -3688,25 +3689,6 @@ nsPrintEngine::DoProgressForSeparateFrames()
 }
 
 /** ---------------------------------------------------
- *  Giving a child frame it searches "up" the tree until it
- *  finds a "Page" frame.
- */
-static nsIFrame * GetPageFrame(nsIFrame * aFrame)
-{
-  nsIFrame * frame = aFrame;
-  while (frame != nsnull) {
-    nsCOMPtr<nsIAtom> type;
-    frame->GetFrameType(getter_AddRefs(type));
-    if (type.get() == nsLayoutAtoms::pageFrame) {
-      return frame;
-    }
-    frame->GetParent(&frame);
-  }
-  return nsnull;
-}
-
-
-/** ---------------------------------------------------
  *  Find by checking content's tag type
  */
 nsIFrame * 
@@ -3900,12 +3882,12 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
       // the FindSelectionBounds step, but walking up to find
       // the parent of a child frame isn't expensive and it makes
       // FindSelectionBounds a little easier to understand
-      startPageFrame = GetPageFrame(startFrame);
+      startPageFrame = nsLayoutUtils::GetPageFrame(startFrame);
       endPageFrame   = startPageFrame;
       aEndRect       = aStartRect;
     } else {
-      startPageFrame = GetPageFrame(startFrame);
-      endPageFrame   = GetPageFrame(endFrame);
+      startPageFrame = nsLayoutUtils::GetPageFrame(startFrame);
+      endPageFrame   = nsLayoutUtils::GetPageFrame(endFrame);
     }
   } else {
     return NS_ERROR_FAILURE;
