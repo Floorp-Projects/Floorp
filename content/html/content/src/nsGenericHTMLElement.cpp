@@ -1601,14 +1601,9 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
   }
 
   if (aAttribute == nsHTMLAtoms::style) {
-    if (mDocument) {
-      nsHTMLValue parsedValue;
-      ParseStyleAttribute(aValue, parsedValue);
-      result = SetHTMLAttribute(aAttribute, parsedValue, aNotify);
-    }
-    else {  // store it as string, will parse it later
-      result = SetHTMLAttribute(aAttribute, nsHTMLValue(aValue), aNotify);
-    }
+    nsHTMLValue parsedValue;
+    ParseStyleAttribute(aValue, parsedValue);
+    result = SetHTMLAttribute(aAttribute, parsedValue, aNotify);
     return result;
   }
   else {
@@ -3404,12 +3399,19 @@ nsresult
 nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& aResult)
 {
   nsresult result = NS_OK;
+  NS_ASSERTION(mNodeInfo, "If we don't have a nodeinfo, we are very screwed");
 
-  if (mDocument) {
+  nsCOMPtr<nsIDocument> doc = mDocument;
+
+  if (!doc) {
+    mNodeInfo->GetDocument(*getter_AddRefs(doc));
+  }
+
+  if (doc) {
     PRBool isCSS = PR_TRUE; // asume CSS until proven otherwise
 
     nsAutoString styleType;
-    mDocument->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
+    doc->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
     if (!styleType.IsEmpty()) {
       static const char textCssStr[] = "text/css";
       isCSS = (styleType.EqualsIgnoreCase(textCssStr, sizeof(textCssStr) - 1));
@@ -3418,7 +3420,7 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
     if (isCSS) {
       nsCOMPtr<nsICSSLoader> cssLoader;
       nsCOMPtr<nsICSSParser> cssParser;
-      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(mDocument));
+      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
 
       if (htmlContainer) {
         htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
@@ -3440,15 +3442,12 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
         if (cssParser) {
           // look up our namespace.  If we're XHTML, we need to be case-sensitive
           // Otherwise, we should not be.
-          nsCOMPtr<nsINodeInfo> nodeInfo;
-          result = GetNodeInfo(*getter_AddRefs(nodeInfo));
-          NS_ENSURE_SUCCESS(result, result);
-          cssParser->SetCaseSensitive(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
+          cssParser->SetCaseSensitive(mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
         }
       }
       if (cssParser) {
         nsCOMPtr<nsIURI> docURL;
-        mDocument->GetBaseURL(*getter_AddRefs(docURL));
+        doc->GetBaseURL(*getter_AddRefs(docURL));
 
         nsCOMPtr<nsIStyleRule> rule;
         result = cssParser->ParseStyleAttribute(aValue, docURL, getter_AddRefs(rule));
