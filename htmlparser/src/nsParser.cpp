@@ -997,7 +997,7 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
         NS_RELEASE(me); 
         return NS_ERROR_OUT_OF_MEMORY; 
       } 
-
+      NS_IF_RELEASE(theDTD);
     } 
     else { 
       mParserContext->mScanner->Append(aSourceBuffer); 

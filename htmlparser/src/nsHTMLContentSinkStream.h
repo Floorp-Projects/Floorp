@@ -191,6 +191,7 @@ protected:
     PRBool    mDoFormat;
     PRBool    mDoHeader;
     PRBool    mBodyOnly;
+    PRBool    mHasOpenHtmlTag;
 
     PRInt32   mMaxColumn;
 
