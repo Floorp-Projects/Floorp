@@ -22,6 +22,7 @@
 #include "domstubs.idl"
 
 interface nsIBoxObject;
+interface nsIDOMLocation;
 
 
 [scriptable, uuid(a6cf90cd-15b3-11d2-932e-00805f8add32)]
@@ -32,9 +33,6 @@ interface nsIDOMNSDocument : nsISupports
 
   readonly attribute nsIDOMLocation       location;
 
-  readonly attribute
-
-  nsIDOMRange               createRange();
   void                      load(in DOMString url);
 
   nsIBoxObject              getBoxObjectFor(in nsIDOMElement elt);
