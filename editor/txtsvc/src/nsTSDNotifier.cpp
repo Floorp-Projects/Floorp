@@ -189,25 +189,25 @@ nsTSDNotifier::DidJoinNodes(nsIDOMNode  *aLeftNode,
 // -------------------------------
 
 NS_IMETHODIMP
-nsTSDNotifier::WillCreateNode(const nsAReadableString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
+nsTSDNotifier::WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::DidCreateNode(const nsAReadableString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult)
+nsTSDNotifier::DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAReadableString &aString)
+nsTSDNotifier::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString &aString)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAReadableString &aString, nsresult aResult)
+nsTSDNotifier::DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString &aString, nsresult aResult)
 {
   return NS_OK;
 }

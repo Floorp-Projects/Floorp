@@ -119,8 +119,8 @@ static const PRBool gNoisy = PR_FALSE;
 // Add the CSS style corresponding to the HTML inline style defined
 // by aProperty aAttribute and aValue to the selection
 NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty, 
-                            const nsAReadableString & aAttribute, 
-                            const nsAReadableString & aValue)
+                            const nsAString & aAttribute, 
+                            const nsAString & aValue)
 {
   nsresult res = NS_OK;
   PRBool useCSS;
@@ -133,8 +133,8 @@ NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty,
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty, 
-                            const nsAReadableString & aAttribute, 
-                            const nsAReadableString & aValue)
+                            const nsAString & aAttribute, 
+                            const nsAString & aValue)
 {
   if (!aProperty) { return NS_ERROR_NULL_POINTER; }
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -313,8 +313,8 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
                                             PRInt32 aStartOffset,
                                             PRInt32 aEndOffset,
                                             nsIAtom *aProperty, 
-                                            const nsAReadableString *aAttribute,
-                                            const nsAReadableString *aValue)
+                                            const nsAString *aAttribute,
+                                            const nsAString *aValue)
 {
   if (!aTextNode) return NS_ERROR_NULL_POINTER;
   nsresult res = NS_OK;
@@ -385,8 +385,8 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
 nsresult
 nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
                                        nsIAtom *aProperty, 
-                                       const nsAReadableString *aAttribute,
-                                       const nsAReadableString *aValue)
+                                       const nsAString *aAttribute,
+                                       const nsAString *aValue)
 {
   if (!aNode || !aProperty) return NS_ERROR_NULL_POINTER;
 
@@ -524,7 +524,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
 
 nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange, 
                                             nsIAtom *aProperty, 
-                                            const nsAReadableString *aAttribute)
+                                            const nsAString *aAttribute)
 {
   if (!inRange) return NS_ERROR_NULL_POINTER;
   nsresult res;
@@ -568,7 +568,7 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
 nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
                                            PRInt32 *aOffset,
                                            nsIAtom *aProperty,          // null here means we split all properties
-                                           const nsAReadableString *aAttribute,
+                                           const nsAString *aAttribute,
                                            nsCOMPtr<nsIDOMNode> *outLeftNode,
                                            nsCOMPtr<nsIDOMNode> *outRightNode)
 {
@@ -624,7 +624,7 @@ PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
 
 nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode, 
                                    nsIAtom *aProperty,   // null here means remove all properties
-                                   const nsAReadableString *aAttribute, 
+                                   const nsAString *aAttribute, 
                                    PRBool aChildrenOnly)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
@@ -712,7 +712,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
 }
 
 PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode, 
-                                     const nsAReadableString *aAttribute)
+                                     const nsAString *aAttribute)
 {
   if (!aNode || !aAttribute) return PR_FALSE;  // ooops
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
@@ -743,7 +743,7 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
 }
 
 PRBool nsHTMLEditor::HasAttr(nsIDOMNode *aNode, 
-                             const nsAReadableString *aAttribute)
+                             const nsAString *aAttribute)
 {
   if (!aNode) return PR_FALSE;
   if (!aAttribute || aAttribute->IsEmpty()) return PR_TRUE;  // everybody has the 'null' attribute
@@ -761,8 +761,8 @@ PRBool nsHTMLEditor::HasAttr(nsIDOMNode *aNode,
 
 
 PRBool nsHTMLEditor::HasAttrVal(nsIDOMNode *aNode, 
-                                const nsAReadableString *aAttribute, 
-                                const nsAReadableString *aValue)
+                                const nsAString *aAttribute, 
+                                const nsAString *aValue)
 {
   if (!aNode) return PR_FALSE;
   if (!aAttribute || aAttribute->IsEmpty()) return PR_TRUE;  // everybody has the 'null' attribute
@@ -882,12 +882,12 @@ PRBool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
 
 nsresult
 nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty, 
-                             const nsAReadableString *aAttribute,
-                             const nsAReadableString *aValue,
+                             const nsAString *aAttribute,
+                             const nsAString *aValue,
                              PRBool *aFirst, 
                              PRBool *aAny, 
                              PRBool *aAll,
-                             nsAWritableString *outValue)
+                             nsAString *outValue)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -1090,18 +1090,18 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
 
 
 NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty, 
-                                              const nsAReadableString &aAttribute, 
-                                              const nsAReadableString &aValue,
+                                              const nsAString &aAttribute, 
+                                              const nsAString &aValue,
                                               PRBool *aFirst, 
                                               PRBool *aAny, 
                                               PRBool *aAll)
 {
   if (!aProperty || !aFirst || !aAny || !aAll)
     return NS_ERROR_NULL_POINTER;
-  const nsAReadableString *att = nsnull;
+  const nsAString *att = nsnull;
   if (aAttribute.Length())
     att = &aAttribute;
-  const nsAReadableString *val = nsnull;
+  const nsAString *val = nsnull;
   if (aValue.Length())
     val = &aValue;
   return GetInlinePropertyBase( aProperty, att, val, aFirst, aAny, aAll, nsnull);
@@ -1109,19 +1109,19 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
 
 
 NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
-                                              const nsAReadableString &aAttribute, 
-                                              const nsAReadableString &aValue,
+                                              const nsAString &aAttribute, 
+                                              const nsAString &aValue,
                                               PRBool *aFirst, 
                                               PRBool *aAny, 
                                               PRBool *aAll,
-                                              nsAWritableString &outValue)
+                                              nsAString &outValue)
 {
   if (!aProperty || !aFirst || !aAny || !aAll)
     return NS_ERROR_NULL_POINTER;
-  const nsAReadableString *att = nsnull;
+  const nsAString *att = nsnull;
   if (aAttribute.Length())
     att = &aAttribute;
-  const nsAReadableString *val = nsnull;
+  const nsAString *val = nsnull;
   if (aValue.Length())
     val = &aValue;
   return GetInlinePropertyBase( aProperty, att, val, aFirst, aAny, aAll, &outValue);
@@ -1133,12 +1133,12 @@ NS_IMETHODIMP nsHTMLEditor::RemoveAllInlineProperties()
   return RemoveInlinePropertyImpl(nsnull, nsnull);
 }
 
-NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsAReadableString &aAttribute)
+NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsAString &aAttribute)
 {
   return RemoveInlinePropertyImpl(aProperty, &aAttribute);
 }
 
-nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAReadableString *aAttribute)
+nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAString *aAttribute)
 {
   if (!mRules)    return NS_ERROR_NOT_INITIALIZED;
   ForceCompositionEnd();
@@ -1727,7 +1727,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAWritableString &outFace)
+nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
 {
   if (!aMixed)
       return NS_ERROR_FAILURE;
@@ -1766,7 +1766,7 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAWritableString &outFace)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAWritableString &aOutColor)
+nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAString &aOutColor)
 {
   if (!aMixed)
       return NS_ERROR_NULL_POINTER;

@@ -252,7 +252,7 @@ nsPlaintextEditor::EndEditorInit()
 }
 
 NS_IMETHODIMP 
-nsPlaintextEditor::SetDocumentCharacterSet(const nsAReadableString & characterSet) 
+nsPlaintextEditor::SetDocumentCharacterSet(const nsAString & characterSet) 
 { 
   nsresult result; 
 
@@ -538,7 +538,7 @@ NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
    to TypedText() to determine what action to take, but without passing
    an event.
    */
-NS_IMETHODIMP nsPlaintextEditor::TypedText(const nsAReadableString& aString,
+NS_IMETHODIMP nsPlaintextEditor::TypedText(const nsAString& aString,
                                       PRInt32 aAction)
 {
   nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
@@ -949,7 +949,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   return result;
 }
 
-NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAReadableString &aStringToInsert)
+NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -1427,9 +1427,9 @@ NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool *aCanCopy)
 
 // Shared between OutputToString and OutputToStream
 NS_IMETHODIMP
-nsPlaintextEditor::GetAndInitDocEncoder(const nsAReadableString& aFormatType,
+nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
                                         PRUint32 aFlags,
-                                        const nsAReadableString& aCharset,
+                                        const nsAString& aCharset,
                                         nsIDocumentEncoder** encoder)
 {
   nsCOMPtr<nsIPresShell> presShell;
@@ -1515,8 +1515,8 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAReadableString& aFormatType,
 
 
 NS_IMETHODIMP 
-nsPlaintextEditor::OutputToString(nsAWritableString& aOutputString,
-                                  const nsAReadableString& aFormatType,
+nsPlaintextEditor::OutputToString(nsAString& aOutputString,
+                                  const nsAString& aFormatType,
                                   PRUint32 aFlags)
 {
   PRBool cancel, handled;
@@ -1550,8 +1550,8 @@ nsPlaintextEditor::OutputToString(nsAWritableString& aOutputString,
 
 NS_IMETHODIMP
 nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
-                             const nsAReadableString& aFormatType,
-                             const nsAReadableString& aCharset,
+                             const nsAString& aFormatType,
+                             const nsAString& aCharset,
                              PRUint32 aFlags)
 {
   nsresult rv;
@@ -1676,7 +1676,7 @@ static nsICiter* MakeACiter()
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::InsertAsQuotation(const nsAReadableString& aQuotedText,
+nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
                                      nsIDOMNode **aNodeInserted)
 {
   // We have the text.  Cite it appropriately:
@@ -1723,17 +1723,17 @@ nsPlaintextEditor::InsertAsQuotation(const nsAReadableString& aQuotedText,
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::PasteAsCitedQuotation(const nsAReadableString& aCitation,
+nsPlaintextEditor::PasteAsCitedQuotation(const nsAString& aCitation,
                                          PRInt32 aSelectionType)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsPlaintextEditor::InsertAsCitedQuotation(const nsAReadableString& aQuotedText,
-                                          const nsAReadableString& aCitation,
+nsPlaintextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
+                                          const nsAString& aCitation,
                                           PRBool aInsertHTML,
-                                          const nsAReadableString& aCharset,
+                                          const nsAString& aCharset,
                                           nsIDOMNode **aNodeInserted)
 {
   return InsertAsQuotation(aQuotedText, aNodeInserted);
@@ -1885,7 +1885,7 @@ nsPlaintextEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 #endif
 
 NS_IMETHODIMP
-nsPlaintextEditor::SetCompositionString(const nsAReadableString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
+nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
   NS_ASSERTION(aTextRangeList, "null ptr");
   if(nsnull == aTextRangeList)
@@ -2116,15 +2116,15 @@ void nsPlaintextEditor::HandleEventListenerError()
 
 nsresult
 nsPlaintextEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
-                                            const nsAReadableString & aAttribute,
-                                            const nsAReadableString & aValue)
+                                            const nsAString & aAttribute,
+                                            const nsAString & aValue)
 {
   return nsEditor::SetAttribute(aElement, aAttribute, aValue);
 }
 
 nsresult
 nsPlaintextEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                               const nsAReadableString & aAttribute)
+                                               const nsAString & aAttribute)
 {
   return nsEditor::RemoveAttribute(aElement, aAttribute);
 }

@@ -41,7 +41,7 @@
 
 #include "prtypes.h"  // for PRBool
 #include "nsError.h"  // for nsresult
-#include "nsString.h" // for nsAReadableString
+#include "nsString.h" // for nsAString
 class nsIDOMNode;
 class nsIEditor;
 class nsPlaintextEditor;
@@ -49,7 +49,7 @@ class nsPlaintextEditor;
 class nsTextEditUtils
 {
 public:
-  static PRBool NodeIsType(nsIDOMNode *aNode, const nsAReadableString& aTag);
+  static PRBool NodeIsType(nsIDOMNode *aNode, const nsAString& aTag);
 
   // from nsTextEditRules:
   static PRBool IsBody(nsIDOMNode *aNode);

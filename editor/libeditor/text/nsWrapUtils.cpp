@@ -51,11 +51,11 @@ static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
  * Rewrap the given section of string, putting the result in aOutString.
  */
 nsresult
-nsWrapUtils::Rewrap(const nsAReadableString& aInString,
+nsWrapUtils::Rewrap(const nsAString& aInString,
                          PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
                          PRBool aRespectNewlines,
-                         const nsAReadableString &aLineStartStr,
-                         nsAWritableString& aOutString)
+                         const nsAString &aLineStartStr,
+                         nsAString& aOutString)
 {
   PRInt32 i;
 

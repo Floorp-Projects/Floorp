@@ -112,8 +112,8 @@ protected:
                             nsISelection *aSelection, 
                             PRBool          *aCancel,
                             PRBool          *aHandled,
-                            const nsAReadableString  *inString,
-                            nsAWritableString        *outString,
+                            const nsAString *inString,
+                            nsAString       *outString,
                             PRInt32          aMaxLength);
   nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
@@ -152,8 +152,8 @@ protected:
     *                   and use aOutText as the result.
     */
   nsresult WillOutputText(nsISelection *aSelection,
-                          const nsAReadableString  *aInFormat,
-                          nsAWritableString *aOutText, 
+                          const nsAString  *aInFormat,
+                          nsAString *aOutText, 
                           PRBool   *aOutCancel, 
                           PRBool *aHandled);
 
@@ -171,16 +171,16 @@ protected:
   /** returns a truncated insertion string if insertion would place us
       over aMaxLength */
   nsresult TruncateInsertionIfNeeded(nsISelection             *aSelection, 
-                                     const nsAReadableString  *aInString,
-                                     nsAWritableString        *aOutString,
+                                     const nsAString          *aInString,
+                                     nsAString                *aOutString,
                                      PRInt32                   aMaxLength);
   
   /** Echo's the insertion text into the password buffer, and converts
       insertion text to '*'s */                                        
-  nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAWritableString *aOutString);
+  nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAString *aOutString);
 
   /** Remove IME composition text from password buffer */
-  nsresult RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAWritableString *aIMEString);
+  nsresult RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAString *aIMEString);
 
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
@@ -231,9 +231,9 @@ class nsTextRulesInfo : public nsRulesInfo
   virtual ~nsTextRulesInfo() {};
   
   // kInsertText
-  const nsAReadableString *inString;
-  nsAWritableString *outString;
-  const nsAReadableString *outputFormat;
+  const nsAString *inString;
+  nsAString *outString;
+  const nsAString *outputFormat;
   PRInt32 maxLength;
   
   // kDeleteSelection
@@ -242,13 +242,13 @@ class nsTextRulesInfo : public nsRulesInfo
   // kMakeList
   PRBool bOrdered;
   PRBool entireList;
-  const nsAReadableString *bulletType;
+  const nsAString *bulletType;
 
   // kAlign
-  const nsAReadableString *alignType;
+  const nsAString *alignType;
   
   // kMakeBasicBlock
-  const nsAReadableString *blockType;
+  const nsAString *blockType;
   
   // kInsertElement
   const nsIDOMElement* insertElement;

@@ -100,7 +100,7 @@
 
 #include "nsHTMLURIRefObject.h"
 
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsString.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMElement.h"
@@ -130,7 +130,7 @@ nsHTMLURIRefObject::Reset()
 }
 
 NS_IMETHODIMP
-nsHTMLURIRefObject::GetNextURI(nsAWritableString & aURI)
+nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
 {
   if (!mNode)
     return NS_ERROR_NOT_INITIALIZED;
@@ -279,8 +279,8 @@ nsHTMLURIRefObject::GetNextURI(nsAWritableString & aURI)
 }
 
 NS_IMETHODIMP
-nsHTMLURIRefObject::RewriteAllURIs(const nsAReadableString & aOldPat,
-                            const nsAReadableString & aNewPat,
+nsHTMLURIRefObject::RewriteAllURIs(const nsAString & aOldPat,
+                            const nsAString & aNewPat,
                             PRBool aMakeRel)
 {
 #ifdef DEBUG_akkana

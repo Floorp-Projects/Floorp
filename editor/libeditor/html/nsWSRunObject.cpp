@@ -285,7 +285,7 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
 }
 
 nsresult 
-nsWSRunObject::InsertText(const nsAReadableString& aStringToInsert, 
+nsWSRunObject::InsertText(const nsAString& aStringToInsert, 
                           nsCOMPtr<nsIDOMNode> *aInOutParent, 
                           PRInt32 *aInOutOffset,
                           nsIDOMDocument *aDoc)

@@ -94,7 +94,7 @@ nsInternetCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsInternetCiter::GetCiteString(const nsAReadableString& aInString, nsAWritableString& aOutString)
+nsInternetCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString)
 {
   aOutString.SetLength(0);
   PRUnichar uch = nl;
@@ -136,8 +136,8 @@ nsInternetCiter::GetCiteString(const nsAReadableString& aInString, nsAWritableSt
 }
 
 nsresult
-nsInternetCiter::StripCitesAndLinebreaks(const nsAReadableString& aInString,
-                                         nsAWritableString& aOutString,
+nsInternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
+                                         nsAString& aOutString,
                                          PRBool aLinebreaksToo,
                                          PRInt32* aCiteLevel)
 {
@@ -180,12 +180,12 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsAReadableString& aInString,
 }
 
 NS_IMETHODIMP
-nsInternetCiter::StripCites(const nsAReadableString& aInString, nsAWritableString& aOutString)
+nsInternetCiter::StripCites(const nsAString& aInString, nsAString& aOutString)
 {
   return StripCitesAndLinebreaks(aInString, aOutString, PR_FALSE, 0);
 }
 
-static void AddCite(nsAWritableString& aOutString, PRInt32 citeLevel)
+static void AddCite(nsAString& aOutString, PRInt32 citeLevel)
 {
   for (PRInt32 i = 0; i < citeLevel; ++i)
     aOutString.Append(PRUnichar(gt));
@@ -194,7 +194,7 @@ static void AddCite(nsAWritableString& aOutString, PRInt32 citeLevel)
 }
 
 static inline void
-BreakLine(nsAWritableString& aOutString, PRUint32& outStringCol,
+BreakLine(nsAString& aOutString, PRUint32& outStringCol,
           PRUint32 citeLevel)
 {
   aOutString.Append(nl);
@@ -203,10 +203,10 @@ BreakLine(nsAWritableString& aOutString, PRUint32& outStringCol,
 }
 
 NS_IMETHODIMP
-nsInternetCiter::Rewrap(const nsAReadableString& aInString,
+nsInternetCiter::Rewrap(const nsAString& aInString,
                         PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
                         PRBool aRespectNewlines,
-                        nsAWritableString& aOutString)
+                        nsAString& aOutString)
 {
   // There shouldn't be returns in this string, only dom newlines.
   // Check to make sure:

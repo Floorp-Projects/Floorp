@@ -652,7 +652,7 @@ nsHTMLEditor::IsBlockNode(nsIDOMNode *aNode)
 
 // Non-static version for the nsIEditor interface and JavaScript
 NS_IMETHODIMP 
-nsHTMLEditor::SetDocumentTitle(const nsAReadableString &aTitle)
+nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 {
   SetDocTitleTxn *txn;
   nsresult result = TransactionFactory::GetNewTransaction(SetDocTitleTxn::GetCID(), (EditTxn **)&txn);
@@ -1201,7 +1201,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
    to TypedText() to determine what action to take, but without passing
    an event.
    */
-NS_IMETHODIMP nsHTMLEditor::TypedText(const nsAReadableString& aString,
+NS_IMETHODIMP nsHTMLEditor::TypedText(const nsAString& aString,
                                       PRInt32 aAction)
 {
   nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
@@ -1543,7 +1543,7 @@ nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelect
 //  but we can't use that because it is selection-based and 
 //  the rules code won't let us edit under the <head> node
 NS_IMETHODIMP
-nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAReadableString& aSourceToInsert)
+nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 {
   nsAutoRules beginRulesSniffing(this, kOpIgnore, nsIEditor::eNone); // dont do any post processing, rules get confused
   nsCOMPtr<nsISelection> selection;
@@ -1648,7 +1648,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAReadableString& aSourceToInse
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::RebuildDocumentFromSource(const nsAReadableString& aSourceString)
+nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
 {
   ForceCompositionEnd();
 
@@ -1977,7 +1977,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::SetParagraphFormat(const nsAReadableString& aParagraphFormat)
+nsHTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat)
 {
   nsAutoString tag; tag.Assign(aParagraphFormat);
   ToLowerCase(tag);
@@ -2105,7 +2105,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
 
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat)
+nsHTMLEditor::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   if (!aMixed) return NS_ERROR_NULL_POINTER;
@@ -2116,7 +2116,7 @@ nsHTMLEditor::GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutColor)
+nsHTMLEditor::GetBackgroundColorState(PRBool *aMixed, nsAString &aOutColor)
 {
   nsresult res;
   PRBool useCSS;
@@ -2134,7 +2134,7 @@ nsHTMLEditor::GetBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutCol
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetHighlightColorState(PRBool *aMixed, nsAWritableString &aOutColor)
+nsHTMLEditor::GetHighlightColorState(PRBool *aMixed, nsAString &aOutColor)
 {
   nsresult res = NS_OK;
   PRBool useCSS;
@@ -2165,7 +2165,7 @@ nsHTMLEditor::GetHighlightColor(PRBool *aMixed, PRUnichar **_retval)
 
 
 nsresult
-nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutColor, PRBool aBlockLevel)
+nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, PRBool aBlockLevel)
 {
   if (!aMixed) return NS_ERROR_NULL_POINTER;
   *aMixed = PR_FALSE;
@@ -2271,7 +2271,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAWritableString &aOut
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutColor)
+nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAString &aOutColor)
 {
   //TODO: We don't handle "mixed" correctly!
   if (!aMixed) return NS_ERROR_NULL_POINTER;
@@ -2365,7 +2365,7 @@ nsHTMLEditor::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList, const nsAReadableString& aBulletType)
+nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, PRBool entireList, const nsAString& aBulletType)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -2443,7 +2443,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAReadableString& aListType, PRBool entire
 
 
 NS_IMETHODIMP
-nsHTMLEditor::RemoveList(const nsAReadableString& aListType)
+nsHTMLEditor::RemoveList(const nsAString& aListType)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -2473,7 +2473,7 @@ nsHTMLEditor::RemoveList(const nsAReadableString& aListType)
 }
 
 nsresult
-nsHTMLEditor::MakeDefinitionItem(const nsAReadableString& aItemType)
+nsHTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -2503,7 +2503,7 @@ nsHTMLEditor::MakeDefinitionItem(const nsAReadableString& aItemType)
 }
 
 nsresult
-nsHTMLEditor::InsertBasicBlock(const nsAReadableString& aBlockType)
+nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -2575,7 +2575,7 @@ nsHTMLEditor::InsertBasicBlock(const nsAReadableString& aBlockType)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::Indent(const nsAReadableString& aIndent)
+nsHTMLEditor::Indent(const nsAString& aIndent)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -2662,7 +2662,7 @@ nsHTMLEditor::Indent(const nsAReadableString& aIndent)
 //TODO: IMPLEMENT ALIGNMENT!
 
 NS_IMETHODIMP
-nsHTMLEditor::Align(const nsAReadableString& aAlignType)
+nsHTMLEditor::Align(const nsAString& aAlignType)
 {
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpAlign, nsIEditor::eNext);
@@ -2686,7 +2686,7 @@ nsHTMLEditor::Align(const nsAReadableString& aAlignType)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetElementOrParentByTagName(const nsAReadableString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
+nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
 {
   if (aTagName.Length() == 0 || !aReturn )
     return NS_ERROR_NULL_POINTER;
@@ -2808,7 +2808,7 @@ NODE_FOUND:
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElement** aReturn)
+nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aReturn)
 {
   if (!aReturn )
     return NS_ERROR_NULL_POINTER;
@@ -3053,7 +3053,7 @@ nsHTMLEditor::GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElemen
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDOMElement** aReturn)
+nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement** aReturn)
 {
   nsresult res=NS_ERROR_NOT_INITIALIZED;
   if (aReturn)
@@ -3200,7 +3200,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetHTMLBackgroundColor(const nsAReadableString& aColor)
+nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
 {
   NS_PRECONDITION(mDocWeak, "Missing Editor DOM Document");
   
@@ -3253,7 +3253,7 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAReadableString& aColor)
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsAReadableString& aAttribute, const nsAReadableString& aValue)
+NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsAString& aAttribute, const nsAString& aValue)
 {
   nsresult res;
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
@@ -3413,20 +3413,20 @@ nsHTMLEditor::RemoveOverrideStyleSheet(nsICSSStyleSheet* aSheet)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::ApplyOverrideStyleSheet(const nsAReadableString& aURL, nsICSSStyleSheet **aStyleSheet)
+nsHTMLEditor::ApplyOverrideStyleSheet(const nsAString& aURL, nsICSSStyleSheet **aStyleSheet)
 {
   return ApplyDocumentOrOverrideStyleSheet(aURL, PR_TRUE, aStyleSheet);
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::ApplyStyleSheet(const nsAReadableString& aURL, nsICSSStyleSheet **aStyleSheet)
+nsHTMLEditor::ApplyStyleSheet(const nsAString& aURL, nsICSSStyleSheet **aStyleSheet)
 {
   return ApplyDocumentOrOverrideStyleSheet(aURL, PR_FALSE, aStyleSheet);
 }
 
 //Note: Loading a document style sheet is undoable, loading an override sheet is not
 nsresult 
-nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsAReadableString& aURL, PRBool aOverride, nsICSSStyleSheet **aStyleSheet)
+nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsAString& aURL, PRBool aOverride, nsICSSStyleSheet **aStyleSheet)
 {
   nsresult rv   = NS_OK;
   nsCOMPtr<nsIURI> uaURL;
@@ -3641,7 +3641,7 @@ static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetHeadContentsAsHTML(nsAWritableString& aOutputString)
+nsHTMLEditor::GetHeadContentsAsHTML(nsAString& aOutputString)
 {
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
@@ -3712,7 +3712,7 @@ nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 #endif
 
 NS_IMETHODIMP
-nsHTMLEditor::SetCompositionString(const nsAReadableString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
+nsHTMLEditor::SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
   NS_ASSERTION(aTextRangeList, "null ptr");
   if(nsnull == aTextRangeList)
@@ -3882,7 +3882,7 @@ nsHTMLEditor::EndOperation()
 }  
 
 PRBool 
-nsHTMLEditor::TagCanContainTag(const nsAReadableString& aParentTag, const nsAReadableString& aChildTag)  
+nsHTMLEditor::TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag)  
 {
   // COtherDTD gives some unwanted results.  We override them here.
   if (aParentTag.Equals(NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
@@ -3992,11 +3992,11 @@ NS_IMETHODIMP nsHTMLEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLa
 // so singleton attributes like <Table border> will not be matched!
 void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
                                               nsIAtom           *aProperty, 
-                                              const nsAReadableString *aAttribute, 
-                                              const nsAReadableString *aValue, 
+                                              const nsAString   *aAttribute, 
+                                              const nsAString   *aValue, 
                                               PRBool            &aIsSet,
                                               nsIDOMNode       **aStyleNode,
-                                              nsAWritableString *outValue) const
+                                              nsAString *outValue) const
 {
   nsresult result;
   aIsSet = PR_FALSE;  // must be initialized to false for code below to work
@@ -4059,7 +4059,7 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
 
 void nsHTMLEditor::IsTextStyleSet(nsIStyleContext *aSC, 
                                   nsIAtom *aProperty, 
-                                  const nsAReadableString *aAttribute,  
+                                  const nsAString *aAttribute,  
                                   PRBool &aIsSet) const
 {
   aIsSet = PR_FALSE;
@@ -4348,7 +4348,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
 NS_IMETHODIMP
 nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
-                                      const nsAReadableString   *aTagName,
+                                      const nsAString   *aTagName,
                                       nsIDOMElement   **aReturn)
 {
   nsresult res = NS_OK;
@@ -5005,8 +5005,8 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
 // aAttribute with its value aValue
 nsresult
 nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
-                                       const nsAReadableString & aAttribute,
-                                       const nsAReadableString & aValue)
+                                       const nsAString & aAttribute,
+                                       const nsAString & aValue)
 {
   PRBool useCSS;
   nsresult res = NS_OK;
@@ -5056,7 +5056,7 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
 
 nsresult
 nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                          const nsAReadableString & aAttribute)
+                                          const nsAString & aAttribute)
 {
   PRBool useCSS;
   nsresult res = NS_OK;
@@ -5089,7 +5089,7 @@ nsHTMLEditor::SetIsCSSEnabled(PRBool aIsCSSPrefChecked)
 
 // Set the block background color
 NS_IMETHODIMP
-nsHTMLEditor::SetCSSBackgroundColor(const nsAReadableString& aColor)
+nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   ForceCompositionEnd();
@@ -5316,7 +5316,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAReadableString& aColor)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::SetBackgroundColor(const nsAReadableString& aColor)
+nsHTMLEditor::SetBackgroundColor(const nsAString& aColor)
 {
   nsresult res;
   PRBool useCSS;

@@ -54,17 +54,17 @@ public:
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsEditor
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetCiteString(const nsAReadableString & aInString, nsAWritableString & aOutString);
+  NS_IMETHOD GetCiteString(const nsAString & aInString, nsAString & aOutString);
 
-  NS_IMETHOD StripCites(const nsAReadableString & aInString, nsAWritableString & aOutString);
+  NS_IMETHOD StripCites(const nsAString & aInString, nsAString & aOutString);
 
-  NS_IMETHOD Rewrap(const nsAReadableString & aInString,
+  NS_IMETHOD Rewrap(const nsAString & aInString,
                     PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
                     PRBool aRespectNewlines,
-                    nsAWritableString & aOutString);
+                    nsAString & aOutString);
 
 protected:
-  nsresult StripCitesAndLinebreaks(const nsAReadableString& aInString, nsAWritableString& aOutString,
+  nsresult StripCitesAndLinebreaks(const nsAString& aInString, nsAString& aOutString,
                                    PRBool aLinebreaksToo, PRInt32* aCiteLevel);
 };
 

@@ -57,7 +57,7 @@
 static NS_DEFINE_CID(kPrefServiceCID,       NS_PREF_CID);
 
 static
-void ProcessBValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+void ProcessBValue(const nsAString * aInputString, nsAString & aOutputString,
                    const char * aDefaultValueString,
                    const char * aPrependString, const char* aAppendString)
 {
@@ -75,7 +75,7 @@ void ProcessBValue(nsAReadableString * aInputString, nsAWritableString & aOutput
 }
 
 static
-void ProcessDefaultValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+void ProcessDefaultValue(const nsAString * aInputString, nsAString & aOutputString,
                          const char * aDefaultValueString,
                          const char * aPrependString, const char* aAppendString)
 {
@@ -86,7 +86,7 @@ void ProcessDefaultValue(nsAReadableString * aInputString, nsAWritableString & a
 }
 
 static
-void ProcessSameValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+void ProcessSameValue(const nsAString * aInputString, nsAString & aOutputString,
                       const char * aDefaultValueString,
                       const char * aPrependString, const char* aAppendString)
 {
@@ -97,7 +97,7 @@ void ProcessSameValue(nsAReadableString * aInputString, nsAWritableString & aOut
 }
 
 static
-void ProcessExtendedValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+void ProcessExtendedValue(const nsAString * aInputString, nsAString & aOutputString,
                           const char * aDefaultValueString,
                           const char * aPrependString, const char* aAppendString)
 {
@@ -114,7 +114,7 @@ void ProcessExtendedValue(nsAReadableString * aInputString, nsAWritableString & 
 }
 
 static
-void ProcessLengthValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+void ProcessLengthValue(const nsAString * aInputString, nsAString & aOutputString,
                         const char * aDefaultValueString,
                         const char * aPrependString, const char* aAppendString)
 {
@@ -128,7 +128,7 @@ void ProcessLengthValue(nsAReadableString * aInputString, nsAWritableString & aO
 }
 
 static
-void ProcessListStyleTypeValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+void ProcessListStyleTypeValue(const nsAString * aInputString, nsAString & aOutputString,
                                const char * aDefaultValueString,
                                const char * aPrependString, const char* aAppendString)
 {
@@ -158,7 +158,7 @@ void ProcessListStyleTypeValue(nsAReadableString * aInputString, nsAWritableStri
 }
 
 static
-void ProcessMarginLeftValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+void ProcessMarginLeftValue(const nsAString * aInputString, nsAString & aOutputString,
                             const char * aDefaultValueString,
                             const char * aPrependString, const char* aAppendString)
 {
@@ -179,7 +179,7 @@ void ProcessMarginLeftValue(nsAReadableString * aInputString, nsAWritableString 
 }
 
 static
-void ProcessMarginRightValue(nsAReadableString * aInputString, nsAWritableString & aOutputString,
+void ProcessMarginRightValue(const nsAString * aInputString, nsAString & aOutputString,
                              const char * aDefaultValueString,
                              const char * aPrependString, const char* aAppendString)
 {
@@ -327,7 +327,7 @@ nsHTMLCSSUtils::Init(nsHTMLEditor *aEditor)
 PRBool
 nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
                                       nsIAtom * aProperty,
-                                      const nsAReadableString * aAttribute)
+                                      const nsAString * aAttribute)
 {
   nsCOMPtr<nsIDOMNode> node = aNode;
   // we need an element node here
@@ -443,7 +443,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
 // the lowest level above the transaction; adds the css declaration "aProperty : aValue" to
 // the inline styles carried by aElement
 nsresult
-nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAReadableString & aValue)
+nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue)
 {
   ChangeCSSInlineStyleTxn *txn;
   nsresult result = CreateCSSPropertyTxn(aElement, aProperty, aValue, &txn, PR_FALSE);
@@ -459,7 +459,7 @@ nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, con
 // specified for the CSS property aProperty, or totally remove the declaration if this
 // property accepts only one value
 nsresult
-nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAReadableString & aValue)
+nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue)
 {
   ChangeCSSInlineStyleTxn *txn;
   nsresult result = CreateCSSPropertyTxn(aElement, aProperty, aValue, &txn, PR_TRUE);
@@ -475,7 +475,7 @@ nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, 
 nsresult 
 nsHTMLCSSUtils::CreateCSSPropertyTxn(nsIDOMElement *aElement, 
                                      nsIAtom * aAttribute,
-                                     const nsAReadableString& aValue,
+                                     const nsAString& aValue,
                                      ChangeCSSInlineStyleTxn ** aTxn,
                                      PRBool aRemoveProperty)
 {
@@ -492,14 +492,14 @@ nsHTMLCSSUtils::CreateCSSPropertyTxn(nsIDOMElement *aElement,
 
 nsresult
 nsHTMLCSSUtils::GetSpecifiedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                     nsAWritableString & aValue)
+                                     nsAString & aValue)
 {
   return GetCSSInlinePropertyBase(aNode, aProperty, aValue, nsnull, SPECIFIED_STYLE_TYPE);
 }
 
 nsresult
 nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                    nsAWritableString & aValue)
+                                    nsAString & aValue)
 {
   nsCOMPtr<nsIDOMViewCSS> viewCSS = nsnull;
   nsresult res = GetDefaultViewCSS(aNode, getter_AddRefs(viewCSS));
@@ -510,7 +510,7 @@ nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
 
 nsresult
 nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                        nsAWritableString &aValue,
+                                        nsAString &aValue,
                                         nsIDOMViewCSS *aViewCSS,
                                         PRUint8 aStyleType)
 {
@@ -600,7 +600,7 @@ NS_NewHTMLCSSUtils(nsHTMLCSSUtils** aInstancePtrResult)
 // remove the CSS style "aProperty : aPropertyValue" and possibly remove the whole node
 // if it is a span and if its only attribute is _moz_dirty
 nsresult
-nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, nsAReadableString & aPropertyValue)
+nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, const nsAString & aPropertyValue)
 {
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
 
@@ -639,14 +639,14 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, nsAR
 // Answers true is the property can be removed by setting a "none" CSS value
 // on a node
 PRBool
-nsHTMLCSSUtils::IsCSSInvertable(nsIAtom *aProperty, const nsAReadableString *aAttribute)
+nsHTMLCSSUtils::IsCSSInvertable(nsIAtom *aProperty, const nsAString *aAttribute)
 {
   return PRBool(nsIEditProperty::b == aProperty);
 }
 
 // Get the default browser background color if we need it for GetCSSBackgroundColorState
 nsresult
-nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAWritableString & aColor)
+nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAString & aColor)
 {
   nsresult result;
   nsCOMPtr<nsIPref> prefService = do_GetService(kPrefServiceCID, &result);
@@ -681,7 +681,7 @@ nsHTMLCSSUtils::GetDefaultBackgroundColor(nsAWritableString & aColor)
 
 // Get the default length unit used for CSS Indent/Outdent
 nsresult
-nsHTMLCSSUtils::GetDefaultLengthUnit(nsAWritableString & aLengthUnit)
+nsHTMLCSSUtils::GetDefaultLengthUnit(nsAString & aLengthUnit)
 {
   nsresult result;
   nsCOMPtr<nsIPref> prefService = do_GetService(kPrefServiceCID, &result);
@@ -703,7 +703,7 @@ nsHTMLCSSUtils::GetDefaultLengthUnit(nsAWritableString & aLengthUnit)
 // We need then a way to determine the number part and the unit from aString, aString
 // being the result of a GetPropertyValue query...
 void
-nsHTMLCSSUtils::ParseLength(nsAReadableString & aString, float * aValue, nsIAtom ** aUnit)
+nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom ** aUnit)
 {
   nsAString::const_iterator iter;
   aString.BeginReading(iter);
@@ -818,7 +818,7 @@ void
 nsHTMLCSSUtils::BuildCSSDeclarations(nsVoidArray & aPropertyArray,
                                      nsStringArray & aValueArray,
                                      const CSSEquivTable * aEquivTable,
-                                     const nsAReadableString * aValue,
+                                     const nsAString * aValue,
                                      PRBool aGetOrRemoveRequest)
 {
   // clear arrays
@@ -858,8 +858,8 @@ nsHTMLCSSUtils::BuildCSSDeclarations(nsVoidArray & aPropertyArray,
 void
 nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
                                                      nsIAtom *aHTMLProperty,
-                                                     const nsAReadableString * aAttribute,
-                                                     const nsAReadableString * aValue,
+                                                     const nsAString * aAttribute,
+                                                     const nsAString * aValue,
                                                      nsVoidArray & cssPropertyArray,
                                                      nsStringArray & cssValueArray,
                                                      PRBool aGetOrRemoveRequest)
@@ -952,8 +952,8 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
 nsresult
 nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                             nsIAtom *aHTMLProperty,
-                                            const nsAReadableString *aAttribute,
-                                            const nsAReadableString *aValue,
+                                            const nsAString *aAttribute,
+                                            const nsAString *aValue,
                                             PRInt32 * aCount)
 {
   nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
@@ -988,8 +988,8 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
 nsresult
 nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                             nsIAtom *aHTMLProperty,
-                                            const nsAReadableString *aAttribute,
-                                            const nsAReadableString *aValue)
+                                            const nsAString *aAttribute,
+                                            const nsAString *aValue)
 {
   nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
   nsresult res = NS_OK;
@@ -1045,8 +1045,8 @@ nsHTMLCSSUtils::HasClassOrID(nsIDOMElement * aElement, PRBool & aReturn)
 nsresult
 nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                                                      nsIAtom *aHTMLProperty,
-                                                     const nsAReadableString *aAttribute,
-                                                     nsAWritableString & aValueString,
+                                                     const nsAString *aAttribute,
+                                                     nsAString & aValueString,
                                                      PRUint8 aStyleType)
 {
   nsCOMPtr<nsIDOMElement> theElement;
@@ -1092,9 +1092,9 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
 nsresult
 nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                                                     nsIAtom *aHTMLProperty,
-                                                    const nsAReadableString * aHTMLAttribute,
+                                                    const nsAString * aHTMLAttribute,
                                                     PRBool & aIsSet,
-                                                    nsAWritableString & valueString,
+                                                    nsAString & valueString,
                                                     PRUint8 aStyleType)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);

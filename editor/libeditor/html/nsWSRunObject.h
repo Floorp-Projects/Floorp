@@ -143,7 +143,7 @@ class nsWSRunObject
     // and makes any needed adjustments to ws around that point.
     // example of fixup: trailingws before {aInOutParent,aInOutOffset}
     //                   needs to be removed.
-    nsresult InsertText(const nsAReadableString& aStringToInsert, 
+    nsresult InsertText(const nsAString& aStringToInsert, 
                         nsCOMPtr<nsIDOMNode> *aInOutNode, 
                         PRInt32 *aInOutOffset,
                         nsIDOMDocument *aDoc);

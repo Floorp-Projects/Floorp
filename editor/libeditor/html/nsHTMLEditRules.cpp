@@ -915,7 +915,7 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
 
 
 NS_IMETHODIMP 
-nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat)
+nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
 {
   // This routine is *heavily* tied to our ui choices in the paragraph
   // style popup.  I cant see a way around that.
@@ -1096,8 +1096,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
                                 nsISelection *aSelection, 
                                 PRBool          *aCancel,
                                 PRBool          *aHandled,
-                                const nsAReadableString  *inString,
-                                nsAWritableString        *outString,
+                                const nsAString *inString,
+                                nsAString       *outString,
                                 PRInt32          aMaxLength)
 {  
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
@@ -2487,12 +2487,12 @@ nsHTMLEditRules::DeleteNonTableElements(nsIDOMNode *aNode)
 
 nsresult
 nsHTMLEditRules::WillMakeList(nsISelection *aSelection, 
-                              const nsAReadableString *aListType, 
+                              const nsAString *aListType, 
                               PRBool aEntireList,
-                              const nsAReadableString *aBulletType,
+                              const nsAString *aBulletType,
                               PRBool *aCancel,
                               PRBool *aHandled,
-                              const nsAReadableString *aItemType)
+                              const nsAString *aItemType)
 {
   if (!aSelection || !aListType || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
@@ -2858,7 +2858,7 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
 
 nsresult
 nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection, 
-                                     const nsAReadableString *aItemType, 
+                                     const nsAString *aItemType, 
                                      PRBool aEntireList, 
                                      PRBool *aCancel,
                                      PRBool *aHandled)
@@ -2870,7 +2870,7 @@ nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection,
 
 nsresult
 nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection, 
-                                    const nsAReadableString *aBlockType, 
+                                    const nsAString *aBlockType, 
                                     PRBool *aCancel,
                                     PRBool *aHandled)
 {
@@ -3682,8 +3682,8 @@ nsHTMLEditRules::RemovePartOfBlock(nsIDOMNode *aBlock,
 nsresult 
 nsHTMLEditRules::ConvertListType(nsIDOMNode *aList, 
                                  nsCOMPtr<nsIDOMNode> *outList,
-                                 const nsAReadableString& aListType, 
-                                 const nsAReadableString& aItemType) 
+                                 const nsAString& aListType, 
+                                 const nsAString& aItemType) 
 {
   if (!aList || !outList) return NS_ERROR_NULL_POINTER;
   *outList = aList;  // we might not need to change the list
@@ -3892,7 +3892,7 @@ nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode,
 
 nsresult
 nsHTMLEditRules::WillAlign(nsISelection *aSelection, 
-                           const nsAReadableString *alignType, 
+                           const nsAString *alignType, 
                            PRBool *aCancel,
                            PRBool *aHandled)
 {
@@ -4114,7 +4114,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
 // AlignInnerBlocks: align inside table cells or list items
 //       
 nsresult
-nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsAReadableString *alignType)
+nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType)
 {
   if (!aNode || !alignType) return NS_ERROR_NULL_POINTER;
   nsresult res;
@@ -4152,7 +4152,7 @@ nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsAReadableString *al
 // AlignBlockContents: align contents of a block element
 //                  
 nsresult
-nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *alignType)
+nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignType)
 {
   if (!aNode || !alignType) return NS_ERROR_NULL_POINTER;
   nsresult res;
@@ -6254,7 +6254,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsISupportsArray *arrayOfNodes)
 //                   one or more blocks of type blockTag.  
 //                       
 nsresult 
-nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadableString *aBlockTag)
+nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAString *aBlockTag)
 {
   // intent of this routine is to be used for converting to/from
   // headers, paragraphs, pre, and address.  Those blocks
@@ -6413,7 +6413,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
 //                 where we can insert the tag.  Adjust inOutParent and
 //                 inOutOffset to pint to new location for tag.
 nsresult 
-nsHTMLEditRules::SplitAsNeeded(const nsAReadableString *aTag, 
+nsHTMLEditRules::SplitAsNeeded(const nsAString *aTag, 
                                nsCOMPtr<nsIDOMNode> *inOutParent,
                                PRInt32 *inOutOffset)
 {
@@ -7530,13 +7530,13 @@ nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
 #endif
 
 NS_IMETHODIMP 
-nsHTMLEditRules::WillCreateNode(const nsAReadableString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
+nsHTMLEditRules::WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
 {
   return NS_OK;  
 }
 
 NS_IMETHODIMP 
-nsHTMLEditRules::DidCreateNode(const nsAReadableString& aTag, 
+nsHTMLEditRules::DidCreateNode(const nsAString& aTag, 
                                nsIDOMNode *aNode, 
                                nsIDOMNode *aParent, 
                                PRInt32 aPosition, 
@@ -7641,7 +7641,7 @@ nsHTMLEditRules::DidJoinNodes(nsIDOMNode  *aLeftNode,
 
 
 NS_IMETHODIMP 
-nsHTMLEditRules::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAReadableString &aString)
+nsHTMLEditRules::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsAString &aString)
 {
   return NS_OK;  
 }
@@ -7650,7 +7650,7 @@ nsHTMLEditRules::WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset,
 NS_IMETHODIMP 
 nsHTMLEditRules::DidInsertText(nsIDOMCharacterData *aTextNode, 
                                   PRInt32 aOffset, 
-                                  const nsAReadableString &aString, 
+                                  const nsAString &aString, 
                                   nsresult aResult)
 {
   if (!mListenerEnabled) return NS_OK;
@@ -7733,7 +7733,7 @@ nsHTMLEditRules::DidDeleteSelection(nsISelection *aSelection)
 // element (here we have to remove the container and keep its
 // children). We break on tables and don't look at their children.
 nsresult
-nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, nsAReadableString & aAlignType, PRBool aChildrenOnly)
+nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignType, PRBool aChildrenOnly)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
 
@@ -7924,7 +7924,7 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode)
 }
 
 nsresult
-nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAReadableString * aAlignType, PRBool aContentsOnly)
+nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAString * aAlignType, PRBool aContentsOnly)
 {
   if (!aElement) return NS_ERROR_NULL_POINTER;
 

@@ -79,7 +79,7 @@ nsAOLCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsAOLCiter::GetCiteString(const nsAReadableString& aInString, nsAWritableString& aOutString)
+nsAOLCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString)
 {
   aOutString = NS_LITERAL_STRING("\n\n>> ");
   aOutString += aInString;
@@ -100,7 +100,7 @@ nsAOLCiter::GetCiteString(const nsAReadableString& aInString, nsAWritableString&
 }
 
 NS_IMETHODIMP
-nsAOLCiter::StripCites(const nsAReadableString& aInString, nsAWritableString& aOutString)
+nsAOLCiter::StripCites(const nsAString& aInString, nsAString& aOutString)
 {
   // Remove the beginning cites, if any:
   nsAutoString tOutputString;
@@ -124,10 +124,10 @@ nsAOLCiter::StripCites(const nsAReadableString& aInString, nsAWritableString& aO
 }
 
 NS_IMETHODIMP
-nsAOLCiter::Rewrap(const nsAReadableString& aInString,
+nsAOLCiter::Rewrap(const nsAString& aInString,
                    PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
                    PRBool aRespectNewlines,
-                   nsAWritableString& aOutString)
+                   nsAString& aOutString)
 {
   nsString citeString;
   return nsWrapUtils::Rewrap(aInString, aWrapCol, aFirstLineOffset,
