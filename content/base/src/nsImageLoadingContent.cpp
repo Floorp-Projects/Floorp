@@ -387,14 +387,15 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 // XXX This should be a protected method, not an interface method!!!
 NS_IMETHODIMP
 nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI) {
-  return ImageURIChanged(NS_ConvertUCS2toUTF8(aNewURI));
+  return ImageURIChanged(aNewURI, PR_TRUE);
 }
 
 /*
  * Non-interface methods
  */
 nsresult
-nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
+nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
+                                       PRBool aForce)
 {
   if (!mLoadingEnabled) {
     return NS_OK;
@@ -412,6 +413,18 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   nsCOMPtr<nsIURI> imageURI;
   rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aForce) {
+    nsCOMPtr<nsIURI> currentURI;
+    GetCurrentURI(getter_AddRefs(currentURI));
+    PRBool equal;
+    if (currentURI &&
+        NS_SUCCEEDED(currentURI->Equals(imageURI, &equal)) &&
+        equal) {
+      // Nothing to do here.
+      return NS_OK;
+    }
+  }
 
   // Remember the URL of this request, in case someone asks us for it later
   // But this only matters if we are affecting the current request
@@ -469,11 +482,11 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
     return NS_OK;
   }
 
-  // Only continue if we have a parent and a document -- that would mean we're
-  // a useful chunk of the content model and _may_ have a frame.  This should
-  // eliminate things like SetAttr calls during the parsing process, as well as
-  // things like setting src on |new Image()|-type things.
-  if (!thisContent->GetDocument() || !thisContent->GetParent()) {
+  // Only continue if we're in a document -- that would mean we're a useful
+  // chunk of the content model and _may_ have a frame.  This should eliminate
+  // things like SetAttr calls during the parsing process, as well as things
+  // like setting src on |new Image()|-type things.
+  if (!thisContent->IsInDoc()) {
     return NS_OK;
   }
 
@@ -560,7 +573,7 @@ nsImageLoadingContent::GetOurDocument()
 }
 
 nsresult
-nsImageLoadingContent::StringToURI(const nsACString& aSpec,
+nsImageLoadingContent::StringToURI(const nsAString& aSpec,
                                    nsIDocument* aDocument,
                                    nsIURI** aURI)
 {

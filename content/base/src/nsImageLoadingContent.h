@@ -73,15 +73,19 @@ protected:
    * ImageURIChanged is called by subclasses when the appropriate
    * attributes (eg 'src' for <img> tags) change.  The string passed
    * in is the new uri string; this consolidates the code for getting
-   * the charset and any other incidentals into this superclass.
+   * the charset, constructing URI objects, and any other incidentals
+   * into this superclass.   
    *
    * Note that this is different from the ImageURIChanged(AString)
-   * declared in nsIImageLoadingContent.idl -- that takes an
-   * nsAString, this takes an nsACString.
+   * declared in nsIImageLoadingContent.idl -- because it allows
+   * control over whether loading is to be forced.
    *
    * @param aNewURI the URI spec to be loaded (may be a relative URI)
+   * @param aForce If true, make sure to load the URI.  If false, only
+   *        load if the URI is different from the currently loaded URI.
    */
-  nsresult ImageURIChanged(const nsACString& aNewURI);
+  nsresult ImageURIChanged(const nsAString& aNewURI,
+                           PRBool aForce);
 
 private:
   /**
@@ -140,7 +144,7 @@ private:
    * @param aDocument the document we belong to
    * @return the URI we want to be loading
    */
-  nsresult StringToURI(const nsACString& aSpec, nsIDocument* aDocument,
+  nsresult StringToURI(const nsAString& aSpec, nsIDocument* aDocument,
                        nsIURI** aURI);
 
   /**

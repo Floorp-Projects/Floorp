@@ -447,7 +447,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   } else if (aNotify && aName == nsHTMLAtoms::src &&
              aValue && mType == NS_FORM_INPUT_IMAGE) {
     // Null value means the attr got unset; don't trigger on that
-    ImageURIChanged(*aValue);
+    ImageURIChanged(*aValue, PR_TRUE);
   } else if (aNotify && aName == nsHTMLAtoms::disabled) {
     SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
   }
@@ -535,7 +535,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       nsAutoString src;
       nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
       if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        ImageURIChanged(src);
+        ImageURIChanged(src, PR_FALSE);
       }
     }
   }
@@ -1690,7 +1690,7 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsAutoString uri;
     nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
     if (result == NS_CONTENT_ATTR_HAS_VALUE) {
-      ImageURIChanged(uri);
+      ImageURIChanged(uri, PR_FALSE);
     }
   }
 
