@@ -97,7 +97,10 @@ generateCompileStub(NativeCodeCache& inCache, const CacheEntry& inCacheEntry)
 	// Write out the dynamic compile stub
 	stub = inCache.acquireMemory(stubSize);
 	Uint8* where = (Uint8*)stub;
-	*where++ = 0x68; // pushl
+
+    // movl $inCacheEntry, %eax
+    *where++ = 0xb8;
+
 	writeLittleWordUnaligned(where, (uint32)(&inCacheEntry));
 	where += 4;
 	*where++ = 0xe9; // jmp

@@ -35,28 +35,31 @@
 
 GLOBAL_ENTRY_START(staticCompileStub)	
 
-		push	%eax					/* Save all volatiles */
-		push	%ebx
-		push	%ecx
-		push	%edx
-		push	20(%esp)				/* Push the second argument to compileAndBackPatchMethod (return address) */
-		push	20(%esp)				/* Push the first argument to compileAndBackPatchMethod (cacheEntry) */
+		push	%ebp					/* Make stack frame */
+		mov		%esp,%ebp
+
+		/* Even though ESI and EDI are non-volatile (callee-saved) registers, we need to
+		   preserve them here in case an exception is thrown.  The exception-handling
+		   code expects to encounter this specially-prepared stack "guard" frame when
+		   unwinding the stack.  See x86ExceptionHandler.cpp. */
+		push	%edi
+		push	%esi
+		push	%ebx					/* XXX - Why push EBX ?  It's caller-saved */
+
+		/* Call compileAndBackPatchMethod() with 2 args */
+		push	16(%esp)				/* Push the second argument to compileAndBackPatchMethod (return address) */
+		push	%eax				    /* Push the first argument to compileAndBackPatchMethod (cacheEntry) */
 		call	compileAndBackPatchMethod
-		pop		%edx					/* Remove passes arguments */
-		pop		%edx					/* Remove passes arguments */
-		mov		%eax, 16(%esp) 			/* Overwrite cacheEntry with function address */
-		pop		%edx					/* Restore volatiles */
-		pop		%ecx
-		pop		%ebx
-		pop		%eax
-		ret								/* Jump to function leaving the return address at the top of the stack	 */
+		
+		pop		%edx					/* Remove passed-in arguments to compileAndBackPatchMethod */
+		pop		%edx
+
+		mov		%ebp,%esp				/* Pop stack frame */
+		pop		%ebp
+		
+		jmp		*%eax					/* Jump to function leaving the return address at the top of the stack */
 
 GLOBAL_ENTRY_END(staticCompileStub)	
-
-GLOBAL_ENTRY_START(compileStub)	
-		push	0xefbeadde				/* This is a dummy immediate that will be filled in by	*/
-		jmp		staticCompileStub		/* generateCompileStub with the cacheEntry */
-GLOBAL_ENTRY_END(compileStub)	
 
 /*
  * 64bit Arithmetic Support Functions
