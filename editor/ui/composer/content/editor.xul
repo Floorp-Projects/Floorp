@@ -40,6 +40,7 @@
         onunload="EditorShutdown()"
         titlemodifier="&editorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
+        windowtype="composer:html"
         align="vertical"
         width="640" height="480">
 
