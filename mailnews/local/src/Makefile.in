@@ -29,13 +29,17 @@ CPPSRCS = \
 	nsMSGFolderDataSource.cpp \
 	nsPop3Protocol.cpp \
 	nsPop3URL.cpp \
-	nsPop3Sink.cpp \
+	nsPop3Sink.cpp 	\
+	nsMailboxProtocol.cpp 	\
+	nsMailboxUrl.cpp	\
 	$(NULL)
 
 EXPORTS= \
 	nsPop3Protocol.h \
 	nsPop3URL.h \
 	nsPop3Sink.h \
+	nsMailboxUrl.h \
+	nsMailboxProtocol.h \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
