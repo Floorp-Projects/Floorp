@@ -27,6 +27,8 @@ include $(topsrcdir)/config/rules.mk
 FILES = \
 	history.xul	\
 	history.css	\
+	history-test.xul	\
+	history-test.js		\
 	$(NULL)
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
