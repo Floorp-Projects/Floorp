@@ -148,7 +148,7 @@ static const nsModuleComponentInfo components[] =
     nsFilePickerConstructor },
   { "OS/2 Look And Feel",
     NS_LOOKANDFEEL_CID,
-    "@mozilla.org/widget/lookandfeel/os2;1",
+    "@mozilla.org/widget/lookandfeel;1",
     nsLookAndFeelConstructor },
   { "OS/2 Sound",
     NS_SOUND_CID,
@@ -168,7 +168,7 @@ static const nsModuleComponentInfo components[] =
     nsTransferableConstructor },
   { "OS/2 HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
-    "@mozilla.org/widget/htmlformatconverter/os2;1",
+    "@mozilla.org/widget/htmlformatconverter;1",
     nsHTMLFormatConverterConstructor }
 };
 
