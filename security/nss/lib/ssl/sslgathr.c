@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslgathr.c,v 1.3 2001/03/16 23:26:04 nelsonb%netscape.com Exp $
+ * $Id: sslgathr.c,v 1.4 2002/02/27 04:40:16 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "ssl.h"
@@ -47,7 +47,7 @@ static SECStatus ssl2_HandleV3HandshakeRecord(sslSocket *ss);
 ** first gathers the header (2 or 3 bytes long depending on the value of
 ** the most significant bit in the first byte) then gathers up the data
 ** for the record into gs->buf. This code handles non-blocking I/O
-** and is to be called multiple times until sec->recordLen != 0.
+** and is to be called multiple times until ss->sec.recordLen != 0.
 ** This function decrypts the gathered record in place, in gs_buf.
  *
  * Caller must hold RecvBufLock. 
@@ -83,7 +83,6 @@ static SECStatus ssl2_HandleV3HandshakeRecord(sslSocket *ss);
 int 
 ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 {
-    sslSecurityInfo *sec  = ss->sec;
     unsigned char *  bp;
     unsigned char *  pBuf;
     int              nb, err, rv;
@@ -104,7 +103,7 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	gs->readOffset    = 0;
     }
     if (gs->encrypted) {
-	PORT_Assert(sec != 0);
+	PORT_Assert(ss->sec.hash != 0);
     }
 
     pBuf = gs->buf.buf;
@@ -221,7 +220,7 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	    if (gs->encrypted) {
 		gs->state     = GS_MAC;
 		gs->recordLen = gs->count - gs->recordPadding
-		    - sec->hash->length;
+		                          - ss->sec.hash->length;
 	    } else {
 		gs->state     = GS_DATA;
 		gs->recordLen = gs->count;
@@ -250,11 +249,11 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	     * If this is a block cipher, this will detect records
 	     * that are not a multiple of the blocksize in length.
 	     */
-	    if (gs->count & (sec->blockSize - 1)) {
+	    if (gs->count & (ss->sec.blockSize - 1)) {
 		/* This is an error. Sender is misbehaving */
 		SSL_DBG(("%d: SSL[%d]: sender, count=%d blockSize=%d",
 			 SSL_GETPID(), ss->fd, gs->count,
-			 sec->blockSize));
+			 ss->sec.blockSize));
 		PORT_SetError(SSL_ERROR_BAD_BLOCK_PADDING);
 		rv = SECFailure;
 		goto spec_locked_done;
@@ -269,7 +268,7 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	    /* Decrypt the portion of data that we just recieved.
 	    ** Decrypt it in place.
 	    */
-	    rv = (*sec->dec)(sec->readcx, pBuf, &nout, gs->offset,
+	    rv = (*ss->sec.dec)(ss->sec.readcx, pBuf, &nout, gs->offset,
 			     pBuf, gs->offset);
 	    if (rv != SECSuccess) {
 		goto spec_locked_done;
@@ -280,9 +279,9 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	    **
 	    ** Prepare MAC by resetting it and feeding it the shared secret
 	    */
-	    macLen = sec->hash->length;
+	    macLen = ss->sec.hash->length;
 	    if (gs->offset >= macLen) {
-		uint32           sequenceNumber = sec->rcvSequence++;
+		uint32           sequenceNumber = ss->sec.rcvSequence++;
 		unsigned char    seq[4];
 
 		seq[0] = (unsigned char) (sequenceNumber >> 24);
@@ -290,23 +289,23 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 		seq[2] = (unsigned char) (sequenceNumber >> 8);
 		seq[3] = (unsigned char) (sequenceNumber);
 
-		(*sec->hash->begin)(sec->hashcx);
-		(*sec->hash->update)(sec->hashcx, sec->rcvSecret.data,
-				     sec->rcvSecret.len);
-		(*sec->hash->update)(sec->hashcx, pBuf + macLen, 
-				     gs->offset - macLen);
-		(*sec->hash->update)(sec->hashcx, seq, 4);
-		(*sec->hash->end)(sec->hashcx, mac, &macLen, macLen);
+		(*ss->sec.hash->begin)(ss->sec.hashcx);
+		(*ss->sec.hash->update)(ss->sec.hashcx, ss->sec.rcvSecret.data,
+				        ss->sec.rcvSecret.len);
+		(*ss->sec.hash->update)(ss->sec.hashcx, pBuf + macLen, 
+				        gs->offset - macLen);
+		(*ss->sec.hash->update)(ss->sec.hashcx, seq, 4);
+		(*ss->sec.hash->end)(ss->sec.hashcx, mac, &macLen, macLen);
 	    }
 
-	    PORT_Assert(macLen == sec->hash->length);
+	    PORT_Assert(macLen == ss->sec.hash->length);
 
 	    ssl_ReleaseSpecReadLock(ss);  /******************************/
 
 	    if (PORT_Memcmp(mac, pBuf, macLen) != 0) {
 		/* MAC's didn't match... */
 		SSL_DBG(("%d: SSL[%d]: mac check failed, seq=%d",
-			 SSL_GETPID(), ss->fd, sec->rcvSequence));
+			 SSL_GETPID(), ss->fd, ss->sec.rcvSequence));
 		PRINT_BUF(1, (ss, "computed mac:", mac, macLen));
 		PRINT_BUF(1, (ss, "received mac:", pBuf, macLen));
 		PORT_SetError(SSL_ERROR_BAD_MAC_READ);
@@ -358,7 +357,7 @@ spec_locked_done:
 	    gs->recordPadding = 0;
 	    gs->state         = GS_INIT;
 
-	    ++sec->rcvSequence;
+	    ++ss->sec.rcvSequence;
 
 	    PRINT_BUF(50, (ss, "recv clear record:", 
 	                   pBuf + gs->recordOffset, gs->recordLen));
@@ -374,7 +373,7 @@ spec_locked_done:
 ** first gathers the header (2 or 3 bytes long depending on the value of
 ** the most significant bit in the first byte) then gathers up the data
 ** for the record into the readBuf. This code handles non-blocking I/O
-** and is to be called multiple times until sec->recordLen != 0.
+** and is to be called multiple times until ss->sec.recordLen != 0.
  *
  * Returns +1 when it has gathered a complete SSLV2 record.
  * Returns  0 if it hits EOF.
@@ -388,7 +387,7 @@ spec_locked_done:
 int 
 ssl2_GatherRecord(sslSocket *ss, int flags)
 {
-    return ssl2_GatherData(ss, ss->gather, flags);
+    return ssl2_GatherData(ss, &ss->gs, flags);
 }
 
 /*
@@ -420,16 +419,16 @@ ssl2_StartGatherBytes(sslSocket *ss, sslGather *gs, unsigned int count)
 }
 
 /* Caller should hold RecvBufLock. */
-sslGather *
-ssl_NewGather(void)
+SECStatus
+ssl_InitGather(sslGather *gs)
 {
-    sslGather *gs;
+    SECStatus status;
 
-    gs = (sslGather*) PORT_ZAlloc(sizeof(sslGather));
-    if (gs) {
-	gs->state = GS_INIT;
-    }
-    return gs;
+    gs->state = GS_INIT;
+    gs->writeOffset = 0;
+    gs->readOffset  = 0;
+    status = sslBuffer_Grow(&gs->buf, 4096);
+    return status;
 }
 
 /* Caller must hold RecvBufLock. */
@@ -439,7 +438,6 @@ ssl_DestroyGather(sslGather *gs)
     if (gs) {	/* the PORT_*Free functions check for NULL pointers. */
 	PORT_ZFree(gs->buf.buf, gs->buf.space);
 	PORT_Free(gs->inbuf.buf);
-	PORT_Free(gs);
     }
 }
 
@@ -447,16 +445,15 @@ ssl_DestroyGather(sslGather *gs)
 static SECStatus
 ssl2_HandleV3HandshakeRecord(sslSocket *ss)
 {
-    sslGather *         gs      	= ss->gather;
     SECStatus           rv;
-    SSL3ProtocolVersion version 	= (gs->hdr[1] << 8) | gs->hdr[2];
+    SSL3ProtocolVersion version = (ss->gs.hdr[1] << 8) | ss->gs.hdr[2];
 
     PORT_Assert( ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ssl_Have1stHandshakeLock(ss) );
 
     /* We've read in 3 bytes, there are 2 more to go in an ssl3 header. */
-    gs->remainder         = 2;
-    gs->count             = 0;
+    ss->gs.remainder         = 2;
+    ss->gs.count             = 0;
 
     /* Clearing these handshake pointers ensures that 
      * ssl_Do1stHandshake won't call ssl2_HandleMessage when we return.
@@ -473,7 +470,7 @@ ssl2_HandleV3HandshakeRecord(sslSocket *ss)
 	return rv;
     }
 
-    ss->sec->send         = ssl3_SendApplicationData;
+    ss->sec.send         = ssl3_SendApplicationData;
 
     return SECSuccess;
 }

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.15 2002/02/22 04:23:25 wtc%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.16 2002/02/27 04:40:17 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -117,8 +117,6 @@ ssl_Do1stHandshake(sslSocket *ss)
     int rv        = SECSuccess;
     int loopCount = 0;
 
-    PORT_Assert(ss->gather != 0);
-
     do {
 	PORT_Assert( ssl_Have1stHandshakeLock(ss) );
 	PORT_Assert( !ssl_HaveRecvBufLock(ss)   );
@@ -136,23 +134,22 @@ ssl_Do1stHandshake(sslSocket *ss)
 	}
 	if (ss->handshake == 0) {
 	    ssl_GetRecvBufLock(ss);
-	    ss->gather->recordLen = 0;
+	    ss->gs.recordLen = 0;
 	    ssl_ReleaseRecvBufLock(ss);
 
 	    SSL_TRC(3, ("%d: SSL[%d]: handshake is completed",
 			SSL_GETPID(), ss->fd));
             /* call handshake callback for ssl v2 */
 	    /* for v3 this is done in ssl3_HandleFinished() */
-	    if ((ss->sec != NULL) &&               /* used SSL */
-	        (ss->handshakeCallback != NULL) && /* has callback */
+	    if ((ss->handshakeCallback != NULL) && /* has callback */
 		(!ss->firstHsDone) &&              /* only first time */
 		(ss->version < SSL_LIBRARY_VERSION_3_0)) {  /* not ssl3 */
 		ss->firstHsDone     = PR_TRUE;
 		(ss->handshakeCallback)(ss->fd, ss->handshakeCallbackData);
 	    }
 	    ss->firstHsDone         = PR_TRUE;
-	    ss->gather->writeOffset = 0;
-	    ss->gather->readOffset  = 0;
+	    ss->gs.writeOffset = 0;
+	    ss->gs.readOffset  = 0;
 	    break;
 	}
 	rv = (*ss->handshake)(ss);
@@ -201,7 +198,7 @@ SECStatus
 SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
 {
     sslSocket *ss;
-    SECStatus rv;
+    SECStatus status;
     PRNetAddr addr;
 
     ss = ssl_FindSocket(s);
@@ -233,21 +230,16 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     ss->securityHandshake   = 0;
 
     ssl_GetRecvBufLock(ss);
-    ss->gather->state       = GS_INIT;
-    ss->gather->writeOffset = 0;
-    ss->gather->readOffset  = 0;
+    status = ssl_InitGather(&ss->gs);
     ssl_ReleaseRecvBufLock(ss);
 
     /*
-    ** Blow away old security state and get a fresh setup. This way if
-    ** ssl was used to connect to the first point in communication, ssl
-    ** can be used for the next layer.
+    ** Blow away old security state and get a fresh setup.
     */
-    if (ss->sec) {
-	ssl_DestroySecurityInfo(ss->sec);
-	ss->sec = 0;
-    }
-    rv = ssl_CreateSecurityInfo(ss);
+    ssl_GetXmitBufLock(ss); 
+    ssl_ResetSecurityInfo(&ss->sec);
+    status = ssl_CreateSecurityInfo(ss);
+    ssl_ReleaseXmitBufLock(ss); 
 
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
@@ -258,7 +250,7 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     SSL_UNLOCK_WRITER(ss);
     SSL_UNLOCK_READER(ss);
 
-    return rv;
+    return status;
 }
 
 /* For SSLv2, does nothing but return an error.
@@ -328,7 +320,6 @@ SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
     ssl_Get1stHandshakeLock(ss);
     ssl_GetSSL3HandshakeLock(ss);
 
-    PORT_Assert(ss->sec);
     ss->handshakeCallback     = cb;
     ss->handshakeCallbackData = client_data;
 
@@ -500,16 +491,13 @@ ssl_SendSavedWriteData(sslSocket *ss, sslBuffer *buf, sslSendFunc send)
 static int 
 DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
 {
-    sslGather *      gs;
     int              rv;
     int              amount;
     int              available;
 
     ssl_GetRecvBufLock(ss);
-    PORT_Assert((ss->sec != 0) && (ss->gather != 0));
-    gs = ss->gather;
 
-    available = gs->writeOffset - gs->readOffset;
+    available = ss->gs.writeOffset - ss->gs.readOffset;
     if (available == 0) {
 	/* Get some more data */
 	if (ss->version >= SSL_LIBRARY_VERSION_3_0) {
@@ -541,7 +529,7 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
 	}
 
 	/* See if any clear data is now available */
-	available = gs->writeOffset - gs->readOffset;
+	available = ss->gs.writeOffset - ss->gs.readOffset;
 	if (available == 0) {
 	    /*
 	    ** No partial data is available. Force error code to
@@ -560,9 +548,9 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
 
     /* Dole out clear data to reader */
     amount = PR_MIN(len, available);
-    PORT_Memcpy(out, gs->buf.buf + gs->readOffset, amount);
+    PORT_Memcpy(out, ss->gs.buf.buf + ss->gs.readOffset, amount);
     if (!(flags & MSG_PEEK)) {
-	gs->readOffset += amount;
+	ss->gs.readOffset += amount;
     }
     rv = amount;
 
@@ -620,21 +608,10 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 {
     SECStatus rv;
     sslSocket *ss;
-    sslSecurityInfo *sec;
     sslServerCerts  *sc;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
-	return SECFailure;
-    }
-
-    if ((rv = ssl_CreateSecurityInfo(ss)) != SECSuccess) {
-	return rv;
-    }
-
-    sec = ss->sec;
-    if (sec == NULL) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
 
@@ -735,120 +712,72 @@ loser:
 SECStatus
 ssl_CreateSecurityInfo(sslSocket *ss)
 {
-    sslSecurityInfo * sec  = (sslSecurityInfo *)0;
-    sslGather *       gs   = (sslGather *      )0;
-    int               rv;
-
-    unsigned char     padbuf[MAX_BLOCK_CYPHER_SIZE];
-
-    if (ss->sec) {
-	return SECSuccess;
-    }
-
-    /* Force the global RNG to generate some random data that we never use */
-    PK11_GenerateRandom(padbuf, sizeof padbuf);
-
-    ss->sec = sec = (sslSecurityInfo*) PORT_ZAlloc(sizeof(sslSecurityInfo));
-    if (!sec) {
-	goto loser;
-    }
+    SECStatus status;
 
     /* initialize sslv2 socket to send data in the clear. */
     ssl2_UseClearSendFunc(ss);
 
-    sec->blockSize  = 1;
-    sec->blockShift = 0;
+    ss->sec.blockSize  = 1;
+    ss->sec.blockShift = 0;
 
-    ssl_GetRecvBufLock(ss);
-    if ((gs = ss->gather) == 0) {
-	ss->gather = gs = ssl_NewGather();
-	if (!gs) {
-	    goto loser;
-	}
-    }
+    ssl_GetXmitBufLock(ss); 
+    status = sslBuffer_Grow(&ss->sec.writeBuf, 4096);
+    ssl_ReleaseXmitBufLock(ss); 
 
-    rv = sslBuffer_Grow(&gs->buf, 4096);
-    if (rv) {
-	goto loser;
-    }
-    ssl_ReleaseRecvBufLock(ss);
-
-    ssl_GetXmitBufLock(ss);
-    rv = sslBuffer_Grow(&sec->writeBuf, 4096);
-    if (rv) {
-	goto loser;
-    }
-    ssl_ReleaseXmitBufLock(ss);
-
-    SSL_TRC(5, ("%d: SSL[%d]: security info created", SSL_GETPID(), ss->fd));
-    return SECSuccess;
-
-  loser:
-    if (sec) {
-	PORT_Free(sec);
-	ss->sec = sec = (sslSecurityInfo *)0;
-    }
-    if (gs) {
-    	ssl_DestroyGather(gs);
-	ss->gather = gs = (sslGather *)0;
-    }
-    return SECFailure;
+    return status;
 }
 
-/* XXX We should handle errors better in this function. */
-/* This function assumes that none of the pointers in ss need to be 
-** freed.
-*/
 SECStatus
 ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os)
 {
-    sslSecurityInfo *sec, *osec;
     int rv;
 
-    rv = ssl_CreateSecurityInfo(ss);
-    if (rv < 0) {
-	goto loser;
-    }
-    sec = ss->sec;
-    osec = os->sec;
+    ss->sec.send 		= os->sec.send;
+    ss->sec.isServer 		= os->sec.isServer;
+    ss->sec.keyBits    		= os->sec.keyBits;
+    ss->sec.secretKeyBits 	= os->sec.secretKeyBits;
 
-    sec->send 		= osec->send;
-    sec->isServer 	= osec->isServer;
-    sec->keyBits    	= osec->keyBits;
-    sec->secretKeyBits 	= osec->secretKeyBits;
+    ss->sec.peerCert   		= CERT_DupCertificate(os->sec.peerCert);
+    if (os->sec.peerCert && !ss->sec.peerCert)
+    	goto loser;
 
-    sec->peerCert   	= CERT_DupCertificate(osec->peerCert);
-
-    sec->cache      	= osec->cache;
-    sec->uncache    	= osec->uncache;
+    ss->sec.cache      		= os->sec.cache;
+    ss->sec.uncache    		= os->sec.uncache;
 
     /* we don't dup the connection info. */
 
-    sec->sendSequence 	= osec->sendSequence;
-    sec->rcvSequence 	= osec->rcvSequence;
+    ss->sec.sendSequence 	= os->sec.sendSequence;
+    ss->sec.rcvSequence 	= os->sec.rcvSequence;
 
-    if (osec->hash && osec->hashcx) {
-	sec->hash 	= osec->hash;
-	sec->hashcx 	= osec->hash->clone(osec->hashcx);
+    if (os->sec.hash && os->sec.hashcx) {
+	ss->sec.hash 		= os->sec.hash;
+	ss->sec.hashcx 		= os->sec.hash->clone(os->sec.hashcx);
+	if (os->sec.hashcx && !ss->sec.hashcx)
+	    goto loser;
     } else {
-	sec->hash 	= NULL;
-	sec->hashcx 	= NULL;
+	ss->sec.hash 		= NULL;
+	ss->sec.hashcx 		= NULL;
     }
 
-    SECITEM_CopyItem(0, &sec->sendSecret, &osec->sendSecret);
-    SECITEM_CopyItem(0, &sec->rcvSecret,  &osec->rcvSecret);
+    SECITEM_CopyItem(0, &ss->sec.sendSecret, &os->sec.sendSecret);
+    if (os->sec.sendSecret.data && !ss->sec.sendSecret.data)
+    	goto loser;
+    SECITEM_CopyItem(0, &ss->sec.rcvSecret,  &os->sec.rcvSecret);
+    if (os->sec.rcvSecret.data && !ss->sec.rcvSecret.data)
+    	goto loser;
 
-    PORT_Assert(osec->readcx  == 0);
-    sec->readcx     	= osec->readcx;	/* XXX wrong if readcx  != 0 */
-    PORT_Assert(osec->writecx == 0);
-    sec->writecx    	= osec->writecx; /* XXX wrong if writecx != 0 */
-    sec->destroy    	= 0;		 /* XXX wrong if either cx != 0*/
+    /* XXX following code is wrong if either cx != 0 */
+    PORT_Assert(os->sec.readcx  == 0);
+    PORT_Assert(os->sec.writecx == 0);
+    ss->sec.readcx     		= os->sec.readcx;
+    ss->sec.writecx    		= os->sec.writecx;
+    ss->sec.destroy    		= 0;	
 
-    sec->enc        	= osec->enc;
-    sec->dec        	= osec->dec;
+    ss->sec.enc        		= os->sec.enc;
+    ss->sec.dec        		= os->sec.dec;
 
-    sec->blockShift 	= osec->blockShift;
-    sec->blockSize  	= osec->blockSize;
+    ss->sec.blockShift 		= os->sec.blockShift;
+    ss->sec.blockSize  		= os->sec.blockSize;
 
     return SECSuccess;
 
@@ -856,57 +785,69 @@ loser:
     return SECFailure;
 }
 
+/* Reset sec back to its initial state.
+** Caller holds any relevant locks.
+*/
+void 
+ssl_ResetSecurityInfo(sslSecurityInfo *sec)
+{
+    /* Destroy MAC */
+    if (sec->hash && sec->hashcx) {
+	(*sec->hash->destroy)(sec->hashcx, PR_TRUE);
+	sec->hashcx = NULL;
+	sec->hash = NULL;
+    }
+    SECITEM_ZfreeItem(&sec->sendSecret, PR_FALSE);
+    SECITEM_ZfreeItem(&sec->rcvSecret, PR_FALSE);
+
+    /* Destroy ciphers */
+    if (sec->destroy) {
+	(*sec->destroy)(sec->readcx, PR_TRUE);
+	(*sec->destroy)(sec->writecx, PR_TRUE);
+	sec->readcx = NULL;
+	sec->writecx = NULL;
+    } else {
+	PORT_Assert(sec->readcx == 0);
+	PORT_Assert(sec->writecx == 0);
+    }
+    sec->readcx = 0;
+    sec->writecx = 0;
+
+    if (sec->localCert) {
+	CERT_DestroyCertificate(sec->localCert);
+	sec->localCert = NULL;
+    }
+    if (sec->peerCert) {
+	CERT_DestroyCertificate(sec->peerCert);
+	sec->peerCert = NULL;
+    }
+    if (sec->peerKey) {
+	SECKEY_DestroyPublicKey(sec->peerKey);
+	sec->peerKey = NULL;
+    }
+
+    /* cleanup the ci */
+    if (sec->ci.sid != NULL) {
+	ssl_FreeSID(sec->ci.sid);
+    }
+    PORT_ZFree(sec->ci.sendBuf.buf, sec->ci.sendBuf.space);
+    memset(&sec->ci, 0, sizeof sec->ci);
+}
+
 /*
 ** Called from SSL_ResetHandshake (above), and 
 **        from ssl_FreeSocket     in sslsock.c
+** Caller should hold relevant locks (e.g. XmitBufLock)
 */
 void 
 ssl_DestroySecurityInfo(sslSecurityInfo *sec)
 {
-    if (sec != 0) {
-	/* Destroy MAC */
-	if (sec->hash && sec->hashcx) {
-	    (*sec->hash->destroy)(sec->hashcx, PR_TRUE);
-	    sec->hashcx = 0;
-	}
-	SECITEM_ZfreeItem(&sec->sendSecret, PR_FALSE);
-	SECITEM_ZfreeItem(&sec->rcvSecret, PR_FALSE);
+    ssl_ResetSecurityInfo(sec);
 
-	/* Destroy ciphers */
-	if (sec->destroy) {
-	    (*sec->destroy)(sec->readcx, PR_TRUE);
-	    (*sec->destroy)(sec->writecx, PR_TRUE);
-	} else {
-	    PORT_Assert(sec->readcx == 0);
-	    PORT_Assert(sec->writecx == 0);
-	}
-	sec->readcx = 0;
-	sec->writecx = 0;
+    PORT_ZFree(sec->writeBuf.buf, sec->writeBuf.space);
+    sec->writeBuf.buf = 0;
 
-	/* etc. */
-	PORT_ZFree(sec->writeBuf.buf, sec->writeBuf.space);
-	sec->writeBuf.buf = 0;
-
-	if (sec->localCert) {
-	    CERT_DestroyCertificate(sec->localCert);
-	    sec->localCert = NULL;
-	}
-	if (sec->peerCert) {
-	    CERT_DestroyCertificate(sec->peerCert);
-	    sec->peerCert = NULL;
-	}
-	if (sec->peerKey) {
-	    SECKEY_DestroyPublicKey(sec->peerKey);
-	    sec->peerKey = NULL;
-	}
-
-	PORT_ZFree(sec->ci.sendBuf.buf, sec->ci.sendBuf.space);
-	if (sec->ci.sid != NULL) {
-	    ssl_FreeSID(sec->ci.sid);
-	}
-
-	PORT_ZFree(sec, sizeof *sec);
-    }
+    memset(sec, 0, sizeof *sec);
 }
 
 /************************************************************************/
@@ -916,8 +857,6 @@ ssl_SecureConnect(sslSocket *ss, const PRNetAddr *sa)
 {
     PRFileDesc *osfd = ss->fd->lower;
     int rv;
-
-    PORT_Assert(ss->sec != 0);
 
     if ( ss->handshakeAsServer ) {
 	ss->securityHandshake = ssl2_BeginServerHandshake;
@@ -1007,8 +946,7 @@ ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
     sslSecurityInfo *sec;
     int              rv   = 0;
 
-    PORT_Assert(ss->sec != 0);
-    sec = ss->sec;
+    sec = &ss->sec;
 
     if (ss->shutdownHow & ssl_SHUTDOWN_RCV) {
 	PORT_SetError(PR_SOCKET_SHUTDOWN_ERROR);
@@ -1063,11 +1001,7 @@ ssl_SecureRead(sslSocket *ss, unsigned char *buf, int len)
 int
 ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 {
-    sslSecurityInfo *sec;
     int              rv		= 0;
-
-    PORT_Assert(ss->sec != 0);
-    sec = ss->sec;
 
     if (ss->shutdownHow & ssl_SHUTDOWN_SEND) {
 	PORT_SetError(PR_SOCKET_SHUTDOWN_ERROR);
@@ -1124,7 +1058,7 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
      *  ssl3_SendApplicationData
      */
     ssl_GetXmitBufLock(ss);
-    rv = (*sec->send)(ss, buf, len, flags);
+    rv = (*ss->sec.send)(ss, buf, len, flags);
     ssl_ReleaseXmitBufLock(ss);
     ss->writerThread = NULL;
     return rv;
@@ -1149,9 +1083,6 @@ SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, void *arg)
 	return SECFailure;
     }
 
-    if ((rv = ssl_CreateSecurityInfo(ss)) != 0) {
-	return rv;
-    }
     ss->handleBadCert = f;
     ss->badCertArg = arg;
 
@@ -1208,13 +1139,9 @@ SSL_DataPending(PRFileDesc *fd)
 	ssl_Get1stHandshakeLock(ss);
 	ssl_GetSSL3HandshakeLock(ss);
 
-	/* Create ss->sec if it doesn't already exist. */
-	rv = ssl_CreateSecurityInfo(ss);
-	if (rv == SECSuccess) {
-	    ssl_GetRecvBufLock(ss);
-	    rv = ss->gather->writeOffset - ss->gather->readOffset;
-	    ssl_ReleaseRecvBufLock(ss);
-	}
+	ssl_GetRecvBufLock(ss);
+	rv = ss->gs.writeOffset - ss->gs.readOffset;
+	ssl_ReleaseRecvBufLock(ss);
 
 	ssl_ReleaseSSL3HandshakeLock(ss);
 	ssl_Release1stHandshakeLock(ss);
@@ -1233,8 +1160,8 @@ SSL_InvalidateSession(PRFileDesc *fd)
 	ssl_Get1stHandshakeLock(ss);
 	ssl_GetSSL3HandshakeLock(ss);
 
-	if (ss->sec && ss->sec->ci.sid) {
-	    ss->sec->uncache(ss->sec->ci.sid);
+	if (ss->sec.ci.sid) {
+	    ss->sec.uncache(ss->sec.ci.sid);
 	    rv = SECSuccess;
 	}
 
@@ -1249,24 +1176,25 @@ SSL_GetSessionID(PRFileDesc *fd)
 {
     sslSocket *    ss;
     SECItem *      item = NULL;
-    sslSessionID * sid;
 
     ss = ssl_FindSocket(fd);
     if (ss) {
 	ssl_Get1stHandshakeLock(ss);
 	ssl_GetSSL3HandshakeLock(ss);
 
-	if (ss->useSecurity && ss->firstHsDone && ss->sec && ss->sec->ci.sid) {
-	    sid = ss->sec->ci.sid;
+	if (ss->useSecurity && ss->firstHsDone && ss->sec.ci.sid) {
 	    item = (SECItem *)PORT_Alloc(sizeof(SECItem));
-	    if (sid->version < SSL_LIBRARY_VERSION_3_0) {
-		item->len = SSL2_SESSIONID_BYTES;
-		item->data = (unsigned char*)PORT_Alloc(item->len);
-		PORT_Memcpy(item->data, sid->u.ssl2.sessionID, item->len);
-	    } else {
-		item->len = sid->u.ssl3.sessionIDLength;
-		item->data = (unsigned char*)PORT_Alloc(item->len);
-		PORT_Memcpy(item->data, sid->u.ssl3.sessionID, item->len);
+	    if (item) {
+		sslSessionID * sid = ss->sec.ci.sid;
+		if (sid->version < SSL_LIBRARY_VERSION_3_0) {
+		    item->len = SSL2_SESSIONID_BYTES;
+		    item->data = (unsigned char*)PORT_Alloc(item->len);
+		    PORT_Memcpy(item->data, sid->u.ssl2.sessionID, item->len);
+		} else {
+		    item->len = sid->u.ssl3.sessionIDLength;
+		    item->data = (unsigned char*)PORT_Alloc(item->len);
+		    PORT_Memcpy(item->data, sid->u.ssl3.sessionID, item->len);
+		}
 	    }
 	}
 
