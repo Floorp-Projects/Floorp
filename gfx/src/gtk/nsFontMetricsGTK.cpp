@@ -39,7 +39,6 @@
 #define REALLY_NOISY_FONTS
 #endif
 
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsGTK::nsFontMetricsGTK()
 {
@@ -96,7 +95,7 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
 
 }
 
-NS_IMPL_ISUPPORTS(nsFontMetricsGTK, kIFontMetricsIID)
+NS_IMPL_ISUPPORTS1(nsFontMetricsGTK, nsIFontMetrics)
 
 #ifdef FONT_SWITCHING
 

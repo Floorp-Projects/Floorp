@@ -903,6 +903,14 @@ NS_IMETHODIMP nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, n
   return NS_OK;
 }
 
+/**
+ * Fills in |aRegion| with a copy of the current clip region.
+ */
+NS_IMETHODIMP nsRenderingContextWin::CopyClipRegion(nsIRegion &aRegion)
+{
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
 {
   nsresult  rv = NS_OK;

@@ -203,6 +203,14 @@ public:
   NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty) = 0;
 
   /**
+   * Gets a copy of the current clipping region for the RenderingContext
+   * @param aRegion inout parameter representing the clip region.
+   *        if SetClipRegion() is called, do not assume that GetClipRegion()
+   *        will return the same object.
+   */
+  NS_IMETHOD CopyClipRegion(nsIRegion &aRegion) = 0;
+
+  /**
    * Gets the current clipping region for the RenderingContext
    * @param aRegion out parameter representing the clip region.
    *        if SetClipRegion() is called, do not assume that GetClipRegion()
