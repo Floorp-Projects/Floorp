@@ -1809,14 +1809,29 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv[(intn)(argc-1)] = STRING_TO_JSVAL(str);
     }
 
-    if ((fp = cx->fp) != NULL && (fp = fp->down) != NULL && fp->script) {
-        filename = fp->script->filename;
-        lineno = js_PCToLineNumber(fp->script, fp->pc);
-        principals = fp->script->principals;
-    } else {
-        filename = NULL;
-        lineno = 0;
-        principals = NULL;
+    /*
+     * Function is static and not called directly by other functions in this
+     * file, therefore it is callable only as a native function by js_Invoke.
+     * Find the scripted caller, possibly skipping other native frames such as
+     * are built for Function.prototype.call or .apply activations that invoke
+     * Function indirectly from a script.
+     */
+    fp = cx->fp;
+    JS_ASSERT(!fp->script && fp->fun && fp->fun->native == Function);
+    for (;;) {
+        fp = fp->down;
+        if (!fp) {
+            filename = NULL;
+            lineno = 0;
+            principals = NULL;
+            break;
+        }
+        if (fp->script) {
+            filename = fp->script->filename;
+            lineno = js_PCToLineNumber(fp->script, fp->pc);
+            principals = fp->script->principals;
+            break;
+        }
     }
 
     mark = JS_ARENA_MARK(&cx->tempPool);
@@ -1863,7 +1878,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
                       0);
     if (!atom)
         goto bad;
-    fun = js_NewFunction(cx, proto, NULL, 0, 0, obj, atom);
+    fun = js_NewFunction(cx, proto, NULL, 0, 0, obj, NULL);
     if (!fun)
         goto bad;
     fun->script = js_NewScript(cx, 0);
