@@ -301,9 +301,13 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     if (isContextClick)
     {
       // Set selection to node clicked on if NOT within an existing selection
-      //   and not the entire body or table element
+      //   and not the entire body or table-related elements
       if (element && !NodeIsInSelection && 
           !ElementIsType(element, NS_LITERAL_STRING("body")) &&
+          !ElementIsType(element, NS_LITERAL_STRING("td")) &&
+          !ElementIsType(element, NS_LITERAL_STRING("th")) &&
+          !ElementIsType(element, NS_LITERAL_STRING("caption")) &&
+          !ElementIsType(element, NS_LITERAL_STRING("tr")) &&
           !ElementIsType(element, NS_LITERAL_STRING("table")))
       {
         mEditorShell->SelectElement(element);
