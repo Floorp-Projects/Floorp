@@ -228,11 +228,9 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsString2 &resultReference)
 {
 	nsresult err = NS_OK;
-	nsString	allReferences;
+	nsAutoString	allReferences (eOneByte);
 	m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_referencesColumnToken, allReferences);
-	char *cStringRefs = allReferences.ToNewCString();
-	const char *startNextRef = cStringRefs;
-	nsAutoCString reference(allReferences);
+	const char *startNextRef = allReferences.GetBuffer();
 	PRInt32 refIndex;
 	for (refIndex = 0; refIndex <= refNum && startNextRef; refIndex++)
 	{
@@ -244,7 +242,6 @@ NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsString2 &resultRefe
 	if (refIndex != refNum)
 		resultReference.Truncate(0);
 
-	delete [] cStringRefs;
 	return err;
 }
 
@@ -298,7 +295,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 	nsresult ret;
 	const char *curName = names;
 	const char *curAddress = addresses;
-	nsString	allRecipients;
+	nsAutoString	allRecipients (eOneByte);
 
 	for (PRUint32 i = 0; i < numAddresses; i++)
 	{
@@ -323,7 +320,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 		curName += strlen(curName) + 1;
 		curAddress += strlen(curAddress) + 1;
 	}
-	ret = SetRecipients((const char *) nsAutoCString(allRecipients), PR_TRUE);
+	ret = SetRecipients(allRecipients.GetBuffer(), PR_TRUE);
 	return ret;
 }
 

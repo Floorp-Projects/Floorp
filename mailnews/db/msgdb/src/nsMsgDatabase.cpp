@@ -2260,12 +2260,12 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	}
 #ifdef SUBJ_THREADING
 	// try subject threading if we couldn't find a reference and the subject starts with Re:
-	nsString subject;
+	nsAutoString subject (eOneByte);
 
 	newHdr->GetSubject(subject);
 	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && thread == NULL)
 	{
-		thread = getter_AddRefs(GetThreadForSubject(nsAutoCString(subject)));
+		thread = getter_AddRefs(GetThreadForSubject(subject.GetBuffer()));
 		if(thread)
 		{
 			thread->GetThreadKey(&threadId);
