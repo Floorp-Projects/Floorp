@@ -106,16 +106,20 @@ function onOK()
 }
 
 function Startup()
-{  
-  if (top.opener) {
-    var browser = top.opener.document.getElementById("content");
-    var l = browser.mPanelContainer.childNodes.length;
+{
+  var useButton = document.getElementById("browserUseCurrent");
+  
+  try {
+    var browser = top.opener.document.getElementById("content");  
 
-    if (l > 1) {
-      var useButton = document.getElementById("browserUseCurrent");
+    var l = browser.mPanelContainer.childNodes.length;
+    if (l > 1)
       useButton.label = useButton.getAttribute("label2");
-    }
+  } catch (e) { 
+    // prefwindow wasn't opened from a browser window, so no current page
+    useButton.disabled = true;
   }
+    
   parent.hPrefWindow.registerOKCallbackFunc(onOK);
 }
       
