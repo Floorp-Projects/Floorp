@@ -45,7 +45,7 @@
        panel and you can damn well click the widgets! -->
 
   <groupbox orient="vertical">
-    <label value="&debugNetworking.label;"/>
+    <caption label="&debugNetworking.label;"/>
     <vbox align="start">
       <checkbox id="browserEnableKeepAlive" label="&debugEnableKeepAlive.label;"
                 pref="true" preftype="bool" prefstring="network.http.keep-alive"
@@ -68,7 +68,7 @@
   </groupbox>
 
   <groupbox orient="vertical">
-    <label value="&debugCache.label;"/>
+    <caption label="&debugCache.label;"/>
     <vbox align="start">
     <checkbox id="nglayoutDebugDisableXULCache" label="&debugDisableXULCache.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"

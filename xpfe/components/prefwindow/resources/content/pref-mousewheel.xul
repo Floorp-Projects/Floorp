@@ -95,7 +95,7 @@
     <separator class="thin"/>
   
     <groupbox orient="vertical">
-      <label>
+      <caption>
         <hbox> 
           <menulist id="mouseWheelMode" oncommand="switchPage(this);"
             pref="true" preftype="bool" prefstring="pref.mousewheel.disable_button.modifier" prefattribute="disabled">
@@ -107,7 +107,7 @@
             </menupopup>
           </menulist>
         </hbox>
-      </label>
+      </caption>
 
 
     <deck id="modifierDeck" class="indent">

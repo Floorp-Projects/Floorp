@@ -56,7 +56,7 @@
 
       <!-- TABLE PANEL -->
       <vbox id="TablePanel">
-        <groupbox><label value="&size.label;"/>
+        <groupbox><caption label="&size.label;"/>
           <grid>
             <columns><column/><column/></columns>
             <rows>
@@ -82,7 +82,7 @@
             </rows>
           </grid>
         </groupbox>
-        <groupbox orient="vertical"><label align="left" value="&tableBorderSpacing.label;"/>
+        <groupbox orient="vertical"><caption align="left" label="&tableBorderSpacing.label;"/>
         <grid>
           <columns><column/><column/><column/></columns>
           <rows>
@@ -150,7 +150,7 @@
       <!-- CELL PANEL -->
       <vbox id="CellPanel">
         <groupbox autostretch="never" valign="middle">
-          <label value="&cellSelection.label;"/>
+          <caption label="&cellSelection.label;"/>
           <vbox>
             <menulist id="SelectionList" oncommand="ChangeSelection(event.target.value)" flex="1">
               <menupopup>
@@ -173,7 +173,7 @@
         </groupbox>
         <hbox autostretch="never">
           <!-- cell size groupbox -->
-          <groupbox><label align="left" value="&size.label;"/>
+          <groupbox><caption align="left" label="&size.label;"/>
             <grid>
               <columns><column/><column/><column flex="1"/></columns>
               <rows>
@@ -194,7 +194,7 @@
             <spring class="bigspacer"/>
           </groupbox>
           <!-- Alignment -->
-          <groupbox><label value="&cellContentAlignment.label;"/>
+          <groupbox><caption label="&cellContentAlignment.label;"/>
             <grid>
               <columns><column/><column flex="1"/><column/></columns>
               <rows>

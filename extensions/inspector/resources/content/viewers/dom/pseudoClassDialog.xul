@@ -25,7 +25,7 @@
   <keyset id="dialogKeys"/>
 
   <groupbox style="width: 25em;">
-    <label value="&pseudoClasses.title;"/>
+    <caption label="&pseudoClasses.title;"/>
     <vbox>
       <checkbox id="cbxStateHover" label="&stateHover.label;"/>
       <checkbox id="cbxStateActive" label="&stateActive.label;"/>

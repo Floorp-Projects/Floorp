@@ -47,7 +47,7 @@
   <button label="browse..." oncommand="browse_base_dir()" />
 </hbox>
 <hbox>
-<groupbox orient="horizontal"><label value="search" />
+<groupbox orient="horizontal"><caption label="search" />
   <button label="Search for " oncommand="select()"/>
   <textbox style="width: 10em;" id="search-name" persist="value" /><text value=" in " />
   <menulist id="search-field" persist="data">
@@ -59,7 +59,7 @@
   </menulist>
 </groupbox>
 <spring flex="1" /></hbox>
-<hbox><groupbox orient="horizontal"><label value="stats" />
+<hbox><groupbox orient="horizontal"><caption label="stats" />
   <text value="tests run: "/><text id="tests_run" value="0" />
   <text value="  tests passed: "/><text id="tests_passed" value="0"/>
   <text value="  tests failed: "/><text id="tests_failed" value="0"/>

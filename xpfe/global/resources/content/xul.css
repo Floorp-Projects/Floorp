@@ -133,19 +133,22 @@ radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
 }
 
-/******** titledbox (moving solely to groupbox later) *******/
+/******** groupbox *********/
 
-titledbox,
 groupbox {
   -moz-binding: url("chrome://global/content/bindings/titledbox.xml#groupbox");
   display: -moz-groupbox;
+}
+
+caption {
+  -moz-binding: url("chrome://global/content/bindings/titledbox.xml#caption");
 }
 
 .groupbox-body {
   -moz-box-pack: inherit;
   -moz-box-align: inherit;
 }
-  
+
 /******* toolbar *******/
 
 toolbox { 

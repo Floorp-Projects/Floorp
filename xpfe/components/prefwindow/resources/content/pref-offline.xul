@@ -63,7 +63,7 @@
 <hbox class="box-smallheader" id="OfflineHeader" title="&boxHeader;"/>
 
 <groupbox orient="vertical" class="small-margin">
-    <label value="&rHeader;"/>
+    <caption label="&rHeader;"/>
 
   <text value="&textStart;"/>
     <radiogroup id="offlineStartupstate" orient="vertical" align="start"
@@ -96,7 +96,7 @@
 </groupbox>
 
 <groupbox orient="vertical">
-    <label value="&Diskspace;"/>	    
+    <caption label="&Diskspace;"/>	    
     <hbox align="center">
         <checkbox id="offlineCompactFolder" label="&offlineCompact.label;" accesskey="&offlineCompact.accesskey;"
             pref="true" preftype="bool" prefstring="mail.prompt_purge_threshhold" prefattribute="checked"

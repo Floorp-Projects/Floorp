@@ -43,7 +43,7 @@
   <broadcaster id="args" value=""/>
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <groupbox orient="vertical" flex="1"><label value="&ListType.label;"/>
+  <groupbox orient="vertical" flex="1"><caption label="&ListType.label;"/>
     <menulist id="ListType" oncommand="SelectListType()">
       <menupopup>
         <menuitem label="&none.value;"/>
@@ -62,7 +62,7 @@
   <!-- message text and list items are set in JS 
        text value should be identical to string with id=BulletStyle in editor.properties 
   -->
-  <groupbox orient="vertical" flex="1"><label id="BulletStyleLabel" value="&bulletStyle.label;"/>
+  <groupbox orient="vertical" flex="1"><caption id="BulletStyleLabel" label="&bulletStyle.label;"/>
     <menulist class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
     <spring class="spacer"/>
     <hbox>

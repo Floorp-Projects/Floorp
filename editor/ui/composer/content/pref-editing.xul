@@ -56,7 +56,7 @@
   </vbox>
   <spring class="smallspacer"/>
   <groupbox orient="vertical" autostretch="never">
-    <label value="&pageColorHeader;"/> 
+    <caption label="&pageColorHeader;"/> 
     <radiogroup id="useCustomColors" orient="vertical" autostretch="never"  
                 pref="true" preftype="bool" prefstring="editor.use_custom_colors"
                 prefattribute="value">

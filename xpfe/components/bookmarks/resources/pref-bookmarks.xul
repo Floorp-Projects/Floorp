@@ -87,7 +87,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
   
   <groupbox orient="vertical">
-    <label value="&filingBookmarks.label;"/>
+    <caption label="&filingBookmarks.label;"/>
     <html flex="1">&autoFile.label;</html>
     <hbox align="center">
       <checkbox id="enableAutoFile" label="&enableAutoFile.label;"
@@ -106,7 +106,7 @@
   </groupbox>
 
   <groupbox>
-    <label value="&extendedDataViews.label;"/>
+    <caption label="&extendedDataViews.label;"/>
     <vbox align="start">
       <html>&extendedDataExplanation.label;</html>
       <checkbox id="showExtendedData" label="&showExtendedData.label;"

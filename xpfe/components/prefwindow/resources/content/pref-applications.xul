@@ -42,7 +42,7 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <groupbox orient="vertical" flex="1">
-    <label value="&descript;"/>
+    <caption label="&descript;"/>
     <text class="label" value="&fileTypes.label;"/>
     <hbox flex="1">
       <vbox flex="1">
@@ -123,7 +123,7 @@
     </hbox>
   </groupbox>
   <groupbox flex="1">
-    <label value="&fileOpening.label;"/>
+    <caption label="&fileOpening.label;"/>
     <html flex="1">&resetText.label;</html>
     <separator orient="vertical"/>
     <hbox align="center">

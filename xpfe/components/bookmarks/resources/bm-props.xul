@@ -105,7 +105,7 @@
         <hbox class="box-padded">
           <spring flex="1"/>
           <groupbox orient="vertical">
-            <label class="label" value="&checkforupdates.legend.label;"/>
+            <caption class="label" label="&checkforupdates.legend.label;"/>
             <grid flex="1">
               <columns>
                 <column/>
@@ -224,7 +224,7 @@
         <hbox class="box-padded">
           <spring flex="1"/>
           <groupbox>
-            <label value="&notifications.legend.label;" />
+            <caption label="&notifications.legend.label;" />
             <vbox align="start">
               <checkbox id="bookmarkIcon" label="&notification.icon.label;" />
               <checkbox id="showAlert" label="&notification.alert.label;" />

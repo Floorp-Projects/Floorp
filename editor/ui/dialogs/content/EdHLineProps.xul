@@ -48,7 +48,7 @@
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
   
-  <groupbox orient="vertical"><label value="&dimensionsBox.label;"/>
+  <groupbox orient="vertical"><caption label="&dimensionsBox.label;"/>
     <grid>
       <columns><column/><column/><column /></columns>
       <rows>
@@ -67,7 +67,7 @@
     </grid>        
     <checkbox id="3dShading" label="&threeDShading.label;" />
   </groupbox>
-  <groupbox><label align="left" value="&alignmentBox.label;"/>
+  <groupbox><caption align="left" label="&alignmentBox.label;"/>
     <radiogroup id="alignmentGroup" orient="horizontal">
       <spring class="spacer"/>
       <radio group="alignmentGroup" id="leftAlign" label="&leftRadio.value;" />

@@ -48,7 +48,7 @@
 
   <!-- Event Debugging -->  
   <groupbox orient="vertical">
-    <label value="&debugEventDebugging.label;"/>
+    <caption label="&debugEventDebugging.label;"/>
     <vbox align="start">
       <checkbox id="nglayoutDebugPaintFlashing" label="&debugPaintFlashing.label;"
                 pref="true" preftype="bool" prefstring="nglayout.debug.paint_flashing"
@@ -73,7 +73,7 @@
 
   <!-- Reflow events -->
   <groupbox orient="vertical">
-    <label value="&debugReflowEvents.label;"/>
+    <caption label="&debugReflowEvents.label;"/>
     <vbox align="start">
       <checkbox id="layoutReflowShowFrameCounts" label="&debugReflowShowFrameCounts.label;"
                 pref="true" preftype="bool" prefstring="layout.reflow.showframecounts"

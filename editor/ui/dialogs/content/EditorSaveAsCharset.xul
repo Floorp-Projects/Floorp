@@ -48,14 +48,14 @@
     <broadcaster id="args" value=""/>
     <keyset id="dialogKeys"/>
 
-    <groupbox orient="vertical"><label align="left" value="&documentTitleTitle.label;"/>
+    <groupbox orient="vertical"><caption align="left" label="&documentTitleTitle.label;"/>
         <!-- Text labels filled in from editor.properties -->
         <text id="EnterTitleLabel" class="label"/> 
         <textbox id="TitleInput" oninput="TitleChanged();"/>
         <html id="TitleHelp" class="label wrap" style="width:1em" />
     </groupbox>
 
-    <groupbox orient="vertical" flex="1"><label value="&documentCharsetTitle.label;"/>
+    <groupbox orient="vertical" flex="1"><caption label="&documentCharsetTitle.label;"/>
         <text class="label" value="&documentCharsetDesc.label;"/>
         <tree class="list" id="CharsetTree" rows="7" flex="1" onselect="SelectCharset();">
             <treecolgroup><treecol flex="1"/></treecolgroup>

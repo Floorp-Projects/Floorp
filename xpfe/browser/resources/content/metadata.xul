@@ -62,7 +62,7 @@
   <text id="no-properties" value="&no-properties.label;"/>
   
   <groupbox id="link-sec">
-    <label><text value="&link-sec.label;"/></label>
+    <caption><text value="&link-sec.label;"/></caption>
     <grid>
       <columns>
         <column/>
@@ -101,7 +101,7 @@
     </grid>
   </groupbox>
   <groupbox id="image-sec">
-    <label><text value="&image-sec.label;"/></label>
+    <caption><text value="&image-sec.label;"/></caption>
     <grid>
       <columns>
         <column/>
@@ -142,7 +142,7 @@
     </grid>
   </groupbox>
   <groupbox id="insdel-sec">
-    <label><text value="&insdel-sec.label;"/></label>
+    <caption><text value="&insdel-sec.label;"/></caption>
     <grid>
       <columns>
         <column/>
@@ -165,7 +165,7 @@
     </grid>
   </groupbox>
   <groupbox id="quote-sec">
-    <label><text value="&quote-sec.label;"/></label>
+    <caption><text value="&quote-sec.label;"/></caption>
     <grid>
       <columns>
         <column/>
@@ -184,7 +184,7 @@
     </grid>
   </groupbox>
   <groupbox id="misc-sec">
-    <label><text value="&misc-sec.label;"/></label>
+    <caption><text value="&misc-sec.label;"/></caption>
     <grid>
       <columns>
         <column/>

@@ -48,7 +48,7 @@
   <popupset id="aTooltipSet" />
 
   <groupbox orient="vertical" autostretch="never">
-    <label value="&pageColors.label;"/>
+    <caption label="&pageColors.label;"/>
     <radiogroup id="pageColorGroup" orient="vertical" autostretch="never">
       <radio group="pageColorGroup" id="DefaultColorsRadio" label="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
         tooltip="aTooltip"     tooltiptext="&defaultColorsRadio.tooltip;" />

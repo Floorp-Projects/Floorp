@@ -45,7 +45,7 @@
   <keyset id="dialogKeys"/>
   <broadcaster id="args" value=""/>
 
-  <groupbox orient="vertical"><label value="&category.label;"/>
+  <groupbox orient="vertical"><caption label="&category.label;"/>
     <radiogroup id="CatGrp" orient="vertical" persist="category letter_index char_index">
       <radio group="CatGrp" id="AccentUpper" label="&accentUpper.label;"   oncommand="ChangeCategory(this.id)"/>
       <radio group="CatGrp" id="AccentLower" label="&accentLower.label;"   oncommand="ChangeCategory(this.id)"/>
