@@ -236,7 +236,8 @@ NS_METHOD nsFrame::DeleteFrame()
     nsIPresContext* cx = vm->GetPresContext();
     // XXX Is this a really good ordering for the releases? MMP
     NS_RELEASE(vm);
-    NS_RELEASE(view);
+    if (view != mView)    //if this is the view that we own, let's not release it...
+      NS_RELEASE(view);
     cx->StopLoadImage(this);
     NS_RELEASE(cx);
   }
