@@ -123,7 +123,8 @@ private:
 class PluginViewerImpl : public nsIContentViewer
 {
 public:
-  PluginViewerImpl(const char* aCommand, nsIStreamListener** aDocListener);
+  PluginViewerImpl(const char* aCommand);
+  nsresult Init(nsIStreamListener** aDocListener);
     
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -196,21 +197,34 @@ NS_NewPluginContentViewer(const char* aCommand,
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aDocViewer)
 {
-  PluginViewerImpl* it = new PluginViewerImpl(aCommand, aDocListener);
+  PluginViewerImpl* it = new PluginViewerImpl(aCommand);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = it->Init(aDocListener);
+  if (NS_FAILED(rv)) {
+    delete it;
+    return rv;
   }
   return it->QueryInterface(kIContentViewerIID, (void**) aDocViewer);
 }
 
 // Note: operator new zeros our memory
-PluginViewerImpl::PluginViewerImpl(const char* aCommand,
-                                   nsIStreamListener** aDocListener)
+PluginViewerImpl::PluginViewerImpl(const char* aCommand)
 {
   NS_INIT_REFCNT();
-  nsIStreamListener* it = new PluginListener(this);
-  *aDocListener = it;
   mEnableRendering = PR_TRUE;
+}
+
+nsresult
+PluginViewerImpl::Init(nsIStreamListener** aDocListener)
+{
+  nsIStreamListener* it = new PluginListener(this);
+  if (it == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(it);
+  *aDocListener = it;
+  return NS_OK;
 }
 
 // ISupports implementation...
@@ -592,7 +606,6 @@ PluginListener::PluginListener(PluginViewerImpl* aViewer)
   NS_INIT_REFCNT();
   mViewer = aViewer;
   NS_ADDREF(aViewer);
-  mRefCnt = 1;
 }
 
 PluginListener::~PluginListener()
