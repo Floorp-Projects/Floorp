@@ -276,16 +276,16 @@ Rights Reserved.
 <!ENTITY stopButton.label "Stop">  
 
 <!--Tooltips-->
-<!ENTITY getMsgButton.tooltip "Get Msg">  
-<!ENTITY newMsgButton.tooltip "New Msg">  
-<!ENTITY replyButton.tooltip "Reply">  
-<!ENTITY replyAllButton.tooltip "Reply All">  
-<!ENTITY forwardButton.tooltip "Forward">  
-<!ENTITY fileButton.tooltip "File">  
-<!ENTITY nextButton.tooltip "Next">  
-<!ENTITY deleteButton.tooltip "Delete">  
-<!ENTITY printButton.tooltip "Print">  
-<!ENTITY stopButton.tooltip "Stop">  
+<!ENTITY getMsgButton.tooltip "Get new messages"> 
+<!ENTITY newMsgButton.tooltip "Create a new message"> 
+<!ENTITY replyButton.tooltip "Reply to sender only"> 
+<!ENTITY replyAllButton.tooltip "Reply to sender and all recipients"> 
+<!ENTITY forwardButton.tooltip "Forward selected message"> 
+<!ENTITY fileButton.tooltip "File selected message"> 
+<!ENTITY nextButton.tooltip "Move to the next unread message"> 
+<!ENTITY deleteButton.tooltip "Delete selected message or folder"> 
+<!ENTITY printButton.tooltip "Print this message"> 
+<!ENTITY stopButton.tooltip "Stop the current transfer"> 
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Document: Done">

@@ -30,7 +30,8 @@ Rights Reserved.
 <!ENTITY orderReceivedColumn.label "Order Received">
 
 <!--Tooltips-->
-<!ENTITY threadColumnHeader.tooltip "Threads">
-<!ENTITY columnChooser.tooltip "Press this to choose columns">
+<!ENTITY threadColumnHeader.tooltip "Click to display message threads"> 
+<!ENTITY columnChooser.tooltip "Click to select columns to display"> 
+
 
 
