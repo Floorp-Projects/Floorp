@@ -323,6 +323,7 @@ int main(int argc,char* argv[]) {
   else {
     printf("MTBF (Mean time between failures) version 1.1.\n");
     printf("This program requires BLAT.EXE, which you can find on the net.\n");
+    printf("http://gepasi.dbs.aber.ac.uk/softw/Blat.html \n");
     printf("Optional arguments: \n");
     printf("  -f filename containing URL list\n");
     printf("  -r email recipient\n");
