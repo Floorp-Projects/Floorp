@@ -166,7 +166,7 @@ char * NET_SACat (char **destination, const char *source)
 PRIVATE char *
 esmtp_value_encode(char *addr)
 {
-	char *buffer = (char *) PR_MALLOC(512); /* esmpt ORCPT allow up to 500 chars encoded addresses */
+	char *buffer = (char *) PR_Malloc(512); /* esmpt ORCPT allow up to 500 chars encoded addresses */
 	char *bp = buffer, *bpEnd = buffer+500;
 	int len, i;
 
