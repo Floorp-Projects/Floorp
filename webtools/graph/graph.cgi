@@ -14,7 +14,10 @@ my $SIZE      = lc($req->param('size'));
 my $DAYS      = lc($req->param('days'));
 my $LTYPE     = lc($req->param('ltype'));
 my $POINTS    = lc($req->param('points'));
+my $AVG       = lc($req->param('avg'));
+
 my $DATAFILE  = "db/$TESTNAME/$TBOX";
+my $DATAFILE_AVG = $DATAFILE . "_avg";
 
 sub make_filenames_list {
   my ($dir) = @_;
@@ -81,8 +84,8 @@ sub print_machines {
 }
 
 sub show_graph {
-  die "$TBOX: no data file found." 
-	unless -e $DATAFILE; 
+  die "$TBOX: no data file found."
+	unless -e $DATAFILE;
 
   my $PNGFILE  = "/tmp/gnuplot.$$";
 
@@ -156,11 +159,18 @@ sub show_graph {
 	$plot_cmd = "plot \"$DATAFILE\" using 1:2 with $ltype";
   }
 
+  if (($AVG) and (-e $DATAFILE_AVG)) {
+    #$plot_cmd .= ", \"$DATAFILE_AVG\" using 1:2 with lines ls 3";
+    $plot_cmd .= ", \"$DATAFILE_AVG\" using 1:2 smooth bezier ls 3";
+  }
+
   # interpolate params into gnuplot command
   # Removing set format x, let gnuplot figure this out.
   #
   # ls 1 = small blue points
   # ls 2 = larger blue points
+  #
+  # lt 3 = blue
   my $cmds = qq{
 				reset
                 $graph_size
@@ -170,6 +180,7 @@ sub show_graph {
 				set key graph 0.1,0.95 reverse spacing .75 width -18
 				set linestyle 1 lt 3 lw 1 pt 7 ps .5
 				set linestyle 2 lt 3 lw 1 pt 7 ps 1
+				set linestyle 3 lt 3 lw 1
 				set data style points
 				set timefmt "%Y:%m:%d:%H:%M:%S"
 				set xdata time
