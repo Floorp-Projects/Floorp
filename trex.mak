@@ -103,6 +103,12 @@ TREX_SHELL_DIR          = $(MOZ_TOP)/shell
 TREX_TREX_BRANCH        = 
 TREX_TREX_DIR           = ns/trex
 
+LIBNLS_BRANCH           = -r libnls_v3_Normandy
+LIBNLS_DIR              = ns/modules/libnls
+
+JULIAN_BRANCH           = -r JULIAN_TREX_BRANCH
+JULIAN_DIR              = ns/julian
+
 # $(MOZ_TOP)/LICENSE
 # $(MOZ_TOP)/LEGAL
 # $(MOZ_TOP)/lib/liblayer
@@ -175,7 +181,7 @@ clobber_build_all:: 	clobber_all \
 #    -$(CVS) $(RAPTOR_LAYOUT_BRANCH) $(RAPTOR_LAYOUT_DIR)
 
 
-pull_all:: pull_platform pull_trex
+pull_all:: pull_platform pull_julian pull_trex
 
 pull_platform::
     @echo +++ trex.mak: checking out platform with "$(CVS_BRANCH)"
@@ -186,6 +192,16 @@ pull_platform::
     nmake -f nglayout.mak pull_all
     cd $(MOZ_SRC)\.
     
+pull_julian::
+    @echo +++ trex.mak: checking out libnls with "$(CVTREX)"
+    cd $(MOZ_SRC)\.
+    -$(CVST) ns/client.mak
+    cd $(MOZ_SRC)\ns\.
+    -$(CVST) -d config ns/clientconfig
+    cd $(MOZ_SRC)\.
+    -$(CVST) $(JULIAN_BRANCH) $(JULIAN_DIR)
+    -$(CVST) $(LIBNLS_BRANCH) $(LIBNLS_DIR)
+    cd $(MOZ_SRC)\.
 
 pull_trex::
     @echo +++ trex.mak: checking out trex with "$(CVTREX)"
@@ -197,7 +213,7 @@ pull_trex::
     cd $(MOZ_SRC)\.
 
 
-build_all:: build_platform build_trex
+build_all:: build_platform build_julian build_trex
 
 # builds PLATFORM_DIRS
 #build_platform:: 
@@ -210,6 +226,12 @@ build_platform::
     nmake -f nglayout.mak all
     cd $(MOZ_SRC)\.
 
+build_julian:: 
+    cd $(MOZ_SRC)\ns\modules\libnls
+    nmake -f makefile.win
+    cd $(MOZ_SRC)\ns\julian
+    nmake -f makefile.win
+    cd $(MOZ_SRC)\.
 
 build_trex:: 
     cd $(MOZ_SRC)\$(MOZ_TOP)\.
