@@ -1784,11 +1784,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
           {
             nsCOMPtr<nsIBrowserWindow> browserWindow(do_QueryInterface(rootContainer));
 
-            if (rootContainer)
+            if(browserWindow)
             {
-              nsAutoString  msg = nsAutoString(aStatusMsg);
+              if (rootContainer)
+              {
+                nsAutoString  msg = nsAutoString(aStatusMsg);
 
-              rv = browserWindow->SetStatus(msg.GetUnicode());
+                rv = browserWindow->SetStatus(msg.GetUnicode());
+              }
             }
           }
         }
