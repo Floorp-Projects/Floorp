@@ -388,5 +388,58 @@ pref("sidebar.customize.all_panels.url", "http://sidebar-rdf.netscape.com/%LOCAL
 pref("sidebar.customize.more_panels.url", "http://dmoz.org/Netscape/Sidebar/");
 
 pref("prefs.converted-to-utf8",false);
+// --------------------------------------------------
+// IBMBIDI 
+// --------------------------------------------------
+//
+// ------------------
+//  Text Direction
+// ------------------
+// 1 = directionLTRBidi *
+// 2 = directionRTLBidi
+pref("bidi.direction", 1);
+// ------------------
+//  Text Type
+// ------------------
+// 1 = charsettexttypeBidi *
+// 2 = logicaltexttypeBidi
+// 3 = visualtexttypeBidi
+pref("bidi.texttype", 1);
+// ------------------
+//  Controls Text Mode
+// ------------------
+// 1 = logicalcontrolstextmodeBidiCmd
+// 2 = visiualcontrolstextmodeBidi
+// 3 = containercontrolstextmodeBidi *
+pref("bidi.controlstextmode", 1);
+// ------------------
+//  Clipboard Text Mode
+// ------------------
+//  1 = logicalclipboardtextmodeBidi
+// 2 = visiualclipboardtextmodeBidi
+// 3 = sourceclipboardtextmodeBidi *
+pref("bidi.clipboardtextmode", 3);
+// ------------------
+//  Numeral Style
+// ------------------
+// 1 = regularcontextnumeralBidi *
+// 2 = hindicontextnumeralBidi
+// 3 = arabicnumeralBidi
+// 4 = hindinumeralBidi
+pref("bidi.numeral", 1);
+// ------------------
+//  Support Mode
+// ------------------
+// 1 = mozillaBidisupport *
+// 2 = OsBidisupport
+// 3 = disableBidisupport
+pref("bidi.support", 1);
+// ------------------
+//  Charset Mode
+// ------------------
+// 1 = doccharactersetBidi *
+// 2 = defaultcharactersetBidi
+pref("bidi.characterset", 1);
+
 
 pref("browser.throbber.url","chrome://navigator/locale/navigator.properties");
