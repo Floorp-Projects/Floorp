@@ -30,6 +30,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 
+#include "nsIXULParentDocument.h"
+
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
@@ -989,11 +991,26 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
     return rv;
   }
-  
+  domWindow->SetOpener(aWindow);
+
   // (3) We need to create a new document that clones the original document's popup
   // content.  This new document must use the different root and a different global script 
   // context (window object) but everything else about it is the same (namespaces, URLs,
   // stylesheets).
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  nsCOMPtr<nsIDocument> document;
+  content->GetDocument(*getter_AddRefs(document));
+  if (document == nsnull)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIXULParentDocument> parentDocument = do_QueryInterface(document);
+  if (parentDocument == nsnull)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocument> popupDocument;
+  if (NS_FAILED(rv = parentDocument->CreatePopupDocument(aPopupContent, getter_AddRefs(popupDocument)))) {
+    NS_ERROR("Unable to create the child popup document.");
+    return rv;
+  }
 
   // The tricky part now is bypassing the normal load process and just putting a document into
   // the webshell.  This is particularly nasty, since webshells don't normally even know
