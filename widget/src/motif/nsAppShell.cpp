@@ -89,6 +89,7 @@ void nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 { 
+  mRefCnt = 0;
   mDispatchListener = 0;
 }
 

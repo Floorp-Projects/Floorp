@@ -58,6 +58,7 @@ CPPSRCS= \
 	nsWidgetFactory.cpp \
 	nsWindow.cpp \
 	nsXtEventHandler.cpp \
+	nsLookAndFeel.cpp \
 	nsToolkit.cpp
 
 CPP_OBJS=				\

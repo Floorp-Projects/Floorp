@@ -890,6 +890,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
             break;
         
         case NS_PAINT: 
+#ifndef XP_UNIX
               // paint the background
             if (aEvent->widget == window) {
                 nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
@@ -898,6 +899,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
                 return nsEventStatus_eIgnore;
             }
+#endif
             break;
         
         case NS_DESTROY:
@@ -1159,14 +1161,6 @@ nsresult WidgetTest(int *argc, char **argv)
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-    res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&deviceContext);
-
-    if (NS_OK == res)
-    {
-      deviceContext->Init(nsnull);
-      NS_ADDREF(deviceContext);
-    }
-
     //
     // create the main window
     //
@@ -1178,6 +1172,17 @@ nsresult WidgetTest(int *argc, char **argv)
     window->SetTitle("TOP-LEVEL window");
     window->Show(PR_TRUE);
     window->SetBackgroundColor(NS_RGB(196, 196, 196));
+
+    //
+    // Create Device Context based on main window
+    //
+    res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&deviceContext);
+
+    if (NS_OK == res)
+    {
+      deviceContext->Init(window->GetNativeData(NS_NATIVE_WIDGET));
+      NS_ADDREF(deviceContext);
+    }
 
 #ifdef XP_PC
     tooltipWindow = createTooltipWindow(window, "INSERT <tooltip> here", 0, 0, 150, 0);
