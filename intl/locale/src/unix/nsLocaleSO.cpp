@@ -105,7 +105,14 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   //
@@ -113,49 +120,60 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   //
   rv = compMgr->RegisterComponent(kLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
   NS_ASSERTION(rv==NS_OK,"nsLocaleTest: RegisterFactory failed.");
-  if (rv!=NS_OK) return rv;
+  if (rv!=NS_OK) goto done;
 
   //
   // register the collation factory
   //
   rv = compMgr->RegisterComponent(kCollationFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
   NS_ASSERTION(rv==NS_OK,"nsLocaleTest: Register CollationFactory failed.");
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   
   //
   // register the collation interface
   //
   rv = compMgr->RegisterComponent(kCollationCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
   NS_ASSERTION(rv==NS_OK,"nsLocaleTest: Register Collation failed.");
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   
   //
   // register the date time formatter
   //
   rv = compMgr->RegisterComponent(kDateTimeFormatCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
   NS_ASSERTION(rv==NS_OK,"nsLocaleTest: Register DateTimeFormat failed.");
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
-  return NS_OK;
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterFactory(kLocaleFactoryCID, path);
-  if (rv!=NS_OK) return rv;
+  if (rv!=NS_OK) goto done;
 
   rv = compMgr->UnregisterFactory(kCollationFactoryCID, path);
-  if (rv!=NS_OK) return rv;
+  if (rv!=NS_OK) goto done;
 
   rv = compMgr->UnregisterFactory(kCollationCID, path);
-  if (rv!=NS_OK) return rv;
+  if (rv!=NS_OK) goto done;
 
   rv = compMgr->UnregisterFactory(kDateTimeFormatCID, path);
-  if (rv!=NS_OK) return rv;
+  if (rv!=NS_OK) goto done;
 
-  return NS_OK;
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
