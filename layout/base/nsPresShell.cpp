@@ -34,6 +34,7 @@
 #include "nsContainerFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
+#include "nsHTMLParts.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -187,6 +188,9 @@ public:
                             PRInt32 aIndexInContainer);
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                            nsIStyleSheet* aStyleSheet,
+                                            PRBool aDisabled);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
   // nsIPresShell
@@ -872,6 +876,31 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
                            nsIStyleSheet* aStyleSheet)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                          nsIStyleSheet* aStyleSheet,
+                                          PRBool aDisabled)
+{
+  nsresult rv = NS_OK;
+  if (nsnull != mRootFrame) {
+    nsIFrame* childFrame;
+    rv = mRootFrame->FirstChild(nsnull, childFrame);
+    
+    if (nsnull != mDocument) {
+      nsIContent* root = mDocument->GetRootContent();
+      if (nsnull != root) {
+        
+        EnterReflowLock();
+        rv = mStyleSet->ReconstructFrames(mPresContext, root,
+                                          mRootFrame, childFrame);
+        ExitReflowLock();
+        NS_RELEASE(root);
+      }
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

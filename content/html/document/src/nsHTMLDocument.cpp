@@ -23,7 +23,6 @@
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIStyleSet.h"
-#include "nsIDocumentObserver.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresShell.h" 
 #include "nsIPresContext.h" 
@@ -49,8 +48,6 @@
 #include "nsIFormManager.h"
 #include "nsRepository.h"
 #include "nsParserCIID.h"
-#include "nsIDOMStyleSheet.h"
-#include "nsIDOMStyleSheetCollection.h"
 #include "nsIDOMHTMLElement.h"
 
 
@@ -79,241 +76,10 @@ static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMNSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kIDOMStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
-static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 
-class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
-                                  public nsIScriptObjectOwner,
-                                  public nsIDocumentObserver
-{
-public:
-  nsDOMStyleSheetCollection(nsIDocument *aDocument);
-  ~nsDOMStyleSheetCollection();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_IDOMSTYLESHEETCOLLECTION
-  
-  NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD BeginLoad(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD EndLoad(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD BeginReflow(nsIDocument *aDocument,
-			                   nsIPresShell* aShell) { return NS_OK; }
-  NS_IMETHOD EndReflow(nsIDocument *aDocument,
-		                   nsIPresShell* aShell) { return NS_OK; } 
-  NS_IMETHOD ContentChanged(nsIDocument *aDocument,
-			                      nsIContent* aContent,
-                            nsISupports* aSubContent) { return NS_OK; }
-  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
-                              nsIContent*  aContent,
-                              nsIAtom*     aAttribute,
-                              PRInt32      aHint) { return NS_OK; }
-  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-			                       nsIContent* aContainer,
-                             PRInt32     aNewIndexInContainer) 
-                             { return NS_OK; }
-  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
-			                       nsIContent* aContainer,
-                             nsIContent* aChild,
-                             PRInt32 aIndexInContainer) { return NS_OK; }
-  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
-			                       nsIContent* aContainer,
-                             nsIContent* aOldChild,
-                             nsIContent* aNewChild,
-                             PRInt32 aIndexInContainer) { return NS_OK; }
-  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
-                            nsIContent* aContainer,
-                            nsIContent* aChild,
-                            PRInt32 aIndexInContainer) { return NS_OK; }
-  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
-                             nsIStyleSheet* aStyleSheet);
-  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
-
-  // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-
-protected:
-  PRInt32       mLength;
-  nsIDocument*  mDocument;
-  void*         mScriptObject;
-};
-
-nsDOMStyleSheetCollection::nsDOMStyleSheetCollection(nsIDocument *aDocument)
-{
-  NS_INIT_REFCNT();
-  mLength = -1;
-  // Not reference counted to avoid circular references.
-  // The document will tell us when its going away.
-  mDocument = aDocument;
-  mDocument->AddObserver(this);
-  mScriptObject = nsnull;
-}
-
-nsDOMStyleSheetCollection::~nsDOMStyleSheetCollection()
-{
-  if (nsnull != mDocument) {
-    mDocument->RemoveObserver(this);
-  }
-  mDocument = nsnull;
-}
-
-NS_IMPL_ADDREF(nsDOMStyleSheetCollection)
-NS_IMPL_RELEASE(nsDOMStyleSheetCollection)
-
-nsresult 
-nsDOMStyleSheetCollection::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  if (NULL == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kIDOMStyleSheetCollectionIID)) {
-    nsIDOMStyleSheetCollection *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDocumentObserverIID)) {
-    nsIDocumentObserver *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMStyleSheetCollection *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP    
-nsDOMStyleSheetCollection::GetLength(PRUint32* aLength)
-{
-  if (nsnull != mDocument) {
-    // XXX Find the number and then cache it. We'll use the 
-    // observer notification to figure out if new ones have
-    // been added or removed.
-    if (-1 == mLength) {
-      PRUint32 count = 0;
-      PRInt32 i, imax = mDocument->GetNumberOfStyleSheets();
-      
-      for (i = 0; i < imax; i++) {
-        nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(i);
-        nsIDOMStyleSheet *domss;
-
-        if (NS_OK == sheet->QueryInterface(kIDOMStyleSheetIID, (void **)&domss)) {
-          count++;
-          NS_RELEASE(domss);
-        }
-
-        NS_RELEASE(sheet);
-      }
-      mLength = count;
-    }
-    *aLength = mLength;
-  }
-  else {
-    *aLength = 0;
-  }
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsDOMStyleSheetCollection::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
-{
-  *aReturn = nsnull;
-  if (nsnull != mDocument) {
-    PRUint32 count = 0;
-    PRInt32 i, imax = mDocument->GetNumberOfStyleSheets();
-  
-    // XXX Not particularly efficient, but does anyone care?
-    for (i = 0; (i < imax) && (nsnull == *aReturn); i++) {
-      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(i);
-      nsIDOMStyleSheet *domss;
-      
-      if (NS_OK == sheet->QueryInterface(kIDOMStyleSheetIID, (void **)&domss)) {
-        if (count++ == aIndex) {
-          *aReturn = domss;
-          NS_ADDREF(domss);
-        }
-        NS_RELEASE(domss);
-      }
-      
-      NS_RELEASE(sheet);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDOMStyleSheetCollection::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptObject) {
-    nsISupports *supports = (nsISupports *)(nsIDOMStyleSheetCollection *)this;
-    nsISupports *parent = (nsISupports *)mDocument;
-
-    // XXX Should be done through factory
-    res = NS_NewScriptStyleSheetCollection(aContext, 
-                                           supports,
-                                           parent,
-                                           (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  return res;
-}
-
-NS_IMETHODIMP 
-nsDOMStyleSheetCollection::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDOMStyleSheetCollection::StyleSheetAdded(nsIDocument *aDocument,
-                                           nsIStyleSheet* aStyleSheet)
-{
-  if (-1 != mLength) {
-    nsIDOMStyleSheet *domss;
-    if (NS_OK == aStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void **)&domss)) {
-      mLength++;
-      NS_RELEASE(domss);
-    }
-  }
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMStyleSheetCollection::DocumentWillBeDestroyed(nsIDocument *aDocument)
-{
-  if (nsnull != mDocument) {
-    aDocument->RemoveObserver(this);
-    mDocument = nsnull;
-  }
-  
-  return NS_OK;
-}
 
 NS_LAYOUT nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
@@ -334,7 +100,6 @@ nsHTMLDocument::nsHTMLDocument()
   mAnchors = nsnull;
   mNamedItems = nsnull;
   mParser = nsnull;
-  mDOMStyleSheets = nsnull;
   nsHTMLAtoms::AddrefAtoms();
   mDTDMode = eDTDMode_NoQuirks;
 
@@ -366,7 +131,6 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mEmbeds);
   NS_IF_RELEASE(mLinks);
   NS_IF_RELEASE(mAnchors);
-  NS_IF_RELEASE(mDOMStyleSheets);
    NS_IF_RELEASE(mAttrStyleSheet);
   NS_IF_RELEASE(mStyleAttrStyleSheet);
   NS_IF_RELEASE(mParser);
@@ -1098,22 +862,6 @@ nsHTMLDocument::GetLastModified(nsString& aLastModified)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP    
-nsHTMLDocument::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
-{
-  if (nsnull == mDOMStyleSheets) {
-    mDOMStyleSheets = new nsDOMStyleSheetCollection(this);
-    if (nsnull == mDOMStyleSheets) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mDOMStyleSheets);
-  }
-
-  *aStyleSheets = mDOMStyleSheets;
-  NS_ADDREF(mDOMStyleSheets);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetEmbeds(nsIDOMHTMLCollection** aEmbeds)

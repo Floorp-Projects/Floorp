@@ -1597,10 +1597,17 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nsReflowStatus& aStatus)
 {
-  NS_PRECONDITION(nsnull != aReflowState.lineLayout, "no line layout");
+  //  NS_PRECONDITION(nsnull != aReflowState.lineLayout, "no line layout");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter TextFrame::Reflow: aMaxSize=%d,%d",
       aReflowState.maxSize.width, aReflowState.maxSize.height));
+
+  // XXX If there's no line layout, we shouldn't even have created this
+  // frame. This may happen if, for example, this is text inside a table
+  // but not inside a cell. For now, just don't reflow.
+  if (nsnull == aReflowState.lineLayout) {
+    return NS_OK;
+  }
 
   // Get starting offset into the content
   PRInt32 startingOffset = 0;

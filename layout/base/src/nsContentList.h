@@ -89,7 +89,10 @@ public:
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer);
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
-			     nsIStyleSheet* aStyleSheet) { return NS_OK; }
+                             nsIStyleSheet* aStyleSheet) { return NS_OK; }
+  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                            nsIStyleSheet* aStyleSheet,
+                                            PRBool aDisabled) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 protected:
