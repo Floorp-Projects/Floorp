@@ -190,7 +190,4 @@ protected:
   XMLParserState* mState;
 };
 
-
-extern NS_HTMLPARS nsresult NS_New_Expat_Tokenizer(nsITokenizer** aInstancePtrResult);
-
 #endif

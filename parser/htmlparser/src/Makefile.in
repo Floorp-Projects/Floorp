@@ -77,7 +77,6 @@ CPPSRCS		= \
 		nsValidDTD.cpp \
 		nsWellFormedDTD.cpp \
 		nsViewSourceHTML.cpp \
-		nsExpatDTD.cpp \
 		$(NULL)
 
 #
@@ -114,7 +113,6 @@ EXPORTS		= \
 		nsWellFormedDTD.h \
 		nsValidDTD.h \
 		nsParserCIID.h \
-		nsExpatDTD.h \
 		nsParserError.h \
 		nsIElementObserver.h \
 		nsIParserService.h \
