@@ -43,7 +43,8 @@ use vars %::versions,
     %::legal_platform,
     %::legal_priority,
     %::target_milestone,
-    %::legal_severity;
+    %::legal_severity,
+    %::superusergroupset;
 
 my $whoid = confirm_login();
 
@@ -563,7 +564,9 @@ if($::usergroupset ne '0') {
     }
     if ($groupAdd ne "0" || $groupDel ne "0") {
         DoComma();
-        $::query .= "groupset = ((groupset & ~($groupDel)) | ($groupAdd))";
+        # mysql < 3.23.5 doesn't support the ~ operator, even though
+        # the docs say that it does
+        $::query .= "groupset = ((groupset & ($::superusergroupset - ($groupDel))) | ($groupAdd))";
     }
 }
 
