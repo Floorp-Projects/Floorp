@@ -156,12 +156,12 @@ pref("mailnews.reply_on_top",               0); // 0=bottom 1=top 2=select+botto
 pref("mailnews.reply_header_type",          1);
 // locale which affects date format, set empty string to use application default locale
 pref("mailnews.reply_header_locale",        "en-US");
-pref("mailnews.reply_header_authorwrote",   "%s wrote");
+pref("mailnews.reply_header_authorwrote",   "chrome://messenger/locale/messengercompose/composeMsgs.properties");
 pref("mailnews.reply_header_ondate",        "On %s");
 // separator to separate between date and author
 pref("mailnews.reply_header_separator",     ", ");
 pref("mailnews.reply_header_colon",         ":");
-pref("mailnews.reply_header_originalmessage",   "--- Original Message ---");
+pref("mailnews.reply_header_originalmessage",   "chrome://messenger/locale/messengercompose/composeMsgs.properties");
 
 pref("mail.purge_threshhold",                100);
 pref("mail.prompt_purge_threshhold",             false);   
