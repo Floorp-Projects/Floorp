@@ -6,7 +6,7 @@
 #define __gen_nsINNTPArticleList_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
+#include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
 #include "nsIMsgHost.h" /* interface nsIMsgHost */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 #include "nsINNTPHost.h" /* interface nsINNTPHost */
@@ -31,7 +31,7 @@ class nsINNTPArticleList : public nsISupports {
   }
 
   /*  <IDL>  */
-  NS_IMETHOD Init(const char *newsHost, const nsIMsgNewsgroup *newsgroup) = 0;
+  NS_IMETHOD Init(const char *newsHost, const nsINNTPNewsgroup *newsgroup) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD AddArticleKey(PRInt32 key) = 0;

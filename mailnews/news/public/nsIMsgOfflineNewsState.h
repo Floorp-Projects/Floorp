@@ -6,7 +6,7 @@
 #define __gen_nsIMsgOfflineNewsState_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
+#include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
 
 
 /* starting interface nsIMsgOfflineNewsState */
@@ -28,8 +28,8 @@ class nsIMsgOfflineNewsState : public nsISupports {
   }
 
   /*  <IDL>  */
-  NS_IMETHOD GetNewsgroup(nsIMsgNewsgroup * *aNewsgroup) = 0;
-  NS_IMETHOD SetNewsgroup(nsIMsgNewsgroup * aNewsgroup) = 0;
+  NS_IMETHOD GetNewsgroup(nsINNTPNewsgroup * *aNewsgroup) = 0;
+  NS_IMETHOD SetNewsgroup(nsINNTPNewsgroup * aNewsgroup) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD Process(char **outputBuffer, PRInt32 bufferSize, PRInt32 *_retval) = 0;

@@ -17,7 +17,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIMsgNewsgroup.idl"
+#include "nsINNTPNewsgroup.idl"
 /* the XPIDL compiler doesn't like including this file?
  * I think it's because this file include another file 
  * I had to change the type below to a string temporarily */
@@ -27,7 +27,7 @@
 interface nsINNTPArticleList : nsISupports {
 
     void Init(in /* nsINNTPHost */ string newsHost,
-          in nsIMsgNewsgroup newsgroup); 
+          in nsINNTPNewsgroup newsgroup); 
     void AddArticleKey(in long key);
     void FinishAddingArticleKeys();
     

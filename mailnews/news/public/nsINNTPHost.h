@@ -6,8 +6,7 @@
 #define __gen_nsINNTPHost_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
-#include "nsIMsgHost.h" /* interface nsIMsgHost */
+#include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 
@@ -19,7 +18,7 @@
   {0xADFB3740, 0xAA57, 0x11d2, \
     { 0xB7, 0xED, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
-class nsINNTPHost : public nsIMsgHost {
+class nsINNTPHost {
  private:
   void operator delete(void *); // NOT TO BE IMPLEMENTED
 
@@ -55,7 +54,7 @@ class nsINNTPHost : public nsIMsgHost {
   NS_IMETHOD GetNewsgroupList(const char *groupname, nsINNTPNewsgroupList **_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create, nsIMsgNewsgroup **_retval) = 0;
+  NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create, nsINNTPNewsgroup **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD AddPropertyForGet(const char *name, const char *value) = 0;
@@ -103,13 +102,13 @@ class nsINNTPHost : public nsIMsgHost {
   NS_IMETHOD DisplaySubscribedGroup(const char *groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages, PRBool visit_now) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetFirstGroupNeedingExtraInfo(nsIMsgNewsgroup **_retval) = 0;
+  NS_IMETHOD GetFirstGroupNeedingExtraInfo(nsINNTPNewsgroup **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool needsExtraInfo) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetNewsGroupAndNumberOfID(const char *message_id, nsIMsgNewsgroup **group, PRUint32 *message_number) = 0;
+  NS_IMETHOD GetNewsGroupAndNumberOfID(const char *message_id, nsINNTPNewsgroup **group, PRUint32 *message_number) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD SetPrettyName(const char *groupName, const char *prettyName) = 0;
@@ -131,10 +130,10 @@ class nsINNTPHost : public nsIMsgHost {
   NS_IMETHOD SetNewsRCFilename(char * aNewsRCFilename) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD FindGroup(const char *name, nsIMsgNewsgroup **_retval) = 0;
+  NS_IMETHOD FindGroup(const char *name, nsINNTPNewsgroup **_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD AddGroup(const char *groupname, nsIMsgNewsgroup **_retval) = 0;
+  NS_IMETHOD AddGroup(const char *groupname, nsINNTPNewsgroup **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD RemoveGroup(const char *groupName) = 0;
