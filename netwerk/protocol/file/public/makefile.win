@@ -27,8 +27,8 @@ include <$(DEPTH)/config/config.mak>
 XPIDL_MODULE = necko_file
 
 XPIDLSRCS =                          \
-        nsIFileProtocolHandler.idl \
-        $(NULL)
+	.\nsIFileProtocolHandler.idl \
+	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 
