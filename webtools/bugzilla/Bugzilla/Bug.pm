@@ -261,7 +261,7 @@ sub emitXML {
       "creation_ts", "qa_contact", "op_sys", "resolution", "bug_file_loc",
       "short_desc", "keywords", "status_whiteboard") {
     if ($self->{$field}) {
-      $xml .= "  <$field>" . $self->{$field} . "</$field>\n";
+      $xml .= "  <$field>" . QuoteXMLChars($self->{$field}) . "</$field>\n";
     }
   }
 
@@ -292,7 +292,7 @@ sub emitXML {
       $xml .= "    <attachid>" . $self->{'attachments'}[$i]->{'attachid'}
                               . "</attachid>\n"; 
       $xml .= "    <date>" . $self->{'attachments'}[$i]->{'date'} . "</date>\n"; 
-      $xml .= "    <desc>" . $self->{'attachments'}[$i]->{'desc'} . "</desc>\n"; 
+      $xml .= "    <desc>" . QuoteXMLChars($self->{'attachments'}[$i]->{'desc'}) . "</desc>\n"; 
     # $xml .= "    <type>" . $self->{'attachments'}[$i]->{'type'} . "</type>\n"; 
     # $xml .= "    <data>" . $self->{'attachments'}[$i]->{'data'} . "</data>\n"; 
       $xml .= "  </attachment>\n"; 
