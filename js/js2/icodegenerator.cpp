@@ -228,6 +228,12 @@ namespace ICG {
         iCode->push_back(instr);
     }
 
+    void ICodeGenerator::beginTry(Label *catchLabel)
+    {
+        Try *instr = new Try(catchLabel);
+        iCode->push_back(instr);
+    }
+        
     /********************************************************************/
 
     Label *ICodeGenerator::getLabel()
@@ -276,15 +282,12 @@ namespace ICG {
     {
         resetTopRegister();
   
+        WhileCodeState *ics = new WhileCodeState(this);
+        addStitcher(ics);
+
         // insert a branch to the while condition, which we're 
         // moving to follow the while block
-        Label *whileConditionTop = getLabel();
-        Label *whileBlockStart = getLabel();
-        branch(whileConditionTop);
-    
-        // save off the current stream while we gen code for the condition
-        addStitcher(new WhileCodeState(whileConditionTop, 
-                                              whileBlockStart, this));
+        branch(ics->whileCondition);
 
         iCode = new InstructionStream();
     }
@@ -329,17 +332,13 @@ namespace ICG {
 
     void ICodeGenerator::beginForStatement(uint32)
     {
-        Label *forCondition = getLabel();
-
-        ForCodeState *ics = new ForCodeState(forCondition, getLabel(), this);
-
-        branch(forCondition);
-
+        ForCodeState *ics = new ForCodeState(this);
         addStitcher(ics);
+        branch(ics->forCondition);
 
         // begin the stream for collecting the condition expression
         iCode = new InstructionStream();
-        setLabel(forCondition);
+        setLabel(ics->forCondition);
 
         resetTopRegister();
     }
@@ -397,16 +396,11 @@ namespace ICG {
     void ICodeGenerator::beginDoStatement(uint32)
     {
         resetTopRegister();
+        DoCodeState *ics = new DoCodeState(this);
+        addStitcher(ics);
   
         // mark the top of the loop body
-        // and reserve a label for the condition
-        Label *doBlock = getLabel();
-        Label *doCondition = getLabel();
-        setLabel(doBlock);
-    
-        addStitcher(new DoCodeState(doBlock, doCondition, this));
-
-        iCode = new InstructionStream();
+        setLabel(ics->doBody);
     }
 
     void ICodeGenerator::endDoStatement()
@@ -445,6 +439,12 @@ namespace ICG {
         // stash the control expression value
         resetTopRegister();
         Register control = op(MOVE, expression);
+    /*
+        XXXX this register needs to belong to the 'variable' set so that
+        it is preserved across statements. Then we can drop having to 
+        keep the registe rbase in the icodestate.
+        
+    */
         // build an instruction stream for the case statements, the case
         // expressions are generated into the main stream directly, the
         // case statements are then added back in afterwards.
@@ -544,11 +544,10 @@ namespace ICG {
 
     void ICodeGenerator::beginIfStatement(uint32, Register condition)
     {
-        Label *elseLabel = getLabel();
-    
-        addStitcher(new IfCodeState(elseLabel, NULL, this));
+        IfCodeState *ics = new IfCodeState(this);
+        addStitcher(ics);
 
-        branchNotConditional(elseLabel, condition);
+        branchNotConditional(ics->elseLabel, condition);
 
         resetTopRegister();
     }
@@ -667,10 +666,65 @@ namespace ICG {
         }
         NOT_REACHED("no continue target available");
     }
+    /********************************************************************/
 
-     /************************************************************************/
+    void ICodeGenerator::beginTryStatement(uint32 pos, bool hasCatch, bool hasFinally)
+    {
+        addStitcher(new TryCodeState((hasCatch) ? getLabel() : NULL,
+                                     (hasFinally) ? getLabel() : NULL, this));        
+    }
 
-   Formatter& ICodeGenerator::print(Formatter& f)
+    void ICodeGenerator::endTryBlock()
+    {
+        TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
+        ASSERT(ics->stateKind == Try_state);
+
+        if (ics->beyondCatch)
+            branch(ics->beyondCatch);
+    }
+
+    void ICodeGenerator::endTryStatement()
+    {
+        TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
+        ASSERT(ics->stateKind == Try_state);
+        stitcher.pop_back();
+        if (ics->beyondCatch)
+            setLabel(ics->beyondCatch);
+    }
+
+    void ICodeGenerator::beginCatchStatement(uint32 pos)
+    {
+        TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
+        ASSERT(ics->stateKind == Try_state);
+    }
+
+    void ICodeGenerator::endCatchExpression(Register expression)
+    {
+        TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
+        ASSERT(ics->stateKind == Try_state);
+    }
+    
+    void ICodeGenerator::endCatchStatement()
+    {
+        TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
+        ASSERT(ics->stateKind == Try_state);
+    }
+
+    void ICodeGenerator::beginFinallyStatement(uint32 pos)
+    {
+        TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
+        ASSERT(ics->stateKind == Try_state);
+    }
+
+    void ICodeGenerator::endFinallyStatement()
+    {
+        TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
+        ASSERT(ics->stateKind == Try_state);
+    }
+
+    /************************************************************************/
+
+    Formatter& ICodeGenerator::print(Formatter& f)
     {
         f << "ICG! " << (uint32)iCode->size() << "\n";
         for (InstructionIterator i = iCode->begin(); 

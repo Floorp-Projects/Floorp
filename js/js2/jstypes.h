@@ -239,6 +239,11 @@ namespace JSTypes {
 
     // a stack of JSFrames.
     typedef std::stack<JSFrame*, std::vector<JSFrame*, gc_allocator<JSFrame*> > > JSFrameStack;
+
+    class JS_Exception : public gc_base {
+    public:
+        JS_Exception() { }
+    };
         
 } /* namespace JSTypes */    
 } /* namespace JavaScript */
