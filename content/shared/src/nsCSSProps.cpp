@@ -100,7 +100,7 @@ nsCSSProps::ReleaseTable(void)
 }
 
 struct CSSPropertyAlias {
-  const char name[13];
+  char name[13];
   nsCSSProperty id;
 };
 
