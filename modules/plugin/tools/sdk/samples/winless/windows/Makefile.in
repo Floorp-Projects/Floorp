@@ -16,41 +16,29 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s):
-#
+# Contributor(s): 
 
-DEPTH = ../../../../../..
+DEPTH = ../../../../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = npsimple
-LIBRARY_NAME = npsimple
+XPIDL_MODULE = npwinless
+LIBRARY_NAME = npwinless
 
 NO_DIST_INSTALL = 1
 
-CPPSRCS = nsScriptablePeer.cpp \
-          plugin.cpp \
-          $(NULL)
+CPPSRCS = plugin.cpp
 
-XPIDLSRCS = nsISimplePlugin.idl
+SHARED_LIBRARY_LIBS = ../../common/plugingate_s.$(LIB_SUFFIX)
 
-SHARED_LIBRARY_LIBS = ../common/plugingate_s.$(LIB_SUFFIX)
-
-ifeq ($(OS_ARCH),WINNT)
-DEFFILE = npsimple.def
-RESFILE = npsimple.res
-endif
+DEFFILE = npwinless.def
+RESFILE = npwinless.res
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),Linux)
-EXTRA_DSO_LDOPTS +=  -L/usr/lib -L/usr/X11R6/lib  -rdynamic  -lXi -lXext -lX11 -lm -lXt
-endif
-
-LOCAL_INCLUDES = -I$(srcdir)/$(XPIDL_GEN_DIR) \
-                 -I$(srcdir)/../include \
-                 -I$(srcdir)/../../include \
+LOCAL_INCLUDES = -I$(srcdir)/../../include \
+                 -I$(srcdir)/../../../include \
                  $(NULL)
