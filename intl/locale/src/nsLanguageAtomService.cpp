@@ -27,6 +27,7 @@
 #include "nsNetUtil.h"
 #include "nsICharsetConverterManager.h"
 #include "nsILocaleService.h"
+#include "nsXPIDLString.h"
 
 class nsLanguageAtom : public nsILanguageAtom
 {
@@ -277,8 +278,8 @@ nsLanguageAtomService::GetLocaleLanguageGroup(nsIAtom** aResult)
     NS_ENSURE_SUCCESS(res, res);
     nsAutoString category;
     category.AssignWithConversion(NSILOCALE_MESSAGE);
-    PRUnichar* loc = nsnull;
-    res = locale->GetCategory(category.GetUnicode(), &loc);
+    nsXPIDLString loc;
+    res = locale->GetCategory(category.GetUnicode(), getter_Copies(loc));
     NS_ENSURE_SUCCESS(res, res);
     nsCOMPtr<nsILanguageAtom> langAtom;
     res = LookupLanguage(loc, getter_AddRefs(langAtom));
