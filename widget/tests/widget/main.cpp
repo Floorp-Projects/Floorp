@@ -52,12 +52,13 @@ void main(int argc, char **argv)
 #endif
 
 #ifdef XP_MAC
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int argC = argc;
 
   WidgetTest(&argC, argv);
-
+	
+	return 0;
 }
 #endif
 
