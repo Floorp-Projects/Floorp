@@ -660,7 +660,12 @@ nsMessenger::OpenURL(const char * url)
 			messageService->DisplayMessage(url, mWebShell, nsnull, nsnull);
 			ReleaseMessageServiceFromURI(url, messageService);
 		}
-
+		//If it's not something we know about, then just load the url.
+		else
+		{
+			nsString urlStr(url);
+			mWebShell->LoadURL(urlStr.GetUnicode());
+		}
 	}
 	/*	here's how we'd turn off the throbber
   setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
