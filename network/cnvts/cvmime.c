@@ -51,7 +51,7 @@
 #include "intl_csi.h"
 
 
-#ifdef JAVA
+#ifdef MOZ_SMARTUPDATE
 #include "softupdt.h"	/* software update converters */
 #endif
 
@@ -622,7 +622,7 @@ net_RegisterDefaultDecoders (void)
   NET_RegisterContentTypeConverter("*", FO_CACHE_AND_ROBOTS_TXT, 
 									NULL, NET_CacheConverter);
 #endif /* CRAWLER */
-#ifdef JAVA
+#ifdef MOZ_SMARTUPDATE
   NET_RegisterContentTypeConverter("*", FO_SOFTWARE_UPDATE, NULL, SU_NewStream);
   NET_RegisterContentTypeConverter(APPLICATION_JAVAARCHIVE, FO_PRESENT, NULL, SU_NewStream);
   NET_cdataCommit(APPLICATION_JAVAARCHIVE, ".jar");
