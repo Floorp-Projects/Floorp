@@ -61,10 +61,6 @@ int np_debug = 0;
 static XP_Bool gForcingRedraw = FALSE;
 #endif /* XP_MAC */
 
-#ifdef XP_MAC
-XP_Bool gForcingRedraw = FALSE;
-#endif /* XP_MAC */
-
 NPNetscapeFuncs npp_funcs;
 
 /*
