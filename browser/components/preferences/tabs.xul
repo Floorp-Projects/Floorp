@@ -51,7 +51,7 @@
       <preference id="browser.link.open_external"      name="browser.link.open_external"      type="int"/>
       <preference id="browser.link.open_newwindow"     name="browser.link.open_newwindow"     type="int"/>
       <preference id="browser.tabs.autoHide"           name="browser.tabs.autoHide"           type="bool"/>
-      <preference id="browser.tabs.loadInBackground"   name="browser.tabs.loadInBackground"   type="bool"/>
+      <preference id="browser.tabs.loadInBackground"   name="browser.tabs.loadInBackground"   type="bool" inverted="true"/>
       <preference id="browser.tabs.warnOnClose"        name="browser.tabs.warnOnClose"        type="bool"/>
     </preferences>
     
@@ -81,7 +81,7 @@
       <checkbox id="hideTabBar" label="&hideTabBar.label;"
                 preference="browser.tabs.autoHide"/>
       <checkbox id="loadInBackground" label="&loadInBackground.label;"
-                preference="browser.tabs.loadInBackground" reversed="true"/>
+                preference="browser.tabs.loadInBackground"/>
       <checkbox id="warnOnClose" label="&warnOnClose.label;"
                 preference="browser.tabs.warnOnClose"/>
     </vbox>

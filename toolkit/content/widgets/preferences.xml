@@ -213,7 +213,8 @@
             case "int":
               return this._branch.getIntPref(this.name);
             case "bool":
-              return this._branch.getBoolPref(this.name);
+              var val = this._branch.getBoolPref(this.name);
+              return this.inverted ? !val : val;
             case "string":
               return this._branch.getCharPref(this.name);
             case "wstring":
