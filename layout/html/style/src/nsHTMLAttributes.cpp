@@ -375,17 +375,17 @@ nsresult HTMLAttributesImpl::QueryInterface(const nsIID& aIID,
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kIHTMLAttributesIID)) {
     *aInstancePtrResult = (void*) ((nsIHTMLAttributes*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIStyleRuleIID)) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)(nsIHTMLAttributes*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

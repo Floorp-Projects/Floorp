@@ -321,7 +321,7 @@ CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
 {
   NS_INIT_REFCNT();
   mScanner = nsnull;
-  mSheet = aSheet; aSheet->AddRef();
+  mSheet = aSheet; NS_ADDREF(aSheet);
   mHavePushBack = PR_FALSE;
 }
 
@@ -375,9 +375,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   mScanner = new nsCSSScanner();
   mScanner->Init(aInput);
   mURL = aInputURL;
-  if (nsnull != aInputURL) {
-    aInputURL->AddRef();
-  }
+  NS_IF_ADDREF(aInputURL);
   mInHead = PR_TRUE;
   nsCSSToken* tk = &mToken;
   for (;;) {
@@ -443,6 +441,7 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
     rule->SetDeclaration(declaration);
     rule->SetWeight(0x7fffffff);
     aResult = rule;
+    NS_RELEASE(declaration);
   }
   else {
     aResult = nsnull;
