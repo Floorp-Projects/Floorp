@@ -1,0 +1,57 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ */
+
+// make sure to include all the required file headers
+
+#include "nsISupports.idl"
+#include "nsIDOMWindowInternal.idl"
+
+/**
+ * nsIKeygenThread
+ *  This is used to communicate with the thread generating a key pair,
+ *  to be used by the dialog displaying status information.
+ */
+[scriptable, uuid(195763b8-1dd2-11b2-a843-eb44e44aaa37)]
+interface nsIKeygenThread : nsISupports
+{
+  /**
+   * startKeyGeneration - run the thread
+   *   A user interface implementing this interface needs to
+   *   call this method as soon as the status information
+   *   is displaying. This will trigger key generation.
+   *   To allow the closure of the status information,
+   *   the thread needs a handle to the displayed window.
+   */
+  void startKeyGeneration(in nsIDOMWindowInternal statusDialog);
+
+  /**
+   * userCanceled - notify the thread
+   *   If the user canceled, the thread is no longer allowed to
+   *   close the dialog. However, if the thread already closed
+   *   it, we are not allowed to close it.
+   */
+  void userCanceled(out boolean threadAlreadyClosedDialog);
+};
+
+%{ C++
+// {195763b8-1dd2-11b2-a843-eb44e44aaa37}
+#define NS_KEYGENTHREAD_CID \
+{ 0x195763b8, 0x1dd2, 0x11b2, { 0xa8, 0x43, 0xeb, 0x44, 0xe4, 0x4a, 0xaa, 0x37 } }
+#define NS_KEYGENTHREAD_CONTRACTID "@mozilla.org/security/keygenthread;1"
+%}
