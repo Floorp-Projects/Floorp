@@ -2037,7 +2037,11 @@ public class ScriptRuntime {
                                     new Object[0]);
                 if (cl != null)
                     return cl.loadClass(className);
-            }
+            } else {
+            	ClassLoader cl = ScriptRuntime.class.getClassLoader();
+            	if (cl != null)
+                    return cl.loadClass(className);
+			}
         } catch (SecurityException e) {
             // fall through...
         } catch (IllegalAccessException e) {
