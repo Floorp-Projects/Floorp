@@ -70,6 +70,14 @@
 #include "nsRDFContentUtils.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsStyleConsts.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMLoadListener.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMPaintListener.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMFormListener.h"
+#include "nsIScriptContextOwner.h"
 
 // The XUL interfaces implemented by the RDF content node.
 #include "nsIDOMXULElement.h"
@@ -101,6 +109,14 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,     NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,           NS_RDFSERVICE_CID);
+
+static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
+static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
+static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
+static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
+static NS_DEFINE_IID(kIDOMFormListenerIID, NS_IDOMFORMLISTENER_IID);
+static NS_DEFINE_IID(kIDOMLoadListenerIID, NS_IDOMLOADLISTENER_IID);
+static NS_DEFINE_IID(kIDOMPaintListenerIID, NS_IDOMPAINTLISTENER_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -218,6 +234,8 @@ public:
     // Implementation methods
     nsresult GetResource(nsIRDFResource** aResource);
     nsresult EnsureContentsGenerated(void) const;
+
+    void AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
 
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
@@ -997,6 +1015,9 @@ RDFElementImpl::GetDocument(nsIDocument*& aResult) const
 NS_IMETHODIMP
 RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
+    if (aDocument == mDocument)
+      return NS_OK;
+
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> resource;
@@ -1346,8 +1367,43 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         }
     }
 
-	  // XUL Only. Find out if we have a broadcast listener for this element.
+	  // XUL Only. Check for event handlers and notify broadcast listeners.
 	  if (successful) {
+        
+      
+        // Check for event handlers
+        nsString attributeName;
+        aName->ToString(attributeName);
+
+        if (attributeName.EqualsIgnoreCase("onclick") ||
+            attributeName.EqualsIgnoreCase("ondblclick") ||
+            attributeName.EqualsIgnoreCase("onmousedown") ||
+            attributeName.EqualsIgnoreCase("onmouseup") ||
+            attributeName.EqualsIgnoreCase("onmouseover") ||
+            attributeName.EqualsIgnoreCase("onmouseout"))
+            AddScriptEventListener(aName, aValue, kIDOMMouseListenerIID);
+        else if (attributeName.EqualsIgnoreCase("onkeydown") ||
+                 attributeName.EqualsIgnoreCase("onkeyup") ||
+                 attributeName.EqualsIgnoreCase("onkeypress"))
+            AddScriptEventListener(aName, aValue, kIDOMKeyListenerIID);
+        else if (attributeName.EqualsIgnoreCase("onmousemove"))
+            AddScriptEventListener(aName, aValue, kIDOMMouseMotionListenerIID); 
+        else if (attributeName.EqualsIgnoreCase("onload"))
+            AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID); 
+        else if (attributeName.EqualsIgnoreCase("onunload") ||
+                 attributeName.EqualsIgnoreCase("onabort") ||
+                 attributeName.EqualsIgnoreCase("onerror"))
+            AddScriptEventListener(aName, aValue, kIDOMLoadListenerIID);
+        else if (attributeName.EqualsIgnoreCase("onfocus") ||
+                 attributeName.EqualsIgnoreCase("onblur"))
+            AddScriptEventListener(aName, aValue, kIDOMFocusListenerIID);
+        else if (attributeName.EqualsIgnoreCase("onsubmit") ||
+                 attributeName.EqualsIgnoreCase("onreset") ||
+                 attributeName.EqualsIgnoreCase("onchange"))
+            AddScriptEventListener(aName, aValue, kIDOMFormListenerIID);
+        else if (attributeName.EqualsIgnoreCase("onpaint"))
+            AddScriptEventListener(aName, aValue, kIDOMPaintListenerIID); 
+
         count = mBroadcastListeners.Count();
         for (PRInt32 i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
@@ -1392,6 +1448,31 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     return rv;
 }
 
+void RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
+{
+  nsresult ret = NS_OK;
+  nsIScriptContext* context;
+  nsIScriptContextOwner* owner;
+
+  if (nsnull != mDocument) {
+      owner = mDocument->GetScriptContextOwner();
+      if (NS_OK == owner->GetScriptContext(&context)) {
+            nsIEventListenerManager *manager;
+            if (NS_OK == GetListenerManager(&manager)) {
+                nsIScriptObjectOwner* owner;
+                if (NS_OK == QueryInterface(kIScriptObjectOwnerIID,
+                                                      (void**) &owner)) {
+                    ret = manager->AddScriptEventListener(context, owner,
+                                                          aName, aValue, aIID);
+                    NS_RELEASE(owner);
+              }
+              NS_RELEASE(manager);
+        }
+        NS_RELEASE(context);
+      }
+      NS_RELEASE(owner);
+  }
+}
 
 NS_IMETHODIMP
 RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
