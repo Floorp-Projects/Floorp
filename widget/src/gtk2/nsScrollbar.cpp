@@ -130,11 +130,11 @@ nsScrollbar::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 NS_IMETHODIMP
 nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
 {
-    if (aX == mBounds.x && aY == mBounds.y)
-        return NS_OK;
-
     LOG(("nsScrollbar::Move [%p] %d %d\n", (void *)this,
          aX, aY));
+
+    if (aX == mBounds.x && aY == mBounds.y)
+        return NS_OK;
 
     mBounds.x = aX;
     mBounds.y = aY;
@@ -415,8 +415,13 @@ nsScrollbar::NativeCreate(nsIWidget        *aParent,
     BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
                aAppShell, aToolkit, aInitData);
 
+    // Do we need to listen for resizes?
+    PRBool listenForResizes;
+    if (aNativeParent || aInitData->mListenForResizes)
+        listenForResizes = PR_TRUE;
+
     // and do our common creation
-    CommonCreate(aParent, aNativeParent);
+    CommonCreate(aParent, listenForResizes);
 
     // save our bounds
     mBounds = aRect;
