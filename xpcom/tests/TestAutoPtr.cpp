@@ -55,15 +55,16 @@ class TestObject : public TestObjectBaseA, public TestObjectBaseB {
 class TestRefObjectBaseA {
     public:
         int fooA;
-        virtual void AddRef() = 0;
-        virtual void Release() = 0;
+        // Must return |nsrefcnt| to keep |nsDerivedSafe| happy.
+        virtual nsrefcnt AddRef() = 0;
+        virtual nsrefcnt Release() = 0;
 };
 
 class TestRefObjectBaseB {
     public:
         int fooB;
-        virtual void AddRef() = 0;
-        virtual void Release() = 0;
+        virtual nsrefcnt AddRef() = 0;
+        virtual nsrefcnt Release() = 0;
 };
 
 class TestRefObject : public TestRefObjectBaseA, public TestRefObjectBaseB {
@@ -81,20 +82,24 @@ class TestRefObject : public TestRefObjectBaseA, public TestRefObjectBaseB {
                    NS_STATIC_CAST(void*, this));
         }
 
-        void AddRef()
+        nsrefcnt AddRef()
         {
             ++mRefCount;
             printf("  AddRef to %d on TestRefObject %p.\n",
                    mRefCount, NS_STATIC_CAST(void*, this));
+            return mRefCount;
         }
 
-        void Release()
+        nsrefcnt Release()
         {
             --mRefCount;
             printf("  Release to %d on TestRefObject %p.\n",
                    mRefCount, NS_STATIC_CAST(void*, this));
-            if (mRefCount == 0)
+            if (mRefCount == 0) {
                 delete NS_CONST_CAST(TestRefObject*, this);
+                return 0;
+            }
+            return mRefCount;
         }
 
     protected:
