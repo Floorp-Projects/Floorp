@@ -51,7 +51,7 @@ MOZPNG=95
 
 dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
-GTK_VERSION=1.1.5
+GTK_VERSION=1.1.9
 
 dnl Set various checks
 dnl ========================================================
