@@ -32,6 +32,10 @@ ifdef MOZ_SOAP
 DIRS += soap
 endif
 
+ifdef MOZ_SCHEMA
+DIRS += schema
+endif
+
 DIRS += build
 
 ifdef ENABLE_TESTS

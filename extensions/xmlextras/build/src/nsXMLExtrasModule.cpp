@@ -40,6 +40,12 @@
 #include "nsDefaultSOAPEncoder.h"
 #include "nsHTTPSOAPTransport.h"
 #endif
+
+#ifdef MOZ_SCHEMA
+#include "nsSchemaLoader.h"
+#include "nsSchemaPrivate.h"
+#endif
+
 #include "nsString.h"
 #include "prprf.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -58,6 +64,29 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPParameter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
+#endif
+
+#ifdef MOZ_SCHEMA
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaLoader)
+NS_DECL_CLASSINFO(nsSchemaLoader)
+NS_DECL_CLASSINFO(nsSchema)
+NS_DECL_CLASSINFO(nsSchemaBuiltinType)
+NS_DECL_CLASSINFO(nsSchemaListType)
+NS_DECL_CLASSINFO(nsSchemaUnionType)
+NS_DECL_CLASSINFO(nsSchemaRestrictionType)
+NS_DECL_CLASSINFO(nsSchemaComplexType)
+NS_DECL_CLASSINFO(nsSchemaTypePlaceholder)
+NS_DECL_CLASSINFO(nsSchemaModelGroup)
+NS_DECL_CLASSINFO(nsSchemaModelGroupRef)
+NS_DECL_CLASSINFO(nsSchemaAnyParticle)
+NS_DECL_CLASSINFO(nsSchemaElement)
+NS_DECL_CLASSINFO(nsSchemaElementRef)
+NS_DECL_CLASSINFO(nsSchemaAttribute)
+NS_DECL_CLASSINFO(nsSchemaAttributeRef)
+NS_DECL_CLASSINFO(nsSchemaAttributeGroup)
+NS_DECL_CLASSINFO(nsSchemaAttributeGroupRef)
+NS_DECL_CLASSINFO(nsSchemaAnyAttribute)
+NS_DECL_CLASSINFO(nsSchemaFacet)
 #endif
 
 class nsXMLExtrasNameset : public nsISupports
@@ -171,6 +200,14 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
+#ifdef MOZ_SCHEMA
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "SchemaLoader",
+                                NS_SCHEMALOADER_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
   return rv;
 }
 
@@ -198,6 +235,102 @@ static nsModuleComponentInfo components[] = {
   { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID,
     NS_HTTPSOAPTRANSPORT_CONTRACTID, nsHTTPSOAPTransportConstructor },
 #endif
+#ifdef MOZ_SCHEMA
+  { "SchemaLoader", NS_SCHEMALOADER_CID, NS_SCHEMALOADER_CONTRACTID,
+    nsSchemaLoaderConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSchemaLoader), nsnull,
+    &NS_CLASSINFO_NAME(nsSchemaLoader), nsIClassInfo::DOM_OBJECT },
+  { "Schema", NS_SCHEMA_CID, NS_SCHEMA_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchema), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchema), nsIClassInfo::DOM_OBJECT },
+  { "SchemaBuiltinType", NS_SCHEMABUILTINTYPE_CID, 
+    NS_SCHEMABUILTINTYPE_CONTRACTID, nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSchemaBuiltinType), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchemaBuiltinType), nsIClassInfo::DOM_OBJECT },
+  { "SchemaListType", NS_SCHEMALISTTYPE_CID, NS_SCHEMALISTTYPE_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSchemaListType), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchemaListType), nsIClassInfo::DOM_OBJECT },
+  { "SchemaUnionType", NS_SCHEMAUNIONTYPE_CID, NS_SCHEMAUNIONTYPE_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSchemaUnionType), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchemaUnionType), nsIClassInfo::DOM_OBJECT },
+  { "SchemaRestrictionType", NS_SCHEMARESTRICTIONTYPE_CID, 
+    NS_SCHEMARESTRICTIONTYPE_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaRestrictionType), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaRestrictionType), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaComplexType", NS_SCHEMACOMPLEXTYPE_CID, 
+    NS_SCHEMACOMPLEXTYPE_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaComplexType), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaComplexType), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaTypePlaceholder", NS_SCHEMATYPEPLACEHOLDER_CID, 
+    NS_SCHEMATYPEPLACEHOLDER_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaTypePlaceholder), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaTypePlaceholder), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaModelGroup", NS_SCHEMAMODELGROUP_CID, 
+    NS_SCHEMAMODELGROUP_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaModelGroup), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchemaModelGroup), nsIClassInfo::DOM_OBJECT },
+  { "SchemaModelGroupRef", NS_SCHEMAMODELGROUPREF_CID, 
+    NS_SCHEMAMODELGROUPREF_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaModelGroupRef), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaModelGroupRef), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaAnyParticle", NS_SCHEMAANYPARTICLE_CID, 
+    NS_SCHEMAANYPARTICLE_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaAnyParticle), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaAnyParticle), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaElement", NS_SCHEMAELEMENT_CID, NS_SCHEMAELEMENT_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSchemaElement), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchemaElement), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaElementRef", NS_SCHEMAELEMENTREF_CID, 
+    NS_SCHEMAELEMENTREF_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaElementRef), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchemaElementRef), nsIClassInfo::DOM_OBJECT },
+  { "SchemaAttribute", NS_SCHEMAATTRIBUTE_CID, NS_SCHEMAATTRIBUTE_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSchemaAttribute), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchemaAttribute), nsIClassInfo::DOM_OBJECT },
+  { "SchemaAttributeRef", NS_SCHEMAATTRIBUTEREF_CID, 
+    NS_SCHEMAATTRIBUTEREF_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaAttributeRef), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaAttributeRef), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaAttributeGroup", NS_SCHEMAATTRIBUTEGROUP_CID, 
+    NS_SCHEMAATTRIBUTEGROUP_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaAttributeGroup), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaAttributeGroup), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaAttributeGroupRef", NS_SCHEMAATTRIBUTEGROUPREF_CID, 
+    NS_SCHEMAATTRIBUTEGROUPREF_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaAttributeGroupRef), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaAttributeGroupRef), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaAnyAttribute", NS_SCHEMAANYATTRIBUTE_CID, 
+    NS_SCHEMAANYATTRIBUTE_CONTRACTID, nsnull, nsnull, 
+    nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsSchemaAnyAttribute), 
+    nsnull, &NS_CLASSINFO_NAME(nsSchemaAnyAttribute), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SchemaFacet", NS_SCHEMAFACET_CID, NS_SCHEMAFACET_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSchemaFacet), nsnull, 
+    &NS_CLASSINFO_NAME(nsSchemaFacet), nsIClassInfo::DOM_OBJECT },
+#endif
 };
 
-NS_IMPL_NSGETMODULE(nsXMLExtrasModule, components)
+void PR_CALLBACK
+XMLExtrasModuleDestructor(nsIModule* self)
+{
+#ifdef MOZ_SCHEMA
+  nsSchemaAtoms::DestroySchemaAtoms();
+#endif    
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsXMLExtrasModule, components, 
+                              XMLExtrasModuleDestructor)
