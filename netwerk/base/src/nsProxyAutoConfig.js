@@ -204,7 +204,7 @@ var pacUtils =
 "}\n"+
 
 "function isPlainHostName(host) {\n" +
-"    return (host.search('\\.') == -1);\n" +
+"    return (host.search('\\\\.') == -1);\n" +
 "}\n" +
 
 "function isResolvable(host) {\n" +
