@@ -75,6 +75,7 @@ public:
   NS_IMETHOD  GetLineHeight(nscoord *aHeight);
   NS_IMETHOD  ScrollByLines(PRInt32 aNumLines);
   NS_IMETHOD  ScrollByPages(PRInt32 aNumPages);
+  NS_IMETHOD  ScrollByWhole(PRBool aTop);
   
   NS_IMETHOD  GetClipView(const nsIView** aClipView) const;
 
