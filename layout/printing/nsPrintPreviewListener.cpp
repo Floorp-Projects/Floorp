@@ -125,7 +125,8 @@ static PRBool IsKeyOK(nsIDOMEvent* aEvent)
 {
   const PRUint32 kOKKeyCodes[] = {nsIDOMKeyEvent::DOM_VK_PAGE_UP, nsIDOMKeyEvent::DOM_VK_PAGE_DOWN,
                                   nsIDOMKeyEvent::DOM_VK_UP, nsIDOMKeyEvent::DOM_VK_DOWN, 
-                                  nsIDOMKeyEvent::DOM_VK_HOME, nsIDOMKeyEvent::DOM_VK_END, 0};
+                                  nsIDOMKeyEvent::DOM_VK_HOME, nsIDOMKeyEvent::DOM_VK_END, 
+                                  nsIDOMKeyEvent::DOM_VK_TAB, 0};
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
   if (keyEvent) {
