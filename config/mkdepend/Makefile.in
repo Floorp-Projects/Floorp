@@ -39,6 +39,12 @@ MODULE_OPTIMIZE_FLAGS = -fast
 endif
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -Ox
+endif
+endif
+
 HOST_CSRCS	= \
 		cppsetup.c \
 		ifparser.c \
