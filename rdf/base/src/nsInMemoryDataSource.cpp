@@ -484,8 +484,6 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
       mTruthValue(aTruthValue),
       mNextAssertion(nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
     NS_ADDREF(mDataSource);
     NS_IF_ADDREF(mSource);
     NS_ADDREF(mProperty);
@@ -690,7 +688,6 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
       mTarget(aTarget),
       mCurrent(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF(mDataSource);
     NS_IF_ADDREF(mSource);
     NS_IF_ADDREF(mTarget);

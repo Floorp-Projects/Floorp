@@ -44,7 +44,6 @@ nsKeygenThread::nsKeygenThread()
  wincx(nsnull),
  threadHandle(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   mutex = PR_NewLock();
 }
 

@@ -60,14 +60,11 @@ NS_IMPL_ISUPPORTS1(nsCRLInfo, nsICRLInfo)
 
 nsCRLInfo::nsCRLInfo()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
 nsCRLInfo::nsCRLInfo(CERTSignedCrl *signedCrl)
 {
-  NS_INIT_ISUPPORTS();
-  
   CERTCrl *crl = &(signedCrl->crl);
   nsAutoString org;
   nsAutoString orgUnit;

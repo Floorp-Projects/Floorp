@@ -109,7 +109,6 @@ ContainerEnumeratorImpl::ContainerEnumeratorImpl(nsIRDFDataSource* aDataSource,
                                                  nsIRDFResource* aContainer)
     : mNextIndex(1)
 {
-    NS_INIT_ISUPPORTS();
     mDataSource = dont_QueryInterface(aDataSource);
     mContainer  = dont_QueryInterface(aContainer);
 }

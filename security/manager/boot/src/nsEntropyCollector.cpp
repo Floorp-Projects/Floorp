@@ -44,7 +44,6 @@
 nsEntropyCollector::nsEntropyCollector()
 :mBytesCollected(0), mWritePointer(mEntropyCache)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsEntropyCollector::~nsEntropyCollector()

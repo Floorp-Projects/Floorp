@@ -120,7 +120,6 @@ NS_IMPL_ISUPPORTS2(nsCertTree, nsICertTree, nsITreeView)
 
 nsCertTree::nsCertTree() : mTreeArray(NULL)
 {
-  NS_INIT_ISUPPORTS();
   mCompareCache.ops = nsnull;
   mNSSComponent = do_GetService(kNSSComponentCID);
 }

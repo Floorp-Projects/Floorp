@@ -326,8 +326,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
       mContextStack(nsnull),
       mDocumentURL(nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
     if (gRefCnt++ == 0) {
         nsresult rv;
         rv = nsServiceManager::GetService(kRDFServiceCID,

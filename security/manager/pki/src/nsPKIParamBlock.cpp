@@ -42,7 +42,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsPKIParamBlock, nsIPKIParamBlock,
 
 nsPKIParamBlock::nsPKIParamBlock()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult

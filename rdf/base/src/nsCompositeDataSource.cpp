@@ -186,7 +186,6 @@ CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompo
       mAllowNegativeAssertions(aAllowNegativeAssertions),
       mCoalesceDuplicateArcs(aCoalesceDuplicateArcs)
 {
-	NS_INIT_ISUPPORTS();
 	NS_ADDREF(mCompositeDataSource);
 }
 
@@ -625,8 +624,6 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 	  mCoalesceDuplicateArcs(PR_TRUE),
       mUpdateBatchNest(0)
 {
-    NS_INIT_ISUPPORTS();
-
     static const size_t kBucketSizes[] = {
         sizeof(CompositeAssertionEnumeratorImpl),
         sizeof(CompositeArcsInOutEnumeratorImpl) };

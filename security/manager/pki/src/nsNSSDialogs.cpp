@@ -60,7 +60,6 @@ static NS_DEFINE_CID(kPKIParamBlockCID, NS_PKIPARAMBLOCK_CID);
 
 nsNSSDialogs::nsNSSDialogs()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsNSSDialogs::~nsNSSDialogs()

@@ -87,7 +87,6 @@ nsIAtom*   nsProfileDirServiceProvider::sApp_MessengerFolderCache50;
 nsProfileDirServiceProvider::nsProfileDirServiceProvider(PRBool aNotifyObservers) :
   mNotifyObservers(aNotifyObservers)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

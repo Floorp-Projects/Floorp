@@ -56,7 +56,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsHash, nsIHash)
 
 nsHash::nsHash() : m_ctxt(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -105,12 +104,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCMSMessage, nsICMSMessage)
 
 nsCMSMessage::nsCMSMessage()
 {
-  NS_INIT_ISUPPORTS();
   m_cmsMsg = nsnull;
 }
 nsCMSMessage::nsCMSMessage(NSSCMSMessage *aCMSMsg)
 {
-  NS_INIT_ISUPPORTS();
   m_cmsMsg = aCMSMsg;
 }
 
@@ -646,7 +643,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCMSDecoder, nsICMSDecoder)
 
 nsCMSDecoder::nsCMSDecoder()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCMSDecoder::~nsCMSDecoder()
@@ -702,7 +698,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCMSEncoder, nsICMSEncoder)
 
 nsCMSEncoder::nsCMSEncoder()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCMSEncoder::~nsCMSEncoder()

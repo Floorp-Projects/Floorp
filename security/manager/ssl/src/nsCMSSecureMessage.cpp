@@ -75,7 +75,6 @@ NS_IMPL_ISUPPORTS1(nsCMSSecureMessage, nsICMSSecureMessage)
 nsCMSSecureMessage::nsCMSSecureMessage()
 {
   // initialize superclass
-  NS_INIT_ISUPPORTS();
 }
 
 // nsCMSMessage destructor

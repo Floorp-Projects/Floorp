@@ -232,7 +232,6 @@ nsWeakPtr LocalStoreImpl::gRDF;
 
 LocalStoreImpl::LocalStoreImpl(void)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 LocalStoreImpl::~LocalStoreImpl(void)

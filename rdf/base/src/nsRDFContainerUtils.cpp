@@ -362,8 +362,6 @@ RDFContainerUtilsImpl::MakeAlt(nsIRDFDataSource *aDataSource, nsIRDFResource *aR
 
 RDFContainerUtilsImpl::RDFContainerUtilsImpl()
 {
-    NS_INIT_ISUPPORTS();
-
     if (gRefCnt++ == 0) {
         nsresult rv;
 

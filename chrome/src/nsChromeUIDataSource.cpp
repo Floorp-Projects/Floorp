@@ -64,7 +64,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsChromeUIDataSource::nsChromeUIDataSource(nsIRDFDataSource* aComposite)
 {
-  NS_INIT_ISUPPORTS();
   mComposite = aComposite;
   mComposite->AddObserver(this);
 
