@@ -816,7 +816,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [urlString appendString:tmpString];
   }
   
-  [self openBrowserWindowWithURL:urlString andReferrer:nil];
+  [self openNewWindowOrTabWithURL:urlString andReferrer:nil];
 }
 
 @end
