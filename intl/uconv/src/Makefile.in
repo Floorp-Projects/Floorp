@@ -60,11 +60,11 @@ CPPSRCS		= \
 		nsConverterInputStream.cpp \
 		nsTextToSubURI.cpp \
 		nsURLProperties.cpp \
+		nsCharsetConverterManager.cpp \
 		$(NULL)
 
 ifndef MOZ_USE_NATIVE_UCONV
 CPPSRCS         += \
-		nsCharsetConverterManager.cpp \
 		nsScriptableUConv.cpp \
 		nsUnicodeDecodeHelper.cpp \
 		nsUnicodeEncodeHelper.cpp \
