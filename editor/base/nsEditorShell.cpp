@@ -359,7 +359,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     {
       err = NS_ERROR_INVALID_ARG;    // this is not an editor we know about
 #if DEBUG
-      nsString  errorMsg = "Failed to init editor. Unknown editor type \"";
+      nsAutoString  errorMsg = "Failed to init editor. Unknown editor type \"";
       errorMsg += mEditorTypeString;
       errorMsg += "\"\n";
       char  *errorMsgCString = errorMsg.ToNewCString();
@@ -1022,8 +1022,8 @@ nsEditorShell::CheckAndSaveDocument(PRBool *_retval)
       if (modCount > 0)
       {
         // Ask user if they want to save current changes
-        nsString tmp1 = GetString("Save");
-        nsString tmp2 = GetString("DontSave");
+        nsAutoString tmp1 = GetString("Save");
+        nsAutoString tmp2 = GetString("DontSave");
         EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), GetString("SaveFilePrompt"),
                                                   &tmp1, &tmp2);
         if (result == eCancel)
@@ -1076,7 +1076,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           nsCOMPtr<nsIDocument> document = do_QueryInterface(doc);
           if (document)
           {
-            nsString const *title = document->GetDocumentTitle();
+            const nsString* title = document->GetDocumentTitle();		// don't delete
             if (title)
             {
               if (title->Length() == 0)
@@ -1742,7 +1742,7 @@ nsEditorShell::GetString(const PRUnichar *name, PRUnichar **_retval)
     return NS_ERROR_NULL_POINTER;
 
   // Don't fail, just return an empty string    
-  nsString empty("");
+  nsAutoString empty("");
 
   if (mStringBundle)
   {
@@ -1795,12 +1795,12 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     // Stuff in Parameters 
     block->SetInt( nsICommonDialogs::eNumberButtons,3 ); 
     block->SetString( nsICommonDialogs::eMsg, aQuestion.GetUnicode()); 
-    nsString url( "chrome://global/skin/question-icon.gif"  ); 
+    nsAutoString url( "chrome://global/skin/question-icon.gif"  ); 
     block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
 
-    nsString yes = aYesString ? *aYesString : GetString("Yes");
-    nsString no = aNoString ? *aNoString : GetString("No");
-    nsString cancel = GetString("Cancel");
+    nsAutoString yes = aYesString ? *aYesString : GetString("Yes");
+    nsAutoString no = aNoString ? *aNoString : GetString("No");
+    nsAutoString cancel = GetString("Cancel");
     block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() ); 
     // This is currently not good -- 2nd button is linked to Cancel
     block->SetString( nsICommonDialogs::eButton1Text, cancel.GetUnicode() ); 
@@ -1876,7 +1876,7 @@ nsEditorShell::GetContentsAs(const PRUnichar *format, PRUint32 flags,
 {
   nsresult  err = NS_NOINTERFACE;
 
-  nsString aFormat (format);
+  nsAutoString aFormat (format);
   nsString aContentsAs;
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
@@ -2835,7 +2835,7 @@ NS_IMETHODIMP
 nsEditorShell::AddWordToDictionary(const PRUnichar *aWord)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsString word(aWord);
+  nsAutoString word(aWord);
   if (mEditor && mSpellChecker)
   {
     result = mSpellChecker->AddWordToPersonalDictionary(&word);
@@ -2847,7 +2847,7 @@ NS_IMETHODIMP
 nsEditorShell::RemoveWordFromDictionary(const PRUnichar *aWord)
 {
   nsresult  result = NS_NOINTERFACE;
-  nsString word(aWord);
+  nsAutoString word(aWord);
   if (mEditor && mSpellChecker)
   {
     result = mSpellChecker->RemoveWordFromPersonalDictionary(&word);

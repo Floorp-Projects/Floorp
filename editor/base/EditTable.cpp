@@ -101,7 +101,7 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
         {
           // We have a cell spanning this location
           // Simply increase its rowspan to keep table rectangular
-          nsString newColSpan;
+          nsAutoString newColSpan;
           newColSpan.Append(colSpan+aNumber, 10);
           SetAttribute(curCell, "colspan", newColSpan);
         } else {

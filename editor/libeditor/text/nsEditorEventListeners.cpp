@@ -374,9 +374,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         else if (PR_TRUE==altKey)
         {
           aProcessed=PR_TRUE;
-          nsString output;
+          nsAutoString output;
           nsresult res = NS_ERROR_FAILURE;
-          nsString format;
+          nsAutoString format;
           if (isShift)
             format = "text/plain";
           else
@@ -563,7 +563,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
           if (htmlEditor)
           {
-            nsString nsstr ("This is <b>bold <em>and emphasized</em></b> text");
+            nsAutoString nsstr ("This is <b>bold <em>and emphasized</em></b> text");
             htmlEditor->InsertHTML(nsstr);
           }
         }
@@ -1256,7 +1256,7 @@ nsTextEditorTextListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 {
-   nsString            composedText;
+   nsAutoString            composedText;
    nsresult            result = NS_OK;
    nsCOMPtr<nsIPrivateTextEvent> textEvent;
    nsIPrivateTextRangeList      *textRangeList;
