@@ -184,6 +184,8 @@ function onOk()
         gServerSettings[slot] = controls[i].value;
     }
   }
+
+  return true;
 }
 
 

@@ -183,7 +183,7 @@ function onAdvanced()
       var account = parent.getAccountFromServerId(gServer.serverURI);
       var identity = account.defaultIdentity;
       var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
-      var account = accountManager.getAccount(serverSettings.deferredToAccount);
+      account = accountManager.getAccount(serverSettings.deferredToAccount);
       if (identity.fccFolder == (pop3Server.serverURI + "/Sent"))
         identity.fccFolder = account.incomingServer.serverURI + "/Sent";
 
@@ -224,12 +224,10 @@ function setupBiffUI()
    var checked = dobiff.checked;
    var locked = getAccountValueIsLocked(dobiff);
 
-   if (checked)
+   if (checked && !locked)
      broadcaster.removeAttribute("disabled");
    else
      broadcaster.setAttribute("disabled", "true");
-   if (locked)
-     broadcaster.setAttribute("disabled","true");
 }
 
 function setupMailOnServerUI()
@@ -295,12 +293,10 @@ function setupNotifyUI()
     var checked = notify.checked;
     var locked = getAccountValueIsLocked(notify);
 
-    if (checked)
+    if (checked && !locked)
       broadcaster.removeAttribute("disabled");
     else
       broadcaster.setAttribute("disabled", "true");
-    if (locked)
-      broadcaster.setAttribute("disabled","true");
 }
 
 function BrowseForNewsrc()
