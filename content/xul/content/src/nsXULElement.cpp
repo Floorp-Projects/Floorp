@@ -2226,7 +2226,7 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
     // unsetting these attributes forces us to update our selected arrays.
     nsCOMPtr<nsIAtom> tag;
     GetTag(*getter_AddRefs(tag));
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None)) {
+    if (aNameSpaceID == kNameSpaceID_None) {
       // See if we're a treeitem atom.
       // XXX Forgive me father, for I know exactly what I do, and I'm
       // doing it anyway.  Need to make an nsIRDFNodeList interface that
