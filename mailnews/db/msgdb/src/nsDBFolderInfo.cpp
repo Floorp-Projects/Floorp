@@ -24,7 +24,7 @@
 #include "msgCore.h"
 #include "nsDBFolderInfo.h"
 #include "nsMsgDatabase.h"
-
+#include "nsMsgFolderFlags.h"
 static const char *kDBFolderInfoScope = "ns:msg:db:row:scope:dbfolderinfo:all";
 static const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
 
@@ -497,6 +497,7 @@ NS_IMETHODIMP nsDBFolderInfo::SetFlags(PRInt32 flags)
 
 	if (m_flags != flags)
 	{
+    NS_ASSERTION((m_flags & MSG_FOLDER_FLAG_INBOX) == 0 || (flags & MSG_FOLDER_FLAG_INBOX) != 0, "lost inbox flag");
 		m_flags = flags; 
 		ret = SetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
 	}
@@ -778,5 +779,41 @@ NS_IMETHODIMP nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint
 	if (err == NS_OK)
 		return GetUint32PropertyWithToken(property_token, *propertyValue);
 	return err;
+}
+
+class nsTransferDBFolderInfo : public nsDBFolderInfo
+{
+public:
+  nsTransferDBFolderInfo();
+  virtual ~nsTransferDBFolderInfo();
+
+};
+
+nsTransferDBFolderInfo::nsTransferDBFolderInfo() : nsDBFolderInfo(nsnull)
+{
+}
+
+nsTransferDBFolderInfo::~nsTransferDBFolderInfo()
+{
+}
+
+/* void GetTransferInfo (out nsIDBFolderInfo transferInfo); */
+NS_IMETHODIMP nsDBFolderInfo::GetTransferInfo(nsIDBFolderInfo **transferInfo)
+{
+  NS_ENSURE_ARG_POINTER(transferInfo);
+
+  nsTransferDBFolderInfo *newInfo = new nsTransferDBFolderInfo;
+  *transferInfo = newInfo;
+  NS_ADDREF(newInfo);
+  newInfo->m_flags = m_flags;
+  return NS_OK;
+}
+
+/* void InitFromTransferInfo (in nsIDBFolderInfo transferInfo); */
+NS_IMETHODIMP nsDBFolderInfo::InitFromTransferInfo(nsIDBFolderInfo *transferInfo)
+{
+  NS_ENSURE_ARG(transferInfo);
+  transferInfo->GetFlags(&m_flags);
+  return NS_OK;
 }
 

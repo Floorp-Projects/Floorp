@@ -59,6 +59,9 @@ interface  nsIDBFolderInfo : nsISupports {
 	void SetUint32Property(in string propertyName, in unsigned long propertyValue);
 	unsigned long GetUint32Property(in string propertyName);
 
+	void	GetTransferInfo(out nsIDBFolderInfo transferInfo);
+	void	InitFromTransferInfo(in nsIDBFolderInfo transferInfo);
+
 	[noscript] void GetCharacterSet(in nsString result);
 	[noscript] void SetCharacterSet(in nsString result);
 

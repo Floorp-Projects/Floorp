@@ -1164,8 +1164,12 @@ NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement
   rv = element->GetStringProperty("onlineName", getter_Copies(onlineName));
   if (NS_SUCCEEDED(rv) && (const char *) onlineName && nsCRT::strlen((const char *) onlineName))
     m_onlineFolderName.Assign(onlineName);
+#ifdef DEBUG_bienvenu
   if (!nsCRT::strcasecmp((const char *) onlineName, "Sent"))
     printf("loading folder cache elem for %s flags = %lx", (const char *) onlineName, mFlags);
+  else if (!nsCRT::strcasecmp((const char *) onlineName, "INBOX"))
+    printf("loading folder cache elem for %s flags = %lx", (const char *) onlineName, mFlags);
+#endif
   return rv;
 }
 
@@ -1659,14 +1663,12 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
         !NET_IsOffline() */)
       {
 
-#if TRANSFER_INFO
-      TNeoFolderInfoTransfer *originalInfo = NULL;
-      originalInfo = new TNeoFolderInfoTransfer(dbFolderInfo);
-#endif // 0
-            if (mDatabase)
+      nsCOMPtr <nsIDBFolderInfo> transferInfo;
+      dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+      if (mDatabase)
       {
         dbFolderInfo = null_nsCOMPtr();
-                mDatabase->ForceClosed();
+        mDatabase->ForceClosed();
       }
       mDatabase = null_nsCOMPtr();
         
@@ -1690,13 +1692,12 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       }
       else if (NS_SUCCEEDED(rv) && mDatabase)
       {
-#if TRANSFER_INFO
-        if (originalInfo && mDatabase)
+        if (transferInfo && mDatabase)
         {
-          originalInfo->TransferFolderInfo(mDatabase->m_dbFolderInfo);
-          delete originalInfo;
+          rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+          if (dbFolderInfo)
+            dbFolderInfo->InitFromTransferInfo(transferInfo);
         }
-#endif
         SummaryChanged();
                 rv = NS_ERROR_UNEXPECTED;
                 if (mDatabase) {
