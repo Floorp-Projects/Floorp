@@ -693,6 +693,19 @@ nsIMenuBar* nsWindow::GetMenuBar()
   return mMenuBar;
 }
 
+PRBool OnJaguarOrLater() // Return true if we are on Mac OS X 10.2 or later
+{
+    static PRBool gInitVer = PR_FALSE;
+    static PRBool gOnJaguarOrLater = PR_FALSE;
+    if(!gInitVer)
+    {
+        long version;
+        OSErr err = ::Gestalt(gestaltSystemVersion, &version);
+        gOnJaguarOrLater = (err == noErr && version >= 0x00001020);
+        gInitVer = PR_TRUE;
+    }
+    return gOnJaguarOrLater;
+}
 
 //
 // SetCursor
@@ -710,7 +723,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     return NS_OK;
   }
 
-  if ( gCursorSpinner == nsnull)
+  if ( gCursorSpinner == nsnull && OnJaguarOrLater())
   {
       gCursorSpinner = new CursorSpinner();
   }
@@ -751,19 +764,26 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     case eCursor_count_down:          cursor = kThemeCountingDownHandCursor; break;
     case eCursor_count_up_down:       cursor = kThemeCountingUpAndDownHandCursor; break;
     case eCursor_zoom_in:             cursor = 149; break;
-    case eCursor_zoom_out:            cursor = 150; break;        
+    case eCursor_zoom_out:            cursor = 150; break;
+    default:                          cursor = kThemeArrowCursor; break;
   }
 
-  if (aCursor == eCursor_spinning)
+  //animated cursors cause crash on Mac OS X 10.1 when Japanese Kotorei input method is enabled
+  if ( OnJaguarOrLater() )
   {
+    if (aCursor == eCursor_spinning)
+    {
       gCursorSpinner->StartSpinCursor();
-  }
-  else
-  {
+    }
+    else
+    {
       gCursorSpinner->StopSpinCursor();
       nsWindow::SetCursorResource(cursor);
+    }
+  } else {
+    nsWindow::SetCursorResource(cursor);
   }
- 
+
   return NS_OK;
   
 } // nsWindow::SetCursor
