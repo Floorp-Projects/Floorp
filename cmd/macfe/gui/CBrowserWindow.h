@@ -24,6 +24,9 @@
 #include "CProgressListener.h"
 #include "CSaveWindowStatus.h"
 #include "divview.h"
+#include "htrdf.h"
+#include "CRDFCoordinator.h"
+
 
 #include "ntypes.h"
 
@@ -182,6 +185,8 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 										  const AEDesc &inRequestedType,
 										  AEDesc& outPropertyDesc) const;
 
+			// sometimes you just need the HTPane of the window...
+		HT_Pane 					HTPane ( ) const { return GetNavCenterParentView()->HTPane(); } ;
 		
 	protected:
 		virtual	void				FinishCreateSelf(void);
