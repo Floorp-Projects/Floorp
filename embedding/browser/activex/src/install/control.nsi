@@ -8,6 +8,8 @@ InstallDir "$PROGRAMFILES\${PRODUCT}"
 
 OutFile MozillaControl${MAJOR_VERSION}${MINOR_VERSION}.exe
 
+SetCompressor bzip2
+
 DirText "This will install the Mozilla ActiveX Control ${VERSION} on your computer. Pick an installation directory."
 
 Section "Mozilla Control (required)"
