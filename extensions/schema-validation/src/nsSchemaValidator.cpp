@@ -2052,7 +2052,7 @@ PRBool nsSchemaValidator::IsValidSchemaDateTime(const nsAString & aNodeValue,
     isValid = nsSchemaValidatorUtils::ParseSchemaDate(date, year, month, day);
 
     if (isValid) {
-      char * pch;
+      const char * pch;
       pch = strchr(strValue.get(),'T');
       pch++;
       strncat(time, pch, (strValue.Length() - findString - 1));
