@@ -493,9 +493,8 @@ BEGIN
     LTEXT           "&Password:",IDC_STATIC,7,96,44,8
     EDITTEXT        IDC_PUBLISH_PASSWORD,70,93,108,13,ES_PASSWORD | 
                     ES_AUTOHSCROLL
-    PUSHBUTTON      "Use &Default Location",IDC_PUBLISH_DEFAULT_LOCATION,191,
-                    74,91,14
-    PUSHBUTTON     "N&etcenter Location",IDC_NETCENTER_LOCATION,191,94,91,14
+    PUSHBUTTON      "Use N&etcenter Location",IDC_NETCENTER_LOCATION,184,74,99,14
+    PUSHBUTTON      "Use &Default Location",IDC_PUBLISH_DEFAULT_LOCATION,184,93,98,14
     GROUPBOX        "Other files to include ",IDC_STATIC,7,115,276,74
     CONTROL         "&Files associated with this page",
                     IDC_INCLUDE_IMAGE_FILES,"Button",BS_AUTORADIOBUTTON | 
