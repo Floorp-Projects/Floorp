@@ -1016,7 +1016,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
 NS_IMETHODIMP 
 nsMsgLocalMailFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
 {
-	nsresult rv = NS_OK;
+	return nsMsgFolder::FindSubFolder(subFolderName, aFolder);
+
+/*	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
   
 	if(NS_FAILED(rv)) 
@@ -1044,6 +1046,7 @@ nsMsgLocalMailFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFold
 	}
 	else
 		return NS_ERROR_NULL_POINTER;
+*/
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
