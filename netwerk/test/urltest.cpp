@@ -242,72 +242,62 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
 
     */
 
-    const int tests = 25;
-
     const char baseURL[] = "http://a/b/c/d;p?q#f";
 
-    const char* rel[tests] = 
-    {
-        "g:h",
-        "g",  
-        "./g",
-        "g/",
-        "/g",
-        "//g",
-        "?y",
-        "g?y",
-        "g?y/./x",
-        "#s",
-        "g#s",
-        "g#s/./x",
-        "g?y#s",
-        ";x",
-        "g;x",
-        "g;x?y#s",
-        ".",
-        "./",
-        "..",
-        "../",
-        "../g",
-        "../..",
-        "../../",
-        "../../g",
-        "#my::anchor"
+    struct test {
+        const char* relativeURL;
+        const char* expectedResult;
     };
 
-    const char* results[tests] = 
-    {
-        "g:h",
-        "http://a/b/c/g",
-        "http://a/b/c/g",
-        "http://a/b/c/g/",
-        "http://a/g",
-        "http://g",
-        "http://a/b/c/d;p?y",
-        "http://a/b/c/g?y",
-        "http://a/b/c/g?y/./x",
-        "http://a/b/c/d;p?q#s",
-        "http://a/b/c/g#s",
-        "http://a/b/c/g#s/./x",
-        "http://a/b/c/g?y#s",
-        "http://a/b/c/d;x",
-        "http://a/b/c/g;x",
-        "http://a/b/c/g;x?y#s",
-        "http://a/b/c/",
-        "http://a/b/c/",
-        "http://a/b/",
-        "http://a/b/",
-        "http://a/b/g",
-        "http://a/",
-        "http://a/",
-        "http://a/g",
-        "http://a/b/c/d;p?q#my::anchor"
+    test tests[] = {
+        // Tests from rfc1808, section 5.1
+        { "g:h",                "g:h" },
+        { "g",                  "http://a/b/c/g" },
+        { "./g",                "http://a/b/c/g" },
+        { "g/",                 "http://a/b/c/g/" },
+        { "/g",                 "http://a/g" },
+        { "//g",                "http://g" },
+        { "?y",                 "http://a/b/c/d;p?y" },
+        { "g?y",                "http://a/b/c/g?y" },
+        { "g?y/./x",            "http://a/b/c/g?y/./x" },
+        { "#s",                 "http://a/b/c/d;p?q#s" },
+        { "g#s",                "http://a/b/c/g#s" },
+        { "g#s/./x",            "http://a/b/c/g#s/./x" },
+        { "g?y#s",              "http://a/b/c/g?y#s" },
+        { ";x",                 "http://a/b/c/d;x" },
+        { "g;x",                "http://a/b/c/g;x" },
+        { "g;x?y#s",            "http://a/b/c/g;x?y#s" },
+        { ".",                  "http://a/b/c/" },
+        { "./",                 "http://a/b/c/" },
+        { "..",                 "http://a/b/" },
+        { "../",                "http://a/b/" },
+        { "../g",               "http://a/b/g" },
+        { "../..",              "http://a/" },
+        { "../../",             "http://a/" },
+        { "../../g",            "http://a/g" },
+
+        // Our additional tests...
+        { "#my::anchor",        "http://a/b/c/d;p?q#my::anchor" },
+
+        // Make sure relative query's work right even if the query
+        // string contains absolute urls or other junk.
+        { "?http://foo",        "http://a/b/c/d;p?http://foo" },
+        { "g?http://foo",       "http://a/b/c/g?http://foo" },
+        { "g/h?http://foo",     "http://a/b/c/g/h?http://foo" },
+        { "g/h/../H?http://foo","http://a/b/c/g/H?http://foo" },
+        { "g/h/../H?http://foo?baz", "http://a/b/c/g/H?http://foo?baz" },
+        { "g/h/../H?http://foo;baz", "http://a/b/c/g/H?http://foo;baz" },
+        { "g/h/../H?http://foo#bar", "http://a/b/c/g/H?http://foo#bar" },
+        { "g/h/../H;baz?http://foo", "http://a/b/c/g/H;baz?http://foo" },
+        { "g/h/../H;baz?http://foo#bar", "http://a/b/c/g/H;baz?http://foo#bar" },
     };
 
-    for (int i = 0 ; i<tests ; ++i)
+    const int numTests = sizeof(tests) / sizeof(tests[0]);
+
+    for (int i = 0 ; i<numTests ; ++i)
     {
-        makeAbsTest(baseURL, rel[i]);
-        cout << "Expect " << results[i] << endl << endl;
+        makeAbsTest(baseURL, tests[i].relativeURL);
+        cout << "Expect " << tests[i].expectedResult << endl << endl;
     }
     return 0;
 }
