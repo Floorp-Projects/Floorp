@@ -70,7 +70,7 @@ protected:
 	nsIMsgDatabase * m_db;
 	PRInt32 m_IMAPMessageOffset;
 
-    // TRUE if we are in Offline IMAP mode, FALSE otherwise
+    // PR_TRUE if we are in Offline IMAP mode, PR_FALSE otherwise
 	PRBool m_OfflineIMAP;		 
 
 	// News related methods & state
@@ -80,10 +80,10 @@ protected:
 	PRInt32 GetNextNewsLine (nsIMsgDatabase * newsDB, char * buf, int bufSize);  
 
 	// Transformations
-	PRBool m_stripHeaders;	// TRUE if we're supposed to strip of message headers
-	PRBool m_stripHtml;		// TRUE if we're supposed to strip off HTML tags
-	PRBool m_passedHeaders;	// TRUE if we've already skipped over the headers
-	PRBool m_messageIsHtml;	// TRUE if the Content-type header claims text/html
+	PRBool m_stripHeaders;	// PR_TRUE if we're supposed to strip of message headers
+	PRBool m_stripHtml;		// PR_TRUE if we're supposed to strip off HTML tags
+	PRBool m_passedHeaders;	// PR_TRUE if we've already skipped over the headers
+	PRBool m_messageIsHtml;	// PR_TRUE if the Content-type header claims text/html
 	PRInt32 ApplyTransformations (char *buf, PRInt32 length, PRBool &returnThisLine);
 	void StripHtml (char *buf);
 };

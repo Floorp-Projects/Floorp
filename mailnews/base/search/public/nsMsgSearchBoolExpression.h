@@ -75,14 +75,14 @@ public:
     
     // Offline
 	nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchTerm * newTerm,
-                                               PRBool EvaluationValue = TRUE);
+                                               PRBool EvaluationValue = PR_TRUE);
 	nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchTerm * newTerm,
                                                char * encodingStr); // IMAP/NNTP
 
     // parses the expression tree and all
     // expressions underneath this node using
     // each EvaluationValue at each leaf to
-    // determine if the end result is TRUE or FALSE.
+    // determine if the end result is PR_TRUE or PR_FALSE.
 	PRBool OfflineEvaluate();
     
     // assuming the expression is for online
