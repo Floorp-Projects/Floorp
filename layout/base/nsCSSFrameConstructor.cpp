@@ -3605,9 +3605,24 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                     nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, pageFrame,
                                              pagePseudoStyle, nsnull, PR_TRUE);
+    nsIFrame* pageContentFrame = nsnull;
+    NS_NewPageContentFrame(aPresShell, &pageContentFrame);
+
+    nsCOMPtr<nsIStyleContext> pageContentPseudoStyle;
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageContentPseudo,
+                                               pagePseudoStyle, PR_FALSE,
+                                               getter_AddRefs(pageContentPseudoStyle));
+
+    pageContentFrame->Init(aPresContext, nsnull, pageFrame, pageContentPseudoStyle, nsnull);
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, pageContentFrame,
+                                             pageContentPseudoStyle, nsnull, PR_TRUE);
 
     // The eventual parent of the document element frame
-    mDocElementContainingBlock = pageFrame;
+    mDocElementContainingBlock = pageContentFrame;
+    mFixedContainingBlock = pageContentFrame;
+
+    // Set the initial child lists
+    pageFrame->SetInitialChildList(aPresContext, nsnull, pageContentFrame);
 
     // Set the initial child lists
     rootFrame->SetInitialChildList(aPresContext, nsnull, pageFrame);
@@ -11228,6 +11243,21 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
                                                styleContext, nsnull, PR_TRUE);
+      nsIFrame* pageContentFrame = nsnull;
+      NS_NewPageContentFrame(aPresShell, &pageContentFrame);
+
+      nsCOMPtr<nsIStyleContext> pageContentPseudoStyle;
+      aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageContentPseudo,
+                                                 styleContext, PR_FALSE,
+                                                 getter_AddRefs(pageContentPseudoStyle));
+
+      pageContentFrame->Init(aPresContext, nsnull, newFrame, pageContentPseudoStyle, nsnull);
+      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, pageContentFrame,
+                                               pageContentPseudoStyle, nsnull, PR_TRUE);
+
+     // Set the initial child lists
+      newFrame->SetInitialChildList(aPresContext, nsnull, pageContentFrame);
+
     }
 
   } else if (nsLayoutAtoms::tableOuterFrame == frameType) {
