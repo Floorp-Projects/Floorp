@@ -257,18 +257,34 @@ GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject)
 jobject
 GetMatchingJavaObject(JNIEnv* env, void* aXPCOMObject)
 {
-  JavaXPCOMBindingEntry *entry =
-    NS_STATIC_CAST(JavaXPCOMBindingEntry*,
-                   PL_DHashTableOperate(gXPCOMtoJAVABindings, aXPCOMObject,
-                                        PL_DHASH_LOOKUP));
+  jobject java_obj = nsnull;
+  nsISupports* xpcom_obj = NS_STATIC_CAST(nsISupports*, aXPCOMObject);
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-        env->CallIntMethod(entry->mJavaObject, hashCodeMID), (int) aXPCOMObject);
-    return entry->mJavaObject;
+  nsJavaXPTCStub* stub = nsnull;
+  xpcom_obj->QueryInterface(NS_GET_IID(nsJavaXPTCStub), (void**) &stub);
+  if (stub) {
+    java_obj = stub->GetJavaObject();
+    NS_ASSERTION(java_obj != nsnull, "nsJavaXPTCStub w/o matching Java object");
+    NS_RELEASE(stub);
   }
 
-  return nsnull;
+  if (java_obj == nsnull) {
+    JavaXPCOMBindingEntry *entry =
+      NS_STATIC_CAST(JavaXPCOMBindingEntry*,
+                     PL_DHashTableOperate(gXPCOMtoJAVABindings, aXPCOMObject,
+                                          PL_DHASH_LOOKUP));
+
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      java_obj = entry->mJavaObject;
+    }
+  }
+
+  if (java_obj) {
+    LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
+        env->CallIntMethod(java_obj, hashCodeMID), (int) aXPCOMObject);
+  }
+
+  return java_obj;
 }
 
 
@@ -364,13 +380,13 @@ InitializeJavaGlobals(JNIEnv *env)
     {
         return PR_FALSE;
     }
-  
+
     if (!(clazz = env->FindClass("org/mozilla/xpcom/XPCOMException")) ||
         !(xpcomExceptionClass = (jclass) env->NewGlobalRef(clazz)))
     {
         return PR_FALSE;
     }
-  
+
     if (!(hashCodeMID = env->GetMethodID(objectClass, "hashCode","()I"))) {
         return PR_FALSE;
     }

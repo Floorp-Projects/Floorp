@@ -47,12 +47,16 @@
 #include "nsJavaXPTCStubWeakRef.h"
 
 
+#define NS_JAVAXPTCSTUB_IID \
+{0x88dd8130, 0xebe6, 0x4431, {0x9d, 0xa7, 0xe6, 0xb7, 0x54, 0x74, 0xfb, 0x21}}
+
 class nsJavaXPTCStub : public nsXPTCStubBase,
                        public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISUPPORTSWEAKREFERENCE
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_JAVAXPTCSTUB_IID)
 
   nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
                  nsIInterfaceInfo *aIInfo);
