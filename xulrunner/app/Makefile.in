@@ -50,6 +50,11 @@ DIRS		= profile
 
 PREF_JS_EXPORTS = $(srcdir)/xulrunner.js
 
+# hardcode en-US for the moment
+AB_CD = en-US
+
+DEFINES += -DAB_CD=$(AB_CD)
+
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = xulrunner$(BIN_SUFFIX)
 else
