@@ -34,7 +34,6 @@ const nsIOutlinerBoxObject = Components.interfaces.nsIOutlinerBoxObject;
 var sfile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
 var retvals;
 var filePickerMode;
-var dirHistory;
 var homeDir;
 var outlinerView;
 
@@ -45,8 +44,6 @@ var gFilePickerBundle;
 
 function filepickerLoad() {
   gFilePickerBundle = document.getElementById("bundle_filepicker");
-
-  dirHistory = new Array();
 
   textInput = document.getElementById("textInput");
   okButton = document.getElementById("ok");
@@ -409,34 +406,27 @@ function onDirectoryChanged(target)
 }
 
 function addToHistory(directoryName) {
-  var found = false;
+  var menu = document.getElementById("lookInMenu");
+  var children = menu.childNodes;
+
   var i = 0;
-  while (!found && i<dirHistory.length) {
-    if (dirHistory[i] == directoryName)
-      found = true;
-    else
-      i++;
+  while (i < children.length) {
+    if (children[i].getAttribute("label") == directoryName)
+      break;
+
+    ++i;
   }
 
-  if (found) {
-    if (i!=0) {
-      dirHistory.splice(i, 1);
-      dirHistory.splice(0, 0, directoryName);
+  if (i < children.length) {
+    if (i != 0) {
+      var node = children[i];
+      menu.removeChild(node);
+      menu.insertBefore(node, children[0]);
     }
   } else {
-    dirHistory.splice(0, 0, directoryName);
-  }
-
-  var menu = document.getElementById("lookInMenu");
-
-  var children = menu.childNodes;
-  for (i=0; i < children.length; i++)
-    menu.removeChild(children[i]);
-
-  for (i=0; i < dirHistory.length; i++) {
     var menuItem = document.createElement("menuitem");
-    menuItem.setAttribute("label", dirHistory[i]);
-    menu.appendChild(menuItem);
+    menuItem.setAttribute("label", directoryName);
+    menu.insertBefore(menuItem, children[0]);
   }
 
   var menuList = document.getElementById("lookInMenuList");
