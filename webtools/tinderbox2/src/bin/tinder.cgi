@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.26 $ 
-# $Date: 2002/04/27 04:59:46 $ 
+# $Revision: 1.27 $ 
+# $Date: 2002/05/01 02:06:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -164,39 +164,6 @@ EOF
 
 
 
-# Create the list of times which determine the build table row spacing.
-# All times are stored in time() format.
-
-sub construct_times_vec {
-  my ($start_time, $end_time, $table_spacing, ) = @_;
-
-  my (@out) =();
-  
-  my ($table_spacing_sec) = $table_spacing*$main::SECONDS_PER_MINUTE;
-  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-    localtime($start_time);
-
-  # the first entry is rounded down to nearest 5 minutes 
-
-  my $remainder = $min % 5;
-  my ($time) = $start_time - ($remainder*$main::SECONDS_PER_MINUTE) - $sec;
-
-  while ($time > $end_time) {
-    push @out, $time;
-    $time -= $table_spacing_sec;
-  }
-
-  push @out, $time;
-
-  # make the last row twice as wide as the rest to encourage a small
-  # amount of overlap between adjacent pages.
-
-  @out[$#out] -= $table_spacing_sec;
-
-  return [@out];
-} # construct_times_vec
-
-
 
 # parse the command line arguments
 
@@ -268,14 +235,7 @@ sub parse_args {
   ( ($daemon_mode) || ($tree) ) ||
     die("If you are not running in daemon mode you must specify a tree\n");
   
-  # This prevents us from 'loosing' builds between the spaces of the
-  # grid and would cause our rendering algorithm to get off by one
-  # build creating problems in the whole grid display.
-
-  my ($times_vec) = construct_times_vec($start_time, $end_time, 
-                                        $TinderDB::TABLE_SPACING,);
-
-  return ($daemon_mode, $times_vec, $tree,);
+  return ($daemon_mode, $start_time, $end_time, $tree,);
 } # parse_args
 
 
@@ -284,7 +244,7 @@ sub parse_args {
 
 sub HTML_status_page {
 
-  my ($times_vec, $tree, ) = @_;
+  my ($start_time, $end_time, $tree, ) = @_;
 
   my ($status_page_url) = (FileStructure::get_filename($tree, 'tree_URL').
                            "/status.html");
@@ -318,17 +278,15 @@ sub HTML_status_page {
 
   my (@legend) = TinderDB::status_table_legend($tree);
   my (@header) = TinderDB::status_table_header($tree);
-  my (@body) = TinderDB::status_table_body($times_vec, $tree);
+  my (@body) = TinderDB::status_table_body($start_time, $end_time, $tree);
 
   # create the footer links
   
-  my ($max_time_row) = $#{$times_vec};
-  my ($display_time) = $times_vec->[0] - $times_vec->[$max_time_row] ;
+  my ($display_time) = $start_time - $end_time;
 
   # round the division to the nearest integer.
 
   my ($display_hours) =  sprintf '%d', ($display_time/$main::SECONDS_PER_HOUR);
-  my ($next_date) = $times_vec->[0] - $display_time;
 
   my ($display_2hours) = min($display_hours*2, $MAX_DISPLAY_HOURS);
   my ($display_4hours) = min($display_hours*4, $MAX_DISPLAY_HOURS);
@@ -339,7 +297,7 @@ sub HTML_status_page {
                     "href"=>("$FileStructure::URLS{'tinderd'}".
                              "\?".
                              "tree=$tree\&".
-                             "start-time=$next_date\&".
+                             "start-time=$end_time\&".
                              "display-hours=$display_hours"),
                    ).
    "<br>\n".
@@ -348,7 +306,7 @@ sub HTML_status_page {
                     "href"=>("$FileStructure::URLS{'tinderd'}".
                              "\?".
                              "tree=$tree\&".
-                             "start-time=$next_date\&".
+                             "start-time=$end_time\&".
                              "display-hours=$display_2hours"),
                    ).
    "<br>\n".
@@ -357,7 +315,7 @@ sub HTML_status_page {
                     "href"=>("$FileStructure::URLS{'tinderd'}".
                              "\?".
                              "tree=$tree\&".
-                             "start-time=$next_date\&".
+                             "start-time=$end_time\&".
                              "display-hours=$display_4hours"),
                    ).
    "<br>\n".
@@ -366,7 +324,7 @@ sub HTML_status_page {
                     "href"=>("$FileStructure::URLS{'tinderd'}".
                              "\?".
                              "tree=$tree\&".
-                             "start-time=$next_date\&".
+                             "start-time=$end_time\&".
                              "display-hours=$display_8hours"),
                    ).
    "<br>\n".
@@ -375,6 +333,11 @@ sub HTML_status_page {
                     "href"=>$status_page_url,
                    ).
   "<br><p>\n\n".
+  HTMLPopUp::Link(
+                  "linktxt"=>"Regnerate HTML Pages",
+                  "href"=>"$FileStructure::URLS{'regenerate'}",
+                  ).
+  "<br>\n".
   HTMLPopUp::Link(
                   "linktxt"=>"Administrate this tree ($tree)",
                   "href"=>("$FileStructure::URLS{'admintree'}".
@@ -389,7 +352,7 @@ sub HTML_status_page {
                              "\?".
                              "tree=$tree"),
                    ).
-  "<br>\n";
+ "<br>\n";
 
   $out .= HTMLPopUp::page_header('title'=>"Tinderbox Status Page tree: $tree", 
                                  'refresh'=>$REFRESH_TIME);
@@ -397,16 +360,19 @@ sub HTML_status_page {
   $out .= "<!-- /Build Page Headers -->\n\n\n";
   $out .= "$links\n";
   $out .= "<br>\n";
+  $out .= HTMLPopUp::Link("name"=>"MOTD",)."\n";
   $out .= "<!-- Message of the Day -->\n";
   $out .=  $motd;
   $out .= "<p>\n<!-- /Message of the Day -->\n";
   $out .= "\n\n";
+  $out .= HTMLPopUp::Link("name"=>"TreeState",)."\n";
   $out .= "<!-- Tree State -->\n";
   $out .= "$html_tree_state";
   $out .= "$html_ignore_builds";
   $out .= "<!-- Break Times -->\n";
   $out .= "$break_times<br>\n";
   $out .= "\n\n";
+  $out .= HTMLPopUp::Link("name"=>"Table",)."\n";
   $out .= "<!-- Table Header -->\n";
   $out .= "<table border=1 bgcolor='#FFFFFF' cellspacing=1 cellpadding=1>\n";
   $out .= "<tr>\n";
@@ -421,6 +387,7 @@ sub HTML_status_page {
   $out .= "<br>\n";
   $out .= $previous_links;
   $out .= "<br>\n";
+  $out .= HTMLPopUp::Link("name"=>"Legend",)."\n";
   $out .= "<!-- Table Legend -->\n";
   $out .= "<FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>";
   $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
@@ -443,7 +410,7 @@ sub HTML_status_page {
 # status pages for all trees.
 
 sub daemon_main {
-  my ($times_vec, $tree, ) = @_;
+  my ($start_time, $end_time, $tree, ) = @_;
 
   # If the daemon is still running from last call do not bother
   # running now. This could cause conflicts on the database.
@@ -467,7 +434,7 @@ sub daemon_main {
     my ($outfile) = (FileStructure::get_filename($tree, 'tree_HTML').
                    "/status.html");
     
-    my (@out) = HTML_status_page($times_vec, $tree, );
+    my (@out) = HTML_status_page($start_time, $end_time, $tree, );
 
     overwrite_file($outfile, @out);
 
@@ -508,13 +475,13 @@ sub daemon_main {
 # saved to disk and we update none of the databases.
 
 sub cgi_main {
-  my ($times_vec, $tree, ) = @_;
+  my ($start_time, $end_time, $tree, ) = @_;
     
   TinderDB::loadtree_db($tree);
   
   print "Content-type: text/html\n\n";
 
-  print HTML_status_page($times_vec, $tree, );
+  print HTML_status_page($start_time, $end_time, $tree, );
   
   return ;
 }
@@ -541,14 +508,14 @@ sub write_stats {
   set_static_vars();
   get_env();
 
-  my ($daemon_mode, $times_vec, $tree, ) =  
+  my ($daemon_mode, $start_time, $end_time, $tree, ) =  
     parse_args();
   chk_security();
   
   if ($daemon_mode) {
-    daemon_main($times_vec, $tree, );
+    daemon_main($start_time, $end_time, $tree, );
   } else {
-    cgi_main($times_vec, $tree,);
+    cgi_main($start_time, $end_time, $tree,);
   }
 
   write_stats();

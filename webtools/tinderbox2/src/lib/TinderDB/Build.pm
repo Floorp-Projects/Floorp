@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.36 $ 
-# $Date: 2002/04/27 04:55:33 $ 
+# $Revision: 1.37 $ 
+# $Date: 2002/05/01 02:06:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -462,6 +462,40 @@ sub trim_db_history {
 
   }
   return ;
+}
+
+
+
+# return a list of all the times where an even occured.
+
+sub event_times_vec {
+  my ($self, $start_time, $end_time, $tree) = (@_);
+
+  my @times;
+
+  my @build_names = build_names($tree);
+  foreach $buildname (@build_names) {
+      my ($num_recs) = $#{ $DATABASE{$tree}{$buildname}{'recs'} };
+      foreach $i (0 .. $num_recs) {
+
+          my $rec = $DATABASE{$tree}{$buildname}{'recs'}[$i];
+          push @times, $rec->{'starttime'};
+          push @times, $rec->{'endtime'};
+
+      }
+  }
+
+  # sort numerically descending
+  @times = sort {$b <=> $a} @times;
+
+  my @out;
+  foreach $time (@times) {
+    ($time <= $start_time) || next;
+    ($time <= $end_time) && last;
+    push @out, $time;
+  }
+
+  return @out;
 }
 
 

@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.7 $ 
-# $Date: 2002/04/26 22:05:00 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/05/01 02:06:24 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -152,6 +152,12 @@ $MAX_UPDATES_SINCE_TRIM = $TinderConfig::DB_MAX_UPDATES_SINCE_TRIM || (50);
 
 $TRIM_SECONDS = $TinderConfig::DB_TRIM_SECONDS || (60 * 60 * 24 * 8);
 
+if (defined($TinderConfig::UNIFORM_ROW_SPACING)) {
+    $UNIFORM_ROW_SPACING = $TinderConfig::UNIFORM_ROW_SPACING;
+} else {
+    $UNIFORM_ROW_SPACING = 1;
+}
+
 # The DB implemenations are sourced in TinderConfig.pm just before
 # this wrapper class is sourced.  It is expected that the
 # implementations will need adjustment and other fiddling so we moved
@@ -170,15 +176,85 @@ $DB = bless(\@TinderDB::HTML_COLUMNS);
 # the columns.  Don't forget that the way to get the DB column names
 # is:
 
-# foreach $obj (@{$TinderDB::DB}) { 
-#	print ref($obj)."\n"; 
-# }
+sub get_db_column_names {
+    @out = ();
 
+    foreach $obj (@{$TinderDB::DB}) { 
+	push @out, ref($obj); 
+    }
+
+    return @out;
+}
 
 #-----------------------------------------------------------
 # You should not need to configure anything below this line
 #-----------------------------------------------------------
 
+
+
+# Create a list of uniformly separated times which determine the build
+# table row spacing.  All times are stored in time() format.
+
+sub construct_uniform_times_vec {
+  my ($start_time, $end_time, $table_spacing, ) = @_;
+
+  my (@out) =();
+  
+  my ($table_spacing_sec) = $table_spacing*$main::SECONDS_PER_MINUTE;
+  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+    localtime($start_time);
+
+  # the first entry is rounded down to nearest 5 minutes 
+
+  my $remainder = $min % 5;
+  my ($time) = $start_time - ($remainder*$main::SECONDS_PER_MINUTE) - $sec;
+
+  while ($time > $end_time) {
+    push @out, $time;
+    $time -= $table_spacing_sec;
+  }
+
+  push @out, $time;
+
+  # make the last row twice as wide as the rest to encourage a small
+  # amount of overlap between adjacent pages.
+
+  @out[$#out] -= $table_spacing_sec;
+
+  return [@out];
+} # construct_uniform_vec
+
+
+# Create a list of times, based on when events occurred, which
+# determine the build table row spacing.  All times are stored in
+# time() format.
+
+sub construct_event_times_vec {
+  my ($start_time, $end_time, $tree) = @_;
+  my (@out) =();
+  
+  if ($DEBUG) {
+    (TreeData::tree_exists($tree)) ||
+      die("TinderDB::loadtree_db(): ".
+          "Tree: $tree, not defined.");
+  }
+
+  foreach $db (@{$DB}) {
+      push @out, $db->event_times_vec(@_);
+  }
+
+  # Round all times to nearest minute, so that we do not get two times
+  # appearing in the time column which display as the same string.
+  # We do however want times which are odd numbers of minutes.
+
+  @out = map { ( $_ - ($_%60) ) } @out;
+  @out = main::uniq(@out);
+
+  # sort numerically descending
+  @out = sort {$b <=> $a} @out ;
+
+  return [@out];
+} # construct_event_times_vec
 
 
 # Our functions for database methods just iterate over the available
@@ -349,24 +425,42 @@ sub status_table_row {
 
 
 sub status_table_body {
-  my ($row_times, $tree, ) = @_;
+  my ($start_time, $end_time, $tree, ) = @_;
 
   if ($DEBUG) {
-    ( ($row_times) && (scalar(@{$row_times}) > 5 ) ) ||
-      die("TinderDB::status_table_body(): ".
-          "row_times, not defined.");
-    
-    (TreeData::tree_exists($tree)) ||
-      die("TinderDB::status_table_body(): ".
-          "Tree: $tree, not defined.");
+      (main::is_time_valid($start_time)) ||
+          die("TinderDB::status_table_body(): ".
+              "start_times, not defined. start_time: $start_time");
+      
+      (main::is_time_valid($end_time)) ||
+          die("TinderDB::status_table_body(): ".
+              "end_times, not defined. end_time: $end_time");
+      
+      (TreeData::tree_exists($tree)) ||
+          die("TinderDB::status_table_body(): ".
+              "Tree: $tree, not defined.");
   }
 
-  my @out;
+  # Construct the vector of times which represent the rows.  Either we
+  # do this with uniform spacing or by putting one row for each time
+  # we have data for.
+
+  my ($row_times);
+  if ($UNIFORM_ROW_SPACING) {
+      $row_times = construct_uniform_times_vec($start_time, $end_time, 
+                                               $TABLE_SPACING,);
+  } else {
+      $row_times = construct_event_times_vec($start_time, $end_time, 
+                                             $tree);
+  }
 
   # We must call html_start before we call html_row.  
 
   TinderDB::status_table_start($row_times, $tree);
-  
+
+  # build each row, in order
+
+  my @out;
   foreach $i (0 .. $#{$row_times}) {
     my (@row) = TinderDB::status_table_row($row_times, $i, $tree);
     push @out, (
