@@ -294,6 +294,20 @@ struct nsStyleUserInterface: public nsStyleStruct {
   PRUint8   mResizer;         // [reset]
 };
 
+struct nsStylePrint: public nsStyleStruct {
+  nsStylePrint(void);
+
+  PRUint8       mPageBreakBefore;	// [reset] see nsStyleConsts.h NS_STYLE_PAGE_BREAK_*
+  PRUint8       mPageBreakAfter;	// [reset] see nsStyleConsts.h NS_STYLE_PAGE_BREAK_*
+  PRUint8       mPageBreakInside;	// [reset] see nsStyleConsts.h NS_STYLE_PAGE_BREAK_*
+	nsString			mPage;
+  PRUint32      mWidows;					// [reset] = 2, number of isolated lines at the top of a page
+  PRUint32      mOrphans;					// [reset] = 2, number of isolated lines at the bottom of a page
+  PRUint8       mMarks;						// [reset] see nsStyleConsts.h NS_STYLE_PAGE_MARKS_*
+  nsStyleCoord  mSizeWidth;				// [reset] length, enum: see nsStyleConsts.h NS_STYLE_PAGE_SIZE_*
+  nsStyleCoord  mSizeHeight;			// [reset] length, enum: see nsStyleConsts.h NS_STYLE_PAGE_SIZE_*
+};
+
 #define BORDER_PRECEDENT_EQUAL  0
 #define BORDER_PRECEDENT_LOWER  1
 #define BORDER_PRECEDENT_HIGHER 2

@@ -75,6 +75,8 @@ static NS_DEFINE_IID(kCSSDisplaySID, NS_CSS_DISPLAY_SID);
 static NS_DEFINE_IID(kCSSTableSID, NS_CSS_TABLE_SID);
 static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
 static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
+static NS_DEFINE_IID(kCSSBreaksSID, NS_CSS_BREAKS_SID);
+static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
 
 // -- nsCSSSelector -------------------------------
 
@@ -1101,6 +1103,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LE     (SETCOORD_LENGTH | SETCOORD_ENUMERATED)
 #define SETCOORD_LEH    (SETCOORD_LE | SETCOORD_INHERIT)
 #define SETCOORD_IA     (SETCOORD_INTEGER | SETCOORD_AUTO)
+#define SETCOORD_LAE		(SETCOORD_LENGTH | SETCOORD_AUTO | SETCOORD_ENUMERATED)
 
 static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
                        const nsStyleCoord& aParentCoord,
@@ -2550,6 +2553,84 @@ MapDeclarationUIInto(nsICSSDeclaration* aDeclaration,
   }
 }
 
+static void 
+MapDeclarationPrintInto(nsICSSDeclaration* aDeclaration, 
+                       nsIMutableStyleContext* aContext, nsIStyleContext* aParentContext,
+                       nsStyleFont* aFont, nsIPresContext* aPresContext)
+{
+  nsStylePrint* print = (nsStylePrint*)aContext->GetMutableStyleData(eStyleStruct_Print);
+  const nsStylePrint* parentPrint = print;
+  if (nsnull != aParentContext) {
+    parentPrint = (const nsStylePrint*)aParentContext->GetStyleData(eStyleStruct_Print);
+  }
+
+  nsCSSBreaks* ourBreaks;
+  if (NS_OK == aDeclaration->GetData(kCSSBreaksSID, (nsCSSStruct**)&ourBreaks)) {
+    if (nsnull != ourBreaks) {
+
+			// page-break-before: enum, auto, inherit
+			switch (ourBreaks->mPageBreakBefore.GetUnit()) {
+				case eCSSUnit_Enumerated:	print->mPageBreakBefore = ourBreaks->mPageBreakBefore.GetIntValue();	break;
+				case eCSSUnit_Auto:				print->mPageBreakBefore = NS_STYLE_PAGE_BREAK_AUTO;										break;
+				case eCSSUnit_Inherit:		print->mPageBreakBefore = parentPrint->mPageBreakBefore;							break;
+			}
+
+			// page-break-after: enum, auto, inherit
+			switch (ourBreaks->mPageBreakAfter.GetUnit()) {
+				case eCSSUnit_Enumerated:	print->mPageBreakAfter = ourBreaks->mPageBreakAfter.GetIntValue();		break;
+				case eCSSUnit_Auto:				print->mPageBreakAfter = NS_STYLE_PAGE_BREAK_AUTO;										break;
+				case eCSSUnit_Inherit:		print->mPageBreakAfter = parentPrint->mPageBreakAfter;								break;
+			}
+
+			// page-break-inside: enum, auto, inherit
+			switch (ourBreaks->mPageBreakInside.GetUnit()) {
+				case eCSSUnit_Enumerated:	print->mPageBreakInside = ourBreaks->mPageBreakInside.GetIntValue();	break;
+				case eCSSUnit_Auto:				print->mPageBreakInside = NS_STYLE_PAGE_BREAK_AUTO;										break;
+				case eCSSUnit_Inherit:		print->mPageBreakInside = parentPrint->mPageBreakInside;							break;
+			}
+
+			// page: string, auto
+			switch (ourBreaks->mPage.GetUnit()) {
+				case eCSSUnit_String:			ourBreaks->mPage.GetStringValue(print->mPage);					break;
+				case eCSSUnit_Auto:				print->mPage.SetLength(0);															break;
+			}
+
+			// widows: int, inherit
+			switch (ourBreaks->mWidows.GetUnit()) {
+				case eCSSUnit_Integer:		print->mWidows = ourBreaks->mWidows.GetIntValue();			break;
+				case eCSSUnit_Inherit:		print->mWidows = parentPrint->mWidows;									break;
+			}
+
+			// orphans: int, inherit
+			switch (ourBreaks->mOrphans.GetUnit()) {
+				case eCSSUnit_Integer:		print->mOrphans = ourBreaks->mOrphans.GetIntValue();		break;
+				case eCSSUnit_Inherit:		print->mOrphans = parentPrint->mOrphans;								break;
+			}
+
+    }
+  }
+
+  nsCSSPage* ourPage;
+  if (NS_OK == aDeclaration->GetData(kCSSPageSID, (nsCSSStruct**)&ourPage)) {
+    if (nsnull != ourPage) {
+
+			// marks: enum, none
+			switch (ourPage->mMarks.GetUnit()) {
+				case eCSSUnit_Enumerated:	print->mMarks = ourPage->mMarks.GetIntValue();					break;
+				case eCSSUnit_None:				print->mMarks = NS_STYLE_PAGE_MARKS_NONE;								break;
+			}
+
+			// size-width: length, enum, auto
+      SetCoord(ourPage->mSizeWidth, print->mSizeWidth, parentPrint->mSizeWidth,
+               SETCOORD_LAE, aFont->mFont, aPresContext);
+
+			// size-height: length, enum, auto
+      SetCoord(ourPage->mSizeHeight, print->mSizeHeight, parentPrint->mSizeHeight,
+               SETCOORD_LAE, aFont->mFont, aPresContext);
+		}
+	}
+}
+
 void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
                         nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
@@ -2566,6 +2647,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
     MapDeclarationTableInto(aDeclaration, aContext, parentContext, font, aPresContext);
     MapDeclarationContentInto(aDeclaration, aContext, parentContext, font, aPresContext);
     MapDeclarationUIInto(aDeclaration, aContext, parentContext, font, aPresContext);
+    MapDeclarationPrintInto(aDeclaration, aContext, parentContext, font, aPresContext);
     NS_IF_RELEASE(parentContext);
   }
 }

@@ -1527,6 +1527,78 @@ PRInt32 StyleUserInterfaceImpl::CalcDifference(const StyleUserInterfaceImpl& aOt
   return NS_STYLE_HINT_VISUAL;
 }
 
+//-----------------------
+// nsStylePrint
+//
+
+nsStylePrint::nsStylePrint(void) { }
+
+struct StylePrintImpl: public nsStylePrint {
+  StylePrintImpl(void)  { }
+
+  void ResetFrom(const nsStylePrint* aParent, nsIPresContext* aPresContext);
+  void SetFrom(const nsStylePrint& aSource);
+  void CopyTo(nsStylePrint& aDest) const;
+  PRInt32 CalcDifference(const StylePrintImpl& aOther) const;
+
+private:  // These are not allowed
+  StylePrintImpl(const StylePrintImpl& aOther);
+  StylePrintImpl& operator=(const StylePrintImpl& aOther);
+};
+
+void StylePrintImpl::ResetFrom(const nsStylePrint* aParent, nsIPresContext* aPresContext)
+{
+  if (aParent) {
+    mPageBreakBefore = aParent->mPageBreakBefore;
+    mPageBreakAfter = aParent->mPageBreakAfter;
+    mPageBreakInside = aParent->mPageBreakInside;
+    mWidows = aParent->mWidows;
+    mOrphans = aParent->mOrphans;
+		mMarks = aParent->mMarks;
+		mSizeWidth = aParent->mSizeWidth;
+		mSizeHeight = aParent->mSizeHeight;
+  }
+  else {
+    mPageBreakBefore = NS_STYLE_PAGE_BREAK_AUTO;
+    mPageBreakAfter = NS_STYLE_PAGE_BREAK_AUTO;
+    mPageBreakInside = NS_STYLE_PAGE_BREAK_AUTO;
+    mWidows = 2;
+    mOrphans = 2;
+		mMarks = NS_STYLE_PAGE_MARKS_NONE;
+		mSizeWidth.SetAutoValue();
+		mSizeHeight.SetAutoValue();
+  }
+}
+
+void StylePrintImpl::SetFrom(const nsStylePrint& aSource)
+{
+  nsCRT::memcpy((nsStylePrint*)this, &aSource, sizeof(nsStylePrint));
+}
+
+void StylePrintImpl::CopyTo(nsStylePrint& aDest) const
+{
+  nsCRT::memcpy(&aDest, (const nsStylePrint*)this, sizeof(nsStylePrint));
+}
+
+PRInt32 StylePrintImpl::CalcDifference(const StylePrintImpl& aOther) const
+{
+	if ((mPageBreakBefore == aOther.mPageBreakBefore)
+	&& (mPageBreakAfter == aOther.mPageBreakAfter)
+	&& (mPageBreakInside == aOther.mPageBreakInside)
+	&& (mWidows == aOther.mWidows)
+	&& (mOrphans == aOther.mOrphans)
+	&& (mMarks == aOther.mMarks)
+	&& (mSizeWidth == aOther.mSizeWidth)
+	&& (mSizeHeight == aOther.mSizeHeight)) {
+  	return NS_STYLE_HINT_NONE;
+	}
+
+	if (mMarks != aOther.mMarks) {
+  	return NS_STYLE_HINT_VISUAL;
+	}
+  return NS_STYLE_HINT_REFLOW;
+}
+
 //----------------------------------------------------------------------
 
 class StyleContextImpl : public nsIStyleContext,
@@ -1593,7 +1665,7 @@ protected:
   StyleTableImpl          mTable;
   StyleContentImpl        mContent;
   StyleUserInterfaceImpl  mUserInterface;
-
+	StylePrintImpl					mPrint;
 };
 
 static PRInt32 gLastDataCode;
@@ -1623,7 +1695,8 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mDisplay(),
     mTable(),
     mContent(),
-    mUserInterface()
+    mUserInterface(),
+    mPrint()
 {
   NS_INIT_REFCNT();
   NS_IF_ADDREF(mPseudoTag);
@@ -1905,6 +1978,9 @@ const nsStyleStruct* StyleContextImpl::GetStyleData(nsStyleStructID aSID)
     case eStyleStruct_UserInterface:
       result = &mUserInterface;
       break;
+    case eStyleStruct_Print:
+    	result = &mPrint;
+    	break;
     default:
       NS_ERROR("Invalid style struct id");
       break;
@@ -1947,6 +2023,9 @@ nsStyleStruct* StyleContextImpl::GetMutableStyleData(nsStyleStructID aSID)
     case eStyleStruct_UserInterface:
       result = &mUserInterface;
       break;
+    case eStyleStruct_Print:
+    	result = &mPrint;
+    	break;
     default:
       NS_ERROR("Invalid style struct id");
       break;
@@ -1994,6 +2073,9 @@ StyleContextImpl::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const
     case eStyleStruct_UserInterface:
       mUserInterface.CopyTo((nsStyleUserInterface&)aStruct);
       break;
+    case eStyleStruct_Print:
+      mPrint.CopyTo((nsStylePrint&)aStruct);
+    	break;
     default:
       NS_ERROR("Invalid style struct id");
       result = NS_ERROR_INVALID_ARG;
@@ -2037,6 +2119,9 @@ StyleContextImpl::SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct)
     case eStyleStruct_UserInterface:
       mUserInterface.SetFrom((const nsStyleUserInterface&)aStruct);
       break;
+    case eStyleStruct_Print:
+      mPrint.SetFrom((const nsStylePrint&)aStruct);
+    	break;
     default:
       NS_ERROR("Invalid style struct id");
       result = NS_ERROR_INVALID_ARG;
@@ -2088,6 +2173,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
     mTable.ResetFrom(&(mParent->mTable), aPresContext);
     mContent.ResetFrom(&(mParent->mContent), aPresContext);
     mUserInterface.ResetFrom(&(mParent->mUserInterface), aPresContext);
+    mPrint.ResetFrom(&(mParent->mPrint), aPresContext);
   }
   else {
     mFont.ResetFrom(nsnull, aPresContext);
@@ -2100,6 +2186,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
     mTable.ResetFrom(nsnull, aPresContext);
     mContent.ResetFrom(nsnull, aPresContext);
     mUserInterface.ResetFrom(nsnull, aPresContext);
+    mPrint.ResetFrom(nsnull, aPresContext);
   }
 
   PRUint32 cnt = 0;
@@ -2147,6 +2234,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
       mTable.ResetFrom(nsnull, aPresContext);
       mContent.ResetFrom(nsnull, aPresContext);
       mUserInterface.ResetFrom(nsnull, aPresContext);
+      mPrint.ResetFrom(nsnull, aPresContext);
       mDisplay.mVisible = visible;
       mDisplay.mDirection = direction;
 
@@ -2262,6 +2350,12 @@ StyleContextImpl::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) c
     }
     if (aHint < NS_STYLE_HINT_MAX) {
       hint = mUserInterface.CalcDifference(other->mUserInterface);
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+    if (aHint < NS_STYLE_HINT_MAX) {
+      hint = mPrint.CalcDifference(other->mPrint);
       if (aHint < hint) {
         aHint = hint;
       }
