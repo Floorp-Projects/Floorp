@@ -149,10 +149,9 @@ nsMimeEmitter2::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char
   {
     if ( (!headerOnly) && (outCharset) && (*outCharset) )
     {
-      // This seems to choke Ender so I am going to leave it out for now.
-      //UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
-      //UtilityWrite(outCharset);
-      //UtilityWrite("\">");
+      UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
+      UtilityWrite(outCharset);
+      UtilityWrite("\">");
     }
     UtilityWrite("<BLOCKQUOTE><table BORDER=0>");
   }  
