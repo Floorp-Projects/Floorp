@@ -25,9 +25,6 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/SignonWindow.js \
-	$(srcdir)/CookieWindow.js \
-	$(srcdir)/WalletWindow.js \
 	$(NULL)
 
 EXPORT_RESOURCE_TOOLBAR = \

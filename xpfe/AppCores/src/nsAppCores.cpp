@@ -20,9 +20,6 @@
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManagerFactory.h"
 #include "nsDOMPropsCoreFactory.h"
-#include "nsSignonCoreFactory.h"
-#include "nsCookieCoreFactory.h"
-#include "nsWalletCoreFactory.h"
 #include "nsProfileCoreFactory.h" 
 #include "nsRDFCoreFactory.h"
 #include "nsBrowserAppCoreFactory.h"
@@ -40,9 +37,6 @@ static PRInt32 gInstanceCnt = 0;
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kDOMPropsCoreCID,    NS_DOMPROPSCORE_CID);
-static NS_DEFINE_IID(kSignonCoreCID,      NS_SIGNONCORE_CID);
-static NS_DEFINE_IID(kCookieCoreCID,      NS_COOKIECORE_CID);
-static NS_DEFINE_IID(kWalletCoreCID,      NS_WALLETCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,     NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kRDFCoreCID,         NS_RDFCORE_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
@@ -67,9 +61,6 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     printf("*** AppCores object is being registered\n");
     nsComponentManager::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kDOMPropsCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kSignonCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kCookieCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kWalletCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kProfileCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE); 
     nsComponentManager::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
@@ -85,9 +76,6 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     
     nsComponentManager::UnregisterComponent(kAppCoresManagerCID, path);
     nsComponentManager::UnregisterComponent(kDOMPropsCoreCID, path);
-    nsComponentManager::UnregisterComponent(kSignonCoreCID, path);
-    nsComponentManager::UnregisterComponent(kCookieCoreCID, path);
-    nsComponentManager::UnregisterComponent(kWalletCoreCID, path);
     nsComponentManager::UnregisterComponent(kProfileCoreCID, path); 
     nsComponentManager::UnregisterComponent(kRDFCoreCID, path);
     nsComponentManager::UnregisterComponent(kToolkitCoreCID, path);
@@ -122,18 +110,6 @@ NSGetFactory(nsISupports* serviceMgr,
     {
         inst = new nsDOMPropsCoreFactory();      
     }
-    else if ( aClass.Equals(kSignonCoreCID) )
-    {
-        inst = new nsSignonCoreFactory();      
-    } 
-    else if ( aClass.Equals(kCookieCoreCID) )
-    {
-        inst = new nsCookieCoreFactory();      
-    } 
-    else if ( aClass.Equals(kWalletCoreCID) )
-    {
-        inst = new nsWalletCoreFactory();      
-    } 
     else if ( aClass.Equals(kProfileCoreCID) ) 
     { 
         inst = new nsProfileCoreFactory(); 
