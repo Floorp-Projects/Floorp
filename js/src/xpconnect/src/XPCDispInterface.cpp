@@ -51,7 +51,9 @@ inline
 PRBool IsReflectable(FUNCDESC * pFuncDesc)
 {
     return (pFuncDesc->wFuncFlags&FUNCFLAG_FRESTRICTED) == 0 &&
-           pFuncDesc->funckind == FUNC_DISPATCH;
+           pFuncDesc->funckind == FUNC_DISPATCH || 
+           pFuncDesc->funckind == FUNC_PUREVIRTUAL ||
+           pFuncDesc->funckind == FUNC_VIRTUAL;
 }
 
 XPCDispInterface::Allocator::Allocator(JSContext * cx, ITypeInfo * pTypeInfo) :
