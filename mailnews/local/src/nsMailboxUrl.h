@@ -65,11 +65,9 @@ public:
 	// from nsIMailboxUrl:
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer);
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer);
-	
-	// mscott: this interface really belongs in nsIURL and I will move it there after talking
-	// it over with core netlib. This error message replaces the err_msg which was in the 
-	// old URL_struct. Also, it should probably be a nsString or a PRUnichar *. I don't know what
-	// XP_GetString is going to return in mozilla. 
+
+	// from nsIMsgMailNewsUrl:
+	NS_IMPL_CLASS_GETSET(RunningUrlFlag, PRBool, m_runningUrl);
 
 	NS_IMETHOD SetErrorMessage (char * errorMessage);
 	// caller must free using PR_FREE
@@ -102,6 +100,8 @@ protected:
     char		*m_ref;
 	char		*m_search;
 	char		*m_errorMessage;
+
+	PRBool		m_runningUrl;
     
     nsISupports	*m_container;
 

@@ -60,6 +60,8 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 
 	m_filePath = nsnull;
 
+	m_runningUrl = PR_FALSE;
+
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
 }
