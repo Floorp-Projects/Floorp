@@ -42,12 +42,10 @@ class AcrobatView extends Viewer implements Pluglet {
 	    acr = new com.adobe.acrobat.Viewer(false);
 	    acr.setDocumentInputStream(input);
 
-//	    acr.zoomTo(1.0);
 	    acr.activate(); //WithoutBars()
 	    acr.execMenuItem(com.adobe.acrobat.ViewerCommand.OneColumn_K);
 	    acr.execMenuItem(com.adobe.acrobat.ViewerCommand.FitWidth_K);
 	} catch(Exception e) {
-	    System.out.println("++ Error loading file.");
 	}
 
 	acr.setSize(new Dimension(defaultSize.width, defaultSize.height));
@@ -70,11 +68,14 @@ class AcrobatView extends Viewer implements Pluglet {
 	view = new JScrollPane();
     }
     public void stop() {
-	frm.dispose();
-	if(acr!=null) acr.deactivate();
+	if (acr != null) {
+	    acr.deactivate();
+	}
     }
     public void destroy() {
-	if(acr!=null) acr.destroy();
+	if (acr != null) {
+	    acr.destroy();
+	}
     }
     public PlugletStreamListener newStream() {
 	PDFViewStreamListener listener = new PDFViewStreamListener();
@@ -85,7 +86,7 @@ class AcrobatView extends Viewer implements Pluglet {
 	if (frame == null) {
 	   return;
 	}
-	frm=frame;
+	frm = frame;
 	frm.setSize(defaultSize);
     }
     public void print(PrinterJob printerJob) {
@@ -94,9 +95,8 @@ class AcrobatView extends Viewer implements Pluglet {
 
 class PDFViewStreamListener implements PlugletStreamListener {
     AcrobatView viewer;
-    int total = 0, length = 0, first = 0;
+    int total = 0;
     byte[] b, bb;
-    Vector v = new Vector(20, 20);
 
     public void setViewer(AcrobatView view) {
 	viewer = view;
@@ -106,7 +106,6 @@ class PDFViewStreamListener implements PlugletStreamListener {
     public void onStartBinding(PlugletStreamInfo streamInfo) {
 	bb = new byte[streamInfo.getLength()];
 	total = 0;
-	first = 0;
     }
 
     public void onDataAvailable(PlugletStreamInfo streamInfo, InputStream input,int  length) {
@@ -115,20 +114,19 @@ class PDFViewStreamListener implements PlugletStreamListener {
 	    int r = 0;
 	    b = new byte[size];
 
-	    r=input.read(b);	
+	    r = input.read(b);	
 
-	    for(int i=total;i<total+size;i++) {
-		bb[i]=b[i-total];
+	    for (int i = total; i < total + size; i++) {
+		bb[i] = b[i-total];
 	    }
-            total+=r;
+            total += r;
 
-	    if(total>=streamInfo.getLength()) {
+	    if (total >= streamInfo.getLength()) {
 		input.close();
 		viewer.displayPDF(bb);
 	    }
 
 	} catch(Exception e) {
-	    System.out.println(e.toString());
 	}
 
     }

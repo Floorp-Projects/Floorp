@@ -1,5 +1,4 @@
 import javax.swing.JPanel;
-import javax.swing.JButton;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
@@ -48,9 +47,7 @@ class ZipDecoder implements Pluglet {
     byte[] b;
     Frame frm;
     Panel panel;
-    List contents;
     FileDialog fsd;
-    boolean firstTime=true;
     JTree zipTree=null;
     Dimension defaultSize;
     String zname;
@@ -72,8 +69,8 @@ class ZipDecoder implements Pluglet {
 
 	    String path=dir+name;
 	    int last = path.lastIndexOf('/');
-	    File dd=null, ff=null;
-	    if(last!=-1) {
+	    File dd = null, ff = null;
+	    if (last != -1) {
 		path=path.substring(0, last);
 		dd = new File(path);
 		dd.mkdirs();
@@ -90,14 +87,13 @@ class ZipDecoder implements Pluglet {
 	    do {
 		r = zis.read(buff, 0, size);
 		fos.write(buff, 0, r);
-		t+=r;
-	    } while(t<size);
+		t += r;
+	    } while (t < size);
 
 	    fos.close();
 	    zis.close();
 
 	} catch(Exception e) {
-	    System.out.println("++ exception: "+e.toString());
 	}
 
     }
@@ -116,13 +112,12 @@ class ZipDecoder implements Pluglet {
 	    }
 
 	    en = zis.getNextEntry();
-	    while(en.toString().indexOf(name)==0) {
+	    while (en.toString().indexOf(name) == 0) {
 		if(!en.isDirectory())
 		    extractFileEntry(en.toString(), dir);
 		en = zis.getNextEntry();
 	    }
 	} catch (Exception e) {
-	    System.out.println("++ Exception: "+e.toString());
 	}
 	
     }
@@ -141,14 +136,14 @@ class ZipDecoder implements Pluglet {
 		Object[] elements = tp.getPath();
 
 		if (tp.getPathCount() == 1) return;
-		String path=elements[1].toString()+'/';
-		for(int i=2;i<tp.getPathCount();i++) {
-		    path+=elements[i].toString()+'/';
+		String path = elements[1].toString() + '/';
+		for (int i = 2; i < tp.getPathCount(); i++) {
+		    path += elements[i].toString()+'/';
 		}
 		DefaultMutableTreeNode node = (DefaultMutableTreeNode)zipTree.getLastSelectedPathComponent();
 
 		if (node.isLeaf()) {
-		    path=path.substring(0, path.length()-1);
+		    path = path.substring(0, path.length() - 1);
 		}
 		
 
@@ -157,7 +152,7 @@ class ZipDecoder implements Pluglet {
 		fsd.setFile("ZipView");
 		fsd.show();
 		dir = fsd.getDirectory();
-		if(dir==null) {
+		if (dir == null) {
 		    return;
 		}
 
@@ -179,15 +174,8 @@ class ZipDecoder implements Pluglet {
     }
 
     private void replaceElement(String name, Vector v, int depth) {
-	Node n;
-	int pos = 0;
-	Enumeration e;
-
 	v.setSize(depth);
-
 	addElement(name, v);
-
-
     }
 
     private void addNode(String path, Vector v) {
@@ -203,15 +191,15 @@ class ZipDecoder implements Pluglet {
 
 	do {
 	    end = path.indexOf('/', start);
-	    if (end>0) {
+	    if (end > 0) {
 		name = path.substring(start, end);
 		start = end+1;
 	    }
 	    else
 		name = path.substring(start); 
 
-	    for(int i=1;i<=depth;i++) {
-		if(!el.hasMoreElements()) {
+	    for (int i=1; i<=depth; i++) {
+		if (!el.hasMoreElements()) {
 		    addElement(name, v);
 		    break;
 		} else {
@@ -226,34 +214,30 @@ class ZipDecoder implements Pluglet {
 		}
 	    }
 	    depth++;
-	} while (end!=-1 && start<path.length());
+	} while (end != -1 && start < path.length());
 
     }
 
     private void createNodes(DefaultMutableTreeNode top) {
-        DefaultMutableTreeNode category = null;
-        DefaultMutableTreeNode book, book1 = null;
-	String name=null;
+	String name = null;
 	Vector v = new Vector(20, 20);
-	int start=0, end = 0;
 
 
 	ZipInputStream zis = new ZipInputStream((InputStream)(new ByteArrayInputStream(b)));
-	ZipEntry en=null;
+	ZipEntry en = null;
 
 	try {
 		v.add(new Node(null, top));
 	    do {
 		en = zis.getNextEntry();
-		if(en!=null) {
+		if (en != null) {
 		    name = en.toString();
 		    addNode(name, v);
 		}
-	    } while (zis.available()==1);
+	    } while (zis.available() == 1);
 
 
 	} catch (Exception e) {
-	    System.out.println("++ Exception: "+e.toString());
 	}
     }
 
@@ -282,13 +266,11 @@ class ZipDecoder implements Pluglet {
     }
 
     public void start() {
-	contents = new List(15, false);
 	panel = new Panel();
 	extract = new Button("Extract");
     }
 
     public void stop() {
-//	panel.removeAll();	
     }
 
     public void destroy() {
@@ -301,7 +283,7 @@ class ZipDecoder implements Pluglet {
     }
 
     public void setWindow(Frame frame) {
-	if(frame == null) {
+	if (frame == null) {
 	    return;
 	}
 	frame.setLayout(new BorderLayout());
@@ -318,7 +300,7 @@ class ZipDecoder implements Pluglet {
 }
 
 class ZipStreamListener implements PlugletStreamListener {
-    int total = 0, length = 0, first = 0;
+    int total = 0;
     ZipDecoder zip;
     byte[] b, bb;
     Vector v = new Vector(20, 20);
@@ -329,8 +311,6 @@ class ZipStreamListener implements PlugletStreamListener {
     public void onStartBinding(PlugletStreamInfo streamInfo) {
 	bb = new byte[streamInfo.getLength()];
 	total = 0;
-	first = 0;
-
     }
 
     public void setZip(ZipDecoder zip) {
@@ -348,18 +328,17 @@ class ZipStreamListener implements PlugletStreamListener {
 
 	    r=input.read(b);	
 
-	    for(int i=total;i<total+size;i++) {
-		bb[i]=b[i-total];
+	    for (int i = total; i < total + size; i++) {
+		bb[i] = b[i-total];
 	    }
-            total+=r;
+            total += r;
 
-	    if(total>=streamInfo.getLength()) {
+	    if (total >= streamInfo.getLength()) {
 		input.close();
 		zip.processData(bb, fname);
 	    }
 
 	} catch(Exception e) {
-	    System.out.println(e.toString());
 	}
     }
 

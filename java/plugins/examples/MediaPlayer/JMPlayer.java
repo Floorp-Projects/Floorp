@@ -7,7 +7,6 @@ import javax.media.control.*;
 
 import org.mozilla.pluglet.*;
 import org.mozilla.pluglet.mozilla.*;
-import org.mozilla.pluglet.mozilla.PlugletTagInfo2;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.print.*;
@@ -18,25 +17,20 @@ import java.util.*;
 public class JMPlayer implements PlugletFactory {
     public JMPlayer() {
     }
-
     public Pluglet createPluglet(String mimeType) {
  	return new Player();
     }
-
     public void initialize(PlugletManager manager) {	
     }
-
     public void shutdown() {
     }
 }
 
 class Player implements Pluglet, ControllerListener {
-    PlugletPeer peer;
     Dimension defaultSize;
     Frame frm;
     int w, h;
     MediaPlayer player = null;
-
     Panel panel;
 
     public synchronized void controllerUpdate(ControllerEvent ce) {
@@ -47,24 +41,19 @@ class Player implements Pluglet, ControllerListener {
 	    Dimension dim = player.getPreferredSize();
 	    frm.pack();
 	    panel.setSize(dim);
-//	    player.setBounds(0, 0, w, h);
 	    frm.setSize(defaultSize);
 	    player.start();
 	    frm.show();
 	}
     }
-
     public Player() {
     }
-
     public void initialize(PlugletPeer peer) {
 	PlugletTagInfo2 info = (PlugletTagInfo2)peer.getTagInfo();
 	w = info.getWidth();
 	h = info.getHeight();
 	defaultSize = new Dimension(w, h);
-	this.peer = peer;
     }
-
     public boolean playFile(String url) {
 	player.setMediaLocator(new MediaLocator(url));
 	if(player.getPlayer() == null) {
@@ -75,80 +64,56 @@ class Player implements Pluglet, ControllerListener {
 	}
 	return true;
     }
-	
     public void start() {
 	player = new MediaPlayer();
 	panel = new Panel();
 	panel.add(player);
     }
-
     public void stop() {
-	(new Exception()).printStackTrace();
 	player.stop();
-	player.deallocate();
 	player.close();
     }
-
     public void destroy() {
     }
-
     public PlugletStreamListener newStream() {
 	JMPlayerStreamListener listener = new JMPlayerStreamListener();
 	listener.setPlayer(this);
 	return listener;
     }
-
     public void setWindow(Frame frame) {
 	if(frame == null) {
 	    return;
 	}
-	if(panel == null) {
-	    System.out.println("++ Initialize failed.");
-	    return;
-	}
-//	PlugletTagInfo2 info = (PlugletTagInfo2)peer.getTagInfo();
-//	defaultSize = new Dimension(info.getWidth(), info.getHeight());
 	frame.setSize(defaultSize);
 	frame.setLayout(new BorderLayout());
 	frame.add(panel);
-	frm=frame;
+	frm = frame;
     }
-
     public void print(PrinterJob printerJob) {
     }
 }
 
 class JMPlayerStreamListener implements PlugletStreamListener {
     Player jmp;
-    int total=0;
 
     public JMPlayerStreamListener() {
     }
-
     public void onStartBinding(PlugletStreamInfo streamInfo) {
-
-
 	if(!jmp.playFile(streamInfo.getURL())) {
-    	    System.out.println("++ Error starting player ");
+    	    System.out.println("Error starting player.");
     	    return;
 	} 
 
     }
-
     public void setPlayer(Player jmp) {
 	this.jmp = jmp;
     }
-
     public void onDataAvailable(PlugletStreamInfo streamInfo, InputStream input,int  length) {
     }
-
     public void onFileAvailable(PlugletStreamInfo plugletInfo, String fileName) {
     }
-
     public void onStopBinding(PlugletStreamInfo plugletInfo,int status) {
-	    System.out.println("++ On stop binding.");
     }
-
     public int  getStreamType() {
 	return 1;
     }

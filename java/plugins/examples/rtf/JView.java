@@ -1,6 +1,4 @@
 import java.net.URL;
-import javax.swing.JPanel;
-//import javax.swing.JScrollPane;
 import javax.swing.JEditorPane;
 import org.mozilla.pluglet.*;
 import org.mozilla.pluglet.mozilla.*;
@@ -22,11 +20,9 @@ public class JView implements PlugletFactory {
 }
 
 class RTFView implements Pluglet {
-//    JScrollPane view;
     ScrollPane view;
     JEditorPane viewPane;
     Dimension defaultSize;
-    JPanel panel; 
     Frame frm;
 
     public void displayURL(String url) {
@@ -39,18 +35,14 @@ class RTFView implements Pluglet {
 	    System.out.println("Error loading URL "+url);
 	}
 	view.add(viewPane);
-//	viewPane.setPreferredSize(defaultSize);
 	view.setSize(defaultSize);
 	view.doLayout();
 	frm.add(view, BorderLayout.CENTER);
 	frm.pack();
 	frm.setVisible(true);
-	System.out.println("++ Showing");
     }
-
     public RTFView() {
     }
-
     public void initialize(PlugletPeer peer) {
 	PlugletTagInfo2 info = (PlugletTagInfo2)peer.getTagInfo();
 	defaultSize = new Dimension(info.getWidth(), info.getHeight());
@@ -60,7 +52,6 @@ class RTFView implements Pluglet {
 	viewPane = new JEditorPane();
     }
     public void stop() {
-	frm.dispose();
     }
     public void destroy() {
     }
@@ -73,7 +64,7 @@ class RTFView implements Pluglet {
 	if (frame == null) {
 	    return;
 	}
-	frm=frame;
+	frm = frame;
 	frm.setSize(defaultSize);
     }
     public void print(PrinterJob printerJob) {
