@@ -49,5 +49,7 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+
 install::
 	$(INSTALL) $(srcdir)/nsFilePicker.js $(DIST)/bin/components
