@@ -51,7 +51,7 @@ function ComposerMultiplexHandler(event)
     } else if (name == 'charsetCustomize') {
         //do nothing - please remove this else statement, once the charset prefs moves to the pref window
     } else {
-        EditorSetDocumentCharacterSet(node.getAttribute('id'));
+        SetForcedEditorCharset(node.getAttribute('id'));
     }
 }
 
@@ -215,6 +215,26 @@ function charsetLoadListener (event)
     }
 }
 
+
+function composercharsetLoadListener (event)
+{
+    var charset = window._content.document.characterSet;
+
+ 
+    if (charset.length > 0 ) {
+       gCharsetMenu.SetCurrentComposerCharset(charset);
+    }
+ }
+
+function SetForcedEditorCharset(charset)
+{
+    if (charset.length > 0 ) {
+       gCharsetMenu.SetCurrentComposerCharset(charset);
+    }
+    EditorSetDocumentCharacterSet(charset);
+}
+
+
 var gLastMailCharset = null;
 
 function mailCharsetLoadListener (event)
@@ -245,4 +265,12 @@ else
         if (messageContent)
             messageContent.addEventListener("load", mailCharsetLoadListener, true);
     }
+    else
+    if (window && arrayOfStrings[0] == "composer") 
+    {
+        var contentArea = window.document.getElementById("appcontent");
+        if (contentArea)
+            contentArea.addEventListener("load", composercharsetLoadListener, true);
+    }
+
 }
