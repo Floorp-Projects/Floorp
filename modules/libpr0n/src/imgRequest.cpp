@@ -176,8 +176,11 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
     }
   }
 
+#if 0
+  // XXX don't do this here... return an error from the stream listener?
   if (mChannel && mProcessing)
     return mChannel->Cancel(status);
+#endif
 
   return NS_OK;
 }
