@@ -46,8 +46,6 @@
 <!ENTITY closeWindow.label "Close Window">
 
 
-<!ENTITY downloadMore.label "Download More">
-<!ENTITY downloadMore.accesskey "D">
 <!ENTITY applyTheme.label "Apply Theme"> 
 <!ENTITY applyTheme.accesskey "A"> 
 <!ENTITY themePreferencesCmd.label "Theme Preferences..."> 
@@ -75,12 +73,14 @@
 <!ENTITY helpMenuCmd.accesskey "h">
 <!ENTITY helpContentsCmd.label "Help Contents">
 
-<!-- Toolbar items --> 
-<!ENTITY backButton.label             "Back">
+<!ENTITY backCmd.label                "Back">
+<!ENTITY backCmd.accesskey            "B">
 <!ENTITY backButton.tooltip           "Go back one page">
-<!ENTITY forwardButton.label          "Forward">
+<!ENTITY forwardCmd.label             "Forward">
+<!ENTITY forwardCmd.accesskey         "F">
 <!ENTITY forwardButton.tooltip        "Go forward one page">
-<!ENTITY reloadButton.label           "Reload">
+<!ENTITY reloadCmd.label              "Reload">
+<!ENTITY reloadCmd.accesskey          "R">
 <!ENTITY reloadButton.tooltip         "Reload current page">
 <!ENTITY stopCmd.label                "Stop">
 <!ENTITY stopCmd.accesskey            "S">
@@ -180,7 +180,8 @@
 <!ENTITY aboutCommPluginsCmd.label      "About Plug-ins">
 <!ENTITY aboutCommPluginsCmd.accesskey      "P">
 
-<!-- Context Menu -->
+<!ENTITY openCmd.commandkey           "l">
+
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
 <!ENTITY openLinkCmd.accesskey        "W">
 <!ENTITY openLinkCmdInTab.label       "Open Link in New Tab">
@@ -193,12 +194,6 @@
 <!ENTITY openFrameCmdInTab.accesskey  "T">
 <!ENTITY showOnlyThisFrameCmd.label     "Show Only This Frame">
 <!ENTITY showOnlyThisFrameCmd.accesskey "w">
-<!ENTITY goBackCmd.label              "Back">
-<!ENTITY goBackCmd.accesskey          "B">
-<!ENTITY goForwardCmd.label           "Forward">
-<!ENTITY goForwardCmd.accesskey       "F">
-<!ENTITY reloadCmd.label              "Reload">
-<!ENTITY reloadCmd.accesskey          "R">
 <!ENTITY reloadCmd.commandkey         "r">
 <!ENTITY reloadFrameCmd.label         "Reload Frame">
 <!ENTITY reloadFrameCmd.accesskey     "R">
