@@ -60,9 +60,9 @@ struct iso_pair
 
 struct iso_map
 {
-	const char* iso_code;
-	DWORD       win_code;
-	iso_pair    sublang_list[20];
+	const char*      iso_code;
+	DWORD            win_code;
+	const iso_pair*  sublang_list;
 };
 
 // Older versions of VC++ and Win32 SDK  and mingw don't have 
