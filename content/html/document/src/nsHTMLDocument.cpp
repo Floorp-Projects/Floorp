@@ -752,6 +752,19 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
        }
     } 
 
+    if (kCharsetFromParentFrame > charsetSource) {
+      if (dcInfo) {
+        nsCOMPtr<nsIAtom> csAtom;
+        dcInfo->GetParentCharset(getter_AddRefs(csAtom));
+        if (csAtom) {
+          csAtom->ToString(charset);
+          charsetSource = kCharsetFromParentFrame;  
+
+          // printf("### 0 >>> Having parent CS = %s\n", charset.ToNewCString());
+        }
+      }
+    }
+
     if((kCharsetFromAutoDetection > charsetSource )  && gPlugDetector)
     {
       nsCOMPtr <nsICharsetDetector> cdet = do_CreateInstance(g_detector_progid, 

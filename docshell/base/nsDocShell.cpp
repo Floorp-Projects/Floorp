@@ -79,6 +79,7 @@ static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
+static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 
 //*****************************************************************************
 //***    nsDocShell: Object Management
@@ -458,6 +459,14 @@ NS_IMETHODIMP nsDocShell::GetDocumentCharsetInfo(nsIDocumentCharsetInfo**
    aDocumentCharsetInfo)
 {
    NS_ENSURE_ARG_POINTER(aDocumentCharsetInfo);
+
+  // if the mDocumentCharsetInfo does not exist already, we create it now
+  if (!mDocumentCharsetInfo) {
+    nsresult res = nsComponentManager::CreateInstance(kDocumentCharsetInfoCID, 
+      NULL, NS_GET_IID(nsIDocumentCharsetInfo), 
+      getter_AddRefs(mDocumentCharsetInfo));
+    if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+  }
 
    *aDocumentCharsetInfo = mDocumentCharsetInfo;
    NS_IF_ADDREF(*aDocumentCharsetInfo);
@@ -888,6 +897,40 @@ NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
             NS_ERROR_FAILURE);
          }
       }
+
+  // Now take this document's charset and set the parentCharset field of the 
+  // child's DocumentCharsetInfo to it. We'll later use that field, in the 
+  // loading process, for the charset choosing algorithm.
+  // If we fail, at any point, we just return NS_OK.
+  // This code has some performance impact. But this will be reduced when 
+  // the current charset will finally be stored as an Atom, avoiding the
+  // alias resolution extra look-up.
+
+  // we are NOT going to propagate the charset is this Chrome's docshell
+  if (mItemType == nsIDocShellTreeItem::typeChrome) return NS_OK;
+
+  nsresult res = NS_OK;
+
+  // get the child's docCSInfo object
+  nsCOMPtr<nsIDocumentCharsetInfo> dcInfo = NULL;
+  res = childAsDocShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
+  if (NS_FAILED(res) || (!dcInfo)) return NS_OK;
+
+  // get the parent's current charset
+  nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+  if (!docv) return NS_OK;
+  nsCOMPtr<nsIDocument> doc;
+  res = docv->GetDocument(*getter_AddRefs(doc));
+  if (NS_FAILED(res) || (!doc)) return NS_OK;
+  nsAutoString parentCS;
+  res = doc->GetDocumentCharacterSet(parentCS);
+  if (NS_FAILED(res)) return NS_OK;
+
+  // set the child's parentCharset
+  res = dcInfo->SetParentCharset(&parentCS);
+  if (NS_FAILED(res)) return NS_OK;
+
+  // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", parentCS.ToNewCString(), mItemType);
 
   return NS_OK;
 }
