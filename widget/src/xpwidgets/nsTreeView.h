@@ -109,8 +109,12 @@ protected:
 	// String drawing helper. Crops left, inserts ellipses, and left justifies string.
 	// Assumption is that the font has been set in the
 	// rendering context, so the font metrics can be retrieved and used.
-	void DrawCroppedString(nsIRenderingContext* drawCtx, nsString text, 
-							const nsRect& rect);
+	nsRect DrawCroppedString(nsIRenderingContext* drawCtx, nsString text, 
+							const nsRect& rect, PRBool drawText=PR_TRUE);
+
+
+	// Event handlers for specific mouse actions
+	void HandleMouseMove(nsGUIEvent* aEvent);
 
 protected:
 	// Data members (*** these should both be smart pointers***)
