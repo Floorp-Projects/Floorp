@@ -406,11 +406,13 @@ nsMsgIdentity::SetSignature(nsILocalFile *sig)
 NS_IMETHODIMP
 nsMsgIdentity::ClearAllValues()
 {
-    nsresult rv;
-    nsCAutoString rootPref("mail.identity.");
-    rootPref += m_identityKey;
+    nsresult rv = getPrefService();
+    if (NS_SUCCEEDED(rv)) {
+        nsCAutoString rootPref(NS_LITERAL_CSTRING("mail.identity."));
+        rootPref += m_identityKey;
 
-    rv = m_prefs->EnumerateChildren(rootPref.get(), clearPrefEnum, (void *)m_prefs);
+        rv = m_prefs->EnumerateChildren(rootPref.get(), clearPrefEnum, (void *)m_prefs);
+    }
 
     return rv;
 }
