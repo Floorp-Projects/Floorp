@@ -735,9 +735,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    const nsRect &aDestRect)
 {
-  NS_ASSERTION(aSXOffset < mBHead->biWidth && aSYOffset < mBHead->biHeight,
-               "Offset(s) are bigger than image.  Caller to DrawTile needs to do more thinking!");
-
   if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 

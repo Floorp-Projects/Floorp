@@ -812,8 +812,16 @@ public:
   /* [noscript] void drawScaledImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsRect aDestRect); */
   NS_IMETHOD DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect) = 0;
 
-  /* [noscript] void drawTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, [const] in nsRect aTargetRect); */
-  NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect) = 0;
+  /*
+   * Tiles an image over an area
+   * @param aImage       Image to tile
+   * @param aXImageStart x location where the origin (0,0) of the image starts
+   * @param aYImageStart y location where the origin (0,0) of the image starts
+   * @param aTargetRect  area to draw to
+   */
+  NS_IMETHOD DrawTile(imgIContainer *aImage,
+                      nscoord aXImageStart, nscoord aYImageStart,
+                      const nsRect * aTargetRect) = 0;
 
 };
 

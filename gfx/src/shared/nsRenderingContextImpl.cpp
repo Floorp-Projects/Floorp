@@ -880,16 +880,25 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawScaledImage(imgIContainer *aImage, con
                    dr.x, dr.y, dr.width, dr.height);
 }
 
-/* [noscript] void drawTile (in imgIContainer aImage, in nscoord aXOffset, in nscoord aYOffset, [const] in nsRect aTargetRect); */
-NS_IMETHODIMP nsRenderingContextImpl::DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect)
+/* [noscript] void drawTile (in imgIContainer aImage, in nscoord aXImageStart, in nscoord aYImageStart, [const] in nsRect aTargetRect); */
+NS_IMETHODIMP
+nsRenderingContextImpl::DrawTile(imgIContainer *aImage,
+                                 nscoord aXImageStart, nscoord aYImageStart,
+                                 const nsRect * aTargetRect)
 {
   nsRect dr(*aTargetRect);
-  nsRect so(0, 0, aXOffset, aYOffset);
-
   mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
+  mTranMatrix->TransformCoord(&aXImageStart, &aYImageStart);
 
-  // i want one of these...
-  mTranMatrix->TransformCoord(&so.x, &so.y, &so.width, &so.height);
+  nscoord width, height;
+  aImage->GetWidth(&width);
+  aImage->GetHeight(&height);
+
+  if (width == 0 || height == 0)
+    return PR_FALSE;
+
+  nscoord xOffset = (dr.x - aXImageStart) % width;
+  nscoord yOffset = (dr.y - aYImageStart) % height;
 
   nsCOMPtr<gfxIImageFrame> iframe;
   aImage->GetCurrentFrame(getter_AddRefs(iframe));
@@ -902,7 +911,7 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawTile(imgIContainer *aImage, nscoord aX
   GetDrawingSurface((void**)&surface);
   if (!surface) return NS_ERROR_FAILURE;
 
-  return img->DrawTile(*this, surface, so.width, so.height, dr);
+  return img->DrawTile(*this, surface, xOffset, yOffset, dr);
 }
 
 NS_IMETHODIMP
