@@ -1100,9 +1100,9 @@ nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
   nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
   NS_ENSURE_TRUE(metrics, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIAtom> langGroup = nsnull;
+  nsCOMPtr<nsIAtom> langGroup;
   mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
-  mPSObj->setlanggroup(langGroup.get());
+  mPSObj->setlanggroup(langGroup);
 
   if (aLength == 0)
     return NS_OK;
@@ -1149,9 +1149,9 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
   nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
   NS_ENSURE_TRUE(metrics, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIAtom> langGroup = nsnull;
+  nsCOMPtr<nsIAtom> langGroup;
   mFontMetrics->GetLangGroup(getter_AddRefs(langGroup));
-  mPSObj->setlanggroup(langGroup.get());
+  mPSObj->setlanggroup(langGroup);
 
   /* build up conversion table */
   mPSObj->preshow(aString, aLength);
