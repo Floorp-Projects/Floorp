@@ -135,7 +135,7 @@ if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
     }
 } else {
     # Calculate the deltas
-    ($delta{$_} = $count{$_} - $before{$_}) foreach (keys(%count));
+    ($delta{$_} = $count{$_} - ($before{$_} || 0)) foreach (keys(%count));
 
     $dobefore = 1;
 }
