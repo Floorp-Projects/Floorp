@@ -1,19 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window
-[
-<!-- These entity declarations will go into a separate, locale file at some point -->
-<!-- Window title -->
-<!ENTITY windowTitle.label "Personal Dictionary">
-<!ENTITY wordEditField.label "New word:">
-<!ENTITY AddButton.label "Add">
-<!ENTITY DictionaryList.label "Words in dictionary:">
-<!ENTITY ReplaceButton.label "Replace">
-<!ENTITY RemoveButton.label "Remove">
-
-<!ENTITY CloseButton.label "Close">
-]>
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPersonalDictionary.dtd">
 
 <xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
