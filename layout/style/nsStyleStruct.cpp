@@ -70,7 +70,6 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
                            const nscoord* aEnumTable, PRInt32 aNumEnums)
 {
   nscoord result = 0;
-  nsIFrame* parentFrame = aFrame->GetParent();
 
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Auto:
