@@ -19,7 +19,7 @@ DEPTH = ../..
 
 include $(DEPTH)/config/config.mk
 
-#DIRS = motif
+DIRS = motif
 
 LIBRARY_NAME = raptorgfx
 
