@@ -2185,6 +2185,8 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
         // never compare against {}:id attribute
         else if ((attr.get() == nsXULAtoms::id) && (attrNameSpaceID == kNameSpaceID_None))
             continue;
+        else if ((attr.get() == nsXULAtoms::parsetype) && (attrNameSpaceID == kNameSpaceID_None))
+            continue;
 
         nsAutoString value;
         rv = aRuleElement->GetAttr(attrNameSpaceID, attr, value);
@@ -2261,12 +2263,26 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
 
                 target = do_QueryInterface(resource);
             }
-            else {
-                nsCOMPtr<nsIRDFLiteral> literal;
-                rv = gRDFService->GetLiteral(value.get(), getter_AddRefs(literal));
-                if (NS_FAILED(rv)) return rv;
+            else {                
+                if (aRuleElement->HasAttr(kNameSpaceID_None, nsXULAtoms::parsetype)) {
+                   nsAutoString parseType;
+                   aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::parsetype, parseType);
+                   if (parseType.Equals(NS_LITERAL_STRING("Integer"))) {                     
+                     nsCOMPtr<nsIRDFInt> intLiteral;
+                     PRInt32 errorCode = nsnull;                     
+                     rv = gRDFService->GetIntLiteral(value.ToInteger(&errorCode), getter_AddRefs(intLiteral));
+                     if (NS_FAILED(rv)) return rv;
+                     
+                     target = do_QueryInterface(intLiteral);
+                   }
+                }
+                else {
+                   nsCOMPtr<nsIRDFLiteral> literal;
+                   rv = gRDFService->GetLiteral(value.get(), getter_AddRefs(literal));
+                   if (NS_FAILED(rv)) return rv;
 
-                target = do_QueryInterface(literal);
+                   target = do_QueryInterface(literal);
+                }
             }
 
             testnode = new nsRDFPropertyTestNode(aParentNode, mConflictSet, mDB, mMemberVar, property, target);
