@@ -123,7 +123,7 @@ my %map = (
   'msgnews',            'mailnews/news',
   'msgsmime',           'mailnews/extensions/smime',
   'necko',              'netwerk/base netwerk/protocol/about netwerk/protocol/data netwerk/protocol/file netwerk/protocol/http netwerk/protocol/jar netwerk/protocol/keyword netwerk/protocol/res netwerk/dns netwerk/socket netwerk/streamconv netwerk/cookie netwerk/build',
-  'necko2',             'netwerk/protocol/datetime netwerk/protocol/finger netwerk/protocol/ftp netwerk/protocol/gopher netwerk/protocol/viewsource netwerk/build2',
+  'necko2',             'netwerk/protocol/ftp netwerk/protocol/gopher netwerk/protocol/viewsource netwerk/build2',
   'nkcache',            'netwerk/cache',
   'npevents',           'modules/plugin/samples/testevents',
   'npsimple',           'modules/plugin/samples/simple',
