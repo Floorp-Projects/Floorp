@@ -59,8 +59,16 @@ nsXPCWrappedNativeScope::nsXPCWrappedNativeScope(XPCContext* xpcc,
         gScopes = this;
     }
     
+    // XXX We'd like to get the global 'Object.prototype' to use for our
+    // wrapped native's JSObject proto. But...
+    // For now let's skip this whole thing since rooting Object.prototype
+    // roots its parent which is the global object which means 'Components'
+    // does not get collected and the scope (this object) doesn't get deleted 
+    // so the root is not released and the whole cycle leaks. Instead, we let 
+    // the wrapped native JSObject's proto be null as it has always been
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=66629
+#if 0
     JSContext* cx = xpcc->GetJSContext();
-
 
     // Lookup 'globalObject.Object.prototype' for our wrapper's proto
     {
@@ -86,6 +94,7 @@ nsXPCWrappedNativeScope::nsXPCWrappedNativeScope(XPCContext* xpcc,
 #endif
       }
     }
+#endif
 }        
 
 nsXPCWrappedNativeScope::~nsXPCWrappedNativeScope()
