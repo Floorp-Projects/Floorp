@@ -72,19 +72,6 @@ TopLevelFrame::TopLevelFrame(nsIEventHandler* handler, JMFrameRef frameRef, JMFr
 	
 	mWindow = ::NewCWindow(NULL, &mBounds, "\p", false, windowProc, WindowPtr(-1), hasGoAway, long(this));
 	if (mWindow != NULL) {
-		if (getModifiers() & controlKey) {
-			// hack: Try creating a root control, to see if that messes up MRJ controls.
-			ControlHandle rootControl = NULL;
-			OSErr result = ::GetRootControl(mWindow, &rootControl);
-			if (result != noErr || rootControl == NULL) {
-				result = ::CreateRootControl(mWindow, &rootControl);
-				if (result == noErr && rootControl != NULL) {
-					FSSpec dumpFile = { -1, 2, "\pJava Console Controls" };
-					result = DumpControlHierarchy(mWindow, &dumpFile);
-				}
-			}
-		}
-		
 		Point zeroPt = { 0, 0 };
 		::JMSetFrameVisibility(frameRef, mWindow, zeroPt, mWindow->clipRgn);
 	}
