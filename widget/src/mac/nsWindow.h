@@ -70,6 +70,8 @@ public:
                                    nsIAppShell *aAppShell = nsnull,
                                    nsIToolkit *aToolkit = nsnull,
                                    nsWidgetInitData *aInitData = nsnull);
+    NS_IMETHOD              GetClientData(void*& aClientData);
+    NS_IMETHOD              SetClientData(void* aClientData);
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
@@ -193,6 +195,8 @@ protected:
   PRBool      			mShown;
   PRBool     	 			mVisible;
   PRBool      			mDisplayed;
+
+  void*       mClientData;
 
   // Resize event management
   nsRect 						mResizeRect;
