@@ -30,7 +30,6 @@
 namespace JS = JavaScript;
 using namespace JavaScript;
 
-
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
 #include <SIOUX.h>
 #include <MacTypes.h>
@@ -414,6 +413,8 @@ static float64 testObjects(World &world, int32 n)
     initCG.setProperty(counter, initCG.loadName(global), initCG.loadImmediate(0.0));
 
     InstructionStream* initCode = initCG.complete();
+    
+    std::cout << initCG;
 
     // function increment()
     // {
@@ -429,6 +430,8 @@ static float64 testObjects(World &world, int32 n)
 
     InstructionStream* incrCode = incrCG.complete();
 
+    std::cout << incrCG;
+
     // run initialization code.
     JSValues args(32);
     interpret(*initCode, args);
@@ -438,7 +441,7 @@ static float64 testObjects(World &world, int32 n)
     while (n-- > 0)
         result = interpret(*incrCode, args);
 
-    std::cout << "result =" << result.f64 << std::endl;
+    std::cout << "result = " << result.f64 << std::endl;
 
     return result.f64;
 }
