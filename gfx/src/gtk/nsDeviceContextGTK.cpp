@@ -150,6 +150,9 @@ NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&a
   nsIRenderingContext *pContext;
   nsresult             rv;
   nsDrawingSurfaceGTK  *surf;
+  GtkWidget *w;
+
+  w = (GtkWidget*)mWidget;
 
   // to call init for this, we need to have a valid nsDrawingSurfaceGTK created
   pContext = new nsRenderingContextGTK();
@@ -161,15 +164,25 @@ NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&a
     // create the nsDrawingSurfaceGTK
     surf = new nsDrawingSurfaceGTK();
 
-    if (nsnull != surf)
+    if (surf && w)
       {
+        GdkDrawable *gwin = nsnull;
         GdkDrawable *win = nsnull;
         // FIXME
-        if (GTK_IS_LAYOUT((GtkWidget*)mWidget))
-          win = (GdkDrawable*)gdk_window_ref(GTK_LAYOUT((GtkWidget*)mWidget)->bin_window);
+        if (GTK_IS_LAYOUT(w))
+          gwin = (GdkDrawable*)GTK_LAYOUT(w)->bin_window;
         else
-          win = (GdkDrawable*)gdk_window_ref(((GtkWidget*)mWidget)->window);
+          gwin = (GdkDrawable*)(w)->window;
 
+        // window might not be realized... ugh
+        if (gwin)
+          gdk_window_ref(gwin);
+        else
+          win = gdk_pixmap_new(nsnull,
+                               w->allocation.width,
+                               w->allocation.height,
+                               gdk_rgb_get_visual()->depth);
+        
         GdkGC *gc = gdk_gc_new(win);
 
         // init the nsDrawingSurfaceGTK
