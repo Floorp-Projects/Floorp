@@ -103,11 +103,6 @@ public:
                                                  nsISupports *aObj,
                                                  REFNSIID aIID);
     
-    static PRUint32 GetProxyHashKey(    nsISupports *rootProxy, 
-                                        nsIEventQueue *destQueue, 
-                                        PRInt32 proxyType);
-
-
     
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
@@ -126,7 +121,7 @@ public:
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
                        nsProxyEventObject* root,
-                       PRUint32 hashValue);
+                       const char * hashStr);
     
     virtual ~nsProxyEventObject();
     
@@ -137,7 +132,7 @@ public:
 #endif
 
 protected:
-    nsVoidKey           mHashKey;
+    nsStringKey           mHashKey;
 
     nsCOMPtr<nsProxyEventClass>  mClass;
     nsCOMPtr<nsProxyObject> mProxyObject;
