@@ -105,7 +105,8 @@ nsHTMLEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
     mouseEvent->GetClientY(&clientY);
     objectResizer->MouseUp(clientX, clientY, element);
   }
-  return NS_OK;
+
+  return nsTextEditorMouseListener::MouseUp(aMouseEvent);
 }
 
 nsresult
@@ -317,7 +318,8 @@ nsHTMLEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
     nsCOMPtr<nsIHTMLInlineTableEditor> inlineTableEditing = do_QueryInterface(htmlEditor);
     inlineTableEditing->DoInlineTableEditingAction(element);
   }
-  return NS_OK;
+
+  return nsTextEditorMouseListener::MouseClick(aMouseEvent);
 }
 
 nsresult
