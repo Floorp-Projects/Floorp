@@ -61,7 +61,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
   if (!g_bHitTop) {
      
      nsAutoString str;
-     // Geez this is ugly. temporary hack to not process html files
+     // Geez this is ugly. temporary hack to only process html files
      str.Truncate();
      nsString(aURLSpec).Right(str,1);
      if (!str.Equals("/"))
@@ -83,7 +83,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
         {
            nsString * pstr = (nsString *)g_duplicateList->ElementAt(n);
            if (pstr->Equals(aURLSpec)) {
-              fputs ("DR: (duplicate found '",stdout);
+              fputs ("Robot: (duplicate '",stdout);
               fputs (aURLSpec,stdout);
               fputs ("')\n",stdout);
               return NS_OK;
@@ -94,20 +94,13 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
      str.Truncate();
      nsString(aURLSpec).Left(str,5);
      if (str.Equals("http:")) {
-        char str_num[25];
         g_iProcessed++;
-        if (g_iProcessed == g_iMaxProcess)
+        if (g_iProcessed == (g_iMaxProcess > 0 ? g_iMaxProcess-1 : 0))
            g_bHitTop = PR_TRUE;
-        sprintf(str_num, "%d", g_iProcessed);
         g_workList->AppendElement(new nsString(aURLSpec));
-        fputs("DebugRobot ",stdout);
-        fputs(str_num, stdout);
-        fputs(": ",stdout);
-        fputs(aURLSpec,stdout);
-        fputs("\n", stdout);
      }
      else {
-        fputs ("DR: (cannot process URL types '",stdout);
+        fputs ("Robot: (cannot process URL types '",stdout);
         fputs (aURLSpec,stdout);
         fputs ("')\n",stdout);
      }
@@ -138,9 +131,7 @@ public:
 
 NS_IMETHODIMP CStreamListener::OnStopBinding(PRInt32 status, const nsString& aMsg)
 {
-   fputs("CStreamListener: stream complete: ", stdout);
-   fputs(aMsg, stdout);
-   fputs("\n", stdout);
+   fputs("done.\n",stdout);
    g_bReadyForNextUrl = PR_TRUE;
    return NS_OK;
 }
@@ -153,6 +144,7 @@ nsresult CStreamListener::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(CStreamListener)
 NS_IMPL_RELEASE(CStreamListener)
 
+extern "C" NS_EXPORT void DumpVectorRecord(void);
 //----------------------------------------------------------------------
 extern "C" NS_EXPORT int DebugRobot(
    nsVoidArray * workList, 
@@ -162,6 +154,7 @@ extern "C" NS_EXPORT int DebugRobot(
    void (*yieldProc )(const char *)
    )
 {
+  int iCount = 1;
   CStreamListener * pl = new CStreamListener; 
   NS_ADDREF(pl);
   if (nsnull==workList)
@@ -171,7 +164,6 @@ extern "C" NS_EXPORT int DebugRobot(
   g_bHitTop = PR_FALSE;
   g_duplicateList = new nsVoidArray();
   RobotSinkObserver* myObserver = new RobotSinkObserver();
-  //SetVerificationDirectory(verify_dir);
   NS_ADDREF(myObserver);
   g_workList = workList;
 
@@ -192,6 +184,15 @@ extern "C" NS_EXPORT int DebugRobot(
       printf("'\n");
       return -1;
     }
+
+    char str_num[25];
+    sprintf (str_num,"%d",iCount++);
+    fputs ("Robot: parsing(",stdout);
+    fputs (str_num,stdout);
+    fputs (") ",stdout);
+    fputs (*urlName,stdout);
+    fputs ("...",stdout);
+
     delete urlName;
 
     nsIParser* parser;
@@ -201,6 +202,7 @@ extern "C" NS_EXPORT int DebugRobot(
       return -1;
     }
 
+	SetVerificationDirectory(verify_dir);
     nsIRobotSink* sink;
     rv = NS_NewRobotSink(&sink);
     if (NS_OK != rv) {
@@ -231,8 +233,12 @@ extern "C" NS_EXPORT int DebugRobot(
     NS_RELEASE(url);
   }
 
+  fputs ("Robot completed.\n", stdout);
+
   NS_RELEASE(pl);
   NS_RELEASE(myObserver);
+
+  DumpVectorRecord();
 
   return 0;
 }
