@@ -816,9 +816,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
          (PL_strcasecmp(type, TEXT_VCARD) == 0) ||
          (PL_strcasecmp(type, APPLICATION_DIRECTORY) == 0) || /* text/x-vcard synonym */
          (PL_strcasecmp(type, TEXT_CSS) == 0) ||
-         (PL_strcasecmp(type, TEXT_JSSS) == 0) ||
-         (PL_strcasecmp(type, MESSAGE_RFC822) == 0) ||
-         (PL_strcasecmp(type, MESSAGE_NEWS) == 0)) ||
+         (PL_strcasecmp(type, TEXT_JSSS) == 0)) ||
          (PL_strcasecmp(encoding, ENCODING_BASE64) != 0)) &&
          (*charset_label))
     {

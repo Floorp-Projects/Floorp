@@ -273,9 +273,7 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
         (PL_strcasecmp(m_type, TEXT_VCARD) == 0) ||
         (PL_strcasecmp(m_type, APPLICATION_DIRECTORY) == 0) || /* text/x-vcard synonym */
         (PL_strcasecmp(m_type, TEXT_CSS) == 0) ||
-        (PL_strcasecmp(m_type, TEXT_JSSS) == 0) ||
-        (PL_strcasecmp(m_type, MESSAGE_RFC822) == 0) ||
-        (PL_strcasecmp(m_type, MESSAGE_NEWS) == 0)))
+        (PL_strcasecmp(m_type, TEXT_JSSS) == 0)))
       {
         needsB64 = PR_TRUE;
       }
