@@ -42,14 +42,15 @@ OBJS =                              \
 
 LINCS = \
         -I$(PUBLIC)\raptor \
+        -I$(PUBLIC)\dom \
         -I$(PUBLIC)\xpcom \
         -I$(PUBLIC)\plugin \
         -I$(PUBLIC)\java \
         -I$(PUBLIC)\netlib \
         -I$(PUBLIC)\oji \
-		-I$(PUBLIC)\cache \
-		-I$(PUBLIC)\pref	\
-		-I$(PUBLIC)\js   	\
+	-I$(PUBLIC)\cache \
+	-I$(PUBLIC)\pref	\
+	-I$(PUBLIC)\js   	\
         $(NULL)
 
 
@@ -73,9 +74,6 @@ OURLIBS = \
  $(DIST)\lib\xppref32.lib \
  $(DIST)\lib\dbm32.lib \
  $(LIBNSPR)  
-
-INCS = $(INCS) \
-  -I$(PUBLIC)\dom
 
 LLIBS = \
   $(OURLIBS) \
