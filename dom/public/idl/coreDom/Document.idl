@@ -80,7 +80,8 @@ interface DocumentXBL {
   void addBinding(in Element elt, in DOMString bindingURL);
   void removeBinding(in Element elt, in DOMString bindingURL);
 
-  void loadBindingDocument(in DOMString documentURL);
+  Element getBindingParent(in Node node);
+  Document loadBindingDocument(in DOMString documentURL);
 };
 
 interface NSDocument {
