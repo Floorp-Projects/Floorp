@@ -362,6 +362,7 @@ THPrint	thePrintRecord;			// handle to print record
 
 NS_IMETHODIMP nsDeviceContextMac::BeginDocument(void)
 {
+#if !TARGET_CARBON
 GrafPtr	thePort;
  
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
@@ -371,6 +372,7 @@ GrafPtr	thePort;
   	SetDrawingSurface(((nsDeviceContextSpecMac*)(this->mSpec))->mPrtRec);
   	SetPort(thePort);
   }
+#endif
   return NS_OK;
 }
 
@@ -381,7 +383,9 @@ NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 {
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen){
  		::SetPort(mOldPort);
+#if !TARGET_CARBON
 		::PrCloseDoc(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
+#endif
 	}
   return NS_OK;
 }
@@ -392,7 +396,9 @@ NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
 NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
 {
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) 
+#if !TARGET_CARBON
 		::PrOpenPage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort,nsnull);
+#endif
   return NS_OK;
 }
 
@@ -403,7 +409,9 @@ NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
  	if(((nsDeviceContextSpecMac*)(this->mSpec))->mPrintManagerOpen) {
  		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort));
+#if !TARGET_CARBON
 		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec))->mPrinterPort);
+#endif
 	}
   return NS_OK;
 }
@@ -462,9 +470,11 @@ void nsDeviceContextMac :: InitFontInfoList()
 			return;
 
 		short numFONDs = ::CountResources('FOND');
+#if !TARGET_CARBON
 		TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
 															kTextEncodingDefaultVariant,
 													 		kTextEncodingDefaultFormat);
+#endif
 		TECObjectRef converter = nil;
 		ScriptCode lastscript = smUninterp;
 		for (short i = 1; i <= numFONDs ; i++)
@@ -477,6 +487,7 @@ void nsDeviceContextMac :: InitFontInfoList()
 				Str255	fontName;
 				::GetResInfo(fond, &fondID, &resType, fontName); 
 
+#if !TARGET_CARBON
 				ScriptCode script = ::FontToScript(fondID);
 				if (script != lastscript)
 				{
@@ -505,6 +516,15 @@ void nsDeviceContextMac :: InitFontInfoList()
 	        		FontNameKey key(unicodeFontName);
 					gFontInfoList->Put(&key, (void*)fondID);
 				}
+#else
+				// pinkerton - CreateTextEncoding() makes a carbon app exit. this is a smarmy hack
+				char buffer[500];
+				::BlockMoveData ( &fontName[1], buffer, *fontName );
+				buffer[*fontName] = NULL;
+printf("font buffer is %s\n", buffer);
+	        	FontNameKey key(buffer);
+				gFontInfoList->Put(&key, (void*)fondID);				
+#endif
 				::ReleaseResource(fond);
 			}
 		}
@@ -522,9 +542,17 @@ bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aF
 	//¥TODO?: Maybe we shouldn't call that function so often. If nsFont could store the
 	//				fontNum, nsFontMetricsMac::SetFont() wouldn't need to call this at all.
 	InitFontInfoList();
+#if TARGET_CARBON
+	char* fontNameC = aFontName.ToNewCString();
+	Str255 fontNamePascal;
+	fontNamePascal[0] = strlen(fontNameC);
+	::BlockMoveData ( fontNameC, &fontNamePascal[1], fontNamePascal[0] );
+	::GetFNum ( fontNamePascal, &aFontNum );
+	delete[] fontNameC;
+#else
     FontNameKey key(aFontName);
 	aFontNum = (short)gFontInfoList->Get(&key);
-
+#endif
 	return (aFontNum != 0);
 }
 
