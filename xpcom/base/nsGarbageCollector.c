@@ -24,6 +24,8 @@
 	nsGarbageCollector.c
  */
 
+#ifdef GC_LEAK_DETECTOR
+
 #include "generic_threads.h"
 #include "pprthred.h"
 
@@ -99,3 +101,5 @@ void NSShutdownGarbageCollector()
 	GC_gcollect();
 #endif
 }
+
+#endif /* GC_LEAK_DETECTOR */
