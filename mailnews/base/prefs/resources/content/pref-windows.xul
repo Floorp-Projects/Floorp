@@ -34,7 +34,8 @@ Contributor(s):
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["mailPaneConfig"];
+    var _elementIDs = ["mailPaneConfig",
+                       "mailnewsDoubleClick2NewWindow"];
   ]]>
   </script>
   
@@ -50,7 +51,12 @@ Contributor(s):
       </radiogroup>
     </hbox>
     
-    <description>&chooseExp.label;</description>
-
+    <label value="&reuseExp.label;"/>
+    <hbox class="indent" align="center">
+      <radiogroup id="mailnewsDoubleClick2NewWindow" preftype="bool" prefstring="mailnews.reuse_message_window" orient="vertical">
+        <radio value="false" label="&reuseExpRadio0.label;" accesskey="&reuseExpRadio0.accesskey;" id="new"/>
+        <radio value="true" label="&reuseExpRadio1.label;" accesskey="&reuseExpRadio1.accesskey;" id="existing"/>
+      </radiogroup>
+    </hbox>
   </groupbox>  
 </page>

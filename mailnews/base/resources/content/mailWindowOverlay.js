@@ -33,6 +33,8 @@ var gOfflineManager;
 var gWindowManagerInterface;
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 var gPrintSettings = null;
+var gWindowReuse  = 0;
+var gWindowID = null;
 
 var gTimelineService = null;
 var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
@@ -1084,9 +1086,72 @@ function MsgOpenSelectedMessages()
 
   var indices = GetSelectedIndices(dbView);
   var numMessages = indices.length;
-  for (var i = 0; i < numMessages; i++) {
-    MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]),dbView.getFolderForViewIndex(indices[i]).URI);
+
+  gWindowReuse = gPrefs.getBoolPref("mailnews.reuse_message_window");
+  // This is a radio type button pref, currently with only 2 buttons.
+  // We need to keep the pref type as 'bool' for backwards compatibility
+  // with 4.x migrated prefs.  For future radio button(s), please use another
+  // pref (either 'bool' or 'int' type) to describe it.
+  //
+  // gWindowReuse values: false, true
+  //    false: open new standalone message window for each message
+  //    true : reuse existing standalone message window for each message
+  if ((gWindowReuse) && (numMessages == 1)) {
+      if (!MsgOpenExistingWindowForMessage(gWindowID,dbView.getURIForViewIndex(indices[0]))) {
+          gWindowID = MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[0]),dbView.getFolderForViewIndex(indices[0]).URI);
+      }
+  } else {
+      for (var i = 0; i < numMessages; i++) {
+          gWindowID = MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]),dbView.getFolderForViewIndex(indices[i]).URI);
+      }
   }
+}
+
+function MsgOpenExistingWindowForMessage(aWindowID, aMessageUri)
+{
+    var messageUri;
+    var msgHdr = null;
+
+    if (!aMessageUri) {
+        var currentIndex = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView).outlinerView.selection;
+        messageUri = gDBView.getURIForViewIndex(currentIndex);
+    }
+    else
+        messageUri = aMessageUri;
+
+    // be sure to pass in the current view....
+    if (!messageUri || !aWindowID)
+        return false;
+
+    try {
+        msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+        if (!msgHdr)
+            return false;
+
+        if (msgHdr.folder.URI != aWindowID.gCurrentFolderUri) {
+            if ("CreateView" in aWindowID) {
+                // Reset the window's message uri and folder uri vars, and
+                // update the command handlers to what's going to be used.
+                // This has to be done before the call to CreateView().
+                aWindowID.gCurrentMessageUri = messageUri;
+                aWindowID.gCurrentFolderUri = msgHdr.folder.URI;
+                aWindowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
+                aWindowID.CreateView(gDBView);
+            }
+            else
+                return false;
+        }
+
+        aWindowID.gDBView.loadMessageByMsgKey(msgHdr.messageKey);
+    }
+    catch (ex) {
+        dump("reusing existing standalone message window failed: " + ex + "\n");
+        return false;
+    }
+    // bring existing window to front
+    aWindowID.focus();
+
+    return true;
 }
 
 function MsgOpenNewWindowForMessage(messageUri, folderUri)
@@ -1111,8 +1176,9 @@ function MsgOpenNewWindowForMessage(messageUri, folderUri)
 
     // be sure to pass in the current view....
     if (messageUri && folderUri) {
-        window.openDialog( "chrome://messenger/content/messageWindow.xul", "_blank", "all,chrome,dialog=no,status,toolbar", messageUri, folderUri, gDBView );
+        return window.openDialog( "chrome://messenger/content/messageWindow.xul", "_blank", "all,chrome,dialog=no,status,toolbar", messageUri, folderUri, gDBView );
     }
+    return null;
 }
 
 function CloseMailWindow()

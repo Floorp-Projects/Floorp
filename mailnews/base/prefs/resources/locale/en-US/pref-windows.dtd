@@ -21,8 +21,15 @@ Rights Reserved.
 <!ENTITY pane.title                       "Windows">
 <!ENTITY windowSettings.label             "Windows">
 <!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail:">
-<!ENTITY selectWindowLayout.accesskey     "e">
+<!ENTITY selectWindowLayout.accesskey     "l">
 <!ENTITY chooseExp.label                  "Note: For this setting to take effect, you will need to exit and then restart Mail.">
 <!ENTITY warnOnSendAccelKey.label         "Confirm when using keyboard shortcut to send message">
 <!ENTITY warnOnSendAccelKey.accesskey     "o">
 
+<!ENTITY reuseExp.label                   "When opening messages, display them in:">
+<!ENTITY reuseExpRadio0.label             "A new message window">
+<!ENTITY reuseExpRadio0.accesskey         "n">
+<!ENTITY reuseExpRadio1.label             "An existing message window">
+<!ENTITY reuseExpRadio1.accesskey         "e">
+<!ENTITY reuseExpRadio2.label             "A tab in an existing message window">
+<!ENTITY reuseExpRadio2.accesskey         "t">
