@@ -16,35 +16,30 @@
 # Reserved.
 
 DEPTH=..\..\..\..
-IGNORE_MANIFEST=1
+MODULE=mime
 
 include <$(DEPTH)\config\config.mak>
 
+################################################################################
+## exports
 
-LIBRARY_NAME=emitterutils
-MODULE= mailnews
-REQUIRES=nspr
-
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
-
-CPPSRCS=    nsEmitterUtils.cpp				\
-			nsMimeRebuffer.cpp					\
+EXPORTS=	nsEmitterUtils.h	\
+    		nsMimeRebuffer.h	\
 			$(NULL)
 
-CPP_OBJS=   .\$(OBJDIR)\nsEmitterUtils.obj				\
-			.\$(OBJDIR)\nsMimeRebuffer.obj					\
-			$(NULL)
+################################################################################
+## library
 
+LIBRARY_NAME=emitterutils_s
 
-EXPORTS=	nsEmitterUtils.h				\
-    			nsMimeRebuffer.h						\
-          $(NULL)
-
-
-LCFLAGS = \
+LCFLAGS =		   \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
+
+CPP_OBJS=   .\$(OBJDIR)\nsEmitterUtils.obj	\
+			.\$(OBJDIR)\nsMimeRebuffer.obj	\
+			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

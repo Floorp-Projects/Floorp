@@ -21,88 +21,37 @@
 # representations of RFC822 messages
 #
 
-#//------------------------------------------------------------------------
-#//
-#// Specify the depth of the current directory relative to the
-#// root of NS
-#//
-#//------------------------------------------------------------------------
 DEPTH=..\..\..\..
+MODULE=mime
 
-#//------------------------------------------------------------------------
-#//
-# New build system where zip dll is build indepenant of java stubs.
-#//
-#//------------------------------------------------------------------------
-MODULE   = xmlemitter
-REQUIRES=
-#EXPORTS =\
-#		.\nsMimeEmitter.h	\
-#		$(NULL)
+################################################################################
+## exports
 
+################################################################################
+## library
 
-DEFINES= 
+LIBNAME = .\$(OBJDIR)\xmlemitter
+DLL = $(LIBNAME).dll
 
-#//------------------------------------------------------------------------
-#// 
-#// Define the files necessary to build the target (ie. OBJS)
-#//
-#//------------------------------------------------------------------------
-
-OBJS=							\
+CPP_OBJS=									\
 		.\$(OBJDIR)\nsMimeEmitter.obj		\
 		.\$(OBJDIR)\nsEmitterFactory.obj	\
 		$(NULL)
 
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
-#//
-#//------------------------------------------------------------------------
-DLLNAME=$(MODULE)
-MAPFILE=$(MODULE).map
-DEFFILE=$(MODULE).def
-
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
-#// (these must be defined before the common makefiles are included)
-#//
-#//------------------------------------------------------------------------
-#
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-#//------------------------------------------------------------------------
-#//
-#// Define any local options for the make tools 
-#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
-#//
-#//------------------------------------------------------------------------
-DEFINES= -NS_DEBUG
-
-MSGLIBS=				\
-		$(NULL)
-
-# These are the libraries we need to link with to create the dll
-# These are the libraries we need to link with to create the dll
-LLIBS=							\
-			$(LLIBS)			\
-			$(LIBNSPR)			\
-			$(DIST)\lib\xppref32.lib	\
-			$(DIST)\lib\mimetype.lib	\
+LLIBS=										\
+			$(LLIBS)						\
+			$(LIBNSPR)						\
+			$(DIST)\lib\xppref32.lib		\
+			$(DIST)\lib\mimetype.lib		\
 			$(DIST)\lib\xpcom.lib       	\
-			$(DIST)\lib\emitterutils.lib    \
+			$(DIST)\lib\emitterutils_s.lib  \
 			$(NULL)
 
-#//------------------------------------------------------------------------
-#//
-#// Include the common makefile rules
-#//
-#//------------------------------------------------------------------------
-include <$(DEPTH)/config/rules.mak>
+MISCDEP=$(LLIBS)
 
-install:: $(DLL)
-        $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+include <$(DEPTH)\config\rules.mak>
 
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
+libs:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
+
