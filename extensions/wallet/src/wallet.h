@@ -57,6 +57,8 @@ WLLT_GetNopreviewListForViewer (nsString& aNopreviewList);
 extern void
 WLLT_GetNocaptureListForViewer (nsString& aNocaptureList);
 
+extern void
+WLLT_GetPrefillListForViewer (nsString& aPrefillList);
 
 XP_END_PROTOS
 

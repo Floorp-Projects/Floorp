@@ -9,6 +9,9 @@ interface WalletCore : BaseAppCore
 
 	void SaveWallet(in wstring results);
 	void CancelWallet();
+
+	wstring GetPrefillList();
+
 };
 
 

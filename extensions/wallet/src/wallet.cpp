@@ -1604,6 +1604,42 @@ wallet_ReleasePrefillElementList(XP_List * wallet_PrefillElement_list) {
   }
 }
 
+#define BUFLEN3 5000
+#define BREAK '\001'
+
+XP_List * wallet_list;
+nsString wallet_url;
+
+PUBLIC void
+WLLT_GetPrefillListForViewer(nsString& aPrefillList)
+{
+  char *buffer = (char*)XP_ALLOC(BUFLEN3);
+  int g = 0, prefillNum = 0;
+  XP_List *list_ptr = wallet_list;
+  wallet_PrefillElement * ptr;
+  buffer[0] = '\0';
+  char * schema;
+  char * value;
+
+  while((ptr = (wallet_PrefillElement *) XP_ListNextObject(list_ptr))!=0) {
+    schema = ptr->schema->ToNewCString();
+    value = ptr->value->ToNewCString();
+    g += PR_snprintf(buffer+g, BUFLEN3-g,
+      "%c%d%c%s%c%s",
+      BREAK, ptr->count,
+      BREAK, schema,
+      BREAK, value);
+    delete []schema;
+    delete []value;
+  }
+  char * urlCString;
+  urlCString = wallet_url.ToNewCString();
+  g += PR_snprintf(buffer+g, BUFLEN3-g,"%c%ld%c%s", BREAK, wallet_list, BREAK, urlCString);
+  delete []urlCString;
+  aPrefillList = buffer;
+  PR_FREEIF(buffer);
+}
+
 #define BUFLEN 50000
 
 extern void
@@ -1631,6 +1667,7 @@ wallet_RequestToPrefill(XP_List * list, nsString url) {
 "    title_frame = 1;\n"
 "    list_frame = 2;\n"
 "    button_frame = 3;\n"
+"    var prefillList = [];\n"
 "\n"
     );
 
@@ -1650,48 +1687,40 @@ wallet_RequestToPrefill(XP_List * list, nsString url) {
 "          \"<TABLE BORDER=0>\" +\n"
 "            \"<TR>\" +\n"
 "              \"<TD>\" +\n"
-"                \"<BR>\" +\n",
+"                \"<BR>\" \n"
+"      )\n",
     heading);
   PR_FREEIF(heading);
 
   /* generate the html for the list of fillins */
-  wallet_PrefillElement * ptr;
-  XP_List * list_ptr = list;
-  PRUint32 count;
-  while((ptr = (wallet_PrefillElement *) XP_ListNextObject(list_ptr))!=0) {
-    char * schema;
-    schema = ptr->schema->ToNewCString();
-    char * value;
-    value = ptr->value->ToNewCString();
-    if (ptr->count) {
-      count = ptr->count;
-      g += PR_snprintf(buffer+g, BUFLEN-g,
+  g += PR_snprintf(buffer+g, BUFLEN-g,
+"      var count;\n"
+"      for (i=1; i<prefillList.length-2; i+=3) {\n"
+"        if(prefillList[i] != 0) {\n"
+"          count = prefillList[i];\n"
+"          top.frames[list_frame].document.write(\n"
 "                \"<TR>\" +\n"
-"                  \"<TD>%s:  </TD>\" +\n"
+"                  \"<TD>\" + prefillList[i+1] + \":  </TD>\" +\n"
 "                  \"<TD>\" +\n"
-"                    \"<SELECT>\" +\n"
-"                      \"<OPTION VALUE=\\\"%s\\\">%s</OPTION>\" +\n",
-        schema, schema, value);
-    } else {
-      g += PR_snprintf(buffer+g, BUFLEN-g,
-"                      \"<OPTION VALUE=\\\"%s\\\">%s</OPTION>\" +\n",
-        schema, value);
-    }
-    count--;
-    if (count == 0) {
-    g += PR_snprintf(buffer+g, BUFLEN-g,
-"                      \"<OPTION VALUE=\\\"%s\\\"></OPTION>\" +\n"
+"                    \"<SELECT>\" \n"
+"          )\n"
+"          count--;\n"
+"        }\n"
+"        top.frames[list_frame].document.write(\n"
+"                      \"<OPTION VALUE=\\\"\"+prefillList[i+1]+\"\\\">\" +\n"
+"                        prefillList[i+2] +\n"
+"                      \"</OPTION>\" \n"
+"        )\n"
+"        if(count == 0) {\n"
+"          top.frames[list_frame].document.write(\n"
+"                      \"<OPTION VALUE=\\\"\"+prefillList[i+1]+\"\\\"></OPTION>\" +\n"
 "                    \"</SELECT><BR>\" +\n"
 "                  \"</TD>\" +\n"
-"                \"</TR>\" +\n",
-      schema);
-    }
-    delete []schema;
-    delete []value;
-  }    
-
-  /* finish generating list of fillins */
-  g += PR_snprintf(buffer+g, BUFLEN-g,
+"                \"</TR>\" \n"
+"          )\n"
+"        }\n"
+"      }\n"
+"      top.frames[list_frame].document.write(\n"
 "              \"</TD>\" +\n"
 "            \"</TR>\" +\n"
 "          \"</TABLE>\" +\n"
@@ -1701,7 +1730,6 @@ wallet_RequestToPrefill(XP_List * list, nsString url) {
 "    };\n"
 "\n"
     );
-  PR_FREEIF(heading);
 
 /* generate rest of html */
   char * skipMessage = Wallet_Localize("BypassThisScreen");
@@ -1722,7 +1750,7 @@ wallet_RequestToPrefill(XP_List * list, nsString url) {
       skipMessage);
   PR_FREEIF(skipMessage);
 
-  /* generate remainder of html, it will go into strings->arg[2] */
+  /* generate remainder of html */
   char * urlCString;
   urlCString = url.ToNewCString();
   g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -1736,6 +1764,9 @@ wallet_RequestToPrefill(XP_List * list, nsString url) {
 "\n"
 "    function loadFrames(){\n"
 "      StartUp(\"Wallet\");\n"
+"      list = DoGetPrefillList();\n"
+"      BREAK = list[0];\n"
+"      prefillList = list.split(BREAK);\n"
 "      loadFillins();\n"
 "      loadButtons();\n"
 "    }\n"
@@ -1745,8 +1776,8 @@ wallet_RequestToPrefill(XP_List * list, nsString url) {
 "      var list = top.frames[button_frame].document.buttons.list;\n"
 "      var url = top.frames[button_frame].document.buttons.url;\n"
 "      var skip = top.frames[button_frame].document.buttons.skip;\n"
-"      list.value = %ld;\n"
-"      url.value = \"%s\";\n"
+"      list.value = prefillList[prefillList.length-2];\n"
+"      url.value = \"prefillList[prefillList.length-1]\";\n"
 "      var fillins = top.frames[button_frame].document.buttons.fillins;\n"
 "      fillins.value = \"\";\n"
 "      for (i=0; i<selname.length; i++) {\n"
@@ -1795,7 +1826,7 @@ wallet_RequestToPrefill(XP_List * list, nsString url) {
 "  <BODY> <BR> </BODY>\n"
 "</NOFRAMES>\n"
 "</HTML>\n",
-    list, urlCString, SEPARATOR, SEPARATOR);
+    SEPARATOR, SEPARATOR);
   delete []urlCString;
 
   SI_MakeDialog(buffer);
@@ -2343,6 +2374,8 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
     return NS_ERROR_FAILURE; // indicates to caller not to display preview screen
   } else {
     /* let user preview and verify the prefills first */
+    wallet_list = wallet_PrefillElement_list;
+    wallet_url = url;
     wallet_RequestToPrefill(wallet_PrefillElement_list, url);
 #ifdef DEBUG
 wallet_DumpStopwatch();

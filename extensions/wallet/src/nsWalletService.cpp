@@ -118,6 +118,11 @@ NS_IMETHODIMP nsWalletlibService::WALLET_GetNocaptureListForViewer(nsString& aNo
     return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::WALLET_GetPrefillListForViewer(nsString& aPrefillList){
+    ::WLLT_GetPrefillListForViewer(aPrefillList);
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsWalletlibService::SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
     ::SINGSIGN_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);

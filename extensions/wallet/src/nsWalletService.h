@@ -43,6 +43,7 @@ public:
     NS_IMETHOD SI_GetRejectListForViewer(nsString& aRejectList);
     NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList);
     NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList);
+    NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList);
 
     NS_IMETHOD SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);

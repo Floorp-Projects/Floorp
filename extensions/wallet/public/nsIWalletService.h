@@ -58,6 +58,7 @@ struct nsIWalletService : public nsISupports
     NS_IMETHOD SI_GetRejectListForViewer(nsString& aRejectList)=0;
     NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList)=0;
     NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList)=0;
+    NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList)=0;
     NS_IMETHOD SI_RememberSignonData
         (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) = 0;
     NS_IMETHOD SI_RestoreSignonData
