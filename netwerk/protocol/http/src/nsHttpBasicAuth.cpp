@@ -90,10 +90,9 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
     // we work with ASCII around here
     nsCAutoString userpass;
     userpass.AssignWithConversion(username);
-    if (password) {
-        userpass.Append(':');
+    userpass.Append(':'); // always send a ':' (see bug 129565)
+    if (password)
         userpass.AppendWithConversion(password);
-    }
 
     char *b64userpass = PL_Base64Encode(userpass.get(),
                                         userpass.Length(),
