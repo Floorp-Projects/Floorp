@@ -1938,7 +1938,7 @@ nsFormFrame::GetFirstSubmitButtonAndTxtCnt(PRInt32& aInputTxtCnt)
     nsIFormControlFrame* fcFrame = (nsIFormControlFrame*) mFormControls.ElementAt(i);
     PRInt32 type;
     fcFrame->GetType(&type);
-    if ((type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_BUTTON_SUBMIT || type == NS_FORM_BUTTON_IMAGE) && 
+    if ((type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_BUTTON_SUBMIT || type == NS_FORM_INPUT_IMAGE) && 
         submitFrame == nsnull) {
       NS_ASSERTION(fcFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&submitFrame) == NS_OK,
                    "This has to be a frame!");
