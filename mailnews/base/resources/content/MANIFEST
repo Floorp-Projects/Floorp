@@ -41,7 +41,7 @@ subscribe.js
 subscribe.xul
 sidebar-messenger.rdf
 folderProps.js
-imapFolderProps.xul
+folderProps.xul
 renameFolderNameDialog.xul
 msgViewNavigation.js
 msgMail3PaneWindow.js

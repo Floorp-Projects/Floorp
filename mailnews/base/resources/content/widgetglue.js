@@ -255,7 +255,7 @@ function MsgFolderProperties()
 
 	var windowTitle = gMessengerBundle.getString("folderProperties");
 	var dialog = window.openDialog(
-                    "chrome://messenger/content/imapFolderProps.xul",
+                    "chrome://messenger/content/folderProps.xul",
                     "",
                     "chrome,centerscreen,titlebar,modal",
                     {preselectedURI:preselectedURI, serverType:serverType,

@@ -73,7 +73,7 @@ CHROME_CONTENT = \
 	.\mailMessengerComposeOverlay.xul \
 	.\mailOverlay.xul \
 	.\mailWidgets.xml \
-      .\imapFolderProps.xul \
+      .\folderProps.xul \
       .\folderProps.js \
       .\sendMsgs.xul \
       .\sendMsgs.js \

@@ -94,7 +94,7 @@ messenger.jar:
     content/messenger/messageWindow.xul                                        (base/resources/content/messageWindow.xul)
     content/messenger/messageWindow.js                                         (base/resources/content/messageWindow.js)
     content/messenger/folderPane.xul                                           (base/resources/content/folderPane.xul)
-    content/messenger/imapFolderProps.xul                                      (base/resources/content/imapFolderProps.xul)
+    content/messenger/folderProps.xul                                          (base/resources/content/folderProps.xul)
     content/messenger/folderProps.js                                           (base/resources/content/folderProps.js)
     content/messenger/threadPane.xul                                           (base/resources/content/threadPane.xul)
     content/messenger/threadPane.js                                            (base/resources/content/threadPane.js)
