@@ -173,30 +173,31 @@ int main(int argc, char *argv[])
         NS_TermEmbedding();
         return 1;
     }
-
-	// Now register an observer to watch for profile changes
-    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
-
-    ProfileChangeObserver *observer = new ProfileChangeObserver;
-    observer->AddRef();
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-approve-change", PR_TRUE);
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-change-teardown", PR_TRUE);
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-after-change", PR_TRUE);
-
-    InitializeWindowCreator();
-
-    // Open the initial browser window
-    OpenWebPage(gFirstURL);
-
-	// Main message loop.
-    // NOTE: We use a fake event and a timeout in order to process idle stuff for
-    //       Mozilla every 1/10th of a second.
-    PRBool runCondition = PR_TRUE;
     WPARAM rv;
-    rv = AppCallbacks::RunEventLoop(runCondition);
+    {    
+    	// Now register an observer to watch for profile changes
+        nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
 
-    observer->Release();
+        ProfileChangeObserver *observer = new ProfileChangeObserver;
+        observer->AddRef();
+        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-approve-change", PR_TRUE);
+        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-change-teardown", PR_TRUE);
+        observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-after-change", PR_TRUE);
 
+        InitializeWindowCreator();
+
+        // Open the initial browser window
+        OpenWebPage(gFirstURL);
+
+	    // Main message loop.
+        // NOTE: We use a fake event and a timeout in order to process idle stuff for
+        //       Mozilla every 1/10th of a second.
+        PRBool runCondition = PR_TRUE;
+
+        rv = AppCallbacks::RunEventLoop(runCondition);
+
+        observer->Release();
+    }
     // Close down Embedding APIs
     NS_TermEmbedding();
 
