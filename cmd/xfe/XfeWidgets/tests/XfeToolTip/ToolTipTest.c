@@ -30,17 +30,15 @@
 /*----------------------------------------------------------------------*/
 static void
 string_obtain_cb	(Widget			w,
-					 XtPointer		client_data1,
-					 XtPointer		client_data2,
+					 XtPointer		client_data,
 					 XmString *		string_return,
 					 Boolean *		need_to_free_string);
 /*----------------------------------------------------------------------*/
 static void
-doc_string_cb		(Widget					w,
-					 XtPointer				client_data1,
-					 XtPointer				client_data2,
-					 XfeDocStringReason		reason,
-					 XmString				string);
+doc_string_cb		(Widget			w,
+					 XtPointer		client_data,
+					 unsigned char	reason,
+					 XmString		string);
 /*----------------------------------------------------------------------*/
 
 
@@ -108,7 +106,6 @@ main(int argc,char *argv[])
 
 	XtManageChild(_status_label);
 
-	XtPopup(frame,XtGrabNone);
 
 	/* Tip Strings */
 	XfeTipStringAdd(_button_widgets[0]);
@@ -129,7 +126,6 @@ main(int argc,char *argv[])
 
 	XfeTipStringSetObtainCallback(_button_widgets[0],
 								  string_obtain_cb,
-								  NULL,
 								  NULL);
 	
  	XfeTipStringGlobalSetEnabledState(True);
@@ -153,15 +149,13 @@ main(int argc,char *argv[])
 
 	XfeDocStringSetObtainCallback(_button_widgets[0],
 								  string_obtain_cb,
-								  NULL,
 								  NULL);
 
 	XfeDocStringSetCallback(_button_widgets[0],
 							doc_string_cb,
-							NULL,
 							NULL);
 
- 	XfeDocStringGlobalSetEnabledState(True);
+	XtPopup(frame,XtGrabNone);
 
     XfeAppMainLoop();
 
@@ -170,8 +164,7 @@ main(int argc,char *argv[])
 /*----------------------------------------------------------------------*/
 static void
 string_obtain_cb(Widget		w,
-				 XtPointer	client_data1,
-				 XtPointer	client_data2,
+				 XtPointer	client_data,
 				 XmString *	string_return,
 				 Boolean *	need_to_free_string)
 {
@@ -187,9 +180,8 @@ string_obtain_cb(Widget		w,
 /*----------------------------------------------------------------------*/
 static void
 doc_string_cb(Widget				w,
-			  XtPointer				client_data1,
-			  XtPointer				client_data2,
-			  XfeDocStringReason	reason,
+			  XtPointer				client_data,
+			  unsigned char	reason,
 			  XmString				string)
 {
 	if (!XfeIsAlive(_status_label))
