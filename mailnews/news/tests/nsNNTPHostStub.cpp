@@ -671,7 +671,7 @@ nsresult nsNNTPHostStub::AddGroup(const char *groupname, nsINNTPNewsgroup **retv
 nsresult nsNNTPHostStub::RemoveGroup(const nsINNTPNewsgroup * group)
 {
 	char * name = nsnull;
-	group->GetName(&name);
+	((nsINNTPNewsgroup *) group)->GetName(&name);
 
 	printf ("Removing group %s.\n", name ? name : "unspecified");
 	PR_FREEIF(name);
