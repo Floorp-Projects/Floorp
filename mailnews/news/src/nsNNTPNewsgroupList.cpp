@@ -670,6 +670,8 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
     			if (NS_FAILED(rv)) return rv;
 			rv = newMsgHdr->SetFlags(flags | MSG_FLAG_HAS_RE);
     			if (NS_FAILED(rv)) return rv;
+			if (! (flags & MSG_FLAG_READ))
+				rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
 		}
 
 #ifdef DEBUG_NEWS
