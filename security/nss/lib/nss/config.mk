@@ -36,8 +36,8 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-# can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
+# can't do this in manifest.mn because OS_TARGET isn't defined there.
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
 SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll

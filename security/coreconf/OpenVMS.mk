@@ -60,3 +60,8 @@ endif
 # Change PROCESS to put the mapfile in the correct format for this platform
 PROCESS_MAP_FILE = copy $(LIBRARY_NAME).def $@
 
+
+#
+# Always set CPU_TAG on Linux, OpenVMS, WINCE.
+#
+CPU_TAG = _$(CPU_ARCH)

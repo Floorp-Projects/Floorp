@@ -31,24 +31,14 @@
 # GPL.
 #
 
-#CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:16:21 $ $Name:  $"
+#CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.3 $ $Date: 2002/02/15 22:53:57 $ $Name:  $"
 
 ifdef BUILD_IDG
 DEFINES += -DNSSDEBUG
 endif
 
-#
-#  Override TARGETS variable so that only static libraries
-#  are specifed as dependencies within rules.mk.
-#
-
-#TARGETS        = $(LIBRARY)
-#SHARED_LIBRARY =
-#IMPORT_LIBRARY =
-#PROGRAM        =
-
-# can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
+# can't do this in manifest.mn because OS_TARGET isn't defined there.
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
 SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
@@ -112,7 +102,7 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH),SunOS)
+ifeq ($(OS_TARGET),SunOS)
 MAPFILE = $(OBJDIR)/nsspkimap.sun
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -M $(MAPFILE)
@@ -125,25 +115,25 @@ endif
 endif
 endif
 
-ifeq ($(OS_ARCH),AIX)
+ifeq ($(OS_TARGET),AIX)
 MAPFILE = $(OBJDIR)/nsspkimap.aix
 ALL_TRASH += $(MAPFILE)
 EXPORT_RULES = -bexport:$(MAPFILE)
 endif
 
-ifeq ($(OS_ARCH),HP-UX)
+ifeq ($(OS_TARGET),HP-UX)
 MAPFILE = $(OBJDIR)/nsspkimap.hp
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -c $(MAPFILE)
 endif
 
-ifeq ($(OS_ARCH), OSF1)
+ifeq ($(OS_TARGET), OSF1)
 MAPFILE = $(OBJDIR)/nsspkimap.osf
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -hidden -input $(MAPFILE)
 endif
 
-ifeq ($(OS_ARCH),Linux)
+ifeq ($(OS_TARGET),Linux)
 MAPFILE = $(OBJDIR)/nsspkimap.linux
 ALL_TRASH += $(MAPFILE)
 MKSHLIB += -Wl,--version-script,$(MAPFILE)

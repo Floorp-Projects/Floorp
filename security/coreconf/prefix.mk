@@ -40,7 +40,7 @@
 #
 
 ifndef OBJ_PREFIX
-	OBJ_PREFIX = 
+    OBJ_PREFIX = 
 endif
 
 #
@@ -48,25 +48,17 @@ endif
 #
 
 ifndef LIB_PREFIX
-	ifeq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
-		LIB_PREFIX = 
-	else
-		LIB_PREFIX = lib
-	endif
+    LIB_PREFIX = lib
 endif
 
 
 ifndef DLL_PREFIX
-	ifeq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
-		DLL_PREFIX = 
-	else
-		DLL_PREFIX = lib
-	endif
+    DLL_PREFIX = lib
 endif
 
 
 ifndef IMPORT_LIB_PREFIX
-	IMPORT_LIB_PREFIX = 
+    IMPORT_LIB_PREFIX = 
 endif
 
 #
@@ -74,6 +66,7 @@ endif
 #
 
 ifndef PROG_PREFIX
-	PROG_PREFIX = 
+    PROG_PREFIX = 
 endif
 
+MK_PREFIX = included

@@ -42,13 +42,13 @@ include manifest.mn
 # (2) Include "global" configuration information. (OPTIONAL)          #
 #######################################################################
 
-include $(CORE_DEPTH)/coreconf/arch.mk
-
-ifeq ($(OS_ARCH),HP-UX)
-	ASFILES += ret_cr16.s
-endif
+# include $(CORE_DEPTH)/coreconf/arch.mk
 
 include $(CORE_DEPTH)/coreconf/config.mk
+
+ifeq ($(OS_TARGET),HP-UX)
+	ASFILES += ret_cr16.s
+endif
 
 #######################################################################
 # (3) Include "component" configuration information. (OPTIONAL)       #

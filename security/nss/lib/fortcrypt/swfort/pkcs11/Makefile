@@ -36,11 +36,11 @@ include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
 
-
 CRYPTO_LIB = $(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX) 
+#SWCILI    = ../$(OBJDIR)/$(LIB_PREFIX)swfci.$(LIB_SUFFIX)
 
-# can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
+# can't do this in manifest.mn because OS_TARGET isn't defined there.
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 ifdef MOZILLA_SECURITY_BUILD
 CRYPTO_LIB = $(DIST)/lib/crypto.lib
@@ -134,7 +134,7 @@ MD_FILES += $(LIBCI_JAR) $(LIBSWCI_JAR)
 #
 
 
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
+ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.1)
 DSO_LDOPTS              = -bM:SRE -bh:4 -bnoentry
 EXTRA_DSO_LDOPTS        = -lc
 MKSHLIB                 = xlC $(DSO_LDOPTS)
@@ -147,7 +147,7 @@ $(SHARED_LIBRARY): $(OBJS)
 
 endif
 
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.2)
+ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.2)
 LD      += -G
 endif 
 

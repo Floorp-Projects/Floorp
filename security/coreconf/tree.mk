@@ -35,53 +35,17 @@
 # Master "Core Components" file system "release" prefixes             #
 #######################################################################
 
-#	RELEASE_TREE = $(CORE_DEPTH)/../coredist
-
-
+# Windows platforms override this.  See WIN32.mk or WIN16.mk.
 ifndef RELEASE_TREE
-	ifdef BUILD_SHIP
-		ifdef USE_SHIPS 
-			RELEASE_TREE = $(BUILD_SHIP)
-		else
-			RELEASE_TREE = /share/builds/components
-		endif
+    ifdef BUILD_SHIP
+	ifdef USE_SHIPS 
+	    RELEASE_TREE = $(BUILD_SHIP)
 	else
-		RELEASE_TREE = /share/builds/components
+	    RELEASE_TREE = /share/builds/components
 	endif
-		ifeq ($(OS_TARGET), WINNT)
-		ifdef BUILD_SHIP
-			ifdef USE_SHIPS
-				RELEASE_TREE = $(NTBUILD_SHIP)
-			else
-				RELEASE_TREE = //redbuild/components
-			endif
-		else
-			RELEASE_TREE = //redbuild/components
-		endif
-		endif
-	
-	ifeq ($(OS_TARGET), WIN95)
-		ifdef BUILD_SHIP
-			ifdef USE_SHIPS
-				RELEASE_TREE = $(NTBUILD_SHIP)
-			else
-				RELEASE_TREE = //redbuild/components
-			endif
-		else
-			RELEASE_TREE = //redbuild/components
-		endif
-	endif
-	ifeq ($(OS_TARGET), WIN16)
-	ifdef BUILD_SHIP
-		ifdef USE_SHIPS
-			RELEASE_TREE = $(NTBUILD_SHIP)
-		else
-			RELEASE_TREE = //redbuild/components
-		endif
-	else
-		RELEASE_TREE = //redbuild/components
-	endif
-	endif
+    else
+	RELEASE_TREE = /share/builds/components
+    endif
 endif
 
 #
@@ -90,21 +54,21 @@ endif
 #
 
 ifeq ($(POLICY), domestic)
-	RELEASE_XP_DIR = domestic
-	RELEASE_MD_DIR = domestic/$(PLATFORM)
+    RELEASE_XP_DIR = domestic
+    RELEASE_MD_DIR = domestic/$(PLATFORM)
 else
-	ifeq ($(POLICY), export)
-		RELEASE_XP_DIR = export
-		RELEASE_MD_DIR = export/$(PLATFORM)
+    ifeq ($(POLICY), export)
+	RELEASE_XP_DIR = export
+	RELEASE_MD_DIR = export/$(PLATFORM)
+    else
+	ifeq ($(POLICY), france)
+	    RELEASE_XP_DIR = france
+	    RELEASE_MD_DIR = france/$(PLATFORM)
 	else
-		ifeq ($(POLICY), france)
-			RELEASE_XP_DIR = france
-			RELEASE_MD_DIR = france/$(PLATFORM)
-		else
-			RELEASE_XP_DIR = 
-			RELEASE_MD_DIR = $(PLATFORM)
-		endif
+	    RELEASE_XP_DIR = 
+	    RELEASE_MD_DIR = $(PLATFORM)
 	endif
+    endif
 endif
 
 
@@ -112,3 +76,5 @@ REPORTER_TREE = $(subst \,\\,$(RELEASE_TREE))
 
 IMPORT_XP_DIR = 
 IMPORT_MD_DIR = $(PLATFORM)
+
+MK_TREE = included

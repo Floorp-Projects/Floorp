@@ -55,15 +55,15 @@ include $(CORE_DEPTH)/coreconf/config.mk
 #######################################################################
 include config.mk
 
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.2)
+ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.2)
 OS_LIBS += -lsvld 
 endif 
 
-ifeq ($(OS_ARCH)$(OS_RELEASE), SunOS5.6)
+ifeq ($(OS_TARGET)$(OS_RELEASE), SunOS5.6)
 OS_LIBS += -ldl -lxnet -lposix4 -lsocket -lnsl
 endif
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 EXTRA_LIBS += $(DIST)/lib/crmf.lib
 else
 EXTRA_LIBS += $(DIST)/lib/libcrmf.$(LIB_SUFFIX) 
@@ -89,7 +89,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 LDDIST = $(DIST)/lib
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 EXTRA_LIBS += $(LDDIST)/sectool.lib
 endif
 

@@ -36,88 +36,60 @@
 #######################################################################
 
 #
-# Object suffixes
+# Object suffixes   (OS2 and WIN% override this)
 #
-
 ifndef OBJ_SUFFIX
-	ifeq ($(OS_ARCH), WINNT)
-		OBJ_SUFFIX = .obj
-	else
-	    ifeq ($(OS_ARCH), OS2)
-		OBJ_SUFFIX = .obj
-	    else
-		OBJ_SUFFIX = .o
-	    endif
-	endif
+    OBJ_SUFFIX = .o
 endif
 
 #
-# Assembler source suffixes
+# Assembler source suffixes (OS2 and WIN% override this)
 #
-
 ifndef ASM_SUFFIX
-	ifeq ($(OS_ARCH), WINNT)
-		ASM_SUFFIX = .asm
-	else
-		ASM_SUFFIX = .s
-	endif
+    ASM_SUFFIX = .s
 endif
 
 #
 # Library suffixes
 #
-
 STATIC_LIB_EXTENSION =
 
 ifndef DYNAMIC_LIB_EXTENSION
-	ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
-		DYNAMIC_LIB_EXTENSION = _shr
-	else
-		DYNAMIC_LIB_EXTENSION =
-	endif
+    DYNAMIC_LIB_EXTENSION =
 endif
 
 
 ifndef STATIC_LIB_SUFFIX
-	STATIC_LIB_SUFFIX = .$(LIB_SUFFIX)
+    STATIC_LIB_SUFFIX = .$(LIB_SUFFIX)
 endif
 
 
 ifndef DYNAMIC_LIB_SUFFIX
-	DYNAMIC_LIB_SUFFIX = .$(DLL_SUFFIX)
+    DYNAMIC_LIB_SUFFIX = .$(DLL_SUFFIX)
 endif
 
-
+# WIN% overridese this
 ifndef IMPORT_LIB_SUFFIX
-	ifeq ($(OS_ARCH), WINNT)
-		IMPORT_LIB_SUFFIX = .$(LIB_SUFFIX)
-	else
-		IMPORT_LIB_SUFFIX = 
-	endif
+    IMPORT_LIB_SUFFIX = 
 endif
 
 
 ifndef STATIC_LIB_SUFFIX_FOR_LINKING
-	STATIC_LIB_SUFFIX_FOR_LINKING = $(STATIC_LIB_SUFFIX)
+    STATIC_LIB_SUFFIX_FOR_LINKING = $(STATIC_LIB_SUFFIX)
 endif
 
 
+# WIN% overridese this
 ifndef DYNAMIC_LIB_SUFFIX_FOR_LINKING
-	ifeq ($(OS_ARCH), WINNT)
-		DYNAMIC_LIB_SUFFIX_FOR_LINKING = $(IMPORT_LIB_SUFFIX)
-	else
-		DYNAMIC_LIB_SUFFIX_FOR_LINKING = $(DYNAMIC_LIB_SUFFIX)
-	endif
+    DYNAMIC_LIB_SUFFIX_FOR_LINKING = $(DYNAMIC_LIB_SUFFIX)
 endif
 
 #
-# Program suffixes
+# Program suffixes (OS2 and WIN% override this)
 #
 
 ifndef PROG_SUFFIX
-	ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-		PROG_SUFFIX = .exe
-	else
-		PROG_SUFFIX =
-	endif
+    PROG_SUFFIX =
 endif
+
+MK_SUFFIX = included

@@ -123,3 +123,8 @@ DSO_LDFLAGS		=
 
 # INCLUDES += -I/usr/include -Y/usr/include/linux
 G++INCLUDES		= -I/usr/include/g++
+
+#
+# Always set CPU_TAG on Linux, OpenVMS, WINCE.
+#
+CPU_TAG = _$(CPU_ARCH)

@@ -46,17 +46,20 @@ PROGRAM        =
 # library names, and all special system linking options               #
 #######################################################################
 
-SECTOOLS_LIBS = $(LDOPTS) $(LIBSSL) $(LIBPKCS7) $(LIBCERT) $(LIBKEY) $(LIBSECMOD) $(LIBCRYPTO) $(LIBSECUTIL) $(LIBSECMOD) $(LIBSSL) $(LIBPKCS7) $(LIBCERT) $(LIBKEY) $(LIBCRYPTO) $(LIBSECUTIL) $(LIBHASH) $(LIBDBM) $(DLLPLC) $(DLLPLDS) $(DLLPR) $(DLLSYSTEM)
+SECTOOLS_LIBS = $(LDOPTS) $(LIBSSL) $(LIBPKCS7) $(LIBCERT) $(LIBKEY) \
+    $(LIBSECMOD) $(LIBCRYPTO) $(LIBSECUTIL) $(LIBSECMOD) $(LIBSSL) \
+    $(LIBPKCS7) $(LIBCERT) $(LIBKEY) $(LIBCRYPTO) $(LIBSECUTIL) \
+    $(LIBHASH) $(LIBDBM) $(DLLPLC) $(DLLPLDS) $(DLLPR) $(DLLSYSTEM)
 
-ifeq ($(OS_ARCH),AIX)
+ifeq ($(OS_TARGET),AIX)
 	OS_LIBS += $(SECTOOLS_LIBS)
 endif
 
-ifeq ($(OS_ARCH),NCR)
+ifeq ($(OS_TARGET),NCR)
 	OS_LIBS += $(SECTOOLS_LIBS)
 endif
 
-ifeq ($(OS_ARCH),SCO_SV)
+ifeq ($(OS_TARGET),SCO_SV)
 	OS_LIBS += $(SECTOOLS_LIBS)
 endif
 

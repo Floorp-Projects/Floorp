@@ -44,3 +44,12 @@ AIX_LINK_OPTS  += -bnso -berok
 DLL_SUFFIX = a
 
 OS_LIBS		+= -lsvld
+
+# override default value set in suffix.mk, for AIX 4.1 only
+DYNAMIC_LIB_EXTENSION = _shr
+
+# override default value in ruleset.mk
+ifdef LIBRARY_NAME
+    SHARED_LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)_shr$(JDK_DEBUG_SUFFIX).a
+endif
+

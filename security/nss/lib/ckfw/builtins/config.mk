@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.4 $ $Date: 2002/02/10 06:18:17 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.5 $ $Date: 2002/02/15 22:53:42 $ $Name:  $"
 
 #
 #  Override TARGETS variable so that only shared libraries
@@ -42,17 +42,17 @@ LIBRARY        =
 IMPORT_LIBRARY =
 PROGRAM        =
 
-ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-	SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+ifeq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
+    SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
 endif
 
 ifdef BUILD_IDG
-DEFINES += -DNSSDEBUG
+    DEFINES += -DNSSDEBUG
 endif
 
 #
 # To create a loadable module on Darwin, we must use -bundle.
 #
-ifeq ($(OS_ARCH),Darwin)
+ifeq ($(OS_TARGET),Darwin)
 DSO_LDOPTS := $(subst -dynamiclib,-bundle,$(DSO_LDOPTS))
 endif

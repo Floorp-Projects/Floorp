@@ -35,7 +35,7 @@
 #######################################################################
 # (1) Include initial platform-independent assignments (MANDATORY).   #
 #######################################################################
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 EXTRA_LIBS += $(DIST)/lib/crmf.lib
 else
 EXTRA_LIBS += $(DIST)/lib/libcrmf.$(LIB_SUFFIX) 

@@ -52,7 +52,7 @@ endif
 platform::
 	@echo $(OBJDIR_NAME)
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 USE_NT_C_SYNTAX=1
 endif
 
@@ -106,7 +106,7 @@ ifdef LIBRARY
 endif
 ifdef SHARED_LIBRARY
 	$(INSTALL) -m 775 $(SHARED_LIBRARY) $(SOURCE_LIB_DIR)
-ifeq ($(OS_ARCH),OpenVMS)
+ifeq ($(OS_TARGET),OpenVMS)
 	$(INSTALL) -m 775 $(SHARED_LIBRARY:$(DLL_SUFFIX)=vms) $(SOURCE_LIB_DIR)
 endif
 endif
@@ -284,7 +284,7 @@ endif
 
 $(PROGRAM): $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(MKPROG) $(subst /,\\,$(OBJS)) -Fe$@ -link $(LDFLAGS) $(subst /,\\,$(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS))
 else
 ifdef XP_OS2_VACPP
@@ -300,7 +300,7 @@ get_objs:
 $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(AR) $(subst /,\\,$(OBJS))
 else
 	$(AR) $(OBJS)
@@ -308,7 +308,7 @@ endif
 	$(RANLIB) $@
 
 
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(OS_TARGET),OS2)
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	rm -f $@
 	$(IMPLIB) $@ $(patsubst %.lib,%.dll.def,$@)
@@ -326,7 +326,7 @@ endif
 $(SHARED_LIBRARY): $(OBJS) $(MAPFILE)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
+ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.1)
 	echo "#!" > $(OBJDIR)/lib$(LIBRARY_NAME)_syms
 	nm -B -C -g $(OBJS) \
 	| awk '/ [T,D] / {print $$3}' \
@@ -335,10 +335,10 @@ ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 	$(LD) $(XCFLAGS) -o $@ $(OBJS) -bE:$(OBJDIR)/lib$(LIBRARY_NAME)_syms \
 	-bM:SRE -bnoentry $(OS_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 else
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(LINK_DLL) -MAP $(DLLBASE) $(subst /,\\,$(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS))
 else
-ifeq ($(OS_ARCH),OS2)
+ifeq ($(OS_TARGET),OS2)
 	@cmd /C "echo LIBRARY $(notdir $(basename $(SHARED_LIBRARY))) INITINSTANCE TERMINSTANCE >$@.def"
 	@cmd /C "echo PROTMODE >>$@.def"
 	@cmd /C "echo CODE    LOADONCALL MOVEABLE DISCARDABLE >>$@.def"
@@ -361,13 +361,13 @@ else
 	$(MKSHLIB) -o $@ $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 endif
 	chmod +x $@
-ifeq ($(OS_ARCH),OpenVMS)
+ifeq ($(OS_TARGET),OpenVMS)
 	@echo "`translate $@`" > $(@:$(DLL_SUFFIX)=vms)
 endif
 endif
 endif
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 $(RES): $(RESNAME)
 	@$(MAKE_OBJDIR)
 # The resource compiler does not understand the -U option.
@@ -382,7 +382,7 @@ $(MAPFILE): $(LIBRARY_NAME).def
 
 $(OBJDIR)/$(PROG_PREFIX)%$(PROG_SUFFIX): $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(MKPROG) $(OBJDIR)/$(PROG_PREFIX)$*$(OBJ_SUFFIX) -Fe$@ -link \
 	$(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 else
@@ -409,7 +409,7 @@ else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
-ifneq ($(OS_ARCH), WINNT)
+ifneq (,$(filter-out WIN%,$(OS_TARGET)))
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
 	$(AS) -o $@ $(ASFLAGS) -c $<
@@ -460,13 +460,13 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 	$(CCC) -C -E $(CFLAGS) $< > $*.i
 
 %.i: %.c
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 	$(CC) -C /P $(CFLAGS) $< 
 else
 	$(CC) -C -E $(CFLAGS) $< > $*.i
 endif
 
-ifneq ($(OS_ARCH), WINNT)
+ifneq (,$(filter-out WIN%,$(OS_TARGET)))
 %.i: %.s
 	$(CC) -C -E $(CFLAGS) $< > $*.i
 endif
@@ -795,9 +795,14 @@ endif
 ###   AND RESULTS_SUBDIR TO BE SET TO SOMETHING LIKE SECURITY/PKCS5
 ##########################################################################
 
-TESTS_DIR = $(RESULTS_DIR)/$(RESULTS_SUBDIR)/$(OS_CONFIG)$(CPU_TAG)$(COMPILER_TAG)$(IMPL_STRATEGY)
+TESTS_DIR = $(RESULTS_DIR)/$(RESULTS_SUBDIR)/$(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(COMPILER_TAG)$(IMPL_STRATEGY)
 
 ifneq ($(REGRESSION_SPEC),)
+
+ifneq ($(BUILD_OPT),)
+REGDATE = $(subst \ ,, $(shell perl  $(CORE_DEPTH)/$(MODULE)/scripts/now))
+endif
+
 tests:: $(REGRESSION_SPEC) 
 	cd $(PLATFORM); \
 	../$(SOURCE_MD_DIR)/bin/regress$(PROG_SUFFIX) specfile=../$(REGRESSION_SPEC) progress $(EXTRA_REGRESS_OPTIONS); \
@@ -839,7 +844,7 @@ endif
 
 -include $(DEPENDENCIES)
 
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
 # Can't use sed because of its 4000-char line length limit, so resort to perl
 .DEFAULT:
 	@perl -e '                                                            \

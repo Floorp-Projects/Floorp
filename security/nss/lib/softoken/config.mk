@@ -31,16 +31,6 @@
 # GPL.
 #
 
-#
-#  Override TARGETS variable so that only static libraries
-#  are specifed as dependencies within rules.mk.
-#
-
-#TARGETS        = $(LIBRARY)
-#SHARED_LIBRARY =
-#IMPORT_LIBRARY =
-#PROGRAM        =
-
 
 ifdef MOZILLA_CLIENT
 DEFINES += -DMOZ_CLIENT
@@ -60,8 +50,8 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
 	$(NULL)
 
-# can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
+# can't do this in manifest.mn because OS_TARGET isn't defined there.
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
 SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
@@ -96,7 +86,7 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH),SunOS)
+ifeq ($(OS_TARGET),SunOS)
 ifndef USE_64
 ifeq ($(CPU_ARCH),sparc)
 # The -R '$ORIGIN' linker option instructs libnss3.so to search for its

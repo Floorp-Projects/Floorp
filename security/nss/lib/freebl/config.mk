@@ -36,7 +36,7 @@ ifndef FREEBL_RECURSIVE_BUILD
 # we only do this stuff for some of the 32-bit builds, no 64-bit builds
 ifndef USE_64
 
-ifeq ($(OS_ARCH), HP-UX)
+ifeq ($(OS_TARGET), HP-UX)
   FREEBL_EXTENDED_BUILD = 1
 endif
 
@@ -83,7 +83,7 @@ TARGETS	     = $(SHARED_LIBRARY)
 LIBRARY      =
 PROGRAM      =
 
-#ifeq ($(OS_ARCH), HP-UX)
+#ifeq ($(OS_TARGET), HP-UX)
   EXTRA_LIBS        += \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
 	$(NULL)

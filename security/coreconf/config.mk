@@ -37,44 +37,50 @@
 # [1.0] Master "Core Components" source and release <architecture>    #
 #       tags                                                          #
 #######################################################################
-
+ifndef MK_ARCH
 include $(CORE_DEPTH)/coreconf/arch.mk
+endif
 
 #######################################################################
 # [2.0] Master "Core Components" default command macros               #
-#       (NOTE: may be overridden in $(OS_CONFIG).mk)                  #
+#       (NOTE: may be overridden in $(OS_TARGET)$(OS_RELEASE).mk)     #
 #######################################################################
-
+ifndef MK_COMMAND
 include $(CORE_DEPTH)/coreconf/command.mk
+endif
 
 #######################################################################
 # [3.0] Master "Core Components" <architecture>-specific macros       #
 #       (dependent upon <architecture> tags)                          #
 #                                                                     #
 #       We are moving towards just having a $(OS_TARGET).mk file      #
-#       as opposed to multiple $(OS_CONFIG).mk files, one for         #
-#       each OS release.                                              #
+#       as opposed to multiple $(OS_TARGET)$(OS_RELEASE).mk files,    #
+#       one for each OS release.                                      #
 #######################################################################
 
-ifeq (,$(filter-out FreeBSD BSD_OS NetBSD OpenUNIX OS2 QNX Darwin,$(OS_TARGET)))
+TARGET_OSES = FreeBSD BSD_OS NetBSD OpenUNIX OS2 QNX Darwin
+
+ifeq (,$(filter-out $(TARGET_OSES),$(OS_TARGET)))
 include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
 else
-include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
+include $(CORE_DEPTH)/coreconf/$(OS_TARGET)$(OS_RELEASE).mk
 endif
 
 #######################################################################
 # [4.0] Master "Core Components" source and release <platform> tags   #
 #       (dependent upon <architecture> tags)                          #
 #######################################################################
-
-include $(CORE_DEPTH)/coreconf/platform.mk
+ifndef PLATFORM
+PLATFORM = $(OBJDIR_NAME)
+endif
 
 #######################################################################
 # [5.0] Master "Core Components" release <tree> tags                  #
 #       (dependent upon <architecture> tags)                          #
 #######################################################################
-
+ifndef MK_TREE
 include $(CORE_DEPTH)/coreconf/tree.mk
+endif
 
 #######################################################################
 # [6.0] Master "Core Components" source and release <component> tags  #
@@ -83,8 +89,9 @@ include $(CORE_DEPTH)/coreconf/tree.mk
 #        command line, as an environment variable, or in individual   #
 #        makefiles, or more appropriately, manifest.mn)               #
 #######################################################################
-
+ifndef MK_MODULE
 include $(CORE_DEPTH)/coreconf/module.mk
+endif
 
 #######################################################################
 # [7.0] Master "Core Components" release <version> tags               #
@@ -92,24 +99,27 @@ include $(CORE_DEPTH)/coreconf/module.mk
 #        command line, as an environment variable, or in individual   #
 #        makefiles, or more appropriately, manifest.mn)               #
 #######################################################################
-
+ifndef MK_VERSION
 include $(CORE_DEPTH)/coreconf/version.mk
+endif
 
 #######################################################################
 # [8.0] Master "Core Components" macros to figure out                 #
 #       binary code location                                          #
 #       (dependent upon <platform> tags)                              #
 #######################################################################
-
+ifndef MK_LOCATION
 include $(CORE_DEPTH)/coreconf/location.mk
+endif
 
 #######################################################################
 # [9.0] Master "Core Components" <component>-specific source path     #
 #       (dependent upon <user_source_tree>, <source_component>,       #
 #        <version>, and <platform> tags)                              #
 #######################################################################
-
+ifndef MK_SOURCE
 include $(CORE_DEPTH)/coreconf/source.mk
+endif
 
 #######################################################################
 # [10.0] Master "Core Components" include switch for support header   #
@@ -117,34 +127,43 @@ include $(CORE_DEPTH)/coreconf/source.mk
 #        (dependent upon <tree>, <component>, <version>,              #
 #         and <platform> tags)                                        #
 #######################################################################
-
+ifndef MK_HEADERS
 include $(CORE_DEPTH)/coreconf/headers.mk
+endif
 
 #######################################################################
 # [11.0] Master "Core Components" for computing program prefixes      #
 #######################################################################
-
+ifndef MK_PREFIX
 include $(CORE_DEPTH)/coreconf/prefix.mk
+endif
 
 #######################################################################
 # [12.0] Master "Core Components" for computing program suffixes      #
 #        (dependent upon <architecture> tags)                         #
 #######################################################################
-
+ifndef MK_SUFFIX
 include $(CORE_DEPTH)/coreconf/suffix.mk
+endif
 
 #######################################################################
 # [13.0] Master "Core Components" for defining JDK                    #
 #        (dependent upon <architecture>, <source>, and <suffix>  tags)#
 #######################################################################
-
+ifdef NS_USE_JDK
 include $(CORE_DEPTH)/coreconf/jdk.mk
+endif
 
 #######################################################################
 # [14.0] Master "Core Components" rule set                            #
-#        (should always be the last file included by config.mk)       #
+#######################################################################
+ifndef MK_RULESET
+include $(CORE_DEPTH)/coreconf/ruleset.mk
+endif
+
+#######################################################################
+# [15.0] Dependencies.
 #######################################################################
 
-include $(CORE_DEPTH)/coreconf/ruleset.mk
 -include $(MKDEPENDENCIES)
 
