@@ -187,9 +187,11 @@ nsWindow::~nsWindow()
 
   // If the widget was released without calling Destroy() then the native
   // window still exists, and we need to destroy it
-  if( mWindowState != nsWindowState_eDead)
+  if( !(mWindowState & nsWindowState_eDead) )
   {
-    mWindowState = nsWindowState_eDoingDelete;
+    mWindowState |= nsWindowState_eDoingDelete;
+    mWindowState &= ~(nsWindowState_eLive|nsWindowState_ePrecreate|
+                      nsWindowState_eInCreate);
 //    if( mWnd)
       Destroy();
   }
@@ -376,8 +378,8 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   // Filters: if state is eInCreate, only send out NS_CREATE
   //          if state is eDoingDelete, don't send out anything because,
   //                                    well, the object's being deleted...
-  if( (mWindowState == nsWindowState_eInCreate && event->message == NS_CREATE)
-      || (mWindowState == nsWindowState_eLive))
+  if( ((mWindowState == nsWindowState_eInCreate) && event->message == NS_CREATE)
+      || (mWindowState & nsWindowState_eLive) )
   {
     if (nsnull != mEventCallback) {
       aStatus = (*mEventCallback)( event);
@@ -801,7 +803,6 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    if( hwndP != HWND_DESKTOP)
    {
-
       // For pop-up menus, the parent is the desktop, but use the "parent" as owner
       if( aInitData && aInitData->mWindowType == eWindowType_popup)
       {
@@ -973,7 +974,7 @@ NS_METHOD nsWindow::Destroy()
 #endif
       // avoid calling into other objects if we're being deleted, 'cos
       // they must have no references to us.
-      if( mWindowState == nsWindowState_eLive && mParent)
+      if( (mWindowState & nsWindowState_eLive) && mParent )
          nsBaseWidget::Destroy();
 
       // just to be safe. If we're going away and for some reason we're still
@@ -1937,6 +1938,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_CLOSE:  // close request
+          mWindowState |= nsWindowState_eClosing;
           DispatchStandardEvent( NS_XUL_CLOSE );
           result = PR_TRUE; // abort window closure
           break;
@@ -2099,39 +2101,45 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_FOCUSCHANGED:
+          /* Make a test to see if we are in the process of closing, deleting
+           * or destroying this nsWindow.  If we are, then we've already
+           * gotten rid of our nsDocShell->mScriptGlobal.  To handle focus
+           * events when there is no mScriptGlobal is apparently a bad thing.
+           */
+          if(!(mWindowState & nsWindowState_eClosing))
           {
-          PRBool isMozWindowTakingFocus = PR_TRUE;
-          if( SHORT1FROMMP( mp2 ) || mWnd == WinQueryFocus(HWND_DESKTOP) )
-          {
-            result = DispatchFocus( NS_GOTFOCUS, isMozWindowTakingFocus );
-            // Only sending an Activate event when we get a WM_ACTIVATE message
-            // isn't good enough; need to do this every time we gain focus.
-            if( !gJustGotActivate )
-            {
-              gJustGotActivate = PR_TRUE;
-              if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == mNextCmdID == 1)
-                 result = DispatchFocus( NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus );
-              else
-                 result = DispatchFocus( NS_ACTIVATE, isMozWindowTakingFocus );
-              gJustGotActivate = PR_FALSE;
-            }
-          }
-          else
-          {
-            char className[19];
-            ::WinQueryClassName((HWND)mp1, 19, className);
-            if (strcmp(className, WindowClass()))
-               isMozWindowTakingFocus = PR_FALSE;
-
-            if( gJustGotDeactivate )
-            {
-              gJustGotDeactivate = PR_FALSE;
-              result = DispatchFocus( NS_DEACTIVATE, isMozWindowTakingFocus );
-            }
-            result = DispatchFocus( NS_LOSTFOCUS, isMozWindowTakingFocus );
+             PRBool isMozWindowTakingFocus = PR_TRUE;
+             if( SHORT1FROMMP( mp2 ) || mWnd == WinQueryFocus(HWND_DESKTOP) )
+             {
+               result = DispatchFocus( NS_GOTFOCUS, isMozWindowTakingFocus );
+               // Only sending an Activate event when we get a WM_ACTIVATE message
+               // isn't good enough; need to do this every time we gain focus.
+               if( !gJustGotActivate )
+               {
+                 gJustGotActivate = PR_TRUE;
+                 if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == mNextCmdID == 1)
+                    result = DispatchFocus( NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus );
+                 else
+                    result = DispatchFocus( NS_ACTIVATE, isMozWindowTakingFocus );
+                 gJustGotActivate = PR_FALSE;
+               }
+             }
+             else
+             {
+               char className[19];
+               ::WinQueryClassName((HWND)mp1, 19, className);
+               if (strcmp(className, WindowClass()))
+                  isMozWindowTakingFocus = PR_FALSE;
+   
+               if( gJustGotDeactivate )
+               {
+                 gJustGotDeactivate = PR_FALSE;
+                 result = DispatchFocus( NS_DEACTIVATE, isMozWindowTakingFocus );
+               }
+               result = DispatchFocus( NS_LOSTFOCUS, isMozWindowTakingFocus );
+             }
           }
           break;
-          }
     
         case WM_WINDOWPOSCHANGED: 
           result = OnReposition( (PSWP) mp1);
@@ -2278,7 +2286,7 @@ void nsWindow::OnDestroy()
    // It's important *not* to do this if we're being called from the
    // destructor -- this would result in our destructor being called *again*
    // from the Release() below.  This is very bad...
-   if( nsWindowState_eDoingDelete != mWindowState)
+   if( !(nsWindowState_eDoingDelete & mWindowState) )
    {
       AddRef();
       DispatchStandardEvent( NS_DESTROY );
@@ -2286,7 +2294,9 @@ void nsWindow::OnDestroy()
    }
 
    // dead widget
-   mWindowState = nsWindowState_eDead;
+   mWindowState |= nsWindowState_eDead;
+   mWindowState &= ~(nsWindowState_eLive|nsWindowState_ePrecreate|
+                     nsWindowState_eInCreate);
 }
 
 //-------------------------------------------------------------------------
