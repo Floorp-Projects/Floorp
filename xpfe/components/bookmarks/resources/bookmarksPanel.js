@@ -66,11 +66,11 @@ BookmarksPanelTree.prototype = {
   
   addBookmark: function ()
   {
-    // This looks evil, you'd think we'd want to find the most recent NAVIGATOR
-    // window and add a bookmark to the page loaded in that, but that's not the
-    // case. In mail/news, we want to bookmark the current mail message and in
-    // editor we want to bookmark the current document. 
-    BookmarksUtils.addBookmarkToWindow(top._content);
+    // This is somewhat of a hack, and we'd like to parameterize this so that
+    // eventually we can bookmark mail messages and editor documents.
+    var contentArea = top.document.getElementById('content');
+    if (contentArea)
+      BookmarksUtils.addBookmarkForBrowser(contentArea.webNavigation);
   },
   
   manageBookmarks: function ()
