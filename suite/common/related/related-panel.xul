@@ -18,8 +18,8 @@
 
 -->
 
-<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
-<?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="resource:/res/samples/related-panel.css" type="text/css"?>
 
 <window
