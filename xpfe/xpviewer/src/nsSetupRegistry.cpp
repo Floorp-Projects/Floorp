@@ -129,6 +129,7 @@ static NS_DEFINE_IID(kCHTMLDocument, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocument, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
+static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactory, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
@@ -186,7 +187,9 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCXMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCImageDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCRangeListCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCRangeCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCImageButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
