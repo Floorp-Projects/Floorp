@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: find,v 1.5 1999/11/09 00:38:35 endico%mozilla.org Exp $
+# $Id: find,v 1.6 1999/11/09 01:38:00 endico%mozilla.org Exp $
 
 # find   --	Find files
 #
@@ -31,7 +31,7 @@ sub find {
     print("<P ALIGN=CENTER>\n",
 	  "Search for files (by name) using regular expressions.\n",
 	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
-	  "on performing searches?)\n");
+	  "on performing searches?)</P>\n");
 
     print ("<form method=get action=\"find\">\n");
 
