@@ -40,6 +40,11 @@
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIHTMLFragmentContentSink.h"
+#include "nsScriptSecurityManager.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
+
+#include "nsIJSContextStack.h"
 // XXX Temporary inclusion to deal with fragment parsing
 #include "nsHTMLParts.h"
 
@@ -2305,9 +2310,55 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
               contentType.Assign(NS_LITERAL_STRING("text/html"));
             }
 
+            // If there's no JS or system JS running,
+            // push the current document's context on the JS context stack
+            // so that event handlers in the fragment do not get 
+            // compiled with the system principal.
+            nsCOMPtr<nsIJSContextStack> ContextStack;
+            nsCOMPtr<nsIScriptSecurityManager> secMan;
+            secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
+            if (document && NS_SUCCEEDED(result)) {
+              nsCOMPtr<nsIPrincipal> sysPrin;
+              nsCOMPtr<nsIPrincipal> subjectPrin;
+
+              // Just to compare, not to use!
+              result = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
+              if (NS_SUCCEEDED(result))
+                  result = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
+              // If there's no subject principal, there's no JS running, so we're in system code.
+              // (just in case...null subject principal will probably never happen)
+              if (NS_SUCCEEDED(result) &&
+                 (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
+                nsCOMPtr<nsIScriptGlobalObject> globalObj;
+                result = document->GetScriptGlobalObject(getter_AddRefs(globalObj));
+
+                nsCOMPtr<nsIScriptContext> scriptContext;
+                if (NS_SUCCEEDED(result) && globalObj) {
+                  result = globalObj->GetContext(getter_AddRefs(scriptContext));
+                }
+
+                JSContext* cx;
+                if (NS_SUCCEEDED(result) && scriptContext) {
+                  cx = (JSContext*)scriptContext->GetNativeContext();
+                }
+
+                if(cx) {
+                  ContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result);
+                  if(NS_SUCCEEDED(result)) {
+                    result = ContextStack->Push(cx);
+                  }
+                }
+              }
+            }
+            
             result = parser->ParseFragment(aFragment, (void*)0,
                                            *tagStack,
                                            0, contentType);
+
+            if (ContextStack) {
+              JSContext *notused;
+              ContextStack->Pop(&notused);
+            }
             
             if (NS_SUCCEEDED(result)) {
               sink->GetFragment(aReturn);
