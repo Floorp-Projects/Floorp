@@ -356,288 +356,6 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
 	return NS_OK;    
 }
 
-class nsPrefProfile
-{
-public:
-	nsPrefProfile() : profileService(NULL), prefs(NULL){};
-	nsresult Startup( nsICmdLineService* cmdLineArgs );
-	void Shutdown();
-private:
-	nsIProfile *profileService;
-	nsIPref *prefs;
-};
-
-void nsPrefProfile::Shutdown()
-{
-  /* Release the global preferences... */
-  if (prefs) {
-    prefs->SavePrefFile(); 
-    prefs->ShutDown();
-    nsServiceManager::ReleaseService(kPrefCID, prefs);
-  }
-
-#if defined(NS_USING_PROFILES)
-  /* Release the global profile service... */
-  if (profileService) {
-    profileService->Shutdown();
-    nsServiceManager::ReleaseService(kProfileCID, profileService);
-  }
-#endif // defined(NS_USING_PROFILES)
-}
-
-nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
-{
-	char* cmdResult = nsnull;
-	nsresult rv;
-  // initializations for profile manager
-#if defined(NS_USING_PROFILES)
-	nsFileSpec currProfileDirSpec;
-	PRBool profileDirSet = PR_FALSE;
-	
-	char *profstr = nsnull;
-	int numProfiles = 0;
-  
-  // get and start the ProfileManager service
-  
-  rv = nsServiceManager::GetService(kProfileCID, 
-                                    nsIProfile::GetIID(), 
-                                    (nsISupports **)&profileService);
-  
-
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-  profileService->Startup(nsnull);
-  profileService->GetProfileCount(&numProfiles); 
-
-  printf("Profile Manager : Command Line Options : Begin\n");
-  // check for command line arguments for profile manager
-  //	
-  // -P command line option works this way:
-  // apprunner -P profilename 
-  // runs the app using the profile <profilename> 
-  // remembers profile for next time 
-	rv = cmdLineArgs->GetCmdLineValue("-P", &cmdResult);
-  if (NS_SUCCEEDED(rv))
-  {
-		if (cmdResult) {
-			char* currProfileName = cmdResult;
-
-			fprintf(stderr, "ProfileName : %s\n", cmdResult);
-			
-			rv = profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
-			printf("** ProfileDir  :  %s **\n", currProfileDirSpec.GetCString());
-			
-			if (NS_SUCCEEDED(rv)){
-				profileDirSet = PR_TRUE;
-			}
-		}
-  }
-
-	// -CreateProfile command line option works this way:
-	// apprunner -CreateProfile profilename 
-	// creates a new profile named <profilename> and sets the directory to your CWD 
-	// runs app using that profile 
-	// remembers profile for next time 
-	//                         - OR -
-	// apprunner -CreateProfile "profilename profiledir" 
-	// creates a new profile named <profilename> and sets the directory to <profiledir> 
-	// runs app using that profile 
-	// remembers profile for next time
-
-	rv = cmdLineArgs->GetCmdLineValue("-CreateProfile", &cmdResult);
-  if (NS_SUCCEEDED(rv))
-  {
-		if (cmdResult) {
-			char* currProfileName = strtok(cmdResult, " ");
-      char* currProfileDirString = strtok(NULL, " ");
-			
-			if (currProfileDirString)
-        currProfileDirSpec = currProfileDirString;
-			else
-			{
-				// No directory name provided. Get File Locator
-				nsIFileLocator* locator = nsnull;
-				rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
-				if (NS_FAILED(rv))
-          return rv;
-				if (!locator)
-				  return NS_ERROR_FAILURE;
-				
-				// Get current profile, make the new one a sibling...
-				nsIFileSpec* spec;
-				rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &spec);
-				if (NS_FAILED(rv) || !spec)
-					return NS_ERROR_FAILURE;
-				spec->GetFileSpec(&currProfileDirSpec);
-				NS_RELEASE(spec);
-				currProfileDirSpec.SetLeafName(currProfileName);
-
-				if (locator)
-				{
-					rv = locator->ForgetProfileDir();
-					nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-				}
-			}
-
-			fprintf(stderr, "profileName & profileDir are: %s\n", cmdResult);
-			profileService->SetProfileDir(currProfileName, currProfileDirSpec);
-      profileDirSet = PR_TRUE;
-			
-		}
-  }
-
-	// Start Profile Manager
-	rv = cmdLineArgs->GetCmdLineValue("-ProfileManager", &cmdResult);
-  if (NS_SUCCEEDED(rv))
-  {		
-		if (cmdResult) {
-			profstr = "resource:/res/profile/pm.xul"; 
-		}
-  }
-
-	// Start Profile Wizard
-	rv = cmdLineArgs->GetCmdLineValue("-ProfileWizard", &cmdResult);
-  if (NS_SUCCEEDED(rv))
-  {		
-		if (cmdResult) {
-			profstr = "resource:/res/profile/cpw.xul"; 
-		}
-  }
-
-	// Start Migaration activity
-	rv = cmdLineArgs->GetCmdLineValue("-installer", &cmdResult);
-  if (NS_SUCCEEDED(rv))
-  {		
-		if (cmdResult) {
-#ifdef XP_PC
-			profileService->MigrateProfileInfo();
-
-			int num4xProfiles = 0;
-			profileService->Get4xProfileCount(&num4xProfiles); 
-
-			if (num4xProfiles == 0 && numProfiles == 0) {
-				profstr = "resource:/res/profile/cpw.xul"; 
-			}
-			else if (num4xProfiles == 1) {
-				profileService->MigrateAllProfiles();
-				profileService->GetProfileCount(&numProfiles);
-			}
-			else if (num4xProfiles > 1) {
-				profstr = "resource:/res/profile/pm.xul";
-			}
-#endif
-		}
-  }
-
-  printf("Profile Manager : Command Line Options : End\n");
-
-#endif // defined(NS_USING_PROFILES)
-
-
-  /*
-   * Load preferences, causing them to be initialized, and hold a reference to them.
-   */
-  rv = nsServiceManager::GetService(kPrefCID, 
-                                    nsIPref::GetIID(), 
-                                    (nsISupports **)&prefs);
-  if (NS_FAILED(rv))
-    return rv;
-
-#if defined (NS_USING_PROFILES)
-  printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
-
-	/* 
-	 * If default profile is current, launch CreateProfile Wizard. 
-	 */ 
-	if (!profileDirSet)
-	{
-		nsIURI* profURL = nsnull;
-
-		PRInt32 profWinWidth  = 615;
-		PRInt32 profWinHeight = 500;
-
-		nsIAppShellService* profAppShell;
-
-		/*
-	 	 * Create the Application Shell instance...
-		 */
-		rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                      nsIAppShellService::GetIID(),
-                                      (nsISupports**)&profAppShell);
-		if (NS_FAILED(rv))
-			return rv;
-
-		char *isPregInfoSet = nsnull;
-		profileService->IsPregCookieSet(&isPregInfoSet); 
-		
-		PRBool pregPref = PR_FALSE;
-		rv = prefs->GetBoolPref(PREG_PREF, &pregPref);
-
-		if (!profstr)
-		{
-			// This means that there was no command-line argument to force
-			// profile UI to come up. But we need the UI anyway if there
-			// are no profiles yet, or if there is more than one.
-			if (numProfiles == 0)
-			{
-				if (pregPref)
-					profstr = "resource:/res/profile/cpwPreg.xul"; 
-				else
-					profstr = "resource:/res/profile/cpw.xul"; 
-			}
-			else if (numProfiles > 1)
-				profstr = "resource:/res/profile/pm.xul"; 
-		}
-
-
-		// Provide Preg information
-		if (pregPref && (PL_strcmp(isPregInfoSet, "true") != 0))
-			profstr = "resource:/res/profile/cpwPreg.xul"; 
-
-
-		if (profstr)
-		{
-#ifdef NECKO
-			rv = NS_NewURI(&profURL, profstr);
-#else
-			rv = NS_NewURL(&profURL, profstr);
-#endif
-	
-			if (NS_FAILED(rv)) {
-				return rv;
-			} 
-
-	 		nsCOMPtr<nsIWebShellWindow>  profWindow;
-			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL,
-                                              PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-                                              nsnull, profWinWidth, profWinHeight,
-                                              getter_AddRefs(profWindow));
-
-			NS_RELEASE(profURL);
-		
-			if (NS_FAILED(rv)) 
-			{
-				return rv;
-			}
-
-			/*
-			 * Start up the main event loop...
-			 */	
-			rv = profAppShell->Run();
-		}
-
-		if (pregPref && PL_strcmp(isPregInfoSet, "true") != 0)
-			profileService->ProcessPRegCookie();
-	}
-  printf("Profile Manager : Profile Wizard and Manager activites : End\n");
-#endif
-
-  // Now we have the right profile, read the user-specific prefs.
-  prefs->ReadUserPrefs();
-  return NS_OK;
-}
-
 static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs)
 {
 	char* cmdResult = nsnull;
@@ -733,7 +451,6 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 	}
 	return rv;
 }
-static nsPrefProfile prefSingleton;
 
 static nsresult main1(int argc, char* argv[])
 {
@@ -795,7 +512,9 @@ static nsresult main1(int argc, char* argv[])
   if ( NS_FAILED(rv) ) 
   	return rv; 
 
-  prefSingleton.Startup( cmdLineArgs );
+  NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    profileMgr->StartupWithArgs(cmdLineArgs);
 
   if ( CheckAndRunPrefs(cmdLineArgs) )
   	return NS_OK;
@@ -858,7 +577,11 @@ int main(int argc, char* argv[])
 
   nsresult result = main1( argc, argv );
 	
-	prefSingleton.Shutdown();
+  // this is supposed to happen automatically when XPCOM shuts down, but
+  // that doesn't always occur!
+  NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
+  if (NS_SUCCEEDED(rv))
+    profileMgr->Shutdown();
   // calling this explicitly will cut down on a large number of leaks we're
   // seeing:
     
