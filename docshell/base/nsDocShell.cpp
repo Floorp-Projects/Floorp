@@ -3953,18 +3953,16 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
     // the document to the original http url that created the document.write().
     // This makes sure that all relative urls in a document.written page loaded
     // via history work properly.
-    PRBool historyLoad = PR_FALSE, isWyciwyg = PR_FALSE;
-
-    if (mLoadType & LOAD_CMD_HISTORY ||
+    if (mCurrentURI &&
+       (mLoadType & LOAD_CMD_HISTORY ||
         mLoadType == LOAD_RELOAD_NORMAL ||
-        mLoadType == LOAD_RELOAD_CHARSET_CHANGE)
-        historyLoad  = PR_TRUE;
-
-    rv = mCurrentURI->SchemeIs("wyciwyg", &isWyciwyg);
-      
-    if (historyLoad && NS_SUCCEEDED(rv) && isWyciwyg)
-        SetBaseUrlForWyciwyg(aContentViewer);
-    
+        mLoadType == LOAD_RELOAD_CHARSET_CHANGE)){
+        PRBool isWyciwyg = PR_FALSE;
+        // Check if the url is wyciwyg
+        rv = mCurrentURI->SchemeIs("wyciwyg", &isWyciwyg);      
+        if (isWyciwyg && NS_SUCCEEDED(rv))
+            SetBaseUrlForWyciwyg(aContentViewer);
+    }
     // XXX What if SetupNewViewer fails?
     if (mLSHE)
       mOSHE = mLSHE;
