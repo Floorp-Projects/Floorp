@@ -89,6 +89,12 @@ FindInString(nsCString &str, const char *needle, PRBool ignoreCase = PR_FALSE)
   return p ? p - data : kNotFound;
 }
 
+inline void
+NS_CopyUnicodeToNative(const nsAString &input, nsACString &output)
+{
+  NS_UTF16ToCString(input, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, output);
+}
+
 typedef nsCString nsCAutoString;
 typedef nsString nsAutoString;
 typedef nsCString nsXPIDLCString;
@@ -97,6 +103,7 @@ typedef nsString nsXPIDLString;
 #else // MOZILLA_STRICT_API
 
 #include "nsString.h"
+#include "nsNativeCharsetUtils.h"
 
 inline void
 AppendIntToString(nsCString &str, PRInt32 value)
