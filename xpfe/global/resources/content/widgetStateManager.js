@@ -129,18 +129,9 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
               }
           }
       }
-      else if( formElement.getAttribute("type") && formElement.type.toLowerCase() == "checkbox"  ) {
+      else if( formElement.getAttribute("type") && ( formElement.type.toLowerCase() == "checkbox" || formElement.type.toLowerCase() == "radio" ) ) {
         // XXX 11/04/99
         this.AddAttributes( formElement, elementEntry, "checked", optAttributes );
-      }
-      else if( formElement.getAttribute("type") && formElement.type.toLowerCase() == "radio" ) {
-        if( formElement.getAttribute("preftype").toLowerCase() == "bool" ) {
-          if( formElement.getAttribute("checked") == true )
-            this.AddAttributes( formElement, elementEntry, "prefindex", optAttributes );              
-        }
-        else {
-          this.AddAttributes( formElement, elementEntry, "checked", optAttributes );
-        }
       }
       else if( formElement.type == "text" &&
                formElement.getAttribute( "datatype" ) == "nsIFileSpec" &&
@@ -213,12 +204,14 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
           if( formElement.type.toLowerCase() == "checkbox" || formElement.type.toLowerCase() == "radio" ) {
             if( value == undefined )
               formElement.checked = formElement.defaultChecked;
-            else {
+            else 
+              formElement.checked = value;
+/*            oops.. appears we've reimplemented 'reversed'. this will be why its not working for alecf. 
               if( formElement.getAttribute( "reversed" ) )
                 formElement.checked = !value;
               else
                 formElement.checked = value;
-            }
+                */
           }
           else if( formElement.type.toLowerCase() == "text" &&
                formElement.getAttribute( "datatype" ) == "nsIFileSpec" ) {
