@@ -69,6 +69,8 @@ function OnLoadMessageWindow()
 function OnUnloadMessageWindow()
 {
 	messenger.SetWindow(null, null);
+  	msgWindow.closeWindow();
+
 }
 
 function CreateMessageWindowGlobals()
