@@ -1642,6 +1642,8 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JSString *str2 = js_ValueToString(cx, argv[0]);
             if (!str2)
                 return JS_FALSE;
+            argv[0] = STRING_TO_JSVAL(str2);
+
             /*
              * Point sep at a local copy of str2's header because find_split
              * will modify sep->length.
@@ -1649,7 +1651,6 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             tmp.length = str2->length;
             tmp.chars = str2->chars;
             sep = &tmp;
-            argv[0] = STRING_TO_JSVAL(sep);
             reobj = NULL;
             re = NULL;
         }
