@@ -2692,6 +2692,7 @@ nsAutoString wallet_url;
 PUBLIC void
 WLLT_GetPrefillListForViewer(nsString& aPrefillList)
 {
+  wallet_Initialize(PR_FALSE); /* to initialize helpMac */
   wallet_PrefillElement * mapElementPtr;
   nsAutoString buffer;
   PRInt32 count = LIST_COUNT(wallet_list);
@@ -2933,6 +2934,7 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
 PUBLIC void
 WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
 {
+  wallet_Initialize(PR_FALSE); /* to initialize helpMac */
   nsAutoString buffer;
   int nopreviewNum = 0;
   wallet_MapElement *url;
