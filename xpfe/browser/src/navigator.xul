@@ -20,7 +20,7 @@
       if (appCore != null) {
         dump("BrowserAppCore has been created.\n");
         appCore.Init("BrowserAppCore");
-	      appCore.setContentWindow(window.frames[0]);
+	      appCore.setContentWindow(window.frames[0].frames[1]);
 	      appCore.setWebShellWindow(window);
 	      appCore.setToolbarWindow(window);
         appCore.setDisableCallback("DoDisableButtons();");
@@ -37,6 +37,7 @@
   function DoDisableButtons()
   {
     // Find buttons in the UI and disable them
+	dump("here");
     dump("Browser disabling buttons\n");
     document.getElementById('urlbar')
   }
@@ -50,7 +51,7 @@
   function RefreshUrlbar()
   {
    //Refresh the urlbar bar
-    document.getElementById('urlbar').value = window.frames[0].location.href;
+    document.getElementById('urlbar').value = window.frames[0].frames[1].location.href;
   }
 
   function BrowserBack()
@@ -58,7 +59,8 @@
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Going Back\n");
-      appCore.back();
+		window.frames[0].frames[1].back();
+      //appCore.back();
       RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -70,7 +72,8 @@
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Going Forward\n");
-      appCore.forward();
+		window.frames[0].frames[1].forward();
+      //appCore.forward();
 	  RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -79,7 +82,7 @@
 
   function BrowserHome()
   {
-   window.frames[0].home();
+   window.frames[0].frames[1].home();
    RefreshUrlbar();
   }
 
@@ -96,7 +99,7 @@
       return false;
     }
 
-    window.frames[0].location.href = url;
+    window.frames[0].frames[1].location.href = url;
 	RefreshUrlbar();
   }
 
@@ -252,7 +255,7 @@
 		if (rdfCore)
 		{
 			rdfCore.Init("RDFCore");
-			//XPAppCoresManager.Add(rdfCore);
+			XPAppCoresManager.Add(rdfCore);
 			rdfCoreFound = true;
 		}
 	}
@@ -500,7 +503,7 @@
     </menu>
     <menu name="Bookmarks" onclick="OpenBookmarkURL(event.target)" 
 						   datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
-		<menuitem name="Add Current Page" onclick="BrowserAddBookmark(window.frames[0].location.href,window.frames[0].document.title);"/>
+		<menuitem name="Add Current Page" onclick="BrowserAddBookmark(window.frames[0].frames[1].location.href,window.frames[0].frames[1].document.title);"/>
 		<menuitem name="Manage Bookmarks..." onclick="BrowserEditBookmarks();"/>
 		<separator/>
 	</menu>
@@ -532,7 +535,7 @@
     </menu>
     
      <menu name="Help">
-      <menuitem name="Help Contents" onclick="window.frames[0].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
+      <menuitem name="Help Contents" onclick="window.frames[0].frames[1].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
       <separator />
       <menuitem name="How To Tutorial" onclick="BrowserReload();"/>
       <menuitem name="Help Channel" onclick="BrowserReload();" />
@@ -540,42 +543,42 @@
       <menuitem name="Software Updates" onclick="BrowserReload();"/>
       <menuitem name="Technical Support" onclick="BrowserReload();"/>
       <menuitem name="Release Notes" 
-	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+	            onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
       
       <separator />
       <menuitem name="About Communicator Prototype" 
-	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+	            onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
     </menu>
 
     // Menu for testing.
     <menu name="Debug">
 
       <menu name="Verification"> // Build verification sites.
-        <menuitem name="Mozilla"  onclick="window.frames[0].location.href='http://www.mozilla.org'"/>
-        <menuitem name="Yahoo"  onclick="window.frames[0].location.href='http://www.yahoo.com'"/>
-        <menuitem name="Netscape"  onclick="window.frames[0].location.href='http://www.netscape.com'"/>
+        <menuitem name="Mozilla"  onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org'"/>
+        <menuitem name="Yahoo"  onclick="window.frames[0].frames[1].location.href='http://www.yahoo.com'"/>
+        <menuitem name="Netscape"  onclick="window.frames[0].frames[1].location.href='http://www.netscape.com'"/>
       </menu>
 
 	  <menu name="Viewer">  // Viewer tests.
-        <menuitem name="Demo #0"  onclick="window.frames[0].location.href='resource:/res/samples/test0.html'"/>
-        <menuitem name="Demo #1"  onclick="window.frames[0].location.href='resource:/res/samples/test1.html'"/>
-        <menuitem name="Demo #2"  onclick="window.frames[0].location.href='resource:/res/samples/test2.html'"/>
-        <menuitem name="Demo #3"  onclick="window.frames[0].location.href='resource:/res/samples/test3.html'"/>
-        <menuitem name="Demo #4"  onclick="window.frames[0].location.href='resource:/res/samples/test4.html'"/>
-        <menuitem name="Demo #5"  onclick="window.frames[0].location.href='resource:/res/samples/test5.html'"/>
-        <menuitem name="Demo #6"  onclick="window.frames[0].location.href='resource:/res/samples/test6.html'"/>
-        <menuitem name="Demo #7"  onclick="window.frames[0].location.href='resource:/res/samples/test7.html'"/>
-        <menuitem name="Demo #8"  onclick="window.frames[0].location.href='resource:/res/samples/test8.html'"/>
-        <menuitem name="Demo #9"  onclick="window.frames[0].location.href='resource:/res/samples/test9.html'"/>
-        <menuitem name="Demo #10" onclick="window.frames[0].location.href='resource:/res/samples/test10.html'"/>
-        <menuitem name="Demo #11" onclick="window.frames[0].location.href='resource:/res/samples/test11.html'"/>
-        <menuitem name="Demo #12" onclick="window.frames[0].location.href='resource:/res/samples/test12.html'"/>
-        <menuitem name="Demo #13" onclick="window.frames[0].location.href='resource:/res/samples/test13.html'"/>
+        <menuitem name="Demo #0"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test0.html'"/>
+        <menuitem name="Demo #1"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test1.html'"/>
+        <menuitem name="Demo #2"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test2.html'"/>
+        <menuitem name="Demo #3"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test3.html'"/>
+        <menuitem name="Demo #4"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test4.html'"/>
+        <menuitem name="Demo #5"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test5.html'"/>
+        <menuitem name="Demo #6"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test6.html'"/>
+        <menuitem name="Demo #7"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test7.html'"/>
+        <menuitem name="Demo #8"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test8.html'"/>
+        <menuitem name="Demo #9"  onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test9.html'"/>
+        <menuitem name="Demo #10" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test10.html'"/>
+        <menuitem name="Demo #11" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test11.html'"/>
+        <menuitem name="Demo #12" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test12.html'"/>
+        <menuitem name="Demo #13" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
       </menu>
 
       <menu name="XPToolkit"> // XPToolkit tests.
-        <menuitem name="Toolbar" onclick="window.frames[0].location.href='resource:/res/samples/toolbarTest1.xul'"/>
-        <menuitem name="Tree" onclick="window.frames[0].location.href='resource:/res/samples/treeTest1.xul'"/>
+        <menuitem name="Toolbar" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/toolbarTest1.xul'"/>
+        <menuitem name="Tree" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/treeTest1.xul'"/>
       </menu>
 
     </menu>
@@ -595,12 +598,12 @@
 	      </titledbutton>
 
 	      <titledbutton id="reload-button" align="bottom" value="Reload" 
-				  onclick="window.frames[0].location.reload()">
+				  onclick="window.frames[0].frames[1].location.reload()">
 				  <observes element="canReload" attribute="disabled"/>
 	      </titledbutton>
 
 	      <titledbutton id="stop-button" align="bottom" value="Stop" 
-				onclick="window.frames[0].stop()">
+				onclick="window.frames[0].frames[1].stop()">
 	        <observes element="canStop" attribute="disabled"/>
 	      </titledbutton>
 	  
@@ -615,7 +618,7 @@
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
 
-          <titledbutton id="Throbber" onclick="window.frames[0].home()">
+          <titledbutton id="Throbber" onclick="window.frames[0].frames[1].home()">
              <observes element="Browser:Throbber" attribute="busy"/>
           </titledbutton>
 	</toolbar>
@@ -624,7 +627,7 @@
     	<titledbutton id="home-button" align="right" value="Home" 
 			onclick="BrowserHome()"/>
 		<titledbutton id="netscape-button" align="right" value="Netscape" 
-			onclick="window.frames[0].location.href='http://my.netscape.com'"/>
+			onclick="window.frames[0].frames[1].location.href='http://my.netscape.com'"/>
 		<spring flex="100%"/>
 	</toolbar>
   </toolbox>
