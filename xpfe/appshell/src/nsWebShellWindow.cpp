@@ -1523,14 +1523,6 @@ nsWebShellWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameN
 
   AddWebShellInfo(value, isPrimary, aChildShell);
 
-  // For some reason nsCOMPtr and do_queryInterface fail here
-  if (aChildShell) {
-    nsIUrlDispatcher *  ud = nsnull;
-    QueryInterface(kIUrlDispatcherIID, (void **)&ud);
-    aChildShell->SetUrlDispatcher(ud);
-    NS_RELEASE(ud);
-  }
-
   NS_RELEASE(typeAtom);
   NS_RELEASE(idAtom);
   return NS_OK;
