@@ -63,7 +63,14 @@
 #elif defined(__alpha__)
 #define JB_SP_INDEX 34
 #elif defined(__arm32__)
+/*
+ * On the arm32, the jmpbuf regs underwent a name change after NetBSD 1.3.
+ */
+#ifdef JMPBUF_REG_R13
 #define JB_SP_INDEX JMPBUF_REG_R13
+#else
+#define JB_SP_INDEX _JB_REG_R13
+#endif
 #else
 #error "Need to define SP index in jmp_buf here"
 #endif
