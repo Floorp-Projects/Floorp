@@ -24,7 +24,41 @@
 
 #include "xptiprivate.h"
 
-static const char g_ZipReaderProgID[] = "component://netscape/libjar/zip-reader";
+#ifdef XPTI_HAS_ZIP_SUPPORT
+
+static const char gCacheProgID[] = "component://netscape/libjar/zip-reader-cache";
+
+static const PRUint32 gCacheSize = 1;
+
+nsCOMPtr<nsIZipReaderCache> xptiZipLoader::gCache = nsnull;
+
+// static 
+nsIZipReader*
+xptiZipLoader::GetZipReader(nsILocalFile* file)
+{
+    NS_ASSERTION(file, "bad file");
+    
+    if(!gCache)
+    {
+        gCache = do_CreateInstance(gCacheProgID);
+        if(!gCache || NS_FAILED(gCache->Init(gCacheSize)))
+            return nsnull;
+    }
+
+    nsIZipReader* reader = nsnull;
+
+    if(NS_FAILED(gCache->GetZip(file, &reader)))
+        return nsnull;
+
+    return reader;
+}
+
+// static 
+void
+xptiZipLoader::Shutdown()
+{
+    gCache = nsnull;
+}
 
 // static 
 PRBool 
@@ -32,22 +66,14 @@ xptiZipLoader::EnumerateZipEntries(nsILocalFile* file,
                                    xptiEntrySink* sink,
                                    xptiWorkingSet* aWorkingSet)
 {
-#ifndef XPCOM_STANDALONE
     NS_ASSERTION(file, "loser!");
     NS_ASSERTION(sink, "loser!");
     NS_ASSERTION(aWorkingSet, "loser!");
 
-    nsCOMPtr<nsIZipReader> zip = do_CreateInstance(g_ZipReaderProgID);
+    nsCOMPtr<nsIZipReader> zip = dont_AddRef(GetZipReader(file));
     if(!zip)
         return PR_FALSE;
-    if(NS_FAILED(zip->Init(file)) || NS_FAILED(zip->Open()))
-        return PR_FALSE;
     
-    // This is required before getting streams for some reason.
-    // XXX and then someopne removed it from that interface!
-    // if(NS_FAILED(zip->ParseManifest()))
-    //    return PR_FALSE;
-
     nsCOMPtr<nsISimpleEnumerator> entries;
     if(NS_FAILED(zip->FindEntries("*.xpt", getter_AddRefs(entries))) ||
        !entries)
@@ -97,9 +123,6 @@ xptiZipLoader::EnumerateZipEntries(nsILocalFile* file,
     } while(1);
 
     return PR_TRUE;
-#else
-    return PR_FALSE;
-#endif /* XPCOM_STANDALONE */
 }
 
 // static
@@ -108,25 +131,9 @@ xptiZipLoader::ReadXPTFileFromZip(nsILocalFile* file,
                                   const char* entryName,
                                   xptiWorkingSet* aWorkingSet)
 {
-#ifndef XPCOM_STANDALONE
-    nsCOMPtr<nsIZipReader> zip = 
-                do_CreateInstance(g_ZipReaderProgID);
+    nsCOMPtr<nsIZipReader> zip = dont_AddRef(GetZipReader(file));
     if(!zip)
-    {
         return nsnull;
-    }
-
-    if(NS_FAILED(zip->Init(file)) || NS_FAILED(zip->Open()))
-    {
-        return nsnull;
-    }
-    
-    // This is required before getting streams for some reason.
-    // XXX and then someopne removed it from that interface!
-    //if(NS_FAILED(zip->ParseManifest()))
-    //{
-    //    return nsnull;
-    //}
 
     nsCOMPtr<nsIZipEntry> entry;
     if(NS_FAILED(zip->GetEntry(entryName, getter_AddRefs(entry))) || !entry)
@@ -135,12 +142,8 @@ xptiZipLoader::ReadXPTFileFromZip(nsILocalFile* file,
     }
 
     return ReadXPTFileFromOpenZip(zip, entry, entryName, aWorkingSet);
-#else
-    return nsnull;
-#endif /* XPCOM_STANDALONE */
 }
 
-#ifndef XPCOM_STANDALONE
 // static
 XPTHeader* 
 xptiZipLoader::ReadXPTFileFromOpenZip(nsIZipReader* zip,
@@ -228,8 +231,5 @@ xptiZipLoader::ReadXPTFileFromOpenZip(nsIZipReader* zip,
         delete [] whole;
     return header;
 }
-#endif /* XPCOM_STANDALONE */
 
-
-
-
+#endif /* XPTI_HAS_ZIP_SUPPORT */

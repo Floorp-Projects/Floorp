@@ -72,7 +72,6 @@ xptiInterfaceInfoManager::FreeInterfaceInfoManager()
     NS_IF_RELEASE(gInterfaceInfoManager);
 }
 
-
 PRBool 
 xptiInterfaceInfoManager::IsValid()
 {
@@ -127,14 +126,18 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
     // We only do this on shutdown of the service.
     mWorkingSet.InvalidateInterfaceInfos();
 
+#ifdef XPTI_HAS_ZIP_SUPPORT
+    xptiZipLoader::Shutdown();
+#endif /* XPTI_HAS_ZIP_SUPPORT */
+
     if(mResolveLock)
         PR_DestroyLock(mResolveLock);
     if(mAutoRegLock)
         PR_DestroyLock(mAutoRegLock);
 }
 
-PRBool 
-xptiInterfaceInfoManager::GetComponentsDir(nsILocalFile** aDir)
+static PRBool
+GetDirectoryFromDirService(const char* codename, nsILocalFile** aDir)
 {
     NS_ASSERTION(aDir,"loser!");
     
@@ -146,8 +149,7 @@ xptiInterfaceInfoManager::GetComponentsDir(nsILocalFile** aDir)
     if(dirService)
     {
         nsCOMPtr<nsILocalFile> dir;
-        dirService->Get(NS_XPCOM_COMPONENT_DIR, 
-                        NS_GET_IID(nsIFile), getter_AddRefs(dir));
+        dirService->Get(codename, NS_GET_IID(nsIFile), getter_AddRefs(dir));
         if(dir)
         {
             NS_ADDREF(*aDir = dir);
@@ -155,6 +157,20 @@ xptiInterfaceInfoManager::GetComponentsDir(nsILocalFile** aDir)
         }
     }
     return PR_FALSE;
+}
+
+PRBool 
+xptiInterfaceInfoManager::GetComponentsDir(nsILocalFile** aDir)
+{
+    return GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR, aDir);
+}
+
+PRBool 
+xptiInterfaceInfoManager::GetManifestDir(nsILocalFile** aDir)
+{
+    // XXX This does not look like the right place yet.
+    // return GetDirectoryFromDirService(NS_XPCOM_APPLICATION_REGISTRY_DIR, aDir);
+    return GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR, aDir);
 }
 
 PRBool 
@@ -308,9 +324,13 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
 
     if(aTypelibRecord.IsZip())
     {
+#ifdef XPTI_HAS_ZIP_SUPPORT
         zipItem = &aWorkingSet->GetZipItemAt(aTypelibRecord.GetZipItemIndex());
         LOG_LOAD(("# loading zip item %s::%s\n", fileRecord->GetName(), zipItem->GetName()));
         header = xptiZipLoader::ReadXPTFileFromZip(file, zipItem->GetName(), aWorkingSet);
+#else
+        header = nsnull;
+#endif /* XPTI_HAS_ZIP_SUPPORT */
     } 
     else
     {
@@ -734,6 +754,7 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
             // This will correspond to typelibRecord above.
             aWorkingSet->AppendFile(fileRecord);
         }
+#ifdef XPTI_HAS_ZIP_SUPPORT
         else // It is a zip file, Oh boy!
         {
             if(!xptiZipLoader::EnumerateZipEntries(file, 
@@ -746,6 +767,7 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
             // xptiInterfaceInfoManager::FoundEntry.
             aWorkingSet->AppendFile(fileRecord);
         }
+#endif /* XPTI_HAS_ZIP_SUPPORT */
     }
 
     return PR_TRUE;
@@ -859,6 +881,7 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
             // This will correspond to typelibRecord above.
             aWorkingSet->AppendFile(fileRecord);
         }
+#ifdef XPTI_HAS_ZIP_SUPPORT
         else // It is a zip file, Oh boy!
         {
             if(!xptiZipLoader::EnumerateZipEntries(file, 
@@ -871,6 +894,7 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
             // xptiInterfaceInfoManager::FoundEntry.
             aWorkingSet->AppendFile(fileRecord);
         }
+#endif /* XPTI_HAS_ZIP_SUPPORT */
     }
     return PR_TRUE;
 }        
