@@ -237,9 +237,6 @@ nsBuffer::GetReadSegment(PRUint32 segmentLogicalOffset,
 {
     nsAutoCMonitor mon(this);
 
-    if (mCondition != NS_OK)    // XXX NS_FAILED?
-        return mCondition;
-
     // set the read segment and cursor if not already set
     if (mReadSegment == nsnull) {
         if (PR_CLIST_IS_EMPTY(&mSegments)) {
@@ -318,17 +315,17 @@ nsBuffer::GetReadableAmount(PRUint32 *result)
     NS_ASSERTION(!mReaderClosed, "state change error");
 
     nsAutoCMonitor mon(this);
+    *result = 0; 
+
     // first set the read segment and cursor if not already set
     if (mReadSegment == nsnull) {
         if (PR_CLIST_IS_EMPTY(&mSegments)) {
-            *result = 0;
             return NS_OK;
         }
         else {
             mReadSegment = mSegments.next;
             mReadSegmentEnd = (char*)mReadSegment + mGrowBySize;
             mReadCursor = (char*)mReadSegment + sizeof(PRCList);
-            *result = mGrowBySize; 
         }
     }
 
