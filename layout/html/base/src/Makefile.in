@@ -132,6 +132,7 @@ RESOURCES_HTML =					\
 		$(srcdir)/gopher-image.gif	\
 		$(srcdir)/gopher-menu.gif	\
 		$(srcdir)/gopher-movie.gif	\
+		$(srcdir)/gopher-sound.gif	\
 		$(srcdir)/gopher-telnet.gif	\
 		$(srcdir)/gopher-text.gif	\
 		$(srcdir)/gopher-unknown.gif	\

@@ -141,6 +141,7 @@ libs::
 	$(MAKE_INSTALL) gopher-image.gif $(DIST)\bin\res\html
 	$(MAKE_INSTALL) gopher-menu.gif $(DIST)\bin\res\html
 	$(MAKE_INSTALL) gopher-movie.gif $(DIST)\bin\res\html
+	$(MAKE_INSTALL) gopher-sound.gif $(DIST)\bin\res\html
 	$(MAKE_INSTALL) gopher-telnet.gif $(DIST)\bin\res\html
 	$(MAKE_INSTALL) gopher-text.gif $(DIST)\bin\res\html
 	$(MAKE_INSTALL) gopher-unknown.gif $(DIST)\bin\res\html
