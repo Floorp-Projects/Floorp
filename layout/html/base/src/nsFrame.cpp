@@ -315,19 +315,9 @@ SelectionImageService::Reset()
   return NS_OK;
 }
 
-//macintosh uses XRGB in its image format. its triple color (RGB) therefore is 4 bytes not 3
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#define SEL_TRIPLESIZE 4
-#else
-#define SEL_TRIPLESIZE 3
-#endif
-
 #define SEL_IMAGE_WIDTH 32
 #define SEL_IMAGE_HEIGHT 32
-#define SEL_WIDTH_BYTES SEL_IMAGE_WIDTH * SEL_TRIPLESIZE
 #define SEL_ALPHA_AMOUNT 128
-#define SEL_IMAGE_ALPHA_SIZE SEL_IMAGE_WIDTH*SEL_IMAGE_HEIGHT
-#define SEL_IMAGE_TOTAL_SIZE SEL_WIDTH_BYTES * SEL_IMAGE_HEIGHT
 
 nsresult
 SelectionImageService::CreateImage(nscolor aImageColor, imgIContainer *aContainer)
@@ -342,45 +332,50 @@ SelectionImageService::CreateImage(nscolor aImageColor, imgIContainer *aContaine
       {
         image->Init(0, 0, SEL_IMAGE_WIDTH, SEL_IMAGE_HEIGHT, gfxIFormats::RGB_A8);
         aContainer->AppendFrame(image);
+
+        PRUint32 bpr, abpr;
+        image->GetImageBytesPerRow(&bpr);
+        image->GetAlphaBytesPerRow(&abpr);
+
         //its better to temporarily go after heap than put big data on stack
-        unsigned char *data = (unsigned char *)malloc(SEL_IMAGE_TOTAL_SIZE);
-        if (!data)
+        unsigned char *row_data = (unsigned char *)malloc(bpr);
+        if (!row_data)
           return NS_ERROR_OUT_OF_MEMORY;
-        unsigned char *alpha = (unsigned char *)malloc(SEL_IMAGE_ALPHA_SIZE);
+        unsigned char *alpha = (unsigned char *)malloc(abpr);
         if (!alpha)
-        {
-          free(data);
           return NS_ERROR_OUT_OF_MEMORY;
-        }
+
+        unsigned char *data = row_data;
+
         PRInt16 i;
-        for (i = 0; i < SEL_WIDTH_BYTES; i+=SEL_TRIPLESIZE)
+        for (i = 0; i < SEL_IMAGE_WIDTH; i++)
         {
 #ifdef XP_PC
-          data[i] = NS_GET_B(aImageColor);
-          data[i+1] = NS_GET_G(aImageColor);
-          data[i+2] = NS_GET_R(aImageColor);
+          *data++ = NS_GET_B(aImageColor);
+          *data++ = NS_GET_G(aImageColor);
+          *data++ = NS_GET_R(aImageColor);
 #endif
 #ifdef XP_UNIX
-          data[i] = NS_GET_R(aImageColor);
-          data[i+1] = NS_GET_G(aImageColor);
-          data[i+2] = NS_GET_B(aImageColor);
+          *data++ = NS_GET_R(aImageColor);
+          *data++ = NS_GET_G(aImageColor);
+          *data++ = NS_GET_B(aImageColor);
 #endif
 #if defined(XP_MAC) || defined(XP_MACOSX)
-          data[i] = 0;
-          data[i+1] = NS_GET_R(aImageColor);
-          data[i+2] = NS_GET_G(aImageColor);
-          data[i+3] = NS_GET_B(aImageColor);
+          *data++ = 0;
+          *data++ = NS_GET_R(aImageColor);
+          *data++ = NS_GET_G(aImageColor);
+          *data++ = NS_GET_B(aImageColor);
 #endif
         }
-        unsigned char *data_cur = data+SEL_WIDTH_BYTES;
-        for (i = 1; i < SEL_IMAGE_HEIGHT; ++i, data_cur+=SEL_WIDTH_BYTES)
+
+        memset((void *)alpha, SEL_ALPHA_AMOUNT, abpr);
+
+        for (i = 0; i < SEL_IMAGE_HEIGHT; i++)
         {
-          memcpy((void *)data_cur,(void *)data,SEL_WIDTH_BYTES);
+          image->SetAlphaData(alpha, abpr, i*abpr);
+          image->SetImageData(row_data,  bpr, i*bpr);
         }
-        memset((void *)alpha,SEL_ALPHA_AMOUNT,SEL_IMAGE_ALPHA_SIZE);
-        image->SetImageData(data,SEL_IMAGE_TOTAL_SIZE, SEL_IMAGE_TOTAL_SIZE-SEL_WIDTH_BYTES);
-        image->SetAlphaData(alpha,SEL_IMAGE_ALPHA_SIZE,SEL_IMAGE_ALPHA_SIZE-SEL_IMAGE_WIDTH);
-        free(data);
+        free(row_data);
         free(alpha);
         return NS_OK;
       }
@@ -934,7 +929,8 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
       if (container)
       {
         nsRect rect(0, 0, mRect.width, mRect.height);
-        aRenderingContext.DrawTile(container,0,0, &rect);
+        rect.IntersectRect(rect,aDirtyRect);
+        aRenderingContext.DrawTile(container,0,0,&rect);
       }
     }
 
