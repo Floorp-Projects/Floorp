@@ -92,6 +92,9 @@ struct UndisplayedNode {
   ~UndisplayedNode(void)
   {
     NS_RELEASE(mStyle);
+    if (mNext) {
+      delete mNext;
+    }
   }
 
   nsIContent*       mContent;
