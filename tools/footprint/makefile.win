@@ -31,6 +31,8 @@ include <$(DEPTH)\config\rules.mak>
 
 libs:: $(OBJDIR) $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
+         $(MAKE_INSTALL) heapmap.pl $(DIST)\bin
+         $(MAKE_INSTALL) codemap.pl $(DIST)\bin
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
