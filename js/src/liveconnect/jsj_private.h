@@ -652,8 +652,8 @@ extern JSObjectMap * JS_DLL_CALLBACK
 jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
                          JSClass *clasp, JSObject *obj);
 
-extern JSObjectMap * JS_DLL_CALLBACK
-jsj_wrapper_dropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj);
+extern void JS_DLL_CALLBACK
+jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map);
 
 extern jsval JS_DLL_CALLBACK
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
