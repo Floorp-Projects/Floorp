@@ -1069,57 +1069,56 @@ NS_IMETHODIMP nsRenderingContextQT::GetWidth(const PRUnichar *aString,
                                              PRUint32 aLength,nscoord &aWidth,
                                              PRInt32 *aFontID)
 {
-  if (aFontID)
-    *aFontID = 0;
-  if (0 == aLength) {
+  if (0 == aLength) 
     aWidth = 0;
-    return NS_OK;
-  }
-  if (!aString || !mFontMetrics)
+  else if (nsnull == aString)
     return NS_ERROR_FAILURE;
+  else {
+    nsFontMetricsQT *metrics = (nsFontMetricsQT*)mFontMetrics;
+    nsFontQT *prevFont = nsnull;
+    int rawWidth = 0;
+    PRUint32 start = 0;
+    PRUint32 i;
 
-  nsFontMetricsQT *metrics = (nsFontMetricsQT*)mFontMetrics;
-  nsFontQT *prevFont = nsnull;
-  int rawWidth = 0;
-  PRUint32 start = 0;
-  PRUint32 i;
-
-  for (i = 0; i < aLength; i++) {
-    PRUnichar c = aString[i];
-    nsFontQT* currFont = nsnull;
-    if (mCurrentFont->SupportsChar(c)) {
-      currFont = mCurrentFont;
-      goto FoundFont;
-    }
-    else {
-      nsFontQT **font = metrics->mLoadedFonts;
-      nsFontQT **lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
-      while (font < lastFont) {
-        if ((*font)->SupportsChar(c)) {
-          currFont = *font;
-          goto FoundFont; // for speed -- avoid "if" statement
-        }
-        font++;
+    for (i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      nsFontQT* currFont = nsnull;
+      if (mCurrentFont->SupportsChar(c)) {
+        currFont = mCurrentFont;
+        goto FoundFont;
       }
-      currFont = metrics->FindFont(c);
-    }
+      else {
+        nsFontQT **font = metrics->mLoadedFonts;
+        nsFontQT **lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+        while (font < lastFont) {
+          if ((*font)->SupportsChar(c)) {
+            currFont = *font;
+            goto FoundFont; // for speed -- avoid "if" statement
+          }
+          font++;
+        }
+        currFont = metrics->FindFont(c);
+      }
 FoundFont:
-    if (prevFont) {
-      if (currFont != prevFont) {
-        rawWidth += prevFont->GetWidth(&aString[start], i - start);
+      if (prevFont) {
+        if (currFont != prevFont) {
+          rawWidth += prevFont->GetWidth(&aString[start], i - start);
+          prevFont = currFont;
+          start = i;
+        }
+      }
+      else {
         prevFont = currFont;
         start = i;
       }
+    } 
+    if (prevFont) {
+      rawWidth += prevFont->GetWidth(&aString[start], i - start);
     }
-    else {
-      prevFont = currFont;
-      start = i;
-    }
-  } 
-  if (prevFont) {
-    rawWidth += prevFont->GetWidth(&aString[start], i - start);
+    aWidth = NSToCoordRound(rawWidth * mP2T);
   }
-  aWidth = NSToCoordRound(rawWidth * mP2T);
+  if (nsnull != aFontID)
+    *aFontID = 0;
 
   return NS_OK;
 }
@@ -1171,7 +1170,7 @@ nsRenderingContextQT::GetTextDimensions(const PRUnichar *aString,
       currFont = metrics->FindFont(c);
     }
 FoundFont:
-    if (prevFont && prevFont->mFontMetrics) {
+    if (prevFont) {
       if (currFont != prevFont) {
         rawWidth += prevFont->GetWidth(&aString[start], i - start);
         if (rawAscent < prevFont->mFontMetrics->ascent())
@@ -1187,7 +1186,7 @@ FoundFont:
       start = i;
     }
   } 
-  if (prevFont && prevFont->mFontMetrics) {
+  if (prevFont) {
     rawWidth += prevFont->GetWidth(&aString[start], i - start);
     if (rawAscent < prevFont->mFontMetrics->ascent())
       rawAscent = prevFont->mFontMetrics->ascent();
