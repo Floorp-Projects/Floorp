@@ -211,13 +211,13 @@ ToNewUTF8String( const nsAString& aSource )
     NS_ConvertUCS2toUTF8 temp(aSource);
 
     char* result;
-    if (temp.mOwnsBuffer) {
+    if (temp.GetOwnsBuffer()) {
       // We allocated. Trick the string into not freeing its buffer to
       // avoid an extra allocation.
       result = temp.mStr;
 
       temp.mStr=0;
-      temp.mOwnsBuffer = PR_FALSE;
+      temp.SetOwnsBuffer(PR_FALSE);
     }
     else {
       // We didn't allocate a buffer, so we need to copy it out of the
@@ -385,7 +385,7 @@ void
 ToUpperCase( nsCString& aCString )
   {
     ConvertToUpperCase converter;
-    converter.write(aCString.mStr, aCString.mLength);
+    converter.write(aCString.mStr, aCString.Length());
   }
 
   /**
@@ -479,7 +479,7 @@ void
 ToLowerCase( nsCString& aCString )
   {
     ConvertToLowerCase converter;
-    converter.write(aCString.mStr, aCString.mLength);
+    converter.write(aCString.mStr, aCString.Length());
   }
 
   /**

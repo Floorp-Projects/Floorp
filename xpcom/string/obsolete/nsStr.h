@@ -224,12 +224,20 @@ enum  eCharSize {eOneByte=0,eTwoByte=1};
 #define kRadixUnknown   (kAutoDetect+1)
 #define IGNORE_CASE     (PR_TRUE)
 
+#define NSSTR_CHARSIZE_BIT   (31)
+#define NSSTR_OWNSBUFFER_BIT (30)
+
+#define NSSTR_CHARSIZE_MASK  (1<<NSSTR_CHARSIZE_BIT)
+#define NSSTR_OWNSBUFFER_MASK (1<<NSSTR_OWNSBUFFER_BIT)
+
+#define NSSTR_CAPACITY_MASK (~(NSSTR_CHARSIZE_MASK | NSSTR_OWNSBUFFER_MASK))
+
 const   PRInt32 kDefaultStringSize = 64;
 const   PRInt32 kNotFound = -1;
 
 
 //----------------------------------------------------------------------------------------
-
+class nsAString;
 class NS_COM CBufDescriptor {
 public:
   CBufDescriptor(char* aString,           PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1);
@@ -250,6 +258,7 @@ public:
 
 struct NS_COM nsStr {  
 
+protected:
   nsStr() {
     MOZ_COUNT_CTOR(nsStr);
   }
@@ -275,7 +284,6 @@ struct NS_COM nsStr {
   * @param  aCharSize tells us the requested char size (1 or 2 bytes)
   */
   static void Initialize(nsStr& aDest,char* aCString,PRUint32 aCapacity,PRUint32 aLength,eCharSize aCharSize,PRBool aOwnsBuffer);
-
  /**
   * This method destroys the given nsStr, and *MAY* 
   * deallocate it's memory depending on the setting
@@ -283,7 +291,6 @@ struct NS_COM nsStr {
   *
   * @update	gess 01/04/99
   * @param  aString is the nsStr to be manipulated
-  * @param  anAgent is the allocator to be used to the nsStr
   */
   static void Destroy(nsStr& aDest); 
 
@@ -292,7 +299,6 @@ struct NS_COM nsStr {
   *
   * @update	gess 01/04/99
   * @param  aString is the nsStr to be manipulated
-  * @param  anAgent is the allocator to be used on the nsStr
   * @return  
   */
   static PRBool EnsureCapacity(nsStr& aString,PRUint32 aNewLength);
@@ -306,7 +312,6 @@ struct NS_COM nsStr {
   * @param  aSource is the buffer to be copied from
   * @param  anOffset tells us where in source to start copying
   * @param  aCount tells us the (max) # of chars to copy
-  * @param  anAgent is the allocator to be used for alloc/free operations
   */
   static void StrAppend(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
 
@@ -318,7 +323,6 @@ struct NS_COM nsStr {
   * @param  aSource is the buffer to be copied from
   * @param  anOffset tells us where in source to start copying
   * @param  aCount tells us the (max) # of chars to copy
-  * @param  anAgent is the allocator to be used for alloc/free operations
   */
   static void StrAssign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
 
@@ -331,7 +335,6 @@ struct NS_COM nsStr {
   * @param  aSource is the buffer to be copied from
   * @param  aSrcOffset tells us where in source to start copying
   * @param  aCount tells us the (max) # of chars to insert
-  * @param  anAgent is the allocator to be used for alloc/free operations
   */
   static void StrInsert1into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
   static void StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
@@ -354,11 +357,12 @@ struct NS_COM nsStr {
   * @param  aDest is the nsStr to be deleted from
   * @param  aDestOffset tells us where in dest to start deleting
   * @param  aCount tells us the (max) # of chars to delete
-  * @param  anAgent is the allocator to be used for alloc/free operations
   */
   static void Delete1(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
+public:
   static void Delete2(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
 
+protected:
   /**
    * helper routines for Delete1, Delete2
    */
@@ -373,7 +377,6 @@ struct NS_COM nsStr {
   * @param  aDestOffset tells us where in dest to start insertion
   * @param  aSource is the buffer to be copied from
   * @param  aSrcOffset tells us where in source to start copying
-  * @param  anAgent is the allocator to be used for alloc/free operations
   */
   static void StrTruncate(nsStr& aDest,PRUint32 aDestOffset);
 
@@ -466,8 +469,10 @@ struct NS_COM nsStr {
   static PRInt32 RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
 
   static void    Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 anOffset);
-
+  
+#ifdef NS_STR_STATS
   static PRBool   DidAcquireMemory(void);
+#endif
 
   /**
    * Returns a hash code for the string for use in a PLHashTable.
@@ -484,23 +489,55 @@ struct NS_COM nsStr {
 #endif
 
 protected:
-  PRUint32        mLength;
-  PRUint32        mCapacity;
-  
   union { 
     char*         mStr;
     PRUnichar*    mUStr;
   };
 
-  PRInt8          mCharSize;
-  PRPackedBool    mOwnsBuffer;
+  PRUint32        mLength;
+  PRUint32        mCapacityAndFlags;
+  
+  inline PRUint32 GetCapacity() const {
+    // actual capacity is one less than is stored
+    return (mCapacityAndFlags & NSSTR_CAPACITY_MASK);
+  }
+
+  inline PRBool GetOwnsBuffer() const {
+    return ((mCapacityAndFlags & NSSTR_OWNSBUFFER_MASK) != 0);
+  }
+
+  inline eCharSize GetCharSize() const {
+    return eCharSize(mCapacityAndFlags >> NSSTR_CHARSIZE_BIT);
+  }
 
 private:
+
+  inline void SetInternalCapacity(PRUint32 aCapacity) {
+    mCapacityAndFlags = 
+      ((mCapacityAndFlags & ~NSSTR_CAPACITY_MASK) |
+       (aCapacity         & NSSTR_CAPACITY_MASK));
+  }
+
+  inline void SetCharSize(eCharSize aCharSize) {
+    mCapacityAndFlags =
+      ((mCapacityAndFlags & ~NSSTR_CHARSIZE_MASK) |
+       (PRUint32(aCharSize) << NSSTR_CHARSIZE_BIT));
+  }
+
+  inline void SetOwnsBuffer(PRBool aOwnsBuffer) {
+    mCapacityAndFlags =
+      (mCapacityAndFlags & ~NSSTR_OWNSBUFFER_MASK |
+       (aOwnsBuffer ? 1 : 0) << NSSTR_OWNSBUFFER_BIT);
+  }
+  
   static PRBool Alloc(nsStr& aString,PRUint32 aCount);
   static PRBool Realloc(nsStr& aString,PRUint32 aCount);
   static PRBool Free(nsStr& aString);
 
 public:
+  friend NS_COM
+  char*
+  ToNewUTF8String( const nsAString& aSource );
   friend inline void AddNullTerminator(nsStr& aDest);
   friend inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex);
   friend class nsString;
@@ -523,7 +560,7 @@ inline PRInt32 MaxInt(PRInt32 anInt1,PRInt32 anInt2){
 }
 
 inline void AddNullTerminator(nsStr& aDest) {
-  if(eTwoByte==aDest.mCharSize) 
+  if(eTwoByte==aDest.GetCharSize()) 
     aDest.mUStr[aDest.mLength]=0;
   else aDest.mStr[aDest.mLength]=0;
 }
@@ -547,7 +584,7 @@ inline void Recycle( PRUnichar* aBuffer) { nsMemory::Free(aBuffer); }
 */
 inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex) {
   if(anIndex<aDest.mLength)  {
-    return (eTwoByte==aDest.mCharSize) ? aDest.mUStr[anIndex] : (PRUnichar)aDest.mStr[anIndex];
+    return (eTwoByte==aDest.GetCharSize()) ? aDest.mUStr[anIndex] : (PRUnichar)aDest.mStr[anIndex];
   }//if
   return 0;
 }

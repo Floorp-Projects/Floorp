@@ -59,7 +59,10 @@
 //static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
 
 static const  PRUnichar gCommonEmptyBuffer[1] = {0};
+
+#ifdef NS_STR_STATS
 static PRBool gStringAcquiredMemory = PR_TRUE;
+#endif
 
 /**
  * This method initializes all the members of the nsStr structure 
@@ -71,9 +74,9 @@ static PRBool gStringAcquiredMemory = PR_TRUE;
 void nsStr::Initialize(nsStr& aDest,eCharSize aCharSize) {
   aDest.mStr=(char*)gCommonEmptyBuffer;
   aDest.mLength=0;
-  aDest.mCapacity=0;
-  aDest.mCharSize=aCharSize;
-  aDest.mOwnsBuffer=0;
+  aDest.SetInternalCapacity(0);
+  aDest.SetCharSize(aCharSize);
+  aDest.SetOwnsBuffer(PR_FALSE);
 }
 
 /**
@@ -85,11 +88,10 @@ void nsStr::Initialize(nsStr& aDest,eCharSize aCharSize) {
 void nsStr::Initialize(nsStr& aDest,char* aCString,PRUint32 aCapacity,PRUint32 aLength,eCharSize aCharSize,PRBool aOwnsBuffer){
   aDest.mStr=(aCString) ? aCString : (char*)gCommonEmptyBuffer;
   aDest.mLength=aLength;
-  aDest.mCapacity=aCapacity;
-  aDest.mCharSize=aCharSize;
-  aDest.mOwnsBuffer=aOwnsBuffer;
+  aDest.SetInternalCapacity(aCapacity);
+  aDest.SetCharSize(aCharSize);
+  aDest.SetOwnsBuffer(aOwnsBuffer);
 }
-
 
 /**
  * This member destroys the memory buffer owned by an nsStr object (if it actually owns it)
@@ -113,7 +115,7 @@ void nsStr::Destroy(nsStr& aDest) {
  */
 PRBool nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength) {
   PRBool result=PR_TRUE;
-  if(aNewLength>aString.mCapacity) {
+  if(aNewLength>aString.GetCapacity()) {
     result=Realloc(aString,aNewLength);
     if(aString.mStr)
       AddNullTerminator(aString);
@@ -130,19 +132,17 @@ PRBool nsStr::EnsureCapacity(nsStr& aString,PRUint32 aNewLength) {
  */
 PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength) {
   PRBool result=PR_TRUE;
-  if(aNewLength>aDest.mCapacity) {
+  if(aNewLength>aDest.GetCapacity()) {
     nsStr theTempStr;
-    nsStr::Initialize(theTempStr,eCharSize(aDest.mCharSize));
+    nsStr::Initialize(theTempStr,eCharSize(aDest.GetCharSize()));
 
-#ifndef NS_USE_OLD_STRING_ALLOCATION_STRATEGY
       // the new strategy is, allocate exact size, double on grows
-    if ( aDest.mCapacity ) {
-      PRUint32 newCapacity = aDest.mCapacity;
+    if ( aDest.GetCapacity() ) {
+      PRUint32 newCapacity = aDest.GetCapacity();
       while ( newCapacity < aNewLength )
         newCapacity <<= 1;
       aNewLength = newCapacity;
     }
-#endif
 
     result=EnsureCapacity(theTempStr,aNewLength);
     if(result) {
@@ -153,8 +153,8 @@ PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength) {
       aDest.mStr = theTempStr.mStr;
       theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
       aDest.mLength=theTempStr.mLength;
-      aDest.mCapacity=theTempStr.mCapacity;
-      aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
+      aDest.SetInternalCapacity(theTempStr.GetCapacity());
+      aDest.SetOwnsBuffer(theTempStr.GetOwnsBuffer());
     }
   }
   return result;
@@ -189,13 +189,13 @@ void nsStr::StrAppend(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt3
     if(0<theLength){
       
       PRBool isBigEnough=PR_TRUE;
-      if(aDest.mLength+theLength > aDest.mCapacity) {
+      if(aDest.mLength+theLength > aDest.GetCapacity()) {
         isBigEnough=GrowCapacity(aDest,aDest.mLength+theLength);
       }
 
       if(isBigEnough) {
         //now append new chars, starting at offset
-        (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDest.mLength,aSource.mStr,anOffset,theLength);
+        (*gCopyChars[aSource.GetCharSize()][aDest.GetCharSize()])(aDest.mStr,aDest.mLength,aSource.mStr,anOffset,theLength);
 
         aDest.mLength+=theLength;
         AddNullTerminator(aDest);
@@ -227,7 +227,7 @@ PRInt32 nsStr::GetSegmentLength(const nsStr& aSource,
 
 void nsStr::AppendForInsert(nsStr& aDest, PRUint32 aDestOffset, const nsStr& aSource, PRUint32 aSrcOffset, PRInt32 theLength) {
   nsStr theTempStr;
-  nsStr::Initialize(theTempStr,eCharSize(aDest.mCharSize));
+  nsStr::Initialize(theTempStr,eCharSize(aDest.GetCharSize()));
 
   PRBool isBigEnough=EnsureCapacity(theTempStr,aDest.mLength+theLength);  //grow the temp buffer to the right size
 
@@ -246,14 +246,14 @@ void nsStr::AppendForInsert(nsStr& aDest, PRUint32 aDestOffset, const nsStr& aSo
     Free(aDest);
     aDest.mStr = theTempStr.mStr;
     theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
-    aDest.mCapacity=theTempStr.mCapacity;
-    aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
+    aDest.SetInternalCapacity(theTempStr.GetCapacity());
+    aDest.SetOwnsBuffer(theTempStr.GetOwnsBuffer());
   }
 }
 
 void nsStr::StrInsert1into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
-  NS_ASSERTION(aSource.mCharSize == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aSource.GetCharSize() == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
   //there are a few cases for insert:
   //  1. You're inserting chars into an empty string (assign)
   //  2. You're inserting onto the end of a string (append)
@@ -267,7 +267,7 @@ void nsStr::StrInsert1into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSou
             //here's the only new case we have to handle. 
             //chars are really being inserted into our buffer...
 
-          if(aDest.mLength+theLength > aDest.mCapacity)
+          if(aDest.mLength+theLength > aDest.GetCapacity())
             AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
           else {
             //shift the chars right by theDelta...
@@ -291,8 +291,8 @@ void nsStr::StrInsert1into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSou
 }
 
 void nsStr::StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
-  NS_ASSERTION(aSource.mCharSize == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aSource.GetCharSize() == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
   //there are a few cases for insert:
   //  1. You're inserting chars into an empty string (assign)
   //  2. You're inserting onto the end of a string (append)
@@ -306,7 +306,7 @@ void nsStr::StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSou
             //here's the only new case we have to handle. 
             //chars are really being inserted into our buffer...
 
-          if(aDest.mLength+theLength > aDest.mCapacity)
+          if(aDest.mLength+theLength > aDest.GetCapacity())
             AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
           else {
             //shift the chars right by theDelta...
@@ -330,8 +330,8 @@ void nsStr::StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSou
 }
 
 void nsStr::StrInsert2into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
-  NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 2 byte");
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aSource.GetCharSize() == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
   //there are a few cases for insert:
   //  1. You're inserting chars into an empty string (assign)
   //  2. You're inserting onto the end of a string (append)
@@ -345,7 +345,7 @@ void nsStr::StrInsert2into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSou
             //here's the only new case we have to handle. 
             //chars are really being inserted into our buffer...
 
-          if(aDest.mLength+theLength > aDest.mCapacity)
+          if(aDest.mLength+theLength > aDest.GetCapacity())
             AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
           else {
             //shift the chars right by theDelta...
@@ -369,8 +369,8 @@ void nsStr::StrInsert2into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSou
 }
 
 void nsStr::StrInsert2into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
-  NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 1 byte");
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aSource.GetCharSize() == eTwoByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
   //there are a few cases for insert:
   //  1. You're inserting chars into an empty string (assign)
   //  2. You're inserting onto the end of a string (append)
@@ -384,7 +384,7 @@ void nsStr::StrInsert2into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSou
             //here's the only new case we have to handle. 
             //chars are really being inserted into our buffer...
 
-          if(aDest.mLength+theLength > aDest.mCapacity)
+          if(aDest.mLength+theLength > aDest.GetCapacity())
             AppendForInsert(aDest, aDestOffset, aSource, aSrcOffset, theLength);
           else {
             
@@ -419,7 +419,7 @@ void nsStr::StrInsert2into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSou
 
 
 void nsStr::Delete1(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
   
   if(aDestOffset<aDest.mLength){
     
@@ -440,7 +440,7 @@ void nsStr::Delete1(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
 
 void nsStr::Delete2(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
   
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   if(aDestOffset<aDest.mLength){
     
@@ -474,7 +474,7 @@ PRInt32 nsStr::GetDeleteLength(const nsStr& aDest, PRUint32 aDestOffset, PRUint3
  * @param   aDestOffset is where in aDest truncation is to occur
  */
 void nsStr::StrTruncate(nsStr& aDest,PRUint32 aDestOffset){
-  if(aDest.mCapacity && aDestOffset<=aDest.mCapacity){
+  if(aDest.GetCapacity() && aDestOffset<=aDest.GetCapacity()){
     aDest.mLength=aDestOffset;
     AddNullTerminator(aDest);
     NSSTR_SEEN(aDest);
@@ -509,7 +509,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
       
       if(0<theIndex) {
         if(theIndex<theMax) {
-          if (aDest.mCharSize == eOneByte)
+          if (aDest.GetCharSize() == eOneByte)
             Delete1(aDest,0,theIndex);
           else
             Delete2(aDest,0,theIndex);
@@ -543,7 +543,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
  * @return
  */
 void nsStr::CompressSet1(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
   
   Trim(aDest,aSet,aEliminateLeading,aEliminateTrailing);
   PRUint32 aNewLen=CompressChars1(aDest.mStr,aDest.mLength,aSet);
@@ -552,7 +552,7 @@ void nsStr::CompressSet1(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,
 }
 
 void nsStr::CompressSet2(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 bytes");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 bytes");
   
   Trim(aDest,aSet,aEliminateLeading,aEliminateTrailing);
   PRUint32 aNewLen=CompressChars2(aDest.mUStr,aDest.mLength,aSet);
@@ -568,7 +568,7 @@ void nsStr::CompressSet2(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,
  * @return
  */
 void nsStr::StripChars1(nsStr& aDest,const char* aSet){
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
   
   if((0<aDest.mLength) && (aSet)) {
     PRUint32 aNewLen=::StripChars1(aDest.mStr, aDest.mLength, aSet);
@@ -578,7 +578,7 @@ void nsStr::StripChars1(nsStr& aDest,const char* aSet){
 }
 
 void nsStr::StripChars2(nsStr& aDest,const char* aSet){
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 bytes");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 bytes");
   
   if((0<aDest.mLength) && (aSet)) {
     PRUint32 aNewLen=::StripChars2(aDest.mUStr, aDest.mLength, aSet);
@@ -607,8 +607,8 @@ void nsStr::StripChars2(nsStr& aDest,const char* aSet){
 
 PRInt32 nsStr::FindSubstr1in1(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
 
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aTarget.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aTarget.GetCharSize() == eOneByte, "Must be 1 byte");
   
   PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
 
@@ -647,8 +647,8 @@ PRInt32 nsStr::FindSubstr1in1(const nsStr& aDest,const nsStr& aTarget, PRBool aI
 
 PRInt32 nsStr::FindSubstr2in1(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
   
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aTarget.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aTarget.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
 
@@ -686,8 +686,8 @@ PRInt32 nsStr::FindSubstr2in1(const nsStr& aDest,const nsStr& aTarget, PRBool aI
 
 PRInt32 nsStr::FindSubstr1in2(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
   
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
-  NS_ASSERTION(aTarget.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aTarget.GetCharSize() == eOneByte, "Must be 1 byte");
   
   PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
 
@@ -726,8 +726,8 @@ PRInt32 nsStr::FindSubstr1in2(const nsStr& aDest,const nsStr& aTarget, PRBool aI
 
 PRInt32 nsStr::FindSubstr2in2(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
   
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
-  NS_ASSERTION(aTarget.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aTarget.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
 
@@ -777,12 +777,12 @@ PRInt32 nsStr::FindSubstr2in2(const nsStr& aDest,const nsStr& aTarget, PRBool aI
  */
 
 PRInt32 nsStr::FindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
   return ::FindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
 
 PRInt32 nsStr::FindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
   return ::FindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
 
@@ -799,7 +799,7 @@ PRInt32 nsStr::FindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,
  */
 PRInt32 nsStr::FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
 
-  NS_ASSERTION(aSet.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aSet.GetCharSize() == eOneByte, "Must be 1 byte");
 
   PRInt32 index=(0<=anOffset) ? anOffset-1 : -1;
   PRInt32 thePos;
@@ -819,7 +819,7 @@ PRInt32 nsStr::FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
 }
 PRInt32 nsStr::FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
 
-  NS_ASSERTION(aSet.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aSet.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   PRInt32 index=(0<=anOffset) ? anOffset-1 : -1;
   PRInt32 thePos;
@@ -856,8 +856,8 @@ PRInt32 nsStr::FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
  */
 PRInt32 nsStr::RFindSubstr1in1(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
 
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aTarget.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aTarget.GetCharSize() == eOneByte, "Must be 1 byte");
   
   if(anOffset<0)
     anOffset=(PRInt32)aDest.mLength-1;
@@ -896,8 +896,8 @@ PRInt32 nsStr::RFindSubstr1in1(const nsStr& aDest,const nsStr& aTarget,PRBool aI
 
 PRInt32 nsStr::RFindSubstr2in1(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
 
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aTarget.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aTarget.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   if(anOffset<0)
     anOffset=(PRInt32)aDest.mLength-1;
@@ -936,8 +936,8 @@ PRInt32 nsStr::RFindSubstr2in1(const nsStr& aDest,const nsStr& aTarget,PRBool aI
 
 PRInt32 nsStr::RFindSubstr1in2(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
 
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
-  NS_ASSERTION(aTarget.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aTarget.GetCharSize() == eOneByte, "Must be 1 byte");
   
   if(anOffset<0)
     anOffset=(PRInt32)aDest.mLength-1;
@@ -976,8 +976,8 @@ PRInt32 nsStr::RFindSubstr1in2(const nsStr& aDest,const nsStr& aTarget,PRBool aI
 
 PRInt32 nsStr::RFindSubstr2in2(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
 
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
-  NS_ASSERTION(aTarget.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aTarget.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   if(anOffset<0)
     anOffset=(PRInt32)aDest.mLength-1;
@@ -1028,11 +1028,11 @@ PRInt32 nsStr::RFindSubstr2in2(const nsStr& aDest,const nsStr& aTarget,PRBool aI
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 PRInt32 nsStr::RFindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 bytes");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 bytes");
   return ::RFindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
 PRInt32 nsStr::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 bytes");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 bytes");
   return ::RFindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
 
@@ -1049,7 +1049,7 @@ PRInt32 nsStr::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase
  */
 PRInt32 nsStr::RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
 
-  NS_ASSERTION(aSet.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aSet.GetCharSize() == eOneByte, "Must be 1 byte");
 
   PRInt32 index=(0<=anOffset) ? anOffset : aDest.mLength;
   PRInt32 thePos;
@@ -1069,7 +1069,7 @@ PRInt32 nsStr::RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgno
 
 PRInt32 nsStr::RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
 
-  NS_ASSERTION(aSet.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aSet.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   PRInt32 index=(0<=anOffset) ? anOffset : aDest.mLength;
   PRInt32 thePos;
@@ -1135,8 +1135,8 @@ TranslateCompareResult(const PRInt32 aDestLength, const PRInt32& aSourceLength, 
  * @return  aDest<aSource=-1;aDest==aSource==0;aDest>aSource=1
  */
 PRInt32 nsStr::StrCompare1To1(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aSource.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aSource.GetCharSize() == eOneByte, "Must be 1 byte");
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
     PRInt32 result = Compare1To1(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
@@ -1149,8 +1149,8 @@ PRInt32 nsStr::StrCompare1To1(const nsStr& aDest,const nsStr& aSource,PRInt32 aC
 
 PRInt32 nsStr::StrCompare1To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
   
-  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
-  NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aSource.GetCharSize() == eTwoByte, "Must be 2 byte");
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
     PRInt32 result = Compare1To2(aDest.mStr, aSource.mUStr, theCount, aIgnoreCase);
@@ -1162,8 +1162,8 @@ PRInt32 nsStr::StrCompare1To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aC
 }
 
 PRInt32 nsStr::StrCompare2To1(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
-  NS_ASSERTION(aSource.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aSource.GetCharSize() == eOneByte, "Must be 1 byte");
   
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
@@ -1176,8 +1176,8 @@ PRInt32 nsStr::StrCompare2To1(const nsStr& aDest,const nsStr& aSource,PRInt32 aC
 }
 
 PRInt32 nsStr::StrCompare2To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
-  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
-  NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aSource.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
@@ -1202,49 +1202,36 @@ void nsStr::Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 aDestOffset) {
     if((aDest.mLength-aDestOffset)>=aSource.mLength) {
       //if you're here, then both dest and source have valid lengths
       //and there's enough room in dest (at offset) to contain source.
-      (*gCopyChars[aSource.mCharSize][aDest.mCharSize])(aDest.mStr,aDestOffset,aSource.mStr,0,aSource.mLength);      
+      (*gCopyChars[aSource.GetCharSize()][aDest.GetCharSize()])(aDest.mStr,aDestOffset,aSource.mStr,0,aSource.mLength);      
     }
   }
 }
 
 //----------------------------------------------------------------------------------------
-
+// allocate the given bytes, not including the null terminator
 PRBool nsStr::Alloc(nsStr& aDest,PRUint32 aCount) {
 
-  static int mAllocCount=0;
-  mAllocCount++;
+  // the new strategy is, allocate exact size, double on grows
+  aDest.SetInternalCapacity(aCount);
+  aDest.mStr = (char*)nsMemory::Alloc((aCount+1)<<aDest.GetCharSize());
 
-#ifdef NS_USE_OLD_STRING_ALLOCATION_STRATEGY
-  //we're given the acount value in charunits; now scale up to next multiple.
-  PRUint32	theNewCapacity=kDefaultStringSize;
-  while(theNewCapacity<aCount){ 
-		theNewCapacity<<=1;
-  }
-
-  aDest.mCapacity=theNewCapacity++;
-  PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
-  aDest.mStr = (char*)nsMemory::Alloc(theSize);
-#else
-    // the new strategy is, allocate exact size, double on grows
-  aDest.mCapacity = aCount;
-  aDest.mStr = (char*)nsMemory::Alloc((aCount+1)<<aDest.mCharSize);
+  if(aDest.mStr)
+    aDest.SetOwnsBuffer(PR_TRUE);
+  
+#ifdef NS_STR_STATS
+  gStringAcquiredMemory = (aDest.mStr != nsnull);
 #endif
-
-  if(aDest.mStr) {
-    aDest.mOwnsBuffer=1;
-    gStringAcquiredMemory=PR_TRUE;
-  }
-  else gStringAcquiredMemory=PR_FALSE;
-  return gStringAcquiredMemory;
+  
+  return (aDest.mStr != nsnull);
 }
 
 PRBool nsStr::Free(nsStr& aDest){
   if(aDest.mStr){
-    if(aDest.mOwnsBuffer){
+    if(aDest.GetOwnsBuffer()){
       nsMemory::Free(aDest.mStr);
     }
     aDest.mStr=0;
-    aDest.mOwnsBuffer=0;
+    aDest.SetOwnsBuffer(PR_FALSE);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -1259,12 +1246,13 @@ PRBool nsStr::Realloc(nsStr& aDest,PRUint32 aCount){
   if(result) {
     Free(aDest);
     aDest.mStr=temp.mStr;
-    aDest.mCapacity=temp.mCapacity;
-    aDest.mOwnsBuffer=temp.mOwnsBuffer;
+    aDest.SetInternalCapacity(temp.GetCapacity());
+    aDest.SetOwnsBuffer(temp.GetOwnsBuffer());
   }
   return result;
 }
 
+#ifdef NS_STR_STATS
 /**
  * Retrieve last memory error
  *
@@ -1274,6 +1262,7 @@ PRBool nsStr::Realloc(nsStr& aDest,PRUint32 aCount){
 PRBool nsStr::DidAcquireMemory(void) {
   return gStringAcquiredMemory;
 }
+#endif
 
 //----------------------------------------------------------------------------------------
 
@@ -1339,7 +1328,7 @@ CBufDescriptor::CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUin
 PRUint32
 nsStr::HashCode(const nsStr& aDest)
 {
-	if (aDest.mCharSize == eTwoByte)
+	if (aDest.GetCharSize() == eTwoByte)
     return nsCRT::HashCode(aDest.mUStr);
   else 
     return nsCRT::HashCode(aDest.mStr);
@@ -1358,7 +1347,7 @@ nsStr::Print(const nsStr& aDest, FILE* out, PRBool truncate)
 {
   PRInt32 printLen = (PRInt32)aDest.mLength;
 
-  if (aDest.mCharSize == eOneByte) {
+  if (aDest.GetCharSize() == eOneByte) {
     const char* chars = aDest.mStr;
     while (printLen-- && (!truncate || *chars != '\n')) {
       fputc(*chars++, out);
@@ -1385,7 +1374,7 @@ PRBool gNoStringInfo = PR_FALSE;
 nsStringInfo::nsStringInfo(nsStr& str)
   : mCount(0)
 {
-  nsStr::Initialize(mStr, str.mCharSize);
+  nsStr::Initialize(mStr, str.GetCharSize());
   nsStr::StrAssign(mStr, str, 0, -1);
 //  nsStr::Print(mStr, stdout);
 //  fputc('\n', stdout);

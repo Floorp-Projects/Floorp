@@ -91,7 +91,7 @@ nsCString::nsCString(const char* aCString,PRInt32 aLength) {
  * @param   reference to another nsCString
  */
 nsCString::nsCString(const nsCString& aString)  {
-  Initialize(*this,eCharSize(aString.mCharSize));
+  Initialize(*this,aString.GetCharSize());
   StrAssign(*this,aString,0,aString.mLength);
 }
 
@@ -140,7 +140,7 @@ nsCString::nsCString( const nsACString& aReadable ) {
 #ifdef DEBUG
 void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
-    *aResult = sizeof(*this) + mCapacity * mCharSize;
+    *aResult = sizeof(*this) + GetCapacity() * GetCharSize();
   }
 }
 #endif
@@ -153,7 +153,7 @@ void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
  * @return  nada
  */
 void nsCString::SetLength(PRUint32 anIndex) {
-  if ( anIndex > mCapacity )
+  if ( anIndex > GetCapacity() )
     SetCapacity(anIndex);
     // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
     //  we can only use it since our local implementation, |nsCString::SetCapacity|, is known to do what we want
@@ -173,7 +173,7 @@ nsCString::SetCapacity( PRUint32 aNewCapacity )
   {
     if ( aNewCapacity )
       {
-        if( aNewCapacity > mCapacity )
+        if( aNewCapacity > GetCapacity() )
           GrowCapacity(*this,aNewCapacity);
         AddNullTerminator(*this);
       }
@@ -1374,7 +1374,7 @@ nsCAutoString::~nsCAutoString(){
 #ifdef DEBUG
 void nsCAutoString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
-    *aResult = sizeof(*this) + mCapacity * mCharSize;
+    *aResult = sizeof(*this) + GetCapacity() * GetCharSize();
   }
 }
 #endif
