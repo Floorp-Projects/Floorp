@@ -28,7 +28,17 @@ function moreInfo()
   var smartBrowsingURL = regionBundle.getString("smartBrowsingURL");
   if (smartBrowsingURL) {
     try {
-      browserURL = parent.hPrefWindow.pref.CopyCharPref("browser.chromeURL");
+      var prefs = Components.classes["@mozilla.org/preferences;1"];
+      if (prefs) {
+        prefs = prefs.getService();
+        if (prefs)
+          prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+      }
+      if (prefs) {
+        var url = prefs.CopyCharPref("browser.chromeURL");
+        if (url)
+          browserURL = url;
+      }
     } catch(e) {
     }
     if (browserURL == null)

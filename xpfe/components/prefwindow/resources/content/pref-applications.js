@@ -89,7 +89,7 @@ const xmlSinkObserver = {
 
     // Convert old "don't ask" pref info to helper app pref entries
     try {
-      var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+      var prefService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefService);
       var prefBranch = prefService.getBranch("browser.helperApps.neverAsk.");
       if (!prefBranch) return;
     } catch(e) { return; }
