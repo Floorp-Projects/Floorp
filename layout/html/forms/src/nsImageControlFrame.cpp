@@ -406,7 +406,7 @@ nsImageControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 
   nsAutoString name;
   nsresult result = GetName(&name);
-  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == result && (name.Length() > 0)) {
     aNames[0] = name;
     aNames[0].AppendWithConversion(".x");
     aNames[1] = name;
