@@ -58,7 +58,7 @@
     <label value="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
     <grid>
-      <columns><column/><column/><column/></columns>
+      <columns><column/><column/><column flex="1"/></columns>
       <rows>
         <row valign="middle" autostretch="never">
           <text class = "label" 
