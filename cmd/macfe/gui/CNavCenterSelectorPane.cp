@@ -83,13 +83,14 @@ CNavCenterSelectorPane::DrawSelf()
 	::EraseRect(&cellBounds);
 	
 	// find the bounds of the first cell
-	cellBounds.bottom = cellBounds.top + mCellHeight;
+	cellBounds.top = 0;
+	cellBounds.bottom = mCellHeight;
 
 #if DRAW_WITH_TITLE
 	StTextState savedState;
 	UTextTraits::SetPortTextTraits(130);
 #endif
-		
+	
 	// iterate over workspaces, drawing each in turn.
 	const listCount = HT_GetViewListCount(GetHTPane());
 	const HT_View selectedView = HT_GetSelectedView(GetHTPane());
@@ -109,6 +110,8 @@ CNavCenterSelectorPane::DrawSelf()
 		cellBounds.bottom += mCellHeight;
 
 	} // for each selector
+	
+	ResizeImageTo ( mFrameSize.width, cellBounds.top, true );
 	
 } // DrawSelf
 
