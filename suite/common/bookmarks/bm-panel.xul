@@ -40,7 +40,7 @@
 
     <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
           style="height: 100%; width:100%;"
-          datasources="rdf:bookmarks rdf:files rdf:ftp rdf:localsearch rdf:internetsearch" 
+          datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
           onclick="if (event.clickCount == 2) return top.OpenBookmarkURL(event.target.parentNode.parentNode, 'bookmarksTree');">
 
       <template>
