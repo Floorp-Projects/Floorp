@@ -38,42 +38,44 @@ ShowWelcomeWin(void)
 	GrafPtr	oldPort;
 	GetPort(&oldPort);
 	
-	SetPort(gWPtr);
-
-//dougt: think about changing this to a constant that is more understandable.	
-	gCurrWin = WELCOME; 
-	/* gControls->ww = (WelcWin *) NewPtrClear(sizeof(WelcWin)); */
-	
-	GetIndString(next, rStringList, sNextBtn);
-	GetIndString(back, rStringList, sBackBtn);
-	
-	gControls->ww->scrollBar = GetNewControl( rLicScrollBar, gWPtr);
-	gControls->ww->welcBox = GetNewControl( rLicBox, gWPtr);
-//dougt: you may want to do something in addition to a check for failure
-	if(gControls->ww->scrollBar && gControls->ww->welcBox)
+	if (gWPtr != NULL)
 	{
-        //dougt: no hi.
-		HLockHi( (Handle) gControls->ww->scrollBar);
-		sbRect = (*(gControls->ww->welcBox))->contrlRect;
-				
-		sbWidth = (*(gControls->ww->scrollBar))->contrlRect.right -
-				  (*(gControls->ww->scrollBar))->contrlRect.left;
-		
-		(*(gControls->ww->scrollBar))->contrlRect.right = sbRect.right + kScrollBarPad;
-		(*(gControls->ww->scrollBar))->contrlRect.left = sbRect.right + kScrollBarPad - 
-														 sbWidth;
-		(*(gControls->ww->scrollBar))->contrlRect.top = sbRect.top - kScrollBarPad;
-		(*(gControls->ww->scrollBar))->contrlRect.bottom = sbRect.bottom + kScrollBarPad;
-		HUnlock( (Handle) gControls->ww->scrollBar);
-	}
-	InitWelcTxt();
+		SetPort(gWPtr);
 
-	ShowNavButtons( back, next);
-	ShowControl( gControls->ww->scrollBar);
-	ShowControl( gControls->ww->welcBox);
-	ShowTxt();
-	InitScrollBar( gControls->ww->scrollBar);
+		gCurrWin = kWelcomeID; 
+		/* gControls->ww = (WelcWin *) NewPtrClear(sizeof(WelcWin)); */
 	
+		GetIndString(next, rStringList, sNextBtn);
+		GetIndString(back, rStringList, sBackBtn);
+	
+		gControls->ww->scrollBar = GetNewControl( rLicScrollBar, gWPtr);
+		gControls->ww->welcBox = GetNewControl( rLicBox, gWPtr);
+
+		if(gControls->ww->scrollBar && gControls->ww->welcBox)
+		{
+			HLock( (Handle) gControls->ww->scrollBar);
+			sbRect = (*(gControls->ww->welcBox))->contrlRect;
+				
+			sbWidth = (*(gControls->ww->scrollBar))->contrlRect.right -
+					  (*(gControls->ww->scrollBar))->contrlRect.left;
+		
+			(*(gControls->ww->scrollBar))->contrlRect.right = sbRect.right + kScrollBarPad;
+			(*(gControls->ww->scrollBar))->contrlRect.left = sbRect.right + kScrollBarPad - 
+														 sbWidth;
+			(*(gControls->ww->scrollBar))->contrlRect.top = sbRect.top - kScrollBarPad;
+			(*(gControls->ww->scrollBar))->contrlRect.bottom = sbRect.bottom + kScrollBarPad;
+			HUnlock( (Handle) gControls->ww->scrollBar);
+		}
+		InitWelcTxt();
+
+		ShowNavButtons( back, next);
+		ShowControl( gControls->ww->scrollBar);
+		ShowControl( gControls->ww->welcBox);
+		ShowTxt();
+		InitScrollBar( gControls->ww->scrollBar);
+	}
+	
+	SetPort(oldPort);
 }
 
 void
@@ -82,12 +84,9 @@ InitWelcTxt(void)
 	Rect 		viewRect, destRect;
 	long		welcStrLen;
 	int 		i;
-	char *		newPara;
 	
 	/* TE specific init */
-
-    //dougt: no hi.
-	HLockHi( (Handle) gControls->ww->welcBox);
+	HLock( (Handle) gControls->ww->welcBox);
 	viewRect = (*(gControls->ww->welcBox))->contrlRect;	
 	HUnlock( (Handle) gControls->ww->welcBox);
 
@@ -96,26 +95,25 @@ InitWelcTxt(void)
 	destRect.right = viewRect.right;
 	destRect.top = viewRect.top;
 	destRect.bottom = viewRect.bottom * kNumWelcScrns; /* XXX: hack */
-	
-	gControls->ww->welcTxt = (TEHandle) NewPtrClear(sizeof(TEPtr));
-	//dougt: check for null
 
 	TextFont(applFont);
 	TextFace(normal);
 	TextSize(12);
-
-	newPara = "\r\r";  //dougt why this constant?
 	
 	gControls->ww->welcTxt = TENew( &destRect, &viewRect);
-    //dougt: check for null.
+	if (!gControls->ww->welcTxt)
+	{
+		ErrorHandler();
+		return;
+	}
 
 	for (i=0; i<kNumWelcMsgs; i++)
 	{
-		HLockHi(gControls->cfg->welcMsg[i]);
+		HLock(gControls->cfg->welcMsg[i]);
 		welcStrLen = strlen( *gControls->cfg->welcMsg[i]);
 		TEInsert( *gControls->cfg->welcMsg[i], welcStrLen, gControls->ww->welcTxt);
 		HUnlock(gControls->cfg->welcMsg[i]);
-		TEInsert( newPara, strlen(newPara), gControls->ww->welcTxt);
+		TEInsert( "\r\r", 2, gControls->ww->welcTxt);
 	}
 	
 	TextFont(systemFont);
@@ -147,11 +145,10 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		case kControlDownButtonPart:
 		case kControlPageUpPart:
 		case kControlPageDownPart:
-            //dougt: this point never gets destroyed.  evil
 			scrollActionFunctionUPP = NewControlActionProc((ProcPtr) DoScrollProc);
 			value = TrackControl(scrollBar, localPt, scrollActionFunctionUPP);
+			DisposeRoutineDescriptor(scrollActionFunctionUPP);
 			return;
-			break; 
 			
 		case kControlIndicatorPart:
 			value = GetControlValue(scrollBar);
@@ -165,10 +162,9 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 				}
 			}
 			return;
-			break;
 	}	
-	//dougt: remove the hi.			
-	HLockHi((Handle)gControls->backB);
+			
+	HLock((Handle)gControls->backB);
 	r = (**(gControls->backB)).contrlRect;
 	HUnlock((Handle)gControls->backB);
 	if (PtInRect( localPt, &r))
@@ -182,8 +178,7 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		}
 	}
 	
-    //dougt: remove the hi.
-	HLockHi((Handle)gControls->nextB);			
+	HLock((Handle)gControls->nextB);			
 	r = (**(gControls->nextB)).contrlRect;
 	HUnlock((Handle)gControls->nextB);
 	if (PtInRect( localPt, &r))

@@ -20,8 +20,8 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
 #include "MacInstallWizard.h"
+
 
 /*-----------------------------------------------------------*
  *   Terminal Window
@@ -36,41 +36,47 @@ ShowTerminalWin(void)
 	short		reserr;
 	GrafPtr		oldPort;
 	GetPort(&oldPort);
-	//dougt: check for gWPtr being null
-	SetPort(gWPtr);
-	
-    //dougt: think about changing the constant to something more readable.
-	gCurrWin = TERMINAL; 
-	/* gControls->tw = (TermWin*) NewPtrClear(sizeof(TermWin)); */
-	
-	GetIndString(next, rStringList, sInstallBtn);
-	GetIndString(back, rStringList, sBackBtn);
-	
-	// malloc and get control
-	rectH = Get1Resource('RECT', rStartMsgBox);
-	reserr = ResError();  //dougt: this does not do what you thing.  It does not always return the last error.
-	if (reserr == noErr)
-		viewRect = (Rect) **((Rect **)rectH);
-	else
+
+	if (gWPtr != NULL)
 	{
-		ErrorHandler();
-		return;
+		SetPort(gWPtr);
+	
+		gCurrWin = kTerminalID; 
+		/* gControls->tw = (TermWin*) NewPtrClear(sizeof(TermWin)); */
+	
+		GetIndString(next, rStringList, sInstallBtn);
+		GetIndString(back, rStringList, sBackBtn);
+	
+		// malloc and get control
+		rectH = Get1Resource('RECT', rStartMsgBox);
+		reserr = ResError();
+		if (reserr == noErr && rectH != NULL)
+			viewRect = (Rect) **((Rect **)rectH);
+		else
+		{
+			ErrorHandler();
+			return;
+		}
+		
+		gControls->tw->startMsgBox = viewRect;
+	
+		gControls->tw->startMsg = TENew(&viewRect, &viewRect);
+	    if (gControls->tw->startMsg == NULL)
+	    {
+	    	ErrorHandler();
+	    	return;
+	    }
+	
+		// populate control
+		HLock(gControls->cfg->startMsg);
+		TESetText(*gControls->cfg->startMsg, strlen(*gControls->cfg->startMsg), 
+					gControls->tw->startMsg);
+		HUnlock(gControls->cfg->startMsg);
+	
+		// show controls
+		TEUpdate(&viewRect, gControls->tw->startMsg);
+		ShowNavButtons( back, next );
 	}
-	gControls->tw->startMsgBox = viewRect;
-	
-	gControls->tw->startMsg = TENew(&viewRect, &viewRect);
-    //dougt: check for null
-	
-	// populate control
-    //dougt: remove hi.
-	HLockHi(gControls->cfg->startMsg);
-	TESetText(*gControls->cfg->startMsg, strlen(*gControls->cfg->startMsg), 
-				gControls->tw->startMsg);
-	HUnlock(gControls->cfg->startMsg);
-	
-	// show controls
-	TEUpdate(&viewRect, gControls->tw->startMsg);
-	ShowNavButtons( back, next);
 	
 	SetPort(oldPort);
 }

@@ -20,9 +20,7 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
 #include "MacInstallWizard.h"
-
 
 
 /*-----------------------------------------------------------*
@@ -47,57 +45,61 @@ ShowSetupTypeWin(void)
 	Str255				instLocTitle, selectFolder;
 	GrafPtr				oldPort;
 	GetPort(&oldPort);
-	//dougt: check gWPtr for null..
-	SetPort(gWPtr);
 	
-    //dougt: change this naming scheme before I pop.
-	gCurrWin = SETUP_TYPE; 
-	/* gControls->stw = (SetupTypeWin *) NewPtrClear(sizeof(SetupTypeWin));	*/
-
-	GetIndString(next, rStringList, sNextBtn);
-	GetIndString(back, rStringList, sBackBtn);
-	
-	// malloc and get controls
-	gControls->stw->instType = GetNewControl( rInstType, gWPtr);
-	gControls->stw->instDescBox = GetNewControl( rInstDescBox, gWPtr);
-	gControls->stw->destLocBox = GetNewControl( rDestLocBox, gWPtr);
-	gControls->stw->destLoc = GetNewControl(rDestLoc, gWPtr);
-    //dougt: check for failure;
-
-	// populate popup button menus
-    //dougt: no hi
-	HLockHi((Handle)gControls->stw->instType);
-	pvtDataHdl = (PopupPrivateData **) (*(gControls->stw->instType))->contrlData;
-	popupMenu = (MenuHandle) (**pvtDataHdl).mHandle;
-	for (i=0; i<gControls->cfg->numSetupTypes; i++)
+	if (gWPtr != NULL)
 	{
-        //dougt: no hi.
-		HLockHi(gControls->cfg->st[i].shortDesc);
-		currMenuItem = CToPascal(*gControls->cfg->st[i].shortDesc);		
-		HUnlock(gControls->cfg->st[i].shortDesc);
-		InsertMenuItem( popupMenu, currMenuItem, i);
-	}
-	HUnlock((Handle)gControls->stw->instType);
-	SetControlMaximum(gControls->stw->instType, gControls->cfg->numSetupTypes);
-	SetControlValue(gControls->stw->instType, gControls->opt->instChoice);
-	//Draw1Control(gControls->stw->instType);
+		SetPort(gWPtr);
 	
-	// setup type desc TE init and default item desc display
-	HLockHi((Handle)gControls->stw->instDescBox);
-	viewRect = (*(gControls->stw->instDescBox))->contrlRect;
-	HUnlock((Handle)gControls->stw->instDescBox);	
-	InsetRect(&viewRect, kTxtRectPad, kTxtRectPad);
+		gCurrWin = kSetupTypeID; 
+		/* gControls->stw = (SetupTypeWin *) NewPtrClear(sizeof(SetupTypeWin));	*/
 
-	gControls->stw->instDescTxt = (TEHandle) NewPtrClear(sizeof(TEPtr));
-	TextFont(systemFont);
-	TextFace(normal);
-	TextSize(12);	
-	gControls->stw->instDescTxt = TENew( &viewRect, &viewRect);
-	HLockHi(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
-	txtSize = strlen(*gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
-	TEInsert( *gControls->cfg->st[gControls->opt->instChoice - 1].longDesc, txtSize, gControls->stw->instDescTxt);
-	TESetAlignment( teFlushDefault, gControls->stw->instDescTxt);
-	HUnlock(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
+		GetIndString(next, rStringList, sNextBtn);
+		GetIndString(back, rStringList, sBackBtn);
+	
+		// malloc and get controls
+		gControls->stw->instType = GetNewControl( rInstType, gWPtr);
+		gControls->stw->instDescBox = GetNewControl( rInstDescBox, gWPtr);
+		gControls->stw->destLocBox = GetNewControl( rDestLocBox, gWPtr);
+		gControls->stw->destLoc = GetNewControl(rDestLoc, gWPtr);
+		if (!gControls->stw->instType || !gControls->stw->instDescBox || 
+			!gControls->stw->destLocBox || !gControls->stw->destLoc)
+		{
+			ErrorHandler();
+			return;
+		}
+
+		// populate popup button menus
+		HLock((Handle)gControls->stw->instType);
+		pvtDataHdl = (PopupPrivateData **) (*(gControls->stw->instType))->contrlData;
+		popupMenu = (MenuHandle) (**pvtDataHdl).mHandle;
+		for (i=0; i<gControls->cfg->numSetupTypes; i++)
+		{
+			HLock(gControls->cfg->st[i].shortDesc);
+			currMenuItem = CToPascal(*gControls->cfg->st[i].shortDesc);		
+			HUnlock(gControls->cfg->st[i].shortDesc);
+			InsertMenuItem( popupMenu, currMenuItem, i);
+		}
+		HUnlock((Handle)gControls->stw->instType);
+		SetControlMaximum(gControls->stw->instType, gControls->cfg->numSetupTypes);
+		SetControlValue(gControls->stw->instType, gControls->opt->instChoice);
+		//Draw1Control(gControls->stw->instType);
+	
+		// setup type desc TE init and default item desc display
+		HLockHi((Handle)gControls->stw->instDescBox);
+		viewRect = (*(gControls->stw->instDescBox))->contrlRect;
+		HUnlock((Handle)gControls->stw->instDescBox);	
+		InsetRect(&viewRect, kTxtRectPad, kTxtRectPad);
+
+		gControls->stw->instDescTxt = (TEHandle) NewPtrClear(sizeof(TEPtr));
+		TextFont(systemFont);
+		TextFace(normal);
+		TextSize(12);	
+		gControls->stw->instDescTxt = TENew( &viewRect, &viewRect);
+		HLockHi(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
+		txtSize = strlen(*gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
+		TEInsert( *gControls->cfg->st[gControls->opt->instChoice - 1].longDesc, txtSize, gControls->stw->instDescTxt);
+		TESetAlignment( teFlushDefault, gControls->stw->instDescTxt);
+		HUnlock(gControls->cfg->st[gControls->opt->instChoice - 1].longDesc);
 
 /*	
 	volName = (unsigned char **)NewPtrClear(sizeof(unsigned char *));
@@ -118,17 +120,18 @@ ShowSetupTypeWin(void)
 	SetControlMaximum(gControls->stw->destLoc, numVols+2); // 2 extra for divider and "Select Folder..." item
 	SetControlValue(gControls->stw->destLoc, 1);
 */
-	GetIndString(selectFolder, rStringList, sSelectFolder);
-	SetControlTitle(gControls->stw->destLoc, selectFolder);
-	GetIndString(instLocTitle, rStringList, sInstLocTitle);
-	SetControlTitle(gControls->stw->destLocBox, instLocTitle);	
+		GetIndString(selectFolder, rStringList, sSelectFolder);
+		SetControlTitle(gControls->stw->destLoc, selectFolder);
+		GetIndString(instLocTitle, rStringList, sInstLocTitle);
+		SetControlTitle(gControls->stw->destLocBox, instLocTitle);	
 	
-	// show controls
-	ShowControl(gControls->stw->instType);
-	ShowControl(gControls->stw->destLoc);
-	ShowNavButtons( back, next );
+		// show controls
+		ShowControl(gControls->stw->instType);
+		ShowControl(gControls->stw->destLoc);
+		ShowNavButtons( back, next );
 	
-	DrawDiskNFolder(gControls->opt->vRefNum, gControls->opt->folder);
+		DrawDiskNFolder(gControls->opt->vRefNum, gControls->opt->folder);
+	}
 		
 	SetPort(oldPort);
 }
@@ -154,7 +157,12 @@ OurNavEventFunction(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBa
 	WindowPtr  windowPtr;
                      
 	windowPtr = (WindowPtr) callBackParms->eventData.eventDataParms.event->message;
-    //dougt: check for null
+	if (!windowPtr)
+	{
+		ErrorHandler();
+		return;
+	}
+	
 	switch(callBackSelector)
 	{
 		case kNavCBEvent:
@@ -270,7 +278,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		return;
 	}
 	
-	HLockHi((Handle)gControls->backB);
+	HLock((Handle)gControls->backB);
 	r = (**(gControls->backB)).contrlRect;
 	HUnlock((Handle)gControls->backB);
 	if (PtInRect( localPt, &r))
@@ -285,7 +293,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		}
 	}
 			
-	HLockHi((Handle)gControls->nextB);			
+	HLock((Handle)gControls->nextB);			
 	r = (**(gControls->nextB)).contrlRect;
 	HUnlock((Handle)gControls->nextB);
 	if (PtInRect( localPt, &r))

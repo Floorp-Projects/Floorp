@@ -19,9 +19,9 @@
  * Contributors:
  *     Samir Gehani <sgehani@netscape.com>
  */
-  
 
 #include "MacInstallWizard.h"
+
 
 #define STANDALONE 1
 #define XP_MAC 1
@@ -29,6 +29,8 @@
 #include "zipfile.h"
 #include "nsAppleSingleDecoder.h"
 
+static FSSpec 	coreFileList[kMaxCoreFiles];
+static short	currCoreFile = 0;
 
 /*-----------------------------------------------------------*
  *   Deflation
@@ -58,7 +60,11 @@ ExtractCoreFile(void)
 	{
 		/* make local copy and unlock handle */
 		coreFile = CToPascal(*gControls->cfg->coreFile);
-		// XXX memory check
+		if (!coreFile)
+		{
+			err= memFullErr;
+			goto cleanup;
+		}
 	}
 	else
 		return fnfErr;
@@ -69,7 +75,11 @@ ExtractCoreFile(void)
 	if (*gControls->cfg->coreDir != NULL)
 	{
 		coreDirPath = CToPascal(*gControls->cfg->coreDir);
-		// XXX memory check
+		if (!coreDirPath)
+		{
+			err = memFullErr;
+			goto cleanup;
+		}
 	}		
 	HUnlock(gControls->cfg->coreDir);
 	
@@ -104,7 +114,10 @@ ExtractCoreFile(void)
 	{
 		rv = ZIP_FindNext( hFind, filename, 255 );
 		if (rv==ZIP_ERR_FNF)
+		{
 			bFoundAll = true;
+			break;
+		}
 		else if (rv!=ZIP_OK)
 			return rv;
 		
@@ -147,40 +160,57 @@ ExtractCoreFile(void)
 		// if there's a coreDir specified move the file into it
 		if (coreDirPath[0] > 0) 
 		{
-			if (*dir) // coreDir:extractedDir:<leaffile>
+			if (*dir) 		// coreDir:extractedDir:<leaffile>
 			{
 				err = DirCreate(coreDirFSp.vRefNum, coreDirID, pdir, &extractedDirID);
-				if (err!=noErr && err!=dupFNErr)
-					return err;
+				if (err==noErr)
+					FSMakeFSSpec(outFSp.vRefNum, coreDirID, pdir, &coreFileList[currCoreFile]); // track for deletion
+				else if (err!=dupFNErr)
+					goto cleanup;
 				ERR_CHECK_RET(ForceMoveFile(outFSp.vRefNum, outFSp.parID, outFSp.name, extractedDirID), err);
+				FSMakeFSSpec(outFSp.vRefNum, extractedDirID, outFSp.name, &coreFileList[currCoreFile]);
 			}
-			// else coreDir:<leaffile>
-			else
+			else 			// else coreDir:<leaffile>
+			{
 				ERR_CHECK_RET(ForceMoveFile(outFSp.vRefNum, outFSp.parID, outFSp.name, coreDirID), err);
+				FSMakeFSSpec(outFSp.vRefNum, coreDirID, outFSp.name, &coreFileList[currCoreFile]); 
+			}
 		}		
-		else if (*dir)	// extractedDir:<leaffile>
+		else if (*dir)		// extractedDir:<leaffile>
 		{
 			err = FSMakeFSSpec(tgtVRefNum, tgtDirID, pdir, &extractedDir);
 			if (err==noErr) // already created
 				err = FSpGetDirectoryID(&extractedDir, &extractedDirID, &isDir);
-			else	// otherwise mkdir
+			else			// otherwise mkdir
+			{
 				err = FSpDirCreate(&extractedDir, smSystemScript, &extractedDirID);
+				FSMakeFSSpec(tgtVRefNum, tgtDirID, pdir, &coreFileList[currCoreFile]); // track for deletion
+			}
 			if (err!=noErr && err!=dupFNErr)
-				return err;
+				goto cleanup;
 				
 			ERR_CHECK_RET(ForceMoveFile(outFSp.vRefNum, outFSp.parID, outFSp.name, extractedDirID), err);
+			FSMakeFSSpec(outFSp.vRefNum, extractedDirID, outFSp.name, &coreFileList[currCoreFile]);
+		}
+		else				// just cwd:<leaffile>
+		{
+			FSMakeFSSpec(outFSp.vRefNum, outFSp.parID, outFSp.name, &coreFileList[currCoreFile]);
 		}
 		
-		if (*dir)
+		if (*dir && pdir)
 			DisposePtr((Ptr) pdir);
-		DisposePtr((Ptr)extractedFile);
+		if (extractedFile)
+			DisposePtr((Ptr)extractedFile);
+		
+		currCoreFile++;
 	}
 	
-// XXX need to make all returns go through cleanup
-// cleanup:							
+cleanup:							
 	// dispose of coreFile, coreDirPath
-	DisposePtr((Ptr) coreFile);
-	DisposePtr((Ptr) coreDirPath);
+	if (coreFile)
+		DisposePtr((Ptr) coreFile);
+	if (coreDirPath)
+		DisposePtr((Ptr) coreDirPath);
 	return err;	
 }
 
@@ -195,6 +225,9 @@ AppleSingleDecode(FSSpecPtr fd, FSSpecPtr outfd)
 	{
 		// decode it
 		decoder = new nsAppleSingleDecoder(fd, outfd);
+		if (!decoder)
+			return memFullErr;
+			
 		ERR_CHECK_RET(decoder->Decode(), err);
 	}
 		
@@ -240,4 +273,38 @@ ForceMoveFile(short vRefNum, long parID, ConstStr255Param name, long newDirID)
 	return err;		
 }
 
+OSErr
+CleanupExtractedFiles(void)
+{
+	OSErr		err = noErr;
+	FSSpec		coreDirFSp;
+	StringPtr	pcoreDir;
+	short		i = 0;
 	
+	HLock(gControls->cfg->coreDir);
+	if (*gControls->cfg->coreDir != NULL && **gControls->cfg->coreDir != NULL)		
+	{
+		// just need to delete the core dir and its contents
+		
+		pcoreDir = CToPascal(*gControls->cfg->coreDir);
+		err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, pcoreDir, &coreDirFSp);
+		if (err == noErr)
+		{
+			err = FSpDelete( &coreDirFSp );
+			return err;
+		}
+		else
+			return err;
+	}		
+	HUnlock(gControls->cfg->coreDir);
+	
+	// otherwise iterate through coreFileList deleteing each individually
+	for (i=0; i<currCoreFile+1; i++)
+	{
+		FSpDelete( &coreFileList[i] );
+	}
+
+	if (pcoreDir)
+		DisposePtr((Ptr) pcoreDir);	
+	return err;
+}

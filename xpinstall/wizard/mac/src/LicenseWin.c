@@ -20,7 +20,6 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
 #include "MacInstallWizard.h"
 
 
@@ -41,8 +40,7 @@ ShowLicenseWin(void)
 	
 	SetPort(gWPtr);
 
-//dougt: nitpick, your use of the define LICENSE is vage.  I had no initial idea of what it was.  How about kLicenseID?
-	gCurrWin = LICENSE; 
+	gCurrWin = kLicenseID; 
 	/* gControls->lw = (LicWin *) NewPtrClear(sizeof(LicWin)); */
 	
 	GetIndString(accept, rStringList, sAcceptBtn);
@@ -50,12 +48,10 @@ ShowLicenseWin(void)
 	
 	gControls->lw->scrollBar = GetNewControl( rLicScrollBar, gWPtr);
 	gControls->lw->licBox = GetNewControl( rLicBox, gWPtr);
-//dougt:  what happens if these fail? don't you want to bail instead of just checking on the next line?
+
 	if(gControls->lw->scrollBar && gControls->lw->licBox)
 	{
-        //dougt: you don't need to lock hi here.
-
-		HLockHi( (Handle) gControls->lw->scrollBar);
+		HLock( (Handle) gControls->lw->scrollBar);
 		sbRect = (*(gControls->lw->licBox))->contrlRect;
 				
 		sbWidth = (*(gControls->lw->scrollBar))->contrlRect.right -
@@ -67,6 +63,11 @@ ShowLicenseWin(void)
 		(*(gControls->lw->scrollBar))->contrlRect.top = sbRect.top - kScrollBarPad;
 		(*(gControls->lw->scrollBar))->contrlRect.bottom = sbRect.bottom + kScrollBarPad;
 		HUnlock( (Handle) gControls->lw->scrollBar);
+	}
+	else
+	{
+		ErrorHandler();
+		return;
 	}
 	InitLicTxt();
 
@@ -95,16 +96,15 @@ InitLicTxt(void)
 	ERR_CHECK(GetCWD(&dirID, &vRefNum));
 	
 	/* open and read license file */
-//dougt: no need to lock hi.,
-	HLockHi(gControls->cfg->licFileName);
+	HLock(gControls->cfg->licFileName);
 	if(**gControls->cfg->licFileName != nil)
 	{
 		cLicFName = (unsigned char*)NewPtrClear(strlen(*gControls->cfg->licFileName));
 		cLicFName = CToPascal(*gControls->cfg->licFileName);
 		
 		ERR_CHECK(FSMakeFSSpec(vRefNum, dirID, cLicFName, &licFile));
-//dougt:  on any dispose, check for null!
-		DisposePtr((char*)cLicFName);
+		if (cLicFName)
+			DisposePtr((char*)cLicFName);
 	}
 	else /* assume default license filename from str rsrc */
 	{	
@@ -120,7 +120,10 @@ InitLicTxt(void)
 	if (dataSize > 0)
 	{
 		if (!(text = NewHandle(dataSize)))
-			ErrorHandler();                                //dougt: since errorhandler() return, you will crash on the next line
+		{
+			ErrorHandler();
+			return;
+		}
 		ERR_CHECK(FSRead(dataRef, &dataSize, *text));
 	}
 	else
@@ -186,14 +189,14 @@ ShowTxt(void)
 {	
 	switch (gCurrWin)
 	{
-		case LICENSE:
+		case kLicenseID:
 			if(gControls->lw->licTxt)
 			{
 				// InvalRect(&(**(gControls->lw->licTxt)).viewRect);
 				TEUpdate( &(**(gControls->lw->licTxt)).viewRect, gControls->lw->licTxt);
 			}
 			break;
-		case WELCOME:
+		case kWelcomeID:
 			if(gControls->ww->welcTxt)
 			{
 				// InvalRect(&(**(gControls->lw->licTxt)).viewRect);
@@ -201,7 +204,6 @@ ShowTxt(void)
 			}
 			break;
 		default:
-			ErrorHandler(); //dougt: i don;t think so tim,
 			break;
 	}		
 }
@@ -215,25 +217,34 @@ ShowLogo(void)
 	Handle		logoRectH; 
 	
 	/* initialize Netscape logo */
-	logoPicH = GetPicture(rNSLogo);  //dougt: isn;t this something that should be pulled from an ini file?  Also, what about
-                                     // better error handling?
-
-	/* draw Netscape logo */
-	if (logoPicH != nil)
-	{		
-		logoRectH = Get1Resource('RECT', rNSLogoBox);
-        //dougt: check failure
-		HLockHi(logoRectH);//dougt: no lock hi
-		derefd = (Rect) **((Rect**)logoRectH);
-		SetRect(&logoRect, derefd.left, derefd.top, derefd.bottom, derefd.right);
-		HUnlock(logoRectH);
-		reserr = ResError();  //dougt: checking this does not gaurentee you the correct ResError().
-		if (reserr == noErr)
+	logoPicH = GetPicture(rNSLogo);  
+	reserr = ResError();
+	
+	if (reserr == noErr)
+	{
+		/* draw Netscape logo */
+		if (logoPicH != nil)
 		{		
-			DrawPicture(logoPicH, &logoRect);
-			ReleaseResource((Handle)logoPicH);
+			logoRectH = Get1Resource('RECT', rNSLogoBox);
+			reserr = ResError();
+			if (reserr == noErr)
+			{
+				HLock(logoRectH);
+				derefd = (Rect) **((Rect**)logoRectH);
+				SetRect(&logoRect, derefd.left, derefd.top, derefd.bottom, derefd.right);
+				HUnlock(logoRectH);
+				reserr = ResError();
+				if (reserr == noErr)
+				{		
+					DrawPicture(logoPicH, &logoRect);
+					ReleaseResource((Handle)logoPicH);
+				}
+			}
 		}
 	}
+	
+	if (reserr != noErr)
+		ErrorHandler();
 }
 
 void
@@ -356,10 +367,10 @@ InitScrollBar(ControlHandle sb)
 	
 	switch(gCurrWin)
 	{
-		case LICENSE:
+		case kLicenseID:
 			currTE = gControls->lw->licTxt;
 			break;
-		case WELCOME:
+		case kWelcomeID:
 			currTE = gControls->ww->welcTxt;
 			break;
 		default:
@@ -387,10 +398,10 @@ DoScrollProc(ControlHandle theControl, short part)
 	if ( part != 0 ) {
 		switch (gCurrWin)
 		{
-			case LICENSE:				
+			case kLicenseID:				
 				te = *(gControls->lw->licTxt);
 				break;
-			case WELCOME:
+			case kWelcomeID:
 				te = *(gControls->ww->welcTxt);
 				break;
 			default:
@@ -440,7 +451,7 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 	
 	gControls->backB = GetNewControl( rBackBtn, gWPtr);
 	gControls->nextB = GetNewControl( rNextBtn, gWPtr);
-//dougt: check for failure...
+
 	if( gControls->backB != NULL)
 	{
 		SetControlTitle( gControls->backB, backTitle); 
@@ -451,8 +462,8 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 	{
 		SetControlTitle( gControls->nextB, nextTitle);
 		ShowControl( gControls->nextB);
-//dougt: no hi.
-		HLockHi( (Handle) gControls->nextB);
+
+		HLock( (Handle) gControls->nextB);
 	
 		bounds = (*(gControls->nextB))->contrlRect;
 		PenMode(patCopy);
