@@ -1033,16 +1033,15 @@ nsHTMLEditor::CheckResizingState(nsISelection *aSelection)
     }
   }
 
-  PRUint16 nodeType;
-  focusNode->GetNodeType(&nodeType);
-  if (nsIDOMNode::TEXT_NODE == nodeType) {
-    nsCOMPtr<nsIDOMNode> parent;
-    res = focusNode->GetParentNode(getter_AddRefs(parent));
-    if (NS_FAILED(res)) return res;
-    focusNode = parent;
-  }
-
   if (focusNode) {
+    PRUint16 nodeType;
+    focusNode->GetNodeType(&nodeType);
+    if (nsIDOMNode::TEXT_NODE == nodeType) {
+      nsCOMPtr<nsIDOMNode> parent;
+      res = focusNode->GetParentNode(getter_AddRefs(parent));
+      if (NS_FAILED(res)) return res;
+      focusNode = parent;
+    }
 
     nsCOMPtr<nsIDOMElement>element;
     element = do_QueryInterface(focusNode);
