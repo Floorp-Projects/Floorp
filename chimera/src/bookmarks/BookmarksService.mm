@@ -863,6 +863,7 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
 
 static void GetImportTitle(nsIDOMElement* aSrc, nsString& aTitle)
 {
+  aTitle.Truncate(0);
   nsCOMPtr<nsIDOMNode> curr;
   aSrc->GetFirstChild(getter_AddRefs(curr));
   while (curr) {
@@ -891,6 +892,33 @@ static void GetImportTitle(nsIDOMElement* aSrc, nsString& aTitle)
   }
 }
 
+// sniff for control chars, which are defined to be in the range U+0000 to U+001F and U+007F to U+009F.
+static PRBool ContainsControlChars(const nsString& inString)
+{
+  PRUint16 *c = (PRUint16*)inString.get();  // be sure to get unsigned
+  
+  while (*c)
+  {
+    if ((*c <= 0x001F) || (*c >= 0x007F && *c <= 0x009F))
+      return PR_TRUE;
+    c ++;
+  }
+  
+  return PR_FALSE;
+}
+
+static void CleanControlChars(nsString& ioString)
+{
+  if (ContainsControlChars(ioString))
+  {
+    // strip control chars here. this is inefficient, but does it matter?
+    NSString* cleanedTitle  = [[NSString stringWith_nsAString: ioString]
+                stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@""];
+    [cleanedTitle assignTo_nsAString:ioString];
+    NSLog(@"Removed control characters from bookmark string '%@'", cleanedTitle);
+  }
+}
+
 static void CreateBookmark(nsIDOMElement* aSrc, nsIDOMElement* aDst,
                            nsIDOMDocument* aDstDoc, PRBool aIsFolder,
                            nsIDOMElement** aResult)
@@ -905,11 +933,14 @@ static void CreateBookmark(nsIDOMElement* aSrc, nsIDOMElement* aDst,
 
   nsAutoString title;
   GetImportTitle(aSrc, title);
+  CleanControlChars(title);
+  
   (*aResult)->SetAttribute(NS_LITERAL_STRING("name"), title);
 
   if (!aIsFolder) {
     nsAutoString href;
     aSrc->GetAttribute(NS_LITERAL_STRING("href"), href);
+    CleanControlChars(href);
     (*aResult)->SetAttribute(NS_LITERAL_STRING("href"), href);
   }
 
