@@ -49,6 +49,7 @@ CPP_OBJS=\
 		.\$(OBJDIR)\nsXULFocusTracker.obj \
         .\$(OBJDIR)\nsXULSortService.obj          \
         .\$(OBJDIR)\nsXULTreeElement.obj          \
+        .\$(OBJDIR)\nsXULKeyListener.obj          \
 	$(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements
