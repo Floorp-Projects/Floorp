@@ -195,8 +195,17 @@ $total_ignored_count = 0;
 #    or die "Unable to open $warn_file_by_file: $!\n";
 #  print_html_by_file($fh, $br);
 #  $fh->close;
-  
 
+my $total_unignored_warnings = $total_warnings_count - $total_ignored_count;
+
+if ($total_unignored_warnings > 0) {
+  # Add an entry to the warning log
+  #
+  my $warn_log = "$tree/warnings.dat";
+  $fh->open(">>$warn_log") or die "Unable to open $warn_log: $!\n";
+  print $fh "$log_file|$total_unignored_warnings\n";
+  $fh->close;
+}
 
 # end of main
 # ===================================================================
