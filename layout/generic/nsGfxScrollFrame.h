@@ -112,6 +112,8 @@ public:
 
    nsIScrollableView* GetScrollableView() const;
 
+  void ScrollToRestoredPosition();
+
   nsIFrame* GetScrolledFrame() const {
     nsIBox* childBox;
     nsIFrame* frame;
@@ -256,6 +258,10 @@ public:
 
   NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
 
+  virtual void ScrollToRestoredPosition() {
+    mInner.ScrollToRestoredPosition();
+  }
+
   virtual nsMargin GetActualScrollbarSizes() const;
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
@@ -382,6 +388,10 @@ public:
                                     PRInt32 aModType);
 
   NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
+
+  virtual void ScrollToRestoredPosition() {
+    mInner.ScrollToRestoredPosition();
+  }
 
   virtual nsMargin GetActualScrollbarSizes() const;
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);

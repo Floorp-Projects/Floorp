@@ -3639,6 +3639,13 @@ PresShell::EndLoad(nsIDocument *aDocument)
     GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
     if (scrollFrame) {
       FrameManager()->RestoreFrameStateFor(scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
+
+      nsIScrollableFrame* scrollableFrame;
+      CallQueryInterface(scrollFrame, &scrollableFrame);
+      NS_ASSERTION(scrollableFrame, "RootScrollFrame is not scrollable?");
+      if (scrollableFrame) {
+        scrollableFrame->ScrollToRestoredPosition();
+      }
     }
   }
 
