@@ -270,6 +270,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
     return NS_OK;
   }
 
+  SetStatus(nsString());
+  SetDefaultStatus(nsString());
+
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     nsCOMPtr<nsIURI> docURL;
