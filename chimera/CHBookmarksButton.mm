@@ -112,6 +112,10 @@
     [self setImage: [NSImage imageNamed: @"smallbookmark"]];
     [self setAction: @selector(openBookmark:)];
     [self setTarget: self];
+    nsAutoString href;
+    mElement->GetAttribute(NS_LITERAL_STRING("href"), href);
+    NSString* helpText = [NSString stringWithCharacters: href.get() length: nsCRT::strlen(href.get())];
+    [self setToolTip: helpText];
   }
   
   nsAutoString name;
