@@ -80,7 +80,7 @@ static void	DrawArrow				(Widget,XEvent *,Region,XRectangle *);
 /* XfeArrow Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 
+static const XtResource resources[] = 
 {
     /* Arrow resources */
     { 
@@ -177,7 +177,7 @@ static XtResource resources[] =
 /* XfeButton Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource syn_resources[] =
+static const XmSyntheticResource syn_resources[] =
 {
     { 
 		XmNarrowHeight,
@@ -215,7 +215,7 @@ _XFE_WIDGET_CLASS_RECORD(arrow,Arrow) =
 		XtInheritRealize,                       /* realize            	*/
 		NULL,									/* actions            	*/
 		0,										/* num_actions        	*/
-		resources,                              /* resources          	*/
+		(XtResource *)resources,				/* resources          	*/
 		XtNumber(resources),                    /* num_resources      	*/
 		NULLQUARK,                              /* xrm_class          	*/
 		TRUE,                                   /* compress_motion    	*/
@@ -244,7 +244,7 @@ _XFE_WIDGET_CLASS_RECORD(arrow,Arrow) =
 		XmInheritBorderUnhighlight,				/* border_unhighlight 	*/
 		XtInheritTranslations,                  /* translations       	*/
 		XmInheritArmAndActivate,				/* arm_and_activate   	*/
-		syn_resources,							/* syn resources      	*/
+		(XmSyntheticResource *)syn_resources,	/* syn resources      	*/
 		XtNumber(syn_resources),				/* num syn_resources  	*/
 		NULL,									/* extension          	*/
     },

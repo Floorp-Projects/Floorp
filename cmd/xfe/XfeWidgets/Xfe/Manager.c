@@ -130,7 +130,7 @@ static void		LayableInfoFree			(Widget);
 /* XfeManager Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 
+static const XtResource resources[] = 
 {
 	/* Callback resources */
     { 
@@ -483,7 +483,7 @@ static XtResource resources[] =
 /* XfeManager Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource syn_resources[] =
+static const XmSyntheticResource syn_resources[] =
 {
     { 
 		XmNmarginBottom,
@@ -534,7 +534,7 @@ static XmSyntheticResource syn_resources[] =
 /* XfeManager Constraint Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource constraint_resources[] = 
+static const XtResource constraint_resources[] = 
 {
     { 
 		XmNpositionIndex,
@@ -580,7 +580,7 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
 		Realize,								/* realize				*/
 		NULL,									/* actions				*/
 		0,										/* num_actions			*/
-		resources,								/* resources			*/
+		(XtResource *)resources,				/* resources			*/
 		XtNumber(resources),					/* num_resources		*/
 		NULLQUARK,								/* xrm_class			*/
 		TRUE,									/* compress_motion		*/
@@ -614,7 +614,7 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
     
     /* Constraint Part */
     {
-		constraint_resources,					/* resource list		*/
+		(XtResource *)constraint_resources,		/* resource list		*/
 		XtNumber(constraint_resources),			/* num resources		*/
 		sizeof(XfeManagerConstraintRec),		/* constraint size		*/
 		ConstraintInitialize,					/* init proc			*/
@@ -626,7 +626,7 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
     /* XmManager Part */
     {
 		XtInheritTranslations,					/* tm_table				*/
-		syn_resources,							/* syn resources		*/
+		(XmSyntheticResource *)syn_resources,	/* syn resources		*/
 		XtNumber(syn_resources),				/* num syn_resources	*/
 		NULL,									/* syn_cont_resources	*/
 		0,										/* num_syn_cont_res		*/

@@ -70,7 +70,7 @@ static void	FillTabHorizontal	(Widget,Pixmap,Dimension,Dimension);
 /* XfeTab Resources														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 
+static const XtResource resources[] = 
 {
     /* Resources */
     { 
@@ -256,7 +256,7 @@ _XFE_WIDGET_CLASS_RECORD(tab,Tab) =
 		XtInheritRealize,                       /* realize            	*/
 		NULL,									/* actions            	*/
 		0,										/* num_actions        	*/
-		resources,                              /* resources          	*/
+		(XtResource *)resources,				/* resources          	*/
 		XtNumber(resources),                    /* num_resources      	*/
 		NULLQUARK,                              /* xrm_class          	*/
 		TRUE,                                   /* compress_motion    	*/

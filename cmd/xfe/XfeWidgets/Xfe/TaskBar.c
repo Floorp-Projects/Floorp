@@ -86,7 +86,7 @@ static void	ActionCallback			(Widget,XtPointer,XtPointer);
 /* XfeTaskBar Resources                                                 */
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 	
+static const XtResource resources[] = 	
 {					
     /* Callback resources */     	
     { 
@@ -195,7 +195,7 @@ _XFE_WIDGET_CLASS_RECORD(taskbar,TaskBar) =
 		XtInheritRealize,						/* realize          	*/
 		NULL,									/* actions          	*/
 		0,										/* num_actions      	*/
-		resources,                              /* resources        	*/
+		(XtResource *)resources,				/* resources        	*/
 		XtNumber(resources),                    /* num_resources    	*/
 		NULLQUARK,                              /* xrm_class        	*/
 		TRUE,                                   /* compress_motion  	*/

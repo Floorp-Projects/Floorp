@@ -90,7 +90,7 @@ static void		MappingEH			(Widget,XtPointer,XEvent *,Boolean *);
 /* XfeFrameShell resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 	
+static const XtResource resources[] = 	
 {					
 	/* Realization callback resources */
 	{ 
@@ -299,7 +299,7 @@ _XFE_WIDGET_CLASS_RECORD(frameshell,FrameShell) =
 		Realize,								/* realize				*/
 		NULL,									/* actions				*/
 		0,										/* num_actions			*/
-		resources,                              /* resources			*/
+		(XtResource *)resources,				/* resources			*/
 		XtNumber(resources),                    /* num_resources		*/
 		NULLQUARK,								/* xrm_class			*/
 		FALSE,									/* compress_motion		*/

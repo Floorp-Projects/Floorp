@@ -446,7 +446,7 @@ static char unhideButtonTranslations[] =
 "<BtnDown>,<BtnUp>:                      XmLGridUnhideColumn()";
 #endif /*0*/
 
-static XtResource resources[] =
+static const XtResource resources[] =
 	{
 		/* Grid Resources */
 		{
@@ -1206,7 +1206,7 @@ XmLGridClassRec xmlGridClassRec =
 		(XtRealizeProc)Realize,                   /* realize            */
 		(XtActionList)actions,                    /* actions            */
 		(Cardinal)XtNumber(actions),              /* num_actions        */
-		resources,                                /* resources          */
+		(XtResource *)resources,				  /* resources          */
 		XtNumber(resources),                      /* num_resources      */
 		NULLQUARK,                                /* xrm_class          */
 		TRUE,                                     /* compress_motion    */

@@ -83,7 +83,7 @@ static void		InvokeSelectionChangedCallback		(Widget,XEvent *);
 /* XfeLabel Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 
+static const XtResource resources[] = 
 {
     /* Callback resources */     	
     { 
@@ -258,7 +258,7 @@ _XFE_WIDGET_CLASS_RECORD(label,Label) =
 		XtInheritRealize,                       /* realize            	*/
 		actions,								/* actions            	*/
 		XtNumber(actions),						/* num_actions        	*/
-		resources,                              /* resources          	*/
+		(XtResource *)resources,				/* resources          	*/
 		XtNumber(resources),                    /* num_resources      	*/
 		NULLQUARK,                              /* xrm_class          	*/
 		TRUE,                                   /* compress_motion    	*/

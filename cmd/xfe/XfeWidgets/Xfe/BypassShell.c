@@ -91,7 +91,7 @@ static void		MappingEH			(Widget,XtPointer,XEvent *,Boolean *);
 /* XfeBypassShell resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 	
+static const XtResource resources[] = 	
 {					
 	/* Realization callback resources */
 	{ 
@@ -289,7 +289,7 @@ _XFE_WIDGET_CLASS_RECORD(bypassshell,BypassShell) =
 		NULL,									/* actions            	*/
 		0,										/* num_actions        	*/
 #endif
-		resources,                              /* resources			*/
+		(XtResource *)resources,				/* resources			*/
 		XtNumber(resources),                    /* num_resources		*/
 		NULLQUARK,								/* xrm_class			*/
 		True,									/* compress_motion		*/

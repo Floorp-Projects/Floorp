@@ -108,7 +108,7 @@ static void 	DescendantPrimitiveCursorCB	(Widget,XtPointer,XtPointer);
 /* XfeOriented Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 	
+static const XtResource resources[] = 	
 {					
     /* Orientation resources */
     { 
@@ -188,7 +188,7 @@ static XtResource resources[] =
 /* XfeToolBar Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource syn_resources[] =
+static const XmSyntheticResource syn_resources[] =
 {
 	{ 
 		XmNspacing,
@@ -204,7 +204,7 @@ static XmSyntheticResource syn_resources[] =
 /* XfeOriented constraint resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource constraint_resources[] = 
+static const XtResource constraint_resources[] = 
 {
     { 
 		XmNallowDrag,
@@ -236,7 +236,7 @@ _XFE_WIDGET_CLASS_RECORD(oriented,Oriented) =
 		XtInheritRealize,						/* realize          	*/
 		NULL,									/* actions          	*/
 		0,										/* num_actions			*/
-		resources,                              /* resources        	*/
+		(XtResource *)resources,				/* resources        	*/
 		XtNumber(resources),                    /* num_resources    	*/
 		NULLQUARK,                              /* xrm_class        	*/
 		TRUE,                                   /* compress_motion  	*/
@@ -270,7 +270,7 @@ _XFE_WIDGET_CLASS_RECORD(oriented,Oriented) =
 
 	/* Constraint Part */
 	{
-		constraint_resources,					/* constraint res		*/
+		(XtResource *)constraint_resources,		/* constraint res		*/
 		XtNumber(constraint_resources),			/* num constraint res	*/
 		sizeof(XfeOrientedConstraintRec),		/* constraint size		*/
 		ConstraintInitialize,					/* init proc			*/
@@ -282,7 +282,7 @@ _XFE_WIDGET_CLASS_RECORD(oriented,Oriented) =
 	/* XmManager Part */
 	{
 		XtInheritTranslations,					/* tm_table				*/
-		syn_resources,							/* syn resources		*/
+		(XmSyntheticResource *)syn_resources,	/* syn resources		*/
 		XtNumber(syn_resources),				/* num syn_resources	*/
 		NULL,                                   /* syn_cont_resources  	*/
 		0,                                      /* num_syn_cont_resource*/

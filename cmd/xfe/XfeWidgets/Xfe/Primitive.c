@@ -103,7 +103,7 @@ static Dimension		GetHeight		(Widget);
 /* XfePrimitive Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 
+static const XtResource resources[] = 
 {
 	/* Callback resources */
 	{ 
@@ -354,7 +354,7 @@ static XtResource resources[] =
 /* XfePrimitive Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource syn_resources[] =
+static const XmSyntheticResource syn_resources[] =
 {
 	{ 
 		XmNmarginBottom,
@@ -434,7 +434,7 @@ _XFE_WIDGET_CLASS_RECORD(primitive,Primitive) =
 		Realize,							/* realize					*/
 		actions,							/* actions					*/
 		XtNumber(actions),					/* num_actions				*/
-		resources,							/* resources				*/
+		(XtResource *)resources,			/* resources				*/
 		XtNumber(resources),				/* num_resources			*/
 		NULLQUARK,							/* xrm_class				*/
 		TRUE,								/* compress_motion			*/
@@ -463,7 +463,7 @@ _XFE_WIDGET_CLASS_RECORD(primitive,Primitive) =
 		XmInheritBorderUnhighlight,			/* border_unhighlight		*/
 		XtInheritTranslations,				/* translations				*/
 		NULL,								/* arm_and_activate			*/
-		syn_resources,						/* syn resources			*/
+		(XmSyntheticResource *)syn_resources, /* syn resources			*/
 		XtNumber(syn_resources),			/* num syn_resources		*/
 		(XtPointer) &primClassExtRec,		/* extension				*/
     },

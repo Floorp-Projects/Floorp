@@ -89,7 +89,7 @@ static void		AccentErase				(Widget);
 /* XfeBmButton Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 
+static const XtResource resources[] = 
 {
     /* Pixmap resources */
     { 
@@ -203,7 +203,7 @@ _XFE_WIDGET_CLASS_RECORD(bmbutton,BmButton) =
 		XtInheritRealize,                       /* realize            	*/
 		actions,								/* actions            	*/
 		XtNumber(actions),						/* num_actions        	*/
-		resources,                              /* resources          	*/
+		(XtResource *)resources,				/* resources          	*/
 		XtNumber(resources),                    /* num_resources      	*/
 		NULLQUARK,                              /* xrm_class          	*/
 		TRUE,                                   /* compress_motion    	*/

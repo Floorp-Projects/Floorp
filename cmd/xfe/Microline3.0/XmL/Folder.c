@@ -131,7 +131,7 @@ static char primTranslations[] =
 "<FocusIn>: XmLFolderPrimFocusIn() PrimitiveFocusIn()\n\
 <FocusOut>: XmLFolderPrimFocusOut() PrimitiveFocusOut()";
 
-static XtResource resources[] =
+static const XtResource resources[] =
 	{
 		/* Folder Resources */
 		{
@@ -293,7 +293,7 @@ static XtResource resources[] =
 		},
     };
 
-static XtResource constraint_resources[] =
+static const XtResource constraint_resources[] =
 	{
 		/* Folder Constraint Resources */
 		{
@@ -342,7 +342,7 @@ XmLFolderClassRec xmlFolderClassRec =
 		(XtRealizeProc)Realize,                   /* realize            */
 		(XtActionList)actions,                    /* actions            */
 		(Cardinal)XtNumber(actions),              /* num_actions        */
-		resources,                                /* resources          */
+		(XtResource *)resources,				  /* resources          */
 		XtNumber(resources),                      /* num_resources      */
 		NULLQUARK,                                /* xrm_class          */
 		TRUE,                                     /* compress_motion    */
@@ -372,7 +372,7 @@ XmLFolderClassRec xmlFolderClassRec =
 		0,                                        /* extension          */
 		},
 		{ /* constraint_class */
-		constraint_resources,	                  /* subresources       */
+		(XtResource *)constraint_resources,		  /* subresources       */
 		XtNumber(constraint_resources),           /* subresource_count  */
 		sizeof(XmLFolderConstraintRec),           /* constraint_size    */
 		(XtInitProc)ConstraintInitialize,         /* initialize         */

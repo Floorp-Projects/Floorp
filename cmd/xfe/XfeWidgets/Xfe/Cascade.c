@@ -118,7 +118,7 @@ static void	UnGrabEH				(Widget,XtPointer,XEvent *,Boolean *);
 /* XfeCascade Resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 
+static const XtResource resources[] = 
 {
     /* Callback resources */     	
     { 
@@ -300,7 +300,7 @@ static XtResource resources[] =
 /* XfeButton Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource syn_resources[] =
+static const XmSyntheticResource syn_resources[] =
 {
     {
 		XmNcascadeArrowHeight,
@@ -350,7 +350,7 @@ _XFE_WIDGET_CLASS_RECORD(cascade,Cascade) =
 		XtInheritRealize,                       /* realize            	*/
 		actions,								/* actions            	*/
 		XtNumber(actions),						/* num_actions        	*/
-		resources,                              /* resources          	*/
+		(XtResource *)resources,				/* resources          	*/
 		XtNumber(resources),                    /* num_resources      	*/
 		NULLQUARK,                              /* xrm_class          	*/
 		TRUE,                                   /* compress_motion    	*/
@@ -379,7 +379,7 @@ _XFE_WIDGET_CLASS_RECORD(cascade,Cascade) =
 		XmInheritBorderUnhighlight,				/* border_unhighlight 	*/
 		XtInheritTranslations,                  /* translations       	*/
 		XmInheritArmAndActivate,				/* arm_and_activate   	*/
-		syn_resources,							/* syn resources      	*/
+		(XmSyntheticResource *)syn_resources,	/* syn resources      	*/
 		XtNumber(syn_resources),				/* num syn_resources  	*/
 		NULL,									/* extension          	*/
     },

@@ -181,7 +181,7 @@ static void		EditTextCreate			(Widget);
 /* XfeToolBar Resources                                                 */
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 	
+static const XtResource resources[] = 	
 {					
     /* Callback resources */     	
     { 
@@ -450,7 +450,7 @@ static XtResource resources[] =
 /* XfeToolBar Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource syn_resources[] =
+static const XmSyntheticResource syn_resources[] =
 {
     { 
 		XmNraiseBorderThickness,
@@ -493,7 +493,7 @@ _XFE_WIDGET_CLASS_RECORD(toolbar,ToolBar) =
 		XtInheritRealize,						/* realize				*/
 		actions,								/* actions            	*/
 		XtNumber(actions),						/* num_actions        	*/
-		resources,                              /* resources			*/
+		(XtResource *)resources,				/* resources			*/
 		XtNumber(resources),                    /* num_resources		*/
 		NULLQUARK,                              /* xrm_class			*/
 		TRUE,                                   /* compress_motion		*/
@@ -544,7 +544,7 @@ _XFE_WIDGET_CLASS_RECORD(toolbar,ToolBar) =
     /* XmManager Part */
     {
 		XtInheritTranslations,					/* tm_table				*/
-		syn_resources,							/* syn resources		*/
+		(XmSyntheticResource *)syn_resources,	/* syn resources		*/
 		XtNumber(syn_resources),				/* num syn_resources	*/
 		NULL,                                   /* syn_cont_resources	*/
 		0,                                      /* num_syn_cont_resource*/

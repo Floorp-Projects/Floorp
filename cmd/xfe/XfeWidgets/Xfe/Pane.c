@@ -188,7 +188,7 @@ static void		DefaultPaneChildAttachment		(Widget,int,XrmValue *);
 /* XfePane resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 	
+static const XtResource resources[] = 	
 {					
     /* Sash resources */
 	{
@@ -425,7 +425,7 @@ static XtResource resources[] =
 /* XfePane synthetic resources											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource synthetic_resources[] =
+static const XmSyntheticResource synthetic_resources[] =
 {
     { 
 		XmNsashOffset,
@@ -462,7 +462,7 @@ static XmSyntheticResource synthetic_resources[] =
 /* XfePane constraint resources											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource constraint_resources[] = 
+static const XtResource constraint_resources[] = 
 {
     { 
 		XmNpaneMaximum,
@@ -534,7 +534,7 @@ static XtResource constraint_resources[] =
 /* XfePane constraint synthetic resources								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource constraint_synthetic_resources[] =
+static const XmSyntheticResource constraint_synthetic_resources[] =
 {
     { 
 		XmNpaneMaximum,
@@ -571,7 +571,7 @@ _XFE_WIDGET_CLASS_RECORD(pane,Pane) =
 		XtInheritRealize,						/* realize				*/
 		NULL,									/* actions				*/
 		0,										/* num_actions			*/
-		resources,                              /* resources			*/
+		(XtResource *)resources,				/* resources			*/
 		XtNumber(resources),                    /* num_resources		*/
 		NULLQUARK,                              /* xrm_class			*/
 		TRUE,                                   /* compress_motion		*/
@@ -605,7 +605,7 @@ _XFE_WIDGET_CLASS_RECORD(pane,Pane) =
 
     /* Constraint Part */
     {
-		constraint_resources,					/* constraint res		*/
+		(XtResource *)constraint_resources,		/* constraint res		*/
 		XtNumber(constraint_resources),			/* num constraint res	*/
 		sizeof(XfePaneConstraintRec),			/* constraint size		*/
 		ConstraintInitialize,					/* init proc			*/
@@ -617,9 +617,9 @@ _XFE_WIDGET_CLASS_RECORD(pane,Pane) =
     /* XmManager Part */
     {
 		XtInheritTranslations,					/* tm_table				*/
-		synthetic_resources,					/* syn resources		*/
+		(XmSyntheticResource *)synthetic_resources, /* syn resources	*/
 		XtNumber(synthetic_resources),			/* num syn_resources	*/
-		constraint_synthetic_resources,			/* syn_cont_resources  	*/
+		(XmSyntheticResource *)constraint_synthetic_resources, /* syn_cont_resources */
 		XtNumber(constraint_synthetic_resources),/* num_syn_cont_resource*/
 		XmInheritParentProcess,                 /* parent_process		*/
 		NULL,                                   /* extension			*/

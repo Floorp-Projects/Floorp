@@ -86,7 +86,7 @@ static void			CheckCylonWidth		(Widget);
 /* XfeProgressBar Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 
+static const XtResource resources[] = 
 {
     /* Resources */
     { 
@@ -234,7 +234,7 @@ _XFE_WIDGET_CLASS_RECORD(progressbar,ProgressBar) =
 		XtInheritRealize,                       /* realize            	*/
 		NULL,									/* actions            	*/
 		0,										/* num_actions        	*/
-		resources,                              /* resources          	*/
+		(XtResource *)resources,				/* resources          	*/
 		XtNumber(resources),                    /* num_resources      	*/
 		NULLQUARK,                              /* xrm_class          	*/
 		TRUE,                                   /* compress_motion    	*/

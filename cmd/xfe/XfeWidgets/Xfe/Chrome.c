@@ -110,7 +110,7 @@ static void		DefaultChromeChildType			(Widget,int,XrmValue *);
 /* XfeChrome resources													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 	
+static const XtResource resources[] = 	
 {					
     /* Resources */
 	{ 
@@ -239,7 +239,7 @@ static XtResource resources[] =
 /* XfeChrome synthetic resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource synthetic_resources[] =
+static const XmSyntheticResource synthetic_resources[] =
 {
    { 
        XmNspacing,
@@ -255,7 +255,7 @@ static XmSyntheticResource synthetic_resources[] =
 /* XfeChrome constraint resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource constraint_resources[] = 
+static const XtResource constraint_resources[] = 
 {
     { 
 		XmNchromeChildType,
@@ -287,7 +287,7 @@ _XFE_WIDGET_CLASS_RECORD(chrome,Chrome) =
 		XtInheritRealize,						/* realize				*/
 		NULL,									/* actions				*/
 		0,										/* num_actions			*/
-		resources,                              /* resources			*/
+		(XtResource *)resources,                /* resources			*/
 		XtNumber(resources),                    /* num_resources		*/
 		NULLQUARK,                              /* xrm_class			*/
 		TRUE,                                   /* compress_motion		*/
@@ -321,7 +321,7 @@ _XFE_WIDGET_CLASS_RECORD(chrome,Chrome) =
 
     /* Constraint Part */
     {
-		constraint_resources,					/* constraint res		*/
+		(XtResource *)constraint_resources,		/* constraint res		*/
 		XtNumber(constraint_resources),			/* num constraint res	*/
 		sizeof(XfeChromeConstraintRec),			/* constraint size		*/
 		ConstraintInitialize,					/* init proc			*/
@@ -333,7 +333,7 @@ _XFE_WIDGET_CLASS_RECORD(chrome,Chrome) =
     /* XmManager Part */
     {
 		XtInheritTranslations,					/* tm_table				*/
-		synthetic_resources,					/* syn resources		*/
+		(XmSyntheticResource *)synthetic_resources, /* syn resources		*/
 		XtNumber(synthetic_resources),			/* num syn_resources	*/
 		NULL,									/* syn resources		*/
 		0,										/* num syn_resources	*/

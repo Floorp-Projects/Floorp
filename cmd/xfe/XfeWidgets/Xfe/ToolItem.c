@@ -60,7 +60,7 @@ static Boolean	InsertChild			(Widget);
 /* XfeToolItem Resources												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XtResource resources[] = 	
+static const XtResource resources[] = 	
 {					
     /* Components */
     { 
@@ -97,7 +97,7 @@ static XtResource resources[] =
 /* XfeToolItem Synthetic Resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static XmSyntheticResource syn_resources[] =
+static const XmSyntheticResource syn_resources[] =
 {
    { 
        XmNspacing,
@@ -127,7 +127,7 @@ _XFE_WIDGET_CLASS_RECORD(toolitem,ToolItem) =
 		XtInheritRealize,						/* realize          	*/
 		NULL,									/* actions          	*/
 		0,										/* num_actions			*/
-		resources,                              /* resources        	*/
+		(XtResource *)resources,				/* resources        	*/
 		XtNumber(resources),                    /* num_resources    	*/
 		NULLQUARK,                              /* xrm_class        	*/
 		TRUE,                                   /* compress_motion  	*/
@@ -173,7 +173,7 @@ _XFE_WIDGET_CLASS_RECORD(toolitem,ToolItem) =
 	/* XmManager Part */
 	{
 		XtInheritTranslations,					/* tm_table				*/
-		syn_resources,							/* syn resources       	*/
+		(XmSyntheticResource *)syn_resources,	/* syn resources       	*/
 		XtNumber(syn_resources),				/* num syn_resources   	*/
 		NULL,                                   /* syn_cont_resources  	*/
 		0,                                      /* num_syn_cont_resource*/
