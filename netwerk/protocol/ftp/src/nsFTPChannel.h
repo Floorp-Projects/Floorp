@@ -37,6 +37,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIThreadPool.h"
+#include "nsIRequest.h"
 
 class nsFTPChannel : public nsIFTPChannel,
                      public nsIStreamListener {
