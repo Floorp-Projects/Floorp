@@ -1,0 +1,5 @@
+content --- XUL, Javascript, and HTML for user interface
+
+xmlterm.html      XMLterm startup file containing HTML and Javascript
+                    Uses mozIXMLTermShell to create XMLterm
+                    Uses ../skin/xmlterm.css for stylesheets

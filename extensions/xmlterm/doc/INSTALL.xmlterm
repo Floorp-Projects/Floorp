@@ -1,0 +1,60 @@
+XMLterm installation instructions for Linux binaries
+----------------------------------------------------
+
+*NOTE* This work in progress. User beware!
+
+*NOTE* Check the XMLterm web site <http://xmlterm.org> for updates.
+
+19 Nov 1999
+
+1. First obtain the Mozilla Linux binary tar file
+   ftp://ftp.mozilla.org/pub/mozilla/releases/m11/mozilla-i686-pc-linux-gnu-M11.tar.gz"
+   and untar it in any convenient location. This will create a
+   directory named "package" containing the binaries.
+
+2. Untar the XMLterm binary tar file "xmlterm-i686-pc-linux-gnu-M11.tar.gz"
+   in the "package" directory created above.
+
+3. Type the following command in the "package" directory:
+
+     ./mozilla chrome://xmlterm/content/xmlterm.html
+
+   This should create an XMLTerm in the browser window. Then click on
+   that window with the mouse to shift focus and start typing UNIX
+   commands.
+
+   **NOTE**
+   The command prompt is assumed to be terminated by one of the characters
+   "#$%>?", followed by a space. If this is not the case, many features will
+   not work. This restriction will be relaxed in the future.
+
+4. To use the stand-alone XMLterm executable called "xmlterm",
+   type the following command in the "package" directory:
+
+    ./run-mozilla.sh xmlterm
+
+   (The Mozilla component registry may need to be updated by running the
+    full browser using step 3 at least once before running "xmlterm".)
+
+5. The command line can be edited using EMACS-style key bindings.
+   Command completion should also work with TCSH and BASH, as should history
+   recall.
+
+6. By default, blue coloring is used to indicate clickable display elements.
+   Note that the prompt and the input command line are clickable.
+   (Of course, the appearance of XMLterm is completely configurable
+   using the CSS stylesheet chrome://xmlterm/skin/default/xmlterm.css)
+
+   After typing one or two commands, click on the prompt string of any previous
+   command to see what happens! Then click again on the same prompt string.
+   Also click on "Hide all output" button at the top of the document.
+
+   Clicking on a previous command line (to the right of the prompt) re-executes
+   the command.
+
+7. The sample Perl script "xls", the iconic/hypertext version of the Unix
+   "ls" command, is also installed in the "package" directory. Adding
+   the "package" directory to your path should enable you to use the "xls"
+   command.
+
+--

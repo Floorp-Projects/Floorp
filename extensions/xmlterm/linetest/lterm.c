@@ -1,0 +1,557 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "MPL"); you may not use this file
+ * except in compliance with the MPL. You may obtain a copy of
+ * the MPL at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the MPL is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the MPL for the specific language governing
+ * rights and limitations under the MPL.
+ * 
+ * The Original Code is lineterm.
+ * 
+ * The Initial Developer of the Original Code is Ramalingam Saravanan.
+ * Portions created by Ramalingam Saravanan <svn@xmlterm.org> are
+ * Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License (the "GPL"), in which case
+ * the provisions of the GPL are applicable instead of
+ * those above. If you wish to allow use of your version of this
+ * file only under the terms of the GPL and not to allow
+ * others to use your version of this file under the MPL, indicate
+ * your decision by deleting the provisions above and replace them
+ * with the notice and other provisions required by the GPL.
+ * If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ */
+
+/* lterm.c: Test driver for LINETERM using NCURSES
+ * CPP options:
+ *   LINUX:   for Linux2.0/glibc
+ *   SOLARIS: for Solaris2.6
+ */
+
+#include <stdio.h>
+#include <signal.h>
+
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+
+#include <assert.h>
+
+#include "curses.h"
+
+#define _REENTRANT
+#include <pthread.h>
+
+#ifdef SOLARIS
+#include <stropts.h>
+#include <poll.h>
+#endif
+
+#ifdef LINUX
+#include <sys/ioctl.h>
+#include <sys/poll.h>
+typedef unsigned int nfds_t;
+#endif
+
+#include "lineterm.h"
+#include "tracelog.h"
+
+#define MAXPROMPT 256          /* Maximum length of prompt regexp */
+#define MAXCOL 4096            /* Maximum columns in line buffer */
+
+/* (0,0) is upper lefthand corner of window */
+
+/* Character attributes
+        A_NORMAL        Normal display (no highlight)
+        A_STANDOUT      Best highlighting mode of the terminal.
+        A_UNDERLINE     Underlining
+        A_REVERSE       Reverse video
+        A_BLINK         Blinking
+        A_DIM           Half bright
+        A_BOLD          Extra bright or bold
+        A_PROTECT       Protected mode
+        A_INVIS         Invisible or blank mode
+        A_ALTCHARSET    Alternate character set
+        A_CHARTEXT      Bit-mask to extract a character
+        COLOR_PAIR(n)   Color-pair number n
+*/
+
+/* GLOBAL VARIABLES */
+static int lineFlag = 0;
+static int ptyFlag = 1;
+static int debugFlag = 0;
+static int ltermNumber = -1;
+static SCREEN  *termScreen = NULL;
+static char *ttyDevice;
+static char *errDevice;
+
+static struct termios tios;    /* TERMIOS structure */
+
+static void finish(int sig);
+static pthread_t output_handler_thread_ID;
+
+static void *output_handler(void *arg);
+
+static void input_handler(int *plterm);
+
+int main(int argc, char *argv[]) {
+  FILE *inFile, *outFile;
+  UNICHAR uregexp[MAXPROMPT+1];
+  int argNo, options, processType, retValue;
+  int remaining, decoded;
+  int messageLevel;
+  char *promptStr;
+  char **commandArgs;
+  char *defaultCommand[] = {(char *)getenv("SHELL"), "-i", NULL};
+
+  /* Process command line arguments */
+  lineFlag = 0;
+  ptyFlag = 1;
+  debugFlag = 0;
+  processType = LTERM_DETERMINE_PROCESS;
+  ttyDevice = NULL;
+  errDevice = NULL;
+  promptStr = "#$%>?";  /* JUST A LIST OF DELIMITERS AT PRESENT */
+
+  lineFlag = 1;         /* Temporary */
+
+  argNo = 1;
+  while (argNo < argc) {
+
+    if ((strcmp(argv[argNo],"-h") == 0)||(strcmp(argv[argNo],"-help") == 0)) {
+      fprintf(stderr, "Usage: %s [-help] [-line] [-nopty] [-debug] [-tcsh / -bash] [-tty /dev/ttyname] [-err /dev/ttyname] [-prompt <prompt>] <command> ...\n", argv[0]);
+      exit(0);
+
+    } else if (strcmp(argv[argNo],"-line") == 0) {
+      lineFlag = 1;
+      argNo++;
+
+    } else if (strcmp(argv[argNo],"-nopty") == 0) {
+      ptyFlag = 0;
+      argNo++;
+
+    } else if (strcmp(argv[argNo],"-debug") == 0) {
+      debugFlag = 1;
+      argNo++;
+
+    } else if (strcmp(argv[argNo],"-bash") == 0) {
+      processType = LTERM_BASH_PROCESS;
+      argNo++;
+
+    } else if (strcmp(argv[argNo],"-tcsh") == 0) {
+      processType = LTERM_TCSH_PROCESS;
+      argNo++;
+
+    } else if (strcmp(argv[argNo],"-tty") == 0) {
+      argNo++;
+      if (argNo < argc) {
+        ttyDevice = argv[argNo];
+        argNo++;
+      }
+
+    } else if (strcmp(argv[argNo],"-err") == 0) {
+      argNo++;
+      if (argNo < argc) {
+        errDevice = argv[argNo];
+        argNo++;
+      }
+
+    } else if (strcmp(argv[argNo],"-prompt") == 0) {
+      argNo++;
+      if (argNo < argc) {
+        promptStr = argv[argNo];
+        argNo++;
+      }
+
+    } else
+      break;
+  }
+
+  if (argNo < argc) {
+    /* Execute specified command */
+    commandArgs = argv + argNo;
+  } else {
+    /* Execute default shell */
+    commandArgs = defaultCommand;
+  }
+
+  /* Convert prompt string to Unicode */
+  retValue = utf8toucs(promptStr, strlen(promptStr), uregexp, MAXPROMPT,
+                       0, &remaining, &decoded);
+  if ((retValue < 0) || (remaining > 0)) {
+    fprintf(stderr, "lterm: Error in decoding prompt string\n");
+    exit(1);
+  }
+
+  assert(decoded <= MAXPROMPT);
+  uregexp[decoded] = U_NUL;
+
+  if (debugFlag) {
+    messageLevel = 98;
+  } else {
+    messageLevel = 1;
+  }
+
+  if (errDevice != NULL) {
+    /* Redirect debug STDERR output to specified device */
+    int errfd = -1;
+    if ( (errfd = open(errDevice, O_WRONLY)) == -1)
+        perror("lterm");
+
+    if (dup2(errfd, 2) == -1) {
+      fprintf(stderr, "lterm: Failed dup2 for specified stderr\n");
+      exit(-1);
+    }
+
+    fprintf(stderr, "\n\nlterm: Echoing %s output to %s\n",
+            argv[0], errDevice);
+  }
+
+  signal(SIGINT, finish); /* Interrupt handler */
+
+  if (lineFlag) {
+    /* Line mode */
+
+    /* Get terminal attributes */
+    if (tcgetattr(0, &tios) == -1) {
+      fprintf(stderr, "lterm: Failed to get TTY attributes\n");
+      exit(-1);
+    }
+
+    /* Disable signals, canonical mode processing, and echo  */
+    tios.c_lflag &= ~(ISIG | ICANON | ECHO );
+
+    /* set MIN=1 and TIME=0 */
+    tios.c_cc[VMIN] = 1;
+    tios.c_cc[VTIME] = 0;
+
+    /* Set terminal attributes */
+    if (tcsetattr(0, TCSAFLUSH, &tios) == -1) {
+      fprintf(stderr, "lterm: Failed to set TTY attributes\n");
+      exit(-1);
+    }
+
+  } else {
+    /* Screen mode */
+    if (ttyDevice == NULL) {
+      /* Initialize screen on controlling TTY */
+      initscr();
+
+    } else {
+      /* Initialize screen on specified TTY */
+      if (errDevice != NULL)
+        fprintf(stderr, "lterm-00: Opening xterm %s\n", ttyDevice);
+      inFile = fopen( ttyDevice, "r");
+      outFile = fopen( ttyDevice, "w");
+      termScreen = newterm("xterm", outFile, inFile);
+      set_term(termScreen);
+    }
+
+    /* NCURSES screen settings */
+    cbreak();                 /* set terminal to raw (non-canonical) mode */
+    noecho();                 /* Disable terminal echo */
+    nonl();                   /* Do not translate newline */
+    intrflush(stdscr, FALSE); /* Flush input on interrupt */
+    keypad(stdscr, TRUE);     /* Enable user keypad */
+
+#ifdef NCURSES_MOUSE_VERSION
+    mousemask(BUTTON1_CLICKED, NULL); /* Capture Button1 click events */
+#endif
+
+    clear(); /* Clear screen */
+  }
+
+  /* Initialize LTERM operations */
+  lterm_init(messageLevel);
+
+  if (errDevice != NULL) {
+    tlog_message("lterm-00: Testing tlog_message\n");
+    tlog_warning("lterm-00: Testing tlog_warning\n");
+    fprintf(stderr, "lterm-00: ");
+    tlog_unichar(uregexp, ucslen(uregexp));
+  }
+
+  if (errDevice != NULL)
+    fprintf(stderr, "lintest-00: Opening LTERM to execute %s\n", commandArgs[0]);
+
+  options = 0;
+  if (!ptyFlag) options |= LTERM_NOPTY_FLAG;
+
+  // options |= LTERM_NOSTDERR_FLAG;
+
+  ltermNumber = lterm_new();
+  retValue = lterm_open(ltermNumber, commandArgs, NULL, uregexp,
+                        options, processType, NULL, NULL);
+  if (retValue < 0) {
+    fprintf(stderr, "lterm: Error %d in opening LTERM\n", retValue);
+    exit(1);
+  }
+
+  /* Create output handler thread */
+  retValue = pthread_create(&output_handler_thread_ID,  NULL,
+                            output_handler, (void *) &ltermNumber);
+  if (retValue != 0) {
+    fprintf(stderr, "lterm: Error %d in creating OUTPUT_HANDLER thread\n",
+                     retValue);
+    finish(0);
+  }
+
+  if (errDevice != NULL)
+    fprintf(stderr, "lterm-00: Created OUTPUT_HANDLER thread\n");
+
+  /* Process input */
+  input_handler(&ltermNumber);
+
+  /* Join output handler thread */
+  if (errDevice != NULL)
+    fprintf(stderr, "lterm-00: Joining OUTPUT_HANDLER thread\n");
+
+  retValue = pthread_join(output_handler_thread_ID,  NULL);
+  if (retValue != 0) {
+    fprintf(stderr, "lterm: Error %d in joining OUTPUT_HANDLER thread\n",
+                     retValue);
+    finish(0);
+  }
+
+  finish(0);
+}
+
+void finish(int sig)
+{
+  if (!lineFlag) {
+    endwin(); /* Close window */
+    if (termScreen != NULL)
+      delscreen(termScreen);
+  }
+
+  if (ltermNumber >= 0) {
+    /* Close and delete LTERM */
+    lterm_delete(ltermNumber);
+  }
+
+  if (errDevice != NULL)
+    fprintf(stderr, "finished-00: Finished\n");
+
+  exit(0);
+}
+
+/** Output an Unicode message to specified file descriptor. */
+void writeUnicode(int fd, const UNICHAR *buf, int count)
+{
+  char str[MAXCOL];
+  int j, k;
+
+  k = 0;
+  for (j=0; j<count; j++) {
+
+    if (k >= MAXCOL-4) {
+      if (MAXCOL >= 4) {
+        str[MAXCOL-4] = '.';
+        str[MAXCOL-3] = '.';
+        str[MAXCOL-2] = '.';
+      }
+      k = MAXCOL-1;
+      break;
+    }
+
+    /* TEMPORARY IMPLEMENTATION: just truncate Unicode to byte characters */
+    str[k++] = buf[j];
+  }
+
+  if (k == 0) return;
+
+  if (write(fd, str, k) != k) {
+    fprintf(stderr, "writeUnicode: Error in writing to FD %d\n", fd);
+    exit(-1);
+  }
+}
+
+
+/** Output an Unicode message to specified output stream
+ * if NOCONTROL is true, control characters are converted to printable
+ * characters before output
+ */
+void printUnicode(FILE *outStream, const UNICHAR *buf, int count, int noControl)
+{
+  char str[MAXCOL];
+  int j, k;
+
+  k = 0;
+  for (j=0; j<count; j++) {
+
+    if (k >= MAXCOL-4) {
+      if (MAXCOL >= 4) {
+        str[MAXCOL-4] = '.';
+        str[MAXCOL-3] = '.';
+        str[MAXCOL-2] = '.';
+      }
+      k = MAXCOL-1;
+      break;
+    }
+
+    if (!noControl && ((buf[j] < U_SPACE) || (buf[j] == U_DEL)) ) {
+      /* Control character */
+      str[k++] = U_CARET;
+      str[k++] = buf[j]+U_ATSIGN;
+    } else {
+      /* Printable character */
+      /* TEMPORARY IMPLEMENTATION: just truncate Unicode to byte characters */
+      str[k++] = buf[j];
+    }
+  }
+
+  /* Insert terminating null character and display string */
+  str[k++] = '\0';
+  fprintf(outStream, "%s\n", str);
+}
+
+
+void input_handler(int *plterm)
+{
+  char ch;
+  UNICHAR uch;
+  int n_written;
+
+  if (lineFlag) {
+
+    for (;;) {
+      /* Read a character from TTY (raw mode) */
+      ch = getchar();
+
+      if (ch == 0) {
+        fprintf(stderr, "input_handler-00: NUL character read; terminating\n");
+        break;
+      }
+
+      uch = (UNICHAR) ch;
+      n_written = lterm_write(*plterm, &uch, 1, LTERM_WRITE_PLAIN_INPUT);
+
+      /* Exit loop if TTY has been closed */
+      if (n_written == -2) {
+        if (errDevice != NULL)
+          fprintf(stderr, "input_handler-00: pseudo-TTY has been closed\n", *plterm);
+        break;
+      }
+
+      if (n_written < 0) {
+        fprintf(stderr, "input_handler: Error %d return from lterm_write\n",
+                         n_written);
+        return;
+      }
+    }
+  }
+
+  /* Close LTERM */
+  if (errDevice != NULL)
+    fprintf(stderr, "input_handler-00: Closing LTERM %d\n", *plterm);
+
+  /* Close and delete LTERM */
+  lterm_delete(*plterm);
+  *plterm = -1;
+}
+
+void *output_handler(void *arg)
+{
+  int *plterm = (int *) arg;
+  int timeout = -1;
+  UNICHAR buf[MAXCOL];
+  UNISTYLE style[MAXCOL];
+  int n_read, opcodes, buf_row, buf_col, cursor_row, cursor_col;
+  int xmax, ymax, x, y, c;
+  MEVENT mev;
+
+  if (errDevice != NULL)
+    fprintf(stderr, "output_handler-00: thread ID = %d, LTERM=%d\n",
+                    pthread_self(), *plterm);
+
+  if (!lineFlag) {
+    /* Get screen size */
+    getmaxyx(stdscr, ymax, xmax);
+
+    if (errDevice != NULL)
+      fprintf(stderr, "output_handler-00: screen xmax = %d, ymax = %d\n",
+              xmax,ymax);
+  }
+
+  for (;;) {
+    n_read = lterm_read(*plterm, timeout, buf, MAXCOL,
+                        style, &opcodes,
+                        &buf_row, &buf_col, &cursor_row, &cursor_col);
+
+    if (n_read == -1) {
+      fprintf(stderr, "output_handler: Error %d return from lterm_read\n",
+                      n_read);
+      return NULL;
+    }
+
+    /* Exit loop if TTY has been closed;
+     * leave it to input handler to close the LTERM.
+     */
+    if (n_read == -2) {
+      if (errDevice != NULL)
+        fprintf(stderr, "output_handler: pseudo-TTY has been closed\n");
+      break;
+    }
+
+    if (debugFlag) {
+      fprintf(stderr, "output_handler-00: n_read=%d, opcodes=%x, buf_row/col=%d/%d, cursor_row/col=%d/%d\n",
+            n_read, opcodes, buf_row, buf_col, cursor_row, cursor_col);
+      fprintf(stderr, "output_handler-00: U(%d): ", n_read);
+      printUnicode(stderr, buf, n_read, 1);
+      fprintf(stderr, "\n");
+    }
+
+    if (opcodes & LTERM_STREAMDATA_CODE) {
+      /* Stream data */
+      if (debugFlag)
+        fprintf(stderr, "output_handler-00: STREAMDATA\n");
+
+    } else if (opcodes & LTERM_SCREENDATA_CODE) {
+      /* Screen data */
+      if (debugFlag)
+        fprintf(stderr, "output_handler-00: SCREENDATA\n");
+
+    } else if (opcodes & LTERM_LINEDATA_CODE) {
+      /* Line data */
+      if (debugFlag)
+        fprintf(stderr, "output_handler-00: LINEDATA\n");
+
+      if (lineFlag) {
+        int j;
+        write(1, "\033[2K", 4);
+        write(1, "\r", 1);
+
+        if (opcodes & LTERM_META_CODE)
+          write(1, "META", 4);
+
+        writeUnicode(1, buf, n_read);
+
+        for (j=0; j< (n_read-cursor_col); j++)
+          write(1, "\033[D", 3);
+
+        if (opcodes & LTERM_BELL_CODE)
+          write(1, "\007", 1);
+
+        if (opcodes & LTERM_CLEAR_CODE)
+          write(1, "\033[H\033[2J", 7);
+
+        if (opcodes & LTERM_NEWLINE_CODE)
+          write(1, "\n", 1);
+      }
+
+    } else if (opcodes != 0) {
+      fprintf(stderr, "output_handler: invalid opcodes %x\n", opcodes);
+    }
+  }
+
+  return NULL;
+}

@@ -1,0 +1,19 @@
+/* xmlterm.css: XMLterm default style sheet */
+
+BODY { font-family: monaco, courier, elite, monospace;
+       background-color: #FFFFFF;
+     }
+
+DIV, PRE, SPAN { margin: 0; padding-top: 0; padding-bottom: 0 }
+
+PRE { font-family: monaco;
+      line-height: 120% }
+
+/* Input components */
+SPAN.prompt      { color: blue }
+SPAN.command     { color: blue }
+
+/* Directory display */
+SPAN.plainfile   { font-family: monaco}
+SPAN.directory   { font-family: monaco; color: blue; cursor: hand }
+SPAN.executable  { font-family: monaco; color: blue; cursor: hand }

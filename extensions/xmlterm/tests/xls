@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+# xls: an XMLterm wrapper for the UNIX "ls" command
+# Usage: xls  [-c|--cols] [-h|help] [-i||--iconic] [-w|--window]
+
+use Cwd;
+use Getopt::Long;
+
+Getopt::Long::config('bundling');
+
+$options = "@ARGV";
+
+&GetOptions("cols|c=i", "help|h!", "iconic|i!", "window|w!");
+
+if ($opt_help) {
+    print "Usage: xls [-c|--cols] [-i|--iconic] [-w|--window]\n";
+    exit;
+}
+
+# Icon details
+#$imgdir="chrome://xmlterm/skin/default/images"
+$imgdir = "file:/usr/share/pixmaps/mc";
+
+($img{'directory'}, $img{'executable'}, $img{'plainfile'}) =
+    ('i-directory.png', 'i-executable.png', 'i-regular.png');
+
+$ncols = 5;
+$ncols = $opt_cols if ($opt_cols);
+
+print "\e{S\a";                         # HTML stream escape sequence
+print "<TABLE FRAME=none BORDER=0>";
+print "<COLGROUP COLSPAN=$ncols WIDTH=1*>";
+
+$dir = cwd();
+$rowimg = "";
+$rowtxt = "";
+$nfile = 0;
+foreach $file (glob("$dir/*")) {        # for each file in current directory
+    if (-d $file) {                     # directory
+        $filetype = "directory";
+        $sendtxt = "cd $file; xls $options";
+        $sendimg = "file:/usr/share/pixmaps/mc/i-directory.png";
+
+    } elsif (-x $file) {                # executable
+        $filetype = "executable";
+        $sendtxt = "$file";
+
+    } else {                            # plain file
+        $filetype = "plainfile";
+        $sendtxt = "";
+    }
+
+    @comps = split(m./.,$file);
+    $tail = $comps[$#comps];            # file name
+
+    if ($opt_window) {
+        $sendcmd = "createln";
+    } else {
+        $sendcmd = "sendln";
+    }
+
+    $clickcmd = qq%onclick="return clickXMLTerm('$sendcmd',-1,'$sendtxt')"%;
+
+    $rowimg .= "<TD><IMG SRC='$imgdir/$img{$filetype}' $clickcmd>";
+    $rowtxt .= "<TD><SPAN CLASS='$filetype' $clickcmd>";
+    $rowtxt .= "$tail</SPAN>";
+    $nfile++;
+
+    if (($nfile % $ncols) == 0) {       # print complete table row
+        print "<TR>$rowimg" if ($opt_iconic) ;
+        print "<TR>$rowtxt";
+        $rowimg = "";
+        $rowtxt = "";
+    }
+
+}
+
+if (length($rowtxt) != 0) {
+    print "<TR>$rowimg" if ($opt_iconic) ;
+    print "<TR>$rowtxt";
+}
+
+print "</TABLE>";
+print "\000";                           # Terminate HTML stream
+

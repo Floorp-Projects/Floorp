@@ -1,0 +1,7 @@
+#!/bin/csh
+set echo
+
+pushd ../base
+make STAND_ALONE=1 export libs
+popd
+make STAND_ALONE=1 $*
