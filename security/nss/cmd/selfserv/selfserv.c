@@ -412,7 +412,7 @@ myBadCertHandler( void *arg, PRFileDesc *fd)
 **************************************************************************/
 #define MIN_THREADS 3
 #define DEFAULT_THREADS 8
-#define MAX_THREADS 128
+#define MAX_THREADS 4096
 #define MAX_PROCS 25
 static int  maxThreads = DEFAULT_THREADS;
 
