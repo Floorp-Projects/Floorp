@@ -878,10 +878,9 @@ void GC_print_callers(struct callinfo info[NFRAMES])
   GC_err_printf0("Callers at location:\n");
   while (current_tree && current_tree->pc) {
     if (dladdr(current_tree->pc, &dlinfo) >= 0) {
-      GC_err_printf4("%s[%s,0x%08X,0x%08X]\n", dlinfo.dli_sname, dlinfo.dli_fname, current_tree->pc, dlinfo.dli_saddr);
+      int offset = (int)current_tree->pc - (int)dlinfo.dli_fbase;
+      GC_err_printf3("%s[%s +0x%08X]\n", dlinfo.dli_sname, dlinfo.dli_fname, offset);
     } else {
-      /* pc2name((word)current_tree->pc, symbol_name, sizeof(symbol_name));  */
-      /* MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name)); */
       GC_err_printf2("%s(%08X)\n", "(unknown)", current_tree->pc);
     }
     current_tree = current_tree->parent;
