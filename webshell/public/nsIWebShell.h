@@ -113,17 +113,6 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_IID; return iid; }
 
   /**
-   * Initialization function for a WebShell instance.  This method provides 
-   * information needed by the WebShell to embed itself inside of a native 
-   * window provided by the caller. It is assumed that this function will be 
-   * called only once.
-   */
-  NS_IMETHOD Init(nsNativeWidget aNativeParent,
-                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
-                  PRBool aAllowPlugins = PR_TRUE,
-                  PRBool aIsSunkenBorder = PR_FALSE) = 0;
-
-  /**
    * Set the nsIWebShellContainer for the WebShell.
    */
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer) = 0;
@@ -141,17 +130,6 @@ public:
   NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aTopLevelWindow) = 0;
 
   /**
-   * Set the DocLoaderObserver which receives all notifications from URLs 
-   * loaded by the document.
-   */
-  NS_IMETHOD SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver) = 0;
-
-  /**
-   * Return the current nsIDocLoadeObserver
-   */
-  NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver** aResult) = 0;
-
-  /**
    * Return the root WebShell instance.  Since WebShells can be nested 
    * (when frames are present for example) this instance represents the 
    * outermost WebShell.
@@ -159,67 +137,9 @@ public:
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
 
   /**
-   * Set the parent WebShell.
-   */
-  NS_IMETHOD SetParent(nsIWebShell* aParent) = 0;
-
-  /**
-   * Return the parent WebShell.
-   */
-  NS_IMETHOD GetParent(nsIWebShell*& aParent) = 0;
-
-  /**
    * Get the referrer of the link using this WebShell.
    */
   NS_IMETHOD GetReferrer(nsIURI **aReferrer) = 0;
-
-  /**
-   * Return the current number of WebShells which are immediate children 
-   * of the current WebShell.
-   */
-  NS_IMETHOD GetChildCount(PRInt32& aResult) = 0;
-
-  /**
-   * Add a new child WebShell.
-   */
-  NS_IMETHOD AddChild(nsIWebShell* aChild) = 0;
-
-  /**
-   * Remove a child WebShell.
-   */
-  NS_IMETHOD RemoveChild(nsIWebShell* aChild) = 0;
-
-  /**
-   * Return the child WebShell at the requested index.
-   */
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult) = 0;
-
-  /**
-   * Return the name of the current WebShell.
-   */
-  NS_IMETHOD GetName(const PRUnichar** aName) = 0;
-
-  /**
-   * Set the name of the current WebShell.
-   */
-  NS_IMETHOD SetName(const PRUnichar* aName) = 0;
-
-  /**
-   * Return the child WebShell with the specified name.
-   */
-  NS_IMETHOD FindChildWithName(const PRUnichar* aName,
-                               nsIWebShell*& aResult) = 0;
-
-  /*
-   * Get Chrome Event Handler 
-   */
-  NS_IMETHOD SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler) = 0;
-
-  /**
-   * Get the content viewer for this webshell.
-   */
-  NS_IMETHOD GetContentViewer(nsIContentViewer** aResult) = 0;
-
 
   //
   // Document load api's
@@ -228,11 +148,6 @@ public:
    * Return the nsIDocumentLoader associated with the WebShell.
    */
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
-
-  /**
-   * Lets us know if the webshell document fired off a load
-   */  
-  NS_IMETHOD IsBusy(PRBool& aResult) = 0;
 
   /**
    * Load the document associated with the specified URL into the WebShell.
@@ -272,20 +187,6 @@ public:
                       const PRUnichar* aReferrer=nsnull,
                       const char * aWindowTarget = nsnull) = 0;
 
-   /** Set the document for this webshell.
-     * This simulates a URI load, in that the same notifications are sent as
-     * if the caller had called LoadURI.
-     * @param aDOMDoc
-     * @param aRootNode
-     */
-   NS_IMETHOD SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode) = 0;
-
-
-  // XXX Temp Hacks
-
-  NS_IMETHOD StopBeforeRequestingURL() = 0;
-  NS_IMETHOD StopAfterURLAvailable() = 0;
-
   //
   // History api's
   //
@@ -304,19 +205,6 @@ public:
   // SetToolBar
   // SetMenuBar
   // SetStatusBar
-
-  // XXX these are here until there a better way to pass along info to a sub doc
-  NS_IMETHOD GetMarginWidth (PRInt32* aWidth)  = 0;
-  NS_IMETHOD SetMarginWidth (PRInt32  aWidth)  = 0;
-  NS_IMETHOD GetMarginHeight(PRInt32* aWidth)  = 0;
-  NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
-  
-  /**
-   * Set/Get the document scale factor
-   */
-
-  NS_IMETHOD SetZoom(float aZoom) = 0;
-  NS_IMETHOD GetZoom(float *aZoom) = 0;
 
   /**
     * Finds text in content
