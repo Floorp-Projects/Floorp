@@ -31,21 +31,29 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 
+#include "nsLayoutCID.h" 
+#include "nsCOMPtr.h"
+
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
+#define LAYOUT_DLL    "raptorhtml.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
+#define LAYOUT_DLL    "libraptorhtml.so"
 #endif
 #endif
+
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
+static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
+
 // XXX end bad code
 
 static void Usage(void)
@@ -57,6 +65,7 @@ int main(int argc, char** argv)
 {
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kCSSParserCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
   nsresult rv;
   PRBool verbose = PR_FALSE;
@@ -94,9 +103,13 @@ int main(int argc, char** argv)
   }
 
   // Create parser
-  nsICSSParser* css;
-  rv = NS_NewCSSParser(&css);
-  if (NS_OK != rv) {
+  nsCOMPtr<nsICSSParser> css;
+  rv = nsComponentManager::CreateInstance(kCSSParserCID,
+	nsnull,
+	kICSSParserIID,
+	getter_AddRefs(css));
+	
+  if (NS_FAILED(rv)) {
     printf("can't create css parser: %d\n", rv);
     return -1;
   }
@@ -161,8 +174,6 @@ int main(int argc, char** argv)
       sheet->Release();
     }
   }
-
-  css->Release();
 
   /* Release the event queue for the thread */
   if (nsnull != pEventQService) {

@@ -36,7 +36,6 @@ include $(topsrcdir)/config/config.mk
 SIMPLE_PROGRAMS = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
 LIBS = \
-	-lraptorhtml \
 	-limg \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
