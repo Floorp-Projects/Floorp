@@ -570,10 +570,13 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
 
 PRBool
 nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext,
+                                                   nsFrameConstructorState& aState,
                                                    nsIFrame*        aFrame,
                                                    nsIContent*      aContent,
                                                    nsIStyleContext* aStyleContext,
                                                    nsIAtom*         aPseudoElement,
+                                                   PRBool           aMakeFirstLetterFrame,
+                                                   PRBool           aForBlock,
                                                    nsIFrame**       aResult)
 {
   *aResult = nsnull; // initialize OUT parameter
@@ -670,12 +673,28 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
           nsresult  result;
 
           // Create a frame
-          result = CreateGeneratedFrameFor(aPresContext, containerFrame, aContent,
-                                           textStyleContext, styleContent,
-                                           contentIndex, &frame);
+          result = CreateGeneratedFrameFor(aPresContext, containerFrame,
+                                           aContent, textStyleContext,
+                                           styleContent, contentIndex, &frame);
           if (NS_SUCCEEDED(result) && frame) {
             // Add it to the list of child frames
             childFrames.AddChild(frame);
+
+            // If we need to make a first-letter frame and we just
+            // made the first frame for the generated content then
+            // create the first-letter frame.
+            if (aMakeFirstLetterFrame && (0 == contentIndex)) {
+              // Create first-letter frame if necessary
+              nsCOMPtr<nsIContent> childContent;
+              nsresult rv = frame->GetContent(getter_AddRefs(childContent));
+              if (NS_SUCCEEDED(rv) && childContent &&
+                  ShouldCreateFirstLetterFrame(aPresContext, childContent,
+                                               frame)) {
+                rv = WrapTextFrame(aPresContext, frame, aContent,
+                                   childContent, aFrame, childFrames,
+                                   aState.mFloatedItems, aForBlock);
+              }
+            }
           }
         }
   
@@ -716,8 +735,9 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*          aPresContext,
 
     // Probe for generated content before
     aFrame->GetStyleContext(&styleContext);
-    if (CreateGeneratedContentFrame(aPresContext, aFrame, aContent, styleContext,
-                                    nsCSSAtoms::beforePseudo, &generatedFrame)) {
+    if (CreateGeneratedContentFrame(aPresContext, aState, aFrame, aContent,
+                                    styleContext, nsCSSAtoms::beforePseudo,
+                                    PR_FALSE, PR_FALSE, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -739,8 +759,9 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*          aPresContext,
     nsIFrame* generatedFrame;
 
     // Probe for generated content after
-    if (CreateGeneratedContentFrame(aPresContext, aFrame, aContent, styleContext,
-                                    nsCSSAtoms::afterPseudo, &generatedFrame)) {
+    if (CreateGeneratedContentFrame(aPresContext, aState, aFrame, aContent,
+                                    styleContext, nsCSSAtoms::afterPseudo,
+                                    PR_FALSE, PR_FALSE, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }
@@ -2380,11 +2401,11 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
 
   if (eWidgetRendering_Gfx == mode) {
       // Construct a frame-based listbox or combobox
-    nsIDOMHTMLSelectElement* select   = nsnull;
+    nsIDOMHTMLSelectElement* dselect   = nsnull;
     PRInt32 size = 1;
-    nsresult result = aContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select);
+    nsresult result = aContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&dselect);
     if (NS_OK == result) {
-      result = select->GetSize(&size); 
+      result = dselect->GetSize(&size); 
       if ((1 == size) || (kNoSizeSpecified  == size)) {
             // Construct a frame-based combo box
           nsIFrame * comboboxFrame;
@@ -2533,7 +2554,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
         listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
         aFrameHasBeenInitialized = PR_TRUE;
       }
-      NS_RELEASE(select);
+      NS_RELEASE(dselect);
     } else {
       rv = NS_NewSelectControlFrame(&aNewFrame);
     }
@@ -4205,10 +4226,10 @@ FindPreviousSibling(nsIPresShell* aPresShell,
 
   // Note: not all content objects are associated with a frame (e.g., if their
   // 'display' type is 'hidden') so keep looking until we find a previous frame
-  for (PRInt32 index = aIndexInContainer - 1; index >= 0; index--) {
+  for (PRInt32 i = aIndexInContainer - 1; i >= 0; i--) {
     nsCOMPtr<nsIContent> precedingContent;
 
-    aContainer->ChildAt(index, *getter_AddRefs(precedingContent));
+    aContainer->ChildAt(i, *getter_AddRefs(precedingContent));
     aPresShell->GetPrimaryFrameFor(precedingContent, &prevSibling);
 
     if (nsnull != prevSibling) {
@@ -4251,10 +4272,10 @@ FindNextSibling(nsIPresShell* aPresShell,
   // 'display' type is 'hidden') so keep looking until we find a previous frame
   PRInt32 count;
   aContainer->ChildCount(count);
-  for (PRInt32 index = aIndexInContainer + 1; index < count; index++) {
+  for (PRInt32 i = aIndexInContainer + 1; i < count; i++) {
     nsCOMPtr<nsIContent> nextContent;
 
-    aContainer->ChildAt(index, *getter_AddRefs(nextContent));
+    aContainer->ChildAt(i, *getter_AddRefs(nextContent));
     aPresShell->GetPrimaryFrameFor(nextContent, &nextSibling);
 
     if (nsnull != nextSibling) {
@@ -5938,10 +5959,11 @@ nsCSSFrameConstructor::GetFirstLetterStyle(nsIPresContext* aPresContext,
   return fls;
 }
 
-static PRBool
-ShouldCreateFirstLetterFrame(nsIPresContext*  aPresContext,
-                             nsIContent*      aContent,
-                             nsIFrame*        aFrame)
+PRBool
+nsCSSFrameConstructor::ShouldCreateFirstLetterFrame(
+  nsIPresContext* aPresContext,
+  nsIContent*      aContent,
+  nsIFrame*        aFrame)
 {
   PRBool result = PR_FALSE;
   NS_PRECONDITION(aFrame, "null ptr");
@@ -5975,15 +5997,17 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*          aPresContex
   nsresult rv = NS_OK;
   nsIStyleContext*  styleContext = nsnull;
 
+  PRBool processFirstLetterFrame = PR_TRUE;
   if (aCanHaveGeneratedContent) {
     // Probe for generated content before
     nsIFrame* generatedFrame;
     aFrame->GetStyleContext(&styleContext);
-    if (CreateGeneratedContentFrame(aPresContext, aFrame, aContent,
+    if (CreateGeneratedContentFrame(aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::beforePseudo,
-                                    &generatedFrame)) {
+                                    PR_TRUE, aForBlock, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
+      processFirstLetterFrame = PR_FALSE;
     }
   }
 
@@ -6001,7 +6025,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*          aPresContex
       }
 
       // Process first-letter frame that is the immediate child of the parent
-      if ((i == 0) && aFrameItems.childList &&
+      if ((i == 0) && processFirstLetterFrame && aFrameItems.childList &&
           ShouldCreateFirstLetterFrame(aPresContext, childContent,
                                        aFrameItems.childList)) {
         rv = WrapTextFrame(aPresContext, aFrameItems.childList, aContent,
@@ -6014,9 +6038,10 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresContext*          aPresContex
   if (aCanHaveGeneratedContent) {
     // Probe for generated content after
     nsIFrame* generatedFrame;
-    if (CreateGeneratedContentFrame(aPresContext, aFrame, aContent,
+    if (CreateGeneratedContentFrame(aPresContext, aState, aFrame, aContent,
                                     styleContext, nsCSSAtoms::afterPseudo,
-                                    &generatedFrame)) {
+                                    processFirstLetterFrame && (0 == count),
+                                    aForBlock, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
     }

@@ -163,10 +163,13 @@ protected:
                                    nsIFrame**            aFrame);
 
   PRBool CreateGeneratedContentFrame(nsIPresContext*  aPresContext,
+                                     nsFrameConstructorState& aState,
                                      nsIFrame*        aFrame,
                                      nsIContent*      aContent,
                                      nsIStyleContext* aStyleContext,
                                      nsIAtom*         aPseudoElement,
+                                     PRBool           aMakeFirstLetterFrame,
+                                     PRBool           aForBlock,
                                      nsIFrame**       aResult);
 
   nsresult AppendFrames(nsIPresContext* aPresContext,
@@ -531,6 +534,10 @@ protected:
   nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext,
                                        nsIContent* aContent,
                                        nsIStyleContext* aStyleContext);
+
+  PRBool ShouldCreateFirstLetterFrame(nsIPresContext* aPresContext,
+                                      nsIContent*      aContent,
+                                      nsIFrame*        aFrame);
 
   nsresult ProcessBlockChildren(nsIPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
