@@ -34,7 +34,7 @@
 /*
  * CMS envelopedData methods.
  *
- * $Id: cmsenvdata.c,v 1.8 2003/11/20 02:00:04 nelsonb%netscape.com Exp $
+ * $Id: cmsenvdata.c,v 1.9 2003/12/04 00:14:24 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -408,7 +408,7 @@ loser:
 SECStatus
 NSS_CMSEnvelopedData_Decode_AfterData(NSSCMSEnvelopedData *envd)
 {
-    if (envd->contentInfo.ciphcx) {
+    if (envd && envd->contentInfo.ciphcx) {
 	NSS_CMSCipherContext_Destroy(envd->contentInfo.ciphcx);
 	envd->contentInfo.ciphcx = NULL;
     }
