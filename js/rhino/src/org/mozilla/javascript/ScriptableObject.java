@@ -1723,7 +1723,7 @@ public abstract class ScriptableObject implements Scriptable {
         return result;
     }
         
-    private Object[] getIds(boolean getAll) {
+    Object[] getIds(boolean getAll) {
         Slot[] s = slots;
         Object[] a = ScriptRuntime.emptyArgs;
         if (s == null)

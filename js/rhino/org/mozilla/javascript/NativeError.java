@@ -52,7 +52,7 @@ public class NativeError extends IdScriptable {
     }
     
     public int methodArity(int methodId, IdFunction function) {
-        if (methodId == CONSTRUCTOR_ID) {
+        if (methodId == Id_constructor) {
             return 1;
         }
         return 0;
@@ -64,7 +64,7 @@ public class NativeError extends IdScriptable {
         throws JavaScriptException
     {
         switch (methodId) {
-        case CONSTRUCTOR_ID: 
+        case Id_constructor: 
             return jsConstructor(cx, args, f, thisObj == null);
 
         case Id_toString: 
@@ -113,15 +113,23 @@ public class NativeError extends IdScriptable {
                 ScriptRuntime.getProp(this, "message", this));
     }    
 
-    protected int getMaxPrototypeMethodId() { return MAX_PROTOTYPE_METHOD; }
+    protected int getMaximumId() { return MAX_ID; }
 
+    protected String getIdName(int id) {
+        if (id == Id_constructor) return "constructor";
+        if (id == Id_toString) return "toString";
+        return null;        
+    }
+    
 // #string_id_map#
 
-    protected int mapNameToMethodId(String s) {
+    protected int mapNameToId(String s) {
         int id;
-// #generated# Last update: 2001-03-29 15:13:30 GMT+02:00
+// #generated# Last update: 2001-04-23 10:03:24 CEST
         L0: { id = 0; String X = null;
-            if (s.length()==8) { X="toString";id=Id_toString; }
+            int s_length = s.length();
+            if (s_length==8) { X="toString";id=Id_toString; }
+            else if (s_length==11) { X="constructor";id=Id_constructor; }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
 // #/generated#
@@ -129,8 +137,9 @@ public class NativeError extends IdScriptable {
     }
 
     private static final int
-        Id_toString              = 1,
-        MAX_PROTOTYPE_METHOD     = 1;
+        Id_constructor           = 1,
+        Id_toString              = 2,
+        MAX_ID                   = 2;
 
 // #/string_id_map#
     

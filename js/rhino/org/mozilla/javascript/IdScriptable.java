@@ -35,190 +35,367 @@
 
 package org.mozilla.javascript;
 
-/** 
+/**
 Base class for native object implementation that uses IdFunction to export its methods to script via <class-name>.prototype object.
 
 Any descendant should implement at least the following methods:
-    getMaxPrototypeMethodId
-    mapNameToMethodId
+    getMaximumId
+    mapNameToId
+    getIdName
     execMethod
     methodArity
 
-Any implementation of execMethod and methodArity should assume that if
-methodId is 0 (CONSTRUCTOR_ID), it denotes EcmaScript constructor for
-<class-name> object.
+To define non-function properties, the descendant should customize
+    getIdValue
+    setIdValue
+    getIdDefaultAttributes
+to get/set property value and provide its default attributes.
 
 To customize initializition of constructor and protype objects, descendant
-may override initForGlobal or fillConstructorProperties methods. 
-
-To wrap primitive java types to script objects, descaendant
-should use wrap_<primitive-type> set of methods.
+may override scopeInit or fillConstructorProperties methods.
 
 */
 public abstract class IdScriptable extends ScriptableObject
     implements IdFunction.Master, ScopeInitializer
 {
-    public static final int CONSTRUCTOR_ID = 0;
-
-    /** 'thisObj' will be null if invoked as constructor, in which case
-     ** instance of Scriptable should be returned.
-     */
-    public abstract Object execMethod(int methodId, IdFunction function,
-                             Context cx, Scriptable scope, 
-                             Scriptable thisObj, Object[] args)
-        throws JavaScriptException;
-
-    public abstract int methodArity(int methodId, IdFunction function);
-
-    /** Return maximum method id for prototype function */
-    protected abstract int getMaxPrototypeMethodId();
-    
-    /** Map name into id for prototypr method. 
-     ** Should return 0 if not name is not prototype method 
-     ** or value between 1 and getMaxPrototypeMethodId()
-     */
-    protected abstract int mapNameToMethodId(String name);
-
     public boolean has(String name, Scriptable start) {
-        if (prototypeFunctionPool != null) {
-            IdFunction f;
-            int id = mapNameToMethodId(name);
-            if (id != 0) { 
-                f = prototypeFunctionPool[id];
+        Object[] data = idMapData;
+        if (data != null) {
+            int id = getId(name, data);
+            if (id != 0) {
+                return data[id * ID_MULT + VALUE_SHIFT] != NOT_FOUND;
             }
-            else {
-                f = checkConstructor(name);
-            }
-            if (f != IdFunction.WAS_OVERWRITTEN) { return true; }
         }
         return super.has(name, start);
     }
 
     public Object get(String name, Scriptable start) {
-        if (prototypeFunctionPool != null) {
-            IdFunction f = lastFunction;
-            if (f.methodName == name) { 
-                if (prototypeFunctionPool[f.methodId] == f) {
-                    return f;
-                }
-                lastFunction = IdFunction.WAS_OVERWRITTEN;
-            }
-            int id = mapNameToMethodId(name);
+        Object[] data = idMapData;
+        if (data != null) {
+            int id = getId(name, data);
             if (id != 0) {
-                f = prototypeFunctionPool[id];
-                if (f == null) { f = wrapMethod(name, id); }
-            }
-            else {
-                f = checkConstructor(name);
-            }
-            if (f != IdFunction.WAS_OVERWRITTEN) {
-                // Update cache
-                f.methodName = name;
-                lastFunction = f;
-                return f; 
+                Object value = data[id * ID_MULT + VALUE_SHIFT];
+                if (value == null) {
+                    value = getIdValue(id, start);
+                }
+                else if (value == NULL_TAG) {
+                    value = null;
+                }
+                return value;
             }
         }
         return super.get(name, start);
     }
 
     public void put(String name, Scriptable start, Object value) {
-        if (doOverwrite(name, start)) {
-            super.put(name, start, value);
+        Object[] data = idMapData;
+        if (data != null) {
+            int id = getId(name, data);
+            if (id != 0) {
+                int attr = getAttributes(id);
+                if ((attr & READONLY) == 0) {
+                    setIdValue(id, start, value);
+                }
+                return;
+            }
         }
+           super.put(name, start, value);
     }
 
     public void delete(String name) {
-        // Let the super class to throw exceptions for sealed objects
-        if (isSealed() || doOverwrite(name, this)) {
-            super.delete(name);
+        Object[] data = idMapData;
+        if (data != null) {
+            int id = getId(name, data);
+            if (id != 0) {
+                // Let the super class to throw exceptions for sealed objects
+                if (!isSealed()) {
+                    deleteId(id);
+                    return;
+                }
+            }
+        }
+        super.delete(name);
+    }
+
+    public int getAttributes(String name, Scriptable start)
+        throws PropertyException
+    {
+        Object[] data = idMapData;
+        if (data != null) {
+            int id = getId(name, data);
+            if (id != 0) {
+                if (data[id * ID_MULT + VALUE_SHIFT] != NOT_FOUND) {
+                    return getAttributes(id);
+                }
+                // For ids with deleted values super will throw exceptions
+            }
+        }
+        return super.getAttributes(name, start);
+    }
+
+    public void setAttributes(String name, Scriptable start,
+                              int attributes)
+        throws PropertyException
+    {
+        Object[] data = idMapData;
+        if (data != null) {
+            int id = getId(name, data);
+            if (id != 0) {
+                synchronized (this) {
+                    if (data[id * ID_MULT + VALUE_SHIFT] != NOT_FOUND) 
+                    {
+                        setAttributes(id, attributes);
+                        return;
+                    }
+                }
+                // For ids with deleted values super will throw exceptions
+            }
+        }
+        super.setAttributes(name, start, attributes);
+    }
+
+    synchronized void addPropertyAttribute(int attribute) {
+        extraIdAttributes |= attribute;
+        Object[] data = idMapData;
+        if (data != null) {
+            byte[] array = attributesArray;
+            if (array != null) {
+                for (int i = attributesArray.length; i-- != 0;) {
+                    int old = array[i];
+                    if (old != 0) {
+                        array[i] = (byte)(attribute | old);
+                    }
+                }
+            }
+        }
+        super.addPropertyAttribute(attribute);
+    }
+
+    Object[] getIds(boolean getAll) {
+        Object[] result = super.getIds(getAll);
+        
+        Object[] data = idMapData;
+        if (data != null) {
+            Object[] ids = null;
+            int count = 0;
+            
+            for (int id = getMaximumId(); id != 0; --id) {
+                if (data[id * ID_MULT + VALUE_SHIFT] != NOT_FOUND) {
+                    if (getAll || (getAttributes(id) & DONTENUM) == 0) {
+                        Object name;
+                        if (!CACHE_NAMES) {
+                            name = getIdName(id);
+                        }
+                        else {
+                            int offset = id * ID_MULT + NAME_CACHE_SHIFT;
+                            name = data[offset];
+                            if (name == null) {
+                                name = getIdName(id);
+                                data[offset] = name;
+                            }
+                        }
+                        if (count == 0) {
+                            // Need extra room for nor more then [1..id] names
+                            ids = new Object[id];
+                        }
+                        ids[count++] = name;
+                    }
+                }
+            }
+            if (count != 0) {
+                if (result.length == 0 && ids.length == count) {
+                    result = ids;
+                }
+                else {
+                    Object[] tmp = new Object[result.length + count];
+                    System.arraycopy(result, 0, tmp, 0, result.length);
+                    System.arraycopy(ids, 0, tmp, result.length, count);
+                }
+            }
+        }
+        return result;
+    }
+
+    /** Return minimum possible id, must be 0 or negative number.
+     ** If descendant needs to use ids not visible via mapNameToId, 
+     ** to define, for example, IdFunction-based properties in other objects,
+     ** it should use negative number and adjust getMinimumId() value
+     */
+    protected int getMinimumId() { return 0; }
+
+    /** Return maximum id, must be positive number.
+     */
+    protected abstract int getMaximumId();
+
+    /** Map name to id of prototype or instance property.
+     ** Should return 0 if not found or value within [1..getMaximumId()].
+     */
+    protected abstract int mapNameToId(String name);
+
+    /** Map id back to property name it defines.
+     */
+    protected abstract String getIdName(int id);
+
+    /** Get default attributes for id. 
+     ** Default implementation return DONTENUM that is the standard attribute 
+     ** for core EcmaScript function. Typically descendants need to overwrite
+     ** this for non-function attributes like length to return
+     ** DONTENUM | READONLY | PERMANENT or DONTENUM | PERMANENT
+     */
+    protected int getIdDefaultAttributes(int id) {
+        return DONTENUM;
+    }
+
+    /** Get id value. 
+     ** Default implementation returns IdFunction instance for given id.
+     ** If id value is constant, descendant can call cacheIdValue to store
+     ** value in permanent cache.
+     */
+    protected Object getIdValue(int id, Scriptable start) {
+        return cacheIdValue(id, newIdFunction(id));
+    }
+
+    /** Set id value. */
+    protected void setIdValue(int id, Scriptable start, Object value) {
+        if (start == this) {
+            synchronized (this) {
+                idMapData[id * ID_MULT + VALUE_SHIFT] 
+                    = (value != null) ? value : NULL_TAG;
+            }
+        }
+        else {
+            start.put(getIdName(id), start, value);
         }
     }
     
-    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
-        useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
-
-        prototypeFunctionPool = new IdFunction[getMaxPrototypeMethodId() + 1];
-
-        sealFunctions = sealed;
-        
-        setPrototype(getObjectPrototype(scope));
-        
-        String name = getClassName();
-
-        IdFunction ctor = newIdFunction(name, CONSTRUCTOR_ID);
-        ctor.setFunctionType(IdFunction.FUNCTION_AND_CONSTRUCTOR);
-        ctor.setParentScope(scope);
-        ctor.setPrototype(getFunctionPrototype(scope));
-        setParentScope(ctor);
-
-        ctor.setImmunePrototypeProperty(this);
-
-        fillConstructorProperties(cx, ctor, sealed);
-
-        if (!name.equals("With")) {
-            // A "With" object would delegate these calls to the prototype:
-            // not the right thing to do here!
-            prototypeFunctionPool[CONSTRUCTOR_ID] = ctor;
+    /** Store value in a permamnet cache. After this call getIdValue will
+     ** never be called for id. */
+    protected Object cacheIdValue(int id, Object value) {
+           Object[] data = idMapData;
+        synchronized (this) {
+            Object curValue = data[id * ID_MULT + VALUE_SHIFT];
+            if (curValue == null) {
+                data[id * ID_MULT + VALUE_SHIFT] 
+                    = (value != null) ? value : NULL_TAG;
+            }
+            else {
+                value = curValue;
+            }
         }
-        else {
-            prototypeFunctionPool[CONSTRUCTOR_ID] = IdFunction.WAS_OVERWRITTEN;
-        }
-        
-        if (sealed) {
-            ctor.sealObject();
-            ctor.addPropertyAttribute(READONLY);
-            sealObject();
-        }
-
-        defineProperty(scope, name, ctor, ScriptableObject.DONTENUM);
+        return value;
     }
 
+    /** 'thisObj' will be null if invoked as constructor, in which case
+     ** instance of Scriptable should be returned.
+     */
+    public abstract Object execMethod(int methodId, IdFunction function,
+                             Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
+        throws JavaScriptException;
+
+    public abstract int methodArity(int methodId, IdFunction function);
+
+    /** Do scope initialization. 
+     ** Default implementation calls activateIdMap() and then if 
+     ** mapNameToId("constructor") returns positive id, defines EcmaScript
+     ** constructor with name getClassName in scope and makes its prototype
+     ** property to point to this object.
+     */ 
+    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
+
+        useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
+        sealFunctions = sealed;
+
+        activateIdMap();
+
+        int constructorId = mapNameToId("constructor");
+        if (constructorId > 0) {
+            setPrototype(getObjectPrototype(scope));
+
+            String name = getClassName();
+
+            IdFunction ctor = newIdFunction(constructorId);
+            ctor.setFunctionType(IdFunction.FUNCTION_AND_CONSTRUCTOR);
+            ctor.setParentScope(scope);
+            ctor.setPrototype(getFunctionPrototype(scope));
+            setParentScope(ctor);
+
+            ctor.setImmunePrototypeProperty(this);
+
+            fillConstructorProperties(cx, ctor, sealed);
+
+            if (!name.equals("With")) {
+                // A "With" object would delegate these calls to the prototype:
+                // not the right thing to do here!
+                cacheIdValue(constructorId, ctor);
+            }
+            else {
+                cacheIdValue(constructorId, NOT_FOUND);
+            }
+
+            if (sealed) {
+                ctor.sealObject();
+                ctor.addPropertyAttribute(READONLY);
+                sealObject();
+            }
+
+            defineProperty(scope, name, ctor, ScriptableObject.DONTENUM);
+        }
+    }
+
+    protected void activateIdMap() {
+        int max = getMaximumId();
+        if (max != 0) {
+            idMapData = new Object[max * ID_MULT + VALUE_SHIFT + 1];
+        }
+    }
+    
     protected void fillConstructorProperties
         (Context cx, IdFunction ctor, boolean sealed)
     {
     }
 
     protected void addIdFunctionProperty
-        (Scriptable obj, String name, int id, boolean sealed)
+        (Scriptable obj, int id, boolean sealed)
     {
-        IdFunction f = newIdFunction(name, id);
+        IdFunction f = newIdFunction(id);
         if (sealed) { f.sealObject(); }
-        defineProperty(obj, name, f, DONTENUM);
+        defineProperty(obj, getIdName(id), f, DONTENUM);
     }
-    
+
 /** Utility method for converting target object into native this.
     Possible usage would be to have a private function like realThis:
-        
-    private NativeSomething realThis(Scriptable thisObj, 
-                                     IdFunction f, boolean searchPrototype) 
+
+    private NativeSomething realThis(Scriptable thisObj,
+                                     IdFunction f, boolean readOnly)
     {
         while (!(thisObj instanceof NativeSomething)) {
-            thisObj = nextInstanceCheck(thisObj, f, searchPrototype);
+            thisObj = nextInstanceCheck(thisObj, f, readOnly);
         }
         return (NativeSomething)thisObj;
-    } 
-     
+    }
+
     Note that although such function can be implemented universally via
     java.lang.Class.isInstance(), it would be much more slower.
 
-    @param searchPrototype specify is it OK to look up prototype chain 
-           for thisObj.
+    @param readOnly specify if the function f does not change state of object.
     @return Scriptable object suitable for a check by the instanceof operator.
     @throws RuntimeException if no more instanceof target can be found
 */
-    protected Scriptable nextInstanceCheck(Scriptable thisObj, 
-                                           IdFunction f, 
-                                           boolean searchPrototype) 
+    protected Scriptable nextInstanceCheck(Scriptable thisObj,
+                                           IdFunction f,
+                                           boolean readOnly)
     {
-        if (searchPrototype && useDynamicScope) {
+        if (readOnly && useDynamicScope) {
+            // for read only functions under dynamic scope look prototype chain
             thisObj = thisObj.getPrototype();
             if (thisObj != null) { return thisObj; }
         }
         throw NativeGlobal.typeError1("msg.incompat.call", f.methodName, f);
     }
-    
-    protected IdFunction newIdFunction(String name, int id) {
-        return new IdFunction(this, name, id);
+
+    protected IdFunction newIdFunction(int id) {
+        return new IdFunction(this, getIdName(id), id);
     }
 
     protected final Object wrap_double(double x) {
@@ -230,68 +407,93 @@ public abstract class IdScriptable extends ScriptableObject
         if (b == x) { return new Byte(b); }
         return new Integer(x);
     }
-    
+
     protected final Object wrap_long(long x) {
         int i = (int)x;
         if (i == x) { return wrap_int(i); }
         return new Long(x);
     }
-    
+
     protected final Object wrap_boolean(boolean x) {
         return x ? Boolean.TRUE : Boolean.FALSE;
     }
-    
-    // Return true to invoke put/delete in super class
-    private boolean doOverwrite(String name, Scriptable start) {
-        if (prototypeFunctionPool != null) { 
-            if (this == start) {
-                int id = mapNameToMethodId(name);
+
+    private int getId(String name, Object[] data) {
+        if (!CACHE_NAMES) { return mapNameToId(name); }
+        else {
+            int id = lastIdCache;
+            if (data[id * ID_MULT + NAME_CACHE_SHIFT] != name) {
+                id = mapNameToId(name);
                 if (id != 0) {
-                    overwriteMethod(id);
-                }
-                else if (name.equals("constructor")) {
-                    overwriteMethod(CONSTRUCTOR_ID);
+                    data[id * ID_MULT + NAME_CACHE_SHIFT] = name;
+                    lastIdCache = id;
                 }
             }
+            return id;
         }
-        return true;
-    }
-    
-    private IdFunction wrapMethod(String name, int id) {
-        synchronized (this) {
-            IdFunction f = prototypeFunctionPool[id];
-            if (f == null) {
-                f = newIdFunction(name, id);
-                if (sealFunctions) { f.sealObject(); }
-                prototypeFunctionPool[id] = f;
-            }
-            return f;
-        }
-    }
-    
-    private void overwriteMethod(int id) {
-        if (prototypeFunctionPool[id] != IdFunction.WAS_OVERWRITTEN) {
-            // Must be synchronized to avoid clearance of overwritten mark
-            // by another thread running in wrapMethod 
-            synchronized (this) {
-                prototypeFunctionPool[id] = IdFunction.WAS_OVERWRITTEN;
-            }
-        }
-    }
-    
-    private IdFunction checkConstructor(String name) {
-        return name.equals("constructor") 
-            ? prototypeFunctionPool[CONSTRUCTOR_ID]
-            : IdFunction.WAS_OVERWRITTEN;
     }
 
-    private IdFunction[] prototypeFunctionPool;
+    private void deleteId(int id) {
+        synchronized (this) {
+            int attr = getAttributes(id);
+            if ((attr & PERMANENT) == 0) {
+                setAttributes(id, EMPTY);
+                idMapData[id * ID_MULT + VALUE_SHIFT] = NOT_FOUND;
+            }
+        }
+    }
     
-// Not null to simplify logic 
-    private IdFunction lastFunction = IdFunction.WAS_OVERWRITTEN;
+    private int getAttributes(int id) {
+        int attributes;
+        byte[] array = attributesArray;
+        if (array == null || (attributes = array[id]) == 0) { 
+            attributes = getIdDefaultAttributes(id) | extraIdAttributes; 
+        }
+        return VISIBLE_ATTR_MASK & attributes;
+    }
+
+    private void setAttributes(int id, int attributes) {
+        byte[] array = attributesArray;
+        if (array == null) {
+            synchronized (this) {
+                array = attributesArray;
+                if (array == null) {
+                    attributesArray = array = new byte[getMaximumId() + 1];
+                }
+            }
+        }
+        attributes &= VISIBLE_ATTR_MASK;
+        array[id] = (byte)(ASSIGNED_ATTRIBUTE_MASK | attributes);
+    }
+
+/*
+    private static final boolean CACHE_NAMES = false;
+    private static final int ID_MULT = 1;
+    private static final int VALUE_SHIFT = -1;
+*/    
+///*
+    private static final boolean CACHE_NAMES = true;
+    private static final int ID_MULT = 2;
+    private static final int VALUE_SHIFT = 1;
+//*/
+    private static final int NAME_CACHE_SHIFT = 0;
+
+
+    private static final int 
+        VISIBLE_ATTR_MASK = READONLY | DONTENUM | PERMANENT;
+
+    private static final int ASSIGNED_ATTRIBUTE_MASK = 0x80;
     
-    private boolean sealFunctions;
+    private static final Object NULL_TAG = new Object();
+
+    private Object[] idMapData;
+    private byte[] attributesArray;
+    private int extraIdAttributes;
+
+    private int lastIdCache;
 
     private boolean useDynamicScope;
+
+    protected boolean sealFunctions;
 }
 

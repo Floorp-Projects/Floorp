@@ -84,7 +84,7 @@ public class NativeNumber extends IdScriptable {
 
     public int methodArity(int methodId, IdFunction function) {
         switch (methodId) {
-        case CONSTRUCTOR_ID:
+        case Id_constructor:
         case Id_toString:
         case Id_toLocaleString:
         case Id_toFixed:
@@ -102,7 +102,7 @@ public class NativeNumber extends IdScriptable {
     {
         switch (methodId) {
 
-        case CONSTRUCTOR_ID:
+        case Id_constructor:
             return jsConstructor(args, thisObj == null);
 
         case Id_toString: return realThis(thisObj, f).
@@ -214,13 +214,26 @@ public class NativeNumber extends IdScriptable {
         return result.toString();
     }
 
-    protected int getMaxPrototypeMethodId() { return MAX_PROTOTYPE_METHOD; }
+    protected int getMaximumId() { return MAX_ID; }
+
+    protected String getIdName(int id) {
+        switch (id) {
+        case Id_constructor:     return "constructor"; 
+        case Id_toString:        return "toString"; 
+        case Id_valueOf:         return "valueOf"; 
+        case Id_toLocaleString:  return "toLocaleString"; 
+        case Id_toFixed:         return "toFixed";
+        case Id_toExponential:   return "toExponential";
+        case Id_toPrecision:     return "toPrecision";
+        }
+        return null;        
+    }
 
 // #string_id_map#
 
-    protected int mapNameToMethodId(String s) {
+    protected int mapNameToId(String s) {
         int id;
-// #generated# Last update: 2001-03-29 14:36:47 GMT+02:00
+// #generated# Last update: 2001-04-23 10:40:45 CEST
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 7: c=s.charAt(0);
@@ -228,7 +241,10 @@ public class NativeNumber extends IdScriptable {
                 else if (c=='v') { X="valueOf";id=Id_valueOf; }
                 break L;
             case 8: X="toString";id=Id_toString; break L;
-            case 11: X="toPrecision";id=Id_toPrecision; break L;
+            case 11: c=s.charAt(0);
+                if (c=='c') { X="constructor";id=Id_constructor; }
+                else if (c=='t') { X="toPrecision";id=Id_toPrecision; }
+                break L;
             case 13: X="toExponential";id=Id_toExponential; break L;
             case 14: X="toLocaleString";id=Id_toLocaleString; break L;
             }
@@ -239,16 +255,16 @@ public class NativeNumber extends IdScriptable {
     }
 
     private static final int
-        Id_toString              = 1,
-        Id_valueOf               = 2,
-        Id_toLocaleString        = 3,
-        Id_toFixed               = 4,
-        Id_toExponential         = 5,
-        Id_toPrecision           = 6,
-        MAX_PROTOTYPE_METHOD     = 6;
+        Id_constructor           = 1,
+        Id_toString              = 2,
+        Id_valueOf               = 3,
+        Id_toLocaleString        = 4,
+        Id_toFixed               = 5,
+        Id_toExponential         = 6,
+        Id_toPrecision           = 7,
+        MAX_ID                   = 7;
 
 // #/string_id_map#
-
 
     private static final double defaultValue = +0.0;
     private double doubleValue;

@@ -18,8 +18,8 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- * Tom Beauvais 
+ * Contributor(s):
+ * Tom Beauvais
  * Norris Boyd
  * Mike McCabe
  *
@@ -52,46 +52,13 @@ import java.util.Vector;
  * @author Mike McCabe
  * @author Norris Boyd
  */
-public class NativeString extends ScriptableObject {
+public class NativeString extends IdScriptable {
 
     /**
      * Zero-parameter constructor: just used to create String.prototype
      */
     public NativeString() {
         string = defaultValue;
-    }
-
-    public static void finishInit(Scriptable scope, FunctionObject ctor,
-                                  Scriptable proto)
-    {
-        // Most of the methods of String.prototype are "vararg" form
-        // so that they can convert the "this" value to string, rather
-        // than being restricted to just operating on NativeString
-        // objects. However, this means that the values of the "length"
-        // properties of these methods are set to 1 by the constructor
-        // for FunctionObject. We must therefore fetch the function
-        // objects and set the length to the appropriate value.
-
-        String[] specialLengthNames = { "indexOf",
-                                        "lastIndexOf",
-                                        "substring",
-                                        "toUpperCase",
-                                        "toLowerCase",
-                                        "toString",
-                                      };
-
-        short[] specialLengthValues = { 2,
-                                        2,
-                                        2,
-                                        0,
-                                        0,
-                                        0,
-                                      };
-
-        for (int i=0; i < specialLengthNames.length; i++) {
-            Object obj = proto.get(specialLengthNames[i], proto);
-            ((FunctionObject) obj).setLength(specialLengthValues[i]);
-        }
     }
 
     public NativeString(String s) {
@@ -102,23 +69,191 @@ public class NativeString extends ScriptableObject {
         return "String";
     }
 
-    public static String jsStaticFunction_fromCharCode(Context cx, 
-                                                       Scriptable thisObj,
-                                                       Object[] args, 
-                                                       Function funObj)
+    protected void fillConstructorProperties
+        (Context cx, IdFunction ctor, boolean sealed)
     {
-        if (args.length < 1)
+        addIdFunctionProperty(ctor, ConstructorId_fromCharCode, sealed);
+        super.fillConstructorProperties(cx, ctor, sealed);
+    }
+
+    protected int getIdDefaultAttributes(int id) {
+        if (id == Id_length) {
+            return DONTENUM | READONLY | PERMANENT;
+        }
+        return super.getIdDefaultAttributes(id);
+    }
+
+    protected Object getIdValue(int id, Scriptable start) {
+        if (id == Id_length) {
+            return wrap_int(realInstance(start).string.length());
+        }
+        return super.getIdValue(id, start);
+    }
+
+    private NativeString realInstance(Scriptable start) {
+        for (; start != null; start = start.getPrototype()) {
+            if (start instanceof NativeString) { return (NativeString)start; }
+        }
+        return this;
+    }
+
+    public int methodArity(int methodId, IdFunction function) {
+        switch (methodId) {
+        case ConstructorId_fromCharCode:
+        case Id_constructor:
+        case Id_charAt:
+        case Id_charCodeAt:
+        case Id_concat:
+        case Id_equals:
+        case Id_equalsIgnoreCase:
+        case Id_match:
+        case Id_search:
+        case Id_split:
+        case Id_replace:
+            return 1;
+
+        case Id_indexOf:
+        case Id_lastIndexOf:
+        case Id_substring:
+        case Id_substr:
+        case Id_slice:
+            return 2;
+        }
+        return 0;
+    }
+
+    public Object execMethod
+        (int methodId, IdFunction f,
+         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
+        switch (methodId) {
+
+        case ConstructorId_fromCharCode: return
+            jsStaticFunction_fromCharCode(args);
+
+        case Id_constructor: return
+            jsConstructor(args, thisObj == null);
+
+        case Id_toString: return realThis(thisObj, f).
+            jsFunction_toString();
+
+        case Id_valueOf: return realThis(thisObj, f).
+            jsFunction_valueOf();
+
+        case Id_charAt: return
+            jsFunction_charAt(ScriptRuntime.toString(thisObj), args);
+
+        case Id_charCodeAt: return wrap_double(
+            jsFunction_charCodeAt(ScriptRuntime.toString(thisObj), args));
+
+        case Id_indexOf: return wrap_int(
+            jsFunction_indexOf(ScriptRuntime.toString(thisObj), args));
+
+        case Id_lastIndexOf: return wrap_int(
+            jsFunction_lastIndexOf(ScriptRuntime.toString(thisObj), args));
+
+        case Id_split: return
+            jsFunction_split(cx, ScriptRuntime.toString(thisObj), args, f);
+
+        case Id_substring: return
+            jsFunction_substring(cx, ScriptRuntime.toString(thisObj), args);
+
+        case Id_toLowerCase: return
+            jsFunction_toLowerCase(ScriptRuntime.toString(thisObj));
+
+        case Id_toUpperCase: return
+            jsFunction_toUpperCase(ScriptRuntime.toString(thisObj));
+
+        case Id_substr: return
+            jsFunction_substr(ScriptRuntime.toString(thisObj), args);
+
+        case Id_concat: return
+            jsFunction_concat(ScriptRuntime.toString(thisObj), args);
+
+        case Id_slice: return
+            jsFunction_slice(ScriptRuntime.toString(thisObj), args);
+
+        case Id_bold: return realThis(thisObj, f).
+            jsFunction_bold();
+
+        case Id_italics: return realThis(thisObj, f).
+            jsFunction_italics();
+
+        case Id_fixed: return realThis(thisObj, f).
+            jsFunction_fixed();
+
+        case Id_strike: return realThis(thisObj, f).
+            jsFunction_strike();
+
+        case Id_small: return realThis(thisObj, f).
+            jsFunction_small();
+
+        case Id_big: return realThis(thisObj, f).
+            jsFunction_big();
+
+        case Id_blink: return realThis(thisObj, f).
+            jsFunction_blink();
+
+        case Id_sup: return realThis(thisObj, f).
+            jsFunction_sup();
+
+        case Id_sub: return realThis(thisObj, f).
+            jsFunction_sub();
+
+        case Id_fontsize: return realThis(thisObj, f).
+            jsFunction_fontsize(ScriptRuntime.toString(args, 0));
+
+        case Id_fontcolor: return realThis(thisObj, f).
+            jsFunction_fontcolor(ScriptRuntime.toString(args, 0));
+
+        case Id_link: return realThis(thisObj, f).
+            jsFunction_link(ScriptRuntime.toString(args, 0));
+
+        case Id_anchor: return realThis(thisObj, f).
+            jsFunction_anchor(ScriptRuntime.toString(args, 0));
+
+        case Id_equals: return wrap_boolean(
+            jsFunction_equals(ScriptRuntime.toString(thisObj),
+                              ScriptRuntime.toString(args, 0)));
+
+        case Id_equalsIgnoreCase: return wrap_boolean(
+            jsFunction_equalsIgnoreCase(ScriptRuntime.toString(thisObj),
+                                        ScriptRuntime.toString(args, 0)));
+
+        case Id_match: return
+            jsFunction_match(cx, thisObj, args, f);
+
+        case Id_search: return
+            jsFunction_search(cx, thisObj, args, f);
+
+        case Id_replace: return
+            jsFunction_replace(cx, thisObj, args, f);
+
+        }
+
+        return Scriptable.NOT_FOUND;
+    }
+
+    private NativeString realThis(Scriptable thisObj, IdFunction f) {
+        while (!(thisObj instanceof NativeString)) {
+            thisObj = nextInstanceCheck(thisObj, f, true);
+        }
+        return (NativeString)thisObj;
+    }
+
+    private static String jsStaticFunction_fromCharCode(Object[] args) {
+        int N = args.length;
+        if (N < 1)
             return "";
-        StringBuffer s = new java.lang.StringBuffer();
-        for (int i=0; i < args.length; i++) {
+        StringBuffer s = new java.lang.StringBuffer(N);
+        for (int i=0; i < N; i++) {
             s.append(ScriptRuntime.toUint16(args[i]));
         }
         return s.toString();
     }
 
-    public static Object jsConstructor(Context cx, Object[] args, 
-                                       Function ctorObj, boolean inNewExpr)
-    {
+    private static Object jsConstructor(Object[] args, boolean inNewExpr) {
         String s = args.length >= 1
             ? ScriptRuntime.toString(args[0])
             : defaultValue;
@@ -135,11 +270,11 @@ public class NativeString extends ScriptableObject {
     }
 
     /* ECMA 15.5.4.2: 'the toString function is not generic.' */
-    public String jsFunction_toString() {
+    private String jsFunction_toString() {
         return string;
     }
 
-    public String jsFunction_valueOf() {
+    private String jsFunction_valueOf() {
         return string;
     }
 
@@ -158,20 +293,15 @@ public class NativeString extends ScriptableObject {
         super.put(index, start, value);
     }
 
-    /**
+    /*
      *
      * See ECMA 15.5.4.[4,5]
      */
-    public static String jsFunction_charAt(Context cx, Scriptable thisObj,
-                                           Object[] args, Function funObj)
+    private static String jsFunction_charAt(String target, Object[] args)
     {
-        if (args.length < 1)
-            args = ScriptRuntime.padArguments(args, 1);
-
         // this'll return 0 if undefined... seems
         // to be ECMA.
-        String target = ScriptRuntime.toString(thisObj);
-        double pos = ScriptRuntime.toInteger(args[0]);
+        double pos = ScriptRuntime.toInteger(args, 0);
 
         if (pos < 0 || pos >= target.length())
             return "";
@@ -179,14 +309,9 @@ public class NativeString extends ScriptableObject {
         return target.substring((int)pos, (int)pos + 1);
     }
 
-    public static double jsFunction_charCodeAt(Context cx, Scriptable thisObj,
-                                               Object[] args, Function funObj)
+    private static double jsFunction_charCodeAt(String target, Object[] args)
     {
-        if (args.length < 1)
-            args = ScriptRuntime.padArguments(args, 1);
-
-        String target = ScriptRuntime.toString(thisObj);
-        double pos = ScriptRuntime.toInteger(args[0]);
+        double pos = ScriptRuntime.toInteger(args, 0);
 
         if (pos < 0 || pos >= target.length()) {
             return ScriptRuntime.NaN;
@@ -195,20 +320,14 @@ public class NativeString extends ScriptableObject {
         return target.charAt((int)pos);
     }
 
-    /**
+    /*
      *
      * See ECMA 15.5.4.6.  Uses Java String.indexOf()
      * OPT to add - BMH searching from jsstr.c.
      */
-    public static int jsFunction_indexOf(Context cx, Scriptable thisObj,
-                                         Object[] args, Function funObj)
-    {
-        if (args.length < 2)
-            args = ScriptRuntime.padArguments(args, 2);
-
-        String target = ScriptRuntime.toString(thisObj);
-        String search = ScriptRuntime.toString(args[0]);
-        double begin = ScriptRuntime.toInteger(args[1]);
+    private static int jsFunction_indexOf(String target, Object[] args) {
+        String search = ScriptRuntime.toString(args, 0);
+        double begin = ScriptRuntime.toInteger(args, 1);
 
         if (begin > target.length()) {
             return -1;
@@ -219,20 +338,14 @@ public class NativeString extends ScriptableObject {
         }
     }
 
-    /**
+    /*
      *
      * See ECMA 15.5.4.7
      *
      */
-    public static int jsFunction_lastIndexOf(Context cx, Scriptable thisObj,
-                                             Object[] args, Function funObj)
-    {
-        if (args.length < 2)
-            args = ScriptRuntime.padArguments(args, 2);
-
-        String target = ScriptRuntime.toString(thisObj);
-        String search = ScriptRuntime.toString(args[0]);
-        double end = ScriptRuntime.toNumber(args[1]);
+    private static int jsFunction_lastIndexOf(String target, Object[] args) {
+        String search = ScriptRuntime.toString(args, 0);
+        double end = ScriptRuntime.toNumber(args, 1);
 
         if (end != end || end > target.length())
             end = target.length();
@@ -254,8 +367,8 @@ public class NativeString extends ScriptableObject {
      * separator occurrence if found, or the string length if no
      * separator is found.
      */
-    private static int find_split(Function funObj, String target, 
-                                  String separator, Object re, 
+    private static int find_split(Function funObj, String target,
+                                  String separator, Object re,
                                   int[] ip, int[] matchlen, boolean[] matched,
                                   String[][] parensp)
     {
@@ -317,8 +430,8 @@ public class NativeString extends ScriptableObject {
          * trying for a match, so we don't get stuck in a loop.
          */
         if (re != null) {
-            return cx.getRegExpProxy().find_split(funObj, target, 
-                                                  separator, re, 
+            return cx.getRegExpProxy().find_split(funObj, target,
+                                                  separator, re,
                                                   ip, matchlen, matched,
                                                   parensp);
         }
@@ -348,9 +461,9 @@ public class NativeString extends ScriptableObject {
                     matchlen[0] = 1;
                     return i;
                 }
-    	        return i + 1;
+                return i + 1;
             }
-    	    return (i == length) ? -1 : i + 1;
+            return (i == length) ? -1 : i + 1;
         }
 
         /* Punt to j.l.s.indexOf; return target length if seperator is
@@ -364,16 +477,14 @@ public class NativeString extends ScriptableObject {
         return (i != -1) ? i : length;
     }
 
-    /**
+    /*
      * See ECMA 15.5.4.8.  Modified to match JS 1.2 - optionally takes
      * a limit argument and accepts a regular expression as the split
      * argument.
      */
-    public static Object jsFunction_split(Context cx, Scriptable thisObj,
-                                          Object[] args, Function funObj)
+    private static Object jsFunction_split(Context cx, String target,
+                                           Object[] args, Function funObj)
     {
-        String target = ScriptRuntime.toString(thisObj);
-
         // create an empty Array to return;
         Scriptable scope = getTopLevelScope(funObj);
         Scriptable result = ScriptRuntime.newObject(cx, scope, "Array", null);
@@ -413,7 +524,7 @@ public class NativeString extends ScriptableObject {
         int len = 0;
         boolean[] matched = { false };
         String[][] parens = { null };
-        while ((match = find_split(funObj, target, separator, re, ip, 
+        while ((match = find_split(funObj, target, separator, re, ip,
                                    matchlen, matched, parens)) >= 0)
         {
             if ((limited && len >= limit) || (match > target.length()))
@@ -427,11 +538,11 @@ public class NativeString extends ScriptableObject {
 
             result.put(len, result, substr);
             len++;
-	    /*
-	     * Imitate perl's feature of including parenthesized substrings
-	     * that matched part of the delimiter in the new array, after the
-	     * split substring that was delimited.
-	     */
+        /*
+         * Imitate perl's feature of including parenthesized substrings
+         * that matched part of the delimiter in the new array, after the
+         * split substring that was delimited.
+         */
             if (re != null && matched[0] == true) {
                 int size = parens[0].length;
                 for (int num = 0; num < size; num++) {
@@ -441,16 +552,16 @@ public class NativeString extends ScriptableObject {
                     len++;
                 }
                 matched[0] = false;
-            }            
+            }
             ip[0] = match + matchlen[0];
 
             if (cx.getLanguageVersion() < Context.VERSION_1_3
                 && cx.getLanguageVersion() != Context.VERSION_DEFAULT)
             {
-		/*
-		 * Deviate from ECMA to imitate Perl, which omits a final
-		 * split unless a limit argument is given and big enough.
-		 */
+        /*
+         * Deviate from ECMA to imitate Perl, which omits a final
+         * split unless a limit argument is given and big enough.
+         */
                 if (!limited && ip[0] == target.length())
                     break;
             }
@@ -458,34 +569,29 @@ public class NativeString extends ScriptableObject {
         return result;
     }
 
-    /**
-     *
-     * See ECMA 15.5.4.[9,10]
+    /*
+     * See ECMA 15.5.4.15
      */
-    public static String jsFunction_substring(Context cx, Scriptable thisObj,
-                                              Object[] args, Function funObj)
+    private static String jsFunction_substring(Context cx, String target,
+                                               Object[] args)
     {
-        if (args.length < 1)
-            args = ScriptRuntime.padArguments(args, 1);
-
-        String target = ScriptRuntime.toString(thisObj);
         int length = target.length();
-        double start = ScriptRuntime.toInteger(args[0]);
+        double start = ScriptRuntime.toInteger(args, 0);
         double end;
 
-	if (start < 0)
-	    start = 0;
-	else if (start > length)
-	    start = length;
+        if (start < 0)
+            start = 0;
+        else if (start > length)
+            start = length;
 
-	if (args.length == 1) {
-	    end = length;
-	} else {
+        if (args.length <= 1 || args[1] == Undefined.instance) {
+            end = length;
+        } else {
             end = ScriptRuntime.toInteger(args[1]);
-	    if (end < 0)
-		end = 0;
-	    else if (end > length)
-		end = length;
+            if (end < 0)
+                end = 0;
+            else if (end > length)
+                end = length;
 
             // swap if end < start
             if (end < start) {
@@ -498,25 +604,19 @@ public class NativeString extends ScriptableObject {
                     end = start;
                 }
             }
-	}
+        }
         return target.substring((int)start, (int)end);
     }
 
-    /**
+    /*
      *
      * See ECMA 15.5.4.[11,12]
      */
-    public static String jsFunction_toLowerCase(Context cx, Scriptable thisObj,
-                                                Object[] args, Function funObj)
-    {
-        String target = ScriptRuntime.toString(thisObj);
+    private static String jsFunction_toLowerCase(String target) {
         return target.toLowerCase();
     }
 
-    public static String jsFunction_toUpperCase(Context cx, Scriptable thisObj,
-                                                Object[] args, Function funObj)
-    {
-        String target = ScriptRuntime.toString(thisObj);
+    private static String jsFunction_toUpperCase(String target) {
         return target.toUpperCase();
     }
 
@@ -524,14 +624,10 @@ public class NativeString extends ScriptableObject {
         return (double) string.length();
     }
 
-    /**
+    /*
      * Non-ECMA methods.
      */
-    public static String jsFunction_substr(Context cx, Scriptable thisObj,
-                                           Object[] args, Function funObj)
-    {
-        String target = ScriptRuntime.toString(thisObj);
-
+    private static String jsFunction_substr(String target, Object[] args) {
         if (args.length < 1)
             return target;
 
@@ -561,26 +657,23 @@ public class NativeString extends ScriptableObject {
         return target.substring((int)begin, (int)end);
     }
 
-    /**
+    /*
      * Python-esque sequence operations.
      */
-    public static String jsFunction_concat(Context cx, Scriptable thisObj,
-                                           Object[] args, Function funObj)
-    {
-        StringBuffer result = new StringBuffer();
-        result.append(ScriptRuntime.toString(thisObj));
+    private static String jsFunction_concat(String target, Object[] args) {
+        int N = args.length;
+        if (N == 0) { return target; }
 
-        for (int i = 0; i < args.length; i++)
+        StringBuffer result = new StringBuffer();
+        result.append(target);
+
+        for (int i = 0; i < N; i++)
             result.append(ScriptRuntime.toString(args[i]));
 
         return result.toString();
     }
 
-    public static String jsFunction_slice(Context cx, Scriptable thisObj,
-                                          Object[] args, Function funObj)
-    {
-        String target = ScriptRuntime.toString(thisObj);
-
+    private static String jsFunction_slice(String target, Object[] args) {
         if (args.length != 0) {
             double begin = ScriptRuntime.toInteger(args[0]);
             double end;
@@ -612,7 +705,7 @@ public class NativeString extends ScriptableObject {
         return target;
     }
 
-    /**
+    /*
      * HTML composition aids.
      */
     private String tagify(String begin, String end, String value) {
@@ -632,98 +725,90 @@ public class NativeString extends ScriptableObject {
         return result.toString();
     }
 
-    public String jsFunction_bold() {
+    private String jsFunction_bold() {
         return tagify("B", null, null);
     }
 
-    public String jsFunction_italics() {
+    private String jsFunction_italics() {
         return tagify("I", null, null);
     }
 
-    public String jsFunction_fixed() {
+    private String jsFunction_fixed() {
         return tagify("TT", null, null);
     }
 
-    public String jsFunction_strike() {
+    private String jsFunction_strike() {
         return tagify("STRIKE", null, null);
     }
 
-    public String jsFunction_small() {
+    private String jsFunction_small() {
         return tagify("SMALL", null, null);
     }
 
-    public String jsFunction_big() {
+    private String jsFunction_big() {
         return tagify("BIG", null, null);
     }
 
-    public String jsFunction_blink() {
+    private String jsFunction_blink() {
         return tagify("BLINK", null, null);
     }
 
-    public String jsFunction_sup() {
+    private String jsFunction_sup() {
         return tagify("SUP", null, null);
     }
 
-    public String jsFunction_sub() {
+    private String jsFunction_sub() {
         return tagify("SUB", null, null);
     }
 
-    public String jsFunction_fontsize(String value) {
+    private String jsFunction_fontsize(String value) {
         return tagify("FONT SIZE", "FONT", value);
     }
 
-    public String jsFunction_fontcolor(String value) {
+    private String jsFunction_fontcolor(String value) {
         return tagify("FONT COLOR", "FONT", value);
     }
 
-    public String jsFunction_link(String value) {
+    private String jsFunction_link(String value) {
         return tagify("A HREF", "A", value);
     }
 
-    public String jsFunction_anchor(String value) {
+    private String jsFunction_anchor(String value) {
         return tagify("A NAME", "A", value);
     }
 
-    public static Object jsFunction_equals(Context cx, Scriptable thisObj,
-                                           Object[] args, Function funObj)
-    {
-        String target = ScriptRuntime.toString(thisObj);
-        String strOther = ScriptRuntime.toString(args[0]);
-        return new Boolean(target.equals(strOther));
+    private static boolean jsFunction_equals(String target, String strOther) {
+        return target.equals(strOther);
     }
-    
 
-    public static Object jsFunction_equalsIgnoreCase(Context cx, 
-                                                     Scriptable thisObj,
-                                                     Object[] args, 
-                                                     Function funObj)
+
+    private static boolean jsFunction_equalsIgnoreCase(String target,
+                                                       String strOther)
     {
-        String target = ScriptRuntime.toString(thisObj);
-        String strOther = ScriptRuntime.toString(args[0]);
-        return new Boolean(target.equalsIgnoreCase(strOther));
+        return target.equalsIgnoreCase(strOther);
     }
-   
-    public static Object jsFunction_match(Context cx, Scriptable thisObj,
-                                          Object[] args, Function funObj)
+
+    private static Object jsFunction_match(Context cx, Scriptable thisObj,
+                                           Object[] args, Function funObj)
         throws JavaScriptException
     {
         return checkReProxy(cx).match(cx, thisObj, args, funObj);
     }
 
-    public static Object jsFunction_search(Context cx, Scriptable thisObj,
-                                           Object[] args, Function funObj)
+    private static Object jsFunction_search(Context cx, Scriptable thisObj,
+                                            Object[] args, Function funObj)
         throws JavaScriptException
     {
         return checkReProxy(cx).search(cx, thisObj, args, funObj);
     }
 
-    public static Object jsFunction_replace(Context cx, Scriptable thisObj,
-                                            Object[] args, Function funObj)
+    private static Object jsFunction_replace(Context cx, Scriptable thisObj,
+                                             Object[] args, Function funObj)
         throws JavaScriptException
     {
         return checkReProxy(cx).replace(cx, thisObj, args, funObj);
     }
-    
+
     private static RegExpProxy checkReProxy(Context cx) {
         RegExpProxy result = cx.getRegExpProxy();
         if (result == null) {
@@ -731,6 +816,161 @@ public class NativeString extends ScriptableObject {
         }
         return result;
     }
+
+    protected int getMinimumId() { return MIN_ID; }
+
+    protected int getMaximumId() { return MAX_ID; }
+
+    protected String getIdName(int id) {
+        switch (id) {
+        case ConstructorId_fromCharCode:   return "fromCharCode";
+
+        case Id_constructor:               return "constructor";
+        case Id_toString:                  return "toString";
+        case Id_valueOf:                   return "valueOf";
+        case Id_charAt:                    return "charAt";
+        case Id_charCodeAt:                return "charCodeAt";
+        case Id_indexOf:                   return "indexOf";
+        case Id_lastIndexOf:               return "lastIndexOf";
+        case Id_split:                     return "split";
+        case Id_substring:                 return "substring";
+        case Id_toLowerCase:               return "toLowerCase";
+        case Id_toUpperCase:               return "toUpperCase";
+        case Id_substr:                    return "substr";
+        case Id_concat:                    return "concat";
+        case Id_slice:                     return "slice";
+        case Id_bold:                      return "bold";
+        case Id_italics:                   return "italics";
+        case Id_fixed:                     return "fixed";
+        case Id_strike:                    return "strike";
+        case Id_small:                     return "small";
+        case Id_big:                       return "big";
+        case Id_blink:                     return "blink";
+        case Id_sup:                       return "sup";
+        case Id_sub:                       return "sub";
+        case Id_fontsize:                  return "fontsize";
+        case Id_fontcolor:                 return "fontcolor";
+        case Id_link:                      return "link";
+        case Id_anchor:                    return "anchor";
+        case Id_equals:                    return "equals";
+        case Id_equalsIgnoreCase:          return "equalsIgnoreCase";
+        case Id_match:                     return "match";
+        case Id_search:                    return "search";
+        case Id_replace:                   return "replace";
+
+        case Id_length:                    return "length";
+        }
+        return null;
+    }
+
+// #string_id_map#
+
+    protected int mapNameToId(String s) {
+        int id;
+// #generated# Last update: 2001-04-23 12:50:07 GMT+02:00
+        L0: { id = 0; String X = null; int c;
+            L: switch (s.length()) {
+            case 3: c=s.charAt(2);
+                if (c=='b') { if (s.charAt(0)=='s' && s.charAt(1)=='u') {id=Id_sub; break L0;} }
+                else if (c=='g') { if (s.charAt(0)=='b' && s.charAt(1)=='i') {id=Id_big; break L0;} }
+                else if (c=='p') { if (s.charAt(0)=='s' && s.charAt(1)=='u') {id=Id_sup; break L0;} }
+                break L;
+            case 4: c=s.charAt(0);
+                if (c=='b') { X="bold";id=Id_bold; }
+                else if (c=='l') { X="link";id=Id_link; }
+                break L;
+            case 5: switch (s.charAt(4)) {
+                case 'd': X="fixed";id=Id_fixed; break L;
+                case 'e': X="slice";id=Id_slice; break L;
+                case 'h': X="match";id=Id_match; break L;
+                case 'k': X="blink";id=Id_blink; break L;
+                case 'l': X="small";id=Id_small; break L;
+                case 't': X="split";id=Id_split; break L;
+                } break L;
+            case 6: switch (s.charAt(1)) {
+                case 'e': c=s.charAt(0);
+                    if (c=='l') { X="length";id=Id_length; }
+                    else if (c=='s') { X="search";id=Id_search; }
+                    break L;
+                case 'h': X="charAt";id=Id_charAt; break L;
+                case 'n': X="anchor";id=Id_anchor; break L;
+                case 'o': X="concat";id=Id_concat; break L;
+                case 'q': X="equals";id=Id_equals; break L;
+                case 't': X="strike";id=Id_strike; break L;
+                case 'u': X="substr";id=Id_substr; break L;
+                } break L;
+            case 7: switch (s.charAt(1)) {
+                case 'a': X="valueOf";id=Id_valueOf; break L;
+                case 'e': X="replace";id=Id_replace; break L;
+                case 'n': X="indexOf";id=Id_indexOf; break L;
+                case 't': X="italics";id=Id_italics; break L;
+                } break L;
+            case 8: c=s.charAt(0);
+                if (c=='f') { X="fontsize";id=Id_fontsize; }
+                else if (c=='t') { X="toString";id=Id_toString; }
+                break L;
+            case 9: c=s.charAt(0);
+                if (c=='f') { X="fontcolor";id=Id_fontcolor; }
+                else if (c=='s') { X="substring";id=Id_substring; }
+                break L;
+            case 10: X="charCodeAt";id=Id_charCodeAt; break L;
+            case 11: switch (s.charAt(2)) {
+                case 'L': X="toLowerCase";id=Id_toLowerCase; break L;
+                case 'U': X="toUpperCase";id=Id_toUpperCase; break L;
+                case 'n': X="constructor";id=Id_constructor; break L;
+                case 's': X="lastIndexOf";id=Id_lastIndexOf; break L;
+                } break L;
+            case 16: X="equalsIgnoreCase";id=Id_equalsIgnoreCase; break L;
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
+    }
+
+    private static final int
+        MIN_ID                       = -1,
+
+        ConstructorId_fromCharCode   = -1,
+
+        Id_constructor               =  1,
+        Id_toString                  =  2,
+        Id_valueOf                   =  3,
+        Id_charAt                    =  4,
+        Id_charCodeAt                =  5,
+        Id_indexOf                   =  6,
+        Id_lastIndexOf               =  7,
+        Id_split                     =  8,
+        Id_substring                 =  9,
+        Id_toLowerCase               = 10,
+        Id_toUpperCase               = 11,
+        Id_substr                    = 12,
+        Id_concat                    = 13,
+        Id_slice                     = 14,
+        Id_bold                      = 15,
+        Id_italics                   = 16,
+        Id_fixed                     = 17,
+        Id_strike                    = 18,
+        Id_small                     = 19,
+        Id_big                       = 20,
+        Id_blink                     = 21,
+        Id_sup                       = 22,
+        Id_sub                       = 23,
+        Id_fontsize                  = 24,
+        Id_fontcolor                 = 25,
+        Id_link                      = 26,
+        Id_anchor                    = 27,
+        Id_equals                    = 28,
+        Id_equalsIgnoreCase          = 29,
+        Id_match                     = 30,
+        Id_search                    = 31,
+        Id_replace                   = 32,
+
+        Id_length                    = 33,
+
+        MAX_ID                       = 33;
+
+// #/string_id_map#
 
     private static final String defaultValue = "";
 
