@@ -474,7 +474,7 @@ sgml-local-ecat-files:nil
 sgml-minimize-attributes:nil
 sgml-namecase-general:t
 sgml-omittag:t
-sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-parent-document:("Bugzilla-Guide.xml" "book" "chapter")
 sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:

@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
-<!ENTITY conventions SYSTEM "conventions.sgml"> ] > -->
+<!ENTITY conventions SYSTEM "conventions.xml"> ] > -->
 
 <chapter id="about">
 <title>About This Guide</title>
@@ -221,7 +221,7 @@ sgml-local-ecat-files:nil
 sgml-minimize-attributes:nil
 sgml-namecase-general:t 
 sgml-omittag:t
-sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-parent-document:("Bugzilla-Guide.xml" "book" "chapter")
 sgml-shorttag:t 
 sgml-tag-region-if-active:t 
 End: -->

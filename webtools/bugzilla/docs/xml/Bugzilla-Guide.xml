@@ -1,23 +1,23 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" [
 
 <!-- Include macros -->
-<!ENTITY about SYSTEM "about.sgml">
-<!ENTITY conventions SYSTEM "conventions.sgml">
-<!ENTITY doc-index SYSTEM "index.sgml">
-<!ENTITY faq SYSTEM "faq.sgml">
-<!ENTITY gfdl SYSTEM "gfdl.sgml">
-<!ENTITY glossary SYSTEM "glossary.sgml">
-<!ENTITY installation SYSTEM "installation.sgml">
-<!ENTITY administration SYSTEM "administration.sgml">
-<!ENTITY using SYSTEM "using.sgml">
-<!ENTITY integration SYSTEM "integration.sgml">
-<!ENTITY future SYSTEM "future.sgml">
-<!ENTITY index SYSTEM "index.sgml">
-<!ENTITY database SYSTEM "database.sgml">
-<!ENTITY patches SYSTEM "patches.sgml">
-<!ENTITY variants SYSTEM "variants.sgml">
-<!ENTITY introduction SYSTEM "introduction.sgml">
-<!ENTITY revhistory SYSTEM "revhistory.sgml">
+<!ENTITY about SYSTEM "about.xml">
+<!ENTITY conventions SYSTEM "conventions.xml">
+<!ENTITY doc-index SYSTEM "index.xml">
+<!ENTITY faq SYSTEM "faq.xml">
+<!ENTITY gfdl SYSTEM "gfdl.xml">
+<!ENTITY glossary SYSTEM "glossary.xml">
+<!ENTITY installation SYSTEM "installation.xml">
+<!ENTITY administration SYSTEM "administration.xml">
+<!ENTITY using SYSTEM "using.xml">
+<!ENTITY integration SYSTEM "integration.xml">
+<!ENTITY future SYSTEM "future.xml">
+<!ENTITY index SYSTEM "index.xml">
+<!ENTITY database SYSTEM "database.xml">
+<!ENTITY patches SYSTEM "patches.xml">
+<!ENTITY variants SYSTEM "variants.xml">
+<!ENTITY introduction SYSTEM "introduction.xml">
+<!ENTITY revhistory SYSTEM "revhistory.xml">
 
 <!-- Things to change for a stable release:
      * bz-ver to current stable
@@ -70,7 +70,7 @@
 <!-- Coding standards for this document 
 
 *  Other than the GFDL, please use the "section" tag instead of "sect1", "sect2", etc.
-*  Use Entities to include files for new chapters in Bugzilla-Guide.sgml.
+*  Use Entities to include files for new chapters in Bugzilla-Guide.xml.
 *  Try to use Entities for frequently-used passages of text as well.
 *  Ensure all documents compile cleanly to HTML after modification.
 The warning, "DTDDECL catalog types not supported" is normal.
@@ -79,7 +79,7 @@ The warning, "DTDDECL catalog types not supported" is normal.
 *  Follow coding standards at http://www.tldp.org, and
 check out the KDE guidelines (they are nice, too)
 http://i18n.kde.org/doc/markup.html
-*  All tags should be lowercase (needsfix)
+*  All tags should be lowercase.
 *  Please use sensible spacing.  The comments at the very end of each
 file define reasonable defaults for PSGML mode in EMACS.
 Double-indent tags, use double spacing whenever possible, and
@@ -120,7 +120,7 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 
       <para>  
 	      This documentation is maintained in DocBook 4.1.2 XML format.
-        Changes are best submitted as plain text or SGML diffs, attached
+        Changes are best submitted as plain text or XML diffs, attached
         to a bug filed in the &bzg-bugs; compontent.
       </para>
       <![%bz-devel;[
@@ -198,7 +198,7 @@ sgml-local-ecat-files:nil
 sgml-minimize-attributes:nil
 sgml-namecase-general:t
 sgml-omittag:t
-sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-parent-document:("Bugzilla-Guide.xml" "book" "chapter")
 sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:

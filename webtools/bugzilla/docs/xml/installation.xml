@@ -1165,7 +1165,7 @@ my $webservergid = '8'
       <command>look GD</command>. 
       This should go through the motions of downloading the latest version of
       the GD module, then it will open a shell and drop you into the build
-      directory. Apply <ulink url="../sgml/gd-makefile.patch">this patch</ulink> 
+      directory. Apply <ulink url="../xml/gd-makefile.patch">this patch</ulink> 
       to the Makefile.PL file (save the
       patch into a file and use the command 
       <command>patch &lt; patchfile</command>.)
@@ -1561,7 +1561,7 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.
       <para>Numerous people have reported that upgrading to version 5.6.1
       or higher solved the problem for them. A less involved fix is to apply
       the patch in <xref linkend="trouble-filetemp-patch"/>. The patch is also
-      available as a <ulink url="../sgml/filetemp.patch">patch file</ulink>.
+      available as a <ulink url="../xml/filetemp.patch">patch file</ulink>.
       </para>
 
       <figure id="trouble-filetemp-patch">
@@ -1607,7 +1607,7 @@ sgml-local-ecat-files:nil
 sgml-minimize-attributes:nil
 sgml-namecase-general:t
 sgml-omittag:t
-sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-parent-document:("Bugzilla-Guide.xml" "book" "chapter")
 sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:

@@ -3,34 +3,32 @@ You'll find these directories and files here:
 
 README.docs	# This README file
 html/		# The compiled HTML docs from SGML sources (do not edit)
-sgml/		# The original SGML doc sources (edit these)
+xml/		# The original XML doc sources (edit these)
 txt/		# The compiled text docs from SGML sources
-ps/		# The compiled PostScript docs from SGML sources
-pdf/		# The compiled Adobe PDF docs from SGML sources
 
-A note about SGML:
-  The documentation is written in DocBook 3.1/4.1 SGML, and attempts to adhere
-to the LinuxDoc standards everywhere applicable (http://www.linuxdoc.org).
-Please consult "The LDP Author Guide" at linuxdoc.org for details on how
-to set up your personal environment for compiling SGML files.
+A note about the XML:
+  The documentation is written in DocBook 4.1.2, and attempts to adhere
+to the LinuxDoc standards everywhere applicable (http://www.tldp.org).
+Please consult "The LDP Author Guide" at tldp.org for details on how
+to set up your personal environment for compiling XML files.
   If you need to make corrections to typographical errors, or other minor
-editing duties, feel free to use any text editor to make the changes.  SGML
+editing duties, feel free to use any text editor to make the changes.  XML
 is not rocket science -- simply make sure your text appears between 
 appropriate tags (like <para>This is a paragraph</para>) and we'll be fine.
 If you are making more extensive changes, please ensure you at least validate
-your SGML before checking it in with something like:
-	nsgmls -s Bugzilla-Guide.sgml
+your XML before checking it in with something like:
+	nsgmls -s $JADE_PUB/xml.dcl Bugzilla-Guide.xml
 
-  When you validate, please validate the master document (Bugzilla-Guide.sgml)
+  When you validate, please validate the master document (Bugzilla-Guide.xml)
 as well as the document you edited to ensure there are no critical errors.
 The following errors are considered "normal" when validating with nsgmls:
 
  DTDDECL catalog entries are not supported
  "DOCTYPE" declaration not allowed in instance
 
-  The reason these occur is that free sgml validators do not yet support
+  The reason these occur is that free sgml/xml validators do not yet support
 the DTDDECL catalog entries, and I've included DOCTYPE declarations in
-entities referenced from Bugzilla-Guide.sgml so these entities can compile
+entities referenced from Bugzilla-Guide.xml so these entities can compile
 individually, if necessary.  I suppose I ought to comment them out at some
 point, but for now they are convenient and don't hurt anything.
 
@@ -39,13 +37,13 @@ documentation.  Please address comments and questions to the newsgroup:
 news://news.mozilla.org/netscape/public/mozilla/webtools .
 
 ==========
-HOW TO SET UP YOUR OWN SGML EDITING ENVIRONMENT:
+HOW TO SET UP YOUR OWN XML EDITING ENVIRONMENT:
 ==========
 
-Trying to set up an SGML/XML Docbook editing environment the 
+Trying to set up an XML Docbook editing environment the 
 first time can be a daunting task.
 I use Linux-Mandrake, in part, because it has a fully-functional
-SGML/XML Docbook editing environment included as part of the
+XML Docbook editing environment included as part of the
 distribution CD's.  If you have easier instructions for how to
 do this for a particular Linux distribution or platform, please
 let the team know at the mailing list: mozilla-webtools@mozilla.org.
@@ -74,9 +72,10 @@ sgml-common
 
 If you're getting these from RedHat, make sure you get the ones in the
 rawhide area.  The ones in the 7.2 distribution are too old and don't
-include the XML stuff.
+include the XML stuff.  The packages distrubuted with RedHat 8.0 and 9
+and known to work.
 
-Download "ldp.dsl" from the Resources page on linuxdoc.org.  This is the 
+Download "ldp.dsl" from the Resources page on tldp.org.  This is the 
 stylesheet I use to get the HTML and text output.  It works well, and has a 
 nice, consistent look with the rest of the linuxdoc documents.  You'll have to 
 adjust the paths in ldp.dsl at the top of the file to reflect the actual 
@@ -91,6 +90,8 @@ dsssl>
 
 Note the difference is the top one points to the HTML docbook stylesheet, 
 and the next one points to the PRINT docbook stylesheet.
+
+Also note that modifying ldp.dsl doesn't seem to be needed on RedHat 9.
 
   You know, this sure looks awful involved.  Anyway, once you have this in
 place, add to your .bashrc:
@@ -111,12 +112,15 @@ for tcsh users.
 folders are anywhere else on your system (for example, the openjade version
 might change if you get a new version at some point).
 
-  I suggest xemacs for editing your SGML/XML Docbook documents.  The darn
+  I suggest xemacs for editing your XML Docbook documents.  The darn
 thing just works, and generally includes PSGML mode by default.  Not to
 mention you can validate the SGML from right within it without having to
 remember the command-line syntax for nsgml (not that it's that hard
 anyway).  If not, you can download psgml at
 http://www.sourceforge.net/projects/psgml.
+
+  Another good editor is the latest releases of vim and gvim.  Vim will
+recognize DocBook tags and give them a different color than unreconized tags.
 
 ==========
 NOTES:
@@ -125,15 +129,17 @@ NOTES:
   Here are the commands I use to maintain this documentation.
   You MUST have DocBook 4.1.2 set up correctly in order for this to work.
 
+  These commands can be run all at once using the ./makedocs.pl script.
+
 To create HTML documentation:
 bash$ cd html
 bash$ jade -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
-$JADE_PUB/xml.dcl ../sgml/Bugzilla-Guide.sgml
+$JADE_PUB/xml.dcl ../xml/Bugzilla-Guide.xml
 
 To create HTML documentation as a single big HTML file:
 bash$ cd html
 bash$ jade -V nochunks -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
-$JADE_PUB/xml.dcl ../sgml/Bugzilla-Guide.sgml >Bugzilla-Guide.html
+$JADE_PUB/xml.dcl ../xml/Bugzilla-Guide.xml >Bugzilla-Guide.html
 
 To create TXT documentation as a single big TXT file:
 bash$ cd txt
