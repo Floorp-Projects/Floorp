@@ -1,0 +1,138 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+</head>
+<body>
+
+<center>
+<h2>
+Component Loaders</h2></center>
+
+<center>Brendan Eich &lt;<a href="mailto:brendan@netscape.com">brendan@netscape.com</a>>
+<br>John Bandauer &lt;<a href="mailto:jband@netscape.com">jband@netscape.com</a>>
+<br>Mike McCabe &lt;<a href="mailto:mccabe@netscape.com">mccabe@netscape.com</a>>
+<br>Mike Shaver &lt;<a href="mailto:shaver@netscape.com">shaver@netscape.com</a>>
+<br>Suresh Duddi &lt;<a href="mailto:dp@netscape.com">dp@netscape.com</a>></center>
+
+<h3>
+Scope of document</h3>
+
+<ul>
+<li>
+Component Developers</li>
+
+<li>
+Clients of XPCOM (for information only)</li>
+</ul>
+
+<h3>
+Why Component Loaders</h3>
+Currently XPCOM requires all component to be packaged in dlls and uses
+the dynamic loading mechanism available with each platform to accomplish
+instantiation of component. This method doesn't blend well with say components
+written in java or javascript and packaged different from a dll. Hence
+the proposal for Component Loaders.
+<br>&nbsp;
+<h3>
+Component Loaders</h3>
+XPCOM in its simplest form can be viewed as creating instances of objects
+given a PROGID or ClassID. How it does this instantiation is specific to
+XPCOM and opaque to clients of XPCOM.
+<p>Internally XPCOM maps the passed in PROGID to a CID and then the CID
+maps into a dll name. XPCOM loads the dll assuming the dynamic loading
+mechanism to create a factory. Then, asks the factory to create a particular
+instance. Here are roughly the steps involved:
+<ol>
+<li>
+CreateInstance(..., PROGID,...)</li>
+
+<li>
+Map PROGID to CID</li>
+
+<li>
+Map CID to Dll</li>
+
+<li>
+factory = Dynamicall Load Dll to create Factory</li>
+
+<li>
+Use Factory to create object instance</li>
+</ol>
+The proposal for Component Loaders is to get XPCOM to delegate the loading
+to a component loader:
+<ul>
+<li>
+CreateInstance(..., PROGID,...)</li>
+
+<li>
+Map PROGID to CID</li>
+
+<li>
+<font color="#990000">Map CID to ComponentType</font></li>
+
+<li>
+<font color="#990000">If ComponentType is Dll</font></li>
+
+<ul>
+<li>
+factory = Dynamically Load Dll to create Factory</li>
+</ul>
+
+<li>
+<font color="#990000">else</font></li>
+
+<ul>
+<li>
+<font color="#990000">ComponentLoaderServicePROGID = "<i>component://Netscape/XPCOM/component-loader&amp;type=</i>"
++ ComponentType</font></li>
+
+<li>
+<font color="#990000">loaderInstance = GetService(..., ComponentLoaderServicePROGID,...)</font></li>
+
+<li>
+<font color="#990000">factory = loaderInstance->CreateFactory(..., componentLocation,...)</font></li>
+</ul>
+
+<li>
+Use Factory to create object instance</li>
+
+<h4>
+Format of ComponentType</h4>
+ComponentType is assumed to be mimetype.
+<h4>
+Component Registration</h4>
+Registration of components in Dlls wont change. ComponentType of Dll is
+assumed here. To facilitate registration of components with specifc component
+types, the component manager will provide the following API:
+<p><tt><font color="#990000">RegisterComponentWithType(const nsCID &amp;aClass,</font></tt>
+<br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const char *aClassName,</font></tt>
+<br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const char *aProgID,</font></tt>
+<br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const char *ComponentType,</font></tt>
+<br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+const char *ComponentLocation,</font></tt>
+<br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PRBool aReplace,</font></tt>
+<br><tt><font color="#990000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PRBool aPersist);</font></tt>
+<br>&nbsp;
+<br>&nbsp;
+<h4>
+Component Loader Service Registration</h4>
+Since the loader is just another component with a special progid, there
+is no special registration of the component loader.&nbsp; Component Loaders
+use either the RegisterComponent() api if they are a dll (most common)
+or use RegisterComponentWithType() api if they are themselves of a particular
+type (very rare).</ul>
+
+<h3>
+Autoregistration of non Dll Components and Component Loaders</h3>
+TBD
+<br>
+<hr WIDTH="100%">
+</body>
+</html>
