@@ -4537,7 +4537,7 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   const PRUnichar *ustr = NS_REINTERPRET_CAST(const PRUnichar *,
                                               ::JS_GetStringChars(str));
 
-  nsCOMPtr<nsIAtom> atom(getter_AddRefs(NS_NewAtom(ustr)));
+  nsCOMPtr<nsIAtom> atom(do_GetAtom(ustr));
   NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
 
   if (compile) {

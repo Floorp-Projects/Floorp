@@ -209,7 +209,7 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   res = focusElement->GetTagName(focusTagName);
   if (NS_FAILED(res)) return res;
   ToLowerCase(focusTagName);
-  nsCOMPtr<nsIAtom> focusTagAtom = getter_AddRefs(NS_NewAtom(focusTagName));
+  nsCOMPtr<nsIAtom> focusTagAtom = do_GetAtom(focusTagName);
 
   nsCOMPtr<nsIDOMElement> absPosElement;
   if (mIsAbsolutelyPositioningEnabled) {

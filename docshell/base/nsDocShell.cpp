@@ -1366,7 +1366,7 @@ nsDocShell::SetCharset(const char* aCharset)
     GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
     if (dcInfo) {
       nsCOMPtr<nsIAtom> csAtom;
-      csAtom = dont_AddRef(NS_NewAtom(aCharset));
+      csAtom = do_GetAtom(aCharset);
       dcInfo->SetForcedCharset(csAtom);
     }
 
@@ -2090,7 +2090,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
         return NS_OK;
 
     // set the child's parentCharset
-    nsCOMPtr<nsIAtom> parentCSAtom(dont_AddRef(NS_NewAtom(parentCS)));
+    nsCOMPtr<nsIAtom> parentCSAtom(do_GetAtom(parentCS));
     res = dcInfo->SetParentCharset(parentCSAtom);
     if (NS_FAILED(res))
         return NS_OK;

@@ -897,9 +897,9 @@ DefaultTooltipTextProvider::DefaultTooltipTextProvider()
 {
     // There are certain element types which we don't want to use
     // as tool tip text. 
-    mTag_dialog       = getter_AddRefs(NS_NewAtom("dialog"));
-    mTag_dialogheader = getter_AddRefs(NS_NewAtom("dialogheader"));
-    mTag_window       = getter_AddRefs(NS_NewAtom("window"));   
+    mTag_dialog       = do_GetAtom("dialog");
+    mTag_dialogheader = do_GetAtom("dialogheader");
+    mTag_window       = do_GetAtom("window");   
 }
 
 /* void getNodeText (in nsIDOMNode aNode, out wstring aText); */

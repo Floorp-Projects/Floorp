@@ -133,10 +133,10 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
     // Add the ``RDF'' prefix, by default.
     nsCOMPtr<nsIAtom> prefix;
 
-    prefix = getter_AddRefs(NS_NewAtom("RDF"));
+    prefix = do_GetAtom("RDF");
     AddNameSpace(prefix, NS_LITERAL_STRING("http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
 
-    prefix = getter_AddRefs(NS_NewAtom("NC"));
+    prefix = do_GetAtom("NC");
     AddNameSpace(prefix, NS_LITERAL_STRING("http://home.netscape.com/NC-rdf#"));
 
     return NS_OK;
@@ -998,7 +998,7 @@ nsRDFXMLSerializer::EnsureNameSpaceFor(nsIRDFResource* aResource)
         aResource->GetValueConst(&s);
         printf("*** Creating namespace for %s\n", s);
 #endif
-        nsCOMPtr<nsIAtom> prefix = getter_AddRefs(NS_NewAtom(nameSpacePrefix));
+        nsCOMPtr<nsIAtom> prefix = do_GetAtom(nameSpacePrefix);
         mNameSpaces.Put(nameSpaceURI, prefix);
     }
 

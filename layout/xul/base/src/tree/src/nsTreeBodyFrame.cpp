@@ -215,7 +215,7 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
 
   // If we have an ID, cache the ID as an atom.
   if (!mID.IsEmpty()) {
-    mIDAtom = getter_AddRefs(NS_NewAtom(mID));
+    mIDAtom = do_GetAtom(mID);
   }
 
   const nsStyleVisibility* vis = aFrame->GetStyleVisibility();

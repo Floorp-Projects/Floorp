@@ -179,12 +179,12 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mDelay = 200 /*msec*/; // XXXwaterson straigt outta my arse
   mMaxPages = -1;
   mRecord = nsnull;
-  mLinkTag = getter_AddRefs(NS_NewAtom("a"));
-  mFrameTag = getter_AddRefs(NS_NewAtom("frame"));
-  mIFrameTag = getter_AddRefs(NS_NewAtom("iframe"));
-  mHrefAttr = getter_AddRefs(NS_NewAtom("href"));
-  mSrcAttr = getter_AddRefs(NS_NewAtom("src"));
-  mBaseHrefAttr = getter_AddRefs(NS_NewAtom("_base_href"));
+  mLinkTag = do_GetAtom("a");
+  mFrameTag = do_GetAtom("frame");
+  mIFrameTag = do_GetAtom("iframe");
+  mHrefAttr = do_GetAtom("href");
+  mSrcAttr = do_GetAtom("src");
+  mBaseHrefAttr = do_GetAtom("_base_href");
   mVisited = new AtomHashTable();
   mVerbose = nsnull;
   LL_I2L(mStartLoad, 0);
@@ -772,7 +772,7 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     nsresult rv;
     rv = NS_MakeAbsoluteURI(absURLSpec, src, docURL);
     if (NS_OK == rv) {
-      nsCOMPtr<nsIAtom> urlAtom = getter_AddRefs(NS_NewAtom(absURLSpec));
+      nsCOMPtr<nsIAtom> urlAtom = do_GetAtom(absURLSpec);
       if (0 == mVisited->Get(urlAtom)) {
         // Remember the URL as visited so that we don't go there again
         mVisited->Put(urlAtom, "visited");

@@ -46,12 +46,12 @@ nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
   mIsForMail(PR_FALSE)
 {
 
-  mBlockQuoteAtom  = getter_AddRefs(do_GetAtom("blockquote"));
-  mTypeAtom        = getter_AddRefs(do_GetAtom("type"));
-  mScriptAtom      = getter_AddRefs(do_GetAtom("script"));
-  mTextAreaAtom    = getter_AddRefs(do_GetAtom("textarea"));
-  mSelectAreaAtom  = getter_AddRefs(do_GetAtom("select"));
-  mMapAtom         = getter_AddRefs(do_GetAtom("map"));
+  mBlockQuoteAtom  = do_GetAtom("blockquote");
+  mTypeAtom        = do_GetAtom("type");
+  mScriptAtom      = do_GetAtom("script");
+  mTextAreaAtom    = do_GetAtom("textarea");
+  mSelectAreaAtom  = do_GetAtom("select");
+  mMapAtom         = do_GetAtom("map");
 }
 
 NS_IMPL_ISUPPORTS1(nsComposeTxtSrvFilter, nsITextServicesFilter);

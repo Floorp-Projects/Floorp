@@ -133,8 +133,8 @@ nsFileView::~nsFileView()
 nsresult
 nsFileView::Init()
 {
-  mDirectoryAtom = dont_AddRef(NS_NewAtom("directory"));
-  mFileAtom = dont_AddRef(NS_NewAtom("file"));
+  mDirectoryAtom = do_GetAtom("directory");
+  mFileAtom = do_GetAtom("file");
   NS_NewISupportsArray(getter_AddRefs(mFileList));
   NS_NewISupportsArray(getter_AddRefs(mDirList));
   NS_NewISupportsArray(getter_AddRefs(mFilteredFiles));
