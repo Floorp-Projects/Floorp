@@ -51,6 +51,7 @@
 #include "nsLabel.h"
 #include "nsFilePicker.h"
 #include "nsScrollbar.h"
+#include "nsNativeScrollbar.h"
 
 #if TARGET_CARBON
 #include "nsMenuBarX.h"
@@ -101,8 +102,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRadioButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsListBox)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextAreaWidget)
 #endif
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHorizScrollbar)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsVertScrollbar)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)	// used by Viewer?
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
@@ -118,6 +118,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -147,11 +148,11 @@ static const nsModuleComponentInfo components[] =
 	{	"Horiz Scrollbar",
 		NS_HORZSCROLLBAR_CID,
 		"@mozilla.org/widgets/horizscroll/mac;1",
-		nsHorizScrollbarConstructor },
+		nsScrollbarConstructor },
 	{	"Vert Scrollbar",
 		NS_VERTSCROLLBAR_CID,
 		"@mozilla.org/widgets/vertscroll/mac;1",
-		nsVertScrollbarConstructor },
+		nsScrollbarConstructor },
 	{ 	"Text Field",
 		NS_TEXTFIELD_CID,
 		"@mozilla.org/widgets/textwidget/mac;1",
@@ -212,6 +213,10 @@ static const nsModuleComponentInfo components[] =
 		NS_DRAGHELPERSERVICE_CID,
 		"@mozilla.org/widget/draghelperservice;1",
 		nsDragHelperServiceConstructor },
+	{	"Native Scrollbar",
+		NS_NATIVESCROLLBAR_CID,
+		"@mozilla.org/widget/nativescrollbar;1",
+		nsNativeScrollbarConstructor },
 #ifdef IBMBIDI
 	{	"Gtk Bidi Keyboard",
 		NS_BIDIKEYBOARD_CID,

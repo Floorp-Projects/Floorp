@@ -284,6 +284,9 @@ nsresult
 NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
+NS_NewNativeScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
 NS_NewGrippyFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
@@ -5349,7 +5352,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
         rv = NS_NewScrollbarFrame(aPresShell, &newFrame);
-
+      }
+      else if (aTag == nsXULAtoms::nativescrollbar) {
+        processChildren = PR_TRUE;
+        isReplaced = PR_TRUE;
+        rv = NS_NewNativeScrollbarFrame(aPresShell, &newFrame);
       }
       // End of SCROLLBAR CONSTRUCTION logic
 

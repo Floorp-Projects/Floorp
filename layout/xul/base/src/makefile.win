@@ -100,7 +100,11 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsListItemFrame.obj \
   .\$(OBJDIR)\nsListBoxLayout.obj \
   .\$(OBJDIR)\nsXULTooltipListener.obj \
+  .\$(OBJDIR)\nsNativeScrollbarFrame.obj \
   $(NULL)
+
+XPIDLSRCS=      .\nsIScrollbarMediator.idl                  \
+                ($NULL)
 
 LINCS= \
   -I..\..\..\html\style\src -I..\..\..\html\base\src \

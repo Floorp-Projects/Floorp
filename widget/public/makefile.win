@@ -45,6 +45,7 @@ XPIDLSRCS =               \
   .\nsIBaseWindow.idl \
   .\nsIBidiKeyboard.idl \
   .\nsIFullScreen.idl \
+  .\nsNativeScrollbar.idl \
   $(NULL)
 
 EXPORTS=\

@@ -552,7 +552,19 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
+    
+    # use different css files for scrollbars on OSX and OS9 in classic skin. On OSX, use
+    # ones that specify native scrollbars via xbl. OS9 can't use these because of
+    # mousewheel driver problems that would be exacerbated by using native scrollbars 
+    # everywhere
+    if ($main::options{carbon}) {
+      MakeAlias(":mozilla:themes:classic:global:mac:nativescrollbars.css", ":mozilla:themes:classic:global:mac:scrollbars.css");
+    }
+    else {
+      MakeAlias(":mozilla:themes:classic:global:mac:xulscrollbars.css", ":mozilla:themes:classic:global:mac:scrollbars.css");    
+    }
     CreateJarFromManifest(":mozilla:themes:classic:global:mac:jar.mn", $chrome_dir, \%jars);
+    
     CreateJarFromManifest(":mozilla:themes:classic:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:modern:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpcom:base:jar.mn", $chrome_dir, \%jars);
@@ -897,7 +909,8 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",              "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",              "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",                "$distdirectory:layout:");
-
+    InstallFromManifest(":mozilla:layout:xul:base:src:MANIFEST",                   "$distdirectory:layout:");
+    
     #GFX
     InstallFromManifest(":mozilla:gfx:public:MANIFEST",                            "$distdirectory:gfx:");
     InstallFromManifest(":mozilla:gfx:idl:MANIFEST_IDL",                           "$distdirectory:idl:");
