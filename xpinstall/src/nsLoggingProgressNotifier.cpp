@@ -80,11 +80,18 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
 
     if (NS_FAILED(rv)) return rv;
 
+    if (!nsSoftwareUpdate::GetLogName())
+    {
 #ifdef XP_MAC
-    rv = iFile->Append("Install Log");
+        rv = iFile->Append("Install Log");
 #else
-    rv = iFile->Append("install.log");
+        rv = iFile->Append("install.log");
 #endif
+    }
+    else
+        rv = iFile->Append(nsSoftwareUpdate::GetLogName());
+
+    if (NS_FAILED(rv)) return rv;
 
     // create log file if it doesn't exist (to work around a mac filespec bug)
     PRBool bExists = PR_FALSE;

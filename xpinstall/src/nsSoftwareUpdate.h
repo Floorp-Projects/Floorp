@@ -42,10 +42,15 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         static nsSoftwareUpdate *GetInstance();
 
         /** GetProgramDirectory
-         *  information used within the XPI module -- not
+         *  Information used within the XPI module -- not
          *  available through any interface
          */
         static nsIFile* GetProgramDirectory() { return mProgramDir; }
+
+        /** GetLogName
+         *  Optional log name used privately in the XPI module.
+         */
+        static char*    GetLogName() { return mLogName; }
 
         NS_DECL_ISUPPORTS
         NS_DECL_NSIAPPSHELLCOMPONENT
@@ -75,7 +80,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
          *  once, and is also set by the AppShellComponent initialize
          *  so it can't be called during a normal Mozilla run
          */
-        NS_IMETHOD StubInitialize(nsIFile *dir);
+        NS_IMETHOD StubInitialize(nsIFile *dir, const char* logName);
 
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
@@ -84,6 +89,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
     private:
         static   nsSoftwareUpdate*  mInstance;
         static   nsCOMPtr<nsIFile>  mProgramDir;
+        static   char*              mLogName;
 
 #if NOTIFICATION_ENABLE
         static   nsIUpdateNotification *mUpdateNotifier;

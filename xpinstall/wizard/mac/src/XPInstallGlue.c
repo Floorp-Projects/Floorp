@@ -30,7 +30,7 @@
  *-----------------------------------------------------------*/
 
 /*================== XPI Stub Entry Points ================== */
-typedef		nsresult (*XPI_InitProc)(const FSSpec& aXPIStubDir, const FSSpec& aProgramDir, pfnXPIProgress progressCB);
+typedef		nsresult (*XPI_InitProc)(const FSSpec& aXPIStubDir, const FSSpec& aProgramDir, const char* aLogName, pfnXPIProgress progressCB);
 typedef 	nsresult (*XPI_InstallProc)(const FSSpec& file, const char* args,long flags);
 typedef		nsresult (*XPI_ExitProc)();
 
@@ -247,7 +247,7 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
     }
 
 	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec), err);
-	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, xpicbProgress ));
+	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, NULL, xpicbProgress ));
 	    
 	// init overall xpi indicator
 	numXPIs = CountSelectedXPIs();
