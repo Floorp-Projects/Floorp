@@ -1357,10 +1357,9 @@ if ($order) {
         $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product = bugs.product WHERE /;
     }
 
-    # If we are sorting by votes, sort in descending order.
-    if ($db_order =~ /bugs.votes\s*(asc|desc){0}/i) {
-        $db_order =~ s/bugs.votes/bugs.votes desc/i;
-    }
+    # If we are sorting by votes, sort in descending order if no explicit
+    # sort order was given
+    $db_order =~ s/bugs.votes\s*(,|$)/bugs.votes desc$1/i;
 
     $query .= " ORDER BY $db_order ";
 }
