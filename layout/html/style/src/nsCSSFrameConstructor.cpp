@@ -7395,96 +7395,90 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell* aPresShell,
                                                     nsIFrame*        aParentFrame,
                                                     nsIFrame*&       aFrame)
 {
-  nsIDOMHTMLImageElement*  imageElement;
-  nsresult                 rv;
+  nsresult      rv;
+  nsAutoString  altText;
 
   // Initialize OUT parameter
   aFrame = nsnull;
 
-  rv = aContent->QueryInterface(kIDOMHTMLImageElementIID, (void**)&imageElement);
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoString  altText;
-  
-    // The "alt" attribute specifies alternate text that is rendered
-    // when the image can not be displayed
-    imageElement->GetAlt(altText);
-    if (0 == altText.Length()) {
-      // If there's no "alt" attribute, then use the value of the "title"
-      // attribute
-      imageElement->GetTitle(altText);
-    }
-    if (0 == altText.Length()) {
-      // If there's no "title" attribute, then use the filename minus the
-      // extension
-      imageElement->GetSrc(altText);
-      if (altText.Length() > 0) {
-        // Trim off the path part of the filename
-        PRInt32 offset = altText.RFindChar('/');
-        if (offset >= 0) {
-          altText.Cut(0, offset + 1);
-        }
+  // The "alt" attribute specifies alternate text that is rendered
+  // when the image can not be displayed
+  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::alt, altText);
+  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+    // If there's no "alt" attribute, then use the value of the "title"
+    // attribute. Note that this is not the same as a value of ""
+    rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, altText);
+  }
+  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+    // If there's no "title" attribute, then use the filename minus the
+    // extension
+    aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, altText);
+    if (altText.Length() > 0) {
+      // Trim off the path part of the filename
+      PRInt32 offset = altText.RFindChar('/');
+      if (offset >= 0) {
+        altText.Cut(0, offset + 1);
+      }
 
-        // Trim off the extension
-        offset = altText.RFindChar('.');
-        if (offset >= 0) {
-          altText.Truncate(offset);
-        }
+      // Trim off the extension
+      offset = altText.RFindChar('.');
+      if (offset >= 0) {
+        altText.Truncate(offset);
       }
     }
-    NS_RELEASE(imageElement);
-  
-    // Create a text content element for the alternate text
-    nsCOMPtr<nsIContent> altTextContent;
-    NS_NewTextNode(getter_AddRefs(altTextContent));
-
-    // Set the content's text
-    nsIDOMCharacterData* domData;
-    altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
-    domData->SetData(altText);
-    NS_RELEASE(domData);
-    
-    // Set aContent as the parent content and set the document object
-    nsCOMPtr<nsIDocument> document;
-    aContent->GetDocument(*getter_AddRefs(document));
-    altTextContent->SetParent(aContent);
-    altTextContent->SetDocument(document, PR_TRUE);
-
-    // Create either an inline frame, block frame, or area frame
-    nsIFrame* containerFrame;
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
-    const nsStylePosition* position = (const nsStylePosition*)
-      aStyleContext->GetStyleData(eStyleStruct_Position);
-
-    if (position->IsAbsolutelyPositioned()) {
-      NS_NewAbsoluteItemWrapperFrame(aPresShell, &containerFrame);
-    } else if (display->IsFloating() || (NS_STYLE_DISPLAY_BLOCK == display->mDisplay)) {
-      NS_NewBlockFrame(aPresShell, &containerFrame);
-    } else {
-      NS_NewInlineFrame(aPresShell, &containerFrame);
-    }
-    containerFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, containerFrame,
-                                             aStyleContext, PR_FALSE);
-
-    // Create a text frame to display the alt-text. It gets a pseudo-element
-    // style context
-    nsIFrame*        textFrame;
-    nsIStyleContext* textStyleContext;
-
-    NS_NewTextFrame(aPresShell, &textFrame);
-    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
-                                               aStyleContext, PR_FALSE,
-                                               &textStyleContext);
-
-    textFrame->Init(aPresContext, altTextContent, containerFrame,
-                    textStyleContext, nsnull);
-    NS_RELEASE(textStyleContext);
-    containerFrame->SetInitialChildList(aPresContext, nsnull, textFrame);
-
-    // Return the container frame
-    aFrame = containerFrame;
   }
+
+  // Create a text content element for the alternate text
+  nsCOMPtr<nsIContent> altTextContent;
+  NS_NewTextNode(getter_AddRefs(altTextContent));
+
+  // Set the content's text
+  nsIDOMCharacterData* domData;
+  altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+  domData->SetData(altText);
+  NS_RELEASE(domData);
+  
+  // Set aContent as the parent content and set the document object
+  nsCOMPtr<nsIDocument> document;
+  aContent->GetDocument(*getter_AddRefs(document));
+  altTextContent->SetParent(aContent);
+  altTextContent->SetDocument(document, PR_TRUE);
+
+  // Create either an inline frame, block frame, or area frame
+  nsIFrame* containerFrame;
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    aStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStylePosition* position = (const nsStylePosition*)
+    aStyleContext->GetStyleData(eStyleStruct_Position);
+
+  if (position->IsAbsolutelyPositioned()) {
+    NS_NewAbsoluteItemWrapperFrame(aPresShell, &containerFrame);
+  } else if (display->IsFloating() || (NS_STYLE_DISPLAY_BLOCK == display->mDisplay)) {
+    NS_NewBlockFrame(aPresShell, &containerFrame);
+  } else {
+    NS_NewInlineFrame(aPresShell, &containerFrame);
+  }
+  containerFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
+  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, containerFrame,
+                                           aStyleContext, PR_FALSE);
+
+  // Create a text frame to display the alt-text. It gets a pseudo-element
+  // style context
+  nsIFrame*        textFrame;
+  nsIStyleContext* textStyleContext;
+
+  NS_NewTextFrame(aPresShell, &textFrame);
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
+                                             aStyleContext, PR_FALSE,
+                                             &textStyleContext);
+
+  textFrame->Init(aPresContext, altTextContent, containerFrame,
+                  textStyleContext, nsnull);
+  NS_RELEASE(textStyleContext);
+  containerFrame->SetInitialChildList(aPresContext, nsnull, textFrame);
+
+  // Return the container frame
+  aFrame = containerFrame;
 
   return rv;
 }
