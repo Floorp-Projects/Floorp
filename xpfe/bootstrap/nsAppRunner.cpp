@@ -20,6 +20,7 @@
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
 #include "nsIWidget.h"
+#include "nsIPref.h"
 #include "plevent.h"
 
 #include "nsIAppShell.h"
@@ -37,12 +38,13 @@ static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gI
 #endif // XP_MAC
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 
 /* Define Interface IDs */
-static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
-static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
+static NS_DEFINE_IID(kIAppShellServiceIID,  NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_IID(kICmdLineServiceIID,   NS_ICOMMANDLINE_SERVICE_IID);
 
 /*********************************************
  AppCores
@@ -98,12 +100,14 @@ int main(int argc, char* argv[])
   nsIAppShellService* appShell;
   nsIDOMAppCoresManager *appCoresManager;
   nsIURL* url;
+  nsIPref *prefs;
 
   /* 
    * initialize all variables that are NS_IF_RELEASE(...) during
    * cleanup...
    */
   url             = nsnull;
+  prefs           = nsnull;
   appShell        = nsnull;
   cmdLineArgs     = nsnull;
   appCoresManager = nsnull;
@@ -118,6 +122,17 @@ int main(int argc, char* argv[])
    */
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
+
+  /*
+   * Load preferences
+   */
+  rv = nsServiceManager::GetService(kPrefCID, 
+                                    nsIPref::GetIID(), 
+                                    (nsISupports **)&prefs);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+  prefs->Startup("prefs.js");
 
   /*
    * Start up the core services:
@@ -356,6 +371,12 @@ done:
   if (nsnull != appCoresManager) {
 		appCoresManager->Shutdown();
     nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
+  }
+
+  /* Release the global preferences... */
+  if (prefs) {
+    prefs->Shutdown();
+    nsServiceManager::ReleaseService(kPrefCID, prefs);
   }
 
   /* 
