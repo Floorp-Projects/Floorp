@@ -981,6 +981,7 @@ case "$target" in
     	DSO_PIC_CFLAGS="+Z"
     	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+        CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
     else
     	DSO_LDOPTS='-b -E +s -L$(DIST)/bin -L$(DIST)/lib'
     	MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
