@@ -5365,13 +5365,18 @@ nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
   aIsSelected = PR_FALSE;
 
   if (!cellMap) { return NS_ERROR_NOT_INITIALIZED;}
-  nsTableCellFrame *cellFrame = cellMap->GetCellFrameAt(aRowIndex, aColIndex);
-  // This error value if a cell isn't found will pass the NS_SUCCEEDED() test
-  // It's OK to attempt to get a cell out of bounds,
-  //  as long as caller test i aCell is not null
-  // Thus we can get iterate to get all cells in a row or col
+
+  // Return a special error value if an index is out of bounds
+  // This will pass the NS_SUCCEEDED() test
+  // Thus we can iterate indexes to get all cells in a row or col
   //   and stop when aCell is returned null.
-  if (!cellFrame) { return NS_TABLELAYOUT_CELL_NOT_FOUND;} // row or col index out of bounds
+  if (aRowIndex >= cellMap->GetRowCount() || 
+      aColIndex >= cellMap->GetColCount())
+  {
+    return NS_TABLELAYOUT_CELL_NOT_FOUND;
+  }
+  nsTableCellFrame *cellFrame = cellMap->GetCellFrameAt(aRowIndex, aColIndex);
+  if (!cellFrame) { return NS_ERROR_FAILURE;} // Some other error 
 
   result = cellFrame->GetRowIndex(aStartRowIndex);
   if (NS_FAILED(result)) return result;
