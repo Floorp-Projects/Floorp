@@ -1,0 +1,4 @@
+Makefile
+tmTransactionService.obj
+transmngr_s.lib
+transmngr_s.pdb
