@@ -20,6 +20,8 @@
 
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDocStreamLoaderFactory.h"
+#include "nsIDocumentViewer.h"
+#include "nsIDocument.h"
 
 class nsICSSStyleSheet;
 class nsIChannel;
