@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.15 2003/06/03 23:24:31 nelsonb%netscape.com Exp $
+ * $Id: secport.c,v 1.16 2003/11/20 02:06:16 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -207,6 +207,8 @@ PORT_NewArena(unsigned long chunksize)
     return(&pool->arena);
 }
 
+#define MAX_SIZE 0x7fffffffUL
+
 void *
 PORT_ArenaAlloc(PLArenaPool *arena, size_t size)
 {
@@ -218,6 +220,9 @@ PORT_ArenaAlloc(PLArenaPool *arena, size_t size)
 	size = 1;
     }
 
+    if (size > MAX_SIZE) {
+	/* you lose. */
+    } else 
     /* Is it one of ours?  Assume so and check the magic */
     if (ARENAPOOL_MAGIC == pool->magic ) {
 	PZ_Lock(pool->lock);
