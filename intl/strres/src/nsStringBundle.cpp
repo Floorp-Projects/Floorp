@@ -24,7 +24,14 @@
 #include "nsIStringBundle.h"
 #include "nscore.h"
 #include "nsILocale.h"
+
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+#endif // NECKO
+
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -42,9 +49,15 @@ NS_DEFINE_IID(kIStringBundleIID, NS_ISTRINGBUNDLE_IID);
 NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
+#ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
+
+static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 
 class nsStringBundle : public nsIStringBundle
 {
@@ -67,7 +80,9 @@ nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
   NS_INIT_REFCNT();
 
   mProps = nsnull;
+  nsIInputStream *in = nsnull;
 
+#ifndef NECKO
   nsINetService* pNetService = nsnull;
   *aResult = nsServiceManager::GetService(kNetServiceCID,
     kINetServiceIID, (nsISupports**) &pNetService);
@@ -77,7 +92,6 @@ nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
 #endif
     return;
   }
-  nsIInputStream *in = nsnull;
 
   *aResult = pNetService->OpenBlockingStream(aURL, nsnull, &in);
   if (NS_FAILED(*aResult)) {
@@ -86,6 +100,51 @@ nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
 #endif
     return;
   }
+
+#else // NECKO
+  nsresult rv;
+  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) {
+#ifdef NS_DEBUG
+    printf("cannot get io service\n");
+#endif
+    *aResult = rv;
+    return;
+  }
+
+  nsIURI *uri = nsnull;
+  rv = aURL->QueryInterface(nsIURI::GetIID(), (void**)&uri);
+  if (NS_FAILED(rv)) {
+#ifdef NS_DEBUG
+    printf("cannot get uri\n");
+#endif
+    *aResult = rv;
+    return;
+  }
+
+  // XXX NECKO what verb? sinkGetter?
+  nsIChannel *channel = nsnull;
+  rv = pNetService->NewChannelFromURI("load", uri, nsnull, &channel);
+  NS_RELEASE(uri);
+  if (NS_FAILED(rv)) {
+#ifdef NS_DEBUG
+    printf("cannot get channel\n");
+#endif
+    *aResult = rv;
+    return;
+  }
+
+  rv = channel->OpenInputStream(0, -1, &in);
+  NS_RELEASE(channel);
+  if (NS_FAILED(rv)) {
+#ifdef NS_DEBUG
+    printf("cannot get input stream\n");
+#endif
+    *aResult = rv;
+    return;
+  }
+#endif // NECKO
+
   if (!in) {
 #ifdef NS_DEBUG
     printf("OpenBlockingStream returned success value, but pointer is NULL\n");
@@ -255,6 +314,8 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
 
   /* get the url
    */
+  nsIURL *url = nsnull;
+#ifndef NECKO
   nsINetService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
     (nsISupports**) &pNetService);
@@ -262,13 +323,25 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
     printf("cannot get net service\n");
     return 1;
   }
-  nsIURL *url = nsnull;
   ret = pNetService->CreateURL(&url, strFile2, nsnull, nsnull,
                                nsnull);
   if (NS_FAILED(ret)) {
     printf("cannot create URL\n");
     return 1;
   }
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+  if (NS_FAILED(ret)) return ret;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = strFile2.GetBuffer();
+  ret = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(ret)) return ret;
+
+  ret = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+  if (NS_FAILED(ret)) return ret;
+#endif // NECKO
 
   /* do it
    */

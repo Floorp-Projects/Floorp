@@ -43,6 +43,13 @@
 #include "rdf.h"
 
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIEventQueueService.h"
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+#endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIRDFFTP.h"
@@ -52,10 +59,6 @@
 static NS_DEFINE_CID(kRDFServiceCID,                  NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,       NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_IID(kISupportsIID,                   NS_ISUPPORTS_IID);
-
-
-
-
 
 class FTPDataSourceCallback : public nsIStreamListener
 {
@@ -703,8 +706,10 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 		nsXPIDLCString ftpURL;
 		source->GetValue( getter_Copies(ftpURL) );
 
-		nsIURL		*url;
-		if (NS_SUCCEEDED(rv = NS_NewURL(&url, (const char*) ftpURL)))
+#ifndef NECKO
+        nsIURL		*url;
+        rv = NS_NewURL(&url, (const char*) ftpURL);
+		if (NS_SUCCEEDED(rv))
 		{
 			FTPDataSourceCallback	*callback = new FTPDataSourceCallback(mInner, source);
 			if (nsnull != callback)
@@ -712,6 +717,44 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 				rv = NS_OpenURL(url, NS_STATIC_CAST(nsIStreamListener *, callback));
 			}
 		}
+#else
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        
+        nsIChannel *channel = nsnull;
+        rv = service->NewChannel("load", (const char*) ftpURL, nsnull, nsnull, &channel);
+        if (NS_FAILED(rv)) return rv;
+
+        FTPDataSourceCallback *callback = new FTPDataSourceCallback(mInner, source);
+        if (!callback) return NS_ERROR_OUT_OF_MEMORY;
+
+        nsIStreamListener *listener = nsnull;
+        rv = callback->QueryInterface(nsIStreamListener::GetIID(), (void**)&listener);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(channel);
+            delete callback;
+            return rv;
+        }
+
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(channel);
+            delete callback;
+            return rv;
+        }
+
+        nsIEventQueue *eventQ = nsnull;
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(channel);
+            delete callback;
+            return rv;
+        }
+
+        rv = channel->AsyncRead(0, -1, nsnull, eventQ, callback);
+        NS_RELEASE(channel);
+        NS_RELEASE(eventQ);
+#endif // NECKO
 	}
 	return NS_NewEmptyEnumerator(aResult);
 }

@@ -19,6 +19,12 @@
 #include "nsIHTMLReflow.h"
 #include "nsFrame.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -75,7 +81,24 @@ nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
   mURLSpec = aNewSpec;
   if (mBaseURL && !aNewSpec.Equals("")) {
     nsString empty;
-    nsresult rv = NS_MakeAbsoluteURL(mBaseURL, empty, mURLSpec, mURL);
+    nsresult rv;
+#ifndef NECKO
+    rv = NS_MakeAbsoluteURL(mBaseURL, empty, mURLSpec, mURL);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return;
+
+    nsIURI *baseUri = nsnull;
+    rv = mBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+    if (NS_FAILED(rv)) return;
+
+    char *absUrl = nsnull;
+    const char *urlSpec = mURLSpec.GetBuffer();
+    rv = service->MakeAbsolute(urlSpec, baseUri, &absUrl);
+    NS_RELEASE(baseUri);
+    mURL = absUrl;
+    delete [] absUrl;
+#endif // NECKO
     if (NS_FAILED(rv)) {
       mURL = mURLSpec;
     }

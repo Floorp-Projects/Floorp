@@ -18,6 +18,12 @@
 #include <stdio.h>
 #include "nsCSSScanner.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIUnicharInputStream.h"
 #include "nsString.h"
@@ -32,7 +38,20 @@ int main(int argc, char** argv)
   // Create url object
   char* urlName = argv[1];
   nsIURL* url;
-  nsresult rv = NS_NewURL(&url, urlName);
+  nsresult rv;
+#ifndef NECKO
+  rv = NS_NewURL(&url, urlName);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return -1;
+
+  nsIURI *uri = nsnull;
+  rv = service->NewURI(urlName, nsnull, &uri);
+  if (NS_FAILED(rv)) return -1;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+#endif // NECKO
   if (NS_OK != rv) {
     printf("invalid URL: '%s'\n", urlName);
     return -1;

@@ -6,7 +6,13 @@
 #include "nsIPref.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
+
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#endif // NECKO
+
 #include "nsIObserverService.h"
 #include "nsString.h"
 #include "prmem.h"
@@ -28,7 +34,11 @@ static NS_DEFINE_IID(kPICSCID, NS_PICS_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+#ifndef NECKO
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -83,7 +93,13 @@ PRInt32 main(PRInt32 argc, char *argv[])
 	if (res == NS_OK) {
     // Load preferences
     nsComponentManager::RegisterComponent(kPrefCID, NULL, NULL, PREF_DLL, PR_FALSE, PR_FALSE);
+
+#ifndef NECKO
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#else
+    nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#endif // NECKO
+
     nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, RAPTORHTMLPARS_DLL, PR_FALSE, PR_FALSE);
 
     res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 

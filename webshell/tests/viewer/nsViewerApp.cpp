@@ -27,7 +27,9 @@
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 #include "nsIPref.h"
+#ifndef NECKO
 #include "nsINetService.h"
+#endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -160,8 +162,10 @@ nsViewerApp::Destroy()
 
   // Only shutdown if Initialize has been called...
   if (PR_TRUE == mIsInitialized) {
+#ifndef NECKO
     NS_ShutdownINetService();
     mIsInitialized = PR_FALSE;
+#endif // NECKO
   }
 }
 
@@ -295,10 +299,12 @@ nsViewerApp::Initialize(int argc, char** argv)
 #endif
 
   // Setup networking library
+#ifndef NECKO
   rv = NS_InitINetService();
   if (NS_OK != rv) {
     return rv;
   }
+#endif // NECKO
 
   // Finally process our arguments
   rv = ProcessArguments(argc, argv);

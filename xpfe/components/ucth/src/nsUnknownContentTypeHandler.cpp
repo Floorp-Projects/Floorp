@@ -23,6 +23,12 @@
 #include "nsIDocumentObserver.h"
 #include "nsString.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIWebShellWindow.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
@@ -200,7 +206,20 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURL *aURL,
     
         // Make url for dialog xul.
         nsIURL *url;
-        rv = NS_NewURL( &url, "resource:/res/samples/unknownContent.xul" );
+        char * urlStr = "resource:/res/samples/unknownContent.xul";
+#ifndef NECKO
+        rv = NS_NewURL( &url, urlStr );
+#else
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsIURI *uri = nsnull;
+        rv = service->NewURI(urlStr, nsnull, &uri);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        NS_RELEASE(uri);
+#endif // NECKO
     
         if ( NS_SUCCEEDED(rv) ) {
             // Create "save to disk" nsIXULCallbacks...

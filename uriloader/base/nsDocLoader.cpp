@@ -32,10 +32,17 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
 #include "nsIHttpURL.h"
-#include "nsILoadAttribs.h"
-#include "nsIURLGroup.h"
 #include "nsIServiceManager.h"
+#ifndef NECKO
+#include "nsIURLGroup.h"
+#include "nsILoadAttribs.h"
 #include "nsINetService.h"
+#else
+#include "nsIURI.h"
+#include "nsIEventQueueService.h"
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+#endif // NECKO
 #include "nsIGenericFactory.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsCOMPtr.h"
@@ -69,18 +76,22 @@ static NS_DEFINE_IID(kIStreamObserverIID,          NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,          NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_IID(kDocumentBindInfoIID,         NS_DOCUMENTBINDINFO_IID);
-static NS_DEFINE_IID(kIURLGroupIID,                NS_IURLGROUP_IID);
 static NS_DEFINE_IID(kRefreshURLIID,               NS_IREFRESHURL_IID);
 static NS_DEFINE_IID(kHTTPURLIID,                  NS_IHTTPURL_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,          NS_ISTREAMLISTENER_IID);
+#ifndef NECKO
+static NS_DEFINE_IID(kIURLGroupIID,                NS_IURLGROUP_IID);
 static NS_DEFINE_IID(kINetServiceIID,              NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_CID(kGenericFactoryCID,           NS_GENERICFACTORY_CID);
-
-/* Define CIDs... */
-static NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 
 /* Forward declarations.... */
 class nsDocLoaderImpl;
@@ -151,8 +162,11 @@ protected:
  * nsDocLoaderImpl implementation...
  ****************************************************************************/
 
-class nsDocLoaderImpl : public nsIDocumentLoader,
-                        public nsIURLGroup
+#ifndef NECKO
+class nsDocLoaderImpl : public nsIDocumentLoader, public nsIURLGroup
+#else
+class nsDocLoaderImpl : public nsIDocumentLoader
+#endif // NECKO
 {
 public:
 
@@ -192,6 +206,7 @@ public:
     NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, 
                                          nsIContentViewerContainer** aResult);
 
+#ifndef NECKO
     // nsIURLGroup interface...
     NS_IMETHOD CreateURL(nsIURL** aInstancePtrResult, 
                          nsIURL* aBaseURL,
@@ -206,6 +221,7 @@ public:
 
     NS_IMETHOD AddChildGroup(nsIURLGroup* aGroup);
     NS_IMETHOD RemoveChildGroup(nsIURLGroup* aGroup);
+#endif // NECKO
 
     // Implementation specific methods...
     void FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
@@ -319,7 +335,9 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 {
     Stop();
     if (nsnull != mParent) {
+#ifndef NECKO
         mParent->RemoveChildGroup(this);
+#endif // NECKO
         NS_RELEASE(mParent);
     }
 
@@ -348,11 +366,13 @@ nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         NS_ADDREF_THIS();
         return NS_OK;
     }
+#ifndef NECKO
     if (aIID.Equals(kIURLGroupIID)) {
         *aInstancePtr = (void*)(nsIURLGroup*)this;
         NS_ADDREF_THIS();
         return NS_OK;
     }
+#endif // NECKO
     return NS_NOINTERFACE;
 }
 
@@ -376,7 +396,9 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
     }
     rv = newLoader->QueryInterface(kIDocumentLoaderIID, (void**)anInstance);
     if (NS_SUCCEEDED(rv)) {
+#ifndef NECKO
         AddChildGroup(newLoader);
+#endif // NECKO
         newLoader->SetParent(this);
     }
 
@@ -673,6 +695,7 @@ nsDocLoaderImpl::GetContentViewerContainer(PRUint32 aDocumentID,
   return rv;
 }
 
+#ifndef NECKO
 NS_IMETHODIMP
 nsDocLoaderImpl::CreateURL(nsIURL** aInstancePtrResult, 
                            nsIURL* aBaseURL,
@@ -800,6 +823,7 @@ nsDocLoaderImpl::RemoveChildGroup(nsIURLGroup* aGroup)
   }
   return rv;
 }
+#endif // NECKO
 
 
 void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIDocumentLoader* aLoadInitiator,
@@ -1193,7 +1217,11 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
      * the nsISupports pointer so the backend can have access to the front
      * end nsIContentViewerContainer for refreshing urls.
      */
+#ifndef NECKO
     rv = m_DocLoader->CreateURL(&url, nsnull, aURLSpec, m_Container);
+#else
+    rv = NS_ERROR_NULL_POINTER;
+#endif // NECKO
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1239,7 +1267,6 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
 nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
 {
   nsresult rv = NS_OK;
-  nsINetService *inet = nsnull;
 
   m_Url = aURL;
   NS_ADDREF(m_Url);
@@ -1261,7 +1288,9 @@ nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
     NS_ADDREF(m_NextStream);
   }
 
+#ifndef NECKO
   /* Start the URL binding process... */
+  nsINetService *inet = nsnull;
   rv = nsServiceManager::GetService(kNetServiceCID,
                                     kINetServiceIID,
                                     (nsISupports **)&inet);
@@ -1269,6 +1298,30 @@ nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
     rv = inet->OpenStream(m_Url, this);
     nsServiceManager::ReleaseService(kNetServiceCID, inet);
   }
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  rv = m_Url->QueryInterface(nsIURI::GetIID(), (void**)&uri);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsIChannel *channel = nsnull;
+  // XXX NECKO verb? sinkGetter?
+  rv = service->NewChannelFromURI("load", uri, nsnull, &channel);
+  NS_RELEASE(uri);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIEventQueue *eventQ = nsnull;
+  NS_WITH_SERVICE(nsIEventQueueService, eqService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = eqService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = channel->AsyncRead(0, -1, nsnull, eventQ, this);
+  NS_RELEASE(eventQ);
+#endif // NECKO
 
   return rv;
 }
@@ -1277,7 +1330,6 @@ nsresult nsDocumentBindInfo::Bind(nsIURL* aURL, nsIStreamListener* aListener)
 nsresult nsDocumentBindInfo::Stop(void)
 {
   nsresult rv;
-  nsINetService* inet;
   if (m_Url == nsnull) return NS_OK;
 
 #if defined(DEBUG)
@@ -1296,6 +1348,8 @@ nsresult nsDocumentBindInfo::Stop(void)
   mStatus = NS_BINDING_ABORTED;
 
   /* Stop the URL binding process... */
+#ifndef NECKO
+  nsINetService* inet;
   rv = nsServiceManager::GetService(kNetServiceCID,
                                     kINetServiceIID,
                                     (nsISupports **)&inet);
@@ -1303,6 +1357,10 @@ nsresult nsDocumentBindInfo::Stop(void)
     rv = inet->InterruptStream(m_Url);
     nsServiceManager::ReleaseService(kNetServiceCID, inet);
   }
+#else
+  // XXX NECKO
+  // need to interrupt the load;
+#endif // NECKO
 
   return rv;
 }

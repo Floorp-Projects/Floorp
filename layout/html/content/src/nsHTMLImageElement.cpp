@@ -37,6 +37,12 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 // XXX nav attrs: suppress
 
@@ -527,7 +533,23 @@ nsHTMLImageElement::SetSrc(const nsString& aSrc)
           empty.Truncate();
           result = mOwnerDocument->GetBaseURL(baseURL);
           if (NS_SUCCEEDED(result)) {
+#ifndef NECKO
             result = NS_MakeAbsoluteURL(baseURL, empty, aSrc, url);
+#else
+            NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
+            if (NS_FAILED(result)) return result;
+
+            nsIURI *baseUri = nsnull;
+            result = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+            if (NS_FAILED(result)) return result;
+
+            char *absUrlStr = nsnull;
+            const char *urlSpec = aSrc.GetBuffer();
+            result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+            NS_RELEASE(baseUri);
+            url = absUrlStr;
+            delete [] absUrlStr;
+#endif // NECKO
             if (NS_FAILED(result)) {
               url = aSrc;
             }

@@ -32,10 +32,18 @@
 #include "plstr.h"
 #include "il_strm.h"
 #include "merrors.h"
-#include "nsINetService.h"
 
+#ifndef NECKO
+#include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#endif // NECKO
+
+#ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#endif // NECKO
+
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 

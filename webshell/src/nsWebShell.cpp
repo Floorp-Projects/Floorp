@@ -65,6 +65,10 @@
 //XXX used for nsIStreamObserver implementation.  This sould be replaced by DocLoader
 //    notifications...
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#endif // NECKO
 
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
@@ -114,6 +118,9 @@ void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
 
 
 static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
+#ifdef NECKO
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 //----------------------------------------------------------------------
 
@@ -1645,7 +1652,22 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 
       // See if they're the same
       nsCOMPtr<nsIURL>  url;
+#ifndef NECKO
       NS_NewURL(getter_AddRefs(url), aUrlSpec);
+#else
+    nsresult rv;
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    const char *uriSpec = aUrlSpec.GetBuffer();
+    rv = service->NewURI(uriSpec, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    NS_RELEASE(uri);
+    if (NS_FAILED(rv)) return rv;
+#endif // NECKO
 
       if ((PRBool)docURL->Equals(url)) {
         // See if there's a destination anchor

@@ -30,6 +30,11 @@
 #include "nsIServiceManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIWebShellWindow.h"
 #include "nsIDOMEventReceiver.h"
@@ -431,8 +436,25 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
   	return result;
 
 	nsIURL* dialogURL;
- 	if (!NS_SUCCEEDED (result = NS_NewURL(&dialogURL, inXULURL ) ) )
+#ifndef NECKO
+    result = NS_NewURL(&dialogURL, inXULURL );
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
+    if (NS_FAILED(result)) return result;
+
+    nsIURI *uri = nsnull;
+    const char *uriStr = inXULURL.GetBuffer();
+    result = service->NewURI(uriStr, nsnull, &uri);
+    if (NS_FAILED(result)) return result;
+
+    result = uri->QueryInterface(nsIURL::GetIID(), (void**)&dialogURL);
+    NS_RELEASE(uri);
+#endif // NECKO
+ 	if (!NS_SUCCEEDED (result) )
+ 	{
+ 		appShellService->Release();
  		return result;
+    }
 
  	NS_IF_RELEASE( mWebShellWindow );
  	appShellService->RunModalDialog( nsnull, dialogURL, mWebShellWindow, nsnull, this, 300, 200);

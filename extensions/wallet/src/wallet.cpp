@@ -22,7 +22,15 @@
 */
 
 #include "wallet.h"
+
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIChannel.h"
+#endif // NECKO
+
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -54,8 +62,14 @@ static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
+
+#ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
@@ -334,22 +348,45 @@ Wallet_Localize(char* genericString) {
   nsAutoString v("");
 
   /* create a URL for the string resource file */
+#ifndef NECKO
   nsINetService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
     (nsISupports**) &pNetService);
+#else
+  nsIIOService* pNetService = nsnull;
+  ret = nsServiceManager::GetService(kIOServiceCID, kIIOServiceIID,
+    (nsISupports**) &pNetService);
+#endif // NECKO
+
   if (NS_FAILED(ret)) {
     printf("cannot get net service\n");
     return v.ToNewCString();
   }
   nsIURL *url = nsnull;
+
+#ifndef NECKO
   ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
     nsnull);
+  nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+
+#else
+  nsIURI *uri = nsnull;
+  ret = pNetService->NewURI(TEST_URL, nsnull, &uri);
   if (NS_FAILED(ret)) {
-    printf("cannot create URL\n");
-    nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+    printf("cannot create URI\n");
+    nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
     return v.ToNewCString();
   }
-  nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+
+  ret = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
+
+#endif // NECKO
+
+  if (NS_FAILED(ret)) {
+    printf("cannot create URL\n");
+    return v.ToNewCString();
+  }
 
   /* create a bundle for the localization */
   nsIStringBundleService* pStringService = nsnull;
@@ -1139,45 +1176,57 @@ wallet_ReadFromURLFieldToSchemaFile
 
 void
 wallet_FetchFromNetCenter(char* from, char* to) {
-  nsINetService *inet = nsnull;
-  nsIURL * url;
-  if (!NS_FAILED(NS_NewURL(&url, from))) {
-    nsresult rv = nsServiceManager::GetService(kNetServiceCID,
-                                               kINetServiceIID,
-                                               (nsISupports **)&inet);
-    if (NS_SUCCEEDED(rv)) {
+    nsIInputStream* newStream;
+    nsIInputStream* *aNewStream = &newStream;
+    nsresult rv;
+#ifndef NECKO
+    nsIURL * url;
+    if (!NS_FAILED(NS_NewURL(&url, from))) {
+        NS_WITH_SERVICE(nsINetService, inet, kNetServiceCID, &rv);
+        if (NS_FAILED(rv)) return;
 
-      /* open network stream */
-      nsIInputStream* newStream;
-      nsIInputStream* *aNewStream = &newStream;
-      rv = inet->OpenBlockingStream(url, nsnull, aNewStream);
-      if (NS_SUCCEEDED(rv)) {
+        rv = inet->OpenBlockingStream(url, nsnull, aNewStream);
+#else
+    NS_WITH_SERVICE(nsIIOService, inet, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return;
 
-        /* open output file */
-        nsFileSpec dirSpec;
-        rv = Wallet_ProfileDirectory(dirSpec);
-        if (NS_FAILED(rv)) {
-          return;
-        }
-        nsOutputFileStream strm(dirSpec + to);
-        if (!strm.is_open()) {
-          NS_ERROR("unable to open file");
-        } else {
 
-          /* place contents of network stream in output file */
-          char buff[1001];
-          PRUint32 count;
-          while (NS_SUCCEEDED((*aNewStream)->Read(buff,1000,&count))) {
-            buff[count] = '\0';
-            strm.write(buff, count);
+    nsIChannel *channel = nsnull;
+    // XXX NECKO what verb do we want here?
+    rv = inet->NewChannel("load", from, nsnull, nsnull, &channel);
+    if (NS_FAILED(rv)) return;
+
+    rv = channel->OpenInputStream(0, -1, aNewStream);
+#endif // NECKO
+
+        /* open network stream */
+        if (NS_SUCCEEDED(rv)) {
+
+          /* open output file */
+          nsFileSpec dirSpec;
+          rv = Wallet_ProfileDirectory(dirSpec);
+          if (NS_FAILED(rv)) {
+            return;
           }
-          strm.flush();
-          strm.close();
+          nsOutputFileStream strm(dirSpec + to);
+          if (!strm.is_open()) {
+            NS_ERROR("unable to open file");
+          } else {
+
+            /* place contents of network stream in output file */
+            char buff[1001];
+            PRUint32 count;
+            while (NS_SUCCEEDED((*aNewStream)->Read(buff,1000,&count))) {
+              buff[count] = '\0';
+              strm.write(buff, count);
+            }
+            strm.flush();
+            strm.close();
+          }
         }
-      }
+#ifndef NECKO
     }
-    nsServiceManager::ReleaseService(kNetServiceCID, inet);
-  }
+#endif // NECKO
 }
 
 /*

@@ -83,6 +83,11 @@
 #include "nsISupportsArray.h"
 #include "nsITextContent.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsIWebShell.h"
 #include "nsIXMLContent.h"
@@ -1060,7 +1065,22 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 			{
 				nsString seedString;
 				generate_RDF_seed(&seedString, 0);
+#ifndef NECKO
 				NS_NewURL(getter_AddRefs(syntheticURL), seedString);
+#else
+                nsresult rv;
+                NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+                if (NS_FAILED(rv)) return rv;
+
+                nsIURI *uri = nsnull;
+                const char *uriStr = seedString.GetBuffer();
+                rv = service->NewURI(uriStr, nsnull, &uri);
+                if (NS_FAILED(rv)) return rv;
+
+                rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&syntheticURL);
+                NS_RELEASE(uri);
+                if (NS_FAILED(rv)) return rv;
+#endif // NECKO
 			}
 
 #if 0

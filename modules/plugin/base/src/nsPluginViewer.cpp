@@ -24,6 +24,12 @@
 #include "nsIPluginInstance.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsILinkHandler.h"
@@ -706,7 +712,25 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
           nsAutoString  fullurl;
 
           // Create an absolute URL
+#ifndef NECKO
           rv = NS_MakeAbsoluteURL(url, base, uniurl, fullurl);
+#else
+          NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+          if (NS_FAILED(rv)) return rv;
+
+          nsIURI *baseUri = nsnull;
+          const char *uriStr = uniurl.GetBuffer();
+          rv = service->NewURI(uriStr, nsnull, &baseUri);
+          if (NS_FAILED(rv)) return rv;
+
+          char *absUrl = nsnull;
+          const char *urlSpec = base.GetBuffer();
+          rv = service->MakeAbsolute(urlSpec, baseUri, &absUrl);
+          NS_RELEASE(baseUri);
+          if (NS_FAILED(rv)) return rv;
+          fullurl = absUrl;
+          delete [] absUrl;
+#endif // NECKO
 
           if (NS_OK == rv)
             rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);

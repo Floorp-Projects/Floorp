@@ -20,32 +20,57 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
-#include "nsINetService.h"
 
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+#ifndef NECKO
+#include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+#endif // NECKO
+
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
+
+#ifndef NECKO
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 nsURLProperties::nsURLProperties(nsString& aUrl)
 {
   mDelegate = nsnull; 
   nsresult res = NS_OK;
+  nsIURL* url = nsnull;
+  nsIInputStream* in = nsnull;
 
+#ifndef NECKO
   nsINetService* pNetService = nsnull;
   if(NS_SUCCEEDED(res)) 
-     res = nsServiceManager::GetService( kNetServiceCID, 
-                                         kINetServiceIID, 
-                                         (nsISupports**) &pNetService);
+     res = nsServiceManager::GetService( kNetServiceCID,
+                                         kINetServiceIID,
+                                        (nsISupports**) &pNetService);
 
-  nsIURL* url = nsnull;
   if(NS_SUCCEEDED(res)) 
     res = pNetService->CreateURL(&url, aUrl, nsnull, nsnull, nsnull);
  
-  nsIInputStream* in=nsnull;
   if(NS_SUCCEEDED(res)) 
     res = pNetService->OpenBlockingStream(url, nsnull, &in);
-    
-  
+#else
+  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
+  if (NS_FAILED(res)) return;
+
+  nsIChannel *channel = nsnull;
+  // XXX NECKO verb? sinkGetter?
+  const char *urlStr = aUrl.GetBuffer();
+  res = pNetService->NewChannel("load", urlStr, nsnull, nsnull, &channel);
+  if (NS_FAILED(res)) return;
+
+  res = channel->OpenInputStream(0, -1, &in);
+  NS_RELEASE(channel);
+#endif // NECKO
+
   if(NS_SUCCEEDED(res))
     res = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
                                          kIPersistentPropertiesIID, 
@@ -58,10 +83,11 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
     NS_IF_RELEASE(mDelegate);
     mDelegate=nsnull;
   }
-
-  if(pNetService) 
-     res = nsServiceManager::ReleaseService( kNetServiceCID, 
+#ifndef NECKO
+  if(pNetService)
+     res = nsServiceManager::ReleaseService( kNetServiceCID,
                                              pNetService);
+#endif // NECKO
   NS_IF_RELEASE(in);
 }
 

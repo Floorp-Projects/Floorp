@@ -22,7 +22,9 @@
 #include "nsweb.h"
 #include "prtypes.h"
 #include "nsISupports.h"
+#ifndef NECKO
 #include "nsILoadAttribs.h"
+#endif // NECKO
 
 /* Forward declarations... */
 class nsString;

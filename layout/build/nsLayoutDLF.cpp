@@ -21,6 +21,12 @@
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsString.h"
@@ -536,7 +542,19 @@ nsLayoutDLF::InitUAStyleSheet()
 
   if (nsnull == gUAStyleSheet) {  // snarf one
     nsIURL* uaURL;
+#ifndef NECKO
     rv = NS_NewURL(&uaURL, nsString(UA_CSS_URL)); // XXX this bites, fix it
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    rv = service->NewURI(UA_CSS_URL, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&uaURL);
+    NS_RELEASE(uri);
+#endif // NECKO
     if (NS_SUCCEEDED(rv)) {
       nsICSSLoader* cssLoader;
       rv = NS_NewCSSLoader(&cssLoader);

@@ -25,10 +25,17 @@
 
 #include "nsIPluginStreamListener.h"
 #include "nsIStreamListener.h"
-#include "nsIURL.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIURL.h"
+
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#endif // NECKO
+
 #include "nsIServiceManager.h"
 #include "nsICookieStorage.h"
 #include "nsINetService.h"
@@ -66,8 +73,14 @@ static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+
+#ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
+
 static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 
@@ -1115,9 +1128,14 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   nsString ua;
   nsINetService *service = nsnull;
 
+#ifndef NECKO
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&service);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+#endif // NECKO
+
   if ((NS_OK == res) && (nsnull != service))
   {
     res = service->GetUserAgent(ua);
@@ -1423,8 +1441,21 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
   //create a URL so that the instantiator can do file ext.
   //based plugin lookups...
-  
+#ifndef NECKO  
   rv = NS_NewURL(&url, aURLSpec);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = aURLSpec.GetBuffer();
+  rv = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+  if (NS_FAILED(rv)) return rv;
+#endif // NECKO
 
   if (rv != NS_OK)
     url = nsnull;
@@ -1965,7 +1996,21 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   if (aURL.Length() <= 0)
     return NS_OK;
 
+#ifndef NECKO
   rv = NS_NewURL(&url, aURL);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = aURL.GetBuffer();
+  rv = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+  if (NS_FAILED(rv)) return rv;
+#endif // NECKO
 
   if (NS_OK == rv)
   {
@@ -2101,6 +2146,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewTempFileName(const char* prefix, PRUint32 buf
 
 NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCookieBuffer, PRUint32& inOutCookieSize)
 {
+#ifndef NECKO
 	nsresult rv = NS_OK;
 	nsINetService* netService = NULL;
 	const nsCID kNetServiceCID = NS_NETSERVICE_CID;
@@ -2120,10 +2166,15 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
 		mServiceMgr->ReleaseService(kNetServiceCID, netService);
 	}
 	return rv;
+#else
+    // XXX NECKO cookie module needs to be used for this info.
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif // NECKO
 }
 
 NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* inCookieBuffer, PRUint32 inCookieSize)
 {
+#ifndef NECKO
 	nsresult rv = NS_OK;
 	nsINetService* netService = NULL;
 	const nsCID kNetServiceCID = NS_NETSERVICE_CID;
@@ -2140,4 +2191,8 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
 		mServiceMgr->ReleaseService(kNetServiceCID, netService);
 	}
 	return rv;
+#else
+    // XXX NECKO cookie module needs to be used for this info.
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif // NECKO
 }

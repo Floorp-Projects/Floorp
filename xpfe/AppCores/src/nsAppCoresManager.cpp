@@ -42,7 +42,9 @@
 
 #include "nsIURL.h"
 #include "nsINetlibURL.h"
+#ifndef NECKO
 #include "nsINetService.h"
+#endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 
@@ -72,8 +74,11 @@ static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 
+#ifndef NECKO
 static NS_DEFINE_IID(kInetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kInetServiceCID, NS_NETSERVICE_CID);
+#endif // NECKO
+
 static NS_DEFINE_IID(kInetLibURLIID, NS_INETLIBURL_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 

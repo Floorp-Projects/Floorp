@@ -34,6 +34,12 @@
 #include "nsImageMap.h"
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
@@ -664,7 +670,24 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
         nsAutoString src;
         nsString empty;
         mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
+#ifndef NECKO
         NS_MakeAbsoluteURL(baseURL, empty, src, absURL);
+#else
+        nsresult rv;
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsIURI *baseUri = nsnull;
+        rv = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+        if (NS_FAILED(rv)) return rv;
+
+        char *absUrlStr = nsnull;
+        const char *baseSpec = src.GetBuffer();
+        rv = service->MakeAbsolute(baseSpec, baseUri, &absUrlStr);
+        NS_RELEASE(baseUri);
+        absURL = absUrlStr;
+        delete [] absUrlStr;
+#endif // NECKO
         NS_IF_RELEASE(baseURL);
 
         // Note: We don't subtract out the border/padding here to remain

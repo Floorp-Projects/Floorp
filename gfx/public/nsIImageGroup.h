@@ -59,8 +59,7 @@ public:
    * Initialize an image group with a device context. All images
    * in this group will be decoded for the specified device context.
    */
-  virtual nsresult Init(nsIDeviceContext *aDeviceContext, 
-                        nsIURLGroup* aURLGroup) = 0;
+  virtual nsresult Init(nsIDeviceContext *aDeviceContext, nsIURLGroup* aURLGroup) = 0;
 
   /** 
    * Add an observers to be informed of image group notifications.

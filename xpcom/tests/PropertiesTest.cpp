@@ -19,10 +19,18 @@
 #define NS_IMPL_IDS
 
 #include "nsIEventQueueService.h"
-#include "nsINetService.h"
 #include "nsIProperties.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#ifndef NECKO
+#include "nsINetService.h"
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+#else
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 
@@ -52,9 +60,7 @@
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 
 
@@ -66,7 +72,12 @@ NS_SetupRegistry()
                                    NULL /* default */);
 
 	// startup netlib:	
-  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+#ifndef NECKO
+    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#else
+    nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+#endif // NECKO
 
     // Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
@@ -96,6 +107,9 @@ main(int argc, char* argv[])
 
   NS_SetupRegistry(); 
 
+  nsIInputStream* in = nsnull;
+
+#ifndef NECKO
   nsINetService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
     (nsISupports**) &pNetService);
@@ -103,19 +117,39 @@ main(int argc, char* argv[])
     printf("cannot get net service\n");
     return 1;
   }
-  nsIURL* url = nsnull;
+  nsIURL *url = nsnull;
   ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
     nsnull);
   if (NS_FAILED(ret) || (!url)) {
     printf("cannot create URL\n");
     return 1;
   }
-  nsIInputStream* in = nsnull;
+
   ret = pNetService->OpenBlockingStream(url, nsnull, &in);
   if (NS_FAILED(ret) || (!in)) {
     printf("cannot open stream\n");
     return 1;
   }
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+  if (NS_FAILED(ret)) return ret;
+
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &ret);
+  if (NS_FAILED(ret)) return ret;
+
+  nsIChannel *channel = nsnull;
+  // XXX NECKO verb? getter?
+  ret = service->NewChannel("load", TEST_URL, nsnull, nsnull, &channel);
+  if (NS_FAILED(ret)) return ret;
+
+  nsIEventQueue *eventQ = nsnull;
+  ret = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+  if (NS_FAILED(ret)) return ret;
+
+  ret = channel->OpenInputStream(0, -1, &in);
+  if (NS_FAILED(ret)) return ret;
+#endif // NECKO
+
   nsIPersistentProperties* props = nsnull;
   ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
     kIPersistentPropertiesIID, (void**) &props);

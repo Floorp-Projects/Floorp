@@ -23,7 +23,9 @@
 #include "nsIWidget.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewerContainer.h"
+#ifndef NECKO
 #include "nsILoadAttribs.h"
+#endif // NECKO
 #include "nsIScrollableView.h"
 #include "nsIParser.h" // for nsCharsetSource only
 #include "nsISessionHistory.h"

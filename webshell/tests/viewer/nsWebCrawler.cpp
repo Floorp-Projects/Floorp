@@ -30,6 +30,12 @@
 #include "nsIViewManager.h"
 #include "nsIFrame.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsITimer.h"
 #include "nsIAtom.h"
 #include "nsIFrameUtil.h"
@@ -514,7 +520,22 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
 
   PRBool ok = PR_TRUE;
   nsIURL* url;
-  nsresult rv = NS_NewURL(&url, aURLSpec);
+  nsresult rv;
+#ifndef NECKO
+  rv = NS_NewURL(&url, aURLSpec);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = aURLSpec.GetBuffer();
+  rv = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+#endif // NECKO
+
   if (NS_OK == rv) {
     const char* host;
     rv = url->GetHost(&host);
@@ -579,7 +600,30 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     }
     aNode->GetAttribute(kNameSpaceID_HTML, mBaseHrefAttr, base);/* XXX not public knowledge! */
     nsIURL* docURL = aDocument->GetDocumentURL();
-    nsresult rv = NS_MakeAbsoluteURL(docURL, base, src, absURLSpec);
+    nsresult rv;
+#ifndef NECKO
+    rv = NS_MakeAbsoluteURL(docURL, base, src, absURLSpec);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return;
+
+    nsIURI *baseUri = nsnull;
+
+    if (base.Length() > 0) {
+        const char *uriStr = base.GetBuffer();
+        rv = service->NewURI(uriStr, nsnull, &baseUri);
+    } else {
+        rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+    }
+    if (NS_FAILED(rv)) return;
+
+    char *absUrlStr = nsnull;
+    const char *urlSpec = src.GetBuffer();
+    rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+    NS_RELEASE(baseUri);
+    absURLSpec = absUrlStr;
+    delete [] absUrlStr;
+#endif // NECKO
     if (NS_OK == rv) {
       nsIAtom* urlAtom = NS_NewAtom(absURLSpec);
       if (0 == mVisited->Get(urlAtom)) {

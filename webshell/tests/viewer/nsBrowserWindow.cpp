@@ -95,9 +95,17 @@
 #endif
 
 #ifdef CookieManagement
+
+#ifndef NECKO
 #include "nsINetService.h"
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
+
 #endif
 
 #if defined(ClientWallet) || defined(SingleSignon)
@@ -435,9 +443,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
 #if defined(CookieManagement) || defined(SingleSignon) || defined(ClientWallet)
   nsresult res;
-#ifdef CookieManagement
-  nsINetService *netservice;
-#endif
 #if defined(ClientWallet) || defined(SingleSignon)
   nsIWalletService *walletservice;
 #endif
@@ -624,7 +629,20 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsIURL * url;
-    if (!NS_FAILED(NS_NewURL(&url, WALLET_EDITOR_URL))) {
+#ifndef NECKO
+    res = NS_NewURL(&url, WALLET_EDITOR_URL);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+    if (NS_FAILED(res)) return nsEventStatus_eIgnore;
+
+    nsIURI *uri = nsnull;
+    res = service->NewURI(WALLET_EDITOR_URL, nsnull, &uri);
+    if (NS_FAILED(res)) return nsEventStatus_eIgnore;
+
+    res = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    NS_RELEASE(uri);
+#endif // NECKO
+    if (!NS_FAILED(res)) {
 //      res = walletservice->WALLET_PreEdit(url);
       NS_RELEASE(walletservice);
     }
@@ -638,14 +656,19 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 #if defined(CookieManagement)
   case PRVCY_DISPLAY_COOKIES:
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&netservice);
-  if ((NS_OK == res) && (nsnull != netservice)) {
-    res = netservice->Cookie_DisplayCookieInfoAsHTML();
-    NS_RELEASE(netservice);
+  {
+#ifndef NECKO
+      nsINetService *netservice;
+      res = nsServiceManager::GetService(kNetServiceCID,
+                                         kINetServiceIID,
+                                         (nsISupports **)&netservice);
+      if ((NS_OK == res) && (nsnull != netservice)) {
+        res = netservice->Cookie_DisplayCookieInfoAsHTML();
+        NS_RELEASE(netservice);
+      }
+#endif // NECKO
+      break;
   }
-  break;
 #endif
 
 #if defined(SingleSignon)
@@ -994,7 +1017,19 @@ GetTitleSuffix(void)
     return suffix;
   }
   nsIURL* url = nsnull;
+#ifndef NECKO
   ret = NS_NewURL(&url, nsString(VIEWER_BUNDLE_URL));
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+    if (NS_FAILED(ret)) return ret;
+
+    nsIURI *uri = nsnull;
+    ret = service->NewURI(VIEWER_BUNDLE_URL, nsnull, &uri);
+    if (NS_FAILED(ret)) return ret;
+
+    ret = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    NS_RELEASE(uri);
+#endif // NECKO
   if (NS_FAILED(ret)) {
     NS_RELEASE(service);
     return suffix;

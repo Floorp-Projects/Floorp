@@ -43,6 +43,11 @@
 
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIWidget.h"
 #include "plevent.h"
 
@@ -743,8 +748,20 @@ nsEditorAppCore::CreateWindowWithURL(const char* urlStr)
 
   nsCOMPtr<nsIURL> url = nsnull;
   nsIWebShellWindow* newWindow = nsnull;
-  
+
+#ifndef NECKO  
   rv = NS_NewURL(getter_AddRefs(url), urlStr);
+#else
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIURI *uri = nsnull;
+  rv = service->NewURI(urlStr, nsnull, &uri);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  NS_RELEASE(uri);
+#endif // NECKO
   if (NS_FAILED(rv) || !url)
     goto done;
 

@@ -48,6 +48,11 @@
 #include "nsIHTMLAttributes.h"
 #include "nsCRT.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIDocument.h"
 #include "nsILinkHandler.h"
 #include "nsRadioControlFrame.h"
@@ -97,9 +102,16 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
 #if defined(CookieManagement)
+
+#ifndef NECKO
 #include "nsINetService.h"
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+#include "nsIURL.h"
+#endif // NECKO
+
+
 #endif
 
 //----------------------------------------------------------------------
@@ -496,7 +508,24 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     }
     nsAutoString absURLSpec;
     nsAutoString base;
+#ifndef NECKO
     NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+#else
+    nsresult result;
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
+    if (NS_FAILED(result)) return result;
+
+    nsIURI *baseUri = nsnull;
+    result = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+    if (NS_FAILED(result)) return result;
+
+    char *absUrlStr = nsnull;
+    const char *urlSpec = href.GetBuffer();
+    result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+    NS_RELEASE(baseUri);
+    absURLSpec = absUrlStr;
+    delete [] absUrlStr;
+#endif // NECKO
     NS_IF_RELEASE(docURL);
 
     // Now pass on absolute url to the click handler

@@ -22,7 +22,9 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#ifndef NECKO
 #include "nsILoadAttribs.h"
+#endif // NECKO
 
 //Forward declarations
 class nsHistoryEntry;

@@ -19,7 +19,17 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
+
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+#include "nsIEventQueueService.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_IEVENTQUEUESERVICE_CID);
+#endif // NECKO
+
 #include "nsString.h"
 #include "nsCRT.h"
 #include "prprf.h"
@@ -198,6 +208,10 @@ PageGrabber::NextFile(const char* aExtension)
   return cname;
 }
 
+#ifdef NECKO
+static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
+#endif // NECKO
+
 nsresult
 PageGrabber::Grab(const nsString& aURL)
 {
@@ -215,15 +229,44 @@ PageGrabber::Grab(const nsString& aURL)
         
   // Create the URL object...
   nsIURL* url = NULL;
-  nsresult rv = NS_NewURL(&url, aURL);
+  nsresult rv;
+
+#ifndef NECKO
+  rv = NS_NewURL(&url, aURL);
   if (NS_OK != rv) {
     return rv;
   }
-        
+#else
+  rv = NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIChannel *channel = nsnull;
+  // XXX NECKO what verb? what eventSinkGetter?
+  rv = ioService->NewChannel("load", aURL, nsnull, nsnull, &channel);
+  if (NS_FAILED(rv)) return rv;
+#endif // NECKO
+
   // Start the URL load...
   StreamToFile* copier = new StreamToFile(fp);
   NS_ADDREF(copier);
+
+#ifndef NECKO
   rv = url->Open(copier);
+#else
+  nsIEventQueue *eventQ = nsnull;
+  NS_WITH_SERVICE(nsIEventQueueService, eqService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = eqService->CreateThreadEventQueue();
+  if (NS_FAILED(rv)) return rv;
+
+  rv = eqService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = channel->AsyncRead(0, -1, nsnull, eventQ, copier);
+  NS_RELEASE(eventQ);
+#endif // NECKO
+
   if (NS_OK != rv) {
     NS_RELEASE(copier);
     NS_RELEASE(url);

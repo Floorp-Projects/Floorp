@@ -26,13 +26,27 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "il_strm.h"
+
+#ifndef NECKO
 #include "nsINetService.h"
+#else
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIChannel.h"
+#endif // NECKO
+
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
+
+#ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+#else
+static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 
 class ImageNetContextSyncImpl : public ilINetContext {
 public:
@@ -171,17 +185,45 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
   aURL->QueryInterface(kIURLIID, (void **)&url);
 
   // Get a network service interface which we'll use to create a stream
+#ifndef NECKO
   nsINetService *service;
   nsresult res = nsServiceManager::GetService(kNetServiceCID,
                                           kINetServiceIID,
                                           (nsISupports **)&service);
+#else
+  nsIIOService *service;
+  nsresult res = nsServiceManager::GetService(kIOServiceCID,
+                                              kIIOServiceIID,
+                                              (nsISupports **)&service);
+#endif // NECKO
 
   if (NS_SUCCEEDED(res)) {
     nsIInputStream* stream = nsnull;
 
+#ifndef NECKO
     // Initiate a synchronous URL load
     if (NS_SUCCEEDED(service->OpenBlockingStream(url, nsnull, &stream)) &&
         (aReader->StreamCreated(aURL, IL_UNKNOWN) == PR_TRUE)) {
+#else
+
+    nsIURI *uri = nsnull;
+    nsresult rv;
+    rv = url->QueryInterface(nsIURI::GetIID(), (void**)&uri);
+    if (NS_FAILED(rv)) return -1;
+
+    // XXX NECKO what verb? what event sink getter
+    nsIChannel *channel = nsnull;
+    rv = service->NewChannelFromURI("load", uri, nsnull, &channel);
+    NS_RELEASE(uri);
+    if (NS_FAILED(rv)) return -1;
+
+    rv = channel->OpenInputStream(0, -1, &stream);
+    NS_RELEASE(channel);
+    if (NS_FAILED(rv)) return -1;
+
+    if (aReader->StreamCreated(aURL, IL_UNKNOWN) == PR_TRUE) {
+
+#endif // NECKO
 
       // Read the URL data
       char      buf[2048];

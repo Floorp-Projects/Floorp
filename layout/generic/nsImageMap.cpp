@@ -22,6 +22,12 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFragment.h"
@@ -846,7 +852,31 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     if (area->IsInside(aX, aY) && area->mHasURL) {
+#ifndef NECKO
       NS_MakeAbsoluteURL(aDocURL, area->mBase, area->mHREF, aAbsURL);
+#else
+      nsresult rv;
+      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+      if (NS_FAILED(rv)) return PR_FALSE;
+
+      nsIURI *baseUri = nsnull;
+
+      if ((area->mBase).Length() > 0) {
+        // use the area->base as the base uri
+        const char *uriStr = (area->mBase).GetBuffer();
+        rv = service->NewURI(uriStr, nsnull, &baseUri);
+      } else {
+        rv = aDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+      }
+      if (NS_FAILED(rv)) return PR_FALSE;
+
+      char *absUrlStr = nsnull;
+      const char *urlSpec = (area->mHREF).GetBuffer();
+      rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+      NS_RELEASE(baseUri);
+      aAbsURL = absUrlStr;
+      delete [] absUrlStr;
+#endif // NECKO
       aTarget = area->mTarget;
       aAltText = area->mAltText;
       *aSuppress = area->mSuppressFeedback;

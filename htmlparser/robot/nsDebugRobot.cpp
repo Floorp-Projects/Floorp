@@ -22,6 +22,12 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIServiceManager.h"
+#include "nsIURI.h"
+#include "nsIIOService.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsIStreamListener.h"
 #include "nsIDTDDebug.h"
 #include "nsIComponentManager.h"
@@ -192,7 +198,21 @@ extern "C" NS_EXPORT int DebugRobot(
 
     // Create url
     nsIURL* url;
-    nsresult rv = NS_NewURL(&url, *urlName);
+    nsresult rv;
+#ifndef NECKO
+    rv = NS_NewURL(&url, *urlName);
+#else
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIURI *uri = nsnull;
+    const char *uriStr = urlName->GetBuffer();
+    rv = service->NewURI(uriStr, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    NS_RELEASE(uri);
+#endif // NECKO    
     if (NS_OK != rv) {
       printf("invalid URL: '");
       fputs(*urlName, stdout);

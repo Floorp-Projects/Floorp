@@ -33,6 +33,12 @@
 #include "nsIDocumentViewer.h"
 #include "nsIContent.h"
 #include "nsIURL.h"
+#ifdef NECKO
+#include "nsIIOService.h"
+#include "nsIURI.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#endif // NECKO
 #include "nsFileSpec.h"
 #include "nsIFactory.h"
 #include "pratom.h"
@@ -629,10 +635,24 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
 
         // Make url for dialog xul.
         nsIURL *url;
-        
+        char * urlStr = "resource:/res/samples/finddialog.xul";
+
         // this should be a chrome URI
         // chrome://navigator/dialogs/content/default/finddialog.xul or something.
-        rv = NS_NewURL( &url, "resource:/res/samples/finddialog.xul" );
+#ifndef NECKO
+        rv = NS_NewURL( &url, urlStr );
+#else
+        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsIURI *uri = nsnull;
+        rv = service->NewURI(urlStr, nsnull, &uri);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        NS_RELEASE(uri);
+        if (NS_FAILED(rv)) return rv;
+#endif // NECKO
 
         // Create callbacks object for the find dialog.
         nsFindDialog *dialog = new nsFindDialog( this, context );
