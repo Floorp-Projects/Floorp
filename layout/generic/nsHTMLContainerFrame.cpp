@@ -515,4 +515,19 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-
+void
+nsHTMLContainerFrame::UpdateStyleContexts(nsIPresContext& aPresContext,
+                                          nsIFrame* aFrame,
+                                          nsIFrame* aOldParent,
+                                          nsIFrame* aNewParent)
+{
+  nsIStyleContext* oldParentSC;
+  aOldParent->GetStyleContext(oldParentSC);
+  nsIStyleContext* newParentSC;
+  aNewParent->GetStyleContext(newParentSC);
+  if (oldParentSC != newParentSC) {
+    aFrame->ReResolveStyleContext(&aPresContext, newParentSC);
+  }
+  NS_RELEASE(oldParentSC);
+  NS_RELEASE(newParentSC);
+}
