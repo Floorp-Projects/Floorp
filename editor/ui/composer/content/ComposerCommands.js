@@ -2139,7 +2139,7 @@ var nsValidateCommand =
   validateFilePageLoaded: function(event)
   {
     event.target.forms[0].uploaded_file.value = URL2Validate;
-  },
+  }
 };
 
 var nsCheckLinksCommand =
