@@ -33,11 +33,29 @@ var sidebar = new Object;
 function debug(msg)
 {
   // uncomment for noise
-  //dump(msg);
+  // dump(msg+"\n");
 }
 
-function sidebarOverlayInit()
-{
+var panel_observer = new Object;
+panel_observer = {
+  OnAssert   : function(src,prop,target)
+    {
+	  debug("Setting timeout to open default");
+
+	  //xxxslamm This timeout does not work. JS bug #???? (bugzilla is down).
+	  // Brendan said that norris is working on this.
+	  //setTimeout("sidebarOpenDefaultPanel(100, 0)",100);
+	},
+  OnUnassert : function(src,prop,target)
+               { debug("panel_observer: onUnassert"); },
+  OnChange   : function(src,prop,old_target,new_target)
+               { debug("panel_observer: onChange"); },
+  OnMove     : function(old_src,new_src,prop,target)
+               { debug("panel_observer: onMove"); }
+}
+
+
+function getSidebarDatasourceURI(panels_file_id) {
   try {
 	  var fileLocatorInterface = Components.interfaces.nsIFileLocator;
 	  var fileLocatorProgID = 'component://netscape/filelocator';
@@ -49,23 +67,26 @@ function sidebarOverlayInit()
 
 	  // if <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
 	  // bin/defaults/profile/panels.rdf to <profile>/panels.rdf
-	  var sidebar_file = fileLocatorService.GetFileLocation(PANELS_RDF_FILE);
-	  var sidebar_url = sidebar_file.URLString;
+	  var sidebar_file = fileLocatorService.GetFileLocation(panels_file_id);
 
 	  if (!sidebar_file.exists()) {	
 		// this should not happen, as GetFileLocation() should copy
 		// defaults/panels.rdf to the users profile directory
-		return;
+		return null;
 	  }
 
-	  debug("sidebar url is " + sidebar_url.URLString + "\n");
-	  sidebar.db = sidebar_file.URLString;
+	  debug("sidebar uri is " + sidebar_file.URLString);
+	  return sidebar_file.URLString;
   }
   catch (ex) {
 	// this should not happen
-	return;
+	return null;
   }
-  
+}
+
+function sidebarOverlayInit()
+{
+  sidebar.datasource_uri = getSidebarDatasourceURI(PANELS_RDF_FILE);
   sidebar.resource = 'urn:sidebar:current-panel-list';
 
   // Initialize the display
@@ -80,20 +101,25 @@ function sidebarOverlayInit()
 	if (sidebar_menuitem)
       sidebar_menuitem.setAttribute('checked', 'true');
 
-	debug("sidebar = " + sidebar + "\n");
-	debug("sidebar.resource = " + sidebar.resource + "\n");
-	debug("sidebar.db = " + sidebar.db + "\n");
+	debug("sidebar = " + sidebar);
+	debug("sidebar.resource = " + sidebar.resource);
+	debug("sidebar.datasource_uri = " + sidebar.datasource_uri);
 
 	// Add the user's current panel choices to the template builder,
 	// which will aggregate it with the other datasources that describe
 	// the individual panel's title, customize URL, and content URL.
 	var panels = document.getElementById('sidebar-panels');
-	panels.database.AddDataSource(RDF.GetDataSource(sidebar.db));
+	panels.database.AddDataSource(RDF.GetDataSource(sidebar.datasource_uri));
 	
+	debug("Adding observer to database.");
+    panels.database.AddObserver(panel_observer);
+
 	// XXX This is a hack to force re-display
 	panels.setAttribute('ref', 'urn:sidebar:current-panel-list');
 
-	sidebarOpenDefaultPanel(1, 0);
+	sidebarOpenDefaultPanel(100, 0);
+
+	
   }
 }
 
@@ -102,19 +128,16 @@ function sidebarOpenDefaultPanel(wait, tries) {
   var target = parent.getAttribute('open-panel-src');
   var children = parent.childNodes;
 
-  debug("~~~~~~~~~~~opening default panel\n");
+  debug("sidebarOpenDefaultPanel("+wait+","+tries+")");
+  debug("  target="+target);
+
   if (children.length < 3) {
-  debug("~~~~~~~~~~~not enough kids yet\n");
 	if (tries < 5) {
       // No children yet, try again later
-      setTimeout('sidebarOpenDefaultPanel('+(wait*2+1)+','+(tries+1)+')',wait);
+      setTimeout('sidebarOpenDefaultPanel('+(wait*2)+','+(tries+1)+')',wait);
 	}
     return;
   }
-    for (var ii=0; ii < children.length; ii++) {
-      debug("~~ child " + ii + "\n");
-	  dumpAttributes(children.item(ii));
-	}
   if (target && target != '') {
     for (var ii=0; ii < children.length; ii++) {
 	  if (children.item(ii).getAttribute('src') == target) {
@@ -124,7 +147,6 @@ function sidebarOpenDefaultPanel(wait, tries) {
 	}
   }
   // Pick the first one
-  debug("~~~~~~~~~~~picking first one\n");
   var first_iframe = children.item(2);
   if (first_iframe) {
     first_iframe.removeAttribute('collapsed');
@@ -158,11 +180,40 @@ function sidebarReload() {
   sidebarOverlayInit(sidebar) 
 }
 
+// Set up a lame hack to avoid opening two customize 
+// windows on a double click.
+var gDisableCustomize = false;
+function enableCustomize() {
+  gDisableCustomize = false;
+}
+
 function sidebarCustomize() {
-  var newWin = window.openDialog('chrome://sidebar/content/customize.xul',
-                                 '_blank','chrome,modal',
-                                 sidebar.db, sidebar.resource)
-  return newWin
+  // Use a single sidebar customize dialog
+
+  var cwindowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+  var iwindowManager = Components.interfaces.nsIWindowMediator;
+  var windowManager  = cwindowManager.QueryInterface(iwindowManager);
+
+  var customizeWindow = windowManager.GetMostRecentWindow('sidebar:customize');
+	
+  if (customizeWindow) {
+	debug("Reuse existing customize dialog");
+	customizeWindow.focus();
+  } else {
+	debug("Open a new customize dialog");
+
+	if (true == gDisableCustomize) {
+	  debug("Recently opened one. Wait a little bit.");
+	  return;
+	}
+    gDisableCustomize = true;
+
+	customizeWindow = window.openDialog(
+						'chrome://sidebar/content/customize.xul',
+					    '_blank','chrome', 
+						sidebar.datasource_uri, sidebar.resource);
+	setTimeout(enableCustomize, 2000);
+  }
 }
 
 function sidebarShowHide() {
@@ -171,12 +222,12 @@ function sidebarShowHide() {
   var is_hidden = sidebar.getAttribute('hidden')
 
   if (is_hidden && is_hidden == "true") {
-    debug("Showing the sidebar\n")
+    debug("Showing the sidebar")
     sidebar.setAttribute('hidden','')
     sidebar_splitter.setAttribute('hidden','')
 	  //sidebarOverlayInit()
   } else {
-    debug("Hiding the sidebar\n")
+    debug("Hiding the sidebar")
     sidebar.setAttribute('hidden','true')
     sidebar_splitter.setAttribute('hidden','true')
   }
@@ -186,11 +237,11 @@ function dumpAttributes(node) {
   var attributes = node.attributes
 
   if (!attributes || attributes.length == 0) {
-    debug("no attributes\n")
+    debug("no attributes")
   }
   for (var ii=0; ii < attributes.length; ii++) {
     var attr = attributes.item(ii)
-    debug("attr "+ii+": "+ attr.name +"="+attr.value+"\n")
+    debug("attr "+ii+": "+ attr.name +"="+attr.value)
   }
 }
 
@@ -203,12 +254,12 @@ function dumpStats() {
   if (visibility) {
     visibility = visibility[1]
   }
-  debug("sidebar-box.style="+style+"\n")
-  debug("sidebar-box.visibility="+visibility+"\n")
-  debug('sidebar-box.width='+box.getAttribute('width')+'\n')
-  debug('sidebar-box attrs\n---------------------\n')
+  debug("sidebar-box.style="+style)
+  debug("sidebar-box.visibility="+visibility)
+  debug('sidebar-box.width='+box.getAttribute('width'))
+  debug('sidebar-box attrs\n---------------------')
   dumpAttributes(box)
-  debug('sidebar-splitter attrs\n--------------------------\n')
+  debug('sidebar-splitter attrs\n--------------------------')
   dumpAttributes(splitter)
 }
 
@@ -220,7 +271,7 @@ function dumpTree(node, depth) {
   // Print your favorite attributes here
   debug(node.nodeName)
   debug(" "+node.getAttribute('id'))
-  debug("\n")
+  debug("")
 
   for (var ii=0; ii < kids.length; ii++) {
     dumpTree(kids[ii], depth + 1)
