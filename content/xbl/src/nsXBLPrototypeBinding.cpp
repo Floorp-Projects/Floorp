@@ -249,6 +249,10 @@ nsXBLPrototypeBinding::GetBindingURI(nsCString& aResult)
   nsCOMPtr<nsIXBLDocumentInfo> info;
   GetXBLDocumentInfo(nsnull, getter_AddRefs(info));
   
+  NS_ASSERTION(info, "The prototype binding has somehow lost its XBLDocInfo! Bad bad bad!!!\n");
+  if (!info)
+    return NS_ERROR_FAILURE;
+
   info->GetDocumentURI(aResult);
   aResult += "#";
   aResult += mID;
@@ -261,6 +265,10 @@ nsXBLPrototypeBinding::GetDocURI(nsCString& aResult)
   nsCOMPtr<nsIXBLDocumentInfo> info;
   GetXBLDocumentInfo(nsnull, getter_AddRefs(info));
   
+  NS_ASSERTION(info, "The prototype binding has somehow lost its XBLDocInfo! Bad bad bad!!!\n");
+  if (!info)
+    return NS_ERROR_FAILURE;
+
   info->GetDocumentURI(aResult);
   return NS_OK;
 }
