@@ -204,6 +204,9 @@ sub BuildDist()
 	#JS
     InstallFromManifest(":mozilla:js:src:MANIFEST",									"$distdirectory:js:");
 
+	#LIVECONNECT
+	InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",						"$distdirectory:liveconnect:");
+
 	#SECURITY_freenav
     InstallFromManifest(":mozilla:modules:security:freenav:MANIFEST",				"$distdirectory:security:");
 
@@ -428,6 +431,8 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",							"JPEG$D.shlb", "JPEG.toc", 1, $main::ALIAS_SYM_FILES);
 
 	BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",						"JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES);
+
+	BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",						"LiveConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
 
 	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES);
 
