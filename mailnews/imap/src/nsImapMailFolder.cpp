@@ -2931,6 +2931,9 @@ nsImapMailFolder::SetUrlState(nsIImapProtocol* aProtocol,
                               PRBool isRunning,
                               nsresult statusCode)
 {
+	if (!isRunning)
+		ProgressStatus(aProtocol, IMAP_DONE, nsnull);
+
     if (aUrl)
         return aUrl->SetUrlState(isRunning, statusCode);
     return statusCode;

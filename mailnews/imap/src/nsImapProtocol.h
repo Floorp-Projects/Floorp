@@ -193,11 +193,12 @@ public:
 	void AlertUserEventUsingId(PRUint32 aMessageId);
 	void AlertUserEvent(const char * message);
 	void AlertUserEventFromServer(const char * aServerEvent);
-	void ShowProgress();
+
 	void ProgressEventFunctionUsingId(PRUint32 aMsgId);
 	void ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const char *
                                                 aExtraInfo);
 	void PercentProgressUpdateEvent(PRUnichar *message, PRInt32 percent);
+	void ShowProgress();
 
 	// utility function calls made by the server
 	char * CreateUtf7ConvertedString(const char * aSourceString, PRBool
@@ -483,6 +484,9 @@ private:
 	PRInt32	m_progressStringId;
 	PRInt32	m_progressIndex;
 	PRInt32 m_progressCount;
+	PRUint32 m_lastProgressStringId;
+	PRInt32 m_lastPercent;
+	PRInt64 m_lastProgressTime;				
 
 	PRBool m_notifySearchHit;
 	PRBool m_mailToFetch;

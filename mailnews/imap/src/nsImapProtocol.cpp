@@ -204,6 +204,9 @@ nsImapProtocol::nsImapProtocol() :
     LL_I2L(m_startTime, 0);
     LL_I2L(m_endTime, 0);
     LL_I2L(m_lastActiveTime, 0);
+	LL_I2L(m_lastProgressTime, 0);
+	ResetProgressInfo();
+
     m_tooFastTime = 0;
     m_idealTime = 0;
     m_chunkAddSize = 0;
@@ -898,13 +901,6 @@ void nsImapProtocol::ProcessCurrentURL()
 	    else   // must be a url that requires us to be in the selected stae 
 			ProcessSelectedStateURL();
 
-#ifdef DEBUG_bienvenu1
-		nsresult rv;
-		nsCOMPtr<nsIImapIncomingServer>	aImapServer  = do_QueryInterface(m_server, &rv);
-		if (NS_SUCCEEDED(rv))
-			aImapServer->RemoveConnection(this);
-        TellThreadToDie(PR_TRUE);
-#endif
 		// The URL has now been processed
         if (!logonFailed && GetConnectionStatus() < 0)
             HandleCurrentUrlError();
@@ -926,6 +922,7 @@ void nsImapProtocol::ProcessCurrentURL()
         m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_FALSE,
                                              NS_OK);  // we are done with this
                                                       // url.
+        WaitForFEEventCompletion();
     }
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
 	PseudoInterrupt(PR_FALSE);	// clear this, because we must be done interrupting?
@@ -1014,6 +1011,7 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISup
     {
         m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_TRUE,
                                              NS_OK);
+        WaitForFEEventCompletion();
     }
     PR_CExitMonitor(this);
 	return NS_OK;
@@ -1029,6 +1027,7 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupp
     {
         m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_FALSE,
                                              aStatus); // set change in url
+        WaitForFEEventCompletion();
     }
     m_channel = null_nsCOMPtr();
     m_outputStream = null_nsCOMPtr();
@@ -3720,6 +3719,13 @@ nsImapProtocol::AlertUserEventFromServer(const char * aServerEvent)
         m_imapServerSink->FEAlertFromServer(aServerEvent);
 }
 
+void nsImapProtocol::ResetProgressInfo()
+{
+	LL_I2L(m_lastProgressTime, 0);
+	m_lastPercent = -1;
+	m_lastProgressStringId = -1;
+}
+
 void
 nsImapProtocol::ShowProgress()
 {
@@ -3752,9 +3758,10 @@ nsImapProtocol::ShowProgress()
 void
 nsImapProtocol::ProgressEventFunctionUsingId(PRUint32 aMsgId)
 {
-    if (m_imapMiscellaneousSink)
+    if (m_imapMiscellaneousSink && aMsgId != m_lastProgressStringId)
 	{
         m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, nsnull);
+		m_lastProgressStringId = aMsgId;
 		// who's going to free this? Does ProgressStatus complete synchronously?
 	}
 }
@@ -3774,9 +3781,30 @@ nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
 void
 nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 percent)
 {
+
+	int64 nowMS;
+	if (percent == m_lastPercent)
+		return;	// hasn't changed, right? So just return. Do we need to clear this anywhere?
+
+	if (percent < 100)	// always need to do 100%
+	{
+		int64 minIntervalBetweenProgress;
+
+		LL_I2L(minIntervalBetweenProgress, 250);
+		int64 diffSinceLastProgress;
+		LL_I2L(nowMS, PR_IntervalToMilliseconds(PR_IntervalNow()));
+		LL_SUB(diffSinceLastProgress, nowMS, m_lastProgressTime); // r = a - b
+		LL_SUB(diffSinceLastProgress, diffSinceLastProgress, minIntervalBetweenProgress); // r = a - b
+		if (!LL_GE_ZERO(diffSinceLastProgress))
+			return;
+	}
+
     ProgressInfo aProgressInfo;
     aProgressInfo.message = message;
     aProgressInfo.percent = percent;
+	m_lastPercent = percent;
+	m_lastProgressTime = nowMS;
+
     if (m_imapMiscellaneousSink)
         m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
 }

@@ -1356,6 +1356,7 @@ nsImapMiscellaneousSinkProxy::SetUrlState(nsIImapProtocol* aProtocol,
             res = NS_ERROR_OUT_OF_MEMORY;
         else
         {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
         }
     }
