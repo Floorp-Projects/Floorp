@@ -112,7 +112,6 @@ nsresult EditAggregateTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction
     *aDidMerge=PR_FALSE;
   if (nsnull!=mChildren)
   {
-    PRInt32 i;
     PRInt32 count = mChildren->Count();
     EditTxn *txn = (EditTxn*)(mChildren->ElementAt(count-1));
     result = txn->Merge(aDidMerge, aTransaction);
