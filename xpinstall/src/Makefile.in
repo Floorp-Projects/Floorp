@@ -53,7 +53,7 @@ CPPSRCS = \
     nsTopProgressNotifier.cpp   \
     nsLoggingProgressNotifier.cpp   \
     ScheduledTasks.cpp          \
-    nsInstallProgressDialog.cpp \	
+    nsInstallProgressDialog.cpp \
     nsXPITriggerInfo.cpp        \
     nsXPInstallManager.cpp      \
     nsInstallFileOpItem.cpp     \
