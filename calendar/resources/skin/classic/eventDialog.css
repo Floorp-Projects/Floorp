@@ -142,7 +142,6 @@
 .date-text-class
 {
    -moz-user-focus			: ignore !important;
-   
    max-width               : 10em;
 }
 
@@ -187,7 +186,7 @@
   }
 
 /*--------------------------------------------------------------------
- *   Start and End date button
+ *   Start and End time button
  *-------------------------------------------------------------------*/
 
 .event-time-button-class
@@ -203,11 +202,11 @@
   }
 .event-time-button-class:hover
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.gif");
   }
 .event-time-button-class:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.png");
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.gif");
   }
 
 .warning-text-class
