@@ -37,11 +37,6 @@ use English;
 use CGI;
 my $request = new CGI;
 
-# Include the Perl library for creating and deleting directory hierarchies
-# and the one for creating temporary files and directories.
-use File::Path;
-use File::Temp qw(tempfile tempdir);
-
 use Doctor qw($template $vars %CONFIG);
 
 use Doctor::File;
@@ -87,7 +82,8 @@ elsif ($action eq "download" || $action eq "display")
                                   { retrieve()    }
 
 # Generates and returns a diff of changes between the submitted version
-# of a page and the version in CVS.  Called by the Show Diff panel of the Edit page.
+# of a page and the version in CVS.  Called by the Show Diff panel of the
+# Edit page.
 elsif ($action eq "diff")         { diff()        }
 
 # Returns the content that was submitted to it.  Useful for displaying
@@ -102,15 +98,13 @@ elsif ($action eq "regurgitate")  { regurgitate() }
 # parameter to be set to the editors' email addresses.
 elsif ($action eq "queue")        { queue()       }
 
-# Adds and commits a new page to the repository.
-elsif ($action eq "create")       { create()      }
+# Commits changes to a (possibly new) page to the repository.
+elsif ($action eq "create" || $action eq "commit")
+                                  { commit()      }
 
-# Commits changes to an existing page to the repository.
-elsif ($action eq "commit")       { commit()      }
-
-else
-{
-  ThrowCodeError("couldn't recognize the value of the action parameter", "Unknown Action");
+else {
+    ThrowCodeError("couldn't recognize the value of the action parameter",
+                   "Unknown Action");
 }
 
 exit;
@@ -127,10 +121,7 @@ sub choose
 }
 
 sub edit {
-    my $file = Doctor::File->new($request->param('file'));
-    
-    $file->retrieve();
-    $vars->{file} = $file;
+    $vars->{file} = Doctor::File->new($request->param('file'));
     
     print $request->header;
     $template->process("edit.tmpl", $vars)
@@ -139,8 +130,6 @@ sub edit {
 
 sub retrieve {
     my $file = Doctor::File->new($request->param('file'));
-    
-    $file->retrieve();
    
     my $disposition = $action eq "download" ? "attachment" : "inline";
       
@@ -252,232 +241,69 @@ sub queue {
       || ThrowCodeError($template->error(), "Template Processing Failed");
 }
 
-sub create
-{
-  # Creates a new file in the repository.
-  
-  ValidateFile();
-  ValidateContent();
-  ValidateUsername();
-  ValidatePassword();
-  ValidateComment();
-  
-  ChangeToTempDir();
-  
-  # Separate the name of the file from its path.
-  $request->param('file') =~ /^(.*)\/([^\/]+)$/;
-  my $filename = $2;
-  my $path = $1;
-    
-  # Write the file to the temporary directory.  "ReplaceFile" is an unfortunate
-  # name.  !!! Replace it with a new fortunate name!
-  ReplaceFile($filename);
-    
-  # Create a fake CVS directory that makes the temporary directory look like
-  # a local working copy of the directory in the repository where this file
-  # will be created.  This way we just have to commit the file to create it;
-  # we avoid having to first check out the directory and then add the file.  
-  
-  # Make the CVS directory and change to it.
-  mkdir("CVS") || ThrowCodeError("couldn't create directory 'CVS': $!");
-  chdir("CVS");
+sub commit {
+    # Commits a (possibly new) file to the repository.
+    my $file = Doctor::File->new($request->param('file'));
 
-  # Make the Entries file and add an entry for the new file.
-  open(FILE, ">Entries") || ThrowCodeError("couldn't create file 'Entries': $!");
-  print FILE "/$filename/0/Initial $filename//\nD\n";
-  close(FILE);
-  
-  # Make an empty file named after the new file but with a ",t" appended
-  # to the name.  I don't know what this is for, but the CVS client creates it,
-  # so I figure I should too.
-  #
-  # UPDATE: Commenting out this code didn't make it fail, so I'm leaving it
-  # commented out--less code means less things to break.
-  #
-  #open(FILE, ">${filename},t")
-  #  || ThrowCodeError("couldn't create file '${filename},t': $!");
-  #close(FILE);
-  
-  # Make the Repository file, which contains the path to the directory
-  # in the CVS repository.
-  open(FILE, ">Repository") 
-    || ThrowCodeError("couldn't create file 'Repository': $!");
-  print FILE "$path\n";
-  close(FILE);
-  
-  # Note that we don't have to create a Root file with information about
-  # the repository (authentication type, server address, root path, etc.)
-  # since we add that information to the command line.
-  
-  # Change back to the directory containing the file and check it in.
-  chdir("..");
-  $vars->{'checkin_results'} = CheckInFile($filename);
-  
-  $vars->{'file'} = $request->param('file');
-  
-  print $request->header;
-  $template->process("created.tmpl", $vars)
-    || ThrowCodeError($template->error(), "Template Processing Failed");
-}
+    my $username = ValidateUsername();
+    my $password = ValidatePassword();
+    my $comment = ValidateComment();
 
-sub commit 
-{
-  # Commit a file to the repository.  Checks out the file via cvs, 
-  # applies the changes, generates a diff, and then checks the file 
-  # back in.  It would be easier if we could commit a file by piping
-  # it into standard input, but cvs does not provide for this.
+    if ($action eq "commit") {
+        ValidateVersions($request->param('version'), $file->version);
+        $file->patch($request->param('content'));
+    }
+    else {
+        $file->add($request->param("content"));
+    }
+    my ($rv, $output, $errors) = $file->commit($username, $password, $comment);
+
+    if ($rv != 0) {
+        ThrowUserError("An error occurred while committing the file.",
+                       undef,
+                       $output,
+                       $rv,
+                       $errors);
+    }
   
-  ValidateFile();
-  ValidateContent();
-  ValidateUsername();
-  ValidatePassword();
-  ValidateComment();
-  my $patch_id;
-  if ($request->param('patch_id')) {
-    $patch_id = ValidateID($request->param('patch_id'));
-  }
-  
-  ChangeToTempDir();
-  
-  # Check out the file from the repository.
-  my $file = $request->param('file');
-  my $oldversion = $request->param('version');
-  my $newversion = CheckOutFile($file);
-  
-  ValidateVersions();
-  
-  # Replace the checked out file with the edited version, generate
-  # a diff between the edited file and the version in the repository,
-  # and check in the edited file.
-  ReplaceFile($file);
-  $vars->{'diff'} = DiffFile($file);
-  $vars->{'checkin_results'} = CheckInFile($file);
-  
-  $vars->{'file'} = $file;
-  
-  print $request->header;
-  $template->process("committed.tmpl", $vars)
-    || ThrowCodeError($template->error(), "Template Processing Failed");
+    $vars->{output} = $output;
+    $vars->{errors} = $errors;
+
+    print $request->header;
+    $template->process("committed.tmpl", $vars)
+      || ThrowCodeError($template->error(), "Template Processing Failed");
 }
 
 ################################################################################
 # Input Validation
 ################################################################################
 
-sub ValidateFile
-{
-  # Make sure a path was entered.
-  my $file = $request->param("file");
-  $file
-    || ThrowUserError("You must include the name/path or the URL of the file.");
+sub ValidateUsername {
+    $request->param('username')
+      || ThrowUserError("You must enter your username.");
   
-
-  # URL -> Path Conversion
-
-  # Remove the absolute URI for files on the web site (if any)
-  # from the beginning of the path.
-  if ($CONFIG{WEB_BASE_URI_PATTERN}) { $file =~ s/^$CONFIG{WEB_BASE_URI_PATTERN}//i }
-  else                       { $file =~ s/^\Q$CONFIG{WEB_BASE_URI}\E//i     }
-
-
-  # Entire Path Issues
-
-  # Collapse multiple consecutive slashes (i.e. dir//file.txt) into a single slash.
-  $file =~ s:/{2,}:/:;
-
-
-  # Beginning of Path Issues
-
-  # Remove a preceding slash.
-  $file =~ s:^/::;
-
-  # Add the base path of the file in the cvs repository if necessary.
-  # (i.e. if the user entered a URL or a path based on the URL).
-  if ($file !~ /^\Q$CONFIG{WEB_BASE_PATH}\E/) { $file = $CONFIG{WEB_BASE_PATH} . $file }
-
-
-  # End of Path Issues
-
-  # If the filename (the last name in the path) contains no period,
-  # it is probably a directory, so add a slash.
-  if ($file =~ m:^[^\./]+$: || $file =~ m:/[^\./]+$:) { $file .= "/" }
-
-  # If the file ends with a forward slash, it is a directory,
-  # so add the name of the default file.
-  if ($file =~ m:/$:) { $file .= "index.html" }
-
-
-  # Set the file path.
-  $request->param("file", $file);
+    my $username = $request->param('username');
   
-  # Note: we don't need to make sure the file exists at this point
-  # because CVS will tell us that.
-
-  # Construct a URL to the file if possible.
-  my $url = $file;
-  if ($url =~ s/^\Q$CONFIG{WEB_BASE_PATH}\E(.*)$/$1/i) { $vars->{'file_url'} = $CONFIG{WEB_BASE_URI} . $url }
-
+    # If the username has an at sign in it, convert it to a percentage sign,
+    # since that's probably what the user meant.  CVS usernames are often email
+    # addresses in which the at sign has been converted to a percentage sign,
+    # and since at signs aren't legal characters in CVS usernames, it's a good
+    # bet that any occurrences are supposed to be percentage signs.
+    $username =~ s/@/%/;
+  
+    return $username;
 }
 
-sub ValidateUsername
-{
-  $request->param('username')
-    || ThrowUserError("You must enter your username.");
-
-  my $username = $request->param('username');
-
-  # If the username has an at sign in it, convert it to a percentage sign,
-  # since that is probably what the user meant (CVS usernames are often
-  # email addresses in which the at sign has been converted to a percentage sign.
-  $username =~ s/@/%/;
-
-  $request->param('username', $username);
+sub ValidatePassword {
+    $request->param('password')
+      || ThrowUserError("You must enter your password.");
+    return $request->param('password');
 }
 
-sub ValidatePassword
-{
-  $request->param('password')
-    || ThrowUserError("You must enter your password.");
-}
-
-sub ValidateComment
-{
-  $request->param('comment')
-    || ThrowUserError("You must enter a check-in comment describing your changes.");
-}
-
-sub ValidateContent
-{
-  my $content = $request->param('content');
-  # The HTML spec tells browsers to remove line breaks (carriage return
-  # and newline characters) from form values in some cases.  This happens
-  # even if those characters are encoded into entities (&#10; and &#13;).
-  # To prevent corruption of file content in this case, we have to escape
-  # those characters as \r and \n, so here we convert them back.
-  # 
-  # An escaped line break is the literal string "\r" or "\n" with zero
-  # or an even number of slashes before it, because if there are an odd
-  # number of slashes before it, then the total number of slashes is even,
-  # so the slashes are actually escaped slashes followed by a literal
-  # "r" or "n" character, rather than an escaped line break character.
-  # In other words, "\n" and "\\\n" are a line break and a slash followed
-  # by a line break, respectively, but "\\n" is a slash followed by
-  # a literal "n".
-  #
-  $content =~ s/(^|[^\\])((\\\\)*)\\r/$1$2\r/g;
-  $content =~ s/(^|[^\\])((\\\\)*)\\n/$1$2\n/g;
-  $content =~ s/\\\\/\\/g;
-
-  $request->param('content', $content);
-}
-
-sub ValidateID()
-{
-  my ($id) = @_;
-  $id =~ m/(\d+)/;
-  $id = $1;
-  $id || ThrowCodeError("$id is not a valid patch ID");
-  return $id;
+sub ValidateComment {
+    $request->param('comment')
+      || ThrowUserError("You must enter a check-in comment describing your changes.");
+    return $request->param('comment');
 }
 
 sub ValidateVersions()
@@ -497,123 +323,6 @@ sub ValidateVersions()
   }
 }
 
-
-################################################################################
-# CVS Glue
-################################################################################
-
-sub CheckOutFile
-{
-  # Checks out a file from the repository.
-  
-  my ($file) = @_;
-  
-  my @args = ("-t", # debugging messages from which to extract the version
-              "-d", 
-              ":pserver:$CONFIG{READ_CVS_USERNAME}:$CONFIG{READ_CVS_PASSWORD}\@$CONFIG{READ_CVS_SERVER}", 
-              "checkout", 
-              $file);
-  
-  # Check out the file from the repository, capturing the output of the
-  # command and any error messages.
-  my ($error_code, $output, $errors) = system_capture("cvs", @args);
-
-  if ($error_code != 0) 
-  {
-    # Include the command in the error message (but hide the password).
-    my $command = join(" ", "cvs", @args);
-    $command =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
-    $errors =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
-    
-    ThrowUserError("Doctor could not check out the file from the repository.",
-                   undef,
-                   $command,
-                   undef,
-                   $errors);
-  }
-
-  # Extract the file version from the errors/notices.
-  my $version = "";
-  if ($errors =~ /\Q$file\E,v,\s([0-9.]+),/) { $version = $1 }
-  
-  return $version;
-}
-
-sub DiffFile
-{
-  # Returns the results of diffing a file against the version in the repository.
-  
-  my ($file) = @_;
-  
-  my @args = ("-d", 
-              ":pserver:$CONFIG{READ_CVS_USERNAME}:$CONFIG{READ_CVS_PASSWORD}\@$CONFIG{READ_CVS_SERVER}", 
-              "diff", 
-              "-u", 
-              $file);
-  
-  # Diff the file against the version in the repository, capturing the diff
-  # and any error messages/notices.
-  my ($error_code, $output, $errors) = system_capture("cvs", @args);
-  
-  # Check the error messages/notices in addition to the error code 
-  # returned by the system call, because for some reason the call 
-  # sometimes returns a non-zero error code (256) upon success.
-  if ($error_code && $errors) 
-  {
-    # Include the command in the error message (but hide the password).
-    my $command = join(" ", "cvs", @args);
-    $command =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
-    $errors =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
-    
-    ThrowUserError("Doctor could not diff your version of the file 
-                    against the version in the repository.",
-                   undef,
-                   $command,
-                   undef,
-                   $errors);
-  }
-  
-  $output || ThrowUserError("You didn't change anything!");
-  
-  return $output;
-}
-
-sub CheckInFile
-{
-  # Checks a file into the repository.
-  
-  my ($file) = @_;
-  
-  my $username = $request->param('username');
-  my $password = $request->param('password');
-  
-  my $comment = $request->param('comment');
-  my @args = ("-d" , 
-              ":pserver:$username:$password\@$CONFIG{WRITE_CVS_SERVER}" , 
-              "commit" , 
-              "-m" , 
-              $comment , 
-              $file);
-  
-  # Check the file into the repository and capture the results.
-  my ($error_code, $output, $errors) = system_capture("cvs", @args);
-  
-  if ($error_code != 0) 
-  {
-    # Include the command in the error message (but hide the password).
-    my $command = join(" ", "cvs", @args);
-    $command =~ s/\Q$password\E/[password]/g;
-    $errors =~ s/\Q$password\E/[password]/g;
-    
-    ThrowUserError("Doctor could not check the file into the repository.",
-                   undef,
-                   $command,
-                   $error_code,
-                   $errors);
-  }
-  
-  return $output;
-}
 
 ################################################################################
 # Error Handling
@@ -674,30 +383,8 @@ sub ThrowCodeError
 }
 
 ################################################################################
-# File and Directory Manipulation
+# Misc
 ################################################################################
-
-sub ReplaceFile
-{
-  # Replaces the file checked out from the repository with the edited version.
-  
-  my ($file) = @_;
-  
-  my $content = GetContent();
-  my $line_endings = $request->param('line_endings');
-
-  # Replace the Windows-style line endings in which browsers send content
-  # with line endings appropriate to the file being replaced if the file
-  # has Unix- or Mac-style line endings.
-  if ($line_endings eq "unix") { $content =~ s/\r\n/\n/g }
-  if ($line_endings eq "mac") { $content =~ s/\r\n/\r/g }
-  
-  open(DOC, ">$file")
-    || ThrowCodeError("I could not open the temporary file <em>$file</em> 
-                       for writing: $!");
-  print DOC $content;
-  close(DOC);
-}
 
 sub GetContent {
     my $fh = $request->upload('content_file');
@@ -711,10 +398,3 @@ sub GetContent {
     }
     return $content;
 }
-
-sub ChangeToTempDir
-{
-  my $dir = tempdir("doctor-XXXXXXXX", TMPDIR => 1, CLEANUP => 1);
-  chdir $dir;
-}
-

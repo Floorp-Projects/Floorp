@@ -28,18 +28,16 @@
   <body bgcolor="white" color="black">
 
     <big><b>Doctor - created <em>
-      [% IF file_url %]
-        <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
+      [% IF file.url %]
+        <a href="[% file.url FILTER html %]">[% file.relative_spec FILTER html %]</a>
       [% ELSE %]
-        [% file FILTER html %]
+        [% file.relative_spec FILTER html %]
       [% END %]
     </em></b></big>
 
     <p>
-      The file was created:
+      The new file has been committed to the repository.
     </p>
-
-    <pre style="background-color: #CCCCCC;">[% checkin_results FILTER html%]</pre>
 
   </body>
 

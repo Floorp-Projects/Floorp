@@ -19,33 +19,37 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   # %]
 
+[% is_new = (file.version == "new" ? 1 : 0) %]
+
 <html>
 
   <head>
-    <title>Doctor - committed [% (file_url ? file_url : file) FILTER html %]</title>
+    <title>Doctor - [% is_new ? "created" : "committed" %] [%+ file.relative_spec FILTER html %]</title>
   </head>
 
   <body bgcolor="white" color="black">
 
-    <big><b>Doctor - committed <em>
-      [% IF file_url %]
-        <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
+    <big><b>Doctor - [% is_new ? "created" : "committed" %] <em>
+      [% IF file.url %]
+        <a href="[% file.url FILTER html %]">[% file.relative_spec FILTER html %]</a>
       [% ELSE %]
-        [% file FILTER html %]
+        [% file.relative_spec FILTER html %]
       [% END %]
     </em></b></big>
 
     <p>
-      The file was committed to the repository:
+      [% IF is_new %]
+        The new file has been committed to the repository.
+      [% ELSE %]
+[%# XXX add some useful links and UI here %]
+        Your changes have been committed to the repository.
+      [% END %]
     </p>
 
-    <pre style="background-color: #CCCCCC;">[% checkin_results FILTER html%]</pre>
-
-    <p>
-      You made the following changes:
-    </p>
-
-    <pre style="background-color: #CCCCCC;">[% diff FILTER html %]</pre>
+    <h2>Results</h2>
+    <pre>
+      [% output %]
+    </pre>
 
   </body>
 
