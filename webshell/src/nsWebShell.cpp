@@ -1680,7 +1680,7 @@ NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
   // up to our parent content handler...
   nsCOMPtr<nsIURIContentListener> parentListener;
   nsresult rv = GetParentURIContentListener(getter_AddRefs(parentListener));
-  if (NS_SUCCEEDED(rv))
+  if (parentListener)
     rv = parentListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
                                           aCanHandleContent);
   else
@@ -3088,11 +3088,6 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
   {
       mDocLoaderObserver->OnEndURLLoad(mDocLoader, channel, aStatus);
   }
-  if(eCharsetReloadRequested == mCharsetReloadState)
-      mCharsetReloadState = eCharsetReloadStopOrigional;
-  else 
-      mCharsetReloadState = eCharsetReloadInit;
-
   return NS_OK;
 }
 
