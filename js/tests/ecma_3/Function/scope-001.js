@@ -24,7 +24,7 @@
 * See ECMA Section 10.1.4 Scope Chain and Identifier Resolution
 * (This section defines the scope chain of an execution context)
 *
-* See ECMA Section 12.10  The with Statement
+* See ECMA Section 12.10 The with Statement
 *
 * See ECMA Section 13 Function Definition
 * (This section defines the scope chain of a function object as that
