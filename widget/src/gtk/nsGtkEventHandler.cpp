@@ -273,9 +273,8 @@ gint handle_configure_event(GtkWidget *w, GdkEventConfigure *event, gpointer p)
   nsSizeEvent sevent;
   InitConfigureEvent(event, p, sevent, NS_SIZE);
 
-  nsRect rect(event->x, event->y, event->width, event->height);
   nsWindow *win = (nsWindow *)p;
-  win->OnResize(rect);
+//  win->DispatchWindowEvent(&sevent);
 
   return PR_FALSE;
 }
@@ -316,7 +315,6 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
   InitMouseEvent(event, p, mevent, b);
 
   nsWindow *win = (nsWindow *)p;
-  win->DispatchMouseEvent(mevent);
 
   return PR_FALSE;
 }
