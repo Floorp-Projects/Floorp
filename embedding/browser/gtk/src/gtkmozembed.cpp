@@ -947,36 +947,34 @@ gtk_moz_embed_startup_xpcom(void)
   if (NS_FAILED(rv))
     return FALSE;
   // set up the thread event queue
-  nsIEventQueueService* eventQService;
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-				    NS_GET_IID(nsIEventQueueService),
-				    (nsISupports **)&eventQService);
-  if (NS_OK == rv)
-  {
-    // get our hands on the thread event queue
-    nsIEventQueue *eventQueue;
-    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQueue);
-    if (NS_FAILED(rv))
-      return FALSE;
-    
-    io_identifier = gdk_input_add(eventQueue->GetEventQueueSelectFD(),
-				  GDK_INPUT_READ,
-				  gtk_moz_embed_handle_event_queue,
-				  eventQueue);
-    NS_RELEASE(eventQService);
-    NS_RELEASE(eventQueue);
-  }
+  nsCOMPtr <nsIEventQueueService> eventQService = 
+    do_GetService(kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return FALSE;
+  // get our hands on the thread event queue
+  nsCOMPtr<nsIEventQueue> eventQueue;
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                         getter_AddRefs(eventQueue));
+  if (NS_FAILED(rv))
+    return FALSE;
+
+  io_identifier = gdk_input_add(eventQueue->GetEventQueueSelectFD(),
+				GDK_INPUT_READ,
+				gtk_moz_embed_handle_event_queue,
+				eventQueue);
   return TRUE;
 }
 
 void
 gtk_moz_embed_shutdown_xpcom(void)
 {
-  nsresult rv;
-  // remove the IO handler for the thread event queue
-  gdk_input_remove(io_identifier);
-  io_identifier = 0;
-  // shut down XPCOM
-  NS_TermEmbedding();
+  if (io_identifier)
+  {
+    // remove the IO handler for the thread event queue
+    gdk_input_remove(io_identifier);
+    io_identifier = 0;
+    // shut down XPCOM
+    NS_TermEmbedding();
+  }
 }
 
