@@ -692,7 +692,7 @@ DEFINES 	+= -DMOZ_USER_DIR=$(MOZ_USER_DIR)
 
 ######################################################################
 
-GARBAGE		= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err)
+GARBAGE		= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o)
 
 ifndef SDK
 SDK		= $(DEPTH)/dist/sdk
