@@ -1,10 +1,10 @@
-#!#perl# --
+#!#perl# -w --
 
 # generate static html pages for use in testing the popup libraries.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2002/05/01 01:51:51 $ 
+# $Revision: 1.2 $ 
+# $Date: 2002/12/10 19:20:04 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/popup.tst,v $ 
 # $Name:  $ 
@@ -204,3 +204,33 @@ foreach $popup_lib (@popup_libs) {
     overwrite_file($outfile, $out);
 
 }
+
+{
+
+# simple tests to validate the escape routines.
+
+my $string = ' <A  HREF="#1039471635" >12/09&nbsp;17:07</a> ';
+my $urlescaped_string = HTMLPopUp::escapeURL($string);
+my $htmlescaped_string = HTMLPopUp::escapeHTML($string);
+my $url = HTMLPopUp::unescapeURL($urlescaped_string);
+my $html = HTMLPopUp::unescapeHTML($htmlescaped_string);
+
+($string eq $url) ||
+	 die("escapeURL followed by unescapeURL did not give us original string\n");
+
+($string eq $html) ||
+	 die("escapeHTML followed by unescapeHTML did not give us original string\n");
+
+
+($htmlescaped_string eq ' &lt;A  HREF=&quot;#1039471635&quot; &gt;12/09&amp;nbsp;17:07&lt;/a&gt; ') ||
+	 die("escapeHTML did not return expected string\n");
+
+
+($urlescaped_string eq
+'%20%3CA%20%20HREF%3D%22%231039471635%22%20%3E12%2F09%26nbsp%3B17%3A07%3C%2Fa%3E%20')
+||
+	 die("escapeURL did not return expected string\n");
+
+}
+
+1;

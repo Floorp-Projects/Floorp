@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/05/10 21:17:56 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/12/10 19:20:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/gennotices.tst,v $ 
 # $Name:  $ 
@@ -173,12 +173,22 @@ foreach $tree (@TREES) {
       my ($pretty_time) = HTMLPopUp::timeHTML($timenow);
       $associations = generate_associations();
 
+      # We simulate people posting notices for events older then the
+      # when they post the note.
+
+      my ($random_posttime) = rand 10;
+      $posttime = $timenow - ($random_posttime * 60),
+      $localposttime = localtime($posttime);
+
+
       my (%data) = (
 		    'tree' => $tree,
 		    'mailaddr' => $mailaddr,
 		    'note' => $note,
 		    'time' => $timenow,
 		    'localtime' => $localtimenow,
+                    'posttime' => $posttime =$timenow,
+                    'localposttime' => $localposttime,
 	            'remote_host' => '127.0.0.1',
 		    'associations' => $associations,
 		   );
