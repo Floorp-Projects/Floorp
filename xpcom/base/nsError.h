@@ -91,6 +91,7 @@
 #define NS_ERROR_MODULE_URILOADER  24
 #define NS_ERROR_MODULE_CONTENT    25
 #define NS_ERROR_MODULE_PYXPCOM    26
+#define NS_ERROR_MODULE_XSLT       27
 
 /* NS_ERROR_MODULE_GENERAL should be used by modules that do not
  * care if return code values overlap. Callers of methods that
