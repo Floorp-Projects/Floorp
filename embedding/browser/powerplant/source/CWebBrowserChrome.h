@@ -34,6 +34,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIContextMenuListener.h"
+#include "nsITooltipListener.h"
 
 // Other
 #include "nsIWebBrowser.h"
@@ -49,7 +50,8 @@ class CWebBrowserChrome : public nsIWebBrowserChrome,
                            public nsIBaseWindow,
                            public nsIPrompt,
                            public nsIInterfaceRequestor,
-                           public nsIContextMenuListener
+                           public nsIContextMenuListener,
+                           public nsITooltipListener
 {
 friend class CBrowserWindow;
 
@@ -61,7 +63,8 @@ public:
    NS_DECL_NSIPROMPT
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSICONTEXTMENULISTENER
-
+   NS_DECL_NSITOOLTIPLISTENER
+  
 protected:
    CWebBrowserChrome();
    virtual ~CWebBrowserChrome();
@@ -72,6 +75,8 @@ protected:
 protected:
    CBrowserWindow*  mBrowserWindow;
    CBrowserShell*   mBrowserShell;
+   
+   Boolean mPreviousBalloonState;     // are balloons on or off?
    
    nsCOMPtr<nsIPrompt> mPrompter;
    
