@@ -374,7 +374,8 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
     printf("\nFinished loading: %s  Status Code: %x\n", info->Name(), aStatus);
     if (bHTTPURL)
         printf("\tHTTP Status: %u\n", httpStatus);
-     if (NS_ERROR_UNKNOWN_HOST == aStatus) {
+     if (NS_ERROR_UNKNOWN_HOST == aStatus ||
+         NS_ERROR_UNKNOWN_PROXY_HOST == aStatus) {
          printf("\tDNS lookup failed.\n");
      }
     printf("\tTime to connect: %.3f seconds\n", connectTime);

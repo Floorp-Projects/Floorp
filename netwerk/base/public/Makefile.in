@@ -94,6 +94,7 @@ XPIDLSRCS	= \
 
 EXPORTS		= \
 		netCore.h \
+		nsNetError.h \
 		nsNetUtil.h \
 		nsUnixColorPrintf.h \
 		nsReadLine.h \

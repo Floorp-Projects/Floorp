@@ -34,7 +34,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
-#include "nsIErrorService.h"
 #include "nsIStandardURL.h"
 #include "nsNetUtil.h"
 #include "prlog.h"

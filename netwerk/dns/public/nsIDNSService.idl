@@ -38,6 +38,7 @@
 #include "nsISupports.idl"
 
 %{C++
+#include "nsNetError.h"
 
 #define NS_DNSSERVICE_CID                              \
 { /* 718e7c81-f8b8-11d2-b951-c80918051d3c */           \
@@ -80,9 +81,3 @@ interface nsIDNSService : nsISupports
     void init();
     void shutdown();
 };
-
-%{C++
-
-#define NS_ERROR_UNKNOWN_HOST  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 30)
-
-%}
