@@ -41,6 +41,8 @@ public:
     
   void FireChangeHandler(nsIPresContext& aPresContext);
 
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();
