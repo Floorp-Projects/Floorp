@@ -745,9 +745,9 @@ function OnClickThreadAndMessagePaneSplitter()
   if (gDBView)
   {
     if (collapsed)
-      gDBView.supressMsgDisplay = false;
-    else
       gDBView.supressMsgDisplay = true;
+    else
+      gDBView.supressMsgDisplay = false;
   }
 
 /*
