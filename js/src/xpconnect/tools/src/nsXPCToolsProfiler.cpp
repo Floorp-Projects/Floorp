@@ -50,7 +50,7 @@ public:
         : mLineno(aLineno), mExtent(aExtent) {}
     ~FunctionKey(void) {}
 
-    PRUint32 HashValue(void) const 
+    PRUint32 HashCode(void) const 
         {return (17*mLineno) + (7*mExtent);}
     PRBool Equals(const nsHashKey* aKey) const
         {const FunctionKey* o = (const FunctionKey*) aKey; 
@@ -195,7 +195,7 @@ xpctools_JSNewScriptHook(JSContext  *cx,
 
     if(self->mFileTable)
     {
-        nsStringKey key(filename);
+        nsCStringKey key(filename);
         ProfilerFile* file = (ProfilerFile*) self->mFileTable->Get(&key);
         if(!file)
         {
