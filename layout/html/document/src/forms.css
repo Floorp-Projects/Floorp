@@ -368,7 +368,7 @@ select[disabled] > input[type="button"]:active,
 input[type="submit"][disabled]:active,
 input[type="submit"][disabled] {
   border: 1px outset ButtonShadow;
-  padding: 1px 1px 1px 1px;
+  padding: 3px 1px 3px 1px;
   color: GrayText;
 }
 
