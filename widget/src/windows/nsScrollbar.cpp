@@ -38,6 +38,11 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
   mScaleFactor   = 1.0f;
   mLineIncrement = 0;
   mBackground    = ::GetSysColor(COLOR_SCROLLBAR);
+
+  //prevent resource leaks..
+  if (mBrush)
+    ::DeleteObject(mBrush);
+
   mBrush         = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
 }
 
