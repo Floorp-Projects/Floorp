@@ -26,20 +26,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= timer
-LIBRARY_NAME	= timer_beos
+LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
 
+CPPSRCS		= nsTimerBeOS.cpp
 
-CPPSRCS		= nsTimer.cpp
+TIMER_SUFFIX   = beos
+IS_COMPONENT   = 1
+CPPSRCS                += nsTimerBeOSFactory.cpp
+EXTRA_DSO_LDOPTS = $(MOZ_TK_LDFLAGS) $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_TIMER
-CXXFLAGS	+= $(TK_CFLAGS)
-INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..
-
-EXTRA_DSO_LDOPTS += \
-	$(XPCOM_LIBS) \
-	$(TK_LIBS) \
-	$(NSPR_LIBS)
-
+INCLUDES       += $(MOZ_TK_CFLAGS) -I$(srcdir)/..
