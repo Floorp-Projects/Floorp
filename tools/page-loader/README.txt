@@ -18,6 +18,7 @@
 #
 # Contributor(s):
 #    John Morrison <jrgm@netscape.com>, original author
+#    Heikki Toivonen <heikki@netscape.com>
 #    
 
 Rough notes on setting up this test app. jrgm@netscape.com 2001/08/05
@@ -153,4 +154,31 @@ Options +ExecCGI
    this as the way to substitute a BASE HREF and some JS into the page which will control
    the exectution of the test.
 
-9) I've probably left some stuff out. Bug jrgm@netscape.com for the missing stuff.
+9) You will most likely need to remove all load event handlers from your
+   test documents (onload attribute on body and handlers added with
+   addEventListener).
+
+10) Because the system uses (X)HTML base, and some XML constructs are not
+    subject to that (for example xml-stylesheet processing instructions),
+    you may need to provide the absolute path to external resources.
+
+11) If your documents are tranformed on the client side with XSLT, you will
+    need to add this snippet of XSLT to your stylesheet (and possibly make
+    sure it does not conflict with your other rules):
+--8<--------------------------------------------------------------------
+<!-- Page Loader -->
+<xsl:template match="html:script">
+  <xsl:copy>
+  <xsl:apply-templates/>
+  </xsl:copy>
+  <xsl:for-each select="@*">
+    <xsl:copy/>
+  </xsl:for-each>
+</xsl:template>
+--8<--------------------------------------------------------------------
+    And near the top of your output rules add:
+       <xsl:apply-templates select="html:script"/>
+    Finally make sure you define the XHTML namespace in the stylesheet
+    with "html" prefix.
+
+12) I've probably left some stuff out. Bug jrgm@netscape.com for the missing stuff.

@@ -1,17 +1,17 @@
 #!/usr/bin/perl
-# 
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
 # the License at http://www.mozilla.org/MPL/
-# 
+#
 # Software distributed under the License is distributed on an "AS
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-# 
+#
 # The Original Code is Mozilla page-loader test, released Aug 5, 2001
-# 
+#
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 2001 Netscape Communications Corporation. All
@@ -19,7 +19,8 @@
 #
 # Contributor(s):
 #    John Morrison <jrgm@netscape.com>, original author
-#    
+#    Heikki Toivonen <heikki@netscape.com>
+#
 
 use strict;
 use CGI::Request;
@@ -29,7 +30,7 @@ use POSIX qw(strftime);
 use DBI;
 
 # list of test pages, JS to insert, httpbase, filebase, etc.
-use PageData; 
+use PageData;
 
 use vars qw(%params $req $cgi $dbh $pagedata
             $gStartNow $gStartNowStr
@@ -162,7 +163,7 @@ sub outputPage {
     open (HTML, "<$file") ||
         die "Can't open file: $file,  $!";
 
-    my $hook = "<script>\n";
+    my $hook = "<script xmlns='http://www.w3.org/1999/xhtml'>\n";
     $hook .= "var g_moztest_Start = (new Date()).getTime();\n";
     $hook .= "var g_moztest_ServerTime='" . encodeHiResTime($gStartNow) . "';\n";
     $hook .= "var g_moztest_Content='" . $pagedata->name($params{curidx}) . "';\n";
@@ -176,7 +177,8 @@ sub outputPage {
 	 if $ENV{SERVER_PORT} == 443;
     warn "basepath: $basepath";
     $basepath =~ s#^(.*?)(/base/)$#$1/nocache$2# if ($params{nocache});
-    $hook .= "<base href='". $basepath . $relpath . "'>";
+    $hook .= "<base href='". $basepath . $relpath .
+      "' xmlns='http://www.w3.org/1999/xhtml' />";
 
     my $magic   = $pagedata->magicString;
     my $content = "";
@@ -186,11 +188,12 @@ sub outputPage {
     }
 
     my $contentTypeHeader;
+    my $mimetype = $pagedata->mimetype($params{curidx});
     my $charset = $pagedata->charset($params{curidx});
     if ($charset) {
-	$contentTypeHeader = qq{Content-type: text/html; charset="$charset"\n\n};
+	$contentTypeHeader = qq{Content-type: $mimetype; charset="$charset"\n\n};
     } else {
-	$contentTypeHeader = qq{Content-type: text/html\n\n};
+	$contentTypeHeader = qq{Content-type: $mimetype\n\n};
     }
     #warn $contentTypeHeader; #XXXjrgm testing...
 	
