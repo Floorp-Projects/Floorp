@@ -360,10 +360,9 @@ nsFolderCompactState::FinishCompact()
 
   nsLocalFolderSummarySpec summarySpec(fileSpec);
   nsXPIDLCString idlName;
-  nsString dbName;
+  nsCAutoString dbName(summarySpec.GetLeafName());
 
   pathSpec->GetLeafName(getter_Copies(idlName));
-  nsMsgGetNativePathString(summarySpec.GetLeafName(), dbName);
 
     // close down the temp file stream; preparing for deleting the old folder
     // and its database; then rename the temp folder and database
@@ -397,7 +396,7 @@ nsFolderCompactState::FinishCompact()
     // rename the copied folder and database to be the original folder and
     // database 
   m_fileSpec.Rename((const char*) idlName);
-  newSummarySpec.Rename(dbName);
+  newSummarySpec.Rename(dbName.get());
  
   rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");

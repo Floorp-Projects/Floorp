@@ -168,9 +168,7 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(
       if (PL_strstr(uri, kMDBDirectoryRoot)) // for moz-abmdbdirectory://
           fileName = &(uri[PL_strlen(kMDBDirectoryRoot)]);
 
-      nsAutoString file;
-      file.AssignWithConversion(fileName);
-      (*dbPath) += file;
+      (*dbPath) += fileName;
 
       nsCOMPtr<nsIAddrDatabase>  addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);

@@ -416,10 +416,9 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
     //          path += sep;
     // here because of the way nsFileSpec concatenates
  
-    nsAutoString str;
-    nsMsgGetNativePathString(path.GetNativePathCString(), str);
-    str.Append(sep);
-    path = str;
+    nsCAutoString str(path.GetNativePathCString());
+    str.AppendWithConversion(sep);
+    path = str.get();
 
 	return rv;
 }
@@ -809,7 +808,11 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
     if(NS_FAILED(rv))
        return rv;
 
-	path += nsAutoString(folderName);
+    nsXPIDLCString nativeFolderName;
+    ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(folderName),
+                       getter_Copies(nativeFolderName));
+    
+	path += nativeFolderName.get();
 		
 	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
     if (outputStream.is_open())

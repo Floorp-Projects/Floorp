@@ -105,11 +105,11 @@ nsresult nsAbMDBRDFResource::GetAbDatabase()
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kMDBDirectoryRoot)]));
+		nsCAutoString file(&(mURI[PL_strlen(kMDBDirectoryRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			file.Truncate(pos);
-		(*dbPath) += file;
+		(*dbPath) += file.get();
 
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
 		         do_GetService(kAddressBookDBCID, &rv);

@@ -429,7 +429,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 
     NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(dbFile));
     // don't strip off the .msf in currentFolderPath.
-    currentFolderPath.SetLeafName(currentFolderNameStr);
+    currentFolderPath.SetLeafName(folderName);
     rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(curFolder));
 
     currentFolderDBNameStr = currentFolderNameStr;

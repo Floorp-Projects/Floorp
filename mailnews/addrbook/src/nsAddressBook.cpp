@@ -323,11 +323,11 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDataba
     
     if (NS_SUCCEEDED(rv) && dbPath)
     {
-      nsAutoString file; file.AssignWithConversion(&(uri[PL_strlen(kMDBDirectoryRoot)]));
+      nsCAutoString file(&(uri[PL_strlen(kMDBDirectoryRoot)]));
       PRInt32 pos = file.Find("/");
       if (pos != -1)
         file.Truncate(pos);
-      (*dbPath) += file;
+      (*dbPath) += file.get();
       
       nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
         do_GetService(kAddressBookDBCID, &rv);
@@ -362,8 +362,8 @@ nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **d
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsAutoString file; file.AssignWithConversion(pDbFile);
-		(*dbPath) += file;
+		nsCAutoString file(pDbFile);
+		(*dbPath) += file.get();
 
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
 		         do_GetService(kAddressBookDBCID, &rv);
