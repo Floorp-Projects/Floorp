@@ -207,7 +207,7 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
       si.cb          = sizeof(si);
       si.wShowWindow = SW_SHOW;
 
-      if(GetModuleFileName(NULL, executable, MAX_PATH) &&
+      if(GetModuleFileName(GetModuleHandle("xpcom.dll"), executable, MAX_PATH) &&
          NULL != (pName = strrchr(executable, '\\')) &&
          NULL != strcpy(pName+1, "windbgdlg.exe") &&
 #ifdef DEBUG_jband
