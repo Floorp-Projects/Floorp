@@ -106,6 +106,7 @@ EXTRA_DSO_LDOPTS += \
 		-lgkgfx		\
 		-lgfxshared_s   \
 		$(GFX_XIE_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 DEFINES		+= -DUSE_MOZILLA_TYPES

@@ -72,6 +72,7 @@ EXTRA_DSO_LDOPTS = \
 		-lgfxshared_s \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 ifdef MOZ_ENABLE_FREETYPE2
