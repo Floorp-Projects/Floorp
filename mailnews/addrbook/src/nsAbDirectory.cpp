@@ -53,7 +53,8 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 nsAbDirectory::nsAbDirectory(void)
   :  nsAbRDFResource(),
-     mInitialized(PR_FALSE)
+     mInitialized(PR_FALSE),
+	 mIsMailingList(-1)
 {
 	NS_NewISupportsArray(getter_AddRefs(mSubDirectories));
 }
@@ -131,52 +132,73 @@ NS_IMETHODIMP nsAbDirectory::OnCardEntryChange
 
 NS_IMETHODIMP nsAbDirectory::GetChildNodes(nsIEnumerator* *result)
 {
-  if (!mInitialized) 
-  {
-    if (!PL_strcmp(mURI, kDirectoryDataSourceRoot) && GetDirList())
+	if (!mInitialized) 
 	{
-		PRInt32 count = GetDirList()->Count();
-		/* check: only show personal address book for now */
-		/* not showing 4.x address book unitl we have the converting done */
-		PRInt32 i;
-		for (i = 0; i < count; i++)
+		if (!PL_strcmp(mURI, kDirectoryDataSourceRoot) && GetDirList())
 		{
-			DIR_Server *server = (DIR_Server *)GetDirList()->ElementAt(i);
-
-			if (server->dirType == PABDirectory)
+			PRInt32 count = GetDirList()->Count();
+			/* check: only show personal address book for now */
+			/* not showing 4.x address book unitl we have the converting done */
+			PRInt32 i;
+			for (i = 0; i < count; i++)
 			{
-				nsString name(server->fileName);
-				PRInt32 pos = name.Find("na2");
-				if (pos >= 0) /* check: this is a 4.x file, remove when conversion is done */
-					continue;
+				DIR_Server *server = (DIR_Server *)GetDirList()->ElementAt(i);
 
-				char* uriStr = nsnull;
-				uriStr = PR_smprintf("%s%s", mURI, server->fileName);
-				if (uriStr == nsnull) 
-					return NS_ERROR_OUT_OF_MEMORY;
-
-				nsCOMPtr<nsIAbDirectory> childDir;
-				AddDirectory(uriStr, getter_AddRefs(childDir));
-				if (uriStr)
-					PR_smprintf_free(uriStr);
-
-				if (childDir)
+				if (server->dirType == PABDirectory)
 				{
-					PRUnichar *unichars = nsnull;
-					PRInt32 unicharLength = 0;
-					PRInt32 descLength = PL_strlen(server->description);
-					INTL_ConvertToUnicode((const char *)server->description, 
-						descLength, (void**)&unichars, &unicharLength);
-					childDir->SetDirName(unichars);
-					childDir->SetServer(server);
-					PR_FREEIF(unichars);
+					nsString name(server->fileName);
+					PRInt32 pos = name.Find("na2");
+					if (pos >= 0) /* check: this is a 4.x file, remove when conversion is done */
+						continue;
+
+					char* uriStr = nsnull;
+					uriStr = PR_smprintf("%s%s", mURI, server->fileName);
+					if (uriStr == nsnull) 
+						return NS_ERROR_OUT_OF_MEMORY;
+
+					nsCOMPtr<nsIAbDirectory> childDir;
+					AddDirectory(uriStr, getter_AddRefs(childDir));
+
+					if (uriStr)
+						PR_smprintf_free(uriStr);
+					if (childDir)
+					{
+						PRUnichar *unichars = nsnull;
+						PRInt32 unicharLength = 0;
+						PRInt32 descLength = PL_strlen(server->description);
+						INTL_ConvertToUnicode((const char *)server->description, 
+							descLength, (void**)&unichars, &unicharLength);
+						childDir->SetDirName(unichars);
+						childDir->SetServer(server);
+						PR_FREEIF(unichars);
+					}
+					nsresult rv = NS_OK;
+					nsCOMPtr<nsIAddrDatabase>  listDatabase;  
+
+					NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+					if (NS_SUCCEEDED(rv))
+					{
+						nsFileSpec* dbPath;
+						abSession->GetUserProfileDirectory(&dbPath);
+
+						nsString file(server->fileName);
+						(*dbPath) += file;
+
+						NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+
+						if (NS_SUCCEEDED(rv) && addrDBFactory)
+							rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(listDatabase), PR_TRUE);
+						if (NS_SUCCEEDED(rv) && listDatabase)
+						{
+							listDatabase->GetMailingListsFromDB(childDir);
+						}
+					}		
 				}
 			}
 		}
+		mInitialized = PR_TRUE;
 	}
-    mInitialized = PR_TRUE;
-  }
-  return mSubDirectories->Enumerate(result);
+	return mSubDirectories->Enumerate(result);
 }
 
 NS_IMETHODIMP nsAbDirectory::AddDirectory(const char *uriName, nsIAbDirectory **childDir)
@@ -206,24 +228,51 @@ NS_IMETHODIMP nsAbDirectory::AddDirectory(const char *uriName, nsIAbDirectory **
 	return rv;
 }
 
-NS_IMETHODIMP nsAbDirectory::GetChildCards(nsIEnumerator* *result)
+nsresult nsAbDirectory::AddMailList(const char *uriName)
 {
-	nsresult rv = GetAbDatabase();
+	if (!uriName)
+		return NS_ERROR_NULL_POINTER;
 
-	if (NS_SUCCEEDED(rv) && mDatabase)
-	{
-		rv = mDatabase->EnumerateCards(this, result);
-	}
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+
+	if(NS_FAILED(rv))
+		return rv;
+	
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uriName, getter_AddRefs(res));
+	if (NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(res, &rv));
+	if (NS_FAILED(rv))
+		return rv;        
+
+	mSubDirectories->AppendElement(directory);
+	 
 	return rv;
 }
 
-NS_IMETHODIMP nsAbDirectory::GetMailingList(nsIEnumerator **mailingList)
+NS_IMETHODIMP nsAbDirectory::GetChildCards(nsIEnumerator* *result)
 {
+	if (mURI && mIsMailingList == -1)
+	{
+		nsString file(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		PRInt32 pos = file.Find("/");
+		if (pos != -1)
+			mIsMailingList = 1;
+		else
+			mIsMailingList = 0;
+	}
+
 	nsresult rv = GetAbDatabase();
 
 	if (NS_SUCCEEDED(rv) && mDatabase)
 	{
-		rv = mDatabase->EnumerateMailingLists(this, mailingList);
+		if (mIsMailingList == 0)
+			rv = mDatabase->EnumerateCards(this, result);
+		else if (mIsMailingList == 1)
+			rv = mDatabase->EnumerateListAddresses(this, result);
 	}
 	return rv;
 }

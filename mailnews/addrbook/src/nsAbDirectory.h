@@ -57,13 +57,14 @@ public:
  	NS_IMETHOD DeleteCards(nsISupportsArray *cards);
  	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
-	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList);
 	NS_IMETHOD CreateNewDirectory(const PRUnichar *dirName, const char *fileName, PRBool migrating);
 	NS_IMETHOD GetDirUri(char **uri);
 
 	// nsIAddrDBListener methods:
 	NS_IMETHOD OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
 	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
+
+	PRBool IsMailingList(){ return (mIsMailingList == 1); }
 
 protected:
 	nsresult NotifyPropertyChanged(char *property, PRUnichar* oldValue, PRUnichar* newValue);
@@ -72,11 +73,14 @@ protected:
 	nsresult AddChildCards(nsAutoString name, nsIAbCard **childDir);
 	nsresult DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Server *server);
 
+	nsresult AddMailList(const char *uriName);
+
 	nsVoidArray* GetDirList(){ return DIR_GetDirectories(); }
 
 protected:
 	nsCOMPtr<nsISupportsArray> mSubDirectories;
 	PRBool mInitialized;
+	PRInt16 mIsMailingList;
 };
 
 #endif

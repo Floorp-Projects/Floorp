@@ -32,7 +32,7 @@
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 
-NS_IMPL_ISUPPORTS(nsAddrBookSession, NS_GET_IID(nsIAddrBookSession));
+NS_IMPL_THREADSAFE_ISUPPORTS(nsAddrBookSession, NS_GET_IID(nsIAddrBookSession));
     
 nsAddrBookSession::nsAddrBookSession():
   mRefCnt(0), mpUserDirectory(nsnull)

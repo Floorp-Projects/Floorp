@@ -35,7 +35,8 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsDirPrefs.h"
-#include "nsIAbBase.h"
+#include "nsIAddrDatabase.h"
+
  /* 
   * Address Book Directory
   */ 
@@ -47,14 +48,27 @@ public:
 	virtual ~nsAbDirProperty(void);
 
 	NS_DECL_ISUPPORTS
-  NS_DECL_NSIABDIRECTORY
+	NS_DECL_NSIABDIRECTORY
 
 protected:
+
+	nsresult GetAttributeName(PRUnichar **aName, nsString& value);
+	nsresult SetAttributeName(const PRUnichar *aName, nsString& arrtibute);
+
 
 	nsString m_DirName;
 	PRUint32 m_LastModifiedDate;
 	nsFileSpec* m_DbPath;
 	DIR_Server* m_Server;
+
+	nsString m_ListName;
+	nsString m_ListNickName;
+	nsString m_Description;
+	PRUint32 m_dbRowID;
+	PRBool   m_bIsMailList;
+
+	nsCOMPtr<nsISupportsArray> m_AddressList;
+
 };
 
 #endif

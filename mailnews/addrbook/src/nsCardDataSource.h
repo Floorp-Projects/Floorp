@@ -116,7 +116,18 @@ protected:
 	static nsIRDFResource* kNC_Organization;
 
 	static nsIRDFResource* kNC_DisplayNameCollation;
+	static nsIRDFResource* kNC_NameCollation;
+	static nsIRDFResource* kNC_NicknameCollation;
 	static nsIRDFResource* kNC_PrimaryEmailCollation;
+	static nsIRDFResource* kNC_SecondEmailCollation;
+	static nsIRDFResource* kNC_WorkPhoneCollation;
+	static nsIRDFResource* kNC_HomePhoneCollation;
+	static nsIRDFResource* kNC_FaxCollation;
+	static nsIRDFResource* kNC_PagerCollation;
+	static nsIRDFResource* kNC_CellularCollation;
+	static nsIRDFResource* kNC_TitleCollation;
+	static nsIRDFResource* kNC_DepartmentCollation;
+	static nsIRDFResource* kNC_CompanyCollation;
 
 	// commands
 	static nsIRDFResource* kNC_Delete;

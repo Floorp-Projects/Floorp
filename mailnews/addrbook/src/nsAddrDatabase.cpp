@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
+#include "nsIAbDirectory.h"
 #include "nsAbCard.h"
 #include "nsIAddrBookSession.h"
 
@@ -57,12 +58,13 @@ static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 
 /* The definition is nsAddressBook.cpp */
 extern const char *kCardDataSourceRoot;
+extern const char *kDirectoryDataSourceRoot;
 
 /* The definition is nsAddrDatabase.cpp */
 extern const char *kMainPersonalAddressBook;
 
-#define ID_PAB_TABLE		1
-#define ID_ANONYMOUS_TABLE	2
+#define ID_PAB_TABLE			1
+#define ID_ANONYMOUS_TABLE		2
 
 const PRInt32 kAddressBookDBVersion = 1;
 
@@ -70,9 +72,9 @@ const char *kAnonymousTableKind = "ns:addrbk:db:table:kind:anonymous";
 const char *kAnonymousRowScope = "ns:addrbk:db:row:scope:anonymous:all";
 
 const char *kPabTableKind = "ns:addrbk:db:table:kind:pab";
-const char *kMailListTableKind = "ns:addrbk:db:table:kind:maillist";
 
 const char *kCardRowScope = "ns:addrbk:db:row:scope:card:all";
+const char *kListRowScope = "ns:addrbk:db:row:scope:list:all";
 
 const char *kFirstNameColumn = "FirstName";
 const char *kLastNameColumn = "LastName";
@@ -115,10 +117,15 @@ const char *kLastModifiedDateColumn = "LastModifiedDate";
 
 const char *kAddressCharSetColumn = "AddrCharSet";
 
+const char *kMailListName = "ListName";
+const char *kMailListNickName = "ListNickName";
+const char *kMailListDescription = "ListDescription";
+const char *kMailListTotalAddresses = "ListTotalAddresses";
 
 struct mdbOid gAddressBookTableOID;
-struct mdbOid gMailListTableOID;
 struct mdbOid gAnonymousTableOID;
+
+static const char *kMailListAddressFormat = "ListAddress%d";
 
 nsAddrDatabase::nsAddrDatabase()
     : m_mdbEnv(nsnull), m_mdbStore(nsnull),
@@ -216,13 +223,16 @@ nsresult nsAddrDatabase::RemoveAnonymousList(nsVoidArray* pArray)
 	return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsAddrDatabase)
+NS_IMPL_THREADSAFE_ADDREF(nsAddrDatabase)
 
 NS_IMETHODIMP_(nsrefcnt) nsAddrDatabase::Release(void)                    
 {                                                      
-	NS_PRECONDITION(0 != mRefCnt, "dup release");     
-	if (--mRefCnt == 0)	// OK, the cache is no longer holding onto this, so we really want to delete it, 
-	{						// after removing it from the cache.
+	NS_PRECONDITION(0 != mRefCnt, "dup release");    	
+	nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+	NS_LOG_RELEASE(this, count,"nsAddrDatabase"); 
+	if (count == 0)	// OK, the cache is no longer holding onto this, so we really want to delete it, 
+	{				// after removing it from the cache.
+		mRefCnt = 1; /* stabilize */
 		RemoveFromCache(this);
 		if (m_mdbStore)
 			m_mdbStore->CloseMdbObject(m_mdbEnv);
@@ -230,7 +240,7 @@ NS_IMETHODIMP_(nsrefcnt) nsAddrDatabase::Release(void)
 		return 0;                                          
 	}
 	NS_LOG_RELEASE(this, mRefCnt,"nsAddrDatabase"); 
-	return mRefCnt;                                      
+	return count;                                      
 }
 
 NS_IMETHODIMP nsAddrDatabase::QueryInterface(REFNSIID aIID, void** aResult)
@@ -903,6 +913,11 @@ nsresult nsAddrDatabase::InitMDBInfo()
 
 			GetStore()->StringToToken(GetEnv(),  kAddressCharSetColumn, &m_AddressCharSetColumnToken);
 			err = GetStore()->StringToToken(GetEnv(), kPabTableKind, &m_PabTableKind); 
+
+			GetStore()->StringToToken(GetEnv(),  kMailListName, &m_ListNameColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kMailListNickName, &m_ListNickNameColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kMailListDescription, &m_ListDescriptionColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kMailListTotalAddresses, &m_ListTotalColumnToken);
 		}
 	}
 	return err;
@@ -1397,6 +1412,200 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	return err;
 }
 
+
+nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIMdbRow *listRow)
+{
+	nsresult	err = NS_OK;
+
+	if (!list && !listRow )
+		return NS_ERROR_NULL_POINTER;
+
+	mdbOid rowOid, tableOid;
+	m_mdbPabTable->GetOid(GetEnv(), &tableOid);
+	listRow->GetOid(GetEnv(), &rowOid);
+
+//	list->SetDbTableID(tableOid.mOid_Id);
+//	list->SetDbRowID(rowOid.mOid_Id);
+
+	// add the row to the singleton table.
+	if (NS_SUCCEEDED(err) && listRow)
+	{
+		PRUnichar* pUnicodeStr = nsnull;
+		PRInt32 unicharLength = 0;
+		char* pUTF8Str = nsnull;
+		list->GetListName(&pUnicodeStr);
+		unicharLength = nsCRT::strlen(pUnicodeStr);
+		if (pUnicodeStr)
+		{
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddListName(listRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+		}
+		PR_FREEIF(pUnicodeStr);
+		list->GetListNickName(&pUnicodeStr);
+		unicharLength = nsCRT::strlen(pUnicodeStr);
+		if (pUnicodeStr)
+		{
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddListNickName(listRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+		}
+		PR_FREEIF(pUnicodeStr);
+		list->GetDescription(&pUnicodeStr);
+		unicharLength = nsCRT::strlen(pUnicodeStr);
+		if (pUnicodeStr)
+		{
+			INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&pUTF8Str);
+			if (pUTF8Str)
+			{
+				AddListDescription(listRow, pUTF8Str);
+				PR_FREEIF(pUTF8Str);
+			}
+		}
+		PR_FREEIF(pUnicodeStr);
+
+		nsISupportsArray* pAddressLists;
+		list->GetAddressLists(&pAddressLists);
+		NS_IF_ADDREF(pAddressLists);
+		PRUint32 count;
+		pAddressLists->Count(&count);
+		AddIntColumn(listRow, m_ListTotalColumnToken, count);
+
+
+		PRUint32 i;
+		for (i = 0; i < count; i++)
+		{
+			nsISupports* pSupport = pAddressLists->ElementAt(i);
+			nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
+			
+			if (NS_FAILED(err))
+				continue;
+
+			PRUnichar *email = nsnull;
+			pCard->GetPrimaryEmail(&email);
+			PRInt32 emailLength = nsCRT::strlen(email);
+			if (email)
+			{
+				char* pUTF8Email = nsnull;
+				INTL_ConvertFromUnicode(email, emailLength, (char**)&pUTF8Email);
+				if (pUTF8Email)
+				{
+					nsIMdbRow	*pCardRow = nsnull;
+					err = GetRowForEmailAddress(pUTF8Email, &pCardRow);
+					if (NS_FAILED(err) || !pCardRow)
+					{
+						//New Email, then add a new row with this email
+
+						err  = GetNewRow(&pCardRow);
+
+						if (NS_SUCCEEDED(err) && pCardRow)
+						{
+							AddPrimaryEmail(pCardRow, pUTF8Email);
+							err = m_mdbPabTable->AddRow(GetEnv(), pCardRow);
+						}
+					}
+					PR_FREEIF(pUTF8Email);
+
+					if (!pCardRow)
+						return NS_ERROR_NULL_POINTER;
+
+					//add a column with address row id to the list row
+					mdb_token listAddressColumnToken;
+
+					char columnStr[16];
+					sprintf(columnStr, kMailListAddressFormat, i + 1); //let it starts from 1
+					GetStore()->StringToToken(GetEnv(),  columnStr, &listAddressColumnToken);
+
+					mdbOid outOid;
+
+					if (pCardRow->GetOid(GetEnv(), &outOid) == NS_OK)
+					{
+						//save member uri to the list row
+						char* listMemberURI = nsnull;
+						char* file = nsnull;
+
+						file = m_dbName.GetLeafName();
+						listMemberURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, outOid.mOid_Id);
+						AddCharStringColumn(listRow, listAddressColumnToken, listMemberURI);
+						if (file)
+							nsCRT::free(file);
+						if (listMemberURI)
+							PR_smprintf_free(listMemberURI);
+					}
+					pCardRow->CutStrongRef(GetEnv());
+				}
+			}
+			PR_FREEIF(email);
+
+		}
+	}
+	return NS_OK;
+}
+
+PRUint32 nsAddrDatabase::GetListAddressTotal(nsIMdbRow* listRow)
+{
+	PRUint32 count = 0;
+	GetIntColumn(listRow, m_ListTotalColumnToken, &count, 0);
+	return count;
+}
+
+nsresult nsAddrDatabase::GetAddressRowByPos(nsIMdbRow* listRow, PRUint16 pos, nsIMdbRow** cardRow)
+{
+	mdb_token listAddressColumnToken;
+
+	char columnStr[16];
+	sprintf(columnStr, kMailListAddressFormat, pos);
+	GetStore()->StringToToken(GetEnv(),  columnStr, &listAddressColumnToken);
+
+	//change from rowid to uri
+    nsAutoString tempString;
+	mdb_id rowID;
+	nsresult err = GetIntColumn(listRow, listAddressColumnToken, (PRUint32*)&rowID, 0);
+//nsesult err = GetStringColumn(listRow, listAddressColumnToken, tempString);
+	if (NS_SUCCEEDED(err))
+	{
+		err = GetCardRowByRowID(rowID, cardRow);
+		return err;
+	}
+	else
+	{
+		return NS_ERROR_FAILURE;
+	}
+}
+
+NS_IMETHODIMP nsAddrDatabase::CreateMailListAndAddToDB(nsIAbDirectory *newList, PRBool notify /* = FALSE */)
+{
+	nsresult	err = NS_OK;
+	nsIMdbRow	*listRow;
+
+	if (!newList || !m_mdbPabTable)
+		return NS_ERROR_NULL_POINTER;
+	
+	err  = GetStore()->NewRow(GetEnv(), m_ListRowScopeToken, &listRow);
+
+	if (NS_SUCCEEDED(err) && listRow)
+	{
+		AddListAttributeColumnsToRow(newList, listRow);
+		err = m_mdbPabTable->AddRow(GetEnv(), listRow);
+		listRow->CutStrongRef(GetEnv());
+	}
+	if (NS_FAILED(err)) return err;
+
+	//  do notification
+	if (notify)
+	{	;
+//		NotifyCardEntryChange(AB_NotifyInserted, newList, NULL);
+	}
+
+	return err;
+}
+
 nsresult nsAddrDatabase::FindAttributeRow(nsIMdbTable* pTable, mdb_token columnToken, nsIMdbRow** row)
 {
 	nsIMdbTableRowCursor* rowCursor = nsnull;
@@ -1673,15 +1882,20 @@ NS_IMETHODIMP nsAddrDatabase::EditAnonymousAttributesInDB()
 
 NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
 {
-	nsresult err = NS_OK;
-
 	if (!card || !m_mdbPabTable)
 		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+	PRBool bIsMailList = PR_FALSE;
+	card->GetIsMailList(&bIsMailList);
 
 	// get the right row
 	nsIMdbRow* pCardRow = nsnull;
 	mdbOid rowOid;
-	rowOid.mOid_Scope = m_CardRowScopeToken;
+	if (bIsMailList)
+		rowOid.mOid_Scope = m_ListRowScopeToken;
+	else
+		rowOid.mOid_Scope = m_CardRowScopeToken;
 	card->GetDbRowID((PRUint32*)&rowOid.mOid_Id);
 	err = GetStore()->GetRow(GetEnv(), &rowOid, &pCardRow);
 	if (pCardRow)
@@ -2513,6 +2727,91 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	return err;
 }
 
+nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardRow)
+{
+	nsresult	err = NS_OK;
+	if (!listCard || !cardRow)
+		return NS_ERROR_NULL_POINTER;
+
+    nsAutoString tempString;
+	char *tempCString = nsnull;
+	PRUnichar *unicodeStr = nsnull;
+	PRInt32 unicharLength = 0;
+
+	err = GetStringColumn(cardRow, m_ListNameColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		listCard->SetDisplayName(unicodeStr);
+		listCard->SetLastName(unicodeStr);
+		nsAllocator::Free(tempCString);
+		PR_Free(unicodeStr);
+	}
+	err = GetStringColumn(cardRow, m_ListNickNameColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		listCard->SetNickName(unicodeStr);
+		nsAllocator::Free(tempCString);
+		PR_Free(unicodeStr);
+	}
+	err = GetStringColumn(cardRow, m_ListDescriptionColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		listCard->SetNotes(unicodeStr);
+		nsAllocator::Free(tempCString);
+		PR_Free(unicodeStr);
+	}
+
+	return err;
+}
+
+nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listRow)
+{
+	nsresult	err = NS_OK;
+	if (!newList || !listRow)
+		return NS_ERROR_NULL_POINTER;
+
+    nsAutoString tempString;
+	char *tempCString = nsnull;
+	PRUnichar *unicodeStr = nsnull;
+	PRInt32 unicharLength = 0;
+
+	err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		newList->SetListName(unicodeStr);
+		nsAllocator::Free(tempCString);
+		PR_Free(unicodeStr);
+	}
+	err = GetStringColumn(listRow, m_ListNickNameColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		newList->SetListNickName(unicodeStr);
+		nsAllocator::Free(tempCString);
+		PR_Free(unicodeStr);
+	}
+	err = GetStringColumn(listRow, m_ListDescriptionColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
+	{
+		tempCString = tempString.ToNewCString();
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		newList->SetDescription(unicodeStr);
+		nsAllocator::Free(tempCString);
+		PR_Free(unicodeStr);
+	}
+
+	return err;
+}
+
 class nsAddrDBEnumerator : public nsIEnumerator 
 {
 public:
@@ -2523,24 +2822,27 @@ public:
 
     // nsAddrDBEnumerator methods:
 
-    nsAddrDBEnumerator(nsAddrDatabase* db, void* closure);
+    nsAddrDBEnumerator(nsAddrDatabase* db);
     virtual ~nsAddrDBEnumerator();
 
 protected:
     nsCOMPtr<nsAddrDatabase>    mDB;
-    nsCOMPtr<nsIAbCard>         mResultCard;
+	nsCOMPtr<nsIAbDirectory>	mResultList;
+	nsCOMPtr<nsIAbCard>			mResultCard;
 	nsIMdbTable*				mDbTable;
 	nsIMdbTableRowCursor*       mRowCursor;
 	nsIMdbRow*					mCurrentRow;
  	mdb_pos						mRowPos;
     PRBool                      mDone;
-    void*                       mClosure;
+    PRBool                      mCurrentRowIsList;
 };
 
-nsAddrDBEnumerator::nsAddrDBEnumerator(nsAddrDatabase* db, void* closure)
-    : mDB(db), mRowCursor(nsnull), mCurrentRow(nsnull), mDone(PR_FALSE), mClosure(closure)
+nsAddrDBEnumerator::nsAddrDBEnumerator(nsAddrDatabase* db)
+    : mDB(db), mRowCursor(nsnull), mCurrentRow(nsnull), mDone(PR_FALSE)
 {
     NS_INIT_REFCNT();
+	mDbTable = mDB->GetPabTable();
+	mCurrentRowIsList = PR_FALSE;
 }
 
 nsAddrDBEnumerator::~nsAddrDBEnumerator()
@@ -2556,10 +2858,10 @@ NS_IMETHODIMP nsAddrDBEnumerator::First(void)
 	nsresult rv = 0;
 	mDone = PR_FALSE;
 
-	if (!mDB || !mDB->GetPabTable() || !mDB->GetEnv())
+	if (!mDB || !mDbTable || !mDB->GetEnv())
 		return NS_ERROR_NULL_POINTER;
 		
-	mDB->GetPabTable()->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
+	mDbTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
 	if (NS_FAILED(rv)) return rv;
     return Next();
 }
@@ -2575,7 +2877,25 @@ NS_IMETHODIMP nsAddrDBEnumerator::Next(void)
 		mCurrentRow->CutStrongRef(mDB->GetEnv());
 	nsresult rv = mRowCursor->NextRow(mDB->GetEnv(), &mCurrentRow, &mRowPos);
     if (mCurrentRow && NS_SUCCEEDED(rv))
-		return NS_OK;
+	{
+		mdbOid rowOid;
+
+		if (mCurrentRow->GetOid(mDB->GetEnv(), &rowOid) == NS_OK)
+		{
+			if (mDB->IsListRowScopeToken(rowOid.mOid_Scope))
+			{
+				mCurrentRowIsList = PR_TRUE;
+				return NS_OK;
+			}
+			else if (mDB->IsCardRowScopeToken(rowOid.mOid_Scope))
+			{
+				mCurrentRowIsList = PR_FALSE;
+				return NS_OK;
+			}
+			else
+				return NS_ERROR_FAILURE;
+		}
+	}
 	else if (!mCurrentRow) 
 	{
         mDone = PR_TRUE;
@@ -2593,8 +2913,16 @@ NS_IMETHODIMP nsAddrDBEnumerator::CurrentItem(nsISupports **aItem)
     if (mCurrentRow) 
 	{
         nsresult rv;
-        rv = mDB->CreateABCard(mCurrentRow, getter_AddRefs(mResultCard));
-        *aItem = mResultCard;
+		if (mCurrentRowIsList)
+		{
+			rv = mDB->CreateABListCard(mCurrentRow, getter_AddRefs(mResultCard));
+			*aItem = mResultCard;
+		}
+		else
+		{
+			rv = mDB->CreateABCard(mCurrentRow, getter_AddRefs(mResultCard));
+			*aItem = mResultCard;
+		}
 		NS_IF_ADDREF(*aItem);
         return NS_OK;
     }
@@ -2606,11 +2934,114 @@ NS_IMETHODIMP nsAddrDBEnumerator::IsDone(void)
     return mDone ? NS_OK : NS_ERROR_FAILURE;
 }
 
+class nsListAddressEnumerator : public nsIEnumerator 
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    // nsIEnumerator methods:
+    NS_DECL_NSIENUMERATOR
+
+    // nsAddrDBEnumerator methods:
+
+    nsListAddressEnumerator(nsAddrDatabase* db, mdb_id rowID);
+    virtual ~nsListAddressEnumerator();
+
+protected:
+    nsCOMPtr<nsAddrDatabase>    mDB;
+	nsCOMPtr<nsIAbCard>			mResultCard;
+	nsIMdbTable*				mDbTable;
+	nsIMdbRow*					mListRow;
+	nsIMdbRow*					mCurrentRow;
+	mdb_id						mListRowID;
+    PRBool                      mDone;
+	PRUint32					mAddressTotal;
+	PRUint16					mAddressPos;
+};
+
+nsListAddressEnumerator::nsListAddressEnumerator(nsAddrDatabase* db, mdb_id rowID)
+    : mDB(db), mCurrentRow(nsnull), mListRowID(rowID), mDone(PR_FALSE)
+{
+    NS_INIT_REFCNT();
+	mDbTable = mDB->GetPabTable();
+	mDB->GetListRowByRowID(mListRowID, &mListRow);
+	mAddressTotal = mDB->GetListAddressTotal(mListRow);
+	mAddressPos = 0;
+}
+
+nsListAddressEnumerator::~nsListAddressEnumerator()
+{
+	if (mListRow)
+		mListRow->CutStrongRef(mDB->GetEnv());
+}
+
+NS_IMPL_ISUPPORTS(nsListAddressEnumerator, NS_GET_IID(nsIEnumerator))
+
+NS_IMETHODIMP nsListAddressEnumerator::First(void)
+{
+	mDone = PR_FALSE;
+
+	if (!mDB || !mDbTable || !mDB->GetEnv())
+		return NS_ERROR_NULL_POINTER;
+	
+	//got total address count and start
+	if (mAddressTotal)
+		return Next();
+	else
+		return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsListAddressEnumerator::Next(void)
+{
+	//go to the next address column
+	if (mCurrentRow)
+	{
+		mCurrentRow->CutStrongRef(mDB->GetEnv());
+		mCurrentRow = nsnull;
+	}
+	mAddressPos++;
+	if (mAddressPos <= mAddressTotal)
+	{
+		nsresult err;
+		err = mDB->GetAddressRowByPos(mListRow, mAddressPos, &mCurrentRow);
+		if (mCurrentRow)
+			return NS_OK;
+		else
+		{
+			mDone = PR_TRUE;
+			return NS_ERROR_FAILURE;
+		}
+	}
+	else
+	{
+        mDone = PR_TRUE;
+		return NS_ERROR_FAILURE;
+	}
+}
+
+NS_IMETHODIMP nsListAddressEnumerator::CurrentItem(nsISupports **aItem)
+{
+    if (mCurrentRow) 
+	{
+        nsresult rv;
+		rv = mDB->CreateABCardInList(mCurrentRow, getter_AddRefs(mResultCard), mListRowID);
+		*aItem = mResultCard;
+		NS_IF_ADDREF(*aItem);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsListAddressEnumerator::IsDone(void)
+{
+    return mDone ? NS_OK : NS_ERROR_FAILURE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result)
 {
-    nsAddrDBEnumerator* e = new nsAddrDBEnumerator(this, nsnull);
+    nsAddrDBEnumerator* e = new nsAddrDBEnumerator(this);
 	m_dbDirectory = directory;
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2619,9 +3050,53 @@ NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnume
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAddrDatabase::EnumerateMailingLists(nsIAbDirectory *directory, nsIEnumerator **result)
+NS_IMETHODIMP nsAddrDatabase::GetMailingListsFromDB(nsIAbDirectory *parentDir)
 {
-    nsAddrDBEnumerator* e = new nsAddrDBEnumerator(this, nsnull);
+	nsCOMPtr<nsIAbDirectory>	resultList;
+	nsIMdbTable*				dbTable = nsnull;
+	nsIMdbTableRowCursor*       rowCursor = nsnull;
+	nsIMdbRow*					currentRow = nsnull;
+ 	mdb_pos						rowPos;
+    PRBool                      done = PR_FALSE;
+
+	m_dbDirectory = parentDir;
+	dbTable = GetPabTable();
+
+	if (!dbTable)
+		return NS_ERROR_FAILURE;
+
+	dbTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+	if (!rowCursor)
+		return NS_ERROR_FAILURE;
+
+	while (!done)
+	{
+		if (currentRow)
+			currentRow->CutStrongRef(GetEnv());
+		nsresult rv = rowCursor->NextRow(GetEnv(), &currentRow, &rowPos);
+		if (currentRow && NS_SUCCEEDED(rv))
+		{
+			mdbOid rowOid;
+
+			if (currentRow->GetOid(GetEnv(), &rowOid) == NS_OK)
+			{
+				if (IsListRowScopeToken(rowOid.mOid_Scope))
+					rv = CreateABList(currentRow, getter_AddRefs(resultList));
+			}
+		}
+		else
+			done = PR_TRUE;
+	}
+	if (rowCursor)
+		rowCursor->CutStrongRef(GetEnv());
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAddrDatabase::EnumerateListAddresses(nsIAbDirectory *directory, nsIEnumerator **result)
+{
+	mdb_id rowID;
+	directory->GetDbRowID((PRUint32*)&rowID);
+    nsListAddressEnumerator* e = new nsListAddressEnumerator(this, rowID);
 	m_dbDirectory = directory;
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2630,7 +3105,7 @@ NS_IMETHODIMP nsAddrDatabase::EnumerateMailingLists(nsIAbDirectory *directory, n
     return NS_OK;
 }
 
-nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
+nsresult nsAddrDatabase::CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result)
 {
     nsresult rv = NS_OK; 
 
@@ -2646,7 +3121,10 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 		char* file = nsnull;
 
 		file = m_dbName.GetLeafName();
-		cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, rowID);
+		if (listRowID > 0)
+			cardURI = PR_smprintf("%s%s/MailList%ld/Card%ld", kCardDataSourceRoot, file, listRowID, rowID);
+		else
+			cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, rowID);
 		nsCOMPtr<nsIAbCard> personCard;
 		rv = m_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
 		if (personCard)
@@ -2676,6 +3154,153 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 	return rv;
 }
 
+/* create a card for a person in the address book */
+nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
+{
+    return CreateCard(cardRow, 0, result);
+}
+
+/* create a card for a person in the mailing list, when clicking on a mailing */
+/* list on the left pane, show this card on the result pane.                  */
+/* The uri is different from a person card in the address book.               */
+
+nsresult nsAddrDatabase::CreateABCardInList(nsIMdbRow* cardRow, nsIAbCard **result, mdb_id listRowID)
+{
+    return CreateCard(cardRow, listRowID, result);
+}
+
+/* create a card for mailing list in the address book */
+nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* cardRow, nsIAbCard **result)
+{
+    nsresult rv = NS_OK; 
+
+	mdbOid outOid;
+	mdb_id rowID=0;
+
+	if (cardRow->GetOid(GetEnv(), &outOid) == NS_OK)
+        rowID = outOid.mOid_Id;
+
+	if(NS_SUCCEEDED(rv))
+	{
+		char* cardURI = nsnull;
+		char* file = nsnull;
+
+		file = m_dbName.GetLeafName();
+		cardURI = PR_smprintf("%s%s/List%ld", kCardDataSourceRoot, file, rowID);
+		nsCOMPtr<nsIAbCard> personCard;
+		rv = m_dbDirectory->AddChildCards(cardURI, getter_AddRefs(personCard));
+		if (personCard)
+		{
+			GetListCardFromDB(personCard, cardRow);
+			mdbOid tableOid;
+			m_mdbPabTable->GetOid(GetEnv(), &tableOid);
+			personCard->SetDbTableID(tableOid.mOid_Id);
+			personCard->SetDbRowID(rowID);
+			personCard->SetAbDatabase(this);
+			personCard->SetIsMailList(PR_TRUE);
+
+			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(personCard, &rv));
+			if (NS_FAILED(rv)) 
+				return NS_ERROR_NULL_POINTER;
+
+			AddListener(listener);
+		}
+		*result = personCard;
+		NS_IF_ADDREF(*result);
+
+		if (file)
+			nsCRT::free(file);
+		if (cardURI)
+			PR_smprintf_free(cardURI);
+	}
+
+	return rv;
+}
+
+/* create a sub directory for mailing list in the address book left pane */
+nsresult nsAddrDatabase::CreateABList(nsIMdbRow* listRow, nsIAbDirectory **result)
+{
+    nsresult rv = NS_OK; 
+
+	if (!listRow)
+		return NS_ERROR_NULL_POINTER;
+
+	mdbOid outOid;
+	mdb_id rowID=0;
+
+	if (listRow->GetOid(GetEnv(), &outOid) == NS_OK)
+        rowID = outOid.mOid_Id;
+
+	if(NS_SUCCEEDED(rv))
+	{
+		char* listURI = nsnull;
+		char* file = nsnull;
+
+		file = m_dbName.GetLeafName();
+		listURI = PR_smprintf("%s%s/MailList%ld", kDirectoryDataSourceRoot, file, rowID);
+		nsCOMPtr<nsIAbDirectory> mailList;
+		rv = m_dbDirectory->AddDirectory(listURI, getter_AddRefs(mailList));
+		if (mailList)
+		{
+			GetListFromDB(mailList, listRow);
+			mailList->SetDbRowID(rowID);
+			mailList->SetIsMailList(PR_TRUE);
+
+			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(mailList, &rv));
+			if (NS_FAILED(rv)) 
+				return NS_ERROR_NULL_POINTER;
+
+			m_dbDirectory->AddMailListToDirectory(mailList);
+
+			*result = mailList;
+			NS_IF_ADDREF(*result);
+		}
+
+		if (file)
+			nsCRT::free(file);
+		if (listURI)
+			PR_smprintf_free(listURI);
+	}
+
+	return rv;
+}
+
+nsresult nsAddrDatabase::GetCardRowByRowID(mdb_id rowID, nsIMdbRow **dbRow)
+{
+	mdbOid rowOid;
+	rowOid.mOid_Scope = m_CardRowScopeToken;
+	rowOid.mOid_Id = rowID;
+
+	return GetStore()->GetRow(GetEnv(), &rowOid, dbRow);
+}
+
+nsresult nsAddrDatabase::GetListRowByRowID(mdb_id rowID, nsIMdbRow **dbRow)
+{
+	mdbOid rowOid;
+	rowOid.mOid_Scope = m_ListRowScopeToken;
+	rowOid.mOid_Id = rowID;
+
+	return GetStore()->GetRow(GetEnv(), &rowOid, dbRow);
+}
+
+nsresult nsAddrDatabase::GetRowForEmailAddress(const char *emailAddress, nsIMdbRow	**cardRow)
+{
+	mdbYarn	emailAddressYarn;
+
+	emailAddressYarn.mYarn_Buf = (void *) emailAddress;
+	emailAddressYarn.mYarn_Fill = PL_strlen(emailAddress);
+	emailAddressYarn.mYarn_Form = 0;
+	emailAddressYarn.mYarn_Size = emailAddressYarn.mYarn_Fill;
+
+	mdbOid		outRowId;
+	nsIMdbStore* store = GetStore();
+	nsIMdbEnv* env = GetEnv();
+	
+	mdb_err result = store->FindRow(env, m_CardRowScopeToken,
+		m_PriEmailColumnToken, &emailAddressYarn,  &outRowId, 
+		cardRow);
+	return result;
+}
 
 NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(nsIAbDirectory *directory, const char *emailAddress, nsIAbCard **cardResult)
 {
@@ -2684,22 +3309,10 @@ NS_IMETHODIMP nsAddrDatabase::GetCardForEmailAddress(nsIAbDirectory *directory, 
 		return NS_ERROR_NULL_POINTER;
 
 	m_dbDirectory = directory;
-
-	mdbYarn	emailAddressYarn;
-
-	emailAddressYarn.mYarn_Buf = (void *) emailAddress;
-	emailAddressYarn.mYarn_Fill = PL_strlen(emailAddress);
-	emailAddressYarn.mYarn_Form = 0;
-	emailAddressYarn.mYarn_Size = emailAddressYarn.mYarn_Fill;
-
-	nsIMdbRow	*cardRow;
-	mdbOid		outRowId;
-	nsIMdbStore* store = GetStore();
-	nsIMdbEnv* env = GetEnv();
+	nsIMdbRow	*cardRow = nsnull;
 	
-	mdb_err result = store->FindRow(env, m_CardRowScopeToken,
-		m_PriEmailColumnToken, &emailAddressYarn,  &outRowId, 
-		&cardRow);
+	mdb_err result = GetRowForEmailAddress(emailAddress, &cardRow);
+
 	if (NS_SUCCEEDED(result) && cardRow)
 	{
 		rv = CreateABCard(cardRow, cardResult);

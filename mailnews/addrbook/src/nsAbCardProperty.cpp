@@ -132,6 +132,7 @@ nsAbCardProperty::nsAbCardProperty(void)
 	m_LastModDate = 0;
 
 	m_bSendPlainText = PR_TRUE;
+	m_bIsMailList = PR_FALSE;
 
 	m_dbTableID = 0;
 	m_dbRowID = 0;
@@ -230,6 +231,18 @@ NS_IMETHODIMP nsAbCardProperty::GetSendPlainText(PRBool *aSendPlainText)
 NS_IMETHODIMP nsAbCardProperty::SetSendPlainText(PRBool aSendPlainText)
 {
 	m_bSendPlainText = aSendPlainText;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetIsMailList(PRBool *aIsMailList)
+{
+	*aIsMailList = m_bIsMailList;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::SetIsMailList(PRBool aIsMailList)
+{
+	m_bIsMailList = aIsMailList;
 	return NS_OK;
 }
 
@@ -618,7 +631,12 @@ NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)
 			char* file = nsnull;
 			file = filePath->GetLeafName();
 			if (file && m_dbRowID)
-				cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, m_dbRowID);
+			{
+				if (m_bIsMailList)
+					cardURI = PR_smprintf("%s%s/List%ld", kCardDataSourceRoot, file, m_dbRowID);
+				else
+					cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, m_dbRowID);
+			}
 			if (file)
 				nsCRT::free(file);
 			delete filePath;

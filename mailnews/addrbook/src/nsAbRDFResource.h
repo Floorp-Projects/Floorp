@@ -54,6 +54,7 @@ public:
 protected:
 
 	nsresult GetAbDatabase();
+	nsresult GetDatabaseFromFile(char* pDbFile);
 
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
  

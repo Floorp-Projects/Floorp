@@ -99,8 +99,6 @@ protected:
                                      nsIRDFNode **target);
 	nsresult createDirectoryChildNode(nsIAbDirectory *directory,
                                       nsIRDFNode **target);
-	nsresult createCardChildNode(nsIAbDirectory *directory,
-                                      nsIRDFNode **target);
 	static nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 										   nsISupportsArray **arcs);
 
@@ -117,9 +115,9 @@ protected:
 
 	static nsIRDFResource* kNC_Child;
 	static nsIRDFResource* kNC_DirName;
-	static nsIRDFResource* kNC_MailingList;
 	static nsIRDFResource* kNC_CardChild;
 	static nsIRDFResource* kNC_DirUri;
+	static nsIRDFResource* kNC_MailList;
 
 	// commands
 	static nsIRDFResource* kNC_Delete;

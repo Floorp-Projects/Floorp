@@ -60,7 +60,18 @@ nsIRDFResource* nsAbCardDataSource::kNC_Organization = nsnull;
 
 //for locale sorting,
 nsIRDFResource* nsAbCardDataSource::kNC_DisplayNameCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_NameCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_NicknameCollation = nsnull;
 nsIRDFResource* nsAbCardDataSource::kNC_PrimaryEmailCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_SecondEmailCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_WorkPhoneCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_HomePhoneCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_FaxCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_PagerCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_CellularCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_TitleCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_DepartmentCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_CompanyCollation = nsnull;
 
 // commands
 nsIRDFResource* nsAbCardDataSource::kNC_Delete = nsnull;
@@ -82,7 +93,18 @@ nsIRDFResource* nsAbCardDataSource::kNC_NewCard = nsnull;
 #define NC_RDF_ORGANIZATION			"http://home.netscape.com/NC-rdf#Company"
 
 #define NC_RDF_DISPLAYNAME_SORT		"http://home.netscape.com/NC-rdf#DisplayName?collation=true"
+#define NC_RDF_NAME_SORT			"http://home.netscape.com/NC-rdf#Name?collation=true"
+#define NC_RDF_NICKNAME_SORT		"http://home.netscape.com/NC-rdf#Nickname?collation=true"
 #define NC_RDF_PRIMARYEMAIL_SORT	"http://home.netscape.com/NC-rdf#PrimaryEmail?collation=true"
+#define NC_RDF_SECONDEMAIL_SORT		"http://home.netscape.com/NC-rdf#SecondEmail?collation=true"
+#define NC_RDF_WORKPHONE_SORT		"http://home.netscape.com/NC-rdf#WorkPhone?collation=true"
+#define NC_RDF_HOMEPHONE_SORT		"http://home.netscape.com/NC-rdf#HomePhone?collation=true"
+#define NC_RDF_FAX_SORT				"http://home.netscape.com/NC-rdf#Fax?collation=true"
+#define NC_RDF_PAGER_SORT			"http://home.netscape.com/NC-rdf#Pager?collation=true"
+#define NC_RDF_CELLULAR_SORT		"http://home.netscape.com/NC-rdf#Cellular?collation=true"
+#define NC_RDF_TITLE_SORT			"http://home.netscape.com/NC-rdf#Title?collation=true"
+#define NC_RDF_DEPARTMENT_SORT		"http://home.netscape.com/NC-rdf#Department?collation=true"
+#define NC_RDF_ORGANIZATION_SORT	"http://home.netscape.com/NC-rdf#Company?collation=true"
 
 //Commands
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
@@ -141,8 +163,30 @@ nsAbCardDataSource::~nsAbCardDataSource (void)
 	 
 	if (kNC_DisplayNameCollation)
 		NS_RELEASE2(kNC_DisplayNameCollation, refcnt);
+	if (kNC_NameCollation)
+		NS_RELEASE2(kNC_NameCollation, refcnt);
+	if (kNC_NicknameCollation)
+		NS_RELEASE2(kNC_NicknameCollation, refcnt);
 	if (kNC_PrimaryEmailCollation)
 		NS_RELEASE2(kNC_PrimaryEmailCollation, refcnt);
+	if (kNC_SecondEmailCollation)
+		NS_RELEASE2(kNC_SecondEmailCollation, refcnt);
+	if (kNC_WorkPhoneCollation)
+		NS_RELEASE2(kNC_WorkPhoneCollation, refcnt);
+	if (kNC_HomePhoneCollation)
+		NS_RELEASE2(kNC_HomePhoneCollation, refcnt);
+	if (kNC_FaxCollation)
+		NS_RELEASE2(kNC_FaxCollation, refcnt);
+	if (kNC_PagerCollation)
+		NS_RELEASE2(kNC_PagerCollation, refcnt);
+	if (kNC_CellularCollation)
+		NS_RELEASE2(kNC_CellularCollation, refcnt);
+	if (kNC_TitleCollation)
+		NS_RELEASE2(kNC_TitleCollation, refcnt);
+	if (kNC_DepartmentCollation)
+		NS_RELEASE2(kNC_DepartmentCollation, refcnt);
+	if (kNC_CompanyCollation)
+		NS_RELEASE2(kNC_CompanyCollation, refcnt);
 
 	if (kNC_Delete)
 		NS_RELEASE2(kNC_Delete, refcnt);
@@ -184,7 +228,18 @@ nsresult nsAbCardDataSource::Init()
     mRDFService->GetResource(NC_RDF_ORGANIZATION,	&kNC_Organization);
 
     mRDFService->GetResource(NC_RDF_DISPLAYNAME_SORT, &kNC_DisplayNameCollation);
+    mRDFService->GetResource(NC_RDF_NAME_SORT, &kNC_NameCollation);
+    mRDFService->GetResource(NC_RDF_NICKNAME_SORT, &kNC_NicknameCollation);
     mRDFService->GetResource(NC_RDF_PRIMARYEMAIL_SORT, &kNC_PrimaryEmailCollation);
+    mRDFService->GetResource(NC_RDF_SECONDEMAIL_SORT, &kNC_SecondEmailCollation);
+    mRDFService->GetResource(NC_RDF_WORKPHONE_SORT, &kNC_WorkPhoneCollation);
+    mRDFService->GetResource(NC_RDF_HOMEPHONE_SORT, &kNC_HomePhoneCollation);
+    mRDFService->GetResource(NC_RDF_FAX_SORT, &kNC_FaxCollation);
+    mRDFService->GetResource(NC_RDF_PAGER_SORT, &kNC_PagerCollation);
+    mRDFService->GetResource(NC_RDF_CELLULAR_SORT, &kNC_CellularCollation);
+    mRDFService->GetResource(NC_RDF_TITLE_SORT, &kNC_TitleCollation);
+    mRDFService->GetResource(NC_RDF_DEPARTMENT_SORT, &kNC_DepartmentCollation);
+    mRDFService->GetResource(NC_RDF_ORGANIZATION_SORT, &kNC_CompanyCollation);
 
     mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
     mRDFService->GetResource(NC_RDF_NEWCADR, &kNC_NewCard);
@@ -537,20 +592,35 @@ nsresult nsAbCardDataSource::createCardNode(nsIAbCard* card,
 		rv = card->GetDepartment(&name);
 	else if ((kNC_Organization == property))
 		rv = card->GetCompany(&name);
-	else if (kNC_DisplayNameCollation == property)
+	else
 	{
 		PRUnichar *tempStr = nsnull;
-		rv = card->GetDisplayName(&tempStr);
-		if (tempStr)
-		{
-			rv = card->GetCollationKey(tempStr, &name);
-			nsCRT::free(tempStr);
-		}
-	}
-	else if (kNC_PrimaryEmailCollation == property)
-	{
-		PRUnichar *tempStr = nsnull;
-		rv = card->GetPrimaryEmail(&tempStr);
+		if (kNC_DisplayNameCollation == property)
+			rv = card->GetDisplayName(&tempStr);
+		else if (kNC_NameCollation == property)
+			rv = card->GetName(&tempStr);
+		else if (kNC_NicknameCollation == property)
+			rv = card->GetNickName(&tempStr);
+		else if (kNC_PrimaryEmailCollation == property)
+			rv = card->GetPrimaryEmail(&tempStr);
+		else if (kNC_SecondEmailCollation == property)
+			rv = card->GetSecondEmail(&tempStr);
+		else if (kNC_WorkPhoneCollation == property)
+			rv = card->GetWorkPhone(&tempStr);
+		else if (kNC_HomePhoneCollation == property)
+			rv = card->GetHomePhone(&tempStr);
+		else if (kNC_FaxCollation == property)
+			rv = card->GetFaxNumber(&tempStr);
+		else if (kNC_PagerCollation == property)
+			rv = card->GetPagerNumber(&tempStr);
+		else if (kNC_CellularCollation == property)
+			rv = card->GetCellularNumber(&tempStr);
+		else if (kNC_TitleCollation == property)
+			rv = card->GetJobTitle(&tempStr);
+		else if (kNC_DepartmentCollation == property)
+			rv = card->GetDepartment(&tempStr);
+		else if (kNC_CompanyCollation == property)
+			rv = card->GetCompany(&tempStr);
 		if (tempStr)
 		{
 			rv = card->GetCollationKey(tempStr, &name);

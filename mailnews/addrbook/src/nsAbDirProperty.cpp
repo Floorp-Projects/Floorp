@@ -39,6 +39,10 @@
 #include "prprf.h"
 #include "prmem.h"
 
+/* The definition is nsAddressBook.cpp */
+extern const char *kDirectoryDataSourceRoot;
+
+
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARD_CID);
@@ -50,12 +54,16 @@ nsAbDirProperty::nsAbDirProperty(void)
 	m_DbPath(nsnull), m_Server(nsnull)
 {
 	NS_INIT_REFCNT();
+
+	m_ListName = "";
+	m_ListNickName = "";
+	m_Description = "";
+	m_bIsMailList = PR_FALSE;
 }
 
 nsAbDirProperty::~nsAbDirProperty(void)
 {
 	PR_FREEIF(m_DbPath);
-	// m_Server will free with the list
 }
 
 NS_IMPL_ADDREF(nsAbDirProperty)
@@ -190,10 +198,6 @@ nsAbDirProperty::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 { return NS_OK; }
 
 NS_IMETHODIMP
-nsAbDirProperty::GetMailingList(nsIEnumerator **mailingList)
-{ return NS_OK; }
-
-NS_IMETHODIMP
 nsAbDirProperty::CreateNewDirectory(const PRUnichar *dirName, const char *fileName, PRBool migrating)
 { return NS_OK; }
 
@@ -201,3 +205,133 @@ NS_IMETHODIMP
 nsAbDirProperty::GetDirUri(char **uri)
 { return NS_OK; }
 
+nsresult nsAbDirProperty::GetAttributeName(PRUnichar **aName, nsString& value)
+{
+	if (aName)
+	{
+		*aName = value.ToNewUnicode();
+		if (!(*aName)) 
+			return NS_ERROR_OUT_OF_MEMORY;
+		else
+			return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+
+}
+
+nsresult nsAbDirProperty::SetAttributeName(const PRUnichar *aName, nsString& arrtibute)
+{
+	if (aName)
+		arrtibute = aName;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::GetListName(PRUnichar * *aListName)
+{ return GetAttributeName(aListName, m_ListName); }
+
+NS_IMETHODIMP nsAbDirProperty::SetListName(const PRUnichar * aListName)
+{ return SetAttributeName(aListName, m_ListName); }
+
+NS_IMETHODIMP nsAbDirProperty::GetListNickName(PRUnichar * *aListNickName)
+{ return GetAttributeName(aListNickName, m_ListNickName); }
+
+NS_IMETHODIMP nsAbDirProperty::SetListNickName(const PRUnichar * aListNickName)
+{ return SetAttributeName(aListNickName, m_ListNickName); }
+
+NS_IMETHODIMP nsAbDirProperty::GetDescription(PRUnichar * *aDescription)
+{ return GetAttributeName(aDescription, m_Description); }
+
+NS_IMETHODIMP nsAbDirProperty::SetDescription(const PRUnichar * aDescription)
+{ return SetAttributeName(aDescription, m_Description); }
+
+NS_IMETHODIMP nsAbDirProperty::GetDbRowID(PRUint32 *aDbRowID)
+{
+	*aDbRowID = m_dbRowID;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::SetDbRowID(PRUint32 aDbRowID)
+{
+	m_dbRowID = aDbRowID;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::GetIsMailList(PRBool *aIsMailList)
+{
+	*aIsMailList = m_bIsMailList;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::SetIsMailList(PRBool aIsMailList)
+{
+	m_bIsMailList = aIsMailList;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::GetAddressLists(nsISupportsArray * *aAddressLists)
+{
+	if (!m_AddressList)
+		NS_NewISupportsArray(getter_AddRefs(m_AddressList));
+
+	*aAddressLists = m_AddressList;
+	NS_ADDREF(*aAddressLists);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::SetAddressLists(nsISupportsArray * aAddressLists)
+{
+	m_AddressList = aAddressLists;
+	return NS_OK;
+}
+
+/* add mailing list to the parent directory */
+NS_IMETHODIMP nsAbDirProperty::AddMailListToDirectory(nsIAbDirectory *mailList)
+{
+	if (!m_AddressList)
+		NS_NewISupportsArray(getter_AddRefs(m_AddressList));
+	m_AddressList->AppendElement(mailList);
+	return NS_OK;
+}
+
+/* add addresses to the mailing list */
+NS_IMETHODIMP nsAbDirProperty::AddAddressToList(nsIAbCard *card)
+{
+	if (!m_AddressList)
+		NS_NewISupportsArray(getter_AddRefs(m_AddressList));
+	m_AddressList->AppendElement(card);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::AddMailListToDatabase(const char *uri)
+{
+	nsresult rv = NS_OK;
+
+	nsCOMPtr<nsIAddrDatabase>  listDatabase;  
+
+	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	if (NS_SUCCEEDED(rv))
+	{
+		nsFileSpec* dbPath;
+		abSession->GetUserProfileDirectory(&dbPath);
+
+		const char* file = nsnull;
+		file = &(uri[PL_strlen(kDirectoryDataSourceRoot)]);
+		(*dbPath) += file;
+
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(listDatabase), PR_TRUE);
+	}
+
+	if (listDatabase)
+	{
+		listDatabase->CreateMailListAndAddToDB(this, PR_TRUE);
+		listDatabase->Commit(kLargeCommit);
+		listDatabase = null_nsCOMPtr();
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_FAILURE;
+}

@@ -73,6 +73,7 @@ interface nsIAbCard : nsISupports {
 	attribute wstring name;
 
 	attribute boolean sendPlainText;
+	attribute boolean isMailList;
 
     attribute unsigned long dbTableID;
     attribute unsigned long dbRowID;

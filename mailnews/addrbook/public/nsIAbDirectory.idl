@@ -48,8 +48,17 @@ interface nsIAbDirectory : nsISupports {
 	void deleteCards(in nsISupportsArray cards);
 	boolean hasCard(in nsIAbCard cards);
 	boolean hasDirectory(in nsIAbDirectory dir);
-	readonly attribute nsIEnumerator mailingList;
 	void createNewDirectory(in wstring dirName, in string fileName, in boolean migrating);
 	string getDirUri();
+	void addMailListToDirectory(in nsIAbDirectory mailList);
 
+	attribute wstring listName;
+	attribute wstring listNickName;
+	attribute wstring description;
+    attribute unsigned long dbRowID;
+	attribute PRBool isMailList;
+	attribute nsISupportsArray addressLists;
+
+	void addAddressToList(in nsIAbCard card);
+	void addMailListToDatabase(in string uri);
 };

@@ -89,8 +89,39 @@ nsresult nsAbRDFResource::GetAbDatabase()
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		const char* file = nsnull;
-		file = &(mURI[PL_strlen(kDirectoryDataSourceRoot)]);
+		nsString file(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		PRInt32 pos = file.Find("/");
+		if (pos != -1)
+			file.Truncate(pos);
+		(*dbPath) += file;
+
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+
+		if (mDatabase)
+			mDatabase->AddListener(this);
+
+		return NS_OK;
+	}
+	if (!mDatabase)
+		return NS_ERROR_NULL_POINTER;
+	return NS_OK;
+}
+
+nsresult nsAbRDFResource::GetDatabaseFromFile(char* pDbFile)
+{
+	nsresult rv = NS_OK;
+	if (!mDatabase && pDbFile)
+	{
+		nsFileSpec* dbPath = nsnull;
+
+		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			abSession->GetUserProfileDirectory(&dbPath);
+		
+		nsString file(pDbFile);
 		(*dbPath) += file;
 
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);

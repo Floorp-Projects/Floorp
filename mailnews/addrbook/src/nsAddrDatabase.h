@@ -78,8 +78,10 @@ public:
 	NS_IMETHOD ForceClosed();
 
 	NS_IMETHOD CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool notify);
+	NS_IMETHOD CreateMailListAndAddToDB(nsIAbDirectory *newList, PRBool notify);
 	NS_IMETHOD EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result);
-	NS_IMETHOD EnumerateMailingLists(nsIAbDirectory *directory, nsIEnumerator **result);
+	NS_IMETHOD GetMailingListsFromDB(nsIAbDirectory *parentDir);
+	NS_IMETHOD EnumerateListAddresses(nsIAbDirectory *directory, nsIEnumerator **result);
 	NS_IMETHOD DeleteCard(nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD EditCard(nsIAbCard *card, PRBool notify);
 	NS_IMETHOD ContainsCard(nsIAbCard *card, PRBool *hasCard);
@@ -235,6 +237,17 @@ public:
 	static void		CleanupCache();
 
 	nsresult CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result);
+	nsresult CreateABCardInList(nsIMdbRow* cardRow, nsIAbCard **result, mdb_id listRowID);
+	nsresult CreateABListCard(nsIMdbRow* cardRow, nsIAbCard **result);
+	nsresult CreateABList(nsIMdbRow* listRow, nsIAbDirectory **result);
+
+	PRBool IsListRowScopeToken(mdb_scope scope) { return (scope == m_ListRowScopeToken) ? PR_TRUE: PR_FALSE; }
+	PRBool IsCardRowScopeToken(mdb_scope scope) { return (scope == m_CardRowScopeToken) ? PR_TRUE: PR_FALSE;  }
+	nsresult GetCardRowByRowID(mdb_id rowID, nsIMdbRow **dbRow);
+	nsresult GetListRowByRowID(mdb_id rowID, nsIMdbRow **dbRow);
+
+	PRUint32 GetListAddressTotal(nsIMdbRow* listRow);
+	nsresult GetAddressRowByPos(nsIMdbRow* listRow, PRUint16 pos, nsIMdbRow** cardRow);
 
 protected:
 
@@ -262,8 +275,11 @@ protected:
 							PRUint32* pValue, PRUint32 defaultValue);
 	nsresult GetBoolColumn(nsIMdbRow *cardRow, mdb_token outToken, PRBool* pValue);
 	nsresult GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow);
+	nsresult GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* cardRow);
+	nsresult GetListFromDB(nsIAbDirectory *newCard, nsIMdbRow* cardRow);
 	nsresult GetAnonymousAttributesFromDB();
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
+	nsresult AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIMdbRow *listRow);
 	nsresult RemoveAnonymousList(nsVoidArray* pArray);
 	nsresult SetAnonymousAttribute(nsVoidArray** pAttrAray, 
 							nsVoidArray** pValueArray, void *attrname, void *value);
@@ -273,8 +289,19 @@ protected:
 	nsresult DoBoolAnonymousTransaction(nsVoidArray* pAttributes, nsVoidArray* pValues, AB_NOTIFY_CODE code);
 	void GetAnonymousAttributesFromCard(nsIAbCard* card);
 	nsresult FindAttributeRow(nsIMdbTable* pTable, mdb_token columnToken, nsIMdbRow** row);
+	nsresult GetRowForEmailAddress(const char *emailAddress, nsIMdbRow	**cardRow);
+	nsresult CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
 
 	nsresult GetCollationKeyGenerator();
+
+	nsresult AddListName(nsIMdbRow * row, const char * value)
+	{ return AddCharStringColumn(row, m_ListNameColumnToken, value); }
+
+	nsresult AddListNickName(nsIMdbRow * row, const char * value)
+	{ return AddCharStringColumn(row, m_ListNickNameColumnToken, value); }
+
+	nsresult AddListDescription(nsIMdbRow * row, const char * value)
+	{ return AddCharStringColumn(row, m_ListDescriptionColumnToken, value); }
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
@@ -307,6 +334,7 @@ protected:
 	mdb_kind			m_MailListTableKind;
 
 	mdb_scope			m_CardRowScopeToken;
+	mdb_scope			m_ListRowScopeToken;
 
 	mdb_token			m_FirstNameColumnToken;
 	mdb_token			m_LastNameColumnToken;
@@ -349,6 +377,11 @@ protected:
 	mdb_token			m_PlainTextColumnToken;
 
 	mdb_token			m_AddressCharSetColumnToken;
+
+	mdb_token			m_ListNameColumnToken;
+	mdb_token			m_ListNickNameColumnToken;
+	mdb_token			m_ListDescriptionColumnToken;
+	mdb_token			m_ListTotalColumnToken;
 
 	nsIAbDirectory*		m_dbDirectory;
 

@@ -99,6 +99,7 @@ protected:
 	PRUint32 m_LastModDate;
 
 	PRBool   m_bSendPlainText;
+	PRBool   m_bIsMailList;
 
 	PRUint32 m_dbTableID;
 	PRUint32 m_dbRowID;

@@ -56,10 +56,7 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 nsIRDFResource* nsAbDirectoryDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsAbDirectoryDataSource::kNC_DirName = nsnull;
-
-nsIRDFResource* nsAbDirectoryDataSource::kNC_MailingList = nsnull;
 nsIRDFResource* nsAbDirectoryDataSource::kNC_CardChild = nsnull;
-
 nsIRDFResource* nsAbDirectoryDataSource::kNC_DirUri = nsnull;
 
 // commands
@@ -68,7 +65,6 @@ nsIRDFResource* nsAbDirectoryDataSource::kNC_NewDirectory = nsnull;
 
 #define NC_RDF_CHILD				"http://home.netscape.com/NC-rdf#child"
 #define NC_RDF_DIRNAME			    "http://home.netscape.com/NC-rdf#DirName"
-#define NC_RDF_MAILINGLIST			"http://home.netscape.com/NC-rdf#MailingList"
 #define NC_RDF_CARDCHILD			"http://home.netscape.com/NC-rdf#CardChild"
 #define NC_RDF_DIRURI				"http://home.netscape.com/NC-rdf#DirUri"
 
@@ -102,7 +98,6 @@ nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
 	nsrefcnt refcnt;
 	NS_RELEASE2(kNC_Child, refcnt);
 	NS_RELEASE2(kNC_DirName, refcnt);
-	NS_RELEASE2(kNC_MailingList, refcnt);
 	NS_RELEASE2(kNC_CardChild, refcnt);
 	NS_RELEASE2(kNC_DirUri, refcnt);
 
@@ -134,7 +129,6 @@ nsAbDirectoryDataSource::Init()
 	{
 		mRDFService->GetResource(NC_RDF_CHILD, &kNC_Child);
 		mRDFService->GetResource(NC_RDF_DIRNAME, &kNC_DirName);
-		mRDFService->GetResource(NC_RDF_MAILINGLIST, &kNC_MailingList);
 		mRDFService->GetResource(NC_RDF_CARDCHILD, &kNC_CardChild);
 		mRDFService->GetResource(NC_RDF_DIRURI, &kNC_DirUri);
 
@@ -246,21 +240,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
 		  rv = NS_OK;
 	  }
     }
-    else if((kNC_MailingList == property))
-    { 
-      nsCOMPtr<nsIEnumerator> mailingList;
-
-      rv = directory->GetMailingList(getter_AddRefs(mailingList));
-      if (NS_FAILED(rv)) return rv;
-      nsAdapterEnumerator* cursor =
-        new nsAdapterEnumerator(mailingList);
-      if (cursor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(cursor);
-      *targets = cursor;
-      rv = NS_OK;
-    }
-    else if((kNC_DirUri == property)) 
+	else if((kNC_DirUri == property)) 
 	{ 
       nsSingletonEnumerator* cursor =
         new nsSingletonEnumerator(property);
@@ -526,6 +506,8 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 	rv = createDirectoryNameNode(directory, target);
   if ((kNC_DirUri == property))
 	rv = createDirectoryUriNode(directory, target);
+  if ((kNC_Child == property))
+	rv = createDirectoryChildNode(directory, target);
   
   return rv;
 }
@@ -534,13 +516,20 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 nsresult nsAbDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *directory,
                                                      nsIRDFNode **target)
 {
-  PRUnichar *name = nsnull;
-  nsresult rv = directory->GetDirName(&name);
-  if (NS_FAILED(rv)) return rv;
-  nsString nameString(name);
-  createNode(nameString, target);
-  nsCRT::free(name);
-  return NS_OK;
+	PRUnichar *name = nsnull;
+	PRBool bIsMailList = PR_FALSE;
+	nsresult rv = NS_OK;
+
+	directory->GetIsMailList(&bIsMailList);
+	if (bIsMailList)
+		rv = directory->GetListName(&name);
+	else
+		rv = directory->GetDirName(&name);
+	if (NS_FAILED(rv)) return rv;
+	nsString nameString(name);
+	createNode(nameString, target);
+	nsCRT::free(name);
+	return NS_OK;
 }
 
 nsresult nsAbDirectoryDataSource::createDirectoryUriNode(nsIAbDirectory *directory,
@@ -559,22 +548,32 @@ nsresult
 nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
                                              nsIRDFNode **target)
 {
-  nsresult rv = NS_RDF_NO_VALUE;
-
-  return NS_FAILED(rv) ? NS_RDF_NO_VALUE : rv;
-}
-
-nsresult
-nsAbDirectoryDataSource::createCardChildNode(nsIAbDirectory *directory,
-                                             nsIRDFNode **target)
-{ 
-  PRUnichar *name;
-  nsresult rv = directory->GetDirName(&name);
-  if (NS_FAILED(rv)) return rv;
-  nsString nameString(name);
-  createNode(nameString, target);
-  nsAllocator::Free(name);
-  return NS_OK;
+	nsCOMPtr<nsISupportsArray> pAddressLists;
+	directory->GetAddressLists(getter_AddRefs(pAddressLists));
+	if (pAddressLists)
+	{
+		PRUint32 total = 0;
+		pAddressLists->Count(&total);
+		
+		if (total == 0)
+			return NS_RDF_NO_VALUE;
+		else
+		{
+			PRUint32 i;
+			for (i = 0; i < total; i++)
+			{
+				nsCOMPtr<nsISupports> mailList;
+				mailList = pAddressLists->ElementAt(i);
+				if (mailList)
+					mailList->QueryInterface(NS_GET_IID(nsIRDFResource), (void**)target);
+				else
+					return NS_RDF_NO_VALUE;
+			}
+			return NS_OK;
+		}
+	}
+	else
+		return NS_RDF_NO_VALUE;
 }
 
 nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)

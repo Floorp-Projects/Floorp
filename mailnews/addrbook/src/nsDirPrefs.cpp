@@ -534,6 +534,14 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
 		}
 #endif
 		*pServer = server;
+
+		// save new address book into pref file 
+		nsresult rv = NS_OK;
+		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+		if (NS_FAILED(rv) || !pPref) 
+			return NS_ERROR_FAILURE;
+		pPref->SavePrefFile();
+
 		return NS_OK;
 	}
 	return NS_ERROR_FAILURE;
@@ -2047,6 +2055,13 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 		nsVoidArray *dirList = DIR_GetDirectories();
 		DIR_SetServerPosition(dirList, server, DIR_POS_DELETE);
 		DIR_DeleteServer(server);
+
+		nsresult rv = NS_OK;
+		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+		if (NS_FAILED(rv) || !pPref) 
+			return NS_ERROR_FAILURE;
+		pPref->SavePrefFile();
+
 		return NS_OK;
 	}
 	return NS_ERROR_NULL_POINTER;
