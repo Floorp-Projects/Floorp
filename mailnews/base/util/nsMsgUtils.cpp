@@ -245,7 +245,7 @@ nsresult NS_MsgHashIfNecessary(nsString &name)
 #endif
   nsAutoString str(name, eOneByte);
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("in: %s\n",str.GetBuffer());
 #endif
 
@@ -266,7 +266,7 @@ nsresult NS_MsgHashIfNecessary(nsString &name)
                 (unsigned long) StringHash(str.GetBuffer()));
   }
   name = hashedname;
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_sspitzer_
   printf("out: %s\n",hashedname);
 #endif
   
