@@ -100,12 +100,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNSHTMLOptionCollection interface, can't use the macro
-  // NS_DECL_NSIDOMNSHTMLOPTIONLIST here since GetLength() is defined
-  // in mode than one interface
+  // NS_DECL_NSIDOMNSHTMLOPTIONCOLLECTION here since GetLength() is
+  // defined in more than one interface
   NS_IMETHOD SetLength(PRUint32 aLength);
   NS_IMETHOD GetSelectedIndex(PRInt32* aSelectedIndex);
   NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex);
   NS_IMETHOD SetOption(PRInt32 aIndex, nsIDOMHTMLOptionElement* aOption);
+  NS_IMETHOD Add(nsIDOMHTMLOptionElement* aOption);
 
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
@@ -2394,6 +2395,13 @@ nsHTMLOptionCollection::NamedItem(const nsAString& aName,
   }
   
   return rv;
+}
+
+NS_IMETHODIMP 
+nsHTMLOptionCollection::Add(nsIDOMHTMLOptionElement *aOption)
+{
+  nsCOMPtr<nsIDOMNode> ret;
+  return mSelect->AppendChild(aOption, getter_AddRefs(ret));
 }
 
 nsresult
