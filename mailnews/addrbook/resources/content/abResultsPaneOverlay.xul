@@ -38,40 +38,40 @@ Original Author:
     onclick="AbResultsPaneOnClick(event);">
 
   <!-- these column ids must match up to the mork column names, except for GeneratedName, see nsIAddrDatabase.idl -->
-  <outlinercol id="GeneratedName" class="outlinercol-header outlinercell-inset-header sortDirectionIndicator" 
+  <outlinercol id="GeneratedName" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&GeneratedName.label;" primary="true"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="WorkPhone" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="WorkPhone" class="sortDirectionIndicator" 
     persist="hidden ordinal width"  flex="1" label="&WorkPhone.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="PrimaryEmail" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="PrimaryEmail" class="sortDirectionIndicator" 
     persist="hidden ordinal width"  flex="1" label="&PrimaryEmail.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="Company" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="Company" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&Company.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="NickName" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="NickName" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&NickName.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="HomePhone" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="HomePhone" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&HomePhone.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="FaxNumber" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="FaxNumber" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&FaxNumber.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="PagerNumber" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="PagerNumber" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&PagerNumber.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="CellularNumber" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="CellularNumber" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&CellularNumber.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="SecondEmail" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="SecondEmail" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&SecondEmail.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="JobTitle" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="JobTitle" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&JobTitle.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="Department" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" 
+  <outlinercol id="Department" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&Department.label;"/>
   
   <outlinerbody flex="1"

@@ -5,7 +5,7 @@
         orient="vertical">
   <outliner flex="1">
     <outlinercol id="description"
-                 class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+                 class="sortDirectionIndicator"
                  flex="1"
                  label="Description"
                  sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#description"
@@ -16,7 +16,7 @@
     <splitter class="tree-splitter" />
 
     <outlinercol id="cn"
-                 class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+                 class="sortDirectionIndicator"
                  flex="1"
                  label="CN"
                  sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn"
