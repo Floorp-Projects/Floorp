@@ -178,7 +178,6 @@ extern PRBool gShuttingDown;
 
 static nsModuleComponentInfo components[] = {
     COMPONENT(MEMORY, nsMemoryImpl::Create),
-
 #define NS_ERRORSERVICE_CLASSNAME NS_ERRORSERVICE_NAME
     COMPONENT(ERRORSERVICE, nsErrorService::Create),
 
@@ -341,6 +340,10 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
         
         gServiceManager = NS_STATIC_CAST(nsIServiceManager*, compMgr);
         nsComponentManagerImpl::gComponentManager = compMgr;
+        
+        if (result) {
+        	NS_ADDREF(*result = gServiceManager);
+        }
     }
 
     nsCOMPtr<nsIMemory> memory = getter_AddRefs(nsMemory::GetGlobalMemoryService());
