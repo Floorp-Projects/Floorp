@@ -1,6 +1,7 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -136,7 +137,7 @@ Rights Reserved.
 					<box align="vertical" style="height:6px; background-color:#9999CC; border-top:thin solid; border-bottom:thin solid"/>
 				
 					<!-- The bucket -->
-					<html:iframe flex="100%" style="border:none; border-bottom:thin solid"
+					<html:iframe flex="100%" style="border:none"
 								 name="addressbucket"
 								 src="chrome://addressbook/content/addressbucket.xul"/>
 				</box>
@@ -162,16 +163,8 @@ Rights Reserved.
 		</box>
 	</box>
 
-	<!-- Bottom 3/4 inch box, OK, Cancel, Help buttons -->
-	<box align="horizontal" style="margin-top: 0.5em">
-		<spring flex="100%"/>
-		<titledbutton id="ok" value="&okButton.label;" class="push" onclick="SelectAddressOKButton()"/>	
-		<spring style="width:10px"/>
-		<titledbutton id="cancel" value="&cancelButton.label;" class="push" onclick="SelectAddressCancelButton()"/>	
-		<spring style="width:10px"/>
-		<titledbutton id="help" value="&helpButton.label;" class="push" onclick="SelectAddressHelpButton()"/>	
-		<spring style="width:10px"/>
-	</box>
+	<!-- OK & Cancel buttons -->
+	<box id="okCancelButtons"/>
 
 </window>
 

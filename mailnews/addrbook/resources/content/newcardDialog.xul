@@ -1,13 +1,14 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window
 [
 <!-- Title -->
-	<!ENTITY editcardWindow.title "New Card">
+	<!ENTITY editcardWindow.title		"New Card">
 <!-- Labels -->
-	<!ENTITY chooseAddressBook.label "Add to: ">
+	<!ENTITY chooseAddressBook.label	"Add to: ">
 ]> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -37,15 +38,7 @@
 				 name="editcard"
 				 src="chrome://addressbook/content/editcard.xul"/>
 	
-	<spring style="height:10px"/>
-	
-	<box align="horizontal">
-		<spring flex="100%"/>
-		<titledbutton id="ok" value="OK" class="push" onclick="NewCardOKButton()" />	
-		<spring style="width:10px"/>
-		<titledbutton id="cancel" value="Cancel" class="push" onclick="NewCardCancelButton()" />	
-		<spring style="width:10px"/>
-	</box>
+	<box id="okCancelButtons"/>
 
 </window>
 

@@ -124,15 +124,6 @@ function GetSelectedAddresses()
 	return selectedAddresses;	
 }
 
-function AbExit()
-{
-	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
-	editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-	
-	if ( editorShell )
-		editorShell.Exit();
-}
-
 function AbClose()
 {
 	top.window.close();

@@ -1,10 +1,11 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
 <!DOCTYPE window
 [
-
 <!ENTITY addressbookWindow.title "Address Book">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
@@ -24,7 +25,6 @@
 <!ENTITY printCardViewCmd.label				".Print Card View...">  
 <!ENTITY printAddressBook.label				".Print Address Book...">  
 <!ENTITY closeCmd.label						"Close">  
-<!ENTITY exitCmd.label						"Exit"> 
 
 <!ENTITY editMenu.label					"Edit"> 
 <!ENTITY undoCmd.label						".Undo">  
@@ -54,38 +54,6 @@
 <!ENTITY sortAscendingCmd.label					".Ascending">  
 <!ENTITY sortDescendingCmd.label				".Descending">  
 <!ENTITY stopSearchingCmd.label				".Stop Searching"> 
- 
-<!ENTITY tasksMenu.label				"Tasks">
-<!ENTITY navigatorCmd.label					"Navigator">  
-<!ENTITY messengerCmd.label					".Messenger">  
-<!ENTITY addressBookCmd.label				".Address Book">  
-<!ENTITY bookmarkMenu.label					".Bookmarks"> 
-<!ENTITY addBookmarkCmd.label					".Add Bookmark">  
-<!ENTITY fileBookmarkCmd.label					".File Bookmark">  
-<!ENTITY editBookmarkCmd.label					".Edit Bookmark">  
-<!ENTITY newsgroupsCmd.label				".Newsgroups">  
-<!ENTITY toolsMenu.label					".Tools"> 
-<!ENTITY historyCmd.label						".History">  
-<!ENTITY securityInfoCmd.label					".Security Info">  
-<!ENTITY messageCenterCmd.label					".Message Center">  
-<!ENTITY importUtilCmd.label					".Import Utility">  
-<!ENTITY javaConsoleCmd.label					".Java Console">
-<!ENTITY windowMenu.label					".Window">
- 
-<!ENTITY helpMenu.label					"Help"> 
-<!ENTITY helpContentCmd.label				".Help Contents">  
-<!ENTITY referenceLibraryCmd.label			".Reference Library">  
-<!ENTITY releaseNotesCmd.label				".Release Notes">  
-<!ENTITY productInfoCmd.label				".Product Information and Support">  
-<!ENTITY softwareUpdatesCmd.label			".Software Updates">  
-<!ENTITY registerCmd.label					".Register Now">  
-<!ENTITY memberServicesCmd.label			".Member Services">  
-<!ENTITY internationalCmd.label				".International Users">  
-<!ENTITY securityCmd.label					".Security">  
-<!ENTITY netwatchCmd.label					".NetWatch">  
-<!ENTITY aboutPluginsCmd.label				".About Plug-ins">  
-<!ENTITY aboutFontCmd.label					".About Font Displayers">  
-<!ENTITY aboutCmd.label						".About Communicator...">  
 
 <!-- Toolbar items -->  
 <!ENTITY newcardButton.img "chrome://addressbook/skin/newcard.gif">
@@ -121,12 +89,12 @@
 <html:script language="javascript" src="chrome://addressbook/content/resultPane.js"/>
 <html:script language="javascript" src="chrome://addressbook/content/cardviewPane.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/commandglue.js"/>
 <!--
+<html:script language="JavaScript" src="chrome://messenger/content/commandglue.js"/>
 <html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
 -->
 	<menubar>
-		<menu name="&fileMenu.label;">
+		<menu id="fileMenu" name="&fileMenu.label;">
 			<menu name="&newMenu.label;">
 				<menuitem name="&newNavCmd.label;" onclick="NewBrowserWindow();"/>
 				<menuitem name="&newMessageCmd.label;" onclick="AbNewMessage();"/>
@@ -145,7 +113,6 @@
 			<menuitem name="&printAddressBook.label;" onclick="AbPrintAddressBook()"/>
 			<separator/>
 			<menuitem name="&closeCmd.label;" onclick="AbClose()"/>
-			<menuitem name="&exitCmd.label;" onclick="AbExit()"/>
 		</menu>
 		
 		<menu name="&editMenu.label;">
@@ -185,48 +152,8 @@
 			</menu>
 		</menu>
 	    
-		<menu name="&tasksMenu.label;">
-			<menuitem name="&navigatorCmd.label;" onclick="NavigatorWindow()"/>
-			<menuitem name="&messengerCmd.label;" onclick="MessengerWindow()"/>
-			<menuitem name="&addressBookCmd.label;" onclick="AddressBook()"/>
-			<separator/>
-			<menu name="&bookmarkMenu.label;">
-				<menuitem name="&addBookmarkCmd.label;" onclick="AddBookmark()"/>
-				<menuitem name="&fileBookmarkCmd.label;" onclick="FileBookmark()"/>
-				<menuitem name="&editBookmarkCmd.label;" onclick="EditBookmark()"/>
-			</menu>
-			<menuitem name="&newsgroupsCmd.label;" onclick="Newsgroups()"/>
-			<separator/>
-			<menu name="&toolsMenu.label;">
-				<menuitem name="&historyCmd.label;" onclick="History()"/>
-				<menuitem name="&securityInfoCmd.label;" onclick="SecurityInfo()"/>
-				<menuitem name="&messageCenterCmd.label;" onclick="MessengerCenter()"/>
-				<menuitem name="&importUtilCmd.label;" onclick="Import()"/>
-				<menuitem name="&javaConsoleCmd.label;" onclick="JavaConsole()"/>
-			</menu>
-			<separator/>
-			<menu name="&windowMenu.label;">
-			</menu>
-		</menu>
-	   
-		<menu name="&helpMenu.label;">
-			<menuitem name="&helpContentCmd.label;" onclick="Help()"/>
-			<menuitem name="&referenceLibraryCmd.label;" onclick="Help()"/>
-			<menuitem name="&releaseNotesCmd.label;" onclick="Help()"/>
-			<menuitem name="&productInfoCmd.label;" onclick="Help()"/>
-			<separator/>
-			<menuitem name="&softwareUpdatesCmd.label;" onclick="Help()"/>
-			<menuitem name="&registerCmd.label;" onclick="Help()"/>
-			<menuitem name="&memberServicesCmd.label;" onclick="Help()"/>
-			<separator/>
-			<menuitem name="&internationalCmd.label;" onclick="Help()"/>
-			<menuitem name="&securityCmd.label;" onclick="Help()"/>
-			<menuitem name="&netwatchCmd.label;" onclick="Help()"/>
-			<separator/>
-			<menuitem name="&aboutPluginsCmd.label;" onclick="About()"/>
-			<menuitem name="&aboutFontCmd.label;" onclick="About()"/>
-			<menuitem name="&aboutCmd.label;" onclick="About()"/>
-		</menu>
+		<menu id="tasksMenu"/>
+		<menu id="helpMenu"/>
 	</menubar>
 
 	<toolbox>

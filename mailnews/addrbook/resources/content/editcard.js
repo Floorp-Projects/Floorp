@@ -9,6 +9,8 @@ function OnLoadNewCard()
 {
 	InitEditCard();
 
+	doSetOKCancel(NewCardOKButton, 0);
+	
 	editCard.card = 0;
 	editCard.okCallback = 0;
 	editCard.generateDisplayName = true;
@@ -25,6 +27,8 @@ function OnLoadEditCard()
 {
 	InitEditCard();
 	
+	doSetOKCancel(EditCardOKButton, 0);
+
 	if (window.arguments && window.arguments[0])
 	{
 		if ( window.arguments[0].card )
@@ -83,7 +87,7 @@ function NewCardOKButton()
 		cardproperty.AddCardToDatabase();// Candice pass  editCard.abURI  this is the var containing GetResultTreeDirectory()
 	}
 	
-	top.window.close();
+	return true;	// close the window
 }
 
 
@@ -97,7 +101,7 @@ function EditCardOKButton()
 	if ( editCard.okCallback )
 		editCard.okCallback();
 	
-	top.window.close();
+	return true;	// close the window
 }
 
 

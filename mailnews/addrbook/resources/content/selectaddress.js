@@ -10,6 +10,8 @@ function OnLoadSelectAddress()
 {
 	var toAddress="", ccAddress="", bccAddress="";
 
+	doSetOKCancel(SelectAddressOKButton, 0);
+
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0])
 	{
@@ -105,14 +107,8 @@ function SelectAddressOKButton()
 	msgCompFields.SetBcc(bccAddress);
 	top.composeWindow.CompFields2Recipients(top.msgCompFields);
 
-	top.window.close();
+	return true;
 }
-
-function SelectAddressCancelButton()
-{
-	top.window.close();
-}
-
 
 function saChangeDirectoryByDOMNode(dirNode)
 {
