@@ -23,136 +23,175 @@
 
 #include "nsIDOMRange.h"
 
+static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
+
 class nsRange : public nsIDOMRange
 {
 public:
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned)=0;
-  NS_IMETHOD    SetIsPositioned(PRBool aIsPositioned)=0;
+  nsRange();
+  virtual ~nsRange();
 
-  NS_IMETHOD    GetStartParent(nsIDOMElement** aStartParent)=0;
-  NS_IMETHOD    SetStartParent(nsIDOMElement* aStartParent)=0;
+  NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);
+  NS_IMETHOD    SetIsPositioned(PRBool aIsPositioned);
 
-  NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset)=0;
-  NS_IMETHOD    SetStartOffset(PRInt32 aStartOffset)=0;
+  NS_IMETHOD    GetStartParent(nsIDOMElement** aStartParent);
+  NS_IMETHOD    SetStartParent(nsIDOMElement* aStartParent);
 
-  NS_IMETHOD    GetEndParent(nsIDOMElement** aEndParent)=0;
-  NS_IMETHOD    SetEndParent(nsIDOMElement* aEndParent)=0;
+  NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset);
+  NS_IMETHOD    SetStartOffset(PRInt32 aStartOffset);
 
-  NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset)=0;
-  NS_IMETHOD    SetEndOffset(PRInt32 aEndOffset)=0;
+  NS_IMETHOD    GetEndParent(nsIDOMElement** aEndParent);
+  NS_IMETHOD    SetEndParent(nsIDOMElement* aEndParent);
 
-  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed)=0;
-  NS_IMETHOD    SetIsCollapsed(PRBool aIsCollapsed)=0;
+  NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset);
+  NS_IMETHOD    SetEndOffset(PRInt32 aEndOffset);
 
-  NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent)=0;
-  NS_IMETHOD    SetCommonParent(nsIDOMNode* aCommonParent)=0;
+  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);
+  NS_IMETHOD    SetIsCollapsed(PRBool aIsCollapsed);
 
-  NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset)=0;
+  NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent);
+  NS_IMETHOD    SetCommonParent(nsIDOMNode* aCommonParent);
 
-  NS_IMETHOD    SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)=0;
+  NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset);
 
-  NS_IMETHOD    Collapse(PRBool aToStart)=0;
+  NS_IMETHOD    SetEnd(nsIDOMNode* aParent, PRInt32 aOffset);
 
-  NS_IMETHOD    Unposition()=0;
+  NS_IMETHOD    Collapse(PRBool aToStart);
 
-  NS_IMETHOD    SelectNode(nsIDOMNode* aN)=0;
+  NS_IMETHOD    Unposition();
 
-  NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN)=0;
+  NS_IMETHOD    SelectNode(nsIDOMNode* aN);
 
-  NS_IMETHOD    DeleteContents()=0;
+  NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN);
 
-  NS_IMETHOD    ExtractContents(nsIDOMDocumentFragment** aReturn)=0;
+  NS_IMETHOD    DeleteContents();
 
-  NS_IMETHOD    CopyContents(nsIDOMDocumentFragment** aReturn)=0;
+  NS_IMETHOD    ExtractContents(nsIDOMDocumentFragment** aReturn);
 
-  NS_IMETHOD    InsertNode(nsIDOMNode* aN)=0;
+  NS_IMETHOD    CopyContents(nsIDOMDocumentFragment** aReturn);
 
-  NS_IMETHOD    SurroundContents(nsIDOMNode* aN)=0;
+  NS_IMETHOD    InsertNode(nsIDOMNode* aN);
 
-  NS_IMETHOD    Clone(nsIDOMRange** aReturn)=0;
+  NS_IMETHOD    SurroundContents(nsIDOMNode* aN);
 
-  NS_IMETHOD    ToString(nsString& aReturn)=0;
+  NS_IMETHOD    Clone(nsIDOMRange** aReturn);
+
+  NS_IMETHOD    ToString(nsString& aReturn);
 };
 
-NS_IMETHOD nsRange::GetIsPositioned(PRBool* aIsPositioned)
+nsresult
+NS_NewRange(nsIDOMRange** aInstancePtrResult)
+{
+  nsRange * range = new nsRange();
+  return range->QueryInterface(kIRangeIID, (void**) aInstancePtrResult);
+}
+
+nsresult nsRange::QueryInterface(const nsIID& aIID,
+                                     void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIRangeIID)) {
+    nsIDOMRange* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return !NS_OK;
+}
+
+nsRange::nsRange() {
+  NS_INIT_REFCNT();
+} 
+
+nsRange::~nsRange() {
+} 
+
+NS_IMPL_ADDREF(nsRange)
+NS_IMPL_RELEASE(nsRange)
+
+nsresult nsRange::GetIsPositioned(PRBool* aIsPositioned)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetIsPositioned(PRBool aIsPositioned)
+nsresult nsRange::SetIsPositioned(PRBool aIsPositioned)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::GetStartParent(nsIDOMElement** aStartParent)
+nsresult nsRange::GetStartParent(nsIDOMElement** aStartParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetStartParent(nsIDOMElement* aStartParent)
+nsresult nsRange::SetStartParent(nsIDOMElement* aStartParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::GetStartOffset(PRInt32* aStartOffset)
+nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetStartOffset(PRInt32 aStartOffset)
+nsresult nsRange::SetStartOffset(PRInt32 aStartOffset)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::GetEndParent(nsIDOMElement** aEndParent)
+nsresult nsRange::GetEndParent(nsIDOMElement** aEndParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetEndParent(nsIDOMElement* aEndParent)
+nsresult nsRange::SetEndParent(nsIDOMElement* aEndParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::GetEndOffset(PRInt32* aEndOffset)
+nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetEndOffset(PRInt32 aEndOffset)
+nsresult nsRange::SetEndOffset(PRInt32 aEndOffset)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::GetIsCollapsed(PRBool* aIsCollapsed)
+nsresult nsRange::GetIsCollapsed(PRBool* aIsCollapsed)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetIsCollapsed(PRBool aIsCollapsed)
+nsresult nsRange::SetIsCollapsed(PRBool aIsCollapsed)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::GetCommonParent(nsIDOMNode** aCommonParent)
+nsresult nsRange::GetCommonParent(nsIDOMNode** aCommonParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetCommonParent(nsIDOMNode* aCommonParent)
+nsresult nsRange::SetCommonParent(nsIDOMNode* aCommonParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
+nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
+nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::Collapse(PRBool aToStart)
+nsresult nsRange::Collapse(PRBool aToStart)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::Unposition()
+nsresult nsRange::Unposition()
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SelectNode(nsIDOMNode* aN)
+nsresult nsRange::SelectNode(nsIDOMNode* aN)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SelectNodeContents(nsIDOMNode* aN)
+nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::DeleteContents()
+nsresult nsRange::DeleteContents()
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
+nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::CopyContents(nsIDOMDocumentFragment** aReturn)
+nsresult nsRange::CopyContents(nsIDOMDocumentFragment** aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::InsertNode(nsIDOMNode* aN)
+nsresult nsRange::InsertNode(nsIDOMNode* aN)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::SurroundContents(nsIDOMNode* aN)
+nsresult nsRange::SurroundContents(nsIDOMNode* aN)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::Clone(nsIDOMRange** aReturn)
+nsresult nsRange::Clone(nsIDOMRange** aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-NS_IMETHOD nsRange::ToString(nsString& aReturn)
+nsresult nsRange::ToString(nsString& aReturn)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
