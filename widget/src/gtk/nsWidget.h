@@ -221,6 +221,9 @@ protected:
     PRBool mShown;
 
     PRUint32 mPreferredWidth, mPreferredHeight;
+private:
+    static nsILookAndFeel *sLookAndFeel;
+    static PRUint32 sWidgetCount;
 };
 
 #endif /* nsWidget_h__ */

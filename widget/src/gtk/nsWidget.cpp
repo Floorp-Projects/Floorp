@@ -33,6 +33,8 @@
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
+static PRUint32 nsWidget::sWidgetCount = 0;
 
 //#define DBG 1
 
@@ -41,12 +43,17 @@ nsWidget::nsWidget()
   // XXX Shouldn't this be done in nsBaseWidget?
   NS_INIT_REFCNT();
 
-  // get the proper color from the look and feel code
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-    lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackground);
+  if (!sLookAndFeel) {
+    if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
+                                                    nsnull, kILookAndFeelIID,
+                                                    (void**)&sLookAndFeel))
+      sLookAndFeel = nsnull;
   }
-  NS_RELEASE(lookAndFeel);
+
+  if (sLookAndFeel)
+    sLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,
+                           mBackground);
+
   mWidget = nsnull;
   mParent = nsnull;
   mPreferredWidth  = 0;
@@ -60,6 +67,7 @@ nsWidget::nsWidget()
   mOnDestroyCalled = PR_FALSE;
   mIsToplevel = PR_FALSE;
   mUpdateArea.SetRect(0, 0, 0, 0);
+  sWidgetCount++;
 }
 
 nsWidget::~nsWidget()
@@ -67,6 +75,9 @@ nsWidget::~nsWidget()
   mIsDestroying = PR_TRUE;
   if (nsnull != mWidget) {
     Destroy();
+  }
+  if (!sWidgetCount--) {
+    NS_RELEASE_IF(sLookAndFeel);
   }
 }
 
