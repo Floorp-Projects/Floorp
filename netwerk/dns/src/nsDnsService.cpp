@@ -449,19 +449,23 @@ NS_IMETHODIMP
 nsDNSRequest::Cancel(nsresult  status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
-    nsresult  rv = NS_OK;
-    mStatus = status;
-    
-    NS_ASSERTION(!PR_CLIST_IS_EMPTY(this), "request is not queue on lookup");
-    if (!PR_CLIST_IS_EMPTY(this)) {
-        nsDNSService::Lock();
-        PR_REMOVE_AND_INIT_LINK(this);
-        nsDNSService::Unlock();
-    }
 
-    if (mUserListener)  rv = FireStop(status);
-    mLookup = nsnull;
-    return rv;
+    PRBool ignore = PR_FALSE;
+    nsDNSService::Lock();
+    if (PR_CLIST_IS_EMPTY(this)) {
+        // ignore this cancelation since we've already called OnStopLookup or
+        // are in the process of calling OnStopLookup (on a different thread).
+        ignore = PR_TRUE;
+    } else {
+        PR_REMOVE_AND_INIT_LINK(this);
+        ignore = (mUserListener == nsnull);
+    }
+    nsDNSService::Unlock();
+
+    if (ignore)
+        return NS_OK;
+
+    return FireStop(status);
 }
 
 NS_IMETHODIMP
