@@ -30,7 +30,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIURL.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIWebShell.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
@@ -1714,10 +1714,11 @@ IsJavaScriptLanguage(const nsString& aName, const char* *aVersion)
 NS_IMETHODIMP
 nsXMLContentSink::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
                                           nsresult aStatus,
+                                          PRUint32 stringLen,
                                           const PRUnichar* string)
 {
   nsresult rv = NS_OK;
-  nsString aData(string);
+  nsString aData(string, stringLen);
 
   if (NS_OK == aStatus) {
     rv = EvaluateScript(aData, 0, mScriptLanguageVersion);

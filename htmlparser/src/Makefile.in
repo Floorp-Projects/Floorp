@@ -109,7 +109,6 @@ EXPORTS		= \
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(DIST)/lib/libexpat_s.a \
 		$(DIST)/lib/libxmltok_s.a \
 		$(NULL)

@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsXPIDLString.h"
 #include "prtime.h"
 #include "rdfutil.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 ////////////////////////////////////////////////////////////////////////
 

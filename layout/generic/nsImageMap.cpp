@@ -28,7 +28,7 @@
 #include "nsIURL.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFragment.h"

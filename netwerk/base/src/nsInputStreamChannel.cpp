@@ -50,12 +50,12 @@ NS_METHOD
 nsInputStreamChannel::Create(nsISupports *aOuter, REFNSIID aIID,
                              void **aResult)
 {
-    nsInputStreamChannel* about = new nsInputStreamChannel();
-    if (about == nsnull)
+    nsInputStreamChannel* channel = new nsInputStreamChannel();
+    if (channel == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(about);
-    nsresult rv = about->QueryInterface(aIID, aResult);
-    NS_RELEASE(about);
+    NS_ADDREF(channel);
+    nsresult rv = channel->QueryInterface(aIID, aResult);
+    NS_RELEASE(channel);
     return rv;
 }
 
@@ -98,7 +98,8 @@ nsInputStreamChannel::Init(nsIURI* uri,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS4(nsInputStreamChannel, 
+NS_IMPL_ISUPPORTS5(nsInputStreamChannel, 
+                   nsIInputStreamChannel,
                    nsIChannel,
                    nsIRequest,
                    nsIStreamObserver,

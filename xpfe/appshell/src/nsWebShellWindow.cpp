@@ -380,10 +380,11 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
     char *tmpStr = NULL;
     nsAutoString urlString;
 
-    aUrl->GetSpec(&tmpStr);
+    rv = aUrl->GetSpec(&tmpStr);
+    if (NS_FAILED(rv)) return rv;
     urlString = tmpStr;
     nsCRT::free(tmpStr);
-    mWebShell->LoadURL(urlString.GetUnicode());
+    rv = mWebShell->LoadURL(urlString.GetUnicode());
   }
                      
   return rv;

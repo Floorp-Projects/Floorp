@@ -44,11 +44,6 @@ LLIBS=\
  $(DIST)\lib\xpcom.lib         \
  $(DIST)\lib\gkgfxwin.lib    \
  $(DIST)\lib\timer_s.lib \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib     \
-!else
- $(DIST)\lib\netlib.lib          \
-!endif
  $(DIST)\lib\jsdom.lib           \
  $(DIST)\lib\js3250.lib          \
  $(LIBNSPR)  

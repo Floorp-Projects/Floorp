@@ -173,7 +173,7 @@ interface nsIChannel : nsIRequest
 [scriptable, uuid(bfbf843a-8b89-11d3-8cd9-0060b0fc14a3)]
 interface nsIInputStreamChannel : nsIChannel
 {
-    void Init(in nsIURI uri,
+    void init(in nsIURI uri,
               in string contentType, 
               in long contentLength,
               in nsIInputStream inStr,

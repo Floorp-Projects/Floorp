@@ -33,7 +33,6 @@ LIBS	= \
 		-L$(DIST)/bin \
 		-lmozjs \
 		-lxpcom \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

@@ -33,7 +33,7 @@
 #include "nsIServiceManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"

@@ -34,7 +34,7 @@
 #include "nsIFrame.h"
 #include "nsIFrameDebug.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsITimer.h"
 #include "nsIAtom.h"
 #include "nsIFrameUtil.h"

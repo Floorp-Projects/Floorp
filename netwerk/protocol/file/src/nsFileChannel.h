@@ -86,11 +86,6 @@ protected:
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;
     nsCOMPtr<nsIStreamListener>         mRealListener;
-
-#ifdef STREAM_CONVERTER_HACK
-    nsCOMPtr<nsIStreamConverter>        mStreamConverter;
-    nsCString                           mStreamConverterOutType;
-#endif
 };
 
 #endif // nsFileChannel_h__

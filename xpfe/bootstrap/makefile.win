@@ -89,11 +89,6 @@ LLIBS=                          \
 !ifdef GC_LEAK_DETECTOR
  $(DIST)\lib\boehm.lib \
 !endif
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib    \
-!else
- $(DIST)\lib\netlib.lib         \
-!endif
 !ifdef MOZ_FULLCIRCLE
  $(MOZ_TOOLS)\lib\fulls32.lib \
 !endif

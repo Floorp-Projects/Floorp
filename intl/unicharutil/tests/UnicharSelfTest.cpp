@@ -30,7 +30,7 @@
 #include "nsUnicharUtilCIID.h"
 #include "nsIProperties.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);

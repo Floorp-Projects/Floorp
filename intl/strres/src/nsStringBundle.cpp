@@ -30,9 +30,7 @@
 #include "nsILocale.h"
 #include "nsIAllocator.h"
 #include "plstr.h"
-
-#include "nsNeckoUtil.h"
-
+#include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

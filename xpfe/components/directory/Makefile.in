@@ -49,7 +49,6 @@ CHROME_SKIN	= directory.css
 CHROME_L10N	= ./locale/en-US/directory.dtd
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		-L$(DIST)/bin \
 		-lxpcom \
 		$(NSPR_LIBS) \

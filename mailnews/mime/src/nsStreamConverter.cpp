@@ -40,10 +40,10 @@
 #include "nsIPipe.h"
 #include "nsMimeStringResources.h"
 #include "nsIPref.h"
-#include "nsIIOService.h"
+#include "nsNetUtil.h"
 #include "nsIMsgQuote.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 

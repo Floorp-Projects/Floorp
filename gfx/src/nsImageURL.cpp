@@ -27,7 +27,7 @@
 #include "ilIURL.h"
 #include "nsIURL.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsString.h"
 
 

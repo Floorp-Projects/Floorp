@@ -31,7 +31,6 @@ PROGRAM		= sendlatertest
 CPPSRCS		= test.cpp
 
 LIBS		= \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		-lraptorgfx \
 		-lxpcom \

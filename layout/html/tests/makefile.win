@@ -41,11 +41,6 @@ LINCS=				\
   -I$(PUBLIC)\raptor		\
   -I$(PUBLIC)\dom		\
   -I$(PUBLIC)\js		\
-!ifdef NECKO
-  -I$(PUBLIC)\necko		\
-!else
-  -I$(PUBLIC)\netlib		\
-!endif
   -I..\base\src			\
   -I..\style\src		\
   -I..\..\css\layout\src	\
@@ -66,11 +61,6 @@ LLIBS=				\
  $(DIST)\lib\util.lib		\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\jsdom.lib		        \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib		        \
-!else
- $(DIST)\lib\netlib.lib		        \
-!endif
  $(DIST)\lib\timer_s.lib \
  $(LIBNSPR)			\
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	

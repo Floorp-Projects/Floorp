@@ -33,7 +33,7 @@
 #include "nsIComponentManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"

@@ -34,7 +34,8 @@ interface nsIUnicharStreamLoaderObserver : nsISupports
 {
     void onUnicharStreamComplete(in nsIUnicharStreamLoader loader,
                                  in nsresult status,
-                                 in wstring result);
+                                 in unsigned long resultLength,
+                                 [size_is(resultLength)] in wstring result);
 };
 
 [scriptable, uuid(31d37360-8e5a-11d3-93ad-00104ba0fd40)]
@@ -60,31 +61,6 @@ interface nsIUnicharStreamLoader : nsISupports
     0x8e5a,                                          \
     0x11d3,                                          \
     {0x93, 0xad, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
-#include "nsIComponentManager.h"
-
-inline nsresult
-NS_NewUnicharStreamLoader(nsIUnicharStreamLoader* *result,
-                          nsIURI* uri,
-                          nsIUnicharStreamLoaderObserver* observer,
-                          nsILoadGroup* loadGroup = nsnull,
-                          nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                          nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL)
-{
-    nsresult rv;
-    nsCOMPtr<nsIUnicharStreamLoader> loader;
-    static NS_DEFINE_CID(kUnicharStreamLoaderCID, NS_UNICHARSTREAMLOADER_CID);
-    rv = nsComponentManager::CreateInstance(kUnicharStreamLoaderCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIUnicharStreamLoader),
-                                            getter_AddRefs(loader));
-    if (NS_FAILED(rv)) return rv;
-    rv = loader->Init(uri, observer, loadGroup, notificationCallbacks, loadAttributes);
-    if (NS_FAILED(rv)) return rv;
-    *result = loader;
-    NS_ADDREF(*result);
-    return rv;
 }
 
 %}

@@ -35,7 +35,7 @@
 #include "nsICSSDeclaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIAtom.h"

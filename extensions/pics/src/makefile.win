@@ -60,11 +60,6 @@ LINCS = -I$(PUBLIC)/js \
 		-I$(PUBLIC)\xpcom \
 		-I$(PUBLIC)\raptor \
 		-I$(PUBLIC)\pref \
-!ifdef NECKO
-                -I$(PUBLIC)\necko                 \
-!else
-                -I$(PUBLIC)\netlib                \
-!endif
 		-I$(DEPTH)\include \
 
 MAKE_OBJ_TYPE = DLL
@@ -81,11 +76,6 @@ LCFLAGS = \
 LLIBS	= \
  $(LIBNSPR) \
  $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib    \
-!else
- $(DIST)\lib\netlib.lib         \
-!endif
  $(DIST)\lib\xpcom.lib \
  $(DIST)\lib\xpcom.lib \
  $(DIST)\lib\gkparser.lib \

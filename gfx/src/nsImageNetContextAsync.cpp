@@ -42,7 +42,7 @@
 //#include "il_strm.h"
 #include "merrors.h"
 
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);

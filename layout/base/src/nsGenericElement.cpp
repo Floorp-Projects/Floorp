@@ -40,7 +40,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsFrame.h"
 #include "nsIPresShell.h"
 #include "nsIView.h"

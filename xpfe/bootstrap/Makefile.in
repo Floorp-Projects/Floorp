@@ -43,7 +43,6 @@ XP_DIST_LIBS	= \
 		$(NULL)
 
 XP_NS_UNDERBAR_CRAP = \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(NULL)
 

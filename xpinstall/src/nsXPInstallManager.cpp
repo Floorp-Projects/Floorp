@@ -31,7 +31,7 @@
 
 #include "nsIURL.h"
 
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIBufferInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"

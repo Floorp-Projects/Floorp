@@ -35,7 +35,6 @@ USE_NSPR_AUTOCONF = @USE_NSPR_AUTOCONF@
 ### XXX ### BROKEN MOZ_USING_XLIBRGB = @MOZ_USING_XLIBRGB@
 
 MOZ_TIMER_LIBS             = @MOZ_TIMER_LIBS@
-MOZ_NECKO_UTIL_LIBS        = $(DIST)/lib/libneckoutil_s.a
 MOZ_REGISTRY_LIBS          = $(DIST)/lib/libmozreg_s.a
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/libwidgetsupport_s.a
 

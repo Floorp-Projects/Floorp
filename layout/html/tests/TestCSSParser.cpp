@@ -24,7 +24,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIInputStream.h"

@@ -74,7 +74,7 @@
 #include "nsIXULPrototypeDocument.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsRDFCID.h"
 #include "nsRDFParserUtils.h"
 #include "nsVoidArray.h"

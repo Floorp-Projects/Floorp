@@ -32,7 +32,7 @@
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"

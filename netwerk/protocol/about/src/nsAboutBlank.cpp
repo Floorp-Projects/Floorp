@@ -24,6 +24,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIStringStream.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -42,9 +43,6 @@ nsAboutBlank::NewChannel(const char *verb,
 {
     nsresult rv;
     nsIChannel* channel;
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     nsISupports* s;
     rv = NS_NewStringInputStream(&s, kBlankPage);
     if (NS_FAILED(rv)) return rv;
@@ -54,10 +52,10 @@ nsAboutBlank::NewChannel(const char *verb,
     NS_RELEASE(s);
     if (NS_FAILED(rv)) return rv;
 
-    rv = serv->NewInputStreamChannel(aURI, "text/html", 
-                                     nsCRT::strlen(kBlankPage),
-                                     in, aLoadGroup, notificationCallbacks,
-                                     loadAttributes, originalURI, &channel);
+    rv = NS_NewInputStreamChannel(aURI, "text/html", 
+                                  nsCRT::strlen(kBlankPage),
+                                  in, aLoadGroup, notificationCallbacks,
+                                  loadAttributes, originalURI, &channel);
     NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 

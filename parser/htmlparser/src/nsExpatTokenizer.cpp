@@ -36,7 +36,7 @@
 
 #include "prmem.h"
 #include "nsIUnicharInputStream.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsSpecialSystemDirectory.h"

@@ -36,8 +36,8 @@
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
 #include "nsUnicharStreamLoader.h"
-//#include "nsAsyncStreamListener.h"
-//#include "nsSyncStreamListener.h"
+#include "nsAsyncStreamListener.h"
+#include "nsSyncStreamListener.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
@@ -83,7 +83,6 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_UNICHARSTREAMLOADER_CID,
       "component://netscape/network/unichar-stream-loader",
       nsUnicharStreamLoader::Create },
-#if 0
     { "Async Stream Observer",
       NS_ASYNCSTREAMOBSERVER_CID,
       "component://netscape/network/async-stream-observer",
@@ -96,7 +95,6 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_SYNCSTREAMLISTENER_CID,
       "component://netscape/network/sync-stream-listener",
       nsSyncStreamListener::Create },
-#endif
     { "Load Group", 
       NS_LOADGROUP_CID,
       "component://netscape/network/load-group",

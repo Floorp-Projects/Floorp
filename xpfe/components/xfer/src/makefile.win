@@ -59,11 +59,6 @@ LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\js3250.lib \
-!ifdef NECKO
-        $(DIST)\lib\neckoutil_s.lib    \
-!else
-        $(DIST)\lib\netlib.lib         \
-!endif
 	$(NULL)
 
 #//------------------------------------------------------------------------

@@ -39,7 +39,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
 #include "nsIDOMWindow.h"

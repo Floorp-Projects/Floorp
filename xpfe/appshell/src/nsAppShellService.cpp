@@ -25,7 +25,7 @@
 #include "nsISupportsArray.h"
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIObserverService.h"

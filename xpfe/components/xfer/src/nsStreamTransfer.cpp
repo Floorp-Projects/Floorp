@@ -24,7 +24,7 @@
 #include "nsIAppShellComponentImpl.h"
 #include "nsStreamXferOp.h"
 #include "nsIFileSpecWithUI.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
 

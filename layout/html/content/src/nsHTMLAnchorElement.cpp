@@ -36,7 +36,7 @@
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 #include "nsCOMPtr.h"
 #include "nsIFrameManager.h"

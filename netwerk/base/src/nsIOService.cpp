@@ -337,31 +337,6 @@ nsIOService::GetUserAgent(PRUnichar* *aUserAgent)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsIOService::NewAsyncStreamObserver(nsIStreamObserver *receiver, nsIEventQueue *eventQueue,
-                                    nsIStreamObserver **result)
-{
-    return NS_NewAsyncStreamObserver(result, eventQueue, receiver);
-    
-}
-
-NS_IMETHODIMP
-nsIOService::NewAsyncStreamListener(nsIStreamListener *receiver, nsIEventQueue *eventQueue,
-                                    nsIStreamListener **result)
-{
-    return NS_NewAsyncStreamListener(result, eventQueue, receiver);
-
-}
-
-NS_IMETHODIMP
-nsIOService::NewSyncStreamListener(nsIInputStream **inStream, 
-                                   nsIBufferOutputStream **outStream,
-                                   nsIStreamListener **listener)
-{
-    return NS_NewSyncStreamListener(inStream, outStream, listener);
-
-}
-
-NS_IMETHODIMP
 nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **result)
 {
     nsresult rv;
@@ -376,32 +351,6 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
     rv = fileHandler->NewChannelFromNativePath(nativePath, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
     
-    *result = channel;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::NewInputStreamChannel(nsIURI* uri, 
-                                   const char *contentType, 
-                                   PRInt32 contentLength,
-                                   nsIInputStream *inStr, 
-                                   nsILoadGroup *aGroup,
-                                   nsIInterfaceRequestor* notificationCallbacks,
-                                   nsLoadFlags loadAttributes,
-                                   nsIURI* originalURI,
-                                   nsIChannel **result)
-{
-    nsresult rv;
-    nsInputStreamChannel* channel;
-    rv = nsInputStreamChannel::Create(nsnull, NS_GET_IID(nsIChannel),
-                                      (void**)&channel);
-    if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(uri, contentType, contentLength, inStr, aGroup,
-                       notificationCallbacks, loadAttributes, originalURI);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(channel);
-        return rv;
-    }
     *result = channel;
     return NS_OK;
 }

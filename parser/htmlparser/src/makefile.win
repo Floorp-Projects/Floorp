@@ -132,11 +132,6 @@ EXPORTS=					\
 
 LINCS=  -I$(PUBLIC)\xpcom  \
         -I$(PUBLIC)\raptor \
-!ifdef NECKO
-        -I$(PUBLIC)\necko  \
-!else
-        -I$(PUBLIC)\netlib \
-!endif
         -I$(PUBLIC)\uconv  \
         -I$(PUBLIC)\expat
 
@@ -153,12 +148,6 @@ LCFLAGS = \
 LLIBS=        \
  $(DIST)\lib\xpcom.lib  \
  $(DIST)\lib\expat.lib			\
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib			\
-!endif
-!ifdef MOZ_PERF
- $(DIST)\lib\util.lib			\
-!endif
  $(LIBNSPR)  
 
 !ifdef MOZ_NO_DEBUG_RTL

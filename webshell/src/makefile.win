@@ -82,11 +82,6 @@ LLIBS=				\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib     \
  $(DIST)\lib\util.lib        \
  $(DIST)\lib\jsdom.lib       \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib       \
-!else
- $(DIST)\lib\netlib.lib       \
-!endif
  $(LIBNSPR)
 
 WIN_LIBS= OLE32.LIB

@@ -45,7 +45,7 @@
 #include "nsIWebShell.h"
 #include "nsIImapService.h"
 #include "nsISocketTransportService.h"
-#include "nsIIOService.h"
+#include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsIPipe.h"
 #include "nsIMsgFolder.h"
@@ -578,9 +578,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         // as the event sink queue
         if (aRealStreamListener)
         {
-            NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv; 
-            pNetService->NewAsyncStreamListener(aRealStreamListener, m_sinkEventQueue, getter_AddRefs(m_channelListener));
+            rv = NS_NewAsyncStreamListener(aRealStreamListener, m_sinkEventQueue, getter_AddRefs(m_channelListener));
         }
 
 		PRUint32 capability = kCapabilityUndefined;

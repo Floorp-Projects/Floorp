@@ -39,7 +39,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsMsgDeliveryListener.h"
-#include "nsIIOService.h"
+#include "nsNetUtil.h"
 #include "nsMsgMimeCID.h"
 #include "nsMsgCompCID.h"
 #include "nsMsgCompose.h"
@@ -90,7 +90,7 @@ nsresult nsMsgQuoteListener::OnHeadersReady(nsIMimeHeaders * headers)
 
 	printf("RECEIVE CALLBACK: OnHeadersReady\n");
 	nsCOMPtr<nsIStreamListener> aStreamListener;
-  if (mMsgQuote)
+    if (mMsgQuote)
     mMsgQuote->GetStreamListener(getter_AddRefs(aStreamListener));
 	if (aStreamListener)
 	{
@@ -185,16 +185,16 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
                       getter_AddRefs(quoteSupport));
 
   mQuoteChannel = null_nsCOMPtr();
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-  rv = netService->NewInputStreamChannel(aURL, 
-                                         nsnull, // contentType
-                                         -1,     // contentLength
-                                         nsnull, // inputStream
-                                         nsnull, // loadGroup
-                                         nsnull, // notificationCallbacks
-                                         nsIChannel::LOAD_NORMAL,
-                                         nsnull, // originalURI
-                                         getter_AddRefs(mQuoteChannel));
+  rv = NS_NewInputStreamChannel(aURL, 
+                                nsnull, // contentType
+                                -1,     // contentLength
+                                nsnull, // inputStream
+                                nsnull, // loadGroup
+                                nsnull, // notificationCallbacks
+                                nsIChannel::LOAD_NORMAL,
+                                nsnull, // originalURI
+                                getter_AddRefs(mQuoteChannel));
+  if (NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, kIStreamConverterServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -207,6 +207,10 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
                                                 mStreamListener,
                                                 quoteSupport,
                                                 getter_AddRefs(convertedListener));
+  if (NS_FAILED(rv)) return rv;
+
+  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   // now we want to create a necko channel for this url and we want to open it
   nsCOMPtr<nsIChannel> aChannel;

@@ -46,7 +46,7 @@
 #include "prprf.h"
 
 #include "nsIIOService.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIPrefMigration.h"
 #include "nsPrefMigrationCIDs.h"
 #include "nsFileStream.h"

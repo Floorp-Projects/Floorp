@@ -37,19 +37,42 @@ interface nsIStreamObserver : nsISupports
                        in wstring errorMsg);
 };
 
+/**
+ * An asynchronous stream observer is used to ship data over to another thread specified
+ * by the thread's event queue. The receiver stream observer is then used to receive
+ * the notifications on the other thread. 
+ *
+ * This interface only provides the initialization needed after construction. Otherwise,
+ * these objects are used simply as nsIStreamObservers.
+ */
+[scriptable, uuid(a28dc590-91b3-11d3-8cd9-0060b0fc14a3)]
+interface nsIAsyncStreamObserver : nsIStreamObserver
+{
+    /**
+     * Initializes an nsIAsyncStreamObserver. 
+     * @param eventQueue - may be null indicating the calling thread's event queue
+     */
+    void init(in nsIStreamObserver receiver,
+              in nsIEventQueue eventQueue);
+};
+
 %{C++
 
-// An asynchronous stream observer is used to ship data over to another thread specified
-// by the thread's event queue. The receiver stream observer is then used to receive
-// the notifications on the other thread.
-extern NS_NET nsresult
-NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
-                          nsIEventQueue* eventQueue,
-                          nsIStreamObserver* receiver);
+// Use this CID to construct an nsIAsyncStreamObserver
+#define NS_ASYNCSTREAMOBSERVER_CID                   \
+{ /* fcc7c380-91b3-11d3-8cd9-0060b0fc14a3 */         \
+    0xfcc7c380,                                      \
+    0x91b3,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
+////////////////////////////////////////////////////////////////////////////////
 // Generic status codes for OnStopRequest:
+
 #define NS_BINDING_SUCCEEDED    NS_OK
 #define NS_BINDING_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
 #define NS_BINDING_ABORTED      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
 
 %}
+

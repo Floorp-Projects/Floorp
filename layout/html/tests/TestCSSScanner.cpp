@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include "nsCSSScanner.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"

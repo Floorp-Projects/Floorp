@@ -72,7 +72,7 @@
 
 // netwerk
 #include "nsIURI.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"

@@ -60,7 +60,7 @@
 
 #include "nsIIOService.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIDocument.h"
 #include "nsILinkHandler.h"

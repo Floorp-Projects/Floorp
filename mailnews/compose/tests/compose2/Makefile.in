@@ -31,7 +31,6 @@ PROGRAM		= msgcomposetest2
 CPPSRCS		= test2.cpp
 
 LIBS		= \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		-lxpcom \
 		-lmozjs \

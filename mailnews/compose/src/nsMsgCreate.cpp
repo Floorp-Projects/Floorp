@@ -50,9 +50,8 @@
 #include "nsMsgCopy.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "nsIIOService.h"
+#include "nsNetUtil.h"
 #include "nsMsgMimeCID.h"
-#include "nsNeckoUtil.h"
 
 // CID's needed
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 

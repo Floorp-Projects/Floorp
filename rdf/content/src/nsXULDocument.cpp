@@ -105,7 +105,7 @@
 #include "nsIXULPrototypeCache.h"
 #include "nsLWBrkCIID.h"
 #include "nsLayoutCID.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsParserCIID.h"
 #include "nsRDFCID.h"
 #include "nsRDFDOMNodeList.h"
@@ -4828,9 +4828,10 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
 }
 
 
-nsresult
+NS_IMETHODIMP
 nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
                                        nsresult aStatus,
+                                       PRUint32 stringLen,
                                        const PRUnichar* string)
 {
     // This is the completion routine that will be called when a
@@ -4854,8 +4855,7 @@ nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
     scriptProto->mSrcLoading = PR_FALSE;
 
     if (NS_SUCCEEDED(aStatus)) {
-        // XXXbe bug warren to provide string length from caller too
-        rv = scriptProto->Compile(string, nsCRT::strlen(string),
+        rv = scriptProto->Compile(string, stringLen,
                                   scriptProto->mSrcURI, 1,
                                   this);
         aStatus = rv;

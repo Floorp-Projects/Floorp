@@ -96,7 +96,7 @@
 #include "nsIMsgComposeService.h"
 #include "nsMsgCompFieldsFact.h"
 #include "nsMsgI18N.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);

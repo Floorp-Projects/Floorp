@@ -43,11 +43,6 @@ LCFLAGS =          \
 
 LLIBS =                                \
         $(DIST)\lib\mozreg.lib       \
-!ifdef NECKO
-        $(DIST)\lib\neckoutil_s.lib    \
-!else
-        $(DIST)\lib\netlib.lib         \
-!endif
         $(DIST)\lib\xpcom.lib          \
         $(DIST)\lib\js3250.lib         \
         $(DIST)\lib\jsdombase_s.lib    \

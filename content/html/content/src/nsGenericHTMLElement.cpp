@@ -47,7 +47,7 @@
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsStyleConsts.h"
 #include "nsXIFConverter.h"
 #include "nsFrame.h"

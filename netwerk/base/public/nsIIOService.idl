@@ -118,49 +118,10 @@ interface nsIIOService : nsISupports
     readonly attribute wstring userAgent;
 
     /**
-     * Returns a new stream observer that marshals data from another
-     * stream observer over to the thread specified by an event queue.
-     * If the event queue is null, the current thread's event queue is
-     * used.
-     */
-    nsIStreamObserver newAsyncStreamObserver(in nsIStreamObserver receiver,
-                                             in nsIEventQueue eventQueue);
-
-    /**
-     * An asynchronous stream listener is used to ship data over to another thread specified
-     * by the thread's event queue. The receiver stream listener is then used to receive
-     * the data on the other thread.
-     */
-    nsIStreamListener newAsyncStreamListener(in nsIStreamListener receiver,
-                                             in nsIEventQueue eventQueue);
-
-    /**
-     * A synchronous stream listener pushes data through a pipe that ends up
-     * in an input stream to be read by another thread.
-     */
-    nsIStreamListener newSyncStreamListener(out nsIInputStream inStream,
-                                            out nsIBufferOutputStream outStream);
-
-    /**
      * This convenience routine first looks up the file protocol handler, and
      * then uses it to construct a file channel from a native path string.
      */
     nsIFileChannel newChannelFromNativePath(in string nativePath);
-
-    /**
-     * Returns a simple channel implementation that uses the given input
-     * stream and content type. A URI may also be supplied which will be returned
-     * by the channel's GetURI method. This routine is a convenience facililty
-     * for protocol writers.
-     */
-    nsIChannel newInputStreamChannel(in nsIURI uri,
-                                     in string contentType, 
-                                     in long contentLength,
-                                     in nsIInputStream inStr,
-                                     in nsILoadGroup aLoadGroup,
-                                     in nsIInterfaceRequestor notificationCallbacks,
-                                     in nsLoadFlags loadAttributes,
-                                     in nsIURI originalURI);
 
     /**
      * Utility for protocol implementors -- extracts the scheme from a URL 

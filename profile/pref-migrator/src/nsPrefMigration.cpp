@@ -46,7 +46,7 @@
 
 #include "nsProxiedService.h"
 
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 
 /* Network */
 

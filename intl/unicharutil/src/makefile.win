@@ -63,7 +63,6 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib		\
-	$(DIST)\lib\neckoutil_s.lib	\
 	$(LIBNSPR)	
 
 include <$(DEPTH)\config\rules.mak>

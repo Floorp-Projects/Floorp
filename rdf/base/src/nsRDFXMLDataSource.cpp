@@ -82,7 +82,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
 #include "nsParserCIID.h"

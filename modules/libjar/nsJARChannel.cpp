@@ -17,7 +17,7 @@
  *
  */
 
-#include "nsNeckoUtil.h"
+#include "nsNetUtil.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIFileSpec.h"
