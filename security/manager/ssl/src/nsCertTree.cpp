@@ -297,8 +297,10 @@ nsCertTree::UpdateUIContents()
     orgCert = nextCert;
   }
   mNumRows = count + mNumOrgs;
-  if (mTree)
+  if (mTree) {
+    mTree->RowCountChanged(0, mNumRows);
     mTree->Invalidate();
+  }
   return NS_OK;
 }
 

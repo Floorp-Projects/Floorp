@@ -126,6 +126,8 @@ public:
   void SetTrustedServerCA();
   /* equivalent to "CT,CT,CT" */
   void SetTrustedCA();
+  /* equivalent to "p,," */
+  void SetValidServerPeer();
   /* equivalent to "p,p,p" */
   void SetValidPeer();
   /* equivalent to "P,P,P" */
@@ -335,6 +337,20 @@ nsNSSCertTrust::SetValidPeer()
                 PR_FALSE, PR_FALSE, PR_FALSE,
                 PR_FALSE, PR_FALSE);
   SetObjSignTrust(PR_TRUE, PR_FALSE,
+                  PR_FALSE, PR_FALSE, PR_FALSE,
+                  PR_FALSE, PR_FALSE);
+}
+
+void 
+nsNSSCertTrust::SetValidServerPeer()
+{
+  SetSSLTrust(PR_TRUE, PR_FALSE,
+              PR_FALSE, PR_FALSE, PR_FALSE,
+              PR_FALSE, PR_FALSE);
+  SetEmailTrust(PR_FALSE, PR_FALSE,
+                PR_FALSE, PR_FALSE, PR_FALSE,
+                PR_FALSE, PR_FALSE);
+  SetObjSignTrust(PR_FALSE, PR_FALSE,
                   PR_FALSE, PR_FALSE, PR_FALSE,
                   PR_FALSE, PR_FALSE);
 }
@@ -3178,7 +3194,6 @@ nsNSSCertificateDB::ImportCertificates(char * data, PRUint32 length,
                                        nsIInterfaceRequestor *ctx)
 
 {
-  SECStatus srv = SECFailure;
   nsresult nsrv;
 
   PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -3219,8 +3234,6 @@ nsNSSCertificateDB::ImportCertificates(char * data, PRUint32 length,
      break;
   }  
   PORT_FreeArena(arena, PR_FALSE);
-  if (srv != SECSuccess && nsrv == NS_OK)
-    nsrv = NS_ERROR_FAILURE;
   return nsrv;
 }
 
@@ -3287,6 +3300,107 @@ loser:
     PORT_FreeArena(arena, PR_TRUE);
   return nsrv;
 }
+
+char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
+{
+  char* nickname = nsnull;
+  int count;
+  PRBool conflict;
+  char* servername = nsnull;
+  
+  servername = CERT_GetCommonName(&cert->subject);
+  if (servername == NULL) {
+    return nsnull;
+  }
+   
+  count = 1;
+  while (1) {
+    if (count == 1) {
+      nickname = PR_smprintf("%s", servername);
+    }
+    else {
+      nickname = PR_smprintf("%s #%d", servername, count);
+    }
+    if (nickname == NULL) {
+      break;
+    }
+
+    conflict = SEC_CertNicknameConflict(nickname, &cert->derSubject,
+                                        cert->dbhandle);
+    if (conflict == PR_SUCCESS) {
+      break;
+    }
+    PR_Free(nickname);
+    count++;
+  }
+  PR_FREEIF(servername);
+  return nickname;
+}
+
+
+NS_IMETHODIMP
+nsNSSCertificateDB::ImportServerCertificate(char * data, PRUint32 length, 
+                                            nsIInterfaceRequestor *ctx)
+
+{
+  SECStatus srv = SECFailure;
+  nsresult nsrv = NS_OK;
+  CERTCertificate * cert;
+  SECItem **rawCerts = nsnull;
+  int numcerts;
+  int i;
+  nsNSSCertTrust trust;
+  char *serverNickname = nsnull;
+ 
+  PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if (!arena)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  CERTDERCerts *certCollection = getCertsFromPackage(arena, data, length);
+  if (!certCollection) {
+    PORT_FreeArena(arena, PR_FALSE);
+    return NS_ERROR_FAILURE;
+  }
+  cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), certCollection->rawCerts,
+                          (char *)NULL, PR_FALSE, PR_TRUE);
+  if (!cert) {
+    nsrv = NS_ERROR_FAILURE;
+    goto loser;
+  }
+  numcerts = certCollection->numcerts;
+  rawCerts = (SECItem **) PORT_Alloc(sizeof(SECItem *) * numcerts);
+  if ( !rawCerts ) {
+    nsrv = NS_ERROR_FAILURE;
+    goto loser;
+  }
+
+  for ( i = 0; i < numcerts; i++ ) {
+    rawCerts[i] = &certCollection->rawCerts[i];
+  }
+
+  serverNickname = nsNSSCertificate::defaultServerNickname(cert);
+  srv = CERT_ImportCerts(CERT_GetDefaultCertDB(), certUsageSSLServer,
+             numcerts, rawCerts, NULL, PR_TRUE, PR_FALSE,
+             serverNickname);
+  PR_FREEIF(serverNickname);
+  if ( srv != SECSuccess ) {
+    nsrv = NS_ERROR_FAILURE;
+    goto loser;
+  }
+
+  trust.SetValidServerPeer();
+  srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), cert, trust.GetTrust());
+  if ( srv != SECSuccess ) {
+    nsrv = NS_ERROR_FAILURE;
+    goto loser;
+  }
+loser:
+  PORT_Free(rawCerts);
+  if (arena) 
+    PORT_FreeArena(arena, PR_TRUE);
+  return nsrv;
+}
+
 
 char *
 default_nickname(CERTCertificate *cert, nsIInterfaceRequestor* ctx)
@@ -3614,6 +3728,73 @@ nsNSSCertificateDB::GetCertTrust(nsIX509Cert *cert,
     }
   } /* user or email, ignore */
   return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsNSSCertificateDB::ImportCertsFromFile(nsIPK11Token *aToken, 
+                                        nsILocalFile *aFile,
+                                        PRUint32 aType)
+{
+  switch (aType) {
+    case nsIX509Cert::CA_CERT:
+    case nsIX509Cert::EMAIL_CERT:
+    case nsIX509Cert::SERVER_CERT:
+      // good
+      break;
+    
+    default:
+      // not supported (yet)
+      return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv;
+  PRFileDesc *fd = nsnull;
+
+  rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!fd)
+    return NS_ERROR_FAILURE;
+
+  PRFileInfo file_info;
+  if (PR_SUCCESS != PR_GetOpenFileInfo(fd, &file_info))
+    return NS_ERROR_FAILURE;
+  
+  char *buf = new char[file_info.size];
+  if (!buf)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  PRInt32 bytes_obtained = PR_Read(fd, buf, file_info.size);
+  PR_Close(fd);
+  
+  if (bytes_obtained != file_info.size)
+    rv = NS_ERROR_FAILURE;
+  else {
+	  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+
+    switch (aType) {
+      case nsIX509Cert::CA_CERT:
+        rv = ImportCertificates(buf, bytes_obtained, aType, cxt);
+        break;
+        
+      case nsIX509Cert::SERVER_CERT:
+        rv = ImportServerCertificate(buf, bytes_obtained, cxt);
+        break;
+
+      case nsIX509Cert::EMAIL_CERT:
+        rv = ImportEmailCertificate(buf, bytes_obtained, cxt);
+        break;
+      
+      default:
+        break;
+    }
+  }
+
+  delete [] buf;
+  return rv;  
 }
 
 /*

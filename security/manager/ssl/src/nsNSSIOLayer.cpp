@@ -1133,46 +1133,6 @@ nsSSLIOLayerNewSocket(const char *host,
   return NS_OK;
 }
 
-
-
-static char* defaultServerNickname(CERTCertificate* cert)
-{
-  char* nickname = nsnull;
-  int count;
-  PRBool conflict;
-  char* servername = nsnull;
-  
-  servername = CERT_GetCommonName(&cert->subject);
-  if (servername == NULL) {
-    return nsnull;
-  }
-   
-  count = 1;
-  while (1) {
-    if (count == 1) {
-      nickname = PR_smprintf("%s", servername);
-    }
-    else {
-      nickname = PR_smprintf("%s #%d", servername, count);
-    }
-    if (nickname == NULL) {
-      break;
-    }
-
-    conflict = SEC_CertNicknameConflict(nickname, &cert->derSubject,
-                                        cert->dbhandle);
-    if (conflict == PR_SUCCESS) {
-      break;
-    }
-    PR_Free(nickname);
-    count++;
-  }
-  PR_FREEIF(servername);
-  return nickname;
-}
-
-
-
 static nsresult
 addCertToDB(CERTCertificate *peerCert, PRInt16 addType)
 {
@@ -1183,7 +1143,7 @@ addCertToDB(CERTCertificate *peerCert, PRInt16 addType)
   
   switch (addType) {
     case nsIBadCertListener::ADD_TRUSTED_PERMANENTLY:
-      nickname = defaultServerNickname(peerCert);
+      nickname = nsNSSCertificate::defaultServerNickname(peerCert);
       if (nsnull == nickname)
         break;
       memset((void*)&trust, 0, sizeof(trust));
