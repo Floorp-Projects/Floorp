@@ -340,7 +340,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
   //
   // Check for an error during PR_Poll(...)
   //
-  if ((PR_POLL_EXCEPT | PR_POLL_ERR | PR_POLL_NVAL | PR_POLL_HUP) & aSelectFlags) {
+  if (PR_POLL_EXCEPT & aSelectFlags) {
     PR_LOG(gSocketLog, PR_LOG_ERROR, 
            ("Operation failed via PR_POLL_EXCEPT. [%s:%d %x].\n", 
             mHostName, mPort, this));
