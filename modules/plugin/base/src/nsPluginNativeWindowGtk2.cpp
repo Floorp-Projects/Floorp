@@ -48,6 +48,13 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gdk/gdk.h>
+#ifdef OJI
+#include "plstr.h"
+#include "nsIPlugin.h"
+#include "nsIPluginHost.h"
+
+static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
+#endif
 
 class nsPluginNativeWindowGtk2 : public nsPluginNativeWindow {
 public: 
@@ -58,6 +65,7 @@ public:
 private:
   GtkWidget*  mGtkSocket;
   nsresult  CreateXEmbedWindow();
+  PRBool    CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstance> &aPluginInstance);
 };
 
 nsPluginNativeWindowGtk2::nsPluginNativeWindowGtk2() : nsPluginNativeWindow()
@@ -103,8 +111,9 @@ nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsCOMPtr<nsIPluginInstance> &aP
     nsresult rv;
     PRBool val = PR_FALSE;
     if(!mGtkSocket) {
-      rv = aPluginInstance->GetValue
-        ((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &val);
+      if (CanGetValueFromPlugin(aPluginInstance))
+        rv = aPluginInstance->GetValue
+               ((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &val);
     }
 #ifdef DEBUG
     printf("nsPluginNativeWindowGtk2: NPPVpluginNeedsXEmbed=%d\n", &val);
@@ -154,4 +163,48 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
   }
 
   return NS_OK;
+}
+
+PRBool nsPluginNativeWindowGtk2::CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstance> &aPluginInstance)
+{
+#ifdef OJI
+  if(aPluginInstance) {
+    nsresult rv;
+    nsIPluginInstancePeer *aPeer;
+
+    rv = aPluginInstance->GetPeer(&aPeer);
+    if (NS_SUCCEEDED(rv) && aPeer) {
+      const char *aMimeType = nsnull;
+
+      aPeer->GetMIMEType((nsMIMEType*)&aMimeType);
+      if (aMimeType &&
+          (PL_strncasecmp(aMimeType, "application/x-java-vm", 21) == 0 ||
+           PL_strncasecmp(aMimeType, "application/x-java-applet", 25) == 0)) {
+        nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kPluginManagerCID, &rv);
+        if (NS_SUCCEEDED(rv) && pluginHost) {
+          nsIPlugin* pluginFactory = NULL;
+
+          rv = pluginHost->GetPluginFactory("application/x-java-vm", &pluginFactory);
+          if (NS_SUCCEEDED(rv) && pluginFactory) {
+            const char * jpiDescription;
+
+            pluginFactory->GetValue(nsPluginVariable_DescriptionString, (void*)&jpiDescription);
+            /** 
+             * "Java(TM) Plug-in" is Sun's Java Plugin Trademark,
+             * so we are sure that this is Sun 's Java Plugin if 
+             * the description start with "Java(TM) Plug-in"
+             **/
+            if (PL_strncasecmp(jpiDescription, "Java(TM) Plug-in", 16) == 0) {
+              // Java Plugin support Xembed from JRE 1.5
+              if (PL_strcasecmp(jpiDescription + 17, "1.5") < 0)
+                return PR_FALSE;
+            }
+          }
+        }
+      }
+    }
+  }
+#endif
+
+  return PR_TRUE;
 }
