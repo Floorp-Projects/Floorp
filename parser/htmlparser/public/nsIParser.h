@@ -54,13 +54,15 @@
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
 
+// {22039D29-2798-4412-9EA6-A11B41BA27D0}
 #define NS_IPARSER_IID      \
-  {0x355cbba0, 0xbf7d,  0x11d1,  \
-  {0xaa, 0xd9, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
+{ 0x22039d29, 0x2798, 0x4412, \
+{ 0x9e, 0xa6, 0xa1, 0x1b, 0x41, 0xba, 0x27, 0xd0 } };
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
-{ 0x41421c60, 0x310a, 0x11d4, { 0x81, 0x6f, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
+{ 0x41421c60, 0x310a, 0x11d4, \
+{ 0x81, 0x6f, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
 
 class nsIContentSink;
 class nsIRequestObserver;
@@ -211,11 +213,19 @@ class nsIParser : public nsISupports {
     /******************************************************************************************
      *  Parse methods always begin with an input source, and perform conversions 
      *  until you wind up being emitted to the given contentsink (which may or may not
-	   *  be a proxy for the NGLayout content model).
+     *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
     
-    // Call this method to resume the parser from the blocked state..
+    // Call this method to resume the parser from the blocked state.
     NS_IMETHOD ContinueParsing() = 0;
+
+    // Call this method to resume the parser from an unblocked state.
+    // This can happen, for example, if parsing was interrupted and then the
+    // consumer needed to restart the parser without waiting for more data.
+    // This also happens after loading scripts, which unblock the parser in
+    // order to process the output of document.write() and then need to
+    // continue on with the page load on an enabled parser.
+    NS_IMETHOD ContinueInterruptedParsing() = 0;
     
     // Stops parsing temporarily.
     NS_IMETHOD_(void) BlockParser() = 0;
