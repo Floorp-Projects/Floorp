@@ -27,6 +27,7 @@
 
 #include "nsIMsgIdentity.h"
 #include "nsIEnumerator.h"
+#include "nsISupportsArray.h"
 #include "nsIMsgFolder.h"
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
@@ -97,7 +98,8 @@ public:
   // counters and things for enumeration 
   PRUint32                  mTotalSentSuccessfully;
   PRUint32                  mTotalSendCount;
-  nsISimpleEnumerator       *mEnumerator;
+  nsCOMPtr<nsISupportsArray> mMessagesToSend;
+  nsCOMPtr<nsIEnumerator> mEnumerator;
   nsIMsgIdentity            *mIdentity;
   nsCOMPtr<nsIMsgFolder>    mMessageFolder;
   nsCOMPtr<nsIMsgWindow>    m_window;

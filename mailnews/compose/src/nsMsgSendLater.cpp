@@ -69,7 +69,6 @@ nsMsgSendLater::nsMsgSendLater()
   mTempIFileSpec = nsnull;
   mTempFileSpec = nsnull;
   mOutFile = nsnull;
-  mEnumerator = nsnull;
   mTotalSentSuccessfully = 0;
   mTotalSendCount = 0;
   mMessageFolder = null_nsCOMPtr();
@@ -98,12 +97,14 @@ nsMsgSendLater::nsMsgSendLater()
   mIdentityKey = nsnull;
 
   mRequestReturnReceipt = PR_FALSE;
+
+  NS_NewISupportsArray(getter_AddRefs(mMessagesToSend));
+
   NS_INIT_REFCNT();
 }
 
 nsMsgSendLater::~nsMsgSendLater()
 {
-  NS_IF_RELEASE(mEnumerator);
   NS_IF_RELEASE(mTempIFileSpec);
   PR_FREEIF(m_to);
   PR_FREEIF(m_fcc);
@@ -386,17 +387,6 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
       if (deleteMsgs)
       {
         mSendLater->DeleteCurrentMessage();
-        //
-        // Since we are deleting entries from the enumeration set, we need to
-        // refresh the enumerator
-        //
-        NS_IF_RELEASE(mSendLater->mEnumerator);
-        mSendLater->mEnumerator = nsnull;
-
-        nsresult ret = mSendLater->mMessageFolder->GetMessages(nsnull, &(mSendLater->mEnumerator));
-	      if (NS_FAILED(ret) || (!(mSendLater->mEnumerator)))
-          mSendLater->mEnumerator = nsnull;   // just to be sure!
-
       }
 
       ++(mSendLater->mTotalSentSuccessfully);
@@ -526,26 +516,27 @@ nsresult
 nsMsgSendLater::StartNextMailFileSend()
 {
   nsFileSpec    fileSpec;
-  nsresult      rv;
+  nsresult      rv = NS_OK;;
   nsXPIDLCString  aMessageURI;
 
   PRBool hasMore = PR_FALSE;
 
-  if ( (!mEnumerator) || !NS_SUCCEEDED(mEnumerator->HasMoreElements(&hasMore)) || !hasMore )
+  if ( (!mEnumerator) || (mEnumerator->IsDone() == NS_OK) )
   {
     // Call any listeners on this operation and then exit cleanly
 #ifdef NS_DEBUG
     printf("nsMsgSendLater: Finished \"Send Later\" operation.\n");
 #endif
+
+    mMessagesToSend->Clear(); // clear out our array
     NotifyListenersOnStopSending(NS_OK, nsnull, mTotalSendCount, mTotalSentSuccessfully);
     return NS_OK;
   }
 
   nsCOMPtr<nsISupports>   currentItem;
-
-  rv = mEnumerator->GetNext(getter_AddRefs(currentItem));
-  if (NS_FAILED(rv))
-    return rv;
+  mEnumerator->CurrentItem(getter_AddRefs(currentItem));
+  // advance to the next item for the next pass.
+  mEnumerator->Next();
 
   mMessage = do_QueryInterface(currentItem); 
   if(!mMessage)
@@ -661,7 +652,7 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFold
 NS_IMETHODIMP 
 nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity *identity)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   DealWithTheIdentityMojo(identity, PR_FALSE);
 
@@ -674,13 +665,28 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity *identity)
   }
 
   // ### fix me - if we need to reparse the folder, this will be asynchronous
-  nsresult ret = mMessageFolder->GetMessages(m_window, &mEnumerator);
-	if (NS_FAILED(ret) || (!mEnumerator))
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  nsresult ret = mMessageFolder->GetMessages(m_window, getter_AddRefs(enumerator));
+	if (NS_FAILED(ret) || (!enumerator))
   {
     NS_IF_RELEASE(mIdentity);
     mIdentity = nsnull;
     return NS_ERROR_FAILURE;
   }
+
+  // copy all the elements in the enumerator into our isupports array....
+
+  nsCOMPtr<nsISupports>   currentItem;
+  PRBool hasMoreElements = PR_FALSE;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) && hasMoreElements)
+  {
+    rv = enumerator->GetNext(getter_AddRefs(currentItem));
+    if (NS_SUCCEEDED(rv) && currentItem)
+      mMessagesToSend->AppendElement(currentItem);
+  }
+
+  // now get an enumerator for our array
+  mMessagesToSend->Enumerate(getter_AddRefs(mEnumerator));
 
 	return StartNextMailFileSend();
 }
