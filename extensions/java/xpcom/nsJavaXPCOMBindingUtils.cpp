@@ -127,8 +127,6 @@ InitJAVAtoXPCOMBindingEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                   NS_STATIC_CAST(const JavaXPCOMBindingEntry *, entry));
 
   e->mKey = key;
-  e->mJavaObject = NS_CONST_CAST(jobject,
-                                    NS_STATIC_CAST(const __jobject*, key));
   e->mXPCOMInstance = nsnull;
 
   return PR_TRUE;
@@ -156,64 +154,61 @@ AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
   // different "addresses" for the same Java object, but the hash code (the
   // result of calling |hashCode()| on the Java object) will always be the same.
   jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
+  jweak java_ref = env->NewWeakGlobalRef(aJavaObject);
 
   JavaXPCOMBindingEntry *entry =
     NS_STATIC_CAST(JavaXPCOMBindingEntry*,
                    PL_DHashTableOperate(gJAVAtoXPCOMBindings,
                                         NS_INT32_TO_PTR(hash),
                                         PL_DHASH_ADD));
+  entry->mJavaObject = java_ref;
   entry->mXPCOMInstance = aXPCOMObject;
 
   entry =
     NS_STATIC_CAST(JavaXPCOMBindingEntry*,
                    PL_DHashTableOperate(gXPCOMtoJAVABindings, aXPCOMObject,
                                         PL_DHASH_ADD));
-  entry->mJavaObject = aJavaObject;
+  entry->mJavaObject = java_ref;
 
-  LOG("+ Adding Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-         hash, (int) aXPCOMObject);
-}
-
-nsISupports*
-RemoveXPCOMBinding(JNIEnv* env, jobject aJavaObject)
-{
-  void* xpcomObj = GetMatchingXPCOMObject(env, aJavaObject);
-
-  // Remove both instances from stores
-  jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
-  PL_DHashTableOperate(gJAVAtoXPCOMBindings, NS_INT32_TO_PTR(hash),
-                       PL_DHASH_REMOVE);
-  PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcomObj, PL_DHASH_REMOVE);
-
-  LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-      hash, (int) xpcomObj);
-
-  nsISupports* inst = nsnull;
-  if (IsXPTCStub(xpcomObj)) {
-    GetXPTCStubAddr(xpcomObj)->QueryInterface(NS_GET_IID(nsISupports),
-                                              (void**) &inst);
-  } else {
-    JavaXPCOMInstance* xpcomInst = (JavaXPCOMInstance*) xpcomObj;
-    inst = xpcomInst->GetInstance();
-    // XXX Getting some odd thread issues when calling this.  Addreffing for
-    //  now to work around the errors.
-    NS_ADDREF(inst);
-    delete xpcomInst;
-  }
-  return inst;
+  LOG("+ Adding Java<->XPCOM binding (Java=0x%08x] | XPCOM=0x%08x)\n",
+         (PRUint32) java_ref, (int) aXPCOMObject);
 }
 
 void
 RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
 {
+  JavaXPCOMBindingEntry* entry;
+
+  // We either get a Java or an XPCOM object.  So find the other object.
+  jint hash = 0;
+  if (aJavaObject) {
+    hash = env->CallIntMethod(aJavaObject, hashCodeMID);
+    entry =
+      NS_STATIC_CAST(JavaXPCOMBindingEntry*,
+                     PL_DHashTableOperate(gJAVAtoXPCOMBindings,
+                                          NS_INT32_TO_PTR(hash),
+                                          PL_DHASH_LOOKUP));
+  } else {
+    entry =
+      NS_STATIC_CAST(JavaXPCOMBindingEntry*,
+                     PL_DHashTableOperate(gXPCOMtoJAVABindings, aXPCOMObject,
+                                          PL_DHASH_LOOKUP));
+  }
+
+  jobject jweakref = entry->mJavaObject;
+  void* xpcom_obj = entry->mXPCOMInstance;
+  if (hash == 0)
+    hash = env->CallIntMethod(jweakref, hashCodeMID);
+
   // Remove both instances from stores
-  jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
   PL_DHashTableOperate(gJAVAtoXPCOMBindings, NS_INT32_TO_PTR(hash),
                        PL_DHASH_REMOVE);
-  PL_DHashTableOperate(gXPCOMtoJAVABindings, aXPCOMObject, PL_DHASH_REMOVE);
+  PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcom_obj, PL_DHASH_REMOVE);
 
   LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-      hash, (int) aXPCOMObject);
+      hash, (int) xpcom_obj);
+
+  env->DeleteWeakGlobalRef(NS_STATIC_CAST(jweak, jweakref));
 }
 
 void*
