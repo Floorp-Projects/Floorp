@@ -329,7 +329,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       if (mDocument) {
       
-        if(gLastFocusedDocument && gLastFocusedDocument != mDocument) {
+        if(gLastFocusedDocument) {
           // fire a blur, on the document only to keep ender happy
           nsEventStatus blurstatus = nsEventStatus_eIgnore;
           nsEvent blurevent;
@@ -358,9 +358,10 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
               }
             }
             
-            if(gLastFocusedDocument != mDocument)
-              gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
-            
+            gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
+            if (!mCurrentFocus && gLastFocusedContent)// must send it to the element that is loosing focus. since SendFocusBlur wont be called
+              gLastFocusedContent->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
+              
             if (commandDispatcher) {
               commandDispatcher->SetSuppressFocus(PR_FALSE);
             }
@@ -2150,7 +2151,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   }
 
   if ((aState & NS_EVENT_STATE_FOCUS)) {
-    if (aContent && (aContent == mCurrentFocus)) {
+    if (aContent && (aContent == mCurrentFocus) && gLastFocusedDocument == mDocument) {
       // gLastFocusedDocument appears to always be correct, that is why
       // I'm not setting it here. This is to catch an edge case.
       NS_IF_RELEASE(gLastFocusedContent);
