@@ -456,6 +456,12 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
     return NS_ERROR_UNEXPECTED;
   }
   
+  // turn off animated GIFs
+  nsCOMPtr<nsIPresContext> presContext;
+  containerAsDocShell->GetPresContext(getter_AddRefs(presContext));
+  if (presContext)
+    presContext->SetImageAnimationMode(eImageAnimation_None);
+
   nsresult rv = DoEditorMode(containerAsDocShell);
   if (NS_FAILED(rv)) return rv;
   
@@ -4671,7 +4677,7 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
         scriptContext->SetScriptsEnabled(PR_FALSE);
     }
   }
-
+  
   // set up a parser observer
   if (!mParserObserver)
   {
