@@ -89,15 +89,19 @@ toolbarbutton.bookmark-item[disabled="true"][container="true"] {
 /* ..... drag and drop styles ..... */
 
 toolbarbutton.bookmark-item[dragover-left="true"] {
-  border-left-color: ThreeDDarkShadow;
+  -moz-border-left-colors: transparent ThreeDDarkShadow;
 }
 
 toolbarbutton.bookmark-item[dragover-right="true"] {
-  border-right-color: ThreeDDarkShadow;
+  -moz-border-right-colors: transparent ThreeDDarkShadow;
 }
 
 toolbarbutton.bookmark-item[dragover-top="true"] {
-  border: 1px solid ThreeDDarkShadow;
+  -moz-appearance: none;
+  -moz-border-top-colors: transparent ThreeDDarkShadow;
+  -moz-border-right-colors: transparent ThreeDDarkShadow;
+  -moz-border-bottom-colors: transparent ThreeDDarkShadow;
+  -moz-border-left-colors: transparent ThreeDDarkShadow;
 }
 
 /* ::::: bookmark menus ::::: */
