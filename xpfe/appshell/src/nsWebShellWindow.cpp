@@ -899,6 +899,22 @@ NS_IMETHODIMP
 nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
                               nsIWebShell *&aNewWebShell)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIWebShellWindow> newWindow;
+
+  if ((aChromeMask & NS_CHROME_OPEN_AS_CHROME) != 0) {
+    // Just do a nice normal create of a web shell and
+    // return it immediately.  
+    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, *getter_AddRefs(newWindow),
+                                   nsnull, nsnull, 615, 480);
+    newWindow->GetWebShell(aNewWebShell); // GetWebShell does the addref.
+    return NS_OK;
+  }
+
 #ifdef XP_PC // XXX: Won't work on any other platforms yet. Sigh.
   // We need to create a new top level window and then enter a nested
   // loop. Eventually the new window will be told that it has loaded,
@@ -907,7 +923,6 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
   // First push a nested event queue for event processing from netlib
   // onto our UI thread queue stack.
-  nsresult           rv;
   NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) {
     NS_ERROR("Unable to obtain queue service.");
@@ -920,11 +935,6 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   if (NS_FAILED(rv))
     return rv;
 
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIWebShellWindow> newWindow;
   appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, *getter_AddRefs(newWindow),
                                  nsnull, nsnull, 615, 480);
 

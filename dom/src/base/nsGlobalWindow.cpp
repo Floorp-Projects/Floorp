@@ -1459,6 +1459,8 @@ GlobalWindowImpl::Open(JSContext *cx,
     mChrome |= WinHasOption(options, "resizable") ? NS_CHROME_WINDOW_RESIZE_ON : 0;
     mChrome |= NS_CHROME_WINDOW_CLOSE_ON;
 
+    mChrome |= WinHasOption(options, "chrome") ? NS_CHROME_OPEN_AS_CHROME : 0;
+
     mWidth = WinHasOption(options, "innerWidth") | WinHasOption(options, "width");
     mHeight = WinHasOption(options, "innerHeight") | WinHasOption(options, "height");
 
