@@ -83,12 +83,7 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 
 #define IS_SPACE(VAL) NS_IS_SPACE(VAL)
 #define IS_DIGIT(i)   NS_IS_DIGIT(i)
-
-#if defined(XP_WIN) || defined(XP_OS2)
 #define IS_ALPHA(VAL) NS_IS_ALPHA(VAL)
-#else
-#define IS_ALPHA(VAL) NS_IS_ALPHA(VAL)
-#endif
 
 
 /* for retrieving information out of messenger nsresults */
