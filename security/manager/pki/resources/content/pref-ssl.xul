@@ -83,7 +83,7 @@ Set Netscape to show a warning and ask permission before:
               pref="true" preftype="bool" prefstring="security.warn_entering_secure"
               prefattribute="checked"/>
     <checkbox id="warnEnteringWeak" 
-		  value="Entering a site that uses weak encryption"
+		  label="Entering a site that uses weak encryption"
               pref="true" preftype="bool" prefstring="security.warn_entering_weak"
               prefattribute="checked"/>
     <checkbox id="warnInsecurePost"

@@ -53,6 +53,7 @@ function onLoad()
         var menuItemNode = document.createElement("menuitem");
         var nick = dialogParams.GetString(i+4);
         menuItemNode.setAttribute("value", nick);
+        menuItemNode.setAttribute("label", nick);
         selectElement.firstChild.appendChild(menuItemNode);
         if (i == 0) {
             selectElement.selectedItem = menuItemNode;

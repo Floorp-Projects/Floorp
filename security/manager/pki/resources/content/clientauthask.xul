@@ -52,11 +52,11 @@
     </titledbox>
   <separator />
   <box>
-  <button id="ok-button" class="dialog" value="&ok.label;"
+  <button id="ok-button" class="dialog" label="&ok.label;"
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
-  <button id="cancel-button" class="dialog" value="&cancel.label;"
+  <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
-  <button id="help-button" class="dialog" value="&help.label;"
+  <button id="help-button" class="dialog" label="&help.label;"
     style="width: 10ex" onclick="alert('Will bring up help one day');" /> 
   </box>
 </box>
