@@ -42,7 +42,8 @@ HINSTANCE nsToolkit::mDllInstance = 0;
 PRBool    nsToolkit::mIsNT        = PR_FALSE;
 
 #ifdef MOZ_AIMM
-IActiveIMMApp              *nsToolkit::gAIMMApp          = NULL;
+IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
+PRInt32        nsToolkit::gAIMMCount = 0;
 #endif
 
 nsWindow     *MouseTrailer::mCaptureWindow  = NULL;
@@ -80,13 +81,6 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
 
             VERIFY(::RegisterClass(&wc));
 
-#ifdef MOZ_AIMM
-            //
-            // Initialize COM since create Active Input Method Manager object
-            //
-
-            ::CoInitialize(NULL);
-#endif
             //
             // Set flag of nsToolkit::mIsNT due to using Unicode API.
             //
@@ -106,13 +100,6 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
             break;
     
         case DLL_PROCESS_DETACH:
-#ifdef MOZ_AIMM
-            if(nsToolkit::gAIMMApp)
-                nsToolkit::gAIMMApp->Release();
-
-            nsToolkit::gAIMMApp = NULL;
-            ::CoUninitialize();
-#endif
             //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
             ::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
             break;
@@ -174,8 +161,16 @@ nsToolkit::nsToolkit()
     mDispatchWnd = 0;
 
 #ifdef MOZ_AIMM
+    //
+    // Initialize COM since create Active Input Method Manager object
+    //
+    if (!nsToolkit::gAIMMCount)
+      ::CoInitialize(NULL);
+
     if(!nsToolkit::gAIMMApp)
       ::CoCreateInstance(CLSID_CActiveIMM, NULL, CLSCTX_INPROC_SERVER, IID_IActiveIMMApp, (void**) &nsToolkit::gAIMMApp);
+
+    nsToolkit::gAIMMCount++;
 #endif
 }
 
@@ -188,6 +183,18 @@ nsToolkit::nsToolkit()
 nsToolkit::~nsToolkit()
 {
     NS_PRECONDITION(::IsWindow(mDispatchWnd), "Invalid window handle");
+
+#ifdef MOZ_AIMM
+    nsToolkit::gAIMMCount--;
+
+    if (!nsToolkit::gAIMMCount) {
+        if(nsToolkit::gAIMMApp) {
+            nsToolkit::gAIMMApp->Release();
+            nsToolkit::gAIMMApp = NULL;
+        }
+        ::CoUninitialize();
+    }
+#endif
 
     // Destroy the Dispatch Window
     ::DestroyWindow(mDispatchWnd);
