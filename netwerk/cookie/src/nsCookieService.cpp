@@ -584,7 +584,7 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
       }
 
       // check if the cookie has expired
-      if (!cookie->IsSession() && cookie->Expiry() <= currentTime) {
+      if (cookie->Expiry() <= currentTime) {
         continue;
       }
 
@@ -1133,6 +1133,9 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
   // attributes parsed from the cookie
   nsCookieAttributes cookieAttributes;
 
+  // init expiryTime such that session cookies won't prematurely expire
+  cookieAttributes.expiryTime = LL_MAXINT;
+
   // newCookie says whether there are multiple cookies in the header; so we can handle them separately.
   // after this function, we don't need the cookieHeader string for processing this cookie anymore;
   // so this function uses it as an outparam to point to the next cookie, if there is one.
@@ -1225,7 +1228,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
     RemoveCookieFromList(matchIter);
 
     // check if the cookie has expired
-    if (!aCookie->IsSession() && aCookie->Expiry() <= aCurrentTime) {
+    if (aCookie->Expiry() <= aCurrentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "previously stored cookie was deleted");
       NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
       return;
@@ -1233,7 +1236,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
 
   } else {
     // check if cookie has already expired
-    if (!aCookie->IsSession() && aCookie->Expiry() <= aCurrentTime) {
+    if (aCookie->Expiry() <= aCurrentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie has already expired");
       return;
     }
@@ -1917,7 +1920,7 @@ removeExpiredCallback(nsCookieEntry *aEntry,
 {
   const nsInt64 &currentTime = *NS_STATIC_CAST(nsInt64*, aArg);
   for (nsListIter iter(aEntry, nsnull, aEntry->Head()); iter.current; ) {
-    if (!iter.current->IsSession() && iter.current->Expiry() <= currentTime)
+    if (iter.current->Expiry() <= currentTime)
       // remove from list. this takes care of updating the iterator for us
       nsCookieService::gCookieService->RemoveCookieFromList(iter);
     else
@@ -1967,8 +1970,8 @@ nsCookieService::CountCookiesFromHost(nsCookie          *aCookie,
   do {
     nsCookieEntry *entry = mHostTable.GetEntry(currentDot);
     for (nsListIter iter(entry); iter.current; ++iter) {
-      // only count session or non-expired cookies
-      if (iter.current->IsSession() || iter.current->Expiry() > aData.currentTime) {
+      // only count non-expired cookies
+      if (iter.current->Expiry() > aData.currentTime) {
         ++countFromHost;
 
         // check if we've found the oldest cookie so far
