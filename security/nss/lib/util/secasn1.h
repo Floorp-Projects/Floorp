@@ -36,7 +36,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.7 2003/03/11 02:31:16 wtc%netscape.com Exp $
+ * $Id: secasn1.h,v 1.8 2003/06/11 23:12:38 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SECASN1_H_
@@ -92,7 +92,7 @@ extern SECStatus SEC_ASN1DecodeItem(PRArenaPool *pool, void *dest,
 
 extern SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src);
+                     const SECItem* src);
 
 /*
 ** Encoding.

@@ -877,7 +877,7 @@ static SECStatus DecodeItem(void* dest,
 
 SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
                      const SEC_ASN1Template* templateEntry,
-                     SECItem* src)
+                     const SECItem* src)
 {
     SECStatus rv = SECSuccess;
     SECItem newsrc;
