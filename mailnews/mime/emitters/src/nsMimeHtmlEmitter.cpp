@@ -194,7 +194,7 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   			  rv = mUnicodeConverter->DecodeMimePartIIStr(headerInfo->value, charset, getter_Copies(unicodeHeaderValue));
         else {
           nsAutoString headerValue(headerInfo->value);
-          *getter_Copies(unicodeHeaderValue) =
+          *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
             nsXPIDLString::Copy(headerValue.GetUnicode());
         }
         if (NS_SUCCEEDED(rv))
@@ -241,7 +241,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
                                                   getter_Copies(unicodeHeaderValue));
     else {
       nsAutoString attachmentName (name);
-      *getter_Copies(unicodeHeaderValue) =
+      *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
         nsXPIDLString::Copy(attachmentName.GetUnicode());
     }
 
