@@ -94,9 +94,6 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     mCairo = cairo_create ();
     cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
 
-    float app2dev = mDeviceContext->AppUnitsToDevUnits();
-    cairo_scale(mCairo, app2dev, app2dev);
-
     mClipRegion = new nsCairoRegion();
 
     cairo_select_font (mCairo, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
@@ -116,9 +113,6 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSu
 
     mCairo = cairo_create ();
     cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
-
-    float app2dev = mDeviceContext->AppUnitsToDevUnits();
-    cairo_scale(mCairo, app2dev, app2dev);
 
     mClipRegion = new nsCairoRegion();
 
