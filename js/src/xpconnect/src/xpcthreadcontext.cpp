@@ -65,6 +65,14 @@ GetMyStack()
 
 /***************************************************************************/
 
+/* 
+* This object holds state that we don't want to lose!
+*
+* The plan is that once created this object never goes away. We do an
+* intentional extra addref at construction to keep it around even if no one
+* is using it.
+*/
+
 nsXPCThreadJSContextStackImpl::nsXPCThreadJSContextStackImpl()
 {
     NS_INIT_ISUPPORTS();
@@ -83,6 +91,8 @@ nsXPCThreadJSContextStackImpl::GetSingleton()
     static nsXPCThreadJSContextStackImpl* singleton = NULL;
     if(!singleton)
         singleton = new nsXPCThreadJSContextStackImpl();
+    if(singleton)
+        NS_ADDREF(singleton);
     return singleton;
 }        
 
