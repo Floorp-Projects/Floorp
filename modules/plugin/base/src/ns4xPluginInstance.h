@@ -35,6 +35,10 @@
 #include "npupp.h"
 #include "jri.h"
 
+#ifdef XP_UNIX
+#include <gtk/gtk.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 
 class ns4xPluginInstance : public nsIPluginInstance
@@ -131,6 +135,14 @@ protected:
      */
     NPPluginFuncs* fCallbacks;
 
+#ifdef XP_UNIX
+   /**
+    * Special GtkXtBin widget that encapsulates the Xt toolkit
+    * within a Gtk Application
+    */
+   GtkWidget *xtbin;
+#endif
+
     /**
      * The 4.x-style structure used to communicate between the plugin
      * instance and the browser.
@@ -147,3 +159,6 @@ protected:
 
 
 #endif // ns4xPluginInstance_h__
+
+
+
