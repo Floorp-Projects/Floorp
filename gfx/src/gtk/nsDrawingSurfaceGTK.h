@@ -10,5 +10,5 @@ struct nsDrawingSurfaceGTK {
 
 typedef nsDrawingSurfaceGTK nsDrawingSurfaceGTK;
 
-#endif nsDrawingSurfaceGTK_h__
+#endif /* nsDrawingSurfaceGTK_h__ */
 
