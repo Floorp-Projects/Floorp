@@ -264,6 +264,9 @@ public:
   NS_IMETHOD  SetMessageKey(PRUint32 aMessageKey);
   NS_IMETHOD  GetMessageId(nsCString* aMessageId);
 
+  // For GUI notification...
+  NS_IMETHOD SetGUINotificationState(PRBool aEnableFlag);
+
   //
   // Attachment processing...
   //
@@ -428,6 +431,7 @@ public:
 								                                        // or mailbox: loading them in parallel would
 								                                        // cause multiple connections to the news
 								                                        // server to be opened, or would cause much seek()ing.
+  PRBool                  mGUINotificationEnabled;      // Should we throw up the GUI alerts on errors?
 
   void                    *m_crypto_closure;
   HJ77514

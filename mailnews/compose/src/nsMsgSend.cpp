@@ -19,8 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
- */ 
-
+ */
 #include "msgCore.h"
 #include "nsCRT.h"
 #include "rosetta_mailnews.h"
@@ -149,6 +148,7 @@ NS_IMPL_ISUPPORTS(nsMsgComposeAndSend, NS_GET_IID(nsIMsgSend));
 nsMsgComposeAndSend::nsMsgComposeAndSend() : 
     m_messageKey(0xffffffff)
 {
+  mGUINotificationEnabled = PR_TRUE;
   mEditor = nsnull;
   mMultipartRelatedAttachmentCount = 0;
   mCompFields = nsnull;			/* Where to send the message once it's done */
@@ -596,7 +596,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	if (! mOutputFile->is_open()) 
   {
 		status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
-    nsMsgDisplayMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE);
+    if (mGUINotificationEnabled)
+      nsMsgDisplayMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE);
 		goto FAIL;
 	}
   
@@ -2599,7 +2600,7 @@ nsMsgComposeAndSend::DeliverMessage()
   // if this is a mongo email...we should have a way to warn the user that
   // they are about to do something they may not want to do.
   //
-  if ( (mMessageWarningSize > 0) && (mTempFileSpec->GetFileSize() > mMessageWarningSize) )
+  if ( (mMessageWarningSize > 0) && (mTempFileSpec->GetFileSize() > mMessageWarningSize) && (mGUINotificationEnabled))
   {
     PRBool abortTheSend = PR_FALSE;
 
@@ -2742,7 +2743,8 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     if (!mMailSendListener)
     {
       // RICHIE_TODO - message loss here?
-      nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
+      if (mGUINotificationEnabled)
+        nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -2776,7 +2778,8 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     if (!mNewsPostListener)
     {
       // RICHIE_TODO - message loss here?
-      nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
+      if (mGUINotificationEnabled)
+        nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -2803,10 +2806,13 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
     // in certain cases, we've already shown the alert
     // and we don't need to show another alert here.
     if (failure_code != NS_ERROR_BUT_DONT_SHOW_ALERT) {
-	    if (!error_msg)
-	      nsMsgDisplayMessageByID(failure_code);
-	    else
-	      nsMsgDisplayMessageByString(error_msg);
+      if (mGUINotificationEnabled)
+      {
+	      if (!error_msg)
+	        nsMsgDisplayMessageByID(failure_code);
+	      else
+	        nsMsgDisplayMessageByString(error_msg);
+      }
     }
   }
 
@@ -2944,9 +2950,12 @@ nsMsgComposeAndSend::DoFcc()
     PRUnichar  *eMsg = ComposeGetStringByID(NS_MSG_FAILED_COPY_OPERATION);
     Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
 
-    nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
-    if (!oopsGiveMeBackTheComposeWindow)
-    	rv = NS_OK;
+    if (mGUINotificationEnabled)
+    {
+      nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
+      if (!oopsGiveMeBackTheComposeWindow)
+    	  rv = NS_OK;
+    }
 
     NotifyListenersOnStopCopy(rv);
 	  nsCRT::free(eMsg);
@@ -3207,12 +3216,15 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
         
         PRUnichar  *eMsg = ComposeGetStringByID(NS_MSG_FAILED_COPY_OPERATION);
         Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
-        
-        nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
-        if (!oopsGiveMeBackTheComposeWindow)
-          rv = NS_OK;
-        else
-          aStatus = NS_ERROR_FAILURE;
+
+        if (mGUINotificationEnabled)
+        {
+          nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
+          if (!oopsGiveMeBackTheComposeWindow)
+            rv = NS_OK;
+          else
+            aStatus = NS_ERROR_FAILURE;
+        }
         
         nsCRT::free(eMsg);
       }
@@ -3974,7 +3986,7 @@ nsMsgComposeAndSend::SetStatusMessage(PRUnichar *aMsgString)
 {
   PRUnichar     *progressMsg;
 
-  if ( (!mFeedback) || (!aMsgString) )
+  if ( (!mFeedback) || (!aMsgString) || (!mGUINotificationEnabled) )
     return NS_OK;
 
   nsString  formattedString(aMsgString);
@@ -3984,5 +3996,13 @@ nsMsgComposeAndSend::SetStatusMessage(PRUnichar *aMsgString)
   progressMsg = nsCRT::strdup(formattedString.GetUnicode());
   mFeedback->ShowStatusString(progressMsg);
 
+  return NS_OK;
+}
+
+// For GUI notification...
+nsresult
+nsMsgComposeAndSend::SetGUINotificationState(PRBool aEnableFlag)
+{
+  mGUINotificationEnabled = aEnableFlag;
   return NS_OK;
 }

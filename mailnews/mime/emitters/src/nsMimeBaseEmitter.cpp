@@ -511,6 +511,8 @@ nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
               break;
             }
           }
+
+          ++ptr;
         }
       }
 
