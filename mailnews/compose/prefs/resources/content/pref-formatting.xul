@@ -20,6 +20,7 @@
 
   <titledbox orient="vertical">
     <title><html>&sendMail.label;</html></title>
+    <html>&sendMaildesc.label;</html>
 
     <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="mail.default_html_action"

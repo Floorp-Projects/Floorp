@@ -20,7 +20,7 @@ Rights Reserved.
 
 <!ENTITY pane.title                           "Message Composition">
 <!ENTITY pane.description                     "Composing mail messages">
-<!ENTITY forwardReply.label                   "Forwarding and replying to messages">
+<!ENTITY forwardReply.label                   "Forwarding and Replying to Messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
 <!ENTITY forwardMsg.accesskey                 "f">
 <!ENTITY inline.label                         "Inline">

@@ -73,7 +73,7 @@
 
 	<separator class="thin"/>
 	<html>&displayText.label;</html>
-    <box class="indent">
+    <box class="indent" autostretch="never">
 	  <text class="label" value="&style.label;" accesskey="&style.accesskey;" for="mailQuotedStyle"/>
       <menulist id="mailQuotedStyle" pref="true" preftype="int" prefstring="mail.quoted_style"
                 prefattribute="data">

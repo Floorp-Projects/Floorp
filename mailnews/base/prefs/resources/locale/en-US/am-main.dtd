@@ -19,7 +19,7 @@
 <!ENTITY sampleSig2.label "Sample Signature 2">
 <!ENTITY sampleSig3.label "Sample Signature 3">
 <!-- LOCALIZATION NOTE (useHtml.label) : do not translate "html" in below line -->
-<!ENTITY useHtml.label "Compose messages using HTML.">
+<!ENTITY useHtml.label "Compose messages using HTML">
 <!-- LOCALIZATION NOTE (attachVCard.label) : do not translate "vCard" in below line -->
 <!ENTITY attachVCard.label "Attach my vCard to messages">
 <!ENTITY advancedButton.label "Advanced...">

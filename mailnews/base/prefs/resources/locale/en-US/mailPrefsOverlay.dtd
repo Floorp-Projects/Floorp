@@ -7,7 +7,7 @@
 <!ENTITY mesCheck.accesskey "m">
 
 <!ENTITY mail.label "Mail and Newsgroups">
-<!ENTITY address.label "Address Book">
+<!ENTITY address.label "Address Books">
 <!ENTITY viewingMessages.label "Message Display">
 <!ENTITY composingMessages.label "Message Composition">
 <!ENTITY format.label "Send Format">

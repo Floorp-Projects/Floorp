@@ -20,7 +20,8 @@ Rights Reserved.
 
 <!ENTITY pane.title                   "Send Format">
 <!ENTITY pane.description             "Message formatting">
-<!ENTITY sendMail.label               "When sending messages in HTML format and one or more recipients are not listed as being able to receive HTML:">
+<!ENTITY sendMail.label               "Send Format">
+<!ENTITY sendMaildesc.label           "When sending messages in HTML format and one or more recipients are not listed as being able to receive HTML:">
 <!ENTITY askMe.label                  "Ask me what to do (Mail prompts you to choose a format)">
 <!ENTITY askMe.accesskey              "a">
 <!ENTITY convertPlain.label           "Convert the message to plain text (some formatting may be lost)">
@@ -30,4 +31,4 @@ Rights Reserved.
 <!ENTITY sendBoth.label               "Send the message in both plain text and HTML (larger message size)">
 <!ENTITY sendBoth.accesskey           "e">
 <!ENTITY override.label               "You can override these settings for individual messages by using the Options menu in the Mail Compose window.">
-<!ENTITY receiveHTML.label            "If you know a particular recipient can reveive HTML mail, unckeck the 'Send email as plain text(no HTML)' checkbox on hte recipients's Address Book card.">
+<!ENTITY receiveHTML.label            "If you know a particular recipient can receive HTML mail, uncheck the 'Send email as plain text (no HTML)' checkbox on the recipient's Address Book card.">

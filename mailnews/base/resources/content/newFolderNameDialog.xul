@@ -51,6 +51,7 @@ Rights Reserved.
         		<spring flex="100%"/>
         	</box>
 		<spring flex="100%"/>
+		<separator/>
 		<box id="okCancelButtons"/>
 		
 	</box>

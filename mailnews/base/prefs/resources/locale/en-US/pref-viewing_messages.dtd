@@ -42,7 +42,7 @@ Rights Reserved.
 <!ENTITY coding.label					  "Use the following character coding as the default for viewing messages:">
 <!ENTITY sendDefaultCharset.label         "Character Coding:">
 <!ENTITY sendDefaultCharset.accesskey	  "h">
-<!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character coding specified by MIME header).">
+<!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character coding specified by MIME header)">
 <!ENTITY forceCharsetOverride.accesskey   "p">
 <!ENTITY fixedWidth.label                 "Fixed width font">
 <!ENTITY fixedWidth.accesskey             "f">
@@ -53,7 +53,7 @@ Rights Reserved.
 <!ENTITY wrapInMsg.label                  "Wrap text to fit window width">
 <!ENTITY wrapInMsg.accesskey              "w">
 <!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
-<!ENTITY convertEmoticons.label           "Display emoticons as graphics.">
+<!ENTITY convertEmoticons.label           "Display emoticons as graphics">
 <!ENTITY convertEmoticons.accesskey       "d">
 
 <!-- Tooltips  -->  
