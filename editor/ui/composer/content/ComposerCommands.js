@@ -741,7 +741,7 @@ var nsPublishAsCommand =
       FinishHTMLSource();
 
       window.ok = false;
-      publishData = {};
+      var publishData = {};
       var oldTitle = GetDocumentTitle();
       window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", 
                         "chrome,close,titlebar,modal", "", "", publishData);

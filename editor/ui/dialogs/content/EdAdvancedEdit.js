@@ -332,7 +332,7 @@ function AddTreeItem ( name, value, treeChildrenId, attArray )
   //  but suppress calling the onSelect handler
   gDoOnSelectTree = false;
   try {
-    selectTreeItem(treeChildren, item);
+    selectTreeItem(treeChildren, treeitem);
   } catch (e) {}
   gDoOnSelectTree = true;
 
