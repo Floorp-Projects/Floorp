@@ -22,6 +22,7 @@
 
 #include "nsCharDetDll.h"
 #include "nsDocumentCharsetInfo.h"
+#include "nsCOMPtr.h"
 
 // XXX doc me
 
@@ -38,6 +39,9 @@ public:
   NS_IMETHOD GetForcedCharset(nsIAtom ** aResult);
   NS_IMETHOD SetForcedDetector(PRBool aForced);
   NS_IMETHOD GetForcedDetector(PRBool * aResult);
+
+private:
+  nsCOMPtr<nsIAtom> mForcedCharset;
 };
 
 class nsDocumentCharsetInfoFactory : public nsIFactory 
@@ -74,13 +78,13 @@ nsDocumentCharsetInfo::~nsDocumentCharsetInfo()
 
 NS_IMETHODIMP nsDocumentCharsetInfo::SetForcedCharset(nsIAtom * aCharset)
 {
-  // XXX write me
+  mForcedCharset = aCharset;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocumentCharsetInfo::GetForcedCharset(nsIAtom ** aResult)
 {
-  // XXX write me
+  *aResult = mForcedCharset;
   return NS_OK;
 }
 
