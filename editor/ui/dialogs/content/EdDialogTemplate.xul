@@ -45,7 +45,7 @@
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <xul:broadcaster id="args" value=""/>
-  <keyset id="keyset"/>
+  <xul:keyset id="keyset"/>
 
   <!-- from EdDialogOverlay -->
   <xul:box id="advancedEditButton"/>
