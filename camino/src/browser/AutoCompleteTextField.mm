@@ -27,6 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsString.h"
+#include "CHUserDefaults.h"
 
 static const int kMaxRows = 6;
 static const int kFrameMargin = 1;
@@ -137,6 +138,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
                                         name:NSWindowWillMoveNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResize:)
                                         name:NSWindowDidResizeNotification object:nil];
+
+  // read the user default on if we should auto-complete the text field as the user
+  // types or make them pick something from a list (a-la mozilla).
+	mCompleteWhileTyping = [[NSUserDefaults standardUserDefaults] boolForKey:USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING];
 }
 
 - (void) dealloc
@@ -322,7 +327,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   PRInt32 defaultRow;
   mResults->GetDefaultItemIndex(&defaultRow);
   
-  if (mCompleteResult) {
+  if (mCompleteResult && mCompleteWhileTyping) {
     [self selectRowAt:defaultRow];
     [self completeResult:defaultRow];
   } else {
@@ -353,12 +358,14 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       // cut off everything in the result string before the search string
       result1 = [result1 substringWithRange:NSMakeRange(matchRange.location, [result1 length]-matchRange.location)];
       
+#if 1
       // fill in the textfield with the matching string
       [self setStringValue:result1];
       
       // select the text after the search string
       text = [[self window] fieldEditor:NO forObject:self];
       [text setSelectedRange:NSMakeRange([mSearchString length], [result1 length]-[mSearchString length])];
+#endif
     }
   }
 }
@@ -496,8 +503,12 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   } else if (command == @selector(moveToEndOfDocument:)) {
     [self selectRowAt:[mTableView numberOfRows]-1];
     [self completeSelectedResult];
-  } else if (command == @selector(insertTab:) || command == @selector(insertNewline:)) {
-    [self closePopup];
+  } else if (command == @selector(insertTab:)) {
+    if ([mPopupWin isVisible]) {
+      [self selectRowBy:1];
+      [self completeSelectedResult];
+      return YES;
+    }
   } else if (command == @selector(deleteBackward:) || 
              command == @selector(deleteForward:)) {
     // if the user deletes characters, we need to know so that

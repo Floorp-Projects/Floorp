@@ -47,6 +47,9 @@
   BOOL mBackspaced;
   // determines if the search currently pending should complete the default result when it is ready
   BOOL mCompleteResult;
+  // should the autocomplete fill in the default completion into the text field? The default
+  // is no, but this can be set with a user default pref.
+  BOOL mCompleteWhileTyping;
   
   NSTimer *mOpenTimer;
 }
