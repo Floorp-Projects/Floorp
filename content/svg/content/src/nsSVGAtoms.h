@@ -43,7 +43,6 @@ public:
 
   // SVG namespace ID, good for the life of the nsSVGAtoms object
   static PRInt32  nameSpaceID;
-  static PRInt32  nameSpaceDeprecatedID;
   
   /* Declare all atoms
 
@@ -59,3 +58,4 @@ public:
 };
 
 #endif /* nsSVGAtoms_h___ */
+

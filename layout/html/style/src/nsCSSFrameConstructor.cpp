@@ -3375,8 +3375,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 #endif 
 #ifdef MOZ_SVG
         if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) && 
-            (nameSpaceID == nsSVGAtoms::nameSpaceID ||
-             nameSpaceID == nsSVGAtoms::nameSpaceDeprecatedID)) {
+            (nameSpaceID == nsSVGAtoms::nameSpaceID)) {
           rv = NS_NewSVGOuterSVGFrame(aPresShell, aDocElement, &contentFrame);
           if (NS_FAILED(rv)) {
             return rv;
@@ -6934,9 +6933,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
                                           nsIStyleContext*         aStyleContext,
                                           nsFrameItems&            aFrameItems)
 {
-  // Make sure that we remain confined in the SVG world
-  if (aNameSpaceID != nsSVGAtoms::nameSpaceID) 
-    return NS_OK;
+  NS_ASSERTION(NS_SUCCEEDED(aContent->GetNameSpaceID(aNameSpaceID)) && 
+            (aNameSpaceID == nsSVGAtoms::nameSpaceID), "SVG frame constructed in wrong namespace");
 
   nsresult  rv = NS_OK;
   PRBool isAbsolutelyPositioned = PR_FALSE;
@@ -6947,10 +6945,6 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   
   NS_ASSERTION(aTag != nsnull, "null SVG tag");
   if (aTag == nsnull)
-    return NS_OK;
-
-  // Make sure that we remain confined in the SVG world
-  if (aNameSpaceID != nsSVGAtoms::nameSpaceID) 
     return NS_OK;
 
   // Initialize the new frame
@@ -7297,8 +7291,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   if (NS_SUCCEEDED(rv) &&
       ((nsnull == aFrameItems.childList) ||
        (lastChild == aFrameItems.lastChild)) &&
-      (aNameSpaceID == nsSVGAtoms::nameSpaceID ||
-       aNameSpaceID == nsSVGAtoms::nameSpaceDeprecatedID)) {
+      (aNameSpaceID == nsSVGAtoms::nameSpaceID)) {
     rv = ConstructSVGFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
                               aTag, aNameSpaceID, styleContext, aFrameItems);
   }

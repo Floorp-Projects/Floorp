@@ -28,10 +28,8 @@
 #include "nsLayoutCID.h"
 
 static const char kSVGNameSpace[] = "http://www.w3.org/2000/svg";
-static const char kSVGDeprecatedNameSpace[] = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.svg";
 
 PRInt32  nsSVGAtoms::nameSpaceID;
-PRInt32  nsSVGAtoms::nameSpaceDeprecatedID;
 
 // define storage for all atoms
 #define SVG_ATOM(_name, _value) nsIAtom* nsSVGAtoms::_name;
@@ -56,8 +54,6 @@ void nsSVGAtoms::AddRefAtoms() {
     if (nsmgr) {
       nsmgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kSVGNameSpace),
                                nameSpaceID);
-      nsmgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kSVGDeprecatedNameSpace),
-                               nameSpaceDeprecatedID);
 
       gNameSpaceManager = nsmgr;
       NS_ADDREF(gNameSpaceManager);
