@@ -59,18 +59,12 @@
 
 static const PRUnichar CSS_ESCAPE = PRUnichar('\\');
 
-static const PRUint8 IS_LATIN1 = 0x01;
-static const PRUint8 IS_DIGIT = 0x02;
-static const PRUint8 IS_HEX_DIGIT = 0x04;
-static const PRUint8 IS_ALPHA = 0x08;
-static const PRUint8 START_IDENT = 0x10;
-static const PRUint8 IS_IDENT = 0x20;
-static const PRUint8 IS_WHITESPACE = 0x40;
-
 static PRBool gLexTableSetup = PR_FALSE;
-static PRUint8 gLexTable[256];
+PRUint8 nsCSSScanner::gLexTable[256];
 
-static void BuildLexTable()
+/* static */
+void
+nsCSSScanner::BuildLexTable()
 {
   gLexTableSetup = PR_TRUE;
 
@@ -87,7 +81,7 @@ static void BuildLexTable()
   lt['\n'] |= IS_WHITESPACE;  // line feed
   lt['\f'] |= IS_WHITESPACE;  // form feed
   for (i = 161; i <= 255; i++) {
-    lt[i] |= IS_LATIN1 | IS_IDENT | START_IDENT;
+    lt[i] |= IS_IDENT | START_IDENT;
   }
   for (i = '0'; i <= '9'; i++) {
     lt[i] |= IS_DIGIT | IS_HEX_DIGIT | IS_IDENT;
@@ -417,20 +411,6 @@ PRBool nsCSSScanner::EatNewline(nsresult& aErrorCode)
     Unread();
   }
   return eaten;
-}
-
-inline PRBool
-IsIdentStart(PRInt32 aChar, PRUint8* aLexTable)
-{
-  return aChar >= 0 &&
-         (aChar >= 256 || (aLexTable[aChar] & START_IDENT) != 0);
-}
-
-static PRBool
-StartsIdent(PRInt32 aFirstChar, PRInt32 aSecondChar, PRUint8* aLexTable)
-{
-  return IsIdentStart(aFirstChar, aLexTable) ||
-         (aFirstChar == '-' && IsIdentStart(aSecondChar, aLexTable));
 }
 
 static PRBool
