@@ -48,29 +48,30 @@ function calendarPrefObserver( CalendarPreferences )
 
 calendarPrefObserver.prototype =
 {
-  domain: "calendar.",
-  observe: function(subject, topic, prefName)
-  {
-     // when calendar pref was changed, we reinitialize 
-     this.CalendarPreferences.loadPreferences();
-     
-     switch( prefName )
-     {
-        case "calendar.week.start":
-         this.CalendarPreferences.calendarWindow.currentView.refresh();
-        break
+   domain: "calendar.",
+   observe: function(subject, topic, prefName)
+   {
+      // when calendar pref was changed, we reinitialize 
+      this.CalendarPreferences.loadPreferences();
 
-        case "calendar.date.format":
-         this.CalendarPreferences.calendarWindow.currentView.refresh();
-         unifinderRefesh();
-        default:
-        break;
+      switch( prefName )
+      {
+         case "calendar.week.start" :
+            this.CalendarPreferences.calendarWindow.currentView.refresh();
+            break;
 
-     }
+         case "calendar.date.format" :
+            this.CalendarPreferences.calendarWindow.currentView.refresh();
+            unifinderRefresh();
+            toDoUnifinderRefresh();
+         default :
+            break;
+
+      }
      
-     //this causes Mozilla to freeze
-     //firePendingEvents(); 
-  }
+      //this causes Mozilla to freeze
+      //firePendingEvents(); 
+   }
 }
 
 function getDefaultCategories()
@@ -99,97 +100,15 @@ function calendarPreferences( CalendarWindow )
 
 calendarPreferences.prototype.loadPreferences = function()
 {
-   try
-   {
-      this.arrayOfPrefs.showalarms = this.calendarPref.getBoolPref( "alarms.show" );
-   }
-   catch( e )
-   {
-      this.calendarPref.setBoolPref( "alarms.show", true );
-      this.arrayOfPrefs.showalarms = true;
-   }
-
-   try
-   {
-      this.arrayOfPrefs.alarmsplaysound = this.calendarPref.getBoolPref( "alarms.playsound" );
-   }
-   catch( e )
-   {
-      this.calendarPref.setBoolPref( "alarms.playsound", false );
-      this.arrayOfPrefs.alarmsplaysound = this.calendarPref.getBoolPref( "alarms.playsound" );
-   }
-
-   try
-   {
-      this.arrayOfPrefs.dateformat = this.calendarPref.getIntPref( "date.format" );
-   }
-   catch( e )
-   {
-      this.calendarPref.setIntPref( "date.format", 0 );
-      this.arrayOfPrefs.dateformat = this.calendarPref.getIntPref( "date.format" );
-   }
-
-   try
-   {
-      this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
-   }
-   catch( e )
-   {
-      this.calendarPref.setIntPref( "week.start", 0 );
-      this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
-   }
-
-   try
-   {
-      this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
-   }
-   catch( e )
-   {
-      this.calendarPref.setIntPref( "event.defaultlength", 60 );
-      this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
-   }
-
-   try
-   {
-      this.arrayOfPrefs.defaultsnoozelength = this.calendarPref.getIntPref( "alarms.defaultsnoozelength" );
-   }
-   catch( e )
-   {
-      this.calendarPref.setIntPref( "alarms.defaultsnoozelength", 10 );
-      this.arrayOfPrefs.defaultsnoozelength = this.calendarPref.getIntPref( "alarms.defaultsnoozelength" );
-   }
-
-
-   try
-   {
-      this.arrayOfPrefs.categories = this.calendarPref.getCharPref( "categories.names" );
-   }
-   catch( e )
-   {
-      this.calendarPref.setCharPref( "categories.names", getDefaultCategories() );
-      this.arrayOfPrefs.categories = this.calendarPref.getCharPref( "categories.names" );
-   }
-         
-   try
-   {
-      this.arrayOfPrefs.numberofservers = this.calendarPref.getIntPref( "servers.count" ); //this counts the default server
-   }
-   catch( e )
-   {
-      this.calendarPref.setIntPref( "servers.count", 1 ); //this counts the default server as well, so its 1.
-      this.arrayOfPrefs.numberofservers = this.calendarPref.getIntPref( "servers.count" ); //this counts the default server
-   }
-
-
-   try
-   {
-      this.arrayOfPrefs.reloadonlaunch = this.calendarPref.getBoolPref( "servers.reloadonlaunch" ); //this counts the default server   
-   }
-   catch( e )
-   {
-      this.calendarPref.setBoolPref( "servers.reloadonlaunch", false ); //do we reload the remote servers on launch?
-      this.arrayOfPrefs.reloadonlaunch = this.calendarPref.getBoolPref( "servers.reloadonlaunch" ); //this counts the default server
-   }
+   this.arrayOfPrefs.showalarms = getBoolPref(this.calendarPref, "alarms.show", true );
+   this.arrayOfPrefs.alarmsplaysound = getBoolPref(this.calendarPref, "alarms.playsound", false );
+   this.arrayOfPrefs.dateformat = getIntPref(this.calendarPref, "date.format", 0 );
+   this.arrayOfPrefs.weekstart = getIntPref(this.calendarPref, "week.start", 0 );
+   this.arrayOfPrefs.defaulteventlength = getIntPref(this.calendarPref, "event.defaultlength", 60 );
+   this.arrayOfPrefs.defaultsnoozelength = getIntPref(this.calendarPref, "alarms.defaultsnoozelength", 10 );
+   this.arrayOfPrefs.categories = getCharPref(this.calendarPref, "categories.names", getDefaultCategories() );
+   this.arrayOfPrefs.numberofservers = getIntPref(this.calendarPref, "servers.count", 1 ); //this counts the default server
+   this.arrayOfPrefs.reloadonlaunch = getBoolPref(this.calendarPref, "servers.reloadonlaunch", false ); //this counts the default server   
 }
 
 calendarPreferences.prototype.getPref = function( Preference )
@@ -198,3 +117,40 @@ calendarPreferences.prototype.getPref = function( Preference )
 
    return( ThisPref );
 }
+
+function getCharPref (prefObj, prefName, defaultValue)
+{
+    try
+    {
+        return prefObj.getCharPref (prefName);
+    }
+    catch (e)
+    {
+        return defaultValue;
+    }
+}
+
+function getIntPref (prefObj, prefName, defaultValue)
+{
+    try
+    {
+        return prefObj.getIntPref (prefName);
+    }
+    catch (e)
+    {
+        return defaultValue;
+    }
+}
+
+function getBoolPref (prefObj, prefName, defaultValue)
+{
+    try
+    {
+        return prefObj.getBoolPref (prefName);
+    }
+    catch (e)
+    {
+        return defaultValue;
+    }
+}
+

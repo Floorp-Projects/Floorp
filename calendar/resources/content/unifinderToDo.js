@@ -56,7 +56,7 @@ var unifinderToDoDataSourceObserver =
 {
    onLoad   : function()
    {
-      toDoUnifinderRefesh();
+      toDoUnifinderRefresh();
    },
    
    onStartBatch   : function()
@@ -65,12 +65,12 @@ var unifinderToDoDataSourceObserver =
     
    onEndBatch   : function()
    {
-      toDoUnifinderRefesh();
+      toDoUnifinderRefresh();
    },
     
    onAddItem : function( calendarToDo )
    {
-      toDoUnifinderRefesh();
+      toDoUnifinderRefresh();
    },
 
    onModifyItem : function( calendarToDo, originalToDo )
@@ -80,7 +80,7 @@ var unifinderToDoDataSourceObserver =
 
    onDeleteItem : function( calendarToDo )
    {
-      toDoUnifinderRefesh();
+      toDoUnifinderRefresh();
    },
 
    onAlarm : function( calendarToDo )
@@ -115,7 +115,7 @@ function finishCalendarToDoUnifinder( )
 *   Called by event observers to update the display
 */
 
-function toDoUnifinderRefesh()
+function toDoUnifinderRefresh()
 {
    var Checked = document.getElementById( "only-completed-checkbox" ).checked;
    

@@ -112,7 +112,7 @@ var unifinderEventDataSourceObserver =
    {
         if( !gICalLib.batchMode )
         {
-            unifinderRefesh();
+            unifinderRefresh();
         }
    },
    
@@ -122,7 +122,7 @@ var unifinderEventDataSourceObserver =
     
    onEndBatch   : function()
    {
-        unifinderRefesh();
+        unifinderRefresh();
    },
     
    onAddItem : function( calendarEvent )
@@ -131,7 +131,7 @@ var unifinderEventDataSourceObserver =
         {
             if( calendarEvent )
             {
-                unifinderRefesh();
+                unifinderRefresh();
             }
         }
    },
@@ -140,7 +140,7 @@ var unifinderEventDataSourceObserver =
    {
         if( !gICalLib.batchMode )
         {
-            unifinderRefesh();
+            unifinderRefresh();
         }
    },
 
@@ -148,7 +148,7 @@ var unifinderEventDataSourceObserver =
    {
         if( !gICalLib.batchMode )
         {
-            unifinderRefesh();
+            unifinderRefresh();
         }
    },
 
@@ -206,7 +206,7 @@ function formatUnifinderEventTime( time )
 *   Called by event observers to update the display
 */
 
-function unifinderRefesh()
+function unifinderRefresh()
 {
    //gEventSource.onlyFutureEvents = (document.getElementById( 'unifinder-future-events' ).getAttribute( "checked" ) == "true" );
    eventTable = gEventSource.getCurrentEvents();
