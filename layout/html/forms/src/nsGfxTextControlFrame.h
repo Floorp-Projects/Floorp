@@ -42,9 +42,9 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsITextContent.h"
 #include "nsHTMLValue.h"
+#include "nsIWebShell.h"
 
 class nsIFrame;
-class nsIWebShell;
 class nsIDOMSelection;
 
 
