@@ -78,11 +78,11 @@ protected:
 
 private:
   nsCOMPtr<nsIPrefBranchInternal> mRootBranch;
-  nsIFile*                mCurrentFile;
+  nsCOMPtr<nsIFile>       mCurrentFile;
   PRPackedBool            mErrorOpeningUserPrefs;
 
   PRPackedBool            mErrorOpeningSharedUserPrefs;
-  nsIFile*                mCurrentSharedFile;
+  nsCOMPtr<nsIFile>       mCurrentSharedFile;
 };
 
 #endif // nsPrefService_h__
