@@ -899,6 +899,7 @@ case "$target" in
     MKSHLIB='$(LD) $(DSO_LDOPTS) -soname $(notdir $@) -o $@'
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS=-shared
+    OS_LIBS="$OS_LIBS -lc"
     case "${target_cpu}" in
     alpha)
         AC_DEFINE(_ALPHA_)
