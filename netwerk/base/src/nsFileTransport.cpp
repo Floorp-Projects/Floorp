@@ -62,10 +62,10 @@ nsFileTransport::nsFileTransport()
       mCancelStatus(NS_OK),
       mMonitor(nsnull),
       mStatus(NS_OK),
-      mLoadAttributes(LOAD_NORMAL),
       mOffset(0),
       mTotalAmount(-1),
       mTransferAmount(-1),
+      mLoadAttributes(LOAD_NORMAL),
       mBuffer(nsnull),
       mService(nsnull)
 {
@@ -513,8 +513,10 @@ nsFileTransport::Process(void)
             // of the data in the stream/file.
             mStatus = NS_BASE_STREAM_CLOSED;
         }
-        mOutputStream->Flush();
-        mOutputStream = null_nsCOMPtr();
+        if (mOutputStream) {
+            mOutputStream->Flush();
+            mOutputStream = null_nsCOMPtr();
+        }
         mInputStream = null_nsCOMPtr();
 
         mSource = null_nsCOMPtr();
