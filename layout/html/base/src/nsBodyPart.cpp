@@ -20,6 +20,10 @@
 #include "nsBodyFrame.h"
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
+#include "nsIWebShell.h"
+#include "nsHTMLAtoms.h"
+
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 class BodyPart : public nsHTMLContainer {
 public:
@@ -72,6 +76,7 @@ BodyPart::CreateFrame(nsIPresContext*  aPresContext,
     return rv;
   }
   frame->SetStyleContext(aPresContext, aStyleContext);
+
   aResult = frame;
   return NS_OK;
 }

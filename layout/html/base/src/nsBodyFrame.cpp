@@ -33,6 +33,10 @@
 #include "nsAbsoluteFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsCSSBlockFrame.h"
+#include "nsIWebShell.h"
+#include "nsHTMLValue.h"
+#include "nsHTMLTagContent.h"
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 nsresult nsBodyFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                nsIContent* aContent,
@@ -349,6 +353,99 @@ nsBodyFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   return NS_OK;
 }
 
+void AddToPadding(nsIPresContext* aPresContext, nsStyleUnit aStyleUnit, nscoord aValue, 
+                  PRBool aVertical, nsStyleCoord& aStyleCoord)
+{
+  if (eStyleUnit_Coord == aStyleUnit) {
+    nscoord coord;
+    coord = aStyleCoord.GetCoordValue();
+    coord += aValue;
+    aStyleCoord.SetCoordValue(coord);
+  } 
+  else if (eStyleUnit_Percent == aStyleUnit) {
+    nsRect visibleArea;
+    aPresContext->GetVisibleArea(visibleArea);
+    float increment = (aVertical) ? ((float)aValue) / ((float)visibleArea.height)
+                                  : ((float)aValue) / ((float)visibleArea.width);
+    float percent = aStyleCoord.GetPercentValue();
+    percent += increment;
+    aStyleCoord.SetPercentValue(percent);
+  }
+}
+
+NS_METHOD 
+nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
+{
+  // marginwidth/marginheight set in the body cancels marginwidth/marginheight set in the 
+  // web shell. However, if marginwidth is set in the web shell but marginheight is not set
+  // it is as if marginheight were set to 0. The same logic applies when marginheight is
+  // set and marginwidth is not set.
+      
+  PRInt32 marginWidth, marginHeight;
+  
+  nsISupports* container;
+  aPresContext->GetContainer(&container);
+  if (nsnull != container) {
+    nsIWebShell* webShell = nsnull;
+    container->QueryInterface(kIWebShellIID, (void**) &webShell);
+    if (nsnull != webShell) {
+      webShell->GetMarginWidth(marginWidth);   // -1 indicates not set
+      webShell->GetMarginHeight(marginHeight); // -1 indicates not set
+      if ((marginWidth >= 0) && (marginHeight < 0)) { // nav quirk 
+        marginHeight = 0;
+      }
+      if ((marginHeight >= 0) && (marginWidth < 0)) { // nav quirk
+        marginWidth = 0;
+      }
+      NS_RELEASE(webShell);
+    }
+    NS_RELEASE(container);
+  }
+
+  nsHTMLValue value;
+  float p2t = aPresContext->GetPixelsToTwips();
+  nsHTMLTagContent* content = (nsHTMLTagContent*)mContent;
+
+  content->GetAttribute(nsHTMLAtoms::marginwidth, value);
+  if (eHTMLUnit_Pixel == value.GetUnit()) { // marginwidth is set in body 
+    marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+    if (marginWidth < 0) {
+      marginWidth = 0;
+    }
+  }
+
+  content->GetAttribute(nsHTMLAtoms::marginheight, value);
+  if (eHTMLUnit_Pixel == value.GetUnit()) { // marginheight is set in body
+    marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+    if (marginHeight < 0) {
+      marginHeight = 0;
+    }
+  }
+
+  nsStyleSpacing* spacing = (nsStyleSpacing*)
+    mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
+  nsStyleCoord styleCoord;
+  nscoord coord;
+  if (marginWidth >= 0) {  // add marginwidth to padding
+    AddToPadding(aPresContext, spacing->mPadding.GetLeftUnit(), 
+                 marginWidth, PR_FALSE, spacing->mPadding.GetLeft(styleCoord));
+    spacing->mPadding.SetLeft(styleCoord);
+    AddToPadding(aPresContext, spacing->mPadding.GetRightUnit(), 
+                 marginWidth, PR_FALSE, spacing->mPadding.GetRight(styleCoord));
+    spacing->mPadding.SetRight(styleCoord);
+  }
+  if (marginHeight >= 0) { // add marginheight to padding
+    AddToPadding(aPresContext, spacing->mPadding.GetTopUnit(), 
+                 marginHeight, PR_TRUE, spacing->mPadding.GetTop(styleCoord));
+    spacing->mPadding.SetTop(styleCoord);
+    AddToPadding(aPresContext, spacing->mPadding.GetBottomUnit(), 
+                 marginHeight, PR_TRUE, spacing->mPadding.GetBottom(styleCoord));
+    spacing->mPadding.SetBottom(styleCoord);
+  }
+
+  mStyleContext->RecalcAutomaticData(aPresContext);
+  return NS_OK;
+}
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
 

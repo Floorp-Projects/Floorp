@@ -74,6 +74,8 @@ public:
                          nsIContent**    aContent,
                          PRInt32&        aCursor);
 
+  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+
   // nsIAnchoredItems
   virtual void AddAnchoredItem(nsIFrame*         aAnchoredItem,
                                AnchoringPosition aPosition,
