@@ -31,6 +31,7 @@
 #include "nsCRT.h"
 #include "nsDeviceContextWin.h"
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
 
 #ifdef FONT_HAS_GLYPH
 #undef FONT_HAS_GLYPH
@@ -134,6 +135,7 @@ public:
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* FindGenericFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindUserDefinedFont(HDC aDC, PRUnichar aChar);
   nsFontWin*         FindFont(HDC aDC, PRUnichar aChar);
   virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName);
   virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
@@ -149,14 +151,17 @@ public:
 
   PRInt32             mIndexOfSubstituteFont;
 
-  nsString            *mFonts;
-  PRUint16            mFontsAlloc;
-  PRUint16            mFontsCount;
+  nsStringArray       mFonts;
   PRUint16            mFontsIndex;
+  nsVoidArray         mFontIsGeneric;
 
+  nsAutoString        mDefaultFont;
   nsString            *mGeneric;
-  int                 mTriedAllGenerics;
   nsCOMPtr<nsIAtom>   mLangGroup;
+  nsAutoString        mUserDefined;
+
+  PRUint8 mTriedAllGenerics;
+  PRUint8 mIsUserDefined;
 
   nscoord             mSpaceWidth;
 
@@ -194,7 +199,7 @@ protected:
   PRUint16 GetFontWeightTable(HDC aDC, nsString* aFontName);
   
   void FillLogFont(LOGFONT* aLogFont, PRInt32 aWeight);
-  void RealizeFont();
+  nsresult RealizeFont();
 
   nsDeviceContextWin  *mDeviceContext;
   nsFont              *mFont;
