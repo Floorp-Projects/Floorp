@@ -105,7 +105,6 @@ NS_IMPL_ISUPPORTS1(nsAddbookUrl, nsIURI)
 NS_IMETHODIMP 
 nsAddbookUrl::CrackAddURL(char *searchPart)
 {
-  nsresult        rv = NS_OK;
   nsCString       emailAddr = "";
   nsCString       folderName = "";
 
@@ -171,7 +170,6 @@ nsAddbookUrl::CrackAddURL(char *searchPart)
 NS_IMETHODIMP 
 nsAddbookUrl::CrackPrintURL(char *searchPart, PRInt32 aOperation)
 {
-  nsresult        rv = NS_OK;
   nsCString       emailAddr = "";
   nsCString       folderName = "";
 
@@ -313,17 +311,17 @@ nsresult nsAddbookUrl::ParseUrl()
 
   mOperationPart.ToLowerCase();
   // Now, figure out what we are supposed to be doing?
-  if (mOperationPart == "printone")
+  if (!nsCRT::strcmp(mOperationPart, "printone"))
   {
     mOperationType = nsIAddbookUrlOperation::PrintIndividual;
     rv = CrackPrintURL(searchPart, mOperationType); 
   }
-  else if (mOperationPart == "printall")
+  else if (!nsCRT::strcmp(mOperationPart, "printall"))
   {
     mOperationType = nsIAddbookUrlOperation::PrintAddressBook;
     rv = CrackPrintURL(searchPart, mOperationType); 
   }
-  else if (mOperationPart == "add")
+  else if (!nsCRT::strcmp(mOperationPart, "add"))
   {
     mOperationType = nsIAddbookUrlOperation::AddToAddressBook;
     rv = CrackAddURL(searchPart); 
