@@ -50,10 +50,8 @@ printStatus(summary);
 /*
  * Just seeing that we don't crash when compiling this assignment -
  */
-try
-{
-  var len =
-
+var len =
+ 
 (((((((((((((((((((((((((((((((((((((((((((((((((((
 (((((((((((((
  
@@ -249,8 +247,3 @@ try
 )))))))))))))
 
 ;
-
-}
-catch(e)
-{
-}
