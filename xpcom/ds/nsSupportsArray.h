@@ -27,7 +27,7 @@
 
 static const PRUint32 kAutoArraySize = 4;
 
-class nsSupportsArray : public nsISupportsArray {
+class NS_COM nsSupportsArray : public nsISupportsArray {
 public:
   nsSupportsArray(void);
   virtual ~nsSupportsArray(void);
