@@ -225,6 +225,7 @@ FindGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s,
 	{
 		retVal = remoteStoreGetSlotValue(rdf, u, s, type, inversep, tv);
 	}
+	XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char*) retVal)));
 	return(retVal);
 }
 

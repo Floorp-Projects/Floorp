@@ -25,6 +25,7 @@
 #include "es2mcf.h"
 #include "glue.h"
 #include "ht.h"
+#include "utils.h"
 
 
 	/* externs */
@@ -62,6 +63,7 @@ ESAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
 		   RDF_ValueType type, PRBool tv)
 {
 	PRBool		retVal;
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char*) v)));	
 
   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)  &&
       (ESFTPRT((RDF_Resource)v)) &&
@@ -82,6 +84,7 @@ ESUnassert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
 {
 	PRBool		retVal;
 
+  XP_ASSERT( (RDF_STRING_TYPE != type) || ( IsUTF8String((const char*) v)));	
   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)  &&
       (ESFTPRT((RDF_Resource)v)) &&
       (containerp((RDF_Resource)v))) {
