@@ -2861,7 +2861,14 @@ nsWidget::GetXIC()
       // fontset is hardcoded, but need to get a fontset at the
       // text insertion point
       GdkFont *gfontset =
-gdk_fontset_load("-misc-fixed-medium-r-normal--*-130-*-*-*-*-*-0");
+gdk_fontset_load("-*-*-*-*-*-*-16-*-*-*-*-*-*-*");
+      // I change it from the font setting from the setting below. 
+      // reason is when I use hanIM the font creation failed in ko locale
+      // so far it does not have problem w/ xcin since xcin only support 
+      // root window.
+
+      //gdk_fontset_load("-misc-fixed-medium-r-normal--*-130-*-*-*-*-*-0");
+
       GdkWindow *gdkWindow = (GdkWindow*) GetNativeData(NS_NATIVE_WINDOW);
       if (!gdkWindow) return nsnull;
 
