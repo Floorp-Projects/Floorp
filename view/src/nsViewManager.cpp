@@ -1629,18 +1629,12 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   }
   view->ConvertFromParentCoords(&clippedRect.x, &clippedRect.y);
 
-  if ((aUpdateFlags & NS_VMREFRESH_FORCHILD) != 0 && view->GetClipChildren()) {
-    nsRect childClipRect;
-    view->GetChildClip(childClipRect);
-    if (!clippedRect.IntersectRect(clippedRect, childClipRect)) {
-      return NS_OK;
-    }
-  }
-
   nsRect damagedRect;
-  if (!damagedRect.IntersectRect(aRect, clippedRect)) {
-    return NS_OK;
-  }
+  damagedRect.x = aRect.x;
+  damagedRect.y = aRect.y;
+  damagedRect.width = aRect.width;
+  damagedRect.height = aRect.height;
+  damagedRect.IntersectRect(aRect, clippedRect);
 
    // If the rectangle is not visible then abort
    // without invalidating. This is a performance 
@@ -2506,10 +2500,10 @@ NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
     view->GetVisibility(visibility);
     if (visibility != nsViewVisibility_kHide) {
       nsView* parentView = view->GetParent();
-      UpdateView(parentView, oldArea, NS_VMREFRESH_NO_SYNC | NS_VMREFRESH_FORCHILD);
+      UpdateView(parentView, oldArea, NS_VMREFRESH_NO_SYNC);
       nsRect newArea;
       view->GetBounds(newArea);
-      UpdateView(parentView, newArea, NS_VMREFRESH_NO_SYNC | NS_VMREFRESH_FORCHILD);
+      UpdateView(parentView, newArea, NS_VMREFRESH_NO_SYNC);
     }
   }
   return NS_OK;
@@ -2570,7 +2564,7 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
 
         UpdateView(view, aRect, NS_VMREFRESH_NO_SYNC);
         view->ConvertToParentCoords(&oldDimensions.x, &oldDimensions.y);
-        UpdateView(parentView, oldDimensions, NS_VMREFRESH_NO_SYNC | NS_VMREFRESH_FORCHILD);
+        UpdateView(parentView, oldDimensions, NS_VMREFRESH_NO_SYNC);
       } else {
         view->SetDimensions(aRect, PR_FALSE);
 
@@ -2578,7 +2572,7 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
         nsRect r = aRect;
         view->ConvertToParentCoords(&r.x, &r.y);
         view->ConvertToParentCoords(&oldDimensions.x, &oldDimensions.y);
-        InvalidateRectDifference(parentView, oldDimensions, r, NS_VMREFRESH_NO_SYNC | NS_VMREFRESH_FORCHILD);
+        InvalidateRectDifference(parentView, oldDimensions, r, NS_VMREFRESH_NO_SYNC);
       } 
     }
 
@@ -2656,8 +2650,7 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegi
     if (parent != nsnull) {
       view->ConvertToParentCoords(&oldClipRect.x, &oldClipRect.y);
       view->ConvertToParentCoords(&newClipRect.x, &newClipRect.y);
-      InvalidateRectDifference(parent, oldClipRect, newClipRect,
-                               NS_VMREFRESH_NO_SYNC | NS_VMREFRESH_FORCHILD);
+      InvalidateRectDifference(parent, oldClipRect, newClipRect, NS_VMREFRESH_NO_SYNC);
     }
   }
 
@@ -2894,7 +2887,7 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
           if (parentView) {
             nsRect  bounds;
             view->GetBounds(bounds);
-            UpdateView(parentView, bounds, NS_VMREFRESH_NO_SYNC | NS_VMREFRESH_FORCHILD);
+            UpdateView(parentView, bounds, NS_VMREFRESH_NO_SYNC);
           }
         }
         else {

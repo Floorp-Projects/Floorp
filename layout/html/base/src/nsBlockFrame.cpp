@@ -771,16 +771,21 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       // Whether or not we're complete hasn't changed
       aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
       
-      ComputeCombinedArea(aReflowState, aMetrics);
-
       // Factor the absolutely positioned child bounds into the overflow area
+      ComputeCombinedArea(aReflowState, aMetrics);
       nsRect childBounds;
       mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
       aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
 
-      // Finish computing the overflow area, taking account of outline and
-      // overflow:hidden etc
-      ComputeOverflowArea(aMetrics.mOverflowArea, aMetrics.mOverflowArea);
+      // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+      if ((aMetrics.mOverflowArea.x < 0) ||
+          (aMetrics.mOverflowArea.y < 0) ||
+          (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+          (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      } else {
+        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+      }
 
       return NS_OK;
     }
@@ -1090,12 +1095,17 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
     // Factor the absolutely positioned child bounds into the overflow area
     aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
-  }
 
-  // Area of child content has been computed into mOverflowArea
-  // Finish computing the overflow area, taking account of outline and
-  // overflow:hidden etc
-  ComputeOverflowArea(aMetrics.mOverflowArea, aMetrics.mOverflowArea);
+    // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+    if ((aMetrics.mOverflowArea.x < 0) ||
+        (aMetrics.mOverflowArea.y < 0) ||
+        (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+        (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+      mState |= NS_FRAME_OUTSIDE_CHILDREN;
+    } else {
+      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    }
+  }
 
   // Clear the space manager pointer in the block reflow state so we
   // don't waste time translating the coordinate system back on a dead
@@ -1157,6 +1167,10 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
              aMetrics.maxElementSize->height);
     }
   }
+#endif
+
+#ifdef DEBUG_roc
+      printf("*** Metrics width/height on the way out=%d,%d\n", aMetrics.width, aMetrics.height);
 #endif
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
@@ -1532,6 +1546,18 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   ComputeCombinedArea(aReflowState, aMetrics);
+
+  // If the combined area of our children exceeds our bounding box
+  // then set the NS_FRAME_OUTSIDE_CHILDREN flag, otherwise clear it.
+  if ((aMetrics.mOverflowArea.x < 0) ||
+      (aMetrics.mOverflowArea.y < 0) ||
+      (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+      (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+    mState |= NS_FRAME_OUTSIDE_CHILDREN;
+  }
+  else {
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+  }
 }
 
 void

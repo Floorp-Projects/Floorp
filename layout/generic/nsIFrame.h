@@ -794,13 +794,6 @@ public:
                                  PRInt32*                 outFrameContentOffset,
                                  nsIFrame*                *outChildFrame) = 0;
 
-  /**
-   * Returns true iff the frame has a view (i.e., GetView() returns non-null)
-   */
-  PRBool HasView() {
-    return (mState & NS_FRAME_HAS_VIEW) != 0;
-  }
-
  /**
    * Get the current frame-state value for this frame. aResult is
    * filled in with the state bits. 
