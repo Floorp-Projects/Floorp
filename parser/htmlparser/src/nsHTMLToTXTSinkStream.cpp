@@ -33,6 +33,12 @@
 #include "nsString.h"
 #include "nsIParser.h"
 #include "nsHTMLEntities.h"
+#include "nsXIFDTD.h"
+
+#include "nsIUnicodeEncoder.h"
+#include "nsICharsetAlias.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
@@ -43,6 +49,55 @@ const  int               gTabSize=2;
 static PRBool IsInline(eHTMLTags aTag);
 static PRBool IsBlockLevel(eHTMLTags aTag);
 
+
+/**
+ *  Inits the encoder instance variable for the sink based on the charset 
+ *  
+ *  @update  gpk 4/21/99
+ *  @param   aCharset
+ *  @return  NS_xxx error result
+ */
+nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
+{
+
+  nsresult res = NS_OK;
+
+  nsICharsetAlias* calias = nsnull;
+  res = nsServiceManager::GetService(kCharsetAliasCID,
+                                     kICharsetAliasIID,
+                                     (nsISupports**)&calias);
+
+  NS_ASSERTION( nsnull != calias, "cannot find charet alias");
+  nsAutoString charsetName = aCharset;
+  if( NS_SUCCEEDED(res) && (nsnull != calias))
+  {
+    res = calias->GetPreferred(aCharset, charsetName);
+    nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
+
+    if(NS_FAILED(res))
+    {
+       // failed - unknown alias , fallback to ISO-8859-1
+      charsetName = "ISO-8859-1";
+    }
+
+    nsICharsetConverterManager * ccm = nsnull;
+    res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                       kICharsetConverterManagerIID, 
+                                       (nsISupports**)&ccm);
+    if(NS_SUCCEEDED(res) && (nsnull != ccm))
+    {
+      nsIUnicodeEncoder * encoder = nsnull;
+      res = ccm->GetUnicodeEncoder(&charsetName, &encoder);
+      if(NS_SUCCEEDED(res) && (nsnull != encoder))
+      {
+        NS_IF_RELEASE(mUnicodeEncoder);
+        mUnicodeEncoder = encoder;
+      }    
+      nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+    }
+  }
+  return res;
+}
 
 
 
@@ -117,6 +172,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()  {
   mDoOutput = PR_FALSE;
   mBufferSize = 0;
   mBuffer = nsnull;
+  mUnicodeEncoder = nsnull;
 }
 
 /**
@@ -133,6 +189,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(ostream& aStream)  {
   mDoOutput = PR_FALSE;
   mBufferSize = 0;
   mBuffer = nsnull;
+  mUnicodeEncoder = nsnull;
 }
 
 
@@ -145,6 +202,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(ostream& aStream)  {
 nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream() {
   mOutput=0;  //we don't own the stream we're given; just forget it.
   delete [] mBuffer;
+  NS_IF_RELEASE(mUnicodeEncoder);
 }
 
 
@@ -409,42 +467,40 @@ void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 }
 
 
+
 void nsHTMLToTXTSinkStream::UnicodeToTXTString(const nsString& aSrc)
 {
+
+
 #define CH_NBSP 160
-#define CH_QUOT 34
-#define CH_AMP  38
-#define CH_LT   60
-#define CH_GT   62
 
   PRInt32       length = aSrc.Length();
-  PRUnichar     ch; 
-  const char*   entity = nsnull;
-  PRUint32      offset = 0;
-  PRUint32      addedLength = 0;
+  nsresult      result;
+  PRInt32       bufferLength;
+
+  if (mUnicodeEncoder == nsnull)
+    InitEncoder("");
 
   if (length > 0)
   {
     EnsureBufferSize(length);
-    for (PRInt32 i = 0; i < length; i++)
-    {
-      ch = aSrc.CharAt(i);
-      switch (ch)
-      {  
-        case CH_QUOT: ch = '"'; break;
-        case CH_AMP:  ch = '&'; break;
-        case CH_GT:   ch = '>'; break;
-        case CH_LT:   ch = '<'; break;
-        case CH_NBSP: ch = ' '; break;
-      }
+    bufferLength = mBufferSize;
+    
+    mUnicodeEncoder->Reset();
+    result = mUnicodeEncoder->Convert(aSrc, &length, mBuffer, &bufferLength);
+    mBuffer[bufferLength] = 0;
+    PRInt32 temp = bufferLength;
+    if (NS_SUCCEEDED(result))
+      result = mUnicodeEncoder->Finish(mBuffer,&temp);
 
-      if (ch < 128)
-      {
-        mBuffer[offset++] = (unsigned char)ch;
-        mBuffer[offset] = 0;
-      }
+
+    for (PRInt32 i = 0; i < bufferLength; i++)
+    {
+      if (mBuffer[i] == char(CH_NBSP))
+        mBuffer[i] = ' ';
     }
   }
+  
 }
 
 
@@ -483,6 +539,18 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream)
     mStrBuffer.Append(mBuffer);
     mColPos += text.Length();
   } 
+  else if (type == eHTMLTag_entity)
+  {
+    const nsString& text = aNode.GetText();
+    UnicodeToTXTString(text);
+    PRInt32 entity = NS_EntityToUnicode(mBuffer);
+    if (entity < 256)
+    {
+      char ch = (char)entity;
+      aStream << ch;
+      mColPos++;
+    }
+  }
   else if (type == eHTMLTag_whitespace)
   {
     if (PR_TRUE)
@@ -551,6 +619,18 @@ NS_IMETHODIMP
 nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode){
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   const nsString&   name = aNode.GetText();
+  if (name.Equals("XIF_DOC_INFO"))
+  {
+    PRInt32 count=aNode.GetAttributeCount();
+    for(PRInt32 i=0;i<count;i++)
+    {
+      const nsString& key=aNode.GetKeyAt(i);
+      const nsString& value=aNode.GetValueAt(i);
+
+      if (key.Equals("charset"))
+        InitEncoder(value);
+    }
+  }
 
   if (type == eHTMLTag_body)
     mDoOutput = PR_TRUE;

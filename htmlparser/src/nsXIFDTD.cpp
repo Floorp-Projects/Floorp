@@ -43,6 +43,8 @@ static NS_DEFINE_IID(kClassIID,     NS_XIF_DTD_IID);
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kXIFDocHeader= "<!DOCTYPE xif>";
+static const char* kXIFDocInfo= "document_info";
+static const char* kXIFCharset= "charset";
   
 
 struct nsXIFTagEntry {
@@ -73,7 +75,10 @@ nsXIFTagEntry gXIFTagTable[] =
   {"css_stylerule",         eXIFTag_css_stylerule},
   {"css_stylesheet",        eXIFTag_css_stylesheet},
 
+  {"document_info",         eXIFTag_document_info},
+
   {"encode",                eXIFTag_encode},
+  {"entity",                eXIFTag_entity},
 
   {"import",                eXIFTag_import},
 
@@ -343,6 +348,7 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
   mInContent=PR_FALSE;
   mLowerCaseAttributes=PR_TRUE;
   mLowerCaseTags=PR_TRUE;
+  mCharset = "";
 }
 
 /**
@@ -395,15 +401,38 @@ eAutoDetectResult nsXIFDTD::CanParse(nsString& aContentType, nsString& aCommand,
   if(aContentType.Equals(kXIFTextContentType)){
     result=ePrimaryDetect;
   }
-  else {
+  else 
+  {
     if(kNotFound!=aBuffer.Find(kXIFDocHeader)) {
-      PRInt32 offset = aBuffer.Find("<section>");
-      if (offset != -1)
-        aBuffer.Cut(0,offset);
       aContentType= kXIFTextContentType;
       result=ePrimaryDetect;
     }
   }
+  
+  nsString charset ="ISO-8859-1";
+  PRInt32 offset;
+  offset = aBuffer.Find(kXIFDocInfo);
+  if(kNotFound!=offset)
+  {
+    offset = aBuffer.Find(kXIFCharset);
+    if (kNotFound!=offset)
+    {
+      PRInt32 start = aBuffer.Find('"',offset);
+      PRInt32 end = aBuffer.Find('"',start+1);
+
+      if ((start != kNotFound) && (end != kNotFound))
+      {
+        charset = "";
+        for (PRInt32 i = start+1; i < end; i++)
+        {
+          PRUnichar ch = aBuffer[i];
+          charset.Append(ch);
+        }
+      }
+    }
+  }
+  mCharset = charset;
+
   return result;
 }
 
@@ -638,6 +667,11 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
         result = OpenContainer(node);        
       break;
 
+      case eXIFTag_entity: 
+        StartTopOfStack();
+        ProcessEntityTag(node);
+      break;
+
       case eXIFTag_content:
         StartTopOfStack();
         mInContent = PR_TRUE;
@@ -645,6 +679,10 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
 
       case eXIFTag_encode:
         ProcessEncodeTag(node);
+      break;
+
+      case eXIFTag_document_info:
+        ProcessDocumentInfoTag(node);
       break;
 
 
@@ -1355,8 +1393,8 @@ void nsXIFDTD::BeginStartTag(const nsIParserNode& aNode)
         if (type == eXIFTag_container)
           PushHTMLTag(tag,tagName);  
  
-        CToken*         token = new CStartToken(tagName);
-        nsCParserNode*  node = new nsCParserNode(token);
+//        CToken*         token = new CStartToken(tagName);
+//        nsCParserNode*  node = new nsCParserNode(token);
         PushNodeAndToken(tagName);
       break;
   }
@@ -1627,6 +1665,38 @@ void nsXIFDTD::ProcessEncodeTag(const nsIParserNode& aNode)
   }
   mSink->DoFragment(PR_FALSE);
 }
+
+
+void nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
+{
+  nsString value;
+
+  if (GetAttribute(aNode,nsString("value"),value))
+  {
+    CEntityToken* entity = new CEntityToken(value);
+    nsCParserNode node((CToken*)entity);
+    mSink->AddLeaf(node);
+  }
+}
+
+
+void nsXIFDTD::ProcessDocumentInfoTag(const nsIParserNode& aNode)
+{
+  nsString value;
+  nsString key("charset");
+
+  if (GetAttribute(aNode,key,value))
+  {
+    PushNodeAndToken(nsString("XIF_DOC_INFO"));
+    CAttributeToken* attribute = new CAttributeToken(key,value);
+    nsIParserNode* top = PeekNode();
+    if (top != nsnull)
+      ((nsCParserNode*)top)->AddAttribute(attribute);
+
+  }
+}
+
+
 
 
 /*** CSS Methods ****/
