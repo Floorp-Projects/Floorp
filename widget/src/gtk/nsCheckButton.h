@@ -49,20 +49,9 @@ public:
   virtual PRBool OnPaint(nsPaintEvent &aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
 
-  // These are needed to Override the auto check behavior
-  void Armed();
-  void DisArmed();
-
 protected:
   NS_IMETHOD nsCheckButton::CreateNative(GtkWidget *parentWindow);
   GtkWidget *mLabel;
-
-private:
-  PRBool mInitialState;
-  PRBool mNewValue;
-  PRBool mValueWasSet;
-  PRBool mIsArmed;
-
 };
 
 #endif // nsCheckButton_h__

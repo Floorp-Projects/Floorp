@@ -61,7 +61,7 @@ protected:
 
 private:
   int             mOrientation;
-  GtkObject*      mAdjustment;
+  GtkAdjustment   *mAdjustment;
 
   int AdjustScrollBarPosition(int aPosition);
 };

@@ -59,12 +59,6 @@ protected:
   NS_IMETHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow);
   GtkWidget *mLabel;
 
-private:
-  PRBool mInitialState;
-  PRBool mNewValue;
-  PRBool mValueWasSet;
-  PRBool mIsArmed;
-
 };
 
 #endif // nsRadioButton_h__

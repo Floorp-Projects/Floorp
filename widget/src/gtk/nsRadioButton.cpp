@@ -37,6 +37,7 @@ NS_IMPL_RELEASE(nsRadioButton)
 nsRadioButton::nsRadioButton() : nsWidget(), nsIRadioButton()
 {
   NS_INIT_REFCNT();
+  mLabel = nsnull;
 }
 
 
@@ -84,46 +85,11 @@ NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 
 //-------------------------------------------------------------------------
 //
-// Armed
-//
-//-------------------------------------------------------------------------
-void nsRadioButton::Armed()
-{
-  mIsArmed      = PR_TRUE;
-  mValueWasSet  = PR_FALSE;
-  mInitialState = GTK_TOGGLE_BUTTON(mWidget)->active;
-}
-
-//-------------------------------------------------------------------------
-//
-// DisArmed
-//
-//-------------------------------------------------------------------------
-void nsRadioButton::DisArmed()
-{
-  if (mValueWasSet) {
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), PR_TRUE);
-//    XmToggleButtonSetState(mRadioBtn, mNewValue, PR_TRUE);
-  } else {
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), PR_TRUE);
-//    XmToggleButtonSetState(mRadioBtn, mInitialState, PR_TRUE);
-  }
-  mIsArmed = PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
 // Set this button label
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetState(const PRBool aState)
 {
-  int state = aState;
-  if (mIsArmed) {
-    mNewValue    = aState;
-    mValueWasSet = PR_TRUE;
-  }
-//  XmToggleButtonSetState(mRadioBtn, aState, PR_TRUE);
   gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), aState);
   return NS_OK;
 }
@@ -134,17 +100,8 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-//  int state = XmToggleButtonGetState(mRadioBtn);
   int state = GTK_TOGGLE_BUTTON(mWidget)->active;
-  if (mIsArmed) {
-    if (mValueWasSet) {
-      return mNewValue;
-    } else {
-      return state;
-    }
-  } else {
-    return state;
-  }
+  return state;
 }
 
 //-------------------------------------------------------------------------
