@@ -1358,11 +1358,11 @@ nsString& nsString::Trim(const char* aTrimSet,
 nsString& nsString::CompressWhitespace( PRBool aEliminateLeading,
                                               PRBool aEliminateTrailing)
 {
+  Trim(" \r\n\t",aEliminateLeading,aEliminateTrailing);
+
   PRUnichar* from = mStr;
   PRUnichar* end = mStr + mLength;
   PRUnichar* to = from;
-
-  Trim(" \r\n\t",aEliminateLeading,aEliminateTrailing);
 
     //this code converts /n, /t, /r into normal space ' ';
     //it also eliminates runs of whitespace...
