@@ -58,7 +58,8 @@ LIB_PREFIX  = $(NULL)
 
 # Override suffix in suffix.mk
 LIB_SUFFIX  = lib
-DLL_SUFFIX  = dll
+# the DLL_SUFFIX must be uppercase for FIPS mode to work. bugzilla 240784
+DLL_SUFFIX  = DLL
 PROG_SUFFIX = .exe
 
 
