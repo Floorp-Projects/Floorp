@@ -704,7 +704,7 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
       //aValues[i] = nsCRT::atoi(token);  XXX this is broken, consequently the next 3 lines?
       char* tokenIso = token.ToNewCString(); 
       aSpecs[i].mValue = atoi(tokenIso);
-      delete [] tokenIso; 
+      nsCRT::free(tokenIso); 
       if (eFramesetUnit_Percent == aSpecs[i].mUnit) {
         if (aSpecs[i].mValue <= 0) {
           aSpecs[i].mValue = 100 / count;

@@ -1101,7 +1101,7 @@ GlobalWindowImpl::Dump(const nsString& aStr)
 
   if (nsnull != cstr) {
     printf("%s", cstr);
-    delete [] cstr;
+    nsCRT::free(cstr);
   }
   
   return NS_OK;
@@ -2438,7 +2438,7 @@ GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
       JS_ReportError(cx,
         "illegal character '%c' ('\\%o') in window name %s",
         mChar, mChar, cp);
-      delete [] cp;
+      nsCRT::free(cp);
       return NS_ERROR_FAILURE;
     }
   }
