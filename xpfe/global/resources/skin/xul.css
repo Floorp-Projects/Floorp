@@ -562,19 +562,25 @@ titledbutton[class~=plain][disabled]:active {
 /* special class for borderless buttons */
 /* titled button on toolbars are automatically set to be borderless (see below) */
 
-titledbutton.image {
+treecell.image > titledbutton {
   border: 1px solid transparent;
   text-decoration: none;
+  margin: 0px;
+  padding: 0px;
 }
 
-titledbutton.image:hover {
+treecell.image > titledbutton:hover {
   border: 1px solid transparent;
   text-decoration: none;
+  margin: 0px;
+  padding: 0px;
 }
  
-titledbutton.image:active {
+treecell.image > titledbutton:active {
   border: 1px solid transparent;
   text-decoration: none;
+  margin: 0px;
+  padding: 0px;
 }
 
 /* as a convenience predefined for toolbar as being same as class borderless */
