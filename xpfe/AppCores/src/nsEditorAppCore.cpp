@@ -68,6 +68,7 @@
 
 #include "nsIEditor.h"
 #include "nsITextEditor.h"
+#include "nsIHTMLEditor.h"
 #include "nsEditorCID.h"
 
 #include "nsRepository.h"
@@ -504,6 +505,14 @@ nsEditorAppCore::SetToEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPr
   if (PR_TRUE==needsInit)
   {
     needsInit=PR_FALSE;
+    result = nsRepository::RegisterFactory(kHTMLEditorCID, EDITOR_DLL, 
+                                           PR_FALSE, PR_FALSE);
+    if (NS_ERROR_FACTORY_EXISTS!=result)
+    {
+      if (NS_FAILED(result))
+        return result;
+    }
+
     result = nsRepository::RegisterFactory(kTextEditorCID, EDITOR_DLL, 
                                            PR_FALSE, PR_FALSE);
     if (NS_ERROR_FACTORY_EXISTS!=result)
@@ -511,6 +520,7 @@ nsEditorAppCore::SetToEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPr
       if (NS_FAILED(result))
         return result;
     }
+
     result = nsRepository::RegisterFactory(kEditorCID, EDITOR_DLL, 
                                            PR_FALSE, PR_FALSE);
     if (NS_ERROR_FACTORY_EXISTS!=result)
@@ -522,19 +532,19 @@ nsEditorAppCore::SetToEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPr
   /** end temp code **/
 /*
   nsISupports *isup = nsnull;
-  result = nsServiceManager::GetService(kTextEditorCID,
-                                        kITextEditorIID, &isup);
+  result = nsServiceManager::GetService(kHTMLEditorCID,
+                                        kIHTMLEditorIID, &isup);
 */
-  result = nsRepository::CreateInstance(kTextEditorCID,
+  result = nsRepository::CreateInstance(kHTMLEditorCID,
                                         nsnull,
-                                        kITextEditorIID, (void **)&gEditor);
+                                        kIHTMLEditorIID, (void **)&gEditor);
   if (NS_FAILED(result))
     return result;
   if (!gEditor) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  gEditor->InitTextEditor(aDOMDocument, aPresShell);
+  gEditor->InitHTMLEditor(aDOMDocument, aPresShell);
   gEditor->EnableUndo(PR_TRUE);
 #endif
   return result;
