@@ -42,9 +42,9 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Page);
 
-#define OPENDIR_NAMESPACE_URI "http://directory.mozilla.org/rdf"
+#define OPENDIR_NAMESPACE_URI "http://directory.mozilla.org/rdf#"
 DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, Topic);
-DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, link);
+DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, narrow);
 DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, catid);
 
 #if 0
@@ -108,7 +108,7 @@ public:
     static nsIRDFDataSource* gHistory;
     static nsIRDFResource* kNC_Page;
     static nsIRDFResource* kOPENDIR_Topic;
-    static nsIRDFResource* kOPENDIR_link;
+    static nsIRDFResource* kOPENDIR_narrow;
     static nsIRDFResource* kOPENDIR_catid;
 
 protected:
@@ -127,7 +127,7 @@ nsIRDFDataSource* nsBrowsingProfile::gHistory    = nsnull;
 
 nsIRDFResource* nsBrowsingProfile::kNC_Page       = nsnull;
 nsIRDFResource* nsBrowsingProfile::kOPENDIR_Topic = nsnull;
-nsIRDFResource* nsBrowsingProfile::kOPENDIR_link  = nsnull;
+nsIRDFResource* nsBrowsingProfile::kOPENDIR_narrow  = nsnull;
 nsIRDFResource* nsBrowsingProfile::kOPENDIR_catid = nsnull;
 
 char nsBrowsingProfile::kHexMap[] =  "0123456789ABCDEF";
@@ -177,7 +177,7 @@ nsBrowsingProfile::Init(const char* userProfileName)
         rv = gRDFService->GetResource(kURIOPENDIR_Topic, &kOPENDIR_Topic);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
-        rv = gRDFService->GetResource(kURIOPENDIR_link, &kOPENDIR_link);
+        rv = gRDFService->GetResource(kURIOPENDIR_narrow, &kOPENDIR_narrow);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
         rv = gRDFService->GetResource(kURIOPENDIR_catid, &kOPENDIR_catid);
@@ -214,7 +214,7 @@ nsBrowsingProfile::~nsBrowsingProfile()
         // release all the properties:
         NS_IF_RELEASE(kOPENDIR_Topic);
         NS_IF_RELEASE(kOPENDIR_catid);
-        NS_IF_RELEASE(kOPENDIR_link);
+        NS_IF_RELEASE(kOPENDIR_narrow);
         NS_IF_RELEASE(kNC_Page);
 
         if (gCategoryDB) {
@@ -375,7 +375,7 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
         rv = gRDFService->GetResource(url, &urlRes);
         if (NS_SUCCEEDED(rv)) {
             nsIRDFAssertionCursor* cursor;
-            rv = gCategoryDB->GetSources(kOPENDIR_link, urlRes, PR_TRUE, &cursor);
+            rv = gCategoryDB->GetSources(kOPENDIR_narrow, urlRes, PR_TRUE, &cursor);
             if (NS_SUCCEEDED(rv)) {
                 while (1) {
                     rv = cursor->Advance();
@@ -413,9 +413,19 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
         // we didn't find this page exactly, but see if some parent directory 
         // url is there
         if (!done) {
+            // if it already ends with a one or more slashes, rip them off.
+            while (urlStr.Length() > 0 && urlStr.Last() == PRUnichar('/')) {
+                urlStr.Truncate(urlStr.Length() - 1);
+            }
+
+            // _Now_ find the right most forward-slash
             pos = urlStr.RFind("/");
+
             if (pos >= 0) {
-                urlStr.Cut(pos, urlStr.Length());
+                // leave the last '/', as this is the way most opendir
+                // entries are specified; for example,
+                //    http://www.amazon.com/
+                urlStr.Cut(pos + 1, urlStr.Length());
             }
             else {
                 done = PR_TRUE;
