@@ -78,14 +78,13 @@ nsLookAndFeel::~nsLookAndFeel()
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
 {
     nsresult res = NS_OK;
-    aColor = 0; // default color black
 
     switch (aID) {
         // These colors don't seem to be used for anything anymore in Mozilla
         // (except here at least TextSelectBackground and TextSelectForeground)
         // The CSS2 colors below are used.
     case eColor_WindowBackground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
         break;
     case eColor_WindowForeground:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
