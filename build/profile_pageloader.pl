@@ -193,7 +193,7 @@ $ENV{HOME} = cwd();
 # Create a profile to test with.
 run_system_cmd(["./".$app_name.$bin_suffix, "-createProfile", "testprofile"], 45);
 
-my $pref_file = find_pref_file(".".$app_name);
+my $pref_file = find_pref_file(".mozilla/".$app_name);
 open PREFS, ">>$pref_file";
 # Add allow_scripts_to_close_windows; this lets us cleanly exit.
 print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", true);\n";
