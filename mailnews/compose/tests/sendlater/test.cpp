@@ -93,13 +93,13 @@ static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID);
 nsresult OnIdentityCheck()
 {
 	nsresult result = NS_OK;
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &result); 
-	if (NS_SUCCEEDED(result) && mailSession)
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &result); 
+	if (NS_SUCCEEDED(result) && accountManager)
 	{
 		// mscott: we really don't check an identity, we check
 		// for an outgoing 
 		nsIMsgIncomingServer * incomingServer = nsnull;
-		result = mailSession->GetCurrentServer(&incomingServer);
+		result = accountManager->GetCurrentServer(&incomingServer);
 		if (NS_SUCCEEDED(result) && incomingServer)
 		{
 			PRUnichar * uniValue = nsnull;
@@ -170,30 +170,16 @@ int main(int argc, char *argv[])
  }
 
 
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv) || !mailSession) 
-  {
-    printf("Failure on Mail Session Init!\n");
-    return rv;
-  }  
-
   nsCOMPtr<nsIMsgIdentity>  identity = nsnull;
   
-  NS_WITH_SERVICE(nsIMsgMailSession, session, kCMsgMailSessionCID, &rv);
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) 
   {
     printf("Failure getting Mail Session!\n");
     return rv;
   }  
 
-  nsCOMPtr<nsIMsgAccountManager> accountManager;
-  rv = session->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) 
-  {
-    printf("Failure getting account Manager!\n");
-    return rv;
-  }  
-  rv = session->GetCurrentIdentity(getter_AddRefs(identity));
+  rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
     printf("Failure getting Identity!\n");
