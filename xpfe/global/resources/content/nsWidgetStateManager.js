@@ -227,7 +227,12 @@ nsWidgetStateManager.prototype =
           // set menulist specific properties
           if( 'value' in aDataObject )
             {
-              element.selectedItem = element.getElementsByAttribute( "value", aDataObject.value )[0];
+              try {
+                element.selectedItem = element.getElementsByAttribute( "value", aDataObject.value )[0];
+              }
+              catch (ex) {
+                dump(aElementID +", ex: " + ex + "\n");
+              }
             }
         },
 
