@@ -102,8 +102,10 @@ table {
   text-align: -moz-initial;
   white-space: normal; /* compatible with IE & spec */
   line-height: normal;
-  font-size: -moz-initial;    /* Quirk: cut off all font inheritance in tables
-  font-weight: -moz-initial;  /* except for family. */
+
+  /* Quirk: cut off all font inheritance in tables except for family. */
+  font-size: -moz-initial;
+  font-weight: -moz-initial;
   font-style: -moz-initial;
   font-variant: -moz-initial;
 }
