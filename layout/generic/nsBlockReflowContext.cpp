@@ -338,8 +338,32 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // reflow auto left/right margins will have a zero value.
   mMargin = reflowState.mComputedMargin;
   mStyleSpacing = reflowState.mStyleSpacing;
-  nscoord x = aSpace.x + mMargin.left;
+  nscoord x;
   nscoord y = aSpace.y + topMargin;
+
+  // If it's a right floated element, then calculate the x-offset
+  // differently
+  if (NS_STYLE_FLOAT_RIGHT == reflowState.mStyleDisplay->mFloats) {
+    nscoord frameWidth;
+     
+    if (NS_UNCONSTRAINEDSIZE == reflowState.mComputedWidth) {
+      nsSize  frameSize;
+
+      // Use the current frame width
+      aFrame->GetSize(frameSize);
+      frameWidth = frameSize.width;
+
+    } else {
+      frameWidth = reflowState.mComputedWidth +
+                   reflowState.mComputedBorderPadding.left +
+                   reflowState.mComputedBorderPadding.right;
+    }
+
+    x = aSpace.XMost() - mMargin.right - frameWidth;
+
+  } else {
+    x = aSpace.x + mMargin.left;
+  }
   mX = x;
   mY = y;
 
