@@ -1164,6 +1164,10 @@ nsLocalFile::GetParent(nsIFile **aParent)
     NS_ENSURE_ARG_POINTER(aParent);
     *aParent       = nsnull;
 
+    // if '/' we are at the top of the volume, return null
+    if (mPath.Equals("/"))
+        return  NS_OK;
+ 
     // <brendan, after jband> I promise to play nice
     char *buffer   = NS_CONST_CAST(char *, mPath.get()),
          *slashp   = buffer;
