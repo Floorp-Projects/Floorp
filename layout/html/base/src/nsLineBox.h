@@ -186,6 +186,13 @@ public:
     return mFlags.mTrimmed;
   }
 
+  void SetHasPercentageChild(PRBool aOn) {
+    mFlags.mHasPercentageChild = aOn;
+  }
+  PRBool HasPercentageChild() const {
+    return mFlags.mHasPercentageChild;
+  }
+
   // mChildCount value
   PRInt32 GetChildCount() const {
     return (PRInt32) mFlags.mChildCount;
@@ -285,10 +292,11 @@ public:
     PRUint32 mBlock : 1;
     PRUint32 mImpactedByFloater : 1;
     PRUint32 mTrimmed : 1;
+    PRUint32 mHasPercentageChild : 1;
 
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 24;
+    PRUint32 mChildCount : 23;
   };
 
   struct ExtraData {

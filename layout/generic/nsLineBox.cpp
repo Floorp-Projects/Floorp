@@ -64,17 +64,15 @@ nsLineBox::~nsLineBox()
 void
 nsLineBox::Cleanup()
 {
-  if (IsBlock()) {
-    if (mBlockData) {
+  if (mData) {
+    if (IsBlock()) {
       delete mBlockData;
     }
-  }
-  else {
-    if (mInlineData) {
+    else {
       delete mInlineData;
     }
+    mData = nsnull;
   }
-  mData = nsnull;
 }
 
 void
@@ -302,9 +300,7 @@ nsLineBox::MaybeFreeData()
 nsFloaterCache*
 nsLineBox::GetFirstFloater()
 {
-  if (NS_WARN_IF_FALSE(IsInline(), "block line can't have floaters")) {
-    return nsnull;
-  }
+  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
   return mInlineData ? mInlineData->mFloaters.Head() : nsnull;
 }
 
@@ -312,7 +308,7 @@ nsLineBox::GetFirstFloater()
 void
 nsLineBox::FreeFloaters(nsFloaterCacheFreeList& aFreeList)
 {
-  NS_WARN_IF_FALSE(IsInline(), "block line can't have floaters");
+  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
   if (IsInline()) {
     if (mInlineData) {
       aFreeList.Append(mInlineData->mFloaters);
@@ -324,7 +320,7 @@ nsLineBox::FreeFloaters(nsFloaterCacheFreeList& aFreeList)
 void
 nsLineBox::AppendFloaters(nsFloaterCacheFreeList& aFreeList)
 {
-  NS_WARN_IF_FALSE(IsInline(), "block line can't have floaters");
+  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
   if (IsInline()) {
     if (aFreeList.NotEmpty()) {
       if (!mInlineData) {
@@ -340,7 +336,7 @@ nsLineBox::AppendFloaters(nsFloaterCacheFreeList& aFreeList)
 PRBool
 nsLineBox::RemoveFloater(nsIFrame* aFrame)
 {
-  NS_WARN_IF_FALSE(IsInline(), "block line can't have floaters");
+  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
   if (IsInline() && mInlineData) {
     nsFloaterCache* fc = mInlineData->mFloaters.Find(aFrame);
     if (fc) {
