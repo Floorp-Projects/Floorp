@@ -25,7 +25,5 @@ else
 DIRS  = xfe
 endif
 
-DIRS  += patcher
-
 include $(DEPTH)/config/rules.mk
 
