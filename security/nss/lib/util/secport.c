@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.1 2000/03/31 19:40:58 relyea%netscape.com Exp $
+ * $Id: secport.c,v 1.2 2000/04/04 18:27:34 roeber%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -493,6 +493,14 @@ PORT_ArenaStrdup(PLArenaPool *arena, char *str) {
 /********************** end of arena functions ***********************/
 
 /****************** unicode conversion functions ***********************/
+/*
+ * NOTE: These conversion functions all assume that the multibyte
+ * characters are going to be in NETWORK BYTE ORDER, not host byte
+ * order.  This is because the only time we deal with UCS-2 and UCS-4
+ * are when the data was received from or is going to be sent out
+ * over the wire (in, e.g. certificates).
+ */
+
 void
 PORT_SetUCS4_UTF8ConversionFunction(PORTCharConversionFunc convFunc)
 { 
