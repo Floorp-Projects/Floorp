@@ -129,8 +129,6 @@ nsUTF8ConverterService::ConvertURISpecToUTF8(const nsACString &aSpec,
   aUTF8Spec.Truncate();
 
   nsCAutoString unescapedSpec; 
-  // NS_UnescapeURL does not fill up unescapedSpec unless there's at least 
-  // one character to unescape.
   NS_UnescapeURL(PromiseFlatCString(aSpec), esc_AlwaysCopy, unescapedSpec);
 
   // convert to UTF-8 unless ASCII only or UTF-8
