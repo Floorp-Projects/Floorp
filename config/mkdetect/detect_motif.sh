@@ -98,25 +98,46 @@
 ##
 
 ##
-## Look for motif stuff in the following places:
+## Look for motif headers in the following places:
 ##
-DEFAULT_MOTIF_SEARCH_PATH="\
-/usr/lesstif \
-/usr/local \
-/usr/dt \
-/usr/X11R6 \
-/usr/X \
-/usr \
+DEFAULT_MOTIF_INCLUDE_SEARCH_PATH="\
+/usr/lesstif/include \
+/usr/local/include \
+/usr/dt/include \
+/usr/X11R6/include \
+/usr/X/include \
+/usr/include \
+/usr/include/Motif1.2 \
+"
+
+##
+## Look for motif libraries in the following places:
+##
+DEFAULT_MOTIF_LIB_SEARCH_PATH="\
+/usr/lesstif/lib \
+/usr/local/lib \
+/usr/dt/lib \
+/usr/X11R6/lib \
+/usr/X/lib \
+/usr/lib \
+/usr/lib/Motif1.2 \
 "
 
 ##
 ## The user can override the default share path by setting MOZILLA_MOTIF_SEARCH
 ##
-if [ -n "$MOZILLA_MOTIF_SEARCH_PATH" ]
+if [ -n "$MOZILLA_MOTIF_INCLUDE_SEARCH_PATH" ]
 then
-    MOTIF_SEARCH_PATH=$MOZILLA_MOTIF_SEARCH_PATH
+    MOTIF_INCLUDE_SEARCH_PATH=$MOZILLA_MOTIF_INCLUDE_SEARCH_PATH
 else
-    MOTIF_SEARCH_PATH=$DEFAULT_MOTIF_SEARCH_PATH
+    MOTIF_INCLUDE_SEARCH_PATH=$DEFAULT_MOTIF_INCLUDE_SEARCH_PATH
+fi
+
+if [ -n "$MOZILLA_MOTIF_LIB_SEARCH_PATH" ]
+then
+    MOTIF_LIB_SEARCH_PATH=$MOZILLA_MOTIF_LIB_SEARCH_PATH
+else
+    MOTIF_LIB_SEARCH_PATH=$DEFAULT_MOTIF_LIB_SEARCH_PATH
 fi
 
 ##
@@ -429,14 +450,14 @@ fi
 ##
 ## Look for <Xm/Xm.h>
 ##
-for d in $MOTIF_SEARCH_PATH
+for d in $MOTIF_INCLUDE_SEARCH_PATH
 do
 	# Check for $d that exists and is readable
 	if [ -d $d -a -r $d ]
 	then
-		if [ -d $d/include/Xm -a -f $d/include/Xm/Xm.h ]
+		if [ -d $d/Xm -a -f $d/Xm/Xm.h ]
 		then
-			MOTIF_INCLUDE_DIR=$d/include
+			MOTIF_INCLUDE_DIR=$d
 			break;
 		fi
 	fi
@@ -561,11 +582,11 @@ $MOTIF_DYNAMIC_LIB_NAME.$MOTIF_VERSION_REVISION_UPDATE_RESULT \
 ##
 ## Look for static library
 ##
-for d in $MOTIF_SEARCH_PATH
+for d in $MOTIF_LIB_SEARCH_PATH
 do
-	if [ -f $d/lib/$MOTIF_STATIC_LIB_NAME ]
+	if [ -f $d/$MOTIF_STATIC_LIB_NAME ]
 	then
-		MOTIF_STATIC_DIR=$d/lib
+		MOTIF_STATIC_DIR=$d
 
 		MOTIF_STATIC_LIB=$MOTIF_STATIC_DIR/$MOTIF_STATIC_LIB_NAME
 
@@ -579,15 +600,15 @@ done
 ##
 ## Look for dyanmic libraries
 ##
-for d in $MOTIF_SEARCH_PATH
+for d in $MOTIF_LIB_SEARCH_PATH
 do
 	for l in $MOTIF_DYNAMIC_SEARCH_PATH
 	do
-		if [ -r $d/lib/$l ]
+		if [ -r $d/$l ]
 		then
-			MOTIF_DYNAMIC_DIR=$d/lib
+			MOTIF_DYNAMIC_DIR=$d
 
-			MOTIF_DYNAMIC_LIB=$d/lib/$l
+			MOTIF_DYNAMIC_LIB=$d/$l
 
 			MOTIF_DYNAMIC_PATHS="-L$MOTIF_DYNAMIC_DIR"
 
