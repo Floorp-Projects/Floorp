@@ -61,6 +61,7 @@
 #include "nsIContent.h"
 #include "nsIEventListenerManager.h"
 #include "nsGenericDOMNodeList.h"
+#include "nsIDOM3Node.h"
 #include "nsIPrincipal.h"
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"

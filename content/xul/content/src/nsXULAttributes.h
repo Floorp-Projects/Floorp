@@ -53,6 +53,7 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsXULAttributeValue.h"
+#include "nsIDOM3Node.h"
 
 class nsIURI;
 class nsINodeInfo;

@@ -32,6 +32,7 @@
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOM3Node.h"
 
 // string includes
 #include "nsReadableUtils.h"

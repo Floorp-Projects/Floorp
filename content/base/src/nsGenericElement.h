@@ -48,6 +48,7 @@
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
+#include "nsIDOM3Node.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"

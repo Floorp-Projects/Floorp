@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsINodeInfo.h"
+#include "nsIDOM3Node.h"
 
 class nsIContent;
 class nsDOMAttribute;

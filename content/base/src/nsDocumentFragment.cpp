@@ -46,6 +46,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsDOMError.h"
+#include "nsIDOM3Node.h"
 
 
 class nsDocumentFragment : public nsGenericContainerElement,

@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "domstubs.idl"
-#include "nsIDOM3Node.idl"
 
 /**
  * The nsIDOMNode interface is the primary datatype for the entire 

@@ -54,6 +54,7 @@
 #include "nsReadableUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOM3Node.h"
 #include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMError.h"
