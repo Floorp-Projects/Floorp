@@ -32,6 +32,10 @@ class nsMsgIncomingServer : public nsIMsgIncomingServer {
   nsMsgIncomingServer();
   virtual ~nsMsgIncomingServer();
 
+  /* attribute string key; */
+  NS_IMETHOD GetKey(char * *aKey);
+  NS_IMETHOD SetKey(char * aKey);
+  
    /* attribute string prettyName; */
   NS_IMETHOD GetPrettyName(char * *aPrettyName);
   NS_IMETHOD SetPrettyName(char * aPrettyName);
@@ -55,24 +59,61 @@ class nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD GetBiffMinutes(PRInt32 *aBiffMinutes);
   NS_IMETHOD SetBiffMinutes(PRInt32 aBiffMinutes);
 
-  NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *serverKey);
-  
- private:
-  char *m_prettyName;
-  char *m_hostName;
-  char *m_userName;
-  char *m_password;
-  
-  PRBool m_doBiff;
-  PRInt32 m_biffMinutes;
+private:
+  nsIPref *m_prefs;
+  char *m_serverKey;
 
 protected:
   char *getPrefName(const char *serverKey, const char *pref);
-  char *getCharPref(nsIPref *prefs, const char *serverKey, const char *pref);
-  PRBool getBoolPref(nsIPref *prefs, const char *serverKey, const char *pref);
-  PRInt32 getIntPref(nsIPref *prefs, const char *serverKey, const char *pref);
+  char *getDefaultPrefName(const char *pref);
   
-
+  nsresult getCharPref(const char *pref, char **);
+  nsresult getDefaultCharPref(const char *pref, char **);
+  nsresult setCharPref(const char *pref, char *);
   
+  nsresult getBoolPref(const char *pref, PRBool *);
+  nsresult getDefaultBoolPref(const char *pref, PRBool *);
+  nsresult setBoolPref(const char *pref, PRBool);
+  
+  nsresult getIntPref(const char *pref, PRInt32 *);
+  nsresult getDefaultIntPref(const char *pref, PRInt32 *);
+  nsresult setIntPref(const char *pref, PRInt32);
 };
+
+/* some useful macros to implement accessors */
+#define NS_IMPL_SERVERPREF_STR(_class, _postfix, _prefname)	\
+NS_IMETHODIMP								   	\
+_class::Get##_postfix(char **retval)   			\
+{											   	\
+  return getCharPref(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+_class::Set##_postfix(char *value)	\
+{												\
+  return setCharPref(_prefname, value);			\
+}
+
+#define NS_IMPL_SERVERPREF_BOOL(_class, _postfix, _prefname)\
+NS_IMETHODIMP								   	\
+_class::Get##_postfix(PRBool *retval)   		\
+{											   	\
+  return getBoolPref(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+_class::Set##_postfix(PRBool value)				\
+{												\
+  return setBoolPref(_prefname, value);			\
+}
+
+#define NS_IMPL_SERVERPREF_INT(_class, _postfix, _prefname)\
+NS_IMETHODIMP								   	\
+_class::Get##_postfix(PRInt32 *retval)   		\
+{											   	\
+  return getIntPref(_prefname, retval);			\
+}												\
+NS_IMETHODIMP	   								\
+_class::Set##_postfix(PRInt32 value)			\
+{												\
+  return setIntPref(_prefname, value);			\
+}
 

@@ -20,6 +20,7 @@
 #define nsMsgIdentity_h___
 
 #include "nsIMsgIdentity.h"
+#include "nsIPref.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // an identity is an object designed to encapsulate all the information we need 
@@ -27,11 +28,6 @@
 // as we flesh out our thoughts on multiple identities and what properties go into
 // these identities.
 //////////////////////////////////////////////////////////////////////////////////
-
-/* E7F875B0-D5AC-11d2-806A-006008128C4E */
-#define NS_IMSGIDENTITY_CID								\
-{ 0xe7f875b0, 0xd5ac, 0x11d2,							\
-	{ 0x80, 0x6a, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
 
 class nsMsgIdentity : public nsIMsgIdentity
@@ -86,26 +82,45 @@ public:
   NS_IMETHOD GetKey(char * *aKey);
   NS_IMETHOD SetKey(char * aKey);
 
-  NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *identityKey);
-  
-protected:
-  char *m_identityName;
-  char *m_fullName;
-  char *m_email;
-  char *m_replyTo;
-  char *m_organization;
-  PRBool m_useHtml;
+private:
   nsIMsgSignature* m_signature;
   nsIMsgVCard* m_vCard;
-
-  char *m_smtpHostname;
-  char *m_smtpUsername;
-  char *m_key;
+  char *m_identityKey;
+  nsIPref *m_prefs;
   
-  char *getPrefName(const char *identityKey, const char *pref);
-  char *getCharPref(nsIPref *prefs, const char *identityKey, const char *pref);
-  PRBool getBoolPref(nsIPref *prefs, const char *identityKey, const char *pref);
+protected:
+  static char *getPrefName(const char *identityKey, const char *pref);
+  nsresult getCharPref(const char *pref, char **);
+  nsresult setCharPref(const char *pref, char *);
+  nsresult getBoolPref(const char *pref, PRBool *);
+  nsresult setBoolPref(const char *pref, PRBool);
   
 };
+
+
+#define NS_IMPL_IDPREF_STR(_postfix, _prefname)	\
+NS_IMETHODIMP								   	\
+nsMsgIdentity::Get##_postfix(char **retval)   	\
+{											   	\
+  return getCharPref(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+nsMsgIdentity::Set##_postfix(char *value)		\
+{												\
+  return setCharPref(_prefname, value);\
+}
+
+#define NS_IMPL_IDPREF_BOOL(_postfix, _prefname)\
+NS_IMETHODIMP								   	\
+nsMsgIdentity::Get##_postfix(PRBool *retval)   	\
+{											   	\
+  return getBoolPref(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+nsMsgIdentity::Set##_postfix(PRBool value)		\
+{												\
+  return setBoolPref(_prefname, value);			\
+}
+
 
 #endif /* nsMsgIdentity_h___ */

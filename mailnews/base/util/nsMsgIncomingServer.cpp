@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -23,92 +23,195 @@
 #include "prmem.h"
 #include "prprf.h"
 
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
 nsMsgIncomingServer::nsMsgIncomingServer():
-  m_prettyName(0),
-  m_hostName(0),
-  m_userName(0),
-  m_password(0),
-  m_doBiff(PR_FALSE),
-  m_biffMinutes(0)
+    m_prefs(0),
+    m_serverKey(0)
 {
   NS_INIT_REFCNT();
 }
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
 {
-  PR_FREEIF(m_prettyName);
-  PR_FREEIF(m_hostName);
-  PR_FREEIF(m_userName);
-  PR_FREEIF(m_password);
+    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
+                                                  m_prefs,
+                                                  nsnull);
+    PR_FREEIF(m_serverKey)
 }
 
 NS_IMPL_ISUPPORTS(nsMsgIncomingServer, GetIID());
 
-NS_IMPL_GETSET_STR(nsMsgIncomingServer, PrettyName, m_prettyName)
-NS_IMPL_GETSET_STR(nsMsgIncomingServer, HostName, m_hostName)
-NS_IMPL_GETSET_STR(nsMsgIncomingServer, UserName, m_userName)
-NS_IMPL_GETSET_STR(nsMsgIncomingServer, Password, m_password)
-NS_IMPL_GETSET(nsMsgIncomingServer, DoBiff, PRBool, m_doBiff)
-NS_IMPL_GETSET(nsMsgIncomingServer, BiffMinutes, PRInt32, m_biffMinutes)
 
-char *
-nsMsgIncomingServer::getPrefName(const char *serverKey,
-                                 const char *prefName)
-{
-  return PR_smprintf("mail.server.%s.%s", serverKey, prefName);
-}
+NS_IMPL_GETTER_STR(nsMsgIncomingServer::GetKey, m_serverKey)
 
-PRBool
-nsMsgIncomingServer::getBoolPref(nsIPref *prefs,
-                                 const char *serverKey,
-                                 const char *prefname)
-{
-  char *prefName = getPrefName(serverKey, prefname);
-  PRBool val=PR_FALSE;
-  prefs->GetBoolPref(prefName, &val);
-  PR_Free(prefName);
-  return val;
-}
-
-PRInt32
-nsMsgIncomingServer::getIntPref(nsIPref *prefs,
-                                 const char *serverKey,
-                                 const char *prefname)
-{
-  char *prefName = getPrefName(serverKey, prefname);
-  PRInt32 val=0;
-  prefs->GetIntPref(prefName, &val);
-  PR_Free(prefName);
-  return val;
-}
-
-char *
-nsMsgIncomingServer::getCharPref(nsIPref *prefs,
-                           const char *serverKey,
-                           const char *prefname)
-{
-  char *prefName = getPrefName(serverKey, prefname);
-  char *val=nsnull;
-  nsresult rv = prefs->CopyCharPref(prefName, &val);
-  PR_Free(prefName);
-  if (NS_FAILED(rv)) return nsnull;
-  return val;
-}
 
 NS_IMETHODIMP
-nsMsgIncomingServer::LoadPreferences(nsIPref *prefs, const char *serverKey)
+nsMsgIncomingServer::SetKey(char * serverKey)
 {
-#ifdef DEBUG_alecf
-    printf("Loading generic server prefs for %s\n", serverKey);
-#endif
-    
-    m_prettyName = getCharPref(prefs, serverKey, "name");
-    m_hostName = getCharPref(prefs, serverKey, "hostname");
-    m_userName = getCharPref(prefs, serverKey, "userName");
-    m_password = getCharPref(prefs, serverKey, "password");
-    m_doBiff = getBoolPref(prefs, serverKey, "check_new_mail");
-    m_biffMinutes = getIntPref(prefs, serverKey, "check_time");
+    nsresult rv = NS_OK;
+    // in order to actually make use of the key, we need the prefs
+    if (!m_prefs)
+        rv = nsServiceManager::GetService(kPrefServiceCID,
+                                          nsIPref::GetIID(),
+                                          (nsISupports**)&m_prefs);
 
-    return NS_OK;
+    PR_FREEIF(m_serverKey);
+    m_serverKey = PL_strdup(serverKey);
+    return rv;
+}
+    
+    
+char *
+nsMsgIncomingServer::getPrefName(const char *serverKey,
+                                 const char *fullPrefName)
+{
+  return PR_smprintf("mail.server.%s.%s", serverKey, fullPrefName);
 }
 
+// this will be slightly faster than the above, and allows
+// the "default" server preference root to be set in one place
+char *
+nsMsgIncomingServer::getDefaultPrefName(const char *fullPrefName)
+{
+  return PR_smprintf("mail.server.default.%s", fullPrefName);
+}
+
+
+nsresult
+nsMsgIncomingServer::getBoolPref(const char *prefname,
+                                 PRBool *val)
+{
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+  
+  if (NS_FAILED(rv))
+    rv = getDefaultBoolPref(prefname, val);
+  
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::getDefaultBoolPref(const char *prefname,
+                                        PRBool *val) {
+  
+  char *fullPrefName = getDefaultPrefName(m_serverKey);
+  nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::setBoolPref(const char *prefname,
+                                 PRBool val)
+{
+  nsresult rv;
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+
+  PRBool defaultValue;
+  rv = getDefaultBoolPref(prefname, &defaultValue);
+
+  if (NS_SUCCEEDED(rv) &&
+      val == defaultValue)
+    rv = m_prefs->ClearUserPref(fullPrefName);
+  else
+    rv = m_prefs->SetBoolPref(fullPrefName, val);
+  
+  PR_Free(fullPrefName);
+  
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::getIntPref(const char *prefname,
+                                PRInt32 *val)
+{
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  if (NS_FAILED(rv))
+    rv = getDefaultIntPref(prefname, val);
+  
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::getDefaultIntPref(const char *prefname,
+                                        PRInt32 *val) {
+  
+  char *fullPrefName = getDefaultPrefName(m_serverKey);
+  nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::setIntPref(const char *prefname,
+                                 PRInt32 val)
+{
+  nsresult rv;
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  
+  PRInt32 defaultVal;
+  rv = getDefaultIntPref(prefname, &defaultVal);
+  
+  if (NS_SUCCEEDED(rv) && defaultVal == val)
+    rv = m_prefs->ClearUserPref(fullPrefName);
+  else
+    rv = m_prefs->SetIntPref(fullPrefName, val);
+  
+  PR_Free(fullPrefName);
+  
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::getCharPref(const char *prefname,
+                                 char  **val)
+{
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+  
+  if (NS_FAILED(rv))
+    rv = getDefaultCharPref(prefname, val);
+  
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::setCharPref(const char *prefname,
+                                 char * val)
+{
+  nsresult rv;
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+
+  char *defaultVal=nsnull;
+  rv = getDefaultCharPref(prefname, &defaultVal);
+  if (NS_SUCCEEDED(rv) &&
+      PL_strcmp(defaultVal, val) == 0)
+    rv = m_prefs->ClearUserPref(fullPrefName);
+  else
+    rv = m_prefs->SetCharPref(fullPrefName, val);
+  
+  PR_FREEIF(defaultVal);
+  PR_Free(fullPrefName);
+  
+  return rv;
+}
+
+
+// use the convenience macros to implement the accessors
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrettyName, "name")
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, UserName, "userName");
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Password, "password");
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
+NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
