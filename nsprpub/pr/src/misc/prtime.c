@@ -1665,7 +1665,7 @@ PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
  * values for these two fields.
  */
 
-#if defined(SUNOS4) || (__GLIBC__ >= 2)
+#if defined(SUNOS4) || (__GLIBC__ >= 2) || defined(XP_BEOS)
     if (mktime(&a) == -1) {
         PR_snprintf(buf, buflen, "can't get timezone");
         return 0;
