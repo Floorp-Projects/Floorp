@@ -176,6 +176,19 @@ protected:
 
     BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode);
     BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode);
+
+
+    BOOL                    OnInputLangChange(WORD aLangID, LRESULT *oResult);			
+    BOOL                    OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState);
+    BOOL                    OnIMEComposition(LPARAM  aGCS);			
+    BOOL                    OnIMECompositionFull();			
+    BOOL                    OnIMEEndComposition();			
+    BOOL                    OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult);			
+    BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult);			
+    BOOL                    OnIMESelect(BOOL  aSelected, WORD aLangID);			
+    BOOL                    OnIMESetContext(BOOL aActive, LPARAM aISC);			
+    BOOL                    OnIMEStartComposition();			
+
     ULONG                   IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey);
     virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode);
 
