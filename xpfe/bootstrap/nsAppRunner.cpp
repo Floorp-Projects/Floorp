@@ -805,17 +805,15 @@ done:
 int main(int argc, char* argv[])
 {
     nsresult rv;
-    nsIServiceManager* servMgr;
-    rv = NS_InitXPCOM(&servMgr);
+    rv = NS_InitXPCOM(NULL);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
 
     int result = main1(argc, argv);
 
     // calling this explicitly will cut down on a large number of leaks we're
     // seeing:
-    rv = NS_ShutdownXPCOM(servMgr);
+    rv = NS_ShutdownXPCOM(NULL);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-    NS_RELEASE(servMgr);
 
     return result;
 }
