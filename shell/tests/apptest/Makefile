@@ -32,10 +32,11 @@ OBJS	= $(CPPSRCS:.cpp=.o)
 EX_LIBS = \
 	$(DIST)/lib/libshell_s.a \
 	$(DIST)/bin/libshell.so \
-	$(DIST)/bin/libgfxunix.so	\
 	$(DIST)/bin/libwidgetunix.so	\
-	$(DIST)/bin/libraptorbase.so	\
 	$(DIST)/bin/libraptorgfx.so	\
+	$(DIST)/bin/libgfxunix.so	\
+	$(DIST)/bin/libraptorbase.so	\
+	$(DIST)/bin/libgmbaseunix.so	\
 	$(DIST)/bin/libxpcom.so	\
 	$(DIST)/bin/libreg.so	\
 	$(DIST)/bin/libnspr21.so	\
