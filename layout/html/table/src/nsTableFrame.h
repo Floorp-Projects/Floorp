@@ -344,12 +344,6 @@ protected:
   /** given the new parent size, do I really need to do a reflow? */
   virtual PRBool NeedsReflow(const nsSize& aMaxSize);
 
-  /** what stage of reflow is currently in process? */
-  virtual PRInt32 GetReflowPass() const;
-
-  /** sets the reflow pass flag.  use with caution! */
-  virtual void SetReflowPass(PRInt32 aReflowPass);
-
   /** returns PR_TRUE if the cached pass 1 data is still valid */
   virtual PRBool IsFirstPassValid() const;
 
@@ -488,21 +482,16 @@ public: /* ----- Cell Map public methods ----- */
 private:
   void DebugPrintCount() const; // Debugging routine
 
-
-  /**  table reflow is a multi-pass operation.  Use these constants to keep track of
-    *  which pass is currently being executed.
-    */
-  enum {kPASS_UNDEFINED=0, kPASS_FIRST=1, kPASS_SECOND=2, kPASS_THIRD=3, kPASS_INCREMENTAL=4};
-
+// data members
   PRInt32     *mColumnWidths;       // widths of each column
-  ColumnInfoCache *mColCache;       // cached information about the table columns
+  PRInt32      mColumnWidthsLength; // the number of column lengths this frame has allocated
   PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit
-  PRInt32      mPass;               // which Reflow pass are we currently in?
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
-  nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
   PRInt32      mColCount;           // the number of columns in this table
   PRInt32      mEffectiveColCount;  // the number of columns in this table adjusted for weird table attributes
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
+  ColumnInfoCache *mColCache;       // cached information about the table columns
+  nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
 };
 
 

@@ -64,6 +64,8 @@ NS_DEF_PTR(nsIContent);
 
 const nsIID kTableFrameCID = NS_TABLEFRAME_CID;
 
+static const PRInt32 kColumnWidthIncrement=100;
+
 /* ----------- CellData ---------- */
 
 /* CellData is the info stored in the cell map */
@@ -263,13 +265,14 @@ nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsContainerFrame(aContent, aParentFrame),
     mCellMap(nsnull),
     mColCache(nsnull),
-    mColumnWidths(nsnull),
     mTableLayoutStrategy(nsnull),
     mFirstPassValid(PR_FALSE),
-    mPass(kPASS_UNDEFINED),
     mIsInvariantWidth(PR_FALSE)
 {
   mEffectiveColCount = -1;  // -1 means uninitialized
+  mColumnWidthsLength = kColumnWidthIncrement;
+  mColumnWidths = new PRInt32[mColumnWidthsLength];
+  nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
   mCellMap = new nsCellMap(0, 0);
 }
 
@@ -1546,7 +1549,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
 #if 1
     // XXX For the time being just fall through and treat it like a
     // pass 2 reflow...
-    mPass = kPASS_SECOND;
     // calling intialize here resets all the cached info based on new table content 
     if (nsnull!=mTableLayoutStrategy)
     {
@@ -1569,11 +1571,9 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       // XXX TROY:  we used to rebuild the cellmap here for incremental reflow.
       //            now that the cellmap is built in the constructor 
       //            we need to reset the cellmap during incremental reflow before we get here
-      mPass = kPASS_FIRST;
       aStatus = ResizeReflowPass1(&aPresContext, aDesiredSize, aReflowState, aStatus);
       // check result
     }
-    mPass = kPASS_SECOND;
 
     if (nsnull==mPrevInFlow)
     {
@@ -1589,8 +1589,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     nsHTMLReflowState    reflowState(aReflowState);
     reflowState.maxSize.width = mRect.width;
     aStatus = ResizeReflowPass2(&aPresContext, aDesiredSize, reflowState);
-
-    mPass = kPASS_UNDEFINED;
   }
   else
   {
@@ -1798,8 +1796,6 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
       state.y += margin;
     }
   }
-
-  mPass = kPASS_UNDEFINED;  // we're no longer in-process
 
 #ifdef NS_DEBUG
   //PostReflowCheck(status);
@@ -2232,13 +2228,20 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
+  NS_ASSERTION(nsnull!=mColumnWidths, "never ever call me until the col widths array is built!");
 
   PRInt32 numCols = GetColCount();
-  if (nsnull==mColumnWidths)
+  if (numCols>mColumnWidthsLength)
   {
-    mColumnWidths = new PRInt32[numCols];
-    nsCRT::memset (mColumnWidths, 0, numCols*sizeof(PRInt32));
-  }
+    PRInt32 priorColumnWidthsLength=mColumnWidthsLength;
+    while (numCols>mColumnWidthsLength)
+      mColumnWidthsLength += kColumnWidthIncrement;
+    PRInt32 * newColumnWidthsArray = new PRInt32[mColumnWidthsLength];
+    nsCRT::memset (newColumnWidthsArray, 0, mColumnWidthsLength*sizeof(PRInt32));
+    nsCRT::memcpy (newColumnWidthsArray, mColumnWidths, priorColumnWidthsLength*sizeof(PRInt32));
+    delete [] mColumnWidths;
+    mColumnWidths = newColumnWidthsArray;
+   }
 
   const nsStyleSpacing* spacing =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -2587,20 +2590,6 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
       childFrame->GetNextSibling(childFrame);
     }
   }
-}
-
-PRInt32 nsTableFrame::GetReflowPass() const
-{
-  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  return firstInFlow->mPass;
-}
-
-void nsTableFrame::SetReflowPass(PRInt32 aReflowPass)
-{
-  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  firstInFlow->mPass = aReflowPass;
 }
 
 PRBool nsTableFrame::IsFirstPassValid() const
