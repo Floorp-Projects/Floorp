@@ -1305,11 +1305,12 @@ nsTableRowFrame::Contains(nsIPresContext* aPresContext,
  * pushing a row frame that has cell frames that span into it. The cell frame
  * should be reflowed with the specified height
  */
-void nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
-                                      const nsHTMLReflowState& aReflowState,
-                                      nsTableCellFrame*        aCellFrame,
-                                      nscoord                  aAvailableHeight,
-                                      nsReflowStatus&          aStatus)
+nscoord 
+nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
+                                 const nsHTMLReflowState& aReflowState,
+                                 nsTableCellFrame*        aCellFrame,
+                                 nscoord                  aAvailableHeight,
+                                 nsReflowStatus&          aStatus)
 {
   // Reflow the cell frame with the specified height. Use the existing width
   nsSize  cellSize;
@@ -1323,21 +1324,53 @@ void nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
   aCellFrame->SizeTo(aPresContext, cellSize.width, aAvailableHeight);
+
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
   aCellFrame->VerticallyAlignChild(aPresContext, aReflowState, mMaxCellAscent);
   aCellFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+
+  return desiredSize.height;
 }
 
 /**
- * This function is called by the row group frame's SplitRowGroup() code when
- * it creates a continuing cell frame and wants to insert it into the row's
- * child list
+ * These 3 functions are called by the row group frame's SplitRowGroup() code when
+ * it creates a continuing cell frame and wants to insert it into the row's child list
  */
-void nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
-                                      nsTableCellFrame* aPrevSibling)
+void 
+nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
+                                 nsTableCellFrame* aPrevSibling)
 {
   mFrames.InsertFrame(nsnull, aPrevSibling, aFrame);
+  aFrame->SetParent(this);
+}
+
+void 
+nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
+                                 PRInt32           aColIndex)
+{
+  // Find the cell frame where col index < aColIndex
+  nsTableCellFrame* priorCell = nsnull;
+  for (nsIFrame* child = mFrames.FirstChild(); child; child->GetNextSibling(&child)) {
+    nsCOMPtr<nsIAtom> frameType;
+    child->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableCellFrame != frameType.get()) {
+      nsTableCellFrame* cellFrame = (nsTableCellFrame*)child;
+      PRInt32 colIndex;
+      cellFrame->GetColIndex(colIndex);
+      if (colIndex < aColIndex) {
+        priorCell = cellFrame;
+      }
+      else break;
+    }
+  }
+  InsertCellFrame(aFrame, priorCell);
+}
+
+void 
+nsTableRowFrame::RemoveCellFrame(nsTableCellFrame* aFrame)
+{
+  mFrames.RemoveFrame(aFrame);
 }
 
 NS_IMETHODIMP

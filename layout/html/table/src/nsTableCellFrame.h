@@ -276,31 +276,6 @@ public:
 #endif
 };
 
-inline nsresult nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex) const
-{
-  nsTableCellFrame* cell = (nsTableCellFrame*)GetFirstInFlow();
-  nsresult result;
-  nsTableRowFrame * row;
-  cell->GetParent((nsIFrame **)&row);
-  if (nsnull!=row)
-  {
-    aRowIndex = row->GetRowIndex();
-    result = NS_OK;
-  }
-  else
-  {
-    aRowIndex = 0;
-    result = NS_ERROR_NOT_INITIALIZED;
-  }
-  return result;
-}
-
-inline nsresult nsTableCellFrame::GetColIndex(PRInt32 &aColIndex) const
-{  
-  aColIndex = mColIndex;
-  return  NS_OK;
-}
-
 inline nscoord nsTableCellFrame::GetPriorAvailWidth()
 { return mPriorAvailWidth;}
 

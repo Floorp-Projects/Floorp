@@ -29,6 +29,7 @@
 
 class nsTableFrame;
 class nsTableRowFrame;
+class nsTableCellFrame;
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 class nsReflowTimer;
 #endif
@@ -298,6 +299,19 @@ protected:
                          const nsHTMLReflowState& aReflowState,
                          nsTableFrame*            aTableFrame,
                          nsReflowStatus&          aStatus);
+
+  nscoord SplitSpanningCells(nsIPresContext&          aPresContext,
+                             const nsHTMLReflowState& aReflowState,
+                             nsIStyleSet&             aStyleSet,
+                             nsTableFrame&            aTableFrame,
+                             nsTableRowFrame&         aRowFrame,
+                             nscoord                  aRowEndY,
+                             nsTableRowFrame*         aContRowFrame);
+
+  void CreateContinuingRowFrame(nsIPresContext& aPresContext,
+                                nsIStyleSet&    aStyleSet,
+                                nsIFrame&       aRowFrame,
+                                nsIFrame**      aContRowFrame);
 
   PRBool IsSimpleRowFrame(nsTableFrame* aTableFrame, 
                           nsIFrame*     aFrame);
