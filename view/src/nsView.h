@@ -299,6 +299,7 @@ public: // NOT in nsIView, so only available in view module
   nsViewManager* GetViewManager() const { return mViewManager; }
   nsViewVisibility GetVisibility() const { return mVis; }
   void* GetClientData() const { return mClientData; }
+  PRBool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
 
   PRInt32 GetChildCount() const { return mNumKids; }
   nsView* GetChild(PRInt32 aIndex) const;
