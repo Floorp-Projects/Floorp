@@ -41,6 +41,7 @@ your Form Manager Information here</font></font></font></h3></center>
                 .classes["component://netscape/appshell/component/browser/instance"]
                 .createInstance(Components.interfaces.nsIBrowserInstance);
     if (appCore) {
+      appCore.setWebShellWindow(window);
       status = appCore.walletRequestToCapture(window._content);
     }
   }
