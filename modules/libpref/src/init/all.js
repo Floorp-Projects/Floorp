@@ -483,11 +483,6 @@ localDefPref("security.directory",              "");
 
 pref("autoupdate.enabled",              true);
 
-pref("silentdownload.enabled",    true);
-pref("silentdownload.directory",  "");
-pref("silentdownload.range",      3000);
-pref("silentdownload.interval",  10000);
-
 pref("browser.editor.disabled", false);
 
 pref("spellchecker.dictionary", "");
