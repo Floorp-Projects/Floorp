@@ -1008,8 +1008,10 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       replyToStr.AssignWithConversion(m_compFields->GetReplyTo());
 
 	    m_identity->GetReplyTo(getter_Copies(replyTo));                                      
-      if ((replyToStr.Length() > 0) && replyTo && *(const char *)replyTo) {
-        replyToStr.AppendWithConversion(',');
+      if (replyTo && *(const char *)replyTo)
+      {
+        if (replyToStr.Length() > 0)
+          replyToStr.AppendWithConversion(',');
         replyToStr.AppendWithConversion(replyTo);
       }
       
