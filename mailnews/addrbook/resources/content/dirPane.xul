@@ -23,7 +23,7 @@
 				<treerow >
 					<treecell>
 						<treeindentation />
-						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DirName" align="right" />
+						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DirName" align="left" />
 					</treecell>
 				</treerow>
 			</treeitem>

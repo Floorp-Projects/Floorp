@@ -28,7 +28,7 @@
 			  		<treerow >
 						<treecell>
 							<treeindentation />
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DisplayName" align="right" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DisplayName" align="left" />
 						</treecell>
 						<treecell>
 							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail" align="right" style="list-style-image: none;" />
