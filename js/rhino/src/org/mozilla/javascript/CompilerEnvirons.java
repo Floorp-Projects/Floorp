@@ -44,14 +44,15 @@ public class CompilerEnvirons
 {
     public CompilerEnvirons()
     {
-        this.errorReporter = DefaultErrorReporter.instance;
-        this.languageVersion = Context.VERSION_DEFAULT;
-        this.generateDebugInfo = true;
-        this.useDynamicScope = false;
-        this.reservedKeywordAsIdentifier = false;
-        this.allowMemberExprAsFunctionName = false;
-        this.optimizationLevel = 0;
-        this.generatingSource = true;
+        errorReporter = DefaultErrorReporter.instance;
+        languageVersion = Context.VERSION_DEFAULT;
+        generateDebugInfo = true;
+        useDynamicScope = false;
+        reservedKeywordAsIdentifier = false;
+        allowMemberExprAsFunctionName = false;
+        xmlAvailable = true;
+        optimizationLevel = 0;
+        generatingSource = true;
     }
 
     public void initFromContext(Context cx)
@@ -61,15 +62,17 @@ public class CompilerEnvirons
         useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
         generateDebugInfo = (!cx.isGeneratingDebugChanged()
                              || cx.isGeneratingDebug());
-        this.reservedKeywordAsIdentifier
+        reservedKeywordAsIdentifier
             = cx.hasFeature(Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER);
-        this.allowMemberExprAsFunctionName
+        allowMemberExprAsFunctionName
             = cx.hasFeature(Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME);
+        xmlAvailable
+            = cx.hasFeature(Context.FEATURE_E4X);
 
-        this.optimizationLevel = cx.getOptimizationLevel();
+        optimizationLevel = cx.getOptimizationLevel();
 
-        this.generatingSource = cx.isGeneratingSource();
-        this.activationNames = cx.activationNames;
+        generatingSource = cx.isGeneratingSource();
+        activationNames = cx.activationNames;
     }
 
     public final ErrorReporter getErrorReporter()
@@ -114,6 +117,36 @@ public class CompilerEnvirons
         this.useDynamicScope = flag;
     }
 
+    public final boolean isReservedKeywordAsIdentifier()
+    {
+        return reservedKeywordAsIdentifier;
+    }
+
+    public void setReservedKeywordAsIdentifier(boolean flag)
+    {
+        reservedKeywordAsIdentifier = flag;
+    }
+
+    public final boolean isAllowMemberExprAsFunctionName()
+    {
+        return allowMemberExprAsFunctionName;
+    }
+
+    public void setAllowMemberExprAsFunctionName(boolean flag)
+    {
+        allowMemberExprAsFunctionName = flag;
+    }
+
+    public final boolean isXmlAvailable()
+    {
+        return xmlAvailable;
+    }
+
+    public void setXmlAvailable(boolean flag)
+    {
+        xmlAvailable = flag;
+    }
+
     public final int getOptimizationLevel()
     {
         return optimizationLevel;
@@ -125,7 +158,7 @@ public class CompilerEnvirons
         this.optimizationLevel = level;
     }
 
-    public boolean isGeneratingSource()
+    public final boolean isGeneratingSource()
     {
         return generatingSource;
     }
@@ -144,20 +177,16 @@ public class CompilerEnvirons
         this.generatingSource = generatingSource;
     }
 
-    final boolean isXmlAvailable()
-    {
-        return true;
-    }
-
     private ErrorReporter errorReporter;
 
-    int languageVersion = Context.VERSION_DEFAULT;
-    boolean generateDebugInfo = true;
-    boolean useDynamicScope;
-    boolean reservedKeywordAsIdentifier;
-    boolean allowMemberExprAsFunctionName;
-    private int optimizationLevel = 0;
-    private boolean generatingSource = true;
+    private int languageVersion;
+    private boolean generateDebugInfo;
+    private boolean useDynamicScope;
+    private boolean reservedKeywordAsIdentifier;
+    private boolean allowMemberExprAsFunctionName;
+    private boolean xmlAvailable;
+    private int optimizationLevel;
+    private boolean generatingSource;
     Hashtable activationNames;
 }
 

@@ -466,7 +466,7 @@ public class TokenStream
                         if (result != Token.RESERVED) {
                             return result;
                         } else if (!parser.compilerEnv.
-                                    reservedKeywordAsIdentifier)
+                                        isReservedKeywordAsIdentifier())
                         {
                             return result;
                         } else {

@@ -317,7 +317,7 @@ public class Parser
             name = ts.getString();
             decompiler.addName(name);
             if (!ts.matchToken(Token.LP)) {
-                if (compilerEnv.allowMemberExprAsFunctionName) {
+                if (compilerEnv.isAllowMemberExprAsFunctionName()) {
                     // Extension to ECMA: if 'function <name>' does not follow
                     // by '(', assume <name> starts memberExpr
                     Node memberExprHead = nf.createName(name);
@@ -331,7 +331,7 @@ public class Parser
             name = "";
         } else {
             name = "";
-            if (compilerEnv.allowMemberExprAsFunctionName) {
+            if (compilerEnv.isAllowMemberExprAsFunctionName()) {
                 // Note that memberExpr can not start with '(' like
                 // in function (1+2).toString(), because 'function (' already
                 // processed as anonymous function
@@ -480,7 +480,7 @@ public class Parser
             return;
 
         case Token.FUNCTION:
-            if (compilerEnv.languageVersion < Context.VERSION_1_2) {
+            if (compilerEnv.getLanguageVersion() < Context.VERSION_1_2) {
               /*
                * Checking against version < 1.2 and version >= 1.0
                * in the above line breaks old javascript, so we keep it
@@ -495,7 +495,7 @@ public class Parser
     private void checkWellTerminatedFunction()
         throws IOException, ParserException
     {
-        if (compilerEnv.languageVersion < Context.VERSION_1_2) {
+        if (compilerEnv.getLanguageVersion() < Context.VERSION_1_2) {
             // See comments in checkWellTerminated
              return;
         }
@@ -1207,7 +1207,7 @@ public class Parser
                 ts.getToken();
                 int decompilerToken = tt;
                 int parseToken = tt;
-                if (compilerEnv.languageVersion == Context.VERSION_1_2) {
+                if (compilerEnv.getLanguageVersion() == Context.VERSION_1_2) {
                     // JavaScript 1.2 uses shallow equality for == and != .
                     // In addition, convert === and !== for decompiler into
                     // == and != since the decompiler is supposed to show
