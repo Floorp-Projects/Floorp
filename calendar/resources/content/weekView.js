@@ -365,9 +365,6 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
 
     dump("duration:  " + eventDuration + "\n");
 
-    var eventText = calEvent.title;
-
-
     var eventBox = document.createElement("vbox");
 
     // XXX Consider changing this to only store the ID
@@ -416,25 +413,21 @@ WeekView.prototype.createEventBox = function ( itemOccurrence )
     eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( null, calEvent )");
     eventBox.setAttribute("tooltip", "eventTooltip");
 
-    // The event description. This doesn't go multi line, but does crop properly.
-    var eventDescriptionElement = document.createElement("label");
-
-    //eventDescriptionElement.calendarEventDisplay = calendarEventDisplay;
-    eventDescriptionElement.setAttribute("class", "week-view-event-label-class" );
-    eventDescriptionElement.setAttribute("value", eventText );
-    eventDescriptionElement.setAttribute("flex", "1" );
-
-    var DescriptionText = document.createTextNode(" ");
-    eventDescriptionElement.appendChild(DescriptionText);
-
-    eventDescriptionElement.setAttribute("height", Height);
-    eventDescriptionElement.setAttribute("crop", "end");
-    eventDescriptionElement.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
-    eventDescriptionElement.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
-    eventDescriptionElement.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
-
-    eventBox.appendChild(eventDescriptionElement);
-
+    // Event box text (title, location and description)
+    if (calEvent.title || calEvent.getProperty("location")) {
+      var titleText = ( (calEvent.title || "") + 
+        (calEvent.getProperty("location") ? " ("+calEvent.getProperty("location")+")" : "") );
+      var titleElement = document.createElement( "label" );
+      titleElement.setAttribute( "class", "week-view-event-title-label-class" );
+      titleElement.appendChild( document.createTextNode( titleText ));
+      eventBox.appendChild( titleElement );
+    }
+    if (calEvent.getProperty("description")) {
+      var descriptionElement = document.createElement( "description" );
+      descriptionElement.setAttribute( "class", "week-view-event-description-class" );
+      descriptionElement.appendChild( document.createTextNode( calEvent.getProperty("description") ));
+      eventBox.appendChild( descriptionElement );
+    }
     return eventBox;
 }
 
