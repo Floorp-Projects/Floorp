@@ -17,43 +17,54 @@
  */
 
 #include "prtypes.h"
-#include "plarena.h"
-#include "seccomon.h"
-#include "mcom_db.h"
-#include "certt.h"
+#include "prlog.h"
+#if 0
 
 PR_BEGIN_EXTERN_C
-
+#endif
 #include "nsZig.h"
+#if 0
 #include "zig.h"
 
 PR_END_EXTERN_C
-
+#endif
 //
 // 			PUBLIC METHODS 
 //
 
 nsZig::nsZig(void * zig)
 {
+#if 0
   itsNativeZig = zig;
+#endif
 }
 
 void nsZig::destroyZignature(void * nativeZig)
 {
+#if 0
   SOB_destroy((ZIG *)nativeZig);
+#endif
+  PR_ASSERT(0);
 }
 
 nsZig::~nsZig(void)
 {
+#if 0
   if (itsNativeZig != NULL) {
     nsZig::destroyZignature(itsNativeZig);
   }
   itsNativeZig = NULL;
+#endif
+  PR_ASSERT(0);
 }
 
 void * nsZig::GetZig(void)
 {
+#if 0
   return itsNativeZig;
+#endif
+  PR_ASSERT(0);
+  return NULL;
 }
 
 
