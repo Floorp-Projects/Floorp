@@ -1360,7 +1360,10 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 
 
 /* virtual */ void 
-nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext)
+nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext,
+                             gint            x,
+                             gint            y,
+                             guint           time)
 {
   nsMouseEvent event;
 
@@ -1369,11 +1372,8 @@ nsWidget::OnDragMotionSignal(GdkDragContext *aGdkDragContext)
 
   event.widget = this;
 
-
-  /* I think we need coordinate stuff here */
-  /* Faking it for now. */
-  event.point.x = 17;
-  event.point.y = 19;
+  event.point.x = x;
+  event.point.y = y;
 
   AddRef();
 
@@ -1400,7 +1400,10 @@ nsWidget::OnDragBeginSignal(GdkDragContext * aGdkDragContext)
 
 
 /* virtual */ void 
-nsWidget::OnDragDropSignal(GdkDragContext *aDragContext)
+nsWidget::OnDragDropSignal(GdkDragContext *aDragContext,
+                           gint            x,
+                           gint            y,
+                           guint           time)
 {
   nsMouseEvent    event;
 
@@ -1826,7 +1829,7 @@ nsWidget::DragMotionSignal(GtkWidget *      aWidget,
   nsWidget * widget = (nsWidget *) aData;
   NS_ASSERTION( nsnull != widget, "instance pointer is null");
 
-  widget->OnDragMotionSignal(aDragContext);
+  widget->OnDragMotionSignal(aDragContext, x, y, time);
 
   return PR_TRUE;
 }
@@ -1865,7 +1868,7 @@ nsWidget::DragDropSignal(GtkWidget *      aWidget,
   }
 #endif
 
-  widget->OnDragDropSignal(aDragContext);
+  widget->OnDragDropSignal(aDragContext, x, y, time);
 
   return PR_TRUE;
 }
