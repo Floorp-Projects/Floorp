@@ -116,7 +116,7 @@ my $Body = "Subject: " . $Subject . "\n" . $Comment;
 my $long_desc_query = "INSERT INTO longdescs SET bug_id=$found_id, who=$userid, bug_when=NOW(), thetext=" . SqlQuote($Body) . ";";
 SendSQL($long_desc_query);
 
-system("cd .. ; ./processmail $found_id '$SenderShort'");
+system("./processmail", $found_id, $SenderShort);
 
 sub DealWithError {
   my ($reason) = @_;
