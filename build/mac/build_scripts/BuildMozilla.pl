@@ -60,7 +60,8 @@ my(%inputfiles) = (
   "buildflags",     "MozillaBuildFlags.txt",
   "checkoutdata",   "MozillaCheckoutList.txt",
   "buildprogress",  "¥ Mozilla opt progress",
-  "buildmodule",    "MozillaBuildList.pm"
+  "buildmodule",    "MozillaBuildList.pm",
+  "checkouttime",   "Mozilla last checkout"
 );
 #-------------------------------------------------------------
 # end build hashes
