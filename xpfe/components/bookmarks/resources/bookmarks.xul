@@ -58,12 +58,15 @@
   <menubar>
     <menu name="&menu.file.label;">
       <menuitem name="&menuitem.newWindow.label;"
-                onclick="BookmarksNewWindow();"/>
+                onclick="window.open('resource:/res/samples/bookmarks.xul',
+                                     'ManageBookmarks',
+                                     'chrome');" />
       <menuitem name="x&menuitem.newBookmark.label;"/>
       <menuitem name="x&menuitem.newFolder.label;"/>
       <menuitem name="x&menuitem.newSeparator.label;"/>
       <separator/>
-      <menuitem name="x&menuitem.close.label;"/>
+      <menuitem name="&menuitem.close.label;"
+                onclick="window.close()" />
     </menu>
     <menu name="&menu.edit.label;">
       <menuitem name="x&menuitem.undo.label;"/>
@@ -79,7 +82,7 @@
       <menuitem name="x&menuitem.findAgain.label;"/>
       <separator/>
       <menuitem name="&menuitem.properties.label;"
-                onclick="return BookmarkProperties();"/>
+                onclick="BookmarkProperties();"/>
     </menu>
   </menubar>
 
@@ -90,7 +93,7 @@
 <tree  id="bookmarksTree" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
        ondblclick="return OpenURL(event,event.target.parentNode.parentNode);"
-       flex="100%">
+       style="height:100%;">
 
   <template>
     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
@@ -150,7 +153,7 @@
     </treerow>
   </treehead>
 
-  <treechildren id="NC:BookmarksRoot" open="true" />
+  <treechildren ref="NC:BookmarksRoot" open="true" />
 </tree>
 
 </xul:window>

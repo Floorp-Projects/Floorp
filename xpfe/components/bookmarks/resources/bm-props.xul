@@ -18,7 +18,7 @@
 
 -->
 
-<?xml-stylesheet href="bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 
 <!DOCTYPE window
 [
@@ -27,56 +27,41 @@
 <!ENTITY bookmarks.location.label     "Location:">
 <!ENTITY bookmarks.shortcut.label     "Shortcut:">
 <!ENTITY bookmarks.description.label  "Description:">
+<!ENTITY bookmarks.ok.label           "Ok">
+<!ENTITY bookmarks.cancel.label       "Cancel">
 ]>
 
 <xul:window
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns="http://www.w3.org/TR/REC-html40"
-  title="&bookmarks.title.label;">
-
-
-  <xul:data>
-    <xul:broadcaster id="properties_node"/>
-    <xul:broadcaster id="dialog.start" ready="false"/>
-    <xul:observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
-  </xul:data>
+  title="&bookmarks.title.label;"
+  onload="Init();"
+  align="vertical"
+  width="300" height="200"> <!-- w&h hard coded so it doesn't look like crap -->
 
   <script src="bm-props.js" />
 
-   <table><tr><td>
-    <table>
-     <tr>
-      <td align="right">
-       &bookmarks.name.label;
-      </td><td>
-       <input type="text" id="name" size="60"/>
-      </td>
-     </tr><tr>
-      <td align="right">
-       &bookmarks.location.label;
-      </td><td>
-       <input type="text" id="url" size="60"/>
-      </td>
-     </tr><tr>
-      <td align="right">
-       &bookmarks.shortcut.label;
-      </td><td>
-       <input type="text" id="shortcut" size="60"/>
-      </td>
-     </tr><tr valign="top">
-      <td align="right">
-       &bookmarks.description.label;
-      </td><td>
-       <textarea id="description" rows="7" cols="60" wrap="hard">
-       </textarea>
-      </td>
-     </tr>
-    </table>
-  </td></tr><tr><td>
-   <table width="100%"><tr align="center"><td>
-    <input type="button" value="Ok" onclick="return commit();"/>
-   </td><td>
-    <input type="button" value="Cancel" onclick="return cancel();"/>
-   </td></tr></table>
-  </td></tr></table>
+  <table style="width:100%;">
+    <tr>
+      <td align="right">&bookmarks.name.label;</td>
+      <td><input type="text" id="name" style="width:100%;"/></td>
+    </tr>
+    <tr>
+      <td align="right">&bookmarks.location.label;</td>
+      <td><input type="text" id="url" style="width:100%;"/></td>
+    </tr>
+    <tr>
+      <td align="right">&bookmarks.shortcut.label;</td>
+      <td><input type="text" id="shortcut" style="width:100%;"/></td>
+    </tr>
+    <tr valign="top">
+      <td align="right">&bookmarks.description.label;</td>
+      <td><textarea id="description" style="width:100%;" wrap="hard"></textarea></td>
+    </tr>
+  </table>
+
+  <xul:box align="horizontal" flex="100%">
+    <button class="defaultbutton" onclick="Commit();">&bookmarks.ok.label;</button>
+    <button class="cancelbutton" onclick="Cancel();">&bookmarks.cancel.label;</button>
+  </xul:box>
 </xul:window>
