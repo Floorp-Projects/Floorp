@@ -230,7 +230,7 @@ public class Interpreter extends LabelTable {
             {
                 itsData.itsLineNumberTable = new UintMap();
             }
-            if (itsData.itsLineNumberTable != null) {
+            if (lineNumber > 0 && itsData.itsLineNumberTable != null) {
                 itsData.itsLineNumberTable.put(lineNumber, iCodeTop);
             }
             iCodeTop = addByte(TokenStream.LINE, iCodeTop);
