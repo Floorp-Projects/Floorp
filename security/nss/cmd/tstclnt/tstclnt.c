@@ -167,7 +167,7 @@ static void Usage(const char *progName)
 {
     printf(
 "Usage:  %s -h host [-p port] [-d certdir] [-n nickname] [-23Tovx] \n"
-"                   [-c ciphers] [-w passwd]\n", progName);
+"                   [-c ciphers] [-w passwd] [-q]\n", progName);
     printf("%-20s Hostname to connect with\n", "-h host");
     printf("%-20s Port number for SSL server\n", "-p port");
     printf("%-20s Directory with cert database (default is ~/.netscape)\n",
@@ -179,6 +179,7 @@ static void Usage(const char *progName)
     printf("%-20s Override bad server cert. Make it OK.\n", "-o");
     printf("%-20s Verbose progress reporting.\n", "-v");
     printf("%-20s Use export policy.\n", "-x");
+    printf("%-20s Ping the server and then exit.\n", "-q");
     printf("%-20s Letter(s) chosen from the following list\n", "-c ciphers");
     printf(
 "A    SSL2 RC4 128 WITH MD5\n"
