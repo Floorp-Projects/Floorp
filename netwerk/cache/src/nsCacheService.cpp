@@ -322,7 +322,7 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
                                 nsICacheListener *         listener,
                                 nsICacheEntryDescriptor ** result)
 {
-    if (*result)
+    if (result)
         *result = nsnull;
 
     nsCacheRequest * request = nsnull;
