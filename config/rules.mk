@@ -889,7 +889,18 @@ $(XPDIST)/include::
 
 export:: $(EXPORTS) $(XPDIST)/include
 	$(INSTALL) -m 444 $^
-endif
+endif 
+
+################################################################################
+# Copy each element of PREF_JS_EXPORTS to $(DIST)/bin/components
+
+ifneq ($(PREF_JS_EXPORTS),)
+$(DIST)/bin/components::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+
+export:: $(PREF_JS_EXPORTS) $(DIST)/bin/components
+	$(INSTALL) -m 444 $^
+endif 
 
 ################################################################################
 # Export the elements of $(XPIDLSRCS), generating .h and .xpt files and
