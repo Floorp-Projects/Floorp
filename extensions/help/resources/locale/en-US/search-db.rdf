@@ -5,16 +5,6 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="account_settings"
-         nc:name="account settings"
-	 nc:link="chrome://help/locale/mail_help.html#account_settingsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="activation"
          nc:name="activation"
 	 nc:link="chrome://help/locale/register_help.html#activationSDX"/>
@@ -28,6 +18,26 @@
        <rdf:Description ID="add_bookmarks"
          nc:name="add bookmarks"
 	 nc:link="chrome://help/locale/customize_help.html#add_bookmarksSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="add_email_account"
+         nc:name="add email account"
+	 nc:link="chrome://help/locale/mail_help.html#add_email_accountSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="add_IMAP_account"
+         nc:name="add IMAP account"
+	 nc:link="chrome://help/locale/mail_help.html#add_IMAP_accountSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -95,9 +105,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="address_mail"
-         nc:name="address mail"
-	 nc:link="chrome://help/locale/mail_help.html#address_mailSDX"/>
+       <rdf:Description ID="address_autocompletion"
+         nc:name="address autocompletion"
+	 nc:link="chrome://help/locale/mail_help.html#address_autocompletionSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -185,6 +195,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="attachments"
+         nc:name="attachments"
+	 nc:link="chrome://help/locale/mail_help.html#attachmentsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="autocomplete"
          nc:name="autocomplete"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#autocompleteSDX"/>
@@ -225,6 +245,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="biff"
+         nc:name="biff"
+	 nc:link="chrome://help/locale/mail_help.html#biffSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="blocking_ICQ_users"
          nc:name="blocking ICQ users"
 	 nc:link="chrome://help/locale/icq_help.html#blocking_ICQ_usersSDX"/>
@@ -238,6 +268,16 @@
        <rdf:Description ID="blocking_Instant_Messenger_users"
          nc:name="blocking Instant Messenger users"
 	 nc:link="chrome://help/locale/im_help.html#blocking_Instant_Messenger_usersSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="BMP"
+         nc:name="BMP"
+	 nc:link="chrome://help/locale/composer_help.html#BMPSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -465,16 +505,6 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="color_codes"
-         nc:name="color codes"
-	 nc:link="chrome://help/locale/composer_help.html#color_codesSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="compact_folders"
          nc:name="compact folders"
 	 nc:link="chrome://help/locale/mail_help.html#compact_foldersSDX"/>
@@ -488,6 +518,16 @@
        <rdf:Description ID="compacting_to_save_disk_space"
          nc:name="compacting to save disk space"
 	 nc:link="chrome://help/locale/mail_help.html#compacting_to_save_disk_spaceSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Composer_settings"
+         nc:name="Composer settings"
+	 nc:link="chrome://help/locale/composer_help.html#Composer_settingsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -585,6 +625,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="csv_export"
+         nc:name="csv export"
+	 nc:link="chrome://help/locale/mail_help.html#csv_exportSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="csv_import"
+         nc:name="csv import"
+	 nc:link="chrome://help/locale/mail_help.html#csv_importSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="default_browser_preferences"
          nc:name="default browser preferences"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#default_browser_preferencesSDX"/>
@@ -595,9 +655,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="default_SMTP_server"
-         nc:name="default SMTP server"
-	 nc:link="chrome://help/locale/mail_help.html#default_SMTP_serverSDX"/>
+       <rdf:Description ID="default_font_for_mail_messages"
+         nc:name="default font for mail messages"
+	 nc:link="chrome://help/locale/mail_help.html#default_font_for_mail_messagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -605,9 +665,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="delete_account"
-         nc:name="delete account"
-	 nc:link="chrome://help/locale/mail_help.html#delete_accountSDX"/>
+       <rdf:Description ID="default_or_multiple_SMTP_servers"
+         nc:name="default or multiple SMTP servers"
+	 nc:link="chrome://help/locale/mail_help.html#default_or_multiple_SMTP_serversSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -618,6 +678,16 @@
        <rdf:Description ID="delete_bookmark"
          nc:name="delete bookmark"
 	 nc:link="chrome://help/locale/customize_help.html#delete_bookmarkSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="delete_LDAP_directory"
+         nc:name="delete LDAP directory"
+	 nc:link="chrome://help/locale/mail_help.html#delete_LDAP_directorySDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -645,9 +715,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="delete_messages"
-         nc:name="delete messages"
-	 nc:link="chrome://help/locale/mail_help.html#delete_messagesSDX"/>
+       <rdf:Description ID="delete_published_pages"
+         nc:name="delete published pages"
+	 nc:link="chrome://help/locale/composer_help.html#delete_published_pagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -658,6 +728,16 @@
        <rdf:Description ID="digital_ID"
          nc:name="digital ID"
 	 nc:link="chrome://help/locale/using_certs_help.html#digital_IDSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="directory_server_properties"
+         nc:name="directory server properties"
+	 nc:link="chrome://help/locale/mail_help.html#directory_server_propertiesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -678,6 +758,16 @@
        <rdf:Description ID="disable_QuickLaunch"
          nc:name="disable QuickLaunch"
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#disable_QuickLaunchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="disconnect"
+         nc:name="disconnect"
+	 nc:link="chrome://help/locale/mail_help.html#disconnectSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -715,9 +805,19 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="distribution_list"
+         nc:name="distribution list"
+	 nc:link="chrome://help/locale/mail_help.html#distribution_listSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="download"
          nc:name="download"
-	 nc:link="chrome://help/locale/mail_help.html#downloadSDX"/>
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#downloadSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -755,9 +855,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="draft"
-         nc:name="draft"
-	 nc:link="chrome://help/locale/mail_help.html#draftSDX"/>
+       <rdf:Description ID="downloading_messages"
+         nc:name="downloading messages"
+	 nc:link="chrome://help/locale/mail_help.html#downloading_messagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -785,9 +885,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="email_account"
-         nc:name="email account"
-	 nc:link="chrome://help/locale/mail_help.html#email_accountSDX"/>
+       <rdf:Description ID="editing_web_pages"
+         nc:name="editing web pages"
+	 nc:link="chrome://help/locale/composer_help.html#editing_web_pagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -798,6 +898,16 @@
        <rdf:Description ID="email_addresses_in_Instant_Messenger"
          nc:name="email addresses in Instant Messenger"
 	 nc:link="chrome://help/locale/im_help.html#email_addresses_in_Instant_MessengerSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="eml_file_format"
+         nc:name="eml file format"
+	 nc:link="chrome://help/locale/mail_help.html#eml_file_formatSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -845,9 +955,29 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="encryption_technologies"
+         nc:name="encryption technologies"
+	 nc:link="chrome://help/locale/ssl_help.html#encryption_technologiesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Eudora_address_book_import"
          nc:name="Eudora address book import"
 	 nc:link="chrome://help/locale/mail_help.html#Eudora_address_book_importSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Eudora_messages"
+         nc:name="Eudora messages"
+	 nc:link="chrome://help/locale/mail_help.html#Eudora_messagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -885,9 +1015,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="file"
-         nc:name="file"
-	 nc:link="chrome://help/locale/mail_help.html#fileSDX"/>
+       <rdf:Description ID="File_Bookmark"
+         nc:name="File Bookmark"
+	 nc:link="chrome://help/locale/customize_help.html#File_BookmarkSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -895,9 +1025,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="File_Bookmark"
-         nc:name="File Bookmark"
-	 nc:link="chrome://help/locale/customize_help.html#File_BookmarkSDX"/>
+       <rdf:Description ID="filing_mail"
+         nc:name="filing mail"
+	 nc:link="chrome://help/locale/mail_help.html#filing_mailSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -925,9 +1055,29 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="folder_permissions"
+         nc:name="folder permissions"
+	 nc:link="chrome://help/locale/mail_help.html#folder_permissionsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="folder_privileges"
          nc:name="folder privileges"
 	 nc:link="chrome://help/locale/mail_help.html#folder_privilegesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="folder_properties"
+         nc:name="folder properties"
+	 nc:link="chrome://help/locale/mail_help.html#folder_propertiesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -965,16 +1115,6 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="general_tab"
-         nc:name="general tab"
-	 nc:link="chrome://help/locale/mail_help.html#general_tabSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="generating_html_or_css"
          nc:name="generating html or css"
 	 nc:link="chrome://help/locale/composer_help.html#generating_html_or_cssSDX"/>
@@ -985,9 +1125,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="get_mail"
-         nc:name="get mail"
-	 nc:link="chrome://help/locale/mail_help.html#get_mailSDX"/>
+       <rdf:Description ID="get_a_map"
+         nc:name="get a map"
+	 nc:link="chrome://help/locale/mail_help.html#get_a_mapSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -995,9 +1135,19 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="get_map"
-         nc:name="get map"
-	 nc:link="chrome://help/locale/mail_help.html#get_mapSDX"/>
+       <rdf:Description ID="get_directions"
+         nc:name="get directions"
+	 nc:link="chrome://help/locale/mail_help.html#get_directionsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="get_mail"
+         nc:name="get mail"
+	 nc:link="chrome://help/locale/mail_help.html#get_mailSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1028,6 +1178,16 @@
        <rdf:Description ID="GIF"
          nc:name="GIF"
 	 nc:link="chrome://help/locale/composer_help.html#GIFSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="global_LDAP_settings"
+         nc:name="global LDAP settings"
+	 nc:link="chrome://help/locale/mail_help.html#global_LDAP_settingsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1145,6 +1305,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="HTTP_address"
+         nc:name="HTTP address"
+	 nc:link="chrome://help/locale/composer_help.html#HTTP_addressSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="ian_oeschger"
          nc:name="ian oeschger"
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#ian_oeschgerSDX"/>
@@ -1245,16 +1415,6 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="IMAP_shared_folders"
-         nc:name="IMAP shared folders"
-	 nc:link="chrome://help/locale/mail_help.html#IMAP_shared_foldersSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="import_certificates"
          nc:name="import certificates"
 	 nc:link="chrome://help/locale/certs_help.html#import_certificatesSDX"/>
@@ -1285,9 +1445,39 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="importing_Communicator_address_books"
+         nc:name="importing Communicator address books"
+	 nc:link="chrome://help/locale/mail_help.html#importing_Communicator_address_booksSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="importing_Communicator_messages"
+         nc:name="importing Communicator messages"
+	 nc:link="chrome://help/locale/mail_help.html#importing_Communicator_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="importing_intermediate_CA certificates"
          nc:name="importing intermediate CA certificates"
 	 nc:link="chrome://help/locale/certs_help.html#importing_intermediate_CA certificatesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="indent"
+         nc:name="indent"
+	 nc:link="chrome://help/locale/composer_help.html#indentSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1328,16 +1518,6 @@
        <rdf:Description ID="internet_keywords"
          nc:name="internet keywords"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#internet_keywordsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ISP"
-         nc:name="ISP"
-	 nc:link="chrome://help/locale/mail_help.html#ISPSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1415,9 +1595,39 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="join"
+         nc:name="join"
+	 nc:link="chrome://help/locale/mail_help.html#joinSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="join_newsgroups"
          nc:name="join newsgroups"
 	 nc:link="chrome://help/locale/mail_help.html#join_newsgroupsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="JPEG"
+         nc:name="JPEG"
+	 nc:link="chrome://help/locale/composer_help.html#JPEGSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="JPG"
+         nc:name="JPG"
+	 nc:link="chrome://help/locale/composer_help.html#JPGSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1455,6 +1665,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="LDAP_update"
+         nc:name="LDAP update"
+	 nc:link="chrome://help/locale/mail_help.html#LDAP_updateSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="LDAP_using_SSL"
+         nc:name="LDAP using SSL"
+	 nc:link="chrome://help/locale/mail_help.html#LDAP_using_SSLSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="ldif_export"
          nc:name="ldif export"
 	 nc:link="chrome://help/locale/mail_help.html#ldif_exportSDX"/>
@@ -1478,16 +1708,6 @@
        <rdf:Description ID="links_Instant_Messenger"
          nc:name="links Instant Messenger"
 	 nc:link="chrome://help/locale/im_help.html#links_Instant_MessengerSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="list"
-         nc:name="list"
-	 nc:link="chrome://help/locale/mail_help.html#listSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1535,6 +1755,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="mail_addresses"
+         nc:name="mail addresses"
+	 nc:link="chrome://help/locale/mail_help.html#mail_addressesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_AIM"
          nc:name="Mail and AIM"
 	 nc:link="chrome://help/locale/im_help.html#Mail_and_AIMSDX"/>
@@ -1545,9 +1775,59 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="mapi_"
-         nc:name="mapi "
-	 nc:link="chrome://help/locale/mail_help.html#mapi_SDX"/>
+       <rdf:Description ID="mail_draft"
+         nc:name="mail draft"
+	 nc:link="chrome://help/locale/mail_help.html#mail_draftSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="mail_privacy_and_security"
+         nc:name="mail privacy and security"
+	 nc:link="chrome://help/locale/mail_help.html#mail_privacy_and_securitySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="mail_return_receipts_settings"
+         nc:name="mail return receipts settings"
+	 nc:link="chrome://help/locale/mail_help.html#mail_return_receipts_settingsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="mail_security_settings"
+         nc:name="mail security settings"
+	 nc:link="chrome://help/locale/mail_help.html#mail_security_settingsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="map_button_in_address_book"
+         nc:name="map button in address book"
+	 nc:link="chrome://help/locale/mail_help.html#map_button_in_address_bookSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="MAPI"
+         nc:name="MAPI"
+	 nc:link="chrome://help/locale/mail_help.html#MAPISDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1595,6 +1875,36 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="message_confirmation"
+         nc:name="message confirmation"
+	 nc:link="chrome://help/locale/mail_help.html#message_confirmationSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="message_file_format"
+         nc:name="message file format"
+	 nc:link="chrome://help/locale/mail_help.html#message_file_formatSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="message_privacy_and_security"
+         nc:name="message privacy and security"
+	 nc:link="chrome://help/locale/mail_help.html#message_privacy_and_securitySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="MIME"
          nc:name="MIME"
 	 nc:link="chrome://help/locale/nav_help.html#MIMESDX"/>
@@ -1618,6 +1928,16 @@
        <rdf:Description ID="move_bookmark"
          nc:name="move bookmark"
 	 nc:link="chrome://help/locale/customize_help.html#move_bookmarkSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="moving_mail"
+         nc:name="moving mail"
+	 nc:link="chrome://help/locale/mail_help.html#moving_mailSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1715,9 +2035,39 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="new_AOL_account"
+         nc:name="new AOL account"
+	 nc:link="chrome://help/locale/mail_help.html#new_AOL_accountSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="new_email_account"
+         nc:name="new email account"
+	 nc:link="chrome://help/locale/mail_help.html#new_email_accountSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="new_IMAP_account"
          nc:name="new IMAP account"
 	 nc:link="chrome://help/locale/mail_help.html#new_IMAP_accountSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="new_LDAP_directory"
+         nc:name="new LDAP directory"
+	 nc:link="chrome://help/locale/mail_help.html#new_LDAP_directorySDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1748,6 +2098,16 @@
        <rdf:Description ID="new_news_account"
          nc:name="new news account"
 	 nc:link="chrome://help/locale/mail_help.html#new_news_accountSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="new_newsgroup_account"
+         nc:name="new newsgroup account"
+	 nc:link="chrome://help/locale/mail_help.html#new_newsgroup_accountSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1805,9 +2165,39 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="news_account"
+         nc:name="news account"
+	 nc:link="chrome://help/locale/mail_help.html#news_accountSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="newsgroup_account"
          nc:name="newsgroup account"
 	 nc:link="chrome://help/locale/mail_help.html#newsgroup_accountSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="newsgroup_security_settings"
+         nc:name="newsgroup security settings"
+	 nc:link="chrome://help/locale/mail_help.html#newsgroup_security_settingsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="offline_directory"
+         nc:name="offline directory"
+	 nc:link="chrome://help/locale/mail_help.html#offline_directorySDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1838,6 +2228,26 @@
        <rdf:Description ID="offline_mail"
          nc:name="offline mail"
 	 nc:link="chrome://help/locale/mail_help.html#offline_mailSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="offline_messages"
+         nc:name="offline messages"
+	 nc:link="chrome://help/locale/mail_help.html#offline_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="offline_replication"
+         nc:name="offline replication"
+	 nc:link="chrome://help/locale/mail_help.html#offline_replicationSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1935,9 +2345,39 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Outlook_address_book_import"
+         nc:name="Outlook address book import"
+	 nc:link="chrome://help/locale/mail_help.html#Outlook_address_book_importSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Outlook_Express"
          nc:name="Outlook Express"
 	 nc:link="chrome://help/locale/mail_help.html#Outlook_ExpressSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Outlook_Express_messages"
+         nc:name="Outlook Express messages"
+	 nc:link="chrome://help/locale/mail_help.html#Outlook_Express_messagesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Outlook_messages"
+         nc:name="Outlook messages"
+	 nc:link="chrome://help/locale/mail_help.html#Outlook_messagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1985,9 +2425,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="POP"
-         nc:name="POP"
-	 nc:link="chrome://help/locale/mail_help.html#POPSDX"/>
+       <rdf:Description ID="pop_account"
+         nc:name="pop account"
+	 nc:link="chrome://help/locale/mail_help.html#pop_accountSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1995,9 +2435,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="post"
-         nc:name="post"
-	 nc:link="chrome://help/locale/mail_help.html#postSDX"/>
+       <rdf:Description ID="posting"
+         nc:name="posting"
+	 nc:link="chrome://help/locale/mail_help.html#postingSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2018,6 +2458,16 @@
        <rdf:Description ID="preventing_junk_mail"
          nc:name="preventing junk mail"
 	 nc:link="chrome://help/locale/mail_help.html#preventing_junk_mailSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="preventing_spam"
+         nc:name="preventing spam"
+	 nc:link="chrome://help/locale/mail_help.html#preventing_spamSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2078,16 +2528,6 @@
        <rdf:Description ID="protecting_your_privacy"
          nc:name="protecting your privacy"
 	 nc:link="chrome://help/locale/using_priv_help.html#protecting_your_privacySDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="publish_web_pages"
-         nc:name="publish web pages"
-	 nc:link="chrome://help/locale/composer_help.html#publish_web_pagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2175,9 +2615,29 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="read_receipt"
+         nc:name="read receipt"
+	 nc:link="chrome://help/locale/mail_help.html#read_receiptSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="read_receipts_settings"
          nc:name="read receipts settings"
 	 nc:link="chrome://help/locale/mail_help.html#read_receipts_settingsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="read_write_and_manage_privileges"
+         nc:name="read write and manage privileges"
+	 nc:link="chrome://help/locale/mail_help.html#read_write_and_manage_privilegesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2225,16 +2685,6 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="remove_account"
-         nc:name="remove account"
-	 nc:link="chrome://help/locale/mail_help.html#remove_accountSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
        <rdf:Description ID="remove_bookmark"
          nc:name="remove bookmark"
 	 nc:link="chrome://help/locale/customize_help.html#remove_bookmarkSDX"/>
@@ -2265,9 +2715,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="replicate"
-         nc:name="replicate"
-	 nc:link="chrome://help/locale/mail_help.html#replicateSDX"/>
+       <rdf:Description ID="return_receipts"
+         nc:name="return receipts"
+	 nc:link="chrome://help/locale/mail_help.html#return_receiptsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2345,9 +2795,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="scope"
-         nc:name="scope"
-	 nc:link="chrome://help/locale/mail_help.html#scopeSDX"/>
+       <rdf:Description ID="scope_in_LDAP"
+         nc:name="scope in LDAP"
+	 nc:link="chrome://help/locale/mail_help.html#scope_in_LDAPSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2425,6 +2875,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="security"
+         nc:name="security"
+	 nc:link="chrome://help/locale/mail_help.html#securitySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="security_settings"
          nc:name="security settings"
 	 nc:link="chrome://help/locale/mail_help.html#security_settingsSDX"/>
@@ -2435,9 +2895,29 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="see_mail"
+         nc:name="see mail"
+	 nc:link="chrome://help/locale/mail_help.html#see_mailSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="send_mail"
          nc:name="send mail"
 	 nc:link="chrome://help/locale/mail_help.html#send_mailSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="sending_a_message_to_a_group"
+         nc:name="sending a message to a group"
+	 nc:link="chrome://help/locale/mail_help.html#sending_a_message_to_a_groupSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2498,26 +2978,6 @@
        <rdf:Description ID="setting_up_Instant_Messenger"
          nc:name="setting up Instant Messenger"
 	 nc:link="chrome://help/locale/im_help.html#setting_up_Instant_MessengerSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="settings"
-         nc:name="settings"
-	 nc:link="chrome://help/locale/composer_help.html#settingsSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="sharing"
-         nc:name="sharing"
-	 nc:link="chrome://help/locale/mail_help.html#sharingSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2615,19 +3075,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="source"
-         nc:name="source"
-	 nc:link="chrome://help/locale/mail_help.html#sourceSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="SSL"
-         nc:name="SSL"
-	 nc:link="chrome://help/locale/mail_help.html#SSLSDX"/>
+       <rdf:Description ID="source_code"
+         nc:name="source code"
+	 nc:link="chrome://help/locale/composer_help.html#source_codeSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2645,6 +3095,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="starting_mail"
+         nc:name="starting mail"
+	 nc:link="chrome://help/locale/mail_help.html#starting_mailSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="steve_rudman"
          nc:name="steve rudman"
 	 nc:link="chrome://help/locale/cs_nav_dialogs.html#steve_rudmanSDX"/>
@@ -2655,9 +3115,49 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="style_sheets"
+         nc:name="style sheets"
+	 nc:link="chrome://help/locale/composer_help.html#style_sheetsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="styles_in_AIM"
          nc:name="styles in AIM"
 	 nc:link="chrome://help/locale/im_help.html#styles_in_AIMSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="subscribing_to_IMAP_folders"
+         nc:name="subscribing to IMAP folders"
+	 nc:link="chrome://help/locale/mail_help.html#subscribing_to_IMAP_foldersSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="symbols"
+         nc:name="symbols"
+	 nc:link="chrome://help/locale/composer_help.html#symbolsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="synchronization"
+         nc:name="synchronization"
+	 nc:link="chrome://help/locale/mail_help.html#synchronizationSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2688,6 +3188,16 @@
        <rdf:Description ID="taskbar"
          nc:name="taskbar"
 	 nc:link="chrome://help/locale/customize_help.html#taskbarSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="text_export"
+         nc:name="text export"
+	 nc:link="chrome://help/locale/mail_help.html#text_exportSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2765,19 +3275,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="update"
-         nc:name="update"
-	 nc:link="chrome://help/locale/mail_help.html#updateSDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="urn:root">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="upload"
-         nc:name="upload"
-	 nc:link="chrome://help/locale/composer_help.html#uploadSDX"/>
+       <rdf:Description ID="uploading_web_pages"
+         nc:name="uploading web pages"
+	 nc:link="chrome://help/locale/composer_help.html#uploading_web_pagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2858,6 +3358,16 @@
        <rdf:Description ID="warning_AIM_users"
          nc:name="warning AIM users"
 	 nc:link="chrome://help/locale/im_help.html#warning_AIM_usersSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="watch_thread"
+         nc:name="watch thread"
+	 nc:link="chrome://help/locale/mail_help.html#watch_threadSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
