@@ -4,7 +4,7 @@ offline.jar:
 *   content/messenger-offline/contents.rdf                         (content/contents.rdf)
 *   content/messenger-offline/pref-offline.xul                     (content/pref-offline.xul)
 
-offline.jar:
+en-US.jar:
     locale/en-US/messenger-offline/offline.properties              (locale/offline.properties)
     locale/en-US/messenger-offline/offline.dtd                     (locale/offline.dtd)
     locale/en-US/messenger-offline/pref-offline.dtd                (locale/pref-offline.dtd)

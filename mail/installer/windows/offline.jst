@@ -12,8 +12,6 @@ logComment("addDirectory: " + err);
 var jarFolder = getFolder("Chrome", "offline.jar");
 
 registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/messenger-offline/");
-registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/inspector/");
-registerChrome(LOCALE | DELAYED_CHROME, jarFolder, "locale/en-US/messenger-offline/");
 
 err = getLastError();
 if (err==SUCCESS)
