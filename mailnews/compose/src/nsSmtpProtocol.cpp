@@ -1110,7 +1110,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 						line = nsnull;
 						break;
 					}
-					if (!fileStream->readline(b, bsize-5)) // if the readline returns false, jump out...
+					if (!fileStream->readline(b, bsize-5)) // if the readline returns false, jump out. we've reached the end of the file
 					{
 						line = nsnull;
 						break;
@@ -1168,7 +1168,17 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 					bsize -= L;
 					b += L;
 					amtInBuffer += L;
-				} while (line && bsize > 100);
+					// test hack by mscott. If our buffer is almost full, then send it off & reset ourselves
+					// to make more room.
+					if (bsize < 100) // i chose 100 arbitrarily.
+					{
+						SendData(buffer);
+						buffer[0] = '\0';
+						b = buffer; // reset buffer
+						bsize = POST_DATA_BUFFER_SIZE;
+					}
+
+				} while (line /* && bsize > 100 */);
               }
 
 			SendData(buffer); 
