@@ -410,7 +410,7 @@ BEGIN {
       # Scrape data
       if (defined $td->{scrape}{$logfile}) {
         my ($scrape_data)
-            = @{ $td->{startup}{$logfile} };
+            = @{ $td->{scrape}{$logfile} };
         # ex: Tp:5.45s
         print sprintf "<br>$scrape_data";
       }
