@@ -261,6 +261,7 @@ endif
 $(OBJDIR)/Makefile: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); fi
 	@echo cd $(OBJDIR); 
+	@echo LD_LIBRARY_PATH=$(MOZ_WITH_NSPR)/lib:$(LD_LIBRARY_PATH) \\
 	@echo ../configure $(CONFIG_FLAGS)
 	@cd $(OBJDIR) && \
 	  LD_LIBRARY_PATH=$(MOZ_WITH_NSPR)/lib:$(LD_LIBRARY_PATH) \
