@@ -65,13 +65,4 @@ interface nsIPrintPreviewNavigation  : nsISupports
   boolean	skipPages(long aNumPages);
 
 
-  /**
-   * PageCount
-   *
-   * Return - Number of pages for preview session
-   */
-  unsigned long pageCount();
-
-
-
 };
