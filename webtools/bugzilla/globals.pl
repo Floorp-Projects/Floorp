@@ -1517,9 +1517,7 @@ sub GetFormat {
 
 use Bugzilla;
 
-$::BZ = Bugzilla->create();
-
-$::template = $::BZ->template();
+$::template = Bugzilla->template();
 
 $::vars = {};
 

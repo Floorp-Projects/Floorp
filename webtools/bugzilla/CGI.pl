@@ -896,7 +896,7 @@ sub GetBugActivity {
 use Bugzilla;
 
 # XXX - mod_perl - reset this between runs
-$::cgi = Bugzilla->instance->cgi;
+$::cgi = Bugzilla->cgi;
 
 # Set up stuff for compatibility with the old CGI.pl code
 # This code will be removed as soon as possible, in favour of

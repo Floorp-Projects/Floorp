@@ -60,7 +60,7 @@ quietly_check_login();
 
 GetVersionTable();
 
-Bugzilla->instance->switch_to_shadow_db();
+Bugzilla->switch_to_shadow_db();
 
 # We only want those products that the user has permissions for.
 my @myproducts;

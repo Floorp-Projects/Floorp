@@ -31,7 +31,18 @@ use Bugzilla;
 sub new {
     my ($class, $context) = @_;
 
-    return Bugzilla->instance;
+    return bless {}, $class;
+}
+
+sub AUTOLOAD {
+    my $class = shift;
+    our $AUTOLOAD;
+
+    $AUTOLOAD =~ s/^.*:://;
+
+    return if $AUTOLOAD eq 'DESTROY';
+
+    return Bugzilla->$AUTOLOAD(@_);
 }
 
 1;

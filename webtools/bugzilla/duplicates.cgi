@@ -56,7 +56,7 @@ GetVersionTable();
 
 quietly_check_login();
 
-Bugzilla->instance->switch_to_shadow_db();
+Bugzilla->switch_to_shadow_db();
 
 use vars qw (%FORM $userid @legal_product);
 

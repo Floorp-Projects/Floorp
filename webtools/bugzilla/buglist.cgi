@@ -629,7 +629,7 @@ if ($serverpush) {
 
 # Connect to the shadow database if this installation is using one to improve
 # query performance.
-Bugzilla->instance->switch_to_shadow_db();
+Bugzilla->switch_to_shadow_db();
 
 # Normally, we ignore SIGTERM and SIGPIPE (see globals.pl) but we need to
 # respond to them here to prevent someone DOSing us by reloading a query

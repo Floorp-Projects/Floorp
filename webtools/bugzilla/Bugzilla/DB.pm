@@ -60,7 +60,7 @@ sub SendSQL {
 
     require Bugzilla;
 
-    $_current_sth = Bugzilla->instance->dbh->prepare($str);
+    $_current_sth = Bugzilla->dbh->prepare($str);
     return $_current_sth->execute;
 }
 
@@ -73,7 +73,7 @@ sub SqlQuote {
 
     require Bugzilla;
 
-    my $res = Bugzilla->instance->dbh->quote($str);
+    my $res = Bugzilla->dbh->quote($str);
 
     trick_taint($res);
 

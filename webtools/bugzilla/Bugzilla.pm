@@ -29,103 +29,71 @@ use Bugzilla::Config;
 use Bugzilla::DB;
 use Bugzilla::Template;
 
-sub create {
+my $_template;
+sub template {
     my $class = shift;
-    my $B = $class->instance;
-
-    # And set up the vars for this request
-    $B->_init_transient;
-
-    return $B;
+    $_template ||= Bugzilla::Template->create();
+    return $_template;
 }
 
-# We don't use Class::Singleton, because theres no need. However, I'm keeping
-# the same interface in case we do change in the future
-
-my $_instance;
-sub instance {
+my $_cgi;
+sub cgi {
     my $class = shift;
-
-    $_instance = $class->_new_instance unless ($_instance);
-
-    return $_instance;
+    $_cgi ||= new Bugzilla::CGI();
+    return $_cgi;
 }
 
-sub template { return $_[0]->{_template}; }
-sub cgi { return $_[0]->{_cgi}; }
-sub dbh { return $_[0]->{_dbh}; }
+my $_dbh;
+my $_dbh_main;
+my $_dbh_shadow;
+
+sub dbh {
+    my $class = shift;
+
+    # If we're not connected, then we must want the main db
+    if (!$_dbh) {
+        $_dbh = $_dbh_main = Bugzilla::DB::connect_main();
+    }
+
+    return $_dbh;
+}
 
 sub switch_to_shadow_db {
-    my $self = shift;
+    my $class = shift;
 
-    if (!$self->{_dbh_shadow}) {
+    if (!$_dbh_shadow) {
         if (Param('shadowdb')) {
-            $self->{_dbh_shadow} = Bugzilla::DB::connect_shadow();
+            $_dbh_shadow = Bugzilla::DB::connect_shadow();
         } else {
-            $self->{_dbh_shadow} = $self->{_dbh_main};
+            $_dbh_shadow = $_dbh_main;
         }
     }
 
-    $self->{_dbh} = $self->{_dbh_shadow};
+    $_dbh = $_dbh_shadow;
 }
 
 sub switch_to_main_db {
-    my $self = shift;
-    $self->{_dbh} = $self->{_dbh_main};
-}
-
-# PRIVATE methods below here
-
-# Called from instance
-sub _new_instance {
     my $class = shift;
 
-    my $self = { };
-    bless($self, $class);
-
-    $self->_init_persistent;
-
-    return $self;
+    $_dbh = $_dbh_main;
 }
 
-# Initialise persistent items
-sub _init_persistent {
-    my $self = shift;
+# Private methods
 
-    # We're always going to use the main db, so connect now
-    $self->{_dbh} = $self->{_dbh_main} = Bugzilla::DB::connect_main();
-
-    # Set up the template
-    $self->{_template} = Bugzilla::Template->create();
-}
-
-# Initialise transient (per-request) items
-sub _init_transient {
-    my $self = shift;
-
-    $self->{_cgi} = new Bugzilla::CGI if exists $::ENV{'GATEWAY_INTERFACE'};
-}
-
-# Clean up transient items such as database handles
+# Per process cleanup
 sub _cleanup {
-    my $self = shift;
+    undef $_cgi;
 
-    delete $self->{_cgi};
+    # When we support transactions, need to ->rollback here
+    $_dbh_main->disconnect if $_dbh_main;
+    $_dbh_shadow->disconnect if $_dbh_shadow and Param("shadowdb");
+    undef $_dbh_main;
+    undef $_dbh_shadow;
+    undef $_dbh;
 }
 
-sub DESTROY {
-    my $self = shift;
-
-    # Clean up transient items. We can't just let perl handle removing
-    # stuff from the $self hash because some stuff (eg database handles)
-    # may need special casing
-    # under a persistent environment (ie mod_perl)
-    $self->_cleanup;
-
-    # Now clean up the persistent items
-    $self->{_dbh_main}->disconnect if $self->{_dbh_main};
-    $self->{_dbh_shadow}->disconnect if
-      $self->{_dbh_shadow} and Param("shadowdb")
+sub END {
+    _cleanup();
 }
 
 1;
@@ -141,11 +109,9 @@ and modules
 
   use Bugzilla;
 
-  Bugzilla->create;
-
   sub someModulesSub {
-    my $B = Bugzilla->instance;
-    $B->template->process(...);
+    Bugzilla->dbh->prepare(...);
+    Bugzilla->template->process(...);
   }
 
 =head1 DESCRIPTION
@@ -180,32 +146,18 @@ templates), whilst destroying those which are only valid for a single request
 
 =back
 
-Note that items accessible via this object may be loaded when the Bugzilla
-object is created, or may be demand-loaded when requested.
+Note that items accessible via this object are demand-loaded when requested.
 
 For something to be added to this object, it should either be able to benefit
 from persistence when run under mod_perl (such as the a C<template> object),
 or should be something which is globally required by a large ammount of code
 (such as the current C<user> object).
 
-=head1 CREATION
+=head1 METHODS
 
-=over 4
-
-=item C<create>
-
-Creates the C<Bugzilla> object, and initialises any per-request data
-
-=item C<instance>
-
-Returns the current C<Bugzilla> instance. If one doesn't exist, then it will
-be created, but no per-request data will be set. The only use this method has
-for creating the object is from a mod_perl init script. (Its also what
-L<Class::Singleton> does, and I'm trying to keep that interface for this)
-
-=back
-
-=head1 FUNCTIONS
+Note that all C<Bugzilla> functionailty is method based; use C<Bugzilla->dbh>
+rather than C<Bugzilla::dbh>. Nothing cares about this now, but don't rely on
+that.
 
 =over 4
 

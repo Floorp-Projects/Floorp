@@ -46,7 +46,7 @@ GetVersionTable();
 
 confirm_login();
 
-Bugzilla->instance->switch_to_shadow_db();
+Bugzilla->switch_to_shadow_db();
 
 my $action = $cgi->param('action') || 'menu';
 

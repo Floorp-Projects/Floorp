@@ -43,7 +43,7 @@ if (chdir("graphs")) {
 ConnectToDatabase();
 GetVersionTable();
 
-Bugzilla->instance->switch_to_shadow_db();
+Bugzilla->switch_to_shadow_db();
 
 my @myproducts;
 push( @myproducts, "-All-", @::legal_product );
