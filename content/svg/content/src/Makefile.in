@@ -90,8 +90,6 @@ CXXFLAGS	+= $(MOZ_LIBART_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_HTML
-
 
 INCLUDES += 	\
 		-I$(srcdir)/../../../shared/public \

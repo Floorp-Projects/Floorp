@@ -33,8 +33,6 @@ REQUIRES	= xpcom \
 
 include <$(DEPTH)/config/config.mak>
 
-DEFINES=-D_IMPL_NS_HTML 
-
 LIBRARY_NAME=gklayout
 MODULE_NAME=nsLayoutModule
 

@@ -76,8 +76,6 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DUSE_NSREG
-
 _RES_FILES = \
 		urlparse.dat \
 		urlparse_unx.dat \

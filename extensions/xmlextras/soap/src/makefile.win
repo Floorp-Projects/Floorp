@@ -51,7 +51,7 @@ REQUIRES        =  \
     xpconnect  \
     necko
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+DEFINES=-DWIN32_LEAN_AND_MEAN
 
 OBJS=        \
         .\$(OBJDIR)\nsDefaultSOAPEncoder.obj \

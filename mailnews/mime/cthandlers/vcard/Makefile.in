@@ -58,8 +58,6 @@ endif
 
 EXTRA_DSO_LIBS += mimecthglue_s
 
-DEFINES		+= -D_IMPL_NS_HTML
-
 CPPSRCS		= \
 		mimevcrd.cpp \
 		nsVCard.cpp \

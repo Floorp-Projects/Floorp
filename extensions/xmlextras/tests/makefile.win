@@ -40,7 +40,7 @@ PROG1 = .\$(OBJDIR)\TestXMLExtras.exe
 PROGRAMS = $(PROG1) \
            $(NULL)
 
-LCFLAGS  = -DUSE_NSREG -GX
+LCFLAGS  = -GX
 
 LLIBS =                       \
         $(DIST)\lib\xpcom.lib \

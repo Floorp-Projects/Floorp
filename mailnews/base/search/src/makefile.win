@@ -45,8 +45,6 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgsearch_s
 
-DEFINES=-D_IMPL_NS_HTML
-
 CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgFilterList.obj\
 			.\$(OBJDIR)\nsMsgFilter.obj\

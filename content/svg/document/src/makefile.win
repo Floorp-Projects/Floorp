@@ -27,7 +27,7 @@ DEPTH=..\..\..\..
 LIBRARY_NAME=contentsvgdoc_s
 MODULE=raptor
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+DEFINES=-DWIN32_LEAN_AND_MEAN
 REQUIRES   = content \
              layout \
              widget \

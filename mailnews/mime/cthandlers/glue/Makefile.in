@@ -43,8 +43,6 @@ CPPSRCS		= \
 		nsMimeContentTypeHandler.cpp \
 		$(NULL)
 
-DEFINES		+= -D_IMPL_NS_HTML
-
 # glue lib should be static
 FORCE_STATIC_LIB = 1
 

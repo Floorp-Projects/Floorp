@@ -29,8 +29,6 @@ PROGRAMNAME = UniversalChardetTest.exe
 PROG1 = .\$(OBJDIR)\$(PROGRAMNAME) 
 PROGRAM = $(PROG1)
 
-LCFLAGS=-DUSE_NSREG
-
 LLIBS= \
  $(DIST)\lib\xpcom.lib \
  $(LIBNSPR)

@@ -57,8 +57,6 @@ REQUIRES = \
 	uconv \
 	$(NULL)
 
-DEFINES= -DEBUG_rhp -D_IMPL_NS_HTML 
-
 #//------------------------------------------------------------------------
 #// 
 #// Define the files necessary to build the target (ie. OBJS)

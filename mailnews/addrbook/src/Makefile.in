@@ -122,7 +122,6 @@ CPPSRCS		+= \
 		nsAbOutlookCard.cpp \
 		nsAbOutlookDirFactory.cpp \
 		nsAbOutlookDirectory.cpp \
-		nsAbQueryStringToExpression.cpp \
 		nsAbWinHelper.cpp \
 		nsMapiAddressBook.cpp \
 		nsWabAddressBook.cpp \

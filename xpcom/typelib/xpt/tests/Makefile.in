@@ -40,7 +40,7 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DEXPORT_XPT_API -DUSE_NSREG
+DEFINES += -DEXPORT_XPT_API
 ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DWIN32_LEAN_AND_MEAN
 endif

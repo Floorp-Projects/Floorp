@@ -38,8 +38,6 @@ REQUIRES	= xpcom \
 
 include $(topsrcdir)/config/config.mk
 
-DEFINES += -D_IMPL_NS_HTML
-
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif

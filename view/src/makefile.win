@@ -36,7 +36,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  $(NULL)
 
-DEFINES =-D_IMPL_NS_VIEW -DWIN32_LEAN_AND_MEAN
+DEFINES =-DWIN32_LEAN_AND_MEAN
 
 OBJS =                              \
     .\$(OBJDIR)\nsView.obj          \
@@ -46,11 +46,6 @@ OBJS =                              \
     .\$(OBJDIR)\nsViewFactory.obj   \
     $(NULL)
 
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        -D_IMPL_NS_VIEW \
-        $(NULL)
 
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\

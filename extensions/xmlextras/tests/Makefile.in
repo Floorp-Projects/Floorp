@@ -52,8 +52,6 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DUSE_NSREG
-
 ifeq ($(OS_ARCH),WINNT)
 CXXFLAGS	+= -GX
 endif

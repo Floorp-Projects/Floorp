@@ -55,7 +55,7 @@ $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8)\
           $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)\
           $(PROGH) $(PROGI) $(PROGJ) $(PROGK)
 
-LCFLAGS=-DUSE_NSREG -GX
+LCFLAGS=-GX
 
 
 INCS = $(INCS)                  \
