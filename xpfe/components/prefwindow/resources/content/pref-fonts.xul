@@ -144,13 +144,6 @@
     <titledbox  orient="vertical">
       <title><text value="&header2;"/></title>
     	<html:div>
-      	<html:input name="fonts" type="radio" id="browserUseDocumentFonts2"
-                    pref="true" preftype="int" prefindex="2"  prefstring="browser.use_document_fonts"/>
-    		<html:label for="browserUseDocumentFonts2" accesskey="t" tabindex="0">
-		    	&useDocFontDynamic;
-    		</html:label>
-    	</html:div>	
-    	<html:div>
       	<html:input name="fonts" type="radio" id="browserUseDocumentFonts1"
                     pref="true" preftype="int" prefindex="1"  prefstring="browser.use_document_fonts"/>
     		<html:label for="browserUseDocumentFonts1" accesskey="t" tabindex="0">
