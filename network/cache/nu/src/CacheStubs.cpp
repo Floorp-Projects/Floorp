@@ -350,8 +350,7 @@ CacheObject_Synch(void* pThis)
     if (pThis)
     {
         nsCacheObject* pObj = (nsCacheObject*) pThis;
-        PRBool bStatus = CACHEMGR->GetModule(pObj->Module())->AddObject(pObj);
-        return bStatus;
+        return CACHEMGR->GetModule(pObj->Module())->AddObject(pObj);
     }
     return PR_FALSE;
 }
