@@ -477,8 +477,6 @@ Contributor(s): ______________________________________. -->
                 <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;" command="cmd_textZoomReduce"/>
                 <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;" command="cmd_textZoomEnlarge"/>
                 <menuseparator/>
-                <menuseparator id="menu_textZoomInsertBefore"/>
-                <menuitem id="menu_textZoomOther" type="radio" name="textZoom" accesskey="&textZoomOtherCmd.accesskey;" oncommand="setTextZoomOther();"/>
               </menupopup>
             </menu>
             <menu label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)"

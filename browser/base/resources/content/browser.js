@@ -128,9 +128,6 @@ function removePrefListener(observer)
 }
 
 function ZoomManager() {
-  // factorAnchor starts on factorOther
-  this.factorOther = parseInt(gNavigatorBundle.getString("valueOther"));
-  this.factorAnchor = this.factorOther;
 }
 
 ZoomManager.prototype = {
@@ -149,7 +146,6 @@ ZoomManager.prototype = {
   zoomFactorsString : "", // cache
   zoomFactors : null,
 
-  factorOther : 300,
   factorAnchor : 300,
   steps : 0,
 
@@ -157,12 +153,6 @@ ZoomManager.prototype = {
     var currentZoom;
     try {
       currentZoom = Math.round(getMarkupDocumentViewer().textZoom * 100);
-      if (this.indexOf(currentZoom) == -1) {
-        if (currentZoom != this.factorOther) {
-          this.factorOther = currentZoom;
-          this.factorAnchor = this.factorOther;
-        }
-      }
     } catch (e) {
       currentZoom = 100;
     }
@@ -237,16 +227,6 @@ ZoomManager.prototype = {
     var insertIndex = -1;
     var stepFactor = parseFloat(gNavigatorBundle.getString("stepFactor"));
 
-    // temporarily add factorOther to list
-    if (this.isZoomInRange(this.factorOther)) {
-      insertIndex = 0;
-      while (this.zoomFactors[insertIndex] < this.factorOther)
-        ++insertIndex;
-
-      if (this.zoomFactors[insertIndex] != this.factorOther)
-        this.zoomFactors.splice(insertIndex, 0, this.factorOther);
-    }
-
     var factor;
     var done = false;
 
@@ -272,8 +252,6 @@ ZoomManager.prototype = {
       factor = Math.round(factor);
       if (this.isZoomInRange(factor))
         factor = this.snap(factor);
-      else
-        this.factorOther = factor;
     }
 
     if (insertIndex != -1)
@@ -1596,8 +1574,7 @@ function registerZoomManager()
   var parentMenu = textZoomMenu.parentNode;
   parentMenu.addEventListener("popupshowing", updateViewMenu, false);
 
-  var insertBefore = document.getElementById("menu_textZoomInsertBefore");
-  var popup = insertBefore.parentNode;
+  var popup = document.getElementById("menu_textZoomPopup");
   var accessKeys = gNavigatorBundle.getString("accessKeys").split(",");
   var zoomFactors = zoom.getZoomFactors();
   for (var i = 0; i < zoomFactors.length; ++i) {
@@ -1615,7 +1592,7 @@ function registerZoomManager()
     menuItem.setAttribute("accesskey", accessKeys[i]);
     menuItem.setAttribute("oncommand", "ZoomManager.prototype.getInstance().textZoom = this.value;");
     menuItem.setAttribute("value", zoomFactors[i]);
-    popup.insertBefore(menuItem, insertBefore);
+    popup.appendChild(menuItem);
   }
 }
 
@@ -1634,11 +1611,6 @@ function updateTextZoomMenu()
 
   var currentZoom = zoom.textZoom;
 
-  var textZoomOther = document.getElementById("menu_textZoomOther");
-  var label = gNavigatorBundle.getString("labelOther");
-  textZoomOther.setAttribute("label", label.replace(/%zoom%/, zoom.factorOther));
-  textZoomOther.setAttribute("value", zoom.factorOther);
-
   var popup = document.getElementById("menu_textZoomPopup");
   var item = popup.firstChild;
   while (item) {
@@ -1650,17 +1622,6 @@ function updateTextZoomMenu()
     }
     item = item.nextSibling;
   }
-}
-
-function setTextZoomOther()
-{
-  var zoom = ZoomManager.prototype.getInstance();
-
-  // open dialog and ask for new value
-  var o = {value: zoom.factorOther, zoomMin: zoom.MIN, zoomMax: zoom.MAX};
-  window.openDialog("chrome://communicator/content/askViewZoom.xul", "AskViewZoom", "chrome,modal,titlebar", o);
-  if (o.zoomOK)
-    zoom.textZoom = o.value;
 }
 
 function toHistory()
