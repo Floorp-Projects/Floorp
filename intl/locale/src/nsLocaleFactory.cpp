@@ -22,10 +22,18 @@
 #include "nsILocale.h"
 #include "nsLocale.h"
 #include "nsLocaleCID.h"
-
+#include "nsIComponentManager.h"
+#ifdef XP_PC
+#include <windows.h>
+#endif
 
 NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
+
+#ifdef XP_PC
+NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
+NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
+#endif
 
 NS_IMPL_ISUPPORTS(nsLocaleFactory,kILocaleFactoryIID)
 
@@ -40,17 +48,26 @@ char* localeCatagoryList[6] = { "NSILOCALE_TIME",
 
 nsLocaleFactory::nsLocaleFactory(void)
 :	fSystemLocale(NULL),
-	fApplicationLocale(NULL)
+	fApplicationLocale(NULL),
+	fWin32LocaleInterface(NULL)
 {
   int	i;
-
+  nsresult result;
   NS_INIT_REFCNT();
 
   fCatagoryList = new nsString*[6];
 
   for(i=0;i<6;i++)
-	  fCatagoryList[i] = new nsString(localeCatagoryList[i]);
+	fCatagoryList[i] = new nsString(localeCatagoryList[i]);
 
+#ifdef XP_PC
+   result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
+									NULL,
+									kIWin32LocaleIID,
+									(void**)&fWin32LocaleInterface);
+	NS_ASSERTION(fWin32LocaleInterface!=NULL,"nsLocaleFactory: factory_create_interface failed.");
+#endif
+	
 }
 
 nsLocaleFactory::~nsLocaleFactory(void)
@@ -61,6 +78,17 @@ nsLocaleFactory::~nsLocaleFactory(void)
 		delete fCatagoryList[i];
 
 	delete []fCatagoryList;
+
+	if (fSystemLocale)
+		fSystemLocale->Release();
+	if (fApplicationLocale)
+		fApplicationLocale->Release();
+
+#ifdef XP_PC
+	if (fWin32LocaleInterface)
+		fWin32LocaleInterface->Release();
+#endif
+
 }
 
 NS_IMETHODIMP
@@ -136,14 +164,59 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 	}
 	
 	//
-	// for now
+	// for Windows
 	//
-	systemLocaleName = new nsString("en-US");
-	result = this->NewLocale(systemLocaleName,systemLocale);
+#ifdef XP_PC
+	LCID				sysLCID;
+	
+	sysLCID = GetSystemDefaultLCID();
+	if (sysLCID==0) {
+		*systemLocale = (nsILocale*)nsnull;
+		return NS_ERROR_FAILURE;
+	}
+	
+	if (fWin32LocaleInterface==NULL) {
+		*systemLocale = (nsILocale*)nsnull;
+		return NS_ERROR_FAILURE;
+	}
 
+	systemLocaleName = new nsString();
+	result = fWin32LocaleInterface->GetXPLocale(sysLCID,systemLocaleName);
+	if (result!=NS_OK) {
+		delete systemLocaleName;
+		*systemLocale = (nsILocale*)nsnull;
+		return result;
+	}
+	result = this->NewLocale(systemLocaleName,&fSystemLocale);
+	if (result!=NS_OK) {
+		delete systemLocaleName;
+		*systemLocale=(nsILocale*)nsnull;
+		fSystemLocale=(nsILocale*)nsnull;
+		return result;
+	}
+
+	*systemLocale = fSystemLocale;
+	fSystemLocale->AddRef();
 	delete systemLocaleName;
-
 	return result;
+	
+#else
+	systemLocaleName = new nsString("en-US");
+	result = this->NewLocale(systemLocaleName,&fSystemLocale);
+	if (result!=NS_OK) {
+		delete systemLocaleName;
+		*systemLocale=(nsILocale*)nsnull;
+		fSystemLocale=(nsILocale*)nsnull;
+		return result;
+	}
+
+	*systemLocale = fSystemLocale;
+	fSystemLocale->AddRef();
+	delete systemLocaleName;
+	return result;
+
+#endif
+
 }
 
 NS_IMETHODIMP
@@ -162,11 +235,60 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 	//
 	// for now
 	//
-	applicationLocaleName = new nsString("en-US");
-	result = this->NewLocale(applicationLocaleName,applicationLocale);
+	//
+	// for Windows
+	//
+#ifdef XP_PC
+	LCID				appLCID;
+	nsIWin32Locale*		iWin32Locale;
+	
+	appLCID = GetUserDefaultLCID();
+	if (appLCID==0) {
+		*applicationLocale = (nsILocale*)nsnull;
+		return NS_ERROR_FAILURE;
+	}
+	
+	if (fWin32LocaleInterface==NULL) {
+		*applicationLocale = (nsILocale*)nsnull;
+		return NS_ERROR_FAILURE;
+	}
 
+	applicationLocaleName = new nsString();
+	result = fWin32LocaleInterface->GetXPLocale(appLCID,applicationLocaleName);
+	if (result!=NS_OK) {
+		delete applicationLocaleName;
+		*applicationLocale = (nsILocale*)nsnull;
+		return result;
+	}
+	result = this->NewLocale(applicationLocaleName,&fApplicationLocale);
+	if (result!=NS_OK) {
+		delete applicationLocaleName;
+		*applicationLocale=(nsILocale*)nsnull;
+		fApplicationLocale=(nsILocale*)nsnull;
+		return result;
+	}
+
+	*applicationLocale = fApplicationLocale;
+	fApplicationLocale->AddRef();
 	delete applicationLocaleName;
+	return result;
+	
+#else
+	applicationLocaleName = new nsString("en-US");
+	result = this->NewLocale(applicationLocaleName,&fapplicationLocale);
+	if (result!=NS_OK) {
+		delete applicationLocaleName;
+		*applicationLocale=(nsILocale*)nsnull;
+		fApplicationLocale=(nsILocale*)nsnull;
+		return result;
+	}
 
+	*applicationLocale = fapplicationLocale;
+	fApplicationLocale->AddRef();
+	delete applicationLocaleName;
+	return result;
+
+#endif
 	return result;
 }
 
