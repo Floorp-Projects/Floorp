@@ -36,7 +36,7 @@
 	#include <LPrintout.h>
 	#include <LStdControl.h>
 	#include <LTable.h>
-	#include <LTextEdit.h>
+	#include <LTextEditView.h>
 	#include <LWindow.h>
 	#include <LRadioGroup.h>
 	#include <LTabGroup.h>
@@ -199,7 +199,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LStdCheckBox);
 	RegisterClass_(LStdRadioButton);
 	RegisterClass_(LStdPopupMenu);
-	RegisterClass_(LTextEdit);
+	RegisterClass_(LTextEditView);
 	RegisterClass_(LView);
 	RegisterClass_(LWindow);
 	RegisterClass_(LRadioGroup);
