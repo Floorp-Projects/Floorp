@@ -280,6 +280,11 @@ nsMsgIncomingServer::SetPrettyName(char *value) {
   return setCharPref("name", value);
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetType(char* *aType) {
+  return getCharPref("type", aType);
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");

@@ -52,6 +52,9 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD SetUsername(char * aUserName);
 
   /* attribute boolean rememberPassword; */
+  NS_IMETHOD GetType(char * *aType);
+  
+  /* attribute boolean rememberPassword; */
   NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword);
   NS_IMETHOD SetRememberPassword(PRBool aRememberPassword);
   
@@ -108,9 +111,9 @@ _class::Get##_postfix(char **retval)   			\
   return getCharPref(_prefname, retval);		\
 }												\
 NS_IMETHODIMP	   								\
-_class::Set##_postfix(char *value)	\
+_class::Set##_postfix(char *chvalue)			\
 {												\
-  return setCharPref(_prefname, value);			\
+  return setCharPref(_prefname, chvalue);		\
 }
 
 #define NS_IMPL_SERVERPREF_BOOL(_class, _postfix, _prefname)\
@@ -120,9 +123,9 @@ _class::Get##_postfix(PRBool *retval)   		\
   return getBoolPref(_prefname, retval);		\
 }												\
 NS_IMETHODIMP	   								\
-_class::Set##_postfix(PRBool value)				\
+_class::Set##_postfix(PRBool bvalue)			\
 {												\
-  return setBoolPref(_prefname, value);			\
+  return setBoolPref(_prefname, bvalue);		\
 }
 
 #define NS_IMPL_SERVERPREF_INT(_class, _postfix, _prefname)\
@@ -132,8 +135,8 @@ _class::Get##_postfix(PRInt32 *retval)   		\
   return getIntPref(_prefname, retval);			\
 }												\
 NS_IMETHODIMP	   								\
-_class::Set##_postfix(PRInt32 value)			\
+_class::Set##_postfix(PRInt32 ivalue)			\
 {												\
-  return setIntPref(_prefname, value);			\
+  return setIntPref(_prefname, ivalue);			\
 }
 

@@ -28,8 +28,11 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute string key;
   
   attribute string prettyName;
+  
   attribute string hostName;
   attribute string username;
+  readonly attribute string type;
+  
   attribute boolean rememberPassword;
   attribute string password;
 
