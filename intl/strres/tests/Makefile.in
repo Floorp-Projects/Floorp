@@ -34,30 +34,10 @@ EXPORT_RESOURCE	= \
 		$(srcdir)/strres-test.js \
 		$(NULL)
 
-ifndef NECKO
-NETLIB_LIBS	= \
-		-lnetlib \
-		-labouturl \
-		-lfileurl \
-		-lremoturl \
-		-lgophurl \
-		-lnetcnvts \
-		-lsockstuburl \
-		-lftpurl \
-		-lmimetype \
-		-lpwcac \
-		-lhttpurl \
-		-lnetwork \
-		-lnetcache \
-		$(NULL)
-else
-NETLIB_LIBS	= -lneckoutil_s
-endif
-
 LIBS		= \
 		-lmozjs \
 		-lxpcom \
-		$(NETLIB_LIBS) \
+		-lneckoutil_s \
 		$(MOZ_TIMER_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
