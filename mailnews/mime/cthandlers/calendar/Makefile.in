@@ -38,6 +38,7 @@ EXTRA_DSO_LDOPTS = 	\
 	-L$(DIST)/lib	\
 	-lxp			\
 	-lxpcom			\
+	-lreg			\
 	-lraptorbase	\
 	$(NULL)
 

@@ -101,6 +101,7 @@ EXTRA_DSO_LDOPTS =	\
 	-lsecfree		\
 	-lxp			\
 	-lxpcom			\
+	-lreg			\
 	$(NULL)
 
 #

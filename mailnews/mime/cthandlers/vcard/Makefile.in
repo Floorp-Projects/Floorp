@@ -49,6 +49,7 @@ EXTRA_DSO_LDOPTS = \
 	-lxp			\
 	-lraptorbase	\
 	-lxpcom			\
+	-lreg			\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
