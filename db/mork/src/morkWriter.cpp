@@ -269,7 +269,7 @@ morkWriter::MakeWriterStream(morkEnv* ev) // give writer a suitable stream
         if ( ev->Good() )
           mWriter_Stream = stream;
         else
-          stream->CutStrongRef(ev);
+          stream->CutStrongRef(ev->AsMdbEnv());
       }
     }
     else
