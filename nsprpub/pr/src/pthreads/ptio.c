@@ -71,6 +71,46 @@
 #include <sys/resource.h>
 #endif
 
+#ifdef SOLARIS
+/*
+ * Define HAVE_SENDFILEV if the system has the sendfilev() system call.
+ * Code built this way won't run on a system without sendfilev().
+ * We can define HAVE_SENDFILEV by default when the minimum release
+ * of Solaris that NSPR supports has sendfilev().
+ */
+#ifdef HAVE_SENDFILEV
+
+#include <sys/sendfile.h>
+
+#define SOLARIS_SENDFILEV(a, b, c, d) sendfilev((a), (b), (c), (d))
+
+#else
+
+#include <dlfcn.h>  /* for dlopen */
+
+/*
+ * Match the definitions in <sys/sendfile.h>.
+ */
+typedef struct sendfilevec {
+    int sfv_fd;       /* input fd */
+    uint_t sfv_flag;  /* flags */
+    off_t sfv_off;    /* offset to start reading from */
+    size_t sfv_len;   /* amount of data */
+} sendfilevec_t;
+
+#define SFV_FD_SELF (-2)
+
+/*
+ * extern ssize_t sendfilev(int, const struct sendfilevec *, int, size_t *);
+ */
+static ssize_t (*pt_solaris_sendfilev_fptr)() = NULL;
+
+#define SOLARIS_SENDFILEV(a, b, c, d) \
+        (*pt_solaris_sendfilev_fptr)((a), (b), (c), (d))
+
+#endif /* HAVE_SENDFILEV */
+#endif /* SOLARIS */
+
 /*
  * The send_file() system call is available in AIX 4.3.2 or later.
  * If this file is compiled on an older AIX system, it attempts to
@@ -276,6 +316,13 @@ struct pt_Continuation
     int nbytes_to_send;                     /* size of header and file */
 #endif  /* HPUX11 */
     
+#ifdef SOLARIS
+    /*
+     * For sendfilev()
+     */
+    int nbytes_to_send;                     /* size of header and file */
+#endif  /* SOLARIS */
+ 
     PRIntervalTime timeout;                 /* client (relative) timeout */
 
     PRInt16 event;                           /* flags for poll()'s events */
@@ -952,6 +999,46 @@ static PRBool pt_hpux_sendfile_cont(pt_Continuation *op, PRInt16 revents)
     return PR_TRUE;
 }
 #endif  /* HPUX11 */
+
+#ifdef SOLARIS  
+static PRBool pt_solaris_sendfile_cont(pt_Continuation *op, PRInt16 revents)
+{
+    struct sendfilevec *vec = (struct sendfilevec *) op->arg2.buffer;
+    size_t xferred;
+    ssize_t count;
+
+    count = SOLARIS_SENDFILEV(op->arg1.osfd, vec, op->arg3.amount, &xferred);
+    PR_ASSERT(count <= op->nbytes_to_send);
+    op->syserrno = errno;
+
+    if (count != -1) {
+        op->result.code += count;
+    } else if (op->syserrno != EWOULDBLOCK && op->syserrno != EAGAIN) {
+        op->result.code = -1;
+    } else {
+        return PR_FALSE;
+    }
+    if (count != -1 && count < op->nbytes_to_send) {
+        op->nbytes_to_send -= count;
+
+        while (count >= vec->sfv_len) {
+            count -= vec->sfv_len;
+            vec++;
+            op->arg3.amount--;
+        }
+        PR_ASSERT(op->arg3.amount > 0);
+
+        vec->sfv_off += count;
+        vec->sfv_len -= count;
+        PR_ASSERT(vec->sfv_len > 0);
+        op->arg2.buffer = vec;
+
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+#endif  /* SOLARIS */
 
 void _PR_InitIO()
 {
@@ -2084,6 +2171,192 @@ static PRInt32 pt_HPUXSendFile(PRFileDesc *sd, PRSendFileData *sfd,
 
 #endif  /* HPUX11 */
 
+#ifdef SOLARIS 
+
+/*
+ *    pt_SolarisSendFile
+ *
+ *    Send file sfd->fd across socket sd. If specified, header and trailer
+ *    buffers are sent before and after the file, respectively.
+ *
+ *    PR_TRANSMITFILE_CLOSE_SOCKET flag - close socket after sending file
+ *
+ *    return number of bytes sent or -1 on error
+ *
+ *    This implementation takes advantage of the sendfilev() system
+ *    call available in Solaris 8.
+ */
+
+static PRInt32 pt_SolarisSendFile(PRFileDesc *sd, PRSendFileData *sfd,
+                PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+    struct stat statbuf;
+    size_t nbytes_to_send, file_nbytes_to_send;	
+    struct sendfilevec sfv_struct[3];  
+    int sfvcnt = 0;	
+    size_t xferred;
+    PRInt32 count;
+    int syserrno;
+
+    if (sfd->file_nbytes == 0) {
+        /* Get file size */
+        if (fstat(sfd->fd->secret->md.osfd, &statbuf) == -1) {
+            _PR_MD_MAP_FSTAT_ERROR(errno);
+            return -1;
+        } 		
+        file_nbytes_to_send = statbuf.st_size - sfd->file_offset;
+    } else {
+        file_nbytes_to_send = sfd->file_nbytes;
+    }
+
+    nbytes_to_send = sfd->hlen + sfd->tlen + file_nbytes_to_send;
+
+    if (sfd->hlen != 0) {
+        sfv_struct[sfvcnt].sfv_fd = SFV_FD_SELF;
+        sfv_struct[sfvcnt].sfv_flag = 0;
+        sfv_struct[sfvcnt].sfv_off = (off_t) sfd->header; 
+        sfv_struct[sfvcnt].sfv_len = sfd->hlen;
+        sfvcnt++;
+    }
+
+    if (file_nbytes_to_send != 0) {
+        sfv_struct[sfvcnt].sfv_fd = sfd->fd->secret->md.osfd;
+        sfv_struct[sfvcnt].sfv_flag = 0;
+        sfv_struct[sfvcnt].sfv_off = sfd->file_offset;
+        sfv_struct[sfvcnt].sfv_len = file_nbytes_to_send;
+        sfvcnt++;
+    }
+
+    if (sfd->tlen != 0) {
+        sfv_struct[sfvcnt].sfv_fd = SFV_FD_SELF;
+        sfv_struct[sfvcnt].sfv_flag = 0;
+        sfv_struct[sfvcnt].sfv_off = (off_t) sfd->trailer; 
+        sfv_struct[sfvcnt].sfv_len = sfd->tlen;
+        sfvcnt++;
+    }
+
+    if (0 == sfvcnt) {
+        count = 0;
+        goto done;
+    }
+   	   
+    /*
+     * Strictly speaking, we may have sent some bytes when the
+     * sendfilev() is interrupted and we should retry it from an
+     * updated offset.  We are not doing that here.
+     */
+    count = SOLARIS_SENDFILEV(sd->secret->md.osfd, sfv_struct,
+            sfvcnt, &xferred);
+
+    PR_ASSERT((count == -1) || (count == xferred));
+
+    if (count == -1) {
+        syserrno = errno;
+        if (syserrno == EINTR) {
+            count = xferred;
+        } else if (syserrno == EAGAIN || syserrno == EWOULDBLOCK) {
+            count = 0;
+        }
+    }
+
+    if (count != -1 && count < nbytes_to_send) {
+        pt_Continuation op;
+        struct sendfilevec *vec = sfv_struct;
+        PRInt32 rem = count;
+
+        while (rem >= vec->sfv_len) {
+            rem -= vec->sfv_len;
+            vec++;
+            sfvcnt--;
+        }
+        PR_ASSERT(sfvcnt > 0);
+
+        vec->sfv_off += rem;
+        vec->sfv_len -= rem;
+        PR_ASSERT(vec->sfv_len > 0);
+
+        op.arg1.osfd = sd->secret->md.osfd;
+        op.arg2.buffer = vec;
+        op.arg3.amount = sfvcnt;
+        op.arg4.flags = 0;
+        op.nbytes_to_send = nbytes_to_send - count;
+        op.result.code = count;
+        op.timeout = timeout;
+        op.function = pt_solaris_sendfile_cont;
+        op.event = POLLOUT | POLLPRI;
+        count = pt_Continue(&op);
+        syserrno = op.syserrno;
+    }
+
+done:
+    if (count == -1) {
+        _MD_solaris_map_sendfile_error(syserrno);
+        return -1;
+    }
+    if (flags & PR_TRANSMITFILE_CLOSE_SOCKET) {
+        PR_Close(sd);
+    }
+    PR_ASSERT(count == nbytes_to_send);
+    return count;
+}
+
+#ifndef HAVE_SENDFILEV
+static pthread_once_t pt_solaris_sendfilev_once_block = PTHREAD_ONCE_INIT;
+
+static void pt_solaris_sendfilev_init_routine(void)
+{
+    void *handle;
+    PRBool close_it = PR_FALSE;
+ 
+    /*
+     * We do not want to unload libsendfile.so.  This handle is leaked
+     * intentionally.
+     */
+    handle = dlopen("libsendfile.so", RTLD_LAZY | RTLD_GLOBAL);
+    PR_LOG(_pr_io_lm, PR_LOG_DEBUG,
+        ("dlopen(libsendfile.so) returns %p", handle));
+
+    if (NULL == handle) {
+        /*
+         * The dlopen(0, mode) call is to allow for the possibility that
+         * sendfilev() may become part of a standard system library in a
+         * future Solaris release.
+         */
+        handle = dlopen(0, RTLD_LAZY | RTLD_GLOBAL);
+        PR_LOG(_pr_io_lm, PR_LOG_DEBUG,
+            ("dlopen(0) returns %p", handle));
+        close_it = PR_TRUE;
+    }
+    pt_solaris_sendfilev_fptr = (ssize_t (*)()) dlsym(handle, "sendfilev");
+    PR_LOG(_pr_io_lm, PR_LOG_DEBUG,
+        ("dlsym(sendfilev) returns %p", pt_solaris_sendfilev_fptr));
+    
+    if (close_it) {
+        dlclose(handle);
+    }
+}
+
+/* 
+ * pt_SolarisDispatchSendFile
+ */
+static PRInt32 pt_SolarisDispatchSendFile(PRFileDesc *sd, PRSendFileData *sfd,
+	  PRTransmitFileFlags flags, PRIntervalTime timeout)
+{
+    int rv;
+
+    rv = pthread_once(&pt_solaris_sendfilev_once_block,
+            pt_solaris_sendfilev_init_routine);
+    PR_ASSERT(0 == rv);
+    if (pt_solaris_sendfilev_fptr) {
+        return pt_SolarisSendFile(sd, sfd, flags, timeout);
+    } else {
+        return PR_EmulateSendFile(sd, sfd, flags, timeout);
+    }
+}
+#endif /* !HAVE_SENDFILEV */
+
+#endif  /* SOLARIS */
+
 #ifdef AIX
 extern	int _pr_aix_send_file_use_disabled;
 #endif
@@ -2118,6 +2391,12 @@ static PRInt32 pt_SendFile(
 	return(PR_EmulateSendFile(sd, sfd, flags, timeout));
     /* return(pt_AIXDispatchSendFile(sd, sfd, flags, timeout));*/
 #endif /* HAVE_SEND_FILE */
+#elif defined(SOLARIS)
+#ifdef HAVE_SENDFILEV
+    	return(pt_SolarisSendFile(sd, sfd, flags, timeout));
+#else
+	return(pt_SolarisDispatchSendFile(sd, sfd, flags, timeout));
+#endif /* HAVE_SENDFILEV */
 #else
 	return(PR_EmulateSendFile(sd, sfd, flags, timeout));
 #endif
