@@ -88,7 +88,7 @@ extern void LO_RefreshArea(MWContext *context, int32 left, int32 top,
 	uint32 width, uint32 height);
 extern Bool LO_CheckForUnload(MWContext *context);
 
-#ifdef LAYERS
+#if 0
 extern void LO_MoveLayer(CL_Layer *layer, int32 x, int32 y);
 extern int32 LO_GetLayerXOffset(CL_Layer *layer);
 extern int32 LO_GetLayerYOffset(CL_Layer *layer);
@@ -156,7 +156,7 @@ extern int32 LO_GetNumberOfLayers(MWContext *context);
 #endif
 extern NET_ReloadMethod LO_GetReloadMethod(MWContext *context);
 
-#ifdef LAYERS 
+#if 0
 extern LO_Element *LO_XYToElement(MWContext *, int32, int32, CL_Layer *);
 extern LO_Element *LO_XYToNearestElement(MWContext *, int32, int32, 
                                          CL_Layer *);
@@ -198,7 +198,7 @@ extern void LO_SetDocumentPosition(MWContext *context, int32 x, int32 y);
 #endif /* OLD_POS_HIST */
 extern void LO_SetDocumentDimensions(MWContext *context,
                                      int32 width, int32 height);
-#ifdef LAYERS
+#if 0
 extern void LO_StartSelection(MWContext *context, int32 x, int32 y, 
                               CL_Layer *layer);
 #else
@@ -237,7 +237,7 @@ extern void LO_SelectText(MWContext *context, LO_Element *start,int32 start_pos,
 extern void LO_RefreshAnchors(MWContext *context);
 extern Bool LO_HaveSelection(MWContext *context);
 extern void LO_GetSelectionEndpoints(MWContext *context,
-	LO_Element **start, LO_Element **end, int32 *start_pos, int32 *end_pos, CL_Layer **sel_layer);
+	LO_Element **start, LO_Element **end, int32 *start_pos, int32 *end_pos, void **sel_layer);
 extern void LO_FreeSubmitData(LO_FormSubmitData *submit_data);
 extern void LO_FreeDocumentFormListData(MWContext *context, void *form_data);
 extern void LO_FreeDocumentEmbedListData(MWContext *context, void *embed_data);
@@ -292,7 +292,7 @@ extern void SI_UnanonymizeSignons();
 extern void SI_StartOfForm();
 #endif
 
-#ifdef LAYERS
+#if 0
 extern Bool LO_Click( MWContext *context, int32 x, int32 y, 
                       Bool requireCaret, CL_Layer *layer );
 extern void LO_Hit(MWContext *context, int32 x, int32 y,
@@ -399,14 +399,14 @@ extern Bool LO_Click( MWContext *context, int32 x, int32 y, Bool requireCaret );
 extern void LO_Hit(MWContext *context, int32 x, int32 y, Bool requireCaret, LO_HitResult *result);
 #endif
 
-#ifdef LAYERS
+#if 0
 extern void LO_SelectObject( MWContext *context, int32 x, int32 y,
                              CL_Layer *layer );
 #else
 extern void LO_SelectObject( MWContext *context, int32 x, int32 y );
 #endif /* LAYERS */
 
-#ifdef LAYERS
+#if 0
 extern LO_LayerType LO_GetLayerType(CL_Layer *layer);
 extern Bool LO_PrepareLayerForWriting(MWContext *context, int32 layer_id, 
                                       const char *referer, int32 width);

@@ -131,7 +131,7 @@ typedef void
  * in a resize_relayout.
  */
  typedef void
- (*ETRestoreAckFunc)(void * data, LO_BlockInitializeStruct *param);
+ (*ETRestoreAckFunc)(void * data, void *param);
 
 /*
  * Typedef for a function taking a void pointer and
@@ -576,7 +576,7 @@ ET_PostEvalAck(MWContext * context, int doc_id, void * data,
 	       char * base_href, Bool valid, ETEvalAckFunc fn);
 
 extern void
-ET_PostRestoreAck(void *data, LO_BlockInitializeStruct *param, 
+ET_PostRestoreAck(void *data, void *param, 
                   ETRestoreAckFunc fn);
 
 /* netlib events */
@@ -734,13 +734,13 @@ typedef enum {
 } ETLayerOp;
 
 extern int
-ET_TweakLayer(MWContext * context, CL_Layer * layer, int32 x, int32 y, 
+ET_TweakLayer(MWContext * context, void * layer, int32 x, int32 y, 
               void *param_ptr, int32 param_val, ETLayerOp op,
 	      const char *referer, int32 doc_id);
 
 extern void
 ET_RestoreLayerState(MWContext *context, int32 layer_id,
-                     LO_BlockInitializeStruct *param, ETRestoreAckFunc fn,
+                     void *param, ETRestoreAckFunc fn,
                      void *data);
 
 extern int32
