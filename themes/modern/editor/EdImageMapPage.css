@@ -95,11 +95,11 @@ html {
 #marquee {
   visibility: hidden;
   position: absolute;
-  top: 1px;
+  top: -5px;
   left: -5px;
   z-index: 10000;
   width: 1px;
-  height: -5px;
+  height: 1px;
 }
 
 #bgDiv {

@@ -113,7 +113,3 @@ treeitem[selected="true"] > treerow.relatedresult {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
 
-.tree-cell-twisty {
-  visibility: collapsed;
-}
-

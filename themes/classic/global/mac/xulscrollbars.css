@@ -62,7 +62,6 @@ slider {
 slider[orient="vertical"] {
   -moz-appearance: scrollbartrack-vertical;
   width: 16px;
-  height: none;
   background-image: url("chrome://global/skin/scrollbar/slider-vrt.gif");
 }
 
@@ -175,7 +174,6 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
   html|div slider[orient="vertical"] {
     -moz-appearance: scrollbartrack-vertical;
     width: 16px;
-    height: none;
     background-image: url("chrome://global/skin/scrollbar/slider-vrt.gif");
   }
 
