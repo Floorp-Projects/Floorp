@@ -306,7 +306,7 @@ tooltip {
   margin-top: 21px;
 }
 
-window[sizemode="maximized"] resizer {
+window[sizemode="maximized"] statusbarpanel.statusbar-resizerpanel {
   visibility: collapse;
 }
 
