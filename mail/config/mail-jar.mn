@@ -49,8 +49,6 @@ content/communicator/viewZoomOverlay.js,              comm/content/communicator/
 content/communicator/askViewZoom.xul,                 comm/content/communicator/askViewZoom.xul
 content/communicator/askViewZoom.js,                  comm/content/communicator/askViewZoom.js
 content/communicator/findUtils.js,                    comm/content/communicator/findUtils.js
-content/communicator/printPageSetup.js,               comm/content/communicator/printPageSetup.js
-content/communicator/printPageSetup.xul,              comm/content/communicator/printPageSetup.xul
 content/communicator/printPreviewBindings.xml,        comm/content/communicator/printPreviewBindings.xml
 content/communicator/printing.js,                     comm/content/communicator/printing.js
 content/communicator/XPCNativeWrapper.js,             comm/content/communicator/XPCNativeWrapper.js
@@ -144,6 +142,8 @@ content/global/printProgress.xul,                     toolkit/content/global/pri
 content/global/printProgress.js,                      toolkit/content/global/printProgress.js
 content/global/printPreviewProgress.xul,              toolkit/content/global/printPreviewProgress.xul
 content/global/printPreviewProgress.js,               toolkit/content/global/printPreviewProgress.js
+content/global/printPageSetup.js,                     toolkit/content/global/printPageSetup.js
+content/global/printPageSetup.xul,                    toolkit/content/global/printPageSetup.xul
 content/global/MPL-1.1.html,                          toolkit/content/global/MPL-1.1.html
 content/global/NPL-1.1.html,                          toolkit/content/global/NPL-1.1.html
 content/global/customizeToolbar.xul,                  toolkit/content/global/customizeToolbar.xul
