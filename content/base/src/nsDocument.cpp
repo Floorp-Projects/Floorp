@@ -24,6 +24,7 @@
  *   L. David Baron  <dbaron@dbaron.org>
  *   Pierre Phaneuf  <pp@ludusdesign.com>
  *   Pete Collins    <petejc@collab.net>
+ *   James Ross      <silver@warwickcompsocc.o.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -122,10 +123,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsIScriptContext.h"
 
-#ifdef DEBUG
 #include "nsICharsetAlias.h"
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
-#endif
 
 // Helper structs for the content->subdoc map
 
@@ -1109,6 +1108,35 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       }
     }
   }
+}
+
+PRBool
+nsDocument::TryChannelCharset(nsIChannel *aChannel,
+                              PRInt32& aCharsetSource,
+                              nsACString& aCharset)
+{
+  if(kCharsetFromChannel <= aCharsetSource) {
+    return PR_TRUE;
+  }
+
+  if (aChannel) {
+    nsCAutoString charsetVal;
+    nsresult rv = aChannel->GetContentCharset(charsetVal);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID));
+      if (calias) {
+        nsCAutoString preferred;
+        rv = calias->GetPreferred(charsetVal,
+                                  preferred);
+        if(NS_SUCCEEDED(rv)) {
+          aCharset = preferred;
+          aCharsetSource = kCharsetFromChannel;
+          return PR_TRUE;
+        }
+      }
+    }
+  }
+  return PR_FALSE;
 }
 
 nsresult

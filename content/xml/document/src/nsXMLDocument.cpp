@@ -576,28 +576,13 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                               aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
   PRInt32 charsetSource = kCharsetFromDocTypeDefault;
+  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
+  TryChannelCharset(aChannel, charsetSource, charset);
 
   nsCOMPtr<nsIURI> aUrl;
   rv = aChannel->GetURI(getter_AddRefs(aUrl));
   if (NS_FAILED(rv)) return rv;
-
-  { // check channel's charset...
-    nsCAutoString charsetVal;
-    rv = aChannel->GetContentCharset(charsetVal);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
-
-      if(NS_SUCCEEDED(rv) && (nsnull != calias) ) {
-        nsCAutoString preferred;
-        rv = calias->GetPreferred(charsetVal, charset);
-        if(NS_SUCCEEDED(rv)){            
-          charsetSource = kCharsetFromChannel;
-        }
-      }
-    }
-  } //end of checking channel's charset
 
   static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
