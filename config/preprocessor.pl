@@ -26,6 +26,9 @@ use strict;
 # defaults to stdin
 # output to stdout
 
+# on cygwin, line endings are screwed up.
+$/ = "\x0D\x0A" if $^O eq 'cygwin';
+
 my $stack = new stack;
 
 # command line arguments
