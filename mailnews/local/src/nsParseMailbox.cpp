@@ -369,7 +369,9 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader(nsIMsgWindow *msgWindow)
     }
     else if (m_mailDB)
     {
-      m_mailDB->AddNewHdrToDB(m_newMsgHdr, PR_TRUE);
+      // add hdr but don't notify - shouldn't be requiring notifications 
+      // during summary file rebuilding
+      m_mailDB->AddNewHdrToDB(m_newMsgHdr, PR_FALSE);
       m_newMsgHdr = nsnull;
     }
     else

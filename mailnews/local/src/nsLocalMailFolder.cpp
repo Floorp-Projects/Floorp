@@ -143,7 +143,8 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : mHaveReadNameFromDB(PR_FALSE),
     mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull),
-    mCheckForNewMessagesAfterParsing(PR_FALSE), mNumFilterClassifyRequests(0)
+    mCheckForNewMessagesAfterParsing(PR_FALSE), mNumFilterClassifyRequests(0), 
+    m_parsingFolder(PR_FALSE)
 {
 }
 
@@ -400,7 +401,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
   }
   
   rv = mailboxService->ParseMailbox(aMsgWindow, path, parser, listener, nsnull);
-  
+  if (NS_SUCCEEDED(rv))
+    m_parsingFolder = PR_TRUE;
   return rv;
 }
 
@@ -719,7 +721,7 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
     }
     else if (mCopyState)
       mCopyState->m_notifyFolderLoaded = PR_TRUE; //defer folder loaded notification
-    else // if the db was already open, it's probably OK to load it...
+    else if (!m_parsingFolder)// if the db was already open, it's probably OK to load it if not parsing
       NotifyFolderEvent(mFolderLoadedAtom);
   }
   PRBool filtersRun;
@@ -3234,6 +3236,7 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
     }
   }
 
+  m_parsingFolder = PR_FALSE;
   return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 }
 

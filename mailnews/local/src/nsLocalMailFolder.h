@@ -216,12 +216,12 @@ protected:
   virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
   virtual nsresult SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
 protected:
-	PRBool		mHaveReadNameFromDB;
-	PRBool		mInitialized;
-	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a
-                                    //time
+  nsLocalMailCopyState *mCopyState; //We only allow one of these at a time
   const char *mType;
-  PRBool      mCheckForNewMessagesAfterParsing;
+  PRPackedBool mHaveReadNameFromDB;
+  PRPackedBool mInitialized;
+  PRPackedBool mCheckForNewMessagesAfterParsing;
+  PRPackedBool m_parsingFolder;
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
   PRInt32 mNumFilterClassifyRequests;
   nsMsgKeyArray mSpamKeysToMove;
