@@ -72,12 +72,12 @@ class nsIMsgIncomingServer;
 // Use these flags in conjunction with SetFlag/TestFlag/ClearFlag instead
 // of creating PRBools for everything....
 
-#define IMAP_RECEIVED_GREETING		0x00000001  /* should we pause for the next read */
-#define IMAP_FIRST_PASS_IN_THREAD   0x00000002  /* entering thread for the first time? */
-#define	IMAP_CONNECTION_IS_OPEN		0x00000004  /* is the connection currently open? */
-#define IMAP_WAITING_FOR_DATA		0x00000008
-
-#define IMAP_CLEAN_UP_URL_STATE     0x00000010 // processing clean up url state
+#define IMAP_RECEIVED_GREETING		      0x00000001  /* should we pause for the next read */
+#define IMAP_FIRST_PASS_IN_THREAD       0x00000002  /* entering thread for the first time? */
+#define	IMAP_CONNECTION_IS_OPEN		      0x00000004  /* is the connection currently open? */
+#define IMAP_WAITING_FOR_DATA		        0x00000008
+#define IMAP_CLEAN_UP_URL_STATE         0x00000010 // processing clean up url state
+#define IMAP_ISSUED_LANGUAGE_REQUEST		0x00000020 // make sure we only issue the language request once per connection...
 
 class nsImapProtocol : public nsIImapProtocol, public nsIRunnable
 {
@@ -375,7 +375,7 @@ private:
   virtual PRBool ProcessCurrentURL();
 	void EstablishServerConnection();
   virtual void ParseIMAPandCheckForNewMail(const char* commandString =
-                                             nsnull);
+                                             nsnull, PRBool ignoreBadNOResponses = PR_FALSE);
 	// biff
 	void	PeriodicBiff();
 	void	SendSetBiffIndicatorEvent(nsMsgBiffState newState);
@@ -434,6 +434,7 @@ private:
 
 	// login related methods. All of these methods actually issue protocol
 	void Capability(); // query host for capabilities.
+  void Language(); // set the language on the server if it supports it
 	void Namespace();
 	void InsecureLogin(const char *userName, const char *password);
 	void AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag);

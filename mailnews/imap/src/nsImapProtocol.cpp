@@ -71,6 +71,10 @@ PRLogModuleInfo *IMAP;
 #include "nsImapUtils.h"
 #include "nsProxyObjectManager.h"
 
+#if 0
+#include "nsIHashAlgorithm.h"
+#endif
+
 #define ONE_SECOND ((PRUint32)1000)    // one second
 #define FOUR_K ((PRUint32)4096)
 
@@ -142,7 +146,6 @@ void TLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
     PL_strcpy(fLineInfo->adoptedMessageLine + fBytesUsed, line);
     fBytesUsed += lineLength;
 }
-
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_THREADSAFE_ADDREF(nsImapProtocol)
@@ -954,89 +957,6 @@ void nsImapProtocol::EstablishServerConnection()
   }
   
   PR_FREEIF(serverResponse); // we don't care about the greeting yet...
-
-#ifdef UNREADY_CODE // mscott: I don't think we need to care about this stuff...
-  if (GetConnectionStatus() == MK_CONNECTED)
-    {
-        // get the one line response from the IMAP server
-        char *serverResponse = CreateNewLineFromSocket();
-        if (serverResponse)
-    {
-      if (!XP_STRNCASECMP(serverResponse, "* OK", 4))
-      {
-        SetConnectionStatus(0);
-        preAuthSucceeded = PR_FALSE;
-        //if (!XP_STRNCASECMP(serverResponse, "* OK Netscape IMAP4rev1 Service 3.0", 35))
-        //  GetServerStateParser().SetServerIsNetscape30Server();
-      }
-      else if (!XP_STRNCASECMP(serverResponse, "* PREAUTH", 9))
-      {
-        // we've been pre-authenticated.
-        // we can skip the whole password step, right into the
-        // kAuthenticated state
-        GetServerStateParser().PreauthSetAuthenticatedState();
-
-        // tell the master that we're authenticated
-        PRBool loginSucceeded = PR_TRUE;
-        TImapFEEvent *alertEvent = 
-          new TImapFEEvent(msgSetUserAuthenticated,  // function to call
-               this,                // access to current entry
-               (void *)loginSucceeded,
-               PR_TRUE);            
-        if (alertEvent)
-        {
-          fFEEventQueue->AdoptEventToEnd(alertEvent);
-        }
-        else
-          HandleMemoryFailure();
-
-        preAuthSucceeded = PR_TRUE;
-              if (fCurrentBiffState == MSG_BIFF_Unknown)
-              {
-                fCurrentBiffState = MSG_BIFF_NoMail;
-                  SendSetBiffIndicatorEvent(fCurrentBiffState);
-              }
-
-        if (GetServerStateParser().GetCapabilityFlag() ==
-          kCapabilityUndefined)
-          Capability();
-
-        if ( !(GetServerStateParser().GetCapabilityFlag() & 
-            (kIMAP4Capability | 
-             kIMAP4rev1Capability | 
-             kIMAP4other) ) )
-        {
-          AlertUserEvent_UsingId(MK_MSG_IMAP_SERVER_NOT_IMAP4);
-          SetCurrentEntryStatus(-1);      
-          SetConnectionStatus(-1);        // stop netlib
-          preAuthSucceeded = PR_FALSE;
-        }
-        else
-        {
-          ProcessAfterAuthenticated();
-          // the connection was a success
-          SetConnectionStatus(0);
-        }
-      }
-      else
-      {
-        preAuthSucceeded = PR_FALSE;
-        SetConnectionStatus(MK_BAD_CONNECT);
-      }
-
-      fNeedGreeting = PR_FALSE;
-      FREEIF(serverResponse);
-    }
-        else
-            SetConnectionStatus(MK_BAD_CONNECT);
-    }
-
-    if ((GetConnectionStatus() < 0) && !DeathSignalReceived())
-  {
-    if (!MSG_Biff_Master_NikiCallingGetNewMail())
-        AlertUserEvent_UsingId(MK_BAD_CONNECT);
-  }
-#endif   
 }
 
 // returns PR_TRUE if another url was run, PR_FALSE otherwise.
@@ -1101,46 +1021,53 @@ PRBool nsImapProtocol::ProcessCurrentURL()
             (GetServerStateParser().GetIMAPstate() == 
        nsImapServerResponseParser::kNonAuthenticated))
     {
-    /* if we got here, the server's greeting should not have been PREAUTH */
-    if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
-        Capability();
+      /* if we got here, the server's greeting should not have been PREAUTH */
+      if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
+          Capability();
       
-    if ( !(GetServerStateParser().GetCapabilityFlag() & (kIMAP4Capability | kIMAP4rev1Capability | 
-           kIMAP4other) ) )
-    {
-      AlertUserEventUsingId(IMAP_SERVER_NOT_IMAP4);
+      if ( !(GetServerStateParser().GetCapabilityFlag() & (kIMAP4Capability | kIMAP4rev1Capability | 
+             kIMAP4other) ) )
+      {
+        AlertUserEventUsingId(IMAP_SERVER_NOT_IMAP4);
 
-      SetConnectionStatus(-1);        // stop netlib
-    }
-    else
-    {
-      logonFailed = !TryToLogon();
+        SetConnectionStatus(-1);        // stop netlib
+      }
+      else
+      {
+        logonFailed = !TryToLogon();
       }
     } // if death signal not received
 
     if (!DeathSignalReceived() && (GetConnectionStatus() >= 0))
     {
-    if (m_runningUrl)
-      FindMailboxesIfNecessary();
-    nsImapState imapState;
-    if (m_runningUrl)
-      m_runningUrl->GetRequiredImapState(&imapState);
-    if (imapState == nsIImapUrl::nsImapAuthenticatedState)
-      ProcessAuthenticatedStateURL();
+      // if the server supports a language extension then we should
+      // attempt to issue the language extension.
+      if ( GetServerStateParser().GetCapabilityFlag() & kHasLanguageCapability)
+        Language();
+
+      if (m_runningUrl)
+        FindMailboxesIfNecessary();
+      
+      nsImapState imapState;      
+      if (m_runningUrl)
+        m_runningUrl->GetRequiredImapState(&imapState);
+      
+      if (imapState == nsIImapUrl::nsImapAuthenticatedState)
+        ProcessAuthenticatedStateURL();
       else   // must be a url that requires us to be in the selected stae 
-      ProcessSelectedStateURL();
+        ProcessSelectedStateURL();
 
     // The URL has now been processed
         if (!logonFailed && GetConnectionStatus() < 0)
-            HandleCurrentUrlError();
+           HandleCurrentUrlError();
         if (DeathSignalReceived())
         {
-            HandleCurrentUrlError();
+          HandleCurrentUrlError();
         }
         else
         {
         }
-  }
+    }
     else if (!logonFailed)
         HandleCurrentUrlError(); 
 
@@ -1212,13 +1139,14 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   return anotherUrlRun;
 }
 
-void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString)
+// ignoreBadAndNOResponses --> don't throw a error dialog if this command results in a NO or Bad response
+// from the server..in other words the command is "exploratory" and we don't really care if it succeeds or fails.
+void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString, PRBool aIgnoreBadAndNOResponses)
 {
     if (commandString)
-        GetServerStateParser().ParseIMAPServerResponse(commandString);
+        GetServerStateParser().ParseIMAPServerResponse(commandString, aIgnoreBadAndNOResponses);
     else
-        GetServerStateParser().ParseIMAPServerResponse(
-            m_currentCommand.GetBuffer());
+        GetServerStateParser().ParseIMAPServerResponse(m_currentCommand.GetBuffer(), aIgnoreBadAndNOResponses);
     // **** fix me for new mail biff state *****
 }
 
@@ -1464,7 +1392,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
                                            PRBool * aCanRunUrl,
                                            PRBool * hasToWait)
 {
-  if (!aCanRunUrl || !hasToWait)
+  if (!aCanRunUrl || !hasToWait || !aImapUrl)
     return NS_ERROR_NULL_POINTER;
   nsresult rv = NS_OK;
   NS_LOCK_INSTANCE();
@@ -1599,7 +1527,7 @@ char *nsImapProtocol::GetServerCommandTag()
 
 void nsImapProtocol::ProcessSelectedStateURL()
 {
-    char *mailboxName = nsnull;
+  char *mailboxName = nsnull;
   PRBool          bMessageIdsAreUids = PR_TRUE;
   imapMessageFlagsType  msgFlags = 0;
   const char          *hostName = GetImapHostName();
@@ -1607,7 +1535,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
   // this can't fail, can it?
   nsresult res;
-    res = m_runningUrl->GetImapAction(&m_imapAction);
+  res = m_runningUrl->GetImapAction(&m_imapAction);
   m_runningUrl->MessageIdsAreUids(&bMessageIdsAreUids);
   m_runningUrl->GetMsgFlags(&msgFlags);
 
@@ -1629,8 +1557,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 if (GetServerStateParser().LastCommandSuccessful()) 
                 {
                   selectIssued = PR_TRUE;
-          AutoSubscribeToMailboxIfNecessary(mailboxName);
-                    SelectMailbox(mailboxName);
+                  AutoSubscribeToMailboxIfNecessary(mailboxName);
+                  SelectMailbox(mailboxName);
                 }
             }
             else if (!GetServerStateParser().GetSelectedMailboxName())
@@ -1647,7 +1575,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
           if (gPromoteNoopToCheckCount > 0 && (m_noopCount % gPromoteNoopToCheckCount) == 0)
             Check();
           else
-                  Noop(); // I think this is needed when we're using a cached connection
+            Noop(); // I think this is needed when we're using a cached connection
           m_needNoop = PR_FALSE;
         }
             }
@@ -1655,7 +1583,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
         else
         {
             // go to selected state
-      AutoSubscribeToMailboxIfNecessary(mailboxName);
+            AutoSubscribeToMailboxIfNecessary(mailboxName);
             SelectMailbox(mailboxName);
             selectIssued = PR_TRUE;
         }
@@ -1673,7 +1601,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
           if (uidStruct)
           {
             uidStruct->returnValidity = kUidUnknown;
-        uidStruct->hostName = hostName;
+            uidStruct->hostName = hostName;
             m_runningUrl->CreateCanonicalSourceFolderPathString(&uidStruct->canonical_boxname);
         if (m_imapMiscellaneousSink)
         {
@@ -2518,8 +2446,8 @@ nsImapProtocol::FetchMessage(const char * messageIds,
 			  if (aolImapServer)
 				  commandString.Append(" XAOL.SIZE") ;
 			  else
-				commandString.Append("RFC822.SIZE");
-			  commandString.Append(" FLAGS");
+				      commandString.Append("RFC822.SIZE");
+			        commandString.Append(" FLAGS");
               commandString.Append(what);
               PR_Free(what);
             }
@@ -4240,7 +4168,7 @@ void nsImapProtocol::Capability()
 
     ProgressEventFunctionUsingId (IMAP_STATUS_CHECK_COMPAT);
     IncrementCommandTagNumber();
-  nsCString command(GetServerCommandTag());
+    nsCString command(GetServerCommandTag());
 
     command.Append(" capability" CRLF);
             
@@ -4249,11 +4177,47 @@ void nsImapProtocol::Capability()
         ParseIMAPandCheckForNewMail();
 }
 
+void nsImapProtocol::Language()
+{
+  // only issue the language request if we haven't done so already...
+  if (!TestFlag(IMAP_ISSUED_LANGUAGE_REQUEST))
+  {
+    SetFlag(IMAP_ISSUED_LANGUAGE_REQUEST);
+    ProgressEventFunctionUsingId (IMAP_STATUS_CHECK_COMPAT);
+    IncrementCommandTagNumber();
+    nsCString command(GetServerCommandTag());
+
+    // extract the desired language attribute from prefs
+    nsresult rv = NS_OK; 
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    nsXPIDLCString acceptLanguages;
+    if (NS_SUCCEEDED(rv) && prefs) 
+        prefs->CopyCharPref("intl.accept_languages", getter_Copies(acceptLanguages));
+
+    // we need to parse out the first language out of this comma separated list....
+    // i.e if we have en,ja we only want to send en to the server.
+    if (acceptLanguages)
+    {
+      nsCAutoString extractedLanguage (acceptLanguages);
+      PRInt32 pos = extractedLanguage.FindChar(',', PR_TRUE);
+      if (pos > 0) // we have a comma separated list of languages...
+        extractedLanguage.Truncate(pos); // truncate everything after the first comma (including the comma)
+      command.Append(" LANGUAGE ");
+      command.Append(extractedLanguage.GetBuffer()); 
+      command.Append(CRLF);
+    }
+            
+    rv = SendData(command.GetBuffer());
+    if (NS_SUCCEEDED(rv))
+        ParseIMAPandCheckForNewMail(nsnull, PR_TRUE /* ignore bad or no result from the server for this command */);
+  }
+}
+
 void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
 {
 
-    ProgressEventFunctionUsingId (IMAP_STATUS_SENDING_LOGIN);
-    IncrementCommandTagNumber();
+  ProgressEventFunctionUsingId (IMAP_STATUS_SENDING_LOGIN);
+  IncrementCommandTagNumber();
   nsCString command (GetServerCommandTag());
   command.Append(" login \"");
   command.Append(userName);
@@ -4274,16 +4238,66 @@ void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
 void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag)
 {
   ProgressEventFunctionUsingId (IMAP_STATUS_SENDING_AUTH_LOGIN);
-    IncrementCommandTagNumber();
+  IncrementCommandTagNumber();
 
   char * currentCommand=nsnull;
-    nsresult rv;
-    
+  nsresult rv;
+
+#if 0
+  if (flag & kHasCRAMCapability)
+  {
+    nsCOMPtr<nsIKeyedHashAlgorithm> keyedHash (do_GetService(NS_KEYEDHASHALGORITHM_PROGID_PREFIX "MD5"));
+    if (keyedHash)
+    {
+      // inform the server that we want to begin a CRAM authentication procedure...
+      nsCAutoString command (GetServerCommandTag());
+      command.Append(" authenticate CRAM-MD5" CRLF);
+      rv = SendData(command);
+      ParseIMAPandCheckForNewMail();
+      if (GetServerStateParser().LastCommandSuccessful()) 
+      {
+          unsigned char * digest;
+          char * decodedChallenge = PL_Base64Decode(GetServerStateParser().fCRAMDigest, 
+                                                    nsCRT::strlen(GetServerStateParser().fCRAMDigest), nsnull);
+
+          rv = keyedHash->KeyedHash((unsigned char *) decodedChallenge, 
+                                  nsCRT::strlen(decodedChallenge), 
+                                  (unsigned char *) password, nsCRT::strlen(password), 
+                                  &digest);
+          PR_FREEIF(decodedChallenge);
+          if (NS_SUCCEEDED(rv) && digest)
+          {
+            nsCAutoString encodedDigest;
+            PRUint32 digestLength = nsCRT::strlen((const char *) digest);
+            char hexVal[8];
+
+            for (PRUint32 j=0; j<digestLength; j++) 
+            {
+              PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)digest[j]);
+              encodedDigest.Append(hexVal); 
+            }
+
+            PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s %s", userName, encodedDigest.GetBuffer());
+            char *base64Str = PL_Base64Encode(m_dataOutputBuf, nsCRT::strlen(m_dataOutputBuf), nsnull);
+            PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
+            PR_FREEIF(base64Str);
+            PR_FREEIF(digest);
+            rv = SendData(m_dataOutputBuf);
+            if (NS_SUCCEEDED(rv))
+               ParseIMAPandCheckForNewMail(command);
+            if (GetServerStateParser().LastCommandSuccessful())
+              return;
+          }
+      } // if CRAM response was received
+    } // if keyed hash
+  }
+  else 
+#endif
   if (flag & kHasAuthPlainCapability)
   {
     PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s authenticate plain" CRLF, GetServerCommandTag());
     rv = SendData(m_dataOutputBuf);
-        if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) return;
     currentCommand = PL_strdup(m_dataOutputBuf); /* StrAllocCopy(currentCommand, GetOutputBuffer()); */
     ParseIMAPandCheckForNewMail();
     if (GetServerStateParser().LastCommandSuccessful()) 
@@ -6257,7 +6271,19 @@ PRBool nsImapProtocol::TryToLogon()
       {
         if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
           Capability();
-
+        
+        // for now, disable CRAM auth...we currently rely on PSM being present for this to work
+        // in order to get an MD5 hash routine. I'm in the process of adding this routine to 
+        // xpcom/ds so until then I'm going to leave CRAM turned off (although it does now work!)
+#if 0
+        // try to use CRAM before we fall back to plain or auth login....
+        if (GetServerStateParser().GetCapabilityFlag() & kHasCRAMCapability)
+        {
+          AuthLogin (userName, password, kHasCRAMCapability);
+          logonTries++;
+        }
+        else 
+#endif
         if (GetServerStateParser().GetCapabilityFlag() & kHasAuthPlainCapability)
         {
           AuthLogin (userName, password, kHasAuthPlainCapability);
