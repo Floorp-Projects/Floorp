@@ -257,6 +257,8 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
   PRInt32 startIndx;
   PRInt32 endIndx;
   
+  mIsDone = PR_FALSE;
+
   // get common content parent
   if (NS_FAILED(aRange->GetCommonParent(getter_AddRefs(dN))) || !dN)
     return NS_ERROR_FAILURE;
@@ -803,6 +805,8 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 {
   if (!aRange) 
     return NS_ERROR_NULL_POINTER; 
+
+  mIsDone = PR_FALSE;
 
   mRange = do_QueryInterface(aRange);
   
