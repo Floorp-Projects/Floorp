@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Akkana Peck (akkana@netscape.com)
+ *    Charles Manske (cmanske@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,13 +39,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Insert Source HTML dialog */
-var srcInput;
 
-// dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   var okButton = document.documentElement.getButton("accept");
   if (okButton)
@@ -53,24 +57,34 @@ function Startup()
     okButton.setAttribute("accesskey",GetString("InsertAccessKey"));
   }
   // Create dialog object to store controls for easy access
-  srcInput = document.getElementById("srcInput");
+  gDialog.srcInput = document.getElementById("srcInput");
 
-  var selection = editorShell.GetContentsAs("text/html", 35);
-  selection = (selection.replace(/<body[^>]*>/,"")).replace(/<\/body>/,"");
-  if (selection != "")
-    srcInput.value = selection;
-
+  var selection;
+  try {
+    selection = editor.outputToString("text/html", 35); // OutputWrap+OutputFormatted+OutputSelectionOnly
+  } catch (e) {}
+  if (selection)
+  {
+    selection = (selection.replace(/<body[^>]*>/,"")).replace(/<\/body>/,"");
+    if (selection)
+      gDialog.srcInput.value = selection;
+  }
   // Set initial focus
-  srcInput.focus();
+  gDialog.srcInput.focus();
   // Note: We can't set the caret location in a multiline textbox
   SetWindowLocation();
 }
 
 function onAccept()
 {
-  if (srcInput.value != "")
-    editorShell.InsertSource(srcInput.value);
-  else {
+  if (gDialog.srcInput.value)
+  {
+    try {
+      GetCurrentEditor().insertHTML(gDialog.srcInput.value);
+    } catch (e) {}
+  }
+  else
+  {
     dump("Null value -- not inserting in HTML Source dialog\n");
     return false;
   }

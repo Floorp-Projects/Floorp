@@ -28,9 +28,11 @@ var tagname = "TAG NAME"
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  if (!GetCurrentEditor())
+  {
+    window.close();
     return;
-
+  }
   // gDialog is declared in EdDialogCommon.js
   // Set commonly-used widgets like this:
   gDialog.fooButton = document.getElementById("fooButton");

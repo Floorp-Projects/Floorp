@@ -24,19 +24,23 @@
  */
 
 
-var charset="";
-var titleWasEdited = false;
-var charsetWasChanged = false;
-var insertNewContentType = false;
-var contenttypeElement;
-var initDone = false;
+var gCharset="";
+var gTitleWasEdited = false;
+var gCharsetWasChanged = false;
+var gInsertNewContentType = false;
+var gContenttypeElement;
+var gInitDone = false;
 
 //Cancel() is in EdDialogCommon.js
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   observerService.notifyObservers(null, "charsetmenu-selected", "other");
@@ -45,17 +49,21 @@ function Startup()
   gDialog.charsetTree   = document.getElementById('CharsetTree'); 
   gDialog.exportToText  = document.getElementById('ExportToText');
 
-  contenttypeElement = GetHTTPEquivMetaElement("content-type");
-  if(!contenttypeElement && (editorShell.contentsMIMEType != 'text/plain')) 
+  gContenttypeElement = GetHTTPEquivMetaElement("content-type");
+  if (!gContenttypeElement && (editor.contentsMIMEType != 'text/plain')) 
   {
-    contenttypeElement = CreateHTTPEquivMetaElement("content-type");
-    if( ! contenttypeElement ) 
+    gContenttypeElement = CreateHTTPEquivMetaElement("content-type");
+    if (!gContenttypeElement ) 
 	{
       window.close();
       return;
     }
-    insertNewContentType = true;
+    gInsertNewContentType = true;
   }
+
+  try {
+    gCharset = editor.documentCharacterSet;
+  } catch (e) {}
 
   InitDialog();
 
@@ -70,7 +78,7 @@ function Startup()
   // SET FOCUS TO FIRST CONTROL
   SetTextboxFocus(gDialog.TitleInput);
   
-  initDone = true;
+  gInitDone = true;
   
   SetWindowLocation();
 }
@@ -78,10 +86,10 @@ function Startup()
   
 function InitDialog() 
 {
-  gDialog.TitleInput.value = editorShell.GetDocumentTitle();
-  charset = editorShell.GetDocumentCharacterSet();
+  gDialog.TitleInput.value = GetDocumentTitle();
+
   var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-  var index = gDialog.charsetTree.builderView.getIndexOfResource(RDF.GetResource(charset));
+  var index = gDialog.charsetTree.builderView.getIndexOfResource(RDF.GetResource(gCharset));
   if (index >= 0) {
     var treeBox = gDialog.charsetTree.treeBoxObject;
     treeBox.selection.select(index);
@@ -92,18 +100,21 @@ function InitDialog()
 
 function onAccept()
 {
-  editorShell.BeginBatchChanges();
+  var editor = GetCurrentEditor();
+  editor.beginTransaction();
 
-  if(charsetWasChanged) 
+  if(gCharsetWasChanged) 
   {
-     SetMetaElementContent(contenttypeElement, "text/html; charset=" + charset, insertNewContentType);     
-     editorShell.SetDocumentCharacterSet(charset);
+     try {
+       SetMetaElementContent(gContenttypeElement, "text/html; charset=" + gCharset, gInsertNewContentType);     
+      editor.documentCharacterSet = gCharset;
+    } catch (e) {}
   }
 
-  editorShell.EndBatchChanges();
+  editor.endTransaction();
 
-  if(titleWasEdited) 
-    window.opener.newTitle = TrimString(gDialog.TitleInput.value);
+  if(gTitleWasEdited) 
+    SetDocumentTitle(TrimString(gDialog.TitleInput.value));
 
   window.opener.ok = true;
   window.opener.exportToText = gDialog.exportToText.checked;
@@ -124,13 +135,13 @@ function readRDFString(aDS,aRes,aProp)
       
 function SelectCharset()
 {
-  if(initDone) 
+  if(gInitDone) 
   {
     try 
 	{
-      charset = gDialog.charsetTree.builderView.getResourceAtIndex(gDialog.charsetTree.currentIndex).Value;
-      if (charset)
-         charsetWasChanged = true;
+      gCharset = gDialog.charsetTree.builderView.getResourceAtIndex(gDialog.charsetTree.currentIndex).Value;
+      if (gCharset)
+        gCharsetWasChanged = true;
     }
     catch(e) {}
   }
@@ -139,5 +150,5 @@ function SelectCharset()
 
 function TitleChanged()
 {
-  titleWasEdited = true; 
+  gTitleWasEdited = true; 
 }

@@ -34,9 +34,11 @@ var frameDoc = null;
 var buttonArray = [];
 
 function Startup(){
-  if (!InitEditorShell())
+  if (!GetCurrentEditor())
+  {
+    window.close();
     return;
-
+  }
   initDialog();
 }
 
@@ -66,18 +68,18 @@ function initDialog(){
 
   //check for relative url
   if (!((srcInput.value.indexOf("http://") != -1) || (srcInput.value.indexOf("file://") != -1))){
-    if (IsUrlAboutBlank(editorShell.editorDocument.location)){
+    if (IsUrlAboutBlank(GetDocumentUrl())){
       alert(GetString("SaveToUseRelativeUrl"));
       window.close();
       //TODO: add option to save document now
     }
     else{
-      var edDoc = new String(editorShell.editorDocument.location);
-      var imgDoc = new String(srcInput.value);
+      var edDoc = GetDocumentUrl();
+      var imgDoc = srcInput.value;
       imgDoc = imgDoc.split("../");
       var len = imgDoc.length;
       for (var i=0; i<len; i++){
-        if (edDoc.length > (String(editorShell.editorDocument.location.protocol).length+2))
+        if (edDoc.length > (String(GetCurrentEditor().document.location.protocol).length+2))
           edDoc = edDoc.substring(0, edDoc.lastIndexOf("/"));
       }
       imgDoc = edDoc+"/"+imgDoc[imgDoc.length-1];
@@ -219,17 +221,23 @@ function finishMap(){
       else
         createPoly(curSpot);
     }
-    //editorShell.editorDocument.body.appendChild(imageMap);
+    //try{
+    //  GetCurrentEditor().root.appendChild(imageMap);
+    //} catch (e) {}
     //returnValue = "test";
-    //window.arguments[0] = "test"; //editorShell.editorDocument.body.appendChild(imageMap); //editorShell.InsertElementAtSelection(imageMap, false);
-    //dump(window.arguments[0]+"\n");
+    //try{
+    //  window.arguments[0] = "test"; //GetCurrentEditor().insertElementAtSelection(imageMap, false);
+    //  dump(window.arguments[0]+"\n");
+    //} catch (e) {}
     dump("imageMap.childNodes.length = "+imageMap.childNodes.length+"\n");
   }
   return true;
 }
 
-function setMapName(){
-  //imageMap = editorShell.CreateElementWithDefaults("map");
+function setMapName() {
+  //try {
+  //  imageMap = GetCurrentEditor().createElementWithDefaults("map");
+  //} catch (e) {}
   //dump(imageMap+"\n");
   //imageMap = frameDoc.createElement("map");
 
@@ -250,7 +258,10 @@ function setMapName(){
 }
 
 function createRect(which){
-  //newRect = editorShell.CreateElementWithDefaults("area");
+  var newRect;
+  //try {
+  //  newRect = editor.createElementWithDefaults("area");
+  //} catch (e) {}
   newRect = frameDoc.createElement("area");
   newRect.setAttribute("shape", "rect");
   coords = parseInt(which.style.left)+","+parseInt(which.style.top)+","+(parseInt(which.style.left)+parseInt(which.style.width))+","+(parseInt(which.style.top)+parseInt(which.style.height));
@@ -272,8 +283,11 @@ function createRect(which){
 }
 
 function createCir(which){
-  //newCir = editorShell.CreateElementWithDefaults("area");
-  var newCir = frameDoc.createElement("area");
+  var newCir;
+  //try {
+  //  newCir = editor.createElementWithDefaults("area");
+  //} catch (e) {}
+  newCir = frameDoc.createElement("area");
   if ( !newCir )
     return;
 
@@ -297,8 +311,11 @@ function createCir(which){
 }
 
 function createPoly(which){
-  //newPoly = editorShell.CreateElementWithDefaults("area");
-  var newPoly = frameDoc.createElement("area");
+  var newPoly;
+  //try {
+  //  newPoly = editor.createElementWithDefaults("area");
+  //} catch (e) {}
+  newPoly = frameDoc.createElement("area");
   if ( !newPoly )
     return;
 

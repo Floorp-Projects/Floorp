@@ -24,9 +24,6 @@
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
-    return;
-
   gDialog.urlInput = document.getElementById("urlInput");
   gDialog.targetInput = document.getElementById("targetInput");
   gDialog.altInput = document.getElementById("altInput");

@@ -18,27 +18,33 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *    Charles Manske (cmanske@netscape.com)
  */
 
-var newTitle = "";
-var author = "";
-var description = "";
-var authorElement;
-var descriptionElement;
-var insertNewAuthor = false;
-var insertNewDescription = false;
-var titleWasEdited = false;
-var authorWasEdited = false;
-var descWasEdited = false;
+var gNewTitle = "";
+var gAuthor = "";
+var gDescription = "";
+var gAuthorElement;
+var gDescriptionElement;
+var gInsertNewAuthor = false;
+var gInsertNewDescription = false;
+var gTitleWasEdited = false;
+var gAuthorWasEdited = false;
+var gDescWasEdited = false;
 
 //Cancel() is in EdDialogCommon.js
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog.PageLocation     = document.getElementById("PageLocation");
+  gDialog.PageModDate      = document.getElementById("PageModDate");
   gDialog.TitleInput       = document.getElementById("TitleInput");
   gDialog.AuthorInput      = document.getElementById("AuthorInput");
   gDialog.DescriptionInput = document.getElementById("DescriptionInput");
@@ -55,8 +61,10 @@ function Startup()
 
     // Get last-modified file date+time
     // TODO: Convert this to local time?
-    var lastmod = editorShell.editorDocument.lastModified;  // get string of last modified date
-
+    var lastmod;
+    try {
+      lastmod = editor.document.lastModified;  // get string of last modified date
+    } catch (e) {}
     // Convert modified string to date (0 = unknown date or January 1, 1970 GMT)
     if(Date.parse(lastmod))
     {
@@ -80,28 +88,28 @@ function Startup()
       } catch (e) {}
     }
   }
-  document.getElementById("PageModDate").setAttribute("value", lastmodString);
+  gDialog.PageModDate.value = lastmodString;
 
-  authorElement = GetMetaElement("author");
-  if (!authorElement)
+  gAuthorElement = GetMetaElement("author");
+  if (!gAuthorElement)
   {
-    authorElement = CreateMetaElement("author");
-    if (!authorElement)
+    gAuthorElement = CreateMetaElement("author");
+    if (!gAuthorElement)
     {
       window.close();
       return;
     }
-    insertNewAuthor = true;
+    gInsertNewAuthor = true;
   }
 
-  descriptionElement = GetMetaElement("description");
-  if (!descriptionElement)
+  gDescriptionElement = GetMetaElement("description");
+  if (!gDescriptionElement)
   {
-    descriptionElement = CreateMetaElement("description");
-    if (!descriptionElement)
+    gDescriptionElement = CreateMetaElement("description");
+    if (!gDescriptionElement)
       window.close();
 
-    insertNewDescription = true;
+    gInsertNewDescription = true;
   }
   
   InitDialog();
@@ -113,17 +121,18 @@ function Startup()
 
 function InitDialog()
 {
-  gDialog.TitleInput.value = editorShell.GetDocumentTitle();
-  var author = TrimString(authorElement.getAttribute("content"));
-  if (author.length == 0)
+  gDialog.TitleInput.value = GetDocumentTitle();
+
+  var gAuthor = TrimString(gAuthorElement.getAttribute("content"));
+  if (!gAuthor)
   {
     // Fill in with value from editor prefs
     var prefs = GetPrefs();
     if (prefs) 
-      author = prefs.getCharPref("editor.author");
+      gAuthor = prefs.getCharPref("editor.author");
   }
-  gDialog.AuthorInput.value = author;
-  gDialog.DescriptionInput.value = descriptionElement.getAttribute("content");
+  gDialog.AuthorInput.value = gAuthor;
+  gDialog.DescriptionInput.value = gDescriptionElement.getAttribute("content");
 }
 
 function TextboxChanged(ID)
@@ -131,22 +140,22 @@ function TextboxChanged(ID)
   switch(ID)
   {
     case "TitleInput":
-      titleWasEdited = true;
+      gTitleWasEdited = true;
       break;
     case "AuthorInput":
-      authorWasEdited = true;
+      gAuthorWasEdited = true;
       break;
     case "DescriptionInput":
-      descWasEdited = true;
+      gDescWasEdited = true;
       break;
   }
 }
 
 function ValidateData()
 {
-  newTitle = TrimString(gDialog.TitleInput.value);
-  author = TrimString(gDialog.AuthorInput.value);
-  description = TrimString(gDialog.DescriptionInput.value);
+  gNewTitle = TrimString(gDialog.TitleInput.value);
+  gAuthor = TrimString(gDialog.AuthorInput.value);
+  gDescription = TrimString(gDialog.DescriptionInput.value);
   return true;
 }
 
@@ -154,20 +163,21 @@ function onAccept()
 {
   if (ValidateData())
   {
-    editorShell.BeginBatchChanges();
-    if (titleWasEdited)
-    {
-      // Set title contents even if string is empty
-      //  because TITLE is a required HTML element
-      editorShell.SetDocumentTitle(newTitle);
-    }
-    
-    if (authorWasEdited)
-      SetMetaElementContent(authorElement, author, insertNewAuthor);
-    if (descWasEdited)
-      SetMetaElementContent(descriptionElement, description, insertNewDescription);
+    var editor = GetCurrentEditor();
+    editor.beginTransaction();
 
-    editorShell.EndBatchChanges();
+    // Set title contents even if string is empty
+    //  because TITLE is a required HTML element
+    if (gTitleWasEdited)
+      SetDocumentTitle(gNewTitle);
+    
+    if (gAuthorWasEdited)
+      SetMetaElementContent(gAuthorElement, gAuthor, gInsertNewAuthor);
+
+    if (gDescWasEdited)
+      SetMetaElementContent(gDescriptionElement, gDescription, gInsertNewDescription);
+
+    editor.endTransaction();
 
     SaveWindowLocation();
     return true; // do close the window

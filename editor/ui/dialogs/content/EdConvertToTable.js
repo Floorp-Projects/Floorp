@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *    Charles Manske (cmanske@netscape.com)
  */
 
 var gIndex;
@@ -28,8 +29,11 @@ var gOtherIndex = "2";
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  if (!GetCurrentEditor())
+  {
+    window.close();
     return;
+  }
 
   gDialog.sepRadioGroup      = document.getElementById("SepRadioGroup");
   gDialog.sepCharacterInput  = document.getElementById("SepCharacterInput");
@@ -101,9 +105,18 @@ function onAccept()
       break;
   }
 
-  // 1 = OutputSelectionOnly, 1024 = OutputLFLineBreak
-  // 256 = OutputEncodeEntities
-  var str = editorShell.GetContentsAs("text/html", 1+1024);
+  var editor = GetCurrentEditor();
+  var str;
+  try {
+    // 1 = OutputSelectionOnly, 1024 = OutputLFLineBreak
+    // 256 = OutputEncodeEntities
+    str = editor.outputToString("text/html", 1+1024);
+  } catch (e) {}
+  if (!str)
+  {
+    SaveWindowLocation();
+    return true;
+  }
 
   // Replace nbsp with spaces:
   str = str.replace(/\u00a0/g, " ");
@@ -257,31 +270,33 @@ function onAccept()
   // (Default width="100%" is used in EdInsertTable.js)
   str = "<table border=\"1\" width=\"100%\" cellpadding=\"2\" cellspacing=\"2\">\n<tr><td>" + str + "</tr>\n</table>\n";
 
-  editorShell.BeginBatchChanges();
+  editor.beginTransaction();
   
   // Delete the selection -- makes it easier to find where table will insert
-  editorShell.DeleteSelection(0);
-
-  var anchorNodeBeforeInsert = editorShell.editorSelection.anchorNode;
-  var offset = editorShell.editorSelection.anchorOffset;
   var nodeBeforeTable = null;
   var nodeAfterTable = null;
-  if (anchorNodeBeforeInsert.nodeType == Node.TEXT_NODE)
-  {
-    // Text was split. Table should be right after the first or before 
-    nodeBeforeTable = anchorNodeBeforeInsert.previousSibling;
-    nodeAfterTable = anchorNodeBeforeInsert;
-  }
-  else
-  {
-    // Table should be inserted right after node pointed to by selection
-    if (offset > 0)
-      nodeBeforeTable = anchorNodeBeforeInsert.childNodes.item(offset - 1);
+  try {
+    editor.deleteSelection(0);
 
-    nodeAfterTable = anchorNodeBeforeInsert.childNodes.item(offset);
-  }
+    var anchorNodeBeforeInsert = editor.selection.anchorNode;
+    var offset = editor.selection.anchorOffset;
+    if (anchorNodeBeforeInsert.nodeType == Node.TEXT_NODE)
+    {
+      // Text was split. Table should be right after the first or before 
+      nodeBeforeTable = anchorNodeBeforeInsert.previousSibling;
+      nodeAfterTable = anchorNodeBeforeInsert;
+    }
+    else
+    {
+      // Table should be inserted right after node pointed to by selection
+      if (offset > 0)
+        nodeBeforeTable = anchorNodeBeforeInsert.childNodes.item(offset - 1);
+
+      nodeAfterTable = anchorNodeBeforeInsert.childNodes.item(offset);
+    }
   
-  editorShell.InsertSource(str);
+    editor.insertHTML(str);
+  } catch (e) {}
 
   var table = null;
   if (nodeAfterTable)
@@ -301,15 +316,15 @@ function onAccept()
   {
     // Fixup table only if pref is set
     var prefs = GetPrefs();
+    var firstRow;
     try {
       if (prefs && prefs.getBoolPref("editor.table.maintain_structure") )
-        editorShell.NormalizeTable(table);
-    } catch(ex) {
-      dump(ex);
-    }
+        editor.normalizeTable(table);
+
+      firstRow = editor.getFirstRow(table);
+    } catch(e) {}
 
     // Put caret in first cell
-    var firstRow = editorShell.GetFirstRow(table);
     if (firstRow)
     {
       var node2 = firstRow.firstChild;
@@ -317,7 +332,9 @@ function onAccept()
         if (node2.nodeName.toLowerCase() == "td" ||
             node2.nodeName.toLowerCase() == "th")
         {
-          editorShell.editorSelection.collapse(node2, 0);
+          try { 
+            editor.selection.collapse(node2, 0);
+          } catch(e) {}
           break;
         }
         node2 = node.nextSibling;
@@ -325,7 +342,7 @@ function onAccept()
     }
   }
 
-  editorShell.EndBatchChanges();
+  editor.endTransaction();
 
   // Save persisted attributes
   gDialog.sepRadioGroup.setAttribute("index", gIndex);
