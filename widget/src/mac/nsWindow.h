@@ -157,6 +157,7 @@ public:
 
     char gInstanceClassName[256];
 protected:
+  virtual PRBool DispatchWindowEvent(nsGUIEvent* event);
 
   void CreateWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
                       const nsRect &aRect,
