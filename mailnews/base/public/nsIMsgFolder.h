@@ -12,15 +12,14 @@
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
-#include "nsIMsgHdr.h" /* interface nsIMsgHdr */
 #include "nsIFolder.h" /* interface nsIFolder */
-#include "nsIMessage.h" /* interface nsIMessage */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
 #include "nsFileSpec.h"
 #include "nsISupportsArray.h"
+#include "nsIMessage.h"
 
 class nsISupportsArray; /* forward decl */
 class nsIMessage; /* forward decl */

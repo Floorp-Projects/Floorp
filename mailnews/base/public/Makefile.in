@@ -30,7 +30,6 @@ XPIDLSRCS =				  \
 		nsIDOMMsgAppCore.idl	\
 		nsIMsgGroupRecord.idl   \
 		nsIMsgIncomingServer.idl	\
-		nsIMessage.idl			\
 		nsIMsgThread.idl	\
 		nsIMsgMessageService.idl \
 		nsIUrlListener.idl	\

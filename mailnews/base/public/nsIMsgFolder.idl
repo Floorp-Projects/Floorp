@@ -18,17 +18,15 @@
  
 #include "nsISupports.idl"
 #include "nsIFolder.idl"
-#include "nsIMessage.idl"
 #include "nsIMsgThread.idl"
 
 %{ C++
 #include "nsFileSpec.h"
 #include "nsISupportsArray.h"
+#include "nsIMessage.h"
 %}
 interface nsISupportsArray;
 interface nsIMessage;
-
-native nsNativeFileSpec(nsNativeFileSpec*);
 
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsIFolder {
