@@ -818,10 +818,15 @@ if ($#ARGV >= 0 && $ARGV[0] eq "-forceqacontact") {
     @{$force{'QAcontact'}} = (trim(shift(@ARGV)));
 }
 
+if ($#ARGV >= 0 && $ARGV[0] eq "-forcereporter") {
+    shift(@ARGV);
+    @{$force{'Reporter'}} = trim(shift(@ARGV));
+}
+
 if (($#ARGV < 0) || ($#ARGV > 1)) {
     print "Usage:\n processmail {bugid} {nametoexclude} " . 
       "[-forcecc list,of,users]\n             [-forceowner name] " .
-      "[-forceqacontact name]\nor\n" .
+      "[-forceqacontact name]\n             [-forcereporter name]\nor\n" .
       " processmail rescanall\n";
     exit;
 }

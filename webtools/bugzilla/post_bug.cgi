@@ -242,6 +242,7 @@ SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext)
 
 my %ccids;
 my $ccid;
+my @cc;
 
 # Add the CC list
 if (defined $::FORM{'cc'}) {
@@ -251,15 +252,32 @@ if (defined $::FORM{'cc'}) {
             if ($ccid && !$ccids{$ccid}) {
                 SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $ccid)");
                 $ccids{$ccid} = 1;
+                push(@cc, $person);
             }
         }
     }
 }
 
+# Assemble the -force* strings so this counts as "Added to this capacity"
+my @ARGLIST = ();
+if (@cc) {
+    push (@ARGLIST, "-forcecc", join(",", @cc));
+}
+
+push (@ARGLIST, "-forceowner", DBID_to_name($::FORM{assigned_to}));
+
+if (defined $::FORM{qacontact}) {
+    push (@ARGLIST, "-forceqacontact", DBID_to_name($::FORM{qacontact}));
+}
+
+push (@ARGLIST, "-forcereporter", DBID_to_name($::userid));
+
+push (@ARGLIST, $id, $::COOKIE{'Bugzilla_login'});
+
 # Send mail to let people know the bug has been created.
 # See attachment.cgi for explanation of why it's done this way.
 my $mailresults = '';
-open(PMAIL, "-|") or exec('./processmail', $id, $::COOKIE{'Bugzilla_login'});
+open(PMAIL, "-|") or exec('./processmail', @ARGLIST);
 $mailresults .= $_ while <PMAIL>;
 close(PMAIL);
 
