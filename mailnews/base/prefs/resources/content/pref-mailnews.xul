@@ -21,6 +21,7 @@ Rights Reserved.
 
 Contributor(s):
     rcassin@supernova.org
+    Seth Spitzer <sspitzer@netscape.com>
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
@@ -37,7 +38,7 @@ Contributor(s):
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["mailPaneConfig", "mailnewsConfirmMoveFoldersToTrash", 
-                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl",
+                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailnewsSoundFileUrl",
                        "newMailNotification", "newMailNotificationAlert", "mailWarnOnSendAccelKey" ];
   ]]>
   </script>
@@ -80,6 +81,10 @@ Contributor(s):
       <checkbox id="newMailNotification" label="&playSound.label;"
                 prefstring="mail.biff.play_sound"
                 accesskey="&playSound.accesskey;" />
+
+
+      <textbox id="mailnewsSoundFileUrl" flex="1" preftype="string"
+                 prefstring="mail.biff.play_sound.url"/>
     </hbox>
 
     <hbox align="center">
