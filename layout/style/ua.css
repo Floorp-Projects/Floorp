@@ -849,14 +849,21 @@ option.selectedfocus {
 }
 
 optgroup {
+  display:block;
   font-style:italic;
   font-weight:bold;
 }
 
-optgroup > option {
+optgroup option {
+  display:block;
   padding-left:20px;
   font-style:normal;
   font-weight:normal;
+}
+
+optgroup:before {
+  display:block;
+  content:attr(label);
 }
 
 textarea {
