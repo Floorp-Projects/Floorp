@@ -202,6 +202,7 @@ HTMLContentSink::~HTMLContentSink()
 {
   NS_IF_RELEASE(mBody);
   NS_IF_RELEASE(mRoot);
+  NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mStyleSheet);
   NS_IF_RELEASE(mCurrentForm);
@@ -213,13 +214,16 @@ HTMLContentSink::~HTMLContentSink()
 
 nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURL* aDocURL)
 {
+  NS_IF_RELEASE(mDocument);
   mDocument = aDoc;
-  NS_IF_ADDREF(aDoc);
+  NS_IF_ADDREF(mDocument);
 
+  NS_IF_RELEASE(mDocumentURL);
   mDocumentURL = aDocURL;
-  NS_IF_ADDREF(aDocURL);
+  NS_IF_ADDREF(mDocumentURL);
 
   // Make root part
+  NS_IF_RELEASE(mRoot);
   nsresult rv = NS_NewRootPart(&mRoot, aDoc);
   if (NS_OK == rv) {
   }
