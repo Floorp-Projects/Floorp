@@ -747,9 +747,17 @@ function doContextCmd(cmdName)
 
 	if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=newbookmark")
 	{
-		var promptStr = bundle.GetStringFromName("NewBookmarkURLPrompt");
-		urlVal = prompt(promptStr, "");
-		if (!urlVal || urlVal=="")	return(false);
+		while (true)
+		{
+			var promptStr = bundle.GetStringFromName("NewBookmarkURLPrompt");
+			urlVal = prompt(promptStr, "");
+			if (!urlVal || urlVal=="")	return(false);
+			
+			// ensure we get a fully qualified URL (protocol colon address)
+			var colonOffset = urlVal.indexOf(":");
+			if (colonOffset > 0)	break;
+			alert(bundle.GetStringFromName("NeedValidURL"));
+		}
 
 		promptStr = bundle.GetStringFromName("NewBookmarkNamePrompt");
 		nameVal = prompt(promptStr, "");
