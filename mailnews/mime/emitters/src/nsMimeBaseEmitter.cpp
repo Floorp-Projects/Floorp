@@ -608,10 +608,6 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 
       newValue = nsEscapeHTML(tValue);
     }
-    else
-    {
-      newValue = nsEscapeHTML(value);
-    }
   }
   else
   {
