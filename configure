@@ -5825,11 +5825,11 @@ rm -f conftest*
      fi
      LIBIDL_CFLAGS=""
      LIBIDL_LIBS=""
-     echo libIDL will be required starting the week of 12-APR-1999.
+     echo libIDL $LIBIDL_VERSION or higher is required.
   echo Get yourself a RPM or source package from ftp://ftp.mozilla.org/
   echo before your tree is HOSED.
   echo See http://www.rpi.edu/~veliaa/libIDL/ for more information.
-  sleep 3
+  { echo "configure: error: libIDL not installed." 1>&2; exit 1; }
   fi
   
   
