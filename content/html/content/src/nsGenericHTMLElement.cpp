@@ -2167,7 +2167,6 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                        NS_CONTENT_ATTR_NOT_THERE;
   }
 
-  aResult.Truncate();
   if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
     // Try subclass conversion routine first
     if (aNameSpaceID == kNameSpaceID_None && 
@@ -2181,7 +2180,6 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
     switch (value->GetUnit()) {
     case eHTMLUnit_Null:
     case eHTMLUnit_Empty:
-      aResult.Truncate();
       break;
 
     case eHTMLUnit_String:
