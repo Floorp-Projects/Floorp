@@ -362,6 +362,15 @@ CHECKOUT_CALENDAR := true
 FASTUPDATE_CALENDAR := true
 endif
 
+
+# because some cygwin tools can't handle native dos-drive paths & vice-versa
+# force configure to use a relative path for --srcdir
+# need a better check for win32
+# and we need to get OBJDIR earlier
+ifdef MOZ_TOOLS
+_OBJ2SRCPATH := $(shell perl -e 'use File::Spec::Unix; print File::Spec::Unix->abs2rel("$(TOPSRCDIR)","$(shell cygpath -u $(OBJDIR))");')
+endif 
+
 #######################################################################
 # Rules
 # 
@@ -579,11 +588,15 @@ else
   CONFIGURE := $(TOPSRCDIR)/configure
 endif
 
+ifdef _OBJ2SRCPATH
+CONFIGURE_ARGS := --srcdir=$(_OBJ2SRCPATH) $(CONFIGURE_ARGS)
+endif
+
 $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR);
-	@echo $(CONFIGURE)
-	@cd $(OBJDIR) && $(CONFIGURE_ENV_ARGS) $(CONFIGURE) \
+	@echo $(CONFIGURE) $(CONFIGURE_ARGS)
+	@cd $(OBJDIR) && $(CONFIGURE_ENV_ARGS) $(CONFIGURE) $(CONFIGURE_ARGS) \
 	  || ( echo "*** Fix above errors and then restart with\
                \"$(MAKE) -f client.mk build\"" && exit 1 )
 	@touch $(OBJDIR)/Makefile
