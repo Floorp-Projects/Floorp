@@ -20,13 +20,13 @@
 <!ENTITY revhistory SYSTEM "revhistory.sgml">
 
 <!ENTITY bz "http://www.bugzilla.org/">
-<!ENTITY bz-ver "2.14">
-<!ENTITY bz-cvs-ver "2.15">
-<!ENTITY bzg-date "August 10, 2001">
-<!ENTITY bzg-ver "2.14">
-<!ENTITY bzg-cvs-ver "2.15.0">
-<!ENTITY bzg-auth "Matthew P. Barnson">
-<!ENTITY bzg-auth-email "<email>barnboy@trilobyte.net</email>">
+<!ENTITY bz-ver "2.16">
+<!ENTITY bz-cvs-ver "2.17">
+<!ENTITY bzg-date "April 2nd, 2002">
+<!ENTITY bzg-ver "2.16">
+<!ENTITY bzg-cvs-ver "2.17.0">
+<!ENTITY bzg-auth "The Bugzilla Team">
+<!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla</ulink>">
 <!ENTITY mysql "http://www.mysql.com/">
 <!ENTITY perl-ver "5.6.1">
 

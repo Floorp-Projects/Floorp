@@ -43,7 +43,7 @@ Tracking Systems", or, more commonly, "Bug-Tracking Systems".  Defect
 Tracking Systems allow individual or groups of developers to keep
 track of outstanding bugs in their product effectively. Bugzilla was
 originally written by Terry Weissman in a programming language called
-"TCL", to replace a crappy bug-tracking database used internally for
+"TCL", to replace a crappy bug-tracking database used internally by
 Netscape Communications.  Terry later ported Bugzilla to Perl from
 TCL, and in Perl it remains to this day. Most commercial
 defect-tracking software vendors at the time charged enormous
@@ -87,7 +87,7 @@ system against which all others are measured.
 	</listitem>
 	<listitem>
 	  <para>
-	    email, XML, console, and HTTP APIs
+	    email, XML, console, and web interfaces
 	  </para>
 	</listitem>
 	<listitem>
@@ -104,30 +104,6 @@ system against which all others are measured.
 	  </para>
 	</listitem>
       </itemizedlist>
-    </para>
-    <para>
-      Despite its current robustness and popularity, Bugzilla faces
-      some near-term challenges, such as reliance on a single
-      database, a lack of abstraction of the user interface and
-      program logic, verbose email bug notifications, a powerful but
-      daunting query interface, little reporting configurability,
-      problems with extremely large queries, some unsupportable bug
-      resolution options, little internationalization (although non-US
-      character sets are accepted for comments), and dependence on
-      some nonstandard libraries.
-    </para>
-    <para>
-      Some recent headway has been made on the query front, however.
-      If you are using the latest version of Bugzilla, you should see
-      a <quote>simple search</quote> form on the default front page of
-      your Bugzilla install.  Type in two or three search terms and
-      you should pull up some relevant information.  This is also
-      available as "queryhelp.cgi".
-    </para>
-    <para>
-      Despite these small problems, Bugzilla is very hard to beat.  It
-      is under <emphasis>very</emphasis> active development to address
-      the current issues, and continually gains new features.
     </para>
   </section>
   
@@ -215,16 +191,8 @@ system against which all others are measured.
       Throughout this portion of the Guide, we will refer to user
       account options available at the Bugzilla test installation,
       <ulink url="http://landfill.tequilarista.org/">
-	landfill.tequilarista.org</ulink>.
-      <note>
-	<para>
-	  Some people have run into difficulties completing this
-	  tutorial.  If you run into problems, please check the
-	  updated online documentation available at <ulink
-							    url="http://www.trilobyte.net/barnsons/">http://www.trilobyte.net/barnsons</ulink>. If you're still stumped, please subscribe to the newsgroup and provide details of exactly what's stumping you!  If enough people complain, I'll have to fix it in the next version of this Guide.  You can subscribe to the newsgroup at <ulink url="news://news.mozilla.org/netscape.public.mozilla.webtools"> news://news.mozilla.org/netscape.public.mozilla.webtools</ulink>
-	</para>
- 
-      </note> Although Landfill serves as a great introduction to
+	    landfill.tequilarista.org</ulink>.
+      Although Landfill serves as a great introduction to
       Bugzilla, it does not offer all the options you would have as a
       user on your own installation of Bugzilla, nor can it do more
       than serve as a general introduction to Bugzilla.  Additionally,
@@ -236,7 +204,7 @@ system against which all others are measured.
     <section id="myaccount">
       <title>Create a Bugzilla Account</title>
       <para>
-	First things first!  If you want to use Bugzilla, first you
+	If you want to use Bugzilla, first you
 	need to create an account.  Consult with the administrator
 	responsible for your installation of Bugzilla for the URL you
 	should use to access it. If you're test-driving the end-user
@@ -282,19 +250,6 @@ system against which all others are measured.
 		that you can login.
 	      </para>
 	    </note>
-	    <caution>
-	      <para>
-		Many modern browsers include an
-		<quote>Auto-Complete</quote> or <quote>Form
-		  Fill</quote> feature to remember the user names and
-		passwords you type in at many sites.  Unfortunately,
-		sometimes they attempt to guess what you will put in
-		as your password, and guess wrong.  If you notice a
-		text box is already filled out, please overwrite the
-		contents of the text box so you can be sure to input
-		the correct information.
-	      </para>
-	    </caution>
 	  </para>
 	</listitem>
       </orderedlist>
@@ -316,16 +271,6 @@ system against which all others are measured.
 	find any bug report, comment, or patch currently in the
 	Bugzilla system.  We'll go into how to create your own bug
 	report later on.
-      </para>
-      <para>
-	There are efforts underway to simplify query usage.  If you
-	have a local installation of Bugzilla 2.12 or higher, you
-	should have <filename>quicksearch.html</filename> available to
-	use and simplify your searches.  There is also a helper for
-	the query interface, called
-	<filename>queryhelp.cgi</filename>.  Landfill tends to run the
-	latest code, so these two utilities should be available there
-	for your perusal.
       </para>
       <para>
 	At this point, let's visit the query page.
