@@ -492,10 +492,6 @@ nsComponentsDlg::RowSelected(GtkWidget *aWidget, gint aRow, gint aColumn,
 
     sCurrRowSelected = aRow;
 
-    // only toggle row selection state for clicks on the row
-    if (aColumn == -1 && !aEvent)
-        return;
-
     ToggleRowSelection(aWidget, aRow, aColumn);
 }
 
