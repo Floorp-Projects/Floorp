@@ -126,152 +126,6 @@ struct InnerTableReflowState {
   }
 };
 
-/* ----------- ColumnInfoCache ---------- */
-
-static const PRInt32 NUM_COL_WIDTH_TYPES=4;
-
-class ColumnInfoCache
-{
-public:
-  ColumnInfoCache(PRInt32 aNumColumns);
-  ~ColumnInfoCache();
-
-  void AddColumnInfo(const nsStyleUnit aType, 
-                     PRInt32 aColumnIndex);
-
-  void GetColumnsByType(const nsStyleUnit aType, 
-                        PRInt32& aOutNumColumns,
-                        PRInt32 *& aOutColumnIndexes);
-  enum ColWidthType {
-    eColWidthType_Auto         = 0,      // width based on contents
-    eColWidthType_Percent      = 1,      // (float) 1.0 == 100%
-    eColWidthType_Coord        = 2,      // (nscoord) value is twips
-    eColWidthType_Proportional = 3       // (int) value has proportional meaning
-  };
-
-#ifdef DEBUG
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
-private:
-  PRInt32  mColCounts [4];
-  PRInt32 *mColIndexes[4];
-  PRInt32  mNumColumns;
-};
-
-ColumnInfoCache::ColumnInfoCache(PRInt32 aNumColumns)
-{
-  mNumColumns = aNumColumns;
-  for (PRInt32 i=0; i<NUM_COL_WIDTH_TYPES; i++)
-  {
-    mColCounts[i] = 0;
-    mColIndexes[i] = nsnull;
-  }
-}
-
-ColumnInfoCache::~ColumnInfoCache()
-{
-  for (PRInt32 i=0; i<NUM_COL_WIDTH_TYPES; i++)
-  {
-    if (nsnull!=mColIndexes[i])
-    {
-      delete [] mColIndexes[i];
-    }
-  }
-}
-
-void ColumnInfoCache::AddColumnInfo(const nsStyleUnit aType, 
-                                    PRInt32 aColumnIndex)
-{
-  // a table may have more COLs than actual columns, so we guard against that here
-  if (aColumnIndex<mNumColumns)
-  {
-    switch (aType)
-    {
-      case eStyleUnit_Auto:
-        if (nsnull==mColIndexes[eColWidthType_Auto])
-          mColIndexes[eColWidthType_Auto] = new PRInt32[mNumColumns];     // TODO : be much more efficient
-        mColIndexes[eColWidthType_Auto][mColCounts[eColWidthType_Auto]] = aColumnIndex;
-        mColCounts[eColWidthType_Auto]++;
-        break;
-
-      case eStyleUnit_Percent:
-        if (nsnull==mColIndexes[eColWidthType_Percent])
-          mColIndexes[eColWidthType_Percent] = new PRInt32[mNumColumns];     // TODO : be much more efficient
-        mColIndexes[eColWidthType_Percent][mColCounts[eColWidthType_Percent]] = aColumnIndex;
-        mColCounts[eColWidthType_Percent]++;
-        break;
-
-      case eStyleUnit_Coord:
-        if (nsnull==mColIndexes[eColWidthType_Coord])
-          mColIndexes[eColWidthType_Coord] = new PRInt32[mNumColumns];     // TODO : be much more efficient
-        mColIndexes[eColWidthType_Coord][mColCounts[eColWidthType_Coord]] = aColumnIndex;
-        mColCounts[eColWidthType_Coord]++;
-        break;
-
-      case eStyleUnit_Proportional:
-        if (nsnull==mColIndexes[eColWidthType_Proportional])
-          mColIndexes[eColWidthType_Proportional] = new PRInt32[mNumColumns];     // TODO : be much more efficient
-        mColIndexes[eColWidthType_Proportional][mColCounts[eColWidthType_Proportional]] = aColumnIndex;
-        mColCounts[eColWidthType_Proportional]++;
-        break;
-
-      default:
-        break;
-    }
-  }
-}
-
-
-void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType, 
-                                       PRInt32& aOutNumColumns,
-                                       PRInt32 *& aOutColumnIndexes)
-{
-  // initialize out-params
-  aOutNumColumns=0;
-  aOutColumnIndexes=nsnull;
-  
-  // fill out params with column info based on aType
-  switch (aType)
-  {
-    case eStyleUnit_Auto:
-      aOutNumColumns = mColCounts[eColWidthType_Auto];
-      aOutColumnIndexes = mColIndexes[eColWidthType_Auto];
-      break;
-    case eStyleUnit_Percent:
-      aOutNumColumns = mColCounts[eColWidthType_Percent];
-      aOutColumnIndexes = mColIndexes[eColWidthType_Percent];
-      break;
-    case eStyleUnit_Coord:
-      aOutNumColumns = mColCounts[eColWidthType_Coord];
-      aOutColumnIndexes = mColIndexes[eColWidthType_Coord];
-      break;
-    case eStyleUnit_Proportional:
-      aOutNumColumns = mColCounts[eColWidthType_Proportional];
-      aOutColumnIndexes = mColIndexes[eColWidthType_Proportional];
-      break;
-
-    default:
-      break;
-  }
-}
-
-#ifdef DEBUG
-void ColumnInfoCache::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  NS_PRECONDITION(aResult, "null OUT parameter pointer");
-  PRUint32 sum = sizeof(*this);
-
-  // Now add in the space talen up by the arrays
-  for (int i = 0; i < 4; i++) {
-    if (mColIndexes[i]) {
-      sum += mNumColumns * sizeof(PRInt32);
-    }
-  }
-
-  *aResult = sum;
-}
-#endif
 
 NS_IMETHODIMP
 nsTableFrame::GetFrameType(nsIAtom** aType) const
@@ -288,7 +142,6 @@ nsTableFrame::GetFrameType(nsIAtom** aType) const
 nsTableFrame::nsTableFrame()
   : nsHTMLContainerFrame(),
     mCellMap(nsnull),
-    mColCache(nsnull),
     mTableLayoutStrategy(nsnull),
     mPercentBasisForRows(0)
 {
@@ -386,12 +239,6 @@ nsTableFrame::~nsTableFrame()
     delete mTableLayoutStrategy;
     mTableLayoutStrategy = nsnull;
   }
-
-  if (nsnull!=mColCache) {
-    delete mColCache;
-    mColCache = nsnull;
-  }
-
 }
 
 NS_IMETHODIMP
@@ -1146,7 +993,7 @@ void nsTableFrame::ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext
   if (nsnull==cellMap)
     return; // no info yet, so nothing useful to do
   
-  CacheColFramesInCellMap();
+  CacheColFrames(aPresContext);
 
   // compute all the collapsing border values for the entire table
   // XXX: we have to make this more incremental!
@@ -2242,7 +2089,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     }
     if (PR_TRUE==needsRecalc)
     {
-      BuildColumnCache(aPresContext, aDesiredSize, aReflowState, aStatus);
+      CacheColFrames(aPresContext, PR_TRUE);
       // if we needed to rebuild the column cache, the data stored in the layout strategy is invalid
       if (nsnull!=mTableLayoutStrategy)
       {
@@ -4239,101 +4086,6 @@ void nsTableFrame::AdjustColumnsForCOLSAttribute()
 #endif 
 }
 
-/*
-  The rule is:  use whatever width is greatest among those specified widths
-  that span a column.  It doesn't matter what comes first, just what is biggest.
-  Specified widths (when colspan==1) and span widths need to be stored separately, 
-  because specified widths tell us what proportion of the span width to give to each column 
-  (in their absence, we use the desired width of the cell.)                                                                  
-*/
-
-// XXX this is being phased out. cells with colspans will potentially overwrite
-// col info stored by cells that don't span just because they are a bigger value. 
-// The fixed width column info should be gotten from nsTableColFrame::GetFixedWidth
-NS_METHOD
-nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
-                                     nsTableCellFrame* aCellFrame,
-                                     nsTableRowFrame * aRowFrame)
-{
-#if 0
-  // if the cell has a colspan, the width is used provisionally, divided equally among 
-  // the spanned columns until the table layout strategy computes the real column width.
-  if ((nsnull!=aCellFrame) && (nsnull!=aRowFrame))
-  {
-    // get the cell style info
-    const nsStylePosition* cellPosition;
-    aCellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
-    if ((eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) ||
-         (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) {
-      // compute the width per column spanned
-      PRInt32 baseColIndex;
-      aCellFrame->GetColIndex(baseColIndex);
-      PRInt32 colSpan = GetEffectiveColSpan(baseColIndex, aCellFrame);
-      for (PRInt32 i=0; i<colSpan; i++)
-      {
-        // get the appropriate column frame
-        nsTableColFrame *colFrame;
-        GetColumnFrame(i+baseColIndex, colFrame);
-        // if the colspan is 1 and we already have a cell that set this column's width
-        // then ignore this width attribute
-        if ((1==colSpan) && (nsTableColFrame::eWIDTH_SOURCE_CELL == colFrame->GetWidthSource()))
-        {
-          break;
-        }
-        // get the column style
-        nsIStyleContext *colSC;
-        colFrame->GetStyleContext(&colSC);
-        nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
-        // if colSpan==1, then we can just set the column width
-        if (1==colSpan)
-        { // set the column width attribute
-          if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
-          {
-            nscoord width = cellPosition->mWidth.GetCoordValue();
-            colPosition->mWidth.SetCoordValue(width);
-          }
-          else
-          {
-            float width = cellPosition->mWidth.GetPercentValue();
-            colPosition->mWidth.SetPercentValue(width);
-          }
-          colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
-        }
-        else  // we have a colspan > 1. so we need to set the column table style spanWidth
-        { // if the cell is a coord width...
-          nsStyleTable* colTableStyle = (nsStyleTable*) colSC->GetMutableStyleData(eStyleStruct_Table);
-          if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
-          {
-            // set the column width attribute iff this span's contribution to this column
-            // is greater than any previous information
-            nscoord cellWidth = cellPosition->mWidth.GetCoordValue();
-            nscoord widthPerColumn = cellWidth/colSpan;
-            nscoord widthForThisColumn = widthPerColumn;
-            if (eStyleUnit_Coord == colTableStyle->mSpanWidth.GetUnit())
-              widthForThisColumn = PR_MAX(widthForThisColumn, colTableStyle->mSpanWidth.GetCoordValue());
-            colTableStyle->mSpanWidth.SetCoordValue(widthForThisColumn);
-          }
-          // else if the cell has a percent width...
-          else if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit())
-          {
-            // set the column width attribute iff this span's contribution to this column
-            // is greater than any previous information
-            float cellWidth = cellPosition->mWidth.GetPercentValue();
-            float percentPerColumn = cellWidth/(float)colSpan;
-            float percentForThisColumn = percentPerColumn;
-            if (eStyleUnit_Percent == colTableStyle->mSpanWidth.GetUnit())
-              percentForThisColumn = PR_MAX(percentForThisColumn, colTableStyle->mSpanWidth.GetPercentValue());
-            colTableStyle->mSpanWidth.SetPercentValue(percentForThisColumn);
-          }
-          colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN);
-        }
-        NS_RELEASE(colSC);
-      }
-    }
-  }
-#endif
-  return NS_OK;
-}
 
 /* there's an easy way and a hard way.  The easy way is to look in our
  * cache and pull the frame from there.
@@ -4380,113 +4132,19 @@ PRBool nsTableFrame::IsColumnWidthsSet()
   return (PRBool)firstInFlow->mBits.mColumnWidthsSet; 
 }
 
-/* We have to go through our child list twice.
- * The first time, we scan until we find the first row.  
- * We set column style from the cells in the first row.
- * Then we terminate that loop and start a second pass.
- * In the second pass, we build column and cell cache info.
- */
-void nsTableFrame::SetColumnStylesFromCells(nsIPresContext& aPresContext, nsIFrame* aRowGroupFrame)
-{
-  nsIFrame *rowFrame;
-  aRowGroupFrame->FirstChild(nsnull, &rowFrame);
-  while (nsnull!=rowFrame)
-  {
-    const nsStyleDisplay *rowDisplay;
-    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay) {
-      SetColumnStylesFromCells(aPresContext, rowFrame);
-    }
-    else if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
-    {
-      nsIFrame *cellFrame;
-      rowFrame->FirstChild(nsnull, &cellFrame);
-      while (nsnull!=cellFrame)
-      {
-        /* this is the first time we are guaranteed to have both the cell frames
-         * and the column frames, so it's a good time to 
-         * set the column style from the cell's width attribute (if this is the first row)
-         */
-        const nsStyleDisplay *cellDisplay;
-        cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
-          SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
-        cellFrame->GetNextSibling(&cellFrame);
-      }
-    }
-    rowFrame->GetNextSibling(&rowFrame);
-  }
-}
 
-void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
-                                     nsHTMLReflowMetrics&     aDesiredSize,
-                                     const nsHTMLReflowState& aReflowState,
-                                     nsReflowStatus&          aStatus)
+void nsTableFrame::CacheColFrames(nsIPresContext& aPresContext,
+								  PRBool          aReset)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
-  PRInt32 colIndex=0;
-  const nsStyleTable* tableStyle;
-  PRBool createdColFrames;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  EnsureColumns(aPresContext, createdColFrames);
-  if (nsnull!=mColCache)
-  {
+
+  if (aReset) {
+    PRBool createdColFrames;
+    EnsureColumns(aPresContext, createdColFrames);
     mCellMap->ClearColumnCache();
-    delete mColCache;
-    mColCache = nsnull;
   }
-
-  mColCache = new ColumnInfoCache(GetColCount());
-  CacheColFramesInCellMap();
-
-  // handle rowgroups
-  PRBool requiresPass1Layout = RequiresPass1Layout();
-
-  nsIFrame * childFrame = mFrames.FirstChild();
-  while (nsnull!=childFrame)
-  { // in this loop, set column style info from cells
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (PR_TRUE==IsRowGroup(childDisplay->mDisplay) && requiresPass1Layout)
-    { // if it's a row group, get the cells and set the column style if appropriate
-      SetColumnStylesFromCells(aPresContext, childFrame);
-    }
-    childFrame->GetNextSibling(&childFrame);
-  }
-
-  // second time through, set column cache info for each column
-  // we can't do this until the loop above has set the column style info from the cells
-  childFrame = mColGroups.FirstChild();
-  while (nsnull!=childFrame)
-  { // for every child, if it's a col group then get the columns
-    nsTableColFrame *colFrame=nsnull;
-    childFrame->FirstChild(nsnull, (nsIFrame **)&colFrame);
-    while (nsnull!=colFrame)
-    { // for every column, create an entry in the column cache
-      // assumes that the col style has been twiddled to account for first cell width attribute
-      const nsStyleDisplay *colDisplay;
-      colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
-      if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
-      {
-        const nsStylePosition* colPosition;
-        colFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)colPosition));
-        PRInt32 repeat = colFrame->GetSpan();
-        colIndex = colFrame->GetColumnIndex();
-        for (PRInt32 i=0; i<repeat; i++)
-        {
-          mColCache->AddColumnInfo(colPosition->mWidth.GetUnit(), colIndex+i);
-        }
-      }
-      colFrame->GetNextSibling((nsIFrame **)&colFrame);
-    }
-    childFrame->GetNextSibling(&childFrame);
-  }
-  mBits.mColumnCacheValid=PR_TRUE;
-}
-
-void nsTableFrame::CacheColFramesInCellMap()
-{
+ 
   nsIFrame * childFrame = mColGroups.FirstChild();
   while (nsnull != childFrame) { // in this loop, we cache column info 
     nsTableColFrame* colFrame = nsnull;
@@ -4509,6 +4167,8 @@ void nsTableFrame::CacheColFramesInCellMap()
     }
     childFrame->GetNextSibling(&childFrame);
   }
+
+  mBits.mColumnCacheValid=PR_TRUE;
 }
 
 PRBool nsTableFrame::ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
@@ -4949,15 +4609,6 @@ nscoord nsTableFrame::GetCellPadding()
   }
   return cellPadding;
 }
-
-
-void nsTableFrame::GetColumnsByType(const nsStyleUnit aType, 
-                                    PRInt32& aOutNumColumns,
-                                    PRInt32 *& aOutColumnIndexes)
-{
-  mColCache->GetColumnsByType(aType, aOutNumColumns, aOutColumnIndexes);
-}
-
 
 
 /* ----- global methods ----- */
@@ -5519,13 +5170,6 @@ nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 
   // Add in the amount of space for the column width array
   sum += mColumnWidthsLength * sizeof(PRInt32);
-
-  // And in size of column info cache
-  if (mColCache) {
-    PRUint32 colCacheSize;
-    mColCache->SizeOf(aHandler, &colCacheSize);
-    aHandler->AddSize(nsLayoutAtoms::tableColCache, colCacheSize);
-  }
 
   // Add in size of cell map
   PRUint32 cellMapSize;
