@@ -373,7 +373,7 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
 
         $vars->{'queryname'} = $name;
         
-        print "Content-Type: text/html\n\n";
+        print $cgi->header();
         $template->process("global/message.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
