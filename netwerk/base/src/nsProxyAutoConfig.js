@@ -81,20 +81,41 @@ nsProxyAutoConfig.prototype = {
         var uri = url.QueryInterface(Components.interfaces.nsIURI);
         // Call the original function-
         var proxy = LocalFindProxyForURL(uri.spec, uri.host);
-        if (proxy == "DIRECT") {
+        if(proxy == null) {
+            return;
+        }
+
+        /* we ignore everything else past the first proxy.
+           we could theoretically check isResolvable now and continue
+           parsing (see bug 84798). but for now... */
+        proxy = proxy.split(";")[0];
+
+        // direct connection (no proxy)
+        if ( proxy.search(/^\s*DIRECT\s*$/i) != -1 ) {
             host.value = null;
             type.value = "direct";
         }
         else {
-            // TODO warn about SOCKS
+            // split proxy string to find proxy type, proxy host and port number
+            var typehostport = /^\s*(\w+)\s+([^:]+)(:\d+)?/(proxy);
+            if(typehostport != null) {
+                host.value = typehostport[2];
+                typehostport[1] = typehostport[1].toUpperCase();
 
-            // we ignore everything else past the first proxy. 
-            // we could theoretically check isResolvable now and continue 
-            // parsing. but for now...
-            var hostport = /^PROXY ([^:]+):(\d+)/(proxy);
-            host.value = hostport[1];
-            port.value = hostport[2];
-            type.value = "http"; //proxy (http, socks, direct, etc)
+                switch(typehostport[1]) {
+                    case "PROXY": // http PROXY              
+                        // assume port 80 if port number not specified (see bug 91630)
+                        port.value = (typehostport[3] != null)? typehostport[3].substr(1): 80;
+                        type.value = "http";
+                        break;
+                    case "SOCKS": // SOCKS v4
+                        // assume port 1080 like NN4 if port number not specified
+                        port.value = (typehostport[3] != null)? typehostport[3].substr(1): 1080;
+                        type.value = "socks4";
+                        break;
+                    // Currently only SOCKS v4 is supported (see bug 78176)                      
+                }
+            }
         }
     },
 
