@@ -41,7 +41,6 @@
 #define _PR_LOCAL_THREADS_ONLY
 #undef  _PR_GLOBAL_THREADS_ONLY
 #undef  HAVE_THREAD_AFFINITY
-#define HAVE_SOCKET_KEEPALIVE
 #define _PR_HAVE_ATOMIC_OPS
 
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */

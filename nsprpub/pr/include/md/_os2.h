@@ -55,7 +55,6 @@
 
 #define HAVE_DLL
 #undef  HAVE_THREAD_AFFINITY
-#define HAVE_SOCKET_KEEPALIVE
 #undef  _PR_HAVE_ATOMIC_OPS
 
 #define HANDLE unsigned long
