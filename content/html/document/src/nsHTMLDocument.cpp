@@ -756,18 +756,23 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsAString& aCharset,
 nsresult
 nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 {
-  nsAutoString lastModified;
   mHttpChannel = do_QueryInterface(aChannel);
   nsresult rv;
 
   if (mHttpChannel) {
-    nsCAutoString lastModHeader;
+    nsCAutoString header;
     rv = mHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
-                                         lastModHeader);
+                                         header);
  
     if (NS_SUCCEEDED(rv)) {
-      CopyASCIItoUCS2(lastModHeader, lastModified);
-      SetLastModified(lastModified);
+      SetLastModified(NS_ConvertASCIItoUCS2(header));
+    }
+
+    // The misspelled key 'referer' is as per the HTTP spec
+    rv = mHttpChannel->GetRequestHeader(NS_LITERAL_CSTRING("referer"),
+                                        header);
+    if (NS_SUCCEEDED(rv)) {
+      SetReferrer(NS_ConvertASCIItoUCS2(header));
     }
   }
 
@@ -782,6 +787,7 @@ nsHTMLDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       // file. Just don't set the last modified date on it...
       rv = file->GetLastModifiedTime(&modDate);
       if (NS_SUCCEEDED(rv)) {
+        nsAutoString lastModified;
         PRExplodedTime prtime;
         char buf[100];
         PRInt64 intermediateValue;
