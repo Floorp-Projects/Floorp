@@ -201,6 +201,12 @@ function nsOutlinerController_delete()
     } catch (ex) {
     }
   }
+  if (max.value) {
+    var newIndex = max.value - (max.value - min.value);
+    if (newIndex >= this.getOutlinerView().rowCount)
+      --newIndex;
+    this.getOutlinerSelection().select(newIndex);
+  }
   return true;
 }
 
