@@ -54,7 +54,7 @@
 
 CLASS_EXPORT_HTMLPARS nsHTMLTokenizer : public nsITokenizer {
 public:
-          nsHTMLTokenizer( PRInt32 aParseMode=eParseMode_quirks,
+          nsHTMLTokenizer( PRInt32 aParseMode=eDTDMode_quirks,
                            eParserDocType aDocType=eHTML3Text,
                            eParserCommands aCommand=eViewNormal);
   virtual ~nsHTMLTokenizer();

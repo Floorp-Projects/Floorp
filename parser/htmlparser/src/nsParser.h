@@ -165,7 +165,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      *  @update  gess 6/9/98
      *  @return  ptr to scanner
      */
-    virtual eParseMode GetParseMode(void);
+    virtual nsDTDMode GetParseMode(void);
 
     /**
      *  Retrieve the scanner from the topmost parser context
@@ -182,7 +182,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE,void* aKey=0,eParseMode aMode=eParseMode_autodetect);
+    virtual nsresult Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
 
     /**
      * Cause parser to parse input from given stream 
@@ -190,7 +190,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,eParseMode aMode=eParseMode_autodetect);
+    virtual nsresult Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
 
     /**
      * @update	gess5/11/98
@@ -198,10 +198,10 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,eParseMode aMode=eParseMode_autodetect);
+    virtual nsresult Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,nsDTDMode aMode=eDTDMode_autodetect);
 
-    virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode=eParseMode_autodetect);
-    virtual nsresult  ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,eParseMode aMode=eParseMode_autodetect);
+    virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect);
+    virtual nsresult  ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect);
 
 
     /**
@@ -384,7 +384,7 @@ private:
      *  @return  NS_OK if succeeded else ERROR.
      */
     static nsresult CreateCompatibleDTDForMimeType(nsIDTD** aDTD, const nsString* aMimeType, 
-                                                   eParseMode aParseMode=eParseMode_unknown);
+                                                   nsDTDMode aParseMode=eDTDMode_unknown);
      /**
      *  Call this method to determine a DTD for a given command
      *  
@@ -394,6 +394,7 @@ private:
      *  @return  NS_OK if succeeded else ERROR.
      */
     static nsresult CreateCompatibleDTDForCommand(nsIDTD**  aDTD, eParserCommands aCommand);
+
 protected:
     //*********************************************
     // And now, some data members...

@@ -50,7 +50,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
   mPrevContext=0; 
   mListener=aListener; 
   NS_IF_ADDREF(mListener); 
-  mParseMode=eParseMode_unknown; 
+  mDTDMode=eDTDMode_unknown; 
   mAutoDetectStatus=aStatus; 
   mTransferBuffer=0; 
   mDTD=aDTD; 
@@ -82,7 +82,7 @@ CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
   mListener=aContext.mListener;
   NS_IF_ADDREF(mListener);
 
-  mParseMode=aContext.mParseMode;
+  mDTDMode=aContext.mDTDMode;
   mAutoDetectStatus=aContext.mAutoDetectStatus;
   mTransferBuffer=aContext.mTransferBuffer;
   mDTD=aContext.mDTD;

@@ -427,10 +427,10 @@ nsScanner* nsParser::GetScanner(void){
  *  @update  gess 01/04/99
  *  @return  parsemode
  */
-eParseMode nsParser::GetParseMode(void){
+nsDTDMode nsParser::GetParseMode(void){
   if(mParserContext)
-    return mParserContext->mParseMode;
-  return eParseMode_unknown;
+    return mParserContext->mDTDMode;
+  return eDTDMode_unknown;
 }
 
 
@@ -480,10 +480,10 @@ eParseMode nsParser::GetParseMode(void){
  *  @return  parsermode (define in nsIParser.h)
  */
 static 
-void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType aDocType) {
+void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType aDocType) {
   const char* theModeStr= PR_GetEnv("PARSE_MODE");
 
-  aParseMode = eParseMode_unknown;
+  aParseMode = eDTDMode_unknown;
     
   PRInt32 theIndex=aBuffer.Find("DOCTYPE",PR_TRUE,0,10);
   if(kNotFound<theIndex) {
@@ -506,13 +506,13 @@ void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType 
         theSubIndex=aBuffer.Find("XHTML",PR_TRUE,theStartPos,theCount);
         if(0<=theSubIndex) {
           aDocType=eXHTMLText;
-          aParseMode=eParseMode_strict;
+          aParseMode=eDTDMode_strict;
         }
         else {
           theSubIndex=aBuffer.Find("ISO/IEC 15445:",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
           if(0<=theSubIndex) {
             aDocType=eHTML4Text;
-            aParseMode=eParseMode_strict;
+            aParseMode=eDTDMode_strict;
             theMajorVersion=4;
             theSubIndex+=15;
           }
@@ -520,14 +520,14 @@ void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType 
             theSubIndex=aBuffer.Find("HTML",PR_TRUE,theStartPos,theCount);
             if(0<=theSubIndex) {
               aDocType=eHTML4Text;
-              aParseMode=eParseMode_strict;
+              aParseMode=eDTDMode_strict;
               theMajorVersion=3;
             }
             else {
               theSubIndex=aBuffer.Find("HYPERTEXT MARKUP",PR_TRUE,theStartPos,theCount);
               if(0<=theSubIndex) {
                 aDocType=eHTML3Text;
-                aParseMode=eParseMode_quirks;
+                aParseMode=eDTDMode_quirks;
                 theSubIndex+=20;
               }
             } 
@@ -561,7 +561,7 @@ void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType 
          (aBuffer.Find("LATIN1", PR_TRUE,theStartPos,theCount) >kNotFound)    ||
          (aBuffer.Find("SYMBOLS",PR_TRUE,theStartPos,theCount) >kNotFound)    ||
          (aBuffer.Find("SPECIAL",PR_TRUE,theStartPos,theCount) >kNotFound)) {
-        aParseMode=eParseMode_quirks;
+        aParseMode=eDTDMode_quirks;
       }
 
       //one last thing: look for a URI that specifies the strict.dtd
@@ -570,7 +570,7 @@ void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType 
       theSubIndex=aBuffer.Find("STRICT.DTD",PR_TRUE,theStartPos,theCount);
       if(0<theSubIndex) {
         //Since we found it, regardless of what's in the descr-text, kick into strict mode.
-        aParseMode=eParseMode_strict;
+        aParseMode=eDTDMode_strict;
         aDocType=eHTML4Text;
       }
 
@@ -578,7 +578,7 @@ void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType 
         switch(theMajorVersion) {
           case 0: case 1: case 2: case 3:
             if(aDocType!=eXHTMLText){
-              aParseMode=eParseMode_quirks; //be as backward compatible as possible
+              aParseMode=eDTDMode_quirks; //be as backward compatible as possible
               aDocType=eHTML3Text;
             }
             break;
@@ -587,7 +587,7 @@ void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType 
               //XXX hack -- someday, the next line of code will be criticized 
               //for it's lack of vision...
             if(theMajorVersion>20) {
-              aParseMode=eParseMode_noquirks;
+              aParseMode=eDTDMode_strict;
             }
             break;
         } //switch
@@ -601,24 +601,24 @@ void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType 
         PRInt32 theIDPos=aBuffer.Find("PublicID",thePos);
         if(kNotFound==theIDPos)
           theIDPos=aBuffer.Find("SystemID",thePos);
-        aParseMode=(kNotFound==theIDPos) ? eParseMode_quirks : eParseMode_strict;
+        aParseMode=(kNotFound==theIDPos) ? eDTDMode_quirks : eDTDMode_strict;
       }
     }
   }
   else if(kNotFound<(theIndex=aBuffer.Find("?XML",PR_TRUE,0,128))) {
     aDocType=eXMLText;
-    aParseMode=eParseMode_strict;
+    aParseMode=eDTDMode_strict;
   }
 
   if(theModeStr) {
     if(0==nsCRT::strcasecmp(theModeStr,"strict"))
-      aParseMode=eParseMode_strict;    
+      aParseMode=eDTDMode_strict;    
   }
   else {
-    if(eParseMode_unknown==aParseMode) {
+    if(eDTDMode_unknown==aParseMode) {
       aBuffer.InsertWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n",0);
       aDocType=eHTML3Text;
-      aParseMode=eParseMode_quirks;
+      aParseMode=eDTDMode_quirks;
     }
   }
 }
@@ -709,14 +709,14 @@ nsresult nsParser::CreateCompatibleDTDForDocType(nsIDTD** aDTD, nsString* aDocTy
   const nsCID*   theDTDClassID=0;
   
   if(aDocTypeStr) {
-    eParseMode     theParseMode=eParseMode_unknown;
-    eParserDocType theDocType=ePlainText;
+    nsDTDMode       theParseMode=eDTDMode_unknown;
+    eParserDocType  theDocType=ePlainText;
 
     DetermineParseMode(*aDocTypeStr,theParseMode,theDocType);
 
     switch(theDocType) {
       case eHTML4Text:
-        if(theParseMode==eParseMode_strict) {
+        if(theParseMode==eDTDMode_strict) {
           theDTDClassID=&kCOtherDTDCID;
           break;
         }
@@ -750,17 +750,17 @@ nsresult nsParser::CreateCompatibleDTDForDocType(nsIDTD** aDTD, nsString* aDocTy
  *  @return  NS_OK if succeeded else ERROR.
  */
 nsresult nsParser::CreateCompatibleDTDForMimeType(nsIDTD** aDTD,const nsString* aMimeType, 
-                                        eParseMode aParseMode)
+                                        nsDTDMode aParseMode)
 {
   nsresult result=NS_OK;
   const nsCID*   theDTDClassID=0;
       
   if(aMimeType) {
     
-    NS_ASSERTION(aParseMode!=eParseMode_unknown,"DTD selection might require a parsemode");
+    NS_ASSERTION(aParseMode!=eDTDMode_unknown,"DTD selection might require a parsemode");
 
     if(aMimeType->EqualsWithConversion(kHTMLTextContentType)) {
-      if(aParseMode==eParseMode_strict) {
+      if(aParseMode==eDTDMode_strict) {
         theDTDClassID=&kCOtherDTDCID;
       }
       else {
@@ -937,7 +937,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
 
   if(!tested) {
     tested=PR_TRUE;
-    eParseMode       theParseMode=eParseMode_unknown;
+    eParseMode       theParseMode=eDTDMode_unknown;
     eParserDocType   theDocumentType=ePlainText;
     
     while(*theDocType) {
@@ -955,7 +955,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       mMinorIteration=-1; 
       
       nsString& theBuffer=mParserContext->mScanner->GetBuffer();
-      DetermineParseMode(theBuffer,mParserContext->mParseMode,mParserContext->mDocType);  
+      DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType);  
 
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
         mParserContext->mDTD->WillBuildModel( *mParserContext,mSink);
@@ -1115,7 +1115,7 @@ PRBool nsParser::IsParserEnabled() {
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey,eParseMode aMode) {  
+nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode) {  
 
   NS_PRECONDITION(0!=aURL,kNullURL);
 
@@ -1154,7 +1154,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBool aVerifyEnabled, void* aKey,eParseMode aMode){
+nsresult nsParser::Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
 
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
@@ -1195,7 +1195,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBoo
  * @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString&
-aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){ 
+aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){ 
   
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again! 
@@ -1275,7 +1275,7 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
  *  @param   aMimeType tells us what kind of stuff you're inserting
  *  @return  TRUE if valid, otherwise FALSE
  */
-PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,eParseMode aMode){
+PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,nsDTDMode aMode){
 
   /************************************************************************************
     This method works like this:
@@ -1328,7 +1328,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
  *  @param   
  *  @return  
  */
-nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,eParseMode aMode){
+nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,nsDTDMode aMode){
 
   nsresult result=NS_OK;
   nsAutoString  theContext;

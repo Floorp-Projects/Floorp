@@ -354,24 +354,6 @@ eHTMLTags nsEntryStack::Last() const {
   return result;
 }
 
-#if 0
-/**
- * 
- * @update  harishd 04/04/99
- * @update  gess 04/21/99
- */
-PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
-  int theIndex=0;
-  for(theIndex=mCount-1;theIndex>0;theIndex--){
-    if(aTag==TagAt(theIndex))
-      return theIndex;
-  }
-  return kNotFound;
-
-}
-#endif
-
-
 /***************************************************************
   Now define the dtdcontext class
  ***************************************************************/
@@ -379,13 +361,16 @@ CNodeRecycler* nsDTDContext::mNodeRecycler=0;
 
 /**
  * 
- * @update	gess9/10/98
+ * @update	gess 04.21.2000
  */
 nsDTDContext::nsDTDContext() : mStack() {
 
   MOZ_COUNT_CTOR(nsDTDContext);
   mResidualStyleCount=0;
   mContextTopIndex=0;
+  mTableStates=0;
+  mHadBody=PR_FALSE; 
+  mHadFrameset=PR_TRUE;
 
 #ifdef  NS_DEBUG
   memset(mXTags,0,sizeof(mXTags));
@@ -399,6 +384,13 @@ nsDTDContext::nsDTDContext() : mStack() {
  */
 nsDTDContext::~nsDTDContext() {
   MOZ_COUNT_DTOR(nsDTDContext);
+
+  while(mTableStates) {
+    //pop the current state and restore it's predecessor, if any...
+    CTableState *theState=mTableStates;      
+    mTableStates=theState->mPrevious;
+    delete theState;
+  }
 }
 
 /**

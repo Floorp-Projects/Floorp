@@ -319,7 +319,7 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
 
     mDocType=aParserContext.mDocType;
     mMimeType=aParserContext.mMimeType;
-    mParseMode=aParserContext.mParseMode;
+    mDTDMode=aParserContext.mDTDMode;
     mParserCommand=aParserContext.mParserCommand;
 
     static const char* theHeader="<?xml version=\"1.0\"?>";
@@ -486,7 +486,7 @@ nsresult CViewSourceHTML::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
 
-    result=NS_NewHTMLTokenizer(&mTokenizer,eParseMode_quirks,mDocType,mParserCommand);
+    result=NS_NewHTMLTokenizer(&mTokenizer,eDTDMode_quirks,mDocType,mParserCommand);
   }
   aTokenizer=mTokenizer;
   return result;

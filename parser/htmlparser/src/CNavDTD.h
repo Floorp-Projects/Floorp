@@ -476,6 +476,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
     nsresult  DoFragment(PRBool aFlag);
 
+    static void ReleaseTable(void);
+
 protected:
 
 		nsresult        CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
@@ -514,7 +516,7 @@ protected:
     eHTMLTags           mSkipTarget;
     nsDeque             mSharedNodes;
     nsresult            mDTDState;
-    eParseMode          mParseMode;
+    nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
     eParserDocType      mDocType;
 

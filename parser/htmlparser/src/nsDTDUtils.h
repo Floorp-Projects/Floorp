@@ -53,9 +53,6 @@ void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char*
 PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size);
 
 
-/***************************************************************
-  The dtdcontext class defines an ordered list of tags (a context).
- ***************************************************************/
 
 /***************************************************************
   First, define the tagstack class
@@ -131,8 +128,55 @@ public:
 };
 
 
-//*********************************************************************************************
-//*********************************************************************************************
+/**********************************************************
+  The table state class is used to store info about each
+  table that is opened on the stack. As tables open and
+  close on the context, we update these objects to track 
+  what has/hasn't been seen on a per table basis. 
+ **********************************************************/
+class CTableState {
+public:
+  CTableState(CTableState *aPreviousState=0) {
+    mHasCaption=PR_FALSE;
+    mHasCols=PR_FALSE;
+    mHasTHead=PR_FALSE;
+    mHasTFoot=PR_FALSE;
+    mHasTBody=PR_FALSE;    
+    mPrevious=aPreviousState;
+  }
+
+  PRBool  CanOpenCaption() {
+    PRBool result=!(mHasCaption || mHasCols || mHasTHead || mHasTFoot || mHasTBody);
+    return result;
+  }
+
+  PRBool  CanOpenCols() {
+    PRBool result=!(mHasCols || mHasTHead || mHasTFoot || mHasTBody);
+    return result;
+  }
+
+  PRBool  CanOpenTHead() {
+    PRBool result=!(mHasTHead || mHasTFoot || mHasTBody);
+    return result;
+  }
+
+  PRBool  CanOpenTFoot() {
+    PRBool result=!(mHasTFoot || mHasTBody);
+    return result;
+  }
+
+  PRBool  mHasCaption;
+  PRBool  mHasCols;
+  PRBool  mHasTHead;
+  PRBool  mHasTFoot;
+  PRBool  mHasTBody;
+  CTableState *mPrevious;
+};
+
+
+/************************************************************************
+  The dtdcontext class defines an ordered list of tags (a context).
+ ************************************************************************/
 
 class nsDTDContext {
 public:
@@ -168,8 +212,12 @@ public:
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;
   PRInt32         mContextTopIndex;
+  PRBool          mHadBody;
+  PRBool          mHadFrameset;
 
   static   CNodeRecycler* mNodeRecycler;
+
+  CTableState *mTableStates;
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };

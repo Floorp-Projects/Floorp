@@ -175,6 +175,13 @@ CNavDTD::CNavDTD() : nsIDTD(),
 #endif
 }
 
+void CNavDTD::ReleaseTable(void) {
+  if(gHTMLElements) {
+    delete gHTMLElements;
+    gHTMLElements=0;
+  }
+}
+
 /**
  * This method recycles the nodes on a nodestack.
  * NOTE: Unlike recycleNode(), we force the usecount
@@ -308,7 +315,7 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
   }
   else {
     if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
-      result=(eParseMode_strict==aParserContext.mParseMode) ? eValidDetect : ePrimaryDetect;
+      result=(eDTDMode_strict==aParserContext.mDTDMode) ? eValidDetect : ePrimaryDetect;
     }
     else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
@@ -321,7 +328,7 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
         if(0==aParserContext.mMimeType.Length()) {
           aParserContext.SetMimeType(NS_ConvertToString(kHTMLTextContentType));
           if(!theBufHasXML) {
-            result=(eParseMode_strict==aParserContext.mParseMode) ? eValidDetect : ePrimaryDetect;
+            result=(eDTDMode_strict==aParserContext.mDTDMode) ? eValidDetect : ePrimaryDetect;
           }
           else result=eValidDetect;
         }
@@ -350,9 +357,9 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
   mLineNumber=1;
   mHasOpenScript=PR_FALSE;
   mHasOpenNoXXX=0;
-  mParseMode=aParserContext.mParseMode;
+  mDTDMode=aParserContext.mDTDMode;
   mParserCommand=aParserContext.mParserCommand;
-  mStyleHandlingEnabled=(eParseMode_quirks==mParseMode);
+  mStyleHandlingEnabled=(eDTDMode_quirks==mDTDMode);
   mRequestedHead=PR_FALSE;
   mMimeType=aParserContext.mMimeType;
     
@@ -661,7 +668,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                 //However, in quirks mode, a few tags request, ambiguosly, for a BODY. - Bugs 18928, 24204.-
                 mMisplacedContent.Push(aToken);
                 aToken->mUseCount++;
-                if(mParseMode==eParseMode_quirks && (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody))) {
+                if(mDTDMode==eDTDMode_quirks && (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody))) {
                   CToken* theBodyToken=(CToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body"));
                   result=HandleToken(theBodyToken,aParser);
                 }
@@ -1552,7 +1559,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       {
           //This is special NAV-QUIRKS code that allows users
           //to use </BR>, even though that isn't a legitimate tag.
-        if(eParseMode_quirks==mParseMode) {
+        if(eDTDMode_quirks==mDTDMode) {
           // Use recycler and pass the token thro' HandleToken() to fix bugs like 32782.
           CHTMLToken* theToken = (CHTMLToken*)mTokenRecycler->CreateTokenOfType(eToken_start,theChildTag);
           result=HandleToken(theToken,mParser);
@@ -1588,8 +1595,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
             // If the bit kHandleStrayTag is set then we automatically open up a matching
             // start tag ( compatibility ).  Currently this bit is set on P tag.
             // This also fixes Bug: 22623
-            if(gHTMLElements[theChildTag].HasSpecialProperty(kHandleStrayTag) &&
-               mParseMode!=eParseMode_noquirks) {
+            if(gHTMLElements[theChildTag].HasSpecialProperty(kHandleStrayTag) && mDTDMode!=eDTDMode_strict) {
               // Oh boy!! we found a "stray" tag. Nav4.x and IE introduce line break in
               // such cases. So, let's simulate that effect for compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
@@ -1899,7 +1905,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   
-    result = (mSink)? mSink->AddDocTypeDecl(*theNode,mParseMode):NS_OK;
+    result = (mSink)? mSink->AddDocTypeDecl(*theNode,mDTDMode):NS_OK;
     mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
   
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
@@ -3139,7 +3145,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
     }
 
 
-    if(eParseMode_quirks==mParseMode) {
+    if(eDTDMode_quirks==mDTDMode) {
 
 #if 0 
 
@@ -3444,7 +3450,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
 nsresult CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,mDocType,mParserCommand);
+    result=NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,mParserCommand);
   }
   aTokenizer=mTokenizer;
   return result;

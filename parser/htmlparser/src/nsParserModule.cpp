@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
+
 #include "nsString.h"
 #include "nspr.h"
 #include "nsCOMPtr.h"
@@ -30,6 +31,7 @@
 #include "nsLoggingSink.h"
 #include "nsWellFormedDTD.h"
 #include "CNavDTD.h"
+#include "COtherDTD.h"
 #include "nsXIFDTD.h"
 #include "COtherDTD.h"
 #include "CRtfDTD.h"
@@ -209,10 +211,11 @@ nsParserModule::Shutdown()
     nsHTMLTokenizer::FreeTokenRecycler();
     nsXMLTokenizer::FreeTokenRecycler();
     nsExpatTokenizer::FreeTokenRecycler();
-//    nsTextTokenizer::FreeTokenRecycler();
     nsDTDContext::FreeNodeRecycler();
     nsParser::FreeSharedObjects();
     mInitialized = PR_FALSE;
+    COtherDTD::ReleaseTable();
+    CNavDTD::ReleaseTable();
   }
 }
 

@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
@@ -280,7 +279,7 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CStartToken::GetSource(nsString& anOutputString){
-  anOutputString.AssignWithConversion("<");
+  anOutputString.AppendWithConversion("<");
   /*
    * Watch out for Bug 15204 
    */
@@ -434,7 +433,7 @@ void CEndToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CEndToken::GetSource(nsString& anOutputString){
-  anOutputString.AssignWithConversion("</");
+  anOutputString.AppendWithConversion("</");
   anOutputString+=mTextValue;
   anOutputString.AppendWithConversion(">");
 }
@@ -616,7 +615,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       }
       //theTermStrPos=theBuffer.Find(aTerminalString,PR_TRUE,theCurrOffset);
       if(theTermStrPos>kNotFound) {
-        if(aMode!=eParseMode_noquirks && !theLastIteration) {
+        if(aMode!=eDTDMode_strict && !theLastIteration) {
           if(!aIgnoreComments) {
             theCurrOffset=theBuffer.Find("<!--",PR_TRUE,theCurrOffset,5);
             if(theStartCommentPos==kNotFound && theCurrOffset>kNotFound) {
@@ -961,8 +960,7 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
  *  @return  error result
  */
 nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-  nsresult result=(aMode==eParseMode_noquirks) ? ConsumeStrictComment(aChar,aScanner,mTextValue) 
-                                               : ConsumeComment(aChar,aScanner,mTextValue);
+  nsresult result=(aMode==eDTDMode_strict) ? ConsumeStrictComment(aChar,aScanner,mTextValue) : ConsumeComment(aChar,aScanner,mTextValue);
 
 #if 0
   if(NS_OK==result) {
@@ -1744,7 +1742,7 @@ void CEntityToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CEntityToken::GetSource(nsString& anOutputString){
-  anOutputString.AssignWithConversion("&");
+  anOutputString.AppendWithConversion("&");
   anOutputString+=mTextValue;
   //anOutputString+=";";
 }
@@ -1945,7 +1943,7 @@ void CSkippedContentToken::DebugDumpSource(nsOutputStream& out) {
  *  @return  nada
  */
 void CSkippedContentToken::GetSource(nsString& anOutputString){
-  anOutputString.AssignWithConversion("$skipped-content");
+  anOutputString.AppendWithConversion("$skipped-content");
 }
 
 /*

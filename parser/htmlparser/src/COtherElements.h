@@ -34,6 +34,7 @@
 
 #undef  TRANSITIONAL
 
+
 /************************************************************************
   This union is a bitfield which describes the group membership
  ************************************************************************/
@@ -178,17 +179,43 @@ public:
   virtual PRBool    CanBeClosedByStartTag(CElement* anElement,nsDTDContext* aContext);
   virtual PRBool    CanBeClosedByEndTag(CElement* anElement,nsDTDContext* aContext);
 
-  virtual PRBool    IsSectionTag(void)    {return PR_FALSE;}
   virtual PRBool    IsContainer(void)     {return mProperties.mIsContainer;}
-  virtual PRBool    IsChildOfHead(void)   {return PR_FALSE;}
-  virtual PRBool    IsWhiteSpaceTag(void) {return PR_FALSE;}
 
   virtual eHTMLTags GetSkipTarget(void)   {return eHTMLTag_unknown;}
-  virtual nsresult  HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink);
+  
+
+  virtual nsresult  WillHandleStartToken( CElement* anElement,
+                                          nsIParserNode* aNode,
+                                          eHTMLTags aTag,
+                                          nsDTDContext* aContext,
+                                          nsIHTMLContentSink* aSink);
+
+  virtual nsresult  HandleStartToken(     nsIParserNode* aNode,
+                                          eHTMLTags aTag,
+                                          nsDTDContext* aContext,
+                                          nsIHTMLContentSink* aSink);
+
   virtual nsresult  HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink);
 
   virtual nsresult  HandleMisplacedStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
+    return result;
+  }
+
+  virtual PRInt32 FindAutoCloseTargetForEndTag(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink, PRInt32& anIndex) {
+    PRInt32 result=-1;
+
+    if(mTag!=aTag) {
+      if(HasOptionalEndTag(this)) {
+        eHTMLTags theGrandParentTag=aContext->TagAt(--anIndex);
+        CElement *theGrandParent=GetElement(theGrandParentTag);
+        if(theGrandParent) {
+          result=theGrandParent->FindAutoCloseTargetForEndTag(aNode,aTag,aContext,aSink,anIndex); //give the parent a chance...
+        }
+      }
+    }
+    else result=anIndex;
+
     return result;
   }
 
@@ -197,6 +224,101 @@ public:
     return result;
   }
 
+  nsresult  AutoGenerateStructure(eHTMLTags *aTagList,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    PRInt32   theLineNumber=0;
+    nsresult  result=NS_OK;
+
+    CStartToken theToken(*aTagList);
+    nsCParserNode theNode(&theToken,theLineNumber);
+    result=OpenContainer(&theNode,*aTagList,aContext,aSink);
+    if(eHTMLTag_unknown!=*(aTagList+1)) {
+      AutoGenerateStructure(++aTagList,aContext,aSink);
+    }
+    
+    CEndToken theEndToken(*aTagList--);
+    nsCParserNode theEndNode(&theEndToken,theLineNumber);
+    result=CloseContainer(&theEndNode,*aTagList,aContext,aSink);
+
+    return result;
+  }
+        
+
+  /**********************************************************
+    Call this for each element as it get's opened on the stack
+   **********************************************************/
+  virtual nsresult  NotifyOpen(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    return NS_OK;
+  }
+
+  /**********************************************************
+    Call this for each element as it get's closed
+   **********************************************************/
+  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    return NS_OK;
+  }
+
+  /**********************************************************
+   this gets called after each tag is opened in the given context
+   **********************************************************/
+  virtual nsresult  OpenContainer(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+    return aSink->OpenContainer(*aNode);
+  }
+
+  /**********************************************************
+    this gets called after each tag is opened in the given context
+   **********************************************************/
+  virtual nsresult  OpenContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+    
+    aContext->Push(aNode);
+
+    CElement *theElement=(aTag==mTag) ? this : GetElement(aTag);
+    theElement->NotifyOpen(aNode,aTag,aContext,aSink);
+    return NS_OK;
+  }
+
+  /**********************************************************
+    this gets called after each tag is opened in the given context
+   **********************************************************/
+  virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+    OpenContext(aNode,aTag,aContext,aSink);
+    return OpenContainer(aNode,aTag,aContext,aSink);
+  }
+
+  /**********************************************************
+    this gets called to close a given tag in the sink
+   **********************************************************/
+  virtual nsresult  CloseContainer(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+    return aSink->CloseContainer(*aNode);
+  }
+
+  /**********************************************************
+    this gets called to close a tag in the given context
+   **********************************************************/
+  virtual nsresult  CloseContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+    nsEntryStack* theStack=0;
+    aContext->Pop(theStack);
+
+    CElement *theElement=(aTag==mTag) ? this : GetElement(aTag);
+    theElement->NotifyClose(aNode,aTag,aContext,aSink);
+
+    return NS_OK;
+  }
+
+  /**********************************************************
+    this gets called to close a tag in the sink and in the context
+   **********************************************************/
+  virtual nsresult CloseContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+    if(mTag!=aTag) {
+      CElement *theElement=GetElement(aTag);
+      return theElement->CloseContainerInContext(aNode,aTag,aContext,aSink);
+    }
+    CloseContext(aNode,aTag,aContext,aSink);
+    return CloseContainer(aNode,aTag,aContext,aSink);
+  }
+
+
+  CElement* GetElement(eHTMLTags aTag);
+
   eHTMLTags       mTag;
   eHTMLTags       mDelegate;
   CGroupMembers   mGroup;
@@ -204,8 +326,6 @@ public:
   eHTMLTags       *mIncludeKids;
   eHTMLTags       *mExcludeKids;
   eHTMLTags       *mAutoClose;    //other start tags that close this container
-
-
 };
 
 
@@ -310,14 +430,18 @@ public:
     return theBlockGroup;
   }
 
-    //by default,members of the block group contain inline children
+  /**********************************************************
+    by default,members of the block group contain inline children
+   **********************************************************/
   static CGroupMembers& GetContainedGroups(void) {
     static CGroupMembers theGroups=CInlineElement::GetContainedGroups();
     theGroups.mBits.mSelf=0;
     return theGroups;
   }
 
-    //call this if you want a group that contains only block elements...
+  /**********************************************************
+    call this if you want a group that contains only block elements...
+   **********************************************************/
   static CGroupMembers& GetBlockGroupMembers(void) {
     static CGroupMembers theGroups={0};
     theGroups.mBits.mBlock=1;
@@ -449,36 +573,6 @@ public:
 
 };
 
-/**********************************************************
-  This defines the preformatted element group
- **********************************************************/
-class CPreformattedElement: public CElement {
-public:
-
-  static CGroupMembers& GetGroup(void) {
-    static CGroupMembers thePreformattedGroup={0};
-    thePreformattedGroup.mBits.mPreformatted=1;
-    return thePreformattedGroup;
-  }
-
-  static CGroupMembers& GetContainedGroups(void) {
-    static CGroupMembers theGroups={0};
-    theGroups.mBits.mPreformatted=1;
-    return theGroups;
-  }
-
-  static void Initialize(CElement& anElement,eHTMLTags aTag){
-    CElement::Initialize(anElement,aTag,GetGroup(),GetContainedGroups());
-  }
-
-  CPreformattedElement(eHTMLTags aTag) : CElement(aTag) {
-    mGroup=GetGroup();
-    mContainsGroups=GetContainedGroups();
-    mProperties.mIsContainer=1;
-  }
-
-};
-
 
 /**********************************************************
   This defines the special-inline element group
@@ -508,9 +602,11 @@ public:
 };
 
 
+
 /**********************************************************
-  This defines elements that belong to tables
+  This defines the Table block itself, not it's children.
  **********************************************************/
+
 class CTableElement: public CElement {
 public:
 
@@ -530,8 +626,161 @@ public:
     CElement::Initialize(anElement,aTag,GetGroup(),GetContainedGroups());
   }
 
-  CTableElement(eHTMLTags aTag) : CElement(aTag) {
+  CTableElement(eHTMLTags aTag=eHTMLTag_table) : CElement(aTag) {
     CElement::Initialize(*this,aTag,CBlockElement::GetGroup(),CTableElement::GetContainedGroups());
+  }
+
+  /**********************************************************
+    Table needs to be notified so it can manage table states.
+   **********************************************************/
+  virtual nsresult  NotifyOpen(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    aContext->mTableStates=new CTableState(aContext->mTableStates); //create and prepend a new state
+    return NS_OK;
+  }
+
+  /**********************************************************
+    Table needs to be notified so it can manage table states.
+   **********************************************************/
+  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    if(aContext->mTableStates) {
+
+      if(!aContext->mTableStates->mHasTBody) {
+        //so let's open a tbody, a TR and a TD for good measure...
+
+        eHTMLTags theTags[]={eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_unknown};
+        nsresult result=AutoGenerateStructure(theTags,aContext,aSink);
+      }
+      
+      //pop the current state and restore it's predecessor, if any...
+      CTableState *theState=aContext->mTableStates;      
+      aContext->mTableStates=theState->mPrevious; 
+      delete theState;
+    }
+    return NS_OK;
+  }
+ 
+  /**********************************************************
+    Table handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+
+    switch(aTag) {
+
+      case eHTMLTag_caption:
+        if(aContext->mTableStates && aContext->mTableStates->CanOpenCaption()) {
+          result=OpenContainerInContext(aNode,aTag,aContext,aSink);  //force the title onto the stack
+        }
+        break;
+
+      case eHTMLTag_col:
+      case eHTMLTag_colgroup:
+        if(aContext->mTableStates && aContext->mTableStates->CanOpenCols()) {
+          result=OpenContainerInContext(aNode,aTag,aContext,aSink);  //force the title onto the stack
+        }
+        break;
+
+      case eHTMLTag_thead:      //nothing to do for these empty tags...      
+        if(aContext->mTableStates && aContext->mTableStates->CanOpenTHead()) {
+          aContext->mTableStates->mHasTHead=PR_TRUE;
+          result=OpenContainerInContext(aNode,aTag,aContext,aSink);  //force the title onto the stack
+        }
+        break;
+
+      case eHTMLTag_tbody:
+        aContext->mTableStates->mHasTBody=PR_TRUE;
+        result=OpenContainerInContext(aNode,aTag,aContext,aSink);  //force the title onto the stack
+        break;
+
+      case eHTMLTag_tfoot:
+        if(aContext->mTableStates && aContext->mTableStates->CanOpenTFoot()) {
+          aContext->mTableStates->mHasTFoot=PR_TRUE;
+          result=OpenContainerInContext(aNode,aTag,aContext,aSink);  //force the title onto the stack
+        }
+        break;
+
+      default:
+        break;
+    }
+    return result; 
+  }
+
+  /**********************************************************
+    Table handles the closing of it's own children
+   **********************************************************/
+  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+    nsEntryStack* theStack=0;
+
+    if(aContext->HasOpenContainer(aTag)) {
+      switch(aTag) {
+        case eHTMLTag_caption:
+        case eHTMLTag_col:
+        case eHTMLTag_colgroup:
+        case eHTMLTag_thead:
+        case eHTMLTag_tfoot:
+        case eHTMLTag_tbody:      
+          result=CloseContainerInContext(aNode,aTag,aContext,aSink);  //force the title onto the stack
+          break;
+
+        default:
+          break;
+      } //switch
+    } //if
+       
+
+    return result;
+  }
+
+  /**********************************************************
+    If you're here, then children below you have optional
+    end tags, can't deal with the given tag, and want you
+    to handle it.
+   **********************************************************/
+  virtual PRInt32   FindAutoCloseTargetForEndTag(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink, PRInt32& anIndex) {
+
+    switch(aTag) {
+      case eHTMLTag_caption:
+      case eHTMLTag_col:
+      case eHTMLTag_colgroup:
+      case eHTMLTag_thead:
+      case eHTMLTag_tfoot:
+      case eHTMLTag_tbody:      
+      case eHTMLTag_tr:      
+      case eHTMLTag_td:     
+        return anIndex;
+        break;
+
+      default:
+        break;
+    } //switch
+
+    return -1;
+  }
+
+};
+
+/**********************************************************
+  This defines the Table block itself, not it's children.
+ **********************************************************/
+
+class CTableRowElement: public CElement {
+public:
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    CElement::Initialize(anElement,aTag,CTableElement::GetGroup(),CElement::GetEmptyGroup());
+    
+    static eHTMLTags kTRKids[]={eHTMLTag_td,eHTMLTag_th,eHTMLTag_unknown};
+    anElement.mIncludeKids=kTRKids;
+  }
+
+  CTableRowElement(eHTMLTags aTag=eHTMLTag_tr) : CElement(aTag) {
+    CTableRowElement::Initialize(*this,aTag);
+  }
+
+  virtual nsresult  HandleEndTokenForChild(CElement *aChild,nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+    return result;
   }
 
 };
@@ -561,6 +810,75 @@ public:
     CListElement::Initialize(*this,aTag);
   }
 
+};
+
+/**********************************************************
+  This defines the LI element...
+
+  An interesting problem here is that LI normally contains
+  Block+inline, unless it's inside a MENU or DIR, in which
+  case it contains only inline.
+ **********************************************************/
+class CLIElement: public CElement {
+public:
+
+  CLIElement(eHTMLTags aTag=eHTMLTag_li) : CElement(aTag) {
+    CListElement::Initialize(*this,aTag);
+    mGroup.mAllBits=0;
+    mGroup.mBits.mList=1;
+    mInlineGroup=CInlineElement::GetContainedGroups();
+    mFlowGroup=mInlineGroup;
+    mFlowGroup.mBits.mBlock=1;
+    mFlowGroup.mBits.mBlockEntity=1;
+  }
+
+  /**********************************************************
+    LI handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    PRInt32 theCount=aContext->GetCount();
+    eHTMLTags theGrandParent=aContext->TagAt(theCount-2);
+
+    switch(theGrandParent) {
+
+      case eHTMLTag_menu:
+      case eHTMLTag_dir:
+        mContainsGroups=mInlineGroup;
+        break;
+
+      default:
+        mContainsGroups=mFlowGroup;
+        break;
+    }
+
+    return CElement::HandleStartToken(aNode,aTag,aContext,aSink);
+  }
+
+  /**********************************************************
+    LI handles the closing of it's own children
+   **********************************************************/
+  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    PRInt32 theCount=aContext->GetCount();
+    eHTMLTags theGrandParent=aContext->TagAt(theCount-2);
+
+    switch(theGrandParent) {
+
+      case eHTMLTag_menu:
+      case eHTMLTag_dir:
+        mContainsGroups=mInlineGroup;
+        break;
+
+      default:
+        mContainsGroups=mFlowGroup;
+        break;
+    }
+
+    return CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+  }
+
+  CGroupMembers mFlowGroup;
+  CGroupMembers mInlineGroup;
 };
 
 /**********************************************************
@@ -680,6 +998,9 @@ public:
     CHeadElement::Initialize(*this,aTag);
   }
 
+  /**********************************************************
+    Head handles the opening of it's own children
+   **********************************************************/
   virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
@@ -688,7 +1009,7 @@ public:
       case eHTMLTag_script:
       case eHTMLTag_style:
       case eHTMLTag_title:
-        aContext->Push(aNode); //force the title onto the stack
+        result=OpenContext(aNode,aTag,aContext,aSink);  //force the title onto the context stack
         break;
 
       case eHTMLTag_base: //nothing to do for these empty tags...      
@@ -702,29 +1023,18 @@ public:
     return result;
   }
 
+  /**********************************************************
+    Head handles the closing of it's own children
+   **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     switch(aTag) {
 
       case eHTMLTag_script:
-        break;
-
       case eHTMLTag_style:
-        break;
-
       case eHTMLTag_title:
-        {
-          nsEntryStack* theStack=0;
-          aContext->Pop(theStack); //force the title onto the stack
-        }
-        break;
-
-      case eHTMLTag_head:
-        {
-          nsEntryStack* theStack=0;
-          aContext->Pop(theStack);
-        }
+        result=CloseContext(aNode,aTag,aContext,aSink);
         break;
 
       case eHTMLTag_base:     //nothing to do for these empty tags...
@@ -740,6 +1050,7 @@ public:
 
 
 };
+
 
 /**********************************************************
   This class is for use with title, script, style
@@ -770,6 +1081,25 @@ public:
   virtual ~CTextContainer() {
   }
 
+  /**********************************************************
+    Call this for each element as it get's closed
+   **********************************************************/
+  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+    if(aNode) {
+      CStartToken   theToken(aTag);
+      PRInt32 theLineNumber=0;
+      nsCParserNode theNode(&theToken,theLineNumber);
+      theNode.SetSkippedContent(mText);
+      result=aSink->AddLeaf(theNode);
+    }
+    mText.Truncate(0);
+    return result;
+  }
+
+  /**********************************************************
+    Textcontainer handles the opening of it's own children
+   **********************************************************/
   virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
@@ -785,33 +1115,13 @@ public:
     return result;
   }
 
-  virtual nsresult  EmitText(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-    if(aNode) {
-      aSink->OpenHead(*aNode);
-      nsCParserNode* theNode=(nsCParserNode*)aNode;
-      theNode->SetSkippedContent(mText);
-      aSink->AddLeaf(*aNode);
-      aSink->CloseHead(*aNode);
-    }
-    mText.Truncate(0);
-    return result;
-  }
-
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
-
-    if(mTag==aTag) {
-      result=EmitText(aNode,aTag,aContext,aSink);
-      nsEntryStack* theStack=0;
-      aContext->Pop(theStack);
-    }
     return result;
   }
 
   nsString  mText;
 };
-
 
 /**********************************************************
   This class is for the title element
@@ -827,7 +1137,21 @@ public:
     mGroup.mBits.mHeadMisc=1;
   }
 
+  /**********************************************************
+    Call this for each element as it get's closed
+   **********************************************************/
+  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+    aSink->OpenHead(*aNode);
+    aSink->SetTitle(mText);
+    aSink->CloseHead(*aNode);
+    mText.Truncate(0);
+    return result;
+  }
 
+  /**********************************************************
+    Title handles the opening of it's own children
+   **********************************************************/
   virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
@@ -843,27 +1167,35 @@ public:
     return result;
   }
 
-  virtual nsresult  EmitText(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-    aSink->OpenHead(*aNode);
-    aSink->SetTitle(mText);
-    aSink->CloseHead(*aNode);
-    mText.Truncate(0);
-    return result;
+};
+
+/**********************************************************
+  This class is for the title element
+ **********************************************************/
+class CTextAreaElement: public CTextContainer {
+public:
+
+  CTextAreaElement() : CTextContainer(eHTMLTag_textarea) {
+    mGroup.mBits.mHeadMisc=1;
+    mGroup=CFormControlElement::GetGroup();
   }
 
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
-    if(mTag==aTag) {
-      result=EmitText(aNode,aTag,aContext,aSink);
-      nsEntryStack* theStack=0;
-      aContext->Pop(theStack);
+    switch(aTag) {
+      case eHTMLTag_whitespace:
+      case eHTMLTag_text:
+      case eHTMLTag_newline:
+        mText.Append(aNode->GetText());
+        break;
+      default:
+        break;
     }
+
     return result;
   }
 
-  nsString  mText;
 };
 
 /**********************************************************
@@ -880,6 +1212,16 @@ public:
     mGroup.mBits.mHeadMisc=1;
   }
 
+  /**********************************************************
+    Call this for each element as it get's closed
+   **********************************************************/
+  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    aSink->OpenHead(*aNode);
+    nsresult result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
+    aSink->CloseHead(*aNode);
+    mText.Truncate(0);
+    return result;
+  }
 
 };
 
@@ -896,6 +1238,111 @@ public:
   CScriptElement() : CTextContainer(eHTMLTag_script) {
     mGroup.mBits.mHeadMisc=1;
     mGroup.mBits.mBlock=1;
+  }
+
+  /**********************************************************
+    Call this for each element as it get's closed
+   **********************************************************/
+  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+
+    if(aContext->HasOpenContainer(eHTMLTag_head)) {
+      aSink->OpenHead(*aNode);
+      result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
+      aSink->CloseHead(*aNode);
+    }
+    else {
+      //add the script to the body
+      CTextToken theToken(mText);
+      PRInt32 theLineNumber=0;
+      nsCParserNode theNode(&theToken,theLineNumber);
+      result=aSink->AddLeaf(theNode);
+    }
+    mText.Truncate(0);
+    return result;
+  }
+
+
+};
+
+/**********************************************************
+  This defines the preformatted element group, (PRE).
+ **********************************************************/
+class CPreformattedElement: public CTextContainer {
+public:
+
+  static CGroupMembers& GetGroup(void) {
+    static CGroupMembers theGroup={0};
+    theGroup.mBits.mPreformatted=1;
+    theGroup.mBits.mBlock=1;
+    return theGroup;
+  }
+
+  static CGroupMembers& GetContainedGroups(void) {
+    static CGroupMembers theGroups={0};
+    theGroups.mBits.mPreformatted=1;
+    return theGroups;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    CElement::Initialize(anElement,aTag,GetGroup(),GetContainedGroups());
+  }
+
+  CPreformattedElement(eHTMLTags aTag) : CTextContainer(aTag) {
+    mGroup=GetGroup();
+    mContainsGroups=GetContainedGroups();
+    mProperties.mIsContainer=1;
+  }
+
+  /**********************************************************
+    Pre handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+
+    switch(aTag) {
+      case eHTMLTag_newline:
+        mText.Append(kCR);
+        break;
+
+      case eHTMLTag_whitespace:
+      case eHTMLTag_text:
+        mText.Append(aNode->GetText());
+        break;
+
+      default:        
+        {
+          nsCParserNode *theNode=(nsCParserNode*)aNode;
+          theNode->mToken->GetSource(mText);
+        }
+        break;
+    }
+
+    return result;
+  }
+
+  /**********************************************************
+    Call this for each element as it get's closed
+   **********************************************************/
+  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+    if(aNode) {
+
+      CTextToken theToken(mText);
+      PRInt32 theLineNumber=0;
+      nsCParserNode theNode(&theToken,theLineNumber);
+      result=aSink->AddLeaf(theNode);
+    }
+    mText.Truncate(0);
+    return result;
+  }
+
+  /**********************************************************
+    Pre handles the closing of it's own children
+   **********************************************************/
+  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    mText.Append(aNode->GetText());
+    return NS_OK;
   }
 
 };
@@ -928,7 +1375,14 @@ public:
     CTopLevelElement::Initialize(*this,aTag);
   }
 
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+  /**********************************************************
+    Toplevel handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(  nsIParserNode* aNode,
+                                      eHTMLTags aTag,
+                                      nsDTDContext* aContext,
+                                      nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     switch(aTag) {
@@ -941,6 +1395,9 @@ public:
     return result;
   }
 
+  /**********************************************************
+    TopLevel handles the opening of it's own children
+   **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
 
     nsEntryStack* theStack=0;
@@ -950,21 +1407,21 @@ public:
       case eHTMLTag_html:
         if(aContext->HasOpenContainer(aTag)) {
           result=aSink->CloseHTML(*aNode);
-          aContext->Pop(theStack);
+          CloseContext(aNode,aTag,aContext,aSink);
         }
         break;
 
       case eHTMLTag_body:
         if(aContext->HasOpenContainer(aTag)) {
           result=aSink->CloseBody(*aNode);
-          aContext->Pop(theStack);
+          CloseContext(aNode,aTag,aContext,aSink);
         }
         break;
 
       case eHTMLTag_frameset:
         if(aContext->HasOpenContainer(aTag)) {
           result=aSink->OpenFrameset(*aNode); 
-          aContext->Pop(theStack);
+          CloseContext(aNode,aTag,aContext,aSink);
         }
         break;
 
@@ -1001,35 +1458,31 @@ public:
     CElement::Initialize(*this,aTag,CHTMLElement::GetGroup(),CHTMLElement::GetContainedGroups());
   }
 
-  nsresult AddHeadElement(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink);
 
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  /**********************************************************
+    HTML handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(  nsIParserNode* aNode,
+                                      eHTMLTags aTag,
+                                      nsDTDContext* aContext,
+                                      nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     switch(aTag) {
       case eHTMLTag_body:
-        if(!aContext->HasOpenContainer(aTag)) {
-          result=aSink->OpenBody(*aNode);
-          aContext->Push(aNode);
-        }
+        result=aSink->OpenBody(*aNode);
+        result=OpenContext(aNode,aTag,aContext,aSink);
+        aContext->mHadBody=PR_TRUE;
         break;
 
       case eHTMLTag_frameset:
-        if(!aContext->HasOpenContainer(aTag)) {
-          result=aSink->OpenFrameset(*aNode); 
-          aContext->Push(aNode);
-        }
-        break;
-
-      case eHTMLTag_base:
-      case eHTMLTag_meta:
-      case eHTMLTag_style:
-      case eHTMLTag_script:
-        result=AddHeadElement(aNode,aTag,aContext,aSink);
+        result=aSink->OpenFrameset(*aNode); 
+        result=OpenContext(aNode,aTag,aContext,aSink);
+        aContext->mHadFrameset=PR_TRUE;
         break;
 
       case eHTMLTag_head:
-        aContext->Push(aNode);
+        result=OpenContext(aNode,aTag,aContext,aSink);
         break;
 
       default:
@@ -1040,10 +1493,27 @@ public:
     return result;
   }
 
+  /**********************************************************
+    HTML handles the closing of it's own children
+   **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     switch(aTag) {
+      case eHTMLTag_body:
+        aSink->CloseBody(*aNode);
+        result=CloseContext(aNode,aTag,aContext,aSink);
+        break;
+
+      case eHTMLTag_frameset:
+        aSink->CloseFrameset(*aNode);
+        result=CloseContext(aNode,aTag,aContext,aSink);
+        break;
+
+      case eHTMLTag_head:
+        result=CloseContext(aNode,aTag,aContext,aSink);
+        break;
+
       case eHTMLTag_unknown:
       default:
         result=CTopLevelElement::HandleEndToken(aNode,aTag,aContext,aSink);
@@ -1084,7 +1554,25 @@ public:
     mExcludeKids=gBodyExcludeKids;
   }
 
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+   //this gets called after each tag is opened in the given context
+  virtual nsresult  OpenContainer(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+    nsresult result=NS_OK;
+    if(mTag==aTag) {
+      result=aSink->OpenBody(*aNode);
+    }
+    else result=CElement::OpenContainer(aNode,aTag,aContext,aSink);
+    return result;
+  }
+
+
+  /**********************************************************
+    Body handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(  nsIParserNode* aNode,
+                                      eHTMLTags aTag,
+                                      nsDTDContext* aContext,
+                                      nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     switch(aTag) {
@@ -1100,14 +1588,19 @@ public:
     return result;
   }
 
+  /**********************************************************
+    Body doesnt really need to handle it's own kids, but it's
+    a really convenient break point for debugging purposes.
+   **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
+    return CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+  }
 
-    switch(aTag) {
-      case eHTMLTag_div:
-      default:
-        result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
-    }
+  /**********************************************************
+    Body is the default place where forwarding stops.
+   **********************************************************/   
+  virtual nsresult  HandleEndTokenForChild(CElement *aChild,nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
     return result;
   }
 
@@ -1132,8 +1625,10 @@ public:
     mHTMLElement(eHTMLTag_html),
     mScriptElement(),
     mStyleElement(),
-    mTitleElement()
-
+    mTitleElement(),
+    mTextAreaElement(),
+    mPreElement(eHTMLTag_pre),
+    mLIElement(eHTMLTag_li)
   {
     memset(mElements,0,sizeof(mElements));
     InitializeElements();
@@ -1149,13 +1644,17 @@ public:
   CElement* mElements[150];  //add one here for special handling of a given element
   CElement  mDfltElements[150];
 
-  CBodyElement    mBodyElement;
-  CFrameElement   mFramesetElement;
-  CHeadElement    mHeadElement;
-  CHTMLElement    mHTMLElement;
-  CScriptElement  mScriptElement;
-  CStyleElement   mStyleElement;
-  CTitleElement   mTitleElement;
+  CBodyElement      mBodyElement;
+  CFrameElement     mFramesetElement;
+  CHeadElement      mHeadElement;
+  CHTMLElement      mHTMLElement;
+  CScriptElement    mScriptElement;
+  CStyleElement     mStyleElement;
+  CTitleElement     mTitleElement;
+  CTextAreaElement  mTextAreaElement;
+  CPreformattedElement mPreElement;
+  CTableElement     mTableElement;
+  CLIElement        mLIElement;
 };
 
 
@@ -1182,7 +1681,6 @@ static eHTMLTags kBlockQuoteKids[]={eHTMLTag_script,eHTMLTag_unknown};
 static eHTMLTags kFramesetKids[]={eHTMLTag_noframes,eHTMLTag_unknown};
 static eHTMLTags kObjectKids[]={eHTMLTag_param,eHTMLTag_unknown};
 static eHTMLTags kTBodyKids[]={eHTMLTag_tr,eHTMLTag_unknown};
-static eHTMLTags kTRKids[]={eHTMLTag_td,eHTMLTag_th,eHTMLTag_unknown};
 
 /***********************************************************************************
   This method is pretty interesting, because it's where the elements all get 
@@ -1316,7 +1814,8 @@ void CElementTable::InitializeElements() {
   CElement::Initialize(             mDfltElements[eHTMLTag_legend],     eHTMLTag_legend,    CElement::GetEmptyGroup(), CInlineElement::GetContainedGroups());
   CElement::Initialize(             mDfltElements[eHTMLTag_li],         eHTMLTag_li,        CListElement::GetGroup(), CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_li].mExcludeKids=kLIExcludeKids;
-
+  mDfltElements[eHTMLTag_li].mContainsGroups.mBits.mSelf=0;
+  
   CElement::InitializeLeaf(         mDfltElements[eHTMLTag_link],       eHTMLTag_link,  CHeadElement::GetMiscGroup(), CLeafElement::GetContainedGroups());
   CElement::Initialize(             mDfltElements[eHTMLTag_listing],    eHTMLTag_listing);
 
@@ -1336,7 +1835,7 @@ void CElementTable::InitializeElements() {
     
   CElement::Initialize(             mDfltElements[eHTMLTag_noframes],   eHTMLTag_noframes,  CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
   CElement::Initialize(             mDfltElements[eHTMLTag_nolayer],    eHTMLTag_nolayer);
-  CElement::Initialize(             mDfltElements[eHTMLTag_noscript],   eHTMLTag_noscript,  CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
+  CElement::Initialize(             mDfltElements[eHTMLTag_noscript],   eHTMLTag_noscript,  CBlockElement::GetGroup(),  CBlockElement::GetBlockGroupMembers());
 
   CElement::Initialize(             mDfltElements[eHTMLTag_object],     eHTMLTag_object,    CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_object].mGroup.mBits.mBlock=1;  //make this a member of the block group.
@@ -1393,18 +1892,16 @@ void CElementTable::InitializeElements() {
 
   CElement::Initialize(             mDfltElements[eHTMLTag_td],         eHTMLTag_td,      CElement::GetEmptyGroup(), CFlowElement::GetContainedGroups());
 
-  CElement::Initialize(             mDfltElements[eHTMLTag_textarea],   eHTMLTag_textarea, CFormControlElement::GetGroup(), CLeafElement::GetContainedGroups());
-  mDfltElements[eHTMLTag_textarea].mContainsGroups.mBits.mLeaf=1;
-  mDfltElements[eHTMLTag_textarea].mContainsGroups.mBits.mWhiteSpace=1;
-
+  CElement::Initialize(             mDfltElements[eHTMLTag_textarea],   eHTMLTag_textarea);
+  
   CElement::Initialize(             mDfltElements[eHTMLTag_tfoot],      eHTMLTag_tfoot,   CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
   mDfltElements[eHTMLTag_tfoot].mIncludeKids=kTBodyKids;
 
-  CElement::Initialize(             mDfltElements[eHTMLTag_th],         eHTMLTag_th,      CElement::GetEmptyGroup(), CFlowElement::GetContainedGroups());
+  CTableRowElement::Initialize(     mDfltElements[eHTMLTag_th],         eHTMLTag_th);
   CElement::Initialize(             mDfltElements[eHTMLTag_thead],      eHTMLTag_thead,   CTableElement::GetGroup(), CLeafElement::GetContainedGroups());
   mDfltElements[eHTMLTag_thead].mIncludeKids=kTBodyKids;
 
-  CElement::Initialize(             mDfltElements[eHTMLTag_tr],         eHTMLTag_tr,      CElement::GetEmptyGroup(), CFlowElement::GetContainedGroups());
+  CTableRowElement::Initialize(     mDfltElements[eHTMLTag_tr],         eHTMLTag_tr);
 
   CElement::Initialize(             mDfltElements[eHTMLTag_title],      eHTMLTag_title);
 
@@ -1438,7 +1935,10 @@ void CElementTable::InitializeElements() {
   mElements[eHTMLTag_script]=&mScriptElement;
   mElements[eHTMLTag_style]=&mStyleElement;
   mElements[eHTMLTag_title]=&mTitleElement;
-  
+  mElements[eHTMLTag_textarea]=&mTextAreaElement;
+  mElements[eHTMLTag_pre]=&mPreElement;
+  mElements[eHTMLTag_table]=&mTableElement;
+  mElements[eHTMLTag_li]=&mLIElement;
 }
 
 void CElementTable::DebugDumpGroups(CElement* aTag){
@@ -1646,10 +2146,23 @@ PRBool CElement::CanContain(CElement* anElement,nsDTDContext* aContext) {
   return result;
 }
 
-nsresult CElement::HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+nsresult CElement::WillHandleStartToken(  CElement *anElement,
+                                          nsIParserNode* aNode,
+                                          eHTMLTags aTag,
+                                          nsDTDContext* aContext,
+                                          nsIHTMLContentSink* aSink) {
   nsresult result=NS_OK;
+  return result;
+}
+
+nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
+                                      eHTMLTags aTag,
+                                      nsDTDContext* aContext,
+                                      nsIHTMLContentSink* aSink) {
 
   CElement* theElement=gElementTable->mElements[aTag];
+
+  nsresult  result=WillHandleStartToken(theElement,aNode,aTag,aContext,aSink);
 
 #if 0
   CElement* theDelegate=theElement->GetDelegate();
@@ -1663,8 +2176,7 @@ nsresult CElement::HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDCon
       if(CanContain(theElement,aContext)) {
     
         if(theElement->IsContainer()) {
-          aContext->Push(aNode);
-          result=aSink->OpenContainer(*aNode);
+          result=theElement->OpenContainerInContext(aNode,aTag,aContext,aSink);
         }
         else {
           result=aSink->AddLeaf(*aNode); 
@@ -1703,11 +2215,13 @@ nsresult CElement::HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDCon
             //  all the tags below it have optional end tags.
             //  If these conditions aren't met, we bail out, leaving the tag open.
 
-          PRInt32 theLastPos=aContext->LastOf(aTag); //see if it's already open...
-          if(-1<theLastPos) {
-            PRInt32 theCount=aContext->GetCount();
-            result=HandleEndToken(aNode,mTag,aContext,aSink);
-            theElementCanOpen=PRBool(aContext->GetCount()<theCount);
+          if(mTag!=aTag) {
+            PRInt32 theLastPos=aContext->LastOf(aTag); //see if it's already open...
+            if(-1<theLastPos) {
+              PRInt32 theCount=aContext->GetCount();
+              result=HandleEndToken(aNode,aTag,aContext,aSink);
+              theElementCanOpen=PRBool(aContext->GetCount()<theCount);
+            }
           }
 
           if(theElementCanOpen) {
@@ -1730,43 +2244,35 @@ nsresult CElement::HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDCon
   return result;
 }
 
-static nsresult CloseContainer(eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-
-  nsEntryStack* aChildStyleStack=0;
-  nsIParserNode* theNode=aContext->Pop(aChildStyleStack);
-
-  nsresult result=NS_OK;
-  switch(aTag) {
-    case eHTMLTag_body:
-      result=aSink->CloseBody(*theNode);
-      break;
-
-    case eHTMLTag_frameset:
-      result=aSink->CloseFrameset(*theNode); 
-      break;
-
-    default:
-      result=aSink->CloseContainer(*theNode);
-      break;
-  }//switch
-  return result;
-}
-
 
 nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
   nsresult result=NS_OK;
 
-//  CElement* theCloser=gElementTable->mElements[aTag];
-
-  if(mTag==aTag) {
-    result=CloseContainer(aTag,aContext,aSink);
+  if(aContext->Last()==aTag) {
+    return CloseContainerInContext(aNode,aTag,aContext,aSink);
   }
-  else {
 
-    PRInt32 theCount=aContext->GetCount();
-    PRInt32 theIndex=0;
-    PRInt32 theLastOptionalTag=-1;
+  PRInt32   theCount=aContext->GetCount();
+  PRInt32   theIndex=theCount-1;
 
+  PRInt32 theCloseTarget=FindAutoCloseTargetForEndTag(aNode,aTag,aContext,aSink,theIndex);
+
+  if(-1!=theCloseTarget) {
+    while(theCloseTarget<aContext->GetCount()) {
+      eHTMLTags theTag=aContext->Last();
+      CElement  *theElement=gElementTable->mElements[theTag];
+      result=theElement->HandleEndToken(aNode,theTag,aContext,aSink);
+    }
+    return result;
+  }
+
+
+  PRInt32 theLastOptionalTag=-1;
+  PRBool   done=PR_FALSE;
+
+  theIndex=0;
+
+  if(!done) {
     for(theIndex=theCount-1;theIndex>=0;theIndex--) {
       eHTMLTags theTag=aContext->TagAt(theIndex);
       CElement* theElement=gElementTable->mElements[theTag];
@@ -1781,7 +2287,7 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
       if(-1<theLastInstance) {
         if(theLastOptionalTag-1==theLastInstance) {          
           for(theIndex=theCount-1;theIndex>=theLastInstance;theIndex--){
-            CloseContainer(aTag,aContext,aSink);
+            CloseContainerInContext(aNode,aTag,aContext,aSink);
           }
         }
       }
@@ -1801,6 +2307,10 @@ inline CElement* CElement::GetDelegate(void) {
   return 0;
 }
 
+inline CElement* CElement::GetElement(eHTMLTags aTag) {
+  return gElementTable->mElements[aTag];
+}
+
 
 inline CElement* CElement::GetDefaultContainerFor(CElement* anElement) {
   CElement* result=0;
@@ -1816,17 +2326,6 @@ inline CElement* CElement::GetDefaultContainerFor(CElement* anElement) {
       result=gElementTable->mElements[eHTMLTag_head];
     }
   }
-  return result;
-}
-
-nsresult CHTMLElement::AddHeadElement(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-  nsresult result=NS_OK;
-
-  CElement* theElement=gElementTable->mElements[eHTMLTag_head];
-  if(theElement) {
-    result=theElement->HandleStartToken(aNode,aTag,aContext,aSink);
-  }
-
   return result;
 }
 

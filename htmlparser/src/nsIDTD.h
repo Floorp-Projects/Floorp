@@ -50,14 +50,14 @@ enum eAutoDetectResult {
   eInvalidDetect
 };
 
-enum  eParseMode {
-  
-  eParseMode_unknown=0,
-  eParseMode_quirks,    //pre 5.0 versions
-  eParseMode_noquirks,  //raptor versions...)
-  eParseMode_strict,
-  eParseMode_autodetect
+enum nsDTDMode {
+  eDTDMode_unknown=0,
+  eDTDMode_quirks,    //pre 5.0 versions
+  eDTDMode_noquirks,  //raptor versions...)
+  eDTDMode_strict,
+  eDTDMode_autodetect
 };
+
 
 class nsIParser;
 class CToken;

@@ -4,12 +4,12 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of 
  * the License at http://www.mozilla.org/NPL/
- *                
+ *                          
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or 
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *      
+ *         
  * The Original Code is mozilla.org code. 
  *  
  * The Initial Developer of the Original Code is Netscape
@@ -17,10 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.  
  * 
- * Contributor(s):   
+ * Contributor(s):     
  */          
     
-//#define ENABLE_CRC    
+//#define ENABLE_CRC      
 //#define RICKG_DEBUG    
  
       
@@ -28,7 +28,7 @@
 #include "nsIDTDDebug.h"  
 #include "COtherDTD.h" 
 #include "nsHTMLTokens.h"
-#include "nsCRT.h"    
+#include "nsCRT.h"     
 #include "nsParser.h"  
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"  
@@ -169,6 +169,12 @@ COtherDTD::COtherDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mSh
 #endif
 }
 
+void COtherDTD::ReleaseTable(void) {
+  if(gElementTable) {
+    delete gElementTable;
+    gElementTable=0;
+  }
+}
 
 /**
  * This method creates a new parser node. It tries to get one from
@@ -198,8 +204,8 @@ nsCParserNode* COtherDTD::CreateNode(void) {
 /**
  * This method recycles a given node
  * @update  gess1/8/99
- * @param 
- * @return  
+ * @param  
+ * @return   
  */
 void COtherDTD::RecycleNode(nsCParserNode* aNode) {
   if(aNode && (!aNode->mUseCount)) {
@@ -358,7 +364,7 @@ PRBool COtherDTD::Verify(nsString& aURLRef,nsIParser* aParser){
     else mDTDDebug->SetVerificationDirectory(kVerificationDir);
   }
 #endif
-
+ 
   if(mDTDDebug) {
     // mDTDDebug->Verify(this,aParser,mBodyContext->GetCount(),mBodyContext->mStack,aURLRef);
   }
@@ -388,7 +394,7 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
     }
     else {
       if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
-        result=(eParseMode_strict==aParserContext.mParseMode) ? ePrimaryDetect : eValidDetect;
+        result=(eDTDMode_strict==aParserContext.mDTDMode) ? ePrimaryDetect : eValidDetect;
       }
       else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
         result=eValidDetect;
@@ -401,7 +407,7 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
           if(0==aParserContext.mMimeType.Length()) {
             aParserContext.SetMimeType(NS_ConvertToString(kHTMLTextContentType));
             if(!theBufHasXML) {
-              result=(eParseMode_strict==aParserContext.mParseMode) ? ePrimaryDetect : eValidDetect;
+              result=(eDTDMode_strict==aParserContext.mDTDMode) ? ePrimaryDetect : eValidDetect;
             }
             else result=eValidDetect;
           }
@@ -428,11 +434,10 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
 
   mFilename=aParserContext.mScanner->GetFilename();
   mHasOpenBody=PR_FALSE;
-  mHadBody=PR_FALSE;
   mHadFrameset=PR_FALSE;
   mLineNumber=1;
   mHasOpenScript=PR_FALSE;
-  mParseMode=aParserContext.mParseMode;
+  mDTDMode=aParserContext.mDTDMode;
   mParserCommand=aParserContext.mParserCommand;
 
   if((!aParserContext.mPrevContext) && (aSink)) {
@@ -484,24 +489,14 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
 
       mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
       if(mSink) {
-    
+
         if(!mBodyContext->GetCount()) {
             //if the content model is empty, then begin by opening <html>...
-          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html, NS_ConvertToString("html"));
+          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
         }
 
         while(NS_SUCCEEDED(result)){
-
-#if 0
-          int n=aTokenizer->GetCount(); 
-          if(n>50) n=50;
-          for(int i=0;i<n;i++){
-            CToken* theToken=aTokenizer->GetTokenAt(i);
-            printf("\nToken[%i],%p",i,theToken);
-          }
-          printf("\n");
-#endif
 
           if(mDTDState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
             CToken* theToken=mTokenizer->PopToken();
@@ -522,7 +517,7 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
   return result;
 }
-
+ 
 /**
  * 
  * @update  gess5/18/98
@@ -532,36 +527,28 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
 nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
-  if(aSink) { 
-
-    if((NS_OK==anErrorCode) && (!mHadBody) && (!mHadFrameset)) { 
-
-      mSkipTarget=eHTMLTag_unknown; //clear this in case we were searching earlier.
-
-      if(ePlainText==mDocType) {
-        CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre, NS_ConvertToString("pre"));
-        mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
-      }
-
-      CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body, NS_ConvertToString("body"));
-      mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
-
-      result=BuildModel(aParser,mTokenizer,0,aSink);
-    } 
+  if(aSink) {  
 
     if(aParser && (NS_OK==result)){ 
       if(aNotifySink){ 
         if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
 
-          while(mBodyContext->GetCount() > 0) {  
-            eHTMLTags theTarget = mBodyContext->Last(); 
-            CElement* theElement=gElementTable->mElements[theTarget];
-            if(theElement) {
-              theElement->HandleEndToken(0,theTarget,mBodyContext,mSink);
-            }
-          }    
-  
-        }      
+          PRInt32 theIndex=mBodyContext->GetCount()-1;
+          eHTMLTags theChild = mBodyContext->TagAt(theIndex); 
+          while(theIndex>0) {             
+            eHTMLTags theParent= mBodyContext->TagAt(--theIndex);
+            CElement *theElement=gElementTable->mElements[theParent];
+            theElement->HandleEndToken(0,theChild,mBodyContext,mSink);
+            theChild=theParent;
+          }
+
+          nsEntryStack *theChildStyles=0;
+          nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyles);   
+          if(theNode) {
+            mSink->CloseHTML(*theNode);
+          }
+
+        }       
         else {
           //If you're here, then an error occured, but we still have nodes on the stack.
           //At a minimum, we should grab the nodes and recycle them.
@@ -623,22 +610,6 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       case eToken_end:
         result=HandleEndToken(theToken); break;
        
-      case eToken_cdatasection:
-      case eToken_comment:
-        result=HandleCommentToken(theToken); break;
-
-      case eToken_entity:
-        result=HandleEntityToken(theToken); break;
-
-      case eToken_attribute:
-        result=HandleAttributeToken(theToken); break;
-
-      case eToken_instruction:
-        result=HandleProcessingInstructionToken(theToken); break;
-
-      case eToken_doctypeDecl:
-        result=HandleDocTypeDeclToken(theToken); break;
-
       default: 
         break; 
     }//switch
@@ -667,7 +638,11 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 nsresult COtherDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
-  switch(aChildTag){
+  switch(aChildTag){ 
+
+    case eHTMLTag_script: 
+      mHasOpenScript=PR_TRUE; 
+      break;   
 
     case eHTMLTag_pre:
     case eHTMLTag_listing:
@@ -683,20 +658,6 @@ nsresult COtherDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
       }
       break;
 
-    case eHTMLTag_plaintext:
-    case eHTMLTag_xmp:
-      //grab the skipped content and dump it out as text...
-      {        
-        STOP_TIMER()
-        MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::DidHandleStartTag(), this=%p\n", this));
-        const nsString& theString=aNode.GetSkippedContent();
-        if(0<theString.Length()) {
-          CViewSourceHTML::WriteText(theString,*mSink,PR_TRUE,PR_FALSE);
-        }
-        MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::DidHandleStartTag(), this=%p\n", this));
-        START_TIMER()
-      }
-      break;
     default:
       break;
   }//switch 
@@ -760,7 +721,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
 
   return result;
 }
-
+  
 
 /**
  *  This method gets called when a start token has been 
@@ -783,8 +744,8 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
     WriteTokenToLog(aToken);
   #endif
 
-  //Begin by gathering up attributes... 
-
+  //Begin by gathering up attributes...  
+ 
   nsCParserNode* theNode=CreateNode();
   theNode->Init(aToken,mLineNumber,mTokenRecycler);
   
@@ -792,73 +753,45 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
   PRInt16       attrCount=aToken->GetAttributeCount();
   eHTMLTags     theParent=mBodyContext->Last();
   nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(*theNode,theChildTag,attrCount);
-
+ 
   if(NS_OK==result) {
     result=WillHandleStartTag(aToken,theChildTag,*theNode);
     if(NS_OK==result) {
  
       mLineNumber += aToken->mNewlineCount;
 
-      PRBool theTagWasHandled=PR_FALSE;
+      PRBool theTagWasHandled=PR_FALSE; 
 
-      switch(theChildTag) {   
-
-        case eHTMLTag_html:
+      switch(theChildTag) {    
+    
+        case eHTMLTag_html: 
           if(!HasOpenContainer(theChildTag)) {
-            result=OpenContainer(theNode,theChildTag,PR_FALSE,0);
+            mSink->OpenHTML(*theNode);
+            mBodyContext->Push(theNode,0);
           }
-          theTagWasHandled=PR_TRUE;
-          break;
-
-        case eHTMLTag_area:
-          if(!mHasOpenMap) theTagWasHandled=PR_TRUE;
-
-          STOP_TIMER();
-          MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::HandleStartToken(), this=%p\n", this));
-          
-          if (mHasOpenMap && mSink) {
-            result=mSink->AddLeaf(*theNode);
-            theTagWasHandled=PR_TRUE;
-          }
-          
-          MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::HandleStartToken(), this=%p\n", this));
-          START_TIMER();
-          break; 
- 
-        //case eHTMLTag_userdefined:
-        case eHTMLTag_noscript:     //HACK XXX! Throw noscript on the floor for now.
-          theTagWasHandled=PR_TRUE;
-          break;
-  
-        case eHTMLTag_script: 
-          mHasOpenScript=PR_TRUE;
-          break;  
-   
-        case eHTMLTag_body:   
-          mHadBody=PR_TRUE;  
-          //fall thru...    
-     
-        default:  
+          theTagWasHandled=PR_TRUE;  
+          break;    
+         
+        default:   
           CElement* theElement=gElementTable->mElements[theParent];
           if(theElement) {
             result=theElement->HandleStartToken(theNode,theChildTag,mBodyContext,mSink);  
             theTagWasHandled=PR_TRUE;  
-          }   
-          break;  
-      }//switch        
-    
+          }    
+          break;   
+      }//switch         
+      
       if(theTagWasHandled) {
-        DidHandleStartTag(*theNode,theChildTag); 
+        DidHandleStartTag(*theNode,theChildTag);  
       }
    
-    } //if     
-  }//if    
-     
-  RecycleNode(theNode);         
-  return result;       
+    } //if         
+  }//if         
+      
+  RecycleNode(theNode);          
+  return result;        
 }      
- 
-   
+  
 /**
  *  This method gets called when an end token has been   
  *  encountered in the parse process. If the end tag matches
@@ -871,224 +804,43 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
  *  @update  gess 3/25/98  
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
+ */ 
 nsresult COtherDTD::HandleEndToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-
+ 
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
  
-  #ifdef  RICKG_DEBUG 
+  #ifdef  RICKG_DEBUG  
     WriteTokenToLog(aToken); 
   #endif 
+  
+  switch(theChildTag) {    
  
-  switch(theChildTag) {
-
     case eHTMLTag_body: //we intentionally don't let the user close HTML or BODY
     case eHTMLTag_html:  
-      break;
- 
-    case eHTMLTag_script:
-      mHasOpenScript=PR_FALSE;
-
+      break;  
+       
+    case eHTMLTag_script:    
+      mHasOpenScript=PR_FALSE;      
+     
     default: 
-      eHTMLTags theParent=mBodyContext->Last();
+      PRInt32 theCount=mBodyContext->GetCount();
+      eHTMLTags theParent=mBodyContext->TagAt(theCount-1);
+      if(theChildTag==theParent) {
+        theParent=mBodyContext->TagAt(theCount-2);
+      }
       CElement* theElement=gElementTable->mElements[theParent];
-      if(theElement) {
+      if(theElement) { 
         nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
         result=theElement->HandleEndToken(&theNode,theChildTag,mBodyContext,mSink);  
       }   
       break;
-  }  
+  }     
  
-  return result;       
-}     
-   
- 
-/**
- *  This method gets called when an entity token has been  
- *  encountered in the parse process. 
- *  
- *  @update  gess 3/25/98 
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */ 
-nsresult COtherDTD::HandleEntityToken(CToken* aToken) { 
-  NS_PRECONDITION(0!=aToken,kNullToken);
-
-  nsresult  result=NS_OK;  
-//  eHTMLTags theParentTag=mBodyContext->Last(); 
-
-  nsCParserNode* theNode=CreateNode();
-  if(theNode) { 
-    theNode->Init(aToken,mLineNumber,0);
-  
-    #ifdef  RICKG_DEBUG 
-      WriteTokenToLog(aToken); 
-    #endif
-
-    result=AddLeaf(theNode); 
-    RecycleNode(theNode);
-  }    
-  return result; 
-} 
-
-
-/**
- *  This method gets called when a comment token has been 
- *  encountered in the parse process. After making sure
- *  we're somewhere in the body, we handle the comment
- *  in the same code that we use for text.
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult COtherDTD::HandleCommentToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
-  
-  nsresult  result=NS_OK;
-
-  nsString& theComment=aToken->GetStringValueXXX();
-  mLineNumber += (theComment).CountChar(kNewLine);
-
-  nsCParserNode* theNode=CreateNode();
-  if(theNode) {
-    theNode->Init(aToken,mLineNumber,0);
-
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
-
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::HandleCommentToken(), this=%p\n", this));
-
-    result=(mSink) ? mSink->AddComment(*theNode) : NS_OK;  
-
-    RecycleNode(theNode);
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::HandleCommentToken(), this=%p\n", this));
-    START_TIMER();
-  }
-
-  return result;
-}
-
-
-/**
- *  This method gets called when an attribute token has been 
- *  encountered in the parse process. This is an error, since
- *  all attributes should have been accounted for in the prior
- *  start or end tokens
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult COtherDTD::HandleAttributeToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
-  NS_ERROR("attribute encountered -- this shouldn't happen!");
-
-  return NS_OK;
-}
-
-
-/**
- *  This method gets called when a script token has been 
- *  encountered in the parse process. n
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult COtherDTD::HandleScriptToken(const nsIParserNode *aNode) {
-  // PRInt32 attrCount=aNode.GetAttributeCount(PR_TRUE);
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::HandleScriptToken(), this=%p\n", this));
-
-  nsresult result=AddLeaf(aNode);
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::HandleScriptToken(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-
-/**
- *  This method gets called when an "instruction" token has been 
- *  encountered in the parse process. 
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult COtherDTD::HandleProcessingInstructionToken(CToken* aToken){
-  NS_PRECONDITION(0!=aToken,kNullToken);
-
-  nsresult  result=NS_OK;
-
-  nsCParserNode* theNode=CreateNode();
-  if(theNode) {
-    theNode->Init(aToken,mLineNumber,0);
-
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
-
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::HandleProcessingInstructionToken(), this=%p\n", this));
-
-    result=(mSink) ? mSink->AddProcessingInstruction(*theNode) : NS_OK; 
-
-    RecycleNode(theNode);
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::HandleProcessingInstructionToken(), this=%p\n", this));
-    START_TIMER();
-
-  }
-  return result;
-}
-
-/**
- *  This method gets called when a DOCTYPE token has been 
- *  encountered in the parse process. 
- *  
- *  @update  harishd 09/02/99
- *  @param   aToken -- The very first token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult COtherDTD::HandleDocTypeDeclToken(CToken* aToken){
-  NS_PRECONDITION(0!=aToken,kNullToken);
-
-  nsresult result=NS_OK;
-
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
-
-  nsString& docTypeStr=aToken->GetStringValueXXX();
-  mLineNumber += (docTypeStr).CountChar(kNewLine);
-  docTypeStr.Trim("<!>");
-
-  nsCParserNode* theNode=CreateNode();
-  if(theNode) {
-    theNode->Init(aToken,mLineNumber,0);
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::HandleDocTypeDeclToken(), this=%p\n", this));
-  
-    result = (mSink)? mSink->AddDocTypeDecl(*theNode,mParseMode):NS_OK;
-    RecycleNode(theNode);
-  
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::HandleDocTypeDeclToken(), this=%p\n", this));
-  START_TIMER();
-
-  }
-  return result;
-}
-
+  return result;          
+}         
+       
 /**
  * Retrieve the attributes for this node, and add then into
  * the node.
@@ -1298,407 +1050,6 @@ PRBool COtherDTD::HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) con
 }
 
 
-/*********************************************
-  Here comes code that handles the interface
-  to our content sink.
- *********************************************/
- 
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * 
- * @update  gess4/22/98
- * @param   aNode -- next node to be added to model
- */
-nsresult COtherDTD::OpenHTML(const nsIParserNode *aNode){
-  NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::OpenHTML(), this=%p\n", this));
-
-  nsresult result=(mSink) ? mSink->OpenHTML(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::OpenHTML(), this=%p\n", this));
-  START_TIMER();
-
-  mBodyContext->Push(aNode);
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- *
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseHTML(const nsIParserNode *aNode){
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::CloseHTML(), this=%p\n", this));
-
-  nsresult result=(mSink) ? mSink->CloseHTML(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::CloseHTML(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::OpenHead(const nsIParserNode *aNode){
-
-  nsresult result=NS_OK;
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::OpenHead(), this=%p\n", this));
- 
-  if(!mHasOpenHead++) {
-    result=(mSink) ? mSink->OpenHead(*aNode) : NS_OK;
-  }
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::OpenHead(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseHead(const nsIParserNode *aNode){
-  nsresult result=NS_OK;
-
-  if(mHasOpenHead) {
-    if(0==--mHasOpenHead){
-
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::CloseHead(), this=%p\n", this));
-
-      result=(mSink) ? mSink->CloseHead(*aNode) : NS_OK; 
-
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::CloseHead(), this=%p\n", this));
-      START_TIMER();
-
-    }
-  }
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::OpenBody(const nsIParserNode *aNode){
-  NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
-
-  nsresult result=NS_OK;
-
-  mHadBody=PR_TRUE;
-
-  PRBool theBodyIsOpen=HasOpenContainer(eHTMLTag_body);
-  if(!theBodyIsOpen){
-    //body is not already open, but head may be so close it
-    PRInt32 theHTMLPos=mBodyContext->LastOf(eHTMLTag_html);
-    result=CloseContainersTo(theHTMLPos+1,eHTMLTag_body,PR_TRUE);  //close current stack containers.
-  }
-
-  if(NS_OK==result) {
-
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::OpenBody(), this=%p\n", this));
-
-    result=(mSink) ? mSink->OpenBody(*aNode) : NS_OK; 
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::OpenBody(), this=%p\n", this));
-    START_TIMER();
-
-    if(!theBodyIsOpen) {
-      mBodyContext->Push(aNode);
-      mTokenizer->PrependTokens(mMisplacedContent);
-    }
-  }
-
-  return result;
-}
- 
-/**
- * This method does two things: 1st, help close
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseBody(const nsIParserNode *aNode){
-//  NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::CloseBody(), this=%p\n", this));
- 
-  nsresult result=(mSink) ? mSink->CloseBody(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::CloseBody(), this=%p\n", this));
-  START_TIMER();
- 
-  return result;  
-}    
-     
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error 
- */
-nsresult COtherDTD::OpenForm(const nsIParserNode *aNode){
-  if(mHasOpenForm)
-    CloseForm(aNode);
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::OpenForm(), this=%p\n", this));
-
-  nsresult result=(mSink) ? mSink->OpenForm(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::OpenForm(), this=%p\n", this));
-  START_TIMER();
-
-  if(NS_OK==result)
-    mHasOpenForm=PR_TRUE;
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseForm(const nsIParserNode *aNode){
-//  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
-  nsresult result=NS_OK;
-  if(mHasOpenForm) {
-    mHasOpenForm=PR_FALSE;
-
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::CloseForm(), this=%p\n", this));
-
-    result=(mSink) ? mSink->CloseForm(*aNode) : NS_OK; 
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::CloseForm(), this=%p\n", this));
-    START_TIMER();
-
-  }
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::OpenMap(const nsIParserNode *aNode){
-  if(mHasOpenMap)
-    CloseMap(aNode);
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::OpenMap(), this=%p\n", this));
-
-  nsresult result=(mSink) ? mSink->OpenMap(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::OpenMap(), this=%p\n", this));
-  START_TIMER();
-
-  if(NS_OK==result) {
-    mBodyContext->Push(aNode);
-    mHasOpenMap=PR_TRUE;
-  }
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseMap(const nsIParserNode *aNode){
-//  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
-  nsresult result=NS_OK;
-  if(mHasOpenMap) {
-    mHasOpenMap=PR_FALSE;
-
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::CloseMap(), this=%p\n", this));
-
-    result=(mSink) ? mSink->CloseMap(*aNode) : NS_OK; 
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::CloseMap(), this=%p\n", this));
-    START_TIMER();
-
-  }
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::OpenFrameset(const nsIParserNode *aNode){
-  NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
-
-  mHadFrameset=PR_TRUE;
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::OpenFrameset(), this=%p\n", this));
-
-  nsresult result=(mSink) ? mSink->OpenFrameset(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::OpenFrameset(), this=%p\n", this));
-  START_TIMER();
-
-  mBodyContext->Push(aNode);
-  mHadFrameset=PR_TRUE;
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult COtherDTD::CloseFrameset(const nsIParserNode *aNode){
-//  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::CloseFrameset(), this=%p\n", this));
-
-  nsresult result=(mSink) ? mSink->CloseFrameset(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::CloseFrameset(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @param   aClosedByStartTag -- ONLY TRUE if the container is being closed by opening of another container.
- * @return  TRUE if ok, FALSE if error
- */
-nsresult
-COtherDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedByStartTag,nsEntryStack* aStyleStack){
-  NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
-  
-  nsresult   result=NS_OK; 
-  PRBool     isDefaultNode=PR_FALSE;
-
-  switch(aTag) {
-
-    case eHTMLTag_html:
-      result=OpenHTML(aNode); break;
-
-    case eHTMLTag_head:
-     // result=OpenHead(aNode); //open the head...
-      result=OpenHead(aNode); 
-      break;
-
-    case eHTMLTag_body:
-      result=OpenBody(aNode); 
-      break;
-
-    case eHTMLTag_style:
-    case eHTMLTag_title:
-      break;
-
-    case eHTMLTag_textarea:
-      result=AddLeaf(aNode);
-      break;
-
-    case eHTMLTag_map:
-      result=OpenMap(aNode);
-      break;
-
-    case eHTMLTag_form:
-      result=OpenForm(aNode); break;
-
-    case eHTMLTag_frameset:
-      if(mHasOpenHead)
-        mHasOpenHead=1;
-      CloseHead(aNode); //do this just in case someone left it open...
-      result=OpenFrameset(aNode); break;
-
-    case eHTMLTag_script:
-      if(mHasOpenHead)
-        mHasOpenHead=1;
-      CloseHead(aNode); //do this just in case someone left it open...
-      result=HandleScriptToken(aNode);
-      break;
-
-    default:
-      isDefaultNode=PR_TRUE;
-      break;
-  }
-
-  if(isDefaultNode) {
-
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::OpenContainer(), this=%p\n", this));
-
-      result=(mSink) ? mSink->OpenContainer(*aNode) : NS_OK; 
-
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::OpenContainer(), this=%p\n", this));
-      START_TIMER();
-
-      mBodyContext->Push(aNode,aStyleStack);
-  }
-
-  return result;
-}
-
 /**
  * This method does two things: 1st, help construct
  * our own internal model of the content-stack; and
@@ -1719,34 +1070,22 @@ COtherDTD::CloseContainer(const nsIParserNode *aNode,eHTMLTags aTarget,PRBool aC
   CRCStruct theStruct(nodeType,K_CLOSEOP);
   mComputedCRC32=AccumulateCRC(mComputedCRC32,(char*)&theStruct,sizeof(theStruct));
 #endif
-
+ 
   switch(nodeType) {
 
     case eHTMLTag_html:
-      result=CloseHTML(aNode); break;
-
-    case eHTMLTag_style:
-    case eHTMLTag_textarea:
-      break;
-
-    case eHTMLTag_head:
-      result=CloseHead(aNode); 
-      break;
-
-    case eHTMLTag_body:
-      result=CloseBody(aNode); 
-      break;
+//      result=CloseHTML(aNode); break;
 
     case eHTMLTag_map:
-      result=CloseMap(aNode);
+//      result=CloseMap(aNode);
       break;
 
     case eHTMLTag_form:
-      result=CloseForm(aNode); 
+//      result=CloseForm(aNode); 
       break;
 
     case eHTMLTag_frameset:
-      result=CloseFrameset(aNode); 
+//      result=CloseFrameset(aNode); 
       break;
 
     case eHTMLTag_title:
@@ -1816,147 +1155,6 @@ nsresult COtherDTD::CloseContainersTo(eHTMLTags aTarget,PRBool aClosedByStartTag
   return result;
 }
 
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  error code; 0 means OK
- */
-nsresult COtherDTD::AddLeaf(const nsIParserNode *aNode){
-  nsresult result=NS_OK;
-  
-  if(mSink){
-    eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
-
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::AddLeaf(), this=%p\n", this));
-    
-    result=mSink->AddLeaf(*aNode);
-    
-    if(NS_SUCCEEDED(result)) {
-      PRBool done=PR_FALSE;
-      eHTMLTags thePrevTag=theTag;
-      nsCParserNode theNode;
-
-      while(!done && NS_SUCCEEDED(result)) {
-        CToken*   theToken=mTokenizer->PeekToken();
-        if(theToken) {
-          theTag=(eHTMLTags)theToken->GetTypeID();
-          switch(theTag) {
-            case eHTMLTag_newline:
-              mLineNumber++;
-            case eHTMLTag_whitespace:
-              {
-                theToken=mTokenizer->PopToken();
-                theNode.Init(theToken,mLineNumber,0);
-
-                STOP_TIMER();
-                MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::AddLeaf(), this=%p\n", this));
-              
-                result=mSink->AddLeaf(theNode);
-
-                if((NS_SUCCEEDED(result))||(NS_ERROR_HTMLPARSER_BLOCK==result)) {
-                  if(mTokenRecycler) {
-                     mTokenRecycler->RecycleToken(theToken);
-                  }
-                  else delete theToken;
-                }
-                
-                MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::AddLeaf(), this=%p\n", this));
-                START_TIMER();
-                thePrevTag=theTag;
-              }
-              break; 
-
-            case eHTMLTag_text:
-              if((mHasOpenBody) && (!mHasOpenHead) &&
-                !(gElementTable->mElements[thePrevTag]->IsWhiteSpaceTag())) {
-                theToken=mTokenizer->PopToken();
-                theNode.Init(theToken,mLineNumber);
-
-                MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::AddLeaf(), this=%p\n", this));
-                STOP_TIMER();
-
-                mLineNumber += theToken->mNewlineCount;
-                result=mSink->AddLeaf(theNode);
-
-                if((NS_SUCCEEDED(result))||(NS_ERROR_HTMLPARSER_BLOCK==result)) {
-                  if(mTokenRecycler) {
-                     mTokenRecycler->RecycleToken(theToken);
-                  }
-                  else delete theToken;
-                }
-              
-                MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::AddLeaf(), this=%p\n", this));
-                START_TIMER();
-              }
-              else done=PR_TRUE;
-              break;
-
-            default:
-              done=PR_TRUE;
-          } //switch
-        }//if
-        else done=PR_TRUE;
-      } //while
-    } //if
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::AddLeaf(), this=%p\n", this));
-    START_TIMER();
-
-  }
-  return result;
-}
-
-/**
- * Call this method ONLY when you want to write a leaf
- * into the head container.
- * 
- * @update  gess 03/14/99
- * @param   aNode -- next node to be added to model
- * @return  error code; 0 means OK
- */
-nsresult COtherDTD::AddHeadLeaf(nsIParserNode *aNode){
-  nsresult result=NS_OK;
-
-  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
-  
-  //this code has been added to prevent <meta> tags from being processed inside
-  //the document if the <meta> tag itself was found in a <noframe>, <nolayer>, or <noscript> tag.
-  eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
-
-  if(eHTMLTag_meta==theTag)
-    if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
-      return result;
-    }
-
-  if(mSink) {
-    result=OpenHead(aNode);
-    if(NS_OK==result) {
-      if(eHTMLTag_title==theTag) {
-      }
-      else result=AddLeaf(aNode);
-        // XXX If the return value tells us to block, go
-        // ahead and close the tag out anyway, since its
-        // contents will be consumed.
-      if (NS_SUCCEEDED(result)) {
-        nsresult rv=CloseHead(aNode);
-        // XXX Only send along a failure. If the close 
-        // succeeded we still may need to indicate that the
-        // parser has blocked (i.e. return the result of
-        // the AddLeaf.
-        if (rv != NS_OK) {
-          result = rv;
-        }
-      }
-    }  
-  }
-
-  return result;
-}
-
  
 /**
  * Retrieve the preferred tokenizer for use by this DTD.
@@ -1967,7 +1165,7 @@ nsresult COtherDTD::AddHeadLeaf(nsIParserNode *aNode){
 nsresult COtherDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,mDocType,mParserCommand);
+    result=NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,mParserCommand);
   }
   aTokenizer=mTokenizer;
   return result;
@@ -1977,7 +1175,7 @@ nsresult COtherDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
 /**
  * 
  * @update  gess8/4/98
- * @param 
+ * @param  
  * @return
  */
 nsITokenRecycler* COtherDTD::GetTokenRecycler(void){
