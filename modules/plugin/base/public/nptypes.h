@@ -45,8 +45,10 @@
 typedef int int32_t;
 typedef unsigned int uint32_t;
 #elif defined(AIX)
-typedef int int32_t;
-typedef unsigned int uint32_t;
+#include <inttypes.h>
+#ifndef __cplusplus
+typedef int bool;
+#endif /* __cplusplus */
 #else
 #include <stdint.h>
 
