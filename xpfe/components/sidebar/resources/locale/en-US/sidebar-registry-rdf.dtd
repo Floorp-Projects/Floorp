@@ -1,0 +1,5 @@
+<!-- extracted from ./sidebar-registry.rdf -->
+
+<!ENTITY sidebar.headlines.label     "Headlines">
+<!ENTITY sidebar.news.label          "Local News">
+<!ENTITY sidebar.weather.label       "Weather">

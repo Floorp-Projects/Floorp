@@ -1,0 +1,6 @@
+<!-- extracted from ./sidebar-browser.rdf -->
+
+<!ENTITY sidebar.whats-related.label  "What's Related">
+<!ENTITY sidebar.flash.label          "Flashes">
+<!ENTITY sidebar.tinderbox.label      "Tinderbox">
+<!ENTITY sidebar.bookmarks.label      "Bookmarks">

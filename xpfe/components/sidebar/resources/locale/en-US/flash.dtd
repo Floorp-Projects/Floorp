@@ -1,0 +1,5 @@
+<!-- extracted from ./flash.xul -->
+
+<!ENTITY tree.header.source.label      "Source">
+<!ENTITY tree.header.description.label "Description">
+<!ENTITY tree.header.time.label        "Time">
