@@ -1197,11 +1197,10 @@ public class Context
         boolean errorseen = false;
         CompilerEnvirons compilerEnv = new CompilerEnvirons();
         compilerEnv.initFromContext(this);
-        compilerEnv.setErrorReporter(DefaultErrorReporter.instance);
         // no source name or source text manager, because we're just
         // going to throw away the result.
         compilerEnv.setGeneratingSource(false);
-        Parser p = new Parser(compilerEnv);
+        Parser p = new Parser(compilerEnv, DefaultErrorReporter.instance);
         try {
             p.parse(source, null, 1);
         } catch (EvaluatorException ee) {
@@ -1255,7 +1254,7 @@ public class Context
                 "Line number can not be negative:"+lineno);
         }
         return (Script) compile(null, in, null, sourceName, lineno,
-                                securityDomain, false, false);
+                                securityDomain, false, null);
     }
 
     /**
@@ -1281,16 +1280,18 @@ public class Context
             throw new IllegalArgumentException(
                 "Line number can not be negative:"+lineno);
         }
-        return compileString(source, false, sourceName, lineno, securityDomain);
+        return compileString(source, null, sourceName, lineno, securityDomain);
     }
 
-    final Script compileString(String source, boolean fromEval,
+    final Script compileString(String source,
+                               ErrorReporter compilationErrorReporter,
                                String sourceName, int lineno,
                                Object securityDomain)
     {
         try {
             return (Script) compile(null, null, source, sourceName, lineno,
-                                    securityDomain, false, fromEval);
+                                    securityDomain, false,
+                                    compilationErrorReporter);
         } catch (IOException ex) {
             // Should not happen when dealing with source as string
             throw new RuntimeException();
@@ -1320,7 +1321,7 @@ public class Context
     {
         try {
             return (Function) compile(scope, null, source, sourceName, lineno,
-                                      securityDomain, true, false);
+                                      securityDomain, true, null);
         }
         catch (IOException ioe) {
             // Should never happen because we just made the reader
@@ -2290,7 +2291,7 @@ public class Context
                            Reader sourceReader, String sourceString,
                            String sourceName, int lineno,
                            Object securityDomain, boolean returnFunction,
-                           boolean fromEval)
+                           ErrorReporter compilationErrorReporter)
         throws IOException
     {
         if (securityDomain != null && securityController == null) {
@@ -2305,7 +2306,9 @@ public class Context
 
         CompilerEnvirons compilerEnv = new CompilerEnvirons();
         compilerEnv.initFromContext(this);
-        compilerEnv.setFromEval(fromEval);
+        if (compilationErrorReporter == null) {
+            compilationErrorReporter = compilerEnv.getErrorReporter();
+        }
 
         if (debugger != null) {
             if (sourceReader != null) {
@@ -2314,50 +2317,40 @@ public class Context
             }
         }
 
-        Parser p = new Parser(compilerEnv);
+        Parser p = new Parser(compilerEnv, compilationErrorReporter);
         ScriptOrFnNode tree;
         if (sourceString != null) {
             tree = p.parse(sourceString, sourceName, lineno);
         } else {
             tree = p.parse(sourceReader, sourceName, lineno);
         }
-        int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
-        if (syntaxErrorCount == 0) {
-            if (returnFunction) {
-                if (!(tree.getFunctionCount() == 1
-                      && tree.getFirstChild() != null
-                      && tree.getFirstChild().getType() == Token.FUNCTION))
-                {
-                    // XXX: the check just look for the first child
-                    // and allows for more nodes after it for compatibility
-                    // with sources like function() {};;;
-                    throw new IllegalArgumentException(
-                        "compileFunction only accepts source with single JS function: "+sourceString);
-                }
-            }
-
-            Interpreter compiler = createCompiler();
-
-            String encodedSource = p.getEncodedSource();
-
-            Object result = compiler.compile(scope, compilerEnv,
-                                             tree, encodedSource,
-                                             returnFunction,
-                                             securityDomain);
-            syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
-            if (syntaxErrorCount == 0) {
-                if (debugger != null) {
-                    if (sourceString == null) Kit.codeBug();
-                    compiler.notifyDebuggerCompilationDone(this, result,
-                                                           sourceString);
-                }
-                return result;
+        if (returnFunction) {
+            if (!(tree.getFunctionCount() == 1
+                  && tree.getFirstChild() != null
+                  && tree.getFirstChild().getType() == Token.FUNCTION))
+            {
+                // XXX: the check just look for the first child
+                // and allows for more nodes after it for compatibility
+                // with sources like function() {};;;
+                throw new IllegalArgumentException(
+                    "compileFunction only accepts source with single JS function: "+sourceString);
             }
         }
-        String msg = Context.getMessage1("msg.got.syntax.errors",
-                                         String.valueOf(syntaxErrorCount));
-        throw compilerEnv.getErrorReporter().
-            runtimeError(msg, sourceName, lineno, null, 0);
+
+        Interpreter compiler = createCompiler();
+
+        String encodedSource = p.getEncodedSource();
+
+        Object result = compiler.compile(scope, compilerEnv,
+                                         tree, encodedSource,
+                                         returnFunction,
+                                         securityDomain);
+        if (debugger != null) {
+            if (sourceString == null) Kit.codeBug();
+            compiler.notifyDebuggerCompilationDone(this, result,
+                                                   sourceString);
+        }
+        return result;
     }
 
     private static Class codegenClass = Kit.classOrNull(

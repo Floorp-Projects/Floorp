@@ -2200,16 +2200,20 @@ public class ScriptRuntime {
         String sourceName = ScriptRuntime.
             makeUrlForGeneratedScript(true, filename, lineNumber);
 
+        ErrorReporter reporter;
+        reporter = DefaultErrorReporter.forEval(cx.getErrorReporter());
+
         // Compile the reader with opt level of -1 to force interpreter
         // mode.
         int savedLevel = cx.optimizationLevel;
         cx.optimizationLevel = -1;
         Script script;
         try {
-            script = cx.compileString((String)x, true, sourceName, 1, null);
+            script = cx.compileString((String)x, reporter, sourceName, 1, null);
         } finally {
             cx.optimizationLevel = savedLevel;
         }
+        ((InterpretedScript)script).itsData.itsFromEvalCode = true;
 
         // if the compile fails, an error has been reported by the
         // compiler, but we need to stop execution to avoid

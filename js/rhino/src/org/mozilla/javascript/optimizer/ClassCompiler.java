@@ -134,58 +134,48 @@ public class ClassCompiler
                                         int lineno,
                                         String mainClassName)
     {
-        Parser p = new Parser(compilerEnv);
+        Parser p = new Parser(compilerEnv, compilerEnv.getErrorReporter());
         ScriptOrFnNode tree = p.parse(source, sourceLocation, lineno);
-        int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
-        if (syntaxErrorCount == 0) {
-            String encodedSource = p.getEncodedSource();
+        String encodedSource = p.getEncodedSource();
 
-            Class superClass = getTargetExtends();
-            Class[] interfaces = getTargetImplements();
-            String scriptClassName;
-            boolean isPrimary = (interfaces == null && superClass == null);
-            if (isPrimary) {
-                scriptClassName = mainClassName;
-            } else {
-                scriptClassName = makeAuxiliaryClassName(mainClassName, "1");
-            }
+        Class superClass = getTargetExtends();
+        Class[] interfaces = getTargetImplements();
+        String scriptClassName;
+        boolean isPrimary = (interfaces == null && superClass == null);
+        if (isPrimary) {
+            scriptClassName = mainClassName;
+        } else {
+            scriptClassName = makeAuxiliaryClassName(mainClassName, "1");
+        }
 
-            Codegen codegen = new Codegen();
-            byte[] scriptClassBytes
-                = codegen.compileToClassFile(compilerEnv, scriptClassName,
-                                             tree, encodedSource,
-                                             false);
+        Codegen codegen = new Codegen();
+        byte[] scriptClassBytes
+            = codegen.compileToClassFile(compilerEnv, scriptClassName,
+                                         tree, encodedSource,
+                                         false);
 
-            syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
-            if (syntaxErrorCount == 0) {
-                if (isPrimary) {
-                    return new Object[] { scriptClassName, scriptClassBytes };
-                }
-                int functionCount = tree.getFunctionCount();
-                ObjToIntMap functionNames = new ObjToIntMap(functionCount);
-                for (int i = 0; i != functionCount; ++i) {
-                    FunctionNode ofn = tree.getFunctionNode(i);
-                    String name = ofn.getFunctionName();
-                    if (name != null && name.length() != 0) {
-                        functionNames.put(name, ofn.getParamCount());
-                    }
-                }
-                if (superClass == null) {
-                    superClass = ScriptRuntime.ObjectClass;
-                }
-                byte[] mainClassBytes
-                    = JavaAdapter.createAdapterCode(
-                        functionNames, mainClassName,
-                        superClass, interfaces, scriptClassName);
-
-                return new Object[] { mainClassName, mainClassBytes,
-                                      scriptClassName, scriptClassBytes };
+        if (isPrimary) {
+            return new Object[] { scriptClassName, scriptClassBytes };
+        }
+        int functionCount = tree.getFunctionCount();
+        ObjToIntMap functionNames = new ObjToIntMap(functionCount);
+        for (int i = 0; i != functionCount; ++i) {
+            FunctionNode ofn = tree.getFunctionNode(i);
+            String name = ofn.getFunctionName();
+            if (name != null && name.length() != 0) {
+                functionNames.put(name, ofn.getParamCount());
             }
         }
-        String msg = ScriptRuntime.getMessage1(
-            "msg.got.syntax.errors", String.valueOf(syntaxErrorCount));
-        throw compilerEnv.getErrorReporter().
-            runtimeError(msg, sourceLocation, lineno, null, 0);
+        if (superClass == null) {
+            superClass = ScriptRuntime.ObjectClass;
+        }
+        byte[] mainClassBytes
+            = JavaAdapter.createAdapterCode(
+                functionNames, mainClassName,
+                superClass, interfaces, scriptClassName);
+
+        return new Object[] { mainClassName, mainClassBytes,
+                              scriptClassName, scriptClassBytes };
     }
 
     private CompilerEnvirons compilerEnv;

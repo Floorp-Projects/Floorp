@@ -298,7 +298,6 @@ public class Interpreter
             generateFunctionICode();
             return createFunction(cx, scope, itsData, false);
         } else {
-            itsData.itsFromEvalCode = compilerEnv.isFromEval();
             generateICodeFromTree(scriptOrFn);
             return new InterpretedScript(itsData);
         }

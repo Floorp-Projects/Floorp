@@ -196,7 +196,9 @@ class NativeScript extends NativeFunction implements Script
             filename = "<Script object>";
             linep[0] = 1;
         }
-        return cx.compileString(source, filename, linep[0], null);
+        ErrorReporter reporter;
+        reporter = DefaultErrorReporter.forEval(cx.getErrorReporter());
+        return cx.compileString(source, reporter, filename, linep[0], null);
     }
 
 // #string_id_map#

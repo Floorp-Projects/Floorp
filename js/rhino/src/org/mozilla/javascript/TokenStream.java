@@ -64,13 +64,11 @@ public class TokenStream
     private final static int
         EOF_CHAR = -1;
 
-    public TokenStream(CompilerEnvirons compilerEnv,
-                       Reader sourceReader, String sourceString,
-                       String sourceName, int lineno)
+    public TokenStream(Parser parser, Reader sourceReader, String sourceString,
+                       int lineno)
     {
-        this.compilerEnv = compilerEnv;
+        this.parser = parser;
         this.pushbackToken = Token.EOF;
-        this.sourceName = sourceName;
         this.lineno = lineno;
         if (sourceReader != null) {
             if (sourceString != null) Kit.codeBug();
@@ -287,17 +285,13 @@ public class TokenStream
 
     public final void reportCurrentLineError(String message)
     {
-        compilerEnv.reportSyntaxError(message, getSourceName(), getLineno(),
-                                      getLine(), getOffset());
+        parser.reportError(message, getLineno(), getLine(), getOffset());
     }
 
     public final void reportCurrentLineWarning(String message)
     {
-        compilerEnv.reportSyntaxWarning(message, getSourceName(), getLineno(),
-                                        getLine(), getOffset());
+        parser.reportWarning(message, getLineno(), getLine(), getOffset());
     }
-
-    public final String getSourceName() { return sourceName; }
 
     public final int getLineno() { return lineno; }
 
@@ -466,7 +460,8 @@ public class TokenStream
                     if (result != Token.EOF) {
                         if (result != Token.RESERVED) {
                             return result;
-                        } else if (!compilerEnv.reservedKeywordAsIdentifier)
+                        } else if (!parser.compilerEnv.
+                                    reservedKeywordAsIdentifier)
                         {
                             return result;
                         } else {
@@ -1448,7 +1443,6 @@ public class TokenStream
     boolean allowRegExp;
     String regExpFlags;
 
-    private String sourceName;
     private String line;
     private boolean fromEval;
     private int pushbackToken;
@@ -1492,5 +1486,5 @@ public class TokenStream
     private boolean xmlIsTagContent;
     private int xmlOpenTagsCount;
 
-    CompilerEnvirons compilerEnv;
+    private Parser parser;
 }

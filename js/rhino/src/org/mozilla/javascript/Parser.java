@@ -58,9 +58,10 @@ import java.util.Hashtable;
 
 public class Parser
 {
-    public Parser(CompilerEnvirons compilerEnv)
+    public Parser(CompilerEnvirons compilerEnv, ErrorReporter errorReporter)
     {
         this.compilerEnv = compilerEnv;
+        this.errorReporter = errorReporter;
     }
 
     protected Decompiler createDecompiler(CompilerEnvirons compilerEnv)
@@ -86,7 +87,6 @@ public class Parser
 
     void reportError(String messageId)
     {
-        this.ok = false;
         ts.reportCurrentLineError(Context.getMessage0(messageId));
 
         // Throw a ParserException exception to unwind the recursive descent
@@ -94,6 +94,18 @@ public class Parser
         throw new ParserException();
     }
 
+    void reportError(String message, int lineno,
+                     String lineText, int lineOffset)
+    {
+        ++syntaxErrorCount;
+        errorReporter.error(message, sourceURI, lineno, lineText, lineOffset);
+    }
+
+    void reportWarning(String message, int lineno,
+                       String lineText, int lineOffset)
+    {
+        errorReporter.warning(message, sourceURI, lineno, lineText, lineOffset);
+    }
 
     public String getEncodedSource()
     {
@@ -154,10 +166,10 @@ public class Parser
      * CompilerEnvirons.)
      */
     public ScriptOrFnNode parse(String sourceString,
-                                String sourceLocation, int lineno)
+                                String sourceURI, int lineno)
     {
-        this.ts = new TokenStream(compilerEnv, null, sourceString,
-                                  sourceLocation, lineno);
+        this.sourceURI = sourceURI;
+        this.ts = new TokenStream(this, null, sourceString, lineno);
         try {
             return parse();
         } catch (IOException ex) {
@@ -175,11 +187,11 @@ public class Parser
      * CompilerEnvirons.)
      */
     public ScriptOrFnNode parse(Reader sourceReader,
-                                String sourceLocation, int lineno)
+                                String sourceURI, int lineno)
         throws IOException
     {
-        this.ts = new TokenStream(compilerEnv, sourceReader, null,
-                                  sourceLocation, lineno);
+        this.sourceURI = sourceURI;
+        this.ts = new TokenStream(this, sourceReader, null, lineno);
         return parse();
     }
 
@@ -193,7 +205,7 @@ public class Parser
         this.encodedSource = null;
         decompiler.addToken(Token.SCRIPT);
 
-        this.ok = true;
+        this.syntaxErrorCount = 0;
 
         int baseLineno = ts.getLineno();  // line number where source starts
 
@@ -216,7 +228,6 @@ public class Parser
                     try {
                         n = function(FunctionNode.FUNCTION_STATEMENT);
                     } catch (ParserException e) {
-                        this.ok = false;
                         break;
                     }
                 } else {
@@ -227,16 +238,18 @@ public class Parser
             }
         } catch (StackOverflowError ex) {
             String msg = Context.getMessage0("mag.too.deep.parser.recursion");
-            throw Context.reportRuntimeError(msg, ts.getSourceName(),
+            throw Context.reportRuntimeError(msg, sourceURI,
                                              ts.getLineno(), null, 0);
         }
 
-        if (!this.ok) {
-            // XXX ts.clearPushback() call here?
-            return null;
+        if (this.syntaxErrorCount != 0) {
+            String msg = String.valueOf(this.syntaxErrorCount);
+            msg = Context.getMessage1("msg.got.syntax.errors", msg);
+            throw errorReporter.runtimeError(msg, sourceURI, baseLineno,
+                                             null, 0);
         }
 
-        currentScriptOrFn.setSourceName(ts.getSourceName());
+        currentScriptOrFn.setSourceName(sourceURI);
         currentScriptOrFn.setBaseLineno(baseLineno);
         currentScriptOrFn.setEndLineno(ts.getLineno());
 
@@ -278,7 +291,7 @@ public class Parser
                 nf.addChildToBack(pn, n);
             }
         } catch (ParserException e) {
-            this.ok = false;
+            // Ignore it
         } finally {
             --nestingOfFunction;
         }
@@ -405,7 +418,7 @@ public class Parser
         }
 
         fnNode.setEncodedSourceBounds(functionSourceStart, functionSourceEnd);
-        fnNode.setSourceName(ts.getSourceName());
+        fnNode.setSourceName(sourceURI);
         fnNode.setBaseLineno(baseLineno);
         fnNode.setEndLineno(ts.getLineno());
 
@@ -1888,11 +1901,12 @@ public class Parser
     }
 
     CompilerEnvirons compilerEnv;
+    private ErrorReporter errorReporter;
+    private int syntaxErrorCount;
+    private String sourceURI;
     private TokenStream ts;
 
     private IRFactory nf;
-
-    private boolean ok; // Did the parse encounter an error?
 
     private int nestingOfFunction;
 

@@ -45,8 +45,6 @@ public class CompilerEnvirons
     public CompilerEnvirons()
     {
         this.errorReporter = DefaultErrorReporter.instance;
-        this.syntaxErrorCount = 0;
-        this.fromEval = false;
         this.languageVersion = Context.VERSION_DEFAULT;
         this.generateDebugInfo = true;
         this.useDynamicScope = false;
@@ -74,11 +72,6 @@ public class CompilerEnvirons
         this.activationNames = cx.activationNames;
     }
 
-    public final int getSyntaxErrorCount()
-    {
-        return syntaxErrorCount;
-    }
-
     public final ErrorReporter getErrorReporter()
     {
         return errorReporter;
@@ -88,40 +81,6 @@ public class CompilerEnvirons
     {
         if (errorReporter == null) throw new IllegalArgumentException();
         this.errorReporter = errorReporter;
-    }
-
-    final void reportSyntaxError(String message,
-                                 String sourceName, int lineno,
-                                 String lineText, int lineOffset)
-    {
-        ++syntaxErrorCount;
-        if (fromEval) {
-            // We're probably in an eval. Need to throw an exception.
-            throw ScriptRuntime.constructError(
-                "SyntaxError", message, sourceName,
-                lineno, lineText, lineOffset);
-        } else {
-            getErrorReporter().error(message, sourceName, lineno,
-                                     lineText, lineOffset);
-        }
-    }
-
-    final void reportSyntaxWarning(String message,
-                                   String sourceName, int lineno,
-                                   String lineText, int lineOffset)
-    {
-        getErrorReporter().warning(message, sourceName,
-                                   lineno, lineText, lineOffset);
-    }
-
-    final boolean isFromEval()
-    {
-        return fromEval;
-    }
-
-    final void setFromEval(boolean fromEval)
-    {
-        this.fromEval = fromEval;
     }
 
     public final int getLanguageVersion()
@@ -191,9 +150,6 @@ public class CompilerEnvirons
     }
 
     private ErrorReporter errorReporter;
-    private int syntaxErrorCount;
-
-    private boolean fromEval;
 
     int languageVersion = Context.VERSION_DEFAULT;
     boolean generateDebugInfo = true;

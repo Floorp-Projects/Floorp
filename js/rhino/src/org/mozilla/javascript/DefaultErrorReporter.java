@@ -44,24 +44,56 @@ class DefaultErrorReporter implements ErrorReporter
 {
     static final DefaultErrorReporter instance = new DefaultErrorReporter();
 
-    public void warning(String message, String sourceName, int line,
-                        String lineSource, int lineOffset)
+    private boolean forEval;
+    private ErrorReporter chainedReporter;
+
+    private DefaultErrorReporter() { }
+
+    static ErrorReporter forEval(ErrorReporter reporter)
     {
-        // do nothing
+        DefaultErrorReporter r = new DefaultErrorReporter();
+        r.forEval = true;
+        r.chainedReporter = reporter;
+        return r;
     }
 
-    public void error(String message, String sourceName, int line,
-                      String lineSource, int lineOffset)
+    public void warning(String message, String sourceURI, int line,
+                        String lineText, int lineOffset)
     {
-        throw new EvaluatorException(message, sourceName, line,
-                                     lineSource, lineOffset);
+        if (chainedReporter != null) {
+            chainedReporter.warning(
+                message, sourceURI, line, lineText, lineOffset);
+        } else {
+            // Do nothing
+        }
     }
 
-    public EvaluatorException runtimeError(String message, String sourceName,
-                                           int line, String lineSource,
+    public void error(String message, String sourceURI, int line,
+                      String lineText, int lineOffset)
+    {
+        if (forEval) {
+            throw ScriptRuntime.constructError(
+                "SyntaxError", message, sourceURI, line, lineText, lineOffset);
+        }
+        if (chainedReporter != null) {
+            chainedReporter.error(
+                message, sourceURI, line, lineText, lineOffset);
+        } else {
+            throw runtimeError(
+                message, sourceURI, line, lineText, lineOffset);
+        }
+    }
+
+    public EvaluatorException runtimeError(String message, String sourceURI,
+                                           int line, String lineText,
                                            int lineOffset)
     {
-        throw new EvaluatorException(message, sourceName, line,
-                                     lineSource, lineOffset);
+        if (chainedReporter != null) {
+            return chainedReporter.runtimeError(
+                message, sourceURI, line, lineText, lineOffset);
+        } else {
+            return new EvaluatorException(
+                message, sourceURI, line, lineText, lineOffset);
+        }
     }
 }
