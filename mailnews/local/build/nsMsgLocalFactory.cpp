@@ -25,6 +25,7 @@
 
 // include files for components this factory creates...
 #include "nsMailboxUrl.h"
+#include "nsPop3URL.h"
 #include "nsMSGFolderDataSource.h"
 #include "nsMailboxService.h"
 #include "nsLocalMailFolder.h"
@@ -40,6 +41,7 @@ static NS_DEFINE_CID(kMailNewsDatasourceCID, NS_MAILNEWSDATASOURCE_CID);
 static NS_DEFINE_CID(kMailNewsResourceCID, NS_MAILNEWSRESOURCE_CID);
 static NS_DEFINE_CID(kMailNewsMessageResourceCID, NS_MAILNEWSMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
+static NS_DEFINE_CID(kCPop3Url, NS_POP3URL_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -122,6 +124,10 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 	if (mClassID.Equals(kCMailboxUrl)) 
 	{
 		inst = NS_STATIC_CAST(nsIMailboxUrl*, new nsMailboxUrl(nsnull, nsnull));
+	}
+	else if (mClassID.Equals(kCPop3Url))
+	{
+		inst = NS_STATIC_CAST(nsIPop3URL*, new nsPop3URL(nsnull, nsnull));
 	}
 	else if (mClassID.Equals(kCMailboxParser)) 
 	{
@@ -219,6 +225,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
+  rv = compMgr->RegisterComponent(kCPop3Url, nsnull, nsnull,
+								  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
   rv = compMgr->RegisterComponent(kPop3ServiceCID, nsnull, nsnull,
 								  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
@@ -265,6 +275,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kCMailboxService, path);
+  if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterFactory(kCPop3Url, path);
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kPop3ServiceCID, path);
