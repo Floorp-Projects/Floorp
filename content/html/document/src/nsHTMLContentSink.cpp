@@ -119,6 +119,11 @@
 #include "nsIPrompt.h"
 #include "nsIDOMWindowInternal.h"
 
+#include "nsLayoutCID.h"
+#include "nsIFrameManager.h"
+#include "nsILayoutHistoryState.h"
+static NS_DEFINE_CID(kLayoutHistoryStateCID, NS_LAYOUT_HISTORY_STATE_CID);
+
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
 const PRBool kBlockByDefault=PR_FALSE;
 #else
@@ -1653,6 +1658,33 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
         mSink->mInNotification--;
       }
       
+      // Create a temp layoutHistoryState to store the childrens' state
+      nsCOMPtr<nsIPresShell> presShell;
+      nsCOMPtr<nsIPresContext> presContext;
+      nsCOMPtr<nsIFrameManager> frameManager;
+      nsCOMPtr<nsILayoutHistoryState> tempFrameState = do_CreateInstance(kLayoutHistoryStateCID);
+      if (mSink && mSink->mDocument) {
+        PRInt32 ns = mSink->mDocument->GetNumberOfShells();
+        if (ns > 0) {
+          presShell = dont_AddRef(mSink->mDocument->GetShellAt(0));
+          if (presShell) {
+            presShell->GetFrameManager(getter_AddRefs(frameManager));
+            presShell->GetPresContext(getter_AddRefs(presContext));
+          }
+        }
+      }
+      NS_ASSERTION(presShell && frameManager && presContext && tempFrameState,
+                  "SinkContext::DemoteContainer() Error storing frame state!");
+
+      // Store children frames state before removing them from old parent
+      nsIFrame* frame = nsnull;
+      if (frameManager && presContext && tempFrameState) {
+        presShell->GetPrimaryFrameFor(container, &frame);
+        if (frame) {
+          frameManager->CaptureFrameState(presContext, frame, tempFrameState);
+        }
+      }
+
       if (NS_SUCCEEDED(result)) {
         // Move all of the demoted containers children to its parent
         PRInt32 i, count;
@@ -1709,6 +1741,15 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
         }
         mStackPos--;
       }
+
+      // Restore frames state after adding it to new parent
+      if (frameManager && presContext && tempFrameState && frame) {
+        presShell->GetPrimaryFrameFor(parent, &frame);
+        if (frame) {
+          frameManager->RestoreFrameState(presContext, frame, tempFrameState);
+        }
+      }
+
     }
     NS_RELEASE(container);
 
