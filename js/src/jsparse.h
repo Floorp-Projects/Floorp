@@ -128,11 +128,14 @@ JS_BEGIN_EXTERN_C
  * TOK_SHOP     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
  *                          pn_op: JSOP_LSH, JSOP_RSH, JSOP_URSH
  * TOK_PLUS,    binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
- *                          pn_strcat: if a left-associated binary TOK_PLUS
+ *                          pn_extra: if a left-associated binary TOK_PLUS
  *                            tree has been flattened into a list (see above
- *                            under <Expressions>), pn_strcat will be true if
- *                            at least one list element is a string literal
- *                            (TOK_STRING), and false otherwise.
+ *                            under <Expressions>), pn_extra will contain
+ *                            PNX_STRCAT if at least one list element is a
+ *                            string literal (TOK_STRING); if such a list has
+ *                            any non-string, non-number term, pn_extra will
+ *                            contain PNX_CANTFOLD.
+ *                          pn_
  * TOK_MINUS                pn_op: JSOP_ADD, JSOP_SUB
  * TOK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
  * TOK_DIVOP                pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
@@ -198,7 +201,7 @@ struct JSParseNode {
 	    JSParseNode *head;          /* first node in list */
 	    JSParseNode **tail;         /* ptr to ptr to last node in list */
 	    uint32      count;          /* number of nodes in list */
-	    JSBool      extra;          /* extra comma flag for [1,2,,] */
+	    uint32      extra;          /* extra comma flag for [1,2,,] */
 	} list;
 	struct {                        /* ternary: if, for(;;), ?: */
 	    JSParseNode *kid1;          /* condition, discriminant, etc. */
@@ -233,7 +236,6 @@ struct JSParseNode {
 #define pn_tail         pn_u.list.tail
 #define pn_count        pn_u.list.count
 #define pn_extra        pn_u.list.extra
-#define pn_strcat       pn_u.list.extra
 #define pn_kid1         pn_u.ternary.kid1
 #define pn_kid2         pn_u.ternary.kid2
 #define pn_kid3         pn_u.ternary.kid3
@@ -247,6 +249,10 @@ struct JSParseNode {
 #define pn_slot         pn_u.name.slot
 #define pn_attrs        pn_u.name.attrs
 #define pn_dval         pn_u.dval
+
+/* PN_LIST pn_extra flags. */
+#define PNX_STRCAT      0x1             /* TOK_PLUS list has string term */
+#define PNX_CANTFOLD    0x2             /* TOK_PLUS list has unfoldable term */
 
 /*
  * Move pn2 into pn, preserving pn->pn_pos and pn->pn_offset and handing off
