@@ -434,7 +434,7 @@ function sendEmail(Subject, Body, To, Cc, Bcc, Attachment, Priority)
 	/* TODO: properly set a listener on this action and report errors back to the calling function */
 	try
 	{
-		MessageCompose.SendMsg(MessageDeliverMode.Now, Account.defaultIdentity, null,null);
+		MessageCompose.SendMsg(MessageDeliverMode.Now, Account.defaultIdentity, Account.key,null,null);
 	}
 	catch(Exception)
 	{
