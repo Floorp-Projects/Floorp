@@ -336,11 +336,6 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
     // gtk_style_copy ups the ref count of the font
     gdk_font_unref (style->font);
 
-    GdkFontPrivate *pvt;
-
-    pvt = (GdkFontPrivate*) style->font;
-    g_print("font refcount: %i\n",pvt->ref_count);
-
     GdkFont *font = (GdkFont *)fontHandle;
     style->font = font;
     gdk_font_ref(style->font);
