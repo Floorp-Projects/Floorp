@@ -343,27 +343,9 @@ main(int argc, char* argv[])
 
         // Enter the message pump to allow the URL load to proceed.
         while ( gKeepRunning ) {
-#ifdef WIN32
-            MSG msg;
-            if (GetMessage(&msg, NULL, 0, 0)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-            else
-                gKeepRunning = FALSE;
-#elif XP_MAC
-            /* Mac stuff is missing here! */
-#elif XP_OS2
-            QMSG qmsg;
-            if (WinGetMsg(0, &qmsg, 0, 0, 0))
-                WinDispatchMsg(0, &qmsg);
-            else
-                gKeepRunning = FALSE;
-#else
             PLEvent *gEvent;
-            rv = gEventQ->WaitForEvent(&gEvent);
-            rv = gEventQ->HandleEvent(gEvent);
-#endif
+            gEventQ->WaitForEvent(&gEvent);
+            gEventQ->HandleEvent(gEvent);
         }
     }
     else {

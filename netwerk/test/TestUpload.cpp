@@ -190,31 +190,16 @@ main(int argc, char* argv[])
         listener = new InputTestConsumer;
         if (!listener) {
             NS_ERROR("Failed to create a new stream listener!");
-            return -1;;
+            return -1;
         }
         NS_ADDREF(listener);
 
         channel->AsyncOpen(listener, nsnull);
 
         while ( gKeepRunning ) {
-#ifdef WIN32
-            MSG msg;
-
-            if (GetMessage(&msg, NULL, 0, 0)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            } else {
-                gKeepRunning = 0;
-            }
-#else
-#ifdef XP_MAC
-            /* Mac stuff is missing here! */
-#else
             PLEvent *gEvent;
-            rv = gEventQ->WaitForEvent(&gEvent);
-            rv = gEventQ->HandleEvent(gEvent);
-#endif /* XP_UNIX */
-#endif /* !WIN32 */
+            gEventQ->WaitForEvent(&gEvent);
+            gEventQ->HandleEvent(gEvent);
         }
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
