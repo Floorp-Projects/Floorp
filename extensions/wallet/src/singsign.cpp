@@ -2555,6 +2555,7 @@ SINGSIGN_PromptUsernameAndPassword
     /* user pressed Cancel */
     PR_FREEIF(*user);
     PR_FREEIF(*pwd);
+    *returnValue = PR_FALSE;
     return res;
   }
   if (checked) {
@@ -2632,6 +2633,7 @@ SINGSIGN_PromptPassword
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*pwd);
+    *returnValue = PR_FALSE;
     return res;
   }
   if (checked) {
@@ -2690,6 +2692,7 @@ SINGSIGN_Prompt
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
     PR_FREEIF(*resultText);
+    *returnValue = PR_FALSE;
     return res;
   }
   if (checked) {
