@@ -51,11 +51,14 @@
         this.ifSetAttribute("timeout", 50);
         this.ifSetAttribute("maxrows", 5);
         this.ifSetAttribute("autoFill", false);
+        this.ifSetAttribute("autoFillAfterMatch", false);
         this.ifSetAttribute("showPopup", true);
         this.ifSetAttribute("flexPopup", true);
         this.ifSetAttribute("alwaysOpenPopup", false);
         this.ifSetAttribute("disableAutocomplete", false);
+        this.ifSetAttribute("forceComplete", false);
         this.ifSetAttribute("tabScrolling", false);
+
         
         // initialize the search sessions
         this.searchSessions = this.getAttribute("searchSessions");
@@ -67,6 +70,7 @@
         if (mps.length == 0)
           this.ifSetAttribute("hideHistory", true);
         
+        // turn js handler attributes into functions
         attr = this.getAttribute("ontextcommand");
         if (attr) this.ontextcommand = new Function("userAction", attr);
         attr = this.getAttribute("ontextrevert");
@@ -144,6 +148,18 @@
                 onset="return this.setAttribute('autoFill', val);"
                 onget="return this.getAttribute('autoFill') == 'true';"/>
 
+      <!-- if the resulting match string is not at the beginning of the typed string,
+           this will optionally autofill like this "bar |>> foobar|" -->
+      <property name="autoFillAfterMatch"
+                onset="return this.setAttribute('autoFillAfterMatch', val);"
+                onget="return this.getAttribute('autoFillAfterMatch') == 'true';"/>
+                
+      <!-- option for completing to the default result whenever the user hits
+           enter or the textbox loses focus -->
+      <property name="forceComplete"
+                onset="return this.setAttribute('forceComplete', val);"
+                onget="return this.getAttribute('forceComplete') == 'true';"/>
+
       <!-- option to show the popup containing the results -->
       <property name="showPopup"
                 onset="return this.setAttribute('showPopup', val);"
@@ -182,9 +198,7 @@
                 onget="return this.getAttribute('userAction');"/>
       
       <!-- state which indicates if the last search had no matches -->
-      <property name="noMatch"
-                onset="return this.setAttribute('nomatch', val);"
-                onget="return this.getAttribute('nomatch') == 'true';"/>
+      <property name="noMatch">true</property>
 
       <!-- state which indicates a search is currently happening -->
       <property name="isSearching">false</property>
@@ -208,10 +222,11 @@
       <property name="mLastKeyCode">null</property>
       <property name="mAutoCompleteTimer">0</property>
       <property name="mMenuOpen">false</property>
-      <property name="mFinishAfterSearch">false</property>
       <property name="mFireAfterSearch">false</property>
+      <property name="mFinishAfterSearch">false</property>
       <property name="mNeedToFinish">false</property>
       <property name="mNeedToComplete">false</property>
+      <property name="mTransientValue">false</property>
       <property name="mView">null</property>
       <property name="currentSearchString">null</property>
       <property name="ignoreInputEvent">false</property>
@@ -545,15 +560,17 @@
               break;
           }
           this.noMatch = failed;
+          this.setAttribute("nomatch", this.noMatch);
           
           if (this.mFinishAfterSearch)
-            this.finishAutoComplete(this.mFireAfterSearch);
+            this.finishAutoComplete(false, this.mFireAfterSearch);
         ]]></body>
       </method>
 
       <!-- when the focus exits the widget or user hits return, 
            determine what value to leave in the textbox -->
       <method name="finishAutoComplete">
+        <parameter name="aForceComplete"/>
         <parameter name="aFireTextCommand"/>
         <body><![CDATA[
           this.mFinishAfterSearch = false;
@@ -573,8 +590,9 @@
             var val = this.resultsPopup.getOverrideValue();
             if (val) {
               this.value = val;
-            } else if (this.mNeedToComplete) {
-              // only fill in default value if there is nothing currently selected in popup
+            } else if (this.mTransientValue) {
+              // do nothing
+            } else if (this.forceComplete && (this.mNeedToComplete || aForceComplete)) {
               var defaultSession = this.getDefaultSession();
               if (defaultSession) {
                 var results = this.mLastResults[defaultSession];
@@ -586,11 +604,10 @@
             this.closeResultPopup();
           }
           
-          this.clearTimer();
-                    
-          this.currentSearchString = "";
           this.mNeedToComplete = false;
-          
+          this.currentSearchString = "";
+          this.clearTimer();
+
           if (aFireTextCommand)
             this.fireTextCommand(this.userAction);
         ]]></body>
@@ -669,6 +686,7 @@
 
           this.userAction = "typing";
           this.mNeedToFinish = true;
+          this.mTransientValue = false;
           this.mNeedToComplete = true;
 
           this.resultsPopup.selectedIndex = null;
@@ -703,12 +721,12 @@
               
             case KeyEvent.DOM_VK_RETURN:
               killEvent = this.mMenuOpen;
-              this.finishAutoComplete(true);
+              this.finishAutoComplete(true, true);
+              this.closeResultPopup();
               break;
 
             case KeyEvent.DOM_VK_ESCAPE:
               this.clearTimer();
-
               killEvent = this.mMenuOpen;
               this.undoAutoComplete();
               this.closeResultPopup();
@@ -717,7 +735,6 @@
             case KeyEvent.DOM_VK_LEFT:
             case KeyEvent.DOM_VK_RIGHT:
               this.clearTimer();
-
               this.closeResultPopup();
               break;
 
@@ -726,7 +743,6 @@
             case KeyEvent.DOM_VK_UP:
             case KeyEvent.DOM_VK_DOWN:
               this.clearTimer();
-              
               killEvent = true;
               this.keyNavigation(aEvent);
               break;
@@ -770,8 +786,10 @@
             this.ignoreInputEvent = true;
             if (selected != null) {
               this.value = this.getResultValueAt(selected);
+              this.mTransientValue = true;
             } else {
               this.value = this.currentSearchString;
+              this.mTransientValue = false;
             }
             
             // move cursor to the end
@@ -801,10 +819,19 @@
                 this.value = this.value + resultValue.substr(endPoint);
                 this.mInputElt.setSelectionRange(endPoint, this.value.length);
               } else {
-                this.value = this.value + " >> " + resultValue;
-                this.mNeedToComplete = true;
-                this.mInputElt.setSelectionRange(entry.length, this.value.length);
+                if (this.autoFillAfterMatch) {
+                  this.value = this.value + " >> " + resultValue;
+                  this.mInputElt.setSelectionRange(entry.length, this.value.length);
+                } else {
+                  var postIndex = resultValue.indexOf(this.value);
+                  if (postIndex >= 0) {
+                    var startPt = this.value.length;
+                    this.value = this.value + resultValue.substr(startPt+postIndex);
+                    this.mInputElt.setSelectionRange(startPt, this.value.length);
+                  }
+                }
               }
+              this.mNeedToComplete = true;
               this.ignoreInputEvent = false;
             }
           } 
@@ -823,7 +850,6 @@
                 this.resultsPopup.setAttribute("width", w);
             }
             
-            dump("open popup\n");
             this.resultsPopup.openPopup(this, -1, -1, "popup", "bottomleft", "topleft");
             this.mMenuOpen = true;
           }
@@ -834,7 +860,6 @@
       <method name="closeResultPopup">
         <body><![CDATA[
           if (this.resultsPopup && this.mMenuOpen) {
-            //dump("close popup\n");
             //var boxObject = this.mPopupSetElt.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
             //boxObject.hidePopup();
             this.resultsPopup.closePopup();
@@ -961,7 +986,6 @@
           
           clearResults: function(aInvalidate)
           {
-            //dump("clearResults\n");
             this.mRowCount = 0;  
             this.mResults = [];
             
@@ -971,7 +995,6 @@
           
           addResults: function(aResults)
           {
-            //dump("addResults\n");
             this.mResults.push(aResults);
             var oldCount = this.mRowCount;
             this.mRowCount += aResults.items.Count();
@@ -1002,7 +1025,6 @@
           
           setOutliner: function(aOutliner)
           {
-            //dump(this.mOutliner + "//" + aOutliner + "\n");
             this.mOutliner = aOutliner;
             
             if (aOutliner) {
@@ -1015,7 +1037,6 @@
           
           getCellText: function(aRow, aColId)
           {
-            //if (aRow == 0 && aColId == "value") dump("START PAINT "+aRow+"\n");
             var result = this.mTextbox.getResultAt(aRow);
             if (!result) return "";
             return aColId == "value" ? result.value : (aColId == "comment" ? result.comment : "");
@@ -1067,7 +1088,7 @@
                action="this.userAction = 'typing';"/>
 
       <handler event="blur" phase="capturing"
-               action="this.userAction = 'none'; this.finishAutoComplete(false);"/>
+               action="this.userAction = 'none'; this.finishAutoComplete(false, false);"/>
     </handlers>
   </binding> 
 
@@ -1092,7 +1113,7 @@
       ]]></constructor>
 
      <property name="textbox"
-                onget="return this.__AUTOCOMPLETE_BOX__;"/>
+                onget="return '__AUTOCOMPLETE_BOX__' in this ? this.__AUTOCOMPLETE_BOX__ : null;"/>
       
       <property name="outliner">
         document.getAnonymousElementByAttribute(this, "anonid", "outliner");
@@ -1164,6 +1185,14 @@
           
           this.outliner.setAttribute("height", height);
           this.outliner.setAttribute("hidescrollbar", view.rowCount <= rows);
+          
+          // XXX horrible hack to workaround for bug 86551
+          // outliner will refuse to recognize initial height of 0 unless
+          // we force frame reconstruction via setting the style attribute
+          if (!("__firstPaint__" in this)) {
+            this.__firstPaint__ = true;
+            this.outliner.setAttribute("style", this.outliner.getAttribute("style"));
+          }
         ]]></body>
       </method>
 
@@ -1222,11 +1251,11 @@
     </implementation>
 
     <handlers>
-      <handler event="create">
+      <handler event="popupshowing">
         this.textbox.mMenuOpen = true;
       </handler>
 
-      <handler event="destroy">
+      <handler event="popuphiding">
         this.textbox.mMenuOpen = false;
         this.selectedIndex = null;
       </handler>
@@ -1278,7 +1307,10 @@
            var x = aEvent.screenX-pbox.screenX + this.boxObject.x;
            var y = aEvent.screenY-pbox.screenY + this.boxObject.y;
            obox.getCellAt(x-1, y-1, row, col, obj);
-           return {row: row.value, column: col.value};
+           if (row.value >= 0 && row.value < this.textbox.view.rowCount)
+             return {row: row.value, column: col.value};
+           else
+            return null;
         ]]></body>
       </method>
     </implementation>
@@ -1289,8 +1321,8 @@
 
       <handler event="mousemove"><![CDATA[
         if (new Date() - this.mLastMoveTime > 30) {
-          var rc = this.getHoverCell(event);
-          if (rc.row != this.textbox.view.selectedIndex)
+         var rc = this.getHoverCell(event);
+         if (rc && rc.row != this.textbox.view.selectedIndex) 
             this.textbox.view.selectedIndex = rc.row;
           this.mLastMoveTime = new Date();
         }

@@ -1,0 +1,120 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+     Joe Hewitt <hewitt@netscape.com>
+  -->
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-smart_browsing.dtd" >
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<window id="pref-smart_browsing-ac" title="&autoCompleteAdvanced.title;"
+        orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript"><![CDATA[
+    
+    window.onload = function()
+    {
+      doSetOKCancel(onOk);      
+
+      setCheck("cbxAutoFill", window.arguments[0]);
+      setCheck("cbxShowPopup", window.arguments[1]);
+      setCheck("cbxShowSearch", window.arguments[2]);
+
+      updateImage("AutoFill");
+      updateImage("ShowPopup");
+      updateImage("ShowSearch");
+      
+      updateShowPopup();
+    }
+    
+    function onOk()
+    {
+      window.opener.receiveACPrefs(getCheck("cbxAutoFill"), 
+                                   getCheck("cbxShowPopup"),
+                                   getCheck("cbxShowSearch"));
+                                         
+      return true;                                           
+    }
+    
+    function getCheck(aName)
+    {
+      return document.getElementById(aName).checked;
+    }
+    
+    function setCheck(aName, aTruth)
+    {
+      document.getElementById(aName).setAttribute("checked", aTruth);
+    }
+    
+    function updateImage(aImg)
+    {
+     var img = document.getElementById("img"+aImg);
+     var checked = document.getElementById("cbx"+aImg).checked;
+      if (aImg == "AutoFill") {
+        img.setAttribute("src", "chrome://communicator/content/pref/autocomplete-autofill-"+(checked?"on":"off")+".gif");
+      } else if (aImg == "ShowPopup") {
+        img.setAttribute("hidden", !checked);
+        updateImage("ShowSearch");
+      } else if (aImg == "ShowSearch") {
+        var checked2 = document.getElementById("cbxShowPopup").checked;
+        img.setAttribute("hidden", !checked2 || !checked);
+      }
+    }
+    
+    function updateShowPopup()
+    {
+      var spChecked = document.getElementById("cbxShowPopup").checked;
+      var showSearch = document.getElementById("cbxShowSearch");
+      showSearch.disabled = !spChecked;
+    }
+    
+  ]]></script>
+  
+  <groupbox>
+    <label value="&autoCompleteAdvanced.title;"/>
+    <vbox>
+      <checkbox id="cbxAutoFill" label="&autoCompleteAutoFill.label;" 
+                oncommand="updateImage('AutoFill')"/>
+      <checkbox id="cbxShowPopup" label="&autoCompleteShowPopup.label;"
+                oncommand="updateShowPopup(); updateImage('ShowPopup')"/>
+      <checkbox id="cbxShowSearch" label="&autoCompleteShowSearch.label;"
+                oncommand="updateImage('ShowSearch')"/>
+    </vbox>
+  </groupbox>
+  
+  <text class="label" value="&autocompletePreview.label;"/>
+  <vbox id="bxExample" class="box-smallheader">
+    <vbox height="159">
+      <image id="imgAutoFill"/>
+      <image id="imgShowPopup" src="chrome://communicator/content/pref/autocomplete-showpopup.gif"/>
+      <image id="imgShowSearch" src="chrome://communicator/content/pref/autocomplete-showsearch.gif"/>
+    </vbox>
+  </vbox>
+            
+  <hbox id="okCancelButtonsRight"/>
+
+</window>

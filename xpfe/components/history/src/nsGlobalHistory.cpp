@@ -469,6 +469,7 @@ nsGlobalHistory::nsGlobalHistory()
   mIgnorePrefixes.AppendString(NS_LITERAL_STRING("www."));
   mIgnorePrefixes.AppendString(NS_LITERAL_STRING("https://www."));
   mIgnorePrefixes.AppendString(NS_LITERAL_STRING("https://"));
+  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("ftp://"));
 }
 
 nsGlobalHistory::~nsGlobalHistory()
@@ -3617,7 +3618,9 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
 
   // pass user input through filter before search
   nsSharableString filtered = AutoCompletePrefilter(nsDependentString (searchString));
-  if (filtered.Length() == 0) {
+  // if the filtered string needs to have any prefixes removed, then we don't want
+  // to use it, so bail out here
+  if (filtered.Length() == 0 || filtered.Length() != nsCRT::strlen(searchString)) {
     listener->OnAutoComplete(results, status);
     return NS_OK;
   }
@@ -3629,7 +3632,7 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
   if (NS_SUCCEEDED(rv)) {
   
     results->SetSearchString(searchString);
-    results->SetDefaultItemIndex(-1);
+    results->SetDefaultItemIndex(0);
   
     // determine if we have found any matches or not
     nsCOMPtr<nsISupportsArray> array;
