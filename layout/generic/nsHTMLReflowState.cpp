@@ -765,8 +765,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // become the default computed values, and may be adjusted below
     // XXX fix to provide 0,0 for the top&bottom margins for
     // inline-non-replaced elements
-    ComputeMargin(containingBlockWidth);
-    ComputePadding(containingBlockWidth);
+    ComputeMargin(containingBlockWidth, cbrs);
+    ComputePadding(containingBlockWidth, cbrs);
     if (!mStyleSpacing->GetBorder(mComputedBorderPadding)) {
       // CSS2 has no percentage borders
       mComputedBorderPadding.SizeTo(0, 0, 0, 0);
@@ -1174,8 +1174,12 @@ nsHTMLReflowState::ComputeHorizontalValue(nscoord aContainingBlockWidth,
   NS_PRECONDITION(eStyleUnit_Inherit != aUnit, "unexpected unit");
   aResult = 0;
   if (eStyleUnit_Percent == aUnit) {
-    float pct = aCoord.GetPercentValue();
-    aResult = NSToCoordFloor(aContainingBlockWidth * pct);
+    if (NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) {
+      aResult = 0;
+    } else {
+      float pct = aCoord.GetPercentValue();
+      aResult = NSToCoordFloor(aContainingBlockWidth * pct);
+    }
   
   } else if (eStyleUnit_Coord == aUnit) {
     aResult = aCoord.GetCoordValue();
@@ -1285,35 +1289,35 @@ nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
 }
 
 void
-nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth)
+nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth,
+                                 const nsHTMLReflowState* aContainingBlockRS)
 {
   // If style style can provide us the margin directly, then use it.
-#if 0
-  if (!mStyleSpacing->GetMargin(aResult) && (nsnull != aParentRS))
-#else
-  mStyleSpacing->CalcMarginFor(frame, computedMargin);
-  if ((eStyleUnit_Percent == mStyleSpacing->mMargin.GetTopUnit()) ||
-      (eStyleUnit_Percent == mStyleSpacing->mMargin.GetRightUnit()) ||
-      (eStyleUnit_Percent == mStyleSpacing->mMargin.GetBottomUnit()) ||
-      (eStyleUnit_Percent == mStyleSpacing->mMargin.GetLeftUnit()))
-#endif
-  {
-    // We have to compute the value (because it's uncomputable by
-    // the style code).
+  if (!mStyleSpacing->GetMargin(computedMargin)) {
+    // We have to compute the value
     if (NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) {
       computedMargin.left = 0;
       computedMargin.right = 0;
 
     } else {
       nsStyleCoord left, right;
-      ComputeHorizontalValue(aContainingBlockWidth,
-                             mStyleSpacing->mMargin.GetLeftUnit(),
-                             mStyleSpacing->mMargin.GetLeft(left),
-                             computedMargin.left);
-      ComputeHorizontalValue(aContainingBlockWidth,
-                             mStyleSpacing->mMargin.GetRightUnit(),
-                             mStyleSpacing->mMargin.GetRight(right),
-                             computedMargin.right);
+
+      if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetLeftUnit()) {
+        computedMargin.left = aContainingBlockRS->computedMargin.left;
+      } else {
+        ComputeHorizontalValue(aContainingBlockWidth,
+                               mStyleSpacing->mMargin.GetLeftUnit(),
+                               mStyleSpacing->mMargin.GetLeft(left),
+                               computedMargin.left);
+      }
+      if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetRightUnit()) {
+        computedMargin.right = aContainingBlockRS->computedMargin.right;
+      } else {
+        ComputeHorizontalValue(aContainingBlockWidth,
+                               mStyleSpacing->mMargin.GetRightUnit(),
+                               mStyleSpacing->mMargin.GetRight(right),
+                               computedMargin.right);
+      }
     }
 
     const nsHTMLReflowState* rs2 = GetPageBoxReflowState(parentReflowState);
@@ -1322,14 +1326,22 @@ nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth)
       // According to the CSS2 spec, margin percentages are
       // calculated with respect to the *height* of the containing
       // block when in a paginated context.
-      ComputeVerticalValue(rs2->computedHeight,
-                           mStyleSpacing->mMargin.GetTopUnit(),
-                           mStyleSpacing->mMargin.GetTop(top),
-                           computedMargin.top);
-      ComputeVerticalValue(rs2->computedHeight,
-                           mStyleSpacing->mMargin.GetBottomUnit(),
-                           mStyleSpacing->mMargin.GetBottom(bottom),
-                           computedMargin.bottom);
+      if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetTopUnit()) {
+        computedMargin.top = aContainingBlockRS->computedMargin.top;
+      } else {
+        ComputeVerticalValue(rs2->computedHeight,
+                             mStyleSpacing->mMargin.GetTopUnit(),
+                             mStyleSpacing->mMargin.GetTop(top),
+                             computedMargin.top);
+      }
+      if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetBottomUnit()) {
+        computedMargin.bottom = aContainingBlockRS->computedMargin.bottom;
+      } else {
+        ComputeVerticalValue(rs2->computedHeight,
+                             mStyleSpacing->mMargin.GetBottomUnit(),
+                             mStyleSpacing->mMargin.GetBottom(bottom),
+                             computedMargin.bottom);
+      }
     }
     else {
       // According to the CSS2 spec, margin percentages are
@@ -1340,56 +1352,72 @@ nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth)
         computedMargin.bottom = 0;
 
       } else {
-        ComputeHorizontalValue(aContainingBlockWidth,
-                               mStyleSpacing->mMargin.GetTopUnit(),
-                               mStyleSpacing->mMargin.GetTop(top),
-                               computedMargin.top);
-        ComputeHorizontalValue(aContainingBlockWidth,
-                               mStyleSpacing->mMargin.GetBottomUnit(),
-                               mStyleSpacing->mMargin.GetBottom(bottom),
-                               computedMargin.bottom);
+        if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetTopUnit()) {
+          computedMargin.top = aContainingBlockRS->computedMargin.top;
+        } else {
+          ComputeHorizontalValue(aContainingBlockWidth,
+                                 mStyleSpacing->mMargin.GetTopUnit(),
+                                 mStyleSpacing->mMargin.GetTop(top),
+                                 computedMargin.top);
+        }
+        if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetBottomUnit()) {
+          computedMargin.bottom = aContainingBlockRS->computedMargin.bottom;
+        } else {
+          ComputeHorizontalValue(aContainingBlockWidth,
+                                 mStyleSpacing->mMargin.GetBottomUnit(),
+                                 mStyleSpacing->mMargin.GetBottom(bottom),
+                                 computedMargin.bottom);
+        }
       }
     }
   }
 }
 
 void
-nsHTMLReflowState::ComputePadding(nscoord aContainingBlockWidth)
+nsHTMLReflowState::ComputePadding(nscoord aContainingBlockWidth,
+                                  const nsHTMLReflowState* aContainingBlockRS)
+
 {
   // If style can provide us the padding directly, then use it.
-#if 0
-  if (!mStyleSpacing->GetPadding(mComputedPadding))
-#else
-  mStyleSpacing->CalcPaddingFor(frame, mComputedPadding);
-  if ((eStyleUnit_Percent == mStyleSpacing->mPadding.GetTopUnit()) ||
-      (eStyleUnit_Percent == mStyleSpacing->mPadding.GetRightUnit()) ||
-      (eStyleUnit_Percent == mStyleSpacing->mPadding.GetBottomUnit()) ||
-      (eStyleUnit_Percent == mStyleSpacing->mPadding.GetLeftUnit()))
-#endif
-  {
-    // We have to compute the value (because it's uncomputable by
-    // the style code).
+  if (!mStyleSpacing->GetPadding(mComputedPadding)) {
+    // We have to compute the value
     nsStyleCoord left, right, top, bottom;
-    ComputeHorizontalValue(aContainingBlockWidth,
-                           mStyleSpacing->mPadding.GetLeftUnit(),
-                           mStyleSpacing->mPadding.GetLeft(left),
-                           mComputedPadding.left);
-    ComputeHorizontalValue(aContainingBlockWidth,
-                           mStyleSpacing->mPadding.GetRightUnit(),
-                           mStyleSpacing->mPadding.GetRight(right),
-                           mComputedPadding.right);
 
-    // According to the CSS2 spec, padding percentages are
-    // calculated with respect to the *width* of the containing
-    // block, even for padding-top and padding-bottom.
-    ComputeHorizontalValue(aContainingBlockWidth,
-                           mStyleSpacing->mPadding.GetTopUnit(),
-                           mStyleSpacing->mPadding.GetTop(top),
-                           mComputedPadding.top);
-    ComputeHorizontalValue(aContainingBlockWidth,
-                           mStyleSpacing->mPadding.GetBottomUnit(),
-                           mStyleSpacing->mPadding.GetBottom(bottom),
-                           mComputedPadding.bottom);
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetLeftUnit()) {
+      mComputedPadding.left = aContainingBlockRS->mComputedPadding.left;
+    } else {
+      ComputeHorizontalValue(aContainingBlockWidth,
+                             mStyleSpacing->mPadding.GetLeftUnit(),
+                             mStyleSpacing->mPadding.GetLeft(left),
+                             mComputedPadding.left);
+    }
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetRightUnit()) {
+      mComputedPadding.right = aContainingBlockRS->mComputedPadding.right;
+    } else {
+      ComputeHorizontalValue(aContainingBlockWidth,
+                             mStyleSpacing->mPadding.GetRightUnit(),
+                             mStyleSpacing->mPadding.GetRight(right),
+                             mComputedPadding.right);
+    }
+
+    // According to the CSS2 spec, percentages are calculated with respect to
+    // containing block width for padding-top and padding-bottom
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetTopUnit()) {
+      mComputedPadding.top = aContainingBlockRS->mComputedPadding.top;
+    } else {
+      ComputeHorizontalValue(aContainingBlockWidth,
+                             mStyleSpacing->mPadding.GetTopUnit(),
+                             mStyleSpacing->mPadding.GetTop(top),
+                             mComputedPadding.top);
+    }
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetBottomUnit()) {
+      mComputedPadding.bottom = aContainingBlockRS->mComputedPadding.bottom;
+    } else {
+      ComputeHorizontalValue(aContainingBlockWidth,
+                             mStyleSpacing->mPadding.GetBottomUnit(),
+                             mStyleSpacing->mPadding.GetBottom(bottom),
+                             mComputedPadding.bottom);
+    }
   }
 }
 
