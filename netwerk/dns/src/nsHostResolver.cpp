@@ -368,6 +368,7 @@ nsHostResolver::ResolveHost(const char            *host,
             rv = NS_ERROR_NOT_INITIALIZED;
         else {
             PRNetAddr tempAddr;
+            memset(&tempAddr, 0, sizeof(PRNetAddr));
             
             // check to see if there is already an entry for this |host|
             // in the hash table.  if so, then check to see if we can't
