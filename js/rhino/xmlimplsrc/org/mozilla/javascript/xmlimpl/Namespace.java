@@ -227,15 +227,20 @@ class Namespace extends IdScriptableObject
     private static final int
         Id_constructor          = 1,
         Id_toString             = 2,
-        MAX_PROTOTYPE_ID        = 2;
+        Id_toSource             = 3,
+        MAX_PROTOTYPE_ID        = 3;
 
     protected int findPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2004-07-20 19:45:27 CEST
-        L0: { id = 0; String X = null;
+// #generated# Last update: 2004-08-21 12:07:01 CEST
+        L0: { id = 0; String X = null; int c;
             int s_length = s.length();
-            if (s_length==8) { X="toString";id=Id_toString; }
+            if (s_length==8) {
+                c=s.charAt(3);
+                if (c=='o') { X="toSource";id=Id_toSource; }
+                else if (c=='t') { X="toString";id=Id_toString; }
+            }
             else if (s_length==11) { X="constructor";id=Id_constructor; }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
@@ -251,6 +256,7 @@ class Namespace extends IdScriptableObject
         switch (id) {
           case Id_constructor: arity=2; s="constructor"; break;
           case Id_toString:    arity=0; s="toString";    break;
+          case Id_toSource:    arity=0; s="toSource";    break;
           default: throw new IllegalArgumentException(String.valueOf(id));
         }
         initPrototypeMethod(NAMESPACE_TAG, id, s, arity);
@@ -267,10 +273,13 @@ class Namespace extends IdScriptableObject
             return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
-        if (id == Id_constructor) {
+        switch (id) {
+          case Id_constructor:
             return jsConstructor(cx, (thisObj == null), args);
-        } else if(id == Id_toString) {
-            return realThis(thisObj, f).jsFunction_toString();
+          case Id_toString:
+            return realThis(thisObj, f).toString();
+          case Id_toSource:
+            return realThis(thisObj, f).js_toSource();
         }
         throw new IllegalArgumentException(String.valueOf(id));
     }
@@ -297,8 +306,29 @@ class Namespace extends IdScriptableObject
         }
     }
 
-    private String jsFunction_toString()
+    private String js_toSource()
     {
-        return toString();
+        StringBuffer sb = new StringBuffer();
+        sb.append('(');
+        toSourceImpl(prefix, uri, sb);
+        sb.append(')');
+        return sb.toString();
+    }
+
+    static void toSourceImpl(String prefix, String uri, StringBuffer sb)
+    {
+        sb.append("new Namespace(");
+        if (uri.length() == 0) {
+            if (!"".equals(prefix)) throw new IllegalArgumentException(prefix);
+        } else {
+            sb.append('\'');
+            if (prefix != null) {
+                sb.append(ScriptRuntime.escapeString(prefix, '\''));
+                sb.append("', '");
+            }
+            sb.append(ScriptRuntime.escapeString(uri, '\''));
+            sb.append('\'');
+        }
+        sb.append(')');
     }
 }

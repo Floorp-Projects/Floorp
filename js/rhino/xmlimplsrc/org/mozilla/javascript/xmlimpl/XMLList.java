@@ -1405,15 +1405,21 @@ class XMLList extends XMLObjectImpl implements Function
         }
         else
         {
-            return toXMLString();
+            return toXMLString(0);
         }
+    }
+
+    String toSource(int indent)
+    {
+        // XXX indent is ignored
+        return "<>"+toXMLString(0)+"</>";
     }
 
     /**
      *
      * @return
      */
-    String toXMLString()
+    String toXMLString(int indent)
     {
         StringBuffer sb = new StringBuffer();
 
@@ -1421,13 +1427,10 @@ class XMLList extends XMLObjectImpl implements Function
         {
             if (i > 0)
             {
-                // Add a line separator
-                String lineSeparator = System.getProperty("line.separator");
-
-                sb.append(lineSeparator);
+                sb.append('\n');
             }
 
-            sb.append(getXmlFromAnnotation(i).toXMLString());
+            sb.append(getXmlFromAnnotation(i).toXMLString(indent));
         }
 
         return sb.toString();

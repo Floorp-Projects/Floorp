@@ -266,7 +266,7 @@ class XML extends XMLObjectImpl
         else if (inputObject instanceof XMLObjectImpl)
         {
             // todo: faster way for XMLObjects?
-            frag = ((XMLObjectImpl) inputObject).toXMLString();
+            frag = ((XMLObjectImpl) inputObject).toXMLString(0);
         }
         else
         {
@@ -2866,18 +2866,26 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         }
         else
         {
-            result = toXMLString();
+            result = toXMLString(0);
         }
 
         return result;
+    }
+
+    String toSource(int indent)
+    {
+        // XXX Does toXMLString always return valid XML literal?
+        return toXMLString(indent);
     }
 
     /**
      *
      * @return
      */
-    String toXMLString ()
+    String toXMLString(int indent)
     {
+        // XXX indent is ignored
+
         String result;
 
         XmlCursor curs = newCursor();
@@ -2977,7 +2985,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
 // Old way of comparing by string.
 //                boolean orgPrettyPrinting = prototype.prettyPrinting;
 //                prototype.prettyPrinting = true;
-//                result = toXMLString().equals(otherXml.toXMLString());
+//                result = toXMLString(0).equals(otherXml.toXMLString(0));
 //                prototype.prettyPrinting = orgPrettyPrinting;
             }
         }

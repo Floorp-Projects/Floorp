@@ -956,6 +956,8 @@ public class Parser
 
         case Token.DEFAULT :
             mustHaveXML();
+
+            decompiler.addToken(Token.DEFAULT);
             int nsLine = ts.getLineno();
 
             if (!(ts.matchToken(Token.NAME)

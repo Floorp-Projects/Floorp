@@ -676,7 +676,7 @@ public final class XMLLibImpl extends XMLLib
     public String escapeTextValue(Object value)
     {
         if (value instanceof XMLObjectImpl) {
-            return ((XMLObjectImpl)value).toXMLString();
+            return ((XMLObjectImpl)value).toXMLString(0);
         }
 
         String text = ScriptRuntime.toString(value);

@@ -127,7 +127,8 @@ abstract class XMLObjectImpl extends XMLObject
     abstract void setNamespace(Namespace ns);
     abstract XMLList text();
     public abstract String toString();
-    abstract String toXMLString();
+    abstract String toSource(int indent);
+    abstract String toXMLString(int indent);
     abstract Object valueOf();
 
     protected abstract Object jsConstructor(Context cx, boolean inNewExpr,
@@ -330,15 +331,16 @@ abstract class XMLObjectImpl extends XMLObject
         Id_setNamespace            = 35,
         Id_text                    = 36,
         Id_toString                = 37,
-        Id_toXMLString             = 38,
-        Id_valueOf                 = 39,
+        Id_toSource                = 38,
+        Id_toXMLString             = 39,
+        Id_valueOf                 = 40,
 
-        MAX_PROTOTYPE_ID           = 39;
+        MAX_PROTOTYPE_ID           = 40;
 
     protected int findPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2004-07-19 13:13:35 CEST
+// #generated# Last update: 2004-08-21 11:02:57 CEST
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 4: c=s.charAt(0);
@@ -356,12 +358,13 @@ abstract class XMLObjectImpl extends XMLObject
                 else if (c=='s') { X="setName";id=Id_setName; }
                 else if (c=='v') { X="valueOf";id=Id_valueOf; }
                 break L;
-            case 8: switch (s.charAt(2)) {
-                case 'S': X="toString";id=Id_toString; break L;
-                case 'd': X="nodeKind";id=Id_nodeKind; break L;
-                case 'i': X="children";id=Id_children; break L;
-                case 'm': X="comments";id=Id_comments; break L;
-                case 'n': X="contains";id=Id_contains; break L;
+            case 8: switch (s.charAt(4)) {
+                case 'K': X="nodeKind";id=Id_nodeKind; break L;
+                case 'a': X="contains";id=Id_contains; break L;
+                case 'd': X="children";id=Id_children; break L;
+                case 'e': X="comments";id=Id_comments; break L;
+                case 'r': X="toString";id=Id_toString; break L;
+                case 'u': X="toSource";id=Id_toSource; break L;
                 } break L;
             case 9: switch (s.charAt(2)) {
                 case 'c': X="localName";id=Id_localName; break L;
@@ -466,7 +469,8 @@ abstract class XMLObjectImpl extends XMLObject
           case Id_setNamespace:      arity=1; s="setNamespace";      break;
           case Id_text:              arity=0; s="text";              break;
           case Id_toString:          arity=0; s="toString";          break;
-          case Id_toXMLString:       arity=0; s="toXMLString";       break;
+          case Id_toSource:          arity=1; s="toSource";          break;
+          case Id_toXMLString:       arity=1; s="toXMLString";       break;
           case Id_valueOf:           arity=0; s="valueOf";           break;
           default: throw new IllegalArgumentException(String.valueOf(id));
         }
@@ -644,8 +648,14 @@ abstract class XMLObjectImpl extends XMLObject
             return realThis(thisObj, f).text();
           case Id_toString:
             return realThis(thisObj, f).toString();
-          case Id_toXMLString:
-            return realThis(thisObj, f).toXMLString();
+          case Id_toSource: {
+            int indent = ScriptRuntime.toInt32(args, 0);
+            return realThis(thisObj, f).toSource(indent);
+          }
+          case Id_toXMLString: {
+            int indent = ScriptRuntime.toInt32(args, 0);
+            return realThis(thisObj, f).toXMLString(indent);
+          }
           case Id_valueOf:
             return realThis(thisObj, f).valueOf();
         }

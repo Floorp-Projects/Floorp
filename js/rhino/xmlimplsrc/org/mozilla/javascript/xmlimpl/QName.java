@@ -52,7 +52,7 @@ final class QName extends IdScriptableObject
     private String localName;
     private String uri;
 
-    public QName(XMLLibImpl lib, String uri, String localName, String prefix)
+    QName(XMLLibImpl lib, String uri, String localName, String prefix)
     {
         super(lib.globalScope(), lib.qnamePrototype);
         if (localName == null) throw new IllegalArgumentException();
@@ -62,7 +62,7 @@ final class QName extends IdScriptableObject
         this.localName = localName;
     }
 
-    public void exportAsJSClass(boolean sealed)
+    void exportAsJSClass(boolean sealed)
     {
         exportAsJSClass(MAX_PROTOTYPE_ID, lib.globalScope(), sealed);
     }
@@ -96,12 +96,12 @@ final class QName extends IdScriptableObject
         return localName;
     }
 
-    public String prefix()
+    String prefix()
     {
         return (prefix == null) ? prefix : "";
     }
 
-    public String uri()
+    String uri()
     {
         return uri;
     }
@@ -213,15 +213,20 @@ final class QName extends IdScriptableObject
     private static final int
         Id_constructor          = 1,
         Id_toString             = 2,
-        MAX_PROTOTYPE_ID        = 2;
+        Id_toSource             = 3,
+        MAX_PROTOTYPE_ID        = 3;
 
     protected int findPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2004-07-18 12:32:51 CEST
-        L0: { id = 0; String X = null;
+// #generated# Last update: 2004-08-21 12:45:13 CEST
+        L0: { id = 0; String X = null; int c;
             int s_length = s.length();
-            if (s_length==8) { X="toString";id=Id_toString; }
+            if (s_length==8) {
+                c=s.charAt(3);
+                if (c=='o') { X="toSource";id=Id_toSource; }
+                else if (c=='t') { X="toString";id=Id_toString; }
+            }
             else if (s_length==11) { X="constructor";id=Id_constructor; }
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
@@ -237,6 +242,7 @@ final class QName extends IdScriptableObject
         switch (id) {
           case Id_constructor: arity=2; s="constructor"; break;
           case Id_toString:    arity=0; s="toString";    break;
+          case Id_toSource:    arity=0; s="toSource";    break;
           default: throw new IllegalArgumentException(String.valueOf(id));
         }
         initPrototypeMethod(QNAME_TAG, id, s, arity);
@@ -253,10 +259,13 @@ final class QName extends IdScriptableObject
             return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
-        if (id == Id_constructor) {
+        switch (id) {
+          case Id_constructor:
             return jsConstructor(cx, (thisObj == null), args);
-        } else if(id == Id_toString) {
-            return realThis(thisObj, f).jsFunction_toString();
+          case Id_toString:
+            return realThis(thisObj, f).toString();
+          case Id_toSource:
+            return realThis(thisObj, f).js_toSource();
         }
         throw new IllegalArgumentException(String.valueOf(id));
     }
@@ -282,9 +291,30 @@ final class QName extends IdScriptableObject
         }
     }
 
-    private String jsFunction_toString()
+    private String js_toSource()
     {
-        return toString();
+        StringBuffer sb = new StringBuffer();
+        sb.append('(');
+        toSourceImpl(uri, localName, prefix, sb);
+        sb.append(')');
+        return sb.toString();
+    }
+
+    private static void toSourceImpl(String uri, String localName,
+                                     String prefix, StringBuffer sb)
+    {
+        sb.append("new QName(");
+        if (uri == null && prefix == null) {
+            if (!"*".equals(localName)) {
+                sb.append("null, ");
+            }
+        } else {
+            Namespace.toSourceImpl(prefix, uri, sb);
+            sb.append(", ");
+        }
+        sb.append('\'');
+        sb.append(ScriptRuntime.escapeString(localName, '\''));
+        sb.append("')");
     }
 
 }
