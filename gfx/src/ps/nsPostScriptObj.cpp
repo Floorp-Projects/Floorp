@@ -354,7 +354,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
         char *old_printer_string = moz_printer_string;
         moz_printer_string = PR_smprintf("MOZ_PRINTER_NAME=%s", printername);
 #ifdef DEBUG
-        printf("setting '%s'\n", moz_printer_name);
+        printf("setting '%s'\n", moz_printer_string);
 #endif
 
         if (!moz_printer_string) {
