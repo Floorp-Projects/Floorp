@@ -333,6 +333,7 @@ extern nsresult NS_NewLabelFrame(nsIFrame** aResult);
 extern nsresult NS_NewLegendFrame(nsIFrame** aResult);
 extern nsresult NS_NewNativeTextControlFrame(nsIFrame** aNewFrame);
 extern nsresult NS_NewGfxTextControlFrame(nsIFrame** aNewFrame);
+extern nsresult NS_NewGfxAutoTextControlFrame(nsIFrame** aNewFrame);
 extern nsresult NS_NewGfxRadioControlFrame(nsIFrame** aResult);
 extern nsresult NS_NewNativeRadioControlFrame(nsIFrame** aResult);
 extern nsresult NS_NewNativeSelectControlFrame(nsIFrame** aResult);
