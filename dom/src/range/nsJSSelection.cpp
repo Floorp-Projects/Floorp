@@ -22,7 +22,6 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
-#include "jsnum.h"
 #include "nsJSUtils.h"
 #include "nsDOMError.h"
 #include "nscore.h"

@@ -97,6 +97,7 @@
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsNodeInfoManager.h"
+#include "nsIXBLService.h"
 
 #include "nsNetUtil.h"     // for NS_MakeAbsoluteURI
 
@@ -549,6 +550,56 @@ nsDocumentChildNodes::DropReference()
   mDocument = nsnull;
 }
 
+// ==================================================================
+// =
+// ==================================================================
+
+MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList);
+
+nsAnonymousContentList::nsAnonymousContentList(nsISupportsArray* aElements)
+{
+  MOZ_COUNT_CTOR(nsAnonymousContentList);
+
+  // We don't reference count our Anonymous reference (to avoid circular
+  // references). We'll be told when the Anonymous goes away.
+  mElements = aElements;
+  NS_IF_ADDREF(mElements);
+}
+ 
+nsAnonymousContentList::~nsAnonymousContentList()
+{
+  MOZ_COUNT_DTOR(nsAnonymousContentList);
+  NS_IF_RELEASE(mElements);
+}
+
+NS_IMETHODIMP
+nsAnonymousContentList::GetLength(PRUint32* aLength)
+{
+  NS_ASSERTION(aLength != nsnull, "null ptr");
+  if (! aLength)
+      return NS_ERROR_NULL_POINTER;
+
+  PRUint32 cnt;
+  nsresult rv = mElements->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  *aLength = cnt;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  PRUint32 cnt;
+  nsresult rv = mElements->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+
+  if (aIndex >= (PRUint32) cnt)
+      return NS_ERROR_INVALID_ARG;
+
+  // Cast is okay because we're in a closed system.
+  *aReturn = (nsIDOMNode*) mElements->ElementAt(aIndex);
+  return NS_OK;
+}
 
 // ==================================================================
 // =
@@ -2073,6 +2124,56 @@ nsDocument::CreateElementWithNameSpace(const nsString& aTagName,
 {
   *aReturn = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult)
+{
+  nsresult rv;
+  *aResult = nsnull;
+
+  // Use the XBL service to get a content list.
+  NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+  if (!xblService)
+    return rv;
+
+  // Retrieve the anonymous content that we should build.
+  nsCOMPtr<nsISupportsArray> anonymousItems;
+  nsCOMPtr<nsIContent> dummyElt;
+  nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
+  if (!element)
+    return rv;
+
+  PRBool dummy;
+  xblService->GetContentList(element, getter_AddRefs(anonymousItems), 
+                             getter_AddRefs(dummyElt), &dummy);
+  
+  if (!anonymousItems)
+    return NS_OK;
+
+  nsCOMPtr<nsISupportsArray> elements;
+  NS_NewISupportsArray(getter_AddRefs(elements));
+
+  PRUint32 count = 0;
+  anonymousItems->Count(&count);
+
+  for (PRUint32 i=0; i < count; i++)
+  {
+    // get our child's content and set its parent to our content
+    nsCOMPtr<nsISupports> node;
+    anonymousItems->GetElementAt(i,getter_AddRefs(node));
+
+    nsCOMPtr<nsIDOMNode> content(do_QueryInterface(node));
+    
+    if (content)
+      elements->AppendElement(content);
+  }
+
+  nsAnonymousContentList* elts = new nsAnonymousContentList(elements);
+  NS_IF_ADDREF(elts);
+  *aResult = elts;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    

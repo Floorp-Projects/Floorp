@@ -355,6 +355,7 @@ public:
     NS_IMETHOD    CreateRange(nsIDOMRange** aRange);
     NS_IMETHOD    GetWidth(PRInt32* aWidth);
     NS_IMETHOD    GetHeight(PRInt32* aHeight);
+    NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResult);
     NS_IMETHOD    Load (const nsString& aUrl, const nsString& aMimeType);
 
     // nsIDOMXULDocument interface

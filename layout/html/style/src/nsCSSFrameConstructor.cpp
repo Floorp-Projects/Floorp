@@ -85,6 +85,7 @@
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIMenuFrame.h"
 #endif
 
 // XXX - temporary, this is for GfxList View
@@ -5155,6 +5156,17 @@ static void LocateAnonymousFrame(nsIPresContext* aPresContext,
     if (*aResult)
       return;
     currFrame->GetNextSibling(&currFrame);
+  }
+
+  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(aParentFrame));
+  if (menuFrame) {
+    nsIFrame* popupChild;
+    menuFrame->GetMenuChild(&popupChild);
+    if (popupChild) {
+      LocateAnonymousFrame(aPresContext, popupChild, aTargetContent, aResult);
+      if (*aResult)
+        return;
+    }
   }
 }
 
