@@ -203,8 +203,8 @@ public:
 protected:
   nsBodyInner mInner;
 
-friend BodyRule;
-friend BodyFixupRule;
+friend class BodyRule;
+friend class BodyFixupRule;
 };
 
 
