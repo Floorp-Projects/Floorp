@@ -55,7 +55,7 @@ static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
     
   nsCOMPtr<nsIURI> uri;
   uri = do_CreateInstance(kStandardUrlCID);
-  uri->SetSpec(uriStr);
+  rv = uri->SetSpec(uriStr);
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIChromeRegistry> chromeRegistry =
@@ -69,7 +69,8 @@ static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
           return rv;
   }
   const char *urlSpec = newSpec;
-  uri->SetSpec(urlSpec);
+  rv = uri->SetSpec(urlSpec);
+  if (NS_FAILED(rv)) return rv;
 
   /* won't deal remote URI yet */
   nsString fileStr; fileStr.AssignWithConversion("file");
@@ -77,18 +78,20 @@ static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
   nsString resoStr; resoStr.AssignWithConversion("resource");
   
   char *uriScheme = nsnull;
-  uri->GetScheme(&uriScheme);
+  rv = uri->GetScheme(&uriScheme);
+  if (NS_FAILED(rv)) return rv;
   nsString tmpStr; tmpStr.AssignWithConversion(uriScheme);
    
   NS_ASSERTION(((tmpStr == fileStr) || (tmpStr == resStr) || (tmpStr == resoStr)), "won't deal remote URI yet! \n");
-
+   
   nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::Moz_BinDirectory);
   nsFileURL fileURL(dir); // file:///moz_0511/mozilla/...
-
+       
   if ((tmpStr != fileStr)) {
        /* resolve to fileURL */
        char *uriPath = nsnull;
-       uri->GetPath(&uriPath);
+       rv = uri->GetPath(&uriPath);
+       if (NS_FAILED(rv)) return rv;
        fileURL += uriPath;
        urlSpec = fileURL.GetURLString();
   }
