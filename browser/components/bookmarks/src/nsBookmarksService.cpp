@@ -2717,6 +2717,8 @@ nsBookmarksService::GetParent(nsIRDFResource* aSource, nsIRDFResource **aParent)
     NS_PRECONDITION(aSource != nsnull, "null ptr");
     if (! aSource)
         return NS_ERROR_NULL_POINTER;
+    if (! mInner)
+        return NS_ERROR_UNEXPECTED;
 
     nsresult rv;
 
@@ -2800,46 +2802,35 @@ nsBookmarksService::IsBookmarked(const char* aURL, PRBool* aIsBookmarked)
 }
 
 NS_IMETHODIMP
-nsBookmarksService::IsBookmarkedResource(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag)
+nsBookmarksService::IsBookmarkedResource(nsIRDFResource *aSource, PRBool *aIsBookmarked)
 {
-    if (!bookmark)      return NS_ERROR_UNEXPECTED;
-    if (!isBookmarkedFlag)  return NS_ERROR_UNEXPECTED;
-    if (!mInner)        return NS_ERROR_UNEXPECTED;
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
 
-    // bookmark root is special (it isn't contained in a rdf seq)
-    if (bookmark == kNC_BookmarksRoot)
-    {
-        *isBookmarkedFlag = PR_TRUE;
-        return NS_OK;
-    }
-
-    *isBookmarkedFlag = PR_FALSE;
-
-    // make sure it is referred to by an ordinal (i.e. is contained in a rdf seq)
     nsresult rv;
-    nsCOMPtr<nsISimpleEnumerator>   enumerator;
-    if (NS_FAILED(rv = mInner->ArcLabelsIn(bookmark, getter_AddRefs(enumerator))))
+    nsCOMPtr<nsIArray> parentArray;
+    rv = GetParentChain(aSource, getter_AddRefs(parentArray));
+    if (NS_FAILED(rv)) {
+        *aIsBookmarked = PR_FALSE;
         return rv;
-        
-    PRBool  more = PR_TRUE;
-    while(NS_SUCCEEDED(rv = enumerator->HasMoreElements(&more))
-        && (more == PR_TRUE))
-    {
-        nsCOMPtr<nsISupports>       isupports;
-        if (NS_FAILED(rv = enumerator->GetNext(getter_AddRefs(isupports))))
-            break;
-        nsCOMPtr<nsIRDFResource>    property = do_QueryInterface(isupports);
-        if (!property)  continue;
-
-        PRBool  flag = PR_FALSE;
-        if (NS_FAILED(rv = gRDFC->IsOrdinalProperty(property, &flag)))  continue;
-        if (flag == PR_TRUE)
-        {
-            *isBookmarkedFlag = PR_TRUE;
-            break;
-        }
     }
-    return rv;
+    
+    // note: returns PR_FALSE for the bookmarks top root
+    PRUint32 length = 0;
+    rv = parentArray->GetLength(&length);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (length == 0) {
+        *aIsBookmarked = PR_FALSE;
+    } else {
+        nsCOMPtr<nsIRDFResource> topParent;
+        parentArray->QueryElementAt(0, NS_GET_IID(nsIRDFResource),
+                                    getter_AddRefs(topParent));
+        *aIsBookmarked = topParent == kNC_BookmarksTopRoot;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3033,23 +3024,17 @@ nsBookmarksService::GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType
 {
     *aType = nsnull;
     nsresult rv = mInner->GetTarget(aNode, kRDF_type, PR_TRUE, aType);
-    if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))
-    {
+    if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE)) {
         // if we didn't match anything in the graph, synthesize its type
         // (which is either a bookmark or a bookmark folder, since everything
         // else is annotated)
-        PRBool isContainer = PR_FALSE;
-        PRBool isBookmarkedFlag = PR_FALSE;
-        (void)gRDFC->IsSeq(mInner, aNode, &isContainer);
-
-        if (isContainer)
+        PRBool isBookmarked = PR_FALSE;
+        if (NS_SUCCEEDED(rv = IsBookmarkedResource(aNode, &isBookmarked))
+            && isBookmarked)
         {
-            *aType = kNC_Folder;
-        }
-        else if (NS_SUCCEEDED(rv = IsBookmarkedResource(aNode,
-                                                        &isBookmarkedFlag)) && (isBookmarkedFlag == PR_TRUE))
-        {
-            *aType = kNC_Bookmark;
+            PRBool isContainer = PR_FALSE;
+            (void)gRDFC->IsSeq(mInner, aNode, &isContainer);
+            *aType = isContainer? kNC_Folder : kNC_Bookmark;
         }
 #ifdef XP_BEOS
         else
@@ -3450,9 +3435,7 @@ nsBookmarksService::GetLastModifiedFolders(nsISimpleEnumerator **aResult)
             return rv;
 
         nsCOMPtr<nsIRDFNode> nodeType;
-        rv = GetSynthesizedType(element, getter_AddRefs(nodeType));
-        if (NS_FAILED(rv))
-            return rv;
+        GetSynthesizedType(element, getter_AddRefs(nodeType));
 
         if (nodeType == kNC_Folder && element != kNC_BookmarksTopRoot)
             folderArray.AppendObject(element);
