@@ -98,6 +98,13 @@ interface nsIMemory : nsISupports
      * @param obs - the observer to unregister
      */
     void unregisterObserver(in nsIMemoryPressureObserver obs);
+
+    /**
+     * This predicate can be used to determine if we're in a low-memory
+     * situation (what constitutes low-memory is platform dependent). This
+     * can be used to trigger the memory flushers.
+     */
+    boolean isLowMemory();
 };
 
 /**

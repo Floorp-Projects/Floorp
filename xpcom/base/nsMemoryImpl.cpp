@@ -24,6 +24,10 @@
 #include "prmem.h"
 #include "nsIServiceManager.h"
 
+#ifdef XP_PC
+#include <windows.h>
+#endif
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMemoryImpl, nsIMemory)
 
 NS_METHOD
@@ -46,7 +50,7 @@ nsMemoryImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 ////////////////////////////////////////////////////////////////////////////////
 // Define NS_OUT_OF_MEMORY_TESTER if you want to force memory failures
 
-#ifdef DEBUG_warren
+#ifdef DEBUG_xwarren
 #define NS_OUT_OF_MEMORY_TESTER
 #endif
 
@@ -162,6 +166,20 @@ nsMemoryImpl::UnregisterObserver(nsIMemoryPressureObserver* obs)
     if (!mObservers)
         return NS_OK;
     return mObservers->RemoveElement(obs);
+}
+
+NS_IMETHODIMP
+nsMemoryImpl::IsLowMemory(PRBool *result)
+{
+#ifdef XP_PC
+    MEMORYSTATUS stat;
+    GlobalMemoryStatus(&stat);
+    *result = ((float)stat.dwAvailPageFile / stat.dwTotalPageFile) < 0.1;
+    return NS_OK;
+#else
+    NS_NOTREACHED("nsMemoryImpl::IsLowMemory");
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 nsresult
