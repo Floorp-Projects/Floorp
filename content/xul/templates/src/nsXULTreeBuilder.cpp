@@ -1118,7 +1118,7 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
                     if (cmp < 0)
                         left = ++index;
                     else if (cmp > 0)
-                        right = index - 1;
+                        right = --index;
                     else
                         break;
                 }
