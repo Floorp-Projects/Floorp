@@ -29,6 +29,7 @@
 NS_EXTERN_IID(kEventQueueServiceCID);
 NS_EXTERN_IID(kHTMLEditorCID);
 NS_EXTERN_IID(kCookieServiceCID);
+NS_EXTERN_IID(kPrefCID);
 
 // Interface IDs
 NS_EXTERN_IID(kIBaseWindowIID);
