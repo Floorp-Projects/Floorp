@@ -547,7 +547,8 @@ NS_IMETHODIMP CBrowserImpl::SetLoadCookie(nsISupports * aLoadCookie)
 NS_IMETHODIMP CBrowserImpl::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
 {
 	QAOutput("nsIURIContentListener->GetParentContentListener()",1);
-	*aParentContentListener = nsnull;
+//	*aParentContentListener = nsnull;
+	QueryInterface(NS_GET_IID(nsIURIContentListener), (void **) aParentContentListener);
 
 	return NS_OK;
 }

@@ -59,7 +59,6 @@ public:
 	//
 	nsCOMPtr<nsIWebNavigation> qaWebNav;
 	nsCOMPtr<nsIURI> theUri;
-	char *uriSpec;
 	//CTests *qaTests ;
 
 public:

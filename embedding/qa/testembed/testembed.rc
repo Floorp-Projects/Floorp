@@ -434,15 +434,7 @@ BEGIN
             MENUITEM "RemoveObservers",             ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS
 
         END
-        POPUP "CallBacks"
-        BEGIN
-            MENUITEM "nsIStreamListener",           ID_INTERFACES_CALLBACKS_NSISTREAMLISTENER
 
-            MENUITEM "nsIRequestObserver",          ID_INTERFACES_CALLBACKS_NSIREQUESTOBSERVER
-
-            MENUITEM "nsIStreamObserver",           ID_INTERFACES_CALLBACKS_NSISTREAMOBSERVER
-
-        END
         POPUP "nsIWebBrowser"
         BEGIN
             MENUITEM "",                            ID_INTERFACES_NSIWEBBROWSER

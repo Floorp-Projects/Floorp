@@ -50,12 +50,7 @@
 class CNsIRequest //: public CTests
 {
 // Construction
-public:
-/*	CNsIRequest(nsIWebBrowser* mWebBrowser,
-			   nsIBaseWindow* mBaseWindow,
-			   nsIWebNavigation* mWebNav,
-			   CBrowserImpl *mpBrowserImpl);
-*/	
+public:	
 
 	CNsIRequest(nsIWebBrowser* mWebBrowser,CBrowserImpl *mpBrowserImpl);
 

@@ -531,6 +531,7 @@ void CTests::OnToolsTestYourMethod()
 		rv = myLoader->RegisterContentListener(cntListener);
 		RvTestResult(rv, "RegisterContentListener() test", 1);
 	}
+
 }
 
 // ***********************************************************************
