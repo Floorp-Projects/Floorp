@@ -18,6 +18,7 @@
  */
 
 #include "nsUnicodeToUCS2BE.h"
+#include <string.h>
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]

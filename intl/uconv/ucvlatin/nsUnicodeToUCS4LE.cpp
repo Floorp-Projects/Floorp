@@ -18,6 +18,7 @@
  */
 
 #include "nsUnicodeToUCS4LE.h"
+#include <string.h>
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]

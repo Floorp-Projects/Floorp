@@ -18,6 +18,7 @@
  */
 
 #include "nsUnicodeToUTF7.h"
+#include <string.h>
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
