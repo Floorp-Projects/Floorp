@@ -102,7 +102,7 @@ public:
 
   // XOVER parser to populate this class
   NS_IMETHOD InitXOVER(PRInt32 first_msg, PRInt32 last_msg);
-  NS_IMETHOD ProcessXOVER(const char *line, int* status);
+  NS_IMETHOD ProcessXOVER(const char *line, PRUint32 * status);
   NS_IMETHOD ResetXOVER();
   NS_IMETHOD ProcessNonXOVER(const char *line);
   NS_IMETHOD FinishXOVER(int status, int *newstatus);
@@ -536,7 +536,7 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 #define NEWS_ART_DISPLAY_FREQ		10
 
 nsresult
-nsNNTPNewsgroupList::ProcessXOVER(const char *line, int *status)
+nsNNTPNewsgroupList::ProcessXOVER(const char *line, PRUint32 *status)
 {
 	const char *next;
 	PRUint32 message_number=0;
