@@ -1528,15 +1528,13 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   mimeInfo->SetMIMEType(NS_ConvertUCS2toUTF8(mimeType).get());
   mimeInfo->AppendExtension(aFileExt);
   nsHashtable typeOptions; // empty hash table
-  /*
-    The mailcap lookup is two-pass to handle the case of mailcap files
-    that have something like:
-
-    text/*; emacs %s
-    text/rtf; soffice %s
-
-    in that order.  We want to pick up "soffice" for text/rtf in such cases
-  */
+  // The mailcap lookup is two-pass to handle the case of mailcap files
+  // that have something like:
+  //
+  // text/*; emacs %s
+  // text/rtf; soffice %s
+  //
+  // in that order.  We want to pick up "soffice" for text/rtf in such cases
   rv = LookUpHandlerAndDescription(majorType, minorType, typeOptions,
                                    handler, mailcap_description,
                                    mozillaFlags);
@@ -1611,15 +1609,13 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
 
   nsDependentSubstring majorType(majorTypeStart, majorTypeEnd);
   nsDependentSubstring minorType(minorTypeStart, minorTypeEnd);
-  /*
-    The mailcap lookup is two-pass to handle the case of mailcap files
-    that have something like:
-
-    text/*; emacs %s
-    text/rtf; soffice %s
-
-    in that order.  We want to pick up "soffice" for text/rtf in such cases
-  */
+  // The mailcap lookup is two-pass to handle the case of mailcap files
+  // that have something like:
+  //
+  // text/*; emacs %s
+  // text/rtf; soffice %s
+  //
+  // in that order.  We want to pick up "soffice" for text/rtf in such cases
   rv = LookUpHandlerAndDescription(majorType,
                                    minorType,
                                    typeOptions,

@@ -926,15 +926,13 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
                                                   nsAString& aDescription,
                                                   nsAString& aMozillaFlags) {
   
-  /*
-   * The mailcap lookup is two-pass to handle the case of mailcap files
-   * that have something like:
-   *
-   * text/*; emacs %s
-   * text/rtf; soffice %s
-   *
-   * in that order.  We want to pick up "soffice" for text/rtf in such cases
-   */
+  // The mailcap lookup is two-pass to handle the case of mailcap files
+  // that have something like:
+  //
+  // text/*; emacs %s
+  // text/rtf; soffice %s
+  //
+  // in that order.  We want to pick up "soffice" for text/rtf in such cases
   nsresult rv = DoLookUpHandlerAndDescription(aMajorType,
                                               aMinorType,
                                               aTypeOptions,
