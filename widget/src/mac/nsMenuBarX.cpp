@@ -70,6 +70,10 @@
 
 #include "nsGUIEvent.h"
 
+#if !XP_MACOSX
+#include "MenuSharing.h"
+#endif
+
 // CIDs
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
@@ -350,6 +354,20 @@ nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
           handled = noErr;
           break;
         }
+
+#if !XP_MACOSX
+        case 'SHMN':
+        { // Shared menu support
+          MenuItemIndex index = command.menu.menuItemIndex;
+          if (index)
+          {
+            (void)SharedMenuHit(GetMenuID(command.menu.menuRef), command.menu.menuItemIndex);
+            ::HiliteMenu(0);
+            handled = noErr;
+          }
+          break;
+        }
+#endif
 
         default:
         {
