@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
 
 <xul:window
   xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -8,7 +8,9 @@
 
   <html:script src="bookmarks.js"/>
 
-<tree datasources="rdf:bookmarks" id="bookmarksTree" ondblclick="return OpenURL(event,event.target.parentNode);">
+<tree id="bookmarksTree"
+      datasources="rdf:bookmarks" 
+      ondblclick="return OpenURL(event,event.target.parentNode);">
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treehead>
