@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+
+#filter substitution
+
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -41,23 +44,21 @@
 
   <!-- list all the locales being supplied by this jar -->
   <RDF:Seq about="urn:mozilla:locale:root">
-    <RDF:li resource="urn:mozilla:locale:en-US"/>
+    <RDF:li resource="urn:mozilla:locale:@AB_CD@"/>
   </RDF:Seq>
 
   <!-- locale information -->
-  <RDF:Description about="urn:mozilla:locale:en-US"
-        chrome:displayName="English (US)"
-        chrome:author="PSM Team"
-        chrome:name="en-US">
+  <RDF:Description about="urn:mozilla:locale:@AB_CD@"
+        chrome:name="@AB_CD@">
     <chrome:packages>
-      <RDF:Seq about="urn:mozilla:locale:en-US:packages">
-        <RDF:li resource="urn:mozilla:locale:en-US:pippki"/>
+      <RDF:Seq about="urn:mozilla:locale:@AB_CD@:packages">
+        <RDF:li resource="urn:mozilla:locale:@AB_CD@:pippki"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
 
   <!-- Version Information.  State that we work only with major version of this
        package. -->
-  <RDF:Description about="urn:mozilla:locale:en-US:pippki"
-#expand 	chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"/>
+  <RDF:Description about="urn:mozilla:locale:@AB_CD@:pippki"
+	 	chrome:localeVersion="@MOZILLA_LOCALE_VERSION@"/>
 </RDF:RDF>
