@@ -245,7 +245,7 @@ void
 CHyperTreeFlexTable :: ClickCell ( const STableCell & inCell, const SMouseDownEvent & inMouse )
 {
 	if ( inCell.col == FindTitleColumnID() &&	
-			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSingleClick, true) == true ) {
+			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSingleClick, false) == true ) {
 		if ( ! ::WaitMouseMoved(inMouse.macEvent.where) )
 			OpenRow ( inCell.row );
 	}
