@@ -102,14 +102,12 @@
   /* drag and drop feedback */
   .bookmark-item.button-toolbar[dragover-left="true"]
     {
-      margin-left         : 0px;
-      border-left         : 2px solid ThreeDDarkShadow;
+      border-left         : 2px solid ThreeDDarkShadow !important;
     }
 
   .bookmark-item.button-toolbar[dragover-right="true"]
     {
-      margin-right        : 0px;
-      border-right        : 2px solid ThreeDDarkShadow;
+      border-right        : 2px solid ThreeDDarkShadow !important;
     }
 
   .menubutton-toolbar-single-text[dragover-top="true"]
