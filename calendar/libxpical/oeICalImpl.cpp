@@ -2100,6 +2100,16 @@ NS_IMETHODIMP oeICalFilter::SetCategories(const char * aNewVal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP oeICalFilter::GetUrl(char **aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::SetUrl(const char * aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP oeICalFilter::GetPrivateEvent(PRBool *aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

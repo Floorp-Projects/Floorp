@@ -150,6 +150,7 @@ oeICalEventImpl::oeICalEventImpl()
     m_description = nsnull;
     m_location = nsnull;
     m_category = nsnull;
+    m_url = nsnull;
     m_isprivate = true;
     m_syncid = nsnull;
     m_allday = false;
@@ -186,6 +187,8 @@ oeICalEventImpl::~oeICalEventImpl()
       nsMemory::Free( m_location );
   if( m_category )
       nsMemory::Free( m_category );
+  if( m_url )
+      nsMemory::Free( m_url );
   if( m_alarmunits )
       nsMemory::Free( m_alarmunits );
   if( m_alarmemail  )
@@ -387,6 +390,41 @@ NS_IMETHODIMP oeICalEventImpl::SetCategories(const char * aNewVal)
         m_category= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
     else
         m_category = nsnull;
+    return NS_OK;
+}
+
+/* attribute string Url; */
+NS_IMETHODIMP oeICalEventImpl::GetUrl(char **aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "GetUrl() = " );
+#endif
+    
+    if( m_url ) {
+        *aRetVal= (char*) nsMemory::Clone( m_url , strlen(m_url)+1);
+        if( *aRetVal == nsnull )
+            return  NS_ERROR_OUT_OF_MEMORY;
+    } else
+        *aRetVal= EmptyReturn();
+
+#ifdef ICAL_DEBUG_ALL
+    printf( "\"%s\"\n", *aRetVal );
+#endif
+   return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::SetUrl(const char * aNewVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "SetUrl( %s )\n", aNewVal );
+#endif
+    if( m_url )
+        nsMemory::Free( m_url );
+    
+    if( aNewVal )
+        m_url= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
+    else
+        m_url = nsnull;
     return NS_OK;
 }
 
@@ -1233,6 +1271,16 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_category= nsnull;
     }
 
+//url
+    prop = icalcomponent_get_first_property( vevent, ICAL_URL_PROPERTY );
+    if ( prop != 0) {
+        tmpstr = (char *)icalproperty_get_url( prop );
+        SetUrl( tmpstr );
+    } else if( m_url ) {
+        nsMemory::Free( m_url );
+        m_url= nsnull;
+    }
+
 //isprivate
     prop = icalcomponent_get_first_property( vevent, ICAL_CLASS_PROPERTY );
     if ( prop != 0) {
@@ -1536,6 +1584,12 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     //category
     if( m_category && strlen( m_category ) != 0 ){
         prop = icalproperty_new_categories( m_category );
+        icalcomponent_add_property( vevent, prop );
+    }
+
+    //url
+    if( m_url && strlen( m_url ) != 0 ){
+        prop = icalproperty_new_url( m_url );
         icalcomponent_add_property( vevent, prop );
     }
 

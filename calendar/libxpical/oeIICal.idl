@@ -91,6 +91,7 @@ interface oeIICalEvent : nsISupports
     attribute short recurWeekdays;
     attribute short recurWeekNumber;
     attribute PRTime lastAlarmAck;
+    attribute string url;
     boolean getNextRecurrence( in PRTime begin, out PRTime result);
     boolean getPreviousOccurrence( in PRTime beforethis, out PRTime result);
     string getIcalString();

@@ -94,6 +94,7 @@ private:
     char *m_description;
     char *m_location;
     char *m_category;
+    char *m_url;
     bool m_isprivate;
     bool m_allday;
     bool m_hasalarm;
