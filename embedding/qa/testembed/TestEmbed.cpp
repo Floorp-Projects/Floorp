@@ -600,11 +600,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(CTestEmbedApp, nsIObserver, nsIWindowCreator, nsIS
 
 // Mainly needed to support "on the fly" profile switching
 
-NS_IMETHODIMP CTestEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP CTestEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     nsresult rv = NS_OK;
     
-    if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-approve-change").get()) == 0)
+    if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0)
     {
         // Ask the user if they want to
         int result = MessageBox(NULL, "Do you want to close all windows in order to switch the profile?", "Confirm", MB_YESNO | MB_ICONQUESTION);
@@ -615,7 +615,7 @@ NS_IMETHODIMP CTestEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTo
             status->VetoChange();
         }
     }
-    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
+    else if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
     {
         // Close all open windows. Alternatively, we could just call CBrowserWindow::Stop()
         // on each. Either way, we have to stop all network activity on this phase.
@@ -636,7 +636,7 @@ NS_IMETHODIMP CTestEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTo
 		    }
 	    }
     }
-    else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()) == 0)
+    else if (nsCRT::strcmp(aTopic, "profile-after-change") == 0)
     {
         InitializePrefs(); // In case we have just switched to a newly created profile.
         
