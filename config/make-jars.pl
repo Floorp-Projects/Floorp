@@ -127,6 +127,7 @@ sub JarIt
 	    $err = $? >> 8;
 	zipErrorCheck($err);
     }
+    Cleanup();
 }
 
 sub MkDirs
@@ -299,4 +300,3 @@ while (<STDIN>) {
     }
 }
 
-Cleanup();
