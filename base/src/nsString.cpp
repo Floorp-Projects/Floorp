@@ -758,10 +758,11 @@ PRInt32 nsString::ToInteger(PRInt32* aErrorCode,PRInt32 aRadix) const {
       result=-result;
       break;
     }
-    else if('+'==theChar) { //stop in a good state if you see this...
+    else if(('+'==theChar) || (' '==theChar)) { //stop in a good state if you see this...
       break;
     }
-    else if(' '==theChar){ //stop in a good state if you see this...
+    else if((('x'==theChar) || ('X'==theChar)) && (16==aRadix)) {  
+      //stop in a good state.
       break;
     }
     else{
