@@ -55,22 +55,23 @@ function commonDialogOnLoad()
   
   // set the number of command buttons
   var nButtons = param.GetInt(2);
+  if (nButtons == 1) hideElementById("cancel");
   switch (nButtons)
     {
       case 4:
         unHideElementByID("Button3");
         setElementText("Button3", param.GetString(11));
+        // fall through
       case 3:
         unHideElementByID("Button2");
         setElementText("Button2", param.GetString(10));
-        break;
-      case 1:
-        hideElementById("cancel");
-        break;
+        // fall through
       default:
       case 2:
         var string = param.GetString(8);
         if (string) setElementText("ok", string);
+        // fall through
+      case 1:
         string = param.GetString(9);
         if (string) setElementText("cancel", string);
         break;
