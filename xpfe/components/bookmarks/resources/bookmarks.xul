@@ -114,41 +114,13 @@
 
   <treehead>
     <treerow>
-      <treecell onclick="return doSort('NameColumn');">
-      	<observes element="NameColumn" attribute="sortActive"/>
-      	<observes element="NameColumn" attribute="sortDirection"/>
-      	&tree.header.name.label;
-      </treecell>
-      <treecell onclick="return doSort('URLColumn');">
-      	<observes element="URLColumn" attribute="sortActive"/>
-      	<observes element="URLColumn" attribute="sortDirection"/>
-      	&tree.header.url.label;
-      </treecell>
-      <treecell onclick="return doSort('ShortcutURLColumn');">
-      	<observes element="ShortcutURLColumn" attribute="sortActive"/>
-      	<observes element="ShortcutURLColumn" attribute="sortDirection"/>
-      	&tree.header.shortcut.label;
-      </treecell>
-      <treecell onclick="return doSort('DescriptionColumn');">
-      	<observes element="DescriptionColumn" attribute="sortActive"/>
-      	<observes element="DescriptionColumn" attribute="sortDirection"/>
-      	&tree.header.description.label;
-      </treecell>
-      <treecell onclick="return doSort('LastVisitColumn');">
-      	<observes element="LastVisitColumn" attribute="sortActive"/>
-      	<observes element="LastVisitColumn" attribute="sortDirection"/>
-      	&tree.header.lastvisit.label;
-      </treecell>
-      <treecell onclick="return doSort('AddedOnColumn');">
-      	<observes element="AddedOnColumn" attribute="sortActive"/>
-      	<observes element="AddedOnColumn" attribute="sortDirection"/>
-      	&tree.header.addedon.label;
-      </treecell>
-      <treecell onclick="return doSort('LastModColumn');">
-      	<observes element="LastModColumn" attribute="sortActive"/>
-      	<observes element="LastModColumn" attribute="sortDirection"/>
-      	&tree.header.lastmod.label;
-      </treecell>
+      <treecell value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
+      <treecell value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
+      <treecell value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');" observes="ShortcutURLColumn" />
+      <treecell value="&tree.header.description.label;" onclick="return doSort('DescriptionColumn');" observes="DescriptionColumn" />
+      <treecell value="&tree.header.lastvisit.label;" onclick="return doSort('LastVisitColumn');" observes="LastVisitColumn" />
+      <treecell value="&tree.header.addedon.label;" onclick="return doSort('AddedOnColumn');" observes="AddedOnColumn" />
+      <treecell value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
     </treerow>
   </treehead>
 </tree>
