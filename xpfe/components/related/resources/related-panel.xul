@@ -21,6 +21,13 @@
 <?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
 <?xml-stylesheet href="related-panel.css" type="text/css"?>
 
+<!DOCTYPE window
+[
+<!ENTITY tree.header.name.label "Name">
+<!ENTITY tree.header.url.label  "URL">
+]>
+
+
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -64,8 +71,8 @@
 
     <treehead>
       <treeitem>
-        <treecell>Name</treecell>
-        <treecell>URL</treecell>
+        <treecell>&tree.header.name.label;</treecell>
+        <treecell>&tree.header.url.label;</treecell>
       </treeitem>
     </treehead>
 
