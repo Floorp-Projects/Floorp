@@ -160,19 +160,19 @@ nsresult CompareNodeToRange(nsIContent* aNode,
   
   // gather up the dom point info
   if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
   
   if (!NS_SUCCEEDED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   if (!NS_SUCCEEDED(aRange->GetStartOffset(&rangeStartOffset)))
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   if (!NS_SUCCEEDED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   if (!NS_SUCCEEDED(aRange->GetEndOffset(&rangeEndOffset)))
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   *outNodeBefore = PR_FALSE;
   *outNodeAfter = PR_FALSE;
