@@ -257,7 +257,7 @@
         var i;
         text = top.frames[schema_frame].document.schema.newSchema;
         schemaIndex = 0;
-        while (!(strings[values[schemas[schemaIndex]]] >= text.value)) {
+        while ((schemaIndex<schemasLength) &&!(strings[values[schemas[schemaIndex]]] >= text.value)) {
           schemaIndex++;
         }
 
@@ -346,13 +346,17 @@
       }
 
       function addValue() {
-        addValue0();
-        loadMain();
+        if (schemasLength != 0) {
+          addValue0();
+          loadMain();
+        }
       }
 
       function addSynonym() {
-        addSynonym0();
-        loadMain();
+        if (schemasLength != 0) {
+          addSynonym0();
+          loadMain();
+        }
       }
 
       function deleteSchema() {
