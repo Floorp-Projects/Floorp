@@ -106,5 +106,19 @@
   </binding>
 
   <binding id="browser"/>
+
+  <binding id="editor">
+    <handlers>
+      <handler event="keypress" key="y" modifiers="accel" oncommand="event.preventDefault();"/> 
+      <handler event="keypress" key="z" modifiers="accel,shift" command="cmd_redo" /> 
+      <handler event="keypress" keycode="VK_HOME" command="cmd_scrollTop" /> 
+      <handler event="keypress" keycode="VK_END" command="cmd_scrollBottom" /> 
+      <handler event="keypress" keycode="VK_LEFT" modifiers="meta" command="cmd_wordPrevious" /> 
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="meta" command="cmd_wordNext" /> 
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift,meta" command="cmd_selectWordPrevious" /> 
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,meta" command="cmd_selectWordNext" /> 
+    </handlers>
+  </binding>
+
    
 </bindings>
