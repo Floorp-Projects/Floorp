@@ -631,6 +631,11 @@
 #endif
 #define CreateDirectoryA          mozce_CreateDirectoryA
 
+
+// We use a method named CreateEvent.  We do not want to map
+// CreateEvent to CreateEventA
+#define CreateEvent               CreateEvent
+
 #ifdef CreateEventA
 #undef CreateEventA
 #endif
