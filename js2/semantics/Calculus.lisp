@@ -43,8 +43,7 @@
 #+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (define . 2) (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
                              (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
-                             (new . 1) (set-field . 1) (:narrow . 1) (:select . 1)
-                             (let-local-var . 2)))
+                             (new . 1) (set-field . 1) (:narrow . 1) (:select . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
 
@@ -521,12 +520,12 @@
 ; var should have been obtained from calling gen-local-var on expr.  Return
 ; `(let ((,var ,expr)) ,body-code),
 ; optimizing the cases that gen-local-var optimizes.
-(defmacro let-local-var (var expr body-code)
+(defmacro let-local-var (var expr &body body-code)
   (let ((body (gensym "BODY")))
-    `(let ((,body ,body-code))
+    `(let ((,body (list ,@body-code)))
        (if (eql ,var ,expr)
-         ,body
-         (list 'let (list (list ,var ,expr)) ,body)))))
+         (gen-progn ,body)
+         (list* 'let (list (list ,var ,expr)) ,body)))))
        
 
 
@@ -947,31 +946,33 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; TAGS
 
-(defstruct (field (:type list) (:constructor make-field (label type mutable)))
+(defstruct (field (:type list) (:constructor make-field (label type mutable optional)))
   label                     ;This field's name (not interned in the world)
   type                      ;This field's type 
-  mutable)                  ;True if this fields is mutable
+  mutable                   ;True if this field is mutable
+  optional)                 ;True if this field can be in an uninitialized state
 
 
 (defstruct (tag (:constructor make-tag (name keyword mutable fields =-name link)) (:predicate tag?))
   (name nil :type symbol :read-only t)               ;This tag's world-interned name
   (keyword nil :type (or null keyword) :read-only t) ;This tag's keyword (non-null only when the tag is immutable and has no fields)
   (mutable nil :type bool :read-only t)              ;True if this tag's equality is based on identity, in which case the tag's values have a hidden serial-number field
-  (fields nil :type list :read-only t)               ;List of fields after eval-tags-types or (field-name field-type-expression [:const|:var]) before eval-tags-types
+  (fields nil :type list :read-only t)               ;List of fields after eval-tags-types or (field-name field-type-expression [:const|:var|:opt-const|:opt-var]) before eval-tags-types
   (=-name nil :type symbol)                          ;Lazily computed name of a function that compares two values of this tag for equality; nil if not known yet
   (link nil :type (or null keyword) :read-only t))   ;:reference if this is a local tag, :external if it's a predefined tag, or nil for no cross-references to this tag
 
-; Return three values:
+; Return four values:
 ;   the one-based position of the tag's field corresponding to the given label or nil if the label is not present;
 ;   the type the field; 
-;   true if the field is mutable.
+;   true if the field is mutable;
+;   true if the field is optional.
 (defun tag-find-field (tag label)
   (do ((fields (tag-fields tag) (cdr fields))
        (n (if (tag-mutable tag) 2 1) (1+ n)))
-      ((endp fields) (values nil nil nil))
+      ((endp fields) (values nil nil nil nil))
     (let ((field (car fields)))
       (when (eq label (field-label field))
-        (return (values n (field-type field) (field-mutable field)))))))
+        (return (values n (field-type field) (field-mutable field) (field-optional field)))))))
 
 
 ; Define a new tag.  Signal an error if the name is already used.  Return the tag.
@@ -1005,17 +1006,18 @@
     (let ((field (first fields)))
       (unless (and (consp field) (identifier? (first field))
                    (consp (cdr field)) (second field)
-                   (member (third field) '(nil :const :var))
+                   (member (third field) '(nil :const :var :opt-const :opt-var))
                    (null (cdddr field)))
         (error "Bad field ~S" field))
       (let ((label (first field))
-            (mutable (eq (third field) :var)))
+            (mutable (member (third field) '(:var :opt-var)))
+            (optional (member (third field) '(:opt-const :opt-var))))
         (when (member label labels)
           (error "Duplicate label ~S" label))
         (push label labels)
         (when (and mutable (not (tag-mutable tag)))
           (error "Tag ~S is immutable but contains a mutable field ~S" (tag-name tag) label))
-        (setf (first fields) (make-field label (scan-type world (second field)) mutable))))))
+        (setf (first fields) (make-field label (scan-type world (second field)) mutable optional))))))
 
 
 ; Evaluate the type expressions in all of the world's tag's fields.
@@ -1038,12 +1040,16 @@
 
 
 ; Scan label to produce a label that is present in the given tag.
-; Return the label's position, its field type, and a flag indicating whether it is mutable.
+; Return:
+;   the label's position;
+;   its field type;
+;   a flag indicating whether it is mutable;
+;   a flag indicating whether it is optional.
 (defun scan-label (tag label)
-  (multiple-value-bind (position field-type mutable) (tag-find-field tag label)
+  (multiple-value-bind (position field-type mutable optional) (tag-find-field tag label)
     (unless position
       (error "Label ~S not present in ~A" label (tag-name tag)))
-    (values position field-type mutable)))
+    (values position field-type mutable optional)))
 
 
 ; Print the tag nicely on the given stream.
@@ -1057,7 +1063,9 @@
           (format stream " ~@_")
           (print-type (field-type field) stream)
           (when (field-mutable field)
-            (format stream " ~@_t")))
+            (format stream " ~@_:var"))
+          (when (field-optional field)
+            (format stream " ~@_:opt")))
         (pprint-exit-if-list-exhausted)
         (format stream " ~:_")))))
 
@@ -2372,17 +2380,8 @@
      (cons name (type-env-live type-env)))))
 
 
-; Nondestructively shadow all writable bindings in the type-env by unused bindings and return the new type-env.
-; Also create new bindings for the function's return type and return block name.
+; Create new bindings for the function's return type and return block name and return the new type-env.
 (defun type-env-init-function (type-env return-type)
-  (dolist (binding (type-env-bindings type-env))
-    (let ((name (first binding)))
-      (when (and (symbolp name) (not (keywordp name)) (member (type-env-local-mode binding) '(:var :uninitialized)))
-        (let* ((first-binding (type-env-get-local type-env name))
-               (first-mode (type-env-local-mode first-binding)))
-          (assert-true first-mode)
-          (unless (eq first-mode :unused)
-            (push (make-type-env-local (type-env-local-name first-binding) (type-env-local-type first-binding) :unused) (type-env-bindings type-env)))))))
   (set-type-env-flag
    (set-type-env-flag type-env :return return-type)
    :return-block-name
@@ -2417,7 +2416,7 @@
     (error "The type environment ~S isn't narrower than ~S" sub-type-env base-type-env)))
 
 
-; live1 and live2 are either :dead or lists of :unintialized variables that have been initialized.
+; live1 and live2 are either :dead or lists of :uninitialized variables that have been initialized.
 ; Return :dead of both live1 and live2 are dead or a list of initialized variables that would be valid
 ; on a merge point between code paths resulting in live1 and live2.
 (defun merge-live-lists (live1 live2)
@@ -3833,6 +3832,7 @@
 
 ; (new <type> <field-expr1> ... <field-exprn>)
 ; Used to create both tuples and records.
+; A <field-expr> may be :uninit to indicate an uninitialized field, which must have kind :opt-const or :opt-var.
 (defun scan-new (world type-env special-form type-name &rest value-exprs)
   (let* ((type (scan-kinded-type world type-name :tag))
          (tag (type-tag type))
@@ -3843,7 +3843,12 @@
       (error "Don't use new to create tag ~A; refer to the tag directly instead" type-name))
     (multiple-value-map-bind (value-codes value-annotated-exprs)
                              #'(lambda (field value-expr)
-                                 (scan-typed-value world type-env value-expr (field-type field)))
+                                 (cond
+                                  ((not (eq value-expr :uninit))
+                                   (scan-typed-value world type-env value-expr (field-type field)))
+                                  ((field-optional field)
+                                   (values :%uninit% value-expr))
+                                  (t (error "Can't leave non-optional field ~S uninitialized" (field-label field)))))
                              (fields value-exprs)
       (values
        (let ((name (tag-name tag)))
@@ -3854,15 +3859,23 @@
        (list* 'expr-annotation:special-form special-form type type-name value-annotated-exprs)))))
 
 
+(defun assert-not-%uninit% (value)
+  (if (eq value :%uninit%)
+    (error "Uninitialized field read")
+    value))
+
 ; (& <label> <record-expr>)
 ; Return the tuple or record field's value.
-(defun scan-& (world type-env special-form label record-expr)
+(defun scan-&-maybe-opt (world type-env special-form label record-expr opt)
   (multiple-value-bind (record-code record-type tags record-annotated-expr) (scan-union-tag-value world type-env record-expr)
     (let ((position-alist nil)
-          (field-types nil))
+          (field-types nil)
+          (any-opt nil))
       (dolist (tag tags)
-        (multiple-value-bind (position field-type mutable) (scan-label tag label)
+        (multiple-value-bind (position field-type mutable optional) (scan-label tag label)
           (declare (ignore mutable))
+          (when optional
+            (setq any-opt t))
           (let ((entry (assoc position position-alist)))
             (unless entry
               (setq entry (cons position nil))
@@ -3870,22 +3883,39 @@
             (assert-true (null (tag-keyword tag)))
             (push (tag-name tag) (cdr entry))
             (push field-type field-types))))
+      (unless (eq opt any-opt)
+        (if any-opt
+          (error "The field ~S may be uninitialized; use &opt instead" label)
+          (error "The field ~S is always initialized; use & instead" label)))
       (assert-true position-alist)
       (setq position-alist (sort position-alist #'< :key #'car))
       (let ((result-type (apply #'make-union-type world field-types)))
         (dolist (field-type field-types)
           (unless (eq (widening-coercion-code world result-type field-type 'test 'test) 'test)
             (error "Nontrivial type coercions in & are not implemented yet")))
-        (values
-         (if (endp (cdr position-alist))
-           (gen-nth-code (caar position-alist) record-code)
-           (let ((var (gen-local-var record-code)))
-             (let-local-var var record-code
-               `(case (car ,var)
-                  ,@(mapcar #'(lambda (entry) (list (cdr entry) (gen-nth-code (car entry) var)))
-                            position-alist)))))
-         result-type
-         (list 'expr-annotation:special-form special-form record-type label record-annotated-expr))))))
+        (let ((code (if (endp (cdr position-alist))
+                      (gen-nth-code (caar position-alist) record-code)
+                      (let ((var (gen-local-var record-code)))
+                        (let-local-var var record-code
+                          `(case (car ,var)
+                             ,@(mapcar #'(lambda (entry) (list (cdr entry) (gen-nth-code (car entry) var)))
+                                       position-alist)))))))
+          (values
+           (if any-opt
+             (list 'assert-not-%uninit% code)
+             code)
+           result-type
+           (list 'expr-annotation:special-form special-form record-type label record-annotated-expr)))))))
+
+; (& <label> <record-expr>)
+; Return the tuple or record field's value.
+(defun scan-& (world type-env special-form label record-expr)
+  (scan-&-maybe-opt world type-env special-form label record-expr nil))
+
+; (&opt <label> <record-expr>)
+; Return the tuple or record field's value.  Assert that the value is present.
+(defun scan-&opt (world type-env special-form label record-expr)
+  (scan-&-maybe-opt world type-env special-form label record-expr t))
 
 
 ; (set-field <expr> <label> <field-expr> ... <label> <field-expr>)
@@ -3917,8 +3947,8 @@
             ((endp labels-and-exprs))
           (let ((label (pop labels-and-exprs))
                 (field-expr (pop labels-and-exprs)))
-            (multiple-value-bind (position field-type mutable) (scan-label tag label)
-              (declare (ignore mutable))
+            (multiple-value-bind (position field-type mutable optional) (scan-label tag label)
+              (declare (ignore mutable optional))
               (when (logbitp position replacement-mask)
                 (error "Duplicate set-field label ~S" label))
               (setq replacement-mask (dpb 1 (byte 1 position) replacement-mask))
@@ -4005,6 +4035,39 @@
        annotated-expr
        false-type-env
        true-type-env))))
+
+
+; (assert-in <expr> <type>)
+; Returns the value of <expr>.
+(defun scan-assert-in (world type-env special-form value-expr type-expr)
+  (let ((type (scan-type world type-expr)))
+    (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
+      (multiple-value-bind (true-type false-type) (type-difference world value-type type)
+        (declare (ignore false-type))
+        (values
+         (let ((var (gen-local-var value-code)))
+           (let-local-var var value-code
+             (list 'assert (type-member-test-code world type value-type var))
+             var))
+         true-type
+         (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr))))))
+
+
+; (assert-not-in <expr> <type>)
+; Returns the value of <expr>.
+(defun scan-assert-not-in (world type-env special-form value-expr type-expr)
+  (let ((type (scan-type world type-expr)))
+    (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
+      (multiple-value-bind (true-type false-type) (type-difference world value-type type)
+        (declare (ignore true-type))
+        (values
+         (let ((var (gen-local-var value-code)))
+           (let-local-var var value-code
+             (list 'assert (list 'not (type-member-test-code world type value-type var)))
+             var))
+         false-type
+         (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr))))))
+
 
 
 ;;; Writable Cells
@@ -4386,7 +4449,8 @@
     (let ((position-alist nil)
           (field-types nil))
       (dolist (tag tags)
-        (multiple-value-bind (position field-type mutable) (scan-label tag label)
+        (multiple-value-bind (position field-type mutable optional) (scan-label tag label)
+          (declare (ignore optional))
           (unless mutable
             (error "Attempt to write to immutable field ~S of ~S" label (tag-name tag)))
           (let ((entry (assoc position position-alist)))
@@ -4415,6 +4479,53 @@
                     (let-local-var val value-code
                       `(case (car ,var)
                          ,@(mapcar #'(lambda (entry) (list (cdr entry) (list 'setf (gen-nth-code (car entry) var) val)))
+                                   position-alist))))))
+              rest-codes)
+             rest-live
+             (cons (list special-form record-type label record-annotated-expr value-annotated-expr) rest-annotated-stmts))))))))
+
+
+; (&const= <label> <record-expr> <value-expr>)
+; Initializes the value of an optional constant field.
+(defun scan-&const= (world type-env rest-statements last special-form label record-expr value-expr)
+  (multiple-value-bind (record-code record-type tags record-annotated-expr) (scan-union-tag-value world type-env record-expr)
+    (let ((position-alist nil)
+          (field-types nil))
+      (dolist (tag tags)
+        (multiple-value-bind (position field-type mutable optional) (scan-label tag label)
+          (declare (ignore mutable))
+          (unless optional
+            (error "Attempt to initialize a non-optional field ~S of ~S" label (tag-name tag)))
+          (let ((entry (assoc position position-alist)))
+            (unless entry
+              (setq entry (cons position nil))
+              (push entry position-alist))
+            (assert-true (null (tag-keyword tag)))
+            (push (tag-name tag) (cdr entry))
+            (push field-type field-types))))
+      (assert-true position-alist)
+      (setq position-alist (sort position-alist #'< :key #'car))
+      (let ((destination-type (apply #'make-intersection-type world field-types)))
+        (dolist (field-type field-types)
+          (unless (eq (widening-coercion-code world field-type destination-type 'test 'test) 'test)
+            (error "Type coercions in &const= are not implemented yet")))
+        (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr destination-type)
+          (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                               (scan-statements world type-env rest-statements last)
+            (values
+             (append
+              (if (endp (cdr position-alist))
+                (list
+                 (list 'assert (list 'eq (gen-nth-code (caar position-alist) record-code) :%uninit%))
+                 (list 'setf (gen-nth-code (caar position-alist) record-code) value-code))
+                (let ((var (gen-local-var record-code))
+                      (val (gen-local-var value-code)))
+                  (let-local-var var record-code
+                    (let-local-var val value-code
+                      `(case (car ,var)
+                         ,@(mapcar #'(lambda (entry) (list (cdr entry)
+                                                           (list 'assert (list 'eq (gen-nth-code (car entry) var) :%uninit%))
+                                                           (list 'setf (gen-nth-code (car entry) var) val)))
                                    position-alist))))))
               rest-codes)
              rest-live
@@ -4517,13 +4628,6 @@
 ;  nil            Always true; used for an "else" clause
 ;  true           Same as nil
 ;  <expr>         Condition expression <expr>
-;  (<key> (in <var> <type>))
-;  (<key> (not-in <var> <type>))
-;  (:narrow-true (and ([not-]in <var> <type>) ... ([not-]in <var> <type>)))
-;  (:narrow-false (or ([not-]in <var> <type>) ... ([not-]in <var> <type>)))
-;        where key is :narrow-true, :narrow-false, or :narrow-both
-;     Condition expression that constrains the type of var in the true branch if key is :narrow-true or :narrow-both
-;     and in the false branch if key is :narrow-false or :narrow-both.
 (defun scan-cond (world type-env rest-statements last special-form &rest cases)
   (unless cases
     (error "Empty cond statement"))
@@ -4760,10 +4864,13 @@
   (scan-deftuple-or-defrecord world nil name fields))
 
 
-; (defrecord <name> (<name1> <type1> [:const | :var]) ... (<namen> <typen> [:const | :var]))
+; (defrecord <name> (<name1> <type1> [:const | :var | :opt-const | :opt-var]) ... (<namen> <typen> [:const | :var | :opt-const | :opt-var]))
 ; Create the mutable record and tag in the world and set its contents.
 ; Do not evaluate the field and type expressions yet; that will be done by eval-tags-types.
-; Fields are immutable unless :var is specified.
+; :const fields are immutable;
+; :var fields are mutable;
+; :opt-const fields can be left uninitialized but can only be initialized once;
+; :opt-var fields are mutable and can be left uninitialized.
 (defun scan-defrecord (world grammar-info-var name &rest fields)
   (declare (ignore grammar-info-var))
   (scan-deftuple-or-defrecord world t name fields))
@@ -4924,6 +5031,7 @@
      (function scan-function depict-function)
      (<- scan-<- depict-<-)
      (&= scan-&= depict-&=)
+     (&const= scan-&const= depict-&=)
      (action<- scan-action<- depict-action<-)
      (return scan-return depict-return)
      (rwhen scan-rwhen depict-cond)
@@ -4990,11 +5098,14 @@
      ;;Tuples and Records
      (new scan-new depict-new)
      (& scan-& depict-&)
+     (&opt scan-&opt depict-&)
      (set-field scan-set-field depict-set-field)
      
      ;;Unions
      (in scan-in depict-in)
      (not-in scan-not-in depict-not-in)
+     (assert-in scan-assert-in depict-assert-in)
+     (assert-not-in scan-assert-not-in depict-assert-in)
      
      ;;Writable Cells
      (writable-cell-of scan-writable-cell-of depict-writable-cell-of)) ;For internal use only
