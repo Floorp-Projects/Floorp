@@ -24,8 +24,15 @@
 #include "nsIMIMEInfo.h"
 
 
+// nsISupports methods
+NS_IMPL_ISUPPORTS(nsMIMEService, nsCOMTypeInfo<nsIMIMEService>::GetIID());
+
+
 // nsMIMEService methods
 nsMIMEService::nsMIMEService() {
+
+    NS_INIT_REFCNT();
+
     mInfoArray = new nsVoidArray();
     InitFromHack(); // XXX bogus
 }
