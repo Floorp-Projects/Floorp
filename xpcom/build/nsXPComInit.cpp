@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXPCOM.h"
+#include "nsXPCOMPrivate.h"
 #include "nsIRegistry.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -51,9 +52,7 @@
 #include "nsErrorService.h"
 #include "nsArena.h"
 #include "nsByteBuffer.h"
-#ifdef PAGE_MANAGER
-#include "nsPageMgr.h"
-#endif
+
 #include "nsSupportsArray.h"
 #include "nsSupportsPrimitives.h"
 #include "nsConsoleService.h"
@@ -203,6 +202,9 @@ PRBool gXPCOMShuttingDown = PR_FALSE;
    &NS_CLASSINFO_NAME(Class) }
 
 static nsModuleComponentInfo components[] = {
+// ugh
+#define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
+#define NS_MEMORY_CLASSNAME  "Global Memory Service"
     COMPONENT(MEMORY, nsMemoryImpl::Create),
 #define NS_ERRORSERVICE_CLASSNAME NS_ERRORSERVICE_NAME
     COMPONENT(ERRORSERVICE, nsErrorService::Create),
@@ -210,10 +212,6 @@ static nsModuleComponentInfo components[] = {
     COMPONENT(ARENA, ArenaImpl::Create),
     COMPONENT(BYTEBUFFER, ByteBufferImpl::Create),
     COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create),
-
-#ifdef PAGE_MANAGER
-    COMPONENT(PAGEMANAGER, nsPageMgr::Create),
-#endif
 
     COMPONENT(PROPERTIES, nsProperties::Create),
 
@@ -277,6 +275,21 @@ static nsModuleComponentInfo components[] = {
 #undef COMPONENT
 
 const int components_length = sizeof(components) / sizeof(components[0]);
+
+// gMemory will be freed during shutdown. 
+static nsIMemory* gMemory = nsnull;
+nsresult NS_COM NS_GetMemoryManager(nsIMemory* *result)
+{
+    nsresult rv = NS_OK;
+    if (!gMemory)
+    {
+        rv = nsMemoryImpl::Create(nsnull,
+                                  NS_GET_IID(nsIMemory), 
+                                  (void**)&gMemory);
+    }
+    NS_IF_ADDREF(*result = gMemory);
+    return rv;
+}
 
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result, 
                              nsIFile* binDirectory)
@@ -373,8 +386,10 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     }
 
     nsIServiceManager *serviceManager = NS_STATIC_CAST(nsIServiceManager*, compMgr);
-    nsCOMPtr<nsIMemory> memory = getter_AddRefs(nsMemory::GetGlobalMemoryService());
 
+    
+    nsCOMPtr<nsIMemory> memory;
+    NS_GetMemoryManager(getter_AddRefs(memory));
     // dougt - these calls will be moved into a new interface when nsIComponentManager is frozen.
     rv = compMgr->RegisterService(kMemoryCID, memory);
     if (NS_FAILED(rv)) return rv;
@@ -434,6 +449,34 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
     return rv;
 }
+
+static nsVoidArray gExitRoutines;
+static void CallExitRoutines()
+{
+    PRInt32 count = gExitRoutines.Count();
+    for (PRInt32 i = 0; i < count; i++) {
+        XPCOMExitRoutine func = (XPCOMExitRoutine) gExitRoutines.ElementAt(i);
+        func();
+    }
+    gExitRoutines.Clear();
+}
+
+nsresult NS_COM 
+NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
+{
+    // priority are not used right now.  It will need to be implemented as more 
+    // classes are moved into the glue library --dougt
+    PRBool okay = gExitRoutines.AppendElement((void*)exitRoutine);
+    return okay ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult NS_COM 
+NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
+{
+    PRBool okay = gExitRoutines.RemoveElement((void*)exitRoutine);
+    return okay ? NS_OK : NS_ERROR_FAILURE;
+}
+
 
 //
 // NS_ShutdownXPCOM()
@@ -535,8 +578,12 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     
     EmptyEnumeratorImpl::Shutdown();
     nsMemoryImpl::Shutdown();
+    NS_IF_RELEASE(gMemory);
+    
     nsThread::Shutdown();
     NS_PurgeAtomTable();
+
+    CallExitRoutines();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcnt::DumpStatistics();
@@ -551,3 +598,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     return NS_OK;
 }
+
+
+

@@ -34,10 +34,16 @@ REQUIRES	= $(NULL)
 
 CPPSRCS		= \
 		nsCOMPtr.cpp \
+		nsMemory.cpp \
+		$(NULL)
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../build \
 		$(NULL)
 
 EXPORTS		= \
 		nsCOMPtr.h \
+		nsMemory.h \
 		$(NULL)
 
 XPIDLSRCS	= \

@@ -35,55 +35,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMemoryImpl_h__
-#define nsMemoryImpl_h__
+#ifndef nsMemory_h__
+#define nsMemory_h__
 
-#include "nsMemory.h"
-#include "nsISupportsArray.h"
-#include "nsIRunnable.h"
-#include "nsIThread.h"
-#include "nsCOMPtr.h"
-#include "plevent.h"
+#include "nsIMemory.h"
 
-struct PRLock;
-class MemoryFlusher;
+#define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
+#define NS_MEMORY_CLASSNAME  "Global Memory Service"
+#define NS_MEMORY_CID                                \
+{ /* 30a04e40-38e7-11d4-8cf5-0060b0fc14a3 */         \
+    0x30a04e40,                                      \
+    0x38e7,                                          \
+    0x11d4,                                          \
+    {0x8c, 0xf5, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
-class nsMemoryImpl : public nsIMemory
+
+/**
+ * Static helper routines to manage memory. These routines allow easy access
+ * to xpcom's built-in (global) nsIMemory implementation, without needing
+ * to go through the service manager to get it. However this requires clients
+ * to link with the xpcom DLL. 
+ *
+ * This class is not threadsafe and is intented for use only on the main
+ * thread.
+ */
+class nsMemory
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMEMORY
-
-    nsMemoryImpl();
-    virtual ~nsMemoryImpl();
-
-    nsresult FlushMemory(const PRUnichar* aReason, PRBool aImmediate);
-
-    // called from xpcom initialization/finalization:
-    static nsresult Startup();
-    static nsresult Shutdown();
-
-    static NS_METHOD
-    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-
-protected:
-    MemoryFlusher* mFlusher;
-    nsCOMPtr<nsIThread> mFlusherThread;
-
-    PRLock* mFlushLock;
-    PRBool  mIsFlushing;
-
-    struct FlushEvent {
-        PLEvent mEvent;
-        const PRUnichar* mReason;
-    };
-
-    FlushEvent mFlushEvent;
-
-    static nsresult RunFlushers(nsMemoryImpl* aSelf, const PRUnichar* aReason);
-
-    static void* PR_CALLBACK HandleFlushEvent(PLEvent* aEvent);
-    static void  PR_CALLBACK DestroyFlushEvent(PLEvent* aEvent);
+    static NS_EXPORT void*      Alloc(size_t size);
+    static NS_EXPORT void*      Realloc(void* ptr, size_t size);
+    static NS_EXPORT void       Free(void* ptr);
+    static NS_EXPORT nsresult   HeapMinimize(PRBool aImmediate);
+    static NS_EXPORT void*      Clone(const void* ptr, size_t size);
+    static NS_EXPORT nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 
-#endif // nsMemoryImpl_h__
+#endif // nsMemory_h__
+

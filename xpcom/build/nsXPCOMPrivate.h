@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,55 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMemoryImpl_h__
-#define nsMemoryImpl_h__
+#ifndef nsXPComPrivate_h__
+#define nsXPComPrivate_h__
 
-#include "nsMemory.h"
-#include "nsISupportsArray.h"
-#include "nsIRunnable.h"
-#include "nsIThread.h"
-#include "nsCOMPtr.h"
-#include "plevent.h"
+#include "nscore.h"
+/**
+ * Private Method to register an exit routine.  This method
+ * allows you to setup a callback that will be called from 
+ * the NS_ShutdownXPCOM function after all services and 
+ * components have gone away.
+ *
+ * This API is for the exclusive use of the xpcom glue library.
+ * 
+ * @status FROZEN
+ * @param exitRoutine pointer to user defined callback function
+ *                    of type XPCOMExitRoutine. 
+ * @param priority    higher priorities are called before lower  
+ *                    priorities.
+ *
+ * @return NS_OK for success;
+ *         other error codes indicate a failure.
+ *
+ */
+typedef NS_CALLBACK(XPCOMExitRoutine)(void);
 
-struct PRLock;
-class MemoryFlusher;
+extern "C" NS_COM nsresult
+NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority);
 
-class nsMemoryImpl : public nsIMemory
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMEMORY
+extern "C" NS_COM nsresult
+NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
 
-    nsMemoryImpl();
-    virtual ~nsMemoryImpl();
+#endif
 
-    nsresult FlushMemory(const PRUnichar* aReason, PRBool aImmediate);
 
-    // called from xpcom initialization/finalization:
-    static nsresult Startup();
-    static nsresult Shutdown();
-
-    static NS_METHOD
-    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-
-protected:
-    MemoryFlusher* mFlusher;
-    nsCOMPtr<nsIThread> mFlusherThread;
-
-    PRLock* mFlushLock;
-    PRBool  mIsFlushing;
-
-    struct FlushEvent {
-        PLEvent mEvent;
-        const PRUnichar* mReason;
-    };
-
-    FlushEvent mFlushEvent;
-
-    static nsresult RunFlushers(nsMemoryImpl* aSelf, const PRUnichar* aReason);
-
-    static void* PR_CALLBACK HandleFlushEvent(PLEvent* aEvent);
-    static void  PR_CALLBACK DestroyFlushEvent(PLEvent* aEvent);
-};
-
-#endif // nsMemoryImpl_h__
