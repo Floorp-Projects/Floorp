@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -73,10 +74,6 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC	= 1
 
 GARBAGE         += $(XPCOM_GLUE_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
-
-ifeq ($(OS_ARCH),WINNT)
-GARBAGE		+= $(addprefix $(srcdir)/,$(XPCOM_GLUE_SRC_LCSRCS))
-endif
 
 SRCS_IN_OBJDIR	= 1
 

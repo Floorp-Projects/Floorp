@@ -65,23 +65,23 @@ public:
   /**
    * Log a warning message to the debug log.
    */
-  static NS_COM void Warning(const char* aMessage,
+  static NS_COM_GLUE void Warning(const char* aMessage,
                              const char* aFile, PRIntn aLine);
 
   /**
    * Abort the executing program. This works on all architectures.
    */
-  static NS_COM void Abort(const char* aFile, PRIntn aLine);
+  static NS_COM_GLUE void Abort(const char* aFile, PRIntn aLine);
 
   /**
    * Break the executing program into the debugger. 
    */
-  static NS_COM void Break(const char* aFile, PRIntn aLine);
+  static NS_COM_GLUE void Break(const char* aFile, PRIntn aLine);
 
   /**
    * Log an assertion message to the debug log
    */
-  static NS_COM void Assertion(const char* aStr, const char* aExpr,
+  static NS_COM_GLUE void Assertion(const char* aStr, const char* aExpr,
                                const char* aFile, PRIntn aLine);
 };
 

@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -41,6 +42,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(srcdir)/../glue/objs.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom_core
@@ -67,7 +69,10 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += macmorefiles
 endif
 
-CPPSRCS		= nsXPComInit.cpp
+CPPSRCS		= \
+		$(XPCOM_GLUE_SRC_LCSRCS) \
+		nsXPComInit.cpp \
+		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS		+= dlldeps.cpp
@@ -97,10 +102,10 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)xptcmd.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
+		-I$(srcdir) \
 		-I.. \
 		-I$(srcdir)/../glue \
 		-I$(srcdir)/../base \
@@ -132,6 +137,8 @@ FORCE_SHARED_LIB = 1
 # UNIX98 iconv support
 OS_LIBS += $(LIBICONV)
 
+GARBAGE         += $(XPCOM_GLUE_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= \
@@ -161,3 +168,6 @@ ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
+
+export:: $(XPCOM_GLUE_SRC_CSRCS)
+	$(INSTALL) $^ .

@@ -88,7 +88,7 @@ nsGetWeakReference::operator()( const nsIID&, void** aResult ) const
   }
 
 
-NS_COM nsIWeakReference*  // or else |already_AddRefed<nsIWeakReference>|
+NS_COM_GLUE nsIWeakReference*  // or else |already_AddRefed<nsIWeakReference>|
 NS_GetWeakReference( nsISupports* aInstancePtr, nsresult* aErrorPtr )
   {
     void* result = 0;
@@ -96,7 +96,7 @@ NS_GetWeakReference( nsISupports* aInstancePtr, nsresult* aErrorPtr )
     return NS_STATIC_CAST(nsIWeakReference*, result);
   }
 
-NS_COM nsresult
+NS_COM_GLUE nsresult
 nsSupportsWeakReference::GetWeakReference( nsIWeakReference** aInstancePtr )
   {
     if ( !aInstancePtr )

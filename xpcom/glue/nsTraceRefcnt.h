@@ -112,24 +112,24 @@ PR_END_MACRO
  */
 class nsTraceRefcnt {
 public:
-  static NS_COM void LogAddRef(void* aPtr,
-                               nsrefcnt aNewRefCnt,
-                               const char* aTypeName,
-                               PRUint32 aInstanceSize);
+  static NS_COM_GLUE void LogAddRef(void* aPtr,
+                                    nsrefcnt aNewRefCnt,
+                                    const char* aTypeName,
+                                    PRUint32 aInstanceSize);
 
-  static NS_COM void LogRelease(void* aPtr,
-                                nsrefcnt aNewRefCnt,
-                                const char* aTypeName);
+  static NS_COM_GLUE void LogRelease(void* aPtr,
+                                     nsrefcnt aNewRefCnt,
+                                     const char* aTypeName);
 
-  static NS_COM void LogCtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize);
+  static NS_COM_GLUE void LogCtor(void* aPtr, const char* aTypeName,
+                                  PRUint32 aInstanceSize);
 
-  static NS_COM void LogDtor(void* aPtr, const char* aTypeName,
-                             PRUint32 aInstanceSize);
+  static NS_COM_GLUE void LogDtor(void* aPtr, const char* aTypeName,
+                                  PRUint32 aInstanceSize);
 
-  static NS_COM void LogAddCOMPtr(void *aCOMPtr, nsISupports *aObject);
+  static NS_COM_GLUE void LogAddCOMPtr(void *aCOMPtr, nsISupports *aObject);
 
-  static NS_COM void LogReleaseCOMPtr(void *aCOMPtr, nsISupports *aObject);
+  static NS_COM_GLUE void LogReleaseCOMPtr(void *aCOMPtr, nsISupports *aObject);
 
 };
 #endif /* nsTraceRefcnt_h___ */

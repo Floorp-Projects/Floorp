@@ -75,7 +75,7 @@ void GlueShutdownTraceRefcnt()
 }
 #endif
 
-NS_COM void 
+NS_COM_GLUE void 
 nsTraceRefcnt::LogAddRef(void * aPtr, nsrefcnt aNewRefcnt, const char *aTypeName, PRUint32 aInstanceSize)
 {
   if (!ENSURE_TRACEOBJECT)
@@ -83,7 +83,7 @@ nsTraceRefcnt::LogAddRef(void * aPtr, nsrefcnt aNewRefcnt, const char *aTypeName
   gTraceRefcntObject->LogAddRef(aPtr, aNewRefcnt, aTypeName, aInstanceSize);
 }
 
-NS_COM void 
+NS_COM_GLUE void 
 nsTraceRefcnt::LogRelease(void * aPtr, nsrefcnt aNewRefcnt, const char *aTypeName)
 {
   if (!ENSURE_TRACEOBJECT)
@@ -91,7 +91,7 @@ nsTraceRefcnt::LogRelease(void * aPtr, nsrefcnt aNewRefcnt, const char *aTypeNam
   gTraceRefcntObject->LogRelease(aPtr, aNewRefcnt, aTypeName);
 }
 
-NS_COM void 
+NS_COM_GLUE void 
 nsTraceRefcnt::LogCtor(void * aPtr, const char *aTypeName, PRUint32 aInstanceSize)
 {
   if (!ENSURE_TRACEOBJECT)
@@ -99,7 +99,7 @@ nsTraceRefcnt::LogCtor(void * aPtr, const char *aTypeName, PRUint32 aInstanceSiz
   gTraceRefcntObject->LogCtor(aPtr, aTypeName, aInstanceSize);
 }
 
-NS_COM void 
+NS_COM_GLUE void 
 nsTraceRefcnt::LogDtor(void * aPtr, const char *aTypeName, PRUint32 aInstanceSize)
 {
   if (!ENSURE_TRACEOBJECT)
@@ -107,7 +107,7 @@ nsTraceRefcnt::LogDtor(void * aPtr, const char *aTypeName, PRUint32 aInstanceSiz
   gTraceRefcntObject->LogDtor(aPtr, aTypeName, aInstanceSize);
 }
 
-NS_COM void 
+NS_COM_GLUE void 
 nsTraceRefcnt::LogAddCOMPtr(void * aPtr, nsISupports *aObject)
 {
   if (!ENSURE_TRACEOBJECT)
@@ -115,7 +115,7 @@ nsTraceRefcnt::LogAddCOMPtr(void * aPtr, nsISupports *aObject)
   gTraceRefcntObject->LogAddCOMPtr(aPtr, aObject);
 }
 
-NS_COM void 
+NS_COM_GLUE void 
 nsTraceRefcnt::LogReleaseCOMPtr(void * aPtr, nsISupports *aObject)
 {
   if (!ENSURE_TRACEOBJECT)

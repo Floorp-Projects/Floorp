@@ -80,7 +80,7 @@ void GlueShutdownMemory()
 ////////////////////////////////////////////////////////////////////////////////
 // nsMemory static helper routines
 
-NS_COM void*
+NS_COM_GLUE void*
 nsMemory::Alloc(PRSize size)
 {
     if (!ENSURE_ALLOCATOR)
@@ -89,7 +89,7 @@ nsMemory::Alloc(PRSize size)
    return gMemory->Alloc(size);
 }
 
-NS_COM void*
+NS_COM_GLUE void*
 nsMemory::Realloc(void* ptr, PRSize size)
 {
     if (!ENSURE_ALLOCATOR)
@@ -98,7 +98,7 @@ nsMemory::Realloc(void* ptr, PRSize size)
     return gMemory->Realloc(ptr, size);
 }
 
-NS_COM void
+NS_COM_GLUE void
 nsMemory::Free(void* ptr)
 {
     if (!ENSURE_ALLOCATOR)
@@ -107,7 +107,7 @@ nsMemory::Free(void* ptr)
     gMemory->Free(ptr);
 }
 
-NS_COM nsresult
+NS_COM_GLUE nsresult
 nsMemory::HeapMinimize(PRBool aImmediate)
 {
     if (!ENSURE_ALLOCATOR)
@@ -116,7 +116,7 @@ nsMemory::HeapMinimize(PRBool aImmediate)
     return gMemory->HeapMinimize(aImmediate);
 }
 
-NS_COM void*
+NS_COM_GLUE void*
 nsMemory::Clone(const void* ptr, PRSize size)
 {
     if (!ENSURE_ALLOCATOR)
@@ -128,7 +128,7 @@ nsMemory::Clone(const void* ptr, PRSize size)
     return newPtr;
 }
 
-NS_COM nsIMemory*
+NS_COM_GLUE nsIMemory*
 nsMemory::GetGlobalMemoryService()
 {
     if (!ENSURE_ALLOCATOR)

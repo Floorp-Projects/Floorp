@@ -67,7 +67,7 @@
 
 #ifndef nscore_h___
 #include "nscore.h"
-  // for |NS_..._CAST|, |NS_COM|
+  // for |NS_..._CAST|, |NS_COM_GLUE|
 #endif
 
 
@@ -341,7 +341,7 @@ class nsCOMPtr_helper
   warrant the specialcasing.
 */
 
-class NS_COM nsQueryInterface
+class NS_COM_GLUE nsQueryInterface
   {
     public:
       explicit
@@ -357,7 +357,7 @@ class NS_COM nsQueryInterface
       nsISupports*  mRawPtr;
   };
 
-class NS_COM nsQueryInterfaceWithError
+class NS_COM_GLUE nsQueryInterfaceWithError
   {
     public:
       nsQueryInterfaceWithError( nsISupports* aRawPtr, nsresult* error )
@@ -432,13 +432,13 @@ class nsCOMPtr_base
           // nothing else to do here
         }
 
-      NS_COM NS_FASTCALL ~nsCOMPtr_base();
+      NS_COM_GLUE NS_FASTCALL ~nsCOMPtr_base();
 
-      NS_COM void NS_FASTCALL   assign_with_AddRef( nsISupports* );
-      NS_COM void NS_FASTCALL   assign_from_qi( const nsQueryInterface, const nsIID& );
-      NS_COM void NS_FASTCALL   assign_from_qi_with_error( const nsQueryInterfaceWithError&, const nsIID& );
-      NS_COM void NS_FASTCALL   assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
-      NS_COM void** NS_FASTCALL begin_assignment();
+      NS_COM_GLUE void NS_FASTCALL   assign_with_AddRef( nsISupports* );
+      NS_COM_GLUE void NS_FASTCALL   assign_from_qi( const nsQueryInterface, const nsIID& );
+      NS_COM_GLUE void NS_FASTCALL   assign_from_qi_with_error( const nsQueryInterfaceWithError&, const nsIID& );
+      NS_COM_GLUE void NS_FASTCALL   assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
+      NS_COM_GLUE void** NS_FASTCALL begin_assignment();
 
     protected:
       NS_MAY_ALIAS_PTR(nsISupports) mRawPtr;
