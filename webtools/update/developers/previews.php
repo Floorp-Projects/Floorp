@@ -135,6 +135,7 @@ echo"Delete File? <input name=\"delete_$i\" type=\"checkbox\" value=\"$previewid
 if ($_POST["submit"]=="Add Preview") {
 
 //Compute the maxval for the filename for the new file.
+if (!$filename_array) { $filename_array=array(); }
 foreach ( $filename_array as $filename) {
 $exploded_filename = explode("-", $filename);
 $count = count($exploded_filename)-1;
