@@ -1286,32 +1286,30 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
         return NS_ERROR_OUT_OF_MEMORY;
 
     struct icaltimetype checkdate = ConvertFromPrtime( datems );
-    checkdate.hour = 0;
-    checkdate.minute = 0;
-    checkdate.second = 0;
     icaltime_adjust( &checkdate, 0, 0, 0, -1 );
-    PRTime checkdateinms = ConvertToPrtime( checkdate );
     
-    EventList *tmplistptr = &m_eventlist;
-    int i=0,count=0;
-    while( tmplistptr ) {
-        if( tmplistptr->event ) {
-            oeIICalEvent* tmpevent = tmplistptr->event;
-            PRBool isvalid;
-            PRTime checkdateloop = checkdateinms;
-            tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
-            while( isvalid ) {
-                eventEnum->AddEvent( tmpevent );
-                dateEnum->AddDate( checkdateloop );
-                count++;
-                if( count == maxcount )
-                    break;
-                tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
+    int count = 0;
+    icaltimetype nextcheckdate;
+    do {
+        nextcheckdate = GetNextEvent( checkdate );
+        if( !icaltime_is_null_time( nextcheckdate )) {
+            EventList *tmplistptr = &m_eventlist;
+            while( tmplistptr && count<maxcount ) {
+                if( tmplistptr->event ) {
+                    oeIICalEvent* tmpevent = tmplistptr->event;
+                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                    if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
+                        eventEnum->AddEvent( tmpevent );
+                        PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
+                        dateEnum->AddDate( nextdateinms );
+                        count++;
+                    }
+                }
+                tmplistptr = tmplistptr->next;
             }
+            checkdate = nextcheckdate;
         }
-        tmplistptr = tmplistptr->next;
-        i++;
-    }
+    } while ( !icaltime_is_null_time( nextcheckdate ) && (count < maxcount) );
 
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
     dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
@@ -1341,7 +1339,7 @@ oeICalImpl::RemoveObserver(oeIICalObserver *observer)
     if( observer ) {
         for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
             if( observer == m_observerlist[i] ) {
-                m_observerlist.erase( &m_observerlist[i] );
+//                m_observerlist.erase( &m_observerlist[i] );
                 observer->Release();
                 break;
             }
