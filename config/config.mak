@@ -319,10 +319,14 @@ CFLAGS = $(CFLAGS) -Gh
 #enable builds on any drive if defined.
 MOZ_SRC=y:
 !endif
-MAKE_INSTALL=$(QUIET)$(DEPTH)\config\makecopy.exe
+MAKE_INSTALL=$(QUIET)$(DEPTH)\config\makecopy.exe -s
 MAKE_MANGLE=$(DEPTH)\config\mangle.exe
 MAKE_UNMANGLE=if exist unmangle.bat call unmangle.bat
 
+!if defined(MOZ_PURIFY)
+# add #line directive to header files for purify
+MKCPYFLAGS= -i
+!endif
 
 
 #//------------------------------------------------------------------------

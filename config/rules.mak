@@ -590,16 +590,22 @@ export:: $(JMC_STUBS) $(OBJDIR) $(JMC_OBJS)
 
 export::
     @echo +++ make: exporting headers
- 	$(MAKE_INSTALL:/=\) -i $(EXPORTS) $(PUBLIC)
+ 	$(MAKE_INSTALL:/=\) $(MKCPYFLAGS) $(EXPORTS) $(PUBLIC)
 
-clobber::
+#// don't delete exported stuff on a local clobber, use clobber_all
+#clobber::
+#!if exist($(PUBLIC))
+#    @cd $(PUBLIC)
+#    -$(RM) $(EXPORTS)
+#    @cd $(MAKEDIR)
+#!endif # $(PUBLIC) exists
+
+clobber_all::
 !if exist($(PUBLIC))
     @cd $(PUBLIC)
     -$(RM) $(EXPORTS)
     @cd $(MAKEDIR)
 !endif # $(PUBLIC) exists
-
-clobber_all:: clobber
 
 !endif # EXPORTS
 
@@ -616,10 +622,14 @@ clean:: $(DIRS)
     -$(RM) $(OBJS) $(NOSUCHFILE) NUL 2> NUL
 
 clobber:: $(DIRS)
+!if defined(GARBAGE) || exist($(OBJDIR))
     -$(RM_R) $(GARBAGE) $(OBJDIR) 2> NUL
+!endif
 
 clobber_all:: $(DIRS)
-    -$(RM_R) *.OBJ $(TARGETS) $(GARBAGE) $(OBJDIR) 2> NUL
+!if defined(GARBAGE) || "$(TARGETS)" != "  " || exist($(OBJDIR))
+    -$(RM_R) $(TARGETS) $(GARBAGE) $(OBJDIR) 2> NUL
+!endif
 
 !if "$(MOZ_BITS)"=="32"
 CFLAGS = $(CFLAGS) -DNO_JNI_STUBS
@@ -699,6 +709,10 @@ install:: $(XPIDL_GEN_DIR) $(TYPELIB)
 !endif
 
 clobber::
+        -$(RM_R) $(XPIDL_GEN_DIR) 2> NUL
+        
+clobber_all::
+        -$(RM_R) $(XPIDL_GEN_DIR) 2> NUL
 !if exist($(PUBLIC))
         @cd $(PUBLIC)
         -$(RM) $(XPIDLSRCS:.idl=.h)
@@ -709,10 +723,9 @@ clobber::
         -$(RM) $(XPIDLSRCS)
         @cd $(MAKEDIR)
 !endif
-        -$(RM_R) $(XPIDL_GEN_DIR) 2> NUL
-        
-clobber_all:: clobber
+!if exist($(DIST)\bin\components)
         -$(RM) $(DIST)\bin\components\$(XPIDL_MODULE).xpt
+!endif
 
 !endif
 !endif

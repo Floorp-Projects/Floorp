@@ -144,21 +144,26 @@ int ReportError(const char* msg)
 BOOL hardSymLink(LPCSTR src, LPCSTR dest)
 { 
     WCHAR FileLink[ MAX_PATH + 1 ];
+    WCHAR FileSource[ MAX_PATH + 1 ];
+    WCHAR FileDest[ MAX_PATH + 1 ];
     LPWSTR FilePart;
 
     WIN32_STREAM_ID StreamId;
     DWORD dwBytesWritten;
+    DWORD cbPathLen;
 
     BOOL bSuccess;
 
 	// Convert src and dest to Unicode
-	DWORD cbPathLen = MultiByteToWideChar(CP_ACP, 0, src, -1, NULL, 0);
-	LPWSTR FileSource = new WCHAR[cbPathLen+1];
-	MultiByteToWideChar(CP_ACP, 0, src, -1, FileSource, cbPathLen);
+    if (!MultiByteToWideChar(CP_ACP, 0, src, -1, FileSource, MAX_PATH)) {
+        ReportError("Convert to WCHAR (source)");
+        return FALSE;
+    }
 
-	cbPathLen = MultiByteToWideChar(CP_ACP, 0, dest, -1, NULL, 0);
-	LPWSTR FileDest = new WCHAR[cbPathLen+1];
-	MultiByteToWideChar(CP_ACP, 0, dest, -1, FileDest, cbPathLen);
+    if (!MultiByteToWideChar(CP_ACP, 0, dest, -1, FileDest, MAX_PATH)) {
+        ReportError("Convert to WCHAR (destination)");
+        return FALSE;
+    }
 
     //
     // open existing file that we link to
@@ -266,15 +271,12 @@ BOOL hardSymLink(LPCSTR src, LPCSTR dest)
         return FALSE;
     }
 
-	delete FileSource; 
-	delete FileDest;
-
     return TRUE;
 } 
 
 int CopyIfNecessary(const char *oldFile, const char *newFile)
 {
-	LPTSTR fullPathName = NULL;
+	char   fullPathName[ MAX_PATH + 1 ];
 	LPTSTR filenamePart = NULL;
 
 	char buffer[8192];
@@ -301,10 +303,7 @@ int CopyIfNecessary(const char *oldFile, const char *newFile)
 
 
 	// find out required size
-	DWORD bufSize = GetFullPathName(oldFile, 0, fullPathName, &filenamePart);
-
-	fullPathName = new char[bufSize];
-	GetFullPathName(oldFile, bufSize, fullPathName, &filenamePart);
+	GetFullPathName(oldFile, MAX_PATH, fullPathName, &filenamePart);
 
 	// If we need to insert #line, the copying is a bit involved.
 	if (insertHashLine == TRUE) {
@@ -366,17 +365,15 @@ int CopyIfNecessary(const char *oldFile, const char *newFile)
 			char *c = strchr(fullPathName, '\\');
 
 			if (c != NULL) {
-				LPTSTR fileSystemName;
+                TCHAR  fileSystemName[50];
 
 				strncpy(rootPathName, fullPathName, (c - fullPathName) + 1);
 
-				fileSystemName = new TCHAR[50]; 
 				if (!GetVolumeInformation(rootPathName, NULL, 0, NULL, NULL, NULL, fileSystemName, sizeof(rootPathName))) {
 					return ReportError("GetVolumeInformation");
 				}
 
 				isNTFS = (strcmp(fileSystemName, "NTFS") == 0);
-				delete fileSystemName;
 			}
 		}
 
@@ -396,16 +393,16 @@ int CopyIfNecessary(const char *oldFile, const char *newFile)
 		}
 	}
 
-	delete fullPathName;
-
     return 0;
 }
 
 void Usage(void)
 {
-    fprintf(stderr, "makecopy: [-is] <file1> [file2 ... fileN] <dir-path>\n");
-    fprintf(stderr, "     -i  --  add #line directive\n");
-    fprintf(stderr, "     -s  --  use symlinks on NT when possible\n");
+    fprintf(stderr, "makecopy: [-cisx] <file1> [file2 ... fileN] <dir-path>\n");
+    fprintf(stderr, "     -c  copy [default], cancels -s\n");
+    fprintf(stderr, "     -i  add #line directive\n");
+    fprintf(stderr, "     -s  use symlinks on NT when possible\n");
+    fprintf(stderr, "     -x  cancel -i\n");
 }
 
 
@@ -428,11 +425,20 @@ int main( int argc, char *argv[] )
     for ( ; *argv[i] == '-' ; ++i) {
         char *opt = argv[i]+1;
         for ( ; *opt; ++opt) {
-            if ( *opt == 'i' )
+            switch (*opt) {
+            case 'c':
+                trySymlink = FALSE;
+                break;
+            case 'i':
                 insertHashLine = TRUE;
-            else if ( *opt == 's' )
+                break;
+            case 's':
                 trySymlink = TRUE;
-            else {
+                break;
+            case 'x':
+                insertHashLine = FALSE;
+                break;
+            default:
                 Usage();
                 return 2;
             }
