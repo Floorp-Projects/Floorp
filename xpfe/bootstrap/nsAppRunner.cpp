@@ -51,6 +51,7 @@ extern "C" void NS_SetupRegistry_1();
 int main(int argc, char* argv[])
 {
   nsresult rv;
+  nsString controllerCID;
 #if 0
   nsICmdLineArguements* cmdLineArgs = nsnull;
 #endif
@@ -66,10 +67,6 @@ int main(int argc, char* argv[])
    */
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
-#ifdef XP_PC
-  PL_InitializeEventsLib("");
-#endif
-
 
   /*
    * Start up the core services:
@@ -118,12 +115,18 @@ int main(int argc, char* argv[])
   ///write me...
   nsIURL* url;
   nsIWidget* newWindow;
-
-  rv = NS_NewURL(&url, "resource:/res/samples/test0.html");
+  
+  rv = NS_NewURL(&url, "resource:/res/samples/appshell.html");
   if (NS_FAILED(rv)) {
     goto done;
   }
-  appShell->CreateTopLevelWindow(url, newWindow);
+  /*
+   * XXX: Currently, the CID for the "controller" is passed in as an argument 
+   *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
+   *      components this will be specified in the XUL description...
+   */
+  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+  appShell->CreateTopLevelWindow(url, controllerCID, newWindow);
   NS_RELEASE(url);
 
   /*
