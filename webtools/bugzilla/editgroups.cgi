@@ -149,7 +149,7 @@ people submitting bugs by email to limit a bug to a certain set of groups. <p>";
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
     print "<b>User RegExp</b> is optional, and if filled in, will automatically
-grant membership to this group to anyone creating a new account with an
+grant membership to this group to anyone with an
 email address that matches this perl regular expression. Do not forget the trailing \'\$\'.  Example \'\@mycompany\\.com\$\'<p>";
     print "The <b>Use For Bugs</b> flag determines whether or not the group is eligible to be used for bugs.
 If you remove this flag, it will no longer be possible for users to add bugs
