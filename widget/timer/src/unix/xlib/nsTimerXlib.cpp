@@ -37,7 +37,7 @@
 #include <X11/Xlib.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsTimerXlibLog, 0)
+NS_IMPL_LOG(nsTimerXlibLog)
 #define PRINTF NS_LOG_PRINTF(nsTimerXlibLog)
 #define FLUSH  NS_LOG_FLUSH(nsTimerXlibLog)
 

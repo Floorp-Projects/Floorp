@@ -29,7 +29,7 @@
 #include "nsFontSizeIterator.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsFontRetrieverServiceLog, 0)
+NS_IMPL_LOG(nsFontRetrieverServiceLog)
 #define PRINTF NS_LOG_PRINTF(nsFontRetrieverServiceLog)
 #define FLUSH  NS_LOG_FLUSH(nsFontRetrieverServiceLog)
  

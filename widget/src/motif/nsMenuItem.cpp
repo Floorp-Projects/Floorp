@@ -46,7 +46,7 @@
 #include "nsStringUtil.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsMenuItemLog, 0)
+NS_IMPL_LOG(nsMenuItemLog)
 #define PRINTF NS_LOG_PRINTF(nsMenuItemLog)
 #define FLUSH  NS_LOG_FLUSH(nsMenuItemLog)
 

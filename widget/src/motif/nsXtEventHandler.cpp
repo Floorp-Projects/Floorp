@@ -36,7 +36,7 @@
 #include "stdio.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsXtEventHandlerLog, 0)
+NS_IMPL_LOG(nsXtEventHandlerLog)
 #define PRINTF NS_LOG_PRINTF(nsXtEventHandlerLog)
 #define FLUSH  NS_LOG_FLUSH(nsXtEventHandlerLog)
 

@@ -39,7 +39,7 @@
 #include <stdlib.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsModuleLog, 0)
+NS_IMPL_LOG(nsModuleLog)
 #define PRINTF NS_LOG_PRINTF(nsModuleLog)
 #define FLUSH  NS_LOG_FLUSH(nsModuleLog)
 

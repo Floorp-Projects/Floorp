@@ -31,7 +31,7 @@
 #include "URLMON.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsDataObjCollectionLog, 0)
+NS_IMPL_LOG(nsDataObjCollectionLog)
 #define PRINTF NS_LOG_PRINTF(nsDataObjCollectionLog)
 #define FLUSH  NS_LOG_FLUSH(nsDataObjCollectionLog)
 

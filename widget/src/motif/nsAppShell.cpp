@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsAppShellLog, 0)
+NS_IMPL_LOG(nsAppShellLog)
 #define PRINTF NS_LOG_PRINTF(nsAppShellLog)
 #define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 

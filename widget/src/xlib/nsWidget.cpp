@@ -42,7 +42,7 @@
 #include "xlibrgb.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsWidgetLog, 0)
+NS_IMPL_LOG(nsWidgetLog)
 #define PRINTF NS_LOG_PRINTF(nsWidgetLog)
 #define FLUSH  NS_LOG_FLUSH(nsWidgetLog)
 

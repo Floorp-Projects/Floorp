@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsFileDialogLog, 0)
+NS_IMPL_LOG(nsFileDialogLog)
 #define PRINTF NS_LOG_PRINTF(nsFileDialogLog)
 #define FLUSH  NS_LOG_FLUSH(nsFileDialogLog)
 

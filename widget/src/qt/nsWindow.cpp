@@ -39,7 +39,7 @@
 #include <qobjectlist.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsWindowLog, 0)
+NS_IMPL_LOG(nsWindowLog)
 #define PRINTF NS_LOG_PRINTF(nsWindowLog)
 #define FLUSH  NS_LOG_FLUSH(nsWindowLog)
 

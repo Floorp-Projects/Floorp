@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsToolkitLog, 0)
+NS_IMPL_LOG(nsToolkitLog)
 #define PRINTF NS_LOG_PRINTF(nsToolkitLog)
 #define FLUSH  NS_LOG_FLUSH(nsToolkitLog)
 
