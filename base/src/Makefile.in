@@ -53,6 +53,9 @@ CPPSRCS =                       \
     nsUnicharInputStream.cpp    \
     nsVoidArray.cpp             \
     nsSpecialSystemDirectory.cpp\
+    nsObserverService.cpp	\
+    nsObserverList.cpp		\
+    nsObserver.cpp		\
     $(NULL)
 
 EXPORTS =                       \
