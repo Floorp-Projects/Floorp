@@ -37,7 +37,8 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
-        onload="window.dialog = new nsHelperAppLauncherDialog();"
+        onload="window.dialog = new nsHelperAppLauncherDialog()"
+        onunload="window.dialog.onCancel()"
         style="width: 40em;"
         class="dialog"
         align="vertical"
@@ -58,9 +59,9 @@
         </box>
         <separator orient="vertical" class="thin"/>
         <box orient="vertical" flex="1">
-            <html>&intro.label;</html>
+            <html id="intro">&intro.label;</html>
             <separator orient="horizontal" class="thin"/>
-            <radiogroup id="mode" orient="vertical">
+            <radiogroup id="mode" orient="vertical" oncommand="window.dialog.toggleChoice()">
                 <box orient="vertical">
                     <box autostretch="never">
                         <radio id="runApp"
@@ -70,10 +71,11 @@
                     </box>
                     <box class="indent">
                         <textfield id="appName" readonly="true" flex="1"/>
-                        <button class="dialog"
+                        <button id="chooseApp"
+                                class="dialog"
                                 value="&chooseApp.label;"
                                 accesskey="&chooseApp.accesskey;"
-                                oncommand="dialog.chooseApp();"/>
+                                oncommand="dialog.chooseApp()"/>
                     </box>
                 </box>
                 <box orient="vertical">
@@ -82,13 +84,6 @@
                                group="mode"
                                value="&saveToDisk.label;"
                                accesskey="&saveToDisk.accesskey;"/>
-                    </box>
-                    <box class="indent">
-                        <textfield id="fileName" readonly="true" flex="1"/>
-                        <button class="dialog"
-                                value="&chooseFile.label;"
-                                accesskey="&chooseFile.accesskey;"
-                                oncommand="dialog.chooseFile();"/>
                     </box>
                  </box>
             </radiogroup>
