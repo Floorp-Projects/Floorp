@@ -40,6 +40,13 @@ MODULE = rdf
 
 REQUIRES = dom js netlib rdf raptor xpcom
 
+# XXX Note dependencies on implementation headers for factory functions
+
+INCLUDES += -I$(srcdir)/../rdf/base/src       \
+	    -I$(srcdir)/../rdf/content/src    \
+	    -I$(srcdir)/../rdf/datasource/src \
+	    $(NULL)
+
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/bin           \
 	-L$(DIST)/lib		\
