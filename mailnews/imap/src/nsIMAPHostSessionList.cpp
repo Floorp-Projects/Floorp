@@ -45,16 +45,17 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 	fCachedPassword = NULL;
 	fCapabilityFlags = kCapabilityUndefined;
 	fHierarchyDelimiters = NULL;
-	fHaveWeEverDiscoveredFolders = FALSE;
+	fHaveWeEverDiscoveredFolders = PR_FALSE;
 	fCanonicalOnlineSubDir = NULL;
 	fNamespaceList = nsIMAPNamespaceList::CreatensIMAPNamespaceList();
-	fUsingSubscription = TRUE;
-	fOnlineTrashFolderExists = FALSE;
-	fShouldAlwaysListInbox = TRUE;
+	fUsingSubscription = PR_TRUE;
+	fOnlineTrashFolderExists = PR_FALSE;
+	fShouldAlwaysListInbox = PR_TRUE;
 	fShellCache = nsIMAPBodyShellCache::Create();
-	fPasswordVerifiedOnline = FALSE;
-    fDeleteIsMoveToTrash = FALSE;
-    fGotNamespaces = FALSE;
+	fPasswordVerifiedOnline = PR_FALSE;
+    fDeleteIsMoveToTrash = PR_FALSE;
+    fGotNamespaces = PR_FALSE;
+	fNamespacesOverridable = PR_FALSE;
 }
 
 nsIMAPHostInfo::~nsIMAPHostInfo()
