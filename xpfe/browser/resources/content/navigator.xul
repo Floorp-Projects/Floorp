@@ -161,7 +161,7 @@ Contributor(s): ______________________________________. -->
             <textbox id="urlbar" class="plain" flex="1"
                      type="autocomplete" searchSessions="history" 
                      timeout="50" maxrows="6" alwaysOpenPopup="true"
-                     defaultSearchEngine="true"
+                     defaultSearchEngine="true" tabScrolling="true"
                      tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                      ontextcommand="return handleURLBarCommand(userAction);"
                      ontextrevert="return handleURLBarRevert();"
