@@ -42,6 +42,7 @@
 #include "nsIPref.h"
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
+#include "nsITimerCallback.h"
 #include "jsurl.h"
 #include "nsIBrowserWindow.h"
 
@@ -273,33 +274,35 @@ protected:
 //----------------------------------------------------------------------
 
 // Class IID's
-static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_IID(kDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
-static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
+static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
+static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_IID(kDocumentLoaderCID,      NS_DOCUMENTLOADER_CID);
+static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
 
 // IID's
 static NS_DEFINE_IID(kIContentViewerContainerIID,
                      NS_ICONTENT_VIEWER_CONTAINER_IID);
-static NS_DEFINE_IID(kIDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, 
+                     NS_IDOCUMENT_LOADER_OBSERVER_IID);
+static NS_DEFINE_IID(kIDeviceContextIID,      NS_IDEVICE_CONTEXT_IID);
+static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
+static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
-static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
-static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
-static NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
-static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
-static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
+static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIPluginManagerIID,      NS_IPLUGINMANAGER_IID);
+static NS_DEFINE_IID(kIPluginHostIID,         NS_IPLUGINHOST_IID);
+static NS_DEFINE_IID(kCPluginHostCID,         NS_PLUGIN_HOST_CID);
+static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_IID(kRefreshURLIID,          NS_IREFRESHURL_IID);
+static NS_DEFINE_IID(kITimerCallbackIID,      NS_ITIMERCALLBACK_IID);
+static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
+static NS_DEFINE_IID(kIBrowserWindowIID,      NS_IBROWSER_WINDOW_IID);
 
 // XXX not sure
-static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
+static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
 
 nsIPluginHost *nsWebShell::mPluginHost = nsnull;
 nsIPluginManager *nsWebShell::mPluginManager = nsnull;
@@ -651,12 +654,7 @@ nsWebShell::Destroy()
   nsresult rv = NS_OK;
 
   // Stop any URLs that are currently being loaded...
-  if (nsnull != mDocLoader) {
-    mDocLoader->Stop();
-  }
-
-  // Cancel any timers that were set for this loader.
-  CancelRefreshURLTimers();
+  Stop();
 
   SetContainer(nsnull);
   SetObserver(nsnull);
@@ -1117,9 +1115,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   Stop();
 
-  // Cancel any timers that were set for this loader.
-  CancelRefreshURLTimers();
-
   rv = mDocLoader->LoadURL(urlSpec,       // URL string
                            nsnull,         // Command
                            this,           // Container
@@ -1135,15 +1130,22 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
 NS_IMETHODIMP nsWebShell::Stop(void)
 {
+  // Cancel any timers that were set for this loader.
+  CancelRefreshURLTimers();
+
   if (mDocLoader) {
     // Stop any documents that are currently being loaded...
     mDocLoader->Stop();
-    
-    // Cancel any timers that were set for this loader.
-    CancelRefreshURLTimers();
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+
+  // Stop the documents being loaded by children too...
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsIWebShell* shell = (nsIWebShell*) mChildren.ElementAt(i);
+    shell->Stop();
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWebShell::Reload(nsReloadType aType)
@@ -1215,9 +1217,6 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
 
     // Stop any documents that are currently being loaded...
     mDocLoader->Stop();
-
-    // Cancel any timers that were set for this loader.
-    CancelRefreshURLTimers();
 
     rv = mDocLoader->LoadURL(urlSpec,        // URL string
                              nsnull,         // Command
@@ -1671,82 +1670,119 @@ nsWebShell::OnConnectionsComplete()
 }
 
 /* For use with redirect/refresh url api */
-class refreshData {
-    public:
-    nsIWebShell* shell;
-    nsString* aUrlSpec;
-    PRBool repeat;
-    PRInt32 delay;
+class refreshData : public nsITimerCallback 
+{
+public:
+  refreshData();
+
+  NS_DECL_ISUPPORTS
+
+  // nsITimerCallback interface
+  virtual void Notify(nsITimer *timer);
+
+  nsIWebShell* mShell;
+  nsString     mUrlSpec;
+  PRBool       mRepeat;
+  PRInt32      mDelay;
+
+protected:
+  virtual ~refreshData();
 };
+
+refreshData::refreshData()
+{
+  NS_INIT_REFCNT();
+
+  mShell   = nsnull;
+}
+
+refreshData::~refreshData()
+{
+  NS_IF_RELEASE(mShell);
+}
+
+
+NS_IMPL_ISUPPORTS(refreshData, kITimerCallbackIID);
+
+void refreshData::Notify(nsITimer *aTimer)
+{
+  NS_PRECONDITION((nsnull != mShell), "Null pointer...");
+  if (nsnull != mShell) {
+    mShell->LoadURL(mUrlSpec, nsnull, PR_TRUE, nsReload);
+  }
+  /* 
+   * LoadURL(...) will cancel all refresh timers... This causes the Timer and
+   * its refreshData instance to be released...
+   */
+}
+
 
 NS_IMETHODIMP
 nsWebShell::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
 {
+  nsresult rv = NS_OK;
+  nsITimer *timer=nsnull;
+  refreshData *data;
+
+  if (nsnull == aURL) {
     NS_PRECONDITION((aURL != nsnull), "Null pointer");
+    rv = NS_ERROR_NULL_POINTER;
+    goto done;
+  }
 
-    refreshData *data= new refreshData();
-    nsITimer *timer=nsnull;
+  NS_NEWXPCOM(data, refreshData);
+  if (nsnull == data) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto done;
+  }
 
-    NS_PRECONDITION((nsnull != data), "Null pointer");
-    
-    data->shell = this;
-    NS_ADDREF(data->shell);
-    data->aUrlSpec = new nsString(aURL->GetSpec());
-    data->delay = millis;
-    data->repeat = repeat;
+  // Set the reference count to one...
+  NS_ADDREF(data);
 
-    /* Create the timer. */
-    if (NS_OK == NS_NewTimer(&timer)) {
-        /* Add the timer to our array. */
-        NS_LOCK_INSTANCE();
-        mRefreshments.AppendElement(timer);
-        timer->Init(nsWebShell::RefreshURLCallback, data, millis);
-        NS_UNLOCK_INSTANCE();
-    }
+  data->mShell = this;
+  NS_ADDREF(data->mShell);
 
-    return NS_OK;
+  data->mUrlSpec = aURL->GetSpec();
+  data->mDelay    = millis;
+  data->mRepeat   = repeat;
+
+  /* Create the timer. */
+  if (NS_OK == NS_NewTimer(&timer)) {
+      /* Add the timer to our array. */
+      NS_LOCK_INSTANCE();
+      mRefreshments.AppendElement(timer);
+      timer->Init(data, millis);
+      NS_UNLOCK_INSTANCE();
+  }
+
+  NS_RELEASE(data);
+
+done:
+  return rv;
 }
 
 NS_IMETHODIMP
 nsWebShell::CancelRefreshURLTimers(void) {
-    PRInt32 count;
-    PRInt32 tmp=0;
-    nsITimer* timer;
-    refreshData* data = nsnull;
+  PRInt32 index;
+  nsITimer* timer;
 
-    /* Right now all we can do is cancel all the timers for this webshell. */
-    NS_LOCK_INSTANCE();
+  /* Right now all we can do is cancel all the timers for this webshell. */
+  NS_LOCK_INSTANCE();
 
-    count = mRefreshments.Count();
-    while (tmp < count) {
-        timer=(nsITimer*)mRefreshments.ElementAt(tmp);
-        /* ditch the mem allocated in/to data */
-        data = (refreshData*)timer->GetClosure();
-        if (data) {
-            NS_RELEASE(data->shell);
-            if (data->aUrlSpec)
-                delete data->aUrlSpec;
-        }
-        delete data;
+  /* Walk the list backwards to avoid copying the array as it shrinks.. */
+  for (index = mRefreshments.Count()-1; (0 <= index); index--) {
+    timer=(nsITimer*)mRefreshments.ElementAt(index);
+    /* Remove the entry from the list before releasing the timer.*/
+    mRefreshments.RemoveElementAt(index);
 
-        mRefreshments.RemoveElementAt(tmp);
-        if (timer) {
-            timer->Cancel();
-            NS_RELEASE(timer);
-        }
-        tmp++;
+    if (timer) {
+      timer->Cancel();
+      NS_RELEASE(timer);
     }
-    NS_UNLOCK_INSTANCE();
+  }
+  NS_UNLOCK_INSTANCE();
 
-    return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-void nsWebShell::RefreshURLCallback(nsITimer* aTimer, void* aClosure) {
-    refreshData *data=(refreshData*)aClosure;
-    NS_PRECONDITION((data != nsnull), "Null pointer...");
-    data->shell->LoadURL(*data->aUrlSpec, nsnull, PR_TRUE, nsReload);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
