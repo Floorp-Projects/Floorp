@@ -186,7 +186,7 @@ main(int argc, char* argv[])
   }
 
   sts->Shutdown();
-  NS_RELEASE(sts);
+
   return 0;
 }
 

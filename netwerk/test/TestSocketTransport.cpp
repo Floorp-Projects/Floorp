@@ -671,7 +671,5 @@ main(int argc, char* argv[])
 
 //  printf("Elapsed time: %ld\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL));
 
-  NS_RELEASE(eventQService);
-
   return 0;
 }

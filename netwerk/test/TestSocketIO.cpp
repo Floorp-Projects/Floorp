@@ -290,13 +290,11 @@ main(int argc, char* argv[])
 #endif
   }
 
-  PRTime endTime;
-  endTime = PR_Now();
+  PRTime endTime; 
+ endTime = PR_Now();
   printf("Elapsed time: %ld\n", (PRInt32)(endTime/1000UL-gElapsedTime/1000UL));
 
   sts->Shutdown();
-  NS_RELEASE(sts);
-  NS_RELEASE(eventQService);
 
   return 0;
 }
