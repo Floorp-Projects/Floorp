@@ -1216,10 +1216,9 @@ nsInstall::CurrentUserNode(nsString& userRegNode)
     int len = MAXREGNAMELEN;
     nsIPref * prefs;
     
-    nsresult rv = nsComponentManager::CreateInstance(kPrefsIID, 
-                                                     nsnull,
-                                                     kPrefsCID,
-                                                     (void**) &prefs);
+    nsresult rv = nsServiceManager::GetService(kPrefsCID, 
+                                               kPrefsIID,
+                                               (nsISupports**) &prefs);
 
 
     if ( NS_SUCCEEDED(rv) )
