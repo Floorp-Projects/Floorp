@@ -1303,9 +1303,30 @@ nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
         }
       }
     } else if (aIsControl) {
-       // Control is held down
+      // Control is held down
       if (IsContentSelectedByIndex(mSelectedIndex)) {
         SetContentSelected(mSelectedIndex, PR_FALSE);
+        // after clearing the selected item
+        // we need to check to see if there are any more 
+        // selected items
+        PRInt32 i;
+        PRInt32 max = 0;
+        if (NS_SUCCEEDED(GetNumberOfOptions(&max))) {
+          for (i=0;i<max;i++) {
+            if (IsContentSelectedByIndex(i)) {
+              // set this to "-1" to force the dispatch of the onchange event
+              mOldSelectedIndex = -1;
+              break;
+            }
+          }
+        }
+        // didn't find any other seleccted items
+        // so we must set the currently selected item to "-1"
+        // this also forces the dispatch of the onchange event
+        if (i == max) {
+          mSelectedIndex = -1;
+        }
+
       } else {
         SetContentSelected(mSelectedIndex, PR_TRUE);
       }
