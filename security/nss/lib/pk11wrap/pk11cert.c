@@ -34,6 +34,8 @@
  * This file implements the Symkey wrapper and the PKCS context
  * Interfaces.
  */
+
+#include "secport.h"
 #include "seccomon.h"
 #include "secmod.h"
 #include "nssilock.h"
@@ -838,25 +840,31 @@ pk11_CollectCrls(PK11SlotInfo *slot, CK_OBJECT_HANDLE crlID, void *arg)
 	 { CKA_NETSCAPE_URL, NULL, 0},
     };
     const int fetchCrlSize = sizeof(fetchCrl)/sizeof(fetchCrl[2]);
-    SECStatus rv;
+    CK_RV crv;
+    SECStatus rv = SECFailure;
 
-    rv = PK11_GetAttributes(head->arena,slot,crlID,fetchCrl,fetchCrlSize);
-    if (rv == SECFailure) {
+    crv = PK11_GetAttributes(head->arena,slot,crlID,fetchCrl,fetchCrlSize);
+    if (CKR_OK != crv) {
+	PORT_SetError(PK11_MapError(crv));
 	goto loser;
     }
-    rv = SECFailure;
+
+    if (!fetchCrl[1].pValue) {
+	PORT_SetError(SEC_ERROR_CRL_INVALID);
+	goto loser;
+    }
 
     new_node = (CERTCrlNode *)PORT_ArenaAlloc(head->arena, sizeof(CERTCrlNode));
     if (new_node == NULL) {
         goto loser;
     }
 
-    if (fetchCrl[1].pValue && *((CK_BBOOL *)fetchCrl[1].pValue))
+    if (*((CK_BBOOL *)fetchCrl[1].pValue))
         new_node->type = SEC_KRL_TYPE;
     else
         new_node->type = SEC_CRL_TYPE;
 
-    derCrl.type = 0;
+    derCrl.type = siBuffer;
     derCrl.data = (unsigned char *)fetchCrl[0].pValue;
     derCrl.len = fetchCrl[0].ulValueLen;
     new_node->crl=CERT_DecodeDERCrl(head->arena,&derCrl,new_node->type);
@@ -3227,7 +3235,7 @@ PK11_GetKeyIDFromCert(CERTCertificate *cert, void *wincx)
 
     item = PORT_ZNew(SECItem);
     if (item) {
-        item->data = theTemplate[0].pValue;
+        item->data = (unsigned char*) theTemplate[0].pValue;
         item->len = theTemplate[0].ulValueLen;
     }
 
@@ -3256,7 +3264,7 @@ PK11_GetKeyIDFromPrivateKey(SECKEYPrivateKey *key, void *wincx)
 
     item = PORT_ZNew(SECItem);
     if (item) {
-        item->data = theTemplate[0].pValue;
+        item->data = (unsigned char*) theTemplate[0].pValue;
         item->len = theTemplate[0].ulValueLen;
     }
 
@@ -3399,7 +3407,7 @@ pk11_GetLowLevelKeyFromHandle(PK11SlotInfo *slot, CK_OBJECT_HANDLE handle) {
 	return NULL;
     }
 
-    item->data = theTemplate[0].pValue;
+    item->data = (unsigned char*) theTemplate[0].pValue;
     item->len =theTemplate[0].ulValueLen;
 
     return item;
@@ -3936,7 +3944,7 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
     if (!profileTime) {
 	SECItem profileSubject;
 
-	profileSubject.data = smimeData[0].pValue;
+	profileSubject.data = (unsigned char*) smimeData[0].pValue;
 	profileSubject.len = smimeData[0].ulValueLen;
 	if (!SECITEM_ItemsAreEqual(&profileSubject,name)) {
 	    goto loser;
@@ -3948,13 +3956,13 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
 	goto loser;
     }
 
-    emailProfile->data = smimeData[1].pValue;
+    emailProfile->data = (unsigned char*) smimeData[1].pValue;
     emailProfile->len = smimeData[1].ulValueLen;
 
     if (profileTime) {
 	*profileTime = (SECItem *)PORT_ZAlloc(sizeof(SECItem));    
 	if (*profileTime) {
-	    (*profileTime)->data = smimeData[0].pValue;
+	    (*profileTime)->data = (unsigned char*) smimeData[0].pValue;
 	    (*profileTime)->len = smimeData[0].ulValueLen;
 	}
     }
