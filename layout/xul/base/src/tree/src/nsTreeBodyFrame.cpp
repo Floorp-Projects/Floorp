@@ -422,7 +422,7 @@ nsTreeBodyFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
   EnsureView();
 
@@ -441,8 +441,10 @@ nsTreeBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
       desiredRows = size.ToInteger(&err);
       mHasFixedRowCount = PR_TRUE;
       mPageCount = desiredRows;
-    } else
+    }
+    else {
       desiredRows = 1;
+    }
   } else {
     // tree
     aSize.width = 0;
@@ -453,15 +455,17 @@ nsTreeBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
       desiredRows = rows.ToInteger(&err);
       mHasFixedRowCount = PR_TRUE;
       mPageCount = desiredRows;
-    } else
+    }
+    else {
       desiredRows = 0;
+    }
   }
 
   aSize.height = mRowHeight * desiredRows;
 
   AddBorderAndPadding(aSize);
   AddInset(aSize);
-  nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize);
+  nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);
 
   return NS_OK;
 }
@@ -2324,6 +2328,32 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
   if (isSeparator) {
     // The row is a separator. Paint only a double horizontal line.
 
+    // Find the primary cell.
+    nscoord currX, primaryX1, primaryX2;
+    currX = primaryX1 = primaryX2 = rowRect.x;
+    for (nsTreeColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width;
+         currCol = currCol->GetNext()) {
+      if (currCol->IsPrimary()) {
+        nsRect cellRect(currX, rowRect.y, currCol->GetWidth(), rowRect.height);
+        PRInt32 overflow = cellRect.x+cellRect.width-(mInnerBox.x+mInnerBox.width);
+        if (overflow > 0)
+          cellRect.width -= overflow;
+        nsRect dirtyRect;
+        if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
+          PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, primaryX2); 
+
+        primaryX1 = currX;
+        PRInt32 level;
+        mView->GetLevel(aRowIndex, &level);
+        if (level == 0) {
+          primaryX1 += mIndentation;
+        }
+
+        break;
+      }
+      currX += currCol->GetWidth();
+    }
+
     // Resolve style for the separator.
     nsStyleContext* separatorContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreeseparator);
     PRBool useTheme = PR_FALSE;
@@ -2336,9 +2366,17 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
     }
 
     // use -moz-appearance if provided.
-    if ( useTheme ) 
-      theme->DrawWidgetBackground(&aRenderingContext, this, 
-                                    displayData->mAppearance, rowRect, aDirtyRect); 
+    if (useTheme) {
+      if (primaryX1 > rowRect.x) {
+        // XXX We should draw the left side of the native separator here.
+        // The problem is that Mac native theme implementation is too smart
+        // and draws a vertical line if the separator is too narrow.
+      }
+      rowRect.width -= primaryX2 - rowRect.x;
+      rowRect.x = primaryX2;
+      theme->DrawWidgetBackground(&aRenderingContext, this,
+                                  displayData->mAppearance, rowRect, aDirtyRect); 
+    }
     else {
       // Get border style
       const nsStyleBorder* borderStyle = (const nsStyleBorder*)separatorContext->GetStyleData(eStyleStruct_Border);
@@ -2356,7 +2394,10 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
         style = borderStyle->GetBorderStyle(side);
         aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
 
-        aRenderingContext.DrawLine(rowRect.x, currY, rowRect.x + rowRect.width, currY);
+        if (primaryX1 > rowRect.x) {
+          aRenderingContext.DrawLine(rowRect.x, currY, primaryX1, currY);
+        }
+        aRenderingContext.DrawLine(primaryX2, currY, rowRect.x + rowRect.width, currY);
 
         side = NS_SIDE_BOTTOM;
         currY += 16;
@@ -2376,8 +2417,9 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
       if (overflow > 0)
         cellRect.width -= overflow;
       nsRect dirtyRect;
+      nscoord dummy;
       if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
-        PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect); 
+        PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, dummy); 
       currX += currCol->GetWidth();
     }
   }
@@ -2391,7 +2433,8 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
                            const nsRect&        aCellRect,
                            nsIPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect)
+                           const nsRect&        aDirtyRect,
+                           nscoord&             aCurrX)
 {
   if (aCellRect.width == 0)
     return NS_OK; // Don't paint cells in hidden columns.
@@ -2539,7 +2582,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
     if (dirtyRect.IntersectRect(aDirtyRect, elementRect)) {
       switch (aColumn->GetType()) {
         case nsTreeColumn::eText:
-          PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
+          PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX);
           break;
         case nsTreeColumn::eCheckbox:
           PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
@@ -2554,13 +2597,15 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
               break;
             case nsITreeView::progressNone:
             default:
-              PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect);
+              PaintText(aRowIndex, aColumn, elementRect, aPresContext, aRenderingContext, aDirtyRect, currX);
               break;
           }
           break;
       }
     }
   }
+
+  aCurrX = currX;
 
   return NS_OK;
 }
@@ -2767,7 +2812,8 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
                            const nsRect&        aTextRect,
                            nsIPresContext*      aPresContext,
                            nsIRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect)
+                           const nsRect&        aDirtyRect,
+                           nscoord&             aCurrX)
 {
   // Now obtain the text for our cell.
   nsAutoString text;
@@ -2921,6 +2967,11 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
 
   aRenderingContext.GetWidth(text, width);
   textRect.width = width;
+
+  // Subtract out the remaining width.
+  nsRect copyRect(textRect);
+  copyRect.Inflate(textMargin);
+  aCurrX += copyRect.width;
 
   textRect.Inflate(bp);
   PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);

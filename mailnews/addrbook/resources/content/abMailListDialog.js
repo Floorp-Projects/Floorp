@@ -501,16 +501,6 @@ function DragOverAddressListTree(event)
 
   // XXX add support for other flavors here
   if (dragSession.isDataFlavorSupported("text/x-moz-address")) {
-    validFlavor = true;
-  }
-
-  // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
-  if (validFlavor)
-  {
-    //XXX this is really slow and likes to refresh N times per second.
-    var rowGroup = event.target.parentNode.parentNode;
-    if (rowGroup)
-      rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
     dragSession.canDrop = true;
   }
 }

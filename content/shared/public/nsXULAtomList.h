@@ -191,17 +191,8 @@ XUL_ATOM(columns, "columns")
 XUL_ATOM(row, "row")
 XUL_ATOM(column, "column")
 
-// toolbar & toolbar d&d atoms
-XUL_ATOM(ddDropLocation, "dd-droplocation")
-XUL_ATOM(ddDropLocationCoord, "dd-droplocationcoord")
-XUL_ATOM(ddDropOn, "dd-dropon")
-XUL_ATOM(ddTriggerRepaintSorted, "dd-triggerrepaintsorted")
-XUL_ATOM(ddTriggerRepaintRestore, "dd-triggerrepaintrestore")
-XUL_ATOM(ddTriggerRepaint, "dd-triggerrepaint")
-XUL_ATOM(ddNoDropBetweenRows, "dd-nodropbetweenrows")
 XUL_ATOM(container, "container")
 XUL_ATOM(leaf,"leaf")
-XUL_ATOM(ddDragDropArea, "dragdroparea")
 
 XUL_ATOM(widget, "widget")
 XUL_ATOM(window, "window")

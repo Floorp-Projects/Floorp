@@ -71,3 +71,16 @@ treechildren:-moz-tree-twisty(group, hidetwisty) {
 treechildren:-moz-tree-image(Name, container, group) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-group.gif");
 }
+
+treechildren:-moz-tree-image(Name, separator) {
+  list-style-image: none;
+}
+
+treechildren:-moz-tree-cell-text(Name, separator) {
+  color: #808080;
+  margin: 0px 5px 0px 5px;
+}
+
+treechildren:-moz-tree-cell-text(Name, separator, selected, focus) {
+  color: #FFFFFF;
+}

@@ -1314,12 +1314,14 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
                                       display->mAppearance, &size, &canOverride);
           float p2t;
           aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
-          aSize.width = NSIntPixelsToTwips(size.width, p2t);
-          aSize.height = NSIntPixelsToTwips(size.height, p2t);
-          if (aSize.width)
+          if (size.width) {
+            aSize.width = NSIntPixelsToTwips(size.width, p2t);
             widthSet = PR_TRUE;
-          if (aSize.height)
+          }
+          if (size.height) {
+            aSize.height = NSIntPixelsToTwips(size.height, p2t);
             heightSet = PR_TRUE;
+          }
         }
       }
     }
