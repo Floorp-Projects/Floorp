@@ -46,6 +46,9 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   OS_CurrentProcessDirectory=   3
         ,   OS_CurrentWorkingDirectory=   4
 
+        ,   XPCOM_CurrentProcessComponentDirectory=   5
+        ,   XPCOM_CurrentProcessComponentRegistry=   6            
+
         ,   Mac_SystemDirectory       =   101
         ,   Mac_DesktopDirectory      =   102
         ,   Mac_TrashDirectory        =   103

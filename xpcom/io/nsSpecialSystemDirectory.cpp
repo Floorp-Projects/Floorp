@@ -271,6 +271,27 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             GetCurrentWorkingDirectory(*this);
             break;
 
+        case XPCOM_CurrentProcessComponentRegistry:
+            GetCurrentProcessDirectory(*this);
+            // XXX We need to unify these names across all platforms
+#ifdef XP_MAC
+            *this += "Component Registry";
+#else
+            *this += "component.reg";
+#endif /* XP_MAC */
+            break;
+
+        case XPCOM_CurrentProcessComponentDirectory:
+            // <exedir>/Components
+            GetCurrentProcessDirectory(*this);
+            // XXX We need to unify these names across all platforms
+#ifdef XP_MAC
+            *this += "Components";
+#else
+            *this += "components";
+#endif /* XP_MAC */
+            break;
+
 #ifdef XP_MAC
         case Mac_SystemDirectory:
             *this = kSystemFolderType;
