@@ -828,7 +828,7 @@ PRBool nsFileSpec::IsHidden() const
     CInfoPBRec      cInfo;
     PRBool          hidden = PR_FALSE;
 
-    if (noErr = GetCatInfo(cInfo))
+    if (noErr == GetCatInfo(cInfo))
         if (cInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)
             hidden = PR_TRUE;
     
