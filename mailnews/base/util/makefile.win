@@ -16,53 +16,15 @@
 # Reserved.
 
 DEPTH=..\..\..
+MODULE= msgbaseutil
+
 IGNORE_MANIFEST=1
-MAKE_OBJ_TYPE	= DLL
+MAKE_OBJ_TYPE=DLL
+DLLNAME= msgcoreutil
 
 include <$(DEPTH)\config\config.mak>
 
-DEFINES=-D_IMPL_NS_MSG_BASE -DWIN32_LEAN_AND_MEAN
-
-LLIBS=								\
-	$(DIST)\lib\xpcom.lib			\
-	$(DIST)\lib\plc3.lib			\
-	$(DIST)\lib\rdfutil_s.lib		\
-	$(LIBNSPR)						\
-	$(NULL)
-
-CPPSRCS=                     \
-	nsMsgGroupRecord.cpp     \
-	nsMsgLineBuffer.cpp		 \
-	nsUInt32Array.cpp		\
-	nsMsgKeySet.cpp			\
-	nsMsgFolder.cpp			\
-	nsMsgDBFolder.cpp		\
-	nsLocalFolderSummarySpec.cpp	\
-	nsMsgIdentity.cpp		\
-	nsMsgIncomingServer.cpp	\
-	nsNewsSummarySpec.cpp \
-	nsMsgUtils.cpp \
-	nsMessage.cpp \
-	$(NULL)
-
-
-
-CPP_OBJS=                               \
-	.\$(OBJDIR)\nsMsgGroupRecord.obj    \
-	.\$(OBJDIR)\nsMsgLineBuffer.obj     \
-	.\$(OBJDIR)\nsUInt32Array.obj	\
-	.\$(OBJDIR)\nsMsgKeySet.obj			\
-	.\$(OBJDIR)\nsMsgFolder.obj			\
-	.\$(OBJDIR)\nsMsgDBFolder.obj		\
-	.\$(OBJDIR)\nsLocalFolderSummarySpec.obj	\
-	.\$(OBJDIR)\nsMsgIdentity.obj		\
-	.\$(OBJDIR)\nsMsgIncomingServer.obj	\
-	.\$(OBJDIR)\nsNewsSummarySpec.obj \
-	.\$(OBJDIR)\nsMsgUtils.obj \
-	.\$(OBJDIR)\nsMessage.obj \
-	$(NULL)
-
-MODULE= mailnews
+DEFINES=-D_IMPL_NS_MSG_BASE
 
 EXPORTS=                \
 	nsMsgLineBuffer.h	\
@@ -77,10 +39,32 @@ EXPORTS=                \
 	nsNewsSummarySpec.h \
 	nsMsgUtils.h \
 	nsMessage.h \
+	nsMsgProtocol.h \
 	$(NULL)
 
+LLIBS=								\
+	$(DIST)\lib\xpcom.lib			\
+	$(DIST)\lib\plc3.lib			\
+	$(DIST)\lib\rdfutil_s.lib		\
+	$(LIBNSPR)						\
+	$(NULL)
 
-DLLNAME = msgcoreutil
+CPP_OBJS=                               \
+	.\$(OBJDIR)\nsMsgGroupRecord.obj    \
+	.\$(OBJDIR)\nsMsgLineBuffer.obj     \
+	.\$(OBJDIR)\nsUInt32Array.obj		\
+	.\$(OBJDIR)\nsMsgKeySet.obj			\
+	.\$(OBJDIR)\nsMsgFolder.obj			\
+	.\$(OBJDIR)\nsMsgDBFolder.obj		\
+	.\$(OBJDIR)\nsLocalFolderSummarySpec.obj	\
+	.\$(OBJDIR)\nsMsgIdentity.obj		\
+	.\$(OBJDIR)\nsMsgIncomingServer.obj	\
+	.\$(OBJDIR)\nsNewsSummarySpec.obj	\
+	.\$(OBJDIR)\nsMsgUtils.obj			\
+	.\$(OBJDIR)\nsMessage.obj			\
+	.\$(OBJDIR)\nsMsgProtocol.obj		\
+	$(NULL)
+
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 
