@@ -1,0 +1,18 @@
+#
+# This is a list of local files which get copied to the mozilla:dist directory
+#
+
+Component_Config.h
+Comm_Config.h
+Comm_DebugConfig.h
+Comm_DebugPrefix.h
+Comm_Defines.h
+Comm_Prefix.h
+Moz_Config.h
+Moz_DebugConfig.h
+Moz_DebugPrefix.h
+Moz_Prefix.h
+Nav_Config.h
+Nav_DebugConfig.h
+Nav_DebugPrefix.h
+Nav_Prefix.h
