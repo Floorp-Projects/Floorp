@@ -5385,6 +5385,19 @@ if test "$NECKO_SMALL_BUFFERS"; then
     AC_DEFINE(NECKO_SMALL_BUFFERS)
 fi 
 
+dnl
+dnl option to disable cookies
+dnl
+NECKO_COOKIES=1
+MOZ_ARG_DISABLE_BOOL(cookies,
+[  --disable-cookies       Disable cookie support],
+    NECKO_COOKIES=,
+    NECKO_COOKIES=1)
+AC_SUBST(NECKO_COOKIES)
+if test "$NECKO_COOKIES"; then
+    AC_DEFINE(NECKO_COOKIES)
+fi
+
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 

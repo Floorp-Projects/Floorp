@@ -42,6 +42,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src
+# export required interfaces, even if --disable-cookies has been given
+DIRS		= public
+
+ifdef NECKO_COOKIES
+DIRS		+= src
+endif
 
 include $(topsrcdir)/config/rules.mk

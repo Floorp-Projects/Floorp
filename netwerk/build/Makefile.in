@@ -80,7 +80,6 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)neckosocket_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)neckocookie_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkconv_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkcnvts_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
@@ -94,7 +93,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../dns/src \
 		-I$(srcdir)/../socket/base \
-		-I$(srcdir)/../cookie/src \
 		-I$(srcdir)/../streamconv/src \
 		-I$(srcdir)/../streamconv/converters \
 		-I$(srcdir)/../mime/src \
@@ -103,6 +101,13 @@ LOCAL_INCLUDES	= \
 		$(foreach d,$(PROTOCOLS), \
 			-I$(srcdir)/../protocol/${d}/src) \
 		$(NULL)
+
+ifdef NECKO_COOKIES
+SHARED_LIBRARY_LIBS += \
+		$(DIST)/lib/$(LIB_PREFIX)neckocookie_s.$(LIB_SUFFIX) \
+                $(NULL)
+LOCAL_INCLUDES	+= -I$(srcdir)/../cookie/src
+endif
 
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	+= mozutil_s
