@@ -27,21 +27,20 @@
     implementation dependent, but are intended to represent the "time"
     portion of the Date in the current time zone in a convenient,
     human-readable form.   We test the content of the string by checking
-    that (morally) d.toDateString()  +  d.toLocaleTimeString()  ==  d.toString()
-    The only headache is that the year is at the end of toDateString() 
-    and also at the end of toString(), so we must take that into account.
-    Also, as of this writing the "GMT ..."  portion of  d.toString() is NOT
-    included in d.toLocaleTimeString() as it is in d.toTimeString(). 
-    So we have to take that into account, too ...
+    that d.toDateString()  +  d.toLocaleTimeString()  ==  d.toString()
 
-    The toLocaleTimeString function is not generic; it generates a runtime error
-    if its 'this' value is not a Date object. Therefore it cannot be transferred
-    to other kinds of objects for use as a method.
+    The only headache is that as of this writing the "GMT ..."  portion of 
+    d.toString() is NOT included in d.toLocaleTimeString() as it is in 
+    d.toTimeString(). So we have to take that into account.
 
     Author:  pschwartau@netscape.com                             
     Date:    14 november 2000
-*/
+    Revised: 07 january 2002  because of a change in JS Date format:
 
+    See http://bugzilla.mozilla.org/show_bug.cgi?id=118266 (SpiderMonkey)
+    See http://bugzilla.mozilla.org/show_bug.cgi?id=118636 (Rhino)
+*/
+//-----------------------------------------------------------------------------
    var SECTION = "15.9.5.7";
    var VERSION = "ECMA_3";  
    var TITLE   = "Date.prototype.toLocaleTimeString()"; 
@@ -138,8 +137,9 @@ function addDateTestCase(date_given_in_milliseconds)
 
 
 /*
- * As of 2002-01-07, the format for dates in SpiderMonkey changed.
- * See http://bugzilla.mozilla.org/show_bug.cgi?id=118266.
+ * As of 2002-01-07, the format for JavaScript dates changed.
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=118266 (SpiderMonkey)
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=118636 (Rhino)
  *
  * WAS: Mon Jan 07 13:40:34 GMT-0800 (Pacific Standard Time) 2002
  * NOW: Mon Jan 07 2002 13:40:34 GMT-0800 (Pacific Standard Time)
@@ -147,7 +147,7 @@ function addDateTestCase(date_given_in_milliseconds)
  * So first, use a regexp of the form /date.toDateString()(.*)$/
  * to capture the TimeString into the first backreference.
  *
- * Then remove the GMT string from the TimeString -
+ * Then remove the GMT string from TimeString (see introduction above)
  */
 function extractLocaleTimeString(date)
 {
