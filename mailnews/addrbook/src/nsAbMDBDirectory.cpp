@@ -625,7 +625,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
 	if (!mDatabase)
 		rv = GetAbDatabase();
 
-	if (!(NS_SUCCEEDED(rv) || mDatabase))
+	if (NS_FAILED(rv) || !mDatabase)
 		return NS_ERROR_FAILURE;
 
 	nsCOMPtr<nsIAbMDBDirectory> dblist(do_QueryInterface(list, &rv));
@@ -670,7 +670,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddCard(nsIAbCard* card, nsIAbCard **_retval)
 	if (!mDatabase)
 		rv = GetAbDatabase();
 
-	if (!(NS_SUCCEEDED(rv) || mDatabase))
+	if (NS_FAILED(rv) || !mDatabase)
 		return NS_ERROR_FAILURE;
 
 	nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &rv));
@@ -729,7 +729,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* card, nsIAbCard **_retval)
 	if (!mDatabase)
 		rv = GetAbDatabase();
 
-	if (!(NS_SUCCEEDED(rv) || mDatabase))
+	if (NS_FAILED(rv) || !mDatabase)
 		return NS_ERROR_FAILURE;
 
 	nsCOMPtr<nsIAbMDBCard> dbcard(do_QueryInterface(card, &rv));

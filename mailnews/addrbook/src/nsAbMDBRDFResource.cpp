@@ -105,9 +105,7 @@ nsresult nsAbMDBRDFResource::GetAbDatabase()
 		if (mDatabase)
 			mDatabase->AddListener(this);
 
-      delete dbPath;
-
-		return NS_OK;
+    delete dbPath;
 	}
 	if (!mDatabase)
 		return NS_ERROR_NULL_POINTER;
