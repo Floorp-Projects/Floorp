@@ -123,6 +123,15 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
     
     GetNextFrame(childFrame, &childFrame);
   }
+  // if the row group doesn't have any children, get it the hard way
+  if (-1 == result) {
+    nsTableFrame* tableFrame;
+    nsTableFrame::GetTableFrame(this, tableFrame);
+    if (tableFrame) {
+      return tableFrame->GetStartRowIndex(*this);
+    }
+  }
+      
   return result;
 }
 
@@ -1230,6 +1239,8 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
     NS_IF_RELEASE(frameType);
   }
 
+  PRInt32 rowIndex;
+  GetRowCount(rowIndex);
   // Append the frames to the sibling chain
   mFrames.AppendFrames(nsnull, aFrameList);
 
@@ -1237,7 +1248,7 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
     nsTableFrame* tableFrame = nsnull;
     nsTableFrame::GetTableFrame(this, tableFrame);
     if (tableFrame) {
-      tableFrame->AppendRows(*aPresContext, *this, rows);
+      tableFrame->AppendRows(*aPresContext, *this, rowIndex, rows);
 
       // Because the number of columns may have changed invalidate the column widths
       tableFrame->InvalidateColumnWidths();

@@ -54,10 +54,8 @@ public:
   ~nsTableCellMap();
   
   void RemoveGroupCellMap(nsTableRowGroupFrame* aRowGroup);
-  void InsertGroupCellMap(PRInt32               aRowIndex, 
-                          nsTableRowGroupFrame& aNewRowGroup);
-  void InsertGroupCellMap(nsTableRowGroupFrame* aPrevRowGroup, 
-                          nsTableRowGroupFrame& aNewRowGroup);
+  void InsertGroupCellMap(nsTableRowGroupFrame&  aNewRowGroup,
+                          nsTableRowGroupFrame*& aPrevRowGroup);
 
   nsTableCellFrame* GetCellFrame(PRInt32   aRowIndex,
                                  PRInt32   aColIndex,
