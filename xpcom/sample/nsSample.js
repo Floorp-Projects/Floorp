@@ -93,7 +93,7 @@ var myModule = {
          * know what aggregation is all about, you don't need to.  It reduces
          * even the mightiest of XPCOM warriors to snivelling cowards.)
          */
-        CreateInstance: function (outer, iid) {
+        createInstance: function (outer, iid) {
             dump("CI: " + iid + "\n");
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;

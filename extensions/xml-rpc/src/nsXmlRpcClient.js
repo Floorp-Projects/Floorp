@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.9 $
+ *  Version: $Revision: 1.10 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.9 2000/07/27 14:52:47 mj%digicool.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.10 2000/08/10 20:11:58 rayw%netscape.com Exp $
  */
 
 /*
@@ -1269,7 +1269,7 @@ var nsXmlRpcClientModule = {
 
 /* nsXmlRpcClient Class Factory */
 var nsXmlRpcClientFactory = {
-    CreateInstance: function(outer, iid) {
+    createInstance: function(outer, iid) {
         if (outer != null)
             throw Components.results.NS_ERROR_NO_AGGREGATION;
     
@@ -1283,7 +1283,7 @@ var nsXmlRpcClientFactory = {
 
 /* nsXmlRpcFault Class Factory */
 var nsXmlRpcFaultFactory = {
-    CreateInstance: function(outer, iid) {
+    createInstance: function(outer, iid) {
         if (outer != null)
             throw Components.results.NS_ERROR_NO_AGGREGATION;
 

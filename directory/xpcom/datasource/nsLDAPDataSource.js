@@ -446,7 +446,7 @@ var nsLDAPDataSourceModule = {
     },
 
     nsLDAPDataSourceFactory: {
-      CreateInstance: function(outer, iid) {
+      createInstance: function(outer, iid) {
 	  if (outer != null)
 	      throw Components.results.NS_ERROR_NO_AGGREGATION;
 	  
@@ -455,7 +455,7 @@ var nsLDAPDataSourceModule = {
     },
 
     nsLDAPMessageRDFDelegateFactoryFactory: {
-	CreateInstance: function(outer, iid) {
+	createInstance: function(outer, iid) {
 	  if (outer != null)
 	      throw Components.results.NS_ERROR_NO_AGGREGATION;
 	  
@@ -464,7 +464,7 @@ var nsLDAPDataSourceModule = {
     },
 
     nsLDAPURLRDFDelegateFactoryFactory: {
-	CreateInstance: function(outer, iid) {
+	createInstance: function(outer, iid) {
 	  if (outer != null)
 	      throw Components.results.NS_ERROR_NO_AGGREGATION;
 	  
@@ -473,7 +473,7 @@ var nsLDAPDataSourceModule = {
     },
 
     nsLDAPConnectionRDFDelegateFactoryFactory: {
-	CreateInstance: function(outer, iid) {
+	createInstance: function(outer, iid) {
 	  if (outer != null)
 	      throw Components.results.NS_ERROR_NO_AGGREGATION;
 	  

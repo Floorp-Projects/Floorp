@@ -82,7 +82,7 @@ CLineService.prototype.openWindowWithArgs=false;
 /* factory for command line handler service (CLineService) */
 CLineFactory = new Object();
 
-CLineFactory.CreateInstance =
+CLineFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -138,7 +138,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
 /* content handler factory object (IRCContentHandler) */
 IRCContentHandlerFactory = new Object();
 
-IRCContentHandlerFactory.CreateInstance =
+IRCContentHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -181,7 +181,7 @@ function (aURI)
 /* protocol handler factory object (IRCProtocolHandler) */
 IRCProtocolHandlerFactory = new Object();
 
-IRCProtocolHandlerFactory.CreateInstance =
+IRCProtocolHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;

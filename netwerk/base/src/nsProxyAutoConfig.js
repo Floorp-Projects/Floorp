@@ -97,7 +97,7 @@ pacModule.canUnload =
     }
 
 var pacFactory = new Object();
-pacFactory.CreateInstance =
+pacFactory.createInstance =
     function (outer, iid) {
         if (outer != null)
             throw Components.results.NS_ERROR_NO_AGGREGATION;

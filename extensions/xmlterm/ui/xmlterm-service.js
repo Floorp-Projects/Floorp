@@ -83,7 +83,7 @@ CLineService.prototype.openWindowWithArgs=false;
 /* factory for command line handler service (CLineService) */
 CLineFactory = new Object();
 
-CLineFactory.CreateInstance =
+CLineFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -142,7 +142,7 @@ function (aContentType, aCommand, aWindowTarget, aSourceContext, aChannel)
 /* content handler factory object (TelnetContentHandler) */
 TelnetContentHandlerFactory = new Object();
 
-TelnetContentHandlerFactory.CreateInstance =
+TelnetContentHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -185,7 +185,7 @@ function (aURI)
 /* protocol handler factory object (TelnetProtocolHandler) */
 TelnetProtocolHandlerFactory = new Object();
 
-TelnetProtocolHandlerFactory.CreateInstance =
+TelnetProtocolHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;

@@ -205,7 +205,7 @@ function(compMgr)
 /* factory object */
 filePickerFactory = new Object();
 
-filePickerFactory.CreateInstance =
+filePickerFactory.createInstance =
 function (outer, iid) {
     debug("CI: " + iid);
     debug("IID:" + nsIFilePicker);

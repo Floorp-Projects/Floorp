@@ -18,9 +18,9 @@
 
 /*
  *  nsDictionary XPCOM component
- *  Version: $Revision: 1.2 $
+ *  Version: $Revision: 1.3 $
  *
- *  $Id: nsDictionary.js,v 1.2 2000/05/09 11:33:40 mj%digicool.com Exp $
+ *  $Id: nsDictionary.js,v 1.3 2000/08/10 20:11:58 rayw%netscape.com Exp $
  */
 
 /*
@@ -103,7 +103,7 @@ var nsDictionaryModule = {
 
 /* nsDictionary Class Factory */
 var nsDictionaryFactory = {
-    CreateInstance: function(outer, iid) {
+    createInstance: function(outer, iid) {
         if (outer != null)
             throw Components.results.NS_ERROR_NO_AGGREGATION;
     

@@ -356,7 +356,7 @@ function(compMgr)
 /* factory object */
 sidebarFactory = new Object();
 
-sidebarFactory.CreateInstance =
+sidebarFactory.createInstance =
 function (outer, iid) {
     debug("CI: " + iid);
     if (outer != null)
