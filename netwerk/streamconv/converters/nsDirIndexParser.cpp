@@ -201,7 +201,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     aFormatStr += len;
     
     // Okay, we're gonna monkey with the nsStr. Bold!
-    name.mLength = nsUnescapeCount(name.mStr);
+    name.SetLength(nsUnescapeCount(NS_CONST_CAST(char*, name.get())));
 
     // All tokens are case-insensitive - http://www.area.com/~roeber/file_format.html
     if (name.EqualsIgnoreCase("description"))
@@ -359,22 +359,19 @@ nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
   // Ensure that our mBuf has capacity to hold the data we're about to
   // read.
   mBuf.SetCapacity(len + aCount + 1);
-  if (! mBuf.mStr)
+  if (! mBuf.get())
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Now read the data into our buffer.
   nsresult rv;
   PRUint32 count;
-  rv = aStream->Read(mBuf.mStr + len, aCount, &count);
+  rv = aStream->Read(NS_CONST_CAST(char*, mBuf.get() + len), aCount, &count);
   if (NS_FAILED(rv)) return rv;
 
   // Set the string's length according to the amount of data we've read.
-  //
-  // XXX You'd think that mBuf.SetLength() would do this, but it
-  // doesn't. It calls Truncate(), so you can't set the length to
-  // something longer.
-  mBuf.mLength = len + count;
-  AddNullTerminator(mBuf);
+  // Note: we know this to work on nsCString. This isn't guaranteed to
+  //       work on other strings.
+  mBuf.SetLength(len + count);
 
   return ProcessData(aRequest, aCtxt);
 }
@@ -393,7 +390,7 @@ nsDirIndexParser::ProcessData(nsIRequest *aRequest, nsISupports *aCtxt) {
     if (eol < 0)        break;
     mBuf.SetCharAt(PRUnichar('\0'), eol);
     
-    const char  *line = &mBuf.mStr[mLineStart];
+    const char  *line = mBuf.get() + mLineStart;
     
     PRInt32 lineLen = eol - mLineStart;
     mLineStart = eol + 1;

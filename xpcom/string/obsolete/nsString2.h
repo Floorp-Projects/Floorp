@@ -83,6 +83,10 @@ class NS_COM nsString :
   public nsAFlatString,
   public nsStr {
 
+public:
+  friend class nsCString;
+  friend class nsLinebreakConverter;
+
 protected:
   virtual const nsBufferHandle<PRUnichar>* GetFlatBufferHandle() const;
   virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;

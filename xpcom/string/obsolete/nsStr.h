@@ -453,6 +453,7 @@ struct NS_COM nsStr {
   static void Print(const nsStr& aDest, FILE* out, PRBool truncate = PR_FALSE);
 #endif
 
+protected:
   PRUint32        mLength;
   PRUint32        mCapacity;
   
@@ -469,6 +470,11 @@ private:
   static PRBool Realloc(nsStr& aString,PRUint32 aCount);
   static PRBool Free(nsStr& aString);
 
+public:
+  friend inline void AddNullTerminator(nsStr& aDest);
+  friend inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex);
+  friend class nsString;
+  friend class nsCString;
 };
 
 
