@@ -40,7 +40,6 @@
   ======================================================================= */
 
 @import url("chrome://messenger/skin/");
-@import url("chrome://communicator/skin/sidebar/sidebar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -151,16 +150,6 @@
 #button-delete[disabled] {
   -moz-image-region: rect(408px 199px 441px 150px) !important;
 } 
-
-/* ::::: sidebar header ::::: */
-
-sidebarheader {
-  border: 1px outset #C7D0D9;
-}
-
-#sidebar-title-box {
-  border: none;
-}
 
 /* ::::: Card View pane ::::: */
 

@@ -26,7 +26,6 @@
   ======================================================================= */
 
 @import url("chrome://messenger/skin/");
-@import url("chrome://communicator/skin/sidebar/sidebar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -132,16 +131,6 @@
   -moz-image-region: rect(210px 92px 231px 69px) !important;
 }
 
-/* ::::: sidebar header ::::: */
-
-sidebarheader {
-  border: 1px outset ThreeDFace;
-}
-
-#sidebar-title-box {
-  border: none;
-}
-
 /* CardView styles - used in the Card View Pane */
 
 #CardViewOuterBox {
@@ -227,13 +216,6 @@ html|p {
 }
 
 /* ::::: border adjustments ::::: */
-
-#sidebar-box {
-  border-top: none;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: none;
-  border-left: 1px solid ThreeDShadow;
-}
 
 #dirTree,
 #resultsTree { 

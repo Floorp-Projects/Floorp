@@ -42,7 +42,6 @@
 @import url("chrome://messenger/skin/");
 @import url("chrome://messenger/skin/primaryToolbar.css");
 @import url("chrome://messenger/skin/folderMenus.css");
-@import url("chrome://communicator/skin/sidebar/sidebar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -58,18 +57,7 @@
 
 /* ::::: border adjustments for focus ring and joined splitters ::::: */
 
-/* ..... sidebar adjustments ..... */
-
-#sidebar-panels-splitter-box {
-  border-top: 2px solid;
-  border-right: 2px solid;
-  -moz-border-top-colors: #AAB4BF #3B414F;
-  -moz-border-right-colors: #DFE5EF #97A4B2;
-}
-
-/* ..... splitter adjustments ..... */
-
-#sidebar-splitter {
+#gray_vertical_splitter {
   border-right: none;
   border-bottom: none;
   border-left: none;
@@ -79,12 +67,6 @@
 #threadpane-splitter {
   border: none;
   min-height: 5px;
-}
-
-#sidebar-panels-splitter {
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
 }
 
 #threadpane-splitter[state="collapsed"] {
