@@ -41,13 +41,13 @@
 //
 //          Basic example:
 //
-//              nsFileSpec myPath("/Development/iotest.txt");
+//              nsFilePath myPath("/Development/iotest.txt");
 //
 //	            nsOutputFileStream testStream(myPath);
 //				testStream << "Hello World" << nsEndl;
 //
-//      4.  Requires streams to be constructed using typesafe nsFileSpec specifier
-//          (not the notorious and bug prone const char*), namely nsFileSpec.  See
+//      4.  Requires streams to be constructed using typesafe nsFilePath specifier
+//          (not the notorious and bug prone const char*), namely nsFilePath.  See
 //          nsFileSpec.h for more details.
 //
 //      5.  Fixes a bug that have been there for a long time, and
@@ -140,7 +140,7 @@ public:
                                       nsBasicFileStream();
                                       nsBasicFileStream(PRFileDesc* desc, int nsprMode);
                                       nsBasicFileStream(
-                                          const nsFileSpec& inFile,
+                                          const nsFilePath& inFile,
                                           int nsprMode,
                                           PRIntn accessMode);
     virtual                           ~nsBasicFileStream();
@@ -148,14 +148,14 @@ public:
 
     inline PRBool                     is_open() const { return mFileDesc != 0; }
     void                              open(
-                                           const nsFileSpec& inFile,
+                                           const nsFilePath& inFile,
                                            int nsprMode,
                                            PRIntn accessMode);
     void                              close();
     PRIntn                            tell() const;
     void                              seek(PRInt32 offset) { seek(PR_SEEK_SET, offset); }
     void                              seek(PRSeekWhence whence, PRInt32 offset);
-    PRBool                            eof() const { return mEOF; }
+    PRBool                              eof() const { return mEOF; }
     PRBool                            failed() const { return mFailed; }
                                           // call PR_GetError() for details
 protected:
@@ -249,7 +249,7 @@ public:
 	enum  { kDefaultMode = PR_RDONLY };
                                       nsInputFileStream(istream* stream = CONSOLE_IN);
                                       nsInputFileStream(
-                                          const nsFileSpec& inFile,
+                                          const nsFilePath& inFile,
                                           int nsprMode = kDefaultMode,
                                           PRIntn accessMode = 00700) // <- OCTAL
                                       : nsBasicFileStream(inFile, nsprMode, accessMode)
@@ -257,7 +257,7 @@ public:
                                       {}
 
     void                              open(
-                                           const nsFileSpec& inFile,
+                                           const nsFilePath& inFile,
                                            int nsprMode = kDefaultMode,
                                            PRIntn accessMode = 00700) // <- OCTAL
                                       {
@@ -280,7 +280,7 @@ public:
 
                                       nsOutputFileStream(ostream* stream = CONSOLE_OUT);
                                       nsOutputFileStream(
-                                           const nsFileSpec& inFile,
+                                           const nsFilePath& inFile,
                                            int nsprMode = kDefaultMode,
                                            PRIntn accessMode = 00700) // <- OCTAL
                                       : nsBasicFileStream(inFile, nsprMode, accessMode)
@@ -288,7 +288,7 @@ public:
                                       {}
  
     inline void                       open(
-                                          const nsFileSpec& inFile,
+                                          const nsFilePath& inFile,
                                           int nsprMode = kDefaultMode,
                                           PRIntn accessMode = 00700) // <- OCTAL
                                       {
@@ -307,7 +307,7 @@ public:
 	enum  { kDefaultMode = (PR_RDWR | PR_CREATE_FILE) };
 
                                       nsIOFileStream(
-                                           const nsFileSpec& inFile,
+                                           const nsFilePath& inFile,
                                            int nsprMode = kDefaultMode,
                                            PRIntn accessMode = 00700) // <- OCTAL
                                       : nsBasicFileStream(inFile, nsprMode, accessMode)
@@ -316,7 +316,7 @@ public:
                                       {}
  
     inline void                       open(
-                                          const nsFileSpec& inFile,
+                                          const nsFilePath& inFile,
                                           int nsprMode = kDefaultMode,
                                           PRIntn accessMode = 00700) // <- OCTAL
                                       {
