@@ -1410,6 +1410,7 @@ case "$target" in
         BIN_FLAGS='-Zlinker /ST:0x100000'
         IMPLIB='emximp -o'
         FILTER='emxexp -o'
+        LDFLAGS='-Zmap'
         MOZ_DEBUG_FLAGS="-g -fno-inline"
         MOZ_OPTIMIZE_FLAGS="-O2 -s"
         MOZ_OPTIMIZE_LDFLAGS="-Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
