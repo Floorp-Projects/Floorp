@@ -3681,7 +3681,7 @@ XP_GetDialogStrings
 # XP_GetError
 # XP_GetGlobalContextList
 # XP_GetLastActiveContext
-# XP_GetNavCenterContext
+XP_GetNavCenterContext
 XP_GetNonGridContext
 # XP_GetObserverListObservable
 XP_GetSecurityStatus
