@@ -118,7 +118,8 @@ PRBool nsFileWidget::Show()
       gtk_file_selection_complete(fs, "/");
 #endif
 
-    //    gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
+    gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
+    gtk_grab_add(mWidget);
     gtk_widget_show(mWidget);
 
     // handle close, destroy, etc on the dialog
@@ -134,6 +135,7 @@ PRBool nsFileWidget::Show()
   else {
     ret = PR_FALSE;
   }
+  gtk_grab_remove(mWidget);
   return ret;
 }
 
