@@ -27,7 +27,7 @@
 
 [% PROCESS global/header.html.tmpl 
   title = "Search for bugs"
-  extra = " onLoad=\"selectProduct(document.forms['queryform']);\""
+  body_attributes = "onload=\"selectProduct(document.forms['queryform']);\""
 %]
 
 [% button_name = "Search" %]

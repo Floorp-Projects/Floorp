@@ -332,8 +332,8 @@ sub value_quote {
 }
 
 # Adds <link> elements for bug lists. These can be inserted into the header by
-# (ab)using the "jscript" parameter to PutHeader, which inserts an arbitrary
-# string into the header. This is currently used only in
+# using the "header_html" parameter to PutHeader, which inserts an arbitrary
+# string into the header. This function is currently used only in
 # template/en/default/bug/edit.html.tmpl.
 sub navigation_links($) {
     my ($buglist) = @_;
@@ -849,8 +849,7 @@ Content-type: text/html
 }
 
 sub PutHeader {
-    ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}, 
-     $vars->{'extra'}, $vars->{'jscript'}) = (@_);
+    ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
      
     $::template->process("global/header.html.tmpl", $::vars)
       || ThrowTemplateError($::template->error());
