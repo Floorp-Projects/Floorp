@@ -56,9 +56,16 @@
 #include "nsIURI.h"
 #include "nsIDialogParamBlock.h"
 
+#ifdef MOZ_XUL_APP
+#include "nsICommandLine.h"
+#endif
+
 NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap)
 NS_IMPL_THREADSAFE_RELEASE(nsMessengerBootstrap)
-NS_IMPL_QUERY_INTERFACE2(nsMessengerBootstrap, nsICmdLineHandler, nsIMessengerWindowService)
+
+NS_IMPL_QUERY_INTERFACE2(nsMessengerBootstrap,
+                         ICOMMANDLINEHANDLER,
+                         nsIMessengerWindowService)
 
 nsMessengerBootstrap::nsMessengerBootstrap()
 {
@@ -68,11 +75,49 @@ nsMessengerBootstrap::~nsMessengerBootstrap()
 {
 }
 
+#ifdef MOZ_XUL_APP
+NS_IMETHODIMP
+nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
+{
+  nsresult rv;
+  PRBool found;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMWindow> opened;
+
+  rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("options"), PR_FALSE, &found);
+  if (NS_SUCCEEDED(rv) && found) {
+    wwatch->OpenWindow(nsnull, "chrome://communicator/content/pref/pref.xul", "_blank",
+                      "chrome,dialog=no,all", nsnull, getter_AddRefs(opened));
+  }
+
+  rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("mail"), PR_FALSE, &found);
+  if (NS_SUCCEEDED(rv) && found) {
+    wwatch->OpenWindow(nsnull, "chrome://messenger/content/", "_blank",
+                       "chrome,dialog=no,all", nsnull, getter_AddRefs(opened));
+    aCmdLine->SetPreventDefault(PR_TRUE);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMessengerBootstrap::GetHelpInfo(nsACString& aResult)
+{
+  aResult.Assign(NS_LITERAL_CSTRING(
+    "  -mail                Open the mail folder view.\n"
+    "  -options             Open the options dialog.\n"));
+
+  return NS_OK;
+}
+
+#else
 CMDLINEHANDLER3_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","Start with mail.",NS_MAILSTARTUPHANDLER_CONTRACTID,"Mail Cmd Line Handler",PR_TRUE,"", PR_TRUE)
 
 NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask) 
 { 
-#ifndef MOZ_THUNDERBIRD
   if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
   nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (pPrefBranch)
@@ -92,19 +137,22 @@ NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask
     }	
   }
   *aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul"); 
-#else
-  NS_ENSURE_ARG_POINTER(aChromeUrlForTask);
-  *aChromeUrlForTask = PL_strdup("chrome://messenger/content/"); 
-#endif
 
   return NS_OK; 
 }
+#endif
 
 NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windowType, const char * aFolderURI, nsMsgKey aMessageKey)
 {
-	nsXPIDLCString chromeurl;
-	nsresult rv = GetChromeUrlForTask(getter_Copies(chromeurl));
-	if (NS_FAILED(rv)) return rv;
+  nsresult rv;
+
+#ifdef MOZ_XUL_APP
+  NS_NAMED_LITERAL_CSTRING(chromeurl, "chrome://messenger/content/");
+#else
+  nsXPIDLCString chromeurl;
+  rv = GetChromeUrlForTask(getter_Copies(chromeurl));
+  if (NS_FAILED(rv)) return rv;
+#endif
 
   nsCOMPtr<nsISupportsArray> argsArray;
   rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
@@ -138,19 +186,3 @@ NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windo
 
   return NS_OK;
 }
-
-#ifdef MOZ_THUNDERBIRD
-nsMsgOptionsCmdLineHandler::nsMsgOptionsCmdLineHandler()
-{
-}
-
-nsMsgOptionsCmdLineHandler::~nsMsgOptionsCmdLineHandler()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsMsgOptionsCmdLineHandler, nsICmdLineHandler) 
-
-CMDLINEHANDLER_IMPL(nsMsgOptionsCmdLineHandler,"-options","", "chrome://communicator/content/pref/pref.xul",
-                   "Open Options Dialog.", NS_MAILOPTIONSTARTUPHANDLER_CONTRACTID,"Mail Options Startup Handler", PR_TRUE,"", PR_TRUE)
-
-#endif

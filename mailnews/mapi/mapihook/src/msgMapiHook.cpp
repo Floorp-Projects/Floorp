@@ -58,7 +58,6 @@
 #include "nsIAppShellService.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsINativeAppSupport.h"
-#include "nsICmdLineService.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsXPIDLString.h"
@@ -87,6 +86,10 @@
 #include "msgMapiSupport.h"
 #include "msgMapiMain.h"
 #include "nsNetUtil.h"
+
+#ifndef MOZ_XUL_APP
+#include "nsICmdLineService.h"
+#endif
 
 extern PRLogModuleInfo *MAPI;
 

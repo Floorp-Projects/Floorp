@@ -112,8 +112,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
 
+#ifndef MOZ_XUL_APP
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
+#endif
 
 
 static NS_METHOD
@@ -231,6 +233,7 @@ static const nsModuleComponentInfo components[] = {
     NS_BROWSERINSTANCE_CONTRACTID,
     nsBrowserInstanceConstructor
   },
+#ifndef MOZ_XUL_APP
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
     NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/html",
@@ -335,6 +338,7 @@ static const nsModuleComponentInfo components[] = {
     "@mozilla.org/commandlinehandler/general-startup;1?type=chrome",
     nsBrowserContentHandlerConstructor,
   },
+#endif //!MOZ_XUL_APP
   { NS_BROWSERSTATUSFILTER_CLASSNAME,
     NS_BROWSERSTATUSFILTER_CID,
     NS_BROWSERSTATUSFILTER_CONTRACTID,

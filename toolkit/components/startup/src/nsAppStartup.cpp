@@ -105,7 +105,6 @@ nsAppStartup::Init()
   os->AddObserver(this, "nsIEventQueueActivated", PR_TRUE);
   os->AddObserver(this, "nsIEventQueueDestroyed", PR_TRUE);
   os->AddObserver(this, "profile-change-teardown", PR_TRUE);
-  os->AddObserver(this, "profile-initial-state", PR_TRUE);
   os->AddObserver(this, "xul-window-registered", PR_TRUE);
   os->AddObserver(this, "xul-window-destroyed", PR_TRUE);
 
@@ -357,101 +356,6 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
 }
 
 
-NS_IMETHODIMP
-nsAppStartup::CreateStartupState(PRInt32 aWindowWidth, PRInt32 aWindowHeight,
-                                 PRBool *_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  nsresult rv;
-
-#ifndef MOZ_THUNDERBIRD // xxxbsmedberg: more ifdef badness!
-  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (!prefService)
-    return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPrefBranch> startupBranch;
-  prefService->GetBranch(PREF_STARTUP_PREFIX, getter_AddRefs(startupBranch));
-  if (!startupBranch)
-    return NS_ERROR_FAILURE;
-  
-  PRUint32 childCount;
-  char **childArray = nsnull;
-  rv = startupBranch->GetChildList("", &childCount, &childArray);
-  if (NS_FAILED(rv))
-    return rv;
-    
-  for (PRUint32 i = 0; i < childCount; i++) {
-    PRBool prefValue;
-    startupBranch->GetBoolPref(childArray[i], &prefValue);
-    if (prefValue) {
-      PRBool windowOpened;
-      rv = LaunchTask(childArray[i], aWindowHeight, aWindowWidth, &windowOpened);
-      if (NS_SUCCEEDED(rv) && windowOpened)
-        *_retval = PR_TRUE;
-    }
-  }
-  
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
-#else
-  PRBool windowOpened;
-  rv = LaunchTask("mail", aWindowHeight, aWindowWidth, &windowOpened);
-  if (NS_SUCCEEDED(rv) && windowOpened)
-    *_retval = PR_TRUE;
-  else
-    *_retval = PR_FALSE;
-#endif
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAppStartup::Ensure1Window(nsICmdLineService *aCmdLineService)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIWindowMediator> windowMediator
-    (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-  if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
-  {
-    PRBool more;
-    windowEnumerator->HasMoreElements(&more);
-    if (!more)
-    {
-      // No window exists so lets create a browser one
-      PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
-      PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
-				
-      // Get the value of -width option
-      nsXPIDLCString tempString;
-      rv = aCmdLineService->GetCmdLineValue("-width", getter_Copies(tempString));
-      if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
-        PR_sscanf(tempString.get(), "%d", &width);
-
-
-      // Get the value of -height option
-      rv = aCmdLineService->GetCmdLineValue("-height", getter_Copies(tempString));
-      if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
-        PR_sscanf(tempString.get(), "%d", &height);
-
-#ifdef MOZ_THUNDERBIRD // XXXbsmedberg more badness, needs NVU thought
-      PRBool windowOpened = PR_FALSE;
-      
-      rv = LaunchTask(NULL, height, width, &windowOpened); 
-      
-      if (NS_FAILED(rv) || !windowOpened)
-        rv = LaunchTask("mail", height, width, &windowOpened);
-#else
-      rv = OpenBrowserWindow(height, width);
-#endif
-    }
-  }
-  return rv;
-}
-
-
 void* PR_CALLBACK
 nsAppStartup::HandleExitEvent(PLEvent* aEvent)
 {
@@ -474,150 +378,6 @@ nsAppStartup::DestroyExitEvent(PLEvent* aEvent)
     NS_REINTERPRET_CAST(nsAppStartup*, aEvent->owner);
   NS_RELEASE(service);
   delete aEvent;
-}
-
-
-nsresult
-nsAppStartup::LaunchTask(const char *aParam, PRInt32 height, PRInt32 width, PRBool *windowOpened)
-{
-  nsresult rv = NS_OK;
-
-  nsCOMPtr <nsICmdLineService> cmdLine =
-    do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr <nsICmdLineHandler> handler;
-  rv = cmdLine->GetHandlerForParam(aParam, getter_AddRefs(handler));
-  if (NS_FAILED(rv)) return rv;
-
-  nsXPIDLCString chromeUrlForTask;
-  rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
-  if (NS_FAILED(rv)) return rv;
-
-  PRBool handlesArgs = PR_FALSE;
-  rv = handler->GetHandlesArgs(&handlesArgs);
-  if (handlesArgs) {
-#ifndef MOZ_THUNDERBIRD //XXXbsmedberg bad toolkit->app dependency!
-    nsXPIDLString defaultArgs;
-    rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-    if (NS_FAILED(rv)) return rv;
-    rv = OpenWindow(chromeUrlForTask, defaultArgs,
-                    nsIAppShellService::SIZE_TO_CONTENT,
-                    nsIAppShellService::SIZE_TO_CONTENT);
-#else
-    // XXX horibble thunderbird hack. Don't pass in the default args if the
-    // cmd line service says we have real arguments! Use those instead.
-    nsXPIDLCString args;
-    nsXPIDLCString cmdLineArgument; // -mail, -compose, etc. 
-    rv = handler->GetCommandLineArgument(getter_Copies(cmdLineArgument));
-    if (NS_SUCCEEDED(rv)) {
-      rv = cmdLine->GetCmdLineValue(cmdLineArgument, getter_Copies(args));
-      if (NS_SUCCEEDED(rv) && args.get() && strcmp(args.get(), "1")) {
-        nsAutoString cmdArgs; cmdArgs.AssignWithConversion(args);
-        rv = OpenWindow(chromeUrlForTask, cmdArgs, height, width);
-      }
-      else
-        rv = NS_ERROR_FAILURE;
-    }
-    
-    // any failure case, do what we used to do:
-    if (NS_FAILED(rv)) {
-      nsXPIDLString defaultArgs;
-      rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-      if (NS_FAILED(rv)) return rv;
-      rv = OpenWindow(chromeUrlForTask, defaultArgs,
-                      nsIAppShellService::SIZE_TO_CONTENT, nsIAppShellService::SIZE_TO_CONTENT);
-    }
-#endif
-  }
-  else {
-    rv = OpenWindow(chromeUrlForTask, EmptyString(), width, height);
-  }
-  
-  // If we get here without an error, then a window was opened OK.
-  if (NS_SUCCEEDED(rv)) {
-    *windowOpened = PR_TRUE;
-  }
-
-  return rv;
-}
-
-nsresult
-nsAppStartup::OpenWindow(const nsAFlatCString& aChromeURL,
-                         const nsAFlatString& aAppArgs,
-                         PRInt32 aWidth, PRInt32 aHeight)
-{
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-  nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
-  if (!wwatch || !sarg)
-    return NS_ERROR_FAILURE;
-
-  sarg->SetData(aAppArgs);
-
-  nsCAutoString features("chrome,dialog=no,all");
-  if (aHeight != nsIAppShellService::SIZE_TO_CONTENT) {
-    features.Append(",height=");
-    features.AppendInt(aHeight);
-  }
-  if (aWidth != nsIAppShellService::SIZE_TO_CONTENT) {
-    features.Append(",width=");
-    features.AppendInt(aWidth);
-  }
-
-  nsCOMPtr<nsIDOMWindow> newWindow;
-  return wwatch->OpenWindow(0, aChromeURL.get(), "_blank",
-                            features.get(), sarg,
-                            getter_AddRefs(newWindow));
-}
-
-
-nsresult
-nsAppStartup::OpenBrowserWindow(PRInt32 height, PRInt32 width)
-{
-    nsresult rv;
-    nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString chromeUrlForTask;
-    rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr <nsICmdLineService> cmdLine = do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString urlToLoad;
-    rv = cmdLine->GetURLToLoad(getter_Copies(urlToLoad));
-    if (NS_FAILED(rv)) return rv;
-
-    if (!urlToLoad.IsEmpty()) {
-
-#ifdef DEBUG_CMD_LINE
-      printf("url to load: %s\n", urlToLoad.get());
-#endif /* DEBUG_CMD_LINE */
-
-      nsAutoString url; 
-     // convert the cmdLine URL to Unicode
-      rv = NS_CopyNativeToUnicode(nsDependentCString(urlToLoad), url);
-      if (NS_FAILED(rv)) {
-        NS_ERROR("Failed to convert commandline url to unicode");
-        return rv;
-      }
-      rv = OpenWindow(chromeUrlForTask, url, width, height);
-
-    } else {
-
-      nsXPIDLString defaultArgs;
-      rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-      if (NS_FAILED(rv)) return rv;
-
-#ifdef DEBUG_CMD_LINE
-      printf("default args: %s\n", NS_ConvertUCS2toUTF8(defaultArgs).get());
-#endif /* DEBUG_CMD_LINE */
-
-      rv = OpenWindow(chromeUrlForTask, defaultArgs, width, height);
-    }
-
-    return rv;
 }
 
 
@@ -735,16 +495,6 @@ nsAppStartup::Observe(nsISupports *aSubject,
         changeStatus->VetoChange();
     }
     ExitLastWindowClosingSurvivalArea();
-  } else if (!strcmp(aTopic, "profile-initial-state")) {
-    if (nsDependentString(aData).Equals(NS_LITERAL_STRING("switch"))) {
-      // Now, establish the startup state according to the new prefs.
-      PRBool openedWindow;
-      CreateStartupState(nsIAppShellService::SIZE_TO_CONTENT,
-                         nsIAppShellService::SIZE_TO_CONTENT, &openedWindow);
-      if (!openedWindow)
-        OpenBrowserWindow(nsIAppShellService::SIZE_TO_CONTENT,
-                          nsIAppShellService::SIZE_TO_CONTENT);
-    }
   } else if (!strcmp(aTopic, "xul-window-registered")) {
     AttemptingQuit(PR_FALSE);
   } else if (!strcmp(aTopic, "xul-window-destroyed")) {

@@ -49,7 +49,7 @@
 #include "nsIAppShellService.h"
 #include "nsIAppStartup.h"
 #include "nsIBaseWindow.h"
-#include "nsICmdLineService.h"
+#include "nsICommandLineRunner.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -253,19 +253,20 @@ nsNativeAppSupportMac::ReOpen()
     } // end if have uncollapsed 
     
     if (!haveOpenWindows && !done)
-    {    
+    {
+      char* argv[] = { nsnull };
     
-      NS_WARNING("trying to open new window");
-      //use the bootstrap helpers to make the right kind(s) of window open        
-      nsresult rv = PR_FALSE;
-      nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
-      if (appStartup)
-      {
-        PRBool openedAWindow = PR_FALSE;
-        appStartup->CreateStartupState(nsIAppShellService::SIZE_TO_CONTENT,
-                                       nsIAppShellService::SIZE_TO_CONTENT,
-                                       &openedAWindow);
-      }
+      // use an empty command line to make the right kind(s) of window open
+      nsCOMPtr<nsICommandLineRunner> cmdLine
+        (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+      NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
+
+      nsresult rv;
+      rv = cmdLine->Init(argv, 0, nsnull,
+                         nsICommandLine::STATE_REMOTE_EXPLICIT);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return cmdLine->Run();
     }
     
   } // got window mediator

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -66,7 +66,6 @@
 #include "nsIMsgAccountManager.h"
 #include "nsIMessengerMigrator.h"
 #include "nsINntpIncomingServer.h"
-#include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
@@ -86,6 +85,11 @@
 #include "nsMsgUtils.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"
+#include "nsIWindowWatcher.h"
+
+#ifdef MOZ_XUL_APP
+#include "nsICommandLine.h"
+#endif
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -117,7 +121,7 @@ NS_IMPL_QUERY_INTERFACE7(nsNntpService,
                          nsIMsgMessageService,
                          nsIProtocolHandler,
                          nsIMsgProtocolInfo,
-                         nsICmdLineHandler,
+                         ICOMMANDLINEHANDLER,
                          nsIMsgMessageFetchPartService,
                          nsIContentHandler)
 
@@ -1690,11 +1694,42 @@ nsNntpService::GetListOfGroupsOnServer(nsINntpIncomingServer *aNntpServer, nsIMs
   return NS_OK;
 }
 
+
+#ifdef MOZ_XUL_APP
+
+NS_IMETHODIMP
+nsNntpService::Handle(nsICommandLine* aCmdLine)
+{
+  nsresult rv;
+  PRBool found;
+
+  rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("news"), PR_FALSE, &found);
+  if (NS_SUCCEEDED(rv) && found) {
+    nsCOMPtr<nsIWindowWatcher> wwatch (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMWindow> opened;
+    wwatch->OpenWindow(nsnull, "chrome://messenger/content/", "_blank",
+                       "chrome,dialog=no,all", nsnull, getter_AddRefs(opened));
+    aCmdLine->SetPreventDefault(PR_TRUE);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetHelpInfo(nsACString& aResult)
+{
+  aResult.Assign(NS_LITERAL_CSTRING("  -news                Open the news client.\n"));
+  return NS_OK;
+}
+
+#else // MOZ_XUL_APP
+
 CMDLINEHANDLER3_IMPL(nsNntpService,"-news","general.startup.news","Start with news.",NS_NEWSSTARTUPHANDLER_CONTRACTID,"News Cmd Line Handler", PR_FALSE,"", PR_TRUE)
 
 NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask) 
 { 
-#ifndef MOZ_THUNDERBIRD
   if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
@@ -1715,11 +1750,8 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
   }
   *aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul"); 
   return NS_OK; 
-#else
-  NS_ENSURE_ARG_POINTER(aChromeUrlForTask);
-  *aChromeUrlForTask = PL_strdup("chrome://messenger/content/"); 
-#endif
 }
+#endif // MOZ_XUL_APP
 
 NS_IMETHODIMP 
 nsNntpService::HandleContent(const char * aContentType, nsIInterfaceRequestor* aWindowContext, nsIRequest *request)

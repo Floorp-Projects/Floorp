@@ -47,9 +47,11 @@
 #include "nscore.h"
 #include "nsISupports.h"
 
+#ifndef MOZ_XUL_APP
 // for nsBrowserStatusHandler
 #include "nsIContentHandler.h"
 #include "nsICmdLineHandler.h"
+#endif
 
 class nsIDocShell;
 class nsIDOMWindowInternal;
@@ -94,6 +96,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
 #endif
 };
 
+#ifndef MOZ_XUL_APP
 class nsBrowserContentHandler : public nsIContentHandler, public nsICmdLineHandler
 {
 public:
@@ -108,5 +111,6 @@ public:
 protected:
   PRBool NeedHomepageOverride(nsIPref *aPrefService);
 };
+#endif
 
 #endif // nsBrowserInstance_h___

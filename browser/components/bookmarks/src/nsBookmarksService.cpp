@@ -51,6 +51,7 @@
 #include "nsBookmarksService.h"
 #include "nsArrayEnumerator.h"
 #include "nsArray.h"
+#include "nsIBrowserHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIRDFContainer.h"
@@ -68,7 +69,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsUnicharUtils.h"
-#include "nsICmdLineHandler.h"
 
 #include "nsISound.h"
 #include "nsIPrompt.h"
@@ -2427,14 +2427,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             if (NS_FAILED(rv)) return rv;
             suppArray->AppendElement(suppString);
     
-            nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));    
-            if (NS_FAILED(rv)) return rv;
-   
-            nsXPIDLCString chromeUrl;
-            rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrl));
-            if (NS_FAILED(rv)) return rv;
-
-            wwatch->OpenWindow(0, chromeUrl, "_blank", "chrome,dialog=no,all", 
+            wwatch->OpenWindow(0, "chrome://browser/content/", "_blank", "chrome,dialog=no,all", 
                                suppArray, getter_AddRefs(newWindow));
                     }
                 }

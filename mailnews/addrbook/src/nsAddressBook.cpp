@@ -76,6 +76,7 @@
 #include "nsIAbCard.h"
 #include "nsIAbMDBCard.h"
 #include "plbase64.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsEscape.h"
 #include "nsVCard.h"
@@ -88,6 +89,10 @@
 #include "nsIMsgVCardService.h"
 
 #include "nsCRT.h"
+
+#ifdef MOZ_XUL_APP
+#include "nsICommandLine.h"
+#endif
 
 // according to RFC 2849
 // SEP = (CR LF / LF)
@@ -177,7 +182,11 @@ nsAddressBook::~nsAddressBook()
 
 NS_IMPL_THREADSAFE_ADDREF(nsAddressBook)
 NS_IMPL_THREADSAFE_RELEASE(nsAddressBook)
-NS_IMPL_QUERY_INTERFACE4(nsAddressBook, nsIAddressBook, nsICmdLineHandler, nsIContentHandler, nsIStreamLoaderObserver)
+NS_IMPL_QUERY_INTERFACE4(nsAddressBook,
+                         nsIAddressBook,
+                         ICOMMANDLINEHANDLER,
+                         nsIContentHandler,
+                         nsIStreamLoaderObserver)
 
 //
 // nsIAddressBook
@@ -2254,5 +2263,39 @@ NS_IMETHODIMP nsAddressBook::Convert4xVCardPrefs(const char *prefRoot, char **es
     return rv;
 }
 
+#ifdef MOZ_XUL_APP
+
+NS_IMETHODIMP
+nsAddressBook::Handle(nsICommandLine* aCmdLine)
+{
+  nsresult rv; 
+  PRBool found;
+
+  rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("addressbook"), PR_FALSE, &found);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!found)
+    return NS_OK;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMWindow> opened;
+  wwatch->OpenWindow(nsnull, "chrome://messenger/content/addressbook/addressbook.xul",
+                     "_blank", "chrome,dialog=no,all", nsnull, getter_AddRefs(opened));
+  aCmdLine->SetPreventDefault(PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAddressBook::GetHelpInfo(nsACString& aResult)
+{
+  aResult.Assign(NS_LITERAL_CSTRING("  -addressbook         Open the address book at startup.\n"));
+  return NS_OK;
+}
+
+#else // !MOZ_XUL_APP
+
 CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://messenger/content/addressbook/addressbook.xul","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)
 
+#endif

@@ -92,6 +92,10 @@
 #include "nsIContentSink.h"
 #include "mozISanitizingSerializer.h"
 
+#ifdef MOZ_XUL_APP
+#include "nsICommandLine.h"
+#endif
+
 #ifdef XP_WIN32
 #include <windows.h>
 #include <shellapi.h>
@@ -158,7 +162,11 @@ nsMsgComposeService::nsMsgComposeService()
   mCachedWindows = nsnull;
 }
 
-NS_IMPL_ISUPPORTS4(nsMsgComposeService, nsIMsgComposeService, nsIObserver, nsICmdLineHandler, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS4(nsMsgComposeService,
+                   nsIMsgComposeService,
+                   nsIObserver,
+                   ICOMMANDLINEHANDLER,
+                   nsISupportsWeakReference)
 
 nsMsgComposeService::~nsMsgComposeService()
 {
@@ -991,7 +999,76 @@ nsresult nsMsgComposeService::AddGlobalHtmlDomains()
   return NS_OK;
 }
 
+#ifdef MOZ_XUL_APP
+NS_IMETHODIMP
+nsMsgComposeService::Handle(nsICommandLine* aCmdLine)
+{
+  nsresult rv;
+  PRInt32 found, end, count;
+  nsAutoString uristr;
+
+  rv = aCmdLine->FindFlag(NS_LITERAL_STRING("compose"), PR_FALSE, &found);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (found == -1)
+    return NS_OK;
+
+  end = found;
+
+  rv = aCmdLine->GetLength(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (count >= found) {
+    aCmdLine->GetArgument(found + 1, uristr);
+    if (StringBeginsWith(uristr, NS_LITERAL_STRING("mailto:"))) {
+      end++;
+      // mailto: URIs are frequently passed with spaces in them. They should be
+      // escaped with %20, but we hack around broken clients. See bug 231032.
+      while (end + 1 < count) {
+        nsAutoString curarg;
+        aCmdLine->GetArgument(end + 1, curarg);
+        if (curarg.First() == '-')
+          break;
+
+        uristr.Append(' ');
+        uristr.Append(curarg);
+        ++end;
+      }
+    }
+    else {
+      uristr.Truncate();
+    }
+  }
+
+  aCmdLine->RemoveArguments(found, end);
+
+  nsCOMPtr<nsIWindowWatcher> wwatch (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISupportsString> arg;
+  if (!uristr.IsEmpty()) {
+    arg = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+    if (arg)
+      arg->SetData(uristr);
+  }    
+
+  nsCOMPtr<nsIDOMWindow> opened;
+  wwatch->OpenWindow(nsnull, DEFAULT_CHROME, "_blank",
+                     "chrome,dialog=no,all", arg, getter_AddRefs(opened));
+
+  aCmdLine->SetPreventDefault(PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgComposeService::GetHelpInfo(nsACString& aResult)
+{
+  aResult.Assign(NS_LITERAL_CSTRING("  -compose             Compose a mail or news message.\n"));
+  return NS_OK;
+}
+
+#else
 CMDLINEHANDLER_IMPL(nsMsgComposeService, "-compose", "general.startup.messengercompose", DEFAULT_CHROME,
                     "Start with messenger compose.", NS_MSGCOMPOSESTARTUPHANDLER_CONTRACTID, "Messenger Compose Startup Handler",
                     PR_TRUE, "about:blank", PR_TRUE)
-
+#endif

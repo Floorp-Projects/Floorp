@@ -92,7 +92,9 @@
 #include "nsDirectoryServiceDefs.h"
 
 #include "nsNetUtil.h"
+#ifndef MOZ_XUL_APP
 #include "nsICmdLineService.h"
+#endif
 
 // Stuff to implement file download dialog.
 #include "nsIProxyObjectManager.h" 
@@ -512,9 +514,11 @@ nsBrowserInstance::GetCmdLineURLUsed(PRBool* aCmdLineURLUsed)
 NS_IMETHODIMP    
 nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
 {
+  *aIsPageCycling = PR_FALSE;
+
+#ifndef MOZ_XUL_APP
   nsresult rv;
 
-  *aIsPageCycling = PR_FALSE;
   if (!sCmdLineURLUsed) {
     nsCOMPtr<nsICmdLineService> cmdLineArgs = 
              do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv);
@@ -561,6 +565,7 @@ nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
     }
 #endif //ENABLE_PAGE_CYCLER
   }
+#endif // MOZ_XUL_APP
   return NS_OK;
 }
 
@@ -605,10 +610,10 @@ nsBrowserInstance::Close()
   return NS_OK;
 }
 
+#ifndef MOZ_XUL_APP
 //*****************************************************************************
 // nsBrowserInstance: Helpers
 //*****************************************************************************
-
 
 ////////////////////////////////////////////////////////////////////////
 // browserCntHandler is a content handler component that registers
@@ -814,3 +819,5 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
 
   return NS_OK;
 }
+
+#endif // MOZ_XUL_APP

@@ -43,11 +43,18 @@
 #include "nsCOMPtr.h"
 #include "nsIAddrDatabase.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsICmdLineHandler.h"
 #include "nsIComponentManager.h"
 #include "nsIContentHandler.h"
 #include "nsIStreamLoader.h"
 #include "rdf.h"
+
+#ifdef MOZ_XUL_APP
+#include "nsICommandLineHandler.h"
+#define ICOMMANDLINEHANDLER nsICommandLineHandler
+#else
+#include "nsICmdLineHandler.h"
+#define ICOMMANDLINEHANDLER nsICmdLineHandler
+#endif
 
 class nsILocalFile;
 class nsIAbDirectory;
@@ -83,7 +90,10 @@ const extern ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[EXPORT_ATTRIBUT
 // are probably out there that can handle 4.x LDIF)
 // else use the MOZ_AB_LDIF_PREFIX prefix, see nsIAddrDatabase.idl
 
-class nsAddressBook : public nsIAddressBook, public nsICmdLineHandler, public nsIContentHandler, public nsIStreamLoaderObserver
+class nsAddressBook : public nsIAddressBook,
+                      public ICOMMANDLINEHANDLER,
+                      public nsIContentHandler,
+                      public nsIStreamLoaderObserver
 {
   
 public:
@@ -92,11 +102,15 @@ public:
 
 	NS_DECL_ISUPPORTS
  	NS_DECL_NSIADDRESSBOOK
-	NS_DECL_NSICMDLINEHANDLER
     NS_DECL_NSICONTENTHANDLER
     NS_DECL_NSISTREAMLOADEROBSERVER
 
-  CMDLINEHANDLER_REGISTERPROC_DECLS
+#ifdef MOZ_XUL_APP
+    NS_DECL_NSICOMMANDLINEHANDLER
+#else
+	NS_DECL_NSICMDLINEHANDLER
+    CMDLINEHANDLER_REGISTERPROC_DECLS
+#endif
     
 protected:
 	nsresult DoCommand(nsIRDFDataSource *db, const nsACString& command,

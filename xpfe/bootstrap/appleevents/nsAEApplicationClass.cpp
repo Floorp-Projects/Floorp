@@ -50,10 +50,11 @@
 
 #include "nsINativeAppSupport.h"
 #include "nsCommandLineServiceMac.h"
-#include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
 #include "nsIAppStartup.h"
 #include "nsXPFEComponentsCID.h"
+
+#include "nsComponentManagerUtils.h"
 
 #ifdef MOZ_XUL_APP
 #include "nsAppRunner.h"

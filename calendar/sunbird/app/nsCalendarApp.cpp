@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
+ *  Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +45,6 @@
 #include "nsBuildID.h"
 #include <string.h>
 
-const int TMP_ARG_MAX=21;
 static const nsXREAppData kAppData = {
   "Mozilla",
   "Sunbird",
@@ -58,31 +58,7 @@ static const nsXREAppData kAppData = {
 
 int main(int argc, char* argv[])
 {
-  char* temparg[TMP_ARG_MAX+1];
-  char **argPtr;
-  int argCount;
-  int i;
-  bool found = false;
-  for (i=0; i < argc; i++) {
-    if (!strncmp("-calendar", argv[i], 9))
-      found = true;
-  }
-  if (!found) {
-    temparg[0] = argv[0];
-    temparg[1] = "-calendar";
-    for( i=1; i<argc && i<TMP_ARG_MAX-1; i++ ) {
-       temparg[i+1]=argv[i];
-    }
-    //we still might lose some args. a check would be handy with big neon letters yelling at the user.
-    temparg[i+1]=0;
-    argPtr = temparg;
-    argCount = argc + 1;
-  } else {
-    argPtr = argv;
-    argCount = argc;
-  }
-  
-  return xre_main(argCount, argPtr, &kAppData);
+  return xre_main(argc, argv, &kAppData);
 }
 
 #if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)

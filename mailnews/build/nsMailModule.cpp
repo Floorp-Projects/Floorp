@@ -46,6 +46,7 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "pratom.h"
+#include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
@@ -284,7 +285,6 @@
 // mailnews base factories
 ////////////////////////////////////////////////////////////////////////////////
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerBootstrap)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOptionsCmdLineHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlListenerManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgMailSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessenger)
@@ -569,6 +569,54 @@ static NS_METHOD UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile 
   return catman->DeleteCategoryEntry("content-policy", NS_MSGCONTENTPOLICY_CONTRACTID, PR_TRUE);
 }
 
+static NS_METHOD
+RegisterCommandLineHandlers(nsIComponentManager* compMgr, nsIFile* path,
+                            const char *location, const char *type,
+                            const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catMan (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(catMan, NS_ERROR_FAILURE);
+
+  rv  = catMan->AddCategoryEntry("command-line-handler", "m-mail",
+                                 NS_MESSENGERBOOTSTRAP_CONTRACTID,
+                                 PR_TRUE, PR_TRUE, nsnull);
+  rv |= catMan->AddCategoryEntry("command-line-handler", "m-addressbook",
+                                 NS_ADDRESSBOOK_CONTRACTID,
+                                 PR_TRUE, PR_TRUE, nsnull);
+  rv |= catMan->AddCategoryEntry("command-line-handler", "m-compose",
+                                 NS_MSGCOMPOSESERVICE_CONTRACTID,
+                                 PR_TRUE, PR_TRUE, nsnull);
+  rv |= catMan->AddCategoryEntry("command-line-handler", "m-news",
+                                 NS_NNTPSERVICE_CONTRACTID,
+                                 PR_TRUE, PR_TRUE, nsnull);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+static NS_METHOD
+UnregisterCommandLineHandlers(nsIComponentManager* compMgr, nsIFile* path,
+                              const char *location,
+                              const nsModuleComponentInfo *info)
+{
+  nsCOMPtr<nsICategoryManager> catMan (do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(catMan, NS_ERROR_FAILURE);
+
+  catMan->DeleteCategoryEntry("command-line-handler", "m-mail",
+                              PR_TRUE);
+  catMan->DeleteCategoryEntry("command-line-handler", "m-addressbook",
+                              PR_TRUE);
+  catMan->DeleteCategoryEntry("command-line-handler", "m-compose",
+                              PR_TRUE);
+  catMan->DeleteCategoryEntry("command-line-handler", "m-news",
+                              PR_TRUE);
+
+  return NS_OK;
+}
+                            
+
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
     ////////////////////////////////////////////////////////////////////////////////
@@ -577,22 +625,12 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Netscape Messenger Bootstrapper", NS_MESSENGERBOOTSTRAP_CID,
       NS_MESSENGERBOOTSTRAP_CONTRACTID,
       nsMessengerBootstrapConstructor,
-    },
-    { "Options Startup Handler", NS_MESSENGEROPTIONSSTARTUP_CID,
-      NS_MAILOPTIONSTARTUPHANDLER_CONTRACTID,
-      nsMsgOptionsCmdLineHandlerConstructor,
-      nsMsgOptionsCmdLineHandler::RegisterProc,
-      nsMsgOptionsCmdLineHandler::UnregisterProc
+      RegisterCommandLineHandlers,
+      UnregisterCommandLineHandlers
     },
     { "Netscape Messenger Window Service", NS_MESSENGERWINDOWSERVICE_CID,
       NS_MESSENGERWINDOWSERVICE_CONTRACTID,
       nsMessengerBootstrapConstructor,
-    },
-    { "Mail Startup Handler", NS_MESSENGERBOOTSTRAP_CID,
-      NS_MAILSTARTUPHANDLER_CONTRACTID,
-      nsMessengerBootstrapConstructor,
-      nsMessengerBootstrap::RegisterProc,
-      nsMessengerBootstrap::UnregisterProc
     },
     { "UrlListenerManager", NS_URLLISTENERMANAGER_CID,
       NS_URLLISTENERMANAGER_CONTRACTID,
@@ -802,9 +840,6 @@ static const nsModuleComponentInfo gComponents[] = {
     ////////////////////////////////////////////////////////////////////////////////
     { "Address Book", NS_ADDRESSBOOK_CID,
       NS_ADDRESSBOOK_CONTRACTID, nsAddressBookConstructor },
-    { "Address Book Startup Handler", NS_ADDRESSBOOK_CID,
-      NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID, nsAddressBookConstructor,
-      nsAddressBook::RegisterProc, nsAddressBook::UnregisterProc },
     { "Address Book Directory Datasource", NS_ABDIRECTORYDATASOURCE_CID,
       NS_ABDIRECTORYDATASOURCE_CONTRACTID, nsAbDirectoryDataSourceConstructor },
     { "Address Boot Strap Directory", NS_ABDIRECTORY_CID,
@@ -894,9 +929,6 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_MSGCOMPOSE_CONTRACTID,  nsMsgComposeConstructor },
     { "Msg Compose Service", NS_MSGCOMPOSESERVICE_CID, 
       NS_MSGCOMPOSESERVICE_CONTRACTID, nsMsgComposeServiceConstructor },
-    { "Msg Compose Startup Handler", NS_MSGCOMPOSESERVICE_CID,
-      NS_MSGCOMPOSESTARTUPHANDLER_CONTRACTID, nsMsgComposeServiceConstructor, nsMsgComposeService::RegisterProc,
-      nsMsgComposeService::UnregisterProc },
     { "mailto content handler", NS_MSGCOMPOSECONTENTHANDLER_CID,
       NS_MSGCOMPOSECONTENTHANDLER_CONTRACTID, nsMsgComposeContentHandlerConstructor },
     { "Msg Compose Parameters", NS_MSGCOMPOSEPARAMS_CID,
@@ -1097,9 +1129,6 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_NNTPURL_CONTRACTID, nsNntpUrlConstructor },
     { "NNTP Service", NS_NNTPSERVICE_CID,
       NS_NNTPSERVICE_CONTRACTID, nsNntpServiceConstructor },
-    { "News Startup Handler", NS_NNTPSERVICE_CID,
-      NS_NEWSSTARTUPHANDLER_CONTRACTID, nsNntpServiceConstructor,
-      nsNntpService::RegisterProc, nsNntpService::UnregisterProc },
     { "NNTP Protocol Info", NS_NNTPSERVICE_CID,
       NS_NNTPPROTOCOLINFO_CONTRACTID, nsNntpServiceConstructor },
     { "NNTP Message Service",NS_NNTPSERVICE_CID,

@@ -63,9 +63,10 @@ MODULE_NAME	= nsMailModule
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  xpobsolete \
-          	  addrbook \
+		  addrbook \
 		  appcomps \
 		  appshell \
+		  toolkitcomps \
                   bayesflt \
 			xmlextras \
 		  content \
@@ -76,7 +77,7 @@ REQUIRES	= xpcom \
 		  intl \
 	     	  locale \
 		  layout \
-        	  lwbrk \
+		  lwbrk \
 		  mailnews \
 	          mailview \
 	          msglocal \
@@ -86,20 +87,20 @@ REQUIRES	= xpcom \
 		  msgnews \
 		  msgimap \
 		  msgdb \
-        	  msgmdn \
+		  msgmdn \
 		  mime \
 	          mimeemitter \
 		  mork \
 		  necko \
-        	  nkcache \
+		  nkcache \
 		  pref \
 		  rdf \
-	          rdfutil \
+		  rdfutil \
 		  string \
 		  txmgr \
 		  widget \
 		  webbrwsr \
-        	  uconv \
+		  uconv \
 		  uriloader \
 		  $(NULL)
 
@@ -118,7 +119,7 @@ SHARED_LIBRARY_LIBS = \
 	        $(DIST)/lib/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)msgsearch_s.$(LIB_SUFFIX) \
-        	$(DIST)/lib/$(LIB_PREFIX)msglocal_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)msglocal_s.$(LIB_SUFFIX) \
 	        $(DIST)/lib/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
 	        $(DIST)/lib/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX) \
 	        $(DIST)/lib/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \

@@ -41,10 +41,17 @@
 #include "nsIMsgComposeService.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
-#include "nsICmdLineHandler.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+
+#ifdef MOZ_XUL_APP
+#include "nsICommandLineHandler.h"
+#define ICOMMANDLINEHANDLER nsICommandLineHandler
+#else
+#include "nsICmdLineHandler.h"
+#define ICOMMANDLINEHANDLER nsICmdLineHandler
+#endif
 
 class nsMsgCachedWindowInfo
 {
@@ -67,7 +74,11 @@ public:
   PRBool                                    htmlCompose;
 };
 
-class nsMsgComposeService : public nsIMsgComposeService, public nsIObserver ,public nsICmdLineHandler, public nsSupportsWeakReference
+class nsMsgComposeService :
+  public nsIMsgComposeService,
+  public nsIObserver,
+  public ICOMMANDLINEHANDLER,
+  public nsSupportsWeakReference
 {
 public: 
 	nsMsgComposeService();
@@ -76,8 +87,13 @@ public:
 	NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGCOMPOSESERVICE
   NS_DECL_NSIOBSERVER
+
+#ifdef MOZ_XUL_APP
+  NS_DECL_NSICOMMANDLINEHANDLER
+#else
   NS_DECL_NSICMDLINEHANDLER
-  CMDLINEHANDLER_REGISTERPROC_DECLS 
+  CMDLINEHANDLER_REGISTERPROC_DECLS
+#endif
 
   nsresult Init();
   void Reset();

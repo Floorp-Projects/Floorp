@@ -54,12 +54,17 @@ const STANDARDURL_CONTRACTID =
     "@mozilla.org/network/standard-url;1";
 const ASS_CONTRACTID =
     "@mozilla.org/appshell/appShellService;1";
+const WINDOWWATCHER_CONTRACTID =
+    "@mozilla.org/embedcomp/window-watcher;1";
 
 /* interafces used in this file */
 const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
+const nsICommandLineHandler =
+                           Components.interfaces.nsICommandLineHandler;
 const nsICmdLineHandler  = Components.interfaces.nsICmdLineHandler;
 const nsICategoryManager = Components.interfaces.nsICategoryManager;
 const nsIContentHandler  = Components.interfaces.nsIContentHandler;
+const nsIFactory         = Components.interfaces.nsIFactory;
 const nsIProtocolHandler = Components.interfaces.nsIProtocolHandler;
 const nsIURI             = Components.interfaces.nsIURI;
 const nsIStandardURL     = Components.interfaces.nsIStandardURL;
@@ -67,31 +72,74 @@ const nsIChannel         = Components.interfaces.nsIChannel;
 const nsIRequest         = Components.interfaces.nsIRequest;
 const nsIAppShellService = Components.interfaces.nsIAppShellService;
 const nsISupports        = Components.interfaces.nsISupports;
+const nsIWindowWatcher   = Components.interfaces.nsIWindowWatcher;
 
 /* Command Line handler service */
 function CLineService()
 {}
 
-CLineService.prototype.commandLineArgument = "-calendar";
-CLineService.prototype.prefNameForStartup = "general.startup.calendar";
-CLineService.prototype.chromeUrlForTask = "chrome://calendar/content";
-CLineService.prototype.helpText = "Start with calendar";
-CLineService.prototype.handlesArgs = false;
-CLineService.prototype.defaultArgs = "";
-CLineService.prototype.openWindowWithArgs = true;
+CLineService.prototype = {
+    /* nsISupports */
+    QueryInterface : function service_qi(iid) {
+        if (iid.equals(nsISupports))
+            return this;
+
+        if (nsICmdLineHandler && iid.equals(nsICmdLineHandler))
+            return this;
+
+        if (nsICommandLineHandler && iid.equals(nsICommandLineHandler))
+            return this;
+
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+
+    /* nsICmdLineHandler */
+
+    commandLineArgument : "-calendar",
+    prefNameForStartup  : "general.startup.calendar",
+    chromeUrlForTask    : "chrome://calendar/content",
+    helpText            : "Start with calendar",
+    handlesArgs         : false,
+    defaultArgs         : "",
+    openWindowWithArgs  : true,
+
+    /* nsICommandLineHandler */
+
+    handle : function service_handle(cmdLine) {
+        if (cmdLine.handleFlag("calendar", false)) {
+            wwatch = Components.classes[WINDOWWATCHER_CONTRACTID]
+                               .getService(nsIWindowWatcher);
+            wwatch.openWindow(null, "chrome://calendar/content/",
+                              "_blank", "chrome,dialog=no,all", cmdLine);
+            cmdLine.preventDefault = true;
+        }
+    },
+
+    helpInfo : "  -calendar            Start with the calendar.\n"
+};
 
 /* factory for command line handler service (CLineService) */
-var CLineFactory = new Object();
+var CLineFactory = {
+    /* nsISupports */
+    QueryInterface : function (iid) {
+        if (iid.equals(nsISupports) ||
+            iid.equals(nsIFactory))
+            return this;
 
-CLineFactory.createInstance =
-function (outer, iid) {
-    if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
 
-    if (!iid.equals(nsICmdLineHandler) && !iid.equals(nsISupports))
-        throw Components.results.NS_ERROR_INVALID_ARG;
+    /* nsIFactory */
 
-    return new CLineService();
+    createInstance : function (outer, iid) {
+        if (outer != null)
+            throw Components.results.NS_ERROR_NO_AGGREGATION;
+
+        return new CLineService.QueryInterface(iid);
+    },
+
+    lockFactory : function(lock) {
+    }
 }
 
 /* text/calendar content handler */
@@ -308,6 +356,8 @@ function (compMgr, fileSpec, location, type)
     catman.addCategoryEntry("command-line-argument-handlers",
                             "calendar command line handler",
                             CLINE_SERVICE_CONTRACTID, true, true);
+    catman.addCategoryEntry("command-line-handler", "m-calendar",
+                            CLINE_SERVICE_CONTRACTID, true, true);
 
     // dump("*** Registering text/calendar handler.\n");
     compMgr.registerFactoryLocation(ICALCNT_HANDLER_CID,
@@ -331,18 +381,22 @@ function(compMgr, fileSpec, location)
 {
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-    compMgr.unregisterFactoryLocation(CLINE_SERVICE_CID,
-                                      fileSpec);
+    compMgr.unregisterFactoryLocation(CLINE_SERVICE_CID, fileSpec);
+    compMgr.unregisterFactoryLocation(ICALCNT_HANDLER_CID, fileSpec);
+    compMgr.unregisterFactoryLocation(ICALPROT_HANDLER_CID, fileSpec);
+
     catman = Components.classes["@mozilla.org/categorymanager;1"]
                        .getService(nsICategoryManager);
     catman.deleteCategoryEntry("command-line-argument-handlers",
-                               CLINE_SERVICE_CONTRACTID, true);
+                               "calendar command line handler", true);
+    catman.deleteCategoryEntry("command-line-handler",
+                               "m-calendar", true);
 }
 
 CalendarModule.getClassObject =
 function (compMgr, cid, iid) {
     if (cid.equals(CLINE_SERVICE_CID))
-        return CLineFactory;
+        return CLineFactory.QueryInterface(iid);
 
     if (cid.equals(ICALCNT_HANDLER_CID))
         return ICALContentHandlerFactory;
@@ -350,11 +404,7 @@ function (compMgr, cid, iid) {
     if (cid.equals(ICALPROT_HANDLER_CID))
         return ICALProtocolHandlerFactory;
 
-    if (!iid.equals(Components.interfaces.nsIFactory))
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
     throw Components.results.NS_ERROR_NO_INTERFACE;
-
 }
 
 CalendarModule.canUnload =

@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  dom \
 		  appshell \
+		  toolkitcomps \
 		  appcomps \
 		  uconv \
 		  intl \

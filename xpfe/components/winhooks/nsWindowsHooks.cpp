@@ -51,7 +51,6 @@
 #include "nsIPromptService.h"
 #include "nsIStringBundle.h"
 #include "nsIAllocator.h"
-#include "nsICmdLineService.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsMemory.h"
@@ -75,6 +74,10 @@
 #include "gfxIImageFrame.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
+
+#ifndef MOZ_XUL_APP
+#include "nsICmdLineService.h"
+#endif
 
 #include "nsXPFEComponentsCID.h"
 
@@ -388,6 +391,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
 
         // If launched with "-installer" then override mShowDialog.
         PRBool installing = PR_FALSE;
+#ifndef MOZ_XUL_APP
         if ( !settings->mShowDialog ) {
             // Get command line service.
             nsCOMPtr<nsICmdLineService> cmdLineArgs
@@ -401,6 +405,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
                 }
             }
         }
+#endif
 
         // First, make sure the user cares.
         if ( settings->mShowDialog || installing ) {

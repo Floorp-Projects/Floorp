@@ -2543,11 +2543,9 @@ function toOpenWindowByType(inType, uri, features)
 function OpenBrowserWindow()
 {
   var charsetArg = new String();
-  var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
-  handler = handler.getService();
-  handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
-  var startpage = handler.defaultArgs;
-  var url = handler.chromeUrlForTask;
+  var handler = Components.classes["@mozilla.org/browser/clh;1"]
+                          .getService(Components.interfaces.nsIBrowserHandler);
+  var startpage = handler.startPage;
   var wintype = document.firstChild.getAttribute('windowtype');
 
   // if and only if the current window is a browser window and it has a document with a character
@@ -2559,11 +2557,11 @@ function OpenBrowserWindow()
     charsetArg = "charset="+DocCharset;
 
     //we should "inherit" the charset menu setting in a new window
-    window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
+    window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", startpage, charsetArg);
   }
   else // forget about the charset information.
   {
-    window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
+    window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", startpage);
   }
 }
 

@@ -1594,7 +1594,7 @@ nsExtensionManager.prototype = {
     }
   },
   
-  start: function nsExtensionManager_start (aIsDirty)
+  start: function nsExtensionManager_start (aCmdLine, aIsDirty)
   {
     this._started = true;
     
@@ -1614,10 +1614,8 @@ nsExtensionManager.prototype = {
     //          cases to see what is stopping these dirs from being removed, but no
     //          time now.
     this._cleanDirs();
-  
-    var cmdLineSvc = Components.classes["@mozilla.org/app-startup/commandLineService;1"]
-                               .getService(Components.interfaces.nsICmdLineService);
-    var safeMode = cmdLineSvc.getCmdLineValue("-safe-mode") != null;
+
+    var safeMode = aCmdLine.handleFlag("safe-mode", false);
     if (!safeMode) {
       var wasInSafeModeFile = getFile(KEY_PROFILEDIR, [DIR_EXTENSIONS, FILE_WASINSAFEMODE]);
       if (wasInSafeModeFile.exists()) {
@@ -1709,32 +1707,49 @@ nsExtensionManager.prototype = {
     return needsRestart;
   },
   
-  handleCommandLineArgs: function nsExtensionManager_handleCommandLineArgs ()
+  handleCommandLineArgs: function nsExtensionManager_handleCommandLineArgs (aCmdLine)
   {
-    var cmdLineSvc = Components.classes["@mozilla.org/app-startup/commandLineService;1"]
-                              .getService(Components.interfaces.nsICmdLineService);
-    var globalExtension = cmdLineSvc.getCmdLineValue("-install-global-extension");
-    if (globalExtension)
-      this._checkForGlobalInstalls(globalExtension, nsIUpdateItem.TYPE_EXTENSION);
-      
-    var globalTheme = cmdLineSvc.getCmdLineValue("-install-global-theme");
-    if (globalTheme)
-      this._checkForGlobalInstalls(globalTheme, nsIUpdateItem.TYPE_THEME);
-    
-    var showList = cmdLineSvc.getCmdLineValue("-list-global-items");
-    if (showList)
-      this._showGlobalItemList();
-      
-    var locked = cmdLineSvc.getCmdLineValue("-lock-item");
-    if (locked) {
-      this._ensureDS();
-      this._ds.lockUnlockItem(locked, true);
+    try {
+      var globalExtension = aCmdLine.handleFlagWithParam("install-global-extension", false);
+      if (globalExtension)
+        this._checkForGlobalInstalls(globalExtension, nsIUpdateItem.TYPE_EXTENSION);
+    }
+    catch (e) {
+      // The command line had the flag, but no param. XXXReport this error!
     }
 
-    var unlocked = cmdLineSvc.getCmdLineValue("-unlock-item");
-    if (unlocked) {
-      this._ensureDS();
-      this._ds.lockUnlockItem(unlocked, false);
+    try {
+      var globalTheme = aCmdLine.handleFlagWithParam("install-global-theme", false);
+      if (globalTheme)
+        this._checkForGlobalInstalls(globalTheme, nsIUpdateItem.TYPE_THEME);
+    }
+    catch (e) {
+      // The command line had the flag, but no param. XXXReport this error!
+    }
+
+    if (aCmdLine.handleFlag("list-global-items", false))
+      this._showGlobalItemList();
+
+    try {
+      var locked = aCmdLine.handleFlagWithParam("lock-item", false);
+      if (locked) {
+        this._ensureDS();
+        this._ds.lockUnlockItem(locked, true);
+      }
+    }
+    catch (e) {
+      // The command line had the flag, but no param. XXXReport this error!
+    }
+
+    try {
+      var unlocked = aCmdLine.handleFlagWithParam("unlock-item", false);
+      if (unlocked) {
+        this._ensureDS();
+        this._ds.lockUnlockItem(unlocked, false);
+      }
+    }
+    catch (e) {
+      // The command line had the flag, but no param. XXXReport this error!
     }
     
     this._finishOperations();

@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  rdfutil \
 		  appshell \
+		  toolkitcomps \
 		  appcomps \
 		  dom \
 		  layout \

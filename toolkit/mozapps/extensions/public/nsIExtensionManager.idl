@@ -41,6 +41,7 @@
 interface nsIFile;
 interface nsIRDFDataSource;
 interface nsIUpdateItem;
+interface nsICommandLine;
 
 [scriptable, uuid(9048223f-ec50-49e5-9866-80ee8f26179d)]
 interface nsIExtensionDownloadProgressListener : nsISupports
@@ -50,18 +51,18 @@ interface nsIExtensionDownloadProgressListener : nsISupports
   void onProgress(in wstring aURL, in unsigned long aValue, in unsigned long aMaxValue);
 };
 
-[scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
+[scriptable, uuid(1a1e274d-c675-4177-99d3-4d153d1b795e)]
 interface nsIExtensionManager : nsISupports
 {
   // Apprunner hooks
-  boolean start(in boolean aIsDirty);
+  boolean start(in nsICommandLine aCmdLine, in boolean aIsDirty);
 
   /** 
    * Returns true if mismatches were found and the app needs to restart. 
    */
   boolean checkForMismatches();
 
-  void handleCommandLineArgs();
+  void handleCommandLineArgs(in nsICommandLine cmdline);
 
   void register();
 

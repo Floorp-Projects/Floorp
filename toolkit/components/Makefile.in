@@ -72,8 +72,11 @@ endif
 endif
 
 DIRS += \
+	commandlines \
 	startup \
 	build \
 	$(NULL)
+
+EXTRA_PP_COMPONENTS = nsDefaultCLH.js
 
 include $(topsrcdir)/config/rules.mk

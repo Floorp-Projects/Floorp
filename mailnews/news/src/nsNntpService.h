@@ -48,10 +48,17 @@
 #include "nsIMsgProtocolInfo.h"
 #include "nsIMsgWindow.h"
 #include "nsINntpUrl.h"
-#include "nsICmdLineHandler.h"
 #include "nsCOMPtr.h"
 #include "nsIContentHandler.h"
 #include "nsICacheSession.h"
+
+#ifdef MOZ_XUL_APP
+#include "nsICommandLineHandler.h"
+#define ICOMMANDLINEHANDLER nsICommandLineHandler
+#else
+#include "nsICmdLineHandler.h"
+#define ICOMMANDLINEHANDLER nsICmdLineHandler
+#endif
 
 class nsIURI;
 class nsIUrlListener;
@@ -61,7 +68,7 @@ class nsNntpService : public nsINntpService,
                       public nsIMsgMessageFetchPartService,
                       public nsIProtocolHandler,
                       public nsIMsgProtocolInfo,
-                      public nsICmdLineHandler,
+                      public ICOMMANDLINEHANDLER,
                       public nsIContentHandler
 {
 public:
@@ -71,15 +78,19 @@ public:
   NS_DECL_NSIMSGMESSAGESERVICE
   NS_DECL_NSIPROTOCOLHANDLER
   NS_DECL_NSIMSGPROTOCOLINFO
-  NS_DECL_NSICMDLINEHANDLER
   NS_DECL_NSICONTENTHANDLER
   NS_DECL_NSIMSGMESSAGEFETCHPARTSERVICE
   
+#ifdef MOZ_XUL_APP
+  NS_DECL_NSICOMMANDLINEHANDLER
+#else
+  NS_DECL_NSICMDLINEHANDLER
+  CMDLINEHANDLER_REGISTERPROC_DECLS
+#endif
+
   // nsNntpService
   nsNntpService();
   virtual ~nsNntpService();
-
-  CMDLINEHANDLER_REGISTERPROC_DECLS
 
 protected:
   PRBool WeAreOffline();

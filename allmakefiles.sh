@@ -934,6 +934,9 @@ toolkit/components/autocomplete/public/Makefile
 toolkit/components/autocomplete/src/Makefile
 toolkit/components/Makefile
 toolkit/components/build/Makefile
+toolkit/components/commandlines/Makefile
+toolkit/components/commandlines/public/Makefile
+toolkit/components/commandlines/src/Makefile
 toolkit/components/console/Makefile
 toolkit/components/downloads/public/Makefile
 toolkit/components/downloads/Makefile

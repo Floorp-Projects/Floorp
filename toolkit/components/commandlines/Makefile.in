@@ -11,10 +11,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Seamonkey bootstrap code.
+# The Original Code is the Mozilla toolkit.
 #
 # The Initial Developer of the Original Code is
-# Benjamin Smedberg <bsmedberg@covad.net>
+# Benjamin Smedberg <benjamin@smedbergs.us>.
+#
 # Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
@@ -34,63 +35,16 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH      = ../../../..
-topsrcdir  = @top_srcdir@
-srcdir     = @srcdir@
-VPATH      = @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE     = toolkitcomps
-LIBRARY_NAME = appstartup_s
-FORCE_STATIC_LIB = 1
-
-REQUIRES = \
-	xpcom \
-	string \
-	js \
-	widget \
-	appshell \
-	appcomps \
-	docshell \
-	exthandler \
-	webshell \
-	dom \
-	necko \
-	pref \
-	profile \
-	embed_base \
-	webbrwsr \
-	windowwatcher \
-	intl \
-	util \
-	xulapp \
+DIRS = \
+	public \
+	src \
 	$(NULL)
-
-CPPSRCS = \
-	nsAppStartup.cpp \
-	$(NULL)
-
-ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += nsUserInfoOS2.cpp
-else
-ifeq (WINNT,$(OS_ARCH))
-CPPSRCS += nsUserInfoWin.cpp
-else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS += \
-	nsUserInfoMac.cpp \
-	nsCommandLineServiceMac.cpp \
-	$(NULL)
-
-LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap/appleevents
-OS_CXXFLAGS += -fexceptions
-else
-CPPSRCS += nsUserInfoUnix.cpp
-endif
-endif
-endif
-
-EXTRA_COMPONENTS = nsCloseAllWindows.js
 
 include $(topsrcdir)/config/rules.mk

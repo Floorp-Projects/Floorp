@@ -59,10 +59,12 @@ bin\components\appstartup.xpt
 bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
 bin\components\bookmarks.xpt
+bin\components\browsercompsbase.xpt
 bin\components\caps.xpt
 bin\components\chardet.xpt
 bin\components\chrome.xpt
 bin\components\commandhandler.xpt
+bin\components\commandlines.xpt
 bin\components\composer.xpt
 bin\components\content_base.xpt
 bin\components\content_html.xpt
@@ -179,6 +181,7 @@ bin\components\xulapp.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
 ; JavaScript components
+bin\components\nsBrowserContentHandler.js
 bin\components\nsSetDefaultBrowser.js
 bin\components\nsCloseAllWindows.js
 bin\components\nsDictionary.js
