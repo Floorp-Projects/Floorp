@@ -430,7 +430,7 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
 {
   if (nsnull == mFrames) {
-    mFrames = new nsFrameList(mWebShell);
+    mFrames = new nsDOMWindowList(mWebShell);
     if (nsnull == mFrames) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -32,7 +32,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsGUIEvent.h"
-#include "nsFrameList.h"
+#include "nsDOMWindowList.h"
 
 class nsIEventListenerManager;
 class nsIDOMDocument;
@@ -200,7 +200,7 @@ protected:
   nsTimeoutImpl *mRunningTimeout;
   PRUint32 mTimeoutPublicIdCounter;
   nsIEventListenerManager* mListenerManager;
-  nsFrameList *mFrames;
+  nsDOMWindowList *mFrames;
 };
 
 /* 
