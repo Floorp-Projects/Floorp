@@ -21,7 +21,6 @@
 
 #include "nsDeviceContext.h"
 #include "nsUnitConversion.h"
-#include "nsIFontCache.h"
 #include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
@@ -75,7 +74,6 @@ public:
 
 protected:
   ~nsDeviceContextUnix();
-  nsresult CreateFontCache();
   void AllocColors();
   uint8 AllocColor(uint8 aRed, uint8 aGreen, 
                    uint8 aBlue, PRBool aCanAlloc);

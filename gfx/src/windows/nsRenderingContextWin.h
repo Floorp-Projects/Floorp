@@ -30,7 +30,6 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsIFontCache.h"
 #include "nsImageWin.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
@@ -145,7 +144,6 @@ protected:
   nscolor					  mCurrentColor;
   nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics	  *mFontMetrics;
-  nsIFontCache      *mFontCache;
   HDC               mDC;
   HDC               mMainDC;
   nsDrawingSurfaceWin *mSurface;

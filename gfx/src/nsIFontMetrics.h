@@ -50,7 +50,7 @@ public:
    * Initialize the font metrics. Call this after creating the font metrics.
    * Font metrics you get from the font cache do NOT need to be initialized
    *
-   * @see nsIFontCache#GetMetricsFor()
+   * @see nsIDeviceContext#GetMetricsFor()
    */
   NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext *aContext) = 0;
 

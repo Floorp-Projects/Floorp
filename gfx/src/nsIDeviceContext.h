@@ -26,7 +26,6 @@
 
 class nsIRenderingContext;
 class nsIView;
-class nsIFontCache;
 class nsIFontMetrics;
 class nsIWidget;
 struct nsFont;
@@ -90,10 +89,6 @@ public:
 
   //returns the scrollbar dimensions in app units
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const = 0;
-
-  //be sure to Relase() after you are done with the Get()
-  NS_IMETHOD  GetFontCache(nsIFontCache *&aCache) = 0;
-  NS_IMETHOD  FlushFontCache() = 0;
 
   // Get the font metrics for a given font.
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics) = 0;

@@ -30,7 +30,6 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsIFontCache.h"
 #include "nsImageMac.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
@@ -114,7 +113,6 @@ protected:
   nsDrawingSurfaceMac		mFrontBuffer;				// current buffer to draw into
   nsIDeviceContext			*mContext;
   nsIFontMetrics				*mFontMetrics;
-  nsIFontCache					*mFontCache;
   RgnHandle							mClipRegion;
   RgnHandle							mMainRegion;
   PRInt32               mCurrFontHandle;
