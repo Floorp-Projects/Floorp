@@ -3405,8 +3405,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     }
 
     if (resolveStyle) {
-      styleContext = ResolveStyleContext(aPresContext, aParentFrame,
-                                         aDocElement);
+      styleContext = aPresShell->StyleSet()->ResolveStyleFor(aDocElement,
+                                                             nsnull);
     }
   }
 
