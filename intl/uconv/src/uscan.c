@@ -183,7 +183,7 @@ PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
 		PRUint32*				inscanlen
 );
 
-PRIVATE PRBool uComposedHangulCommon(
+PRIVATE PRBool uScanComposedHangulCommon(
 		uShiftTable 			*shift,
 		PRInt32*				state,
 		unsigned char		*in,
@@ -674,7 +674,7 @@ PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
 #define VCount 21
 #define TCount 28
 #define NCount (VCount * TCount)
-PRIVATE PRBool uComposedHanguleCommon(
+PRIVATE PRBool uScanComposedHangulCommon(
 		uShiftTable 			*shift,
 		PRInt32*				state,
 		unsigned char		*in,
@@ -758,7 +758,7 @@ PRIVATE PRBool uCnSAlways8BytesComposedHangul(
 		PRUint32*				inscanlen
 )
 {
-   return uComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0xff);
+   return uScanComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0xff);
 }
 /*=================================================================================
 
@@ -772,5 +772,5 @@ PRIVATE PRBool uCnSAlways8BytesGLComposedHangul(
 		PRUint32*				inscanlen
 )
 {
-   return uComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0x7f);
+   return uScanComposedHangulCommon(shift,state,in,out,inbuflen,inscanlen,0x7f);
 }

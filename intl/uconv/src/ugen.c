@@ -191,7 +191,7 @@ PRIVATE PRBool uCnGAlways8BytesGLComposedHangul(
 );
 
 
-PRIVATE PRBool uComposedHangulCommon(
+PRIVATE PRBool uGenComposedHangulCommon(
 		uShiftTable 			*shift,
 		PRInt32*				state,
 		PRUint16				in,
@@ -716,7 +716,7 @@ PRIVATE PRBool uCheckAndGenAlways1ByteShiftGL(
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uComposedHangulCommon(
+PRIVATE PRBool uGenComposedHangulCommon(
 		uShiftTable 			*shift,
 		PRInt32*				state,
 		PRUint16				in,
@@ -769,7 +769,7 @@ PRIVATE PRBool uCnGAlways8BytesComposedHangul(
 		PRUint32*				outlen
 )
 {
-  return uComposedHangulCommon(shift,state,in,out,outbuflen,outlen,0xff);
+  return uGenComposedHangulCommon(shift,state,in,out,outbuflen,outlen,0xff);
 }
 PRIVATE PRBool uCnGAlways8BytesGLComposedHangul(
 		uShiftTable 			*shift,
@@ -780,5 +780,5 @@ PRIVATE PRBool uCnGAlways8BytesGLComposedHangul(
 		PRUint32*				outlen
 )
 {
-  return uComposedHangulCommon(shift,state,in,out,outbuflen,outlen,0x7f);
+  return uGenComposedHangulCommon(shift,state,in,out,outbuflen,outlen,0x7f);
 }
