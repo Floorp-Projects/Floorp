@@ -381,9 +381,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
           rv = GetServer(getter_AddRefs(server));
 
           if (NS_SUCCEEDED(rv) && server) {
-            nsCOMPtr<nsIPop3IncomingServer> popServer;
-            rv = server->QueryInterface(NS_GET_IID(nsIPop3IncomingServer),
-                                        (void **)&popServer);
+            nsCOMPtr<nsIPop3IncomingServer> popServer = do_QueryInterface(server, &rv);
             if (NS_SUCCEEDED(rv)) {
               nsCOMPtr<nsIFileSpec> spec;
               rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
@@ -398,9 +396,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
           rv = GetServer(getter_AddRefs(server));
         
           if (NS_SUCCEEDED(rv) && server) {
-            nsCOMPtr<nsINoIncomingServer> noneServer;
-            rv = server->QueryInterface(NS_GET_IID(nsINoIncomingServer),
-                                        (void **)&noneServer);
+            nsCOMPtr<nsINoIncomingServer> noneServer = do_QueryInterface(server, &rv);
             if (NS_SUCCEEDED(rv)) {
               nsCOMPtr<nsIFileSpec> spec;
               rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
@@ -661,8 +657,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	if(rv == NS_OK && child)
 	{
 		nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-		nsCOMPtr<nsISupports> folderSupports;
-		rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
+		nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &rv));
 		if(childSupports && NS_SUCCEEDED(rv))
 		{
 
@@ -689,8 +684,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash()
         rv = GetParent(getter_AddRefs(parent));
         if (NS_SUCCEEDED(rv) && parent)
         {
-            nsCOMPtr<nsIMsgFolder> parentFolder;
-            parentFolder = do_QueryInterface(parent, &rv);
+            nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent, &rv);
             if (NS_SUCCEEDED(rv) && parentFolder)
             {
                 nsXPIDLString idlFolderName;
@@ -1310,8 +1304,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 		msgSupport = getter_AddRefs(messages->ElementAt(0));
 		if (msgSupport)
 		{
-		  nsCOMPtr<nsIMessage> aMessage;
-		  aMessage = do_QueryInterface(msgSupport, &rv);
+		  nsCOMPtr<nsIMessage> aMessage = do_QueryInterface(msgSupport, &rv);
 		  if(NS_SUCCEEDED(rv))
 			rv = CopyMessageTo(aMessage, this, isMove);
 		  else
@@ -1477,9 +1470,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 	    nsCOMPtr<nsIMsgIncomingServer> server;
 	    rv = GetServer(getter_AddRefs(server));
 
-	    nsCOMPtr<nsIPop3IncomingServer> popServer;
-	    rv = server->QueryInterface(NS_GET_IID(nsIPop3IncomingServer),
-					(void **)&popServer);
+	    nsCOMPtr<nsIPop3IncomingServer> popServer = do_QueryInterface(server, &rv);
 	    if (NS_SUCCEEDED(rv)) {
 		rv = pop3Service->GetNewMail(aWindow, nsnull,popServer,nsnull);
 	    }
@@ -1639,9 +1630,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   nsCOMPtr<nsLocalMoveCopyMsgTxn> localUndoTxn;
 
   if (mCopyState->m_undoMsgTxn)
-    rv = mCopyState->m_undoMsgTxn->QueryInterface(
-      NS_GET_IID(nsLocalMoveCopyMsgTxn),
-      getter_AddRefs(localUndoTxn));
+		localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
+
   
 	//Copy the header to the new database
 	if(copySucceeded && mCopyState->m_message)
@@ -1767,9 +1757,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
 	nsresult rv;
 
   if (mCopyState->m_undoMsgTxn)
-    rv = mCopyState->m_undoMsgTxn->QueryInterface(
-      NS_GET_IID(nsLocalMoveCopyMsgTxn),
-      getter_AddRefs(localUndoTxn));
+		localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
 
   // I think this is always true for online to offline copy
   mCopyState->m_dummyEnvelopeNeeded = PR_TRUE;
@@ -1863,8 +1851,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
 		msgSupport = getter_AddRefs(messages->ElementAt(i));
 		if (msgSupport)
 		{
-		  nsCOMPtr<nsIMessage> aMessage;
-		  aMessage = do_QueryInterface(msgSupport, &rv);
+		  nsCOMPtr<nsIMessage> aMessage = do_QueryInterface(msgSupport, &rv);
 		  if(NS_SUCCEEDED(rv) && aMessage)
 		  {
 			  nsMsgKey key;
