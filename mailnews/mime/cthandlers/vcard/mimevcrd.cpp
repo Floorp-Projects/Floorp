@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "msgCore.h"
 #include "prlog.h"
 #include "prtypes.h"
@@ -30,7 +29,11 @@
 #include "nsEscape.h"
 #include "nsVCardTransition.h"
 #include "comi18n.h"
-
+#include "nsIEventQueueService.h"
+#include "nsIStringBundle.h"
+#include "nsINetService.h"
+#include "nsIPref.h"
+#include "nsVCardStringResources.h"
 
 #include "nsVCard.h"
 #include "nsVCardObj.h"
@@ -43,87 +46,6 @@ static int MimeInlineTextVCard_parse_eof (MimeObject *, PRBool);
 static int MimeInlineTextVCard_parse_begin (MimeObject *obj);
 
 static int s_unique = 0;
-
-extern int MK_OUT_OF_MEMORY;
-
-extern "C" int MK_LDAP_COMMON_NAME;   
-extern "C" int MK_LDAP_FAX_NUMBER;    
-extern "C" int MK_LDAP_GIVEN_NAME;    
-extern "C" int MK_LDAP_LOCALITY;      
-extern "C" int MK_LDAP_PHOTOGRAPH;    
-extern "C" int MK_LDAP_EMAIL_ADDRESS; 
-extern "C" int MK_LDAP_MANAGER;       
-extern "C" int MK_LDAP_ORGANIZATION;  
-extern "C" int MK_LDAP_OBJECT_CLASS;  
-extern "C" int MK_LDAP_ORG_UNIT;      
-extern "C" int MK_LDAP_POSTAL_ADDRESS;
-extern "C" int MK_LDAP_SECRETARY;     
-extern "C" int MK_LDAP_SURNAME;       
-extern "C" int MK_LDAP_STREET;        
-extern "C" int MK_LDAP_PHONE_NUMBER;  
-extern "C" int MK_LDAP_CAR_LICENSE;
-extern "C" int MK_LDAP_BUSINESS_CAT;
-extern "C" int MK_LDAP_DEPT_NUMBER;
-extern "C" int MK_LDAP_DESCRIPTION;
-extern "C" int MK_LDAP_EMPLOYEE_TYPE;
-extern "C" int MK_LDAP_POSTAL_CODE;
-extern "C" int MK_LDAP_TITLE;
-extern "C" int MK_LDAP_REGION;
-extern "C" int MK_LDAP_DOM_TYPE;
-extern "C" int MK_LDAP_INTL_TYPE;
-extern "C" int MK_LDAP_POSTAL_TYPE;
-extern "C" int MK_LDAP_PARCEL_TYPE;
-extern "C" int MK_LDAP_WORK_TYPE;
-extern "C" int MK_LDAP_HOME_TYPE;
-extern "C" int MK_LDAP_PREF_TYPE;
-extern "C" int MK_LDAP_VOICE_TYPE;
-extern "C" int MK_LDAP_FAX_TYPE;
-extern "C" int MK_LDAP_MSG_TYPE;
-extern "C" int MK_LDAP_CELL_TYPE;
-extern "C" int MK_LDAP_PAGER_TYPE;
-extern "C" int MK_LDAP_BBS_TYPE;
-extern "C" int MK_LDAP_MODEM_TYPE;
-extern "C" int MK_LDAP_CAR_TYPE;
-extern "C" int MK_LDAP_ISDN_TYPE;
-extern "C" int MK_LDAP_VIDEO_TYPE;
-extern "C" int MK_LDAP_AOL_TYPE;
-extern "C" int MK_LDAP_APPLELINK_TYPE;
-extern "C" int MK_LDAP_ATTMAIL_TYPE;
-extern "C" int MK_LDAP_CSI_TYPE;
-extern "C" int MK_LDAP_EWORLD_TYPE;
-extern "C" int MK_LDAP_INTERNET_TYPE;
-extern "C" int MK_LDAP_IBMMAIL_TYPE;
-extern "C" int MK_LDAP_MCIMAIL_TYPE;
-extern "C" int MK_LDAP_POWERSHARE_TYPE;
-extern "C" int MK_LDAP_PRODIGY_TYPE;
-extern "C" int MK_LDAP_TLX_TYPE;
-extern "C" int MK_LDAP_MIDDLE_NAME;
-extern "C" int MK_LDAP_NAME_PREFIX;
-extern "C" int MK_LDAP_NAME_SUFFIX;
-extern "C" int MK_LDAP_TZ;
-extern "C" int MK_LDAP_GEO;
-extern "C" int MK_LDAP_SOUND;
-extern "C" int MK_LDAP_REVISION;
-extern "C" int MK_LDAP_VERSION;
-extern "C" int MK_LDAP_KEY;
-extern "C" int MK_LDAP_LOGO;
-extern "C" int MK_LDAP_X400;
-extern "C" int MK_LDAP_BIRTHDAY;
-extern "C" int MK_LDAP_ADDRESS;
-extern "C" int MK_LDAP_LABEL;
-extern "C" int MK_LDAP_MAILER;
-extern "C" int MK_LDAP_ROLE;
-extern "C" int MK_LDAP_UPDATEURL;
-extern "C" int MK_LDAP_COOLTALKADDRESS;
-extern "C" int MK_LDAP_USEHTML;
-extern "C" int MK_ADDR_VIEW_COMPLETE_VCARD;
-extern "C" int MK_ADDR_VIEW_CONDENSED_VCARD;
-extern "C" int MK_MSG_ADD_TO_ADDR_BOOK;
-extern "C" int MK_ADDR_DEFAULT_DLS;
-extern "C" int MK_ADDR_SPECIFIC_DLS;
-extern "C" int MK_ADDR_HOSTNAMEIP;
-extern "C" int MK_ADDR_CONFINFO;
-extern "C" int MK_ADDR_ADDINFO;
 
 static int BeginVCard (MimeObject *obj);
 static int EndVCard (MimeObject *obj);
@@ -311,7 +233,7 @@ static int WriteEachLineToStream (MimeObject *obj, const char *line)
 		PR_Free ((void*) htmlLine);
 	}
 	else
-		status = MK_OUT_OF_MEMORY;
+		status = VCARD_OUT_OF_MEMORY;
 
 	return status;
 }
@@ -371,7 +293,7 @@ static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *c
 			PR_Free ((void*) htmlLine);
 		}
 		else
-			status = MK_OUT_OF_MEMORY;
+			status = VCARD_OUT_OF_MEMORY;
 	}	
 	return status;
 }
@@ -440,7 +362,7 @@ static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow,
 			PR_Free ((void*) htmlLine);
 		}
 		else
-			status = MK_OUT_OF_MEMORY;
+			status = VCARD_OUT_OF_MEMORY;
 	}
 
 	return status;
@@ -488,7 +410,7 @@ static int OutputFont(MimeObject *obj, PRBool endFont, char * size, char* color)
 			PR_Free ((void*) htmlLine);
 		}
 		else
-			status = MK_OUT_OF_MEMORY;
+			status = VCARD_OUT_OF_MEMORY;
 	}
 
 	return status;
@@ -592,7 +514,7 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 				{
 					PR_FREEIF (htmlLine1);
 					PR_FREEIF (htmlLine2);
-					return MK_OUT_OF_MEMORY;
+					return VCARD_OUT_OF_MEMORY;
 				}
 				else
 				{
@@ -634,7 +556,7 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 		if (status < 0) return status;
 	}
 	else
-		status = MK_OUT_OF_MEMORY;
+		status = VCARD_OUT_OF_MEMORY;
 
 	status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, NULL, NULL, NULL, NULL);
 	if (status < 0) return status;
@@ -719,7 +641,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 			}
 			if (!htmlLine1)
 			{
-				return MK_OUT_OF_MEMORY;
+				return VCARD_OUT_OF_MEMORY;
 			}
 		}
 	}
@@ -787,7 +709,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 		}
 		if (!htmlLine2)
 		{
-			return MK_OUT_OF_MEMORY;
+			return VCARD_OUT_OF_MEMORY;
 		}
 	}
 	/* output email address */
@@ -816,7 +738,9 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 						PR_FREEIF (namestring);
 						status = OutputFont(obj, PR_FALSE, "-1", NULL);
 						if (status < 0) return status;
-						status = WriteLineToStream (obj, XP_GetString (MK_LDAP_USEHTML));
+            char *tString = VCardGetStringByID(VCARD_LDAP_USEHTML);
+						status = WriteLineToStream (obj, tString);
+            PR_FREEIF(tString);
 						if (status < 0) return status;
 						status = OutputFont(obj, PR_TRUE, NULL, NULL);
 						if (status < 0) return status;
@@ -877,22 +801,31 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 	prop = isAPropertyOf(v, VCCooltalk);
 	if (prop)
 	{
-		WriteLineToStream (obj, XP_GetString (MK_ADDR_CONFINFO));
+    char *tString = VCardGetStringByID(VCARD_ADDR_CONFINFO);
+		WriteLineToStream (obj, tString);
+    PR_FREEIF(tString);
 		if (status < 0) return status;
 		prop2 = isAPropertyOf(prop, VCUseServer);
 		if (prop2)
 		{
 			if (VALUE_TYPE(prop2)) {
 				namestring  = fakeCString (vObjectUStringZValue(prop2));
+        char *tString = NULL;
 				if (PL_strcmp (namestring, "0") == 0)
-					status = WriteLineToStream (obj, XP_GetString (MK_ADDR_DEFAULT_DLS));
-				else {
+        {
+          tString = VCardGetStringByID(VCARD_ADDR_DEFAULT_DLS);
+        }
+				else 
+        {
 					if (PL_strcmp (namestring, "1") == 0)
-						status = WriteLineToStream (obj, XP_GetString (MK_ADDR_SPECIFIC_DLS));
+						tString = VCardGetStringByID(VCARD_ADDR_SPECIFIC_DLS);
 					else
 						if (PL_strcmp (namestring, "2") == 0)
-							status = WriteLineToStream (obj, XP_GetString (MK_ADDR_HOSTNAMEIP));
+							tString = VCardGetStringByID(VCARD_ADDR_HOSTNAMEIP);
 				}
+
+        status = WriteLineToStream (obj, tString);
+        PR_FREEIF(tString);
 				PR_FREEIF (namestring);
 				if (status < 0) return status;
 			}
@@ -940,7 +873,9 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 	/* output the additional info header */
 	status = OutputFont(obj, PR_FALSE, "-1", NULL);
 	if (status < 0) return status;
-	status = WriteLineToStream (obj, XP_GetString (MK_ADDR_ADDINFO));
+  char *tString = VCardGetStringByID(VCARD_ADDR_ADDINFO);
+	status = WriteLineToStream (obj, tString);
+  PR_FREEIF(tString);
 	if (status < 0) return status;
 	status = OutputFont(obj, PR_TRUE, NULL, NULL);
 	if (status < 0) return status;
@@ -973,7 +908,6 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	char* converted = NULL;
   PRInt32 converted_length;
   PRInt32   res;
-	// RICHIE PRInt16 fromCharsetID, toCharsetID;
 
 	if (!obj->options->output_vcard_buttons_p)
 		return status;
@@ -981,14 +915,14 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	vCard = writeMemVObjects(0, &len, v);
 
 	if (!vCard)
-		return MK_OUT_OF_MEMORY;
+		return VCARD_OUT_OF_MEMORY;
 
 	vEscCard = nsEscape (vCard, url_XAlphas);
 
 	PR_FREEIF (vCard);
 
 	if (!vEscCard)
-		return MK_OUT_OF_MEMORY;
+		return VCARD_OUT_OF_MEMORY;
 
 	/* parse a content type for the charset */
 	charset = PL_strstr(obj->content_type, "charset=");
@@ -998,7 +932,8 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 
 	if (basic)
 	{
-		rsrcString = XP_GetString(MK_ADDR_VIEW_COMPLETE_VCARD);
+		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_COMPLETE_VCARD);
+
 		// convert from the resource charset. 
     res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                               &converted, &converted_length);
@@ -1010,7 +945,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	}
 	else 
 	{
-		rsrcString = XP_GetString(MK_ADDR_VIEW_CONDENSED_VCARD);
+		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_CONDENSED_VCARD);
     res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                               &converted, &converted_length);
     if ( (res != 0) || (converted == NULL) )
@@ -1021,9 +956,15 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	}
 
 	if (converted != rsrcString)
+  {
 		PR_FREEIF(converted);
+  }
+  else
+  {
+    PR_FREEIF(rsrcString);
+  }
 
-	rsrcString = XP_GetString(MK_MSG_ADD_TO_ADDR_BOOK);
+	rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
 
   res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
                             &converted, &converted_length);
@@ -1032,15 +973,22 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 
 	htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
 		vEscCard, converted);
+
 	if (converted != rsrcString)
+  {
 		PR_FREEIF(converted);
+  }
+  else
+  {
+    PR_FREEIF(rsrcString);
+  }
 
 	if (!htmlLine1 && !htmlLine2)
 	{
 		PR_FREEIF (vEscCard);
 		PR_FREEIF (htmlLine1);
 		PR_FREEIF (htmlLine2);
-		return MK_OUT_OF_MEMORY;
+		return VCARD_OUT_OF_MEMORY;
 	}
 	
 	status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
@@ -1128,7 +1076,7 @@ static int BeginLayer(MimeObject *obj, PRBool basic)
 		if (status < 0) return status;
 	}
 	else
-		status = MK_OUT_OF_MEMORY;
+		status = VCARD_OUT_OF_MEMORY;
 
 	return status;
 }
@@ -1302,30 +1250,33 @@ static void GetAddressProperties (VObject* o, char ** attribName)
 	VObject* parcel = isAPropertyOf(o, VCParcelProp);
 	VObject* home = isAPropertyOf(o, VCHomeProp);
 	VObject* work = isAPropertyOf(o, VCWorkProp);
+  char    *tString = NULL;
+
 	if (domProp) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_DOM_TYPE));
+    tString = VCardGetStringByID(VCARD_LDAP_DOM_TYPE);
 	}
 	if (intlProp) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_INTL_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_INTL_TYPE);
 	}
 	if (postal) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_POSTAL_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_POSTAL_TYPE);
 	}
 	if (parcel) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PARCEL_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_PARCEL_TYPE);
 	}
 	if (home) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_HOME_TYPE);
 	}
 	if (work) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_WORK_TYPE);
 	}
+
+  if (tString)
+  {
+    vCard_SACat (&(*attribName), " ");
+    vCard_SACat (&(*attribName), tString);
+    PR_FREEIF(tString);
+  }
 }
 
 
@@ -1340,42 +1291,42 @@ static void GetTelephoneProperties (VObject* o, char ** attribName)
 	VObject* cell = isAPropertyOf(o, VCCellularProp);
 	VObject* pager = isAPropertyOf(o, VCPagerProp);
 	VObject* bbs = isAPropertyOf(o, VCBBSProp);
+  char    *tString = NULL;
+
 	if (prefProp) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PREF_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_PREF_TYPE);
 	}
 	if (home) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_HOME_TYPE);
 	}
 	if (work) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_WORK_TYPE);
 	}
 	if (voiceProp) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_VOICE_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_VOICE_TYPE);
 	}
 	if (fax) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_FAX_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_FAX_TYPE);
 	}
 	if (msg) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_MSG_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_MSG_TYPE);
 	}
 	if (cell) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_CELL_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_CELL_TYPE);
 	}
 	if (pager) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PAGER_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_PAGER_TYPE);
 	}
 	if (bbs) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_BBS_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_BBS_TYPE);
 	}
+
+  if (tString)
+  {
+    vCard_SACat (&(*attribName), " ");
+    vCard_SACat (&(*attribName), tString);
+    PR_FREEIF(tString);
+  }
 }
 
 static void GetEmailProperties (VObject* o, char ** attribName)
@@ -1396,67 +1347,60 @@ static void GetEmailProperties (VObject* o, char ** attribName)
 	VObject* prodigy = isAPropertyOf(o, VCProdigyProp);
 	VObject* telex = isAPropertyOf(o, VCTLXProp);
 	VObject* x400 = isAPropertyOf(o, VCX400Prop);
+  char     *tString = NULL;
+
 	if (prefProp) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PREF_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_PREF_TYPE);
 	}
 	if (home) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_HOME_TYPE);
 	}
 	if (work) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_WORK_TYPE);
 	}
 	if (aol) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_AOL_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_AOL_TYPE);
 	}
 	if (applelink) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_APPLELINK_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_APPLELINK_TYPE);
 	}
 	if (att) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_ATTMAIL_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_ATTMAIL_TYPE);
 	}
 	if (cis) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_CSI_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_CSI_TYPE);
 	}
 	if (eworld) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_EWORLD_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_EWORLD_TYPE);
 	}
 	if (internet) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_INTERNET_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_INTERNET_TYPE);
 	}
 	if (ibmmail) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_IBMMAIL_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_IBMMAIL_TYPE);
 	}
 	if (mcimail) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_MCIMAIL_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_MCIMAIL_TYPE);
 	}
 	if (powershare) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_POWERSHARE_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_POWERSHARE_TYPE);
 	}
 	if (prodigy) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PRODIGY_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_PRODIGY_TYPE);
 	}
 	if (telex) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_TLX_TYPE));
+		tString = VCardGetStringByID(VCARD_LDAP_TLX_TYPE);
 	}
 	if (x400) {
-		vCard_SACat (&(*attribName), " ");
-		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_X400));
+		tString = VCardGetStringByID(VCARD_LDAP_X400);
 	}
 
+  if (tString)
+  {
+    vCard_SACat (&(*attribName), " ");
+    vCard_SACat (&(*attribName), tString);
+    PR_FREEIF(tString);
+  }
 }
 
 static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
@@ -1473,7 +1417,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 			{
 				GetTelephoneProperties(o, &attribName);
 				if (!attribName)
-					attribName = PL_strdup (XP_GetString (MK_LDAP_PHONE_NUMBER));
+					attribName = VCardGetStringByID(VCARD_LDAP_PHONE_NUMBER);
 				attribName = vCard_SACat(&attribName, ": ");
 				value = fakeCString (vObjectUStringZValue(o));
 				if (value)
@@ -1538,7 +1482,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 		if (PL_strcasecmp (VCPhotoProp, vObjectName(o)) == 0) {
 			VObject* urlProp = isAPropertyOf(o, VCURLProp);
 			if (urlProp) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_PHOTOGRAPH));
+				attribName = VCardGetStringByID(VCARD_LDAP_PHOTOGRAPH);
 				/* format the value string to the url */
 				value = fakeCString (vObjectUStringZValue(o));
 				if (value)
@@ -1551,14 +1495,14 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCBirthDateProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_BIRTHDAY));
+				attribName = VCardGetStringByID(VCARD_LDAP_BIRTHDAY);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
 		}
 
 		if (PL_strcasecmp (VCDeliveryLabelProp, vObjectName(o)) == 0) {
-			attribName = PL_strdup (XP_GetString (MK_LDAP_LABEL));
+			attribName = VCardGetStringByID(VCARD_LDAP_LABEL);
 			GetAddressProperties(o, &attribName);
 			value = fakeCString (vObjectUStringZValue(o));
 			goto DOWRITE;
@@ -1569,7 +1513,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			{
 				if (VALUE_TYPE(o)) {
 					(*numEmail)++;
-					attribName = PL_strdup (XP_GetString (MK_LDAP_EMAIL_ADDRESS));
+					attribName = VCardGetStringByID(VCARD_LDAP_EMAIL_ADDRESS);
 					GetEmailProperties(o, &attribName);
 					value = fakeCString (vObjectUStringZValue(o));
 					goto DOWRITE;
@@ -1579,7 +1523,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCFamilyNameProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_SURNAME));
+				attribName = VCardGetStringByID(VCARD_LDAP_SURNAME);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1587,7 +1531,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCGivenNameProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_GIVEN_NAME));
+				attribName = VCardGetStringByID(VCARD_LDAP_GIVEN_NAME);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1595,7 +1539,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCNamePrefixesProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_NAME_PREFIX));
+				attribName = VCardGetStringByID(VCARD_LDAP_NAME_PREFIX);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1603,7 +1547,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCNameSuffixesProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_NAME_SUFFIX));
+				attribName = VCardGetStringByID(VCARD_LDAP_NAME_SUFFIX);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1611,7 +1555,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCAdditionalNamesProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_MIDDLE_NAME));
+				attribName = VCardGetStringByID(VCARD_LDAP_MIDDLE_NAME);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1619,7 +1563,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCMailerProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_MAILER));
+				attribName = VCardGetStringByID(VCARD_LDAP_MAILER);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1627,7 +1571,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCTimeZoneProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_TZ));
+				attribName = VCardGetStringByID(VCARD_LDAP_TZ);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1635,7 +1579,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCGeoProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_GEO));
+				attribName = VCardGetStringByID(VCARD_LDAP_GEO);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1643,7 +1587,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCBusinessRoleProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_ROLE));
+				attribName = VCardGetStringByID(VCARD_LDAP_ROLE);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1652,7 +1596,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 		if (PL_strcasecmp (VCLogoProp, vObjectName(o)) == 0) {
 			VObject* urlProp = isAPropertyOf(o, VCURLProp);
 			if (urlProp) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_LOGO));
+				attribName = VCardGetStringByID(VCARD_LDAP_LOGO);
 				/* format the value string to the url */
 				value = fakeCString (vObjectUStringZValue(o));
 				if (value)
@@ -1663,13 +1607,13 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 		}
 
 		if (PL_strcasecmp (VCAgentProp, vObjectName(o)) == 0) {
-			attribName = PL_strdup (XP_GetString (MK_LDAP_SECRETARY));
+			attribName = VCardGetStringByID(VCARD_LDAP_SECRETARY);
 			goto DOWRITE;
 		}
 
 		if (PL_strcasecmp (VCLastRevisedProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_REVISION));
+				attribName = VCardGetStringByID(VCARD_LDAP_REVISION);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1677,7 +1621,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCPronunciationProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_SOUND));
+				attribName = VCardGetStringByID(VCARD_LDAP_SOUND);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1686,7 +1630,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 		if (PL_strcasecmp (VCVersionProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
-				attribName = PL_strdup (XP_GetString (MK_LDAP_VERSION));
+				attribName = VCardGetStringByID(VCARD_LDAP_VERSION);
 				value = fakeCString (vObjectUStringZValue(o));
 				goto DOWRITE;
 			}
@@ -1777,7 +1721,7 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
     PR_Free ((void*) htmlLine);
 	}
 	else
-		status = MK_OUT_OF_MEMORY;
+		status = VCARD_OUT_OF_MEMORY;
 
   if (converted != line)
     PR_FREEIF(converted);
@@ -1842,3 +1786,221 @@ MIME_StripContinuations(char *original)
 	return original;
 }
 
+/*	Very similar to strdup except it free's too
+ */
+extern "C" char * 
+vCard_SACopy (char **destination, const char *source)
+{
+  if(*destination)
+  {
+    PR_Free(*destination);
+    *destination = 0;
+  }
+  if (! source)
+  {
+    *destination = NULL;
+  }
+  else 
+  {
+    *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+    if (*destination == NULL) 
+      return(NULL);
+    
+    PL_strcpy (*destination, source);
+  }
+  return *destination;
+}
+
+/*  Again like strdup but it concatinates and free's and uses Realloc
+*/
+extern "C"  char *
+vCard_SACat (char **destination, const char *source)
+{
+  if (source && *source)
+  {
+    if (*destination)
+    {
+      int length = PL_strlen (*destination);
+      *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
+      if (*destination == NULL)
+        return(NULL);
+      
+      PL_strcpy (*destination + length, source);
+    }
+    else
+    {
+      *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+      if (*destination == NULL)
+        return(NULL);
+      
+      PL_strcpy (*destination, source);
+    }
+  }
+  return *destination;
+}
+
+
+/* This is the next generation string retrieval call */
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+#define VCARD_URL       "resource:/res/mailnews/messenger/vcard.properties"
+
+extern "C" 
+char *
+VCardGetStringByIDREAL(PRInt32 stringID)
+{
+  nsresult    res;
+  char        propertyURL[256];
+  PRInt32     bufLen = sizeof(propertyURL);
+
+/***************************************     
+    // Father forgive me...
+    NS_WITH_SERVICE(nsIEventQueueService, pEventQueueService, kEventQueueServiceCID, &res); 
+//    nsresult ret = nsServiceManager::GetService(kEventQueueServiceCID,
+//      kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
+    if (NS_FAILED(res)) {
+      printf("cannot get event queue service\n");
+      return "xx";
+    }
+    res = pEventQueueService->CreateThreadEventQueue();
+    if (NS_FAILED(res)) 
+    {
+      printf("CreateThreadEventQueue failed\n");
+      return "xx";
+    }
+****************************************/
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+  if (NS_SUCCEEDED(res) && prefs)
+    res = prefs->GetCharPref("mail.strings.vcard", propertyURL, &bufLen);
+
+  if (!NS_SUCCEEDED(res) || !prefs)
+    PR_snprintf(propertyURL, sizeof(propertyURL), "%s", VCARD_URL);
+
+  NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &res); 
+  if (!NS_SUCCEEDED(res) || (nsnull == pNetService)) 
+  {
+      return PL_strdup("???");   // Don't I18N this string...failsafe return value
+  }
+
+  NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+  if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+  {
+    nsIURL      *url = nsnull;
+    nsILocale   *locale = nsnull;
+
+    res = pNetService->CreateURL(&url, nsString(VCARD_URL), nsnull, nsnull, nsnull);
+    if (NS_FAILED(res)) 
+    {
+      return PL_strdup("???");   // Don't I18N this string...failsafe return value
+    }
+
+    nsIStringBundle* sBundle = nsnull;
+    res = sBundleService->CreateBundle(url, locale, &sBundle);
+    if (NS_FAILED(res)) 
+    {
+      return PL_strdup("???");   // Don't I18N this string...failsafe return value
+    }
+
+    nsAutoString v("");
+    res = sBundle->GetStringFromID(stringID, v);
+    if (NS_FAILED(res)) 
+    {
+      char    buf[128];
+
+      PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
+      return PL_strdup(buf);
+    }
+
+    // Here we need to return a new copy of the string
+    char      *returnBuffer = NULL;
+    PRInt32   bufferLen = v.Length() + 1;
+
+    returnBuffer = (char *)PR_MALLOC(bufferLen);
+    if (returnBuffer)
+    {
+      v.ToCString(returnBuffer, bufferLen);
+      return returnBuffer;
+    }
+  }
+
+  return PL_strdup("???");   // Don't I18N this string...failsafe return value
+}
+
+extern "C" 
+char *
+VCardGetStringByID(PRInt32 stringID)
+{
+  if (-1000 == stringID) return PL_strdup("Application is out of memory.");
+  if (1001 == stringID) return PL_strdup("State");
+  if (1002 == stringID) return PL_strdup("Domestic");
+  if (1003 == stringID) return PL_strdup("International");
+  if (1004 == stringID) return PL_strdup("Postal");
+  if (1005 == stringID) return PL_strdup("Parcel");
+  if (1006 == stringID) return PL_strdup("Work");
+  if (1007 == stringID) return PL_strdup("Home");
+  if (1008 == stringID) return PL_strdup("Preferred");
+  if (1009 == stringID) return PL_strdup("Voice");
+  if (1010 == stringID) return PL_strdup("Fax");
+  if (1011 == stringID) return PL_strdup("Message");
+  if (1012 == stringID) return PL_strdup("Cellular");
+  if (1013 == stringID) return PL_strdup("Pager");
+  if (1014 == stringID) return PL_strdup("BBS");
+  if (1015 == stringID) return PL_strdup("Modem");
+  if (1016 == stringID) return PL_strdup("Car");
+  if (1017 == stringID) return PL_strdup("ISDN");
+  if (1018 == stringID) return PL_strdup("Video");
+  if (1019 == stringID) return PL_strdup("AOL");
+  if (1020 == stringID) return PL_strdup("Applelink");
+  if (1021 == stringID) return PL_strdup("AT&T Mail");
+  if (1022 == stringID) return PL_strdup("Compuserve");
+  if (1023 == stringID) return PL_strdup("eWorld");
+  if (1024 == stringID) return PL_strdup("Internet");
+  if (1025 == stringID) return PL_strdup("IBM Mail");
+  if (1026 == stringID) return PL_strdup("MCI Mail");
+  if (1027 == stringID) return PL_strdup("Powershare");
+  if (1028 == stringID) return PL_strdup("Prodigy");
+  if (1029 == stringID) return PL_strdup("Telex");
+  if (1030 == stringID) return PL_strdup("Additional Name");
+  if (1031 == stringID) return PL_strdup("Prefix");
+  if (1032 == stringID) return PL_strdup("Suffix");
+  if (1033 == stringID) return PL_strdup("Time Zone");
+  if (1034 == stringID) return PL_strdup("Geographic Position");
+  if (1035 == stringID) return PL_strdup("Sound");
+  if (1036 == stringID) return PL_strdup("Revision");
+  if (1037 == stringID) return PL_strdup("Version");
+  if (1038 == stringID) return PL_strdup("Public Key");
+  if (1039 == stringID) return PL_strdup("Logo");
+  if (1040 == stringID) return PL_strdup("Birthday");
+  if (1041 == stringID) return PL_strdup("X400");
+  if (1042 == stringID) return PL_strdup("Address");
+  if (1043 == stringID) return PL_strdup("Label");
+  if (1044 == stringID) return PL_strdup("Mailer");
+  if (1045 == stringID) return PL_strdup("Role");
+  if (1046 == stringID) return PL_strdup("Update From");
+  if (1047 == stringID) return PL_strdup("Conference Address");
+  if (1048 == stringID) return PL_strdup("HTML Mail");
+  if (1049 == stringID) return PL_strdup("Add to Personal Address Book");
+  if (1050 == stringID) return PL_strdup("Additional Information:");
+  if (1051 == stringID) return PL_strdup("View Complete Card");
+  if (1052 == stringID) return PL_strdup("View Condensed Card");
+  if (1053 == stringID) return PL_strdup("Conference Address");
+  if (1054 == stringID) return PL_strdup("Default Directory Server");
+  if (1055 == stringID) return PL_strdup("Specific Directory Server");
+  if (1056 == stringID) return PL_strdup("Hostname or IP Address");
+  if (1057 == stringID) return PL_strdup("Phone Number");
+  if (1058 == stringID) return PL_strdup("Photograph");
+  if (1059 == stringID) return PL_strdup("Email");
+  if (1060 == stringID) return PL_strdup("Last Name");
+  if (1061 == stringID) return PL_strdup("First Name");
+  if (1062 == stringID) return PL_strdup("Administrative Assistant");
+
+  char    buf[128];
+  
+  PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
+  return PL_strdup(buf);
+}

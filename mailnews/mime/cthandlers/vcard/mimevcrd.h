@@ -39,4 +39,15 @@ struct MimeInlineTextVCard {
   MimeInlineText text;
 };
 
+/*	Very similar to strdup except it free's too
+ */
+extern "C" char * 
+vCard_SACopy (char **destination, const char *source);
+
+extern "C"  char *
+vCard_SACat (char **destination, const char *source);
+
+extern "C" char *
+VCardGetStringByID(PRInt32 stringID);
+
 #endif /* _MIMEVCRD_H_ */

@@ -95,12 +95,5 @@ extern "C" int MK_ADDR_ADDINFO;
 extern "C" char 
 *XP_GetString (int i);
 
-/*	Very similar to strdup except it free's too
- */
-extern "C" char * 
-vCard_SACopy (char **destination, const char *source);
-
-extern "C"  char *
-vCard_SACat (char **destination, const char *source);
 
 #endif /* nsMimeTransition_h_ */

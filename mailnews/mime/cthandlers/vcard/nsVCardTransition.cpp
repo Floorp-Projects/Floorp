@@ -141,62 +141,13 @@ extern "C" char
   if (i == MK_LDAP_UPDATEURL) return PL_strdup("Update From");
   if (i == MK_LDAP_COOLTALKADDRESS) return PL_strdup("Conference Address");
   if (i == MK_LDAP_USEHTML) return PL_strdup("HTML Mail");
-  if ( i == MK_MSG_ADD_TO_ADDR_BOOK) return PL_strdup("Add to Personal Address Book");
+  if (i == MK_MSG_ADD_TO_ADDR_BOOK) return PL_strdup("Add to Personal Address Book");
   if (i == MK_ADDR_ADDINFO) return PL_strdup("Additional Information:");
   if (i == MK_ADDR_VIEW_COMPLETE_VCARD) return PL_strdup("View Complete Card");
   if (i == MK_ADDR_VIEW_CONDENSED_VCARD) return PL_strdup("View Condensed Card");
-  return PL_strdup("Unknown");
+  
+  char buf[128];
+  sprintf(buf, "Unknown: %d", i);
+  return PL_strdup(buf);
 }
 
-/*	Very similar to strdup except it free's too
- */
-extern "C" char * 
-vCard_SACopy (char **destination, const char *source)
-{
-  if(*destination)
-  {
-    PR_Free(*destination);
-    *destination = 0;
-  }
-  if (! source)
-  {
-    *destination = NULL;
-  }
-  else 
-  {
-    *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-    if (*destination == NULL) 
-      return(NULL);
-    
-    PL_strcpy (*destination, source);
-  }
-  return *destination;
-}
-
-/*  Again like strdup but it concatinates and free's and uses Realloc
-*/
-extern "C"  char *
-vCard_SACat (char **destination, const char *source)
-{
-  if (source && *source)
-  {
-    if (*destination)
-    {
-      int length = PL_strlen (*destination);
-      *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
-      if (*destination == NULL)
-        return(NULL);
-      
-      PL_strcpy (*destination + length, source);
-    }
-    else
-    {
-      *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-      if (*destination == NULL)
-        return(NULL);
-      
-      PL_strcpy (*destination, source);
-    }
-  }
-  return *destination;
-}

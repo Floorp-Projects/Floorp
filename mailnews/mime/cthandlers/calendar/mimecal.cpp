@@ -29,7 +29,7 @@ static int MimeInlineTextCalendar_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextCalendar_parse_eof (MimeObject *, PRBool);
 static int MimeInlineTextCalendar_parse_begin (MimeObject *obj);
 
-extern "C" int MK_OUT_OF_MEMORY = 100;
+extern "C" int CAL_OUT_OF_MEMORY = -1000;
 
 /*
  * These functions are the public interface for this content type
@@ -108,7 +108,7 @@ MimeInlineTextCalendar_parse_begin(MimeObject *obj)
   clazz->bufferlen = 0;
   clazz->buffermax = 512;
   clazz->buffer = (char*) PR_MALLOC(clazz->buffermax);
-  if (clazz->buffer == NULL) return MK_OUT_OF_MEMORY;
+  if (clazz->buffer == NULL) return CAL_OUT_OF_MEMORY;
   return 0;
 }
 
@@ -132,7 +132,7 @@ MimeInlineTextCalendar_parse_line(char *line, PRInt32 length, MimeObject *obj)
       clazz->buffermax += 512;
     } while (clazz->bufferlen + length >= clazz->buffermax);
     clazz->buffer = (char *)PR_Realloc(clazz->buffer, clazz->buffermax);
-    if (clazz->buffer == NULL) return MK_OUT_OF_MEMORY;
+    if (clazz->buffer == NULL) return CAL_OUT_OF_MEMORY;
   }
   nsCRT::memcpy(clazz->buffer + clazz->bufferlen, line, length);
   clazz->bufferlen += length;

@@ -56,7 +56,6 @@ OBJS=						\
 		.\$(OBJDIR)\mimexpcom.obj 	\
 		.\$(OBJDIR)\nsVCard.obj		\
 		.\$(OBJDIR)\nsVCardObj.obj	\
-		.\$(OBJDIR)\nsVCardTransition.obj	\
 		.\$(OBJDIR)\comi18n.obj		\
 		.\$(OBJDIR)\nsVCardFactory.obj	\
 		.\$(OBJDIR)\nsMimeContentTypeHandler.obj	\
@@ -110,6 +109,10 @@ LINCS=$(LINCS)  -I.             \
 			   -I$(PUBLIC)\mime		\
 			   -I$(PUBLIC)\mailnews		\
 			   -I$(PUBLIC)\uconv		\
+			   -I$(PUBLIC)\intl		\
+			   -I$(PUBLIC)\locale		\
+			   -I$(PUBLIC)\netlib		\
+			   -I$(PUBLIC)\pref		\
 			   -I..\..\src 			\
 			   $(NULL)
 
