@@ -1155,7 +1155,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       result=PRBool(0!=strchr(gTagSet3,aChild)); break;
 
     case eHTMLTag_caption:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_center:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
