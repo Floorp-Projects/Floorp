@@ -2796,9 +2796,9 @@ HDC   dc1 = NULL;
     // Begin -- section of code to get the real x-height with GetGlyphOutline()
     GLYPHMETRICS gm;
     DWORD len = gGlyphAgent.GetGlyphMetrics(dc, PRUnichar('x'), 0, &gm);
-    if (GDI_ERROR != len && gm.gmBlackBoxY > 0)
+    if (GDI_ERROR != len && gm.gmptGlyphOrigin.y > 0)
     {
-      mXHeight = NSToCoordRound(gm.gmBlackBoxY * dev2app);
+      mXHeight = NSToCoordRound(gm.gmptGlyphOrigin.y * dev2app);
     }
     // End -- getting x-height
 
