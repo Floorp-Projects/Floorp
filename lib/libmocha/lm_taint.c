@@ -1517,6 +1517,7 @@ static char *targetStrings[] = {
     "UniversalFileWrite",
     "UniversalPreferencesRead",
     "UniversalPreferencesWrite",
+    "AccountSetup",
     /* See Target.java for more targets */
 };
 
