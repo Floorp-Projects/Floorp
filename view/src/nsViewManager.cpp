@@ -1634,10 +1634,12 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
             // Auto double buffering logic.
             // See if the paint region is greater than .25 the area of our view.
             // If so, enable double buffered painting.
-
-            arearect.IntersectRect(damrect, viewrect);
+             
+            // XXX These two lines cause a lot of flicker for drag-over re-drawing - rods
+            //arearect.IntersectRect(damrect, viewrect);
   
-            if ((((float)arearect.width * arearect.height) / varea) >  0.25f)
+            //if ((((float)arearect.width * arearect.height) / varea) >  0.25f)
+            // XXX rods
               updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
 //printf("refreshing: view: %x, %d, %d, %d, %d\n", view, trect.x, trect.y, trect.width, trect.height);
@@ -2228,7 +2230,7 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
 
 		nscolor col = NS_RGB(255,255,255);
 		aContext.SetColor(col);
-		aContext.FillRect(bounds);
+		//aContext.FillRect(bounds);
   }
 
   return mDrawingSurface;
