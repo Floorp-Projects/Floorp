@@ -29,6 +29,10 @@ print "Content-type: text/html\n\n<HTML>\n";
 
 EmitHtmlHeader("administer tinderbox", "tree: $tree");
 
+$form{noignore} = 1;            # Force us to load all build info, not
+                                # paying any attention to ignore_builds stuff.
+$maxdate = time();
+$mindate = $maxdate - 24*60*60;
 &load_data;
 
 if (defined($tree)) {
@@ -104,7 +108,7 @@ the tinderbox URL.<br>
 <INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
 ";
 
-    @names = sort (@$build_name_names, keys %$ignore_builds) ;
+    @names = sort (@$build_name_names) ;
 
     for $i (@names){
         if( $i ne "" ){
