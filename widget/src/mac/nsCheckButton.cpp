@@ -171,6 +171,7 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         AddRef();
         return NS_OK;
     }
+    return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
 //-------------------------------------------------------------------------
