@@ -3494,7 +3494,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *aRelativeNode,
                                        nsIRDFResource *aItemType)
 {
   nsresult rv;
-  const kParentArgumentIndex = 0;
+  const PRInt32 kParentArgumentIndex = 0;
   
   nsCOMPtr<nsIRDFResource> rParent;
 
