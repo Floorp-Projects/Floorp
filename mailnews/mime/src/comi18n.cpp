@@ -1534,7 +1534,10 @@ PRUint32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
 PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
                                void** uniBuffer, PRInt32* uniLength)
 {
-  return INTL_ConvertToUnicode(from_charset, inCstring, PL_strlen(inCstring), uniBuffer, uniLength);
+  char charset[kMAX_CSNAME];
+  // Since we don't have a converter us-ascii and the manager does not map, we do the mapping here.
+  PL_strcpy(charset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
+  return INTL_ConvertToUnicode(charset, inCstring, PL_strlen(inCstring), uniBuffer, uniLength);
 }
 
 PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
@@ -1550,9 +1553,10 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
   if (header == 0)
     return nsnull;
 
-  // No MIME encoded, duplicate the input
-  if (*header == '\0' || intlmime_is_mime_part2_header(header)) {
+  // No MIME encoded, duplicate the input and put us-ascii as a charset
+  if (*header == '\0' || !intlmime_is_mime_part2_header(header)) {
     result = PL_strdup(header);
+    PL_strcpy(charset, "us-ascii");
   }
   else {
     char *header_copy = PL_strdup(header);  // avoid to modify the original string
