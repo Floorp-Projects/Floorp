@@ -54,6 +54,10 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#include "jsfile.h"
+
+#define JS_TEST_FILE 1
+
 #if defined(JS_PARANOID_REQUEST) && defined(JS_THREADSAFE)
 #define CHECK_REQUEST(cx)	PR_ASSERT(cx->requestDepth)
 #else
@@ -640,6 +644,9 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #endif
 #if JS_HAS_SCRIPT_OBJECT
 	   js_InitScriptClass(cx, obj) &&
+#endif
+#if JS_TEST_FILE
+	   js_InitFileClass(cx, obj) &&
 #endif
 	   js_InitDateClass(cx, obj);
 }
