@@ -32,6 +32,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
+#include "nsIXULBrowserWindow.h"
 
 // Use this trick temporarily, to minimize delta to nsBrowserAppCore.cpp.
 #define nsBrowserAppCore nsBrowserInstance
@@ -188,6 +189,7 @@ nsBrowserAppCore::nsBrowserAppCore() : mIsClosed(PR_FALSE)
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
   mDocShell             = nsnull;
+  mDOMWindow            = nsnull;
   mContentAreaWebShell  = nsnull;
   mContentAreaDocLoader = nsnull;
   mSHistory             = nsnull;
@@ -1285,9 +1287,8 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP    
 nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 {
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (! aWin)
-    return NS_ERROR_NULL_POINTER;
+   NS_ENSURE_ARG(aWin);
+   mDOMWindow = aWin;
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) {
@@ -1631,8 +1632,17 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel, nsString& aMsg)
 {
-  nsresult rv = setAttribute( mDocShell, "WebBrowserChrome", "status", aMsg );
-   return rv;
+   if(!mDOMWindow)
+      return NS_OK;
+
+   nsCOMPtr<nsISupports> xpConnectObj;
+   mDOMWindow->GetXPConnectObject("XULBrowserWindow", getter_AddRefs(xpConnectObj));
+   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
+
+   if(xulBrowserWindow)
+      xulBrowserWindow->SetStatus(aMsg.GetUnicode());
+
+   return NS_OK;
 }
 
 

@@ -392,6 +392,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    ExitModalLoop();
    mWindow->Show(PR_FALSE);
 
+   mDOMWindow = nsnull;
    if(mDocShell)
       {
       nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mDocShell));
@@ -855,6 +856,19 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
       docShellElement->SetAttribute("sizemode", sizeString);
    }
 
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindow** aDOMWindow)
+{
+   NS_ENSURE_STATE(mDocShell);
+
+   if(!mDOMWindow)
+      mDOMWindow = do_GetInterface(mDocShell);
+   NS_ENSURE_TRUE(mDOMWindow, NS_ERROR_FAILURE);
+
+   *aDOMWindow = mDOMWindow;
+   NS_ADDREF(*aDOMWindow);
    return NS_OK;
 }
 
