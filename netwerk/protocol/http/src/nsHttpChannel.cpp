@@ -3661,6 +3661,7 @@ nsHttpChannel::SetPriority(PRInt32 value)
     mPriority = newValue;
     if (mTransaction)
         gHttpHandler->RescheduleTransaction(mTransaction, mPriority);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
