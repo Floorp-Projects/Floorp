@@ -44,8 +44,6 @@
 struct JSPrincipals;
 %}
 
-interface nsIPref;
-
 [ptr] native JSPrincipals(JSPrincipals);
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]

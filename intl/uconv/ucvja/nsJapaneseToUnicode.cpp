@@ -39,7 +39,8 @@
 
 #include "nsUCSupport.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "japanese.map"
 
@@ -57,10 +58,10 @@ void nsJapaneseToUnicode::setMapMode()
 
   mMapIndex = gIndex;
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (!prefs) return;
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefBranch) return;
   nsXPIDLCString prefMap;
-  res = prefs->GetCharPref("intl.jis0208.map", getter_Copies(prefMap));
+  res = prefBranch->GetCharPref("intl.jis0208.map", getter_Copies(prefMap));
   if (!NS_SUCCEEDED(res)) return;
   nsCaseInsensitiveCStringComparator comparator;
   if ( prefMap.Equals(NS_LITERAL_CSTRING("cp932"), comparator) ) {

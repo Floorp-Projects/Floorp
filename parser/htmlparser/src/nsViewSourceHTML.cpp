@@ -79,7 +79,8 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 #include "nsHTMLEntities.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsUnicharUtils.h"
 
 #include "COtherDTD.h"
@@ -344,14 +345,14 @@ CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
   mPopupTag = VIEW_SOURCE_POPUP;
   mSyntaxHighlight = PR_FALSE;
   mWrapLongLines = PR_FALSE;
-  nsCOMPtr<nsIPref> thePrefsService(do_GetService(NS_PREF_CONTRACTID));
-  if (thePrefsService) {
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
     PRBool temp;
     nsresult rv;
-    rv = thePrefsService->GetBoolPref("view_source.syntax_highlight", &temp);
+    rv = prefBranch->GetBoolPref("view_source.syntax_highlight", &temp);
     mSyntaxHighlight = NS_SUCCEEDED(rv) ? temp : PR_TRUE;
 
-    rv = thePrefsService->GetBoolPref("view_source.wrap_long_lines", &temp);
+    rv = prefBranch->GetBoolPref("view_source.wrap_long_lines", &temp);
     mWrapLongLines = NS_SUCCEEDED(rv) ? temp : PR_FALSE;
   }
 

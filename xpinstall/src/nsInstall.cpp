@@ -42,7 +42,8 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -2403,43 +2404,22 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
 }
 
 
-static NS_DEFINE_IID(kPrefsIID, NS_IPREF_IID);
-static NS_DEFINE_IID(kPrefsCID,  NS_PREF_CID);
-
 void
 nsInstall::CurrentUserNode(nsString& userRegNode)
 {
-    char *profname;
-    nsIPref * prefs;
+    nsXPIDLCString profname;
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-    nsresult rv = nsServiceManager::GetService(kPrefsCID,
-                                               kPrefsIID,
-                                               (nsISupports**) &prefs);
-
-
-    if ( NS_SUCCEEDED(rv) )
+    if ( prefBranch )
     {
-        rv = prefs->CopyCharPref("profile.name", &profname);
-
-        if ( NS_FAILED(rv) )
-        {
-            PR_FREEIF(profname); // Allocated by PREF_CopyCharPref
-            profname = NULL;
-        }
-
-        NS_RELEASE(prefs);
-    }
-    else
-    {
-        profname = NULL;
+        prefBranch->GetCharPref("profile.name", getter_Copies(profname));
     }
 
     userRegNode.Assign(NS_LITERAL_STRING("/Netscape/Users/"));
-    if (profname != nsnull)
+    if ( !profname.IsEmpty() )
     {
         userRegNode.AppendWithConversion(profname);
         userRegNode.Append(NS_LITERAL_STRING("/"));
-        PR_FREEIF(profname);
     }
 }
 

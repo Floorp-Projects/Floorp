@@ -62,7 +62,6 @@
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsIFile.h"
-#include "nsIPref.h"
 
 NS_IMPL_ISUPPORTS1(nsDebugObject, nsIDebugObject)
 

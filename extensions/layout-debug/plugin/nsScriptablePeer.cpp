@@ -42,9 +42,12 @@
 /////////////////////////////////////////////////////
 //
 // This file implements the nsScriptablePeer object
-// The naive methods of this class are supposed to
+// The native methods of this class are supposed to
 // be callable from JavaScript
 //
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+
 #include "plugin.h" 
 
 
@@ -306,11 +309,11 @@ char*                 URLName;
 NS_IMETHODIMP nsScriptablePeer::SetBoolPref(const PRUnichar *aPrefName, PRBool aVal)
 {
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
     nsCString prefName;
     prefName.AssignWithConversion(aPrefName);
-    prefs->SetBoolPref(prefName.get(), aVal);
+    prefBranch->SetBoolPref(prefName.get(), aVal);
     return NS_OK;
   } else {
     return NS_ERROR_FAILURE;

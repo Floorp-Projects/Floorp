@@ -47,7 +47,9 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPosixLocale.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 //#define DEBUG_UNIX_COLLATION
@@ -90,15 +92,18 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
   nsresult res;
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs) {
-    PRUnichar *prefValue;
-    res = prefs->GetLocalizedUnicharPref("intl.collationOption", &prefValue);
-    if (NS_SUCCEEDED(res)) {
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
+    res = prefBranch->GetComplexValue("intl.collationOption",
+                                      NS_GET_IID(nsIPrefLocalizedString),
+                                      getter_AddRefs(prefLocalString));
+    if (NS_SUCCEEDED(res) && prefLocalString) {
+      nsXPIDLString prefValue;
+      prefLocalString->GetData(getter_Copies(prefValue));
       mUseCodePointOrder =
-        nsDependentString(prefValue).Equals(NS_LITERAL_STRING("useCodePointOrder"),
-                                            nsCaseInsensitiveStringComparator());
-      nsMemory::Free(prefValue);
+        prefValue.Equals(NS_LITERAL_STRING("useCodePointOrder"),
+                         nsCaseInsensitiveStringComparator());
     }
   }
 

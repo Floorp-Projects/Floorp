@@ -40,7 +40,8 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsIRegistry.h"
 #include "nsString.h"
@@ -222,11 +223,11 @@ NS_IMETHODIMP nsAccessProxy::OnStateChange(nsIWebProgress *aWebProgress,
   if ((aStateFlags & (STATE_STOP|STATE_START)) && (aStateFlags & STATE_IS_DOCUMENT)) {
     // Test for built in text to speech or braille display usage preference
     // If so, attach event handlers to window. If not, don't.
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
     nsXPIDLCString textToSpeechEngine, brailleDisplayEngine;
-    if (prefs) {
-      prefs->CopyCharPref("accessibility.usetexttospeech", getter_Copies(textToSpeechEngine));
-      prefs->CopyCharPref("accessibility.usebrailledisplay", getter_Copies(brailleDisplayEngine));
+    if (prefBranch) {
+      prefBranch->GetCharPref("accessibility.usetexttospeech", getter_Copies(textToSpeechEngine));
+      prefBranch->GetCharPref("accessibility.usebrailledisplay", getter_Copies(brailleDisplayEngine));
     }
 
     if ((textToSpeechEngine && *textToSpeechEngine) || (brailleDisplayEngine && *brailleDisplayEngine)) {  

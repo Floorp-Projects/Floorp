@@ -49,7 +49,6 @@
 #include "nsScrollPortView.h"
 
 #include "nsIModule.h"
-#include "nsIPref.h"
 
 #include "nsViewManager.h"
 
