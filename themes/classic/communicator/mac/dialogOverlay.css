@@ -69,12 +69,12 @@
   
 .box-header-circle 
   {
-	  background-image      : url("chrome://communicator/skin/button28-bg.gif");
-  	background-repeat     : no-repeat;
-	  background-position   : 50% 4px;
-  	background-color      : transparent;
-	  min-width             : 28px;
-  	margin                : 1px 7px 1px 1px;
+    background-image      : url("chrome://global/skin/button28-bg.gif");
+    background-repeat     : no-repeat;
+    background-position   : 50% 4px;
+    background-color      : transparent;
+    min-width             : 28px;
+    margin                : 1px 7px 1px 1px;
     height                : 28px;
     width                 : 28px;
   }  
