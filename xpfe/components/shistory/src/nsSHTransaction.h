@@ -23,6 +23,10 @@
 #ifndef nsSHTransaction_h
 #define nsSHTransaction_h
 
+// Helper Classes
+#include "nsCOMPtr.h"
+
+// Needed interfaces
 #include "nsISHTransaction.h"
 #include "nsISHEntry.h"
 
@@ -38,22 +42,13 @@ protected:
 	virtual ~nsSHTransaction();
 
 
-private:
-    friend NS_IMETHODIMP
-		NS_NewSHTransaction(nsISupports * aOuter, REFNSIID aIID, void** aResult);
-	nsresult SetChild(nsISHTransaction * aChild);
-	nsresult SetParent(nsISHTransaction * aParent);
-	//nsresult SetSHEntry(nsISHEntry * aSHEntry);
-	//nsresult SetLRVList(nsISHTransaction * aLRVList);
-    
+protected:
    PRBool         mPersist;
 
-	/* Weak reference to parent */
-	nsISHTransaction * mParent;
-	nsISHTransaction * mChild;
-	nsISHTransaction * mLRVList;
-	nsISHEntry *  mSHEntry;
-
+	nsISHTransaction * mPrev; // Weak Reference
+	nsCOMPtr<nsISHTransaction> mNext;
+	nsCOMPtr<nsISHTransaction> mLRVList;
+	nsCOMPtr<nsISHEntry>  mSHEntry;
 };
 
 

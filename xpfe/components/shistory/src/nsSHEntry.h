@@ -23,40 +23,33 @@
 #ifndef nsSHEntry_h
 #define nsSHEntry_h
 
+// Helper Classes
 #include "nsCOMPtr.h"
-#include "nsISHEntry.h"
-#include "nsISHContainer.h"
-#include "nsVoidArray.h"
 #include "nsString.h"
-#include "nsILayoutHistoryState.h"
 
-class nsSHEnumerator;
-class nsSHEntry : public nsISHEntry,
-                  public nsISHContainer
+// Interfaces needed
+#include "nsIDOMDocument.h"
+#include "nsIInputStream.h"
+#include "nsILayoutHistoryState.h"
+#include "nsISHEntry.h"
+#include "nsIURI.h"
+
+class nsSHEntry : public nsISHEntry
 {
 public: 
-	nsSHEntry();
-     NS_DECL_ISUPPORTS
-     NS_DECL_NSISHENTRY
-     NS_DECL_NSISHCONTAINER
+   nsSHEntry();
+
+   NS_DECL_ISUPPORTS
+   NS_DECL_NSISHENTRY
 
 protected:
-     void DestroyChildren();
+   virtual ~nsSHEntry();
 	 
-private:     
-	virtual ~nsSHEntry();
-	friend NS_IMETHODIMP 
-		 NS_NewSHEntry(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-	 friend class nsSHEnumerator;
-	 
-    nsCOMPtr<nsIURI>                mURI;
-	 nsCOMPtr<nsIDOMDocument>        mDocument;
-	 nsString                        mTitle;
-	 nsCOMPtr<nsIInputStream>        mPostData;
-	 nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-	 nsVoidArray                     mChildren;
-	 nsISHEntry *                    mParent;   // weak reference to parent
-	 
+   nsCOMPtr<nsIURI>                mURI;
+	nsCOMPtr<nsIDOMDocument>        mDocument;
+	nsString                        mTitle;
+	nsCOMPtr<nsIInputStream>        mPostData;
+	nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
 };
 
 #endif /* nsSHEntry_h */
