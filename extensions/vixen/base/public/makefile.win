@@ -22,7 +22,6 @@
 DEPTH=..\..\..\..
 
 XPIDLSRCS = .\nsIVixenShell.idl  \
-	    .\nsITransactionService.idl \
 	    $(NULL)
 
 MODULE=vixen
