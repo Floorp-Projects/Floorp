@@ -1010,7 +1010,7 @@ PRInt32       y = aY;
   }
 
 	mTMatrix->TransformCoord(&x, &y);
-  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, aSpacing ? dx0 : NULL, FALSE);
+  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : NULL), FALSE);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {
     delete [] dx0;
