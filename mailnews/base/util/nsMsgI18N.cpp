@@ -66,7 +66,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
-static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 //
 // International functions necessary for composition
@@ -633,73 +632,66 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
     return NS_ERROR_ILLEGAL_VALUE;  // not supported type
   }
 
-  // Resolve charset alias
-  nsAutoString aCharset; aCharset.AssignWithConversion(charset);
-  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res)); 
-  if (NS_SUCCEEDED(res)) {
-    nsAutoString aAlias(aCharset);
-    if (aAlias.Length()) {
-      res = calias->GetPreferred(aAlias, aCharset);
-    }
-  }
-  if (NS_FAILED(res)) {
-    return res;
-  }
+  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+  NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr <nsISaveAsCharset> aConv;  // charset converter plus entity, NCR generation
-  res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, 
-                                           NS_GET_IID(nsISaveAsCharset), getter_AddRefs(aConv));
-  if(NS_SUCCEEDED(res)) {
-    // attribute: 
-    // html text - charset conv then fallback to entity or NCR
-    // plain text - charset conv then fallback to '?'
-    char charset_buf[kMAX_CSNAME+1];
-    if (bTEXT_HTML) {
-      // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
-      res = aConv->Init(aCharset.ToCString(charset_buf, kMAX_CSNAME+1), 
-                        aCharset.EqualsIgnoreCase("ISO-8859-1") ?
-                          nsISaveAsCharset::attr_htmlTextDefault :
-                          nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR, 
-                        nsIEntityConverter::html32);
-    }
-    else {
-      // fallback for text/plain: first try transliterate then '?'
-      res = aConv->Init(aCharset.ToCString(charset_buf, kMAX_CSNAME+1), 
-                        nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityAfterCharsetConv, 
-                        nsIEntityConverter::transliterate);
-    }
-    if (NS_SUCCEEDED(res)) {
-      // Mapping characters in a certain range (required for Japanese only)
-      if (!nsCRT::strcasecmp("ISO-2022-JP", charset)) {
-        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
-        if (nsnull != prefs && NS_SUCCEEDED(res)) {
-          PRBool return_val;
+  nsCOMPtr <nsIAtom> charsetAtom;
+  res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
+  NS_ENSURE_SUCCESS(res, res);
 
-          if (NS_FAILED(prefs->GetBoolPref("mailnews.send_hankaku_kana", &return_val)))
-            return_val = PR_FALSE;  // no pref means need the mapping
+  const PRUnichar *charsetName;
+  res = charsetAtom->GetUnicode(&charsetName);
+  NS_ENSURE_SUCCESS(res, res);
 
-          if (!return_val) {
-            nsCOMPtr <nsITextTransform> textTransform;
-            res = nsComponentManager::CreateInstance(NS_HANKAKUTOZENKAKU_CONTRACTID, nsnull, 
-                                                     NS_GET_IID(nsITextTransform), getter_AddRefs(textTransform));
-            if (NS_SUCCEEDED(res)) {
-              nsAutoString aText(inString);
-              nsAutoString aResult;
-              res = textTransform->Change(aText, aResult);
-              if (NS_SUCCEEDED(res)) {
-                return aConv->Convert(aResult.get(), outString);
-              }
-            }
-          }
+  // charset converter plus entity, NCR generation
+  nsCOMPtr <nsISaveAsCharset> conv = do_CreateInstance(NS_SAVEASCHARSET_CONTRACTID, &res);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // attribute: 
+  // html text - charset conv then fallback to entity or NCR
+  // plain text - charset conv then fallback to '?'
+  if (bTEXT_HTML)
+    // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
+    res = conv->Init(NS_ConvertUCS2toUTF8(charsetName).get(), 
+                     !nsCRT::strcmp(charsetName, NS_LITERAL_STRING("ISO-8859-1").get()) ?
+                     nsISaveAsCharset::attr_htmlTextDefault :
+                     nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR, 
+                     nsIEntityConverter::html32);
+  else
+    // fallback for text/plain: first try transliterate then '?'
+    res = conv->Init(NS_ConvertUCS2toUTF8(charsetName).get(), 
+                     nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityNone, 
+                     nsIEntityConverter::transliterate);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // Mapping characters in a certain range (required for Japanese only)
+  if (!nsCRT::strcmp(charsetName, NS_LITERAL_STRING("ISO-2022-JP").get())) {
+    static PRInt32 sSendHankakuKana = -1;
+    if (sSendHankakuKana < 0) {
+      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res));
+      NS_ENSURE_SUCCESS(res, res);
+      PRBool sendHankaku;
+      // Get a hidden 4.x pref with no UI, get it only once.
+      if (NS_FAILED(prefs->GetBoolPref("mailnews.send_hankaku_kana", &sendHankaku)))
+        sSendHankakuKana = 0;  // no pref means need the mapping
+      else
+        sSendHankakuKana = sendHankaku ? 1 : 0;
+    }
+
+    if (!sSendHankakuKana) {
+      nsCOMPtr <nsITextTransform> textTransform = do_CreateInstance(NS_HANKAKUTOZENKAKU_CONTRACTID, &res);
+      if (NS_SUCCEEDED(res)) {
+        nsAutoString mapped;
+        res = textTransform->Change(inString, nsCRT::strlen(inString), mapped);
+        if (NS_SUCCEEDED(res)) {
+          return conv->Convert(mapped.get(), outString);
         }
       }
-
-      // Convert to charset
-      res = aConv->Convert(inString, outString);
     }
   }
- 
-  return res;
+
+  // Convert to charset
+  return conv->Convert(inString, outString);
 }
 
 nsresult nsMsgI18NFormatNNTPXPATInNonRFC1522Format(const nsCString& aCharset, 
