@@ -19,6 +19,7 @@ nsCharTraits.h
 nsAReadableString.h
 nsAWritableString.h
 nsSharedString.h
+nsStatistics.h
 nsStr.h
 nsString.h
 nsString2.h
@@ -28,6 +29,7 @@ nsTime.h
 nsUnitConversion.h
 nsVector.h
 nsVoidArray.h
+nsVoidBTree.h
 nsXPIDLString.h
 plvector.h
 nsTextFormater.h
