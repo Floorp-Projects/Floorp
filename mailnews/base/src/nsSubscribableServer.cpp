@@ -793,3 +793,4 @@ nsSubscribableServer::CommitSubscribeChanges()
 	NS_ASSERTION(PR_FALSE,"override this.");
 	return NS_ERROR_FAILURE;
 }
+
