@@ -54,7 +54,7 @@ typedef enum
 
 #else
 
-#define AE_ASSERT(x)		((void) 0)
+#define AE_ASSERT(x,msg)	((void) 0)
 
 #endif
 
