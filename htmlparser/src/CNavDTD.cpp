@@ -795,7 +795,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           (gHTMLElements[theParentTag].CanContain(theTag)) && (theTag!=eHTMLTag_comment)) { // Added comment -> bug 40855
             
           mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; // reset the state since all the misplaced tokens are about to get handled.
-         
+
           result = HandleSavedTokens(mBodyContext->mContextTopIndex);
           NS_ENSURE_SUCCESS(result, result);
 
@@ -1290,16 +1290,23 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsC
         if(!(theParentContains && theChildAgrees)) {
           if (!CanPropagate(theParentTag,aChildTag,theParentContains)) { 
             if(theChildIsContainer || (!theParentContains)){ 
-              if((!theChildAgrees) && (!gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,aChildTag)) ||
-                 (mBodyContext->mContextTopIndex > 0 && theIndex <= mBodyContext->mContextTopIndex)) {
+              if(!theChildAgrees && !gHTMLElements[aChildTag].CanAutoCloseTag(*mBodyContext,aChildTag)) {
                 // Closing the tags above might cause non-compatible results.
                 // Ex. <TABLE><TR><TD><TBODY>Text</TD></TR></TABLE>. 
                 // In the example above <TBODY> is badly misplaced, but 
                 // we should not attempt to close the tags above it, 
-                // The safest thing to do is to discard this tag.     
+                // The safest thing to do is to discard this tag.
                 return result;
               }
-              CloseContainersTo(theIndex,aChildTag,PR_TRUE);
+              else if (mBodyContext->mContextTopIndex > 0 && theIndex <= mBodyContext->mContextTopIndex) {
+                // Looks like the parent tag does not want to contain the current tag ( aChildTag ). 
+                // However, we have to force the containment, when handling misplaced content, to avoid data loss.
+                // Ref. bug 138577.
+                theParentContains = PR_TRUE;
+              }
+              else {
+                CloseContainersTo(theIndex,aChildTag,PR_TRUE);
+              }
             }//if
             else break;
           }//if
@@ -1503,7 +1510,6 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
       while(theTagCount > 0) {
         theTag = mBodyContext->TagAt(--theTagCount);
         if(!gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) {
-          if(!gHTMLElements[theTag].CanContain(aChildTag)) break;
           mBodyContext->mContextTopIndex = theTagCount; // This is our insertion point
           break;
         }
