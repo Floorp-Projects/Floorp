@@ -1176,8 +1176,11 @@ nsPlainTextSerializer::EndLine(PRBool softlinebreak)
           ' ' == mCurrentLine[--linelength]) {
       mCurrentLine.SetLength(linelength);
     }
-    if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+    if((mFlags & nsIDocumentEncoder::OutputFormatFlowed) &&
+       (mIndent == 0)) {
       // Add the soft part of the soft linebreak (RFC 2646 4.1)
+      // We only do this when there is no indentation since format=flowed
+      // lines and indentation doesn't work well together.
       mCurrentLine.AppendWithConversion(' ');
     }
     mCurrentLine.Append(mLineBreak);
