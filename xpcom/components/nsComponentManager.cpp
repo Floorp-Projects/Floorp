@@ -2365,7 +2365,13 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
 
     if (entry) {
         if (entry->mServiceObject) {
-            return entry->mServiceObject->QueryInterface(aIID, result);
+            nsCOMPtr<nsISupports> serviceObject = entry->mServiceObject;
+            // We need to not be holding the service manager's monitor while calling
+            // QueryInterface, because it invokes user code which could try to re-enter
+            // the service manager, or try to grab some other lock/monitor/condvar
+            // and deadlock, e.g. bug 282743.
+            mon.Exit();
+            return serviceObject->QueryInterface(aIID, result);
         }
 #ifdef XPCOM_CHECK_PENDING_CIDS
         rv = AddPendingCID(entry->mCid);
