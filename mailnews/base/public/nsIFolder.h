@@ -14,7 +14,6 @@
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-class nsIFolderListener; /* forward decl */
 
 /* starting interface:    nsIFolder */
 
@@ -44,6 +43,9 @@ class nsIFolder : public nsICollection {
 
   /* nsIEnumerator GetSubFolders (); */
   NS_IMETHOD GetSubFolders(nsIEnumerator **_retval) = 0;
+
+  /* readonly attribute boolean hasSubFolders; */
+  NS_IMETHOD GetHasSubFolders(PRBool *aHasSubFolders) = 0;
 
   /* void AddFolderListener (in nsIFolderListener listener); */
   NS_IMETHOD AddFolderListener(nsIFolderListener *listener) = 0;

@@ -14,8 +14,6 @@
 class nsIURL; /* forward decl */
 class nsIUrlListener; /* forward decl */
 class nsIStreamListener; /* forward decl */
-    
-
 
 /* starting interface:    nsIMsgMessageService */
 

@@ -6,10 +6,7 @@
 #define __gen_nsIFolderListener_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsICollection.h" /* interface nsICollection */
 #include "nsrootidl.h" /* interface nsrootidl */
-#include "nsIEnumerator.h" /* interface nsIEnumerator */
-#include "nsIFolder.h" /* interface nsIFolder */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"

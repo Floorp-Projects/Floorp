@@ -17,7 +17,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFolder.idl"
 
 interface nsIFolder;
 

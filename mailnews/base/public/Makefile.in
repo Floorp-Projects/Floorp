@@ -24,6 +24,7 @@ MODULE		= mailnews
 include $(DEPTH)/config/autoconf.mk
 NO_GEN_XPT=1
 XPIDLSRCS =				  \
+		nsIFolder.idl		\
 		nsIMsgHost.idl		  \
 		nsIMsgFolder.idl	  \
 		nsIDOMMsgAppCore.idl	\
@@ -33,6 +34,7 @@ XPIDLSRCS =				  \
 		nsIMsgThread.idl	\
 		nsIMsgMessageService.idl \
 		nsIUrlListener.idl	\
+		nsIFolderListener.idl	\
 		$(NULL)
 
 EXPORTS =				\
