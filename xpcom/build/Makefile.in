@@ -31,6 +31,7 @@ LIBRARY_NAME	= xpcom
 EXPORT_LIBRARY = 1
 REQUIRES	= libreg \
 		  string \
+		  unicharutil \
 		  $(NULL)
 
 EXPORTS		= \

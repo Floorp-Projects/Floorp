@@ -97,8 +97,3 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTMLPARS -DXML_DTD
 
-# xpcom/io pulls in osx toolkit headers
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
-CXXFLAGS	+= $(TK_CFLAGS)
-endif
-

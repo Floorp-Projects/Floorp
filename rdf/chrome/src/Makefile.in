@@ -60,8 +60,3 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-# xpcom/io pulls in osx toolkit headers
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
-CXXFLAGS	+= $(TK_CFLAGS)
-endif
-
