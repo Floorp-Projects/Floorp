@@ -1534,6 +1534,19 @@ nsFontXft::GetXftFont(void)
         if (!pat)
             return nsnull;
 
+        // bug 196312 : work around problem with CJK bi-width fonts
+        // and fontconfig prior to 2.2. CJK bi-width fonts are regarded
+        // as genuinely monospace by fontconfig that  sets FC_SPACING
+        // to FC_MONOSPACE, which makes Xft drawing/measuring routines
+        // use the global advance width (the width of double width glyphs 
+        // and twice the width of single width glyphs) even for single width
+        // characters (e.g. Latin letters and digits). This results in
+        // spaced-out ('s p a c e d - o u t') rendering. By deleting
+        // FC_SPACING here, we're emulating the behavior of fontconfig 2.2 or 
+        // later that does not set FC_SPACING for any font.
+        if (FcGetVersion() < 20200)
+            FcPatternDel(pat, FC_SPACING);
+
         mXftFont = XftFontOpenPattern(GDK_DISPLAY(), pat);
         if (!mXftFont)
             FcPatternDestroy(pat);
