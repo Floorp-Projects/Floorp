@@ -243,9 +243,6 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
         GetRegistryDllInfo(libKey, &lastModTime, &fileSize);
         rv = CreateDll(NULL, library, lastModTime, fileSize, &dll);
         if (NS_FAILED(rv)) continue;
-#ifdef DEBUG_dp
-        printf("Populating dll: %s, %d, %d\n", library, lastModTime, fileSize);
-#endif
     }
 
     return NS_OK;
