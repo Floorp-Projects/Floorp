@@ -86,8 +86,8 @@ Rights Reserved.
 		</box>
 		<box align="vertical" flex="20%">
 			<spring flex="100%"/>
-			<titledbutton id="subscribe" class="push" value="&subscribeButton.label;" onclick="SubscribeButtonClicked()"/>
-			<titledbutton id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="UnsubscribeButtonClicked()"/>
+			<titledbutton id="subscribe" class="push" value="&subscribeButton.label;" onclick="SetSubscribeState('true')"/>
+			<titledbutton id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="SetSubscribeState('false')"/>
 			<spring flex="100%"/>
 		</box>
 	</box>

@@ -1,6 +1,9 @@
 var gSubscribetree = null;
 var gCurrentServer = null;
 var okCallback = null;
+var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+var datasource = rdf.GetDataSource('rdf:newshostinfo');
+
 
 function SubscribeOnLoad()
 {
@@ -34,10 +37,6 @@ function SubscribeOnLoad()
 
 		var folders = folder.GetSubFolders();
 		
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
-
-		var datasource = rdf.GetDataSource('rdf:newshostinfo');
-
 		if (folders) {
 			try {
 				while (true) {
@@ -47,25 +46,7 @@ function SubscribeOnLoad()
 					dump(f.name + "\n");
 
 					dump('urn:' + f.name + "\n");
-					var group = rdf.GetResource('urn:' + f.name);
-					dump(group + "\n");
-
-                    var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#subscribed", true);
-					var target = datasource.GetTarget(group, prop, true);
-					dump(target + "\n");
-					if (target) {
-						var targetValue = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-						//dump(targetValue + "\n");
-                    	if (targetValue) {
-							targetValue = targetValue.Value;
-							dump(targetValue + "\n");
-							if (targetValue) {
-								var newLiteral = rdf.GetLiteral("true");
-								var newTarget = newLiteral.QueryInterface(Components.interfaces.nsIRDFNode);
-								datasource.Change(group,prop,target,newTarget);
-							}
-						}
-					}
+					SetState('urn:' + f.name, 'true');
 					folders.next();
 				}
 			}
@@ -94,14 +75,40 @@ function subscribeCancel()
 	return true;
 }
 
-function SubscribeButtonClicked()
+function SetState(uri, state)
 {
-	dump("subscribe button clicked\n");
+	var group = rdf.GetResource(uri);
+	dump(group + "\n");
+
+    var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#subscribed", true);
+	var target = datasource.GetTarget(group, prop, true);
+	dump(target + "\n");
+	if (target) {
+		var targetValue = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+		//dump(targetValue + "\n");
+        if (targetValue) {
+			targetValue = targetValue.Value;
+			dump(targetValue + "\n");
+			if (targetValue) {
+				var newLiteral = rdf.GetLiteral(state);
+				var newTarget = newLiteral.QueryInterface(Components.interfaces.nsIRDFNode);
+				datasource.Change(group,prop,target,newTarget);
+			}
+		}
+	}
 }
 
-function UnsubscribeButtonClicked()
+function SetSubscribeState(state)
 {
-	dump("unsubscribe button clicked\n");
+	dump("subscribe button clicked\n");
+
+	var groupList = gSubscribetree.selectedItems;
+	for (i=0;i<groupList.length;i++) {
+		group = groupList[i];
+		uri = group.getAttribute('id');
+		dump(uri + "\n");
+		SetState(uri, state);
+	}
 }
 
 function SubscribeOnClick(event)
