@@ -208,7 +208,7 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
     nsIXULWindowCallbacks *cb = nsnull;
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(currentFrontWin, &parent);
-    rv = appShell->RunModalDialog(nsnull, parent, nsnull,
+    rv = appShell->RunModalDialog(nsnull, parent, urlObj,
                                NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                                cb, 504, 436);
     return rv;
