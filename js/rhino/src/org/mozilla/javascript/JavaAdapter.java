@@ -66,7 +66,7 @@ public class JavaAdapter extends ScriptableObject {
             // Avoid an error for an undefined value; return null instead.
             return null;
         }
-        return NativeJavaObject.coerceType(c, result);
+        return NativeJavaObject.coerceType(c, result, true);
     }
 
     public static Scriptable setAdapterProto(Scriptable obj, Object adapter) {

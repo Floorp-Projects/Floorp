@@ -175,7 +175,7 @@ public class Context {
                 Thread old = cx.currentThread;
                 if (old != null && old != t) {
                     throw new RuntimeException
-                        ("Can not enter on Context active on another thread");
+                        ("Cannot enter Context active on another thread");
                 }
                 if (Context.check && old == t && cx != current)
                     Context.codeBug();
@@ -1225,6 +1225,23 @@ public class Context {
         if (value == null && staticType != null)
             return null;
         return ScriptRuntime.toObject(scope, value, staticType);
+    }
+
+    /**
+     * Convert a JavaScript value into the desired type.
+     * Uses the semantics defined with LiveConnect3 and throws an 
+     * Illegal argument exception if the conversion cannot be performed.
+     * @param value the JavaScript value to convert
+     * @param desired type the Java type to convert to. Primitive Java
+     *        types are represented using the TYPE fields in the corresponding
+     *        wrapper class in java.lang.
+     * @return the converted value
+     * @throws IllegalArgumentException if the conversion cannot be performed
+     */
+    public static Object toType(Object value, Class desiredType) 
+        throws IllegalArgumentException
+    {
+        return NativeJavaObject.coerceType(desiredType, value, false);
     }
 
     /**

@@ -215,8 +215,9 @@ class JavaMembers {
                 if (method == null)
                     throw reportMemberNotFound(name);
                 Class[] types = method.getParameterTypes();
-                Object[] params = { NativeJavaObject.coerceType(types[0], value) };
-                method.invoke(javaObject, params);
+                Object[] args = { NativeJavaObject.coerceType(types[0], value, 
+                                                              true) };
+                method.invoke(javaObject, args);
             } catch (IllegalAccessException accessEx) {
                 throw new RuntimeException("unexpected IllegalAccessException " +
                                            "accessing Java field");
@@ -234,7 +235,8 @@ class JavaMembers {
                         "msg.java.internal.private", name);
                 }
                 field.set(javaObject,
-                          NativeJavaObject.coerceType(field.getType(), value));
+                          NativeJavaObject.coerceType(field.getType(), value,
+                                                      true));
             } catch (ClassCastException e) {
                 throw Context.reportRuntimeError1(
                     "msg.java.method.assign", name);

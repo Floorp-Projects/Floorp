@@ -506,7 +506,9 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
      * Type-munging for field setting and method invocation.
      * Conforms to LC3 specification
      */
-    public static Object coerceType(Class type, Object value) {
+    public static Object coerceType(Class type, Object value, 
+                                    boolean useErrorHandler) 
+    {
         if (value != null && value.getClass() == type) {
             return value;
         }
@@ -516,7 +518,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         case JSTYPE_NULL:
             // raise error if type.isPrimitive()
             if (type.isPrimitive()) {
-                reportConversionError(value, type);
+                reportConversionError(value, type, !useErrorHandler);
             }
             return null;
 
@@ -526,7 +528,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return "undefined";
             }
             else {
-                reportConversionError("undefined", type);
+                reportConversionError("undefined", type, !useErrorHandler);
             }
             break;
 
@@ -541,7 +543,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return value.toString();
             }
             else {
-                reportConversionError(value, type);
+                reportConversionError(value, type, !useErrorHandler);
             }
             break;
 
@@ -550,14 +552,14 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return ScriptRuntime.toString(value);
             }
             else if (type == ScriptRuntime.ObjectClass) {
-                return coerceToNumber(Double.TYPE, value);
+                return coerceToNumber(Double.TYPE, value, useErrorHandler);
             }
             else if ((type.isPrimitive() && type != Boolean.TYPE) ||
                      ScriptRuntime.NumberClass.isAssignableFrom(type)) {
-                return coerceToNumber(type, value);
+                return coerceToNumber(type, value, useErrorHandler);
             }
             else {
-                reportConversionError(value, type);
+                reportConversionError(value, type, !useErrorHandler);
             }
             break;
 
@@ -576,15 +578,15 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                     return new Character(((String)value).charAt(0));
                 }
                 else {
-                    return coerceToNumber(type, value);
+                    return coerceToNumber(type, value, useErrorHandler);
                 }
             }
             else if ((type.isPrimitive() && type != Boolean.TYPE) ||
                      ScriptRuntime.NumberClass.isAssignableFrom(type)) {
-                return coerceToNumber(type, value);
+                return coerceToNumber(type, value, useErrorHandler);
             }
             else {
-                reportConversionError(value, type);
+                reportConversionError(value, type, !useErrorHandler);
             }
             break;
 
@@ -607,7 +609,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                     return value.toString();
                 }
                 else {
-                    reportConversionError(value, type);
+                    reportConversionError(value, type, !useErrorHandler);
                 }
             }
             break;
@@ -616,9 +618,9 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         case JSTYPE_JAVA_ARRAY:
             if (type.isPrimitive()) {
                 if (type == Boolean.TYPE) {
-                    reportConversionError(value, type);
+                    reportConversionError(value, type, !useErrorHandler);
                 }
-                return coerceToNumber(type, value);
+                return coerceToNumber(type, value, useErrorHandler);
             }
             else {
                 if (value instanceof Wrapper) {
@@ -632,7 +634,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                         return value;
                     }
                     else {
-                        reportConversionError(value, type);
+                        reportConversionError(value, type, !useErrorHandler);
                     }
                 }
             }
@@ -649,9 +651,9 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             }
             else if (type.isPrimitive()) {
                 if (type == Boolean.TYPE) {
-                    reportConversionError(value, type);
+                    reportConversionError(value, type, !useErrorHandler);
                 }
-                return coerceToNumber(type, value);
+                return coerceToNumber(type, value, useErrorHandler);
             }
             else if (type.isInstance(value)) {
                 return value;
@@ -666,10 +668,11 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 for (int i = 0 ; i < length ; ++i) {
                     try  {
                         Array.set(Result, i, coerceType(arrayType,
-                                                        array.get(i, array)));
+                                                        array.get(i, array), 
+                                                        useErrorHandler));
                     }
                     catch (EvaluatorException ee) {
-                        reportConversionError(value, type);
+                        reportConversionError(value, type, !useErrorHandler);
                     }
                 }
 
@@ -679,10 +682,10 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 value = ((Wrapper)value).unwrap();
                 if (type.isInstance(value))
                     return value;
-                reportConversionError(value, type);
+                reportConversionError(value, type, !useErrorHandler);
             }
             else {
-                reportConversionError(value, type);
+                reportConversionError(value, type, !useErrorHandler);
             }
             break;
         }
@@ -712,7 +715,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         }
     }
 
-    static Object coerceToNumber(Class type, Object value) {
+    static Object coerceToNumber(Class type, Object value, boolean useErrorHandler) {
         Class valueClass = value.getClass();
 
         // Character
@@ -723,7 +726,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             return new Character((char)toInteger(value,
                                                  ScriptRuntime.CharacterClass,
                                                  (double)Character.MIN_VALUE,
-                                                 (double)Character.MAX_VALUE));
+                                                 (double)Character.MAX_VALUE,
+                                                 useErrorHandler));
         }
 
         // Double, Float
@@ -731,7 +735,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
             type == ScriptRuntime.DoubleClass || type == Double.TYPE) {
             return valueClass == ScriptRuntime.DoubleClass
                 ? value
-                : new Double(toDouble(value));
+                : new Double(toDouble(value, useErrorHandler));
         }
 
         if (type == ScriptRuntime.FloatClass || type == Float.TYPE) {
@@ -739,7 +743,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return value;
             }
             else {
-                double number = toDouble(value);
+                double number = toDouble(value, useErrorHandler);
                 if (Double.isInfinite(number) || Double.isNaN(number)
                     || number == 0.0) {
                     return new Float((float)number);
@@ -770,7 +774,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return new Integer((int)toInteger(value,
                                                   ScriptRuntime.IntegerClass,
                                                   (double)Integer.MIN_VALUE,
-                                                  (double)Integer.MAX_VALUE));
+                                                  (double)Integer.MAX_VALUE, 
+                                                  useErrorHandler));
             }
         }
 
@@ -791,7 +796,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return new Long(toInteger(value,
                                           ScriptRuntime.LongClass,
                                           min,
-                                          max));
+                                          max, 
+                                          useErrorHandler));
             }
         }
 
@@ -803,7 +809,8 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return new Short((short)toInteger(value,
                                                   ScriptRuntime.ShortClass,
                                                   (double)Short.MIN_VALUE,
-                                                  (double)Short.MAX_VALUE));
+                                                  (double)Short.MAX_VALUE,
+                                                  useErrorHandler));
             }
         }
 
@@ -815,15 +822,16 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 return new Byte((byte)toInteger(value,
                                                 ScriptRuntime.ByteClass,
                                                 (double)Byte.MIN_VALUE,
-                                                (double)Byte.MAX_VALUE));
+                                                (double)Byte.MAX_VALUE,
+                                                useErrorHandler));
             }
         }
 
-        return new Double(toDouble(value));
+        return new Double(toDouble(value, useErrorHandler));
     }
 
 
-    static double toDouble(Object value) {
+    static double toDouble(Object value, boolean useErrorHandler) {
         if (value instanceof Number) {
             return ((Number)value).doubleValue();
         }
@@ -833,7 +841,7 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
         else if (value instanceof Scriptable) {
             if (value instanceof Wrapper) {
                 // XXX: optimize tail-recursion?
-                return toDouble(((Wrapper)value).unwrap());
+                return toDouble(((Wrapper)value).unwrap(), useErrorHandler);
             }
             else {
                 return ScriptRuntime.toNumber(value);
@@ -856,23 +864,26 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
                 }
                 catch (IllegalAccessException e) {
                     // XXX: ignore, or error message?
-                    reportConversionError(value, Double.TYPE);
+                    reportConversionError(value, Double.TYPE, !useErrorHandler);
                 }
                 catch (InvocationTargetException e) {
                     // XXX: ignore, or error message?
-                    reportConversionError(value, Double.TYPE);
+                    reportConversionError(value, Double.TYPE, !useErrorHandler);
                 }
             }
             return ScriptRuntime.toNumber(value.toString());
         }
     }
 
-    static long toInteger(Object value, Class type, double min, double max) {
-        double d = toDouble(value);
+    static long toInteger(Object value, Class type, double min, double max,
+                          boolean useErrorHandler) 
+    {
+        double d = toDouble(value, useErrorHandler);
 
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // Convert to string first, for more readable message
-            reportConversionError(ScriptRuntime.toString(value), type);
+            reportConversionError(ScriptRuntime.toString(value), type, 
+                                  !useErrorHandler);
         }
 
         if (d > 0.0) {
@@ -884,12 +895,19 @@ public class NativeJavaObject implements Scriptable, Wrapper, Externalizable {
 
         if (d < min || d > max) {
             // Convert to string first, for more readable message
-            reportConversionError(ScriptRuntime.toString(value), type);
+            reportConversionError(ScriptRuntime.toString(value), type, 
+                                  !useErrorHandler);
         }
         return (long)d;
     }
 
-    static void reportConversionError(Object value, Class type) {
+    static void reportConversionError(Object value, Class type, 
+                                      boolean throwIllegalArg) 
+    {
+        if (throwIllegalArg) {
+            throw new IllegalArgumentException("Cannot convert " + value +
+                                               " to type " + type);
+        }
         throw Context.reportRuntimeError2
             ("msg.conversion.not.allowed",
              value.toString(), NativeJavaMethod.javaSignature(type));

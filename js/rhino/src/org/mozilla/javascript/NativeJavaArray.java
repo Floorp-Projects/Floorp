@@ -110,7 +110,8 @@ public class NativeJavaArray extends NativeJavaObject {
 
     public void put(int index, Scriptable start, Object value) {
         if (0 <= index && index < length) {
-            Array.set(array, index, NativeJavaObject.coerceType(cls, value));
+            Array.set(array, index, NativeJavaObject.coerceType(cls, value, 
+                                                                true));
             return;
         }
         super.put(index, start, value);

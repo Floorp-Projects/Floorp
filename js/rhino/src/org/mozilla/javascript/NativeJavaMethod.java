@@ -204,7 +204,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
         // First, we marshall the args.
         for (int i = 0; i < args.length; i++) {
-            args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i]);
+            args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i], true);
         }
         Object javaObject;
         if (Modifier.isStatic(meth.getModifiers())) {

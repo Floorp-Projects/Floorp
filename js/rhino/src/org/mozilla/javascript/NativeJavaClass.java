@@ -218,7 +218,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
         Class[] paramTypes = ctor.getParameterTypes();
         for (int i = 0; i < args.length; i++) {
-            args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i]);
+            args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i], true);
         }
         try {
             // we need to force this to be wrapped, because construct _has_
