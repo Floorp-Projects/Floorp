@@ -354,8 +354,9 @@ public:
   NS_IMETHOD  SetZoom(float aZoom) = 0;
   NS_IMETHOD  GetZoom(float &aZoom) const = 0;
 
-  //get and set the text zoom value used for display-time
-  //scaling. default is 1.0 (no zoom)
+  //get and set the text zoom value used for display-time scaling.
+  //default is 1.0 (no zoom).  The device context doesn't do anything
+  //with this value.  It's merely a convenient place to store it.
   NS_IMETHOD  SetTextZoom(float aTextZoom) = 0;
   NS_IMETHOD  GetTextZoom(float &aTextZoom) const = 0;
 

@@ -552,9 +552,7 @@ static FONTMETRICS* getMetrics( long &lFonts, PCSZ facename, HPS hps)
 void
 nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
 {
-  float textZoom = 1.0;
-  mDeviceContext->GetTextZoom( textZoom );
-  int points = NSTwipsToIntPoints( mFont.size * textZoom );
+  int points = NSTwipsToIntPoints( mFont.size );
 
   FATTRS* fattrs = &(aFont->fattrs);
   if( fattrs->fsFontUse == 0 )  // if image font
@@ -652,9 +650,9 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
     if( fattrs->fsFontUse == 0 )    /* if image font */
       fHeight = points * gDPI / 72;
     else
-      fHeight = mFont.size * app2dev * textZoom * gDPI / nsFontMetricsOS2::gSystemRes;
+      fHeight = mFont.size * app2dev * gDPI / nsFontMetricsOS2::gSystemRes;
   else
-    fHeight = mFont.size * app2dev * textZoom;
+    fHeight = mFont.size * app2dev;
 
   long lFloor = NSToIntFloor( fHeight ); 
   aFont->charbox.cx = MAKEFIXED( lFloor, (fHeight - (float)lFloor) * 65536.0f );

@@ -221,16 +221,16 @@ nsStyleFont::nsStyleFont()
 
 nsStyleFont::nsStyleFont(const nsFont& aFont)
   : mFlags(NS_STYLE_FONT_DEFAULT),
-    mFont(aFont)
+    mFont(aFont),
+    mSize(aFont.size)
 {
-  mSize = aFont.size;
 }
 
 nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
-:mFont(aSrc.mFont)
+  : mFlags(aSrc.mFlags),
+    mFont(aSrc.mFont),
+    mSize(aSrc.mSize)
 {
-  mSize = aSrc.mSize;
-  mFlags = aSrc.mFlags;
 }
 
 void* 

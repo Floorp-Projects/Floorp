@@ -780,11 +780,9 @@ NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont &aFont,nsIAtom *aLangGroup,
   mDeviceContext = aContext;
 
   float a2d;
-  float textZoom = 1.0;
  
   aContext->GetAppUnitsToDevUnits(a2d);
-  aContext->GetTextZoom(textZoom);
-  mPixelSize = NSToIntRound(a2d * textZoom * mFont->size); 
+  mPixelSize = NSToIntRound(a2d * mFont->size); 
   if (mFont->style == NS_FONT_STYLE_NORMAL) {
 #if (QT_VERSION >= 230)
     if (use_qt_xft())

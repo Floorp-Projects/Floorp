@@ -1253,9 +1253,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  float textZoom = 1.0;
-  mDeviceContext->GetTextZoom(textZoom);
-  mPixelSize = NSToIntRound(app2dev * textZoom * mFont->size);
+  mPixelSize = NSToIntRound(app2dev * mFont->size);
   mStretchIndex = 4; // normal
   mStyleIndex = mFont->style;
 

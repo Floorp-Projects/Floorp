@@ -109,10 +109,6 @@ nsFontUtils::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 
 	RGBColor	black = {0};
 
-  float textZoom = 1.0;
-  inDevContext.GetTextZoom(textZoom);
-  textSize *= textZoom;
-	
 	outStyle.tsFont = (short)fontNum;
 	outStyle.tsFace = textFace;
 	outStyle.tsSize = textSize;
