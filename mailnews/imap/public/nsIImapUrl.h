@@ -43,7 +43,7 @@
 
 class nsIMsgIncomingServer; 
 
-class nsIImapUrl : public nsIMsgMailNewsUrl
+class nsIImapUrl : public nsISupports
 {
 public:
   static const nsIID& GetIID() {
