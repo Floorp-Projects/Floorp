@@ -61,6 +61,7 @@ public:
     static PRInt32 GetChildIDFor(nsIAccessible* aAccessible);
 
     void GetXPAccessibleFor(const VARIANT& varChild, nsIAccessible **aXPAccessible);
+
     // ISimpleDOMDocument
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_URL( 
         /* [out] */ BSTR __RPC_FAR *url);
@@ -82,10 +83,16 @@ public:
         /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes);
 
     // IAccessible
-    // Overrid get_accChild so that it can get any child via the unique ID
+    // Override get_accChild so that it can get any child via the unique ID
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accChild( 
         /* [in] */ VARIANT varChild,
         /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
+
+    // Override get_accParent so that native accessible for window is 
+    // returned as parent, otherwise WindowFromAccessibleObject() doesn't work.
+    // Also necessary for MSAA SDK's accexplore.exe testing tool to work.
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent( 
+        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent);
 
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
 };
