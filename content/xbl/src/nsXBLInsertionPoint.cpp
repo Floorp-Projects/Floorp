@@ -61,10 +61,19 @@ nsXBLInsertionPoint::AddChild(nsIContent* aChildElement)
   if (!mElements)
     NS_NewISupportsArray(getter_AddRefs(mElements));
 
-  // XXX For now, just append.  Eventually we'll need to do a walk
-  // trying to figure out an appropriate spot.
   mElements->AppendElement(aChildElement);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLInsertionPoint::InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement)
+{
+  if (!mElements)
+    NS_NewISupportsArray(getter_AddRefs(mElements));
+
+  mElements->InsertElementAt(aChildElement, aIndex);
+  
   return NS_OK;
 }
 
