@@ -238,20 +238,20 @@ UPDATE_TITLE = echo "]2;gmake: $@ in $(shell $(topsrcdir)/build/autoconf/print-
 endif
 
 ifndef BUILD_OFFICIAL
-# "Official" build only: Continue past errors.
-CONTINUE_ON_ERROR := set -e;
-EXIT_ON_ERROR := set +e;
+# Without "set -e", shell loops continue past errors.
+EXIT_ON_ERROR := set -e;
 else
+# "Official" build only: Continue past errors.
+EXIT_ON_ERROR :=
 PRINT_TIMESTAMP := date;
 endif
 
 ifdef DIRS
 LOOP_OVER_DIRS = \
-    @for d in $(DIRS); do \
+    @$(EXIT_ON_ERROR) \
+    for d in $(DIRS); do \
         $(UPDATE_TITLE) \
-        $(CONTINUE_ON_ERROR) \
         $(MAKE) -C $$d $@; \
-        $(EXIT_ON_ERROR) \
         $(PRINT_TIMESTAMP) \
     done
 endif
