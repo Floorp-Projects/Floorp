@@ -135,13 +135,19 @@ sub Checkout()
 		$session->checkout("mozilla/modules/libreg") || die "checkout failure";
 		$session->checkout("mozilla/xpcom") || die "checkout failure";
 	}
+#	if ($main::pull{imglib})
+#	{
+#		my($IMGLIB_BRANCH) = "MODULAR_IMGLIB_BRANCH";
+#
+#		$session->checkout("mozilla/jpeg", $IMGLIB_BRANCH) || die "checkout failure";
+#		$session->checkout("mozilla/modules/libutil", $IMGLIB_BRANCH) || die "checkout failure";
+#		$session->checkout("mozilla/modules/libimg", $IMGLIB_BRANCH) || die "checkout failure";
+#	}
 	if ($main::pull{imglib})
 	{
-		my($IMGLIB_BRANCH) = "MODULAR_IMGLIB_BRANCH";
-
-		$session->checkout("mozilla/jpeg", $IMGLIB_BRANCH) || die "checkout failure";
-		$session->checkout("mozilla/modules/libutil", $IMGLIB_BRANCH) || die "checkout failure";
-		$session->checkout("mozilla/modules/libimg", $IMGLIB_BRANCH) || die "checkout failure";
+		$session->checkout("mozilla/jpeg") || die "checkout failure";
+		$session->checkout("mozilla/modules/libutil") || die "checkout failure";
+		$session->checkout("mozilla/modules/libimg") || die "checkout failure";
 	}
 	if ($main::pull{netlib})
 	{
@@ -270,8 +276,8 @@ sub BuildDist()
     [":mozilla:layout:html:base:src:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:document:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:base:src:MANIFEST", "$distdirectory:layout:"],
-				[":mozilla:layout:events:public:MANIFEST", "$distdirectory:layout:"],
-				[":mozilla:layout:events:src:MANIFEST", "$distdirectory:layout:"],
+	[":mozilla:layout:events:public:MANIFEST", "$distdirectory:layout:"],
+	[":mozilla:layout:events:src:MANIFEST", "$distdirectory:layout:"],
 #WIDGET
     [":mozilla:widget:public:MANIFEST", "$distdirectory:widget:"],
 #GFX
@@ -283,6 +289,7 @@ sub BuildDist()
    [":mozilla:dom:public:coreDom:MANIFEST", "$distdirectory:dom:"],
    [":mozilla:dom:public:coreEvents:MANIFEST", "$distdirectory:dom:"],
    [":mozilla:dom:public:events:MANIFEST", "$distdirectory:dom:"],
+   [":mozilla:dom:public:html:MANIFEST", "$distdirectory:dom:"],
 #HTMLPARSER
    [":mozilla:htmlparser:src:MANIFEST", "$distdirectory:htmlparser:"],
 
@@ -312,6 +319,7 @@ sub BuildCommonProjects()
 	Moz::BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
 	Moz::BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",							"Stubs");
 	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
+	Moz::BuildProjectClean(":mozilla:cmd:macfe:projects:client:Navigator.mcp",    				"Stub Library");
 
 # shared
 
@@ -357,7 +365,7 @@ sub BuildCommonProjects()
 
 	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",						"png$D.o");
 
-	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o");
+	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o (standalone)");
 
 	BuildProject(":mozilla:network:macbuild:network.mcp",		"NetworkModular$D.o");
 
