@@ -483,8 +483,8 @@ GetText(nsIContent* aContent, PRInt32& aLengthResult)
 {
   const PRUnichar* cp = nsnull;
   nsITextContent* tc = nsnull;
-  aContent->QueryInterface(kITextContentIID, (void**) &tc);
-  if (nsnull != tc) {
+  nsresult rv = aContent->QueryInterface(kITextContentIID, (void**) &tc);
+  if ((NS_OK == rv) && (nsnull != tc)) {
     tc->GetText(cp, aLengthResult);
     NS_RELEASE(tc);
   }
@@ -693,27 +693,17 @@ TextFrame::PrepareUnicodeText(PRInt32* aIndexes,
           }
           continue;
         } else {
-          *s++ = ' ';
-          length++;
-          if (nsnull != aIndexes) {
-            aIndexes[mappingInx++] = strInx;
-            strInx++;
-          }
+          ch = ' ';
         }
-      } else if (ch == CH_NBSP) {
-        *s++ = ' ';
-        length++;
-        if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
-          strInx++;
-        }
-      } else {
-        *s++ = ch;
-        length++;
-        if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
-          strInx++;
-        }
+      }
+      else if (ch == CH_NBSP) {
+        ch = ' ';
+      }
+      *s++ = ch;
+      length++;
+      if (nsnull != aIndexes) {
+        aIndexes[mappingInx++] = strInx;
+        strInx++;
       }
       col++;
     }
@@ -741,19 +731,16 @@ TextFrame::PrepareUnicodeText(PRInt32* aIndexes,
             }
           }
         }
-        *s++ = ' ';
-        length++;
-        if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
-          strInx++;
-        }
-      } else {
-        *s++ = ch;
-        length++;
-        if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
-          strInx++;
-        }
+        ch = ' ';
+      }
+      else if (ch == CH_NBSP) {
+        ch = ' ';
+      }
+      *s++ = ch;
+      length++;
+      if (nsnull != aIndexes) {
+        aIndexes[mappingInx++] = strInx;
+        strInx++;
       }
     }
   }
@@ -833,27 +820,17 @@ TextFrame::PrepareAsciiText(PRInt32* aIndexes,
           }
           continue;
         } else {
-          *s++ = ' ';
-          length++;
-          if (nsnull != aIndexes) {
-            aIndexes[mappingInx++] = strInx;
-            strInx++;
-          }
+          ch = ' ';
         }
-      } else if (ch == CH_NBSP) {
-        *s++ = ' ';
-        length++;
-        if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
-          strInx++;
-        }
-      } else {
-        *s++ = ch;
-        length++;
-        if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
-          strInx++;
-        }
+      }
+      else if (ch == CH_NBSP) {
+        ch = ' ';
+      }
+      *s++ = ch;
+      length++;
+      if (nsnull != aIndexes) {
+        aIndexes[mappingInx++] = strInx;
+        strInx++;
       }
       col++;
     }
@@ -881,19 +858,16 @@ TextFrame::PrepareAsciiText(PRInt32* aIndexes,
             }
           }
         }
-        *s++ = ' ';
-        length++;
-        if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
-          strInx++;
-        }
-      } else {
-        *s++ = ch;
-        length++;
-        if (nsnull != aIndexes) {
-          aIndexes[mappingInx++] = strInx;
-          strInx++;
-        }
+        ch = ' ';
+      }
+      else if (ch == CH_NBSP) {
+        ch = ' ';
+      }
+      *s++ = ch;
+      length++;
+      if (nsnull != aIndexes) {
+        aIndexes[mappingInx++] = strInx;
+        strInx++;
       }
     }
   }
