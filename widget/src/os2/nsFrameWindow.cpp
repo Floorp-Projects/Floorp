@@ -370,6 +370,13 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
          break;
       }
 
+       case WM_ADJUSTWINDOWPOS:
+          {
+            PSWP pswp = (PSWP)mp1;
+            if (pswp->fl & SWP_ZORDER)
+              ConstrainZLevel(&pswp->hwndInsertBehind);
+          }
+          break;
       case WM_DESTROY:
          WinSubclassWindow( mFrameWnd, fnwpDefFrame);
          WinSetWindowPtr( mFrameWnd, QWL_USER, 0);
