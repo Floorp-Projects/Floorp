@@ -58,10 +58,10 @@
 <!ENTITY min-gd-ver "1.20">
 <!ENTITY min-gd-graph-ver "any">
 <!ENTITY min-gd-text-align-ver "any">
-<!ENTITY min-chart-base-ver "0.99c">
+<!ENTITY min-chart-base-ver "1.0">
 <!ENTITY min-xml-parser-ver "any">
 <!ENTITY min-mime-parser-ver "any">
-<!ENTITY min-patchreader-ver "0.9.1">
+<!ENTITY min-patchreader-ver "0.9.4">
 
 ]>
 
