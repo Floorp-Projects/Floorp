@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -40,44 +40,43 @@
 #define nsURIChecker_h__
 
 #include "nsIURIChecker.h"
-#include "nsIRequest.h"
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIHttpEventSink.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIURI.h"
-
 #include "nsIIOService.h"
+#include "nsIURI.h"
 #include "nsCOMPtr.h"
 
-class nsURIChecker : public nsIURIChecker, public nsIRequest,
-                     public nsIStreamListener, public nsIHttpEventSink,
+//-----------------------------------------------------------------------------
+
+class nsURIChecker : public nsIURIChecker,
+                     public nsIStreamListener,
+                     public nsIHttpEventSink,
                      public nsIInterfaceRequestor
 {
 public:
     nsURIChecker();
-    virtual ~nsURIChecker();
+    virtual ~nsURIChecker() {}
 
     NS_DECL_ISUPPORTS
-    
     NS_DECL_NSIURICHECKER
-
     NS_DECL_NSIREQUEST
-
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIHTTPEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
 
 protected:
-    nsresult mStatus;
-    PRBool mIsPending;
-
-    nsCOMPtr<nsIChannel> mChannel;
+    nsCOMPtr<nsIChannel>         mChannel;
     nsCOMPtr<nsIRequestObserver> mObserver;
-    nsCOMPtr<nsISupports> mCtxt;
+    nsCOMPtr<nsISupports>        mObserverContext;
+    nsresult                     mStatus;
+    PRPackedBool                 mIsPending;
+    PRPackedBool                 mAllowHead;
 
-    void SetStatusAndCallBack(nsIRequest* aRequest, nsresult aStatus);
+    void     SetStatusAndCallBack(nsresult aStatus);
+    nsresult CheckStatus();
 };
 
 #endif // nsURIChecker_h__
