@@ -296,8 +296,10 @@ endif
 ifeq ($(OS_ARCH), HP-UX)
     LDOPTS += -z -Wl,+s,+b,$(ABSOLUTE_LIB_DIR)
     ifeq ($(USE_64),1)
-        LDOPTS += +DA2.0W
-        EXTRA_LIBS = -lpthread
+        LDOPTS += +DD64
+    endif
+    ifeq ($(USE_PTHREADS),1)
+        EXTRA_LIBS = $(LIBPTHREAD)
     endif
 endif
 
