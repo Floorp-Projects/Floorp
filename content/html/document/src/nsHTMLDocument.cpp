@@ -429,7 +429,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
        if(! gInitDetector)
        {
            nsIPref* pref = nsnull;
-           if(NS_SUCCEEDED(webShell->GetPrefs(pref)))
+           if(NS_SUCCEEDED(webShell->GetPrefs(pref)) && pref)
            {
       
              char* detector_name = nsnull;
