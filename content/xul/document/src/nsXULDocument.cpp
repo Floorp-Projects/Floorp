@@ -25,8 +25,6 @@
 
   TO DO
 
-  1) Figure out how to get rid of the DummyListener hack.
-
  */
 
 // Note the ALPHABETICAL ORDERING
@@ -828,8 +826,8 @@ XULDocumentImpl::XULDocumentImpl(void)
       mCharSetID("UTF-8"),
       mDisplaySelection(PR_FALSE),
       mContentViewerContainer(nsnull),
-      mIsPopup(PR_FALSE),
-	  mParentContentSink(nsnull)
+      mParentContentSink(nsnull),
+      mIsPopup(PR_FALSE)
 {
     NS_INIT_REFCNT();
 
