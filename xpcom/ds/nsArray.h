@@ -81,7 +81,7 @@ public:
     NS_DECL_NSIMUTABLEARRAY
 
 private:
-    nsCOMArray<nsISupports> mArray;
+    nsCOMArray_base mArray;
 };
 
 

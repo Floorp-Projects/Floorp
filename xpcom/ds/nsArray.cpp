@@ -47,7 +47,7 @@ struct findIndexOfClosure
     PRUint32 resultIndex;
 };
 
-static PRBool FindElementCallback(nsISupports* aElement, void* aClosure);
+static PRBool FindElementCallback(void* aElement, void* aClosure);
 
 
 NS_IMPL_ISUPPORTS2(nsArray, nsIArray, nsIMutableArray)
@@ -133,14 +133,17 @@ nsArray::Clear()
 }
 
 PRBool
-FindElementCallback(nsISupports *aElement, void* aClosure)
+FindElementCallback(void *aElement, void* aClosure)
 {
     findIndexOfClosure* closure =
         NS_STATIC_CAST(findIndexOfClosure*, aClosure);
 
+    nsISupports* element =
+        NS_STATIC_CAST(nsISupports*, aElement);
+    
     // don't start searching until we're past the startIndex
     if (closure->resultIndex >= closure->startIndex &&
-        aElement == closure->targetElement) {
+        element == closure->targetElement) {
         return PR_FALSE;    // stop! We found it
     }
     closure->resultIndex++;
