@@ -353,8 +353,8 @@ private:
     _currerr = nsPrintEngine::TestRuntimeErrorCondition(_name, _currerr, _newerr); \
   }
 #else
-#define CHECK_RUNTIME_ERROR_CONDITION
-#define INIT_RUNTIME_ERROR_CHECKING
+#define CHECK_RUNTIME_ERROR_CONDITION(_name, _currerr, _newerr)
+#define INIT_RUNTIME_ERROR_CHECKING()
 #endif
 
 #endif /* nsPrintEngine_h___ */
