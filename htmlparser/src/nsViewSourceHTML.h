@@ -53,127 +53,10 @@ class CViewSourceHTML: public nsIDTD
 public:
 
     NS_DECL_ISUPPORTS
-
-
-    /**
-     *  
-     *  
-     *  @update  gess 4/9/98
-     *  @param   
-     *  @return  
-     */
-    CViewSourceHTML();
-
-    /**
-     *  
-     *  
-     *  @update  gess 4/9/98
-     *  @param   
-     *  @return  
-     */
-    virtual ~CViewSourceHTML();
-
-
-    NS_IMETHOD_(const nsIID&) GetMostDerivedIID(void) const;
-
-    /**
-     * Call this method if you want the DTD to construct a clone of itself.
-     * @update	gess7/23/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD CreateNewInstance(nsIDTD** aInstancePtrResult);
-
-
-    /**
-     * This method is called to determine if the given DTD can parse
-     * a document in a given source-type. 
-     * NOTE: Parsing always assumes that the end result will involve
-     *       storing the result in the main content model.
-     * @update	gess6/24/98
-     * @param   
-     * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
-     */
-    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext,
-                                            const nsString& aBuffer,
-                                            PRInt32 aVersion);
-
-    /**
-      * The parser uses a code sandwich to wrap the parsing process. Before
-      * the process begins, WillBuildModel() is called. Afterwards the parser
-      * calls DidBuildModel(). 
-      * @update	rickg 03.20.2000
-      * @param	aParserContext
-      * @param	aSink
-      * @return	error code (almost always 0)
-      */
-    NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
-                              nsIContentSink* aSink);
-
-    /**
-      * The parser uses a code sandwich to wrap the parsing process. Before
-      * the process begins, WillBuildModel() is called. Afterwards the parser
-      * calls DidBuildModel(). 
-      * @update	gess5/18/98
-      * @param	aFilename is the name of the file being parsed.
-      * @return	error code (almost always 0)
-      */
-    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer,
-                          nsITokenObserver* anObserver = nsnull,
-                          nsIContentSink* aSink = nsnull);
-
-   /**
-     * The parser uses a code sandwich to wrap the parsing process. Before
-     * the process begins, WillBuildModel() is called. Afterwards the parser
-     * calls DidBuildModel(). 
-     * @update	gess5/18/98
-     * @param	anErrorCode contans the last error that occured
-     * @return	error code
-     */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
-                             nsIParser* aParser,
-                             nsIContentSink* aSink = nsnull);
-
-    /**
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aToken -- token object to be put into content model
-     *  @return  0 if all is well; non-zero is an error
-     */
-    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
-
-    /**
-     * 
-     * @update	gess 12/20/99
-     * @param   ptr-ref to (out) tokenizer
-     * @return  nsresult
-     */
-    NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer);
-
+    NS_DECL_NSIDTD
     
-    /**
-     * 
-     * @update	gess12/28/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD_(nsTokenAllocator *) GetTokenAllocator(void);
-
-    /**
-     * 
-     * @update	gess5/18/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD WillResumeParse(void);
-
-    /**
-     * 
-     * @update	gess5/18/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD WillInterruptParse(void);
+    CViewSourceHTML();
+    virtual ~CViewSourceHTML();
 
     /**
      * Set this to TRUE if you want the DTD to verify its
@@ -184,61 +67,20 @@ public:
      */
     virtual void SetVerification(PRBool aEnable);
 
-    /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- int tag of parent container
-     *  @param   aChild -- int tag of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
-    NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;
-
-    /**
-     * Use this id you want to stop the building content model
-     * --------------[ Sets DTD to STOP mode ]----------------
-     * It's recommended to use this method in accordance with
-     * the parser's terminate() method.
-     *
-     * @update	harishd 07/22/99
-     * @param 
-     * @return
-     */
-    NS_IMETHOD Terminate(nsIParser* aParser = nsnull);
-
-    /**
-     * Give rest of world access to our tag enums, so that CanContain(), etc,
-     * become useful.
-     */
-    NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag,
-                                 PRInt32* aIntTag) const;
-
-    NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const;
-
-    NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity,
-                                      PRInt32* aUnicode) const;
-
-    NS_IMETHOD_(PRBool) IsBlockElement(PRInt32 aTagID,
-                                       PRInt32 aParentID) const;
-    NS_IMETHOD_(PRBool) IsInlineElement(PRInt32 aTagID,
-                                        PRInt32 aParentID) const;
-
-    /**
-     *  This method gets called to determine whether a given 
-     *  tag is itself a container
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aTag -- tag to test for containership
-     *  @return  PR_TRUE if given tag can contain other tags
-     */
-    NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;
-
-
 private:
-    nsresult WriteTag(PRInt32 tagType,const nsAReadableString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
-    nsresult WriteTagWithError(PRInt32 tagType,const nsAReadableString& aToken,PRInt32 attrCount,PRBool aNewlineRequired);
-    void     AddContainmentError(eHTMLTags aChild,eHTMLTags aParent,PRInt32 aLineNumber);
+    nsresult WriteTag(PRInt32 tagType,
+                      const nsAReadableString &aText,
+                      PRInt32 attrCount,
+                      PRBool aNewlineRequired);
+    
+    nsresult WriteTagWithError(PRInt32 tagType,
+                               const nsAReadableString& aToken,
+                               PRInt32 attrCount,
+                               PRBool aNewlineRequired);
+    
+    void AddContainmentError(eHTMLTags aChild,
+                             eHTMLTags aParent,
+                             PRInt32 aLineNumber);
 
     nsresult WriteAttributes(PRInt32 attrCount);
     nsresult GenerateSummary();

@@ -40,13 +40,13 @@ include <$(DEPTH)\config\config.mak>
 LIBRARY_NAME=raptorhtmlpars 
 DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN -DXML_DTD
 
-LIBRARY_NAME   = gkparser
-MODULE_NAME	   = nsParserModule
+LIBRARY_NAME  = gkparser
+MODULE_NAME   = nsParserModule
 
-CPP_OBJS =                          \
+CPP_OBJS =                        \
 	.\$(OBJDIR)\nsDTDUtils.obj      \
 	.\$(OBJDIR)\nsHTMLTokenizer.obj \
-	.\$(OBJDIR)\nsExpatTokenizer.obj\
+	.\$(OBJDIR)\nsExpatDriver.obj   \
 	.\$(OBJDIR)\nsElementTable.obj  \
 	.\$(OBJDIR)\CNavDTD.obj         \
 	.\$(OBJDIR)\COtherDTD.obj       \
@@ -58,11 +58,10 @@ CPP_OBJS =                          \
 	.\$(OBJDIR)\nsParserNode.obj    \
 	.\$(OBJDIR)\nsScanner.obj       \
 	.\$(OBJDIR)\nsToken.obj         \
-	.\$(OBJDIR)\nsWellFormedDTD.obj \
 	.\$(OBJDIR)\nsViewSourceHTML.obj\
-	.\$(OBJDIR)\nsParserService.obj  \
+	.\$(OBJDIR)\nsParserService.obj \
 	.\$(OBJDIR)\nsParserModule.obj  \
-	.\$(OBJDIR)\nsParserMsgUtils.obj  \
+	.\$(OBJDIR)\nsParserMsgUtils.obj\
 !ifdef MOZ_DEBUG
 	.\$(OBJDIR)\nsLoggingSink.obj   \
 	.\$(OBJDIR)\nsHTMLNullSink.obj  \

@@ -88,33 +88,52 @@ public:
                 nsIWebShell* aContainer);
 
   // nsIContentSink overrides
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
-  NS_IMETHOD AddCDATASection(const nsIParserNode& aNode);
+  NS_IMETHOD HandleStartElement(const PRUnichar *aName, 
+                                const PRUnichar **aAtts, 
+                                const PRUint32 aAttsCount, 
+                                const PRUint32 aIndex, 
+                                const PRUint32 aLineNumber);
+
+  NS_IMETHOD HandleEndElement(const PRUnichar *aName);
+  
+  NS_IMETHOD HandleCDataSection(const PRUnichar *aData, 
+                                const PRUint32 aLength);
 
 protected:
+    // nsXMLContentSink overrides
+    PRBool OnOpenContainer(const PRUnichar **aAtts, 
+                           PRUint32 aAttsCount, 
+                           PRInt32 aNameSpaceID, 
+                           nsIAtom* aTagName);
+    
+    nsresult CreateElement(const PRUnichar** aAtts, 
+                           PRUint32 aAttsCount, 
+                           PRInt32 aNameSpaceID, 
+                           nsINodeInfo* aNodeInfo, 
+                           nsIContent** aResult);
+    
+    nsresult AddAttributes(const PRUnichar** aAtts, 
+                           nsIContent* aContent,
+                           PRBool aIsHTML);
+    
+    nsresult AddAttributesToXULPrototype(const PRUnichar **aAtts, 
+                                         PRUint32 aAttsCount, 
+                                         nsXULPrototypeElement* aElement);
+      
+    // Our own helpers for constructing XBL prototype objects.
+    void ConstructBinding();
+    void ConstructHandler(const PRUnichar **aAtts);
+    void ConstructResource(const PRUnichar **aAtts, nsIAtom* aResourceType);
+    void ConstructImplementation(const PRUnichar **aAtts);
+    void ConstructProperty(const PRUnichar **aAtts);
+    void ConstructMethod(const PRUnichar **aAtts);
+    void ConstructParameter(const PRUnichar **aAtts);
+    void ConstructField(const PRUnichar **aAtts);
+  
+
   // nsXMLContentSink overrides
-  PRBool OnOpenContainer(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTagName);
   nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                      PRBool* aDidFlush=nsnull);
-  nsresult CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID, 
-                         nsINodeInfo* aNodeInfo, nsIContent** aResult);
-  nsresult AddAttributes(const nsIParserNode& aNode,
-                         nsIContent* aContent,
-                         PRBool aIsHTML);
-
-  // Our own helpers for constructing XBL prototype objects.
-  void ConstructBinding();
-  void ConstructHandler(const nsIParserNode& aNode);
-  void ConstructResource(const nsIParserNode& aNode, nsIAtom* aResourceType);
-  void ConstructImplementation(const nsIParserNode& aNode);
-  void ConstructProperty(const nsIParserNode& aNode);
-  void ConstructMethod(const nsIParserNode& aNode);
-  void ConstructParameter(const nsIParserNode& aNode);
-  void ConstructField(const nsIParserNode& aNode);
-
-  nsresult AddAttributesToXULPrototype(const nsIParserNode& aNode, nsXULPrototypeElement* aElement);
-
 protected:
   XBLPrimaryState mState;
   XBLSecondaryState mSecondaryState;

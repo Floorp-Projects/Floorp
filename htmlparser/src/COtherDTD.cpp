@@ -485,6 +485,12 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
   return result; 
 }  
 
+nsresult  
+COtherDTD::Terminate(nsIParser* aParser) 
+{ 
+  return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING; 
+}
+
 /** 
  *  This big dispatch method is used to route token handler calls to the right place.
  *  What's wrong with it? This table, and the dispatch methods themselves need to be 
@@ -995,12 +1001,12 @@ nsresult COtherDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
  * @param 
  * @return 
  */
-nsresult COtherDTD::WillResumeParse(void) {
+nsresult COtherDTD::WillResumeParse(nsIContentSink* aSink) {
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::WillResumeParse(), this=%p\n", this));
 
-  nsresult result=(mSink) ? mSink->WillResume() : NS_OK; 
+  nsresult result=(aSink) ? aSink->WillResume() : NS_OK; 
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::WillResumeParse(), this=%p\n", this));
   START_TIMER();
@@ -1014,12 +1020,12 @@ nsresult COtherDTD::WillResumeParse(void) {
  * @update  gess5/18/98
  * @return  error code
  */ 
-nsresult COtherDTD::WillInterruptParse(void){ 
+nsresult COtherDTD::WillInterruptParse(nsIContentSink* aSink){ 
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::WillInterruptParse(), this=%p\n", this));
 
-  nsresult result=(mSink) ? mSink->WillInterrupt() : NS_OK; 
+  nsresult result=(aSink) ? aSink->WillInterrupt() : NS_OK; 
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::WillInterruptParse(), this=%p\n", this));
   START_TIMER();

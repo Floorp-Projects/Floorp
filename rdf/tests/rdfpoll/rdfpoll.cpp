@@ -125,11 +125,11 @@ SetupRegistry(void)
     nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // parser
-    static NS_DEFINE_CID(kParserCID,                NS_PARSER_CID);
-    static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
+    static NS_DEFINE_CID(kParserCID,       NS_PARSER_CID);
+    static NS_DEFINE_IID(kExpatDriverCID,  NS_EXPAT_DRIVER_CID);
 
-    nsComponentManager::RegisterComponent(kParserCID,                NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kWellFormedDTDCID,         NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kParserCID,      NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kExpatDriverCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
     // layout
     static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);

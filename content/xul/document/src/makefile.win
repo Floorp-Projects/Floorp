@@ -24,32 +24,32 @@ DEPTH=..\..\..\..
 LIBRARY_NAME=contentxuldocument_s 
 MODULE=content_xul
 REQUIRES	= xpcom \
-		  string \
-		  exthandler \
-		  mimetype \
-		  widget \
-		  dom \
-		  rdf \
-		  js \
-		  xpconnect \
-		  caps \
-		  locale \
-		  view \
-		  necko \
-		  uriloader \
-		  htmlparser \
-		  lwbrk \
-		  chrome \
-		  docshell \
-		  pref \
-		  layout \
-		  gfx \
-		  layout_xul \
-		  content \
-                  webshell \
-		  webBrowser_core \
-		  unicharutil \
-		  $(NULL)
+            string \
+            exthandler \
+            mimetype \
+            widget \
+            dom \
+            rdf \
+            js \
+            xpconnect \
+            caps \
+            locale \
+            view \
+            necko \
+            uriloader \
+            htmlparser \
+            lwbrk \
+            chrome \
+            docshell \
+            pref \
+            layout \
+            gfx \
+            layout_xul \
+            content \
+            webshell \
+            webBrowser_core \
+            unicharutil \
+            $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

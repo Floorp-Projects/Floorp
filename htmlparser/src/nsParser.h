@@ -162,10 +162,10 @@ class nsParser : public nsIParser,
      */
     virtual void SetDocumentCharset(nsString& aCharset, PRInt32 aSource);
 
-    void GetDocumentCharset(nsString& oCharset, PRInt32& oSource)
+    void GetDocumentCharset(nsString& aCharset, PRInt32& aSource)
     {
-         oCharset = mCharset;
-         oSource = mCharsetSource;
+         aCharset = mCharset;
+         aSource = mCharsetSource;
     }
 
 
@@ -453,29 +453,30 @@ protected:
     // And now, some data members...
     //*********************************************
     
-  
-    CParserContext*     mParserContext;
-    PRInt32             mMajorIteration;
-    PRInt32             mMinorIteration;
-
-    nsIRequestObserver*   mObserver;
-    nsIContentSink*     mSink;
+      
+    nsCOMPtr<nsIEventQueue> mEventQueue;
+    CParserContext*         mParserContext;
+    nsIRequestObserver*     mObserver;
+    nsIContentSink*         mSink;
    
     nsIParserFilter*    mParserFilter;
-    PRBool              mDTDVerification;
-    eParserCommands     mCommand;
-    PRInt32             mStreamStatus;
     nsITokenObserver*   mTokenObserver;
+    nsTokenAllocator    mTokenAllocator;
+    
+    eParserCommands     mCommand;
+    nsresult            mInternalState;
+    PRInt32             mStreamStatus;
+    PRInt32             mMajorIteration;
+    PRInt32             mMinorIteration;
+    PRInt32             mCharsetSource;
+
     nsString            mUnusedInput;
     nsString            mCharset;
-    PRInt32             mCharsetSource;
-    nsresult            mInternalState;
-    PRBool              mObserversEnabled;
     nsString            mCommandStr;
-    PRBool              mParserEnabled;
-    nsTokenAllocator    mTokenAllocator;
-
-    nsCOMPtr<nsIEventQueue> mEventQueue;
+        
+    PRPackedBool        mDTDVerification;
+    PRPackedBool        mParserEnabled;
+    PRPackedBool        mObserversEnabled;
     PRPackedBool        mPendingContinueEvent;
     PRPackedBool        mCanInterrupt;
    

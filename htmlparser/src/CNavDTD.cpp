@@ -674,6 +674,12 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
   return result;
 }
 
+nsresult  
+CNavDTD::Terminate(nsIParser* aParser) 
+{ 
+  return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING; 
+}
+
 /**
  * --- Backwards compatibility ---
  * Use this method to determine if the tag in question needs a BODY.
@@ -3921,7 +3927,8 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
  * @param   none
  * @return  ptr to tokenizer
  */
-nsresult CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
+NS_IMETHODIMP
+CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
     result=NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,mParserCommand);
@@ -3930,37 +3937,18 @@ nsresult CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   return result;
 }
 
-
-/**
- * 
- * @update  gess8/4/98
- * @param 
- * @return
- */
-NS_IMETHODIMP_(nsTokenAllocator *)
-CNavDTD::GetTokenAllocator(void)
-{
-  if(!mTokenAllocator) {
-    nsresult result=GetTokenizer(mTokenizer);
-    if (NS_SUCCEEDED(result)) {
-      mTokenAllocator=mTokenizer->GetTokenAllocator();
-    }
-  }
-  return mTokenAllocator;
-}
-
 /**
  * 
  * @update  gess5/18/98
  * @param 
  * @return
  */
-nsresult CNavDTD::WillResumeParse(void){
+nsresult CNavDTD::WillResumeParse(nsIContentSink* aSink){
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
 
-  nsresult result=(mSink) ? mSink->WillResume() : NS_OK; 
+  nsresult result=(aSink) ? aSink->WillResume() : NS_OK; 
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
   START_TIMER();
@@ -3974,12 +3962,12 @@ nsresult CNavDTD::WillResumeParse(void){
  * @update  gess5/18/98
  * @return  error code
  */
-nsresult CNavDTD::WillInterruptParse(void){
+nsresult CNavDTD::WillInterruptParse(nsIContentSink* aSink){
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
 
-  nsresult result=(mSink) ? mSink->WillInterrupt() : NS_OK; 
+  nsresult result=(aSink) ? aSink->WillInterrupt() : NS_OK; 
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
   START_TIMER();

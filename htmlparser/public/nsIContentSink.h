@@ -49,10 +49,8 @@
  * content-sink model building process. There is another one that you may care 
  * about more, which is the IHTMLContentSink interface. (See that file for details).
  */
-
-#include "nsIParserNode.h"
 #include "nsISupports.h"
-#include "nsParserError.h"
+#include "nsString.h"
 
 class nsIParser;
 
@@ -112,79 +110,6 @@ public:
    * gets the DidBuildModel notification i.e. when parsing is done.
    */
   NS_IMETHOD SetParser(nsIParser* aParser)=0;
-
-  /**
-   * This method is used to open a generic container in the sink.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode) = 0;
-
-  /**
-   *  This method gets called by the parser when a close
-   *  container tag has been consumed and needs to be closed.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD CloseContainer(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This gets called by the parser when you want to add
-   * a leaf node to the current container in the content
-   * model.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This gets called by the parser when you want to add
-   * a leaf node to the current container in the content
-   * model.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD AddComment(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This gets called by the parser when you want to add
-   * a leaf node to the current container in the content
-   * model.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This method is called by the parser when it encounters
-   * a document type declaration.
-   *
-   * XXX Should the parser also part the internal subset?
-   *
-   * @param  nsIParserNode reference to parser node interface
-   */
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)=0;
-
-  /**
-   * This gets called by the parser if it hits an unrecoverable
-   * error (in XML, if the document is not well-formed or valid).
-   *
-   * @param aErrorResult the error code
-   */
-  NS_IMETHOD NotifyError(const nsParserError* aError)=0;
-
-  /**
-   * This gets called by the parser to notify observers of
-   * the tag
-   *
-   * @param aErrorResult the error code
-   */
-  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode)=0;
 
   /**
    * Flush all pending notifications so that the content model

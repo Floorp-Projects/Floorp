@@ -250,15 +250,46 @@ NS_IMPL_THREADSAFE_ADDREF(nsXMLContentSink)
 NS_IMPL_THREADSAFE_RELEASE(nsXMLContentSink)
 
 NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
-	NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
-	NS_INTERFACE_MAP_ENTRY(nsIContentSink)
-	NS_INTERFACE_MAP_ENTRY(nsIObserver)
-	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-	NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
-	NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIExpatSink)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
 NS_INTERFACE_MAP_END
 
+/**
+ * DOCTYPE declaration is covered with very strict rules, which
+ * makes our life here simpler because the XML parser has already
+ * detected errors. The only slightly problematic case is whitespace
+ * between the tokens. There MUST be whitespace between the tokens
+ * EXCEPT right before > and [.
+ */
+static const char* kWhitespace = " \r\n\t\b"; // Optimized for typical cases
+
+static void
+GetDocTypeToken(nsString& aStr,
+                nsString& aToken,
+                PRBool aQuotedString)
+{
+  aStr.Trim(kWhitespace,PR_TRUE,PR_FALSE); // If we don't do this we must look ahead
+                                           // before Cut() and adjust the cut amount.
+  
+  if (aQuotedString) {    
+    PRInt32 endQuote = aStr.FindChar(aStr[0],PR_FALSE,1);
+    aStr.Mid(aToken,1,endQuote-1);
+    aStr.Cut(0,endQuote+1);
+  } else {    
+    static const char* kDelimiter = " >[\r\n\t\b"; // Optimized for typical cases
+    PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
+    if (tokenEnd > 0) {
+      aStr.Left(aToken, tokenEnd);
+      aStr.Cut(0, tokenEnd);
+    }
+  }
+}
   // nsIContentSink
 NS_IMETHODIMP
 nsXMLContentSink::WillBuildModel(void)
@@ -504,153 +535,6 @@ nsXMLContentSink::SetParser(nsIParser* aParser)
   return NS_OK;
 }
 
-// XXX Code copied from nsHTMLContentSink. It should be shared.
-nsresult
-nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
-                                nsIContent* aContent,
-                                PRBool aIsHTML)
-{
-  // Add tag attributes to the content attributes
-  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  PRInt32 ac = aNode.GetAttributeCount();
-
-  for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-
-    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
-                 getter_AddRefs(nameAtom));
-
-    PRInt32 nameSpaceID;
-
-    if (nameSpacePrefix) {
-        nameSpaceID = GetNameSpaceId(nameSpacePrefix);
-    } else {
-      if (nameAtom.get() == nsLayoutAtoms::xmlnsNameSpace)
-        nameSpaceID = kNameSpaceID_XMLNS;
-      else
-        nameSpaceID = kNameSpaceID_None;
-    }
-
-    if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;
-      nameAtom = dont_AddRef(NS_NewAtom(key));
-      nameSpacePrefix = nsnull;
-    } else if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
-      // Ooh, what a nice little hack we have here :-)
-      nsAutoString name;
-      nameAtom->ToString(name);
-      nameAtom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("xmlns:") + name));
-      nameSpaceID = kNameSpaceID_HTML;  // XXX this is wrong, but necessary until HTML can store other namespaces for attrs
-    }
-
-    nsCOMPtr<nsINodeInfo> ni;
-    mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
-                                  *getter_AddRefs(ni));
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
-
-    // Add attribute to content
-    aContent->SetAttr(ni, aNode.GetValueAt(i), PR_FALSE);
-  }
-
-  // Give autoloading links a chance to fire
-  if (mWebShell) {
-    nsCOMPtr<nsIXMLContent> xmlcontent(do_QueryInterface(aContent));
-    if (xmlcontent) {
-      nsresult rv = xmlcontent->MaybeTriggerAutoLink(mWebShell);
-      if (rv == NS_XML_AUTOLINK_REPLACE ||
-          rv == NS_XML_AUTOLINK_UNDEFINED) {
-        // If we do not terminate the parse, we just keep generating link trigger
-        // events. We want to parse only up to the first replace link, and stop.
-        mParser->Terminate();
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
-{
-  PRInt32 ac = aNode.GetAttributeCount();
-  nsCOMPtr<nsINameSpace> nameSpace;
-  nsresult rv = NS_OK;
-
-  if (mNameSpaceStack && (0 < mNameSpaceStack->Count())) {
-    nameSpace =
-      (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
-  } else {
-    nsCOMPtr<nsINameSpaceManager> manager;
-    mDocument->GetNameSpaceManager(*getter_AddRefs(manager));
-
-    NS_ASSERTION(manager, "no name space manager in document");
-
-    if (manager) {
-      rv = manager->CreateRootNameSpace(*getter_AddRefs(nameSpace));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
-  NS_ENSURE_TRUE(nameSpace, NS_ERROR_UNEXPECTED);
-
-  static const NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
-  static const PRUint32 xmlns_len = kNameSpaceDef.Length();
-
-  for (PRInt32 i = 0; i < ac; i++) {
-    const nsAReadableString& key = aNode.GetKeyAt(i);
-    // Look for "xmlns" at the start of the attribute name
-
-    PRUint32 key_len = key.Length();
-
-    if (key_len >= xmlns_len &&
-        nsDependentSubstring(key, 0, xmlns_len).Equals(kNameSpaceDef)) {
-      nsCOMPtr<nsIAtom> prefixAtom;
-
-      // If key_len > xmlns_len we have a xmlns:foo type attribute,
-      // extract the prefix. If not, we have a xmlns attribute in
-      // which case there is no prefix.
-
-      if (key_len > xmlns_len) {
-        nsReadingIterator<PRUnichar> start, end;
-
-        key.BeginReading(start);
-        key.EndReading(end);
-
-        start.advance(xmlns_len);
-
-        if (*start == ':') {
-          ++start;
-
-          prefixAtom =
-            dont_AddRef(NS_NewAtom(nsDependentSubstring(start, end)));
-        }
-      }
-
-      nsCOMPtr<nsINameSpace> child;
-      rv = nameSpace->CreateChildNameSpace(prefixAtom, aNode.GetValueAt(i),
-                                           *getter_AddRefs(child));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nameSpace = child;
-    }
-  }
-
-  if (!mNameSpaceStack) {
-    mNameSpaceStack = new nsAutoVoidArray();
-
-    if (!mNameSpaceStack) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  nsINameSpace *tmp = nameSpace;
-  mNameSpaceStack->AppendElement(tmp);
-  NS_ADDREF(tmp);
-
-  return NS_OK;
-}
-
 // static
 void
 nsXMLContentSink::SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
@@ -681,141 +565,8 @@ nsXMLContentSink::SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
   *aLocalName = NS_NewAtom(aString);
 }
 
-NS_IMETHODIMP
-nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-  PRBool isHTML = PR_FALSE;
-  PRBool appendContent = PR_TRUE;
-  nsCOMPtr<nsIContent> content;
-
-  // XXX Hopefully the parser will flag this before we get
-  // here. If we're in the epilog, there should be no
-  // new elements
-  PR_ASSERT(eXMLContentSinkState_InEpilog != mState);
-
-  FlushText();
-
-  mState = eXMLContentSinkState_InDocumentElement;
-
-  nsCOMPtr<nsIAtom> nameSpacePrefix, tagAtom;
-
-  SplitXMLName(aNode.GetText(), getter_AddRefs(nameSpacePrefix),
-               getter_AddRefs(tagAtom));
-
-  // We must register namespace declarations found in the attribute list
-  // of an element before creating the element. This is because the
-  // namespace prefix for an element might be declared within the attribute
-  // list.
-  result = PushNameSpacesFrom(aNode);
-  NS_ENSURE_SUCCESS(result, result);
-
-  PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
-
-  if (!OnOpenContainer(aNode, nameSpaceID, tagAtom))
-    return NS_OK;
-  
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-
-  mNodeInfoManager->GetNodeInfo(tagAtom, nameSpacePrefix, nameSpaceID,
-                                *getter_AddRefs(nodeInfo));
-
-  isHTML = IsHTMLNameSpace(nameSpaceID);
-
-  if (isHTML) {
-    if (tagAtom.get() == nsHTMLAtoms::script) {
-      result = ProcessStartSCRIPTTag(aNode);
-      // Don't append the content to the tree until we're all
-      // done collecting its contents
-      appendContent = PR_FALSE;
-    } else if (tagAtom.get() == nsHTMLAtoms::title) {
-      if (mTitleText.IsEmpty())
-        mInTitle = PR_TRUE; // The first title wins
-    }
-
-    nsCOMPtr<nsIHTMLContent> htmlContent;
-    result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_TRUE);
-    content = do_QueryInterface(htmlContent);
-
-    if (tagAtom.get() == nsHTMLAtoms::style) {
-      mStyleElement = htmlContent;
-    } else if (tagAtom.get() == nsHTMLAtoms::base) {
-      if (!mBaseElement) {
-        mBaseElement = htmlContent; // The first base wins
-      }
-    } else if (tagAtom.get() == nsHTMLAtoms::meta) {
-      if (!mMetaElement) {
-        mMetaElement = htmlContent;
-      }
-    }
-  }
-  else
-    CreateElement(aNode, nameSpaceID, nodeInfo, getter_AddRefs(content));
-  
-  if (NS_OK == result) {
-    PRInt32 id;
-    mDocument->GetAndIncrementContentID(&id);
-    content->SetContentID(id);
-
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
-
-    if (ssle) {
-      // We stopped supporting <style src="..."> for XHTML as it is
-      // non-standard.
-      if (isHTML && tagAtom.get() == nsHTMLAtoms::style) {
-        ssle->InitStyleLinkElement(nsnull, PR_TRUE);
-      }
-      else {
-        ssle->InitStyleLinkElement(mParser, PR_FALSE);
-        ssle->SetEnableUpdates(PR_FALSE);
-      }
-    }
-
-    content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-
-    // Set the attributes on the new content element
-    result = AddAttributes(aNode, content, isHTML);
-
-    if (NS_OK == result) {
-      // If this is the document element
-      if (!mDocElement) {
-        mDocElement = content;
-        NS_ADDREF(mDocElement);
-
-        // For XSL, we need to wait till after the transform
-        // to set the root content object.
-        if (!mXSLTransformMediator)
-            mDocument->SetRootContent(mDocElement);
-      }
-      else if (appendContent) {
-        nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
-
-        parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
-      }
-
-      PushContent(content);
-    }
-
-    // Set the ID attribute atom on the node info object for this node
-    nsCOMPtr<nsIAtom> IDAttr;
-    result = aNode.GetIDAttributeAtom(getter_AddRefs(IDAttr));
-    if (IDAttr && NS_SUCCEEDED(result))
-      result = nodeInfo->SetIDAttributeAtom(IDAttr);
-
-    if (ssle) {
-      ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
-      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
-        mStyleSheetCount++;
-    }
-  }
-
-  return result;
-}
-
 nsresult
-nsXMLContentSink::CreateElement(const nsIParserNode& aNode,
-                                PRInt32 aNameSpaceID, 
+nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount, PRInt32 aNameSpaceID, 
                                 nsINodeInfo* aNodeInfo, nsIContent** aResult)
 {
   // The first step here is to see if someone has provided their
@@ -830,130 +581,6 @@ nsXMLContentSink::CreateElement(const nsIParserNode& aNode,
     NS_NewXMLElement(aResult, aNodeInfo);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-  PRBool popContent = PR_TRUE;
-  PRBool appendContent = PR_FALSE;
-
-  // XXX Hopefully the parser will flag this before we get
-  // here. If we're in the prolog or epilog, there should be
-  // no close tags for elements.
-  PR_ASSERT(eXMLContentSinkState_InDocumentElement == mState);
-
-  FlushText();
-
-  nsCOMPtr<nsIContent> currentContent(dont_AddRef(GetCurrentContent()));
-
-  if (currentContent && currentContent->IsContentOfType(nsIContent::eHTML)) {
-    nsCOMPtr<nsIAtom> tagAtom;
-
-    currentContent->GetTag(*getter_AddRefs(tagAtom));
-
-    if (tagAtom.get() == nsHTMLAtoms::script) {
-      result = ProcessEndSCRIPTTag(aNode);
-      appendContent = PR_TRUE;
-    } else if (tagAtom.get() == nsHTMLAtoms::title) {
-      if (mInTitle) { // The first title wins
-        nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
-        if (dom_doc) {
-          mTitleText.CompressWhitespace();
-          dom_doc->SetTitle(mTitleText);
-        }
-        mInTitle = PR_FALSE;
-      }
-    } else if (tagAtom.get() == nsHTMLAtoms::style) {
-      if (mStyleElement) {
-        result = ProcessSTYLETag(aNode);
-        mStyleElement=nsnull;
-        mStyleText.Truncate();
-      }
-    } else if (tagAtom.get() == nsHTMLAtoms::base) {
-      if (mBaseElement) {
-        result = ProcessBASETag();
-      }
-    } else if (tagAtom.get() == nsHTMLAtoms::meta) {
-      if (mMetaElement) {
-        result = ProcessMETATag();
-        mMetaElement = nsnull;  // HTML can have more than one meta so clear this now
-      }
-    }
-  }
-
-  nsCOMPtr<nsIContent> content;
-  if (popContent) {
-    content = getter_AddRefs(PopContent());
-    if (content) {
-      if (mDocElement == content.get()) {
-        mState = eXMLContentSinkState_InEpilog;
-      }
-      else if (appendContent) {
-        nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
-
-        parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
-      }
-    }
-    else {
-      // XXX Again, the parser should catch unmatched tags and
-      // we should never get here.
-      PR_ASSERT(0);
-    }
-  }
-  nsINameSpace* nameSpace = PopNameSpaces();
-  NS_IF_RELEASE(nameSpace);
-
-  if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
-    return NS_ERROR_HTMLPARSER_BLOCK;
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::AddLeaf(const nsIParserNode& aNode)
-{
-  // XXX For now, all leaf content is character data
-  // XXX make sure to push/pop name spaces here too (for attributes)
-  switch (aNode.GetTokenType()) {
-    case eToken_text:
-    case eToken_whitespace:
-    case eToken_newline:
-      AddText(aNode.GetText());
-      break;
-
-    case eToken_cdatasection:
-      AddCDATASection(aNode);    
-      break;
-
-    case eToken_entity:
-    {
-      nsAutoString tmp;
-      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-      if (unicode < 0) {
-        return AddText(aNode.GetText());
-      }
-      return AddText(tmp);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::NotifyError(const nsParserError* aError)
-{
-  return NS_OK;
-}
-
-// nsIXMLContentSink
-NS_IMETHODIMP
-nsXMLContentSink::AddXMLDecl(const nsIParserNode& aNode)
-{
-  // XXX We'll ignore it for now
-  printf("nsXMLContentSink::AddXMLDecl\n");
   return NS_OK;
 }
 
@@ -976,62 +603,6 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
     if (parent) {
       result = parent->AppendChildTo(aContent, PR_FALSE, PR_FALSE);
     }
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::AddComment(const nsIParserNode& aNode)
-{
-  FlushText();
-
-  nsIContent *comment;
-  nsIDOMComment *domComment;
-  nsresult result = NS_OK;
-
-  result = NS_NewCommentNode(&comment);
-  if (NS_OK == result) {
-    result = comment->QueryInterface(NS_GET_IID(nsIDOMComment), (void **)&domComment);
-    if (NS_OK == result) {
-      domComment->AppendData(aNode.GetText());
-      NS_RELEASE(domComment);
-
-      comment->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-      result = AddContentAsLeaf(comment);
-    }
-    NS_RELEASE(comment);
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
-{
-  FlushText();
-
-  nsIContent *cdata;
-  nsIDOMCDATASection *domCDATA;
-  nsresult result = NS_OK;
-
-  const nsAReadableString& text = aNode.GetText();
-  if (mInTitle) {
-    mTitleText.Append(text);
-  } else if (mStyleElement) {
-    mStyleText.Append(text);
-  }
-  result = NS_NewXMLCDATASection(&cdata);
-  if (NS_OK == result) {
-    result = cdata->QueryInterface(NS_GET_IID(nsIDOMCDATASection), (void **)&domCDATA);
-    if (NS_OK == result) {
-      domCDATA->AppendData(text);
-      NS_RELEASE(domCDATA);
-
-      cdata->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-      result = AddContentAsLeaf(cdata);
-    }
-    NS_RELEASE(cdata);
   }
 
   return result;
@@ -1163,66 +734,6 @@ nsXMLContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
 }
 
 nsresult
-nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
-{
-  nsresult rv = NS_OK;
-  
-  nsAutoString title; 
-  nsAutoString type; 
-  nsAutoString media; 
-
-  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
-  title.CompressWhitespace();
-
-  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  type.StripWhitespace();
-
-  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, media);
-  ToLowerCase(media);
-
-  nsAutoString  mimeType;
-  nsAutoString  params;
-  nsStyleLinkElement::SplitMimeType(type, mimeType, params);
-
-  PRBool blockParser = PR_FALSE;//kBlockByDefault;
-
-  if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) { 
-    if (!title.IsEmpty()) {  // possibly preferred sheet
-      nsAutoString preferredStyle;
-      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
-      if (preferredStyle.IsEmpty()) {
-        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
-      }
-    }
-
-    PRBool doneLoading = PR_FALSE;
-
-    nsIUnicharInputStream* uin = nsnull;
-
-    // Create a string to hold the data and wrap it up in a unicode
-    // input stream.
-    rv = NS_NewStringUnicharInputStream(&uin, new nsString(mStyleText));
-    if (NS_OK != rv) {
-      return rv;
-    }
-
-    // Now that we have a url and a unicode input stream, parse the
-    // style sheet.
-    rv = mCSSLoader->LoadInlineStyle(mStyleElement, uin, title, media, kNameSpaceID_Unknown,
-                                     mStyleSheetCount++, 
-                                     ((blockParser) ? mParser : nsnull),
-                                     doneLoading, this);
-    NS_RELEASE(uin);
-
-    if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
-      rv = NS_ERROR_HTMLPARSER_BLOCK;
-    }
-  }//if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css"))
-
-  return rv;
-}
-
-nsresult
 nsXMLContentSink::ProcessBASETag()
 {
   nsresult rv = NS_OK;
@@ -1298,149 +809,6 @@ nsXMLContentSink::ProcessMETATag()
   return rv;
 }
 
-NS_IMETHODIMP
-nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-  nsAutoString text, target, data;
-  nsCOMPtr<nsIContent> node;
-
-  FlushText();
-
-  text.Assign(aNode.GetText());
-  ParseProcessingInstruction(text, target, data);
-  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node), target, data);
-  if (NS_OK == result) {
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
-
-    if (ssle) {
-      ssle->InitStyleLinkElement(mParser, PR_FALSE);
-      ssle->SetEnableUpdates(PR_FALSE);
-    }
-
-    result = AddContentAsLeaf(node);
-
-    if (ssle) {
-      ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
-      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
-        mStyleSheetCount++; // This count may not reflect the real stylesheet count
-    }
-
-    if (NS_FAILED(result))
-      return result;
-
-    // If it's a XSL stylesheet PI...
-    nsAutoString type;
-    nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("type"), type);
-    if (mState == eXMLContentSinkState_InProlog && 
-        target.EqualsWithConversion(kStyleSheetPI) && 
-        !type.EqualsIgnoreCase("text/css")) {
-      nsAutoString href, title, media, alternate;
-
-      nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("href"), href);
-      // If there was no href, we can't do anything with this PI
-      if (href.IsEmpty()) {
-        return NS_OK;
-      }
-
-      nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("title"), title);
-      title.CompressWhitespace();
-
-      nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("media"), media);
-      ToLowerCase(media);
-
-      nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("alternate"), alternate);
-
-      result = ProcessStyleLink(node, href, alternate.Equals(NS_LITERAL_STRING("yes")),
-                                title, type, media);
-    }
-  }
-
-  return result;
-}
-
-
-/**
- * DOCTYPE declaration is covered with very strict rules, which
- * makes our life here simpler because the XML parser has already
- * detected errors. The only slightly problematic case is whitespace
- * between the tokens. There MUST be whitespace between the tokens
- * EXCEPT right before > and [.
- */
-static const char* kWhitespace = " \r\n\t\b"; // Optimized for typical cases
-
-static void
-GetDocTypeToken(nsString& aStr,
-                nsString& aToken,
-                PRBool aQuotedString)
-{
-  aStr.Trim(kWhitespace,PR_TRUE,PR_FALSE); // If we don't do this we must look ahead
-                                           // before Cut() and adjust the cut amount.
-  
-  if (aQuotedString) {    
-    PRInt32 endQuote = aStr.FindChar(aStr[0],PR_FALSE,1);
-    aStr.Mid(aToken,1,endQuote-1);
-    aStr.Cut(0,endQuote+1);
-  } else {    
-    static const char* kDelimiter = " >[\r\n\t\b"; // Optimized for typical cases
-    PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
-    if (tokenEnd > 0) {
-      aStr.Left(aToken, tokenEnd);
-      aStr.Cut(0, tokenEnd);
-    }
-  }
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
-{
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mDocument));
-  if (!doc)
-    return NS_OK;
-
-  nsAutoString docTypeStr(aNode.GetText()); 
-  nsAutoString str, name, publicId, systemId;
-
-  if (Substring(docTypeStr, 0, 9).Equals(NS_LITERAL_STRING("<!DOCTYPE"))) {
-    docTypeStr.Right(str, docTypeStr.Length()-9);
-  }
-
-  GetDocTypeToken(str, name, PR_FALSE);
-
-  nsAutoString token;
-
-  GetDocTypeToken(str, token, PR_FALSE);
-  if (token.Equals(NS_LITERAL_STRING("PUBLIC"))) {
-    GetDocTypeToken(str, publicId, PR_TRUE);
-    GetDocTypeToken(str, systemId, PR_TRUE);
-  }
-  else if (token.Equals(NS_LITERAL_STRING("SYSTEM"))) {
-    GetDocTypeToken(str, systemId, PR_TRUE);
-  }
-
-  // The rest is the internal subset (minus whitespace and the trailing >)
-  str.Truncate(str.Length()-1); // Delete the trailing >
-  str.Trim(kWhitespace);
-
-  nsCOMPtr<nsIDOMDocumentType> oldDocType;
-  nsCOMPtr<nsIDOMDocumentType> docType;
-  
-  // Create a new doctype node
-  rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
-                             name, nsnull, nsnull,
-                             publicId, systemId, str);
-  if (NS_FAILED(rv) || !docType) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIDOMNode> tmpNode;
-  
-  return doc->AppendChild(docType, getter_AddRefs(tmpNode));
-}
-
 NS_IMETHODIMP 
 nsXMLContentSink::SetDocumentCharset(nsAWritableString& aCharset)
 {
@@ -1485,92 +853,6 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 }
 
 #define NS_ACCUMULATION_BUFFER_SIZE 4096
-
-NS_IMETHODIMP
-nsXMLContentSink::AddCharacterData(const nsIParserNode& aNode)
-{
-  return AddText(aNode.GetText());
-}
-
-nsresult
-nsXMLContentSink::AddText(const nsAReadableString& aString)
-{
-  PRInt32 addLen = aString.Length();
-  if (0 == addLen) {
-    return NS_OK;
-  }
-
-  if (mInTitle) {
-    mTitleText.Append(aString);
-  } else if (mStyleElement) {
-    mStyleText.Append(aString);
-  }
-
-  // Create buffer when we first need it
-  if (0 == mTextSize) {
-    mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * NS_ACCUMULATION_BUFFER_SIZE);
-    if (nsnull == mText) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mTextSize = NS_ACCUMULATION_BUFFER_SIZE;
-  }
-
-  // Copy data from string into our buffer; flush buffer when it fills up
-  PRInt32 offset = 0;
-  PRBool  isLastCharCR = PR_FALSE;
-  while (0 != addLen) {
-    PRInt32 amount = mTextSize - mTextLength;
-    if (amount > addLen) {
-      amount = addLen;
-    }
-    if (0 == amount) {
-      if (mConstrainSize) {
-        nsresult rv = FlushText();
-        if (NS_OK != rv) {
-          return rv;
-        }
-      }
-      else {
-        mTextSize += addLen;
-        mText = (PRUnichar *) PR_REALLOC(mText, sizeof(PRUnichar) * mTextSize);
-        if (nsnull == mText) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-    }
-    mTextLength +=
-      nsContentUtils::CopyNewlineNormalizedUnicodeTo(aString, 
-                                                     offset, 
-                                                     &mText[mTextLength], 
-                                                     amount,
-                                                     isLastCharCR);
-    offset += amount;
-    addLen -= amount;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::AddUnparsedEntity(const nsIParserNode& aNode)
-{
-  printf("nsXMLContentSink::AddUnparsedEntity\n");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::AddNotation(const nsIParserNode& aNode)
-{
-  printf("nsXMLContentSink::AddNotation\n");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLContentSink::AddEntityReference(const nsIParserNode& aNode)
-{
-  printf("nsXMLContentSink::AddEntityReference\n");
-  return NS_OK;
-}
 
 PRInt32
 nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
@@ -1735,30 +1017,6 @@ nsXMLContentSink::StartLayout()
   }
 }
 
-nsresult
-nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-
-  nsCOMPtr<nsIContent> element(dont_AddRef(GetCurrentContent()));
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(element));
-  NS_ASSERTION(scriptElement, "null script element in XML content sink");
-  mScriptElements.AppendElement(scriptElement);
-
-  nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(element));
-  if (sele) {
-    sele->SetLineNumber(mScriptLineNo);
-  }
-
-  mConstrainSize = PR_TRUE; 
-  // Assume that we're going to block the parser with a script load.
-  // If it's an inline script, we'll be told otherwise in the call
-  // to our ScriptAvailable method.
-  mNeedToBlockParser = PR_TRUE;
-
-  return result;
-}
-
 NS_IMETHODIMP
 nsXMLContentSink::ScriptAvailable(nsresult aResult, 
                                   nsIDOMHTMLScriptElement *aElement, 
@@ -1823,16 +1081,6 @@ nsXMLContentSink::ScriptEvaluated(nsresult aResult,
   if(mParser && mParser->IsParserEnabled() && aWasPending){
     mParser->ContinueParsing();
   }
-
-  return NS_OK;
-}
-
-nsresult
-nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
-{
-  // Wait until we get the script content
-  mConstrainSize = PR_FALSE;
-  mScriptLineNo = (PRUint32)aNode.GetSourceLineNumber();
 
   return NS_OK;
 }
@@ -1924,4 +1172,750 @@ nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID,
                                     nsIElementFactory** aResult)
 {
   gNameSpaceManager->GetElementFactory(aNameSpaceID, aResult);
+}
+
+NS_IMETHODIMP 
+nsXMLContentSink::HandleStartElement(const PRUnichar *aName, 
+                                     const PRUnichar **aAtts, 
+                                     const PRUint32 aAttsCount, 
+                                     const PRUint32 aIndex, 
+                                     const PRUint32 aLineNumber)
+{
+  nsresult result = NS_OK;
+  PRBool isHTML = PR_FALSE;
+  PRBool appendContent = PR_TRUE;
+  nsCOMPtr<nsIContent> content;
+
+  // XXX Hopefully the parser will flag this before we get
+  // here. If we're in the epilog, there should be no
+  // new elements
+  PR_ASSERT(eXMLContentSinkState_InEpilog != mState);
+
+  FlushText();
+
+  mState = eXMLContentSinkState_InDocumentElement;
+
+  nsCOMPtr<nsIAtom> nameSpacePrefix, tagAtom;
+
+  SplitXMLName(nsDependentString(aName), getter_AddRefs(nameSpacePrefix),
+               getter_AddRefs(tagAtom));
+
+  // We must register namespace declarations found in the attribute list
+  // of an element before creating the element. This is because the
+  // namespace prefix for an element might be declared within the attribute
+  // list.
+  result = PushNameSpacesFrom(aAtts);
+  NS_ENSURE_SUCCESS(result, result);
+
+  PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+
+  if (!OnOpenContainer(aAtts, aAttsCount, nameSpaceID, tagAtom))
+    return NS_OK;
+  
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+
+  mNodeInfoManager->GetNodeInfo(tagAtom, nameSpacePrefix, nameSpaceID,
+                                *getter_AddRefs(nodeInfo));
+
+  isHTML = IsHTMLNameSpace(nameSpaceID);
+
+  if (isHTML) {
+    if (tagAtom.get() == nsHTMLAtoms::script) {
+      result = ProcessStartSCRIPTTag(aLineNumber);
+      // Don't append the content to the tree until we're all
+      // done collecting its contents
+      appendContent = PR_FALSE;
+    } else if (tagAtom.get() == nsHTMLAtoms::title) {
+      if (mTitleText.IsEmpty())
+        mInTitle = PR_TRUE; // The first title wins
+    }
+
+    nsCOMPtr<nsIHTMLContent> htmlContent;
+    result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_TRUE);
+    content = do_QueryInterface(htmlContent);
+
+    if (tagAtom.get() == nsHTMLAtoms::style) {
+      mStyleElement = htmlContent;
+    } 
+    else if (tagAtom.get() == nsHTMLAtoms::base) {
+      if (!mBaseElement) {
+        mBaseElement = htmlContent; // The first base wins
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::meta) {
+      if (!mMetaElement) {
+        mMetaElement = htmlContent;
+      }
+    }
+  }
+  else
+    CreateElement(aAtts, aAttsCount, nameSpaceID, nodeInfo, getter_AddRefs(content));
+
+  if (NS_OK == result) {
+    PRInt32 id;
+    mDocument->GetAndIncrementContentID(&id);
+    content->SetContentID(id);
+
+    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
+
+    if (ssle) {
+      // We stopped supporting <style src="..."> for XHTML as it is
+      // non-standard.
+      if (isHTML && tagAtom.get() == nsHTMLAtoms::style) {
+        ssle->InitStyleLinkElement(nsnull, PR_TRUE);
+      }
+      else {
+        ssle->InitStyleLinkElement(mParser, PR_FALSE);
+        ssle->SetEnableUpdates(PR_FALSE);
+      }
+    }
+
+    content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+
+    // Set the attributes on the new content element
+    result = AddAttributes(aAtts, content, isHTML);
+
+    if (NS_OK == result) {
+      // If this is the document element
+      if (!mDocElement) {
+        mDocElement = content;
+        NS_ADDREF(mDocElement);
+
+        // For XSL, we need to wait till after the transform
+        // to set the root content object.
+        if (!mXSLTransformMediator)
+            mDocument->SetRootContent(mDocElement);
+      }
+      else if (appendContent) {
+        nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
+
+        parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
+      }
+
+      PushContent(content);
+    }
+
+    // Set the ID attribute atom on the node info object for this node
+    if (aIndex != -1) {
+      nsCOMPtr<nsIAtom> IDAttr = dont_AddRef(NS_NewAtom((const PRUnichar *) aAtts[aIndex]));
+      if (IDAttr && NS_SUCCEEDED(result)) {
+        result = nodeInfo->SetIDAttributeAtom(IDAttr);
+      }
+    }
+     
+    if (ssle) {
+      ssle->SetEnableUpdates(PR_TRUE);
+      result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
+        if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+          mParser->BlockParser();
+        }
+        mStyleSheetCount++;
+      }
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
+{
+  nsresult result = NS_OK;
+  PRBool popContent = PR_TRUE;
+  PRBool appendContent = PR_FALSE;
+
+  // XXX Hopefully the parser will flag this before we get
+  // here. If we're in the prolog or epilog, there should be
+  // no close tags for elements.
+  PR_ASSERT(eXMLContentSinkState_InDocumentElement == mState);
+
+  FlushText();
+
+  nsCOMPtr<nsIContent> currentContent(dont_AddRef(GetCurrentContent()));
+
+  if (currentContent && currentContent->IsContentOfType(nsIContent::eHTML)) {
+    nsCOMPtr<nsIAtom> tagAtom;
+
+    currentContent->GetTag(*getter_AddRefs(tagAtom));
+
+    if (tagAtom.get() == nsHTMLAtoms::script) {
+      result = ProcessEndSCRIPTTag();
+      appendContent = PR_TRUE;
+    } else if (tagAtom.get() == nsHTMLAtoms::title) {
+      if (mInTitle) { // The first title wins
+        nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
+        if (dom_doc) {
+          mTitleText.CompressWhitespace();
+          dom_doc->SetTitle(mTitleText);
+        }
+        mInTitle = PR_FALSE;
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::style) {
+      if (mStyleElement) {
+        result = ProcessSTYLETag();
+        mStyleElement=nsnull;
+        mStyleText.Truncate();
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::base) {
+      if (mBaseElement) {
+        result = ProcessBASETag();
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::meta) {
+      if (mMetaElement) {
+        result = ProcessMETATag();
+        mMetaElement = nsnull;  // HTML can have more than one meta so clear this now
+      }
+    }
+  }
+
+  nsCOMPtr<nsIContent> content;
+  if (popContent) {
+    content = getter_AddRefs(PopContent());
+    if (content) {
+      if (mDocElement == content.get()) {
+        mState = eXMLContentSinkState_InEpilog;
+      }
+      else if (appendContent) {
+        nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
+
+        parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
+      }
+    }
+    else {
+      // XXX Again, the parser should catch unmatched tags and
+      // we should never get here.
+      PR_ASSERT(0);
+    }
+  }
+  nsINameSpace* nameSpace = PopNameSpaces();
+  NS_IF_RELEASE(nameSpace);
+
+  if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
+    if (mParser) mParser->BlockParser();
+    result = NS_ERROR_HTMLPARSER_BLOCK;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsXMLContentSink::HandleComment(const PRUnichar *aName)
+{
+  FlushText();
+
+  nsIContent *comment;
+  nsIDOMComment *domComment;
+  nsresult result = NS_OK;
+
+  result = NS_NewCommentNode(&comment);
+  if (NS_OK == result) {
+    result = comment->QueryInterface(NS_GET_IID(nsIDOMComment), (void **)&domComment);
+    if (NS_OK == result) {
+      domComment->AppendData(nsDependentString(aName));
+      NS_RELEASE(domComment);
+
+      comment->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+      result = AddContentAsLeaf(comment);
+    }
+    NS_RELEASE(comment);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP nsXMLContentSink::HandleCDataSection(const PRUnichar *aData, PRUint32 aLength)
+{
+  FlushText();
+
+  nsIContent *cdata;
+  nsIDOMCDATASection *domCDATA;
+  nsresult result = NS_OK;
+  
+  if (mInTitle) {
+    mTitleText.Append(aData, aLength);
+  } else if (mStyleElement) {
+    mStyleText.Append(aData, aLength);
+  }
+  
+  result = NS_NewXMLCDATASection(&cdata);
+  if (NS_OK == result) {
+    result = cdata->QueryInterface(NS_GET_IID(nsIDOMCDATASection), (void **)&domCDATA);
+    if (NS_OK == result) {
+      domCDATA->SetData(nsDependentString(aData, aLength));
+      NS_RELEASE(domCDATA);
+
+      cdata->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+      result = AddContentAsLeaf(cdata);
+    }
+    NS_RELEASE(cdata);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mDocument));
+  if (!doc)
+    return NS_OK;
+
+  nsAutoString docTypeStr(aDoctype); 
+  nsAutoString str, name, publicId, systemId;
+
+  if (Substring(docTypeStr, 0, 9).Equals(NS_LITERAL_STRING("<!DOCTYPE"))) {
+    docTypeStr.Right(str, docTypeStr.Length()-9);
+  }
+
+  GetDocTypeToken(str, name, PR_FALSE);
+
+  nsAutoString token;
+
+  GetDocTypeToken(str, token, PR_FALSE);
+  if (token.Equals(NS_LITERAL_STRING("PUBLIC"))) {
+    GetDocTypeToken(str, publicId, PR_TRUE);
+    GetDocTypeToken(str, systemId, PR_TRUE);
+  }
+  else if (token.Equals(NS_LITERAL_STRING("SYSTEM"))) {
+    GetDocTypeToken(str, systemId, PR_TRUE);
+  }
+
+  // The rest is the internal subset (minus whitespace and the trailing >)
+  str.Truncate(str.Length()-1); // Delete the trailing >
+  str.Trim(kWhitespace);
+
+  nsCOMPtr<nsIDOMDocumentType> oldDocType;
+  nsCOMPtr<nsIDOMDocumentType> docType;
+  
+  // Create a new doctype node
+  rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
+                             name, nsnull, nsnull,
+                             publicId, systemId, str);
+  if (NS_FAILED(rv) || !docType) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDOMNode> tmpNode;
+  
+  return doc->AppendChild(docType, getter_AddRefs(tmpNode));
+}
+
+NS_IMETHODIMP 
+nsXMLContentSink::HandleCharacterData(const PRUnichar *aData, 
+                                      PRUint32 aLength)
+{
+  nsresult result = NS_OK;
+  if (aData) {
+    result = AddText(aData,aLength);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget, 
+                                              const PRUnichar *aData)
+{
+  FlushText();
+
+  nsresult result = NS_OK;
+  const nsDependentString target(aTarget);
+  nsAutoString data(aData); // XXX replace this with nsDependentString. Change nsParserUtils APIs
+  
+  nsCOMPtr<nsIContent> node;
+
+  // ParseProcessingInstruction(text, target, data);
+  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node), target, data);
+  if (NS_OK == result) {
+    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
+
+    if (ssle) {
+      ssle->InitStyleLinkElement(mParser, PR_FALSE);
+      ssle->SetEnableUpdates(PR_FALSE);
+    }
+
+    result = AddContentAsLeaf(node);
+
+    if (ssle) {
+      ssle->SetEnableUpdates(PR_TRUE);
+      result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
+      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
+        mStyleSheetCount++; // This count may not reflect the real stylesheet count
+    }
+
+    if (NS_FAILED(result)) {
+      if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+        mParser->BlockParser();
+      }
+      return result;
+    }
+
+    // If it's a XSL stylesheet PI...
+    nsAutoString type;
+    nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
+    if (mState == eXMLContentSinkState_InProlog && 
+        target.Equals(NS_LITERAL_STRING("xml-stylesheet")) && 
+        !type.EqualsIgnoreCase("text/css")) {
+      nsAutoString href, title, media, alternate;
+
+      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), href);
+      // If there was no href, we can't do anything with this PI
+      if (href.IsEmpty()) {
+        return NS_OK;
+      }
+
+      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("title"), title);
+      title.CompressWhitespace();
+
+      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("media"), media);
+      ToLowerCase(media);
+
+      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
+
+      result = ProcessStyleLink(node, href, alternate.Equals(NS_LITERAL_STRING("yes")),
+                                title, type, media);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsXMLContentSink::ReportError(const PRUnichar* aErrorText, 
+                              const PRUnichar* aSourceText)
+{
+  nsresult rv = NS_OK;
+
+  NS_NAMED_LITERAL_STRING(name, "xmlns");
+  NS_NAMED_LITERAL_STRING(value, "http://www.w3.org/1999/xhtml");
+
+  const PRUnichar* atts[] = {name.get(), value.get(), nsnull};
+
+  mState = eXMLContentSinkState_InProlog;
+  NS_IF_RELEASE(mDocElement); // Do this inorder to set the <parsererror> as the document root
+    
+  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1, -1, -1);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
+  NS_ENSURE_SUCCESS(rv,rv);  
+  
+  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), atts, 1, -1, -1);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = HandleEndElement(NS_LITERAL_STRING("sourcetext").get());
+  NS_ENSURE_SUCCESS(rv,rv); 
+  
+  rv = HandleEndElement(NS_LITERAL_STRING("parsererror").get());
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
+{
+  nsCOMPtr<nsINameSpace> nameSpace;
+  nsresult rv = NS_OK;
+
+  if (mNameSpaceStack && (0 < mNameSpaceStack->Count())) {
+    nameSpace =
+      (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
+  } else {
+    nsCOMPtr<nsINameSpaceManager> manager;
+    mDocument->GetNameSpaceManager(*getter_AddRefs(manager));
+
+    NS_ASSERTION(manager, "no name space manager in document");
+
+    if (manager) {
+      rv = manager->CreateRootNameSpace(*getter_AddRefs(nameSpace));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  NS_ENSURE_TRUE(nameSpace, NS_ERROR_UNEXPECTED);
+
+  static const NS_NAMED_LITERAL_STRING(kNameSpaceDef, "xmlns");
+  static const PRUint32 xmlns_len = kNameSpaceDef.Length();
+
+  
+  while (*aAtts) {
+    const nsDependentString key(aAtts[0]);
+
+    // Look for "xmlns" at the start of the attribute name
+
+    PRUint32 key_len = key.Length();
+
+    if (key_len >= xmlns_len &&
+        nsDependentSubstring(key, 0, xmlns_len).Equals(kNameSpaceDef)) {
+      nsCOMPtr<nsIAtom> prefixAtom;
+
+      // If key_len > xmlns_len we have a xmlns:foo type attribute,
+      // extract the prefix. If not, we have a xmlns attribute in
+      // which case there is no prefix.
+
+      if (key_len > xmlns_len) {
+        nsReadingIterator<PRUnichar> start, end;
+
+        key.BeginReading(start);
+        key.EndReading(end);
+
+        start.advance(xmlns_len);
+
+        if (*start == ':') {
+          ++start;
+
+          prefixAtom =
+            dont_AddRef(NS_NewAtom(nsDependentSubstring(start, end)));
+        }
+      }
+
+      nsCOMPtr<nsINameSpace> child;
+      rv = nameSpace->CreateChildNameSpace(prefixAtom, nsDependentString(aAtts[1]),
+                                           *getter_AddRefs(child));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nameSpace = child;
+    }
+    aAtts += 2;
+  }
+
+  if (!mNameSpaceStack) {
+    mNameSpaceStack = new nsAutoVoidArray();
+
+    if (!mNameSpaceStack) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  nsINameSpace *tmp = nameSpace;
+  mNameSpaceStack->AppendElement(tmp);
+  NS_ADDREF(tmp);
+
+  return NS_OK;
+}
+
+nsresult
+nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
+                                nsIContent* aContent,
+                                PRBool aIsHTML)
+{
+  // Add tag attributes to the content attributes
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+
+  while (*aAtts) {
+    // Get upper-cased key
+    const nsDependentString key(aAtts[0]);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    PRInt32 nameSpaceID;
+
+    if (nameSpacePrefix) {
+        nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+    } else {
+      if (nameAtom.get() == nsLayoutAtoms::xmlnsNameSpace)
+        nameSpaceID = kNameSpaceID_XMLNS;
+      else
+        nameSpaceID = kNameSpaceID_None;
+    }
+
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;
+      nameAtom = dont_AddRef(NS_NewAtom(key));
+      nameSpacePrefix = nsnull;
+    } else if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
+      // Ooh, what a nice little hack we have here :-)
+      nsAutoString name;
+      nameAtom->ToString(name);
+      nameAtom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("xmlns:") + name));
+      nameSpaceID = kNameSpaceID_HTML;  // XXX this is wrong, but necessary until HTML can store other namespaces for attrs
+    }
+
+    nsCOMPtr<nsINodeInfo> ni;
+    mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
+                                  *getter_AddRefs(ni));
+    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+
+    // Add attribute to content
+    aContent->SetAttr(ni, nsDependentString(aAtts[1]), PR_FALSE);
+    aAtts += 2;
+  }
+
+  // Give autoloading links a chance to fire
+  if (mWebShell) {
+    nsCOMPtr<nsIXMLContent> xmlcontent(do_QueryInterface(aContent));
+    if (xmlcontent) {
+      nsresult rv = xmlcontent->MaybeTriggerAutoLink(mWebShell);
+      if (rv == NS_XML_AUTOLINK_REPLACE ||
+          rv == NS_XML_AUTOLINK_UNDEFINED) {
+        // If we do not terminate the parse, we just keep generating link trigger
+        // events. We want to parse only up to the first replace link, and stop.
+        mParser->Terminate();
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+#define NS_ACCUMULATION_BUFFER_SIZE 4096
+
+nsresult
+nsXMLContentSink::AddText(const PRUnichar* aText, 
+                          PRInt32 aLength)
+{
+
+  if (mInTitle) {
+    mTitleText.Append(aText,aLength);
+  } else if (mStyleElement) {
+    mStyleText.Append(aText,aLength);
+  }
+
+  // Create buffer when we first need it
+  if (0 == mTextSize) {
+    mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * NS_ACCUMULATION_BUFFER_SIZE);
+    if (nsnull == mText) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mTextSize = NS_ACCUMULATION_BUFFER_SIZE;
+  }
+
+  const nsAReadableString& str = Substring(aText, aText+aLength);
+
+  // Copy data from string into our buffer; flush buffer when it fills up
+  PRInt32 offset = 0;
+  PRBool  isLastCharCR = PR_FALSE;
+  while (0 != aLength) {
+    PRInt32 amount = mTextSize - mTextLength;
+    if (amount > aLength) {
+      amount = aLength;
+    }
+    if (0 == amount) {
+      if (mConstrainSize) {
+        nsresult rv = FlushText();
+        if (NS_OK != rv) {
+          return rv;
+        }
+      }
+      else {
+        mTextSize += aLength;
+        mText = (PRUnichar *) PR_REALLOC(mText, sizeof(PRUnichar) * mTextSize);
+        if (nsnull == mText) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+    }
+    mTextLength +=
+      nsContentUtils::CopyNewlineNormalizedUnicodeTo(str, 
+                                                     offset, 
+                                                     &mText[mTextLength], 
+                                                     amount,
+                                                     isLastCharCR);
+    offset  += amount;
+    aLength -= amount;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsXMLContentSink::ProcessSTYLETag()
+{
+  nsresult rv = NS_OK;
+  
+  nsAutoString title; 
+  nsAutoString type; 
+  nsAutoString media; 
+
+  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
+  title.CompressWhitespace();
+
+  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
+  type.StripWhitespace();
+
+  mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, media);
+  ToLowerCase(media);
+
+  nsAutoString  mimeType;
+  nsAutoString  params;
+  nsStyleLinkElement::SplitMimeType(type, mimeType, params);
+
+  PRBool blockParser = PR_FALSE;//kBlockByDefault;
+
+  if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) { 
+    if (!title.IsEmpty()) {  // possibly preferred sheet
+      nsAutoString preferredStyle;
+      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
+      if (preferredStyle.IsEmpty()) {
+        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
+      }
+    }
+
+    PRBool doneLoading = PR_FALSE;
+
+    nsIUnicharInputStream* uin = nsnull;
+
+    // Create a string to hold the data and wrap it up in a unicode
+    // input stream.
+    rv = NS_NewStringUnicharInputStream(&uin, new nsString(mStyleText));
+    if (NS_OK != rv) {
+      return rv;
+    }
+
+    // Now that we have a url and a unicode input stream, parse the
+    // style sheet.
+    rv = mCSSLoader->LoadInlineStyle(mStyleElement, uin, title, media, kNameSpaceID_Unknown,
+                                     mStyleSheetCount++, 
+                                     ((blockParser) ? mParser : nsnull),
+                                     doneLoading, this);
+    NS_RELEASE(uin);
+
+    if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
+      if (mParser) {
+        mParser->BlockParser();
+      }
+      rv = NS_ERROR_HTMLPARSER_BLOCK;
+    }
+  }//if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css"))
+
+  return rv;
+}
+
+nsresult
+nsXMLContentSink::ProcessEndSCRIPTTag()
+{
+  nsresult result = NS_OK;
+
+  nsCOMPtr<nsIContent> element(dont_AddRef(GetCurrentContent()));
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(element));
+  NS_ASSERTION(scriptElement, "null script element in XML content sink");
+  mScriptElements.AppendElement(scriptElement);
+
+  nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(element));
+  if (sele) {
+    sele->SetLineNumber(mScriptLineNo);
+  }
+
+  mConstrainSize = PR_TRUE; 
+  // Assume that we're going to block the parser with a script load.
+  // If it's an inline script, we'll be told otherwise in the call
+  // to our ScriptAvailable method.
+  mNeedToBlockParser = PR_TRUE;
+
+  return result;
+}
+
+nsresult
+nsXMLContentSink::ProcessStartSCRIPTTag(PRUint32 aLineNo)
+{
+  // Wait until we get the script content
+  mConstrainSize = PR_FALSE;
+  mScriptLineNo = aLineNo;
+
+  return NS_OK;
 }

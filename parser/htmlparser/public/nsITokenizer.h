@@ -70,26 +70,38 @@ public:
   Notes: 
  ***************************************************************/
 
+
 class nsITokenizer : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITOKENIZER_IID)
 
-  virtual nsresult          WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)=0;
-  virtual nsresult          ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)=0;
-  virtual nsresult          DidTokenize(PRBool aIsFinalChunk)=0;
-  virtual nsTokenAllocator* GetTokenAllocator(void)=0;
-
-  virtual CToken*           PushTokenFront(CToken* aToken)=0;
-  virtual CToken*           PushToken(CToken* aToken)=0;
-	virtual CToken*           PopToken(void)=0;
-	virtual CToken*           PeekToken(void)=0;
-	virtual PRInt32           GetCount(void)=0;
-	virtual CToken*           GetTokenAt(PRInt32 anIndex)=0;
-
-  virtual void              PrependTokens(nsDeque& aDeque)=0;
+  NS_IMETHOD                     WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)=0;
+  NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)=0;
+  NS_IMETHOD                     DidTokenize(PRBool aIsFinalChunk)=0;
+  
+  NS_IMETHOD_(CToken*)           PushTokenFront(CToken* aToken)=0;
+  NS_IMETHOD_(CToken*)           PushToken(CToken* aToken)=0;
+  NS_IMETHOD_(CToken*)           PopToken(void)=0;
+  NS_IMETHOD_(CToken*)           PeekToken(void)=0;
+  NS_IMETHOD_(CToken*)           GetTokenAt(PRInt32 anIndex)=0;
+  NS_IMETHOD_(PRInt32)           GetCount(void)=0;
+  NS_IMETHOD_(nsTokenAllocator*) GetTokenAllocator(void)=0;
+  NS_IMETHOD_(void)              PrependTokens(nsDeque& aDeque)=0;
   
 };
 
+#define NS_DECL_NSITOKENIZER \
+  NS_IMETHOD                     WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator);\
+  NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens);\
+  NS_IMETHOD                     DidTokenize(PRBool aIsFinalChunk);\
+  NS_IMETHOD_(CToken*)           PushTokenFront(CToken* aToken);\
+  NS_IMETHOD_(CToken*)           PushToken(CToken* aToken);\
+  NS_IMETHOD_(CToken*)           PopToken(void);\
+  NS_IMETHOD_(CToken*)           PeekToken(void);\
+  NS_IMETHOD_(CToken*)           GetTokenAt(PRInt32 anIndex);\
+  NS_IMETHOD_(PRInt32)           GetCount(void);\
+  NS_IMETHOD_(nsTokenAllocator*) GetTokenAllocator(void);\
+  NS_IMETHOD_(void)              PrependTokens(nsDeque& aDeque);
+
 
 #endif
-

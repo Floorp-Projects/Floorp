@@ -72,11 +72,11 @@ XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
 /* atts is array of name/value pairs, terminated by 0;
    names and values are 0 terminated. */
 
-typedef void (*XML_StartElementHandler)(void *userData,
+typedef int (*XML_StartElementHandler)(void *userData,
 					const XML_Char *name,
 					const XML_Char **atts);
 
-typedef void (*XML_EndElementHandler)(void *userData,
+typedef int (*XML_EndElementHandler)(void *userData,
 				      const XML_Char *name);
 
 /* s is not 0 terminated. */
@@ -85,7 +85,7 @@ typedef void (*XML_CharacterDataHandler)(void *userData,
 					 int len);
 
 /* target and data are 0 terminated */
-typedef void (*XML_ProcessingInstructionHandler)(void *userData,
+typedef int (*XML_ProcessingInstructionHandler)(void *userData,
 						 const XML_Char *target,
 						 const XML_Char *data);
 
@@ -401,6 +401,10 @@ attribute/value pair counts as 2; thus this correspondds to an index
 into the atts array passed to the XML_StartElementHandler. */
 int XMLPARSEAPI XML_GetIdAttributeIndex(XML_Parser parser);
 
+void XMLPARSEAPI XML_BlockParser(XML_Parser parser);
+void XMLPARSEAPI XML_UnblockParser(XML_Parser parser);
+
+const XML_Char* XMLPARSEAPI XML_GetMismatchedTag(XML_Parser parser);
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;
 len may be zero for this call (or any other). */
@@ -483,7 +487,8 @@ enum XML_Error {
   XML_ERROR_INCORRECT_ENCODING,
   XML_ERROR_UNCLOSED_CDATA_SECTION,
   XML_ERROR_EXTERNAL_ENTITY_HANDLING,
-  XML_ERROR_NOT_STANDALONE
+  XML_ERROR_NOT_STANDALONE,
+  XML_ERROR_PARSER_BLOCKED
 };
 
 /* If XML_Parse or XML_ParseBuffer have returned 0, then XML_GetErrorCode

@@ -126,7 +126,8 @@ class CNavDTD : public nsIDTD
 
 public:
     NS_DECL_ISUPPORTS
-
+    NS_DECL_NSIDTD
+     
     /**
       *  Common constructor for navdtd. You probably want to call
       *  NS_NewNavHTMLDTD().
@@ -134,115 +135,8 @@ public:
       *  @update  gess 7/9/98
       */
     CNavDTD();
-
-    /**
-     *  Virtual destructor -- you know what to do
-     *  @update  gess 7/9/98
-     */
     virtual ~CNavDTD();
-
-    NS_IMETHOD_(const nsIID&) GetMostDerivedIID(void) const;
-
-    /**
-     * Call this method if you want the DTD to construct a clone of itself.
-     * @update	gess7/23/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD CreateNewInstance(nsIDTD** aInstancePtrResult);
-
-    /**
-     * This method is called to determine if the given DTD can parse
-     * a document of a given source-type. 
-     * Note that parsing assumes that the end result will always be stored 
-	   * in the main content model. Of course, it's up to you which content-
-	   * model you pass in to the parser, so you can always control the process.
-	   *
-     * @update	gess 7/15/98
-     * @param	aContentType contains the name of a filetype that you are
-   	 *			being asked to parse).
-     * @return  TRUE if this DTD parse the given type; FALSE otherwise.
-     */
-    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext,
-                                            const nsString& aBuffer,
-                                            PRInt32 aVersion);
-
-    /**
-      * The parser uses a code sandwich to wrap the parsing process. Before
-      * the process begins, WillBuildModel() is called. Afterwards the parser
-      * calls DidBuildModel(). 
-      * @update	rickg 03.20.2000
-      * @param	aParserContext
-      * @param	aSink
-      * @return	error code (almost always 0)
-      */
-    NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
-                              nsIContentSink* aSink);
-
-    /**
-      * The parser uses a code sandwich to wrap the parsing process. Before
-      * the process begins, WillBuildModel() is called. Afterwards the parser
-      * calls DidBuildModel(). 
-      * @update	gess5/18/98
-      * @param	aFilename is the name of the file being parsed.
-      * @return	error code (almost always 0)
-      */
-    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer,
-                          nsITokenObserver* anObserver = nsnull,
-                          nsIContentSink* aSink = nsnull);
-
-   /**
-     * The parser uses a code sandwich to wrap the parsing process. Before
-     * the process begins, WillBuildModel() is called. Afterwards the parser
-     * calls DidBuildModel(). 
-     * @update	gess5/18/98
-     * @param	anErrorCode contans the last error that occured
-     * @return	error code
-     */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
-                             nsIParser* aParser,
-                             nsIContentSink* aSink = nsnull);
-
-    /**
-     *  This method is called by the parser, once for each token
-     *	that has been constructed during the tokenization phase.
-     *  @update  gess 3/25/98
-     *  @param   aToken -- token object to be put into content model
-     *  @return  0 if all is well; non-zero is an error
-     */
-    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
-
-    /**
-     * 
-     * @update	gess12/28/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD  GetTokenizer(nsITokenizer*& aTokenizer);
     
-    /**
-     * 
-     * @update	gess12/28/98
-     * @param 
-     * @return
-     */
-    NS_IMETHOD_(nsTokenAllocator *) GetTokenAllocator(void);
-
-    /**
-     * If the parse process gets interrupted, this method gets called
-	   * prior to the process resuming.
-     * @update	gess5/18/98
-     * @return	error code -- usually NS_OK (0)
-     */
-    NS_IMETHOD WillResumeParse(void);
-
-    /**
-     * If the parse process is about to be interrupted, this method
-	   * will be called just prior.
-     * @update	gess5/18/98
-     * @return	error code  -- usually NS_OK (0)
-     */
-    NS_IMETHOD WillInterruptParse(void);
 
     /**
      *  This method is called to determine whether or not a tag
@@ -253,19 +147,9 @@ public:
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;
-
-    /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- int tag of parent container
-     *  @param   aChild -- int tag of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
-    NS_IMETHOD_(PRBool) CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
-                                     PRBool aParentContains) ;
+    virtual PRBool CanPropagate(eHTMLTags aParent,
+                                eHTMLTags aChild,
+                                PRBool aParentContains) ;
 
     /**
      *  This method gets called to determine whether a given 
@@ -277,18 +161,9 @@ public:
      *  @param   aParentContains -- can be 0,1,-1 (false,true, unknown)
      *  @return  PR_TRUE if given tag can be omitted
      */
-    NS_IMETHOD_(PRBool) CanOmit(eHTMLTags aParent, eHTMLTags aChild,
-                                PRBool& aParentContains);
-
-    /**
-     *  This method gets called to determine whether a given 
-     *  tag is itself a container
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aTag -- tag to test for containership
-     *  @return  PR_TRUE if given tag can contain other tags
-     */
-    NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;
+    virtual PRBool CanOmit(eHTMLTags aParent, 
+                           eHTMLTags aChild,
+                           PRBool& aParentContains);
 
     /**
      * This method tries to design a context map (without actually
@@ -300,9 +175,9 @@ public:
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    NS_IMETHOD_(PRBool) ForwardPropagate(nsString& aSequence,
-                                         eHTMLTags aParentTag,
-                                         eHTMLTags aChildTag);
+    virtual PRBool ForwardPropagate(nsString& aSequence,
+                                    eHTMLTags aParentTag,
+                                    eHTMLTags aChildTag);
 
     /**
      * This method tries to design a context map (without actually
@@ -313,9 +188,9 @@ public:
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    NS_IMETHOD_(PRBool) BackwardPropagate(nsString& aSequence,
-                                          eHTMLTags aParentTag,
-                                          eHTMLTags aChildTag) const;
+    virtual PRBool BackwardPropagate(nsString& aSequence,
+                                     eHTMLTags aParentTag,
+                                     eHTMLTags aChildTag) const;
 
     /**
      * Attempt forward and/or backward propagation for the given
@@ -366,40 +241,6 @@ public:
      * @return  index of topmost tag occurance -- may be -1 (kNotFound).
      */
     virtual PRInt32 LastOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
-
-    /**
-     * Use this id you want to stop the building content model
-     * --------------[ Sets DTD to STOP mode ]----------------
-     * It's recommended to use this method in accordance with
-     * the parser's terminate() method.
-     *
-     * @update	harishd 07/22/99
-     * @param 
-     * @return
-     */
-    NS_IMETHOD Terminate(nsIParser* aParser = nsnull)
-    {
-        mDTDState = NS_ERROR_HTMLPARSER_STOPPARSING;
-
-        return mDTDState;
-    }
-
-    /**
-     * Give rest of world access to our tag enums, so that CanContain(), etc,
-     * become useful.
-     */
-    NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag,
-                                 PRInt32* aIntTag) const;
-
-    NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const;
-
-    NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity,
-                                      PRInt32* aUnicode) const;
-
-    NS_IMETHOD_(PRBool) IsBlockElement(PRInt32 aTagID,
-                                       PRInt32 aParentID) const;
-    NS_IMETHOD_(PRBool) IsInlineElement(PRInt32 aTagID,
-                                        PRInt32 aParentID) const;
 
     /**
      * The following set of methods are used to partially construct 
@@ -489,7 +330,6 @@ public:
 
     nsresult  DoFragment(PRBool aFlag);
 
-
 protected:
 
 		nsresult        CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
@@ -502,27 +342,32 @@ protected:
     
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;
+    
     nsIHTMLContentSink* mSink;
     nsTokenAllocator*   mTokenAllocator;
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mTempContext;
-    PRInt32             mOpenHeadCount;
-    PRInt32             mOpenMapCount;
-    PRInt32             mOpenFormCount;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
+   
+    nsString            mFilename; 
+    nsString            mScratch;  //used for various purposes; non-persistent
+    nsAutoString        mMimeType;  //ok as an autostring; these are short.
+
+    nsNodeAllocator     mNodeAllocator;
     nsDTDMode           mDTDMode;
     eParserDocType      mDocType;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
+
     eHTMLTags           mSkipTarget;
     nsresult            mDTDState;
-    PRUint16            mFlags;
     PRInt32             mLineNumber;
-    nsString            mScratch;  //used for various purposes; non-persistent
-    nsAutoString        mMimeType;  //ok as an autostring; these are short.
-    nsNodeAllocator     mNodeAllocator;
-    nsString            mFilename; 
-    
+    PRInt32             mOpenHeadCount;
+    PRInt32             mOpenMapCount;
+    PRInt32             mOpenFormCount;
+
+    PRUint16            mFlags;
+
 #ifdef ENABLE_CRC
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
@@ -533,7 +378,7 @@ inline nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult)
 {
   NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
   return nsComponentManager::CreateInstance(kNavDTDCID,
-					    nsnull,
+                                            nsnull,
                                             NS_GET_IID(nsIDTD),
                                             (void**)aInstancePtrResult);
 }

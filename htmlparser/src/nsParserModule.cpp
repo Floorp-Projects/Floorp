@@ -44,7 +44,6 @@
 #include "nsIModule.h"
 #include "nsParserCIID.h"
 #include "nsParser.h"
-#include "nsWellFormedDTD.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"
 #include "COtherDTD.h"
@@ -52,22 +51,22 @@
 #include "nsHTMLEntities.h"
 #include "nsHTMLTokenizer.h"
 //#include "nsTextTokenizer.h"
-#include "nsExpatTokenizer.h"
 #include "nsElementTable.h"
 #include "nsParserService.h"
 
 #ifdef NS_DEBUG
 #include "nsLoggingSink.h"
+#include "nsExpatDriver.h"
 #endif
 
 //----------------------------------------------------------------------
 
 #ifdef NS_DEBUG
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsExpatDriver)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
-NS_GENERIC_FACTORY_CONSTRUCTOR(CWellFormedDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(COtherDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CTransitionalDTD)
@@ -78,10 +77,10 @@ static nsModuleComponentInfo gComponents[] = {
 
 #ifdef NS_DEBUG
   { "Logging sink", NS_LOGGING_SINK_CID, NULL, nsLoggingSinkConstructor },
+  { "Expat Driver", NS_EXPAT_DRIVER_CID, NULL, nsExpatDriverConstructor },
 #endif
 
   { "Parser", NS_PARSER_CID, NULL, nsParserConstructor },
-  { "Well formed DTD", NS_WELLFORMEDDTD_CID, NULL, CWellFormedDTDConstructor },
   { "Navigator HTML DTD", NS_CNAVDTD_CID, NULL, CNavDTDConstructor },
   { "OTHER DTD", NS_COTHER_DTD_CID, NULL, COtherDTDConstructor },
   { "Transitional DTD", NS_CTRANSITIONAL_DTD_CID, NULL,
