@@ -186,6 +186,7 @@
 #include "nscore.h"
 #include "nsIAllocator.h"
 #include <string.h>
+#include <stdio.h>
 
 //----------------------------------------------------------------------------------------
 
@@ -410,6 +411,19 @@ struct NS_COM nsStr {
 
   static PRBool   DidAcquireMemory(void);
 
+  /**
+   * Returns a hash code for the string for use in a PLHashTable.
+   */
+  static PRUint32 HashCode(const nsStr& aDest);
+
+#ifdef DEBUG
+  /**
+   * Prints an nsStr. If truncate is true, the string is only printed up to 
+   * the first newline. (Note: The current implementation doesn't handle
+   * non-ascii unicode characters.)
+   */
+  static void Print(const nsStr& aDest, FILE* out, PRBool truncate = PR_FALSE);
+#endif
 
   PRUint32        mLength;
   PRUint32        mCapacity;
@@ -468,6 +482,28 @@ inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex){
   return 0;
 }
 
+#ifdef DEBUG
 
-#endif
+#include "plhash.h"
 
+class nsStringInfo {
+public:
+  nsStringInfo(nsStr& str);
+  ~nsStringInfo() {}
+
+  static nsStringInfo* GetInfo(nsStr& str);
+
+  static void Seen(nsStr& str);
+
+  static void Report(FILE* out = stdout);
+  
+  static PRIntn ReportEntry(PLHashEntry *he, PRIntn i, void *arg);
+
+protected:
+  nsStr         mStr;
+  PRUint32      mCount;
+};
+
+#endif // DEBUG
+
+#endif // _nsStr
