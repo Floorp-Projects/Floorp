@@ -321,10 +321,10 @@ BookmarksUIElement.prototype = {
       break;
     case "newseparator":
       nfseln = this.getBestItem ();
-      var parentNode = this.findRDFNode(aSelectedItem, false);
-      args = [{ property: NC_NS + "parent", 
-                resource: NODE_ID(parentNode) }];
-      BookmarksUtils.doBookmarksCommand(NODE_ID(aSelectedItem), 
+      var parentNode = this.findRDFNode(nfseln, false);
+      var args = [{ property: NC_NS + "parent", 
+                    resource: NODE_ID(parentNode) }];
+      BookmarksUtils.doBookmarksCommand(NODE_ID(nfseln), 
                                         NC_NS_CMD + "newseparator", args);
       break;
     case "import":
@@ -490,6 +490,19 @@ BookmarksUIElement.prototype = {
       this.endBatch();
   },
   
+  /////////////////////////////////////////////////////////////////////////////
+  // For the given selection, determines the element that should form the 
+  // container to paste items into.
+  resolvePasteFolder: function (aSelection)
+  {
+    const lastSelected = aSelection[aSelection.length-1];  
+    if (lastSelected.getAttribute("container") == "true" &&
+        lastSelected.getAttribute("open") == "true" && 
+        aSelection.length == 1)
+      return lastSelected;
+    return this.findRDFNode(lastSelected, false);
+  },
+  
   canPaste: function ()
   {
     const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
@@ -513,6 +526,7 @@ BookmarksUIElement.prototype = {
   
   deleteSelection: function (aSelection)
   {
+    dump("*** deleteSelection\n");
     const kRDFCContractID = "@mozilla.org/rdf/container;1";
     const kRDFCIID = Components.interfaces.nsIRDFContainer;
     const ksRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
@@ -521,8 +535,6 @@ BookmarksUIElement.prototype = {
     var count = 0;
 
     var selectionLength = aSelection.length;
-    if ("beginBatch" in this && selectionLength > 1)
-      this.beginBatch();
     while (aSelection.length && aSelection[count]) {
       const currParent = this.findRDFNode(aSelection[count], false);
       const kSelectionURI = NODE_ID(aSelection[count]);
@@ -541,10 +553,17 @@ BookmarksUIElement.prototype = {
       ksRDFC.Init(kBMDS, krParent);
       nextElement = this.getNextElement(aSelection[count]);
       ksRDFC.RemoveElement(krNode, true);
+
+      try {
+        // XXX - UGH. Template builder is NOT removing the element from the
+        //       tree, and so selection remains non-zero in length and we go into
+        //       an infinite loop here. Tear the node out of the document. 
+        var parent = aSelection[count].parentNode;
+        parent.removeChild(aSelection[count]);
+      }
+      catch (e) {
+      }
     }
-    if ("beginBatch" in this && selectionLength > 1)
-      this.endBatch();
-      
     this.selectElement(nextElement);
   },
 
@@ -571,25 +590,19 @@ BookmarksUIElement.prototype = {
     openDialog (getBrowserURL(), "_blank", "chrome,all,dialog=no", urlValue);
   },
 
-  open: function (aEvent) 
+  open: function (aEvent, aRDFNode) 
   { 
-    if (!this.isValidOpenEvent(aEvent))   
-      return;
-
-    var rdfNode = this.findRDFNode(aEvent.target, true);
-    if (rdfNode.getAttribute("container") == "true") 
-      return;
-  
-    var urlValue = LITERAL(this.db, rdfNode, NC_NS + "URL");
+    var urlValue = LITERAL(this.db, aRDFNode, NC_NS + "URL");
     
     // Ignore "NC:" and empty urls.
     if (urlValue.substring(0,3) == "NC:" || !urlValue) return;
     
     if (aEvent.altKey)   
-      this.showPropertiesForNode (rdfNode);
-    else
+      this.showPropertiesForNode (aRDFNode);
+    else if (this.openNewWindow)
       openDialog (getBrowserURL(), "_blank", "chrome,all,dialog=no", urlValue);
-      
+    else
+      openTopWin (urlValue);
     aEvent.preventBubble();
   },
 
@@ -757,7 +770,16 @@ var BookmarksUtils = {
     var url = aWindow.location.href;
     var title = aWindow.document.title || url;
     var docCharset = aWindow.document.characterSet;
-
+    this.addBookmark(url, title, docCharset);
+  },
+  
+  addBookmark: function (aURL, aTitle, aCharset)
+  {
+    if (aCharset === undefined) {
+      var fw = document.commandDispatcher.focusedWindow;
+      aCharset = fw.document.characterSet;
+    }
+  
     const kPrefContractID = "@mozilla.org/preferences;1";
     const kPrefIID = Components.interfaces.nsIPref;
     const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
@@ -768,25 +790,18 @@ var BookmarksUtils = {
     catch (e) {
     }
 
-    // XXX - 0.8 hack - prevent dialog from appearing on Mac, as there are
-    //       crashes in optimized builds. 
-    if (navigator.platform.toLowerCase().indexOf("mac") != -1) {
-      showDialog = false;
-    }
-    
     if (showDialog)
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,dialog=no,resizable=no", title, url, null, docCharset);
+                 "centerscreen,chrome,dialog=no,resizable=no", aTitle, aURL, null, aCharset);
     else {
       // User has elected to override the file dialog and always file bookmarks
       // into the default bookmark folder. 
       const kBMSvcContractID = "@mozilla.org/browser/bookmarks-service;1";
       const kBMSvcIID = Components.interfaces.nsIBookmarksService;
       const kBMSvc = Components.classes[kBMSvcContractID].getService(kBMSvcIID);
-      kBMSvc.AddBookmark(url, title, kBMSvcIID.BOOKMARK_DEFAULT_TYPE, docCharset);
+      kBMSvc.AddBookmark(aURL, aTitle, kBMSvcIID.BOOKMARK_DEFAULT_TYPE, aCharset);
     }
   }
-
 };
 
 /* XXX Template problems

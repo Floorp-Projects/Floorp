@@ -24,6 +24,18 @@
 var NC_NS  = "http://home.netscape.com/NC-rdf#";
 var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
+var gSpringLoadTracker = {
+  timeout: 0,
+  element: null,
+  
+  open: function (aRDFNode) 
+  {
+    if (this.element)
+      this.element.setAttribute("open", "true");
+    clearTimeout(this.timeout);
+  }
+};
+
 var bookmarksDNDObserver = {
   _RDF: null,
   get RDF ()
@@ -60,6 +72,8 @@ var bookmarksDNDObserver = {
       throw Components.results.NS_OK; // don't drag treehead cells.
     if (bookmarksTree.getAttribute("sortActive") == "true")
       throw Components.results.NS_OK; 
+      
+    dump("*** pass\n");  
       
     var selItems = null;
     if (bookmarksTree.selectedItems.length <= 0)
@@ -104,8 +118,42 @@ var bookmarksDNDObserver = {
     if (rowGroup)
       rowGroup.setAttribute("dd-triggerrepaint" + 
                             (bookmarksTree.getAttribute("sortActive") == "true" ? "sorted" : ""), 0);
-  },  
+    
+    var rdfNode = gBookmarksShell.findRDFNode(aEvent.target, true);
+    var rdfParent = rdfNode.parentNode.parentNode;
+    if (rdfParent && rdfParent.getAttribute("container") == "true") {
+      var rDragOverContainer = this.RDF.GetResource(NODE_ID(rdfParent));
 
+      const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
+      const kRDFCUtilsContractID = "@mozilla.org/rdf/container-utils;1";
+      const kRDFCUtilsIID = Components.interfaces.nsIRDFContainerUtils;
+      const kRDFCUtils = Components.classes[kRDFCUtilsContractID].getService(kRDFCUtilsIID);
+      var isContainer = kRDFCUtils.IsContainer(kBMDS, rDragOverContainer);
+      if (!isContainer) {
+        // This ain't a container. Don't allow drops, and bail before doing anything
+        // else.
+        aDragSession.canDrop = false;
+        return;
+      }
+    }      
+    
+    // Springloaded folders.
+    /* XXX - not yet. 
+    if (rdfNode && rdfNode.getAttribute("container") == "true" &&
+        rdfNode.getAttribute("open") != "true") {
+      if (!gSpringLoadTracker.element || gSpringLoadTracker.element.id != rdfNode.id) {
+        // XXX - this is not good enough. We need to keep track of nesting and close up
+        // folders after the user has dragged out of them otherwise we end up with 
+        // everything open and a big mess!
+        if (gSpringLoadTracker.timeout)
+          clearTimeout(gSpringLoadTracker.timeout);
+        gSpringLoadTracker.element = rdfNode;
+        gSpringLoadTracker.timeout = setTimeout("gSpringLoadTracker.open()", 100);
+      }
+    }
+    */
+  },  
+  
   _flavourSet: null,
   getSupportedFlavours: function ()
   {
@@ -188,6 +236,7 @@ var bookmarksDNDObserver = {
       bo.beginBatch();
     }
     */
+    
     for (i = 0; i < numObjects; ++i) {
       var flavourData = aXferData.dataList[i].first;
       
@@ -214,11 +263,19 @@ var bookmarksDNDObserver = {
       var rSource = this.getResource(sourceID);
       var rParent = parentID ? this.getResource(parentID) : null;
 
+      const kRDFCUtilsContractID = "@mozilla.org/rdf/container-utils;1";
+      const kRDFCUtilsIID = Components.interfaces.nsIRDFContainerUtils;
+      const kRDFCUtils = Components.classes[kRDFCUtilsContractID].getService(kRDFCUtilsIID);
+      var isContainer = kRDFCUtils.IsContainer(kBMDS, rContainer);
+            
       // Prevent dropping node on itself, before or after itself, on its parent 
       // container, or a weird situation when an open container is dropped into
       // itself (which results in data loss!).
+      // Also prevent dropping into a folder that isn't actually a container 
+      // (and is thus probably a pseudo-container from an aggregated datasource,
+      //  see bug 68656 fir details).
       if (rSource == rTarget || (dropAction == "on" && rContainer == rParent) ||
-          rContainer == rSource)
+          rContainer == rSource || !isContainer)
         continue;
 
       // XXX if any of the following fails, the nodes are gone for good!

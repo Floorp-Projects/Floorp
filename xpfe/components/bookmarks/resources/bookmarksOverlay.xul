@@ -36,9 +36,44 @@
          
   <popupset id="popupset">
     <popup id="bmContext" 
-           oncreate="if (gBookmarksShell) gBookmarksShell.createContextMenu(event);"/>
+           oncreate="gBookmarksShell.createContextMenu(event);"/>
   </popupset>
 
+  <commands id="commands">
+    <commandset id="bookmarksItems">
+      <command id="cmd_open" oncommand="goDoCommand('cmd_open');"/>
+      <command id="cmd_openfolder" oncommand="goDoCommand('cmd_openfolder');"/>
+      <command id="cmd_newfolder" oncommand="goDoCommand('cmd_newfolder');"/>
+      <command id="cmd_newbookmark" oncommand="goDoCommand('cmd_newbookmark');"/>
+      <command id="cmd_newseparator" oncommand="goDoCommand('cmd_newseparator');"/>
+      <command id="cmd_find" oncommand="goDoCommand('cmd_find');"/>
+      <command id="cmd_setnewbookmarkfolder" oncommand="goDoCommand('cmd_setnewbookmarkfolder');"/>
+      <command id="cmd_setpersonaltoolbarfolder" oncommand="goDoCommand('cmd_setpersonaltoolbarfolder');"/>
+      <command id="cmd_setnewsearchfolder" oncommand="goDoCommand('cmd_setnewsearchfolder');"/>
+      <command id="cmd_properties" oncommand="goDoCommand('cmd_properties');"/>
+      <command id="cmd_rename" oncommand="goDoCommand('cmd_rename');"/>
+      <command id="cmd_openfolderinnewwindow" oncommand="goDoCommand('cmd_openfolderinnewwindow');"/>
+      <command id="cmd_import" oncommand="goDoCommand('cmd_import');"/>
+      <command id="cmd_export" oncommand="goDoCommand('cmd_export');"/>
+    </commandset>
+    <commandset id="CommandUpdate_Bookmarks"
+                commandupdater="true"
+                events="focus,tree-select"
+                oncommandupdate="BookmarksTree.prototype.controller.onCommandUpdate()">
+    </commandset>                
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="bookmarksItems"/>
+  </commands>
+
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="cmd_cut"/>
+    <broadcaster id="cmd_copy"/>
+    <broadcaster id="cmd_paste"/>
+    <broadcaster id="cmd_delete"/>
+    <broadcaster id="cmd_selectAll"/>
+  </broadcasterset>  
+  
 </overlay>
 
          

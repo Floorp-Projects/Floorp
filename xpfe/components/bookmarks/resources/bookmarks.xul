@@ -27,7 +27,7 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksWindow.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -68,31 +68,7 @@
   <script src="chrome://global/content/nsTransferable.js"></script>
   <script src="chrome://communicator/content/bookmarks/bookmarksDD.js"></script>
 
-  <commands id="commands">
-    <commandset id="CommandUpdate_Bookmarks"
-                commandupdater="true"
-                events="focus,tree-select"
-                oncommandupdate="BookmarksTree.prototype.controller.onCommandUpdate()">
-    </commandset>                
-    <commandset id="selectEditMenuItems"/>
-    <commandset id="globalEditMenuItems"/>
-    <commandset id="bookmarksItems">
-      <command id="cmd_open" oncommand="goDoCommand('cmd_open');"/>
-      <command id="cmd_openfolder" oncommand="goDoCommand('cmd_openfolder');"/>
-      <command id="cmd_newfolder" oncommand="goDoCommand('cmd_newfolder');"/>
-      <command id="cmd_newbookmark" oncommand="goDoCommand('cmd_newbookmark');"/>
-      <command id="cmd_newseparator" oncommand="goDoCommand('cmd_newseparator');"/>
-      <command id="cmd_find" oncommand="goDoCommand('cmd_find');"/>
-      <command id="cmd_setnewbookmarkfolder" oncommand="goDoCommand('cmd_setnewbookmarkfolder');"/>
-      <command id="cmd_setpersonaltoolbarfolder" oncommand="goDoCommand('cmd_setpersonaltoolbarfolder');"/>
-      <command id="cmd_setnewsearchfolder" oncommand="goDoCommand('cmd_setnewsearchfolder');"/>
-      <command id="cmd_properties" oncommand="goDoCommand('cmd_properties');"/>
-      <command id="cmd_rename" oncommand="goDoCommand('cmd_rename');"/>
-      <command id="cmd_openfolderinnewwindow" oncommand="goDoCommand('cmd_openfolderinnewwindow');"/>
-      <command id="cmd_import" oncommand="goDoCommand('cmd_import');"/>
-      <command id="cmd_export" oncommand="goDoCommand('cmd_export');"/>
-    </commandset>
-  </commands>
+  <commands id="commands"/>
   
   <broadcasterset id="broadcasterset">
     <!-- File Menu -->
@@ -102,11 +78,6 @@
     <broadcaster id="cmd_quit"/>
     <!-- Edit Menu -->
     <broadcaster id="cmd_undo"/>
-    <broadcaster id="cmd_cut"/>
-    <broadcaster id="cmd_copy"/>
-    <broadcaster id="cmd_paste"/>
-    <broadcaster id="cmd_delete"/>
-    <broadcaster id="cmd_selectAll"/>
     <broadcaster id="cmd_preferences"/>
   </broadcasterset>
 
@@ -262,7 +233,7 @@
     </toolbar>
   </toolbox>
   
-  <tree id="bookmarksTree" ref="NC:NavCenter" context="bmContext"
+  <tree id="bookmarksTree" class="bookmarks-window-tree" context="bmContext" ref="NC:NavCenter"
         datasources="rdf:bookmarks rdf:files rdf:httpindex rdf:localsearch rdf:internetsearch"
         multiple="true" flags="dont-test-empty"
         ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
@@ -299,7 +270,7 @@
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
-              <treecell class="treecell-bookmark treecell-indent treecell-editable"
+              <treecell class="treecell-indent treecell-editable"
                         editable="true" value="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
@@ -407,9 +378,9 @@
     </treehead>
 
     <treechildren flex="1" id="treechildren-bookmarks" 
-                  onclick="if (gBookmarksShell) gBookmarksShell.open(event);"/>
+                  onclick="gBookmarksShell.treeOpen(event);"/>
   </tree>
-  
+    
   <statusbar id="status-bar">
     <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
     <statusbarpanel id="statusbar-text" flex="1"/>

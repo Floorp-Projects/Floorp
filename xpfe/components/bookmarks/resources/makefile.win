@@ -23,28 +23,5 @@ DEPTH=..\..\..\..
 
 DIRS= locale
 
-CHROME_DIR = .
-CHROME_CONTENT_DIR = packages\core\communicator\content\bookmarks
-CHROME_L10N_DIR = locales\en-US\communicator\locale\bookmarks
-
-CHROME_CONTENT = \
-	.\bm-find.js \
-	.\bm-find.xul \
-	.\bm-panel.js \
-	.\bm-panel.xul \
-	.\bm-props.js \
-	.\bm-props.xul \
-	.\bookmarks.js \
-	.\bookmarksDD.js \
-	.\bookmarks.xul \
-	$(NULL)
-
-CHROME_L10N = \
-	.\locale\en-US\bm-find.dtd \
-	.\locale\en-US\bm-props.dtd \
-	.\locale\en-US\bookmarks.dtd \
-	.\locale\en-US\bookmark.properties \
-	$(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
