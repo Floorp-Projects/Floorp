@@ -56,6 +56,7 @@ OBJS=                                       \
 #//
 #//------------------------------------------------------------------------
 
+MODULE=mozreg
 DLLNAME=mozreg
 
 DLL=$(OBJDIR)\$(DLLNAME).dll
@@ -83,11 +84,9 @@ LLIBS = \
 include <$(DEPTH)/config/rules.mak>
 
 export:: $(DLL)	
+    $(MAKE_INSTALL) $(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
 
-libs:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
 clobber::
-    $(RM) $(DIST)\bin\$(LIBNAME).dll
-    $(RM) $(DIST)\lib\$(LIBNAME).lib
+    $(RM) $(DIST)\bin\$(DLLNAME).dll
+    $(RM) $(DIST)\lib\$(DLLNAME).lib
