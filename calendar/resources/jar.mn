@@ -31,8 +31,6 @@ calendar.jar:
     content/calendar/eventDialog.xul (content/eventDialog.xul)
     content/calendar/outlookImportDialog.xul (content/outlookImportDialog.xul)
     content/calendar/outlookImportDialog.js (content/outlookImportDialog.js)
-    content/calendar/importDuplicatesDialog.js (content/importDuplicatesDialog.js)
-    content/calendar/importDuplicatesDialog.xul (content/importDuplicatesDialog.xul)
     content/calendar/importExport.js (content/importExport.js)
     content/calendar/localCalDialog.js (content/localCalDialog.js)
     content/calendar/localCalDialog.xul (content/localCalDialog.xul)
