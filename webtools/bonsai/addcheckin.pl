@@ -198,7 +198,7 @@ LEGALDIR:
                     foreach $i (@::CheckInList) {
                          $filename = "this file doesn't exist"
 # XXX verify...
-                              if ((eval("\$$i{person}") eq $name) &&
+                              if ((eval("\$$i" . "{person}") eq $name) &&
                                   ($i ne $id));
                     }
                } else {
