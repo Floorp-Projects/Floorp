@@ -1474,7 +1474,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
                            NS_BLOCK_MARGIN_ROOT & mState);
-  PRInt32 sizeofBRS = sizeof nsBlockReflowState;
 
   if (eReflowReason_Resize != aReflowState.reason) {
     RenumberLists(aPresContext);
