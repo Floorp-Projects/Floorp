@@ -39,6 +39,7 @@ enum {
 #define IS_ASCII_UPPER(u) ((0x0041 <= (u)) && ( (u) <= 0x005a))
 #define IS_ASCII_LOWER(u) ((0x0061 <= (u)) && ( (u) <= 0x007a))
 #define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
+#define IS_ASCII_SPACE(u) ( 0x0020 == (u) )
 
 #define IS_NOCASE_CHAR(u) (PR_FALSE)
 // consider the following range need double check
@@ -288,8 +289,12 @@ nsresult nsCaseConversionImp2::ToTitle(
   // Currently, it only do the right thing for ASCII
   // Howerver, we need a word breaker to do the right job
   //
-  this->ToLower(anArray, aReturn, aLen);
-  PRBool bLastIsChar = bLastIsChar =  IS_ASCII_LOWER(anArray[0]);
+  // this->ToLower(anArray, aReturn, aLen); 
+  // CSS define Capitalize as 
+  //  Uppercases the first character of each word
+  // 
+  
+  PRBool bLastIsSpace =  IS_ASCII_SPACE(anArray[0]);
   if(aStartInWordBoundary)
   {
      this->ToTitle(aReturn[0], &aReturn[0]);
@@ -298,12 +303,12 @@ nsresult nsCaseConversionImp2::ToTitle(
   PRUint32 i;
   for(i=1;i<aLen;i++)
   {
-    if(!bLastIsChar)
+    if(bLastIsSpace)
     {
       this->ToTitle(aReturn[i], &aReturn[i]);
     }
 
-    bLastIsChar = IS_ASCII_LOWER(aReturn[i]);
+    bLastIsSpace = IS_ASCII_SPACE(aReturn[i]);
   }
   return NS_OK;
 }
