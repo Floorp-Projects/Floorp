@@ -209,24 +209,23 @@
           // collecting the child nodes could trigger constructors
           // which would blow away our list.
           var radioChildren = [];
-          function _filterRadioGroup(aNode) {
-            switch (aNode.localName) {
-              case "radio": return NodeFilter.FILTER_ACCEPT;
-              case "template":
-              case "radiogroup": return NodeFilter.FILTER_REJECT;
-              default: return NodeFilter.FILTER_SKIP;
-            }
-          }
-          var iterator = this.ownerDocument.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, _filterRadioGroup, true);
+          var iterator = this.ownerDocument.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, this._filterRadioGroup, true);
           while (iterator.nextNode())
             radioChildren.push(iterator.currentNode);
-
-          // assign null to break circular reference between _filterRadioGroup
-          // and iterator (via this scope)
-          // XXX The function really should be global instead of local.
-          iterator = null;
-
           return this.mRadioChildren = radioChildren;
+        ]]>
+        </body>
+      </method>
+      <method name="_filterRadioGroup">
+        <parameter name="node"/>
+        <body>
+        <![CDATA[
+          switch (node.localName) {
+            case "radio": return NodeFilter.FILTER_ACCEPT;
+            case "template":
+            case "radiogroup": return NodeFilter.FILTER_REJECT;
+            default: return NodeFilter.FILTER_SKIP;
+          }
         ]]>
         </body>
       </method>
