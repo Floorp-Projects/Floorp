@@ -1769,6 +1769,23 @@ nsDocShell::GetSameTypeRootTreeItem(nsIDocShellTreeItem ** aRootTreeItem)
     return NS_OK;
 }
 
+static PRBool
+ItemIsActive(nsIDocShellTreeItem *aItem)
+{
+    nsCOMPtr<nsIDOMWindow> tmp(do_GetInterface(aItem));
+    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(tmp));
+
+    if (window) {
+        PRBool isClosed;
+
+        if (NS_SUCCEEDED(window->GetClosed(&isClosed)) && !isClosed) {
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsDocShell::FindItemWithName(const PRUnichar * aName,
                              nsISupports * aRequestor,
@@ -1785,8 +1802,8 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
         reqAsTreeItem(do_QueryInterface(aRequestor));
 
     // First we check our name.
-    if (mName.Equals(aName)) {
-        *_retval = NS_STATIC_CAST(nsIDocShellTreeItem *, this);
+    if (mName.Equals(aName) && ItemIsActive(this)) {
+        *_retval = this;
         NS_ADDREF(*_retval);
         return NS_OK;
     }
@@ -2142,7 +2159,7 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
 
         PRBool childNameEquals = PR_FALSE;
         child->NameEquals(aName, &childNameEquals);
-        if (childNameEquals) {
+        if (childNameEquals && ItemIsActive(child)) {
             *_retval = child;
             NS_ADDREF(*_retval);
             break;
