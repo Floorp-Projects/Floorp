@@ -27,7 +27,7 @@
 
 #include <npapi.h>
 #include "plugin.h"
-
+#include <stdarg.h>
 
 // resource include
 #ifdef WIN32 // **************************** WIN32 *****************************
@@ -69,6 +69,8 @@ extern void DialerHangup();
 
 // keep a global execution environment
 JRIEnv* env;
+
+const BOOL gEnableTrace = TRUE;
 
 // Keeps track of OS version, either win95, winNT, or win16 
 #ifdef WIN32
@@ -627,8 +629,16 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fCheckEnvironment(JRIEnv* env,
 	return (TRUE);
 }
 
-void trace( const char* traceStatement )
+void trace( const char* traceStatement, ... )
 {
+	static char		buffer[ 10000 ];
+	
+	int				len = 0;
+	va_list			stack;
+	
+	if ( !gEnableTrace )
+		return;
+		
 	if ( !env )
 		return;
 	
@@ -636,8 +646,13 @@ void trace( const char* traceStatement )
 	if ( !self )
 		return;
 	
-	java_lang_String* traceString = JRI_NewStringPlatform( env, traceStatement,
-		strlen( traceStatement), NULL, 0 );
+	va_start( stack, traceStatement );
+	(void)vsprintf( buffer, traceStatement, stack );
+	va_end( stack );
+	len = strlen( buffer );
+	
+	java_lang_String* traceString = JRI_NewStringPlatform( env, buffer,
+		len, NULL, 0 );
 		
 	netscape_npasw_SetupPlugin_debug( env, self, traceString );
 }
