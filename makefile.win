@@ -144,12 +144,14 @@ rebase:
 !endif
 
 splitsymbols:
-!if defined(MOZ_FULLCIRCLE)
+!if defined(MOZILLA_OFFICIAL)
 !if defined(FIND)
 !if "$(SPLITSYM)" != ""
-	echo splitting symbols for FullCircle
+	echo splitting symbols out of binaries
 	$(FIND) $(DIST) -name "*.dll" -exec $(SPLITSYM) {} ;
 	$(FIND) $(DIST) -name "*.exe" -exec $(SPLITSYM) {} ;
+	$(FIND) $(DIST) -name "*.EXE" -exec $(SPLITSYM) {} ;
+
 !else
         echo No splitsym defined.
 !endif
