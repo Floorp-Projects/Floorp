@@ -43,6 +43,11 @@ nsImageMac :: ~nsImageMac()
 {
 	if(mImageBits)
 		delete[] mImageBits;
+		
+	if(mAlphaBits){
+    delete mAlphaPix;
+    delete [] mAlphaBits;
+	}
 }
 
 NS_IMPL_ISUPPORTS(nsImageMac, kIImageIID);
@@ -60,13 +65,11 @@ nsresult nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 {
 PRInt32	bufferdepth;
 
-	if(nsnull==mImageBits)
-		{
+	if(nsnull==mImageBits){
 		delete [] mImageBits;
 		}
 
-		switch(aDepth)
-			{
+		switch(aDepth){
 			case 8:
 				mThePixelmap.pixelType = chunky;
 				mThePixelmap.cmpCount = 1;
@@ -94,16 +97,13 @@ PRInt32	bufferdepth;
 				break;
 			}
 	
-	if(mThePixelmap.cmpCount)
-		{
+	if(mThePixelmap.cmpCount){
 		mRowBytes = CalcBytesSpan(aWidth,bufferdepth);
 		mSizeImage = mRowBytes*aHeight;
 		mImageBits = new unsigned char[mSizeImage];
 		}
 		
-	if(mImageBits)
-		{
-		// we are cool
+	if(mImageBits){
 		mThePixelmap.baseAddr = (char*) mImageBits;
 		mThePixelmap.rowBytes = mRowBytes | 0x8000;
 		mThePixelmap.bounds.top = 0;
@@ -123,40 +123,35 @@ PRInt32	bufferdepth;
 		}
 
 
-    // Allocate mask image bits if requested
-    if (aMaskRequirements != nsMaskRequirements_kNoMask)
-    {
-      if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements)
-      {
-        mARowBytes = (aWidth + 7) / 8;
-        mAlphaDepth = 1;
-      }
-      else
-      {
-        NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
-                     "unexpected mask depth");
-        mARowBytes = aWidth;
-        mAlphaDepth = 8;
-      }
-
-      // 32-bit align each row
-      mARowBytes = (mARowBytes + 3) & ~0x3;
-
-      mAlphaBits = new unsigned char[mARowBytes * aHeight];
+  // Allocate mask image bits if requested
+  if (aMaskRequirements != nsMaskRequirements_kNoMask){
+  	mAlphaPix = new BitMap();
+    if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements){
+    	mARowBytes = (aWidth + 7) / 8;					// 1 bit rowbytes
+    	mARowBytes = (mARowBytes + 3) & ~0x3;		// 32 bit align
+    	mAlphaBits = new unsigned char[mARowBytes * aHeight];
+      mAlphaDepth = 1;
+      bufferdepth = 1;
+      mAlphaPix->baseAddr = (char*) mAlphaBits;
+      mAlphaPix->rowBytes = mARowBytes;
+      mAlphaPix->bounds.top = 0;
+      mAlphaPix->bounds.left = 0;
+      mAlphaPix->bounds.bottom = aHeight;
+      mAlphaPix->bounds.right = aWidth;      
       mAlphaWidth = aWidth;
       mAlphaHeight = aHeight;
-    }
-    else
-    {
+    }else{
+      NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements, "unexpected mask depth");
       mAlphaBits = nsnull;
       mAlphaWidth = 0;
       mAlphaHeight = 0;
     }
 
-
-
-
-
+  } else{
+    mAlphaBits = nsnull;
+    mAlphaWidth = 0;
+    mAlphaHeight = 0;
+  }
   return NS_OK;
 }
 
@@ -199,20 +194,24 @@ NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
   PixMapPtr	destpix;
   RGBColor	rgbblack = {0x0000,0x0000,0x0000};
   RGBColor	rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
-  Rect			srcrect,dstrect;
+  Rect			srcrect,dstrect,maskrect;;
 
   if (nsnull == mThePixelmap.baseAddr)
     return NS_ERROR_FAILURE;
 
 	::SetRect(&srcrect,aSX,aSY,aSX+aSWidth,aSY+aSHeight);
+	::SetRect(&maskrect,aSX,aSY,aSX+aSWidth,aSY+aSHeight);
 	::SetRect(&dstrect,aDX,aDY,aDX+aDWidth,aDY+aDHeight);
 
 	destpix = *((CGrafPtr)aSurface)->portPixMap;
 
 	::RGBForeColor(&rgbblack);
 	::RGBBackColor(&rgbwhite);
-	
-	::CopyBits((BitMap*)&mThePixelmap, (BitMap*)destpix, &srcrect, &dstrect, ditherCopy, 0L);
+	if(mAlphaBits){
+	  ::CopyDeepMask((BitMap*)&mThePixelmap,(BitMap*)mAlphaPix,(BitMap*)destpix,&srcrect,&maskrect,&dstrect,srcCopy,0L);
+	} else {
+	  ::CopyBits((BitMap*)&mThePixelmap, (BitMap*)destpix, &srcrect, &dstrect, ditherCopy, 0L);
+	}
 
   return NS_OK;
 }

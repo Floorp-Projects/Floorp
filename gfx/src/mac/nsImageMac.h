@@ -81,25 +81,26 @@ public:
   virtual void  		MoveAlphaMask(PRInt32 aX, PRInt32 aY) {}
 
 private:
-	PixMap							mThePixelmap;				
-	PRInt32							mWidth;
-	PRInt32							mHeight;
-	PRInt32							mSizeImage;
-  PRInt32             mRowBytes;          // number of bytes per row
-  PRUint8*            mImageBits;         // starting address of the bits
+  PixMap			mThePixelmap;
+  PRInt32			mWidth;
+  PRInt32			mHeight;
+  PRInt32			mSizeImage;
+  PRInt32           mRowBytes;          // number of bytes per row
+  PRUint8*          mImageBits;         // starting address of the bits
 
 	
-  nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
+  nsColorMap*       mColorMap;          // Redundant with mColorTable, but necessary
     
   // alpha layer members
-  PRUint8             *mAlphaBits;         // alpha layer if we made one
-  PRInt32							mARowBytes;					// rowbytes for the alpha layer
-  PRInt8              mAlphaDepth;         // alpha layer depth
-  PRInt16             mAlphaWidth;        // alpha layer width
-  PRInt16             mAlphaHeight;       // alpha layer height
-  nsPoint             mLocation;          // alpha mask location
-  PRInt8              mImageCache;        // place to save off the old image for fast animation
-  PRInt16             mAlphaLevel;        // an alpha level every pixel uses
+  BitMap			*mAlphaPix;			// the alpha level pixel map
+  PRUint8			*mAlphaBits;        // the bits to set for the mask
+  PRInt32			mARowBytes;			// rowbytes for the alpha layer
+  PRInt8            mAlphaDepth;        // alpha layer depth
+  PRInt16			mAlphaWidth;        // alpha layer width
+  PRInt16			mAlphaHeight;       // alpha layer height
+  nsPoint			mLocation;          // alpha mask location
+  PRInt8			mImageCache;        // place to save off the old image for fast animation
+  PRInt16			mAlphaLevel;        // an alpha level every pixel uses
 };
 
 #endif
