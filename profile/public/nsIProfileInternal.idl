@@ -25,11 +25,21 @@
 interface nsICmdLineService;
 interface nsIFile;
 
+%{C++
+#define NS_ERROR_PROFILE_REQUIRES_INTERACTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 1)
+%}
+
 [scriptable, uuid(2f977d42-5485-11d4-87e2-0010a4e75ef2)]
 interface nsIProfileInternal : nsIProfile {
     
-    [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
-    void startup(in wstring filename);
+    /**
+     * Starts up the profile manager
+     *
+     * @param cmdLine       Arguments passed from command line - can be null
+     * @param canInteract   Whether dialogs can be shown during startup
+     *                      If false and dialogs would need to be shown, returns NS_ERROR_PROFILE_REQUIRES_INTERRACTION
+     */
+    [noscript] void startupWithArgs(in nsICmdLineService cmdLine, in boolean canInteract);
  
     long get4xProfileCount();
 

@@ -54,7 +54,7 @@ private:
     nsresult ProcessArgs(nsICmdLineService *service,
                             PRBool *profileDirSet,
                             nsCString & profileURLStr);
-    nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
+    nsresult LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInterract);
 	nsresult CopyDefaultFile(nsIFile *profDefaultsDir,
 	                         nsIFile *newProfDir,
 								const char *fileName);
