@@ -640,6 +640,7 @@ PK11_DeleteTokenPrivateKey;
 PK11_DeleteTokenPublicKey;
 PK11_DeleteTokenSymKey;
 PK11_GetSymKeyNickname;
+PK11_GetPQGParamsFromPrivateKey;
 PK11_GetPublicKeyNickname;
 PK11_GetPrivateKeyNickname;
 PK11_SetSymKeyNickname;
