@@ -163,25 +163,45 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
 static PRBool
 GetDirectoryFromDirService(const char* codename, nsILocalFile** aDir)
 {
+    NS_ASSERTION(codename,"loser!");
     NS_ASSERTION(aDir,"loser!");
     
-    // We must make a new nsILocalFile each time because the caller *will* 
-    // modify it.
-
     nsCOMPtr<nsIProperties> dirService = 
         do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-    if(dirService)
+    if(!dirService)
+        return PR_FALSE;
+
+    return NS_SUCCEEDED(dirService->Get(codename, NS_GET_IID(nsILocalFile), 
+                                        (void**) aDir));
+}
+
+static PRBool
+AppendFromDirServiceList(const char* codename, nsISupportsArray* aPath)
+{
+    NS_ASSERTION(codename,"loser!");
+    NS_ASSERTION(aPath,"loser!");
+    
+    nsCOMPtr<nsIProperties> dirService = 
+        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+    if(!dirService)
+        return PR_FALSE;
+
+    nsCOMPtr<nsISimpleEnumerator> fileList;
+    dirService->Get(codename, NS_GET_IID(nsISimpleEnumerator), 
+                    getter_AddRefs(fileList));
+    if(!fileList)
+        return PR_FALSE;
+    
+    PRBool more;
+    while(NS_SUCCEEDED(fileList->HasMoreElements(&more)) && more)
     {
         nsCOMPtr<nsILocalFile> dir;
-        dirService->Get(codename, NS_GET_IID(nsIFile), getter_AddRefs(dir));
-        if(dir)
-        {
-            NS_ADDREF(*aDir = dir);
-            return PR_TRUE;
-        }
+        fileList->GetNext(getter_AddRefs(dir));
+        if(!dir || !aPath->AppendElement(dir))
+            return PR_FALSE;
     }
-    return PR_FALSE;
-}
+    return PR_TRUE;
+}        
 
 // static 
 PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
@@ -199,11 +219,7 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     
     nsCOMPtr<nsILocalFile> dir;
 
-    // XXX We'd like to get the *right* path from the embedding.
-
-    // For now we'll add the following...
-
-    // Add components dir
+    // Always put components directory first
 
     if(NS_FAILED(GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR, 
                                             getter_AddRefs(dir))) ||
@@ -212,19 +228,10 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
         return PR_FALSE;
     }
 
-#if 0
-    // XXX Let's not do this untill we're sure about what we want to do.
-    // XXX Without this block we are compatible with previous versions.
-
-    // Add plugins dir
+    // Add additional plugins dirs
     // No error checking here since this is optional in some embeddings
 
-    if(NS_SUCCEEDED(GetDirectoryFromDirService(NS_APP_PLUGINS_DIR, 
-                                               getter_AddRefs(dir))))
-    {
-        searchPath->AppendElement(dir);
-    }
-#endif
+    (void) AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
 
 
     NS_ADDREF(*aPath = searchPath);

@@ -528,6 +528,20 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
 
     if(!ReadSectionHeader(reader, g_TOKEN_Directories, 1, &dirCount))
         goto out;
+    else
+    {
+        // To validate that the directory list matches the current search path
+        // we first confirm that the list lengths match.
+
+        nsCOMPtr<nsISupportsArray> searchPath;
+        aMgr->GetSearchPath(getter_AddRefs(searchPath));
+
+        PRUint32 searchPathCount;
+        searchPath->Count(&searchPathCount);
+        
+        if(dirCount != (int) searchPathCount)
+            goto out;
+    }
 
     // Read the directory records
 
