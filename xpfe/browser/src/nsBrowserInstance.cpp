@@ -666,7 +666,6 @@ nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
     return NS_ERROR_FAILURE;
   }
 
-  
   PRBool hasChildren=PR_FALSE;
   nsresult rv;
 
@@ -1471,6 +1470,9 @@ NS_IMETHODIMP nsBrowserInstance::OnProgressChange(nsIChannel* aChannel,
    PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
    PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
+   EnsureXULBrowserWindow();
+   if(mXULBrowserWindow)
+      mXULBrowserWindow->OnProgress(aChannel, aCurTotalProgress, aMaxTotalProgress);
    return NS_OK;
 }
       
