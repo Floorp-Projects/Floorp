@@ -97,6 +97,7 @@ nsMenu::nsMenu() : nsIMenu()
   mDOMElement     = nsnull;
   mWebShell       = nsnull;
   mConstructed    = false;
+  mLabel          = " ";
 }
 
 //-------------------------------------------------------------------------
@@ -172,7 +173,21 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
 NS_METHOD nsMenu::SetLabel(const nsString &aText)
 
 {
-   mLabel = aText;
+  mLabel = aText;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::GetAccessKey(nsString &aText)
+{
+  aText = mAccessKey;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
+{
+  mAccessKey = aText;
   return NS_OK;
 }
 
