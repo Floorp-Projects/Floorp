@@ -67,12 +67,6 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
-#elif defined(LINUX)
-#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 3)
-#include <string.h>
-#else
-extern "C" char * strsignal(int);
-#endif
 #endif
 
 #ifdef MOZ_WIDGET_PHOTON
@@ -125,18 +119,10 @@ ah_crap_handler(int signum)
 {
   PR_GetCurrentThread();
 
-  // I don't think strsignal is portable.  If it is, this can be changed.
-#ifdef LINUX
-  printf("\nProgram %s (pid = %d) received %s signal.\n",
-         _progname,
-         getpid(),
-         strsignal(signum));
-#else
   printf("\nProgram %s (pid = %d) received signal %d.\n",
          _progname,
          getpid(),
          signum);
-#endif
   
   printf("Stack:\n");
   DumpStackToFile(stdout);
