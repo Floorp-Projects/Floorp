@@ -138,9 +138,9 @@ sub authenticate {
         }
         &::InsertNewUser($username, $userRealName);
 
-        my ($userid, $disabledtext) = $dbh->selectrow_array($sth,
-                                                            undef,
-                                                            $username);
+        ($userid, $disabledtext) = $dbh->selectrow_array($sth,
+                                                         undef,
+                                                         $username);
         return (AUTH_ERROR, $userid, "no_userid")
           unless $userid;
     }
