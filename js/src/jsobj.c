@@ -2030,7 +2030,8 @@ static JSDHashTableOps resolving_dhash_ops = {
     resolving_MatchEntry,
     JS_DHashMoveEntryStub,
     JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub
+    JS_DHashFinalizeStub,
+    NULL
 };
 
 #if defined JS_THREADSAFE && defined DEBUG
