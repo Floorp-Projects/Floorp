@@ -552,8 +552,13 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       if (gLastFocusedContent) {
         nsCOMPtr<nsIDocument> doc;
         gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
-        doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-      }
+		if(doc)
+          doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+        else {
+		  mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+		  NS_RELEASE(gLastFocusedContent);
+		}
+	  }
       else mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
       
       // Suppress the command dispatcher for the duration of the
