@@ -204,12 +204,12 @@ titledbutton[class=push][pseudoclass~="focus"]:-moz-focus-inner {
    border : 1px dotted black;
 }
 
-tristatecheckbox {
+checkbox {
    display:inline;
    border: 1px solid black;
 }
 
-tristatecheckbox[depress] {
+checkbox[depress] {
    background: darkGray;
    border: 1px inset black;
 }
