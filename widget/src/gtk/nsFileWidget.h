@@ -84,6 +84,10 @@ protected:
 
   GtkWidget		*mWidget;
   nsString		mTitle;
+  GtkWidget   *mOptionMenu;
+  GtkWidget   *mFilterMenu;
+
+
   nsFileDlgMode   mMode;
   PRUint32		    mNumberOfFilters;  
   const nsString*	mTitles;
