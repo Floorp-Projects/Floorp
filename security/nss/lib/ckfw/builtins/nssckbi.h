@@ -50,7 +50,7 @@
 /* These are the  correct verion numbers that details the changes 
  * to the list of trusted certificates.  */
 #define NSS_BUILTINS_LIBRARY_VERSION_MAJOR 1
-#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 20
+#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 40
 
 /* These verion numbers that details the semantic changes to the ckfw engine. */
 #define NSS_BUILTINS_HARDWARE_VERSION_MAJOR 1
