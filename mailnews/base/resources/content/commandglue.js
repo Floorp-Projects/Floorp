@@ -508,11 +508,17 @@ function IsSpecialFolderSelected(folderName)
 
 	var folderTree = GetFolderTree();
 	var db = folderTree.database;
-	var db = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    if (!db) return false;
+	db = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    if (!db) return false;
 
-	var property = RDF.GetResource('http://home.netscape.com/NC-rdf#SpecialFolder');
+	var property =
+        RDF.GetResource('http://home.netscape.com/NC-rdf#SpecialFolder');
+    if (!property) return false;
 	var result = db.GetTarget(folderResource, property , true);
+    if (!result) return false;
 	result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
+    if (!result) return false;
 	if(result.Value == folderName)
 		return true;
 
