@@ -8,9 +8,9 @@
 <window id="winPrefSidebar" orient="vertical"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="Javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script language="Javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
-  <script language="Javascript" src="chrome://inspector/content/prefs/pref-sidebar.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/prefs/pref-sidebar.js"/>
 
   <box class="box-smallheader" title="&Sidebar.label;"/>
 
@@ -23,7 +23,4 @@
       <button value="Install" onclick="gSidebarPrefs.installSidebar()"/>
     </box>
   </box>
-
 </window>
-
-        

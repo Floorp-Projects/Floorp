@@ -36,8 +36,8 @@
         orient="vertical"
         onload="Startup()">
 
-  <script src="chrome://communicator/content/wallet/WalletEditor.js"/>
-  <script language="javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletEditor.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <keyset id="keyset"/>
            
     <box id="system" flex="100%" orient="vertical">

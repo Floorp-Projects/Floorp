@@ -50,12 +50,12 @@
 -->
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js" />
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js" />
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
   <!-- Methods for Image Map only -->
-  <script language="JavaScript" src="chrome://editor/content/EdImageMap.js" />
-  <script language="JavaScript" src="chrome://editor/content/EdImageMapShapes.js" />
+  <script type="application/x-javascript" src="chrome://editor/content/EdImageMap.js" />
+  <script type="application/x-javascript" src="chrome://editor/content/EdImageMapShapes.js" />
 
   <broadcaster id="args" value=""/>
 

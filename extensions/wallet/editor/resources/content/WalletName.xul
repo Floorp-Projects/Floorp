@@ -36,14 +36,14 @@
         orient="vertical"
         onload="parent.initPanel();">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs =
       ["name.prefix", "name.first", "name.middle", "name.last", "name.suffix"];
   ]]>
   </script>
 
-  <script language="JavaScript"
+  <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
   <titledbox class="tabpanel" autostretch="never">

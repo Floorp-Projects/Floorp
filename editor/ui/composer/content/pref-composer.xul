@@ -35,10 +35,10 @@
   		  onload="parent.initPanel('chrome://editor/content/pref-composer.xul');">
 
   <!-- We need these for separator "thin" class -->
-  <script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->
   <![CDATA[
     var _elementIDs = ["maintainTableStructure", "tableDeleteKey", "preserveFormatting", "recentFiles"];
@@ -203,7 +203,4 @@
 
   </titledbox>
   -->
-
-  
 </window>
-

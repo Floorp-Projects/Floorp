@@ -26,8 +26,8 @@
 <overlay id="vfdCommandsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
-  <script language="JavaScript" src="chrome://vixen/content/vfdCommands.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://vixen/content/vfdCommands.js"/>
   
   <commandset id="vfdCommands"
               commandupdate="true"

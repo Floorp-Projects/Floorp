@@ -11,7 +11,7 @@
     width="425"
     height="225">
 
-    <html:script language="javascript" src="progress.js"/>
+    <script type="application/x-javascript" src="progress.js"/>
 
     <data>
         <broadcaster id="data.canceled" type="string" value="false"/>

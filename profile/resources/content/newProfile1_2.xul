@@ -35,7 +35,7 @@
   <stringbundle id="bundle_newProfile1_2"
                 src="chrome://communicator/locale/profile/newProfile1_2.properties"/>
 
-  <script language="JavaScript" src="chrome://communicator/content/profile/newProfile1_2.js"></script>
+  <script type="application/x-javascript" src="chrome://communicator/content/profile/newProfile1_2.js"/>
 
   <html>&pnl2.intro.text;</html> 
   <html>&pnl2.pname.label;</html> 
@@ -68,4 +68,3 @@
 
   <data id="ProfileLocale" />
 </window>
-

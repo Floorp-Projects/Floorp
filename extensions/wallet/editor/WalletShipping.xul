@@ -36,13 +36,13 @@
         orient="vertical"
         onload="parent.initPanel();">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = [];
   ]]>
   </script>
 
-  <script language="JavaScript"
+  <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
 

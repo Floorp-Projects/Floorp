@@ -60,13 +60,13 @@
     cview-static.js    Non event-handler functions core to cview.
     cview-handlers.js  Event-handlers core to cview.
 -->
-  <html:script>
+  <script>
     var DEBUG = true;
-  </html:script>
-  <html:script src="chrome://cview/content/cview-utils.js"/>
-  <html:script src="chrome://cview/content/cview-rdf.js"/>
-  <html:script src="chrome://cview/content/cview-static.js"/>
-  <html:script src="chrome://cview/content/cview-handlers.js"/>
+  </script>
+  <script type="application/x-javascript" src="chrome://cview/content/cview-utils.js"/>
+  <script type="application/x-javascript" src="chrome://cview/content/cview-rdf.js"/>
+  <script type="application/x-javascript" src="chrome://cview/content/cview-static.js"/>
+  <script type="application/x-javascript" src="chrome://cview/content/cview-handlers.js"/>
 
 <!--
   This popup is the context menu for elements in the interfaces list.

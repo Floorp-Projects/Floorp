@@ -34,9 +34,9 @@
     onclose = "onClose()"
     orient="vertical">
 
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script language="JavaScript" src="chrome://editor/content/EdSpellCheck.js"/>
-  <script language="Javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdSpellCheck.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="keys">

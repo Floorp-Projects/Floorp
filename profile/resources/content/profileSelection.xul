@@ -54,9 +54,9 @@
   <stringbundle id="bundle_brand"
                 src="chrome://global/locale/brand.properties"/>
   
-  <script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
-  <script language="javascript" src="chrome://communicator/content/profile/profileSelection.js"></script>
-  <script language="javascript" src="chrome://communicator/content/profile/profileManager.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/profile/profileManager.js"/>
   
   <keyset id="keyset">
     <key id="fooKey" key="s"   event="keydown" oncommand="foo()" modifiers="accel, shift"/>

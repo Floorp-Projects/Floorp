@@ -39,10 +39,10 @@
    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <!--- Element-specific methods -->
-  <script language="JavaScript" src="chrome://editor/content/EdHLineProps.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdHLineProps.js"/>
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="keyset"/>

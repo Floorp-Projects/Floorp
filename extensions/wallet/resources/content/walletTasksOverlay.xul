@@ -27,9 +27,9 @@
 <overlay id="walletTasksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="javascript" src="chrome://wallet/content/walletOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
 
     function HideWallet() {
@@ -226,6 +226,4 @@
       </menupopup>
     </menu>
   </menupopup>
-
 </overlay>
-

@@ -52,7 +52,7 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
   <!-- XXX - This should SO become an XBL widget -->
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   
   <!-- Shared Bookmarks Utility Library -->
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>

@@ -43,8 +43,8 @@
   
   </script>        
         
-  <script language="javascript" src="chrome://communicator/content/wallet/WalletViewer.js"></script>
-  <script language="javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletViewer.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 
   <keyset id="keyset"/>
 
@@ -53,7 +53,7 @@
     <tree class="inset" id="panelTree" style="width: 0px" flex="3"/>      
 
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="7"/>
-    <script language="JavaScript">
+    <script type="application/x-javascript">
     <![CDATA[
       document.getElementById("panelFrame").setAttribute("src", "chrome://communicator/content/wallet/WalletName.xul");
       document.getElementById("panelFrame").setAttribute("tag", "" );

@@ -36,7 +36,7 @@
         orient="vertical"
         onload="parent.initPanel();">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["socsec.prefix", "socsec.middle", "socsec.suffix",
                        "license.number", "license.state", "mothersmaidenname",
@@ -45,7 +45,7 @@
   ]]>
   </script>
 
-  <script language="JavaScript"
+  <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
   <titledbox class="tabpanel" autostretch="never">

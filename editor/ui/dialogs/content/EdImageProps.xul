@@ -43,10 +43,10 @@
     id="imagedialog"
     >
   
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script language="JavaScript" src="chrome://editor/content/EdImageProps.js"/>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
-  <script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdImageProps.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>

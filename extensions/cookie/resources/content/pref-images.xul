@@ -35,9 +35,9 @@
         align="vertical"
         onload="imageBlockingEnabled(); parent.initPanel('chrome://cookie/content/pref-images.xul');">
           
-  <script language="javascript" src="chrome://cookie/content/cookieOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
   
   var _elementIDs = ["accOrgImages", "networkImageBehaviour", "networkImageWarnAboutImages"];

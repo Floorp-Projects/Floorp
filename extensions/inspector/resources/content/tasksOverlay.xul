@@ -5,7 +5,7 @@
 <overlay id="eInspectorTasksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="javascript">
+  <script type="application/x-javascript">
     
     function launchInspector()
     {

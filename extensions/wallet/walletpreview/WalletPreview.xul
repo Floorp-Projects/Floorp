@@ -33,8 +33,8 @@
         class="dialog"
         onload="Startup()">
 
-  <html:script src="chrome://global/content/strres.js" />
-  <html:script src="chrome://communicator/content/wallet/WalletPreview.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletPreview.js"/>
 
   <keyset id="keyset"/>
            

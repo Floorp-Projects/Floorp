@@ -15,11 +15,11 @@
   
   <!--============================= SCRIPTS ============================= -->
 
-  <script language="javascript" src="chrome://inspector/content/viewers/styleRules/styleRules.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/styleRules/styleRules.js"/>
 
-  <script language="javascript" src="chrome://inspector/content/utils.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
 
   <!--============================= POPUPS ============================== -->
 
@@ -156,5 +156,3 @@
   </tree>    
 
 </window>
-
-        

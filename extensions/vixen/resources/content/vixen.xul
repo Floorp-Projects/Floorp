@@ -39,12 +39,12 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="vxShell.startup();" onunload="vxShell.shutdown();">
   
-  <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
-  <script language="JavaScript" src="chrome://global/content/globalOverlay.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
-  <script language="JavaScript" src="chrome://vixen/content/vxKeysetOverlay.js"></script>
-  <script language="JavaScript" src="chrome://vixen/content/vixen.js"></script>
-  <script language="JavaScript" src="chrome://vixen/content/vxUtils.js"></script>
+  <script type="application/x-javascript" src="chrome://vixen/content/vxKeysetOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://vixen/content/vixen.js"/>
+  <script type="application/x-javascript" src="chrome://vixen/content/vxUtils.js"/>
 
   <keyset id="keyset"/>
   
@@ -79,7 +79,4 @@
       <button class="button-toolbar" value="Dump DOM" oncommand="XXX_dumpDOM();"/>
     </toolbar>
   </toolbox>
-          
 </window>
-
-        

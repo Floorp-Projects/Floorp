@@ -13,9 +13,9 @@
         orient="vertical"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="Javascript" src="chrome://inspector/content/search/modules/findFiles/dialog.js"/>
-  <script language="Javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/search/modules/findFiles/dialog.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
   
   <box orient="vertical">
     <box autostretch="never">
@@ -33,6 +33,4 @@
   </box>
 
   <box id="okCancelButtonsRight"/>
-
 </window>
-

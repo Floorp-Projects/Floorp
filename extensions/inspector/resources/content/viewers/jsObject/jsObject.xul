@@ -12,11 +12,8 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script language="javascript" src="chrome://inspector/content/viewers/jsObject/jsObject.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/jsObject/jsObject.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
 
   <text value="Not Yet Implemented"/>
-
 </window>
-
-        

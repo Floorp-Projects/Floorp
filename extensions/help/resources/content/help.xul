@@ -16,7 +16,7 @@
         persist="width height screenX screenY"
         onload="init();" >
 
-  <script type="text/javascript" src="chrome://help/content/help.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <box orient="vertical" flex="1">
 

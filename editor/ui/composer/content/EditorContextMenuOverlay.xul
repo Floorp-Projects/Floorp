@@ -26,7 +26,7 @@
 <overlay id="ComposerContextMenuOverlay"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script language="JavaScript" src="chrome://editor/content/EditorContextMenu.js"/>
+<script type="application/x-javascript" src="chrome://editor/content/EditorContextMenu.js"/>
 
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   

@@ -36,7 +36,7 @@
         onload="TutorialURL()" 
         orient="vertical">
 <!-- 
-  <script language="javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 -->
 
   <script>
