@@ -22,13 +22,13 @@
  */
 
 // Local Includes 
+#include "nsString.h"
 #include "nsUrlbarHistory.h"
 
 // Helper Classes
 #include "nsXPIDLString.h"
 
 // Interfaces Needed
-#include "nsString.h"
 #include "nsIAutoCompleteResults.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIPref.h"
@@ -356,18 +356,13 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
 	        if (NS_FAILED(rv))
                 return NS_ERROR_FAILURE;
 
-	        PRUnichar *  itemValue=nsnull;
-            resultItem->GetValue(&itemValue);
-			nsAutoString itemAutoStr(itemValue);
+	        nsAutoString itemValue;
+            resultItem->GetValue(itemValue);
 
-            //printf("SearchPreviousResults::Comparing %s with %s \n", searchAutoStr.ToNewCString(), itemAutoStr.ToNewCString());
-			if (!itemValue)
+			if (itemValue.IsEmpty())
 				continue;
-		    if (nsCRT::strncasecmp(searchStr, itemValue, searchStrLen) == 0)
-			{
-			    Recycle(itemValue);
+		    if (nsCRT::strncasecmp(searchStr, itemValue.get(), searchStrLen) == 0)
 			    continue;
-			}
 			
 	    }
 	    return NS_OK;
@@ -519,7 +514,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
 		   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
            
-           newItem->SetValue(match);
+           newItem->SetValue(nsDependentString(match));
            nsCOMPtr<nsISupportsArray> array;
            rv = results->GetItems(getter_AddRefs(array));
            if (NS_SUCCEEDED(rv))
@@ -611,11 +606,11 @@ nsUrlbarHistory::CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteR
             if (NS_FAILED(rv))
                 return NS_ERROR_FAILURE;
 
-            nsXPIDLString itemValue;
-            resultItem->GetValue(getter_Copies(itemValue));
+            nsAutoString itemValue;
+            resultItem->GetValue(itemValue);
             // Using nsIURI to do comparisons didn't quite work out.
             // So use nsCRT methods
-            if (nsCRT::strcasecmp(itemValue, aItem) == 0)
+            if (nsCRT::strcasecmp(itemValue.get(), aItem) == 0)
             {
                 //printf("In CheckItemAvailability. Item already found\n");
                 *aResult = PR_TRUE;
@@ -675,7 +670,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
             //Create an AutoComplete Item 
 		    nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
             NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);            
-            newItem->SetValue(hostName.GetUnicode());
+            newItem->SetValue(hostName);
             nsCOMPtr<nsISupportsArray> array;
             rv = aResultArray->GetItems(getter_AddRefs(array));
             // Always insert the host entry at the top of the array

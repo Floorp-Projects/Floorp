@@ -176,7 +176,7 @@ protected:
   // 
   // autocomplete stuff
   //
-  nsVoidArray* mIgnorePrefixes;
+  nsStringArray mIgnorePrefixes;
   
   nsresult AutoCompleteSearch(const nsAReadableString& aSearchString,
                               nsIAutoCompleteResults* aPrevResults,

@@ -47,6 +47,7 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -462,24 +463,12 @@ nsGlobalHistory::nsGlobalHistory()
   
   // commonly used prefixes that should be chopped off all 
   // history and input urls before comparison
-  mIgnorePrefixes = new nsVoidArray(5);
 
-  nsString* temp;
-
-  temp = new nsString(NS_LITERAL_STRING("http://www."));
-  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 0);
-
-  temp = new nsString(NS_LITERAL_STRING("http://"));
-  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 1);
-
-  temp = new nsString(NS_LITERAL_STRING("www."));
-  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 2);
-
-  temp = new nsString(NS_LITERAL_STRING("https://www."));
-  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 3);
-
-  temp = new nsString(NS_LITERAL_STRING("https://"));
-  mIgnorePrefixes->ReplaceElementAt(NS_STATIC_CAST(void*, temp), 4);
+  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("http://www."));
+  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("http://"));
+  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("www."));
+  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("https://www."));
+  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("https://"));
 }
 
 nsGlobalHistory::~nsGlobalHistory()
@@ -516,12 +505,6 @@ nsGlobalHistory::~nsGlobalHistory()
   if (mExpireNowTimer)
     mExpireNowTimer->Cancel();
 
-  for(PRInt32 i = 0; i < mIgnorePrefixes->Count(); ++i) {
-    nsString* entry = NS_STATIC_CAST(nsString*, mIgnorePrefixes->ElementAt(i));
-    delete entry;
-  }
-
-  delete mIgnorePrefixes;
 }
 
 
@@ -733,8 +716,18 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   mdb_err err;
 
   PRInt32 len = (nsCRT::strlen(aValue) * sizeof(PRUnichar));
+
+  // eventually turn this on when we're confident in mork's abilitiy
+  // to handle yarn forms properly
+#if 0
+  NS_ConvertUCS2toUTF8 utf8Value(aValue);
+  printf("Storing utf8 value %s\n", utf8Value.get());
+  mdbYarn yarn = { (void *)utf8Value.get(), utf8Value.Length(), utf8Value.Length(), 0, 1, nsnull };
+#else
+
   mdbYarn yarn = { (void *)aValue, len, len, 0, 0, nsnull };
   
+#endif
   err = aRow->AddColumn(mEnv, aCol, &yarn);
   if (err != 0) return NS_ERROR_FAILURE;
   return NS_OK;
@@ -883,7 +876,7 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 
   nsCOMPtr<nsIRDFLiteral> oldname;
   if (!oldtitle.IsEmpty()) {
-    rv = gRDFService->GetLiteral(oldtitle.GetUnicode(), getter_AddRefs(oldname));
+    rv = gRDFService->GetLiteral(oldtitle.get(), getter_AddRefs(oldname));
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -1525,7 +1518,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       if (NS_FAILED(rv)) return rv;
 
       nsCOMPtr<nsIRDFLiteral> name;
-      rv = gRDFService->GetLiteral(title.GetUnicode(), getter_AddRefs(name));
+      rv = gRDFService->GetLiteral(title.get(), getter_AddRefs(name));
       if (NS_FAILED(rv)) return rv;
 
       return CallQueryInterface(name, aTarget);
@@ -2368,10 +2361,11 @@ nsGlobalHistory::CheckHostnameEntries()
 
 
   while (row) {
+#if 0
     rv = GetRowValue(row, kToken_URLColumn, url);
     if (NS_FAILED(rv)) break;
 
-    rv = urlObj->SetSpec(url);
+    rv = urlObj->SetSpec(url.get());
     if (NS_FAILED(rv)) break;
 
     rv = urlObj->GetHost(getter_Copies(hostname));
@@ -2379,6 +2373,17 @@ nsGlobalHistory::CheckHostnameEntries()
 
     SetRowValue(row, kToken_HostnameColumn, hostname);
     
+#endif
+
+    // to be turned on when we're confident in mork's ability
+    // to handle yarn forms properly
+#if 0
+    nsAutoString title;
+    rv = GetRowValue(row, kToken_NameColumn, title);
+    // reencode back into UTF8
+    if (NS_SUCCEEDED(rv))
+      SetRowValue(row, kToken_NameColumn, title.get());
+#endif
     cursor->NextRow(mEnv, getter_Acquires(row), &pos);
   }
 
@@ -3342,22 +3347,67 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       mdbYarn yarn;
       aRow->AliasCellYarn(mEnv, property_column, &yarn);
 
-      if (term->method.Equals("is")) {
-        // is the cell in unicode or not? Hmm...let's assume so?
-        nsDependentCString rowVal((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
+      nsDependentCString rowVal((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
 
-        if (NS_ConvertUCS2toUTF8(term->text) != rowVal)
+      // set up some iterators
+      nsACString::const_iterator start, end;
+      rowVal.BeginReading(start);
+      rowVal.EndReading(end);
+      
+      // is the cell in unicode or not? Hmm...let's assume so?
+      NS_ConvertUCS2toUTF8 utf8Value(term->text);
+      
+      if (term->method.Equals("is")) {
+
+        if (utf8Value != rowVal)
+          return PR_FALSE;
+      }
+
+      else if (term->method.Equals("isnot")) {
+        if (utf8Value == rowVal)
+          return PR_FALSE;
+      }
+
+      else if (term->method.Equals("contains")) {
+        if (!FindInReadable(utf8Value, start, end))
+          return PR_FALSE;
+      }
+
+      else if (term->method.Equals("doesntcontain")) {
+        if (FindInReadable(utf8Value, start, end))
+          return PR_FALSE;
+      }
+
+      else if (term->method.Equals("startswith")) {
+        // need to make sure that the found string is 
+        // at the beginning of the string
+        nsACString::const_iterator real_start = start;
+        if (!(FindInReadable(utf8Value, start, end) &&
+              real_start == start))
+          return PR_FALSE;
+      }
+
+      else if (term->method.Equals("endswith")) {
+        // need to make sure that the found string ends
+        // at the end of the string
+        nsACString::const_iterator real_end = end;
+        if (!(RFindInReadable(utf8Value, start, end) &&
+              real_end == end))
           return PR_FALSE;
       }
 
       else {
         NS_WARNING("Unrecognized search method in SearchEnumerator::RowMatches");
-        // don't handle other match types like isgreater/etc yet
+        // don't handle other match types like isgreater/etc yet,
+        // so assume the match failed and bail
+        return PR_FALSE;
       }
       
     }
   }
   
+  // we've gone through each term and didn't bail, so they must have
+  // all matched!
   return PR_TRUE;
 }
 
@@ -3435,11 +3485,11 @@ nsGlobalHistory::AutoCompleteEnumerator::~AutoCompleteEnumerator()
 PRBool
 nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 {
-  nsCString url;
+  nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
   
-  nsString url2;
-  url2.AssignWithConversion(url);
+  nsAutoString url2;
+  url2.AssignWithConversion(url.get());
   PRBool result = mHistory->AutoCompleteCompare(url2, mSelectValue); 
   
   return result;
@@ -3448,7 +3498,7 @@ nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 nsresult
 nsGlobalHistory::AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
 {
-  nsCString url;
+  nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
   nsAutoString comments;
   mHistory->GetRowValue(aRow, mCommentColumn, comments);
@@ -3456,9 +3506,7 @@ nsGlobalHistory::AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsI
   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
 
-  PRUnichar* urlstr = url.ToNewUnicode();
-  newItem->SetValue(urlstr);
-  nsMemory::Free(urlstr);
+  newItem->SetValue(NS_ConvertASCIItoUCS2(url.get()));
   
   newItem->SetComment(comments.get());
 
@@ -3591,12 +3639,13 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
     for (PRUint32 i = 0; i < count; ++i) {
       nsCOMPtr<nsIAutoCompleteItem> item;
       prevResultItems->GetElementAt(i, getter_AddRefs(item));
+
+      // make a copy of the value because AutoCompleteCompare
+      // is destructive
+      nsAutoString url;
+      item->GetValue(url);
       
-      nsXPIDLString url;
-      item->GetValue(getter_Copies(url));
-      
-      nsDependentString urlstr(url);
-      if (AutoCompleteCompare(urlstr, aSearchString))
+      if (AutoCompleteCompare(url, aSearchString))
         resultItems->AppendElement(item);
     }    
   } else {
@@ -3612,18 +3661,24 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
     // store hits in an auto array initially
     nsAutoVoidArray array;
       
-    nsISupports* entry; // not using nsCOMPtr here to avoid time spent refcounting 
-                       // while passing these around between the 3 arrays
-    // step through the enumerator
+    // not using nsCOMPtr here to avoid time spent
+    // refcounting while passing these around between the 3 arrays
+    nsISupports* entry; 
+
+    // step through the enumerator to get the items into 'array'
+    // because we don't know how many items there will be
     PRBool hasMore;
     while (PR_TRUE) {
       enumerator->HasMoreElements(&hasMore);
       if (!hasMore) break;
+      
+      // addref's each entry as it enters 'array'
       enumerator->GetNext(&entry);
       array.AppendElement(entry);
     }
   
-    // turn auto array into flat array for quick sort
+    // turn auto array into flat array for quick sort, now that we
+    // know how many items there are
     PRUint32 count = array.Count();
     nsIAutoCompleteItem** items = new nsIAutoCompleteItem*[count];
     PRUint32 i;
@@ -3631,7 +3686,8 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
       items[i] = (nsIAutoCompleteItem*)array.ElementAt(i);
     
     // sort it
-    NS_QuickSort(items, count, sizeof(nsIAutoCompleteItem*), AutoCompleteSortComparison, nsnull);
+    NS_QuickSort(items, count, sizeof(nsIAutoCompleteItem*),
+                 AutoCompleteSortComparison, nsnull);
   
     // place the sorted array into the autocomplete results
     for (i = 0; i < count; ++i) {
@@ -3652,8 +3708,8 @@ nsGlobalHistory::AutoCompleteCutPrefix(nsAWritableString& aURL)
   // This comparison is case-sensitive.  Therefore, it assumes that aUserURL is a 
   // potential URL whose host name is in all lower case.
   PRInt32 idx = 0;
-  for (PRInt32 i = 0; i < mIgnorePrefixes->Count(); ++i) {
-    nsString* string = NS_STATIC_CAST(nsString*, mIgnorePrefixes->ElementAt(i));    
+  for (PRInt32 i = 0; i < mIgnorePrefixes.Count(); ++i) {
+    nsString* string = mIgnorePrefixes.StringAt(i);    
     if (Substring(aURL, 0, string->Length()).Equals(*string)) {
       idx = string->Length();
       break;
@@ -3703,20 +3759,11 @@ AutoCompleteSortComparison(const void *v1, const void *v2, void *unused)
   nsIAutoCompleteItem *item1 = *(nsIAutoCompleteItem**) v1;
   nsIAutoCompleteItem *item2 = *(nsIAutoCompleteItem**) v2;
   
-  nsXPIDLString s1;
-  item1->GetValue(getter_Copies(s1));
-  nsXPIDLString s2;
-  item2->GetValue(getter_Copies(s2));
+  nsAutoString s1;
+  item1->GetValue(s1);
+  nsAutoString s2;
+  item2->GetValue(s2);
   
-  if (!s1) {
-    if (!s2)
-      return 0;
-    else
-      return -1;
-  } else if (!s2) {
-    return 1;
-  } else {
-    return nsCRT::strcmp(s1, s2);
-  }
+  return nsCRT::strcmp(s1.get(), s2.get());
 }
 
