@@ -23,10 +23,11 @@ MODULE		= msgimap
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDLSRCS =				  			\
-		nsIImapServerSink.idl		\
-		nsIImapIncomingServer.idl 	\
-		nsIImapFlagAndUidState.idl 	\
+XPIDLSRCS =				  \
+		nsIImapServerSink.idl	\
+		nsIImapMessageSink.idl \
+		nsIImapIncomingServer.idl \
+		nsIImapFlagAndUidState.idl \
 		nsIImapMockChannel.idl		\
 		$(NULL)
 
@@ -36,7 +37,6 @@ EXPORTS= 								\
 			nsIImapLog.h				\
 			nsIIMAPHostSessionList.h 	\
 			nsIImapMailFolderSink.h 	\
-			nsIImapMessageSink.h 		\
 			nsIImapExtensionSink.h 		\
 			nsIImapMiscellaneousSink.h 	\
 			nsIImapService.h			\
