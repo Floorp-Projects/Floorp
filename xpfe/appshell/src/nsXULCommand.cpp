@@ -216,3 +216,4 @@ nsEventStatus nsXULCommand::MenuDestruct(const nsMenuEvent & aMenuEvent)
   DoCommand();
   return nsEventStatus_eConsumeNoDefault;
 }
+
