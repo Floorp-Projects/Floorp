@@ -57,6 +57,24 @@ LocateHttpStart(char *buf, PRUint32 len)
     return 0;
 }
 
+#if defined(PR_LOGGING)
+static void
+LogHeaders(const char *lines)
+{
+    nsCAutoString buf;
+    char *p;
+    while ((p = PL_strstr(lines, "\r\n")) != nsnull) {
+        buf.Assign(lines, p - lines);
+        if (PL_strcasestr(buf.get(), "authorization: ") != nsnull) {
+            char *p = PL_strchr(PL_strchr(buf.get(), ' ')+1, ' ');
+            while (*++p) *p = '*';
+        }
+        LOG2(("  %s\n", buf.get()));
+        lines = p + 2;
+    }
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // nsHttpTransaction <public>
 //-----------------------------------------------------------------------------
@@ -138,7 +156,13 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     mReqHeaderBuf.SetLength(0);
     requestHead->Flatten(mReqHeaderBuf);
 
-    LOG2(("http request [\n%s]\n", mReqHeaderBuf.get()));
+#if defined(PR_LOGGING)
+    if (LOG2_ENABLED()) {
+        LOG2(("http request [\n"));
+        LogHeaders(mReqHeaderBuf.get());
+        LOG2(("]\n"));
+    }
+#endif
 
     mReqUploadStream = requestStream;
     if (!mReqUploadStream)
@@ -458,9 +482,13 @@ nsHttpTransaction::HandleContentStart()
 
     if (mResponseHead) {
 #if defined(PR_LOGGING)
-        nsCAutoString headers;
-        mResponseHead->Flatten(headers, PR_FALSE);
-        LOG2(("http response [\n%s]\n", headers.get()));                        
+        if (LOG2_ENABLED()) {
+            LOG2(("http response [\n"));
+            nsCAutoString headers;
+            mResponseHead->Flatten(headers, PR_FALSE);
+            LogHeaders(headers.get());
+            LOG2(("]\n"));
+        }
 #endif
         // notify the connection, give it a chance to cause a reset.
         PRBool reset = PR_FALSE;
