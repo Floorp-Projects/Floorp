@@ -1896,7 +1896,8 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent,
     //If not disabled, check for the right cursor.
     else {
       if (aTargetFrame) {
-        aTargetFrame->GetCursor(aPresContext, aEvent->point, cursor);
+        if (NS_FAILED(aTargetFrame->GetCursor(aPresContext, aEvent->point, cursor)))
+          return;  // don't update the cursor if we failed to get it from the frame see bug 118877
       }
     }
   }
