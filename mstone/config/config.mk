@@ -68,7 +68,7 @@ ifeq ($(OS_ARCH), WINNT)
 	PERL_LIB_OS_FILES = $(PERL5_IMPORT)/lib/$(PERL_OS)/*.pm
 endif
 ifeq ($(OS_ARCH), IRIX64)
-	ARCH	= IRIX
+	OS_ARCH	= IRIX
 endif
 ifeq ($(OS_ARCH), IRIX)
 	# MIPSpro Compilers: Version 7.2.1
