@@ -57,8 +57,6 @@
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">
 <!ENTITY useStyleSheetMenu.accesskey "u">
 <!ENTITY useStyleSheetNone.label "None">
-<!ENTITY showImagesCmd.label "Show Images">
-<!ENTITY showImagesCmd.accesskey "g">
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.commandkey "u">
