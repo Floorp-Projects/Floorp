@@ -3231,16 +3231,17 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  refContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
   ContentRemoved(nsnull, refContent, indx);
+  refContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
   mChildren->ReplaceElementAt(content, indx);
   // This is OK because we checked above.
   if (ELEMENT_NODE == nodeType)
     mRootContent = content;
 
-  ContentInserted(nsnull, content, indx);
   content->SetDocument(this, PR_TRUE, PR_TRUE);
+  ContentInserted(nsnull, content, indx);
+
   *aReturn = aOldChild;
   NS_ADDREF(aOldChild);
 
