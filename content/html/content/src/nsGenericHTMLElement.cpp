@@ -81,6 +81,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsILanguageAtomService.h"
 
 // XXX todo: add in missing out-of-memory checks
 NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
@@ -375,15 +376,22 @@ static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
   NS_RELEASE(aAttributes);
 }
 
+static int gGenericHTMLElementCount = 0;
+static nsILanguageAtomService* gLangService = nsnull;
+
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
   mAttributes = nsnull;
+  gGenericHTMLElementCount++;
 }
 
 nsGenericHTMLElement::~nsGenericHTMLElement()
 {
   if (nsnull != mAttributes) {
     ReleaseAttributes(mAttributes);
+  }
+  if (!--gGenericHTMLElementCount) {
+    NS_IF_RELEASE(gLangService);
   }
 }
 
@@ -2211,6 +2219,10 @@ nsGenericHTMLElement::ParseCommonAttribute(nsIAtom* aAttribute,
   if (nsHTMLAtoms::dir == aAttribute) {
     return ParseEnumValue(aValue, kDirTable, aResult);
   }
+  else if (nsHTMLAtoms::lang == aAttribute) {
+    aResult.SetStringValue(aValue);
+    return PR_TRUE;
+  }
   return PR_FALSE;
 }
 
@@ -2522,6 +2534,22 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
       aStyleContext->GetMutableStyleData(eStyleStruct_Display);
     display->mDirection = value.GetIntValue();
   }
+  aAttributes->GetAttribute(nsHTMLAtoms::lang, value);
+  if (value.GetUnit() == eHTMLUnit_String) {
+    if (!gLangService) {
+      nsServiceManager::GetService(NS_LANGUAGEATOMSERVICE_PROGID,
+        NS_GET_IID(nsILanguageAtomService), (nsISupports**) &gLangService);
+      if (!gLangService) {
+        return;
+      }
+    }
+    nsStyleDisplay* display = (nsStyleDisplay*)
+      aStyleContext->GetMutableStyleData(eStyleStruct_Display);
+    nsAutoString lang;
+    value.GetStringValue(lang);
+    gLangService->LookupLanguage(lang.GetUnicode(),
+      getter_AddRefs(display->mLanguage));
+  }
 }
 
 PRBool
@@ -2530,6 +2558,10 @@ nsGenericHTMLElement::GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
 {
   if (nsHTMLAtoms::dir == aAttribute) {
     aHint = NS_STYLE_HINT_REFLOW;  // XXX really? possibly FRAMECHANGE?
+    return PR_TRUE;
+  }
+  else if (nsHTMLAtoms::lang == aAttribute) {
+    aHint = NS_STYLE_HINT_REFLOW; // LANG attribute affects font selection
     return PR_TRUE;
   }
   /* 

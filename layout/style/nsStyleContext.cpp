@@ -1018,10 +1018,12 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
 {
   if (nsnull != aParent) {
     mDirection = aParent->mDirection;
+    mLanguage = aParent->mLanguage;
     mVisible = aParent->mVisible;
   }
   else {
     aPresContext->GetDefaultDirection(&mDirection);
+    aPresContext->GetLanguage(getter_AddRefs(mLanguage));
     mVisible = NS_STYLE_VISIBILITY_VISIBLE;
   }
   mDisplay = NS_STYLE_DISPLAY_INLINE;
@@ -1036,12 +1038,32 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
 
 void StyleDisplayImpl::SetFrom(const nsStyleDisplay& aSource)
 {
-  nsCRT::memcpy((nsStyleDisplay*)this, &aSource, sizeof(nsStyleDisplay));
+  mDirection = aSource.mDirection;
+  mDisplay = aSource.mDisplay;
+  mFloats = aSource.mFloats;
+  mBreakType = aSource.mBreakType;
+  mBreakBefore = aSource.mBreakBefore;
+  mBreakAfter = aSource.mBreakAfter;
+  mVisible = aSource.mVisible;
+  mOverflow = aSource.mOverflow;
+  mClipFlags = aSource.mClipFlags;
+  mClip = aSource.mClip;
+  mLanguage = aSource.mLanguage;
 }
 
 void StyleDisplayImpl::CopyTo(nsStyleDisplay& aDest) const
 {
-  nsCRT::memcpy(&aDest, (const nsStyleDisplay*)this, sizeof(nsStyleDisplay));
+  aDest.mDirection = mDirection;
+  aDest.mDisplay = mDisplay;
+  aDest.mFloats = mFloats;
+  aDest.mBreakType = mBreakType;
+  aDest.mBreakBefore = mBreakBefore;
+  aDest.mBreakAfter = mBreakAfter;
+  aDest.mVisible = mVisible;
+  aDest.mOverflow = mOverflow;
+  aDest.mClipFlags = mClipFlags;
+  aDest.mClip = mClip;
+  aDest.mLanguage = mLanguage;
 }
 
 PRInt32 StyleDisplayImpl::CalcDifference(const StyleDisplayImpl& aOther) const
@@ -1050,6 +1072,7 @@ PRInt32 StyleDisplayImpl::CalcDifference(const StyleDisplayImpl& aOther) const
       (mFloats == aOther.mFloats) &&
       (mOverflow == aOther.mOverflow)) {
     if ((mDirection == aOther.mDirection) &&
+        (mLanguage == aOther.mLanguage) &&
         (mBreakType == aOther.mBreakType) &&
         (mBreakBefore == aOther.mBreakBefore) &&
         (mBreakAfter == aOther.mBreakAfter)) {
@@ -2294,9 +2317,10 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
       StyleContextImpl* holdParent = mParent;
       mParent = nsnull; // cut off all inheritance. this really blows
 
-      // XXX the style we do preserve is visibility, direction
+      // XXX the style we do preserve is visibility, direction, language
       PRUint8 visible = mDisplay.mVisible;
       PRUint8 direction = mDisplay.mDirection;
+      nsCOMPtr<nsILanguageAtom> language = mDisplay.mLanguage;
 
       // time to emulate a sub-document
       // This is ugly, but we need to map style once to determine display type
@@ -2316,6 +2340,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
       mPrint.ResetFrom(nsnull, aPresContext);
       mDisplay.mVisible = visible;
       mDisplay.mDirection = direction;
+      mDisplay.mLanguage = language;
 
       PRUint32 numRules = 0;
       if (mRules) {

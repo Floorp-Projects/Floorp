@@ -447,6 +447,7 @@ public:
     const nsStyleFont* mFont;
     const nsStyleText* mText;
     const nsStyleColor* mColor;
+    const nsStyleDisplay* mDisplay;
     nsIFontMetrics* mNormalFont;
     nsIFontMetrics* mSmallFont;
     nsIFontMetrics* mLastFont;
@@ -479,13 +480,20 @@ public:
       mColor = (const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
       mFont = (const nsStyleFont*) sc->GetStyleData(eStyleStruct_Font);
       mText = (const nsStyleText*) sc->GetStyleData(eStyleStruct_Text);
+      mDisplay = (const nsStyleDisplay*) sc->GetStyleData(eStyleStruct_Display);
 
       // Cache the original decorations and reuse the current font
       // to query metrics, rather than creating a new font which is expensive.
       nsFont* plainFont = (nsFont *)&mFont->mFont; //XXX: Change to use a CONST_CAST macro.
       PRUint8 originalDecorations = plainFont->decorations;
       plainFont->decorations = NS_FONT_DECORATION_NONE;
-      aPresContext->GetMetricsFor(*plainFont, &mNormalFont);
+      nsCOMPtr<nsIDeviceContext> deviceContext;
+      aRenderingContext.GetDeviceContext(*getter_AddRefs(deviceContext));
+      nsCOMPtr<nsIAtom> langGroup;
+      if (mDisplay->mLanguage) {
+        mDisplay->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
+      }
+      deviceContext->GetMetricsFor(*plainFont, langGroup, mNormalFont);
       aRenderingContext.SetFont(mNormalFont);
       aRenderingContext.GetWidth(' ', mSpaceWidth);
 #ifdef _WIN32
