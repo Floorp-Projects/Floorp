@@ -186,8 +186,8 @@ sub load_data {
 }
 
 sub load_buildlog {
-    local($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile,$binaryname);
-    local($buildrec, @treelist, $t);
+    my ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile,$binaryname);
+    my ($buildrec, @treelist, $t);
 
     if( $tree2 ne '' ){ 
         @treelist = ($td1, $td2);
@@ -206,6 +206,10 @@ sub load_buildlog {
             chomp;
             ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
                 split( /\|/ );
+	    # Ignore stuff in the future.
+	    next if $buildtime > $maxdate;
+
+	    # Ignore stuff in the past
             if ($buildtime < $mindate) {
                 # Occasionally, a build might show up with a bogus time.  So,
                 # we won't judge ourselves as having hit the end until we

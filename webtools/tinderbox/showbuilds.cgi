@@ -25,17 +25,25 @@ require 'imagelog.pl';
 require 'header.pl';
 $|=1;
 
+#require 'utils.pl';
+#$default_root = pickDefaultRepository();
+# Terrible hack until I can figure out how to do this properly. -slamm
+$default_root = '/cvsroot';
 
 #
 # show 12 hours by default
 #
+$nowdate = time;
+if (not defined($maxdate = $form{maxdate})) {
+  $maxdate = $nowdate;
+}
 if($form{'showall'} != 0 ){
     $mindate = 0;
 }
 else {
     $hours = 12;
     $hours = $form{hours} if $form{hours} ne "";
-    $mindate = time - ($hours*60*60);
+    $mindate = $maxdate - ($hours*60*60);
 }
 
 $colormap = {
@@ -168,7 +176,8 @@ $treename = $tree . ($tree2 ne "" ? " and $tree2" : "" );
                            "tree: $treename ($now)");
 
     print "$script_str\n";
-    print "$message_of_day\n";
+    # Only show the message of the day on the first pageful
+    print "$message_of_day\n" if $maxdate eq $nowdate;
 
     if (!$form{'nocrap'}) {
         my ($imageurl,$imagewidth,$imageheight,$quote) = &get_image;
@@ -198,7 +207,7 @@ $treename = $tree . ($tree2 ne "" ? " and $tree2" : "" );
             };
       }
     if($bonsai_tree){
-        print "<p>The tree is currently <font size=+2>";
+        print "The tree is currently <font size=+2>";
         if( &tree_open ){
             print "OPEN";
         }
@@ -231,14 +240,8 @@ sub display_build_table_row {
     my ($tt, $hour_color);
     $tt = &print_time($build_time_times->[$t]);
 
-    if( $tree2 ne ""){
-        $qr = "";
-        $er = "";
-    }
-    else {
-        $qr = &query_ref( $td1, $build_time_times->[$t]);
-        $er = "</a>";
-    }
+    my ($qr) = '';
+    my ($er) = '';
 
     if ($build_time_times->[$t] % 7200 > 3600) {
         $hour_color = "";
@@ -250,6 +253,10 @@ sub display_build_table_row {
     if ($lasthour == $hour) {
       $tt =~ s/^.*&nbsp;//;
     } else {
+      if ($tree2 eq '') {
+	$qr = &query_ref( $td1, $build_time_times->[$t]);
+	$er = "</a>";
+      }
       $lasthour = $hour;
     }
 
@@ -424,8 +431,9 @@ sub display_build_table_header {
 
 sub display_build_table_footer {
     print "</table>\n";
-#    print "</td></tr></table>";
-    print "<a href=showbuilds.cgi?tree=$tree&showall=1>Show more checkin history</a><br><br>\n";
+    my $nextdate = $maxdate - $hours*60*60;
+    print "<a href='showbuilds.cgi?tree=$tree&hours=$hours&maxdate=$nextdate&nocrap=1'>";
+    print "Show next $hours hours</a><br><br>\n";
 
     if (open(FOOTER, "<$data_dir/footer.html")) {
         while (<FOOTER>) {
@@ -443,7 +451,11 @@ sub query_ref {
     my( $td, $mindate, $maxdate, $who ) = @_;
     my( $output ) = '';
 
-    $output = "<a href=../bonsai/cvsquery.cgi?module=$td->{cvs_module}&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}&date=explicit&mindate=$mindate&maxdate=$maxdate";
+    $output = "<a href=../bonsai/cvsquery.cgi?module=$td->{cvs_module}";
+    $output .= "&branch=$td->{cvs_branch}" if $td->{cvs_branch} ne 'HEAD';
+    $output .= "&cvsroot=$td->{cvs_root}" if $td->{cvs_root} ne $default_root;
+    $output .= "&date=explicit&mindate=$mindate";
+    $output .= "&maxdate=$maxdate" if $maxdate ne '';
     $output .= "&who=$who" if $who ne '';
     $output .= ">";
 }
@@ -540,7 +552,7 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
     l = document.layers['popup'];
     l.document.write(
         "<table border=1 cellspacing=1><tr><td>" + 
-        note_array[noteid] + 
+        note[noteid] + 
         "</tr></table>");
     l.document.close();
 
@@ -557,7 +569,10 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
     return false;
 }
 
-note_array = new Array();
+note = new Array();
+tree = new Array();
+name = new Array();
+err = new Array();
 
 </script>
 
@@ -570,9 +585,9 @@ note_array = new Array();
 <SCRIPT>
 function log_popup(e,buildindex,logfile,buildtime)
 {
-    tree = eval("tree_b" + buildindex);
-    buildname = eval("name_b" + buildindex);
-    errorparser = eval("error_b" + buildindex);
+    tree = tree[buildindex];
+    buildname = name[buildindex];
+    errorparser = err[buildindex];
 
     urlparams = "tree=" + tree
            + "&errorparser=" + errorparser
@@ -608,43 +623,47 @@ function log_popup(e,buildindex,logfile,buildtime)
     q.document.close();
     return false;
 }
-</SCRIPT>
 ENDJS
 
 $script_str .= "
-<script>
-
 function js_qr(tree,mindate, maxdate, who ){
     if (tree == 0 ){
         return '../bonsai/cvsquery.cgi?module=${cvs_module}&branch=${cvs_branch}&cvsroot=${cvs_root}&date=explicit&mindate=' 
             + mindate + '&maxdate=' +maxdate + '&who=' + who ;
-    }
+    }";
+$script_str .= "
     else {
         return '../bonsai/cvsquery.cgi?module=$td2->{cvs_module}&branch=$td2->{cvs_branch}&cvsroot=$td2->{cvs_root}&date=explicit&mindate=' 
             + mindate + '&maxdate=' +maxdate + '&who=' + who ;
-    }
+    }" if $tree2 ne '';
+$script_str .= "
 }
 
 function js_qr24(tree,who){
     if (tree == 0 ){
         return '../bonsai/cvsquery.cgi?module=${cvs_module}&branch=${cvs_branch}&cvsroot=${cvs_root}&date=day' 
             + '&who=' +who;
-    }
+    }";
+$script_str .= "
     else{
         return '../bonsai/cvsquery.cgi?module=$td2->{cvs_module}&branch=$td2->{cvs_branch}&cvsroot=$td2->{cvs_root}&date=day' 
             + '&who=' +who;
-    }
+    }" if $tree2 ne '';
+$script_str .= "
 }
 ";
 
-$i = 0;
-while( $i < @note_array ){
-    $s = $note_array[$i];
-    $s =~ s/\\/\\\\/g;
-    $s =~ s/\"/\\\"/g;
-    $s =~ s/\n/\\n/g;
-    $script_str .= "note_array[$i] = \"$s\";\n";
-    $i++;
+$ii = 0;
+while( $ii < @note_array ){
+  $ss = $note_array[$ii];
+  while( $ii < @note_array && $note_array[$ii] eq $ss ){
+    $script_str .= "note[$ii] = ";
+    $ii++;
+  }
+  $ss =~ s/\\/\\\\/g;
+  $ss =~ s/\"/\\\"/g;
+  $ss =~ s/\n/\\n/g;
+  $script_str .= "\"$ss\";\n";
 }
 
 $ii = 1;
@@ -652,16 +671,16 @@ while ($ii <= $name_count) {
   if (defined($br = $build_table->[1][$ii])) {
     if ($br != -1) {
       $bn = $build_name_names->[$ii];
-      $script_str .= "tree_b${ii}='$br->{td}{name}';\n";
-      $script_str .= " name_b${ii}='$bn';\n";
-      $script_str .= "  error_b${ii}='$br->{errorparser}';\n";
+      $script_str .= "tree[$ii]='$br->{td}{name}';\n";
+      $script_str .= "name[$ii]='$bn';\n";
+      $script_str .= " err[$ii]='$br->{errorparser}';\n";
     }
   }
   $ii++;
 }
 
 
-$script_str .= "</script>\n";
+$script_str .= "</SCRIPT>\n";
 
 }
 
@@ -677,7 +696,7 @@ sub do_express {
     
       my ($bw) = Backwards->new("$form{tree}/build.dat") or die;
 
-      $latest_time=0;
+      my $latest_time=0;
       my $tooearly = 0;
       while( $_ = $bw->readline ) {
 	chop;
@@ -687,6 +706,8 @@ sub do_express {
 	  if ($latest_time == 0) {
 	    $latest_time = $buildtime;
 	  }
+	  # Ignore stuff in the future.
+	  next if $buildtime > $maxdate;
 	  # Ignore stuff more than 12 hours old
 	  if ($buildtime < $latest_time - 12*60*60) {
             # Occasionally, a build might show up with a bogus time.  So,
@@ -697,7 +718,6 @@ sub do_express {
             }
             next;
           }
-
 	  next if defined $build{$buildname};
 	  
 	  $build{$buildname} = $buildstatus;
