@@ -1943,6 +1943,18 @@ PresShell::HandleEvent(nsIView         *aView,
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;
 
+  if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
+  {//KEY HANDLERS WILL GET RID OF THIS 
+    mSelection->EnableFrameNotification(PR_FALSE);
+    if (mDisplayNonTextSelection && NS_SUCCEEDED(mSelection->HandleKeyEvent(aEvent)))
+    {  
+      mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
+      return NS_OK;
+    }
+     mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
+    //we are a listener now.
+  }
+
   if (nsnull != frame) {
     PushCurrentEventFrame();
 
@@ -1956,13 +1968,6 @@ PresShell::HandleEvent(nsIView         *aView,
       NS_RELEASE(container);
     }
 
-    if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
-    {
-      mSelection->EnableFrameNotification(PR_FALSE);
-      mSelection->HandleKeyEvent(aEvent);
-      mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
-      //we are a listener now.
-    }
     nsIEventStateManager *manager;
     nsIContent* focusContent = nsnull;
     if (NS_OK == mPresContext->GetEventStateManager(&manager)) {

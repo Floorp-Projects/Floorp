@@ -729,9 +729,21 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     return NS_ERROR_NULL_POINTER;
   STATUS_CHECK_RETURN_MACRO();
 
-  nsresult result = NS_OK;
+  nsresult result = NS_ERROR_FAILURE;
   if (NS_KEY_DOWN == aGuiEvent->message) {
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
+    switch (keyEvent->keyCode)
+    {
+        case nsIDOMUIEvent::VK_LEFT  : 
+        case nsIDOMUIEvent::VK_UP    :
+        case nsIDOMUIEvent::VK_DOWN  : 
+        case nsIDOMUIEvent::VK_RIGHT    :
+        case nsIDOMUIEvent::VK_HOME  : 
+        case nsIDOMUIEvent::VK_END    :
+          break;
+        default:
+           return NS_ERROR_FAILURE;
+    }
     nsCOMPtr<nsIDOMNode> weakNodeUsed;
     PRInt32 offsetused = 0;
     nsSelectionAmount amount = eSelectCharacter;
@@ -815,7 +827,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
           InvalidateDesiredX();
           mHint = HINTLEFT;//stick to this line
        break;
-    default :return result;
+    default :return NS_ERROR_FAILURE;
     }
     if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent)
       result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, keyEvent->isShift, PR_FALSE);
@@ -1623,7 +1635,7 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
   
   *aReturnFrame = 0;
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(FetchAnchorNode());
+  nsCOMPtr<nsIContent> content = do_QueryInterface(FetchFocusNode());
   if (content)
     return mRangeList->GetFrameForNodeOffset(content, FetchFocusOffset(),aReturnFrame);
   return NS_ERROR_FAILURE;
@@ -2391,7 +2403,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   // First, find the range containing the old focus point:
   if (!mRangeArray || !mAnchorFocusRange)
     return NS_ERROR_NOT_INITIALIZED;
-  mRangeList->InvalidateDesiredX();
+  //mRangeList->InvalidateDesiredX();
   nsCOMPtr<nsIDOMRange> difRange;
   nsresult res;
   res = nsComponentManager::CreateInstance(kRangeCID, nsnull,
