@@ -380,7 +380,8 @@ AddressBookParser::~AddressBookParser(void)
 	}
 }
 
-const char *kTabExtension = ".txt";  
+const char *kTxtExtension = ".txt";  
+const char *kTabExtension = ".tab";  
 const char *kLdifExtension = ".ldi";  
 
 nsresult AddressBookParser::ParseFile()
@@ -392,7 +393,7 @@ nsresult AddressBookParser::ParseFile()
 	{
 		mFileSpec->GetLeafName(&leafName);
 		fileString = leafName;
-		if (-1 != fileString.Find(kTabExtension))
+		if (-1 != fileString.Find(kTabExtension) || -1 != fileString.Find(kTxtExtension))
 			mFileType = TABFile;
 		else if (-1 != fileString.Find(kLdifExtension))
 			mFileType = LDIFFile;
