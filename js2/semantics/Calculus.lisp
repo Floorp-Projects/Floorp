@@ -63,10 +63,10 @@
 
 
 
-#+mcl (dolist (indent-spec '((? . 1) (/*/ . 1) (throw-error . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
+#+mcl (dolist (indent-spec '((? . 1) (/*/ . 1) (lisp-call . 3) (throw-error . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (define . 2) (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
                              (assert . 1) (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
-                             (new . 1) (set-field . 1) (:narrow . 1) (:select . 1)))
+                             (new . 1) (set-field . 1) (list-set-of . 1) (:narrow . 1) (:select . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
 
@@ -656,18 +656,18 @@
   (or (intset-min intset)
       (error "min of empty integer-set")))
 
-(defun character-set-min (intset)
+(defun char16-set-min (intset)
   (code-char (or (intset-min intset)
-                 (error "min of empty character-set"))))
+                 (error "min of empty char16-set"))))
 
 
 (defun integer-set-max (intset)
   (or (intset-max intset)
       (error "max of empty integer-set")))
 
-(defun character-set-max (intset)
+(defun char16-set-max (intset)
   (code-char (or (intset-max intset)
-                 (error "max of empty character-set"))))
+                 (error "max of empty char16-set"))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -1006,8 +1006,8 @@
   (rational-type nil :type (or null type))           ;Type used for rational numbers
   (finite32-type nil :type (or null type))           ;Type used for nonzero finite single-precision floating-point numbers
   (finite64-type nil :type (or null type))           ;Type used for nonzero finite double-precision floating-point numbers
-  (character-type nil :type (or null type))          ;Type used for characters
-  (string-type nil :type (or null type))             ;Type used for strings (vectors of characters)
+  (char16-type nil :type (or null type))             ;Type used for characters
+  (string-type nil :type (or null type))             ;Type used for strings (vectors of char16s)
   (denormalized-false-type nil :type (or null type)) ;Type (denormalized-tag false)
   (denormalized-true-type nil :type (or null type))  ;Type (denormalized-tag true)
   (boxed-boolean-type nil :type (or null type))      ;Union type (union (tag true) (tag false))
@@ -1451,9 +1451,9 @@
            :rational         ;nil            ;nil
            :finite32         ;nil            ;nil    ;All non-zero finite 32-bit single-precision floating-point numbers
            :finite64         ;nil            ;nil    ;All non-zero finite 64-bit double-precision floating-point numbers
-           :character        ;nil            ;nil
+           :char16           ;nil            ;nil
            :->               ;nil            ;(result-type arg1-type arg2-type ... argn-type)
-           :string           ;nil            ;(character)
+           :string           ;nil            ;(char16)
            :vector           ;nil            ;(element-type)
            :list-set         ;nil            ;(element-type)
            :range-set        ;nil            ;(element-type)
@@ -1470,7 +1470,7 @@
 ;
 ;A union type must have:
 ;  at least two types
-;  only types with kinds :integer, :rational, :finite32, :finite64, :character, :->, :string, :vector, :list-set, or :tag
+;  only types with kinds :integer, :rational, :finite32, :finite64, :char16, :->, :string, :vector, :list-set, or :tag
 ;  no type that is a duplicate or subtype of another type in the union
 ;  at most one type each with kind :->
 ;  at most one type each with kind :vector or :list-set; furthermore, if such a type is present, then only keyword :tag types may be present
@@ -1508,7 +1508,7 @@
 
 (declaim (inline make-vector-type))
 (defun make-vector-type (world element-type)
-  (if (eq element-type (world-character-type world))
+  (if (eq element-type (world-char16-type world))
     (world-string-type world)
     (make-type world :vector nil (list element-type) nil nil)))
 
@@ -1698,7 +1698,7 @@
                   (if (or (member type supertype-types) (member (world-rational-type world) supertype-types))
                     code
                     (type-mismatch)))
-                 ((:rational :finite32 :finite64 :character :-> :string :tag)
+                 ((:rational :finite32 :finite64 :char16 :-> :string :tag)
                   (if (member type supertype-types)
                     code
                     (type-mismatch)))
@@ -1711,7 +1711,7 @@
                   (dolist (type-type (type-parameters type))
                     (unless (case (type-kind type-type)
                               (:integer (or (member type-type supertype-types) (member (world-rational-type world) supertype-types)))
-                              ((:rational :finite32 :finite64 :character :-> :string :tag :vector :list-set) (member type-type supertype-types)))
+                              ((:rational :finite32 :finite64 :char16 :-> :string :tag :vector :list-set) (member type-type supertype-types)))
                       (type-mismatch)))
                   code)
                  (t (type-mismatch)))))
@@ -1745,7 +1745,7 @@
 (defun type-to-union (world type)
   (ecase (type-kind type)
     (:boolean (type-parameters (world-boxed-boolean-type world)))
-    ((:integer :rational :finite32 :finite64 :character :-> :string :vector :list-set :tag) (list type))
+    ((:integer :rational :finite32 :finite64 :char16 :-> :string :vector :list-set :tag) (list type))
     (:denormalized-tag (make-tag-type world (type-tag type)))
     (:union (type-parameters type))))
 
@@ -1796,7 +1796,7 @@
 
 
 (defun coercable-to-union-kind (kind)
-  (member kind '(:boolean :integer :rational :finite32 :finite64 :character :-> :string :vector :list-set :tag :denormalized-tag :union)))
+  (member kind '(:boolean :integer :rational :finite32 :finite64 :char16 :-> :string :vector :list-set :tag :denormalized-tag :union)))
 
 
 ; types is a list of distinct, non-overlapping types appropriate for inclusion in a union and
@@ -1947,7 +1947,7 @@
 
 ; types must be a list of types suitable for inclusion in a :union type's parameters.  Return the following values:
 ;    a list of integerp, rationalp, finite32?, finite64?, characterp, functionp, stringp, and/or listp depending on whether types include the
-;       :integer, :rational, :finite32, :finite64, :character, :->, :string and/or :vector or :list-set member kinds;
+;       :integer, :rational, :finite32, :finite64, :char16, :->, :string and/or :vector or :list-set member kinds;
 ;    a list of keywords used by non-list tags in the types;
 ;    a list of tag names used by list tags in the types
 (defun analyze-union-types (types)
@@ -1961,7 +1961,7 @@
         (:rational (push 'rationalp atom-tests))
         (:finite32 (push 'finite32? atom-tests))
         (:finite64 (push 'finite64? atom-tests))
-        (:character (push 'characterp atom-tests))
+        (:char16 (push 'characterp atom-tests))
         (:-> (push 'functionp atom-tests))
         (:string (push 'stringp atom-tests))
         ((:vector :list-set)
@@ -2039,7 +2039,7 @@
       (:rational (write-string "rational" stream))
       (:finite32 (write-string "finite32" stream))
       (:finite64 (write-string "finite64" stream))
-      (:character (write-string "character" stream))
+      (:char16 (write-string "char16" stream))
       (:-> (pprint-logical-block (stream nil :prefix "(" :suffix ")")
              (format stream "-> ~@_")
              (pprint-indent :current 0 stream)
@@ -2177,6 +2177,21 @@
     (unless (eq (type-kind type) expected-type-kind)
       (error "Expected ~(~A~) but got ~A" expected-type-kind (print-type-to-string type)))
     type))
+
+
+; (integer-list <value> ... <value>)
+; Each <value> must be a constant expression.
+; ***** Currently the lists are not checked, so this type is equivalent to integer except for display purposes.
+(defun scan-integer-list (world allow-forward-references &rest value-exprs)
+  (declare (ignore allow-forward-references))
+  (when (endp value-exprs)
+    (error "Integer list type must have at least one element"))
+  (let* ((integer-type (world-integer-type world))
+         (values (mapcar #'(lambda (value-expr) (eval (scan-typed-value world (make-type-env nil nil) value-expr integer-type)))
+                         value-exprs)))
+    (unless (every #'integerp values)
+      (error "Bad integer list ~S" value-exprs))
+    integer-type))
 
 
 ; (integer-range <low-limit> <high-limit>)
@@ -2367,7 +2382,7 @@
 ; to make sure that there are no current outstanding references to types other
 ; than via type names (except for types for which it can be guaranteed that
 ; their type structures are defined only once; this applies to types such as
-; integer and character but not (vector integer)).
+; integer and char16 but not (vector integer)).
 ;
 ; This function calls resolve-forward-types before making equivalent types be eq
 ; and recompute-type-caches just before returning.
@@ -2537,7 +2552,7 @@
      (or (cdr (assoc order
                      (case (type-kind type)
                        ((:integer :rational) '((< . <) (> . >) (<= . <=) (>= . >=)))
-                       (:character '((< . char<) (> . char>) (<= . char<=) (>= . char>=)))
+                       (:char16 '((< . char<) (> . char>) (<= . char<=) (>= . char>=)))
                        (:string '((< . string<) (> . string>) (<= . string<=) (>= . string>=))))))
          (error "Can't apply ~A to instances of type ~A" order (print-type-to-string type))))))
 
@@ -2932,7 +2947,7 @@
     (:rational (rationalp value))
     (:finite32 (and (finite32? value) (not (zerop value))))
     (:finite64 (and (finite64? value) (not (zerop value))))
-    (:character (characterp value))
+    (:char16 (characterp value))
     (:-> (functionp value))
     (:string (stringp value))
     (:vector (value-list-has-type value (vector-element-type type) shallow))
@@ -2978,7 +2993,7 @@
     (:void (assert-true (null value))
            (write-string "empty" stream))
     (:boolean (write-string (if value "true" "false") stream))
-    ((:integer :rational :character :->) (write value :stream stream))
+    ((:integer :rational :char16 :->) (write value :stream stream))
     ((:finite32 :finite64) (write value :stream stream))
     (:string (prin1 value stream))
     (:vector (let ((element-type (vector-element-type type)))
@@ -3239,7 +3254,7 @@
        (if (zerop value-expr)
          (error "Use +zero64 or -zero64 instead of 0.0")
          (scan-constant value-expr (world-finite64-type world))))
-      ((characterp value-expr) (scan-constant value-expr (world-character-type world)))
+      ((characterp value-expr) (scan-constant value-expr (world-char16-type world)))
       ((stringp value-expr) (scan-constant value-expr (world-string-type world)))
       (t (syntax-error))))))
 
@@ -3479,6 +3494,29 @@
        code
        type
        (list* 'expr-annotation:special-form special-form text2)))))
+
+
+; (lisp-call <lisp-function> <arg-exprs> <result-type-expr> . <styled-text>)
+; Evaluate <lisp-function> applied to the results of evaluating <arg-exprs>, but depict <styled-text>.
+; <styled-text> can contain the entry (:operand <n>) to depict the nth operand, with n starting from 0.
+(defun scan-lisp-call (world type-env special-form lisp-function arg-exprs result-type-expr &rest text)
+  (let ((result-type (scan-type world result-type-expr))
+        (arg-values nil)
+        (arg-annotated-exprs nil))
+    (dolist (arg-expr arg-exprs)
+      (multiple-value-bind (arg-value arg-type arg-annotated-expr) (scan-value world type-env arg-expr)
+        (declare (ignore arg-type))
+        (push arg-value arg-values)
+        (push arg-annotated-expr arg-annotated-exprs)))
+    (let ((arg-values (nreverse arg-values))
+          (arg-annotated-exprs (nreverse arg-annotated-exprs)))
+      (when (endp text)
+        (error "lisp-call needs a text comment"))
+      (let ((text2 (scan-expressions-in-comment world type-env text)))
+        (values
+         (cons lisp-function arg-values)
+         result-type
+         (list* 'expr-annotation:special-form special-form arg-annotated-exprs text2))))))
 
 
 (defun semantic-expt (base exponent)
@@ -3785,12 +3823,12 @@
   (values
    (if element-codes
      (let ((elements-code (cons 'list element-codes)))
-       (if (eq element-type (world-character-type world))
+       (if (eq element-type (world-char16-type world))
          (if (cdr element-codes)
            (list 'coerce elements-code ''string)
            (list 'string (car element-codes)))
          elements-code))
-     (if (eq element-type (world-character-type world))
+     (if (eq element-type (world-char16-type world))
        ""
        nil))
    (make-vector-type world element-type)
@@ -3975,7 +4013,7 @@
 (defun range-set-in-converter-expr (element-type expr)
   (ecase (type-kind element-type)
     (:integer expr)
-    (:character (list 'char-code expr))))
+    (:char16 (list 'char-code expr))))
 
 
 ; expr is the source code of an expression that generates an integer.  Return the source code that undoes
@@ -3983,14 +4021,14 @@
 (defun range-set-out-converter-expr (element-type expr)
   (ecase (type-kind element-type)
     (:integer expr)
-    (:character (list 'code-char expr))))
+    (:char16 (list 'code-char expr))))
 
 
 ; Return a function that converts integers to values of the given element-type for retrieval from a range-set.
 (defun range-set-out-converter (element-type)
   (ecase (type-kind element-type)
     (:integer #'identity)
-    (:character #'code-char)))
+    (:char16 #'code-char)))
 
 
 ; (range-set-of <element-type> <element-expr> ... <element-expr>)  ==>
@@ -4301,7 +4339,7 @@
         (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world true-type-env value-expr)
           (let* ((source-is-vector (member collection-kind '(:string :vector)))
                  (source-is-string (eq collection-kind :string))
-                 (destination-is-string (and source-is-vector (eq value-type (world-character-type world))))
+                 (destination-is-string (and source-is-vector (eq value-type (world-char16-type world))))
                  (result-type (case collection-kind
                                 ((:string :vector) (make-vector-type world value-type))
                                 (:list-set (make-list-set-type world value-type))
@@ -4388,7 +4426,11 @@
 (defun check-optional-value (value)
   (cond
    ((eq value :%uninit%) (error "Uninitialized field read"))
-   ((delayed-value? value) (fetch-value (delayed-value-symbol value)))
+   ((delayed-value? value)
+    (let ((s (delayed-value-symbol value)))
+      (if (boundp s)
+        (symbol-value s)
+        (compute-variable-value s))))
    (t value)))
 
 ; (& <label> <record-expr>)
@@ -5316,23 +5358,36 @@
 
 ; (throw-error <error> . <styled-text>)
 ; Syntactic sugar for:
-; (throw (/*/ (construct-error <error>) "a[n] " <error> " exception " :m-dash " " . <styled-text>))
+; (throw (/*/ (system-error <error> <message>) "a[n] " <error> " exception " :m-dash " " . <styled-text>))
 (defun scan-throw-error (world type-env rest-statements last special-form error-name &rest text)
   (declare (ignore special-form))
-  (when text
-    (setq text (list* " " :m-dash " " text)))
   (scan-statements
    world
    type-env
-   (cons `(throw (/*/ (construct-error ,error-name)
+   (cons `(throw (/*/ (system-error ,error-name ,(simple-text-to-string text))
                    ,(if (member error-name *an-error-list*) "an" "a")
                    :nbsp
                    (:global ,error-name)
                    :nbsp
                    "exception"
-                   ,@text))
+                   ,@(and text (list* " " :m-dash " " text))))
          rest-statements)
    last))
+
+
+(defun simple-text-to-string (text)
+  (if text
+    (apply #'concatenate 'string
+           (mapcar #'(lambda (text-item)
+                       (cond
+                        ((stringp text-item) text-item)
+                        ((eq text-item :apostrophe) "'")
+                        ((characterp text-item) (string text-item))
+                        ((and (consp text-item) (= (length text-item) 2) (eq (first text-item) :character-literal) (stringp (second text-item)))
+                         (second text-item))
+                        (t "*")))
+                   text))
+    'undefined))
 
 
 ; (catch <body-statements> (<var> [:unused]) . <handler-statements>)
@@ -5698,6 +5753,7 @@
      
      ;;Expressions
      (/*/ scan-/*/ depict-/*/)
+     (lisp-call scan-lisp-call depict-lisp-call)
      (expt scan-expt depict-expt)
      (= scan-= depict-comparison)
      (/= scan-/= depict-comparison)
@@ -5768,6 +5824,7 @@
      (not-in scan-not-in-condition))
     
     (:type-constructor
+     (integer-list scan-integer-list depict-integer-list)
      (integer-range scan-integer-range depict-integer-range)
      (-> scan--> depict-->)
      (vector scan-vector depict-vector)
@@ -5832,15 +5889,15 @@
     (float64-divide (-> (float64 float64) float64) #'float64-divide)
     (float64-remainder (-> (float64 float64) float64) #'float64-remainder)
     
-    (code-to-character (-> (integer) character) #'code-char)
-    (character-to-code (-> (character) integer) #'char-code)
+    (integer-to-char16 (-> (integer) char16) #'code-char)
+    (char16-to-integer (-> (char16) integer) #'char-code)
     
-    (integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
-    (integer-set-max (-> (integer-set) integer) #'integer-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
-    (character-set-min (-> (character-set) character) #'character-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
-    (character-set-max (-> (character-set) character) #'character-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
+    ;(integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
+    ;(integer-set-max (-> (integer-set) integer) #'integer-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
+    ;(char16-set-min (-> (char16-set) char16) #'char16-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
+    ;(char16-set-max (-> (char16-set) char16) #'char16-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
     
-    (digit-value (-> (character) integer) #'digit-char-36)))
+    (digit-value (-> (char16) integer) #'digit-char-36)))
 
 
 ;;; Partial order of primitives for deciding when to depict parentheses.
@@ -5941,12 +5998,12 @@
       (setf (world-finite64-type world) (make-simple-type 'nonzero-finite-float64 :finite64 '= '/=))
       (setf (world-finite32-tag world) (make-tag :finite32 nil nil (list (make-field 'value (world-rational-type world) nil nil)) '= nil -1))
       (setf (world-finite64-tag world) (make-tag :finite64 nil nil (list (make-field 'value (world-rational-type world) nil nil)) '= nil -1))
-      (setf (world-character-type world) (make-simple-type 'character :character 'char= 'char/=))
-      (let ((string-type (make-type world :string nil (list (world-character-type world)) 'string= 'string/=)))
+      (setf (world-char16-type world) (make-simple-type 'char16 :char16 'char= 'char/=))
+      (let ((string-type (make-type world :string nil (list (world-char16-type world)) 'string= 'string/=)))
         (add-type-name world string-type (world-intern world 'string) nil)
         (setf (world-string-type world) string-type)))
     (add-type-name world (make-range-set-type world (world-integer-type world)) (world-intern world 'integer-set) nil)
-    (add-type-name world (make-range-set-type world (world-character-type world)) (world-intern world 'character-set) nil)
+    (add-type-name world (make-range-set-type world (world-char16-type world)) (world-intern world 'char16-set) nil)
     
     ;Define order, floating-point, and long integer types
     (let (;(order-types (mapcar
