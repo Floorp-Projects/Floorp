@@ -60,11 +60,11 @@ class nsCaret : public nsICaret,
     NS_IMETHOD    GetCaretDOMSelection(nsISelection **outDOMSel);
     NS_IMETHOD    SetCaretDOMSelection(nsISelection *inDOMSel);
     NS_IMETHOD    GetCaretVisible(PRBool *outMakeVisible);
- 		NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
-  	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
-		NS_IMETHOD 		GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *inDOMSel, nsRect* outCoordinates, PRBool* outIsCollapsed, nsIView **outView);
-		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
-		NS_IMETHOD 		EraseCaret();
+    NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
+    NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
+    NS_IMETHOD    GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *inDOMSel, nsRect* outCoordinates, PRBool* outIsCollapsed, nsIView **outView);
+    NS_IMETHOD    ClearFrameRefs(nsIFrame* aFrame);
+    NS_IMETHOD    EraseCaret();
 
     NS_IMETHOD    SetCaretWidth(nscoord aPixels);
     NS_IMETHOD    SetVisibilityDuringSelection(PRBool aVisibility);
@@ -105,6 +105,9 @@ protected:
     PRPackedBool          mDrawn;             // this should be mutable
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
     PRPackedBool          mShowDuringSelection; // show when text is selected
+
+    PRPackedBool          mCachedOffsetValid;   //whether the cached frame offset is valid
+    nsPoint               mCachedFrameOffset;   //cached frame offset
     
     nsRect                mCaretRect;         // the last caret rect
     nsIFrame*             mLastCaretFrame;    // store the frame the caret was last drawn in.
