@@ -84,7 +84,7 @@ extern void
 WLLT_ExpirePassword(PRBool* status);
 
 extern void
-WLLT_InitReencryptCallback();
+WLLT_InitReencryptCallback(nsIDOMWindow* window);
 
 extern nsresult
 Wallet_Encrypt(const nsString& text, nsString& crypt);

@@ -113,6 +113,12 @@ NS_IMETHODIMP nsWalletlibService::WALLET_ExpirePassword(PRBool* status){
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::WALLET_InitReencryptCallback(nsIDOMWindow* window){
+  /* register callback to be used when encryption pref changes */
+  ::WLLT_InitReencryptCallback(window);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *key, const PRUnichar *userName) {
   ::SINGSIGN_RemoveUser(key, userName);
   return NS_OK;
@@ -191,8 +197,6 @@ void nsWalletlibService::Init()
     nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService );
   }
 
-  /* register callback to be used when encryption pref changes */
-  ::WLLT_InitReencryptCallback();
 }
 
 NS_IMETHODIMP

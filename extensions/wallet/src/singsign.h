@@ -87,6 +87,9 @@ SINGSIGN_HaveData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar 
 extern void
 SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
 
+extern void
+SI_UnregisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data);
+
 extern PRBool
 SI_GetBoolPref(const char * prefname, PRBool defaultvalue);
 

@@ -60,6 +60,14 @@
       wallet.WALLET_ChangePassword();
     }
 
+    function initReencryptCallback()
+    {
+      wallet = Components.classes['component://netscape/wallet/wallet-service'];
+      wallet = wallet.getService();
+      wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
+      wallet.WALLET_InitReencryptCallback(window);
+    }
+
   ]]>
   </script>
         
@@ -100,7 +108,7 @@
     <html flex="1">&encryptDescription.label;</html>
     <checkbox id="encryptEnabled" value="&encryptEnabled.label;" accesskey="&encryptEnabled.accesskey;"
               pref="true" preftype="bool" prefstring="wallet.crypto"
-              prefattribute="checked"/>
+              prefattribute="checked" oncommand="initReencryptCallback();"/>
 
   </titledbox>
 

@@ -147,6 +147,15 @@ SI_RegisterCallback(const char* domain, PrefChangedFunc callback, void* instance
 }
 
 PUBLIC void
+SI_UnregisterCallback(const char* domain, PrefChangedFunc callback, void* instance_data) {
+  nsresult ret;
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->UnregisterCallback(domain, callback, instance_data);
+  }
+}
+
+PUBLIC void
 SI_SetBoolPref(const char * prefname, PRBool prefvalue) {
   nsresult ret;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);

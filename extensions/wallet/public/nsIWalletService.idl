@@ -57,6 +57,7 @@ interface nsIWalletService : nsISupports {
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);
   void WALLET_FetchFromNetCenter();
   boolean WALLET_ExpirePassword();
+  void WALLET_InitReencryptCallback(in nsIDOMWindow win);
 
   void SI_RemoveUser(in string key, in wstring userName);
   void SI_StorePassword(in string key, in wstring userName, in wstring pwd);

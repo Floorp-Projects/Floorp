@@ -2888,7 +2888,7 @@ WLLT_DeleteAll() {
 }
 
 MODULE_PRIVATE int PR_CALLBACK
-wallet_ReencryptAll(const char * newpref, void * data) {
+wallet_ReencryptAll(const char * newpref, void* window) {
   PRUnichar * message;
 
   /* prevent reentry for the case that the user doesn't supply correct master password */
@@ -2897,6 +2897,9 @@ wallet_ReencryptAll(const char * newpref, void * data) {
     return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
   }
   level ++;
+  PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
+  PRInt32 i = 0;
+  nsAutoString value;
 
   /* logout first so there is no conversion unless user knows the master password */
 if (!changingPassword) {
@@ -2904,13 +2907,14 @@ if (!changingPassword) {
   if (NS_SUCCEEDED(rv)) {
     rv = gSecretDecoderRing->Logout();
   }
+  if (NS_FAILED(rv)) {
+    goto fail;
+  }
   wallet_Initialize(PR_FALSE);
 }
   wallet_MapElement * ptr;
-  nsAutoString value;
-  PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
   gEncryptionFailure = PR_FALSE;
-  for (PRInt32 i=0; i<count && !gEncryptionFailure; i++) {
+  for (i=0; i<count && !gEncryptionFailure; i++) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
     if (!ptr->item2.IsEmpty()) {
       if (NS_FAILED(Wallet_Decrypt(ptr->item2, value))) {
@@ -2952,7 +2956,7 @@ if (!changingPassword) {
   SI_SetBoolPref(pref_Crypto, SI_GetBoolPref(pref_Crypto, PR_TRUE));
 
 //  message = Wallet_Localize("Converted");
-//?????  Wallet_Alert(message);
+//  Wallet_Alert(message, (nsIDOMWindow *)window);
 //  Recycle(message);
   level--;
   return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
@@ -2962,15 +2966,22 @@ fail:
 
   /* alert the user to the failure */
   message = Wallet_Localize("NotConverted");
-//?????  Wallet_Alert(message);
+  Wallet_Alert(message, (nsIDOMWindow *)window);
   Recycle(message);
   level--;
   return 1;
 }
 
 PUBLIC void
-WLLT_InitReencryptCallback() {
-  SI_RegisterCallback(pref_Crypto, wallet_ReencryptAll, NULL);
+WLLT_InitReencryptCallback(nsIDOMWindow* window) {
+  static PRBool registered = PR_FALSE;
+  static nsIDOMWindow* lastWindow;
+  if (registered) {
+    SI_UnregisterCallback(pref_Crypto, wallet_ReencryptAll, lastWindow);
+  }
+  SI_RegisterCallback(pref_Crypto, wallet_ReencryptAll, window);
+  lastWindow = window;
+  registered = PR_TRUE;
 }
 
 /*
