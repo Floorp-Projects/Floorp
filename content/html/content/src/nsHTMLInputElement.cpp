@@ -1428,54 +1428,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  // If we're a file input we have anonymous content underneath
-  // that we need to hide.  We need to set the event target now
-  // to ourselves and the original target to the previous target.
-
-  nsCOMPtr<nsIDOMEventTarget> oldTarget;
-  if (mType == NS_FORM_INPUT_FILE || mType == NS_FORM_INPUT_TEXT ) {
-    // If the event is starting here that's fine.  If it's not
-    // init'ing here it started beneath us and needs modification.
-    // XXX This happens twice (unnecessarily) since there is both a capture
-    // and a bubble stage.
-    if (!(NS_EVENT_FLAG_INIT & aFlags)) {
-      // Create the DOM event.
-      if (!*aDOMEvent) {
-        // We haven't made a DOMEvent yet.  Force making one now.
-        nsCOMPtr<nsIEventListenerManager> listenerManager;
-        rv = GetListenerManager(getter_AddRefs(listenerManager));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsAutoString empty;
-        rv = listenerManager->CreateEvent(aPresContext, aEvent, empty,
-                                          aDOMEvent);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // See if there is an original target already.  If not, set it to the
-      // current event target.
-      nsCOMPtr<nsIDOMEventTarget> originalTarget;
-      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(*aDOMEvent));
-      if (nsevent) {
-        nsevent->GetOriginalTarget(getter_AddRefs(originalTarget));
-      }
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(*aDOMEvent));
-      NS_ENSURE_TRUE(privateEvent, NS_ERROR_FAILURE);
-
-      (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-      if (!originalTarget) {
-        privateEvent->SetOriginalTarget(oldTarget);
-      }
-
-      // Set the target to us now.
-      nsCOMPtr<nsIDOMEventTarget>
-        target(do_QueryInterface((nsIDOMHTMLInputElement*)this));
-
-      privateEvent->SetTarget(target);
-    }
-  }
-
   //
   // Web pages expect the value of a radio button or checkbox to be set
   // *before* onclick fires, and they expect that if they set the value
@@ -1606,26 +1558,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   NS_LITERAL_STRING("RadioStateChange"));
       }
 #endif
-    }
-  }
-
-  // Finish the special file control processing...
-  if (oldTarget) {
-    // If the event is starting here that's fine.  If it's not
-    // init'ing here it started beneath us and needs modification.
-    if (!(NS_EVENT_FLAG_INIT & aFlags)) {
-      if (!*aDOMEvent) {
-        return NS_ERROR_FAILURE;
-      }
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
-        do_QueryInterface(*aDOMEvent);
-
-      if (!privateEvent) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // This will reset the target to its original value
-      privateEvent->SetTarget(oldTarget);
     }
   }
 
