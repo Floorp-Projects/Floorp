@@ -182,3 +182,39 @@ void nsHashtable::Reset() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+nsCStringKey::nsCStringKey(const char* str)
+  : mStr(mBuf)
+{
+  PRInt32 len = PL_strlen(str);
+  if (len >= sizeof(mBuf)) {
+    mStr = PL_strdup(str);
+    NS_ASSERTION(mStr, "out of memory");
+  }
+  else {
+    PL_strcpy(mStr, str);
+  }
+}
+
+nsCStringKey::~nsCStringKey(void)
+{
+  if (mStr != mBuf)
+    PL_strfree(mStr);
+}
+
+PRUint32 nsCStringKey::HashValue(void) const
+{
+  return (PRUint32) PL_HashString((const void*) mStr);
+}
+
+PRBool nsCStringKey::Equals(const nsHashKey* aKey) const
+{
+  return PL_strcmp( ((nsCStringKey*)aKey)->mStr, mStr ) == 0;
+}
+
+nsHashKey* nsCStringKey::Clone() const
+{
+  return new nsCStringKey(mStr);
+}
+
+////////////////////////////////////////////////////////////////////////////////

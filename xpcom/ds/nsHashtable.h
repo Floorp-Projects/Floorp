@@ -151,35 +151,15 @@ private:
   char* mStr;
 
 public:
-  nsCStringKey(const char* str)
-    : mStr(mBuf)
-  {
-    PRInt32 len = PL_strlen(str);
-    if (len >= sizeof(mBuf)) {
-      mStr = PL_strdup(str);
-      NS_ASSERTION(mStr, "out of memory");
-    }
-    else {
-      PL_strcpy(mStr, str);
-    }
-  }
+  nsCStringKey(const char* str);
 
-  ~nsCStringKey(void) {
-    if (mStr != mBuf)
-      PL_strfree(mStr);
-  }
+  ~nsCStringKey(void);
 
-  PRUint32 HashValue(void) const {
-    return (PRUint32) PL_HashString((const void*) mStr);
-  }
+  PRUint32 HashValue(void) const;
 
-  PRBool Equals(const nsHashKey* aKey) const {
-    return PL_strcmp( ((nsCStringKey*)aKey)->mStr, mStr ) == 0;
-  }
+  PRBool Equals(const nsHashKey* aKey) const;
 
-  nsHashKey* Clone() const {
-    return new nsCStringKey(mStr);
-  }
+  nsHashKey* Clone() const;
 
 };
 
