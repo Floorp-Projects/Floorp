@@ -148,12 +148,13 @@ public:
     // XXX We lose StringAtom here (and is it safe to stash the address of a StringAtom?)
     // - is there any way of keeping StringAtoms themselves in a bytecodeContainer?
     
-    void addRegExp(RegExpInstance *x, size_t pos)       { emitOp(eRegExp, pos); addPointer(x); }
+    void addRegExp(RegExpInstance *x, size_t pos)   { emitOp(eRegExp, pos); mRegExpList.push_back(x); addShort(mRegExpList.size() - 1); }
 
 
     typedef std::vector<uint8> CodeBuffer;
 
     CodeBuffer mBuffer;
+    std::vector<RegExpInstance *> mRegExpList;    // gc tracking 
     std::vector<Multiname *> mMultinameList;      // gc tracking 
     std::vector<Frame *> mFrameList;              // gc tracking 
 

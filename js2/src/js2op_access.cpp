@@ -130,7 +130,7 @@
             LookupKind lookup(false, NULL);
             indexVal = pop();
             b = pop();
-            const String *indexStr = toString(indexVal);
+            const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
@@ -144,7 +144,7 @@
             LookupKind lookup(false, NULL);
             indexVal = pop();
             b = pop();
-            const String *indexStr = toString(indexVal);
+            const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             bool result;
             if (!meta->deleteProperty(b, &mn, &lookup, RunPhase, &result))
@@ -163,7 +163,7 @@
             a = pop();
             indexVal = pop();
             b = pop();
-            const String *indexStr = toString(indexVal);
+            const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             meta->writeProperty(b, &mn, &lookup, true, a, RunPhase);
             push(a);
@@ -177,7 +177,7 @@
             LookupKind lookup(false, NULL);
             indexVal = pop();
             b = top();
-            const String *indexStr = toString(indexVal);
+            const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
@@ -192,7 +192,7 @@
             LookupKind lookup(false, NULL);
             indexVal = pop();
             b = top();
-            const String *indexStr = toString(indexVal);
+            const String *indexStr = meta->toString(indexVal);
             push(STRING_TO_JS2VAL(indexStr));
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
             if (!meta->readProperty(b, &mn, &lookup, RunPhase, &a))

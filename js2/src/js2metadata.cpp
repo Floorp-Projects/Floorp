@@ -48,6 +48,7 @@
 #include "world.h"
 #include "utilities.h"
 #include "js2value.h"
+#include "jslong.h"
 #include "numerics.h"
 #include "reader.h"
 #include "parser.h"
@@ -985,7 +986,7 @@ namespace MetaData {
                 VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);                
                 VariableBinding *vb = vs->bindings;
                 while (vb)  {
-                    if (vb->member) {
+                    if (vb->member) {   // static or instance variable
                         if (vb->member->kind == Member::Variable) {
                             Variable *v = checked_cast<Variable *>(vb->member);
                             JS2Class *type = getVariableType(v, CompilePhase, p->pos);
@@ -2497,53 +2498,6 @@ doUnary:
         return STRING_TO_JS2VAL(meta->engine->object_StringAtom);
     }
 
-    js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
-    {
-        // XXX Change constructors to take js2val pointer for the result (which would be an already
-        // rooted pointer).
-        RegExpInstance *thisInst = new RegExpInstance(meta->regexpClass);
-        JS2Object::RootIterator ri = JS2Object::addRoot(&thisInst);
-        js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
-        REuint32 flags = 0;
-
-        const String *regexpStr = meta->engine->Empty_StringAtom;
-        const String *flagStr = meta->engine->Empty_StringAtom;
-        if (argc > 0) {
-            if (meta->objectType(argv[0]) == meta->regexpClass) {
-                if ((argc == 1) || JS2VAL_IS_UNDEFINED(argv[1])) {
-                    RegExpInstance *otherInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(argv[0]));
-                    js2val src  = otherInst->getSource(meta);
-                    ASSERT(JS2VAL_IS_STRING(src));
-                    regexpStr = JS2VAL_TO_STRING(src);
-                    flags = otherInst->mRegExp->flags;
-                }
-                else
-                    meta->reportError(Exception::typeError, "Illegal RegExp constructor args", meta->engine->errorPos());
-            }
-            else
-                regexpStr = meta->engine->toString(argv[0]);
-            if ((argc > 1) && !JS2VAL_IS_UNDEFINED(argv[1])) {
-                flagStr = meta->engine->toString(argv[1]);
-                if (parseFlags(flagStr->begin(), (int32)flagStr->length(), &flags) != RE_NO_ERROR)
-                    meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), *regexpStr + "/" + *flagStr);  // XXX error message?
-            }
-        }
-        REState *pState = REParse(regexpStr->begin(), (int32)regexpStr->length(), flags, RE_VERSION_1);
-        if (pState) {
-            thisInst->mRegExp = pState;
-            // XXX ECMA spec says these are DONTENUM
-            thisInst->setSource(meta, STRING_TO_JS2VAL(regexpStr));
-            thisInst->setGlobal(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_GLOBAL) == RE_GLOBAL));
-            thisInst->setIgnoreCase(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_IGNORECASE) == RE_IGNORECASE));
-            thisInst->setLastIndex(meta, INT_TO_JS2VAL(0));
-            thisInst->setMultiline(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_MULTILINE) == RE_MULTILINE));
-        }
-        else
-            meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), "/" + *regexpStr + "/" + *flagStr);  // XXX what about the RE parser error message?
-        JS2Object::removeRoot(ri);
-        return thatValue;
-    }
-
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code)
     {
         FixedInstance *fInst = new FixedInstance(functionClass);
@@ -2600,6 +2554,7 @@ doUnary:
         NamespaceList publicNamespaceList;
         publicNamespaceList.push_back(publicNamespace);
         Variable *v;
+        InstanceMember *m;
 
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, &world.identifiers["Date"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
@@ -2611,6 +2566,16 @@ doUnary:
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
         defineStaticMember(&env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         regexpClass->construct = RegExp_Constructor;
+        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
+        defineInstanceMember(regexpClass, &cxt, &world.identifiers["source"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
+        defineInstanceMember(regexpClass, &cxt, &world.identifiers["global"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
+        defineInstanceMember(regexpClass, &cxt, &world.identifiers["lastIndex"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
+        defineInstanceMember(regexpClass, &cxt, &world.identifiers["ignoreCase"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
+        defineInstanceMember(regexpClass, &cxt, &world.identifiers["multiline"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
 
         v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
         defineStaticMember(&env, &world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
@@ -2621,6 +2586,12 @@ doUnary:
         v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
         defineStaticMember(&env, &world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initMathObject(this);
+
+        MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, &world.identifiers["Array"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
+        defineStaticMember(&env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+ //       dateClass->prototype = new PrototypeInstance(NULL, dateClass);
+        initArrayObject(this);
 
 
     }
@@ -2638,7 +2609,9 @@ doUnary:
             return numberClass;
         if (JS2VAL_IS_STRING(objVal)) {
             if (JS2VAL_TO_STRING(objVal)->length() == 1)
-                return characterClass;
+                return stringClass; // XXX characterClass; Need the connection from class Character to
+                                    // class String - i.e. access to all the functions in 'String.prototype' - 
+                                    // but (some of) those routines depened on being called on a StringInstance...
             else 
                 return stringClass;
         }
@@ -2705,6 +2678,31 @@ doUnary:
         return NULL;
     }
 
+    // Return true if the object contains the property, but don't
+    // scan the prototype chain. Only scan dynamic properties. XXX
+    bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name)
+    {
+        ASSERT(obj);
+        DynamicPropertyMap *dMap = NULL;
+        bool isPrototypeInstance = false;
+        if (obj->kind == DynamicInstanceKind)
+            dMap = &(checked_cast<DynamicInstance *>(obj))->dynamicProperties;
+        else
+        if (obj->kind == GlobalObjectKind)
+            dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
+        else {
+            ASSERT(obj->kind == PrototypeInstanceKind);
+            isPrototypeInstance = true;
+            dMap = &(checked_cast<PrototypeInstance *>(obj))->dynamicProperties;
+        }
+        for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
+            if (i->first == *name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Read the property from the container given by the public id in multiname - if that exists
     // 
     bool JS2Metadata::readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
@@ -2746,6 +2744,34 @@ doUnary:
         return false;   // 'None'
     }
 
+    void DynamicInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue)
+    {
+        const DynamicPropertyMap::value_type e(*name, newValue);
+        dynamicProperties.insert(e);
+    }
+
+    void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue)
+    {
+        // An index has to pass the test that :
+        //   ToString(ToUint32(ToString(index))) == ToString(index)     
+        // (we already have done the 'ToString(index)' part, so require
+        //
+        //  ToString(ToUint32(name)) == name
+        //
+        const DynamicPropertyMap::value_type e(*name, newValue);
+        dynamicProperties.insert(e);
+
+        char16 *numEnd;        
+        float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
+        uint32 index = JS2Engine::toUInt32(f);
+
+        if (index == f) {
+            uint32 length = getLength(meta, this);
+            if (index >= length)
+                setLength(meta, this, index + 1);
+        }
+    }
+
     // Write a value to a dynamic container - inserting into the map if not already there (if createIfMissing)
     bool JS2Metadata::writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
     {
@@ -2775,8 +2801,7 @@ doUnary:
             DynamicInstance *dynInst = checked_cast<DynamicInstance *>(container);
             InstanceBinding *ib = resolveInstanceMemberName(dynInst->type, multiname, ReadAccess, phase);
             if (ib == NULL) {
-                const DynamicPropertyMap::value_type e(*name, newValue);
-                dynInst->dynamicProperties.insert(e);
+                dynInst->writeProperty(this, name, newValue);
                 return true;
             }
         }
@@ -2858,9 +2883,10 @@ readClassProperty:
             InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase);
             if ((ib == NULL) && isDynamicInstance) 
                 return readDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, phase, rval);
-            else 
-                // XXX passing a primitive here ???
-                return readInstanceMember(containerVal, c, (ib) ? &ib->qname : NULL, phase, rval);
+            else {
+                // XXX Spec. would have us passing a primitive here ???
+                return readInstanceMember(toObject(containerVal), c, (ib) ? &ib->qname : NULL, phase, rval);
+            }
         }
         JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
         switch (container->kind) {
@@ -3386,6 +3412,184 @@ deleteClassProperty:
 
         GCMARKOBJECT(glob);
     
+    }
+
+    // x is not a String
+    const String *JS2Metadata::convertValueToString(js2val x)
+    {
+        if (JS2VAL_IS_UNDEFINED(x))
+            return engine->undefined_StringAtom;
+        if (JS2VAL_IS_NULL(x))
+            return engine->null_StringAtom;
+        if (JS2VAL_IS_BOOLEAN(x))
+            return (JS2VAL_TO_BOOLEAN(x)) ? engine->true_StringAtom : engine->false_StringAtom;
+        if (JS2VAL_IS_INT(x))
+            return numberToString(JS2VAL_TO_INT(x));
+        if (JS2VAL_IS_LONG(x)) {
+            float64 d;
+            JSLL_L2D(d, *JS2VAL_TO_LONG(x));
+            return numberToString(&d);
+        }
+        if (JS2VAL_IS_ULONG(x)) {
+            float64 d;
+            JSLL_UL2D(d, *JS2VAL_TO_ULONG(x));
+            return numberToString(&d);
+        }
+        if (JS2VAL_IS_FLOAT(x)) {
+            float64 d = *JS2VAL_TO_FLOAT(x);
+            return numberToString(&d);
+        }
+        if (JS2VAL_IS_DOUBLE(x))
+            return numberToString(JS2VAL_TO_DOUBLE(x));
+        return toString(toPrimitive(x));
+    }
+
+    // x is not a primitive (it is an object and not null)
+    js2val JS2Metadata::convertValueToPrimitive(js2val x)
+    {
+        // return [[DefaultValue]] --> get property 'toString' and invoke it, 
+        // if not available or result is not primitive then try property 'valueOf'
+        // if that's not available or returns a non primitive, throw a TypeError
+
+        Multiname mn(&world.identifiers["toString"], publicNamespace);
+        LookupKind lookup(false, NULL);
+        js2val result;
+        if (readProperty(x, &mn, &lookup, RunPhase, &result)) {
+            if (JS2VAL_IS_OBJECT(result)) {
+                JS2Object *obj = JS2VAL_TO_OBJECT(result);
+                if ((obj->kind == FixedInstanceKind) && (objectType(result) == functionClass)) {
+                    FunctionWrapper *fWrap = (checked_cast<FixedInstance *>(obj))->fWrap;
+                    if (fWrap->code) {
+                        result = (fWrap->code)(this, result, NULL, 0);
+                        return result;
+                    }
+                }
+                else
+                if (obj->kind == MethodClosureKind) {
+                    MethodClosure *mc = checked_cast<MethodClosure *>(obj);
+                    FixedInstance *fInst = mc->method->fInst;
+                    FunctionWrapper *fWrap = fInst->fWrap;
+                    if (fWrap->code) {
+                        result = (fWrap->code)(this, mc->thisObject, NULL, 0);
+                        return result;
+                    }
+                }
+            }
+        }
+
+        return STRING_TO_JS2VAL(engine->object_StringAtom);
+    }
+
+    // x is not a number
+    float64 JS2Metadata::convertValueToDouble(js2val x)
+    {
+        if (JS2VAL_IS_UNDEFINED(x))
+            return nan;
+        if (JS2VAL_IS_NULL(x))
+            return 0;
+        if (JS2VAL_IS_BOOLEAN(x))
+            return (JS2VAL_TO_BOOLEAN(x)) ? 1.0 : 0.0;
+        if (JS2VAL_IS_STRING(x)) {
+            String *str = JS2VAL_TO_STRING(x);
+            char16 *numEnd;
+            return stringToDouble(str->data(), str->data() + str->length(), numEnd);
+        }
+        return toFloat64(toPrimitive(x));
+    }
+
+    // x is not a number, convert it to one
+    js2val JS2Metadata::convertValueToGeneralNumber(js2val x)
+    {
+        // XXX Assuming convert to float64, rather than long/ulong
+        return engine->allocNumber(toFloat64(x));
+    }
+
+    // x is not an Object, it needs to be wrapped in one
+    js2val JS2Metadata::convertValueToObject(js2val x)
+    {
+        if (JS2VAL_IS_UNDEFINED(x) || JS2VAL_IS_NULL(x) || JS2VAL_IS_SPECIALREF(x))
+            reportError(Exception::typeError, "Can't convert to Object", engine->errorPos());
+        if (JS2VAL_IS_STRING(x))
+            return String_Constructor(this, JS2VAL_NULL, &x, 1);
+        // XXX need more
+        return OBJECT_TO_JS2VAL(new PrototypeInstance(objectClass->prototype, objectClass));
+    }
+    
+    // x is any js2val
+    float64 JS2Metadata::toFloat64(js2val x)
+    { 
+        if (JS2VAL_IS_INT(x)) 
+            return JS2VAL_TO_INT(x); 
+        else
+        if (JS2VAL_IS_DOUBLE(x)) 
+            return *JS2VAL_TO_DOUBLE(x); 
+        else
+        if (JS2VAL_IS_LONG(x)) {
+            float64 d;
+            JSLL_L2D(d, *JS2VAL_TO_LONG(x));
+            return d;
+        }
+        else
+        if (JS2VAL_IS_ULONG(x)) {
+            float64 d;
+            JSLL_UL2D(d, *JS2VAL_TO_ULONG(x));
+            return d; 
+        }
+        else
+        if (JS2VAL_IS_FLOAT(x))
+            return *JS2VAL_TO_FLOAT(x);
+        else 
+            return convertValueToDouble(x); 
+    }
+
+    // x is not a bool
+    bool JS2Metadata::convertValueToBoolean(js2val x)
+    {
+        if (JS2VAL_IS_UNDEFINED(x))
+            return false;
+        if (JS2VAL_IS_NULL(x))
+            return false;
+        if (JS2VAL_IS_INT(x))
+            return (JS2VAL_TO_INT(x) != 0);
+        if (JS2VAL_IS_LONG(x) || JS2VAL_IS_ULONG(x))
+            return (!JSLL_IS_ZERO(x));
+        if (JS2VAL_IS_FLOAT(x)) {
+            float64 xd = *JS2VAL_TO_FLOAT(x);
+            return ! (JSDOUBLE_IS_POSZERO(xd) || JSDOUBLE_IS_NEGZERO(xd) || JSDOUBLE_IS_NaN(xd));
+        }
+        if (JS2VAL_IS_DOUBLE(x)) {
+            float64 xd = *JS2VAL_TO_DOUBLE(x);
+            return ! (JSDOUBLE_IS_POSZERO(xd) || JSDOUBLE_IS_NEGZERO(xd) || JSDOUBLE_IS_NaN(xd));
+        }
+        if (JS2VAL_IS_STRING(x)) {
+            String *str = JS2VAL_TO_STRING(x);
+            return (str->length() != 0);
+        }
+        return true;
+    }
+
+    // x is not an int
+    int32 JS2Metadata::convertValueToInteger(js2val x)
+    {
+        int32 i;
+        if (JS2VAL_IS_LONG(x)) {
+            JSLL_L2I(i, *JS2VAL_TO_LONG(x));
+            return i;
+        }
+        if (JS2VAL_IS_ULONG(x)) {
+            JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
+            return i;
+        }
+        if (JS2VAL_IS_FLOAT(x)) {
+            float64 f = *JS2VAL_TO_FLOAT(x);
+            return toInt32(f);
+        }
+        if (JS2VAL_IS_DOUBLE(x)) {
+            float64 d = *JS2VAL_TO_DOUBLE(x);
+            return toInt32(d);
+        }
+        float64 d = convertValueToDouble(x);
+        return toInt32(d);
     }
 
 

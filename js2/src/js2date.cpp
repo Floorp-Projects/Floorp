@@ -298,7 +298,6 @@ static int32 WeekDay(float64 t)
 static float64 *Date_getProlog(JS2Metadata *meta, const js2val thisValue)
 {
     if (meta->objectType(thisValue) != meta->dateClass)
-            //|| ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue))->type != meta->dateClass)) )
         meta->reportError(Exception::typeError, "You really need a date", meta->engine->errorPos());
     DateInstance *dateInst = checked_cast<DateInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return &dateInst->ms;
@@ -388,7 +387,7 @@ static js2val Date_makeTime(JS2Metadata *meta, const js2val thisValue, js2val *a
 	argc = maxargs;  /* clamp argc */
 
     for (i = 0; i < argc; i++) {
-        float64 f = meta->engine->toFloat64(argv[i]);        
+        float64 f = meta->toFloat64(argv[i]);        
         if (JSDOUBLE_IS_NaN(f)) {
             *date = nan;
             return meta->engine->nanValue;
@@ -454,7 +453,7 @@ static js2val Date_makeDate(JS2Metadata *meta, const js2val thisValue, js2val *a
 	argc = maxargs;   /* clamp argc */
 
     for (i = 0; i < argc; i++) {
-        float64 f = meta->engine->toFloat64(argv[i]);      
+        float64 f = meta->toFloat64(argv[i]);      
         if (JSDOUBLE_IS_NaN(f)) {
             *date = nan;
             return meta->engine->nanValue;
@@ -874,11 +873,11 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv,
         if (argc == 1) {
             if (!JS2VAL_IS_STRING(argv[0])) {
 	        /* the argument is a millisecond number */
-                float64 d = meta->engine->toFloat64(argv[0]);
+                float64 d = meta->toFloat64(argv[0]);
 	        thisInst->ms = TIMECLIP(d);
 	    } else {
 	        /* the argument is a string; parse it. */
-                const String *str = meta->engine->toString(argv[0]);
+                const String *str = meta->toString(argv[0]);
 	        float64 d = date_parseString(*str);
 	        thisInst->ms = TIMECLIP(d);
 	    }
@@ -891,7 +890,7 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 
 	    for (loop = 0; loop < MAXARGS; loop++) {
 	        if (loop < argc) {
-	            float64 double_arg = meta->engine->toFloat64(argv[loop]);
+	            float64 double_arg = meta->toFloat64(argv[loop]);
 		    /* if any arg is NaN, make a NaN date object
 		       and return */
 		    if (!JSDOUBLE_IS_FINITE(double_arg)) {
@@ -924,7 +923,7 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 
 js2val Date_parse(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 /*argc*/)
 {
-    const String *str = meta->engine->toString(argv[0]);
+    const String *str = meta->toString(argv[0]);
     float64 d = date_parseString(*str);
     d = TIMECLIP(d);
     return meta->engine->allocNumber(d);
@@ -938,7 +937,7 @@ js2val Date_UTC(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uin
 
     for (loop = 0; loop < MAXARGS; loop++) {
 	if (loop < argc) {
-            d = meta->engine->toFloat64(argv[loop]);
+            d = meta->toFloat64(argv[loop]);
 	    if (!JSDOUBLE_IS_FINITE(d))
                 return meta->engine->allocNumber(d);
 	    array[loop] = floor(d);
@@ -1272,7 +1271,7 @@ static js2val Date_getUTCMilliseconds(JS2Metadata *meta, const js2val thisValue,
 static js2val Date_setTime(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 /*argc*/)
 {
     float64 *date = Date_getProlog(meta, thisValue);
-    float64 result = meta->engine->toFloat64(argv[0]);
+    float64 result = meta->toFloat64(argv[0]);
     *date = TIMECLIP(result);
     return meta->engine->allocNumber(*date);
 }
@@ -1286,7 +1285,7 @@ static js2val Date_setYear(JS2Metadata *meta, const js2val thisValue, js2val arg
 
     float64 *date = Date_getProlog(meta, thisValue);
     result = *date;
-    year = meta->engine->toFloat64(argv[0]);
+    year = meta->toFloat64(argv[0]);
     if (!JSDOUBLE_IS_FINITE(year)) {
 	*date = nan;
         return meta->engine->allocNumber(*date);

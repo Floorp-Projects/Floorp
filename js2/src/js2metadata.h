@@ -60,10 +60,14 @@ typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
 extern void initMathObject(JS2Metadata *meta);
+extern void initArrayObject(JS2Metadata *meta);
+
 extern js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 
+extern uint32 getLength(JS2Metadata *meta, JS2Object *obj);
+extern js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length);
 
 // OBJECT is the semantic domain of all possible objects and is defined as:
 // OBJECT = UNDEFINED | NULL | BOOLEAN | FLOAT64 | LONG | ULONG | CHARACTER | STRING | NAMESPACE |
@@ -514,6 +518,8 @@ public:
     Slot        *slots;         // A set of slots that hold this instance's fixed property values
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
     virtual void markChildren();
+
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
 };
 
 // Prototype instances are represented as PROTOTYPE records. Prototype instances
@@ -545,16 +551,28 @@ public:
 // that contains the string data
 class StringInstance : public FixedInstance {
 public:
-    StringInstance(JS2Class *type) : FixedInstance(type) { }
+    StringInstance(JS2Class *type) : FixedInstance(type), mValue(NULL) { }
 
-    String     *mValue;
+    String     *mValue;             // has been allocated by engine in the GC'able Pond
+
+    virtual void markChildren()     { if (mValue) JS2Object::mark(mValue); }
 };
 
-// RegExp instances are fixed (not dynamic? XXX) instances created by the RegExp class, they have an extra field 
-// that contains the RegExp object
-class RegExpInstance : public FixedInstance {
+// Array instances are dynamic instances created by the Array class, they 
+// maintain the value of the 'length' property when 'indexable' elements
+// are added.
+class ArrayInstance : public DynamicInstance {
 public:
-    RegExpInstance(JS2Class *type) : FixedInstance(type) { }
+    ArrayInstance(JS2Class *type) : DynamicInstance(type) { }
+
+    virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
+};
+
+// RegExp instances are dynamic instances created by the RegExp class, they have an extra field 
+// that contains the RegExp object
+class RegExpInstance : public DynamicInstance {
+public:
+    RegExpInstance(JS2Class *type) : DynamicInstance(type) { }
 
     void setLastIndex(JS2Metadata *meta, js2val a);
     void setGlobal(JS2Metadata *meta, js2val a);
@@ -922,6 +940,7 @@ public:
     bool readStaticMember(StaticMember *m, Phase phase, js2val *rval);
     bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
     JS2Object *lookupDynamicProperty(JS2Object *obj, const String *name);
+    bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name);
 
     bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
@@ -941,6 +960,21 @@ public:
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String &name);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String *name);
 
+    const String *convertValueToString(js2val x);
+    js2val convertValueToPrimitive(js2val x);
+    float64 convertValueToDouble(js2val x);
+    bool convertValueToBoolean(js2val x);
+    int32 convertValueToInteger(js2val x);
+    js2val convertValueToGeneralNumber(js2val x);
+    js2val convertValueToObject(js2val x);
+
+    const String *toString(js2val x)    { if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
+    js2val toPrimitive(js2val x)        { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
+    float64 toFloat64(js2val x);
+    js2val toGeneralNumber(js2val x)    { if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
+    bool toBoolean(js2val x)            { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
+    int32 toInteger(js2val x)           { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
+    js2val toObject(js2val x)           { if (JS2VAL_IS_OBJECT(x)) return x; else return convertValueToObject(x); }
 
     // Used for interning strings
     World &world;
@@ -980,6 +1014,7 @@ public:
     JS2Class *dateClass;
     JS2Class *regexpClass;
     JS2Class *mathClass;
+    JS2Class *arrayClass;
 
     Parser *mParser;                // used for error reporting
 

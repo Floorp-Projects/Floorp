@@ -155,6 +155,9 @@ namespace MetaData {
         for (std::vector<Frame *>::iterator fi = mFrameList.begin(), fend = mFrameList.end(); (fi != fend); fi++) {
             GCMARKOBJECT(*fi);   
         }
+        for (std::vector<RegExpInstance *>::iterator ri = mRegExpList.begin(), rend = mRegExpList.end(); (ri != rend); ri++) {
+            GCMARKOBJECT(*ri);   
+        }
     }
 
 }

@@ -34,7 +34,7 @@
     case eBranchTrue:
         {
             a = pop();
-            bool c = toBoolean(a);
+            bool c = meta->toBoolean(a);
             if (c) {
                 int32 offset = BytecodeContainer::getOffset(pc);
                 pc += offset;
@@ -47,7 +47,7 @@
     case eBranchFalse:
         {
             a = pop();
-            bool c = toBoolean(a);
+            bool c = meta->toBoolean(a);
             if (!c) {
                 int32 offset = BytecodeContainer::getOffset(pc);
                 pc += offset;
@@ -82,7 +82,7 @@
     case eFirst:
         {
             a = pop();
-            b = toObject(a);
+            b = meta->toObject(a);
             ForIteratorObject *fi = new ForIteratorObject(JS2VAL_TO_OBJECT(b));
             push(OBJECT_TO_JS2VAL(fi));
             push(BOOLEAN_TO_JS2VAL(fi->first()));

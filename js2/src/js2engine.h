@@ -156,26 +156,10 @@ public:
     // Use the pc map in the current bytecode container to get a source offset
     size_t errorPos();
 
-    int32 toInt32(float64 f);
-    uint32 toUInt32(float64 f);
-    uint16 toUInt16(float64 f);
+    static int32 toInt32(float64 f);
+    static uint32 toUInt32(float64 f);
+    static uint16 toUInt16(float64 f);
 
-
-    const String *convertValueToString(js2val x);
-    js2val convertValueToPrimitive(js2val x);
-    float64 convertValueToDouble(js2val x);
-    bool convertValueToBoolean(js2val x);
-    int32 convertValueToInteger(js2val x);
-    js2val convertValueToGeneralNumber(js2val x);
-    js2val convertValueToObject(js2val x);
-
-    const String *toString(js2val x){ if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
-    js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
-    float64 toFloat64(js2val x);
-    js2val toGeneralNumber(js2val x){ if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
-    bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
-    int32 toInteger(js2val x)       { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
-    js2val toObject(js2val x)       { if (JS2VAL_IS_OBJECT(x)) return x; else return convertValueToObject(x); }
 
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
@@ -236,6 +220,7 @@ public:
     const String *Empty_StringAtom;
     const String *Dollar_StringAtom;
     const String *prototype_StringAtom;
+    const String *length_StringAtom;
 
     // The activation stack, when it's empty and a return is executed, the
     // interpreter quits

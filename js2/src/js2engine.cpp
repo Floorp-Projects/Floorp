@@ -188,84 +188,6 @@ namespace MetaData {
         return new JavaScript::String(widenCString(chrp));
     }
 
-    // x is not a String
-    const String *JS2Engine::convertValueToString(js2val x)
-    {
-        if (JS2VAL_IS_UNDEFINED(x))
-            return undefined_StringAtom;
-        if (JS2VAL_IS_NULL(x))
-            return null_StringAtom;
-        if (JS2VAL_IS_BOOLEAN(x))
-            return (JS2VAL_TO_BOOLEAN(x)) ? true_StringAtom : false_StringAtom;
-        if (JS2VAL_IS_INT(x))
-            return numberToString(JS2VAL_TO_INT(x));
-        if (JS2VAL_IS_LONG(x)) {
-            float64 d;
-            JSLL_L2D(d, *JS2VAL_TO_LONG(x));
-            return numberToString(&d);
-        }
-        if (JS2VAL_IS_ULONG(x)) {
-            float64 d;
-            JSLL_UL2D(d, *JS2VAL_TO_ULONG(x));
-            return numberToString(&d);
-        }
-        if (JS2VAL_IS_FLOAT(x)) {
-            float64 d = *JS2VAL_TO_FLOAT(x);
-            return numberToString(&d);
-        }
-        if (JS2VAL_IS_DOUBLE(x))
-            return numberToString(JS2VAL_TO_DOUBLE(x));
-        return toString(toPrimitive(x));
-    }
-
-    // x is not a primitive (it is an object and not null)
-    js2val JS2Engine::convertValueToPrimitive(js2val x)
-    {
-        // return [[DefaultValue]] --> get property 'toString' and invoke it, 
-        // if not available or result is not primitive then try property 'valueOf'
-        // if that's not available or returns a non primitive, throw a TypeError
-
-        return STRING_TO_JS2VAL(object_StringAtom);
-    
-        ASSERT(false);
-        return JS2VAL_VOID;
-    }
-
-    // x is not a number
-    float64 JS2Engine::convertValueToDouble(js2val x)
-    {
-        if (JS2VAL_IS_UNDEFINED(x))
-            return nan;
-        if (JS2VAL_IS_NULL(x))
-            return 0;
-        if (JS2VAL_IS_BOOLEAN(x))
-            return (JS2VAL_TO_BOOLEAN(x)) ? 1.0 : 0.0;
-        if (JS2VAL_IS_STRING(x)) {
-            String *str = JS2VAL_TO_STRING(x);
-            char16 *numEnd;
-            return stringToDouble(str->data(), str->data() + str->length(), numEnd);
-        }
-        return toFloat64(toPrimitive(x));
-    }
-
-    // x is not a number, convert it to one
-    js2val JS2Engine::convertValueToGeneralNumber(js2val x)
-    {
-        // XXX Assuming convert to float64, rather than long/ulong
-        return allocNumber(toFloat64(x));
-    }
-
-    // x is not an Object, it needs to be wrapped in one
-    js2val JS2Engine::convertValueToObject(js2val x)
-    {
-        if (JS2VAL_IS_UNDEFINED(x) || JS2VAL_IS_NULL(x) || JS2VAL_IS_SPECIALREF(x))
-            meta->reportError(Exception::typeError, "Can't convert to Object", errorPos());
-        if (JS2VAL_IS_STRING(x))
-            return String_Constructor(meta, JS2VAL_NULL, &x, 1);
-        // XXX need more
-        return OBJECT_TO_JS2VAL(new PrototypeInstance(meta->objectClass->prototype, meta->objectClass));
-    }
-    
     // x is a Number, validate that it has no fractional component
     int64 JS2Engine::checkInteger(js2val x)
     {
@@ -299,83 +221,6 @@ namespace MetaData {
         ASSERT(JS2VAL_IS_ULONG(x));
         JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
         return i;
-    }
-
-    // x is any js2val
-    float64 JS2Engine::toFloat64(js2val x)
-    { 
-        if (JS2VAL_IS_INT(x)) 
-            return JS2VAL_TO_INT(x); 
-        else
-        if (JS2VAL_IS_DOUBLE(x)) 
-            return *JS2VAL_TO_DOUBLE(x); 
-        else
-        if (JS2VAL_IS_LONG(x)) {
-            float64 d;
-            JSLL_L2D(d, *JS2VAL_TO_LONG(x));
-            return d;
-        }
-        else
-        if (JS2VAL_IS_ULONG(x)) {
-            float64 d;
-            JSLL_UL2D(d, *JS2VAL_TO_ULONG(x));
-            return d; 
-        }
-        else
-        if (JS2VAL_IS_FLOAT(x))
-            return *JS2VAL_TO_FLOAT(x);
-        else 
-            return convertValueToDouble(x); 
-    }
-
-    // x is not a bool
-    bool JS2Engine::convertValueToBoolean(js2val x)
-    {
-        if (JS2VAL_IS_UNDEFINED(x))
-            return false;
-        if (JS2VAL_IS_NULL(x))
-            return false;
-        if (JS2VAL_IS_INT(x))
-            return (JS2VAL_TO_INT(x) != 0);
-        if (JS2VAL_IS_LONG(x) || JS2VAL_IS_ULONG(x))
-            return (!JSLL_IS_ZERO(x));
-        if (JS2VAL_IS_FLOAT(x)) {
-            float64 xd = *JS2VAL_TO_FLOAT(x);
-            return ! (JSDOUBLE_IS_POSZERO(xd) || JSDOUBLE_IS_NEGZERO(xd) || JSDOUBLE_IS_NaN(xd));
-        }
-        if (JS2VAL_IS_DOUBLE(x)) {
-            float64 xd = *JS2VAL_TO_DOUBLE(x);
-            return ! (JSDOUBLE_IS_POSZERO(xd) || JSDOUBLE_IS_NEGZERO(xd) || JSDOUBLE_IS_NaN(xd));
-        }
-        if (JS2VAL_IS_STRING(x)) {
-            String *str = JS2VAL_TO_STRING(x);
-            return (str->length() != 0);
-        }
-        return true;
-    }
-
-    // x is not an int
-    int32 JS2Engine::convertValueToInteger(js2val x)
-    {
-        int32 i;
-        if (JS2VAL_IS_LONG(x)) {
-            JSLL_L2I(i, *JS2VAL_TO_LONG(x));
-            return i;
-        }
-        if (JS2VAL_IS_ULONG(x)) {
-            JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
-            return i;
-        }
-        if (JS2VAL_IS_FLOAT(x)) {
-            float64 f = *JS2VAL_TO_FLOAT(x);
-            return toInt32(f);
-        }
-        if (JS2VAL_IS_DOUBLE(x)) {
-            float64 d = *JS2VAL_TO_DOUBLE(x);
-            return toInt32(d);
-        }
-        float64 d = convertValueToDouble(x);
-        return toInt32(d);
     }
 
     int32 JS2Engine::toInt32(float64 d)
@@ -444,7 +289,8 @@ namespace MetaData {
                   INIT_STRINGATOM(object),
                   Empty_StringAtom(&world.identifiers[""]),
                   Dollar_StringAtom(&world.identifiers["$"]),
-                  prototype_StringAtom(&world.identifiers["prototype"])
+                  INIT_STRINGATOM(prototype),
+                  INIT_STRINGATOM(length)
     {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;

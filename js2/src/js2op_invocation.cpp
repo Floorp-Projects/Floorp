@@ -37,12 +37,12 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            a = top();
+            a = top(argCount + 1);
             ASSERT(JS2VAL_IS_OBJECT(a) && !JS2VAL_IS_NULL(a));
             JS2Object *obj = JS2VAL_TO_OBJECT(a);
             if (obj->kind == ClassKind) {
                 JS2Class *c = checked_cast<JS2Class *>(obj);
-                a = c->construct(meta, JS2VAL_NULL, NULL, argCount);
+                a = c->construct(meta, JS2VAL_NULL, base(argCount), argCount);
                 pop(argCount + 1);
                 push(a);
             }
@@ -94,11 +94,11 @@
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
             a = top(argCount + 2);                  // 'this'
-            b = top(argCount + 1);                      // target function
+            b = top(argCount + 1);                  // target function
             if (JS2VAL_IS_PRIMITIVE(b))
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
             JS2Object *fObj = JS2VAL_TO_OBJECT(b);
-            if (fObj->kind == FixedInstanceKind) {
+            if ((fObj->kind == FixedInstanceKind) && (meta->objectType(b) == meta->functionClass)) {
                 FixedInstance *fInst = checked_cast<FixedInstance *>(fObj);
                 FunctionWrapper *fWrap = fInst->fWrap;
                 js2val compileThis = fWrap->compileFrame->thisObject;

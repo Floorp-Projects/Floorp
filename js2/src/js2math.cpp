@@ -92,73 +92,73 @@ static js2val Math_abs(JS2Metadata *meta, const js2val /*thisValue*/, js2val *ar
     if (argc == 0)
         return meta->engine->nanValue;
     else
-        return meta->engine->allocNumber(fd::fabs(meta->engine->toFloat64(argv[0])));
+        return meta->engine->allocNumber(fd::fabs(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_acos(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::acos(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::acos(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_asin(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::asin(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::asin(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_atan(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::atan(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::atan(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_atan2(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc <= 1)
         return meta->engine->nanValue;
-    float64 y = meta->engine->toFloat64(argv[0]);
-    float64 x = meta->engine->toFloat64(argv[1]);
+    float64 y = meta->engine->meta->toFloat64(argv[0]);
+    float64 x = meta->engine->meta->toFloat64(argv[1]);
     return meta->engine->allocNumber(fd::atan2(y, x));
 }
 static js2val Math_ceil(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::ceil(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::ceil(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_cos(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::cos(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::cos(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_exp(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::exp(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::exp(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_floor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
     else
-        return meta->engine->allocNumber(fd::floor(meta->engine->toFloat64(argv[0])));
+        return meta->engine->allocNumber(fd::floor(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_log(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::log(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::log(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_max(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->negInfValue;
-    float64 result = meta->engine->toFloat64(argv[0]);
+    float64 result = meta->engine->meta->toFloat64(argv[0]);
     if (JSDOUBLE_IS_NaN(result)) return meta->engine->nanValue;
     for (uint32 i = 1; i < argc; ++i) {
-        float64 arg = meta->engine->toFloat64(argv[i]);
+        float64 arg = meta->engine->meta->toFloat64(argv[i]);
         if (JSDOUBLE_IS_NaN(arg)) return meta->engine->nanValue;
         if (arg > result)
             result = arg;
@@ -169,10 +169,10 @@ static js2val Math_min(JS2Metadata *meta, const js2val /*thisValue*/, js2val *ar
 {
     if (argc == 0)
         return meta->engine->posInfValue;
-    float64 result = meta->engine->toFloat64(argv[0]);
+    float64 result = meta->engine->meta->toFloat64(argv[0]);
     if (JSDOUBLE_IS_NaN(result)) return meta->engine->nanValue;
     for (uint32 i = 1; i < argc; ++i) {
-        float64 arg = meta->engine->toFloat64(argv[i]);
+        float64 arg = meta->engine->meta->toFloat64(argv[i]);
         if (JSDOUBLE_IS_NaN(arg)) return meta->engine->nanValue;
         if ((arg < result) || (JSDOUBLE_IS_POSZERO(result) && JSDOUBLE_IS_NEGZERO(arg)))
             result = arg;
@@ -183,7 +183,7 @@ static js2val Math_pow(JS2Metadata *meta, const js2val /*thisValue*/, js2val *ar
 {
     if (argc < 1)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::pow(meta->engine->toFloat64(argv[0]), meta->engine->toFloat64(argv[1])));
+    return meta->engine->allocNumber(fd::pow(meta->engine->meta->toFloat64(argv[0]), meta->engine->meta->toFloat64(argv[1])));
 }
 
 /*
@@ -265,26 +265,26 @@ static js2val Math_round(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    float64 x = meta->engine->toFloat64(argv[0]);
+    float64 x = meta->engine->meta->toFloat64(argv[0]);
     return meta->engine->allocNumber( fd::copysign( fd::floor(x + 0.5), x ) );
 }
 static js2val Math_sin(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::sin(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::sin(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_sqrt(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::sqrt(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::sqrt(meta->engine->meta->toFloat64(argv[0])));
 }
 static js2val Math_tan(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)   
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::tan(meta->engine->toFloat64(argv[0])));
+    return meta->engine->allocNumber(fd::tan(meta->engine->meta->toFloat64(argv[0])));
 }
 
 

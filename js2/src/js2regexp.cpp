@@ -134,23 +134,23 @@ namespace MetaData {
         if (argc > 0) {
             int32 index = 0;
 
-            const String *str = meta->engine->toString(argv[0]);
+            const String *str = meta->engine->meta->toString(argv[0]);
             js2val globalMultiline = thisInst->getMultiline(meta);
 
             if (thisInst->getGlobal(meta)) {
                 js2val lastIndex = thisInst->getLastIndex(meta);
-                index = meta->engine->toInteger(lastIndex);            
+                index = meta->engine->meta->toInteger(lastIndex);            
             }
 
-            REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, toInt32(str->length()), meta->engine->toBoolean(globalMultiline));
+            REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), index, toInt32(str->length()), meta->toBoolean(globalMultiline));
             if (match) {
                 PrototypeInstance *A = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
                 result = OBJECT_TO_JS2VAL(A);
                 js2val matchStr = meta->engine->allocString(str->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
-                Multiname mname(&meta->world.identifiers[*numberToString((long)0)], meta->publicNamespace);
+                Multiname mname(&meta->world.identifiers[*meta->toString((long)0)], meta->publicNamespace);
                 meta->writeDynamicProperty(A, &mname, true, matchStr, RunPhase);
                 for (int32 i = 0; i < match->parenCount; i++) {
-                    Multiname mname(&meta->world.identifiers[*numberToString(i + 1)], meta->publicNamespace);
+                    Multiname mname(&meta->world.identifiers[*meta->toString(i + 1)], meta->publicNamespace);
                     if (match->parens[i].index != -1) {
                         js2val parenStr = meta->engine->allocString(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
                         meta->writeDynamicProperty(A, &mname, true, parenStr, RunPhase);
@@ -180,6 +180,53 @@ namespace MetaData {
 
         }
         return result;
+    }
+
+    js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+    {
+        // XXX Change constructors to take js2val pointer for the result (which would be an already
+        // rooted pointer).
+        RegExpInstance *thisInst = new RegExpInstance(meta->regexpClass);
+        JS2Object::RootIterator ri = JS2Object::addRoot(&thisInst);
+        js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
+        REuint32 flags = 0;
+
+        const String *regexpStr = meta->engine->Empty_StringAtom;
+        const String *flagStr = meta->engine->Empty_StringAtom;
+        if (argc > 0) {
+            if (meta->objectType(argv[0]) == meta->regexpClass) {
+                if ((argc == 1) || JS2VAL_IS_UNDEFINED(argv[1])) {
+                    RegExpInstance *otherInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(argv[0]));
+                    js2val src  = otherInst->getSource(meta);
+                    ASSERT(JS2VAL_IS_STRING(src));
+                    regexpStr = JS2VAL_TO_STRING(src);
+                    flags = otherInst->mRegExp->flags;
+                }
+                else
+                    meta->reportError(Exception::typeError, "Illegal RegExp constructor args", meta->engine->errorPos());
+            }
+            else
+                regexpStr = meta->toString(argv[0]);
+            if ((argc > 1) && !JS2VAL_IS_UNDEFINED(argv[1])) {
+                flagStr = meta->toString(argv[1]);
+                if (parseFlags(flagStr->begin(), (int32)flagStr->length(), &flags) != RE_NO_ERROR)
+                    meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), *regexpStr + "/" + *flagStr);  // XXX error message?
+            }
+        }
+        REState *pState = REParse(regexpStr->begin(), (int32)regexpStr->length(), flags, RE_VERSION_1);
+        if (pState) {
+            thisInst->mRegExp = pState;
+            // XXX ECMA spec says these are DONTENUM
+            thisInst->setSource(meta, STRING_TO_JS2VAL(regexpStr));
+            thisInst->setGlobal(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_GLOBAL) == RE_GLOBAL));
+            thisInst->setIgnoreCase(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_IGNORECASE) == RE_IGNORECASE));
+            thisInst->setLastIndex(meta, INT_TO_JS2VAL(0));
+            thisInst->setMultiline(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_MULTILINE) == RE_MULTILINE));
+        }
+        else
+            meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), "/" + *regexpStr + "/" + *flagStr);  // XXX what about the RE parser error message?
+        JS2Object::removeRoot(ri);
+        return thatValue;
     }
 
 }

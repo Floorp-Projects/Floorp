@@ -146,7 +146,7 @@ static int readEvalPrint(FILE *in)
                     metadata->ValidateStmtList(parsedStatements);
                     js2val rval = metadata->ExecuteStmtList(RunPhase, parsedStatements);
                     if (!JS2VAL_IS_VOID(rval))
-                        stdOut << *metadata->engine->toString(rval) << '\n';
+                        stdOut << *metadata->toString(rval) << '\n';
                 }
             }
             clear(buffer);
@@ -204,7 +204,7 @@ using namespace MetaData;
 js2val print(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
 {
     for (uint32 i = 0; i < argc; i++) {
-        stdOut << *metadata->engine->toString(argv[i]) << '\n';
+        stdOut << *metadata->toString(argv[i]) << '\n';
     }
     return JS2VAL_UNDEFINED;
 }
@@ -212,7 +212,7 @@ js2val print(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 ar
 js2val load(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
 {
     if (argc)
-        return meta->readEvalFile(*meta->engine->toString(argv[0]));
+        return meta->readEvalFile(*meta->toString(argv[0]));
     else
         return JS2VAL_UNDEFINED;
 }

@@ -73,6 +73,14 @@
         }
         break;
 
+    case eRegExp: 
+        {
+            RegExpInstance *x = bCon->mRegExpList[BytecodeContainer::getShort(pc)];
+            push(OBJECT_TO_JS2VAL(x));
+            pc += sizeof(short);
+        }
+        break;
+
     case eNull: 
         {
 	    push(JS2VAL_NULL);
