@@ -1261,6 +1261,9 @@ Wallet_SetKey(PRBool isNewkey) {
     PR_FREEIF(message2);
   } else { /* key has previously been established */
     PRUnichar * message;
+    PRUnichar * message2 = Wallet_Localize("confirmPassword");
+    PRUnichar * mismatch = Wallet_Localize("confirmFailed_TryAgain?");
+    PRBool matched;
     if (isNewkey) { /* user is changing his key */
       message = Wallet_Localize("newPassword");
     } else {
@@ -1270,14 +1273,35 @@ Wallet_SetKey(PRBool isNewkey) {
       useDefaultKey = PR_TRUE;
       newkey = PL_strdup("~");
     } else { /* ask the user for his key */
-      newkey = wallet_GetString(message);
+      if (isNewkey) { /* user is changing his password */
+        for (;;) {
+          newkey = wallet_GetDoubleString(message, message2, matched);
+          if ((newkey != NULL) && matched) {
+            break; /* break out of loop if both passwords matched */
+          }
+          /* password confirmation failed, ask user if he wants to try again */
+          if ((newkey == NULL) || (!Wallet_Confirm(mismatch))) {
+            Recycle(mismatch);
+            Recycle(message);
+            Recycle(message2);
+            keyCancel = PR_TRUE;
+            return FALSE; /* user does not want to try again */
+          }    
+        }
+      } else {
+        newkey = wallet_GetString(message);
+      }
       if (newkey == NULL) {
         Recycle(message);
+        Recycle(message2);
+        Recycle(mismatch);
         keyCancel = PR_TRUE;
         return PR_FALSE; /* user pressed cancel -- does not want to enter a new key */
       }
     }
     Recycle(message);
+    Recycle(message2);
+    Recycle(mismatch);
   }
 
   if (PL_strlen(newkey) == 0) { /* user entered a zero-length key */
