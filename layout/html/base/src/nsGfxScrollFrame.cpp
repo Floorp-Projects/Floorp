@@ -45,7 +45,6 @@
 #include "nsIServiceManager.h"
 #include "nsIView.h"
 #include "nsIScrollableView.h"
-#include "nsIScrollable.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsWidgetsCID.h"
@@ -1182,72 +1181,40 @@ NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::Release(void)
 
 NS_IMPL_QUERY_INTERFACE1(nsGfxScrollFrameInner, nsIScrollPositionListener)
 
-static void HandleScrollPref(nsIScrollable *aScrollable, PRInt32 aOrientation,
-                             PRUint8& aValue)
-{
-  PRInt32 pref;
-  aScrollable->GetDefaultScrollbarPreferences(aOrientation, &pref);
-  switch (pref) {
-    case nsIScrollable::Scrollbar_Auto:
-      // leave |aValue| untouched
-      break;
-    case nsIScrollable::Scrollbar_Never:
-      aValue = NS_STYLE_OVERFLOW_HIDDEN;
-      break;
-    case nsIScrollable::Scrollbar_Always:
-      aValue = NS_STYLE_OVERFLOW_SCROLL;
-      break;
-  }
-}
-
-static nsGfxScrollFrameInner::ScrollbarStyles
-ConvertOverflow(PRUint8 aOverflow)
-{
-  nsGfxScrollFrameInner::ScrollbarStyles result;
-  switch (aOverflow) {
-    case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
-      result.mHorizontal = NS_STYLE_OVERFLOW_HIDDEN;
-      result.mVertical = NS_STYLE_OVERFLOW_SCROLL;
-      break;
-    case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
-      result.mHorizontal = NS_STYLE_OVERFLOW_SCROLL;
-      result.mVertical = NS_STYLE_OVERFLOW_HIDDEN;
-      break;
-    default:
-      result.mHorizontal = aOverflow;
-      result.mVertical = aOverflow;
-  }
-  return result;
-}
-
 nsGfxScrollFrameInner::ScrollbarStyles
 nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
 {
-  ScrollbarStyles result;
+  PRUint8 overflow;
   nsIFrame* parent = mOuter->GetParent();
   if (parent && parent->GetType() == nsLayoutAtoms::viewportFrame &&
       // Make sure we're actually the root scrollframe
       parent->GetFirstChild(nsnull) ==
         NS_STATIC_CAST(const nsIFrame*, mOuter)) {
-    nsPresContext *presContext = mOuter->GetPresContext();
-    result = ConvertOverflow(presContext->GetViewportOverflowOverride());
-
-    nsCOMPtr<nsISupports> container = presContext->GetContainer();
-    nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(container);
-    HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_X,
-                     result.mHorizontal);
-    HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_Y,
-                     result.mVertical);
+    overflow = mOuter->GetPresContext()->GetViewportOverflowOverride();
   } else {
-    result = ConvertOverflow(mOuter->GetStyleDisplay()->mOverflow);
+    overflow = mOuter->GetStyleDisplay()->mOverflow;
   }
 
-  NS_ASSERTION(result.mHorizontal != NS_STYLE_OVERFLOW_VISIBLE &&
-               result.mHorizontal != NS_STYLE_OVERFLOW_CLIP &&
-               result.mVertical != NS_STYLE_OVERFLOW_VISIBLE &&
-               result.mVertical != NS_STYLE_OVERFLOW_CLIP,
-               "scrollbars should not have been created");
-  return result;
+  switch (overflow) {
+  case NS_STYLE_OVERFLOW_SCROLL:
+  case NS_STYLE_OVERFLOW_HIDDEN:
+  case NS_STYLE_OVERFLOW_VISIBLE: // should never happen
+  case NS_STYLE_OVERFLOW_AUTO:
+    return ScrollbarStyles(overflow, overflow);
+  case NS_STYLE_OVERFLOW_CLIP:
+    // This isn't quite right (although the value is deprecated and not
+    // very important). The scrollframe will still be scrollable using
+    // keys.  This can happen when HTML or BODY has propagated the style
+    // to the viewport.  (In other cases, there will be no scrollframe.)
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
+  case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_SCROLL);
+  case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN);
+  default:
+    NS_NOTREACHED("invalid overflow value");
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
+  }
 }
 
 void
