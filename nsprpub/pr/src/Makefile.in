@@ -71,14 +71,10 @@ OS_LIBS			= -lm
 else	# 4.1.3_U1
 MAPFILE = $(OBJDIR)/nsprmap.sun
 GARBAGE += $(MAPFILE)
+ifdef NS_USE_GCC
+MKSHLIB += -Wl,-M,$(MAPFILE)
+else
 MKSHLIB += -M $(MAPFILE)
-#
-# A "cpu" subdirectory will be created in this directory if NSDISTMODE
-# is not "copy".  (See the comments in pr/src/md/unix/Makefile.in for
-# the reason.)  This needs to be removed, too.
-#
-ifneq ($(NSDISTMODE),copy)
-GARBAGE += cpu
 endif
 #
 # In Solaris 2.6 or earlier, -lrt is called -lposix4.
@@ -101,7 +97,7 @@ endif	# LOCAL_THREADS_ONLY
 endif	# USE_PTHREADS
 ifeq ($(OS_TEST),sun4u)
 ifndef USE_64
-DSO_LDOPTS	+= -f \$$ORIGIN/cpu/\$$ISALIST/lib$(ULTRASPARC_LIBRARY)$(LIBRARY_VERSION).so
+DSO_LDOPTS	+= -Wl,-f,\$$ORIGIN/cpu/\$$ISALIST/lib$(ULTRASPARC_LIBRARY)$(LIBRARY_VERSION).so
 endif
 endif	# sun4u
 endif	# 4.1.3_U1
