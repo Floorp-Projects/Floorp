@@ -48,4 +48,4 @@ REQUIRES = dbm seccmd
 
 PROGRAM = pk12util
 
-USE_STATIC_LIBS = 1
+# USE_STATIC_LIBS = 1

@@ -335,10 +335,8 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
 	}
     }
     /* Perform the conversion. */
-    ret = sec_port_ucs2_utf8_conversion_function(toUnicode,
-						 dup->data, dup->len,
-						 outBuf, maxOutBufLen,
-						 outBufLen);
+    ret = PORT_UCS2_UTF8Conversion(toUnicode, dup->data, dup->len,
+                                   outBuf, maxOutBufLen, outBufLen);
     if (dup)
 	SECITEM_ZfreeItem(dup, PR_TRUE);
     /* If converting ASCII to Unicode, swap bytes before returning
@@ -780,6 +778,18 @@ loser:
     return;
 }
 
+static void
+p12u_EnableAllCiphers()
+{
+    SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
+    SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
+    SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
+    SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
+    SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
+    SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
+    SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
+}
+
 static PRUintn
 P12U_Init(char *dir)
 {
@@ -795,8 +805,9 @@ P12U_Init(char *dir)
 
     /* setup unicode callback functions */
     PORT_SetUCS2_ASCIIConversionFunction(p12u_ucs2_ascii_conversion_function);
-    PORT_SetUCS4_UTF8ConversionFunction(sec_port_ucs4_utf8_conversion_function);
-    PORT_SetUCS2_UTF8ConversionFunction(sec_port_ucs2_utf8_conversion_function);
+    /* use the defaults for UCS4-UTF8 and UCS2-UTF8 */
+
+    p12u_EnableAllCiphers();
 
     return 0;
 }
