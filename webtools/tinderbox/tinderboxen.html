@@ -44,7 +44,7 @@
   }
 
 
-  if(document.layers) {
+  if (typeof document.layers != 'undefined') {
       // 4.x 
       printLayer($tree1);
       document.write("<hr>");

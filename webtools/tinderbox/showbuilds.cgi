@@ -624,7 +624,7 @@ sub print_javascript {
       if (noDHTML) {
         return true;
       }
-      if (document.layers) {
+      if (typeof document.layers != 'undefined') {
         var l  = document.layers['popup'];
         l.src  = d.target.href;
         l.top  = d.target.y - 6;
@@ -655,7 +655,7 @@ sub print_javascript {
         document.location = log_url(logfile);
         return false;
       }
-      if (document.layers) {
+      if (typeof document.layers != 'undefined') {
         var l = document.layers['popup'];
         l.document.write("<table border=1 cellspacing=1><tr><td>"
                          + notes[noteid] + "</tr></table>");
@@ -692,7 +692,7 @@ sub print_javascript {
         document.location = logurl;
         return false;
       }
-      if (document.layers) {
+      if (typeof document.layers != 'undefined') {
         var q = document.layers["logpopup"];
         q.top = e.target.y - 6;
 
