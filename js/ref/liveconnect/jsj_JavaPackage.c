@@ -225,7 +225,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
         }
         
 #ifdef DEBUG
-        printf("JavaPackage \'%s\' created\n", newPath);
+        /* printf("JavaPackage \'%s\' created\n", newPath); */
 #endif
 
     }
