@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -91,6 +91,8 @@
 // this is going away - see
 // http://bugzilla.mozilla.org/show_bug.cgi?id=71482
 #include "nsIBrowserHistory.h"
+
+#include "nsIEventStateManager.h"
 
 #ifdef IBMBIDI
 #include "nsIUBidiUtils.h"
@@ -1970,96 +1972,108 @@ NS_IMETHODIMP nsDocShell::GetMainWidget(nsIWidget** aMainWidget)
 
 NS_IMETHODIMP nsDocShell::SetFocus()
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (doc) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
-    if (sgo) {
-      nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
-      if (domwin)
-        domwin->Focus();
-    }
+  nsCOMPtr<nsIPresShell> presShell;
+  nsCOMPtr<nsIDocument> document;
+  GetPresShell(getter_AddRefs(presShell));
+  if (!presShell)
+    return NS_ERROR_FAILURE;
+  presShell->GetDocument(getter_AddRefs(document));
+
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(getter_AddRefs(presContext));
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  presContext->GetEventStateManager(getter_AddRefs(esm));
+  if (!esm)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> rootContent(getter_AddRefs(document->GetRootContent()));
+  if (!rootContent) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> focusContent;
+  esm->GetNextTabbableContent(rootContent, nsnull, PR_TRUE,
+                              getter_AddRefs(focusContent));
+  if (focusContent) {
+    nsIFrame* focusFrame = nsnull;
+    presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
+    esm->ChangeFocus(focusContent, focusFrame, PR_TRUE);
   }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
-   PRBool* aTookFocus)
+                                         PRBool* aTookFocus)
 {
-   NS_ENSURE_ARG_POINTER(aTookFocus);
+  NS_ENSURE_ARG_POINTER(aTookFocus);
+  
+  // Next person we should call is first the parent otherwise the 
+  // docshell tree owner.
 
-   // Next person we should call is first the parent otherwise the 
-   // docshell tree owner.
-   nsCOMPtr<nsIBaseWindow> nextCallWin(do_QueryInterface(mParent));
-   if(!nextCallWin)
-      {
-      nextCallWin = do_QueryInterface(mTreeOwner);
+  nsCOMPtr<nsIBaseWindow> nextCallWin(do_QueryInterface(mParent));
+  if(!nextCallWin)
+    nextCallWin = do_QueryInterface(mTreeOwner);
+
+  //If the current focus is us, offer it to the next owner.
+  if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this)) {
+    if(nextCallWin) {
+      nsresult ret = nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
+      if (NS_SUCCEEDED(ret) && *aTookFocus)
+        return NS_OK;
+    }
+    
+    if (!mChildren.Count()) {
+      //If we don't have children and our parent didn't want 
+      //the focus then we should just stop now.
+      return NS_OK;
+    }
+  }
+
+  
+  //Otherwise, check the chilren and offer it to the next sibling.
+  PRInt32 i;
+  PRInt32 n = mChildren.Count();
+  for(i = 0; i < n; i++) {
+    nsCOMPtr<nsIBaseWindow> 
+      child(do_QueryInterface((nsISupports*)mChildren.ElementAt(i)));
+    //If we have focus we offer it to our first child.
+    if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this)) {
+      if(NS_SUCCEEDED(child->SetFocus())) {
+        *aTookFocus = PR_TRUE;
+        return NS_OK;
       }
-
-   //If the current focus is us, offer it to the next owner.
-   if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this))
-      {
-      if(nextCallWin)
-        { 
-        nsresult ret = nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
-        if (NS_SUCCEEDED(ret) && *aTookFocus)
+      else
+        return NS_ERROR_FAILURE;
+    }
+    //If we don't have focus, find the child that does then
+    //offer focus to the next one.
+    if (child.get() == aCurrentFocus) {
+      while(++i < n) {
+        child = do_QueryInterface((nsISupports*)mChildren.ElementAt(i));
+        if(NS_SUCCEEDED(child->SetFocus())) {
+          *aTookFocus = PR_TRUE;
           return NS_OK;
         }
-
-        if (!mChildren.Count())
-           {
-           //If we don't have children and our parent didn't want 
-           //the focus then we should just stop now.
-           return NS_OK;
-           }
+        else
+          return NS_ERROR_FAILURE;
       }
+    }
+  }
+  
+  //Reached the end of our child list.  If we aren't currently focused, try
+  // to accept focus.
 
-   //Otherwise, check the chilren and offer it to the next sibling.
-   PRInt32 i;
-   PRInt32 n = mChildren.Count();
-   for(i = 0; i < n; i++)
-      {
-      nsCOMPtr<nsIBaseWindow> 
-         child(do_QueryInterface((nsISupports*)mChildren.ElementAt(i)));
-      //If we have focus we offer it to our first child.
-      if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this))
-        {
-        if(NS_SUCCEEDED(child->SetFocus()))
-           {
-           *aTookFocus = PR_TRUE;
-           return NS_OK;
-           }
-        else 
-           {
-           return NS_ERROR_FAILURE;
-           } 
-        }
-      //If we don't have focus, find the child that does then
-      //offer focus to the next one.
-      if (child.get() == aCurrentFocus)
-         {
-         while(++i < n)
-            {
-            child = do_QueryInterface((nsISupports*)mChildren.ElementAt(i));
-            if(NS_SUCCEEDED(child->SetFocus()))
-               {
-               *aTookFocus = PR_TRUE;
-               return NS_OK;
-               }
-            else 
-               {
-               return NS_ERROR_FAILURE;
-               } 
-            }
-         }
-      }
+  if ((aCurrentFocus != NS_STATIC_CAST(nsIBaseWindow*, this)) &&
+      NS_SUCCEEDED(SetFocus())) {
+    *aTookFocus = PR_TRUE;
+    return NS_OK;
+  }
 
-   //Reached the end of our child list.  Call again to offer focus
-   //upwards and to start at the beginning of our child list if
-   //no one above us wants focus.
-   return FocusAvailable(this, aTookFocus);
+  // Call again to offer focus upwards and to start at the beginning of our
+  // child list if no one above us wants focus.
+  return FocusAvailable(this, aTookFocus);
 }
 
 NS_IMETHODIMP nsDocShell::GetTitle(PRUnichar** aTitle)

@@ -74,6 +74,10 @@ public:
   NS_IMETHOD GetFocusedContent(nsIContent **aContent) = 0;
   NS_IMETHOD SetFocusedContent(nsIContent* aContent) = 0;
 
+  virtual PRBool ChangeFocus(nsIContent* aFocus, nsIFrame* aFocusFrame, PRBool aSetFocus) = 0;
+  NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame,
+                                    PRBool forward, nsIContent** aResult) = 0;
+
   // This is an experiement and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) = 0;
 

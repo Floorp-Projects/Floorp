@@ -2390,12 +2390,26 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
 
   nsCOMPtr<nsIContent> next;
   //Get the next tab item.  This takes tabIndex into account
-  GetNextTabbableContent(rootContent, primaryFrame, forward, getter_AddRefs(next));
-
+  if (!topOfDoc)
+    GetNextTabbableContent(rootContent, primaryFrame, forward, getter_AddRefs(next));
+  
   //Either no tabbable items or the end of the document
   if (!next) {
-    PRBool focusTaken = PR_FALSE;
 
+    // If we've reached the end of the content in this document, we
+    // focus the document itself before leaving.
+    if (!topOfDoc) {
+      nsCOMPtr<nsIScriptGlobalObject> sgo;
+      mDocument->GetScriptGlobalObject(getter_AddRefs(sgo));
+      nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
+      if (domwin) {
+        SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+        if (NS_SUCCEEDED(domwin->Focus()))
+          return;
+      }
+    }
+
+    PRBool focusTaken = PR_FALSE;
     SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
     //Offer focus upwards to allow shifting focus to UI controls
