@@ -656,6 +656,9 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &a
     case STRING_TOKEN:
       funcObj->SetReturnValue(TYPE_STRING);
       break;
+    case VOID_TOKEN:
+      funcObj->SetReturnValue(TYPE_VOID);
+      break;
     // scoped name
     case IDENTIFIER_TOKEN:
       //if (aSpecification.ContainInterface(aToken.stringID)) {

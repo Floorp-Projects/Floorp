@@ -62,6 +62,7 @@ enum TokenType {
   ASSIGNEMENT_TOKEN, // '='
   FUNC_PARAMS_SPEC_BEGIN_TOKEN, // '('
   FUNC_PARAMS_SPEC_END_TOKEN, // ')'
+  VOID_TOKEN,
   // constant values
   INTEGER_CONSTANT = 1000,
   STRING_CONSTANT
@@ -186,6 +187,7 @@ protected:
   void      SKeywords(char *aCurrentPos, Token *aToken);
   void      TKeywords(char *aCurrentPos, Token *aToken);
   void      UKeywords(char *aCurrentPos, Token *aToken);
+  void      VKeywords(char *aCurrentPos, Token *aToken);
   void      WKeywords(char *aCurrentPos, Token *aToken);
   void      Identifier(char *aCurrentPos, Token *aToken);
   void      Number(int aStartChar, Token *aToken);

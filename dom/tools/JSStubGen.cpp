@@ -657,7 +657,9 @@ static const char *kMethodBeginStr = "\n\n"
 "{\n"
 "  nsIDOM%s *nativeThis = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
 "  NS_ASSERTION(nsnull != nativeThis, \"null pointer\");\n"
-"  JSBool rBool = JS_FALSE;\n"
+"  JSBool rBool = JS_FALSE;\n";
+
+static const char *kMethodReturnStr = 
 "  %s nativeRet;\n";
 
 static const char *kMethodParamStr =  "  %s b%d;\n";
@@ -718,11 +720,19 @@ static const char *kMethodIntParamStr = "\n"
 #define JSGEN_GENERATE_INTPARAM(buffer, paramNum) \
     sprintf(buffer, kMethodIntParamStr, paramNum, paramNum)
 
-static const char *kMethodParamListStr = "b%d, ";
+static const char *kMethodParamListStr = "b%d";
+static const char *kMethodParamListDelimiterStr = ", ";
 
 static const char *kMethodBodyMiddleStr =
 "\n"
 "    if (NS_OK != nativeThis->%s(%s%snativeRet)) {\n"
+"      return JS_FALSE;\n"
+"    }\n"
+"\n";
+
+static const char *kMethodBodyMiddleNoReturnStr =
+"\n"
+"    if (NS_OK != nativeThis->%s(%s)) {\n"
 "      return JS_FALSE;\n"
 "    }\n"
 "\n";
@@ -755,6 +765,9 @@ static const char *kMethodIntRetStr =
 static const char *kMethodBoolRetStr =
 "    *rval = BOOLEAN_TO_JSVAL(nativeRet);\n";
 
+static const char *kMethodVoidRetStr = 
+"    *rval = JSVAL_VOID;\n";
+
 static const char *kMethodEndStr =
 "  }\n"
 "  else {\n"
@@ -785,9 +798,12 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
       GetCapitalizedName(method_name, *func);
       GetVariableTypeForLocal(return_type, *rval);
       sprintf(buf, kMethodBeginStr, method_name, iface->GetName(),
-              method_name, iface->GetName(), iface->GetName(), 
-              return_type);
+              method_name, iface->GetName(), iface->GetName());
       *file << buf;
+      if (rval->GetType() != TYPE_VOID) {
+        sprintf(buf, kMethodReturnStr, return_type);
+        *file << buf;
+      }
 
       for (p = 0; p < pcount; p++) {
         IdlParameter *param = func->GetParameterAt(p);
@@ -834,13 +850,22 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
       char *param_ptr = param_buf;
       param_buf[0] = '\0';
       for (p = 0; p < pcount; p++) {
+        if (p > 0) {
+          strcpy(param_ptr, kMethodParamListDelimiterStr);
+          param_ptr += strlen(param_ptr);
+        }
         sprintf(param_ptr, kMethodParamListStr, p);
         param_ptr += strlen(param_ptr);
       }
 
-      sprintf(buf, kMethodBodyMiddleStr, method_name, param_buf,
-              rval->GetType() == TYPE_STRING ? "" : "&",
-              method_name);
+      if (rval->GetType() != TYPE_VOID) {
+        strcpy(param_ptr, kMethodParamListDelimiterStr);
+        sprintf(buf, kMethodBodyMiddleStr, method_name, param_buf,
+                rval->GetType() == TYPE_STRING ? "" : "&");
+      }
+      else {
+        sprintf(buf, kMethodBodyMiddleNoReturnStr, method_name, param_buf);
+      }
       *file << buf;
 
       switch(rval->GetType()) {
@@ -861,6 +886,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
             break;
           case TYPE_OBJECT:
             *file << kMethodObjectRetStr;
+            break;
+          case TYPE_VOID:
+            *file << kMethodVoidRetStr;
             break;
           default:
             // XXX Fail for other cases

@@ -186,6 +186,9 @@ Token* IdlScanner::NextToken()
         case 'u':
           UKeywords(mTokenName + 1, mCurrentToken); 
           break;
+        case 'v':
+          VKeywords(mTokenName + 1, mCurrentToken); 
+          break;
         case 'w':
           WKeywords(mTokenName + 1, mCurrentToken); 
           break;
@@ -992,6 +995,40 @@ void IdlScanner::UKeywords(char *aCurrentPos, Token *aToken)
     else {
       // it must be an identifier
       KeywordMismatch(c, aCurrentPos, aToken);
+    }
+  }
+  else {
+    // it must be an identifier
+    KeywordMismatch(c, aCurrentPos, aToken);
+  }
+}
+
+//
+// 'void' is the only keyword starting with 'v'.
+// If that is not it, it must be an identifier
+//
+void IdlScanner::VKeywords(char *aCurrentPos, Token *aToken)
+{
+  int c = mInputFile->get();
+  if (c != EOF && c == 'o' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'i' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'd' && (*aCurrentPos++ = c)) {
+    // if terminated is a keyword
+    c = mInputFile->get();
+    if (c != EOF) {
+      if (isalpha(c) || isdigit(c) || c == '_') {
+        // more characters, it must be an identifier
+        *aCurrentPos++ = c;
+        Identifier(aCurrentPos, aToken);
+      }
+      else {
+        // it is a keyword
+        aToken->SetToken(VOID_TOKEN);
+        mInputFile->putback(c);
+      }
+    }
+    else {
+      aToken->SetToken(VOID_TOKEN);
     }
   }
   else {

@@ -33,7 +33,8 @@ enum Type {
   TYPE_INT,
   TYPE_UINT,
   TYPE_STRING,
-  TYPE_OBJECT
+  TYPE_OBJECT,
+  TYPE_VOID
 };
 
 class IdlVariable : public IdlObject {
