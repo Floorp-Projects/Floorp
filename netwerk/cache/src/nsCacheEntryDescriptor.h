@@ -46,15 +46,22 @@ public:
     /**
      *  routines for manipulating descriptors in PRCLists
      */
-
     PRCList*                        GetListNode(void)    { return &mListLink;   }
     static nsCacheEntryDescriptor*  GetInstance(PRCList* qp) {
         return (nsCacheEntryDescriptor*)
             ((char*)qp - offsetof(nsCacheEntryDescriptor, mListLink));
     }
 
-    nsCacheEntry * CacheEntry(void) { return mCacheEntry; }
-    
+    /**
+     * utility method to attempt changing data size of associated entry
+     */
+    nsresult  RequestDataSizeChange(PRInt32 deltaSize);
+
+    /**
+     * methods callbacks for nsCacheService
+     */
+    nsCacheEntry * CacheEntry(void) { return mCacheEntry; }    
+
 protected:
     
     PRCList                 mListLink;
