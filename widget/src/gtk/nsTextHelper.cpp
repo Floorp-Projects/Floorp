@@ -78,7 +78,7 @@ NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize)
 {
-  char *str;
+  char *str = nsnull;
   if (GTK_IS_ENTRY(mWidget))
     {
       str = gtk_entry_get_text(GTK_ENTRY(mWidget));
