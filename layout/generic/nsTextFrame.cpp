@@ -633,7 +633,7 @@ TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
         // XXX This is a one to many mapping that I think isn't handled well
         if (nsnull != aIndexes) {
           *aIndexes++ = strInx;
-          strInx++;
+        	strInx += wordLen;
         }
       }
       else if (0 == wordLen) {
