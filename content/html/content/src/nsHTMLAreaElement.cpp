@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMNSHTMLAreaElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -32,13 +33,14 @@
 #include "nsIPresContext.h"
 #include "nsIFocusableContent.h"
 #include "nsIEventStateManager.h"
+#include "nsIURL.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLAreaElement : public nsIDOMHTMLAreaElement,
-                          public nsIScriptObjectOwner,
-                          public nsIDOMEventReceiver,
+                          public nsIJSScriptObject,
                           public nsIHTMLContent,
                           public nsIFocusableContent
 {
@@ -76,11 +78,17 @@ public:
   NS_IMETHOD GetTarget(nsString& aTarget);
   NS_IMETHOD SetTarget(const nsString& aTarget);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+  // nsIDOMNSHTMLAreaElement
+  NS_IMETHOD    GetProtocol(nsString& aProtocol);
+  NS_IMETHOD    GetHost(nsString& aHost);
+  NS_IMETHOD    GetHostname(nsString& aHostname);
+  NS_IMETHOD    GetPathname(nsString& aPathname);
+  NS_IMETHOD    GetSearch(nsString& aSearch);
+  NS_IMETHOD    GetPort(nsString& aPort);
+  NS_IMETHOD    GetHash(nsString& aHash);
 
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
@@ -137,6 +145,11 @@ nsHTMLAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFocusableContentIID)) {
     *aInstancePtr = (void*)(nsIFocusableContent*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLAreaElement))) {
+    *aInstancePtr = (void*)(nsIDOMNSHTMLAreaElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -258,4 +271,198 @@ NS_IMETHODIMP
 nsHTMLAreaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+}
+
+NS_IMETHODIMP    
+nsHTMLAreaElement::GetProtocol(nsString& aProtocol)
+{
+  nsAutoString href;
+  nsIURI *url;
+  nsresult result = NS_OK;
+  
+  result = GetHref(href);
+  if (NS_OK == result) {
+    result = NS_NewURI(&url, href);
+    if (NS_OK == result) {
+      char* protocol;
+      result = url->GetScheme(&protocol);
+      if (result == NS_OK) {
+        aProtocol.SetString(protocol);
+        aProtocol.Append(":");
+        nsCRT::free(protocol);
+      }
+      NS_RELEASE(url);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLAreaElement::GetHost(nsString& aHost)
+{
+  nsAutoString href;
+  nsIURI *url;
+  nsresult result = NS_OK;
+  
+  result = GetHref(href);
+  if (NS_OK == result) {
+    result = NS_NewURI(&url, href);
+    if (NS_OK == result) {
+      char* host;
+      result = url->GetHost(&host);
+      if (result == NS_OK) {
+        aHost.SetString(host);
+        nsCRT::free(host);
+        PRInt32 port;
+        (void)url->GetPort(&port);
+        if (-1 != port) {
+          aHost.Append(":");
+          aHost.Append(port, 10);
+        }
+      }
+      NS_RELEASE(url);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLAreaElement::GetHostname(nsString& aHostname)
+{
+  nsAutoString href;
+  nsIURI *url;
+  nsresult result = NS_OK;
+  
+  result = GetHref(href);
+  if (NS_OK == result) {
+    result = NS_NewURI(&url, href);
+    if (NS_OK == result) {
+      char* host;
+      result = url->GetHost(&host);
+      if (result == NS_OK) {
+        aHostname.SetString(host);
+        nsCRT::free(host);
+      }
+      NS_RELEASE(url);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLAreaElement::GetPathname(nsString& aPathname)
+{
+  nsAutoString href;
+  nsIURI *url;
+  nsresult result = NS_OK;
+  
+  result = GetHref(href);
+  if (NS_OK == result) {
+    result = NS_NewURI(&url, href);
+    if (NS_OK == result) {
+      char* file;
+      result = url->GetPath(&file);
+      if (result == NS_OK) {
+        aPathname.SetString(file);
+        nsCRT::free(file);
+      }
+      NS_IF_RELEASE(url);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLAreaElement::GetSearch(nsString& aSearch)
+{
+  nsAutoString href;
+  nsIURI *uri;
+  nsresult result = NS_OK;
+
+  result = GetHref(href);
+  if (NS_OK == result) {
+    result = NS_NewURI(&uri, href);
+    if (NS_OK == result) {
+      char *search;
+      nsIURL* url;
+      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
+      if (NS_SUCCEEDED(result)) {
+        result = url->GetQuery(&search);
+        NS_RELEASE(url);
+      }
+      if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
+        aSearch.SetString("?");
+        aSearch.Append(search);
+        nsCRT::free(search);
+      }
+      else {
+        aSearch.SetLength(0);
+      }
+      NS_RELEASE(uri);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLAreaElement::GetPort(nsString& aPort)
+{
+  nsAutoString href;
+  nsIURI *url;
+  nsresult result = NS_OK;
+  
+  result = GetHref(href);
+  if (NS_OK == result) {
+    result = NS_NewURI(&url, href);
+    if (NS_OK == result) {
+      aPort.SetLength(0);
+      PRInt32 port;
+      (void)url->GetPort(&port);
+      if (-1 != port) {
+        aPort.Append(port, 10);
+      }
+      NS_RELEASE(url);
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLAreaElement::GetHash(nsString& aHash)
+{
+  nsAutoString href;
+  nsIURI *uri;
+  nsresult result = NS_OK;
+  
+  result = GetHref(href);
+  if (NS_OK == result) {
+    result = NS_NewURI(&uri, href);
+
+    if (NS_OK == result) {
+      char *ref;
+      nsIURL* url;
+      result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
+      if (NS_SUCCEEDED(result)) {
+        result = url->GetRef(&ref);
+        NS_RELEASE(url);
+      }
+      if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
+        aHash.SetString("#");
+        aHash.Append(ref);
+        nsCRT::free(ref);
+      }
+      else {
+        aHash.SetLength(0);
+      }
+      NS_RELEASE(uri);
+    }
+  }
+
+  return result;
 }

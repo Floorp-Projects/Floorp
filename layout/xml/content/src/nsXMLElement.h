@@ -39,8 +39,6 @@ class nsIEventListenerManager;
 class nsIHTMLAttributes;
 
 class nsXMLElement : public nsIDOMElement,
-		     public nsIScriptObjectOwner,
-		     public nsIDOMEventReceiver,
 		     public nsIXMLContent,
          public nsIBindableContent,
 		     public nsIJSScriptObject
@@ -204,9 +202,6 @@ public:
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
   NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
   NS_IMETHOD GetBaseTag(nsIAtom** aResult);
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIJSScriptObject
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp) {

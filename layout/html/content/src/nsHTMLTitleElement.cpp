@@ -40,8 +40,7 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 class nsHTMLTitleElement : public nsIDOMHTMLTitleElement,
-                           public nsIScriptObjectOwner,
-                           public nsIDOMEventReceiver,
+                           public nsIJSScriptObject,
                            public nsIHTMLContent
 {
 public:
@@ -64,11 +63,8 @@ public:
   NS_IMETHOD GetText(nsString& aType);
   NS_IMETHOD SetText(const nsString& aType);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

@@ -494,8 +494,6 @@ nsGenericDOMDataNode::SetScriptObject(void *aScriptObject)
 
 //----------------------------------------------------------------------
 
-// nsIDOMEventReceiver implementation
-
 nsresult
 nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
 {
@@ -510,72 +508,6 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
     NS_ADDREF(mListenerManager);
   }
   return rv;
-}
-
-nsresult
-nsGenericDOMDataNode::GetNewListenerManager(nsIEventListenerManager** aResult)
-{
-  return NS_NewEventListenerManager(aResult);
-} 
-
-nsresult
-nsGenericDOMDataNode::HandleEvent(nsIDOMEvent *aEvent)
-{
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericDOMDataNode::AddEventListenerByIID(nsIDOMEventListener* aListener,
-                                       const nsIID& aIID)
-{
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericDOMDataNode::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
-                                          const nsIID& aIID)
-{
-  if (nsnull != mListenerManager) {
-    mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericDOMDataNode::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                       PRBool aUseCapture)
-{
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericDOMDataNode::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                          PRBool aUseCapture)
-{
-  if (nsnull != mListenerManager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------

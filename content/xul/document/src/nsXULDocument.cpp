@@ -751,6 +751,12 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsXULDocument::StopDocumentLoad()
+{
+    return NS_OK;
+}
+
 const nsString*
 nsXULDocument::GetDocumentTitle() const
 {

@@ -537,6 +537,10 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 NS_IMETHODIMP
 DocumentViewerImpl::Stop(void)
 {
+  if (mDocument) {
+    mDocument->StopDocumentLoad();
+  }
+
   if (mPresContext) {
     mPresContext->Stop();
   }

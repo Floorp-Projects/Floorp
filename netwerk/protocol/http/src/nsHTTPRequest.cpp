@@ -103,7 +103,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method):
     nsXPIDLString ua;
     if (NS_SUCCEEDED(httpHandler->GetUserAgent(getter_Copies(ua))))
     {
-        nsCString uaString((const PRUnichar*)ua);
+        nsCAutoString uaString((const PRUnichar*)ua);
         SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
     }
 

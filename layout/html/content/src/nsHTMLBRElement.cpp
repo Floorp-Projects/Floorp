@@ -35,8 +35,7 @@
 static NS_DEFINE_IID(kIDOMHTMLBRElementIID, NS_IDOMHTMLBRELEMENT_IID);
 
 class nsHTMLBRElement : public nsIDOMHTMLBRElement,
-                        public nsIScriptObjectOwner,
-                        public nsIDOMEventReceiver,
+                        public nsIJSScriptObject,
                         public nsIHTMLContent
 {
 public:
@@ -59,11 +58,8 @@ public:
   NS_IMETHOD GetClear(nsString& aClear);
   NS_IMETHOD SetClear(const nsString& aClear);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

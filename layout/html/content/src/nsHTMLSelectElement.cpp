@@ -92,10 +92,9 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_IDOMHTMLCOLLECTION
 
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-
   // nsIJSScriptObject interface
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
   PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
   PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
@@ -126,9 +125,7 @@ private:
 
 class nsHTMLSelectElement : public nsIDOMHTMLSelectElement,
                             public nsIDOMNSHTMLSelectElement,
-                            public nsIScriptObjectOwner,
                             public nsIJSScriptObject,
-                            public nsIDOMEventReceiver,
                             public nsIHTMLContent,
                             public nsIFormControl,
                             public nsIFocusableContent,
@@ -179,12 +176,6 @@ public:
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
   NS_IMETHOD NamedItem(const nsString& aName, nsIDOMNode** aReturn);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
-
   // nsIContent
   NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
 
@@ -206,6 +197,7 @@ public:
   NS_IMETHOD IsDoneAddingContent(PRBool * aIsDone);
 
   // nsIJSScriptObject
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj,
                                 jsval aID, jsval *aVp);
   virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj,
@@ -1407,7 +1399,6 @@ nsHTMLOptionCollection::IndexOf(nsIContent* aOption)
   return -1;
 }
 
-
 // nsIScriptObjectOwner interface
 
 NS_IMETHODIMP
@@ -1419,6 +1410,12 @@ nsHTMLOptionCollection::GetScriptObject(nsIScriptContext *aContext, void** aScri
   }
   *aScriptObject = mScriptObject;
   return res;
+}
+
+NS_IMETHODIMP 
+nsHTMLOptionCollection::SetScriptObject(void* aScriptObject)
+{
+  return nsGenericDOMHTMLCollection::SetScriptObject(aScriptObject);
 }
 
 // nsIJSScriptObject interface

@@ -110,7 +110,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocument, 
                    public nsIDOMNSDocument,
                    public nsIDiskDocument,
-                   public nsIScriptObjectOwner, 
                    public nsIJSScriptObject,
                    public nsSupportsWeakReference,
                    public nsIDOMEventReceiver,
@@ -126,6 +125,8 @@ public:
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
                                nsIStreamListener **aDocListener);
+
+  NS_IMETHOD StopDocumentLoad();
 
   /**
    * Return the title of the document. May return null.

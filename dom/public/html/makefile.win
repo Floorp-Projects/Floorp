@@ -94,7 +94,10 @@ EXPORTS2= \
 	nsIDOMImage.h \
 	nsIDOMNSHTMLButtonElement.h \
 	nsIDOMNSHTMLDocument.h \
-	nsIDOMOption.h
+	nsIDOMOption.h \
+	nsIDOMNSHTMLAnchorElement.h \
+	nsIDOMNSHTMLAreaElement.h 
+
 
 MODULE=dom 
 

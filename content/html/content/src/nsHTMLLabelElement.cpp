@@ -47,8 +47,7 @@ static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 class nsHTMLLabelElement : public nsIDOMHTMLLabelElement,
-                  public nsIScriptObjectOwner,
-                  public nsIDOMEventReceiver,
+                  public nsIJSScriptObject,
                   public nsIHTMLContent,
                   public nsIFormControl
 
@@ -77,11 +76,8 @@ public:
   NS_IMETHOD GetHtmlFor(nsString& aHtmlFor);
   NS_IMETHOD SetHtmlFor(const nsString& aHtmlFor);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)

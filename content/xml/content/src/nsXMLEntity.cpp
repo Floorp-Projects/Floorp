@@ -36,7 +36,6 @@ static NS_DEFINE_IID(kIDOMEntityIID, NS_IDOMENTITY_IID);
 
 class nsXMLEntity : public nsIDOMEntity,
                     public nsIScriptObjectOwner,
-                    public nsIDOMEventReceiver,
                     public nsIContent
 {
 public:
@@ -58,9 +57,6 @@ public:
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
@@ -138,10 +134,11 @@ nsXMLEntity::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
     return NS_OK;                                           
   }                                                         
   if (aIID.Equals(kIDOMEventReceiverIID)) {                  
-    nsIDOMEventReceiver* tmp = this;                       
-    *aInstancePtrResult = (void*) tmp;                                   
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
+    nsCOMPtr<nsIEventListenerManager> man;
+    if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){
+      return man->QueryInterface(kIDOMEventReceiverIID, (void**)aInstancePtrResult);
+    }     
+    return NS_NOINTERFACE;
   }                                                         
   if (aIID.Equals(kIScriptObjectOwnerIID)) {                 
     nsIScriptObjectOwner* tmp = this;                      

@@ -3265,8 +3265,10 @@ NS_IMETHODIMP GlobalWindowImpl::ClearTimeoutOrInterval(PRInt32 aTimerID)
    nsTimeoutImpl **top, *timeout;
 
    public_id = (PRUint32)aTimerID;
-   if(!public_id)    /* id of zero is reserved for internal use */
-      return NS_ERROR_FAILURE;
+   if(!public_id) {  /* id of zero is reserved for internal use */
+     /* return silently for compatibility (see bug 30700) */
+     return NS_OK;
+   }
    for(top = &mTimeouts; (timeout = *top) != NULL; top = &timeout->next)
       {
       if(timeout->public_id == public_id)

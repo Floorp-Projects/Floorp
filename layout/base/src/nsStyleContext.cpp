@@ -766,7 +766,7 @@ PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
         (mOutlineStyle != aOther.mOutlineStyle) ||
         (mOutlineColor != aOther.mOutlineColor) ||
         (mOutlineRadius != aOther.mOutlineRadius)) {
-      return NS_STYLE_HINT_REFLOW;	// XXX: should be VISUAL: see bugs 9809 and 9816
+      return NS_STYLE_HINT_VISUAL;	// XXX: should be VISUAL: see bugs 9809 and 9816
     }
     return NS_STYLE_HINT_NONE;
   }

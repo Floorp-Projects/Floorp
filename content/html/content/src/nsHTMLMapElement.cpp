@@ -39,8 +39,7 @@ static NS_DEFINE_IID(kIDOMHTMLMapElementIID, NS_IDOMHTMLMAPELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 class nsHTMLMapElement : public nsIDOMHTMLMapElement,
-                         public nsIScriptObjectOwner,
-                         public nsIDOMEventReceiver,
+                         public nsIJSScriptObject,
                          public nsIHTMLContent
 {
 public:
@@ -64,11 +63,8 @@ public:
   NS_IMETHOD GetName(nsString& aName);
   NS_IMETHOD SetName(const nsString& aName);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {

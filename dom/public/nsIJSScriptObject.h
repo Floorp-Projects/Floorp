@@ -24,6 +24,7 @@
 #define nsIJSScriptObject_h__
 
 #include "nsISupports.h"
+#include "nsIScriptObjectOwner.h"
 #include "jsapi.h"
 
 #define NS_IJSSCRIPTOBJECT_IID \
@@ -39,7 +40,7 @@
  * <P>
  * It is used by the script runtime to collect information about an object
  */
-class nsIJSScriptObject : public nsISupports {
+class nsIJSScriptObject : public nsIScriptObjectOwner {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IJSSCRIPTOBJECT_IID; return iid; }
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, 

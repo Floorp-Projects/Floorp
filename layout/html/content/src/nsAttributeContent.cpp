@@ -74,7 +74,7 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 
-class nsAttributeContent : public nsIContent, public nsITextContent, public nsIAttributeContent {
+class nsAttributeContent : public nsITextContent, public nsIAttributeContent {
 public:
   friend nsresult NS_NewAttributeContent(nsAttributeContent** aNewFrame);
 

@@ -39,8 +39,7 @@ extern nsGenericHTMLElement::EnumTable kListTypeTable[];
 static NS_DEFINE_IID(kIDOMHTMLDirectoryElementIID, NS_IDOMHTMLDIRECTORYELEMENT_IID);
 
 class nsHTMLDirectoryElement : public nsIDOMHTMLDirectoryElement,
-                               public nsIScriptObjectOwner,
-                               public nsIDOMEventReceiver,
+                               public nsIJSScriptObject,
                                public nsIHTMLContent
 {
 public:
@@ -63,11 +62,8 @@ public:
   NS_IMETHOD GetCompact(PRBool* aCompact);
   NS_IMETHOD SetCompact(PRBool aCompact);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

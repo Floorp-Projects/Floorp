@@ -338,14 +338,14 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content;
-  elementFactory->CreateInstanceByTag("scrollbar", getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, "horizontal", PR_FALSE);
+  elementFactory->CreateInstanceByTag(nsAutoString("scrollbar"), getter_AddRefs(content));
+  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, nsAutoString("horizontal"), PR_FALSE);
   aAnonymousChildren.AppendElement(content);
 
   // create vertical scrollbar
   content = nsnull;
-  elementFactory->CreateInstanceByTag("scrollbar", getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, "vertical", PR_FALSE);
+  elementFactory->CreateInstanceByTag(nsAutoString("scrollbar"), getter_AddRefs(content));
+  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, nsAutoString("vertical"), PR_FALSE);
   aAnonymousChildren.AppendElement(content);
 
       // XXX For GFX never have scrollbars
@@ -828,7 +828,7 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
         nscoord x = 0;
         nscoord y = 0;
 
-        nsString value;
+        nsAutoString value;
         if (NS_CONTENT_ATTR_HAS_VALUE == hcontent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value))
         {
            PRInt32 error;
@@ -1044,12 +1044,12 @@ nsGfxScrollFrameInner::CalculateChildTotalSize(nsIFrame*            aKidFrame,
 void
 nsGfxScrollFrameInner::SetScrollbarVisibility(nsIFrame* aScrollbar, PRBool aVisible)
 {
-        nsString oldStyle = "";
+        nsAutoString oldStyle = "";
         nsCOMPtr<nsIContent> child;
         aScrollbar->GetContent(getter_AddRefs(child));
         child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, oldStyle);
 
-        nsString newStyle;
+        nsAutoString newStyle;
         if (aVisible)
           newStyle = "";
         else
@@ -1722,7 +1722,7 @@ nsGfxScrollFrameInner::SetAttribute(nsIFrame* aFrame, nsIAtom* aAtom, nscoord aS
       aFrame->GetContent(getter_AddRefs(content));
       char ch[100];
       sprintf(ch,"%d", aSize);
-      nsString newValue(ch);
+      nsAutoString newValue(ch);
       content->SetAttribute(kNameSpaceID_None, aAtom, newValue, aReflow);
       return PR_TRUE;
   }
@@ -1736,7 +1736,7 @@ nsGfxScrollFrameInner::GetIntegerAttribute(nsIFrame* aFrame, nsIAtom* atom, PRIn
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
 
-    nsString value;
+    nsAutoString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, atom, value))
     {
       PRInt32 error;
@@ -1880,7 +1880,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize)
     aFrame->GetContent(getter_AddRefs(content));
 
     PRInt32 error;
-    nsString value;
+    nsAutoString value;
 
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
     {

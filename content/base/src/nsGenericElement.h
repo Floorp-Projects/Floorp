@@ -22,6 +22,7 @@
 #ifndef nsGenericElement_h___
 #define nsGenericElement_h___
 
+#include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -32,6 +33,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsILinkHandler.h"
 #include "nsGenericDOMNodeList.h"
+#include "nsIEventListenerManager.h"
 
 extern const nsIID kIDOMNodeIID;
 extern const nsIID kIDOMElementIID;
@@ -44,7 +46,6 @@ extern const nsIID kIContentIID;
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
-class nsIEventListenerManager;
 class nsIFrame;
 class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
@@ -115,14 +116,12 @@ typedef struct {
   nsDOMAttributeMap* mAttributeMap;
   nsVoidArray *mRangeList;
   nsIContent* mCapturer;
+  nsIEventListenerManager* mListenerManager;
 } nsDOMSlots;
 
-class nsGenericElement : public nsIJSScriptObject {
+class nsGenericElement {
 public:
   nsGenericElement();
-#if 1
-  virtual       // XXX temporary until vidur fixes this up
-#endif
   ~nsGenericElement();
 
   void Init(nsIContent* aOuterContentObject, nsIAtom* aTag);
@@ -150,20 +149,6 @@ public:
   nsresult    GetElementsByTagName(const nsString& aTagname,
                                    nsIDOMNodeList** aReturn);
   nsresult    Normalize();
-
-  // nsIDOMEventReceiver interface
-  nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-  nsresult RemoveEventListenerByIID(nsIDOMEventListener* aListener,
-                               const nsIID& aIID);
-  nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
-  nsresult GetNewListenerManager(nsIEventListenerManager** aInstancePtrResult);
-  nsresult HandleEvent(nsIDOMEvent *aEvent);
-
-  // nsIDOMEventTarget interface
-  nsresult AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                            PRBool aUseCapture);
-  nsresult RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                               PRBool aUseCapture);
 
   // nsIScriptObjectOwner interface
   nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -223,6 +208,8 @@ public:
 
   //----------------------------------------
 
+  nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+
   nsresult RenderFrame(nsIPresContext*);
 
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
@@ -249,6 +236,7 @@ public:
   static nsIAtom* CutNameSpacePrefix(nsString& aString);
 
   nsDOMSlots *GetDOMSlots();
+  void MaybeClearDOMSlots();
 
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
@@ -256,10 +244,9 @@ public:
   // work.
   nsIContent* mContent;
 
-  nsIDocument* mDocument;
-  nsIContent* mParent;
+  nsIDocument* mDocument;                   // WEAK
+  nsIContent* mParent;                      // WEAK
   nsIAtom* mTag;
-  nsIEventListenerManager* mListenerManager;
   nsDOMSlots *mDOMSlots;
   PRUint32 mContentID;
 };
@@ -913,6 +900,37 @@ public:
     return _g.SetScriptObject(aScriptObject);            \
   }
 
+#define NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(_g)                       \
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(_g)                          \
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj,    \
+                        jsval aID, jsval *aVp) {                        \
+    return _g.AddProperty(aContext, aObj, aID, aVp);                    \
+  }                                                                     \
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, \
+                        jsval aID, jsval *aVp) {                        \
+    return _g.DeleteProperty(aContext, aObj, aID, aVp);                 \
+  }                                                                     \
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj,    \
+                        jsval aID, jsval *aVp) {                        \
+    return _g.GetProperty(aContext, aObj, aID, aVp);                    \
+  }                                                                     \
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj,    \
+                        jsval aID, jsval *aVp) {                        \
+    return _g.SetProperty(aContext, aObj, aID, aVp);                    \
+  }                                                                     \
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) { \
+    return _g.EnumerateProperty(aContext, aObj);                             \
+  }                                                                          \
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID) { \
+    return _g.EnumerateProperty(aContext, aObj);                              \
+  }                                                                           \
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) { \
+    return _g.EnumerateProperty(aContext, aObj);                              \
+  }                                                                           \
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj) {     \
+    _g.Finalize(aContext, aObj);                                        \
+  }
+
 #define NS_IMPL_CONTENT_QUERY_INTERFACE(_id, _iptr, _this, _base) \
   if (_id.Equals(kISupportsIID)) {                              \
     _base* tmp = _this;                                         \
@@ -934,16 +952,18 @@ public:
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIDOMEventReceiverIID)) {                      \
-    nsIDOMEventReceiver* tmp = _this;                           \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
+    nsCOMPtr<nsIEventListenerManager> man;                      \
+    if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){ \
+      return man->QueryInterface(kIDOMEventReceiverIID, (void**)_iptr); \
+    }                                                           \
+    return NS_NOINTERFACE;                                      \
   }                                                             \
   if (_id.Equals(kIDOMEventTargetIID)) {                        \
-    nsIDOMEventTarget* tmp = _this;                             \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
+    nsCOMPtr<nsIEventListenerManager> man;                      \
+    if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){ \
+      return man->QueryInterface(kIDOMEventTargetIID, (void**)_iptr); \
+    }                                                           \
+    return NS_NOINTERFACE;                                      \
   }                                                             \
   if (_id.Equals(kIScriptObjectOwnerIID)) {                     \
     nsIScriptObjectOwner* tmp = _this;                          \
@@ -959,7 +979,7 @@ public:
     return NS_OK;                                               \
   }                                                             \
   if (_id.Equals(kIJSScriptObjectIID)) {                        \
-    nsIJSScriptObject* tmp = (nsIJSScriptObject*)&mInner;       \
+    nsIJSScriptObject* tmp = _this;                             \
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \

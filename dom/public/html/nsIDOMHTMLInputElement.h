@@ -84,6 +84,7 @@ public:
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex)=0;
 
   NS_IMETHOD    GetType(nsString& aType)=0;
+  NS_IMETHOD    SetType(const nsString& aType)=0;
 
   NS_IMETHOD    GetUseMap(nsString& aUseMap)=0;
   NS_IMETHOD    SetUseMap(const nsString& aUseMap)=0;
@@ -135,6 +136,7 @@ public:
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex);  \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex);  \
   NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    SetType(const nsString& aType);  \
   NS_IMETHOD    GetUseMap(nsString& aUseMap);  \
   NS_IMETHOD    SetUseMap(const nsString& aUseMap);  \
   NS_IMETHOD    GetValue(nsString& aValue);  \
@@ -179,6 +181,7 @@ public:
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to GetTabIndex(aTabIndex); } \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
   NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
   NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to GetUseMap(aUseMap); } \
   NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to SetUseMap(aUseMap); } \
   NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \

@@ -32,8 +32,7 @@
 #include "nsIPresContext.h"
 
 class nsHTMLSpanElement : public nsIDOMHTMLElement,
-                          public nsIScriptObjectOwner,
-                          public nsIDOMEventReceiver,
+                          public nsIJSScriptObject,
                           public nsIHTMLContent
 {
 public:
@@ -52,11 +51,8 @@ public:
   // nsIDOMHTMLElement
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

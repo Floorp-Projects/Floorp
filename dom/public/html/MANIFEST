@@ -67,3 +67,5 @@ nsIDOMImage.h
 nsIDOMNSHTMLButtonElement.h
 nsIDOMNSHTMLDocument.h
 nsIDOMOption.h
+nsIDOMNSHTMLAnchorElement.h
+nsIDOMNSHTMLAreaElement.h

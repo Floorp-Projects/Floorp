@@ -41,8 +41,7 @@ static NS_DEFINE_IID(kIDOMHTMLLayerElementIID, NS_IDOMHTMLLAYERELEMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 
 class nsHTMLLayerElement : public nsIDOMHTMLLayerElement,
-                           public nsIScriptObjectOwner,
-                           public nsIDOMEventReceiver,
+                           public nsIJSScriptObject,
                            public nsIHTMLContent
 {
 public:
@@ -78,11 +77,8 @@ public:
   NS_IMETHOD    SetZIndex(PRInt32 aZIndex);
   NS_IMETHOD    GetDocument(nsIDOMDocument** aReturn);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

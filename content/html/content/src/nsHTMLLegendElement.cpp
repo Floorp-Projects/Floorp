@@ -40,8 +40,7 @@ static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 
 class nsHTMLLegendElement : public nsIDOMHTMLLegendElement,
-                            public nsIScriptObjectOwner,
-                            public nsIDOMEventReceiver,
+                            public nsIJSScriptObject,
                             public nsIHTMLContent,
                             public nsIFormControl
 {
@@ -68,11 +67,8 @@ public:
   NS_IMETHOD GetAlign(nsString& aAlign);
   NS_IMETHOD SetAlign(const nsString& aAlign);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)

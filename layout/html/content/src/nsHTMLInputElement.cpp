@@ -71,8 +71,7 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 class nsHTMLInputElement : public nsIDOMHTMLInputElement,
                            public nsIDOMNSHTMLInputElement,
-                           public nsIScriptObjectOwner,
-                           public nsIDOMEventReceiver,
+                           public nsIJSScriptObject,
                            public nsIHTMLContent,
                            public nsIFormControl,
                            public nsIFocusableContent,
@@ -163,6 +162,7 @@ public:
   NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
   NS_IMETHOD GetType(nsString& aType);
+  NS_IMETHOD SetType(const nsString& aType);
   NS_IMETHOD GetUseMap(nsString& aUseMap);
   NS_IMETHOD SetUseMap(const nsString& aUseMap);
   NS_IMETHOD GetValue(nsString& aValue);
@@ -178,11 +178,8 @@ public:
   // nsIDOMNSHTMLInputElement
   NS_DECL_IDOMNSHTMLINPUTELEMENT
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
@@ -411,14 +408,8 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Size, size)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
+NS_IMPL_STRING_ATTR(nsHTMLInputElement, Type, type)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
-
-NS_IMETHODIMP
-nsHTMLInputElement::GetType(nsString& aValue)
-{
-  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, aValue);
-  return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsHTMLInputElement::GetValue(nsString& aValue)
