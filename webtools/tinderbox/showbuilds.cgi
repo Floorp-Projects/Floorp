@@ -1000,7 +1000,7 @@ sub do_vxml {
 
   %state_symbols = (success=>'green',busted=>'red',testfailed=>'test failed');
 
-  print "<vxml><block><form>\n\n";
+  print "<vxml><form><block>\n\n";
 
   if (is_tree_state_available()) {
     print "<audio>$::tree is " .
@@ -1014,5 +1014,5 @@ sub do_vxml {
     print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>\n";
   }
   print "<pause>1000</pause><audio>adios</audio>\n\n";
-  print "</form></block></vxml>";
+  print '<goto next="_home"/>\n</block></form></vxml>';
 }
