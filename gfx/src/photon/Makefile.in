@@ -44,9 +44,6 @@ CPPSRCS		= \
 		nsRenderingContextPh.cpp \
 		$(NULL)
 
-# Force Debug on to make logging work
-DEFINES     += -DDEBUG
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(TK_CFLAGS)
