@@ -182,6 +182,26 @@ nsIFrameDebug::GetLogModuleInfo()
 }
 #endif
 
+NS_LAYOUT void
+nsIFrameDebug::RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
+{
+  if((nsnull == aPresContext) || (nsnull == out))
+    return;
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  if (nsnull != shell) {
+    nsIFrame* frame;
+    shell->GetRootFrame(&frame);
+    if(nsnull != frame) {
+      nsIFrameDebug* debugFrame;
+      nsresult rv;
+      rv = frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&debugFrame);
+      if(NS_SUCCEEDED(rv))
+        debugFrame->List(aPresContext, out, aIndent);
+    }
+  }
+}
 //----------------------------------------------------------------------
 
 nsresult
