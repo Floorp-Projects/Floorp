@@ -273,6 +273,37 @@ pref("font.min-size.fixed.zh-CN", 10);
 pref("font.min-size.variable.zh-TW", 10);
 pref("font.min-size.fixed.zh-TW", 10);
 
+// X11 specific
+/* X11 font accept/reject patterns:
+ * Patterns have to match against strings like this:
+ * (boolean values can only be "true" or "false")
+ * "fname=.*;scalable=.*;outline_scaled=.*;xdisplay=.*;xdpy=%d;ydpy=%d;xdevice=.*"
+ * - fname     = X11 font name (string)
+ * - scalable  = is font scalable ? (boolean)
+ * - outline_scaled = is font an outline scaled font ? (boolean)
+ * - xdisplay  = X11 display name (like "host:0.0" (string)
+ * - xdpy      = X DPI (X screen resolution) (integer)
+ * - ydpy      = Y DPI (Y screen resolution) (integer)
+ * - xdevice   = "display" or "printer" (Xprint)
+ * Patterns use  the regular expressions described in the EXTENDED REGULAR
+ * EXPRESSIONS section of the regex(5) manual page.
+ * Note that prefs strings can always be concatenated via the '+'-operator,
+ * e.g. pref("font.x11.acceptfontpattern", "pattern1|" + 
+ *                                         "pattern2|" +
+ *                                         "pattern3");
+ */
+/* reject font if accept pattern does not match it... */
+pref("font.x11.acceptfontpattern", ".*");
+/* reject font if reject pattern matches it... */
+pref("font.x11.rejectfontpattern", 
+     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
+
+/* reject font if accept pattern does not match it... */
+pref("printer.font.xprint.acceptfontpattern", ".*");
+/* reject font if reject pattern matches it... */
+pref("printer.font.xprint.rejectfontpattern", 
+     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
+
 // ps font
 // this list is used by the postscript font
 // to enumerate the list of langGroups

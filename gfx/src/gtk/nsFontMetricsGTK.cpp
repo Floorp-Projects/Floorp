@@ -20,7 +20,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com> 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Brian Stell <bstell@ix.netcom.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,6 +39,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define ENABLE_X_FONT_BANNING 1
+
+#include <sys/types.h>
 #include "nscore.h"
 #include "nsQuickSort.h"
 #include "nsFontMetricsGTK.h"
@@ -55,12 +60,25 @@
 #include "nsXFontNormal.h"
 #include "nsX11AlphaBlend.h"
 #include "nsXFontAAScaledBitmap.h"
-
-#include <gdk/gdk.h>
+#ifdef ENABLE_X_FONT_BANNING
+#include <regex.h>
+#endif /* ENABLE_X_FONT_BANNING */
 
 #include <X11/Xatom.h>
+#include <gdk/gdk.h>
 
 #define UCS2_NOMAPPING 0XFFFD
+
+#ifdef PR_LOGGING 
+static PRLogModuleInfo * FontMetricsGTKLM = PR_NewLogModule("FontMetricsGTK");
+#endif /* PR_LOGGING */
+
+#ifdef ENABLE_X_FONT_BANNING
+/* Not all platforms may have REG_OK */
+#ifndef REG_OK
+#define REG_OK (0)
+#endif /* !REG_OK */
+#endif /* ENABLE_X_FONT_BANNING */
 
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
@@ -77,6 +95,7 @@
 #define NS_FONT_DEBUG_FIND_FONT   0x04
 #define NS_FONT_DEBUG_SIZE_FONT   0x08
 #define NS_FONT_DEBUG_SCALED_FONT 0x10
+#define NS_FONT_DEBUG_BANNED_FONT 0x20
 static PRUint32 gDebug = 0;
 
 #define DEBUG_PRINTF_MACRO(x, type) \
@@ -106,6 +125,8 @@ static PRUint32 gDebug = 0;
 
 #define SCALED_FONT_PRINTF(x) \
          DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_SCALED_FONT)
+#define BANNED_FONT_PRINTF(x) \
+         DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_BANNED_FONT)
 
 struct nsFontCharSetMap;
 struct nsFontFamilyName;
@@ -262,7 +283,10 @@ static double  gAABitmapUndersize = 0.9;
 static PRInt32 gBitmapScaleMinimum = 10;
 static double  gBitmapOversize = 1.2;
 static double  gBitmapUndersize = 0.8;
-
+#ifdef ENABLE_X_FONT_BANNING
+static regex_t *gFontRejectRegEx = nsnull,
+               *gFontAcceptRegEx = nsnull;
+#endif /* ENABLE_X_FONT_BANNING */
 static gint SingleByteConvert(nsFontCharSetInfo* aSelf, XFontStruct* aFont,
   const PRUnichar* aSrcBuf, PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen);
 static gint DoubleByteConvert(nsFontCharSetInfo* aSelf, XFontStruct* aFont,
@@ -735,6 +759,19 @@ FreeGlobals(void)
 
   gInitialized = 0;
 
+#ifdef ENABLE_X_FONT_BANNING
+  if (gFontRejectRegEx) {
+    regfree(gFontRejectRegEx);
+    delete gFontRejectRegEx;
+    gFontRejectRegEx = nsnull;
+  }
+  
+  if (gFontAcceptRegEx) {
+    regfree(gFontAcceptRegEx);
+    delete gFontAcceptRegEx;
+    gFontAcceptRegEx = nsnull;
+  }  
+#endif /* ENABLE_X_FONT_BANNING */
   nsXFontAAScaledBitmap::FreeGlobals();
   nsX11AlphaBlendFreeGlobals();
 
@@ -1039,6 +1076,50 @@ InitGlobals(void)
       gAABitmapScaleEnabled = nsXFontAAScaledBitmap::InitGlobals(GDK_DISPLAY(),
                                      DefaultScreen(GDK_DISPLAY()));
   }
+  
+#ifdef ENABLE_X_FONT_BANNING
+  /* get the font banning pattern */
+  nsXPIDLCString fbpattern;
+  rv = gPref->GetCharPref("font.x11.rejectfontpattern", getter_Copies(fbpattern));
+  if (NS_SUCCEEDED(rv)) {
+    gFontRejectRegEx = new regex_t;
+    if (!gFontRejectRegEx) {
+      FreeGlobals();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    /* Compile the pattern - and return an error if we get an invalid pattern... */
+    if (regcomp(gFontRejectRegEx, fbpattern.get(), REG_EXTENDED|REG_NOSUB) != REG_OK) {
+      PR_LOG(FontMetricsGTKLM, PR_LOG_DEBUG, ("Invalid rejectfontpattern '%s'\n", fbpattern.get()));
+      BANNED_FONT_PRINTF(("Invalid font.x11.rejectfontpattern '%s'", fbpattern.get()));
+      delete gFontRejectRegEx;
+      gFontRejectRegEx = nsnull;
+      
+      FreeGlobals();
+      return NS_ERROR_INVALID_ARG;
+    }    
+  }
+
+  rv = gPref->GetCharPref("font.x11.acceptfontpattern", getter_Copies(fbpattern));
+  if (NS_SUCCEEDED(rv)) {
+    gFontAcceptRegEx = new regex_t;
+    if (!gFontAcceptRegEx) {
+      FreeGlobals();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    /* Compile the pattern - and return an error if we get an invalid pattern... */
+    if (regcomp(gFontAcceptRegEx, fbpattern.get(), REG_EXTENDED|REG_NOSUB) != REG_OK) {
+      PR_LOG(FontMetricsGTKLM, PR_LOG_DEBUG, ("Invalid acceptfontpattern '%s'\n", fbpattern.get()));
+      BANNED_FONT_PRINTF(("Invalid font.x11.acceptfontpattern '%s'", fbpattern.get()));
+      delete gFontAcceptRegEx;
+      gFontAcceptRegEx = nsnull;
+      
+      FreeGlobals();
+      return NS_ERROR_INVALID_ARG;
+    }    
+  }
+#endif /* ENABLE_X_FONT_BANNING */
 
   gInitialized = 1;
 
@@ -1808,7 +1889,8 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
            *
            * Now, single byte documents find these special chars before
            * the CJK fonts are searched so this is no longer needed
-           * and should be removed, as requested in bug 100233
+           * but is useful when trying to determine which font(s) the
+           * special chars are found in.
            */
           if ((aSelf->Convert == DoubleByteConvert) 
               && (!gAllowDoubleByteSpecialChars)) {
@@ -3435,7 +3517,21 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
   else {
     node_hash = gFFRENodes;
   }
-
+  
+#ifdef ENABLE_X_FONT_BANNING
+  int  screen_xres,
+       screen_yres;
+  /* Get Xserver DPI. 
+   * We cannot use Mozilla's API here because it may "override" the DPI
+   * got from the Xserver via prefs. But we want to filter ("ban") fonts
+   * we get from the Xserver which _it_(=Xserver) has "choosen" for us
+   * using its DPI value ...
+   */
+  screen_xres = int((float(::gdk_screen_width())  / (float(::gdk_screen_width_mm())  / 25.4f)) + 0.5f);
+  screen_yres = int((float(::gdk_screen_height()) / (float(::gdk_screen_height_mm()) / 25.4f)) + 0.5f);
+#endif /* ENABLE_X_FONT_BANNING */
+      
+  BANNED_FONT_PRINTF(("Loading font '%s'", aPattern));
   /*
    * We do not use XListFontsWithInfo here, because it is very expensive.
    * Instead, we get that info at the time when we actually load the font.
@@ -3446,10 +3542,13 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
     return;
   }
   for (int i = 0; i < count; i++) {
-    char* name = list[i];
+    char name[256]; /* X11 font names are never larger than 255 chars */
+    strcpy(name, list[i]);
+ 
     if ((!name) || (name[0] != '-')) {
       continue;
     }
+    
     char buf[512];
     PL_strncpyz(buf, name, sizeof(buf));
     char *fName = buf;
@@ -3550,18 +3649,56 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
  * implemented. See http://bugzilla.mozilla.org/show_bug.cgi?id=94327#c34
  * for additional comments...
  */      
-#ifndef ENABLE_X_FONT_BANNING
+#ifndef DISABLE_WORKAROUND_FOR_BUG_103159
       // skip 'mysterious' and 'spurious' cases like
       // -adobe-times-medium-r-normal--17-120-100-100-p-0-iso8859-9
       if ((pixelSize[0] != '0' || pointSize[0] != 0) && 
-          (outline_scaled == PR_FALSE) )
+          (outline_scaled == PR_FALSE)) {
+        PR_LOG(FontMetricsGTKLM, PR_LOG_DEBUG, ("rejecting font '%s' (via hardcoded workaround for bug 103159)\n", list[i]));
+        BANNED_FONT_PRINTF(("rejecting font '%s' (via hardcoded workaround for bug 103159)", list[i]));          
         continue;
-#endif /* ENABLE_X_FONT_BANNING */  
+      }  
+#endif /* DISABLE_WORKAROUND_FOR_BUG_103159 */
     }
     char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
     if (!*charSetName) {
       continue;
     }
+
+#ifdef ENABLE_X_FONT_BANNING
+#define BOOL2STR(b) ((b)?("true"):("false"))    
+    if (gFontRejectRegEx || gFontAcceptRegEx) {
+      char fmatchbuf[512]; /* See sprintf() below. */
+           
+      sprintf(fmatchbuf, "fname=%s;scalable=%s;outline_scaled=%s;xdisplay=%s;xdpy=%d;ydpy=%d;xdevice=%s",
+              list[i], /* full font name */
+              BOOL2STR(scalable), 
+              BOOL2STR(outline_scaled),
+              XDisplayString(GDK_DISPLAY()),
+              screen_xres,
+              screen_yres,
+              "display" /* Xlib gfx supports other devices like "printer", too - DO NOT REMOVE! */
+              );
+#undef BOOL2STR
+                  
+      if (gFontRejectRegEx) {
+        /* reject font if reject pattern matches it... */        
+        if (regexec(gFontRejectRegEx, fmatchbuf, 0, nsnull, 0) == REG_OK) {
+          PR_LOG(FontMetricsGTKLM, PR_LOG_DEBUG, ("rejecting font '%s' (via reject pattern)\n", fmatchbuf));
+          BANNED_FONT_PRINTF(("rejecting font '%s' (via reject pattern)", fmatchbuf));
+          continue;
+        }  
+      }
+
+      if (gFontAcceptRegEx) {
+        if (regexec(gFontAcceptRegEx, fmatchbuf, 0, nsnull, 0) == REG_NOMATCH) {
+          PR_LOG(FontMetricsGTKLM, PR_LOG_DEBUG, ("rejecting font '%s' (via accept pattern)\n", fmatchbuf));
+          BANNED_FONT_PRINTF(("rejecting font '%s' (via accept pattern)", fmatchbuf));
+          continue;
+        }
+      }       
+    }    
+#endif /* ENABLE_X_FONT_BANNING */    
     nsCStringKey charSetKey(charSetName);
     nsFontCharSetMap* charSetMap =
       (nsFontCharSetMap*) gCharSetMaps->Get(&charSetKey);
