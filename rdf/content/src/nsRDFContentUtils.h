@@ -81,6 +81,9 @@ public:
 
     static PRBool
     IsContainedBy(nsIContent* aElement, nsIContent* aContainer);
+
+    static nsresult
+    GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult);
 };
 
 

@@ -68,6 +68,7 @@ static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
 static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
+static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
@@ -557,3 +558,43 @@ nsRDFContentUtils::IsContainedBy(nsIContent* aElement, nsIContent* aContainer)
     return PR_FALSE;
 }
 
+
+nsresult
+nsRDFContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult)
+{
+    NS_PRECONDITION(aAttribute != nsnull, "null ptr");
+    if (! aAttribute)
+        return NS_ERROR_NULL_POINTER;
+
+    // XXX should we allow nodes with no namespace???
+    NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "no namespace");
+    if (aNameSpaceID == kNameSpaceID_Unknown)
+        return NS_ERROR_UNEXPECTED;
+
+    nsresult rv;
+
+    // construct a fully-qualified URI from the namespace/tag pair.
+    NS_WITH_SERVICE(nsINameSpaceManager, nsmgr, kNameSpaceManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString uri;
+    rv = nsmgr->GetNameSpaceURI(aNameSpaceID, uri);
+    // XXX ignore failure; treat as "no namespace"
+
+    // XXX check to see if we need to insert a '/' or a '#'
+    nsAutoString attr;
+    aAttribute->ToString(attr);
+    if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && attr.First() != '#')
+        uri.Append('#');
+
+    uri.Append(attr);
+
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdf->GetResource(nsCAutoString(uri), aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
