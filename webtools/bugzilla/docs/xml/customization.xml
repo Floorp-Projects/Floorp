@@ -98,7 +98,7 @@
           If you are making template changes that you intend on submitting back
           for inclusion in standard Bugzilla, you should read the relevant
           sections of the 
-          <ulink url="http://www.bugzilla.org/developerguide.html">Developers'
+          <ulink url="http://www.bugzilla.org/docs/developer.html">Developers'
           Guide</ulink>.
         </para>
       </note>
