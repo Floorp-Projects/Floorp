@@ -51,8 +51,7 @@ public:
   nsEventQueueServiceImpl();
   virtual ~nsEventQueueServiceImpl();
 
-  static NS_METHOD
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  nsresult Init();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS

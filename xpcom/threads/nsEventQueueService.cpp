@@ -104,17 +104,19 @@ nsEventQueueServiceImpl::~nsEventQueueServiceImpl()
   PR_DestroyMonitor(mEventQMonitor);
 }
 
-NS_METHOD
-nsEventQueueServiceImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsresult
+nsEventQueueServiceImpl::Init()
 {
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-  nsEventQueueServiceImpl* eqs = new nsEventQueueServiceImpl();
-  if (eqs == NULL)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(eqs);
-  nsresult rv = eqs->QueryInterface(aIID, aResult);
-  NS_RELEASE(eqs);
+  // ensure that a main thread event queue exists!
+  nsresult rv;
+  nsCOMPtr<nsIThread> mainThread;
+  rv = nsIThread::GetMainThread(getter_AddRefs(mainThread));
+  if (NS_SUCCEEDED(rv)) {
+    PRThread *thr;
+    rv = mainThread->GetPRThread(&thr);
+    if (NS_SUCCEEDED(rv))
+      rv = CreateEventQueue(thr, PR_TRUE);
+  }
   return rv;
 }
 
