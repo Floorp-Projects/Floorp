@@ -296,6 +296,11 @@ fi
 if test "`echo | $LD -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_LD=1
 fi
+if test "$GNU_CC"; then
+    if `$CC -print-prog-name=ld` -v 2>&1 | grep -c GNU >/dev/null; then
+        GCC_USE_GNU_LD=1
+    fi
+fi
 
 dnl Special win32 checks
 dnl ========================================================
@@ -1481,11 +1486,13 @@ case "$target" in
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
     *-solaris*)
-        if test -z "$GNU_LD"; then
-         if test -z "$GNU_CC"; then
-          MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-M $(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
-         else
+        if test -z "$GNU_CC"; then
+         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-M $(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
+        else
+         if test -z "$GCC_USE_GNU_LD"; then
           MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-M -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-mapfile'
+         else
+          MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
          fi
         fi
         ;;
