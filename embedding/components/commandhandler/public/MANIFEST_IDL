@@ -1,0 +1,3 @@
+nsICommandManager.idl
+nsPICommandUpdater.idl
+nsICommandParams.idl

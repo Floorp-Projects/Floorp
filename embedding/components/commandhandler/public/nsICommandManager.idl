@@ -100,8 +100,7 @@ interface nsICommandManager : nsISupports
    * On output: aCommandParams: values set by the caller filled in with
    * state from the command.
    */
-  void        getCommandState(in DOMString aCommandName,
-                              inout nsICommandParams aCommandParams);
+  void        getCommandState(in nsICommandParams aCommandParams);
     
   /*
    * Execute the specified command.
@@ -110,7 +109,7 @@ interface nsICommandManager : nsISupports
    * may be null for parameter-less commands.
    *
    */
-  void        doCommand(in DOMString aCommandName, in nsICommandParams aCommandParams);
+  void        doCommand(in nsICommandParams aCommandParams);
 
 };
 
@@ -120,9 +119,19 @@ interface nsICommandManager : nsISupports
 Arguments to observers "Observe" method are as follows:
 
   void Observe(   in nsISupports aSubject,          // The nsICommandManager calling this Observer
-                  in wstring     aTopic,            // Name of the command whose state changed
-                  in wstring     aDummy );          // Unused string
+                  in string      aTopic,            // Unused
+                  in wstring     aDummy );          // Name of the command
 
 */
+
+// {64edb481-0c04-11d5-a73c-e964b968b0bc}
+%{C++
+#define NS_COMMAND_MANAGER_CID \
+{ 0x64edb481, 0x0c04, 0x11d5, { 0xa7, 0x3c, 0xe9, 0x64, 0xb9, 0x68, 0xb0, 0xbc } }
+
+#define NS_COMMAND_MANAGER_CONTRACTID \
+ "@mozilla.org/embedcomp/command-manager;1"
+%}
+
 
 

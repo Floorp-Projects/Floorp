@@ -64,16 +64,14 @@ NS_IMPL_ISUPPORTS2(nsControllerCommandManager, nsIControllerCommandManager, nsIS
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::RegisterCommand(const nsAReadableString & aCommandName, nsIControllerCommand *aCommand)
+nsControllerCommandManager::RegisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
 {
   nsStringKey commandKey(aCommandName);
   
   if (mCommandsTable.Put (&commandKey, aCommand))
   {
 #if DEBUG
-    nsCAutoString msg("Replacing existing command -- ");
-    msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING("Replacing existing command -- ");
 #endif
   }  
   return NS_OK;
@@ -81,7 +79,7 @@ nsControllerCommandManager::RegisterCommand(const nsAReadableString & aCommandNa
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::UnregisterCommand(const nsAReadableString & aCommandName, nsIControllerCommand *aCommand)
+nsControllerCommandManager::UnregisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
 {
   nsStringKey commandKey(aCommandName);
 
@@ -91,7 +89,7 @@ nsControllerCommandManager::UnregisterCommand(const nsAReadableString & aCommand
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::FindCommandHandler(const nsAReadableString & aCommandName, nsIControllerCommand **outCommand)
+nsControllerCommandManager::FindCommandHandler(const nsAString & aCommandName, nsIControllerCommand **outCommand)
 {
   NS_ENSURE_ARG_POINTER(outCommand);
   
@@ -109,7 +107,7 @@ nsControllerCommandManager::FindCommandHandler(const nsAReadableString & aComman
 
 /* boolean isCommandEnabled (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandManager::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandManager::IsCommandEnabled(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -118,12 +116,10 @@ nsControllerCommandManager::IsCommandEnabled(const nsAReadableString & aCommandN
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
   FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));  
-  if (!commandHandler)
+  if (!commandHandler) 
   {
 #if DEBUG
-    nsCAutoString msg("Controller command manager asked about a command that it does not handle -- ");
-    msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING("Controller command manager asked about a command that it does not handle -- ");
 #endif
     return NS_OK;    // we don't handle this command
   }
@@ -133,7 +129,7 @@ nsControllerCommandManager::IsCommandEnabled(const nsAReadableString & aCommandN
 
 
 NS_IMETHODIMP
-nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon)
+nsControllerCommandManager::UpdateCommandState(const nsAString & aCommandName, nsISupports *aCommandRefCon)
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
@@ -141,9 +137,7 @@ nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aComman
   if (!commandHandler)
   {
 #if DEBUG
-    nsCAutoString msg("Controller command manager asked to update the state of a command that it does not handle -- ");
-    msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING("Controller command manager asked to update the state of a command that it does not handle -- ");
 #endif
     return NS_OK;    // we don't handle this command
   }
@@ -152,9 +146,7 @@ nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aComman
   if (!stateCommand)
   {
 #if DEBUG
-    nsCAutoString msg("Controller command manager asked to update the state of a command that doesn't do state updating -- ");
-    msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING("Controller command manager asked to update the state of a command that doesn't do state updating -- ");
 #endif
     return NS_ERROR_NO_INTERFACE;
   }
@@ -163,7 +155,7 @@ nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aComman
 }
 
 NS_IMETHODIMP
-nsControllerCommandManager::SupportsCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+nsControllerCommandManager::SupportsCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -181,7 +173,7 @@ nsControllerCommandManager::SupportsCommand(const nsAReadableString & aCommandNa
 
 /* void doCommand (in wstring command); */
 NS_IMETHODIMP
-nsControllerCommandManager::DoCommand(const nsAReadableString & aCommandName, nsISupports *aCommandRefCon)
+nsControllerCommandManager::DoCommand(const nsAString & aCommandName, nsISupports *aCommandRefCon)
 {
   // find the command  
   nsCOMPtr<nsIControllerCommand> commandHandler;
@@ -189,14 +181,59 @@ nsControllerCommandManager::DoCommand(const nsAReadableString & aCommandName, ns
   if (!commandHandler)
   {
 #if DEBUG
-    nsCAutoString msg("Controller command manager asked to do a command that it does not handle -- ");
-    msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING("Controller command manager asked to do a command that it does not handle -- ");
 #endif
     return NS_OK;    // we don't handle this command
   }
   
   return commandHandler->DoCommand(aCommandName, aCommandRefCon);
+}
+
+#define COMMAND_NAME NS_ConvertASCIItoUCS2("cmd_name")
+
+NS_IMETHODIMP
+nsControllerCommandManager::DoCommandParams(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+  nsAutoString tValue;
+  nsresult rv;
+  if (NS_SUCCEEDED(rv = aParams->GetStringValue(COMMAND_NAME,tValue)))
+  {
+    FindCommandHandler(tValue, getter_AddRefs(commandHandler));
+    if (!commandHandler)
+    {
+  #if DEBUG
+      NS_WARNING("Controller command manager asked to do a command that it does not handle -- ");
+  #endif
+      return NS_OK;    // we don't handle this command
+    }
+    return commandHandler->DoCommandParams(aParams, aCommandRefCon);
+  }  
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsControllerCommandManager::GetCommandState(nsICommandParams *aParams, nsISupports *aCommandRefCon)
+{
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+  nsAutoString tValue;
+  nsresult rv;
+  if (NS_SUCCEEDED(rv = aParams->GetStringValue(COMMAND_NAME,tValue)))
+  {
+    FindCommandHandler(tValue, getter_AddRefs(commandHandler));
+    if (!commandHandler)
+    {
+  #if DEBUG
+      NS_WARNING("Controller command manager asked to do a command that it does not handle -- ");
+  #endif
+      return NS_OK;    // we don't handle this command
+    }
+    return commandHandler->GetCommandState(aParams, aCommandRefCon);
+  }  
+  return rv;
 }
 
 
