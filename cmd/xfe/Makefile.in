@@ -839,7 +839,7 @@ HPUX_RESOURCE_HACK	= -Wp,-H16384
 
 OTHER_LIBS	= $(HPUX_XLIBS) -lXm -L$(DIST)/lib -lXmu -lXt -lX11 -lXext $(OS_LIBS)
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 
 ifdef NS_USE_GCC
 CCLD          = $(CCC)
@@ -1024,7 +1024,7 @@ ifndef NO_WEBFONTS
 EXTRA_REL_FILES += $(WEBFONT_DSO)
 endif
 
-ifndef NO_EDITOR
+ifdef MOZ_EDITOR
 OTHER_LIBS	+= -L$(NS_LIB)
 
 #
