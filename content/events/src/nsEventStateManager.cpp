@@ -2278,6 +2278,27 @@ nsEventStateManager::SetFocusedContent(nsIContent* aContent)
   return NS_OK;
 }
 
+//-------------------------------------------
+// Access Key Registration
+//-------------------------------------------
+NS_IMETHODIMP
+nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, PRUint32 aKey)
+{
+#ifdef DEBUG_rods
+  printf("Obj: %p Registered %d [%c]accesskey\n", aFrame, aKey, (char)aKey);
+#endif
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame)
+{
+#ifdef DEBUG_rods
+  printf("Obj: %p Unregistered accesskey\n", aFrame);
+#endif
+  return NS_ERROR_FAILURE;
+}
+
 #ifndef USE_FOCUS_FOR_MOUSEWHEEL
 
 nsIFrame*
