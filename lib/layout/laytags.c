@@ -4168,6 +4168,13 @@ lo_LayoutTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
     XP_Bool started_in_head=FALSE;
 	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(context);
 
+	/* HACK: Do not layout any tags except the META tag for the dummy context of 
+	   type MWContextRDFSlave. */
+	if (context && context->type == MWContextRDFSlave && tag &&
+		tag->type != P_HEAD &&
+		tag->type != P_META)
+		return;
+
 	XP_ASSERT(state);
 
     if(state->top_state)
