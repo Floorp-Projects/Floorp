@@ -637,11 +637,11 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
     [mTimeLeftLabel setStringValue:[self formatFuzzyTime:secToGo]];
   }
   else if (!downloadTimer) {  // download done.  Set remaining time to 0, fix progress bar & cancel button
+    mDownloadIsComplete = YES;	// all done.
     [mTimeLeftLabel setStringValue:@""];
     [self setProgressBar:aCurrentProgress maxProg:aCurrentProgress];
     if (!mSaveFileDialogShouldStayOpen)
       [[self window] performClose:self];	//close window
-    mDownloadIsComplete = YES;	// all done.
     [[self window] update];	//redraw window
   }
   else //maxBytes is undetermined.  Set remaining time to question marks.
