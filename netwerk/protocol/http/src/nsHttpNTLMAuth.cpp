@@ -110,6 +110,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
         if (NS_FAILED(rv))
             return rv;
 
+        inBufLen = 0;
         inBuf = nsnull;
     }
     else {

@@ -768,7 +768,7 @@ des_encrypt(const PRUint8 *key, const PRUint8 *src, PRUint8 *hash)
   PK11SlotInfo *slot = nsnull;
   PK11SymKey *symkey = nsnull;
   PK11Context *ctxt = nsnull;
-  SECItem keyItem, *param;
+  SECItem keyItem, *param = nsnull;
   SECStatus rv;
   unsigned int n;
   
