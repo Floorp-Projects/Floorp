@@ -1238,6 +1238,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_instruction:
       result=WriteTag(mPITag,aToken->GetStringValue(),0,aToken->IsInError());
+      break;
 
     default:
       result=NS_OK;
