@@ -1937,7 +1937,7 @@ char *VCARD_URL = {"resource:/chrome/messenger/content/default/vcard_en.properti
 
 extern "C" 
 char *
-VCardGetStringByIDREAL(PRInt32 stringID)
+VCardGetStringByID(PRInt32 stringID)
 {
   nsresult    res = NS_OK;
   char*       propertyURL;
@@ -2029,7 +2029,7 @@ VCardGetStringByIDREAL(PRInt32 stringID)
 
 extern "C" 
 char *
-VCardGetStringByID(PRInt32 stringID)
+VCardGetStringByIDHACK(PRInt32 stringID)
 {
   if (-1000 == stringID) return PL_strdup("Application is out of memory.");
   if (1001 == stringID) return PL_strdup("State");

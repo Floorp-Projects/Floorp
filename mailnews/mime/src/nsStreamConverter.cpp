@@ -442,7 +442,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	// the following output channel stream is used to fake the content type for people who later
 	// call into us..
 	NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-	rv = netService->NewInputStreamChannel(aURI, mOutputFormat, nsnull, getter_AddRefs(mOutgoingChannel));
+	rv = netService->NewInputStreamChannel(aURI, mOutputFormat, nsnull, nsnull, getter_AddRefs(mOutgoingChannel));
 	
 	// We will first find an appropriate emitter in the repository that supports 
 	// the requested output format...note, the special exceptions are nsMimeMessageDraftOrTemplate
