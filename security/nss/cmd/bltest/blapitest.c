@@ -71,7 +71,7 @@ static void Usage()
 	PRINTUSAGE("",      "-k", "file which contains key.");
 	PRINTUSAGE("",      "-v", "file which contains initialization vector.");
 	PRINTUSAGE("",      "-b", "size of input buffer.");
-	PRINTUSAGE("",      "-g", "key size.");
+	PRINTUSAGE("",      "-g", "key size (in bytes).");
 	PRINTUSAGE("",      "-p", "do performance test.");
 	PRINTUSAGE("(rsa)", "-e", "rsa public exponent.");
 	PRINTUSAGE("(rc5)", "-r", "number of rounds.");
@@ -565,7 +565,7 @@ rc2_ecb_test(blapitestInfo *info)
 	PRIntervalTime time1, time2;
 	int i, numiter;
 	numiter = info->repetitions;
-	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
+	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	rc2cx = RC2_CreateContext(info->key.data, info->key.len, NULL, 
 	                          NSS_RC2, info->key.len);
@@ -603,7 +603,7 @@ rc2_cbc_test(blapitestInfo *info)
 	PRIntervalTime time1, time2;
 	int i, numiter;
 	numiter = info->repetitions;
-	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
+	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, info->bufsize, "tmp.iv");
 	rc2cx = RC2_CreateContext(info->key.data, info->key.len, info->iv.data, 
@@ -668,7 +668,7 @@ rc4_test(blapitestInfo *info)
 	PRIntervalTime time1, time2;
 	int i, numiter;
 	numiter = info->repetitions;
-	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
+	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	rc4cx = RC4_CreateContext(info->key.data, info->key.len);
 	if (!rc4cx) {
@@ -729,7 +729,7 @@ rc5_ecb_test(blapitestInfo *info)
 	PRIntervalTime time1, time2;
 	int i, numiter;
 	numiter = info->repetitions;
-	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
+	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
 	                          NULL, NSS_RC5);
@@ -773,7 +773,7 @@ rc5_cbc_test(blapitestInfo *info)
 	PRIntervalTime time1, time2;
 	int i, numiter;
 	numiter = info->repetitions;
-	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
+	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, info->bufsize, "tmp.iv");
 	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
@@ -1247,7 +1247,7 @@ int main(int argc, char **argv)
 
 	PORT_Memset(&info, 0, sizeof(info));
 	info.bufsize = 8;
-	info.keysize = 8;
+	info.keysize = DES_KEY_LENGTH;
 	info.rsapubexp = 17;
 	info.rounds = 10;
 	info.wordsize = 4;
