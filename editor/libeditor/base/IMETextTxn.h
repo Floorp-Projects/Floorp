@@ -74,14 +74,14 @@ public:
   /** initialize the transaction
     * @param aElement the text content node
     * @param aOffset  the location in aElement to do the insertion
-	* @param aReplaceLength the length of text to replace (0= no replacement)
+    * @param aReplaceLength the length of text to replace (0 == no replacement)
     * @param aString  the new text to insert
     * @param aSelCon used to get and set the selection
     */
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
                   PRUint32 aOffset,
-				  PRUint32 aReplaceLength,
-				  nsIPrivateTextRangeList* aTextRangeList,
+                  PRUint32 aReplaceLength,
+                  nsIPrivateTextRangeList* aTextRangeList,
                   const nsAString& aString,
                   nsWeakPtr aSelCon);
 
