@@ -46,6 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = downloadmanager
 LIBRARY_NAME  = downloadmanager_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES  = xpcom \
             string \
             rdf \

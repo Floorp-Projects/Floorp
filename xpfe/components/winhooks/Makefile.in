@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= appcomps
 XPIDL_MODULE	= winhooks
 LIBRARY_NAME	= winhooks_s
+MOZILLA_INTERNAL_API = 1
 
 XPIDLSRCS	= nsIWindowsHooks.idl
 

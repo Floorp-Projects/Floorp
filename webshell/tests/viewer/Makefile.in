@@ -45,6 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 DIRS			:= public
 
 MODULE			= webshell_tests
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  embed_base \

@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webshell_tests
 LIBRARY_NAME	= viewer_gtk_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  webbrwsr \
