@@ -30,7 +30,7 @@ function chooseApp()
     var windowTitle = gBundle.GetStringFromName("chooseHandler");
     var programsFilter = gBundle.GetStringFromName("programsFilter");
     filePicker.init(window, windowTitle, FP.modeOpen);
-    if (navigator.platform == "Windows")
+    if (navigator.platform == "Win32")
       filePicker.appendFilter(programsFilter, "*.exe; *.com");
     else
       filePicker.appendFilters(FP.filterAll);
