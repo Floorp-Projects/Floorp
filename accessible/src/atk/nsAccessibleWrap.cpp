@@ -213,6 +213,15 @@ nsAccessibleWrap::~nsAccessibleWrap()
     }
 }
 
+NS_IMETHODIMP nsAccessibleWrap::GetExtState(PRUint32 *aState)
+{
+    PRUint32 state;
+    nsAccessible::GetState(&state);
+    if (!(state & STATE_INVISIBLE))
+      *aState |= STATE_SHOWING;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
     *aOutAccessible = nsnull;
@@ -501,8 +510,10 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, void *aAtkStateSet)
     if (aState & nsIAccessible::STATE_MULTISELECTABLE)
         atk_state_set_add_state (state_set, ATK_STATE_MULTISELECTABLE);
 
-    if (!(aState & nsIAccessible::STATE_UNAVAILABLE))
+    if (!(aState & nsIAccessible::STATE_UNAVAILABLE)) {
         atk_state_set_add_state (state_set, ATK_STATE_ENABLED);
+        atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
+    }
 
     // The following state is
     // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
@@ -890,12 +901,12 @@ refStateSetCB(AtkObject *aAtkObj)
     nsresult rv = accWrap->GetState(&accState);
     NS_ENSURE_SUCCESS(rv, state_set);
 
-    if (accState == 0) {
-        nsresult rv = accWrap->GetExtState(&accState);
-        //NS_ENSURE_SUCCESS(rv, state_set);
-        if (accState == 0)
-            return state_set;
-    }
+    rv = accWrap->GetExtState(&accState);
+    NS_ENSURE_SUCCESS(rv, state_set);
+
+    if (accState == 0)
+      return state_set;
+
     nsAccessibleWrap::TranslateStates(accState, state_set);
     return state_set;
 }

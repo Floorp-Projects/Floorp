@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLFormControlAccessibleWrap.h"
+#include "nsIDOMHTMLInputElement.h"
 #include "nsIFrame.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTextFieldAccessibleWrap, nsHTMLTextFieldAccessible, nsIAccessibleText, nsIAccessibleEditableText)
@@ -58,6 +59,19 @@ nsHTMLTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
       SetEditor(editor);
     }
   }
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::GetExtState(PRUint32 *aState)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMHTMLInputElement> htmlFormElement(do_QueryInterface(mDOMNode, &rv));
+  if (NS_SUCCEEDED(rv) && htmlFormElement) {
+    nsAutoString typeString;
+    htmlFormElement->GetType(typeString);
+    if (typeString.EqualsIgnoreCase("text"))
+      *aState |= STATE_SINGLE_LINE;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::Shutdown()

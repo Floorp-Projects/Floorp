@@ -505,12 +505,12 @@ NS_IMETHODIMP nsDocAccessibleWrap::GetRole(PRUint32 *_retval)
     PRBool isEditable;
     GetIsEditable(&isEditable);
 
-    if (isEditable) {
+    if (isEditable)
         *_retval = ROLE_TEXT;
-        return NS_OK;
-    }
+    else
+        *_retval = ROLE_HTML_CONTAINER;
 
-    return nsDocAccessible::GetRole(_retval);
+    return NS_OK;
 }
 
 void nsDocAccessibleWrap::CheckForEditor()

@@ -447,8 +447,7 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetRole(PRUint32 *_retval)
   */
 NS_IMETHODIMP nsXULProgressMeterAccessible::GetState(PRUint32 *_retval)
 {
-  *_retval =0;
-  return NS_OK;
+  return nsAccessible::GetState(_retval);
 }
 
 NS_IMETHODIMP nsXULProgressMeterAccessible::GetValue(nsAString& _retval)
@@ -581,8 +580,7 @@ NS_IMETHODIMP nsXULStatusBarAccessible::GetRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULStatusBarAccessible::GetState(PRUint32 *_retval)
 {
-  *_retval = 0;  // no special state flags for status bar
-  return NS_OK;
+  return nsAccessible::GetState(_retval);
 }
 
 /**

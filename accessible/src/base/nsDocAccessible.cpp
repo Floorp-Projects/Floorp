@@ -147,7 +147,8 @@ NS_IMETHODIMP nsDocAccessible::GetValue(nsAString& aValue)
 
 NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
 {
-  *aState = STATE_FOCUSABLE;
+  nsAccessible::GetState(aState);
+  *aState |= STATE_FOCUSABLE;
   if (mBusy == eBusyStateLoading)
     *aState |= STATE_BUSY;
 

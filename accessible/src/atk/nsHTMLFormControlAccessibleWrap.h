@@ -51,6 +51,7 @@ public:
 
   nsHTMLTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
+  NS_IMETHOD GetExtState(PRUint32 *aState);
   NS_IMETHOD Shutdown();
 };
 
