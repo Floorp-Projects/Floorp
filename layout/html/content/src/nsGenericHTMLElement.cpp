@@ -443,17 +443,17 @@ nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
   mNodeInfo->GetPrefix(aNodeName);
   if (aNodeName.Length()) {
     aNodeName.Append(PRUnichar(':'));
+
+    nsAutoString tmp;
+    mNodeInfo->GetName(tmp);
+
+    tmp.ToUpperCase();
+
+    aNodeName.Append(tmp);
   }
 #else
-  aNodeName.Truncate();
+  mNodeInfo->GetName(aNodeName);
 #endif
-
-  nsCOMPtr<nsIAtom> atom;
-  mNodeInfo->GetNameAtom(*getter_AddRefs(atom));
-
-  atom->ToString(aNodeName);
-
-  aNodeName.ToUpperCase();
 
   return NS_OK;
 }
