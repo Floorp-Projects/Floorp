@@ -46,6 +46,7 @@
 #include "nsIMsgWindow.h"
 #include "nsIProgressEventSink.h"
 #include "nsIStringBundle.h"
+#include "nsWeakReference.h"
 
 class nsMsgProgress : public nsIMsgProgress, public nsIMsgStatusFeedback, public nsIProgressEventSink
 {
@@ -68,6 +69,6 @@ private:
   PRInt32                           m_pendingStateFlags;
   PRInt32                           m_pendingStateValue;
   nsCOMPtr<nsIDOMWindowInternal>    m_dialog;
-  nsCOMPtr<nsIMsgWindow>            m_msgWindow;
+  nsWeakPtr                         m_msgWindow;
   nsCOMPtr<nsISupportsArray>        m_listenerList;
 };

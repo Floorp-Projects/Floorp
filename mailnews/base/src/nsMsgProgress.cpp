@@ -79,10 +79,13 @@ NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent, ns
                                                 nsISupports *parameters)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  
-  m_msgWindow = aMsgWindow;
-  if (m_msgWindow)
-    m_msgWindow->SetStatusFeedback(this);
+
+  if (aMsgWindow)
+  {
+    SetMsgWindow(aMsgWindow);
+    aMsgWindow->SetStatusFeedback(this);
+  }
+
   if (m_dialog)
     return NS_ERROR_ALREADY_INITIALIZED;
   
@@ -214,8 +217,12 @@ NS_IMETHODIMP nsMsgProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRequ
     }
   }
   
-  if (aStateFlags == nsIWebProgressListener::STATE_STOP && m_msgWindow && NS_FAILED(aStatus))
-    m_msgWindow->StopUrls();
+  nsCOMPtr<nsIMsgWindow> msgWindow (do_QueryReferent(m_msgWindow));
+  if (aStateFlags == nsIWebProgressListener::STATE_STOP && msgWindow && NS_FAILED(aStatus))
+  {
+    msgWindow->StopUrls();
+    msgWindow->SetStatusFeedback(nsnull);
+  }
 
   return NS_OK;
 }
@@ -349,17 +356,21 @@ NS_IMETHODIMP nsMsgProgress::CloseWindow()
 
 NS_IMETHODIMP nsMsgProgress::SetMsgWindow(nsIMsgWindow *aMsgWindow)
 {
-  m_msgWindow = aMsgWindow;
+  m_msgWindow = do_GetWeakReference(aMsgWindow);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgProgress::GetMsgWindow(nsIMsgWindow **aMsgWindow)
 {
   NS_ENSURE_ARG_POINTER(aMsgWindow);
-  NS_IF_ADDREF(*aMsgWindow = m_msgWindow);
+  
+  if (m_msgWindow) 
+    CallQueryReferent(m_msgWindow.get(), aMsgWindow);
+  else 
+    *aMsgWindow = nsnull;
+
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsMsgProgress::OnProgress(nsIRequest *request, nsISupports* ctxt, 
                                           PRUint64 aProgress, PRUint64 aProgressMax)
