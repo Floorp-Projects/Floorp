@@ -994,8 +994,8 @@ sub BuildProjects()
 	BuildInternationalProjects();
 	BuildLayoutProjects();
 	BuildEditorProjects();
+	BuildMailNewsProjects();
 	MakeResourceAliases();
 	BuildViewerProjects();
 	BuildXPAppProjects();
-	BuildMailNewsProjects();
 }
