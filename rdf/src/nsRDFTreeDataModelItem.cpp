@@ -102,6 +102,13 @@ nsRDFTreeDataModelItem::GetNthChild(nsIDMItem*& pItem, PRUint32 item) const
 
 
 NS_IMETHODIMP
+nsRDFTreeDataModelItem::GetSubtreeSize(PRUint32& result) const
+{
+    return nsRDFDataModelItem::GetSubtreeSize(result);
+}
+
+
+NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetParent(nsIDMItem*& pItem) const
 {
     return nsRDFDataModelItem::GetParent(pItem);

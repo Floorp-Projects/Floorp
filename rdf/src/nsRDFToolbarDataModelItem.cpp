@@ -98,6 +98,13 @@ nsRDFToolbarDataModelItem::GetNthChild(nsIDMItem*& pItem, PRUint32 item) const
 
 
 NS_IMETHODIMP
+nsRDFToolbarDataModelItem::GetSubtreeSize(PRUint32& result) const
+{
+    return nsRDFDataModelItem::GetSubtreeSize(result);
+}
+
+
+NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetParent(nsIDMItem*& pItem) const
 {
     return nsRDFDataModelItem::GetParent(pItem);
