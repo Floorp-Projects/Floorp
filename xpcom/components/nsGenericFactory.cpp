@@ -100,12 +100,14 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount,
-                                 nsModuleComponentInfo* components)
+                                 nsModuleComponentInfo* components,
+                                 nsModuleDestructorProc dtor)
     : mInitialized(PR_FALSE), 
       mModuleName(moduleName),
       mComponentCount(componentCount),
       mComponents(components),
-      mFactories(8, PR_FALSE)
+      mFactories(8, PR_FALSE),
+      mDtor(dtor)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -132,6 +134,8 @@ nsGenericModule::Initialize()
 void
 nsGenericModule::Shutdown()
 {
+    if (mDtor)
+        mDtor(this);
     // Release the factory objects
     mFactories.Reset();
 }
@@ -257,6 +261,7 @@ NS_COM nsresult
 NS_NewGenericModule(const char* moduleName,
                     PRUint32 componentCount,
                     nsModuleComponentInfo* components,
+                    nsModuleDestructorProc dtor,
                     nsIModule* *result)
 {
     nsresult rv = NS_OK;
@@ -265,7 +270,7 @@ NS_NewGenericModule(const char* moduleName,
 
     // Create and initialize the module instance
     nsGenericModule *m = 
-        new nsGenericModule(moduleName, componentCount, components);
+        new nsGenericModule(moduleName, componentCount, components, dtor);
     if (!m) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

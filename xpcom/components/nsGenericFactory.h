@@ -70,7 +70,8 @@ class nsGenericModule : public nsIModule
 {
 public:
     nsGenericModule(const char* moduleName, PRUint32 componentCount,
-                    nsModuleComponentInfo* components);
+                    nsModuleComponentInfo* components,
+                    nsModuleDestructorProc dtor);
     virtual ~nsGenericModule();
 
     NS_DECL_ISUPPORTS
@@ -87,6 +88,7 @@ protected:
     PRUint32                    mComponentCount;
     nsModuleComponentInfo*      mComponents;
     nsSupportsHashtable         mFactories;
+    nsModuleDestructorProc      mDtor;
 };
 
 #endif /* nsGenericFactory_h___ */
