@@ -381,7 +381,7 @@ public class JavaAdapter extends ScriptableObject {
 
         // Invoke base class constructor
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.INVOKESPECIAL, superName, "<init>", "()", "V");
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "<init>", "()V");
 
         // Save parameter in instance variable "delegee"
         cfw.add(ByteCode.ALOAD_0);  // this
@@ -392,12 +392,12 @@ public class JavaAdapter extends ScriptableObject {
         // create a wrapper object to be used as "this" in method calls
         cfw.add(ByteCode.ALOAD_1);  // the Scriptable
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.INVOKESTATIC,
-                "org/mozilla/javascript/JavaAdapter",
-                "setAdapterProto",
-                "(Lorg/mozilla/javascript/Scriptable;" +
-                 "Ljava/lang/Object;)",
-                "Lorg/mozilla/javascript/Scriptable;");
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/JavaAdapter",
+                      "setAdapterProto",
+                      "(Lorg/mozilla/javascript/Scriptable;"
+                      +"Ljava/lang/Object;"
+                      +")Lorg/mozilla/javascript/Scriptable;");
 
         // save the wrapper
         cfw.add(ByteCode.ASTORE_1);
@@ -419,7 +419,7 @@ public class JavaAdapter extends ScriptableObject {
 
         // Invoke base class constructor
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.INVOKESPECIAL, superName, "<init>", "()", "V");
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "<init>", "()V");
 
         // Save parameter in instance variable "delegee"
         cfw.add(ByteCode.ALOAD_0);  // this
@@ -444,19 +444,19 @@ public class JavaAdapter extends ScriptableObject {
 
         // Invoke base class constructor
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.INVOKESPECIAL, superName, "<init>", "()", "V");
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "<init>", "()V");
 
         // Load script class
         cfw.add(ByteCode.NEW, scriptClassName);
         cfw.add(ByteCode.DUP);
-        cfw.add(ByteCode.INVOKESPECIAL, scriptClassName, "<init>", "()", "V");
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, scriptClassName, "<init>", "()V");
 
         // Run script and save resulting scope
-        cfw.add(ByteCode.INVOKESTATIC,
-                "org/mozilla/javascript/ScriptRuntime",
-                "runScript",
-                "(Lorg/mozilla/javascript/Script;)",
-                "Lorg/mozilla/javascript/Scriptable;");
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/ScriptRuntime",
+                      "runScript",
+                      "(Lorg/mozilla/javascript/Script;"
+                      +")Lorg/mozilla/javascript/Scriptable;");
         cfw.add(ByteCode.ASTORE_1);
 
         // Save the Scriptable in instance variable "delegee"
@@ -468,12 +468,12 @@ public class JavaAdapter extends ScriptableObject {
         // create a wrapper object to be used as "this" in method calls
         cfw.add(ByteCode.ALOAD_1);  // the Scriptable
         cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.INVOKESTATIC,
-                "org/mozilla/javascript/JavaAdapter",
-                "setAdapterProto",
-                "(Lorg/mozilla/javascript/Scriptable;" +
-                 "Ljava/lang/Object;)",
-                "Lorg/mozilla/javascript/Scriptable;");
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/JavaAdapter",
+                      "setAdapterProto",
+                      "(Lorg/mozilla/javascript/Scriptable;"
+                      +"Ljava/lang/Object;"
+                      +")Lorg/mozilla/javascript/Scriptable;");
         //save the wrapper
         cfw.add(ByteCode.ASTORE_1);
         cfw.add(ByteCode.ALOAD_0);  // this
@@ -498,8 +498,8 @@ public class JavaAdapter extends ScriptableObject {
             cfw.add(ByteCode.NEW, "java/lang/Boolean");
             cfw.add(ByteCode.DUP);
             cfw.add(ByteCode.ILOAD, paramOffset++);
-            cfw.add(ByteCode.INVOKESPECIAL, "java/lang/Boolean",
-                    "<init>", "(Z)", "V");
+            cfw.addInvoke(ByteCode.INVOKESPECIAL, "java/lang/Boolean",
+                          "<init>", "(Z)V");
         } else
             if (paramType.equals(Character.TYPE)) {
                 // Create a string of length 1 using the character parameter.
@@ -511,8 +511,8 @@ public class JavaAdapter extends ScriptableObject {
                 cfw.add(ByteCode.ICONST_0);
                 cfw.add(ByteCode.ILOAD, paramOffset++);
                 cfw.add(ByteCode.CASTORE);
-                cfw.add(ByteCode.INVOKESPECIAL, "java/lang/String",
-                        "<init>", "([C)", "V");
+                cfw.addInvoke(ByteCode.INVOKESPECIAL, "java/lang/String",
+                              "<init>", "([C)V");
             } else {
                 // convert all numeric values to java.lang.Double.
                 cfw.add(ByteCode.NEW, "java/lang/Double");
@@ -542,8 +542,8 @@ public class JavaAdapter extends ScriptableObject {
                     paramOffset += 2;
                     break;
                 }
-                cfw.add(ByteCode.INVOKESPECIAL, "java/lang/Double",
-                        "<init>", "(D)", "V");
+                cfw.addInvoke(ByteCode.INVOKESPECIAL, "java/lang/Double",
+                              "<init>", "(D)V");
             }
         return paramOffset;
     }
@@ -560,28 +560,26 @@ public class JavaAdapter extends ScriptableObject {
         // wrap boolean values with java.lang.Boolean, convert all other
         // primitive values to java.lang.Double.
         if (retType.equals(Boolean.TYPE)) {
-            cfw.add(ByteCode.INVOKESTATIC,
-                    "org/mozilla/javascript/Context",
-                    "toBoolean", "(Ljava/lang/Object;)",
-                    "Z");
+            cfw.addInvoke(ByteCode.INVOKESTATIC,
+                          "org/mozilla/javascript/Context",
+                          "toBoolean", "(Ljava/lang/Object;)Z");
             cfw.add(ByteCode.IRETURN);
         } else if (retType.equals(Character.TYPE)) {
                 // characters are represented as strings in JavaScript.
                 // return the first character.
                 // first convert the value to a string if possible.
-                cfw.add(ByteCode.INVOKESTATIC,
-                        "org/mozilla/javascript/Context",
-                        "toString", "(Ljava/lang/Object;)",
-                        "Ljava/lang/String;");
+                cfw.addInvoke(ByteCode.INVOKESTATIC,
+                              "org/mozilla/javascript/Context",
+                              "toString",
+                              "(Ljava/lang/Object;)Ljava/lang/String;");
                 cfw.add(ByteCode.ICONST_0);
-                cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/String", "charAt",
-                        "(I)", "C");
+                cfw.addInvoke(ByteCode.INVOKEVIRTUAL, "java/lang/String",
+                              "charAt", "(I)C");
                 cfw.add(ByteCode.IRETURN);
         } else if (retType.isPrimitive()) {
-            cfw.add(ByteCode.INVOKESTATIC,
-                    "org/mozilla/javascript/Context",
-                    "toNumber", "(Ljava/lang/Object;)",
-                    "D");
+            cfw.addInvoke(ByteCode.INVOKESTATIC,
+                          "org/mozilla/javascript/Context",
+                          "toNumber", "(Ljava/lang/Object;)D");
             String typeName = retType.getName();
             switch (typeName.charAt(0)) {
             case 'b':
@@ -608,18 +606,17 @@ public class JavaAdapter extends ScriptableObject {
         } else {
             String retTypeStr = retType.getName();
             cfw.addLoadConstant(retTypeStr);
-            cfw.add(ByteCode.INVOKESTATIC,
-                    "java/lang/Class",
-                    "forName",
-                    "(Ljava/lang/String;)",
-                    "Ljava/lang/Class;");
+            cfw.addInvoke(ByteCode.INVOKESTATIC,
+                          "java/lang/Class",
+                          "forName",
+                          "(Ljava/lang/String;)Ljava/lang/Class;");
 
-            cfw.add(ByteCode.INVOKESTATIC,
-                    "org/mozilla/javascript/JavaAdapter",
-                    "convertResult",
-                    "(Ljava/lang/Object;" +
-                    "Ljava/lang/Class;)",
-                    "Ljava/lang/Object;");
+            cfw.addInvoke(ByteCode.INVOKESTATIC,
+                          "org/mozilla/javascript/JavaAdapter",
+                          "convertResult",
+                          "(Ljava/lang/Object;"
+                          +"Ljava/lang/Class;"
+                          +")Ljava/lang/Object;");
             // Now cast to return type
             cfw.add(ByteCode.CHECKCAST, retTypeStr.replace('.', '/'));
             cfw.add(ByteCode.ARETURN);
@@ -679,19 +676,18 @@ public class JavaAdapter extends ScriptableObject {
 
                 // Get argument Class
                 cfw.addLoadConstant(parms[i].getName());
-                cfw.add(ByteCode.INVOKESTATIC,
-                        "java/lang/Class",
-                        "forName",
-                        "(Ljava/lang/String;)",
-                        "Ljava/lang/Class;");
+                cfw.addInvoke(ByteCode.INVOKESTATIC,
+                              "java/lang/Class",
+                              "forName",
+                              "(Ljava/lang/String;)Ljava/lang/Class;");
 
-                cfw.add(ByteCode.INVOKESTATIC,
-                        "org/mozilla/javascript/JavaAdapter",
-                        "toObject",
-                        "(Ljava/lang/Object;" +
-                         "Lorg/mozilla/javascript/Scriptable;" +
-                         "Ljava/lang/Class;)",
-                        "Lorg/mozilla/javascript/Scriptable;");
+                cfw.addInvoke(ByteCode.INVOKESTATIC,
+                              "org/mozilla/javascript/JavaAdapter",
+                              "toObject",
+                              "(Ljava/lang/Object;"
+                              +"Lorg/mozilla/javascript/Scriptable;"
+                              +"Ljava/lang/Class;"
+                              +")Lorg/mozilla/javascript/Scriptable;");
             }
             cfw.add(ByteCode.AASTORE);
         }
@@ -707,12 +703,14 @@ public class JavaAdapter extends ScriptableObject {
 
         // go through utility method, which creates a Context to run the
         // method in.
-        cfw.add(ByteCode.INVOKESTATIC,
-                "org/mozilla/javascript/JavaAdapter",
-                "callMethod",
-                "(Lorg/mozilla/javascript/Scriptable;" +
-                 "Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)",
-                "Ljava/lang/Object;");
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/JavaAdapter",
+                      "callMethod",
+                      "(Lorg/mozilla/javascript/Scriptable;"
+                      +"Ljava/lang/Object;"
+                      +"Ljava/lang/String;"
+                      +"[Ljava/lang/Object;"
+                      +")Ljava/lang/Object;");
 
         if (returnType.equals(Void.TYPE)) {
             cfw.add(ByteCode.POP);
@@ -816,15 +814,11 @@ public class JavaAdapter extends ScriptableObject {
             }
         }
 
-        // split the method signature at the right parentheses.
-        int rightParen = methodSignature.indexOf(')');
-
         // call the superclass implementation of the method.
-        cfw.add(ByteCode.INVOKESPECIAL,
-                superName,
-                methodName,
-                methodSignature.substring(0, rightParen + 1),
-                methodSignature.substring(rightParen + 1));
+        cfw.addInvoke(ByteCode.INVOKESPECIAL,
+                      superName,
+                      methodName,
+                      methodSignature);
 
         // now, handle the return type appropriately.
         Class retType = returnType;
