@@ -1282,26 +1282,16 @@ treechildren:-moz-tree-cell-text(completed)
    list-style-image      : url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress, current) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
-}
-
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
-}
-
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, future),
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress),
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue),
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday) {
    list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
 }
 
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue, current) {
-   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
-}
-
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, future, current),
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress, current),
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue, current),
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday, current) {
    list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
 }

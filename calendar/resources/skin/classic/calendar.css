@@ -1281,6 +1281,7 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed),
 
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday),
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue),
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, future),
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
    list-style-image      : url("chrome://calendar/skin/unifinder/checkbox_unchecked.png");
 }
