@@ -245,6 +245,10 @@ JS_BeginRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_EndRequest(JSContext *cx);
 
+/* Yield to pending GC operations, regardless of request depth */
+extern JS_PUBLIC_API(void)
+JS_YieldRequest(JSContext *cx);
+
 extern JS_PUBLIC_API(void)
 JS_SuspendRequest(JSContext *cx);
 
