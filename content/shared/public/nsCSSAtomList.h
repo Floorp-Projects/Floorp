@@ -66,8 +66,7 @@ CSS_ATOM(buttonLabelPseudo, ":-moz-buttonlabel")
 CSS_ATOM(checkedPseudo, ":checked")
 
 CSS_ATOM(disabledPseudo, ":disabled")
-CSS_ATOM(dragOverPseudo, ":drag-over")
-CSS_ATOM(dragPseudo, ":drag")
+CSS_ATOM(dragOverPseudo, ":-moz-drag-over")
 
 CSS_ATOM(emptyPseudo, ":empty")
 
@@ -84,15 +83,11 @@ CSS_ATOM(hoverPseudo, ":hover")
 CSS_ATOM(langPseudo, ":lang")
 CSS_ATOM(linkPseudo, ":link")
 
-CSS_ATOM(menuPseudo, ":menu")
-
 CSS_ATOM(notPseudo, ":not")
 
 CSS_ATOM(rootPseudo, ":root")
 
 CSS_ATOM(xblBoundElementPseudo, ":-moz-bound-element")
-
-CSS_ATOM(selectionPseudo, ":selection")
 
 CSS_ATOM(universalSelector, "*")
 

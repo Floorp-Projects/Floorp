@@ -39,7 +39,7 @@
 
 /* blocks */
 
-html, div, map, dt, isindex, *|*:-moz-anonymous-block, *|*:cell-content {
+html, div, map, dt, isindex, *|*:-moz-anonymous-block, *|*:-moz-cell-content {
   display: block;
 }
 
@@ -154,7 +154,7 @@ table {
   -moz-box-sizing: border-box;
 }
 
-*|*:table {
+*|*:-moz-table {
   display: table;
   -moz-box-sizing: border-box; /* XXX do we really want this? */
 }
@@ -172,7 +172,7 @@ table[rules] {
   border-collapse: collapse;
 }
 
-*|*:table-outer {
+*|*:-moz-table-outer {
   display: table;
   margin: 0;
   border: none;
@@ -224,11 +224,11 @@ tr {
   vertical-align: inherit;
 }
 
-*|*:table-row {
+*|*:-moz-table-row {
   display: table-row;
 }
 
-col, *|*:table-column {
+col, *|*:-moz-table-column {
   display: table-column;
   border: inherit;
   width: inherit;
@@ -237,7 +237,7 @@ col, *|*:table-column {
   border: inherit;
 }
 
-colgroup, *|*:table-column-group {
+colgroup, *|*:-moz-table-column-group {
   display: table-column-group;
 }
 
@@ -256,7 +256,7 @@ tfoot {
   vertical-align: middle;
 }
 
-*|*:table-row-group {
+*|*:-moz-table-row-group {
   display: table-row-group;
 }
 
@@ -274,7 +274,7 @@ th {
   padding: 1px;
 }
 
-*|*:table-cell {
+*|*:-moz-table-cell {
   display: table-cell;
   padding: 1px;
   white-space: inherit;
@@ -356,7 +356,7 @@ ul, menu, dir {
   list-style-type: disc;
   margin: 1em 0;
   padding-left: 40px;
-  counter-reset: -html-counter 0;
+  -moz-counter-reset: -html-counter 0;
 }
 
 ol {
@@ -364,7 +364,7 @@ ol {
   list-style-type: decimal;
   margin: 1em 0;
   padding-left: 40px;
-  counter-reset: -html-counter 0;
+  -moz-counter-reset: -html-counter 0;
 }
 
 li {
@@ -484,12 +484,12 @@ noembed, noscript, param {
 
 /* magic */
 
-*|*:viewport, *|*:viewport-scroll, *|*:canvas {
+*|*:-moz-viewport, *|*:-moz-viewport-scroll, *|*:-moz-canvas {
   display: block;
   background-color: inherit;
 }
 
-*|*:scrolled-content { 
+*|*:-moz-scrolled-content { 
   /* e.g., text inputs, select boxes */
   background: inherit;
   padding: inherit;
@@ -497,7 +497,7 @@ noembed, noscript, param {
   -moz-box-orient: inherit;
 }
 
-*|*:wrapped-frame {
+*|*:-moz-wrapped-frame {
   display: inherit;
 }
 
@@ -544,7 +544,7 @@ noembed, noscript, param {
     cursor: default !important;
   }
 
-  *|*:viewport, *|*:viewport-scroll, *|*:canvas {
+  *|*:-moz-viewport, *|*:-moz-viewport-scroll, *|*:-moz-canvas {
     background-color: #737373 !important;
   }
 

@@ -143,8 +143,8 @@ CSS_PROP(-x-clip-right, clip_right, REFLOW) // XXX bug 3935
 CSS_PROP(-x-clip-top, clip_top, REFLOW) // XXX bug 3935
 CSS_PROP(color, color, VISUAL)
 CSS_PROP(content, content, FRAMECHANGE)
-CSS_PROP(counter-increment, counter_increment, REFLOW)
-CSS_PROP(counter-reset, counter_reset, REFLOW)
+CSS_PROP(-moz-counter-increment, counter_increment, REFLOW) // XXX bug 137285
+CSS_PROP(-moz-counter-reset, counter_reset, REFLOW) // XXX bug 137285
 CSS_PROP(cue, cue, AURAL)
 CSS_PROP(cue-after, cue_after, AURAL)
 CSS_PROP(cue-before, cue_before, AURAL)

@@ -42,7 +42,7 @@
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
-*|*:fieldset-content {
+*|*:-moz-fieldset-content {
   display: block;
 }
 
@@ -369,7 +369,7 @@ input[type="submit"] {
   -moz-binding: none;
 }
 
-*|*:button-content {
+*|*:-moz-button-content {
   display: block;
   text-align: center;
 }
