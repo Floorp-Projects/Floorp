@@ -452,20 +452,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_nativeClone
     PK11SlotInfo *slot=NULL;
     PK11SymKey *toBeCloned=NULL;
     PK11SymKey *clone=NULL;
-    CK_BBOOL cktrue = CK_TRUE;
-    CK_OBJECT_CLASS ckclass = CKO_SECRET_KEY;
-    CK_KEY_TYPE keyType;
-    CK_ATTRIBUTE keyTemplate[] = {
-        { CKA_CLASS, NULL, 0},
-        { CKA_KEY_TYPE, NULL, 0},
-        { CKA_ENCRYPT, NULL, 0},
-        { CKA_DECRYPT, NULL, 0},
-        { CKA_WRAP, NULL, 0},
-        { CKA_UNWRAP, NULL, 0},
-        { CKA_VALUE, NULL, 0},
-    };
     SECStatus rv;
-    CK_RV crv;
     jobject cloneObj=NULL;
 
     PR_ASSERT(env!=NULL && tokenObj!=NULL && toBeClonedObj!=NULL);
@@ -489,46 +476,17 @@ Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_nativeClone
         goto finish;
     }
 
-    /* create the new symkey structure */
-    clone = PK11_CreateSymKey(slot, toBeCloned->type, NULL /*wincx*/);
+    clone = PK11_ImportSymKey(
+        slot,
+        PK11_GetMechanism(toBeCloned),
+        PK11_OriginGenerated, /* we don't know this, but it doesn't matter */
+        CKA_ENCRYPT, /* !!! Actually we want to enable all operations */
+        PK11_GetKeyData(toBeCloned),
+        NULL /* wincx */
+    );
+        
+
     if( clone == NULL ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to create symmetric key");
-        goto finish;
-    }
-    clone->size = toBeCloned->size;
-    if( SECITEM_CopyItem(NULL, &clone->data, &toBeCloned->data) != SECSuccess) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to copy key data");
-        goto finish;
-    }
-
-    /* setup the template */
-    keyType = PK11_GetKeyType(toBeCloned->type, toBeCloned->size);
-    keyTemplate[0].pValue = &ckclass;
-    keyTemplate[0].ulValueLen = sizeof(ckclass);
-    keyTemplate[1].pValue = &keyType;
-    keyTemplate[1].ulValueLen = sizeof(keyType);
-    keyTemplate[2].pValue = &cktrue;
-    keyTemplate[2].ulValueLen = sizeof(cktrue); /* CKA_ENCRYPT */
-    keyTemplate[3].pValue = &cktrue;
-    keyTemplate[3].ulValueLen = sizeof(cktrue); /* CKA_DECRYPT */
-    keyTemplate[4].pValue = &cktrue;
-    keyTemplate[4].ulValueLen = sizeof(cktrue); /* CKA_WRAP */
-    keyTemplate[5].pValue = &cktrue;
-    keyTemplate[5].ulValueLen = sizeof(cktrue); /* CKA_UNWRAP */
-    keyTemplate[6].pValue = toBeCloned->data.data;
-    keyTemplate[6].ulValueLen = toBeCloned->data.len;
-
-    /* import the key */
-    if( !clone->sessionOwner || !clone->slot->isThreadSafe) {
-        PK11_EnterSlotMonitor(slot);
-    }
-    crv = PK11_GETTAB(slot)->C_CreateObject(clone->session, keyTemplate,
-            7, &clone->objectID);
-    if( !clone->sessionOwner || !clone->slot->isThreadSafe) {
-        PK11_ExitSlotMonitor(slot);
-    }
-
-    if( crv != CKR_OK ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to create new symmetric"
             " key object");
         goto finish;
