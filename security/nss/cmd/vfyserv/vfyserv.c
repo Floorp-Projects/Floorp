@@ -66,6 +66,7 @@
 #include "prio.h"
 #include "prnetdb.h"
 #include "nss.h"
+#include "secutil.h"
 
 #include "vfyserv.h"
 
