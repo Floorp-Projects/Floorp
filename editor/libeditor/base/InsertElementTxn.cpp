@@ -64,8 +64,7 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
     printf("%p Do Insert Element of %p into parent %p at offset %d\n", 
                        this, nodeAsContent.get(), parentAsContent.get(), mOffset); 
   }
-  if (!mNode || !mParent)
-    return NS_ERROR_NULL_POINTER;
+  if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult result;
   nsCOMPtr<nsIDOMNode>refNode;
@@ -92,16 +91,16 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
 
   nsCOMPtr<nsIDOMNode> resultNode;
   result = mParent->InsertBefore(mNode, refNode, getter_AddRefs(resultNode));
-  if (NS_SUCCEEDED(result) && resultNode)
-  {
-    nsCOMPtr<nsIDOMSelection> selection;
-    result = mEditor->GetSelection(getter_AddRefs(selection));
-    if ((NS_SUCCEEDED(result)) && selection)
-    { // place the selection just after the inserted element
-      selection->Collapse(mParent, mOffset+1);
-      //selection->Extend(mParent, mOffset+1);
-    }    
-  }
+	if (NS_FAILED(result)) return result;
+	if (!resultNode) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  result = mEditor->GetSelection(getter_AddRefs(selection));
+	if (NS_FAILED(result)) return result;
+	if (!selection) return NS_ERROR_NULL_POINTER;
+  // place the selection just after the inserted element
+  selection->Collapse(mParent, mOffset+1);
+  //selection->Extend(mParent, mOffset+1);
   return result;
 }
 
@@ -109,8 +108,7 @@ NS_IMETHODIMP InsertElementTxn::Undo(void)
 {
   if (gNoisy) { printf("%p Undo Insert Element of %p into parent %p at offset %d\n", 
                        this, mNode.get(), mParent.get(), mOffset); }
-  if (!mNode || !mParent)
-    return NS_ERROR_NULL_POINTER;
+  if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->RemoveChild(mNode, getter_AddRefs(resultNode));

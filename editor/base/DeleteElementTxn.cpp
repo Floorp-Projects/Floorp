@@ -51,16 +51,11 @@ DeleteElementTxn::~DeleteElementTxn()
 NS_IMETHODIMP DeleteElementTxn::Do(void)
 {
   if (gNoisy) { printf("%p Do Delete Element element = %p\n", this, mElement.get()); }
-  if (!mElement)
-    return NS_ERROR_NULL_POINTER;
+  if (!mElement) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult result = mElement->GetParentNode(getter_AddRefs(mParent));
-  if (NS_FAILED(result)) {
-    return result;
-  }
-  if (!mParent) {
-    return NS_OK;   // this is a no-op, there's no parent to delete mElement from
-  }
+  if (NS_FAILED(result)) { return result; }
+  if (!mParent) { return NS_OK; }  // this is a no-op, there's no parent to delete mElement from
 
 #ifdef NS_DEBUG
   // begin debug output

@@ -35,23 +35,24 @@ NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
                                        const nsString& aValue,
                                        PRBool aRemoveAttribute)
 {
-  if (nsnull!=aEditor && nsnull!=aElement)
-  {
-    mEditor = aEditor;
-    mElement = do_QueryInterface(aElement);
-    mAttribute = aAttribute;
-    mValue = aValue;
-    mRemoveAttribute = aRemoveAttribute;
-    mAttributeWasSet=PR_FALSE;
-    mUndoValue="";
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_NULL_POINTER;
+	NS_ASSERTION(aEditor && aElement, "bad arg");
+  if (!aEditor || !aElement) { return NS_ERROR_NULL_POINTER; }
+
+  mEditor = aEditor;
+  mElement = do_QueryInterface(aElement);
+  mAttribute = aAttribute;
+  mValue = aValue;
+  mRemoveAttribute = aRemoveAttribute;
+  mAttributeWasSet=PR_FALSE;
+  mUndoValue="";
+  return NS_OK;
 }
 
 NS_IMETHODIMP ChangeAttributeTxn::Do(void)
 {
+	NS_ASSERTION(mEditor && mElement, "bad state");
+	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+
   // need to get the current value of the attribute and save it, and set mAttributeWasSet
   nsresult result = mEditor->GetAttributeValue(mElement, mAttribute, mUndoValue, mAttributeWasSet);
   // XXX: hack until attribute-was-set code is implemented
@@ -70,6 +71,9 @@ NS_IMETHODIMP ChangeAttributeTxn::Do(void)
 
 NS_IMETHODIMP ChangeAttributeTxn::Undo(void)
 {
+	NS_ASSERTION(mEditor && mElement, "bad state");
+	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+
   nsresult result=NS_OK;
   if (PR_TRUE==mAttributeWasSet)
     result = mElement->SetAttribute(mAttribute, mUndoValue);
@@ -81,6 +85,9 @@ NS_IMETHODIMP ChangeAttributeTxn::Undo(void)
 
 NS_IMETHODIMP ChangeAttributeTxn::Redo(void)
 {
+	NS_ASSERTION(mEditor && mElement, "bad state");
+	if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+
   nsresult result;
 
   if (PR_FALSE==mRemoveAttribute)

@@ -104,11 +104,10 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
       // put a "white-space: pre" style on the body
 		  nsCOMPtr<nsIDOMElement> bodyElement;
 		  nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
-		  if (NS_SUCCEEDED(res) && bodyElement)
-		  {
-		    // not going through the editor to do this.
-		    bodyElement->SetAttribute("style", "white-space: pre");
-		  }
+			if (NS_FAILED(res)) return res;
+			if (!bodyElement) return NS_ERROR_NULL_POINTER;
+      // not going through the editor to do this.
+	    bodyElement->SetAttribute("style", "white-space: pre");
     }
   }
   mFlags = aFlags;
@@ -394,7 +393,9 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           // splitting anchor twice sets newTextNode as an empty text node between 
           // two halves of the original text node
           result = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
-          result = mEditor->SplitNode(anchorAsText, 0, getter_AddRefs(newTextNode));
+					if (NS_SUCCEEDED(result)) {
+						result = mEditor->SplitNode(anchorAsText, 0, getter_AddRefs(newTextNode));
+					}
         }
       }
       // now we have the new text node we are going to insert into.  
@@ -464,37 +465,30 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
   }
   else  // we have no selection, so insert a style tag in the body
   {
-    nsCOMPtr<nsIDOMDocument>doc;
-    mEditor->GetDocument(getter_AddRefs(doc));  
-    nsCOMPtr<nsIDOMNodeList>nodeList;
-    nsAutoString bodyTag = "body";
-    result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-    if ((NS_SUCCEEDED(result)) && nodeList)
-    {
-      PRUint32 count;
-      nodeList->GetLength(&count);
-      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
-      nsCOMPtr<nsIDOMNode>bodyNode;
-      result = nodeList->Item(0, getter_AddRefs(bodyNode));
-      if ((NS_SUCCEEDED(result)) && bodyNode)
-      { // now we've got the body tag.  insert the style tag
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
-        {
-          if (PR_TRUE==aTypeInState.GetBold()) { 
-            InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::b, aSelection);
-          }
+		nsCOMPtr<nsIDOMElement> bodyElement;
+		nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+		if (NS_FAILED(res)) return res;
+		if (!bodyElement) return NS_ERROR_NULL_POINTER;
+    
+		nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+    if (bodyNode)
+    { // now we've got the body tag.  insert the style tag
+      if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
+      {
+        if (PR_TRUE==aTypeInState.GetBold()) { 
+          InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::b, aSelection);
         }
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
-        {
-          if (PR_TRUE==aTypeInState.GetItalic()) { 
-            InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::i, aSelection);
-          }
+      }
+      if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
+      {
+        if (PR_TRUE==aTypeInState.GetItalic()) { 
+          InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::i, aSelection);
         }
-        if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
-        {
-          if (PR_TRUE==aTypeInState.GetUnderline()) { 
-            InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::u, aSelection);
-          }
+      }
+      if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
+      {
+        if (PR_TRUE==aTypeInState.GetUnderline()) { 
+          InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::u, aSelection);
         }
       }
     }
@@ -513,12 +507,11 @@ nsTextEditRules::CreateFontStyleForInsertText(nsIDOMNode      *aNewTextNode,
   if (0!=aValue.Length()) 
   { 
     result = InsertStyleNode(aNewTextNode, nsIEditProperty::font, aSelection, getter_AddRefs(newStyleNode));
-    if (NS_SUCCEEDED(result) && newStyleNode)
-    {
-      nsCOMPtr<nsIDOMElement>element = do_QueryInterface(newStyleNode);
-      if (element) {
-        result = mEditor->SetAttribute(element, aAttr, aValue);
-      }
+    if (NS_FAILED(result)) return result;
+    if (!newStyleNode) return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMElement>element = do_QueryInterface(newStyleNode);
+    if (element) {
+      result = mEditor->SetAttribute(element, aAttr, aValue);
     }
   }
   else
@@ -540,21 +533,26 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode,
   nsresult result;
   nsCOMPtr<nsIDOMNode>parent;
   aNode->GetParentNode(getter_AddRefs(parent));
+	if (NS_FAILED(result)) return result;
+	if (!parent) return NS_ERROR_NULL_POINTER;
+
   PRInt32 offsetInParent;
-  nsEditor::GetChildOffset(aNode, parent, offsetInParent);
+  result = nsEditor::GetChildOffset(aNode, parent, offsetInParent);
+  if (NS_FAILED(result)) return result;
+
   nsAutoString tag;
   aTag->ToString(tag);
   result = mEditor->CreateNode(tag, parent, offsetInParent, aNewNode);
-  if ((NS_SUCCEEDED(result)) && *aNewNode)
+	if (NS_FAILED(result)) return result;
+	if (!aNewNode) return NS_ERROR_NULL_POINTER;
+
+  result = mEditor->DeleteNode(aNode);
+  if (NS_SUCCEEDED(result))
   {
-    result = mEditor->DeleteNode(aNode);
-    if (NS_SUCCEEDED(result))
-    {
-      result = mEditor->InsertNode(aNode, *aNewNode, 0);
-      if (NS_SUCCEEDED(result)) {
-        if (aSelection) {
-          aSelection->Collapse(aNode, 0);
-        }
+    result = mEditor->InsertNode(aNode, *aNewNode, 0);
+    if (NS_SUCCEEDED(result)) {
+      if (aSelection) {
+        result = aSelection->Collapse(aNode, 0);
       }
     }
   }
@@ -575,16 +573,17 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
     nsCOMPtr<nsIDOMNode>anchor;
     PRInt32 offset;
     result = aSelection->GetAnchorNode(getter_AddRefs(anchor));
-    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
+    if (NS_FAILED(result)) return result;
+    if (!anchor) return NS_ERROR_NULL_POINTER;
+    result = aSelection->GetAnchorOffset(&offset);
+    if (NS_FAILED(result)) return result;
+    nsCOMPtr<nsIDOMCharacterData>anchorAsText;
+    anchorAsText = do_QueryInterface(anchor);
+    if (anchorAsText)
     {
-      nsCOMPtr<nsIDOMCharacterData>anchorAsText;
-      anchorAsText = do_QueryInterface(anchor);
-      if (anchorAsText)
-      {
-        nsCOMPtr<nsIDOMNode> newStyleNode;
-        result = InsertStyleNode(anchor, aTag, aSelection, getter_AddRefs(newStyleNode));
-        return result;
-      }
+      nsCOMPtr<nsIDOMNode> newStyleNode;
+      result = InsertStyleNode(anchor, aTag, aSelection, getter_AddRefs(newStyleNode));
+      return result;
     }
   }
   // if we get here, there is no selected text node so we create one.
@@ -593,15 +592,15 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
   nsCOMPtr<nsIDOMNode>newStyleNode;
   nsCOMPtr<nsIDOMNode>newTextNode;
   result = mEditor->CreateNode(tag, aParentNode, 0, getter_AddRefs(newStyleNode));
-  if (NS_SUCCEEDED(result)) 
-  {
-    result = mEditor->CreateNode(nsEditor::GetTextNodeTag(), newStyleNode, 0, getter_AddRefs(newTextNode));
-    if (NS_SUCCEEDED(result)) 
-    {
-      if (aSelection) {
-        aSelection->Collapse(newTextNode, 0);
-      }
-    }
+	if (NS_FAILED(result)) return result;
+	if (!newStyleNode) return NS_ERROR_NULL_POINTER;
+
+  result = mEditor->CreateNode(nsEditor::GetTextNodeTag(), newStyleNode, 0, getter_AddRefs(newTextNode));
+	if (NS_FAILED(result)) return result;
+	if (!newTextNode) return NS_ERROR_NULL_POINTER;
+
+  if (aSelection) {
+    result = aSelection->Collapse(newTextNode, 0);
   }
   return result;
 }
@@ -707,55 +706,63 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
       nsCOMPtr<nsIDOMNode>anchor;
       PRInt32 offset;
 		  result = aSelection->GetAnchorNode(getter_AddRefs(anchor));
-		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
+      if (NS_FAILED(result)) return result;
+      if (!anchor) return NS_ERROR_NULL_POINTER;
+      result = aSelection->GetAnchorOffset(&offset);
+      if (NS_FAILED(result)) return result;
+
+      nsCOMPtr<nsIDOMNodeList> anchorChildren;
+      result = anchor->GetChildNodes(getter_AddRefs(anchorChildren));
+      nsCOMPtr<nsIDOMNode> selectedNode;
+      if ((NS_SUCCEEDED(result)) && anchorChildren) {              
+        result = anchorChildren->Item(offset, getter_AddRefs(selectedNode));
+      }
+      else {
+        selectedNode = do_QueryInterface(anchor);
+      }
+      if ((NS_SUCCEEDED(result)) && selectedNode)
       {
-        nsCOMPtr<nsIDOMNodeList> anchorChildren;
-        result = anchor->GetChildNodes(getter_AddRefs(anchorChildren));
-        nsCOMPtr<nsIDOMNode> selectedNode;
-        if ((NS_SUCCEEDED(result)) && anchorChildren) {              
-          result = anchorChildren->Item(offset, getter_AddRefs(selectedNode));
-        }
-        else {
-          selectedNode = do_QueryInterface(anchor);
-        }
-        if ((NS_SUCCEEDED(result)) && selectedNode)
+        nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
+        selectedNodeAsText = do_QueryInterface(selectedNode);
+        if (selectedNodeAsText)
         {
-          nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
-          selectedNodeAsText = do_QueryInterface(selectedNode);
-          if (selectedNodeAsText)
+          nsCOMPtr<nsIDOMNode> siblingNode;
+          selectedNode->GetPreviousSibling(getter_AddRefs(siblingNode));
+          if (siblingNode)
           {
-            nsCOMPtr<nsIDOMNode> siblingNode;
-            selectedNode->GetPreviousSibling(getter_AddRefs(siblingNode));
-            if (siblingNode)
+            nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
+            siblingNodeAsText = do_QueryInterface(siblingNode);
+            if (siblingNodeAsText)
             {
-              nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
-              siblingNodeAsText = do_QueryInterface(siblingNode);
-              if (siblingNodeAsText)
-              {
-                PRUint32 siblingLength; // the length of siblingNode before the join
-                siblingNodeAsText->GetLength(&siblingLength);
-                nsCOMPtr<nsIDOMNode> parentNode;
-                selectedNode->GetParentNode(getter_AddRefs(parentNode));
-                result = mEditor->JoinNodes(siblingNode, selectedNode, parentNode);
-                // selectedNode will remain after the join, siblingNode is removed
-              }
+              PRUint32 siblingLength; // the length of siblingNode before the join
+              siblingNodeAsText->GetLength(&siblingLength);
+              nsCOMPtr<nsIDOMNode> parentNode;
+              result = selectedNode->GetParentNode(getter_AddRefs(parentNode));
+							if (NS_FAILED(result)) return result;
+							if (!parentNode) return NS_ERROR_NULL_POINTER;
+              result = mEditor->JoinNodes(siblingNode, selectedNode, parentNode);
+              // selectedNode will remain after the join, siblingNode is removed
             }
-            selectedNode->GetNextSibling(getter_AddRefs(siblingNode));
-            if (siblingNode)
+          }
+          selectedNode->GetNextSibling(getter_AddRefs(siblingNode));
+          if (siblingNode)
+          {
+            nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
+            siblingNodeAsText = do_QueryInterface(siblingNode);
+            if (siblingNodeAsText)
             {
-              nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
-              siblingNodeAsText = do_QueryInterface(siblingNode);
-              if (siblingNodeAsText)
-              {
-                PRUint32 selectedNodeLength; // the length of siblingNode before the join
-                selectedNodeAsText->GetLength(&selectedNodeLength);
-                nsCOMPtr<nsIDOMNode> parentNode;
-                selectedNode->GetParentNode(getter_AddRefs(parentNode));
-                result = mEditor->JoinNodes(selectedNode, siblingNode, parentNode);
-                // selectedNode will remain after the join, siblingNode is removed
-                // set selection
-                aSelection->Collapse(siblingNode, selectedNodeLength);
-              }
+              PRUint32 selectedNodeLength; // the length of siblingNode before the join
+              selectedNodeAsText->GetLength(&selectedNodeLength);
+              nsCOMPtr<nsIDOMNode> parentNode;
+              result = selectedNode->GetParentNode(getter_AddRefs(parentNode));
+							if (NS_FAILED(result)) return result;
+							if (!parentNode) return NS_ERROR_NULL_POINTER;
+
+              result = mEditor->JoinNodes(selectedNode, siblingNode, parentNode);
+        			if (NS_FAILED(result)) return result;
+              // selectedNode will remain after the join, siblingNode is removed
+              // set selection
+              result = aSelection->Collapse(siblingNode, selectedNodeLength);
             }
           }
         }
@@ -795,23 +802,24 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
       nsCOMPtr<nsIDOMNode>node;
       PRInt32 offset;
 		  result = aSelection->GetAnchorNode(getter_AddRefs(node));
-		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && node)
+      if (NS_FAILED(result)) return result;
+      if (!node) return NS_ERROR_NULL_POINTER;
+      result = aSelection->GetAnchorOffset(&offset);
+      if (NS_FAILED(result)) return result;
+      nsCOMPtr<nsIDOMElement>element;
+      element = do_QueryInterface(node);
+      if (element)
       {
-        nsCOMPtr<nsIDOMElement>element;
-        element = do_QueryInterface(node);
-        if (element)
-        {
-          nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-          nsAutoString val;
-          (void)element->GetAttribute(att, val);
-          if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) {
-            mBogusNode = do_QueryInterface(element);
-          }
+        nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
+        nsAutoString val;
+        (void)element->GetAttribute(att, val);
+        if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) {
+          mBogusNode = do_QueryInterface(element);
         }
-        nsCOMPtr<nsIDOMNode> temp;
-        result = node->GetParentNode(getter_AddRefs(temp));
-        node = do_QueryInterface(temp);
       }
+      nsCOMPtr<nsIDOMNode> temp;
+      result = node->GetParentNode(getter_AddRefs(temp));
+      node = do_QueryInterface(temp);
     }
   }
   return result;
@@ -842,23 +850,24 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
       nsCOMPtr<nsIDOMNode>node;
       PRInt32 offset;
 		  result = aSelection->GetAnchorNode(getter_AddRefs(node));
-		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && node)
+      if (NS_FAILED(result)) return result;
+      if (!node) return NS_ERROR_NULL_POINTER;
+		  result = aSelection->GetAnchorOffset(&offset);
+      if (NS_FAILED(result)) return result;
+      nsCOMPtr<nsIDOMElement>element;
+      element = do_QueryInterface(node);
+      if (element)
       {
-        nsCOMPtr<nsIDOMElement>element;
-        element = do_QueryInterface(node);
-        if (element)
-        {
-          nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-          nsAutoString val;
-          (void)element->GetAttribute(att, val);
-          if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) {
-            mBogusNode = do_QueryInterface(element);
-          }
+        nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
+        nsAutoString val;
+        (void)element->GetAttribute(att, val);
+        if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) {
+          mBogusNode = do_QueryInterface(element);
         }
-        nsCOMPtr<nsIDOMNode> temp;
-        result = node->GetParentNode(getter_AddRefs(temp));
-        node = do_QueryInterface(temp);
       }
+      nsCOMPtr<nsIDOMNode> temp;
+      result = node->GetParentNode(getter_AddRefs(temp));
+      node = do_QueryInterface(temp);
     }
   }
   return result;
@@ -895,86 +904,63 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
 {
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   if (!mEditor) { return NS_ERROR_NULL_POINTER; }
-  nsCOMPtr<nsIDOMDocument>doc;
-  mEditor->GetDocument(getter_AddRefs(doc));  
-  nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsAutoString bodyTag = "body";
-  nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-  if ((NS_SUCCEEDED(result)) && nodeList)
+
+	nsCOMPtr<nsIDOMElement> bodyElement;
+	nsresult result = mEditor->GetBodyElement(getter_AddRefs(bodyElement));  
+	if (NS_FAILED(result)) return result;
+	if (!bodyElement) return NS_ERROR_NULL_POINTER;
+	nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+
+  // now we've got the body tag.
+  // iterate the body tag, looking for editable content
+  // if no editable content is found, insert the bogus node
+  PRBool needsBogusContent=PR_TRUE;
+  nsCOMPtr<nsIDOMNode>bodyChild;
+  result = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
+  while ((NS_SUCCEEDED(result)) && bodyChild)
+  { 
+    if (PR_TRUE==mEditor->IsEditable(bodyChild))
+    {
+      needsBogusContent = PR_FALSE;
+      break;
+    }
+    nsCOMPtr<nsIDOMNode>temp;
+    bodyChild->GetNextSibling(getter_AddRefs(temp));
+    bodyChild = do_QueryInterface(temp);
+  }
+  if (PR_TRUE==needsBogusContent)
   {
-    PRUint32 count;
-    nodeList->GetLength(&count);
-    NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
-    nsCOMPtr<nsIDOMNode>bodyNode;
-    result = nodeList->Item(0, getter_AddRefs(bodyNode));
-    if ((NS_SUCCEEDED(result)) && bodyNode)
-    { // now we've got the body tag.
-      // iterate the body tag, looking for editable content
-      // if no editable content is found, insert the bogus node
-      PRBool needsBogusContent=PR_TRUE;
-      nsCOMPtr<nsIDOMNode>bodyChild;
-      result = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
-      while ((NS_SUCCEEDED(result)) && bodyChild)
-      { 
-        if (PR_TRUE==mEditor->IsEditable(bodyChild))
-        {
-          needsBogusContent = PR_FALSE;
-          break;
-        }
-        nsCOMPtr<nsIDOMNode>temp;
-        bodyChild->GetNextSibling(getter_AddRefs(temp));
-        bodyChild = do_QueryInterface(temp);
-      }
-      if (PR_TRUE==needsBogusContent)
-      {
-        // set mBogusNode to be the newly created <P>
-        result = mEditor->CreateNode(nsAutoString("P"), bodyNode, 0, 
-                                     getter_AddRefs(mBogusNode));
-        if ((NS_SUCCEEDED(result)) && mBogusNode)
-        {
-          nsCOMPtr<nsIDOMNode>newTNode;
-          result = mEditor->CreateNode(nsEditor::GetTextNodeTag(), mBogusNode, 0, 
-                                       getter_AddRefs(newTNode));
-          if ((NS_SUCCEEDED(result)) && newTNode)
-          {
-            nsCOMPtr<nsIDOMCharacterData>newNodeAsText;
-            newNodeAsText = do_QueryInterface(newTNode);
-            if (newNodeAsText)
-            {
-              nsAutoString data;
-              data += 160;
-              newNodeAsText->SetData(data);
-              aSelection->Collapse(newTNode, 0);
-            }
-          }
-          // make sure we know the PNode is bogus
-          nsCOMPtr<nsIDOMElement>newPElement;
-          newPElement = do_QueryInterface(mBogusNode);
-          if (newPElement)
-          {
-            nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-            nsAutoString val(nsEditor::kMOZEditorBogusNodeValue);
-            newPElement->SetAttribute(att, val);
-          }
-        }
-      }
+    // set mBogusNode to be the newly created <P>
+    result = mEditor->CreateNode(nsAutoString("P"), bodyNode, 0, 
+                                 getter_AddRefs(mBogusNode));
+		if (NS_FAILED(result)) return result;
+		if (!mBogusNode) return NS_ERROR_NULL_POINTER;
+
+    nsCOMPtr<nsIDOMNode>newTNode;
+    result = mEditor->CreateNode(nsEditor::GetTextNodeTag(), mBogusNode, 0, 
+                                 getter_AddRefs(newTNode));
+    if (NS_FAILED(result)) return result;
+    if (!newTNode) return NS_ERROR_NULL_POINTER;
+
+    nsCOMPtr<nsIDOMCharacterData>newNodeAsText;
+    newNodeAsText = do_QueryInterface(newTNode);
+    if (newNodeAsText)
+    {
+      nsAutoString data;
+      data += 160;
+      newNodeAsText->SetData(data);
+      aSelection->Collapse(newTNode, 0);
+    }
+    // make sure we know the PNode is bogus
+    nsCOMPtr<nsIDOMElement>newPElement;
+    newPElement = do_QueryInterface(mBogusNode);
+    if (newPElement)
+    {
+      nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
+      nsAutoString val(nsEditor::kMOZEditorBogusNodeValue);
+      newPElement->SetAttribute(att, val);
     }
   }
   return result;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

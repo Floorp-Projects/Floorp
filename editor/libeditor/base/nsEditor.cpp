@@ -239,6 +239,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   // disable links
   nsCOMPtr<nsIPresContext> context;
   mPresShell->GetPresContext(getter_AddRefs(context));
+  if (!context) return NS_ERROR_NULL_POINTER;
   context->SetLinkHandler(0);  
 
   // Set up the DTD
@@ -252,9 +253,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   if (!mEditProperty) {return NS_ERROR_NULL_POINTER;}
 
   mPresShell->GetViewManager(&mViewManager);
-  if (mViewManager){
-    mViewManager->Release(); //we want a weak link
-  }
+  if (!mViewManager) {return NS_ERROR_NULL_POINTER;}
+  mViewManager->Release(); //we want a weak link
+
   mPresShell->SetDisplayNonTextSelection(PR_TRUE);//we want to see all the selection reflected to user
   mUpdateCount=0;
   InsertTextTxn::ClassInit();
@@ -267,22 +268,25 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   mIMEBufferLength = 0;
   
   /* Show the caret */
+  // XXX: I suppose it's legal to fail to get a caret, so don't propogate the
+  //      result of GetCaret
   nsCOMPtr<nsICaret>	caret;
   if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret))) && caret)
   {
   	caret->SetCaretVisible(PR_TRUE);
   	caret->SetCaretReadOnly(PR_FALSE);
   }
+
   // NOTE: We don't fail if we can't get prefs or string bundles
   //  since we could still be used as the text edit widget without prefs
 
   // Get the prefs service (Note: can't use nsCOMPtr for service pointers)
-  result = nsServiceManager::GetService(kPrefCID, 
-                                        nsIPref::GetIID(), 
-                                        (nsISupports**)&mPrefs);
-  if (NS_FAILED(result) || !mPrefs)
+  nsresult ignoredResult = nsServiceManager::GetService(kPrefCID, 
+                                                        nsIPref::GetIID(), 
+                                                        (nsISupports**)&mPrefs);
+  if (NS_FAILED(ignoredResult) || !mPrefs)
   {
-    printf("ERROR: Failed to get Prefs Service instance.\n");
+    if (gNoisy) { printf("ERROR: Failed to get Prefs Service instance.\n");}
   }
 
   // TODO: Cache basic preferences?
@@ -290,20 +294,21 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
   //       respond to while running
 
   nsIStringBundleService* service;
-  result = nsServiceManager::GetService(kStringBundleServiceCID,
-                                        nsIStringBundleService::GetIID(), 
-                                        (nsISupports**)&service);
+  ignoredResult = nsServiceManager::GetService(kStringBundleServiceCID,
+                                               nsIStringBundleService::GetIID(), 
+                                               (nsISupports**)&service);
 
-  if (NS_SUCCEEDED(result) && service)
+  if (NS_SUCCEEDED(ignoredResult) && service)
   {
     nsILocale* locale = nsnull;
-    result = service->CreateBundle(EDITOR_BUNDLE_URL, locale, 
-                                   getter_AddRefs(mStringBundle));
+    ignoredResult = service->CreateBundle(EDITOR_BUNDLE_URL, locale, 
+                                          getter_AddRefs(mStringBundle));
     // We don't need to keep service around once we created the bundle
     nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
   } else {
-    printf("ERROR: Failed to get StringBundle Service instance.\n");
+    if (gNoisy) printf("ERROR: Failed to get StringBundle Service instance.\n");
   }
+
 /*
  Example of getting a string:
   nsString value;
@@ -374,8 +379,8 @@ NS_IMETHODIMP nsEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
   // get the document
   nsCOMPtr<nsIDOMDocument> doc;
   rv = GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv) || !doc)
-    return rv;
+  if (NS_FAILED(rv)) return rv;
+  if (!doc) return NS_ERROR_NULL_POINTER;
   
   nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
   if (!diskDoc)
@@ -1237,7 +1242,6 @@ nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTex
 
 	return result;
 }
-
 
 #ifdef XP_MAC
 #pragma mark -
