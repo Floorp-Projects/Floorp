@@ -1906,6 +1906,7 @@ void nsTableFrame::PlaceChild(nsIPresContext*    aPresContext,
       }
     }
   }
+  //XXX: this should call into layout strategy to get the width field
   if (nsnull != aMaxElementSize) 
   {
     nsMargin borderPadding;
@@ -3281,6 +3282,12 @@ nscoord nsTableFrame::GetMaxTableWidth()
   if (nsnull!=mTableLayoutStrategy)
     result = mTableLayoutStrategy->GetTableMaxWidth();
   return result;
+}
+
+void nsTableFrame::SetMaxElementSize(nsSize* aMaxElementSize)
+{
+  if (nsnull!=mTableLayoutStrategy)
+    mTableLayoutStrategy->SetMaxElementSize(aMaxElementSize);
 }
 
 

@@ -1322,6 +1322,12 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
     processChildren = PR_TRUE;
     break;
 
+  case NS_STYLE_DISPLAY_TABLE_CAPTION:
+    // XXX We should check for being inside of a table row frame...
+    rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame, NS_BODY_NO_AUTO_MARGINS);
+    processChildren = PR_TRUE;
+    break;
+
   default:
     // Don't create any frame for content that's not displayed...
     break;
