@@ -57,7 +57,8 @@ interface gfxIImageFrame : nsISupports
             in nscoord aY,
             in nscoord aWidth,
             in nscoord aHeight,
-            in gfx_format aFormat);
+            in gfx_format aFormat,
+            in gfx_depth aDepth);
 
   /**
    * TRUE by default.  When set to FALSE, you will no longer be able to make any modifications

@@ -151,7 +151,7 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
        (numFrames >= 1)) // Not sure if I want to create a composite frame for every anim. Could be smarter.
     {
       mCompositingFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-      mCompositingFrame->Init(0, 0, mSize.width, mSize.height, gfxIFormats::RGB_A1);
+      mCompositingFrame->Init(0, 0, mSize.width, mSize.height, gfxIFormats::RGB_A1, 24);
 
       nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(mCompositingFrame));
       if (ireq) {
@@ -607,7 +607,7 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
     gfx_format format;
     mCompositingFrame->GetFormat(&format);
 
-    mCompositingPrevFrame->Init(0, 0, mSize.width, mSize.height, format);
+    mCompositingPrevFrame->Init(0, 0, mSize.width, mSize.height, format, 24);
 
     PRUint8* aDataSrc;
     PRUint8* aDataDest;

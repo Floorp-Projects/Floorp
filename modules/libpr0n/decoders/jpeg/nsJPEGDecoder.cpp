@@ -314,7 +314,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       format = gfxIFormats::BGR;
 #endif
 
-      if (NS_FAILED(mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, format))) {
+      if (NS_FAILED(mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, format, 24))) {
         mState = JPEG_ERROR;
         return NS_ERROR_OUT_OF_MEMORY;
       }

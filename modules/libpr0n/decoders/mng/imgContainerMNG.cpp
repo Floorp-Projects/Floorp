@@ -339,7 +339,7 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
   if (!decoder->mImageFrame)
     return MNG_FALSE;
 
-  if (NS_FAILED(decoder->mImageFrame->Init(0, 0, width, height, format)))
+  if (NS_FAILED(decoder->mImageFrame->Init(0, 0, width, height, format, 24)))
     return MNG_FALSE;
 
   decoder->mImageContainer->AppendFrame(decoder->mImageFrame);

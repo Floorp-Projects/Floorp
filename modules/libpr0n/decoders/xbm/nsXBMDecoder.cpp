@@ -166,7 +166,7 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         mImage->Init(mWidth, mHeight, mObserver);
         mObserver->OnStartContainer(nsnull, nsnull, mImage);
 
-        nsresult rv = mFrame->Init(0, 0, mWidth, mHeight, GFXFORMAT);
+        nsresult rv = mFrame->Init(0, 0, mWidth, mHeight, GFXFORMAT, 24);
         if (NS_FAILED(rv))
           return rv;
 

@@ -330,7 +330,7 @@ SelectionImageService::CreateImage(nscolor aImageColor, imgIContainer *aContaine
       nsCOMPtr<gfxIImageFrame> image = do_CreateInstance("@mozilla.org/gfx/image/frame;2",&result);
       if (NS_SUCCEEDED(result) && image)
       {
-        image->Init(0, 0, SEL_IMAGE_WIDTH, SEL_IMAGE_HEIGHT, gfxIFormats::RGB_A8);
+        image->Init(0, 0, SEL_IMAGE_WIDTH, SEL_IMAGE_HEIGHT, gfxIFormats::RGB_A8, 24);
         aContainer->AppendFrame(image);
 
         PRUint32 bpr, abpr;

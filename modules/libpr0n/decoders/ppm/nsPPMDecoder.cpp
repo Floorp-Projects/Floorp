@@ -259,7 +259,7 @@ NS_IMETHODIMP nsPPMDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
       mImage->Init(mWidth, mHeight, mObserver);
       if (mObserver)
 	mObserver->OnStartContainer(nsnull, nsnull, mImage);
-      mFrame->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB);
+      mFrame->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB, 24);
       mImage->AppendFrame(mFrame);
       if (mObserver)
 	mObserver->OnStartFrame(nsnull, nsnull, mFrame);
