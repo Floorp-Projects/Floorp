@@ -117,15 +117,20 @@ static NSArray* sToolbarDefaults = nil;
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:NO];
 }
 
-/*
 - (void)windowDidBecomeMain:(NSNotification *)notification
 {
+  // we have to manually enable/disable the bookmarks menu items, because we
+  // turn autoenabling off for that menu
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:YES];
 }
 
 - (void)windowDidResignMain:(NSNotification *)notification
 {
+  // we have to manually enable/disable the bookmarks menu items, because we
+  // turn autoenabling off for that menu
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:NO];
 }
-*/
+
 
 -(void)mouseMoved:(NSEvent*)aEvent
 {
