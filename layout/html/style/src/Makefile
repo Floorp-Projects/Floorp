@@ -30,6 +30,7 @@ CPPSRCS =				\
 	nsCSSDeclaration.cpp		\
 	nsCSSParser.cpp			\
 	nsCSSProps.cpp			\
+	nsCSSProps2.cpp			\
 	nsCSSRendering.cpp		\
 	nsCSSScanner.cpp		\
 	nsCSSStyleRule.cpp		\
