@@ -985,7 +985,6 @@ MapTableFrameInto(nsIHTMLAttributes* aAttributes,
       aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
       aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
-      tableStyle->mRules=NS_STYLE_TABLE_RULES_NONE;
       break;
     case NS_STYLE_TABLE_FRAME_ABOVE:
       aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
