@@ -145,8 +145,6 @@ static const PRUnichar sHTMLTagUnicodeName_i[] =
   {'i', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_iframe[] =
   {'i', 'f', 'r', 'a', 'm', 'e', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_ilayer[] =
-  {'i', 'l', 'a', 'y', 'e', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_image[] =
   {'i', 'm', 'a', 'g', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_img[] =
@@ -163,8 +161,6 @@ static const PRUnichar sHTMLTagUnicodeName_keygen[] =
   {'k', 'e', 'y', 'g', 'e', 'n', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_label[] =
   {'l', 'a', 'b', 'e', 'l', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_layer[] =
-  {'l', 'a', 'y', 'e', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_legend[] =
   {'l', 'e', 'g', 'e', 'n', 'd', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_li[] =
