@@ -43,6 +43,7 @@
 
 #include "plugin.h"
 #include "helpers.h"
+#include "guihlp.h"
 #include "guiprefs.h"
 #include "os2utils.h"
 #include "xp.h"
