@@ -93,7 +93,7 @@ function initServices()
   kPREFContractID  = "@mozilla.org/preferences-service;1";
   kPREFIID         = Components.interfaces.nsIPrefService;
   PREF             = Components.classes[kPREFContractID].getService(kPREFIID)
-                               .getBranch(null)
+                               .getBranch(null);
 
   kSOUNDContractID = "@mozilla.org/sound;1";
   kSOUNDIID        = Components.interfaces.nsISound;
@@ -148,7 +148,7 @@ var BookmarksCommand = {
   {
     var xulElement = document.createElementNS(XUL_NS, "menuitem");
     xulElement.setAttribute("cmd", aCommandName);
-    var cmd = "cmd_" + aCommandName.substring(NC_NS_CMD.length)
+    var cmd = "cmd_" + aCommandName.substring(NC_NS_CMD.length);
     xulElement.setAttribute("command", cmd);
     
     switch (aCommandName) {
@@ -430,15 +430,15 @@ var BookmarksCommand = {
 
     xferable.addDataFlavor("moz/bookmarkclipboarditem");
     bmstring.data = sBookmarkItem;
-    xferable.setTransferData("moz/bookmarkclipboarditem", bmstring, sBookmarkItem.length*2)
+    xferable.setTransferData("moz/bookmarkclipboarditem", bmstring, sBookmarkItem.length*2);
     
     xferable.addDataFlavor("text/html");
     htmlstring.data = sTextHTML;
-    xferable.setTransferData("text/html", htmlstring, sTextHTML.length*2)
+    xferable.setTransferData("text/html", htmlstring, sTextHTML.length*2);
     
     xferable.addDataFlavor("text/unicode");
     unicodestring.data = sTextUnicode;
-    xferable.setTransferData("text/unicode", unicodestring, sTextUnicode.length*2)
+    xferable.setTransferData("text/unicode", unicodestring, sTextUnicode.length*2);
     
     const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
     const kClipboardIID = Components.interfaces.nsIClipboard;
@@ -491,7 +491,7 @@ var BookmarksCommand = {
       return;
     }
    
-    var selection = {item: items, parent:Array(items.length), length: items.length}
+    var selection = {item: items, parent:Array(items.length), length: items.length};
     BookmarksUtils.checkSelection(selection);
     BookmarksUtils.insertSelection("paste", selection, aTarget, true);
   },
@@ -537,7 +537,7 @@ var BookmarksCommand = {
   // requires utilityOverlay.js if opening in new window for getTopWin()
   openOneBookmark: function (aURI, aTargetBrowser, aDS)
   {
-    var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS)
+    var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS);
     // Ignore "NC:" and empty urls.
     if (url == "")
       return;
@@ -632,7 +632,7 @@ var BookmarksCommand = {
   {
     var rSeparator  = BMSVC.createSeparator();
     var selection   = BookmarksUtils.getSelectionFromResource(rSeparator);
-    BookmarksUtils.insertSelection("newseparator", selection, aTarget)
+    BookmarksUtils.insertSelection("newseparator", selection, aTarget);
   },
 
   importBookmarks: function ()
@@ -672,7 +672,7 @@ var BookmarksCommand = {
       transaction.index  .push(index);
       transaction.isValid.push(true);
     }
-    var isCancelled = !BookmarksUtils.any(transaction.isValid)
+    var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
       BMSVC.transactionManager.doTransaction(transaction);
       BookmarksUtils.flushDataSource();
@@ -823,11 +823,11 @@ var BookmarksController = {
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_setpersonaltoolbarfolder":
       if (length != 1)
-        return false
+        return false;
       return item0 != "NC:PersonalToolbarFolder" && type0 == "Folder";
     case "cmd_bm_setnewsearchfolder":
       if (length != 1)
-        return false
+        return false;
       return item0 != "NC:NewSearchFolder"       && 
              (type0 == "Folder" || type0 == "PersonalToolbarFolder");
     case "cmd_bm_movebookmark":
@@ -1004,7 +1004,7 @@ var BookmarksUtils = {
       else
         bundle = this._bundle.formatStringFromName(aStringKey, aReplaceString, aReplaceString.length);
     } catch (e) {
-      dump("Bookmark bundle "+aStringKey+" not found!\n")
+      dump("Bookmark bundle "+aStringKey+" not found!\n");
       bundle = "";
     }
 
@@ -1036,9 +1036,9 @@ var BookmarksUtils = {
   // Determine the rdf:type property for the given resource.
   resolveType: function (aResource)
   {
-    var type = this.getProperty(aResource, RDF_NS+"type")
+    var type = this.getProperty(aResource, RDF_NS+"type");
     if (type != "")
-      type = type.split("#")[1]
+      type = type.split("#")[1];
     if (type == "Folder") {
       if (this.isPersonalToolbarFolder(aResource))
         type = "PersonalToolbarFolder";
@@ -1051,13 +1051,13 @@ var BookmarksUtils = {
   /////////////////////////////////////////////////////////////////////////////
   // Returns true if aResource is a folder group
   isFolderGroup: function (aResource) {
-    return this.getProperty(aResource, NC_NS+"FolderGroup") == "true"
+    return this.getProperty(aResource, NC_NS+"FolderGroup") == "true";
   },
 
   /////////////////////////////////////////////////////////////////////////////
   // Returns true if aResource is the Personal Toolbar Folder
   isPersonalToolbarFolder: function (aResource) {
-    return this.getProperty(aResource, NC_NS+"FolderType") == "NC:PersonalToolbarFolder"
+    return this.getProperty(aResource, NC_NS+"FolderType") == "NC:PersonalToolbarFolder";
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1112,7 +1112,7 @@ var BookmarksUtils = {
     var rName = this.getProperty(aFolder, NC_NS+"Name");    
     var newFolder;
     if (this.isFolderGroup(aFolder))
-      newFolder = BMSVC.createGroup(rName)
+      newFolder = BMSVC.createGroup(rName);
     else
       newFolder = BMSVC.createFolder(rName);
     
@@ -1266,7 +1266,7 @@ var BookmarksUtils = {
   // Returns true is aItem is a child of aContainer
   isChildOfContainer: function (aItem, aContainer)
   {
-    RDFC.Init(BMDS, aContainer)
+    RDFC.Init(BMDS, aContainer);
     var rChildren = RDFC.GetElements();
     while (rChildren.hasMoreElements()) {
       if (aItem == rChildren.getNext())
@@ -1293,7 +1293,7 @@ var BookmarksUtils = {
     }
     if (aAction != "move" && !BookmarksUtils.all(transaction.isValid))
       SOUND.beep();
-    var isCancelled = !BookmarksUtils.any(transaction.isValid)
+    var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
       BMSVC.transactionManager.doTransaction(transaction);
       if (aAction != "move")
@@ -1344,7 +1344,7 @@ var BookmarksUtils = {
     }
     if (!BookmarksUtils.all(transaction.isValid))
       SOUND.beep();
-    var isCancelled = !BookmarksUtils.any(transaction.isValid)
+    var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
       BMSVC.transactionManager.doTransaction(transaction);
       BookmarksUtils.flushDataSource();
