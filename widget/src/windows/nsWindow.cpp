@@ -4607,17 +4607,25 @@ LPCWSTR nsWindow::WindowClassW()
         wc.hCursor          = NULL;
         wc.hbrBackground    = mBrush;
         wc.lpszMenuName     = NULL;
+
         wc.lpszClassName    = kWClassNameHidden;
-        nsWindow::sIsRegistered = nsToolkit::mRegisterClass(&wc);
+        BOOL succeeded =  nsToolkit::mRegisterClass(&wc) != 0;
+        nsWindow::sIsRegistered = succeeded; 
 
         wc.lpszClassName    = kWClassNameContent;
-        nsWindow::sIsRegistered &= nsToolkit::mRegisterClass(&wc);
+        if (!nsToolkit::mRegisterClass(&wc)) {
+          nsWindow::sIsRegistered = FALSE;
+        }
 
         wc.lpszClassName    = kWClassNameGeneral;
-        nsWindow::sIsRegistered = nsToolkit::mRegisterClass(&wc);
+        if (!nsToolkit::mRegisterClass(&wc)) {
+          nsWindow::sIsRegistered = FALSE;
+        }
 
         wc.lpszClassName    = kWClassNameUI;
-        nsWindow::sIsRegistered &= nsToolkit::mRegisterClass(&wc);
+        if (!nsToolkit::mRegisterClass(&wc)) {
+          nsWindow::sIsRegistered = FALSE;
+        }
 
         // Call FilterClientWindows method since it enables ActiveIME on CJK Windows
         if(nsToolkit::gAIMMApp)
