@@ -686,7 +686,7 @@ static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFun
 
   stringList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList;
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
   PRUnichar* end   = start;
 
   while (running && (kNullCh != *start)) {

@@ -897,8 +897,8 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue;
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList;
+  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue.GetUnicode();
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList.GetUnicode();
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {
@@ -938,8 +938,8 @@ static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue,
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue;
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList;
+  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue.GetUnicode();
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList.GetUnicode();
   PRUnichar* end   = start;
 
   if (kNullCh != *start) {
@@ -1143,7 +1143,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
                     NS_IF_RELEASE(docURL);
 
-                    linkHandler->GetLinkState(absURLSpec, linkState);
+                    linkHandler->GetLinkState(absURLSpec.GetUnicode(), linkState);
                   }
                 }
               }

@@ -464,7 +464,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                 NS_IF_RELEASE(docURL);
 
                 nsLinkState  state;
-                if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
+                if (NS_OK == linkHandler->GetLinkState(absURLSpec.GetUnicode(), state)) {
                   switch (state) {
                     case eLinkState_Unvisited:
                       if (nsnull != mLinkRule) {
