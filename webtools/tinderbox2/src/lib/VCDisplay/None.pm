@@ -6,8 +6,8 @@
 # cvsquery an we may need to generalize the interfaces in the future
 # to accomidate more VC systems.
 
-# $Revision: 1.8 $ 
-# $Date: 2003/04/20 20:34:02 $ 
+# $Revision: 1.9 $ 
+# $Date: 2003/05/10 19:59:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/None.pm,v $ 
 # $Name:  $ 
@@ -55,7 +55,7 @@ use lib '#tinder_libdir#';
 
 use TreeData;
 use HTMLPopUp;
-
+use Utils;
 
 
 # create a Link to a VC file and its line number
@@ -135,11 +135,9 @@ sub query {
       die("function VCDisplay::query, tree: $args{'tree'} does not exist\n");
   }
 
-  my $output = '';
-
   my $checkin_page_reference = ($args{'maxdate'} || $args{'mindate'});
   
-  my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
+  my ($href) = (FileStructure::get_filename($args{'tree'}, 'tree_URL').
                 "/all_vc.html");
 
   if ($checkin_page_reference) {
