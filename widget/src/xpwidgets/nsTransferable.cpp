@@ -190,7 +190,7 @@ NS_IMETHODIMP nsTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void 
     data->mFlavor->GetMimeType(mime);
     if (mimeInQuestion.Equals(mime)) {
       if (nsnull != data->mData) {
-        delete data->mData;
+        delete[] data->mData;
       }
       data->mData     = aData;
       data->mDataLen  = aDataLen;
