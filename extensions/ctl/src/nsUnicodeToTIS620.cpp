@@ -239,7 +239,7 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
   
   // Cleanup Run Info;
   aPtr = txtRuns.head;
-  for (int i = 0; i < txtRuns.numRuns; i++) {
+  for (i = 0; i < txtRuns.numRuns; i++) {
     aTmpPtr = aPtr;
     aPtr = aPtr->next;
     delete aTmpPtr;
