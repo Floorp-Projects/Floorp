@@ -443,6 +443,8 @@ function upgradeCleanup()
   deleteThisFile("Components", "xpti.dat");
   deleteThisFile("Components", "xptitemp.dat");
   deleteThisFile("Chrome",     "chrome.rdf");
+  deleteThisFile("Chrome",     "overlays.rdf");
+  deleteThisFile("Chrome",     "stylesheets.rdf");
   deleteThisFile("Chrome",     "forms.jar");
   deleteThisFile("Chrome",     "typeaheadfind.jar");
   deleteThisFolder("Chrome",   "overlayinfo");
@@ -707,27 +709,8 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Create Folder: " + fProgram + "chrome");
     logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
     logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\cookie\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\inspector\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\communicator\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\editor\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\messenger\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\skin");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\skin\\stylesheets.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlays.rdf");
+    logComment("Installing: "    + fProgram + "chrome\\stylesheets.rdf");
 
     err = getLastError();
     if (err == SUCCESS)
