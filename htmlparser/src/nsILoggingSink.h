@@ -21,6 +21,7 @@
 
 #include "nsIHTMLContentSink.h"
 #include "nsString.h"
+#include <iostream.h>
 
 // IID for nsILoggingSink
 #define NS_ILOGGING_SINK_IID \
