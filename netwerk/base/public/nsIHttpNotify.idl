@@ -32,9 +32,19 @@ interface nsIHttpNotify : nsISupports, nsIObserver {
     // stream, this method is called. 
     //
     // ARGUMENTS:
+	// aContext: An nsIProtocolConnection pointer.
     // aHeaders: All http headers (as defined in
     // http://www.w3.org/Protocols/HTTP/1.0/spec.html#Message-Headers)
     //
     // RETURNS: nsresult
-    void OnHeaders(in string aHeaders);
+    void OnHeaders(in nsISupports *aContext, in string aHeaders);
+
+	// Before an http request is sent to the server, this method is called
+	// to determine whether the external module wants to set any headers.
+	// ARGUMENTS:
+	// aContext: An nsIProtocolConnection pointer.
+	// aHeaders: Any headers the external module wants set for this request.
+	// 
+	// RETURNS: nsresult
+	void SetHeaders(in nsISupports *aContext, out string aHeaders);
 };
