@@ -656,7 +656,7 @@ sub BuildClientDist()
 
     #EMBEDDING
     InstallFromManifest(":mozilla:embedding:browser:webbrowser:MANIFEST_IDL",      "$distdirectory:idl:");
-    InstallFromManifest(":mozilla:embedding:browser:setup:MANIFEST_IDL",           "$distdirectory:idl:");
+    # InstallFromManifest(":mozilla:embedding:browser:setup:MANIFEST_IDL",           "$distdirectory:idl:");
 
     #WIDGET
     InstallFromManifest(":mozilla:widget:public:MANIFEST",                         "$distdirectory:widget:");
@@ -880,7 +880,7 @@ sub BuildXPIDLCompiler()
     }
 
 	# xpt_link MPW tool, needed for merging xpt files (release build)
-    if ($main::options_flags{xptlink})
+    if ($main::options{xptlink})
     {
         my($codewarrior_msl) = GetCodeWarriorRelativePath("MSL:MSL_C:MSL_MacOS:");
     	if ( ! -e $codewarrior_msl . "Lib:PPC:MSL C.PPC MPW(NL).Lib") {
