@@ -349,7 +349,6 @@ const int kMenuTruncationChars = 60;
     // since it will be added to and removed from the menu repeatedly
     mMenuItem = [[NSMenuItem alloc] initWithTitle:[self label] action:@selector(selectTab:) keyEquivalent:@""];
     [mMenuItem setTarget:self];
-    [mMenuItem retain];
 
     [[self tabView] setAutoresizesSubviews:YES];
 
