@@ -2951,7 +2951,12 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
   // To figure out the filename of the plugin, we'll need to get the
   // plugin's CID, and then navigate through the XPCOM registry to
   // pull out the DLL name to which the CID is registered.
-  nsAutoString path( NS_READABLE_CAST(NS_LITERAL_STRING("software/mozilla/XPCOM/classID/")) + NS_READABLE_CAST(NS_ConvertASCIItoUCS2(aCID)) );
+  NS_NAMED_LITERAL_STRING(prefix, "software/mozilla/XPCOM/classID/");
+  NS_ConvertASCIItoUCS2 suffix(aCID);
+
+  const nsAReadableString& prefixRef = prefix;
+  const nsAReadableString& suffixRef = suffix;
+  nsAutoString path(prefixRef+suffixRef);
     // this contortion to append is a hack until I can figure out why the right |operator+| is not found
     //  on some platforms
 
