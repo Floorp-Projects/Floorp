@@ -267,7 +267,10 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
     if ((NS_FAILED(ret) || !in) && lc_country.Length() && lc_lang.Length()) {
       /* plan A: fallback to lang only
        */
-      strFile2 = fileLeft + "_" + lc_lang + fileRight;
+      strFile2 = fileLeft;
+      strFile2 += "_";
+      strFile2 += lc_lang;
+      strFile2 += fileRight;
       ret = OpenInputStream(strFile2, in);
     }/* plan A */   
   }/* locale */
