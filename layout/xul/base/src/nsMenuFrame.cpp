@@ -192,31 +192,6 @@ nsMenuFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
     // Didn't find it.
     rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    
-    nsCOMPtr<nsIDOMXULMenuListElement> list(do_QueryInterface(mContent));
-    if (list) {
-      nsCOMPtr<nsIDOMElement> element;
-      list->GetSelectedItem(getter_AddRefs(element));
-      if (!element) {
-        nsAutoString value;
-        list->GetValue(value);
-        if (value == "") {
-          nsCOMPtr<nsIContent> child;
-          GetMenuChildrenElement(getter_AddRefs(child));
-          if (child) {
-            PRInt32 count;
-            child->ChildCount(count);
-            if (count > 0) {
-              nsCOMPtr<nsIContent> item;
-              child->ChildAt(0, *getter_AddRefs(item));
-              nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
-              if (selectedElement) 
-                list->SetSelectedItem(selectedElement);
-            }
-          }
-        }
-      }
-    }
   }
   return rv;
 }
@@ -741,15 +716,6 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
     }
   }
 
-  // If we're a menulist AND if we're intrinsically sized, then
-  // we need to flow our popup and use its width as our own width.
-  PRBool constrainMenuWidth = PR_FALSE;
-  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(mContent);
-  if (menulist && (aReflowState.mComputedWidth == NS_UNCONSTRAINEDSIZE)) {
-    constrainMenuWidth = PR_TRUE;
-    MarkAsGenerated();
-  }
-
   // Handle reflowing our subordinate popup
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize);  
   if (popupChild) {         
@@ -772,14 +738,11 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
                            NS_FRAME_NO_SIZE_VIEW |NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS);
   }
 
-  if (constrainMenuWidth) {
-    boxState.mComputedWidth = kidDesiredSize.width;
-  }
-
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, boxState, aStatus);
 
   // If we're a menulist, then we might potentially flow the popup a second time
   // (its width may be too small).
+  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(mContent);
   if (menulist && popupChild) {
     if (kidDesiredSize.width < aDesiredSize.width) {
       // Flow the popup again.
@@ -803,7 +766,6 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
                         NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS);
     }
   }
- 
   return rv;
 }
 
@@ -963,11 +925,7 @@ nsMenuFrame::SelectFirstItem()
 PRBool
 nsMenuFrame::IsMenu()
 {
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
-  if (tag.get() == nsXULAtoms::menu)
-    return PR_TRUE;
-  return PR_FALSE;
+  return mIsMenu;
 }
 
 NS_IMETHODIMP_(void)
@@ -1430,6 +1388,28 @@ nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& a
       box->GetBoxInfo(aPresContext, aReflowState, childInfo);
       GetRedefinedMinPrefMax(aPresContext, this, childInfo);
       aSize.prefSize.width = childInfo.prefSize.width;
+    }
+
+    nsCOMPtr<nsIDOMElement> element;
+    menulist->GetSelectedItem(getter_AddRefs(element));
+    if (!element) {
+      nsAutoString value;
+      menulist->GetValue(value);
+      if (value == "") {
+        nsCOMPtr<nsIContent> child;
+        GetMenuChildrenElement(getter_AddRefs(child));
+        if (child) {
+          PRInt32 count;
+          child->ChildCount(count);
+          if (count > 0) {
+            nsCOMPtr<nsIContent> item;
+            child->ChildAt(0, *getter_AddRefs(item));
+            nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
+            if (selectedElement) 
+              menulist->SetSelectedItem(selectedElement);
+          }
+        }
+      }
     }
   }
   return rv;
