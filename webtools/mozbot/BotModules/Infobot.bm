@@ -114,11 +114,11 @@ sub Told {
         $self->targettedSay($event, "I have $sum factoids in my database and $friends to help me answer questions. ".
                             "Since the last reload, I've been asked $questions, performed $edits, and spoken with other bots $interbots.", 1);
     } elsif ($event->{'channel'} eq '' and $message =~ /^:INFOBOT:DUNNO <(\S+)> (.*)$/) {
-        $self->ReceivedDunno($event, $1, $2);
+        $self->ReceivedDunno($event, $1, $2) unless $event->{'from'} eq $event->{'nick'};
     } elsif ($event->{'channel'} eq '' and $message =~ /^:INFOBOT:QUERY <(\S+)> (.*)$/) {
-        $self->ReceivedQuery($event, $2, $1);
+        $self->ReceivedQuery($event, $2, $1) unless $event->{'from'} eq $event->{'nick'};
     } elsif ($event->{'channel'} eq '' and $message =~ /^:INFOBOT:REPLY <(\S+)> (.+?) =(is|are)?=> (.*)$/) {
-        $self->ReceivedReply($event, $3, $2, $1, $4);
+        $self->ReceivedReply($event, $3, $2, $1, $4) unless $event->{'from'} eq $event->{'nick'};
     } elsif ($message =~ /^\s*literal\s+(.+?)\s*$/) {
         $self->Literal($event, $1);
     } elsif ($event->{level} < 10) {
@@ -597,6 +597,7 @@ sub Research {
     if (not $asked) {
         # not yet asked, so ask each bot about $subject
         foreach my $bot (@{$self->{'friendBots'}}) {
+            next if $bot eq $event->{'nick'};
             local $event->{'from'} = $bot;
             $self->directSay($event, ":INFOBOT:QUERY <$who> $subject");
         }
