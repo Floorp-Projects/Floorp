@@ -717,6 +717,17 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
     
     my %substs;
 
+    # If an attachment was created, then add an URL. (Note: the 'g'lobal
+    # replace should work with comments with multiple attachments.)
+
+    if ( $newcomments =~ /Created an attachment \(/ ) {
+
+        my $showattachurlbase =
+            Param('urlbase') . "showattachment.cgi?attach_id=";
+
+        $newcomments =~ s/(Created an attachment \(id=([0-9]+)\))/$1\n --> \(${showattachurlbase}$2\)/g;
+    }
+
     $person .= Param('emailsuffix');
 # 09/13/2000 cyeh@bluemartini.com
 # If a bug is changed, don't put the word "Changed" in the subject mail
