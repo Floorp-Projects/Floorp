@@ -38,9 +38,9 @@
 
 package org.mozilla.javascript;
 
-import java.lang.reflect.*;
-
 import java.util.Hashtable;
+import java.io.IOException;
+import java.io.Reader;
 
 /**
  * Collection of utilities
@@ -295,6 +295,24 @@ public class Kit
             }
         }
         return initialValue;
+    }
+
+    public static String readReader(Reader r)
+        throws IOException
+    {
+        char[] buffer = new char[512];
+        int cursor = 0;
+        for (;;) {
+            int n = r.read(buffer, cursor, buffer.length - cursor);
+            if (n < 0) { break; }
+            cursor += n;
+            if (cursor == buffer.length) {
+                char[] tmp = new char[buffer.length * 2];
+                System.arraycopy(buffer, 0, tmp, 0, cursor);
+                buffer = tmp;
+            }
+        }
+        return new String(buffer, 0, cursor);
     }
 
     /**
