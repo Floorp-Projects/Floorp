@@ -51,6 +51,7 @@ public:
                               const char* aContentType, 
                               const char *aCommand,
                               nsIContentViewerContainer* aContainer,
+                              nsISupports* aExtraInfo,
                               nsIStreamListener** aDocListenerResult,
                               nsIContentViewer** aDocViewerResult) = 0;
 };
@@ -77,6 +78,11 @@ public:
                             nsIStreamObserver* anObserver = nsnull,
                             nsURLReloadType type = nsURLReload,
                             const PRUint32 aLocalIP = 0) = 0;
+
+    NS_IMETHOD LoadSubDocument(const nsString& aURLSpec,
+                               nsISupports* aExtraInfo = nsnull,
+                               nsURLReloadType type = nsURLReload,
+                               const PRUint32 aLocalIP = 0) = 0;
 
     NS_IMETHOD Stop(void) = 0;
 
