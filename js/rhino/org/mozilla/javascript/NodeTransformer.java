@@ -626,15 +626,17 @@ public class NodeTransformer {
      */
     private boolean isSpecialCallName(Node tree, Node node) {
         Node left = node.getFirstChild();
-        String name = "";
-        if (left.getType() == TokenStream.NAME)
-            name = left.getString();
-        else
-            if (left.getType() == TokenStream.GETPROP)
-                name = left.getLastChild().getString();
-        if (name.equals("eval") || name.equals("Closure") ||
-            name.equals("With") || name.equals("exec"))
-        {
+        boolean isSpecial = false;
+        if (left.getType() == TokenStream.NAME) {
+            String name = left.getString();
+            isSpecial = name.equals("eval") || name.equals("With");
+        } else {
+            if (left.getType() == TokenStream.GETPROP) {
+                String name = left.getLastChild().getString();
+                isSpecial = name.equals("exec");
+            }
+        }
+        if (isSpecial) {
             // Calls to these functions require activation objects.
             if (inFunction)
                 ((FunctionNode) tree).setRequiresActivation(true);
