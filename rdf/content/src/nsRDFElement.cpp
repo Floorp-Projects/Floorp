@@ -653,26 +653,28 @@ RDFElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
     if (NS_FAILED(rv)) return rv;
 
     PRInt32 count;
-    if (NS_SUCCEEDED(rv = ChildCount(count))) {
-        for (PRInt32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIContent> child;
-            rv = ChildAt(i, *getter_AddRefs(child));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child");
-            if (NS_FAILED(rv))
-                break;
+    rv = ChildCount(count);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child count");
+    if (NS_FAILED(rv)) return rv;
 
-            nsCOMPtr<nsIDOMNode> domNode;
-            rv = child->QueryInterface(kIDOMNodeIID, (void**) getter_AddRefs(domNode));
-            if (NS_FAILED(rv)) {
-                NS_WARNING("child content doesn't support nsIDOMNode");
-                continue;
-            }
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIContent> child;
+        rv = ChildAt(i, *getter_AddRefs(child));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child");
+        if (NS_FAILED(rv))
+            break;
 
-            rv = children->AppendNode(domNode);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append node to list");
-            if (NS_FAILED(rv))
-                break;
+        nsCOMPtr<nsIDOMNode> domNode;
+        rv = child->QueryInterface(kIDOMNodeIID, (void**) getter_AddRefs(domNode));
+        if (NS_FAILED(rv)) {
+            NS_WARNING("child content doesn't support nsIDOMNode");
+            continue;
         }
+
+        rv = children->AppendNode(domNode);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append node to list");
+        if (NS_FAILED(rv))
+            break;
     }
 
     // Create() addref'd for us
@@ -685,18 +687,17 @@ NS_IMETHODIMP
 RDFElementImpl::GetFirstChild(nsIDOMNode** aFirstChild)
 {
     nsresult rv;
-    nsIContent* child;
-    if (NS_SUCCEEDED(rv = ChildAt(0, child))) {
-	if (nsnull == child) return(NS_ERROR_FAILURE);
+    nsCOMPtr<nsIContent> child;
+    rv = ChildAt(0, *getter_AddRefs(child));
+
+    if (NS_SUCCEEDED(rv) && (child != nsnull)) {
         rv = child->QueryInterface(kIDOMNodeIID, (void**) aFirstChild);
         NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
-        NS_RELEASE(child); // balance the AddRef in ChildAt()
         return rv;
     }
-    else {
-        *aFirstChild = nsnull;
-        return NS_OK;
-    }
+
+    *aFirstChild = nsnull;
+    return NS_OK;
 }
 
 
@@ -705,23 +706,24 @@ RDFElementImpl::GetLastChild(nsIDOMNode** aLastChild)
 {
     nsresult rv;
     PRInt32 count;
-    if (NS_FAILED(rv = ChildCount(count))) {
-        NS_ERROR("unable to get child count");
-        return rv;
-    }
-    if (count) {
-        nsIContent* child;
-        if (NS_SUCCEEDED(rv = ChildAt(count - 1, child))) {
+    rv = ChildCount(count);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child count");
+
+    if (NS_SUCCEEDED(rv) && (count != 0)) {
+        nsCOMPtr<nsIContent> child;
+        rv = ChildAt(count - 1, *getter_AddRefs(child));
+
+        NS_ASSERTION(child != nsnull, "no child");
+
+        if (child) {
             rv = child->QueryInterface(kIDOMNodeIID, (void**) aLastChild);
             NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
-            NS_RELEASE(child); // balance the AddRef in ChildAt()
+            return rv;
         }
-        return rv;
     }
-    else {
-        *aLastChild = nsnull;
-        return NS_OK;
-    }
+
+    *aLastChild = nsnull;
+    return NS_OK;
 }
 
 
@@ -732,12 +734,11 @@ RDFElementImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
         PRInt32 pos;
         mParent->IndexOf(NS_STATIC_CAST(nsIStyledContent*, this), pos);
         if (pos > -1) {
-            nsIContent* prev;
-            mParent->ChildAt(--pos, prev);
+            nsCOMPtr<nsIContent> prev;
+            mParent->ChildAt(--pos, *getter_AddRefs(prev));
             if (prev) {
                 nsresult rv = prev->QueryInterface(kIDOMNodeIID, (void**) aPreviousSibling);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
-                NS_RELEASE(prev); // balance the AddRef in ChildAt()
                 return rv;
             }
         }
@@ -757,16 +758,16 @@ RDFElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
         PRInt32 pos;
         mParent->IndexOf(NS_STATIC_CAST(nsIStyledContent*, this), pos);
         if (pos > -1) {
-            nsIContent* next;
-            mParent->ChildAt(++pos, next);
-            if (nsnull != next) {
+            nsCOMPtr<nsIContent> next;
+            mParent->ChildAt(++pos, *getter_AddRefs(next));
+            if (next) {
                 nsresult res = next->QueryInterface(kIDOMNodeIID, (void**) aNextSibling);
                 NS_ASSERTION(NS_OK == res, "not a DOM Node");
-                NS_RELEASE(next); // balance the AddRef in ChildAt()
                 return res;
             }
         }
     }
+
     // XXX Nodes that are just below the document (their parent is the
     // document) need to go to the document to find their next sibling.
     *aNextSibling = nsnull;
