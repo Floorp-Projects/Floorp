@@ -109,6 +109,8 @@ sub cmdSendPassword {
 }
 
 # user.login
+# if this returns undef, don't do anything!
+# XXX need a quieter version of this to enable/disable UI elements
 sub hasRight {
     my $self = shift;
     my($app, $right) = @_;

@@ -228,9 +228,9 @@ sub setting {
     my($variable, $setting) = @_;
     $self->assert(ref($variable) eq 'SCALAR', 1, 'Internal Error: User object was expecting a scalar ref for setting() but didn\'t get one');
     if (defined($$variable)) {
-        $self->getField('settings', $setting)->data($$variable);
+        $self->getField('setting', $setting)->data($$variable);
     } else {
-        my $field = $self->hasField('settings', $setting);
+        my $field = $self->hasField('setting', $setting);
         if (defined($field)) {
             $$variable = $field->data;
         }
@@ -295,7 +295,7 @@ sub invalidateRights {
     # cached expansion of the rights data. Changing this externally
     # makes no sense -- what rights one has is dependent on what
     # groups one is in, and changing the rights won't magically change
-    # what groups you are in.
+    # what groups you are in (how could it).
 }
 
 sub propertySet {

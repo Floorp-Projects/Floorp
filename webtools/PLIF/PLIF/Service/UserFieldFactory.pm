@@ -39,7 +39,7 @@ sub provides {
     return ($service eq 'user.fieldFactory' or $class->SUPER::provides($service));
 }
 
-# Field Factory
+# Field Factory (Factory for Field Instances)
 #
 # The factory methods below should return service instances (not
 # objects or pointers to services in the controller's service
@@ -70,4 +70,54 @@ sub createFieldByName {
     my $field = $app->getServiceInstance("user.field.$type", $user, @data, $fieldData);
     $app->assert(defined($field), 1, "Database contains a field of type '$type' but there is no service providing that type");
     return $field;
+}
+
+
+# Field Factory (Factory for Field Types)
+#
+# These methods add (and remove) field types to (and from) the
+# database. They don't return anything in particular.
+# These methods are not expected to be called during normal
+# operations, only during installations and upgrades. 
+
+sub registerField {
+    my $self = shift;
+    my($app, $fieldCategory, $fieldName, $fieldType, @data) = @_;
+    my $dataSource = $app->getService('dataSource.user');
+    # see if the field already exists, so that we can keep the fieldID
+    # the same:
+    my($oldType, $fieldID) = $dataSource->getFieldByName($app, $fieldCategory, $fieldName);
+    # if the type changes, then act as if it was deleted:
+    if ((defined($oldType)) and ($oldType ne $fieldType)) {
+        $app->getCollectingServiceList("user.field.$oldType.manager")->fieldRemoved($fieldID);
+    }
+    $fieldID = $dataSource->setField($app, $fieldID, $fieldCategory, $fieldName, $fieldType, @data);
+    # if the field is new or if the type changed, then notify the field type's manager of this:
+    if ((not defined($oldType)) or ($oldType ne $fieldType)) {
+        $app->getCollectingServiceList("user.field.$oldType.manager")->fieldAdded($fieldID);
+    } else {
+        # otherwise, just do a change notification
+        $app->getCollectingServiceList("user.field.$oldType.manager")->fieldChanged($fieldID);
+    }
+    # return the fieldID
+    return $fieldID
+}
+
+sub registerSetting {
+    my $self = shift;
+    my($app, $setting, @data) = @_;
+    return $self->registerField($app, 'setting', $setting, @data);
+}
+
+sub removeField {
+    my $self = shift;
+    my($app, $fieldCategory, $fieldName) = @_;
+    my $dataSource = $app->getService('dataSource.user');
+    # get the field's data (ID and type, in particular)
+    my($fieldType, $fieldID) = $dataSource->getFieldByName($app, $fieldCategory, $fieldName);
+    if (defined($fieldType)) {
+        $app->getCollectingService("user.field.$fieldType.manager")->fieldRemoved($fieldID);
+        $dataSource->removeField($app, $fieldID);
+    } # else, field wasn't there to start with, so...
+    return $fieldID;
 }

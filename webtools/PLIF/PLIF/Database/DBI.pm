@@ -103,8 +103,12 @@ sub createResultsFrame {
     my $handle = $self->handle->prepare($statement);
     # untaint the values... (XXX?)
     foreach my $value (@values) {
-        $value =~ /^(.*)$/os;
-        $value = $1;
+        if (defined($value)) {
+            $value =~ /^(.*)$/os;
+            $value = $1;
+        } else {
+            $value = '';
+        }
     }
     if ($handle and ((not defined($execute)) or $handle->execute(@values))) {
         return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute);

@@ -65,7 +65,7 @@ sub init {
     $self->typeData($fieldTypeData); # change this at your peril
     $self->mode($fieldMode); # change this at your peril
     $self->data($fieldData); # this is the only thing you should be changing
-    # don't forget to update the user's 'hash' function if you add more fields
+    # don't forget to update the user's 'hash' function if you add more member variables here
     $self->{'_DELETE'} = 0;
     $self->{'_DIRTY'} = 0;
 }

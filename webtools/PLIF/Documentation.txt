@@ -473,6 +473,33 @@ CHAPTER 9: INPUT AND OUTPUT
 
 Some day.
 
+___________________________
+CHAPTER 10: COMMON MISTAKES
+| Wherein perls of wisdom are given out in order to save the reader
+| some time.
+
+If you get an error message of the form:
+
+   Can't locate object method "myMethod" via package "a.service.name" at SomePath/SomeModule.pm line 42
+
+...then you are probably calling 'getService' on the $self object
+instead of the $app object. The error happens because 
+
+   $aPLIFObject->getService('a.service.name')->myMethod();
+
+...results in |$aPLIFObject->{'a.service.name'}| being set to
+'a.service.name' and returns that exact value, which then results in
+the method call being invoked on the string, as in:
+
+   'a.service.name'->myMethod();
+
+...which of course will fail, since hte package 'a.service.name'
+doesn't exist and thus doesn't have a method called myMethod().
+
+For the same reason, this error can happen if you misspell the name of
+the service getter method (e.g., if you use |$app->getServiceList()|
+instead of |$app->getCollectingServiceList()|).
+
 _____________________
 CHAPTER n: CONCLUSION
 | Wherein it is revealed that all is subject to change, only available

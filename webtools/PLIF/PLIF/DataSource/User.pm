@@ -161,14 +161,22 @@ sub setField {
     # if fieldID is undefined, then add a new entry and return the
     # fieldID. Typically data will be undefined then too.
     $self->notImplemented();
+    # The caller should make sure that the relevant service
+    # ('user.field.$type.manager') is then notified
+    # ('fieldAdded($fieldID)') so that any additional database setup
+    # can be performed. If this was merely a change and not a new
+    # addition, then call fieldChanged($fieldID) instead. (It is a
+    # change if you pass $fieldID, and it is an addition if $fieldID
+    # is undefined.)
+    # returns the fieldID.
 }
 
 sub removeField {
     my $self = shift;
     my($app, $fieldID) = @_;
     # The caller should make sure that the relevant service
-    # ('user.field.$type.remover') is notified
-    # ('removeField($fieldID)') so that any additional database
+    # ('user.field.$type.manager') is notified
+    # ('fieldRemoved($fieldID)') so that any additional database
     # cleanup can be performed.
     $self->notImplemented();
 }

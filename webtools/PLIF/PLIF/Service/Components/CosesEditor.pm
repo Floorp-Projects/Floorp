@@ -33,7 +33,9 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
-# XXX I need to register and require rights
+# XXX Add more fine grained control over rights (this would have the
+# side-effect of removing the redundancy in each of the cmdXXX calls
+# below, which would be nice...)
 
 sub provides {
     my $class = shift;
@@ -43,6 +45,7 @@ sub provides {
             $service eq 'dispatcher.output.generic' or
             $service eq 'dispatcher.output' or
             $service eq 'dataSource.strings.default' or
+            $service eq 'setup.install' or
             $class->SUPER::provides($service));
 }
 
@@ -51,152 +54,177 @@ sub cmdCosesEditor {
     # warning: this is also called from other methods below
     my $self = shift;
     my($app) = @_;
-    my %variants = $app->getService('dataSource.strings')->getDescribedVariants();
-    my $variantsSortColumn = $app->input->getArgument('cosesEditorVariantsSortColumn');
-    my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-    my $stringsSortColumn = $app->input->getArgument('cosesEditorStringsSortColumn');
-    my $user = $app->getObject('user');
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
     if (defined($user)) {
-        # XXX have to register these settings
+        my %variants = $app->getService('dataSource.strings')->getDescribedVariants();
+        my $variantsSortColumn = $app->input->getArgument('cosesEditorVariantsSortColumn');
+        my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
+        my $stringsSortColumn = $app->input->getArgument('cosesEditorStringsSortColumn');
+        # if (defined($user)) {
         $user->setting(\$variantsSortColumn, 'cosesEditor.index.variantsSortColumn');
         $user->setting(\$stringsSortColumn, 'cosesEditor.index.stringsSortColumn');
-    }
-    $app->output->cosesEditorIndex(\%variants, $variantsSortColumn, \%strings, $stringsSortColumn);
+        # }
+        $app->output->cosesEditorIndex(\%variants, $variantsSortColumn, \%strings, $stringsSortColumn);
+    } # else, user has been notified
 }
 
 # dispatcher.commands
 sub cmdCosesVariantAdd {
     my $self = shift;
     my($app) = @_;
-    my @data = ('', '', 1.0, '', '', '', '', '', '');
-    my $id = $app->getService('dataSource.strings')->setVariant($app, undef, @data);
-    my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-    $app->output->cosesEditorVariant($id, @data, \%expectedStrings, {});
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
+    if (defined($user)) {
+        my @data = ('', '', 1.0, '', '', '', '', '', '');
+        my $id = $app->getService('dataSource.strings')->setVariant($app, undef, @data);
+        my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
+        $app->output->cosesEditorVariant($id, @data, \%expectedStrings, {});
+    } # else, user has been notified
 }
 
 # dispatcher.commands
 sub cmdCosesVariantEdit {
     my $self = shift;
     my($app) = @_;
-    my $id = $app->input->getArgument('cosesEditorVariantID');
-    my $dataSource = $app->getService('dataSource.strings');
-    my @data = $dataSource->getVariant($app, $id);
-    my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-    my %variantStrings = $dataSource->getVariantStrings($app, $id);
-    $app->output->cosesEditorVariant($id, @data, \%expectedStrings, \%variantStrings);
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
+    if (defined($user)) {
+        my $id = $app->input->getArgument('cosesEditorVariantID');
+        my $dataSource = $app->getService('dataSource.strings');
+        my @data = $dataSource->getVariant($app, $id);
+        my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
+        my %variantStrings = $dataSource->getVariantStrings($app, $id);
+        $app->output->cosesEditorVariant($id, @data, \%expectedStrings, \%variantStrings);
+    } # else, user has been notified
 }
 
 # dispatcher.commands
 sub cmdCosesVariantAddString {
     my $self = shift;
     my($app) = @_;
-    my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-    my($id, $data, $variantStrings) = $self->getVariantEditorArguments($app);
-    $app->output->cosesEditorVariant($id, @$data, \%expectedStrings, $variantStrings);
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
+    if (defined($user)) {
+        my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
+        my($id, $data, $variantStrings) = $self->getVariantEditorArguments($app);
+        $app->output->cosesEditorVariant($id, @$data, \%expectedStrings, $variantStrings);
+    } # else, user has been notified
 }
 
 # dispatcher.commands
 sub cmdCosesVariantCommit {
     my $self = shift;
     my($app) = @_;
-    my($id, $data, $variantStrings) = $self->getVariantEditorArguments($app);
-    my $dataSource = $app->getService('dataSource.strings');
-    $dataSource->setVariant($app, $id, @$data);
-    foreach my $string (keys(%$variantStrings)) {
-        $dataSource->setString($app, $id, $string, $variantStrings->{$string});
-    }
-    $self->cmdCosesEditor($app);
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
+    if (defined($user)) {
+        my($id, $data, $variantStrings) = $self->getVariantEditorArguments($app);
+        my $dataSource = $app->getService('dataSource.strings');
+        $dataSource->setVariant($app, $id, @$data);
+        foreach my $string (keys(%$variantStrings)) {
+            $dataSource->setString($app, $id, $string, $variantStrings->{$string});
+        }
+        $self->cmdCosesEditor($app);
+    } # else, user has been notified
 }
 
 # dispatcher.commands
 sub cmdCosesStringEdit {
     my $self = shift;
     my($app) = @_;
-    my $id = $app->input->getArgument('cosesEditorStringID');
-    my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-    my $dataSource = $app->getService('dataSource.strings');
-    my %expectedVariants = $dataSource->getDescribedVariants();    
-    my %stringVariants = $dataSource->getStringVariants($app, $id);
-    $app->output->cosesEditorString($id, $strings{$id}, \%expectedVariants, \%stringVariants);
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
+    if (defined($user)) {
+        my $id = $app->input->getArgument('cosesEditorStringID');
+        my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
+        my $dataSource = $app->getService('dataSource.strings');
+        my %expectedVariants = $dataSource->getDescribedVariants();    
+        my %stringVariants = $dataSource->getStringVariants($app, $id);
+        $app->output->cosesEditorString($id, $strings{$id}, \%expectedVariants, \%stringVariants);
+    } # else, user has been notified
 }
 
 # dispatcher.commands
 sub cmdCosesStringCommit {
     my $self = shift;
     my($app) = @_;
-    my $input = $app->input;
-    my $id = $input->getArgument('cosesEditorStringID');
-    my %variants = ();
-    my $index = 0;
-    while (defined(my $name = $input->getArgument('cosesEditorStringVariant${index}Name'))) {
-        $variants{$name} = $input->getArgument('cosesEditorStringVariant${index}Value');
-        $index += 1;
-    }
-    my $dataSource = $app->getService('dataSource.strings');
-    foreach my $variant (keys(%variants)) {
-        $dataSource->setString($app, $variant, $id, $variants{$variant});
-    }
-    $self->cmdCosesEditor($app);
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
+    if (defined($user)) {
+        my $input = $app->input;
+        my $id = $input->getArgument('cosesEditorStringID');
+        my %variants = ();
+        my $index = 0;
+        while (defined(my $name = $input->getArgument('cosesEditorStringVariant${index}Name'))) {
+            $variants{$name} = $input->getArgument('cosesEditorStringVariant${index}Value');
+            $index += 1;
+        }
+        my $dataSource = $app->getService('dataSource.strings');
+        foreach my $variant (keys(%variants)) {
+            $dataSource->setString($app, $variant, $id, $variants{$variant});
+        }
+        $self->cmdCosesEditor($app);
+    } # else, user has been notified
 }
 
 # dispatcher.commands
 sub cmdCosesVariantExport {
     my $self = shift;
     my($app) = @_;
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
+    if (defined($user)) {
 
-    # get data
-    my $id = $app->input->getArgument('cosesEditorVariantID');
-    my $dataSource = $app->getService('dataSource.strings');
-    my @data = $dataSource->getVariant($app, $id);
-    my %strings = $dataSource->getVariantStrings($app, $id);
+        # get data
+        my $id = $app->input->getArgument('cosesEditorVariantID');
+        my $dataSource = $app->getService('dataSource.strings');
+        my @data = $dataSource->getVariant($app, $id);
+        my %strings = $dataSource->getVariantStrings($app, $id);
 
-    # serialise variant
-    my $XML = $app->getService('service.xml');
-    # note. This namespace is certainly not set in stone. Please make better suggestions. XXX
-    my $result = '<variant xmlns="http://bugzilla.mozilla.org/variant/1"';
-    foreach my $name (qw(protocol quality type encoding charset language description translator)) {
-        my $value = $XML->escape(shift(@data));
-        $result .=   "\n         $name=\"$value\"";
-    }
-    $result .= ">\n";
-    foreach my $string (keys(%strings)) {
-        my $name = $XML->escape($string);
-        my $value = $XML->escape($strings{$string});
-        $result.= "  <string name=\"$name\">$value</string>\n";
-    }
-    $result .= '</variant>';
-    $app->output->cosesEditorExport($id, $result);
+        # serialise variant
+        my $XML = $app->getService('service.xml');
+        # note. This namespace is certainly not set in stone. Please make better suggestions. XXX
+        my $result = '<variant xmlns="http://bugzilla.mozilla.org/variant/1"';
+        foreach my $name (qw(protocol quality type encoding charset language description translator)) {
+            my $value = $XML->escape(shift(@data));
+            $result .=   "\n         $name=\"$value\"";
+        }
+        $result .= ">\n";
+        foreach my $string (keys(%strings)) {
+            my $name = $XML->escape($string);
+            my $value = $XML->escape($strings{$string});
+            $result.= "  <string name=\"$name\">$value</string>\n";
+        }
+        $result .= '</variant>';
+        $app->output->cosesEditorExport($id, $result);
+    } # else, user has been notified
 }
 
 # dispatcher.commands
 sub cmdCosesVariantImport {
     my $self = shift;
     my($app) = @_;
+    my $user = $app->getService('user.login')->hasRight($app, 'cosesEditor');
+    if (defined($user)) {
 
-    # get data
-    my $file = $app->input->getArgument('cosesEditorImportData');
+        # get data
+        my $file = $app->input->getArgument('cosesEditorImportData');
 
-    # parse data
-    my $XML = $app->getService('service.xml');
-    my $data = {
-        'depth' => 0,
-        'string' => undef,
-        'variant' => [], # same at all scopes (because walkNesting() is not a deep copy)
-        'strings' => {}, # same at all scopes (because walkNesting() is not a deep copy)
-    };
-    $XML->walk($self, $XML->parse($file), $data);
+        # parse data
+        my $XML = $app->getService('service.xml');
+        my $data = {
+            'depth' => 0,
+            'string' => undef,
+            'variant' => [], # same at all scopes (because walkNesting() is not a deep copy)
+            'strings' => {}, # same at all scopes (because walkNesting() is not a deep copy)
+        };
+        $XML->walk($self, $XML->parse($file), $data);
 
-    # add data
-    my $dataSource = $app->getService('dataSource.strings');
-    my $id = $dataSource->setVariant($app, undef, @{$data->{'variant'}});
-    foreach my $string (keys(%{$data->{'strings'}})) {
-        $dataSource->setString($app, $id, $string, $data->{'strings'}->{$string});
-    }
+        # add data
+        my $dataSource = $app->getService('dataSource.strings');
+        my $id = $dataSource->setVariant($app, undef, @{$data->{'variant'}});
+        foreach my $string (keys(%{$data->{'strings'}})) {
+            $dataSource->setString($app, $id, $string, $data->{'strings'}->{$string});
+        }
 
-    # display data
-    my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
-    my %variantStrings = $dataSource->getVariantStrings($app, $id);
-    $app->output->cosesEditorVariant($id, @{$data->{'variant'}}, \%expectedStrings, \%variantStrings);
+        # display data
+        my %expectedStrings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
+        my %variantStrings = $dataSource->getVariantStrings($app, $id);
+        $app->output->cosesEditorVariant($id, @{$data->{'variant'}}, \%expectedStrings, \%variantStrings);
+    } # else, user has been notified
 }
 
 # service.xml.sink
@@ -340,6 +368,19 @@ sub getDefaultString {
         }
     }
     return; # nope, sorry
+}
+
+# setup.install
+sub setupInstall {
+    my $self = shift;
+    my($app) = @_;
+    $self->dump(9, 'about to configure COSES editor...');
+    my $fieldFactory = $app->getService('user.fieldFactory');
+    $fieldFactory->registerSetting($app, 'cosesEditor.index.stringsSortColumn', 'string');
+    $fieldFactory->registerSetting($app, 'cosesEditor.index.variantsSortColumn', 'string');
+    my $userDataSource = $app->getService('dataSource.user');
+    $userDataSource->addRight($app, 'cosesEditor');
+    $self->dump(9, 'done configuring COSES editor');
 }
 
 

@@ -73,6 +73,7 @@ sub cmdSetup {
     my $self = shift;
     my($app) = @_;
     my $result;
+    # call all the setup handlers until one fails:
     $result = $app->getSelectingServiceList('setup.configure')->setupConfigure($app);
     if (not $result) {
         $result = $app->getSelectingServiceList('setup.install')->setupInstall($app);

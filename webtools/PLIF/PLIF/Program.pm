@@ -172,6 +172,8 @@ sub hash {
 # you couldn't dispatch the command.
 # Note: Don't confuse this method with the identically named method in
 # the Service class hierarchy that does something similar!
+# Also Note: Application.pm overrides this to forward commands to
+# services implementing the 'dispatcher.commands' service.
 sub dispatch {
     my $self = shift;
     my($command) = @_;

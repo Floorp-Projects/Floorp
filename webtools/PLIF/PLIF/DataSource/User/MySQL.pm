@@ -179,6 +179,7 @@ sub setField {
     if (defined($fieldID)) {
         $self->database($app)->execute('UPDATE userDataTypes SET category=?, name=?, type=?, data=?, mode=? WHERE fieldID = ?',
                                        $category, $name, $type, $data, $mode, $fieldID);
+        return $fieldID;
     } else {
         return $self->database($app)->execute('INSERT INTO userDataTypes SET category=?, name=?, type=?, data=?, mode=?',
                                               $category, $name, $type, $data, $mode)->MySQLID;
@@ -263,7 +264,10 @@ sub getRights {
 sub addRight {
     my $self = shift;
     my($app, $name) = @_;
+    $self->assert($name, 1, 'Tried to add a right without a right name');
     # only adds $name if it isn't there already, because name is a unique index
+    # XXX this currently causes an error instead of silently doing nothing.
+    # XXX this must be fixed; can we do it in one step, without a query?
     my $rightID = $self->database($app)->execute('INSERT INTO rights SET name=?', $name)->MySQLID;
 }
 

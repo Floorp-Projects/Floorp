@@ -69,7 +69,7 @@ sub reexecute {
 # This should only be used by MySQL-specific DBI data sources
 sub MySQLID {
     my $self = shift;
-    return $self->handle->database->{'mysql_insertid'};
+    return $self->handle->{'mysql_insertid'};
 }
 
 # other possible APIs:
