@@ -1,0 +1,82 @@
+<html>
+<head><title>The Jprof Profiler</title></head><body>
+<h1><center>The Jprof Profiler</h1></center><hr>
+<h2>Introduction</h2>
+Jprof is a profiling tool.  I am writing it because I need to find out
+where mozilla is spending its time, and there do not seem to be any
+profilers for Linux that can handle threads and/or shared libraries.
+This code is based heavily on Kipp Hickman's leaky.
+<P>
+<h2>Operation</h2>
+To use jprof, the mozilla source code is changed to install a timer
+which periodically causes the OS to send a signal.  When mozilla receives
+this signal, it does a stack crawl, and dumps the stack trace to a file.
+After mozilla has run, the jprof program can pick apart the mozilla binary
+and the log files and determine the call stack when each of the signals
+were received.  If the signals are sent fast enough, it should be possible
+to figure out where mozilla is spending its time by looking at a histogram
+of the call stack.
+<P>
+<h2>Use</h2>
+Jprof is not too difficult to use.  First it must be enabled by adding:
+<pre>
+--enable-jprof
+</pre>
+as an argument to configure, and rebuilding mozilla.  After mozilla is built,
+you must set the environment variable JPROF_FLAGS to enable the profiling code.
+Assuming you are in the dist/bin directory where the mozilla-bin binary lives,
+you can do this by typing:
+
+<pre>
+env JPROF_FLAGS=JP_START LD_LIBRARY_PATH=. ./mozilla-bin
+</pre>
+
+As mozilla runs, it will write out the call stack to a file called jprof-log
+every time a timer fires.  Right now the timer is set to go off
+20 times a second.  This is a lot slower than it will eventually go, but its
+easier to debug this way.  After you run mozilla for a while, shut it down.
+You can then create a profile by running the command:
+<pre>
+./jprof mozilla-bin ./jprof-log > tmp.html
+</pre>
+If you view the generated HTML in a browser you will see a lot of blocks
+that look like this:
+
+<pre>
+<hr>
+                 70 <A href="#82397">g_main_dispatch</A>
+ 76269           70  <A name=76269>gdk_event_dispatch</a>
+                 59 <A href="#68487">handle_gdk_event(_GdkEvent *, void *)</A>
+                 11 <A href="#76265">gdk_events_queue</A>
+<hr>
+</pre>
+
+<P>
+This output is supposed to look similar to gprof output, so if know how
+to read gprof, reading this should be easy.  If you are not familiar
+with gprof, here is how to interpret these blocks.
+<P>
+On the right is a column of function names.  One (and only one) of these
+function names is proceeded by a number on the  left hand side of
+the page.  In this case the function gdk_event_dispatch is proceeded
+by the number 76269.  This number is the index number of the function.
+The value of the index number is not important, but its presence tells you
+which function the block refers to (in our case gdk_event_dispatch).
+<P>
+All the functions which appear in the list above gdk_event_dispatch, are
+functions which called gdk_event_dispatch.   All the functions which appear
+below gdk_event_dispatch are functions that gdk_event_dispatch called.  In
+our example gdk_event_dispatch called the functions handle_gdk_event and
+gdk_events_queue, and it was called by g_main_dispatch.
+<P>
+The number that is immediately to the right of the index number is times
+the function appeared in a sampled call stack.  In our example the number
+is 70 which means that 70 of our call stacks contain gdk_event_dispatch.
+The numbers in front of the parent and children functions are the number
+of times those functions were parents or children of our function.
+<P>
+<h2>Source Code</h2>
+I hope to get the code into mozilla soon.  Until then you can download it from
+<A href="http://goliath.inttek.net/~jlnance/mozilla/jprof">goliath</a>  It
+comes in two pieces, a patch to apply to the existing mozilla code, and a
+tarball containing new files.
