@@ -167,11 +167,9 @@ nsTextFragment::SetTo(PRUnichar *aBuffer, PRInt32 aLength, PRBool aRelease)
   mState.mLength = aLength;
 }
 
-PRBool
-nsTextFragment::SetTo(const PRUnichar *aBuffer, PRInt32 aLength)
+void
+nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
 {
-  PRBool bidiEnabled = PR_FALSE;
-
   ReleaseText();
 
   if (aLength != 0) {
@@ -183,14 +181,7 @@ nsTextFragment::SetTo(const PRUnichar *aBuffer, PRInt32 aLength)
       PRUnichar ch = *ucp++;
       if (ch >> 8) {
         need2 = PR_TRUE;
-#ifdef IBMBIDI
-        if (CHAR_IS_BIDI(ch) ) {
-          bidiEnabled = PR_TRUE;
-#endif // IBMBIDI
         break;
-#ifdef IBMBIDI
-        }
-#endif // IBMBIDI
       }
     }
 
@@ -202,7 +193,7 @@ nsTextFragment::SetTo(const PRUnichar *aBuffer, PRInt32 aLength)
       if (!m2b) {
         NS_ERROR("Failed to clone string buffer!");
 
-        return PR_FALSE;
+        return;
       }
 
       // Setup our fields
@@ -225,7 +216,7 @@ nsTextFragment::SetTo(const PRUnichar *aBuffer, PRInt32 aLength)
         if (!nt) {
           NS_ERROR("Failed to allocate string buffer!");
 
-          return bidiEnabled;
+          return;
         }
 
         // Copy data
@@ -242,8 +233,6 @@ nsTextFragment::SetTo(const PRUnichar *aBuffer, PRInt32 aLength)
       mState.mLength = aLength;
     }
   }
-
-  return bidiEnabled;
 }
 
 void
@@ -337,3 +326,23 @@ nsTextFragment::CopyTo(char *aDest, PRInt32 aOffset, PRInt32 aCount)
     }
   }
 }
+
+#ifdef IBMBIDI
+// To save time we only do this when we really want to know, not during
+// every allocation
+void
+nsTextFragment::SetBidiFlag()
+{
+  if (mState.mIs2b && !mState.mIsBidi) {
+    const PRUnichar* cp = m2b;
+    const PRUnichar* end = cp + mState.mLength;
+    while (cp < end) {
+      PRUnichar ch = *cp++;
+      if (CHAR_IS_BIDI(ch) ) {
+        mState.mIsBidi = PR_TRUE;
+        break;
+      }
+    }
+  }
+}
+#endif

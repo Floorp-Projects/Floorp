@@ -138,6 +138,19 @@ public:
     return mState.mIs2b;
   }
 
+#ifdef IBMBIDI
+  /**
+   * Return PR_TRUE if this fragment contains Bidi text
+   * For performance reasons this flag is not set automatically, but
+   * requires an explicit call to SetBidiFlag()
+   */
+  PRBool IsBidi() const
+  {
+    return mState.mIsBidi;
+  }
+#endif
+
+
   /**
    * Get a pointer to constant PRUnichar data.
    */
@@ -178,7 +191,7 @@ public:
    * buffer. Like operator= except a length is specified instead of
    * assuming 0 termination.
    */
-  PRBool SetTo(const PRUnichar *aBuffer, PRInt32 aLength);
+  void SetTo(const PRUnichar* aBuffer, PRInt32 aLength);
 
   /**
    * Change the contents of this fragment to be a copy of the given
@@ -218,10 +231,19 @@ public:
     return mState.mIs2b ? m2b[aIndex] : PRUnichar(m1b[aIndex]);
   }
 
+#ifdef IBMBIDI
+  /**
+   * Scan the contents of the fragment and turn on mState.mIsBidi if it
+   * includes any Bidi characters.
+   */
+  void SetBidiFlag();
+#endif
+
   struct FragmentBits {
     PRBool mInHeap : 1;
     PRBool mIs2b : 1;
-    PRUint32 mLength : 30;
+    PRBool mIsBidi : 1;
+    PRUint32 mLength : 29;
   };
 
 protected:

@@ -287,6 +287,9 @@ struct nsGenericDOMDataNode {
   //----------------------------------------
 
   void ToCString(nsAWritableString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
+#ifdef IBMBIDI
+  void SetBidiStatus();
+#endif
 
   nsIDocument* mDocument;
   nsIContent* mParent;
