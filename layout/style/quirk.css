@@ -104,6 +104,7 @@ table, caption {
 table {
   text-align: -moz-initial;
   white-space: normal; /* compatible with IE & spec */
+  line-height: normal;
 }
 
 /* Quirk: make sure backgrounds are inherited in tables */
