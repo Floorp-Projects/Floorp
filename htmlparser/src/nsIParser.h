@@ -73,7 +73,8 @@ typedef enum {
    kCharsetFromParentFrame,
    kCharsetFromAutoDetection,
    kCharsetFromMetaTag,
-   kCharsetFromHTTPHeader
+   kCharsetFromHTTPHeader,
+   kCharsetFromPreviousLoading
 } nsCharsetSource;
 
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
