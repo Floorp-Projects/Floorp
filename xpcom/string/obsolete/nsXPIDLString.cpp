@@ -33,23 +33,10 @@
 ////////////////////////////////////////////////////////////////////////
 // nsXPIDLString
 
-nsXPIDLString::nsXPIDLString()
-    : mBuf(0),
-      mBufOwner(PR_FALSE)
-{
-}
-
-
 nsXPIDLString::~nsXPIDLString()
 {
     if (mBufOwner && mBuf)
         XPIDL_FREE(mBuf);
-}
-
-
-nsXPIDLString::operator const PRUnichar*() const
-{
-    return mBuf;
 }
 
 
@@ -109,13 +96,6 @@ nsXPIDLString::StartAssignmentByReference()
 ////////////////////////////////////////////////////////////////////////
 // nsXPIDLCString
 
-nsXPIDLCString::nsXPIDLCString()
-    : mBuf(0),
-      mBufOwner(PR_FALSE)
-{
-}
-
-
 nsXPIDLCString::~nsXPIDLCString()
 {
     if (mBufOwner && mBuf)
@@ -138,12 +118,6 @@ nsXPIDLCString& nsXPIDLCString::operator =(const char* aCString)
     }
     
     return *this;
-}
-
-
-nsXPIDLCString::operator const char*() const
-{
-    return mBuf;
 }
 
 
