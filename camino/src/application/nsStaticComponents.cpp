@@ -50,6 +50,7 @@ NSGETMODULE(_name) (nsIComponentManager* aCompMgr,             \
 DECL_NSGETMODULE(xpcomObsoleteModule)
 DECL_NSGETMODULE(nsI18nModule)
 DECL_NSGETMODULE(nsUConvModule)
+DECL_NSGETMODULE(nsJarModule)
 DECL_NSGETMODULE(xpconnect)
 DECL_NSGETMODULE(necko_core_and_primary_protocols)
 DECL_NSGETMODULE(necko_secondary_protocols)
@@ -89,6 +90,7 @@ static nsStaticModuleInfo gStaticModuleInfo[] = {
 MODULE(xpcomObsoleteModule),
 MODULE(nsI18nModule),
 MODULE(nsUConvModule),
+MODULE(nsJarModule),
 MODULE(xpconnect),
 MODULE(necko_core_and_primary_protocols),
 MODULE(necko_secondary_protocols),
