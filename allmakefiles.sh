@@ -584,6 +584,9 @@ xpinstall/public/Makefile
 xpinstall/res/Makefile
 xpinstall/src/Makefile
 xpinstall/stub/Makefile
+xpinstall/wizard/libxpnet/Makefile
+xpinstall/wizard/libxpnet/src/Makefile
+xpinstall/wizard/libxpnet/test/Makefile
 xpinstall/wizard/unix/src2/Makefile
 "
 
