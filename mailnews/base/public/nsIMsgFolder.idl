@@ -465,4 +465,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   // lists all descendents, not just first level children
   void ListDescendents(in nsISupportsArray descendents);  
   void Shutdown(in boolean shutdownChildren);
+
+  readonly attribute boolean inVFEditSearchScope;
+  void setInVFEditSearchScope(in boolean aSearchThisFolder, in boolean aSetOnSubFolders);
 };

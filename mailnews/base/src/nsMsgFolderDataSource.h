@@ -167,6 +167,8 @@ protected:
                                     nsIRDFNode **target);
   nsresult createFolderVirtualNode(nsIMsgFolder *folder,
                                     nsIRDFNode **target);
+  nsresult createInVFEditSearchScopeNode(nsIMsgFolder* folder,
+                                      nsIRDFNode **target);
   nsresult createFolderImapSharedNode(nsIMsgFolder *folder,
                                     nsIRDFNode **target);
   nsresult createFolderSynchronizeNode(nsIMsgFolder *folder, nsIRDFNode **target);
@@ -251,7 +253,7 @@ protected:
   static nsIRDFResource* kNC_SyncDisabled;
   static nsIRDFResource* kNC_CanSearchMessages;
   static nsIRDFResource* kNC_VirtualFolder;
-  
+  static nsIRDFResource* kNC_InVFEditSearchScope;
 
   // commands
   static nsIRDFResource* kNC_Delete;
@@ -284,6 +286,7 @@ protected:
   static nsIAtom* kIsDeferredAtom;
   static nsrefcnt gFolderResourceRefCnt;
   static nsIAtom* kCanFileMessagesAtom;
+  static nsIAtom* kInVFEditSearchScopeAtom;
   
   nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;
 

@@ -215,6 +215,8 @@ protected:
   nsCOMPtr<nsIFileSpec> mPath;
   char * mBaseMessageURI; //The uri with the message scheme
 
+  PRBool mInVFEditSearchScope ; // non persistant state used by the virtual folder UI
+
   // static stuff for cross-instance objects like atoms
   static nsrefcnt gInstanceCount;
 
@@ -232,6 +234,7 @@ protected:
   static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;
   static nsIAtom* kNewMessagesAtom;
+  static nsIAtom* kInVFEditSearchScopeAtom;
   static nsIAtom* kNumNewBiffMessagesAtom;
   static nsIAtom* kTotalMessagesAtom;
   static nsIAtom* kFolderSizeAtom;

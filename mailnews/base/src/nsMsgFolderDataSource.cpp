@@ -98,10 +98,12 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_NewMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SubfoldersHaveUnreadMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NoSelect = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_VirtualFolder = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_InVFEditSearchScope = nsnull; 
 nsIRDFResource* nsMsgFolderDataSource::kNC_ImapShared = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Synchronize = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SyncDisabled = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanSearchMessages = nsnull;
+
 // commands
 nsIRDFResource* nsMsgFolderDataSource::kNC_Delete= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ReallyDelete= nsnull;
@@ -130,6 +132,7 @@ nsIAtom * nsMsgFolderDataSource::kSynchronizeAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kOpenAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kIsDeferredAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kCanFileMessagesAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kInVFEditSearchScopeAtom = nsnull;
 
 static const PRUint32 kDisplayBlankCount = 0xFFFFFFFE;
 static const PRUint32 kDisplayQuestionCount = 0xFFFFFFFF;
@@ -172,6 +175,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES), &kNC_SubfoldersHaveUnreadMessages);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_NOSELECT), &kNC_NoSelect);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_VIRTUALFOLDER), &kNC_VirtualFolder);
+    rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_INVFEDITSEARCHSCOPE), &kNC_InVFEditSearchScope);    
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_IMAPSHARED), &kNC_ImapShared);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_SYNCHRONIZE), &kNC_Synchronize);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_SYNCDISABLED), &kNC_SyncDisabled);
@@ -203,6 +207,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     kOpenAtom                    = NS_NewAtom("open");
     kIsDeferredAtom              = NS_NewAtom("isDeferred");
     kCanFileMessagesAtom         = NS_NewAtom("canFileMessages");
+    kInVFEditSearchScopeAtom     = NS_NewAtom("inVFEditSearchScope");
   }
   
   CreateLiterals(rdf);
@@ -246,6 +251,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE2(kNC_SubfoldersHaveUnreadMessages, refcnt);
     NS_RELEASE2(kNC_NoSelect, refcnt);
     NS_RELEASE2(kNC_VirtualFolder, refcnt);
+    NS_RELEASE2(kNC_InVFEditSearchScope, refcnt);
     NS_RELEASE2(kNC_ImapShared, refcnt);
     NS_RELEASE2(kNC_Synchronize, refcnt);
     NS_RELEASE2(kNC_SyncDisabled, refcnt);
@@ -276,6 +282,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kOpenAtom);
     NS_RELEASE(kIsDeferredAtom);
     NS_RELEASE(kCanFileMessagesAtom);
+    NS_RELEASE(kInVFEditSearchScopeAtom);    
   }
 }
 
@@ -481,6 +488,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
       (kNC_CanFileMessagesOnServer == property) ||
       (kNC_NoSelect == property) ||
       (kNC_VirtualFolder == property) ||
+      (kNC_InVFEditSearchScope == property) ||
       (kNC_ImapShared == property) ||
       (kNC_Synchronize == property) ||
       (kNC_SyncDisabled == property) ||
@@ -588,6 +596,7 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
       aArc == kNC_Child ||
       aArc == kNC_NoSelect ||
       aArc == kNC_VirtualFolder ||
+      aArc == kNC_InVFEditSearchScope ||
       aArc == kNC_ImapShared ||
       aArc == kNC_Synchronize ||
       aArc == kNC_SyncDisabled ||
@@ -660,6 +669,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_Child);
   (*arcs)->AppendElement(kNC_NoSelect);
   (*arcs)->AppendElement(kNC_VirtualFolder);
+  (*arcs)->AppendElement(kNC_InVFEditSearchScope);
   (*arcs)->AppendElement(kNC_ImapShared);
   (*arcs)->AppendElement(kNC_Synchronize);
   (*arcs)->AppendElement(kNC_SyncDisabled);
@@ -927,6 +937,8 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsIRDFResource *resource,
       NotifyPropertyChanged(resource, kNC_IsDeferred, literalNode, oldLiteralNode);
     else if (kCanFileMessagesAtom == property)
       NotifyPropertyChanged(resource, kNC_CanFileMessages, literalNode, oldLiteralNode);
+    else if (kInVFEditSearchScopeAtom == property)
+      NotifyPropertyChanged(resource, kNC_InVFEditSearchScope, literalNode); 
   } 
 
   return NS_OK;
@@ -1044,6 +1056,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
     rv = createFolderNoSelectNode(folder, target);
   else if ((kNC_VirtualFolder == property))
     rv = createFolderVirtualNode(folder, target);
+  else if (kNC_InVFEditSearchScope == property)
+    rv = createInVFEditSearchScopeNode(folder, target);
   else if ((kNC_ImapShared == property))
     rv = createFolderImapSharedNode(folder, target);
   else if ((kNC_Synchronize == property))
@@ -1288,6 +1302,18 @@ nsMsgFolderDataSource::createFolderNoSelectNode(nsIMsgFolder* folder,
   if (NS_FAILED(rv)) return rv;
 
   *target = (noSelect) ? kTrueLiteral : kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createInVFEditSearchScopeNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  PRBool inVFEditSearchScope = PR_FALSE;
+  folder->GetInVFEditSearchScope(&inVFEditSearchScope);
+
+  *target = inVFEditSearchScope ? kTrueLiteral : kFalseLiteral;
   NS_IF_ADDREF(*target);
   return NS_OK;
 }
