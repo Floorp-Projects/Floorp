@@ -388,9 +388,28 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetSpec(char * *aSpec)
 	return m_baseURL->GetSpec(aSpec);
 }
 
+#define FILENAME_PART "&filename="
+#define FILENAME_PART_LEN 10
+
 NS_IMETHODIMP nsMsgMailNewsUrl::SetSpec(const char * aSpec)
 {
-	return m_baseURL->SetSpec(aSpec);
+  // Parse out "filename" attribute if present.
+  char *start, *end;
+  start = PL_strcasestr(aSpec,FILENAME_PART);
+  if (start)
+  {	// Make sure we only get our own value.
+    end = PL_strcasestr((char*)(start+FILENAME_PART_LEN),"&");
+    if (end)
+    {
+      *end = 0;
+      mAttachmentFileName = start+FILENAME_PART_LEN;
+      *end = '&';
+    }
+    else
+      mAttachmentFileName = start+FILENAME_PART_LEN;
+  }
+  // Now, set the rest.
+  return m_baseURL->SetSpec(aSpec);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetPrePath(char * *aPrePath)

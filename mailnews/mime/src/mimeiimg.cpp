@@ -28,6 +28,7 @@
 #include "nsMimeTypes.h"
 #include "nsMimeStringResources.h"
 #include "nsCRT.h"
+#include "nsEscape.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeInlineImage, MimeInlineImageClass,
@@ -109,11 +110,27 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 	  ct = obj->content_type;
 	  if (!ct) ct = IMAGE_GIF;  /* Can't happen?  Close enough. */
 
+	  // Fill in content type and attachment name here.
+	  nsCAutoString url_with_filename(image_url);
+	  url_with_filename += "&type=";
+	  url_with_filename += ct;
+	  char * filename = MimeHeaders_get_name ( obj->headers, obj->options );
+	  if (filename)
+	  {
+		  char *escapedName = nsEscape(filename, url_Path);
+		  if (escapedName)
+		  {
+			  url_with_filename += "&filename=";
+			  url_with_filename += escapedName;
+			  nsCRT::free(escapedName);
+		  }
+	  }
+
     // We need to separate images with HR's...
     MimeObject_write_separator(obj);
 
 	  img->image_data =
-		obj->options->image_begin(image_url, ct, obj->options->stream_closure);
+		obj->options->image_begin(url_with_filename, ct, obj->options->stream_closure);
 	  PR_Free(image_url);
 
 	  if (!img->image_data) return MIME_OUT_OF_MEMORY;

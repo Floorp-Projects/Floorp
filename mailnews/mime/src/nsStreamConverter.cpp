@@ -455,7 +455,16 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       if (typeField)
       {
         // store the real content type...mOutputFormat gets deleted later on...
+		// and make sure we only get our own value.
+		char *nextField = PL_strcasestr(typeField + nsCRT::strlen("&type="),"&");
+		if (nextField)
+		{
+			*nextField = 0;
         mRealContentType = typeField + nsCRT::strlen("&type=");
+			*nextField = '&';
+		}
+		else
+          mRealContentType = typeField + nsCRT::strlen("&type=");
         if (mRealContentType.Equals("message/rfc822"))
         {
           mRealContentType = "text/plain";

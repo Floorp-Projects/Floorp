@@ -357,6 +357,8 @@ NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType,
     uri.Append(mimePart);
     uri += "&type=";
     uri += aContentType;
+	uri += "&filename=";
+    uri += aFileName;
   }
   else
   {
@@ -366,6 +368,8 @@ NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType,
     uri += part;
     uri += "&type=";
     uri += aContentType;
+	uri += "&filename=";
+    uri += aFileName;
   }
   
   nsCOMPtr<nsIMsgFolder> folder;

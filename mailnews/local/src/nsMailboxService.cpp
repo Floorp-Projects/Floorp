@@ -238,6 +238,8 @@ NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType,
   partMsgUrl += part;
   partMsgUrl += "&type=";
   partMsgUrl += aContentType;
+  partMsgUrl += "&filename=";
+  partMsgUrl += aFileName;
   return FetchMessage(partMsgUrl, aDisplayConsumer,
                       aMsgWindow,aUrlListener, aFileName,
                       nsIMailboxUrl::ActionFetchPart, nsnull, nsnull);

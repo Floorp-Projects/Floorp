@@ -369,6 +369,8 @@ NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType,
   newsUrl = aUrl;
   newsUrl += "&type=";
   newsUrl += aContentType;
+  newsUrl += "&filename=";
+  newsUrl += aFileName;
 
   NewURI(newsUrl, nsnull, getter_AddRefs(url));
 
