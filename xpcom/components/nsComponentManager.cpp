@@ -76,6 +76,10 @@
 #include "prlog.h"
 PRLogModuleInfo* nsComponentManagerLog = NULL;
 
+//#if defined(DEBUG_)
+#define SHOW_DENIED_ON_SHUTDOWN
+//#endif
+
 #include "nsAutoLock.h"
 
 // Enable printing of critical errors on screen even for release builds
@@ -1582,9 +1586,13 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
     // occurs in the list
     if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
-#ifdef DEBUG_dp
-        NS_WARN_IF_FALSE(PR_FALSE, "Creating new instance on shutdown. Denied.");
-#endif /* DEBUG_dp */
+#ifdef SHOW_DENIED_ON_SHUTDOWN
+        nsXPIDLCString cid, iid;
+        cid.Adopt(aClass.ToString());
+        iid.Adopt(aIID.ToString());
+        printf("Creating new instance on shutdown. Denied.\n"
+               "         CID: %s\n         IID: %s\n", cid.get(), iid.get());
+#endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -1639,9 +1647,12 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
     // occurs in the list
     if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
-#ifdef DEBUG_dp
-        NS_WARN_IF_FALSE(PR_FALSE, "Creating new instance on shutdown. Denied.");
-#endif /* DEBUG_dp */
+#ifdef SHOW_DENIED_ON_SHUTDOWN
+        nsXPIDLCString iid;
+        iid.Adopt(aIID.ToString());
+        printf("Creating new instance on shutdown. Denied.\n"
+               "  ContractID: %s\n         IID: %s\n", aContractID, iid.get());
+#endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -1732,7 +1743,13 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     // occurs in the list
     if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
-        NS_WARNING("Creating new service on shutdown. Denied.");
+#ifdef SHOW_DENIED_ON_SHUTDOWN
+        nsXPIDLCString cid, iid;
+        cid.Adopt(aClass.ToString());
+        iid.Adopt(aIID.ToString());
+        printf("Getting service on shutdown. Denied.\n"
+               "         CID: %s\n         IID: %s\n", cid.get(), iid.get());
+#endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -1895,7 +1912,13 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
     // occurs in the list
     if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
-        NS_WARNING("Creating new service on shutdown. Denied.");
+#ifdef SHOW_DENIED_ON_SHUTDOWN
+        nsXPIDLCString cid, iid;
+        cid.Adopt(aClass.ToString());
+        iid.Adopt(aIID.ToString());
+        printf("Checking for service on shutdown. Denied.\n"
+               "         CID: %s\n         IID: %s\n", cid.get(), iid.get());
+#endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -1931,7 +1954,12 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
     // occurs in the list
     if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
-        NS_WARNING("checking for new service on shutdown. Denied.");
+#ifdef SHOW_DENIED_ON_SHUTDOWN
+        nsXPIDLCString iid;
+        iid.Adopt(aIID.ToString());
+        printf("Checking for service on shutdown. Denied.\n"
+               "  ContractID: %s\n         IID: %s\n", aContractID, iid.get());
+#endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -1995,7 +2023,12 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     // occurs in the list
     if (gXPCOMShuttingDown) {
         // When processing shutdown, dont process new GetService() requests
-        NS_WARNING("Creating new service on shutdown. Denied.");
+#ifdef SHOW_DENIED_ON_SHUTDOWN
+        nsXPIDLCString iid;
+        iid.Adopt(aIID.ToString());
+        printf("Getting service on shutdown. Denied.\n"
+               "  ContractID: %s\n         IID: %s\n", aContractID, iid.get());
+#endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
     }
 
