@@ -104,7 +104,6 @@ public:
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetSpaceWidth(nscoord& aAveCharWidth);
-  NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   NS_IMETHOD  GetStringWidth(const char *String,nscoord &aWidth,nscoord aLength);
@@ -130,7 +129,6 @@ public:
   inline void SetSpaceWidth(nscoord aSpaceWidth) { mSpaceWidth = aSpaceWidth; };
 
   inline nsDeviceContextPS* GetDeviceContext() { return mDeviceContext; }
-  inline nsFont* GetFont() { return mFont; };
   inline nsVoidArray* GetFontsPS() { return mFontsPS; };
   inline nsHashtable *GetFontsAlreadyLoadedList() {return mFontsAlreadyLoaded;};
   inline int GetFontPSState() { return mFontPSState; };
@@ -154,7 +152,6 @@ protected:
   void RealizeFont();
 
   nsDeviceContextPS   *mDeviceContext;
-  nsFont              *mFont;
   nscoord             mHeight;
   nscoord             mAscent;
   nscoord             mDescent;

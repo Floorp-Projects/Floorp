@@ -1524,11 +1524,6 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
 {
   // do not free mGeneric here
 
-  if (nsnull != mFont) {
-    delete mFont;
-    mFont = nsnull;
-  }
-
   if (mLoadedFonts) {
     PR_Free(mLoadedFonts);
     mLoadedFonts = nsnull;
@@ -1613,7 +1608,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       return res;
   }
 
-  mFont = new nsFont(aFont);
+  mFont = aFont;
   mLangGroup = aLangGroup;
 
   mDeviceContext = aContext;
@@ -1621,15 +1616,15 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   float app2dev;
   app2dev = mDeviceContext->AppUnitsToDevUnits();
 
-  mPixelSize = NSToIntRound(app2dev * mFont->size);
+  mPixelSize = NSToIntRound(app2dev * mFont.size);
   // Make sure to clamp the pixel size to something reasonable so we
   // don't make the X server blow up.
   mPixelSize = PR_MIN(gdk_screen_height() * FONT_MAX_FONT_SCALE, mPixelSize);
 
   mStretchIndex = 4; // normal
-  mStyleIndex = mFont->style;
+  mStyleIndex = mFont.style;
 
-  mFont->EnumerateFamilies(FontEnumCallback, this);
+  mFont.EnumerateFamilies(FontEnumCallback, this);
   nsXPIDLCString value;
   if (!mGeneric) {
     gPref->CopyCharPref("font.default", getter_Copies(value));
@@ -2011,12 +2006,6 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetMaxAdvance(nscoord &aAdvance)
 NS_IMETHODIMP nsFontMetricsGTK::GetAveCharWidth(nscoord &aAveCharWidth)
 {
   aAveCharWidth = mAveCharWidth;
-  return NS_OK;
-}
-
-NS_IMETHODIMP  nsFontMetricsGTK::GetFont(const nsFont*& aFont)
-{
-  aFont = mFont;
   return NS_OK;
 }
 
@@ -5048,7 +5037,7 @@ check_done:
   nsFontStyle* style = aNode->mStyles[mStyleIndex];
 
   nsFontWeight** weights = style->mWeights;
-  int weight = mFont->weight;
+  int weight = mFont.weight;
   int steps = (weight % 100);
   int weightIndex;
   if (steps) {

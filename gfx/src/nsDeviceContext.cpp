@@ -622,9 +622,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   PRInt32 n = mFontMetrics.Count() - 1;
   for (PRInt32 i = n; i >= 0; --i) {
     fm = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[i]);
-    const nsFont* font;
-    fm->GetFont(font);
-    if (font->Equals(aFont)) {
+    if (fm->Font().Equals(aFont)) {
       nsCOMPtr<nsIAtom> langGroup;
       fm->GetLangGroup(getter_AddRefs(langGroup));
       if (aLangGroup == langGroup.get()) {

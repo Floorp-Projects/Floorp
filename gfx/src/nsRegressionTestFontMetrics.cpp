@@ -60,7 +60,6 @@ NS_NewRegressionTestFontMetrics(nsIFontMetrics** aMetrics)
 
 nsRegressionTestFontMetrics:: nsRegressionTestFontMetrics()
 {
-  mFont = nsnull; 
   mDeviceContext = nsnull;
   
   mHeight = 0; 
@@ -83,11 +82,6 @@ NS_IMPL_ISUPPORTS1(nsRegressionTestFontMetrics, nsIFontMetrics)
 
 nsRegressionTestFontMetrics::~nsRegressionTestFontMetrics()
 {
-  if (nsnull != mFont)
-  {
-    delete mFont;
-    mFont = nsnull;
-  }
   mDeviceContext = nsnull;
 }
 
@@ -95,7 +89,7 @@ nsRegressionTestFontMetrics::~nsRegressionTestFontMetrics()
 NS_IMETHODIMP
 nsRegressionTestFontMetrics::Init(const nsFont& aFont, nsIDeviceContext *aContext)
 {
-  mFont = new nsFont(aFont);
+  mFont = aFont;
   mDeviceContext = aContext;
   RealizeFont();
   return NS_OK;
@@ -114,7 +108,7 @@ nsRegressionTestFontMetrics::RealizeFont()
   float dev2app;
   dev2app = mDeviceContext->DevUnitsToAppUnits();
   nscoord onepixel = NSToCoordRound(1 * dev2app);
-  PRUint32 fontsize = mFont->size;
+  PRUint32 fontsize = mFont.size;
  
   // Most of the numbers are just made up....
   // feel free to play around.
@@ -152,7 +146,7 @@ nsRegressionTestFontMetrics::RealizeFont()
 NS_METHOD
 nsRegressionTestFontMetrics::GetWidth(const char aChar, nscoord& aWidth)
 {
-  float size = (float)mFont->size;
+  float size = (float)mFont.size;
   aWidth = 0;
 
   if(aChar == ' ')
@@ -179,7 +173,7 @@ nsRegressionTestFontMetrics::GetWidth(const char aChar, nscoord& aWidth)
 NS_METHOD
 nsRegressionTestFontMetrics::GetWidth(const PRUnichar aChar,nscoord& aWidth)
 {
-  float size = (float)mFont->size;
+  float size = (float)mFont.size;
   aWidth = 0;
 
   if(aChar == ' ')
@@ -218,7 +212,7 @@ nsRegressionTestFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength
   float totalsize = 0;
   
   for(PRUint32 index = 0; index < aLength; index++){
-    size = (float)mFont->size;
+    size = (float)mFont.size;
     if(aString[index] == ' ')
       size *= MAPPING_FACTOR_FOR_SPACE;
     else if(aString[index] >= 'a' && aString[index] <= 'z')
@@ -255,7 +249,7 @@ nsRegressionTestFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nsc
   float totalsize = 0;
  
   for(PRUint32 index=0; index < aLength; index++){
-    size = (float)mFont->size;
+    size = (float)mFont.size;
     if(aString[index] == ' ')
       size *= MAPPING_FACTOR_FOR_SPACE;
     else if(aString[index] >= 'a' && aString[index] <= 'z')
@@ -340,13 +334,6 @@ nsRegressionTestFontMetrics::GetMaxAdvance(nscoord &aAdvance)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRegressionTestFontMetrics::GetFont(const nsFont *&aFont)
-{
-  aFont = mFont;
-  return NS_OK;
-}
-NS_IMETHODIMP
 nsRegressionTestFontMetrics::GetFontHandle(nsFontHandle &aHandle)
 {
   //We don't have a font handler

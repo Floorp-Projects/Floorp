@@ -381,14 +381,14 @@ NS_IMETHODIMP
 nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
                        nsIDeviceContext *aContext)
 {
-    mFont = new nsFont(aFont);
+    mFont = aFont;
     mLangGroup = aLangGroup;
 
     // Hang onto the device context
     mDeviceContext = aContext;
 
     float app2dev = mDeviceContext->AppUnitsToDevUnits();
-    mPixelSize = NSTwipsToFloatPixels(mFont->size, app2dev);
+    mPixelSize = NSTwipsToFloatPixels(mFont.size, app2dev);
 
     // Make sure to clamp the pixel size to something reasonable so we
     // don't make the X server blow up.
@@ -396,7 +396,7 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mPixelSize = PR_MIN(screenPixels * FONT_MAX_FONT_SCALE, mPixelSize);
 
     // enumerate over the font names passed in
-    mFont->EnumerateFamilies(nsFontMetricsXft::EnumFontCallback, this);
+    mFont.EnumerateFamilies(nsFontMetricsXft::EnumFontCallback, this);
 
     nsCOMPtr<nsIPref> prefService;
     prefService = do_GetService(NS_PREF_CONTRACTID);
@@ -481,13 +481,6 @@ nsFontMetricsXft::Destroy()
 {
     mDeviceContext = nsnull;
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFontMetricsXft::GetFont(const nsFont *&aFont)
-{
-    aFont = mFont;
     return NS_OK;
 }
 
@@ -1026,7 +1019,7 @@ nsFontMetricsXft::SetupFCPattern(void)
 
     // If there's a generic add a pref for the generic if there's one
     // set.
-    if (mGenericFont && !mFont->systemFont) {
+    if (mGenericFont && !mFont.systemFont) {
         nsCString name;
         name += "font.name.";
         name += mGenericFont->get();
@@ -1061,21 +1054,21 @@ nsFontMetricsXft::SetupFCPattern(void)
     }
 
     // Add the generic if there is one.
-    if (mGenericFont && !mFont->systemFont)
+    if (mGenericFont && !mFont.systemFont)
         AddFFRE(mPattern, mGenericFont, PR_FALSE);
 
     if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
         // generic font
-        if (mGenericFont && !mFont->systemFont) {
+        if (mGenericFont && !mFont.systemFont) {
             printf("\tadding generic family: %s\n", mGenericFont->get());
         }
 
         // pixel size
-        printf("\tpixel,twip size: %f,%d\n", mPixelSize, mFont->size);
+        printf("\tpixel,twip size: %f,%d\n", mPixelSize, mFont.size);
 
         // slant type
         printf("\tslant: ");
-        switch(mFont->style) {
+        switch(mFont.style) {
         case NS_FONT_STYLE_ITALIC:
             printf("italic\n");
             break;
@@ -1089,7 +1082,7 @@ nsFontMetricsXft::SetupFCPattern(void)
 
         // weight
         printf("\tweight: (orig,calc) %d,%d\n",
-               mFont->weight, CalculateWeight(mFont->weight));
+               mFont.weight, CalculateWeight(mFont.weight));
 
     }        
 
@@ -1101,11 +1094,11 @@ nsFontMetricsXft::SetupFCPattern(void)
 
     // Add the slant type
     FcPatternAddInteger(mPattern, FC_SLANT,
-                        CalculateSlant(mFont->style));
+                        CalculateSlant(mFont.style));
 
     // Add the weight
     FcPatternAddInteger(mPattern, FC_WEIGHT,
-                        CalculateWeight(mFont->weight));
+                        CalculateWeight(mFont.weight));
 
     // Set up the default substitutions for this font
     FcConfigSubstitute(0, mPattern, FcMatchPattern);
@@ -1240,7 +1233,7 @@ nsFontMetricsXft::SetupMiniFont(void)
     FcPatternAddInteger(pattern, FC_PIXEL_SIZE, int(0.5 * mPixelSize));
 
     FcPatternAddInteger(pattern, FC_WEIGHT,
-                        CalculateWeight(mFont->weight));
+                        CalculateWeight(mFont.weight));
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
     XftDefaultSubstitute(GDK_DISPLAY(), DefaultScreen(GDK_DISPLAY()),

@@ -1319,8 +1319,7 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
           ((processLen+1) < aLength) &&
           IS_LOW_SURROGATE(*(aString+1)))
       {
-         const nsFont *font;
-         mGS->mFontMetrics->GetFont(font);
+         const nsFont *font = &mGS->mFontMetrics->Font();
          fallbackDone = SurrogateGetDimensions(aString, segDim, fontNum, 
                                                font->size, 
                                                (font->weight > NS_FONT_WEIGHT_NORMAL), 
@@ -1350,8 +1349,7 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
       // Fallback by using ATSUI
       if (!fallbackDone)  
       {
-        const nsFont *font;
-        mGS->mFontMetrics->GetFont(font);
+        const nsFont *font = &mGS->mFontMetrics->Font();
         fallbackDone = ATSUIFallbackGetDimensions(aString, segDim, fontNum, 
                                                   font->size, 
                                                   (font->weight > NS_FONT_WEIGHT_NORMAL), 
@@ -1506,8 +1504,7 @@ nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
           ((processLen+1) < aLength) &&
           IS_LOW_SURROGATE(*(aString+1)) )
       {
-         const nsFont *font;
-         mGS->mFontMetrics->GetFont(font);
+         const nsFont *font = &mGS->mFontMetrics->Font();
          fallbackDone = SurrogateGetBoundingMetrics(aString, segBoundingMetrics, fontNum, 
                                                     font->size, 
                                                     (font->weight > NS_FONT_WEIGHT_NORMAL), 
@@ -1536,8 +1533,7 @@ nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
       // Fallback by using ATSUI
       if (!fallbackDone)  
       {
-        const nsFont *font;
-        mGS->mFontMetrics->GetFont(font);
+        const nsFont *font = &mGS->mFontMetrics->Font();
         fallbackDone = ATSUIFallbackGetBoundingMetrics(aString, segBoundingMetrics, fontNum, 
                                                   font->size, 
                                                   (font->weight > NS_FONT_WEIGHT_NORMAL), 
@@ -1648,8 +1644,7 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
           ((processLen+1) < aLength) &&
           IS_LOW_SURROGATE(*(aString+1)) )
       {
-         const nsFont *font;
-         mGS->mFontMetrics->GetFont(font);
+         const nsFont *font = &mGS->mFontMetrics->Font();
          fallbackDone = SurrogateDrawChar(aString, x, y, thisWidth, fontNum, 
                                           font->size, 
                                           (font->weight > NS_FONT_WEIGHT_NORMAL), 
@@ -1677,8 +1672,7 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 #ifndef DISABLE_ATSUI_FALLBACK  
 		  // Fallback by using ATSUI
 		  if(! fallbackDone)  {
-		  	const nsFont *font;
-			  mGS->mFontMetrics->GetFont(font);
+		  	const nsFont *font = &mGS->mFontMetrics->Font();
 		  	fallbackDone = ATSUIFallbackDrawChar(aString, x, y, thisWidth, fontNum, 
 									  		font->size, 
 									  		(font->weight > NS_FONT_WEIGHT_NORMAL), 

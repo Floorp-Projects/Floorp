@@ -156,8 +156,6 @@ nsFontMetricsPango::nsFontMetricsPango()
 
 nsFontMetricsPango::~nsFontMetricsPango()
 {
-    delete mFont;
-
     if (mDeviceContext)
         mDeviceContext->FontMetricsDeleted(this);
 
@@ -188,13 +186,13 @@ NS_IMETHODIMP
 nsFontMetricsPango::Init(const nsFont& aFont, nsIAtom* aLangGroup,
                          nsIDeviceContext *aContext)
 {
-    mFont = new nsFont(aFont);
+    mFont = aFont;
     mLangGroup = aLangGroup;
 
     // Hang on to the device context
     mDeviceContext = aContext;
     
-    mPointSize = NSTwipsToFloatPoints(mFont->size);
+    mPointSize = NSTwipsToFloatPoints(mFont.size);
 
     // Make sure to clamp the pixel size to something reasonable so we
     // don't make the X server blow up.
@@ -202,7 +200,7 @@ nsFontMetricsPango::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mPointSize = PR_MIN(screenPixels * FONT_MAX_FONT_SCALE, mPointSize);
 
     // enumerate over the font names passed in
-    mFont->EnumerateFamilies(nsFontMetricsPango::EnumFontCallback, this);
+    mFont.EnumerateFamilies(nsFontMetricsPango::EnumFontCallback, this);
 
     nsCOMPtr<nsIPref> prefService;
     prefService = do_GetService(NS_PREF_CONTRACTID);
@@ -448,13 +446,6 @@ NS_IMETHODIMP
 nsFontMetricsPango::Destroy()
 {
     mDeviceContext = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFontMetricsPango::GetFont(const nsFont *&aFont)
-{
-    aFont = mFont;
     return NS_OK;
 }
 
@@ -971,7 +962,7 @@ nsFontMetricsPango::RealizeFont(void)
 
     // If there's a generic add a pref for the generic if there's one
     // set.
-    if (mGenericFont && !mFont->systemFont) {
+    if (mGenericFont && !mFont.systemFont) {
         nsCString name;
         name += "font.name.";
         name += mGenericFont->get();
@@ -1002,7 +993,7 @@ nsFontMetricsPango::RealizeFont(void)
     }
 
     // Add the generic if there is one.
-    if (mGenericFont && !mFont->systemFont) {
+    if (mGenericFont && !mFont.systemFont) {
         familyList.Append(mGenericFont->get());
         familyList.Append(',');
     }
@@ -1017,11 +1008,11 @@ nsFontMetricsPango::RealizeFont(void)
 
     // Set the style
     pango_font_description_set_style(mPangoFontDesc,
-                                     CalculateStyle(mFont->style));
+                                     CalculateStyle(mFont.style));
 
     // Set the weight
     pango_font_description_set_weight(mPangoFontDesc,
-                                      CalculateWeight(mFont->weight));
+                                      CalculateWeight(mFont.weight));
 
     // Now that we have the font description set up, create the
     // context.

@@ -251,13 +251,10 @@ nsMathMLFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
   // get the bounding metrics of the overbar char, the rendering context
   // is assumed to have been set with the font of the current style context
 #ifdef NS_DEBUG
-  const nsFont* myFont;
-  aFontMetrics->GetFont(myFont);
   nsCOMPtr<nsIFontMetrics> currFontMetrics;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(currFontMetrics));
-  const nsFont* currFont;
-  currFontMetrics->GetFont(currFont);
-  NS_ASSERTION(currFont->Equals(*myFont), "unexpected state");
+  NS_ASSERTION(currFontMetrics->Font().Equals(aFontMetrics->Font()),
+      "unexpected state");
 #endif
   nscoord xHeight;
   aFontMetrics->GetXHeight(xHeight);
@@ -293,13 +290,10 @@ nsMathMLFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
   // get the bounding metrics of the minus sign, the rendering context
   // is assumed to have been set with the font of the current style context
 #ifdef NS_DEBUG
-  const nsFont* myFont;
-  aFontMetrics->GetFont(myFont);
   nsCOMPtr<nsIFontMetrics> currFontMetrics;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(currFontMetrics));
-  const nsFont* currFont;
-  currFontMetrics->GetFont(currFont);
-  NS_ASSERTION(currFont->Equals(*myFont), "unexpected state");
+  NS_ASSERTION(currFontMetrics->Font().Equals(aFontMetrics->Font()),
+	"unexpected state");
 #endif
   nscoord xHeight;
   aFontMetrics->GetXHeight(xHeight);

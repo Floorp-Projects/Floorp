@@ -2129,9 +2129,7 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
   //will take it's place that will need this code again. MMP
   if (mFontMetrics)
   {
-    const nsFont *font;
-    mFontMetrics->GetFont(font);
-    PRUint8 deco = font->decorations;
+    PRUint8 deco = mFontMetrics->Font().decorations;
 
     if (deco & NS_FONT_DECORATION_OVERLINE)
       DrawLine(aX, aY, aX + aWidth, aY);

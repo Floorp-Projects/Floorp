@@ -67,11 +67,6 @@ nsFontMetricsBeOS::nsFontMetricsBeOS()
 
 nsFontMetricsBeOS::~nsFontMetricsBeOS()
 {
-  if (nsnull != mFont) 
-  {
-    delete mFont;
-    mFont = nsnull;
-  }
   if (mDeviceContext) 
   {
     // Notify our device context that owns us so that it can update its font cache
@@ -116,16 +111,14 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
  
   PRInt16  face = 0;
 
-  mFont = new nsFont(aFont);
-  if (!mFont)
-    return NS_ERROR_OUT_OF_MEMORY;
+  mFont = aFont;
 
   float       app2dev, app2twip;
   app2dev = aContext->AppUnitsToDevUnits();
   app2twip = aContext->DevUnitsToTwips();
 
   app2twip *= app2dev;
-  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
+  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont.size * app2twip)))) / app2twip;
 
   // process specified fonts from first item of the array.
   // stop processing next when a real font found;
@@ -400,12 +393,6 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetSpaceWidth(nscoord &aSpaceWidth)
   aSpaceWidth = mSpaceWidth; 
   return NS_OK; 
 } 
-
-NS_IMETHODIMP  nsFontMetricsBeOS::GetFont(const nsFont*& aFont)
-{
-  aFont = mFont;
-  return NS_OK;
-}
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetLangGroup(nsIAtom** aLangGroup)
 {

@@ -161,11 +161,6 @@ public:
 		aAveCharWidth = mAveCharWidth;
 		return NS_OK;
 		}
-	inline NS_IMETHODIMP  GetFont(const nsFont *&aFont)
-		{
-		aFont = mFont;
-		return NS_OK;
-		}
   inline NS_IMETHODIMP  GetFontHandle(nsFontHandle &aHandle)
 		{
 		aHandle = (nsFontHandle) mFontHandle;
@@ -181,7 +176,6 @@ protected:
   void RealizeFont();
 
   nsIDeviceContext    *mDeviceContext;
-  nsFont              *mFont;
   char                *mFontHandle;		/* Photon Fonts are just a string */
   nscoord             mHeight;
   nscoord             mAscent;

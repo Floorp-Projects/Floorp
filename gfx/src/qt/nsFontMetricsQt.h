@@ -83,7 +83,6 @@ public:
 
     nsIDeviceContext *mDeviceContext;
     nsCOMPtr<nsIAtom> mLangGroup;
-    nsFont mFont;
 
     nscoord          mLeading;
     nscoord          mEmHeight;
@@ -140,7 +139,6 @@ public:
     NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
     NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
     NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
-    NS_IMETHOD  GetFont(const nsFont *&aFont);
     NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
     NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 

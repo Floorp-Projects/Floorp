@@ -370,9 +370,7 @@ public:
     // should switch to this API in order to scale with changes of TextZoom
     fm->GetEmHeight(emHeight);
 #else
-    const nsFont* font;
-    fm->GetFont(font);
-    emHeight = NSToCoordRound(float(font->size));
+    emHeight = NSToCoordRound(float(fm->Font().size));
 #endif
   }
 
