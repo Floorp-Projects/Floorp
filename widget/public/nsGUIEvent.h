@@ -112,6 +112,196 @@ class nsIURI;
 #define NS_EVENT_TYPE_NULL                   0
 
 /**
+ * GUI MESSAGES
+ */
+ //@{
+#define NS_EVENT_NULL                   0
+
+
+#define NS_WINDOW_START                 100
+
+// Widget is being created
+#define NS_CREATE                       (NS_WINDOW_START)
+// Widget may be destroyed
+#define NS_XUL_CLOSE                    (NS_WINDOW_START + 1)
+// Widget is being destroyed
+#define NS_DESTROY                      (NS_WINDOW_START + 2)
+// Widget was resized
+#define NS_SIZE                         (NS_WINDOW_START + 3)
+// Widget size mode was changed
+#define NS_SIZEMODE                     (NS_WINDOW_START + 4)
+// Widget gained focus
+#define NS_GOTFOCUS                     (NS_WINDOW_START + 5)
+// Widget lost focus
+#define NS_LOSTFOCUS                    (NS_WINDOW_START + 6)
+// Widget got activated
+#define NS_ACTIVATE                     (NS_WINDOW_START + 7)
+// Widget got deactivated
+#define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
+// top-level window z-level change request
+#define NS_SETZLEVEL                    (NS_WINDOW_START + 9)
+// Widget needs to be repainted
+#define NS_PAINT                        (NS_WINDOW_START + 30)
+// Key is pressed within a window
+#define NS_KEY_PRESS                    (NS_WINDOW_START + 31)
+// Key is released within a window
+#define NS_KEY_UP                       (NS_WINDOW_START + 32)
+// Key is pressed within a window
+#define NS_KEY_DOWN                     (NS_WINDOW_START + 33)
+// Window has been moved to a new location.
+// The events point contains the x, y location in screen coordinates
+#define NS_MOVE                         (NS_WINDOW_START + 34) 
+
+// Tab control's selected tab has changed
+#define NS_TABCHANGE                    (NS_WINDOW_START + 35)
+
+#define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
+
+// Menu item selected
+#define NS_MENU_SELECTED                (NS_WINDOW_START + 38)
+
+// Form control changed: currently == combo box selection changed
+// but could be expanded to mean textbox, checkbox changed, etc.
+// This is a GUI specific event that does not necessarily correspond
+// directly to a mouse click or a key press.
+#define NS_CONTROL_CHANGE                (NS_WINDOW_START + 39)
+
+// Indicates the display has changed depth
+#define NS_DISPLAYCHANGED                (NS_WINDOW_START + 40)
+
+// Indicates a theme change has occurred
+#define NS_THEMECHANGED                 (NS_WINDOW_START + 41)
+
+// Indicates a System color has changed. It is the platform
+// toolkits responsibility to invalidate the window to 
+// ensure that it is drawn using the current system colors.
+#define NS_SYSCOLORCHANGED              (NS_WINDOW_START + 42)
+
+// Indicates a script error has occurred
+#define NS_SCRIPT_ERROR                 (NS_WINDOW_START + 50)
+
+#define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
+#define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
+
+#define NS_PLUGIN_ACTIVATE               (NS_WINDOW_START + 62)
+
+#define NS_MOUSE_MESSAGE_START          300
+#define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
+#define NS_MOUSE_LEFT_BUTTON_UP         (NS_MOUSE_MESSAGE_START + 1)
+#define NS_MOUSE_LEFT_BUTTON_DOWN       (NS_MOUSE_MESSAGE_START + 2)
+#define NS_MOUSE_MIDDLE_BUTTON_UP       (NS_MOUSE_MESSAGE_START + 10)
+#define NS_MOUSE_MIDDLE_BUTTON_DOWN     (NS_MOUSE_MESSAGE_START + 11)
+#define NS_MOUSE_RIGHT_BUTTON_UP        (NS_MOUSE_MESSAGE_START + 20)
+#define NS_MOUSE_RIGHT_BUTTON_DOWN      (NS_MOUSE_MESSAGE_START + 21)
+#define NS_MOUSE_ENTER                  (NS_MOUSE_MESSAGE_START + 22)
+#define NS_MOUSE_EXIT                   (NS_MOUSE_MESSAGE_START + 23)
+#define NS_MOUSE_LEFT_DOUBLECLICK       (NS_MOUSE_MESSAGE_START + 24)
+#define NS_MOUSE_MIDDLE_DOUBLECLICK     (NS_MOUSE_MESSAGE_START + 25)
+#define NS_MOUSE_RIGHT_DOUBLECLICK      (NS_MOUSE_MESSAGE_START + 26)
+#define NS_MOUSE_LEFT_CLICK             (NS_MOUSE_MESSAGE_START + 27)
+#define NS_MOUSE_MIDDLE_CLICK           (NS_MOUSE_MESSAGE_START + 28)
+#define NS_MOUSE_RIGHT_CLICK            (NS_MOUSE_MESSAGE_START + 29)
+#define NS_MOUSE_ACTIVATE               (NS_MOUSE_MESSAGE_START + 30)
+#define NS_MOUSE_ENTER_SYNTH            (NS_MOUSE_MESSAGE_START + 31)
+#define NS_MOUSE_EXIT_SYNTH             (NS_MOUSE_MESSAGE_START + 32)
+
+#define NS_CONTEXTMENU_MESSAGE_START    500
+#define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
+#define NS_CONTEXTMENU_KEY              (NS_CONTEXTMENU_MESSAGE_START + 1)
+
+#define NS_SCROLLBAR_MESSAGE_START      1000
+#define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
+#define NS_SCROLLBAR_PAGE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 1)
+#define NS_SCROLLBAR_PAGE_PREV          (NS_SCROLLBAR_MESSAGE_START + 2)
+#define NS_SCROLLBAR_LINE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 3)
+#define NS_SCROLLBAR_LINE_PREV          (NS_SCROLLBAR_MESSAGE_START + 4)
+
+#define NS_STREAM_EVENT_START           1100
+#define NS_PAGE_LOAD                    (NS_STREAM_EVENT_START)
+#define NS_PAGE_UNLOAD                  (NS_STREAM_EVENT_START + 1)
+#define NS_IMAGE_LOAD                   (NS_STREAM_EVENT_START + 2)
+#define NS_IMAGE_ABORT                  (NS_STREAM_EVENT_START + 3)
+#define NS_IMAGE_ERROR                  (NS_STREAM_EVENT_START + 4)
+#define NS_SCRIPT_LOAD                  (NS_STREAM_EVENT_START + 5)
+#define NS_BEFORE_PAGE_UNLOAD           (NS_STREAM_EVENT_START + 6)
+ 
+#define NS_FORM_EVENT_START             1200
+#define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)
+#define NS_FORM_RESET                   (NS_FORM_EVENT_START + 1)
+#define NS_FORM_CHANGE                  (NS_FORM_EVENT_START + 2)
+#define NS_FORM_SELECTED                (NS_FORM_EVENT_START + 3)
+#define NS_FORM_INPUT                   (NS_FORM_EVENT_START + 4)
+
+//Need separate focus/blur notifications for non-native widgets
+#define NS_FOCUS_EVENT_START            1300
+#define NS_FOCUS_CONTENT                (NS_FOCUS_EVENT_START)
+#define NS_BLUR_CONTENT                 (NS_FOCUS_EVENT_START + 1)
+
+
+#define NS_DRAGDROP_EVENT_START         1400
+#define NS_DRAGDROP_ENTER               (NS_DRAGDROP_EVENT_START)
+#define NS_DRAGDROP_OVER                (NS_DRAGDROP_EVENT_START + 1)
+#define NS_DRAGDROP_EXIT                (NS_DRAGDROP_EVENT_START + 2)
+#define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 3)
+#define NS_DRAGDROP_GESTURE             (NS_DRAGDROP_EVENT_START + 4)
+#define NS_DRAGDROP_OVER_SYNTH          (NS_DRAGDROP_EVENT_START + 1)
+#define NS_DRAGDROP_EXIT_SYNTH          (NS_DRAGDROP_EVENT_START + 2)
+
+// Events for popups
+#define NS_XUL_EVENT_START            1500
+#define NS_XUL_POPUP_SHOWING          (NS_XUL_EVENT_START)
+#define NS_XUL_POPUP_SHOWN            (NS_XUL_EVENT_START+1)
+#define NS_XUL_POPUP_HIDING           (NS_XUL_EVENT_START+2)
+#define NS_XUL_POPUP_HIDDEN           (NS_XUL_EVENT_START+3)
+#define NS_XUL_COMMAND                (NS_XUL_EVENT_START+4)
+#define NS_XUL_BROADCAST              (NS_XUL_EVENT_START+5)
+#define NS_XUL_COMMAND_UPDATE         (NS_XUL_EVENT_START+6)
+#define NS_XUL_CLICK                  (NS_XUL_EVENT_START+7)
+//@}
+
+// Scroll events
+#define NS_MOUSE_SCROLL_START         1600
+#define NS_MOUSE_SCROLL               (NS_MOUSE_SCROLL_START)
+
+#define NS_SCROLLPORT_START           1700
+#define NS_SCROLLPORT_UNDERFLOW       (NS_SCROLLPORT_START)
+#define NS_SCROLLPORT_OVERFLOW        (NS_SCROLLPORT_START+1)
+#define NS_SCROLLPORT_OVERFLOWCHANGED (NS_SCROLLPORT_START+2)
+
+// Mutation events defined elsewhere starting at 1800
+
+// accessible events
+#define NS_ACCESSIBLE_START           1900
+#define NS_GETACCESSIBLE              (NS_ACCESSIBLE_START)
+
+#define NS_USER_DEFINED_EVENT         2000
+
+// custom OS events
+#define NS_APPCOMMAND_START           2100
+#define NS_APPCOMMAND                 (NS_APPCOMMAND_START)
+#define NS_APPCOMMAND_BACK            (NS_APPCOMMAND_START + 1)
+#define NS_APPCOMMAND_FORWARD         (NS_APPCOMMAND_START + 2)
+#define NS_APPCOMMAND_REFRESH         (NS_APPCOMMAND_START + 3)
+#define NS_APPCOMMAND_STOP            (NS_APPCOMMAND_START + 4)
+#define NS_APPCOMMAND_SEARCH          (NS_APPCOMMAND_START + 5)
+#define NS_APPCOMMAND_FAVORITES       (NS_APPCOMMAND_START + 6)
+#define NS_APPCOMMAND_HOME            (NS_APPCOMMAND_START + 7)
+ 
+// composition events
+#define NS_COMPOSITION_EVENT_START    2200
+#define NS_COMPOSITION_START          (NS_COMPOSITION_EVENT_START)
+#define NS_COMPOSITION_END            (NS_COMPOSITION_EVENT_START + 1)
+#define NS_COMPOSITION_QUERY          (NS_COMPOSITION_EVENT_START + 2)
+
+// reconversion events
+#define NS_RECONVERSION_START         2300
+#define NS_RECONVERSION_QUERY         (NS_RECONVERSION_START)
+
+// text events
+#define NS_TEXT_START                 2400
+#define NS_TEXT_TEXT                  (NS_TEXT_START)
+
+/**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
  */
@@ -369,6 +559,9 @@ struct nsMouseEvent : public nsInputEvent
     : nsInputEvent(msg, w, structType),
       clickCount(0), acceptActivation(PR_FALSE)
   {
+    if (msg == NS_MOUSE_MOVE) {
+      flags |= NS_EVENT_FLAG_CANT_CANCEL;
+    }
   }
 
   /// The number of mouse clicks
@@ -618,196 +811,6 @@ enum nsDragDropEventStatus {
   nsDragDropEventStatus_eDrop  
 };
 
-
-/**
- * GUI MESSAGES
- */
- //@{
-#define NS_EVENT_NULL                   0
-
-
-#define NS_WINDOW_START                 100
-
-// Widget is being created
-#define NS_CREATE                       (NS_WINDOW_START)
-// Widget may be destroyed
-#define NS_XUL_CLOSE                    (NS_WINDOW_START + 1)
-// Widget is being destroyed
-#define NS_DESTROY                      (NS_WINDOW_START + 2)
-// Widget was resized
-#define NS_SIZE                         (NS_WINDOW_START + 3)
-// Widget size mode was changed
-#define NS_SIZEMODE                     (NS_WINDOW_START + 4)
-// Widget gained focus
-#define NS_GOTFOCUS                     (NS_WINDOW_START + 5)
-// Widget lost focus
-#define NS_LOSTFOCUS                    (NS_WINDOW_START + 6)
-// Widget got activated
-#define NS_ACTIVATE                     (NS_WINDOW_START + 7)
-// Widget got deactivated
-#define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
-// top-level window z-level change request
-#define NS_SETZLEVEL                    (NS_WINDOW_START + 9)
-// Widget needs to be repainted
-#define NS_PAINT                        (NS_WINDOW_START + 30)
-// Key is pressed within a window
-#define NS_KEY_PRESS                    (NS_WINDOW_START + 31)
-// Key is released within a window
-#define NS_KEY_UP                       (NS_WINDOW_START + 32)
-// Key is pressed within a window
-#define NS_KEY_DOWN                     (NS_WINDOW_START + 33)
-// Window has been moved to a new location.
-// The events point contains the x, y location in screen coordinates
-#define NS_MOVE                         (NS_WINDOW_START + 34) 
-
-// Tab control's selected tab has changed
-#define NS_TABCHANGE                    (NS_WINDOW_START + 35)
-
-#define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
-
-// Menu item selected
-#define NS_MENU_SELECTED                (NS_WINDOW_START + 38)
-
-// Form control changed: currently == combo box selection changed
-// but could be expanded to mean textbox, checkbox changed, etc.
-// This is a GUI specific event that does not necessarily correspond
-// directly to a mouse click or a key press.
-#define NS_CONTROL_CHANGE                (NS_WINDOW_START + 39)
-
-// Indicates the display has changed depth
-#define NS_DISPLAYCHANGED                (NS_WINDOW_START + 40)
-
-// Indicates a theme change has occurred
-#define NS_THEMECHANGED                 (NS_WINDOW_START + 41)
-
-// Indicates a System color has changed. It is the platform
-// toolkits responsibility to invalidate the window to 
-// ensure that it is drawn using the current system colors.
-#define NS_SYSCOLORCHANGED              (NS_WINDOW_START + 42)
-
-// Indicates a script error has occurred
-#define NS_SCRIPT_ERROR                 (NS_WINDOW_START + 50)
-
-#define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
-#define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
-
-#define NS_PLUGIN_ACTIVATE               (NS_WINDOW_START + 62)
-
-#define NS_MOUSE_MESSAGE_START          300
-#define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
-#define NS_MOUSE_LEFT_BUTTON_UP         (NS_MOUSE_MESSAGE_START + 1)
-#define NS_MOUSE_LEFT_BUTTON_DOWN       (NS_MOUSE_MESSAGE_START + 2)
-#define NS_MOUSE_MIDDLE_BUTTON_UP       (NS_MOUSE_MESSAGE_START + 10)
-#define NS_MOUSE_MIDDLE_BUTTON_DOWN     (NS_MOUSE_MESSAGE_START + 11)
-#define NS_MOUSE_RIGHT_BUTTON_UP        (NS_MOUSE_MESSAGE_START + 20)
-#define NS_MOUSE_RIGHT_BUTTON_DOWN      (NS_MOUSE_MESSAGE_START + 21)
-#define NS_MOUSE_ENTER                  (NS_MOUSE_MESSAGE_START + 22)
-#define NS_MOUSE_EXIT                   (NS_MOUSE_MESSAGE_START + 23)
-#define NS_MOUSE_LEFT_DOUBLECLICK       (NS_MOUSE_MESSAGE_START + 24)
-#define NS_MOUSE_MIDDLE_DOUBLECLICK     (NS_MOUSE_MESSAGE_START + 25)
-#define NS_MOUSE_RIGHT_DOUBLECLICK      (NS_MOUSE_MESSAGE_START + 26)
-#define NS_MOUSE_LEFT_CLICK             (NS_MOUSE_MESSAGE_START + 27)
-#define NS_MOUSE_MIDDLE_CLICK           (NS_MOUSE_MESSAGE_START + 28)
-#define NS_MOUSE_RIGHT_CLICK            (NS_MOUSE_MESSAGE_START + 29)
-#define NS_MOUSE_ACTIVATE               (NS_MOUSE_MESSAGE_START + 30)
-#define NS_MOUSE_ENTER_SYNTH            (NS_MOUSE_MESSAGE_START + 31)
-#define NS_MOUSE_EXIT_SYNTH             (NS_MOUSE_MESSAGE_START + 32)
-
-#define NS_CONTEXTMENU_MESSAGE_START    500
-#define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
-#define NS_CONTEXTMENU_KEY              (NS_CONTEXTMENU_MESSAGE_START + 1)
-
-#define NS_SCROLLBAR_MESSAGE_START      1000
-#define NS_SCROLLBAR_POS                (NS_SCROLLBAR_MESSAGE_START)
-#define NS_SCROLLBAR_PAGE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 1)
-#define NS_SCROLLBAR_PAGE_PREV          (NS_SCROLLBAR_MESSAGE_START + 2)
-#define NS_SCROLLBAR_LINE_NEXT          (NS_SCROLLBAR_MESSAGE_START + 3)
-#define NS_SCROLLBAR_LINE_PREV          (NS_SCROLLBAR_MESSAGE_START + 4)
-
-#define NS_STREAM_EVENT_START           1100
-#define NS_PAGE_LOAD                    (NS_STREAM_EVENT_START)
-#define NS_PAGE_UNLOAD                  (NS_STREAM_EVENT_START + 1)
-#define NS_IMAGE_LOAD                   (NS_STREAM_EVENT_START + 2)
-#define NS_IMAGE_ABORT                  (NS_STREAM_EVENT_START + 3)
-#define NS_IMAGE_ERROR                  (NS_STREAM_EVENT_START + 4)
-#define NS_SCRIPT_LOAD                  (NS_STREAM_EVENT_START + 5)
-#define NS_BEFORE_PAGE_UNLOAD           (NS_STREAM_EVENT_START + 6)
- 
-#define NS_FORM_EVENT_START             1200
-#define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)
-#define NS_FORM_RESET                   (NS_FORM_EVENT_START + 1)
-#define NS_FORM_CHANGE                  (NS_FORM_EVENT_START + 2)
-#define NS_FORM_SELECTED                (NS_FORM_EVENT_START + 3)
-#define NS_FORM_INPUT                   (NS_FORM_EVENT_START + 4)
-
-//Need separate focus/blur notifications for non-native widgets
-#define NS_FOCUS_EVENT_START            1300
-#define NS_FOCUS_CONTENT                (NS_FOCUS_EVENT_START)
-#define NS_BLUR_CONTENT                 (NS_FOCUS_EVENT_START + 1)
-
-
-#define NS_DRAGDROP_EVENT_START         1400
-#define NS_DRAGDROP_ENTER               (NS_DRAGDROP_EVENT_START)
-#define NS_DRAGDROP_OVER                (NS_DRAGDROP_EVENT_START + 1)
-#define NS_DRAGDROP_EXIT                (NS_DRAGDROP_EVENT_START + 2)
-#define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 3)
-#define NS_DRAGDROP_GESTURE             (NS_DRAGDROP_EVENT_START + 4)
-#define NS_DRAGDROP_OVER_SYNTH          (NS_DRAGDROP_EVENT_START + 1)
-#define NS_DRAGDROP_EXIT_SYNTH          (NS_DRAGDROP_EVENT_START + 2)
-
-// Events for popups
-#define NS_XUL_EVENT_START            1500
-#define NS_XUL_POPUP_SHOWING          (NS_XUL_EVENT_START)
-#define NS_XUL_POPUP_SHOWN            (NS_XUL_EVENT_START+1)
-#define NS_XUL_POPUP_HIDING           (NS_XUL_EVENT_START+2)
-#define NS_XUL_POPUP_HIDDEN           (NS_XUL_EVENT_START+3)
-#define NS_XUL_COMMAND                (NS_XUL_EVENT_START+4)
-#define NS_XUL_BROADCAST              (NS_XUL_EVENT_START+5)
-#define NS_XUL_COMMAND_UPDATE         (NS_XUL_EVENT_START+6)
-#define NS_XUL_CLICK                  (NS_XUL_EVENT_START+7)
-//@}
-
-// Scroll events
-#define NS_MOUSE_SCROLL_START         1600
-#define NS_MOUSE_SCROLL               (NS_MOUSE_SCROLL_START)
-
-#define NS_SCROLLPORT_START           1700
-#define NS_SCROLLPORT_UNDERFLOW       (NS_SCROLLPORT_START)
-#define NS_SCROLLPORT_OVERFLOW        (NS_SCROLLPORT_START+1)
-#define NS_SCROLLPORT_OVERFLOWCHANGED (NS_SCROLLPORT_START+2)
-
-// Mutation events defined elsewhere starting at 1800
-
-// accessible events
-#define NS_ACCESSIBLE_START           1900
-#define NS_GETACCESSIBLE              (NS_ACCESSIBLE_START)
-
-#define NS_USER_DEFINED_EVENT         2000
-
-// custom OS events
-#define NS_APPCOMMAND_START           2100
-#define NS_APPCOMMAND                 (NS_APPCOMMAND_START)
-#define NS_APPCOMMAND_BACK            (NS_APPCOMMAND_START + 1)
-#define NS_APPCOMMAND_FORWARD         (NS_APPCOMMAND_START + 2)
-#define NS_APPCOMMAND_REFRESH         (NS_APPCOMMAND_START + 3)
-#define NS_APPCOMMAND_STOP            (NS_APPCOMMAND_START + 4)
-#define NS_APPCOMMAND_SEARCH          (NS_APPCOMMAND_START + 5)
-#define NS_APPCOMMAND_FAVORITES       (NS_APPCOMMAND_START + 6)
-#define NS_APPCOMMAND_HOME            (NS_APPCOMMAND_START + 7)
- 
-// composition events
-#define NS_COMPOSITION_EVENT_START    2200
-#define NS_COMPOSITION_START          (NS_COMPOSITION_EVENT_START)
-#define NS_COMPOSITION_END            (NS_COMPOSITION_EVENT_START + 1)
-#define NS_COMPOSITION_QUERY          (NS_COMPOSITION_EVENT_START + 2)
-
-// reconversion events
-#define NS_RECONVERSION_START         2300
-#define NS_RECONVERSION_QUERY         (NS_RECONVERSION_START)
-
-// text events
-#define NS_TEXT_START                 2400
-#define NS_TEXT_TEXT                  (NS_TEXT_START)
 
 #define NS_IS_MOUSE_EVENT(evnt) \
        (((evnt)->message == NS_MOUSE_LEFT_BUTTON_DOWN) || \
