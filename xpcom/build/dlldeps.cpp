@@ -41,7 +41,6 @@
 #include "nsVoidArray.h"
 #include "nsValueArray.h"
 #include "nsIAtom.h"
-//#include "nsIBuffer.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsRecyclingAllocator.h"
@@ -58,7 +57,6 @@
 #include "nsSupportsArray.h"
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"
-#include "nsProxyEventPrivate.h"
 #include "nsProxyRelease.h"
 #include "xpt_xdr.h"
 #include "xptcall.h"
@@ -129,7 +127,6 @@ void XXXNeverCalled()
     new nsArrayEnumerator(nsnull);
     NS_QuickSort(nsnull, 0, 0, nsnull, nsnull);
     nsString();
-    nsProxyObject(nsnull, 0, nsnull);
     NS_ProxyRelease(nsnull, nsnull, PR_FALSE);
     XPT_DoString(nsnull, nsnull, nsnull);
     XPT_DoHeader(nsnull, nsnull, nsnull);

@@ -362,96 +362,6 @@ ifeq ($(MOZ_REORDER),1)
   OS_CXXFLAGS += -ffunction-sections
 endif
 
-#
-# List known meta modules and their dependent libs
-#
-_ALL_META_COMPONENTS=mail crypto
-
-MOZ_META_COMPONENTS_mail = \
-	IMAP_factory \
-	mime_services \
-	nsMsgNewsModule  \
-	nsImportServiceModule \
-	nsAbModule \
-	nsTextImportModule \
-	nsVCardModule \
-	nsMsgDBModule \
-	nsMsgMdnModule \
-	nsMsgMailViewModule \
-	nsBayesianFilterModule \
-	$(NULL)
-
-MOZ_META_COMPONENTS_mail_comps = \
-	msgimap \
-	mime \
-	msgnews \
-	import \
-	addrbook \
-	impText \
-	vcard \
-	msgdb \
-	msgmdn \
-	mailview \
-  offline-startup \
-	bayesflt \
-	$(NULL)
-
-MOZ_META_COMPONENTS_mail_libs = mimecthglue_s
-ifdef USE_SHORT_LIBNAME
-MOZ_META_COMPONENTS_mail_libs += msgbsutl
-else
-MOZ_META_COMPONENTS_mail_libs += msgbaseutil
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-MOZ_META_COMPONENTS_mail += \
-	nsMsgBaseModule \
-	nsEudoraImportModule \
-	nsOEImport \
-	nsOutlookImport \
-	msgMapiModule \
-	$(NULL)
-MOZ_META_COMPONENTS_mail_comps += \
-	msgbase \
-	impEudra \
-	importOE \
-	impOutlk \
-	msgMapi \
-	$(NULL)
-else
-MOZ_META_COMPONENTS_mail += nsMsgBaseModule
-MOZ_META_COMPONENTS_mail_comps += mailnews
-endif
-
-MOZ_META_COMPONENTS_mail += \
-	nsMimeEmitterModule \
-	nsMsgComposeModule \
-	local_mail_services \
-	nsComm4xMailImportModule \
-	$(NULL)
-
-ifdef USE_SHORT_LIBNAME
-MOZ_META_COMPONENTS_mail_comps += emitter msgcompo msglocal
-ifeq ($(OS_ARCH),WINNT)
-MOZ_META_COMPONENTS_mail_comps += impComm4xMail
-else
-MOZ_META_COMPONENTS_mail_comps += imp4Mail
-endif
-else
-MOZ_META_COMPONENTS_mail_comps += mimeemitter msgcompose localmail impComm4xMail
-endif
-
-ifdef MOZ_PSM
-MOZ_META_COMPONENTS_mail += nsMsgSMIMEModule
-MOZ_META_COMPONENTS_mail_comps += msgsmime
-else
-MOZ_META_COMPONENTS_mail +=  nsSMIMEModule
-MOZ_META_COMPONENTS_mail_comps += smimestb
-endif
-
-MOZ_META_COMPONENTS_crypto = BOOT PKI NSS
-MOZ_META_COMPONENTS_crypto_comps = pipboot pippki pipnss
-
 # If we're applying MOZ_PROFILE_GENERATE to a non-static build, then we
 # need to create a static build _with_ PIC.  This allows us to generate
 # profile data that will still be valid when the object files are linked into
@@ -480,7 +390,7 @@ endif
 # the module is built static.
 
 ifdef IS_COMPONENT
-ifneq (,$(MOZ_STATIC_COMPONENT_LIBS)$(findstring $(LIBRARY_NAME), $(MOZ_STATIC_COMPONENTS)))
+ifneq (,$(MOZ_STATIC_COMPONENT_LIBS))
 ifdef MODULE_NAME
 DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
 FORCE_STATIC_LIB=1
@@ -489,25 +399,21 @@ endif
 endif
 
 # Determine if module being compiled is destined 
-# to be merged into a meta module in the future
+# to be merged into libxul
 
-ifneq (, $(findstring $(META_COMPONENT), $(MOZ_META_COMPONENTS)))
+ifdef MOZ_ENABLE_LIBXUL
+ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
 ifdef MODULE_NAME
 DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
+else
+$(error Component makefile doesn't specify MODULE_NAME.)
 endif
 endif
 EXPORT_LIBRARY=
 FORCE_STATIC_LIB=1
 _ENABLE_PIC=1
 endif
-
-#
-# Force PIC if we're generating the mozcomps meta module
-#
-
-ifneq (,$(findstring mozcomps, $(MOZ_META_COMPONENTS)))
-_ENABLE_PIC=1
 endif
 
 ifdef STATIC_BUILD_PIC
@@ -553,20 +459,6 @@ ifdef MOZ_PROFILE_USE
 DSO_PIC_CFLAGS += $(PROFILE_USE_CFLAGS)
 endif
 
-
-# Force _all_ exported methods to be |_declspec(dllexport)| when we're
-# building them into the executable.
-ifeq ($(OS_ARCH),WINNT)
-ifdef MOZ_STATIC_COMPONENT_LIBS
-DEFINES	+= \
-	-D_IMPL_NS_GFX \
-	-D_IMPL_NS_MSG_BASE \
-	-D_IMPL_NS_WIDGET \
-	$(NULL)
-endif
-endif
-
-
 #
 # Personal makefile customizations go in these optional make include files.
 #
@@ -601,7 +493,7 @@ CXXFLAGS	= $(OS_CXXFLAGS)
 LDFLAGS		= $(OS_LDFLAGS)
 
 # Allow each module to override the *default* optimization settings
-# by setting MODULE_OPTIMIZE_FLAGS iff the developer has not given
+# by setting MODULE_OPTIMIZE_FLAGS if the developer has not given
 # arguments to --enable-optimize
 ifdef MOZ_OPTIMIZE
 ifeq (1,$(MOZ_OPTIMIZE))

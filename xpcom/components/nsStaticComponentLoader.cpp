@@ -106,7 +106,9 @@ info_InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsStaticComponentLoader, nsIComponentLoader)
 
+#ifndef MOZ_ENABLE_LIBXUL
 NS_COM NSGetStaticModuleInfoFunc NSGetStaticModuleInfo;
+#endif
 
 nsresult
 nsStaticComponentLoader::GetModuleInfo()

@@ -15,7 +15,7 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
+# Benjamin Smedberg <benjamin@smedbergs.us>
 # Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
@@ -42,77 +42,73 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom_obsolete
-LIBRARY_NAME	= xpcom_compat
-ifneq ($(OS_ARCH),WINNT)
-SHORT_LIBNAME	= xpcomct
+MODULE = libxul
+LIBRARY_NAME = xul
+EXPORT_LIBRARY = 1
+FORCE_USE_PIC = 1
+FORCE_SHARED_LIB = 1
+
+REQUIRES = \
+	xpcom \
+	string \
+	xpcom_obsolete \
+	zlib \
+	$(NULL)
+
+CPPSRCS = \
+	nsStaticXULComponents.cpp \
+	$(NULL)
+
+ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
+REQUIRES += libreg
+
+CPPSRCS += \
+	dlldeps.cpp \
+	dlldeps-obs.cpp \
+	dlldeps-zlib.cpp \
+	$(NULL)
 endif
-
-GRE_MODULE	= 1
-LIBXUL_LIBRARY = 1
-PACKAGE_FILE = xpcomobsolete.pkg
-
-DIRS            = component
-
-REQUIRES	= xpcom \
-		  string \
-		  $(NULL)
-
-# pull in MoreFiles for MacOSX
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-REQUIRES += macmorefiles
-endif
-
-CPPSRCS         = \
-		nsFileSpec.cpp \
-		nsFileStream.cpp \
-		nsIFileStream.cpp \
-		nsFileSpecImpl.cpp \
-		nsSpecialSystemDirectory.cpp \
-		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-REQUIRES	+= libreg
-ifndef MOZ_ENABLE_LIBXUL
-CPPSRCS		+= dlldeps-obs.cpp
-endif
+DEFINES	+= -DZLIB_DLL=1
 endif
 
-EXPORTS		= \
-		xpcomobsolete.h    \
-		nsFileSpec.h    \
-		nsFileStream.h  \
-		nsIFileStream.h \
-		nsSpecialSystemDirectory.h \
-		nsIRegistryUtils.h \
-		$(NULL)
-
-LOCAL_INCLUDES	= \
-		-I.. \
-		-I$(srcdir)/../io \
-		$(NULL)
-
-XPIDLSRCS	= nsIFileSpec.idl \
-		  nsIRegistry.idl \
-		 $(NULL)
-# Force use of PIC
-FORCE_USE_PIC	= 1 
-
+# dependent libraries
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
-		$(NULL)
+	$(DIST)/lib/$(LIB_PREFIX)xpcom_core.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)xpcom_compat.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)mozz.$(LIB_SUFFIX) \
+	$(NULL)
 
-# due to symbol conflicts on win32, this needs to be shared
-ifndef MOZ_ENABLE_LIBXUL
-FORCE_SHARED_LIB = 1
-endif
+# component libraries
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/components/$(LIB_PREFIX)xpcom_compat_c.$(LIB_SUFFIX) \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_COM_OBSOLETE
+ifdef GC_LEAK_DETECTOR
+EXTRA_DSO_LIBS += boehm
+endif
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LIBS += macmorefiles_s
+EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS)
+EXTRA_DEPS += $(DIST)/lib/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
+endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+OS_LIBS += $(LIBICONV)
+
+DEFINES += \
+	-D_IMPL_NS_COM \
+	-D_IMPL_NS_STRINGAPI \
+	-DEXPORT_XPT_API \
+	-DEXPORT_XPTC_API \
+	-DEXPORT_XPTI_API \
+	-D_IMPL_NS_COM_OBSOLETE \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CXXFLAGS	+= $(TK_CFLAGS)
@@ -124,12 +120,19 @@ EXTRA_DSO_LDOPTS += -lbe
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, shell32 ole32)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, imagehlp)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 ifdef GNU_CXX
 DSO_LDOPTS += -Wl,--export-all-symbols
 endif
 endif # WINNT
 
+export:: dlldeps.cpp dlldeps-obs.cpp
+
+dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
+	$(INSTALL) $^ .
+
+dlldeps-obs.cpp: $(topsrcdir)/xpcom/obsolete/dlldeps-obs.cpp
+	$(INSTALL) $^ .

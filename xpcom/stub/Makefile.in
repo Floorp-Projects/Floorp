@@ -80,10 +80,14 @@ FORCE_USE_PIC	= 1
 
 FORCE_SHARED_LIB = 1
 
+ifdef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LIBS = xul
+else
 ifeq ($(OS_TARGET),OS2)
 EXTRA_DSO_LIBS = xpcomcor
 else
 EXTRA_DSO_LIBS = xpcom_core
+endif
 endif
 EXTRA_DSO_LDOPTS = $(LIBS_DIR) $(EXTRA_DSO_LIBS) $(NSPR_LIBS)
 
