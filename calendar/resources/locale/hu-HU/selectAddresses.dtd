@@ -35,11 +35,11 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- Select addresses for mail message dialog -->
-<!ENTITY ab-selectAddressesDialog.title "Internet Appliance Dialógus - Címek kiválasztása">
-<!ENTITY ab-selectAddressesDialogHeader.label "Válassz címeket">
+<!ENTITY ab-selectAddressesDialog.title "E-mail címek kiválasztása">
+<!ENTITY ab-selectAddressesDialogHeader.label "Válasszon címeket">
 <!ENTITY ab-selectAddressesDialogLookIn.label "Nézze meg itt: ">
 <!ENTITY ab-selectAddressesDialogNameColumn.label "Név">
-<!ENTITY ab-selectAddressesDialogEmailColumn.label "Email cím">
+<!ENTITY ab-selectAddressesDialogEmailColumn.label "E-mail cím">
 <!ENTITY ab-selectAddressesDialogFor.label "számára: ">
 <!ENTITY ab-selectAddressesDialogClearButton.label "Törlés">
 <!ENTITY ab-selectAddressesDialogToButton.label "Címzett ">
@@ -47,10 +47,10 @@
 <!ENTITY ab-selectAddressesDialogBccButton.label "Rejtett másolat ">
 <!ENTITY ab-selectAddressesDialogRemoveButton.label "Eltávolítása">
 <!ENTITY ab-selectAddressesDialogAddressTo.label "Az üzenet címzettje:">
-<!ENTITY ab-selectAddressesDialogPrefixTo.label "To: ">
-<!ENTITY ab-selectAddressesDialogPrefixCc.label "CC: ">
-<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc: ">
-<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Nincs email cím">
+<!ENTITY ab-selectAddressesDialogPrefixTo.label "Címzett: ">
+<!ENTITY ab-selectAddressesDialogPrefixCc.label "Másolat: ">
+<!ENTITY ab-selectAddressesDialogPrefixBcc.label "Rejtett másolat: ">
+<!ENTITY ab-selectAddressesDialogNoEmailMessage.label "Nincs E-mail cím">
 <!ENTITY ab-selectAddressesDialogInvite.label "Meghívó">
 <!ENTITY ab-selectAddressesDialogUninvite.label "Eltávolítás">
 <!ENTITY ab-selectAddressesDialogInviteList.label "Meghívó lista:">

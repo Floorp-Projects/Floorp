@@ -32,33 +32,34 @@
    - the provisions above, a recipient may use your version of this file under
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
-   - Hungarian translation by GĂˇbor Ziegler <gziegler@freemail.hu>
+   - Hungarian translation by G÷bor Ziegler <gziegler@freemail.hu>
+   - Updated Hungarian translation by KAMI <kamihir@freemail.hu>
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY time.midnight "éjfél" >
-<!ENTITY time.1 "hajn.1 ó" >
-<!ENTITY time.2 "hajn.2 ó" >
-<!ENTITY time.3 "hajn.3 ó" >
-<!ENTITY time.4 "hajn.4 ó" >
-<!ENTITY time.5 "hajn.5 ó" >
-<!ENTITY time.6 "reggel 6 ó" >
-<!ENTITY time.7 "reggel 7 ó" >
-<!ENTITY time.8 "reggel 8 ó" >
-<!ENTITY time.9 "de. 9 ó" >
-<!ENTITY time.10 "de. 10 ó" >
-<!ENTITY time.11 "de. 11 ó" >
+<!ENTITY time.1 "hajnal 1 óra" >
+<!ENTITY time.2 "hajnal 2 óra" >
+<!ENTITY time.3 "hajnal 3 óra" >
+<!ENTITY time.4 "hajnal 4 óra" >
+<!ENTITY time.5 "hajnal 5 óra" >
+<!ENTITY time.6 "reggel 6 óra" >
+<!ENTITY time.7 "reggel 7 óra" >
+<!ENTITY time.8 "reggel 8 óra" >
+<!ENTITY time.9 "délelőtt 9 óra" >
+<!ENTITY time.10 "délelőtt 10 óra" >
+<!ENTITY time.11 "délelőtt 11 óra" >
 <!ENTITY time.noon "dél" >
-<!ENTITY time.13 "du. 1 ó" >
-<!ENTITY time.14 "du. 2 ó" >
-<!ENTITY time.15 "du. 3 ó" >
-<!ENTITY time.16 "du. 4 ó" >
-<!ENTITY time.17 "du. 5 ó" >
-<!ENTITY time.18 "du. 6 ó" >
-<!ENTITY time.19 "este 7 ó" >
-<!ENTITY time.20 "este 8 ó" >
-<!ENTITY time.21 "este. 9 ó" >
-<!ENTITY time.22 "este 11 ó" >
-<!ENTITY time.23 "este 11 ó" >
+<!ENTITY time.13 "délután 1 óra" >
+<!ENTITY time.14 "délután 2 óra" >
+<!ENTITY time.15 "délután 3 óra" >
+<!ENTITY time.16 "délután 4 óra" >
+<!ENTITY time.17 "délután 5 óra" >
+<!ENTITY time.18 "délután 6 óra" >
+<!ENTITY time.19 "este 7 óra" >
+<!ENTITY time.20 "este 8 óra" >
+<!ENTITY time.21 "este 9 óra" >
+<!ENTITY time.22 "este 10 óra" >
+<!ENTITY time.23 "este 11 óra" >
 
 <!-- Month Names -->
 <!ENTITY day.1.Ddd "Va" >
@@ -77,7 +78,7 @@
 <!ENTITY day.6.DDD "PÉ" >
 <!ENTITY day.7.DDD "SZO" >
 
-<!ENTITY day.1.name "Vaásrnap" >
+<!ENTITY day.1.name "Vasárnap" >
 <!ENTITY day.2.name "Hétfő" >
 <!ENTITY day.3.name "Kedd" >
 <!ENTITY day.4.name "Szerda" >

@@ -35,45 +35,46 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - Hungarian translation by Gábor Ziegler <gziegler@freemail.hu>
+   - Updated Hungarian translation by KAMI <kamihir@freemail.hu>
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY calendar.label             "Naptár" >
 <!ENTITY calendarPanel.label        "Naptár" >
 <!ENTITY calendar.accesskey         "c" >
 <!ENTITY calendar.publish.label     "Közzététel">
-<!ENTITY calendar.general.label     "General">
+<!ENTITY calendar.general.label     "Általános">
 <!ENTITY calendar.alarms.label      "Értesítések">
 <!ENTITY calendar.views.label       "Nézetek">
 <!ENTITY calendar.timezone.label    "Saját időzóna">
 
-<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.title            "Naptár beállításai">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
-<!ENTITY prefWindow.category         "Category">
+<!ENTITY prefWindow.category         "Kategória">
 
-<!ENTITY pref.mainbox.label         "Általános beállítás" >
-<!ENTITY pref.alarmgoesoff.label "Amikor egy értesítés esedékes:">
-<!ENTITY pref.playasound  "Hang lejátszésa" >
+<!ENTITY pref.mainbox.label         "Általános beállítások" >
+<!ENTITY pref.alarmgoesoff.label "Amikor egy értesítés esedékes">
+<!ENTITY pref.playasound  "Hang lejátszása" >
 
 <!ENTITY pref.alarmbox.label    "Értesítések" >
-<!ENTITY pref.showalarmbox    "Értesítő ablak felhozása" >
-<!ENTITY pref.defaultemail.label "Alapértelmezett cím, amire az értesítőket kell küldeni:">
-<!ENTITY pref.defaulttext.label "Alapértelmezett szöveg az értesítésekhez:">
-<!ENTITY pref.missedalarms    "Mutassa az elmulasztott értesítéseket is" >
-<!ENTITY pref.defalarm4events.label "Default alarm setting for events:">
-<!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
-<!ENTITY pref.alarm.on "On">
-<!ENTITY pref.alarm.off "Off">
-<!ENTITY pref.defalarmlen4events.label "Default time an alarm goes off before an event:">
-<!ENTITY pref.defalarmlen4todos.label "Default time an alarm goes off before a task:">
+<!ENTITY pref.showalarmbox    "Értesítőablak megjelenítése" >
+<!ENTITY pref.defaultemail.label "Az e-mail értesítés alapértelmezett címzettje">
+<!ENTITY pref.defaulttext.label "Alapértelmezett szöveg az értesítésekhez">
+<!ENTITY pref.missedalarms    "Az elmulasztott értesítések megjelenítése" >
+<!ENTITY pref.defalarm4events.label "Események alapértelmezett értesítési beállítása">
+<!ENTITY pref.defalarm4todos.label "Feladatok  alapértelmezett értesítési beállítása">
+<!ENTITY pref.alarm.on "Be">
+<!ENTITY pref.alarm.off "Ki">
+<!ENTITY pref.defalarmlen4events.label "Értesítés kikapcsolása az esemény előtt">
+<!ENTITY pref.defalarmlen4todos.label "Értesítés kikapcsolása a feladat előtt">
 
-<!ENTITY pref.dateformat.label      "Dátum szöveg formátuma:" >
+<!ENTITY pref.dateformat.label      "Dátumszöveg formátuma" >
 <!ENTITY pref.dateformat.long       "Hosszú" >
 <!ENTITY pref.dateformat.short      "Rövid"  >
-<!ENTITY pref.defaultlength.label   "Alapértelmezett eseményhossz:" >
-<!ENTITY pref.defaultsnoozelength.label   "Alapértelmezett szundi hossz:" >
+<!ENTITY pref.defaultlength.label   "Alapértelmezett eseményhossz" >
+<!ENTITY pref.defaultsnoozelength.label   "Alapértelmezett szundihossz" >
 
-<!ENTITY pref.weekstarts.label     "A hét első napja:" >
-<!ENTITY pref.weekstarts.sunday    "Vaásrnap" >
+<!ENTITY pref.weekstarts.label     "A hét első napja" >
+<!ENTITY pref.weekstarts.sunday    "Vasárnap" >
 <!ENTITY pref.weekstarts.monday    "Hétfő" >
 <!ENTITY pref.weekstarts.tuesday   "Kedd" >
 <!ENTITY pref.weekstarts.wednesday "Szerda" >
@@ -81,7 +82,7 @@
 <!ENTITY pref.weekstarts.friday    "Péntek" >
 <!ENTITY pref.weekstarts.saturday  "Szombat" >
 
-<!ENTITY pref.numberofweeks.label     "Alapértelmezett összes hetek száma:" >
+<!ENTITY pref.numberofweeks.label     "Alapértelmezett összes hetek száma" >
 <!ENTITY pref.numberofweeks.0      "Nincs" >
 <!ENTITY pref.numberofweeks.1      "1 hét" >
 <!ENTITY pref.numberofweeks.2      "2 hét" >
@@ -89,7 +90,7 @@
 <!ENTITY pref.numberofweeks.4      "4 hét" >
 <!ENTITY pref.numberofweeks.5      "5 hét" >
 <!ENTITY pref.numberofweeks.6      "6 hét" >
-<!ENTITY pref.numberofpreviousweeks.label     "A megelőző hetek száma:" >
+<!ENTITY pref.numberofpreviousweeks.label     "A megelőző hetek száma" >
 
 <!ENTITY pref.hour.help.description    "Ha esemény van ezeken kívül, akkor felülbírálásra kerül" >
 <!ENTITY pref.hour.00    "00:00" >
@@ -118,21 +119,21 @@
 <!ENTITY pref.hour.23    "23:00" >
 
 <!ENTITY pref.calendar.view.allview.caption "Általános">
-<!ENTITY pref.calendar.view.dayview.caption "Napi nézet View">
-<!ENTITY pref.calendar.view.weekview.caption "Heti nézet View">
-<!ENTITY pref.calendar.view.weekanddayview.caption "Többheti nézet">
+<!ENTITY pref.calendar.view.dayview.caption "Napi nézet">
+<!ENTITY pref.calendar.view.weekview.caption "Heti nézet">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Többheti és napi nézet">
 <!ENTITY pref.calendar.view.monthview.caption "Havi nézet">
 <!ENTITY pref.calendar.view.multiweekview.caption "Többheti nézet">
 
 <!ENTITY pref.calendar.view.restrict.label "A nézet korlátozása ">
-<!ENTITY pref.calendar.view.starttime.label "Kezdési időpont:">
-<!ENTITY pref.calendar.view.endtime.label   "Bejezési időpont:">
+<!ENTITY pref.calendar.view.starttime.label "Kezdési időpont">
+<!ENTITY pref.calendar.view.endtime.label   "Befejezési időpont">
 
-<!ENTITY pref.categories.label   "Kategórák" >
+<!ENTITY pref.categories.label   "Kategóriák" >
 
-<!ENTITY pref.categories.help.description   "Használj vesszőt minden egyes hozáadnio kívánt kategória között">
+<!ENTITY pref.categories.help.description   "Használjon vesszőt minden egyes hozzáadni kívánt kategória között.">
 
-<!ENTITY pref.reloadonlaunch       "Induláskor a távoli  naptárak frissítése">
+<!ENTITY pref.reloadonlaunch       "Induláskor a távoli naptárak frissítése">
 
 <!ENTITY pref.publish.caption        "Közzétételi beállítások">
 <!ENTITY pref.publish.path.label     "Alapértelmezett távoli fájlnév">
@@ -144,11 +145,11 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Saját időzóna">
 <!ENTITY pref.calendar.timezone.caption "Időzóna">
-<!ENTITY pref.defaultzone.label     "Alapértelmezett időzóna:" >
+<!ENTITY pref.defaultzone.label     "Alapértelmezett időzóna" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrika/Abidjan" >
 <!ENTITY pref.timezone.Africa.Accra "Afrika/Accra" >
-<!ENTITY pref.timezone.Africa.Addis_Ababa "Afrika/Addis_Ababa" >
+<!ENTITY pref.timezone.Africa.Addis_Ababa "Afrika/Addis Ababa" >
 <!ENTITY pref.timezone.Africa.Algiers "Afrika/Algiers" >
 <!ENTITY pref.timezone.Africa.Asmera "Afrika/Asmera" >
 <!ENTITY pref.timezone.Africa.Bamako "Afrika/Bamako" >
@@ -163,10 +164,10 @@
 <!ENTITY pref.timezone.Africa.Ceuta "Afrika/Ceuta" >
 <!ENTITY pref.timezone.Africa.Conakry "Afrika/Conakry" >
 <!ENTITY pref.timezone.Africa.Dakar "Afrika/Dakar" >
-<!ENTITY pref.timezone.Africa.Dar_es_Salaam "Afrika/Dar_es_Salaam" >
+<!ENTITY pref.timezone.Africa.Dar_es_Salaam "Afrika/Dar es Salaam" >
 <!ENTITY pref.timezone.Africa.Djibouti "Afrika/Djibouti" >
 <!ENTITY pref.timezone.Africa.Douala "Afrika/Douala" >
-<!ENTITY pref.timezone.Africa.El_Aaiun "Afrika/El_Aaiun" >
+<!ENTITY pref.timezone.Africa.El_Aaiun "Afrika/El Aaiun" >
 <!ENTITY pref.timezone.Africa.Freetown "Afrika/Freetown" >
 <!ENTITY pref.timezone.Africa.Gaborone "Afrika/Gaborone" >
 <!ENTITY pref.timezone.Africa.Harare "Afrika/Harare" >
@@ -193,7 +194,7 @@
 <!ENTITY pref.timezone.Africa.Nouakchott "Afrika/Nouakchott" >
 <!ENTITY pref.timezone.Africa.Ouagadougou "Afrika/Ouagadougou" >
 <!ENTITY pref.timezone.Africa.Porto-Novo "Afrika/Porto-Novo" >
-<!ENTITY pref.timezone.Africa.Sao_Tome "Afrika/Sao_Tome" >
+<!ENTITY pref.timezone.Africa.Sao_Tome "Afrika/Sao Tome" >
 <!ENTITY pref.timezone.Africa.Timbuktu "Afrika/Timbuktu" >
 <!ENTITY pref.timezone.Africa.Tripoli "Afrika/Tripoli" >
 <!ENTITY pref.timezone.Africa.Tunis "Afrika/Tunis" >
@@ -208,11 +209,11 @@
 <!ENTITY pref.timezone.America.Barbados "Amerika/Barbados" >
 <!ENTITY pref.timezone.America.Belem "Amerika/Belem" >
 <!ENTITY pref.timezone.America.Belize "Amerika/Belize" >
-<!ENTITY pref.timezone.America.Boa_Vista "Amerika/Boa_Vista" >
+<!ENTITY pref.timezone.America.Boa_Vista "Amerika/Boa Vista" >
 <!ENTITY pref.timezone.America.Bogota "Amerika/Bogota" >
 <!ENTITY pref.timezone.America.Boise "Amerika/Boise" >
-<!ENTITY pref.timezone.America.Buenos_Aires "Amerika/Buenos_Aires" >
-<!ENTITY pref.timezone.America.Cambridge_Bay "Amerika/Cambridge_Bay" >
+<!ENTITY pref.timezone.America.Buenos_Aires "Amerika/Buenos Aires" >
+<!ENTITY pref.timezone.America.Cambridge_Bay "Amerika/Cambridge Bay" >
 <!ENTITY pref.timezone.America.Cancun "Amerika/Cancun" >
 <!ENTITY pref.timezone.America.Caracas "Amerika/Caracas" >
 <!ENTITY pref.timezone.America.Catamarca "Amerika/Catamarca" >
@@ -221,22 +222,22 @@
 <!ENTITY pref.timezone.America.Chicago "Amerika/Chicago" >
 <!ENTITY pref.timezone.America.Chihuahua "Amerika/Chihuahua" >
 <!ENTITY pref.timezone.America.Cordoba "Amerika/Cordoba" >
-<!ENTITY pref.timezone.America.Costa_Rica "Amerika/Costa_Rica" >
+<!ENTITY pref.timezone.America.Costa_Rica "Amerika/Costa Rica" >
 <!ENTITY pref.timezone.America.Cuiaba "Amerika/Cuiaba" >
 <!ENTITY pref.timezone.America.Curacao "Amerika/Curacao" >
 <!ENTITY pref.timezone.America.Dawson "Amerika/Dawson" >
-<!ENTITY pref.timezone.America.Dawson_Creek "Amerika/Dawson_Creek" >
+<!ENTITY pref.timezone.America.Dawson_Creek "Amerika/Dawson Creek" >
 <!ENTITY pref.timezone.America.Denver "Amerika/Denver" >
 <!ENTITY pref.timezone.America.Detroit "Amerika/Detroit" >
 <!ENTITY pref.timezone.America.Dominica "Amerika/Dominica" >
 <!ENTITY pref.timezone.America.Edmonton "Amerika/Edmonton" >
 <!ENTITY pref.timezone.America.Eirunepe "Amerika/Eirunepe" >
-<!ENTITY pref.timezone.America.El_Salvador "Amerika/El_Salvador" >
+<!ENTITY pref.timezone.America.El_Salvador "Amerika/El Salvador" >
 <!ENTITY pref.timezone.America.Fortaleza "Amerika/Fortaleza" >
-<!ENTITY pref.timezone.America.Glace_Bay "Amerika/Glace_Bay" >
+<!ENTITY pref.timezone.America.Glace_Bay "Amerika/Glace Bay" >
 <!ENTITY pref.timezone.America.Godthab "Amerika/Godthab" >
-<!ENTITY pref.timezone.America.Goose_Bay "Amerika/Goose_Bay" >
-<!ENTITY pref.timezone.America.Grand_Turk "Amerika/Grand_Turk" >
+<!ENTITY pref.timezone.America.Goose_Bay "Amerika/Goose Bay" >
+<!ENTITY pref.timezone.America.Grand_Turk "Amerika/Grand Turk" >
 <!ENTITY pref.timezone.America.Grenada "Amerika/Grenada" >
 <!ENTITY pref.timezone.America.Guadeloupe "Amerika/Guadeloupe" >
 <!ENTITY pref.timezone.America.Guatemala "Amerika/Guatemala" >
@@ -257,9 +258,9 @@
 <!ENTITY pref.timezone.America.Juneau "Amerika/Juneau" >
 <!ENTITY pref.timezone.America.Kentucky.Louisville "Amerika/Kentucky/Louisville" >
 <!ENTITY pref.timezone.America.Kentucky.Monticello "Amerika/Kentucky/Monticello" >
-<!ENTITY pref.timezone.America.La_Paz "Amerika/La_Paz" >
+<!ENTITY pref.timezone.America.La_Paz "Amerika/La Paz" >
 <!ENTITY pref.timezone.America.Lima "Amerika/Lima" >
-<!ENTITY pref.timezone.America.Los_Angeles "Amerika/Los_Angeles" >
+<!ENTITY pref.timezone.America.Los_Angeles "Amerika/Los Angeles" >
 <!ENTITY pref.timezone.America.Louisville "Amerika/Louisville" >
 <!ENTITY pref.timezone.America.Maceio "Amerika/Maceio" >
 <!ENTITY pref.timezone.America.Managua "Amerika/Managua" >
@@ -269,14 +270,14 @@
 <!ENTITY pref.timezone.America.Mendoza "Amerika/Mendoza" >
 <!ENTITY pref.timezone.America.Menominee "Amerika/Menominee" >
 <!ENTITY pref.timezone.America.Merida "Amerika/Merida" >
-<!ENTITY pref.timezone.America.Mexico_City "Amerika/Mexico_City" >
+<!ENTITY pref.timezone.America.Mexico_City "Amerika/Mexico City" >
 <!ENTITY pref.timezone.America.Miquelon "Amerika/Miquelon" >
 <!ENTITY pref.timezone.America.Monterrey "Amerika/Monterrey" >
 <!ENTITY pref.timezone.America.Montevideo "Amerika/Montevideo" >
 <!ENTITY pref.timezone.America.Montreal "Amerika/Montreal" >
 <!ENTITY pref.timezone.America.Montserrat "Amerika/Montserrat" >
 <!ENTITY pref.timezone.America.Nassau "Amerika/Nassau" >
-<!ENTITY pref.timezone.America.New_York "Amerika/New_York" >
+<!ENTITY pref.timezone.America.New_York "Amerika/New York" >
 <!ENTITY pref.timezone.America.Nipigon "Amerika/Nipigon" >
 <!ENTITY pref.timezone.America.Nome "Amerika/Nome" >
 <!ENTITY pref.timezone.America.Noronha "Amerika/Noronha" >
@@ -285,29 +286,29 @@
 <!ENTITY pref.timezone.America.Paramaribo "Amerika/Paramaribo" >
 <!ENTITY pref.timezone.America.Phoenix "Amerika/Phoenix" >
 <!ENTITY pref.timezone.America.Port-au-Prince "Amerika/Port-au-Prince" >
-<!ENTITY pref.timezone.America.Port_of_Spain "Amerika/Port_of_Spain" >
-<!ENTITY pref.timezone.America.Porto_Velho "Amerika/Porto_Velho" >
-<!ENTITY pref.timezone.America.Puerto_Rico "Amerika/Puerto_Rico" >
-<!ENTITY pref.timezone.America.Rainy_River "Amerika/Rainy_River" >
-<!ENTITY pref.timezone.America.Rankin_Inlet "Amerika/Rankin_Inlet" >
+<!ENTITY pref.timezone.America.Port_of_Spain "Amerika/Port of Spain" >
+<!ENTITY pref.timezone.America.Porto_Velho "Amerika/Porto Velho" >
+<!ENTITY pref.timezone.America.Puerto_Rico "Amerika/Puerto Rico" >
+<!ENTITY pref.timezone.America.Rainy_River "Amerika/Rainy River" >
+<!ENTITY pref.timezone.America.Rankin_Inlet "Amerika/Rankin Inlet" >
 <!ENTITY pref.timezone.America.Recife "Amerika/Recife" >
 <!ENTITY pref.timezone.America.Regina "Amerika/Regina" >
-<!ENTITY pref.timezone.America.Rio_Branco "Amerika/Rio_Branco" >
+<!ENTITY pref.timezone.America.Rio_Branco "Amerika/Rio Branco" >
 <!ENTITY pref.timezone.America.Rosario "Amerika/Rosario" >
 <!ENTITY pref.timezone.America.Santiago "Amerika/Santiago" >
-<!ENTITY pref.timezone.America.Santo_Domingo "Amerika/Santo_Domingo" >
-<!ENTITY pref.timezone.America.Sao_Paulo "Amerika/Sao_Paulo" >
+<!ENTITY pref.timezone.America.Santo_Domingo "Amerika/Santo Domingo" >
+<!ENTITY pref.timezone.America.Sao_Paulo "Amerika/Sao Paulo" >
 <!ENTITY pref.timezone.America.Scoresbysund "Amerika/Scoresbysund" >
 <!ENTITY pref.timezone.America.Shiprock "Amerika/Shiprock" >
-<!ENTITY pref.timezone.America.St_Johns "Amerika/St_Johns" >
-<!ENTITY pref.timezone.America.St_Kitts "Amerika/St_Kitts" >
-<!ENTITY pref.timezone.America.St_Lucia "Amerika/St_Lucia" >
-<!ENTITY pref.timezone.America.St_Thomas "Amerika/St_Thomas" >
-<!ENTITY pref.timezone.America.St_Vincent "Amerika/St_Vincent" >
-<!ENTITY pref.timezone.America.Swift_Current "Amerika/Swift_Current" >
+<!ENTITY pref.timezone.America.St_Johns "Amerika/St Johns" >
+<!ENTITY pref.timezone.America.St_Kitts "Amerika/St Kitts" >
+<!ENTITY pref.timezone.America.St_Lucia "Amerika/St Lucia" >
+<!ENTITY pref.timezone.America.St_Thomas "Amerika/St Thomas" >
+<!ENTITY pref.timezone.America.St_Vincent "Amerika/St Vincent" >
+<!ENTITY pref.timezone.America.Swift_Current "Amerika/Swift Current" >
 <!ENTITY pref.timezone.America.Tegucigalpa "Amerika/Tegucigalpa" >
 <!ENTITY pref.timezone.America.Thule "Amerika/Thule" >
-<!ENTITY pref.timezone.America.Thunder_Bay "Amerika/Thunder_Bay" >
+<!ENTITY pref.timezone.America.Thunder_Bay "Amerika/Thunder Bay" >
 <!ENTITY pref.timezone.America.Tijuana "Amerika/Tijuana" >
 <!ENTITY pref.timezone.America.Tortola "Amerika/Tortola" >
 <!ENTITY pref.timezone.America.Vancouver "Amerika/Vancouver" >
@@ -321,9 +322,9 @@
 <!ENTITY pref.timezone.Antarctica.Mawson "Antarktisz/Mawson" >
 <!ENTITY pref.timezone.Antarctica.McMurdo "Antarktisz/McMurdo" >
 <!ENTITY pref.timezone.Antarctica.Palmer "Antarktisz/Palmer" >
-<!ENTITY pref.timezone.Antarctica.South_Pole "Antarktisz/South_Pole" >
+<!ENTITY pref.timezone.Antarctica.South_Pole "Antarktisz/Déli sark" >
 <!ENTITY pref.timezone.Antarctica.Syowa "Antarktisz/Syowa" >
-<!ENTITY pref.timezone.Antarctica.Vostok "Antarktisz/Vostok" >
+<!ENTITY pref.timezone.Antarctica.Vostok "Antarktisz/Vosztok" >
 <!ENTITY pref.timezone.Arctic.Longyearbyen "Arktisz/Longyearbyen" >
 <!ENTITY pref.timezone.Asia.Aden "Ázsia/Aden" >
 <!ENTITY pref.timezone.Asia.Almaty "Ázsia/Almaty" >
@@ -349,7 +350,7 @@
 <!ENTITY pref.timezone.Asia.Dushanbe "Ázsia/Dushanbe" >
 <!ENTITY pref.timezone.Asia.Gaza "Ázsia/Gaza" >
 <!ENTITY pref.timezone.Asia.Harbin "Ázsia/Harbin" >
-<!ENTITY pref.timezone.Asia.Hong_Kong "Ázsia/Hong_Kong" >
+<!ENTITY pref.timezone.Asia.Hong_Kong "Ázsia/Hong Kong" >
 <!ENTITY pref.timezone.Asia.Hovd "Ázsia/Hovd" >
 <!ENTITY pref.timezone.Asia.Irkutsk "Ázsia/Irkutsk" >
 <!ENTITY pref.timezone.Asia.Istanbul "Ázsia/Istanbul" >
@@ -362,7 +363,7 @@
 <!ENTITY pref.timezone.Asia.Kashgar "Ázsia/Kashgar" >
 <!ENTITY pref.timezone.Asia.Katmandu "Ázsia/Katmandu" >
 <!ENTITY pref.timezone.Asia.Krasnoyarsk "Ázsia/Krasnoyarsk" >
-<!ENTITY pref.timezone.Asia.Kuala_Lumpur "Ázsia/Kuala_Lumpur" >
+<!ENTITY pref.timezone.Asia.Kuala_Lumpur "Ázsia/Kuala Lumpur" >
 <!ENTITY pref.timezone.Asia.Kuching "Ázsia/Kuching" >
 <!ENTITY pref.timezone.Asia.Kuwait "Ázsia/Kuwait" >
 <!ENTITY pref.timezone.Asia.Macao "Ázsia/Macao" >
@@ -372,7 +373,7 @@
 <!ENTITY pref.timezone.Asia.Nicosia "Ázsia/Nicosia" >
 <!ENTITY pref.timezone.Asia.Novosibirsk "Ázsia/Novosibirsk" >
 <!ENTITY pref.timezone.Asia.Omsk "Ázsia/Omsk" >
-<!ENTITY pref.timezone.Asia.Phnom_Penh "Ázsia/Phnom_Penh" >
+<!ENTITY pref.timezone.Asia.Phnom_Penh "Ázsia/Phnom Penh" >
 <!ENTITY pref.timezone.Asia.Pontianak "Ázsia/Pontianak" >
 <!ENTITY pref.timezone.Asia.Pyongyang "Ázsia/Pyongyang" >
 <!ENTITY pref.timezone.Asia.Qatar "Ázsia/Qatar" >
@@ -389,7 +390,7 @@
 <!ENTITY pref.timezone.Asia.Tehran "Ázsia/Tehran" >
 <!ENTITY pref.timezone.Asia.Thimphu "Ázsia/Thimphu" >
 <!ENTITY pref.timezone.Asia.Tokyo "Ázsia/Tokyo" >
-<!ENTITY pref.timezone.Asia.Ujung_Pandang "Ázsia/Ujung_Pandang" >
+<!ENTITY pref.timezone.Asia.Ujung_Pandang "Ázsia/Ujung Pandang" >
 <!ENTITY pref.timezone.Asia.Ulaanbaatar "Ázsia/Ulaanbaatar" >
 <!ENTITY pref.timezone.Asia.Urumqi "Ázsia/Urumqi" >
 <!ENTITY pref.timezone.Asia.Vientiane "Ázsia/Vientiane" >
@@ -400,75 +401,75 @@
 <!ENTITY pref.timezone.Atlantic.Azores "Atlanti/Azores" >
 <!ENTITY pref.timezone.Atlantic.Bermuda "Atlanti/Bermuda" >
 <!ENTITY pref.timezone.Atlantic.Canary "Atlanti/Canary" >
-<!ENTITY pref.timezone.Atlantic.Cape_Verde "Atlanti/Cape_Verde" >
+<!ENTITY pref.timezone.Atlantic.Cape_Verde "Atlanti/Cape Verde" >
 <!ENTITY pref.timezone.Atlantic.Faeroe "Atlanti/Faeroe" >
-<!ENTITY pref.timezone.Atlantic.Jan_Mayen "Atlanti/Jan_Mayen" >
+<!ENTITY pref.timezone.Atlantic.Jan_Mayen "Atlanti/Jan Mayen" >
 <!ENTITY pref.timezone.Atlantic.Madeira "Atlanti/Madeira" >
 <!ENTITY pref.timezone.Atlantic.Reykjavik "Atlanti/Reykjavik" >
-<!ENTITY pref.timezone.Atlantic.South_Georgia "Atlanti/South_Georgia" >
-<!ENTITY pref.timezone.Atlantic.St_Helena "Atlanti/St_Helena" >
+<!ENTITY pref.timezone.Atlantic.South_Georgia "Atlanti/South Georgia" >
+<!ENTITY pref.timezone.Atlantic.St_Helena "Atlanti/St Helena" >
 <!ENTITY pref.timezone.Atlantic.Stanley "Atlanti/Stanley" >
 <!ENTITY pref.timezone.Australia.Adelaide "Ausztrália/Adelaide" >
 <!ENTITY pref.timezone.Australia.Brisbane "Ausztrália/Brisbane" >
-<!ENTITY pref.timezone.Australia.Broken_Hill "Ausztrália/Broken_Hill" >
+<!ENTITY pref.timezone.Australia.Broken_Hill "Ausztrália/Broken Hill" >
 <!ENTITY pref.timezone.Australia.Darwin "Ausztrália/Darwin" >
 <!ENTITY pref.timezone.Australia.Hobart "Ausztrália/Hobart" >
 <!ENTITY pref.timezone.Australia.Lindeman "Ausztrália/Lindeman" >
-<!ENTITY pref.timezone.Australia.Lord_Howe "Ausztrália/Lord_Howe" >
+<!ENTITY pref.timezone.Australia.Lord_Howe "Ausztrália/Lord Howe" >
 <!ENTITY pref.timezone.Australia.Melbourne "Ausztrália/Melbourne" >
 <!ENTITY pref.timezone.Australia.Perth "Ausztrália/Perth" >
 <!ENTITY pref.timezone.Australia.Sydney "Ausztrália/Sydney" >
-<!ENTITY pref.timezone.Europe.Amsterdam "Európa/Amsterdam" >
+<!ENTITY pref.timezone.Europe.Amsterdam "Európa/Amszterdam" >
 <!ENTITY pref.timezone.Europe.Andorra "Európa/Andorra" >
-<!ENTITY pref.timezone.Europe.Athens "Európa/Athens" >
+<!ENTITY pref.timezone.Europe.Athens "Európa/Athén" >
 <!ENTITY pref.timezone.Europe.Belfast "Európa/Belfast" >
-<!ENTITY pref.timezone.Europe.Belgrade "Európa/Belgrade" >
+<!ENTITY pref.timezone.Europe.Belgrade "Európa/Belgrád" >
 <!ENTITY pref.timezone.Europe.Berlin "Európa/Berlin" >
-<!ENTITY pref.timezone.Europe.Bratislava "Európa/Bratislava" >
-<!ENTITY pref.timezone.Europe.Brussels "Európa/Brussels" >
-<!ENTITY pref.timezone.Europe.Bucharest "Európa/Bucharest" >
+<!ENTITY pref.timezone.Europe.Vienna "Európa/Bécs" >
+<!ENTITY pref.timezone.Europe.Brussels "Európa/Brüsszel" >
+<!ENTITY pref.timezone.Europe.Bucharest "Európa/Bukarest" >
 <!ENTITY pref.timezone.Europe.Budapest "Európa/Budapest" >
 <!ENTITY pref.timezone.Europe.Chisinau "Európa/Chisinau" >
-<!ENTITY pref.timezone.Europe.Copenhagen "Európa/Copenhagen" >
 <!ENTITY pref.timezone.Europe.Dublin "Európa/Dublin" >
-<!ENTITY pref.timezone.Europe.Gibraltar "Európa/Gibraltar" >
+<!ENTITY pref.timezone.Europe.Gibraltar "Európa/Gibraltár" >
 <!ENTITY pref.timezone.Europe.Helsinki "Európa/Helsinki" >
-<!ENTITY pref.timezone.Europe.Istanbul "Európa/Istanbul" >
-<!ENTITY pref.timezone.Europe.Kaliningrad "Európa/Kaliningrad" >
+<!ENTITY pref.timezone.Europe.Istanbul "Európa/Isztambul" >
+<!ENTITY pref.timezone.Europe.Kaliningrad "Európa/Kalinyingrád" >
 <!ENTITY pref.timezone.Europe.Kiev "Európa/Kiev" >
-<!ENTITY pref.timezone.Europe.Lisbon "Európa/Lisbon" >
+<!ENTITY pref.timezone.Europe.Copenhagen "Európa/Koppenhága" >
+<!ENTITY pref.timezone.Europe.Lisbon "Európa/Liszabon" >
 <!ENTITY pref.timezone.Europe.Ljubljana "Európa/Ljubljana" >
 <!ENTITY pref.timezone.Europe.London "Európa/London" >
 <!ENTITY pref.timezone.Europe.Luxembourg "Európa/Luxembourg" >
 <!ENTITY pref.timezone.Europe.Madrid "Európa/Madrid" >
-<!ENTITY pref.timezone.Europe.Malta "Európa/Malta" >
-<!ENTITY pref.timezone.Europe.Minsk "Európa/Minsk" >
+<!ENTITY pref.timezone.Europe.Malta "Európa/Málta" >
+<!ENTITY pref.timezone.Europe.Minsk "Európa/Minszk" >
 <!ENTITY pref.timezone.Europe.Monaco "Európa/Monaco" >
-<!ENTITY pref.timezone.Europe.Moscow "Európa/Moscow" >
+<!ENTITY pref.timezone.Europe.Moscow "Európa/Moszkva" >
 <!ENTITY pref.timezone.Europe.Nicosia "Európa/Nicosia" >
 <!ENTITY pref.timezone.Europe.Oslo "Európa/Oslo" >
-<!ENTITY pref.timezone.Europe.Paris "Európa/Paris" >
-<!ENTITY pref.timezone.Europe.Prague "Európa/Prague" >
+<!ENTITY pref.timezone.Europe.Paris "Európa/Párizs" >
+<!ENTITY pref.timezone.Europe.Bratislava "Európa/Pozsony" >
+<!ENTITY pref.timezone.Europe.Prague "Európa/Prága" >
 <!ENTITY pref.timezone.Europe.Riga "Európa/Riga" >
-<!ENTITY pref.timezone.Europe.Rome "Európa/Rome" >
-<!ENTITY pref.timezone.Europe.Samara "Európa/Samara" >
-<!ENTITY pref.timezone.Europe.San_Marino "Európa/San_Marino" >
-<!ENTITY pref.timezone.Europe.Sarajevo "Európa/Sarajevo" >
-<!ENTITY pref.timezone.Europe.Simferopol "Európa/Simferopol" >
+<!ENTITY pref.timezone.Europe.Rome "Európa/Róma" >
+<!ENTITY pref.timezone.Europe.Samara "Európa/Szamara" >
+<!ENTITY pref.timezone.Europe.San_Marino "Európa/San Marino" >
+<!ENTITY pref.timezone.Europe.Sarajevo "Európa/Szarajevó" >
+<!ENTITY pref.timezone.Europe.Simferopol "Európa/Szimferopol" >
 <!ENTITY pref.timezone.Europe.Skopje "Európa/Skopje" >
-<!ENTITY pref.timezone.Europe.Sofia "Európa/Sofia" >
+<!ENTITY pref.timezone.Europe.Sofia "Európa/Szófia" >
 <!ENTITY pref.timezone.Europe.Stockholm "Európa/Stockholm" >
 <!ENTITY pref.timezone.Europe.Tallinn "Európa/Tallinn" >
-<!ENTITY pref.timezone.Europe.Tirane "Európa/Tirane" >
-<!ENTITY pref.timezone.Europe.Uzhgorod "Európa/Uzhgorod" >
+<!ENTITY pref.timezone.Europe.Tirane "Európa/Tirana" >
+<!ENTITY pref.timezone.Europe.Uzhgorod "Európa/Ungvár" >
 <!ENTITY pref.timezone.Europe.Vaduz "Európa/Vaduz" >
-<!ENTITY pref.timezone.Europe.Vatican "Európa/Vatican" >
-<!ENTITY pref.timezone.Europe.Vienna "Európa/Vienna" >
+<!ENTITY pref.timezone.Europe.Vatican "Európa/Vatikán" >
 <!ENTITY pref.timezone.Europe.Vilnius "Európa/Vilnius" >
-<!ENTITY pref.timezone.Europe.Warsaw "Európa/Warsaw" >
-<!ENTITY pref.timezone.Europe.Zagreb "Európa/Zagreb" >
+<!ENTITY pref.timezone.Europe.Warsaw "Európa/Varsó" >
+<!ENTITY pref.timezone.Europe.Zagreb "Európa/Zágráb" >
 <!ENTITY pref.timezone.Europe.Zaporozhye "Európa/Zaporozhye" >
-<!ENTITY pref.timezone.Europe.Zurich "Európa/Zurich" >
+<!ENTITY pref.timezone.Europe.Zurich "Európa/Zürich" >
 <!ENTITY pref.timezone.Indian.Antananarivo "Indiai/Antananarivo" >
 <!ENTITY pref.timezone.Indian.Chagos "Indiai/Chagos" >
 <!ENTITY pref.timezone.Indian.Christmas "Indiai/Christmas" >
@@ -505,11 +506,11 @@
 <!ENTITY pref.timezone.Pacific.Niue "Óceánia/Niue" >
 <!ENTITY pref.timezone.Pacific.Norfolk "Óceánia/Norfolk" >
 <!ENTITY pref.timezone.Pacific.Noumea "Óceánia/Noumea" >
-<!ENTITY pref.timezone.Pacific.Pago_Pago "Óceánia/Pago_Pago" >
+<!ENTITY pref.timezone.Pacific.Pago_Pago "Óceánia/Pago Pago" >
 <!ENTITY pref.timezone.Pacific.Palau "Óceánia/Palau" >
 <!ENTITY pref.timezone.Pacific.Pitcairn "Óceánia/Pitcairn" >
 <!ENTITY pref.timezone.Pacific.Ponape "Óceánia/Ponape" >
-<!ENTITY pref.timezone.Pacific.Port_Moresby "Óceánia/Port_Moresby" >
+<!ENTITY pref.timezone.Pacific.Port_Moresby "Óceánia/Port Moresby" >
 <!ENTITY pref.timezone.Pacific.Rarotonga "Óceánia/Rarotonga" >
 <!ENTITY pref.timezone.Pacific.Saipan "Óceánia/Saipan" >
 <!ENTITY pref.timezone.Pacific.Tahiti "Óceánia/Tahiti" >
