@@ -217,7 +217,7 @@ NS_IMETHODIMP nsFilePicker::GetSelectedFilter(PRInt32 *aType)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
+NS_IMETHODIMP nsFilePicker::SetDefaultString(PRUnichar *aString)
 {
   if (mWidget) {
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget),
@@ -226,6 +226,10 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
+{
+  return NS_ERROR_FAILURE;
+}
 
 //-------------------------------------------------------------------------
 //
