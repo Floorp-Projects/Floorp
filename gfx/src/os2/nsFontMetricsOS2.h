@@ -31,6 +31,7 @@
 #define _nsFontMetricsOS2_h
 
 #include "nsIFontMetrics.h"
+#include "nsFont.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"      //HCT-M15 
@@ -38,7 +39,6 @@
 class nsIRenderingContext;
 class nsDeviceContextOS2;
 class nsString;
-class nsFont;
 
 // An nsFontHandle is actually a pointer to one of these.
 // It knows how to select itself into a ps.
