@@ -41,8 +41,10 @@
 #include "nsHTMLIIDs.h"
 #include "nsDOMEvent.h"
 #include "nsIScrollableView.h"
+#include "nsWidgetsCID.h"
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
 NS_IMETHODIMP
 nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
@@ -213,7 +215,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
            aFrame));
         aForce = PR_TRUE;
       
-      } else if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+      } else if (position->IsAbsolutelyPositioned()) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
            aFrame));
@@ -324,6 +326,12 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) ||
             (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)) {
           viewManager->SetViewContentTransparency(view, PR_TRUE);
+        }
+
+        // XXX If it's fixed positioned, then create a widget so it floats
+        // above the scrolling area
+        if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+          view->CreateWidget(kCChildCID);
         }
 
         viewManager->SetViewOpacity(view, color->mOpacity);
