@@ -202,8 +202,6 @@ wallet_GetWalletNotificationPref(void) {
 /* The following declarations define the data base */
 /***************************************************/
 
-#define WALLET_FREE(_ptr) { nsMemory::Free((void*)_ptr); (_ptr) = nsnull; }
-#define WALLET_FREEIF(_ptr) if (_ptr) WALLET_FREE(_ptr)
 
 enum PlacementType {DUP_IGNORE, DUP_OVERWRITE, DUP_BEFORE, DUP_AFTER, AT_END, BY_LENGTH};
 #define LIST_COUNT(list)  ((list) ? (list)->Count() : 0)
@@ -218,10 +216,9 @@ public:
   }
   ~wallet_Sublist()
   {
-    WALLET_FREEIF(item);
     MOZ_COUNT_DTOR(wallet_Sublist);
   }
-  const char* item;
+  nsString item;
 };
 
 /*
@@ -242,8 +239,6 @@ public:
   }
   ~wallet_MapElement()
   {
-    WALLET_FREEIF(item1);
-    WALLET_FREEIF(item2);
     if (itemList) {
       PRInt32 count = LIST_COUNT(itemList);
       wallet_Sublist * sublistPtr;
@@ -255,8 +250,8 @@ public:
     }
     MOZ_COUNT_DTOR(wallet_MapElement);
   }
-  const char* item1;
-  const char* item2;
+  nsString item1;
+  nsString item2;
   nsVoidArray * itemList;
 };
 
@@ -272,20 +267,15 @@ MOZ_DECL_CTOR_COUNTER(wallet_HelpMac)
 class wallet_HelpMac {
 public:
   wallet_HelpMac() {
-    item1 = nsnull;
-    item2 = nsnull;
-    item3 = nsnull;
     MOZ_COUNT_CTOR(wallet_HelpMac);
   }
   ~wallet_HelpMac() {
-    WALLET_FREEIF(item1);
-    WALLET_FREEIF(item2);
-    WALLET_FREEIF(item3);
     MOZ_COUNT_DTOR(wallet_HelpMac);
   }
-  const char* item1;
-  const char* item2;
-  const char* item3;
+  nsAutoString item1;
+  nsAutoString item2;
+  nsAutoString item3;
+  nsAutoString dummy;
 };
 wallet_HelpMac * helpMac;
 
@@ -301,8 +291,8 @@ PRIVATE nsVoidArray * wallet_URL_list=0;
 PRIVATE nsVoidArray * wallet_DistinguishedSchema_list=0;
 #endif
 
-#define NO_CAPTURE(x) x.First()
-#define NO_PREVIEW(x) x.Last()
+#define NO_CAPTURE 0
+#define NO_PREVIEW 1
 
 MOZ_DECL_CTOR_COUNTER(wallet_PrefillElement)
 
@@ -310,19 +300,17 @@ class wallet_PrefillElement {
 public:
   wallet_PrefillElement() : inputElement(nsnull), selectElement(nsnull)
   {
-    schema = nsnull;
     MOZ_COUNT_CTOR(wallet_PrefillElement);
   }
   ~wallet_PrefillElement()
   {
-    WALLET_FREEIF(schema);
     NS_IF_RELEASE(inputElement);
     NS_IF_RELEASE(selectElement);
     MOZ_COUNT_DTOR(wallet_PrefillElement);
   }
   nsIDOMHTMLInputElement* inputElement;
   nsIDOMHTMLSelectElement* selectElement;
-  char* schema;
+  nsString schema;
   nsString value;
   PRInt32 selectIndex;
   PRUint32 count;
@@ -363,12 +351,15 @@ wallet_Dump(nsVoidArray * list) {
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=0; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
-    fprintf(stdout, "%s %s \n", (mapElementPtr->item1), (mapElementPtr->item2));
+    fprintf(stdout, "%s %s \n",
+            NS_LossyConvertUCS2toASCII(mapElementPtr->item1).get(),
+            NS_LossyConvertUCS2toASCII(mapElementPtr->item2).get());
     wallet_Sublist * sublistPtr;
     PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
     for (PRInt32 i2=0; i2<count2; i2++) {
       sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(i2));
-      fprintf(stdout, "     %s \n", (sublistPtr->item));
+      fprintf(stdout, "     %s \n",
+              NS_LossyConvertUCS2toASCII(sublistPtr->item).get());
     }
   }
   wallet_Pause();
@@ -518,7 +509,6 @@ Wallet_Localize(const char* genericString) {
   return ToNewUnicode(v);
 }
 
-
 /**********************/
 /* Modal dialog boxes */
 /**********************/
@@ -558,7 +548,7 @@ Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
                           (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
                           nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
 
-  WALLET_FREE(confirm_string);
+  Recycle(confirm_string);
   return (buttonPressed == 0);
 }
 
@@ -582,8 +572,8 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
                           (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2),
                           nsnull, nsnull, never_string, nsnull, nsnull, &buttonPressed);
 
-  WALLET_FREE(never_string);
-  WALLET_FREE(confirm_string);
+  Recycle(never_string);
+  Recycle(confirm_string);
 
   return buttonPressed;
 }
@@ -601,7 +591,7 @@ wallet_Alert(PRUnichar * szMessage, nsIDOMWindowInternal* window)
   const nsAutoString message( szMessage );
   PRUnichar * title = Wallet_Localize("CaveatTitle");
   res = dialog->Alert(title, message.get());
-  WALLET_FREE(title);
+  Recycle(title);
   return;     // XXX should return the error
 }
 
@@ -612,7 +602,7 @@ wallet_Alert(PRUnichar * szMessage, nsIPrompt* dialog)
   const nsAutoString message( szMessage );
   PRUnichar * title = Wallet_Localize("CaveatTitle");
   res = dialog->Alert(title, message.get());
-  WALLET_FREE(title);
+  Recycle(title);
   return;     // XXX should return the error
 }
 
@@ -642,7 +632,7 @@ Wallet_CheckConfirmYN
     NS_ASSERTION(PR_FALSE, "Bad result from checkbox");
     *checkValue = 0; /* this should never happen but it is happening!!! */
   }
-  WALLET_FREE(confirm_string);
+  Recycle(confirm_string);
   return (buttonPressed == 0);
 }
 
@@ -692,7 +682,7 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
   }
 
   /* otherwise do our own obscuring using Base64 encoding */
-  char * crypt0 = PL_Base64Encode(text, 0, NULL);
+  char * crypt0 = PL_Base64Encode((const char *)text, 0, NULL);
   if (!crypt0) {
     return NS_ERROR_FAILURE;
   }
@@ -707,7 +697,7 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
     crypt[PREFIX_len+i] = crypt0[i];
   }
   crypt[PREFIX_len + crypt0_len] = '\0';
-  WALLET_FREE(crypt0);
+  Recycle(crypt0);
 
   return NS_OK;
 }
@@ -785,49 +775,76 @@ WLLT_ChangePassword(PRBool* status) {
   *status = NS_SUCCEEDED(rv);
 }
 
-nsresult
-wallet_Encrypt(const nsCString& text, nsCString& crypt) {
+PUBLIC nsresult
+Wallet_Encrypt (const nsString& text, nsString& crypt) {
 
+  /* convert text from unichar to UTF8 */
+  nsAutoString UTF8text;
+  PRUnichar c;
+  for (PRUint32 i=0; i<text.Length(); i++) {
+    c = text.CharAt(i);
+    if (c <= 0x7F) {
+      UTF8text.Append(c);
+    } else if (c <= 0x7FF) {
+      UTF8text += PRUnichar((0xC0) | ((c>>6) & 0x1F));
+      UTF8text += PRUnichar((0x80) | (c & 0x3F));
+    } else {
+      UTF8text += PRUnichar((0xE0) | ((c>>12) & 0xF));
+      UTF8text += PRUnichar((0x80) | ((c>>6) & 0x3F));
+      UTF8text += PRUnichar((0x80) | (c & 0x3F));
+    }
+  }
+  
   /* encrypt text to crypt */
   char * cryptCString = nsnull;
-  nsresult rv = EncryptString(text.get(), cryptCString);
+  char * UTF8textCString = ToNewCString(UTF8text);
+  nsresult rv = EncryptString(UTF8textCString, cryptCString);
+  Recycle (UTF8textCString);
   if NS_FAILED(rv) {
     return rv;
   }
-  crypt = cryptCString;
-  WALLET_FREE(cryptCString);
+  crypt.AssignWithConversion(cryptCString);
+  Recycle (cryptCString);
   return NS_OK;
 }
 
-nsresult
-wallet_Decrypt(const nsCString& crypt, nsCString& text) {
+PUBLIC nsresult
+Wallet_Decrypt(const nsString& crypt, nsString& text) {
 
   /* decrypt crypt to text */
-  char * textCString = nsnull;
-  nsresult rv = DecryptString(crypt.get(), textCString);
+  char * cryptCString = ToNewCString(crypt);
+  char * UTF8textCString = nsnull;
+
+  nsresult rv = DecryptString(cryptCString, UTF8textCString);
+  Recycle(cryptCString);
   if NS_FAILED(rv) {
     return rv;
   }
 
-  text = textCString;
-  WALLET_FREE(textCString);
+  /* convert text from UTF8 to unichar */
+  PRUnichar c1, c2, c3;
+  text.Truncate(0);
+  text.SetCapacity(2 * crypt.Length());
+  
+  PRUint32 UTF8textCString_len = PL_strlen(UTF8textCString);
+  for (PRUint32 i=0; i<UTF8textCString_len; ) {
+    c1 = (PRUnichar)UTF8textCString[i++];    
+    if ((c1 & 0x80) == 0x00) {
+      text += c1;
+    } else if ((c1 & 0xE0) == 0xC0) {
+      c2 = (PRUnichar)UTF8textCString[i++];    
+      text += (PRUnichar)(((c1 & 0x1F)<<6) + (c2 & 0x3F));
+    } else if ((c1 & 0xF0) == 0xE0) {
+      c2 = (PRUnichar)UTF8textCString[i++];    
+      c3 = (PRUnichar)UTF8textCString[i++];    
+      text += (PRUnichar)(((c1 & 0x0F)<<12) + ((c2 & 0x3F)<<6) + (c3 & 0x3F));
+    } else {
+      Recycle(UTF8textCString);
+      return NS_ERROR_FAILURE; /* this is an error, input was not utf8 */
+    }
+  }
+  Recycle(UTF8textCString);
   return NS_OK;
-}
-
-PUBLIC nsresult
-Wallet_Encrypt (const nsString& textUCS2, nsString& cryptUCS2) {
-  nsCAutoString cryptUTF8;
-  nsresult rv = wallet_Encrypt(NS_ConvertUCS2toUTF8(textUCS2), cryptUTF8);
-  cryptUCS2 = NS_ConvertUTF8toUCS2(cryptUTF8);
-  return rv;
-}
-
-PUBLIC nsresult
-Wallet_Decrypt(const nsString& cryptUCS2, nsString& textUCS2) {
-  nsCAutoString textUTF8;
-  nsresult rv = wallet_Decrypt(NS_ConvertUCS2toUTF8(cryptUCS2), textUTF8);
-  textUCS2 = NS_ConvertUTF8toUCS2(textUTF8);
-  return rv;
 }
 
 PUBLIC nsresult
@@ -862,7 +879,7 @@ wallet_Clear(nsVoidArray ** list) {
     }
   }
   delete (*list);
-  *list = nsnull;
+  *list = 0;
 }
 
 /*
@@ -875,13 +892,13 @@ PRIVATE nsVoidArray * wallet_MapElementAllocations_list=0;
 const PRInt32 kAllocBlockElems = 500;
 static PRInt32 wallet_NextAllocSlot = kAllocBlockElems;
 
-static nsresult
-wallet_AllocateMapElement(wallet_MapElement*& mapElement) {
+static wallet_MapElement *
+wallet_AllocateMapElement() {
   static wallet_MapElement* mapElementTable;
   if (wallet_NextAllocSlot >= kAllocBlockElems) {
     mapElementTable = new wallet_MapElement[kAllocBlockElems];
     if (!mapElementTable) {
-      return NS_ERROR_OUT_OF_MEMORY;
+      return nsnull;
     }
     if(!wallet_MapElementAllocations_list) {
       wallet_MapElementAllocations_list = new nsVoidArray();
@@ -891,34 +908,21 @@ wallet_AllocateMapElement(wallet_MapElement*& mapElement) {
     }
     wallet_NextAllocSlot = 0;
   }
-  mapElement = &mapElementTable[wallet_NextAllocSlot++];
-  return NS_OK;
+  return &mapElementTable[wallet_NextAllocSlot++];
 }
 
 static void
 wallet_DeallocateMapElements() {
   wallet_MapElement * mapElementPtr;
   PRInt32 count = LIST_COUNT(wallet_MapElementAllocations_list);
-
-  // initialize remainder of last allocated block so we don't crash on []delete
-  for (PRInt32 j=wallet_NextAllocSlot; j<kAllocBlockElems; j++) {
-    mapElementPtr =
-      NS_STATIC_CAST(wallet_MapElement*,
-                     (wallet_MapElementAllocations_list)->ElementAt(count-1));
-    mapElementPtr[j].item1 = nsnull;
-    mapElementPtr[j].item2 = nsnull;
-    mapElementPtr[j].itemList = nsnull;
-  }
-
   for (PRInt32 i=count-1; i>=0; i--) {
     mapElementPtr =
       NS_STATIC_CAST(wallet_MapElement*, (wallet_MapElementAllocations_list)->ElementAt(i));
     delete [] mapElementPtr;
   }  
   delete wallet_MapElementAllocations_list;
-  wallet_MapElementAllocations_list = nsnull;
+  wallet_MapElementAllocations_list = 0;
   wallet_NextAllocSlot = kAllocBlockElems;
-
 }
 
 /*
@@ -926,8 +930,8 @@ wallet_DeallocateMapElements() {
  */
 static PRBool
 wallet_WriteToList(
-    const char* item1,
-    const char* item2,
+    nsString item1,     // not ref. Locally modified
+    nsString item2,     // not ref. Locally modified
     nsVoidArray* itemList,
     nsVoidArray*& list,
     PRBool obscure,
@@ -936,12 +940,12 @@ wallet_WriteToList(
   wallet_MapElement * mapElementPtr;
   PRBool added_to_list = PR_FALSE;
 
-  wallet_MapElement * mapElement = nsnull;
+  wallet_MapElement * mapElement;
   if (list == wallet_FieldToSchema_list || list == wallet_SchemaStrings_list ||
       list == wallet_PositionalSchema_list || list == wallet_StateSchema_list ||
       list == wallet_SchemaConcat_list  || list == wallet_DistinguishedSchema_list ||
       list == wallet_VcardToSchema_list) {
-    wallet_AllocateMapElement(mapElement);
+    mapElement = wallet_AllocateMapElement();
   } else {
     mapElement = new wallet_MapElement;
   }
@@ -949,28 +953,25 @@ wallet_WriteToList(
     return PR_FALSE;
   }
 
-  nsCAutoString item1UTF8(item1); ToLowerCase(item1UTF8);
-  mapElement->item1 = ToNewCString(item1UTF8);
-  mapElement->item2 = PL_strdup(item2);
-  mapElement->itemList = itemList;
-
+  ToLowerCase(item1);
   if (obscure) {
-    char * crypt = nsnull;
-    if (NS_FAILED(EncryptString(mapElement->item2, crypt))) {
-      delete mapElement;
+    nsAutoString crypt;
+    if (NS_FAILED(Wallet_Encrypt(item2, crypt))) {
       return PR_FALSE;
     }
-    WALLET_FREEIF(mapElement->item2);
-    mapElement->item2 = crypt;
+    item2 = crypt;
   }
+
+  mapElement->item1 = item1;
+  mapElement->item2 = item2;
+  mapElement->itemList = itemList;
 
   /* make sure the list exists */
   if(!list) {
-    list = new nsVoidArray();
-    if(!list) {
-      delete mapElement;
-      return PR_FALSE;
-    }
+      list = new nsVoidArray();
+      if(!list) {
+          return PR_FALSE;
+      }
   }
 
   /*
@@ -996,22 +997,22 @@ wallet_WriteToList(
           wallet_Sublist * sublistPtr2;
           sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(0));
           sublistPtr2 = NS_STATIC_CAST(wallet_Sublist*, itemList->ElementAt(0));
-          if(PL_strlen(sublistPtr->item) < PL_strlen(sublistPtr2->item)) {
+          if(sublistPtr->item.Length() < sublistPtr2->item.Length()) {
             list->InsertElementAt(mapElement, i);
             added_to_list = PR_TRUE;
             break;
           }
-        } else if (PL_strlen(mapElementPtr->item2) < PL_strlen(mapElement->item2)) {
+        } else if (mapElementPtr->item2.Length() < item2.Length()) {
           list->InsertElementAt(mapElement, i);
           added_to_list = PR_TRUE;
           break;
         }
       }
-    } else if(!PL_strcmp(mapElementPtr->item1, mapElement->item1)) {
+    } else if(mapElementPtr->item1.Equals(item1)) {
       if (DUP_OVERWRITE==placement) {
         delete mapElement;
-        mapElementPtr->item1 = mapElement->item1;
-        mapElementPtr->item2 = mapElement->item2;
+        mapElementPtr->item1 = item1;
+        mapElementPtr->item2 = item2;
         mapElementPtr->itemList = itemList;
       } else if (DUP_BEFORE==placement) {
         list->InsertElementAt(mapElement, i);
@@ -1020,7 +1021,7 @@ wallet_WriteToList(
         added_to_list = PR_TRUE;
         break;
       }
-    } else if(PL_strcmp(mapElementPtr->item1, mapElement->item1)>=0) {
+    } else if(Compare(mapElementPtr->item1,item1)>=0) {
       list->InsertElementAt(mapElement, i);
       added_to_list = PR_TRUE;
       break;
@@ -1037,8 +1038,8 @@ wallet_WriteToList(
  */
 static PRBool
 wallet_ReadFromList(
-  const nsACString& item1,
-  nsACString& item2,
+  nsString item1,
+  nsString& item2,
   nsVoidArray*& itemList,
   nsVoidArray*& list,
   PRBool obscure,
@@ -1050,18 +1051,17 @@ wallet_ReadFromList(
 
   /* find item1 in the list */
   wallet_MapElement * mapElementPtr;
+  ToLowerCase(item1);
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=index; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
-    if(item1.Equals(mapElementPtr->item1,  nsCaseInsensitiveCStringComparator())) {
+    if(mapElementPtr->item1.Equals(item1)) {
       if (obscure) {
-        char * plaintext = nsnull;
-        if (NS_FAILED(DecryptString(mapElementPtr->item2, plaintext))) {
+        if (NS_FAILED(Wallet_Decrypt(mapElementPtr->item2, item2))) {
           return PR_FALSE;
         }
-        item2 = plaintext;
       } else {
-        item2 = PL_strdup(mapElementPtr->item2);
+        item2 = nsAutoString(mapElementPtr->item2);
       }
       itemList = mapElementPtr->itemList;
       index = i+1;
@@ -1077,8 +1077,8 @@ wallet_ReadFromList(
 
 PRBool
 wallet_ReadFromList(
-  const nsACString& item1,
-  nsACString& item2,
+  nsString item1,
+  nsString& item2,
   nsVoidArray*& itemList,
   nsVoidArray*& list,
   PRBool obscure)
@@ -1166,12 +1166,7 @@ Wallet_UTF8Put(nsOutputFileStream& strm, PRUnichar c) {
   }
 }
 
-static void
-wallet_Put(nsOutputFileStream& strm, char c) {
-  strm.put(c);
-}
-
-static char
+static PRUnichar
 wallet_Get(nsInputFileStream& strm) {
   const PRUint32 buflen = 1000;
   static char buf[buflen+1];
@@ -1185,7 +1180,7 @@ wallet_Get(nsInputFileStream& strm) {
       return 0;
     }
   }
-  return (buf[next++]);
+  return (buf[next++] & 0xFF);
 }
 
 PUBLIC PRUnichar
@@ -1201,9 +1196,8 @@ Wallet_UTF8Get(nsInputFileStream& strm) {
   } else {
     return 0; /* this is an error, input was not utf8 */
   }
-}
+}/*
 
-/*
  * I have an even a simpler set of routines if you are not concerned about UTF-8.  The
  * algorithms for those routines are as follows:
  *
@@ -1337,11 +1331,10 @@ Wallet_RandomName(char* suffix)
  * strip carriage returns and line feeds from end of line
  */
 
-static nsresult
-wallet_GetLine(nsInputFileStream& strm, const char** lineCString)
+static PRInt32
+wallet_GetLine(nsInputFileStream& strm, nsString& line)
 {
   const PRUint32 kInitialStringCapacity = 64;
-  nsCAutoString line;
 
   /* read the line */
   line.Truncate(0);
@@ -1350,14 +1343,14 @@ wallet_GetLine(nsInputFileStream& strm, const char** lineCString)
   PRInt32 stringCap = kInitialStringCapacity;
   line.SetCapacity(stringCap);
   
-  char c;
-  static char lastC = '\0';
+  PRUnichar c;
+  static PRUnichar lastC = '\0';
   for (;;) {
-    c = wallet_Get(strm);
+    c = Wallet_UTF8Get(strm);
 
     /* check for eof */
     if (c == 0) {
-      return NS_ERROR_FAILURE;
+      return -1;
     }
 
     /* check for line terminator (mac=CR, unix=LF, win32=CR+LF */
@@ -1378,50 +1371,48 @@ wallet_GetLine(nsInputFileStream& strm, const char** lineCString)
     }
     line += c;
   }
-  WALLET_FREEIF(*lineCString);
-  *lineCString = ToNewCString(line);
+
   return NS_OK;
 }
 
 static PRBool
 wallet_GetHeader(nsInputFileStream& strm)
 {
-  const char* format = nsnull;
+  nsAutoString format;
+  nsAutoString buffer;
 
   /* format revision number */
-  if (NS_FAILED(wallet_GetLine(strm, &format))) {
+  if (NS_FAILED(wallet_GetLine(strm, format))) {
     return PR_FALSE;
   }
-  PRBool rv = !PL_strcmp(format, HEADER_VERSION);
-  WALLET_FREEIF(format);
-  return rv;
-}
-
-/*
- * Write a line-feed to a file
- */
-static void
-wallet_EndLine(nsOutputFileStream& strm) {
-  strm.put('\n');
+  if (!format.EqualsWithConversion(HEADER_VERSION)) {
+    /* something's wrong */
+    return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 /*
  * Write a line to a file
  */
 static void
-wallet_PutLine(nsOutputFileStream& strm, const char* line) {
-  strm.write(line, PL_strlen(line));
-  wallet_EndLine(strm);
+wallet_PutLine(nsOutputFileStream& strm, const nsString& line) {
+  for (PRUint32 i=0; i<line.Length(); i++) {
+    Wallet_UTF8Put(strm, line.CharAt(i));
+  }
+  Wallet_UTF8Put(strm, '\n');
 }
 
 static void
 wallet_PutHeader(nsOutputFileStream& strm) {
 
   /* format revision number */
-  wallet_PutLine(strm, HEADER_VERSION);
+  {
+    nsAutoString temp1;
+    temp1.AssignWithConversion(HEADER_VERSION);
+    wallet_PutLine(strm, temp1);
+  }
 }
-
-#define WALLET_NULL(_ptr) (!(_ptr) || !(_ptr)[0])
 
 /*
  * write contents of designated list into designated file
@@ -1449,7 +1440,7 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list) {
   }
 
   /* put out the header */
-  if (!PL_strcmp(filename, schemaValueFileName)) {
+  if (filename == schemaValueFileName) {
     wallet_PutHeader(strm);
   }
 
@@ -1458,7 +1449,7 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list) {
   for (PRInt32 i=0; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     wallet_PutLine(strm, (*mapElementPtr).item1);
-    if (!WALLET_NULL((*mapElementPtr).item2)) {
+    if (!(*mapElementPtr).item2.IsEmpty()) {
       wallet_PutLine(strm, (*mapElementPtr).item2);
     } else {
       wallet_Sublist * sublistPtr;
@@ -1468,7 +1459,7 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list) {
         wallet_PutLine(strm, (*sublistPtr).item);
       }
     }
-    wallet_EndLine(strm);
+    wallet_PutLine(strm, nsAutoString());
   }
 
   /* close the stream */
@@ -1500,7 +1491,7 @@ wallet_ReadFromFile
   }
  
   /* read in the header */
-  if (!PL_strcmp(filename, schemaValueFileName)) {
+  if (filename == schemaValueFileName) {
     if (!wallet_GetHeader(strm)) {
       /* something's wrong -- ignore the file */
       strm.close();
@@ -1509,33 +1500,32 @@ wallet_ReadFromFile
   }
 
   for (;;) {
-    if (NS_FAILED(wallet_GetLine(strm, &helpMac->item1))) {
+    if (NS_FAILED(wallet_GetLine(strm, helpMac->item1))) {
       /* end of file reached */
       break;
     }
 
 #ifdef AutoCapture
     /* Distinguished schema list is a list of single entries, not name/value pairs */
-    if (!PL_strcmp(filename, distinguishedSchemaFileName)) {
+    if (PL_strcmp(filename, distinguishedSchemaFileName) == 0) {
       nsVoidArray* dummy = NULL;
       wallet_WriteToList(helpMac->item1, helpMac->item1, dummy, list, PR_FALSE, placement);
       continue;
     }
 #endif
 
-    if (NS_FAILED(wallet_GetLine(strm, &helpMac->item2))) {
+    if (NS_FAILED(wallet_GetLine(strm, helpMac->item2))) {
       /* unexpected end of file reached */
       break;
     }
-
-    if (WALLET_NULL(helpMac->item2)) {
+    if (helpMac->item2.Length()==0) {
       /* the value must have been deleted */
       nsVoidArray* dummy = NULL;
       wallet_WriteToList(helpMac->item1, helpMac->item2, dummy, list, PR_FALSE, placement);
       continue;
     }
 
-    if (NS_FAILED(wallet_GetLine(strm, &helpMac->item3))) {
+    if (NS_FAILED(wallet_GetLine(strm, helpMac->item3))) {
       /* end of file reached */
       nsVoidArray* dummy = NULL;
       wallet_WriteToList(helpMac->item1, helpMac->item2, dummy, list, PR_FALSE, placement);
@@ -1543,53 +1533,54 @@ wallet_ReadFromFile
       return;
     }
 
-    if (WALLET_NULL(helpMac->item3)) {
+    if (helpMac->item3.Length()==0) {
       /* just a pair of values, no need for a sublist */
       nsVoidArray* dummy = NULL;
       wallet_WriteToList(helpMac->item1, helpMac->item2, dummy, list, PR_FALSE, placement);
     } else {
       /* need to create a sublist and put item2 and item3 onto it */
 
+      // don't we leak itemList here?
+
       nsVoidArray * itemList = new nsVoidArray();
       if (!itemList) {
         break;
       }
 
+      // Don't we leak sublist too?
       wallet_Sublist * sublist = new wallet_Sublist;
       if (!sublist) {
         break;
       }
-      sublist->item = PL_strdup(helpMac->item2);
+      sublist->item = helpMac->item2;
       itemList->AppendElement(sublist);
       sublist = new wallet_Sublist;
       if (!sublist) {
-        delete itemList;
         break;
       }
-      sublist->item = PL_strdup(helpMac->item3);
+      sublist->item = helpMac->item3;
       itemList->AppendElement(sublist);
       /* add any following items to sublist up to next blank line */
+      helpMac->dummy.Truncate(0);
       for (;;) {
         /* get next item for sublist */
-        if (NS_FAILED(wallet_GetLine(strm, &helpMac->item3))) {
+        if (NS_FAILED(wallet_GetLine(strm, helpMac->item3))) {
           /* end of file reached */
-          wallet_WriteToList(helpMac->item1, nsnull, itemList, list, PR_FALSE, placement);
+          wallet_WriteToList(helpMac->item1, helpMac->dummy, itemList, list, PR_FALSE, placement);
           strm.close();
           return;
         }
-
-        if (WALLET_NULL(helpMac->item3)) {
+        if (helpMac->item3.Length()==0) {
           /* blank line reached indicating end of sublist */
-          wallet_WriteToList(helpMac->item1, nsnull, itemList, list, PR_FALSE, placement);
+          wallet_WriteToList(helpMac->item1, helpMac->dummy, itemList, list, PR_FALSE, placement);
           break;
         }
         /* add item to sublist */
         sublist = new wallet_Sublist;
         if (!sublist) {
-          delete itemList;
           break;
         }
-        sublist->item = PL_strdup(helpMac->item3);
+        sublist->item = helpMac->item3;
         itemList->AppendElement(sublist);
       }
     }
@@ -1613,7 +1604,7 @@ Wallet_GiveCaveat(nsIDOMWindowInternal* window, nsIPrompt* dialog) {
     } else {
       wallet_Alert(message, dialog);
     }
-    WALLET_FREE(message);
+    Recycle(message);
   }
 }
  
@@ -1622,14 +1613,14 @@ wallet_GetHostFile(nsIURI * url, nsString& outHostFile)
 {
   outHostFile.Truncate(0);
   nsAutoString urlName;
-  char* host = nsnull;
+  char* host;
   nsresult rv = url->GetHost(&host);
   if (NS_FAILED(rv)) {
     return;
   }
   urlName.AppendWithConversion(host);
   nsCRT::free(host);
-  char* file = nsnull;
+  char* file;
   rv = url->GetPath(&file);
   if (NS_FAILED(rv)) {
     return;
@@ -1642,26 +1633,23 @@ wallet_GetHostFile(nsIURI * url, nsString& outHostFile)
   urlName.Left(outHostFile, stringEnd);
 }
 
-static void
-Strip(const nsString& textUCS2, nsCString& stripText) {
-  NS_ConvertUCS2toUTF8 textUTF8(textUCS2);
-// above line is equivalen to the following (who would have guessed it?)
-//    nsCAutoString textUTF8 = NS_ConvertUCS2toUTF8(textUCS2);
-  for (PRUint32 i=0; i<textUTF8.Length(); i++) {
-    char c = textUTF8.CharAt(i);
+static nsString&
+Strip(const nsString& text, nsString& stripText) {
+  for (PRUint32 i=0; i<text.Length(); i++) {
+    PRUnichar c = text.CharAt(i);
     if (nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) || c>'~') {
       stripText += c;
     }
   }
+  return stripText;
 }
 
 /*
  * given a displayable text, get the schema
  */
-static void
-TextToSchema(
+static void TextToSchema(
     const nsString& text,
-    nsACString& schema)
+    nsString& schema)
 {
   /* return if no SchemaStrings list exists */
   if (!wallet_SchemaStrings_list) {
@@ -1700,7 +1688,7 @@ TextToSchema(
     if (isSubstring) {
 
       /* all strings were contained in the displayable text, accept this schema */
-      schema.Assign(mapElementPtr->item1);
+      schema = mapElementPtr->item1;
       return;
     }
   }
@@ -1709,78 +1697,70 @@ TextToSchema(
 /*
  * given a field name, get the value
  */
-static nsresult 
-FieldToValue(
+static PRInt32 FieldToValue(
     const nsString& field,
-    nsACString& schema,
-    nsString& valueUCS2,
+    nsString& schema,
+    nsString& value,
     nsVoidArray*& itemList,
     PRInt32& index)
 {
 
   /* return if no SchemaToValue list exists or if all values previous used */
   if (!wallet_SchemaToValue_list || index == -1) {
-    return NS_ERROR_FAILURE;
+    return -1;
   }
 
   /* if no schema name is given, fetch schema name from field/schema tables */
   nsVoidArray* dummy;
-  nsCAutoString stripField;
-  if (schema.IsEmpty()) {
-    Strip(field, stripField);
-  }
-  if (!schema.IsEmpty() ||
-      wallet_ReadFromList(stripField, schema, dummy, wallet_FieldToSchema_list, PR_FALSE)) {
+  nsString stripField;
+  if ((schema.Length() > 0) ||
+      wallet_ReadFromList(Strip(field, stripField), schema, dummy, wallet_FieldToSchema_list, PR_FALSE)) {
 
     /* schema name found, now attempt to fetch value from schema/value table */ 
-    nsCAutoString valueUTF8;
     PRInt32 index2 = index;
     if ((index >= 0) &&
-        wallet_ReadFromList
-          (schema, valueUTF8, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
+        wallet_ReadFromList(schema, value, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
       /* value found, prefill it into form and return */
-      valueUCS2 = NS_ConvertUTF8toUCS2(valueUTF8);
       index = index2;
-      return NS_OK;
+      return 0;
 
     } else {
 
       /* value not found, see if concatenation rule exists */
       nsVoidArray * itemList2;
-      nsCAutoString valueUTF8b;
+      nsAutoString dummy2;
       if (index > 0) {
         index = 0;
       }
       PRInt32 index0 = index;
       PRInt32 index00 = index;
       PRInt32 index4 = 0;
-      while (wallet_ReadFromList(schema, valueUTF8b, itemList2, wallet_SchemaConcat_list, PR_FALSE, index4)) {
+      while (wallet_ReadFromList(schema, dummy2, itemList2, wallet_SchemaConcat_list, PR_FALSE, index4)) {
 
         /* concatenation rules exist, generate value as a concatenation */
-        nsCAutoString concatenatedValueUTF8;
         wallet_Sublist * sublistPtr;
-        concatenatedValueUTF8.SetLength(0);
-        nsCAutoString valueUTF8c;
+        value.SetLength(0);
+        nsAutoString value2;
         PRInt32 index00max = index0;
 
-        if (!valueUTF8b.IsEmpty()) {
+        if (dummy2.Length() > 0) {
 
           /* single item on rhs of concatenation rule */
           PRInt32 index5 = 0;
           PRInt32 j;
           PRBool failed = PR_FALSE;
           for (j=0; j>index0; j -= 2) {
-            if (!wallet_ReadFromList(valueUTF8b, valueUTF8c, dummy, wallet_SchemaToValue_list, PR_TRUE, index5)) {
+            if (!wallet_ReadFromList(dummy2, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index5)) {
               failed = PR_TRUE;
               break;
             }
             index00 += 2;
           }
 
-          if (!failed && wallet_ReadFromList(valueUTF8b, valueUTF8c, dummy, wallet_SchemaToValue_list, PR_TRUE, index5)) {
+          if (!failed && wallet_ReadFromList(dummy2, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index5)) {
 
             /* found an unused value for the single rhs item */
-            concatenatedValueUTF8 += valueUTF8c;
+            value += value2;
             index00 += 2;
           }
           index00max = index00;
@@ -1799,9 +1779,8 @@ FieldToValue(
           index00 = index0;
           PRInt32 index3 = 0;
           PRBool failed = PR_FALSE;
-          nsCAutoString valueUTF8d; valueUTF8d.Assign(sublistPtr->item);
           for (PRInt32 j=0; j>index0; j -= 2) {
-            if (!wallet_ReadFromList(valueUTF8d, valueUTF8, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
+            if (!wallet_ReadFromList(sublistPtr->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
 
               /* all values of next multi-rhs item were used previously */
               failed = PR_TRUE;
@@ -1810,13 +1789,13 @@ FieldToValue(
             index00 += 2;
           }
 
-          if (!failed && wallet_ReadFromList(valueUTF8d, valueUTF8, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
-            if (!concatenatedValueUTF8.IsEmpty()) {
-              concatenatedValueUTF8 += " ";
+          if (!failed && wallet_ReadFromList(sublistPtr->item, value2, dummy, wallet_SchemaToValue_list, PR_TRUE, index3)) {
+            if (value.Length()>0) {
+              value.Append(NS_LITERAL_STRING(" "));
             }
 
             /* found an unused value for the multi-rhs item */
-            concatenatedValueUTF8 += valueUTF8;
+            value += value2;
             index00 += 2;
           }
           if (index00 > index00max) {
@@ -1825,12 +1804,11 @@ FieldToValue(
         }
 
         itemList = nsnull;
-        if (!concatenatedValueUTF8.IsEmpty()) {
+        if (value.Length()>0) {
 
           /* a new value was found */
           index -= 2;
-          valueUCS2 = NS_ConvertUTF8toUCS2(concatenatedValueUTF8);
-          return NS_OK;
+          return 0;
         }
 
         /* all values from this concat rule were used, go on to next concat rule */
@@ -1839,33 +1817,29 @@ FieldToValue(
 
       /* no more concat rules, indicate failure */
       index = -1;
-      return NS_ERROR_FAILURE;
+      return -1;
     }
   } else {
     /* schema name not found, use field name as schema name and fetch value */
     PRInt32 index2 = index;
 
-    nsAutoString localSchemaUCS2;
-    wallet_GetHostFile(wallet_lastUrl, localSchemaUCS2);
-    localSchemaUCS2.Append(NS_LITERAL_STRING(":"));
-    localSchemaUCS2.Append(field);
-    nsCAutoString localSchemaUTF8 = NS_ConvertUCS2toUTF8(localSchemaUCS2);
-    nsCAutoString valueUTF8;
+    nsAutoString temp;
+    wallet_GetHostFile(wallet_lastUrl, temp);
+    temp.Append(NS_LITERAL_STRING(":"));
+    temp.Append(field);
 
-    if (wallet_ReadFromList
-        (localSchemaUTF8, valueUTF8, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
+    if (wallet_ReadFromList(temp, value, itemList, wallet_SchemaToValue_list, PR_TRUE, index2)) {
       /* value found, prefill it into form */
-      schema = localSchemaUTF8;
+      schema = temp;
       index = index2;
-      valueUCS2 = NS_ConvertUTF8toUCS2(valueUTF8);
-      return NS_OK;
+      return 0;
     }
   }
   index = -1;
-  return NS_ERROR_FAILURE;
+  return -1;
 }
 
-static nsresult
+static PRInt32
 wallet_GetSelectIndex(
   nsIDOMHTMLSelectElement* selectElement,
   const nsString& value,
@@ -1897,13 +1871,13 @@ wallet_GetSelectIndex(
           optionText.Trim(" \n\t\r");
           if (valueLC==optionValue || valueLC==optionText) {
             index = optionX;
-            return NS_OK;
+            return 0;
           }
         }
       }
     }
   }
-  return NS_ERROR_FAILURE;
+  return -1;
 }
 
 void
@@ -1980,17 +1954,17 @@ wallet_StepForwardOrBack
     }
 
     /* if we've reached a #text node, append it to accumulated text */
-    nsAutoString siblingNameUCS2;
-    result = elementNode->GetNodeName(siblingNameUCS2);
-    nsCAutoString siblingNameUTF8; siblingNameUTF8.AssignWithConversion(siblingNameUCS2);
-    if (siblingNameUTF8.EqualsIgnoreCase("#text")) {
+    nsAutoString siblingName;
+    result = elementNode->GetNodeName(siblingName);
+    nsCAutoString siblingCName; siblingCName.AssignWithConversion(siblingName);
+    if (siblingCName.EqualsIgnoreCase("#text")) {
       nsAutoString siblingValue;
       result = elementNode->GetNodeValue(siblingValue);
       text.Append(siblingValue);      
     }
 
     /* if we've reached a SCRIPT node, don't fetch its siblings */
-    if (siblingNameUTF8.EqualsIgnoreCase("SCRIPT")) {
+    if (siblingCName.EqualsIgnoreCase("SCRIPT")) {
       return;
     }
 
@@ -2022,10 +1996,10 @@ wallet_StepForwardOrBack
 //static nsICaseConversion* gCaseConv =  nsnull;
 
 static void
-wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsACString& schema) {
+wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsString& schema) {
   static PRInt32 numerator = 0;
   static PRInt32 denominator = 0;
-  static nsCString lastPositionalSchema;
+  static nsString lastPositionalSchema;
 
   /* return if no PositionalSchema list exists */
   if (!wallet_PositionalSchema_list) {
@@ -2033,12 +2007,12 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsACString& schema) {
     return;
   }
 
-  if (!schema.IsEmpty()) {
+  if (schema.Length()) {
     numerator = 0;
     denominator = 0;
-    lastPositionalSchema.Assign(schema);
+    lastPositionalSchema = schema;
   } else if (numerator < denominator) {
-    schema.Assign(lastPositionalSchema);
+    schema = lastPositionalSchema;
   } else {
     schema.SetLength(0);
     return;
@@ -2049,7 +2023,7 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsACString& schema) {
   PRInt32 count = LIST_COUNT(wallet_PositionalSchema_list);
   for (PRInt32 i=0; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, wallet_PositionalSchema_list->ElementAt(i));
-    if (schema.Equals(mapElementPtr->item1, nsCaseInsensitiveCStringComparator())) {
+    if (mapElementPtr->item1.EqualsIgnoreCase(schema)) {
       /* found our positional schema in the list */
 
       /* A "position set" is a set of continuous <input> or <select> fields
@@ -2139,11 +2113,11 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsACString& schema) {
         }
       }
 
-      nsCAutoString fractionString; /* of form 2/5 meaning 2nd in a 5-element set */
-      nsCAutoString fractionStringWithoutDenominator; /* of form 2/ meaning 2nd in any-length set */
+      nsAutoString fractionString; /* of form 2/5 meaning 2nd in a 5-element set */
+      nsAutoString fractionStringWithoutDenominator; /* of form 2/ meaning 2nd in any-length set */
       fractionString.SetLength(0);
       fractionString.AppendInt(numerator);
-      fractionString.Append("/");
+      fractionString.Append(NS_LITERAL_STRING("/"));
       fractionStringWithoutDenominator.Assign(fractionString);
       fractionString.AppendInt(denominator);
 
@@ -2153,28 +2127,29 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsACString& schema) {
       for (PRInt32 j=0; j<count2; j=j+2) {
         sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j));
 
-        if (!PL_strcmp(sublistPtr->item, fractionString.get()) ||
-            !PL_strcmp(sublistPtr->item, fractionStringWithoutDenominator.get())) {
+        if (sublistPtr->item.EqualsWithConversion(fractionString) ||
+            sublistPtr->item.EqualsWithConversion(fractionStringWithoutDenominator)) {
           sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j+1));
-          schema.Assign(sublistPtr->item);
+          schema = sublistPtr->item;
           return;
         }
       }
     }
   }
+  schema.SetLength(0);
 }
 
-const char* previousElementState = nsnull;
+static nsString previousElementState;
 static nsIDOMNode* previousElementNode;
 
 static void
 wallet_InitializeStateTesting() {
   previousElementNode = nsnull;
-  previousElementState = nsnull;
+  previousElementState.SetLength(0);
 }
 
 static void
-wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsACString& schema) {
+wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsString& schema) {
 
   /* return if no StateSchema list exists */
   if (!wallet_StateSchema_list) {
@@ -2186,7 +2161,7 @@ wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsACString& schema) {
   PRInt32 count = LIST_COUNT(wallet_StateSchema_list);
   for (PRInt32 i=0; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, wallet_StateSchema_list->ElementAt(i));
-    if (schema.Equals(mapElementPtr->item1, nsCaseInsensitiveCStringComparator())) {
+    if (mapElementPtr->item1.EqualsIgnoreCase(schema)) {
       /* found our state schema in the list */
 
       /* A state-schema entry consists of a set of possible states and the schema associated
@@ -2216,7 +2191,7 @@ wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsACString& schema) {
         nsAutoString text;
         wallet_StepForwardOrBack(localElementNode, text, atInputOrSelect, atEnd, PR_FALSE);
 
-        /* see if it's a node we already saved the state for */
+        /* see if its a node we already saved the state for */
         if (localElementNode == previousElementNode) {
           previousElementNode = elementNode;
 
@@ -2226,24 +2201,27 @@ wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsACString& schema) {
           PRInt32 j;
           for (j=0; j<count2; j=j+2) {
             sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j));
-            if (!PL_strcasecmp(sublistPtr->item, previousElementState)) {
+
+            /* next state in list obtained, test to see if it is the state of the previous node */
+            if (sublistPtr->item.EqualsIgnoreCase(previousElementState)) {
               previousElementState = sublistPtr->item;
               sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j+1));
-              schema.Assign(sublistPtr->item);
+              schema = sublistPtr->item;
               return;
             }
 
             /* test to see if we obtained the catch-all (*) state.
              *   Note: the catch-all must be the last entry in the list
              */
-            if (!PL_strcmp(sublistPtr->item, "*")) {
+            if (sublistPtr->item.Equals(NS_LITERAL_STRING("*"))) {
               sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j+1));
-              schema.Assign(sublistPtr->item);
+              schema = sublistPtr->item;
               return;
             }
           }
 
           /* no catch-all state specified, return no schema */
+          schema.SetLength(0);
           return;
         }
 
@@ -2258,7 +2236,7 @@ wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsACString& schema) {
             previousElementState = sublistPtr->item;
             previousElementNode = elementNode;
             sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j+1));
-            schema.Assign(sublistPtr->item);
+            schema = sublistPtr->item;
             return;
           }
         }
@@ -2269,16 +2247,17 @@ wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsACString& schema) {
       PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
       for (PRInt32 j=0; j<count2; j=j+2) {
         sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j));
-        if (!PL_strcmp(sublistPtr->item, "*")) {
+        if (sublistPtr->item.Equals(NS_LITERAL_STRING("*"))) {
           previousElementNode = localElementNode;
           sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(j+1));
-          schema.Assign(sublistPtr->item);
+          schema = sublistPtr->item;
           previousElementNode = elementNode;
           return;
         }
       }
 
       /* no catch-all state specified, return no schema */
+      schema.SetLength(0);
       previousElementNode = elementNode;
       return;
     }
@@ -2292,15 +2271,14 @@ wallet_ResolveStateSchema(nsIDOMNode* elementNode, nsACString& schema) {
 }
 
 static void
-wallet_GetSchemaFromDisplayableText
-    (nsIDOMNode* elementNode, nsACString& schema, PRBool skipStateChecking) {
+wallet_GetSchemaFromDisplayableText(nsIDOMNode* elementNode, nsString& schema, PRBool skipStateChecking) {
 
-  static nsCString lastSchema;
+  static nsString lastSchema;
   static nsIDOMNode* lastElementNode;
 
   /* return if this is the same as the last element node */
   if (elementNode == lastElementNode) {
-    schema.Assign(lastSchema);
+    schema = lastSchema;
     return;
   }
   lastElementNode = elementNode;
@@ -2332,18 +2310,18 @@ wallet_GetSchemaFromDisplayableText
       someTextFound = PR_TRUE;
 
       TextToSchema(text, schema);
-      if (!schema.IsEmpty()) {
+      if (schema.Length()) {
 
         /* schema found, process positional schema if any */
-        if (!schema.IsEmpty() && schema.First() == '%') {
+        if (schema.Length() && schema.CharAt(0) == '%') {
           wallet_ResolvePositionalSchema(elementNode, schema);
         }
 
         /* process state schema if any */
-        if (!skipStateChecking && !schema.IsEmpty() && schema.First() == '$') {
+        if (!skipStateChecking && schema.Length() && schema.CharAt(0) == '$') {
           wallet_ResolveStateSchema(elementNode, schema); 
         }
-        lastSchema.Assign(schema);
+        lastSchema = schema;
         return;
       }
 
@@ -2372,11 +2350,11 @@ wallet_GetSchemaFromDisplayableText
    * of the skipStateChecking argument.
    */
 
-  if (!skipStateChecking && !schema.IsEmpty() && schema.First() == '$') {
+  if (!skipStateChecking && schema.Length() && schema.CharAt(0) == '$') {
     wallet_ResolveStateSchema(elementNode, schema); 
   }
 
-  lastSchema.Assign(schema);
+  lastSchema = schema;
   return;
 }
 
@@ -2385,16 +2363,17 @@ wallet_GetPrefills(
   nsIDOMNode* elementNode,
   nsIDOMHTMLInputElement*& inputElement,  
   nsIDOMHTMLSelectElement*& selectElement,
-  nsACString& schema,
+  nsString& schema,
   nsString& value,
   PRInt32& selectIndex,
   PRInt32& index)
 {
   nsresult result;
-  nsCAutoString localSchema; localSchema.Assign(schema);
 
   /* get prefills for input element */
   result = elementNode->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement);
+
+  // The below code looks really suspicious leak-wize
 
   if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
     nsAutoString type;
@@ -2406,50 +2385,52 @@ wallet_GetPrefills(
         nsVoidArray* itemList;
 
         /* try to get schema name from vcard attribute if it exists */
-        if (localSchema.IsEmpty()) {
+        if (schema.Length() == 0) {
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
           if (element) {
             nsAutoString vcard; vcard.Assign(NS_LITERAL_STRING("VCARD_NAME"));
-            nsAutoString vcardValueUCS2;
-            result = element->GetAttribute(vcard, vcardValueUCS2);
+            nsAutoString vcardValue;
+            result = element->GetAttribute(vcard, vcardValue);
             if (NS_OK == result) {
               nsVoidArray* dummy;
-              wallet_ReadFromList(NS_ConvertUCS2toUTF8(vcardValueUCS2), localSchema, dummy,
-                                  wallet_VcardToSchema_list, PR_FALSE);
+              wallet_ReadFromList(vcardValue, schema, dummy, wallet_VcardToSchema_list, PR_FALSE);
             }
           }
         }
 
         /* try to get schema name from displayable text if possible */
-        if (localSchema.IsEmpty()) {
-          wallet_GetSchemaFromDisplayableText(inputElement, localSchema, PR_FALSE);
+        if (schema.Length() == 0) {
+          wallet_GetSchemaFromDisplayableText(inputElement, schema, PR_FALSE);
         }
 
 #ifdef IgnoreFieldNames
 // use displayable text instead of field names
-if (!localSchema.IsEmpty()) {
+if (schema.Length()) {
 #endif
 
         /*
          * if schema name was obtained then get value from schema name,
          * otherwise get value from field name by using mapping tables to get schema name
          */
-        if (NS_SUCCEEDED(FieldToValue(field, localSchema, value, itemList, index))) {
+        if (FieldToValue(field, schema, value, itemList, index) == 0) {
           if (value.IsEmpty() && nsnull != itemList) {
             /* pick first of a set of synonymous values */
-            const char* encryptedValue = ((wallet_Sublist *)itemList->ElementAt(0))->item;
-            char* valueCString = nsnull;
-            if (NS_FAILED(DecryptString(encryptedValue, valueCString))) {
+            nsAutoString encryptedValue( ((wallet_Sublist *)itemList->ElementAt(0))->item );
+            if (NS_FAILED(Wallet_Decrypt(encryptedValue, value))) {
               NS_RELEASE(inputElement);
               return NS_ERROR_FAILURE;
             }
-            value = NS_ConvertUTF8toUCS2(valueCString);
           }
           selectElement = nsnull;
           selectIndex = -1;
-          schema = localSchema;
           return NS_OK;
         }
+
+#ifdef IgnoreFieldNames
+// use displayable text instead of field names
+}
+#endif
+
       }
     }
     NS_RELEASE(inputElement);
@@ -2464,31 +2445,30 @@ if (!localSchema.IsEmpty()) {
     if (NS_SUCCEEDED(result)) {
 
       /* try to get schema name from displayable text if possible */
-      if (localSchema.IsEmpty()) {
-        wallet_GetSchemaFromDisplayableText(selectElement, localSchema, PR_FALSE);
-      }
+      wallet_GetSchemaFromDisplayableText(selectElement, schema, PR_FALSE);
 
 #ifdef IgnoreFieldNames
 // use displayable text instead of field names
-if (!localSchema.IsEmpty()) {
+if (schema.Length()) {
 #endif
 
       nsVoidArray* itemList;
-      if (NS_SUCCEEDED(FieldToValue(field, localSchema, value, itemList, index))) {
+      if (FieldToValue(field, schema, value, itemList, index) == 0) {
         if (!value.IsEmpty()) {
           /* no synonym list, just one value to try */
           result = wallet_GetSelectIndex(selectElement, value, selectIndex);
           if (NS_SUCCEEDED(result)) {
             /* value matched one of the values in the drop-down list */
 
+            // No Release() here?
+
             inputElement = nsnull;
-            schema = localSchema;
             return NS_OK;
           }
         } else {
           /* synonym list exists, try each value */
           for (PRInt32 i=0; i<LIST_COUNT(itemList); i++) {
-            value = NS_ConvertUTF8toUCS2(((wallet_Sublist *)itemList->ElementAt(i))->item);
+            value = ((wallet_Sublist *)itemList->ElementAt(i))->item;
             result = wallet_GetSelectIndex(selectElement, value, selectIndex);
             if (NS_SUCCEEDED(result)) {
               /* value matched one of the values in the drop-down list */
@@ -2496,12 +2476,18 @@ if (!localSchema.IsEmpty()) {
               // No Release() here?
 
               inputElement = nsnull;
-              schema = localSchema;
               return NS_OK;
             }
           }
         }
       }
+
+
+#ifdef IgnoreFieldNames
+// use displayable text instead of field names
+}
+#endif
+
     }
     NS_RELEASE(selectElement);
   }
@@ -2524,7 +2510,7 @@ Wallet_ReleaseAllLists() {
 #endif
     wallet_DeallocateMapElements();
     delete helpMac;
-    helpMac = nsnull;
+    helpMac = 0;
 }
 
 //#define WALLET_CHECK_FOOTPRINT
@@ -2538,14 +2524,14 @@ wallet_Size(nsVoidArray * list) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     size += sizeof(wallet_MapElement*);
     size += sizeof(wallet_MapElement);
-    size += PL_strlen(mapElementPtr->item1);
-    size += PL_strlen(mapElementPtr->item2);
+    size += 2*(mapElementPtr->item1).Length();
+    size += 2*(mapElementPtr->item2).Length();
     wallet_Sublist * sublistPtr;
     PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
     for (PRInt32 i2=0; i2<count2; i2++) {
       sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(i2));
       size += sizeof(wallet_Sublist);
-      size += PL_strlen(sublistPtr->item);
+      size += 2*(sublistPtr->item).Length();
     }
   }
   return size;
@@ -2709,15 +2695,15 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
 
 #define SEPARATOR "#*%$"
 
-static nsresult
+static PRInt32
 wallet_GetNextInString(const nsString& str, nsString& head, nsString& tail) {
   PRInt32 separator = str.Find(SEPARATOR);
   if (separator == -1) {
-    return NS_ERROR_FAILURE;
+    return -1;
   }
   str.Left(head, separator);
   str.Mid(tail, separator+sizeof(SEPARATOR)-1, str.Length() - (separator+sizeof(SEPARATOR)-1));
-  return NS_OK;
+  return 0;
 }
 
 static void
@@ -2730,7 +2716,7 @@ wallet_ReleasePrefillElementList(nsVoidArray * wallet_PrefillElement_list) {
       delete prefillElementPtr;
     }
     delete wallet_PrefillElement_list;
-    wallet_PrefillElement_list = nsnull;
+    wallet_PrefillElement_list = 0;
   }
 }
 
@@ -2743,21 +2729,25 @@ PUBLIC void
 WLLT_GetPrefillListForViewer(nsString& aPrefillList)
 {
   wallet_Initialize(PR_FALSE); /* to initialize helpMac */
-  wallet_PrefillElement * prefillElementPtr;
+  wallet_PrefillElement * mapElementPtr;
   nsAutoString buffer;
   PRInt32 count = LIST_COUNT(wallet_list);
   for (PRInt32 i=0; i<count; i++) {
-    prefillElementPtr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_list->ElementAt(i));
+    mapElementPtr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_list->ElementAt(i));
     buffer.AppendWithConversion(BREAK);
-    buffer.AppendInt(prefillElementPtr->count,10);
+    buffer.AppendInt(mapElementPtr->count,10);
     buffer.AppendWithConversion(BREAK);
-    buffer.Append(NS_ConvertUTF8toUCS2(prefillElementPtr->schema));
+    buffer.Append(mapElementPtr->schema);
     buffer.AppendWithConversion(BREAK);
-    buffer.Append(prefillElementPtr->value);
+    buffer.Append(mapElementPtr->value);
   }
 
+  PRUnichar * urlUnichar = ToNewUnicode(wallet_url);
   buffer.AppendWithConversion(BREAK);
-  buffer += wallet_url.get();
+
+  buffer += urlUnichar;
+  Recycle(urlUnichar);
+
   aPrefillList = buffer;
 }
 
@@ -2769,45 +2759,6 @@ wallet_FreeURL(wallet_MapElement *url) {
     }
     wallet_URL_list->RemoveElement(url);
     PR_Free(url);
-}
-
-const char* permission_NoCapture_NoPreview = "yy";
-const char* permission_NoCapture_Preview = "yn";
-const char* permission_Capture_NoPreview = "ny";
-const char* permission_Capture_Preview = "nn";
-
-PRIVATE void
-wallet_SetNoPreview(nsACString& permission, char noPreview) {
-  if (noPreview == 'y') {
-    if (NO_CAPTURE(permission) == 'y') {
-      permission = permission_NoCapture_NoPreview;
-    } else {
-      permission = permission_Capture_NoPreview;
-    }
-  } else {
-    if (NO_CAPTURE(permission) == 'y') {
-      permission = permission_NoCapture_Preview;
-    } else {
-      permission = permission_Capture_Preview;
-    }
-  }
-}
-
-PRIVATE void
-wallet_SetNoCapture(nsACString& permission, char noCapture) {
-  if (noCapture == 'y') {
-    if (NO_PREVIEW(permission) == 'y') {
-      permission = permission_NoCapture_NoPreview;
-    } else {
-      permission = permission_NoCapture_Preview;
-    }
-  } else {
-    if (NO_PREVIEW(permission) == 'y') {
-      permission = permission_NoCapture_NoPreview;
-    } else {
-      permission = permission_NoCapture_Preview;
-    }
-  }
 }
 
 PUBLIC void
@@ -2825,8 +2776,8 @@ Wallet_SignonViewerReturn(const nsString& results)
       count--;
       url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(count));
       if (url && SI_InSequence(gone, count)) {
-        wallet_SetNoPreview(nsCAutoString(url->item2), 'n');
-        if (!PL_strcmp(url->item2, permission_Capture_Preview)) {
+        url->item2.SetCharAt('n', NO_PREVIEW);
+        if (url->item2.CharAt(NO_CAPTURE) == 'n') {
           wallet_FreeURL(url);
           wallet_WriteToFile(URLFileName, wallet_URL_list);
         }
@@ -2842,8 +2793,8 @@ Wallet_SignonViewerReturn(const nsString& results)
       count2--;
       url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(count2));
       if (url && SI_InSequence(gone, count2)) {
-        wallet_SetNoCapture(nsCAutoString(url->item2), 'n');
-        if (!PL_strcmp(url->item2, permission_Capture_Preview)) {
+        url->item2.SetCharAt('n', NO_CAPTURE);
+        if (url->item2.CharAt(NO_PREVIEW) == 'n') {
           wallet_FreeURL(url);
           wallet_WriteToFile(URLFileName, wallet_URL_list);
         }
@@ -2856,7 +2807,8 @@ Wallet_SignonViewerReturn(const nsString& results)
  * see if user wants to capture data on current page
  */
 PRIVATE PRBool
-wallet_OKToCapture(const nsAFlatCString& url, nsIDOMWindowInternal* window) {
+wallet_OKToCapture(char* urlName, nsIDOMWindowInternal* window) {
+  nsAutoString url; url.AssignWithConversion(urlName);
 
   /* exit if pref is not set */
   if (!wallet_GetFormsCapturingPref() || !wallet_GetEnabledPref()) {
@@ -2866,10 +2818,9 @@ wallet_OKToCapture(const nsAFlatCString& url, nsIDOMWindowInternal* window) {
   /* see if this url is already on list of url's for which we don't want to capture */
   wallet_InitializeURLList();
   nsVoidArray* dummy;
-  nsCAutoString urlPermissions;
-  if (wallet_ReadFromList(url, urlPermissions, dummy, wallet_URL_list, PR_FALSE)) {
-    if (urlPermissions.Equals(permission_Capture_Preview) ||
-        urlPermissions.Equals(permission_Capture_NoPreview)) {
+  nsAutoString value; value.Assign(NS_LITERAL_STRING("nn"));
+  if (wallet_ReadFromList(url, value, dummy, wallet_URL_list, PR_FALSE)) {
+    if (value.CharAt(NO_CAPTURE) == 'y') {
       return PR_FALSE;
     }
   }
@@ -2880,12 +2831,12 @@ wallet_OKToCapture(const nsAFlatCString& url, nsIDOMWindowInternal* window) {
   PRInt32 button = Wallet_3ButtonConfirm(message, window);
   if (button == NEVER_BUTTON) {
     /* add URL to list with NO_CAPTURE indicator set */
-    wallet_SetNoCapture(nsCAutoString(urlPermissions), 'y');
-    if (wallet_WriteToList(url.get(), urlPermissions.get(), dummy, wallet_URL_list, PR_FALSE, DUP_OVERWRITE)) {
+    value.SetCharAt('y', NO_CAPTURE);
+    if (wallet_WriteToList(url, value, dummy, wallet_URL_list, PR_FALSE, DUP_OVERWRITE)) {
       wallet_WriteToFile(URLFileName, wallet_URL_list);
     }
   }
-  WALLET_FREE(message);
+  Recycle(message);
   return (button == YES_BUTTON);
 }
 #endif
@@ -2894,7 +2845,7 @@ wallet_OKToCapture(const nsAFlatCString& url, nsIDOMWindowInternal* window) {
  * capture the value of a form element
  */
 PRIVATE PRBool
-wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, nsACString& schema)
+wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, const nsString& schema)
 {
   /* do nothing if there is no value */
   if (!value.Length()) {
@@ -2907,32 +2858,27 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
 
 #ifdef IgnoreFieldNames
 // use displayable text instead of field names
-  if (schema.IsEmpty()) {
+  if (!schema.Length()) {
     return PR_FALSE;
   }
 #endif
 
-  const char* valueCString = NS_ConvertUCS2toUTF8(value).get();
-  nsCAutoString oldValue;
+  nsAutoString oldValue;
 
   /* is there a mapping from this field name to a schema name */
-  nsCAutoString localSchema; localSchema.Assign(schema);
+  nsAutoString localSchema(schema);
   nsVoidArray* dummy;
-  nsCAutoString stripField;
-  if (localSchema.IsEmpty()) {
-    Strip(field, stripField);
-  }
-  if (!localSchema.IsEmpty() ||
-      (wallet_ReadFromList(stripField, localSchema, dummy,
-                           wallet_FieldToSchema_list, PR_FALSE))) {
+  nsString stripField;
+  if (localSchema.Length() ||
+      (wallet_ReadFromList(Strip(field, stripField), localSchema, dummy, wallet_FieldToSchema_list, PR_FALSE))) {
+
     /* field to schema mapping already exists */
 
     /* is this a new value for the schema */
     PRInt32 index = 0;
     PRInt32 lastIndex = index;
     while(wallet_ReadFromList(localSchema, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
-      PRBool isNewValue = !oldValue.Equals(valueCString);
-      if (!isNewValue) {
+      if (oldValue == value) {
         /*
          * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
          * keep multiple values in that list for the same field ordered with
@@ -2955,8 +2901,8 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
     }
 
     /* this is a new value so store it */
-    dummy = nsnull;
-    if (wallet_WriteToList(localSchema.get(), valueCString, dummy, wallet_SchemaToValue_list, PR_TRUE)) {
+    dummy = 0;
+    if (wallet_WriteToList(localSchema, value, dummy, wallet_SchemaToValue_list, PR_TRUE)) {
       wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
     }
 
@@ -2968,15 +2914,13 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
     PRInt32 index = 0;
     PRInt32 lastIndex = index;
 
-    nsAutoString concatParamUCS2;
-    wallet_GetHostFile(wallet_lastUrl, concatParamUCS2);
-    concatParamUCS2.Append(NS_LITERAL_STRING(":"));
-    concatParamUCS2.Append(field);
-    nsCAutoString concatParamUTF8 = NS_ConvertUCS2toUTF8(concatParamUCS2);
-    while(wallet_ReadFromList
-        (concatParamUTF8, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
-      PRBool isNewValue = !oldValue.Equals(valueCString);
-      if (!isNewValue) {
+    nsAutoString concat_param;
+    wallet_GetHostFile(wallet_lastUrl, concat_param);
+    concat_param.Append(NS_LITERAL_STRING(":"));
+    concat_param.Append(field);
+
+    while(wallet_ReadFromList(concat_param, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
+      if (oldValue == value) {
         /*
          * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
          * keep multiple values in that list for the same field ordered with
@@ -2997,23 +2941,19 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, n
       }
       lastIndex = index;
 
-      //??? aren't these next four lines redundant?
-      wallet_GetHostFile(wallet_lastUrl, concatParamUCS2);
-      concatParamUCS2.Append(NS_LITERAL_STRING(":"));
-      concatParamUCS2.Append(field);
-      concatParamUTF8 = NS_ConvertUCS2toUTF8(concatParamUCS2);
+      wallet_GetHostFile(wallet_lastUrl, concat_param);
+      concat_param.Append(NS_LITERAL_STRING(":"));
+      concat_param.Append(field);
     }
 
     /* this is a new value so store it */
-    dummy = nsnull;
-    nsAutoString hostFileFieldUCS2;
-    wallet_GetHostFile(wallet_lastUrl, hostFileFieldUCS2);
-    hostFileFieldUCS2.Append(NS_LITERAL_STRING(":"));
-    hostFileFieldUCS2.Append(field);
+    dummy = 0;
+    nsAutoString hostFileField;
+    wallet_GetHostFile(wallet_lastUrl, hostFileField);
+    hostFileField.Append(NS_LITERAL_STRING(":"));
+    hostFileField.Append(field);
 
-    if (wallet_WriteToList
-        (NS_ConvertUCS2toUTF8(hostFileFieldUCS2).get(), valueCString, dummy,
-         wallet_SchemaToValue_list, PR_TRUE)) {
+    if (wallet_WriteToList(hostFileField, value, dummy, wallet_SchemaToValue_list, PR_TRUE)) {
       wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
     }
   }
@@ -3037,10 +2977,9 @@ WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
   PRInt32 count = LIST_COUNT(wallet_URL_list);
   for (PRInt32 i=0; i<count; i++) {
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
-    if (!PL_strcmp(url->item2, permission_Capture_NoPreview) ||
-        !PL_strcmp(url->item2, permission_NoCapture_NoPreview)) {
+    if (url->item2.CharAt(NO_PREVIEW) == 'y') {
       buffer.AppendWithConversion(BREAK);
-      buffer += NS_ConvertUTF8toUCS2(url->item1);
+      buffer += url->item1;
     }
   }
   aNopreviewList = buffer;
@@ -3056,10 +2995,9 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
   PRInt32 count = LIST_COUNT(wallet_URL_list);
   for (PRInt32 i=0; i<count; i++) {
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
-    if (!PL_strcmp(url->item2, permission_NoCapture_Preview) ||
-        !PL_strcmp(url->item2, permission_NoCapture_NoPreview)) {
+    if (url->item2.CharAt(NO_CAPTURE) == 'y') {
       buffer.AppendWithConversion(BREAK);
-      buffer += NS_ConvertUTF8toUCS2(url->item1);
+      buffer += url->item1;
     }
   }
   aNocaptureList = buffer;
@@ -3110,7 +3048,7 @@ WLLT_PostEdit(const nsString& walletList)
     tail.Mid(temp, separator+1, tail.Length() - (separator+1));
     tail = temp;
 
-    wallet_PutLine(strm, NS_ConvertUCS2toUTF8(head).get());
+    wallet_PutLine(strm, head);
   }
 
   /* close the file and read it back into the SchemaToValue list */
@@ -3129,18 +3067,16 @@ WLLT_PreEdit(nsString& walletList)
   for (PRInt32 i=0; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
 
-    walletList += NS_ConvertUTF8toUCS2(mapElementPtr->item1);
-    walletList.AppendWithConversion(BREAK);
-    if (!WALLET_NULL(mapElementPtr->item2)) {
-      walletList += NS_ConvertUTF8toUCS2(mapElementPtr->item2);
-      walletList.AppendWithConversion(BREAK);
+    walletList += mapElementPtr->item1; walletList.AppendWithConversion(BREAK);
+    if (!mapElementPtr->item2.IsEmpty()) {
+      walletList += mapElementPtr->item2; walletList.AppendWithConversion(BREAK);
     } else {
       wallet_Sublist * sublistPtr;
       PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
       for (PRInt32 i2=0; i2<count2; i2++) {
         sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(i2));
-        walletList += NS_ConvertUTF8toUCS2(sublistPtr->item);
-        walletList.AppendWithConversion(BREAK);
+        walletList += sublistPtr->item; walletList.AppendWithConversion(BREAK);
+
       }
     }
     walletList.AppendWithConversion(BREAK);
@@ -3187,7 +3123,7 @@ wallet_ReencryptAll(const char * newpref, void* window) {
   gReencryptionLevel ++;
   PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
   PRInt32 i = 0;
-  char* plainText = nsnull;
+  nsAutoString value;
 
   /* logout first so there is no conversion unless user knows the master password */
 if (!changingPassword) {
@@ -3204,27 +3140,24 @@ if (!changingPassword) {
   gEncryptionFailure = PR_FALSE;
   for (i=0; i<count && !gEncryptionFailure; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
-    char * crypt = nsnull;
-    if (!WALLET_NULL(mapElementPtr->item2)) {
-      if (NS_FAILED(DecryptString(mapElementPtr->item2, plainText))) {
+    if (!mapElementPtr->item2.IsEmpty()) {
+      if (NS_FAILED(Wallet_Decrypt(mapElementPtr->item2, value))) {
         goto fail;
       }
-      if (NS_FAILED(EncryptString(plainText, crypt))) {
+      if (NS_FAILED(Wallet_Encrypt(value, mapElementPtr->item2))) {
         goto fail;
       }
-      mapElementPtr->item2 = crypt;
     } else {
       wallet_Sublist * sublistPtr;
       PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
       for (PRInt32 i2=0; i2<count2; i2++) {
         sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(i2));
-        if (NS_FAILED(DecryptString(sublistPtr->item, plainText))) {
+        if (NS_FAILED(Wallet_Decrypt(sublistPtr->item, value))) {
           goto fail;
         }
-        if (NS_FAILED(EncryptString(plainText, crypt))) {
+        if (NS_FAILED(Wallet_Encrypt(value, sublistPtr->item))) {
           goto fail;
         }
-        sublistPtr->item = crypt;
       }
     }
   }
@@ -3248,7 +3181,7 @@ if (!changingPassword) {
 
 //  message = Wallet_Localize("Converted");
 //  wallet_Alert(message, (nsIDOMWindowInternal *)window);
-//  WALLET_FREE(message);
+//  Recycle(message);
   gReencryptionLevel--;
   return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
 fail:
@@ -3258,7 +3191,7 @@ fail:
   /* alert the user to the failure */
   message = Wallet_Localize("NotConverted");
   wallet_Alert(message, (nsIDOMWindowInternal *)window);
-  WALLET_FREE(message);
+  Recycle(message);
   gReencryptionLevel--;
   return 1;
 }
@@ -3301,12 +3234,12 @@ WLLT_PrefillReturn(const nsString& results)
 
   /* add url to url list if user doesn't want to preview this page in the future */
   if (skip.Equals(NS_LITERAL_STRING("true"))) {
-    nsCAutoString url = NS_ConvertUCS2toUTF8(urlName);
+    nsAutoString url = nsAutoString(urlName);
     nsVoidArray* dummy;
-    nsCAutoString urlPermissions;
-    wallet_ReadFromList(url, urlPermissions, dummy, wallet_URL_list, PR_FALSE);
-    wallet_SetNoPreview(nsCAutoString(urlPermissions), 'y');
-    if (wallet_WriteToList(url.get(), urlPermissions.get(), dummy, wallet_URL_list, PR_FALSE, DUP_OVERWRITE)) {
+    nsAutoString value; value.Assign(NS_LITERAL_STRING("nn"));
+    wallet_ReadFromList(url, value, dummy, wallet_URL_list, PR_FALSE);
+    value.SetCharAt('y', NO_PREVIEW);
+    if (wallet_WriteToList(url, value, dummy, wallet_URL_list, PR_FALSE, DUP_OVERWRITE)) {
       wallet_WriteToFile(URLFileName, wallet_URL_list);
     }
   }
@@ -3340,11 +3273,11 @@ WLLT_PrefillReturn(const nsString& results)
     if (mapElementPtr->count != 0) {
       /* count != 0 indicates a new schema name */
       nsAutoString tail;
-      if (NS_FAILED(wallet_GetNextInString(fillins, next, tail))) {
+      if (wallet_GetNextInString(fillins, next, tail) == -1) {
         break;
       }
       fillins = tail;
-      if (PL_strcmp(NS_ConvertUCS2toUTF8(next).get(), mapElementPtr->schema)) {
+      if (next != mapElementPtr->schema) {
         break; /* something's wrong so stop prefilling */
       }
       wallet_GetNextInString(fillins, next, tail);
@@ -3362,17 +3295,12 @@ WLLT_PrefillReturn(const nsString& results)
        * reordering if the current entry already was first
        */
       if (mapElementPtr->count == 0) {
-        nsCAutoString oldvalueUTF8;
+        nsAutoString oldValue;
         PRInt32 index = 0;
         PRInt32 lastIndex = index;
         nsVoidArray* dummy;
-        while(wallet_ReadFromList(nsDependentCString(mapElementPtr->schema),
-                                  oldvalueUTF8,
-                                  dummy,
-                                  wallet_SchemaToValue_list,
-                                  PR_TRUE,
-                                  index)) {
-          if (oldvalueUTF8.Equals(NS_ConvertUCS2toUTF8(mapElementPtr->value).get())) {
+        while(wallet_ReadFromList(mapElementPtr->schema, oldValue, dummy, wallet_SchemaToValue_list, PR_TRUE, index)) {
+          if (oldValue == mapElementPtr->value) {
             wallet_MapElement * mapElement =
               (wallet_MapElement *) (wallet_SchemaToValue_list->ElementAt(lastIndex));
             wallet_SchemaToValue_list->RemoveElementAt(lastIndex);
@@ -3469,17 +3397,15 @@ wallet_TraversalForPrefill
                            * elements in group will have count field set to 0
                            */
                           prefillElement = new wallet_PrefillElement;
-                          nsCAutoString schemaUTF8;
                           if (NS_SUCCEEDED(wallet_GetPrefills
                               (elementNode,
                               prefillElement->inputElement,
                               prefillElement->selectElement,
-                              schemaUTF8,
+                              prefillElement->schema,
                               prefillElement->value,
                               prefillElement->selectIndex,
                               index))) {
                             /* another value found */
-                            prefillElement->schema = ToNewCString(schemaUTF8);
                             if (nsnull == firstElement) {
                               firstElement = prefillElement;
                             }
@@ -3528,7 +3454,7 @@ WLLT_PrefillOneElement
 {
   nsIDOMHTMLInputElement* inputElement;
   nsIDOMHTMLSelectElement* selectElement;
-  nsCAutoString schema;
+  nsString schema;
   nsString value;
   PRInt32 selectIndex = 0;
   PRInt32 index = 0;
@@ -3550,8 +3476,8 @@ WLLT_PrefillOneElement
             value,
             selectIndex,
             index))) {
-          compositeValue.AppendWithConversion(BREAK);
-          compositeValue.Append(value);
+              compositeValue.AppendWithConversion(BREAK);
+              compositeValue.Append(value);
         }
       }
     }
@@ -3582,7 +3508,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
     if (!gEncryptionFailure) {
       PRUnichar * message = Wallet_Localize("noPrefills");
       wallet_Alert(message, win);
-      WALLET_FREE(message);
+      Recycle(message);
     }
 
     // Shouldn't wallet_PrefillElement_list be deleted here?
@@ -3597,12 +3523,10 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
   if (!quick) {
     wallet_InitializeURLList();
     nsVoidArray* dummy;
-    nsCAutoString urlPermissions;
+    nsAutoString value; value.Assign(NS_LITERAL_STRING("nn"));
     if (urlName.Length() != 0) {
-      wallet_ReadFromList
-        (NS_ConvertUCS2toUTF8(urlName), urlPermissions, dummy, wallet_URL_list, PR_FALSE);
-      noPreview = (urlPermissions.Equals(permission_Capture_NoPreview) ||
-                   urlPermissions.Equals(permission_NoCapture_NoPreview));
+      wallet_ReadFromList(urlName, value, dummy, wallet_URL_list, PR_FALSE);
+      noPreview = (value.CharAt(NO_PREVIEW) == 'y');
     }
   }
 
@@ -3656,19 +3580,24 @@ wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
         result = inputElement->GetValue(value);
         if (NS_SUCCEEDED(result)) {
           /* get schema name from vcard attribute if it exists */
-          nsCAutoString schema;
+          nsAutoString schema;
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
           if (element) {
             nsAutoString vcardName; vcardName.Assign(NS_LITERAL_STRING("VCARD_NAME"));
-            nsAutoString vcardValueUCS2;
-            result = element->GetAttribute(vcardName, vcardValueUCS2);
+            nsAutoString vcardValue;
+            result = element->GetAttribute(vcardName, vcardValue);
             if (NS_OK == result) {
               nsVoidArray* dummy;
-              wallet_ReadFromList(NS_ConvertUCS2toUTF8(vcardValueUCS2), schema, dummy,
-                                  wallet_VcardToSchema_list, PR_FALSE);
+              wallet_ReadFromList(vcardValue, schema, dummy, wallet_VcardToSchema_list, PR_FALSE);
             }
           }
-          if (schema.IsEmpty()) {
+
+#ifdef IgnoreFieldNames
+// use displayable text instead of vcard names
+schema.SetLength(0);
+#endif
+
+          if (!schema.Length()) {
             /* get schema from displayable text if possible */
             wallet_GetSchemaFromDisplayableText(inputElement, schema, (value.Length()==0));
           }
@@ -3721,19 +3650,24 @@ wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
                               && optionText.Length();
               if (valueOK || textOK) {
                 /* get schema name from vcard attribute if it exists */
-                nsCAutoString schema;
+                nsAutoString schema;
                 nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
                 if (element) {
                   nsAutoString vcardName; vcardName.Assign(NS_LITERAL_STRING("VCARD_NAME"));
-                  nsAutoString vcardValueUCS2;
-                  result = element->GetAttribute(vcardName, vcardValueUCS2);
+                  nsAutoString vcardValue;
+                  result = element->GetAttribute(vcardName, vcardValue);
                   if (NS_OK == result) {
                     nsVoidArray* dummy;
-                    wallet_ReadFromList(NS_ConvertUCS2toUTF8(vcardValueUCS2), schema, dummy,
-                                        wallet_VcardToSchema_list, PR_FALSE);
+                    wallet_ReadFromList(vcardValue, schema, dummy, wallet_VcardToSchema_list, PR_FALSE);
                   }
                 }
-                if (schema.IsEmpty()) {
+
+#ifdef IgnoreFieldNames
+// use displayable text instead of vcard names
+schema.SetLength(0);
+#endif
+
+                if (!schema.Length()) {
                   /* get schema from displayable text if possible */
                   wallet_GetSchemaFromDisplayableText(selectElement, schema, (!valueOK && !textOK));
                 }
@@ -3846,7 +3780,7 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* 
     *status = +1;
   }
   wallet_Alert(message, win);
-  WALLET_FREE(message);
+  Recycle(message);
 }
 
 MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct)
@@ -3902,7 +3836,7 @@ wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
   }
   nsIDOMHTMLInputElement* inputElement;
   nsIDOMHTMLSelectElement* selectElement;
-  nsCAutoString schema;
+  nsAutoString schema;
   nsAutoString valueSaved;
   PRInt32 selectIndex = 0;
   PRInt32 index = 0;
@@ -3923,7 +3857,8 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
   /* get url name as ascii string */
   char *URLName = nsnull;
-  nsAutoString strippedURLNameUCS2;
+  char *strippedURLName = nsnull;
+  nsAutoString strippedURLNameAutoString;
   nsCOMPtr<nsIDocument> doc;
   currentForm->GetDocument(*getter_AddRefs(doc));
   if (!doc) {
@@ -3935,13 +3870,14 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
     return;
   }
   (void)docURL->GetSpec(&URLName);
-  wallet_GetHostFile(docURL, strippedURLNameUCS2);
-  nsCAutoString strippedURLNameUTF8 = NS_ConvertUCS2toUTF8(strippedURLNameUCS2);
+  wallet_GetHostFile(docURL, strippedURLNameAutoString);
+  strippedURLName = ToNewCString(strippedURLNameAutoString);
 
   /* get to the form elements */
   nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(doc));
   if (htmldoc == nsnull) {
     nsCRT::free(URLName);
+    nsCRT::free(strippedURLName);
     return;
   }
 
@@ -3949,6 +3885,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   nsresult rv = htmldoc->GetForms(getter_AddRefs(forms));
   if (NS_FAILED(rv) || (forms == nsnull)) {
     nsCRT::free(URLName);
+    nsCRT::free(strippedURLName);
     return;
   }
 
@@ -4082,27 +4019,24 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 #ifdef AutoCapture
                         if (passwordcount == 0 && !OKToPrompt) {
                           /* get schema from field */
-                          nsCAutoString schema;
+                          nsAutoString schema;
                           nsVoidArray* dummy;
-                          nsCAutoString stripField;
+                          nsString stripField;
 
                           /* try to get schema from displayable text */
-                          if (schema.IsEmpty()) {
+                          if (schema.Length() == 0) {
                             wallet_GetSchemaFromDisplayableText(inputElement, schema, PR_FALSE);
                           }
 
 #ifndef IgnoreFieldNames
                           /* no schema found, so try to get it from field name */
-                          if (schema.IsEmpty()) {
-                            Strip(field, stripField);
-                            wallet_ReadFromList
-                              (stripField, schema, 
-                               dummy, wallet_FieldToSchema_list, PR_FALSE);
+                          if (schema.Length() == 0) {
+                            wallet_ReadFromList(Strip(field, stripField), schema, dummy, wallet_FieldToSchema_list, PR_FALSE);
                           }
 #endif
 
                           /* if schema found, see if it is in distinguished schema list */
-                          if (!schema.IsEmpty()) {
+                          if (schema.Length()) {
                             /* see if schema is in distinguished list */
                             wallet_MapElement * mapElementPtr;
                             PRInt32 count = LIST_COUNT(wallet_DistinguishedSchema_list);
@@ -4110,7 +4044,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
                             for (PRInt32 i=0; i<count; i++) {
                               mapElementPtr = NS_STATIC_CAST
                                 (wallet_MapElement*, wallet_DistinguishedSchema_list->ElementAt(i));
-                                  if (schema.Equals(mapElementPtr->item1, nsCaseInsensitiveCStringComparator()) && value.Length() > 0) {
+                              if (mapElementPtr->item1.EqualsIgnoreCase(schema) && value.Length() > 0) {
                                 hits++;
                                 if (hits > 1 && newValueFound) {
                                   OKToPrompt = PR_TRUE;
@@ -4155,12 +4089,12 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
             PRUnichar * notification = Wallet_Localize("WalletNotification");
             wallet_SetWalletNotificationPref(PR_TRUE);
             wallet_Alert(notification, window);
-            WALLET_FREE(notification);
+            Recycle(notification);
           }
 #else
           /* save form if it meets all necessary conditions */
           if (wallet_GetFormsCapturingPref() &&
-              (OKToPrompt) && wallet_OKToCapture(strippedURLNameUTF8, window)) {
+              (OKToPrompt) && wallet_OKToCapture(strippedURLName, window)) {
 
             /* give caveat if this is the first time data is being captured */
             Wallet_GiveCaveat(window, nsnull);
@@ -4181,6 +4115,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
     }
   }
   nsCRT::free(URLName);
+  nsCRT::free(strippedURLName);
 }
 
 PUBLIC void
