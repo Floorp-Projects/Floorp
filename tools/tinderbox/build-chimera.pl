@@ -44,7 +44,7 @@ sub main {
   my $post_status = 'success';  # Success until we report a failure.
   my $status = 0;  # 0 = success
   # No tests for now, since Chimera can't open a URL passed on the command line.
-  my $chimera_alive_test = 0;
+  my $chimera_alive_test = 1;
   my $chimera_test8_test = 0;
   my $chimera_dir = "$mozilla_build_dir/mozilla/chimera";
   my $embedding_dir = "$mozilla_build_dir/mozilla/embedding/config";
@@ -75,8 +75,8 @@ sub main {
     chdir $chimera_dir;
     
     if ($status == 0) {
-      #TinderUtils::print_log "Deleting binary...\n";
-      #TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
+      TinderUtils::print_log "Deleting binary...\n";
+      TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
 
       # Always do a clean build; gecko dependencies don't work correctly
       # for Chimera.
@@ -88,7 +88,7 @@ sub main {
       TinderUtils::print_log "cwd = $foo\n";
       
       # opt = Deployment, debug = Development
-      $status = TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\" install");
+      $status = TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\"");
       TinderUtils::print_log "Status from pbxbuild: $status\n";
     }
 
@@ -110,16 +110,17 @@ sub main {
                                           "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                           "Navigator",
                                           "about:blank",
-                                          45);
+                                          60);
   }
 
   # Test chimera, test8
+  # resource:///res/samples/test8.html
   if ($chimera_test8_test and $post_status eq 'success') {
     $post_status = TinderUtils::AliveTest("ChimeraTest8Test",
                                           "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                           "Navigator",
-                                          "resource:///res/samples/test8.html",
-                                          45);
+                                          "http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html",
+                                          60);
   }
   
   # Pass our status back to calling script.
