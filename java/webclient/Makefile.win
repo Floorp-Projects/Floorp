@@ -41,7 +41,7 @@ DIRS  = classes_spec \
 	$(NULL)
 !else
 DIRS  = classes \
-	src
+	src \
 	$(NULL)
 !endif
 
