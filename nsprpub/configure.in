@@ -18,6 +18,7 @@ dnl Copyright (C) 1998o-2000 Netscape Communications Corporation.  All
 dnl Rights Reserved.
 dnl 
 dnl Contributor(s):
+dnl     Christopher Seawood <cls@seawood.org>
 dnl 
 dnl Alternatively, the contents of this file may be used under the
 dnl terms of the GNU General Public License Version 2 or later (the
@@ -32,18 +33,8 @@ dnl may use your version of this file under either the MPL or the
 dnl GPL.
 dnl 
 
-
-dnl
-dnl Process this file with autoconf to produce a configure script.
-dnl
 AC_PREREQ(2.12)
 AC_INIT(config/libc_r.h)
-
-d=`pwd`
-if test "${srcdir}" = "$d" || test "${srcdir}" = "."  ; then
-   echo "Do not build in the srcdir as it will override Makefiles used by non-autoconf build."
-   exit 1;
-fi
 
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
@@ -96,7 +87,29 @@ dnl ========================================================
 case "$target" in
 *-irix6*)
 	USE_N32=1 ;;
+*-cygwin*)
+    # Check to see if we are really running in a msvc environemnt
+    _WIN32_MSVC=
+    if test "$CC" = "cl" || test "$CXX" = "cl"; then
+        _WIN32_MSVC=1
+    elif test -z "$CC"; then
+        echo 'main() { return 0; }' > dummy.c
+        cl -o dummy dummy.c
+        if test $? = 0; then
+            _WIN32_MSVC=1
+        fi
+        rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
+    fi
+    ;;
+*-msvc*)
+    _WIN32_MSVC=1
+    ;;
 esac
+
+if test -n "$_WIN32_MSVC"; then
+    SKIP_COMPILER_CHECKS=1
+    SKIP_LIBRARY_CHECKS=1
+fi
 
 dnl ========================================================
 dnl =
@@ -137,10 +150,11 @@ AC_ARG_ENABLE(debug,
 AC_ARG_ENABLE(shared,
     [  --disable-shared        Do not compile into shared libraries])
 
-AC_ARG_ENABLE(target,
-    [  --enable-target=\$t      Turn on features for target \$t when build has multiple targets],
-    MOZ_TARGET=`echo $enableval | tr a-z A-Z`,
-    MOZ_TARGET=)
+AC_ARG_ENABLE(win32-target,
+    [  --enable-win32-target=\$t
+                               Specify win32 flavor. (WIN95 or WINNT)],
+    MOZ_WIN32_TARGET=`echo $enableval | tr a-z A-Z`,
+    MOZ_WIN32_TARGET=)
 
 AC_ARG_ENABLE(n32,
     [  --enable-n32            Enable n32 ABI support (IRIX only)],
@@ -170,9 +184,10 @@ if test -n "$MOZ_DEBUG"; then
     DEFINES="$DEFINES -UNDEBUG"
 else
     AC_DEFINE(NDEBUG)
-    DEFINES="$DEFINES -UDEBUG"    
+    DEFINES="$DEFINES -U_DEBUG -UDEBUG"
 fi
 
+if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -213,47 +228,51 @@ if test "$target" != "$host"; then
     LDFLAGS=$_SAVE_LDFLAGS
 
     if test -z "$CC"; then
-	    AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", :)
+	    AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", echo)
     fi
     unset ac_cv_prog_CC
     AC_PROG_CC
     if test -z "$CXX"; then
-	    AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", :)
+	    AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", echo)
     fi
     unset ac_cv_prog_CXX
     AC_PROG_CXX
     if test -z "$RANLIB"; then
-	    AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", :)
+	    AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", echo)
     fi
     if test -z "$AR"; then
-	    AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", :)
+	    AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", echo)
     fi
     if test -z "$AS"; then
-	    AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", :)
+	    AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", echo)
     fi
     if test -z "$LD"; then
-	    AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
+	    AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", echo)
     fi
     if test -z "$STRIP"; then
-	    AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
+	    AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", echo)
     fi
     if test -z "$DLLTOOL"; then
-	    AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", :)
+	    AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", echo)
     fi
     if test -z "$WINDRES"; then
-	    AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
+	    AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", echo)
     fi
 
 else
-    AC_PROG_CC
     AC_PROG_CXX
+    if test "$CXX" = "cl" -a -z "$CC"; then
+        CC=$CXX
+    else        
+        AC_PROG_CC
+    fi
     AC_PROG_RANLIB
     AC_PATH_PROGS(AS, as, $CC)
-    AC_PATH_PROGS(AR, ar, :)
-    AC_PATH_PROGS(LD, ld, :)
-    AC_PATH_PROGS(STRIP, strip, :)
-    AC_PATH_PROGS(DLLTOOL, dlltool, :)
-    AC_PATH_PROGS(WINDRES, windres, :)
+    AC_PATH_PROGS(AR, ar, echo not_ar)
+    AC_PATH_PROGS(LD, ld link, echo not_ld)
+    AC_PATH_PROGS(STRIP, strip, echo not_strip)
+    AC_PATH_PROGS(DLLTOOL, dlltool, echo not_dlltool)
+    AC_PATH_PROGS(WINDRES, windres, echo not_windres)
     if test -z "$HOST_CC"; then
 	    HOST_CC="$CC"
     fi
@@ -276,12 +295,14 @@ else
     CROSS_COMPILE=
 fi
 
+fi # SKIP_COMPILER_CHECKS
+
 dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PATH_PROGS(PERL, perl5 perl, :)
+AC_PATH_PROGS(PERL, perl5 perl, echo not_perl)
 
 dnl ========================================================
 dnl Default platform specific options
@@ -296,18 +317,128 @@ PR_MD_ARCH_DIR=unix
 AR_FLAGS='cr $@'
 AS='$(CC)'
 
-OS_TARGET=`uname -s`
 OS_ARCH=`uname -s | sed -e 's|/|_|g'`
 OS_RELEASE=`uname -r`
 OS_TEST=`uname -m`
 
-if test "${OS_ARCH}" = "IRIX64"; then
+if test "$OS_ARCH" = "IRIX64"; then
     OS_ARCH=IRIX
 fi
 
-if test "${OS_TARGET}" = "IRIX64"; then
-    OS_TARGET=IRIX
+#######################################################################
+# Master "Core Components" macros for getting the OS target           #
+#######################################################################
+
+#
+# Note: OS_TARGET should be specified on the command line for gmake.
+# When OS_TARGET=WIN95 is specified, then a Windows 95 target is built.
+# The difference between the Win95 target and the WinNT target is that
+# the WinNT target uses Windows NT specific features not available
+# in Windows 95. The Win95 target will run on Windows NT, but (supposedly)
+# at lesser performance (the Win95 target uses threads; the WinNT target
+# uses fibers).
+#
+# When OS_TARGET=WIN16 is specified, then a Windows 3.11 (16bit) target
+# is built. See: win16_3.11.mk for lots more about the Win16 target.
+#
+# If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
+# cross-compilation.
+#
+
+#
+# The following hack allows one to build on a WIN95 machine (as if
+# s/he were cross-compiling on a WINNT host for a WIN95 target).
+# It also accomodates for MKS's uname.exe.  If you never intend
+# to do development on a WIN95 machine, you don't need this hack.
+#
+if test "$OS_ARCH" = "WIN95"; then
+    OS_ARCH=WINNT
+    OS_TARGET=WIN95
+elif test "$OS_ARCH" = 'Windows_95'; then
+    OS_ARCH=Windows_NT
+    OS_TARGET=WIN95
+elif test "$OS_ARCH" = "CYGWIN_95-4.0"; then
+    OS_ARCH='CYGWIN_NT-4.0'
+    OS_TARGET=WIN95
+elif test "$OS_ARCH" = "OS2"; then
+    OS_ARCH=OS2
+    OS_TARGET=OS2
 fi
+
+#
+# On WIN32, we also define the variable CPU_ARCH.
+#
+
+if test "$OS_ARCH" = "WINNT"; then
+    CPU_ARCH=`uname -p`
+    if test "$CPU_ARCH" = "I386"; then
+        CPU_ARCH=x86
+    fi
+elif test "$OS_ARCH" = "Windows_NT"; then
+#
+# If uname -s returns "Windows_NT", we assume that we are using
+# the uname.exe in MKS toolkit.
+#
+# The -r option of MKS uname only returns the major version number.
+# So we need to use its -v option to get the minor version number.
+# Moreover, it doesn't have the -p option, so we need to use uname -m.
+#
+    OS_ARCH=WINNT
+#    OS_MINOR_RELEASE=`uname -v`
+    if test "$OS_MINOR_RELEASE" = "00"; then
+        OS_MINOR_RELEASE=0
+    fi
+    OS_RELEASE="${OS_RELEASE}.${OS_MINOR_RELEASE}"
+    CPU_ARCH=`uname -m`
+    #
+    # MKS's uname -m returns "586" on a Pentium machine.
+    #
+    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
+        CPU_ARCH=x86
+    fi
+elif echo "$OS_ARCH" | grep -c CYGWIN_NT >/dev/null; then
+#
+# If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
+# the uname.exe in the Cygwin tools.
+#
+    OS_RELEASE=`echo $OS_ARCH | sed 's|^CYGWIN_NT-||'`
+    OS_ARCH=WINNT
+    CPU_ARCH=`uname -m`
+    #
+    # Cygwin's uname -m returns "i686" on a Pentium Pro machine.
+    #
+    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
+        CPU_ARCH=x86
+    fi
+elif test "$OS_ARCH" = "CYGWIN32_NT"; then
+#
+# Prior to the Beta 20 release, Cygwin was called GNU-Win32.
+# If uname -s returns "CYGWIN32/NT", we assume that we are using
+# the uname.exe in the GNU-Win32 tools.
+#
+    OS_ARCH=WINNT
+    CPU_ARCH=`uname -m`
+    #
+    # GNU-Win32's uname -m returns "i686" on a Pentium Pro machine.
+    #
+    if echo "$CPU_ARCH" | grep -c 86 >/dev/null; then
+        CPU_ARCH=x86
+    fi
+fi
+
+if test -z "$OS_TARGET"; then
+    OS_TARGET=$OS_ARCH
+fi
+if test "$OS_TARGET" = "WIN95"; then
+    OS_RELEASE="4.0"
+fi
+if test "$OS_TARGET" = "WIN16"; then
+    OS_RELEASE=
+fi
+if test -z "$MOZ_WIN32_TARGET"; then
+    MOZ_WIN32_TARGET=$OS_TARGET
+fi
+OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
 dnl ========================================================
 
@@ -315,7 +446,7 @@ dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
-*-mingw*)
+*-mingw*|*-cygwin*|*-msvc*)
     ;;
 *-beos*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
@@ -722,32 +853,109 @@ case "$target" in
     esac    
     ;;
 
-*-mingw*)
+*-mingw*|*-cygwin*|*-msvc*)
     AC_DEFINE(XP_PC)
-    AC_DEFINE(NONAMELESSUNION)
+    AC_DEFINE(WIN32)
     PR_MD_ARCH_DIR=windows
-    if test -z "$GNU_CC"; then
+
+    if test -n "$GNU_CC"; then
+        AC_DEFINE(NONAMELESSUNION)
+        MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $*.dll --output-lib $@'
+    else
+        CC=cl
+        CXX=cl
+        LD=link
+        AR='lib -NOLOGO -OUT:"$@"'
+        AR_FLAGS=
+        RANLIB='echo not_ranlib'
+        NSINSTALL=nsinstall
+        INSTALL='${NSINSTALL}'
+        RC=rc.exe
+        GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
 	    OBJ_SUFFIX=obj
 	    LIB_SUFFIX=lib
 	    DLL_SUFFIX=dll
-    fi
-    MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $*.dll --output-lib $@'
+        
+        CFLAGS="$CFLAGS -W3 -nologo -GF -Gy"
+        _DEBUG_FLAGS=
 
-    case "$MOZ_TARGET" in
+        if test -n "$MOZ_OPTIMIZE"; then
+            CFLAGS="$CFLAGS -MD"
+            OPTIMIZER=-O2
+            DLLFLAGS='-OUT:"$@"'
+            OBJDIR_TAG=_OPT
+
+            if test -n "$MOZ_PROFILE"; then
+                OPTIMIZER="$OPTIMIZER -Z7"
+                DLLFLAGS="$DLLFLAGS -DEBUG -DEBUGTYPE:CV"
+                LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
+    fi
+        else
+            if test -n "$USE_DEBUG_RTL"; then
+                CFLAGS="$CFLAGS -MDd"
+            else
+                CFLAGS="$CFLAGS -MD"
+            fi
+            OPTIMIZER="-Od -Z7"
+            DLLFLAGS='-DEBUG -DEBUGTYPE:CV -OUT:"$@"'
+            if test -n "$GLOWCODE"; then
+                DLLFLAGS='-DEBUG -DEBUGTYPE:both -INCLUDE:_GlowCode -OUT:"$@"'
+            fi
+            OBJDIR_TAG=_DBG
+            LDFLAGS="$LDFLAGS -DEBUG -DEBUGTYPE:CV"
+            if test -n "$PROFILE"; then
+                LDFLAGS="$LDFLAGS -PROFILE -MAP"
+                DLLFLAGS="$DLLFLAGS -PROFILE -MAP"
+            fi
+        fi
+    fi
+
+    if test -n "$USE_STATIC_TLS"; then
+        AC_DEFINE(_PR_USE_STATIC_TLS)
+    fi
+
+    if test "$OS_TARGET" = "WINNT"; then
+        if test -z "$GNU_CC"; then
+            CFLAGS="$CFLAGS -GT"
+        fi
+        if test "$CPU_ARCH" = "x86"; then
+            CFLAGS="$CFLAGS -G5"
+        fi
+        AC_DEFINE(WINNT)
+    else
+        AC_DEFINE(WIN95)
+        AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
+    fi
+
+    if test "$CPU_ARCH" = "x86"; then
+        CPU_ARCH_TAG=
+    else
+        CPU_ARCH_TAG=$CPU_ARCH
+    fi
+
+    if test -n "$USE_DEBUG_RTL"; then
+        OBJDIR_SUFFIX=OBJD
+    else
+        OBJDIR_SUFFIX=OBJ
+    fi
+
+    OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
+    OBJDIR='${OBJDIR_NAME}'
+
+    OS_DLLFLAGS='-nologo -DLL -SUBSYSTEM:WINDOWS -PDB:NONE'
+
+    case "$MOZ_WIN32_TARGET" in
     WINNT)
-	    DEFINES="$DEFINES -DWIN32 -DWINNT -DWin32_Winsock"
 	    MDCPUCFG_H=_winnt.cfg
 	    ;;
     WIN95)
-	    DEFINES="$DEFINES -UWINNT -DWIN32 -DWIN95 -DWin32_Winsock -D_PR_GLOBAL_THREADS_ONLY"
 	    MDCPUCFG_H=_win95.cfg
 	    ;;
     WIN16)
-	    DEFINES="$DEFINES -UWINNT"
 	    MDCPUCFG_H=_win16.cfg
 	    ;;
     *)
-	    AC_MSG_ERROR([Missing MOZ_TARGET for ${target}.  Use --enable-target to set.])
+	    AC_MSG_ERROR([Missing MOZ_WIN32_TARGET for ${target}.  Use --enable-win32-target to set.])
    	;;
     esac
 
@@ -765,6 +973,7 @@ case "$target" in
 	    AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	    ;;
     esac
+
     ;;
 
 *-nto*)
@@ -870,6 +1079,7 @@ if test "$enable_shared" = no; then
     MKSHLIB=
 fi
 
+if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl ========================================================
 dnl Check for system libraries
 dnl ========================================================
@@ -1014,6 +1224,8 @@ case "$target" in
     ;;
 esac
 
+fi # SKIP_LIBRARY_CHECKS
+
 AC_ARG_ENABLE(cplus,
     [  --enable-cplus          Use cplus for whatever reason],
     [ if test "$enableval" = "yes"; then
@@ -1063,7 +1275,7 @@ if test -n "$USE_PTHREADS"; then
     fi
 
     case "$target" in
-    *-mingw*|*-cygwin*|*-uwin*)
+    *-mingw*|*-cygwin*|*-uwin*|*-msvc*)
 	    ;;
     *-solaris*)
 	    AC_DEFINE(_REENTRANT)
@@ -1131,7 +1343,7 @@ case "$target" in
         AC_DEFINE(_POSIX_C_SOURCE=199506L)
     fi
     ;;
-*-mingw*|*-cygwin*|*-uwin*)
+*-mingw*|*-cygwin*|*-uwin*|*-msvc*)
     dnl win32 does not use pthreads
     USE_PTHREADS=
     _PTHREAD_LDFLAGS=
@@ -1162,9 +1374,11 @@ esac
 
 OS_LIBS="$_PTHREAD_LDFLAGS $OS_LIBS"
 
+if test -z "$SKIP_LIBRARY_CHECKS"; then
 AC_CHECK_FUNC(dlopen,,[
     AC_CHECK_LIB(dl, dlopen, [OS_LIBS="-ldl $OS_LIBS"])
 ])
+fi
 
 dnl If the user passed in arg to --enable-optimize,
 dnl make sure that we use it.
@@ -1212,7 +1426,7 @@ AC_SUBST(USE_NSPR_THREADS)
 AC_SUBST(NSPR_VERSION)
 AC_SUBST(NSPR_MODNAME)
 AC_SUBST(MDCPUCFG_H)
-AC_SUBST(MOZ_TARGET)
+AC_SUBST(MOZ_WIN32_TARGET)
 AC_SUBST(PR_MD_CSRCS)
 AC_SUBST(PR_MD_ASFILES)
 AC_SUBST(PR_MD_ARCH_DIR)
@@ -1254,6 +1468,10 @@ AC_SUBST(OBJDIR)
 AC_SUBST(OBJDIR_NAME)
 AC_SUBST(NSINSTALL)
 AC_SUBST(OPTIMIZER)
+AC_SUBST(RC)
+AC_SUBST(CPU_ARCH_TAG)
+AC_SUBST(DLLFLAGS)
+AC_SUBST(OS_DLLFLAGS)
 
 dnl ========================================================
 dnl Generate output files.

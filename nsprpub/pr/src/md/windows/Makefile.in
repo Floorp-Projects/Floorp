@@ -43,7 +43,7 @@ include $(MOD_DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 ifdef USE_AUTOCONF
-OS_TARGET=$(MOZ_TARGET)
+OS_TARGET=$(MOZ_WIN32_TARGET)
 endif
 
 ifeq ($(OS_TARGET), WIN16)
