@@ -58,8 +58,8 @@ nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 
 nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
 {
-  if (mPixmap)
 #ifdef NS_GTK_REF
+  if (mPixmap)
     ::gdk_pixmap_unref(mPixmap);
 #endif
   if (mImage)
@@ -159,7 +159,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 
   }
 */
-  ::gdk_image_destroy(mImage);
+  if (mImage)
+    ::gdk_image_destroy(mImage);
   mImage = nsnull;
 
   mLocked = PR_FALSE;
@@ -177,6 +178,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: GetDimensions(PRUint32 *aWidth, PRUint32 *a
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: IsOffscreen(PRBool *aOffScreen)
 {
+  *aOffScreen = mIsOffscreen;
   return NS_OK;
 }
 
@@ -196,7 +198,9 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 {
   mGC = aGC;
   mPixmap = aDrawable;
-
+// this is definatly going to be on the screen, as it will be the window of a
+// widget or something.
+  mIsOffscreen = PR_FALSE;
   return NS_OK;
 }
 
@@ -211,7 +215,11 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
   mHeight = aHeight;
   mFlags = aFlags;
 
+// we can draw on this offscreen because it has no parent
+  mIsOffscreen = PR_TRUE;
+
   mPixmap = ::gdk_pixmap_new(nsnull, mWidth, mHeight, mDepth);
+  g_print("pixmap is not going to be freed\n");
 
   return NS_OK;
 }
@@ -233,6 +241,11 @@ GdkGC *nsDrawingSurfaceGTK::GetGC(void)
   return mGC;
 }
 
+/* below are utility functions used mostly for nsRenderingContext and nsImage
+ * to plug into gdk_* functions for drawing.  You should not set a pointer
+ * that might hang around with the return from these.  instead use the ones
+ * above.  pav
+ */
 GdkDrawable *nsDrawingSurfaceGTK::GetDrawable(void)
 {
   return mPixmap;

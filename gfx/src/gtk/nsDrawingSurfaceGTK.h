@@ -48,10 +48,16 @@ public:
 
   NS_IMETHOD Init(GdkDrawable *aDrawable, GdkGC *aGC);
   NS_IMETHOD Init(GdkGC *aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
+
+/* get the GC and manage the GdkGC's refcount */
   NS_IMETHOD GetGC(GdkGC *aGC);
   NS_IMETHOD ReleaseGC(void);
 
-  // things that are useful to me.
+/* below are utility functions used mostly for nsRenderingContext and nsImage
+ * to plug into gdk_* functions for drawing.  You should not set a pointer
+ * that might hang around with the return from these.  instead use the ones
+ * above.  pav
+ */
   GdkGC *GetGC(void);
   GdkDrawable *GetDrawable(void);
 
@@ -64,6 +70,7 @@ private:
   PRUint32      mWidth;
   PRUint32      mHeight;
   PRUint32	mFlags;
+  PRBool	mIsOffscreen;
 
   /* for locks */
   GdkImage	*mImage;
