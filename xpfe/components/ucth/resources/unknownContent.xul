@@ -1,11 +1,21 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
 
-<!DOCTYPE window> 
+<!DOCTYPE window
+[
+<!ENTITY unknownWindow.title "Unknown File Type"> 
+<!ENTITY startDownload "You have started to download a file of type">
+<!ENTITY contentType.label "contentType goes here"> 
+<!ENTITY dialogMore.label "More Info..."> 
+<!ENTITY dialogPick.label "Pick App..."> 
+<!ENTITY dialogSave.label "Save File..."> 
+<!ENTITY dialogCancel.label "Cancel"> 
+
+]> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="Unknown File Type"
+        title="&unknownWindow.title;"
         width="425"
         height="180"
         onload="onLoad()">
@@ -78,25 +88,25 @@
     <html:table style="width:100%;">
         <html:tr>
             <html:td colspan="4">
-                You have started to download a file of type
+                &startDownload;
                 <html:div id="dialog.contentType" style="display:inline">
-                    contentType goes here
+                    &contentType.label;
                 </html:div>
             </html:td>
         </html:tr>
     
         <html:tr>
             <html:td style="width:25%">
-                <html:button id="dialog.more" onclick="more()" disabled="">More Info...</html:button>
+                <html:button id="dialog.more" onclick="more()" disabled="">&dialogMore.label;</html:button>
             </html:td>
             <html:td style="width:25%">
-                <html:button id="dialog.pick" onclick="pick()" disabled="">Pick App...</html:button>
+                <html:button id="dialog.pick" onclick="pick()" disabled="">&dialogPick.label;</html:button>
             </html:td>
             <html:td style="width:25%">
-                <html:button id="dialog.save" onclick="save()">Save File...</html:button>
+                <html:button id="dialog.save" onclick="save()">&dialogSave.label;</html:button>
             </html:td>
             <html:td style="width:25%">
-                <html:button id="dialog.cancel" onclick="cancel()">Cancel</html:button>
+                <html:button id="dialog.cancel" onclick="cancel()">&dialogCancel.label;</html:button>
             </html:td>
         </html:tr>
     </html:table>
