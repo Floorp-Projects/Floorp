@@ -229,7 +229,10 @@ public:
     void               GrabPointer  (void);
     void               GrabKeyboard (void);
     void               ReleaseGrabs (void);
+
     void               SetPluginType(PRBool aIsXembed);
+    void               SetNonXEmbedPluginFocus(void);
+    void               LoseNonXEmbedPluginFocus(void);
 
     Window              mOldFocusWindow;
 
