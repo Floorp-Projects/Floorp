@@ -72,7 +72,7 @@
      </hbox>
      <radiogroup id="smtp.trySSL"
                 prefstring="mail.smtpserver.%serverkey%.try_ssl"
-                oncommand="selectProtocol();">
+                oncommand="selectProtocol(0);">
        <hbox style="margin-left: 2em">
          <radio value="0" label="&neverSecure.label;" id="smtp.neverSecure"/>
          <radio value="1" label="&sometimesSecure.label;" id="smtp.sometimesSecure"/>

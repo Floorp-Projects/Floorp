@@ -92,7 +92,7 @@ function initSmtpSettings(server) {
 
     onUseUsername(gSmtpUseUsername, false);
     updateControls();
-    selectProtocol();
+    selectProtocol(1);
     if (gSmtpService.defaultServer)
       onLockPreference();
 }
@@ -183,14 +183,16 @@ function updateControls() {
         gSmtpTrySSL.disabled = gSmtpTrySSL.disabled;
 }
 
-function selectProtocol() {
+function selectProtocol(init) {
+  prevDefaultPort = gDefaultPort.value;
+
   if (gSmtpTrySSL.selectedItem == gSmtpS) {
     gDefaultPort.value = "465";
-    if(gPort.value == "" || gPort.value == "25")
+    if(gPort.value == "" || (!init && gPort.value == "25" && prevDefaultPort != gDefaultPort.value))
         gPort.value = gDefaultPort.value;
   } else {
     gDefaultPort.value = "25";
-    if(gPort.value == "" || gPort.value == "465")
+    if(gPort.value == "" || (!init && gPort.value == "465" && prevDefaultPort != gDefaultPort.value))
         gPort.value = gDefaultPort.value;
   }
 }
