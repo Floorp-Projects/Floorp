@@ -45,7 +45,6 @@ CPPSRCS=					\
         nsRootBoxFrame.cpp        \
         nsStackLayout.cpp        \
         nsSplitterFrame.cpp        \
-        nsTitleFrame.cpp        \
 		nsButtonBoxFrame.cpp \
         nsSpringFrame.cpp \
     	nsSliderFrame.cpp \
@@ -73,10 +72,8 @@ CPPSRCS=					\
   nsXULTreeSliceFrame.cpp \
   nsXULTreeCellFrame.cpp \
   nsTreeLayout.cpp \
-	nsSpinnerFrame.cpp \
 	nsScrollbarFrame.cpp \
         nsScrollbarButtonFrame.cpp \
-	nsFontPickerFrame.cpp \
 	nsMenuPopupFrame.cpp \
 	nsMenuFrame.cpp \
 	nsMenuBarFrame.cpp \
@@ -110,7 +107,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsMenuBarFrame.obj \
 	    .\$(OBJDIR)\nsMenuFrame.obj \
         .\$(OBJDIR)\nsSplitterFrame.obj    \
-        .\$(OBJDIR)\nsTitleFrame.obj    \
 		.\$(OBJDIR)\nsButtonBoxFrame.obj    \
         .\$(OBJDIR)\nsSpringFrame.obj    \
     	.\$(OBJDIR)\nsSliderFrame.obj \
@@ -138,10 +134,8 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsXULTreeSliceFrame.obj \
   .\$(OBJDIR)\nsXULTreeCellFrame.obj \
   .\$(OBJDIR)\nsTreeLayout.obj \
-	.\$(OBJDIR)\nsSpinnerFrame.obj \
 	.\$(OBJDIR)\nsScrollbarFrame.obj \
 	.\$(OBJDIR)\nsScrollbarButtonFrame.obj \
-	.\$(OBJDIR)\nsFontPickerFrame.obj \
 	.\$(OBJDIR)\nsMenuPopupFrame.obj \
 	.\$(OBJDIR)\nsMenuBarListener.obj \
 	.\$(OBJDIR)\nsMenuListener.obj \

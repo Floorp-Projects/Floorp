@@ -66,7 +66,6 @@ CPPSRCS		= \
         nsStackFrame.cpp \
         nsSpringFrame.cpp \
 		nsTitledBoxFrame.cpp \
-		nsTitleFrame.cpp \
 		nsFrameNavigator.cpp \
 		nsSplitterFrame.cpp \
 		nsGrippyFrame.cpp \
@@ -74,12 +73,10 @@ CPPSRCS		= \
 		nsBoxFrame.cpp \
 		nsProgressMeterFrame.cpp \
 		nsTreeIndentationFrame.cpp \
-                nsTreeItemDragCapturer.cpp \
-                nsSpinnerFrame.cpp \
+    nsTreeItemDragCapturer.cpp \
 		nsScrollbarFrame.cpp \
 		nsScrollbarButtonFrame.cpp \
 		nsSliderFrame.cpp \
-		nsFontPickerFrame.cpp \
 		nsMenuPopupFrame.cpp \
 		nsMenuFrame.cpp \
 		nsMenuBarFrame.cpp \
