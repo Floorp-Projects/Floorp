@@ -2425,7 +2425,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
         // Hold a refcount to the observer. The continued existence of the observer will
         // delay deletion of this view hierarchy should the event want to cause its
         // destruction in, say, some JavaScript event handler.
-        nsCOMPtr<nsIViewObserver> vobs = GetViewObserver();
+        nsCOMPtr<nsIViewObserver> vobs = vVM->GetViewObserver();
         if (vobs) {
           vobs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
         }
