@@ -132,7 +132,8 @@ sub Checkout()
 		#//$session->checkout("mozilla/lib/libstyle") || die "checkout failure";
 		#//$session->checkout("mozilla/lib/libpwcac") || die "checkout failure";
 		$session->checkout("mozilla/modules/libpref",$LIBPREF_BRANCH) || die "checkout failure";
-		$session->checkout("mozilla/modules/plugin",$PLUGIN_BRANCH) || die "checkout failure";
+		#//$session->checkout("mozilla/modules/plugin",$PLUGIN_BRANCH) || die "checkout failure";
+		$session->checkout("mozilla/modules/plugin") || die "checkout failure";
 	}
 	if ($main::pull{xpcom})
 	{
