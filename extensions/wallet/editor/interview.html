@@ -43,6 +43,7 @@ your Form Manager Information here</font></font></font></h3></center>
    if (appCore) {
       status = appCore.walletRequestToCapture(window._content);
 
+      /* need to localize the following strings */
       if (status == -1) { /* UnableToCapture */
         alert("UnableToCapture");
       } else if (status == 0) { /* Captured */
