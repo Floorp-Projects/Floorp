@@ -1718,7 +1718,7 @@ void CRDFOutliner::OnPaint()
 
 	// Divider color
 	m_DividerColor = RGB(255,255,255);
-	m_bDrawDividers = FALSE;
+	m_bDrawDividers = TRUE;
 
 	HPALETTE pOldPalette = NULL;
 	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(pdc.m_hDC, RASTERCAPS) & RC_PALETTE))
