@@ -140,6 +140,7 @@ public:
 	NS_IMETHOD GetSizeOnDisk(PRUint32 * size);
         
   NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
+	NS_IMETHOD GetCanSubscribe(PRBool *aResult);	
 
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);

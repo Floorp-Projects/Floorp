@@ -18,10 +18,12 @@
  * Rights Reserved.
  */
 
-treeitem[Subscribed="false"] > treerow > treecell.subscribedcol > .tree-button {
+@import url(chrome://global/skin/global.css);
+
+.subscribedcol {
  list-style-image: url("chrome://messenger/skin/dot.gif");
 }
 
-treeitem[Subscribed="true"] > treerow > treecell.subscribedcol > .tree-button {
+.subscribedcol[value="true"] {
  list-style-image: url("chrome://messenger/skin/check.gif");
 }     

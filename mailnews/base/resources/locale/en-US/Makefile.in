@@ -35,6 +35,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/newFolderNameDialog.dtd \
 		$(srcdir)/subscribeDialog.dtd \
 		$(srcdir)/subscribe.dtd \
+		$(srcdir)/subscribe.properties \
 		$(srcdir)/sidebar-messenger.dtd \
 		$(srcdir)/sidebar-messenger-rdf.dtd \
 		$(srcdir)/msgFolderPickerOverlay.dtd	\

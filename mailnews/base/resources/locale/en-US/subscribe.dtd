@@ -22,8 +22,6 @@ Rights Reserved.
 <!ENTITY unsubscribeButton.label			"Unsubscribe">
 <!ENTITY refreshButton.label				"Refresh">
 <!ENTITY stopButton.label				"Stop">
-<!ENTITY folders.label						"Newsgroup:">
 <!ENTITY server.label						"Server:">
-<!ENTITY foldersHeader.label				"newsgroup">
-<!ENTITY subscribedHeader.label				"subscribed">
-<!ENTITY messagesHeader.label				"messages">
+<!ENTITY subscribedHeader.label				"Subscribe">
+<!ENTITY messagesHeader.label				"Messages">

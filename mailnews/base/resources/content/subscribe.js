@@ -11,11 +11,31 @@ function Stop()
 	dump("we need to stop the news url that is running.\n");
 }
 
+var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
+
+function SetServerTypeSpecificTextValues()
+{
+	var serverType = GetMsgFolderFromUri(gServerURI).server.type;
+	dump("serverType="+serverType+"\n");
+	
+	/* set the server specific ui elements */
+    var element = document.getElementById("foldertextlabel");
+	var stringName = "foldertextfor-" + serverType;
+	var stringval = Bundle.GetStringFromName(stringName);
+	element.setAttribute('value',stringval);
+
+	stringName = "foldersheaderfor-" + serverType;
+	stringval = Bundle.GetStringFromName(stringName);
+    element = document.getElementById("foldersheaderlabel");
+	element.setAttribute('value',stringval);
+}
+
 function onServerClick(event)
 {
 	var item = event.target;
 	gServerURI = item.id;
 
+	SetServerTypeSpecificTextValues();
 	SetUpTree();
 }
 
@@ -25,8 +45,10 @@ function SetUpServerMenu()
 
     var serverMenu = document.getElementById("serverMenu");
     var menuitems = serverMenu.getElementsByAttribute("id", gServerURI);
-    
+
     serverMenu.selectedItem = menuitems[0];
+
+	SetServerTypeSpecificTextValues();
 }
 
 var MySubscribeListener = {

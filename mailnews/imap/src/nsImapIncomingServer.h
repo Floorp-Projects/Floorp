@@ -30,12 +30,14 @@
 #include "nsIImapServerSink.h"
 #include "nsIStringBundle.h"
 #include "nsIMsgLogonRedirector.h"
+#include "nsISubscribableServer.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsImapIncomingServer : public nsMsgIncomingServer,
                              public nsIImapIncomingServer,
 							              public nsIImapServerSink,
-							              public nsIMsgLogonRedirectionRequester
+							              public nsIMsgLogonRedirectionRequester,
+										  public nsISubscribableServer
                              
 {
 public:
@@ -51,7 +53,8 @@ public:
 	NS_DECL_NSIIMAPINCOMINGSERVER
 	NS_DECL_NSIIMAPSERVERSINK
 	NS_DECL_NSIMSGLOGONREDIRECTIONREQUESTER
-    
+    NS_DECL_NSISUBSCRIBABLESERVER
+
 	NS_IMETHOD PerformBiff();
 	NS_IMETHOD CloseCachedConnections();
 
@@ -82,6 +85,7 @@ private:
 	PRBool						m_waitingForConnectionInfo;
 	PRInt32						m_redirectedLogonRetries;
 	nsCOMPtr<nsIMsgLogonRedirector> m_logonRedirector;
+    nsCOMPtr <nsISubscribeListener> mSubscribeListener;	
 };
 
 

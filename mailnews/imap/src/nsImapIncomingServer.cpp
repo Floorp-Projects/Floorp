@@ -18,6 +18,11 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Bienvenu <bienvenu@netscape.com>
+ *   Jeff Tsai <jefft@netscape.com>
+ *   Scott MacGregor <mscott@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
+ *   Alecf Flett <alecf@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -66,33 +71,13 @@ static NS_DEFINE_CID(kMsgLogonRedirectorServiceCID, NS_MSGLOGONREDIRECTORSERVICE
 NS_IMPL_ADDREF_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
 NS_IMPL_RELEASE_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
 
-NS_IMETHODIMP nsImapIncomingServer::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-	*aInstancePtr = nsnull;
+NS_INTERFACE_MAP_BEGIN(nsImapIncomingServer)
+	NS_INTERFACE_MAP_ENTRY(nsIImapServerSink)
+	NS_INTERFACE_MAP_ENTRY(nsIImapIncomingServer)
+	NS_INTERFACE_MAP_ENTRY(nsIMsgLogonRedirectionRequester)
+	NS_INTERFACE_MAP_ENTRY(nsISubscribableServer)
+NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
-    if (aIID.Equals(NS_GET_IID(nsIImapServerSink)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIImapServerSink*, this);
-	}              
-	else if(aIID.Equals(NS_GET_IID(nsIImapIncomingServer)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIImapIncomingServer*, this);
-	}
-	else if (aIID.Equals(NS_GET_IID(nsIMsgLogonRedirectionRequester)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIMsgLogonRedirectionRequester*, this);
-	}
-	if(*aInstancePtr)
-	{
-		AddRef();
-		return NS_OK;
-	}
-
-	return nsMsgIncomingServer::QueryInterface(aIID, aInstancePtr);
-}
-
-                            
 nsImapIncomingServer::nsImapIncomingServer()
 {    
     NS_INIT_REFCNT();
@@ -1761,4 +1746,33 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
     }
     return rv;
 
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
+{
+	nsresult rv;
+#ifdef DEBUG_sspitzer
+	printf("in PopulateSubscribeDatasource()\n");
+#endif
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetSubscribeListener(nsISubscribeListener *aListener)
+{
+	if (!aListener) return NS_ERROR_NULL_POINTER;
+	mSubscribeListener = aListener;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
+{
+	if (!aListener) return NS_ERROR_NULL_POINTER;
+	if (mSubscribeListener) {
+			*aListener = mSubscribeListener;
+			NS_ADDREF(*aListener);
+	}
+	return NS_OK;
 }

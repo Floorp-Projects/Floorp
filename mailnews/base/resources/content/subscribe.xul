@@ -19,8 +19,6 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/subscribe.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -39,6 +37,7 @@ Rights Reserved.
         onload="SubscribeOnLoad()"
         style="padding:10px"> 
         
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/subscribe.js"/>
 
@@ -48,18 +47,22 @@ Rights Reserved.
 		<box orient="vertical" flex="100%">
 			<box orient="horizontal">
 				<text value="&server.label;"/>
-    			<menulist oncommand="onServerClick(event);" id="serverMenu">
-      				<menupopup rdf:datasources="rdf:msgaccountmanager"
+    			<menulist oncommand="onServerClick(event);" id="serverMenu"
+						rdf:datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+						rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
                  		rdf:containment="http://home.netscape.com/NC-rdf#child"
                  		ref="msgaccounts:/">
-        				<template>
-          					<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-        				</template>
-      				</menupopup>
+        			<template>
+						<rule NC:CanSubscribe="true">
+      						<menupopup>
+          						<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+      						</menupopup>
+						</rule>
+        			</template>
     			</menulist>
  			</box>
 			<box orient="horizontal" flex="100%">
-				<text class="label" value="&folders.label;" for="name"/>
+				<text id="foldertextlabel" class="label" value="..." for="name"/>
 				<textfield id="name"/>
 			</box>
 		</box>
@@ -68,7 +71,7 @@ Rights Reserved.
 		<box orient="vertical" flex="100%">
 
 <tree style="width:100px;" flex="100%"
-	      		class="inset"
+				class="inset"
 				id="subscribetree"
 				datasources="rdf:subscribe"
 				onclick="SubscribeOnClick(event);"> 
@@ -78,7 +81,7 @@ Rights Reserved.
 				<treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed">
 					<treerow>
 						 <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-						<treecell allowevents="true" class="subscribedcol image" onclick="return top.ReverseStateFromNode(event.target.parentNode.parentNode.parentNode)"/>
+						<treecell class="treecell-image subscribedcol" allowevents="true" onclick="return top.ReverseStateFromNode(event.target.parentNode.parentNode.parentNode)" value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
 						<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 					</treerow>
 				</treeitem>
@@ -94,7 +97,7 @@ Rights Reserved.
 
 	<treehead>	
 		<treerow id="headRow">
-			<treecell value="&foldersHeader.label;" />
+			<treecell id="foldersheaderlabel" value="..." />
 			<treecell value="&subscribedHeader.label;"/>
 			<treecell value="&messagesHeader.label;"/>
 		</treerow>

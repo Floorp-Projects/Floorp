@@ -1081,6 +1081,21 @@ nsImapMailFolder::GetCanCreateSubfolders(PRBool *aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::GetCanSubscribe(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+
+  PRBool isImapServer = PR_FALSE;
+  nsresult rv = GetIsServer(&isImapServer);
+  if (NS_FAILED(rv)) return rv;
+ 
+  // you can only subscribe to imap servers, not imap folders
+  *aResult = isImapServer;
+  return NS_OK;
+}
+
 nsresult nsImapMailFolder::GetServerKey(char **serverKey)
 {
   // look for matching imap folders, then pop folders
