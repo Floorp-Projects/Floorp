@@ -2019,6 +2019,8 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
           case NS_STYLE_HINT_CONTENT:
             restyle = PR_TRUE;
             break;
+          case NS_STYLE_HINT_AURAL:
+            break;
         }
       }
       else if (nsHTMLAtoms::color == aAttribute) {
