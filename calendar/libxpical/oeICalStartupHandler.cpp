@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "plstr.h"
+#include "nsString.h"
 #include "oeICalStartupHandler.h"
 
 NS_IMPL_ISUPPORTS1(oeICalStartupHandler, nsICmdLineHandler);
