@@ -723,8 +723,10 @@ NS_IMETHODIMP nsDocAccessible::OnStateChange(nsIWebProgress *aWebProgress,
                                              PRUint32 aStateFlags,
                                              nsresult aStatus)
 {
-  NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Should not be listening to other OnStateChange types");
-  NS_ASSERTION((aStateFlags & STATE_START) || (aStateFlags & STATE_STOP) , "Should not be listening to other OnStateChange types");
+  if (!(aStateFlags & (STATE_START | STATE_STOP))) {
+    return NS_OK;   // We don't care about STATE_TRANSFERRING
+  }
+  NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Should not be listening to other OnStateChange types (should be document)");
   if (!mWeakShell || !mDocument) {
     return NS_OK;
   }
