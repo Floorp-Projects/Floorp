@@ -237,6 +237,8 @@ pref("browser.chrome.toolbar_tips",         true);
 // 0 = Pictures Only, 1 = Text Only, 2 = Pictures and Text
 pref("browser.chrome.toolbar_style",        2);
 
+pref("browser.xul.error_pages.enabled", true);
+
 // Dialog modality issues
 pref("browser.prefWindowModal", true);
 pref("browser.show_about_as_stupid_modal_window", false);
