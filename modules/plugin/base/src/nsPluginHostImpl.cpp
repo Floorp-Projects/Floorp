@@ -1047,6 +1047,7 @@ nsPluginHostImpl::~nsPluginHostImpl()
 #ifdef NS_DEBUG
 printf("killing plugin host\n");
 #endif
+  Destroy();
   if (nsnull != mPluginPath)
   {
     PR_Free(mPluginPath);
