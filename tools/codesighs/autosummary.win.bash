@@ -85,6 +85,7 @@ fi
 EXCLUDE_PATTERN_01="test"
 EXCLUDE_PATTERN_02="tools"
 EXCLUDE_PATTERN_03="dbg"
+EXCLUDE_PATTERN_04="sample"
 
 EXCLUDE_NAME_01="mkdepend.map"
 EXCLUDE_NAME_02="IBMNEC.map"
@@ -116,7 +117,7 @@ find ./mozilla -type f -name *.map > $ALLMAPSFILE
 #   Reduce the map files to a revelant set.
 #
 NOPATMAPSFILE="$TMPDIR/nopatmaps.list"
-grep -vi $EXCLUDE_PATTERN_01 < $ALLMAPSFILE | grep -vi $EXCLUDE_PATTERN_02 | grep -vi $EXCLUDE_PATTERN_03 > $NOPATMAPSFILE
+grep -vi $EXCLUDE_PATTERN_01 < $ALLMAPSFILE | grep -vi $EXCLUDE_PATTERN_02 | grep -vi $EXCLUDE_PATTERN_03 | grep -vi $EXCLUDE_PATTERN_04 > $NOPATMAPSFILE
 MAPSFILE="$TMPDIR/maps.list"
 grep -vi $EXCLUDE_NAME_01 < $NOPATMAPSFILE | grep -vi $EXCLUDE_NAME_02 > $MAPSFILE
 
