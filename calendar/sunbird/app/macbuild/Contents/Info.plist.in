@@ -16,7 +16,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.sunbird</string>
 	<key>CFBundleInfoDictionaryVersion</key>
-	<string>APP_VERSION</string>
+	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>Sunbird</string>
 	<key>CFBundlePackageType</key>

@@ -13,7 +13,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.xulrunner</string>
 	<key>CFBundleInfoDictionaryVersion</key>
-	<string>APP_VERSION</string>
+	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>XULRunner</string>
 	<key>CFBundlePackageType</key>

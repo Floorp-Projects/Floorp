@@ -80,7 +80,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.firefox</string>
 	<key>CFBundleInfoDictionaryVersion</key>
-	<string>APP_VERSION</string>
+	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>Firefox</string>
 	<key>CFBundlePackageType</key>
