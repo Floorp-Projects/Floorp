@@ -88,7 +88,11 @@
     <!-- Downloaded Files List -->
     <expander id="downloads" label="&downloads.label;" clearlabel="&clearDownloads.label;" persist="open">
       <description>&downloadsDescription.label;</description>
-      <!-- XXX - need option to disable download manager list, and number of days used --> 
+      
+      <hbox align="center" id="downloadsRetentionBox">
+        <description>&downloadsRetentionPolicy.label;</description>
+      </hbox>
+
     </expander>
 
     <!-- Cookies -->
@@ -137,5 +141,15 @@
     <label>&clearAllDescription.label;</label>
     <button label="&clearAll.label;" oncommand="PrivacyPanel.clearAll();"/>
   </hbox>
+
+  <menulist id="downloadsRetentionPolicy" hidden="true"
+            preftype="int" prefstring="browser.download.retention" prefdefval="0">
+    <menupopup>
+      <menuitem value="0" label="&downloadsRemoveImmediately.label;"/>
+      <menuitem value="1" label="&downloadsRemoveExit.label;"/>
+      <menuitem value="2" label="&downloadsRemoveManually.label;"/>
+    </menupopup>
+  </menulist>
+
 </page>
     

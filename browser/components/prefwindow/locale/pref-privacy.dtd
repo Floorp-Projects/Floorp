@@ -35,7 +35,11 @@
 <!ENTITY clearFormfill.label               "Clear">
 
 <!ENTITY downloads.label                   "Download Manager History">
-<!ENTITY downloadsDescription.label        "The Download Manager keeps track of recently downloaded files. XXXben - blake, we need at the very least a toggle here, probably a retention window as well">
+<!ENTITY downloadsDescription.label        "The Download Manager keeps track of recently downloaded files. THESE OPTIONS DO NOT WORK YET.">
+<!ENTITY downloadsRetentionPolicy.label    "Remove files from the Download Manager:">
+<!ENTITY downloadsRemoveImmediately.label  "Upon successful download">
+<!ENTITY downloadsRemoveExit.label         "When Firebird exits">
+<!ENTITY downloadsRemoveManually.label     "Manually">
 <!ENTITY clearDownloads.label              "Clear">
 
 <!ENTITY passwords.label                   "Saved Passwords">

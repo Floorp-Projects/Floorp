@@ -38,7 +38,8 @@
 
 var _elementIDs = ["histDay", "browserCacheDiskCache", "enableCookies",
                     "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
-                    "enableCookiesButAskFirst", "enableFormFill", "enablePasswords"];
+                    "enableCookiesButAskFirst", "enableFormFill", "enablePasswords", 
+                    "downloadsRetentionPolicy"];
 
 function Startup() {
   var cookiesEnabled = document.getElementById("enableCookies").checked;
@@ -78,6 +79,25 @@ function Startup() {
   
   var categories = document.getElementById("privacyCategories");
   categories.addEventListener("clear", PrivacyPanel.clear, false);
+  
+  // XXXben - we do this because of a bug with the download retention window menulist. 
+  // The bug is that when the Options dialog opens, or you switch from another panel to
+  // this panel, style is incompletely resolved on the menulist's display area anonymous
+  // content - it is resolved on the all a/c subcomponents *except* menulist-label (the
+  // text nodes)... and (as a result, I think) when style is resolved later as the menulist
+  // goes from visbility: collapse to being visible, the menulist-label has the wrong parent
+  // style context which causes the style context parent checking to complain heartily. The
+  // symptom is that the menulist is not initialized with the currently selected value from
+  // preferences. I suspect this is related to the fact that the menulist is inserted into
+  // an XBL insertion point, as this problem does not occur when the menulist is placed outside
+  // the bound element. dbaron is helping me with this with a reduced test case, but in 
+  // the meantime, I'm working around this bug by placing the menulist outside the bound element
+  // until it is completely initialized and then scooting it in, which is what this code does. 
+  var drb = document.getElementById("downloadsRetentionBox");
+  var drp = document.getElementById("downloadsRetentionPolicy");
+  drp.removeAttribute("hidden");
+  document.documentElement.removeChild(drp);
+  drb.appendChild(drp);
 }
 
 function unload()
