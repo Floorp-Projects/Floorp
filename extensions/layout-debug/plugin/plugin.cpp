@@ -45,6 +45,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsMemory.h"
 #include "nsNetUtil.h"
+#include "nsString.h"
 
 // service manager which will give the access to all public browser services
 // we will use memory service as an illustration
@@ -198,7 +199,7 @@ nsXPIDLCString  dirPath;
 nsresult        rv;
 
   nsCOMPtr<nsILocalFile> theDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  rv = NS_InitFileFromURLSpec(theDir, aFilePath);
+  rv = NS_InitFileFromURLSpec(theDir, nsDependentCString(aFilePath));
 
   if (NS_FAILED(rv)){
     mIter = 0;
@@ -236,13 +237,20 @@ char*                 URLName;
       break;
     nsXPIDLCString filePath;
     char* afilepath;
-    rv = dirEntry->GetPath(&afilepath);
+    nsCAutoString path;
+
+
+    rv = dirEntry->GetPath(path);
     if (NS_FAILED(rv))
       continue;
 
+    afilepath =  ToNewCString(path);
+ 
     if( strstr(afilepath,".html") != 0 ) {
       *aDirName = afilepath;
-      NS_GetURLSpecFromFile(dirEntry,&URLName);
+      nsCAutoString urlname;
+      NS_GetURLSpecFromFile(dirEntry,urlname);
+      URLName = ToNewCString(urlname);
       *aDirName = URLName;
       break;
     } else {

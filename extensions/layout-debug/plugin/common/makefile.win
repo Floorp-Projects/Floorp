@@ -19,7 +19,24 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..\..
+DEPTH=..\..\..\..
+
+REQUIRES=   xpcom \
+            dom \
+            necko\
+            string \
+            widget \
+            locale \
+            view \
+            pref \
+            gfx2 \
+            imglib2 \
+            unicharutil \
+            java \
+            debug \
+            plugin \
+            $(NULL)
+
 include <$(DEPTH)\config\config.mak>
 
 MAKE_OBJ_TYPE	= LIB

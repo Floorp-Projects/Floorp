@@ -22,7 +22,7 @@
 DEPTH=..\..\..
 MODULE = npdebug
 REQUIRES=   xpcom \
-			      dom \
+            dom \
             necko\
             string \
             widget \
@@ -34,6 +34,7 @@ REQUIRES=   xpcom \
             unicharutil \
             java \
             debug \
+            plugin \
             $(NULL)
 
 include <$(DEPTH)\config\config.mak>
@@ -41,9 +42,9 @@ include <$(DEPTH)\config\config.mak>
 
 
 
-XPIDLSRCS = 				      \
-	.\nsIDebugPlugin.idl    \
-	$(NULL)
+XPIDLSRCS = \
+            .\nsIDebugPlugin.idl \
+            $(NULL)
 
 MAKE_OBJ_TYPE	= DLL
 DLLNAME = npdebug
@@ -51,16 +52,17 @@ RESFILE = npdebug.res
 DEFFILE = npdebug.def
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-CFLAGS = $(CFLAGS) -I.\include 
+CFLAGS = $(CFLAGS) -I.\include
+          
 
-OBJS = \
+OBJS =  \
   .\$(OBJDIR)\plugin.obj \
   .\$(OBJDIR)\nsScriptablePeer.obj \
   $(NULL)
 
 LLIBS = \
   .\common\$(OBJDIR)\plugingate.lib \
-  $(DIST)\lib\xpcom.lib	                \
+  $(DIST)\lib\xpcom.lib \
   $(NULL)
 
 WIN_LIBS = version.lib
@@ -71,12 +73,12 @@ include <$(DEPTH)\config\rules.mak>
 libs:: $(DLL)
   $(RM) $(XPDIST)\idl\nsIDebugPlugin.idl 
   $(RM) $(XPDIST)\include\nsIDebugPlugin.h 
-#  $(RM) $(DIST)\bin\components\$(DLLNAME).xpt 
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\plugins
+# $(RM) $(DIST)\bin\components\$(DLLNAME).xpt 
+  $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\plugins
 
 
 clobber::
-	$(RM) *.sbr
+  $(RM) *.sbr
   $(RM) $(XPDIST)\idl\nsIDebugPlugin.idl 
   $(RM) $(XPDIST)\include\nsIDebugPlugin.h 
   $(RM) $(DIST)\bin\components\$(DLLNAME).xpt 
