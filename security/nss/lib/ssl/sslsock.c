@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.4 2000/09/11 22:37:12 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.5 2000/09/12 20:15:43 jgmyers%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -165,7 +165,7 @@ sslSessionIDLookupFunc  ssl_sid_lookup;
 sslSessionIDCacheFunc   ssl_sid_cache;
 sslSessionIDUncacheFunc ssl_sid_uncache;
 
-static ssl_inited = PR_FALSE;
+static PRBool ssl_inited = PR_FALSE;
 static PRDescIdentity ssl_layer_id;
 
 int                     ssl_lock_readers	= 1;	/* default true. */
@@ -997,7 +997,6 @@ ssl_Accept(PRFileDesc *fd, PRNetAddr *sockaddr, PRIntervalTime timeout)
     sslSocket  *ss;
     sslSocket  *ns 	= NULL;
     PRFileDesc *newfd 	= NULL;
-    PRFileDesc *layer 	= NULL;
     PRFileDesc *osfd;
     PRStatus    status;
 
@@ -1289,7 +1288,9 @@ ssl_GetPeerInfo(sslSocket *ss)
     /* If ssl_SocksConnect() has previously recorded the peer's IP & port,
      * use that.
      */
-    if ((ss->peer != 0) && (ss->port != 0)) {
+    if ((ss->port != 0) &&
+	((ss->peer.pr_s6_addr32[0] != 0) || (ss->peer.pr_s6_addr32[1] != 0) ||
+	 (ss->peer.pr_s6_addr32[2] != 0) || (ss->peer.pr_s6_addr32[3] != 0))) {
 	/* SOCKS code has already recorded the peer's IP addr and port.
 	 * (NOT the proxy's addr and port) in ss->peer & port.
 	 */
@@ -1304,9 +1305,14 @@ ssl_GetPeerInfo(sslSocket *ss)
 	return SECFailure;
     }
     /* we have to mask off the high byte because AIX is lame */
-    PORT_Assert((sin.inet.family & 0xff) == PR_AF_INET);
-    ci->peer = sin.inet.ip;
-    ci->port = sin.inet.port;
+    if ((sin.inet.family & 0xff) == PR_AF_INET) {
+        PR_ConvertIPv4AddrToIPv6(sin.inet.ip, &ci->peer);
+	ci->port = sin.inet.port;
+    } else {
+        PORT_Assert(sin.ipv6.family == PR_AF_INET6);
+	ci->peer = sin.ipv6.ip;
+	ci->port = sin.ipv6.port;
+    }
     return SECSuccess;
 }
 
@@ -1802,7 +1808,7 @@ ssl_NewSocket(void)
 	ss->fdx                = ssl_defaults.fdx;
 	ss->v2CompatibleHello  = ssl_defaults.v2CompatibleHello;
 	ss->detectRollBack     = ssl_defaults.detectRollBack;
-	ss->peer               = 0;
+	memset(&ss->peer, 0, sizeof(ss->peer));
 	ss->port               = 0;
 	ss->noCache            = ssl_defaults.noCache;
 	ss->peerID             = NULL;

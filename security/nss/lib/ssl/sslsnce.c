@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.3 2000/09/07 03:35:31 nelsonb%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.4 2000/09/12 20:15:43 jgmyers%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -135,7 +135,7 @@ static PRUint32 certCacheFileSize;
 */ 
 typedef struct SIDCacheEntryStr SIDCacheEntry;
 struct SIDCacheEntryStr {
-    PRUint32 addr;
+    PRIPv6Addr addr;
     PRUint32 time;
 
     union {
@@ -181,7 +181,7 @@ struct SIDCacheEntryStr {
 	 * so, force the struct size up to the next power of two.
 	 */
 	struct {
-	    unsigned char    filler[248];	/* 248 + 4 + 4 == 256 */
+	    unsigned char filler[256 - sizeof(PRIPv6Addr) - sizeof(PRUint32)];
 	} force256;
     } u;
 };
@@ -199,9 +199,8 @@ struct CertCacheEntryStr {
 
 
 static void IOError(int rv, char *type);
-static PRUint32 Offset(PRUint32 addr, unsigned char *s, unsigned nl);
+static PRUint32 Offset(const PRIPv6Addr *addr, unsigned char *s, unsigned nl);
 static void Invalidate(SIDCacheEntry *sce);
-
 /************************************************************************/
 
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
@@ -221,7 +220,6 @@ struct winInheritanceStr {
     HANDLE        certCacheFDMAP;
     HANDLE        svrCacheSem;
 };
-
 typedef struct winInheritanceStr winInheritance;
 
 static HANDLE svrCacheSem    = INVALID_HANDLE_VALUE;
@@ -748,9 +746,11 @@ ConvertFromSID(SIDCacheEntry *to, sslSessionID *from)
 		  sizeof(to->u.ssl2.cipherArg) - from->u.ssl2.cipherArg.len);
 #endif
 	SSL_TRC(8, ("%d: SSL: ConvertSID: masterKeyLen=%d cipherArgLen=%d "
-		    "time=%d addr=0x%x cipherType=%d", myPid,
+		    "time=%d addr=0x%08x%08x%08x%08x cipherType=%d", myPid,
 		    to->u.ssl2.masterKeyLen, to->u.ssl2.cipherArgLen,
-		    to->time, to->addr, to->u.ssl2.cipherType));
+		    to->time, to->addr.pr_s6_addr32[0], 
+		    to->addr.pr_s6_addr32[1], to->addr.pr_s6_addr32[2],
+		    to->addr.pr_s6_addr32[3], to->u.ssl2.cipherType));
     } else {
 	/* This is an SSL v3 session */
 
@@ -767,8 +767,10 @@ ConvertFromSID(SIDCacheEntry *to, sslSessionID *from)
 	            from->u.ssl3.sessionID,
 		    from->u.ssl3.sessionIDLength);
 
-	SSL_TRC(8, ("%d: SSL3: ConvertSID: time=%d addr=0x%x cipherSuite=%d",
-		    myPid, to->time, to->addr, to->u.ssl3.cipherSuite));
+	SSL_TRC(8, ("%d: SSL3: ConvertSID: time=%d addr=0x%08x%08x%08x%08x cipherSuite=%d",
+		    myPid, to->time, to->addr.pr_s6_addr32[0],
+		    to->addr.pr_s6_addr32[1], to->addr.pr_s6_addr32[2],
+		    to->addr.pr_s6_addr32[3], to->u.ssl3.cipherSuite));
     }
 }
 
@@ -816,9 +818,11 @@ ConvertToSID(SIDCacheEntry *from, CERTCertDBHandle * dbHandle)
 		  from->u.ssl2.masterKeyLen);
 
 	SSL_TRC(8, ("%d: SSL: ConvertToSID: masterKeyLen=%d cipherArgLen=%d "
-		    "time=%d addr=0x%x cipherType=%d",
+		    "time=%d addr=0x%08x%08x%08x%08x cipherType=%d",
 		    myPid, to->u.ssl2.masterKey.len,
-		    to->u.ssl2.cipherArg.len, to->time, to->addr,
+		    to->u.ssl2.cipherArg.len, to->time, 
+		    to->addr.pr_s6_addr32[0], to->addr.pr_s6_addr32[1],
+		    to->addr.pr_s6_addr32[2], to->addr.pr_s6_addr32[3], 
 		    to->u.ssl2.cipherType));
     } else {
 	/* This is an SSL v3 session */
@@ -902,10 +906,10 @@ Invalidate(SIDCacheEntry *sce)
     if (sce == NULL) return;
 
     if (sce->u.ssl2.version < SSL_LIBRARY_VERSION_3_0) {
-	offset = Offset(sce->addr, sce->u.ssl2.sessionID,
+	offset = Offset(&sce->addr, sce->u.ssl2.sessionID,
 			sizeof sce->u.ssl2.sessionID); 
     } else {
-	offset = Offset(sce->addr, sce->u.ssl3.sessionID,
+	offset = Offset(&sce->addr, sce->u.ssl3.sessionID,
 			sce->u.ssl3.sessionIDLength); 
     }
 	
@@ -972,11 +976,11 @@ unlock_cache(void)
 ** compute a hash value.
 */
 static PRUint32 
-Offset(PRUint32 addr, unsigned char *s, unsigned nl)
+Offset(const PRIPv6Addr *addr, unsigned char *s, unsigned nl)
 {
     PRUint32 rv;
 
-    rv = addr ^ (((PRUint32)s[0] << 24) | ((PRUint32)s[1] << 16)
+    rv = addr->pr_s6_addr32[3] ^ (((PRUint32)s[0] << 24) | ((PRUint32)s[1] << 16)
 		 | (s[2] << 8) | s[nl-1]);
     return (rv % numSIDCacheEntries) * sizeof(SIDCacheEntry);
 }
@@ -989,7 +993,7 @@ Offset(PRUint32 addr, unsigned char *s, unsigned nl)
 ** Returns PR_TRUE if found a valid match.  PR_FALSE otherwise.
 */
 static PRBool 
-FindSID(PRUint32 addr, unsigned char *sessionID,
+FindSID(const PRIPv6Addr *addr, unsigned char *sessionID,
 	unsigned sessionIDLength, SIDCacheEntry *sce)
 {
     PRUint32      offset;
@@ -1043,8 +1047,11 @@ FindSID(PRUint32 addr, unsigned char *sessionID,
 	((sce->u.ssl2.version >= SSL_LIBRARY_VERSION_3_0) &&
 	 (now > sce->time + ssl3_sid_timeout))) {
 	/* SessionID has timed out. Invalidate the entry. */
-	SSL_TRC(7, ("%d: timed out sid entry addr=%08x now=%x time+=%x",
-		    myPid, sce->addr, now, sce->time + ssl_sid_timeout));
+	SSL_TRC(7, ("%d: timed out sid entry addr=%08x%08x%08x%08x now=%x time+=%x",
+		    myPid, sce->addr.pr_s6_addr32[0],
+		    sce->addr.pr_s6_addr32[1], sce->addr.pr_s6_addr32[2],
+		    sce->addr.pr_s6_addr32[3], now, 
+		    sce->time + ssl_sid_timeout));
 	sce->u.ssl2.valid = 0;
 
 	GET_SERVER_CACHE_WRITE_LOCK(SIDCacheFD, offset, sizeof *sce);
@@ -1081,7 +1088,7 @@ FindSID(PRUint32 addr, unsigned char *sessionID,
     ** Finally, examine specific session-id/addr data to see if the cache
     ** entry matches our addr+session-id value
     */
-    if ((sce->addr == addr) &&
+    if (!memcmp(&sce->addr, addr, sizeof(PRIPv6Addr)) &&
 	(PORT_Memcmp(sce->u.ssl2.sessionID, sessionID, sessionIDLength) == 0)) {
 	/* Found it */
 	return PR_TRUE;
@@ -1097,7 +1104,7 @@ FindSID(PRUint32 addr, unsigned char *sessionID,
  * pointer ssl_sid_lookup.
  */
 static sslSessionID *
-ServerSessionIDLookup(	PRUint32       addr,
+ServerSessionIDLookup(	const PRIPv6Addr  *addr,
 			unsigned char *sessionID,
 			unsigned int   sessionIDLength,
                         CERTCertDBHandle * dbHandle)
@@ -1142,8 +1149,10 @@ ServerSessionIDCache(sslSessionID *sid)
 
 	sid->time = ssl_Time();
 	if (version < SSL_LIBRARY_VERSION_3_0) {
-	    SSL_TRC(8, ("%d: SSL: CacheMT: cached=%d addr=0x%08x time=%x "
-			"cipher=%d", myPid, sid->cached, sid->addr,
+	    SSL_TRC(8, ("%d: SSL: CacheMT: cached=%d addr=0x%08x%08x%08x%08x time=%x "
+			"cipher=%d", myPid, sid->cached, 
+			sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
+			sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
 			sid->time, sid->u.ssl2.cipherType));
 	    PRINT_BUF(8, (0, "sessionID:", sid->u.ssl2.sessionID,
 			  sizeof(sid->u.ssl2.sessionID)));
@@ -1153,16 +1162,18 @@ ServerSessionIDCache(sslSessionID *sid)
 			  sid->u.ssl2.cipherArg.len));
 
 	    /* Write out new cache entry */
-	    offset = Offset(sid->addr, sid->u.ssl2.sessionID,
+	    offset = Offset(&sid->addr, sid->u.ssl2.sessionID,
 			    sizeof(sid->u.ssl2.sessionID)); 
 	} else {
-	    SSL_TRC(8, ("%d: SSL: CacheMT: cached=%d addr=0x%08x time=%x "
-			"cipherSuite=%d", myPid, sid->cached, sid->addr,
+	    SSL_TRC(8, ("%d: SSL: CacheMT: cached=%d addr=0x%08x%08x%08x%08x time=%x "
+			"cipherSuite=%d", myPid, sid->cached, 
+			sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
+			sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3], 
 			sid->time, sid->u.ssl3.cipherSuite));
 	    PRINT_BUF(8, (0, "sessionID:", sid->u.ssl3.sessionID,
 			  sid->u.ssl3.sessionIDLength));
 
-	    offset = Offset(sid->addr, sid->u.ssl3.sessionID,
+	    offset = Offset(&sid->addr, sid->u.ssl3.sessionID,
 			    sid->u.ssl3.sessionIDLength);
 	    
 	}
@@ -1225,8 +1236,10 @@ ServerSessionIDUncache(sslSessionID *sid)
     err = PR_GetError();
     lock_cache();
     if (sid->version < SSL_LIBRARY_VERSION_3_0) {
-	SSL_TRC(8, ("%d: SSL: UncacheMT: valid=%d addr=0x%08x time=%x "
-		    "cipher=%d", myPid, sid->cached, sid->addr,
+	SSL_TRC(8, ("%d: SSL: UncacheMT: valid=%d addr=0x%08x%08x%08x%08x time=%x "
+		    "cipher=%d", myPid, sid->cached, 
+		    sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
+		    sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3], 
 		    sid->time, sid->u.ssl2.cipherType));
 	PRINT_BUF(8, (0, "sessionID:", sid->u.ssl2.sessionID,
 		      sizeof(sid->u.ssl2.sessionID)));
@@ -1234,15 +1247,17 @@ ServerSessionIDUncache(sslSessionID *sid)
 		      sid->u.ssl2.masterKey.len));
 	PRINT_BUF(8, (0, "cipherArg:", sid->u.ssl2.cipherArg.data,
 		      sid->u.ssl2.cipherArg.len));
-	rv = FindSID(sid->addr, sid->u.ssl2.sessionID,
+	rv = FindSID(&sid->addr, sid->u.ssl2.sessionID,
 		     sizeof(sid->u.ssl2.sessionID), &sce);
     } else {
-	SSL_TRC(8, ("%d: SSL3: UncacheMT: valid=%d addr=0x%08x time=%x "
-		    "cipherSuite=%d", myPid, sid->cached, sid->addr,
+	SSL_TRC(8, ("%d: SSL3: UncacheMT: valid=%d addr=0x%08x%08x%08x%08x time=%x "
+		    "cipherSuite=%d", myPid, sid->cached, 
+		    sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
+		    sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3], 
 		    sid->time, sid->u.ssl3.cipherSuite));
 	PRINT_BUF(8, (0, "sessionID:", sid->u.ssl3.sessionID,
 		      sid->u.ssl3.sessionIDLength));
-	rv = FindSID(sid->addr, sid->u.ssl3.sessionID,
+	rv = FindSID(&sid->addr, sid->u.ssl3.sessionID,
 		     sid->u.ssl3.sessionIDLength, &sce);
     }
     

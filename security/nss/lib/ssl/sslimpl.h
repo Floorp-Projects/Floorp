@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.3 2000/05/24 03:35:23 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.4 2000/09/12 20:15:43 jgmyers%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -163,7 +163,7 @@ typedef PRInt32       (*sslSendFunc)(sslSocket *ss, const unsigned char *buf,
 
 typedef void          (*sslSessionIDCacheFunc)  (sslSessionID *sid);
 typedef void          (*sslSessionIDUncacheFunc)(sslSessionID *sid);
-typedef sslSessionID *(*sslSessionIDLookupFunc)(PRUint32       addr,
+typedef sslSessionID *(*sslSessionIDLookupFunc)(const PRIPv6Addr    *addr,
 						unsigned char* sid,
 						unsigned int   sidLen,
                                                 CERTCertDBHandle * dbHandle);
@@ -293,7 +293,7 @@ struct sslSocketStr {
     sslBuffer        pendingBuf;			/*xmitBufLock*/
 
     /* the following 3 variables are only used with socks or other proxies. */
-    long             peer;	/* Target server IP address */
+    PRIPv6Addr       peer;	/* Target server IP address */
     int              port;	/* Target server port number. */
     char *           peerID;	/* String uniquely identifies target server. */
     /* End of socks variables. */
@@ -479,7 +479,7 @@ struct sslConnectInfoStr {
     /* outgoing handshakes appended to this. */
     sslBuffer       sendBuf;	                /*xmitBufLock*/ /* ssl 2 & 3 */
 
-    unsigned long   peer;                                       /* ssl 2 & 3 */
+    PRIPv6Addr      peer;                                       /* ssl 2 & 3 */
     unsigned short  port;                                       /* ssl 2 & 3 */
 
     sslSessionID   *sid;                                        /* ssl 2 & 3 */
@@ -691,7 +691,7 @@ struct sslSessionIDStr {
     const char *          peerID;     /* client only */
     const char *          urlSvrName; /* client only */
 
-    PRUint32              addr;
+    PRIPv6Addr            addr;
     PRUint16              port;
 
     SSL3ProtocolVersion   version;
@@ -1040,7 +1040,7 @@ extern SECStatus sslBuffer_Grow(sslBuffer *b, unsigned int newLen);
 extern void      ssl2_UseClearSendFunc(sslSocket *ss);
 extern void      ssl_ChooseSessionIDProcs(sslSecurityInfo *sec);
 
-extern sslSessionID *ssl_LookupSID(PRUint32 addr, PRUint16 port, 
+extern sslSessionID *ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port, 
                                    const char *peerID, const char *urlSvrName);
 extern void      ssl_FreeSID(sslSessionID *sid);
 
