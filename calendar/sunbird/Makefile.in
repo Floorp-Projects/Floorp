@@ -65,27 +65,19 @@ sunbird::
 	mkdir -p ./MozillaSunbird/res/builtin
 	cp $(topsrcdir)/dist/bin/MozillaSunbird* ./MozillaSunbird
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)gkgfx$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)mozjs$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)plc4$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)ssl3$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)xpcom$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)gtksuperwin$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)jsj$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)mozz$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)nss3$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)smime3$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)xpistub$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)gtkembedmoz$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)gtkxtbin$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)nspr4$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)nssckbi$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)plds4$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)softokn3$(DLL_SUFFIX) ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)xlibrgb$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)xpcom_compat$(DLL_SUFFIX) ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/mangle ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/mozilla-xremote-client ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/run-mozilla.sh ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/shlibsign ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/timebombgen ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/xpicleanup ./MozillaSunbird/
@@ -111,7 +103,6 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/defaults/pref/all.js ./MozillaSunbird/defaults/pref
 	cp $(topsrcdir)/dist/bin/defaults/pref/mailnews.js ./MozillaSunbird/defaults/pref
 	cp $(topsrcdir)/dist/bin/defaults/pref/editor.js ./MozillaSunbird/defaults/pref
-	cp $(topsrcdir)/dist/bin/defaults/pref/unix.js ./MozillaSunbird/defaults/pref
 	cp $(topsrcdir)/dist/bin/defaults/pref/xpinstall.js ./MozillaSunbird/defaults/pref
 	cp $(topsrcdir)/dist/bin/defaults/profile/chrome/userContent-example.css ./MozillaSunbird/defaults/profile/chrome
 	cp $(topsrcdir)/dist/bin/defaults/profile/chrome/userChrome-example.css ./MozillaSunbird/defaults/profile/chrome
@@ -137,7 +128,6 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/res/entityTables/mathml20.properties ./MozillaSunbird/res/entityTables
 	cp $(topsrcdir)/dist/bin/res/charsetalias.properties ./MozillaSunbird/res
 	cp $(topsrcdir)/dist/bin/res/charsetData.properties ./MozillaSunbird/res
-	cp $(topsrcdir)/dist/bin/res/unixcharset.properties ./MozillaSunbird/res
 	cp $(topsrcdir)/dist/bin/res/langGroups.properties ./MozillaSunbird/res
 	cp $(topsrcdir)/dist/bin/res/language.properties ./MozillaSunbird/res
 	cp $(topsrcdir)/dist/bin/res/rdf/article.gif ./MozillaSunbird/res/rdf
@@ -145,7 +135,6 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/res/rdf/folder-closed.gif ./MozillaSunbird/res/rdf
 	cp $(topsrcdir)/dist/bin/res/rdf/folder-open.gif ./MozillaSunbird/res/rdf
 	cp $(topsrcdir)/dist/bin/res/rdf/loading.gif ./MozillaSunbird/res/rdf
-	cp $(topsrcdir)/dist/bin/res/sample.unixpsfonts.properties ./MozillaSunbird/res
 	cp $(topsrcdir)/dist/bin/res/builtin/platformHTMLBindings.xml ./MozillaSunbird/res/builtin
 	cp $(topsrcdir)/dist/bin/res/builtin/htmlBindings.xml ./MozillaSunbird/res/builtin
 	cp $(topsrcdir)/dist/bin/res/broken-image.gif ./MozillaSunbird/res
@@ -185,13 +174,10 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/xpcom_ds.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xpcom_io.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xpcom_components.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/xpcom_threads.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xpcom_xpti.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/proxyObjInst.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xpcom_compat_c$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xpcom_obsolete.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xpconnect.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xpconnect$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/unicharutil.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/uconv.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/ucnative.xpt ./MozillaSunbird/components
@@ -206,14 +192,12 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/jar.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/oji.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)oji$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)jsd$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/jsdservice.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/util.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/necko.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsProxyAutoConfig.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/necko_cookie.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/necko_dns.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/necko_socket.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/mimetype.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/necko_strconv.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/necko_cache.xpt ./MozillaSunbird/components
@@ -231,7 +215,6 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/exthandler.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/prefetch.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/pref.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)pref$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/caps.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)caps$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/rdf.xpt ./MozillaSunbird/components
@@ -239,11 +222,7 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)chrome$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)rdf$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/htmlparser.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)htmlpars$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/gfx.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)gfxps$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)gfxxprint$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)gfx_gtk$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/imglib2.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)imglib2$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/plugin.xpt ./MozillaSunbird/components
@@ -264,8 +243,6 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/jsurl.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)jsdom$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/widget.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)widget_gtk$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xremote_client$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/content_base.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/content_html.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/content_htmldoc.xpt ./MozillaSunbird/components
@@ -279,7 +256,6 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)gklayout$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)mork$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/shistory.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/docshell.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)docshell$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/webshell_idls.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/profile.xpt ./MozillaSunbird/components
@@ -310,13 +286,9 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/accessibility.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)accessibility$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/appshell.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)nsappshell$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsCloseAllWindows.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/mozbrwsr.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/directory.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/filepicker.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)fileview$(DLL_SUFFIX) ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/nsFilePicker.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/mozfind.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)mozfind$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/search.xpt ./MozillaSunbird/components
@@ -330,14 +302,11 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/nsKillAll.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/windowds.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xremoteservice.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xremoteservice$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)appcomps$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xpinstall.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xpinstall$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/autocomplete.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/history.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/satchel.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)toolkitcomps$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/bookmarks.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)cookie$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/cookie.xpt ./MozillaSunbird/components
@@ -346,7 +315,6 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/walleteditor.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/signonviewer.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/walletpreview.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)walletviewers$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xml-rpc.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsDictionary.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsXmlRpcClient.js ./MozillaSunbird/components
@@ -371,7 +339,36 @@ sunbird::
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)pippki$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/downloads.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsDownloadProgressListener.js ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)browsercomps$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xpical$(DLL_SUFFIX) ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/calendar.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/chrome/calendar.jar ./MozillaSunbird/chrome
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*appshell$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*gfx*$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*pars*$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*widget*$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xp*$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)*js*$(DLL_SUFFIX) ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)*pref*$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)gtksuperwin$(DLL_SUFFIX) ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)gtkembedmoz$(DLL_SUFFIX) ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)gtkxtbin$(DLL_SUFFIX) ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/$(LIB_PREFIX)xlibrgb$(DLL_SUFFIX) ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/mozilla-xremote-client ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/run-mozilla.sh ./MozillaSunbird/
+	cp $(topsrcdir)/dist/bin/defaults/pref/unix.js ./MozillaSunbird/defaults/pref
+	cp $(topsrcdir)/dist/bin/res/unixcharset.properties ./MozillaSunbird/res
+	cp $(topsrcdir)/dist/bin/res/sample.unixpsfonts.properties ./MozillaSunbird/res
+	cp $(topsrcdir)/dist/bin/components/xpcom_threads.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/proxyObjInst.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)jsd$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/necko_socket.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xremote_client$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/docshell.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/filepicker.xpt ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)fileview$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/nsFilePicker.js ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)xremoteservice$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)toolkitcomps$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)walletviewers$(DLL_SUFFIX) ./MozillaSunbird/components
+	cp $(topsrcdir)/dist/bin/components/$(LIB_PREFIX)browsercomps$(DLL_SUFFIX) ./MozillaSunbird/components
+
