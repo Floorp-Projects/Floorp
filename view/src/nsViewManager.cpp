@@ -2444,9 +2444,13 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
     // nsIClipViews clip everything, including their child views. So we note that explicitly.
     // This means nsView::GetClippedRect will now take account of the clipping effects of
     // nsIClipViews.
+    // This will be overridden by SetViewChildClipRegion below, if necessary
     if (IsClipView(view)) {
-      view->SetViewFlags(view->GetViewFlags() | NS_VIEW_FLAG_CLIPCHILDREN);
-      view->SetChildClip(0, 0, aRect.width, aRect.height);
+      nsRect childClipRect = aRect;
+      childClipRect.x = 0;
+      childClipRect.y = 0;
+      view->SetClipChildren(PR_TRUE);
+      view->SetChildClip(childClipRect);
     }
   }
   
@@ -2459,31 +2463,60 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, nsIRegion *a
  
   NS_ASSERTION(!(nsnull == view), "no view");
 
-  // XXX Shouldn't we repaint the view here?
+  PRBool oldClipFlag = view->GetClipChildren();
+  nsRect oldClipRect;
+  if (oldClipFlag) {
+    view->GetChildClip(oldClipRect);
+  } else {
+    // clipping may not have been enabled, but get the area to invalidate anyway
+    view->GetDimensions(oldClipRect);
+  }
+  PRBool newClipFlag;
+  nsRect newClipRect;
 
   // If the view implements nsIClipView then we ensure a clip rect is set,
   // and it is set to no more than the bounds of the view.
   if (aRegion != nsnull) {
-    nsRect newClip;
-    aRegion->GetBoundingBox(&newClip.x, &newClip.y, &newClip.width, &newClip.height);
+    newClipFlag = PR_TRUE;
+    aRegion->GetBoundingBox(&newClipRect.x, &newClipRect.y, &newClipRect.width, &newClipRect.height);
     if (IsClipView(view)) {
       nsRect dims;
       view->GetDimensions(dims);
-      newClip.IntersectRect(newClip, dims);
+      newClipRect.IntersectRect(newClipRect, dims);
     }
-    view->SetViewFlags(view->GetViewFlags() | NS_VIEW_FLAG_CLIPCHILDREN);
-    view->SetChildClip(newClip.x, newClip.y, newClip.XMost(), newClip.YMost());
   } else {
     if (IsClipView(view)) {
-      nsRect dims;
-      view->GetDimensions(dims);
-      view->SetViewFlags(view->GetViewFlags() | NS_VIEW_FLAG_CLIPCHILDREN);
-      view->SetChildClip(0, 0, dims.width, dims.height);
+      newClipFlag = PR_TRUE;
+      view->GetDimensions(newClipRect);
+      newClipRect.x = 0;
+      newClipRect.y = 0;
     } else {
-      view->SetViewFlags(view->GetViewFlags() & ~NS_VIEW_FLAG_CLIPCHILDREN);
+      newClipFlag = PR_FALSE;
+      // clipping is not enabled, but get the new unclipped area for invalidation purposes
+      view->GetDimensions(newClipRect);
     }
   }
+
+  if (newClipFlag == oldClipFlag
+      && (!newClipFlag || newClipRect == oldClipRect)) {
+    return NS_OK;
+  }
+
+  // Update the view properties
+  view->SetClipChildren(newClipFlag);
+  view->SetChildClip(newClipRect);
  
+  // Invalidate changed areas
+  // Paint (new - old) in the current view
+  InvalidateRectDifference(view, newClipRect, oldClipRect, NS_VMREFRESH_NO_SYNC);
+  // Paint (old - new) in the parent view, since it'll be clipped out of the current view
+  nsView* parent = view->GetParent();
+  if (parent != nsnull) {
+    view->ConvertToParentCoords(&oldClipRect.x, &oldClipRect.y);
+    view->ConvertToParentCoords(&newClipRect.x, &newClipRect.y);
+    InvalidateRectDifference(parent, oldClipRect, newClipRect, NS_VMREFRESH_NO_SYNC);
+  }
+
   return NS_OK;
 }
 

@@ -229,11 +229,6 @@ NS_IMETHODIMP nsView::Init(nsIViewManager* aManager,
   // we don't hold a reference to the view manager
   mViewManager = NS_STATIC_CAST(nsViewManager*, aManager);
 
-  mChildClip.mLeft = 0;
-  mChildClip.mRight = 0;
-  mChildClip.mTop = 0;
-  mChildClip.mBottom = 0;
-
   SetPosition(aBounds.x, aBounds.y);
   nsRect dim(0, 0, aBounds.width, aBounds.height);
 
@@ -547,28 +542,6 @@ NS_IMETHODIMP nsView::GetBounds(nsRect &aBounds) const
   if (this == rootView)
     aBounds.x = aBounds.y = 0;
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::SetChildClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
-{
-  NS_PRECONDITION(aLeft <= aRight && aTop <= aBottom, "bad clip values");
-  mChildClip.mLeft = aLeft;
-  mChildClip.mTop = aTop;
-  mChildClip.mRight = aRight;
-  mChildClip.mBottom = aBottom;
-
-  
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const
-{
-  *aLeft = mChildClip.mLeft;
-  *aTop = mChildClip.mTop;
-  *aRight = mChildClip.mRight;
-  *aBottom = mChildClip.mBottom; 
   return NS_OK;
 }
 
@@ -1047,17 +1020,11 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
     if (parentView->GetClipChildren()) {
       aIsClipped = PR_TRUE;
       // Adjust for clip specified by ancestor
-      nscoord clipLeft;
-      nscoord clipTop;
-      nscoord clipRight;
-      nscoord clipBottom;
-      parentView->GetChildClip(&clipLeft, &clipTop, &clipRight, &clipBottom);
       nsRect clipRect;
+      parentView->GetChildClip(clipRect);
       //Offset the cliprect by the amount the child offsets from the parent
-      clipRect.x = clipLeft + ancestorX;
-      clipRect.y = clipTop + ancestorY;
-      clipRect.width = clipRight - clipLeft;
-      clipRect.height = clipBottom - clipTop;
+      clipRect.x += ancestorX;
+      clipRect.y += ancestorY;
       PRBool overlap = aClippedRect.IntersectRect(clipRect, aClippedRect);
       if (!overlap) {
         aEmpty = PR_TRUE; // Does not intersect so the rect is empty.

@@ -49,13 +49,6 @@
 
 //mmptemp
 
-struct nsViewClip {
-  nscoord mLeft;
-  nscoord mRight;
-  nscoord mTop;
-  nscoord mBottom;
-};
-
 class nsIRegion;
 class nsIRenderingContext;
 class nsIViewManager;
@@ -192,20 +185,17 @@ public:
    * The clip is relative to the origin of the view.
    * All of the children of this view will be clipped using
    * the specified rectangle
-   * @param aLeft new left position
-   * @param aTop new top position
-   * @param aRight new right position
-   * @param aBottom new bottom position
    */
-  NS_IMETHOD  SetChildClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  void SetClipChildren(PRBool aDoClip) {
+    mVFlags = (mVFlags & ~NS_VIEW_FLAG_CLIPCHILDREN) | (aDoClip ? NS_VIEW_FLAG_CLIPCHILDREN : 0);
+  }
+  void SetChildClip(const nsRect &aRect) { mChildClip = aRect; }
   /**
-   * Called to get the dimensions and position of the clip for the view.
-   * @param aLeft left position
-   * @param aTop top position
-   * @param aRight right position
-   * @param aBottom bottom position
+   * Called to get the dimensions and position of the clip for the children of this view.
    */
-  NS_IMETHOD  GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const;
+  PRBool GetClipChildren() const { return (mVFlags & NS_VIEW_FLAG_CLIPCHILDREN) != 0; }
+  void GetChildClip(nsRect &aRect) const { aRect = mChildClip; }
+
   /**
    * Called to indicate that the visibility of a view has been
    * changed.
@@ -304,7 +294,6 @@ public: // NOT in nsIView, so only available in view module
   nsViewVisibility GetVisibility() const { return mVis; }
   void* GetClientData() const { return mClientData; }
   PRBool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
-  PRBool GetClipChildren() const { return (mVFlags & NS_VIEW_FLAG_CLIPCHILDREN) != 0; }
 
   PRInt32 GetChildCount() const { return mNumKids; }
   nsView* GetChild(PRInt32 aIndex) const;
@@ -345,7 +334,7 @@ protected:
   PRInt32           mNumKids;
   nscoord           mPosX, mPosY;
   nsRect            mDimBounds; // relative to parent
-  nsViewClip        mChildClip;
+  nsRect            mChildClip;
   float             mOpacity;
   PRUint32          mVFlags;
   nsIRegion*        mDirtyRegion;
