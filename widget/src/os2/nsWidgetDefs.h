@@ -35,7 +35,87 @@
 #include <uconv.h>  // Rather not have to include these two, but need types...
 #include <unikbd.h> // 
 
+#ifndef MAX_PATH
+#define MAX_PATH CCHMAXPATH
+#endif
+
+#ifndef OPENFILENAME
+/* OPENFILENAME struct flags
+ */
+
+#define OFN_READONLY                 0x00000001
+#define OFN_OVERWRITEPROMPT          0x00000002
+#define OFN_HIDEREADONLY             0x00000004
+#define OFN_NOCHANGEDIR              0x00000008
+#define OFN_SHOWHELP                 0x00000010
+#define OFN_ENABLEHOOK               0x00000020
+#define OFN_ENABLETEMPLATE           0x00000040
+#define OFN_ENABLETEMPLATEHANDLE     0x00000080
+#define OFN_NOVALIDATE               0x00000100
+#define OFN_ALLOWMULTISELECT         0x00000200
+#define OFN_EXTENSIONDIFFERENT       0x00000400
+#define OFN_PATHMUSTEXIST            0x00000800
+#define OFN_FILEMUSTEXIST            0x00001000
+#define OFN_CREATEPROMPT             0x00002000
+#define OFN_SHAREAWARE               0x00004000
+#define OFN_NOREADONLYRETURN         0x00008000
+#define OFN_NOTESTFILECREATE         0x00010000
+#define OFN_NONETWORKBUTTON          0x00020000
+#define OFN_NOLONGNAMES              0x00040000
+
+typedef struct _tagOFN {
+   ULONG                             lStructSize;
+   HWND                              hwndOwner;
+   HMODULE                           hInstance;
+   PCSZ                              lpstrFilter;
+   PSZ                               lpstrCustomFilter;
+   ULONG                             nMaxCustFilter;
+   ULONG                             nFilterIndex;
+   PSZ                               lpstrFile;
+   ULONG                             nMaxFile;
+   PSZ                               lpstrFileTitle;
+   ULONG                             nMaxFileTitle;
+   PCSZ                              lpstrInitialDir;
+   PCSZ                              lpstrTitle;
+   ULONG                             Flags;
+   USHORT                            nFileOffset;
+   USHORT                            nFileExtension;
+   PCSZ                              lpstrDefExt;
+   ULONG                             lCustData;
+   PFN                               lpfnHook;
+   PCSZ                              lpTemplateName;
+} OPENFILENAME, *POPENFILENAME, *LPOPENFILENAME;
+
+extern "C" BOOL APIENTRY DaxOpenSave(BOOL, LONG *, LPOPENFILENAME, PFNWP);
+#endif
+
 #define SUPPORT_NON_XPFE /* support for viewer.exe */
+
+struct nsUconvInfo
+{
+  char*    mCharset;
+  PRUint16 mCodePage;
+  UconvObject  mConverter;
+};
+
+static nsUconvInfo gUconvInfo[15  /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ] = 
+{
+  { "DEFAULT",     0,    NULL },
+  { "ANSI",        1252, NULL },
+  { "EASTEUROPE",  1250, NULL },
+  { "RUSSIAN",     1251, NULL },
+  { "GREEK",       1253, NULL },
+  { "TURKISH",     1254, NULL },
+  { "HEBREW",      1255, NULL },
+  { "ARABIC",      1256, NULL },
+  { "BALTIC",      1257, NULL },
+  { "THAI",        874,  NULL },
+  { "SHIFTJIS",    932,  NULL },
+  { "GB2312",      936,  NULL },
+  { "HANGEUL",     949,  NULL },
+  { "CHINESEBIG5", 950,  NULL },
+  { "JOHAB",       1361, NULL }
+};
 
 class nsIFontRetrieverService;
 class nsDragService;
@@ -76,6 +156,10 @@ class nsWidgetModuleData
    // Atom service; clients don't need to bother about freeing them.
    ATOM GetAtom( const char *atomname);
    ATOM GetAtom( const nsString &atomname);
+
+   ULONG GetCurrentDirectory(ULONG bufLen, PSZ dirString);
+
+   int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
 
 #if 0
    HWND     GetWindowForPrinting( PCSZ pszClass, ULONG ulStyle);

@@ -41,7 +41,7 @@ CPPSRCS		= \
 		nsClipboard.cpp \
 		nsDirPicker.cpp \
 		nsFSTree.cpp \
-		nsFileDialog.cpp \
+		nsFileWidget.cpp \
 		nsFilePicker.cpp \
 		nsFontRetrieverService.cpp \
 		nsFontSizeIterator.cpp \
@@ -56,7 +56,7 @@ CPPSRCS		= \
 		$(NULL)
 
 # XXX FILES temporarily removed
-#              	nsDragService.cpp \
+#		nsDragService.cpp \
 
 # XXX OS2TODO
 #		nsNativeDragTarget.cpp      \

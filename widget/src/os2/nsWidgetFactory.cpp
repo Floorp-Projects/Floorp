@@ -41,7 +41,7 @@
 #include "nsWidgetDefs.h"              // OS/2 only
 
 #include "nsFilePicker.h"
-// OS2TODO #include "nsFileWidget.h"
+#include "nsFileWidget.h"
 #include "nsFileSpecWithUIImpl.h"
 #include "nsLookAndFeel.h"
 #include "nsScrollbar.h"
@@ -62,7 +62,6 @@
 // OS2TODO #include "nsDragService.h"
 
 #include "nsFrameWindow.h"     // OS/2 only
-#include "nsFileDialog.h"           // OS/2 only
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -186,11 +185,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
 #endif
     }
     else if (mClassID.Equals(kCFileOpen)) {
-#ifdef XP_OS2
-        inst = (nsISupports*) new nsFileDialog();
-#else
         inst = (nsISupports*)new nsFileWidget();
-#endif
     }
     else if (mClassID.Equals(kCFilePicker)) {
         inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
@@ -288,7 +283,6 @@ NSGetFactory(nsISupports* serviceMgr,
   return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 
 }
-
 
 
 

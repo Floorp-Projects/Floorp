@@ -19,7 +19,6 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
- *   Henry Sobotka <sobotka@axess.com>: OS/2 adaptation
  */
 
 #ifndef nsFilePicker_h__
@@ -30,10 +29,10 @@
 #undef NS_IMPL_IDS
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
-#include "nsWidgetDefs.h"
+#include "nsdefs.h"
 
 /**
- * OS/2 FileSelector wrapper
+ * Native Windows FileSelector wrapper
  */
 
 class nsFilePicker : public nsBaseFilePicker
@@ -43,7 +42,16 @@ public:
   virtual ~nsFilePicker();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIFILEPICKER
+
+    // nsIFilePicker (less what's in nsBaseFilePicker)
+  NS_IMETHOD GetDefaultString(PRUnichar * *aDefaultString);
+  NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
+  NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
+  NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
+  NS_IMETHOD GetFile(nsILocalFile * *aFile);
+  NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD Show(PRInt16 *_retval); 
+  NS_IMETHOD AppendFilter(const PRUnichar *aTitle,  const PRUnichar *aFilter) ;
 
 protected:
   /* method from nsBaseFilePicker */
@@ -61,8 +69,8 @@ protected:
   nsString               mTitle;
   PRInt16                mMode;
   nsCString              mFile;
-  nsString               mFilterList;
   nsString               mDefault;
+  nsString               mFilterList;
   nsIUnicodeEncoder*     mUnicodeEncoder;
   nsIUnicodeDecoder*     mUnicodeDecoder;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;

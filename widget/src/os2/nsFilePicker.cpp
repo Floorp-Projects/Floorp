@@ -19,24 +19,26 @@
  * 
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
- *   Henry Sobotka <sobotka@axess.com>: OS/2 adaptation
  */
+
+// Define so header files for openfilename are included
+#ifdef WIN32_LEAN_AND_MEAN
+#undef WIN32_LEAN_AND_MEAN
+#endif
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #define NS_IMPL_IDS
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
+#include "nsWidgetDefs.h"
+#include "nsDirPicker.h"
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
-#include "nsDirPicker.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
-#define FILEPICKER_PROPERTIES "chrome://global/locale/filepicker.properties"
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -75,10 +77,10 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   NS_ENSURE_ARG_POINTER(retval);
 
   PRBool result = PR_FALSE;
-  char fileBuffer[CCHMAXPATH+1] = "";
+  char fileBuffer[MAX_PATH+1] = "";
   char *converted = ConvertToFileSystemCharset(mDefault.GetUnicode());
   if (nsnull == converted) {
-    mDefault.ToCString(fileBuffer,CCHMAXPATH);
+    mDefault.ToCString(fileBuffer,MAX_PATH);
   }
   else {
     PL_strcpy(fileBuffer, converted);
@@ -93,8 +95,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
   mFile.SetLength(0);
 
-#ifdef XP_OS2
-
   if (mMode == modeGetFolder) {
 
     DIRPICKER dp = { { 0 }, 0, TRUE, 0 }; // modal dialog
@@ -108,89 +108,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       mFile.Append(dp.szFullFile);
     }
   }
-
-  else {
-
-    FILEDLG fdlg;
-    memset(&fdlg, 0, sizeof(FILEDLG));
-
-    fdlg.cbSize = sizeof(FILEDLG);
-    fdlg.fl = FDS_CENTER;
-    fdlg.pszTitle = title;
-
-    //  XXX Unused because presently "All Files"
-    //    char *filterBuffer = mFilterList.ToNewCString();
-    //    strcpy(fdlg.szFullFile, filterBuffer);
-    strcpy( fdlg.szFullFile, initialDir );
-    strcat(fdlg.szFullFile, "\\");
-    strcat(fdlg.szFullFile, fileBuffer);
-
-    if (mMode == modeOpen)
-      fdlg.fl |= FDS_OPEN_DIALOG;
-
-    else if (mMode == modeSave) {
-      fdlg.fl |= FDS_SAVEAS_DIALOG | FDS_ENABLEFILELB;
-
-      // OS2TODO:
-      // get URL leaf (if path ends in '/', use "index.html")
-      // and display in filename field
-    }
-
-    else
-      NS_ASSERTION(0, "Only open and save modes supported");
-
-    WinFileDlg( HWND_DESKTOP, mWnd, &fdlg);
-
-    if (fdlg.lReturn == DID_OK) {
-      result = PR_TRUE;
-      mDisplayDirectory->InitWithPath(fdlg.szFullFile);
-      mFile.Append(fdlg.szFullFile);
-    }
-
-    // XXX For when filters work
-    //    if (filterBuffer)
-    //      nsMemory::Free(filterBuffer);
-  }
-
-#else      // Windows version for reference
-
-  if (mMode == modeGetFolder) {
-
-    BROWSEINFO browserInfo;
-    browserInfo.hwndOwner      = mWnd;
-    browserInfo.pidlRoot       = nsnull;
-    browserInfo.pszDisplayName = (LPSTR)initialDir;
-    browserInfo.lpszTitle      = title;
-    browserInfo.ulFlags        = BIF_RETURNONLYFSDIRS;//BIF_STATUSTEXT | BIF_RETURNONLYFSDIRS;
-    browserInfo.lpfn           = nsnull;
-    browserInfo.lParam         = nsnull;
-    browserInfo.iImage         = nsnull;
-
-    // XXX UNICODE support is needed here --> DONE
-    LPITEMIDLIST list = ::SHBrowseForFolder(&browserInfo);
-    if (list != NULL) {
-      result = ::SHGetPathFromIDList(list, (LPSTR)fileBuffer);
-      if (result) {
-
-        // XXXX ???? nothing done with pathStr - Henry
-
-        nsAutoString pathStr;
-        PRUnichar *unichar = ConvertFromFileSystemCharset(fileBuffer);
-        if (nsnull == unichar)
-          pathStr.AssignWithConversion(fileBuffer);
-        else {
-          pathStr.Assign(unichar);
-          nsMemory::Free( unichar );
-        }
-          
-        if (result == PR_TRUE) {
-          // I think it also needs a conversion here (to unicode since appending to nsString) 
-          // but doing that generates garbage file name, weird.
-          mFile.Append(fileBuffer);
-        }
-      }
-    }
-  }
   else {
 
     OPENFILENAME ofn;
@@ -198,7 +115,16 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     ofn.lStructSize = sizeof(ofn);
 
-    char *filterBuffer = mFilterList.ToNewCString();
+    PRInt32 l = (mFilterList.Length()+2)*2;
+    char *filterBuffer = (char*) nsMemory::Alloc(l);
+    int len = gModuleData.WideCharToMultiByte(0,
+                                          mFilterList.GetUnicode(),
+                                          mFilterList.Length(),
+                                          filterBuffer,
+                                          l);
+    filterBuffer[len] = NULL;
+    filterBuffer[len+1] = NULL;
+                                  
     if (initialDir && *initialDir) {
       ofn.lpstrInitialDir = initialDir;
     }
@@ -211,28 +137,23 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     ofn.nMaxFile     = MAX_PATH;
 
     // XXX use OFN_NOCHANGEDIR  for M5
-    ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    ofn.Flags = OFN_SHAREAWARE | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
+    LONG rv;
     if (mMode == modeOpen) {
       // FILE MUST EXIST!
       ofn.Flags |= OFN_FILEMUSTEXIST;
-      result = ::GetOpenFileName(&ofn);
     }
-    else if (mMode == modeSave) {
-      result = ::GetSaveFileName(&ofn);
-    }
-    else {
-      NS_ASSERTION(0, "Only load, save and getFolder are supported modes"); 
-    }
-  
+    if( DaxOpenSave( (mMode == modeSave), &rv, &ofn, NULL) )
+      result = PR_TRUE;
+
+
     // Remember what filter type the user selected
     mSelectedType = (PRInt16)ofn.nFilterIndex;
 
     // Store the current directory in mDisplayDirectory
     char* newCurrentDirectory = NS_STATIC_CAST( char*, nsMemory::Alloc( MAX_PATH+1 ) );
-
-    VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
-
+    VERIFY(gModuleData.GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
     mDisplayDirectory->InitWithPath(newCurrentDirectory);
     nsMemory::Free( newCurrentDirectory );
 
@@ -248,10 +169,9 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     }
 
   }
-#endif
 
   if (title)
-    nsMemory::Free(title);
+    nsMemory::Free( title );
 
   if (result)
       *retval = returnOK;
@@ -261,70 +181,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Set the list of filters
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsFilePicker::AppendFilters(PRInt32 aFilterMask)
-{
-  nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
-  nsCOMPtr<nsIStringBundle> stringBundle;
-  nsILocale   *locale = nsnull;
-
-  rv = stringService->CreateBundle(FILEPICKER_PROPERTIES, locale, getter_AddRefs(stringBundle));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  PRUnichar *title;
-  PRUnichar *filter;
-
-  if (aFilterMask & filterAll) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterHTML) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("htmlTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("htmlFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterText) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("textTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("textFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterImages) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("imageTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("imageFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterXML) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xmlTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xmlFilter").GetUnicode(), &filter);
-    AppendFilter(title,filter);
-  }
-  if (aFilterMask & filterXUL) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xulTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xulFilter").GetUnicode(), &filter);
-    AppendFilter(title, filter);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFilePicker::AppendFilter(const PRUnichar *aTitle,
-                                         const PRUnichar *aFilter)
-{
-  mFilterList.Append(aTitle);
-  mFilterList.AppendWithConversion('\0');
-  mFilterList.Append(aFilter);
-  mFilterList.AppendWithConversion('\0');
-
-  return NS_OK;
-}
 
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
@@ -400,12 +256,7 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindowInternal *aParent,
-                                 const PRUnichar *aTitle,
-                                 PRInt16 aMode)
-{
-  return nsBaseFilePicker::Init(aParent, aTitle, aMode);
-}
+
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
@@ -432,9 +283,8 @@ void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
 		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
-
 	  if (NS_FAILED(rv)) 
-		  aCharset.AssignWithConversion("ISO-8859-1");
+		  aCharset.AssignWithConversion("windows-1252");
   }
   fileSystemCharset = aCharset;
 }
@@ -512,4 +362,16 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "error charset conversion");
   return NS_SUCCEEDED(rv) ? outString : nsnull;
+}
+
+
+NS_IMETHODIMP
+nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
+{
+  mFilterList.Append(aTitle);
+  mFilterList.AppendWithConversion('\0');
+  mFilterList.Append(aFilter);
+  mFilterList.AppendWithConversion('\0');
+
+  return NS_OK;
 }

@@ -31,6 +31,7 @@
  */
 
 #define INCL_DOSDEVIOCTL // for keyboard layout
+#define INCL_DOSERRORS
 
 #include "nsWidgetDefs.h"
 #include "nsHashtable.h"
@@ -444,4 +445,82 @@ HWND nsWidgetModuleData::GetWindowForPrinting( PCSZ pszClass, ULONG ulStyle)
 
 #endif
 
+ULONG nsWidgetModuleData::GetCurrentDirectory(ULONG bufLen, PSZ dirString)
+{
+   ULONG drivemap,currentdisk;
+   const char * strPtr = dirString +3;
+
+   // We need extra space for the 'x:\'.
+   if (bufLen < 3)
+   {
+      return 0;
+   }
+
+   ULONG len = bufLen - 3;
+
+   APIRET rc = DosQueryCurrentDir(0, (PBYTE)strPtr, &len);
+   if (rc != ERROR_BUFFER_OVERFLOW)
+   {
+      if (rc)
+         return 0;
+      len = strlen(strPtr) + 3;
+
+      // Directory does not start with 'x:\', so add it.
+      DosQueryCurrentDisk (&currentdisk, &drivemap);
+
+      // Follow the case of the first letter in the path.
+      if (isupper(dirString[3]))
+         dirString[0] = (char)('A' - 1 + currentdisk);
+      else
+         dirString[0] = (char)('a' - 1 + currentdisk);
+      dirString[1] = ':';
+      dirString[2] = '\\';
+   }
+   else
+      len += 3;   // Add three extra spaces for the 'x:\'.
+   return len;
+}
+
+int nsWidgetModuleData::WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
+{
+  UconvObject* pConverter = 0;
+  /* Free any converters that were created */
+  for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
+    if (gUconvInfo[i].mCodePage == CodePage) {
+      if (!gUconvInfo[i].mConverter) {
+        UniChar codepage[20];
+        int unirc = UniMapCpToUcsCp( CodePage, codepage, 20);
+        UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
+        break;
+      } /* endif */
+      pConverter = &gUconvInfo[i].mConverter;
+    } /* endif */
+  } /* endfor */
+  if (!pConverter) {
+      pConverter = &gUconvInfo[0].mConverter;
+  } /* endif */
+
+  UniChar *ucsString = (UniChar*) pText;
+  size_t   ucsLen = ulLength;
+  size_t   cplen = ulSize;
+  size_t   cSubs = 0;
+
+  char *tmp = szBuffer; // function alters the out pointer
+
+   int unirc = UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
+                                (void**) &tmp, &cplen, &cSubs);
+
+  if( unirc == UCONV_E2BIG) // k3w1
+  {
+    // terminate output string (truncating)
+    *(szBuffer + ulSize - 1) = '\0';
+  }
+  else if( unirc != ULS_SUCCESS)
+  {
+     printf("very bad");
+  }
+  return ulSize - cplen;
+}
+
 nsWidgetModuleData gModuleData;
+
