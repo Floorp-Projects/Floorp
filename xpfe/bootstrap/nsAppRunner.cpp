@@ -122,7 +122,7 @@ static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined (XP_UNIX) && !defined (XP_MAC ) && !defined(NTO) && ( !defined( XP_PC ) || !defined( WIN32 ) )
+#if !defined (XP_MAC ) && !defined(NTO) && ( !defined( XP_PC ) || !defined( WIN32 ) )
 
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
 {	
@@ -591,7 +591,11 @@ void DumpHelp(char *appname)
   printf("%s-ProfileWizard%sStart with profile wizard.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-SelectProfile%sStart with profile selection dialog.\n",HELP_SPACER_1,HELP_SPACER_2);
+#ifdef XP_UNIX
+  printf("%s-splash%sEnable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
+#else
   printf("%s-nosplash%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
+#endif
 
   // not working yet, because we handle -h too early, and components
   // havent registered yet
@@ -649,20 +653,20 @@ int main(int argc, char* argv[])
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
   nsISplashScreen *splash = 0;
-  PRBool dosplash = PR_TRUE;
   // We can't use the command line service here because it isn't running yet
+#ifdef XP_UNIX
+  PRBool dosplash = PR_FALSE;
+  for (int i=0; i<argc; i++)
+    if ((PL_strcasecmp(argv[i], "-splash") == 0)
+        || (PL_strcasecmp(argv[i], "--splash") == 0))
+      dosplash = PR_TRUE;
+#else        
+  PRBool dosplash = PR_TRUE;
   for (int i=0; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-nosplash") == 0)
-#ifdef XP_UNIX
-|| (PL_strcasecmp(argv[i], "--nosplash") == 0)
-#endif /* XP_UNIX */
-#ifdef XP_PC
-|| (PL_strcasecmp(argv[i], "/nosplash") == 0)
-#endif /* XP_PC */
-   ) {
-       dosplash = PR_FALSE;
-       break;
-     }
+        || (PL_strcasecmp(argv[i], "/nosplash") == 0))
+      dosplash = PR_FALSE
+#endif
   if (dosplash) {
       rv = NS_CreateSplashScreen( &splash );
       NS_ASSERTION( NS_SUCCEEDED(rv), "NS_CreateSplashScreen failed" );
