@@ -104,6 +104,13 @@ nsFTPChannel::Init(const char* verb,
 
     mHandler = aHandler;
 
+    NS_ASSERTION(aPool, "FTP channel needs a thread pool to play in");
+    if (!aPool) return NS_ERROR_NULL_POINTER;
+    mPool = aPool;
+
+    mOriginalURI = originalURI ? originalURI : uri;
+    mURL = uri;
+
     rv = SetLoadAttributes(loadAttributes);
     if (NS_FAILED(rv)) return rv;
 
@@ -112,13 +119,6 @@ nsFTPChannel::Init(const char* verb,
 
     rv = SetNotificationCallbacks(notificationCallbacks);
     if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(aPool, "FTP channel needs a thread pool to play in");
-    if (!aPool) return NS_ERROR_NULL_POINTER;
-    mPool = aPool;
-
-    mOriginalURI = originalURI ? originalURI : uri;
-    mURL = uri;
 
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
     if (NS_FAILED(rv)) return rv;
