@@ -50,6 +50,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPref.h"
 #include "nsIView.h"
+#include "nsIScrollableView.h"
 #include "nsIDocumentViewer.h"
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
