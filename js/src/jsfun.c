@@ -1155,8 +1155,10 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                        ? JSXDR_FUNCONST
                        : JSXDR_FUNVAR;
                 userid = INT_TO_JSVAL(sprop->shortid);
-                propname = ATOM_BYTES((JSAtom *)sprop->id);
-                if (!JS_XDRUint32(xdr, &type) ||
+                /* XXX lossy conversion, need new XDR version for ECMAv3 */
+                propname = JS_GetStringBytes(ATOM_TO_STRING((JSAtom *)sprop->id));
+                if (!propname ||
+                    !JS_XDRUint32(xdr, &type) ||
                     !JS_XDRUint32(xdr, &userid) ||
                     !JS_XDRCString(xdr, &propname)) {
                     if (mark)
@@ -1690,7 +1692,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
              */
             principals = fp->script->principals;
             filename = fp->script->filename;
-            lineno = js_PCToLineNumber(fp->script, fp->pc);
+            lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
             break;
         }
     }
@@ -1779,6 +1781,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (sprop) {
                     ok = JS_TRUE;
                     if (obj2 == obj) {
+                        const char *name = js_AtomToPrintableString(cx, atom);
+
                         /*
                          * A duplicate parameter name. We force a duplicate
                          * node on the SCOPE_LAST_PROP(scope) list with the
@@ -1786,11 +1790,12 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                          * flag, and not mapped by an entry in scope.
                          */
                         JS_ASSERT(sprop->getter == js_GetArgument);
-                        ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                        ok = name &&
+                             js_ReportCompileErrorNumber(cx, ts, NULL,
                                                          JSREPORT_WARNING |
                                                          JSREPORT_STRICT,
                                                          JSMSG_DUPLICATE_FORMAL,
-                                                         ATOM_BYTES(atom));
+                                                         name);
 
                         dupflag = SPROP_IS_DUPLICATE;
                     }
@@ -1890,7 +1895,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     fun = js_NewFunction(cx, proto, NULL, 0, 0, obj, NULL);
     if (!fun)
         goto bad;
-    fun->script = js_NewScript(cx, 0);
+    fun->script = js_NewScript(cx, 0, 0, 0);
     if (!fun->script)
         goto bad;
     return proto;

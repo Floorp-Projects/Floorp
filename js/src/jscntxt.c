@@ -345,7 +345,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
 void
 js_ReportOutOfMemory(JSContext *cx, JSErrorCallback callback)
 {
-    JSStackFrame *fp = cx->fp;
+    JSStackFrame *fp;
     JSErrorReport report;
     JSErrorReporter onError = cx->errorReporter;
 
@@ -353,22 +353,21 @@ js_ReportOutOfMemory(JSContext *cx, JSErrorCallback callback)
     const JSErrorFormatString *efs = callback(NULL, NULL, JSMSG_OUT_OF_MEMORY);
     const char *msg = efs ? efs->format : "Out of memory";
 
-    memset(&report, 0, sizeof (struct JSErrorReport));
-
     /* Fill out the report, but don't do anything that requires allocation. */
-    report.errorNumber = JSMSG_OUT_OF_MEMORY;
+    memset(&report, 0, sizeof (struct JSErrorReport));
     report.flags = JSREPORT_ERROR;
+    report.errorNumber = JSMSG_OUT_OF_MEMORY;
 
     /*
      * Walk stack until we find a frame that is associated with some script
      * rather than a native frame.
      */
-    while (fp && (!fp->script || !fp->pc))
-        fp = fp->down;
-
-    if (fp) {
-        report.filename = fp->script->filename;
-        report.lineno = js_PCToLineNumber(fp->script, fp->pc);
+    for (fp = cx->fp; fp; fp = fp->down) {
+        if (fp->script && fp->pc) {
+            report.filename = fp->script->filename;
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+            break;
+        }
     }
 
     /*
@@ -390,38 +389,38 @@ js_ReportOutOfMemory(JSContext *cx, JSErrorCallback callback)
 JSBool
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {
-    JSStackFrame *fp;
-    JSErrorReport report, *reportp;
     char *last;
+    JSStackFrame *fp;
+    JSErrorReport report;
     JSBool warning;
 
     if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
         return JS_TRUE;
 
-    /* Find the top-most active script frame, for best line number blame. */
-    for (fp = cx->fp; fp && (!fp->script || !fp->pc); fp = fp->down)
-        continue;
-
-    reportp = &report;
-    memset(reportp, 0, sizeof (struct JSErrorReport));
-    report.flags = flags;
-    if (fp) {
-        report.filename = fp->script->filename;
-        report.lineno = js_PCToLineNumber(fp->script, fp->pc);
-        /* XXX should fetch line somehow */
-    }
     last = JS_vsmprintf(format, ap);
     if (!last)
         return JS_FALSE;
 
-    ReportError(cx, last, reportp);
-    free(last);
+    memset(&report, 0, sizeof (struct JSErrorReport));
+    report.flags = flags;
 
-    warning = JSREPORT_IS_WARNING(reportp->flags);
+    /* Find the top-most active script frame, for best line number blame. */
+    for (fp = cx->fp; fp; fp = fp->down) {
+        if (fp->script && fp->pc) {
+            report.filename = fp->script->filename;
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+            break;
+        }
+    }
+
+    warning = JSREPORT_IS_WARNING(report.flags);
     if (warning && JS_HAS_WERROR_OPTION(cx)) {
-        reportp->flags &= ~JSREPORT_WARNING;
+        report.flags &= ~JSREPORT_WARNING;
         warning = JS_FALSE;
     }
+
+    ReportError(cx, last, &report);
+    free(last);
     return warning;
 }
 
@@ -598,42 +597,21 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
         return JS_TRUE;
 
-    report.messageArgs = NULL;
-    report.ucmessage = NULL;
-    message = NULL;
-
-    fp = cx->fp;
-    if (fp && fp->script && fp->pc) {
-        report.filename = fp->script->filename;
-        report.lineno = js_PCToLineNumber(fp->script, fp->pc);
-    } else {
-        /*  We can't find out where the error was from the current
-            frame so see if the next frame has a script/pc combo we
-            could use */
-        if (fp && fp->down && fp->down->script && fp->down->pc) {
-            report.filename = fp->down->script->filename;
-            report.lineno = js_PCToLineNumber(fp->down->script, fp->down->pc);
-        }
-        else {
-            report.filename = NULL;
-            report.lineno = 0;
-        }
-    }
-
-    /* XXX should fetch line somehow */
-    report.linebuf = NULL;
-    report.tokenptr = NULL;
+    memset(&report, 0, sizeof (struct JSErrorReport));
     report.flags = flags;
     report.errorNumber = errorNumber;
 
     /*
-     * XXX js_ExpandErrorArguments only sometimes fills these in, so we
-     * initialize them to clear garbage.
+     * If we can't find out where the error was based on the current frame,
+     * see if the next frame has a script/pc combo we can use.
      */
-    report.uclinebuf = NULL;
-    report.uctokenptr = NULL;
-    report.ucmessage = NULL;
-    report.messageArgs = NULL;
+    for (fp = cx->fp; fp; fp = fp->down) {
+        if (fp->script && fp->pc) {
+            report.filename = fp->script->filename;
+            report.lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+            break;
+        }
+    }
 
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
                                  &message, &report, &warning, charArgs, ap)) {

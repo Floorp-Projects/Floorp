@@ -588,7 +588,7 @@ JS_ClearAllWatchPoints(JSContext *cx)
 JS_PUBLIC_API(uintN)
 JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    return js_PCToLineNumber(script, pc);
+    return js_PCToLineNumber(cx, script, pc);
 }
 
 JS_PUBLIC_API(jsbytecode *)
@@ -636,18 +636,13 @@ JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
 {
-    if (fp->annotation) {
-        JSPrincipals *principals = fp->script
-            ? fp->script->principals
-            : NULL;
+    if (fp->annotation && fp->script) {
+        JSPrincipals *principals = fp->script->principals;
 
-        if (principals == NULL)
-            return NULL;
-
-        if (principals->globalPrivilegesEnabled(cx, principals)) {
+        if (principals && principals->globalPrivilegesEnabled(cx, principals)) {
             /*
-             * Only give out an annotation if privileges have not
-             * been revoked globally.
+             * Give out an annotation only if privileges have not been revoked
+             * or disabled globally.
              */
             return fp->annotation;
         }
@@ -665,13 +660,14 @@ JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation)
 JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp)
 {
-    JSPrincipals *principals = fp->script
-        ? fp->script->principals
-        : NULL;
-
-    return principals
-        ? principals->getPrincipalArray(cx, principals)
-        : NULL;
+    JSPrincipals *principals;
+    
+    if (!fp->script)
+        return NULL;
+    principals = fp->script->principals;
+    if (!principals)
+        return NULL;
+    return principals->getPrincipalArray(cx, principals);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1181,12 +1177,10 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     if (script->filename)
         nbytes += strlen(script->filename) + 1;
 
-    notes = script->notes;
-    if (notes) {
-        for (sn = notes; !SN_IS_TERMINATOR(sn); sn += SN_LENGTH(sn))
-            continue;
-        nbytes += (sn - notes + 1) * sizeof *sn;
-    }
+    notes = SCRIPT_NOTES(script);
+    for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn))
+        continue;
+    nbytes += (sn - notes + 1) * sizeof *sn;
 
     tnotes = script->trynotes;
     if (tnotes) {

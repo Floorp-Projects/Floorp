@@ -117,19 +117,19 @@ mem_set32(JSXDRState *xdr, uint32 *lp)
 }
 
 static JSBool
-mem_getbytes(JSXDRState *xdr, char **bytesp, uint32 len)
+mem_getbytes(JSXDRState *xdr, char *bytes, uint32 len)
 {
     MEM_LEFT(xdr, len);
-    memcpy(*bytesp, MEM_DATA(xdr), len);
+    memcpy(bytes, MEM_DATA(xdr), len);
     MEM_INCR(xdr, len);
     return JS_TRUE;
 }
 
 static JSBool
-mem_setbytes(JSXDRState *xdr, char **bytesp, uint32 len)
+mem_setbytes(JSXDRState *xdr, char *bytes, uint32 len)
 {
     MEM_NEED(xdr, len);
-    memcpy(MEM_DATA(xdr), *bytesp, len);
+    memcpy(MEM_DATA(xdr), bytes, len);
     MEM_INCR(xdr, len);
     return JS_TRUE;
 }
@@ -334,25 +334,23 @@ JS_XDRUint32(JSXDRState *xdr, uint32 *lp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_XDRBytes(JSXDRState *xdr, char **bytesp, uint32 len)
+JS_XDRBytes(JSXDRState *xdr, char *bytes, uint32 len)
 {
     uint32 padlen;
-    char *padbp;
     static char padbuf[JSXDR_ALIGN-1];
 
     if (xdr->mode == JSXDR_ENCODE) {
-        if (!xdr->ops->setbytes(xdr, bytesp, len))
+        if (!xdr->ops->setbytes(xdr, bytes, len))
             return JS_FALSE;
     } else {
-        if (!xdr->ops->getbytes(xdr, bytesp, len))
+        if (!xdr->ops->getbytes(xdr, bytes, len))
             return JS_FALSE;
     }
     len = xdr->ops->tell(xdr);
     if (len % JSXDR_ALIGN) {
         padlen = JSXDR_ALIGN - (len % JSXDR_ALIGN);
         if (xdr->mode == JSXDR_ENCODE) {
-            padbp = padbuf;
-            if (!xdr->ops->setbytes(xdr, &padbp, padlen))
+            if (!xdr->ops->setbytes(xdr, padbuf, padlen))
                 return JS_FALSE;
         } else {
             if (!xdr->ops->seek(xdr, padlen, JSXDR_SEEK_CUR))
@@ -379,7 +377,7 @@ JS_XDRCString(JSXDRState *xdr, char **sp)
         if (!(*sp = (char *) JS_malloc(xdr->cx, len + 1)))
             return JS_FALSE;
     }
-    if (!JS_XDRBytes(xdr, sp, len)) {
+    if (!JS_XDRBytes(xdr, *sp, len)) {
         if (xdr->mode == JSXDR_DECODE)
             JS_free(xdr->cx, *sp);
         return JS_FALSE;

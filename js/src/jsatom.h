@@ -73,7 +73,14 @@ struct JSAtom {
 #define ATOM_TO_STRING(atom)      JSVAL_TO_STRING(ATOM_KEY(atom))
 #define ATOM_IS_BOOLEAN(atom)     JSVAL_IS_BOOLEAN(ATOM_KEY(atom))
 #define ATOM_TO_BOOLEAN(atom)     JSVAL_TO_BOOLEAN(ATOM_KEY(atom))
-#define ATOM_BYTES(atom)          JS_GetStringBytes(ATOM_TO_STRING(atom))
+
+/*
+ * Return a printable, lossless char[] representation of a string-type atom.
+ * The lifetime of the result extends at least until the next GC activation,
+ * longer if cx's string newborn root is not overwritten.
+ */
+extern JS_FRIEND_API(const char *)
+js_AtomToPrintableString(JSContext *cx, JSAtom *atom);
 
 #define ATOM_KEYWORD(atom)        ((struct keyword *)(atom)->entry.value)
 #define ATOM_SET_KEYWORD(atom,kw) ((atom)->entry.value = (kw))

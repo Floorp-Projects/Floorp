@@ -177,18 +177,18 @@ struct JSCodeGenerator {
         jsbytecode  *base;          /* base of JS bytecode vector */
         jsbytecode  *limit;         /* one byte beyond end of bytecode */
         jsbytecode  *next;          /* pointer to next free bytecode */
+        jssrcnote   *notes;         /* source notes, see below */
+        uintN       noteCount;      /* number of source notes so far */
+        uintN       noteMask;       /* growth increment for notes */
+        ptrdiff_t   lastNoteOffset; /* code offset for last source note */
+        uintN       currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
     const char      *filename;      /* null or weak link to source filename */
     uintN           firstLine;      /* first line, for js_NewScriptFromCG */
-    uintN           currentLine;    /* line number for tree-based srcnote gen */
     JSPrincipals    *principals;    /* principals for constant folding eval */
     JSAtomList      atomList;       /* literals indexed for mapping */
     intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
-    jssrcnote       *notes;         /* source notes, see below */
-    uintN           noteCount;      /* number of source notes so far */
-    uintN           noteMask;       /* growth increment for notes */
-    ptrdiff_t       lastNoteOffset; /* code offset for last source note */
     JSTryNote       *tryBase;       /* first exception handling note */
     JSTryNote       *tryNext;       /* next available note */
     size_t          tryNoteSpace;   /* # of bytes allocated at tryBase */
@@ -205,6 +205,12 @@ struct JSCodeGenerator {
 #define CG_NEXT(cg)             ((cg)->current->next)
 #define CG_CODE(cg,offset)      (CG_BASE(cg) + (offset))
 #define CG_OFFSET(cg)           PTRDIFF(CG_NEXT(cg), CG_BASE(cg), jsbytecode)
+
+#define CG_NOTES(cg)            ((cg)->current->notes)
+#define CG_NOTE_COUNT(cg)       ((cg)->current->noteCount)
+#define CG_NOTE_MASK(cg)        ((cg)->current->noteMask)
+#define CG_LAST_NOTE_OFFSET(cg) ((cg)->current->lastNoteOffset)
+#define CG_CURRENT_LINE(cg)     ((cg)->current->currentLine)
 
 #define CG_PROLOG_BASE(cg)      ((cg)->prolog.base)
 #define CG_PROLOG_LIMIT(cg)     ((cg)->prolog.limit)
@@ -224,8 +230,8 @@ struct JSCodeGenerator {
  */
 extern JS_FRIEND_API(JSBool)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
-		     const char *filename, uintN lineno,
-		     JSPrincipals *principals);
+                     const char *filename, uintN lineno,
+                     JSPrincipals *principals);
 
 /*
  * Release cx->codePool, cx->notePool, and cx->tempPool to marks set by
@@ -254,7 +260,7 @@ js_Emit2(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1);
  */
 extern ptrdiff_t
 js_Emit3(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1,
-	 jsbytecode op2);
+         jsbytecode op2);
 
 /*
  * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
@@ -267,8 +273,8 @@ js_EmitN(JSContext *cx, JSCodeGenerator *cg, JSOp op, size_t extra);
  */
 #define CHECK_AND_SET_JUMP_OFFSET(cx,cg,pc,off)                               \
     JS_BEGIN_MACRO                                                            \
-	if (!js_SetJumpOffset(cx, cg, pc, off))                               \
-	    return JS_FALSE;                                                  \
+        if (!js_SetJumpOffset(cx, cg, pc, off))                               \
+            return JS_FALSE;                                                  \
     JS_END_MACRO
 
 #define CHECK_AND_SET_JUMP_OFFSET_AT(cx,cg,off)                               \
@@ -276,7 +282,7 @@ js_EmitN(JSContext *cx, JSCodeGenerator *cg, JSOp op, size_t extra);
 
 extern JSBool
 js_SetJumpOffset(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
-		 ptrdiff_t off);
+                 ptrdiff_t off);
 
 /* Test whether we're in a with statement. */
 extern JSBool
@@ -291,7 +297,7 @@ js_InCatchBlock(JSTreeContext *tc, JSAtom *atom);
  */
 extern void
 js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
-		 ptrdiff_t top);
+                 ptrdiff_t top);
 
 /*
  * Pop tc->topStmt.  If the top JSStmtInfo struct is not stack-allocated, it
@@ -319,7 +325,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
  */
 extern JSBool
 js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
-		    JSFunction *fun);
+                    JSFunction *fun);
 
 /*
  * Source notes generated along with bytecode for decompiling and debugging.
@@ -351,7 +357,7 @@ typedef enum JSSrcNoteType {
                                    at end of array literal: [1,2,,] */
     SRC_VAR         = 6,        /* JSOP_NAME/SETNAME/FORNAME in a var decl */
     SRC_PCDELTA     = 7,        /* offset from comma-operator to next POP,
-				   or from CONDSWITCH to first CASE opcode */
+                                   or from CONDSWITCH to first CASE opcode */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
     SRC_RESERVED0   = 10,       /* reserved for future use */
@@ -363,7 +369,7 @@ typedef enum JSSrcNoteType {
     SRC_BREAK2LABEL = 16,       /* JSOP_GOTO for 'break label' with atomid */
     SRC_CONT2LABEL  = 17,       /* JSOP_GOTO for 'continue label' with atomid */
     SRC_SWITCH      = 18,       /* JSOP_*SWITCH with offset to end of switch,
-				   2nd off to first JSOP_CASE if condswitch */
+                                   2nd off to first JSOP_CASE if condswitch */
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
     SRC_CATCH       = 20,       /* catch block has guard */
     SRC_CONST       = 21,       /* JSOP_SETCONST in a const decl */
@@ -380,24 +386,24 @@ typedef enum JSSrcNoteType {
 #define SN_XDELTA_MASK          ((ptrdiff_t)JS_BITMASK(SN_XDELTA_BITS))
 
 #define SN_MAKE_NOTE(sn,t,d)    (*(sn) = (jssrcnote)                          \
-					  (((t) << SN_DELTA_BITS)             \
-					   | ((d) & SN_DELTA_MASK)))
+                                          (((t) << SN_DELTA_BITS)             \
+                                           | ((d) & SN_DELTA_MASK)))
 #define SN_MAKE_XDELTA(sn,d)    (*(sn) = (jssrcnote)                          \
-					  ((SRC_XDELTA << SN_DELTA_BITS)      \
-					   | ((d) & SN_XDELTA_MASK)))
+                                          ((SRC_XDELTA << SN_DELTA_BITS)      \
+                                           | ((d) & SN_XDELTA_MASK)))
 
 #define SN_IS_XDELTA(sn)        ((*(sn) >> SN_DELTA_BITS) >= SRC_XDELTA)
 #define SN_TYPE(sn)             (SN_IS_XDELTA(sn) ? SRC_XDELTA                \
-						  : *(sn) >> SN_DELTA_BITS)
+                                                  : *(sn) >> SN_DELTA_BITS)
 #define SN_SET_TYPE(sn,type)    SN_MAKE_NOTE(sn, type, SN_DELTA(sn))
 #define SN_IS_GETTABLE(sn)      (SN_TYPE(sn) < SRC_NEWLINE)
 
 #define SN_DELTA(sn)            ((ptrdiff_t)(SN_IS_XDELTA(sn)                 \
-					     ? *(sn) & SN_XDELTA_MASK         \
-					     : *(sn) & SN_DELTA_MASK))
+                                             ? *(sn) & SN_XDELTA_MASK         \
+                                             : *(sn) & SN_DELTA_MASK))
 #define SN_SET_DELTA(sn,delta)  (SN_IS_XDELTA(sn)                             \
-				 ? SN_MAKE_XDELTA(sn, delta)                  \
-				 : SN_MAKE_NOTE(sn, SN_TYPE(sn), delta))
+                                 ? SN_MAKE_XDELTA(sn, delta)                  \
+                                 : SN_MAKE_NOTE(sn, SN_TYPE(sn), delta))
 
 #define SN_DELTA_LIMIT          ((ptrdiff_t)JS_BIT(SN_DELTA_BITS))
 #define SN_XDELTA_LIMIT         ((ptrdiff_t)JS_BIT(SN_XDELTA_BITS))
@@ -422,7 +428,7 @@ extern JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[];
 extern JS_FRIEND_API(uintN)          js_SrcNoteLength(jssrcnote *sn);
 
 #define SN_LENGTH(sn)           ((js_SrcNoteSpec[SN_TYPE(sn)].arity == 0) ? 1 \
-				 : js_SrcNoteLength(sn))
+                                 : js_SrcNoteLength(sn))
 #define SN_NEXT(sn)             ((sn) + SN_LENGTH(sn))
 
 /* A source note array is terminated by an all-zero element. */
@@ -432,18 +438,19 @@ extern JS_FRIEND_API(uintN)          js_SrcNoteLength(jssrcnote *sn);
 /*
  * Append a new source note of the given type (and therefore size) to cg's
  * notes dynamic array, updating cg->noteCount.  Return the new note's index
- * within the array pointed at by cg->notes.  Return -1 if out of memory.
+ * within the array pointed at by cg->current->notes.  Return -1 if out of
+ * memory.
  */
 extern intN
 js_NewSrcNote(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type);
 
 extern intN
 js_NewSrcNote2(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
-	       ptrdiff_t offset);
+               ptrdiff_t offset);
 
 extern intN
 js_NewSrcNote3(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
-	       ptrdiff_t offset1, ptrdiff_t offset2);
+               ptrdiff_t offset1, ptrdiff_t offset2);
 
 /*
  * NB: this function can add at most one extra extended delta note.
@@ -460,15 +467,26 @@ js_GetSrcNoteOffset(jssrcnote *sn, uintN which);
 
 extern JSBool
 js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
-		    uintN which, ptrdiff_t offset);
+                    uintN which, ptrdiff_t offset);
 
 /*
- * Finish taking source notes in cx's notePool by copying them to new
- * stable store allocated via JS_malloc.  Return null on malloc failure,
- * which means this function reported an error.
+ * Finish taking source notes in cx's notePool, copying final notes to the new
+ * stable store allocated by the caller and passed in via notes.  Return false
+ * on malloc failure, which means this function reported an error.
+ *
+ * To compute the number of JSSrcNotes to allocate and pass in via notes, use
+ * the CG_COUNT_FINAL_SRCNOTES macro.  This macro knows a lot about details of
+ * js_FinishTakingSrcNotes.
  */
-extern jssrcnote *
-js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg);
+#define CG_COUNT_FINAL_SRCNOTES(cg)                                           \
+    ((cg)->prolog.noteCount +                                                 \
+     (((cg)->prolog.noteCount && (cg)->prolog.currentLine != (cg)->firstLine) \
+      ? 2 + (((cg)->firstLine > SN_3BYTE_OFFSET_MASK) << 1)                   \
+      : 0) +                                                                  \
+     (cg)->main.noteCount + 1)
+
+extern JSBool
+js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes);
 
 /*
  * Allocate cg->treeContext.tryCount notes (plus one for the end sentinel)
@@ -483,14 +501,21 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);
  */
 extern JSTryNote *
 js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
-	      ptrdiff_t end, ptrdiff_t catchStart);
+              ptrdiff_t end, ptrdiff_t catchStart);
 
 /*
- * Finish generating exception information, and copy it to JS_malloc
- * storage.
+ * Finish generating exception information into the space at notes.  As with
+ * js_FinishTakingSrcNotes, the caller must use CG_COUNT_FINAL_TRYNOTES(cg) to
+ * preallocate enough space in a JSTryNote[] to pass as the notes parameter of
+ * js_FinishTakingTryNotes.
  */
-extern JSBool
-js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote **tryp);
+#define CG_COUNT_FINAL_TRYNOTES(cg)                                           \
+    (((cg)->tryNext > (cg)->tryBase)                                          \
+     ? PTRDIFF(cg->tryNext, cg->tryBase, JSTryNote) + 1                       \
+     : 0)
+
+extern void
+js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote *notes);
 
 JS_END_EXTERN_C
 

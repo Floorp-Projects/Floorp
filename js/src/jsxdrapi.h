@@ -92,8 +92,8 @@ typedef enum JSXDRWhence {
 typedef struct JSXDROps {
     JSBool      (*get32)(JSXDRState *, uint32 *);
     JSBool      (*set32)(JSXDRState *, uint32 *);
-    JSBool      (*getbytes)(JSXDRState *, char **, uint32);
-    JSBool      (*setbytes)(JSXDRState *, char **, uint32);
+    JSBool      (*getbytes)(JSXDRState *, char *, uint32);
+    JSBool      (*setbytes)(JSXDRState *, char *, uint32);
     void *      (*raw)(JSXDRState *, uint32);
     JSBool      (*seek)(JSXDRState *, int32, JSXDRWhence);
     uint32      (*tell)(JSXDRState *);
@@ -142,7 +142,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_XDRUint32(JSXDRState *xdr, uint32 *lp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRBytes(JSXDRState *xdr, char **bytes, uint32 len);
+JS_XDRBytes(JSXDRState *xdr, char *bytes, uint32 len);
 
 extern JS_PUBLIC_API(JSBool)
 JS_XDRCString(JSXDRState *xdr, char **sp);
@@ -180,7 +180,8 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
 #define JSXDR_MAGIC_SCRIPT_1        0xdead0001
 #define JSXDR_MAGIC_SCRIPT_2        0xdead0002
 #define JSXDR_MAGIC_SCRIPT_3        0xdead0003
-#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_3
+#define JSXDR_MAGIC_SCRIPT_4        0xdead0004
+#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_4
 
 JS_END_EXTERN_C
 

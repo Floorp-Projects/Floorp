@@ -51,6 +51,21 @@
 #include "jsopcode.h"
 #include "jsstr.h"
 
+JS_FRIEND_API(const char *)
+js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
+{
+    JSString *str;
+    const char *bytes;
+
+    str = js_QuoteString(cx, ATOM_TO_STRING(atom), 0);
+    if (!str)
+        return NULL;
+    bytes = js_GetStringBytes(str);
+    if (!bytes)
+        JS_ReportOutOfMemory(cx);
+    return bytes;
+}
+
 extern const char js_Error_str[];       /* trivial, from jsexn.h */
 
 /*
@@ -164,14 +179,15 @@ js_compare_stub(const void *v1, const void *v2)
     return 1;
 }
 
-JS_STATIC_DLL_CALLBACK(void *)
-js_alloc_atom_space(void *priv, size_t size)
+/* These next two are exported to jsscript.c and used similarly there. */
+void * JS_DLL_CALLBACK
+js_alloc_table_space(void *priv, size_t size)
 {
     return malloc(size);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
-js_free_atom_space(void *priv, void *item)
+void JS_DLL_CALLBACK
+js_free_table_space(void *priv, void *item)
 {
     free(item);
 }
@@ -207,7 +223,7 @@ js_free_atom(void *priv, JSHashEntry *he, uintN flag)
 }
 
 static JSHashAllocOps atom_alloc_ops = {
-    js_alloc_atom_space,    js_free_atom_space,
+    js_alloc_table_space,   js_free_table_space,
     js_alloc_atom,          js_free_atom
 };
 
@@ -789,7 +805,7 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
 
             /* Finally, add an entry for atom into the hash bucket at hep. */
             ale = (JSAtomListElement *)
-                JS_HashTableRawAdd(al->table, hep, atom->number, atom, NULL);
+                  JS_HashTableRawAdd(al->table, hep, atom->number, atom, NULL);
             if (!ale)
                 return NULL;
         }

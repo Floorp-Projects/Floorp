@@ -1025,7 +1025,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = JSVAL_TO_STRING(argv[0]);
     if (caller->script) {
         file = caller->script->filename;
-        line = js_PCToLineNumber(caller->script, caller->pc);
+        line = js_PCToLineNumber(cx, caller->script, caller->pc);
         principals = caller->script->principals;
     } else {
         file = NULL;
@@ -1977,31 +1977,39 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
             JSBool negative_ = (*cp_ == '-');                                 \
             if (negative_) cp_++;                                             \
             if (JS7_ISDEC(*cp_) &&                                            \
-                str_->length - negative_ <= sizeof(JSVAL_INT_MAX_STRING) - 1) \
-            {                                                                 \
-                jsuint index_ = JS7_UNDEC(*cp_++);                            \
-                jsuint oldIndex_ = 0;                                         \
-                jsuint c_ = 0;                                                \
-                if (index_ != 0) {                                            \
-                    while (JS7_ISDEC(*cp_)) {                                 \
-                        oldIndex_ = index_;                                   \
-                        c_ = JS7_UNDEC(*cp_);                                 \
-                        index_ = 10 * index_ + c_;                            \
-                        cp_++;                                                \
-                    }                                                         \
-                }                                                             \
-                if (*cp_ == 0 &&                                              \
-                    (oldIndex_ < (JSVAL_INT_MAX / 10) ||                      \
-                     (oldIndex_ == (JSVAL_INT_MAX / 10) &&                    \
-                      c_ <= (JSVAL_INT_MAX % 10)))) {                         \
-                    if (negative_) index_ = 0 - index_;                       \
-                    id = INT_TO_JSVAL((jsint)index_);                         \
-                }                                                             \
+                str_->length - negative_ <= sizeof(JSVAL_INT_MAX_STRING)-1) { \
+                id = CheckForFunnyIndex(id, cp_, negative_);                  \
             } else {                                                          \
                 CHECK_FOR_EMPTY_INDEX(id);                                    \
             }                                                                 \
         }                                                                     \
     JS_END_MACRO
+
+static jsid
+CheckForFunnyIndex(jsid id, const jschar *cp, JSBool negative)
+{
+    jsuint index = JS7_UNDEC(*cp++);
+    jsuint oldIndex = 0;
+    jsuint c = 0;
+
+    if (index != 0) {
+        while (JS7_ISDEC(*cp)) {
+            oldIndex = index;
+            c = JS7_UNDEC(*cp);
+            index = 10 * index + c;
+            cp++;
+        }
+    }
+    if (*cp == 0 &&
+        (oldIndex < (JSVAL_INT_MAX / 10) ||
+         (oldIndex == (JSVAL_INT_MAX / 10) &&
+          c <= (JSVAL_INT_MAX % 10)))) {
+        if (negative)
+            index = 0 - index;
+        id = INT_TO_JSVAL((jsint)index);
+    }
+    return id;
+}
 
 JSScopeProperty *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
@@ -2106,8 +2114,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                                                 ? setter
                                                 : sprop->setter);
 
-            PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
-
             /* NB: obj == pobj, so we can share unlock code at the bottom. */
             if (!sprop)
                 goto bad;
@@ -2151,13 +2157,13 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         goto bad;
     }
 
-    PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     if (SPROP_HAS_VALID_SLOT(sprop, scope))
         LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
 
 #if JS_HAS_GETTER_SETTER
 out:
 #endif
+    PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj, id, sprop);
     if (propp)
         *propp = (JSProperty *) sprop;
     else
@@ -2576,9 +2582,17 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     /* Unlock obj2 before calling getter, relock after to avoid deadlock. */
     scope = OBJ_SCOPE(obj2);
     slot = sprop->slot;
-    *vp = (slot != SPROP_INVALID_SLOT)
-          ? LOCKED_OBJ_GET_SLOT(obj2, slot)
-          : JSVAL_VOID;
+    if (slot != SPROP_INVALID_SLOT) {
+        JS_ASSERT(slot < obj2->map->freeslot);
+        *vp = LOCKED_OBJ_GET_SLOT(obj2, slot);
+
+        /* If sprop has a stub getter, we're done. */
+        if (!sprop->getter)
+            goto out;
+    } else {
+        *vp = JSVAL_VOID;
+    }
+
     JS_UNLOCK_SCOPE(cx, scope);
     if (!SPROP_GET(cx, sprop, obj, obj2, vp))
         return JS_FALSE;
@@ -2588,6 +2602,8 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         LOCKED_OBJ_SET_SLOT(obj2, slot, *vp);
         PROPERTY_CACHE_FILL(&cx->runtime->propertyCache, obj2, id, sprop);
     }
+
+out:
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
@@ -2733,13 +2749,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         pval = LOCKED_OBJ_GET_SLOT(obj, slot);
 
         /* If sprop has a stub setter, keep scope locked and just store *vp. */
-        if (!sprop->setter) {
-            GC_POKE(cx, pval);
-            LOCKED_OBJ_SET_SLOT(obj, slot, *vp);
-
-            JS_UNLOCK_SCOPE(cx, scope);
-            return JS_TRUE;
-        }
+        if (!sprop->setter)
+            goto set_slot;
     }
 
     /* Avoid deadlock by unlocking obj's scope while calling sprop's setter. */
@@ -2758,6 +2769,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      * someone who cleared scope).
      */
     if (SPROP_HAS_VALID_SLOT(sprop, scope)) {
+  set_slot:
         GC_POKE(cx, pval);
         LOCKED_OBJ_SET_SLOT(obj, slot, *vp);
     }

@@ -59,12 +59,12 @@
 #include "nsIAppShell.h"
 #include "nsIJSContextStack.h"
 
-/* XXX
+/*
  * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
- * script hook.  This is a hack to avoid some js engine problems that I havn't
- * properly tracked down.  I'm lame.
+ * script hook.  This was a hack to avoid some js engine problems that should
+ * be fixed now (see Mozilla bug 77636).
  */
-#define CAUTIOUS_SCRIPTHOOK
+#undef CAUTIOUS_SCRIPTHOOK
 
 #ifdef DEBUG_verbose
 #   define DEBUG_COUNT(name, count)                                             \

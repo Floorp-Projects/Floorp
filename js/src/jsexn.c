@@ -470,7 +470,7 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
         }
         APPEND_CHAR_TO_STACK(':');
         if (fp->script && fp->pc) {
-            ulineno = js_PCToLineNumber(fp->script, fp->pc);
+            ulineno = js_PCToLineNumber(cx, fp->script, fp->pc);
             JS_snprintf(ulnbuf, sizeof ulnbuf, "%u", ulineno);
             for (cp = ulnbuf; *cp; cp++)
                 APPEND_CHAR_TO_STACK(*cp);
