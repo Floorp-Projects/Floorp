@@ -30,6 +30,8 @@ textbox[type="autocomplete"]
     padding             : 1px 2px;
     background-color    : #CCCCCC;
     list-style-image    : url("chrome://global/skin/arrow-dn.gif");
+    -moz-binding        : url("chrome://global/skin/classicBindings.xml#autocomplete-history-button");
+
   }
 
 .autocomplete-history-button[open="true"]

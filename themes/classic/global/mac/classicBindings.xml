@@ -213,5 +213,13 @@
       <xul:text class="toolbarbutton-top-text" inherits="value=label,crop"/>
     </content>
   </binding>  
+  
+    <binding id="autocomplete-history-button" extends="xul:box">
+    <content>
+      <xul:box class="autocomplete-history-button-internal-box" autostretch="never">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
 
 </bindings>
