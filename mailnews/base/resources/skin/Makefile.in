@@ -47,6 +47,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/dot.gif			\
 	$(srcdir)/subscribe.css			\
 	$(srcdir)/folderHasMail.gif	\
+	$(srcdir)/readcol.gif	\
+	$(srcdir)/readmail.gif	\
+	$(srcdir)/unreadmail.gif	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

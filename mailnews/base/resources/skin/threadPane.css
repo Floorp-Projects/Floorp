@@ -65,6 +65,18 @@ treerow > treecell > titledbutton {
  width: 16px;
 }
 
+titledbutton.unreadcol {
+  list-style-image: url("chrome://messenger/skin/readmail.gif");
+}
+
+treeitem[Status=""] treerow > treecell > titledbutton.unreadcol {
+  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+}
+
+treeitem[Status="new"] treerow > treecell > titledbutton.unreadcol {
+  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+}
+
 treehead treerow treecell { 
  font-size: 9pt;
  background-color: #666699; 

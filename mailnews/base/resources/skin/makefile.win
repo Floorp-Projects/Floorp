@@ -34,10 +34,13 @@ install::
 	$(MAKE_INSTALL) reply.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) forward.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) trash.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) check.gif		$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) dot.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) check.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) dot.gif				$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) subscribe.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folderHasMail.gif	$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) readcol.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) readmail.gif		$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) unreadmail.gif		$(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\messenger.css
@@ -58,5 +61,10 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\dot.gif
 	rm -f $(DIST)\chrome\messenger\skin\default\subscribe.css
 	rm -f $(DIST)\chrome\messenger\skin\default\folderHasMail.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\readcol.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\readmail.gif
+	rm -f $(DIST)\chrome\messenger\skin\default\unreadmail.gif
+
+
 
 
