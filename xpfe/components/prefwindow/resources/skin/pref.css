@@ -11,6 +11,10 @@
    padding-right: 5px;
    padding-top: 3px;
    padding-bottom: 3px;
+   border-left: 1px solid threedshadow;
+   border-top: 1px solid threedshadow;
+   border-right: 1px solid threedhighlight;
+   border-bottom: 1px solid threedhighlight;
 }
 
 .left-header-text {
