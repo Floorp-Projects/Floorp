@@ -51,8 +51,8 @@ my $serverpush = 0;
 
 ConnectToDatabase();
 
-# print "Content-type: text/plain\n\n";    # Handy for debugging.
-# $::FORM{'debug'} = 1;
+#print "Content-type: text/plain\n\n";    # Handy for debugging.
+#$::FORM{'debug'} = 1;
 
 
 if (grep(/^cmd-/, keys(%::FORM))) {
@@ -433,6 +433,14 @@ sub GenerateSQL {
                  push(@wherepart, "$table.bug_id = bugs.bug_id");
              }
          },
+
+	 "^(dependson|blocked)," => sub {
+		push(@supptables, "dependencies");
+		$ff = "dependencies.$f";
+		$ref = $funcsbykey{",$t"};
+		&$ref;
+		push(@wherepart, "$term");
+	 },
 
 
          ",equals" => sub {
