@@ -525,9 +525,9 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
       }
     }
     if(!isSixthWeekDisplayed) {
-      document.getElementById( "month-week-6-row" ).setAttribute( "collapsed", "true" );
+      document.getElementById( "month-week-6-row" ).setAttribute( "hidden", "true" );
     } else {
-      document.getElementById( "month-week-6-row" ).removeAttribute( "collapsed" );
+      document.getElementById( "month-week-6-row" ).removeAttribute( "hidden" );
     }
 
     // fifth week should not display if holds only off days and only work days displayed
@@ -543,9 +543,9 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
       }
     }
     if(!isFifthWeekDisplayed) {
-      document.getElementById( "month-week-5-row" ).setAttribute( "collapsed", "true" );
+      document.getElementById( "month-week-5-row" ).setAttribute( "hidden", "true" );
     } else {
-      document.getElementById( "month-week-5-row" ).removeAttribute( "collapsed" );
+      document.getElementById( "month-week-5-row" ).removeAttribute( "hidden" );
     }
   }
 

@@ -530,11 +530,11 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
    var weekIndex;
    for( weekIndex = 1 ;  weekIndex <= this.WeeksInView ; ++weekIndex )
    {
-     document.getElementById( "multiweek-week-" + weekIndex + "-row" ).removeAttribute( "collapsed" );
+     document.getElementById( "multiweek-week-" + weekIndex + "-row" ).removeAttribute( "hidden" );
    }
    for( weekIndex = this.WeeksInView + 1 ; weekIndex <= 6 ; ++weekIndex )
    {
-     document.getElementById( "multiweek-week-" + weekIndex + "-row" ).setAttribute( "collapsed", "true" );
+     document.getElementById( "multiweek-week-" + weekIndex + "-row" ).setAttribute( "hidden", "true" );
    }
 
    // read preference for previous weeks in view
