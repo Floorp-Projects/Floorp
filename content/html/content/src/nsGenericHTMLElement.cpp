@@ -874,7 +874,6 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   PRBool done = PR_FALSE;
   nsCOMPtr<nsIAtom> tag;
 
-
   frame->GetContent(getter_AddRefs(content));
 
   if (content) {
@@ -1129,7 +1128,9 @@ nsGenericHTMLElement::GetInnerHTML(nsAWritableString& aInnerHTML)
 {
   aInnerHTML.Truncate();
 
-  if (!mDocument) {
+  nsCOMPtr<nsIDocument> doc;
+  mNodeInfo->GetDocument(*getter_AddRefs(doc));
+  if (!doc) {
     return NS_OK; // We rely on the document for doing HTML conversion
   }
 
@@ -1142,7 +1143,7 @@ nsGenericHTMLElement::GetInnerHTML(nsAWritableString& aInnerHTML)
 
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  docEncoder->Init(mDocument, NS_LITERAL_STRING("text/html"), 0);
+  docEncoder->Init(doc, NS_LITERAL_STRING("text/html"), 0);
 
   nsCOMPtr<nsIDOMRange> range(new nsRange);
   NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);
