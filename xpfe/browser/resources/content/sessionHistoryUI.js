@@ -23,9 +23,12 @@
  *  Peter Annema <disttsc@bart.nl>
  *
  */
-const MAX_HISTORY_MENU_ITEMS = 15;
-var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+const MAX_HISTORY_MENU_ITEMS = 15
+const MAX_HISTORY_ITEMS = 100;
+var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+             .getService(Components.interfaces.nsIRDFService);
+var rdfc = Components.classes["@mozilla.org/rdf/container-utils;1"]
+             .getService(Components.interfaces.nsIRDFContainerUtils);
 var localstore = rdf.GetDataSource("rdf:localstore");
 
 function FillHistoryMenu( aParent, aMenu )
@@ -116,17 +119,18 @@ function createUBHistoryMenu( aParent )
   {
     var ubHistory = appCore.urlbarHistory;
     if (localstore) {
-      var entries = localstore.GetTargets(rdf.GetResource("nc:urlbar-history"),
-                                          rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
-                                          true);
+      var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history")).GetElements();
       var i= MAX_HISTORY_MENU_ITEMS;
-      
       
       // Delete any old menu items only if there are legitimate
       // urls to display, otherwise we want to display the 
-      // '(Nothing Available)' item.
-      if (entries.hasMoreElements()) 
-        deleteHistoryItems(aParent);
+      // '(Nothing Available)' item.     
+	  deleteHistoryItems(aParent);
+      if (!entries.hasMoreElements()) {               
+	    //Create the "Nothing Available" Menu item          	   
+		var na = bundle.GetStringFromName( "nothingAvailable" );
+		createMenuItem(aParent, "nothing_available", na);      
+      }     
 
       while (entries.hasMoreElements() && (i-- > 0)) {
         var entry = entries.getNext();
@@ -146,27 +150,27 @@ function addToUrlbarHistory()
 	if (!urlToAdd)
 	   return;
 	if (localstore) {
-	   var entries = localstore.GetTargets(rdf.GetResource("nc:urlbar-history"),
-                                rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
-                                true);
+    var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history"));
+	var entry = rdf.GetLiteral(urlToAdd);
+    var index = entries.IndexOf(entry);
 
-       while (entries.hasMoreElements()) {
-	     var entry = entries.getNext();
-		 if (entry) {
-		   entry = entry.QueryInterface(Components.interfaces.nsIRDFLiteral);
-           var url = entry.Value;
-		   if (url == urlToAdd) {
-		 //     dump("URL already in urlbar history\n");
-			  return;
-		   }  
-         }  //entry
-       }  //while
-	   //dump("Adding " + urlToAdd + "to urlbar history\n");
-	   localstore.Assert(rdf.GetResource("nc:urlbar-history"),
-                    rdf.GetResource("http://home.netscape.com/NC-rdf#child"),
-                    rdf.GetLiteral(urlToAdd),
-                    true);
-	} //localstore		
+    if (index != -1) {
+      // we've got it already. Remove it from its old place 
+      // and insert it to the top
+      //dump("URL already in urlbar history\n");
+      entries.RemoveElementAt(index, true);
+    }
+
+    // Otherwise, we've got a new URL in town. Add it!
+    // Put the new entry at the front of the list.
+    entries.InsertElementAt(entry, 1, true);
+
+    // Remove any expired history items so that we don't let this grow
+    // without bound.
+    for (index = entries.GetCount(); index > MAX_HISTORY_ITEMS; --index) {
+      entries.RemoveElementAt(index, true);
+    }
+  }
   }
   
 function createMenuItem( aParent, aIndex, aValue)
@@ -188,13 +192,13 @@ function createCheckboxMenuItem( aParent, aIndex, aValue, aChecked)
     aParent.appendChild( menuitem );
   }
 
-function deleteHistoryItems( aParent )
+function deleteHistoryItems( aParent)
   {
     var children = aParent.childNodes;
     for (var i = 0; i < children.length; i++ )
       {
         var index = children[i].getAttribute( "index" );
-        if (index)
+        if (index) 		  
           aParent.removeChild( children[i] );
       }
   }
