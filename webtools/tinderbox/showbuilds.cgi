@@ -379,7 +379,7 @@ sub print_table_header {
       if ($form{nocrap}) {
         print "<th rowspan=2 bgcolor=$colormap{busted}>$bn</th>";
       } else {
-        print "<td rowspan=2 bgcolor=000000 background='$images{flames}>'";
+        print "<td rowspan=2 bgcolor=000000 background='$images{flames}'>";
         print "<font color=white>$bn</font></td>";
       }
     }
