@@ -107,19 +107,22 @@ while (@row = FetchSQLData()) {
 undef $profid{0};
 
 
-Status("Checking reporter/assigned_to ids");
-SendSQL("select bug_id,reporter,assigned_to from bugs");
+Status("Checking reporter/assigned_to/qa_contact ids");
+SendSQL("select bug_id,reporter,assigned_to,qa_contact from bugs");
 
 my %bugid;
 
 while (@row = FetchSQLData()) {
-    my($id, $reporter, $assigned_to) = (@row);
+    my($id, $reporter, $assigned_to, $qa_contact) = (@row);
     $bugid{$id} = 1;
     if (!defined $profid{$reporter}) {
         Alert("Bad reporter $reporter in " . BugLink($id));
     }
     if (!defined $profid{$assigned_to}) {
         Alert("Bad assigned_to $assigned_to in" . BugLink($id));
+    }
+    if ($qa_contact != 0 && !defined $profid{$qa_contact}) {
+        Alert("Bad qa_contact $qa_contact in" . BugLink($id));
     }
 }
 
