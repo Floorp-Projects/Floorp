@@ -144,7 +144,7 @@ public class SSLClient
 	  results.println(htmlHeader);
 	results.println("SSL Client Tester");
 	results.println(
-			"$Id: SSLClient.java,v 1.5 2002/09/05 01:16:59 nicolson%netscape.com Exp $ " + 
+			"$Id: SSLClient.java,v 1.6 2002/09/06 16:23:48 nicolson%netscape.com Exp $ " + 
 			versionStr );
 	
 	SSLSocket s;
@@ -402,7 +402,7 @@ public class SSLClient
     0
   };
   
-  public static void main(String argv[]) 
+  public static void main(String argv[])  throws Exception
     {
       int i;
 

@@ -323,7 +323,7 @@ public class SSLServer
 	0
     };
 
-    public static void main(String argv[]) 
+    public static void main(String argv[]) throws Exception
     {
 	int i;
 
