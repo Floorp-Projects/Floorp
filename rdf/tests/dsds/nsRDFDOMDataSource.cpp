@@ -97,9 +97,6 @@ class nsRDFDOMDataSource : public nsISupports {
   /* void Flush (); */
   NS_IMETHOD Flush() = 0;
 
-  /* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
-  NS_IMETHOD GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval) = 0;
-
   /* nsISimpleEnumerator GetAllCmds (in nsIRDFResource aSource); */
   NS_IMETHOD GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval) = 0;
 

@@ -114,9 +114,6 @@ public:
   /* void Flush (); */
   NS_IMETHOD Flush();
 
-  /* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
-  NS_IMETHOD GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval);
-
   /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
   NS_IMETHOD IsCommandEnabled(nsISupportsArray * aSources, nsIRDFResource *aCommand, nsISupportsArray * aArguments, PRBool *_retval);
 
@@ -433,13 +430,6 @@ nsRDFDataSourceDataSource::GetAllResources(nsISimpleEnumerator **_retval)
 /* void Flush (); */
 NS_IMETHODIMP
 nsRDFDataSourceDataSource::Flush()
-{
-  return NS_RDF_NO_VALUE;
-}
-
-/* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
-NS_IMETHODIMP
-nsRDFDataSourceDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
 {
   return NS_RDF_NO_VALUE;
 }
