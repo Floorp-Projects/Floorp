@@ -41,16 +41,16 @@
 #endif
 
 #include "prefapi.h"
+#include "nsIPref.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 
 ///////////////////
-#include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLDocument.h"
 
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
+static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 ///////////////////
 
 #define InSingleSignon 1
@@ -108,6 +108,19 @@ PRIVATE PRBool si_useDialogs = PR_FALSE;
 
 static PRBool si_PartiallyLoaded = FALSE;
 static PRBool si_FullyLoaded = FALSE;
+
+PRIVATE void
+si_SetSignonNotificationPref(PRBool x) {
+  nsresult ret;
+  nsIPref* pPrefService = nsnull;
+  ret = nsServiceManager::GetService(kPrefServiceCID, kIPrefServiceIID,
+    (nsISupports**) &pPrefService);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->SetBoolPref("signon.Notified", x);
+//    ret = pPrefService->SaveLIPrefFile(NULL);
+    nsServiceManager::ReleaseService(kPrefServiceCID, pPrefService);
+  }
+}
 
 PRIVATE void
 si_SetUsingDialogsPref(PRBool x)
@@ -758,6 +771,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
 
         } else if (pickFirstUser) {
             user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
+            url->chosen_user = user;
 
         } else {
             /* multiple users for this URL so a choice needs to be made */
@@ -771,11 +785,10 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
             list2 = list;
             users2 = users;
 
-            /* step through set of user nodes for this URL and create list of
-             * first data node of each (presumably that is the user name).
-             * Note that the user nodes are already ordered by
-             * most-recently-used so the first one in the list is the most
-             * likely one to be chosen.
+            /* if there are multiple users, we need to load in the password file
+             * before creating the list of usernames that we will present for 
+             * selection.  Otherwise the ordering of the users in the file and the
+             * ordering of users in the list we present for selection will disagree
              */
             user_count = 0;
             while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
@@ -786,9 +799,30 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
                     /* name of current data item does not match name in data node */
                     continue;
                 }
+                user_count++;
+            }
+            if (user_count > 1) {
+                si_LoadSignonData(TRUE);
+                url = si_GetURL(URLName);
+            }
+            user_ptr = url->signonUser_list;
+
+            /* step through set of user nodes for this URL and create list of
+             * first data node of each (presumably that is the user name).
+             * Note that the user nodes are already ordered by
+             * most-recently-used so the first one in the list is the most
+             * likely one to be chosen.
+             */
+            while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+                data_ptr = user->signonData_list;
+                /* consider first data node to be the identifying item */
+                data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+                if (PL_strcmp(data->name, userText)) {
+                    /* name of current data item does not match name in data node */
+                    continue;
+                }
                 *(list2++) = data->value;
                 *(users2++) = user;
-                user_count++;
             }
 
             /* have user select a username from the list */
@@ -1079,6 +1113,7 @@ si_OkToSave(char *URLName, char *userName) {
         message = Wallet_Localize("PasswordNotification2");
         StrAllocCat(notification, message);
         PR_FREEIF(message);
+        si_SetSignonNotificationPref(PR_TRUE);
         if (!MyFE_Confirm(notification)) {
             XP_FREE (notification);
             PREF_SetBoolPref(pref_rememberSignons, PR_FALSE);
@@ -2307,7 +2342,7 @@ SINGSIGN_RestoreSignonData
     /* get first saved user just so we can see the name of the first item on the form */
     user = si_GetUser(URLName, PR_TRUE, NULL); /* this is the first saved user */
     if (user) {
-        si_LoadSignonData(TRUE); /* this destroys "user" so need to recalculate it */
+        si_LoadSignonData(PR_TRUE); /* this destroys "user" so need to recalculate it */
         user = si_GetUser(URLName, PR_TRUE, NULL);
         data_ptr = user->signonData_list; /* this is first item on form */
         data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
@@ -2334,7 +2369,7 @@ SINGSIGN_RestoreSignonData
     user = si_GetUser(URLName, PR_FALSE, name);
     if (user) {
         si_LoadSignonData(TRUE); /* this destroys user so need to recaculate it */
-        user = si_GetUser(URLName, PR_FALSE, name);
+        user = si_GetUser(URLName, PR_TRUE, name);
         if (user) { /* this should alwlays be true but just in case */
             data_ptr = user->signonData_list;
             while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
@@ -2417,7 +2452,7 @@ si_RestoreOldSignonDataFromBrowser
     /* get the data from previous time this URL was visited */
     si_lock_signon_list();
     user = si_GetUser(URLName, pickFirstUser, "username");
-    if (!user) {
+   if (!user) {
         /* leave original username and password from caller unchanged */
         /* username = 0; */
         /* *password = 0; */
