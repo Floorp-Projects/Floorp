@@ -961,6 +961,20 @@ nsXULDocument::SetDocumentCharacterSet(const nsAReadableString& aCharSetID)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsXULDocument::GetDocumentCharacterSetSource(PRInt32* aCharsetSource)
+{
+  *aCharsetSource = mCharacterSetSource;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXULDocument::SetDocumentCharacterSetSource(PRInt32 aCharsetSource)
+{
+  mCharacterSetSource = aCharsetSource;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXULDocument::AddCharSetObserver(nsIObserver* aObserver)
 {

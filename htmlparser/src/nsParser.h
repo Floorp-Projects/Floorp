@@ -160,9 +160,9 @@ class nsParser : public nsIParser,
      *  @param   aCharsetSource- the soure of the chares
      *  @return	 nada
      */
-    virtual void SetDocumentCharset(nsString& aCharset, nsCharsetSource aSource);
+    virtual void SetDocumentCharset(nsString& aCharset, PRInt32 aSource);
 
-    void GetDocumentCharset(nsString& oCharset, nsCharsetSource& oSource)
+    void GetDocumentCharset(nsString& oCharset, PRInt32& oSource)
     {
          oCharset = mCharset;
          oSource = mCharsetSource;
@@ -338,7 +338,7 @@ class nsParser : public nsIParser,
     PRBool DetectMetaTag(const char* aBytes, 
                          PRInt32 aLen, 
                          nsString& oCharset, 
-                         nsCharsetSource& oCharsetSource);
+                         PRInt32& oCharsetSource);
 
     void SetSinkCharset(nsAWritableString& aCharset);
 
@@ -466,7 +466,7 @@ protected:
     nsITokenObserver*   mTokenObserver;
     nsString            mUnusedInput;
     nsString            mCharset;
-    nsCharsetSource     mCharsetSource;
+    PRInt32             mCharsetSource;
     nsresult            mInternalState;
     PRBool              mObserversEnabled;
     nsString            mCommandStr;

@@ -501,7 +501,7 @@ void nsParser::SetCommand(eParserCommands aParserCommand){
  *  @param   aCharsetSource- the soure of the chares
  *  @return	 nada
  */
-void nsParser::SetDocumentCharset(nsString& aCharset, nsCharsetSource aCharsetSource){
+void nsParser::SetDocumentCharset(nsString& aCharset, PRInt32 aCharsetSource){
   mCharset = aCharset;
   mCharsetSource = aCharsetSource; 
   if(mParserContext && mParserContext->mScanner)
@@ -2062,7 +2062,7 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
 #define UCS4_3412 "X-ISO-10646-UCS-4-3412"
 #define UTF8 "UTF-8"
 
-static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, nsCharsetSource& oCharsetSource) {
+static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, PRInt32& oCharsetSource) {
  oCharsetSource= kCharsetFromAutoDetection;
  oCharset.Truncate();
  // See http://www.w3.org/TR/2000/REC-xml-20001006#sec-guessing
@@ -2229,7 +2229,7 @@ PRBool
 nsParser::DetectMetaTag(const char* aBytes, 
                         PRInt32 aLen, 
                         nsString& aCharset, 
-                        nsCharsetSource& aCharsetSource) 
+                        PRInt32& aCharsetSource) 
 {
   PRBool foundContentType = PR_FALSE;
   aCharsetSource= kCharsetFromMetaTag;
@@ -2358,7 +2358,7 @@ ParserWriteFunc(nsIInputStream* in,
   }
 
   if(pws->mNeedCharsetCheck) { 
-    nsCharsetSource guessSource; 
+    PRInt32 guessSource; 
     nsAutoString guess, preferred; 
   
     pws->mNeedCharsetCheck = PR_FALSE; 

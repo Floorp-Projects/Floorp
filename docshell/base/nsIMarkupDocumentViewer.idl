@@ -70,7 +70,7 @@ interface nsIMarkupDocumentViewer : nsISupports
 	*/
 	attribute PRInt32 hintCharacterSetSource;
 
-	//void GetCharacterSetHint(in wstring hintCharset, in nsCharsetSource charsetSource);
+	//void GetCharacterSetHint(in wstring hintCharset, in PRInt32 charsetSource);
 
 	/**
 	* Tell the container to shrink-to-fit or grow-to-fit its contents

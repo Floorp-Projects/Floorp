@@ -52,6 +52,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDocumentCharsetInfo, nsIDocumentCharsetInfo);
 nsDocumentCharsetInfo::nsDocumentCharsetInfo() 
 {
   NS_INIT_REFCNT();
+  mParentCharsetSource = 0;
 }
 
 nsDocumentCharsetInfo::~nsDocumentCharsetInfo() 
@@ -96,4 +97,15 @@ NS_IMETHODIMP nsDocumentCharsetInfo::GetParentCharset(nsIAtom ** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocumentCharsetInfo::SetParentCharsetSource(PRInt32 aCharsetSource)
+{
+  mParentCharsetSource = aCharsetSource;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocumentCharsetInfo::GetParentCharsetSource(PRInt32 * aParentCharsetSource)
+{
+  *aParentCharsetSource = mParentCharsetSource;
+  return NS_OK;
+}
 

@@ -199,7 +199,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
                 char * text = PR_GetEnv("NGLAYOUT_HOME");
                 nsString mtemplateURL(text ? text : "resource:/res/samples/picstest1.html");
                 //  ws->LoadURL(mtemplateURL, nsnull, nsnull);
-                nsCharsetSource s;
+                PRInt32 s;
                 ws->SetRendering(PR_TRUE);
                 ws->StopDocumentLoad();
                 ws->LoadDocument("resource:/res/samples/picstest1.html", nsnull, s);

@@ -46,7 +46,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsHTMLDocument.h"
-#include "nsIParser.h"
 #include "nsIParserFilter.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLParts.h"
@@ -416,6 +415,272 @@ nsHTMLDocument::CreateShell(nsIPresContext* aContext,
   return result;
 }
 
+// The following Try*Charset will return PR_FALSE only if the charset source 
+// should be considered (ie. aCharsetSource < thisCharsetSource) but we failed 
+// to get the charset from this source. 
+
+PRBool 
+nsHTMLDocument::TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
+                               PRInt32& aCharsetSource, 
+                               nsAString& aCharset)
+{
+  PRInt32 requestCharsetSource;
+  nsresult rv;
+
+  if (aMarkupDV) {
+    rv = aMarkupDV->GetHintCharacterSetSource(&requestCharsetSource);
+    if(NS_SUCCEEDED(rv) && kCharsetUninitialized != requestCharsetSource) {
+      PRUnichar* requestCharset;
+      rv = aMarkupDV->GetHintCharacterSet(&requestCharset);
+      aMarkupDV->SetHintCharacterSetSource((PRInt32)(kCharsetUninitialized));
+      if(requestCharsetSource <= aCharsetSource) 
+        return PR_TRUE;
+      if(NS_SUCCEEDED(rv)) {
+        aCharsetSource = requestCharsetSource;
+        aCharset = requestCharset;
+        Recycle(requestCharset);
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
+
+PRBool 
+nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
+                                     nsIDocumentCharsetInfo*  aDocInfo,
+                                     PRInt32& aCharsetSource, 
+                                     nsAString& aCharset)
+{
+  nsresult rv;
+
+  if(kCharsetFromUserForced <= aCharsetSource) 
+    return PR_TRUE;
+
+  PRUnichar* forceCharsetFromWebShell = nsnull;
+  if (aMarkupDV) 
+    rv = aMarkupDV->GetForceCharacterSet(&forceCharsetFromWebShell);
+
+  if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) 
+  {
+    aCharset = forceCharsetFromWebShell;
+    Recycle(forceCharsetFromWebShell);
+    //TODO: we should define appropriate constant for force charset
+    aCharsetSource = kCharsetFromUserForced;  
+  } else if (aDocInfo) {
+    nsCOMPtr<nsIAtom> csAtom;
+    aDocInfo->GetForcedCharset(getter_AddRefs(csAtom));
+    if (csAtom.get() != nsnull) {
+      csAtom->ToString(aCharset);
+      aCharsetSource = kCharsetFromUserForced;  
+      aDocInfo->SetForcedCharset(nsnull);
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+PRBool 
+nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor, 
+                                PRInt32& aCharsetSource, 
+                                nsAString& aCharset)
+{
+  nsresult rv;
+  
+  if (kCharsetFromCache <= aCharsetSource) 
+    return PR_TRUE;
+
+  nsXPIDLCString cachedCharset;
+  rv = aCacheDescriptor->GetMetaDataElement("charset",
+                                           getter_Copies(cachedCharset));
+  if (NS_SUCCEEDED(rv) && PL_strlen(cachedCharset) > 0)
+  {
+    aCharset.Assign(NS_ConvertASCIItoUCS2(cachedCharset));
+    aCharsetSource = kCharsetFromCache;
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+PRBool 
+nsHTMLDocument::TryBookmarkCharset(nsXPIDLCString* aUrlSpec,
+                                   PRInt32& aCharsetSource, 
+                                   nsAString& aCharset)
+{
+  nsresult rv;
+  if (kCharsetFromBookmarks <= aCharsetSource)
+    return PR_TRUE;
+
+  nsCOMPtr<nsIRDFDataSource>  datasource;
+  if (gRDF && NS_SUCCEEDED(rv = gRDF->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource)))) {
+    nsCOMPtr<nsIBookmarksService>   bookmarks = do_QueryInterface(datasource);
+    if (bookmarks) {
+      if (aUrlSpec) {
+        nsXPIDLString pBookmarkedCharset;
+        rv = bookmarks->GetLastCharset(*aUrlSpec, getter_Copies(pBookmarkedCharset));
+        if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE)) {
+          aCharset = pBookmarkedCharset;
+          aCharsetSource = kCharsetFromBookmarks;
+          return PR_TRUE;
+        }    
+      } 
+    }
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsHTMLDocument::TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
+                                 PRInt32& aCharsetSource, 
+                                 nsAString& aCharset)
+{
+  if (aDocInfo) {
+    PRInt32 source;
+    nsCOMPtr<nsIAtom> csAtom;
+    PRInt32 parentSource;
+    aDocInfo->GetParentCharsetSource(&parentSource);
+    if (kCharsetFromParentForced <= parentSource)
+      source = kCharsetFromParentForced;
+    else if (kCharsetFromCache <= parentSource)
+      source = kCharsetFromParentFrame;
+    else 
+      return PR_FALSE;
+
+    if (source < aCharsetSource)
+      return PR_TRUE;
+
+    aDocInfo->GetParentCharset(getter_AddRefs(csAtom));
+    if (csAtom) {
+      csAtom->ToString(aCharset);
+      aCharsetSource = source;  
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsHTMLDocument::TryWeakDocTypeDefault(PRInt32& aCharsetSource, 
+                                      nsAString& aCharset)
+{
+  if (kCharsetFromWeakDocTypeDefault <= aCharsetSource)
+    return PR_TRUE;
+  
+  aCharset.Assign(NS_LITERAL_STRING("ISO-8859-1")); // fallback value in case webShell return error
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (prefs) {
+    nsXPIDLString defCharset;
+    nsresult rv = prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
+    if (NS_SUCCEEDED(rv)) {
+      aCharset.Assign(defCharset);
+    }
+  }
+  aCharsetSource = kCharsetFromWeakDocTypeDefault;
+  return PR_TRUE;
+}
+
+PRBool 
+nsHTMLDocument::TryHttpHeaderCharset(nsIHttpChannel *aHttpChannel, 
+                                     PRInt32& aCharsetSource, 
+                                     nsAString& aCharset)
+{
+  if(kCharsetFromHTTPHeader <= aCharsetSource)
+    return PR_TRUE;
+
+  if (aHttpChannel) {
+    nsXPIDLCString charsetheader;
+    nsresult rv = aHttpChannel->GetCharset(getter_Copies(charsetheader));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsICharsetAlias> calias(do_CreateInstance(kCharsetAliasCID, &rv));
+      if(calias) {
+        nsAutoString preferred;
+        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetheader), preferred);
+        if(NS_SUCCEEDED(rv)) {
+          aCharset = preferred;
+          aCharsetSource = kCharsetFromHTTPHeader;
+          return PR_TRUE;
+        }  
+      }
+    } 
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsHTMLDocument::TryUserDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
+                                       PRInt32& aCharsetSource, 
+                                       nsAString& aCharset)
+{
+  if(kCharsetFromUserDefault <= aCharsetSource) 
+    return PR_TRUE;
+
+  PRUnichar* defaultCharsetFromWebShell = NULL;
+  if (aMarkupDV) {
+    nsresult rv = aMarkupDV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
+    if(NS_SUCCEEDED(rv)) {
+      aCharset = defaultCharsetFromWebShell;
+      Recycle(defaultCharsetFromWebShell);
+      aCharsetSource = kCharsetFromUserDefault;
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+void 
+nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, 
+                                   nsAString& aCharset,
+                                   const char* aCommand)
+{
+  nsCOMPtr <nsIParserFilter> cdetflt;
+
+  nsresult rv_detect;
+  if(! gInitDetector) {
+    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
+    if(pref) {
+      PRUnichar* detector_name = nsnull;
+      rv_detect = pref->GetLocalizedUnicharPref("intl.charset.detector", &detector_name);
+      if(NS_SUCCEEDED(rv_detect)) {
+        PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,DETECTOR_CONTRACTID_MAX);
+        PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get(),DETECTOR_CONTRACTID_MAX);
+        gPlugDetector = PR_TRUE;
+        PR_FREEIF(detector_name);
+      }
+      pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback, nsnull);
+    }
+    gInitDetector = PR_TRUE;
+  }
+
+  if (gPlugDetector) {
+    nsCOMPtr <nsICharsetDetector> cdet = do_CreateInstance(g_detector_contractid, &rv_detect);
+    if(NS_SUCCEEDED(rv_detect)) {
+      cdetflt = do_CreateInstance(NS_CHARSET_DETECTION_ADAPTOR_CONTRACTID, &rv_detect);
+      if(NS_SUCCEEDED(rv_detect)) {
+        nsCOMPtr<nsICharsetDetectionAdaptor> adp = do_QueryInterface(cdetflt, &rv_detect);
+        if(cdetflt && NS_SUCCEEDED( rv_detect )) {
+          nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(aDocShell, &rv_detect);
+          if( NS_SUCCEEDED( rv_detect )) {
+            rv_detect = adp->Init(wss, cdet, this, mParser, PromiseFlatString(aCharset).get(), aCommand);
+
+            // The current implementation for SetParserFilter needs to 
+            // be changed to be more XPCOM friendly. See bug #40149
+            if (mParser) 
+              nsCOMPtr<nsIParserFilter> oldFilter = getter_AddRefs(mParser->SetParserFilter(cdetflt));
+          }
+        }
+      }
+    }
+    else {
+      // IF we cannot create the detector, don't bother to 
+      // create one next time.
+      gPlugDetector = PR_FALSE;
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIChannel* aChannel,
@@ -441,17 +706,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  nsAutoString charset(NS_LITERAL_STRING("ISO-8859-1")); // fallback value in case webShell return error
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  if (prefs) {
-    nsXPIDLString defCharset;
-    rv = prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
-    if (NS_SUCCEEDED(rv)) {
-      charset.Assign(defCharset);
-    }
-  }
-  nsCharsetSource charsetSource = kCharsetFromWeakDocTypeDefault;
 
   nsCOMPtr<nsIURI> aURL;
   rv = aChannel->GetURI(getter_AddRefs(aURL));
@@ -484,25 +738,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
       SetReferrer(referrer);
     }
-
-    if(kCharsetFromHTTPHeader > charsetSource) {
-      nsXPIDLCString charsetheader;
-      rv = httpChannel->GetCharset(getter_Copies(charsetheader));
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICharsetAlias> calias(do_CreateInstance(kCharsetAliasCID, &rv));
-        if(calias) {
-          nsAutoString preferred;
-          rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetheader), preferred);
-          if(NS_SUCCEEDED(rv)) {
-#ifdef DEBUG_charset
-            printf("From HTTP Header, charset = %s\n", NS_ConvertUCS2toUTF8(charset).get());
-#endif
-            charset = preferred;
-            charsetSource = kCharsetFromHTTPHeader;
-          }
-        }  
-      }
-    } 
 
     nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(httpChannel);
     if (cachingChan) {
@@ -560,10 +795,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (NS_FAILED(rv)) { return rv; }
   }
 
-  PRUnichar* requestCharset = nsnull;
-  nsCharsetSource requestCharsetSource = kCharsetUninitialized;
-
-  nsCOMPtr <nsIParserFilter> cdetflt;
   nsCOMPtr<nsIHTMLContentSink> sink;
 #ifdef rickgdebug
   nsString outString;   // added out. Redirect to stdout if desired -- gpk 04/01/99
@@ -612,193 +843,49 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       }
     }
   }
-	if(kCharsetFromUserDefault > charsetSource) 
-  {
-		PRUnichar* defaultCharsetFromWebShell = NULL;
-    if (muCV) {
-  		rv = muCV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
-      if(NS_SUCCEEDED(rv)) {
-        charset = defaultCharsetFromWebShell;
-        Recycle(defaultCharsetFromWebShell);
-        charsetSource = kCharsetFromUserDefault;
-      }
+
+  nsXPIDLCString scheme;
+  aURL->GetScheme(getter_Copies(scheme));
+
+  nsXPIDLCString urlSpec;
+  aURL->GetSpec(getter_Copies(urlSpec));
+
+  PRInt32 charsetSource = kCharsetUninitialized;
+  nsAutoString charset; 
+  
+  // The following charset resolving calls has implied knowledge about 
+  // charset source priority order. Each try will return true if the 
+  // source is higher or equal to the source as its name describes. Some
+  // try call might change charset source to multiple values, like 
+  // TryHintCharset and TryParentCharset. It should be always safe to try more 
+  // sources. 
+  if (! TryUserForcedCharset(muCV, dcInfo, charsetSource, charset)) {
+    TryHintCharset(muCV, charsetSource, charset);
+    TryParentCharset(dcInfo, charsetSource, charset);
+    if (TryHttpHeaderCharset(httpChannel, charsetSource, charset)) {
+      // Use the header's charset.
+    }
+    else if (scheme && nsCRT::strcasecmp("about", scheme) &&          // don't try to access bookmarks for about:blank
+             TryBookmarkCharset(&urlSpec, charsetSource, charset)) {
+      // Use the bookmark's charset.
+    }
+    else if (cacheDescriptor && urlSpec &&
+             TryCacheCharset(cacheDescriptor, charsetSource, charset)) {
+      // Use the cache's charset.
+    }
+    else if (TryWeakDocTypeDefault(charsetSource, charset)) {
+      // Use the weak doc type default charset
+    }
+    else {
+      // Use the user's default charset.
+      TryUserDefaultCharset(muCV, charsetSource, charset);
     }
   }
-
-    // for html, we need to find out the Meta tag from the hint.
-    if (muCV) {
-      rv = muCV->GetHintCharacterSet(&requestCharset);
-      if(NS_SUCCEEDED(rv)) {
-        rv = muCV->GetHintCharacterSetSource((PRInt32*)(&requestCharsetSource));
- 		        if(kCharsetUninitialized != requestCharsetSource) {
- 		            muCV->SetHintCharacterSetSource((PRInt32)(kCharsetUninitialized));
- 		  			}
-      }
-    }
-    if(NS_SUCCEEDED(rv)) 
-    {
-      if(requestCharsetSource > charsetSource) 
-      {
-#ifdef DEBUG_charset
-				nsAutoString d(requestCharset);
-			  char* cCharset = ToNewCString(d);
-			  printf("From request charset, charset = %s req=%d->%d\n", 
-			  		cCharset, charsetSource, requestCharsetSource);
-			  Recycle(cCharset);
-#endif
-        charsetSource = requestCharsetSource;
-        charset = requestCharset;
-        Recycle(requestCharset);
-      }
-    }
-    if(kCharsetFromUserForced > charsetSource) {
-      PRUnichar* forceCharsetFromWebShell = NULL;
-      if (muCV) {
-		    rv = muCV->GetForceCharacterSet(&forceCharsetFromWebShell);
-      }
-		  if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) 
-      {
-#ifdef DEBUG_charset
-				nsAutoString d(forceCharsetFromWebShell);
-			  char* cCharset = ToNewCString(d);
-			  printf("From force, charset = %s \n", cCharset);
-			  Recycle(cCharset);
-#endif
-				charset = forceCharsetFromWebShell;
-        Recycle(forceCharsetFromWebShell);
-				//TODO: we should define appropriate constant for force charset
-				charsetSource = kCharsetFromUserForced;  
-          } else if (dcInfo) {
-            nsCOMPtr<nsIAtom> csAtom;
-            dcInfo->GetForcedCharset(getter_AddRefs(csAtom));
-            if (csAtom.get() != NULL) {
-              csAtom->ToString(charset);
-              charsetSource = kCharsetFromUserForced;  
-              dcInfo->SetForcedCharset(NULL);
-            }
-          }
-    }
-
-    nsresult rv_detect = NS_OK;
-    if(! gInitDetector)
-    {
-      nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-      if(pref)
-      {
-        PRUnichar* detector_name = nsnull;
-        if(NS_SUCCEEDED(
-             rv_detect = pref->GetLocalizedUnicharPref("intl.charset.detector",
-                                 &detector_name)))
-        {
-          PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,DETECTOR_CONTRACTID_MAX);
-          PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get(),DETECTOR_CONTRACTID_MAX);
-          gPlugDetector = PR_TRUE;
-          PR_FREEIF(detector_name);
-        }
-        pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback, nsnull);
-      }
-      gInitDetector = PR_TRUE;
-    }
-
-    // don't try to access bookmarks if we are loading about:blank...it's not going
-    // to give us anything useful and it causes Bug #44397. At the same time, I'm loath to do something
-    // like this because I think it's really bogus that layout is depending on bookmarks. This is very evil.
-    nsXPIDLCString scheme;
-    aURL->GetScheme(getter_Copies(scheme));
-
-    nsXPIDLCString urlSpec;
-    aURL->GetSpec(getter_Copies(urlSpec));
-
-    if (cacheDescriptor && urlSpec)
-    {
-      if (kCharsetFromCache > charsetSource) 
-      {
-        nsXPIDLCString cachedCharset;
-        rv = cacheDescriptor->GetMetaDataElement("charset",
-                                                 getter_Copies(cachedCharset));
-        if (NS_SUCCEEDED(rv) && PL_strlen(cachedCharset) > 0)
-        {
-          charset.AssignWithConversion(cachedCharset);
-          charsetSource = kCharsetFromCache;
-        }
-      }    
-      rv = NS_OK;
-    }
-
-    if (scheme && nsCRT::strcasecmp("about", scheme) && (kCharsetFromBookmarks > charsetSource))
-    {
-      nsCOMPtr<nsIRDFDataSource>  datasource;
-      if (gRDF && NS_SUCCEEDED(rv_detect = gRDF->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
-      {
-           nsCOMPtr<nsIBookmarksService>   bookmarks = do_QueryInterface(datasource);
-           if (bookmarks)
-           {
-
-                 if (urlSpec)
-                 {
-                            nsXPIDLString pBookmarkedCharset;
-
-                            if (NS_SUCCEEDED(rv = bookmarks->GetLastCharset(urlSpec, getter_Copies(pBookmarkedCharset))) && 
-                               (rv != NS_RDF_NO_VALUE))
-                            {
-                              charset = pBookmarkedCharset;
-                              charsetSource = kCharsetFromBookmarks;
-                            }    
-
-                  } 
-           }
-       }
-    } 
-
-    if (kCharsetFromParentFrame > charsetSource) {
-      if (dcInfo) {
-        nsCOMPtr<nsIAtom> csAtom;
-        dcInfo->GetParentCharset(getter_AddRefs(csAtom));
-        if (csAtom) {
-          csAtom->ToString(charset);
-          charsetSource = kCharsetFromParentFrame;  
-
-          // printf("### 0 >>> Having parent CS = %s\n", NS_LossyConvertUCS2toASCII(charset).get());
-        }
-      }
-    }
-
-    if((kCharsetFromAutoDetection > charsetSource )  && gPlugDetector)
-    {
-      nsCOMPtr <nsICharsetDetector> cdet = do_CreateInstance(g_detector_contractid, 
-                                                             &rv_detect);
-      if(NS_SUCCEEDED( rv_detect )) 
-      {
-        cdetflt = do_CreateInstance(NS_CHARSET_DETECTION_ADAPTOR_CONTRACTID,
-			            &rv_detect);
-        if(NS_SUCCEEDED( rv_detect )) 
-        {
-          nsCOMPtr<nsICharsetDetectionAdaptor> adp = do_QueryInterface(cdetflt, 
-                                                                       &rv_detect);
-          if(cdetflt && NS_SUCCEEDED( rv_detect ))
-          {
-            nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(docShell,
-                                                                  &rv_detect);
-            if( NS_SUCCEEDED( rv_detect )) 
-            {
-              rv_detect = adp->Init(wss, cdet, (nsIDocument*)this, 
-                     mParser, charset.get(),aCommand);
-            }
-          }
-        }
-      }
-      else 
-      {
-        // IF we cannot create the detector, don't bother to 
-        // create one next time.
-        gPlugDetector = PR_FALSE;
-      }
-  }
+  
+  if(kCharsetFromAutoDetection > charsetSource)
+    StartAutodetection(docShell, charset, aCommand);
 #endif
 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 //ahmed
 #ifdef IBMBIDI
   // Check if 864 but in Implicit mode !
@@ -806,10 +893,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     charset.Assign(NS_LITERAL_STRING("IBM864i"));
 #endif // IBMBIDI
 
-  rv = this->SetDocumentCharacterSet(charset);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  SetDocumentCharacterSet(charset);
+  SetDocumentCharacterSetSource(charsetSource);
 
   if(cacheDescriptor) {
     rv = cacheDescriptor->SetMetaDataElement("charset",
@@ -833,11 +918,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 //        nsCOMPtr<nsIDTD> theDTD;
 //        NS_NewNavHTMLDTD(getter_AddRefs(theDTD));
 //        mParser->RegisterDTD(theDTD);
-
-    if(cdetflt)
-      // The current implementation for SetParserFilter needs to 
-      // be changed to be more XPCOM friendly. See bug #40149
-      nsCOMPtr<nsIParserFilter> oldFilter = getter_AddRefs(mParser->SetParserFilter(cdetflt));
 
 #ifdef DEBUG_charset
 	  char* cCharset = ToNewCString(charset);

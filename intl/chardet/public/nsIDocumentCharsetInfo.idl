@@ -12,4 +12,6 @@ interface nsIDocumentCharsetInfo : nsISupports
   attribute boolean forcedDetector;
 
   attribute nsIAtom parentCharset;
+
+  attribute PRInt32 parentCharsetSource;
 };

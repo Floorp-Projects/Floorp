@@ -161,6 +161,8 @@ public:
   NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharSetID) = 0;
   NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID) = 0;
 
+  NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource) = 0;
+  NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource) = 0;
   /**
    * Add an observer that gets notified whenever the charset changes.
    */

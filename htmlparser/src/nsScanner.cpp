@@ -105,7 +105,7 @@ MOZ_DECL_CTOR_COUNTER(nsScanner)
  *  @param   aMode represents the parser mode (nav, other)
  *  @return  
  */
-nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharsetSource aSource)
+nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, PRInt32 aSource)
 {
   MOZ_COUNT_CTOR(nsScanner);
 
@@ -134,7 +134,7 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, nsCharsetSource aSource) : 
+nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, PRInt32 aSource) : 
     mFilename(aFilename)
 {
   MOZ_COUNT_CTOR(nsScanner);
@@ -163,7 +163,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& aCharset, nsCharsetSource aSource) :
+nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& aCharset, PRInt32 aSource) :
     mFilename(aFilename)
 {  
   MOZ_COUNT_CTOR(nsScanner);
@@ -181,7 +181,7 @@ nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& 
 }
 
 
-nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSource aSource) {
+nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , PRInt32 aSource) {
 
   nsresult res = NS_OK;
 

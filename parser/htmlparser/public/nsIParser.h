@@ -92,22 +92,23 @@ enum eParserDocType {
 };
 
 
-typedef enum {
-   kCharsetUninitialized = 0,
-   kCharsetFromWeakDocTypeDefault,
-   kCharsetFromUserDefault ,
-   kCharsetFromDocTypeDefault,
-   kCharsetFromCache,
-   kCharsetFromParentFrame,
-   kCharsetFromBookmarks,
-   kCharsetFromAutoDetection,
-   kCharsetFromMetaTag,
-   kCharsetFromByteOrderMark,
-   kCharsetFromHTTPHeader,
-   kCharsetFromUserForced,
-   kCharsetFromOtherComponent,
-   kCharsetFromPreviousLoading
-} nsCharsetSource;
+// define Charset source constants
+// note: the value order define the priority  
+#define kCharsetUninitialized           0
+#define kCharsetFromWeakDocTypeDefault  1
+#define kCharsetFromUserDefault         2
+#define kCharsetFromDocTypeDefault      3
+#define kCharsetFromCache               4
+#define kCharsetFromParentFrame         5
+#define kCharsetFromBookmarks           6
+#define kCharsetFromAutoDetection       7
+#define kCharsetFromMetaTag             8
+#define kCharsetFromByteOrderMark       9
+#define kCharsetFromHTTPHeader         10 
+#define kCharsetFromParentForced       11
+#define kCharsetFromUserForced         12
+#define kCharsetFromOtherComponent     13
+#define kCharsetFromPreviousLoading    14
 
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 
@@ -186,8 +187,8 @@ class nsIParser : public nsISupports {
      *  @param   aCharsetSource- the soure of the chares
      *  @return	 nada
      */
-    virtual void SetDocumentCharset(nsString& aCharset, nsCharsetSource aSource)=0;
-    virtual void GetDocumentCharset(nsString& oCharset, nsCharsetSource& oSource)=0;
+    virtual void SetDocumentCharset(nsString& aCharset, PRInt32 aSource)=0;
+    virtual void GetDocumentCharset(nsString& oCharset, PRInt32& oSource)=0;
 
     virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter) = 0;
 

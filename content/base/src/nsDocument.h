@@ -304,6 +304,9 @@ public:
   NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharsetID);
   NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID);
 
+  NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource);
+  NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource);
+
   /**
    * Add an observer that gets notified whenever the charset changes.
    */
@@ -572,7 +575,10 @@ protected:
   nsCOMPtr<nsIURI> mDocumentBaseURL;
   nsIPrincipal* mPrincipal;
   nsWeakPtr mDocumentLoadGroup;
+  
   nsString mCharacterSet;
+  PRInt32 mCharacterSetSource;
+  
   nsVoidArray mCharSetObservers;
   nsIDocument* mParentDocument;
   nsVoidArray mSubDocuments;

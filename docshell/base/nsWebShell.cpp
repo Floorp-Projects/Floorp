@@ -551,7 +551,7 @@ nsWebShell::SetHistoryState(nsISupports* aLayoutHistoryState)
 NS_IMETHODIMP
 nsWebShell::LoadDocument(const char* aURL,
                          const char* aCharset,
-                         nsCharsetSource aSource)
+                         PRInt32 aSource)
 {
   // XXX hack. kee the aCharset and aSource wait to pick it up
   nsCOMPtr<nsIContentViewer> cv;
@@ -561,12 +561,12 @@ nsWebShell::LoadDocument(const char* aURL,
     nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);  
     if (muDV)
     {
-      nsCharsetSource hint;
-      muDV->GetHintCharacterSetSource((PRInt32 *)(&hint));
+      PRInt32 hint;
+      muDV->GetHintCharacterSetSource(&hint);
       if( aSource > hint ) 
       {
         muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
-        muDV->SetHintCharacterSetSource((PRInt32)aSource);
+        muDV->SetHintCharacterSetSource(aSource);
         if(eCharsetReloadRequested != mCharsetReloadState) 
         {
           mCharsetReloadState = eCharsetReloadRequested;
@@ -586,7 +586,7 @@ nsWebShell::LoadDocument(const char* aURL,
 //Its name should be changed to "CharsetReloadDocument"
 NS_IMETHODIMP
 nsWebShell::ReloadDocument(const char* aCharset,
-                           nsCharsetSource aSource)
+                           PRInt32 aSource)
 {
 
   // XXX hack. kee the aCharset and aSource wait to pick it up
@@ -597,12 +597,12 @@ nsWebShell::ReloadDocument(const char* aCharset,
     nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);  
     if (muDV)
     {
-      nsCharsetSource hint;
-      muDV->GetHintCharacterSetSource((PRInt32 *)(&hint));
+      PRInt32 hint;
+      muDV->GetHintCharacterSetSource(&hint);
       if( aSource > hint ) 
       {
          muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
-         muDV->SetHintCharacterSetSource((PRInt32)aSource);
+         muDV->SetHintCharacterSetSource(aSource);
          if(eCharsetReloadRequested != mCharsetReloadState) 
          {
             mCharsetReloadState = eCharsetReloadRequested;

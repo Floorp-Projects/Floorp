@@ -915,6 +915,17 @@ NS_IMETHODIMP nsDocument::SetDocumentCharacterSet(const nsAReadableString& aChar
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocument::GetDocumentCharacterSetSource(PRInt32* aCharsetSource)
+{
+  *aCharsetSource = mCharacterSetSource;
+  return NS_OK;
+}
+NS_IMETHODIMP nsDocument::SetDocumentCharacterSetSource(PRInt32 aCharsetSource)
+{
+  mCharacterSetSource = aCharsetSource;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDocument::AddCharSetObserver(nsIObserver* aObserver)
 {
   NS_ENSURE_ARG_POINTER(aObserver);

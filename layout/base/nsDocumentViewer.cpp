@@ -596,7 +596,7 @@ protected:
   /* character set member data */
   nsString mDefaultCharacterSet;
   nsString mHintCharset;
-  nsCharsetSource mHintCharsetSource;
+  PRInt32 mHintCharsetSource;
   nsString mForceCharacterSet;
 };
 
@@ -5475,7 +5475,7 @@ SetChildHintCharacterSetSource(nsIMarkupDocumentViewer* aChild, void* aClosure)
 
 NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharacterSetSource)
 {
-  mHintCharsetSource = (nsCharsetSource)aHintCharacterSetSource;
+  mHintCharsetSource = aHintCharacterSetSource;
   // now set the hint char set source on all children of mContainer
   return CallChildren(SetChildHintCharacterSetSource,
                       (void*) aHintCharacterSetSource);

@@ -42,7 +42,6 @@
 #include "nsIWebShellServices.h"
 #include "nsIContentViewerContainer.h"
 #include "nsObserverBase.h"
-#include "nsIParser.h"
 #include "nsString.h"
 #include "nsIDocShell.h"
 #include "nsIHttpChannel.h"
@@ -56,7 +55,7 @@ static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
 NS_IMETHODIMP nsObserverBase::NotifyWebShell(nsISupports* aWebShell,
                                              nsISupports* aChannel,
                                              const char* charset, 
-                                             nsCharsetSource source)
+                                             PRInt32 source)
 {
    
    nsresult rv  = NS_OK;

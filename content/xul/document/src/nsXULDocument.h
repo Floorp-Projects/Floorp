@@ -179,6 +179,10 @@ public:
 
     NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID);
 
+    NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource);
+    
+    NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource);
+
     NS_IMETHOD GetContentLanguage(nsAWritableString& aContentLanguage) const;
 
 #ifdef IBMBIDI
@@ -563,6 +567,8 @@ protected:
     nsIScriptGlobalObject*     mScriptGlobalObject; // [WEAK]
     nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
     nsString                   mCharSetID;
+    PRInt32                    mCharacterSetSource;
+
     // This is set in nsPresContext::Init, which calls SetShell.
     // Since I think this is almost always done, take the 32-byte hit for
     // an nsAutoVoidArray instead of having it be a separate allocation.

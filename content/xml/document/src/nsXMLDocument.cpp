@@ -390,7 +390,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
   PRBool bIsHTML = PR_FALSE; 
   char* aContentType;
-  nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
+  PRInt32 charsetSource = kCharsetFromDocTypeDefault;
 
   nsCOMPtr<nsIURI> aUrl;
   rv = aChannel->GetURI(getter_AddRefs(aUrl));
@@ -453,7 +453,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
           //code mirrors nsHTMLDocument.cpp
           PRUnichar* requestCharset = nsnull;
           nsIParserFilter *cdetflt = nsnull;
-          nsCharsetSource requestCharsetSource = kCharsetUninitialized;
+          PRInt32 requestCharsetSource = kCharsetUninitialized;
 
           //need to be able to override doc charset default on user request
           if( kCharsetFromDocTypeDefault == charsetSource ) // it is not from HTTP header
@@ -461,7 +461,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
           //check hint Charset (is this needed here?)
           PRUnichar* hintCharset = nsnull;
-          nsCharsetSource  hintSource = kCharsetUninitialized;
+          PRInt32  hintSource = kCharsetUninitialized;
 
           rv = muCV->GetHintCharacterSet(&hintCharset); 
           if(NS_SUCCEEDED(rv)) {
