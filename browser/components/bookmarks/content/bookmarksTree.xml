@@ -732,7 +732,7 @@
     
         onSelectionChanged: function ()
         {
-          dump("ONSELECTION CHANGED\n")
+          //dump("ONSELECTION CHANGED\n");
           var selection = this.mOuter.getTreeSelection();
           this.mOuter._selection = selection;
           this.mOuter._target    = this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], BookmarksUtils.DROP_BEFORE);
