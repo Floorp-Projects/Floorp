@@ -56,7 +56,7 @@ NSPR_CONFIGURE := ../configure \
 		--with-dist-bindir=$(MOZ_DIST_FLIPPED)/$(MOZ_OBJDIR)/bin \
 		--with-dist-libdir=$(MOZ_DIST_FLIPPED)/$(MOZ_OBJDIR)/lib
 
-ifeq (,$(MOZ_DEBUG))
+ifeq (,$(MOZ_DEBUG)$(MOZ_TRACE_MALLOC))
 NSPR_CONFIGURE := $(NSPR_CONFIGURE) --enable-optimize --disable-debug
 endif
 
