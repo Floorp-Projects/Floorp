@@ -2171,7 +2171,7 @@ wallet_GetPrefills(
         if (FieldToValue(field, schema, value, itemList, index) == 0) {
           if (value.IsEmpty() && nsnull != itemList) {
             /* pick first of a set of synonymous values */
-            nsAutoString encryptedValue = ((wallet_Sublist *)itemList->ElementAt(0))->item;
+            nsAutoString encryptedValue( ((wallet_Sublist *)itemList->ElementAt(0))->item );
             if (NS_FAILED(Wallet_Decrypt(encryptedValue, value))) {
               NS_RELEASE(inputElement);
               return -1;
