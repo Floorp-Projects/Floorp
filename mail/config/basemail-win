@@ -173,6 +173,8 @@ components\embedcomponents.dll
 components\windowwatcher.xpt
 components\webbrowserpersist.xpt
 components\commandhandler.xpt
+; we need mozbrwser.xpt for nsIXULWindow.xpt
+components\mozbrwsr.xpt
 
 ; jar
 components\jar50.dll
