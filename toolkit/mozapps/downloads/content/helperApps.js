@@ -201,8 +201,11 @@ HelperApps.prototype = {
       types = types.QueryInterface(Components.interfaces.nsIRDFLiteral);
       types = types.Value.split(", ");
       
-      var mimeSvc = Components.classes["@mozilla.org/mime;1"].getService(Components.interfaces.nsIMIMEService);
-      return mimeSvc.GetFromTypeAndExtension(types[0], "");
+      // We're using helper app service as our MIME Service here because the helper app service
+      // talks to OS Specific hooks that on some platforms (MacOS X) are required to get a 
+      // fully populated MIME Info object. Thus it is this object that we return. 
+      mimeSvc = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
+      return mimeSvc.GetFromTypeAndExtension(types[0], null);
     }
     
     return null;
