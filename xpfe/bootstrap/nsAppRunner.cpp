@@ -69,10 +69,6 @@ static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
 #include "prlog.h"
 #endif
 
-#ifdef MOZ_FULLCIRCLE
-#include "fullsoft.h"
-#endif
-
 #ifdef MOZ_JPROF
 #include "jprof.h"
 #endif
@@ -161,45 +157,6 @@ PrintUsage(void)
 {
   fprintf(stderr, "Usage: apprunner <url>\n");
   fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
-}
-
-//----------------------------------------------------------------------------------------
-static void InitFullCircle()
-{
-  // initialization for Full Circle
-#ifdef MOZ_FULLCIRCLE
-  FC_ERROR fcstatus = FC_ERROR_FAILED;
-  fcstatus = FCInitialize();
-	  
-  // Print out error status.
-  switch(fcstatus)
-  {
-    case FC_ERROR_OK:
-      printf("Talkback loaded Ok.\n");
-      break;
-    case FC_ERROR_CANT_INITIALIZE:
-      printf("Talkback error: Can't initialize.\n");
-      break;
-    case FC_ERROR_NOT_INITIALIZED:
-      printf("Talkback error: Not initialized.\n");
-      break;
-    case FC_ERROR_ALREADY_INITIALIZED:
-      printf("Talkback error: Already initialized.\n");
-      break;
-    case FC_ERROR_FAILED:
-      printf("Talkback error: Failure.\n");
-      break;
-    case FC_ERROR_OUT_OF_MEMORY:
-      printf("Talkback error: Out of memory.\n");
-      break;
-    case FC_ERROR_INVALID_PARAMETER:
-      printf("Talkback error: Invalid parameter.\n");
-      break;
-    default:
-      printf("Talkback error: Unknown error status.\n");
-      break;
-  }
-#endif
 }
 
 static nsresult OpenWindow( const char*urlstr, const PRUnichar *args ) {
@@ -497,8 +454,6 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
   fpsetmask(0);
 #endif
    
-  InitFullCircle();
-
  #if XP_MAC 
     stTSMCloser  tsmCloser;
   
