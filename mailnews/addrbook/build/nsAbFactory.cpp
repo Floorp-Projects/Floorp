@@ -213,7 +213,8 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
+	nsresult finalResult = NS_OK;
 
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
@@ -227,27 +228,37 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 							  NS_RDF_DATASOURCE_PROGID_PREFIX "addressdirectory",
 							  path, PR_TRUE, PR_TRUE);
 
+	if (NS_FAILED(rv)) finalResult = rv;
+
 	rv = compMgr->RegisterComponent(kAbDirectoryCID,
 								  "Mail/News Address Book Directory Factory",
 								  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "abdirectory",
 								  path, PR_TRUE, PR_TRUE);
+
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kAbCardDataSourceCID, 
 							  "Mail/News Address Book Card Data Source",
 							  NS_RDF_DATASOURCE_PROGID_PREFIX "addresscard",
 							  path, PR_TRUE, PR_TRUE);
 
+	if (NS_FAILED(rv)) finalResult = rv;
+
 	rv = compMgr->RegisterComponent(kAbCardCID,
 								  "Mail/News Address Book Card Factory",
 								  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "abcard",
 								  path, PR_TRUE, PR_TRUE);
-  return rv;
+
+	if (NS_FAILED(rv)) finalResult = rv;
+	
+	return finalResult;
 }
 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
+	nsresult finalResult = NS_OK;
 
 	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
 	if (NS_FAILED(rv)) return rv;
@@ -256,11 +267,16 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->UnregisterComponent(kAbDirectoryDataSourceCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kAbDirectoryCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kAbCardDataSourceCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kAbCardCID, path);
-	return rv;
+	if (NS_FAILED(rv)) finalResult = rv;
+	
+	return finalResult;
 }
