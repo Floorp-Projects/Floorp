@@ -50,7 +50,7 @@
         orient="vertical"
         width="640" height="480"
         screenX="10" screenY="10"
-        persist="screenX screenY width height"
+        persist="screenX screenY width height sizemode"
         >
 
   <script type="text/javascript" src="chrome://editor/content/editor.js"/>
