@@ -194,8 +194,7 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
         content->GetTag(*getter_AddRefs(tag));
 
         // for now I am checking for both titlebutton and toolbar items
-        // XXX but the check for titlebutton should be removed in the future
-        if (tag.get() == nsXULAtoms::titledbutton || tag.get() == nsXULAtoms::toolbaritem) {
+        if (tag.get() == nsXULAtoms::toolbaritem) {
 
           // now check if item is a container
           PRBool isContainer = PR_FALSE;
