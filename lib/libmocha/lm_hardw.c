@@ -152,4 +152,8 @@ lm_DefineHardware(MochaDecoder *decoder, JSObject *parent)
         decoder->hardware = obj;
     return obj;
 }
+#else
+#ifdef OSF1
+static int dumbcc = 0;  /* The 3.2 compiler aborts when there's "nothing to compile", and 4.0 warns.  This fixes both problems. */
+#endif
 #endif

@@ -149,4 +149,8 @@ MODULE_PRIVATE XP_Bool INTL_GetSendHankakuKana()
 	return send_hankaku_kana;
 }
 
+#else
+#ifdef OSF1
+static int dumbcc = 0;  /* The 3.2 compiler aborts when there's "nothing to compile", and 4.0 warns.  This fixes both problems. */
+#endif
 #endif /* MOZ_MAIL_NEWS */
