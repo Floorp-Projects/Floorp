@@ -43,7 +43,7 @@
 //    set NSPR_LOG_MODULES=nsHTTPProtocol:5
 //    set NSPR_LOG_FILE=nspr.log
 //
-// this enables PR_LOG_DEBUG level information and places all output in
+// this enables PR_LOG_ALWAYS level information and places all output in
 // the file nspr.log
 //
 PRLogModuleInfo* gHTTPLog = nsnull;
@@ -81,7 +81,7 @@ nsHTTPHandler::nsHTTPHandler()
     nsresult rv;
     NS_INIT_REFCNT();
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPHandler [this=%x].\n", this));
 
     // Initialize the Atoms used by the HTTP protocol...
@@ -105,7 +105,7 @@ nsHTTPHandler::nsHTTPHandler()
 
 nsHTTPHandler::~nsHTTPHandler()
 {
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPHandler [this=%x].\n", this));
 
     mPendingChannelList->Clear();
@@ -340,7 +340,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
         mPendingChannelList->AppendElement(i_Channel);
 
-        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("nsHTTPHandler::RequestTransport."
                 "\tAll socket transports are busy."
                 "\tAdding nsHTTPChannel [%x] to pending list.\n",
@@ -384,7 +384,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 
     *o_pTrans = trans;
     
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPHandler::RequestTransport."
             "\tGot a socket transport for nsHTTPChannel [%x].\n",
             i_Channel));
@@ -412,7 +412,7 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
         mPendingChannelList->RemoveElement(item);
         channel = (nsHTTPChannel*)(nsISupports*)item;
 
-        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("nsHTTPHandler::ReleaseTransport."
                 "\tRestarting nsHTTPChannel [%x]\n",
                 channel));

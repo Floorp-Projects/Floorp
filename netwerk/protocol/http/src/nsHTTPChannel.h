@@ -69,6 +69,8 @@ public:
     NS_DECL_NSIHTTPCHANNEL
 
     // nsHTTPChannel methods:
+    nsresult            Authenticate(const char *iChallenge,
+                                 nsIChannel **oChannel);
     nsresult            Init(nsILoadGroup *aGroup);
     nsresult            Open();
     nsresult            Redirect(const char *aURL,
@@ -102,6 +104,13 @@ protected:
     nsCString                   mContentType;
     nsCString                   mCharset;
     nsIInputStream*             mPostStream;
+	// Auth related stuff-
+	/* 
+		If this is true then we have already tried 
+		prehost as a response to the server challenge. 
+		And so we need to throw a dialog box!
+	*/
+	PRBool 						mAuthTriedWithPrehost;
 };
 
 #endif /* _nsHTTPChannel_h_ */

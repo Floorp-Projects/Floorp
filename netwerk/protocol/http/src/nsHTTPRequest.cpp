@@ -52,7 +52,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method,
 
     mURI = do_QueryInterface(i_pURL);
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPRequest [this=%x].\n", this));
 
     mTransport = i_pTransport;
@@ -70,7 +70,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method,
 
 nsHTTPRequest::~nsHTTPRequest()
 {
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPRequest [this=%x].\n", this));
 
     NS_IF_RELEASE(mRequest);
@@ -196,7 +196,7 @@ nsHTTPRequest::Build()
     nsString2 lineBuffer(eOneByte);
     PRUint32 bytesWritten = 0;
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPRequest::Build() [this=%x].  Building Request string.",
             this));
 
@@ -213,7 +213,7 @@ nsHTTPRequest::Build()
 
     lineBuffer.Append(" HTTP/1.0"CRLF);
     
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("\tnsHTTPRequest.\tFirst line: %s", lineBuffer.GetBuffer()));
 
     rv = out->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
@@ -245,7 +245,7 @@ nsHTTPRequest::Build()
     }
 */
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("\tnsHTTPRequest.\tRequest Headers:\n"));
 
     // Write the request headers, if any...
@@ -273,7 +273,7 @@ nsHTTPRequest::Build()
                 lineBuffer.Append(autoBuffer);
                 lineBuffer.Append(CRLF);
 
-                PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+                PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                        ("\tnsHTTPRequest [this=%x].\t\t%s\n",
                         this, lineBuffer.GetBuffer()));
 
@@ -285,7 +285,7 @@ nsHTTPRequest::Build()
     }
 
     nsCOMPtr<nsIInputStream> stream;
-    NS_ASSERTION(mConnection, "Hee ha!");
+    NS_ASSERTION(mConnection, "Connection disappeared!");
     if (NS_FAILED(mConnection->GetPostDataStream(getter_AddRefs(stream))))
             return NS_ERROR_FAILURE;
 
@@ -334,7 +334,7 @@ nsHTTPRequest::Build()
         if (NS_FAILED(rv)) return rv;
     }
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPRequest::Build() [this=%x].\tFinished building request.\n",
             this));
 
@@ -420,7 +420,7 @@ nsHTTPRequest::GetInputStream(nsIInputStream* *o_Stream)
 NS_IMETHODIMP
 nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
 {
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPRequest [this=%x]. Starting to write request to server.\n",
             this));
     return NS_OK;
@@ -433,7 +433,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
 {
     nsresult rv = iStatus;
     
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPRequest [this=%x]. Finished writing request to server."
             "\tStatus: %x\n", 
             this, iStatus));

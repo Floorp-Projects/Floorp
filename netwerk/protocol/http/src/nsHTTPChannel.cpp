@@ -40,6 +40,10 @@
 #include "nsIMIMEService.h"
 #include "nsIEnumerator.h"
 
+// Once other kinds of auth are up change TODO
+#include "nsBasicAuth.h" 
+
+
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
@@ -62,11 +66,12 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mLoadAttributes(LOAD_NORMAL),
     mResponseContext(nsnull),
     mLoadGroup(nsnull),
-    mPostStream(nsnull)
+    mPostStream(nsnull),
+	mAuthTriedWithPrehost(PR_FALSE)
 {
     NS_INIT_REFCNT();
 
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPChannel [this=%x].\n", this));
 
     mVerb = i_Verb;
@@ -85,7 +90,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
 
 nsHTTPChannel::~nsHTTPChannel()
 {
-    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPChannel [this=%x].\n", this));
 
     //TODO if we keep our copy of mURI, then delete it too.
@@ -639,7 +644,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
 
   newURLSpec = nsnull;
   newURI->GetSpec(&newURLSpec);
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
           this, newURLSpec));
 #endif /* PR_LOGGING */
@@ -743,4 +748,105 @@ nsHTTPChannel::GetPostDataStream(nsIInputStream **o_postStream)
         return NS_OK; 
     }
     return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetAuthTriedWithPrehost(PRBool iTried)
+{
+	mAuthTriedWithPrehost = iTried;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetAuthTriedWithPrehost(PRBool* oTried)
+{
+	if (oTried)
+	{
+		*oTried = mAuthTriedWithPrehost;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+}
+
+
+nsresult 
+nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
+{
+	nsresult rv = NS_ERROR_FAILURE;
+	nsCOMPtr <nsIChannel> channel;
+	if (!oChannel || !iChallenge)
+		return NS_ERROR_NULL_POINTER;
+	
+	*oChannel = nsnull; // Initialize...
+
+	// Determine the new username password combination to use 
+	char* newUserPass = nsnull;
+	if (!mAuthTriedWithPrehost)
+	{
+        nsXPIDLCString prehost;
+        
+		if (NS_SUCCEEDED(rv = mURI->GetPreHost(getter_Copies(prehost))))
+		{
+			// If no prehost then continue with the dialog box...
+			// TODO
+
+			if (!(newUserPass = nsCRT::strdup(prehost)))
+				return NS_ERROR_OUT_OF_MEMORY;
+		}
+ 	}
+
+	// Couldnt get one from prehost or has already been tried so...ask
+    if (!newUserPass || (0==PL_strlen(newUserPass)))
+	{
+        /*
+            Throw a modal dialog box asking for 
+            username, password. Prefill (!?!)
+        */
+        // Fill that information in newUserPass
+        // TODO ... 
+		// this will just continue and show 
+		// the 401 response for now
+        return NS_ERROR_NOT_IMPLEMENTED; 
+	}
+
+	// Construct the auth string request header based on info provided. 
+    nsXPIDLCString authString;
+	// change this later to include other kinds of authentication. TODO 
+    if (NS_FAILED(rv = nsBasicAuth::Authenticate(
+                        mURI, 
+                        static_cast<const char*>(iChallenge), 
+                        static_cast<const char*>(newUserPass),
+                        getter_Copies(authString))))
+        return rv; // Failed to construct an authentication string.
+
+	// Construct a new channel
+	NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+
+	// This smells like a clone function... maybe there is a benefit in doing that, think. TODO.
+	rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, 
+								mLoadGroup, mEventSinkGetter,
+								getter_AddRefs(channel));
+	if (NS_FAILED(rv)) return rv; 
+
+    // Copy the load attributes into the new channel...
+	channel->SetLoadAttributes(mLoadAttributes);
+
+    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
+    NS_ASSERTION(httpChannel, "Something terrible happened..!");
+	if (!httpChannel)
+        return rv;
+
+	// Add the authentication header.
+	httpChannel->SetRequestHeader(nsHTTPAtoms::Authorization, authString);
+
+	// Let it know that we have already tried prehost stuff...
+	httpChannel->SetAuthTriedWithPrehost(PR_TRUE);
+
+	// Fire the new request...
+	rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
+	*oChannel = channel;
+	NS_ADDREF(*oChannel);
+	return rv;
 }
