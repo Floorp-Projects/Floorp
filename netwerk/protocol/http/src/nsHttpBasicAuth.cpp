@@ -66,7 +66,7 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
     LOG(("nsHttpBasicAuth::GenerateCredentials [challenge=%s]\n", challenge));
 
     // we only know how to deal with Basic auth for http.
-    PRBool isBasicAuth = !PL_strncasecmp(challenge, "basic ", 6);
+    PRBool isBasicAuth = !PL_strncasecmp(challenge, "basic", 5);
     NS_ENSURE_TRUE(isBasicAuth, NS_ERROR_UNEXPECTED);
 
     NS_ENSURE_ARG_POINTER(creds);
