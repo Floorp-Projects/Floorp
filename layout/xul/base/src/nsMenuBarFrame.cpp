@@ -568,7 +568,7 @@ nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
 {
   mTarget->RemoveEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE); 
   
-  mTarget->RemoveEventListener("mousedown", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE); 
+  mTarget->RemoveEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_TRUE); 
 
   mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE); 
   mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);  
