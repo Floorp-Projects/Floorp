@@ -466,7 +466,7 @@ PL_ProcessPendingEvents(PLEventQueue* self)
   if (PR_FALSE != self->processingEvents) return;
 
     self->processingEvents = PR_TRUE;
-#if 0
+#if !defined(WIN32)
     while (PR_TRUE) {
     PLEvent* event = PL_GetEvent(self);
         if (event == NULL) break;
