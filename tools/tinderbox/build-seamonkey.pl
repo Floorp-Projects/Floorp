@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 
-$::Version = '$Revision: 1.63 $ ';
+$::Version = '$Revision: 1.64 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -156,7 +156,7 @@ sub BuildIt {
     chdir $Settings::DirName or die "Couldn't enter $Settings::DirName";
     
     my $build_dir = getcwd();
-    my $binary_basename = '$Settings::BinaryName';
+    my $binary_basename = "$Settings::BinaryName";
     my $binary_dir = "$build_dir/$Settings::Topsrcdir/dist/bin";
     my $full_binary_name = "$binary_dir/$binary_basename";
     my $exit_early = 0;
