@@ -148,6 +148,12 @@ CWebShellContainer::IsIntrinsicallySized(PRBool& aResult)
 }
 
 NS_IMETHODIMP
+CWebShellContainer::ShowAfterCreation()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CWebShellContainer::Show()
 {
 	return NS_OK;
@@ -485,15 +491,7 @@ CWebShellContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, n
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStartDocumentLoad(const char* aCommand,
-#ifdef NECKO
-                                        nsIChannel* aChannel,
-                                        nsILoadGroup* aLoadGroup,
-#else
-                                        nsIURI *aUrl, 
-#endif
-                                        nsIContentViewerContainer* aContainer,
-                                        nsIStreamListener **aDocListener)
+CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand)
 { 
 	return NS_OK; 
 } 
@@ -528,7 +526,7 @@ CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCh
 } 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, const char* aContentType, nsIContentViewer* aViewer)
+CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, nsIContentViewer* aViewer)
 { 
 	return NS_OK; 
 } 
