@@ -92,23 +92,17 @@ NS_IMETHODIMP nsMsgProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
       do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    nsIWebProgressListener * webProg; 
-
-    QueryInterface(NS_GET_IID(nsIMsgStatusFeedback), (void **) &webProg);
-
-    ifptr->SetData(webProg);
+    ifptr->SetData(NS_STATIC_CAST(nsIMsgProgress*, this));
     ifptr->SetDataIID(&NS_GET_IID(nsIMsgProgress));
 
     array->AppendElement(ifptr);
 
     array->AppendElement(parameters);
 
-    nsAutoString tmp;
-    tmp.AssignWithConversion(dialogURL);
-
     // Open the dialog.
     nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = parent->OpenDialog(tmp, NS_LITERAL_STRING("_blank"),
+    rv = parent->OpenDialog(NS_ConvertASCIItoUCS2(dialogURL),
+                            NS_LITERAL_STRING("_blank"),
                             NS_LITERAL_STRING("chrome,titlebar,dependent"),
                             array, getter_AddRefs(newWindow));
   }
