@@ -60,6 +60,22 @@ extern "C" {
 #include <X11/Xos.h>
 #include <X11/Intrinsic.h>
 
+/* Porting Note:
+ * If you are going to use this code somewhere other than mozilla
+ * you will need to set these defines.  It's pretty easy for Intel
+ * but I'm not sure about other platforms.
+ */
+#if USE_MOZILLA_TYPES
+/* prtypes contains definitions for uint32/int32 and uint16/int16 */
+#include "prtypes.h"
+#include "prcpucfg.h"
+#else
+typedef unsigned int uint32;
+typedef int int32;
+typedef unsigned short uint16;
+typedef short int16;
+#endif
+
 typedef struct _XlibRgbCmap XlibRgbCmap;
 
 struct _XlibRgbCmap {
@@ -71,13 +87,13 @@ void
 xlib_rgb_init (Display *display, Screen *screen);
 
 unsigned long
-xlib_rgb_xpixel_from_rgb (unsigned int rgb);
+xlib_rgb_xpixel_from_rgb (uint32 rgb);
 
 void
-xlib_rgb_gc_set_foreground (GC gc, unsigned int rgb);
+xlib_rgb_gc_set_foreground (GC gc, uint32 rgb);
 
 void
-xlib_rgb_gc_set_background (GC gc, unsigned int rgb);
+xlib_rgb_gc_set_background (GC gc, uint32 rgb);
 
 typedef enum
 {
@@ -133,7 +149,7 @@ xlib_draw_gray_image (Drawable drawable,
 		      int rowstride);
 
 XlibRgbCmap *
-xlib_rgb_cmap_new (unsigned int *colors, int n_colors);
+xlib_rgb_cmap_new (uint32 *colors, int n_colors);
 
 void
 xlib_rgb_cmap_free (XlibRgbCmap *cmap);
