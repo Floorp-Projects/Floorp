@@ -48,10 +48,10 @@ PRBool CTagList::Contains(eHTMLTags aTag){
  * @return
  */
 PRInt32 CTagList::GetTopmostIndexOf(nsTagStack& aTagStack){
-  int max=aTagStack.mCount;
+  int max = aTagStack.mTags->GetSize();
   int index;
   for(index=max-1;index>=0;index--){
-    if(Contains(aTagStack.mTags[index])) {
+    if(Contains(aTagStack[index])) {
       return index;
     }
   }
@@ -65,10 +65,10 @@ PRInt32 CTagList::GetTopmostIndexOf(nsTagStack& aTagStack){
  * @return
  */
 PRInt32 CTagList::GetBottommostIndexOf(nsTagStack& aTagStack,PRInt32 aStartOffset){
-  int max=aTagStack.mCount;
+  int max = aTagStack.mTags->GetSize();
   int index;
   for(index=aStartOffset;index<max;index++){
-    if(Contains(aTagStack.mTags[index])) {
+    if(Contains(aTagStack[index])) {
       return index;
     }
   }
@@ -1004,7 +1004,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gInBody,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kBlock, kNone, kSelf,	
-    /*special properties*/              kOmitWS,
+    /*special properties*/              (kOmitWS|kBadContentWatch),
     /*special parents,kids,skip*/       0,&gTableKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_tbody,
@@ -1012,7 +1012,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,	
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special properties*/              kOmitWS,
+    /*special properties*/              (kOmitWS|kBadContentWatch),
     /*special parents,kids,skip*/       &gInTable,&gTBodyKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_td,
@@ -1036,7 +1036,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special properties*/              kOmitWS,
+    /*special properties*/              (kOmitWS|kBadContentWatch),
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_th, 
@@ -1052,7 +1052,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,		
     /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special properties*/              kOmitWS,
+    /*special properties*/              (kOmitWS|kBadContentWatch),
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_title,
@@ -1068,7 +1068,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gTRParents,&gTRParents,	
     /*autoclose starttags and endtags*/ &gTRCloseTags,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special properties*/              kOmitWS,
+    /*special properties*/              (kOmitWS|kBadContentWatch),
     /*special parents,kids,skip*/       &gTRParents,&gTRKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_tt,
