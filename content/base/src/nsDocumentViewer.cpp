@@ -3069,7 +3069,8 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       mCachedPrintWebProgressListner = aWebProgressListener;
       mPrintIsPending                = PR_TRUE;
     }
-    return NS_OK;
+    PR_PL(("Printing Stopped - document is still busy!"));
+    return NS_ERROR_GFX_PRINTER_DOC_IS_BUSY;
   }
 
   nsCOMPtr<nsIPresShell> presShell;
@@ -3120,8 +3121,9 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
   return rv;
 #else
-  return NS_ERROR_FAILURE;
-#endif
+  PR_PL(("NS_PRINTING not defined - printing not implemented in this build!"));
+  return NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED;
+#endif /* NS_PRINTING */
 }
 
 /** ---------------------------------------------------
