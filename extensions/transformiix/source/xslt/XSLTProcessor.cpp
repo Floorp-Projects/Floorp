@@ -1048,12 +1048,6 @@ txXSLTProcessor::processDefaultTemplate(ProcessorState* aPs,
     }
 }
 
-PRBool
-FindUri(nsString& aElement, void *aData)
-{
-    return !aElement.Equals(*NS_STATIC_CAST(nsAString*, aData));
-}
-
 void
 txXSLTProcessor::processInclude(const nsAString& aHref,
                                 txListIterator* aImportFrame,
@@ -1061,8 +1055,7 @@ txXSLTProcessor::processInclude(const nsAString& aHref,
 {
     // make sure the include isn't included yet
     nsStringArray& stylesheetStack = aPs->getEnteredStylesheets();
-    if (!stylesheetStack.EnumerateBackwards(FindUri,
-                                            NS_CONST_CAST(nsAString*, &aHref))) {
+    if (stylesheetStack.IndexOf(aHref) != -1) {
         aPs->receiveError(NS_LITERAL_STRING("Stylesheet includes itself. URI: ") +
                           aHref, NS_ERROR_FAILURE);
         return;
