@@ -378,6 +378,18 @@ CenterWindow(HWND hWndDlg)
 /////////////////////////////////////////////////////////////////////////////
 // Extract Files Dialog
 
+// This routine processes windows messages that are in queue
+void ProcessWindowsMessages()
+{
+  MSG msg;
+
+  while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+  {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+}
+
 // This routine updates the status string in the extracting dialog
 static void
 SetStatusLine(LPCTSTR lpszStatus)
@@ -539,6 +551,8 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
     while (dwSizeUnCmp > 0)
     {
 			DWORD	dwBytesToWrite, dwBytesWritten;
+
+      ProcessWindowsMessages();
 
 			dwBytesToWrite = dwSizeUnCmp > 4096 ? 4096 : dwSizeUnCmp;
 			if (!WriteFile(hFile, lpBytesUnCmp, dwBytesToWrite, &dwBytesWritten, NULL))
@@ -768,33 +782,15 @@ RunInstaller()
   WaitForInputIdle(pi.hProcess, 3000);  // wait up to 3 seconds
   if(dwMode != SILENT)
   {
-    DestroyWindow(dlgInfo.hWndDlg);
+    ShowWindow(dlgInfo.hWndDlg, SW_HIDE);
   }
 
   // Wait for the installer to complete
   WaitForSingleObject(pi.hProcess, INFINITE);
   CloseHandle(pi.hProcess);
 
-  // That was just the installer bootstrapper. Now we need to wait for the
-  // installer itself. We can find the process ID by looking for a window of
-  // class ISINSTALLSCLASS
-  HWND	hWnd = FindWindow("ISINSTALLSCLASS", NULL);
+  DestroyWindow(dlgInfo.hWndDlg);
 
-  if (hWnd) {
-    DWORD	dwProcessId;
-    HANDLE	hProcess;
-
-    // Get the associated process handle and wait for it to terminate
-    GetWindowThreadProcessId(hWnd, &dwProcessId);
-
-    // We need the process handle to use WaitForSingleObject
-    hProcess = OpenProcess(STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE, FALSE, dwProcessId);
-
-    if (hProcess) {
-      WaitForSingleObject(hProcess, INFINITE);
-      CloseHandle(hProcess);
-    }
-  }
   // Delete the files from the temp directory
   EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)DeleteTempFilesProc, 0);
 
@@ -815,22 +811,40 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdS
 	hInst = hInstance;
 	LoadString(hInst, IDS_TITLE, szTitle, MAX_BUF);
 
+  /* Allow only one instance of nsinstall to run.
+   * Detect a previous instance of nsinstall, bring it to the 
+   * foreground, and quit current instance */
+  if(FindWindow("NSExtracting", "Extracting...") != NULL)
+    return(1);
+
   // Parse the command line
   ParseCommandLine(lpCmdLine);
 
 	// Figure out the total size of the resources
 	EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)SizeOfResourcesProc, 0);
 
+  // Register a class for the gauge
+  memset(&wc, 0, sizeof(wc));
+  wc.lpfnWndProc   = (WNDPROC)GaugeWndProc;
+  wc.hInstance     = hInstance;
+  wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+  wc.lpszClassName = "NSGauge";
+  RegisterClass(&wc);
+
+  // Register a class for the main dialog
+  memset(&wc, 0, sizeof(wc));
+  wc.style         = CS_DBLCLKS | CS_SAVEBITS | CS_BYTEALIGNWINDOW;
+  wc.lpfnWndProc   = DefDlgProc;
+  wc.cbClsExtra    = 0;
+  wc.cbWndExtra    = DLGWINDOWEXTRA;
+  wc.hInstance     = hInstance;
+  wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+  wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+  wc.lpszClassName = "NSExtracting";
+  RegisterClass(&wc);
+
   if(dwMode != SILENT)
   {
-    // Register a class for the gauge
-    memset(&wc, 0, sizeof(wc));
-    wc.lpfnWndProc = (WNDPROC)GaugeWndProc;
-    wc.hInstance = hInstance;
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-    wc.lpszClassName = "NSGauge";
-    RegisterClass(&wc);
-
 	  // Display the dialog box
 	  dlgInfo.hWndDlg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_EXTRACTING), NULL, (DLGPROC)DialogProc);
 	  UpdateWindow(dlgInfo.hWndDlg);

@@ -1791,6 +1791,7 @@ void ProcessWindowsMessages()
     DispatchMessage(&msg);
   }
 }
+
 void ShowMessage(LPSTR szMessage, BOOL bShow)
 {
   char szBuf[MAX_BUF];

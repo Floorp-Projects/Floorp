@@ -20,7 +20,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Troy Chevalier <troy@netscape.com>
  *     Sean Su <ssu@netscape.com>
  */
@@ -32,6 +32,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
+
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -53,6 +54,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDD_EXTRACTING DIALOG DISCARDABLE  0, 0, 193, 61
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Extracting..."
+CLASS "NSExtracting"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "",IDC_STATUS,9,13,159,8
