@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsRect.h"
 #include "nspr.h"
 #include "nsString.h"
 #include "nsHTColumn.h"
