@@ -28,6 +28,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsString2.h"
+#include "nsXPIDLString.h"
 
 #include "nsCRT.h"  // for nsCRT::strtok
 
@@ -190,13 +191,14 @@ nsMsgAccountManager::createAccountWithKey(nsIMsgIncomingServer *server,
 NS_IMETHODIMP
 nsMsgAccountManager::addAccount(nsIMsgAccount *account)
 {
-    char *accountKey=nsnull;
-    account->GetKey(&accountKey);
+    nsXPIDLCString accountKey;
+    account->GetKey(getter_Copies(accountKey));
     nsCStringKey key(accountKey);
     
 #ifdef DEBUG_alecf
-    printf("Adding account %s\n", accountKey);
+    printf("Adding account %s\n", (const char *)accountKey);
 #endif
+
     
     if (m_accounts->Exists(&key))
       return NS_ERROR_UNEXPECTED;
@@ -679,8 +681,8 @@ nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
 
   findServerEntry *entry = (findServerEntry*) data;
 
-  char *thisHostname;
-  nsresult rv = server->GetHostName(&thisHostname);
+  nsXPIDLCString thisHostname;
+  nsresult rv = server->GetHostName(getter_Copies(thisHostname));
   if (NS_FAILED(rv)) return PR_TRUE;
 
   // do a QI to see if we support this interface, but be sure to release it!
