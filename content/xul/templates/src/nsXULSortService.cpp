@@ -689,7 +689,7 @@ openSortCallback(const void *data1, const void *data2, void *privateData)
 	{
 		if (nsnull != sortInfo->xulSortClass)
 		{
-			rv = (sortInfo->xulSortClass->OpenSort)(node1, node2, sortInfo, &sortOrder);
+			rv = XULSortServiceImpl::OpenSort(node1, node2, sortInfo, &sortOrder);
 		}
 	}
 	return(sortOrder);
@@ -888,7 +888,7 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 	{
 		if (nsnull != sortInfo->xulSortClass)
 		{
-			rv = (sortInfo->xulSortClass->ImplaceSort)(node1, node2, sortInfo, &sortOrder);
+			rv = XULSortServiceImpl::ImplaceSort(node1, node2, sortInfo, &sortOrder);
 		}
 	}
 	return(sortOrder);
