@@ -5491,12 +5491,20 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
             return rv;
         }
 
+        PRUint32 oldPermissions = 0600;
+        rv = aBookmarksFile->GetPermissions(&oldPermissions);
+        if (NS_FAILED(rv))
+            oldPermissions = 0600;
+
         rv = tempFile->MoveTo(bookmarkParentDir, bookmarkLeafName);
         if (NS_FAILED(rv))
         {
+#ifdef DESTROY_THE_ONLY_COMPLETE_BOOKMARKS_FILE
             tempFile->Remove(PR_FALSE);
+#endif
             return rv;
         }
+        aBookmarksFile->SetPermissions(oldPermissions);
     }
 
     mDirty = PR_FALSE;
