@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.15 2002/02/21 22:41:42 ian.mcgreer%sun.com Exp $
+ * $Id: secasn1d.c,v 1.16 2002/03/26 01:13:23 nicolson%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -1513,7 +1513,11 @@ sec_asn1d_next_substring (sec_asn1d_state *state)
 
     if (state->pending) {
 	PORT_Assert (!state->indefinite);
-	PORT_Assert (child_consumed <= state->pending);
+	if( child_consumed > state->pending ) {
+	    PORT_SetError (SEC_ERROR_BAD_DER);
+	    state->top->status = decodeError;
+	    return;
+	}
 
 	state->pending -= child_consumed;
 	if (state->pending == 0)
@@ -1628,7 +1632,11 @@ sec_asn1d_next_in_group (sec_asn1d_state *state)
      */
     if (state->pending) {
 	PORT_Assert (!state->indefinite);
-	PORT_Assert (child_consumed <= state->pending);
+	if( child_consumed > state->pending ) {
+	    PORT_SetError (SEC_ERROR_BAD_DER);
+	    state->top->status = decodeError;
+	    return;
+	}
 
 	state->pending -= child_consumed;
 	if (state->pending == 0) {
@@ -1694,7 +1702,11 @@ sec_asn1d_next_in_sequence (sec_asn1d_state *state)
 	sec_asn1d_free_child (child, PR_FALSE);
 	if (state->pending) {
 	    PORT_Assert (!state->indefinite);
-	    PORT_Assert (child_consumed <= state->pending);
+	    if( child_consumed > state->pending ) {
+		PORT_SetError (SEC_ERROR_BAD_DER);
+		state->top->status = decodeError;
+		return;
+	    }
 	    state->pending -= child_consumed;
 	    if (state->pending == 0) {
 		child->theTemplate++;
@@ -1739,8 +1751,13 @@ sec_asn1d_next_in_sequence (sec_asn1d_state *state)
 	     */
 	    if (state->indefinite && child->endofcontents) {
 		PORT_Assert (child_consumed == 2);
-		state->consumed += child_consumed;
-		state->place = afterEndOfContents;
+		if( child_consumed != 2 ) {
+		    PORT_SetError (SEC_ERROR_BAD_DER);
+		    state->top->status = decodeError;
+		} else {
+		    state->consumed += child_consumed;
+		    state->place = afterEndOfContents;
+		}
 	    } else {
 		PORT_SetError (SEC_ERROR_BAD_DER);
 		state->top->status = decodeError;
@@ -2090,8 +2107,12 @@ sec_asn1d_pop_state (sec_asn1d_state *state)
 	state->consumed += state->child->consumed;
 	if (state->pending) {
 	    PORT_Assert (!state->indefinite);
-	    PORT_Assert (state->child->consumed <= state->pending);
-	    state->pending -= state->child->consumed;
+	    if( state->child->consumed > state->pending ) {
+		PORT_SetError (SEC_ERROR_BAD_DER);
+		state->top->status = decodeError;
+	    } else {
+		state->pending -= state->child->consumed;
+	    }
 	}
 	state->child->consumed = 0;
     }
@@ -2176,7 +2197,11 @@ sec_asn1d_during_choice
     /* cargo'd from next_in_sequence innards */
     if( state->pending ) {
       PORT_Assert(!state->indefinite);
-      PORT_Assert(child->consumed <= state->pending);
+      if( child->consumed > state->pending ) {
+	PORT_SetError (SEC_ERROR_BAD_DER);
+	state->top->status = decodeError;
+	return NULL;
+      }
       state->pending -= child->consumed;
       if( 0 == state->pending ) {
         /* XXX uh.. not sure if I should have stopped this
@@ -2432,6 +2457,11 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
 
 	/* We should not consume more than we have.  */
 	PORT_Assert (consumed <= len);
+	if( consumed > len ) {
+	    PORT_SetError (SEC_ERROR_BAD_DER);
+	    cx->status = decodeError;
+	    break;
+	}
 
 	/* It might have changed, so we have to update our local copy.  */
 	state = cx->current;
