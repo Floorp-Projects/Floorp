@@ -153,7 +153,7 @@ nsPopupWindowManager::Observe(nsISupports *aSubject,
                               const char *aTopic,
                               const PRUnichar *aData)
 {
-  NS_ConvertUCS2toUTF8 pref(aData);
+  NS_LossyConvertUCS2toASCII pref(aData);
   if (pref.Equals(kPopupDisablePref)) {
     // refresh our local copy of the "disable popups" pref
     PRBool permission = PR_FALSE;

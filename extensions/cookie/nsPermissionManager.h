@@ -140,15 +140,14 @@ public:
 
 private:
 
-  inline nsresult AddInternal(const nsAFlatCString &aHost,
-                              PRUint32 aType,
-                              PRUint32 aPermission);
+  nsresult AddInternal(const nsAFlatCString &aHost,
+                       PRUint32 aType,
+                       PRUint32 aPermission);
 
   nsresult Read();
   nsresult Write();
   nsresult NotifyObservers(const nsACString &aHost);
   nsresult RemoveAllFromMemory();
-  inline nsVoidArray* GetHostList();
 
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<nsIFile>            mPermissionsFile;

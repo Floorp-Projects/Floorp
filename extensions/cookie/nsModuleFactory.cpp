@@ -43,7 +43,6 @@
 #include "nsCookie.h"
 #include "nsCCookie.h"
 #include "nsPermission.h"
-#include "nsCookieManager.h"
 #include "nsCCookieManager.h"
 #include "nsCookieService.h"
 #include "nsImgManager.h"
@@ -58,8 +57,7 @@
 // Define the constructor function for the objects
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookie)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPermission)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieManager, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieService, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsImgManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPermissionManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPopupWindowManager, Init)
@@ -114,7 +112,7 @@ static const nsModuleComponentInfo components[] = {
     { "CookieManager",
       NS_COOKIEMANAGER_CID,
       NS_COOKIEMANAGER_CONTRACTID,
-      nsCookieManagerConstructor
+      nsCookieServiceConstructor
     },
     { "CookieService",
       NS_COOKIESERVICE_CID,
@@ -156,4 +154,11 @@ static const nsModuleComponentInfo components[] = {
     },
 };
 
-NS_IMPL_NSGETMODULE(nsCookieModule, components)
+PR_STATIC_CALLBACK(void)
+cookieModuleDtor(nsIModule *aSelf)
+{
+  // Release our singletons
+  nsCookieService::FreeSingleton();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsCookieModule, components, cookieModuleDtor)

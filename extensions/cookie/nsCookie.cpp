@@ -15,12 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Daniel Witte.
+ * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Daniel Witte (dwitte@stanford.edu)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,88 +37,110 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCookie.h"
-#include "nsString.h"
 
-// nsCookie Implementation
+/******************************************************************************
+ * nsCookie:
+ * string helper impl
+ ******************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsCookie, nsICookie, nsISupportsWeakReference);
-
-nsCookie::nsCookie()
-: cookieName(0),
-  cookieValue(0),
-  cookieIsDomain(PR_FALSE),
-  cookieHost(0),
-  cookiePath(0),
-  cookieIsSecure(PR_FALSE)
+// allocate contiguous storage and copy aSource strings,
+// providing terminating nulls for each destination string.
+// XXX consider arena allocation here
+static inline void
+StrBlockCopy(const nsACString &aSource1,
+             const nsACString &aSource2,
+             const nsACString &aSource3,
+             const nsACString &aSource4,
+             char             *&aDest1,
+             char             *&aDest2,
+             char             *&aDest3,
+             char             *&aDest4,
+             char             *&aDestEnd)
 {
+  // find the required buffer size, adding 4 for the terminating nulls
+  const PRUint32 totalLength = aSource1.Length() + aSource2.Length() + aSource3.Length() + aSource4.Length() + 4;
+
+  char *result = NS_STATIC_CAST(char*, nsMemory::Alloc(totalLength * sizeof(char)));
+  NS_ASSERTION(result, "out of memory allocating for nsCookie!");
+
+  nsACString::const_iterator fromBegin, fromEnd;
+  char *toBegin = result;
+
+  aDest1 = toBegin;
+  *copy_string(aSource1.BeginReading(fromBegin), aSource1.EndReading(fromEnd), toBegin) = char(0);
+  aDest2 = ++toBegin;
+  *copy_string(aSource2.BeginReading(fromBegin), aSource2.EndReading(fromEnd), toBegin) = char(0);
+  aDest3 = ++toBegin;
+  *copy_string(aSource3.BeginReading(fromBegin), aSource3.EndReading(fromEnd), toBegin) = char(0);
+  aDest4 = ++toBegin;
+  *copy_string(aSource4.BeginReading(fromBegin), aSource4.EndReading(fromEnd), toBegin) = char(0);
+  aDestEnd = toBegin;
 }
 
-nsCookie::nsCookie
-  (const nsACString &name,
-   const nsACString &value,
-   PRBool isDomain,
-   const nsACString &host,
-   const nsACString &path,
-   PRBool isSecure,
-   PRUint64 expires,
-   nsCookieStatus status,
-   nsCookiePolicy policy)
-: cookieName(name),
-  cookieValue(value),
-  cookieIsDomain(isDomain),
-  cookieHost(host),
-  cookiePath(path),
-  cookieIsSecure(isSecure)
+/******************************************************************************
+ * nsCookie:
+ * ctor/dtor
+ ******************************************************************************/
+
+nsCookie::nsCookie(const nsACString &aName,
+                   const nsACString &aValue,
+                   const nsACString &aHost,
+                   const nsACString &aPath,
+                   nsInt64          aExpiry,
+                   nsInt64          aLastAccessed,
+                   PRBool           aIsSession,
+                   PRBool           aIsDomain,
+                   PRBool           aIsSecure,
+                   nsCookieStatus   aStatus,
+                   nsCookiePolicy   aPolicy)
+ : mExpiry(aExpiry)
+ , mLastAccessed(aLastAccessed)
+ , mRefCnt(0)
+ , mIsSession(aIsSession != PR_FALSE)
+ , mIsDomain(aIsDomain != PR_FALSE)
+ , mIsSecure(aIsSecure != PR_FALSE)
+ , mStatus(aStatus)
+ , mPolicy(aPolicy)
 {
-  cookieExpires = expires;
-  cookieStatus = status;
-  cookiePolicy = policy;
+  // allocate a new (contiguous) string, and assign string members
+  StrBlockCopy(aName, aValue, aHost, aPath,
+               mName, mValue, mHost, mPath, mEnd);
 }
 
-nsCookie::~nsCookie(void) {
+nsCookie::~nsCookie()
+{
+  if (mName)
+    nsMemory::Free(mName);
 }
 
-NS_IMETHODIMP nsCookie::GetName(nsACString& aName) {
-  aName = cookieName;
+/******************************************************************************
+ * nsCookie:
+ * xpcom impl
+ ******************************************************************************/
+
+// xpcom getters
+NS_IMETHODIMP nsCookie::GetName(nsACString &aName)         { aName = Name();            return NS_OK; }
+NS_IMETHODIMP nsCookie::GetValue(nsACString &aValue)       { aValue = Value();          return NS_OK; }
+NS_IMETHODIMP nsCookie::GetHost(nsACString &aHost)         { aHost = Host();            return NS_OK; }
+NS_IMETHODIMP nsCookie::GetPath(nsACString &aPath)         { aPath = Path();            return NS_OK; }
+NS_IMETHODIMP nsCookie::GetExpiry(PRInt64 *aExpiry)        { *aExpiry = Expiry();       return NS_OK; }
+NS_IMETHODIMP nsCookie::GetIsSession(PRBool *aIsSession)   { *aIsSession = IsSession(); return NS_OK; }
+NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain)     { *aIsDomain = IsDomain();   return NS_OK; }
+NS_IMETHODIMP nsCookie::GetIsSecure(PRBool *aIsSecure)     { *aIsSecure = IsSecure();   return NS_OK; }
+NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = Status();       return NS_OK; }
+NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = Policy();       return NS_OK; }
+
+// compatibility method, for use with the legacy nsICookie interface.
+// here, expires == 0 denotes a session cookie.
+NS_IMETHODIMP
+nsCookie::GetExpires(PRUint64 *aExpires)
+{
+  if (IsSession()) {
+    *aExpires = 0;
+  } else {
+    *aExpires = Expiry() > nsInt64(0) ? PRInt64(Expiry()) : 1;
+  }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookie::GetValue(nsACString& aValue) {
-  aValue = cookieValue;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain) {
-  *aIsDomain = cookieIsDomain;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookie::GetHost(nsACString& aHost) {
-  aHost = cookieHost;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookie::GetPath(nsACString& aPath) {
-  aPath = cookiePath;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookie::GetIsSecure(PRBool *aIsSecure) {
-  *aIsSecure = cookieIsSecure;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookie::GetExpires(PRUint64 *aExpires) {
-  *aExpires = cookieExpires;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) {
-  *aStatus = cookieStatus;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) {
-  *aPolicy = cookiePolicy;
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS2(nsCookie, nsICookie, nsICookie2)
