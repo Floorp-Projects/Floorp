@@ -960,23 +960,25 @@ nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 }
 
 nsresult
-nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
+nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                                  PRBool aCompileEventHandlers)
 {
   PRBool doNothing = PR_FALSE;
   if (aDocument == mDocument) {
     doNothing = PR_TRUE; // short circuit useless work
   }
 
-  nsresult result = nsGenericElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-  if (NS_OK != result) {
+  nsresult result = nsGenericElement::SetDocument(aDocument, aDeep,
+                                                  aCompileEventHandlers);
+  if (NS_FAILED(result)) {
     return result;
   }
 
   if (!doNothing) {
-    if ((nsnull != mDocument) && (nsnull != mAttributes)) {
+    if (mDocument && mAttributes) {
       ReparseStyleAttribute();
       nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-      if (nsnull != sheet) {
+      if (sheet) {
         mAttributes->SetStyleSheet(sheet);
         //      sheet->SetAttributesFor(htmlContent, mAttributes); // sync attributes with sheet
         NS_RELEASE(sheet);
@@ -3701,8 +3703,8 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = nsGenericElement::SetDocument(aDocument, aDeep,
-                                       aCompileEventHandlers);
+    rv = nsGenericHTMLElement::SetDocument(aDocument, aDeep,
+                                           aCompileEventHandlers);
   }
 
   return rv;
@@ -3863,8 +3865,8 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = nsGenericElement::SetDocument(aDocument, aDeep,
-                                       aCompileEventHandlers);
+    rv = nsGenericHTMLElement::SetDocument(aDocument, aDeep,
+                                           aCompileEventHandlers);
   }
 
   return rv;
