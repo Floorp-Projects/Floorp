@@ -320,17 +320,25 @@ nsTableFrame::Init(nsIPresContext&  aPresContext,
 
 nsTableFrame::~nsTableFrame()
 {
-  if (nsnull!=mCellMap)
-    delete mCellMap;
+  if (nsnull!=mCellMap) {
+    delete mCellMap; 
+    mCellMap = nsnull;
+  } 
 
-  if (nsnull!=mColumnWidths)
+  if (nsnull!=mColumnWidths) {
     delete [] mColumnWidths;
+    mColumnWidths = nsnull;
+  }
 
-  if (nsnull!=mTableLayoutStrategy)
+  if (nsnull!=mTableLayoutStrategy) {
     delete mTableLayoutStrategy;
+    mTableLayoutStrategy = nsnull;
+  }
 
-  if (nsnull!=mColCache)
+  if (nsnull!=mColCache) {
     delete mColCache;
+    mColCache = nsnull;
+  }
 }
 
 NS_IMETHODIMP
@@ -4615,6 +4623,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
     if (PR_TRUE==gsDebugIR) printf("TIF BCC: clearing column cache and cell map column frame cache.\n");
     mCellMap->ClearColumnCache();
     delete mColCache;
+    mColCache = nsnull;
   }
 
   mColCache = new ColumnInfoCache(GetColCount());
