@@ -457,7 +457,7 @@ public class InputBuffer implements CharacterClasses {
                        text.charAt(len)!=0x2029) ; len++) {
         }
 
-        return text.substring(offset,len);
+        return text.toString().substring(offset,len);
     }
 
     static boolean test_getLineText() {
