@@ -48,51 +48,77 @@
 
     <implementation>
 
+      <field name="defaultScrollAmount">6</field>
       <property name="scrollAmount">
         <getter>
           if (this.hasAttribute("scrollamount"))
             return this.getAttribute("scrollamount");
-          return 6; //default value is 6 pixels
+          return this.defaultScrollAmount; //default value is 6 pixels
         </getter>
         <setter>
           this.setAttribute("scrollamount", val);
         </setter>
       </property>
 
+      <field name="defaultScrollDelay">85</field>
       <property name="scrollDelay">
         <getter>
           <![CDATA[
-          if (!this.hasAttribute("scrolldelay"))
-            return 85; //default value is 85 ms
+          var rv = this.defaultScrollDelay; //default value is 85 ms
 
-          var myScrollDelay = this.getAttribute('scrolldelay');
+          if (this.hasAttribute("scrolldelay")) {
+            rv = this.getAttribute("scrolldelay");
 
-          //marquee doesn't allow anything shorter than 40 ms
-          if (myScrollDelay < 40)
-            return 40;
-          return myScrollDelay;
+            //marquee doesn't allow anything shorter than 40 ms
+            if (rv < 40)
+              rv = 40;
+          }
+          return rv;
           ]]>
         </getter>
         <setter>
           this.setAttribute("scrolldelay", val);
+
+          // since we changed the scrolldelay, restart the marquee
+          this._doMove(false);
         </setter>
       </property>
 
+      <field name="defaultDirection">"left"</field>
       <property name="direction">
         <getter>
-          if (this.hasAttribute("direction"))
-            return this.getAttribute("direction");
-          return "left"; //default value is "left"
+          return this.directionField;
         </getter>
+        <setter>
+          // if val is false, don't change anything
+          if (val) {
+            // in case direction is swapped between horizontal/vertical, use
+            // setAttribute to make the xbl bindings change.
+            this.setAttribute("direction", val);
+
+            // since we changed the direction, set startNewDirection to true
+            this.startNewDirection = true;
+            this.directionField = val.toLowerCase();
+
+            // pass in aSkipSettingNewPosition as true
+            this._doMove(true);
+          }
+        </setter>
       </property>
 
+      <field name="directionField">"left"</field>
+
+      <field name="defaultBehavior">"scroll"</field>
       <property name="behavior">
         <getter>
-          if (this.hasAttribute("behavior"))
-            return this.getAttribute("behavior");
-          return "scroll"; //default value is "scroll"
+          return this.behaviorField;
         </getter>
+        <setter>
+          this.behaviorField = val ? val.toLowerCase() : this.defaultBehavior;
+        </setter>
       </property>
+
+      <field name="behaviorField">"scroll"</field>
 
       <field name="dirsign">1</field>
       <field name="startAt">0</field>
@@ -100,7 +126,8 @@
       <field name="newPosition">0</field>
       <field name="runId">0</field>
 
-      <field name="scrollStarted">0</field>
+      <field name="originalHeight">0</field>
+      <field name="startNewDirection">true</field>
 
       <property name="outerDiv"
         onget="return document.getAnonymousNodes(this)[0]"
@@ -117,99 +144,37 @@
       <property name="width">
         <getter>
           <![CDATA[
+          var rv = "1px";
           if (this.hasAttribute("width"))
-            return this.getAttribute("width");
-          else if (this.parentNode.offsetWidth > 0)
-            return this.parentNode.offsetWidth;
-          else if (this.parentNode.parentNode.offsetWidth > 0)
-            return this.parentNode.parentNode.offsetWidth;
-          else
-            return 1;
+            rv = this.getAttribute("width");
+          else if (this.offsetWidth) {
+            // if the element has an offsetWidth, don't set a width
+            rv = "";
+          } else if (this.offsetParent) {
+            var myElem = this.offsetParent;
+
+            // lets walk up the offsetParent tree looking for an
+            // element with a width.
+
+            while (myElem.offsetParent && (myElem.offsetWidth <= 0))
+              myElem = myElem.offsetParent;
+
+            if (myElem)
+              rv = myElem.offsetWidth + "px";
+          }
+
+          return rv;
           ]]>
         </getter>
-      </property> 
+      </property>
 
       <!-- For sniffing purposes -->
-      <field name="nsMarqueeVersion">"0.9.6"</field>
-  
+      <field name="nsMarqueeVersion">"0.9.7"</field>
+
       <method name="start">
         <body>
         <![CDATA[
-
-          this.stop();
-
-          if (this.scrollStarted == 0)
-          {
-            this.scrollStarted = 1; //we only want this to run once
-
-            switch (this.direction)
-            {
-              case "up":
-                this.dirsign = 1;
-                this.startAt = 0;
-                this.stopAt  = this.innerDiv.offsetHeight -
-                               parseInt(this.outerDiv.style.height);
-              break;
-
-              case "down":
-                this.dirsign = -1;
-                this.startAt = this.innerDiv.offsetHeight -
-                               parseInt(this.outerDiv.style.height);
-                this.stopAt  = 0;
-              break;
-
-              case "left":
-                this.dirsign = 1;
-                this.startAt = this.innerDiv.offsetLeft - this.outerDiv.offsetWidth;
-                this.stopAt  = this.outerDiv.offsetWidth + this.innerDiv.offsetWidth + this.startAt;
-              break;
-
-              case "right":
-              default:
-                this.dirsign = -1;
-                this.stopAt  = this.innerDiv.offsetLeft - this.outerDiv.offsetWidth;
-                this.startAt = this.outerDiv.offsetWidth + this.innerDiv.offsetWidth + this.stopAt;              
-              break;
-            }
-            this.newPosition = this.startAt;
-          } //end if
-
-          this.newPosition = parseInt(this.newPosition) + (this.dirsign * this.scrollAmount);
-
-          if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
-              (this.dirsign == -1 && this.newPosition < this.stopAt))
-          {
-            if (this.behavior == "alternate")
-            {
-              this.dirsign = -1 * this.dirsign;
-              var temp     = this.stopAt;
-              this.stopAt  = this.startAt;
-              this.startAt = temp;
-            }
-            else
-            {
-              this.newPosition = this.startAt;
-            }
-          }
-
-          switch(this.direction)
-          {
-            case "up":
-            case "down":
-              this.outerDiv.scrollTop = this.newPosition;
-            break;
-
-            case "left":
-            case "right":
-            default:
-              this.outerDiv.scrollLeft = this.newPosition;
-            break;
-          }
-
-          var myThis = this;
-          var myTimeOut = function myTimeOutFunction(){myThis.start();}
-
-          this.runId = window.setTimeout(myTimeOut, this.scrollDelay);
+          this._doMove(false);
         ]]>
         </body>
       </method>
@@ -225,50 +190,179 @@
         </body>
       </method>
 
+      <method name="_doMove">
+        <parameter name="aSkipSettingNewPosition"/>
+        <body>
+        <![CDATA[
+
+          this.stop();
+
+          //startNewDirection is true at first load and whenever the direction is changed
+          if (this.startNewDirection) {
+            this.startNewDirection = false; //we only want this to run once every scroll direction change
+
+            if ((this.directionField == "up") || (this.directionField == "down"))
+            {
+              // "", 0 and empty height should default to 200px
+              var height = (this.getAttribute("height") != "0" && this.getAttribute("height")) || "200px";
+
+              // support % heights
+              if (/%/.test(height)) {
+                height = parseInt('0' + height, 10);
+                height = (height/100) * this.outerDiv.offsetHeight;
+              }
+
+              this.outerDiv.style.height = height;
+
+              this.innerDiv.style.padding = height + " 0";
+              this.innerDiv.style.whiteSpace = "";
+            }
+            else {
+              this.outerDiv.style.height = "";
+
+              this.innerDiv.style.padding = "0px";
+              this.innerDiv.style.whiteSpace = "nowrap";
+            }
+
+            switch (this.directionField)
+            {
+              case "up":
+                this.dirsign = 1;
+                this.startAt = (this.behaviorField == 'alternate') ? this.originalHeight : 0;
+                this.stopAt  = this.innerDiv.offsetHeight - parseInt(this.outerDiv.style.height) 
+                               - ((this.behaviorField == 'alternate') ? this.originalHeight : 0);               
+              break;
+
+              case "down":
+                this.dirsign = -1;
+                this.startAt = this.innerDiv.offsetHeight - parseInt(this.outerDiv.style.height)
+                               - ((this.behaviorField == 'alternate') ? this.originalHeight : 0);
+                this.stopAt  = (this.behaviorField == 'alternate') ? this.originalHeight : 0;
+              break;
+
+              case "left":
+                this.dirsign = 1;
+                this.startAt = (this.behaviorField != 'alternate') ? (this.innerDiv.offsetLeft - this.outerDiv.offsetWidth) : this.innerDiv.offsetWidth;
+                this.stopAt  = this.outerDiv.offsetWidth
+                               + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.startAt) : 0);
+              break;
+
+              case "right":
+              default:
+                this.dirsign = -1;
+                this.stopAt  = (this.behaviorField != 'alternate') ? this.innerDiv.offsetLeft - this.outerDiv.offsetWidth : this.innerDiv.offsetWidth;
+                this.startAt = this.outerDiv.offsetWidth 
+                               + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.stopAt) : 0);   
+              break;
+            }
+
+            // if the direction attribute is changed, don't reset the starting position
+            if (!aSkipSettingNewPosition)
+              this.newPosition = this.startAt;
+          } //end if
+
+          this.newPosition = parseInt(this.newPosition) + (this.dirsign * this.scrollAmount);
+
+          if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
+              (this.dirsign == -1 && this.newPosition < this.stopAt))
+          {
+            if (this.behaviorField == "alternate")
+            {
+              // lets start afresh
+              this.startNewDirection = true;
+
+              // swap direction
+              const swap = {left: "right", down: "up", up: "down", right: "left"};
+              this.directionField = swap[this.directionField];
+            }
+            else
+            {
+              this.newPosition = this.startAt;
+            }
+          }
+
+          if (!this.startNewDirection) {
+            if ((this.directionField == "up") || (this.directionField == "down"))
+              this.outerDiv.scrollTop = this.newPosition;
+            else
+              this.outerDiv.scrollLeft = this.newPosition;
+          }
+
+          var myThis = this;
+
+          var lambda = function myTimeOutFunction(){myThis.start();}
+          this.runId = window.setTimeout(lambda, this.scrollDelay);
+        ]]>
+        </body>
+      </method>
+
       <method name="init">
         <body>
         <![CDATA[
           var height;
-
-          if ((this.direction == "up") || (this.direction == "down")) {
-            height = "200px";
-            this.outerDiv.style.height = height;
-          }
-          else {
-            this.innerDiv.style.whiteSpace = "nowrap";          
-          }
 
           if (this.hasAttribute('height')) {
             height = this.getAttribute('height');
             this.outerDiv.style.height = height + "px";
           }
 
-          this.outerDiv.style.width = this.width + "px";
+          this.outerDiv.style.width = this.width;
 
-          if ((this.direction == "up") || (this.direction == "down")) {
-            this.innerDiv.style.padding = height + "px" + " 0";
-          }
-  
           // Some sites access the element via the evil IE way of elementID.foo()
           if (this.hasAttribute('id'))
             window[this.getAttribute('id')] = this;
 
-          this.start();
+          // Website can define a background color via the bgcolor attribute
+          if (this.hasAttribute("bgcolor"))
+            this.outerDiv.style.backgroundColor = this.getAttribute("bgcolor");
+
+          // store the original height before we add padding
+          this.originalHeight = this.innerDiv.offsetHeight;
+
+          this._doMove(false);
         ]]>
         </body>
       </method>
 
       <constructor>
         <![CDATA[
+          // for performance, we store the lowercased direction/behavior in a field.
+          // default to "left"
+          this.directionField = this.hasAttribute("direction") ? this.getAttribute("direction").toLowerCase() : this.defaultDirection;
+          
+          // default to "scroll"
+          this.behaviorField = this.hasAttribute("behavior") ? this.getAttribute("behavior").toLowerCase() : this.defaultBehavior;
+
           var myThis = this;
           var lambda = function myScopeFunction() { myThis.init(); }
 
-          //init needs to be run after the page has loaded in order to calculate the correct
-          //height/width
+          // init needs to be run after the page has loaded in order to calculate
+          // the correct height/width
           window.addEventListener("load", lambda, false);
         ]]>
       </constructor>
     </implementation>
+    
+    <handlers>
+      <handler event="DOMAttrModified" phase="target">
+        <![CDATA[
+        var attrName = event.attrName.toLowerCase();
+        var oldValue = event.prevValue.toLowerCase();
+        var newValue = event.newValue.toLowerCase();
+
+        // only if a new value is specified
+        if (oldValue != newValue && newValue) {
+          if (attrName == "direction") {
+            this.startNewDirection = true;
+            this.directionField = newValue;
+            this._doMove(true);
+          } else if (attrName == "behavior") {
+            this.behaviorField = newValue;
+          }
+        }
+        ]]>
+      </handler>
+    </handlers>
 
   </binding>
 
