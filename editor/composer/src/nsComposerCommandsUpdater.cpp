@@ -108,7 +108,7 @@ NS_IMETHODIMP nsComposerCommandsUpdater::DidDo(nsITransactionManager *aManager,
   if (undoCount == 1)
   {
     if (mFirstDoOfFirstUndo)
-      CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
+      CallUpdateCommands(NS_LITERAL_STRING("undo"));
     mFirstDoOfFirstUndo = PR_FALSE;
   }
 	
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsComposerCommandsUpdater::DidUndo(nsITransactionManager *aManager
   if (undoCount == 0)
     mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
 
-  CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
+  CallUpdateCommands(NS_LITERAL_STRING("undo"));
   return NS_OK;
 }
 
@@ -144,7 +144,7 @@ NS_IMETHODIMP nsComposerCommandsUpdater::WillRedo(nsITransactionManager *aManage
 NS_IMETHODIMP nsComposerCommandsUpdater::DidRedo(nsITransactionManager *aManager,  
   nsITransaction *aTransaction, nsresult aRedoResult)
 {
-  CallUpdateCommands(NS_ConvertASCIItoUCS2("undo"));
+  CallUpdateCommands(NS_LITERAL_STRING("undo"));
   return NS_OK;
 }
 
@@ -222,11 +222,11 @@ void nsComposerCommandsUpdater::TimerCallback()
   PRBool isCollapsed = SelectionIsCollapsed();
   if (isCollapsed != mSelectionCollapsed)
   {
-    CallUpdateCommands(NS_ConvertASCIItoUCS2("select"));
+    CallUpdateCommands(NS_LITERAL_STRING("select"));
     mSelectionCollapsed = isCollapsed;
   }
   
-  CallUpdateCommands(NS_ConvertASCIItoUCS2("style"));
+  CallUpdateCommands(NS_LITERAL_STRING("style"));
 }
 
 nsresult
@@ -234,7 +234,7 @@ nsComposerCommandsUpdater::UpdateDirtyState(PRBool aNowDirty)
 {
   if (mDirtyState != aNowDirty)
   {
-    CallUpdateCommands(NS_ConvertASCIItoUCS2("save"));
+    CallUpdateCommands(NS_LITERAL_STRING("save"));
 
     mDirtyState = aNowDirty;
   }
