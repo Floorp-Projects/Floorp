@@ -60,12 +60,11 @@ function javascriptEnabledChange(){
 }
 
 function Startup(){
-    //If we don't have a checkbox under groupbox pluginPreferences, we should hide it
-    var pluginGroup = document.getElementById("pluginPreferences")
-    var children = pluginGroup.childNodes;
-    if (!children || children.length <= 1)    // 1 for the caption
-      pluginGroup.setAttribute("hidden", "true");
-  }
+  //If we don't have a checkbox under groupbox pluginPreferences, we should hide it
+  var pluginGroup = document.getElementById("pluginPreferences");
+  var children = pluginGroup.childNodes;
+  if (!children || children.length <= 1)    // 1 for the caption
+    pluginGroup.setAttribute("hidden", "true");
 
   javascriptEnabledChange();
 }
