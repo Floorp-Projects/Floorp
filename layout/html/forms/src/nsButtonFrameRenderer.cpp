@@ -156,7 +156,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
     GetButtonOuterFocusRect(aRect, rect);
 
     const nsStyleBorder* border;
-    ::GetStyleData(mOuterFocusStyle, &border);
+    ::GetStyleData(NS_STATIC_CAST(nsIStyleContext*,mOuterFocusStyle), &border);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                                 aDirtyRect, rect, *border, mOuterFocusStyle, 0);
   }
@@ -167,7 +167,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
     GetButtonInnerFocusRect(aRect, rect);
 
     const nsStyleBorder* border;
-    ::GetStyleData(mInnerFocusStyle, &border);
+    ::GetStyleData(NS_STATIC_CAST(nsIStyleContext*,mInnerFocusStyle), &border);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                                 aDirtyRect, rect, *border, mInnerFocusStyle, 0);
   }
