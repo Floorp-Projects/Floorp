@@ -72,4 +72,35 @@ interface nsIDOMNSHTMLDocument : nsISupports
 
   // mapped to attribute embeds for NS4 compat
   readonly attribute nsIDOMHTMLCollection plugins;
+  
+
+  /**
+    * Midas additions
+    */
+  attribute DOMString       designMode;
+
+  boolean                   execCommand(in DOMString commandID,
+                                        in boolean doShowUI,
+                                        in DOMString value);
+
+  // returns true if the help is being shown for command (false if not)
+  boolean                   execCommandShowHelp(in DOMString commandID);
+
+  // returns true if the command is enabled (false otherwise)
+  boolean                   queryCommandEnabled(in DOMString commandID);
+  
+  // returns true if the command is in a indeterminate state (false otherwise)
+  boolean                   queryCommandIndeterm(in DOMString commandID);
+
+  // returns true if the command has been executed (false otherwise)
+  boolean                   queryCommandState(in DOMString commandID);
+
+  // returns true if the command is supported on the current range
+  boolean                   queryCommandSupported(in DOMString commandID);
+
+  //
+  DOMString                 queryCommandText(in DOMString commandID);
+
+  // returns the current value of the document or current selection for command
+  DOMString                 queryCommandValue(in DOMString commandID);
 };
