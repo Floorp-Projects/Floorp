@@ -846,6 +846,12 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
       passFields.ObjectAt(0)->GetValue(passValue);
       passFields.ObjectAt(0)->GetName(passFieldName);
 
+      // If username and password are both empty, there is no reason
+      // to store this login.
+
+      if (userValue.IsEmpty() && passValue.IsEmpty())
+        return NS_OK;
+
       SignonHashEntry* hashEnt;
 
       if (mSignonTable.Get(realm, &hashEnt)) {
