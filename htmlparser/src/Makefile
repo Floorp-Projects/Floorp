@@ -40,6 +40,7 @@ CPPSRCS =     \
   prstrm.cpp \
   nsHTMLContentSinkStream.cpp \
   nsXIFDTD.cpp \
+  nsParserFactory.cpp \
   $(NULL)
 
 EXPORTS =     \
@@ -59,6 +60,7 @@ EXPORTS =     \
   nsValidDTD.h \
   CRtfDTD.h \
   nsXIFDTD.h \
+  nsParserCIID.h \
   $(NULL)
 
 EXTRA_EXPORTS =					\

@@ -28,6 +28,14 @@
 #include "nsHTMLDelegate.h"
 #include "nsIParser.h"
 #include "nsHTMLContentSink.h"
+#include "nsRepository.h"
+#include "nsParserCIID.h"
+
+#ifdef XP_PC
+#define PARSER_DLL "raptorhtmlpars.dll"
+#else
+#define PARSER_DLL "libraptorhtmlpars.so"
+#endif
 
 ofstream filelist("filelist.out");
 
@@ -99,8 +107,15 @@ void parseFile (const char* aFilename,int size)
   strcat(filename,".tokens");
   {
     nsIParser* parser;
-    nsresult rv = NS_NewParser(&parser);
-    nsresult r=NS_NewParser(&parser);
+
+    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+    nsresult rv = NSRepository::CreateInstance(kCParserCID, 
+                                               nsnull, 
+                                               kCParserIID, 
+                                               (void **)&parser);
+
     CHTMLContentSink theSink;
     parser->setContentSink(&theSink);
     parser->parse(aFilename);
@@ -180,6 +195,10 @@ int main(int argc, char* argv [])
   if(argc==2) 
     strcpy(buffer,argv[1]);
   else _getcwd(buffer,_MAX_PATH);
+
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  NSRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+
   walkDirectoryTree(buffer);
   return 0;
 }

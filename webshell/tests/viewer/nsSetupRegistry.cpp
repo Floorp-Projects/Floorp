@@ -35,6 +35,8 @@
 #include "nsIDocumentLoader.h"
 #include "nsIThrobber.h"
 
+#include "nsParserCIID.h"
+
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
@@ -42,6 +44,7 @@
 #define WEB_DLL    "raptorweb.dll"
 #define PLUGIN_DLL "raptorplugin.dll"
 #define PREF_DLL   "xppref32.dll"
+#define PARSER_DLL "raptorhtmlpars.dll"
 #else
 #define WIDGET_DLL "libwidgetunix.so"
 #define GFXWIN_DLL "libgfxunix.so"
@@ -49,6 +52,7 @@
 #define WEB_DLL    "libraptorwebwidget.so"
 #define PLUGIN_DLL "raptorplugin.so"
 #define PREF_DLL   "libpref.so"
+#define PARSER_DLL "libraptorhtmlpars.so"
 #endif
 
 // Class ID's
@@ -78,6 +82,7 @@ static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -108,4 +113,5 @@ NS_SetupRegistry()
   NSRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
 }

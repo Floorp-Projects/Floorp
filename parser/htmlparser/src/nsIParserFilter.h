@@ -48,7 +48,6 @@ class nsIParserFilter : public nsISupports {
    NS_IMETHOD ProcessTokens( /* dont know what goes here yet */ void ) = 0;
 };
 
-extern nsresult NS_NewParserFilter(nsIParserFilter** aInstancePtrResult);
 
 
 #endif

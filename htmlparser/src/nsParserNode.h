@@ -39,26 +39,34 @@
 #include "nsIParserNode.h"
 #include "nsToken.h"
 #include "nsString.h"
+#include "nsParserCIID.h"
 
-//class nsParser;
 
 class nsCParserNode :  public nsIParserNode {
   enum {eMaxAttr=20};
   
   public:
 
+    NS_DECL_ISUPPORTS
+
     /**
      * Default constructor
      * @update	gess5/11/98
      * @param   aToken is the token this node "refers" to
      */
-    nsCParserNode(CToken* aToken,PRInt32 aLineNumber=1);
+    nsCParserNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1);
 
     /**
      * Destructor
      * @update	gess5/11/98
      */
     virtual ~nsCParserNode();
+
+    /**
+     * Init
+     * @update	gess5/11/98
+     */
+    virtual nsresult Init(CToken* aToken=nsnull,PRInt32 aLineNumber=1);
 
     /**
      * Retrieve the name of the node

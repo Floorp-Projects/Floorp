@@ -40,6 +40,8 @@
 #include "nsWidgetsCID.h"
 #include "nsViewerApp.h"
 #include "prprf.h"
+#include "nsRepository.h"
+#include "nsParserCIID.h"
 
 #include "resources.h"
 
@@ -1295,7 +1297,15 @@ nsBrowserWindow::DoDebugSave()
       doc->CreateXIF(buffer,PR_FALSE);
 
       nsIParser* parser;
-      nsresult rv = NS_NewParser(&parser);
+
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      nsresult rv = NSRepository::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
       if (NS_OK == rv) {
         nsIHTMLContentSink* sink = nsnull;
 
@@ -1346,7 +1356,15 @@ nsBrowserWindow::DoCopy()
       doc->CreateXIF(buffer,PR_TRUE);
 
       nsIParser* parser;
-      nsresult rv = NS_NewParser(&parser);
+
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      nsresult rv = NSRepository::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
       if (NS_OK == rv) {
         nsIHTMLContentSink* sink = nsnull;
         

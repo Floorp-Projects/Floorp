@@ -42,6 +42,7 @@ CPPSRCS=					\
 	nsWellFormed.cpp			\
 	nsXIFDTD.cpp				\
 	prstrm.cpp				\
+    nsParserFactory.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
@@ -63,6 +64,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsWellFormedDTD.obj		\
 	.\$(OBJDIR)\nsXIFDTD.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
+	.\$(OBJDIR)\nsParserFactory.obj			\
 	$(NULL)
 
 EXPORTS=					\
@@ -83,6 +85,7 @@ EXPORTS=					\
 	COtherDTD.h				\
 	nsIDTD.h				\
 	nsXIFDTD.h				\
+    nsParserCIID.h \
 	$(NULL)
 
 EXTRA_EXPORTS=					\
