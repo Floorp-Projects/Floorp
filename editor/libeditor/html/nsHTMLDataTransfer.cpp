@@ -1073,7 +1073,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         stuffToPaste.Assign(text.get(), len / 2);
         nsAutoEditBatch beginBatching(this);
         // need to provide a hook from this point
-        rv = InsertText(stuffToPaste);
+        rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
       }
     }
     else if (flavor.Equals(NS_LITERAL_STRING(kFileMime)))
@@ -1164,8 +1164,9 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   if (!dragSession) return NS_OK;
 
   // transferable hooks here
-  PRBool isAllowed = PR_TRUE;
-  DoAllowDropHook(aDropEvent, dragSession, &isAllowed);
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  GetDocument(getter_AddRefs(domdoc));
+  PRBool isAllowed = nsEditorHookUtils::DoAllowDropHook(domdoc, aDropEvent, dragSession);
   if (!isAllowed)
     return NS_OK;
 
@@ -1181,18 +1182,17 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   if (NS_FAILED(rv)) return rv;
   if (!trans) return NS_OK;  // NS_ERROR_FAILURE; SHOULD WE FAIL?
 
-  // handle transferable hooks
-  PRBool doInsert = PR_TRUE;
-  DoInsertionHook(aDropEvent, trans, &doInsert);
-  if (!doInsert)
-    return NS_OK;
-
   PRUint32 numItems = 0; 
   rv = dragSession->GetNumDropItems(&numItems);
   if (NS_FAILED(rv)) return rv;
 
   // Combine any deletion and drop insertion into one transaction
   nsAutoEditBatch beginBatching(this);
+
+  // We never have to delete if selection is already collapsed
+  PRBool deleteSelection = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> newSelectionParent;
+  PRInt32 newSelectionOffset = 0;
 
   PRUint32 i; 
   PRBool doPlaceCaret = PR_TRUE;
@@ -1237,11 +1237,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       NS_ASSERTION(text.Length() <= (infoLen/2), "Invalid length!");
       infoStr.Assign(text.get(), infoLen / 2);
     }
-
-    // We never have to delete if selection is already collapsed
-    PRBool deleteSelection = PR_FALSE;
-    nsCOMPtr<nsIDOMNode> newSelectionParent;
-    PRInt32 newSelectionOffset = 0;
 
     if (doPlaceCaret)
     {
@@ -1372,6 +1367,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       doPlaceCaret = PR_FALSE;
     }
     
+    // handle transferable hooks
+    PRBool doInsert = nsEditorHookUtils::DoInsertionHook(domdoc, aDropEvent, trans);
+    if (!doInsert)
+      return NS_OK;
+
     rv = InsertFromTransferable(trans, contextStr, infoStr, newSelectionParent,
                                 newSelectionOffset, deleteSelection);
   }
@@ -1541,12 +1541,6 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
   rv = PrepareHTMLTransferable(getter_AddRefs(trans), bHavePrivateHTMLFlavor);
   if (NS_SUCCEEDED(rv) && trans)
   {
-    // handle transferable hooks
-    PRBool doInsert = PR_TRUE;
-    DoInsertionHook(nsnull, trans, &doInsert);
-    if (!doInsert)
-      return NS_OK;
-
     // Get the Data from the clipboard  
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
@@ -1590,6 +1584,14 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
           infoStr.Assign(text.get(), infoLen / 2);
         }
       }
+
+     // handle transferable hooks
+     nsCOMPtr<nsIDOMDocument> domdoc;
+     GetDocument(getter_AddRefs(domdoc));
+     PRBool doInsert = nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans);
+     if (!doInsert)
+       return NS_OK;
+
       rv = InsertFromTransferable(trans, contextStr, infoStr,
                                   nsnull, 0, PR_TRUE);
     }

@@ -266,4 +266,24 @@ class nsEditorUtils
     static PRBool IsLeafNode(nsIDOMNode *aNode);
 };
 
+
+class nsIDragSession;
+class nsITransferable;
+class nsIDOMEvent;
+class nsISimpleEnumerator;
+
+class nsEditorHookUtils
+{
+  public:
+    static PRBool   DoAllowDragHook(nsIDOMDocument *aDoc, nsIDOMEvent *aEvent);
+    static PRBool   DoDragHook(nsIDOMDocument *aDoc, nsITransferable *aTrans);
+    static PRBool   DoAllowDropHook(nsIDOMDocument *aDoc, nsIDOMEvent *aEvent,
+                                    nsIDragSession *aSession);
+    static PRBool   DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aEvent,
+                                    nsITransferable *aTrans);
+  private:
+    static nsresult GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
+                                                  nsISimpleEnumerator **aEnumerator);
+};
+
 #endif // nsEditorUtils_h__

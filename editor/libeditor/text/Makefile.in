@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  widget \
 		  unicharutil \
-		  docshell \
 		  $(NULL)
 
 CPPSRCS		=                           \
