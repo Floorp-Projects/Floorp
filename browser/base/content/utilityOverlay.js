@@ -41,75 +41,6 @@
  * for shared application glue for the Communicator suite of applications
  **/
 
-/*
-  Note: All Editor/Composer-related methods have been moved to editorApplicationOverlay.js,
-  so app windows that require those must include editorNavigatorOverlay.xul
-*/
-
-/**
- * Go into online/offline mode
- **/
-
-const kIOServiceProgID = "@mozilla.org/network/io-service;1";
-const kObserverServiceProgID = "@mozilla.org/observer-service;1";
-
-function toggleOfflineStatus()
-{
-  var checkfunc;
-  try {
-    checkfunc = document.getElementById("offline-status").getAttribute('checkfunc');
-  }
-  catch (ex) {
-    checkfunc = null;
-  }
-
-  var ioService = Components.classes[kIOServiceProgID]
-                            .getService(Components.interfaces.nsIIOService);
-  if (checkfunc) {
-    if (!eval(checkfunc)) {
-      // the pre-offline check function returned false, so don't go offline
-      return;
-    }
-  }
-  ioService.offline = !ioService.offline;
-}
-
-function setOfflineUI(offline)
-{
-  var broadcaster = document.getElementById("Communicator:WorkMode");
-  var panel = document.getElementById("offline-status");
-  if (!broadcaster || !panel) return;
-
-  //Checking for a preference "network.online", if it's locked, disabling 
-  // network icon and menu item
-  var prefService = Components.classes["@mozilla.org/preferences-service;1"];
-  prefService = prefService.getService();
-  prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
-  
-  var prefBranch = prefService.getBranch(null);
-  
-  var offlineLocked = prefBranch.prefIsLocked("network.online"); 
-  
-  if (offlineLocked ) {
-      broadcaster.setAttribute("disabled","true");
-  }
-
-  var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
-
-  if (offline)
-    {
-      broadcaster.setAttribute("offline", "true");
-      panel.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
-      broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
-    }
-  else
-    {
-      broadcaster.removeAttribute("offline");
-      panel.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
-      broadcaster.setAttribute("label", bundle.GetStringFromName("gooffline"));
-    }
-}
-
 var goPrefWindow = 0;
 
 function getBrowserURL() {
@@ -304,26 +235,6 @@ function goUpdatePasteMenuItems()
   goUpdateCommand('cmd_paste');
 }
 
-// function that extracts the filename from a url
-function extractFileNameFromUrl(urlstr)
-{
-  if (!urlstr) return null;
-
-  // For "http://foo/bar/cheese.jpg", return "cheese.jpg".
-  // For "imap://user@host.com:143/fetch>UID>/INBOX>951?part=1.2&type=image/gif&filename=foo.jpeg", return "foo.jpeg".
-  // The 2nd url (ie, "imap://...") is generated for inline images by MimeInlineImage_parse_begin() in mimeiimg.cpp.
-  var lastSlash = urlstr.slice(urlstr.lastIndexOf( "/" )+1);
-  if (lastSlash)
-  { 
-    var nameIndex = lastSlash.lastIndexOf( "filename=" );
-    if (nameIndex != -1)
-      return (lastSlash.slice(nameIndex+9));
-    else
-      return lastSlash;
-  }
-  return null; 
-}
-
 // Gather all descendent text under given document node.
 function gatherTextUnder ( root ) 
 {
@@ -369,44 +280,3 @@ function gatherTextUnder ( root )
   text = text.replace( /\s+/g, " " );
   return text;
 }
-
-var offlineObserver = {
-  observe: function(subject, topic, state) {
-    // sanity checks
-    if (topic != "network:offline-status-changed") return;
-    setOfflineUI(state == "offline");
-  }
-}
-
-function utilityOnLoad(aEvent)
-{
-  var broadcaster = document.getElementById("Communicator:WorkMode");
-  if (!broadcaster) return;
-
-  var observerService = Components.classes[kObserverServiceProgID]
-              .getService(Components.interfaces.nsIObserverService);
-
-  // crude way to prevent registering twice.
-  try {
-    observerService.removeObserver(offlineObserver, "network:offline-status-changed");
-  }
-  catch (ex) {
-  }
-  observerService.addObserver(offlineObserver, "network:offline-status-changed", false);
-  // make sure we remove this observer later
-  addEventListener("unload",utilityOnUnload,false);
-
-  // set the initial state
-  var ioService = Components.classes[kIOServiceProgID]
-          .getService(Components.interfaces.nsIIOService);
-  setOfflineUI(ioService.offline);
-}
-
-function utilityOnUnload(aEvent) 
-{
-  var observerService = Components.classes[kObserverServiceProgID]
-        .getService(Components.interfaces.nsIObserverService);
-  observerService.removeObserver(offlineObserver, "network:offline-status-changed");
-}
-
-addEventListener("load",utilityOnLoad,true);
