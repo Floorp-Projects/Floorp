@@ -856,6 +856,8 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   nsresult result=kBadURL;
+  mObserver = aListener;
+  NS_IF_ADDREF(mObserver);
   mDTDVerification=aVerifyEnabled;
   if(aURL) {
     char* spec;
