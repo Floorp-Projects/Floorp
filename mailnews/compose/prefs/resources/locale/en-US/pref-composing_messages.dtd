@@ -46,7 +46,7 @@ Rights Reserved.
 <!ENTITY messageWrapping.label                "Message Wrapping">
 <!ENTITY wrapInMsg.label                      "Wrap plain text messages to fit window width">
 <!ENTITY wrapInMsg.accesskey                  "w">
-<!ENTITY convertStructs.label                 "Add html styles to structured phrases. For example, format text contained within asterisks as bold.">
+<!ENTITY convertStructs.label                 "Add HTML styles to structured phrases. For example, format text contained within asterisks as bold.">
 <!ENTITY convertStructs.accesskey             "s">
 
 <!ENTITY sendingMessagesHeader.label          "For outgoing messages">

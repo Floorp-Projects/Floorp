@@ -37,7 +37,7 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
 <!ENTITY convertEmoticons.label1 'Convert emoticons to graphics.  For example, convert " :-) " to "'>
 <!ENTITY convertEmoticons.label2 '"'>
-<!ENTITY convertStructs.label1 'Add html styles to structured phrases.'>
+<!ENTITY convertStructs.label1 'Add HTML styles to structured phrases.'>
 <!ENTITY convertStructs.label2 'For example, convert "*test*" to "'>
 <!ENTITY convertStructs.label3 '*test*'>
 <!ENTITY convertStructs.label4 '"'>

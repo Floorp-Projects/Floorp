@@ -46,5 +46,5 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
 <!ENTITY convertEmoticons.label           "Convert emoticons to graphics.">
 <!ENTITY convertEmoticons.accesskey       "c">
-<!ENTITY convertStructs.label             "Add html styles to structured phrases. For example, format text contained within asterisks as bold.">
+<!ENTITY convertStructs.label             "Add HTML styles to structured phrases. For example, format text contained within asterisks as bold.">
 <!ENTITY convertStructs.accesskey         "s">
