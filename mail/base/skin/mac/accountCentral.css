@@ -178,6 +178,13 @@ padding: 8px 7px;
   padding-top: 7px;
 }
 
+#SubscribeRSS label {
+  background: url("chrome://messenger/skin/accountcentral/manage-rss.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
 #OfflineSettings label {
   background: url("chrome://messenger/skin/accountcentral/offline.png")  no-repeat !important;
   padding-left: 50px;
