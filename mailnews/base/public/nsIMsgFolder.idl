@@ -389,6 +389,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   void throwAlertMsg(in string msgName, in nsIMsgWindow msgWindow);
   wstring getStringWithFolderNameFromBundle(in string msgName);
   void notifyCompactCompleted();
+  long compareSortKeys(in nsIMsgFolder msgFolder);
 
   attribute nsIMsgRetentionSettings retentionSettings;
   attribute nsIMsgDownloadSettings downloadSettings;
@@ -398,7 +399,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    */
   attribute long sortOrder;
 
-  readonly attribute wstring sortKey;
+  [noscript]readonly attribute wstring sortKey;
 
   /** 
    * used to determine if we persist the close / open state of this folder or not

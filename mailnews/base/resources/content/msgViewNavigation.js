@@ -65,13 +65,9 @@ function compareServerSortOrder(server1, server2)
     return 0;
 }
 
-function compareFolderSortKey(folder1, folder2) {
-
-  if (folder1.sortKey < folder2.sortKey)
-    return -1;
-  if (folder1.sortKey > folder2.sortKey)
-    return 1;
-  return 0;
+function compareFolderSortKey(folder1, folder2) 
+{
+  return folder1.compareSortKeys(folder2);
 }
 
 function GetSubFoldersInFolderPaneOrder(folder)

@@ -2833,12 +2833,12 @@ NS_IMETHODIMP nsMsgFolder::GetSortKey(PRUnichar **aSortKey)
 {
   nsresult rv=NS_OK;
   NS_ENSURE_ARG(aSortKey);
-  nsAutoString orderString;
   PRInt32 order;
   rv = GetSortOrder(&order);
   NS_ENSURE_SUCCESS(rv,rv);
-  orderString.AppendInt(order);
-
+  nsAutoString orderString;
+  orderString.AppendInt(order);  
+  
   nsXPIDLString folderName;
   rv = GetName(getter_Copies(folderName));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -2885,5 +2885,22 @@ nsMsgFolder::CreateCollationKey(const PRUnichar *aSource,  PRUnichar **aSortKey)
   return rv;
 }
 
+NS_IMETHODIMP nsMsgFolder::CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sortOrder)
+{
+  nsresult rv;
+  nsXPIDLString sortKey1;
+  nsXPIDLString sortKey2;
+  rv = GetSortKey(getter_Copies(sortKey1));
+  NS_ENSURE_SUCCESS(rv,rv);
+  aFolder->GetSortKey(getter_Copies(sortKey2));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = kCollationKeyGenerator->CompareRawSortKey((const PRUint8 *) sortKey1.get(),
+                 sortKey1.Length() * sizeof(PRUnichar),
+                 (const PRUint8 *) sortKey2.get(),
+                 sortKey2.Length() * sizeof(PRUnichar),
+                 sortOrder);                    
+  return rv;
+}
 
 

@@ -204,6 +204,7 @@ public:
   
   // nsRDFResource overrides
   NS_IMETHOD Init(const char* aURI);
+  NS_IMETHOD CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sortOrder);
   
   // Gets the URL that represents the given message.  Returns a newly
   // created string that must be free'd using XP_FREE().
