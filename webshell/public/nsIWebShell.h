@@ -95,7 +95,8 @@ public:
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
-                  PRBool aAllowPlugins = PR_TRUE) = 0;
+                  PRBool aAllowPlugins = PR_TRUE,
+                  PRBool aIsSunkenBorder = PR_TRUE) = 0;
 
   NS_IMETHOD Destroy() = 0;
 
