@@ -140,6 +140,31 @@ function saveFilter() {
         return false;
     }
 
+
+    var targetUri;
+    var action = gActionElement.selectedItem.getAttribute("data");
+    dump("Action = " + action + "\n");
+    
+    if (action == nsMsgFilterAction.MoveToFolder) {
+        if (gActionTargetElement)
+            targetUri = gActionTargetElement.selectedItem.getAttribute("data");
+        dump("folder target = " + gActionTargetElement.selectedItem + "\n");
+        if (!targetUri || targetUri == "") {
+            var str = Bundle.GetStringFromName("mustSelectFolder");
+            window.alert(str);
+            return false;
+        }
+    }
+    
+    else if (action == nsMsgFilterAction.ChangePriority) {
+        if (!gActionPriority.selectedItem) {
+            var str = Bundle.GetStringFromName("mustSelectPriority");
+            window.alert(str);
+            return false;
+        }
+    }
+
+    // this must happen after everything has 
     if (!gFilter) {
         gFilter = gFilterList.createFilter(gFilterNameElement.value);
         isNewFilter = true;
@@ -148,35 +173,13 @@ function saveFilter() {
         isNewFilter = false;
     }
 
-    saveSearchTerms(gFilter.searchTerms, gFilter);
-
-    var action = gActionElement.selectedItem.getAttribute("data");
-    dump("Action = " + action + "\n");
     gFilter.action = action;
-    if (action == nsMsgFilterAction.MoveToFolder) {
-        var targetUri;
-        if (gActionTargetElement)
-            targetUri = gActionTargetElement.selectedItem.getAttribute("data");
-        dump("folder target = " + gActionTargetElement.selectedItem + "\n");
-        if (!targetUri || targetUri == "") {
-            var str = Bundle.GetStringFromName("mustSelectFolder");
-            window.alert(str);
-            gFilter = null;
-            return false;
-        }
+    if (action == nsMsgFilterAction.MoveToFolder)
         gFilter.actionTargetFolderUri = targetUri;
-    }
-    
-    else if (action == nsMsgFilterAction.ChangePriority) {
-        if (!gActionPriority.selectedItem) {
-            var str = Bundle.GetStringFromName("mustSelectPriority");
-            window.alert(str);
-            gFilter = null;
-            return false;
-        }
+    else if (action == nsMsgFilterAction.ChangePriority)
         gFilter.actionPriority = gActionPriority.selectedItem.getAttribute("data");
-    }
 
+    saveSearchTerms(gFilter.searchTerms, gFilter);
     
     if (isNewFilter) {
         dump("new filter.. inserting into " + gFilterList + "\n");
