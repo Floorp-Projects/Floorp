@@ -39,8 +39,6 @@
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
-#ifdef NEW_CLIPBOARD_SUPPORT
-
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
@@ -65,13 +63,11 @@ static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
 
 static NS_DEFINE_IID(kCXIFFormatConverterCID,    NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
-#endif
 
 
 /*
  * nsTextEditorKeyListener implementation
  */
-
 
 NS_IMPL_ADDREF(nsTextEditorKeyListener)
 

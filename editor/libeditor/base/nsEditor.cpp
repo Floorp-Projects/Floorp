@@ -42,9 +42,6 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsICaret.h"
-#ifndef NEW_CLIPBOARD_SUPPORT
-#include "nsISelectionMgr.h"
-#endif
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -75,8 +72,6 @@
 // END
 #endif
 
-#ifdef NEW_CLIPBOARD_SUPPORT
-
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
@@ -88,15 +83,12 @@
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
 static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
-
 static NS_DEFINE_CID(kIGenericTransferableIID,  NS_IGENERICTRANSFERABLE_IID);
 static NS_DEFINE_CID(kCGenericTransferableCID,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
-
 static NS_DEFINE_IID(kCXIFFormatConverterCID,    NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
-#endif
 
 static NS_DEFINE_IID(kIContentIID,          NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
@@ -922,42 +914,18 @@ NS_IMETHODIMP nsEditor::Cut()
   return res;
 }
 
-#ifndef NEW_CLIPBOARD_SUPPORT
-extern "C" NS_EXPORT nsISelectionMgr* GetSelectionMgr();
-#endif
 
 NS_IMETHODIMP nsEditor::Copy()
 {
   //printf("nsEditor::Copy\n");
 
-#ifndef NEW_CLIPBOARD_SUPPORT
-  // Get the nsSelectionMgr:
-  // XXX BWEEP BWEEP TEMPORARY!
-  // The selection mgr needs to be a service.
-  // See http://bugzilla.mozilla.org/show_bug.cgi?id=3509.
-  // In the meantime, so I'm not blocked on writing the rest of the code,
-  // nsSelectionMgr uses the egregious hack of a global variable:
-  nsISelectionMgr* selectionMgr = GetSelectionMgr();
-  if (!selectionMgr)
-  {
-    printf("Can't get selection mgr!\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  //NS_ADD_REF(theSelectionMgr);
-  return mPresShell->DoCopy(selectionMgr);
-#else
   return mPresShell->DoCopy();
-#endif
-
 }
 
 NS_IMETHODIMP nsEditor::Paste()
 {
   //printf("nsEditor::Paste\n");
   nsString stuffToPaste;
-
-#ifdef NEW_CLIPBOARD_SUPPORT
 
   // Get Clipboard Service
   nsIClipboard* clipboard;
@@ -1008,26 +976,6 @@ NS_IMETHODIMP nsEditor::Paste()
   }
   NS_IF_RELEASE(clipboard);
 
-
-#else 
-
-  // Get the nsSelectionMgr:
-  // XXX BWEEP BWEEP TEMPORARY!
-  // The selection mgr needs to be a service.
-  // See http://bugzilla.mozilla.org/show_bug.cgi?id=3509.
-  // In the meantime, so I'm not blocked on writing the rest of the code,
-  // nsSelectionMgr uses the egregious hack of a global variable:
-  nsISelectionMgr* selectionMgr = GetSelectionMgr();
-  if (!selectionMgr)
-  {
-    printf("Can't get selection mgr!\n");
-    return NS_ERROR_FAILURE;
-  }
-  //NS_ADD_REF(theSelectionMgr);
-
-  // Now we have the selection mgr.  Get its contents as text (for now):
-  selectionMgr->PasteTextBlocking(&stuffToPaste);
-#endif
   //printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
 
   // Now let InsertText handle the hard stuff:
