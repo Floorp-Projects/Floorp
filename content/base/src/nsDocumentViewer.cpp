@@ -1291,9 +1291,6 @@ nsresult
 DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
                                  nsIDeviceContext * aDContext)
 {
-#ifdef DEBUG_dcone
-  PRBool  CanPrint;
-#endif
 
   NS_ENSURE_ARG_POINTER(aParent);
   NS_ENSURE_ARG_POINTER(aDContext);
@@ -1363,23 +1360,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
     }
   }
  
-#ifdef DEBUG_dcone
- 
-  CanPrint = PR_FALSE;
-  {
-  nsIDOMWindow *theDOMWindow;
-  this->GetDOMWindow(&theDOMWindow);
-  if(theDOMWindow == mCurFocusFrame)
-    CanPrint = PR_TRUE;
-  }
- 
-#endif
 
-  // now complete printing the rest of the document
-  // if it doesn't contain any framesets
-#ifdef DEBUG_dcone
-  if (!doesContainFrameSet && CanPrint==PR_TRUE) {
-#endif
 
 if (!doesContainFrameSet) {
     NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
