@@ -273,6 +273,10 @@ function CIRCServer (parent, hostname, port, password)
     s.savedLine = "";
     s.lag = -1;    
     s.usersStable = true;
+    s.supports = null;
+    s.channelTypes = null;
+    s.channelModes = null;
+    s.userModes = null;
 
     parent.servers[serverName] = s;
     if ("onInit" in s)
@@ -883,6 +887,39 @@ function serv_001 (e)
         e.server.me.changeNick(e.params[1]);
     }
     
+    /* Set up supports defaults here.
+     * This is so that we don't waste /huge/ amounts of RAM for the network's 
+     * servers just because we know about them. Until we connect, that is.
+     * These defaults are taken from the draft 005 RPL_ISUPPORTS here:
+     * http://www.ietf.org/internet-drafts/draft-brocklesby-irc-isupport-02.txt
+     */
+    this.supports = new Object();
+    this.supports.modes = 3;
+    this.supports.maxchannels = 10;
+    this.supports.nicklen = 9;
+    this.supports.casemapping = "rfc1459";
+    this.supports.channellen = 200;
+    this.supports.chidlen = 5;
+    /* Make sure it's possible to tell if we've actually got a 005 message. */
+    this.supports.rpl_isupport = false;
+    this.channelTypes = { '#': true, '&': true };
+    /* This next one isn't in the isupport draft, but instead is defaulting to
+     * the codes we understand. It should be noted, some servers include the
+     * mode characters (o, h, v) in the 'a' list, although the draft spec says
+     * they should be treated as type 'b'. Luckly, in practise this doesn't 
+     * matter, since both 'a' and 'b' types always take a parameter in the 
+     * MODE message, and parsing is not affected. */
+    this.channelModes = {
+                          a: ['b'],
+                          b: ['k'],
+                          c: ['l'],
+                          d: ['i', 'm', 'n', 'p', 's', 't']
+                        };
+    this.userModes = [
+                       { mode: 'o', symbol: '@' },
+                       { mode: 'v', symbol: '+' }
+                     ];
+    
     if (this.parent.INITIAL_UMODE)
     {
         e.server.sendData("mode " + e.server.me.nick + " :" +
@@ -898,6 +935,97 @@ function serv_001 (e)
     this.parent.users = this.users;
     e.destObject = this.parent;
     e.set = "network";
+}
+
+
+/* server features */
+CIRCServer.prototype.on005 =
+function serv_005 (e)
+{
+    /* Drop params 0 and 1. */
+    for (var i = 2; i < e.params.length; i++) {
+        var itemStr = e.params[i];
+        /* Items may be of the forms:
+         *   NAME
+         *   -NAME
+         *   NAME=value
+         * Value may be empty on occasion.
+         * No value allowed for -NAME items.
+         */
+        var item = itemStr.match(/^(-?)([A-Z]+)(=(.*))?$/i);
+        if (! item)
+            continue;
+        
+        var name = item[2].toLowerCase();
+        if (("3" in item) && item[3])
+        {
+            // And other items are stored as-is, though numeric items
+            // get special treatment to make our life easier later.
+            if (("4" in item) && item[4].match(/^\d+$/))
+                this.supports[name] = Number(item[4]);
+            else
+                this.supports[name] = item[4];
+        }
+        else
+        {
+            // Boolean-type items stored as 'true'.
+            this.supports[name] = !(("1" in item) && item[1] == "-");
+        }
+    }
+    
+    // Supported 'special' items:
+    //   CHANTYPES (--> channelTypes{}), 
+    //   PREFIX (--> userModes[{mode,symbol}]), 
+    //   CHANMODES (--> channelModes{a:[], b:[], c:[], d:[]}).
+    
+    if ("chantypes" in this.supports)
+    {
+        this.channelTypes = [];
+        for (var m = 0; m < this.supports.chantypes.length; m++)
+            this.channelTypes[this.supports.chantypes[m]] = true;
+    }
+    
+    if ("prefix" in this.supports)
+    {
+        var mlist = this.supports.prefix.match(/^\((.*)\)(.*)$/i);
+        if ((! mlist) || (mlist[1].length != mlist[2].length))
+        {
+            dd ("** Malformed PREFIX entry in 005 SUPPORTS message **");
+        }
+        else
+        {
+            this.userModes = [];
+            for (var m = 0; m < mlist[1].length; m++)
+                this.userModes.push( { mode: mlist[1][m], 
+                                                   symbol: mlist[2][m] } );
+        }
+    }
+    
+    if ("chanmodes" in this.supports)
+    {
+        var cmlist = this.supports.chanmodes.split(/,/);
+        if ((!cmlist) || (cmlist.length < 4))
+        {
+            dd ("** Malformed CHANMODES entry in 005 SUPPORTS message **");
+        }
+        else
+        {
+            // 4 types - list, set-unset-param, set-only-param, flag.
+            this.channelModes = { 
+                                           a: cmlist[0].split(''), 
+                                           b: cmlist[1].split(''), 
+                                           c: cmlist[2].split(''), 
+                                           d: cmlist[3].split('')
+                                         };
+        }
+    }
+    
+    this.supports.rpl_isupport = true;
+    
+    e.destObject = this.parent;
+    e.set = "network";
+    
+    return true;
 }
 
 
@@ -1002,6 +1130,7 @@ function serv_353 (e)
     e.set = "channel";
 
     var nicks = e.params[4].split (" ");
+    var mList = this.userModes;
 
     for (var n in nicks)
     {
@@ -1009,24 +1138,20 @@ function serv_353 (e)
         if (nick == "")
             break;
         
-        switch (nick[0])
+        var found = false;
+        for (var m in mList)
         {
-            case "@":
+            if (nick[0] == mList[m].symbol)
+            {
                 e.user = new CIRCChanUser (e.channel,
                                            nick.substr(1, nick.length),
-                                           true, (void 0));
+                                           [ mList[m].mode ]);
+                found = true;
                 break;
-            
-            case "+":
-                e.user = new CIRCChanUser (e.channel,
-                                           nick.substr(1, nick.length),
-                                           (void 0), true);
-                break;
-            
-            default:
-                e.user = new CIRCChanUser (e.channel, nick);
-                break;
+            }
         }
+        if (!found)
+            e.user = new CIRCChanUser (e.channel, nick, [ ]);
 
     }
 
@@ -1134,54 +1259,37 @@ function serv_chanmode (e)
 
     var nick;
     var user;
+    var mList = this.userModes;
     
     for (var i = 0; i < mode_str.length ; i++)
     {
+        /* Take care of modifier first. */
+        if ((mode_str[i] == '+') || (mode_str[i] == '-'))
+        {
+            modifier = mode_str[i];
+            continue;
+        }
+        
+        var done = false;
+        for (var m in mList)
+        {
+            if ((mode_str[i] == mList[m].mode) && (modifier != ""))
+            {
+                nick = e.params[BASE_PARAM + params_eaten];
+                user = new CIRCChanUser (e.channel, nick, 
+                                         [ modifier + mList[m].mode ]);
+                params_eaten++;
+                e.usersAffected.push (user);
+                done = true;
+                break;
+            }
+        }
+        if (done)
+            continue;
+        
         switch (mode_str[i])
         {
-            case "+":
-            case "-":
-                modifier = mode_str[i];
-                break;
-
             /* user modes */
-            case "o": /* operator */
-                if (modifier == "+")
-                {
-                    nick = e.params[BASE_PARAM + params_eaten];
-                    user = new CIRCChanUser (e.channel, nick, true);
-                    params_eaten++;
-                    e.usersAffected.push (user);
-                }
-                else
-                    if (modifier == "-")
-                    {
-                        nick = e.params[BASE_PARAM + params_eaten];
-                        user = new CIRCChanUser (e.channel, nick, false);
-                        params_eaten++;
-                        e.usersAffected.push (user);
-                    }
-                break;
-                        
-            case "v": /* voice */
-                if (modifier == "+")
-                {
-                    nick = e.params[BASE_PARAM + params_eaten];
-                    user = new CIRCChanUser (e.channel, nick, (void 0), true);
-                    params_eaten++;
-                    e.usersAffected.push (user);
-                }
-                else
-                    if (modifier == "-")
-                    {
-                        nick = e.params[BASE_PARAM + params_eaten];
-                        user = new CIRCChanUser (e.channel, nick, (void 0),
-                                                 false);
-                        params_eaten++;
-                        e.usersAffected.push (user);
-                    }
-                break;
-                
             case "b": /* ban */
                 var ban = e.params[BASE_PARAM + params_eaten];
                 params_eaten++;
@@ -1747,9 +1855,9 @@ function chan_geturl ()
 }
 
 CIRCChannel.prototype.addUser = 
-function chan_adduser (nick, isOp, isVoice)
+function chan_adduser (nick, modes)
 {
-    return new CIRCChanUser (this, nick, isOp, isVoice);
+    return new CIRCChanUser (this, nick, modes);
 }
 
 CIRCChannel.prototype.getUser =
@@ -1770,21 +1878,34 @@ function chan_removeuser (nick)
 }
 
 CIRCChannel.prototype.getUsersLength = 
-function chan_userslen ()
+function chan_userslen (mode)
 {
     var i = 0;
+    var p;
     this.opCount = 0;
+    this.halfopCount = 0;
     this.voiceCount = 0;
     
-    for (var p in this.users)
+    if (typeof mode == "undefined")
     {
-        if (this.users[p].isOp)
-            ++this.opCount;
-        else if (this.users[p].isVoice)
-            ++this.voiceCount;
-        i++;
+        for (p in this.users)
+        {
+            if (this.users[p].isOp)
+                this.opCount++;
+            if (this.users[p].isHalfOp)
+                this.halfopCount++;
+            if (this.users[p].isVoice)
+                this.voiceCount++;
+            i++;
+        }
     }
-
+    else
+    {
+        for (p in this.users)
+            if (arrayContains(this.users[p].modes, mode))
+                i++;
+    }
+    
     return i;
 }
 
@@ -2145,7 +2266,7 @@ function usr_whois ()
 /*
  * channel user
  */
-function CIRCChanUser (parent, nick, isOp, isVoice)
+function CIRCChanUser (parent, nick, modes)
 {
     var properNick = nick;
     nick = nick.toLowerCase();    
@@ -2153,8 +2274,46 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
     if (nick in parent.users)
     {
         var existingUser = parent.users[nick];
-        if (typeof isOp != "undefined") existingUser.isOp = isOp;
-        if (typeof isVoice != "undefined") existingUser.isVoice = isVoice;
+        if (modes)
+        {
+            // If we start with a single character mode, assume we're replacing
+            // the list. (i.e. the list is either all +/- modes, or all normal)
+            if ((modes.length >= 1) && (modes[0].search(/^[-+]/) == -1))
+            {
+                // Modes, but no +/- prefixes, so *replace* mode list.
+                existingUser.modes = modes;
+            }
+            else
+            {
+                // We have a +/- mode list, so carefully update the mode list.
+                for (var m in modes)
+                {
+                    // This will remove '-' modes, and all other modes will be
+                    // added.
+                    var mode = modes[m][1];
+                    if (modes[m][0] == "-")
+                    {
+                        if (arrayContains(existingUser.modes, mode))
+                        {
+                            var i = arrayIndexOf(existingUser.modes, mode);
+                            arrayRemoveAt(existingUser.modes, i);
+                        }
+                    }
+                    else
+                    {
+                        if (!arrayContains(existingUser.modes, mode))
+                            existingUser.modes.push(mode);
+                    }
+                }
+            }
+        }
+        existingUser.isOp = (arrayContains(existingUser.modes, "o")) ?
+            true : false;
+        existingUser.isHalfOp = (arrayContains(existingUser.modes, "h")) ?
+            true : false;
+        existingUser.isVoice = (arrayContains(existingUser.modes, "v")) ?
+            true : false;
+
         return existingUser;
     }
         
@@ -2163,6 +2322,7 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
     this.__proto__ = protoUser;
     this.getURL = cusr_geturl;
     this.setOp = cusr_setop;
+    this.setHalfOp = cusr_sethalfop;
     this.setVoice = cusr_setvoice;
     this.setBan = cusr_setban;
     this.kick = cusr_kick;
@@ -2172,9 +2332,14 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
     this.act = cusr_act;
     this.whois = cusr_whois;
     this.parent = parent;
-    this.isOp = (typeof isOp != "undefined") ? isOp : false;
-    this.isVoice = (typeof isVoice != "undefined") ? isVoice : false;
     this.TYPE = "IRCChanUser";
+    
+    this.modes = new Array();
+    if (typeof modes != "undefined")
+        this.modes = modes;
+    this.isOp = (arrayContains(this.modes, "o")) ? true : false;
+    this.isHalfOp = (arrayContains(this.modes, "h")) ? true : false;
+    this.isVoice = (arrayContains(this.modes, "v")) ? true : false;
     
     parent.users[nick] = this;
 
@@ -2195,6 +2360,20 @@ function cusr_setop (f)
         return false;
 
     var modifier = (f) ? " +o " : " -o ";
+    server.sendData("MODE " + this.parent.name + modifier + this.nick + "\n");
+
+    return true;
+}
+
+function cusr_sethalfop (f)
+{
+    var server = this.parent.parent;
+    var me = server.me;
+
+    if (!this.parent.users[me.nick].isOp)
+        return false;
+
+    var modifier = (f) ? " +h " : " -h ";
     server.sendData("MODE " + this.parent.name + modifier + this.nick + "\n");
 
     return true;

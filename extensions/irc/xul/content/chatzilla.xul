@@ -63,6 +63,7 @@
                 <bindings>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#sortname" object="?sortname"/>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#op" object="?op"/>
+                  <binding subject="?member" predicate="http://home.netscape.com/NC-irc#halfop" object="?halfop"/>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#voice" object="?voice"/>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#nick" object="?nick"/>
                 </bindings>
@@ -70,9 +71,9 @@
                 <action>
                   <treechildren>
                     <treeitem uri="?member" flex="1"
-                      properties="op-?op voice-?voice">
+                      properties="op-?op halfop-?halfop voice-?voice">
                       <treerow>
-                          <treecell properties="op-?op voice-?voice"
+                          <treecell properties="op-?op halfop-?halfop voice-?voice"
                            label="?nick"/>
                       </treerow>
                     </treeitem>
@@ -83,7 +84,7 @@
     
             <treecols>
               <treecol id="usercol" hideheader="true" flex="1"
-                properties="op-?op voice-?voice"/>
+                properties="op-?op halfop-?halfop voice-?voice"/>
             </treecols>
           </tree>
     

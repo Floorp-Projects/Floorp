@@ -180,6 +180,23 @@ treechildren::-moz-tree-image(voice-true) {
     list-style-image: url(chrome://chatzilla/skin/images/voice-graphic.png);
 }
 
+/* half-chanop */
+treechildren:-moz-tree-image(halfop-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/halfop-symbol.png);
+}
+
+treechildren::-moz-tree-image(halfop-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/halfop-symbol.png);
+}
+
+#user-list[mode="graphic"] treechildren:-moz-tree-image(halfop-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/halfop-graphic.png);
+}
+
+#user-list[mode="graphic"] treechildren::-moz-tree-image(halfop-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/halfop-graphic.png);
+}
+
 /* chanop */
 treechildren:-moz-tree-image(op-true) {
     list-style-image: url(chrome://chatzilla/skin/images/op-symbol.png);

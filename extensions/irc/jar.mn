@@ -72,6 +72,8 @@ chatzilla.jar:
 	skin/modern/chatzilla/images/no-graphic.png  (xul/skin/images/no-graphic.png)
 	skin/modern/chatzilla/images/op-symbol.png   (xul/skin/images/op-symbol.png) 
 	skin/modern/chatzilla/images/op-graphic.png  (xul/skin/images/op-graphic.png)
+	skin/modern/chatzilla/images/halfop-symbol.png   (xul/skin/images/halfop-symbol.png) 
+	skin/modern/chatzilla/images/halfop-graphic.png  (xul/skin/images/halfop-graphic.png)
 	skin/modern/chatzilla/images/voice-symbol.png  (xul/skin/images/voice-symbol.png) 
 	skin/modern/chatzilla/images/voice-graphic.png (xul/skin/images/voice-graphic.png)
 	skin/modern/chatzilla/images/taskbar-irc.gif  (xul/skin/images/taskbar-irc.gif) 
