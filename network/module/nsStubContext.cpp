@@ -359,7 +359,7 @@ PRIVATE void stub_Progress(MWContext *context, const char *msg)
         nsConnectionInfo *pConn = 
             (nsConnectionInfo *) context->modular_data->fe_data;
         nsAutoString status(msg);
-        pListener->OnStatus(pConn->pURL, status);
+        pListener->OnStatus(pConn->pURL, status.GetUnicode());
         NS_RELEASE(pListener);
     } else {
         printf("%s\n", msg);
@@ -582,7 +582,7 @@ void stub_complete(NET_StreamClass *stream)
     /* Notify the Data Consumer that the Binding has completed... */
     if (pConn->pConsumer) {
         nsAutoString status;
-        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status);
+        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status.GetUnicode());
         pConn->mStatus = nsConnectionSucceeded;
     }
 
@@ -611,7 +611,7 @@ void stub_abort(NET_StreamClass *stream, int status)
     if (pConn->pConsumer) {
         nsAutoString status;
 
-        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_ABORTED, status);
+        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_ABORTED, status.GetUnicode());
         pConn->mStatus = nsConnectionAborted;
     }
 

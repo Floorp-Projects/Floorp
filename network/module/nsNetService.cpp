@@ -1006,7 +1006,7 @@ protected:
 
 PRUint32 nsStringHashKey::HashValue(void) const
 {
-    return nsCRT::HashValue(mName);
+    return nsCRT::HashValue(mName.GetUnicode());
 }
 
 PRBool nsStringHashKey::Equals(const nsHashKey *aKey) const
@@ -1457,7 +1457,7 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
             if ((nsConnectionActive == pConn->mStatus) && 
                 (nsnull != pConn->pConsumer)) {
                 nsAutoString status;
-                pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_FAILED, status);
+                pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_FAILED, status.GetUnicode());
                 NS_RELEASE(pConn->pConsumer);
             }
 
