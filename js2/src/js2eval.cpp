@@ -857,9 +857,9 @@ VariableMemberCommon:
             return JS2VAL_ZERO;
         if (JS2VAL_IS_NUMBER(newValue)) {
             int64 x = meta->engine->checkInteger(newValue);
-            if (LONG_IS_INT(x)) {
+            if (JSLL_IS_INT32(x)) {
                 int32 i = 0;
-                JSLL_L2I(x, i);
+                JSLL_L2I(i, x);
                 return INT_TO_JS2VAL(i);
             }
         }        
@@ -870,6 +870,18 @@ VariableMemberCommon:
     js2val defaultIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
     {
         return BOOLEAN_TO_JS2VAL(meta->objectType(newValue) == isClass);
+    }
+
+    js2val integerIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
+    {
+        bool result = false;
+        if (JS2VAL_IS_NUMBER(newValue)) {
+            float64 f = meta->toFloat64(newValue);
+            if (JSDOUBLE_IS_FINITE(f)) {
+                
+            }
+        }        
+        return BOOLEAN_TO_JS2VAL(result);
     }
 
 

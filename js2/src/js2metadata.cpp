@@ -3558,6 +3558,7 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Mu
         MAKEBUILTINCLASS(numberClass, generalNumberClass, false, true, engine->allocStringPtr(&world.identifiers["Number"]), engine->nanValue);
         MAKEBUILTINCLASS(integerClass, numberClass, false, true, engine->allocStringPtr(&world.identifiers["Integer"]), JS2VAL_ZERO);
         integerClass->implicitCoerce = integerImplicitCoerce;
+        integerClass->is = integerIs;
         MAKEBUILTINCLASS(characterClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Character"]), JS2VAL_ZERO);
         MAKEBUILTINCLASS(stringClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["String"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["namespace"]), JS2VAL_NULL);

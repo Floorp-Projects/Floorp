@@ -214,10 +214,11 @@ public:
     size_t errorPos();
 
     static int32 float64toInt32(float64 f);
+    static int64 float64toInt64(float64 f);
     static uint32 float64toUInt32(float64 f);
     static uint16 float64toUInt16(float64 f);
     static float64 truncateFloat64(float64 d);
-
+    
 
     int64 checkInteger(js2val x);
 

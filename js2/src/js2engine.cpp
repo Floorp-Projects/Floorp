@@ -370,6 +370,13 @@ namespace MetaData {
             return (int32)(d);    
     }
 
+    int64 JS2Engine::float64toInt64(float64 f)
+    {
+        int64 i;
+        JSLL_D2L(i, f);
+        return i;
+    }
+
     uint32 JS2Engine::float64toUInt32(float64 d)
     {
         if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )

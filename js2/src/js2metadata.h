@@ -84,6 +84,7 @@ bool arrayWritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const Str
 js2val defaultImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 js2val defaultIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 js2val integerImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
+js2val integerIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 
 
 
@@ -1401,6 +1402,8 @@ public:
     bool toBoolean(js2val x)            { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
     int32 toInteger(js2val x)           { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
     js2val toObject(js2val x)           { if (JS2VAL_IS_OBJECT(x)) return x; else return convertValueToObject(x); }
+    // x is a General Number
+    int64 truncateToInteger(js2val x)   { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return JS2Engine::float64toInt64(toFloat64(x)); }
 
     // Used for interning strings
     World &world;

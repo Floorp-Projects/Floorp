@@ -172,7 +172,7 @@
                         pushULong(z);   
                     }
                     else {
-                        int64 y = checkInteger(b);
+                        int64 y = meta->truncateToInteger(b);
                         int64 z;
                         JSLL_AND(z, x, y);
                         pushLong(z);   

@@ -96,6 +96,7 @@ extern int64 JSLL_Zero();
 #define JSLL_CMP(a, op, b)    ((int64)(a) op (int64)(b))
 #define JSLL_UCMP(a, op, b)   ((uint64)(a) op (uint64)(b))
 
+#define JSLL_IS_INT32(x)      (JSLL_CMP((x), >=, -((int64)2147483648L)) && JSLL_CMP((x), <, 2147483648L))
 /***********************************************************************
 ** MACROS:      JSLL_<logical operators>
 **
