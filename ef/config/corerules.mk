@@ -268,7 +268,7 @@ else
 endif
 	$(INSTALL) -m 555 $(LIBRARY) $(DIST)/lib
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LD_LIBS) $(OS_LIBS) $(EXTRA_LIBS) -L$(DIST)/lib 
+	$(MKSHLIB) -o $@ $(OBJS) $(LD_LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 	chmod +x $@
 endif
 endif
