@@ -59,6 +59,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIStyleSet.h"
 #include "nsLayoutAtoms.h"
 #include "nsISizeOfHandler.h"
+#include "nsIScriptSecurityManager.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -698,11 +699,39 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
                           const nsString& aTargetSpec,
                           PRBool aClick)
 {
+  // We get here with server side image map
   nsILinkHandler* handler = nsnull;
   aPresContext->GetLinkHandler(&handler);
   if (nsnull != handler) {
     if (aClick) {
-      handler->OnLinkClick(mContent, eLinkVerb_Replace, aURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
+      nsresult proceed = NS_OK;
+      // Check that this page is allowed to load this URI.
+      // Almost a copy of the similarly named method in nsGenericElement
+      nsresult rv;
+      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+
+      nsCOMPtr<nsIPresShell> ps;
+      if (NS_SUCCEEDED(rv)) 
+        rv = aPresContext->GetShell(getter_AddRefs(ps));
+      nsCOMPtr<nsIDocument> doc;
+      if (NS_SUCCEEDED(rv) && ps) 
+        rv = ps->GetDocument(getter_AddRefs(doc));
+      
+      nsCOMPtr<nsIURI> baseURI;
+      if (NS_SUCCEEDED(rv) && doc) 
+        baseURI = dont_AddRef(doc->GetDocumentURL());
+      nsCOMPtr<nsIURI> absURI;
+      if (NS_SUCCEEDED(rv)) 
+        rv = NS_NewURI(getter_AddRefs(absURI), aURLSpec, baseURI);
+      
+      if (NS_SUCCEEDED(rv)) 
+        proceed = securityManager->CheckLoadURI(baseURI, absURI, PR_FALSE);
+
+      // Only pass off the click event if the script security manager
+      // says it's ok.
+      if (NS_SUCCEEDED(proceed))
+        handler->OnLinkClick(mContent, eLinkVerb_Replace, aURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
     }
     else {
       handler->OnOverLink(mContent, aURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
