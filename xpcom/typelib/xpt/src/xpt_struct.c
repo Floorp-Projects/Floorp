@@ -780,7 +780,7 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
     
     switch (XPT_TDP_TAG(td->prefix)) {
       case TD_INTERFACE_TYPE:
-        if (!XPT_Do16(cursor, &td->type.interface))
+        if (!XPT_Do16(cursor, &td->type.iface))
             goto error;
         break;
       case TD_INTERFACE_IS_TYPE:

@@ -418,11 +418,11 @@ main(int argc, char **argv)
                     }
 
                     if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
-                        td->type.interface = 
+                        td->type.iface = 
                             get_new_index(fix_array, 
                                           totalNumberOfInterfaces,
                                           fix_array[i].file_num, 
-                                          td->type.interface);
+                                          td->type.iface);
                     }                                                
                 }
 
@@ -431,10 +431,10 @@ main(int argc, char **argv)
                  */
                 td = &id->method_descriptors[j].result->type;
                 if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
-                    td->type.interface = 
+                    td->type.iface = 
                         get_new_index(fix_array, totalNumberOfInterfaces,
                                       fix_array[i].file_num, 
-                                      td->type.interface);
+                                      td->type.iface);
                 }                
             }
         } 

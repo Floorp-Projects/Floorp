@@ -800,10 +800,10 @@ handle_iid_is:
                                        className);
                         return FALSE;
                     }
-                    td->type.interface = ide - ides + 1;
+                    td->type.iface = ide - ides + 1;
 #ifdef DEBUG_shaver_index
                     fprintf(stderr, "DBG: index %d for %s\n",
-                            td->type.interface, className);
+                            td->type.iface, className);
 #endif
                 }
                 break;

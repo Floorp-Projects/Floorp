@@ -609,7 +609,7 @@ GenproxyGetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
     int tag = XPT_TDP_TAG(td->prefix);
     
     if (tag == TD_INTERFACE_TYPE) {
-        int idx = td->type.interface;
+        int idx = td->type.iface;
         if (!idx || idx > header->num_interfaces)
             *type_string = "/*unknown*/ nsISupports";
         else
@@ -630,7 +630,7 @@ GenproxyGetStringForRefType(XPTHeader *header, XPTTypeDescriptor *td,
     int tag = XPT_TDP_TAG(td->prefix);
     
     if (tag == TD_INTERFACE_TYPE) {
-        int idx = td->type.interface;
+        int idx = td->type.iface;
         if (!idx || idx > header->num_interfaces)
             *type_string = "nsISupports";
         else
