@@ -53,10 +53,12 @@ LIBS = \
 	-lmozdbm	\
 	-lxp	\
 	-lpref	\
-	-ljs	\
+	-lmozjs	\
 	-lraptorbase \
 	-lraptorhtml	\
 	-lraptorhtmlpars \
+	-lexpat \
+	-lxmltok \
 	-lraptorgfx	\
 	-ljsdom	\
 	-ljsurl	\
