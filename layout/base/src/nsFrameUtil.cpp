@@ -496,7 +496,7 @@ nsFrameUtil::LoadFrameRegressionData(nsIURL* aURL, nsIXMLContent** aResult)
   NS_NewWellFormed_DTD(&theDTD);
   parser->RegisterDTD(theDTD);
   parser->SetContentSink(sink);
-  parser->Parse(theWholeDarnThing, PR_FALSE, PR_FALSE, PR_TRUE);
+  parser->Parse(theWholeDarnThing, this, PR_FALSE, PR_FALSE, PR_TRUE);
   NS_RELEASE(parser);
 
   *aResult = sink->GetRoot();

@@ -36,6 +36,7 @@ class nsIDocument;
 class nsIHTMLStyleSheet : public nsIStyleSheet {
 public:
   NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument) = 0;
+  NS_IMETHOD Reset(nsIURL* aURL) = 0;
   NS_IMETHOD SetLinkColor(nscolor aColor) = 0;
   NS_IMETHOD SetActiveLinkColor(nscolor aColor) = 0;
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor) = 0;

@@ -96,6 +96,8 @@ public:
                             PRInt32 aIndexInContainer);
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet);
   NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                             nsIStyleSheet* aStyleSheet,
                                             PRBool aDisabled);

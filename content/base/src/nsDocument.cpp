@@ -141,6 +141,8 @@ public:
                             PRInt32 aIndexInContainer) { return NS_OK; }
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet);
   NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                         nsIStyleSheet* aStyleSheet,
                                         PRBool aDisabled) { return NS_OK; }
@@ -325,6 +327,21 @@ nsDOMStyleSheetCollection::StyleSheetAdded(nsIDocument *aDocument,
   }
   
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDOMStyleSheetCollection::StyleSheetRemoved(nsIDocument *aDocument,
+                                             nsIStyleSheet* aStyleSheet)
+{
+  if (-1 != mLength) {
+    nsIDOMStyleSheet *domss;
+    if (NS_OK == aStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void **)&domss)) {
+      mLength--;
+      NS_RELEASE(domss);
+    }
+  }
+  
+  return NS_OK;  
 }
 
 NS_IMETHODIMP
@@ -699,13 +716,30 @@ nsDocument::Reset(nsIURL *aURL)
     NS_RELEASE(subdoc);
   }
 
-  NS_IF_RELEASE(mRootContent);
+  if (nsnull != mRootContent) {
+    ContentRemoved(nsnull, mRootContent, 0);
+    NS_IF_RELEASE(mRootContent);
+  }
 
   // Delete references to style sheets
   index = mStyleSheets.Count();
   while (--index >= 0) {
     nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
     sheet->SetOwningDocument(nsnull);
+
+    PRInt32 pscount = mPresShells.Count();
+    PRInt32 psindex;
+    for (psindex = 0; psindex < pscount; psindex++) {
+      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(psindex);
+      nsIStyleSet* set = shell->GetStyleSet();
+      if (nsnull != set) {
+        set->RemoveDocStyleSheet(sheet);
+        NS_RELEASE(set);
+      }
+    }
+
+    // XXX Tell observers?
+
     NS_RELEASE(sheet);
   }
   mStyleSheets.Clear();

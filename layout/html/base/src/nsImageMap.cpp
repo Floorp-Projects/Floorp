@@ -973,6 +973,13 @@ nsImageMap::StyleSheetAdded(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
+nsImageMap::StyleSheetRemoved(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImageMap::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                            nsIStyleSheet* aStyleSheet,
                                            PRBool aDisabled)

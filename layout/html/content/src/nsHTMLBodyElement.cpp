@@ -819,6 +819,18 @@ nsHTMLBodyElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  if ((aAttribute == nsHTMLAtoms::link) ||
+      (aAttribute == nsHTMLAtoms::vlink) ||
+      (aAttribute == nsHTMLAtoms::alink) ||
+      (aAttribute == nsHTMLAtoms::bgcolor) ||
+      (aAttribute == nsHTMLAtoms::background) ||
+      (aAttribute == nsHTMLAtoms::text))
+  {
+    *aHint = NS_STYLE_HINT_VISUAL;
+  }
+  else {
+    nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  }
+
   return NS_OK;
 }

@@ -51,6 +51,7 @@ public:
 
   // basic style sheet data
   NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument);
+  NS_IMETHOD Reset(nsIURL* aURL);
   NS_IMETHOD GetURL(nsIURL*& aURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
@@ -234,6 +235,15 @@ HTMLCSSStyleSheetImpl::Init(nsIURL* aURL, nsIDocument* aDocument)
     return NS_ERROR_ALREADY_INITIALIZED;
 
   mDocument = aDocument; // not refcounted!
+  mURL = aURL;
+  NS_ADDREF(mURL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+HTMLCSSStyleSheetImpl::Reset(nsIURL* aURL)
+{
+  NS_IF_RELEASE(mURL);
   mURL = aURL;
   NS_ADDREF(mURL);
   return NS_OK;

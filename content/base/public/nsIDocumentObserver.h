@@ -191,6 +191,18 @@ public:
                              nsIStyleSheet* aStyleSheet) = 0;
 
   /**
+   * A StyleSheet has just been removed from the document.
+   * This method is called automatically when a StyleSheet gets removed
+   * from the document. The notification is passed on to all of the 
+   * document observers.
+   *
+   * @param aDocument The document being observed
+   * @param aStyleSheet the StyleSheet that has been removed
+   */
+  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet) = 0;
+
+  /**
    * A StyleSheet has just disabled or enabled.
    * This method is called automatically when the disabled state
    * of a StyleSheet gets changed. The style sheet passes this
