@@ -53,9 +53,9 @@ Rights Reserved.
       <html>&select.label;</html>
       <separator class="thin"/>
       <radiogroup id="importFields" orient="vertical" class="indent" autostretch="never">
-    		<radio data="addressbook" id="addressbookRadio" value="&importDialog.addressbookTitle;"/>
-    		<radio data="mail" id="mailRadio" value="&importDialog.mailTitle;"/>
-  	  	<radio data="settings" id="settingsRadio" value="&importDialog.settingsTitle;"/>
+    		<radio group="importFields" data="addressbook" id="addressbookRadio" value="&importDialog.addressbookTitle;"/>
+    		<radio group="importFields" data="mail" id="mailRadio" value="&importDialog.mailTitle;"/>
+  	  	<radio group="importFields" data="settings" id="settingsRadio" value="&importDialog.settingsTitle;"/>
       </radiogroup>
     </box>
     <box class="wizard-box" orient="vertical">

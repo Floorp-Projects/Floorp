@@ -20,7 +20,7 @@
  * Contributor(s):
  */
 
-var importType = 0;
+var importType = null;
 var bundle = 0;
 var importService = 0;
 var successStr = null;
@@ -51,29 +51,29 @@ function GetFormattedBundleString( strId, formatStr)
 
 function OnLoadImportDialog()
 {
-	top.bundle = srGetStrBundle("chrome://messenger/locale/importMsgs.properties");
-	top.importService = Components.classes["@mozilla.org/import/import-service;1"].getService();
-	top.importService = top.importService.QueryInterface(Components.interfaces.nsIImportService);
+	bundle = srGetStrBundle("chrome://messenger/locale/importMsgs.properties");
+	importService = Components.classes["@mozilla.org/import/import-service;1"].getService();
+	importService = top.importService.QueryInterface(Components.interfaces.nsIImportService);
 	
-	top.progressInfo = new Object();
-	top.progressInfo.progressWindow = null;
-	top.progressInfo.importInterface = null;
-	top.progressInfo.mainWindow = top.window;
-	top.progressInfo.intervalState = 0;
-	top.progressInfo.importSuccess = false;
-	top.progressInfo.importType = null;
+	progressInfo = { };
+	progressInfo.progressWindow = null;
+	progressInfo.importInterface = null;
+	progressInfo.mainWindow = window;
+	progressInfo.intervalState = 0;
+	progressInfo.importSuccess = false;
+	progressInfo.importType = null;
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0] && window.arguments.importType)
 	{
 		// keep parameters in global for later
-		top.importType = window.arguments[0].importType;
-		top.progressInfo.importType = top.importType;
+		importType = window.arguments[0].importType;
+		progressInfo.importType = top.importType;
 	}
 	else
 	{
-		top.importType = "addressbook";
-		top.progressInfo.importType = "addressbook";
+		importType = "addressbook";
+		progressInfo.importType = "addressbook";
 	}
 	
 	SetUpImportType();	
@@ -83,29 +83,18 @@ function OnLoadImportDialog()
 function SetUpImportType()
 {
 	// set dialog title
-	switch ( top.importType )
+  var typeRadioGroup = document.getElementById("importFields");
+  switch (importType)
 	{
+
 		case "mail":
-			//document.getElementById( "listLabel").setAttribute('value', GetBundleString( 'ImportMailListLabel'));
-			document.getElementById( "mailRadio").checked = true;
-			document.getElementById( "addressbookRadio").checked = false;
-			document.getElementById( "settingsRadio").checked = false;
+      typeRadioGroup.selectedItem = document.getElementById("mailRadio");
 			break;
 		case "addressbook":
-			// top.window.title = top.bundle.GetStringFromName('ImportAddressBooksDialogTitle');
-			//document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportAddressBooksListLabel'));
-			//SetDivText('listLabel', GetBundleString('ImportAddressBooksListLabel'));
-			document.getElementById( "addressbookRadio").checked = true;
-			document.getElementById( "mailRadio").checked = false;
-			document.getElementById( "settingsRadio").checked = false;
+      typeRadioGroup.selectedItem = document.getElementById("addressbookRadio");
 			break;
 		case "settings":
-			// top.window.title = top.bundle.GetStringFromName('ImportSettingsDialogTitle');
-			//document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportSettingsListLabel'));
-			//SetDivText('listLabel', GetBundleString('ImportSettingsListLabel'));
-			document.getElementById( "settingsRadio").checked = true;
-			document.getElementById( "addressbookRadio").checked = false;
-			document.getElementById( "mailRadio").checked = false;
+      typeRadioGroup.selectedItem = document.getElementById("settingsRadio");
 			break;
 	}
 	
@@ -146,13 +135,15 @@ function ImportDialogOKButton()
   
 	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
 	{
+    var importTypeRadioGroup = document.getElementById("importFields");
+    importType = importTypeRadioGroup.selectedItem.getAttribute("data");
 		var index = tree.selectedItems[0].getAttribute('list-index');
-		var module = top.importService.GetModule( top.importType, index);
-		var name = top.importService.GetModuleName( top.importType, index);
-		top.selectedModuleName = name;
+		var module = importService.GetModule(importType, index);
+		var name = importService.GetModuleName(importType, index);
+		selectedModuleName = name;
 		if (module) 
 		{
-			switch( top.importType )
+			switch(importType)
 			{
 				case "mail":
 					top.successStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
@@ -210,7 +201,6 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
-
 							var meterText = GetFormattedBundleString('MailProgressMeterText', name);
               header.setAttribute("description", meterText);
               
@@ -346,6 +336,8 @@ function ContinueImport( info) {
 			}
 		}
 		else {
+      dump("*** WARNING! sometimes this shows results too early. \n");
+      dump("    something screwy here. this used to work fine.\n");
 			clearInterval( info.intervalState);
 			info.importSuccess = true;
 			if (info.progressWindow) {
@@ -367,13 +359,14 @@ function ShowImportResults(good, module)
 {
   var modSuccess = 'Import' + module + 'Success';
   var modFailed = 'Import' + module + 'Failed';
+  var results, title;
 	if (good) {
-    var title = GetFormattedBundleString(modSuccess, selectedModuleName ? selectedModuleName : '');
-    var results = successStr.data;    
+    title = GetFormattedBundleString(modSuccess, selectedModuleName ? selectedModuleName : '');
+    results = successStr.data;    
 	}
 	else if (errorStr.data) { 
-    var title = GetFormattedBundleString(modFailed, selectedModuleName ? selectedModuleName : '');
-    var results = errorStr.data;
+    title = GetFormattedBundleString(modFailed, selectedModuleName ? selectedModuleName : '');
+    results = errorStr.data;
 	}
 	
 	if (results && title) 
