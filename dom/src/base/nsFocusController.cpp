@@ -105,7 +105,11 @@ nsFocusController::GetFocusedWindow(nsIDOMWindowInternal** aWindow)
 NS_IMETHODIMP
 nsFocusController::SetFocusedElement(nsIDOMElement* aElement)
 {
-  mPreviousElement = mCurrentElement;
+  if (mCurrentElement) 
+    mPreviousElement = mCurrentElement;
+  else if (aElement) 
+    mPreviousElement = aElement;
+
   mCurrentElement = aElement;
 
   if (!mSuppressFocus) {
@@ -309,8 +313,10 @@ nsFocusController::Focus(nsIDOMEvent* aEvent)
           nsCOMPtr<nsIDOMDocument> windowDoc;
           mCurrentWindow->GetDocument(getter_AddRefs(windowDoc));
           if (ownerDoc != windowDoc)
-            mCurrentElement = nsnull;
+            mCurrentElement = mPreviousElement = nsnull;
         }
+        else
+          mPreviousElement = nsnull;
 
         if (!mCurrentElement)
           UpdateCommands(NS_LITERAL_STRING("focus"));
