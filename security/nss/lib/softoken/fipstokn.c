@@ -134,6 +134,24 @@ static CK_FUNCTION_LIST pk11_fipsTable = {
 
 #undef __PASTE
 
+static CK_RV
+fips_login_if_key_object(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
+{
+    CK_RV rv;
+    CK_OBJECT_CLASS objClass;
+    CK_ATTRIBUTE class; 
+    class.type = CKA_CLASS;
+    class.pValue = &objClass;
+    class.ulValueLen = sizeof(objClass);
+    rv = NSC_GetAttributeValue(hSession, hObject, &class, 1);
+    if (rv == CKR_OK) {
+	if ((objClass == CKO_PRIVATE_KEY) || (objClass == CKO_SECRET_KEY)) {
+	    rv = pk11_fipsCheck();
+	}
+    }
+    return rv;
+}
+
 
 /**********************************************************************
  *
@@ -352,7 +370,12 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_CopyObject(CK_SESSION_HANDLE hSession,
        CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount,
 					CK_OBJECT_HANDLE_PTR phNewObject) {
-    PK11_FIPSCHECK();
+    CK_RV rv;
+    PK11_FIPSFATALCHECK();
+    rv = fips_login_if_key_object(hSession, hObject);
+    if (rv != CKR_OK) {
+	return rv;
+    }
     return NSC_CopyObject(hSession,hObject,pTemplate,usCount,phNewObject);
 }
 
@@ -360,7 +383,12 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 /* FC_DestroyObject destroys an object. */
  CK_RV FC_DestroyObject(CK_SESSION_HANDLE hSession,
 		 				CK_OBJECT_HANDLE hObject) {
-    PK11_FIPSCHECK();
+    CK_RV rv;
+    PK11_FIPSFATALCHECK();
+    rv = fips_login_if_key_object(hSession, hObject);
+    if (rv != CKR_OK) {
+	return rv;
+    }
     return NSC_DestroyObject(hSession,hObject);
 }
 
@@ -368,7 +396,12 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 /* FC_GetObjectSize gets the size of an object in bytes. */
  CK_RV FC_GetObjectSize(CK_SESSION_HANDLE hSession,
     			CK_OBJECT_HANDLE hObject, CK_ULONG_PTR pusSize) {
-    PK11_FIPSCHECK();
+    CK_RV rv;
+    PK11_FIPSFATALCHECK();
+    rv = fips_login_if_key_object(hSession, hObject);
+    if (rv != CKR_OK) {
+	return rv;
+    }
     return NSC_GetObjectSize(hSession, hObject, pusSize);
 }
 
@@ -376,9 +409,12 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 /* FC_GetAttributeValue obtains the value of one or more object attributes. */
  CK_RV FC_GetAttributeValue(CK_SESSION_HANDLE hSession,
  CK_OBJECT_HANDLE hObject,CK_ATTRIBUTE_PTR pTemplate,CK_ULONG usCount) {
-    /* depend on the normal soft token to protect sensitive objects and
-     * data */
+    CK_RV rv;
     PK11_FIPSFATALCHECK();
+    rv = fips_login_if_key_object(hSession, hObject);
+    if (rv != CKR_OK) {
+	return rv;
+    }
     return NSC_GetAttributeValue(hSession,hObject,pTemplate,usCount);
 }
 
@@ -386,7 +422,12 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 /* FC_SetAttributeValue modifies the value of one or more object attributes */
  CK_RV FC_SetAttributeValue (CK_SESSION_HANDLE hSession,
  CK_OBJECT_HANDLE hObject,CK_ATTRIBUTE_PTR pTemplate,CK_ULONG usCount) {
-    PK11_FIPSCHECK();
+    CK_RV rv;
+    PK11_FIPSFATALCHECK();
+    rv = fips_login_if_key_object(hSession, hObject);
+    if (rv != CKR_OK) {
+	return rv;
+    }
     return NSC_SetAttributeValue(hSession,hObject,pTemplate,usCount);
 }
 
