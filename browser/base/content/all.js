@@ -300,7 +300,6 @@ pref("javascript.options.showInConsole",    true);
 // advanced prefs
 pref("advanced.always_load_images",         true);
 pref("security.enable_java",                true);
-pref("css.allow",                           true);
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
 
