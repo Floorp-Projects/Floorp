@@ -244,29 +244,29 @@ nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect&        aDirtyRect)
 {
-  // Paint our children only if we are visible
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->mVisible) {
-    PRBool clipState;
 
-    // If overflow is hidden then set the clip rect so that children
-    // don't leak out of us
-    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-      aRenderingContext.PushState();
-      aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                    nsClipCombine_kIntersect, clipState);
-    }
+  // Child elements have the opportunity to override the visibility property
+  // of their parent and display even if the parent is hidden
+  PRBool clipState;
 
-    nsIFrame* kid = mFirstChild;
-    while (nsnull != kid) {
-      PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid);
-      kid->GetNextSibling(kid);
-    }
+  // If overflow is hidden then set the clip rect so that children
+  // don't leak out of us
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
+                                  nsClipCombine_kIntersect, clipState);
+  }
 
-    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-      aRenderingContext.PopState(clipState);
-    }
+  nsIFrame* kid = mFirstChild;
+  while (nsnull != kid) {
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid);
+    kid->GetNextSibling(kid);
+  }
+
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.PopState(clipState);
   }
 }
 

@@ -102,10 +102,12 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
                                     aDirtyRect, rect, *color, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *spacing, skipSides);
-
-    // Now paint the kids
-    PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
   }
+
+  // Now paint the kids. Note that child elements have the opportunity to
+  // override the visibility property and display even if their parent is
+  // hidden
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
   return NS_OK;
 }
 

@@ -4986,6 +4986,8 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
+
+  // Only paint the border and background if we're visible
   if (disp->mVisible) {
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color = (const nsStyleColor*)
@@ -4999,23 +5001,25 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
                                     aDirtyRect, rect, *color, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *spacing, skipSides);
+  }
 
-    // If overflow is hidden then set the clip rect so that children
-    // don't leak out of us
-    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-      PRBool clipState;
-      aRenderingContext.PushState();
-      aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                    nsClipCombine_kIntersect, clipState);
-    }
+  // If overflow is hidden then set the clip rect so that children
+  // don't leak out of us
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    PRBool clipState;
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
+                                  nsClipCombine_kIntersect, clipState);
+  }
 
-    PaintFloaters(aPresContext, aRenderingContext, aDirtyRect);
-    PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  // Child elements have the opportunity to override the visibility
+  // property and display even if the parent is hidden
+  PaintFloaters(aPresContext, aRenderingContext, aDirtyRect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
 
-    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-      PRBool clipState;
-      aRenderingContext.PopState(clipState);
-    }
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    PRBool clipState;
+    aRenderingContext.PopState(clipState);
   }
   return NS_OK;
 }
