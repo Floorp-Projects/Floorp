@@ -190,6 +190,11 @@ PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI)
     return PR_FALSE;
   }
 
+  nsXPIDLString desc;
+  nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
+  if (extProtService)
+    extProtService->GetApplicationDescription(scheme, desc);
+
   nsCOMPtr<nsIStringBundle> appstrings;
   rv = sbSvc->CreateBundle("chrome://global/locale/appstrings.properties",
                            getter_AddRefs(appstrings));
@@ -213,15 +218,21 @@ PRBool nsExtProtocolChannel::PromptForScheme(nsIURI* aURI)
   appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolLaunchBtn").get(),
                                 getter_Copies(launchBtn));
 
+  if (desc.IsEmpty())
+    appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolUnknown").get(),
+                                  getter_Copies(desc));
+
+
   nsXPIDLString message;
-  const PRUnichar* msgArgs[] = { utf16scheme.get(), uri.get() };
+  const PRUnichar* msgArgs[] = { utf16scheme.get(), uri.get(), desc.get() };
   appstrings->FormatStringFromName(NS_LITERAL_STRING("externalProtocolPrompt").get(),
                                    msgArgs,
                                    NS_ARRAY_LENGTH(msgArgs),
                                    getter_Copies(message));
 
   if (utf16scheme.IsEmpty() || uri.IsEmpty() || title.IsEmpty() ||
-      checkMsg.IsEmpty() || launchBtn.IsEmpty() || message.IsEmpty())
+      checkMsg.IsEmpty() || launchBtn.IsEmpty() || message.IsEmpty() ||
+      desc.IsEmpty())
     return PR_FALSE;
 
   // all pieces assembled, now we can pose the dialog

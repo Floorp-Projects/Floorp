@@ -50,7 +50,7 @@ interface nsIFile;
  * handler for a given protocol scheme. And you can ask it to load 
  * the url using the default handler.
  */
-[scriptable, uuid(100FD4B3-4557-11d4-98D0-001083010E9B)]
+[scriptable, uuid(4F38DF07-0B21-4d40-BED0-08E33EB566FB)]
 interface nsIExternalProtocolService : nsISupports
 {
   /**
@@ -76,5 +76,19 @@ interface nsIExternalProtocolService : nsISupports
    * Used to load a url via an external protocol handler (if one exists)
    * @param aURL The url to load
    */
-  void loadUrl (in nsIURI aURL);  
+  void loadUrl (in nsIURI aURL);
+
+  /**
+   * Gets a human-readable description for the application responsible for
+   * handling a specific protocol.
+   *
+   * @param aScheme The scheme to look up. For example, "mms".
+   *
+   * @throw NS_ERROR_NOT_IMPLEMENTED
+   *        If getting descriptions for protocol helpers is not supported
+   * @throw NS_ERROR_NOT_AVAILABLE
+   *        If no protocol helper exists for this scheme, or if it is not
+   *        possible to get a description for it.
+   */
+  AString getApplicationDescription(in AUTF8String aScheme);
 }; 

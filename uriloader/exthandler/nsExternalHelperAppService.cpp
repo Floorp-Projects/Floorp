@@ -1067,6 +1067,12 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsExternalHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
+{
+  // this method should only be implemented by each OS specific implementation of this service.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // Methods related to deleting temporary files on exit

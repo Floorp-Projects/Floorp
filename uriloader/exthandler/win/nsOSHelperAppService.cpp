@@ -256,6 +256,20 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   return rv;
 }
 
+NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
+{
+  nsCAutoString cmdString(aScheme);
+  cmdString.AppendLiteral("\\shell\\open\\command");
+  HKEY cmd;
+  LONG rc = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, cmdString.get(), 0, KEY_QUERY_VALUE, &cmd);
+  if (rc != ERROR_SUCCESS)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PRBool found = GetValueString(cmd, NULL, _retval);
+  ::RegCloseKey(cmd);
+  return found ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+}
+
 // GetMIMEInfoFromRegistry: This function obtains the values of some of the nsIMIMEInfo
 // attributes for the mimeType/extension associated with the input registry key.  The default
 // entry for that key is the name of a registry key under HKEY_CLASSES_ROOT.  The default
