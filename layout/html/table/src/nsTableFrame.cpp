@@ -2698,7 +2698,13 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
   const nsStylePosition* position =
     (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
   if (eStyleUnit_Coord==position->mWidth.GetUnit()) 
-    maxWidth = position->mWidth.GetCoordValue();
+  {
+    nscoord coordWidth=0;
+    coordWidth = position->mWidth.GetCoordValue();
+    // NAV4 compatibility:  0-coord-width == auto-width
+    if (0!=coordWidth)
+      maxWidth = coordWidth;
+  }
 
   if (0>maxWidth)  // nonsense style specification
     maxWidth = 0;
@@ -3860,13 +3866,19 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
       break;
 
     case eStyleUnit_Coord:
-      // XXX: subtract out this table frame's borderpadding?
-      aSpecifiedTableWidth = tablePosition->mWidth.GetCoordValue();
-      aReflowState.frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-      spacing->CalcBorderPaddingFor(aReflowState.frame, borderPadding);
-      aSpecifiedTableWidth -= (borderPadding.right + borderPadding.left);
-      result = PR_FALSE;
-      break;
+    {
+      nscoord coordWidth = tablePosition->mWidth.GetCoordValue();
+      // NAV4 compatibility.  If coord width is 0, do nothing so we get same result as "auto"
+      if (0!=coordWidth)
+      {
+        aSpecifiedTableWidth = coordWidth;
+        aReflowState.frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+        spacing->CalcBorderPaddingFor(aReflowState.frame, borderPadding);
+        aSpecifiedTableWidth -= (borderPadding.right + borderPadding.left);
+        result = PR_FALSE;
+      }
+    }
+    break;
 
     case eStyleUnit_Percent:
       // set aSpecifiedTableWidth to be the given percent of the parent.

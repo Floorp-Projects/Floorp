@@ -345,6 +345,19 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     printf(" content returned desired width %d given avail width %d\n",
             kidSize.width, availSize.width);
   }
+  // Nav4 hack for 0 width cells.  
+  // Empty cells are assigned a width of 3px
+  // see testcase "cellHeights.html"
+  if (0==kidSize.width)
+  {
+    float p2t;
+    aPresContext.GetScaledPixelsToTwips(p2t);
+    kidSize.width=NSIntPixelsToTwips(3, p2t);
+    if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
+          pMaxElementSize->width=NSIntPixelsToTwips(3, p2t);
+    if (gsDebug) printf ("setting child width from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(1, p2t));
+  }
+  // end Nav4 hack for 0 width cells
 #endif
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
@@ -377,34 +390,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
              this, cellHeight, kidSize.height, topInset, bottomInset);
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
-
-  // Nav4 hack for 0 width cells.  If the cell has any content, it must have a desired width of at least 1
-  // see testcase "cellHeights.html"
-  /*
-  if (0==cellWidth)
-  {
-    PRInt32 childCount;
-    mFirstChild->ChildCount(childCount);
-    if (0!=childCount)
-    {
-      nsIFrame *grandChild;
-      mFirstChild->FirstChild(grandChild);
-      grandChild->ChildCount(childCount);
-      if (0!=childCount)
-      {
-        float p2t;
-        aPresContext.GetScaledPixelsToTwips(p2t);
-        nscoord one = ((nscoord)(NSIntPixelsToTwips(1, p2t)));
-        cellWidth = 1;
-        if (gsDebug) 
-          printf ("setting cellWidth=1 because it was 0 but there's some content\n");
-        if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
-          pMaxElementSize->width=1; // insets added in below
-      }
-    }
-  }
-  */
-  // end Nav4 hack for 0 width cells
 
   // NAV4 compatibility: only add insets if cell content was not 0 width
   if (0!=cellWidth)
@@ -459,20 +444,6 @@ NS_METHOD nsTableCellFrame::IR_StyleChanged(nsIPresContext&          aPresContex
     tableFrame->InvalidateFirstPassCache();
   }
 
-  // we are obligated to pass along the reflow command to our children before doing anything else
-  /*
-  nsIFrame *childFrame = mFirstChild;
-  while (nsnull!=childFrame)
-  {
-    nsHTMLReflowState childReflowState(aPresContext, childFrame, aReflowState,
-                                       aReflowState.maxSize, eReflowReason_Incremental);
-    rv = ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
-    if (NS_FAILED(rv))
-      break;
-    // the returned desired size is irrelevant, because we'll do a resize reflow in a moment
-    childFrame->GetNextSibling(childFrame);
-  }
-  */
   return rv;
 }
 
