@@ -83,6 +83,7 @@ nsBaseWidget::nsBaseWidget() :
     mContext       = nsnull;
     mCursor        = eCursor_standard;
     mBorderStyle   = eBorderStyle_none;
+    NS_INIT_REFCNT();
 }
 
 
