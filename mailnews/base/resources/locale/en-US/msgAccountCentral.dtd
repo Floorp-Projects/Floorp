@@ -19,22 +19,13 @@ Rights Reserved.
 --> 
 
 <!ENTITY emailSectionHdr.label        "Email"> 
-<!ENTITY readMsgsLink.label           "Read"> 
-<!ENTITY readMsgsSuffix.label         "my Email messages"> 
-<!ENTITY composeMsgLink.label         "Compose"> 
-<!ENTITY composeMsgSuffix.label       "a new message"> 
+<!ENTITY readMsgsLink.label           "Read messages"> 
+<!ENTITY composeMsgLink.label         "Compose a new message"> 
 
 <!ENTITY accountsSectionHdr.label     "Accounts"> 
-<!ENTITY settingsPrefix.label         "View"> 
-<!ENTITY settingsLink.label           "settings"> 
-<!ENTITY settingsSuffix.label         "for this account"> 
-<!ENTITY newAcctPrefix.label          "Create a"> 
-<!ENTITY newAcctLink.label            "new account"> 
+<!ENTITY settingsLink.label           "View settings for this account"> 
+<!ENTITY newAcctLink.label            "Create a new account"> 
 
 <!ENTITY advFeaturesSectionHdr.label  "Advanced Features"> 
-<!ENTITY searchMsgsLink.label         "Search"> 
-<!ENTITY searchMsgsSuffix.label       "my messages"> 
-<!ENTITY filtersPrefix.label          "Create message"> 
-<!ENTITY filtersLink.label            "filters"> 
-
-<!ENTITY spacer.label                 " "> 
+<!ENTITY searchMsgsLink.label         "Search messages"> 
+<!ENTITY filtersLink.label            "Create message filters">

@@ -67,16 +67,12 @@ Rights Reserved.
       <row id="ReadMessages" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&readMsgsLink.label;" onclick="ReadMessages();"/> 
-          <text class="acctCentralText" value="&spacer.label;"/> 
-          <text class="acctCentralText" value="&readMsgsSuffix.label;"/> 
         </box>
       </row>
       <separator class="thin"/>
       <row id="ComposeMessage" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&composeMsgLink.label;" onclick="ComposeAMessage();"/> 
-          <text class="acctCentralText" value="&spacer.label;"/> 
-          <text class="acctCentralText" value="&composeMsgSuffix.label;"/> 
         </box> 
       </row>
 
@@ -92,18 +88,12 @@ Rights Reserved.
       <separator class="thin"/>
       <row id="AccountSettings" class="acctCentralRow">
         <box> 
-          <text class="acctCentralText" value="&settingsPrefix.label;"/> 
-          <text class="acctCentralText" value="&spacer.label;"/> 
           <text class="acctCentralText acctCentralLinkText" value="&settingsLink.label;" onclick="ViewSettings();"/> 
-          <text class="acctCentralText" value="&spacer.label;"/> 
-          <text class="acctCentralText" value="&settingsSuffix.label;"/> 
         </box> 
       </row>
       <separator class="thin"/>
       <row id="CreateAccount" class="acctCentralRow">
         <box> 
-          <text class="acctCentralText" value="&newAcctPrefix.label;"/> 
-          <text class="acctCentralText" value="&spacer.label;"/> 
           <text class="acctCentralText acctCentralLinkText" value="&newAcctLink.label;" onclick="CreateNewAccount();"/> 
         </box> 
       </row>
@@ -121,15 +111,11 @@ Rights Reserved.
       <row id="SearchMessages" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&searchMsgsLink.label;" onclick="SearchMessages();"/> 
-          <text class="acctCentralText" value="&spacer.label;"/> 
-          <text class="acctCentralText" value="&searchMsgsSuffix.label;"/> 
         </box> 
       </row>
       <separator class="thin"/>
       <row id="CreateFilters" class="acctCentralRow">
         <box> 
-          <text class="acctCentralText" value="&filtersPrefix.label;"/> 
-          <text class="acctCentralText" value="&spacer.label;"/> 
           <text class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" onclick="CreateMsgFilters();"/> 
         </box> 
       </row>
