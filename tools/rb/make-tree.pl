@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-# $Id: make-tree.pl,v 1.1 2000/07/12 01:32:54 dbaron%fas.harvard.edu Exp $
+# $Id: make-tree.pl,v 1.2 2003/06/13 01:10:19 timeless%mozdev.org Exp $
 #
 # See http://www.mozilla.org/performance/refcnt-balancer.html for more info.
 #
@@ -185,7 +185,14 @@ if ($::opt_comptrs) {
      read_data(*COMPTRS, "nsCOMPtrRelease", "nsCOMPtrAddRef");
 }
 
-
+sub num_alpha {
+     my ($aN, $aS, $bN, $bS);
+     ($aN, $aS) = ($1, $2) if $a =~ /^(\d+) (.+)$/;
+     ($bN, $bS) = ($1, $2) if $b =~ /^(\d+) (.+)$/;
+     return $a cmp $b unless defined $aN && defined $bN;
+     return $aN <=> $bN unless $aN == $bN;
+     return $aS cmp $bS;
+}
 
 # Given a subtree and its nesting level, return true if that subtree should be pruned.
 # If it shouldn't be pruned, destructively attempt to prune its children.
@@ -208,7 +215,7 @@ sub prune($$) {
      }
 
      my @children;
-     foreach my $child (sort(keys(%$site))) {
+     foreach my $child (sort num_alpha keys(%$site)) {
          if (substr($child, 0, 1) ne '#') {
              if (prune($site->{$child}, $nest + 1)) {
                  delete $site->{$child};
@@ -301,7 +308,7 @@ Imbalance
 ---------
 };
 
-foreach my $call (sort(keys(%imbalance))) {
+foreach my $call (sort num_alpha keys(%imbalance)) {
      print $call . " " . $imbalance{$call} . "\n";
 }
 
