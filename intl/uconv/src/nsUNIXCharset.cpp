@@ -228,11 +228,11 @@ nsPlatformCharset::InitGetCharset(nsAString &oString)
     nsAutoLock guard(gLock);
 
     if (!gNLInfo) {
-      nsAutoString propertyURL;
+      nsCAutoString propertyURL;
       // note: NS_LITERAL_STRING("resource:/res/unixcharset." OSARCH ".properties") does not compile on AIX
-      propertyURL.Assign(NS_LITERAL_STRING("resource:/res/unixcharset."));
-      propertyURL.AppendWithConversion(OSARCH);
-      propertyURL.Append(NS_LITERAL_STRING(".properties"));
+      propertyURL.Assign(NS_LITERAL_CSTRING("resource:/res/unixcharset."));
+      propertyURL.Append(OSARCH);
+      propertyURL.Append(NS_LITERAL_CSTRING(".properties"));
       nsURLProperties *info;
       info = new nsURLProperties( propertyURL );
       NS_ASSERTION( info, "cannot create nsURLProperties");
@@ -398,7 +398,7 @@ nsPlatformCharset::MapToCharset(short script, short region, nsAString& outCharse
 }
 
 nsresult 
-nsPlatformCharset::MapToCharset(nsString& inANSICodePage, nsAString& outCharset)
+nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsAString& outCharset)
 {
   return NS_OK;
 }
