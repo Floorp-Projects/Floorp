@@ -103,7 +103,7 @@ nsAutoCompleteMdbResult::GetValueAt(PRInt32 aIndex, nsAString & _retval)
 {
   NS_ENSURE_TRUE(aIndex >= 0 && aIndex < mResults.Count(), NS_ERROR_ILLEGAL_VALUE);
 
-  nsIMdbRow *row = NS_STATIC_CAST(nsIMdbRow *, mResults.ElementAt(aIndex));
+  nsIMdbRow *row = mResults.ObjectAt(aIndex);
   if (!row) return NS_OK;
 
   if (mValueType == kUnicharType) {
@@ -130,7 +130,7 @@ nsAutoCompleteMdbResult::GetCommentAt(PRInt32 aIndex, nsAString & _retval)
 {
   NS_ENSURE_TRUE(aIndex >= 0 && aIndex < mResults.Count(), NS_ERROR_ILLEGAL_VALUE);
 
-  nsIMdbRow *row = NS_STATIC_CAST(nsIMdbRow *, mResults.ElementAt(aIndex));
+  nsIMdbRow *row = mResults.ObjectAt(aIndex);
   if (!row) return NS_OK;
 
   if (mCommentType == kUnicharType) {
@@ -205,17 +205,17 @@ nsAutoCompleteMdbResult::SetTokens(mdb_scope aValueToken, PRInt16 aValueType, md
 NS_IMETHODIMP
 nsAutoCompleteMdbResult::AddRow(nsIMdbRow *aRow)
 {
-  mResults.AppendElement((void *)aRow);
+  mResults.AppendObject(aRow);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAutoCompleteMdbResult::RemoveRowAt(PRUint32 aRowIndex, PRBool aRemoveFromDb)
 {
-  nsIMdbRow *row = (nsIMdbRow *)mResults.ElementAt(aRowIndex);
+  nsIMdbRow *row = mResults.ObjectAt(aRowIndex);
   NS_ENSURE_TRUE(row, NS_ERROR_INVALID_ARG);
 
-  mResults.RemoveElementAt(aRowIndex);
+  mResults.RemoveObjectAt(aRowIndex);
 
   if (aRemoveFromDb && mTable && mEnv) {
     mdb_err err = mTable->CutRow(mEnv, row);
@@ -228,7 +228,7 @@ nsAutoCompleteMdbResult::RemoveRowAt(PRUint32 aRowIndex, PRBool aRemoveFromDb)
 NS_IMETHODIMP
 nsAutoCompleteMdbResult::GetRowAt(PRUint32 aRowIndex, nsIMdbRow **aRow)
 {
-  *aRow = (nsIMdbRow *)mResults.ElementAt(aRowIndex);
+  *aRow = mResults.ObjectAt(aRowIndex);
   return NS_OK;
 }
 
