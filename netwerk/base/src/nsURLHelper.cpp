@@ -47,16 +47,6 @@
 #include <windows.h> // ::IsDBCSLeadByte need
 #endif
 
-/* helper call function */
-nsresult
-nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask)
-{
-    nsCAutoString result;
-    nsresult rv = nsStdEscape(str, mask, result);
-    originalStr += result;
-    return rv;
-}
-
 /* extracts first number from a string and assumes that this is the port number*/
 PRInt32 
 ExtractPortFrom(const char* src)

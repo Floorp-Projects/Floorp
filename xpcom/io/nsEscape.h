@@ -85,10 +85,20 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer,
   */
 
 
-  /**
-     * Constants for the mask in the call to nsStdEscape
-     */
+/**
+ * DEPRACATED API: use NS_EscapeURLPart/NS_UnescapeURL instead
+ */
+NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result);
+NS_COM nsresult nsStdUnescape(char* str, char **result);
 
+#ifdef __cplusplus
+}
+#endif
+
+
+/**
+ * Constants for partType in the call to NS_EscapeURLPart
+ */
 enum EscapeMask {
   esc_Scheme        = 1,
   esc_Username      = 2,
@@ -103,30 +113,28 @@ enum EscapeMask {
   esc_Forced        = 1024
 };
 
-NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result);
-NS_COM nsresult nsStdUnescape(char* str, char **result);
+/**
+ * NS_EscapeURLPart
+ *
+ * Escapes invalid char's in an URL segment.  Has no side-effect if the URL
+ * segment is already escaped.  Otherwise, the escaped URL segment is appended
+ * to |result|.
+ *
+ * @param part     - url segment string
+ * @param partLen  - url segment string length (-1 if unknown)
+ * @param partType - url segment type flag
+ * @param result   - result buffer, untouched if part is already escaped
+ *
+ * @return TRUE if escaping was performed, FALSE otherwise.
+ */
+NS_COM PRBool NS_EscapeURLPart(const char *part,
+                               PRInt32 partLen,
+                               PRInt16 partType,
+                               nsACString &result);
 
 /**
- * NS_EscapeURL
- *
- * Escapes invalid char's in an URL segment.
- *
- * @param str       - the url string
- * @param len       - optional string length (-1 if unknown)
- * @param mask      - url segment type mask
- * @param result    - result buffer, untouched if escaping & filtering not necessary
+ * Expands URL escape sequences.  Equivalent to nsUnescape.
  */
-NS_COM nsresult NS_EscapeURL(const char *str,
-                             PRInt32 len,
-                             PRInt16 mask,
-                             nsACString &result);
-
-#define NS_UnescapeURL(str) nsUnescape(str)
-
-#ifdef __cplusplus
-}
-#endif
-
-
+NS_COM void NS_UnescapeURL(char *str);
 
 #endif //  _ESCAPE_H_

@@ -349,8 +349,8 @@ const int EscapeChars[256] =
 
 NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
 {
-    result.Truncate(0);
-    nsresult rv = NS_EscapeURL(str, -1, mask, result);
+    result.Truncate();
+    nsresult rv = NS_EscapeURLPart(str, -1, mask, result);
     if (NS_SUCCEEDED(rv) && result.IsEmpty())
         result = str;
     return rv;
@@ -365,30 +365,30 @@ NS_COM nsresult nsStdUnescape(char *str, char **result)
     return NS_OK;
 }
 
-NS_COM nsresult NS_EscapeURL(const char *str,
-                             PRInt32 len,
-                             PRInt16 mask,
-                             nsACString &result)
+NS_COM PRBool NS_EscapeURLPart(const char *part,
+                               PRInt32 partLen,
+                               PRInt16 mask,
+                               nsACString &result)
 {
-    if (!str)
-        return NS_OK;
+    if (!part)
+        return PR_FALSE;
 
     int i = 0;
     static const char hexChars[] = "0123456789ABCDEF";
-    if (len < 0)
-        len = strlen(str);
+    if (partLen < 0)
+        partLen = strlen(part);
     PRBool forced = PR_FALSE;
     PRBool writing = PR_FALSE;
 
     if (mask & esc_Forced)
         forced = PR_TRUE;
 
-    register const unsigned char* src = (const unsigned char *) str;
+    register const unsigned char* src = (const unsigned char *) part;
 
     char tempBuffer[100];
     unsigned int tempBufferPos = 0;
 
-    for (i = 0; i < len; i++)
+    for (i = 0; i < partLen; i++)
     {
       unsigned char c = *src++;
 
@@ -407,8 +407,7 @@ NS_COM nsresult NS_EscapeURL(const char *str,
       {
         if (!writing)
         {
-          result.Truncate(0);
-          result.Append(str, i);
+          result.Append(part, i);
           writing = PR_TRUE;
         }
         tempBuffer[tempBufferPos++] = HEX_ESCAPE;
@@ -428,6 +427,10 @@ NS_COM nsresult NS_EscapeURL(const char *str,
       tempBuffer[tempBufferPos] = '\0';
       result += tempBuffer;
     }
-    return NS_OK;
+    return writing;
 }
 
+NS_COM void NS_UnescapeURL(char *str)
+{
+    nsUnescape(str);
+}

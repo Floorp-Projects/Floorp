@@ -47,9 +47,6 @@
 extern "C" {
 #endif
 
-/* helper call function */
-nsresult nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask);
-
 /* Get port from string */ 
 PRInt32 ExtractPortFrom(const char* src);
 
