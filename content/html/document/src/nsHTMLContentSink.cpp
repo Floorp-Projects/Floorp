@@ -1927,6 +1927,10 @@ SinkContext::AddComment(const nsIParserNode& aNode)
 
   FlushTextAndRelease();
 
+  if (!mSink) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  
   nsCOMPtr<nsIContent> comment;
   nsresult rv = NS_NewCommentNode(getter_AddRefs(comment));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1939,7 +1943,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
   comment->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
   nsIHTMLContent* parent;
-  if (!mSink->mBody && mSink->mHead) {
+  if (!mSink->mBody && !mSink->mFrameset && mSink->mHead) {
     parent = mSink->mHead;
   } else {
     parent = mStack[mStackPos - 1].mContent;
