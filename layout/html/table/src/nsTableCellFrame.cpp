@@ -31,6 +31,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsIPtr.h"
 #include "nsIView.h"
+#include "nsStyleUtil.h"
 // dependancy on content
 #include "nsHTMLTagContent.h"
 
@@ -442,29 +443,14 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleS
   
   tableFrame->GetStyleContext(aPresContext,styleContext);
   
-  const nsStyleColor*   colorData = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
-
-   // Look until we find a style context with a NON-transparent background color
-  while (styleContext)
-  {
-    if ((colorData->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)!=0)
-    {
-      nsIStyleContext* temp = styleContext;
-      styleContext = styleContext->GetParent();
-      NS_RELEASE(temp);
-      colorData = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
-    }
-    else
-    {
-      break;
-    }
-  }
+  const nsStyleColor* colorData = 
+      nsStyleUtil::FindNonTransparentBackground(styleContext);
+  NS_IF_RELEASE(styleContext);
 
   // Yaahoo, we found a style context which has a background color 
-  
   nscolor borderColor = 0xFFC0C0C0;
 
-  if (styleContext != nsnull)
+  if (colorData != nsnull)
     borderColor = colorData->mBackgroundColor;
 
   // if the border color is white, then shift to grey
