@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*-
+/* -*- Mode: Java; tab-width: 4; c-basic-offset: 2; -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -28,13 +28,23 @@ function initPanel() {
   }
 }
 
-window.doneLoading = false;
+var hWalletViewer = null;
 var walletViewerInterface = null;
 var walletServiceInterface = null;
 var bundle = null; // string bundle
 var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/WalletEditor.properties";
 var schemaToValue = [];
 var BREAK = "|";
+
+function onLoad()
+{
+  hWalletViewer = new nsWalletViewer('panelFrame');
+
+  if (!hWalletViewer)
+    throw "failed to create walletviewer";
+  else
+    hWalletViewer.init();
+}
 
 function nsWalletViewer(frame_id)
 {
@@ -70,7 +80,6 @@ nsWalletViewer.prototype =
           dump("*** user failed to unlock the database\n");
           return;
         }
-        doSetOKCancel(this.onOK, this.onCancel);
 
         // allow l10n to hide certain panels
         var pref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -126,7 +135,7 @@ nsWalletViewer.prototype =
           this.closeBranches("pnameID");
         },
 
-      onOK:
+    onAccept:
         function() {
           for(var i = 0; i < hWalletViewer.okHandlers.length; i++) {
             hWalletViewer.okHandlers[i]();
@@ -135,7 +144,8 @@ nsWalletViewer.prototype =
           var tag = document.getElementById(hWalletViewer.contentFrame).getAttribute("tag");
           hWalletViewer.savePageData(tag);
           hWalletViewer.saveAllData();
-          close();
+
+        return true;
         },
 
       onCancel:
@@ -143,7 +153,8 @@ nsWalletViewer.prototype =
           for(var i = 0; i < hWalletViewer.cancelHandlers.length; i++) {
             hWalletViewer.cancelHandlers[i]();
           }
-          close();
+
+        return true;
         },
 
       registerOKCallbackFunc:

@@ -41,9 +41,6 @@
   ]]>
   </script>
 
-  <script type="application/x-javascript"
-          src="chrome://communicator/content/wallet/WalletViewer.js"/>
-  
   <groupbox>
     <caption label="&address.title;"/>
     <grid class="indent" flex="1">

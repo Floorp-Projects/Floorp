@@ -38,7 +38,4 @@
   ]]>
   </script>
 
-  <script type="application/x-javascript"
-          src="chrome://communicator/content/wallet/WalletViewer.js"/>
-  
 </page>

@@ -30,13 +30,13 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="generate();">
+      onload="parent.initPanel();">
 
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = [];
 
-  function generate() {
+  function Startup() {
     var colonIndex;
     for (var schema in parent.schemaToValue) {
       colonIndex = schema.indexOf(":");
@@ -71,15 +71,11 @@
         _elementIDs[_elementIDs.length] = schema;
       }
     }
-    parent.initPanel();
   }
   ]]>
 
   </script>
 
-  <script type="application/x-javascript"
-          src="chrome://communicator/content/wallet/WalletViewer.js"/>
-  
   <groupbox>
     <caption label="&urlspecific.title;"/>
 

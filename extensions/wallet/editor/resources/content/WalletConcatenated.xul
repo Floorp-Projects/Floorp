@@ -54,10 +54,6 @@
   ]]>
   </script>
 
-  <script type="application/x-javascript"
-          src="chrome://communicator/content/wallet/WalletViewer.js"/>
-  
-
   <groupbox hidden="true">
     <caption label="&concatPrimary.title;"/>
     <grid class="indent" flex="1">
