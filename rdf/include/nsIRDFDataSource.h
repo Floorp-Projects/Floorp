@@ -51,6 +51,9 @@ public:
     /**
      * Find an RDF resource that points to a given node over the
      * specified arc & truth value
+     *
+     * @return NS_ERROR_FAILURE if there is no source that leads
+     * to the target with the specified property.
      */
     NS_IMETHOD GetSource(nsIRDFNode* property,
                          nsIRDFNode* target,
@@ -60,6 +63,10 @@ public:
     /**
      * Find all RDF resources that point to a given node over the
      * specified arc & truth value
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the
+     * method returns NS_OK, you may assume that nsIRDFCursor points
+     * to a valid (but possibly empty) cursor.
      */
     NS_IMETHOD GetSources(nsIRDFNode* property,
                           nsIRDFNode* target,
@@ -69,6 +76,9 @@ public:
     /**
      * Find a child of that is related to the source by the given arc
      * arc and truth value
+     *
+     * @return NS_ERROR_FAILURE if there is no target accessable from the
+     * source via the specified property.
      */
     NS_IMETHOD GetTarget(nsIRDFNode* source,
                          nsIRDFNode* property,
@@ -77,7 +87,11 @@ public:
 
     /**
      * Find all children of that are related to the source by the given arc
-     * arc and truth value
+     * arc and truth value.
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the
+     * method returns NS_OK, you may assume that nsIRDFCursor points
+     * to a valid (but possibly empty) cursor.
      */
     NS_IMETHOD GetTargets(nsIRDFNode* source,
                           nsIRDFNode* property,
@@ -102,6 +116,7 @@ public:
     /**
      * Query whether an assertion exists in this graph.
      *
+     * @return NS_OK unless a catastrophic error occurs.
      */
     NS_IMETHOD HasAssertion(nsIRDFNode* source,
                             nsIRDFNode* property,
@@ -123,6 +138,10 @@ public:
 
     /**
      * Get a cursor to iterate over all the arcs that point into a node.
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the method
+     * returns NS_OK, you may assume that labels points to a valid (but
+     * possible empty) nsIRDFCursor object.
      */
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
                            nsIRDFCursor*& labels /* out */) = 0;
@@ -130,6 +149,10 @@ public:
     /**
      * Get a cursor to iterate over all the arcs that originate in
      * a resource.
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the method
+     * returns NS_OK, you may assume that labels points to a valid (but
+     * possible empty) nsIRDFCursor object.
      */
     NS_IMETHOD ArcLabelsOut(nsIRDFNode* source,
                             nsIRDFCursor*& labels /* out */) = 0;
