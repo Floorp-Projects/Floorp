@@ -732,8 +732,14 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
     // iteration.
     nscoord knownFeasibleHeight = NS_INTRINSICSIZE;
     nscoord knownInfeasibleHeight = 0;
+    // We set this flag when we detect that we may contain a frame
+    // that can break anywhere (thus foiling the linear decrease-by-one
+    // search)
+    PRBool maybeContinuousBreakingDetected = PR_FALSE;
 
     while (1) {
+      nscoord lastKnownFeasibleHeight = knownFeasibleHeight;
+
       nscoord maxHeight = 0;
       for (nsIFrame* f = mFrames.FirstChild(); f; f = f->GetNextSibling()) {
         maxHeight = PR_MAX(maxHeight, f->GetSize().height);
@@ -775,9 +781,17 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
         break;
       }
 
+      if (lastKnownFeasibleHeight - knownFeasibleHeight == 1) {
+        // We decreased the feasible height by one twip only. This could
+        // indicate that there is a continuously breakable child frame
+        // that we are crawling through.
+        maybeContinuousBreakingDetected = PR_TRUE;
+      }
+
       nscoord nextGuess = (knownFeasibleHeight + knownInfeasibleHeight)/2;
       // The constant of 600 twips is arbitrary. It's about two line-heights.
-      if (knownFeasibleHeight - nextGuess < 600) {
+      if (knownFeasibleHeight - nextGuess < 600 &&
+          !maybeContinuousBreakingDetected) {
         // We're close to our target, so just try shrinking just the
         // minimum amount that will cause one of our columns to break
         // differently.
