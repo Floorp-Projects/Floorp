@@ -912,7 +912,7 @@ tree {
   width: 100%;
 }
 
-treeitem[selected="true"] { 
+treeitem[selected="true"] > treerow { 
   color: white;
   background-color: #336699;
 }
