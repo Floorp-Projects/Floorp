@@ -219,7 +219,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
 NS_IMETHODIMP
 nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
 {
-    NS_IF_ADDREF(*aLoadCookie = NS_STATIC_CAST(nsIDocumentLoader*, mDocShell));
+    NS_IF_ADDREF(*aLoadCookie = nsDocShell::GetAsSupports(mDocShell));
     return NS_OK;
 }
 
