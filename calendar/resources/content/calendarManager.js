@@ -36,9 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-include('chrome://calendar/content/jslib/io/io.js');
-include('chrome://calendar/content/jslib/rdf/rdf.js');
-include('chrome://calendar/content/jslib/rdf/rdfFile.js');
+
 var gNextSubNodeToRefresh=0;
 var gModifiedTime = new Array();
 //var gModifiedTimeRemote = new Array(); 

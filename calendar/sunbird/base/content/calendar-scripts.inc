@@ -48,8 +48,6 @@
     var defaultCalendarFileName = "&calendar.file.default.name;";
   </script>
 
-  <script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
-
 #ifdef XP_MACOSX
   <!-- Needed for Mac OS X "Window" menu -->
   <script type="application/x-javascript" src="chrome://calendar/content/hiddenWindow.js"/>

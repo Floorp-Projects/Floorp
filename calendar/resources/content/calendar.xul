@@ -134,6 +134,9 @@
   <command id="minimizeWindowCmd" oncommand="window.minimize();"/>
   <command id="zoomWindowCmd" oncommand="zoomWindow();"/>
 #endif
+
+  <command id="timezone_command" oncommand="openTimezoneWindow()"/>
+
 </commandset>
 
 <keyset>
@@ -196,8 +199,6 @@
 </script>  
 
 <!-- Javascript includes -->
-
-<script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
 
 <!-- NEEDED FOR DRAG AND DROP SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>
