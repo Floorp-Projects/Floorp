@@ -1923,7 +1923,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
         native->SetIsServerMode( PR_FALSE );
 
         // close app if there are no more top-level windows.
-        appStartup->Quit(nsIAppShellService::eConsiderQuit);
+        appStartup->Quit(nsIAppStartup::eConsiderQuit);
       }
 
       return;
