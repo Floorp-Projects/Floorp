@@ -673,6 +673,15 @@ xlib_rgb_init (Display *display, Screen *screen)
   int i;
   static const int byte_order[1] = { 1 };
 
+  static int initialized = 0;
+
+  if (initialized)
+  {
+    return;
+  }
+
+  initialized = 1;
+
   /* check endian sanity */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
   if (((char *)byte_order)[0] == 1) {
@@ -3397,5 +3406,36 @@ xlib_rgb_get_visual_info (void)
     return image_info->x_visual_info;
   else
     return 0;
+}
+
+int
+xlib_rgb_get_depth (void)
+{
+  XVisualInfo * v = xlib_rgb_get_visual_info();
+
+  if (v)
+  {
+    return v->depth;
+  }
+
+  return 0;
+}
+
+Display *
+xlib_rgb_get_display (void)
+{
+  if (image_info)
+    return image_info->display;
+  
+  return NULL;
+}
+
+Screen *
+xlib_rgb_get_screen (void)
+{
+  if (image_info)
+    return image_info->screen;
+  
+  return NULL;
 }
 

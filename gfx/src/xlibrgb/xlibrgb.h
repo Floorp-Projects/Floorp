@@ -162,6 +162,15 @@ xlib_rgb_get_visual (void);
 XVisualInfo *
 xlib_rgb_get_visual_info (void);
 
+int
+xlib_rgb_get_depth (void);
+
+Display *
+xlib_rgb_get_display (void);
+
+Screen *
+xlib_rgb_get_screen (void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
