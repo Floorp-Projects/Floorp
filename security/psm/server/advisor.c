@@ -399,6 +399,7 @@ loser:
  */
 #define SSL2_SPK "enable_ssl2"
 #define SSL3_SPK "enable_ssl3"
+#define TLS_SPK "enable_tls"
 #define CLIENT_AUTH_SPK "client_auth_auto_select"
 #define EMAIL_CERT_SPK "default_email_cert"
 #define WARN_ENTER_SECURE_SPK "warn_entering_secure"
@@ -472,6 +473,7 @@ SSMSecurityAdvisorContext_SavePrefs(SSMSecurityAdvisorContext* cx,
     PrefSet* prefs = NULL;
     PRBool ssl2on;
     PRBool ssl3on;
+    PRBool tlson;
     PRBool autoSelect;
     PRBool warnEnterSecure;
     PRBool warnLeaveSecure;
@@ -500,6 +502,11 @@ SSMSecurityAdvisorContext_SavePrefs(SSMSecurityAdvisorContext* cx,
     }
 
     rv = SSMSecurityAdvisor_get_bool_value(req, SSL3_SPK, &ssl3on);
+    if (rv != SSM_SUCCESS) {
+        goto loser;
+    }
+
+    rv = SSMSecurityAdvisor_get_bool_value(req, TLS_SPK, &tlson);
     if (rv != SSM_SUCCESS) {
         goto loser;
     }
@@ -576,6 +583,12 @@ SSMSecurityAdvisorContext_SavePrefs(SSMSecurityAdvisorContext* cx,
         rv = ssm_set_pack_bool_pref(prefs, "security.enable_ssl3", ssl3on,
                                     (SetPrefElement*)list, &n);
         SSL_EnableDefault(SSL_ENABLE_SSL3, ssl3on);
+    }
+
+    if (PREF_BoolPrefChanged(prefs, "security.enable_tls", tlson)) {
+        rv = ssm_set_pack_bool_pref(prefs, "security.enable_tls", tlson,
+                                    (SetPrefElement*)list, &n);
+        SSL_EnableDefault(SSL_ENABLE_TLS, tlson);
     }
 
     if (PREF_StringPrefChanged(prefs, "security.default_personal_cert", 
@@ -2577,6 +2590,7 @@ SSMSecurityAdvisorContext_GetPrefListKeywordHandler(SSMTextGenContext* cx)
     char* str9 = NULL;
     char* str10 = NULL;
     char* str11 = NULL;
+	char* str12 = NULL;
 
     if ((cx == NULL) || (cx->m_request == NULL) || (cx->m_result == NULL)) {
         goto loser;
@@ -2599,7 +2613,7 @@ SSMSecurityAdvisorContext_GetPrefListKeywordHandler(SSMTextGenContext* cx)
     subboolfmt = "var %1$s = %2$s;\n";
     subfmt = "var %1$s = \"%2$s\";\n";
     /* since nickname may contain ', I really should use " for quotes */
-    fmt = "%1$s%2$s%3$s%4$s%5$s%6$s%7$s%8$s%9$s%10$s%11$s";
+    fmt = "%1$s%2$s%3$s%4$s%5$s%6$s%7$s%8$s%9$s%10$s%11$s%12$s";
 
     /* make sure all the right default values are enforced */
     rv = PREF_GetBoolPref(prefs, "security.enable_ssl2", &boolval);
@@ -2689,9 +2703,18 @@ SSMSecurityAdvisorContext_GetPrefListKeywordHandler(SSMTextGenContext* cx)
     else { /* default */
         str11 = PR_smprintf(subboolfmt, SIGN_NEWS_SPK, "false");
     }
+
+    rv = PREF_GetBoolPref(prefs, "security.enable_tls", &boolval);
+    if ((rv == SSM_SUCCESS) && (boolval == PR_FALSE)) {
+        str12 = PR_smprintf(subboolfmt, TLS_SPK, "false");
+    }
+    else { /* default */
+        str12 = PR_smprintf(subboolfmt, TLS_SPK, "true");
+    }
+
     PR_FREEIF(cx->m_result);
     cx->m_result = PR_smprintf(fmt, str1, str2, str3, str4, str5, str6, str7,
-                               str8, str9, str10, str11);
+                               str8, str9, str10, str11, str12);
     SSM_DebugUTF8String("security advisor prefs list", cx->m_result);
 
     goto done;

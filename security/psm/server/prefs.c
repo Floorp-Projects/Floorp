@@ -69,6 +69,7 @@ typedef struct DefaultPrefs {
 DefaultPrefs pref_defaults[] = {
     { "enable_ssl2", "true" },
     { "enable_ssl3", "true" },
+	{ "enable_tls",	 "true" },
     { NULL, NULL }
 };
 
@@ -570,6 +571,7 @@ typedef struct PrefItemNodeStr {
 PrefItem pref_defaults[] = {
     {"security.enable_ssl2", "true"},
     {"security.enable_ssl3", "true"},
+    {"security.enable_tls", "true"},
     {"security.default_personal_cert", "Ask Every Time"},
     {"security.default_mail_cert", NULL},
     {"security.ask_for_password", "0"},

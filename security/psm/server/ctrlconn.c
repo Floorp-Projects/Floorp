@@ -1367,6 +1367,13 @@ static SSMStatus ssm_enable_security_prefs(SSMControlConnection* ctrl)
     }
     SSL_EnableDefault(SSL_ENABLE_SSL3, prefval);
 
+    if (PREF_GetBoolPref(ctrl->m_prefs, "security.enable_tls", &prefval) != 
+        PR_SUCCESS) {
+        goto loser;
+    }
+    SSL_EnableDefault(SSL_ENABLE_TLS, prefval);
+
+
     /* set password values */
     if (PREF_GetIntPref(ctrl->m_prefs, "security.ask_for_password", &ask) !=
         PR_SUCCESS) {

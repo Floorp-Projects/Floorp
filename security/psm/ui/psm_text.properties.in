@@ -279,7 +279,7 @@ adv_options_intro="View and configure SSL and verification settings."
 adv_options_SSL="Change SSL settings:"
 adv_enable_SSL2='Enable SSL version 2'
 adv_enable_SSL3='Enable SSL version 3'
-adv_enable_TLS="Enable TLS"
+adv_enable_TLS='Enable TLS'
 adv_options_revoke="Configure verification services"
 adv_OCSP="Check for certificate revocation if certificate has an OCSP responder location"
 
