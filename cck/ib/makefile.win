@@ -92,9 +92,14 @@ libs:: $(PROGRAM)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(EXENAME).lib ..\lib
 
 export::
-	$(MAKE_INSTALL) script.ib $(CCKDIST)\CCKTool
+	$(MAKE_INSTALL) script_linux.ib $(CCKDIST)\CCKTool
+	$(MAKE_INSTALL) script_win.ib $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows\enus
+	$(MAKE_INSTALL) script_mac.ib $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX\enus
 	$(MAKE_INSTALL) help1.txt $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) help2.txt $(CCKDIST)\CCKTool
+
+	mv -f $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows\enus\script_win.ib $(CCKDIST)\CCKTool\Version\$(VERSION)\Windows\enus\script.ib
+	mv -f $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX\enus\script_mac.ib $(CCKDIST)\CCKTool\Version\$(VERSION)\MacintoshOSX\enus\script.ib
 
 $(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE)
 
