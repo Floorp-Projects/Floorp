@@ -171,7 +171,7 @@
 
   <tree id="downloadView" flex="1" class="plain" context="downloadPaneContext"
             datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"
-            ondblclick="onDoubleClick();" enableColumnDrag="true"
+            ondblclick="onDoubleClick(event);" enableColumnDrag="true"
             onselect="onSelect(event);">
     <treecols onclick="doSort(event.target)">
       <treecol id="Name" primary="true"
