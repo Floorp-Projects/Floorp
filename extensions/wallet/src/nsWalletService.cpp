@@ -294,6 +294,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
     NS_RELEASE(cv);
     NS_RELEASE(ws);
     NS_RELEASE(cont);
+    PR_Free(URLName);
     return rv;
   }
 
@@ -305,6 +306,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
     NS_RELEASE(cv);
     NS_RELEASE(ws);
     NS_RELEASE(cont);
+    PR_Free(URLName);
     return rv;
   }
 
@@ -372,6 +374,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
   NS_RELEASE(cv);
   NS_RELEASE(ws);
   NS_RELEASE(cont);
+  PR_Free(URLName);
   return rv;
 }
 
