@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include <stdlib.h>
 #include "nsITransactionManager.h"
 #include "nsTransactionManagerCID.h"
 #include "nsRepository.h"
@@ -169,8 +170,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  nsresult Close(void) {}
-  nsresult Write(const char *str, PRInt32 offset, PRInt32 len, PRInt32 *wcnt)
+  NS_IMETHOD Close(void) {return NS_OK;}
+  NS_IMETHOD Write(const char *str, PRInt32 offset, PRInt32 len, PRInt32 *wcnt)
   {
     *wcnt = fwrite(&str[offset], 1, len, stdout);
     fflush(stdout);
