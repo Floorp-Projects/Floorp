@@ -12,12 +12,57 @@
         align="vertical"
         onload="onLoad(event);">
 
-    <html:script src="resource:/res/samples/DumpDOM.js"/>
     <html:script src="AccountManager.js"/>
 	<box align="horizontal" flex="90%" style="padding: 10px">
 		<box align="vertical" flex="25%">
-			<html:iframe flex="80%" name="accounttree" style="border-style:inset" src="chrome://messenger/content/accounttree.xul"/>
-            <titledbutton value="&newAccountButton.label;" onclick="DumpDOM(document);"/>
+<html:div style="border-style:inset" flex="100%">
+	<tree rdf:datasources="rdf:msgaccountmanager"
+          rdf:containment="http://home.netscape.com/NC-rdf#Settings"
+          onclick="parent.onAccountClick(event)" id="accounttree"
+          style="height: 100%"
+          ref="msgaccounts:/">
+	  <template>
+	  	<rule>
+            <treechildren>
+			<treeitem uri="..."
+                PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
+		  		<treerow >
+					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+		  		</treerow>
+<!--
+                <treechildren>
+                  <treeitem>
+                    <treerow>
+                      <treecell value="a"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem>
+                    <treerow>
+                      <treecell value="b"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem>
+                    <treerow>
+                      <treecell value="c"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+-->
+			</treeitem>
+            </treechildren>
+		</rule>
+	  </template>
+
+	  <treecol style="width: 100%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+	  <treehead>
+		<treerow>
+	      <treecell value="&nameCol.label;"/>
+		</treerow>
+	  </treehead>
+
+	</tree>
+</html:div>
+            <titledbutton value="&newAccountButton.label;" onclick="onNewAccount();"/>
             <titledbutton value="&setDefaultButton.label;" onclick="document.getElementById('mydeck').setAttribute('value','2');"/>
             <box align="horizontal">
               <titledbutton value="&duplicateButton.label;" flex="50%"/>
