@@ -27,14 +27,16 @@ SIMPLE_PROGRAMS	= xpt_dump xpt_link
 
 CSRCS		= xpt_dump.c xpt_link.c
 
-LIBS		= 		\
-		  -L$(DIST)/bin \
-		  -lxpt 	\
-		  $(NULL)
+# Compile directly against the static lib, so we can use the tools
+# during the build without the shared library path being set.
+LIBS		= $(DIST)/lib/libxpt.a
 
-# build these xpt tools early so that it'll be
-# available along with xpidl, which also must be built early.
-export:: libs
+# Tell the $(SIMPLE_PROGRAMS) target that we need to be recompiled
+# when libxpt changes.
+EXTRA_DEPS = $(wildcard $(DIST)/lib/libxpt.*)
+
+# Build xpidl early.  (libs creates .deps used by install.)
+export:: libs install
 
 include $(topsrcdir)/config/rules.mk
 

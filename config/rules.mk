@@ -447,7 +447,7 @@ endif
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 #
-$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o
+$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EXTRA_DEPS)
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
