@@ -16,9 +16,10 @@
  * Reserved.
  */
 
-#ifndef nsInputFrame_h___
-#define nsInputFrame_h___
+#ifndef nsFormControlFrame_h___
+#define nsFormControlFrame_h___
 
+#include "nsIFormControlFrame.h"
 #include "nsIFormManager.h"
 #include "nsHTMLContainer.h"
 #include "nsISupports.h"
@@ -29,6 +30,10 @@
 class nsIView;
 class nsIPresContext;
 class nsStyleCoord;
+class nsFormFrame;
+
+#define CSS_NOTSET -1
+#define ATTR_NOTSET -1
 
 /**
   * Enumeration of possible mouse states used to detect mouse clicks
@@ -67,21 +72,25 @@ struct nsInputDimensionSpec
 };
 
 /** 
-  * nsInputFrame is the base class for frames of form controls. It
+  * nsFormControlFrame is the base class for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.
   * @see nsLeafFrame and its base classes for more info
   */
-class nsInputFrame : public nsLeafFrame {
-  typedef nsLeafFrame nsInputFrameSuper;
+class nsFormControlFrame : public nsLeafFrame,
+                           public nsIFormControlFrame
+{
+
 public:
   /**
     * Main constructor
     * @param aContent the content representing this frame
     * @param aParentFrame the parent frame
     */
-  nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsFormControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  static nscoord CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  static nscoord CalculateSize (nsIPresContext* aPresContext, nsFormControlFrame* aFrame,
                                 const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 
                                 nsSize& aBounds, PRBool& aWidthExplicit, 
                                 PRBool& aHeightExplicit, nscoord& aRowSize);
@@ -94,9 +103,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-  NS_IMETHOD  SetRect(const nsRect& aRect);
-
-  /**
+   /**
     * Draw this frame within the context of a presentation context and rendering context
     * @see nsIFrame::Paint
     */
@@ -118,12 +125,6 @@ public:
 
   // new behavior
 
-  nsFormRenderingMode GetMode() const;
-  /**
-   * Return true if the underlying form element is a hidden form element
-   */
-  PRBool IsHidden();
-
   /**
     * Get the class id of the widget associated with this frame
     * @return the class id
@@ -136,13 +137,21 @@ public:
     */
   virtual const nsIID& GetIID(); 
 
+  NS_IMETHOD GetType(PRInt32* aType) const;
+  NS_IMETHOD GetName(nsString* aName);
+  NS_IMETHOD GetValue(nsString* aName);
+  virtual PRInt32 GetMaxNumValues();
+  virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                 nsString* aValues, nsString* aNames);
+
   /**
     * Get the widget associated with this frame
     * @param aView the view associated with the frame. It is a convience parm.
     * @param aWidget the address of address of where the widget will be placed.
     * This method doses an AddRef on the widget.
     */
-  virtual nsresult GetWidget(nsIView* aView, nsIWidget** aWidget);
+  nsresult GetWidget(nsIView* aView, nsIWidget** aWidget);
+  nsresult GetWidget(nsIWidget** aWidget);
 
   /**
     * Respond to a enter key being pressed
@@ -158,7 +167,10 @@ public:
     * Perform opertations after the widget associated with this frame has been
     * created.
     */
-  virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);  
+  virtual void PostCreateWidget(nsIPresContext* aPresContext);
+  
+  virtual void Reset();
+  virtual PRBool IsSuccessful();
 
   /**
     * Perform opertations before the widget associated with this frame has been
@@ -166,9 +178,9 @@ public:
     */
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);  
 
-  static nscoord GetTextSize(nsIPresContext& aContext, nsInputFrame* aFrame,
+  static nscoord GetTextSize(nsIPresContext& aContext, nsFormControlFrame* aFrame,
                              const nsString& aString, nsSize& aSize);
-  static nscoord GetTextSize(nsIPresContext& aContext, nsInputFrame* aFrame,
+  static nscoord GetTextSize(nsIPresContext& aContext, nsFormControlFrame* aFrame,
                              PRInt32 aNumChars, nsSize& aSize);
 
   void GetWidgetSize(nsSize& aSize) const { aSize.width  = mWidgetSize.width; 
@@ -181,22 +193,22 @@ public:
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
+  NS_IMETHOD GetSize(PRInt32* aSize) const;
+  NS_IMETHOD GetMaxLength(PRInt32* aSize);
+
+  virtual void SetClickPoint(nscoord aX, nscoord aY);
+  nsFormFrame* GetFormFrame() { return mFormFrame; }
+  virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
 protected:
 
-  virtual ~nsInputFrame();
+  virtual ~nsFormControlFrame();
 
   /**
-    * Return PR_TRUE if the bounds of this frame have been set
-    */
-  PRBool BoundsAreSet();
-
-  void SetViewVisiblity(nsIPresContext* aPresContext, PRBool aShow);
-
- /**
     * Get the size that this frame would occupy without any constraints
     * @param aPresContext the presentation context
     * @param aDesiredSize the size desired by this frame, to be set by this method
@@ -211,7 +223,7 @@ protected:
                               nsReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
-  const void GetFont(nsIPresContext* aPresContext, nsFont& aFont);
+  NS_IMETHOD GetFont(nsIPresContext* aPresContext, nsFont& aFont);
 
    /**
     * Get the width and height of this control based on CSS 
@@ -223,12 +235,20 @@ protected:
                     const nsReflowState& aReflowState,
                     nsSize& aSize);
 
-  nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
-                      nscoord aMaxWidth, const nsStyleCoord& aCoord);
+  //nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
+  //                    nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
   nsMouseState mLastMouseState;
-  nsSize mWidgetSize;
-  PRBool mDidInit;
+  nsIWidget*   mWidget;
+  nsSize       mWidgetSize;
+  PRBool       mDidInit;
+  nsPoint      mLastClickPoint;
+  nsFormFrame* mFormFrame;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
 };
 
 #endif

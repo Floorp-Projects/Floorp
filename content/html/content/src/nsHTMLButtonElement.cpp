@@ -154,6 +154,7 @@ NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey, eSetAttrNotify_No
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name, eSetAttrNotify_Restart)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Type, type, eSetAttrNotify_Restart)
+NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value, eSetAttrNotify_Render)
 
 NS_IMETHODIMP

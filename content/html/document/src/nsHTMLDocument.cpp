@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved. 
  */ 
+
 #include "nsHTMLDocument.h"
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"
@@ -31,6 +32,7 @@
 #include "nsIDOMNode.h" // for Find
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIPostToServer.h"  
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
@@ -88,7 +90,6 @@ nsHTMLDocument::nsHTMLDocument()
   mEmbeds = nsnull;
   mLinks = nsnull;
   mAnchors = nsnull;
-  mForms = nsnull;
   mNamedItems = nsnull;
   mParser = nsnull;
   nsHTMLAtoms::AddrefAtoms();
@@ -108,33 +109,31 @@ nsHTMLDocument::nsHTMLDocument()
   mParentStack = (nsIDOMNode**) new PRUint32[32];
   mChildStack  = (nsIDOMNode**) new PRUint32[32];
   mBodyContent = nsnull;
+  mForms = nsnull;
 
 }
 
 nsHTMLDocument::~nsHTMLDocument()
 {
-  // XXX Temporary code till forms become real content
   PRInt32 i;
-  for (i = 0; i < mTempForms.Count(); i++) {
-    nsIFormManager *form = (nsIFormManager *)mTempForms.ElementAt(i);
-    if (nsnull != form) {
-      NS_RELEASE(form);
-    }
-  }
+
   DeleteNamedItems();
   NS_IF_RELEASE(mImages);
   NS_IF_RELEASE(mApplets);
   NS_IF_RELEASE(mEmbeds);
   NS_IF_RELEASE(mLinks);
   NS_IF_RELEASE(mAnchors);
-  NS_IF_RELEASE(mForms);
-  NS_IF_RELEASE(mAttrStyleSheet);
+   NS_IF_RELEASE(mAttrStyleSheet);
   NS_IF_RELEASE(mStyleAttrStyleSheet);
   NS_IF_RELEASE(mParser);
   for (i = 0; i < mImageMaps.Count(); i++) {
     nsIImageMap*  map = (nsIImageMap*)mImageMaps.ElementAt(i);
 
     NS_RELEASE(map);
+  }
+  if (mForms) {
+    mForms->Reset();
+    NS_RELEASE(mForms);
   }
 // XXX don't bother doing this until the dll is unloaded???
 //  nsHTMLAtoms::ReleaseAtoms();
@@ -332,41 +331,6 @@ NS_IMETHODIMP nsHTMLDocument::GetImageMap(const nsString& aMapName,
         return NS_OK;
       }
     }
-  }
-
-  return 1;/* XXX NS_NOT_FOUND */
-}
-
-// XXX Temporary form methods. Forms will soon become actual content
-// elements. For now, the document keeps a list of them.
-NS_IMETHODIMP 
-nsHTMLDocument::AddForm(nsIFormManager *aForm)
-{
-  NS_PRECONDITION(nsnull != aForm, "null ptr");
-  if (nsnull == aForm) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (mTempForms.AppendElement(aForm)) {
-    NS_ADDREF(aForm);
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP_(PRInt32) 
-nsHTMLDocument::GetFormCount() const
-{
-  return mTempForms.Count();
-}
-  
-NS_IMETHODIMP 
-nsHTMLDocument::GetFormAt(PRInt32 aIndex, nsIFormManager **aForm) const
-{
-  *aForm = (nsIFormManager *)mTempForms.ElementAt(aIndex);
-
-  if (nsnull != *aForm) {
-    NS_ADDREF(*aForm);
-    return NS_OK;
   }
 
   return 1;/* XXX NS_NOT_FOUND */
@@ -595,57 +559,6 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 
   return NS_OK;
 }
-
-// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-// XXX Temporary till form becomes real content
-
-class nsTempFormContentList : public nsContentList {
-public:
-  nsTempFormContentList(nsHTMLDocument *aDocument);
-  ~nsTempFormContentList();
-};
-
-nsTempFormContentList::nsTempFormContentList(nsHTMLDocument *aDocument) : nsContentList(aDocument)
-{
-  PRInt32 i, count = aDocument->GetFormCount();
-  for (i=0; i < count; i++) {
-    nsIFormManager *form;
-    
-    if (NS_OK == aDocument->GetFormAt(i, &form)) {
-      nsIContent *content;
-      if (NS_OK == form->QueryInterface(kIContentIID, (void **)&content)) {
-        Add(content);
-        NS_RELEASE(content);
-      }
-      NS_RELEASE(form);
-    }
-  }
-}
-
-nsTempFormContentList::~nsTempFormContentList()
-{
-  mDocument = nsnull;
-}
-
-NS_IMETHODIMP    
-nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
-{
-  if (nsnull == mForms) {
-    mForms = new nsTempFormContentList(this);
-    if (nsnull == mForms) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mForms);
-  }
-
-  *aForms = (nsIDOMHTMLCollection *)mForms;
-  NS_ADDREF(mForms);
-
-  return NS_OK;
-}
-
-// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 PRBool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent)
@@ -1006,19 +919,6 @@ nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
     mNamedItems = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
                                   PL_CompareValues, nsnull, nsnull);
     RegisterNamedItems(mRootContent, PR_FALSE);
-    // XXX Need to do this until forms become real content
-    PRInt32 i, count = mTempForms.Count();
-    for (i = 0; i < count; i++) {
-      nsIFormManager *form = (nsIFormManager *)mTempForms.ElementAt(i);
-      if (NS_OK == form->QueryInterface(kIContentIID, (void **)&content)) {
-        nsAutoString value;
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(name, value)) {
-          char *nameStr = value.ToNewCString();
-          PL_HashTableAdd(mNamedItems, nameStr, content);
-        }
-        NS_RELEASE(content);
-      }
-    }
   }
 
   char *str = aName.ToNewCString();
@@ -1986,4 +1886,48 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
 
   return NS_OK;
 }
+
+// forms related stuff
+
+// XXX remove this if GetForms is sufficient
+NS_IMETHODIMP 
+nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
+{
+  NS_PRECONDITION(nsnull != aForm, "null ptr");
+  if (nsnull == aForm) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (!mForms) {
+    nsIDOMHTMLCollection* forms = nsnull;
+    GetForms(&forms);
+  }
+  nsIContent* iContent = nsnull;
+  nsresult result = aForm->QueryInterface(kIContentIID, (void**)&iContent);
+  if ((NS_OK == result) && iContent) {
+    if (mForms->Add(iContent)) {
+      NS_RELEASE(iContent);
+      return NS_OK;
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
+{
+  if (nsnull == mForms) {
+    nsAutoString tag("form");
+    mForms = new nsContentList(this, tag);
+    if (nsnull == mForms) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  *aForms = (nsIDOMHTMLCollection *)mForms;
+  NS_ADDREF(mForms);
+
+  return NS_OK;
+}
+
+
 

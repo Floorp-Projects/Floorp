@@ -53,17 +53,6 @@ public:
 
   NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult);
 
-  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-  // XXX Temporary form methods. Forms will soon become actual content
-  // elements. For now, the document keeps a list of them.
-  NS_IMETHOD AddForm(nsIFormManager *aForm);
-
-  NS_IMETHOD_(PRInt32) GetFormCount() const;
-  
-  NS_IMETHOD GetFormAt(PRInt32 aIndex, nsIFormManager **aForm) const;
-  // XXX
-  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
 
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
@@ -100,6 +89,8 @@ public:
   // nsIDOMHTMLDocument interface
   NS_DECL_IDOMHTMLDOCUMENT
   NS_DECL_IDOMNSHTMLDOCUMENT
+  // the following is not part of nsIDOMHTMLDOCUMENT but allows the content sink to add forms
+  NS_IMETHOD AddForm(nsIDOMHTMLFormElement* aForm);
 
   // From nsIScriptObjectOwner interface, implemented by nsDocument
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
@@ -163,7 +154,6 @@ protected:
   nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;
   nsDTDMode mDTDMode;
   nsVoidArray mImageMaps;
-  nsVoidArray mTempForms;  // XXX Temporary
 
   nsContentList *mImages;
   nsContentList *mApplets;

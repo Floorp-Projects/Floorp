@@ -23,15 +23,13 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 REQUIRES=xpcom raptor js
 
-CPPSRCS=nsForm.cpp nsInput.cpp nsInputButton.cpp nsInputCheckbox.cpp \
-    nsInputFile.cpp nsInputFrame.cpp \
-    nsInputRadio.cpp nsInputText.cpp nsSelect.cpp
+CPPSRCS=nsFormFrame.cpp nsFormControlFrame.cpp nsButtonControlFrame.cpp nsCheckboxControlFrame.cpp \
+    nsFileControlFrame.cpp nsRadioControlFrame.cpp nsTextControlFrame.cpp nsSelectControlFrame.cpp
 
-CPP_OBJS=.\$(OBJDIR)\nsForm.obj .\$(OBJDIR)\nsInput.obj \
-    .\$(OBJDIR)\nsInputButton.obj .\$(OBJDIR)\nsInputCheckbox.obj \
-    .\$(OBJDIR)\nsInputFile.obj .\$(OBJDIR)\nsInputFrame.obj \
-    .\$(OBJDIR)\nsInputRadio.obj \
-    .\$(OBJDIR)\nsInputText.obj .\$(OBJDIR)\nsSelect.obj 
+CPP_OBJS=.\$(OBJDIR)\nsFormFrame.obj .\$(OBJDIR)\nsFormControlFrame.obj \
+    .\$(OBJDIR)\nsButtonControlFrame.obj .\$(OBJDIR)\nsCheckboxControlFrame.obj \
+    .\$(OBJDIR)\nsFileControlFrame.obj .\$(OBJDIR)\nsRadioControlFrame.obj \
+    .\$(OBJDIR)\nsTextControlFrame.obj .\$(OBJDIR)\nsSelectControlFrame.obj 
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
   -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib				\

@@ -36,8 +36,9 @@
 
 #include "nsIDOMText.h"
 
-#include "nsHTMLForms.h"
-#include "nsIFormManager.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMHTMLOptionElement.h"
 #include "nsIFormControl.h"
 #include "nsIImageMap.h"
 
@@ -48,6 +49,7 @@
 #include "nsIFrame.h"
 
 #include "nsIWebShell.h"
+#include "nsIHTMLDocument.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -59,11 +61,16 @@ static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
 #define XXX_ART_HACK 1
 
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTTPUrlIID, NS_IHTTPURL_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 //----------------------------------------------------------------------
 
@@ -174,7 +181,7 @@ public:
   PRInt32 mInMonolithicContainer;
   PRBool mDirty;
   PRBool mLayoutStarted;
-  nsIFormManager* mCurrentForm;
+  nsIDOMHTMLFormElement* mCurrentForm;
   nsIImageMap* mCurrentMap;
 
   SinkContext** mContexts;
@@ -236,8 +243,6 @@ public:
   nsresult AddText(const nsString& aText);
   nsresult FlushText(PRBool* aDidFlush = nsnull);
 
-  nsresult AddOptionText(const nsIParserNode& aNode);
-
   void MaybeMarkSinkDirty();
 
   HTMLContentSink* mSink;
@@ -260,8 +265,6 @@ public:
   PRInt32 mTextLength;
   PRInt32 mTextSize;
 
-  nsIHTMLContent* mCurrentSelect;
-  nsIHTMLContent* mCurrentOption;
 };
 
 //----------------------------------------------------------------------
@@ -449,13 +452,24 @@ AddAttributes(const nsIParserNode& aNode,
   return NS_OK;
 }
 
+void SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
+{
+  nsIFormControl* formControl = nsnull;
+  nsresult result = aContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+  if ((NS_OK == result) && formControl) {
+    formControl->SetForm(aForm);
+    NS_RELEASE(formControl);
+  }
+}
+
 // XXX compare switch statement against nsHTMLTags.h's list
 static nsresult
 MakeContentObject(nsHTMLTag aNodeType,
                   nsIAtom* aAtom,
-                  nsIFormManager* aForm,
+                  nsIDOMHTMLFormElement* aForm,
                   nsIWebShell* aWebShell,
-                  nsIHTMLContent** aResult)
+                  nsIHTMLContent** aResult,
+                  const nsString* aContent = nsnull)
 {
   nsresult rv = NS_OK;
   switch (aNodeType) {
@@ -512,7 +526,11 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLFontElement(aResult, aAtom);
     break;
   case eHTMLTag_form:
-    rv = NS_NewHTMLFormElement(aResult, aAtom);
+    // the form was already created 
+    *aResult = nsnull;
+    if (aForm) {
+      rv = aForm->QueryInterface(kIHTMLContentIID, (void**)aResult);
+    }
     break;
   case eHTMLTag_frame:
     rv = NS_NewHTMLFrameElement(aResult, aAtom);
@@ -542,6 +560,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_input:
     rv = NS_NewHTMLInputElement(aResult, aAtom);
+    SetForm(*aResult, aForm);
     break;
   case eHTMLTag_isindex:
     rv = NS_NewHTMLIsIndexElement(aResult, aAtom);
@@ -577,7 +596,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLOptGroupElement(aResult, aAtom);
     break;
   case eHTMLTag_option:
-    rv = NS_NewHTMLOption(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLOptionElement(aResult, aAtom);
     break;
   case eHTMLTag_p:
     rv = NS_NewHTMLParagraphElement(aResult, aAtom);
@@ -595,7 +614,8 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLScriptElement(aResult, aAtom);
     break;
   case eHTMLTag_select:
-    rv = NS_NewHTMLSelect(aResult, aAtom, aForm);/* XXX old style */
+    rv = NS_NewHTMLSelectElement(aResult, aAtom);
+    SetForm(*aResult, aForm);
     break;
   case eHTMLTag_spacer:
     rv = NS_NewHTMLSpacerElement(aResult, aAtom);
@@ -617,6 +637,17 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_textarea:
     rv = NS_NewHTMLTextAreaElement(aResult, aAtom);
+    // XXX why is textarea not a container. If it were, this code would not be necessary
+    // If the text area has some content, set it 
+    if (aContent && (aContent->Length() > 0)) {
+      nsIDOMHTMLTextAreaElement* taElem;
+      rv = (*aResult)->QueryInterface(kIDOMHTMLTextAreaElementIID, (void **)&taElem);
+      if ((NS_OK == rv) && taElem) {
+        taElem->SetDefaultValue(*aContent);
+        NS_RELEASE(taElem);
+      }
+    }
+    SetForm(*aResult, aForm);
     break;
   case eHTMLTag_title:
     rv = NS_NewHTMLTitleElement(aResult, aAtom);
@@ -634,13 +665,44 @@ MakeContentObject(nsHTMLTag aNodeType,
   return rv;
 }
 
+#if 0
+// XXX is this logic needed by nsDOMHTMLOptionElement?
+void
+GetOptionText(const nsIParserNode& aNode, nsString& aText)
+{
+  aText.SetLength(0);
+  switch (aNode.GetTokenType()) {
+  case eToken_text:
+  case eToken_whitespace:
+  case eToken_newline:
+    aText.Append(aNode.GetText());
+    break;
+
+  case eToken_entity:
+    {
+      nsAutoString tmp2("");
+      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
+      if (unicode < 0) {
+        aText.Append(aNode.GetText());
+      } else {
+        aText.Append(tmp2);
+      }
+    }
+    break;
+  }
+    nsAutoString x;
+    char* y = aText.ToNewCString();
+    printf("foo");
+}
+#endif
+
 /**
  * Factory subroutine to create all of the html content objects.
  */
 static nsresult
 CreateContentObject(const nsIParserNode& aNode,
                     nsHTMLTag aNodeType,
-                    nsIFormManager* aForm,
+                    nsIDOMHTMLFormElement* aForm,
                     nsIWebShell* aWebShell,
                     nsIHTMLContent** aResult)
 {
@@ -660,7 +722,7 @@ CreateContentObject(const nsIParserNode& aNode,
 
   // Make the content object
   nsresult rv;
-
+ 
   // XXX right now this code is here because we need aNode to create
   // images, textareas and input form elements. As soon as all of the
   // generic content code is in use, it can be moved up into
@@ -720,69 +782,16 @@ CreateContentObject(const nsIParserNode& aNode,
     rv = NS_NewHTMLImageElement(aResult, atom);
 #endif /* XXX */
     break;
-  case eHTMLTag_input:
-    {
-      nsAutoString val;
-      if (FindAttribute(aNode, "type", val)) {
-        if (val.EqualsIgnoreCase("submit")) {
-          rv = NS_NewHTMLInputSubmit(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("reset")) {
-          rv = NS_NewHTMLInputReset(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("button")) {
-          rv = NS_NewHTMLInputButton(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("checkbox")) {
-          rv = NS_NewHTMLInputCheckbox(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("file")) {
-          rv = NS_NewHTMLInputFile(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("hidden")) {
-          rv = NS_NewHTMLInputHidden(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("image")) {
-          rv = NS_NewHTMLInputImage(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("password")) {
-          rv = NS_NewHTMLInputPassword(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("radio")) {
-          rv = NS_NewHTMLInputRadio(aResult, atom, aForm);
-        }
-        else if (val.EqualsIgnoreCase("text")) {
-          rv = NS_NewHTMLInputText(aResult, atom, aForm);
-        }
-        else {
-          rv = NS_NewHTMLInputText(aResult, atom, aForm);
-        }
-      }
-      else {
-        rv = NS_NewHTMLInputText(aResult, atom, aForm);
-      }
-    }
-    break;
-  case eHTMLTag_textarea:
-    {
-      const nsString& content = aNode.GetSkippedContent();
-      rv = NS_NewHTMLTextArea(aResult, atom, aForm);
-      if (NS_OK == rv) {
-        // If the text area has some content, give it to it now
-        if (content.Length() > 0) {
-          nsIFormControl* ctrl;
-          rv = (*aResult)->QueryInterface(kIFormControlIID, (void **)&ctrl);
-          if (NS_OK == rv) {
-            ctrl->SetContent(content);
-            NS_RELEASE(ctrl);
-          }
-        }
-      }
-    }
-    break;
   default:
-    rv = MakeContentObject(aNodeType, atom, aForm, aWebShell, aResult);
-    break;
+    {
+      // XXX why is textarea not a container?
+      nsAutoString content;
+      if (eHTMLTag_textarea == aNodeType) {
+        content = aNode.GetSkippedContent();
+      }
+      rv = MakeContentObject(aNodeType, atom, aForm, aWebShell, aResult, &content);
+      break;
+    }
   }
   NS_RELEASE(atom);
 
@@ -822,8 +831,6 @@ SinkContext::SinkContext(HTMLContentSink* aSink)
   mText = nsnull;
   mTextLength = 0;
   mTextSize = 0;
-  mCurrentOption = nsnull;
-  mCurrentSelect = nsnull;
 }
 
 SinkContext::~SinkContext()
@@ -837,8 +844,6 @@ SinkContext::~SinkContext()
   if (nsnull != mText) {
     delete [] mText;
   }
-  NS_IF_RELEASE(mCurrentOption);
-  NS_IF_RELEASE(mCurrentSelect);
 }
 
 nsresult
@@ -923,16 +928,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   case eHTMLTag_a:
     mSink->ProcessATag(aNode, content);
     break;
-  case eHTMLTag_select:
-    NS_IF_RELEASE(mCurrentSelect);
-    mCurrentSelect = content;
-    NS_IF_ADDREF(content);
-    break;
-  case eHTMLTag_option:
-    NS_IF_RELEASE(mCurrentOption);
-    mCurrentOption = content;
-    NS_IF_ADDREF(content);
-    break;
   case eHTMLTag_table:
     mSink->mInMonolithicContainer++;
     break;
@@ -964,12 +959,6 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
 
   // Special handling for certain tags
   switch (nodeType) {
-  case eHTMLTag_option:
-    NS_IF_RELEASE(mCurrentOption);
-    break; 
-  case eHTMLTag_select:
-    NS_IF_RELEASE(mCurrentSelect);
-    break;
   case eHTMLTag_table:
     mSink->mInMonolithicContainer--;
     break;
@@ -988,12 +977,6 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
                   "SinkContext::AddLeaf", aNode);
 
   nsresult rv = NS_OK;
-
-  // XXX temporary hack until option layout code can find content
-  // the proper way.
-  if (eHTMLTag_option == mStack[mStackPos-1].mType) {
-    return AddOptionText(aNode);
-  }
 
   switch (aNode.GetTokenType()) {
   case eToken_start:
@@ -1181,44 +1164,6 @@ SinkContext::FlushText(PRBool* aDidFlush)
   return rv;
 }
 
-nsresult
-SinkContext::AddOptionText(const nsIParserNode& aNode)
-{
-  if ((nsnull != mCurrentSelect) && (nsnull != mCurrentOption)) {
-    nsIFormControl* control = nsnull;
-    mCurrentOption->QueryInterface(kIFormControlIID, (void **)&control);
-    if (nsnull != control) {
-      // Get current content and append on the new content
-      nsAutoString currentText;
-      control->GetContent(currentText);
-
-      switch (aNode.GetTokenType()) {
-      case eToken_text:
-      case eToken_whitespace:
-      case eToken_newline:
-        currentText.Append(aNode.GetText());
-        break;
-
-      case eToken_entity:
-        {
-          nsAutoString tmp2("");
-          PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
-          if (unicode < 0) {
-            currentText.Append(aNode.GetText());
-          } else {
-            currentText.Append(tmp2);
-          }
-        }
-        break;
-      }
-      control->SetContent(currentText);
-      NS_RELEASE(control);
-    }
-  }
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
 
 nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
@@ -1610,7 +1555,6 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-// XXX add code to place form into the content model
 NS_IMETHODIMP
 HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
@@ -1622,44 +1566,28 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
   // Close out previous form if it's there
   NS_IF_RELEASE(mCurrentForm);
 
-  // Create new form
+  // set the current form
   nsAutoString tmp("FORM");
   nsIAtom* atom = NS_NewAtom(tmp);
-  if (nsnull == atom) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsIHTMLContent* iContent = nsnull;
+  nsresult rv = NS_NewHTMLFormElement(&iContent, atom);
+  if ((NS_OK == rv) && iContent) {
+    iContent->QueryInterface(kIDOMHTMLFormElementIID, (void**)&mCurrentForm);
+    NS_RELEASE(iContent);
   }
-  nsresult rv = NS_NewHTMLForm(&mCurrentForm, atom);
   NS_RELEASE(atom);
 
-  if (NS_OK == rv) {
-    // XXX replace with AddAttributes when form's implement nsIHTMLContent
-    // Add tag attributes to the form; we can't use AddAttributes
-    // because mCurrentForm is not an nsIHTMLContent (yet).
-    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
-    nsAutoString k, v;
-    PRInt32 ac = aNode.GetAttributeCount();
-    for (PRInt32 i = 0; i < ac; i++) {
-      // Get upper-cased key
-      const nsString& key = aNode.GetKeyAt(i);
-      k.SetLength(0);
-      k.Append(key);
-      k.ToUpperCase();
+  AddLeaf(aNode);
 
-      // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, v, sco);
-      mCurrentForm->SetAttribute(k, v);
-    }
-    NS_IF_RELEASE(sco);
-
-    // XXX Temporary code till forms become real content
-    // Add the form to the document
-    ((nsHTMLDocument*)mDocument)->AddForm(mCurrentForm);
-    nsIContent *content;
-    if (NS_OK == mCurrentForm->QueryInterface(kIContentIID, (void **)&content)) {
-      content->SetDocument(mDocument);
-      NS_RELEASE(content);
-    }
-  }
+  // add the form to the document
+  //nsIHTMLDocument* htmlDoc = nsnull;
+  //if (mDocument && mCurrentForm) {
+  //  rv = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
+  //  if ((NS_OK == rv) && htmlDoc) {
+  //    htmlDoc->AddForm(mCurrentForm);
+  //    NS_RELEASE(htmlDoc);
+  //  }
+  //}
 
   return NS_OK;
 }

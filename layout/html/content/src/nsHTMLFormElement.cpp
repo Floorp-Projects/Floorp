@@ -16,7 +16,12 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsIForm.h"
+#include "nsIFormControl.h"
+#include "nsIFormManager.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNSHTMLFormElement.h"
+#include "nsIDOMHTMLCollection.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -26,13 +31,25 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"   
+#include "nsIFrame.h"
 
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
+static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
+
+class nsFormControlList;
+
+// nsHTMLFormElement
 
 class nsHTMLFormElement : public nsIDOMHTMLFormElement,
-                   public nsIScriptObjectOwner,
-                   public nsIDOMEventReceiver,
-                   public nsIHTMLContent
+                          public nsIScriptObjectOwner,
+                          public nsIDOMEventReceiver,
+                          public nsIHTMLContent,
+                          public nsIForm
 {
 public:
   nsHTMLFormElement(nsIAtom* aTag);
@@ -78,10 +95,45 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIForm
+  NS_IMETHOD AddElement(nsIFormControl* aElement);
+  NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const;
+  NS_IMETHOD GetElementCount(PRUint32* aCount) const;
+  NS_IMETHOD RemoveElement(nsIFormControl* aElement, PRBool aChildIsRef = PR_TRUE);
+
 protected:
+  nsFormControlList*       mControls;
   nsGenericHTMLLeafElement mInner;
 };
 
+// nsFormControlList
+class nsFormControlList : public nsIDOMHTMLCollection, public nsIScriptObjectOwner {
+public:
+  nsFormControlList();
+  virtual ~nsFormControlList();
+
+  void Clear();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void *aScriptObject);
+  NS_IMETHOD ResetScriptObject();
+
+  // nsIDOMHTMLCollection interface
+  NS_DECL_IDOMHTMLCOLLECTION
+  
+  // Called to tell us that the form is going away and that we
+  // should drop our (non ref-counted) reference to it
+  void ReleaseForm();
+
+  void        *mScriptObject;
+  nsVoidArray  mElements;
+};
+
+// nsHTMLFormElement implementation
+
+// construction, destruction
 nsresult
 NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 {
@@ -100,29 +152,80 @@ nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mControls = new nsFormControlList();
+  NS_ADDREF(mControls);
+nsTraceRefcnt::Create((nsIForm*)this, "nsHTMLFormElement", __FILE__, __LINE__);
 }
 
 nsHTMLFormElement::~nsHTMLFormElement()
 {
+  // set the controls to have no form
+  PRUint32 numControls;
+  GetElementCount(&numControls);
+  for (PRUint32 i = 0; i < numControls; i++) {
+    // avoid addref to child
+    nsIFormControl* control = (nsIFormControl*)mControls->mElements.ElementAt(i); 
+    if (control) {
+      // it is assummed that passing in nsnull will not release formControl's previous form
+      control->SetForm(nsnull); 
+    }
+  }
+
+  NS_RELEASE(mControls);
+
+  // XXX make sure this gets moved into nsFormFrame, but not the 1st one!!
+  //mChildren.Clear();
+  //RemoveRadioGroups();
+nsTraceRefcnt::Destroy((nsIForm*)this, __FILE__, __LINE__);
 }
 
-NS_IMPL_ADDREF(nsHTMLFormElement)
-
-NS_IMPL_RELEASE(nsHTMLFormElement)
-
-nsresult
+// nsISupports
+NS_IMETHODIMP
 nsHTMLFormElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLFormElementIID)) {
-    nsIDOMHTMLFormElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+  if (aIID.Equals(kIFormIID)) {
+    *aInstancePtr = (void*)(nsIForm*)this;
+    AddRef();
+    return NS_OK;
+  } 
+  else if (aIID.Equals(kIDOMHTMLFormElementIID)) {
+    *aInstancePtr = (void*)(nsIDOMHTMLFormElement*)this;
+    AddRef();
+    return NS_OK;
+  } 
+  else if (aIID.Equals(kIDOMNSHTMLFormElementIID)) {
+    *aInstancePtr = (void*)(nsIDOMNSHTMLFormElement*)this;
+    AddRef();
     return NS_OK;
   }
   return NS_NOINTERFACE;
 }
 
+NS_IMETHODIMP
+nsHTMLFormElement::AddRef(void)                                
+{ 
+nsTraceRefcnt::AddRef((nsIForm*)this, mRefCnt+1, __FILE__, __LINE__);
+  PRInt32 refCnt = mRefCnt;  // debugging 
+  return ++mRefCnt;                                          
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsHTMLFormElement::Release()
+{
+nsTraceRefcnt::Release((nsIForm*)this, mRefCnt-1, __FILE__, __LINE__);
+  --mRefCnt;
+  PRUint32 numChildren;
+  GetElementCount(&numChildren);
+  if ((int)mRefCnt == numChildren) {
+    mRefCnt = 0;
+    delete this; 
+    return 0;
+  } 
+  return mRefCnt;
+}
+
+// nsIDOMHTMLFormElement
 nsresult
 nsHTMLFormElement::CloneNode(nsIDOMNode** aReturn)
 {
@@ -135,9 +238,10 @@ nsHTMLFormElement::CloneNode(nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aResult)
+nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 {
-  // XXX write me
+  *aElements = mControls;
+  NS_ADDREF(mControls);
   return NS_OK;
 }
 
@@ -154,26 +258,85 @@ NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target, eSetAttrNotify_None)
 
 NS_IMETHODIMP
-nsHTMLFormElement::Reset()
+nsHTMLFormElement::Submit()
 {
-  // XXX
-  return NS_OK;
+  // XXX Need to do something special with mailto: or news: URLs
+  nsIDocument* doc = nsnull;
+  nsresult result = GetDocument(doc);
+  if ((NS_OK == result) && doc) {
+    nsIPresShell *shell = doc->GetShellAt(0);
+    if (nsnull != shell) {
+      nsIFrame* frame = shell->FindFrameWithContent(this);
+      if (frame) {
+        nsIFormManager* formMan = nsnull;
+        nsresult result = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
+        if ((NS_OK == result) && formMan) {
+          nsIPresContext *context = shell->GetPresContext();
+          if (nsnull != context) {
+            // XXX We're currently passing in null for the frame.
+            // It works for now, but might not always
+            // be correct. In the future, we might not need the 
+            // frame to be passed to the link handler.
+            result = formMan->OnSubmit(context, nsnull);
+            NS_RELEASE(context);
+          }
+        }
+      }
+      NS_RELEASE(shell);
+    }
+    NS_RELEASE(doc);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP
-nsHTMLFormElement::Submit()
+nsHTMLFormElement::Reset()
 {
-  // XXX
-  return NS_OK;
-}
+  // XXX Need to do something special with mailto: or news: URLs
+  nsIDocument* doc = nsnull;
+  nsresult result = GetDocument(doc);
+  if ((NS_OK == result) && doc) {
+    nsIPresShell *shell = doc->GetShellAt(0);
+    if (nsnull != shell) {
+      nsIFrame* frame = shell->FindFrameWithContent(this);
+      if (frame) {
+        nsIFormManager* formMan = nsnull;
+        nsresult result = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
+        if ((NS_OK == result) && formMan) {
+          result = formMan->OnReset();
+        }
+      }
+      NS_RELEASE(shell);
+    }
+  }
 
+  return result;
+}
+static nsGenericHTMLElement::EnumTable kFormMethodTable[] = {
+  { "get", NS_FORM_METHOD_GET },
+  { "post", NS_FORM_METHOD_POST },
+  { 0 }
+};
+static nsGenericHTMLElement::EnumTable kFormEnctypeTable[] = {
+  { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
+  { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
+  { 0 }
+};
 
 NS_IMETHODIMP
 nsHTMLFormElement::StringToAttribute(nsIAtom* aAttribute,
                               const nsString& aValue,
                               nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::method) {
+    nsGenericHTMLElement::ParseEnumValue(aValue, kFormMethodTable, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::enctype) {
+    nsGenericHTMLElement::ParseEnumValue(aValue, kFormEnctypeTable, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -182,7 +345,18 @@ nsHTMLFormElement::AttributeToString(nsIAtom* aAttribute,
                               nsHTMLValue& aValue,
                               nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::method) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::EnumValueToString(aValue, kFormMethodTable, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::enctype) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::EnumValueToString(aValue, kFormEnctypeTable, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -214,3 +388,166 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+
+// nsIForm
+
+NS_IMETHODIMP
+nsHTMLFormElement::GetElementCount(PRUint32* aCount) const 
+{
+  mControls->GetLength(aCount); 
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLFormElement::GetElementAt(PRInt32 aIndex, nsIFormControl** aFormControl) const 
+{ 
+  *aFormControl = (nsIFormControl*) mControls->mElements.ElementAt(aIndex);
+  NS_IF_ADDREF(*aFormControl);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::AddElement(nsIFormControl* aChild) 
+{ 
+  PRBool rv = mControls->mElements.AppendElement(aChild);
+  if (rv) {
+    NS_ADDREF(aChild);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsHTMLFormElement::RemoveElement(nsIFormControl* aChild, PRBool aChildIsRef) 
+{ 
+  PRBool rv = mControls->mElements.RemoveElement(aChild);
+  if (rv && aChildIsRef) {
+    NS_RELEASE(aChild);
+  }
+  return rv;
+}
+
+
+// nsFormControlList implementation, this could go away if there were a lightweight collection implementation somewhere
+
+nsFormControlList::nsFormControlList() 
+{
+  mRefCnt = 0;
+  mScriptObject = nsnull;
+}
+
+nsFormControlList::~nsFormControlList()
+{
+}
+
+NS_IMETHODIMP
+nsFormControlList::SetScriptObject(void *aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
+void
+nsFormControlList::Clear()
+{
+  PRUint32 numElements = mElements.Count();
+  for (PRUint32 i = 0; i < numElements; i++) {
+    nsIFormControl* elem = (nsIFormControl*) mElements.ElementAt(i);
+    NS_IF_RELEASE(elem);
+  }
+}
+
+nsresult nsFormControlList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
+  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+  if (aIID.Equals(kIDOMHTMLCollectionIID)) {
+    *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIDOMHTMLCollection*)this;
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMPL_ADDREF(nsFormControlList)
+NS_IMPL_RELEASE(nsFormControlList)
+
+
+nsresult nsFormControlList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptHTMLCollection(aContext, (nsISupports *)(nsIDOMHTMLCollection *)this, nsnull, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+  return res;
+}
+
+nsresult nsFormControlList::ResetScriptObject()
+{
+  mScriptObject = nsnull;
+  return NS_OK;
+}
+
+// nsIDOMHTMLCollection interface
+NS_IMETHODIMP    
+nsFormControlList::GetLength(PRUint32* aLength)
+{
+  *aLength = mElements.Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  nsIFormControl *control = (nsIFormControl*)mElements.ElementAt(aIndex);
+  if (control) {
+    return control->QueryInterface(kIDOMNodeIID, (void**)aReturn); // keep the ref
+  }
+  *aReturn = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsFormControlList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+{
+  PRUint32 count = mElements.Count();
+  nsresult result = NS_OK;
+
+  *aReturn = nsnull;
+  for (PRUint32 i = 0; i < count && *aReturn == nsnull; i++) {
+    nsIFormControl *control = (nsIFormControl*)mElements.ElementAt(i);
+    if (nsnull != control) {
+      nsIContent *content;
+      
+      result = control->QueryInterface(kIContentIID, (void **)&content);
+      if (NS_OK == result) {
+        nsAutoString name;
+        // XXX Should it be an EqualsIgnoreCase?
+        if (((content->GetAttribute("NAME", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+             (aName.Equals(name))) ||
+            ((content->GetAttribute("ID", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+             (aName.Equals(name)))) {
+          result = control->QueryInterface(kIDOMNodeIID, (void **)aReturn);
+        }
+        NS_RELEASE(content);
+      }
+    }
+  }
+  
+  return result;
+}
+

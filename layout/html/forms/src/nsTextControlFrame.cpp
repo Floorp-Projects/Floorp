@@ -1,0 +1,374 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsTextControlFrame.h"
+#include "nsIContent.h"
+#include "prtypes.h"
+#include "nsIFrame.h"
+#include "nsISupports.h"
+#include "nsIAtom.h"
+#include "nsIPresContext.h"
+#include "nsIHTMLContent.h"
+#include "nsHTMLIIDs.h"
+#include "nsITextWidget.h"
+#include "nsITextAreaWidget.h"
+#include "nsWidgetsCID.h"
+#include "nsSize.h"
+#include "nsString.h"
+#include "nsHTMLAtoms.h"
+#include "nsIStyleContext.h"
+#include "nsFont.h"
+#include "nsDOMEvent.h"
+#include "nsIFormControl.h"
+#include "nsFormFrame.h"
+#include "nsIContent.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
+static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
+static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
+
+nsresult
+NS_NewTextControlFrame(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*&  aResult)
+{
+  aResult = new nsTextControlFrame(aContent, aParent);
+  if (nsnull == aResult) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+nsTextControlFrame::nsTextControlFrame(nsIContent* aContent,
+                                       nsIFrame* aParentFrame)
+  : nsFormControlFrame(aContent, aParentFrame)
+{
+}
+
+nsTextControlFrame::~nsTextControlFrame()
+{
+}
+
+nscoord 
+nsTextControlFrame::GetVerticalBorderWidth(float aPixToTwip) const
+{
+   return NSIntPixelsToTwips(4, aPixToTwip);
+}
+
+nscoord 
+nsTextControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+{
+  return GetVerticalBorderWidth(aPixToTwip);
+}
+
+// for a text area aInnerHeight is the height of one line
+nscoord 
+nsTextControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                             nscoord aInnerHeight) const
+{
+#ifdef XP_PC
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_TEXTAREA == type) {
+    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.40f);
+  } else {
+    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.25f);
+  }
+#endif
+#ifdef XP_UNIX
+  return NSIntPixelsToTwips(10, aPixToTwip); // XXX this is probably wrong
+#endif
+}
+
+nscoord 
+nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                               float aPixToTwip, 
+                                               nscoord aInnerWidth,
+                                               nscoord aCharWidth) const
+{
+#ifdef XP_PC
+  nscoord padding;
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_TEXTAREA == type) {
+    padding = (nscoord)(40 * aCharWidth / 100);
+  } else {
+    padding = (nscoord)(55 * aCharWidth / 100);
+  }
+  nscoord min = NSIntPixelsToTwips(3, aPixToTwip);
+  if (padding > min) {
+    return padding;
+  } else {
+    return min;
+  }
+#endif
+#ifdef XP_UNIX
+  return NSIntPixelsToTwips(6, aPixToTwip);  // XXX this is probably wrong
+#endif
+}
+
+
+const nsIID&
+nsTextControlFrame::GetIID()
+{
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_TEXTAREA == type) {
+    return kITextAreaWidgetIID;
+  } else {
+    return kITextWidgetIID;
+  }
+}
+  
+const nsIID&
+nsTextControlFrame::GetCID()
+{
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_TEXTAREA == type) {
+    return kTextAreaCID;
+  } else {
+    return kTextCID;
+  }
+}
+
+void
+nsTextControlFrame::EnterPressed(nsIPresContext& aPresContext) 
+{
+  if (mFormFrame && mFormFrame->CanSubmit(*this)) {
+    nsEventStatus mStatus = nsEventStatus_eIgnore;
+    nsEvent mEvent;
+    mEvent.eventStructType = NS_EVENT;
+    mEvent.message = NS_FORM_SUBMIT;
+    mContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+
+    mFormFrame->OnSubmit(&aPresContext, this);
+  }
+}
+
+void 
+nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                   const nsReflowState& aReflowState,
+                                   nsReflowMetrics& aDesiredLayoutSize,
+                                   nsSize& aDesiredWidgetSize)
+{
+  // get the css size and let the frame use or override it
+  nsSize styleSize;
+  GetStyleSize(*aPresContext, aReflowState, styleSize);
+
+  nsSize size;
+  
+  PRBool widthExplicit, heightExplicit;
+  PRInt32 ignore;
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+    PRInt32 width;
+    if (NS_CONTENT_ATTR_HAS_VALUE != GetSize(&width)) {
+      width = 20;
+    }
+    // Nav Quirk!!
+    width += 1;
+    nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
+                                  nsnull, width, PR_FALSE, nsnull, 1);
+    CalculateSize(aPresContext, this, styleSize, textSpec, size, 
+                  widthExplicit, heightExplicit, ignore);
+  } else {
+    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, nsnull, 20, 
+                                  PR_FALSE, nsHTMLAtoms::rows, 1);
+    CalculateSize(aPresContext, this, styleSize, areaSpec, size, 
+                  widthExplicit, heightExplicit, ignore);
+  }
+
+  if (NS_FORM_TEXTAREA == type) {
+    float p2t = aPresContext->GetPixelsToTwips();
+    nscoord scrollbarWidth = GetScrollbarWidth(p2t);
+
+    if (!heightExplicit) {
+      size.height += scrollbarWidth;
+    } 
+    if (!widthExplicit) {
+      size.width += scrollbarWidth;
+    }
+  }
+
+
+  aDesiredLayoutSize.width  = size.width;
+  aDesiredLayoutSize.height = size.height;
+  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  aDesiredLayoutSize.descent = 0;
+  aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
+  aDesiredWidgetSize.height = aDesiredLayoutSize.height;
+}
+
+nsWidgetInitData*
+nsTextControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
+{
+  PRInt32 type;
+  GetType(&type);
+
+  nsTextWidgetInitData* data = nsnull;
+
+  if (NS_FORM_INPUT_PASSWORD == type) {
+    data = new nsTextWidgetInitData();
+    data->clipChildren = PR_TRUE;
+    data->mIsPassword = PR_TRUE;
+  }
+
+  return data;
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::GetText(nsString* aText)
+{
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_TEXT == type) {
+    nsIDOMHTMLInputElement* textElem = nsnull;
+    nsresult result = mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem);
+    if ((NS_OK == result) && textElem) {
+      result = textElem->GetValue(*aText);
+      NS_RELEASE(textElem);
+    }
+  } else {
+    nsIDOMHTMLTextAreaElement* textArea = nsnull;
+    nsresult result = mContent->QueryInterface(kIDOMHTMLTextAreaElementIID, (void**)&textArea);
+    if ((NS_OK == result) && textArea) {
+      result = textArea->GetDefaultValue(*aText);
+      NS_RELEASE(textArea);
+    }
+  }
+  return result;
+}
+
+void 
+nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
+{
+  if (!mWidget) {
+    return;
+  }
+
+  PRInt32 type;
+  GetType(&type);
+
+  const nsStyleFont* fontStyle = (const nsStyleFont*)(mStyleContext->GetStyleData(eStyleStruct_Font));
+	mWidget->SetFont(fontStyle->mFixedFont);
+  mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+
+  PRUint32 ignore;
+  
+  nsAutoString value;
+  GetText(&value);
+
+  nsITextAreaWidget* textArea = nsnull;
+  nsITextWidget* text = nsnull;
+  if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+    text->SetText(value, ignore);
+    PRInt32 maxLength;
+    nsresult result = GetMaxLength(&maxLength);
+    if (NS_CONTENT_ATTR_NOT_THERE != result) {
+      text->SetMaxTextLength(maxLength);
+    }
+    NS_RELEASE(text);
+  } else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&textArea)) {
+    textArea->SetText(value, ignore);
+    mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+    NS_RELEASE(textArea);
+  }
+}
+
+PRInt32 
+nsTextControlFrame::GetMaxNumValues()
+{
+  return 1;
+}
+  
+PRBool
+nsTextControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                   nsString* aValues, nsString* aNames)
+{
+  if (!mWidget) {
+    return PR_FALSE;
+  }
+
+  nsAutoString name;
+  nsresult result = GetName(&name);
+  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_NOT_THERE == result)) {
+    return PR_FALSE;
+  }
+
+  PRUint32 size;
+  nsITextWidget* text = nsnull;
+  nsITextAreaWidget* textArea = nsnull;
+
+  aNames[0] = name;  
+  aNumValues = 1;
+
+  if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+    text->GetText(aValues[0],0,size);  // the last parm is not used
+    NS_RELEASE(text);
+    return PR_TRUE;
+  } else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&textArea)) {
+    textArea->GetText(aValues[0],0,size);  // the last parm is not used
+    NS_RELEASE(textArea);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+void 
+nsTextControlFrame::Reset() 
+{
+  if (!mWidget) {
+    return;
+  }
+
+  nsITextWidget* text = nsnull;
+  nsITextAreaWidget* textArea = nsnull;
+
+  nsAutoString value;
+  nsresult valStatus = GetText(&value);
+
+  PRUint32 size;
+  if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) {
+      text->SetText(value,size);
+    } else {
+      text->SetText("",size);
+    }
+    NS_RELEASE(text);
+  } else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&textArea)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) {
+      textArea->SetText(value,size);
+    } else {
+      textArea->SetText("",size);
+    }
+    NS_RELEASE(textArea);
+  }
+
+}  
+
+

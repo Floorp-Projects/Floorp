@@ -18,7 +18,8 @@
 DEPTH=../../../..
 
 EXPORTS =			\
-	nsIFormManager.h	\
+	nsIFormControl.h	\
+	nsIForm.h	\
         $(NULL)
 
 MODULE = raptor
