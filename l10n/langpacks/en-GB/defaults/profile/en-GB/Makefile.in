@@ -19,21 +19,23 @@
 # Contributor(s): 
 #
 
-DEPTH	= ..
-topsrcdir	= ..
-VPATH		= .
-srcdir		= .
+DEPTH		= ../../../../../..
+THEME_ROOT_DEPTH = @srcdir@/../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(THEME_ROOT_DEPTH)/theme.mk
 
-DIRS	= langpacks
-
-ifdef MOZ_L10N_TOOLS
-DIRS	+= tools
-endif
-
-ifdef MOZ_L10N_LANG
-DIRS	+= lang
-endif
+EXPORT_RESOURCE = \
+		$(srcdir)/bookmarks.html \
+		$(srcdir)/panels.rdf \
+		$(srcdir)/search.rdf \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/defaults/profile/$(THEME)
+

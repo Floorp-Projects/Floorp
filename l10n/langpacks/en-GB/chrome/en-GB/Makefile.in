@@ -19,21 +19,25 @@
 # Contributor(s): 
 #
 
-DEPTH	= ..
-topsrcdir	= ..
-VPATH		= .
-srcdir		= .
+DEPTH	= ../../../../..
+THEME_ROOT_DEPTH = @srcdir@/../..
+topsrcdir	= @top_srcdir@
+VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(THEME_ROOT_DEPTH)/theme.mk
 
-DIRS	= langpacks
+CHROME_DIR = locales/$(THEME)
+CHROME_MISC_DIR = .
+CHROME_TYPE = locale
 
-ifdef MOZ_L10N_TOOLS
-DIRS	+= tools
-endif
+CHROME_MISC = \
+	manifest.rdf \
+	$(NULL)
 
-ifdef MOZ_L10N_LANG
-DIRS	+= lang
+ifdef MOZ_LANGPACKS
+DIRS	= communicator editor global messenger navigator necko
 endif
 
 include $(topsrcdir)/config/rules.mk

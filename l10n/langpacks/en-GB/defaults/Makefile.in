@@ -19,21 +19,13 @@
 # Contributor(s): 
 #
 
-DEPTH	= ..
-topsrcdir	= ..
-VPATH		= .
-srcdir		= .
+DEPTH	= ../../../..
+topsrcdir	= @top_srcdir@
+VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= langpacks
-
-ifdef MOZ_L10N_TOOLS
-DIRS	+= tools
-endif
-
-ifdef MOZ_L10N_LANG
-DIRS	+= lang
-endif
+DIRS	= profile
 
 include $(topsrcdir)/config/rules.mk
