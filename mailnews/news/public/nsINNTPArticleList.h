@@ -2,38 +2,39 @@
  * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsINNTPArticleList.idl
  */
 
-#ifndef __nsINNTPArticleList_h__
-#define __nsINNTPArticleList_h__
+#ifndef __gen_nsINNTPArticleList_h__
+#define __gen_nsINNTPArticleList_h__
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
 
-/* starting interface nsINNTPArticleKeysState */
+
+/* starting interface nsINNTPArticleList */
 
 /* {921AC214-96B5-11d2-B7EB-00805F05FFA5} */
-#define NS_INNTPARTICLEKEYSSTATE_IID_STR "921AC214-96B5-11d2-B7EB-00805F05FFA5"
-#define NS_INNTPARTICLEKEYSSTATE_IID \
+#define NS_INNTPARTICLELIST_IID_STR "921AC214-96B5-11d2-B7EB-00805F05FFA5"
+#define NS_INNTPARTICLELIST_IID \
   {0x921AC214, 0x96B5, 0x11d2, \
     { 0xB7, 0xEB, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
-class nsINNTPArticleKeysState : public nsISupports {
+class nsINNTPArticleList : public nsISupports {
  private:
   void operator delete(void *); // NOT TO BE IMPLEMENTED
 
  public: 
   static const nsIID& IID() {
-    static nsIID iid = NS_INNTPARTICLEKEYSSTATE_IID;
+    static nsIID iid = NS_INNTPARTICLELIST_IID;
     return iid;
   }
 
-  /* void Init(in string newsHost, in nsIMsgNewsgroup newsgroup); */
+  /*  <IDL>  */
   NS_IMETHOD Init(const char *newsHost, const nsIMsgNewsgroup *newsgroup) = 0;
 
-  /* void AddArticleKey(in  key); */
+  /*  <IDL>  */
   NS_IMETHOD AddArticleKey(PRInt32 key) = 0;
 
-  /* void FinishAddingArticleKeys(); */
+  /*  <IDL>  */
   NS_IMETHOD FinishAddingArticleKeys() = 0;
 };
 
-#endif /* __nsINNTPArticleList_h__ */
+#endif /* __gen_nsINNTPArticleList_h__ */
