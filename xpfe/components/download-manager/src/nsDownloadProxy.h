@@ -92,61 +92,73 @@ public:
  
   NS_IMETHODIMP GetDisplayName(PRUnichar** aDisplayName)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetDisplayName(aDisplayName);
   }
   
   NS_IMETHODIMP SetDisplayName(const PRUnichar* aDisplayName)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->SetDisplayName(aDisplayName);
   }
   
   NS_IMETHODIMP GetMIMEInfo(nsIMIMEInfo** aMIMEInfo)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetMIMEInfo(aMIMEInfo);
   }
   
   NS_IMETHODIMP GetSource(nsIURI** aSource)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetSource(aSource);
   }
   
   NS_IMETHODIMP GetTarget(nsILocalFile** aTarget)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetTarget(aTarget);
   }
   
   NS_IMETHODIMP GetStartTime(PRInt64* aStartTime)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetStartTime(aStartTime);
   }
 
   NS_IMETHODIMP GetPercentComplete(PRInt32* aPercentComplete)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetPercentComplete(aPercentComplete);
   }
    
   NS_IMETHODIMP GetListener(nsIWebProgressListener** aListener)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetListener(aListener);
   }
 
   NS_IMETHODIMP SetListener(nsIWebProgressListener* aListener)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->SetListener(aListener);
   }
   
   NS_IMETHODIMP GetObserver(nsIObserver** aObserver)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetObserver(aObserver);
   }
 
   NS_IMETHODIMP SetObserver(nsIObserver* aObserver)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->SetObserver(aObserver);
   }
    
   NS_IMETHODIMP GetPersist(nsIWebBrowserPersist** aPersist)
   {
+    if (!mInner) return NS_ERROR_NOT_INITIALIZED;
     return mInner->GetPersist(aPersist);
   }
 
