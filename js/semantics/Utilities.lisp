@@ -336,6 +336,19 @@
     entries))
 
 
+; Return true if the two hash tables are equal, using the given equality test for testing their elements.
+(defun hash-table-= (hash-table1 hash-table2 &key (test #'eql))
+  (and (= (hash-table-count hash-table1) (hash-table-count hash-table2))
+       (progn
+         (maphash
+          #'(lambda (key1 value1)
+              (multiple-value-bind (value2 present2) (gethash key1 hash-table2)
+                (unless (and present2 (funcall test value1 value2))
+                  (return-from hash-table-= nil))))
+          hash-table1)
+         t)))
+
+
 ; Given an association list ((key1 . data1) (key2 . data2) ... (keyn datan)),
 ; produce another association list whose keys are sets of the keys of the original list,
 ; where the data elements of each such set are equal according to the given test function.
