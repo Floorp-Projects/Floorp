@@ -153,7 +153,7 @@
         var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
                               .getService(Components.interfaces.nsILocaleService);
         var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-        var bundleURL = "chrome://global-platform/locale/wizard.properties";
+        var bundleURL = "chrome://global/locale/widgets/wizard.properties";
         this._bundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
         
         // get anonymous content references
@@ -337,9 +337,17 @@
         <body><![CDATA[
           var label = this.currentPage.getAttribute("label");
           if (!label && this.onFirstPage)
+#ifdef XP_MACOSX
+            label = this._bundle.GetStringFromName("default-first-title-mac");
+#else
             label = this._bundle.formatStringFromName("default-first-title", [this.title], 1);
+#endif
           else if (!label && this.onLastPage)
-            label = this._bundle.formatStringFromName("default-last-title", [this.title], 1);
+#ifdef XP_MACOSX
+            label = this._bundle.GetStringFromName("default-last-title-mac");
+#else
+            label = this._bundle.formatStringFromName("default-last-title)", [this.title], 1);
+#endif
           this._wizardHeader.setAttribute("label", label);
           this._wizardHeader.setAttribute("description", this.currentPage.getAttribute("description"));
         ]]></body>
