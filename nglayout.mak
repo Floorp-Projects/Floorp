@@ -120,7 +120,8 @@ RAPTOR_DIRS =			\
   view				\
   widget			\
   layout			\
-  webshell
+  webshell			\
+  xpfe
 
 # Main rules
 
@@ -214,6 +215,7 @@ pull_nglayout:
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/view
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/webshell
 	$(CVSCO_RAPTOR) $(MOZ_TOP)/widget
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/xpfe
 
 ######################################################################
 
