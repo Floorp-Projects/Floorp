@@ -45,21 +45,21 @@ package org.mozilla.javascript;
  */
 public class NativeFunction extends BaseFunction
 {
-    
-    public void initScriptFunction(Context cx, String functionName,
-                                   String[] argNames, int argCount)
+
+    public final void initScriptFunction(Context cx, String functionName,
+                                         String[] argNames, int argCount)
     {
-        if (!(argNames != null 
+        if (!(argNames != null
               && 0 <= argCount && argCount <= argNames.length))
         {
             throw new IllegalArgumentException();
         }
-        
+
         if (!(this.argNames == null)) {
             // Initialization can only be done once
             throw new IllegalStateException();
         }
-        
+
         this.functionName = functionName;
         this.argNames = argNames;
         this.argCount = (short)argCount;
@@ -74,7 +74,7 @@ public class NativeFunction extends BaseFunction
      * @param justbody Whether the decompilation should omit the
      * function header and trailing brace.
      */
-    public String decompile(Context cx, int indent, boolean justbody)
+    public final String decompile(Context cx, int indent, boolean justbody)
     {
         Object encodedSource = getEncodedSource();
         if (encodedSource == null) {
@@ -129,6 +129,7 @@ public class NativeFunction extends BaseFunction
      */
     protected String[] argNames;
     protected short argCount;
+
     protected short version;
 }
 
