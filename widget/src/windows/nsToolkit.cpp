@@ -54,6 +54,7 @@ NS_SetWindowLong    nsToolkit::mSetWindowLong = &SetWindowLongW;
 NS_SendMessage      nsToolkit::mSendMessage = &SendMessageW;
 NS_DispatchMessage  nsToolkit::mDispatchMessage = &DispatchMessageW;
 NS_GetMessage       nsToolkit::mGetMessage = &GetMessageW;
+NS_PeekMessage      nsToolkit::mPeekMessage = &PeekMessageW;
 NS_GetOpenFileName  nsToolkit::mGetOpenFileName = &GetOpenFileNameW;
 NS_GetSaveFileName  nsToolkit::mGetSaveFileName = &GetSaveFileNameW;
 NS_GetClassName     nsToolkit::mGetClassName = &GetClassNameW;
@@ -71,6 +72,7 @@ NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 static PRUintn gToolkitTLSIndex = 0;
 
 HINSTANCE nsToolkit::mDllInstance = 0;
+PRBool    nsToolkit::mIsNT = PR_FALSE;
 PRBool    nsToolkit::mUseImeApiW  = PR_FALSE;
 PRBool    nsToolkit::mW2KXP_CP936 = PR_FALSE;
 PRBool    nsToolkit::mIsWinXP     = PR_FALSE;
@@ -465,8 +467,9 @@ nsToolkit::Startup(HMODULE hModule)
       }
     }
 
-    nsToolkit::mUseImeApiW = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
-    if (nsToolkit::mUseImeApiW)  {
+    nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
+    if (nsToolkit::mIsNT)  {
+      nsToolkit::mUseImeApiW = PR_TRUE;
       // XXX Hack for stopping the crash (125573)
       if (osversion.dwMajorVersion == 5 && (osversion.dwMinorVersion == 0 || osversion.dwMinorVersion == 1))  { 
         nsToolkit::mIsWinXP = (osversion.dwMinorVersion == 1);
@@ -487,6 +490,7 @@ nsToolkit::Startup(HMODULE hModule)
       nsToolkit::mSendMessage = &nsSendMessage;
       nsToolkit::mDispatchMessage = &DispatchMessageA;
       nsToolkit::mGetMessage = &GetMessageA;
+      nsToolkit::mPeekMessage = &PeekMessageA;
 
       nsToolkit::mGetOpenFileName = &nsGetOpenFileName;
       nsToolkit::mGetSaveFileName = &nsGetSaveFileName;
