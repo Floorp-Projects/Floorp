@@ -62,7 +62,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 
   *aFactory = NULL; 
   // the converter manager
-  if (aClass.Equals(nsCOMTypeInfo<nsICharsetConverterManager>::GetIID())) {
+  if (aClass.Equals(kCharsetConverterManagerCID)) {
     nsManagerFactory *factory = new nsManagerFactory();
 
     if(nsnull == factory)
