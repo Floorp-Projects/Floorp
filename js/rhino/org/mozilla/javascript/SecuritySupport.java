@@ -54,6 +54,10 @@ package org.mozilla.javascript;
  * <p>
  * These three pieces of functionality are encapsulated in the
  * SecuritySupport class.
+ * <p>
+ * Additionally, an embedding may provide filtering on the 
+ * Java classes that are visible to scripts through the 
+ * <code>visibleToScripts</code> method.
  *
  * @see org.mozilla.javascript.Context
  * @see java.lang.ClassLoader
@@ -67,7 +71,7 @@ public interface SecuritySupport {
      * <p>
      * In embeddings that care about security, the securityDomain 
      * must be associated with the defined class such that a call to
-     * getsecurityDomain with that class will return this security
+     * <code>getSecurityDomain</code> with that class will return this security
      * context.
      * <p>
      * @param name the name of the class
