@@ -106,6 +106,8 @@
 /* *             - fixed magnification bug with object 0                    * */
 /* *             1.0.5 - 01/19/2003 - G.Juyn                                * */
 /* *             - B664911 - fixed buffer overflow during init              * */
+/* *             1.0.6 - 19/04/2003 - G.Juyn                                * */
+/* *             - fixed problem with infinite loops during readdisplay()   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -2996,7 +2998,8 @@ mng_retcode mng_process_ani_endl (mng_datap   pData,
       if ((pLOOP->iRunningcount) && (pLOOP->iRunningcount < 0x7fffffffL))
         pLOOP->iRunningcount--;
 
-      if ((pData->bReading) && (pLOOP->iRunningcount >= 0x7fffffffL))
+      if ((!pData->bDisplaying) && (pData->bReading) &&
+          (pLOOP->iRunningcount >= 0x7fffffffL))
       {
         pData->iTotalframes   = 0x7fffffffL;
         pData->iTotallayers   = 0x7fffffffL;
