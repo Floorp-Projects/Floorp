@@ -123,6 +123,8 @@
 #include "nsFileStream.h"
 #include "nsIProxyObjectManager.h" 
 
+#include "nsISecureBrowserUI.h"
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -474,8 +476,24 @@ nsBrowserInstance::ReinitializeContentVariables()
   nsCOMPtr<nsIDOMWindowInternal> content;
   mDOMWindow->Get_content(getter_AddRefs(content));
   SetContentWindow(content);
-}
 
+  /* reinitialize the security module */
+  nsresult rv;
+  nsCOMPtr<nsSecureBrowserUI> security =
+     do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && security) {
+    nsCOMPtr<nsIDOMDocument> doc;
+    rv = mDOMWindow->GetDocument(getter_AddRefs(doc));
+    if (NS_SUCCEEDED(rv) && doc) {
+      nsCOMPtr<nsIDOMElement> button;
+      rv = doc->GetElementById(NS_LITERAL_STRING("security-button"),
+                               getter_AddRefs(button));
+      if (NS_SUCCEEDED(rv)) {
+        security->Init(content,button);
+      }
+    }
+  }
+}
 
 nsresult nsBrowserInstance::GetContentAreaDocShell(nsIDocShell** outDocShell)
 {
