@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkconxmldoc_s
-REQUIRES	= xpcom string js dom locale widget caps htmlparser necko view docshell webshell uriloader pref xpconnect uconv chardet expat lwbrk exthandler mimetype gfx2
+REQUIRES	= xpcom string js dom widget caps htmlparser necko view docshell webshell uriloader pref xpconnect uconv chardet lwbrk exthandler mimetype
 
 CPPSRCS		= \
 		nsXMLContentSink.cpp \

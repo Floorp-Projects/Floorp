@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS			:= public
 
 MODULE			= webshell_tests
-REQUIRES		= xpcom string webshell widget layout dom webbrwsr docshell util uriloader locale necko htmlparser view timer unicharutil pref intl editor chardet cookie gfx2 txmgr js
+REQUIRES		= xpcom string webshell widget layout dom webbrwsr docshell util uriloader locale necko htmlparser view timer pref intl editor cookie
 
 PROGRAM			:= viewer$(BIN_SUFFIX)
 

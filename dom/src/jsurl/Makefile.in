@@ -31,7 +31,7 @@ LIBRARY_NAME	= jsurl
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= javascript__protocol
-REQUIRES	= xpcom string js dom necko caps widget layout docshell uriloader locale appshell rdf gfx2 xpconnect jsconsole
+REQUIRES	= xpcom string js dom necko caps widget appshell rdf xpconnect jsconsole
 
 XPIDLSRCS	= \
 		nsIEvaluateStringProxy.idl \

@@ -26,7 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= embedcomponents
 LIBRARY_NAME	= jsconsole_s
-REQUIRES	= jsconsole xpcom string dom windowwatcher widget js xpconnect caps layout uriloader necko docshell locale webbrwsr embed_base gfx2 wallet intl appshell
+REQUIRES	= jsconsole xpcom string dom windowwatcher js
 
 CPPSRCS		= nsJSConsoleService.cpp \
                   $(NULL)

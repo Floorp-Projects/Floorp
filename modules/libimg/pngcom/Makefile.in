@@ -30,7 +30,7 @@ LIBRARY_NAME	= nspng
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPNGModule
-REQUIRES	= xpcom string img util layout locale png unicharutil
+REQUIRES	= xpcom string img util layout png
 
 CPPSRCS		= \
 		ipng.cpp \

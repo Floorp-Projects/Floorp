@@ -31,7 +31,7 @@ LIBRARY_NAME	= mozxfer
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsStreamTransferModule
-REQUIRES	= xpcom string necko appshell dom js widget pref intl locale layout mozcomps
+REQUIRES	= xpcom string necko dom js widget pref intl
 
 CPPSRCS		= \
 		nsStreamTransfer.cpp \

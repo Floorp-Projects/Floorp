@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = accessibility
 LIBRARY_NAME  = accessibility_s
-REQUIRES  = xpcom string layout widget dom view locale gfx2 js intl docshell webshell necko uriloader htmlparser xuldoc
+REQUIRES  = xpcom string layout widget dom view locale intl docshell webshell necko htmlparser xuldoc
 
 CPPSRCS   = \
     nsAccessible.cpp \

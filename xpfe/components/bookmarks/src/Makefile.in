@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
 LIBRARY_NAME	= bookmarks_s
-REQUIRES	= xpcom string rdf appshell widget necko uconv docshell pref timer dom js layout uriloader locale intl webshell gfx2 windowwatcher
+REQUIRES	= xpcom string rdf appshell widget necko uconv docshell pref timer dom intl webshell windowwatcher
 
 CPPSRCS		= nsBookmarksService.cpp
 

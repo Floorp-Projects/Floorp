@@ -30,7 +30,7 @@ MODULE		= layout
 EXPORTS         = nsFontList.h
 LIBRARY_NAME	= gkgfx
 EXPORT_LIBRARY = 1
-REQUIRES	= xpcom string img widget util dom locale view necko pref timer uriloader gfx2 imglib2 intl mimetype
+REQUIRES	= xpcom string img widget util locale view necko pref timer uriloader gfx2 imglib2 intl mimetype
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 DIRS		=

@@ -30,7 +30,7 @@ LIBRARY_NAME	= nsjpg
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsJPGModule
-REQUIRES	= xpcom string img util layout locale jpeg unicharutil
+REQUIRES	= xpcom string img util layout
 
 CPPSRCS		= \
 		jpeg.cpp \

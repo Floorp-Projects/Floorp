@@ -31,7 +31,7 @@ LIBRARY_NAME	= appcomps
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= application
-REQUIRES	= xpcom string layout rdf necko timer intl mork widget locale dom pref docshell webshell gfx2
+REQUIRES	= xpcom string layout rdf necko timer intl mork widget dom pref docshell webshell
 
 CPPSRCS		= nsModule.cpp
 
