@@ -51,6 +51,8 @@ function getIspDefaultsForUri(domainURI)
 
     var result = dataSourceToObject(ispDefaults, domainRes);
 
+    if (!result) return null;
+    
     // add this extra attribute which is the domain itself
     var domainData = domainURI.split(':');
     if (domainData.length > 1)
