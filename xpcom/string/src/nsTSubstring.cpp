@@ -528,6 +528,13 @@ nsTSubstring_CharT::Equals( const abstract_string_type& readable, const comparat
 PRBool
 nsTSubstring_CharT::Equals( const char_type* data ) const
   {
+    // unfortunately, some callers pass null :-(
+    if (!data)
+      {
+        NS_NOTREACHED("null data pointer");
+        return mLength == 0;
+      }
+
     // XXX avoid length calculation?
     size_type length = char_traits::length(data);
     return mLength == length && char_traits::compare(mData, data, mLength) == 0;
@@ -536,6 +543,13 @@ nsTSubstring_CharT::Equals( const char_type* data ) const
 PRBool
 nsTSubstring_CharT::Equals( const char_type* data, const comparator_type& comp ) const
   {
+    // unfortunately, some callers pass null :-(
+    if (!data)
+      {
+        NS_NOTREACHED("null data pointer");
+        return mLength == 0;
+      }
+
     // XXX avoid length calculation?
     size_type length = char_traits::length(data);
     return mLength == length && comp(mData, data, mLength) == 0;
