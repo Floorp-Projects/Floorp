@@ -14,12 +14,15 @@
 
 <html:script src="chrome://global/content/filepicker.js"/>
 
-<box align="horizontal">
+<box align="horizontal" autostretch="never">
+<!-- History list needs hooked up
   <text value="Look in:"/>
   <menulist id="lookInMenuList" flex="1">
     <menupopup id="lookInMenu"/>
   </menulist>
-
+-->
+  <text value="Current directory:"/>
+  <textfield id="curLocation" readonly="" flex="1"/>
   <button value=".." onclick="goUp();"/>
 </box>
 
@@ -40,12 +43,12 @@
   </tree>
 </box>
 
-<box align="horizontal">
+<box align="horizontal" autostretch="never" style="margin-top: 5px">
   <text value="File name:"/>
-  <html:input type="text" id="textInput" onkeypress="if (event.which == 13) { onOK(); }" flex="1"/>
+  <textfield id="textInput" onkeypress="if (event.which == 13) { onOK(); }" flex="1"/>
 </box>
 
-<box align="horizontal">
+<box align="horizontal" autostretch="never">
   <text value="Files of type:"/>
   <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
 </box>

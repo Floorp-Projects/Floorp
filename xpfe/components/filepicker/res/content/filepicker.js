@@ -361,13 +361,19 @@ function clearTree() {
 
 
 function addToHistory(directoryName) {
+  /* The history list is not hooked up yet, so we'll just use
+     a text element for the current directory */
+/*
   var menuList = document.getElementById("lookInMenuList");
   var menu = document.getElementById("lookInMenu");
   var menuItem = document.createElement("menuitem");
   menuItem.setAttribute("value", directoryName);
   menu.appendChild(menuItem);
 
-  menuList.selectedItem = menuItem;
+  menuList.selectedItem = menuItem; */
+
+  var dirText = document.getElementById("curLocation");
+  dirText.setAttribute("value", directoryName);
 }
 
 function goUp() {
