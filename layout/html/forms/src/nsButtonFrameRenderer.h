@@ -91,7 +91,7 @@ public:
 	/**
 	* Subroutine to add in borders and padding
 	*/
-	virtual void AddBordersAndPadding(nsIPresContext* aPresContext,
+	virtual void AddFocusBordersAndPadding(nsIPresContext& aPresContext,
 							const nsHTMLReflowState& aReflowState,
 							nsHTMLReflowMetrics& aDesiredSize,
 							nsMargin& aBorderPadding);
