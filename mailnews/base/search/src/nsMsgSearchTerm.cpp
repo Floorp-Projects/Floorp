@@ -574,26 +574,32 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 // Looks in the MessageDB for the user specified arbitrary header, if it finds the header, it then looks for a match against
 // the value for the header. 
 nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
-														nsIMsgDBHdr *msg, nsIMsgDatabase* db, const char * headers, PRUint32 headersSize, PRBool ForFiltering)
+														nsIMsgDBHdr *msg, nsIMsgDatabase* db, const char * headers, 
+														PRUint32 headersSize, PRBool ForFiltering, PRBool *pResult)
 {
-	nsresult err = NS_COMFALSE;
-	nsMsgBodyHandler * bodyHan = new nsMsgBodyHandler (scope, offset,length, msg, db, headers, headersSize, ForFiltering);
-	if (!bodyHan)
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+	*pResult = PR_FALSE;
+	nsresult err = NS_OK;
+	PRBool result;
+
+	nsMsgBodyHandler * bodyHandler = new nsMsgBodyHandler (scope, offset,length, msg, db, headers, headersSize, ForFiltering);
+	if (!bodyHandler)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	bodyHan->SetStripHeaders (PR_FALSE);
+	bodyHandler->SetStripHeaders (PR_FALSE);
 
 	if (MatchAllBeforeDeciding())
-		err = NS_OK;
+		result = PR_TRUE;
 	else
-		err = NS_COMFALSE;
+		result = PR_FALSE;
 
 	const int kBufSize = 512; // max size of a line??
 	char * buf = (char *) PR_Malloc(kBufSize);
 	if (buf)
 	{
 		PRBool searchingHeaders = PR_TRUE;
-		while (searchingHeaders && bodyHan->GetNextLine(buf, kBufSize))
+		while (searchingHeaders && bodyHandler->GetNextLine(buf, kBufSize))
 		{
 			char * buf_end = buf + PL_strlen(buf);
 			int headerLength = m_arbitraryHeader.Length();
@@ -618,11 +624,12 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRU
 				if (headerValue < buf_end && *headerValue) // make sure buf has info besides just the header
 				{
 					nsString2 headerStr = headerValue;
-					nsresult err2 = MatchString(&headerStr, charset);  // match value with the other info...
-					if (err != err2) // if we found a match
+					PRBool result2;
+					err = MatchString(&headerStr, charset, PR_FALSE, &result2);  // match value with the other info...
+					if (result != result2) // if we found a match
 					{
 						searchingHeaders = PR_FALSE;   // then stop examining the headers
-						err = err2;
+						result = result2;
 					}
 				}
 				else
@@ -631,21 +638,26 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRU
 			if (EMPTY_MESSAGE_LINE(buf))
 				searchingHeaders = PR_FALSE;
 		}
-		delete bodyHan;
+		delete bodyHandler;
 		PR_Free(buf);
+		*pResult = result;
 		return err;
 	}
 	else
 	{
-		delete bodyHan;
+		delete bodyHandler;
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 }
 
 nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, const char *folderCharset,
-										   nsIMsgDBHdr *msg, nsIMsgDatabase* db)
+										   nsIMsgDBHdr *msg, nsIMsgDatabase* db, PRBool *pResult)
 {
-	nsresult err = NS_COMFALSE;
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+	nsresult err = NS_OK;
+	PRBool result = PR_FALSE;
+	*pResult = PR_FALSE;
 
 	// Small hack so we don't look all through a message when someone has
 	// specified "BODY IS foo"
@@ -673,11 +685,11 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 
 		// Change the sense of the loop so we don't bail out prematurely
 		// on negative terms. i.e. opDoesntContain must look at all lines
-		nsresult errContinueLoop;
+		PRBool boolContinueLoop;
 		if (MatchAllBeforeDeciding())
-			err = errContinueLoop = NS_OK;
+			result = boolContinueLoop = PR_TRUE;
 		else
-			err = errContinueLoop = NS_COMFALSE;
+			result = boolContinueLoop = PR_FALSE;
 
 		// If there's a '=' in the search term, then we're not going to do
 		// quoted printable decoding. Otherwise we assume everything is
@@ -690,7 +702,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 		PRBool isQuotedPrintable = !(mail_csid & STATEFUL) &&
 										(PL_strchr (m_value.u.string, '=') == nsnull);
 
-		while (!endOfFile && err == errContinueLoop)
+		while (!endOfFile && result == boolContinueLoop)
 		{
 			if (bodyHan->GetNextLine(buf, kBufSize))
 			{
@@ -713,7 +725,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 				}
 				if (*compare && *compare != CR && *compare != LF)
 				{
-					err = MatchString (compare, win_csid, PR_TRUE);
+					err = MatchString (compare, win_csid, PR_TRUE, &result);
 					lines++; 
 				}
 				if (compare != buf)
@@ -731,14 +743,19 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 	else
 		err = NS_ERROR_OUT_OF_MEMORY;
 #endif // HAVE_I18N
+	*pResult = result;
 	return err;
 }
 
 
-// returns NS_COMFALSE when strings don't match, NS_OK if they do.
-nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *charset, PRBool body)
+// *pResult is PR_FALSE when strings don't match, PR_TRUE if they do.
+nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *charset, PRBool body, PRBool *pResult)
 {
-	nsresult err = NS_COMFALSE;
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+	PRBool result = PR_FALSE;
+
+	nsresult err = NS_OK;
 	nsString2 n_str(eOneByte);
 	const char* n_header = nsnull;
 	if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
@@ -762,12 +779,12 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 	case nsMsgSearchOp::Contains:
 		if ((nsnull != n_header) && (n_str[0]) && /* INTL_StrContains(csid, n_header, n_str) */
 			stringToMatch->Find(n_str, PR_TRUE) != -1)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::DoesntContain:
 		if ((nsnull != n_header) && (n_str[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
 			stringToMatch->Find(n_str, PR_TRUE) == -1)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
 		if(n_header)
@@ -775,10 +792,10 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 			if (n_str[0])
 			{
 				if (n_str.Equals(*stringToMatch, PR_TRUE) != -1/* INTL_StrIs(csid, n_header, n_str)*/ )
-					err = NS_OK;
+					result = PR_TRUE;
 			}
 			else if (n_header[0] == '\0') // Special case for "is <the empty string>"
-				err = NS_OK;
+				result = PR_TRUE;
 		}
 		break;
 	case nsMsgSearchOp::Isnt:
@@ -787,31 +804,31 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 			if (n_str[0])
 			{
 				if (!n_str.Equals(*stringToMatch, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
-					err = NS_OK;
+					result = PR_TRUE;
 			}
 			else if (n_header[0] != '\0') // Special case for "isn't <the empty string>"
-				err = NS_OK;
+				result = PR_TRUE;
 		}
 		break;
 	case nsMsgSearchOp::IsEmpty:
 		if (stringToMatch->Length() == 0)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::BeginsWith:
 #ifdef DO_I18N_YET
 		if((nsnull != n_str) && (nsnull != n_header) && INTL_StrBeginWith(csid, n_header, n_str))
-			err = NS_OK;
+			result = PR_TRUE;
 #else
 		// ### DMB - not the  most efficient way to do this.
 		if (stringToMatch->Find(n_str, PR_TRUE) == 0)
-			err = NS_OK;
+			result = PR_TRUE;
 #endif
 		break;
 	case nsMsgSearchOp::EndsWith: 
 #ifdef DO_I18N_YET
 		{
 		if((nsnull != n_str) && (nsnull != n_header) && INTL_StrEndWith(csid, n_header, n_str))
-			err = NS_OK;
+			result = PR_TRUE;
 		}
 #else
 		NS_ASSERTION(PR_FALSE, "not implemented yet");
@@ -821,7 +838,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 		NS_ASSERTION(PR_FALSE, "invalid operator matching search results");
 	}
 
-
+	*pResult = result;
 	return err;
 }
 
@@ -833,8 +850,12 @@ PRBool nsMsgSearchTerm::MatchAllBeforeDeciding ()
 }
 
 
-nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset)
+nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *charset, PRBool *pResult)
 {
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+	*pResult = PR_FALSE;
+	PRBool result;
 	nsresult err = InitHeaderAddressParser();
 	if (!NS_SUCCEEDED(err))
 		return err;
@@ -846,11 +867,11 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 
 	// Change the sense of the loop so we don't bail out prematurely
 	// on negative terms. i.e. opDoesntContain must look at all recipients
-	nsresult errContinueLoop;
+	PRBool boolContinueLoop;
 	if (MatchAllBeforeDeciding())
-		err = errContinueLoop = NS_OK;
+		result = boolContinueLoop = PR_TRUE;
 	else
-		err = errContinueLoop = NS_COMFALSE;
+		result = boolContinueLoop = PR_FALSE;
 
 	PRUint32 count;
 	nsresult parseErr = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, &count) ;
@@ -866,11 +887,11 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		nsString2 walkAddresses(addresses, eOneByte);
 		PRInt32 namePos = 0;
 		PRInt32 addressPos = 0;
-		for (PRUint32 i = 0; i < count && err == errContinueLoop; i++)
+		for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)
 		{
-			err = MatchString (&walkNames, charset);
-			if (errContinueLoop == err)
-				err = MatchString (&walkAddresses, charset);
+			err = MatchString (&walkNames, charset, PR_FALSE, &result);
+			if (boolContinueLoop == result)
+				err = MatchString (&walkAddresses, charset, PR_FALSE, &result);
 
 			namePos += walkNames.Length() + 1;
 			addressPos += walkAddresses.Length() + 1;
@@ -881,6 +902,7 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		PR_FREEIF(names);
 		PR_FREEIF(addresses);
 	}
+	*pResult = result;
 	return err;
 }
 
@@ -893,23 +915,27 @@ nsresult nsMsgSearchTerm::GetLocalTimes (PRTime a, PRTime b, PRExplodedTime &aEx
 }
 
 
-nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch)
+nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch, PRBool *pResult)
 {
-	nsresult err = NS_COMFALSE;
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+	PRBool result = PR_FALSE;
 	nsTime t_date(dateToMatch);
 	
 	switch (m_operator)
 	{
 	case nsMsgSearchOp::IsBefore:
 		if (t_date < nsTime(m_value.u.date))
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::IsAfter:
 		{
 			nsTime adjustedDate = nsTime(m_value.u.date);
 			adjustedDate += 60*60*24; // we want to be greater than the next day....
 			if (t_date > adjustedDate)
-				err = NS_OK;
+				result = PR_TRUE;
 		}
 		break;
 	case nsMsgSearchOp::Is:
@@ -920,7 +946,7 @@ nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch)
 				if (tmThis.tm_year == tmToMatch.tm_year &&
 					tmThis.tm_month == tmToMatch.tm_month &&
 					tmThis.tm_mday == tmToMatch.tm_mday)
-					err = NS_OK;
+					result = PR_TRUE;
 			}
 		}
 		break;
@@ -932,20 +958,26 @@ nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch)
 				if (tmThis.tm_year != tmToMatch.tm_year ||
 					tmThis.tm_month != tmToMatch.tm_month ||
 					tmThis.tm_mday != tmToMatch.tm_mday)
-					err = NS_OK;
+					result = PR_TRUE;
 			}
 		}
 		break;
 	default:
 		NS_ASSERTION(PR_FALSE, "invalid compare op for dates");
 	}
+	*pResult = result;
 	return err;
 }
 
 
-nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate)
+nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate, PRBool *pResult)
 {
-	nsresult err = NS_COMFALSE;
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+
+	PRBool result = PR_FALSE;
+	nsresult err = NS_OK;
+
 #ifdef DO_AGE_YET
 	time_t now = XP_TIME();
 	time_t matchDay = now - (m_value.u.age * 60 * 60 * 24);
@@ -962,50 +994,58 @@ nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate)
 	{
 	case nsMsgSearchOp::IsGreaterThan: // is older than 
 		if (msgDate < matchDay)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::IsLessThan: // is younger than 
 		if (msgDate > matchDay)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
 		if (matchTime && msgTime)
 			if ((day == msgTime->tm_mday) 
 				&& (month == msgTime->tm_mon)
 				&& (year == msgTime->tm_year))
-				err = NS_OK;
+				result = PR_TRUE;
 		break;
 	default:
 		NS_ASSERTION(PR_FALSE, "invalid compare op comparing msg age");
 	}
 #endif // DO_AGE_YET
+	*pResult = result;
 	return err;
 }
 
 
-nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch)
+nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch, PRBool *pResult)
 {
-	nsresult err = NS_COMFALSE;
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+
+	PRBool result = PR_FALSE;
 	switch (m_operator)
 	{
 	case nsMsgSearchOp::IsHigherThan:
 		if (sizeToMatch > m_value.u.size)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::IsLowerThan:
 		if (sizeToMatch < m_value.u.size)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	default:
 		break;
 	}
-	return err;
+	*pResult = result;
+	return NS_OK;
 }
 
 
-nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch)
+nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch, PRBool *pResult)
 {
-	nsresult err = NS_COMFALSE;
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
 	PRBool matches = PR_FALSE;
 
 	if (statusToMatch & m_value.u.msgStatus)
@@ -1015,13 +1055,15 @@ nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch)
 	{
 	case nsMsgSearchOp::Is:
 		if (matches)
-			err = NS_OK;
+			*pResult = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Isnt:
 		if (!matches)
-			err = NS_OK;
+			*pResult = PR_TRUE;
 		break;
 	default:
+		*pResult = PR_FALSE;
+		err = NS_ERROR_FAILURE;
 		NS_ASSERTION(PR_FALSE, "invalid comapre op for msg status");
 	}
 
@@ -1029,9 +1071,13 @@ nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch)
 }
 
 
-nsresult nsMsgSearchTerm::MatchPriority (nsMsgPriority priorityToMatch)
+nsresult nsMsgSearchTerm::MatchPriority (nsMsgPriority priorityToMatch, PRBool *pResult)
 {
-	nsresult err = NS_COMFALSE;
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult err = NS_OK;
+	PRBool result;
 
 	// Use this ugly little hack to get around the fact that enums don't have
 	// integer compare operators
@@ -1042,19 +1088,22 @@ nsresult nsMsgSearchTerm::MatchPriority (nsMsgPriority priorityToMatch)
 	{
 	case nsMsgSearchOp::IsHigherThan:
 		if (p1 > p2)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::IsLowerThan:
 		if (p1 < p2)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
 		if (p1 == p2)
-			err = NS_OK;
+			result = PR_TRUE;
 		break;
 	default:
+		result = PR_FALSE;
+		err = NS_ERROR_FAILURE;
 		NS_ASSERTION(PR_FALSE, "invalid match operator");
 	}
+	*pResult = result;
 	return err;
 }
 

@@ -41,10 +41,11 @@ public:
                                          nsMsgSearchScopeTerm *scope, 
                                          nsIMsgDatabase * db, 
                                          const char * headers,
-                                         PRUint32 headerSize);
+                                         PRUint32 headerSize,
+										 PRBool *pResult);
 
 	static nsresult MatchTermsForSearch(nsIMsgDBHdr * msgTomatch, nsMsgSearchTermArray & termList, nsMsgSearchScopeTerm *scope,
-                                                nsIMsgDatabase *db);
+                                                nsIMsgDatabase *db, PRBool *pResult);
 
 	virtual nsresult BuildSummaryFile ();
 	virtual nsresult OpenSummaryFile ();
@@ -60,7 +61,8 @@ protected:
                                 nsIMsgDatabase * db, 
                                 const char * headers,
                                 PRUint32 headerSize,
-                                PRBool ForFilters);
+                                PRBool ForFilters,
+								PRBool *pResult);
 	struct ListContext *m_cursor;
 	nsIMsgDatabase *m_db;
 	struct ListContext *m_listContext;

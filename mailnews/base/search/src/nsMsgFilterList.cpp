@@ -133,9 +133,10 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
 			 if (curFilterType & filterType)
 			{
 				nsresult matchTermStatus = NS_OK;
+				PRBool result;
 
-				matchTermStatus = filter->MatchHdr(msgHdr, folder, db, headers, headersSize);
-				if (matchTermStatus == NS_OK && listener)
+				matchTermStatus = filter->MatchHdr(msgHdr, folder, db, headers, headersSize, &result);
+				if (NS_SUCCEEDED(matchTermStatus) && result && listener)
 				{
 					PRBool applyMore;
 

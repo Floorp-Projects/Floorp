@@ -452,18 +452,20 @@ nsresult nsMsgSearchOfflineMail::MatchTermsForFilter(nsIMsgDBHdr *msgToMatch,
                                                            nsMsgSearchScopeTerm * scope,
                                                            nsIMsgDatabase * db, 
                                                            const char * headers,
-                                                           PRUint32 headerSize)
+                                                           PRUint32 headerSize,
+														   PRBool *pResult)
 {
-    return MatchTerms(msgToMatch, termList, scope, db, headers, headerSize, TRUE);
+    return MatchTerms(msgToMatch, termList, scope, db, headers, headerSize, TRUE, pResult);
 }
 
 // static method which matches a header against a list of search terms.
 nsresult nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch, 
                                                 nsMsgSearchTermArray &termList,
                                                 nsMsgSearchScopeTerm *scope,
-                                                nsIMsgDatabase *db)
+                                                nsIMsgDatabase *db,
+												PRBool *pResult)
 {
-    return MatchTerms(msgToMatch, termList, scope, db, nsnull, 0, FALSE);
+    return MatchTerms(msgToMatch, termList, scope, db, nsnull, 0, FALSE, pResult);
 }
 
 nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
@@ -472,7 +474,8 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
                                             nsIMsgDatabase * db, 
                                             const char * headers,
                                             PRUint32 headerSize,
-                                            PRBool Filtering) 
+                                            PRBool Filtering,
+											PRBool *pResult) 
 {
     nsresult err = NS_OK;
     nsString  recipients;
@@ -480,17 +483,21 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
     nsString  matchString;
 	PRUint32 msgFlags;
 
+	PRBool result;
+
+	if (!pResult)
+		return NS_ERROR_NULL_POINTER;
+
+	*pResult = PR_FALSE;
+
     // Don't even bother to look at expunged messages awaiting compression
     msgToMatch->GetFlags(&msgFlags);
 	if (msgFlags & MSG_FLAG_EXPUNGED)
-        err = NS_COMFALSE;
+        result = PR_FALSE;
 
     // Loop over all terms, and match them all to this message. 
 
     const char *charset = nsnull; // scope->m_folder->GetFolderCSID() & ~CS_AUTO;
-//    if (CS_DEFAULT == csid)
-  //      csid = INTL_DefaultWinCharSetID(0);
-
 
 	// ### DMB Todo - remove nsAutoCString when nsString2 lands.
     nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();  // create our expression
@@ -506,24 +513,24 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         {
         case nsMsgSearchAttrib::Sender:
             msgToMatch->GetAuthor(&matchString);
-            err = pTerm->MatchRfc822String (nsAutoString(matchString,eOneByte).GetBuffer(), charset);
+            err = pTerm->MatchRfc822String (nsAutoString(matchString,eOneByte).GetBuffer(), charset, &result);
             break;
         case nsMsgSearchAttrib::Subject:
 			{
             msgToMatch->GetSubject(&matchString /* , TRUE */);
 			nsString2 singleByteString(matchString, eOneByte); 
-            err = pTerm->MatchString (&singleByteString, charset);
+            err = pTerm->MatchString (&singleByteString, charset, PR_FALSE, &result);
 			}
             break;
         case nsMsgSearchAttrib::ToOrCC:
         {
-            nsresult errKeepGoing = pTerm->MatchAllBeforeDeciding() ? NS_OK : NS_COMFALSE;
+            PRBool boolKeepGoing = pTerm->MatchAllBeforeDeciding();
             msgToMatch->GetRecipients(&recipients);
-            err = pTerm->MatchRfc822String (nsAutoString(recipients,eOneByte).GetBuffer(), charset);
-            if (errKeepGoing == err)
+            err = pTerm->MatchRfc822String (nsAutoString(recipients,eOneByte).GetBuffer(), charset, &result);
+            if (boolKeepGoing == result)
             {
                 msgToMatch->GetCCList(&ccList);
-                err = pTerm->MatchRfc822String (nsAutoString(ccList,eOneByte).GetBuffer(), charset);
+                err = pTerm->MatchRfc822String (nsAutoString(ccList,eOneByte).GetBuffer(), charset, &result);
             }
         }
             break;
@@ -533,46 +540,46 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 				PRUint32 lineCount;
 				msgToMatch->GetMessageKey(&messageKey);
 				msgToMatch->GetLineCount(&lineCount);
-	            err = pTerm->MatchBody (scope, messageKey, lineCount, charset, msgToMatch, db);
+	            err = pTerm->MatchBody (scope, messageKey, lineCount, charset, msgToMatch, db, &result);
 			}
             break;
         case nsMsgSearchAttrib::Date:
 			{
 				PRTime date;
 				msgToMatch->GetDate(&date);
-				err = pTerm->MatchDate (date);
+				err = pTerm->MatchDate (date, &result);
 			}
             break;
         case nsMsgSearchAttrib::MsgStatus:
-            err = pTerm->MatchStatus (msgFlags);
+            err = pTerm->MatchStatus (msgFlags, &result);
             break;
         case nsMsgSearchAttrib::Priority:
 			{
 				nsMsgPriority msgPriority;
 				msgToMatch->GetPriority(&msgPriority);
-				err = pTerm->MatchPriority (msgPriority);
+				err = pTerm->MatchPriority (msgPriority, &result);
 			}
             break;
         case nsMsgSearchAttrib::Size:
 			{
 				PRUint32 messageSize;
 				msgToMatch->GetMessageSize(&messageSize);
-				err = pTerm->MatchSize (messageSize);
+				err = pTerm->MatchSize (messageSize, &result);
 			}
             break;
         case nsMsgSearchAttrib::To:
             msgToMatch->GetRecipients(&recipients);
-            err = pTerm->MatchRfc822String(nsAutoString(recipients,eOneByte).GetBuffer(), charset);
+            err = pTerm->MatchRfc822String(nsAutoString(recipients,eOneByte).GetBuffer(), charset, &result);
             break;
         case nsMsgSearchAttrib::CC:
             msgToMatch->GetCCList(&ccList);
-            err = pTerm->MatchRfc822String (nsAutoString(ccList,eOneByte).GetBuffer(), charset);
+            err = pTerm->MatchRfc822String (nsAutoString(ccList,eOneByte).GetBuffer(), charset, &result);
             break;
         case nsMsgSearchAttrib::AgeInDays:
 			{
 				PRTime date;
 				msgToMatch->GetDate(&date);
-	            err = pTerm->MatchAge (date);
+	            err = pTerm->MatchAge (date, &result);
 			}
             break;
         case nsMsgSearchAttrib::OtherHeader:
@@ -581,8 +588,8 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 				msgToMatch->GetLineCount(&lineCount);
 				nsMsgKey messageKey;
 				msgToMatch->GetMessageKey(&messageKey);
-            err = pTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, 
-                                                msgToMatch, db, headers, headerSize, Filtering);
+				err = pTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, 
+                                                msgToMatch, db, headers, headerSize, Filtering, &result);
 			}
             break;
 
@@ -590,14 +597,15 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             err = NS_ERROR_INVALID_ARG; // ### was SearchError_InvalidAttribute
         }
 
-        if (expression && (err == NS_OK || err == NS_COMFALSE))
-            expression = expression->AddSearchTerm(pTerm, (err == NS_OK));    // added the term and its value to the expression tree
+        if (expression && NS_SUCCEEDED(err))
+            expression = expression->AddSearchTerm(pTerm, result);    // added the term and its value to the expression tree
         else
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    PRBool result = expression->OfflineEvaluate();
+    result = expression->OfflineEvaluate();
     delete expression;
-    return result ? NS_OK : NS_COMFALSE;
+	*pResult = result;
+    return err;
 }
 
 

@@ -55,7 +55,7 @@ interface nsIMsgFilter : nsISupports {
 
     void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,
                   in nsIMsgDatabase db, in string headers,
-                  in unsigned long headerSize);
+                  in unsigned long headerSize, out boolean result);
 
     void LogRuleHit(in nsOutputStream stream, in nsIMsgDBHdr header);
 

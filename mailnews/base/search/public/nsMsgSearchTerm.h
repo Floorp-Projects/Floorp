@@ -43,7 +43,8 @@ public:
 	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsIMsgDatabase * db);
 
 
-	nsresult MatchBody (nsMsgSearchScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, nsIMsgDBHdr * msg, nsIMsgDatabase * db);
+	nsresult MatchBody (nsMsgSearchScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, 
+						nsIMsgDBHdr * msg, nsIMsgDatabase * db, PRBool *pResult);
 	nsresult MatchArbitraryHeader (nsMsgSearchScopeTerm *,
                                    PRUint32 offset,
                                    PRUint32 length,
@@ -52,14 +53,15 @@ public:
                                    nsIMsgDatabase *db,
                                    const char * headers, /* NULL terminated header list for msgs being filtered. Ignored unless ForFilters */
                                    PRUint32 headersSize, /* size of the NULL terminated list of headers */
-                                   PRBool ForFilters /* true if we are filtering */);
-	nsresult MatchString (nsString2 *, const char *charset, PRBool body = FALSE);
-	nsresult MatchDate (PRTime);
-	nsresult MatchStatus (PRUint32);
-	nsresult MatchPriority (nsMsgPriority);
-	nsresult MatchSize (PRUint32);
-	nsresult MatchRfc822String(const char *, const char *charset);
-	nsresult MatchAge (PRTime);
+                                   PRBool ForFilters /* true if we are filtering */,
+								   PRBool *pResult);
+	nsresult MatchString (nsString2 *, const char *charset, PRBool body, PRBool *result);
+	nsresult MatchDate (PRTime, PRBool *result);
+	nsresult MatchStatus (PRUint32, PRBool *result);
+	nsresult MatchPriority (nsMsgPriority, PRBool *result);
+	nsresult MatchSize (PRUint32, PRBool *result);
+	nsresult MatchRfc822String(const char *, const char *charset, PRBool *pResult);
+	nsresult MatchAge (PRTime, PRBool *result);
 
 	nsresult EnStreamNew (nsString2 &stream);
 	nsresult DeStream (char *, PRInt16 length);

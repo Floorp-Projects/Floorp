@@ -79,7 +79,7 @@ public:
 	*/
 	NS_IMETHOD SetAction(nsMsgRuleActionType type, void *value);
 	NS_IMETHOD GetAction(nsMsgRuleActionType *type, void **value) ;
-	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, const char *headers, PRUint32 headersSize) ;
+	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, const char *headers, PRUint32 headersSize, PRBool *pResult) ;
 	NS_IMETHOD LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *header);
 
 

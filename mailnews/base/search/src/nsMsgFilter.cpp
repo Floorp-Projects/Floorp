@@ -258,7 +258,8 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 }
 
 
-NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, const char *headers, PRUint32 headersSize)
+NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
+									const char *headers, PRUint32 headersSize, PRBool *pResult)
 {
 
 	nsMsgSearchScopeTerm scope (nsMsgSearchScope::MailFolder, folder);
@@ -266,7 +267,8 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
                                                            &scope,
                                                            db, 
                                                            headers,
-                                                           headersSize);
+                                                           headersSize,
+														   pResult);
 }
 
 void nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)
