@@ -498,10 +498,15 @@ nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
 ///////////////////////////////////////////////////////////////////////////////
 // GetRootViewForPopup
 //   Retrieves the view for the popup widget that contains the given frame. 
-//   If the given frame is not contained by a popup widget, return the root view.
+//   If the given frame is not contained by a popup widget, return the
+//   root view.  This is the root view of the pres context's
+//   viewmanager if aStopAtViewManagerRoot is true; otherwise it's the
+//   root view of the root viewmanager.
 void
 nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext, 
-                                      nsIFrame* aStartFrame, nsIView** aResult)
+                                      nsIFrame* aStartFrame,
+                                      PRBool aStopAtViewManagerRoot,
+                                      nsIView** aResult)
 {
   *aResult = nsnull;
 
@@ -524,6 +529,15 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext,
     nsIView* view = nsnull;
     nsIView* temp = nsnull;
     parentWithView->GetView(aPresContext, &view);
+    NS_ASSERTION(view, "GetParentWithView returned frame with no view!");
+    nsIView* rootView = nsnull;
+    if (aStopAtViewManagerRoot) {
+      nsCOMPtr<nsIViewManager> viewManager;
+      view->GetViewManager(*getter_AddRefs(viewManager));
+      NS_ASSERTION(viewManager, "View must have a viewmanager");
+      viewManager->GetRootView(rootView);
+    }
+    
     while (view) {
       // Walk up the view hierachy looking for a view whose widget has a 
       // window type of eWindowType_popup - in other words a popup window
@@ -537,6 +551,11 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIPresContext* aPresContext,
           *aResult = view;
           return;
         }
+      }
+
+      if (aStopAtViewManagerRoot && view == rootView) {
+        *aResult = view;
+        return;
       }
 
       view->GetParent(temp);
@@ -628,7 +647,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
           nsCOMPtr<nsIPresContext> targetContext;
           shell->GetPresContext(getter_AddRefs(targetContext));
           if (targetContext) {
-            GetRootViewForPopup(targetContext, targetFrame, &parentView);
+            GetRootViewForPopup(targetContext, targetFrame, PR_TRUE, &parentView);
             GetWidgetForView(parentView, *getter_AddRefs(targetDocumentWidget));
           }
         }
@@ -1070,7 +1089,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   //   frames inside a toplevel window, this is the root view of the toplevel
   //   window.
   nsIView* parentView = nsnull;
-  GetRootViewForPopup(aPresContext, aFrame, &parentView);
+  GetRootViewForPopup(aPresContext, aFrame, PR_FALSE, &parentView);
   if (!parentView)
     return NS_OK;
 
@@ -2050,7 +2069,8 @@ nsMenuPopupFrame::GetWidget(nsIWidget **aWidget)
 {
   // Get parent view
   nsIView * view = nsnull;
-  nsMenuPopupFrame::GetRootViewForPopup(mPresContext, this, &view);
+  // XXX should this be passing PR_FALSE or PR_TRUE for aStopAtViewManagerRoot?
+  nsMenuPopupFrame::GetRootViewForPopup(mPresContext, this, PR_FALSE, &view);
   if (!view)
     return NS_OK;
 
