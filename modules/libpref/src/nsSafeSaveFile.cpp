@@ -137,7 +137,8 @@ nsresult nsSafeSaveFile::PostProcessSave(void)
         // rename the previous save to .bak (i.e. <filename.js> to <filename.bak>)
         backupFile->SetLeafName(mTargetFileName);
         rv = backupFile->MoveTo(0, fileName);
-        if (NS_FAILED(rv))
+        // it's only an error if the file exists
+        if ((NS_FAILED(rv)) && (rv != NS_ERROR_FILE_NOT_FOUND))
             return rv;
     }
 
