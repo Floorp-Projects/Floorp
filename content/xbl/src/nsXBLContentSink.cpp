@@ -727,7 +727,7 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts,
                                 nsIContent** aResult)
 {
   if (aNameSpaceID == nsXULAtoms::nameSpaceID) {
-    nsXULPrototypeElement* prototype = new nsXULPrototypeElement(0);
+    nsXULPrototypeElement* prototype = new nsXULPrototypeElement();
     if (!prototype)
       return NS_ERROR_OUT_OF_MEMORY;
     

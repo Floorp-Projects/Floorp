@@ -6059,7 +6059,13 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
 
     nsCOMPtr<nsIContent> result;
 
-    if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
+    if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
+        // If it's a XUL element, it'll be lightweight until somebody
+        // monkeys with it.
+        rv = nsXULElement::Create(aPrototype, this, PR_TRUE, getter_AddRefs(result));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
         // If it's an HTML element, it's gonna be heavyweight no matter
         // what. So we need to copy everything out of the prototype
         // into the element.
@@ -6077,7 +6083,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;
     }
-    else if (!aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
+    else {
         // If it's not a XUL element, it's gonna be heavyweight no matter
         // what. So we need to copy everything out of the prototype
         // into the element.
@@ -6099,12 +6105,6 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         if (NS_FAILED(rv)) return rv;
 
         rv = AddAttributes(aPrototype, result);
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        // If it's a XUL element, it'll be lightweight until somebody
-        // monkeys with it.
-        rv = nsXULElement::Create(aPrototype, this, PR_TRUE, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -6376,11 +6376,13 @@ nsXULDocument::OverlayForwardReference::Resolve()
     rv = mDocument->AddSubtreeToDocument(target);
     if (NS_FAILED(rv)) return eResolve_Error;
 
+#ifdef PR_LOGGING
     nsCAutoString idC;
     idC.AssignWithConversion(id);
     PR_LOG(gXULLog, PR_LOG_ALWAYS,
            ("xul: overlay resolved '%s'",
             idC.get()));
+#endif
 
     mResolved = PR_TRUE;
     return eResolve_Succeeded;

@@ -440,7 +440,7 @@ PRInt32              nsXULElement::kNameSpaceID_RDF;
 PRInt32              nsXULElement::kNameSpaceID_XUL;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-PRUint32             nsXULPrototypeAttribute::gNumElements;
+PRUint32             nsXULProtlotypeAttribute::gNumElements;
 PRUint32             nsXULPrototypeAttribute::gNumAttributes;
 PRUint32             nsXULPrototypeAttribute::gNumEventHandlers;
 PRUint32             nsXULPrototypeAttribute::gNumCacheTests;
@@ -4933,7 +4933,6 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
 
     // Write basic prototype data
     rv = aStream->Write32(mType);
-    rv |= aStream->Write32(mLineNo);
 
     // Write Node Info
     PRInt32 index = aNodeInfos->IndexOf(mNodeInfo);
@@ -4968,7 +4967,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
             nsXULPrototypeScript* script = NS_STATIC_CAST(nsXULPrototypeScript*, child);
 
             if (script) {
-                rv |= aStream->WriteBoolean(script->mOutOfLine);
+                rv |= aStream->Write8(script->mOutOfLine);
                 if (! script->mOutOfLine)
                     rv |= script->Serialize(aStream, aContext, aNodeInfos);
                 else
@@ -4992,11 +4991,8 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
     nsresult rv;
 
-    PRUint32 number;
-    rv = aStream->Read32(&number);
-    mLineNo = (PRInt32)number;
-
     // Read Node Info
+    PRUint32 number;
     rv |= aStream->Read32(&number);
     mNodeInfo = do_QueryElementAt(aNodeInfos, number);
     if (!mNodeInfo)
@@ -5043,13 +5039,13 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 
     rv |= aStream->Read32(&number);
     mNumChildren = PRInt32(number);
-    
+
     if (mNumChildren > 0) {
         mChildren = new nsXULPrototypeNode*[mNumChildren];
-        memset(mChildren, 0, sizeof(nsXULPrototypeNode*) * mNumChildren);
         if (! mChildren)
             return NS_ERROR_OUT_OF_MEMORY;
 
+        memset(mChildren, 0, sizeof(nsXULPrototypeNode*) * mNumChildren);
 
         for (i = 0; i < mNumChildren; i++) {
             rv |= aStream->Read32(&number);
@@ -5059,7 +5055,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 
             switch (childType) {
             case eType_Element:
-                child = new nsXULPrototypeElement(-1);
+                child = new nsXULPrototypeElement();
                 if (! child) 
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
@@ -5068,7 +5064,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                          aNodeInfos);
                 break;
             case eType_Text:
-                child = new nsXULPrototypeText(-1);
+                child = new nsXULPrototypeText();
                 if (! child)
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
@@ -5078,14 +5074,14 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 break;
             case eType_Script:
                 // language version obtained during deserialization.
-                child = new nsXULPrototypeScript(-1, nsnull);
+                child = new nsXULPrototypeScript(0, nsnull);
                 if (! child)
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
 
                 nsXULPrototypeScript* script = NS_STATIC_CAST(nsXULPrototypeScript*, child);
                 if (script) {
-                    rv |= aStream->ReadBoolean(&script->mOutOfLine);
+                    rv |= aStream->Read8(&script->mOutOfLine);
                     if (! script->mOutOfLine) {
                         rv |= script->Deserialize(aStream, aContext,
                                                   aDocumentURI, aNodeInfos);
@@ -5137,8 +5133,9 @@ nsXULPrototypeElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& 
 // nsXULPrototypeScript
 //
 
-nsXULPrototypeScript::nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion)
-    : nsXULPrototypeNode(eType_Script, aLineNo),
+nsXULPrototypeScript::nsXULPrototypeScript(PRUint16 aLineNo, const char *aVersion)
+    : nsXULPrototypeNode(eType_Script),
+      mLineNo(aLineNo),
       mSrcLoading(PR_FALSE),
       mOutOfLine(PR_TRUE),
       mSrcLoadWaiters(nsnull),
@@ -5165,7 +5162,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     nsresult rv;
 
     // Write basic prototype data
-    aStream->Write32(mLineNo);
+    aStream->Write16(mLineNo);
 
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
                  "script source still loading when serializing?!");
@@ -5228,9 +5225,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     // Read basic prototype data
-    PRUint32 number;
-    aStream->Read32(&number);
-    mLineNo = (PRInt32)number;
+    aStream->Read16(&mLineNo);
     
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
                  "prototype script not well-initialized when deserializing?!");
@@ -5410,7 +5405,7 @@ nsresult
 nsXULPrototypeScript::Compile(const PRUnichar* aText,
                               PRInt32 aTextLength,
                               nsIURI* aURI,
-                              PRInt32 aLineNo,
+                              PRUint16 aLineNo,
                               nsIDocument* aDocument,
                               nsIXULPrototypeDocument* aPrototypeDocument)
 {
@@ -5470,7 +5465,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                 scopeObject,
                                 principal,
                                 urlspec.get(),
-                                PRUint32(aLineNo),
+                                aLineNo,
                                 mLangVersion,
                                 (void**)&mJSObject);
 
@@ -5520,7 +5515,6 @@ nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
 
     // Write basic prototype data
     rv = aStream->Write32(mType);
-    rv |= aStream->Write32(mLineNo);
 
     rv |= aStream->WriteWStringZ(mValue.get());
 
@@ -5536,10 +5530,6 @@ nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     // Write basic prototype data
-    PRUint32 number;
-    rv = aStream->Read32(&number);
-    mLineNo = (PRInt32)number;
-    
     PRUnichar* str = nsnull;
     rv |= aStream->ReadWStringZ(&str);
     mValue.Adopt(str);
