@@ -44,6 +44,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMCharacterData.h"
 #include "nsString.h"
 #include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -979,10 +980,163 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
   [[[aController getBrowserWrapper] getBrowserView] setActive: YES];
 }
 
+static void GetImportTitle(nsIDOMElement* aSrc, nsString& aTitle)
+{
+  nsCOMPtr<nsIDOMNode> curr;
+  aSrc->GetFirstChild(getter_AddRefs(curr));
+  while (curr) {
+    nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(curr));
+    if (charData) {
+      nsAutoString data;
+      charData->GetData(data);
+      aTitle += data;
+    }
+    nsCOMPtr<nsIDOMNode> temp = curr;
+    temp->GetNextSibling(getter_AddRefs(curr));
+  }
+
+  nsCAutoString ctitle; ctitle.AssignWithConversion(aTitle);
+  printf("The title is %s\n", ctitle.get());
+}
+
+static void CreateBookmark(nsIDOMElement* aSrc, nsIDOMElement* aDst,
+                           nsIDOMDocument* aDstDoc, PRBool aIsFolder,
+                           nsIDOMElement** aResult)
+{
+  nsCOMPtr<nsIDOMElement> childElt;
+  nsAutoString tagName(NS_LITERAL_STRING("bookmark"));
+  if (aIsFolder)
+    tagName = NS_LITERAL_STRING("folder");
+
+  aDstDoc->CreateElementNS(NS_LITERAL_STRING("http://chimera.mozdev.org/bookmarks/"),
+                           tagName,
+                           aResult); // Addref happens here.
+
+  nsAutoString title;
+  GetImportTitle(aSrc, title);
+  (*aResult)->SetAttribute(NS_LITERAL_STRING("name"), title);
+
+  if (!aIsFolder) {
+    nsAutoString href;
+    aSrc->GetAttribute(NS_LITERAL_STRING("href"), href);
+    (*aResult)->SetAttribute(NS_LITERAL_STRING("href"), href);
+  }
+
+  nsCOMPtr<nsIDOMNode> dummy;
+  aDst->AppendChild(childElt, getter_AddRefs(dummy));
+}
+
+static void AddImportedBookmarks(nsIDOMElement* aSrc, nsIDOMElement* aDst, nsIDOMDocument* aDstDoc,
+                                 PRInt32& aBookmarksType)
+{
+  if (!aSrc || !aDst) {
+    printf("uh-oh uh-oh. %x %x\n", aSrc, aDst);
+    return;
+  }
+  
+  nsAutoString localName;
+  aSrc->GetLocalName(localName);
+  ToLowerCase(localName);
+  nsCOMPtr<nsIDOMElement> newBookmark;
+  if (localName.Equals(NS_LITERAL_STRING("dt")) ||
+      localName.Equals(NS_LITERAL_STRING("li"))) {
+    if (aBookmarksType != 2) {
+      // If we ever decided that we were Mozilla, don't check again.
+      if (localName.Equals(NS_LITERAL_STRING("dt")))
+        aBookmarksType = 0; // IE.
+      else if (localName.Equals(NS_LITERAL_STRING("li")))
+        aBookmarksType = 1; // Omniweb.
+    }
+    
+    // We have found either a folder or a leaf.
+    nsCOMPtr<nsIDOMNode> curr;
+    aSrc->GetFirstChild(getter_AddRefs(curr));
+    while (curr) {
+      nsCOMPtr<nsIDOMElement> childElt(do_QueryInterface(curr));
+      if (childElt) {
+        childElt->GetLocalName(localName);
+        ToLowerCase(localName);
+        if (localName.Equals(NS_LITERAL_STRING("h3"))) {
+          // Folder in Mozilla and IE.  In Mozilla it will probably have an ID.
+          PRBool hasID;
+          childElt->HasAttribute(NS_LITERAL_STRING("ID"), &hasID);
+          if (hasID)
+            aBookmarksType = 2; // Mozilla
+          else
+            aBookmarksType = 0; // IE
+          CreateBookmark(childElt, aDst, aDstDoc, PR_TRUE, getter_AddRefs(newBookmark));
+        }
+        else if (localName.Equals(NS_LITERAL_STRING("a"))) {
+          // Guaranteed to be a bookmark in IE.  Could be either in Omniweb.
+          // Assume that it's a folder if the href is missing.
+          PRBool hasAttr;
+          childElt->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
+          CreateBookmark(childElt, aDst, aDstDoc, !hasAttr, getter_AddRefs(newBookmark));
+        }
+        else if (localName.Equals(NS_LITERAL_STRING("dl")) ||
+                 localName.Equals(NS_LITERAL_STRING("ul"))) {
+          // The children of a folder.  Recur inside.
+          AddImportedBookmarks(aSrc, newBookmark, aDstDoc, aBookmarksType);
+        }
+      }
+      
+      nsCOMPtr<nsIDOMNode> temp = curr;
+      temp->GetNextSibling(getter_AddRefs(curr));
+    }      
+    return;
+  }
+  else {
+    // Recur over all our children.
+    nsCOMPtr<nsIDOMNode> curr;
+    aSrc->GetFirstChild(getter_AddRefs(curr));
+    while (curr) {
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(curr));
+      if (elt)
+        AddImportedBookmarks(elt, aDst, aDstDoc, aBookmarksType);
+      nsCOMPtr<nsIDOMNode> temp = curr;
+      temp->GetNextSibling(getter_AddRefs(curr));
+    }
+  }
+}
+
 void
 BookmarksService::ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc)
 {
+  nsCOMPtr<nsIDOMElement> domElement;
+  aHTMLDoc->GetDocumentElement(getter_AddRefs(domElement));
+
+  nsCOMPtr<nsIDOMElement> elt;
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(gBookmarks));
+  domDoc->GetDocumentElement(getter_AddRefs(elt));
+
+  // Create the root by hand.
+  nsCOMPtr<nsIDOMElement> childElt;
+  domDoc->CreateElementNS(NS_LITERAL_STRING("http://chimera.mozdev.org/bookmarks/"),
+                          NS_LITERAL_STRING("folder"),
+                          getter_AddRefs(childElt));
+  nsCOMPtr<nsIDOMNode> dummy;
+  elt->AppendChild(childElt, getter_AddRefs(dummy));
+
+  // Now crawl through the file and look for <DT> elements.  They signify folders
+  // or leaves.
+  PRInt32 bookmarksType;
+  AddImportedBookmarks(domElement, childElt, domDoc, bookmarksType);
+
+  if (bookmarksType == 0)
+    childElt->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Internet Explorer Favorites"));
+  else if (bookmarksType == 1)
+    childElt->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Omniweb Favorites"));
+  else if (bookmarksType == 2)
+    childElt->SetAttribute(NS_LITERAL_STRING("name"), NS_LITERAL_STRING("Mozilla/Netscape Favorites"));
+
+  // Save out the file.
+  FlushBookmarks();
   
+  // Now do a notification that the root Favorites folder got added.  This
+  // will update all our views.
+  nsCOMPtr<nsIContent> parentContent(do_QueryInterface(elt));
+  nsCOMPtr<nsIContent> childContent(do_QueryInterface(childElt));
+  BookmarkAdded(parentContent, childContent);
 }
 
 void
