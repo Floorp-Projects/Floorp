@@ -67,7 +67,7 @@ BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 !endif
 !endif
 
-!ifdef NO_SECURITY
+!ifndef MOZ_SECURITY
 HASHLIBS=$(DIST)\lib\secfreenav32.lib
 !else
 HASHLIBS=$(BINREL_DIST)\lib\hash.lib $(BINREL_DIST)\lib\secutil.lib 
@@ -78,11 +78,7 @@ LLIBS	= $(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
 $(HASHLIBS) \
 $(BINREL_DIST)\lib\watcomfx.lib 
 
-!ifdef NSPR20
 DEFFILE	= $(DLL1NAME).def
-!else
-DEFFILE	= $(DLLNAME).def
-!endif
 !else
 LLIBS	= $(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
 !if defined(MOZ_DEBUG) && defined(GLOWCODE)
