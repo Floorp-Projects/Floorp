@@ -61,6 +61,20 @@ sub sillyness {
     $zz = @::versions;
 };
 
+if (length($::buffer) == 0) {
+    $vars->{'title'} = "Parameters Required";
+    $vars->{'message'} = "This script is not meant to be invoked without any 
+                          search terms.";
+    $vars->{'url'} = "query.cgi";
+    $vars->{'link'} = "Please use the search form to specify some search
+                       criteria.";
+    print "Refresh: 10; URL=query.cgi\n";
+    print "Content-Type: text/html\n\n";
+    $template->process("global/message.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    exit;
+}    
+
 ConnectToDatabase();
 
 ################################################################################
