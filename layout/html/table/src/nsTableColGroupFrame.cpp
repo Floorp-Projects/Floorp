@@ -79,7 +79,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
   // in the absence of any COL children
   if (0==mColCount)
   {
-    nsIFrame *firstImplicitCol=nsnull;
+    nsIFrame *firstImplicitColFrame=nsnull;
     nsIFrame *prevColFrame=nsnull;
     nsAutoString colTag;
     nsHTMLAtoms::col->ToString(colTag);
@@ -109,15 +109,15 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
       ((nsTableFrame *)tableFrame)->AddColumnFrame((nsTableColFrame *)colFrame);
 
       //hook into list of children
-      if (nsnull==firstImplicitCol)
-        firstImplicitCol = colFrame;
+      if (nsnull==firstImplicitColFrame)
+        firstImplicitColFrame = colFrame;
       else
         prevColFrame->SetNextSibling(colFrame);
       prevColFrame = colFrame;
     }
     // hook new columns into col group child list
     if (nsnull==mFirstChild)
-      mFirstChild = firstImplicitCol;
+      mFirstChild = firstImplicitColFrame;
     else
     {
       nsIFrame *lastChild = mFirstChild;
@@ -127,7 +127,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
         lastChild = nextChild;
         nextChild->GetNextSibling(nextChild);
       }
-      lastChild->SetNextSibling(firstImplicitCol);
+      lastChild->SetNextSibling(firstImplicitColFrame);
     }
   }
   SetStyleContextForFirstPass(&aPresContext);

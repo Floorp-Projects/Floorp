@@ -109,7 +109,7 @@ NS_IMETHODIMP nsTableOuterFrame::Init(nsIPresContext& aPresContext, nsIFrame* aC
   mFirstChild = aChildList;
 
   // Set our internal member data
-  mInnerTableFrame = (nsTableFrame*)mFirstChild;
+  mInnerTableFrame = mFirstChild;
   if (2 == LengthOf(mFirstChild)) {
     mFirstChild->GetNextSibling(mCaptionFrame);
   }
@@ -135,7 +135,7 @@ PRBool nsTableOuterFrame::NeedsReflow(const nsSize& aMaxSize)
 {
   PRBool result=PR_TRUE;
   if (nsnull!=mInnerTableFrame)
-    result = mInnerTableFrame->NeedsReflow(aMaxSize);
+    result = ((nsTableFrame *)mInnerTableFrame)->NeedsReflow(aMaxSize);
   return result;
 }
 
@@ -288,7 +288,6 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
     // Reflow captions to the width of the inner table
     kidReflowState.maxSize.width = aState.innerTableMaxSize.width;
   }
-  mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_INCREMENTAL);
   kidFrame->Reflow(*aPresContext, kidSize, kidReflowState, aStatus);
 
   // Place the child frame after taking into account its margin
@@ -301,6 +300,12 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   }
 
   // XXX We're not correctly dealing with maxElementSize...
+
+  // XXX The type of kidFrame matters
+  //      if it's this table's caption, we need to get a new maxElementSize and if the
+  //      maxElementSize > tableWidth, reflow the table
+  //      otherwise, it's destined for the inner table.  Do the inner table's
+  //      incremental reflow, and then reflow the caption if necessary.
 
   // Adjust the frames that follow
   return AdjustSiblingsAfterReflow(aPresContext, aState, kidFrame,
@@ -414,15 +419,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       // Set up our kids.  They're already present, on an overflow list, 
       // or there are none so we'll create them now
       MoveOverflowToChildList();
-      // XXX CONSTRUCTION
-#if 0
-      if (nsnull == mFirstChild) {
-        nsresult  result = CreateChildFrames(&aPresContext);
-        if (NS_OK != result) {
-          return result;
-        }
-      }
-#endif
 
       // Lay out the caption and get its maximum element size
       if (nsnull != mCaptionFrame) {
@@ -446,7 +442,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
     nscoord tableWidth = GetTableWidth(aReflowState);
 
     // If the caption max element size is larger, then use it instead.
-    // Note: this implicitly forces the table width to be fixed...
     if (mMinCaptionWidth > tableWidth) {
       tableWidth = mMinCaptionWidth;
     }
@@ -602,74 +597,6 @@ void nsTableOuterFrame::PlaceChild( OuterTableReflowState& aState,
   }
 }
 
-// XXX CONSTRUCTION
-#if 0
-nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
-{
-  // Create the inner table frame
-  nsresult result = CreateInnerTableFrame(aPresContext, mInnerTableFrame);
-  if (NS_OK != result) {
-    return result;
-  }
-
-  // Add it to the list of child frames
-  mFirstChild = mInnerTableFrame;
-
-  // Now create the caption frame, prepending a top caption and appending a
-  // bottom caption
-  //
-  // We only allow a single caption. If there are more than one caption, then
-  // ignore all but the first
-  for (PRInt32 kidIndex = 0; /* nada */ ; kidIndex++) 
-  {
-    nsIContentPtr caption;
-    mContent->ChildAt(kidIndex, caption.AssignRef());
-    if (PR_TRUE==caption.IsNull()) {
-      break;
-    }
-
-    // Resolve style so we can tell if the content should be displayed
-    // as a caption
-    nsIStyleContextPtr captionSC =
-      aPresContext->ResolveStyleContextFor(caption, this);
-    NS_ASSERTION(captionSC.IsNotNull(), "bad style context for caption.");
-    nsStyleDisplay *childDisplay = (nsStyleDisplay*)captionSC->GetStyleData(eStyleStruct_Display);
-    if (NS_STYLE_DISPLAY_TABLE_CAPTION == childDisplay->mDisplay)
-    {
-      // Create the caption frame.
-      nsIContentDelegate* kidDel = nsnull;
-      kidDel = caption->GetDelegate(aPresContext);
-      nsresult rv = kidDel->CreateFrame(aPresContext, caption, this, captionSC,
-                                        mCaptionFrame);
-      NS_RELEASE(kidDel);
-      if (NS_OK != rv) {
-        return rv;
-      }
-
-      // Determine if the caption is a top or bottom caption
-      const nsStyleText* captionTextStyle = 
-        (const nsStyleText*)captionSC->GetStyleData(eStyleStruct_Text);
-
-      // Link child frame into the list of children
-      if ((eStyleUnit_Enumerated == captionTextStyle->mVerticalAlign.GetUnit()) && 
-          (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionTextStyle->mVerticalAlign.GetIntValue()))
-      {
-        // Bottom caption is added to the end of the child frame list
-        mInnerTableFrame->SetNextSibling(mCaptionFrame);
-      }
-      else
-      {
-        // Top caption is added to the beginning of child frame list
-        mCaptionFrame->SetNextSibling(mFirstChild);
-        mFirstChild = mCaptionFrame;
-      }
-      break;
-    }
-  }
-
-  return NS_OK;
-}
-#endif
 
 NS_METHOD
 nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -789,42 +716,6 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
 }
 
 
-/**
- * Called by member function CreareChildFrames() to create the inner table
- * frame. Resolves and sets the frame's style context
- */
-nsresult nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext,
-                                                  nsTableFrame*&  aTableFrame)
-{
-  // Do we have a prev-in-flow?
-  if (nsnull == mPrevInFlow) {
-    // No, create the inner table frame
-    aTableFrame = new nsTableFrame(mContent, this);
-    if (nsnull == aTableFrame) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Resolve style and set the style context. Have the inner table use our
-    // style context
-    aTableFrame->SetStyleContext(aPresContext, mStyleContext);
-
-  } else {
-    // Create a continuing column
-    nsTableOuterFrame*  prevOuterTable = (nsTableOuterFrame*)mPrevInFlow;
-    nsIFrame*           prevInnerTable = prevOuterTable->mInnerTableFrame;
-    nsIStyleContextPtr  kidSC;
-
-    prevInnerTable->GetStyleContext(aPresContext, kidSC.AssignRef());
-    prevInnerTable->CreateContinuingFrame(*aPresContext, this, kidSC,
-                      (nsIFrame*&)aTableFrame);
-    if (nsnull == aTableFrame) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  return NS_OK;
-}
-
 /* ----- global methods ----- */
 
 nsresult 
@@ -896,4 +787,3 @@ NS_METHOD nsTableOuterFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFi
   }
   return NS_OK;
 }
-
