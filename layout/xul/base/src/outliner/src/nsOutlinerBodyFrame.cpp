@@ -416,6 +416,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
 {
   // First clear out the old view.
   nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mOutlinerBoxObject));
+  if (!box)
+    return NS_OK; // Just ignore the call.  An initial reflow when it comes in
+                  // will retrieve the view from the box object.
+  
   nsAutoString view; view.AssignWithConversion("view");
   
   if (mView) {

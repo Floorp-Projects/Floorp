@@ -160,11 +160,14 @@ NS_IMETHODIMP nsOutlinerBoxObject::SetView(nsIOutlinerView * aView)
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
     return body->SetView(aView);
-  else {
-    nsCOMPtr<nsISupports> suppView(do_QueryInterface(aView));
+  
+  nsCOMPtr<nsISupports> suppView(do_QueryInterface(aView));
+  if (suppView)
     SetPropertyAsSupports(NS_LITERAL_STRING("view").get(), suppView);
-    return NS_OK;
-  }
+  else
+    RemoveProperty(NS_LITERAL_STRING("view").get());
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerBoxObject::GetFocused(PRBool* aFocused)
