@@ -41,17 +41,6 @@
 
 #include "nsIWordBreaker.h"
 
-typedef enum {
-  kWbClassSpace = 0,
-  kWbClassAlphaLetter,
-  kWbClassPunct,
-  kWbClassHanLetter,
-  kWbClassKatakanaLetter,
-  kWbClassHiraganaLetter,
-  kWbClassHWKatakanaLetter,
-  kWbClassThaiLetter
-} wb_class;
-
 class nsSampleWordBreaker : public nsIWordBreaker
 {
   NS_DECL_ISUPPORTS
