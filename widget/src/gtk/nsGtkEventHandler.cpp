@@ -572,16 +572,13 @@ void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpo
 //==============================================================
 void nsGtkWidget_ResetResize_Callback(gpointer call_data)
 {
-#if 0
     nsWindow* widgetWindow = (nsWindow*)call_data;
     widgetWindow->SetResized(PR_FALSE);
-#endif
 }
 
 //==============================================================
 void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
 {
-#if 0
   nsIMenuItem * menuItem = (nsIMenuItem *)p;
   if (menuItem != NULL) {
     nsMenuEvent mevent;
@@ -596,6 +593,5 @@ void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
     nsEventStatus status;
     mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
   }
-#endif
 }
 

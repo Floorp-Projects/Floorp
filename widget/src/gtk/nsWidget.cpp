@@ -74,7 +74,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
 
 nsIWidget *nsWidget::GetParent(void)
 {
-  NS_NOTYETIMPLEMENTED("nsWidget::GetParent");
+//  NS_NOTYETIMPLEMENTED("nsWidget::GetParent");
   return mParent;
 }
 
@@ -86,7 +86,6 @@ nsIWidget *nsWidget::GetParent(void)
 
 NS_METHOD nsWidget::Show(PRBool bState)
 {
-  fprintf(stderr,"nsWidget::Show() called\n");
     if (bState) {
       if (mWidget) {
         gtk_widget_show(mWidget);
@@ -124,7 +123,9 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
+#if DBG
   fprintf(stderr,"nsWidget::Move called (%d,%d)\n", aX, aY);
+#endif
   mBounds.x = aX;
   mBounds.y = aY;
   gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
@@ -134,7 +135,9 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+#if DBG
   fprintf(stderr,"nsWidget::Resize called w,h(%d,%d)\n", aWidth, aHeight);
+#endif
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   gtk_widget_set_usize(mWidget,aWidth, aHeight);

@@ -88,6 +88,7 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
   XtAddCallback(mMenu, XmNactivateCallback, nsXtWidget_Menu_Callback, 
                 (nsIMenuItem *)this);
 */
+  gtk_signal_connect (GTK_OBJECT (mMenu), "activate", GTK_SIGNAL_FUNC(nsGtkWidget_Menu_Callback) , this);
   delete[] nameStr;
 }
 

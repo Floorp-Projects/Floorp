@@ -54,7 +54,7 @@ void nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p);
 
 void nsGtkWidget_Refresh_Callback(gpointer call_data);
 
-void nsGtkWidget_ResetResize_Callback(gpointer call_data);
+void nsGtkWidget_ResetResize_Callback(GtkWidget *w, gpointer p);
 
 void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p);
 
