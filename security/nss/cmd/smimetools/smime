@@ -34,7 +34,7 @@
 #
 # smime.pl - frontend for S/MIME message generation and parsing
 #
-# $Id: smime,v 1.4 2000/06/23 16:40:31 chrisk%netscape.com Exp $
+# $Id: smime,v 1.5 2000/06/23 18:37:33 chrisk%netscape.com Exp $
 #
 
 use Getopt::Std;
@@ -109,12 +109,12 @@ sub parseheaders($)
 
 	# ignore non-headers (or should we die horribly?)
 	next unless (defined($hdrname));
-	$hdrname =~ tr/A-Z/a-z/;
-	@hdrvalues = split(/\s*;\s*/, $hdrvalue);
+	$hdrname =~ tr/A-Z/a-z/;			# lowercase the header name
+	@hdrvalues = split(/\s*;\s*/, $hdrvalue);	# split header values (XXXX quoting)
 
 	# there is guaranteed to be at least one value
 	$hdrvalue = shift @hdrvalues;
-	if ($hdrvalue =~ /^\"(.*)\"$/) {
+	if ($hdrvalue =~ /^\s*\"(.*)\"\s*$/) {		# strip quotes if there
 	    $hdrvalue = $1;
 	}
 
@@ -124,10 +124,10 @@ sub parseheaders($)
 	# deal with additional name-value pairs
 	foreach $hdrvalue (@hdrvalues) {
 	    ($subhdrname, $subhdrvalue) = $hdrvalue =~ m/^(\S+)\s*=\s*(.*)$/;
-	    # ignore non-subheaders (or should we die?)
+	    # ignore non-name-value pairs (or should we die?)
 	    next unless (defined($subhdrname));
 	    $subhdrname =~ tr/A-Z/a-z/;
-	    if ($subhdrvalue =~ /^\"(.*)\"$/) {
+	    if ($subhdrvalue =~ /^\s*\"(.*)\"\s*$/) {	# strip quotes if there
 		$subhdrvalue = $1;
 	    }
 	    $hdrhash{$hdrname}{$subhdrname} = $subhdrvalue;
@@ -138,13 +138,14 @@ sub parseheaders($)
 }
 
 #
-# encryptentity($entity, $options) - encrypt an S/MIME entity
+# encryptentity($entity, $options) - encrypt an S/MIME entity,
+#                                    creating a new application/pkcs7-smime entity
 #
 # entity  - string containing entire S/MIME entity to encrypt
 # options - options for cmsutil
 #
-# this will generate and return a new multipart/signed entity consisting
-# of the canonicalized original content, plus a signature block.
+# this will generate and return a new application/pkcs7-smime entity containing
+# the enveloped input entity.
 #
 sub encryptentity($$)
 {
@@ -160,10 +161,7 @@ sub encryptentity($$)
     $boundary = "------------ms" . join("", @boundarychars[map{rand @boundarychars }( 1 .. 24 )]);
 
     #
-    # tell cmsutil to generate a signed CMS message using the canonicalized data
-    # The signedData has detached content (-T) and includes a signing time attribute (-G)
-    #
-    # if we do not provide a password on the command line, here's where we would be asked for it
+    # tell cmsutil to generate a enveloped CMS message using our data
     #
     open(CMS, "|$cmsutilpath -E $cmsutiloptions -o $tmpencfile") or die "ERROR: cannot pipe to cmsutil";
     print CMS $entity;
@@ -173,22 +171,16 @@ sub encryptentity($$)
 	exit 1;
     }
 
-    open (ENC, $tmpencfile) or die "ERROR: cannot find newly generated encrypted content";
-
-    #
-    # construct a new multipart/signed MIME entity consisting of the original content and
-    # the signature
-    #
-    # (we assume that cmsutil generates a SHA1 digest)
-    $out .= "Content-Type: application/pkcs7-mime; smime-type=enveloped-data; name=smime.p7m\n";
+    $out  = "Content-Type: application/pkcs7-mime; smime-type=enveloped-data; name=smime.p7m\n";
     $out .= "Content-Transfer-Encoding: base64\n";
     $out .= "Content-Disposition: attachment; filename=smime.p7m\n";
-    $out .= "\n";		# end of entity header
+    $out .= "\n";			# end of entity header
 
-    local($/) = undef;		# slurp whole file
-    $out .= encode_base64(<ENC>), "\n";	# append base64-encoded signature
-
+    open (ENC, $tmpencfile) or die "ERROR: cannot find newly generated encrypted content";
+    local($/) = undef;			# slurp whole file
+    $out .= encode_base64(<ENC>), "\n";	# entity body is base64-encoded CMS message
     close(ENC);
+
     unlink($tmpencfile);
 
     $out;
@@ -239,10 +231,10 @@ sub signentity($$)
     # (we assume that cmsutil generates a SHA1 digest)
     $out .= "Content-Type: multipart/signed; protocol=\"application/pkcs7-signature\"; micalg=sha1; boundary=\"${boundary}\"\n";
     $out .= "\n";		# end of entity header
-    $out .= "This is a cryptographically signed message in MIME format.\n\n"; # explanatory comment
-    $out .= "--${boundary}\n";
-    $out .= "$entity\n";	# the trailing \n seems to be important
-    $out .= "--${boundary}\n";
+    $out .= "This is a cryptographically signed message in MIME format.\n"; # explanatory comment
+    $out .= "\n--${boundary}\n";
+    $out .= $entity;
+    $out .= "\n--${boundary}\n";
     $out .= "Content-Type: application/pkcs7-signature; name=smime.p7s\n";
     $out .= "Content-Transfer-Encoding: base64\n";
     $out .= "Content-Disposition: attachment; filename=smime.p7s\n";
@@ -250,8 +242,8 @@ sub signentity($$)
     $out .= "\n";		# end of signature subentity header
 
     local($/) = undef;		# slurp whole file
-    $out .= encode_base64(<SIG>), "\n";	# append base64-encoded signature
-    $out .= "--${boundary}--\n";
+    $out .= encode_base64(<SIG>);	# append base64-encoded signature
+    $out .= "\n--${boundary}--\n";
 
     close(SIG);
     unlink($tmpsigfile);
@@ -361,6 +353,8 @@ if (defined $opt_D) {
     # - just print information about the structure of the message
     # - strip n layers, then dump DER of CMS message
 
+    $layercounter = 1;
+
     while (1) {
 	%hdrhash = parseheaders($mimeheaders);
 	unless (exists($hdrhash{"content-type"}{MAIN})) {
@@ -380,47 +374,50 @@ if (defined $opt_D) {
 	    $smimetype = $hdrhash{"content-type"}{"smime-type"};
 	    if ($smimetype eq "signed-data" or $smimetype eq "enveloped-data") {
 		# it's verification or decryption time!
-		# XXX
+
+		# can handle only base64 encoding for now
+		# all other encodings are treated as binary (8bit)
 		if ($hdrhash{"content-transfer-encoding"}{MAIN} eq "base64") {
 		    $mimebody = decode_base64($mimebody);
 		}
 
-		# we would dump the DER at this point
+		# if we need to dump the DER, we would do it right here
 
-		$tmpsigfile = "/tmp/sig.$$";
-		open(TMP, ">$tmpsigfile") or die "ERROR: cannot write signature data to temporary file";
+		# now write the DER
+		$tmpderfile = "/tmp/der.$$";
+		open(TMP, ">$tmpderfile") or die "ERROR: cannot write signature data to temporary file";
 		print TMP $mimebody;
 		unless (close(TMP)) {
 		    print STDERR "ERROR: writing signature data to temporary file.\n";
-		    unlink($tmpsigfile);
+		    unlink($tmpderfile);
 		    exit 1;
 		}
 
 		$mimeheaders = "";
-		open(TMP, "$cmsutilpath -D -h 1 -i $tmpsigfile |") or die "ERROR: cannot open pipe to cmsutil";
+		open(TMP, "$cmsutilpath -D -h $layercounter -i $tmpderfile |") or die "ERROR: cannot open pipe to cmsutil";
+		$layercounter++;
 		while (<TMP>) {
-		    last if (/^\r?$/);
-		    if (/^SMIME: /) {
+		    last if (/^\r?$/);			# empty lines mark end of header
+		    if (/^SMIME: /) {			# add all SMIME info to the rfc822 hdrs
 			$lastref = \$rfc822headers;
 		    } elsif (/^\s/) {
-			;
+			;				# continuation lines go to the last dest
 		    } else {
-			$lastref = \$mimeheaders;
+			$lastref = \$mimeheaders;	# all other headers are mime headers
 		    }
 		    $$lastref .= $_;
 		}
-		$olddelim = $/;
-		$/ = undef;
-		$mimebody = <TMP>;
-		$/ = $olddelim;
+		# slurp in rest of the data to $mimebody
+		$olddelim = $/; $/ = undef; $mimebody = <TMP>; $/ = $olddelim;
 		close(TMP);
-		unlink($tmpsigfile);
+
+		unlink($tmpderfile);
+
 	    } else {
 		print STDERR "ERROR: unknown smime-type \"$smimetype\" in application/pkcs7-smime entity.\n";
 		last;
 	    }
 	} elsif ($contenttype eq "multipart/signed") {
-	    # print STDERR "XXX multipart/signed\n";
 	    #
 	    # clear signed message
 	    #
@@ -430,8 +427,7 @@ if (defined $opt_D) {
 	    }
 	    if ($hdrhash{"content-type"}{"protocol"} ne "application/pkcs7-signature") {
 		# we cannot handle this guy
-		print STDERR "ERROR: unknown protocol \"",
-			$hdrhash{"content-type"}{"protocol"},
+		print STDERR "ERROR: unknown protocol \"", $hdrhash{"content-type"}{"protocol"},
 			"\" in multipart/signed entity.\n";
 		last;
 	    }
@@ -447,7 +443,7 @@ if (defined $opt_D) {
 	    # third (2), the signature as a mime entity
 	    # fourth (3), trailing data (there shouldn't be any)
 
-	    @multiparts = split(/\n--$boundary(?:--)?\n/, $mimebody);
+	    @multiparts = split(/\r?\n--$boundary(?:--)?\r?\n/, $mimebody);
 
 	    #
 	    # parse the signature headers
@@ -459,8 +455,7 @@ if (defined $opt_D) {
 	    }
 	    if ($sighdrhash{"content-type"}{MAIN} ne "application/pkcs7-signature") {
 		# we cannot handle this guy
-		print STDERR "ERROR: unknown content type \"",
-			$sighdrhash{"content-type"}{MAIN},
+		print STDERR "ERROR: unknown content type \"", $sighdrhash{"content-type"}{MAIN},
 			"\" in signature entity.\n";
 		last;
 	    }
@@ -490,7 +485,8 @@ if (defined $opt_D) {
 	    }
 
 	    $mimeheaders = "";
-	    open(TMP, "$cmsutilpath -D -h 1 -c $tmpmsgfile -i $tmpsigfile |") or die "ERROR: cannot open pipe to cmsutil";
+	    open(TMP, "$cmsutilpath -D -h $layercounter -c $tmpmsgfile -i $tmpsigfile |") or die "ERROR: cannot open pipe to cmsutil";
+	    $layercounter++;
 	    while (<TMP>) {
 		last if (/^\r?$/);
 		if (/^SMIME: /) {
@@ -502,29 +498,29 @@ if (defined $opt_D) {
 		}
 		$$lastref .= $_;
 	    }
-	    $olddelim = $/;
-	    $/ = undef;
-	    $mimebody = <TMP>;
-	    $/ = $olddelim;
+	    $olddelim = $/; $/ = undef; $mimebody = <TMP>; $/ = $olddelim;
 	    close(TMP);
 	    unlink($tmpsigfile);
 	    unlink($tmpmsgfile);
+
 	} else {
+
 	    # not a content type we know - we're done
 	    last;
+
 	}
     }
 
     # so now we have the S/MIME parsing information in rfc822headers
     # and the first mime entity we could not handle in mimeheaders and mimebody.
-    # so dump em out and we're done.
+    # dump 'em out and we're done.
     print $rfc822headers;
     print $mimeheaders . "\n" . $mimebody;
 
 } else {
 
     #
-    # encode (much easier than decode)
+    # encode (which is much easier than decode)
     #
 
     $mimeentity = $mimeheaders . "\n" . $mimebody;
