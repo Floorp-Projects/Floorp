@@ -103,6 +103,7 @@ private:
     nsresult ReadFromCache();
     nsresult CloseCacheEntry(nsresult status);
     nsresult InitCacheEntry();
+    nsresult StoreAuthorizationMetaData();
     nsresult FinalizeCacheEntry();
     nsresult InstallCacheListener();
 
