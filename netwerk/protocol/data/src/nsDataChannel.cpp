@@ -344,7 +344,7 @@ nsDataChannel::GetContentType(char* *aContentType) {
 
     if (mContentType.Length()) {
         *aContentType = mContentType.ToNewCString();
-        if (!*aContentType) NS_ERROR_OUT_OF_MEMORY;
+        if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
     } else {
         NS_ASSERTION(0, "data protocol should have content type by now");
         return NS_ERROR_FAILURE;
