@@ -31,6 +31,7 @@ CSRCS		=  \
 CPPSRCS		= \
                   nsEUCKRToUnicode.cpp \
                   nsUnicodeToEUCKR.cpp \
+                  nsUnicodeToKSC5601.cpp \
 		  nsUCvKOSupport.cpp \
                   nsUCvKODll.cpp \
 		  $(NULL)
