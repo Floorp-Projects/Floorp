@@ -5531,6 +5531,18 @@ DocumentViewerImpl::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
 NS_IMETHODIMP
 DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 {
+  // Get the webshell for this documentviewer
+  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
+  // Get the DocShell and see if it is busy
+  // We can't Print or Print Preview this document if it is still busy
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webContainer));
+  NS_ASSERTION(docShell.get(), "This has to be a docshell");
+  PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+  if (NS_FAILED(docShell->GetBusyFlags(&busyFlags)) || busyFlags != nsIDocShell::BUSY_FLAGS_NONE) {
+    ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP, PR_FALSE);
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv = NS_OK;
 printf("DocumentViewerImpl::PrintPreview\n");
 #if defined(XP_PC) && defined(DEBUG_rods) && defined(DEBUG_PRINTING)
@@ -5601,9 +5613,6 @@ printf("DocumentViewerImpl::PrintPreview\n");
   } else {
     mPrt->mPrintDocList->Clear();
   }
-
-  // Get the webshell for this documentviewer
-  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
 
   // Add Root Doc to Tree and List
   mPrt->mPrintObject             = new PrintObject;
@@ -5871,6 +5880,18 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
   nsresult rv = NS_ERROR_FAILURE;
 
+  // Get the webshell for this documentviewer
+  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
+  // Get the DocShell and see if it is busy
+  // We can't Print or Print Preview this document if it is still busy
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webContainer));
+  NS_ASSERTION(docShell.get(), "This has to be a docshell");
+  PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+  if (NS_FAILED(docShell->GetBusyFlags(&busyFlags)) || busyFlags != nsIDocShell::BUSY_FLAGS_NONE) {
+    ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PRT);
+    return rv;
+  }
+
   if (mIsDoingPrintPreview) {
     PRBool okToPrint = PR_FALSE;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
@@ -5948,9 +5969,6 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   } else {
     mPrt->mPrintDocList->Clear();
   }
-
-  // Get the webshell for this documentviewer
-  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
 
   // Add Root Doc to Tree and List
   mPrt->mPrintObject             = new PrintObject;
@@ -6282,6 +6300,8 @@ DocumentViewerImpl::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrintin
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_XPRINT_BROKEN_XPRT)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PRT)
 
     default:
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)
