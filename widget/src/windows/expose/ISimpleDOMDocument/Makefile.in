@@ -69,7 +69,7 @@ done_gen: ISimpleDOMDocument.idl
 	touch $@
 
 $(addprefix $(srcdir)/,$(CSRCS)): %.c: done_gen
-	cp $(@F) $@
+	@if cmp -s $(@F) $@; then cp $(@F) $@; fi
 
 export:: done_gen $(addprefix $(srcdir)/,$(CSRCS))
 
