@@ -190,7 +190,8 @@ function RemoveColor()
 function SelectLastPickedColor()
 {
   SetCurrentColor(LastPickedColor);
-  onOk();
+  if ( onOK() )
+    window.close();
 }
 
 function SetCurrentColor(color)
