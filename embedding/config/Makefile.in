@@ -66,7 +66,7 @@ else
 	-$(RM) -rf $(DIST)/Embed/tmpchrome
 endif
 
-libs:: embed_chrome
+embed_copy::
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEBROWSER) -o $(_PLATFORM) -v
 ifeq ($(OS_ARCH),WINNT)
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEBROWSER_SUPP) -o $(_PLATFORM) -v
@@ -91,8 +91,12 @@ ifdef MOZ_DEBUG
 endif
 endif # WINNT
 
+libs::
+	$(MAKE) embed_chrome
+	$(MAKE) embed_copy
+
 ifeq ($(OS_ARCH),WINNT)
-gre:: embed_chrome
+gre_copy::
 	$(PERL) -I$(srcdir) $(srcdir)/gre.pl gre < $(srcdir)/$(BASEBROWSER) > $(MOZILLA_DIR)/embedding/config/gre-win.tmp
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(MOZILLA_DIR)/embedding/config/gre-win.tmp -o $(_PLATFORM) -v
 	-$(RM) -f $(MOZILLA_DIR)/embedding/config/gre-win.tmp
@@ -104,4 +108,9 @@ gre:: embed_chrome
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/gre_app_support/chrome
 	test -d $(DIST)/gre_app_support/plugins || mkdir $(DIST)/gre_app_support/plugins
 	test -d $(DIST)/gre_app_support/components || mkdir $(DIST)/gre_app_support/components
+
+gre::
+	$(MAKE) embed_chrome
+	$(MAKE) gre_copy
+
 endif # WINNT
