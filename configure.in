@@ -379,6 +379,7 @@ AC_ARG_ENABLE(mail-compose,
 [  --enable-mail-compose   enable old Messenger mail composer (broken)],
 	[if test "$enableval" = "yes"; then
 	    MOZ_MAIL_COMPOSE=1
+	    NO_EDITOR=
 	fi])
 
 AC_SUBST(MOZ_FE)
@@ -467,9 +468,9 @@ fi
 dnl XCFLAGS="$X_CFLAGS"
 dnl XLFLAGS="$X_LIBS"
 
-AC_SUBST(XCFLAGS)
-AC_SUBST(XLFLAGS)
-AC_SUBST(XLIBS)
+dnl AC_SUBST(XCFLAGS)
+dnl AC_SUBST(XLFLAGS)
+dnl AC_SUBST(XLIBS)
 
 AC_SUBST(FE_X_CFLAGS)
 AC_SUBST(FE_X_LIBS)
