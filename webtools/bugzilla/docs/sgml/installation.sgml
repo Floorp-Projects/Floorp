@@ -53,10 +53,18 @@
 <listitem>
   <para>Perl Modules (minimum version):
   <orderedlist>
+
     <listitem>
       <para>
         <ulink url="http://www.template-toolkit.org">Template</ulink>
         (v2.07)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <ulink url="http://www.perldoc.com/perl5.6/lib/File/Temp.html">
+	File::Temp</ulink> (v1.804) (Prerequisite for Template)
       </para>
     </listitem>
 
