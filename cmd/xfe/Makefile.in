@@ -315,8 +315,8 @@ BASIC_LIBS	= \
 		  $(DIST)/lib/libjsurl.a	\
 		  $(DIST)/lib/libmarimurl.a	\
 		  $(DIST)/lib/libremoturl.a	\
-		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
+		  $(DIST)/lib/libnetwork.a	\
 		  $(DIST)/lib/lib$(LITE_PREFIX)xml.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)lay.a \
 		  $(DIST)/lib/libmariner.a \

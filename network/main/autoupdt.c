@@ -274,8 +274,10 @@ PR_PUBLIC_API(void)
 #else
 PUBLIC void
 #endif
-checkForAutoUpdate(void *cx, char* url, int32 file_size, int32 bytes_range, uint32 interval)
+checkForAutoUpdate(void *cx, char* url, int32 file_size)
 {
+  int32 bytes_range; 
+  int32 interval;
   char *directory = NULL;
 #ifdef WIN32 
   char  Path[_MAX_PATH+1];
@@ -301,6 +303,15 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size, int32 bytes_range, uint
     }
   }
   
+  if (PREF_OK != PREF_GetIntPref("autoupdate.background_download_byte_range", 
+                                 &bytes_range)) {
+    bytes_range = 3000;
+  }
+
+  if (PREF_OK != PREF_GetIntPref("autoupdate.background_download_interval", 
+                                 &interval)) {
+    interval = 10000;
+  }
 
   autoupdt = PR_Malloc(sizeof(AutoUpdateConnnectionStruct));
   memset(autoupdt, '\0', sizeof(AutoUpdateConnnectionStruct));

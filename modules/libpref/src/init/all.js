@@ -230,6 +230,8 @@ pref("autoupdate.enabled",              true);
 pref("autoupdate.confirm_install",				false);
 pref("autoupdate.background_download_enabled",  false);
 pref("autoupdate.background_download_directory",  "");
+pref("autoupdate.background_download_byte_range",  3000);
+pref("autoupdate.background_download_interval",  10000);
 
 pref("imap.io.mac.logging", false);
 

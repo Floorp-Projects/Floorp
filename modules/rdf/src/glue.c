@@ -68,33 +68,28 @@ rdf_complete(NET_StreamClass *stream)
   RDFFile f = (RDFFile)stream->data_object;
   if (strcmp(f->url, gNavCntrUrl) == 0) {
     if (f->resourceCount == 0) {
-       parseNextRDFXMLBlob(stream, gDefaultNavcntr, strlen(gDefaultNavcntr));
+      parseNextRDFXMLBlob(stream, gDefaultNavcntr, strlen(gDefaultNavcntr));
     } else {
-       RDF_Resource browser = RDF_GetResource(NULL, "netscape:browser", 1);
-       RDF_Resource updateFrom = RDF_GetResource(NULL, "updateURL", 1);
-       char* uf = RDF_GetSlotValue(gNCDB, browser, updateFrom,
-                                   RDF_STRING_TYPE, false, true);
-       RDF_Resource fileSize = RDF_GetResource(NULL, "fileSize", 1);
-       char* fs = RDF_GetSlotValue(gNCDB, browser, fileSize,
-                                   RDF_STRING_TYPE, false, true);
-       uint32 fSize;
-       if (fs == NULL) {
-       fSize = 3000;
-        } else {
-         sscanf("%lu", fs, &fSize);
-         freeMem(fs);
-       }
-       if (uf != NULL)  {
+      RDF_Resource browser = RDF_GetResource(NULL, "netscape:browser", 1);
+      RDF_Resource updateFrom = RDF_GetResource(NULL, "updateURL", 1);
+      char* uf = RDF_GetSlotValue(gNCDB, browser, updateFrom,
+                                  RDF_STRING_TYPE, false, true);
+      RDF_Resource fileSize = RDF_GetResource(NULL, "fileSize", 1);
+      char* fs = RDF_GetSlotValue(gNCDB, browser, fileSize,
+                                  RDF_STRING_TYPE, false, true);
+      uint32 fSize;
+      if (fs == NULL) {
+        fSize = 3000;
+      } else {
+        sscanf("%lu", fs, &fSize);
+        freeMem(fs);
+      }
+      if (uf != NULL)  {
 #ifdef MOZ_SMARTUPDATE
-          checkForAutoUpdate((void *)FE_GetRDFContext(),
-                          uf,
-                          fSize, /* File size */
-                          3000,  /* byte range */
-                          10000  /* Interval in msecs */
-                          );
+        checkForAutoUpdate((void *)FE_GetRDFContext(), uf, fSize);
 #endif
-          freeMem(uf);
-       }
+        freeMem(uf);
+      }
     } 
   }
   if (f) {
