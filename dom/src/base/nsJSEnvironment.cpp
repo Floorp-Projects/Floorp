@@ -263,6 +263,8 @@ nsJSContext::EvaluateStringWithValue(const nsString& aScript,
                                      void* aRetValue,
                                      PRBool* aIsUndefined)
 {
+  // Beware that the result is not rooted! Be very careful not to run
+  // the GC before rooting the result somehow!
   if (!mScriptsEnabled) {
     *aIsUndefined = PR_TRUE;
     return NS_OK;
@@ -359,8 +361,6 @@ nsJSContext::EvaluateStringWithValue(const nsString& aScript,
   else {
     if (aIsUndefined) *aIsUndefined = PR_TRUE;
   }
-
-  ScriptEvaluated();
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
