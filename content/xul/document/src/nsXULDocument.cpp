@@ -3038,6 +3038,20 @@ nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
 nsresult
 nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
 {
+    nsresult rv;
+
+    // We need to pay special attention to the keyset tag to set up a listener
+    nsCOMPtr<nsIAtom> tag;
+    aElement->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::keyset) {
+        // Create our XUL key listener and hook it up.    
+        NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+        if (xblService) {
+            nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aElement));
+            xblService->AttachGlobalKeyHandler(rec);
+        }
+    }
+
     // See if we need to attach a XUL template to this node
     return CheckTemplateBuilder(aElement);
 }
@@ -5266,16 +5280,6 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         // monkeys with it.
         rv = nsXULElement::Create(aPrototype, this, PR_TRUE, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
-
-        // We also need to pay special attention to the keyset tag to set up a listener
-        if (aPrototype->mNodeInfo->Equals(nsXULAtoms::keyset, kNameSpaceID_XUL)) {
-            // Create our XUL key listener and hook it up.    
-            NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-            if (xblService) {
-                nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(result));
-                xblService->AttachGlobalKeyHandler(rec);
-            }
-        }
     }
 
     result->SetContentID(mNextContentID++);
