@@ -53,6 +53,7 @@
 #include "nsColor.h"
 #include "nsIDocument.h"
 #include "nsButtonFrameRenderer.h"
+#include "nsFormControlFrame.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -82,6 +83,11 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
   mTranslatedRect = nsRect(0,0,0,0);
   mDidInit = PR_FALSE;
   mRenderer.SetNameSpace(kNameSpaceID_None);
+
+  mCacheSize.width             = -1;
+  mCacheSize.height            = -1;
+  mCachedMaxElementSize.width  = -1;
+  mCachedMaxElementSize.height = -1;
 }
 
 nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
@@ -510,6 +516,12 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
+  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
+                                                         aDesiredSize, aReflowState, aStatus);
+  if (NS_SUCCEEDED(skiprv)) {
+    return skiprv;
+  }
+
   // XXX remove the following when the reflow state is fixed
   ButtonHack((nsHTMLReflowState&)aReflowState, "html4 button");
 
@@ -651,6 +663,8 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
 
 
   aStatus = NS_FRAME_COMPLETE;
+
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
   return NS_OK;
 }
 

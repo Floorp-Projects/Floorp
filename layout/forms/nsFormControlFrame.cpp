@@ -71,6 +71,12 @@ nsFormControlFrame::nsFormControlFrame()
   mFormFrame      = nsnull;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
+
+  // Reflow Optimization
+  mCacheSize.width             = -1;
+  mCacheSize.height            = -1;
+  mCachedMaxElementSize.width  = -1;
+  mCachedMaxElementSize.height = -1;
 }
 
 nsFormControlFrame::~nsFormControlFrame()
@@ -96,6 +102,63 @@ nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
   return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+void nsFormControlFrame::SetupCachedSizes(nsSize& aCacheSize,
+                                              nsSize& aCachedMaxElementSize,
+                                              nsHTMLReflowMetrics& aDesiredSize)
+{
+  aCacheSize.width  = aDesiredSize.width;
+  aCacheSize.height = aDesiredSize.height;
+  if (aDesiredSize.maxElementSize != nsnull) {
+    aCachedMaxElementSize.width  = aDesiredSize.maxElementSize->width;
+    aCachedMaxElementSize.height = aDesiredSize.maxElementSize->height;
+  }
+}
+
+nsresult nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
+                                              nsSize& aCachedMaxElementSize,
+                                              nsIPresContext* aPresContext,
+                                              nsHTMLReflowMetrics& aDesiredSize,
+                                              const nsHTMLReflowState& aReflowState,
+                                              nsReflowStatus& aStatus)
+{
+#if 1
+  if (aReflowState.reason == eReflowReason_Resize) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth &&
+        NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
+
+      if (aCacheSize.width > -1 && aCacheSize.height > -1) {
+        aDesiredSize.width  = aCacheSize.width;
+        aDesiredSize.height = aCacheSize.height;
+        if (aDesiredSize.maxElementSize != nsnull) {
+          aDesiredSize.maxElementSize->width = aCachedMaxElementSize.width;
+          aDesiredSize.maxElementSize->height = aCachedMaxElementSize.height;
+        }
+        aDesiredSize.ascent = aDesiredSize.height;
+        aDesiredSize.descent = 0;
+        aStatus = NS_FRAME_COMPLETE;
+        return NS_OK;
+      }
+    } else {
+      if (aCacheSize.width == aReflowState.mComputedWidth && 
+          aCacheSize.height == aReflowState.mComputedHeight) {
+        aDesiredSize.width  = aCacheSize.width;
+        aDesiredSize.height = aCacheSize.height;
+        if (aDesiredSize.maxElementSize != nsnull) {
+          aDesiredSize.maxElementSize->width = aCachedMaxElementSize.width;
+          aDesiredSize.maxElementSize->height = aCachedMaxElementSize.height;
+        }
+        aDesiredSize.ascent = aDesiredSize.height;
+        aDesiredSize.descent = 0;
+        aStatus = NS_FRAME_COMPLETE;
+       return NS_OK;
+      }
+    }
+  }
+#endif 
+  return NS_ERROR_FAILURE;
+
 }
 
 nscoord 
@@ -244,6 +307,12 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
+  nsresult skiprv = SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
+                                     aDesiredSize, aReflowState, aStatus);
+  if (NS_SUCCEEDED(skiprv)) {
+    return skiprv;
+  }
+
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
   if (eWidgetRendering_Native == mode) {
@@ -267,6 +336,7 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   aStatus = NS_FRAME_COMPLETE;
+  SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
   return NS_OK;
 }
 
