@@ -254,16 +254,7 @@ RelatedLinksDataSource::~RelatedLinksDataSource (void)
 		NS_RELEASE(kRDF_InstanceOf);
 		NS_RELEASE(kRDF_type);
 
-		if (nsnull != mObservers)
-		{
-			for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i)
-			{
-				nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-				NS_RELEASE(obs);
-			}
-			delete mObservers;
-			mObservers = nsnull;
-		}
+        delete mObservers; // we only hold a weak ref to each observer
 
 		if (nsnull != mInner)
 		{
