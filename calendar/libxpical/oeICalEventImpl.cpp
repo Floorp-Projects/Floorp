@@ -36,9 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef WIN32
 #include <stdlib.h> // for atol
-#endif
 
 #include "oeICalEventImpl.h"
 #include "nsMemory.h"
