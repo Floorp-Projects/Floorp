@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/walletNavigatorOverlay.dtd">
+
+<overlay id="walletNavigatorOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="javascript" src="chrome://communicator/content/wallet/walletOverlay.js"/>
+
+  <script language="JavaScript">
+  <![CDATA[
+
+    function initEditItems() {
+      var state;
+
+      // Determine if capture should be displayed and enabled.
+      state = getState(capture, 0);
+      setDisabledAttr("edit_capture", (state != enable));
+
+      // Determine if prefill should be displayed and enabled.
+      state = getState(prefill, 0);
+      setDisabledAttr("edit_prefill", (state != enable));
+    }
+
+/* form toolbar is out
+    // Can't use generic goToggleToolbar (see utilityOverlay.js) for form menu because
+    // form toolbar could be hidden even when the checkbox in the view menu is checked
+    function goToggleFormToolbar(id, elementID) {
+      var element = document.getElementById(elementID);
+      if (element) {
+        var checkValue = element.getAttribute("checked");
+        if (checkValue == "false") {
+          element.setAttribute("checked","true")
+          initToolbarItems();
+        } else {
+          element.setAttribute("checked","false")
+          showItem("formToolbar", false);
+        }
+        document.persist(id, 'hidden');
+        document.persist(elementID, 'checked');
+      }
+    }
+
+    function navObserver() {
+    }
+    navObserver.prototype.Observe = function (subject, message, contextUrl) {
+      if (message == 'EndDocumentLoad') {
+        initToolbarItems()
+      }
+    }
+
+    function addEndDocumentLoadListener() {
+      if (window._content) {
+        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService();
+        observerService = observerService.QueryInterface(Components.interfaces.nsIObserverService);
+        var observer = new navObserver();
+        if (observerService && observer) {
+          observerService.AddObserver(observer, "EndDocumentLoad");
+        } else {
+          dump("FAILURE to get observer service\n");
+        }
+      }
+    }
+
+    window.addEventListener("load", addEndDocumentLoadListener, false);
+*/
+
+  ]]>
+  </script>         
+
+  <!-- menu items -->
+
+<!-- form toolbar is out
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="cmd_viewformtoolbar" value="&formbarCmd.label;"
+                 accesskey="&formbarCmd.accesskey;" class="menuitem-iconic"
+                 type="checkbox" checked="true"
+                 oncommand="goToggleFormToolbar('formToolbar','cmd_viewformtoolbar');"/>
+  </broadcasterset>
+-->
+
+  <!-- view menu -->
+<!-- form toolbar is out
+  <menupopup id="view_toolbars_popup">
+    <menuitem insertafter="cmd_viewpersonaltoolbar"
+              observes="cmd_viewformtoolbar"/>
+  </menupopup>
+-->
+
+  <!-- edit menu -->
+  <menupopup id="menu_Edit_Popup" oncreate="initEditItems();">
+    <menuitem id="edit_formshow"
+              value="&formshowCmd.label;"
+              accesskey="&formshowCmd.accesskey;"
+              oncommand="formShow();"
+              insertafter="menu_selectAll"/>
+    <menuitem id="edit_capture"
+              value="&captureCmd.label;"
+              accesskey="&captureCmd.accesskey;"
+              oncommand="formCapture();"
+              insertafter="menu_selectAll"/>
+    <menuitem id="edit_prefill"
+              value="&prefillCmd.label;"
+              accesskey="&prefillCmd.accesskey;"
+              oncommand="formPrefill();"
+              insertafter="menu_selectAll"/>
+    <menuseparator insertafter="menu_selectAll"/> 
+  </menupopup>
+
+  <!-- Form toolbar items -->
+
+<!-- form toolbar is out
+  <box id="appcontent">
+    <toolbar id="formToolbar"
+             class="chromeclass-directories"
+             tbautostretch="always"
+             insertafter="browser"
+             persist="collapsed"
+             style="display:none;">
+      <button class="button-toolbar-4"
+              id="formPrefill"
+              crop="right"
+              oncommand="formPrefill();"
+              value="  &formPrefill.label;  "
+              tooltip="aTooltip"
+              tooltiptext="&formPrefill.tooltip;"/>
+      <toolbarseparator/>
+      <button class="button-toolbar-4"
+              id="formCapture"
+              crop="right"
+              oncommand="formCapture();"
+              value="  &formCapture.label;  "
+              tooltip="aTooltip"
+              tooltiptext="&formCapture.tooltip;"/>
+      <toolbarseparator/>
+      <button class="button-toolbar-4"
+              id="formShow"
+              crop="right"
+              oncommand="formShow(); initToolbarItems();"
+              value="  &formView.label;  "
+              tooltip="aTooltip"
+              tooltiptext="&formView.tooltip;"/>
+      <toolbarseparator/>
+    </toolbar>
+  </box>
+-->
+
+</overlay>

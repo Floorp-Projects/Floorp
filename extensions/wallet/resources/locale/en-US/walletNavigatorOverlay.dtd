@@ -1,0 +1,15 @@
+<!ENTITY  formbarCmd.label            "Form Toolbar">
+<!ENTITY  formbarCmd.accesskey        "f">
+<!ENTITY  formPrefill.label           "Prefill Form">
+<!ENTITY  formCapture.label           "Save Form Data">
+<!ENTITY  formView.label              "View Saved Data">
+<!ENTITY  formPrefill.tooltip         "Prefill this form with previously-saved data">
+<!ENTITY  formCapture.tooltip         "Save data found on this form">
+<!ENTITY  formView.tooltip            "View previously-saved data for this form">
+
+<!ENTITY captureCmd.label             "Save Form Data">
+<!ENTITY captureCmd.accesskey         "s"> 
+<!ENTITY prefillCmd.label             "Prefill Form">
+<!ENTITY prefillCmd.accesskey         "m"> 
+<!ENTITY formshowCmd.label             "View Saved Data">
+<!ENTITY formshowCmd.accesskey         "v"> 
