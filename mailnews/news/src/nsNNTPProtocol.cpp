@@ -3129,22 +3129,21 @@ static void ComputeRate(PRInt32 bytes, PRTime startTime, float *rate)
 PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 length)
 {
 	nsresult rv;
-    char * line;
-    char * description;
-    int i=0;
+    PRInt32 i=0;
 	PRUint32 status = 1;
 	
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-
-	if(pauseForMoreData)
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *orig_line = line;
+ 
+	if (pauseForMoreData)
 	{
 		SetFlag(NNTP_PAUSE_FOR_READ);
+		PR_FREEIF(orig_line);
 		return 0;
 	}
 
-    if(!line)
-        return(status);  /* no line yet */
+    if(!line) return(status);  /* no line yet */
 
             /* End of list? */
     if (line[0]=='.' && line[1]=='\0')
@@ -3156,21 +3155,27 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 		else
 			m_nextState = DISPLAY_NEWSGROUPS;
         ClearFlag(NNTP_PAUSE_FOR_READ);
-		PR_FREEIF(line);
+		PR_FREEIF(orig_line);
         return 0;  
     }
-	else if (line [0] == '.' && line [1] == '.')
+	else if (line [0] == '.' && line [1] == '.') 
+	{
+	  if (line [2] == '.')
+	  {
+		  // some servers send "... 0000000001 0000000002 y".  
+		  // just skip that that.
+		  // see bug #69231
+		  PR_FREEIF(orig_line);
+		  return status;
+	  }
 	  /* The NNTP server quotes all lines beginning with "." by doubling it. */
 	  line++;
+	}
 
     /* almost correct
      */
     if(status > 1)
     {
-#ifdef UNREADY_CODE
-    	ce->bytes_received += status;
-        FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
-#else
 		mBytesReceived += status;
         mBytesReceivedSinceLastStatusUpdate += status;
         
@@ -3213,15 +3218,18 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                                                   getter_Copies(statusString));
 
         	    rv = msgStatusFeedback->ShowStatusString(statusString);
-        	    if (NS_FAILED(rv)) return rv;
+				if (NS_FAILED(rv)) {
+					PR_FREEIF(orig_line);
+					return rv;
+				}
 		}
-#endif
     }
     
 	 /* find whitespace seperator if it exits */
     for(i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
         ;  /* null body */
 
+	char *description;
     if(line[i] == '\0')
         description = &line[i];
     else
@@ -3249,19 +3257,25 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 	    }
         mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
-		if (NS_FAILED(rv)) return -1;
+		if (NS_FAILED(rv)) {
+			PR_FREEIF(orig_line);
+			return -1;
+		}
 
 		mInputStream = inputStream;
 
 		const PRUint32 kUpdateTimerDelay = READ_NEWS_LIST_TIMEOUT;
 		rv = mUpdateTimer->Init(NS_STATIC_CAST(nsITimerCallback*,this), kUpdateTimerDelay);
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to init timer");
-		if (NS_FAILED(rv)) return -1;
+		if (NS_FAILED(rv)) {
+			PR_FREEIF(orig_line);
+			return -1;
+		}
 
 		m_nextState = NEWS_FINISHED;
     }
 
-	PR_FREEIF(line);
+	PR_FREEIF(orig_line);
 	if (NS_FAILED(rv)) return -1;
     return(status);
 }
