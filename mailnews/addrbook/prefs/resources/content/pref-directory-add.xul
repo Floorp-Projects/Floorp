@@ -61,27 +61,29 @@
                  </columns>
 
                  <rows>
-                     <row>
+                     <row align="center">
                          <label value="&directoryName.label;" accesskey="&directoryName.accesskey;" 
                                 control="description"/>
                          <textbox id="description" flex="1"/>
                          <spacer flex="1"/>
                      </row>
-                     <row>
+                     <row align="center">
                          <label value="&directoryHostname.label;" accesskey="&directoryHostname.accesskey;"
                                 control="hostname"/>
                          <textbox id="hostname" flex="1"/>
                          <spacer flex="1"/>
                      </row>
-                     <row>
+                     <row align="center">
                          <label value="&directoryBaseDN.label;" 
                                 accesskey="&directoryBaseDN.accesskey;"
                                 control="basedn"/>
-                         <textbox id="basedn"/>
+                         <vbox>
+                           <textbox id="basedn"/>
+                         </vbox>
                          <button label="&findButton.label;" 
                                  accesskey="&findButton.accesskey;" disabled="true"/>
                      </row>
-                     <row>
+                     <row align="center">
                          <label value="&portNumber.label;" 
                                 accesskey="&portNumber.accesskey;"
                                 control="port"/>
@@ -115,16 +117,16 @@
              </columns>
       
              <rows>
-               <row>
+               <row align="center">
                  <label value="&return.label;" 
                        accesskey="&return.accesskey;"
                        control="results"/>
-                 <hbox>
+                 <hbox align="center">
                    <textbox id="results" size="6"/>
                    <label value="&results.label;"/>
                  </hbox>
                </row>
-               <row>
+               <row align="center">
                  <label value="&scope.label;" control="scope"/>
                  <radiogroup id="scope" orient="horizontal">
                    <radio id="one" value="1" label="&scopeOneLevel.label;"/>
