@@ -32,17 +32,10 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize,
-                          nsReflowStatus& aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext* aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize& aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus& aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
   NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
                                    nsIFrame*       aParent,

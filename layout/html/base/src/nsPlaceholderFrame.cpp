@@ -49,11 +49,10 @@ PlaceholderFrame::~PlaceholderFrame()
 {
 }
 
-NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsSize*          aMaxElementSize,
-                                         nsReflowStatus&  aStatus)
+NS_METHOD PlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
+                                   nsReflowMetrics&     aDesiredSize,
+                                   const nsReflowState& aReflowState,
+                                   nsReflowStatus&      aStatus)
 {
   // Get the floater container in which we're inserted
   nsIFloaterContainer*  container = nsnull;
@@ -79,24 +78,26 @@ NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
     // Resize reflow the anchored item into the available space
     // XXX Check for complete?
-    mAnchoredItem->ResizeReflow(aPresContext, aDesiredSize, aMaxSize,
-                                nsnull, aStatus);
-    mAnchoredItem->SizeTo(aDesiredSize.width, aDesiredSize.height);
+    nsReflowMetrics desiredSize(nsnull);
+    nsReflowState   reflowState(eReflowReason_Initial, aReflowState.maxSize);
+    mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+    mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
 
     // Now notify our containing block that there's a new floater
     container->AddFloater(aPresContext, mAnchoredItem, this);
   } else {
     // XXX This causes anchored-items sizes to get fixed up; this is
     // not quite right because this class should be implementing one
-    // of the incremental reflow methods and propogating things down
+    // of the incremental reflow methods and propagating things down
     // properly to the contained frame.
-    mAnchoredItem->ResizeReflow(aPresContext, aDesiredSize, aMaxSize,
-                                nsnull, aStatus);
-    mAnchoredItem->SizeTo(aDesiredSize.width, aDesiredSize.height);
+    nsReflowMetrics desiredSize(nsnull);
+    nsReflowState   reflowState(eReflowReason_Resize, aReflowState.maxSize);
+    mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+    mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
     container->PlaceFloater(aPresContext, mAnchoredItem, this);
   }
 
-  return nsFrame::ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, aStatus);
+  return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
 NS_METHOD

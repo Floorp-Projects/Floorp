@@ -130,47 +130,75 @@ nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
   return result;
 }
 
-NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsSize*          aMaxElementSize,
-                                    nsReflowStatus&  aStatus)
+NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
+                              nsReflowMetrics&     aDesiredSize,
+                              const nsReflowState& aReflowState,
+                              nsReflowStatus&      aStatus)
 {
-  NS_FRAME_TRACE_REFLOW_IN("nsBodyFrame::ResizeReflow");
+  NS_FRAME_TRACE_REFLOW_IN("nsBodyFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Do we have any children?
+  // XXX Verify the reason is eReflowReason_Initial...
   if (nsnull == mFirstChild) {
-    // No, create a column frame
+    // No, create a pseudo block frame
     CreateColumnFrame(aPresContext);
   }
 
-  // Reflow the column
-  if (nsnull != mFirstChild) {
-    // Clear any regions that are marked as unavailable
-    mSpaceManager->ClearRegions();
+  if (eReflowReason_Incremental == aReflowState.reason) {
+  
+    // The reflow command should never be target for us
+    NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
+    NS_ASSERTION(aReflowState.reflowCommand->GetTarget() != this,
+                 "bad reflow command target");
 
+    // Is the next frame in the reflow chain the pseudo block-frame or a
+    // floating frame?
+    //
+    // XXX Do we want the floating frame to be a reflow target or should its
+    // placeholder frame be the target? The reason this is currently happening
+    // is that the placeholder frame was changed to return the floating frame
+    // as a child frame. That's wrong, because the floating frame now appears
+    // to be both a geometric child of the body and of the placeholder. Yuck...
+    nsIFrame* next = aReflowState.reflowCommand->GetNext();
+    if (mFirstChild != next) {
+      // It's a floating frame that's the target. Reflow the body making it
+      // look like a resize occured. This will reflow the placeholder which will
+      // resize the floating frame...
+      nsReflowState reflowState(eReflowReason_Resize, aReflowState.maxSize);
+      return Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+    }
+  }
+
+  // Reflow the child frame
+  if (nsnull != mFirstChild) {
     // Get our border/padding info
     nsStyleSpacing* mySpacing =
       (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
     nsMargin  borderPadding;
     mySpacing->CalcBorderPaddingFor(this, borderPadding);
-
-    // Compute the column's max size
-    nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, borderPadding,
-                                                aMaxSize);
+  
+    // Compute the child frame's max size
+    nsSize  kidMaxSize = GetColumnAvailSpace(aPresContext, borderPadding,
+                                             aReflowState.maxSize);
+    mSpaceManager->Translate(borderPadding.left, borderPadding.top);
+  
+    if (eReflowReason_Resize == aReflowState.reason) {
+      // Clear any regions that are marked as unavailable
+      // XXX Temporary hack until everything is incremental...
+      mSpaceManager->ClearRegions();
+    }
 
     // Get the column's desired rect
-    nsRect        desiredRect;
     nsIRunaround* reflowRunaround;
+    nsReflowState reflowState(aReflowState, kidMaxSize);
+    nsRect        desiredRect;
 
     mFirstChild->WillReflow(*aPresContext);
-    mSpaceManager->Translate(borderPadding.left, borderPadding.top);
     mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
-    reflowRunaround->ResizeReflow(aPresContext, mSpaceManager, columnMaxSize,
-                desiredRect, aMaxElementSize, aStatus);
-    mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
+    reflowRunaround->Reflow(aPresContext, mSpaceManager, aDesiredSize,
+                            reflowState, desiredRect, aStatus);
 
     // If the frame is complete, then check whether there's a next-in-flow that
     // needs to be deleted
@@ -184,23 +212,25 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
       }
     }
 
-    // Place and size the column
+    mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
+  
+    // Place and size the frame
     desiredRect.x += borderPadding.left;
     desiredRect.y += borderPadding.top;
     mFirstChild->SetRect(desiredRect);
     mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
-
+  
     // Set our last content offset and whether the last content is complete
     // based on the state of the pseudo frame
     nsBlockFrame* blockPseudoFrame = (nsBlockFrame*)mFirstChild;
     mLastContentOffset = blockPseudoFrame->GetLastContentOffset();
     mLastContentIsComplete = blockPseudoFrame->GetLastContentIsComplete();
-
+  
     // Return our desired size
-    ComputeDesiredSize(desiredRect, aMaxSize, borderPadding, aDesiredSize);
+    ComputeDesiredSize(desiredRect, aReflowState.maxSize, borderPadding, aDesiredSize);
   }
-
-  NS_FRAME_TRACE_REFLOW_OUT("nsBodyFrame::ResizeReflow", aStatus);
+  
+  NS_FRAME_TRACE_REFLOW_OUT("nsBodyFrame::Reflow", aStatus);
   return NS_OK;
 }
 
@@ -242,59 +272,6 @@ NS_METHOD nsBodyFrame::VerifyTree() const
     }
   }
 #endif
-  return NS_OK;
-}
-
-NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsReflowCommand& aReflowCommand,
-                                         nsReflowStatus&  aStatus)
-{
-  NS_FRAME_TRACE_REFLOW_IN("nsBodyFrame::IncrementalReflow");
-
-  // Get our border/padding info
-  nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
-  nsMargin  borderPadding;
-  mySpacing->CalcBorderPaddingFor(this, borderPadding);
-
-  mSpaceManager->Translate(borderPadding.left, borderPadding.top);
-
-  // The reflow command should never be target for us
-  NS_ASSERTION(aReflowCommand.GetTarget() != this, "bad reflow command target");
-
-  // Compute the child frame's max size
-  nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, borderPadding,
-                                              aMaxSize);
-
-  // Pass the command along to our column pseudo frame
-  nsRect      desiredRect;
-  nsIFrame*   nextFrame;
-
-  NS_ASSERTION(nsnull != mFirstChild, "no first child");
-  mFirstChild->WillReflow(*aPresContext);
-  aStatus = aReflowCommand.Next(mSpaceManager, desiredRect, columnMaxSize,
-                                nextFrame);
-
-  // Place and size the frame
-  desiredRect.x += borderPadding.left;
-  desiredRect.y += borderPadding.top;
-  mFirstChild->SetRect(desiredRect);
-  mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
-
-  // Set our last content offset and whether the last content is complete
-  // based on the state of the pseudo frame
-  nsBlockFrame* blockPseudoFrame = (nsBlockFrame*)mFirstChild;
-  mLastContentOffset = blockPseudoFrame->GetLastContentOffset();
-  mLastContentIsComplete = blockPseudoFrame->GetLastContentIsComplete();
-
-  // Return our desired size
-  ComputeDesiredSize(desiredRect, aMaxSize, borderPadding, aDesiredSize);
-
-  mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
-
-  NS_FRAME_TRACE_REFLOW_OUT("nsBodyFrame::IncrementalReflow", aStatus);
   return NS_OK;
 }
 

@@ -213,11 +213,10 @@ nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 NS_METHOD
-nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize,
-                          nsReflowStatus& aStatus)
+nsInputFrame::Reflow(nsIPresContext*      aPresContext,
+                     nsReflowMetrics&     aDesiredSize,
+                     const nsReflowState& aReflowState,
+                     nsReflowStatus&      aStatus)
 {
   nsIView* view = nsnull;
   GetView(view);
@@ -240,7 +239,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  nsIPresShell   *presShell = aPresContext->GetShell();     // need to release
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
 
-    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, mWidgetSize);
+    GetDesiredSize(aPresContext, aReflowState.maxSize, aDesiredSize, mWidgetSize);
 
     //nsRect boundBox(0, 0, mWidgetSize.width, mWidgetSize.height); 
     nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
@@ -287,7 +286,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  NS_IF_RELEASE(presShell); 
   }
   else {
-    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, mWidgetSize);
+    GetDesiredSize(aPresContext, aReflowState.maxSize, aDesiredSize, mWidgetSize);
 
     // If we are being reflowed and have a view, hide the view until
     // we are told to paint (which is when our location will have
@@ -298,9 +297,9 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = aDesiredSize.width;
-	  aMaxElementSize->height = aDesiredSize.height;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
     
   aStatus = NS_FRAME_COMPLETE;

@@ -67,10 +67,10 @@ public:
   FixedSizeFrame(nsIContent* aContent,
                  nsIFrame* aParentFrame);
 
-  nsReflowStatus ResizeReflow(nsIPresContext* aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize& aMaxSize,
-                              nsSize* aMaxElementSize);
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+                    nsReflowMetrics& aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 
   PRBool       IsSplittable() const;
 };
@@ -108,13 +108,13 @@ FixedSizeFrame::FixedSizeFrame(nsIContent* aContent,
 {
 }
 
-nsReflowStatus
-FixedSizeFrame::ResizeReflow(nsIPresContext* aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize& aMaxSize,
-                             nsSize* aMaxElementSize)
+NS_METHOD FixedSizeFrame::Reflow(nsIPresContext*      aPresContext,
+                                 nsReflowMetrics&     aDesiredSize,
+                                 const nsReflowState& aReflowState,
+                                 nsReflowStatus&      aStatus)
 {
-  NS_PRECONDITION((aMaxSize.width > 0) && (aMaxSize.height > 0), "bad max size");
+  NS_PRECONDITION((aReflowState.maxSize.width > 0) && (aReflowState.maxSize.height > 0),
+                  "bad max size");
   FixedSizeContent* content = (FixedSizeContent*)mContent;
   nsReflowStatus    status = NS_FRAME_COMPLETE;
   FixedSizeFrame*   prevInFlow = (FixedSizeFrame*)mPrevInFlow;
@@ -125,16 +125,16 @@ FixedSizeFrame::ResizeReflow(nsIPresContext* aPresContext,
   // We can split once horizontally
   if (nsnull != prevInFlow) {
     aDesiredSize.width -= prevInFlow->mRect.width;
-  } else if ((aDesiredSize.width > aMaxSize.width) && content->IsSplittable()) {
-    aDesiredSize.width = aMaxSize.width;
+  } else if ((aDesiredSize.width > aReflowState.maxSize.width) && content->IsSplittable()) {
+    aDesiredSize.width = aReflowState.maxSize.width;
     status = NS_FRAME_NOT_COMPLETE;
   }
 
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = aDesiredSize.width;
-    aMaxElementSize->height = aDesiredSize.height;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
   return status;

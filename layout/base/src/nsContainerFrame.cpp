@@ -438,15 +438,14 @@ PRBool nsContainerFrame::ChildIsPseudoFrame(const nsIFrame* aChild) const
  * child is complete and it has next-in-flows (it was a splittable child)
  * then delete the next-in-flows.
  */
-nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
-                                             nsIPresContext*  aPresContext,
-                                             nsReflowMetrics& aDesiredSize,
-                                             const nsSize&    aMaxSize,
-                                             nsSize*          aMaxElementSize)
+nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
+                                             nsIPresContext*      aPresContext,
+                                             nsReflowMetrics&     aDesiredSize,
+                                             const nsReflowState& aReflowState)
 {
   nsReflowStatus status;
                                                   
-  aKidFrame->ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, status);
+  aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState, status);
 
   if (NS_FRAME_IS_COMPLETE(status)) {
     nsIFrame* kidNextInFlow;
@@ -474,12 +473,12 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
  * used to reflow the child; otherwise interface nsIFrame is used. If the
  * child is splittable then  runaround is done using continuing frames.
  */
-nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
-                                             nsIPresContext*  aPresContext,
-                                             nsISpaceManager* aSpaceManager,
-                                             const nsSize&    aMaxSize,
-                                             nsRect&          aDesiredRect,
-                                             nsSize*          aMaxElementSize)
+nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
+                                             nsIPresContext*      aPresContext,
+                                             nsISpaceManager*     aSpaceManager,
+                                             nsReflowMetrics&     aDesiredSize,
+                                             const nsReflowState& aReflowState,
+                                             nsRect&              aDesiredRect)
 {
   nsIRunaround*   reflowRunaround;
   nsReflowStatus  status;
@@ -494,11 +493,11 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   nsBandTrapezoid   trapezoids[12];
   nsBandTrapezoid*  trapezoid = trapezoids;
   nsRect            availBand;
-  nsSize            availSize = aMaxSize;
+  nsSize            availSize = aReflowState.maxSize;
 
   bandData.trapezoids = trapezoids;
   bandData.size = 12;
-  aSpaceManager->GetBandData(0, aMaxSize, bandData);
+  aSpaceManager->GetBandData(0, aReflowState.maxSize, bandData);
 
   if (bandData.count > 1) {
     // If there's more than one trapezoid that means there are floaters
@@ -546,28 +545,26 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
                                          (void**)&reflowRunaround)) {
     // Yes, the child frame wants to interact directly with the space
     // manager.
-    reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, availSize,
-                                  aDesiredRect, aMaxElementSize, status);
+    nsReflowState reflowState(aReflowState, availSize);
+    reflowRunaround->Reflow(aPresContext, aSpaceManager, aDesiredSize, reflowState,
+                            aDesiredRect, status);
   } else {
     // No, use interface nsIFrame instead.
-    nsReflowMetrics desiredSize;
-
-    // Hide the floaters from the child frame
-    if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-      if ((availBand.x > 0) || (availBand.XMost() < aMaxSize.width)) {
+    if (aReflowState.maxSize.width != NS_UNCONSTRAINEDSIZE) {
+      if ((availBand.x > 0) || (availBand.XMost() < aReflowState.maxSize.width)) {
         // There are left/right floaters.
         availSize.width = availBand.width;
       }
     }
 
-    aKidFrame->ResizeReflow(aPresContext, desiredSize, availSize,
-                            aMaxElementSize, status);
+    // XXX FIX ME
+    aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState, status);
 
     // Return the desired rect
     aDesiredRect.x = availBand.x;
     aDesiredRect.y = 0;
-    aDesiredRect.width = desiredSize.width;
-    aDesiredRect.height = desiredSize.height;
+    aDesiredRect.width = aDesiredSize.width;
+    aDesiredRect.height = aDesiredSize.height;
   }
 
   if (NS_FRAME_IS_COMPLETE(status)) {

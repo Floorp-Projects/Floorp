@@ -70,37 +70,32 @@ public:
   virtual ~nsReflowCommand();
 
   /**
-   * Dispatch the reflow command. The command is processed and dispatched
-   * to the appropriate frame's appropriate method.
+   * Dispatch the reflow command.
+   *
+   * Builds a path from the target frame back to the root frame, and then invokes
+   * the root frame's Reflow() member function.
    */
   void Dispatch(nsReflowMetrics& aDesiredSize, const nsSize& aMaxSize);
 
-  // Pass the reflow command to the next frame in the hierarchy. Returns the
-  // status and the next frame to which the command was dispatched
-  nsReflowStatus Next(nsReflowMetrics& aDesiredSize,
-                      const nsSize&    aMaxSize,
-                      nsIFrame*&       aNextFrame);
+  /**
+   * Get the next frame in the command chain. Note that this removes the frame
+   * from the target chain
+   */
+  nsIFrame* GetNext();
 
-  // Pass the reflow command to the next frame in the hierarchy. Returns the
-  // status and the next frame to which the command was dispatched
-  //
-  // Use this version if you have a space manager. This function will check if
-  // the caller supports nsIRunaround and call either the nsIFrame or the
-  // nsIRunaround IncrementalReflow() function
-  nsReflowStatus Next(nsISpaceManager* aSpaceManager,
-                      nsRect&          aDesiredRect,
-                      const nsSize&    aMaxSize,
-                      nsIFrame*&       aNextFrame);
-
-  nsIFrame* GetNext() const;
-
-  // Get the target of the reflow command
+  /**
+   * Get the target of the reflow command
+   */
   nsIFrame* GetTarget() const {return mTargetFrame;}
 
-  // Get the type of reflow command
+  /**
+   * Get the type of reflow command
+   */
   ReflowType GetType() const {return mType;}
 
-  // Get the child frame associated with the reflow command
+  /**
+   * Get the child frame associated with the reflow command
+   */
   nsIFrame*  GetChildFrame() const {return mChildFrame;}
 
 private:

@@ -108,13 +108,12 @@ public:
 
   /**
     * Respond to the request to resize and/or reflow
-    * @see nsIFrame::ResizeReflow
+    * @see nsIFrame::Reflow
     */
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aCX,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aCX,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
   // new behavior
 

@@ -189,18 +189,12 @@ public:
   NS_IMETHOD VerifyTree() const;
 
   // nsIRunaround
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
-                          nsISpaceManager* aSpaceManager,
-                          const nsSize&    aMaxSize,
-                          nsRect&          aDesiredRect,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsISpaceManager* aSpaceManager,
-                               const nsSize&    aMaxSize,
-                               nsRect&          aDesiredRect,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsISpaceManager*     aSpaceManager,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsRect&              aDesiredRect,
+                    nsReflowStatus&      aStatus);
 
   // nsIFloaterContainer
   virtual PRBool AddFloater(nsIPresContext*   aPresContext,
@@ -211,20 +205,19 @@ public:
                             PlaceholderFrame* aPlaceholder);
 
   // nsBlockFrame
-  nsresult ReflowInlineChild(nsIFrame*        aKidFrame,
-                             nsIPresContext*  aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize&    aMaxSize,
-                             nsSize*          aMaxElementSize,
-                             nsReflowStatus&  aStatus);
+  nsresult ReflowInlineChild(nsIFrame*            aKidFrame,
+                             nsIPresContext*      aPresContext,
+                             nsReflowMetrics&     aDesiredSize,
+                             const nsReflowState& aReflowState,
+                             nsReflowStatus&      aStatus);
 
-  nsresult ReflowBlockChild(nsIFrame*        aKidFrame,
-                            nsIPresContext*  aPresContext,
-                            nsISpaceManager* aSpaceManager,
-                            const nsSize&    aMaxSize,
-                            nsRect&          aDesiredRect,
-                            nsSize*          aMaxElementSize,
-                            nsReflowStatus&  aStatus);
+  nsresult ReflowBlockChild(nsIFrame*            aKidFrame,
+                            nsIPresContext*      aPresContext,
+                            nsISpaceManager*     aSpaceManager,
+                            nsReflowMetrics&     aDesiredSize,
+                            const nsReflowState& aReflowState,
+                            nsRect&              aDesiredRect,
+                            nsReflowStatus&      aStatus);
 
   nsLineData* GetFirstLine();
 

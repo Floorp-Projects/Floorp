@@ -268,7 +268,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     nsSize                  kidAvailSize(aState.availSize);
     if (0>=kidAvailSize.height)
       kidAvailSize.height = 1;      // XXX: HaCk - we don't handle negative heights yet
-    nsReflowMetrics desiredSize;
+    nsReflowMetrics desiredSize(pKidMaxElementSize);
     nsReflowStatus  status;
 
     // Get top margin for this kid
@@ -296,8 +296,8 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     }
 
     // Reflow the child into the available space
-    status = ReflowChild(kidFrame, aPresContext, desiredSize,
-                         kidAvailSize, pKidMaxElementSize);
+    nsReflowState kidReflowState(eReflowReason_Resize, kidAvailSize);
+    status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
     // Did the child fit?
     if ((kidFrame != mFirstChild) &&
@@ -494,7 +494,7 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
   PRBool        result = PR_TRUE;
 
   while (nsnull != nextInFlow) {
-    nsReflowMetrics kidSize;
+    nsReflowMetrics kidSize(pKidMaxElementSize);
     nsReflowStatus    status;
 
     // Get the next child
@@ -530,8 +530,8 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
-    status = ReflowChild(kidFrame, aPresContext, kidSize, aState.availSize,
-                         pKidMaxElementSize);
+    nsReflowState kidReflowState(eReflowReason_Resize, aState.availSize);
+    status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
     // Did the child fit?
     if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
@@ -757,9 +757,10 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
-    nsReflowMetrics kidSize;
+    nsReflowMetrics kidSize(pKidMaxElementSize);
+    nsReflowState   kidReflowState(eReflowReason_Initial, aState.availSize);
     nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
-                                        aState.availSize, pKidMaxElementSize);
+                                        kidReflowState);
 
     // Did the child fit?
     if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
@@ -818,23 +819,22 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   * Rows are responsible for layout of their children.
   */
 NS_METHOD
-nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsSize*          aMaxElementSize,
-                                    nsReflowStatus&  aStatus)
+nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
+                             nsReflowMetrics&     aDesiredSize,
+                             const nsReflowState& aReflowState,
+                             nsReflowStatus&      aStatus)
 {
   if (gsDebug1==PR_TRUE)
-    printf("nsTableRowGroupFrame::ResizeReflow - aMaxSize = %d, %d\n",
-            aMaxSize.width, aMaxSize.height);
+    printf("nsTableRowGroupFrame::Reflow - aMaxSize = %d, %d\n",
+            aReflowState.maxSize.width, aReflowState.maxSize.height);
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
 
   // Initialize out parameter
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = 0;
-    aMaxElementSize->height = 0;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = 0;
+    aDesiredSize.maxElementSize->height = 0;
   }
 
   PRBool reflowMappedOK = PR_TRUE;
@@ -844,11 +844,11 @@ nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
   // Check for an overflow list
   MoveOverflowToChildList();
 
-  RowGroupReflowState state(aPresContext, aMaxSize);
+  RowGroupReflowState state(aPresContext, aReflowState.maxSize);
 
   // Reflow the existing frames
   if (nsnull != mFirstChild) {
-    reflowMappedOK = ReflowMappedChildren(aPresContext, state, aMaxElementSize);
+    reflowMappedOK = ReflowMappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
     if (PR_FALSE == reflowMappedOK) {
       aStatus = NS_FRAME_NOT_COMPLETE;
     }
@@ -864,10 +864,10 @@ nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
       }
     } else if (NextChildOffset() < mContent->ChildCount()) {
       // Try and pull-up some children from a next-in-flow
-      if (PullUpChildren(aPresContext, state, aMaxElementSize)) {
+      if (PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
         // If we still have unmapped children then create some new frames
         if (NextChildOffset() < mContent->ChildCount()) {
-          aStatus = ReflowUnmappedChildren(aPresContext, state, aMaxElementSize);
+          aStatus = ReflowUnmappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
         }
       } else {
         // We were unable to pull-up all the existing frames from the
@@ -890,7 +890,7 @@ nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
   // Return our desired rect
   //NS_ASSERTION(0<state.firstRowHeight, "illegal firstRowHeight after reflow");
   //NS_ASSERTION(0<state.y, "illegal height after reflow");
-  aDesiredSize.width = aMaxSize.width;
+  aDesiredSize.width = aReflowState.maxSize.width;
   aDesiredSize.height = state.y;   
 
 #ifdef NS_DEBUG
@@ -899,11 +899,11 @@ nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
 
   if (gsDebug1==PR_TRUE) 
   {
-    if (nsnull!=aMaxElementSize)
+    if (nsnull!=aDesiredSize.maxElementSize)
       printf("nsTableRowGroupFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
               NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
               aDesiredSize.width, aDesiredSize.height,
-              aMaxElementSize->width, aMaxElementSize->height);
+              aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
     else
       printf("nsTableRowGroupFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
              NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
@@ -912,23 +912,6 @@ nsTableRowGroupFrame::ResizeReflow( nsIPresContext*  aPresContext,
 
   return NS_OK;
 
-}
-
-NS_METHOD
-nsTableRowGroupFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                        nsReflowMetrics& aDesiredSize,
-                                        const nsSize&    aMaxSize,
-                                        nsReflowCommand& aReflowCommand,
-                                        nsReflowStatus&  aStatus)
-{
-  if (gsDebug1==PR_TRUE) printf("nsTableRowGroupFrame::IncrementalReflow\n");
-
-  // total hack for now, just some hard-coded values
-  aDesiredSize.width = aMaxSize.width;
-  aDesiredSize.height = aMaxSize.height;
-
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
 }
 
 NS_METHOD

@@ -43,40 +43,20 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsLeafFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize,
-                                    nsReflowStatus& aStatus)
+NS_METHOD nsLeafFrame::Reflow(nsIPresContext*      aPresContext,
+                              nsReflowMetrics&     aDesiredSize,
+                              const nsReflowState& aReflowState,
+                              nsReflowStatus&      aStatus)
 {
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
 
-  GetDesiredSize(aPresContext, aDesiredSize, aMaxSize);
+  GetDesiredSize(aPresContext, aDesiredSize, aReflowState.maxSize);
   AddBordersAndPadding(aPresContext, aDesiredSize);
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = aDesiredSize.width;
-    aMaxElementSize->height = aDesiredSize.height;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
-}
-
-NS_METHOD nsLeafFrame::IncrementalReflow(nsIPresContext* aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize& aMaxSize,
-                                         nsReflowCommand& aReflowCommand,
-                                         nsReflowStatus& aStatus)
-{
-  // XXX Unless the reflow command is a style change, we should
-  // just return the current size, otherwise we should invoke
-  // GetDesiredSize
-
-  // XXX add in code to check for width/height being set via css
-  // and if set use them instead of calling GetDesiredSize.
-  GetDesiredSize(aPresContext, aDesiredSize, aMaxSize);
-  AddBordersAndPadding(aPresContext, aDesiredSize);
-
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }

@@ -32,17 +32,10 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
   NS_IMETHOD ContentAppended(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,

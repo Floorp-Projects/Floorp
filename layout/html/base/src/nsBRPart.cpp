@@ -35,11 +35,10 @@ public:
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize,
-                          nsReflowStatus& aStatus);
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+                    nsReflowMetrics& aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
   NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
                               nsReflowMetrics& aMetrics);
 
@@ -105,11 +104,10 @@ NS_METHOD BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetric
   return NS_OK;
 }
 
-NS_METHOD BRFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                nsReflowMetrics& aDesiredSize,
-                                const nsSize& aMaxSize,
-                                nsSize* aMaxElementSize,
-                                nsReflowStatus& aStatus)
+NS_METHOD BRFrame::Reflow(nsIPresContext* aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsReflowState& aMaxSize,
+                          nsReflowStatus& aStatus)
 {
   // Get cached state for containing block frame
   nsLineLayout* lineLayoutState = nsnull;

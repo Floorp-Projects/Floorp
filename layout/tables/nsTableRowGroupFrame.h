@@ -62,26 +62,19 @@ public:
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect);
 
-  /** calls ResizeReflow for all of its child rows.
+  /** calls Reflow for all of its child rows.
     * Rows are all set to the same width and stacked vertically.
     * <P> rows are not split unless absolutely necessary.
     *
     * @param aDesiredSize width set to width of rows, height set to 
     *                     sum of height of rows that fit in aMaxSize.height.
     *
-    * @see nsIFrame::ResizeReflow
+    * @see nsIFrame::Reflow
     */
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&   aMaxSize,
-                          nsSize*         aMaxElementSize,
-                          nsReflowStatus& aStatus);
-  /** @see nsIFrame::IncrementalReflow */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+                    nsReflowMetrics& aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,

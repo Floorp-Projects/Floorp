@@ -374,6 +374,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     mPresContext->SetVisibleArea(r);
   }
 
+  nsReflowReason  reflowReason = eReflowReason_Resize;
+
   if (nsnull == mRootFrame) {
     if (nsnull != mDocument) {
       nsIContent* root = mDocument->GetRootContent();
@@ -386,6 +388,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
                                         rootSC, mRootFrame);
           NS_RELEASE(rootSC);
           NS_RELEASE(cd);
+          reflowReason = eReflowReason_Initial;
 
           // Bind root frame to root view (and root window)
           nsIView* rootView = mViewManager->GetRootView();
@@ -409,10 +412,11 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     nsRect          bounds;
     mPresContext->GetVisibleArea(bounds);
     nsSize          maxSize(bounds.width, bounds.height);
-    nsReflowMetrics desiredSize;
+    nsReflowMetrics desiredSize(nsnull);
     nsReflowStatus  status;
-    mRootFrame->ResizeReflow(mPresContext, desiredSize, maxSize,
-                             nsnull, status);
+    nsReflowState   reflowState(reflowReason, maxSize);
+
+    mRootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {
@@ -480,7 +484,7 @@ void
 PresShell::ProcessReflowCommands()
 {
   if (0 != mReflowCommands.Count()) {
-    nsReflowMetrics desiredSize;
+    nsReflowMetrics desiredSize(nsnull);
 
     while (0 != mReflowCommands.Count()) {
       nsReflowCommand* rc = (nsReflowCommand*) mReflowCommands.ElementAt(0);

@@ -28,7 +28,7 @@
 
 nsCellLayoutData::nsCellLayoutData(nsTableCellFrame *aCellFrame, 
                                    nsReflowMetrics * aDesiredSize, nsSize * aMaxElementSize)
-
+  : mDesiredSize(nsnull)
 {
   // IMPORTANT: Always intialize instance variables to null
   mCellFrame = nsnull;

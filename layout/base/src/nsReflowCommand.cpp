@@ -76,80 +76,19 @@ void nsReflowCommand::Dispatch(nsReflowMetrics& aDesiredSize,
   if (nsnull != root) {
     mPath.RemoveElementAt(mPath.Count() - 1);
 
+    nsReflowState   reflowState(this, aMaxSize);
     nsReflowStatus  status;
-    root->IncrementalReflow(mPresContext, aDesiredSize, aMaxSize, *this, status);
+    root->Reflow(mPresContext, aDesiredSize, reflowState, status);
   }
 }
 
-// Pass the reflow command to the next frame in the hierarchy
-nsReflowStatus nsReflowCommand::Next(nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsIFrame*&       aNextFrame)
-{
-  PRInt32         count = mPath.Count();
-  nsReflowStatus  result = NS_FRAME_COMPLETE;
-
-  NS_ASSERTION(count > 0, "empty path vector");
-  if (count > 0) {
-    aNextFrame = (nsIFrame*)mPath[count - 1];
-
-    NS_ASSERTION(nsnull != aNextFrame, "null frame");
-    mPath.RemoveElementAt(count - 1);
-    aNextFrame->IncrementalReflow(mPresContext, aDesiredSize, aMaxSize,
-                                  *this, result);
-  } else {
-    aNextFrame = nsnull;
-  }
-
-  return result;
-}
-
-// Pass the reflow command to the next frame in the hierarchy. Check
-// whether it wants to use nsIRunaround or nsIFrame
-nsReflowStatus nsReflowCommand::Next(nsISpaceManager* aSpaceManager,
-                                     nsRect&          aDesiredRect,
-                                     const nsSize&    aMaxSize,
-                                     nsIFrame*&       aNextFrame)
-{
-  PRInt32         count = mPath.Count();
-  nsReflowStatus  result = NS_FRAME_COMPLETE;
-
-  NS_ASSERTION(count > 0, "empty path vector");
-  if (count > 0) {
-    aNextFrame = (nsIFrame*)mPath[count - 1];
-
-    NS_ASSERTION(nsnull != aNextFrame, "null frame");
-    mPath.RemoveElementAt(count - 1);
-
-    // Does the frame support nsIRunaround?
-    nsIRunaround* reflowRunaround;
-
-    if (NS_OK == aNextFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
-      reflowRunaround->IncrementalReflow(mPresContext, aSpaceManager, aMaxSize,
-                                         aDesiredRect, *this, result);
-    } else {
-      nsReflowMetrics desiredSize;
-
-      aNextFrame->IncrementalReflow(mPresContext, desiredSize, aMaxSize,
-                                    *this, result);
-      aDesiredRect.x = 0;
-      aDesiredRect.y = 0;
-      aDesiredRect.width = desiredSize.width;
-      aDesiredRect.height = desiredSize.height;
-    }
-  } else {
-    aNextFrame = nsnull;
-  }
-
-  return result;
-}
-
-nsIFrame* nsReflowCommand::GetNext() const
+nsIFrame* nsReflowCommand::GetNext()
 {
   PRInt32 count = mPath.Count();
   nsIFrame* rv = nsnull;
   if (count > 0) {
     rv = (nsIFrame*) mPath[count - 1];
+    mPath.RemoveElementAt(count - 1);
   }
   return rv;
 }

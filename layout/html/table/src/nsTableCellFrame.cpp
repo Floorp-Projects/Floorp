@@ -227,11 +227,10 @@ nsTableFrame* nsTableCellFrame::GetTableFrame()
 
 /**
   */
-NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&   aMaxSize,
-                                         nsSize*         aMaxElementSize,
-                                         nsReflowStatus& aStatus)
+NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
+                                   nsReflowMetrics& aDesiredSize,
+                                   const nsReflowState& aReflowState,
+                                   nsReflowStatus& aStatus)
 {
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
 
@@ -242,16 +241,15 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   if (gsDebug==PR_TRUE)
     printf("nsTableCellFrame::ResizeReflow: maxSize=%d,%d\n",
-           aMaxSize.width, aMaxSize.height);
+           aReflowState.maxSize.width, aReflowState.maxSize.height);
 
   mFirstContentOffset = mLastContentOffset = 0;
 
-  nsSize availSize(aMaxSize);
+  nsSize availSize(aReflowState.maxSize);
   nsSize maxElementSize;
-  nsSize *pMaxElementSize = aMaxElementSize;
-  if (NS_UNCONSTRAINEDSIZE==aMaxSize.width)
+  nsSize *pMaxElementSize = aDesiredSize.maxElementSize;
+  if (NS_UNCONSTRAINEDSIZE==aReflowState.maxSize.width)
     pMaxElementSize = &maxElementSize;
-  nsReflowMetrics kidSize;
   nscoord x = 0;
   // SEC: what about ascent and decent???
 
@@ -296,7 +294,9 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   if (gsDebug==PR_TRUE)
     printf("  nsTableCellFrame::ResizeReflow calling ReflowChild with availSize=%d,%d\n",
            availSize.width, availSize.height);
-  aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, availSize, pMaxElementSize);
+  nsReflowMetrics kidSize(pMaxElementSize);
+  nsReflowState kidReflowState(aReflowState, availSize);
+  aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, kidReflowState);
 
   if (gsDebug==PR_TRUE)
   {
@@ -341,11 +341,11 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   aDesiredSize.ascent = topInset;
   aDesiredSize.descent = bottomInset;
 
-  if (nsnull!=aMaxElementSize)
+  if (nsnull!=aDesiredSize.maxElementSize)
   {
-    *aMaxElementSize = *pMaxElementSize;
-    aMaxElementSize->height += topInset + bottomInset;
-    aMaxElementSize->width += leftInset + rightInset;
+    *aDesiredSize.maxElementSize = *pMaxElementSize;
+    aDesiredSize.maxElementSize->height += topInset + bottomInset;
+    aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
   
   if (gsDebug==PR_TRUE)
@@ -356,18 +356,6 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   //PostReflowCheck(result);
 #endif
 
-  return NS_OK;
-}
-
-NS_METHOD nsTableCellFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                              nsReflowMetrics& aDesiredSize,
-                                              const nsSize&    aMaxSize,
-                                              nsReflowCommand& aReflowCommand,
-                                              nsReflowStatus&  aStatus)
-{
-  if (gsDebug == PR_TRUE) printf("nsTableCellFrame::IncrementalReflow\n");
-  // total hack for now, just some hard-coded values
-  ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
   return NS_OK;
 }
 

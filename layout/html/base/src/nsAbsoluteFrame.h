@@ -41,11 +41,10 @@ public:
   NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
   NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
   NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const;
-  NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
-                           nsReflowMetrics& aDesiredSize,
-                           const nsSize&    aMaxSize,
-                           nsSize*          aMaxElementSize,
-                           nsReflowStatus&  aStatus);
+  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+                     nsReflowMetrics&     aDesiredSize,
+                     const nsReflowState& aReflowState,
+                     nsReflowStatus&      aStatus);
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
 protected:

@@ -52,17 +52,10 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext* aCX,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize,
-                          nsReflowStatus& aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext* aCX,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize& aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus& aStatus);
+  NS_IMETHOD Reflow(nsIPresContext* aCX,
+                    nsReflowMetrics& aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 
   void GetBulletSize(nsIPresContext* aCX,
                      nsReflowMetrics& aDesiredSize,
@@ -132,16 +125,15 @@ NS_METHOD BulletFrame::Paint(nsIPresContext& aCX,
   return NS_OK;
 }
 
-NS_METHOD BulletFrame::ResizeReflow(nsIPresContext* aCX,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize,
-                                    nsReflowStatus& aStatus)
+NS_METHOD BulletFrame::Reflow(nsIPresContext* aCX,
+                              nsReflowMetrics& aDesiredSize,
+                              const nsReflowState& aReflowState,
+                              nsReflowStatus& aStatus)
 {
-  GetBulletSize(aCX, aDesiredSize, aMaxSize);
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = aDesiredSize.width;
-    aMaxElementSize->height = aDesiredSize.height;
+  GetBulletSize(aCX, aDesiredSize, aReflowState.maxSize);
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
   // This is done so that our containers VerifyTree code will work
@@ -149,21 +141,6 @@ NS_METHOD BulletFrame::ResizeReflow(nsIPresContext* aCX,
   // the bullet must be mapping the second content object instead of
   // mapping the first content object.
   mLastContentIsComplete = PR_FALSE;
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
-}
-
-NS_METHOD BulletFrame::IncrementalReflow(nsIPresContext* aCX,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize& aMaxSize,
-                                         nsReflowCommand& aReflowCommand,
-                                         nsReflowStatus& aStatus)
-{
-  // XXX Unless the reflow command is a style change, we should
-  // just return the current size, otherwise we should invoke
-  // GetBulletSize
-  GetBulletSize(aCX, aDesiredSize, aMaxSize);
-
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
@@ -439,10 +416,11 @@ void
 nsListItemFrame::PlaceOutsideBullet(nsIFrame* aBullet, nsIPresContext* aCX)
 {
   nsSize maxSize(0, 0);
-  nsReflowMetrics bulletSize;
+  nsReflowMetrics bulletSize(nsnull);
+  nsReflowState bulletReflowState(eReflowReason_Resize, maxSize);
 
   // Size the bullet
-  ReflowChild(aBullet, aCX, bulletSize, maxSize, nsnull);
+  ReflowChild(aBullet, aCX, bulletSize, bulletReflowState);
 
   // We can only back the bullet over so far
 
@@ -574,12 +552,12 @@ nsListItemFrame::InsertBullet(nsIFrame* aBullet)
  */
 // XXX we may need to grow to accomodate the bullet
 // XXX check for compatability: <LI><H1>dah dah</H1> where is bullet?
-NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
-                                        nsISpaceManager* aSpaceManager,
-                                        const nsSize& aMaxSize,
-                                        nsRect& aDesiredRect,
-                                        nsSize* aMaxElementSize,
-                                        nsReflowStatus& aStatus)
+NS_METHOD nsListItemFrame::Reflow(nsIPresContext* aCX,
+                                  nsISpaceManager* aSpaceManager,
+                                  nsReflowMetrics& aDesiredSize,
+                                  const nsReflowState& aReflowState,
+                                  nsRect& aDesiredRect,
+                                  nsReflowStatus& aStatus)
 {
   PRBool insideBullet = PR_FALSE;
 
@@ -623,9 +601,10 @@ NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
 
   // Let base class do things first
   nsBlockReflowState state;
-  InitializeState(aCX, aSpaceManager, aMaxSize, aMaxElementSize, state);
+  InitializeState(aCX, aSpaceManager, aReflowState.maxSize,
+                  aDesiredSize.maxElementSize, state);
   state.mFirstChildIsInsideBullet = insideBullet;
-  DoResizeReflow(state, aMaxSize, aDesiredRect, aStatus);
+  DoResizeReflow(state, aReflowState.maxSize, aDesiredRect, aStatus);
 
   // Now place the bullet and put it at the head of the list of children
   if (!insideBullet && (nsnull != bullet)) {
