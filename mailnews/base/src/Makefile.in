@@ -33,7 +33,6 @@ EXPORTS = \
 	$(NULL)
 
 CPPSRCS = \
-	nsMsgKeyArray.cpp\
 	nsMsgPtrArray.cpp \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
