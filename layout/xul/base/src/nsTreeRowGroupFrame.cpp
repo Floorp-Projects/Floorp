@@ -2380,7 +2380,7 @@ LocateIndentationFrame ( nsIPresContext* aPresContext, nsIFrame* aParentFrame,
   aParentFrame->GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIAtom> tagName;
   content->GetTag ( *getter_AddRefs(tagName) );
-  if ( tagName == nsXULAtoms::treeindentation ) {
+  if ( tagName.get() == nsXULAtoms::treeindentation ) {
     *aResult = aParentFrame;
     return;
   }
@@ -2417,7 +2417,7 @@ nsTreeRowGroupFrame :: FindFirstChildTreeItemFrame ( nsIPresContext* inPresConte
     currChildFrame->GetContent ( getter_AddRefs(content) );
     nsCOMPtr<nsIAtom> tagName;
     content->GetTag ( *getter_AddRefs(tagName) );
-    if ( tagName == nsXULAtoms::treechildren )
+    if ( tagName.get() == nsXULAtoms::treechildren )
       break;
     currChildFrame->GetNextSibling ( &currChildFrame );
   } // foreach child of the treeItem
