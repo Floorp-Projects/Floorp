@@ -144,6 +144,7 @@ PRBool nsDll::Load(void)
         return PR_TRUE;
     }
 
+#if defined(XP_UNIX)
     nsCOMPtr<nsIComponentLoaderManager> manager = do_QueryInterface(m_loader->mCompMgr);
     if (!manager)
         return PR_TRUE;
@@ -221,12 +222,14 @@ PRBool nsDll::Load(void)
         }
         free(buffer);
     }
-    // load the component
+#endif
 
+    // load the component
     nsCOMPtr<nsILocalFile> lf(do_QueryInterface(m_dllSpec));
     NS_ASSERTION(lf, "nsIFile here must implement a nsILocalFile"); 
     lf->Load(&m_instance);
 
+#if defined(XP_UNIX)
     // Unload any of library dependencies we loaded earlier. The assumption  
     // here is that the component will have a "internal" reference count to
     // the dependency library we just loaded.  
@@ -238,6 +241,7 @@ PRBool nsDll::Load(void)
         for (PRInt32 index = 0; index < arrayCount; index++)
             PR_UnloadLibrary((PRLibrary*)dependentLibArray.ElementAt(index));
     }
+#endif
 
 #ifdef NS_BUILD_REFCNT_LOGGING
         nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);

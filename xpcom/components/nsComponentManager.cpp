@@ -2688,7 +2688,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
 
         factoryTableEntry->mFactoryEntry = entry;
     }
-
+    
     // Update the ContractID->CLSID Map
     if (aContractID) {
         nsresult rv = HashContractID(aContractID, strlen(aContractID), entry);
