@@ -500,6 +500,21 @@ typedef struct __struct_STOptions
 } STOptions;
 
 /*
+**  STOptionChange
+**
+**  Generalized way to determine what options changed.
+**  Useful for flushing caches, et. al.
+*/
+typedef struct __struct_STOptionChange
+{
+    int mSet;
+    int mOrder;
+    int mGraph;
+    int mCategory;
+}
+STOptionChange;
+
+/*
 ** STRequest
 **
 ** Things specific to a request.

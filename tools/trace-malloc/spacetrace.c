@@ -1706,6 +1706,14 @@ int recalculateRunCost(STRun* aRun)
             PR_IntervalToMilliseconds(PR_IntervalNow() - start), aRun->mAllocationCount);
 #endif
 
+    /*
+    **  Cause the graphs to be recalculated as well.
+    */
+    globals.mCache.mFootprintCached = 0;
+    globals.mCache.mTimevalCached = 0;
+    globals.mCache.mLifespanCached = 0;
+    globals.mCache.mWeightCached = 0;
+
     return 0;
 }
 
@@ -5046,6 +5054,67 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
 #endif /* WANT_GRAPHS */
 
 /*
+**  fillOptions
+**
+**  Given an appropriate hexcaped string, distill the option values
+**      and fill the given STOption struct.
+**
+**  Note that the options passed in are not touched UNLESS there is
+**      a replacement found in the form data.
+*/
+void fillOptions(STOptions* outOptions, STOptionChange* outWhatChanged, const char* inFormData)
+{
+    /*
+    **  Init out args if appropriate.
+    */
+    if(NULL != outWhatChanged)
+    {
+        memset(outWhatChanged, 0, sizeof(STOptionChange));
+    }
+
+    if(NULL != outOptions && NULL != outWhatChanged && NULL != inFormData)
+    {
+        int dontCare = 0;
+        char looper_buf[32];
+        PRIntn looper = 0;
+
+        getDataPRUint32(inFormData, "mListItemMax", &outOptions->mListItemMax, &dontCare, 1);
+
+        getDataPRUint32(inFormData, "mTimevalMin", &outOptions->mTimevalMin, &outWhatChanged->mSet, ST_TIMEVAL_RESOLUTION);
+        getDataPRUint32(inFormData, "mTimevalMax", &outOptions->mTimevalMax, &outWhatChanged->mSet, ST_TIMEVAL_RESOLUTION);
+
+        getDataPRUint32(inFormData, "mAllocationTimevalMin", &outOptions->mAllocationTimevalMin, &outWhatChanged->mSet, ST_TIMEVAL_RESOLUTION);
+        getDataPRUint32(inFormData, "mAllocationTimevalMax", &outOptions->mAllocationTimevalMax, &outWhatChanged->mSet, ST_TIMEVAL_RESOLUTION);
+        
+#if WANT_GRAPHS
+        getDataPRUint32(inFormData, "mGraphTimevalMin", &outOptions->mGraphTimevalMin, &outWhatChanged->mGraph, ST_TIMEVAL_RESOLUTION);
+        getDataPRUint32(inFormData, "mGraphTimevalMax", &outOptions->mGraphTimevalMax, &outWhatChanged->mGraph, ST_TIMEVAL_RESOLUTION);
+#endif /* WANT_GRAPHS */
+
+        getDataPRUint32(inFormData, "mSizeMin", &outOptions->mSizeMin, &outWhatChanged->mSet, 1);
+        getDataPRUint32(inFormData, "mSizeMax", &outOptions->mSizeMax, &outWhatChanged->mSet, 1);
+
+        getDataPRUint32(inFormData, "mAlignBy", &outOptions->mAlignBy, &outWhatChanged->mSet, 1);
+        getDataPRUint32(inFormData, "mOverhead", &outOptions->mOverhead, &outWhatChanged->mSet, 1);
+        getDataPRUint32(inFormData, "mOrderBy", &outOptions->mOrderBy, &outWhatChanged->mOrder, 1);
+
+        getDataPRUint32(inFormData, "mLifetimeMin", &outOptions->mLifetimeMin, &outWhatChanged->mSet, ST_TIMEVAL_RESOLUTION);
+        getDataPRUint32(inFormData, "mLifetimeMax", &outOptions->mLifetimeMax, &outWhatChanged->mSet, ST_TIMEVAL_RESOLUTION);
+
+        getDataPRUint64(inFormData, "mWeightMin", &outOptions->mWeightMin64, &outWhatChanged->mSet);
+        getDataPRUint64(inFormData, "mWeightMax", &outOptions->mWeightMax64, &outWhatChanged->mSet);
+
+        for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
+        {
+            PR_snprintf(looper_buf, sizeof(looper_buf), "mRestrictText%d", looper);
+            getDataString(inFormData, looper_buf, outOptions->mRestrictText[looper], sizeof(outOptions->mRestrictText[looper]), &outWhatChanged->mSet);
+        }
+
+        getDataString(inFormData, "mCategoryName", outOptions->mCategoryName, sizeof(outOptions->mCategoryName), &outWhatChanged->mCategory);
+    }
+}
+
+/*
 ** applySettings
 **
 ** Apply settings and update global options.
@@ -5053,54 +5122,15 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
 */
 int applySettings(STRequest* inRequest)
 {
-    int getRes = 0;
-    int changedSet = 0;
-    int changedOrder = 0;
-    int changedGraph = 0;
-    int changedDontCare = 0;
-    int changedCategory = 0;
-    char looper_buf[32];
-    PRIntn looper = 0;
+    int retval = 0;
+    STOptionChange changed;
 
-    /*
-    ** If we've got get data, we need to attempt to enact the changes.
-    ** That way, when we show the page, it will have the new changes.
-    */
-    if(NULL == inRequest->mGetData || '\0' == *inRequest->mGetData)
-        return 0;
-
-
-    getRes += getDataPRUint32(inRequest->mGetData, "mListItemMax", &globals.mOptions.mListItemMax, &changedDontCare, 1);
-    getRes += getDataPRUint32(inRequest->mGetData, "mTimevalMin", &globals.mOptions.mTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint32(inRequest->mGetData, "mTimevalMax", &globals.mOptions.mTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint32(inRequest->mGetData, "mAllocationTimevalMin", &globals.mOptions.mAllocationTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
-    
-    getRes += getDataPRUint32(inRequest->mGetData, "mAllocationTimevalMax", &globals.mOptions.mAllocationTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
-
-#if WANT_GRAPHS
-    getRes += getDataPRUint32(inRequest->mGetData, "mGraphTimevalMin", &globals.mOptions.mGraphTimevalMin, &changedGraph, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint32(inRequest->mGetData, "mGraphTimevalMax", &globals.mOptions.mGraphTimevalMax, &changedGraph, ST_TIMEVAL_RESOLUTION);
-#endif /* WANT_GRAPHS */
-    getRes += getDataPRUint32(inRequest->mGetData, "mSizeMin", &globals.mOptions.mSizeMin, &changedSet, 1);
-    getRes += getDataPRUint32(inRequest->mGetData, "mSizeMax", &globals.mOptions.mSizeMax, &changedSet, 1);
-    getRes += getDataPRUint32(inRequest->mGetData, "mAlignBy", &globals.mOptions.mAlignBy, &changedSet, 1);
-    getRes += getDataPRUint32(inRequest->mGetData, "mOverhead", &globals.mOptions.mOverhead, &changedSet, 1);
-    getRes += getDataPRUint32(inRequest->mGetData, "mOrderBy", &globals.mOptions.mOrderBy, &changedOrder, 1);
-    getRes += getDataPRUint32(inRequest->mGetData, "mLifetimeMin", &globals.mOptions.mLifetimeMin, &changedSet, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint32(inRequest->mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet, ST_TIMEVAL_RESOLUTION);
-    getRes += getDataPRUint64(inRequest->mGetData, "mWeightMin", &globals.mOptions.mWeightMin64, &changedSet);
-    getRes += getDataPRUint64(inRequest->mGetData, "mWeightMax", &globals.mOptions.mWeightMax64, &changedSet);
-    for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
-    {
-        PR_snprintf(looper_buf, sizeof(looper_buf), "mRestrictText%d", looper);
-        getRes += getDataString(inRequest->mGetData, looper_buf, globals.mOptions.mRestrictText[looper], sizeof(globals.mOptions.mRestrictText[looper]), &changedSet);
-    }
-    getRes += getDataString(inRequest->mGetData, "mCategoryName", globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), &changedCategory);
+    fillOptions(&globals.mOptions, &changed, inRequest->mGetData);
     
     /*
     ** Sanity check options
     */
-    if (changedCategory && (!globals.mOptions.mCategoryName[0]
+    if (changed.mCategory && (!globals.mOptions.mCategoryName[0]
                             || !findCategoryNode(globals.mOptions.mCategoryName, &globals)))
     {
         PR_snprintf(globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), "%s", ST_ROOT_CATEGORY_NAME);
@@ -5109,7 +5139,7 @@ int applySettings(STRequest* inRequest)
     /*
     ** Resort the global based on new prefs if needed.
     */
-    if(0 != changedSet || 0 != changedOrder)
+    if(0 != changed.mSet || 0 != changed.mOrder)
     {
         /*
         ** Dont free globals.mCache.mSortedRun anymore. It is held in the root category node.
@@ -5118,11 +5148,11 @@ int applySettings(STRequest* inRequest)
         globals.mCache.mSortedRun = createRunFromGlobal();
         if(NULL == globals.mCache.mSortedRun)
         {
-            getRes = __LINE__;
+            retval = __LINE__;
             REPORT_ERROR(__LINE__, createRunFromGlobal);
         }
     }
-    else if (0 != changedCategory)
+    else if (0 != changed.mCategory)
     {
         /*
         ** Just a category change. We dont need to harvest. Just find the
@@ -5145,7 +5175,7 @@ int applySettings(STRequest* inRequest)
     ** If any of the set was changed, we need to throw away all our
     **  cached graphs.
     */
-    if(0 != changedSet || 0 != changedGraph)
+    if(0 != changed.mSet || 0 != changed.mGraph)
     {
         /*
         ** Automove the graph timeval if required.
@@ -5162,7 +5192,7 @@ int applySettings(STRequest* inRequest)
     }
 #endif /* WANT_GRAPHS */
 
-    return getRes;
+    return retval;
 }
 
 /*
@@ -5385,22 +5415,28 @@ int displayIndex(STRequest* inRequest)
 */
 void initRequestOptions(STRequest* inRequest, const char* inGetData, const char* inCookieData)
 {
-    /*
-    **  Copy of global options.
-    */
-    memcpy(&inRequest->mOptions, &globals.mOptions, sizeof(globals.mOptions));
-
-    if(NULL != inGetData)
+    if(NULL != inRequest)
     {
         /*
-        **  Todo
+        **  Copy of global options.
         */
-    }
-    else if(NULL != inCookieData)
-    {
+        memcpy(&inRequest->mOptions, &globals.mOptions, sizeof(globals.mOptions));
+        
         /*
-        **  Todo
+        **  Decide what will override global options if anything.
         */
+        if(NULL != inGetData)
+        {
+            STOptionChange changed;
+            
+            fillOptions(&inRequest->mOptions, &changed, inGetData);
+        }
+        else if(NULL != inCookieData)
+        {
+            STOptionChange changed;
+            
+            fillOptions(&inRequest->mOptions, &changed, inCookieData);
+        }
     }
 }
 
@@ -5894,7 +5930,7 @@ void handleClient(void* inArg)
                 **  mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.26 2002/05/04 01:12:18 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.27 2002/05/04 02:06:52 blythe%netscape.com Exp $", crlf);
                 if(NULL != getData)
                 {
                     if(NULL == cookieData || (NULL != cookieData && 0 != strcmp(getData, cookieData)))
