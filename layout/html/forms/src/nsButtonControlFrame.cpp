@@ -387,6 +387,10 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
     aDesiredLayoutSize.height  = 0;
     aDesiredLayoutSize.ascent  = 0;
     aDesiredLayoutSize.descent = 0;
+    if (aDesiredLayoutSize.maxElementSize) {
+      aDesiredLayoutSize.maxElementSize->width  = 0;
+      aDesiredLayoutSize.maxElementSize->height = 0;
+    }
   } else {
     nsSize styleSize;
     GetStyleSize(*aPresContext, aReflowState, styleSize);
