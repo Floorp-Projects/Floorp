@@ -705,7 +705,7 @@ NS_IMETHODIMP nsDocShell::FindItemWithName(const PRUnichar *aName,
    nsCOMPtr<nsIDocShellTreeItem> reqAsTreeItem(do_QueryInterface(aRequestor));
 
    // First we check our name.
-   if(mName.Equals(aName))
+   if(mName.EqualsWithConversion(aName))
       {
       *_retval = NS_STATIC_CAST(nsIDocShellTreeItem*, this);
       NS_ADDREF(*_retval);
@@ -902,7 +902,7 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName,
          continue;
 
       child->GetName(getter_Copies(childName));
-      if(name.Equals(childName))
+      if(name.EqualsWithConversion(childName))
          {
          *_retval = child;
          NS_ADDREF(*_retval);
