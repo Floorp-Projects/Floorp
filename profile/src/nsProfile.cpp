@@ -334,6 +334,16 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
             rv = profAppShell->Run();
         }
 
+	// if we get here, and we don't have a current profile, 
+	// return a failure so we will exit
+	// this can happen, if the user hits Exit in the profile manager dialog
+	char *currentProfileStr = nsnull;
+	rv = GetCurrentProfile(&currentProfileStr);
+	if (NS_FAILED(rv) || !currentProfileStr || (PL_strlen(currentProfileStr) == 0)) {
+		return NS_ERROR_FAILURE;
+	}
+	PR_FREEIF(currentProfileStr); 
+
     if (pregPref && PL_strcmp(isPregInfoSet, REGISTRY_TRUE_STRING) != 0)
         ProcessPRegCookie();
     
