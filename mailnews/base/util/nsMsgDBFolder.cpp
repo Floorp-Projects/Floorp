@@ -1532,10 +1532,6 @@ NS_IMETHODIMP //called on the folder that is renamed or about to be deleted
 nsMsgDBFolder::ChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsensitive, PRBool *changed)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr <nsIMsgFilterList> filterList;
-  rv = GetFilterList(getter_AddRefs(filterList));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
   nsXPIDLCString oldUri;
   rv = GetURI(getter_Copies(oldUri));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1547,7 +1543,35 @@ nsMsgDBFolder::ChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsen
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
+  nsCOMPtr<nsIMsgFilterList> filterList;
+  nsCOMPtr<nsIMsgAccountManager> accountMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsISupportsArray> allServers;
+    rv = accountMgr->GetAllServers(getter_AddRefs(allServers));
+    if (NS_SUCCEEDED(rv) && allServers)
+    {
+      PRUint32 numServers,
+      rv = allServers->Count(&numServers);
+      for (PRUint32 serverIndex=0; serverIndex < numServers; serverIndex++)
+      {
+        nsCOMPtr <nsISupports> serverSupports = allServers->ElementAt(serverIndex);
+        nsCOMPtr <nsIMsgIncomingServer> server = do_QueryInterface(serverSupports, &rv);
+        if (server && NS_SUCCEEDED(rv))
+        {
+          PRBool canHaveFilters;
+          rv = server->GetCanHaveFilters(&canHaveFilters);
+          if (NS_SUCCEEDED(rv) && canHaveFilters) 
+          {
+            rv = server->GetFilterList(getter_AddRefs(filterList));
+            if (filterList && NS_SUCCEEDED(rv))
   rv = filterList->ChangeFilterTarget(oldUri, newUri, caseInsensitive, changed);
+          }
+        }
+      }
+    }
+  }
+
   return rv;
 }
 
