@@ -958,6 +958,7 @@ nsNntpService::GetNntpServerByIdentity(nsIMsgIdentity *aSenderIdentity, nsIMsgIn
       if(serverType.Equals("nntp"))
       {
         *aNntpServer = inServer;
+        NS_IF_ADDREF(*aNntpServer);
         break;
       }
     }
