@@ -26,7 +26,7 @@
 # provisions above, a recipient may use your version of this file
 # under either the MPL or the GPL.
 
-package PLIF::Service::Component::CosesEditor;
+package PLIF::Service::Components::CosesEditor;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;

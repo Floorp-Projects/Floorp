@@ -26,7 +26,7 @@
 # provisions above, a recipient may use your version of this file
 # under either the MPL or the GPL.
 
-package PLIF::Service::Component::Login;
+package PLIF::Service::Components::Login;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
