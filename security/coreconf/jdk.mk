@@ -84,7 +84,7 @@ endif
 ifeq ($(OS_ARCH), WINNT)
 	# (1) specify "location" information
 	ifeq ($(JAVA_HOME),)
-		JAVA_HOME = //iridium/components/jdk/1.2.2_01/WINNT
+		JAVA_HOME = //hs-sca15c/components/jdk/1.2.2_01/WINNT
 	endif
 
 	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
