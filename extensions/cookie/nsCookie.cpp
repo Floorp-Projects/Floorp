@@ -1448,12 +1448,29 @@ permission_Add(char * host, PRBool permission, PRInt32 type, PRBool save) {
     }
   }
 
-  /* create a type structure and attach it to the host structure */
+  /* see if host already has an entry for this type */
   permission_TypeStruct * typeStruct;
-  typeStruct = PR_NEW(permission_TypeStruct);
-  typeStruct->type = type;
-  typeStruct->permission = permission;
-  hostStruct->permissionList->AppendElement(typeStruct);
+  PRBool typeFound = PR_FALSE;
+  PRInt32 count2 = hostStruct->permissionList->Count();
+  for (PRInt32 typeIndex=0; typeIndex<count2; typeIndex++) {
+    typeStruct = NS_STATIC_CAST
+      (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
+    if (typeStruct->type == type) {
+
+      /* type found.  Modify the corresponding permission */
+      typeStruct->permission = permission;
+      typeFound = PR_TRUE;
+      break;
+    }
+  }
+
+  /* create a type structure and attach it to the host structure */
+  if (!typeFound) {
+    typeStruct = PR_NEW(permission_TypeStruct);
+    typeStruct->type = type;
+    typeStruct->permission = permission;
+    hostStruct->permissionList->AppendElement(typeStruct);
+  }
 
   /* write the changes out to a file */
   if (save) {
@@ -2738,6 +2755,19 @@ Image_Block(nsString imageURL) {
   Recycle(imageURLCString);
   if (PL_strlen(host) != 0) {
     permission_Add(host, PR_FALSE, IMAGEPERMISSION, PR_TRUE);
+  }
+}
+
+PUBLIC void
+Permission_Add(nsString imageURL, PRBool permission, PRInt32 type) {
+  if (imageURL.Length() == 0) {
+    return;
+  }
+  char * imageURLCString = imageURL.ToNewCString();
+  char *host = cookie_ParseURL(imageURLCString, GET_HOST_PART);
+  Recycle(imageURLCString);
+  if (PL_strlen(host) != 0) {
+    permission_Add(host, permission, type, PR_TRUE);
   }
 }
 

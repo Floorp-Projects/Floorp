@@ -32,6 +32,9 @@
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCookieViewer.h"
+#include "nsIDocShell.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
@@ -117,4 +120,64 @@ CookieViewerImpl::BlockImage(const char* imageURL)
   nsAutoString imageURLAutoString = imageURL;
   res = cookieservice->Image_Block(imageURLAutoString);
   return res;
+}
+
+NS_IMETHODIMP
+CookieViewerImpl::AddPermission(nsIDOMWindow* aWin, PRBool permission, PRInt32 type)
+{
+  nsresult rv;
+
+  /* all the following is just to get the url of the window */
+
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (!aWin) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
+  scriptGlobalObject = do_QueryInterface(aWin);
+  if(!scriptGlobalObject) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell; 
+  rv = scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
+  if(NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = docShell->GetPresShell(getter_AddRefs(presShell));
+  if(NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsIDocument* doc = nsnull;
+  rv = presShell->GetDocument(&doc);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!doc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURI> docURL;
+  docURL = doc->GetDocumentURL();
+  if (!docURL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  char* spec;
+  (void)docURL->GetSpec(&spec);
+  nsAutoString objectURLAutoString = spec;
+  Recycle(spec);
+
+  /* got the url at last, now pass it on to the Permission_Add routie */
+
+  NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = cookieservice->Permission_Add(objectURLAutoString, permission, type);
+  return rv;
 }
