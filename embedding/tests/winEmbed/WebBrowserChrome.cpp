@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,6 +19,7 @@
  * Contributor(s):
  */
 
+// XXX Windows.h should not be needed. This file is meant to be platform neutral
 #include <windows.h> // for cheesy nsIPrompt implementation
 
 // Mozilla Includes
@@ -46,7 +47,7 @@
 
 WebBrowserChrome::WebBrowserChrome()
 {
-	NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
     mNativeWindow = nsnull;
 }
 
@@ -92,7 +93,8 @@ nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
     // The window has been created. Now register for history notifications
     mWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsISHistoryListener));
 
-    if (mWebBrowser) {
+    if (mWebBrowser)
+    {
       *aBrowser = mWebBrowser;
       NS_ADDREF(*aBrowser);
       return NS_OK;
@@ -117,6 +119,8 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+   NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
+   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -125,15 +129,18 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP WebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
+    NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-  *aInstancePtr = 0;
-  if (aIID.Equals(NS_GET_IID(nsIDOMWindow))) {
-    if (mWebBrowser)
-      return mWebBrowser->GetContentDOMWindow((nsIDOMWindow **) aInstancePtr);
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return QueryInterface(aIID, aInstancePtr);
+    *aInstancePtr = 0;
+    if (aIID.Equals(NS_GET_IID(nsIDOMWindow)))
+    {
+        if (mWebBrowser)
+        {
+            return mWebBrowser->GetContentDOMWindow((nsIDOMWindow **) aInstancePtr);
+        }
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+    return QueryInterface(aIID, aInstancePtr);
 }
 
 //*****************************************************************************
@@ -177,53 +184,53 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeFlags,
                                   PRInt32 aCX, PRInt32 aCY,
                                   nsIWebBrowser **_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = nsnull;
 
-  // Create the chrome object. Note that it leaves this function
-  // with an extra reference so that it can released correctly during
-  // destruction (via Win32UI::Destroy)
+    // Create the chrome object. Note that it leaves this function
+    // with an extra reference so that it can released correctly during
+    // destruction (via Win32UI::Destroy)
 
-  nsresult rv;
+    nsresult rv;
 
-  nsIWebBrowserChrome *newChrome = nsnull;
-  rv = ::CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull, &newChrome);
-  if (NS_SUCCEEDED(rv))
-  {
-    newChrome->GetWebBrowser(_retval);
-  }
+    nsIWebBrowserChrome *newChrome = nsnull;
+    rv = ::CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull, &newChrome);
+    if (NS_SUCCEEDED(rv))
+    {
+        newChrome->GetWebBrowser(_retval);
+    }
 
-  return rv;
+    return rv;
 }
 
 
 NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow(void)
 {
-  WebBrowserChromeUI::Destroy(this);
-  return NS_OK;
+    WebBrowserChromeUI::Destroy(this);
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP WebBrowserChrome::ShowAsModal(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP WebBrowserChrome::IsWindowModal(PRBool *_retval)
 {
-  *_retval = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
+    *_retval = PR_FALSE;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP WebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //*****************************************************************************
@@ -292,117 +299,123 @@ WebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 WebBrowserChrome::OnHistoryNewEntry(nsIURI * aNewURI)
 {
-  return SendHistoryStatusMessage(aNewURI, "add");
+    return SendHistoryStatusMessage(aNewURI, "add");
 }
 
 NS_IMETHODIMP
 WebBrowserChrome::OnHistoryGoBack(nsIURI * aBackURI, PRBool * aContinue)
 {
-  // For now, let the operation continue
-  *aContinue = PR_TRUE;
-  return SendHistoryStatusMessage(aBackURI, "back");
+    // For now, let the operation continue
+    *aContinue = PR_TRUE;
+    return SendHistoryStatusMessage(aBackURI, "back");
 }
 
 
 NS_IMETHODIMP
 WebBrowserChrome::OnHistoryGoForward(nsIURI * aForwardURI, PRBool * aContinue)
 {
-  // For now, let the operation continue
-  *aContinue = PR_TRUE;
-  return SendHistoryStatusMessage(aForwardURI, "forward");
+    // For now, let the operation continue
+    *aContinue = PR_TRUE;
+    return SendHistoryStatusMessage(aForwardURI, "forward");
 }
 
 
 NS_IMETHODIMP
 WebBrowserChrome::OnHistoryGotoIndex(PRInt32 aIndex, nsIURI * aGotoURI, PRBool * aContinue)
 {
-  // For now, let the operation continue
-  *aContinue = PR_TRUE;
-  return SendHistoryStatusMessage(aGotoURI, "goto", aIndex);
+    // For now, let the operation continue
+    *aContinue = PR_TRUE;
+    return SendHistoryStatusMessage(aGotoURI, "goto", aIndex);
 }
 
 NS_IMETHODIMP
 WebBrowserChrome::OnHistoryReload(nsIURI * aURI, PRUint32 aReloadFlags, PRBool * aContinue)
 {
-  // For now, let the operation continue
-  *aContinue = PR_TRUE;
-  return SendHistoryStatusMessage(aURI, "reload", 0 /* no info to pass here */, aReloadFlags);
+    // For now, let the operation continue
+    *aContinue = PR_TRUE;
+    return SendHistoryStatusMessage(aURI, "reload", 0 /* no info to pass here */, aReloadFlags);
 }
 
 NS_IMETHODIMP
 WebBrowserChrome::OnHistoryPurge(PRInt32 aNumEntries, PRBool *aContinue)
 {
-  // For now let the operation continue
-  *aContinue = PR_FALSE;
-  return SendHistoryStatusMessage(nsnull, "purge", aNumEntries);
+    // For now let the operation continue
+    *aContinue = PR_FALSE;
+    return SendHistoryStatusMessage(nsnull, "purge", aNumEntries);
 }
 
 nsresult
 WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1, PRUint32 aReloadFlags)
 {
-  nsXPIDLCString uriCStr;
-  if (aURI)
-    aURI->GetSpec(getter_Copies(uriCStr));
-
-  nsString uriAStr;
-
-  if(!(nsCRT::strcmp(operation, "back"))) {
-    // Going back. XXX Get string from a resource file
-    uriAStr.Append(NS_ConvertASCIItoUCS2("Going back to url:"));
-    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
-  }
-  else if (!(nsCRT::strcmp(operation, "forward"))) {
-    // Going forward. XXX Get string from a resource file
-    uriAStr.Append(NS_ConvertASCIItoUCS2("Going forward to url:"));
-    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
-  }
-  else if (!(nsCRT::strcmp(operation, "reload"))) {
-    // Reloading. XXX Get string from a resource file
-    if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
-        aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+    nsXPIDLCString uriCStr;
+    if (aURI)
     {
-      uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url,(bypassing proxy and cache) :"));
+        aURI->GetSpec(getter_Copies(uriCStr));
     }
-    else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
+
+    nsString uriAStr;
+
+    if(!(nsCRT::strcmp(operation, "back")))
     {
-      uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (bypassing proxy):"));
+        // Going back. XXX Get string from a resource file
+        uriAStr.Append(NS_ConvertASCIItoUCS2("Going back to url:"));
+        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
     }
-    else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+    else if (!(nsCRT::strcmp(operation, "forward")))
     {
-      uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (bypassing cache):"));
+        // Going forward. XXX Get string from a resource file
+        uriAStr.Append(NS_ConvertASCIItoUCS2("Going forward to url:"));
+        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
     }
-    else
+    else if (!(nsCRT::strcmp(operation, "reload")))
     {
-      uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (normal):"));
+        // Reloading. XXX Get string from a resource file
+        if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
+            aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+        {
+            uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url,(bypassing proxy and cache) :"));
+        }
+        else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
+        {
+            uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (bypassing proxy):"));
+        }
+        else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+        {
+            uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (bypassing cache):"));
+        }
+        else
+        {
+            uriAStr.Append(NS_ConvertASCIItoUCS2("Reloading url, (normal):"));
+        }
+        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
     }
-    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
-  }
-  else if (!(nsCRT::strcmp(operation, "add"))) {
-    // Adding new entry. XXX Get string from a resource file
-    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
-    uriAStr.Append(NS_ConvertASCIItoUCS2(" added to session History"));
-  }
-  else if (!(nsCRT::strcmp(operation, "goto"))) {
-    // Goto. XXX Get string from a resource file
-    uriAStr.Append(NS_ConvertASCIItoUCS2("Going to HistoryIndex:"));
-    uriAStr.AppendInt(info1);
-    uriAStr.Append(NS_ConvertASCIItoUCS2(" Url:"));
-    uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
-  }
-  else if (!(nsCRT::strcmp(operation, "purge"))) {
-    // Purging old entries
-    uriAStr.AppendInt(info1);
-    uriAStr.Append(NS_ConvertASCIItoUCS2(" purged from Session History"));
-  }
+    else if (!(nsCRT::strcmp(operation, "add")))
+    {
+        // Adding new entry. XXX Get string from a resource file
+        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+        uriAStr.Append(NS_ConvertASCIItoUCS2(" added to session History"));
+    }
+    else if (!(nsCRT::strcmp(operation, "goto")))
+    {
+        // Goto. XXX Get string from a resource file
+        uriAStr.Append(NS_ConvertASCIItoUCS2("Going to HistoryIndex:"));
+        uriAStr.AppendInt(info1);
+        uriAStr.Append(NS_ConvertASCIItoUCS2(" Url:"));
+        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+    }
+    else if (!(nsCRT::strcmp(operation, "purge")))
+    {
+        // Purging old entries
+        uriAStr.AppendInt(info1);
+        uriAStr.Append(NS_ConvertASCIItoUCS2(" purged from Session History"));
+    }
 
-  PRUnichar * uriStr = nsnull;
-  uriStr = uriAStr.ToNewUnicode();
-  WebBrowserChromeUI::UpdateStatusBarText(this, uriStr);
-  nsCRT::free(uriStr);
+    PRUnichar * uriStr = nsnull;
+    uriStr = uriAStr.ToNewUnicode();
+    WebBrowserChromeUI::UpdateStatusBarText(this, uriStr);
+    nsCRT::free(uriStr);
 
-  return NS_OK;
-
-
+    return NS_OK;
 }
 
 //*****************************************************************************
@@ -480,12 +493,41 @@ NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
 NS_IMETHODIMP WebBrowserChrome::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
     nsresult rv = NS_OK;
-	if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
+    if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-change-teardown").get()) == 0)
     {
-		// A profile change means death for this window
-	    WebBrowserChromeUI::Destroy(this);
+        // A profile change means death for this window
+        WebBrowserChromeUI::Destroy(this);
     }
     return rv;
+}
+
+//*****************************************************************************
+// WebBrowserChrome::nsIContextMenuListener
+//*****************************************************************************   
+
+/* void OnShowContextMenu (in unsigned long aContextFlags, in nsIDOMEvent aEvent, in nsIDOMNode aNode); */
+NS_IMETHODIMP WebBrowserChrome::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+{
+    WebBrowserChromeUI::ShowContextMenu(this, aContextFlags, aEvent, aNode);
+    return NS_OK;
+}
+
+//*****************************************************************************
+// WebBrowserChrome::nsITooltipListener
+//*****************************************************************************   
+
+/* void OnShowTooltip (in long aXCoords, in long aYCoords, in wstring aTipText); */
+NS_IMETHODIMP WebBrowserChrome::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
+{
+    WebBrowserChromeUI::ShowTooltip(this, aXCoords, aYCoords, aTipText);
+    return NS_OK;
+}
+
+/* void OnHideTooltip (); */
+NS_IMETHODIMP WebBrowserChrome::OnHideTooltip()
+{
+    WebBrowserChromeUI::HideTooltip(this);
+    return NS_OK;
 }
 
 
@@ -497,76 +539,80 @@ A real app would want better. */
 
 NS_IMETHODIMP WebBrowserChrome::Alert(const PRUnichar* dialogTitle, const PRUnichar *text)
 {
-  nsAutoString stext(text);
-  nsAutoString stitle(dialogTitle);
-  char *ctext = stext.ToNewCString();
-  char *ctitle = stitle.ToNewCString();
-  ::MessageBox((HWND)mNativeWindow, ctext, ctitle, MB_OK | MB_ICONEXCLAMATION);
-  nsMemory::Free(ctitle);
-  nsMemory::Free(ctext);
-  return NS_OK;
+    nsAutoString stext(text);
+    nsAutoString stitle(dialogTitle);
+    char *ctext = stext.ToNewCString();
+    char *ctitle = stitle.ToNewCString();
+    // XXX platform specific user-interface code should happen in WebBrowserChromeUI
+    ::MessageBox((HWND)mNativeWindow, ctext, ctitle, MB_OK | MB_ICONEXCLAMATION);
+    nsMemory::Free(ctitle);
+    nsMemory::Free(ctext);
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::AlertCheck(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue)
 {
-  nsAutoString stext(text);
-  nsAutoString stitle(dialogTitle);
-  char *ctext = stext.ToNewCString();
-  char *ctitle = stitle.ToNewCString();
-  ::MessageBox((HWND)mNativeWindow, ctext, ctitle, MB_OK | MB_ICONEXCLAMATION);
-  *checkValue = PR_FALSE; // yeah, well, it's not a real implementation
-  delete ctitle;
-  delete ctext;
-  return NS_OK;
+    nsAutoString stext(text);
+    nsAutoString stitle(dialogTitle);
+    char *ctext = stext.ToNewCString();
+    char *ctitle = stitle.ToNewCString();
+    // XXX platform specific user-interface code should happen in WebBrowserChromeUI
+    ::MessageBox((HWND)mNativeWindow, ctext, ctitle, MB_OK | MB_ICONEXCLAMATION);
+    *checkValue = PR_FALSE; // yeah, well, it's not a real implementation
+    delete ctitle;
+    delete ctext;
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::Confirm(const PRUnichar* dialogTitle, const PRUnichar *text, PRBool *_retval)
 {
-  nsAutoString stext(text);
-  nsAutoString stitle(dialogTitle);
-  char *ctext = stext.ToNewCString();
-  char *ctitle = stitle.ToNewCString();
-  int answer = ::MessageBox((HWND)mNativeWindow, ctext, ctitle, MB_YESNO | MB_ICONQUESTION);
-  delete ctitle;
-  delete ctext;
-  *_retval = answer == IDYES ? PR_TRUE : PR_FALSE;
-  return NS_OK;
+    nsAutoString stext(text);
+    nsAutoString stitle(dialogTitle);
+    char *ctext = stext.ToNewCString();
+    char *ctitle = stitle.ToNewCString();
+    // XXX platform specific user-interface code should happen in WebBrowserChromeUI
+    int answer = ::MessageBox((HWND)mNativeWindow, ctext, ctitle, MB_YESNO | MB_ICONQUESTION);
+    delete ctitle;
+    delete ctext;
+    *_retval = answer == IDYES ? PR_TRUE : PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::ConfirmCheck(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
-  nsAutoString stext(text);
-  nsAutoString stitle(dialogTitle);
-  char *ctext = stext.ToNewCString();
-  char *ctitle = stitle.ToNewCString();
-  int answer = ::MessageBox((HWND)mNativeWindow, ctext, ctitle, MB_YESNO | MB_ICONQUESTION);
-  delete ctitle;
-  delete ctext;
-  *_retval = answer == IDYES ? PR_TRUE : PR_FALSE;
-  return NS_OK;
+    nsAutoString stext(text);
+    nsAutoString stitle(dialogTitle);
+    char *ctext = stext.ToNewCString();
+    char *ctitle = stitle.ToNewCString();
+    // XXX platform specific user-interface code should happen in WebBrowserChromeUI
+    int answer = ::MessageBox((HWND)mNativeWindow, ctext, ctitle, MB_YESNO | MB_ICONQUESTION);
+    delete ctitle;
+    delete ctext;
+    *_retval = answer == IDYES ? PR_TRUE : PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::Prompt(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm, PRUint32 savePassword, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP WebBrowserChrome::PromptUsernameAndPassword(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm, PRUint32 savePassword, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP WebBrowserChrome::PromptPassword(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar* passwordRealm, PRUint32 savePassword, PRUnichar **pwd, PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP WebBrowserChrome::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP WebBrowserChrome::UniversalDialog(const PRUnichar *titleMessage, const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkboxMsg, const PRUnichar *button0Text, const PRUnichar *button1Text, const PRUnichar *button2Text, const PRUnichar *button3Text, const PRUnichar *editfield1Msg, const PRUnichar *editfield2Msg, PRUnichar **editfield1Value, PRUnichar **editfield2Value, const PRUnichar *iconURL, PRBool *checkboxState, PRInt32 numberButtons, PRInt32 numberEditfields, PRInt32 editField1Password, PRInt32 *buttonPressed)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

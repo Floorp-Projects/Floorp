@@ -278,19 +278,22 @@ NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const PRUnic
    new windows under these circumstances. */
 nsresult InitializeWindowCreator()
 {
-  // create an nsWindowCreator and give it to the WindowWatcher service
-  WindowCreator *creatorCallback = new WindowCreator();
-  if (creatorCallback) {
-    nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback)));
-    if (windowCreator) {
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-      if (wwatch) {
-        wwatch->SetWindowCreator(windowCreator);
-        return NS_OK;
-      }
+    // create an nsWindowCreator and give it to the WindowWatcher service
+    WindowCreator *creatorCallback = new WindowCreator();
+    if (creatorCallback)
+    {
+        nsCOMPtr<nsIWindowCreator> windowCreator(dont_QueryInterface(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback)));
+        if (windowCreator)
+        {
+            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+            if (wwatch)
+            {
+                wwatch->SetWindowCreator(windowCreator);
+                return NS_OK;
+            }
+        }
     }
-  }
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 }
 
 //-----------------------------------------------------------------------------
@@ -303,52 +306,55 @@ nsresult InitializeWindowCreator()
 //
 nsresult OpenWebPage(const char *url)
 {
-  nsresult  rv;
+    nsresult  rv;
 
-  // Create the chrome object. Note that it leaves this function
-  // with an extra reference so that it can released correctly during
-  // destruction (via Win32UI::Destroy)
+    // Create the chrome object. Note that it leaves this function
+    // with an extra reference so that it can released correctly during
+    // destruction (via Win32UI::Destroy)
 
-  nsIWebBrowserChrome *chrome = nsnull;
-  rv = CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull, &chrome);
-  if (NS_SUCCEEDED(rv))
-  {
-    // Start loading a page
-    nsCOMPtr<nsIWebBrowser> newBrowser;
-    chrome->GetWebBrowser(getter_AddRefs(newBrowser));
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-    return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
-  }
+    nsIWebBrowserChrome *chrome = nsnull;
+    rv = CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull, &chrome);
+    if (NS_SUCCEEDED(rv))
+    {
+        // Start loading a page
+        nsCOMPtr<nsIWebBrowser> newBrowser;
+        chrome->GetWebBrowser(getter_AddRefs(newBrowser));
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
+        return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(),
+            nsIWebNavigation::LOAD_FLAGS_NONE);
+    }
 
-  return rv;
+    return rv;
 }   
 
 
 nsresult CreateBrowserWindow(PRUint32 aChromeFlags, nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow)
 {
-  WebBrowserChrome * chrome = new WebBrowserChrome();
-  if (!chrome)
+    WebBrowserChrome * chrome = new WebBrowserChrome();
+    if (!chrome)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
+
+    chrome->SetChromeFlags(aChromeFlags);
+
+    // Insert the browser
+    nsCOMPtr<nsIWebBrowser> newBrowser;
+    chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
+    if (!newBrowser)
     return NS_ERROR_FAILURE;
 
-  CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
+    // Place it where we want it.
+    ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
 
-  chrome->SetChromeFlags(aChromeFlags);
+    // Subscribe new window to profile changes so it can kill itself when one happens
+    nsresult rv;
+    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome), NS_LITERAL_STRING("profile-change-teardown").get());
 
-  // Insert the browser
-  nsCOMPtr<nsIWebBrowser> newBrowser;
-  chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
-  if (!newBrowser)
-    return NS_ERROR_FAILURE;
-
-  // Place it where we want it.
-  ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
-  
-  // Subscribe new window to profile changes so it can kill itself when one happens
-  nsresult rv;
-  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
-  observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome), NS_LITERAL_STRING("profile-change-teardown").get());
-
-  return NS_OK;
+    return NS_OK;
 }
 
 //
@@ -571,16 +577,16 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
     if (hmenu)
     {
         EnableMenuItem(hmenu, MOZ_GoBack, MF_BYCOMMAND |
-                ((canGoBack) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
+            ((canGoBack) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
         EnableMenuItem(hmenu, MOZ_GoForward, MF_BYCOMMAND |
-                ((canGoForward) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
+            ((canGoForward) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
 
         EnableMenuItem(hmenu, MOZ_Cut, MF_BYCOMMAND |
-                ((canCutSelection) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
+            ((canCutSelection) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
         EnableMenuItem(hmenu, MOZ_Copy, MF_BYCOMMAND |
-                ((canCopySelection) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
+            ((canCopySelection) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
         EnableMenuItem(hmenu, MOZ_Paste, MF_BYCOMMAND |
-                ((canPaste) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
+            ((canPaste) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
     }
 
     HWND button;
@@ -667,8 +673,11 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             {
                 TCHAR szURL[2048];
                 memset(szURL, 0, sizeof(szURL));
-                GetDlgItemText(hwndDlg, IDC_ADDRESS, szURL, sizeof(szURL) / sizeof(szURL[0]) - 1);
-                webNavigation->LoadURI(NS_ConvertASCIItoUCS2(szURL).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+                GetDlgItemText(hwndDlg, IDC_ADDRESS, szURL,
+                    sizeof(szURL) / sizeof(szURL[0]) - 1);
+                webNavigation->LoadURI(
+                    NS_ConvertASCIItoUCS2(szURL).GetUnicode(),
+                    nsIWebNavigation::LOAD_FLAGS_NONE);
             }
             break;
 
@@ -1202,10 +1211,10 @@ void WebBrowserChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aB
     HWND button;
     button = GetDlgItem(hwndDlg, IDC_STOP);
     if (button)
-      EnableWindow(button, aBusy);
+        EnableWindow(button, aBusy);
     button = GetDlgItem(hwndDlg, IDC_GO);
     if (button)
-      EnableWindow(button, !aBusy);
+        EnableWindow(button, !aBusy);
     UpdateUI(aChrome);
 }
 
@@ -1234,6 +1243,35 @@ void WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aC
     }
 }
 
+//
+//  FUNCTION: ShowContextMenu()
+//
+//  PURPOSE: Display a context menu for the given node
+//
+void WebBrowserChromeUI::ShowContextMenu(nsIWebBrowserChrome *aChrome, PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+{
+    // TODO code to test context flags and display a popup menu should go here
+}
+
+//
+//  FUNCTION: ShowTooltip()
+//
+//  PURPOSE: Show a tooltip
+//
+void WebBrowserChromeUI::ShowTooltip(nsIWebBrowserChrome *aChrome, PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
+{
+    // TODO code to show a tooltip should go here
+}
+
+//
+//  FUNCTION: HideTooltip()
+//
+//  PURPOSE: Hide the tooltip
+//
+void WebBrowserChromeUI::HideTooltip(nsIWebBrowserChrome *aChrome)
+{
+    // TODO code to hide a tooltip should go here
+}
 
 //
 //  FUNCTION: GetResourceStringByID()
@@ -1242,16 +1280,15 @@ void WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aC
 //
 void WebBrowserChromeUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
 {
-
-  char resBuf[MAX_LOADSTRING];
-  int retval = LoadString( ghInstanceResources, aID, (LPTSTR)resBuf, sizeof(resBuf) );
-  if (retval != 0)
-  {
-    int resLen = strlen(resBuf);
-    *aReturn = (char *)calloc(resLen+1, sizeof(char *));
-    if (!*aReturn) return;
-    PL_strncpy(*aReturn, (char *) resBuf, resLen);
-  }
-  return;
+    char resBuf[MAX_LOADSTRING];
+    int retval = LoadString( ghInstanceResources, aID, (LPTSTR)resBuf, sizeof(resBuf) );
+    if (retval != 0)
+    {
+        int resLen = strlen(resBuf);
+        *aReturn = (char *)calloc(resLen+1, sizeof(char *));
+        if (!*aReturn) return;
+            PL_strncpy(*aReturn, (char *) resBuf, resLen);
+    }
+    return;
 }
 

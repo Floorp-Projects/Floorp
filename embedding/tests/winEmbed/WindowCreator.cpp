@@ -24,11 +24,13 @@
 #include "WindowCreator.h"
 #include "winEmbed.h"
 
-WindowCreator::WindowCreator() {
-  NS_INIT_REFCNT();
+WindowCreator::WindowCreator()
+{
+    NS_INIT_REFCNT();
 }
 
-WindowCreator::~WindowCreator() {
+WindowCreator::~WindowCreator()
+{
 }
 
 NS_IMPL_ISUPPORTS1(WindowCreator, nsIWindowCreator)
@@ -38,7 +40,7 @@ WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,
                                   PRUint32 chromeFlags,
                                   nsIWebBrowserChrome **_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  ::CreateBrowserWindow(PRInt32(chromeFlags), parent, _retval);
-  return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    NS_ENSURE_ARG_POINTER(_retval);
+    ::CreateBrowserWindow(PRInt32(chromeFlags), parent, _retval);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
