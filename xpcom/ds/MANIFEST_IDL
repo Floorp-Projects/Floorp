@@ -9,6 +9,7 @@ nsIProperties.idl
 nsIPropertyBag.idl
 nsIRecyclingAllocator.idl
 nsISerializable.idl
+nsIStringService.idl
 nsISimpleEnumerator.idl
 nsISupportsArray.idl
 nsIArray.idl

@@ -92,20 +92,6 @@ nsStringService::DeleteACString(nsACString * aString)
 }
 
 NS_IMETHODIMP 
-nsStringService::DeleteAString(nsAString * aString)
-{
-  delete aString;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsStringService::DeleteACString(nsACString * aString)
-{
-  delete aString;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsStringService::GetString(const nsACString & aString, char **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
