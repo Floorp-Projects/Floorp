@@ -27,7 +27,7 @@ include <$(DEPTH)\config\config.mak>
 
 install:: 
  $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f basebrowser-win -o dos -v
- $(MAKE_INSTALL) installed-chrome.txt $(DIST)\bin\chrome
+ $(MAKE_INSTALL) installed-chrome.txt $(DIST)\Embed\chrome
 
 clobber::
- rm -f $(DIST)\bin\chrome\installed-chrome.txt
+ rm -f $(DIST)\Embed\chrome\installed-chrome.txt
