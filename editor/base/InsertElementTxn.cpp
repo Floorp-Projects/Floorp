@@ -45,6 +45,8 @@ NS_IMETHODIMP InsertElementTxn::Init(nsIDOMNode *aNode,
   mParent = do_QueryInterface(aParent);
   mOffset = aOffset;
   mEditor = aEditor;
+  if (!mNode || !mParent || !mEditor)
+    return NS_ERROR_INVALID_ARG;
   return NS_OK;
 }
 
@@ -71,16 +73,19 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
   { // get a ref node
     PRInt32 i=0;
     result = mParent->GetFirstChild(getter_AddRefs(refNode));
-    for (; i<mOffset; i++)
+    if (NS_SUCCEEDED(result) && refNode)
     {
-      nsCOMPtr<nsIDOMNode>nextSib;
-      result = refNode->GetNextSibling(getter_AddRefs(nextSib));  
-      if (NS_FAILED(result)) {
-        break;  // couldn't get a next sibling, so make aNode the first child
-      }
-      refNode = do_QueryInterface(nextSib);
-      if (!refNode) {
-        break;  // couldn't get a next sibling, so make aNode the first child
+      for (; i<mOffset; i++)
+      {
+        nsCOMPtr<nsIDOMNode>nextSib;
+        result = refNode->GetNextSibling(getter_AddRefs(nextSib));  
+        if (NS_FAILED(result)) {
+          break;  // couldn't get a next sibling, so make aNode the first child
+        }
+        refNode = do_QueryInterface(nextSib);
+        if (!refNode) {
+          break;  // couldn't get a next sibling, so make aNode the first child
+        }
       }
     }
   }
@@ -102,7 +107,7 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
 NS_IMETHODIMP InsertElementTxn::Undo(void)
 {
   if (gNoisy) { printf("%p Undo Insert Element of %p into parent %p at offset %d\n", 
-                       this, mNode, mParent, mOffset); }
+                       this, mNode.get(), mParent.get(), mOffset); }
   if (!mNode || !mParent)
     return NS_ERROR_NULL_POINTER;
 

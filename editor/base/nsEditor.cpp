@@ -1032,14 +1032,94 @@ NS_IMETHODIMP nsEditor::SelectAll()
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
       {
-        selection->Collapse(bodyNode, 0);
+        result = selection->Collapse(bodyNode, 0);
+        if (NS_SUCCEEDED(result))
+        {
+          PRInt32 numBodyChildren=0;
+          nsCOMPtr<nsIDOMNode>lastChild;
+          result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
+          if ((NS_SUCCEEDED(result)) && lastChild)
+          {
+            GetChildOffset(lastChild, bodyNode, numBodyChildren);
+            result = selection->Extend(bodyNode, numBodyChildren+1);
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP nsEditor::BeginningOfDocument()
+{
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->BeginningOfDocument();
+#endif // ENABLE_JS_EDITOR_LOG
+
+  if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(result) && selection)
+  {
+    nsCOMPtr<nsIDOMNodeList>nodeList;
+    nsAutoString bodyTag = "body";
+    result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    if ((NS_SUCCEEDED(result)) && nodeList)
+    {
+      PRUint32 count;
+      nodeList->GetLength(&count);
+      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+      nsCOMPtr<nsIDOMNode>bodyNode;
+      result = nodeList->Item(0, getter_AddRefs(bodyNode));
+      if ((NS_SUCCEEDED(result)) && bodyNode)
+      {
+        result = selection->Collapse(bodyNode, 0);
+        ScrollIntoView(PR_TRUE);
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP nsEditor::EndOfDocument()
+{
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->EndOfDocument();
+#endif // ENABLE_JS_EDITOR_LOG
+
+  if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(result) && selection)
+  {
+    nsCOMPtr<nsIDOMNodeList>nodeList;
+    nsAutoString bodyTag = "body";
+    result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    if ((NS_SUCCEEDED(result)) && nodeList)
+    {
+      PRUint32 count;
+      nodeList->GetLength(&count);
+      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+      nsCOMPtr<nsIDOMNode>bodyNode;
+      result = nodeList->Item(0, getter_AddRefs(bodyNode));
+      if ((NS_SUCCEEDED(result)) && bodyNode)
+      {
         PRInt32 numBodyChildren=0;
         nsCOMPtr<nsIDOMNode>lastChild;
         result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
         if ((NS_SUCCEEDED(result)) && lastChild)
         {
           GetChildOffset(lastChild, bodyNode, numBodyChildren);
-          selection->Extend(bodyNode, numBodyChildren+1);
+          result = selection->Collapse(bodyNode, numBodyChildren+1);
+          ScrollIntoView(PR_FALSE);
         }
       }
     }
@@ -1788,15 +1868,22 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelecti
   *aTxn = nsnull;
 
   nsresult result;
-  // allocate the out-param transaction
-  result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
-  if (NS_FAILED(result)) {
-    return result;
-  }
   nsCOMPtr<nsIDOMSelection> selection;
   result = mPresShell->GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
+    // Check whether the selection is collapsed and we should do nothing:
+    PRBool isCollapsed;
+    result = (selection->GetIsCollapsed(&isCollapsed));
+    if (NS_SUCCEEDED(result) && isCollapsed && aAction == eDoNothing)
+      return NS_OK;
+
+    // allocate the out-param transaction
+    result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
+    if (NS_FAILED(result)) {
+      return result;
+    }
+
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = do_QueryInterface(selection);
     if (enumerator)
@@ -1808,7 +1895,6 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelecti
         if ((NS_SUCCEEDED(result)) && (currentItem))
         {
           nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-          PRBool isCollapsed;
           range->GetIsCollapsed(&isCollapsed);
           if (PR_FALSE==isCollapsed)
           {
@@ -3493,7 +3579,7 @@ nsEditor::IsTextNode(nsIDOMNode *aNode)
 PRInt32 
 nsEditor::GetIndexOf(nsIDOMNode *parent, nsIDOMNode *child)
 {
-  PRInt32 index = 0;
+  PRInt32 idx = 0;
   
   NS_PRECONDITION(parent, "null parent passed to nsEditor::GetIndexOf");
   NS_PRECONDITION(parent, "null child passed to nsEditor::GetIndexOf");
@@ -3502,12 +3588,12 @@ nsEditor::GetIndexOf(nsIDOMNode *parent, nsIDOMNode *child)
   NS_PRECONDITION(content, "null content in nsEditor::GetIndexOf");
   NS_PRECONDITION(cChild, "null content in nsEditor::GetIndexOf");
   
-  nsresult res = content->IndexOf(cChild, index);
+  nsresult res = content->IndexOf(cChild, idx);
   if (NS_FAILED(res)) 
   {
     NS_NOTREACHED("could not find child in parent - nsEditor::GetIndexOf");
   }
-  return index;
+  return idx;
 }
   
 

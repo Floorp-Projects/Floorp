@@ -22,7 +22,6 @@
 #include "nsEditorEventListeners.h"
 #include "nsInsertHTMLTxn.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMNSRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h" 
@@ -37,6 +36,7 @@
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMNSRange.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsFileSpec.h"
@@ -45,6 +45,7 @@
 #include "nsIFileWidget.h" // for GetLocalFileURL stuff
 #include "nsWidgetsCID.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 
 #ifdef ENABLE_JS_EDITOR_LOG
@@ -395,6 +396,16 @@ NS_IMETHODIMP nsHTMLEditor::SelectAll()
   return nsTextEditor::SelectAll();
 }
 
+NS_IMETHODIMP nsHTMLEditor::BeginningOfDocument()
+{
+  return nsEditor::BeginningOfDocument();
+}
+
+NS_IMETHODIMP nsHTMLEditor::EndOfDocument()
+{
+  return nsEditor::EndOfDocument();
+}
+
 NS_IMETHODIMP nsHTMLEditor::ScrollUp(nsIAtom *aIncrement)
 {
   return nsTextEditor::ScrollUp(aIncrement);
@@ -460,8 +471,6 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
     mJSEditorLog->PasteAsCitedQuotation(aCitation);
 #endif // ENABLE_JS_EDITOR_LOG
 
-  printf("nsHTMLEditor::PasteAsQuotation\n");
-
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> newNode;
   nsAutoString tag("blockquote");
@@ -523,8 +532,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
     mJSEditorLog->InsertAsCitedQuotation(aQuotedText, aCitation);
 #endif // ENABLE_JS_EDITOR_LOG
 
-  printf("nsHTMLEditor::InsertAsQuotation\n");
-
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> newNode;
   nsAutoString tag("blockquote");
@@ -557,27 +564,100 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
     mJSEditorLog->InsertHTML(aInputString);
 #endif // ENABLE_JS_EDITOR_LOG
 
-  nsresult res;
   nsAutoEditBatch beginBatching(this);
 
-  nsEditor::DeleteSelection(nsIEditor::eDoNothing);
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> parentNode;
+  PRInt32 offsetOfNewNode;
+  res = DeleteSelectionAndPrepareToCreateNode(parentNode, offsetOfNewNode);
 
-  // Make the transaction for insert html:
-  nsInsertHTMLTxn* insertHTMLTxn = 0;
-  res = TransactionFactory::GetNewTransaction(kInsertHTMLTxnIID,
-                                              (EditTxn **)&insertHTMLTxn);
-  if (NS_SUCCEEDED(res))
+  nsCOMPtr<nsIDOMSelection>selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res))
+    return res;
+
+    // Get the first range in the selection, for context:
+  nsCOMPtr<nsIDOMRange> range;
+  res = selection->GetRangeAt(0, getter_AddRefs(range));
+  if (NS_FAILED(res))
+    return res;
+
+  nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
+  if (!nsrange)
+    return NS_ERROR_NO_INTERFACE;
+
+  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+  res = nsrange->CreateContextualFragment(aInputString,
+                                          getter_AddRefs(docfrag));
+  if (NS_FAILED(res))
   {
-    res = insertHTMLTxn->Init(aInputString, this);
-    if (NS_SUCCEEDED(res))
-      res = Do(insertHTMLTxn);
-
-    // XXX How is it that we don't have to release the transaction?
+#ifdef DEBUG
+    printf("Couldn't create contextual fragment: error was %d\n", res);
+#endif
+    return res;
   }
 
-  if (NS_FAILED(res))
-    printf("Couldn't insert html: error was %d\n", res);
+#if defined(DEBUG_akkana)
+  printf("============ Fragment dump :===========\n");
 
+  nsCOMPtr<nsIContent> fragc (do_QueryInterface(docfrag));
+  if (!fragc)
+    printf("Couldn't get fragment is nsIContent\n");
+  else
+    fragc->List(stdout);
+#endif
+
+  // Insert the contents of the document fragment:
+  nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
+#define INSERT_FRAGMENT_DIRECTLY 1
+#ifdef INSERT_FRAGMENT_DIRECTLY
+  // Make a collapsed range pointing to right after the current selection,
+  // and let range gravity keep track of where it is so that we can
+  // set the selection back there after the insert.
+  // Unfortunately this doesn't work right yet.
+  nsCOMPtr<nsIDOMRange> saverange;
+  res = selection->GetRangeAt(0, getter_AddRefs(saverange));
+
+  // Insert the node:
+  res = InsertNode(fragmentAsNode, parentNode, offsetOfNewNode);
+
+  // Now collapse the selection to the beginning of what we just inserted;
+  // would be better to set it to the end.
+  if (saverange)
+  {
+    nsCOMPtr<nsIDOMNode> parent;
+    PRInt32 offset;
+    if (NS_SUCCEEDED(saverange->GetEndParent(getter_AddRefs(parent))))
+      if (NS_SUCCEEDED(saverange->GetEndOffset(&offset)))
+        selection->Collapse(parent, offset);
+  }
+  else
+    selection->Collapse(parentNode, 0/*offsetOfNewNode*/);
+#else /* INSERT_FRAGMENT_DIRECTLY */
+  // Loop over the contents of the fragment:
+  nsCOMPtr<nsIDOMNode> child;
+  res = fragmentAsNode->GetFirstChild(getter_AddRefS(child));
+  if (NS_FAILED(res))
+  {
+    printf("GetFirstChild failed!\n");
+    return res;
+  }
+  while (child)
+  {
+    res = InsertNode(child, parentNode, offsetOfNewNode++);
+    if (NS_FAILED(res))
+      break;
+    nsCOMPtr<nsIDOMNode> nextSib;
+    if (NS_FAILED(child->GetNextSibling(getter_AddRefs(nextSib))))
+      /*break*/;
+    child = nextSib;
+  }
+  if (NS_FAILED(res))
+    return res;
+
+  // Now collapse the selection to the end of what we just inserted:
+  selection->Collapse(parentNode, offsetOfNewNode);
+#endif /* INSERT_FRAGMENT_DIRECTLY */
   return res;
 }
 
@@ -606,13 +686,30 @@ NS_IMETHODIMP nsHTMLEditor::OutputTextToString(nsString& aOutputString)
     if (NS_FAILED(rv))
       return rv;
   }
-    
 
   return encoder->EncodeToString(aOutputString);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
 {
+#if defined(DEBUG_akkana)
+  printf("============Content dump:===========\n");
+
+  nsCOMPtr<nsIDocument> thedoc;
+  nsCOMPtr<nsIPresShell> presShell;
+  if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))))
+  {
+    presShell->GetDocument(getter_AddRefs(thedoc));
+    if (thedoc) {
+      nsIContent* root = thedoc->GetRootContent();
+      if (nsnull != root) {
+        root->List(stdout);
+        NS_RELEASE(root);
+      }
+    }
+  }
+#endif
+
   nsCOMPtr<nsIHTMLEncoder> encoder;
   nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
                                                    nsnull,
@@ -2062,7 +2159,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)
+nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
 #ifdef ENABLE_JS_EDITOR_LOG
   nsAutoJSEditorLogLock logLock(mJSEditorLog);
@@ -2072,10 +2169,8 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
 #endif // ENABLE_JS_EDITOR_LOG
 
   nsresult res=NS_ERROR_NOT_INITIALIZED;
-  if (aReturn)
-    *aReturn = nsnull;
   
-  if (!aElement || !aReturn)
+  if (!aElement)
     return NS_ERROR_NULL_POINTER;
   
   nsAutoEditBatch beginBatching(this);

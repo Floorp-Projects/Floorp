@@ -67,7 +67,7 @@ public:
 
 protected:
   
-  /** the element to delete */
+  /** the element to insert */
   nsCOMPtr<nsIDOMNode> mNode;
 
   /** the node into which the new node will be inserted */

@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+// THIS FILE IS CURRENTLY THOUGHT TO BE OBSOLETE.
+// KEEPING AROUND FOR A FEW DAYS JUST TO MAKE SURE;
+// BUT IT'S NO LONGER PART OF THE BUILD.
+
 #include "nsInsertHTMLTxn.h"
 #include "nsIDOMSelection.h"
 #include "nsIContent.h"
@@ -44,7 +48,6 @@ nsInsertHTMLTxn::~nsInsertHTMLTxn()
 
 NS_IMETHODIMP nsInsertHTMLTxn::Do(void)
 {
-#if 0
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(res) && selection)
@@ -61,8 +64,12 @@ NS_IMETHODIMP nsInsertHTMLTxn::Do(void)
         printf("Calling nsInsertHTMLTxn::Do(%s)\n", str);
         delete[] str;
 #endif /* DEBUG_akkana */
-        res = nsrange->InsertFragment(mSrc);
-        // XXX NOTE: this part isn't going through the transaction manager!
+        nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+        res = nsrange->CreateContextualFragment(mSrc, getter_AddRefs(docfrag));
+
+        // Now we have to insert that document fragment in an undoable way
+        printf("Sorry, Insert HTML not fully written yet\n");
+        return NS_ERROR_NOT_IMPLEMENTED;
       }
     }
 #ifdef DEBUG_akkana
@@ -71,9 +78,6 @@ NS_IMETHODIMP nsInsertHTMLTxn::Do(void)
   }
 
   return res;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 NS_IMETHODIMP nsInsertHTMLTxn::Undo(void)

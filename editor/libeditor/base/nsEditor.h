@@ -201,6 +201,10 @@ public:
 
   NS_IMETHOD SelectAll();
 
+  NS_IMETHOD BeginningOfDocument();
+
+  NS_IMETHOD EndOfDocument();
+
   NS_IMETHOD Cut();
   
   NS_IMETHOD Copy();
