@@ -78,7 +78,8 @@ public:
     void     SetDataSize( PRUint32  size);
 
     PRUint32 MetaDataSize(void)                   { return mMetaSize;}
-    void     SetMetaDataSize( PRUint32  size);
+
+    PRUint32 Size(void)                           { return mDataSize + mMetaSize; }
 
     nsCacheDevice * CacheDevice(void)                        { return mCacheDevice;}
     void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device;}
@@ -158,6 +159,8 @@ private:
     friend class nsCacheEntryHashTable;
     friend class nsCacheService;
 
+    void     DetachDescriptors(void);
+
     // internal methods
     nsresult CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGranted);
     void MarkDoomed()          { mFlags |=  eDoomedMask; }
@@ -211,6 +214,7 @@ public:
     void          VisitEntries( Visitor *visitor);
     
 private:
+    friend class nsCacheService; // XXX redefine interface so this isn't necessary
 
     // PLDHashTable operation callbacks
     static const void *   GetKey( PLDHashTable *table, PLDHashEntryHdr *entry);

@@ -27,6 +27,8 @@
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
 #include "nsIPref.h"
+#include "nsICacheVisitor.h"
+#include "signal.h"
 
 
 static NS_DEFINE_CID(kStorageTransportCID, NS_STORAGETRANSPORT_CID);
@@ -46,6 +48,9 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
 
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
 {
+#if DEBUG
+    printf("### starting ~nsMemoryCacheDevice()\n");
+#endif
     // XXX dealloc all memory
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
@@ -66,9 +71,11 @@ nsMemoryCacheDevice::MemoryCacheSizeChanged(const char * pref, void * closure)
     if (NS_FAILED(rv))  return rv;
 
     rv = prefs->GetIntPref(gMemoryCacheSizePref, (PRInt32 *)&softLimit);
+    if (NS_FAILED(rv)) return rv;
     
+    softLimit *= 1024;  // convert k into bytes
     PRUint32 hardLimit = softLimit + 1024*1024*2;  // XXX find better limit than +2Meg
-    rv = device->AdjustMemoryLimits(softLimit, hardLimit);
+    device->AdjustMemoryLimits(softLimit, hardLimit);
 
     return 0; // XXX what are we supposed to return?
 }
@@ -80,16 +87,21 @@ nsMemoryCacheDevice::Init()
     nsresult  rv;
 
     rv = mMemCacheEntries.Init();
+    
+    // set some default memory limits, in case prefs aren't available
+    mSoftLimit = 1024 * 1024 * 3;
+    mHardLimit = mSoftLimit + 1024 *1024 * 2;
 
-    // XXX read user prefs for memory cache limits
+    // read user prefs for memory cache limits
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-    if (NS_FAILED(rv))  return rv;
+    if (NS_SUCCEEDED(rv)) {
 
-    rv = prefs->RegisterCallback(gMemoryCacheSizePref, MemoryCacheSizeChanged, this);
-    if (NS_FAILED(rv))  return rv;
+        rv = prefs->RegisterCallback(gMemoryCacheSizePref, MemoryCacheSizeChanged, this);
+        if (NS_FAILED(rv))  return rv;
 
-    // Initialize the pref
-    MemoryCacheSizeChanged(gMemoryCacheSizePref, this);
+        // Initialize the pref
+        MemoryCacheSizeChanged(gMemoryCacheSizePref, this);
+    }
 
     // Register as a memory pressure observer
     NS_WITH_SERVICE(nsIObserverService,
@@ -121,7 +133,9 @@ nsMemoryCacheDevice::FindEntry(nsCString * key)
     PR_REMOVE_AND_INIT_LINK(entry);
     PR_APPEND_LINK(entry, &mEvictionList);
     
-    return entry;;
+    mInactiveSize -= entry->Size();
+
+    return entry;
 }
 
 
@@ -142,6 +156,9 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
     if (ourEntry != entry)
         return NS_ERROR_INVALID_POINTER;
 
+    mInactiveSize += entry->Size();
+    EvictEntriesIfNecessary();
+
     return NS_OK;
 }
 
@@ -161,7 +178,13 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
         return rv;
     }
 
-    // XXX add size of entry to memory totals
+    // add size of entry to memory totals
+    ++mEntryCount;
+    if (mMaxEntryCount < mEntryCount) mMaxEntryCount = mEntryCount;
+
+    mTotalSize += entry->Size();
+    EvictEntriesIfNecessary();
+    
     return NS_OK;
 }
 
@@ -174,6 +197,10 @@ nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
 
     // remove entry from our eviction list
     PR_REMOVE_AND_INIT_LINK(entry);
+
+    // adjust our totals
+    mTotalSize    -= entry->Size();
+    mInactiveSize -= entry->Size();
 }
 
 
@@ -217,7 +244,15 @@ nsMemoryCacheDevice::GetFileForEntry( nsCacheEntry *    entry,
 nsresult
 nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 {
-    // XXX keep track of totals
+    if (entry->IsStreamData()) {
+        // we have the right to refuse or pre-evict
+    }
+
+    // adjust our totals
+    mTotalSize    += deltaSize;
+
+    EvictEntriesIfNecessary();
+
     return NS_OK;
 }
 
@@ -225,28 +260,29 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 nsresult
 nsMemoryCacheDevice::Visit(nsICacheVisitor * visitor)
 {
+    //    visitor->VisitDevice(GetDeviceID(), deviceInfo);
     return NS_OK;
 }
 
 
-nsresult
+void
 nsMemoryCacheDevice::AdjustMemoryLimits(PRUint32  softLimit, PRUint32  hardLimit)
 {
     mSoftLimit = softLimit;
     mHardLimit = hardLimit;
-
-    if ((mTotalSize > mHardLimit) || (mInactiveSize > softLimit)) {
-        // XXX rv = EvictEntries();
-    }
-    return NS_OK;
+    EvictEntriesIfNecessary();
 }
 
 
-nsresult
-nsMemoryCacheDevice::EvictEntries(void)
+void
+nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
 {
-    nsCacheEntry * entry;
-    nsresult       rv = NS_OK;
+    nsCacheEntry * entry, * next;
+
+    if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
+        return;
+
+    // XXX implement more sophisticated eviction ordering
 
     entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList);
     while (entry != &mEvictionList) {
@@ -259,24 +295,97 @@ nsMemoryCacheDevice::EvictEntries(void)
         mMemCacheEntries.RemoveEntry(entry);
 
         // remove entry from the eviction list
+        next = (nsCacheEntry *)PR_NEXT_LINK(entry);
         PR_REMOVE_AND_INIT_LINK(entry);
         
         // update statistics
-        PRUint32 memoryRecovered = entry->DataSize() + entry->MetaDataSize();
+        PRUint32 memoryRecovered = entry->Size();
         mTotalSize    -= memoryRecovered;
         mInactiveSize -= memoryRecovered;
         --mEntryCount;
+
         delete entry;
+        entry = next;
 
         if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
             break;
     }
+}
 
+
+/******************************************************************************
+ * nsMemoryCacheDeviceInfo - for implementing about:cache
+ *****************************************************************************/
+
+class nsMemoryCacheDeviceInfo : public nsICacheDeviceInfo {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICACHEDEVICEINFO
+
+    nsMemoryCacheDeviceInfo(nsMemoryCacheDevice* device)
+        :   mDevice(device)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    virtual ~nsMemoryCacheDeviceInfo() {}
+    
+private:
+    nsMemoryCacheDevice* mDevice;
+};
+
+
+NS_IMPL_ISUPPORTS1(nsMemoryCacheDeviceInfo, nsICacheDeviceInfo);
+
+
+NS_IMETHODIMP
+nsMemoryCacheDeviceInfo::GetDescription(char ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    *result = nsCRT::strdup("Memory cache device");
+    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
 
+NS_IMETHODIMP
+nsMemoryCacheDeviceInfo::GetUsageReport(char ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    *result = nsCRT::strdup("Memory cache usage report:");
+    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
 
-// XXX need methods for enumerating entries
 
+NS_IMETHODIMP
+nsMemoryCacheDeviceInfo::GetEntryCount(PRUint32 * result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    // XXX compare calculated count vs. mEntryCount
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsMemoryCacheDeviceInfo::GetTotalSize(PRUint32 * result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    // *aTotalSize = mDevice->getCacheSize();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMemoryCacheDeviceInfo::GetMaximumSize(PRUint32 * result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    // *aMaximumSize = mDevice->getCacheCapacity();
+    return NS_OK;
+}
+
+
+/******************************************************************************
+ * nsMemoryCacheEntryInfo - for implementing about:cache
+ *****************************************************************************/
 

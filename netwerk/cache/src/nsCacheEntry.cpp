@@ -85,13 +85,6 @@ nsCacheEntry::SetDataSize( PRUint32   size)
     MarkEntryDirty();
 }
 
-void
-nsCacheEntry::SetMetaDataSize( PRUint32   size)
-{
-    mMetaSize = size;
-    mLastModified = ConvertPRTimeToSeconds(PR_Now());
-    MarkEntryDirty();
-}
 
 nsresult
 nsCacheEntry::GetSecurityInfo( nsISupports ** result)
@@ -149,13 +142,12 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
             return NS_ERROR_OUT_OF_MEMORY;
     }
     nsresult rv = mMetaData->SetElement(key, value);
-    if (NS_SUCCEEDED(rv))
-        MarkMetaDataDirty();
-    
-    // XXX calc meta data size
+    if (NS_FAILED(rv))
+        return rv;
 
-    mLastModified = ConvertPRTimeToSeconds(PR_Now());
-
+    mMetaSize = mMetaData->Size();                    // calc new meta data size
+    mLastModified = ConvertPRTimeToSeconds(PR_Now()); // time stamp the entry
+    MarkMetaDataDirty();                              // mark it dirty
     return rv;
 }
 
@@ -304,9 +296,26 @@ nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
 }
 
 
-/*
+void
+nsCacheEntry::DetachDescriptors(void)
+{
+    nsCacheEntryDescriptor * descriptor =
+        (nsCacheEntryDescriptor *)PR_LIST_HEAD(&mDescriptorQ);
+
+    while (descriptor != &mDescriptorQ) {
+        nsCacheEntryDescriptor * next =
+            (nsCacheEntryDescriptor *)PR_NEXT_LINK(descriptor);
+        
+        descriptor->ClearCacheEntry();
+        PR_REMOVE_AND_INIT_LINK(descriptor);
+        descriptor = next;
+    }
+}
+
+
+/******************************************************************************
  *  nsCacheEntryHashTable
- */
+ *****************************************************************************/
 
 PLDHashTableOps
 nsCacheEntryHashTable::ops =
@@ -373,7 +382,7 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
     hashEntry = PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_ADD);
 #ifndef DEBUG_dougt
     NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry == 0,
-                 "nsCacheEntryHashTable::AddEntry - entry already used");
+                 "### nsCacheEntryHashTable::AddEntry - entry already used");
 #endif
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = cacheEntry;
 
@@ -385,10 +394,13 @@ void
 nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 {
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
-    NS_ASSERTION(cacheEntry, "cacheEntry == nsnull");
+    NS_ASSERTION(cacheEntry, "### cacheEntry == nsnull");
 
+#if DEBUG
     // XXX debug code to make sure we have the entry we're trying to remove
-
+    nsCacheEntry *check = GetEntry(cacheEntry->mKey);
+    NS_ASSERTION(check == cacheEntry, "### Attempting to remove unknown cache entry!!!");
+#endif
     (void) PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_REMOVE);
 }
 
@@ -433,7 +445,7 @@ nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
                                   const PLDHashEntryHdr * hashEntry,
                                   const void *            key)
 {
-    NS_ASSERTION(key !=  nsnull, "nsCacheEntryHashTable::MatchEntry : null key");
+    NS_ASSERTION(key !=  nsnull, "### nsCacheEntryHashTable::MatchEntry : null key");
     nsCacheEntry *cacheEntry = ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry;
 
     return nsStr::StrCompare(*cacheEntry->mKey, *(nsCString *)key, -1, PR_FALSE) == 0;
@@ -458,6 +470,7 @@ nsCacheEntryHashTable::ClearEntry(PLDHashTable * /* table */,
     ((nsCacheEntryHashTableEntry *)hashEntry)->keyHash    = 0;
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = 0;
 }
+
 
 void
 nsCacheEntryHashTable::Finalize(PLDHashTable * table)

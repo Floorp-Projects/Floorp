@@ -29,6 +29,7 @@
 #include "nsCacheEntry.h"
 
 
+class nsMemoryCacheDeviceInfo;
 
 class nsMemoryCacheDevice : public nsCacheDevice
 {
@@ -39,10 +40,11 @@ public:
     virtual nsresult  Init();
 
     virtual const char *   GetDeviceID(void);
-    virtual nsCacheEntry * FindEntry( nsCString * key );
-    virtual nsresult       DeactivateEntry( nsCacheEntry * entry );
+
     virtual nsresult       BindEntry( nsCacheEntry * entry );
+    virtual nsCacheEntry * FindEntry( nsCString * key );
     virtual void           DoomEntry( nsCacheEntry * entry );
+    virtual nsresult       DeactivateEntry( nsCacheEntry * entry );
 
     virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
                                            nsCacheAccessMode mode,
@@ -58,8 +60,9 @@ public:
     static int PR_CALLBACK MemoryCacheSizeChanged(const char * pref, void * closure);
  
 private:
-    nsresult  AdjustMemoryLimits(PRUint32  softLimit, PRUint32  hardLimit);
-    nsresult  EvictEntries(void);
+    friend class nsMemoryCacheDeviceInfo;
+    void      AdjustMemoryLimits(PRUint32  softLimit, PRUint32  hardLimit);
+    void      EvictEntriesIfNecessary(void);
 
     nsCacheEntryHashTable   mMemCacheEntries;
     PRCList                 mEvictionList;
@@ -75,6 +78,8 @@ private:
     PRUint32                mMaxEntryCount;
     // XXX what other stats do we want to keep?
 };
+
+
 
 
 #endif // _nsMemoryCacheDevice_h_

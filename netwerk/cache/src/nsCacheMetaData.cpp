@@ -110,37 +110,50 @@ nsCacheMetaData::SetElement(const nsAReadableCString& key,
                             const nsAReadableCString& value)
 {
     nsCacheMetaDataHashTableEntry * metaEntry;
+    nsresult  rv = NS_ERROR_OUT_OF_MEMORY;  // presume the worst
 
     NS_ASSERTION(initialized, "nsCacheMetaDataHashTable not initialized");
 
     // XXX need to copy string until we have scc's new flat string abstract class
     // XXX see nsCacheMetaData::HashKey below (bug 70075)
     nsCString * tempKey = new nsCString(key);
-    if (!tempKey) return NS_ERROR_OUT_OF_MEMORY;
+    if (!tempKey) return rv;
 
     // XXX should empty value remove the key?
 
     metaEntry = (nsCacheMetaDataHashTableEntry *)
         PL_DHashTableOperate(&table, tempKey, PL_DHASH_ADD);
+    if (!metaEntry) goto error_exit;
+
+
     if (metaEntry->key == nsnull) {
         metaEntry->key = new nsCString(key);
         if (metaEntry->key == nsnull) {
-            delete tempKey;
-            return NS_ERROR_OUT_OF_MEMORY;
+            goto error_exit;
         }
     }
     if (metaEntry->value != nsnull)
-        delete metaEntry->value;
+        delete metaEntry->value;  // clear the old value
 
     metaEntry->value = new nsCString(value);
     if (metaEntry->value == nsnull) {
         // XXX remove key?
-        delete tempKey;
-        return NS_ERROR_OUT_OF_MEMORY;
+        goto error_exit;
     }
 
+    rv = NS_OK;
+ error_exit:
     delete tempKey;
-    return NS_OK;
+    return rv;
+}
+
+
+PRUint32
+nsCacheMetaData::Size(void)
+{
+    PRUint32 size = 0;
+    (void) PL_DHashTableEnumerate(&table, CalculateSize, &size);
+    return size;
 }
 
 
@@ -204,9 +217,9 @@ nsCacheMetaData::MatchEntry(PLDHashTable *       /* table */,
 				     const PLDHashEntryHdr * hashEntry,
 				     const void *            key)
 {
-    NS_ASSERTION(key !=  nsnull, "nsCacheMetaDataHashTable::MatchEntry : null key");
+    NS_ASSERTION(key !=  nsnull, "### nsCacheMetaDataHashTable::MatchEntry : null key");
     nsCString * entryKey = ((nsCacheMetaDataHashTableEntry *)hashEntry)->key;
-    NS_ASSERTION(entryKey, "hashEntry->key == nsnull");
+    NS_ASSERTION(entryKey, "### hashEntry->key == nsnull");
 
     return entryKey->Equals(*NS_STATIC_CAST(const nsAReadableCString*,key));
 }
