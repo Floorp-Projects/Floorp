@@ -689,7 +689,7 @@ qa_stat_get_sysinfo()
                     -e "s/ release//"`
     else
         case $QA_SYS in
-            *SunOS*5.8*)
+            *SunOS*5.[89]*)
                 ISAINFO=`$GET_SYSINFO isainfo -v`
                 IS_64=`echo $ISAINFO | grep 64 >/dev/null && \
                     echo 64 bit`
