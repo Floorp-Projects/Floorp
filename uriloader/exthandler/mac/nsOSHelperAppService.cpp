@@ -27,6 +27,9 @@
 #include "nsIURL.h"
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
+#include "nsMimeTypes.h"
+
+#include "nsIInternetConfigService.h"
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
@@ -45,15 +48,25 @@ NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentTyp
   
   // for now we only have defaults to worry about...
   // go look up in the windows registry to see if there is a handler for this mime type...if there is return TRUE...
-
   *aCanHandleContent = PR_FALSE;
-  return NS_OK;
+  nsresult rv = nsExternalHelperAppService::CanHandleContent(aMimeContentType, aURI,aCanHandleContent);
+
+  if (NS_FAILED(rv) || *aCanHandleContent == PR_FALSE)
+  {
+    nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_PROGID));
+    if (icService)
+    {
+      rv = icService->HasMappingForMIMEType(aMimeContentType, aCanHandleContent);
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
-   nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
   
   // see if we have user specified information for handling this content type by giving the base class
   // first crack at it...
@@ -62,11 +75,57 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   
   // this is important!! if do content for the base class returned any success code, then assume we are done
   // and don't even play around with 
-  if (NS_SUCCEEDED(rv)) return NS_OK;
+  if (NS_SUCCEEDED(rv))
+  {
+    if (((strcmp(aMimeContentType, UNKNOWN_CONTENT_TYPE) == 0) ||
+         (strcmp(aMimeContentType, APPLICATION_OCTET_STREAM) == 0)) &&
+         url)
+    {
+      // trap for unknown or octet-stream to check for a ".bin" file
+      char str[16];
+      char *strptr = str;
+      url->GetFileExtension(&strptr);
+      if (*strptr)
+      {
+        if (strcmp(strptr, "bin") != 0)
+        {
+          return NS_OK;
+        }
+        else
+        {
+          // it's a ".bin" file, on Mac, it's probably a MacBinary file
+          // do lookup in Internet Config
+          rv = NS_ERROR_FAILURE;
+        }
+      }
+    }
+    else
+    {
+      return NS_OK;
+    }
+  }
   
-  // there is no registry on linux (like there is on win32)
   *aStreamListener = nsnull;
-  return NS_OK;
+  // use InternetConfig to fill in MIMEInfo
+  nsCOMPtr<nsIMIMEInfo> mimeInfo;
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_PROGID));
+  if (icService)
+  {
+    if (url)
+      rv = icService->FillInMIMEInfo(aMimeContentType, url, getter_AddRefs(mimeInfo));
+    else
+      rv = icService->FillInMIMEInfo(aMimeContentType, nsnull, getter_AddRefs(mimeInfo));
+    if (NS_SUCCEEDED(rv) && mimeInfo)
+    {
+      // this code is incomplete and just here to get things started..
+      nsXPIDLCString fileExtension;
+      mimeInfo->FirstExtension(getter_Copies(fileExtension));
+      nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
+      handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+      rv = NS_OK;
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
