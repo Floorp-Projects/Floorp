@@ -120,7 +120,8 @@ orkinRow::CanUseRow(nsIMdbEnv* mev, mork_bool inMutable,
   if ( ev )
   {
     morkRowObject* rowObj = (morkRowObject*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kRow);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kRow,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( rowObj )
     {
       if ( rowObj->IsRowObject() )

@@ -275,7 +275,16 @@ nsIMdbFile_SlotStrongFile(nsIMdbFile* self, morkEnv* ev, nsIMdbFile** ioSlot);
   // then zeroed out.  Then if self is non-nil, this is acquired by
   // calling AddStrongRef(), and if the return value shows success,
   // then self is put into slot *ioSlot.  Note self can be nil, so we take
-  // expression 'nsIMdbHeap_SlotStrongFile(0, ev, &slot)'.
+  // expression 'nsIMdbFile_SlotStrongFile(0, ev, &slot)'.
+
+extern void // utility method very similar to morkNode::SlotStrongNode():
+nsIMdbCompare_SlotStrongCompare(nsIMdbCompare* self, morkEnv* ev,
+  nsIMdbCompare** ioSlot);
+  // If *ioSlot is non-nil, that compare is released by CutStrongRef() and
+  // then zeroed out.  Then if self is non-nil, this is acquired by
+  // calling AddStrongRef(), and if the return value shows success,
+  // then self is put into slot *ioSlot.  Note self can be nil, so we take
+  // expression 'nsIMdbCompare_SlotStrongCompare(0, ev, &slot)'.
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 

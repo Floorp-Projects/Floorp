@@ -129,6 +129,13 @@ morkTableRowCursor::NonTableRowCursorTypeError(morkEnv* ev)
   ev->NewError("non morkTableRowCursor");
 }
 
+
+orkinTableRowCursor*
+morkTableRowCursor::AcquireUniqueRowCursorHandle(morkEnv* ev)
+{
+  return this->AcquireTableRowCursorHandle(ev);
+}
+
 orkinTableRowCursor*
 morkTableRowCursor::AcquireTableRowCursorHandle(morkEnv* ev)
 {
@@ -153,6 +160,23 @@ morkTableRowCursor::NextRowOid(morkEnv* ev, mdbOid* outOid)
   (void) this->NextRow(ev, outOid, &outPos);
   return outPos;
 }
+
+mork_bool
+morkTableRowCursor::CanHaveDupRowMembers(morkEnv* ev)
+{
+  return morkBool_kFalse; // false default is correct
+}
+
+mork_count
+morkTableRowCursor::GetMemberCount(morkEnv* ev)
+{
+  morkTable* table = mTableRowCursor_Table;
+  if ( table )
+    return table->mTable_RowArray.mArray_Fill;
+  else
+    return 0;
+}
+
 
 morkRow*
 morkTableRowCursor::NextRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos)

@@ -68,9 +68,9 @@
 #include "morkThumb.h"
 #endif
 
-#ifndef _MORKFILE_
-#include "morkFile.h"
-#endif
+// #ifndef _MORKFILE_
+// #include "morkFile.h"
+// #endif
 
 #ifndef _ORKINTHUMB_
 #include "orkinThumb.h"
@@ -119,7 +119,8 @@ orkinStore::CanUseStore(nsIMdbEnv* mev,
   if ( ev )
   {
     morkStore* self = (morkStore*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kStore);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kStore,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( self )
     {
       if ( self->IsStore() )
@@ -373,7 +374,46 @@ orkinStore::GetPortFilePath(
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkStore* store = (morkStore*) mHandle_Object;
+    nsIMdbFile* file = store->mStore_File;
+    
+    if ( file )
+      file->Path(mev, outFilePath);
+    else
+      store->NilStoreFileError(ev);
+    
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinStore::GetPortFile(
+  nsIMdbEnv* mev, // context
+  nsIMdbFile** acqFile) // acquire file used by port or store
+{
+  mdb_err outErr = 0;
+  if ( acqFile )
+    *acqFile = 0;
+
+  morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkStore* store = (morkStore*) mHandle_Object;
+    nsIMdbFile* file = store->mStore_File;
+    
+    if ( file )
+    {
+      if ( acqFile )
+      {
+        file->AddStrongRef(mev);
+        if ( ev->Good() )
+          *acqFile = file;
+      }
+    }
+    else
+      store->NilStoreFileError(ev);
+      
     outErr = ev->AsErr();
   }
   return outErr;
@@ -421,19 +461,25 @@ orkinStore::CanExportToFormat( // can export content in given specific format?
 /*virtual*/ mdb_err
 orkinStore::ExportToFormat( // export content in given specific format
   nsIMdbEnv* mev, // context
-  const char* inFilePath, // the file to receive exported content
+  // const char* inFilePath, // the file to receive exported content
+  nsIMdbFile* ioFile, // destination abstract file interface
   const char* inFormatVersion, // file format description
   nsIMdbThumb** acqThumb) // acquire thumb for incremental export
 // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
 // then the export will be finished.
 {
-  MORK_USED_2(inFilePath,inFormatVersion);
   mdb_err outErr = 0;
   nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    if ( ioFile && inFormatVersion && acqThumb )
+    {
+      ev->StubMethodOnlyError();
+    }
+    else
+      ev->NilPointerError();
+    
     outErr = ev->AsErr();
   }
   if ( acqThumb )
@@ -995,6 +1041,33 @@ orkinStore::ImportContent( // import content from port
     *acqThumb = outThumb;
   return outErr;
 }
+
+/*virtual*/ mdb_err
+orkinStore::ImportFile( // import content from port
+  nsIMdbEnv* mev, // context
+  nsIMdbFile* ioFile, // the file with content to add to store
+  nsIMdbThumb** acqThumb) // acquire thumb for incremental import
+// Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+// then the import will be finished.
+{
+  nsIMdbThumb* outThumb = 0;
+  mdb_err outErr = 0;
+  morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    if ( ioFile && acqThumb )
+    {
+      ev->StubMethodOnlyError();
+    }
+    else
+      ev->NilPointerError();
+    
+    outErr = ev->AsErr();
+  }
+  if ( acqThumb )
+    *acqThumb = outThumb;
+  return outErr;
+}
 // } ----- end inport/export methods -----
 
 // { ----- begin hinting methods -----
@@ -1065,8 +1138,8 @@ orkinStore::LargeCommit( // save important changes if at all possible
     nsIMdbHeap* heap = store->mPort_Heap;
     
     morkThumb* thumb = 0;
-    morkFile* file = store->mStore_File;
-    if ( file && file->Length(ev) > 128 && store->mStore_CanWriteIncremental )
+    // morkFile* file = store->mStore_File;
+    if ( store->DoPreferLargeOverCompressCommit(ev) )
     {
       thumb = morkThumb::Make_LargeCommit(ev, heap, store);
     }
@@ -1107,8 +1180,7 @@ orkinStore::SessionCommit( // save all changes if large commits delayed
     nsIMdbHeap* heap = store->mPort_Heap;
     
     morkThumb* thumb = 0;
-    morkFile* file = store->mStore_File;
-    if ( file && file->Length(ev) > 128 && store->mStore_CanWriteIncremental )
+    if ( store->DoPreferLargeOverCompressCommit(ev) )
     {
       thumb = morkThumb::Make_LargeCommit(ev, heap, store);
     }

@@ -97,7 +97,8 @@ orkinPortTableCursor::CanUsePortTableCursor(nsIMdbEnv* mev,
   if ( ev )
   {
     morkPortTableCursor* self = (morkPortTableCursor*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kPortTableCursor);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kPortTableCursor,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( self )
     {
       if ( self->IsPortTableCursor() )

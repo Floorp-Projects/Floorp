@@ -104,7 +104,8 @@ orkinRowCellCursor::CanUseRowCellCursor(nsIMdbEnv* mev, mork_bool inMutable,
   if ( ev )
   {
     morkRowCellCursor* self = (morkRowCellCursor*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kRowCellCursor);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kRowCellCursor,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( self )
     {
       if ( self->IsRowCellCursor() )

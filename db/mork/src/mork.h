@@ -194,6 +194,8 @@ class morkRow;
 class morkRowCellCursor;
 class morkRowObject;
 class morkRowSpace;
+class morkSorting;
+class morkSortingRowCursor;
 class morkSpace;
 class morkSpan;
 class morkStore;

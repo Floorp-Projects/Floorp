@@ -36,9 +36,13 @@
 #include "morkFile.h"
 #endif
 
-// #ifndef _ORKINFILE_
-// #include "orkinFile.h"
-// #endif
+#define MORK_CONFIG_USE_ORKINFILE 1
+ 
+#ifdef MORK_CONFIG_USE_ORKINFILE
+#ifndef _ORKINFILE_
+#include "orkinFile.h"
+#endif
+#endif /*MORK_CONFIG_USE_ORKINFILE*/
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 

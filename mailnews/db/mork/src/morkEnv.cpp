@@ -67,6 +67,9 @@ morkEnv::~morkEnv() /*i*/ // assert CloseEnv() executed earlier
   MORK_ASSERT(mEnv_ErrorHook==0);
 }
 
+/* choose morkBool_kTrue or morkBool_kFalse for kBeVerbose: */
+#define morkEnv_kBeVerbose morkBool_kFalse
+
 /*public non-poly*/
 morkEnv::morkEnv(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
   morkFactory* ioFactory, nsIMdbHeap* ioSlotHeap)
@@ -86,7 +89,7 @@ morkEnv::morkEnv(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
 , mEnv_DoTrace( morkBool_kFalse )
 , mEnv_AutoClear( morkAble_kDisabled )
 , mEnv_ShouldAbort( morkBool_kFalse )
-, mEnv_BeVerbose( morkBool_kFalse )
+, mEnv_BeVerbose( morkEnv_kBeVerbose )
 {
   MORK_ASSERT(ioSlotHeap && ioFactory );
   if ( ioSlotHeap )
@@ -126,7 +129,7 @@ morkEnv::morkEnv(morkEnv* ev, /*i*/
 , mEnv_DoTrace( morkBool_kFalse )
 , mEnv_AutoClear( morkAble_kDisabled )
 , mEnv_ShouldAbort( morkBool_kFalse )
-, mEnv_BeVerbose( morkBool_kFalse )
+, mEnv_BeVerbose( morkEnv_kBeVerbose )
 {
   // $$$ do we need to refcount the inSelfAsMdbEnv nsIMdbEnv??
   

@@ -38,8 +38,8 @@ public:
   virtual ~orkinHeap(); // does nothing
     
 private: // copying is not allowed
-  orkinHeap(const morkHandle& other);
-  orkinHeap& operator=(const morkHandle& other);
+  orkinHeap(const orkinHeap& other);
+  orkinHeap& operator=(const orkinHeap& other);
 
 public:
 

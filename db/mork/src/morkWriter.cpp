@@ -40,9 +40,9 @@
 #include "morkWriter.h"
 #endif
 
-#ifndef _MORKFILE_
-#include "morkFile.h"
-#endif
+// #ifndef _MORKFILE_
+// #include "morkFile.h"
+// #endif
 
 #ifndef _MORKSTREAM_
 #include "morkStream.h"
@@ -113,7 +113,7 @@ morkWriter::~morkWriter() // assert CloseTable() executed earlier
 
 /*public non-poly*/
 morkWriter::morkWriter(morkEnv* ev, const morkUsage& inUsage,
-    nsIMdbHeap* ioHeap, morkStore* ioStore, morkFile* ioFile,
+    nsIMdbHeap* ioHeap, morkStore* ioStore, nsIMdbFile* ioFile,
     nsIMdbHeap* ioSlotHeap)
 : morkNode(ev, inUsage, ioHeap)
 , mWriter_Store( 0 )
@@ -194,7 +194,7 @@ morkWriter::morkWriter(morkEnv* ev, const morkUsage& inUsage,
     if ( ioSlotHeap && ioFile && ioStore )
     {
       morkStore::SlotWeakStore(ioStore, ev, &mWriter_Store);
-      morkFile::SlotStrongFile(ioFile, ev, &mWriter_File);
+      nsIMdbFile_SlotStrongFile(ioFile, ev, &mWriter_File);
       nsIMdbHeap_SlotStrongHeap(ioSlotHeap, ev, &mWriter_SlotHeap);
       if ( ev->Good() )
       {
@@ -228,7 +228,8 @@ morkWriter::MakeWriterStream(morkEnv* ev) // give writer a suitable stream
       }
       else // compress commit
       {
-        morkFile* bud = mWriter_File->AcquireBud(ev, heap);
+        nsIMdbFile* bud = 0;
+        mWriter_File->AcquireBud(ev->AsMdbEnv(), heap, &bud);
         if ( bud )
         {
           if ( ev->Good() )
@@ -239,7 +240,7 @@ morkWriter::MakeWriterStream(morkEnv* ev) // give writer a suitable stream
                 morkWriter_kStreamBufSize, frozen);
           }
           else
-            bud->CutStrongRef(ev);
+            bud->CutStrongRef(ev->AsMdbEnv());
         }
       }
         
@@ -264,8 +265,8 @@ morkWriter::CloseWriter(morkEnv* ev) // called by CloseMorkNode();
     if ( this->IsNode() )
     {
       morkStore::SlotWeakStore((morkStore*) 0, ev, &mWriter_Store);
-      morkFile::SlotStrongFile((morkFile*) 0, ev, &mWriter_File);
-      morkFile::SlotStrongFile((morkFile*) 0, ev, &mWriter_Bud);
+      nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev, &mWriter_File);
+      nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev, &mWriter_Bud);
       morkStream::SlotStrongStream((morkStream*) 0, ev, &mWriter_Stream);
       nsIMdbHeap_SlotStrongHeap((nsIMdbHeap*) 0, ev, &mWriter_SlotHeap);
       this->MarkShut();
@@ -1195,12 +1196,12 @@ morkWriter::OnContentDone(morkEnv* ev)
   }
   
   stream->Flush(ev);
-  morkFile* bud = mWriter_Bud;
+  nsIMdbFile* bud = mWriter_Bud;
   if ( bud )
   {
-    bud->Flush(ev);
-    bud->BecomeTrunk(ev);
-    morkFile::SlotStrongFile((morkFile*) 0, ev, &mWriter_Bud);
+    bud->Flush(ev->AsMdbEnv());
+    bud->BecomeTrunk(ev->AsMdbEnv());
+    nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev, &mWriter_Bud);
   }
   else if ( !mWriter_Incremental ) // should have a bud?
     this->NilWriterBudError(ev);

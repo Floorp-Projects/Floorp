@@ -60,8 +60,8 @@ protected: // construction is protected (use the static Make() method)
   // void CloseHandle(morkEnv* ev); // don't need to specialize closing
 
 private: // copying is not allowed
-  orkinTable(const morkHandle& other);
-  orkinTable& operator=(const morkHandle& other);
+  orkinTable(const orkinTable& other);
+  orkinTable& operator=(const orkinTable& other);
 
 // public: // dynamic type identification
   // mork_bool IsHandle() const //
@@ -273,23 +273,6 @@ public: // type identification
     nsIMdbEnv* ev); // context
   // } ----- end row set methods -----
 
-  // { ----- begin searching methods -----
-  virtual mdb_err SearchOneSortedColumn( // search only currently sorted col
-    nsIMdbEnv* ev, // context
-    const mdbYarn* inPrefix, // content to find as prefix in row's column cell
-    mdbRange* outRange); // range of matching rows
-    
-  virtual mdb_err SearchManyColumns( // search variable number of sorted cols
-    nsIMdbEnv* ev, // context
-    const mdbYarn* inPrefix, // content to find as prefix in row's column cell
-    mdbSearch* ioSearch, // columns to search and resulting ranges
-    nsIMdbThumb** acqThumb); // acquire thumb for incremental search
-  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then the search will be finished.  Until that time, the ioSearch argument
-  // is assumed referenced and used by the thumb; one should not inspect any
-  // output results in ioSearch until after the thumb is finished with it.
-  // } ----- end searching methods -----
-
   // { ----- begin hinting methods -----
   virtual mdb_err SearchColumnsHint( // advise re future expected search cols  
     nsIMdbEnv* ev, // context
@@ -319,6 +302,30 @@ public: // type identification
     // a surprise request occurs for row position during batch changes.
   // } ----- end hinting methods -----
 
+  // { ----- begin searching methods -----
+  virtual mdb_err FindRowMatches( // search variable number of sorted cols
+    nsIMdbEnv* ev, // context
+    const mdbYarn* inPrefix, // content to find as prefix in row's column cell
+    nsIMdbTableRowCursor** acqCursor); // set of matching rows
+    
+  virtual mdb_err GetSearchColumns( // query columns used by FindRowMatches()
+    nsIMdbEnv* ev, // context
+    mdb_count* outCount, // context
+    mdbColumnSet* outColSet); // caller supplied space to put columns
+    // GetSearchColumns() returns the columns actually searched when the
+    // FindRowMatches() method is called.  No more than mColumnSet_Count
+    // slots of mColumnSet_Columns will be written, since mColumnSet_Count
+    // indicates how many slots are present in the column array.  The
+    // actual number of search column used by the table is returned in
+    // the outCount parameter; if this number exceeds mColumnSet_Count,
+    // then a caller needs a bigger array to read the entire column set.
+    // The minimum of mColumnSet_Count and outCount is the number slots
+    // in mColumnSet_Columns that were actually written by this method.
+    //
+    // Callers are expected to change this set of columns by calls to
+    // nsIMdbTable::SearchColumnsHint() or SetSearchSorting(), or both.
+  // } ----- end searching methods -----
+
   // { ----- begin sorting methods -----
   // sorting: note all rows are assumed sorted by row ID as a secondary
   // sort following the primary column sort, when table rows are sorted.
@@ -328,46 +335,38 @@ public: // type identification
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to query sorting potential
     mdb_bool* outCanSort); // whether the column can be sorted
-  
-  virtual mdb_err
-  NewSortColumn( // change the column used for sorting in the table
-    nsIMdbEnv* ev, // context
-    mdb_column inColumn, // requested new column for sorting table
-    mdb_column* outActualColumn, // column actually used for sorting
-    nsIMdbThumb** acqThumb); // acquire thumb for incremental table resort
-  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then the sort will be finished. 
-  
-  virtual mdb_err
-  NewSortColumnWithCompare( // change sort column with explicit compare
-    nsIMdbEnv* ev, // context
-    nsIMdbCompare* ioCompare, // explicit interface for yarn comparison
-    mdb_column inColumn, // requested new column for sorting table
-    mdb_column* outActualColumn, // column actually used for sorting
-    nsIMdbThumb** acqThumb); // acquire thumb for incremental table resort
-  // Note the table will hold a reference to inCompare if this object is used
-  // to sort the table.  Until the table closes, callers can only force release
-  // of the compare object by changing the sort (by say, changing to unsorted).
-  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then the sort will be finished. 
-  
-  virtual mdb_err GetSortColumn( // query which col is currently sorted
-    nsIMdbEnv* ev, // context
-    mdb_column* outColumn); // col the table uses for sorting (or zero)
-
-  
-  virtual mdb_err CloneSortColumn( // view same table with a different sort
-    nsIMdbEnv* ev, // context
-    mdb_column inColumn, // requested new column for sorting table
-    nsIMdbThumb** acqThumb); // acquire thumb for incremental table clone
-  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then call nsIMdbTable::ThumbToCloneSortTable() to get the table instance.
     
-  virtual mdb_err
-  ThumbToCloneSortTable( // redeem complete CloneSortColumn() thumb
+  virtual mdb_err GetSorting( // view same table in particular sorting
     nsIMdbEnv* ev, // context
-    nsIMdbThumb* ioThumb, // thumb from CloneSortColumn() with done status
-    nsIMdbTable** acqTable); // new table instance (or old if sort unchanged)
+    mdb_column inColumn, // requested new column for sorting table
+    nsIMdbSorting** acqSorting); // acquire sorting for column
+    
+  virtual mdb_err SetSearchSorting( // use this sorting in FindRowMatches()
+    nsIMdbEnv* ev, // context
+    mdb_column inColumn, // often same as nsIMdbSorting::GetSortColumn()
+    nsIMdbSorting* ioSorting); // requested sorting for some column
+    // SetSearchSorting() attempts to inform the table that ioSorting
+    // should be used during calls to FindRowMatches() for searching
+    // the column which is actually sorted by ioSorting.  This method
+    // is most useful in conjunction with nsIMdbSorting::SetCompare(),
+    // because otherwise a caller would not be able to override the
+    // comparison ordering method used during searchs.  Note that some
+    // database implementations might be unable to use an arbitrarily
+    // specified sort order, either due to schema or runtime interface
+    // constraints, in which case ioSorting might not actually be used.
+    // Presumably ioSorting is an instance that was returned from some
+    // earlier call to nsIMdbTable::GetSorting().  A caller can also
+    // use nsIMdbTable::SearchColumnsHint() to specify desired change
+    // in which columns are sorted and searched by FindRowMatches().
+    //
+    // A caller can pass a nil pointer for ioSorting to request that
+    // column inColumn no longer be used at all by FindRowMatches().
+    // But when ioSorting is non-nil, then inColumn should match the
+    // column actually sorted by ioSorting; when these do not agree,
+    // implementations are instructed to give precedence to the column
+    // specified by ioSorting (so this means callers might just pass
+    // zero for inColumn when ioSorting is also provided, since then
+    // inColumn is both redundant and ignored).
   // } ----- end sorting methods -----
 
   // { ----- begin moving methods -----

@@ -82,7 +82,7 @@ public: // state is public because the entire Mork system is private
   mork_u2      mThumb_Seed;  // optional seed for u4 alignment padding
   
   morkStore*   mThumb_Store; // weak ref to created store
-  morkFile*    mThumb_File;  // strong ref to file (store, import, export)
+  nsIMdbFile*  mThumb_File;  // strong ref to file (store, import, export)
   morkWriter*  mThumb_Writer;  // strong ref to writer (for commit)
   morkBuilder* mThumb_Builder;  // strong ref to builder (for store open)
   morkPort*    mThumb_SourcePort;  // strong ref to port for import

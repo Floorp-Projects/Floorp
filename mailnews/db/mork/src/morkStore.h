@@ -155,7 +155,7 @@ public: // state is public because the entire Mork system is private
   morkAtomSpace*   mStore_GroundAtomSpace; // ground atom space for scopes
   morkAtomSpace*   mStore_GroundColumnSpace; // ground column space for scopes
 
-  morkFile*        mStore_File; // the file containing Mork text
+  nsIMdbFile*      mStore_File; // the file containing Mork text
   morkStream*      mStore_InStream; // stream using file used by the builder
   morkBuilder*     mStore_Builder; // to parse Mork text and build structures 
 
@@ -246,6 +246,11 @@ public: // building an atom inside mStore_BookAtom from a char* string
   // inString. This method is the standard way to stage a string as an
   // atom for searching or adding new atoms into an atom space hash table.
 
+public: // determining whether incremental writing is a good use of time:
+
+  mork_bool DoPreferLargeOverCompressCommit(morkEnv* ev);
+  // true when mStore_CanWriteIncremental && store has file large enough 
+
 public: // lazy creation of members and nested row or atom spaces
 
   morkAtomSpace*   LazyGetOidAtomSpace(morkEnv* ev);
@@ -304,11 +309,13 @@ public: // other store methods
 
   mork_bool OpenStoreFile(morkEnv* ev, // return value equals ev->Good()
     mork_bool inFrozen,
-    const char* inFilePath,
+    // const char* inFilePath,
+    nsIMdbFile* ioFile, // db abstract file interface
     const mdbOpenPolicy* inOpenPolicy);
 
   mork_bool CreateStoreFile(morkEnv* ev, // return value equals ev->Good()
-    const char* inFilePath,
+    // const char* inFilePath,
+    nsIMdbFile* ioFile, // db abstract file interface
     const mdbOpenPolicy* inOpenPolicy);
     
   morkAtom* CopyAtom(morkEnv* ev, const morkAtom* inAtom);

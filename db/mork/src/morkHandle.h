@@ -118,12 +118,12 @@ public: // other handle methods
   void NonOpenObjectError(morkEnv* ev) const;
   
   morkObject* GetGoodHandleObject(morkEnv* ev,
-    mork_bool inMutabl, mork_magic inMagicType) const;
+    mork_bool inMutable, mork_magic inMagicType, mork_bool inClosedOkay) const;
 
 public: // interface supporting mdbObject methods
 
   morkEnv* CanUseHandle(nsIMdbEnv* mev, mork_bool inMutable,
-    mdb_err* outErr) const;
+    mork_bool inClosedOkay, mdb_err* outErr) const;
     
   // { ----- begin mdbObject style methods -----
   mdb_err Handle_IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);

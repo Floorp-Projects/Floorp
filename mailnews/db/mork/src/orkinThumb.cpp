@@ -87,7 +87,8 @@ orkinThumb::CanUseThumb(nsIMdbEnv* mev,
   if ( ev )
   {
     morkThumb* self = (morkThumb*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kThumb);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kThumb,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( self )
     {
       if ( self->IsThumb() )

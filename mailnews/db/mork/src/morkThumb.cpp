@@ -44,9 +44,9 @@
 #include "morkStore.h"
 #endif
 
-#ifndef _MORKFILE_
-#include "morkFile.h"
-#endif
+// #ifndef _MORKFILE_
+// #include "morkFile.h"
+// #endif
 
 #ifndef _MORKWRITER_
 #include "morkWriter.h"
@@ -58,10 +58,6 @@
 
 #ifndef _MORKBUILDER_
 #include "morkBuilder.h"
-#endif
-
-#ifndef _MORKFILE_
-#include "morkFile.h"
 #endif
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
@@ -134,7 +130,7 @@ morkThumb::CloseThumb(morkEnv* ev) // called by CloseMorkNode();
       morkBuilder::SlotStrongBuilder((morkBuilder*) 0, ev, &mThumb_Builder);
       
       morkWriter::SlotStrongWriter((morkWriter*) 0, ev, &mThumb_Writer);
-      morkFile::SlotStrongFile((morkFile*) 0, ev, &mThumb_File);
+      nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev, &mThumb_File);
       morkStore::SlotStrongStore((morkStore*) 0, ev, &mThumb_Store);
       morkPort::SlotStrongPort((morkPort*) 0, ev, &mThumb_SourcePort);
       this->MarkShut();
@@ -208,10 +204,11 @@ morkThumb::Make_OpenFileStore(morkEnv* ev, nsIMdbHeap* ioHeap,
   morkThumb* outThumb = 0;
   if ( ioHeap && ioStore )
   {
-    morkFile* file = ioStore->mStore_File;
+    nsIMdbFile* file = ioStore->mStore_File;
     if ( file )
     {
-      mork_pos fileEof = file->Length(ev);
+      mork_pos fileEof = 0;
+      file->Eof(ev->AsMdbEnv(), &fileEof);
       if ( ev->Good() )
       {
         outThumb = new(*ioHeap, ev)
@@ -248,7 +245,7 @@ morkThumb::Make_LargeCommit(morkEnv* ev,
   morkThumb* outThumb = 0;
   if ( ioHeap && ioStore )
   {
-    morkFile* file = ioStore->mStore_File;
+    nsIMdbFile* file = ioStore->mStore_File;
     if ( file )
     {
       outThumb = new(*ioHeap, ev)
@@ -266,10 +263,10 @@ morkThumb::Make_LargeCommit(morkEnv* ev,
           writer->mWriter_NeedDirtyAll = morkBool_kFalse;
           outThumb->mThumb_DoCollect = morkBool_kFalse;
           morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
-          morkFile::SlotStrongFile(file, ev, &outThumb->mThumb_File);
-          morkWriter::SlotStrongWriter(writer, ev, &outThumb->mThumb_Writer);
-		  // writer no longer holds on to this.
-		  writer->CutStrongRef(ev);
+          
+          nsIMdbFile_SlotStrongFile(file, ev, &outThumb->mThumb_File);
+          
+          outThumb->mThumb_Writer = writer; // pass writer ownership to thumb
         }
       }
     }
@@ -289,7 +286,7 @@ morkThumb::Make_CompressCommit(morkEnv* ev,
   morkThumb* outThumb = 0;
   if ( ioHeap && ioStore )
   {
-    morkFile* file = ioStore->mStore_File;
+    nsIMdbFile* file = ioStore->mStore_File;
     if ( file )
     {
       outThumb = new(*ioHeap, ev)
@@ -305,7 +302,7 @@ morkThumb::Make_CompressCommit(morkEnv* ev,
           writer->mWriter_NeedDirtyAll = morkBool_kTrue;
           outThumb->mThumb_DoCollect = inDoCollect;
           morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
-          morkFile::SlotStrongFile(file, ev, &outThumb->mThumb_File);
+          nsIMdbFile_SlotStrongFile(file, ev, &outThumb->mThumb_File);
           morkWriter::SlotStrongWriter(writer, ev, &outThumb->mThumb_Writer);
           
           // cope with fact that parsed transaction groups are going away:

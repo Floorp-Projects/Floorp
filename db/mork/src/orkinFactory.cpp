@@ -80,6 +80,14 @@
 #include "morkThumb.h"
 #endif
 
+#ifndef _ORKINHEAP_
+#include "orkinHeap.h"
+#endif
+
+#ifndef _ORKINCOMPARE_
+#include "orkinCompare.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 /* public virtual*/
@@ -144,7 +152,8 @@ orkinFactory::CanUseFactory(nsIMdbEnv* mev, mork_bool inMutable,
   if ( ev )
   {
     morkFactory* factory = (morkFactory*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kFactory);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kFactory,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( factory )
     {
       if ( factory->IsFactory() )
@@ -277,7 +286,8 @@ orkinFactory::IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
 // { ----- begin file methods -----
 /*virtual*/ mdb_err
 orkinFactory::OpenOldFile(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
-  const char* inFilePath, mork_bool inFrozen, nsIMdbFile** acqFile)
+  const char* inFilePath,
+  mork_bool inFrozen, nsIMdbFile** acqFile)
   // Choose some subclass of nsIMdbFile to instantiate, in order to read
   // (and write if not frozen) the file known by inFilePath.  The file
   // returned should be open and ready for use, and presumably positioned
@@ -413,6 +423,26 @@ orkinFactory::MakeHeap(nsIMdbEnv* mev, nsIMdbHeap** acqHeap)
 }
 // } ----- end heap methods -----
 
+// { ----- begin compare methods -----
+/*virtual*/ mdb_err
+orkinFactory::MakeCompare(nsIMdbEnv* mev, nsIMdbCompare** acqCompare)
+{
+  mdb_err outErr = 0;
+  nsIMdbCompare* outCompare = 0;
+  morkEnv* ev = this->CanUseFactory(mev,
+    /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    outCompare = new orkinCompare();
+    if ( !outCompare )
+      ev->OutOfMemoryError();
+  }
+  if ( acqCompare )
+    *acqCompare = outCompare;
+  return outErr;
+}
+// } ----- end compare methods -----
+
 // { ----- begin row methods -----
 /*virtual*/ mdb_err
 orkinFactory::MakeRow(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
@@ -440,8 +470,9 @@ orkinFactory::MakeRow(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
 /*virtual*/ mdb_err
 orkinFactory::CanOpenFilePort(
   nsIMdbEnv* mev, // context
-  const char* inFilePath, // the file to investigate
-  const mdbYarn* inFirst512Bytes,
+  // const char* inFilePath, // the file to investigate
+  // const mdbYarn* inFirst512Bytes,
+  nsIMdbFile* ioFile, // db abstract file interface
   mdb_bool* outCanOpen, // whether OpenFilePort() might succeed
   mdbYarn* outFormatVersion)
 {
@@ -455,9 +486,9 @@ orkinFactory::CanOpenFilePort(
     /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    if ( inFilePath && inFirst512Bytes && outCanOpen )
+    if ( ioFile && outCanOpen )
     {
-      canOpenAsPort = this->CanOpenMorkTextFile(ev, inFirst512Bytes);
+      canOpenAsPort = this->CanOpenMorkTextFile(ev, ioFile);
     }
     else
       ev->NilPointerError();
@@ -475,7 +506,8 @@ orkinFactory::CanOpenFilePort(
 orkinFactory::OpenFilePort(
   nsIMdbEnv* mev, // context
   nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-  const char* inFilePath, // the file to open for readonly import
+  // const char* inFilePath, // the file to open for readonly import
+  nsIMdbFile* ioFile, // db abstract file interface
   const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
   nsIMdbThumb** acqThumb)
 {
@@ -486,7 +518,7 @@ orkinFactory::OpenFilePort(
     /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    if ( inFilePath && inOpenPolicy && acqThumb )
+    if ( ioFile && inOpenPolicy && acqThumb )
     {
     }
     else
@@ -543,17 +575,39 @@ orkinFactory::ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort(
 
 mork_bool
 orkinFactory::CanOpenMorkTextFile(morkEnv* ev,
-  const mdbYarn* inFirst512Bytes)
+  // const mdbYarn* inFirst512Bytes,
+  nsIMdbFile* ioFile)
 {
   MORK_USED_1(ev);
   mork_bool outBool = morkBool_kFalse;
   mork_size headSize = MORK_STRLEN(morkWriter_kFileHeader);
-  const mdbYarn* y = inFirst512Bytes;
-  if ( y && y->mYarn_Buf && y->mYarn_Fill >= headSize )
+  
+  char localBuf[ 256 + 4 ]; // for extra for sloppy safety
+  mdbYarn localYarn;
+  mdbYarn* y = &localYarn;
+  y->mYarn_Buf = localBuf; // space to hold content
+  y->mYarn_Fill = 0;       // no logical content yet
+  y->mYarn_Size = 256;     // physical capacity is 256 bytes
+  y->mYarn_More = 0;
+  y->mYarn_Form = 0;
+  y->mYarn_Grow = 0;
+  
+  if ( ioFile )
   {
-    mork_u1* buf = (mork_u1*) y->mYarn_Buf;
-    outBool = ( MORK_MEMCMP(morkWriter_kFileHeader, buf, headSize) == 0 );
+    nsIMdbEnv* menv = ev->AsMdbEnv();
+    mdb_size actualSize = 0;
+    ioFile->Get(menv, y->mYarn_Buf, y->mYarn_Size, /*pos*/ 0, &actualSize);
+    y->mYarn_Fill = actualSize;
+    
+    if ( y->mYarn_Buf && actualSize >= headSize && ev->Good() )
+    {
+      mork_u1* buf = (mork_u1*) y->mYarn_Buf;
+      outBool = ( MORK_MEMCMP(morkWriter_kFileHeader, buf, headSize) == 0 );
+    }
   }
+  else
+    ev->NilPointerError();
+
   return outBool;
 }
 
@@ -561,8 +615,9 @@ orkinFactory::CanOpenMorkTextFile(morkEnv* ev,
 /*virtual*/ mdb_err
 orkinFactory::CanOpenFileStore(
   nsIMdbEnv* mev, // context
-  const char* inFilePath, // the file to investigate
-  const mdbYarn* inFirst512Bytes,
+  // const char* inFilePath, // the file to investigate
+  // const mdbYarn* inFirst512Bytes,
+  nsIMdbFile* ioFile, // db abstract file interface
   mdb_bool* outCanOpenAsStore, // whether OpenFileStore() might succeed
   mdb_bool* outCanOpenAsPort, // whether OpenFilePort() might succeed
   mdbYarn* outFormatVersion)
@@ -578,10 +633,10 @@ orkinFactory::CanOpenFileStore(
     /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    if ( inFilePath && inFirst512Bytes && outCanOpenAsStore )
+    if ( ioFile && outCanOpenAsStore )
     {
       // right now always say true; later we should look for magic patterns
-      canOpenAsStore = this->CanOpenMorkTextFile(ev, inFirst512Bytes);
+      canOpenAsStore = this->CanOpenMorkTextFile(ev, ioFile);
       canOpenAsPort = canOpenAsStore;
     }
     else
@@ -602,7 +657,8 @@ orkinFactory::CanOpenFileStore(
 orkinFactory::OpenFileStore( // open an existing database
   nsIMdbEnv* mev, // context
   nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-  const char* inFilePath, // the file to open for general db usage
+  // const char* inFilePath, // the file to open for general db usage
+  nsIMdbFile* ioFile, // db abstract file interface
   const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
   nsIMdbThumb** acqThumb)
 {
@@ -615,7 +671,7 @@ orkinFactory::OpenFileStore( // open an existing database
     if ( !ioHeap ) // need to use heap from env?
       ioHeap = ev->mEnv_Heap;
     
-    if ( inFilePath && inOpenPolicy && acqThumb )
+    if ( ioFile && inOpenPolicy && acqThumb )
     {
       morkFactory* factory = (morkFactory*) this->mHandle_Object;
       morkStore* store = new(*ioHeap, ev)
@@ -624,7 +680,7 @@ orkinFactory::OpenFileStore( // open an existing database
       if ( store )
       {
         mork_bool frozen = morkBool_kFalse; // open store mutable access
-        if ( store->OpenStoreFile(ev, frozen, inFilePath, inOpenPolicy) )
+        if ( store->OpenStoreFile(ev, frozen, ioFile, inOpenPolicy) )
         {
           morkThumb* thumb = morkThumb::Make_OpenFileStore(ev, ioHeap, store);
           if ( thumb )
@@ -691,7 +747,8 @@ orkinFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
 orkinFactory::CreateNewFileStore( // create a new db with minimal content
   nsIMdbEnv* mev, // context
   nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-  const char* inFilePath, // name of file which should not yet exist
+  // const char* inFilePath, // name of file which should not yet exist
+  nsIMdbFile* ioFile, // db abstract file interface
   const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
   nsIMdbStore** acqStore)
 {
@@ -704,7 +761,7 @@ orkinFactory::CreateNewFileStore( // create a new db with minimal content
     if ( !ioHeap ) // need to use heap from env?
       ioHeap = ev->mEnv_Heap;
     
-    if ( inFilePath && inOpenPolicy && acqStore && ioHeap )
+    if ( ioFile && inOpenPolicy && acqStore && ioHeap )
     {
       morkFactory* factory = (morkFactory*) this->mHandle_Object;
       morkStore* store = new(*ioHeap, ev)
@@ -716,7 +773,7 @@ orkinFactory::CreateNewFileStore( // create a new db with minimal content
         store->mStore_CanDirty = morkBool_kTrue;
         store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
 
-        if ( store->CreateStoreFile(ev, inFilePath, inOpenPolicy) )
+        if ( store->CreateStoreFile(ev, ioFile, inOpenPolicy) )
           outStore = orkinStore::MakeStore(ev, store);
           
         store->CutStrongRef(ev); // always cut ref (handle has its own ref)

@@ -126,8 +126,8 @@ class morkWriter : public morkNode { // row iterator
 public: // state is public because the entire Mork system is private
 
   morkStore*   mWriter_Store;      // weak ref to committing store
-  morkFile*    mWriter_File;       // strong ref to store's file
-  morkFile*    mWriter_Bud;        // strong ref to bud of mWriter_File
+  nsIMdbFile*  mWriter_File;       // strong ref to store's file
+  nsIMdbFile*  mWriter_Bud;        // strong ref to bud of mWriter_File
   morkStream*  mWriter_Stream;     // strong ref to stream on bud file
   nsIMdbHeap*  mWriter_SlotHeap;   // strong ref to slot heap
 
@@ -200,7 +200,7 @@ public: // morkNode virtual methods
   
 public: // morkWriter construction & destruction
   morkWriter(morkEnv* ev, const morkUsage& inUsage,
-    nsIMdbHeap* ioHeap, morkStore* ioStore, morkFile* ioFile,
+    nsIMdbHeap* ioHeap, morkStore* ioStore, nsIMdbFile* ioFile,
     nsIMdbHeap* ioSlotHeap);
   void CloseWriter(morkEnv* ev); // called by CloseMorkNode();
 

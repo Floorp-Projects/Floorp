@@ -111,7 +111,8 @@ orkinTable::CanUseTable(nsIMdbEnv* mev,
   if ( ev )
   {
     morkTable* self = (morkTable*)
-      this->GetGoodHandleObject(ev, inMutable, morkMagic_kTable);
+      this->GetGoodHandleObject(ev, inMutable, morkMagic_kTable,
+        /*inClosedOkay*/ morkBool_kFalse);
     if ( self )
     {
       if ( self->IsTable() )
@@ -557,7 +558,7 @@ orkinTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
     {
       if ( ev->Good() )
       {
-        cursor->mCursor_Seed = (mork_seed) inRowPos;
+        // cursor->mCursor_Seed = (mork_seed) inRowPos;
         outCursor = cursor->AcquireTableRowCursorHandle(ev);
       }
       else
@@ -845,15 +846,13 @@ orkinTable::CutAllRows( // remove all rows from the table
 
 // { ----- begin searching methods -----
 /*virtual*/ mdb_err
-orkinTable::SearchOneSortedColumn( // search only currently sorted col
+orkinTable::FindRowMatches( // search variable number of sorted cols
   nsIMdbEnv* mev, // context
   const mdbYarn* inPrefix, // content to find as prefix in row's column cell
-  mdbRange* outRange) // range of matching rows
+  nsIMdbTableRowCursor** acqCursor) // set of matching rows
 {
   MORK_USED_1(inPrefix);
-  mdbRange range;
-  range.mRange_FirstPos = -1;
-  range.mRange_LastPos = -1;
+  nsIMdbTableRowCursor* outCursor = 0;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
@@ -861,23 +860,31 @@ orkinTable::SearchOneSortedColumn( // search only currently sorted col
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
-  if ( outRange )
-    *outRange = range;
+  if ( acqCursor )
+    *acqCursor = outCursor;
   return outErr;
 }
   
 /*virtual*/ mdb_err
-orkinTable::SearchManyColumns( // search variable number of sorted cols
+orkinTable::GetSearchColumns( // query columns used by FindRowMatches()
   nsIMdbEnv* mev, // context
-  const mdbYarn* inPrefix, // content to find as prefix in row's column cell
-  mdbSearch* ioSearch, // columns to search and resulting ranges
-  nsIMdbThumb** acqThumb) // acquire thumb for incremental search
-// Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-// then the search will be finished.  Until that time, the ioSearch argument
-// is assumed referenced and used by the thumb; one should not inspect any
-// output results in ioSearch until after the thumb is finished with it.
+  mdb_count* outCount, // context
+  mdbColumnSet* outColSet) // caller supplied space to put columns
+  // GetSearchColumns() returns the columns actually searched when the
+  // FindRowMatches() method is called.  No more than mColumnSet_Count
+  // slots of mColumnSet_Columns will be written, since mColumnSet_Count
+  // indicates how many slots are present in the column array.  The
+  // actual number of search column used by the table is returned in
+  // the outCount parameter; if this number exceeds mColumnSet_Count,
+  // then a caller needs a bigger array to read the entire column set.
+  // The minimum of mColumnSet_Count and outCount is the number slots
+  // in mColumnSet_Columns that were actually written by this method.
+  //
+  // Callers are expected to change this set of columns by calls to
+  // nsIMdbTable::SearchColumnsHint() or SetSearchSorting(), or both.
 {
-  MORK_USED_2(inPrefix,ioSearch);
+  MORK_USED_1(outColSet);
+  mdb_count count = 0;
   mdb_err outErr = 0;
   nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
@@ -886,8 +893,8 @@ orkinTable::SearchManyColumns( // search variable number of sorted cols
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
-  if ( acqThumb )
-    *acqThumb = outThumb;
+  if ( outCount )
+    *outCount = count;
   return outErr;
 }
 // } ----- end searching methods -----
@@ -975,20 +982,18 @@ orkinTable::EndBatchChangeHint( // advise before many adds and cuts
 // sort following the primary column sort, when table rows are sorted.
 
 /*virtual*/ mdb_err
-orkinTable::CanSortColumn( // query which col is currently used for sorting
+orkinTable::CanSortColumn( // query which column is currently used for sorting
   nsIMdbEnv* mev, // context
   mdb_column inColumn, // column to query sorting potential
   mdb_bool* outCanSort) // whether the column can be sorted
 {
   MORK_USED_1(inColumn);
-  mdb_bool canSort = morkBool_kFalse;
+  mdb_bool canSort = mdbBool_kFalse;
   mdb_err outErr = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    if ( outCanSort )
-      *outCanSort = morkBool_kFalse;
-      
+    // ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
   if ( outCanSort )
@@ -997,121 +1002,70 @@ orkinTable::CanSortColumn( // query which col is currently used for sorting
 }
 
 /*virtual*/ mdb_err
-orkinTable::NewSortColumn( // change col used for sorting in the table
+orkinTable::GetSorting( // view same table in particular sorting
   nsIMdbEnv* mev, // context
   mdb_column inColumn, // requested new column for sorting table
-  mdb_column* outActualColumn, // column actually used for sorting
-  nsIMdbThumb** acqThumb) // acquire thumb for incremental table resort
+  nsIMdbSorting** acqSorting) // acquire sorting for column
 {
   MORK_USED_1(inColumn);
-  mdb_column actualColumn = 0;
+  nsIMdbSorting* outSorting = 0;
   mdb_err outErr = 0;
-  nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
-  if ( outActualColumn )
-    *outActualColumn = actualColumn;
-  if ( acqThumb )
-    *acqThumb = outThumb;
-  return outErr;
-}
-// Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-// then the sort will be finished. 
-
-/*virtual*/ mdb_err
-orkinTable::NewSortColumnWithCompare( // change sort col w/ explicit compare
-  nsIMdbEnv* mev, // context
-  nsIMdbCompare* ioCompare, // explicit interface for yarn comparison
-  mdb_column inColumn, // requested new column for sorting table
-  mdb_column* outActualColumn, // column actually used for sorting
-  nsIMdbThumb** acqThumb) // acquire thumb for incremental table resort
-{
-  MORK_USED_2(inColumn,ioCompare);
-  mdb_column actualColumn = 0;
-  mdb_err outErr = 0;
-  nsIMdbThumb* outThumb = 0;
-  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
-  if ( ev )
-  {
-    ev->StubMethodOnlyError();
-    outErr = ev->AsErr();
-  }
-  if ( outActualColumn )
-    *outActualColumn = actualColumn;
-  if ( acqThumb )
-    *acqThumb = outThumb;
-  return outErr;
-}
-// Note the table will hold a reference to inCompare if this object is used
-// to sort the table.  Until the table closes, callers can only force release
-// of the compare object by changing the sort (by say, changing to unsorted).
-// Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-// then the sort will be finished. 
-
-/*virtual*/ mdb_err
-orkinTable::GetSortColumn( // query which col is currently sorted
-  nsIMdbEnv* mev, // context
-  mdb_column* outColumn) // col the table uses for sorting (or zero)
-{
-  mdb_err outErr = 0;
-  mdb_column col = 0;
-  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
-  if ( ev )
-  {
-    ev->StubMethodOnlyError();
-    outErr = ev->AsErr();
-  }
-  if ( outColumn )
-    *outColumn = col;
+  if ( acqSorting )
+    *acqSorting = outSorting;
   return outErr;
 }
 
-
 /*virtual*/ mdb_err
-orkinTable::CloneSortColumn( // view same table with a different sort
+orkinTable::SetSearchSorting( // use this sorting in FindRowMatches()
   nsIMdbEnv* mev, // context
-  mdb_column inColumn, // requested new column for sorting table
-  nsIMdbThumb** acqThumb) // acquire thumb for incremental table clone
+  mdb_column inColumn, // often same as nsIMdbSorting::GetSortColumn()
+  nsIMdbSorting* ioSorting) // requested sorting for some column
+  // SetSearchSorting() attempts to inform the table that ioSorting
+  // should be used during calls to FindRowMatches() for searching
+  // the column which is actually sorted by ioSorting.  This method
+  // is most useful in conjunction with nsIMdbSorting::SetCompare(),
+  // because otherwise a caller would not be able to override the
+  // comparison ordering method used during searchs.  Note that some
+  // database implementations might be unable to use an arbitrarily
+  // specified sort order, either due to schema or runtime interface
+  // constraints, in which case ioSorting might not actually be used.
+  // Presumably ioSorting is an instance that was returned from some
+  // earlier call to nsIMdbTable::GetSorting().  A caller can also
+  // use nsIMdbTable::SearchColumnsHint() to specify desired change
+  // in which columns are sorted and searched by FindRowMatches().
+  //
+  // A caller can pass a nil pointer for ioSorting to request that
+  // column inColumn no longer be used at all by FindRowMatches().
+  // But when ioSorting is non-nil, then inColumn should match the
+  // column actually sorted by ioSorting; when these do not agree,
+  // implementations are instructed to give precedence to the column
+  // specified by ioSorting (so this means callers might just pass
+  // zero for inColumn when ioSorting is also provided, since then
+  // inColumn is both redundant and ignored).
 {
   MORK_USED_1(inColumn);
   mdb_err outErr = 0;
-  nsIMdbThumb* outThumb = 0;
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    if ( ioSorting )
+    {
+      ev->StubMethodOnlyError();
+    }
+    else
+      ev->NilPointerError();
+      
     outErr = ev->AsErr();
   }
-  if ( acqThumb )
-    *acqThumb = outThumb;
   return outErr;
 }
-// Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-// then call nsIMdbTable::ThumbToCloneSortTable() to get the table instance.
-  
-/*virtual*/ mdb_err
-orkinTable::ThumbToCloneSortTable( // redeem complete CloneSortColumn() thumb
-  nsIMdbEnv* mev, // context
-  nsIMdbThumb* ioThumb, // thumb from CloneSortColumn() with done status
-  nsIMdbTable** acqTable) // new table instance (or old if sort unchanged)
-{
-  MORK_USED_1(ioThumb);
-  mdb_err outErr = 0;
-  nsIMdbTable* outTable = 0;
-  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
-  if ( ev )
-  {
-    ev->StubMethodOnlyError();
-    outErr = ev->AsErr();
-  }
-  if ( acqTable )
-    *acqTable = outTable;
-  return outErr;
-}
+
 // } ----- end sorting methods -----
 
 // { ----- begin moving methods -----
