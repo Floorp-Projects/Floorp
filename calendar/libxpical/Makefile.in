@@ -84,7 +84,7 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
-DEFINES += -DICAL_DEBUG 
+#DEFINES += -DICAL_DEBUG 
 #-DICAL_DEBUG_ALL
 
 include $(topsrcdir)/config/rules.mk
