@@ -15,3 +15,8 @@
 <!-- LOCALIZATION NOTE (defaultengine.label): Keep parenthesis so it sorts to the first position in the list -->
 <!ENTITY  defaultengine.label "Netscape Search">
 <!ENTITY  searchResults.label "Search Results">
+<!ENTITY  sidebarClickMode.label "Search result loading:">
+<!ENTITY  useSingleClicks.label "Use single click to load search results from sidebar">
+<!ENTITY  useDoubleClicks.label "Use double click to load search results from sidebar">
+
+

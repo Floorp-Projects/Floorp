@@ -59,6 +59,7 @@ CHROME_L10N = \
 	.\locale\en-US\internetresults.dtd \
 	.\locale\en-US\search.dtd \
 	.\locale\en-US\search-panel.dtd \
+	.\locale\en-US\search-panel.properties \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
