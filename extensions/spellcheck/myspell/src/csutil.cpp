@@ -256,7 +256,7 @@ struct cs_info * get_current_cs(const char * es) {
   free(upper);
 
   return ccs;
-};
+}
 
 
 struct lang_map lang2enc[] = {
@@ -290,4 +290,4 @@ const char * get_default_enc(const char * lang) {
     }
   }
   return NULL;
-};
+}
