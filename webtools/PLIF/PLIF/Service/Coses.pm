@@ -299,8 +299,13 @@ sub evaluateVariable {
         if (ref($scope) eq 'HASH') {
             $scope = $scope->{$part};
         } elsif (ref($scope) eq 'ARRAY') {
-            $self->assert(scalar($part =~ /^\d+$/o), 1, "Tried to drill into an array using a non-numeric key ('$part')");
-            $scope = $scope->[$part];
+            if ($part =~ /^\d+$/o) {
+                $scope = $scope->[$part];
+            } elsif ($part eq 'length') {
+                $scope = scalar(@$scope);
+            } else {
+                $self->assert(1, "Tried to drill into an array using a non-numeric key ('$part')");
+            }
         } else {
             $self->error(1, "Could not resolve '$variable' (the part giving me trouble was '$part')");
         }
@@ -436,12 +441,14 @@ sub genericKeys {
         if (defined($source) and $source eq 'values') {
             return values(%$value);
         } else { # (not defined($source) or $source eq 'keys')
+            $self->assert(not defined($source) or $source eq 'keys', 1, "Unknown source type '$source', valid values are 'keys' (the default) or 'values'");
             return keys(%$value);
         }
     } elsif (ref($value) eq 'ARRAY') {
         if (defined($source) and $source eq 'values') {
             return @$value;
         } else { # (not defined($source) or $source eq 'keys')
+            $self->assert(not defined($source) or $source eq 'keys', 1, "Unknown source type '$source', valid values are 'keys' (the default) or 'values'");
             if ($#$value >= 0) {
                 return (0..$#$value);
             } else {
@@ -474,11 +481,17 @@ sub genericSort {
             return sort { length($b) <=> length($b) } @list;
         } elsif ($order eq 'reverse length') {
             return sort { length($a) <=> length($a) } @list;
+        } elsif ($order eq 'default') {
+            return reverse @list; # keep in sync with default below
+        } elsif ($order eq 'reverse default') {
+            return @list;
+        } else {
+            $self->error(1, "Unknown sort order '$order', valid values are '[reverse] ([case insensitive] lexical | numerical | length | default)'");
         }
         # XXX we need to also support:
         #   Sorting by a particular subkey of a hash to sort an array of hashes
     }
-    # else:
+    # else assume 'default':
     return reverse @list;
 }
 
