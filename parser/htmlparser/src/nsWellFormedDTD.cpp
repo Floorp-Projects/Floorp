@@ -35,6 +35,9 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsXMLTokenizer.h"
+#ifdef EXPAT
+  #include "nsExpatTokenizer.h"
+#endif
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -136,6 +139,10 @@ CWellFormedDTD::CWellFormedDTD() : nsIDTD() {
  */
 CWellFormedDTD::~CWellFormedDTD(){
   mParser=0; //just to prove we destructed...
+#ifdef EXPAT
+  if (mTokenizer)
+    delete (nsExpatTokenizer *) mTokenizer;
+#endif
 }
 
 /**
@@ -322,8 +329,13 @@ nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
  * @return  ptr to tokenizer
  */
 nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
-  if(!mTokenizer)
+  if(!mTokenizer) {
+#ifndef EXPAT
     mTokenizer=new nsXMLTokenizer();
+#else
+    mTokenizer = new nsExpatTokenizer();
+#endif
+  }
   return mTokenizer;
 }
 

@@ -31,9 +31,6 @@
 #include "CNavDTD.h"
 #include "nsWellFormedDTD.h"
 #include "nsViewSourceHTML.h" //uncomment this to partially enable viewsource...
-#ifdef EXPAT
-  #include "nsExpatDTD.h"
-#endif
 
 #undef rickgdebug
 #ifdef  rickgdebug
@@ -93,12 +90,7 @@ public:
 
     nsIDTD* theDTD;
 
-#ifndef EXPAT
     NS_NewWellFormed_DTD(&theDTD);
-#else
-    NS_New_Expat_DTD(&theDTD);
-#endif
-
     RegisterDTD(theDTD);
 
     NS_NewNavHTMLDTD(&theDTD);    //do this as the default HTML DTD...
