@@ -13,6 +13,29 @@ my $chromeType = $ARGV[2];
 my $pkgName = $ARGV[3];
 my $jarFileName = $ARGV[4];
 
+my $win32 = ($^O =~ /((MS)?win32)|cygwin|os2/i) ? 1 : 0;
+my $macos = ($^O =~ /MacOS|darwin/i) ? 1 : 0;
+my $unix  = !($win32 || $macos) ? 1 : 0;
+
+sub foreignPlatformFile
+{
+   my ($jarfile) = @_;
+   
+   if (!$win32 && index($jarfile, "-win") != -1) {
+     return 1;
+   }
+   
+   if (!$unix && index($jarfile, "-unix") != -1) {
+     return 1; 
+   }
+
+   if (!$macos && index($jarfile, "-mac") != -1) {
+     return 1;
+   }
+
+   return 0;
+}
+
 #print "add-chrome $installedChromeFile $disableJarPackaging $chromeType $pkgName $jarFileName\n";
 
 my $nofilelocks = 0;
@@ -23,6 +46,8 @@ if (defined($::opt_l)) {
 if ($jarFileName =~ /(.*)\.jar/) {
     $jarFileName = $1;
 }
+
+if (!foreignPlatformFile($jarFileName)) {
 
 my $line;
 if ($disableJarPackaging) {
@@ -86,4 +111,5 @@ if ($err) {
     die "error: can't close $installedChromeFile: $!";
 }
 print "+++ adding chrome $installedChromeFile\n+++\t$line\n";
+}
 
