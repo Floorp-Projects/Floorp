@@ -41,13 +41,15 @@
 #include "nsIRDFResource.h"
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
+#include "nsIObserver.h"
+#include "nsISupportsArray.h"
 
 class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsIRDFService;
 
 class nsExternalHelperAppService : public nsIExternalHelperAppService, public nsPIExternalAppLauncher, 
-                                   public nsIExternalProtocolService, public nsIMIMEService
+                                   public nsIExternalProtocolService, public nsIMIMEService, public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -55,6 +57,7 @@ public:
   NS_DECL_NSPIEXTERNALAPPLAUNCHER
   NS_DECL_NSIEXTERNALPROTOCOLSERVICE
   NS_DECL_NSIMIMESERVICE
+  NS_DECL_NSIOBSERVER
 
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
@@ -110,6 +113,10 @@ protected:
   virtual nsresult AddDefaultMimeTypesToCache();
   virtual nsresult GetMIMEInfoForMimeTypeFromExtras(const char * aContentType, nsIMIMEInfo ** aMIMEInfo );
 
+protected:
+  // functions related to the tempory file cleanup service provided by nsExternalHelperAppService
+  nsresult ExpungeTemporaryFiles();
+  nsCOMPtr<nsISupportsArray> mTemporaryFilesList;
 };
 
 // this is a small private struct used to help us initialize some

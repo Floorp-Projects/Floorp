@@ -37,8 +37,6 @@
 #include "nsCURILoader.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 
 // used to manage our in memory data source of helper applications
 #include "nsRDFCID.h"
@@ -60,6 +58,7 @@
 // used for http content header disposition information.
 #include "nsIHttpChannel.h"
 #include "nsIAtom.h"
+#include "nsIObserverService.h" // so we can be an xpcom shutdown observer
 
 #ifdef XP_MAC
 #include "nsILocalFileMac.h"
@@ -125,6 +124,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalHelperAppService)
    NS_INTERFACE_MAP_ENTRY(nsPIExternalAppLauncher)
    NS_INTERFACE_MAP_ENTRY(nsIExternalProtocolService)
    NS_INTERFACE_MAP_ENTRY(nsIMIMEService)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalHelperAppService::nsExternalHelperAppService() : mDataSourceInitialized(PR_FALSE)
@@ -136,6 +136,13 @@ nsExternalHelperAppService::nsExternalHelperAppService() : mDataSourceInitialize
   PRInt32 hashTableSize = sizeof(defaultMimeEntries) / sizeof(defaultMimeEntries[0]);
   mMimeInfoCache = new nsHashtable(hashTableSize);
   AddDefaultMimeTypesToCache();
+
+  /* Add an observer to XPCOM shutdown */
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (obs)
+    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+
 }
 
 nsExternalHelperAppService::~nsExternalHelperAppService()
@@ -405,12 +412,12 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   if (trueString.Equals(stringValue))
        aMIMEInfo->SetPreferredAction(nsIMIMEInfo::handleInternally);
   
-  // always ask
-  FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_AlwaysAsk, &stringValue);
-  if (trueString.Equals(stringValue))
-      aMIMEInfo->SetAlwaysAskBeforeHandling(PR_TRUE);
-  else
-    aMIMEInfo->SetAlwaysAskBeforeHandling(PR_FALSE);
+  // always ask --> these fields aren't stored in the data source anymore
+  //FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_AlwaysAsk, &stringValue);
+  //if (trueString.Equals(stringValue))
+  //      aMIMEInfo->SetAlwaysAskBeforeHandling(PR_TRUE);
+  // else
+  //  aMIMEInfo->SetAlwaysAskBeforeHandling(PR_FALSE);
 
 
   // now digest the external application information
@@ -509,6 +516,71 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
 {
   // this method should only be implemented by each OS specific implementation of this service.
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Methods related to deleting temporary files on exit
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile * aTemporaryFile)
+{
+  nsresult rv = NS_OK;
+  PRBool isFile = PR_FALSE;
+  nsCOMPtr<nsILocalFile> localFile (do_QueryInterface(aTemporaryFile, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // as a safety measure, make sure the nsIFile is really a file and not a directory object.
+  localFile->IsFile(&isFile);
+  if (!isFile) return NS_OK;
+
+  if (!mTemporaryFilesList)
+    rv = NS_NewISupportsArray(getter_AddRefs(mTemporaryFilesList));
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mTemporaryFilesList->AppendElement(localFile);
+
+  return NS_OK;
+}
+
+nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
+{
+  if (!mTemporaryFilesList) return NS_OK;
+
+  nsresult rv = NS_OK;
+  PRUint32 numEntries = 0;
+  mTemporaryFilesList->Count(&numEntries);
+  nsCOMPtr<nsISupports> element;
+  nsCOMPtr<nsILocalFile> localFile;
+  for (PRUint32 index = 0; index < numEntries; index ++)
+  {
+    element = getter_AddRefs(mTemporaryFilesList->ElementAt(index));
+    if (element)
+    {
+      localFile = do_QueryInterface(element);
+      if (localFile)
+        localFile->Delete(PR_FALSE);
+    }
+  }
+
+  mTemporaryFilesList->Clear();
+
+  return NS_OK;
+}
+
+/* XPCOM Shutdown observer */
+NS_IMETHODIMP
+nsExternalHelperAppService::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData )
+{
+  // we must be shutting down xpcom so remove our temporary files...
+  ExpungeTemporaryFiles();
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (obs)
+    rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this), NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+	return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -924,7 +996,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
 
 nsresult nsExternalAppHandler::ExecuteDesiredAction()
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (mProgressWindowCreated && !mCanceled)
   {
     nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
@@ -1109,6 +1181,9 @@ nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
     if (helperAppService)
     {
       rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mTempFile);
+
+      // be sure to add this temporary file to our list of files which need deleted on exit...
+      helperAppService->DeleteTemporaryFileOnExit(mTempFile);
     }
   }
 
