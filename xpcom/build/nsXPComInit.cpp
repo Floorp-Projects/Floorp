@@ -225,12 +225,12 @@ RegisterGenericFactory(nsIComponentRegistrar* registrar,
     return rv;
 }
 
-// in order to support the installer, we need
+// In order to support the installer, we need
 // to be told out of band if we should cause
-// an autoregister.  if a file exists named
-// ".autoreg" next to the application, this
-// will signal us to cause autoreg.
-static PRBool CheckAndRemoveUpdateFile()
+// an autoregister.  If the file ".autoreg" exists in the binary
+// directory, we check its timestamp against the timestamp of the
+// compreg.dat file.  If the .autoreg file is newer, we autoregister.
+static PRBool CheckUpdateFile()
 {
     nsresult rv;
     nsCOMPtr<nsIProperties> directoryService;
@@ -253,13 +253,30 @@ static PRBool CheckAndRemoveUpdateFile()
 
     file->AppendNative(nsDependentCString(".autoreg"));
     
-    PRBool exists = PR_FALSE;
+    PRBool exists;
     file->Exists(&exists);
     if (!exists)
-        return exists;
+        return PR_FALSE;
 
-    file->Remove(PR_FALSE);
-    return exists;
+    nsCOMPtr<nsIFile> compregFile;
+    rv = directoryService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE,
+                               NS_GET_IID(nsIFile),
+                               getter_AddRefs(compregFile));
+
+    
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Getting NS_XPCOM_COMPONENT_REGISTRY_FILE failed");
+        return PR_FALSE;
+    }
+
+    // Don't need to check whether compreg exists; if it doesn't
+    // we won't even be here.
+
+    PRInt64 compregModTime, autoregModTime;
+    compregFile->GetLastModifiedTime(&compregModTime);
+    file->GetLastModifiedTime(&autoregModTime);
+
+    return LL_CMP(autoregModTime, >, compregModTime);
 }
 
 
@@ -571,10 +588,10 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     }
 #endif
 
-    if ( NS_FAILED(rv) || CheckAndRemoveUpdateFile()) {
+    if ( NS_FAILED(rv) || CheckUpdateFile()) {
         // if we find no persistent registry, we will try to autoregister
         // the default components directory.
-        nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);        
+        nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);
 
         // If the application is using a GRE, then, 
         // auto register components in the GRE directory as well.
@@ -645,6 +662,13 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             }
         }
 
+
+        // Make sure the compreg file's mod time is current.
+        nsCOMPtr<nsIFile> compregFile;
+        rv = gDirectoryService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE,
+                                    NS_GET_IID(nsIFile),
+                                    getter_AddRefs(compregFile));
+        compregFile->SetLastModifiedTime(PR_Now() / 1000);
     }
     
     // Pay the cost at startup time of starting this singleton.
