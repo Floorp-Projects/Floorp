@@ -290,6 +290,7 @@ gdk_superwin_bin_filter (GdkXEvent *gdk_xevent,
 
   case ConfigureNotify:
     gdk_superwin_clear_translate_queue(superwin, xevent->xany.serial);
+    return GDK_FILTER_REMOVE;
     break;
   }
 
