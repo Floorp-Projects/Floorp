@@ -22,7 +22,9 @@
 #include "nsSegmentedBuffer.h"
 #include "nsAutoLock.h"
 #include "nsIServiceManager.h"
+#ifdef PAGE_MANAGER
 #include "nsIPageManager.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -760,7 +762,9 @@ nsPipe::nsPipeOutputStream::SetNonBlocking(PRBool aNonBlocking)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef PAGE_MANAGER
 static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
+#endif
 static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 NS_COM nsresult
@@ -772,7 +776,7 @@ NS_NewPipe(nsIBufferInputStream* *inStrResult,
 {
     nsresult rv;
     const nsCID* cid = &kAllocatorCID;
-#if 0
+#ifdef PAGE_MANAGER
     // Take the page manager out altogether because some unices don't
     // know how to reserve VM -- only preallocate it which takes up a lot 
     // of space.
