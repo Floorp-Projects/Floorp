@@ -53,8 +53,9 @@
           </html:button>
           
 		  <html:input style="width:325px;"></html:input>   
-	      
-          <html:img alt="Throbber!" src="resource:/res/throbber/anims00.gif"/>
+    	<html:button cmd="nsCmd:BrowserHome">
+             <html:img src="resource:/res/throbber/anims00.gif"/>
+        </html:button>	      
     </xul:toolbar>
     
     <xul:toolbar>
