@@ -2239,6 +2239,10 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
                 return ret;
             }
             
+            // We need to explicitly set the target here, because the
+            // DOM implementation will try to compute the target from
+            // the frame. If we don't have a frame (e.g., we're a
+            // menu), then that breaks.
             nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
             if (privateEvent) {
               privateEvent->SetTarget(this);
