@@ -31,14 +31,10 @@
 #define __WebBrowserChrome__
 
 #include "nsCOMPtr.h"
-#include "nsIGenericFactory.h"
 #include "nsString.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserChromeFocus.h"
 
-#include "nsIDocShell.h"
-#include "nsIContentViewer.h"
-#include "nsIContentViewerFile.h"
 #include "nsIBaseWindow.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebNavigation.h"

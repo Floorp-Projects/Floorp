@@ -36,15 +36,10 @@
 #include "nsIWebProgress.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIRequest.h"
-#include "nsIChannel.h"
 #include "nsCWebBrowser.h"
-#include "nsWidgetsCID.h"
 #include "nsIProfileChangeStatus.h"
-#include "nsCRT.h"
 
 // Local includes
 #include "resource.h"
@@ -380,19 +375,19 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
 
     nsString uriAStr;
 
-    if(!(nsCRT::strcmp(operation, "back")))
+    if(!(strcmp(operation, "back")))
     {
         // Going back. XXX Get string from a resource file
         uriAStr.AppendLiteral("Going back to url:");
         uriAStr.Append(NS_ConvertUTF8toUCS2(uriCStr));
     }
-    else if (!(nsCRT::strcmp(operation, "forward")))
+    else if (!(strcmp(operation, "forward")))
     {
         // Going forward. XXX Get string from a resource file
         uriAStr.AppendLiteral("Going forward to url:");
         uriAStr.Append(NS_ConvertUTF8toUCS2(uriCStr));
     }
-    else if (!(nsCRT::strcmp(operation, "reload")))
+    else if (!(strcmp(operation, "reload")))
     {
         // Reloading. XXX Get string from a resource file
         if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
@@ -414,13 +409,13 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
         }
         uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
     }
-    else if (!(nsCRT::strcmp(operation, "add")))
+    else if (!(strcmp(operation, "add")))
     {
         // Adding new entry. XXX Get string from a resource file
         uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
         uriAStr.AppendLiteral(" added to session History");
     }
-    else if (!(nsCRT::strcmp(operation, "goto")))
+    else if (!(strcmp(operation, "goto")))
     {
         // Goto. XXX Get string from a resource file
         uriAStr.AppendLiteral("Going to HistoryIndex:");
@@ -428,7 +423,7 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
         uriAStr.AppendLiteral(" Url:");
         uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
     }
-    else if (!(nsCRT::strcmp(operation, "purge")))
+    else if (!(strcmp(operation, "purge")))
     {
         // Purging old entries
         uriAStr.AppendInt(info1);
@@ -530,7 +525,7 @@ NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
 NS_IMETHODIMP WebBrowserChrome::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
     nsresult rv = NS_OK;
-    if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
+    if (strcmp(aTopic, "profile-change-teardown") == 0)
     {
         // A profile change means death for this window
         WebBrowserChromeUI::Destroy(this);
