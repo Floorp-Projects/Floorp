@@ -256,7 +256,7 @@ jsds_SyncFilter (FilterRecord *rec, jsdIFilter *filter)
     
     JSObject *glob_proper = nsnull;
     nsCOMPtr<nsISupports> glob;
-    nsresult rv = filter->GetGlob(getter_AddRefs(glob));
+    nsresult rv = filter->GetGlobalObject(getter_AddRefs(glob));
     if (NS_FAILED(rv))
         return PR_FALSE;
     if (glob) {
@@ -634,7 +634,15 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
             gJsds->GetDebuggerHook(getter_AddRefs(hook));
             break;
         case JSD_HOOK_BREAKPOINT:
-            gJsds->GetBreakpointHook(getter_AddRefs(hook));
+            {
+                /* we can't pause breakpoints the way we pause the other
+                 * execution hooks (at least, not easily.)  Instead we bail
+                 * here if the service is paused. */
+                PRUint32 level;
+                gJsds->GetPauseDepth(&level);
+                if (!level)
+                    gJsds->GetBreakpointHook(getter_AddRefs(hook));
+            }
             break;
         case JSD_HOOK_THROW:
         {
@@ -1932,6 +1940,34 @@ jsdValue::Refresh()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+jsdValue::GetWrappedValue()
+{
+    ASSERT_VALID_EPHEMERAL;
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+    if (!xpc)
+        return NS_ERROR_FAILURE;
+
+    nsresult rv;
+    nsCOMPtr<nsIXPCNativeCallContext> cc;
+    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    if (NS_FAILED(rv))
+        return rv;
+
+    jsval *result;
+    rv = cc->GetRetValPtr(&result);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (result)
+    {
+        *result = JSD_GetValueWrappedJSVal (mCx, mValue);
+        cc->SetReturnValueWasSet(PR_TRUE);
+    }
+
+    return NS_OK;
+}
+
 /******************************************************************************
  * debugger service implementation
  ******************************************************************************/
@@ -2184,6 +2220,14 @@ jsdService::Off (void)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+jsdService::GetPauseDepth(PRUint32 *_rval)
+{
+    NS_ENSURE_ARG_POINTER(_rval);
+    *_rval = mPauseLevel;
+    return NS_OK;
+}
+    
 NS_IMETHODIMP
 jsdService::Pause(PRUint32 *_rval)
 {
@@ -2468,6 +2512,42 @@ jsdService::ClearAllBreakpoints (void)
     JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
 }
+
+NS_IMETHODIMP
+jsdService::WrapValue(jsdIValue **_rval)
+{
+    ASSERT_VALID_CONTEXT;
+
+    nsCOMPtr<nsIXPConnect> xpc = do_GetService (nsIXPConnect::GetCID());
+    if (!xpc)
+        return NS_ERROR_FAILURE;
+
+    nsresult rv;
+    nsCOMPtr<nsIXPCNativeCallContext> cc;
+    rv = xpc->GetCurrentNativeCallContext (getter_AddRefs(cc));
+    if (NS_FAILED(rv))
+        return rv;
+
+    PRUint32 argc;
+    rv = cc->GetArgc (&argc);
+    if (NS_FAILED(rv))
+        return rv;
+    if (argc < 1)
+        return NS_ERROR_INVALID_ARG;
+    
+    jsval    *argv;
+    rv = cc->GetArgvPtr (&argv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    JSDValue *jsdv = JSD_NewValue (mCx, argv[0]);
+    if (!jsdv)
+        return NS_ERROR_FAILURE;
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 jsdService::EnterNestedEventLoop (jsdINestCallback *callback, PRUint32 *_rval)

@@ -153,6 +153,12 @@ interface jsdIDebuggerService : nsISupports
     void off ();
 
     /**
+     * Peek at the current pause depth of the debugger.
+     *
+     * @return depth Number of pause() calls still waiting to be unPause()d.
+     */
+    readonly attribute unsigned long pauseDepth;
+    /**
      * Temporarily disable the debugger.  Hooks will not be called while the
      * debugger is paused.  Multiple calls to pause will increase the "pause
      * depth", and equal number of unPause calles must be made to resume
@@ -249,6 +255,14 @@ interface jsdIDebuggerService : nsISupports
      * Clear all breakpoints in all scripts.
      */
     void clearAllBreakpoints ();
+
+    /**
+     * When called from JavaScript, this method returns the jsdIValue wrapper
+     * for the given value.  If a wrapper does not exist one will be created.
+     * When called from another language this method returns an xpconnect
+     * defined error code.
+     */
+    jsdIValue wrapValue (/*in jsvalue value*/);
     
     /* XXX these two routines are candidates for refactoring.  The only problem
      * is that it is not clear where and how they should land.
@@ -312,7 +326,7 @@ interface jsdIFilter : nsISupports
      * The jsdIService caches this value internally, to if it changes you must
      * swap the filter with itself using jsdIService::swapFilters.
      */
-    attribute nsISupports glob;
+    attribute nsISupports globalObject;
     
     /**
      * String representing the url pattern to be filtered.  Supports limited
@@ -860,6 +874,15 @@ interface jsdIValue : jsdIEphemeral
      * the jsdIValue with the underlying structure.
      */
     void refresh();
+
+    /**
+     * When called from JavaScript, this method returns the JavaScript value
+     * wrapped by this jsdIValue.  The calling script is free to use the result
+     * as it would any other JavaScript value.
+     * When called from another language this method returns an xpconnect
+     * defined error code.
+     */
+    void getWrappedValue();
 };
 
 /**
