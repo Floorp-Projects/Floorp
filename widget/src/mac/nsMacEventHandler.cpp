@@ -1344,9 +1344,13 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 		PRBool active;
 		mTopLevelWidget->IsActive(&active);
 		nsWindow*	focusedWidget = mTopLevelWidget;
-	  if(!active) {
+		if (!active) {
 		  gEventDispatchHandler.SetActivated(focusedWidget);
 		  mTopLevelWidget->SetIsActive(PR_TRUE);
+		}
+		else if (!gEventDispatchHandler.GetActive()) {
+		  NS_ASSERTION(0, "We think we're active, but there is no active widget!");
+		  gEventDispatchHandler.SetActivated(focusedWidget);
 		}
 		
 		// Twiddle menu bars
