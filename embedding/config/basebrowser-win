@@ -154,6 +154,16 @@ components\xppref32.dll
 components\profile.dll                  
 components\profile.xpt                  
 
+; psm2
+; Optional - only if you need PSM2 support
+components\pipnss.dll
+components\pipnss.xpt
+chrome\pipnss.jar
+components\pippki.dll
+components\pippki.xpt
+chrome\pippki.jar
+defaults\pref\security-prefs.js
+
 ; rdf
 components\rdf.dll
 components\rdf.xpt
