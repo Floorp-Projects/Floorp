@@ -1035,7 +1035,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
       nsCOMPtr<nsIAtom> tag;
       aChildContent->GetTag(*getter_AddRefs(tag));
       // forms need a frame but it can't be a child of an inner table
-      if (nsHTMLAtoms::form == tag) {  
+      if (nsHTMLAtoms::form == tag.get()) {  
         // if the parent is a table, put the form in the outer table frame
         const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
           aParentStyleContext->GetStyleData(eStyleStruct_Display);
@@ -1102,40 +1102,40 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
   } 
    
   // check tags first
-  if (  (nsHTMLAtoms::img      == tag) ||
-        (nsHTMLAtoms::hr       == tag) ||
-        (nsHTMLAtoms::br       == tag) ||
-        (nsHTMLAtoms::wbr      == tag) ||
-        (nsHTMLAtoms::input    == tag) ||
-        (nsHTMLAtoms::textarea == tag) ||
-        (nsHTMLAtoms::select   == tag) ||
-        (nsHTMLAtoms::applet   == tag) ||
-        (nsHTMLAtoms::embed    == tag) ||
-        (nsHTMLAtoms::fieldset == tag) ||
-        (nsHTMLAtoms::legend   == tag) ||
-        (nsHTMLAtoms::object   == tag) ||
-        (nsHTMLAtoms::form     == tag) ||
-        (nsHTMLAtoms::iframe   == tag) ||
-        (nsHTMLAtoms::spacer   == tag) ||
-        (nsHTMLAtoms::button   == tag) ||
-        (nsHTMLAtoms::label    == tag    )) {
+  if (  (nsHTMLAtoms::img      == tag.get()) ||
+        (nsHTMLAtoms::hr       == tag.get()) ||
+        (nsHTMLAtoms::br       == tag.get()) ||
+        (nsHTMLAtoms::wbr      == tag.get()) ||
+        (nsHTMLAtoms::input    == tag.get()) ||
+        (nsHTMLAtoms::textarea == tag.get()) ||
+        (nsHTMLAtoms::select   == tag.get()) ||
+        (nsHTMLAtoms::applet   == tag.get()) ||
+        (nsHTMLAtoms::embed    == tag.get()) ||
+        (nsHTMLAtoms::fieldset == tag.get()) ||
+        (nsHTMLAtoms::legend   == tag.get()) ||
+        (nsHTMLAtoms::object   == tag.get()) ||
+        (nsHTMLAtoms::form     == tag.get()) ||
+        (nsHTMLAtoms::iframe   == tag.get()) ||
+        (nsHTMLAtoms::spacer   == tag.get()) ||
+        (nsHTMLAtoms::button   == tag.get()) ||
+        (nsHTMLAtoms::label    == tag.get()    )) {
     return PR_TRUE;
   }
 
 #ifdef INCLUDE_XUL
-  if (  (nsXULAtoms::button          == tag)  ||
-        (nsXULAtoms::checkbox        == tag)  ||
-        (nsXULAtoms::radio           == tag)  ||
-        (nsXULAtoms::text            == tag)  ||
-        (nsXULAtoms::widget          == tag)  ||
-        (nsXULAtoms::tree            == tag)  ||
-        (nsXULAtoms::treechildren    == tag)  ||
-        (nsXULAtoms::treeitem        == tag)  ||
-        (nsXULAtoms::treecell        == tag)  ||
-        (nsXULAtoms::treeindentation == tag)  ||
-        (nsXULAtoms::toolbox         == tag)  ||
-        (nsXULAtoms::toolbar         == tag)  ||
-        (nsXULAtoms::progressmeter   == tag    )) {
+  if (  (nsXULAtoms::button          == tag.get())  ||
+        (nsXULAtoms::checkbox        == tag.get())  ||
+        (nsXULAtoms::radio           == tag.get())  ||
+        (nsXULAtoms::text            == tag.get())  ||
+        (nsXULAtoms::widget          == tag.get())  ||
+        (nsXULAtoms::tree            == tag.get())  ||
+        (nsXULAtoms::treechildren    == tag.get())  ||
+        (nsXULAtoms::treeitem        == tag.get())  ||
+        (nsXULAtoms::treecell        == tag.get())  ||
+        (nsXULAtoms::treeindentation == tag.get())  ||
+        (nsXULAtoms::toolbox         == tag.get())  ||
+        (nsXULAtoms::toolbar         == tag.get())  ||
+        (nsXULAtoms::progressmeter   == tag.get()    )) {
     return PR_TRUE;
   }
 #endif
@@ -1890,7 +1890,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
 		  // Construct a child frame
 		  nsCOMPtr<nsIAtom> pTag;
 		  childContent->GetTag(*getter_AddRefs(pTag));
-		  if (pTag == nsXULAtoms::treechildren)
+		  if (pTag.get() == nsXULAtoms::treechildren)
 		  {
 			  // We want to call ConstructFrame to keep building rows, but only if we're
 			  // open.
@@ -3453,7 +3453,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   content->GetTag(*getter_AddRefs(tag));
 
   // See whether it's an IMG or an OBJECT element
-  if (nsHTMLAtoms::img == tag) {
+  if (nsHTMLAtoms::img == tag.get()) {
     // It's an IMG element. Try and construct an alternate frame to use when the
     // image can't be rendered
     nsIFrame* newFrame;
@@ -3473,7 +3473,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
       parentFrame->InsertFrames(*aPresContext, *presShell, nsnull, prevSibling, newFrame);
     }
 
-  } else if (nsHTMLAtoms::object == tag) {
+  } else if (nsHTMLAtoms::object == tag.get()) {
     ;
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected tag");

@@ -753,11 +753,11 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
           nsCOMPtr<nsIContent>oldContent;
           if (NS_SUCCEEDED(frame->GetContent(getter_AddRefs(oldContent))) && oldContent){
             nsCOMPtr<nsIDOMNode> oldDomNode(do_QueryInterface(oldContent));
-            if (oldDomNode && (oldDomNode == GetFocusNode())) {
+            if (oldDomNode && (oldDomNode.get() == GetFocusNode())) {
               nsCOMPtr<nsIContent> anchorContent;
               if (NS_SUCCEEDED(anchor->GetContent(getter_AddRefs(anchorContent))) && anchorContent){
                 nsCOMPtr<nsIDOMNode>anchorDomNode(do_QueryInterface(anchorContent));
-                if (anchorDomNode && anchorDomNode == GetAnchorNode()) {
+                if (anchorDomNode && anchorDomNode.get() == GetAnchorNode()) {
 
 
                   //get offsets
@@ -867,7 +867,7 @@ findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff)
     return nsnull;
   nsCOMPtr<nsIContent> content;
   aParent->GetContent(getter_AddRefs(content));
-  if (content == aContent){
+  if (content.get() == aContent){
     return aParent;
   }
   if (aTurnOff)
@@ -1155,7 +1155,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     range->GetStartOffset(&startOffset);
     nsresult res;
 
-    if ((GetFocusNode() == endNode) && (GetFocusOffset() == endOffset))
+    if ((GetFocusNode() == endNode.get()) && (GetFocusOffset() == endOffset))
     {
       res = range->SetEnd(aParentNode, aOffset);
       if (res == NS_ERROR_ILLEGAL_VALUE)
@@ -1171,7 +1171,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       return NotifySelectionListeners();
     }
     
-    if ((GetFocusNode() == startNode) && (GetFocusOffset() == startOffset))
+    if ((GetFocusNode() == startNode.get()) && (GetFocusOffset() == startOffset))
     {
       res = range->SetStart(aParentNode, aOffset);
       if (res == NS_ERROR_ILLEGAL_VALUE)

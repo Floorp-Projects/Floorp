@@ -507,15 +507,15 @@ nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
           nsString  buffer;
           mText.AppendTo(buffer);
-          if (startContent == content || endContent == content)
+          if (startContent.get() == content || endContent.get() == content)
           { 
             // NOTE: ORDER MATTERS!
             // This must go before the Cut
-            if (endContent == content)
+            if (endContent.get() == content)
               buffer.Truncate(endOffset);            
       
             // This must go after the Trunctate
-            if (startContent == content)
+            if (startContent.get() == content)
              buffer.Cut(0,startOffset); 
           }
           aConverter.AddContent(buffer);

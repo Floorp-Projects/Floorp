@@ -80,7 +80,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 	  pContent->GetTag(*getter_AddRefs(pTag));
 	  if (pTag)
 	  {
-		  while (aFrame && pTag && pTag != nsXULAtoms::treeitem)
+		  while (aFrame && pTag && pTag.get() != nsXULAtoms::treeitem)
 		  {
 			  aFrame->GetParent(&aFrame);
 			  
@@ -91,7 +91,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 
 		  // We now have a tree row content node. Start counting our level of nesting.
 		  nsCOMPtr<nsIContent> pParentContent;
-		  while (pTag != nsXULAtoms::treebody && pTag != nsXULAtoms::treehead)
+		  while (pTag.get() != nsXULAtoms::treebody && pTag.get() != nsXULAtoms::treehead)
 		  {
 			  pContent->GetParent(*getter_AddRefs(pParentContent));
 
