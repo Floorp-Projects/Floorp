@@ -53,6 +53,7 @@ REQUIRES	= content \
 		  view \
 		  widget \
 		  xpcom \
+		  necko \
 		  $(NULL)
 
 CPPSRCS = \
