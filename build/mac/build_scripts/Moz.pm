@@ -60,6 +60,7 @@ use CodeWarriorLib;
                   DontStopForErrors
                   InstallFromManifest
                   InstallResources
+                  RedirectOutputToFile
                   Delay
                   ActivateApplication
                   IsProcessRunning);
@@ -463,6 +464,23 @@ sub LaunchCodeWarrior()
   CodeWarriorLib::activate();
   
   chdir($cur_dir);
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// RedirectOutputToFile
+#//--------------------------------------------------------------------------------------------------
+sub RedirectOutputToFile($)
+{
+    my($log_file) = @_;
+    
+    print "Output is now being redirected to the file '$log_file'\n";
+    
+    open(STDOUT, "> $log_file") || die "Can't redirect stdout";
+    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+    select(STDERR); $| = 1;     # make unbuffered
+    select(STDOUT); $| = 1;     # make unbuffered
+    
+    MacPerl::SetFileInfo("CWIE", "TEXT", $log_file);
 }
 
 #//--------------------------------------------------------------------------------------------------

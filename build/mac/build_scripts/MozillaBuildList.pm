@@ -2034,6 +2034,10 @@ sub RunBuild($$$)
     }
     
     SetupBuildParams(\%main::pull, \%main::build, \%main::options, \%main::optiondefines, $build_prefs);
+
+    if ($main::LOG_TO_FILE) {
+        RedirectOutputToFile("Mozilla script log");
+    }
     
     ConfigureBuildSystem();
     
@@ -2049,6 +2053,7 @@ sub RunBuild($$$)
     );
     SetBuildNumber(":mozilla:config:build_number", \@gen_files);
         
+die;
     chdir($main::MOZ_SRC);
     BuildDist();
     

@@ -60,7 +60,8 @@ $CARBON                 = 0;    # turn on to build with TARGET_CARBON
 $PROFILE                = 0;
 $RUNTIME                = 0;    # turn on to just build runtime support and NSPR projects
 $GC_LEAK_DETECTOR       = 0;    # turn on to use GC leak detection
-$MOZILLA_OFFICIAL       = 1;    # generate build number
+$MOZILLA_OFFICIAL       = 0;    # generate build number
+$LOG_TO_FILE            = 0;    # write perl output to a file
 
 #-------------------------------------------------------------
 # configuration variables that affect the manner of building, 

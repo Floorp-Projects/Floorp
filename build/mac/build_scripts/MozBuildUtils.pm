@@ -265,17 +265,15 @@ sub SetupBuildLog($)
         my $now = localtime();
         while ($now =~ s@:@.@) {} # replace all colons by periods
         my $logdir = ":Build Logs:";
-        if (!stat($logdir))
+        if (! -d $logdir)
         {
-            print "Creating directory $logdir\n";
             mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
         }
         OpenErrorLog("$logdir$now");
     }
     else
     {
-        OpenErrorLog("NGLayoutBuildLog");       # Release build
-        #OpenErrorLog("Mozilla.BuildLog");      # Tinderbox requires that name
+        OpenErrorLog("Mozilla build log");
     }
 }
 
@@ -315,7 +313,6 @@ sub SetTimeBomb($$)
   
   system("perl :mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days");
 }
-
 
 
 1;

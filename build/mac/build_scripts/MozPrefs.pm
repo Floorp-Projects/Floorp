@@ -203,11 +203,6 @@ sub ReadPrefsFile($$$$)
         my($var_setting) = $2;
         
         print "Setting \$main::$build_var to $var_setting\n";
-        
-        if ($var_setting =~ /\d+/) {
-          $var_setting += 0;  # convert to numeric
-        }
-        
         eval "\$main::$build_var = $var_setting";
       }
       else
