@@ -127,11 +127,11 @@ nsAddrDatabase::nsAddrDatabase()
     : m_mdbEnv(nsnull), m_mdbStore(nsnull),
       m_mdbPabTable(nsnull), m_dbName(""),
       m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
-      m_cardRowScopeToken(0),
       m_pabTableKind(0),
       m_buddyTableKind(0),
       m_historyTableKind(0),
       m_mailListTableKind(0),
+      m_cardRowScopeToken(0),
       m_categoryTableKind(0),
       m_FirstNameColumnToken(0),
       m_LastNameColumnToken(0),
@@ -583,12 +583,15 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 				{
 					nsFileSpec ioStream(dbName->GetCString());
 					nsIOFileStream *dbStream = new nsIOFileStream(ioStream);
-					if (dbStream)
-					{
+					if (dbStream) {
 						PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
 						first512Bytes.mYarn_Fill = bytesRead;
 						dbStream->close();
 						delete dbStream;
+					}
+					else {
+						PR_FREEIF(nativeFileName);
+						return NS_ERROR_OUT_OF_MEMORY;
 					}
 				}
 				ret = myMDBFactory->CanOpenFilePort(m_mdbEnv, nativeFileName, // the file to investigate
@@ -1488,7 +1491,7 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 {
     nsresult rv; 
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv) || !rdfService) return rv;
 
 	char* cardURI = nsnull;
     nsCOMPtr<nsIRDFResource> resource;

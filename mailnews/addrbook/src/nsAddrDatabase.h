@@ -130,8 +130,8 @@ protected:
 	mdb_kind			m_buddyTableKind;
 	mdb_kind			m_historyTableKind;
 	mdb_kind			m_mailListTableKind;
-	mdb_kind			m_categoryTableKind;
 	mdb_scope			m_cardRowScopeToken;
+	mdb_kind			m_categoryTableKind;
 
 	mdb_token			m_FirstNameColumnToken;
 	mdb_token			m_LastNameColumnToken;
