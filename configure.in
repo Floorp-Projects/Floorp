@@ -949,9 +949,6 @@ dnl the qsort routine under solaris is faulty
            ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
            AC_DEFINE(ULTRA_SPARC)
            ;;
-         *)
-           ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0 -K PIC'
-           ;;
        esac
     else
        ASFLAGS="$ASFLAGS -fPIC"
@@ -963,13 +960,14 @@ dnl the qsort routine under solaris is faulty
        if test "$OS_RELEASE" = "5.3"; then
 	  AC_DEFINE(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES)
        fi
-    fi
-    case $OS_TEST in
-	sun4u)
-            ASFLAGS="$ASFLAGS -DULTRA_SPARC"
+       case $OS_TEST in
+         sun4u)
+            CFLAGS="${CFLAGS} -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0"
+            CXXFLAGS="${CXXFLAGS} -Wa,-xarch=v8plus,-DULTRA_SPARC,-P,-L,-D_ASM,-D__STDC__=0,-K,PIC"
             AC_DEFINE(ULTRA_SPARC)
-	    ;;
-    esac
+            ;;
+       esac
+    fi
     if test "$OS_RELEASE" = "5.5.1"; then
        AC_DEFINE(NEED_USLEEP_PROTOTYPE)
     fi
