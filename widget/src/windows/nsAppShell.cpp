@@ -136,7 +136,7 @@ nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
          isInWindow = PR_TRUE;
        } else {
          RECT r;
-         VERIFY(::GetWindowRect(win, &r));
+         ::GetWindowRect(win, &r);
          if (msg->pt.x >= r.left && msg->pt.x <= r.right && msg->pt.y >= r.top && msg->pt.y <= r.bottom)
            isInWindow = PR_TRUE;
        }
