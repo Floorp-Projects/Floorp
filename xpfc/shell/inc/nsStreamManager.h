@@ -42,6 +42,21 @@ public:
    */
   NS_IMETHOD Init();
 
+  NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
+                     const nsString& aURLSpec, 
+                     nsIStreamListener* aListener, 
+                     nsIPostData * aPostData,
+                     nsIID *aDTDIID = nsnull,
+                     nsIID *aSinkIID = nsnull);
+
+private:
+  nsIURL * mUrl;
+  nsIDTD * mDTD;
+  nsIContentSink * mSink;
+
+public:
+  nsIParser * mParser;
+
 };
 
 

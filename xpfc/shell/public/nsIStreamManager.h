@@ -22,6 +22,9 @@
 #include "nscore.h"
 #include "nsxpfc.h"
 #include "nsISupports.h"
+#include "nsIWebViewerContainer.h"
+#include "nsIURL.h"
+#include "nsIStreamListener.h"
 
 // 5f680140-360f-11d2-9248-00805f8a7ab6
 #define NS_ISTREAM_MANAGER_IID      \
@@ -38,6 +41,13 @@ public:
    * @result The result of the initialization, NS_OK if no errors
    */
   NS_IMETHOD Init() = 0;
+
+  NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
+                     const nsString& aURLSpec, 
+                     nsIStreamListener* aListener, 
+                     nsIPostData * aPostData,
+                     nsIID *aDTDIID = nsnull,
+                     nsIID *aSinkIID = nsnull) = 0;
 
 
 };
