@@ -27,6 +27,9 @@ SIMPLE_PROGRAMS	= PrimitiveTest SimpleTypeLib
 
 CSRCS		= PrimitiveTest.c SimpleTypeLib.c
 
+# This fixes cout & ostream undefines for gcc 2.7.2.3.
+CPP_PROG_LINK = 1
+
 LIBS		= 		\
 		  -L$(DIST)/bin \
 		  -lxpcom 	\
