@@ -184,7 +184,7 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext* aPresContext,
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, mFrame,
                                   aDirtyRect, buttonRect, *border, *padding,
-                                  0, 0);
+                                  0, 0, PR_FALSE);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                               aDirtyRect, buttonRect, *border, context, 0);
 }
