@@ -38,8 +38,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsResChannel::nsResChannel()
-    : mLock(nsnull),
-      mLoadAttributes(LOAD_NORMAL),
+    : mLoadAttributes(LOAD_NORMAL),
+      mLock(nsnull),
       mState(QUIESCENT)
 {
     NS_INIT_REFCNT();
