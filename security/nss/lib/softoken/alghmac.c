@@ -62,7 +62,7 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
 {
     HMACContext *cx;
     unsigned int i;
-    unsigned char hashed_secret[SHA1_LENGTH];
+    unsigned char hashed_secret[HASH_LENGTH_MAX];
 
     /* required by FIPS 198 Section 3 */
     if (isFIPS && secret_len < hash_obj->length/2) {

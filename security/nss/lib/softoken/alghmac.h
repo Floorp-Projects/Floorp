@@ -43,8 +43,7 @@ extern void
 HMAC_Destroy(HMACContext *cx);
 
 /* create HMAC context
- *  hash_alg	the algorithm with which the HMAC is performed.  This 
- *		should be, SEC_OID_MD5, SEC_OID_SHA1, or SEC_OID_MD2.
+ *  hashObj     hash object from SECRawHashObjects[]
  *  secret	the secret with which the HMAC is performed.
  *  secret_len	the length of the secret.
  *  isFIPS	true if conforming to FIPS 198.
