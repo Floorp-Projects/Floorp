@@ -204,8 +204,8 @@ login john@doe.com
 password foo
 </screen>
 
-Note that the machine entry should match exactly the instance URL
-specified to <application>bugzilla-submit</application>.
+<para>Note that the machine entry should match exactly the instance URL
+specified to <application>bugzilla-submit</application>.</para>
 
 </listitem>
 </varlistentry>
