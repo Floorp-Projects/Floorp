@@ -1433,6 +1433,7 @@ JSBool
 js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                              jsval *vp)
 {
+    JSBool ok;
     JSStackFrame *fp;
     JSAtomListElement *ale;
     JSObject *obj, *pobj;
@@ -1441,9 +1442,13 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 
     /*
      * fp chases cg down the stack, but only until we reach the outermost cg.
-     * All stack frames should be flagged with JSFRAME_COMPILING, so we check
-     * sanity here.
+     * This enables propagating consts from top-level into switch cases in a
+     * function compiled along with the top-level script.  All stack frames
+     * with matching code generators should be flagged with JSFRAME_COMPILING;
+     * we check sanity here.
      */
+    *vp = JSVAL_VOID;
+    ok = JS_TRUE;
     fp = cx->fp;
     do {
         JS_ASSERT(fp->flags & JSFRAME_COMPILING);
@@ -1458,32 +1463,37 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                 return JS_TRUE;
             }
 
-            if (fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO)) {
-                /*
-                 * We're compiling code that will be executed immediately,
-                 * and not reexecuted against a different scope chain and/or
-                 * variable object.  Therefore we can get const values from
-                 * our variable object here.
-                 *
-                 * Try looking in the variable object for a direct property
-                 * that is readonly and permanent.  We know such a property
-                 * can't be shadowed by another property on obj's prototype
-                 * chain, or a with object or catch variable; nor can prop's
-                 * value be changed, nor can prop be deleted.
-                 */
-                if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop))
-                    return JS_FALSE;
-                if (pobj == obj) {
-                    if (!OBJ_GET_ATTRIBUTES(cx, obj, (jsid)atom, prop, &attrs))
-                        return JS_FALSE;
-                    if ((~attrs & (JSPROP_READONLY | JSPROP_PERMANENT)) == 0)
-                        return OBJ_GET_PROPERTY(cx, obj, (jsid)atom, vp);
+            /*
+             * Try looking in the variable object for a direct property that
+             * is readonly and permanent.  We know such a property can't be
+             * shadowed by another property on obj's prototype chain, or a
+             * with object or catch variable; nor can prop's value be changed,
+             * nor can prop be deleted.
+             */
+            prop = NULL;
+            ok = OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop);
+            if (ok) {
+                if (pobj == obj &&
+                    (fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO))) {
+                    /*
+                     * We're compiling code that will be executed immediately,
+                     * not re-executed against a different scope chain and/or
+                     * variable object.  Therefore we can get constant values
+                     * from our variable object here.
+                     */
+                    ok = OBJ_GET_ATTRIBUTES(cx, obj, (jsid)atom, prop, &attrs);
+                    if (ok && !(~attrs & (JSPROP_READONLY | JSPROP_PERMANENT)))
+                        ok = OBJ_GET_PROPERTY(cx, obj, (jsid)atom, vp);
                 }
+                if (prop)
+                    OBJ_DROP_PROPERTY(cx, pobj, prop);
             }
+            if (!ok || prop)
+                break;
         }
         fp = fp->down;
     } while ((cg = cg->parent) != NULL);
-    return JS_FALSE;
+    return ok;
 }
 
 /*
@@ -1988,6 +1998,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     JSParseNode **table;
     jsdouble d;
     jsint i, low, high;
+    jsval v;
     JSAtom *atom;
     JSAtomListElement *ale;
     intN noteIndex;
@@ -2058,11 +2069,15 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 pn3->pn_val = ATOM_KEY(pn4->pn_atom);
                 break;
               case TOK_NAME:
-                if (!pn4->pn_expr &&
-                    js_LookupCompileTimeConstant(cx, cg, pn4->pn_atom,
-                                                 &pn3->pn_val)) {
-                    constPropagated = JS_TRUE;
-                    break;
+                if (!pn4->pn_expr) {
+                    ok = js_LookupCompileTimeConstant(cx, cg, pn4->pn_atom, &v);
+                    if (!ok)
+                        goto release;
+                    if (!JSVAL_IS_VOID(v)) {
+                        pn3->pn_val = v;
+                        constPropagated = JS_TRUE;
+                        break;
+                    }
                 }
                 /* FALL THROUGH */
               case TOK_PRIMARY:
@@ -2245,18 +2260,20 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
              * We free table if non-null at label out, so all control flow must
              * exit this function through goto out or goto bad.
              */
-            tableSize = (size_t)tableLength * sizeof *table;
-            table = (JSParseNode **) JS_malloc(cx, tableSize);
-            if (!table)
-                return JS_FALSE;
-            memset(table, 0, tableSize);
-            for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-                if (pn3->pn_type == TOK_DEFAULT)
-                    continue;
-                i = JSVAL_TO_INT(pn3->pn_val);
-                i -= low;
-                JS_ASSERT((uint32)i < tableLength);
-                table[i] = pn3;
+            if (tableLength != 0) {
+                tableSize = (size_t)tableLength * sizeof *table;
+                table = (JSParseNode **) JS_malloc(cx, tableSize);
+                if (!table)
+                    return JS_FALSE;
+                memset(table, 0, tableSize);
+                for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+                    if (pn3->pn_type == TOK_DEFAULT)
+                        continue;
+                    i = JSVAL_TO_INT(pn3->pn_val);
+                    i -= low;
+                    JS_ASSERT((uint32)i < tableLength);
+                    table[i] = pn3;
+                }
             }
         } else {
             JS_ASSERT(switchOp == JSOP_LOOKUPSWITCH);
