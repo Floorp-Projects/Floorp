@@ -45,28 +45,22 @@ package org.mozilla.classfile;
 public class DefiningClassLoader extends ClassLoader {
 
     public Class defineClass(String name, byte data[]) {
-        ClassLoader loader = getClass().getClassLoader();
-        if (loader != null) {
-            Class clazz = ClassManager.defineClass(loader, name, data);
-            if (clazz != null)
-                return clazz;
-        }
         return super.defineClass(name, data, 0, data.length);
     }
 
     public Class loadClass(String name, boolean resolve)
         throws ClassNotFoundException
     {
-        Class clazz;
-        ClassLoader loader = getClass().getClassLoader();
-        if (loader != null) {
-            clazz = ClassManager.loadClass(loader, name, resolve);
-            if (clazz != null)
-                return clazz;
-        }
-        clazz = findLoadedClass(name);
-        if (clazz == null)
+        Class clazz = findLoadedClass(name);
+        if (clazz == null) {
+            ClassLoader loader = getClass().getClassLoader();
+            if (loader != null) {
+                clazz = ClassManager.loadClass(loader, name, resolve);
+                if (clazz != null)
+                    return clazz;
+            }
             clazz = findSystemClass(name);
+        }
         if (resolve)
             resolveClass(clazz);
         return clazz;

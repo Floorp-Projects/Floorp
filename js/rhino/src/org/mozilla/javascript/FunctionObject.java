@@ -40,11 +40,12 @@
 
 package org.mozilla.javascript;
 
-import java.util.Hashtable;
 import java.util.Vector;
-import java.lang.reflect.*;
-import java.io.IOException;
-import org.mozilla.classfile.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.InvocationTargetException;
 
 public class FunctionObject extends NativeFunction {
 
@@ -557,7 +558,7 @@ public class FunctionObject extends NativeFunction {
         throws IllegalAccessException, InvocationTargetException
     {
         Invoker master = invokerMaster;
-		if (master != null) {
+        if (master != null) {
             if (invoker == null) {
                 invoker = master.createInvoker(method, types);
             }
@@ -621,21 +622,24 @@ public class FunctionObject extends NativeFunction {
         }
     }
 
-	/** Get default master implementation or null if not available */
-	private static Invoker newInvokerMaster() {
-		try {
-			Class cl = Class.forName(INVOKER_MASTER_CLASS);
-			return (Invoker)cl.newInstance();
-		}
-		catch (Exception ex) {}
-		return null;
-	}
+    /** Get default master implementation or null if not available */
+    private static Invoker newInvokerMaster() {
+        try {
+            Class cl = Class.forName(INVOKER_MASTER_CLASS);
+            return (Invoker)cl.newInstance();
+        }
+        catch (ClassNotFoundException ex) {}
+        catch (IllegalAccessException ex) {}
+        catch (InstantiationException ex) {}
+        catch (SecurityException ex) {}
+        return null;
+    }
 
-	private static final String 
-		INVOKER_MASTER_CLASS = "org.mozilla.javascript.optimizer.InvokerImpl";
+    private static final String 
+        INVOKER_MASTER_CLASS = "org.mozilla.javascript.optimizer.InvokerImpl";
 
-	static Invoker invokerMaster = newInvokerMaster();
-	
+    static Invoker invokerMaster = newInvokerMaster();
+    
     private static final short VARARGS_METHOD = -1;
     private static final short VARARGS_CTOR =   -2;
     
