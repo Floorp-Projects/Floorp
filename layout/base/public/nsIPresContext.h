@@ -59,6 +59,7 @@ class nsIDocument;
 class nsIDeviceContext;
 class nsIFontMetrics;
 class nsIFrame;
+class nsIFrameManager;
 class nsIImage;
 class nsILinkHandler;
 class nsIPresShell;
@@ -137,6 +138,8 @@ public:
   nsIDocument* GetDocument() { return GetPresShell()->GetDocument(); } 
   nsIViewManager* GetViewManager() { return GetPresShell()->GetViewManager(); } 
   nsIStyleSet* GetStyleSet() { return GetPresShell()->GetStyleSet(); } 
+  nsIFrameManager* GetFrameManager()
+    { return GetPresShell()->GetFrameManager(); } 
 
   /**
    * Access compatibility mode for this context
