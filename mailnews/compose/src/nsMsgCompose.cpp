@@ -286,7 +286,10 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
     identity->GetOrganization(getter_Copies(organization));
     
     m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email));
-    m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo));
+	//Set the reply-to only if the user have not specified one in the message
+	const char * reply = m_compFields->GetReplyTo();
+	if (reply == nsnull || *reply == 0)
+		m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo));
     m_compFields->SetOrganization(NS_CONST_CAST(char*, (const char *)organization));
     
 #ifdef DEBUG_ducarroz

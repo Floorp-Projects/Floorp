@@ -68,7 +68,7 @@ Rights Reserved.
 		<menuitem name="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
 		<menuitem name="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
 		<separator/>
-		<menuitem name="&closeCmd.label;" cmd="nsCmd:BrowserClose"/>
+		<menuitem name="&closeCmd.label;" onclick="CloseWindow();"/>
 	</menu>
     <menu name="&editMenu.label;">
 		<menuitem name="&undoCmd.label;" cmd="nsCmd:ComposeNYI"/>
@@ -194,7 +194,9 @@ Rights Reserved.
 							<html:option value="addr_to">&toAddr.label;</html:option>
 							<html:option value="addr_cc">&ccAddr.label;</html:option>
 							<html:option value="addr_bcc">&bccAddr.label;</html:option>
+							<html:option value="addr_reply">&replyAddr.label;</html:option>
 							<html:option value="addr_newsgroups">&newsgroupsAddr.label;</html:option>
+							<html:option value="addr_followup">&followupAddr.label;</html:option>
 							</html:select>
 						</box>
 						<box align="vertical" flex="100%">
@@ -250,6 +252,22 @@ Rights Reserved.
 			</box>
 			<box align="vertical" flex="40%">
 				<html:div flex="100%">[attachment box]</html:div>
+<!--
+				<tree id="attachment" flex="100%">
+					<treehead>
+						<treerow>
+							<treecell>Attachment</treecell>
+						</treerow>
+					</treehead>
+					<treechildren id="attachmentTree" open="true">
+						<treeitem> <treerow> <treecell>aaaa</treecell> </treerow> </treeitem>
+						<treeitem> <treerow> <treecell>bbb</treecell> </treerow> </treeitem>
+						<treeitem> <treerow> <treecell>ccc</treecell> </treerow> </treeitem>
+						<treeitem> <treerow> <treecell>dddd</treecell> </treerow> </treeitem>
+						<treeitem> <treerow> <treecell>eeeee</treecell> </treerow> </treeitem>
+					</treechildren>
+				</tree>
+-->
 			</box>
 		</box>
 	</toolbar>

@@ -423,11 +423,15 @@ function Recipients2CompFields(msgCompFields)
 		var addrTo = "";
 		var addrCc = "";
 		var addrBcc = "";
+		var addrReply = "";
 		var addrNg = "";
+		var addrFollow = "";
 		var to_Sep = "";
 		var cc_Sep = "";
 		var bcc_Sep = "";
+		var reply_Sep = "";
 		var ng_Sep = "";
+		var follow_Sep = "";
 
 	    while ((inputField = document.getElementById("msgRecipient#" + i)))
 	    {
@@ -436,10 +440,12 @@ function Recipients2CompFields(msgCompFields)
 	    	{
 	    		switch (document.getElementById("msgRecipientType#" + i).value)
 	    		{
-	    			case "addr_to"			: addrTo += to_Sep + fieldValue; to_Sep = ",";		break;
-	    			case "addr_cc"			: addrCc += cc_Sep + fieldValue; cc_Sep = ",";		break;
-	    			case "addr_bcc"			: addrBcc += bcc_Sep + fieldValue; bcc_Sep = ",";	break;
-	    			case "addr_newsgroups"	: addrNg += ng_Sep + fieldValue; ng_Sep = ",";		break;
+	    			case "addr_to"			: addrTo += to_Sep + fieldValue; to_Sep = ",";					break;
+	    			case "addr_cc"			: addrCc += cc_Sep + fieldValue; cc_Sep = ",";					break;
+	    			case "addr_bcc"			: addrBcc += bcc_Sep + fieldValue; bcc_Sep = ",";				break;
+	    			case "addr_reply"		: addrReply += reply_Sep + fieldValue; reply_Sep = ",";			break;
+	    			case "addr_newsgroups"	: addrNg += ng_Sep + fieldValue; ng_Sep = ",";					break;
+	    			case "addr_followup"	: addrFollow += follow_Sep + fieldValue; follow_Sep = ",";		break;
 	    		}
 	    	}
 	    	i ++;
@@ -447,7 +453,9 @@ function Recipients2CompFields(msgCompFields)
     	msgCompFields.SetTo(addrTo);
     	msgCompFields.SetCc(addrCc);
     	msgCompFields.SetBcc(addrBcc);
+    	msgCompFields.SetReplyTo(addrReply);
     	msgCompFields.SetNewsgroups(addrNg);
+    	msgCompFields.SetFollowupTo(addrFollow);
 	}
 	else
 		dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
@@ -482,6 +490,14 @@ function CompFields2Recipients(msgCompFields)
 			i ++;
 		}		
 
+		fieldValue = msgCompFields.GetReplyTo();
+		if (fieldValue != "" && i <= MAX_RECIPIENTS)
+		{
+			document.getElementById("msgRecipient#" + i).value = fieldValue;
+			document.getElementById("msgRecipientType#" + i).value = "addr_reply";
+			i ++;
+		}		
+
 		fieldValue = msgCompFields.GetNewsgroups();
 		if (fieldValue != "" && i <= MAX_RECIPIENTS)
 		{
@@ -490,6 +506,14 @@ function CompFields2Recipients(msgCompFields)
 			i ++;
 		}
 		
+		fieldValue = msgCompFields.GetFollowupTo();
+		if (fieldValue != "" && i <= MAX_RECIPIENTS)
+		{
+			document.getElementById("msgRecipient#" + i).value = fieldValue;
+			document.getElementById("msgRecipientType#" + i).value = "addr_followup";
+			i ++;
+		}		
+
 		for (; i <= MAX_RECIPIENTS; i++) 
 		{ 
 			document.getElementById("msgRecipient#" + i).value = ""; 
@@ -519,4 +543,10 @@ function SetComposeWindowTitle(event)
 	}
 	/* i18N todo:  this should not be hard coded, either */
 	window.title = "Compose: "+ newTitle;
+}
+
+function CloseWindow()
+{
+	if (msgCompose)
+		msgCompose.CloseWindow();
 }
