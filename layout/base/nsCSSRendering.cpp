@@ -518,7 +518,6 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
   switch (theStyle) {
   case NS_STYLE_BORDER_STYLE_NONE:
   case NS_STYLE_BORDER_STYLE_HIDDEN:
-  case NS_STYLE_BORDER_STYLE_BLANK:
     return;
 
   case NS_STYLE_BORDER_STYLE_DOTTED:    //handled a special case elsewhere
@@ -3763,7 +3762,6 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
         break;
       case NS_STYLE_BORDER_STYLE_NONE:
       case NS_STYLE_BORDER_STYLE_HIDDEN:
-      case NS_STYLE_BORDER_STYLE_BLANK:
         break;
       case NS_STYLE_BORDER_STYLE_RIDGE:
       case NS_STYLE_BORDER_STYLE_GROOVE:
@@ -4291,8 +4289,7 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
   switch (aBorderStyle) {
   case NS_STYLE_BORDER_STYLE_NONE:
   case NS_STYLE_BORDER_STYLE_HIDDEN:
-  case NS_STYLE_BORDER_STYLE_BLANK:
-    //NS_ASSERTION(PR_FALSE, "style of none, hidden, or blank");
+    //NS_ASSERTION(PR_FALSE, "style of none or hidden");
     break;
   case NS_STYLE_BORDER_STYLE_DOTTED:
   case NS_STYLE_BORDER_STYLE_DASHED: 

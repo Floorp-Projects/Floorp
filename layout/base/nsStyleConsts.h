@@ -251,13 +251,12 @@
 #define NS_STYLE_BORDER_STYLE_DASHED            4
 #define NS_STYLE_BORDER_STYLE_SOLID             5
 #define NS_STYLE_BORDER_STYLE_DOUBLE            6
-#define NS_STYLE_BORDER_STYLE_BLANK             7
-#define NS_STYLE_BORDER_STYLE_INSET             8
-#define NS_STYLE_BORDER_STYLE_OUTSET            9
-#define NS_STYLE_BORDER_STYLE_HIDDEN            10
-#define NS_STYLE_BORDER_STYLE_BG_INSET          11
-#define NS_STYLE_BORDER_STYLE_BG_OUTSET         12
-#define NS_STYLE_BORDER_STYLE_BG_SOLID          13
+#define NS_STYLE_BORDER_STYLE_INSET             7
+#define NS_STYLE_BORDER_STYLE_OUTSET            8
+#define NS_STYLE_BORDER_STYLE_HIDDEN            9
+#define NS_STYLE_BORDER_STYLE_BG_INSET          10
+#define NS_STYLE_BORDER_STYLE_BG_OUTSET         11
+#define NS_STYLE_BORDER_STYLE_BG_SOLID          12
 // a bit ORed onto the style for table border collapsing indicating that the style was 
 // derived from a table with its rules attribute set
 #define NS_STYLE_BORDER_STYLE_RULES_MASK      0x10  
