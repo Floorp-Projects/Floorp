@@ -318,6 +318,8 @@
 <!-- Orodne vrstice po meri -->
 <!ENTITY calendar.context.customize.label             "Po meri ...">
 <!ENTITY calendar.context.customize.accesskey         "P">
+<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
+<!ENTITY calendar.menu.customize.accesskey            "C">
 <!ENTITY calendar.maintoolbar.name                    "Glavna orodna vrstica">
 <!ENTITY calendar.maintoolbar.accesskey               "G">
 

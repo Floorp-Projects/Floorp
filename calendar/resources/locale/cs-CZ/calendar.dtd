@@ -318,6 +318,8 @@
 <!-- customizable toolbars -->
 <!ENTITY calendar.context.customize.label             "Vlastní">
 <!ENTITY calendar.context.customize.accesskey         "V">
+<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
+<!ENTITY calendar.menu.customize.accesskey            "C">
 <!ENTITY calendar.maintoolbar.name                    "Hlavní lišta">
 <!ENTITY calendar.maintoolbar.accesskey               "H">
 
