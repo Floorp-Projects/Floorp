@@ -70,6 +70,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -1612,6 +1613,17 @@ ChromeContextMenuListener::RemoveChromeListeners()
 NS_IMETHODIMP
 ChromeContextMenuListener::ContextMenu(nsIDOMEvent* aMouseEvent)
 {     
+  nsCOMPtr<nsIDOMNSUIEvent> uievent(do_QueryInterface(aMouseEvent));
+
+  if (uievent) {
+    PRBool isDefaultPrevented = PR_FALSE;
+    uievent->GetPreventDefault(&isDefaultPrevented);
+
+    if (isDefaultPrevented) {
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIDOMEventTarget> targetNode;
   nsresult res = aMouseEvent->GetTarget(getter_AddRefs(targetNode));
   if (NS_FAILED(res))
