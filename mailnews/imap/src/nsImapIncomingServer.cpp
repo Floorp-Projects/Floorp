@@ -40,9 +40,8 @@ public:
     virtual ~nsImapIncomingServer();
 
 	// we support the nsIImapIncomingServer interface
-	NS_IMPL_CLASS_GETSET_STR(RootFolderPath, m_rootFolderPath);
-   
-    NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *serverKey);
+	NS_IMETHOD GetRootFolderPath(char **);
+	NS_IMETHOD SetRootFolderPath(char *);
 
 private:
 	char *m_rootFolderPath;
@@ -53,7 +52,6 @@ NS_IMPL_ISUPPORTS_INHERITED(nsImapIncomingServer,
                             nsIImapIncomingServer);
 
                             
-
 nsImapIncomingServer::nsImapIncomingServer() : m_rootFolderPath(nsnull)
 {    
     NS_INIT_REFCNT();
@@ -64,20 +62,7 @@ nsImapIncomingServer::~nsImapIncomingServer()
 	PR_FREEIF(m_rootFolderPath);
 }
 
-nsresult
-nsImapIncomingServer::LoadPreferences(nsIPref *prefs,
-                                      const char *serverKey)
-{
-#ifdef DEBUG
-    printf("Loading imap prefs for %s..\n",serverKey);
-#endif
-    
-    nsMsgIncomingServer::LoadPreferences(prefs, serverKey);
-    
-	// now load imap server specific preferences
-    m_rootFolderPath = getCharPref(prefs, serverKey, "directory");
-    return NS_OK;
-}
+NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, RootFolderPath, "directory")
 
 nsresult NS_NewImapIncomingServer(const nsIID& iid,
                                   void **result)
