@@ -48,15 +48,17 @@ Contributors:
     <label value="&MsgSyncDirections.label;"/>
 
     <vbox class="indent" align="start">
-        <checkbox id="syncMail" hidable="true" hidefor="movemail,pop3" label="&syncTypeMail.label;"/>
-        <checkbox id="syncNews" label="&syncTypeNews.label;"/>
+        <checkbox id="syncMail" hidable="true" hidefor="movemail,pop3" label="&syncTypeMail.label;"
+                  accesskey="&syncTypeMail.accesskey;"/>
+        <checkbox id="syncNews" label="&syncTypeNews.label;" accesskey="&syncTypeNews.accesskey;"/>
     </vbox>
     <vbox align="start">
-        <checkbox id="sendMessage" label="&sendMessage.label;"/>
-        <checkbox id="workOffline" label="&workOffline.label;"/>
+        <checkbox id="sendMessage" label="&sendMessage.label;" accesskey="&sendMessage.accesskey;"/>
+        <checkbox id="workOffline" label="&workOffline.label;" accesskey="&workOffline.accesskey;"/>
     </vbox>
     <separator class="thin"/>
     <hbox align="right">
-        <button id="select" label="&selectButton.label;"  oncommand="OnSelect();"/>
+        <button id="select" label="&selectButton.label;" accesskey="&selectButton.accesskey;"
+                oncommand="OnSelect();"/>
     </hbox>
 </dialog>
