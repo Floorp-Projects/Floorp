@@ -50,6 +50,10 @@ ifeq ($(OS_ARCH),BSD_OS)
 TAR_CREATE_FLAGS = -cvLf
 endif
 
+ifeq ($(MOZ_PKG_FORMAT),TAR)
+PKG_SUFFIX	= .tar
+MAKE_PACKAGE 	= tar $(TAR_CREATE_FLAGS) - $(MOZ_PKG_APPNAME)
+endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
 MAKE_PACKAGE 	= tar $(TAR_CREATE_FLAGS) - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
