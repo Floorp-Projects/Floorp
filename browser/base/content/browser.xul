@@ -103,6 +103,10 @@
     <command id="cmd_bm_paste"                     oncommand="goDoCommand('cmd_bm_paste');"/>
     <command id="cmd_bm_delete"                    oncommand="goDoCommand('cmd_bm_delete');"/>
 
+#ifdef XP_WIN
+    <command id="cmd_handleBackspace"  oncommand="BrowserHandleBackspace();" />
+#endif
+
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
@@ -216,7 +220,10 @@
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
-
+#ifdef XP_WIN
+    <key keycode="VK_BACK" command="cmd_handleBackspace"/>
+    <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
+#endif
     <key keycode="VK_F5" oncommand="BrowserReload();"/>
     <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
 

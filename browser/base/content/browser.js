@@ -591,6 +591,29 @@ function BrowserBack()
   }
 }
 
+#ifdef XP_WIN
+function BrowserHandleBackspace()
+{
+  // The order of seeing keystrokes is this:
+  // 1) Chrome, 2) Typeahead, 3) [platform]HTMLBindings.xml
+  // Rather than have typeaheadfind responsible for making VK_BACK 
+  // go back in history, we handle backspace it here as follows:
+  // When backspace is pressed, it might mean back
+  // in typeaheadfind if that's active, or it might mean back in history
+
+  var typeAhead = null;
+  const TYPE_AHEAD_FIND_CONTRACTID = "@mozilla.org/typeaheadfind;1";
+  if (TYPE_AHEAD_FIND_CONTRACTID in Components.classes) {
+    typeAhead = Components.classes[TYPE_AHEAD_FIND_CONTRACTID]
+                .getService(Components.interfaces.nsITypeAheadFind);
+  }
+  
+  if (!typeAhead || !typeAhead.backOneChar()) {
+    BrowserBack();
+  }
+}
+#endif
+
 function BrowserForward()
 {
   try {
