@@ -1506,8 +1506,10 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
   // but the situation may still be unexpected
   else if (GetConnectionStatus() >= 0 && !DeathSignalReceived())
   {
-    // alert the user that the connection was closed unexpectedly
-    AlertUserEventUsingId(IMAP_SERVER_DISCONNECTED);
+    // alert the user that the connection was closed unexpectedly, 
+    // but only if we are running an URL
+    if (m_runningUrl)
+      AlertUserEventUsingId(IMAP_SERVER_DISCONNECTED);
   }
   
   PR_CEnterMonitor(this);
