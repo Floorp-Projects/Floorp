@@ -106,7 +106,11 @@ protected:
   struct TabInfo {
     TabInfo( nsIContent * inContent, PRBool inCollapsed, 
                const nsRect &inBounds = nsRect(0,0,0,0)) 
-       : mToolbar(inContent), mCollapsed(inCollapsed), mBoundingRect(inBounds) { } 
+       : mToolbar(inContent),
+         mBoundingRect(inBounds),
+         mCollapsed(inCollapsed)
+      {
+      } 
 
     void SetBounds(const nsRect &inBounds) { mBoundingRect = inBounds; }
 
