@@ -473,6 +473,9 @@ public:
     NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
     NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
 
+    // needed by the XUL Content Sink to do URL conversions
+    NS_IMETHOD GetChannel(nsIChannel **aResult);
+
 protected:
     // Implementation methods
     friend nsresult
@@ -609,6 +612,10 @@ protected:
     PRBool                     mIsPopup; 
     nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
+
+
+    nsCOMPtr<nsIChannel> mChannel; // ?? channel we are currently using
+
 
     nsVoidArray mForwardReferences;
     PRBool mForwardReferencesResolved;
@@ -1073,6 +1080,7 @@ XULDocumentImpl::StartDocumentLoad(const char* aCommand,
 		nsresult status;
 		nsCOMPtr<nsIParser> parser;
 #ifdef NECKO
+    mChannel = aChannel;
     nsCOMPtr<nsIURI> aURL;
     status = aChannel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(status)) return status;
@@ -4398,3 +4406,10 @@ XULDocumentImpl::ApplyPersistentAttributesToElements(nsIRDFResource* aResource, 
 }
 
 
+NS_IMETHODIMP
+XULDocumentImpl::GetChannel(nsIChannel **aResult)
+{
+  *aResult = mChannel;
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}

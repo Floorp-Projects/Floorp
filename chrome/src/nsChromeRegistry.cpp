@@ -30,17 +30,13 @@
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFContainer.h"
 #include "nsHashtable.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
+#include "nsNeckoUtil.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID, NS_IRDFLITERAL_IID);
-static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID, NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFIntIID, NS_IRDFINT_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
@@ -88,11 +84,50 @@ nsOverlayEnumerator::~nsOverlayEnumerator()
 
 NS_IMETHODIMP nsOverlayEnumerator::HasMoreElements(PRBool *aIsTrue)
 {
-  return NS_OK;
+  return mArcs->HasMoreElements(aIsTrue);
 }
 
 NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
 {
+  nsresult rv;
+  *aResult = nsnull;
+
+  if (!mArcs)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupports> supports;
+  mArcs->GetNext(getter_AddRefs(supports));
+
+  nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(supports, &rv);
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  const PRUnichar* valueStr;
+  rv = value->GetValueConst(&valueStr);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIURL> url;
+  
+  rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+                                          nsnull,
+                                          NS_GET_IID(nsIURL),
+                                          getter_AddRefs(url));
+
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  nsCAutoString str(valueStr);
+  url->SetSpec(str);
+  
+  nsCOMPtr<nsISupports> sup;
+  sup = do_QueryInterface(url, &rv);
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  *aResult = sup;
+  NS_ADDREF(*aResult);
+
   return NS_OK;
 }
 
@@ -160,7 +195,7 @@ nsChromeRegistry::nsChromeRegistry()
   if (gRefCnt == 1) {
       nsresult rv;
       rv = nsServiceManager::GetService(kRDFServiceCID,
-                                        kIRDFServiceIID,
+                                        NS_GET_IID(nsIRDFService),
                                         (nsISupports**)&gRDFService);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
 
@@ -425,20 +460,8 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumera
   // Construct the lookup string-
   // which is basically chrome:// + package + provider
   
-  nsAutoString lookup("chrome://");
-
-  lookup += package; // no trailing slash here
-  
-  NS_ASSERTION(*provider == '/', "No leading slash here!");
-  
-  //definitely have a leading slash...
-  if (*provider != '/')
-      lookup += '/';
-  lookup += provider; 
-  
-  // end it on a slash if none is present
-  if (lookup.CharAt(lookup.Length()-1) != '/')
-      lookup += '/';
+  char *lookup;
+  aChromeURL->GetSpec(&lookup);
 
   // Get the chromeResource from this lookup string
   nsCOMPtr<nsIRDFResource> chromeResource;
@@ -446,6 +469,8 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumera
       NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
       return rv;
   }
+  // XXX free this?
+  //  nsAllocator::Free(lookup);
 
   nsCAutoString overlayFile;
 
@@ -465,8 +490,21 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumera
     dataSource = do_QueryInterface(supports);
     if (dataSource)
     {
+      nsCOMPtr<nsIRDFContainer> container;
+      nsresult rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                                       nsnull,
+                                                       NS_GET_IID(nsIRDFContainer),
+                                                       getter_AddRefs(container));
+      if (NS_FAILED(rv))
+        return NS_OK;
+      
+      if (NS_FAILED(container->Init(dataSource, chromeResource)))
+        return NS_OK;
+
+
       nsCOMPtr<nsISimpleEnumerator> arcs;
-      dataSource->ArcLabelsOut(chromeResource, getter_AddRefs(arcs));
+      if (NS_FAILED(container->GetElements(getter_AddRefs(arcs))))
+        return NS_OK;
 
       *aResult = new nsOverlayEnumerator(arcs);
 
@@ -475,6 +513,7 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumera
 
   }
 
+  nsAllocator::Free(lookup);
 
   return NS_OK;
 }
@@ -595,13 +634,13 @@ nsChromeRegistry::GetChromeResource(nsIRDFDataSource *aDataSource,
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
 
-    if (NS_SUCCEEDED(rv = chromeBase->QueryInterface(kIRDFResourceIID,
+    if (NS_SUCCEEDED(rv = chromeBase->QueryInterface(NS_GET_IID(nsIRDFResource),
                                                      (void**) getter_AddRefs(resource)))) {
         nsXPIDLCString uri;
         resource->GetValue( getter_Copies(uri) );
         aResult = uri;
     }
-    else if (NS_SUCCEEDED(rv = chromeBase->QueryInterface(kIRDFLiteralIID,
+    else if (NS_SUCCEEDED(rv = chromeBase->QueryInterface(NS_GET_IID(nsIRDFLiteral),
                                                       (void**) getter_AddRefs(literal)))) {
         nsXPIDLString s;
         literal->GetValue( getter_Copies(s) );
