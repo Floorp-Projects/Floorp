@@ -88,6 +88,12 @@
 #define _PR_HAVE_SYSV_SEMAPHORES
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
 
+#if __FreeBSD_version >= 400014
+#define _PR_INET6
+#define _PR_HAVE_GETHOSTBYNAME2
+#define _PR_INET6_PROBE
+#endif
+
 #define USE_SETJMP
 
 #ifndef _PR_PTHREADS
