@@ -776,7 +776,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
     }
 
     // Last resort, the aardvark rule
-    if (mTypeAheadBuffer.Length() > 0 && mTypeAheadBuffer.First() == mTypeAheadBuffer.CharAt(1) &&
+    if (mTypeAheadBuffer.Length() > 1 && mTypeAheadBuffer.First() == mTypeAheadBuffer.CharAt(1) &&
         mTypeAheadBuffer.Last() != mTypeAheadBuffer.First()) {
       // The aardvark rule: if they repeat the same character and then change
       // first find exactly what they typed, if not there start over with new char
