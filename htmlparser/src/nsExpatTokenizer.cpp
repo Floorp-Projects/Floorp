@@ -117,23 +117,6 @@ nsresult nsExpatTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr
   return NS_OK;                                                        
 }
 
-/**
- *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsParser.
- *  
- *  @update  gess 4/8/98
- *  @param   nsIParser** ptr to newly instantiated parser
- *  @return  NS_xxx error result
- */
-NS_HTMLPARS nsresult NS_New_Expat_Tokenizer(nsITokenizer** aInstancePtrResult) {
-  nsExpatTokenizer* it = new nsExpatTokenizer();
-  if (it == 0) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
-}
-
-
 NS_IMPL_ADDREF(nsExpatTokenizer)
 NS_IMPL_RELEASE(nsExpatTokenizer)
 

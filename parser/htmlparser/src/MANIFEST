@@ -21,7 +21,6 @@ nsParserCIID.h
 nsHTMLEntities.h
 nsHTMLEntityList.h
 nsWellFormedDTD.h
-nsExpatDTD.h
 nsIExpatTokenizer.h
 nsParserError.h
 nsIElementObserver.h
