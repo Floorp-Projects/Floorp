@@ -175,7 +175,7 @@ ASFILES		:= xptcinvoke_asm_irix.s xptcstubs_asm_irix.s
 ifdef GNU_CC
 ASFLAGS		+= -Wa,-D__GNUC__
 else
-CXXFLAGS	:= $(shell echo $(CXXFLAGS) | sed 's/-O\(3|fast\)/-O2/g')
+CXXFLAGS	:= $(shell echo $(CXXFLAGS) | sed 's/-O\(3\|fast\)/-O2/g')
 endif
 endif
 endif
