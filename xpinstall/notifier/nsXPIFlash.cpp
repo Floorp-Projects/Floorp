@@ -44,8 +44,8 @@
 #define NC_XPIFLASH_TYPE        "http://home.netscape.com/NC-rdf#XPInstallNotification"
 
 #define NC_XPIFLASH_TITLE       "http://home.netscape.com/NC-rdf#title"
-#define NC_XPIFLASH_REGKEY      "http://home.netscape.com/NC-rdf#version"
-#define NC_XPIFLASH_VERSION     "http://home.netscape.com/NC-rdf#registryKey"
+#define NC_XPIFLASH_REGKEY      "http://home.netscape.com/NC-rdf#registryKey"
+#define NC_XPIFLASH_VERSION     "http://home.netscape.com/NC-rdf#version"
 #define NC_XPIFLASH_DESCRIPTION	"http://home.netscape.com/NC-rdf#description"
 #define NC_XPIFLASH_URL			"http://home.netscape.com/NC-rdf#url"
 
@@ -330,7 +330,7 @@ nsXPINotifierImpl::AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor)
 
                         nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInner);
                         ds->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
-                        ds->Assert(aPackage, kNC_Description, title, PR_TRUE);
+                        ds->Assert(aPackage, kNC_Source, title, PR_TRUE);
                         ds->Assert(aPackage, kNC_URL, url, PR_TRUE);
 
                         ds->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
