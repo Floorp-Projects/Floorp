@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.12 $ 
-# $Date: 2003/01/19 17:22:07 $ 
+# $Revision: 1.13 $ 
+# $Date: 2003/04/20 00:52:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -78,6 +78,7 @@ sub summary_pages {
     # ugly and nearly all of these are used by every summary function.
 
     @LATEST_STATUS = TinderDB::Build::latest_status($tree);
+    @LATEST_ERRS = TinderDB::Build::latest_errors($tree);
     @BUILD_NAMES = TinderDB::Build::build_names($tree);
 
     @HTML_COLORS = BuildStatus::status2html_colors(@LATEST_STATUS);
@@ -86,6 +87,9 @@ sub summary_pages {
     $TREE = $tree;
     $TREE_STATE = TinderHeader::gettree_header('TreeState', $tree);
     $HTML_TIME = HTMLPopUp::timeHTML($main::TIME);
+    $DISPLAY_BUILD_ERRORS =
+        ( defined($TinderConfig::DISPLAY_BUILD_ERRORS) && 
+          ($TinderConfig::DISPLAY_BUILD_ERRORS) );
 
     $REFRESH_TIME = $refresh_time;
 
@@ -396,7 +400,13 @@ EOF
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];
-    $body .= "\t\t<TD BGCOLOR='$color'>$buildname</TD>\n";
+    $body .= "\t\t<TD BGCOLOR='$color'>$buildname\n";
+    if ($DISPLAY_BUILD_ERRORS) {
+      my ($errs) = $LATEST_ERRS[$i];
+      $body .= "&nbsp;errs:&nbsp;$errs";
+    }
+    $body .= "</TD>\n";
+
   }
   $body .= "\t</TR></TABLE>\n";
 
@@ -438,7 +448,12 @@ sub panel {
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];
-    $body .= "\t\t<TR><TD BGCOLOR='$color'>$buildname</TD></TR>\n";
+    $body .= "\t\t<TR><TD BGCOLOR='$color'>$buildname";
+    if ($DISPLAY_BUILD_ERRORS) {
+      my ($errs) = $LATEST_ERRS[$i];
+      $body .= "errs:&nbsp;$errs";
+    }
+    $body .= "</TD></TR>\n";
   }
 
   $body .= "\t</TABLE>\n";
@@ -470,7 +485,12 @@ sub jspanel {
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];
-    $body .= "\t\t<TR><TD CLASS='tinderbuild' BGCOLOR='$color'>$buildname</td></tr>\n";
+    $body .= "\t\t<TR><TD CLASS='tinderbuild' BGCOLOR='$color'>$buildname";
+    if ($DISPLAY_BUILD_ERRORS) {
+      my ($errs) = $LATEST_ERRS[$i];
+      $body .= "errs:&nbsp;$errs";
+    }
+    $body .= "</TD></TR>";
   }
 
   $body .= "</TABLE>";
@@ -490,13 +510,22 @@ sub quickparse {
 
   $header = "<PRE>\n";
 
-  $body .= "State|$TREE|$TREE|$TREE_STATE\n";
+  $body .= "State|$TREE|$TREE|$TREE_STATE";
+  if ($DISPLAY_BUILD_ERRORS) {
+    $body .= "|Errs";
+  }
+  $body .= "\n";
   
-    for ($i=0; $i <= $#BUILD_NAMES; $i++) {
-      my ($buildname) = $BUILD_NAMES[$i];
-      my ($status) = $LATEST_STATUS[$i];
-      $body .= "Build|$TREE|$buildname|$status\n";
+  for ($i=0; $i <= $#BUILD_NAMES; $i++) {
+    my ($buildname) = $BUILD_NAMES[$i];
+    my ($status) = $LATEST_STATUS[$i];
+    $body .= "Build|$TREE|$buildname|$status";
+    if ($DISPLAY_BUILD_ERRORS) {
+      my ($errs) = $LATEST_ERRS[$i];
+      $body .= "|" . $errs;
     }
+    $body .= "\n";
+  }
 
   $footer = "\n";
   $extension = 'html';
