@@ -41,6 +41,7 @@ public:
    */
   nsUnicodeToBIG5NoAscii();
 
+  NS_IMETHOD FillInfo(PRUint32 *aInfo);
 protected:
 
   //--------------------------------------------------------------------

@@ -52,3 +52,13 @@ NS_IMETHODIMP nsUnicodeToBIG5NoAscii::GetMaxLength(const PRUnichar * aSrc,
   *aDestLength = 2 * aSrcLength;
   return NS_OK_UENC_EXACTLENGTH;
 }
+NS_IMETHODIMP nsUnicodeToBIG5NoAscii::FillInfo(PRUint32 *aInfo)
+{
+  nsresult rv = nsTableEncoderSupport::FillInfo(aInfo); // call the super class
+  if(NS_SUCCEEDED(rv))
+  {
+    // mark the first 128 bits as 0. 4 x 32 bits = 128 bits
+    aInfo[0] = aInfo[1] = aInfo[2] = aInfo[3] = 0;
+  }
+  return rv;
+}
