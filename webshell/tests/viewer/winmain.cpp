@@ -223,6 +223,7 @@ static void Destroy(WindowData* wd)
   DestroyConsole();
   if (nsnull != wd) {
     if (nsnull != wd->ww) {
+      wd->ww->SetContainer(nsnull); // release the doc observer
       NS_RELEASE(wd->ww);
     }
     if (nsnull != wd->observer) {
