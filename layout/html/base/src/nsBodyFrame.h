@@ -35,8 +35,10 @@ public:
   friend nsresult NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent,
                                   nsIFrame*& aResult, PRUint32 aFlags);
 
+  // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+  // nsIFrame
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
