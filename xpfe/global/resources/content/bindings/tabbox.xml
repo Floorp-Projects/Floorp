@@ -386,6 +386,8 @@
         </getter>
       </property>
 
+      <field name="_selectedPanel">null</field>
+
       <property name="selectedIndex">
         <getter>
         <![CDATA[
@@ -396,12 +398,14 @@
                         
         <setter>
         <![CDATA[
-          if (this.selectedIndex == val)
-            return val;
+          var panel = this._selectedPanel;
+          this._selectedPanel = this.childNodes[val];
           this.setAttribute("selectedIndex", val);
-          var event = document.createEvent("Events");
-          event.initEvent("select", false, true);
-          this.dispatchEvent(event);
+          if (this._selectedPanel != panel) {
+            var event = document.createEvent("Events");
+            event.initEvent("select", false, true);
+            this.dispatchEvent(event);
+          }
           return val;
         ]]>
         </setter>
@@ -411,7 +415,7 @@
       <property name="selectedPanel">
         <getter>
           <![CDATA[
-            return this.childNodes[this.selectedIndex];
+            return this._selectedPanel;
           ]]>
         </getter>
 
