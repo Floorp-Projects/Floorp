@@ -42,7 +42,7 @@
 
 class nsParser;
 class nsIHTMLContentSink;
-class nsIParserDebug;
+class nsIDTDDebug;
 
 class CNavDTD : public nsIDTD {
             
@@ -71,11 +71,19 @@ class CNavDTD : public nsIDTD {
 
     /**
      * 
+     * @update	jevering6/23/98
+     * @param 
+     * @return
+     */
+	virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
+
+    /**
+     * 
      * @update	gess5/18/98
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(const char* aFilename=0, nsIParserDebug* aParserDebug=0);
+    virtual PRInt32 WillBuildModel(const char* aFilename=0);
 
     /**
      * 
@@ -347,6 +355,8 @@ class CNavDTD : public nsIDTD {
      * @return  TRUE if the token was handled.
      */
     PRInt32 HandleStyleToken(CToken* aToken);
+
+	
 
 private:
 
@@ -680,7 +690,7 @@ protected:
     PRBool              mHasOpenMap;
     nsDeque             mTokenDeque;
     char*               mFilename;
-    nsIParserDebug*     mParserDebug;
+    nsIDTDDebug*		mDTDDebug;
 };
 
 

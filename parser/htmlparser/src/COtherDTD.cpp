@@ -31,7 +31,7 @@
  *         
  */
 
-#include "nsIParserDebug.h"
+#include "nsIDTDDebug.h"
 #include "COtherDTD.h"
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
@@ -236,7 +236,7 @@ COtherDTD::COtherDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
   mParser=0;
   mFilename=0;
-  mParserDebug=0;
+  mDTDDebug=0;
   nsCRT::zero(mLeafBits,sizeof(mLeafBits));
   nsCRT::zero(mContextStack,sizeof(mContextStack));
   nsCRT::zero(mStyleStack,sizeof(mStyleStack));
@@ -259,9 +259,25 @@ COtherDTD::~COtherDTD(){
   DeleteTokenHandlers();
   if (mFilename)
      PL_strfree(mFilename);
-  if (mParserDebug)
-     NS_RELEASE(mParserDebug);
+  if (mDTDDebug)
+     NS_RELEASE(mDTDDebug);
 //  NS_RELEASE(mSink);
+}
+
+/**
+ * 
+ * @update	jevering6/23/98
+ * @param 
+ * @return
+ */
+
+void COtherDTD::SetDTDDebug(nsIDTDDebug * aDTDDebug)
+{
+	if (mDTDDebug)
+		NS_RELEASE(mDTDDebug);
+	mDTDDebug = aDTDDebug;
+	if (mDTDDebug)
+		NS_ADDREF(mDTDDebug);
 }
 
 /**
@@ -270,7 +286,7 @@ COtherDTD::~COtherDTD(){
  * @param 
  * @return
  */
-PRInt32 COtherDTD::WillBuildModel(const char* aFilename, nsIParserDebug* aParserDebug){
+PRInt32 COtherDTD::WillBuildModel(const char* aFilename){
   PRInt32 result=0;
 
   if (mFilename) {
@@ -280,9 +296,6 @@ PRInt32 COtherDTD::WillBuildModel(const char* aFilename, nsIParserDebug* aParser
   if(aFilename) {
     mFilename = PL_strdup(aFilename);
   }
-
-  mParserDebug = aParserDebug;
-  NS_IF_ADDREF(mParserDebug);
 
   if(mSink)
     mSink->WillBuildModel();
@@ -330,8 +343,8 @@ PRInt32 COtherDTD::HandleToken(CToken* aToken){
 
     if(aHandler) {
       result=(*aHandler)(theToken,this);
-      if (mParserDebug)
-         mParserDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
+      if (mDTDDebug)
+         mDTDDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
     }
 
   }//if

@@ -23,14 +23,14 @@
  *         
  */
 
-#ifndef NS_IPARSERDEBUG__
-#define NS_IPARSERDEBUG__
+#ifndef NS_IDTDDEBUG__
+#define NS_IDTDDEBUG__
 
 #include "nsISupports.h"
 #include "nsHTMLTokens.h"
 #include "prtypes.h"
 
-#define NS_IPARSERDEBUG_IID      \
+#define NS_IDTDDEBUG_IID      \
   {0x7b68c220, 0x0685,  0x11d2,  \
   {0xa4, 0xb5, 0x00,    0x80, 0x5f, 0x2a, 0x0e, 0xd2}}
 
@@ -38,7 +38,7 @@
 class nsIDTD;
 class nsParser;
 
-class nsIParserDebug : public nsISupports {
+class nsIDTDDebug : public nsISupports {
             
 public:
 
@@ -52,6 +52,6 @@ public:
 
 };
 
-extern NS_EXPORT nsresult NS_NewParserDebug(nsIParserDebug** aInstancePtrResult);
+extern NS_EXPORT nsresult NS_NewDTDDebug(nsIDTDDebug** aInstancePtrResult);
 
-#endif /* NS_IPARSERDEBUG__ */
+#endif /* NS_IDTDDEBUG__ */

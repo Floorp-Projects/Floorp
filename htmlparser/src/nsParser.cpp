@@ -30,7 +30,7 @@
 #include <fstream.h>
 #include "nsIInputStream.h"
 #include "nsIParserFilter.h"
-#include "nsIParserDebug.h"
+#include "nsIDTDDebug.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
@@ -86,8 +86,8 @@ CTokenDeallocator gTokenKiller;
  */
 nsParser::nsParser() : mTokenDeque(gTokenKiller) {
   NS_INIT_REFCNT();
+  mDTDDebug = 0;
   mParserFilter = 0;
-  mParserDebug = 0;
   mListener = 0;
   mTransferBuffer=0;
   mSink=0;
@@ -108,6 +108,7 @@ nsParser::nsParser() : mTokenDeque(gTokenKiller) {
  */
 nsParser::~nsParser() {
   NS_IF_RELEASE(mListener);
+  NS_IF_RELEASE(mDTDDebug);
   if(mTransferBuffer)
     delete [] mTransferBuffer;
   mTransferBuffer=0;
@@ -120,7 +121,6 @@ nsParser::~nsParser() {
   mScanner=0;
 
   NS_IF_RELEASE(mDTD);
-  NS_IF_RELEASE(mParserDebug);
   NS_IF_RELEASE(mURL);
 
 }
@@ -334,16 +334,17 @@ PRBool nsParser::DetermineContentType(const char* aContentType) {
  * @param 
  * @return
  */
-PRInt32 nsParser::WillBuildModel(const char* aFilename, const char* aContentType, nsIParserDebug * aDebug){
+PRInt32 nsParser::WillBuildModel(const char* aFilename, const char* aContentType){
   mMajorIteration=-1;
   mMinorIteration=-1;
 
   mParseMode=DetermineParseMode();  
   mDTD=(0==mDTD) ? CreateDTD(mParseMode,aContentType) : mDTD;
   if(mDTD) {
+	mDTD->SetDTDDebug(mDTDDebug);
     mDTD->SetParser(this);
     mDTD->SetContentSink(mSink);
-    mDTD->WillBuildModel(aFilename,mParserDebug);
+    mDTD->WillBuildModel(aFilename);
   }
 
 #ifdef DEBUG_SAVE_SOURCE_DOC
@@ -394,20 +395,17 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRBool nsParser::Parse(const char* aFilename,nsIParserDebug* aParserDebug){
+PRBool nsParser::Parse(const char* aFilename){
   NS_PRECONDITION(0!=aFilename,kNullFilename);
   PRInt32 status=kBadFilename;
   
   if(aFilename) {
 
-    mParserDebug = aParserDebug;
-    NS_IF_ADDREF(mParserDebug);
-
     //ok, time to create our tokenizer and begin the process
     mScanner=new CScanner(aFilename,mParseMode);
     char theContentType[600];
     DetermineContentType(theContentType);
-    WillBuildModel(aFilename,theContentType,aParserDebug);
+    WillBuildModel(aFilename,theContentType);
     status=ResumeParse();
     DidBuildModel(status);
 
@@ -429,14 +427,13 @@ PRBool nsParser::Parse(const char* aFilename,nsIParserDebug* aParserDebug){
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamListener* aListener,nsIParserDebug* aParserDebug) {
+PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamListener* aListener, nsIDTDDebug * aDTDDebug) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   PRInt32 status=kBadURL;
 
-  NS_IF_RELEASE(mParserDebug);
-  mParserDebug = aParserDebug;
-  NS_IF_ADDREF(mParserDebug);
+  mDTDDebug = aDTDDebug;
+  NS_IF_ADDREF(mDTDDebug);
 
   NS_IF_RELEASE(mURL);
   mURL = aURL;
@@ -594,7 +591,7 @@ nsresult nsParser::OnStartBinding(const char* aContentType){
   if (nsnull != mListener) {
     mListener->OnStartBinding(aContentType);
   }
-  nsresult result=WillBuildModel(mURL->GetSpec(),aContentType,mParserDebug);
+  nsresult result=WillBuildModel(mURL->GetSpec(),aContentType);
   if(!mTransferBuffer) {
     mTransferBuffer=new char[gTransferBufferSize+1];
   }
