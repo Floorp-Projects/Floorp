@@ -26,10 +26,12 @@
     </implementation>
   </binding>
 
-  <binding id="menu" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+  <binding id="menu" extends="chrome://global/content/widgets/menu.xml#menuitem-base">
     <content>
       <xul:label class="menu-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
+      <xul:hbox anonid="accel">
+        <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
+      </xul:hbox>
       <xul:hbox align="center" class="menu-right" xbl:inherits="_moz-menuactive,disabled">
         <xul:image/>
       </xul:hbox>
@@ -42,10 +44,12 @@
     </implementation>  
   </binding>
 
-  <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+  <binding id="menuitem" extends="chrome://global/content/widgets/menu.xml#menuitem-base">
     <content>
       <xul:label class="menu-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
+      <xul:hbox anonid="accel">
+        <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
+      </xul:hbox>
     </content>
     
     <implementation>
@@ -56,14 +60,14 @@
     </implementation>  
   </binding>
 
-  <binding id="menu-menubar" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+  <binding id="menu-menubar" extends="chrome://global/content/widgets/menu.xml#menuitem-base">
     <content>
       <xul:label class="menubar-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
   </binding>
 
-  <binding id="menu-menubar-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+  <binding id="menu-menubar-iconic" extends="chrome://global/content/widgets/menu.xml#menuitem-base">
     <content>
       <xul:image class="menubar-left" xbl:inherits="image=src"/>
       <xul:label class="menubar-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
@@ -71,18 +75,20 @@
     </content>
   </binding>
 
-  <binding id="menuitem-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem">
+  <binding id="menuitem-iconic" extends="chrome://global/content/widgets/menu.xml#menuitem">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center"
                 xbl:inherits="selected,_moz-menuactive,disabled,checked">
         <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
+      <xul:hbox anonid="accel">
+        <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
+      </xul:hbox>
     </content>
   </binding>
 
-  <binding id="menuitem-iconic-noaccel" extends="chrome://global/content/bindings/menu.xml#menuitem">
+  <binding id="menuitem-iconic-noaccel" extends="chrome://global/content/widgets/menu.xml#menuitem">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center"
                 xbl:inherits="selected,disabled,checked">
@@ -92,13 +98,15 @@
     </content>
   </binding>
 
-  <binding id="menu-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+  <binding id="menu-iconic" extends="chrome://global/content/widgets/menu.xml#menuitem-base">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center">
         <xul:image xbl:inherits="src=image"/>
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
+      <xul:hbox anonid="accel">
+        <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
+      </xul:hbox>
       <xul:hbox class="menu-right" xbl:inherits="_moz-menuactive,disabled" align="center" pack="center">
         <xul:image/>
       </xul:hbox>
@@ -111,13 +119,13 @@
     </implementation>  
   </binding>
   
-  <binding id="menubutton-item" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+  <binding id="menubutton-item" extends="chrome://global/content/widgets/menu.xml#menuitem-base">
     <content>
       <xul:label class="menubutton-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
   </binding>  
   
-  <binding id="menuseparator" extends="chrome://global/content/bindings/menu.xml#menuitem-base"/>
+  <binding id="menuseparator" extends="chrome://global/content/widgets/menu.xml#menuitem-base"/>
 
 </bindings>
