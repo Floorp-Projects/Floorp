@@ -44,6 +44,8 @@ TEST_FILES      = \
 		entityxif.out \
 		mailquote.html \
 		mailquote.out \
+		xifstuff.xif \
+		xifstuff.out \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

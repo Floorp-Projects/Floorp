@@ -137,15 +137,19 @@ protected:
 
   nsresult InitEncoder(const nsString& aCharset);
 
+  void WriteSimple(const nsString& aString);
   void Write(const nsString& aString);
-  void WriteWrapped(const nsString& aString);
   void EncodeToBuffer(const nsString& aString);
+  NS_IMETHOD GetValueOfAttribute(const nsIParserNode& aNode,
+                                 char* aMatchKey,
+                                 nsString& aValueRet);
 
 protected:
   nsIOutputStream* mStream;
   nsString*        mString;
 
   PRInt32          mIndent;
+  PRBool           mCiteQuote;
   PRInt32          mColPos;
   PRBool           mDoOutput;
   PRInt32          mFlags;
