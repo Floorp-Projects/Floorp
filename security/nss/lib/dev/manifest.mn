@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.7 $ $Date: 2002/04/15 15:22:01 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.8 $ $Date: 2002/04/18 17:29:55 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -58,6 +58,7 @@ CSRCS =		        \
 # here is where the 3.4 glue code is added
 ifndef PURE_STAN_BUILD
 DEFINES = -DNSS_3_4_CODE
+PRIVATE_EXPORTS += devm.h devtm.h
 endif
 
 REQUIRES = security nspr

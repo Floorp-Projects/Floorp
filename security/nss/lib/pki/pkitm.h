@@ -35,7 +35,7 @@
 #define PKITM_H
 
 #ifdef DEBUG
-static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.8 $ $Date: 2002/04/15 15:22:11 $ $Name:  $";
+static const char PKITM_CVS_ID[] = "@(#) $RCSfile: pkitm.h,v $ $Revision: 1.9 $ $Date: 2002/04/18 17:30:04 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -110,6 +110,7 @@ typedef struct
 {
   union {
     PRStatus (*  cert)(NSSCertificate *c, void *arg);
+    PRStatus (*   crl)(NSSCRL       *crl, void *arg);
     PRStatus (* pvkey)(NSSPrivateKey *vk, void *arg);
     PRStatus (* pbkey)(NSSPublicKey *bk, void *arg);
   } func;

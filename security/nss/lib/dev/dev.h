@@ -41,7 +41,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.23 $ $Date: 2002/04/15 15:22:00 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.24 $ $Date: 2002/04/18 17:29:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -377,6 +377,7 @@ nssSlot_CreateSession
  * nssToken_FindTrustObjects
  * nssToken_FindTrustForCertificate
  * nssToken_FindCRLs
+ * nssToken_FindCRLsBySubject
  * nssToken_FindPrivateKeys
  * nssToken_FindPrivateKeyByID
  * nssToken_Digest
@@ -577,6 +578,17 @@ nssToken_FindCRLs
 );
 
 NSS_EXTERN nssCryptokiObject **
+nssToken_FindCRLsBySubject
+(
+  NSSToken *token,
+  nssSession *sessionOpt,
+  NSSDER *subject,
+  nssTokenSearchType searchType,
+  PRUint32 maximumOpt,
+  PRStatus *statusOpt
+);
+
+NSS_EXTERN nssCryptokiObject **
 nssToken_FindPrivateKeys
 (
   NSSToken *token,
@@ -740,9 +752,23 @@ nssCryptokiCRL_GetAttributes
   nssCryptokiObject *crlObject,
   nssSession *sessionOpt,
   NSSArena *arenaOpt,
-  NSSItem *crl,
-  NSSItem *krl,
-  NSSItem *url
+  NSSItem *encodingOpt,
+  NSSUTF8 **urlOpt,
+  PRBool *isKRLOpt
+);
+
+/* I'm including this to handle import of certificates in NSS 3.5.  This
+ * function will set the cert-related attributes of a key, in order to
+ * associate it with a cert.  Does it stay like this for 4.0?
+ */
+NSS_EXTERN PRStatus
+nssCryptokiPrivateKey_SetCertificate
+(
+  nssCryptokiObject *keyObject,
+  nssSession *sessionOpt,
+  NSSUTF8 *nickname,
+  NSSItem *id,
+  NSSDER *subject
 );
 
 NSS_EXTERN void
@@ -912,30 +938,6 @@ NSS_EXTERN nssSession *
 nssToken_GetDefaultSession
 (
   NSSToken *token
-);
-
-NSS_EXTERN PRStatus
-nssToken_SetTrustCache
-(
-  NSSToken *tok
-);
-
-NSS_EXTERN PRStatus
-nssToken_SetCrlCache
-(
-  NSSToken *tok
-);
-
-NSS_EXTERN PRBool
-nssToken_HasCrls
-(
-  NSSToken *tok
-);
-
-NSS_EXTERN PRStatus
-nssToken_SetHasCrls
-(
-  NSSToken *tok
 );
 
 NSS_EXTERN PRStatus

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.12 $ $Date: 2002/04/15 15:22:01 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.13 $ $Date: 2002/04/18 17:29:54 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -150,13 +150,13 @@ nssToken_Destroy
   NSSToken *tok
 )
 {
-#ifdef PURE_STAN_BUILD
-    PR_AtomicDecrement(&tok->base.refCount);
-    if (tok->base.refCount == 0) {
-	nssTokenObjectCache_Destroy(tok->cache);
-	return nssArena_Destroy(tok->base.arena);
+    if (tok) {
+	PR_AtomicDecrement(&tok->base.refCount);
+	if (tok->base.refCount == 0) {
+	    nssTokenObjectCache_Destroy(tok->cache);
+	    return nssArena_Destroy(tok->base.arena);
+	}
     }
-#endif
     return PR_SUCCESS;
 }
 
@@ -268,11 +268,9 @@ nssToken_DeleteStoredObject
     NSSToken *token = instance->token;
     nssSession *session = NULL;
     void *epv = nssToken_GetCryptokiEPV(instance->token);
-#ifdef PURE_STAN_BUILD
     if (token->cache) {
 	status = nssTokenObjectCache_RemoveObject(token->cache, instance);
     }
-#endif
     if (instance->isTokenObject) {
        if (nssSession_IsReadWrite(token->defaultSession)) {
 	   session = token->defaultSession;
@@ -476,7 +474,6 @@ find_objects_by_template
     CK_OBJECT_CLASS objclass;
     nssCryptokiObject **objects = NULL;
     PRUint32 i;
-#ifdef PURE_STAN_BUILD
     for (i=0; i<otsize; i++) {
 	if (obj_template[i].type == CKA_CLASS) {
 	    objclass = *(CK_OBJECT_CLASS *)obj_template[i].pValue;
@@ -495,7 +492,6 @@ find_objects_by_template
 	                                                    maximumOpt);
 	if (statusOpt) *statusOpt = PR_SUCCESS;
     }
-#endif /* PURE_STAN_BUILD */
     /* Either they are not cached, or cache failed; look on token. */
     if (!objects) {
 	objects = find_objects(token, sessionOpt, 
@@ -547,13 +543,11 @@ nssToken_ImportCertificate
     NSS_CK_TEMPLATE_FINISH(cert_tmpl, attr, ctsize);
     /* Import the certificate onto the token */
     rvObject = import_object(tok, sessionOpt, cert_tmpl, ctsize);
-#ifdef PURE_STAN_BUILD
     if (rvObject && tok->cache) {
 	nssTokenObjectCache_ImportObject(tok->cache, rvObject,
 	                                 CKO_CERTIFICATE,
 	                                 cert_tmpl, ctsize);
     }
-#endif
     return rvObject;
 }
 
@@ -1022,13 +1016,11 @@ nssToken_ImportTrust
     NSS_CK_TEMPLATE_FINISH(trust_tmpl, attr, tsize);
     /* import the trust object onto the token */
     object = import_object(tok, sessionOpt, trust_tmpl, tsize);
-#ifdef PURE_STAN_BUILD
     if (object && tok->cache) {
 	nssTokenObjectCache_ImportObject(tok->cache, object,
 	                                 CKO_CERTIFICATE,
 	                                 trust_tmpl, tsize);
     }
-#endif
     return object;
 }
 
@@ -1162,13 +1154,11 @@ nssToken_ImportCRL
 
     /* import the crl object onto the token */
     object = import_object(token, sessionOpt, crl_tmpl, crlsize);
-#ifdef PURE_STAN_BUILD
     if (object && token->cache) {
 	nssTokenObjectCache_ImportObject(token->cache, object,
 	                                 CKO_CERTIFICATE,
 	                                 crl_tmpl, crlsize);
     }
-#endif
     return object;
 }
 
@@ -1211,7 +1201,41 @@ nssToken_FindCRLs
     return objects;
 }
 
-#ifdef PURE_STAN_BUILD
+NSS_IMPLEMENT nssCryptokiObject **
+nssToken_FindCRLsBySubject
+(
+  NSSToken *token,
+  nssSession *sessionOpt,
+  NSSDER *subject,
+  nssTokenSearchType searchType,
+  PRUint32 maximumOpt,
+  PRStatus *statusOpt
+)
+{
+    CK_OBJECT_CLASS crlobjc = CKO_NETSCAPE_CRL;
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE crlobj_template[3];
+    CK_ULONG crlobj_size;
+    nssCryptokiObject **objects;
+    nssSession *session = sessionOpt ? sessionOpt : token->defaultSession;
+
+    NSS_CK_TEMPLATE_START(crlobj_template, attr, crlobj_size);
+    if (searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (searchType == nssTokenSearchType_TokenOnly ||
+               searchType == nssTokenSearchType_TokenForced) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
+    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS, crlobjc);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT, subject);
+    NSS_CK_TEMPLATE_FINISH(crlobj_template, attr, crlobj_size);
+
+    objects = find_objects_by_template(token, session,
+                                       crlobj_template, crlobj_size,
+                                       maximumOpt, statusOpt);
+    return objects;
+}
+
 NSS_IMPLEMENT PRStatus
 nssToken_GetCachedObjectAttributes
 (
@@ -1230,7 +1254,6 @@ nssToken_GetCachedObjectAttributes
                                                    object, objclass,
                                                    atemplate, atlen);
 }
-#endif
 
 NSS_IMPLEMENT NSSItem *
 nssToken_Digest
@@ -1391,85 +1414,6 @@ nssToken_FinishDigest
     return rvItem;
 }
 
-#ifdef NSS_3_4_CODE
-
-NSS_IMPLEMENT PRStatus
-nssToken_SetTrustCache
-(
-  NSSToken *token
-)
-{
-    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
-    CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE tobj_template[2];
-    CK_ULONG tobj_size;
-    nssCryptokiObject **objects;
-    nssSession *session = token->defaultSession;
-
-    NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
-    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS, tobjc);
-    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
-    NSS_CK_TEMPLATE_FINISH(tobj_template, attr, tobj_size);
-
-    objects = find_objects_by_template(token, session,
-                                       tobj_template, tobj_size, 1, NULL);
-    token->hasNoTrust = PR_FALSE;
-    if (objects) {
-	nssCryptokiObjectArray_Destroy(objects);
-    } else {
-	token->hasNoTrust = PR_TRUE;
-    } 
-    return PR_SUCCESS;
-}
-
-NSS_IMPLEMENT PRStatus
-nssToken_SetCrlCache
-(
-  NSSToken *token
-)
-{
-    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_CRL;
-    CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE tobj_template[2];
-    CK_ULONG tobj_size;
-    nssCryptokiObject **objects;
-    nssSession *session = token->defaultSession;
-
-    NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
-    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS, tobjc);
-    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
-    NSS_CK_TEMPLATE_FINISH(tobj_template, attr, tobj_size);
-
-    objects = find_objects_by_template(token, session,
-                                       tobj_template, tobj_size, 1, NULL);
-    token->hasNoCrls = PR_TRUE;
-    if (objects) {
-	nssCryptokiObjectArray_Destroy(objects);
-    } else {
-	token->hasNoCrls = PR_TRUE;
-    }
-    return PR_SUCCESS;
-}
-
-NSS_IMPLEMENT PRBool
-nssToken_HasCrls
-(
-    NSSToken *tok
-)
-{
-    return !tok->hasNoCrls;
-}
-
-NSS_IMPLEMENT PRStatus
-nssToken_SetHasCrls
-(
-    NSSToken *tok
-)
-{
-    tok->hasNoCrls = PR_FALSE;
-    return PR_SUCCESS;
-}
-
 NSS_IMPLEMENT PRBool
 nssToken_IsPresent
 (
@@ -1478,5 +1422,4 @@ nssToken_IsPresent
 {
     return nssSlot_IsTokenPresent(token->slot);
 }
-#endif
 

@@ -35,7 +35,7 @@
 #define DEVTM_H
 
 #ifdef DEBUG
-static const char DEVTM_CVS_ID[] = "@(#) $RCSfile: devtm.h,v $ $Revision: 1.1 $ $Date: 2002/04/04 20:00:22 $ $Name:  $";
+static const char DEVTM_CVS_ID[] = "@(#) $RCSfile: devtm.h,v $ $Revision: 1.2 $ $Date: 2002/04/18 17:29:54 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -52,8 +52,6 @@ static const char DEVTM_CVS_ID[] = "@(#) $RCSfile: devtm.h,v $ $Revision: 1.1 $ 
 PR_BEGIN_EXTERN_C
 
 #define MAX_LOCAL_CACHE_OBJECTS 10
-
-typedef struct nssTokenObjectCacheStr nssTokenObjectCache;
 
 PR_END_EXTERN_C
 

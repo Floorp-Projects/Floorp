@@ -35,7 +35,7 @@
 #define DEVM_H
 
 #ifdef DEBUG
-static const char DEVM_CVS_ID[] = "@(#) $RCSfile: devm.h,v $ $Revision: 1.5 $ $Date: 2002/04/04 20:00:21 $ $Name:  $";
+static const char DEVM_CVS_ID[] = "@(#) $RCSfile: devm.h,v $ $Revision: 1.6 $ $Date: 2002/04/18 17:29:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -140,6 +140,78 @@ nssCryptokiObject_Create
   NSSToken *t, 
   nssSession *session,
   CK_OBJECT_HANDLE h
+);
+
+NSS_EXTERN nssTokenObjectCache *
+nssTokenObjectCache_Create
+(
+  NSSToken *token,
+  PRBool cacheCerts,
+  PRBool cacheTrust,
+  PRBool cacheCRLs
+);
+
+NSS_EXTERN void
+nssTokenObjectCache_Destroy
+(
+  nssTokenObjectCache *cache
+);
+
+NSS_EXTERN PRBool
+nssTokenObjectCache_HaveObjectClass
+(
+  nssTokenObjectCache *cache,
+  CK_OBJECT_CLASS objclass
+);
+
+NSS_EXTERN nssCryptokiObject **
+nssTokenObjectCache_FindObjectsByTemplate
+(
+  nssTokenObjectCache *cache,
+  CK_OBJECT_CLASS objclass,
+  CK_ATTRIBUTE_PTR otemplate,
+  CK_ULONG otlen,
+  PRUint32 maximumOpt
+);
+
+NSS_EXTERN PRStatus
+nssTokenObjectCache_GetObjectAttributes
+(
+  nssTokenObjectCache *cache,
+  NSSArena *arenaOpt,
+  nssCryptokiObject *object,
+  CK_OBJECT_CLASS objclass,
+  CK_ATTRIBUTE_PTR atemplate,
+  CK_ULONG atlen
+);
+
+NSS_EXTERN PRStatus
+nssTokenObjectCache_ImportObject
+(
+  nssTokenObjectCache *cache,
+  nssCryptokiObject *object,
+  CK_OBJECT_CLASS objclass,
+  CK_ATTRIBUTE_PTR ot,
+  CK_ULONG otlen
+);
+
+NSS_EXTERN PRStatus
+nssTokenObjectCache_RemoveObject
+(
+  nssTokenObjectCache *cache,
+  nssCryptokiObject *object
+);
+
+/* XXX allows peek back into token */
+NSS_EXTERN PRStatus
+nssToken_GetCachedObjectAttributes
+(
+  NSSToken *token,
+  NSSArena *arenaOpt,
+  nssCryptokiObject *object,
+  CK_OBJECT_CLASS objclass,
+  CK_ATTRIBUTE_PTR atemplate,
+  CK_ULONG atlen
 );
 
 /* PKCS#11 stores strings in a fixed-length buffer padded with spaces.  This

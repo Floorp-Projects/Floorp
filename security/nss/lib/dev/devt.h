@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.16 $ $Date: 2002/04/15 15:22:01 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.17 $ $Date: 2002/04/18 17:29:54 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -82,6 +82,8 @@ struct nssDeviceBaseStr
   PRUint32 flags;
 };
 
+typedef struct nssTokenObjectCacheStr nssTokenObjectCache;
+
 /* XXX until devobject.c goes away */
 struct NSSTokenStr
 {
@@ -93,12 +95,9 @@ struct NSSTokenStr
     nssSession *defaultSession;
     NSSTrustDomain *trustDomain;
     PRIntervalTime lastTime;
-    PRBool hasNoTrust;
-    PRBool hasNoCrls;
+    nssTokenObjectCache *cache;
 #ifdef NSS_3_4_CODE
     PK11SlotInfo *pk11slot;
-    nssList *certList; /* local cache of certs for slow tokens */
-    PRBool loggedIn;
 #endif
 };
 
