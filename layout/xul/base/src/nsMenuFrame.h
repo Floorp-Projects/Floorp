@@ -62,7 +62,7 @@ public:
   NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
   
   // The nsITimerCallback interface
-  virtual void Notify(nsITimer *timer);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,

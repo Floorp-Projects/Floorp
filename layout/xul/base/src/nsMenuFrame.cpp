@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Michael Lowe <michael.lowe@bigfoot.com>
  */
 
 #include "nsXULAtoms.h"
@@ -46,12 +47,19 @@
 #include "nsIDOMElement.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMText.h"
+#include "nsILookAndFeel.h"
+#include "nsIComponentManager.h"
+#include "nsWidgetsCID.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
 static PRInt32 gEatMouseMove = PR_FALSE;
 
 nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
+
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+
 
 //
 // NS_NewMenuFrame
@@ -326,9 +334,19 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
     // If we're a menu (and not a menu item),
     // kick off the timer.
     if (!isMenuBar && IsMenu() && !mMenuOpen && !mOpenTimer) {
-        // We're a menu, we're built, we're closed, and no timer has been kicked off.
-        NS_NewTimer(getter_AddRefs(mOpenTimer));
-        mOpenTimer->Init(this, 250);   // 250 ms delay 
+
+      PRInt32 menuDelay = 250;   // ms
+
+      nsILookAndFeel * lookAndFeel;
+      if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
+                      kILookAndFeelIID, (void**)&lookAndFeel)) {
+        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
+       NS_RELEASE(lookAndFeel);
+      }
+
+      // We're a menu, we're built, we're closed, and no timer has been kicked off.
+      NS_NewTimer(getter_AddRefs(mOpenTimer));
+      mOpenTimer->Init(this, menuDelay, NS_PRIORITY_HIGHEST);
     }
   }
   return NS_OK;
@@ -823,7 +841,7 @@ nsMenuFrame::IsMenu()
   return PR_FALSE;
 }
 
-void
+NS_IMETHODIMP_(void)
 nsMenuFrame::Notify(nsITimer* aTimer)
 {
   // Our timer has fired.

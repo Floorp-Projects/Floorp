@@ -136,6 +136,8 @@ static NS_DEFINE_IID(kCMenuBarCID,                NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenuCID,                   NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCContextMenuCID,            NS_CONTEXTMENU_CID);
+static NS_DEFINE_IID(kCTimerCID,            NS_TIMER_CID);
+static NS_DEFINE_IID(kCTimerManagerCID,            NS_TIMERMANAGER_CID);
 //static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
 static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
@@ -326,6 +328,10 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCXIFFormatConverterCID,  NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDragServiceCID,          "Drag Service", "component://netscape/widget/dragservice", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontRetrieverServiceCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+#ifdef XP_PC
+  nsComponentManager::RegisterComponentLib(kCTimerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+#endif
   nsComponentManager::RegisterComponentLib(kCMenuBarCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCMenuCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCMenuItemCID,      NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);

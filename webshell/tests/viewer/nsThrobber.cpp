@@ -312,12 +312,14 @@ nsThrobber::Tick()
     mCompletedImages = 0;
   }
 
+#ifndef REPEATING_TIMERS
   NS_RELEASE(mTimer);
 
   nsresult rv = NS_NewTimer(&mTimer);
   if (NS_OK == rv) {
     mTimer->Init(ThrobTimerCallback, this, 33);
   }
+#endif
 }
 
 nsresult
@@ -343,7 +345,7 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
   if (NS_OK != rv) {
     return rv;
   }
-  mTimer->Init(ThrobTimerCallback, this, 33);
+  mTimer->Init(ThrobTimerCallback, this, 33, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
   
   char * mask = aFileNameMask.ToNewCString();
   for (PRInt32 cnt = 0; cnt < mNumImages; cnt++)

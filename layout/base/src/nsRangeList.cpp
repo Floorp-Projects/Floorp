@@ -389,7 +389,7 @@ public:
     return NS_OK;
   }
 
-  virtual void Notify(nsITimer *timer)
+  NS_IMETHOD_(void) Notify(nsITimer *timer)
   {
     if (mSelection && mPresContext && mFrame)
     {

@@ -70,7 +70,10 @@ NS_IMPL_ISUPPORTS(nsTimerXlib, kITimerIID)
 nsresult
 nsTimerXlib::Init(nsTimerCallbackFunc aFunc,
                 void *aClosure,
-                PRUint32 aDelay)
+                PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
 {
   mFunc = aFunc;
   mClosure = aClosure;
@@ -79,7 +82,10 @@ nsTimerXlib::Init(nsTimerCallbackFunc aFunc,
 
 nsresult 
 nsTimerXlib::Init(nsITimerCallback *aCallback,
-                PRUint32 aDelay)
+                PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
 {
     mCallback = aCallback;
     NS_ADDREF(mCallback);

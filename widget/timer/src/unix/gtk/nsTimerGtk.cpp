@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *  Alexander Larsson (alla@lysator.liu.se)
  */
 
 #include "nsTimerGtk.h"
@@ -27,10 +28,22 @@ static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 // extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
 // extern "C" void NS_ProcessTimeouts(void);
 
-extern "C" gint nsTimerExpired(gpointer aCallData);
+extern "C" gboolean nsTimerExpired(gpointer aCallData);
 
-void nsTimerGtk::FireTimeout()
+/* Just linear interpolation. Is this good? */
+static gint calc_priority(PRUint32 aPriority)
 {
+  int pri = ((G_PRIORITY_HIGH-G_PRIORITY_LOW)*(int)aPriority)/NS_PRIORITY_HIGHEST + G_PRIORITY_LOW;
+  return pri;
+}
+
+PRBool nsTimerGtk::FireTimeout()
+{
+  if (mType == NS_TYPE_REPEATING_PRECISE) {
+    mTimerId = g_timeout_add_full(calc_priority(mPriority),
+                                  mDelay, nsTimerExpired, this, NULL);
+  }
+  
   if (mFunc != NULL) {
     (*mFunc)(this, mClosure);
   }
@@ -38,12 +51,38 @@ void nsTimerGtk::FireTimeout()
     mCallback->Notify(this); // Fire the timer
   }
 
-// Always repeating here
-
-// if (mRepeat)
-//  mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
+  return (mType == NS_TYPE_REPEATING_SLACK);
 }
 
+void nsTimerGtk::SetDelay(PRUint32 aDelay)
+{
+  if (aDelay!=mDelay) {
+    Cancel();
+    mDelay=aDelay;
+    mTimerId = g_timeout_add_full(calc_priority(mPriority),
+                                  mDelay, nsTimerExpired, this, NULL);
+  }
+};
+
+void nsTimerGtk::SetPriority(PRUint32 aPriority)
+{
+  if (aPriority!=mPriority) {
+    Cancel();
+    mPriority = aPriority;
+    mTimerId = g_timeout_add_full(calc_priority(mPriority),
+                                  mDelay, nsTimerExpired, this, NULL);
+  }
+}
+
+void nsTimerGtk::SetType(PRUint32 aType)
+{
+  if (aType!=mType) {
+    Cancel();
+    mType = aType;
+    mTimerId = g_timeout_add_full(calc_priority(mPriority),
+                                  mDelay, nsTimerExpired, this, NULL);
+  }
+}
 
 nsTimerGtk::nsTimerGtk()
 {
@@ -55,11 +94,12 @@ nsTimerGtk::nsTimerGtk()
   mTimerId = 0;
   mDelay = 0;
   mClosure = NULL;
+  mPriority = 0;
+  mType = NS_TYPE_ONE_SHOT;
 }
 
 nsTimerGtk::~nsTimerGtk()
 {
-
 //  printf("nsTimerGtk::~nsTimerGtk called for %p\n", this);
 
   Cancel();
@@ -68,91 +108,61 @@ nsTimerGtk::~nsTimerGtk()
 
 nsresult 
 nsTimerGtk::Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+                 void *aClosure,
+                 PRUint32 aDelay,
+                 PRUint32 aPriority,
+                 PRUint32 aType
+                )
 {
   //printf("nsTimerGtk::Init called with func + closure for %p\n", this);
     mFunc = aFunc;
     mClosure = aClosure;
-    // mRepeat = aRepeat;
+    mPriority = aPriority;
+    mType = aType;
+    mDelay = aDelay;
 
-// This is ancient debug code that is making it impossible to have timeouts
-// greater than 10 seconds. -re
-
-//   if ((aDelay > 10000) || (aDelay < 0)) {
-//     printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
-//            aDelay);
-//     return Init(aDelay);
-//   }
-
-    mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
-
-    return Init(aDelay);
+    mTimerId = g_timeout_add_full(calc_priority(mPriority),
+                                  mDelay, nsTimerExpired, this, NULL);
+ 
+    return NS_OK;
 }
 
 nsresult 
 nsTimerGtk::Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+                 PRUint32 aDelay,
+                 PRUint32 aPriority,
+                 PRUint32 aType
+                 )
 {
   //printf("nsTimerGtk::Init called with callback only for %p\n", this);
     mCallback = aCallback;
     NS_ADDREF(mCallback);
-    // mRepeat = aRepeat;
-
-// This is ancient debug code that is making it impossible to have timeouts
-// greater than 10 seconds. -re
-
-//   if ((aDelay > 10000) || (aDelay < 0)) {
-//     printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
-//            aDelay);
-//     return Init(aDelay);
-//   }
-
-    mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
-
-    return Init(aDelay);
-}
-
-nsresult
-nsTimerGtk::Init(PRUint32 aDelay)
-{
-  //printf("nsTimerGtk::Init called with delay %d only for %p\n", aDelay, this);
-
+    mPriority = aPriority;
+    mType = aType;
     mDelay = aDelay;
-    //    NS_ADDREF(this);
 
+    mTimerId = g_timeout_add_full(calc_priority(mPriority),
+                                  mDelay, nsTimerExpired, this, NULL);
+ 
     return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(nsTimerGtk, kITimerIID)
-
 
 void
 nsTimerGtk::Cancel()
 {
   //printf("nsTimerGtk::Cancel called for %p\n", this);
 
-  //nsTimerGtk *me = this;
-
   if (mTimerId)
-    gtk_timeout_remove(mTimerId);
-
-  //
-  // This is reported as a leak by purify, but it also causes a 
-  // crash on startup if uncommented.  Need to dig deeper.
-  //
-  //NS_RELEASE(me);
-  //
+    g_source_remove(mTimerId);
 }
 
-gint nsTimerExpired(gpointer aCallData)
+gboolean nsTimerExpired(gpointer aCallData)
 {
   //printf("nsTimerExpired for %p\n", aCallData);
   nsTimerGtk* timer = (nsTimerGtk *)aCallData;
-  timer->FireTimeout();
-  return 0;
+  return timer->FireTimeout();
 }
 
 #ifdef MOZ_MONOLITHIC_TOOLKIT

@@ -100,7 +100,8 @@ nsTimer::~nsTimer()
 }
 
 nsresult nsTimer::Init( nsTimerCallbackFunc aFunc,
-                        void *aClosure, PRUint32 aDelay)
+                        void *aClosure,
+                PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
 {
    mFunc = aFunc;
    mClosure = aClosure;
@@ -108,7 +109,8 @@ nsresult nsTimer::Init( nsTimerCallbackFunc aFunc,
    return mManager->InitTimer( this, aDelay);
 }
 
-nsresult nsTimer::Init( nsITimerCallback *aCallback, PRUint32 aDelay)
+nsresult nsTimer::Init( nsITimerCallback *aCallback, PRUint32 aDelay,
+                PRUint32 aPriority, PRUint32 aType)
 {
    mCallback = aCallback;
    NS_ADDREF(mCallback); // this is daft, but test14 traps without it

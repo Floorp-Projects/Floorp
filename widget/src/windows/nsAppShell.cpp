@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Michael Lowe <michael.lowe@bigfoot.com>
  */
 
 #include "nsAppShell.h"
@@ -26,11 +27,15 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include <windows.h>
+#include "nsWidgetsCID.h"
+#include "nsITimer.h"
+#include "nsITimerQueue.h"
 #ifdef MOZ_AIMM
 #include "aimm.h"
 #endif
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS(nsAppShell, NS_IAPPSHELL_IID) 
 
@@ -77,13 +82,18 @@ NS_METHOD nsAppShell::Run(void)
   MSG  msg;
   int  keepGoing = 1;
   
+  nsresult rv;
+  NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   // Process messages
   do {
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
-    // Note: on Win98 and NT 5.0 we can also use PM_QS_INPUT and PM_QS_PAINT flags.
-    if (::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
-      ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (::PeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
+        ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+        ::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
+        ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
       keepGoing = (msg.message != WM_QUIT);
 
@@ -96,6 +106,15 @@ NS_METHOD nsAppShell::Run(void)
         if (mDispatchListener)
           mDispatchListener->AfterDispatch();
       }
+
+    // process timer queue.
+    } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
+
+      do {
+        queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+      } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
+                !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+      
     } else {
        // Block and wait for any posted application message
       ::WaitMessage();
@@ -120,23 +139,49 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
   static MSG msg;
 
-  BOOL isOK = GetMessage(&msg, NULL, 0, 0);
+  BOOL gotMessage = false;
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  do {
+    // Give priority to system messages (in particular keyboard, mouse,
+    // timer, and paint messages).
+    if (::PeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
+        ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+        ::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
+        ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+
+      gotMessage = true;
+
+    // process timer queue.
+    } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
+
+      do {
+        queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+      } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
+                !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+
+    } else {
+       // Block and wait for any posted application message
+      ::WaitMessage();
+    }
+
+  } while (!gotMessage);
+
 #ifdef DEBUG_danm
   if (msg.message != WM_TIMER)
     printf("-> %d", msg.message);
 #endif
 
-  if (isOK) {
 //#ifdef MOZ_AIMM // not need?
 //  if (!nsToolkit::gAIMMMsgPumpOwner || (nsToolkit::gAIMMMsgPumpOwner->OnTranslateMessage(&msg) != S_OK))
 //#endif
-    TranslateMessage(&msg);
-    aEvent = &msg;
-    aRealEvent = PR_TRUE;
-    return NS_OK;
-  }
-  aRealEvent = PR_FALSE;
-  return NS_ERROR_FAILURE;
+  TranslateMessage(&msg);
+  aEvent = &msg;
+  aRealEvent = PR_TRUE;
+  return NS_OK;
 }
 
 nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)

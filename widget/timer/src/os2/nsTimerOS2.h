@@ -47,11 +47,23 @@ class nsTimer : public nsITimer
    void Construct();
    void Destruct();
 
-   nsresult Init( nsTimerCallbackFunc aFunc, void *aClosure, PRUint32 aDelay);
-   nsresult Init( nsITimerCallback *aCallback, PRUint32 aDelay);
+   nsresult Init( nsTimerCallbackFunc aFunc, void *aClosure,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
+   nsresult Init( nsITimerCallback *aCallback, PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
    void     Cancel();
    PRUint32 GetDelay()                 { return mDelay; }
    void     SetDelay( PRUint32 aDelay) {}; // XXX Windows does this too...
+   virtual PRUint32 GetPriority() {}
+   virtual void SetPriority(PRUint32 aPriority) {}
+
+   virtual PRUint32 GetType() {}
+   virtual void SetType(PRUint32 aType) {}
    void    *GetClosure()               { return mClosure; }
 
    // Implementation

@@ -66,7 +66,7 @@ public:
 
   void Stop();
 
-  virtual void Notify(nsITimer *timer);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   PRInt32 GetFrameData(nsProgressMeterFrame* aFrame);
 
@@ -101,7 +101,7 @@ void StripeTimer::Start()
 {
   nsresult rv = NS_NewTimer(&mTimer);
   if (NS_OK == rv) {
-    mTimer->Init(this, ANIMATION_SPEED);
+    mTimer->Init(this, ANIMATION_SPEED, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
   }
 }
 
@@ -163,12 +163,14 @@ PRInt32 StripeTimer::FrameCount() {
   return mFrames.Count();
 }
 
-void StripeTimer::Notify(nsITimer *timer)
+NS_IMETHODIMP_(void) StripeTimer::Notify(nsITimer *timer)
 {
   // XXX hack to get auto-repeating timers; restart before doing
   // expensive work so that time between ticks is more even
+#ifndef REPEATING_TIMERS
   Stop();
   Start();
+#endif
 
   PRInt32 i, n = mFrames.Count();
   for (i = 0; i < n; i++) {

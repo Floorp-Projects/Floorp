@@ -79,7 +79,7 @@ void nsRepeatService::Stop()
   }
 }
 
-void nsRepeatService::Notify(nsITimer *timer)
+NS_IMETHODIMP_(void) nsRepeatService::Notify(nsITimer *timer)
 {
    // if the repeat delay is the initial one reset it.
   if (mRepeatTimer) {

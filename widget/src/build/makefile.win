@@ -62,6 +62,7 @@ LLIBS= \
  $(DIST)\lib\gkgfxwin.lib           \
  $(DIST)\lib\raptorbasewidget_s.lib		  \
  $(DIST)\lib\raptorwidget_s.lib	        \
+ $(DIST)\lib\timer_s.lib				\
  $(LIBNSPR) 
 
 include <$(DEPTH)\config\rules.mak>

@@ -109,7 +109,8 @@ public:
     eMetric_ListVerticalInsidePadding,                    // needed only because of GTK
 
     eMetric_CaretBlinkTime,                               // default, may be overriden by OS
-    eMetric_CaretWidthTwips
+    eMetric_CaretWidthTwips,
+    eMetric_SubmenuDelay
   } nsMetricID;
 
   typedef enum {

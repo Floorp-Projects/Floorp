@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Michael Lowe <michael.lowe@bigfoot.com>
  */
 #include <windows.h>
 #include "nsViewerApp.h"
@@ -27,10 +28,13 @@
 #include "plevent.h"
 #include "nsIServiceManager.h"
 #include "nsIThread.h"
+#include "nsWidgetsCID.h"
+#include "nsTimerManager.h"
 
 JSConsole *gConsole;
 HINSTANCE gInstance, gPrevInstance;
 static nsITimer* gNetTimer;
+static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 nsNativeViewerApp::nsNativeViewerApp()
 {
@@ -39,6 +43,7 @@ nsNativeViewerApp::nsNativeViewerApp()
 nsNativeViewerApp::~nsNativeViewerApp()
 {
 }
+
 
 int
 nsNativeViewerApp::Run() 
@@ -52,26 +57,41 @@ nsNativeViewerApp::Run()
   MSG  msg;
   int  keepGoing = 1;
 
+  nsresult rv;
+  NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+  if (NS_FAILED(rv)) return 0;
+
   // Pump all messages
   do {
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
     // Note: on Win98 and NT 5.0 we can also use PM_QS_INPUT and PM_QS_PAINT flags.
-    if (::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE)) {
-      keepGoing = (msg.message != WM_QUIT);
-    
-    } else {
-      // Block and wait for any posted application message
-      keepGoing = ::GetMessage(&msg, NULL, 0, 0);
-    }
+    if (::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
+      ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
-    // If we successfully retrieved a message then dispatch it
-    if (keepGoing >= 0) {
-      if (!JSConsole::sAccelTable || !gConsole || !gConsole->GetMainWindow() ||
+      keepGoing = (msg.message != WM_QUIT);
+
+      // If we successfully retrieved a message then dispatch it
+      if (keepGoing >= 0) {
+        if (!JSConsole::sAccelTable || !gConsole || !gConsole->GetMainWindow() ||
           !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+        }
       }
+
+    // process timer queue.
+    } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
+
+      do {
+        //printf("fire\n");
+        queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+      } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
+              !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+
+    } else {
+       // Block and wait for any posted application message
+      ::WaitMessage();
     }
   } while (keepGoing != 0);
 

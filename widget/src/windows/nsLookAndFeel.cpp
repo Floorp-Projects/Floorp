@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Michael Lowe <michael.lowe@bigfoot.com>
  */
 
 #include "nsLookAndFeel.h"
@@ -237,6 +238,40 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_CaretWidthTwips:
         aMetric = 30;
+        break;
+    case eMetric_SubmenuDelay:
+        {
+        static PRInt32 sSubmenuDelay = -1;
+
+        if (sSubmenuDelay == -1) {
+          HKEY key;
+          char value[100];
+          DWORD length, type;
+          LONG result;
+
+          sSubmenuDelay = 200;
+
+          result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
+                   "Control Panel\\Desktop", 0, KEY_READ, &key);
+
+          if (result == ERROR_SUCCESS) {
+            length = sizeof(value);
+
+            result = ::RegQueryValueEx(key, "MenuShowDelay",
+                     NULL, &type, (LPBYTE)&value, &length);
+
+            ::RegCloseKey(key);
+
+            PRInt32 errorCode;
+            nsString str(value);
+            PRInt32 submenuDelay = str.ToInteger(&errorCode);
+            if (errorCode == NS_OK) {
+              sSubmenuDelay = submenuDelay;
+            }
+          }
+        }
+        aMetric = sSubmenuDelay;
+        }
         break;
     default:
         aMetric = -1;

@@ -116,7 +116,7 @@ protected:
   virtual ~nsScrollingView();
 
   // nsITimerCallback Interface
-  virtual void Notify(nsITimer *timer);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   //private
   void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);

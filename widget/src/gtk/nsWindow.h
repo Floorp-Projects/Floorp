@@ -53,7 +53,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsITimerCallback
-  virtual void Notify(nsITimer* aTimer);
+  NS_IMETHOD_(void) Notify(nsITimer* aTimer);
 
   NS_IMETHOD           WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
 

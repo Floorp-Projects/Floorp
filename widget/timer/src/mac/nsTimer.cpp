@@ -72,16 +72,27 @@ class TimerImpl : public nsITimer
 
     virtual nsresult Init(nsTimerCallbackFunc aFunc,
                           void *aClosure,
-                          PRUint32 aDelay);
+                          PRUint32 aDelay,
+                          PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                          PRUint32 aType = NS_TYPE_ONE_SHOT
+                          );
 
     virtual nsresult Init(nsITimerCallback *aCallback,
-                          PRUint32 aDelay);
+                          PRUint32 aDelay,
+                          PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                          PRUint32 aType = NS_TYPE_ONE_SHOT
+                          );
 
     virtual void Cancel();
 
     virtual PRUint32 GetDelay();
-
     virtual void SetDelay(PRUint32 aDelay);
+
+    virtual PRUint32 GetPriority() {};
+    virtual void SetPriority(PRUint32 aPriority) {};
+
+    virtual PRUint32 GetType() {};
+    virtual void SetType(PRUint32 aType) {};
 
     virtual void* GetClosure();
   
@@ -169,8 +180,11 @@ TimerImpl::~TimerImpl()
 
 //----------------------------------------------------------------------------------------
 nsresult TimerImpl::Init(nsTimerCallbackFunc aFunc,
-                          void *aClosure,
-                          PRUint32 aDelay)
+                       void *aClosure,
+                       PRUint32 aDelay,
+                       PRUint32 aPriority,
+                       PRUint32 aType
+                       )
 //----------------------------------------------------------------------------------------
 {
   mCallbackFunc = aFunc;
@@ -181,7 +195,10 @@ nsresult TimerImpl::Init(nsTimerCallbackFunc aFunc,
 
 //----------------------------------------------------------------------------------------
 nsresult TimerImpl::Init(nsITimerCallback *aCallback,
-                          PRUint32 aDelay)
+                       PRUint32 aDelay,
+                       PRUint32 aPriority,
+                       PRUint32 aType
+                       )
 //----------------------------------------------------------------------------------------
 {
   NS_ADDREF(aCallback);

@@ -1794,7 +1794,7 @@ nsBookmarksService::Init()
 
 		rv = NS_NewTimer(getter_AddRefs(mTimer));
 		if (NS_FAILED(rv)) return rv;
-		mTimer->Init(nsBookmarksService::FireTimer, this, /* repeat, */ BOOKMARK_TIMEOUT);
+		mTimer->Init(nsBookmarksService::FireTimer, this, BOOKMARK_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
 		// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor
 	}
 
@@ -2102,12 +2102,13 @@ else
 	}
 #endif
 
-
+#ifndef REPEATING_TIMERS
 	// reschedule the timer
 	nsresult rv = NS_NewTimer(getter_AddRefs(bmks->mTimer));
 	if (NS_FAILED(rv)) return;
 	bmks->mTimer->Init(nsBookmarksService::FireTimer, bmks, /* repeat, */ BOOKMARK_TIMEOUT);
 	// Note: don't addref "bmks" as we'll cancel the timer in the nsBookmarkService destructor
+#endif
 }
 
 
@@ -2613,6 +2614,37 @@ nsBookmarksService::Release()
 		return mRefCnt;
 	}
 }
+
+
+
+
+NS_IMETHODIMP
+nsBookmarksService::QueryInterface(REFNSIID aIID, void **aResult)
+{
+	NS_PRECONDITION(aResult != nsnull, "null ptr");
+	if (! aResult)
+		return NS_ERROR_NULL_POINTER;
+
+	if (aIID.Equals(NS_GET_IID(nsIBookmarksService)) ||
+	    aIID.Equals(kISupportsIID))
+	{
+		*aResult = NS_STATIC_CAST(nsIBookmarksService*, this);
+	}
+	else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
+		*aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
+	}
+	else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
+		*aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource*, this);
+	}
+	else {
+		*aResult = nsnull;
+		return NS_NOINTERFACE;
+	}
+
+	NS_ADDREF(this);
+	return NS_OK;
+}
+
 
 NS_IMPL_QUERY_INTERFACE6(nsBookmarksService, 
 			 nsIBookmarksService,

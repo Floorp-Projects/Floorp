@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Michael Lowe <michael.lowe@bigfoot.com>
  */
 
 #if defined(DEBUG_ftang)
@@ -69,8 +70,12 @@
 #include "nsIClipboard.h"
 #include "nsWidgetsCID.h"
 
+#include "nsITimer.h"
+#include "nsITimerQueue.h"
+
 static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 
 BOOL nsWindow::sIsRegistered = FALSE;
@@ -617,7 +622,6 @@ nsWindow::IsScrollbar(HWND aWnd) {
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
- 
      // check to see if we have a rollup listener registered
     if (nsnull != gRollupListener && nsnull != gRollupWidget) {
   
@@ -2567,6 +2571,24 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           DispatchStandardEvent(NS_DISPLAYCHANGED);
         break;
 
+        case WM_ENTERIDLE:
+          {
+          nsresult rv;
+          NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+          if (!NS_FAILED(rv)) {
+
+            if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
+
+              MSG wmsg;
+              do {
+                //printf("fire\n");
+                queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+              } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
+                  !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE));
+            }
+          }
+          }
+          break;
         
         case WM_NOTIFY:
             // TAB change

@@ -78,6 +78,9 @@
 
 #include "nsSound.h"
 
+#include "nsWindowsTimer.h"
+
+#include "nsTimerManager.h"
 
 
 // Drag & Drop, Clipboard
@@ -136,6 +139,9 @@ static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
 
 static NS_DEFINE_IID(kCFontRetrieverService, NS_FONTRETRIEVERSERVICE_CID);
 
+static NS_DEFINE_IID(kCTimer, NS_TIMER_CID);
+
+static NS_DEFINE_IID(kCTimerManager, NS_TIMERMANAGER_CID);
 
 
 // Drag & Drop, Clipboard
@@ -479,7 +485,17 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
 
     }
 
+    else if (mClassID.Equals(kCTimer)) {
 
+        inst = (nsISupports*)(nsITimer*) new nsTimer();
+
+    }
+
+    else if (mClassID.Equals(kCTimerManager)) {
+
+        inst = (nsISupports*)(nsITimerQueue*) new nsTimerManager();
+
+    }
 	/* */
 
   

@@ -1979,7 +1979,7 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
 
 
 
-void nsWindow::Notify(nsITimer* aTimer)
+NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
 {
   //  printf("%p nsWindow::Notify()\n", this);
   mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
