@@ -115,7 +115,7 @@ protected:
     nsIDOMElement  * menuElement,
     nsIDOMNode     * menuNode);
 
-  nsIMenuItem * FindMenuItem(nsIMenu * aMenu, PRUint32 aId);
+  nsIMenuItem * FindMenuItem(nsIContextMenu * aMenu, PRUint32 aId);
 
   HMENU        mMenu;
 

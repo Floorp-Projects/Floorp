@@ -403,8 +403,8 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 	  mX, mY, 0, pWnd, NULL);
 
   // Dispatch to MenuItemSelected
-  nsIMenu * menu;
-  QueryInterface(kIMenuIID, (void**) &menu);
+  nsIContextMenu * menu;
+  QueryInterface(kIContextMenuIID, (void**) &menu);
   nsIMenuItem * menuItem = FindMenuItem(menu, identifier);
   NS_RELEASE(menu);
   if (menuItem) {
@@ -425,14 +425,14 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 }
 
 //-------------------------------------------------------------------------
-nsIMenuItem * nsContextMenu::FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
+nsIMenuItem * nsContextMenu::FindMenuItem(nsIContextMenu * aMenu, PRUint32 aId)
 {
   PRUint32 i, count;
   aMenu->GetItemCount(count);
   for (i=0;i<count;i++) {
     nsISupports * item;
     nsIMenuItem * menuItem;
-    nsIMenu     * menu;
+    nsIContextMenu     * menu;
 
     aMenu->GetItemAt(i, item);
     if (NS_OK == item->QueryInterface(kIMenuItemIID, (void **)&menuItem)) {
@@ -440,7 +440,7 @@ nsIMenuItem * nsContextMenu::FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
         NS_RELEASE(item);
         return menuItem;
       }
-    } else if (NS_OK == item->QueryInterface(kIMenuIID, (void **)&menu)) {
+    } else if (NS_OK == item->QueryInterface(kIContextMenuIID, (void **)&menu)) {
       nsIMenuItem * fndItem = FindMenuItem(menu, aId);
       NS_RELEASE(menu);
       if (nsnull != fndItem) {
