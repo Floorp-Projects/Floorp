@@ -124,4 +124,13 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIDOMWindow.h"
 
+// MfcEmbed #defines
+
+// USE_PROFILES - If defined, nsIProfile will be used which allows for
+// multiple profiles. If not defined, a standalone directory service provider
+// will be used to provide "profile" locations to one specified directory.
+// In the case, the mozilla profile DLL is not needed.
+
+#define USE_PROFILES 1
+
 #endif //_STDAFX_H

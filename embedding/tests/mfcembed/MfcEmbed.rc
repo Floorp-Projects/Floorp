@@ -750,6 +750,12 @@ BEGIN
     ID_TIMES                "Times New Roman"
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PROFILES_FOLDER_NAME "MfcEmbed"
+    IDS_PROFILES_NONSHARED_NAME "Browser"
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
