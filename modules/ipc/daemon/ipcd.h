@@ -39,6 +39,7 @@
 #define IPCD_H__
 
 #include "ipcModule.h"
+#include "ipcMessage.h"
 
 //-----------------------------------------------------------------------------
 // IPC daemon methods (see struct ipcDaemonMethods)
@@ -47,8 +48,8 @@
 // modules must access these through the ipcDaemonMethods structure.
 //-----------------------------------------------------------------------------
 
-PRStatus        IPC_DispatchMsg          (ipcClientHandle client, const ipcMessage *msg);
-PRStatus        IPC_SendMsg              (ipcClientHandle client, const ipcMessage *msg);
+PRStatus        IPC_DispatchMsg          (ipcClientHandle client, const nsID &target, const void *data, PRUint32 dataLen);
+PRStatus        IPC_SendMsg              (ipcClientHandle client, const nsID &target, const void *data, PRUint32 dataLen);
 ipcClientHandle IPC_GetClientByID        (PRUint32 id);
 ipcClientHandle IPC_GetClientByName      (const char *name);
 void            IPC_EnumClients          (ipcClientEnumFunc func, void *closure);
@@ -58,5 +59,19 @@ PRBool          IPC_ClientHasName        (ipcClientHandle client, const char *na
 PRBool          IPC_ClientHasTarget      (ipcClientHandle client, const nsID &target);
 void            IPC_EnumClientNames      (ipcClientHandle client, ipcClientNameEnumFunc func, void *closure);
 void            IPC_EnumClientTargets    (ipcClientHandle client, ipcClientTargetEnumFunc func, void *closure);
+
+//-----------------------------------------------------------------------------
+// ipcMessage equivalents...
+//-----------------------------------------------------------------------------
+
+//
+// dispatch message
+//
+PRStatus IPC_DispatchMsg(ipcClientHandle client, const ipcMessage *msg);
+
+//
+// send message, takes ownership of |msg|.
+//
+PRStatus IPC_SendMsg(ipcClientHandle client, ipcMessage *msg);
 
 #endif // !IPCD_H__

@@ -41,20 +41,52 @@
 #include "ipcClient.h"
 #include "ipcModuleReg.h"
 #include "ipcModule.h"
+#include "ipcCommandModule.h"
 #include "ipcdPrivate.h"
 #include "ipcd.h"
-
-//-----------------------------------------------------------------------------
-// IPC API
-//-----------------------------------------------------------------------------
 
 PRStatus
 IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 {
+    if (msg->Target().Equals(IPCM_TARGET)) {
+        IPCM_HandleMsg(client, msg);
+        return PR_SUCCESS;
+    }
+
+    return IPC_DispatchMsg(client, msg->Target(), msg->Data(), msg->DataLen());
+}
+
+PRStatus
+IPC_SendMsg(ipcClient *client, ipcMessage *msg)
+{
+    if (client == NULL) {
+        //
+        // broadcast
+        //
+        for (int i=0; i<ipcClientCount; ++i)
+            IPC_SendMsg(&ipcClients[i], msg->Clone());
+        delete msg;
+        return PR_SUCCESS;
+    }
+
+    if (client->HasTarget(msg->Target()))
+        return IPC_PlatformSendMsg(client, msg);
+
+    LOG(("  no registered message handler\n"));
+    return PR_FAILURE;
+}
+
+//-----------------------------------------------------------------------------
+// IPC daemon methods
+//-----------------------------------------------------------------------------
+
+PRStatus
+IPC_DispatchMsg(ipcClient *client, const nsID &target, const void *data, PRUint32 dataLen)
+{
     // lookup handler for this message's topic and forward message to it.
-    ipcModuleMethods *methods = IPC_GetModuleByTarget(msg->Target());
+    ipcModuleMethods *methods = IPC_GetModuleByTarget(target);
     if (methods) {
-        methods->handleMsg(client, msg);
+        methods->handleMsg(client, target, data, dataLen);
         return PR_SUCCESS;
     }
     LOG(("no registered module; ignoring message\n"));
@@ -62,25 +94,9 @@ IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 }
 
 PRStatus
-IPC_SendMsg(ipcClient *client, const ipcMessage *msg)
+IPC_SendMsg(ipcClient *client, const nsID &target, const void *data, PRUint32 dataLen)
 {
-    LOG(("IPC_SendMsg [clientID=%u]\n", client->ID()));
-
-    if (client == NULL) {
-        //
-        // broadcast
-        //
-        for (int i=0; i<ipcClientCount; ++i) {
-            if (client->HasTarget(msg->Target()))
-                IPC_PlatformSendMsg(&ipcClients[i], msg);
-        }
-        return PR_SUCCESS;
-    }
-    if (!client->HasTarget(msg->Target())) {
-        LOG(("  no registered message handler\n"));
-        return PR_FAILURE;
-    }
-    return IPC_PlatformSendMsg(client, msg);
+    return IPC_SendMsg(client, new ipcMessage(target, (const char *) data, dataLen));
 }
 
 ipcClient *

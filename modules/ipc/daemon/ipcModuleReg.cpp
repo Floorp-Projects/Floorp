@@ -150,49 +150,45 @@ IPC_GetModuleByTarget(const nsID &target)
 void
 IPC_InitModuleReg(const char *exePath)
 {
-    //
-    // register built-in modules
-    //
-    AddModule(IPCM_TARGET, IPC_GetCommandModuleMethods(), NULL);
+    if (!(exePath && *exePath))
+        return;
 
     //
     // register plug-in modules
     //
-    if (exePath && *exePath) {
-        static const char relModDir[] = "ipc/modules";
+    static const char relModDir[] = "ipc/modules";
 
-        char *p = PL_strrchr(exePath, IPC_PATH_SEP_CHAR);
-        if (p == NULL) {
-            LOG(("unexpected exe path\n"));
-            return;
+    char *p = PL_strrchr(exePath, IPC_PATH_SEP_CHAR);
+    if (p == NULL) {
+        LOG(("unexpected exe path\n"));
+        return;
+    }
+
+    int baseLen = p - exePath;
+    int finalLen = baseLen + 1 + sizeof(relModDir);
+
+    // build full path to ipc modules
+    char *modulesDir = (char*) malloc(finalLen);
+    memcpy(modulesDir, exePath, baseLen);
+    modulesDir[baseLen] = IPC_PATH_SEP_CHAR;
+    memcpy(modulesDir + baseLen + 1, relModDir, sizeof(relModDir));
+
+    LOG(("loading libraries in %s\n", modulesDir));
+    // 
+    // scan directory for IPC modules
+    //
+    PRDir *dir = PR_OpenDir(modulesDir);
+    if (dir) {
+        PRDirEntry *ent;
+        while ((ent = PR_ReadDir(dir, PR_SKIP_BOTH)) != NULL) {
+            // 
+            // locate extension, and check if dynamic library
+            //
+            char *p = strrchr(ent->name, '.');
+            if (p && PL_strcasecmp(p, MOZ_DLL_SUFFIX) == 0)
+                InitModuleFromLib(modulesDir, ent->name);
         }
-
-        int baseLen = p - exePath;
-        int finalLen = baseLen + 1 + sizeof(relModDir);
-
-        // build full path to ipc modules
-        char *modulesDir = (char*) malloc(finalLen);
-        memcpy(modulesDir, exePath, baseLen);
-        modulesDir[baseLen] = IPC_PATH_SEP_CHAR;
-        memcpy(modulesDir + baseLen + 1, relModDir, sizeof(relModDir));
-
-        LOG(("loading libraries in %s\n", modulesDir));
-        // 
-        // scan directory for IPC modules
-        //
-        PRDir *dir = PR_OpenDir(modulesDir);
-        if (dir) {
-            PRDirEntry *ent;
-            while ((ent = PR_ReadDir(dir, PR_SKIP_BOTH)) != NULL) {
-                // 
-                // locate extension, and check if dynamic library
-                //
-                char *p = strrchr(ent->name, '.');
-                if (p && PL_strcasecmp(p, MOZ_DLL_SUFFIX) == 0)
-                    InitModuleFromLib(modulesDir, ent->name);
-            }
-            PR_CloseDir(dir);
-        }
+        PR_CloseDir(dir);
     }
 }
 

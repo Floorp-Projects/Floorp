@@ -60,10 +60,6 @@ ipcClient::Init()
 
     // every client must be able to handle IPCM messages.
     mTargets.Append(IPCM_TARGET);
-
-#ifdef XP_UNIX
-    mInMsg = new ipcMessage();
-#endif
 }
 
 //
@@ -76,8 +72,7 @@ ipcClient::Finalize()
     mTargets.DeleteAll();
 
 #ifdef XP_UNIX 
-    if (mInMsg)
-        delete mInMsg;
+    mInMsg.Reset();
     mOutMsgQ.DeleteAll();
 #endif
 }
@@ -173,11 +168,11 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
             PRUint32 nread;
             PRBool complete;
 
-            mInMsg->ReadFrom(ptr, PRUint32(n), &nread, &complete);
+            mInMsg.ReadFrom(ptr, PRUint32(n), &nread, &complete);
 
             if (complete) {
-                IPC_DispatchMsg(this, mInMsg);
-                mInMsg->Reset();
+                IPC_DispatchMsg(this, &mInMsg);
+                mInMsg.Reset();
             }
 
             n -= nread;

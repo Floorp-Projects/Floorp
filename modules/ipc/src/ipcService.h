@@ -82,11 +82,13 @@ class ipcClientQuery
 public:
     ipcClientQuery()
         : mNext(nsnull)
+        , mID(0)
         , mReqToken(0)
         { }
 
     ipcClientQuery              *mNext;
     nsCString                    mName;
+    PRUint32                     mID;
     PRUint32                     mReqToken;
     nsCOMPtr<ipcIClientObserver> mObserver;
 };

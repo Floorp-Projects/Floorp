@@ -193,7 +193,7 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
 //-----------------------------------------------------------------------------
 
 PRStatus
-IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg)
+IPC_PlatformSendMsg(ipcClient  *client, ipcMessage *msg)
 {
     LOG(("IPC_SendMessageNow [clientID=%u clientPID=%u]\n",
         client->ID(), client->PID()));
@@ -207,6 +207,7 @@ IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg)
     SendMessage(client->Hwnd(), WM_COPYDATA, 0, (LPARAM) &cd);
     LOG(("  done.\n"));
 
+    delete msg;
     return PR_SUCCESS;
 }
 

@@ -126,7 +126,7 @@ private:
 #endif
 
 #ifdef XP_UNIX
-    ipcMessage   *mInMsg;    // buffer for incoming message
+    ipcMessage    mInMsg;    // buffer for incoming message
     ipcMessageQ   mOutMsgQ;  // outgoing message queue
 
     // keep track of the amount of the first message sent
