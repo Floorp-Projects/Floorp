@@ -212,7 +212,11 @@ rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFil
         /*	urls->use_local_copy = rdfFile->localp;*/
 	urls->fe_data = rdfFile;
 	if (method) urls->method = method;  
-	NET_GetURL(urls, FO_CACHE_AND_RDF, cx, rdf_GetUrlExitFunc);
+	if (rdfFile->localp) {
+          NET_GetURLQuick(urls, FO_CACHE_AND_RDF, cx, rdf_GetUrlExitFunc);
+        } else {
+          NET_GetURLQuick(urls, FO_CACHE_AND_RDF, cx, rdf_GetUrlExitFunc);
+        }
 	return 1;
 }
 
