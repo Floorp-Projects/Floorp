@@ -167,15 +167,6 @@ Contributors:
     <spacer flex="1"/>
   </hbox>
 
-  <checkbox hidable="true" hidefor="pop3,nntp,movemail" wsm_persist="true" id="imap.cleanupInboxOnExit"
-            label="&expungeOnExit.label;" iscontrolcontainer="true"
-            prefattribute="value"
-            prefstring="mail.server.%serverkey%.cleanup_inbox_on_exit"/>
-  <checkbox hidable="true" hidefor="nntp" wsm_persist="true" id="server.emptyTrashOnExit" 
-            label="&emptyTrashOnExit.label;" iscontrolcontainer="true"
-            prefattribute="value"
-            prefstring="mail.server.%serverkey%.empty_trash_on_exit"/>
-
   <hbox iscontrolcontainer="true" flex="1">
     <checkbox hidable="true" hidefor="pop3,nntp,movemail" hidden="true" wsm_persist="true" id="imap.dualUseFolders"
               prefattribute="value"
@@ -231,21 +222,30 @@ Contributors:
     </hbox>
 -->
 
-  <vbox iscontrolcontainer="true">
-    <label value="&newsrcFilePath.label;" control="nntp.newsrcFilePath"/>
-    <textbox hidable="true" hidefor="imap,pop3,movemail" wsm_persist="true" id="nntp.newsrcFilePath"
-               datatype="nsIFileSpec"
-               prefstring="mail.server.%serverkey%.newsrc.file" class="uri-element"/>
-  </vbox>
-
-  <hbox flex="1">
-    <spacer flex="1"/>
+  <hbox align="end">
+    <vbox flex="1">
+      <checkbox hidable="true" hidefor="pop3,nntp,movemail" wsm_persist="true" id="imap.cleanupInboxOnExit"
+                label="&expungeOnExit.label;" iscontrolcontainer="true"
+                prefattribute="value"
+                prefstring="mail.server.%serverkey%.cleanup_inbox_on_exit"/>
+      <checkbox hidable="true" hidefor="nntp" wsm_persist="true" id="server.emptyTrashOnExit" 
+                label="&emptyTrashOnExit.label;" iscontrolcontainer="true"
+                prefattribute="value"
+                prefstring="mail.server.%serverkey%.empty_trash_on_exit"/>
+    </vbox>
     <button label="&advancedButton.label;"
             oncommand="onAdvanced();"
             wsm_persist="true" id="server.advancedbutton" 
             prefstring="mail.server.%serverkey%.advanced.disable"/>
     <label hidden="true" wsm_persist="true" id="identity.smtpServerKey"/>
   </hbox>
+
+  <vbox iscontrolcontainer="true">
+    <label value="&newsrcFilePath.label;" control="nntp.newsrcFilePath"/>
+    <textbox hidable="true" hidefor="imap,pop3,movemail" wsm_persist="true" id="nntp.newsrcFilePath"
+               datatype="nsIFileSpec"
+               prefstring="mail.server.%serverkey%.newsrc.file" class="uri-element"/>
+  </vbox>
 
   </vbox>
   </groupbox>
