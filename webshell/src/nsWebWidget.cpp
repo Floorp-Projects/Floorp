@@ -155,7 +155,13 @@ NS_IMPL_RELEASE(WebWidgetImpl)
 WebWidgetImpl::~WebWidgetImpl()
 {
   // Release windows and views
-  NS_IF_RELEASE(mViewManager);
+  if (nsnull != mViewManager)
+  {
+    mViewManager->SetRootView(nsnull);
+    mViewManager->SetRootWindow(nsnull);
+    NS_RELEASE(mViewManager);
+  }
+
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mView);
 
