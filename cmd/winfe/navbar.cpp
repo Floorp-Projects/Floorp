@@ -206,7 +206,7 @@ void CNavMenuBar::OnPaint( )
 
 	// Background image URL
 	m_BackgroundImageURL = "";
-	HT_GetNodeData(top, gNavCenter->treeBGURL, HT_COLUMN_STRING, &data);
+	HT_GetNodeData(top, gNavCenter->titleBarBGURL, HT_COLUMN_STRING, &data);
 	if (data)
 		m_BackgroundImageURL = (char*)data;
 	m_pBackgroundImage = NULL; // Clear out the BG image.
