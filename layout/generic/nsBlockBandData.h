@@ -90,6 +90,15 @@ public:
                                     nsSize* aResult);
 
 protected:
+
+  /** utility method to calculate the band data at aY.
+    * nsBlockBandData methods should never call 
+    * mSpaceManager->GetBandData directly.
+    * They should always call this method instead so data members
+    * mTrapezoid, mCount, and mSize all get managed properly.
+    */
+  nsresult GetBandData(nscoord aY);
+
   // The spacemanager we are getting space from
   nsISpaceManager* mSpaceManager;
   nscoord mSpaceManagerX, mSpaceManagerY;
