@@ -417,7 +417,15 @@ IFRAME {
 INPUT {
   vertical-align: bottom;
 }
+LABEL {
+  display: inline;
+  vertical-align: bottom;
+  background-color: white; 
+	padding-left: 3px
+	padding-right: 3px
+}
 BUTTON {
+  display: inline;
   vertical-align: bottom;
   background-color: white; 
 	border: 3px outset grey; 

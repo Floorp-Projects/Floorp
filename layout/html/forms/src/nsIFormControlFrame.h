@@ -39,7 +39,11 @@ class nsIFormControlFrame : public nsISupports {
 public:
 
   NS_IMETHOD GetType(PRInt32* aType) const =  0;
+
   NS_IMETHOD GetName(nsString* aName) = 0;
+
+  virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE) = 0;
+
   virtual void MouseClicked(nsIPresContext* aPresContext) = 0;
 
   virtual void Reset() = 0;

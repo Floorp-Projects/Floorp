@@ -25,14 +25,14 @@ REQUIRES=xpcom raptor js
 
 CPPSRCS=nsFormFrame.cpp nsFormControlFrame.cpp nsButtonControlFrame.cpp nsCheckboxControlFrame.cpp \
     nsFileControlFrame.cpp nsRadioControlFrame.cpp nsTextControlFrame.cpp nsSelectControlFrame.cpp \
-		nsFieldSetFrame.cpp nsLegendFrame.cpp nsHTMLButtonControlFrame.cpp
+		nsFieldSetFrame.cpp nsLegendFrame.cpp nsHTMLButtonControlFrame.cpp nsLabelFrame.cpp
 
 CPP_OBJS=.\$(OBJDIR)\nsFormFrame.obj .\$(OBJDIR)\nsFormControlFrame.obj \
     .\$(OBJDIR)\nsButtonControlFrame.obj .\$(OBJDIR)\nsCheckboxControlFrame.obj \
     .\$(OBJDIR)\nsFileControlFrame.obj .\$(OBJDIR)\nsRadioControlFrame.obj \
     .\$(OBJDIR)\nsTextControlFrame.obj .\$(OBJDIR)\nsSelectControlFrame.obj \
 		.\$(OBJDIR)\nsFieldSetFrame.obj .\$(OBJDIR)\nsLegendFrame.obj \
-		.\$(OBJDIR)\nsHTMLButtonControlFrame.obj
+		.\$(OBJDIR)\nsHTMLButtonControlFrame.obj .\$(OBJDIR)\nsLabelFrame.obj
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
   -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib				\

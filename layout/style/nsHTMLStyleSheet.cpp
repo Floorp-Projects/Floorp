@@ -1248,6 +1248,10 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
     rv = NS_NewHTMLButtonControlFrame(aContent, aParentFrame, aNewFrame);
     processChildren = PR_TRUE;
   }
+  else if (nsHTMLAtoms::label == aTag) {
+    rv = NS_NewLabelFrame(aContent, aParentFrame, aNewFrame);
+    processChildren = PR_TRUE;
+  }
 
   // If we succeeded in creating a frame then set its style context,
   // process its children (if requested), and initialize the frame
