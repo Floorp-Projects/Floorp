@@ -200,7 +200,7 @@ PRStatus _MD_CreateThread(PRThread *thread,
      *   when the corresponding NSPR threads terminate.  
      */
     flags = THR_SUSPENDED|THR_DETACHED;
-    if ((thread->flags & (_PR_GCABLE_THREAD|_PR_BOUND_THREAD)) ||
+    if (_PR_IS_GCABLE_THREAD(thread) || (thread->flags & _PR_BOUND_THREAD) ||
     							(scope == PR_GLOBAL_BOUND_THREAD))
 		flags |= THR_BOUND;
 
@@ -423,7 +423,7 @@ void solaris_record_regs(PRThread *t, prstatus_t *lwpstatus)
 #ifdef sparc
 	long *regs = (long *)&t->md.context.uc_mcontext.gregs[0];
 
-	PR_ASSERT(t->flags & _PR_GCABLE_THREAD);
+	PR_ASSERT(_PR_IS_GCABLE_THREAD(t));
 	PR_ASSERT(t->md.threadID == lwpstatus->pr_reg[REG_G7]);
 
 	t->md.sp = lwpstatus->pr_reg[REG_SP];
@@ -520,7 +520,7 @@ void _MD_Suspend(PRThread *thr)
    prstatus_t lwpstatus;
    int lwp_main_proc_fd = 0;
   
-   if (!(thr->flags & _PR_GCABLE_THREAD) || !suspendAllOn){
+   if (!_PR_IS_GCABLE_THREAD(thr) || !suspendAllOn){
      /*XXX When the suspendAllOn is set, we will be trying to do lwp_suspend
       * during that time we can't call any thread lib or libc calls. Hence
       * make sure that no suspension is requested for Non gcable thread

@@ -234,9 +234,6 @@ void _MD_PauseCPU(PRIntervalTime timeout)
 
 PRStatus _MD_InitThread(PRThread *thread)
 {
-	/* all threads on Mac OS can be GCable. */
-	thread->flags |= _PR_GCABLE_THREAD;
-
 	thread->md.asyncIOLock = PR_NewLock();
 	PR_ASSERT(thread->md.asyncIOLock != NULL);
 	thread->md.asyncIOCVar = PR_NewCondVar(thread->md.asyncIOLock);
