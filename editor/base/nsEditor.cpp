@@ -1280,10 +1280,9 @@ NS_IMETHODIMP nsEditor::SelectAll()
   ForceCompositionEnd();
 
   nsCOMPtr<nsIDOMSelection> selection;
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
-  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     result = SelectEntireDocument(selection);
@@ -1297,9 +1296,9 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
 
   nsCOMPtr<nsIDOMSelection> selection;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
-  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -1356,9 +1355,9 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
 
   nsCOMPtr<nsIDOMSelection> selection;
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
-  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+  nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -4926,10 +4925,10 @@ nsresult nsEditor::EndUpdateViewBatch()
 {
   NS_PRECONDITION(mUpdateCount>0, "bad state");
   
-  nsCOMPtr<nsISelectionController>    selCon;
-  nsresult  rv = GetSelectionController(getter_AddRefs(selCon));
-  if (NS_FAILED(rv))
-    return rv;
+  nsresult rv;
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak,&rv);
+  if (NS_FAILED(rv) || !selCon)
+    return rv?rv:NS_ERROR_FAILURE;
     
   StCaretHider caretHider(selCon);
         
@@ -5272,10 +5271,9 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
 
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mPresShellWeak);
-  if (!selcon) return NS_ERROR_NOT_INITIALIZED;
-  result = selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
+  if (!selCon) return NS_ERROR_NOT_INITIALIZED;
+  result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
     // Check whether the selection is collapsed and we should do nothing:
