@@ -5810,16 +5810,18 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 /*
 ** handleClient
 **
+**  main() of the new client thread.
 ** Read the fd for the request.
 ** Output the results.
-** Returns !0 on error.
 */
-int handleClient(tmreader* aTMR, PRFileDesc* aFD)
+void handleClient(void* inArg)
 {
-    int retval = 0;
+    PRFileDesc* aFD = NULL;
 
-    if(NULL != aTMR && NULL != aFD)
+    aFD = (PRFileDesc*)inArg;
+    if(NULL != aFD)
     {
+        PRStatus closeRes = PR_SUCCESS;
         char aBuffer[2048];
         PRInt32 readRes = 0;
 
@@ -5920,32 +5922,35 @@ int handleClient(tmreader* aTMR, PRFileDesc* aFD)
                 /*
                 ** Ready for the real fun.
                 */
-                realFun = handleRequest(aTMR, aFD, start, getData);
+                realFun = handleRequest(globals.mTMR, aFD, start, getData);
                 if(0 != realFun)
                 {
-                    retval = __LINE__;
                     REPORT_ERROR(__LINE__, handleRequest);
                 }
             }
             else
             {
-                retval = __LINE__;
                 REPORT_ERROR(__LINE__, handleClient);
             }
         }
         else
         {
-            retval = __LINE__;
             REPORT_ERROR(__LINE__, lineReader);
+        }
+
+        /*
+        ** Done with the connection.
+        */
+        closeRes = PR_Close(aFD);
+        if(PR_SUCCESS != closeRes)
+        {
+            REPORT_ERROR(__LINE__, PR_Close);
         }
     }
     else
     {
-        retval = __LINE__;
         REPORT_ERROR(__LINE__, handleClient);
     }
-
-    return retval;
 }
 
 /*
@@ -5956,7 +5961,7 @@ int handleClient(tmreader* aTMR, PRFileDesc* aFD)
 **
 ** Returns !0 on error.
 */
-int serverMode(tmreader* aTMR)
+int serverMode(void)
 {
     int retval = 0;
     PRFileDesc* socket = NULL;
@@ -5983,7 +5988,7 @@ int serverMode(tmreader* aTMR)
         if(PR_SUCCESS == bindRes)
         {
             PRStatus listenRes = PR_SUCCESS;
-            const int backlog = 10;
+            const int backlog = 0x20;
 
             /*
             ** Start listening for clients.
@@ -5994,7 +5999,6 @@ int serverMode(tmreader* aTMR)
             if(PR_SUCCESS == listenRes)
             {
                 PRFileDesc* connection = NULL;
-                int handleRes = 0;
                 int failureSum = 0;
                 char message[80];
 
@@ -6012,40 +6016,56 @@ int serverMode(tmreader* aTMR)
                 PR_fprintf(PR_STDOUT, " + %s]\n", FormatNumber(globals.mReallocCount));
 
                 /*
-                ** Keep accepting until we know otherwise.
-                ** We stay single threaded, as a result page may output
-                **  a URL to an image which requires the same processing,
-                **  and we serialize the caching of that common data by
-                **  only accepting one connection at a time.
-                ** Plus, I can defend I'm still sane by not trying to
-                **  write a full on HTTPD if I stay single threaded.
+                **  Keep accepting until we know otherwise.
+                **
+                **  We do a thread per connection.
+                **  Up to the thread to close the connection when done.
+                **
+                **  This is known by me to be suboptimal, and I would rather
+                **      do a thread pool if it ever becomes a resource issue.
+                **  Any issues would simply point to a need to get
+                **      more machines or a beefier machine to handle the
+                **      requests, as well as a need to do thread pooling and
+                **      avoid thread creation overhead.
+                **  The threads are not tracked, except possibly by NSPR
+                **      itself and PR_Cleanup will wait on them all to exit as
+                **      user threads so our shared data is valid.
                 */
                 while(0 == globals.mStopHttpd && 0 == retval)
                 {
                     connection = PR_Accept(socket, NULL, PR_INTERVAL_NO_TIMEOUT);
                     if(NULL != connection)
                     {
+                        PRThread* clientThread = NULL;
+
                         /*
-                        ** Hand off the connection.
-                        ** However, no error for each connection will cause us
-                        **  to stop.
-                        ** The load time is too painful to bail out here.
+                        **  Thread per connection.
                         */
-                        handleRes = handleClient(aTMR, connection);
-                        if(0 != handleRes)
+                        clientThread = PR_CreateThread(
+                            PR_USER_THREAD, /* PR_Cleanup sync */
+                            handleClient,
+                            (void*)connection,
+                            PR_PRIORITY_NORMAL,
+                            PR_GLOBAL_THREAD, /* IO enabled */
+                            PR_UNJOINABLE_THREAD,
+                            0
+                            );
+
+                        if(NULL == clientThread)
                         {
+                            PRStatus closeRes = PR_SUCCESS;
+
                             failureSum += __LINE__;
-                            REPORT_ERROR(__LINE__, handleClient);
-                        }
-                        
-                        /*
-                        ** Done with the connection.
-                        */
-                        closeRes = PR_Close(connection);
-                        if(PR_SUCCESS != closeRes)
-                        {
-                            failureSum += __LINE__;
-                            REPORT_ERROR(__LINE__, PR_Close);
+                            REPORT_ERROR(__LINE__, PR_Accept);
+
+                            /*
+                            **  Close the connection as well, no service
+                            */
+                            closeRes = PR_Close(connection);
+                            if(PR_FAILURE == closeRes)
+                            {
+                                REPORT_ERROR(__LINE__, PR_Close);
+                            }
                         }
                     }
                     else
@@ -6102,11 +6122,11 @@ int serverMode(tmreader* aTMR)
 **
 ** Perform whatever batch requests we were asked to do.
 */
-int batchMode(tmreader* aTMR)
+int batchMode(void)
 {
     int retval = 0;
 
-    if(NULL != aTMR && 0 != globals.mOptions.mBatchRequestCount)
+    if(0 != globals.mOptions.mBatchRequestCount)
     {
         PRUint32 loop = 0;
         int failureSum = 0;
@@ -6131,7 +6151,7 @@ int batchMode(tmreader* aTMR)
                 {
                     PRStatus closeRes = PR_SUCCESS;
                     
-                    handleRes = handleRequest(aTMR, outFile, globals.mOptions.mBatchRequests[loop], NULL);
+                    handleRes = handleRequest(globals.mTMR, outFile, globals.mOptions.mBatchRequests[loop], NULL);
                     if(0 != handleRes)
                     {
                         failureSum += __LINE__;
@@ -6233,7 +6253,7 @@ int doRun(void)
                     /*
                     ** Output in one big step while everything still exists.
                     */
-                    outputResult = batchMode(globals.mTMR);
+                    outputResult = batchMode();
                     if(0 != outputResult)
                     {
                         REPORT_ERROR(__LINE__, batchMode);
@@ -6247,7 +6267,7 @@ int doRun(void)
                     /*
                     ** httpd time.
                     */
-                    serverRes = serverMode(globals.mTMR);
+                    serverRes = serverMode();
                     if(0 != serverRes)
                     {
                         REPORT_ERROR(__LINE__, serverMode);
