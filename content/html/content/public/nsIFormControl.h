@@ -131,14 +131,13 @@ public:
   /**
    * Save to presentation state
    */
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext,
-                       nsIPresState** aState) = 0;
+  NS_IMETHOD SaveState() = 0;
 
   /**
    * Restore from presentation state
+   * @param aState the pres state to use to restore the control
    */
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext,
-                          nsIPresState* aState) = 0;
+  NS_IMETHOD RestoreState(nsIPresState* aState) = 0;
 };
 
 #endif /* nsIFormControl_h___ */

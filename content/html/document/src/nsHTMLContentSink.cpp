@@ -123,6 +123,7 @@
 #include "nsIParserService.h"
 #include "nsParserCIID.h"
 #include "nsISelectElement.h"
+#include "nsITextAreaElement.h"
 
 #include "nsIPref.h"
 
@@ -810,8 +811,9 @@ MakeContentObject(nsHTMLTag aNodeType,
                   nsIDOMHTMLFormElement* aForm,
                   nsIWebShell* aWebShell,
                   nsIHTMLContent** aResult,
-                  const nsAString* aSkippedContent = nsnull,
-                  PRBool aInsideNoXXXTag = PR_FALSE);
+                  const nsAString* aSkippedContent,
+                  PRBool aInsideNoXXXTag,
+                  PRBool aFromParser);
 
 
 /**
@@ -858,7 +860,8 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     }
     // Make the content object
     rv = MakeContentObject(aNodeType, nodeInfo, aForm, aWebShell,
-                           aResult, skippedContent, !!mInsideNoXXXTag);
+                           aResult, skippedContent, !!mInsideNoXXXTag,
+                           PR_TRUE);
 
     PRInt32 id;
     mDocument->GetAndIncrementContentID(&id);
@@ -895,7 +898,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
 
     if (aCaseSensitive) {
       rv = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull, nsnull,
-                             aResult);
+                             aResult, nsnull, PR_FALSE, PR_FALSE);
     } else {
       // Revese map id to name to get the correct character case in
       // the tag name.
@@ -922,7 +925,8 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
         }
       }
 
-      rv = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull, nsnull, aResult);
+      rv = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull, nsnull, aResult,
+                             nsnull, PR_FALSE, PR_FALSE);
     }
   }
 
@@ -994,7 +998,8 @@ MakeContentObject(nsHTMLTag aNodeType,
                   nsIWebShell* aWebShell,
                   nsIHTMLContent** aResult,
                   const nsAString* aSkippedContent,
-                  PRBool aInsideNoXXXTag)
+                  PRBool aInsideNoXXXTag,
+                  PRBool aFromParser)
 {
   nsresult rv = NS_OK;
   switch (aNodeType) {
@@ -1105,7 +1110,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLImageElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_input:
-    rv = NS_NewHTMLInputElement(aResult, aNodeInfo);
+    rv = NS_NewHTMLInputElement(aResult, aNodeInfo, aFromParser);
     if (!aInsideNoXXXTag)
       SetForm(*aResult, aForm);
     break;
@@ -1170,7 +1175,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLScriptElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_select:
-    rv = NS_NewHTMLSelectElement(aResult, aNodeInfo);
+    rv = NS_NewHTMLSelectElement(aResult, aNodeInfo, aFromParser);
     if (!aInsideNoXXXTag) {
       SetForm(*aResult, aForm);
     }
@@ -1421,13 +1426,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     return rv;
   }
 
-  if (nodeType == eHTMLTag_select) {
-    nsCOMPtr<nsISelectElement> select(do_QueryInterface(content));
-    if (select) {
-      select->DoneAddingContent(PR_FALSE);
-    }
-  }
-
   mStack[mStackPos].mType = nodeType;
   mStack[mStackPos].mContent = content;
   mStack[mStackPos].mFlags = 0;
@@ -1607,9 +1605,8 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     case eHTMLTag_select:
       {
         nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &result);
-
-        if (NS_SUCCEEDED(result)) {
-          result = select->DoneAddingContent(PR_TRUE);
+        if (select) {
+          result = select->DoneAddingChildren();
         }
       }
       break;
@@ -1884,6 +1881,22 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
 
       // Add new leaf to its parent
       AddLeaf(content);
+
+      // Notify input and button that they are now fully created
+      switch (nodeType) {
+      case eHTMLTag_input:
+      case eHTMLTag_button:
+        content->DoneCreatingElement();
+        break;
+      case eHTMLTag_textarea:
+        // XXX textarea deserves to be treated like the container it is.
+        nsCOMPtr<nsITextAreaElement> textarea(do_QueryInterface(content));
+        if (textarea) {
+          textarea->DoneAddingChildren();
+        }
+        break;
+      }
+
       NS_RELEASE(content);
     }
     break;

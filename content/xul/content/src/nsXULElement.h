@@ -389,6 +389,7 @@ public:
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
                               nsEventStatus* aEventStatus);
+    NS_IMETHOD DoneCreatingElement();
 
     NS_IMETHOD GetContentID(PRUint32* aID);
     NS_IMETHOD SetContentID(PRUint32 aID);

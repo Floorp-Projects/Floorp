@@ -309,6 +309,34 @@ public:
 
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
 
+  /**
+   * This method is called when the parser finishes creating the element.  This
+   * particularly means that it has done everything you would expect it to have
+   * done after it encounters the > at the end of the tag (for HTML or XML).
+   * This includes setting the attributes, setting the document / form, and
+   * placing the element into the tree at its proper place.
+   *
+   * For container elements, this is called *before* any of the children are
+   * created or added into the tree.
+   *
+   * NOTE: this is currently only called for input and button, in the HTML
+   * content sink.  If you want to call it on your element, modify the content
+   * sink of your choice to do so.  This is an efficiency measure.
+   *
+   * If you also need to determine whether the parser is the one creating your
+   * element (through createElement() or cloneNode() generally)   * aFromParser to the NS_NewXXX() constructor for your element and have the
+   * parser pass true.  See nsHTMLInputElement.cpp and
+   * nsHTMLContentSink::MakeContentObject().
+   *
+   * DO NOT USE THIS METHOD to get around the fact that it's hard to deal with
+   * attributes dynamically.  If you make attributes affect your element from
+   * this method, it will only happen on initialization and JavaScript will not
+   * be able to create elements (which requires them to first create the
+   * element and then call setAttribute() directly, at which point
+   * DoneCreatingElement() has already been called and is out of the picture).
+   */
+  NS_IMETHOD DoneCreatingElement() = 0;
+
 #ifdef DEBUG
   /**
    * Get the size of the content object. The size value should include
