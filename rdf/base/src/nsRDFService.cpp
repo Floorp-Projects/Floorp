@@ -418,6 +418,13 @@ rdf_HashWideString(const void* key)
     return result;
 }
 
+static PRIntn
+rdf_CompareWideStrings(const void* v1, const void* v2)
+{
+    return 0 == nsCRT::strcmp(NS_STATIC_CAST(const PRUnichar*, v1), NS_STATIC_CAST(const PRUnichar*, v2));
+}
+
+
 ServiceImpl::ServiceImpl(void)
     :  mNamedDataSources(nsnull), mResources(nsnull), mLiterals(nsnull)
 {
@@ -430,7 +437,7 @@ ServiceImpl::ServiceImpl(void)
 
     mLiterals = PL_NewHashTable(1023,
                                 rdf_HashWideString,
-                                PL_CompareStrings,
+                                rdf_CompareWideStrings,
                                 PL_CompareValues,
                                 nsnull, nsnull);
 
