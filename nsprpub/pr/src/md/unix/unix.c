@@ -1055,7 +1055,7 @@ PRInt32 _MD_accept(PRFileDesc *fd, PRNetAddr *addr,
     while ((rv = accept(osfd, (struct sockaddr *) addr,
                                         (_PRSockLen_t *)addrlen)) == -1) {
         err = _MD_ERRNO();
-        if ((err == EAGAIN) || (err == EWOULDBLOCK)) {
+        if ((err == EAGAIN) || (err == EWOULDBLOCK) || (err == ECONNABORTED)) {
             if (fd->secret->nonblocking) {
                 break;
             }
