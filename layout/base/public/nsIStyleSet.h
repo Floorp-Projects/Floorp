@@ -82,6 +82,17 @@ public:
   
   virtual nsresult GetRuleTree(nsIRuleNode** aResult) = 0;
 
+  // ClearCachedStyleData is used to invalidate portions of both the style context tree
+  // and rule tree without destroying the actual nodes in the two trees.  |aRule| provides
+  // a hint as to which rule has changed, and all subtree data pruning will occur rooted
+  // only on style contexts and rule nodes that use that rule.  If the rule is null, then
+  // it is assumed that both trees are to be entirely wiped.
+  //
+  // |aContext| provides an additional hint that a specific style context has changed, and
+  // that the entire rule tree need not be searched for occurrences of |aRule|.  It is
+  // only specified in the inline style case, i.e., when the inline style attribute changes.
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsIStyleContext* aContext) = 0;
+
   // enable / disable the Quirk style sheet: 
   // returns NS_FAILURE if none is found, otherwise NS_OK
   NS_IMETHOD EnableQuirkStyleSheet(PRBool aEnable) = 0;

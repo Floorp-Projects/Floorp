@@ -4723,7 +4723,7 @@ NS_IMETHODIMP DocumentViewerImpl::SetTextZoom(float aTextZoom)
   if (mDeviceContext) {
     mDeviceContext->SetTextZoom(aTextZoom);
     if (mPresContext) {
-      mPresContext->RemapStyleAndReflow();
+      mPresContext->ClearStyleDataAndReflow();
     }
   }
 

@@ -158,9 +158,9 @@ public:
   NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
 
   /**
-   * Remap style from the root frame downwards, and reflow.
+   * Clear style data from the root frame downwards, and reflow.
    */
-  NS_IMETHOD RemapStyleAndReflow(void) = 0;
+  NS_IMETHOD ClearStyleDataAndReflow(void) = 0;
 
   /**
    * Resolve style for the given piece of content that will be a child

@@ -115,6 +115,7 @@ public:
   NS_IMETHOD Shutdown();
 
   virtual nsresult GetRuleTree(nsIRuleNode** aResult);
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsIStyleContext* aContext);
 
   NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext,
                                   nsIStyleContext* aStyleContext, 
@@ -982,6 +983,53 @@ StyleSetImpl::GetRuleTree(nsIRuleNode** aResult)
 {
   *aResult = mRuleTree;
   NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsresult
+StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsIStyleContext* aContext)
+{
+  // XXXdwh.  If we're willing to *really* optimize this
+  // invalidation, we could only invalidate the struct data
+  // that actually changed.  For example, if someone changes
+  // style.left, we really only need to blow away cached
+  // data in the position struct.
+  if (aContext) {
+    nsCOMPtr<nsIRuleNode> ruleNode;
+    aContext->GetRuleNode(getter_AddRefs(ruleNode));
+    ruleNode->ClearCachedData(aRule); 
+
+    // We don't need to mess with the style tree in this case, since the act of 
+    // changing inline style attributes automatically causes re-resolution to a new style context
+    // (with new descendant style contexts as well).
+  }
+  else {
+    // XXXdwh This is not terribly fast, but fortunately this case is rare (and often a full tree
+    // invalidation anyway).  Improving performance here would involve a footprint
+    // increase.  Mappings from rule nodes to their associated style contexts as well as
+    // mappings from rules to their associated rule nodes would enable us to avoid the two
+    // tree walks that occur here.
+
+    // Crawl the entire rule tree and blow away all data for rule nodes (and their descendants)
+    // that have the given rule.
+    if (mRuleTree)
+      mRuleTree->ClearCachedDataInSubtree(aRule);
+
+    // We need to crawl the entire style context tree, and for each style context we need 
+    // to see if the specified rule is matched.  If so, that context and all its descendant
+    // contexts must have their data wiped.
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    nsIFrame* rootFrame;
+    shell->GetRootFrame(&rootFrame);
+    if (rootFrame) {
+      nsCOMPtr<nsIStyleContext> rootContext;
+      rootFrame->GetStyleContext(getter_AddRefs(rootContext));
+      if (rootContext)
+        rootContext->ClearStyleData(aPresContext, aRule);
+    }
+  }
+
   return NS_OK;
 }
 

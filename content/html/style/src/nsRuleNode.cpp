@@ -412,24 +412,18 @@ nsRuleNode::GetRule(nsIStyleRule** aResult)
   return NS_OK;
 }
 
-PRBool PR_CALLBACK ClearCachedDataHelper(nsHashKey* aKey, void* aData, void* aClosure)
-{
-  nsRuleNode* ruleNode = (nsRuleNode*)aData;
-  ruleNode->ClearPath();
-  return PR_TRUE;
-}
-
 NS_IMETHODIMP
-nsRuleNode::ClearPath()
+nsRuleNode::PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched)
 {
-  // Any children must not be allowed to obtain cached data from parents.  We must
-  // clear any bits in descendants that indicate inheritance.
-  mInheritBits &= ~NS_STYLE_INHERIT_MASK;
-  if (mStyleData.mResetData || mStyleData.mInheritedData)
-    mStyleData.Destroy(0, mPresContext);
-
-  if (mChildren)
-    mChildren->Enumerate(ClearCachedDataHelper);
+  *aMatched = PR_FALSE;
+  nsRuleNode* ruleDest = this;
+  while (ruleDest) {
+    if (ruleDest->mRule == aRule) {
+      *aMatched = PR_TRUE;
+      break;
+    }
+    ruleDest = ruleDest->mParent;
+  }
 
   return NS_OK;
 }
@@ -446,7 +440,10 @@ nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
 
   if (ruleDest) {
     // The rule was contained along our branch.  We need to blow away
-    // all cached data along this path.
+    // all cached data along this path.  Note that, because of the definition
+    // of inline style, all nodes along this path must have exactly one child.  This
+    // is not a bushy subtree, and so we know that by clearing this path, we've
+    // invalidated everything that we need to.
     nsRuleNode* curr = this;
     while (curr) {
       curr->mNoneBits &= ~NS_STYLE_INHERIT_MASK;
@@ -475,12 +472,13 @@ PRBool PR_CALLBACK ClearCachedDataInSubtreeHelper(nsHashKey* aKey, void* aData, 
 NS_IMETHODIMP
 nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
 {
-  if (mRule == aRule) {
+  if (aRule == nsnull || mRule == aRule) {
     // We have a match.  Blow away all data stored at this node.
     if (mStyleData.mResetData || mStyleData.mInheritedData)
       mStyleData.Destroy(0, mPresContext);
     mNoneBits &= ~NS_STYLE_INHERIT_MASK;
-    mInheritBits &= ~NS_STYLE_INHERIT_MASK;  // XXXdwh need to clear all data in descendants!
+    mInheritBits &= ~NS_STYLE_INHERIT_MASK;
+    aRule = nsnull;
   }
 
   if (mChildren)

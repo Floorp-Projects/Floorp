@@ -299,7 +299,8 @@ public:
 
   NS_IMETHOD GetPresContext(nsIPresContext** aResult)=0;
 
-  NS_IMETHOD ClearPath()=0;
+  NS_IMETHOD PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched) = 0;
+
   NS_IMETHOD ClearCachedData(nsIStyleRule* aRule)=0;
   NS_IMETHOD ClearCachedDataInSubtree(nsIStyleRule* aRule)=0;
   

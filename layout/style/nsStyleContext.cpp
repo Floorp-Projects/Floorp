@@ -75,8 +75,6 @@ public:
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
   virtual PRBool    HasTextDecorations() { return mBits & NS_STYLE_HAS_TEXT_DECORATIONS; };
 
-  NS_IMETHOD RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse = PR_TRUE);
-
   NS_IMETHOD GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding);
 
   NS_IMETHOD GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct);
@@ -88,6 +86,8 @@ public:
 
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
   virtual nsStyleStruct* GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID);
+
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
 
   virtual void ForceUnique(void);
   NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint,PRBool aStopAtFirstDifference = PR_FALSE);
@@ -103,6 +103,8 @@ public:
 protected:
   void AppendChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
+
+  void ApplyStyleFixups(nsIPresContext* aPresContext);
 
   nsStyleContext* mParent;
   nsStyleContext* mChild;
@@ -140,33 +142,7 @@ nsStyleContext::nsStyleContext(nsIStyleContext* aParent,
     mParent->AppendChild(this);
   }
 
-  // See if we have any text decorations.
-  // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
-  if (mParent && mParent->HasTextDecorations())
-    mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
-  else {
-    // We might have defined a decoration.
-    const nsStyleTextReset* text = (const nsStyleTextReset*)GetStyleData(eStyleStruct_TextReset);
-    if (text->mTextDecoration != NS_STYLE_TEXT_DECORATION_NONE &&
-        text->mTextDecoration != NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL)
-      mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
-  }
-
-  // Correct tables.
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)GetStyleData(eStyleStruct_Display);
-  if (disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
-    // -moz-center and -moz-right are used for HTML's alignment
-    // This is covering the <div align="right"><table>...</table></div> case.
-    // In this case, we don't want to inherit the text alignment into the table.
-    const nsStyleText* text = (const nsStyleText*)GetStyleData(eStyleStruct_Text);
-    
-    if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
-        text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
-    {
-      nsStyleText* uniqueText = (nsStyleText*)GetUniqueStyleData(aPresContext, eStyleStruct_Text);
-      uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
-    }
-  }
+  ApplyStyleFixups(aPresContext);
 }
 
 nsStyleContext::~nsStyleContext()
@@ -545,30 +521,60 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct)
   return result;
 }
 
-NS_IMETHODIMP
-nsStyleContext::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
+void
+nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
 {
-#if 0 // Commenting out until we figure out why this crashes only on opt builds.
-  // First we need to clear out all of our style data.
-  if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
-    mCachedStyleData.Destroy(mBits, aPresContext);
+  // See if we have any text decorations.
+  // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
+  if (mParent && mParent->HasTextDecorations())
+    mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
+  else {
+    // We might have defined a decoration.
+    const nsStyleTextReset* text = (const nsStyleTextReset*)GetStyleData(eStyleStruct_TextReset);
+    if (text->mTextDecoration != NS_STYLE_TEXT_DECORATION_NONE &&
+        text->mTextDecoration != NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL)
+      mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
+  }
 
-  mBits &= ~NS_STYLE_INHERIT_MASK;  // Clear out all data that indicates we should look for
-                                    // style data in our parent.
+  // Correct tables.
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)GetStyleData(eStyleStruct_Display);
+  if (disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
+    // -moz-center and -moz-right are used for HTML's alignment
+    // This is covering the <div align="right"><table>...</table></div> case.
+    // In this case, we don't want to inherit the text alignment into the table.
+    const nsStyleText* text = (const nsStyleText*)GetStyleData(eStyleStruct_Text);
+    
+    if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
+        text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
+    {
+      nsStyleText* uniqueText = (nsStyleText*)GetUniqueStyleData(aPresContext, eStyleStruct_Text);
+      uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
+    }
+  }
+}
 
-  // Now we need to ensure that any cached data along the path from our
-  // rule node back to the root is cleared out.
-  mRuleNode->ClearPath();
+nsresult
+nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule)
+{
+  PRBool matched = PR_TRUE;
+  if (aRule)
+    mRuleNode->PathContainsRule(aRule, &matched);
+  
+  if (matched) {
+    // First we need to clear out all of our style data.
+    if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
+      mCachedStyleData.Destroy(mBits, aPresContext);
 
-  // Now do the same for all of our children, but only if the recurse boolean
-  // is set.
-  if (!aRecurse)
-    return NS_OK;
+    mBits = 0; // Clear all bits.
+    aRule = nsnull;
+  }
+
+  ApplyStyleFixups(aPresContext);
 
   if (mChild) {
     nsStyleContext* child = mChild;
     do {
-      child->RemapStyle(aPresContext);
+      child->ClearStyleData(aPresContext, aRule);
       child = child->mNextSibling;
     } while (mChild != child);
   }
@@ -576,11 +582,11 @@ nsStyleContext::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
   if (mEmptyChild) {
     nsStyleContext* child = mEmptyChild;
     do {
-      child->RemapStyle(aPresContext);
+      child->ClearStyleData(aPresContext, aRule);
       child = child->mNextSibling;
     } while (mEmptyChild != child);
   }
-#endif
+
   return NS_OK;
 }
 
