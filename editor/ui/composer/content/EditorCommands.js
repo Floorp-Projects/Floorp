@@ -20,6 +20,7 @@
  * Contributor(s): 
  *    Sammy Ford
  *    Dan Haddix (dan6992@hotmail.com)
+ *    John Ratke (jratke@owc.net)
  */
 
 /* Main Composer window UI control */
@@ -50,7 +51,6 @@ function EditorOnLoad() {
     // Continue with normal startup.
     EditorStartup( 'html', document.getElementById("content-frame"));
     window.tryToClose = EditorClose;
-    return;
 }
   
 function TextEditorOnLoad() {
@@ -65,6 +65,16 @@ function TextEditorOnLoad() {
     return;
 }
   
+var DocumentStateListener =
+{
+  NotifyDocumentCreated: function() 
+    {
+      EditorSetDefaultPrefs();
+    },
+  NotifyDocumentWillBeDestroyed: function() {},
+  NotifyDocumentStateChanged:function( isNowDirty ) {}
+};
+
 function EditorStartup(editorType, editorElement)
 {
   dump("Doing Editor Startup...\n");
@@ -84,6 +94,9 @@ function EditorStartup(editorType, editorElement)
   editorShell.SetEditorType(editorType);
   editorShell.SetContentWindow(contentWindow);
 
+  // add a listener to be called when document is really done loading
+  editorShell.RegisterDocumentStateListener( DocumentStateListener );
+ 
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
@@ -1250,10 +1263,156 @@ function EditorRunLog()
   contentWindow.focus();
 }
 
+function EditorSetDefaultPrefs()
+{
+  /* only set defaults for new documents */
+  var url = document.getElementById("args").getAttribute("value");
+  if ( url != "about:blank" )
+    return;
+
+  var domdoc;
+  try { domdoc = window.editorShell.editorDocument; } catch (e) { dump( e + "\n"); }
+  if ( !domdoc )
+  {
+    return;
+  }
+
+  // try to get preferences service
+  var prefs = null;
+  try {
+    prefs = Components.classes['component://netscape/preferences'];
+    prefs = prefs.getService();
+    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+  }
+  catch (ex) {
+    dump("failed to get prefs service!\n");
+    prefs = null;
+  }
+
+  // search for author meta tag.
+  // if one is found, don't do anything.
+  // if not, create one and make it a child of the head tag 
+  //   and set its content attribute to the value of the editor.author preference.
+  var nodelist = domdoc.getElementsByTagName("meta");
+  if ( nodelist )
+  {
+    var found = false;
+    var node = 0;
+    var listlength = nodelist.length;
+
+    dump("meta nodelist length is "+listlength+"\n");
+    for (var i = 0; i < listlength && !found; i++)
+    {
+      node = nodelist.item(i);
+      if ( node )
+      {
+        var value = node.getAttribute("name");
+        if (value == "author")
+        {
+          found = true;
+        }
+      }
+    }
+
+    if ( !found )
+    {
+      dump("no meta tag for author found\n");
+      /* create meta tag with 2 attributes */
+      var element = domdoc.createElement("meta");
+      if ( element )
+      {
+        AddAttrToElem(domdoc, "name", "Author", element);
+        AddAttrToElem(domdoc, "content", prefs.CopyCharPref("editor.author"), element);
+
+        var headelement = 0;
+        var headnodelist = domdoc.getElementsByTagName("head");
+        if (headnodelist)
+        {
+          var sz = headnodelist.length;
+          if ( sz >= 1 )
+          {
+            dump("nodelist is "+sz+" long for head, getting 0\n");
+            headelement = headnodelist.item(0);
+          }
+          else
+            dump("nodelist is 0 long for head\n");
+        }
+        else
+          dump("no headlist retrieved from domdoc\n");
+        
+        if ( headelement )
+        {
+            headelement.appendChild( element );
+        }
+      }
+    }
+  }
+
+  // color prefs
+  var use_custom_colors = false;
+  try {
+    use_custom_colors = prefs.GetBoolPref("editor.use_custom_colors");
+    dump("pref use_custom_colors:" + use_custom_colors + "\n");
+  }
+  catch (ex) {
+    dump("problem getting use_custom_colors as bool, hmmm, still confused about its identity?!\n");
+  }
+
+  if ( use_custom_colors )
+  {
+    // find body node
+    var bodyelement = null;
+    var bodynodelist = null;
+    try {
+      bodynodelist = domdoc.getElementsByTagName("body");
+      bodyelement = bodynodelist.item(0);
+    }
+    catch (ex) {
+      dump("no body tag found?!\n");
+      //  better have one, how can we blow things up here?
+    }
+
+    // try to get the default color values.  ignore them if we don't have them.
+    var text_color = link_color = active_link_color = followed_link_color = background_color = "";
+
+    try { text_color = prefs.CopyCharPref("editor.text_color"); } catch (e) {}
+    try { link_color = prefs.CopyCharPref("editor.link_color"); } catch (e) {}
+    try { active_link_color = prefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
+    try { followed_link_color = prefs.CopyCharPref("editor.followed_link_color"); } catch (e) {}
+    try { background_color = prefs.CopyCharPref("editor.background_color"); } catch(e) {}
+
+    // add the color attributes to the body tag.
+    // FIXME:  use the check boxes for each color somehow..
+    if (text_color != "")
+      AddAttrToElem(domdoc, "text", text_color, bodyelement);
+    if (link_color != "")
+      AddAttrToElem(domdoc, "link", link_color, bodyelement);
+    if (active_link_color != "") 
+      AddAttrToElem(domdoc, "alink", active_link_color, bodyelement);
+    if (followed_link_color != "")
+      AddAttrToElem(domdoc, "vlink", followed_link_color, bodyelement);
+    if (background_color != "")
+      AddAttrToElem(domdoc, "bgcolor", background_color, bodyelement);
+  }
+
+  // auto-save???
+}
+
+function AddAttrToElem(dom, attr_name, attr_value, elem)
+{
+  var a = dom.createAttribute(attr_name);
+  if ( a )
+  {
+    a.value = attr_value;
+    elem.setAttributeNode(a);
+  }
+}
+
+
 function EditorDocumentLoaded()
 {
   dump("The document was loaded in the content area\n");
-
+  
   //window.addEventListener("keyup", EditorReflectDocState, true, false);	// post process, no capture
   //window.addEventListener("dblclick", EditorDoDoubleClick, true, false);
 
