@@ -1205,7 +1205,7 @@ int main(int argc, char* argv[])
   // They should% return quick, so we deal with them here.
   if (HandleDumpArguments(argc, argv))
     return 0;
-
+ 
 #ifdef NS_TRACE_MALLOC
   argc = NS_TraceMallocStartupArgs(argc, argv);
 #endif

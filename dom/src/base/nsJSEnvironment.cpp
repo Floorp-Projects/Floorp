@@ -1114,7 +1114,12 @@ static JSClass OptionsClass = {
 
 #include <errno.h>              // XXX assume Linux if NS_TRACE_MALLOC
 #include <fcntl.h>
+#ifdef XP_UNIX
 #include <unistd.h>
+#endif
+#ifdef XP_WIN32
+#include <io.h>
+#endif
 #include "nsTraceMalloc.h"
 
 static JSBool
@@ -1158,7 +1163,7 @@ TraceMallocOpenLogFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 static JSBool
 TraceMallocChangeLogFD(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    int fd, oldfd;
+    int32 fd, oldfd;
 
     if (argc == 0) {
         oldfd = -1;

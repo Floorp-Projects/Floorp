@@ -46,6 +46,9 @@ EXPORTS =                  \
         nscore.h           \
         pure.h             \
         nslog.h            \
+!ifdef MOZ_TRACE_MALLOC
+		nsTraceMalloc.h    \
+!endif
         $(NULL)			
 
 XPIDL_MODULE = xpcom_base
@@ -79,12 +82,19 @@ LINCS =                   \
 	-I$(PUBLIC)\xpcom\components \
 	$(NULL)
 
-LCFLAGS = -D_IMPL_NS_COM -DWIN32_LEAN_AND_MEAN
+LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
+
 
 !ifdef GC_LEAK_DETECTOR
 LCFLAGS = $(LCFLAGS) -DGC_LEAK_DETECTOR
 !endif
 
+
+!ifdef MOZ_TRACE_MALLOC
+C_OBJS =                                    \
+		.\$(OBJDIR)\nsTraceMalloc.obj \
+        $(NULL)
+!endif
 
 CPP_OBJS =                            \
         .\$(OBJDIR)\nsLogging.obj       \
@@ -107,6 +117,11 @@ CPP_OBJS =                            \
 !endif
 !ifdef MOZ_DEBUG
         .\$(OBJDIR)\pure_api.obj      \
+!endif
+!ifdef MOZ_TRACE_MALLOC
+        .\$(OBJDIR)\nsTypeInfo.obj      \
+        .\$(OBJDIR)\nsDebugHelpWin32.obj      \
+        .\$(OBJDIR)\nsWinTraceMalloc.obj      \
 !endif
         $(NULL)
 
