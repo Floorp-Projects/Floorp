@@ -119,10 +119,13 @@ interface nsIChannel : nsIRequest
      * Setting contentType between the time that asyncOpen() is called and the
      * time when onStartRequest is fired has undefined behavior at this time.
      *
-     * The value of the contentType attribute is a lowercase string.  If the
-     * assigned value contains a charset parameter, than that charset parameter
-     * will be stripped from the contentType and will replace the contentCharset
-     * attribute.  All other parameters are stripped on assignment.
+     * The value of the contentType attribute is a lowercase string.  A value
+     * assigned to this attribute will be parsed and normalized as follows:
+     *  1- any parameters (delimited with a ';') will be stripped.
+     *  2- if a charset parameter is given, then its value will replace the
+     *     the contentCharset attribute of the channel.
+     *  3- the stripped contentType will be lowercased.
+     * Any implementation of nsIChannel must follow these rules.
      */
     attribute ACString contentType;
 
