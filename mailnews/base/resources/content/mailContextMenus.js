@@ -93,7 +93,7 @@ function fillFolderPaneContextMenu()
 	EnableMenuItem("folderPaneContext-getMessages", true);
 
 	ShowMenuItem("folderPaneContext-openNewWindow", (numSelected <= 1) && !isServer);
-	EnableMenuItem("folderPaneContext-openNewWindow", (false));
+	EnableMenuItem("folderPaneContext-openNewWindow", (true));
 
 	SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
 	SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);

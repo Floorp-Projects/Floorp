@@ -1205,3 +1205,21 @@ function GetResourceFromUri(uri)
 
 	return resource;
 }  
+
+function MsgOpenNewWindowForFolder(folder)
+{
+	if(!folder)
+	{
+		folder = GetSelectedFolder();
+	}
+
+	if(folder)
+	{
+		var uri = folder.getAttribute("id");
+		if(uri)
+		{
+			window.openDialog( "chrome://messenger/content/", "_blank", "chrome,all,dialog=no", uri );
+		}
+	}
+
+}

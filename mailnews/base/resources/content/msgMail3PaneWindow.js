@@ -73,6 +73,8 @@ var gNextMessageAfterDelete = null;
 
 var gActiveThreadPaneSortColumn = "";
 
+var gStartFolderUri = null;
+
 // the folderListener object
 var folderListener = {
     OnItemAdded: function(parentItem, item, view) {},
@@ -126,8 +128,7 @@ var folderListener = {
 			if(resource)
 			{
 				var uri = resource.Value;
-				dump('In OnFolderLoaded for ' + uri);
-				dump('\n');
+				dump("In OnFolderLoaded for " + uri +"\n");
 				if(uri == gCurrentFolderToReroot)
 				{
 					gCurrentFolderToReroot="";
@@ -135,7 +136,6 @@ var folderListener = {
 					if(msgFolder)
 					{
 						msgFolder.endFolderLoading();
-						dump("before reroot in OnFolderLoaded\n");
 						RerootFolder(uri, msgFolder, gCurrentLoadingFolderIsThreaded, gCurrentLoadingFolderSortID, gCurrentLoadingFolderSortDirection);
 						gCurrentLoadingFolderIsThreaded = false;
 						gCurrentLoadingFolderSortID = "";
@@ -168,23 +168,17 @@ var folderListener = {
 	},
 	OnDeleteOrMoveMessagesCompleted :function(folder)
 	{
-		dump("In OnDeleteOrMoveMessagesCompleted\n");
 		if(IsCurrentLoadedFolder(folder))
 		{
 			msgNavigationService.EnsureDocumentIsLoaded(document);
 
-			dump("next message uri is " + gNextMessageAfterDelete + "\n");
 			if(gNextMessageAfterDelete)
 			{
 				var nextMessage = document.getElementById(gNextMessageAfterDelete);
-				if(!nextMessage)
-					dump("No next message after delete\n");
 				SelectNextMessage(nextMessage);
 				var threadTree = GetThreadTree();
 				if(threadTree)
 					threadTree.ensureElementIsVisible(nextMessage);
-				else
-					dump("No thread tree\n");
 				gNextMessageAfterDelete = null;
 			}
 		}
@@ -196,16 +190,12 @@ function IsCurrentLoadedFolder(folder)
 	msgfolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
 	if(msgfolder)
 	{
-		dump("IsCurrentLoadedFolder: has msgFolder\n");
 		var folderResource = msgfolder.QueryInterface(Components.interfaces.nsIRDFResource);
 		if(folderResource)
 		{
-			dump("IsCurrentLoadedFolder: has folderResource\n");
 			var folderURI = folderResource.Value;
 			var currentLoadedFolder = GetThreadTreeFolder();
 			var currentURI = currentLoadedFolder.getAttribute('ref');
-			dump("IsCurrentLoadedFolder: folderURI = " + folderURI + "\n");
-			dump("IsCurrentLoadedFolder: currentURI = " + currentURI + "\n");
 			return(currentURI == folderURI);
 		}
 	}
@@ -233,8 +223,16 @@ function OnLoadMessenger()
   AddToSession();
   //need to add to session before trying to load start folder otherwise listeners aren't
   //set up correctly.
-  dump('Before load start folder\n');
-  setTimeout("loadStartFolder();", 0);
+  if(window.arguments && window.arguments[0])
+  {
+	gStartFolderUri = window.arguments[0];
+  }
+  else
+  {
+    gStartFolderUri = null;
+  }
+
+  setTimeout("loadStartFolder(gStartFolderUri);", 0);
 
   // FIX ME - later we will be able to use onload from the overlay
   OnLoadMsgHeaderPane();
@@ -416,43 +414,42 @@ function loadStartPage() {
     }
 }
 
-function loadStartFolder()
+function loadStartFolder(startFolderUri)
 {
 	//First get default account
 	try
 	{
-		var defaultAccount = accountManager.defaultAccount;
+		if(!startFolderUri)
+		{
+			var defaultAccount = accountManager.defaultAccount;
 
-		var server = defaultAccount.incomingServer;
-		var rootFolder = server.RootFolder;
-		var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+			var server = defaultAccount.incomingServer;
+			var rootFolder = server.RootFolder;
+			var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-		//now find Inbox
-		var outNumFolders = new Object();
-		dump('Before getting inbox\n');
-		var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
-		if(!inboxFolder) return;
-		dump('We have an inbox\n');
+			//now find Inbox
+			var outNumFolders = new Object();
+			var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
+			if(!inboxFolder) return;
 
-		var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-		var inboxURI = resource.Value;
+			var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+			var startFolderUri = resource.Value;
 
-		dump('InboxURI = ' + inboxURI + '\n');
-		//first, let's see if it's already in the dom.  This will make life easier.
-		//We need to make sure content is built by this time
+			//first, let's see if it's already in the dom.  This will make life easier.
+			//We need to make sure content is built by this time
+		}
 		msgNavigationService.EnsureDocumentIsLoaded(document);
 
-		var inbox = document.getElementById(inboxURI);
+		var startFolder = document.getElementById(startFolderUri);
 
 		//if it's not here we will have to make sure it's open.
-		if(!inbox)
+		if(!startFolder)
 		{
-			dump('There isnt an inbox in the tree yet\n');
 
 		}
 
 		var folderTree= GetFolderTree();
-		ChangeSelection(folderTree, inbox);
+		ChangeSelection(folderTree, startFolder);
 	}
 	catch(ex)
 	{
@@ -516,7 +513,6 @@ function AddDataSources()
 
 function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
 {
-	dump("SetupMoveCopyMenus for " + menuid + "\n");
 	var menu = document.getElementById(menuid);
 	if(menu)
 	{
@@ -541,7 +537,6 @@ function InitPanes()
 
 function OnLoadFolderPane(folderTree)
 {
-	dump('In onLoadfolderPane\n');
     gFolderTree = folderTree;
 	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#FolderTreeName');
 
@@ -600,8 +595,6 @@ function GetThreadTree()
 {
     if (gThreadTree) return gThreadTree;
 	var threadTree = document.getElementById('threadTree');
-	if(!threadTree)
-		dump('thread tree is null\n');
     gThreadTree = threadTree;
 	return threadTree;
 }
@@ -716,7 +709,6 @@ function ThreadPaneOnClick(event)
 			//open all of the children of the treeitem
 			msgNavigationService.OpenTreeitemAndDescendants(treeitem);
 		}
-		dump('clicked on a twisty\n');
     }
 	else if(event.clickCount == 2)
 	{
@@ -734,6 +726,21 @@ function ThreadPaneDoubleClick(treeitem)
 	{
 		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default);
 	}
+}
+
+function FolderPaneOnClick(event)
+{
+	if(event.clickCount == 2)
+	{
+		var item = event.target.parentNode.parentNode;
+		if (item.nodeName == "treeitem")
+			FolderPaneDoubleClick(item);
+	}
+}
+
+function FolderPaneDoubleClick(treeitem)
+{
+	MsgOpenNewWindowForFolder(treeitem);
 }
 
 function ChangeSelection(tree, newSelection)

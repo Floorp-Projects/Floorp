@@ -38,7 +38,8 @@
 		  onblur="goOnEvent(this,'blur')"
 		ondragover="return DragOverTree(event);"
 		ondraggesture="return BeginDragFolderTree(event);"
-		ondragdrop="return DropOnFolderTree(event);"> 
+		ondragdrop="return DropOnFolderTree(event);"
+		onclick="FolderPaneOnClick(event);"> 
 
 	  <template>
 	  	<rule>

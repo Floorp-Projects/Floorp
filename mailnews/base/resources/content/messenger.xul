@@ -276,7 +276,7 @@ Rights Reserved.
 		<menuitem id="folderPaneContext-openNewWindow"
 			  value="&folderContextOpenNewWindow.label;"
 			  accesskey=""
-			  oncommand="MsgOpenNewWindowForFolder();"/>
+			  oncommand="MsgOpenNewWindowForFolder(null);"/>
 		<menuitem id="folderPaneContext-rename"
 			  value="&folderContextRename.label;"
 			  accesskey=""
