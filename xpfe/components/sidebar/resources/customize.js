@@ -106,6 +106,8 @@ function save_initial_panels()
 {
   var tree = document.getElementById('current-panels');
   if (!tree.view) {
+    // The tempate didn't build a treechildren, create one now
+    tree.appendChild(document.createElement('treechildren'));
     setTimeout(save_initial_panels, 0);
   } else {
     for (var i = 0; i < tree.view.rowCount; ++i) {
