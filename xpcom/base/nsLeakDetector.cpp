@@ -25,8 +25,10 @@
 #include "nsLeakDetector.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsILeakDetector.h"
+#include "nsICollection.h"
 
 #include <stdio.h>
 #include <time.h>
@@ -107,10 +109,50 @@ NS_METHOD nsLeakDetector::TraceObject(nsISupports* object, PRBool verbose)
     return NS_ERROR_FAILURE;
 }
 
+NS_METHOD nsLeakDetector::TraceCollection(nsICollection* objects, PRBool verbose)
+{
+    PRUint32 count;
+    if (NS_FAILED(objects->Count(&count)))
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsISupports>* elements = new nsCOMPtr<nsISupports>[count];
+    if (elements == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    for (PRUint32 i = 0; i < count; ++i)
+        objects->GetElementAt(i, getter_AddRefs(elements[i]));
+
+    nsresult rv = NS_ERROR_FAILURE;
+    FILE* trace = openTraceFile();
+    if (trace != NULL) {
+        FILE* old_stderr = GC_stderr;
+        GC_stderr = trace;
+        GC_trace_object(elements, (verbose ? 1 : 0));
+        GC_stderr = old_stderr;
+        fclose(trace);
+        rv = NS_OK;
+    }
+    
+    delete[] elements;
+    
+    return rv;
+}
+
 NS_METHOD nsLeakDetector::MarkObject(nsISupports* object, PRBool marked)
 {
     GC_mark_object(object, (marked ? 1 : 0));
     return NS_OK;
+}
+
+NS_METHOD nsLeakDetector::GetServices(nsISupports* *result)
+{
+    nsIServiceManager* serviceManager = nsnull;
+    nsresult rv = nsServiceManager::GetGlobalServiceManager(&serviceManager);
+    if (rv == NS_OK) {
+        *result = serviceManager;
+        NS_ADDREF(*result);
+    }
+    return rv;
 }
 
 #define NS_CLEAKDETECTOR_CID_STR "bb1ba360-1dd1-11b2-b30e-aa2314429f54"
