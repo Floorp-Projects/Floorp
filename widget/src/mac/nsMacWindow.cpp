@@ -16,12 +16,11 @@
  * Reserved.
  */
 
-#include <LowMem.h>
-
-#include "nsWindow.h"
 #include "nsMacWindow.h"
 #include "nsMacEventHandler.h"
 #include "nsMacMessageSink.h"
+
+#include <LowMem.h>
 
 // from MacHeaders.c
 #ifndef topLeft
@@ -56,9 +55,10 @@ NS_IMPL_RELEASE(nsMacWindow);
 nsMacWindow::nsMacWindow() : nsWindow()
 	, mWindowMadeHere(PR_FALSE)
 	, mIsDialog(PR_FALSE)
-	,	mMacEventHandler(new nsMacEventHandler(this))
+	, mMacEventHandler(nsnull)
 {
 	NS_INIT_REFCNT();
+	mMacEventHandler.reset(new nsMacEventHandler(this));
 	strcpy(gInstanceClassName, "nsMacWindow");
 }
 
