@@ -187,6 +187,7 @@ typedef PRUint32 nsresult;
   /* VC++ 5.0 and greater implement template specialization, 4.2 is unknown */
   #define HAVE_CPP_SPECIALIZATION
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
+  #define HAVE_CPP_EXTERN_INSTANTIATION
 
   #define HAVE_CPP_EXPLICIT
   #define HAVE_CPP_TYPENAME
