@@ -1198,6 +1198,85 @@ nsImageWin::GetBits()
 #ifdef USE_IMG2
 NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
 {
-  return NS_OK;
+  PRInt32 canRaster,srcy;
+  HBITMAP oldSrcBits, oldDstBits;
+  DWORD   rop;
+  PRInt32 origDHeight = aDHeight;
+  PRInt32 origDWidth = aDWidth;
+
+  if (mBHead == nsnull || aDWidth < 0 || aDHeight < 0) 
+    return NS_ERROR_FAILURE;
+
+  if (0 == aDWidth || 0 == aDHeight)
+    return NS_OK;
+
+  // Translate to bottom-up coordinates for the source bitmap
+  srcy = mBHead->biHeight - mNaturalHeight;
+
+  // Create a memory DC that is compatible with the screen
+  HDC dstMemDC = ::CreateCompatibleDC(nsnull);
+
+  nsImageWin* imgWin = NS_STATIC_CAST(nsImageWin*, aDstImage); 
+  if(!imgWin->mHBitmap)
+  {
+    if (imgWin->mSizeImage > 0){
+       if (imgWin->mAlphaDepth == 8) {
+         imgWin->CreateImageWithAlphaBits(dstMemDC);
+       } else {
+         void* bits;
+         imgWin->mHBitmap = CreateDIBSection(dstMemDC,(LPBITMAPINFO)imgWin->mBHead,DIB_RGB_COLORS,&bits,nsnull,nsnull);
+       }
+      imgWin->mIsOptimized = PR_TRUE;
+      imgWin->CleanUpDIB();
+    }
+  }
+  oldDstBits = (HBITMAP)::SelectObject(dstMemDC, imgWin->mHBitmap);
+
+    if (!IsOptimized() || nsnull==mHBitmap){
+      rop = SRCCOPY;
+
+      if (nsnull != mAlphaBits){
+        if( 1==mAlphaDepth){
+	        MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
+	        ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0,mNaturalWidth, mNaturalHeight, mAlphaBits,
+			                                    (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+	         rop = SRCPAINT;
+        }
+      }
+
+      if (8==mAlphaDepth) {              
+         DrawComposited(dstMemDC, aDX, aDY, aDWidth, aDHeight,
+           0, 0, mNaturalHeight, mNaturalWidth);
+      } else {
+        ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, mImageBits,
+		      (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
+      }
+    }else{
+      rop = SRCCOPY;
+      if( 1==mAlphaDepth && mAlphaBits){
+	      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
+        ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, mAlphaBits,
+		                   (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+	      rop = SRCPAINT;
+        ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight,0, 0, mNaturalWidth, mNaturalHeight, mHBitmap,
+		                    (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
+      } else if (8 == mAlphaDepth && mAlphaBits) {
+        BLENDFUNCTION blendFunction;
+        blendFunction.BlendOp = AC_SRC_OVER;
+        blendFunction.BlendFlags = 0;
+        blendFunction.SourceConstantAlpha = 255;
+        blendFunction.AlphaFormat = 1; //AC_SRC_ALPHA*
+        gAlphaBlend(dstMemDC, aDX, aDY, aDWidth, aDHeight, dstMemDC, 0, 0, mNaturalWidth, mNaturalHeight, blendFunction);
+      } else {
+        ::StretchBlt(dstMemDC, aDX, aDY, aDWidth, aDHeight, dstMemDC, 0, 0, mNaturalWidth, mNaturalHeight, rop);
+      }
+    }
+
+   ::SelectObject(dstMemDC, oldDstBits);
+   ::DeleteDC(dstMemDC);
+   return NS_OK;
 }
+
 #endif
