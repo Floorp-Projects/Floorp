@@ -3134,6 +3134,31 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   ir.HorizontalAlignFrames(aLine->mBounds);
   ir.RelativePositionFrames();
 
+  // Calculate the bottom margin for the line.
+  nscoord lineBottomMargin = 0;
+  if (0 == aLine->mBounds.height) {
+    nsIFrame* brFrame = aState.mLineLayout.GetBRFrame();
+    if (nsnull != brFrame) {
+      // If a line ends in a BR and the line is empty of height then we
+      // make sure that the line ends up with some height anyway. Note
+      // that the height looks like vertical margin so that it can
+      // compress with other block margins.
+      nsIStyleContext* brSC;
+      nsIPresContext& px = aState.mPresContext;
+      nsresult rv = brFrame->GetStyleContext(&px, brSC);
+      if ((NS_OK == rv) && (nsnull != brSC)) {
+        const nsStyleFont* font = (const nsStyleFont*)
+          brSC->GetStyleData(eStyleStruct_Font);
+        nsIFontMetrics* fm = px.GetMetricsFor(font->mFont);
+        if (nsnull != fm) {
+          fm->GetHeight(lineBottomMargin);
+          NS_RELEASE(fm);
+        }
+        NS_RELEASE(brSC);
+      }
+    }
+  }
+
   // See if the line fit. If it doesn't we need to push it. Our first
   // line will always fit.
 
@@ -3143,7 +3168,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // XXX don't forget to factor in the top/bottom margin when sharing
   // this with the block code
-  nscoord newY = aState.mY + aLine->mBounds.height;
+  nscoord newY = aState.mY + aLine->mBounds.height + lineBottomMargin;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
      ("nsBlockFrame::PlaceLine: newY=%d limit=%d lineHeight=%d",
       newY, aState.mBottomEdge, aLine->mBounds.height));
@@ -3216,8 +3241,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // Based on the last child we reflowed reflow status, we may need to
   // clear past any floaters.
   if (NS_INLINE_IS_BREAK_AFTER(aReflowStatus)) {
-    // Apply break to the line
     PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(aReflowStatus);
+    // Apply break to the line
     switch (breakType) {
     default:
       break;
