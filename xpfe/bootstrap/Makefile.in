@@ -435,7 +435,6 @@ libs:: $(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
 	cp -R $(DIST)/package/PrintPDE.plugin $(DIST)/$(APP_NAME).app/Contents/Plug-Ins/
-	cp -RL $(srcdir)/macbuild/Contents/*.icns $(DIST)/$(APP_NAME).app/Contents/Resources/
 	cp -RL $(DIST)/package/mozillaSuite.rsrc $(DIST)/$(APP_NAME).app/Contents/Resources/$(PROGRAM).rsrc
 	echo -n APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 
