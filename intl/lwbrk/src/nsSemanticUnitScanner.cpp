@@ -97,10 +97,17 @@ NS_IMETHODIMP nsSemanticUnitScanner::Next(const PRUnichar *text, PRInt32 length,
 
     // if we don't have enough text to make decision, return 
     if (needMoreText) {
-       *begin = pos;
-       *end = pos;
-       *_retval = PR_FALSE;
-       return NS_OK;
+       if (isLastBuffer) {
+           *begin = pos;
+           *end = length;
+           *_retval = PR_TRUE;
+           return NS_OK;
+       } else {
+           *begin = pos;
+           *end = pos;
+           *_retval = PR_FALSE;
+           return NS_OK;
+       }
     } 
     
     // if what we got is space or punct, look at the next break
