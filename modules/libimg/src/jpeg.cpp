@@ -18,7 +18,7 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 3.3 1998/12/14 22:42:06 pnunn%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 3.4 1998/12/17 22:16:27 pnunn%netscape.com Exp $
  */
 
 
@@ -719,6 +719,16 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
     int error_code;
 
 	jpeg_struct *js = (jpeg_struct *)ic->ds;
+  
+     /* If this js == NULL, chances are the netlib 
+       continued to send data after the image stream was closed. */
+    if (!js) {
+#ifdef DEBUG
+        ILTRACE(1,("Netlib sent data after the image stream was closed\n"));
+#endif
+        return MK_IMAGE_LOSSAGE;
+    }
+
 	j_decompress_ptr jd = &js->jd;
     il_source_mgr *src = (il_source_mgr*) js->jd.src;
     NI_PixmapHeader *img_header = &ic->image->header;
@@ -727,16 +737,6 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
     NI_ColorMap *cmap = &src_header->color_space->cmap;
 #endif /* M12N */
 
-    /* If this assert fires, chances are the netlib 
-       continued to send data after the image stream was closed. */
-    PR_ASSERT(js);
-    if (!js) {
-#ifdef DEBUG
-        ILTRACE(1,("Netlib sent data after the image stream was closed\n"));
-#endif
-        return MK_IMAGE_LOSSAGE;
-    }
-    
 	/* Return here if there is a fatal error. */
 	if ((error_code = setjmp(js->jerr.setjmp_buffer)) != 0) {
         /* Free up all the data structures */
