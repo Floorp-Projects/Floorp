@@ -247,6 +247,14 @@ function AbClose()
   top.close();
 }
 
+function AbNewLDAPDirectory()
+{
+  window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul", 
+                    "", 
+                    "chrome,modal=yes,resizable=no,centerscreen", 
+                    null);
+}
+
 function AbNewAddressBook()
 {
   var dialog = window.openDialog(

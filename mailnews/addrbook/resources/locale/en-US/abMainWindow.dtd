@@ -33,9 +33,9 @@ Rights Reserved.
 <!ENTITY newAddressBookCmd.label                        "Address Book..."> 
 <!-- LOCALIZATION NOTE (newAddressBookCmd.accesskey) : DONT_TRANSLATE --> 
 <!ENTITY newAddressBookCmd.accesskey                    "b">  
-<!ENTITY newDirectoryCmd.label                          ".Directory">
-<!-- LOCALIZATION NOTE (newDirectoryCmd.accesskey) : DONT_TRANSLATE -->  
-<!ENTITY newDirectoryCmd.accesskey			"d">  
+<!ENTITY newLDAPDirectoryCmd.label                     "LDAP Directory...">
+<!-- LOCALIZATION NOTE (newLDAPDirectoryCmd.accesskey) : DONT_TRANSLATE -->
+<!ENTITY newLDAPDirectoryCmd.accesskey                 "D">
 <!ENTITY importCmd.label                                "Import..."> 
 <!ENTITY importCmd.accesskey				"I"> 
 <!ENTITY exportCmd.label                                "Export...">  
