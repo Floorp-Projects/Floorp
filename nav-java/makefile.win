@@ -38,17 +38,6 @@ DEPTH=..
 #// DIRS          - There are subdirectories to process
 #//
 #//------------------------------------------------------------------------
-!if "$(AWT_11)" == "1"
-CLASSES=classes11 classes
-!else
-CLASSES=classes
-!endif
-
-!if "$(MOZ_BITS)" == "16"
-DIRS=netscape
-!else
-DIRS=$(CLASSES) netscape
-!endif
 
 !if !defined(MOZ_JAVA)
 DIRS=stubs
