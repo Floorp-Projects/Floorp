@@ -554,6 +554,15 @@ NS_METHOD nsBaseWidget::GetBounds(nsRect &aRect)
   return NS_OK;
 }
 
+/**
+* If the implementation of nsWindow uses a local coordinate system within the window,
+* this method must be overridden
+*
+**/
+NS_METHOD nsBaseWidget::GetScreenBounds(nsRect &aRect)
+{
+  return GetBounds(aRect);
+}
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden
