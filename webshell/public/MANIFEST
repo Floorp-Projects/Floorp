@@ -7,3 +7,5 @@ nsILinkHandler.h
 nsweb.h
 nsIWebShell.h
 nsIContentViewerContainer.h
+nsIBrowserWindow.h
+nsIThrobber.h
