@@ -482,6 +482,7 @@ sub BuildClientDist()
 
     #XPINSTALL (the one and only!)
     InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");
+    InstallFromManifest(":mozilla:xpinstall:public:MANIFEST_PREFS",				    $dist_dir."Components:", 1);
     BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",                 "xpinstall");
   
    #FULL CIRCLE    
