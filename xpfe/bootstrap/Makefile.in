@@ -65,7 +65,6 @@ ifndef TOOLKIT_EXORCISM
 endif
 
 LIBS		+= \
-		-lxpcom \
 		$(UN_EXORCISED_WIDGET_FLAGS) \
 		-lraptorgfx \
 		$(UN_EXORCISED_GFX_FLAGS) \
