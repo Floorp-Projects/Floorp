@@ -501,8 +501,8 @@ nsFileOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUin
 NS_IMETHODIMP
 nsFileOutputStream::GetNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
