@@ -1263,7 +1263,7 @@ enum ADDRESSBOOK_EXPORT_FILE_TYPE
 {
  LDIF_EXPORT_TYPE =  0,
  CSV_EXPORT_TYPE = 1,
- TAB_EXPORT_TYPE = 2,
+ TAB_EXPORT_TYPE = 2
 };
 
 NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
