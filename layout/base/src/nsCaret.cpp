@@ -182,11 +182,11 @@ NS_METHOD nsCaret::NotifySelectionChanged()
 
 #pragma mark -
 
+
 //-----------------------------------------------------------------------------
-nsresult nsCaret::StartBlinking()
+nsresult nsCaret::PrimeTimer()
 {
 	NS_IF_RELEASE(mBlinkTimer);
-	mBlinkTimer = nsnull;
 	
 	// set up the blink timer
 	if (mBlinkRate > 0)
@@ -198,7 +198,16 @@ nsresult nsCaret::StartBlinking()
 		
 		mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate);
 	}
-	
+
+	return NS_OK;
+}
+
+
+//-----------------------------------------------------------------------------
+nsresult nsCaret::StartBlinking()
+{
+	PrimeTimer();
+		
   NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
   
 	DrawCaret();		// draw it right away
@@ -214,7 +223,6 @@ nsresult nsCaret::StopBlinking()
 		DrawCaret();
 	
 	NS_IF_RELEASE(mBlinkTimer);
-	mBlinkTimer = nsnull;
 	return NS_OK;
 }
 
@@ -237,11 +245,11 @@ void nsCaret::DrawCaret()
 	// from the selection, and store the rect. If we are drawn, we _have_ to erase,
 	// which why the rect is stored, and the stored rect used to erase.
 	
-  if (PR_TRUE || !mDrawn)
+  if (!mDrawn)
   {
 	  nsCOMPtr<nsIDOMSelection> domSelection;
 	  nsresult err = mPresShell->GetSelection(getter_AddRefs(domSelection));
-	  if (!NS_SUCCEEDED(err) || (nsnull == domSelection))
+	  if (!NS_SUCCEEDED(err) || !domSelection)
 	  	return;
 	  	
 	  PRBool isCollapsed;
@@ -252,7 +260,7 @@ void nsCaret::DrawCaret()
 			nsCOMPtr<nsIDOMNode>	focusNode;
 			PRInt32	focusOffset;
 			
-			domSelection->GetFocusNodeAndOffset(getter_doesnt_AddRef(focusNode), &focusOffset);
+			domSelection->GetFocusNodeAndOffset(getter_AddRefs(focusNode), &focusOffset);
 			
 			// is this a text node?
 			nsCOMPtr<nsIDOMCharacterData>	nodeAsText(do_QueryInterface(focusNode));
@@ -330,10 +338,7 @@ void nsCaret::DrawCaret()
 		mDrawn = !mDrawn;
 	}
 
-	// prime the timer again
-	if (mBlinkTimer)
-		mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate);
-
+	PrimeTimer();
 }
 
 

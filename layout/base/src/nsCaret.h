@@ -58,6 +58,8 @@ class nsCaret : public nsICaret,
 	
 	protected:
 
+		nsresult			PrimeTimer();
+		
 		nsresult			StartBlinking();
 		nsresult			StopBlinking();
 		

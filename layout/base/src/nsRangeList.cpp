@@ -1264,6 +1264,10 @@ nsRangeList::DeleteFromDocument()
 NS_IMETHODIMP
 nsRangeList::GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnchorOffset)
 {
+	if (!outAnchorNode || !outAnchorOffset)
+		return NS_ERROR_NULL_POINTER;
+
+	NS_IF_ADDREF((nsIDOMNode *)mAnchorNode);
   *outAnchorNode = mAnchorNode;
   *outAnchorOffset = mAnchorOffset;
 	return NS_OK;
@@ -1276,6 +1280,10 @@ nsRangeList::GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnch
 NS_IMETHODIMP
 nsRangeList::GetFocusNodeAndOffset(nsIDOMNode** outFocusNode, PRInt32 *outFocusOffset)
 {
+	if (!outFocusNode || !outFocusOffset)
+		return NS_ERROR_NULL_POINTER;
+	
+	NS_IF_ADDREF((nsIDOMNode *)mFocusNode);
   *outFocusNode = mFocusNode;
   *outFocusOffset = mFocusOffset;
   return NS_OK;
