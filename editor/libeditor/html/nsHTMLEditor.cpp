@@ -2870,7 +2870,6 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDO
   if (TagName.EqualsWithConversion("hr"))
   {
     // Note that we read the user's attributes for these from prefs (in InsertHLine JS)
-    newElement->SetAttribute(NS_LITERAL_STRING("align"),NS_LITERAL_STRING("center"));
     newElement->SetAttribute(NS_LITERAL_STRING("width"),NS_LITERAL_STRING("100%"));
     newElement->SetAttribute(NS_LITERAL_STRING("size"),NS_LITERAL_STRING("2"));
   } else if (TagName.EqualsWithConversion("table"))
