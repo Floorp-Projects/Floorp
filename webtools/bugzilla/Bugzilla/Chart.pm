@@ -230,7 +230,7 @@ sub readData {
 
     # Prepare the query which retrieves the data for each series
     my $query = "SELECT " . $dbh->sql_to_days('series_date') . " - " . 
-                            $dbh->sql_to_days('FROM_UNIXTIME($datefrom)') .
+                            $dbh->sql_to_days("FROM_UNIXTIME($datefrom)") .
                 ", series_value FROM series_data " .
                 "WHERE series_id = ? " .
                 "AND series_date >= FROM_UNIXTIME($datefrom)";
