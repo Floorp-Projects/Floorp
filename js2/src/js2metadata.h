@@ -53,7 +53,8 @@ class JS2Metadata;
 class JS2Class;
 class StaticBinding;
 class Environment;
-class Context;  
+class Context;
+class CompoundAttribute;
 typedef jsval js2val;
 
 typedef void (Invokable)();
@@ -82,16 +83,18 @@ public:
     Attribute(AttributeKind kind) : kind(kind) { }
 
     static Attribute *combineAttributes(Attribute *a, Attribute *b);
+    static CompoundAttribute *toCompoundAttribute(Attribute *a);
 
-#ifdef DEBUG
-    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
-#endif
+    virtual CompoundAttribute *toCompoundAttribute()    { ASSERT(false); return NULL; }
+
 };
 
 // A Namespace (is also an attribute)
 class Namespace : public Attribute {
 public:
     Namespace(StringAtom &name) : Attribute(NamespaceKind), name(name) { }
+
+    virtual CompoundAttribute *toCompoundAttribute();
 
     StringAtom &name;       // The namespace's name used by toString
 };
@@ -482,6 +485,7 @@ public:
 class TrueAttribute : public Attribute {
 public:
     TrueAttribute() : Attribute(TrueKind) { }
+    virtual CompoundAttribute *toCompoundAttribute();
 };
 
 // The 'false' attribute
@@ -496,6 +500,8 @@ class CompoundAttribute : public Attribute {
 public:
     CompoundAttribute();
     void addNamespace(Namespace *n);
+
+    virtual CompoundAttribute *toCompoundAttribute()    { return this; }
 
     NamespaceList *namespaces;      // The set of namespaces contained in this attribute
     bool xplicit;                   // true if the explicit attribute has been given

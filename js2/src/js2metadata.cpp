@@ -119,6 +119,17 @@ namespace MetaData {
                         defineHoistedVar(env, *v->name, p);
                     }
                     else {
+                        CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
+                        if (a->dynamic || a->prototype)
+                            reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                        MemberModifier memberMod = a->memberMod;
+                        if ((env->getTopFrame()->kind == Frame::Class)
+                                && (memberMod == Attribute::NoModifier))
+                            memberMod == Attribute::Final;
+                        switch (memberMod) {
+                        case Attribute::NoModifier:
+                        case Attribute::Static:
+                        }
                     }
 
                     v = v->next;
@@ -400,6 +411,26 @@ namespace MetaData {
             namespaces(NULL), xplicit(false), dynamic(false), memberMod(NoModifier), 
             overrideMod(NoOverride), prototype(false), unused(false) 
     { 
+    }
+
+    CompoundAttribute *Attribute::toCompoundAttribute(Attribute *a)
+    { 
+        if (a) 
+            return a->toCompoundAttribute(); 
+        else
+            return new CompoundAttribute();
+    }
+
+    CompoundAttribute *Namespace::toCompoundAttribute()    
+    { 
+        CompoundAttribute *t = new CompoundAttribute(); 
+        t->addNamespace(this); 
+        return t; 
+    }
+
+    CompoundAttribute *TrueAttribute::toCompoundAttribute()    
+    { 
+        return new CompoundAttribute(); 
     }
 
 
