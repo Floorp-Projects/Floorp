@@ -97,7 +97,7 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	/* Actually, the only way to implement forward inline is to simulate a template message. 
 	   Maybe one day when we will have more time we can change that
 	*/
-	if (type == nsIMsgCompType::ForwardInline)
+	if (type == nsIMsgCompType::ForwardInline || type == nsIMsgCompType::Draft || type == nsIMsgCompType::Template)
 	{
 	    nsCOMPtr<nsIMsgDraft> pMsgDraft;
 	    rv = nsComponentManager::CreateInstance(kMsgDraftCID,
@@ -105,8 +105,21 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	                                 nsCOMTypeInfo<nsIMsgDraft>::GetIID(), 
 	                                 getter_AddRefs(pMsgDraft));
 	    if (NS_SUCCEEDED(rv) && pMsgDraft)
-	    	rv = pMsgDraft->OpenDraftMsg(originalMsgURI, nsnull, identity, PR_TRUE);
+		{
+			switch(type)
+			{
+				case nsIMsgCompType::ForwardInline:
+	    			rv = pMsgDraft->OpenDraftMsg(originalMsgURI, nsnull, identity, PR_TRUE);
+					break;
+				case nsIMsgCompType::Draft:
+	    			rv = pMsgDraft->OpenDraftMsg(originalMsgURI, nsnull, identity, PR_FALSE);
+					break;
+				case nsIMsgCompType::Template:
+	    			rv = pMsgDraft->OpenEditorTemplate(originalMsgURI, nsnull, identity);
+					break;
+			}
 
+		}
 		return rv;
 	}
 

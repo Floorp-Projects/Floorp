@@ -25,7 +25,7 @@
  */
  
 var msgComposeType = Components.interfaces.nsIMsgCompType;
-var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
+var msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
 var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
 
 var prefs = Components.classes['component://netscape/preferences'].getService();
@@ -403,19 +403,19 @@ function MsgDeleteFolder()
 
 function MsgNewMessage(event)
 {
-  ComposeMessage(msgComposeType.New, msgComposFormat.Default);
+  ComposeMessage(msgComposeType.New, msgComposeFormat.Default);
 } 
 
 function MsgReplyMessage(event)
 {
   dump("\nMsgReplyMessage from XUL\n");
-  ComposeMessage(msgComposeType.Reply, msgComposFormat.Default);
+  ComposeMessage(msgComposeType.Reply, msgComposeFormat.Default);
 }
 
 function MsgReplyToAllMessage(event) 
 {
   dump("\nMsgReplyToAllMessage from XUL\n");
-  ComposeMessage(msgComposeType.ReplyAll, msgComposFormat.Default);
+  ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.Default);
 }
 
 function MsgForwardMessage(event)
@@ -435,13 +435,13 @@ function MsgForwardMessage(event)
 function MsgForwardAsAttachment(event)
 {
   dump("\nMsgForwardAsAttachment from XUL\n");
-  ComposeMessage(msgComposeType.ForwardAsAttachment, msgComposFormat.Default);
+  ComposeMessage(msgComposeType.ForwardAsAttachment, msgComposeFormat.Default);
 }
 
 function MsgForwardAsInline(event)
 {
   dump("\nMsgForwardAsInline from XUL\n");
-  ComposeMessage(msgComposeType.ForwardInline, msgComposFormat.Default);
+  ComposeMessage(msgComposeType.ForwardInline, msgComposeFormat.Default);
 }
 
 function MsgCopyMessage(destFolder)

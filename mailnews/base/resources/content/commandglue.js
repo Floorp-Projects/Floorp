@@ -157,7 +157,8 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 			{	
 				dump('i = '+ i);
 				dump('\n');				
-				if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline)
+				if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
+					type == msgComposeType.Template || type == msgComposeType.Draft)
 				{
 					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, identity);
 				}

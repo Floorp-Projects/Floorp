@@ -574,9 +574,23 @@ function ThreadPaneOnClick(event)
 		}
 		dump('clicked on a twisty\n');
     }
-
+	else if(event.clickCount == 2)
+	{
+		ThreadPaneDoubleClick(event.target.parentNode.parentNode);
+	}
 }
 
+function ThreadPaneDoubleClick(treeitem)
+{
+	if(IsSpecialFolderSelected("Drafts"))
+	{
+		ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default);
+	}
+	else if(IsSpecialFolderSelected("Templates"))
+	{
+		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default);
+	}
+}
 
 function ChangeSelection(tree, newSelection)
 {
