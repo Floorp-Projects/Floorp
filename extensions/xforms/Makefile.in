@@ -83,6 +83,8 @@ CPPSRCS		= \
 		nsXFormsInputElement.cpp \
  		nsXFormsGroupElement.cpp \
 		nsXFormsOutputElement.cpp \
+		nsXFormsRepeatElement.cpp \
+		nsXFormsRepeatItemElement.cpp \
 		nsXFormsTriggerElement.cpp \
 		nsXFormsSubmissionElement.cpp \
 		nsXFormsStubElement.cpp \

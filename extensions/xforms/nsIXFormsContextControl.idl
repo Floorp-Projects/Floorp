@@ -59,4 +59,9 @@ interface nsIXFormsContextControl : nsISupports
    * only be returned if the default model has an id="".
    */
   void getContext(out AString aModelID, out nsIDOMElement aContextNode, out long aContextPosition, out long aContextSize);
+
+  /**
+   * Used by parents to set the context node for children.
+   */
+  void setContextNode(in nsIDOMElement aContextNode);
 };

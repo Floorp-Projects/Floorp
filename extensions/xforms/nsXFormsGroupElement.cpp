@@ -301,6 +301,12 @@ nsXFormsGroupElement::Process()
 }
 
 // nsIXFormsContextControl
+NS_IMETHODIMP
+nsXFormsGroupElement::SetContextNode(nsIDOMElement *aContextNode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 nsXFormsGroupElement::GetContext(nsAString&      aModelID,
                                  nsIDOMElement **aContextNode,

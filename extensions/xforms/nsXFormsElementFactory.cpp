@@ -48,6 +48,13 @@ NS_HIDDEN_(nsresult) NS_NewXFormsInputElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsTextAreaElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsGroupElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsRepeatElement(nsIXTFElement **aElement);
+
+/// @todo Having \<repeatitem\> in the factory means that the item can be used
+/// by a user in a document. Not optimal, as it is not a legal XForms tag, but
+/// only a pseudo-element. But nsXFormsRepeatElement needs to be able to
+/// create the tag, so is there a "backdoor way" to do that? (XXX)
+NS_HIDDEN_(nsresult) NS_NewXFormsRepeatItemElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsTriggerElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsSubmitElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsLabelElement(nsIXTFElement **aElement);
@@ -85,6 +92,10 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsGroupElement(aElement);
   if (aTagName.EqualsLiteral("output"))
     return NS_NewXFormsOutputElement(aElement);
+  if (aTagName.EqualsLiteral("repeat"))
+    return NS_NewXFormsRepeatElement(aElement);
+  if (aTagName.EqualsLiteral("repeatitem"))
+    return NS_NewXFormsRepeatItemElement(aElement);
   if (aTagName.EqualsLiteral("label"))
     return NS_NewXFormsLabelElement(aElement);
   if (aTagName.EqualsLiteral("dispatch"))

@@ -77,6 +77,7 @@ public:
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
+  NS_IMETHOD DocumentChanged(nsIDOMDocument *aNewDocument);
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
@@ -116,6 +117,7 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE |
                                 nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
+                                nsIXTFElement::NOTIFY_DOCUMENT_CHANGED |
                                 nsIXTFElement::NOTIFY_PARENT_CHANGED);
 
   nsCOMPtr<nsIDOMElement> node;
@@ -206,10 +208,21 @@ nsXFormsInputElement::OnDestroyed()
 }
 
 NS_IMETHODIMP
+nsXFormsInputElement::DocumentChanged(nsIDOMDocument *aNewDocument)
+{
+  // We need to re-evaluate our instance data binding when our document
+  // changes, since our context can change
+  if (aNewDocument)
+    Refresh();  
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsInputElement::ParentChanged(nsIDOMElement *aNewParent)
 {
-  // We need to re-evaluate our instance data binding when our parent
-  // changes, since xmlns declarations in effect could have changed.
+  // We need to re-evaluate our instance data binding when our parent changes,
+  // since xmlns declarations or our context could have changed.
   if (aNewParent)
     Refresh();
 
