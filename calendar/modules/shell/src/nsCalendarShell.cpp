@@ -41,6 +41,7 @@
 #include "nsCapiCIID.h"
 #include "nspr.h"
 #include "prcvar.h"
+#include "nsX400Parser.h"
 
 #include "capi.h"
 #include "nsICapi.h"
@@ -138,7 +139,6 @@ int RcvData(void * pData,
       /*
        * XXX: may want to ensure that pBuf is 0 terminated.
        */
-      //pCapiCallbackReader->AddChunk(new UnicodeString(pBuf));
       char * pBufCopy = new char[strlen(pBuf)];
       strncpy(pBufCopy, pBuf, (size_t) strlen(pBuf));
       nsCapiBufferStruct * capiBuffer = new nsCapiBufferStruct();
@@ -162,7 +162,7 @@ int RcvData(void * pData,
      * the parsing thread to take over. This will help keep the 
      * list of unparsed buffers to a minimum.
      */
-    //PR_Sleep(PR_INTERVAL_NO_WAIT);
+    // PR_Sleep(PR_INTERVAL_NO_WAIT);
     return iSize > 0 ? 0 : -1;
 }
 
@@ -176,13 +176,10 @@ nsCalendarShell::nsCalendarShell()
   mShellInstance  = nsnull ;
   mDocumentContainer = nsnull ;
   mObserverManager = nsnull;
-
   mCAPIPassword = nsnull;
-
   m_pCalendar = nsnull;
   mpLoggedInUser = nsnull;
   mCommandServer = nsnull;
-
   mCAPISession = nsnull;
   mCAPIHandle = nsnull;
 }
@@ -491,19 +488,15 @@ nsresult nsCalendarShell::Logon()
   
   char* psHandle = mpLoggedInUser->GetUserName().GetBuffer();
   
-  
-  /*
-   * XXX: we need to make this more general...
-   */
   if (nsCurlParser::eCAPI == theURL.GetProtocol())
-    psHandle = ":/S=Sun/G=John/";
 
+  {
+    nsX400Parser x(theURL.GetExtra());
+    x.Delete("ND");
+    x.GetValue(&psHandle);
+  }
 
-  s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(
-        mCAPISession, 
-        psHandle,
-        0, 
-        &mCAPIHandle);
+  s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(mCAPISession,psHandle,0,&mCAPIHandle);
 
   if (CAPI_ERR_OK != s)
     return NS_OK;
