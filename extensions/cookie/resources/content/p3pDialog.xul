@@ -47,10 +47,10 @@
 <dialog id="p3pDialog"
         buttons="accept,cancel,extra1,extra2,help"
         buttonalign="center"
-        acceptLabel="&p3pDialogOff.label;"
-        cancelLabel="&p3pDialogClose.label;"
-        extra1Label="&p3pDialogViewCookies.label;"
-        extra2Label="&p3pDialogViewLevels.label;"
+        buttonlabelaccept="&p3pDialogOff.label;"
+        buttonlabelcancel="&p3pDialogClose.label;"
+        buttonlabelextra1="&p3pDialogViewCookies.label;"
+        buttonlabelextra2="&p3pDialogViewLevels.label;"
         title="&p3pDialogTitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="init();"
@@ -68,15 +68,8 @@
   {
     window.arguments[0].gButtonPressed = "";
 
-    // label the buttons
-    var dialog = document.documentElement;
-    dialog.getButton("accept").label = dialog.getAttribute("acceptLabel");
-    dialog.getButton("cancel").label = dialog.getAttribute("cancelLabel");
-    dialog.getButton("extra1").label = dialog.getAttribute("extra1Label");
-    dialog.getButton("extra2").label = dialog.getAttribute("extra2Label");
-
     // focus on the cancel button
-    dialog.getButton("cancel").focus();
+    document.documentElement.getButton("cancel").focus();
   }
 
   function ViewCookieManager() {

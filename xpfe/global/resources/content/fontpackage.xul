@@ -44,7 +44,10 @@
 
 <dialog title="&window.title;"
         id="downloadFontDialog"
+        buttonpack="center"
         buttons="accept,cancel"
+        buttonlabelaccept="&downloadButton.label;"
+        buttonlabelcancel="&cancelButton.label;"
         ondialogaccept="download();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad();">
@@ -77,18 +80,6 @@
 
       <description id="install" value="&install;"/>
 
-      <separator orient="horizontal"/>
-
-      <hbox>
-        <spacer flex="1"/>
-        <button dlgtype="accept" default="true"
-                label="&downloadButton.label;"
-                id="downloadButton"/>
-        <button dlgtype="cancel"
-                label="&cancelButton.label;"
-                id="cancelButton"/>
-        <spacer flex="1"/>
-      </hbox>
     </vbox>
   </hbox>
 </dialog>
