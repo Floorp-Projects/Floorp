@@ -189,16 +189,7 @@ public:
     {0x81, 0x63, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
 
-class nsIShutdownListener : public nsISupports {
-public:
-
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISHUTDOWNLISTENER_IID);
-
-    NS_IMETHOD
-    OnShutdown(const nsCID& aClass, nsISupports* service) = 0;
-
-};
-
+class nsIShutdownListener;
 
 
 template <class DestinationType>
