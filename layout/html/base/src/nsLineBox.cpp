@@ -31,7 +31,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
   mNext = nsnull;
   mBounds.SetRect(0,0,0,0);
   mCombinedArea.SetRect(0,0,0,0);
-  mCarriedOutTopMargin = 0;
+//XXX  mCarriedOutTopMargin = 0;
   mCarriedOutBottomMargin = 0;
   mBreakType = NS_STYLE_CLEAR_NONE;
 }
@@ -82,9 +82,11 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   char cbuf[100];
   fprintf(out, "line %p: count=%d state=%s ",
           this, ChildCount(), StateToString(cbuf, sizeof(cbuf)));
+#if XXX
   if (0 != mCarriedOutTopMargin) {
     fprintf(out, "tm=%d ", mCarriedOutTopMargin);
   }
+#endif
   if (0 != mCarriedOutBottomMargin) {
     fprintf(out, "bm=%d ", mCarriedOutBottomMargin);
   }

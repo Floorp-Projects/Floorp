@@ -85,9 +85,9 @@ public:
                        nsIFrame** aNextRCFrame,
                        nsReflowStatus& aReflowStatus);
 
-  nscoord GetCarriedOutTopMargin() const {
-    return mCarriedOutTopMargin;
-  }
+//XXX  nscoord GetCarriedOutTopMargin() const {
+//XXX    return mCarriedOutTopMargin;
+//XXX  }
 
   nscoord GetCarriedOutBottomMargin() const {
     return mCarriedOutBottomMargin;
@@ -243,7 +243,7 @@ protected:
   nscoord mBottomEdge;
   nscoord mMaxTopBoxHeight;
   nscoord mMaxBottomBoxHeight;
-  nscoord mCarriedOutTopMargin;
+//XXX  nscoord mCarriedOutTopMargin;
   nscoord mCarriedOutBottomMargin;
 
   nsTextRun* mReflowTextRuns;

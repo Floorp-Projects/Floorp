@@ -1163,7 +1163,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   // Record ascent and update max-ascent and max-descent values
   pfd->mAscent = aMetrics.ascent;
   pfd->mDescent = aMetrics.descent;
-  mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
+//XXX  mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
   mCarriedOutBottomMargin = aMetrics.mCarriedOutBottomMargin;
 
   // If the band was updated during the reflow of that frame then we
