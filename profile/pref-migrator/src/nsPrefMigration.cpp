@@ -107,8 +107,8 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-static NS_DEFINE_IID(kIPrefMigration_IID, NS_IPrefMigration_IID);
-static NS_DEFINE_IID(kPrefMigration_CID,  NS_PrefMigration_CID);
+static NS_DEFINE_IID(kIPrefMigrationIID, NS_IPREFMIGRATION_IID);
+static NS_DEFINE_IID(kPrefMigrationCID,  NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static PRInt32 gInstanceCnt = 0;
@@ -840,7 +840,7 @@ NSCanUnload(nsISupports* serviceMgr)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServiceMgr, const char *path)
 {
-  nsRepository::RegisterComponent(kPrefMigration_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+  nsRepository::RegisterComponent(kPrefMigrationCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
  
   return NS_OK;
 }
@@ -848,7 +848,7 @@ NSRegisterSelf(nsISupports* aServiceMgr, const char *path)
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServiceMgr, const char *path)
 {
-  //nsRepository::UnregisterFactory(kPrefMigration_CID, path);
+  //nsRepository::UnregisterFactory(kPrefMigrationCID, path);
   return NS_OK;
 }
 
@@ -868,7 +868,7 @@ NSGetFactory(nsISupports* serviceMgr,
   *aFactory = NULL;
   nsISupports *inst;
 
-  if ( aClass.Equals(kPrefMigration_CID) )
+  if ( aClass.Equals(kPrefMigrationCID) )
   {
     inst = new nsPrefMigrationFactory();        
   }

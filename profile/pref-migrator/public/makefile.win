@@ -20,7 +20,7 @@ DEPTH=..\..\..
 MODULE=prefmigr
 
 DEFINES=-D_IMPL_NS_DOM 
-EXPORTS=nsPrefMigrationIIDs.h
+EXPORTS=nsPrefMigrationCIDs.h
 
 XPIDLSRCS = 	.\nsIPrefMigrationProgress.idl        \
 		.\nsIPrefMigration.idl			\

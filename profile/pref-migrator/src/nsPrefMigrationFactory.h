@@ -20,7 +20,7 @@
 #ifndef nsPrefMigrationFactory_h___
 #define nsPrefMigrationFactory_h___
 
-#include "nsPrefMigrationIIDs.h"
+#include "nsPrefMigrationCIDs.h"
 #include "nsIFactory.h"
 
 class nsPrefMigrationFactory : public nsIFactory 

@@ -17,4 +17,4 @@
 #
 nsIPrefMigrationProgress.idl
 nsIPrefMigration.idl
-nsPrefMigrationIIDs.h
+nsPrefMigrationCIDs.h

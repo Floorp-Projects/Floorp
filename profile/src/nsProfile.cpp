@@ -61,7 +61,7 @@
 #endif
 
 #include "nsIPrefMigration.h"
-#include "nsPrefMigrationIIDs.h"
+#include "nsPrefMigrationCIDs.h"
 
 // included for XPlatform coding 
 #include "nsFileStream.h"
@@ -131,8 +131,7 @@ static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
-static NS_DEFINE_IID(kIPrefMigration_IID, NS_IPrefMigration_IID);
-static NS_DEFINE_CID(kPrefMigration_CID, NS_PrefMigration_CID);
+static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 
 class nsProfile: public nsIProfile,
                  public nsIShutdownListener
@@ -2231,9 +2230,9 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	nsCOMPtr <nsIPrefMigration> pPrefMigrator;
 
 
-	rv = nsComponentManager::CreateInstance(kPrefMigration_CID, 
-                                          nsnull, 
-                                          kIPrefMigration_IID, 
+	rv = nsComponentManager::CreateInstance(kPrefMigrationCID, 
+                                          nsnull,
+					NS_GET_IID(nsIPrefMigration),
 					getter_AddRefs(pPrefMigrator));
     if (NS_FAILED(rv)) return rv;
                                       
