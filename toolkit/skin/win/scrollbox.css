@@ -5,12 +5,14 @@
  */
 .autorepeatbutton-up 
   {
-    list-style-image      : url("chrome://global/skin/arrow/arrow-up.gif")
+    list-style-image      : url("chrome://global/skin/arrow/arrow-up.gif");
+    -moz-image-region     : auto; /* cut off inheritance */
   }
 
 .autorepeatbutton-down 
   {
-    list-style-image      : url("chrome://global/skin/arrow/arrow-dn.gif")
+    list-style-image      : url("chrome://global/skin/arrow/arrow-dn.gif");
+    -moz-image-region     : auto; /* cut off inheritance */
   }
 
 autorepeatbutton 
