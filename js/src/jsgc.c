@@ -584,7 +584,7 @@ js_LockGCThing(JSContext *cx, void *thing)
                     JS_DHashTableOperate(rt->gcLocksHash, thing,
                                          JS_DHASH_LOOKUP);
                 JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr));
-                if (JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr) {
+                if (JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr)) {
                     JS_ASSERT(lhe->count >= 1);
                     lhe->count++;
                 }
