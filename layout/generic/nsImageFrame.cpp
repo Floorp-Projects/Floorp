@@ -750,6 +750,8 @@ NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIPresConte
 
     mLoads[0].mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
     if (!r.IsEmpty()) {
+      r.x += mBorderPadding.left;
+      r.y += mBorderPadding.top;
       Invalidate(aPresContext, r, PR_FALSE);
     }
   }
