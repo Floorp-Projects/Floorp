@@ -926,6 +926,43 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
                                                   nsAString& aHandler,
                                                   nsAString& aDescription,
                                                   nsAString& aMozillaFlags) {
+  
+  /*
+   * The mailcap lookup is two-pass to handle the case of mailcap files
+   * that have something like:
+   *
+   * text/*; emacs %s
+   * text/rtf; soffice %s
+   *
+   * in that order.  We want to pick up "soffice" for text/rtf in such cases
+   */
+  nsresult rv = DoLookUpHandlerAndDescription(aMajorType,
+                                              aMinorType,
+                                              aTypeOptions,
+                                              aHandler,
+                                              aDescription,
+                                              aMozillaFlags);
+  if (NS_FAILED(rv)) {
+    // maybe we have an entry for "aMajorType/*"?
+    rv = DoLookUpHandlerAndDescription(aMajorType,
+                                       NS_LITERAL_STRING("*"),
+                                       aTypeOptions,
+                                       aHandler,
+                                       aDescription,
+                                       aMozillaFlags);
+  }
+
+  return rv;
+}
+
+// static
+nsresult
+nsOSHelperAppService::DoLookUpHandlerAndDescription(const nsAString& aMajorType,
+                                                    const nsAString& aMinorType,
+                                                    nsHashtable& aTypeOptions,
+                                                    nsAString& aHandler,
+                                                    nsAString& aDescription,
+                                                    nsAString& aMozillaFlags) {
   LOG(("-- LookUpHandlerAndDescription for type '%s/%s'\n",
        NS_LossyConvertUCS2toASCII(aMajorType).get(),
        NS_LossyConvertUCS2toASCII(aMinorType).get()));
@@ -1241,16 +1278,14 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   
   LOG(("Here we do an extension lookup for '%s'\n", aFileExt));
 
-  nsresult rv;
-
   nsAutoString mimeType, majorType, minorType,
                mime_types_description, mailcap_description,
                handler, mozillaFlags;
   
-  rv = LookUpTypeAndDescription(NS_ConvertUTF8toUCS2(aFileExt),
-                                majorType,
-                                minorType,
-                                mime_types_description);
+  nsresult rv = LookUpTypeAndDescription(NS_ConvertUTF8toUCS2(aFileExt),
+                                         majorType,
+                                         minorType,
+                                         mime_types_description);
   if (NS_FAILED(rv))
     return nsnull;
 
@@ -1273,24 +1308,9 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   mimeInfo->SetMIMEType(NS_ConvertUCS2toUTF8(mimeType).get());
   mimeInfo->AppendExtension(aFileExt);
   nsHashtable typeOptions; // empty hash table
-  /*
-    The mailcap lookup is two-pass to handle the case of mailcap files
-    that have something like:
-
-    text/*; emacs %s
-    text/rtf; soffice %s
-
-    in that order.  We want to pick up "soffice" for text/rtf in such cases
-  */
   rv = LookUpHandlerAndDescription(majorType, minorType, typeOptions,
                                    handler, mailcap_description,
                                    mozillaFlags);
-  if (NS_FAILED(rv)) {
-    // maybe we have an entry for "majorType/*"?
-    rv = LookUpHandlerAndDescription(majorType, NS_LITERAL_STRING("*"),
-                                     typeOptions, handler, mailcap_description,
-                                     mozillaFlags);
-  }
   LOG(("Handler/Description results:  handler='%s', description='%s', mozillaFlags='%s'\n",
           NS_LossyConvertUCS2toASCII(handler).get(),
           NS_LossyConvertUCS2toASCII(mailcap_description).get(),
@@ -1302,7 +1322,12 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
   } else {
     mimeInfo->SetDescription(mailcap_description.get());
   }
-  if (NS_SUCCEEDED(rv) && !handler.IsEmpty()) {
+
+  if (NS_SUCCEEDED(rv) && handler.IsEmpty()) {
+    rv = NS_ERROR_NOT_AVAILABLE;
+  }
+  
+  if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIFile> handlerFile;
     rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
     
@@ -1311,34 +1336,24 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
       mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
       mimeInfo->SetDefaultDescription(handler.get());
     }
-  } else {
+  }
+
+  if (NS_FAILED(rv)) {
     mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
 
   return mimeInfo;
-  
-  // XXX Once cache can be invalidated, add the mime info to it.  See bug 121644
-  // AddMimeInfoToCache(*_retval);
-
 }
 
 already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetFromType(const char *aMIMEType) {
-  // if the extension is null, return immediately
-  if (!aMIMEType)
+  // if the type is null, return immediately
+  if (!aMIMEType || !*aMIMEType)
     return nsnull;
   
   LOG(("Here we do a mimetype lookup for '%s'\n", aMIMEType));
-  nsresult rv;
-  nsAutoString extensions,
-    mime_types_description, mailcap_description,
-    handler, mozillaFlags;
-
-  nsHashtable typeOptions;
-  
   // extract the major and minor types
-  nsAutoString mimeType;
-  mimeType.AssignWithConversion(aMIMEType);
+  NS_ConvertASCIItoUTF16 mimeType(aMIMEType);
   nsAString::const_iterator start_iter, end_iter,
                             majorTypeStart, majorTypeEnd,
                             minorTypeStart, minorTypeEnd;
@@ -1347,62 +1362,50 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
   mimeType.EndReading(end_iter);
 
   // XXX FIXME: add typeOptions parsing in here
-  rv = ParseMIMEType(start_iter, majorTypeStart, majorTypeEnd,
-                     minorTypeStart, minorTypeEnd, end_iter);
+  nsHashtable typeOptions;  
+  nsresult rv = ParseMIMEType(start_iter, majorTypeStart, majorTypeEnd,
+                              minorTypeStart, minorTypeEnd, end_iter);
 
   if (NS_FAILED(rv)) {
     return nsnull;
   }
 
+  nsAutoString mailcap_description, handler, mozillaFlags;
+
   nsDependentSubstring majorType(majorTypeStart, majorTypeEnd);
   nsDependentSubstring minorType(minorTypeStart, minorTypeEnd);
-  /*
-    The mailcap lookup is two-pass to handle the case of mailcap files
-    that have something like:
-
-    text/*; emacs %s
-    text/rtf; soffice %s
-
-    in that order.  We want to pick up "soffice" for text/rtf in such cases
-  */
-  rv = LookUpHandlerAndDescription(majorType,
-                                   minorType,
-                                   typeOptions,
-                                   handler,
-                                   mailcap_description,
-                                   mozillaFlags);
-  if (NS_FAILED(rv)) {
-    // maybe we have an entry for "majorType/*"?
-    rv = LookUpHandlerAndDescription(majorType,
-                                     NS_LITERAL_STRING("*"),
-                                     typeOptions,
-                                     handler,
-                                     mailcap_description,
-                                     mozillaFlags);
-  }
+  LookUpHandlerAndDescription(majorType,
+                              minorType,
+                              typeOptions,
+                              handler,
+                              mailcap_description,
+                              mozillaFlags);
   LOG(("Handler/Description results:  handler='%s', description='%s', mozillaFlags='%s'\n",
           NS_LossyConvertUCS2toASCII(handler).get(),
           NS_LossyConvertUCS2toASCII(mailcap_description).get(),
           NS_LossyConvertUCS2toASCII(mozillaFlags).get()));
   
-  if (handler.IsEmpty()) {
-    // we have no useful info....
-    return nsnull;
-  }
-  
   mailcap_description.Trim(" \t\"");
   mozillaFlags.Trim(" \t");
+
+  nsAutoString extensions, mime_types_description;
   LookUpExtensionsAndDescription(majorType,
                                  minorType,
                                  extensions,
                                  mime_types_description);
 
+  if (handler.IsEmpty() && extensions.IsEmpty() &&
+      mailcap_description.IsEmpty() && mime_types_description.IsEmpty()) {
+    // No real useful info
+    return nsnull;
+  }
+  
   nsIMIMEInfo* mimeInfo = nsnull;
   rv = CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mimeInfo);
   if (NS_FAILED(rv))
     return nsnull;
 
-  mimeInfo->SetFileExtensions(PromiseFlatCString(NS_ConvertUCS2toUTF8(extensions)).get());
+  mimeInfo->SetFileExtensions(NS_ConvertUCS2toUTF8(extensions).get());
   mimeInfo->SetMIMEType(aMIMEType);
   if (! mime_types_description.IsEmpty()) {
     mimeInfo->SetDescription(mime_types_description.get());
@@ -1410,9 +1413,11 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
     mimeInfo->SetDescription(mailcap_description.get());
   }
 
-  rv = NS_ERROR_FAILURE;
+  rv = NS_ERROR_NOT_AVAILABLE;
   nsCOMPtr<nsIFile> handlerFile;
-  rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
+  if (!handler.IsEmpty()) {
+    rv = GetFileTokenForPath(handler.get(), getter_AddRefs(handlerFile));
+  }
   
   if (NS_SUCCEEDED(rv)) {
     mimeInfo->SetDefaultApplicationHandler(handlerFile);

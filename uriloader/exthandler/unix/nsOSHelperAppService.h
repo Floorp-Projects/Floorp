@@ -122,6 +122,14 @@ private:
                                               nsAString& aHandler,
                                               nsAString& aDescription,
                                               nsAString& aMozillaFlags);
+  
+  static nsresult DoLookUpHandlerAndDescription(const nsAString& aMajorType,
+                                                const nsAString& aMinorType,
+                                                nsHashtable& aTypeOptions,
+                                                nsAString& aHandler,
+                                                nsAString& aDescription,
+                                                nsAString& aMozillaFlags);
+  
   static nsresult GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
                                                           const nsAString& aMajorType,
                                                           const nsAString& aMinorType,
