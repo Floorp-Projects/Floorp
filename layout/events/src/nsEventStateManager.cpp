@@ -1247,7 +1247,7 @@ nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, nsIFrame* aFocusFram
 {
   nsCOMPtr<nsIFocusableContent> focusChange = do_QueryInterface(aFocusContent);
   
-  if (focusChange) {
+  if (focusChange && aFocusFrame) {
  
     PRBool surpressBlurAndFocus = PR_FALSE;
     nsCOMPtr<nsIStyleContext> context;
