@@ -31,7 +31,6 @@ EmitHtmlHeader("administer tinderbox", "tree: $tree");
 
 &load_data;
 
-
 if( -r "$tree/mod.pl" ){
     require "$tree/mod.pl";
 }
@@ -88,22 +87,27 @@ print "
 </FORM>
 <FORM method=post action=doadmin.cgi>
 <hr>
-
+<B><font size=+1>If builds are behaving badly you can turn them off.</font></b><br>  Uncheck
+the build that is misbehaving and click the button.  You can still see all the
+builds even if some are disabled by adding the parameter <b><tt>&noignore=1</tt></b> to
+the tinderbox URL.<br>
 <B>Password:</B> <INPUT NAME=password TYPE=password> <BR>
 <INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
-<INPUT TYPE=HIDDEN NAME=command VALUE=remove_build>
+<INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
 ";
 
-$i = 1;
-while( $i <= $name_count ){
-    $n = $build_name_names->[$i];
-    print "<INPUT TYPE=radio NAME=build VALUE='$n'>";
-    print "$n<br>\n";
-    $i++;
+@names = sort (@$build_name_names, keys %$ignore_builds) ;
+
+for $i (@names){
+    if( $i ne "" ){
+        $checked = ($ignore_builds->{$i} != 0 ? "": "CHECKED" );
+        print "<INPUT TYPE=checkbox NAME='build_$i' $checked >";
+        print "$i<br>\n";
+    }
 }
 
 print "
-<INPUT TYPE=SUBMIT VALUE='Remove Build From Page'>
+<INPUT TYPE=SUBMIT VALUE='Show only checked builds'>
 </FORM>
 <hr>
 ";

@@ -24,6 +24,7 @@ require 'globals.pl';
 
 umask O666;
 
+
 $|=1;
 
 check_password();
@@ -44,6 +45,9 @@ elsif( $command eq 'trim_logs' ){
 }
 elsif( $command eq 'set_message' ){
     &set_message;
+}
+elsif( $command eq 'disable_builds' ){
+    &disable_builds;
 } else {
     print "Unknown command: \"$command\".";
 }
@@ -160,6 +164,41 @@ sub remove_build {
     print "<h2><a href=showbuilds.cgi?tree=$tree>
             $builds_removed Builds removed from build.dat</a></h2>\n";
 }
+
+sub disable_builds {
+    my $i,%buildnames;
+    $build_name = $form{'build'};
+
+    #
+    # Trim build.dat
+    #
+    open(BD, "<$tree/build.dat");
+    while( <BD> ){
+        ($mailtime,$buildtime,$bname) = split( /\|/ );
+        $buildnames{$bname} = 0;
+    }
+    close( BD );
+
+    for $i (keys %form) {
+        if ($i =~ /^build_/ ){
+            $i =~ s/^build_//;
+            $buildnames{$i} = 1;
+        }
+    }
+
+    open(IGNORE, ">$tree/ignorebuilds.pl");
+    print IGNORE '$ignore_builds = {' . "\n";
+    for $i ( sort keys %buildnames ){
+        if( $buildnames{$i} == 0 ){
+            print IGNORE "\t\t'$i' => 1,\n";
+        }
+    }
+    print IGNORE "\t};\n";
+
+    chmod( 0777, "$tree/ignorebuilds.pl");
+    print "<h2><a href=showbuilds.cgi?tree=$treename>Build state Changed</a></h2>\n";
+}
+
 
 sub set_message {
     $m = $form{'message'};

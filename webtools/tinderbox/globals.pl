@@ -29,6 +29,7 @@ $td2 = {};
 
 $build_list = [];           # array of all build records
 $build_name_index = {};
+$ignore_builds = {};
 $build_name_names = [];
 $name_count = 0;
 
@@ -120,11 +121,16 @@ sub load_data {
     $tree2 = $form{'tree2'};
     if( $tree2 ne '' ){
         require "$tree2/treedata.pl";
+        if( -r "$tree2/ignorebuilds.pl" ){
+            require "$tree2/ignorebuilds.pl";
+        }
+
         $td2 = {};
         $td2->{name} = $tree2;
         $td2->{cvs_module} = $cvs_module;
         $td2->{cvs_branch} = $cvs_branch;
         $td2->{num} = 1;
+        $td2->{ignore_builds} = $ignore_builds;
         if( $cvs_root eq '' ){
             $cvs_root = '/m/src';
         }
@@ -142,11 +148,19 @@ sub load_data {
     die "the \"tree\" parameter must be provided\n" unless $tree;
 
     require "$tree/treedata.pl";
+    $ignore_builds = {};
+    if( -r "$tree/ignorebuilds.pl" ){
+        require "$tree/ignorebuilds.pl";
+    }
+    else {
+    }
+        
     $td1 = {};
     $td1->{name} = $tree;
     $td1->{num} = 0;
     $td1->{cvs_module} = $cvs_module;
     $td1->{cvs_branch} = $cvs_branch;
+    $td1->{ignore_builds} = $ignore_builds;
     if( $cvs_root eq '' ){
         $cvs_root = '/m/src';
     }
@@ -196,7 +210,10 @@ sub load_buildlog {
                         binaryname => $binaryname,
                         td => $t
                    };
-            if( $mailtime > 0 && $buildtime > $mindate ){
+            if( $mailtime > 0 
+                    && $buildtime > $mindate 
+                    && ($form{noignore} || !($t->{ignore_builds}->{$buildname} != 0)) 
+                ){
                 push @{$build_list}, $buildrec;
             }
         }
