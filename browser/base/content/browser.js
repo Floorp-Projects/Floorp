@@ -105,7 +105,7 @@ const dlObserver = {
       toggleSidebar("viewDownloadsSidebar");
   }
 };
-
+  
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -357,32 +357,34 @@ function Startup()
   RegisterTabOpenObserver();
 #endif
 #endif
+  var sidebarBox = document.getElementById("sidebar-box");
   if (window.opener) {
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     if (!openerSidebarBox.hidden) {
-      gMustLoadSidebar = true;
-      var sidebarBox = document.getElementById("sidebar-box");
-      sidebarBox.hidden = false;
-      var sidebarSplitter = document.getElementById("sidebar-splitter");
-      sidebarSplitter.hidden = false;
-
       var sidebarTitle = document.getElementById("sidebar-title");
       sidebarTitle.setAttribute("value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
       sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
       var sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
-      document.getElementById(sidebarCmd).setAttribute("checked", "true");
       sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
+      sidebarBox.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
     }
   }
-  
+  if (sidebarBox.hasAttribute("sidebarcommand")) { 
+    var cmd = sidebarBox.getAttribute("sidebarcommand");
+    gMustLoadSidebar = true;
+    sidebarBox.hidden = false;
+    var sidebarSplitter = document.getElementById("sidebar-splitter");
+    sidebarSplitter.hidden = false;
+    document.getElementById(cmd).setAttribute("checked", "true");
+  }
+
   // Focus the content area unless we're loading a blank page
-  var elt;
-  if (uriToLoad == "about:blank") {
-    var navBar = document.getElementById("nav-bar");
-    if (navBar && !navBar.hidden && gURLBar && !gURLBar.parentNode.parentNode.collapsed)
-      elt = gURLBar;
-    else
-      elt = _content;
+  var elt;  
+  var navBar = document.getElementById("nav-bar");    
+  if (uriToLoad == "about:blank" && navBar && !navBar.hidden && gURLBar && !gURLBar.parentNode.parentNode.collapsed)
+    elt = gURLBar;
+  else
+    elt = _content;
   }
   
   setTimeout(delayedStartup, 0, elt);
@@ -400,7 +402,8 @@ function delayedStartup(aElt)
 
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
-    sidebar.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
+    var sidebarBox = document.getElementById("sidebar-box");
+    sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
  
   // Perform default browser checking (after window opens).
@@ -463,6 +466,17 @@ function Shutdown()
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
   } catch (ex) {
+  }
+
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+  var enumerator = windowManagerInterface.getEnumerator(null);
+  enumerator.getNext();
+  if (!enumerator.hasMoreElements()) {
+    document.persist("sidebar-box", "sidebarcommand");
+    document.persist("sidebar-box", "width");
+    document.persist("sidebar-box", "src");
+    document.persist("sidebar-title", "value");
   }
 
   const service = Components.classes["@mozilla.org/observer-service;1"]
@@ -3181,12 +3195,11 @@ nsBrowserContentListener.prototype =
     },
     QueryInterface: function(iid)
     {
-        if (iid.equals(Components.interfaces.nsIURIContentListener))
-            return this;
-        if (iid.equals(Components.interfaces.nsISupportsWeakReference))
-            return this;
+        if (iid.equals(Components.interfaces.nsIURIContentListener) ||
+            iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+            iid.equals(Components.interfaces.nsISupports))
+          return this;
         throw Components.results.NS_NOINTERFACE;
-
     },
     onStartURIOpen: function(uri)
     {
@@ -3267,6 +3280,8 @@ function toggleSidebar(aCommandID) {
 
   if (elt.getAttribute("checked") == "true") {
     elt.removeAttribute("checked");
+    sidebarBox.setAttribute("sidebarcommand", "");
+    sidebarTitle.setAttribute("value", "");
     sidebarBox.hidden = true;
     sidebarSplitter.hidden = true;
     return;
@@ -3288,6 +3303,7 @@ function toggleSidebar(aCommandID) {
   if (!title)
     title = elt.getAttribute("label");
   sidebar.setAttribute("src", url);
+  sidebarBox.setAttribute("src", url);
   sidebarBox.setAttribute("sidebarcommand", elt.id);
   sidebarTitle.setAttribute("value", title);
 }
@@ -4447,8 +4463,7 @@ function SelectDetector(event, doReload)
     }
 }
 
-function SetForcedDetector()
-{
+function BrowserSetForcedDetector(doReload) {
     BrowserSetForcedDetector();
 }
 
