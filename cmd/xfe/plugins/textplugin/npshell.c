@@ -111,7 +111,7 @@ NPP_GetMIMEDescription(void)
 }
 
 NPError
-NPP_GetValue(void *future, NPPVariable variable, void *value)
+NPP_GetValue(NPP future, NPPVariable variable, void *value)
 {
 	NPError err = NPERR_NO_ERROR;
 
@@ -280,7 +280,6 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 #ifdef TEXT_PLUGIN
 		{
 			Widget netscape_widget;
-			Widget form;
 			Arg av[20];
 			int ac;
 
@@ -448,7 +447,7 @@ NPP_Print(NPP instance, NPPrint* printInfo)
 		return;
 
 	if (instance != NULL) {
-		PluginInstance* This = (PluginInstance*) instance->pdata;
+      /*PluginInstance* This = (PluginInstance*) instance->pdata;*/
 	
 		if (printInfo->mode == NP_FULL) {
 		    /*

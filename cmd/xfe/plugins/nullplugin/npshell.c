@@ -50,7 +50,7 @@ NPP_GetMIMEDescription(void)
 }
 
 NPError
-NPP_GetValue(void *instance, NPPVariable variable, void *value)
+NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 {
 	NPError err = NPERR_NO_ERROR;
 

@@ -107,7 +107,7 @@ NPP_GetMIMEDescription(void)
 #define PLUGIN_DESCRIPTION	"Tests java natives and reflection stuff."
 
 NPError
-NPP_GetValue(void *future, NPPVariable variable, void *value)
+NPP_GetValue(NPP future, NPPVariable variable, void *value)
 {
     NPError err = NPERR_NO_ERROR;
     if (variable == NPPVpluginNameString)
