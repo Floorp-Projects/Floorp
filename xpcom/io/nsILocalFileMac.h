@@ -53,6 +53,9 @@ class nsILocalFileMac : public nsISupports
 public: 
 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILOCALFILEMAC_IID)
 
+	// Use with SetFileTypeAndCreator to make creator be that of current process
+	enum { CURRENT_PROCESS_CREATOR = 0x8000000 };
+
 	// We need to be able to determine what init method was used as that
 	// will affect how we clone a nsILocalFileMac
 	NS_IMETHOD GetInitType(nsLocalFileMacInitType *type) = 0;
@@ -81,6 +84,12 @@ public:
 	// SetFileTypeAndCreator call will preserve the existing code
 	NS_IMETHOD GetFileTypeAndCreator(OSType *type, OSType *creator) = 0;
 	NS_IMETHOD SetFileTypeAndCreator(OSType type, OSType creator) = 0;
+	
+	// Methods for setting the file type from other means. Just setting the
+	// type is probably enough. The creator is set to that of the current process
+	// by default. Failure is likely on these methods - take it lightly.
+	NS_IMETHOD SetFileTypeFromSuffix(const char *suffix) = 0;
+	NS_IMETHOD SetFileTypeFromMIMEType(const char *mimetype) = 0;
 	
 	// Since Mac files can consist of both a data and resource fork we have a
 	// method that will return the combined size of both forks rather than just the

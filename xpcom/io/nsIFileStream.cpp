@@ -228,8 +228,24 @@ NS_IMETHODIMP FileImpl::Open(
     PRBool ignoredResult;
     original.ResolveSymlink(ignoredResult);
     const FSSpec& spec = original.operator const FSSpec&();
-    if (nsprMode & PR_CREATE_FILE)
-        err = FSpCreate(&spec, kCreator, 'TEXT', 0);
+    if (nsprMode & PR_CREATE_FILE) {
+        // In order to get the right file type/creator, do it with an nsILocalFileMac
+        // Don't propagate any errors in doing this. If any error, just use FSpCreate.
+        FSSpec nonConstSpec = spec;
+        nsCOMPtr<nsILocalFileMac> macFile;
+        nsresult res = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_FALSE, getter_AddRefs(macFile));
+        if (NS_SUCCEEDED(res)) {
+            nsCOMPtr<nsIFile> asFile(do_QueryInterface(macFile, &res));
+            if (NS_SUCCEEDED(res)) {
+                res = asFile->Create(nsIFile::NORMAL_FILE_TYPE, 0);
+                if (res == NS_ERROR_FILE_ALREADY_EXISTS)
+                    res = NS_OK;
+            }
+        }
+        if (NS_FAILED(res))
+            err = FSpCreate(&spec, kCreator, 'TEXT', 0);
+    }
+
     if (err == dupFNErr)
         err = noErr;
     if (err != noErr)

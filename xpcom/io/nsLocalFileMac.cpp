@@ -26,11 +26,14 @@
 
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
+#include "nsXPIDLString.h" 
 
 #include "nsLocalFileMac.h"
 
 #include "nsISimpleEnumerator.h"
 #include "nsIComponentManager.h"
+#include "nsIInternetConfigService.h"
+#include "nsIMIMEInfo.h"
 #include "prtypes.h"
 #include "prerror.h"
 #include "pprio.h" // Include this rather than prio.h so we get def of PR_ImportFile
@@ -61,6 +64,10 @@ extern "C"
 {
 #include <FSp_fopen.h>
 }
+
+#pragma mark [Constants]
+
+const OSType kDefaultCreator = 'MOSS';
 
 #pragma mark [static util funcs]
 
@@ -772,6 +779,9 @@ class nsDirEnumerator : public nsISimpleEnumerator
 NS_IMPL_ISUPPORTS(nsDirEnumerator, NS_GET_IID(nsISimpleEnumerator));
 
 #pragma mark -
+
+OSType nsLocalFile::mgCurrentProcessSignature = 0;
+
 #pragma mark [CTOR/DTOR]
 nsLocalFile::nsLocalFile()
 :	mInitType(eNotInitialized)
@@ -779,12 +789,16 @@ nsLocalFile::nsLocalFile()
 ,	mHaveFileInfo(PR_FALSE)
 ,   mFollowSymlinks(PR_FALSE)
 ,   mType('????')
-,   mCreator('MOSS')
+,   mCreator(kDefaultCreator)
 {
 	NS_INIT_REFCNT();
 
 	MakeDirty();	
 	ClearFSSpec(mSpec);
+	
+	DetermineCurrentProcessCreator();
+	if (mgCurrentProcessSignature != 0)
+	    mCreator = mgCurrentProcessSignature;
 }
 
 nsLocalFile::~nsLocalFile()
@@ -1037,7 +1051,10 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 		return MacErrorMapper(err);
 	
 	if (flags & PR_CREATE_FILE)
+	{
+	    SetOSTypeFromExtension();
 		err = ::FSpCreate(&spec, mCreator, mType, 0);
+    }
 	   
 	/* If opening with the PR_EXCL flag the existence of the file prior to opening is an error */
 	if ((flags & PR_EXCL) &&  (err == dupFNErr))
@@ -1145,6 +1162,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 	switch (type)
 	{
 		case NORMAL_FILE_TYPE:
+		    SetOSTypeFromExtension();
 			err = ::FSpCreate(&mResolvedSpec, mCreator, mType, smCurrentScript);
 			return (MacErrorMapper(err));
 			break;
@@ -2605,6 +2623,9 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 	OSErr err = ::FSpGetFInfo(&mTargetSpec, &info);
 	if (err != noErr)
 		return NS_ERROR_FILE_NOT_FOUND;
+		
+	if (creator == CURRENT_PROCESS_CREATOR)
+	    creator = (mgCurrentProcessSignature != 0) ? mgCurrentProcessSignature : kDefaultCreator;
 	
 	// See if the user specified a type or creator before changing from what was read
 	if (type)
@@ -2617,6 +2638,33 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 		return NS_ERROR_FILE_ACCESS_DENIED;
 	
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsLocalFile::SetFileTypeFromSuffix(const char *suffix)
+{
+    NS_ENSURE_ARG(suffix);
+    return SetOSTypeFromExtension(suffix);
+}
+
+NS_IMETHODIMP nsLocalFile::SetFileTypeFromMIMEType(const char *mimetype)
+{
+    NS_ENSURE_ARG(mimetype);
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIInternetConfigService, icService, NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIMIMEInfo> mimeInfo;
+        rv = icService->FillInMIMEInfo(mimetype, nsnull, getter_AddRefs(mimeInfo));
+        if (NS_SUCCEEDED(rv))
+        {
+            PRUint32 osType;
+            rv = mimeInfo->GetMacType(&osType);
+            if (NS_SUCCEEDED(rv))
+                mType = osType;
+        }
+    }
+    return rv;
 }
 
 NS_IMETHODIMP  
@@ -2728,6 +2776,69 @@ nsLocalFile::OpenDocWithApp(nsILocalFile* aAppToOpenWith, PRBool aLaunchInBackgr
 	return rv;
 }
 
+nsresult nsLocalFile::SetOSTypeFromExtension(const char* extension)
+{
+    nsresult rv;
+    
+    nsXPIDLCString localExtBuf;
+    char *extPtr;
+    
+    if (!extension)
+    {
+        rv = GetLeafName(getter_Copies(localExtBuf));
+        extPtr = strrchr(localExtBuf, '.');
+        if (!extPtr)
+            return NS_ERROR_FAILURE;
+        ++extPtr;   
+    }
+    else
+    {
+        extPtr = const_cast<char *>(extension); // really, we won't touch it
+        if (*extPtr == '.')
+            ++extPtr;
+    }
+    
+    NS_WITH_SERVICE(nsIInternetConfigService, icService, NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIMIMEInfo> mimeInfo;
+        rv = icService->GetMIMEInfoFromExtension(extPtr, getter_AddRefs(mimeInfo));
+        if (NS_SUCCEEDED(rv))
+        {
+            PRUint32 osType;
+            rv = mimeInfo->GetMacType(&osType);
+            if (NS_SUCCEEDED(rv))
+                mType = osType;
+        }
+    }
+    return rv;
+}
+
+nsresult nsLocalFile::DetermineCurrentProcessCreator()
+{
+    nsresult rv = NS_OK;
+    
+    if (mgCurrentProcessSignature == 0)
+    {
+        OSErr err;
+        ProcessSerialNumber psn;
+     	ProcessInfoRec 	info;
+    	
+    	psn.highLongOfPSN = 0;
+    	psn.lowLongOfPSN  = kCurrentProcess;
+
+		info.processInfoLength = sizeof(ProcessInfoRec);
+		info.processName = nil;
+		info.processAppSpec = nil;
+		err = ::GetProcessInformation(&psn, &info);
+	    if (err == noErr)
+	        mgCurrentProcessSignature = info.processSignature;
+	    // Try again next time if error
+	    else
+	        rv = MacErrorMapper(err);
+    }
+    return NS_OK;
+}
 
 #pragma mark -
 
