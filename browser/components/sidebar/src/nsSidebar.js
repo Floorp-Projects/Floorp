@@ -107,9 +107,13 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     var win = WINMEDSVC.getMostRecentWindow( "navigator:browser" );
                                                                                 
     sidebarURLSecurityCheck(aContentURL);
+    var dialogArgs = {
+      name: aTitle,
+      url: aContentURL,
+      bWebPanel: true
+    }
     win.openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                   "centerscreen,chrome,dialog,resizable,dependent",
-                   aTitle, aContentURL, null, null, null, null, true);
+                   "centerscreen,chrome,dialog,resizable,dependent", dialogArgs);
 }
 
 /* decorate prototype to provide ``class'' methods and property accessors */
