@@ -716,7 +716,9 @@ xt_client_event_handler( Widget w, XtPointer client_data, XEvent *event)
     case FocusOut:
       break;
     case KeyPress:
+#ifdef DEBUG_XTBIN
       printf("Key Press Got!\n");
+#endif
       break;
     default:
       break;
@@ -752,7 +754,9 @@ send_xembed_message (XtClient  *xtclient,
   XSync (dpy,False);
 
   if((errorcode = untrap_error())) {
+#ifdef DEBUG_XTBIN
     printf("send_xembed_message error(%d)!!!\n",errorcode);
+#endif
   }
 }
 
@@ -775,7 +779,9 @@ untrap_error(void)
 {
   XSetErrorHandler(old_error_handler);
   if(trapped_error_code) {
+#ifdef DEBUG_XTBIN
     printf("Get X Window Error = %d\n", trapped_error_code);
+#endif
   }
   return trapped_error_code;
 }
