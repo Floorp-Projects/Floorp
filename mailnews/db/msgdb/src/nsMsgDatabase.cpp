@@ -1708,7 +1708,7 @@ PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags)
   
   nsMsgKey key;
   (void)msgHdr->GetMessageKey(&key);
-  if (m_newSet.IndexOf(key) != kNotFound)
+  if (m_newSet.GetSize() > 0 && m_newSet.GetAt(m_newSet.GetSize() - 1) == key || m_newSet.IndexOf(key) != kNotFound)
     statusFlags |= MSG_FLAG_NEW;
   else
     statusFlags &= ~MSG_FLAG_NEW;
@@ -2250,7 +2250,9 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, n
 
 NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 {
-  if (m_newSet.IndexOf(key) == kNotFound)
+  // we add new keys in increasing order...
+  if (m_newSet.GetSize() == 0 
+      || (m_newSet.GetAt(m_newSet.GetSize() - 1) < key))
     m_newSet.Add(key);
   return NS_OK;
 }
@@ -3451,7 +3453,10 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
   PRUint16 numReferences = 0;
   PRUint32 newHdrFlags = 0;
   
-  newHdr->GetFlags(&newHdrFlags);
+  // use raw flags instead of GetFlags, because GetFlags will
+  // pay attention to what's in m_newSet, and this new hdr isn't
+  // in m_newSet yet.
+  newHdr->GetRawFlags(&newHdrFlags);
   newHdr->GetNumReferences(&numReferences);
   
 #define SUBJ_THREADING 1// try reference threading first
@@ -3518,7 +3523,7 @@ nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIM
   return thread->AddChild(newHdr, inReplyTo, threadInThread, announcer);
 }
 
-nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsCString &reference)
+nsMsgHdr * nsMsgDatabase::GetMsgHdrForReference(nsCString &reference)
 {
   NS_ASSERTION(PR_FALSE, "not implemented yet.");
   return nsnull;

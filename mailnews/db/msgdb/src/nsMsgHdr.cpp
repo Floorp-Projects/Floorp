@@ -583,7 +583,7 @@ NS_IMETHODIMP nsMsgHdr::GetMessageOffset(PRUint32 *result)
   GetRawFlags(&rawFlags);
   if (rawFlags & MSG_FLAG_OFFLINE)
   {
-  	return GetUInt32Column(m_mdb->m_offlineMsgOffsetColumnToken, result);
+    return GetUInt32Column(m_mdb->m_offlineMsgOffsetColumnToken, result);
   }
   else
   {

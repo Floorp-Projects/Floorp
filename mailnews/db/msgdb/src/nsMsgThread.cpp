@@ -248,7 +248,7 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   PRBool parentKeyNeedsSetting = PR_TRUE;
   
   nsIMdbRow *hdrRow = hdr->GetMDBRow();
-  hdr->GetFlags(&newHdrFlags);
+  hdr->GetRawFlags(&newHdrFlags);
   hdr->GetMessageKey(&newHdrKey);
   hdr->GetDateInSeconds(&msgDate);
   if (msgDate > m_newestMsgDate)

@@ -256,8 +256,8 @@ NS_IMETHODIMP nsNewsDatabase::GetHighWaterArticleNum(nsMsgKey *key)
 // Do we need to keep track of known arts permanently?
 NS_IMETHODIMP nsNewsDatabase::GetLowWaterArticleNum(nsMsgKey *key)
 {
-  nsresult		rv;
-  nsMsgHdr		*pHeader;
+  nsresult  rv;
+  nsMsgHdr  *pHeader;
 
   nsCOMPtr<nsISimpleEnumerator> hdrs;
   rv = EnumerateMessages(getter_AddRefs(hdrs));
@@ -272,7 +272,7 @@ NS_IMETHODIMP nsNewsDatabase::GetLowWaterArticleNum(nsMsgKey *key)
   return pHeader->GetMessageKey(key);
 }
  
-nsresult		nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
+nsresult  nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

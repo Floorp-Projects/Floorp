@@ -504,17 +504,12 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
     const char *subject = line;  /* #### const evilness */
     PRUint32 subjectLen = strlen(line);
     
-    PRUint32 flags;
-    rv = newMsgHdr->GetFlags(&flags);
-    if (NS_FAILED(rv)) 
-      return rv;
+    PRUint32 flags = 0;
+    // ### should call IsHeaderRead here...
     /* strip "Re: " */
     nsXPIDLCString modifiedSubject;
     if (NS_MsgStripRE(&subject, &subjectLen, getter_Copies(modifiedSubject)))
-      flags |= MSG_FLAG_HAS_RE;
-    rv = newMsgHdr->SetFlags(flags); // this will make sure read flags agree with newsrc
-    if (NS_FAILED(rv)) 
-      return rv;
+      (void) newMsgHdr->OrFlags(MSG_FLAG_HAS_RE, &flags); // this will make sure read flags agree with newsrc
     
     if (! (flags & MSG_FLAG_READ))
       rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
