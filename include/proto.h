@@ -263,6 +263,26 @@ extern Bool LO_ForwardInGrid(MWContext *context);
 extern Bool LO_GridCanGoForward(MWContext *context);
 extern Bool LO_GridCanGoBackward(MWContext *context);
 
+#if defined(SingleSignon)
+extern void SI_RememberSignonData
+    (MWContext *context, LO_FormSubmitData *submit);
+extern void SI_RestoreOldSignonData
+    (MWContext *context, LO_FormElementStruct *form_element, char *URLName);
+extern int SI_LoadSignonData(char *filename);
+extern int SI_SaveSignonData(char *filename);
+extern void SI_RemoveAllSignonData();
+extern void SI_RemoveUser(char *URLName, char *userName, Bool save);
+extern int SI_PromptUsernameAndPassword
+    (MWContext *context, char *buf,
+    char **username, char **password, char *URLName);
+extern char *SI_PromptPassword
+    (MWContext *context, char *prompt, char *URLName,
+    Bool pickFirstUser, Bool useLastPassword);
+extern char * SI_Prompt
+    (MWContext *context, char *prompt, char* defaultUsername, char *URLName);
+extern void SI_StartOfForm();
+#endif
+
 #ifdef LAYERS
 extern Bool LO_Click( MWContext *context, int32 x, int32 y, 
                       Bool requireCaret, CL_Layer *layer );
@@ -430,4 +450,3 @@ extern int XP_ContextCount(MWContextType cxType, XP_Bool bTopLevel);
 XP_END_PROTOS
 
 # endif /* _PROTO_H_ */
-
