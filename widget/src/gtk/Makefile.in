@@ -57,6 +57,7 @@ CPPSRCS		= \
 		nsWidget.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
+		nsGtkIMEHelper.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a

@@ -24,6 +24,7 @@
 #define nsWidget_h__
 
 #include "nsBaseWidget.h"
+#include "nsIKBStateControl.h"
 #include "nsIRegion.h"
 
 
@@ -64,11 +65,18 @@ class nsIToolkit;
  * Base of all GTK+ native widgets.
  */
 
-class nsWidget : public nsBaseWidget
+class nsWidget : public nsBaseWidget, nsIKBStateControl
 {
 public:
   nsWidget();
   virtual ~nsWidget();
+
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  // nsIWidget
 
   NS_IMETHOD            Create(nsIWidget *aParent,
                                const nsRect &aRect,
@@ -145,6 +153,11 @@ public:
   NS_IMETHOD InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
   NS_IMETHOD Update(void);
   NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+
+
+  // nsIKBStateControl
+  NS_IMETHOD ResetInputState();
+  NS_IMETHOD PasswordFieldInit();
 
   void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
     
