@@ -772,6 +772,7 @@
 		};
 		F50E1BA70207EB8201F281DF = {
 			children = (
+				F5948A48029EB9C801000102,
 				F50E1BC90207F99201F281DF,
 				F50E1BA80207EB8201F281DF,
 				F50E1BBC0207F27B01F281DF,
@@ -800,6 +801,7 @@
 		};
 		F50E1BAA0207EB8201F281DF = {
 			children = (
+				F5948A3F029DA08C01000102,
 				F50E1BAB0207EBE001F281DF,
 			);
 			isa = PBXGroup;
@@ -3138,6 +3140,34 @@
 			isa = PBXGroup;
 			name = Nibs;
 			refType = 4;
+		};
+		F5948A3F029DA08C01000102 = {
+			isa = PBXFileReference;
+			name = nsFontEnumerator.cpp;
+			path = /Users/beard/Projects/Chimera/mozilla/gfx/src/mac/nsFontEnumerator.cpp;
+			refType = 0;
+		};
+		F5948A48029EB9C801000102 = {
+			children = (
+				F5948A49029EB9E301000102,
+			);
+			isa = PBXGroup;
+			name = xpcom;
+			refType = 4;
+		};
+		F5948A49029EB9E301000102 = {
+			children = (
+				F5948A4A029EBA3701000102,
+			);
+			isa = PBXGroup;
+			name = components;
+			refType = 4;
+		};
+		F5948A4A029EBA3701000102 = {
+			isa = PBXFileReference;
+			name = nsComponentManager.cpp;
+			path = ../xpcom/components/nsComponentManager.cpp;
+			refType = 2;
 		};
 		F59E9F3D0237E28401A967DF = {
 			isa = PBXFileReference;
