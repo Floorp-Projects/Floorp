@@ -363,9 +363,6 @@ int main(int argc, char **argv)
     printf("\n");
 
     printf("#define JS_STACK_GROWTH_DIRECTION (%d)\n", StackGrowthDirection(&dummy1));
-
-    /* XXX is there an efficient-to-compute, consistent-across-time limit? */
-    printf("#define JS_DEFAULT_STACK_SIZE_LIMIT %luU\n", (unsigned long)1 << 20);
     printf("\n");
 
     printf("#endif /* js_cpucfg___ */\n");

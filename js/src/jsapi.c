@@ -1757,10 +1757,37 @@ JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
     return -1;
 }
 
-JS_PUBLIC_API(void)
-JS_SetStackSizeLimit(JSContext *cx, jsuword stackSizeLimit)
+#ifdef DEBUG
+static void
+CheckStackGrowthDirection(int *dummy1addr, jsuword limitAddr)
 {
-    js_SetStackSizeLimit(cx, stackSizeLimit);
+    int dummy2;
+
+#if JS_STACK_GROWTH_DIRECTION > 0
+    JS_ASSERT(dummy1addr < &dummy2);
+    JS_ASSERT((jsuword)&dummy2 < limitAddr);
+#else
+    /* Stack grows downward, the common case on modern architectures. */
+    JS_ASSERT(&dummy2 < dummy1addr);
+    JS_ASSERT(limitAddr < (jsuword)&dummy2);
+#endif
+}
+#endif
+
+JS_PUBLIC_API(void)
+JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr)
+{
+#ifdef DEBUG
+    int dummy1;
+
+    CheckStackGrowthDirection(&dummy1, limitAddr);
+#endif
+
+#if JS_STACK_GROWTH_DIRECTION > 0
+    if (limitAddr == 0)
+        limitAddr = (jsuword)-1;
+#endif
+    cx->stackLimit = limitAddr;
 }
 
 /************************************************************************/

@@ -70,6 +70,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
+#if JS_STACK_GROWTH_DIRECTION > 0
+    cx->stackLimit = (jsuword)-1;
+#endif
 #ifdef JS_THREADSAFE
     js_InitContextForLocking(cx);
 #endif
@@ -145,7 +148,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         JS_UNLOCK_GC(rt);
     }
 
-    js_SetStackSizeLimit(cx, JS_DEFAULT_STACK_SIZE_LIMIT);
     return cx;
 }
 
@@ -696,40 +698,4 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
     if ((errorNumber > 0) && (errorNumber < JSErr_Limit))
         return &js_ErrorFormatString[errorNumber];
     return NULL;
-}
-
-#ifdef DEBUG
-static void
-CheckStackGrowthDirection(int *dummy1addr)
-{
-    int dummy2;
-
-#if JS_STACK_GROWTH_DIRECTION > 0
-    JS_ASSERT(&dummy2 > dummy1addr);
-#else
-    JS_ASSERT(&dummy2 < dummy1addr);
-#endif
-}
-#endif
-
-void
-js_SetStackSizeLimit(JSContext *cx, jsuword stackSizeLimit)
-{
-    int stackDummy;
-    jsuword stackAddr;
-
-#ifdef DEBUG
-    CheckStackGrowthDirection(&stackDummy);
-#endif
-
-    stackAddr = (jsuword)&stackDummy;
-#if JS_STACK_GROWTH_DIRECTION > 0
-    cx->stackLimit = (stackAddr + stackSizeLimit > stackAddr)
-                     ? stackAddr + stackSizeLimit
-                     : (jsuword)-1;
-#else
-    cx->stackLimit = (stackAddr > stackSizeLimit)
-                     ? stackAddr - stackSizeLimit
-                     : 0;
-#endif
 }
