@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.4 $ ';
+$Version = '$Revision: 1.5 $ ';
 
 
 sub PrintUsage {
@@ -16,7 +16,6 @@ sub PrintUsage {
      ."          --configfile CONFIGFILENAME --version ]\n";
 }
 
-# Main function
 &ParseArgs;
 &InitVars;
 &ConditionalArgs;
@@ -37,7 +36,7 @@ sub ParseArgs {
 
   my $manArg = 0;
 
-  for $arg (@ARGV) {
+  while ($arg = shift @ARGV) {
     $CVS = 'cvs -q -z3', next if $arg eq '--compress';
     &PrintExampleConfig, exit if $arg eq '--example-config';
     &PrintUsage        , exit if $arg eq '--help' or $arg eq '-h';
@@ -78,6 +77,10 @@ sub ParseArgs {
 }
 
 sub InitVars {
+  for (@ARGV) {
+    # Save DATA section for printing the example.
+    return if /^--example-config$/;
+  }
   eval while <DATA>;  # See __END__ section below
 }
 
@@ -678,7 +681,7 @@ $CVS           = 'cvs -q';
 $CVSCO         = 'checkout -P';
 
 #- Set these proper values for your tinderbox server
-$Tinderbox_server = 'tinderbox-daemon\@cvs-mirror.mozilla.org';
+$Tinderbox_server = 'tinderbox-daemon@cvs-mirror.mozilla.org';
 
 # Relative path to binary
 $BinaryName{apprunner} = '/dist/bin/apprunner';
