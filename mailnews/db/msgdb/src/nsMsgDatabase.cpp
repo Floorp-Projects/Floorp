@@ -380,7 +380,8 @@ NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 	static nsIMdbFactory *gMDBFactory = nsnull;
 	if (!gMDBFactory)
 	{
-		nsresult rv = nsComponentManager::CreateInstance(kCMorkFactory, nsnull, nsIMdbFactoryFactory::GetIID(), (void **) &gMDBFactory);
+		nsresult rv;
+        rv = nsComponentManager::CreateInstance(kCMorkFactory, nsnull, nsIMdbFactoryFactory::GetIID(), (void **) &gMDBFactory);
 	}
 	return gMDBFactory;
 }
@@ -2279,7 +2280,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	nsAutoString subject (eOneByte);
 
 	newHdr->GetSubject(subject);
-	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && thread == NULL)
+	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && (!thread))
 	{
 		thread = getter_AddRefs(GetThreadForSubject(subject.GetBuffer()));
 		if(thread)
@@ -2294,7 +2295,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	}
 #endif // SUBJ_THREADING
 
-	if (thread == NULL)
+	if (!thread)
 	{
 		// couldn't find any parent articles - msgHdr is top-level thread, for now
 		result = AddNewThread(newHdr);
