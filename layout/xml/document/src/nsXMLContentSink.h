@@ -23,6 +23,10 @@
 #include "nsIXMLContentSink.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
+#ifdef XSL
+#include "nsIObserver.h"
+#include "nsITransformMediator.h"
+#endif
 
 class nsIDocument;
 class nsIScriptObjectOwner;
@@ -42,16 +46,14 @@ typedef enum {
   eXMLContentSinkState_InEpilog
 } XMLContentSinkState;
 
-#ifdef XSL
-typedef struct _XSLStyleSheetState {
-  PRBool sheetExists;
-  nsIXSLContentSink* sink;
-} XSLStyleSheetState;
-#endif
-
 // XXX Till the parser knows a little bit more about XML, 
 // this is a HTMLContentSink.
-class nsXMLContentSink : public nsIXMLContentSink {
+class nsXMLContentSink : public nsIXMLContentSink
+#ifdef XSL
+                         ,
+                         public nsIObserver
+#endif
+{
 public:
   nsXMLContentSink();
   virtual ~nsXMLContentSink();
@@ -85,6 +87,13 @@ public:
   NS_IMETHOD AddNotation(const nsIParserNode& aNode);
   NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
+#ifdef XSL
+  // nsIObserver
+  NS_IMETHOD Observe(nsISupports *aSubject, 
+                     const PRUnichar *aTopic, 
+                     const PRUnichar *someData);
+#endif
+
   NS_IMETHOD ResumeParsing();
   NS_IMETHOD EvaluateScript(nsString& aScript, PRUint32 aLineNo);
 
@@ -112,16 +121,26 @@ protected:
   nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
-
-#ifndef XSL
+  
+  nsresult ProcessCSSStyleLink(nsIContent* aElement,
+                            const nsString& aHref, PRBool aAlternate,
+                            const nsString& aTitle, const nsString& aType,
+                            const nsString& aMedia);
+#ifdef XSL
   nsresult ProcessStyleLink(nsIContent* aElement,
                             const nsString& aHref, PRBool aAlternate,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
-#else
+
+  nsresult ProcessXSLStyleLink(nsIContent* aElement,
+                            const nsString& aHref, PRBool aAlternate,
+                            const nsString& aTitle, const nsString& aType,
+                            const nsString& aMedia);
   nsresult CreateStyleSheetURL(nsIURI** aUrl, const nsAutoString& aHref);
-  nsresult LoadXSLStyleSheet(const nsIURI* aUrl);
+  nsresult LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType);
+  nsresult SetupTransformMediator();
 #endif
+  void StartLayoutProcess();
 
   nsresult AddText(const nsString& aString);
   nsresult CreateErrorText(const nsParserError* aError, nsString& aErrorString);
@@ -155,9 +174,8 @@ protected:
   nsString  mPreferredStyle;
   PRInt32 mStyleSheetCount;
   nsICSSLoader* mCSSLoader;
-
 #ifdef XSL
-  XSLStyleSheetState mXSLState;
+  nsITransformMediator* mXSLTransformMediator;    // Weak reference
 #endif
 };
 
