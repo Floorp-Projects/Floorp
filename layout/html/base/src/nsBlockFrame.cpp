@@ -2006,6 +2006,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // reflow this line if it's line wrapped and any of the continuing lines
     // are dirty.  If we are printing (constrained height), always reflow
     // the line.
+    // XXXperf XXXldb Check that the previous line was not wrapped
+    // before doing this check (it's O(N^2) as written now).
     if ((NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableHeight) ||
         (!line->IsDirty() &&
          aState.GetFlag(BRS_COMPUTEMAXWIDTH) &&
@@ -3645,8 +3647,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         rv = CreateContinuationFor(aState, aLine, aFrame, madeContinuation);
         if (NS_FAILED(rv)) 
           return rv;
-        // Remember that the line has wrapped
-        aLine->SetLineWrapped(PR_TRUE);
+        if (!aLineLayout.GetLineEndsInBR()) {
+          // Remember that the line has wrapped
+          aLine->SetLineWrapped(PR_TRUE);
+        }
       }
 
       // Split line, but after the frame just reflowed
@@ -3680,7 +3684,9 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       return rv;
 
     // Remember that the line has wrapped
-    aLine->SetLineWrapped(PR_TRUE);
+    if (!aLineLayout.GetLineEndsInBR()) {
+      aLine->SetLineWrapped(PR_TRUE);
+    }
     
     // If we are reflowing the first letter frame or a placeholder then 
     // don't split the line and don't stop the line reflow...
@@ -3910,6 +3916,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // See if we're shrink wrapping the width
   if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
+    // XXXldb Do we really still want to do this?
     // When determining the line's width we also need to include any
     // right floats that impact us. This represents the shrink wrap
     // width of the line
@@ -4243,6 +4250,8 @@ nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
 
         // When pushing and pulling frames we need to check for whether any
         // views need to be reparented
+        // XXXldb Are float lists in sync with what floats are actually
+        // present in the lines, so their views can be reparented?
         nsHTMLContainerFrame::ReparentFrameView(aPresContext, frame, prevBlock, this);
 
         // If the frame we are looking at is a placeholder for a float, we
@@ -4251,16 +4260,17 @@ nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
         // Note: A floating table (example: style="position: relative; float: right")
         //       is an example of an out-of-flow frame with a view
 
+        // XXXldb What about a placeholder within an inline or block descendant?
+
         if (nsLayoutAtoms::placeholderFrame == frame->GetType()) {
-          nsIFrame *outOfFlowFrame = NS_STATIC_CAST(nsPlaceholderFrame*, frame)->GetOutOfFlowFrame();
-          if (outOfFlowFrame) {
-            const nsStyleDisplay* display = outOfFlowFrame->GetStyleDisplay();
-            if (!display->IsAbsolutelyPositioned()) {
-              // It's not an absolute or fixed positioned frame, so it
-              // must be a float!
-              outOfFlowFrame->SetParent(this);
-              nsHTMLContainerFrame::ReparentFrameView(aPresContext, outOfFlowFrame, prevBlock, this);
-            }
+          nsIFrame *outOfFlowFrame =
+            NS_STATIC_CAST(nsPlaceholderFrame*, frame)->GetOutOfFlowFrame();
+          if (!outOfFlowFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+            // It's not an absolute or fixed positioned frame, so it
+            // must be a float!
+            outOfFlowFrame->SetParent(this);
+            nsHTMLContainerFrame::ReparentFrameView(aPresContext,
+                                              outOfFlowFrame, prevBlock, this);
           }
         }
 
