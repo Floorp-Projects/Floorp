@@ -49,6 +49,10 @@
 #define PREF_FILE_NAME_IN_4x "preferences.js"
 #elif defined(XP_WIN) || defined(XP_OS2)
 #define PREF_FILE_NAME_IN_4x "prefs.js"
+#else
+/* this will cause a failure at run time, as it should, since we don't know
+   how to migrate platforms other than Mac, Windows and UNIX */
+#define PREF_FILE_NAME_IN_4x ""
 #endif
 
 
