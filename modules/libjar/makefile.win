@@ -20,53 +20,44 @@
 #
 # Contributors:
 #     Daniel Veditz <dveditz@netscape.com>
+
 IGNORE_MANIFEST=1
 
 MODULE=jar 
 DEPTH=..\..
+
 MAKE_OBJ_TYPE=DLL
+
 DLLNAME=jar$(VERSION_NUMBER)
-PDBFILE=$(DLLNAME).pdb
-MAPFILE=$(DLLNAME).map
+
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 EXPORTS=zipfile.h
 
 OBJS=.\$(OBJDIR)\nsZipArchive.obj
 
-!if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\nspr \
+LINCS=                        \
+    -I$(XPDIST)\public\nspr   \
     -I$(XPDIST)\public\raptor \
     -I$(XPDIST)\public\xpcom  \
-    -I$(XPDIST)\public\zlib
+    -I$(XPDIST)\public\zlib   \
+    $(NULL)
 
-LLIBS=$(XPDIST)\win32_d.obj\lib\libnspr21.lib \
-      $(XPDIST)\win32_d.obj\lib\libplc21.lib \
-      $(XPDIST)\win32_d.obj\lib\zip3250.lib
-!endif
 
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
-#// (these must be defined before the common makefiles are included)
-#//
-#//------------------------------------------------------------------------
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-MAPFILE= $(DLLNAME).map
+LLIBS=                          \
+      $(LIBNSPR)	            \
+      $(DIST)\lib\plc3.lib      \
+      $(DIST)\lib\zip3250.lib   \
+      $(NULL)
 
-#//------------------------------------------------------------------------
-#//
-#// Include the common makefile rules
-#//
-#//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
-
 clobber::
-	$(RM) $(OBJS)
+  $(RM) $(OBJS)
   $(RM) $(DIST)\bin\$(DLLNAME).dll
   $(RM) $(DIST)\lib\$(DLLNAME).lib
 
