@@ -275,7 +275,20 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   // (2) if we don't have a match yet, see if this type is in our list of extras.
   if (!mimeInfo)
   {
+#ifdef XP_WIN
+    /* XXX Gross hack to wallpaper over the most common Win32
+     * extension issues caused by the fix for bug 116938.  See bug
+     * 120327, comment 271 for why this is needed.  Not even sure we
+     * want to remove this once we have fixed all this stuff to work
+     * right; any info we get from extras on this type is pretty much
+     * useless....
+     */
+    if (PL_strcasecmp(aMimeContentType, APPLICATION_OCTET_STREAM) != 0) {
+#endif
       GetMIMEInfoForMimeTypeFromExtras(aMimeContentType, getter_AddRefs(mimeInfo));
+#ifdef XP_WIN
+    }
+#endif
   }
 
   // (3) if we STILL don't have a mime object for this content type then give up
