@@ -101,6 +101,12 @@ GARBAGE		+= $(DEPENDENCIES) core $(wildcard core.[0-9]*)
 
 DIST_GARBAGE += Makefile
 
+####################################################################
+#
+# The NSPR-specific configuration
+#
+####################################################################
+
 DEFINES += -DFORCE_PR_LOG
 
 ifeq ($(_PR_NO_CLOCK_TIMER),1)
