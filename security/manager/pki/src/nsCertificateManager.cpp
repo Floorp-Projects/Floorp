@@ -35,8 +35,10 @@ static NS_DEFINE_IID(kCertDBCID, NS_X509CERTDB_CID);
 nsCertificateManager::nsCertificateManager()
 {
   NS_INIT_REFCNT();
+#ifdef PR_LOGGING
   if (!gPIPPKILog)
     gPIPPKILog = PR_NewLogModule("pippki");
+#endif
 }
 
 nsCertificateManager::~nsCertificateManager()
