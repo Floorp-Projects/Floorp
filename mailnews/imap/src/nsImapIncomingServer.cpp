@@ -516,18 +516,15 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath)
     uri.Append(kImapRootURI);
     uri.Append('/');
 
-    char *username;
-    GetUsername(&username);
-    uri.Append(username);
-    uri.Append('@');
-	char *hostName = nsnull;
-	GetHostName(&hostName);
+    nsXPIDLCString userName;
+    GetUsername(getter_Copies(userName));
+	uri.Append(userName);
+	uri.Append('@');
 
-	if (hostName)
-	{
-		uri.Append(hostName);
-		nsAllocator::Free(hostName);
-	}
+	nsXPIDLCString hostName;
+	GetHostName(getter_Copies(hostName));
+	uri.Append(hostName);
+
 #if 0    
     PRInt32 leafPos = folderName.RFindChar('/');
     if (leafPos > 0)
