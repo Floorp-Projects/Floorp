@@ -1662,6 +1662,7 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
 #endif
 
   nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(this);
+  if (mSPTimerLock) {
   PR_Lock(mSPTimerLock);
   if (mSPTimer) {
     mSPTimer->Cancel();
@@ -1672,7 +1673,7 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
   PR_Unlock(mSPTimerLock);
   PR_DestroyLock(mSPTimerLock);
   mSPTimerLock = nsnull;
-
+  }
   return nsXULWindow::Destroy();
 }
 
