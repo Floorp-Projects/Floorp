@@ -47,6 +47,7 @@ MODULE_NAME	= nsTestDynamicModule
 MODULE		= xpcom
 LIBRARY_NAME	= testdynamic
 SHORT_LIBNAME	= tdynamic
+MOZILLA_INTERNAL_API = 1
 
 CPPSRCS		= TestDynamic.cpp
 

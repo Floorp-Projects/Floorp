@@ -46,6 +46,7 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_ds
 LIBRARY_NAME	= xpcomds_s
 GRE_MODULE	= 1
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= \
 		  string \
