@@ -1477,7 +1477,7 @@ void JS::StmtNode::printBlock(PrettyPrinter &f, const StmtNode *statements)
 			PrettyPrinter::Block b(f, basicIndent);
 			while (statements) {
 				if (statements->hasKind(Case)) {
-					PrettyPrinter::Indent(f, caseIndent - basicIndent);
+					PrettyPrinter::Indent i(f, caseIndent - basicIndent);
 					f.requiredBreak();
 					statements->print(f);
 				} else {
