@@ -2502,33 +2502,37 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
       /////////////////////
       // draw focus
       // XXX This is only temporary
-      nsCOMPtr<nsIEventStateManager> stateManager;
-      nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
-      if (NS_SUCCEEDED(rv)) {
-        if (NS_SUCCEEDED(rv) && !nsFormFrame::GetDisabled(this) && mFocused == this) {
-          aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-          aRenderingContext.SetColor(0);
-        } else {
-          const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-          aRenderingContext.SetColor(myColor->mBackgroundColor);
-          aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
+      const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+      // Only paint the focus if we're visible
+      if (disp->IsVisible()) {
+        nsCOMPtr<nsIEventStateManager> stateManager;
+        nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
+        if (NS_SUCCEEDED(rv)) {
+          if (NS_SUCCEEDED(rv) && !nsFormFrame::GetDisabled(this) && mFocused == this) {
+            aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
+            aRenderingContext.SetColor(0);
+          } else {
+            const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+            aRenderingContext.SetColor(myColor->mBackgroundColor);
+            aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
+          }
+          //aRenderingContext.DrawRect(clipRect);
+          float p2t;
+          aPresContext->GetPixelsToTwips(&p2t);
+          nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+          clipRect.width -= onePixel;
+          clipRect.height -= onePixel;
+          aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
+                                     clipRect.x+clipRect.width, clipRect.y);
+          aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
+                                     clipRect.x+clipRect.width, clipRect.y+clipRect.height);
+          aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
+                                     clipRect.x, clipRect.y+clipRect.height);
+          aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
+                                     clipRect.x, clipRect.y);
+          aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
+                                     clipRect.x, clipRect.y);
         }
-        //aRenderingContext.DrawRect(clipRect);
-        float p2t;
-        aPresContext->GetPixelsToTwips(&p2t);
-        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-        clipRect.width -= onePixel;
-        clipRect.height -= onePixel;
-        aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
-                                   clipRect.x+clipRect.width, clipRect.y);
-        aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
-                                   clipRect.x+clipRect.width, clipRect.y+clipRect.height);
-        aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
-                                   clipRect.x, clipRect.y+clipRect.height);
-        aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                                   clipRect.x, clipRect.y);
-        aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                                   clipRect.x, clipRect.y);
       }
       /////////////////////
       aRenderingContext.PopState(clipEmpty);
