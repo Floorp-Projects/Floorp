@@ -78,6 +78,7 @@ Rights Reserved.
 	<commandset id="globalEditMenuItems"/>
 	<commandset id="selectEditMenuItems"/>
 	<commandset id="undoEditMenuItems"/>
+	<commandset id="clipboardEditMenuItems"/>
 </commands>
 
 <broadcasterset id="broadcasterset"/>

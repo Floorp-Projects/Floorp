@@ -72,6 +72,11 @@
 					commandupdater="true"
 					events="undo"
 					oncommandupdate="goUpdateUndoEditMenuItems()"/>
+
+	<commandset id="clipboardEditMenuItems"
+					commandupdater="true"
+					events="clipboard"
+					oncommandupdate="goUpdatePasteMenuItems()"/>
 					
 	<broadcaster id="cmd_undo" 
 				 oncommand="goDoCommand('cmd_undo')"

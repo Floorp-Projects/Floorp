@@ -78,12 +78,11 @@
   </keyset>
 
   <!-- commands updated when the editor gets created -->
-  <commandset id="composerMenuItems"
+  <commandset id="commonEditorMenuItems"
 					commandupdater="true"
 					events="create"
 					oncommandupdate="goUpdateComposerMenuItems(this)"
   >
-
     <command id="cmd_open"                                          oncommand="goDoCommand('cmd_open')"/>
     <command id="cmd_openRemote"   value="&openremoteCmd.label;"    oncommand="goDoCommand('cmd_openRemote')"/>
     <command id="cmd_close"        value="&closeCmd.label;"         oncommand="goDoCommand('cmd_close')"/>
@@ -94,7 +93,13 @@
     <command id="cmd_print_button"                                  buttonaction="goDoCommand('cmd_print')"/>
 
     <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goDoCommand('cmd_quit')"/>
+  </commandset>
 
+  <commandset id="composerMenuItems"
+					commandupdater="true"
+					events="create"
+					oncommandupdate="goUpdateComposerMenuItems(this)"
+  >
     <!-- format menu -->
     <command id="cmd_listProperties"  oncommand="goDoCommand('cmd_listProperties')"/>
     <command id="cmd_pageProperties"  oncommand="goDoCommand('cmd_pageProperties')"/>

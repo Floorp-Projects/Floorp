@@ -1570,14 +1570,14 @@ static void CheckForFocus(nsIDocument* aDocument)
 
       nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(ourWindow);
       if (domWindow == focusedWindow) {
-		PRBool active;
+        PRBool active;
         commandDispatcher->GetActive(&active);
-		commandDispatcher->SetFocusedElement(nsnull);
-		if(active) {
+        commandDispatcher->SetFocusedElement(nsnull);
+        if(active) {
           // We need to restore focus and make sure we null
           // out the focused element.
           domWindow->Focus();
-		}
+        }
       }
       commandDispatcher->SetSuppressFocus(PR_FALSE);
     }
@@ -2839,94 +2839,104 @@ PresShell::DoCopy()
 {
   nsCOMPtr<nsIDocument> doc;
   GetDocument(getter_AddRefs(doc));
-  if (doc) {
-    nsString buffer;
-    nsresult rv;
+  if (!doc) return NS_ERROR_FAILURE;
+  
+  nsString buffer;
+  nsresult rv;
 
-    nsCOMPtr<nsIDOMSelection> sel;
-    
-    nsCOMPtr<nsIEventStateManager> manager;
-    nsCOMPtr<nsIContent> content;
-    rv = mPresContext->GetEventStateManager(getter_AddRefs(manager));
-    if (NS_FAILED(rv) || !manager)
-      return rv?rv:NS_ERROR_FAILURE;
-    rv = manager->GetFocusedContent(getter_AddRefs(content));
-    if (NS_SUCCEEDED(rv) && content)
+  nsCOMPtr<nsIDOMSelection> sel;
+  
+  nsCOMPtr<nsIEventStateManager> manager;
+  nsCOMPtr<nsIContent> content;
+  rv = mPresContext->GetEventStateManager(getter_AddRefs(manager));
+  if (NS_FAILED(rv) || !manager)
+    return rv?rv:NS_ERROR_FAILURE;
+  rv = manager->GetFocusedContent(getter_AddRefs(content));
+  if (NS_SUCCEEDED(rv) && content)
+  {
+    //check to see if we need to get selection from frame
+    //optimization that MAY need to be expanded as more things implement their own "selection"
+    nsCOMPtr<nsIDOMNSHTMLInputElement>    htmlInputElement(do_QueryInterface(content));
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextAreaElement(do_QueryInterface(content));
+    if (htmlInputElement || htmlTextAreaElement)
     {
-      //check to see if we need to get selection from frame
-      //optimization that MAY need to be expanded as more things implement their own "selection"
-      nsCOMPtr<nsIDOMNSHTMLInputElement>    htmlInputElement(do_QueryInterface(content));
-      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextAreaElement(do_QueryInterface(content));
-      if (htmlInputElement || htmlTextAreaElement)
-      {
-        nsIFrame *htmlInputFrame;
-        rv = GetPrimaryFrameFor(content, &htmlInputFrame);
-        if (NS_FAILED(rv) || !htmlInputFrame)
-          return rv?rv:NS_ERROR_FAILURE;
-        nsCOMPtr<nsISelectionController> selCon;
-        rv = htmlInputFrame->GetSelectionController(mPresContext,getter_AddRefs(selCon));
-        if (NS_FAILED(rv) || !selCon)
-          return rv?rv:NS_ERROR_FAILURE;
-        rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
-      }
+      nsIFrame *htmlInputFrame;
+      rv = GetPrimaryFrameFor(content, &htmlInputFrame);
+      if (NS_FAILED(rv) || !htmlInputFrame)
+        return rv?rv:NS_ERROR_FAILURE;
+      nsCOMPtr<nsISelectionController> selCon;
+      rv = htmlInputFrame->GetSelectionController(mPresContext,getter_AddRefs(selCon));
+      if (NS_FAILED(rv) || !selCon)
+        return rv?rv:NS_ERROR_FAILURE;
+      rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
     }
-    if (!sel) //get selection from this PresShell
-      rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
-      
-    if (NS_FAILED(rv) || !sel)
-      return rv?rv:NS_ERROR_FAILURE;
+  }
+  if (!sel) //get selection from this PresShell
+    rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
+    
+  if (NS_FAILED(rv) || !sel)
+    return rv?rv:NS_ERROR_FAILURE;
 
-    doc->CreateXIF(buffer,sel);
+  doc->CreateXIF(buffer,sel);
 
-    // Get the Clipboard
-    NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
-    if (NS_FAILED(rv)) 
-      return rv;
+  // Get the Clipboard
+  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
 
-    if ( clipboard ) {
-      // Create a transferable for putting data on the Clipboard
-      nsCOMPtr<nsITransferable> trans;
-      rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              NS_GET_IID(nsITransferable), 
-                                              getter_AddRefs(trans));
-      if ( trans ) {
-        // The data on the clipboard will be in "XIF" format
-        // so give the clipboard transferable a "XIFConverter" for 
-        // converting from XIF to other formats
-        nsCOMPtr<nsIFormatConverter> xifConverter;
-        rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-                                                NS_GET_IID(nsIFormatConverter),
-                                                getter_AddRefs(xifConverter));
-        if ( xifConverter ) {
-          // Add the XIF DataFlavor to the transferable
-          // this tells the transferable that it can handle receiving the XIF format
-          trans->AddDataFlavor(kXIFMime);
+  if ( clipboard ) {
+    // Create a transferable for putting data on the Clipboard
+    nsCOMPtr<nsITransferable> trans;
+    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                            NS_GET_IID(nsITransferable), 
+                                            getter_AddRefs(trans));
+    if ( trans ) {
+      // The data on the clipboard will be in "XIF" format
+      // so give the clipboard transferable a "XIFConverter" for 
+      // converting from XIF to other formats
+      nsCOMPtr<nsIFormatConverter> xifConverter;
+      rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
+                                              NS_GET_IID(nsIFormatConverter),
+                                              getter_AddRefs(xifConverter));
+      if ( xifConverter ) {
+        // Add the XIF DataFlavor to the transferable
+        // this tells the transferable that it can handle receiving the XIF format
+        trans->AddDataFlavor(kXIFMime);
 
-          // Add the converter for going from XIF to other formats
-          trans->SetConverter(xifConverter);
+        // Add the converter for going from XIF to other formats
+        trans->SetConverter(xifConverter);
 
-          // Now add the XIF data to the transferable, placing it into a nsISupportsWString object.
-          // the transferable wants the number bytes for the data and since it is double byte
-          // we multiply by 2. 
-          nsCOMPtr<nsISupportsWString> dataWrapper;
-          rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID,
-                                                  nsnull, 
-                                                  NS_GET_IID(nsISupportsWString),
-                                                  getter_AddRefs(dataWrapper));
-          if ( dataWrapper ) {
-            dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.GetUnicode()) );
-            // QI the data object an |nsISupports| so that when the transferable holds
-            // onto it, it will addref the correct interface.
-            nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
-            trans->SetTransferData(kXIFMime, genericDataObj, buffer.Length()*2);
-          }
-          
-          // put the transferable on the clipboard
-          clipboard->SetData(trans, nsnull, nsIClipboard::kGlobalClipboard);
+        // Now add the XIF data to the transferable, placing it into a nsISupportsWString object.
+        // the transferable wants the number bytes for the data and since it is double byte
+        // we multiply by 2. 
+        nsCOMPtr<nsISupportsWString> dataWrapper;
+        rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID,
+                                                nsnull, 
+                                                NS_GET_IID(nsISupportsWString),
+                                                getter_AddRefs(dataWrapper));
+        if ( dataWrapper ) {
+          dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.GetUnicode()) );
+          // QI the data object an |nsISupports| so that when the transferable holds
+          // onto it, it will addref the correct interface.
+          nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
+          trans->SetTransferData(kXIFMime, genericDataObj, buffer.Length()*2);
         }
+        
+        // put the transferable on the clipboard
+        clipboard->SetData(trans, nsnull, nsIClipboard::kGlobalClipboard);
       }
     }
   }
+  
+  // Now that we have copied, update the Paste menu item
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  doc->GetScriptGlobalObject(getter_AddRefs(globalObject));  
+  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(globalObject);
+  if (domWindow)
+  {
+    domWindow->UpdateCommands(NS_ConvertASCIItoUCS2("clipboard"));
+  }
+  
   return NS_OK;
 }
 

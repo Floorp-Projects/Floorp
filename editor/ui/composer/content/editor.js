@@ -211,17 +211,17 @@ function EditorSharedStartup()
   // Set platform-specific hints for how to select cells
   // Mac uses "Cmd", all others use "Ctrl"
   var tableKey = GetString(gIsMac ? "XulKeyMac" : "TableSelectKey");
-  var DragStr = tableKey+GetString("Drag");
-  var ClickStr = tableKey+GetString("Click");
+  var dragStr = tableKey+GetString("Drag");
+  var clickStr = tableKey+GetString("Click");
 
-  var DelStr = GetString(gIsMac ? "Clear" : "Del");
+  var delStr = GetString(gIsMac ? "Clear" : "Del");
 
-  document.getElementById("menu_SelectCell").setAttribute("acceltext", ClickStr);
-  document.getElementById("menu_SelectRow").setAttribute("acceltext", DragStr);
-  document.getElementById("menu_SelectColumn").setAttribute("acceltext", DragStr);
-  document.getElementById("menu_SelectAllCells").setAttribute("acceltext", DragStr);
+  SafeSetAttribute("menu_SelectCell", "acceltext", clickStr);
+  SafeSetAttribute("menu_SelectRow", "acceltext", dragStr);
+  SafeSetAttribute("menu_SelectColumn", "acceltext", dragStr);
+  SafeSetAttribute("menu_SelectAllCells", "acceltext", dragStr);
   // And add "Del" or "Clear"
-  document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
+  SafeSetAttribute("menu_DeleteCellContents", "acceltext", delStr);
 
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
@@ -236,6 +236,13 @@ function EditorShutdown()
 {
   dump("In EditorShutdown..\n");
   return editorShell.Shutdown();
+}
+
+function SafeSetAttribute(nodeID, attributeName, attributeValue)
+{
+    var theNode = document.getElementById(nodeID);
+    if (theNode)
+        theNode.setAttribute(attributeName, attributeValue);
 }
 
 // We use this alot!

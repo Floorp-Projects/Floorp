@@ -69,7 +69,9 @@
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
+    <commandset id="clipboardEditMenuItems"/>
     
+    <commandset id="commonEditorMenuItems"/>
     <commandset id="composerMenuItems"/>
     <commandset id="composerEditMenuItems"/>
     <commandset id="composerSaveMenuItems"/>    

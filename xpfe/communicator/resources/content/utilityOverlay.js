@@ -205,7 +205,6 @@ function goUpdateGlobalEditMenuItems()
 	goUpdateCommand('cmd_cut');
 	goUpdateCommand('cmd_copy');
 	goUpdateCommand('cmd_paste');
-	goUpdateCommand('cmd_pasteQuote');
 	goUpdateCommand('cmd_selectAll');
 	goUpdateCommand('cmd_delete');
 }
@@ -225,10 +224,13 @@ function goUpdateUndoEditMenuItems()
 	//dump("Updating undo/redo menu items\n");
 	goUpdateCommand('cmd_undo');
 	goUpdateCommand('cmd_redo');
+}
 
-	// we shouldn't really do this here, but we don't get the right notifications now
+// update menu items that depend on clipboard contents
+function goUpdatePasteMenuItems()
+{
+	//dump("Updating clipboard menu items\n");
 	goUpdateCommand('cmd_paste');
-	goUpdateCommand('cmd_pasteQuote');
 }
 
 // This used to be BrowserNewEditorWindow in navigator.js

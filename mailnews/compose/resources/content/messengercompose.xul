@@ -80,7 +80,9 @@ Rights Reserved.
   <commandset id="globalEditMenuItems"/>
   <commandset id="selectEditMenuItems"/>
   <commandset id="undoEditMenuItems"/>
+  <commandset id="clipboardEditMenuItems"/>
 
+  <commandset id="commonEditorMenuItems"/>
   <commandset id="composerMenuItems"/>
   <commandset id="composerEditMenuItems"/>
   <commandset id="composerSaveMenuItems"/>    
@@ -158,6 +160,7 @@ Rights Reserved.
 <!--- REMOVE KEYSET UNTIL IT WORKS CORRECTLY ON MAC!
 ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF THE MODIFIERS PRESSED, THE COMMAND IS EXECUTED.
 
+These also need to call goDoCommand(), not editor JS functions. - - smfr
 <keyset id="defaultKeySet">
 	<key id="acmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="a" onkeypress="EditorSelectAll()" />
 	<key id="bcmdkey" disabled="false" shift="false" xulkey="true" alt="false" key="b" onkeypress="EditorApplyStyle('b')"/>
