@@ -86,7 +86,18 @@ PLATFORM_FLAGS		+= -mno-486 -Di386
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
 OS_INCLUDES		+= -I/usr/X11R6/include
 OS_LIBS			+= -L/lib -ldl -lc
-endif
+
+# Linux: only install fullcircle crash-reporting for Intel, RedHat 5.0.
+LINUX_VENDOR	= $(shell if test -f /etc/redhat-release; then echo "redhat"; else echo "unknown"; fi;)
+ifeq ($(LINUX_VENDOR),redhat)
+ifeq ($(basename $(shell awk '{print $$2}' /etc/redhat-release)),5)
+MOZ_FULLCIRCLE  = 1
+FC_PLATFORM     = LinuxIntel
+FC_PLATFORM_DIR = Linux2_x86
+endif # rh 5.0
+endif # LINUX_VENDOR = redhat
+
+endif # x86
 
 # These are CPU_ARCH independent
 ifeq ($(OS_RELEASE),1.2)
