@@ -758,7 +758,7 @@ NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 NS_IMETHODIMP nsMsgFolder::SetName(const PRUnichar * name)
 {
   // override the URI-generated name
-	if (!mName.Equals(name))
+	if (!mName.EqualsWithConversion(name))
 	{
 	  mName = name;
   
