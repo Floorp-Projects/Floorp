@@ -1795,7 +1795,7 @@ nsListControlFrame::GetOptionAsContent(nsIDOMHTMLCollection* aCollection, PRInt3
   nsIContent * content = nsnull;
   nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*aCollection, aIndex));
 
-  NS_ASSERTION(optionElement.get() != nsnull, "could get option element by index!");
+  NS_ASSERTION(optionElement != nsnull, "could not get option element by index!");
 
   if (optionElement) {
     optionElement->QueryInterface(NS_GET_IID(nsIContent),(void**) &content);
@@ -3178,9 +3178,8 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 // the end of the list then we start at the end of the list and search 
 // backwards until we get back to the original item or an enabled option
 // 
-// anNewIndex - will get set to the new index if it finds one
-// aDoSetNewIndex - indicates that a new item was found and it can be selected
-// aWasDisabled - means it found a new item but it was disabled
+// aStartIndex - the index to start searching from
+// aNewIndex - will get set to the new index if it finds one
 // aNumOptions - the total number of options in the list
 // aDoAdjustInc - the initial increment 1-n
 // aDoAdjustIncNext - the increment used to search for the next enabled option
@@ -3189,12 +3188,18 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 // any number greater representing a page of items
 //
 void
-nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 startIndex,
-                                              PRInt32 &anNewIndex,
+nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 aStartIndex,
+                                              PRInt32 &aNewIndex,
                                               PRInt32 aNumOptions,
                                               PRInt32 aDoAdjustInc,
                                               PRInt32 aDoAdjustIncNext)
 {
+  // Cannot select anything if there is nothing to select
+  if (aNumOptions == 0) {
+    aNewIndex = kNothingSelected;
+    return;
+  }
+
   // means we reached the end of the list and now we are searching backwards
   PRBool doingReverse = PR_FALSE;
   // lowest index in the search range
@@ -3208,6 +3213,7 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 startIndex,
   // automatically in multiple ... to do this, we'd need to override
   // OnOptionSelected and set mStartSelectedIndex if nothing is selected.  Not
   // sure of the effects, though, so I'm not doing it just yet.
+  PRInt32 startIndex = aStartIndex;
   if (startIndex < bottom) {
     GetSelectedIndex(&startIndex);
   }
@@ -3223,7 +3229,7 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 startIndex,
   while (1) {
     // if the newIndex isn't disabled, we are golden, bail out
     PRBool isDisabled = PR_TRUE;
-    if (NS_OK == IsOptionDisabled(newIndex, isDisabled) && !isDisabled) {
+    if (NS_SUCCEEDED(IsOptionDisabled(newIndex, isDisabled)) && !isDisabled) {
       break;
     }
 
@@ -3259,7 +3265,7 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 startIndex,
   }
 
   // Looks like we found one
-  anNewIndex     = newIndex;
+  aNewIndex     = newIndex;
 }
 
 nsAString& 
@@ -3272,87 +3278,71 @@ nsListControlFrame::GetIncrementalString()
 nsresult
 nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  NS_ASSERTION(aKeyEvent != nsnull, "keyEvent is null.");
+  NS_ASSERTION(aKeyEvent, "keyEvent is null.");
 
   if (nsFormControlHelper::GetDisabled(mContent))
     return NS_OK;
 
-  nsresult rv         = NS_ERROR_FAILURE; 
-  PRUint32 keycode    = 0;
-  PRUint32 charcode   = 0;
-  PRUint32 numOptions = 0;
-  PRBool isControl    = PR_FALSE;
-  PRBool isShift      = PR_FALSE;
-  nsCOMPtr<nsIDOMHTMLCollection> options;
-
   // Start by making sure we can query for a key event
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-  if (keyEvent) {
-    //uiEvent->GetCharCode(&code);
-    //REFLOW_DEBUG_MSG3("%c %d   ", code, code);
-    keyEvent->GetKeyCode(&keycode);
-    keyEvent->GetCharCode(&charcode);
+  NS_ENSURE_TRUE(keyEvent, NS_ERROR_FAILURE);
+
+  PRUint32 keycode = 0;
+  PRUint32 charcode = 0;
+  keyEvent->GetKeyCode(&keycode);
+  keyEvent->GetCharCode(&charcode);
 #ifdef DO_REFLOW_DEBUG
-    if (code >= 32) {
-      REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
-    }
+  if (code >= 32) {
+    REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
+  }
 #endif
-    PRBool isAlt     = PR_FALSE;
 
-    keyEvent->GetAltKey(&isAlt);
-    // Fix for Bug 62425
-    if (isAlt) {
+  PRBool isAlt = PR_FALSE;
+
+  keyEvent->GetAltKey(&isAlt);
+  if (isAlt) {
 #ifdef FIX_FOR_BUG_62425
-      if (code == nsIDOMKeyEvent::DOM_VK_UP || code == nsIDOMKeyEvent::DOM_VK_DOWN) {
-        if (IsInDropDownMode() == PR_TRUE) {
-          PRBool isDroppedDown;
-          mComboboxFrame->IsDroppedDown(&isDroppedDown);
-          mComboboxFrame->ShowDropDown(!isDroppedDown);
-          aKeyEvent->PreventDefault();
+    if (code == nsIDOMKeyEvent::DOM_VK_UP || code == nsIDOMKeyEvent::DOM_VK_DOWN) {
+      if (IsInDropDownMode() == PR_TRUE) {
+        PRBool isDroppedDown;
+        mComboboxFrame->IsDroppedDown(&isDroppedDown);
+        mComboboxFrame->ShowDropDown(!isDroppedDown);
+        aKeyEvent->PreventDefault();
 
-          nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
 
-          if (nsevent) {
-            nsevent->PreventCapture();
-            nsevent->PreventBubble();
-          }
+        if (nsevent) {
+          nsevent->PreventCapture();
+          nsevent->PreventBubble();
         }
       }
+    }
 #endif
-      return NS_OK;
-    }
-
-    keyEvent->GetCtrlKey(&isControl);
-    if (!isControl) {
-      keyEvent->GetMetaKey(&isControl);
-    }
-    keyEvent->GetShiftKey(&isShift);
-
-    // now make sure there are options or we are wasting our time
-    options = getter_AddRefs(GetOptions(mContent));
-
-    if (options) {
-      options->GetLength(&numOptions);
-
-      if (numOptions == 0) {
-        return NS_OK;
-      }
-    } else{
-      return rv;
-    }
-  } else {
-    return rv;
+    return NS_OK;
   }
 
-  // Whether we need PreventDefault or not
-  PRBool needPreventDefault = PR_TRUE;
-  
+  // Get control / shift modifiers
+  PRBool isControl = PR_FALSE;
+  PRBool isShift   = PR_FALSE;
+  keyEvent->GetCtrlKey(&isControl);
+  if (!isControl) {
+    keyEvent->GetMetaKey(&isControl);
+  }
+  keyEvent->GetShiftKey(&isShift);
+
+  // now make sure there are options or we are wasting our time
+  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+  NS_ENSURE_TRUE(options, NS_ERROR_FAILURE);
+
+  PRUint32 numOptions = 0;
+  options->GetLength(&numOptions);
+
   // Whether we did an incremental search or another action
   PRBool didIncrementalSearch = PR_FALSE;
   
   // this is the new index to set
   // DOM_VK_RETURN & DOM_VK_ESCAPE will not set this
-  PRInt32  newIndex = kNothingSelected;
+  PRInt32 newIndex = kNothingSelected;
 
   // set up the old and new selected index and process it
   // DOM_VK_RETURN selects the item
@@ -3390,6 +3380,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         if (droppedDown) {
           ComboboxFinish(mEndSelectionIndex);
         }
+	aKeyEvent->PreventDefault();
         return NS_OK;
       } else {
         newIndex = mEndSelectionIndex;
@@ -3432,7 +3423,6 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         PRBool isDroppedDown;
         mComboboxFrame->IsDroppedDown(&isDroppedDown);
         mComboboxFrame->ShowDropDown(!isDroppedDown);
-        aKeyEvent->PreventDefault();
 
         nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
 
@@ -3464,29 +3454,29 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         // Backspace key will delete the last char in the string
         if (keycode == NS_VK_BACK && !GetIncrementalString().IsEmpty()) {
           GetIncrementalString().Truncate(GetIncrementalString().Length() - 1);
+	  aKeyEvent->PreventDefault();
         }
         return NS_OK;
       }
       
-      needPreventDefault = PR_FALSE;
-
       PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charcode));
 
       DOMTimeStamp keyTime;
       aKeyEvent->GetTimeStamp(&keyTime);
 
-      // Incremental Search: if time elapsed is below INCREMENTAL_SEARCH_KEYPRESS_TIME,
-      // append this keystroke to the search string we will use to find options and start
-      // searching at the current keystroke.	Otherwise, Truncate the string if it's been
-      // a long time since our last keypress.
+      // Incremental Search: if time elapsed is below
+      // INCREMENTAL_SEARCH_KEYPRESS_TIME, append this keystroke to the search
+      // string we will use to find options and start searching at the current
+      // keystroke.  Otherwise, Truncate the string if it's been a long time
+      // since our last keypress.
       if (keyTime - gLastKeyTime > INCREMENTAL_SEARCH_KEYPRESS_TIME) {
         GetIncrementalString().Truncate();
       }
       gLastKeyTime = keyTime;
 
-      // Append this keystroke to the string. 
-      // Exception: If the user types the same key repeatedly, we'll cycle through all
-      // options beginning with that char, rather than appending it.
+      // Append this keystroke to the search string. 
+      // Exception: If the user types the same key repeatedly, we'll cycle
+      // through all options beginning with that char, rather than appending it.
       if (!(GetIncrementalString().Length() == 1 &&
             GetIncrementalString().First() == uniChar)) {
         GetIncrementalString().Append(uniChar);
@@ -3494,9 +3484,10 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
       // Determine where we're going to start reading the string
       // If we have multiple characters to look for, we start looking *at* the
-      // current option.  If we have only one character to look for, we start looking
-      // *after* the current option.	
-      // Exception: if there is no option selected to start at, we always start *at* 0.
+      // current option.  If we have only one character to look for, we start
+      // looking *after* the current option.	
+      // Exception: if there is no option selected to start at, we always start
+      // *at* 0.
       PRInt32 startIndex;
       GetSelectedIndex(&startIndex);
       if (startIndex == kNothingSelected) {
@@ -3505,9 +3496,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         startIndex++;
       }
 
-      PRUint32 i, index;
+      PRUint32 i;
       for (i = 0; i < numOptions; i++) {
-        index = (i + startIndex) % numOptions;
+        PRUint32 index = (i + startIndex) % numOptions;
         nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(getter_AddRefs(GetOption(*options, index)));
         if (optionElement) {
           nsAutoString text;
@@ -3518,25 +3509,23 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
               if (wasChanged) {
                 UpdateSelection(); // dispatch event, update combobox, etc.
               }
-              needPreventDefault = PR_TRUE;
               break;
             }
           }
         }
       } // for
+
     } break;//case
   } // switch
 
-  //if current key has been processed then we need to call PreventDefault()
-  if (needPreventDefault){
-      aKeyEvent->PreventDefault();
-  }
+  // We ate the key if we got this far.
+  aKeyEvent->PreventDefault();
 
   // If we didn't do an incremental search, clear the string
   if (!didIncrementalSearch) {
     GetIncrementalString().Truncate();
   }
-  
+
   // Actually process the new index and let the selection code
   // do the scrolling for us
   if (newIndex != kNothingSelected) {
