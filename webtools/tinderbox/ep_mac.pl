@@ -24,7 +24,7 @@ sub has_error {
     $line =~ /fatal error/  # link error
     || $line =~ /Error  /   # C error
     || $line =~ /\[checkout aborted\]/ #cvs error
-    || $line =~ /find project file / #CW project error
+    || $line =~ /Couldn\'t find project file / # CW project error
 ;
 }
 
