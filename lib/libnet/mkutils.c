@@ -33,6 +33,7 @@
 #include "libi18n.h"
 #include "msgcom.h"
 #include "mkcache.h"
+#include "mkmemcac.h"
 #include "mkextcac.h"
 #include "mime.h"
 #include "secrng.h"
@@ -3369,3 +3370,52 @@ NET_Base64Decode (char *src,
 }
 
 #endif /* MOZ_MAIL_NEWS */
+
+/* A utility function to fetch a file from cache right away, 
+ * and update it (from the original server) after its used.
+ * Used in/Required by Mr. R.D.F. Guha 
+ *
+ * Note that if the item is not in the cache, this defaults
+ * to retrieving it from the server.
+ *
+ * Variables and returns : see NET_GetURL in include/net.h
+ *
+ * Warning: Possibility of a stale copy!
+ *
+ */
+PUBLIC int
+NET_GetURLQuick (URL_Struct * URL_s,
+        FO_Present_Types output_format,
+        MWContext * context,
+        Net_GetUrlExitFunc*	exit_routine)
+{
+	if (!NET_FindURLInMemCache(URL_s, context) &&
+		!NET_FindURLInExtCache(URL_s, context))
+	{
+		/* default */
+		return NET_GetURL(
+			URL_s, 
+			output_format, 
+			context, 
+			exit_routine);
+	}
+	else
+	{
+		/* Only from cache */
+		int status =
+			NET_GetURL(
+				URL_s,
+				FO_ONLY_FROM_CACHE || output_format,
+				context,
+				exit_routine);
+
+		/* Update request */
+		NET_GetURL(
+			URL_s,
+			FO_CACHE_ONLY,
+			context,
+			NULL);
+		
+		return status;
+	}
+}
