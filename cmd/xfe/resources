@@ -3018,6 +3018,15 @@ Center-justify the current paragraph
 *setAlignmentStyleRight.documentationString:	\
 Right-justify the current paragraph
 
+!=============================
+  Table Menu - Page Composer
+!=============================
+
+*menuBar*tableMenu.labelString:		Table
+*tableInsertMenu.labelString:		Insert
+*tableDeleteMenu.labelString:		Delete
+*tableSelectMenu.labelString:		Select
+
 !============================
   Tools Menu - Page Composer
 !============================
@@ -4882,6 +4891,7 @@ private, it would be safer for you to cancel the submission.
 !*printSetup_popup*preeditType:			none
 
 *findDialog_popup.title:			@NAME@: Find
+*replaceDialog_popup.title:			@NAME@: Find and Replace
 *findDialog*findInLabel.labelString:		Find in:
 *findDialog*msgHeaders.labelString:		Message Headers in This Folder
 *findDialog*msgBody.labelString:		Body of This Message
@@ -4889,6 +4899,9 @@ private, it would be safer for you to cancel the submission.
 *findDialog*msgBody.indicatorType:		ONE_OF_MANY
 *findDialog*findLabel.labelString:		Find:
 *findDialog*findLabel.alignment:		ALIGNMENT_END
+*findDialog*replaceLabel.labelString:		Replace With:
+*findDialog*replaceBtn.labelString:		Replace
+*findDialog*replaceAllBtn.labelString:		Replace All
 *findDialog*caseSensitive.labelString:		Case Sensitive
 *findDialog*backwards.labelString:		Find Backwards
 *findDialog*backwards.leftOffset:		20
