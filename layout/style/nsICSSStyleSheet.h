@@ -35,6 +35,7 @@ public:
   virtual PRBool ContainsStyleSheet(nsIURL* aURL) const = 0;
 
   virtual void AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
+  NS_IMETHOD  InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex) = 0;
 
   virtual void PrependStyleRule(nsICSSStyleRule* aRule) = 0;
   virtual void AppendStyleRule(nsICSSStyleRule* aRule) = 0;
@@ -49,6 +50,8 @@ public:
   NS_IMETHOD  SetTitle(const nsString& aTitle) = 0;
   NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
+
+  NS_IMETHOD  Clone(nsICSSStyleSheet*& aClone) const = 0;
 };
 
 // XXX for backwards compatibility and convenience
