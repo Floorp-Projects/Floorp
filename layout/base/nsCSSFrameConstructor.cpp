@@ -297,7 +297,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*  aPresContext,
   nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
                                            aStyleContext, PR_FALSE);
   nsIStyleContext* parentStyleContext;
-  aParentFrame->GetStyleContext(parentStyleContext);
+  aParentFrame->GetStyleContext(&parentStyleContext);
 #if 0
   nsIStyleContext *outerStyleContext = 
     aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableOuterPseudo, parentStyleContext);
@@ -416,7 +416,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
   nsresult result = NS_OK;
   if (NS_SUCCEEDED(result)) {
     nsIStyleContext* parentStyleContext = nsnull;
-    result = aParentFrame->GetStyleContext(parentStyleContext);
+    result = aParentFrame->GetStyleContext(&parentStyleContext);
     if (NS_SUCCEEDED(result)) {
       // create the outer table frames
       nsIStyleContext* outerStyleContext = 
@@ -471,7 +471,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
       nsIFrame* outerFrame;
       ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, outerFrame, innerFrame, aFixedItems);
       nsIStyleContext* outerStyleContext;
-      outerFrame->GetStyleContext(outerStyleContext);
+      outerFrame->GetStyleContext(&outerStyleContext);
       nsIStyleContext* adjStyleContext = 
         aPresContext->ResolveStyleContextFor(aContent, outerStyleContext);
       aNewCaptionFrame->Init(*aPresContext, aContent, outerFrame, adjStyleContext);
@@ -516,7 +516,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
   nsIStyleContext* styleContextRelease = nsnull;
 
   nsIStyleContext* parentStyleContext;
-  aParentFrame->GetStyleContext(parentStyleContext);
+  aParentFrame->GetStyleContext(&parentStyleContext);
   const nsStyleDisplay* parentDisplay = 
    (const nsStyleDisplay*) parentStyleContext->GetStyleData(eStyleStruct_Display);
 
@@ -534,7 +534,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
     nsIFrame* outerFrame;
     ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, outerFrame, innerFrame, aFixedItems);
     nsIStyleContext* innerStyleContext;
-    innerFrame->GetStyleContext(innerStyleContext);
+    innerFrame->GetStyleContext(&innerStyleContext);
     if (contentDisplayIsGroup) {
       styleContext = aPresContext->ResolveStyleContextFor(aContent, innerStyleContext);
     } else {
@@ -658,7 +658,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
       (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == parentDisplay->mDisplay)) {
     if (!contentDisplayIsRow) { // content is from some (soon to be) child of ours
       aParentFrame = TableGetAsNonScrollFrame(aPresContext, aParentFrame, parentDisplay); 
-      aParentFrame->GetStyleContext(groupStyleContext);
+      aParentFrame->GetStyleContext(&groupStyleContext);
       styleContext = aPresContext->ResolvePseudoStyleContextFor(aContent, 
                                      nsHTMLAtoms::tableRowPseudo, groupStyleContext);
     }
@@ -673,7 +673,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
                                   aAbsoluteItems, PR_TRUE, aNewTopMostFrame, groupFrame,
                                   aFixedItems, toDo);
     if (NS_SUCCEEDED(rv)) {
-      groupFrame->GetStyleContext(groupStyleContext);
+      groupFrame->GetStyleContext(&groupStyleContext);
       if (contentDisplayIsRow) {
         styleContext = aPresContext->ResolveStyleContextFor(aContent, groupStyleContext);
       } else {
@@ -755,7 +755,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
                                   groupFrame, aFixedItems);
     if (NS_SUCCEEDED(rv)) {
       nsIStyleContext* groupStyleContext; 
-      groupFrame->GetStyleContext(groupStyleContext);
+      groupFrame->GetStyleContext(&groupStyleContext);
       nsIStyleContext* styleContext = aPresContext->ResolveStyleContextFor(aContent, groupStyleContext);
       rv = NS_NewTableColFrame(aNewColFrame);
       aNewColFrame->Init(*aPresContext, aContent, groupFrame, styleContext);
@@ -796,7 +796,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
   PRBool contentDisplayIsCell = (NS_STYLE_DISPLAY_TABLE_CELL == display->mDisplay);
 
   nsIStyleContext* parentStyleContext;
-  aParentFrame->GetStyleContext(parentStyleContext);
+  aParentFrame->GetStyleContext(&parentStyleContext);
   const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
     parentStyleContext->GetStyleData(eStyleStruct_Display);
 
@@ -822,7 +822,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                 aAbsoluteItems, aNewTopMostFrame, rowFrame, aFixedItems, &toDo);
     if (NS_SUCCEEDED(rv)) {
       nsIStyleContext* rowStyleContext; 
-      rowFrame->GetStyleContext(rowStyleContext);
+      rowFrame->GetStyleContext(&rowStyleContext);
       if (contentDisplayIsCell) {
         styleContext = aPresContext->ResolveStyleContextFor(aContent, rowStyleContext);
       } else {
@@ -918,7 +918,7 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresContext*  aPresContext,
   PRInt32   count;
 
   nsIStyleContext* parentStyleContext;
-  aParentFrame->GetStyleContext(parentStyleContext);
+  aParentFrame->GetStyleContext(&parentStyleContext);
 
   aContent->ChildCount(count);
   for (PRInt32 i = 0; i < count; i++) {
@@ -1053,7 +1053,7 @@ nsCSSFrameConstructor:: GetDisplay(nsIFrame* aFrame)
     return nsnull;
   }
   nsIStyleContext* styleContext = nsnull;
-  aFrame->GetStyleContext(styleContext);
+  aFrame->GetStyleContext(&styleContext);
   const nsStyleDisplay* display = 
     (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
   NS_RELEASE(styleContext);
@@ -2538,12 +2538,12 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
   nsIStyleContext* styleContext;
   nsIStyleContext* parentStyleContext;
 
-  aParentFrame->GetStyleContext(parentStyleContext);
+  aParentFrame->GetStyleContext(&parentStyleContext);
   if (nsLayoutAtoms::textTagName == tag) {
     // Use a special pseudo element style context for text
     nsIContent* parentContent = nsnull;
     if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(parentContent);
+      aParentFrame->GetContent(&parentContent);
     }
     styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
                                                               nsHTMLAtoms::textPseudo, 
@@ -2554,7 +2554,7 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
     // Use a special pseudo element style context for comments
     nsIContent* parentContent = nsnull;
     if (nsnull != aParentFrame) {
-      aParentFrame->GetContent(parentContent);
+      aParentFrame->GetContent(&parentContent);
     }
     styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
                                                               nsHTMLAtoms::commentPseudo, 
@@ -2650,7 +2650,7 @@ nsCSSFrameConstructor::ReconstructFrames(nsIPresContext* aPresContext,
         nsIStyleContext*  rootPseudoStyle;
         nsAbsoluteItems   fixedItems(nsnull);  // XXX FIX ME...
 
-        aParentFrame->GetStyleContext(rootPseudoStyle);
+        aParentFrame->GetStyleContext(&rootPseudoStyle);
         rv = ConstructDocElementFrame(aPresContext, aContent,
                                       aParentFrame, rootPseudoStyle, newChild,
                                       fixedItems);
@@ -3258,7 +3258,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     // is there?
     if (nsnull != frame) {
       nsIStyleContext* frameContext;
-      frame->GetStyleContext(frameContext);
+      frame->GetStyleContext(&frameContext);
       NS_ASSERTION(nsnull != frameContext, "frame must have style context");
       if (nsnull != frameContext) {
         nsIStyleContext*  parentContext = frameContext->GetParent();
@@ -3316,7 +3316,7 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
 
   if (restyle) {
     nsIStyleContext* sc;
-    frame->GetStyleContext(sc);
+    frame->GetStyleContext(&sc);
     sc->RemapStyle(aPresContext);
     NS_RELEASE(sc);
 
@@ -3435,8 +3435,8 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext* aPresContext
       nsIStyleContext*  parentStyleContext;
       nsIContent*       parentContent;
   
-      aParentFrame->GetContent(parentContent);
-      aParentFrame->GetStyleContext(parentStyleContext);
+      aParentFrame->GetContent(&parentContent);
+      aParentFrame->GetStyleContext(&parentStyleContext);
       textStyleContext = aPresContext->ResolvePseudoStyleContextFor
                            (parentContent, nsHTMLAtoms::textPseudo, parentStyleContext);
       NS_RELEASE(parentStyleContext);
@@ -3470,7 +3470,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   aFrame->GetParent(parentFrame);
 
   // Get the content object associated with aFrame
-  aFrame->GetContent(content);
+  aFrame->GetContent(&content);
   NS_ASSERTION(nsnull != content, "null content object");
   content->GetTag(tag);
 

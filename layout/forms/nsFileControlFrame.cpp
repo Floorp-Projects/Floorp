@@ -327,7 +327,12 @@ nsFileControlFrame::GetFrameName(nsString& aResult) const
 NS_IMETHODIMP
 nsFileControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  return GetContent(aContent);
+  nsIContent* content;
+  nsresult    rv;
+
+  rv = GetContent(&content);
+  aContent = content;
+  return rv;
 }
 
 NS_IMETHODIMP

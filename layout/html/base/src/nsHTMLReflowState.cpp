@@ -99,7 +99,7 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
 {
   nsIAtom* tag = nsnull;
   nsIContent* content;
-  if ((NS_OK == frame->GetContent(content)) && (nsnull != content)) {
+  if (NS_SUCCEEDED(frame->GetContent(&content)) && (nsnull != content)) {
     content->GetTag(tag);
     NS_RELEASE(content);
   }
@@ -818,7 +818,7 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
 {
   nscoord lineHeight = -1;
   nsIStyleContext* sc;
-  aFrame->GetStyleContext(sc);
+  aFrame->GetStyleContext(&sc);
   const nsStyleFont* elementFont = nsnull;
   if (nsnull != sc) {
     elementFont = (const nsStyleFont*)sc->GetStyleData(eStyleStruct_Font);

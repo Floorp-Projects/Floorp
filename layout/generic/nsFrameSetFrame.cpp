@@ -370,7 +370,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
 {
   nsHTMLFramesetFrame* parent = nsnull;
   nsIContent* content = nsnull;
-  aChild->GetContent(content);
+  aChild->GetContent(&content);
   if (nsnull != content) { 
     nsIContent* contentParent = nsnull;
     content->GetParent(contentParent);
@@ -600,7 +600,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
 
   if (aDrag && aCellIndex && ChildIsFrameset(aChild)) {
     nsIContent* childContent;
-    aChild->GetContent(childContent);
+    aChild->GetContent(&childContent);
     if (childContent) {
       nsIAtom* tag;
       childContent->GetTag(tag);
@@ -1237,7 +1237,7 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
 {
   PRBool result = PR_FALSE;
   nsIContent* content = nsnull;
-  aChildFrame->GetContent(content);
+  aChildFrame->GetContent(&content);
   if (nsnull != content) {
     nsIHTMLContent* htmlContent = nsnull;
     content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);

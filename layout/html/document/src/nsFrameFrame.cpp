@@ -603,7 +603,11 @@ nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 {
   nsHTMLFrameOuterFrame* parent;
   GetParent((nsIFrame*&)parent);
-  return parent->GetContent((nsIContent*&)aContent);
+
+  nsIContent* content;
+  nsresult    rv = parent->GetContent(&content);
+  aContent = content;
+  return rv;
 }
 
 

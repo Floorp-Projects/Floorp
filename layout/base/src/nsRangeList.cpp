@@ -510,7 +510,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, ns
     return NS_ERROR_NULL_POINTER;
   if (NS_KEY_DOWN == aGuiEvent->message) {
     nsCOMPtr<nsIContent> content;
-    if (NS_FAILED(aFrame->GetContent(*getter_AddRefs(content))) || !content)
+    if (NS_FAILED(aFrame->GetContent(getter_AddRefs(content))) || !content)
       return NS_ERROR_NULL_POINTER;
     nsCOMPtr<nsIDOMNode> domnode(content);
     if (!domnode)
@@ -618,10 +618,10 @@ compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
   if (aBegin == aEnd)
     return 0;
   nsCOMPtr<nsIContent> beginContent;
-  if (NS_SUCCEEDED(aBegin->GetContent(*getter_AddRefs(beginContent))) && beginContent){
+  if (NS_SUCCEEDED(aBegin->GetContent(getter_AddRefs(beginContent))) && beginContent){
     nsCOMPtr<nsIDOMNode>beginNode (beginContent);
     nsCOMPtr<nsIContent> endContent;
-    if (NS_SUCCEEDED(aEnd->GetContent(*getter_AddRefs(endContent))) && endContent){
+    if (NS_SUCCEEDED(aEnd->GetContent(getter_AddRefs(endContent))) && endContent){
       nsCOMPtr<nsIDOMNode>endNode (endContent);
       PRBool storage;
       PRInt32 int1;
@@ -684,7 +684,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
   //HACKHACKHACK
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
-  if (NS_SUCCEEDED(aFrame->GetContent(*getter_AddRefs(content))) && content){
+  if (NS_SUCCEEDED(aFrame->GetContent(getter_AddRefs(content))) && content){
     domNode = content;
     nsCOMPtr<nsIDOMNode> parent;
     nsCOMPtr<nsIDOMNode> parent2;
@@ -736,11 +736,11 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         }
         else if (frame){ //we need to check to see what the order is.
           nsCOMPtr<nsIContent>oldContent;
-          if (NS_SUCCEEDED(frame->GetContent(*getter_AddRefs(oldContent))) && oldContent){
+          if (NS_SUCCEEDED(frame->GetContent(getter_AddRefs(oldContent))) && oldContent){
             nsCOMPtr<nsIDOMNode>oldDomNode(oldContent);
             if (oldDomNode && oldDomNode == GetFocusNode()) {
               nsCOMPtr<nsIContent>anchorContent;
-              if (NS_SUCCEEDED(anchor->GetContent(*getter_AddRefs(anchorContent))) && anchorContent){
+              if (NS_SUCCEEDED(anchor->GetContent(getter_AddRefs(anchorContent))) && anchorContent){
                 nsCOMPtr<nsIDOMNode>anchorDomNode(anchorContent);
                 if (anchorDomNode && anchorDomNode == GetAnchorNode()) {
 
@@ -850,7 +850,7 @@ findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff)
   if (!aParent || !aContent)
     return nsnull;
   nsCOMPtr<nsIContent> content;
-  aParent->GetContent(*getter_AddRefs(content));
+  aParent->GetContent(getter_AddRefs(content));
   if (content == aContent){
     return aParent;
   }
@@ -925,7 +925,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
         frameOffset = -1;
         while((result = getNextFrame(result)) != nsnull){
           nsCOMPtr<nsIContent> content;
-          result->GetContent(*getter_AddRefs(content));
+          result->GetContent(getter_AddRefs(content));
           if (content == endContent){
             if (endContent == frameContent)
               frameOffset = GetFocusOffset();

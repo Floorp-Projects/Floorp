@@ -706,12 +706,12 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       if (PR_TRUE==gsDebug) printf("EnsureColumns:creating colgroup frame\n");
       // Resolve style for the colgroup frame
       // first, need to get the nearest containing content object
-      GetContent(lastColGroupElement);                                          // ADDREF a: lastColGroupElement++  (either here or in the loop below)
+      GetContent(&lastColGroupElement);                                          // ADDREF a: lastColGroupElement++  (either here or in the loop below)
       nsIFrame *parentFrame;
       GetParent(parentFrame);
       while (nsnull==lastColGroupElement)
       {
-        parentFrame->GetContent(lastColGroupElement);
+        parentFrame->GetContent(&lastColGroupElement);
         if (nsnull==lastColGroupElement)
           parentFrame->GetParent(parentFrame);
       }
@@ -732,7 +732,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
     }
     else
     {
-      lastColGroupFrame->GetContent((nsIContent *&)lastColGroupElement);  // ADDREF b: lastColGroupElement++
+      lastColGroupFrame->GetContent(&lastColGroupElement);  // ADDREF b: lastColGroupElement++
     }
 
     // XXX It would be better to do this in the style code while constructing
@@ -743,7 +743,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
     nsIFrame* firstNewColFrame = nsnull;
     nsIFrame* lastNewColFrame = nsnull;
     nsIStyleContextPtr  lastColGroupStyle;
-    lastColGroupFrame->GetStyleContext(lastColGroupStyle.AssignRef());
+    lastColGroupFrame->GetStyleContext(lastColGroupStyle.AssignPtr());
     for ( ; excessColumns > 0; excessColumns--)
     {
       // Create a new col frame
@@ -3318,7 +3318,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
           nsIFrame* continuingFrame;
            
           nsIStyleContext* kidSC;
-          kidFrame->GetStyleContext(kidSC);
+          kidFrame->GetStyleContext(&kidSC);
           kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
           NS_RELEASE(kidSC);
           NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
@@ -3470,7 +3470,7 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
         nsIFrame* continuingFrame;
 
         nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(kidSC);
+        kidFrame->GetStyleContext(&kidSC);
         kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
         NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
@@ -3850,7 +3850,7 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
         }
         // get the column style
         nsIStyleContext *colSC;
-        colFrame->GetStyleContext(colSC);
+        colFrame->GetStyleContext(&colSC);
         nsStylePosition* colPosition = (nsStylePosition*) colSC->GetMutableStyleData(eStyleStruct_Position);
         // if colSpan==1, then we can just set the column width
         if (1==colSpan)
@@ -4190,7 +4190,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   for ( ; nsnull!=rg; index++)
   {
     nsIContent *content = nsnull;
-    rg->GetContent(content);                                              // content: REFCNT++
+    rg->GetContent(&content);                                              // content: REFCNT++
     NS_ASSERTION(nsnull!=content, "bad frame, returned null content.");
     const nsStyleDisplay* display;
     //XXX: TROY:  this was just this->GetStyleData which can't be right

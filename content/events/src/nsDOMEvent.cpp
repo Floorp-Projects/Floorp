@@ -114,7 +114,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
     NS_RELEASE(manager);
   }
   
-  if (NS_OK == targetFrame->GetContent(targetContent) && nsnull != targetContent) {    
+  if (NS_OK == targetFrame->GetContent(&targetContent) && nsnull != targetContent) {    
     if (NS_OK == targetContent->QueryInterface(kIDOMNodeIID, (void**)&mTarget)) {
       *aTarget = mTarget;
       NS_ADDREF(mTarget);

@@ -892,7 +892,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetAttributes(PRUint16& n,
   nsIContent* iContent;
 
   if ((nsnull == mAttrNames) && (nsnull != mOwner)) {
-    rv = mOwner->GetContent(iContent);
+    rv = mOwner->GetContent(&iContent);
 
     if (NS_SUCCEEDED(rv)) {
       PRInt32 count;
@@ -1043,7 +1043,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
 
           if (NS_OK == rv) {
             nsIContent* content = nsnull;
-            mOwner->GetContent(content);
+            mOwner->GetContent(&content);
             rv = lh->OnLinkClick(content, eLinkVerb_Replace, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
             NS_IF_RELEASE(content);
           }
@@ -1126,7 +1126,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetTagType(nsPluginTagType *result)
   {
     nsIContent  *cont;
 
-    mOwner->GetContent(cont);
+    mOwner->GetContent(&cont);
 
     if (nsnull != cont)
     {
@@ -1169,7 +1169,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetParameters(PRUint16& n, const char*con
   {
     nsIContent  *cont;
 
-    mOwner->GetContent(cont);
+    mOwner->GetContent(&cont);
 
     if (nsnull != cont)
     {

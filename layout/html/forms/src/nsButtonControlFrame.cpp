@@ -239,7 +239,7 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     nsEvent event;
     event.eventStructType = NS_EVENT;
     nsIContent *formContent = nsnull;
-    mFormFrame->GetContent(formContent);
+    mFormFrame->GetContent(&formContent);
 
     switch(type) {
     case NS_FORM_INPUT_RESET:

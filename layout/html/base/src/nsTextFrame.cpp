@@ -1459,7 +1459,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 
   // Find the font metrics for this text
   nsIStyleContext* styleContext;
-  aNewFrame->GetStyleContext(styleContext);
+  aNewFrame->GetStyleContext(&styleContext);
   const nsStyleFont *font = (const nsStyleFont*)
     styleContext->GetStyleData(eStyleStruct_Font);
   NS_RELEASE(styleContext);
@@ -2177,7 +2177,7 @@ TextFrame::ComputeTotalWordWidth(nsLineLayout& aLineLayout,
     nsIFrame* frame = aNextFrame;
     while (nsnull != frame) {
       nsIContent* content = nsnull;
-      if ((NS_OK == frame->GetContent(content)) && (nsnull != content)) {
+      if ((NS_OK == frame->GetContent(&content)) && (nsnull != content)) {
 #ifdef DEBUG_WORD_WRAPPING
         printf("  next textRun=");
         nsAutoString tmp;
@@ -2253,7 +2253,7 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
   aStop = contentLen < tx.GetContentLength();
 
   nsIStyleContext* sc;
-  if ((NS_OK == aTextFrame->GetStyleContext(sc)) &&
+  if ((NS_OK == aTextFrame->GetStyleContext(&sc)) &&
       (nsnull != sc)) {
     // Measure the piece of text. Note that we have to select the
     // appropriate font into the text first because the rendering

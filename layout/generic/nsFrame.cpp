@@ -375,10 +375,11 @@ nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsFrame::GetContent(nsIContent*& aContent) const
+nsFrame::GetContent(nsIContent** aContent) const
 {
+  NS_PRECONDITION(nsnull != aContent, "null OUT parameter pointer");
   NS_IF_ADDREF(mContent);
-  aContent = mContent;
+  *aContent = mContent;
   return NS_OK;
 }
 
@@ -392,11 +393,12 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 
 
 NS_IMETHODIMP
-nsFrame::GetStyleContext(nsIStyleContext*& aStyleContext) const
+nsFrame::GetStyleContext(nsIStyleContext** aStyleContext) const
 {
+  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
   NS_ASSERTION(nsnull != mStyleContext, "frame should always have style context");
   NS_IF_ADDREF(mStyleContext);
-  aStyleContext = mStyleContext;
+  *aStyleContext = mStyleContext;
   return NS_OK;
 }
 
@@ -607,7 +609,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
 
     // Get Content
     nsIContent* content;
-    nsresult rv = GetContent(content);
+    nsresult rv = GetContent(&content);
     if (NS_FAILED(rv) || (nsnull == content)) {
       return rv;
     }
@@ -1597,7 +1599,7 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
   nsIContent* content;
   PRInt32     result = -1;
 
-  aFrame->GetContent(content);
+  aFrame->GetContent(&content);
   if (nsnull != content) {
     nsIContent* parentContent;
 
@@ -1937,7 +1939,7 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
 static void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
 {
   nsIContent* frameContent;
-  aFrame->GetContent(frameContent);
+  aFrame->GetContent(&frameContent);
   if (frameContent == aContent) {
     ForceDrawFrame((nsFrame *)aFrame);
   }

@@ -75,7 +75,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 	  // First climb out to the tree row level.
 	  nsIFrame* aFrame = this;
 	  nsCOMPtr<nsIContent> pContent;
-	  aFrame->GetContent(*getter_AddRefs(pContent));
+	  aFrame->GetContent(getter_AddRefs(pContent));
 	  nsCOMPtr<nsIAtom> pTag;
 	  pContent->GetTag(*getter_AddRefs(pTag));
 	  if (pTag)
@@ -85,7 +85,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 			  aFrame->GetParent(aFrame);
 			  
 			  // nsCOMPtr correctly handles releasing the old |pContent| and |pTag|
-			  aFrame->GetContent(*getter_AddRefs(pContent));
+			  aFrame->GetContent(getter_AddRefs(pContent));
 			  pContent->GetTag(*getter_AddRefs(pTag));
 		  }
 

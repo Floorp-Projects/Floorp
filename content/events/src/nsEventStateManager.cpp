@@ -92,7 +92,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   case NS_GOTFOCUS:
     NS_IF_RELEASE(mCurrentFocus);
     if (nsnull != mCurrentTarget) {
-      mCurrentTarget->GetContent(mCurrentFocus);
+      mCurrentTarget->GetContent(&mCurrentFocus);
     }
     break;
   }
@@ -241,7 +241,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         nsIContent *lastContent = nsnull;
         nsIContent *targetContent;
 
-        mCurrentTarget->GetContent(targetContent);
+        mCurrentTarget->GetContent(&targetContent);
 
         if (nsnull != mLastMouseOverFrame) {
           //fire mouseout
@@ -252,7 +252,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           event.widget = nsnull;
 
           //The frame has change but the content may not have.  Check before dispatching to content
-          mLastMouseOverFrame->GetContent(lastContent);
+          mLastMouseOverFrame->GetContent(&lastContent);
 
           if (lastContent != targetContent) {
             //XXX This event should still go somewhere!!
@@ -309,7 +309,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         event.widget = nsnull;
 
         nsIContent *lastContent;
-        mLastMouseOverFrame->GetContent(lastContent);
+        mLastMouseOverFrame->GetContent(&lastContent);
 
         if (nsnull != lastContent) {
           lastContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
@@ -373,7 +373,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
     event.widget = nsnull;
 
     nsIContent *content;
-    mCurrentTarget->GetContent(content);
+    mCurrentTarget->GetContent(&content);
 
     if (nsnull != content) {
       ret = content->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, aStatus); 
@@ -403,7 +403,7 @@ nsEventStateManager::DispatchKeyPressEvent(nsIPresContext& aPresContext,
   event.keyCode = aEvent->keyCode;
 
   nsIContent *content;
-  mCurrentTarget->GetContent(content);
+  mCurrentTarget->GetContent(&content);
 
   if (nsnull != content) {
     ret = content->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, aStatus); 

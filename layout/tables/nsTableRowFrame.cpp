@@ -139,7 +139,7 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
            * see nsHTMLStyleSheet::RulesMatching
            */
           nsIContent* cell;
-          kidFrame->GetContent(cell);
+          kidFrame->GetContent(&cell);
           nsIHTMLTableCellElement *cellContent = nsnull;
           nsresult rv = cell->QueryInterface(kIHTMLTableCellElementIID, 
                                              (void **)&cellContent);  // cellContent: REFCNT++
@@ -637,7 +637,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       nscoord specifiedHeight = 0;
       nscoord cellHeight = desiredSize.height;
       nsIStyleContextPtr kidSC;
-      kidFrame->GetStyleContext(kidSC.AssignRef());
+      kidFrame->GetStyleContext(kidSC.AssignPtr());
       const nsStylePosition* kidPosition = (const nsStylePosition*)
         kidSC->GetStyleData(eStyleStruct_Position);
       switch (kidPosition->mHeight.GetUnit()) {
@@ -882,7 +882,7 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
           // See if it has a specified height that overrides the desired size
           nscoord specifiedHeight = 0;
           nsIStyleContextPtr kidSC;
-          frame->GetStyleContext(kidSC.AssignRef());
+          frame->GetStyleContext(kidSC.AssignPtr());
           const nsStylePosition* kidPosition = (const nsStylePosition*)
             kidSC->GetStyleData(eStyleStruct_Position);
           switch (kidPosition->mHeight.GetUnit()) {
@@ -1305,7 +1305,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     nscoord specifiedHeight = 0;
     nscoord cellHeight = desiredSize.height;
     nsIStyleContextPtr kidSC;
-    aNextFrame->GetStyleContext(kidSC.AssignRef());
+    aNextFrame->GetStyleContext(kidSC.AssignPtr());
     const nsStylePosition* kidPosition = (const nsStylePosition*)
       kidSC->GetStyleData(eStyleStruct_Position);
     switch (kidPosition->mHeight.GetUnit()) {
@@ -1475,7 +1475,7 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
       nsIStyleContext*  kidSC;
 
       // Create a continuing cell frame
-      kidFrame->GetStyleContext(kidSC);
+      kidFrame->GetStyleContext(&kidSC);
       kidFrame->CreateContinuingFrame(aPresContext, cf, kidSC, contCellFrame);
       NS_RELEASE(kidSC);
       

@@ -350,7 +350,7 @@ nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext)
 
   if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
     nsIContent *formContent = nsnull;
-    mFormFrame->GetContent(formContent);
+    mFormFrame->GetContent(&formContent);
 
     nsEventStatus status;
     nsEvent event;
@@ -377,7 +377,12 @@ nsImageControlFrame::GetFont(nsIPresContext*        aPresContext,
 NS_IMETHODIMP
 nsImageControlFrame::GetFormContent(nsIContent*& aContent) const
 {
-  return GetContent(aContent);
+  nsIContent* content;
+  nsresult    rv;
+
+  rv = GetContent(&content);
+  aContent = content;
+  return rv;
 }
 
 nscoord 

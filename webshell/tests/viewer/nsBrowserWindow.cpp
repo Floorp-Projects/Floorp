@@ -2744,7 +2744,7 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
 	      fputs("null root frame\n", out);
             } else {
 	      nsIStyleContext* rootContext;
-	      root->GetStyleContext(rootContext);
+	      root->GetStyleContext(&rootContext);
 	      if (nsnull != rootContext) {
 	        styleSet->ListContexts(rootContext, out);
 	        NS_RELEASE(rootContext);

@@ -83,14 +83,14 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame)
 {
   nsIContent* content;
-  aFloatedFrame->GetContent(content);
+  aFloatedFrame->GetContent(&content);
 
   nsPlaceholderFrame* placeholder;
   NS_NewPlaceholderFrame((nsIFrame**)&placeholder);
   
   // The placeholder frame gets a pseudo style context
   nsIStyleContext*  kidSC;
-  aFloatedFrame->GetStyleContext(kidSC);
+  aFloatedFrame->GetStyleContext(&kidSC);
   nsIStyleContext*  placeholderPseudoStyle =
     aPresContext.ResolvePseudoStyleContextFor(content,
                                               nsHTMLAtoms::placeholderPseudo, kidSC);
@@ -159,7 +159,7 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
     nsIFrame* nextFrame;
     aFrame->GetNextSibling(nextFrame);
     nsIStyleContext* kidSC;
-    aFrame->GetStyleContext(kidSC);
+    aFrame->GetStyleContext(&kidSC);
     aFrame->CreateContinuingFrame(aPresContext, aOuterFrame,
                                   kidSC, nextInFlow);
     NS_RELEASE(kidSC);
@@ -357,9 +357,9 @@ nsHTMLContainerFrame::UpdateStyleContexts(nsIPresContext& aPresContext,
                                           nsIFrame* aNewParent)
 {
   nsIStyleContext* oldParentSC;
-  aOldParent->GetStyleContext(oldParentSC);
+  aOldParent->GetStyleContext(&oldParentSC);
   nsIStyleContext* newParentSC;
-  aNewParent->GetStyleContext(newParentSC);
+  aNewParent->GetStyleContext(&newParentSC);
   if (oldParentSC != newParentSC) {
     aFrame->ReResolveStyleContext(&aPresContext, newParentSC);
   }

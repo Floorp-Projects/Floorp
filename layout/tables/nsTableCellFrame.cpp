@@ -576,7 +576,7 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   nsIStyleContext*  kidSC;
 
   nsIFrame* firstKid = mFrames.FirstChild();
-  firstKid->GetStyleContext(kidSC);
+  firstKid->GetStyleContext(&kidSC);
   firstKid->CreateContinuingFrame(aPresContext, cf, kidSC, childList);
   NS_RELEASE(kidSC);
   cf->SetInitialChildList(aPresContext, nsnull, childList);
@@ -616,7 +616,7 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
   nsTableFrame::GetTableFrame(this, tableFrame);
   nsIStyleContext*  styleContext = nsnull;
   
-  tableFrame->GetStyleContext(styleContext);
+  tableFrame->GetStyleContext(&styleContext);
   
   const nsStyleColor* colorData = 
       nsStyleUtil::FindNonTransparentBackground(styleContext);

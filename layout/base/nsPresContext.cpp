@@ -192,7 +192,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
 
   mShell->GetRootFrame(rootFrame);
   if (nsnull != rootFrame) {
-    rootFrame->GetStyleContext(rootStyleContext);
+    rootFrame->GetStyleContext(&rootStyleContext);
     rootStyleContext->RemapStyle(this);
     NS_RELEASE(rootStyleContext);
   

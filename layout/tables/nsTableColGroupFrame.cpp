@@ -522,7 +522,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
         {
           nsIStyleContextPtr colStyleContext;
           nsStylePosition * colPosition=nsnull;
-          colFrame->GetStyleContext(colStyleContext.AssignRef());
+          colFrame->GetStyleContext(colStyleContext.AssignPtr());
           colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
           if (colIndex<numCols)
           {
@@ -560,7 +560,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
             if (eStyleUnit_Auto==colPosition->mWidth.GetUnit())
             {
               // notice how we defer getting a mutable style context until we're sure we really need one
-              colFrame->GetStyleContext(colStyleContext.AssignRef());
+              colFrame->GetStyleContext(colStyleContext.AssignPtr());
               nsStylePosition * mutableColPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
               mutableColPosition->mWidth = position->mWidth;
               colStyleContext->RecalcAutomaticData(&aPresContext);
