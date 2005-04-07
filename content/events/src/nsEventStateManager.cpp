@@ -2537,7 +2537,7 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
 }
 
 void
-nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent)
+nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto)
 {
   if (!mLastMouseOverElement)
     return;
@@ -2560,7 +2560,8 @@ nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent)
         if (presContext) {
           nsEventStateManager* kidESM =
             NS_STATIC_CAST(nsEventStateManager*, presContext->EventStateManager());
-          kidESM->NotifyMouseOut(aEvent);
+          // Not moving into any element in this subdocument
+          kidESM->NotifyMouseOut(aEvent, nsnull);
         }
       }
     }
@@ -2579,7 +2580,7 @@ nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent)
   
   // Fire mouseout
   DispatchMouseEvent(aEvent, NS_MOUSE_EXIT_SYNTH,
-                     mLastMouseOverElement, nsnull);
+                     mLastMouseOverElement, aMovingInto);
   
   mLastMouseOverFrame = nsnull;
   mLastMouseOverElement = nsnull;
@@ -2622,7 +2623,7 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
   if (mLastMouseOverElement == aContent)
     return;
 
-  NotifyMouseOut(aEvent);
+  NotifyMouseOut(aEvent, aContent);
 
   // Store the first mouseOver event we fire and don't refire mouseOver
   // to that element while the first mouseOver is still ongoing.
@@ -2659,8 +2660,9 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
     break;
   case NS_MOUSE_EXIT:
     {
-      // This is actually the window mouse exit event. 
-      NotifyMouseOut(aEvent);
+      // This is actually the window mouse exit event. We're not moving
+      // into any new element.
+      NotifyMouseOut(aEvent, nsnull);
     }
     break;
   }
