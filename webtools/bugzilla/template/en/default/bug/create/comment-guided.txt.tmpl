@@ -19,33 +19,37 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 [%# INTERFACE:
-  # form: hash. This is the $::FORM variable from a bug submission (i.e. the
-  #   fields on a template from enter_bug.cgi.) It can be used to pull out 
-  #   various custom fields and format an initial Description entry from them. 
+  # This template has no interface.
+  #
+  # Form variables from a bug submission (i.e. the fields on a template from
+  # enter_bug.cgi) can be access via Bugzilla.cgi.param. It can be used to
+  # pull out various custom fields and format an initial Description entry
+  # from them.
   #%]  
 [% USE Bugzilla %]
-User-Agent:       [%+ Bugzilla.cgi.user_agent() %]
-Build Identifier: [%+ form.buildid %]
+[% cgi = Bugzilla.cgi %]
+User-Agent:       [%+ cgi.user_agent() %]
+Build Identifier: [%+ cgi.param("buildid") %]
 
-[%+ form.comment IF form.comment %]
+[%+ cgi.param("comment") IF cgi.param("comment") %]
 
-[%+ IF form.reproducible != "Choose one..." -%]
-Reproducible: [%+ form.reproducible %]
+[%+ IF cgi.param("reproducible") != "Choose one..." -%]
+Reproducible: [%+ cgi.param("reproducible") %]
 [% END %]
 
-[% IF !(form.reproduce_steps.match('^1\.\s+2\.\s+3\.\s+$') || form.reproduce_steps.match('^\s+$')) %]
+[% IF !(cgi.param("reproduce_steps").match('^1\.\s+2\.\s+3\.\s+$') || cgi.param("reproduce_steps").match('^\s+$')) %]
 Steps to Reproduce:
-[%+ form.reproduce_steps %]
+[%+ cgi.param("reproduce_steps") %]
 [% END %]
 
-[% IF form.actual_results -%]
+[% IF cgi.param("actual_results") -%]
 Actual Results:  
-[%+ form.actual_results %]
+[%+ cgi.param("actual_results") %]
 [% END %]
 
-[% IF form.expected_results %]
+[% IF cgi.param("expected_results") %]
 Expected Results:  
-[%+ form.expected_results %]
+[%+ cgi.param("expected_results") %]
 [% END %]
 
-[%+ form.additional_info %]
+[%+ cgi.param("additional_info") %]

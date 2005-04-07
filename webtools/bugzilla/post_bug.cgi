@@ -70,9 +70,8 @@ my $dbh = Bugzilla->dbh;
 # enter_bug template and then referencing them in the comment template.
 my $comment;
 
-$vars->{'form'} = \%::FORM;
-
-my $format = GetFormat("bug/create/comment", $::FORM{'format'}, "txt");
+my $format = GetFormat("bug/create/comment",
+                       scalar($cgi->param('format')), "txt");
 
 $template->process($format->{'template'}, $vars, \$comment)
   || ThrowTemplateError($template->error());
@@ -81,22 +80,22 @@ ValidateComment($comment);
 
 # Check that the product exists and that the user
 # is allowed to submit bugs in this product.
-my $product = $::FORM{'product'};
+my $product = $cgi->param('product');
 if (!CanEnterProduct($product)) {
     ThrowUserError("entry_access_denied", {product => $product});
 }
 my $product_id = get_product_id($product);
 
 # Set cookies
-if (exists $::FORM{'product'}) {
-    if (exists $::FORM{'version'}) {
+if (defined $cgi->param('product')) {
+    if (defined $cgi->param('version')) {
         $cgi->send_cookie(-name => "VERSION-$product",
                           -value => $cgi->param('version'),
                           -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
     }
 }
 
-if (defined $::FORM{'maketemplate'}) {
+if (defined $cgi->param('maketemplate')) {
     $vars->{'url'} = $::buffer;
     
     print $cgi->header();
@@ -108,34 +107,35 @@ if (defined $::FORM{'maketemplate'}) {
 umask 0;
 
 # Some sanity checking
-my $component_id = get_component_id($product_id, $::FORM{component});
+my $component_id = get_component_id($product_id,
+                                    scalar($cgi->param('component')));
 $component_id || ThrowUserError("require_component");
 
-if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
+if (!$cgi->param('short_desc') || trim($cgi->param('short_desc')) eq "") {
     ThrowUserError("require_summary");
 }
 
 # Check that if required a description has been provided
 # This has to go somewhere after 'maketemplate' 
 #  or it breaks bookmarks with no comments.
-if (Param("commentoncreate") && !trim($::FORM{'comment'})) {
+if (Param("commentoncreate") && !trim($cgi->param('comment'))) {
     ThrowUserError("description_required");
 }
 
-# If bug_file_loc is "http://", the default, strip it out and use an empty
-# value. 
-$::FORM{'bug_file_loc'} = "" if $::FORM{'bug_file_loc'} eq 'http://';
-    
-my $sql_product = SqlQuote($::FORM{'product'});
-my $sql_component = SqlQuote($::FORM{'component'});
+# If bug_file_loc is "http://", the default, use an empty value instead.
+$cgi->param('bug_file_loc', '') if $cgi->param('bug_file_loc') eq 'http://';
+
+my $sql_product = SqlQuote($cgi->param('product'));
+my $sql_component = SqlQuote($cgi->param('component'));
 
 # Default assignee is the component owner.
-if (!UserInGroup("editbugs") || $::FORM{'assigned_to'} eq "") {
+if (!UserInGroup("editbugs") || $cgi->param('assigned_to') eq "") {
     SendSQL("SELECT initialowner FROM components " .
             "WHERE id = $component_id");
-    $::FORM{'assigned_to'} = FetchOneColumn();
+    $cgi->param(-name => 'assigned_to', -value => FetchOneColumn());
 } else {
-    $::FORM{'assigned_to'} = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
+    $cgi->param(-name => 'assigned_to',
+                -value => DBNameToIdAndCheck(trim($cgi->param('assigned_to'))));
 }
 
 my @bug_fields = ("version", "rep_platform",
@@ -146,49 +146,45 @@ my @bug_fields = ("version", "rep_platform",
 # Retrieve the default QA contact if the field is empty
 if (Param("useqacontact")) {
     my $qa_contact;
-    if (!UserInGroup("editbugs") || trim($::FORM{'qa_contact'}) eq "") {
+    if (!UserInGroup("editbugs") || !defined $cgi->param('qa_contact')
+        || trim($cgi->param('qa_contact')) eq "") {
         SendSQL("SELECT initialqacontact FROM components " .
                 "WHERE id = $component_id");
         $qa_contact = FetchOneColumn();
     } else {
-        $qa_contact = DBNameToIdAndCheck(trim($::FORM{'qa_contact'}));
+        $qa_contact = DBNameToIdAndCheck(trim($cgi->param('qa_contact')));
     }
 
     if ($qa_contact) {
-        $::FORM{'qa_contact'} = $qa_contact;
+        $cgi->param(-name => 'qa_contact', -value => $qa_contact);
         push(@bug_fields, "qa_contact");
     }
 }
 
 if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
     # Default to NEW if the user hasn't selected another status
-    $::FORM{'bug_status'} ||= "NEW";
+    if (!$cgi->param('bug_status')) {
+        $cgi->param(-name => 'bug_status', -value => "NEW");
+    }
 } else {
     # Default to UNCONFIRMED if we are using it, NEW otherwise
-    $::FORM{'bug_status'} = 'UNCONFIRMED';
+    $cgi->param(-name => 'bug_status', -value => 'UNCONFIRMED');
     SendSQL("SELECT votestoconfirm FROM products WHERE id = $product_id");
-    if (!FetchOneColumn()) {
-        $::FORM{'bug_status'} = "NEW";
+    if (!FetchOneColumn()) {   
+        $cgi->param(-name => 'bug_status', -value => "NEW");
     }
 }
 
-if (!exists $::FORM{'target_milestone'}) {
+if (!defined $cgi->param('target_milestone')) {
     SendSQL("SELECT defaultmilestone FROM products WHERE name=$sql_product");
-    $::FORM{'target_milestone'} = FetchOneColumn();
+    $cgi->param(-name => 'target_milestone', -value => FetchOneColumn());
 }
 
 if (!Param('letsubmitterchoosepriority')) {
-    $::FORM{'priority'} = Param('defaultpriority');
+    $cgi->param(-name => 'priority', -value => Param('defaultpriority'));
 }
 
 GetVersionTable();
-
-# XXX Temporar FORM compatibility code, reflect changes back to CGI object
-$cgi->param('bug_file_loc', $::FORM{'bug_file_loc'});
-$cgi->param('assigned_to', $::FORM{'assigned_to'});
-$cgi->param('bug_status', $::FORM{'bug_status'});
-$cgi->param('target_milestone', $::FORM{'target_milestone'});
-$cgi->param('priority', $::FORM{'priority'});
 
 # Some more sanity checking
 CheckFormField($cgi, 'product',      \@::legal_product);
@@ -206,37 +202,32 @@ CheckFormFieldDefined($cgi, 'comment');
 
 my @used_fields;
 foreach my $field (@bug_fields) {
-    if (exists $::FORM{$field}) {
+    if (defined $cgi->param($field)) {
         push (@used_fields, $field);
     }
 }
 
-if (exists $::FORM{'bug_status'} 
-    && $::FORM{'bug_status'} ne 'UNCONFIRMED') 
+if (defined $cgi->param('bug_status') 
+    && $cgi->param('bug_status') ne 'UNCONFIRMED') 
 {
     push(@used_fields, "everconfirmed");
-    $::FORM{'everconfirmed'} = 1;
+    $cgi->param(-name => 'everconfirmed', -value => 1);
 }
 
-$::FORM{'product_id'} = $product_id;
+$cgi->param(-name => 'product_id', -value => $product_id);
 push(@used_fields, "product_id");
-$::FORM{component_id} = $component_id;
+$cgi->param(-name => 'component_id', -value => $component_id);
 push(@used_fields, "component_id");
 
 my %ccids;
-my @cc;
 
 # Create the ccid hash for inserting into the db
-# and the list for passing to Bugzilla::BugMail::Send
 # use a hash rather than a list to avoid adding users twice
-if (defined $::FORM{'cc'}) {
-    foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
-        if ($person ne "") {
-            my $ccid = DBNameToIdAndCheck($person);
-            if ($ccid && !$ccids{$ccid}) {
-                $ccids{$ccid} = 1;
-                push(@cc, $person);
-            }
+if (defined $cgi->param('cc')) {
+    foreach my $person ($cgi->param('cc')) {
+        my $ccid = DBNameToIdAndCheck($person);
+        if ($ccid && !$ccids{$ccid}) {
+           $ccids{$ccid} = 1;
         }
     }
 }
@@ -245,8 +236,8 @@ if (defined $::FORM{'cc'}) {
 my @keywordlist;
 my %keywordseen;
 
-if ($::FORM{'keywords'} && UserInGroup("editbugs")) {
-    foreach my $keyword (split(/[\s,]+/, $::FORM{'keywords'})) {
+if ($cgi->param('keywords') && UserInGroup("editbugs")) {
+    foreach my $keyword (split(/[\s,]+/, $cgi->param('keywords'))) {
         if ($keyword eq '') {
            next;
         }
@@ -264,27 +255,27 @@ if ($::FORM{'keywords'} && UserInGroup("editbugs")) {
 
 # Check for valid dependency info. 
 foreach my $field ("dependson", "blocked") {
-    if (UserInGroup("editbugs") && defined($::FORM{$field}) &&
-        $::FORM{$field} ne "") {
+    if (UserInGroup("editbugs") && defined($cgi->param($field)) &&
+        $cgi->param($field) ne "") {
         my @validvalues;
-        foreach my $id (split(/[\s,]+/, $::FORM{$field})) {
+        foreach my $id (split(/[\s,]+/, $cgi->param($field))) {
             next unless $id;
             ValidateBugID($id, $field);
             push(@validvalues, $id);
         }
-        $::FORM{$field} = join(",", @validvalues);
+        $cgi->param(-name => $field, -value => join(",", @validvalues));
     }
 }
 # Gather the dependecy list, and make sure there are no circular refs
 my %deps;
-if (UserInGroup("editbugs") && defined($::FORM{'dependson'})) {
+if (UserInGroup("editbugs") && defined($cgi->param('dependson'))) {
     my $me = "blocked";
     my $target = "dependson";
     my %deptree;
     for (1..2) {
         $deptree{$target} = [];
         my %seen;
-        foreach my $i (split('[\s,]+', $::FORM{$target})) {
+        foreach my $i (split('[\s,]+', $cgi->param($target))) {
             if (!exists $seen{$i}) {
                 push(@{$deptree{$target}}, $i);
                 $seen{$i} = 1;
@@ -346,7 +337,7 @@ my $sql = "INSERT INTO bugs " .
   "VALUES (";
 
 foreach my $field (@used_fields) {
-    $sql .= SqlQuote($::FORM{$field}) . ",";
+    $sql .= SqlQuote($cgi->param($field)) . ",";
 }
 
 $comment =~ s/\r\n?/\n/g;     # Get rid of \r.
@@ -359,19 +350,19 @@ $sql .= "$::userid, $sql_timestamp, $sql_timestamp, ";
 
 # Time Tracking
 if (UserInGroup(Param("timetrackinggroup")) &&
-    defined $::FORM{'estimated_time'}) {
+    defined $cgi->param('estimated_time')) {
 
-    my $est_time = $::FORM{'estimated_time'};
+    my $est_time = $cgi->param('estimated_time');
     Bugzilla::Bug::ValidateTime($est_time, 'estimated_time');
     $sql .= SqlQuote($est_time) . "," . SqlQuote($est_time) . ",";
 } else {
     $sql .= "0, 0, ";
 }
 
-if ((UserInGroup(Param("timetrackinggroup"))) && ($::FORM{'deadline'})) {
-    Bugzilla::Util::ValidateDate($::FORM{'deadline'}, 'YYYY-MM-DD');
-    my $str = $::FORM{'deadline'};
-    $sql .= SqlQuote($::FORM{'deadline'});  
+if ((UserInGroup(Param("timetrackinggroup"))) && ($cgi->param('deadline'))) {
+    Bugzilla::Util::ValidateDate($cgi->param('deadline'), 'YYYY-MM-DD');
+    my $str = $cgi->param('deadline');
+    $sql .= SqlQuote($cgi->param('deadline'));  
 } else {
     $sql .= "NULL";
 }
@@ -380,10 +371,10 @@ $sql .= ")";
 
 # Groups
 my @groupstoadd = ();
-foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
-    if ($::FORM{$b}) {
+foreach my $b (grep(/^bit-\d*$/, $cgi->param())) {
+    if ($cgi->param($b)) {
         my $v = substr($b, 4);
-        $v =~ /^(\d+)$/
+        detaint_natural($v)
           || ThrowCodeError("group_id_invalid");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
@@ -444,7 +435,7 @@ foreach my $grouptoadd (@groupstoadd) {
 # Add the initial comment, allowing for the fact that it may be private
 my $privacy = 0;
 if (Param("insidergroup") && UserInGroup(Param("insidergroup"))) {
-    $privacy = $::FORM{'commentprivacy'} ? 1 : 0;
+    $privacy = $cgi->param('commentprivacy') ? 1 : 0;
 }
 
 SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate) 
@@ -474,7 +465,7 @@ if (UserInGroup("editbugs")) {
                 " keywords = " . SqlQuote(join(', ', @list)) .
                 " WHERE bug_id = $id");
     }
-    if (defined $::FORM{'dependson'}) {
+    if (defined $cgi->param('dependson')) {
         my $me = "blocked";
         my $target = "dependson";
         for (1..2) {
