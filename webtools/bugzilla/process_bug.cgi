@@ -44,6 +44,7 @@ use Bugzilla::Util;
 
 # Use the Flag module to modify flag data if the user set flags.
 use Bugzilla::Flag;
+use Bugzilla::FlagType;
 
 # Shut up misguided -w warnings about "used only once":
 
@@ -138,7 +139,7 @@ foreach my $field ("dependson", "blocked") {
 # The order of these function calls is important, as both Flag::validate
 # and FlagType::validate assume User::match_field has ensured that the values
 # in the requestee fields are legitimate user email addresses.
-&Bugzilla::User::match_field({
+&Bugzilla::User::match_field($cgi, {
     'qa_contact'                => { 'type' => 'single' },
     'newcc'                     => { 'type' => 'multi'  },
     'masscc'                    => { 'type' => 'multi'  },
@@ -148,8 +149,8 @@ foreach my $field ("dependson", "blocked") {
 # Validate flags, but only if the user is changing a single bug,
 # since the multi-change form doesn't include flag changes.
 if (defined $::FORM{'id'}) {
-    Bugzilla::Flag::validate(\%::FORM, $::FORM{'id'});
-    Bugzilla::FlagType::validate(\%::FORM, $::FORM{'id'});
+    Bugzilla::Flag::validate($cgi, $::FORM{'id'});
+    Bugzilla::FlagType::validate($cgi, $::FORM{'id'});
 }
 
 ######################################################################
@@ -1814,7 +1815,7 @@ foreach my $id (@idlist) {
     # Set and update flags.
     if ($UserInEditGroupSet) {
         my $target = Bugzilla::Flag::GetTarget($id);
-        Bugzilla::Flag::process($target, $timestamp, \%::FORM);
+        Bugzilla::Flag::process($target, $timestamp, $cgi);
     }
     if ($bug_changed) {
         SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp WHERE bug_id = $id");

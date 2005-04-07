@@ -228,7 +228,7 @@ sub count {
 
 =over
 
-=item C<validate($data, $bug_id)>
+=item C<validate($cgi, $bug_id)>
 
 Validates fields containing flag modifications.
 
@@ -238,17 +238,17 @@ Validates fields containing flag modifications.
 
 sub validate {
     my $user = Bugzilla->user;
-    my ($data, $bug_id) = @_;
+    my ($cgi, $bug_id) = @_;
   
     # Get a list of flags to validate.  Uses the "map" function
     # to extract flag IDs from form field names by matching fields
     # whose name looks like "flag-nnn", where "nnn" is the ID,
     # and returning just the ID portion of matching field names.
-    my @ids = map(/^flag-(\d+)$/ ? $1 : (), keys %$data);
+    my @ids = map(/^flag-(\d+)$/ ? $1 : (), $cgi->param());
   
     foreach my $id (@ids)
     {
-        my $status = $data->{"flag-$id"};
+        my $status = $cgi->param("flag-$id");
         
         # Make sure the flag exists.
         my $flag = get($id);
@@ -277,9 +277,9 @@ sub validate {
         # feature and the attachment is marked private).
         if ($status eq '?'
             && $flag->{type}->{is_requesteeble}
-            && trim($data->{"requestee-$id"}))
+            && trim($cgi->param("requestee-$id")))
         {
-            my $requestee_email = trim($data->{"requestee-$id"});
+            my $requestee_email = trim($cgi->param("requestee-$id"));
             if ($requestee_email ne $flag->{'requestee'}->{'email'}) {
                 # We know the requestee exists because we ran
                 # Bugzilla::User::match_field before getting here.
@@ -299,7 +299,7 @@ sub validate {
                 # Throw an error if the target is a private attachment and
                 # the requestee isn't in the group of insiders who can see it.
                 if ($flag->{target}->{attachment}->{exists}
-                    && $data->{'isprivate'}
+                    && $cgi->param('isprivate')
                     && Param("insidergroup")
                     && !$requestee->in_group(Param("insidergroup")))
                 {
@@ -353,21 +353,21 @@ sub snapshot {
 
 =over
 
-=item C<process($target, $timestamp, $data)>
+=item C<process($target, $timestamp, $cgi)>
 
 Processes changes to flags.
 
 The target is the bug or attachment this flag is about, the timestamp
 is the date/time the bug was last touched (so that changes to the flag
-can be stamped with the same date/time), the data is the form data
-with flag fields that the user submitted.
+can be stamped with the same date/time), the cgi is the CGI object
+used to obtain the flag fields that the user submitted.
 
 =back
 
 =cut
 
 sub process {
-    my ($target, $timestamp, $data) = @_;
+    my ($target, $timestamp, $cgi) = @_;
 
     my $dbh = Bugzilla->dbh;
     my $bug_id = $target->{'bug'}->{'id'};
@@ -381,14 +381,14 @@ sub process {
     my @old_summaries = snapshot($bug_id, $attach_id);
     
     # Cancel pending requests if we are obsoleting an attachment.
-    if ($attach_id && $data->{'isobsolete'}) {
+    if ($attach_id && $cgi->param('isobsolete')) {
         CancelRequests($bug_id, $attach_id);
     }
 
     # Create new flags and update existing flags.
-    my $new_flags = FormToNewFlags($target, $data);
+    my $new_flags = FormToNewFlags($target, $cgi);
     foreach my $flag (@$new_flags) { create($flag, $timestamp) }
-    modify($data, $timestamp);
+    modify($cgi, $timestamp);
     
     # In case the bug's product/component has changed, clear flags that are
     # no longer valid.
@@ -521,7 +521,7 @@ sub migrate {
 
 =over
 
-=item C<modify($data, $timestamp)>
+=item C<modify($cgi, $timestamp)>
 
 Modifies flags in the database when a user changes them.
 Note that modified flags are always set active (is_active = 1) -
@@ -533,14 +533,14 @@ attachment.cgi midairs. See bug 223878 for details.
 =cut
 
 sub modify {
-    my ($data, $timestamp) = @_;
+    my ($cgi, $timestamp) = @_;
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
     $timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
     
     # Extract a list of flags from the form data.
-    my @ids = map(/^flag-(\d+)$/ ? $1 : (), keys %$data);
+    my @ids = map(/^flag-(\d+)$/ ? $1 : (), $cgi->param());
     
     # Loop over flags and update their record in the database if necessary.
     # Two kinds of changes can happen to a flag: it can be set to a different
@@ -550,8 +550,8 @@ sub modify {
     foreach my $id (@ids) {
         my $flag = get($id);
 
-        my $status = $data->{"flag-$id"};
-        my $requestee_email = trim($data->{"requestee-$id"});
+        my $status = $cgi->param("flag-$id");
+        my $requestee_email = trim($cgi->param("requestee-$id"));
 
         
         # Ignore flags the user didn't change. There are two components here:
@@ -672,7 +672,7 @@ sub clear {
 
 =over
 
-=item C<FormToNewFlags($target, $data)
+=item C<FormToNewFlags($target, $cgi)
 
 Someone pleasedocument this function.
 
@@ -681,20 +681,20 @@ Someone pleasedocument this function.
 =cut
 
 sub FormToNewFlags {
-    my ($target, $data) = @_;
+    my ($target, $cgi) = @_;
     
     # Get information about the setter to add to each flag.
     # Uses a conditional to suppress Perl's "used only once" warnings.
     my $setter = new Bugzilla::User($::userid);
 
     # Extract a list of flag type IDs from field names.
-    my @type_ids = map(/^flag_type-(\d+)$/ ? $1 : (), keys %$data);
-    @type_ids = grep($data->{"flag_type-$_"} ne 'X', @type_ids);
+    my @type_ids = map(/^flag_type-(\d+)$/ ? $1 : (), $cgi->param());
+    @type_ids = grep($cgi->param("flag_type-$_") ne 'X', @type_ids);
     
     # Process the form data and create an array of flag objects.
     my @flags;
     foreach my $type_id (@type_ids) {
-        my $status = $data->{"flag_type-$type_id"};
+        my $status = $cgi->param("flag_type-$type_id");
         &::trick_taint($status);
     
         # Create the flag record and populate it with data from the form.
@@ -706,7 +706,7 @@ sub FormToNewFlags {
         };
 
         if ($status eq "?") {
-            my $requestee = $data->{"requestee_type-$type_id"};
+            my $requestee = $cgi->param("requestee_type-$type_id");
             if ($requestee) {
                 my $requestee_id = login_to_id($requestee);
                 $flag->{'requestee'} = new Bugzilla::User($requestee_id);

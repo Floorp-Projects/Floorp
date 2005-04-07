@@ -303,7 +303,7 @@ sub count {
 
 =over
 
-=item C<validate($data, $bug_id, $attach_id)>
+=item C<validate($cgi, $bug_id, $attach_id)>
 
 Get a list of flag types to validate.  Uses the "map" function
 to extract flag type IDs from form field names by matching columns
@@ -316,13 +316,13 @@ and returning just the ID portion of matching field names.
 
 sub validate {
     my $user = Bugzilla->user;
-    my ($data, $bug_id, $attach_id) = @_;
+    my ($cgi, $bug_id, $attach_id) = @_;
   
-    my @ids = map(/^flag_type-(\d+)$/ ? $1 : (), keys %$data);
+    my @ids = map(/^flag_type-(\d+)$/ ? $1 : (), $cgi->param());
   
     foreach my $id (@ids)
     {
-        my $status = $data->{"flag_type-$id"};
+        my $status = $cgi->param("flag_type-$id");
         
         # Don't bother validating types the user didn't touch.
         next if $status eq "X";
@@ -348,9 +348,9 @@ sub validate {
         # feature and the attachment is marked private).
         if ($status eq '?'
             && $flag_type->{is_requesteeble}
-            && trim($data->{"requestee_type-$id"}))
+            && trim($cgi->param("requestee_type-$id")))
         {
-            my $requestee_email = trim($data->{"requestee_type-$id"});
+            my $requestee_email = trim($cgi->param("requestee_type-$id"));
 
             # We know the requestee exists because we ran
             # Bugzilla::User::match_field before getting here.
@@ -370,7 +370,7 @@ sub validate {
             # the requestee isn't in the group of insiders who can see it.
             if ($attach_id
                 && Param("insidergroup")
-                && $data->{'isprivate'}
+                && $cgi->param('isprivate')
                 && !$requestee->in_group(Param("insidergroup")))
             {
                 ThrowUserError("flag_requestee_unauthorized_attachment",

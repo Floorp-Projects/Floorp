@@ -687,7 +687,8 @@ sub match {
 # Here's what it does:
 #
 # 1. Accepts a list of fields along with whether they may take multiple values
-# 2. Takes the values of those fields from $::FORM and passes them to match()
+# 2. Takes the values of those fields from the first parameter, a $cgi object 
+#    and passes them to match()
 # 3. Checks the results of the match and displays confirmation or failure
 #    messages as appropriate.
 #
@@ -710,7 +711,7 @@ sub match {
 
 # How to call it:
 #
-# Bugzilla::User::match_field ({
+# Bugzilla::User::match_field($cgi, {
 #   'field_name'    => { 'type' => fieldtype },
 #   'field_name2'   => { 'type' => fieldtype },
 #   [...]
@@ -720,8 +721,8 @@ sub match {
 #
 
 sub match_field {
-
-    my $fields         = shift;   # arguments as a hash
+    my $cgi          = shift;   # CGI object to look up fields in
+    my $fields       = shift;   # arguments as a hash
     my $matches      = {};      # the values sent to the template
     my $matchsuccess = 1;       # did the match fail?
     my $need_confirm = 0;       # whether to display confirmation screen
@@ -729,11 +730,9 @@ sub match_field {
     # prepare default form values
 
     my $vars = $::vars;
-    $vars->{'form'}  = \%::FORM;
-    $vars->{'mform'} = \%::MFORM;
 
     # What does a "--do_not_change--" field look like (if any)?
-    my $dontchange = $vars->{'form'}->{'dontchange'};
+    my $dontchange = $cgi->param('dontchange');
 
     # Fields can be regular expressions matching multiple form fields
     # (f.e. "requestee-(\d+)"), so expand each non-literal field
@@ -747,7 +746,7 @@ sub match_field {
             $expanded_fields->{$field_pattern} = $fields->{$field_pattern};
         }
         else {
-            my @field_names = grep(/$field_pattern/, keys %{$vars->{'form'}});
+            my @field_names = grep(/$field_pattern/, $cgi->param());
             foreach my $field_name (@field_names) {
                 $expanded_fields->{$field_name} = 
                   { type => $fields->{$field_pattern}->{'type'} };
@@ -774,23 +773,27 @@ sub match_field {
         # Tolerate fields that do not exist.
         #
         # This is so that fields like qa_contact can be specified in the code
-        # and it won't break if $::MFORM does not define them.
+        # and it won't break if the CGI object does not know about them.
         #
         # It has the side-effect that if a bad field name is passed it will be
         # quietly ignored rather than raising a code error.
 
-        next if !defined($vars->{'mform'}->{$field});
+        next if !defined $cgi->param($field);
 
         # Skip it if this is a --do_not_change-- field
-        next if $dontchange && $dontchange eq $vars->{'form'}->{$field};
+        next if $dontchange && $dontchange eq $cgi->param($field);
 
         # We need to move the query to $raw_field, where it will be split up,
-        # modified by the search, and put back into $::FORM and $::MFORM
+        # modified by the search, and put back into the CGI environment
         # incrementally.
 
-        my $raw_field = join(" ", @{$vars->{'mform'}->{$field}});
-        $vars->{'form'}->{$field}  = '';
-        $vars->{'mform'}->{$field} = [];
+        my $raw_field = join(" ", $cgi->param($field));
+
+        # When we add back in values later, it matters that we delete
+        # the param here, and not set it to '', so that we will add
+        # things to an empty list, and not to a list containing one
+        # empty string
+        $cgi->delete($field);
 
         my @queries = ();
 
@@ -835,12 +838,12 @@ sub match_field {
             if ((scalar(@{$users}) == 1)
                 && (@{$users}[0]->{'login'} eq $query))
             {
-                # delimit with spaces if necessary
-                if ($vars->{'form'}->{$field}) {
-                    $vars->{'form'}->{$field} .= " ";
-                }
-                $vars->{'form'}->{$field} .= @{$users}[0]->{'login'};
-                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'login'};
+                $cgi->append(-name=>$field,
+                             -values=>[@{$users}[0]->{'login'}]);
+
+                # XXX FORM compatilibity code, will be removed in bug 225818
+                $::FORM{$field} = join(" ", $cgi->param($field));
+
                 next;
             }
 
@@ -850,12 +853,13 @@ sub match_field {
             # here is where it checks for multiple matches
 
             if (scalar(@{$users}) == 1) { # exactly one match
-                # delimit with spaces if necessary
-                if ($vars->{'form'}->{$field}) {
-                    $vars->{'form'}->{$field} .= " ";
-                }
-                $vars->{'form'}->{$field} .= @{$users}[0]->{'login'};
-                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'login'};
+
+                $cgi->append(-name=>$field,
+                             -values=>[@{$users}[0]->{'login'}]);
+
+                # XXX FORM compatilibity code, will be removed in bug 225818
+                $::FORM{$field} = join(" ", $cgi->param($field));
+
                 $need_confirm = 1 if &::Param('confirmuniqueusermatch');
 
             }

@@ -126,10 +126,11 @@ elsif ($action eq "insert")
   # The order of these function calls is important, as both Flag::validate
   # and FlagType::validate assume User::match_field has ensured that the values
   # in the requestee fields are legitimate user email addresses.
-  Bugzilla::User::match_field({ '^requestee(_type)?-(\d+)$' => 
-                                    { 'type' => 'single' } });
-  Bugzilla::Flag::validate(\%::FORM, $bugid);
-  Bugzilla::FlagType::validate(\%::FORM, $bugid, $::FORM{'id'});
+  Bugzilla::User::match_field($cgi, {
+      '^requestee(_type)?-(\d+)$' => { 'type' => 'single' }
+  });
+  Bugzilla::Flag::validate($cgi, $bugid);
+  Bugzilla::FlagType::validate($cgi, $bugid, $::FORM{'id'});
   
   insert($data);
 }
@@ -155,10 +156,11 @@ elsif ($action eq "update")
   # The order of these function calls is important, as both Flag::validate
   # and FlagType::validate assume User::match_field has ensured that the values
   # in the requestee fields are legitimate user email addresses.
-  Bugzilla::User::match_field({ '^requestee(_type)?-(\d+)$' => 
-                                    { 'type' => 'single' } });
-  Bugzilla::Flag::validate(\%::FORM, $bugid);
-  Bugzilla::FlagType::validate(\%::FORM, $bugid, $::FORM{'id'});
+  Bugzilla::User::match_field($cgi, {
+      '^requestee(_type)?-(\d+)$' => { 'type' => 'single' }
+  });
+  Bugzilla::Flag::validate($cgi, $bugid);
+  Bugzilla::FlagType::validate($cgi, $bugid, $::FORM{'id'});
   
   update();
 }
@@ -1033,7 +1035,7 @@ sub insert
   
   # Create flags.
   my $target = Bugzilla::Flag::GetTarget(undef, $attachid);
-  Bugzilla::Flag::process($target, $timestamp, \%::FORM);
+  Bugzilla::Flag::process($target, $timestamp, $cgi);
    
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'mailrecipients'} =  { 'changer' => Bugzilla->user->login,
@@ -1168,7 +1170,7 @@ sub update
   # is obsoleting this attachment without deleting any requests
   # the user submits at the same time.
   my $target = Bugzilla::Flag::GetTarget(undef, $::FORM{'id'});
-  Bugzilla::Flag::process($target, $timestamp, \%::FORM);
+  Bugzilla::Flag::process($target, $timestamp, $cgi);
 
   # Update the attachment record in the database.
   SendSQL("UPDATE  attachments 
