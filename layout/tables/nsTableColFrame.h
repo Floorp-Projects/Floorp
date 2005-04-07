@@ -195,7 +195,7 @@ protected:
   // the starting index of the column (starting at 0) that this col object represents //
   PRUint32 mColIndex:        16;
   
-  // border width in pixels
+  // border width in pixels of the inner half of the border only
   BCPixelSize mLeftBorderWidth;
   BCPixelSize mRightBorderWidth;
   BCPixelSize mTopContBorderWidth;

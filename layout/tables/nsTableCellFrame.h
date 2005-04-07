@@ -452,12 +452,15 @@ public:
 
   virtual nsIAtom* GetType() const;
 
+  // Get the *inner half of the border only*, in twips.
   virtual nsMargin* GetBorderWidth(float     aPixelsToTwips,
                                    nsMargin& aBorder) const;
-  nscoord GetBorderWidth(PRUint8 aSide) const;
 
-  void SetBorderWidth(const nsMargin& aBorder);
-  void SetBorderWidth(PRUint8 aSide, nscoord aPixelValue);
+  // Get the *inner half of the border only*, in pixels.
+  BCPixelSize GetBorderWidth(PRUint8 aSide) const;
+
+  // Set the full (both halves) width of the border
+  void SetBorderWidth(PRUint8 aSide, BCPixelSize aPixelValue);
 
   virtual void GetSelfOverflow(nsRect& aOverflowArea);
 
@@ -477,12 +480,12 @@ protected:
 
 private:
   
-  // These are the half of the border width that goes inside the cell
-  // boundary, in pixels.
-  PRUint32 mTopBorder:    8;
-  PRUint32 mRightBorder:  8;
-  PRUint32 mBottomBorder: 8;
-  PRUint32 mLeftBorder:   8;
+  // These are the entire width of the border (the cell edge contains only
+  // the inner half, per the macros in nsTablePainter.h).
+  BCPixelSize mTopBorder;
+  BCPixelSize mRightBorder;
+  BCPixelSize mBottomBorder;
+  BCPixelSize mLeftBorder;
 };
 
 #endif

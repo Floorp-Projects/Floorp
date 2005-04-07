@@ -170,8 +170,6 @@ private:
   * - "ColGroup-list" which contains the col group frames
   *
   * @see nsLayoutAtoms::colGroupList
-  *
-  * TODO: make methods virtual so nsTableFrame can be used as a base class in the future.
   */
 class nsTableFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
@@ -1116,34 +1114,3 @@ return aReturn;}
   var = 1.0f / var;
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
