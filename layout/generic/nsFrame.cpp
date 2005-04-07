@@ -948,6 +948,12 @@ nsFrame::PaintSelf(nsPresContext*      aPresContext,
                                mStyleContext, 0);
 }
 
+nsresult
+nsIFrame::CreateWidgetForView(nsIView* aView)
+{
+  return aView->CreateWidget(kWidgetCID);
+}
+
 /**
   *
  */
@@ -5670,9 +5676,8 @@ nsFrame::SetParent(const nsIFrame* aParent)
     if (needsWidget) {
         nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
         nsIView* view = GetView();
-
         if (!view->HasWidget())
-           view->CreateWidget(kWidgetCID);   
+          CreateWidgetForView(view);
     }
   }
 

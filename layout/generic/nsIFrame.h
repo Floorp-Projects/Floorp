@@ -718,6 +718,14 @@ public:
   virtual PRBool NeedsView() { return PR_FALSE; }
 
   /**
+   * This frame needs a view with a widget (e.g. because it's fixed
+   * positioned), so we call this to create the widget. If widgets for
+   * this frame type need to be of a certain type or require special
+   * initialization, that can be done here.
+   */
+  virtual nsresult CreateWidgetForView(nsIView* aView);
+
+  /**
    * Event handling of GUI events.
    *
    * @param   aEvent event structure describing the type of event and rge widget

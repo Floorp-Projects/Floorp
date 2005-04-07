@@ -62,8 +62,6 @@
 #include "nsReflowPath.h"
 #include "nsCSSFrameConstructor.h"
 
-static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
-
 NS_IMETHODIMP
 nsHTMLContainerFrame::Paint(nsPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
@@ -581,7 +579,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
   // above the scrolling area
   const nsStyleDisplay* display = aFrame->GetStyleContext()->GetStyleDisplay();
   if (NS_STYLE_POSITION_FIXED == display->mPosition) {
-    view->CreateWidget(kCChildCID);
+    aFrame->CreateWidgetForView(view);
   }
 
   // Reparent views on any child frames (or their descendants) to this
