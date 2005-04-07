@@ -82,7 +82,7 @@ open ( UNICODATA , "< UnicodeData-Latest.txt")
 # Open the output file
 #
 ######################################################################
-open ( OUT , "> ../base/src/bidicattable.h") 
+open ( OUT , "> ../base/bidicattable.h") 
   || die "cannot open output ../base/src/bidicattable.h file";
 
 ######################################################################
@@ -194,16 +194,17 @@ while(<UNICODATA>) {
 
 @range = (
   0x0000,   0x07ff, 
-  0x0900,   0x19ff,
-  0x1d00,   0x2bff,
-  0x2e80,   0x33ff,
+  0x0900,   0x1a1f,
+  0x1d00,   0x2ddf,
+  0x2e00,   0x33ff,
   0x4dc0,   0x4dff,
-  0xa000,   0xa4ff,	  
-  0xf900,  0x1013f,
+  0xa000,   0xa4ff,
+  0xa700,   0xa82f,
+  0xf900,  0x1018f,
   0x10300, 0x104ff,
   0x10800, 0x1083f,
-  0x1d000, 0x1d1ff,
-  0x1d300, 0x1d7ff,
+  0x10a00, 0x10a5f,
+  0x1d000, 0x1d7ff,
   0x2f800, 0x2fa1f,
   0xe0000, 0xe01ff  
 );
