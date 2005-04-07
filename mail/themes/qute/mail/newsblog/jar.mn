@@ -1,8 +1,0 @@
-classic.jar:
-  skin/classic/messenger-newsblog/contents.rdf
-  skin/classic/messenger-newsblog/feed-subscriptions.css
-  skin/classic/messenger-newsblog/newsBlogOverlay.css
-  skin/classic/messenger-newsblog/icons/rss-feed.png
-  skin/classic/messenger-newsblog/icons/rss-feed-new.png
-  skin/classic/messenger-newsblog/icons/server-rss.png
-  skin/classic/messenger-newsblog/icons/folder-search-rss.png
