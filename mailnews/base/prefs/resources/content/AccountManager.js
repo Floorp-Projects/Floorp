@@ -630,7 +630,7 @@ function saveAccount(accountValues, account)
         }
       }
       else {
-      if (slot in dest && dest[slot] != typeArray[slot]) {
+      if (slot in dest && typeArray[slot] != undefined && dest[slot] != typeArray[slot]) {
         try {
           dest[slot] = typeArray[slot];
           } 
