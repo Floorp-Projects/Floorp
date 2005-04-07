@@ -79,6 +79,7 @@ SDK_XPIDLSRCS = 						\
 JAVA_XPIDLSRCS = \
 				nsIDownload.idl \
 				nsITransfer.idl \
+				nsIWebProgressListener2.idl \
 				$(NULL)
 
 XPIDLSRCS = 							\
