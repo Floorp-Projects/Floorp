@@ -35,9 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ImageSurface.h"
+#include "gfxImageSurface.h"
 
-ImageSurface::ImageSurface(int format, long width, long height) :
+gfxImageSurface::gfxImageSurface(int format, long width, long height) :
     mFormat(format), mWidth(width), mHeight(height)
 {
     mData = new unsigned char[width * height * 4];
@@ -50,7 +50,7 @@ ImageSurface::ImageSurface(int format, long width, long height) :
 
 }
 
-ImageSurface::~ImageSurface()
+gfxImageSurface::~gfxImageSurface()
 {
     delete[] mData;
 }

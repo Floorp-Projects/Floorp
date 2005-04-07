@@ -45,8 +45,8 @@
 
 class gfxImageSurface : public gfxASurface {
 public:
-    ImageSurface(int format, long width, long height);
-    virtual ~ImageSurface();
+    gfxImageSurface(int format, long width, long height);
+    virtual ~gfxImageSurface();
 
     // <insert refcount stuff here>
 
