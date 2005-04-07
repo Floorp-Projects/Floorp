@@ -614,6 +614,8 @@
           if (this.mSessionReturns == 0) 
             this.postSearchCleanup();
                
+          if (this.mFinishAfterSearch)
+            this.finishAutoComplete(false, this.mFireAfterSearch, null);
         ]]></body>
       </method>
 
@@ -670,9 +672,6 @@
              if (defaultSession)
                 this.autoFillInput(defaultSession, this.mLastResults[defaultSession], true);         
           }
-          
-          if (this.mFinishAfterSearch)
-            this.finishAutoComplete(false, this.mFireAfterSearch, null);
         ]]></body>
       </method>
 
@@ -686,46 +685,44 @@
           this.mFinishAfterSearch = false;
           this.mFireAfterSearch = false;
           if (this.mNeedToFinish && !this.disableAutocomplete) {
-            // if a search is happening at this juncture, bail out of this function
-            // and let the search finish, and tell it to come back here when it's done
-            if (this.isSearching || this.isWaiting) {
-              this.mFinishAfterSearch = true;
-              this.mFireAfterSearch = aFireTextCommand;
-              return;
-            }
-            
-            this.mNeedToFinish = false;
-
             // set textbox value to either override value, or default search result 
             var val = this.resultsPopup.getOverrideValue();
             if (val) {
               this.value = val;
-            } else if (this.mTransientValue) {
-              // do nothing
-            } else if (this.forceComplete && (this.mNeedToComplete || aForceComplete)) {
-              var defaultSession = this.getDefaultSession();
-
+              this.mNeedToFinish = false;
+            } else if (this.mTransientValue || !this.forceComplete ||
+                       !(this.mNeedToComplete || aForceComplete)) {
+              this.mNeedToFinish = false;
+            } else {
               // we want to use the default item index for the first session which gave us a valid
               // default item index...
-              var results;
               for (var name in this.mLastResults) {
-               results = this.mLastResults[name];
+                var results = this.mLastResults[name];
                if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
                {
-                 defaultSession = name;
+                  this.value = this.getSessionValueAt(name, results.defaultItemIndex);
+                  this.mNeedToFinish = false;
                  break;
                }
               }
 
-              if (defaultSession) {
-                results = this.mLastResults[defaultSession];
-                if (results && !this.noMatch)
-                  if (results.defaultItemIndex != -1)
-                  this.value = this.getSessionValueAt(defaultSession, results.defaultItemIndex);
-                  else
+              if (this.mNeedToFinish) {
+                // if a search is happening at this juncture, bail out of this function
+                // and let the search finish, and tell it to come back here when it's done
+                if (this.isSearching || this.isWaiting) {
+                  this.mFinishAfterSearch = true;
+                  this.mFireAfterSearch = aFireTextCommand;
+                  return;
+                }
+
+                this.mNeedToFinish = false;
+                var defaultSession = this.getDefaultSession();
+                if (defaultSession)
                     this.value = this.getSessionValueAt(defaultSession, 0); // preselect the first one...
               }
             }
+
+            this.stopLookup();
 
             if (!this.noMatch)
               this.autoComplete();
