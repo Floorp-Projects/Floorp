@@ -71,7 +71,6 @@ enum ENameRule {
 
 enum EValueRule {
   eNoValue,
-  eHasValue,         // Supports value from waistate:valuenow attribute
   eHasValueMinMax    // Supports value, min and max from waistate:valuenow, valuemin and valuemax
 };
 
@@ -95,6 +94,7 @@ struct nsRoleMapEntry
   nsStateMapEntry attributeMap2;
   nsStateMapEntry attributeMap3;
   nsStateMapEntry attributeMap4;
+  nsStateMapEntry attributeMap5;
 };
 
 class nsAccessible : public nsAccessNodeWrap, 
