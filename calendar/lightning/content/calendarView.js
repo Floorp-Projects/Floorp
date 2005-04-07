@@ -39,8 +39,9 @@
   every view needs to have the following:
 
   properties:
-  startDate   calIDateTime
-  endDate     calIDateTime
+  displayCalendar  calICalendar
+  startDate        calIDateTime
+  endDate          calIDateTime
 
   functions:
   goToDay
@@ -49,6 +50,11 @@
 */
 
 calendarView.prototype = {
+
+
+    setDisplayCalendar: function(calendar) {
+        this.displayCalendar = calendar;
+    },
 
     /* public stuff */
     refresh: function() {
@@ -65,9 +71,9 @@ calendarView.prototype = {
             }
         };
 
-        var ccalendar = getCalendar();
-        ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
-                           0, this.startDate, this.endDate, getListener);
+        var calendar = this.displayCalendar;
+        calendar.getItems(calendar.ITEM_FILTER_TYPE_EVENT | calendar.ITEM_FILTER_CLASS_OCCURRENCES,
+                          0, this.startDate, this.endDate, getListener);
     },
 
     goToToday: function() {
