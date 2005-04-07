@@ -1652,7 +1652,8 @@ DocumentViewerImpl::Hide(void)
     // right now returning from print and the layout frame that was
     // created for this document is being destroyed. In such a case we
     // ignore the Hide() call.
-
+    // XXX The above statement is a lie. We do not check our parents.
+    // in fact it always returns false for subdocuments.
     return NS_OK;
   }
 
@@ -1663,7 +1664,8 @@ DocumentViewerImpl::Hide(void)
     // we're right now returning from print preview and the layout
     // frame that was created for this document is being destroyed. In
     // such a case we ignore the Hide() call.
-
+    // XXX The above statement is a lie. We do not check our parents.
+    // in fact it always returns false for subdocuments.
     return NS_OK;
   }
 
@@ -3376,6 +3378,7 @@ DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetti
 }
 
 /* readonly attribute boolean doingPrint; */
+// XXX This always returns PR_FALSE for subdocuments
 NS_IMETHODIMP
 DocumentViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
 {
@@ -3384,6 +3387,7 @@ DocumentViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
   
   *aDoingPrint = PR_FALSE;
   if (mPrintEngine) {
+    // XXX shouldn't this be GetDoingPrint() ?
     return mPrintEngine->GetDoingPrintPreview(aDoingPrint);
   } 
   return NS_OK;
@@ -3393,6 +3397,7 @@ DocumentViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
 }
 
 /* readonly attribute boolean doingPrintPreview; */
+// XXX This always returns PR_FALSE for subdocuments
 NS_IMETHODIMP
 DocumentViewerImpl::GetDoingPrintPreview(PRBool *aDoingPrintPreview)
 {
@@ -3603,6 +3608,7 @@ DocumentViewerImpl::SetIsPrintingInDocShellTree(nsIDocShellTreeNode* aParentNode
 #endif // NS_PRINTING
 
 //------------------------------------------------------------
+// XXX this always returns PR_FALSE for subdocuments
 PRBool
 DocumentViewerImpl::GetIsPrinting()
 {
@@ -3632,7 +3638,8 @@ DocumentViewerImpl::SetIsPrinting(PRBool aIsPrinting)
 
 //------------------------------------------------------------
 // The PrintEngine holds the current value
-// this called from inside the DocViewer
+// this called from inside the DocViewer.
+// XXX it always returns PR_FALSE for subdocuments
 PRBool
 DocumentViewerImpl::GetIsPrintPreview()
 {

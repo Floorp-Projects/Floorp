@@ -158,15 +158,16 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   nsCOMPtr<nsIFrameLoader> mFrameLoader;
+  nsIView* mInnerView;
+  PRPackedBool mDidCreateDoc;
   PRPackedBool mOwnsFrameLoader;
   PRPackedBool mIsInline;
-  nsIView* mInnerView;
 };
 
 nsSubDocumentFrame::nsSubDocumentFrame()
-  : nsLeafFrame(), mOwnsFrameLoader(PR_FALSE)
+  : nsLeafFrame(), mDidCreateDoc(PR_FALSE), mOwnsFrameLoader(PR_FALSE),
+    mIsInline(PR_FALSE)
 {
-  mIsInline = PR_FALSE;
 }
 
 #ifdef ACCESSIBILITY
@@ -274,6 +275,7 @@ nsSubDocumentFrame::Init(nsPresContext* aPresContext,
   if (shouldCreateDoc) {
     rv = ShowDocShell();
     NS_ENSURE_SUCCESS(rv,rv);
+    mDidCreateDoc = PR_TRUE;
   }
 
   return NS_OK;
@@ -534,7 +536,7 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 NS_IMETHODIMP
 nsSubDocumentFrame::Destroy(nsPresContext* aPresContext)
 {
-  if (mFrameLoader) {
+  if (mFrameLoader && mDidCreateDoc) {
     // Get the content viewer through the docshell, but don't call
     // GetDocShell() since we don't want to create one if we don't
     // have one.
@@ -584,6 +586,8 @@ nsSize nsSubDocumentFrame::GetMargin()
   return result;
 }
 
+// XXX this should be called ObtainDocShell or something like that,
+// to indicate that it could have side effects
 NS_IMETHODIMP
 nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
 {
