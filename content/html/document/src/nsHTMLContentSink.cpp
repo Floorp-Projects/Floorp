@@ -699,17 +699,6 @@ public:
   SinkContext(HTMLContentSink* aSink);
   ~SinkContext();
 
-  // Normally when OpenContainer's are done the container is not
-  // appended to it's parent until the container is closed. By setting
-  // pre-append to true, the container will be appended when it is
-  // created.
-  // XXXbz why do we really need this "no pre-appending" thing?  Seems
-  // a little weird to me....
-  void SetPreAppend(PRBool aPreAppend)
-  {
-    mPreAppend = aPreAppend;
-  }
-
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
                  PRUint32 aNumFlushed, PRInt32 aInsertionPoint);
   nsresult OpenContainer(const nsIParserNode& aNode);
@@ -738,7 +727,6 @@ public:
   void UpdateChildCounts();
 
   HTMLContentSink* mSink;
-  PRBool mPreAppend;
   PRInt32 mNotifyLevel;
   nsCOMPtr<nsITextContent> mLastTextNode;
   PRInt32 mLastTextNodeSize;
@@ -746,13 +734,9 @@ public:
   struct Node {
     nsHTMLTag mType;
     nsGenericHTMLElement* mContent;
-    PRUint32 mFlags;
     PRUint32 mNumFlushed;
     PRInt32 mInsertionPoint;
   };
-
-// Node.mFlags
-#define APPENDED 0x1
 
   Node* mStack;
   PRInt32 mStackSize;
@@ -1077,9 +1061,15 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 MOZ_DECL_CTOR_COUNTER(SinkContext)
 
 SinkContext::SinkContext(HTMLContentSink* aSink)
-  : mSink(aSink), mPreAppend(PR_FALSE), mNotifyLevel(0),
-    mLastTextNodeSize(0), mStack(nsnull), mStackSize(0), mStackPos(0),
-    mText(nsnull), mTextLength(0), mTextSize(0)
+  : mSink(aSink),
+    mNotifyLevel(0),
+    mLastTextNodeSize(0),
+    mStack(nsnull),
+    mStackSize(0),
+    mStackPos(0),
+    mText(nsnull),
+    mTextLength(0),
+    mTextSize(0)
 {
   MOZ_COUNT_CTOR(SinkContext);
 }
@@ -1113,7 +1103,6 @@ SinkContext::Begin(nsHTMLTag aNodeType,
 
   mStack[0].mType = aNodeType;
   mStack[0].mContent = aRoot;
-  mStack[0].mFlags = APPENDED;
   mStack[0].mNumFlushed = aNumFlushed;
   mStack[0].mInsertionPoint = aInsertionPoint;
   NS_ADDREF(aRoot);
@@ -1236,7 +1225,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
 
   mStack[mStackPos].mType = nodeType;
   mStack[mStackPos].mContent = content;
-  mStack[mStackPos].mFlags = 0;
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
 
@@ -1272,24 +1260,20 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   
   rv = mSink->AddAttributes(aNode, content);
 
-  if (mPreAppend) {
-    if (mStackPos <= 0) {
-      NS_ERROR("container w/o parent");
+  if (mStackPos <= 0) {
+    NS_ERROR("container w/o parent");
 
-      return NS_ERROR_FAILURE;
-    }
+    return NS_ERROR_FAILURE;
+  }
 
-    nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
+  nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
 
-    if (mStack[mStackPos - 1].mInsertionPoint != -1) {
-      parent->InsertChildAt(content,
-                            mStack[mStackPos - 1].mInsertionPoint++,
-                            PR_FALSE, PR_FALSE);
-    } else {
-      parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
-    }
-
-    mStack[mStackPos].mFlags |= APPENDED;
+  if (mStack[mStackPos - 1].mInsertionPoint != -1) {
+    parent->InsertChildAt(content,
+                          mStack[mStackPos - 1].mInsertionPoint++,
+                          PR_FALSE, PR_FALSE);
+  } else {
+    parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
   }
 
   mStackPos++;
@@ -1348,26 +1332,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   nsGenericHTMLElement* content = mStack[mStackPos].mContent;
 
   content->Compact();
-
-  // Add container to its parent if we haven't already done it
-  if ((mStack[mStackPos].mFlags & APPENDED) == 0) {
-    NS_ASSERTION(mStackPos > 0, "container w/o parent");
-    if (mStackPos <= 0) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
-
-    // If the parent has an insertion point, insert rather than
-    // append.
-    if (mStack[mStackPos - 1].mInsertionPoint != -1) {
-      result = parent->InsertChildAt(content,
-                                     mStack[mStackPos - 1].mInsertionPoint++,
-                                     PR_FALSE, PR_FALSE);
-    } else {
-      result = parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
-    }
-  }
 
   // If we're in a state where we do append notifications as
   // we go up the tree, and we're at the level where the next
@@ -1447,8 +1411,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   NS_IF_RELEASE(content);
 
 #ifdef DEBUG
-  if (mPreAppend &&
-      SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
+  if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
     mSink->ForceReflow();
   }
 #endif
@@ -1574,8 +1537,7 @@ SinkContext::AddLeaf(nsGenericHTMLElement* aContent)
   DidAddContent(aContent, PR_FALSE);
 
 #ifdef DEBUG
-  if (mPreAppend &&
-      SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
+  if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
     mSink->ForceReflow();
   }
 #endif
@@ -1629,8 +1591,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
   DidAddContent(comment, PR_FALSE);
 
 #ifdef DEBUG
-  if (mPreAppend &&
-      SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
+  if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
     mSink->ForceReflow();
   }
 #endif
@@ -1740,42 +1701,18 @@ SinkContext::AddText(const nsAString& aText)
 nsresult
 SinkContext::FlushTags(PRBool aNotify)
 {
-  nsresult result = NS_OK;
-
   // Don't release last text node in case we need to add to it again
   FlushText();
-
-  PRUint32 childCount;
-  nsGenericHTMLElement* content;
-
-  // Start from the top of the stack (growing upwards) and append
-  // all content that hasn't been previously appended to the tree
-  PRInt32 stackPos = mStackPos - 1;
-
-  while ((stackPos > 0) && ((mStack[stackPos].mFlags & APPENDED) == 0)) {
-    content = mStack[stackPos].mContent;
-    nsGenericHTMLElement* parent = mStack[stackPos - 1].mContent;
-
-    mStack[stackPos].mFlags |= APPENDED;
-
-    // If the parent has an insertion point, insert rather than
-    // append.
-    if (mStack[mStackPos - 1].mInsertionPoint != -1) {
-      parent->InsertChildAt(content, mStack[mStackPos - 1].mInsertionPoint++,
-                            PR_FALSE, PR_FALSE);
-    } else {
-      parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
-    }
-
-    stackPos--;
-  }
 
   if (aNotify) {
     // Start from the base of the stack (growing upward) and do
     // a notification from the node that is closest to the root of
     // tree for any content that has been added.
-    stackPos = 1;
+    PRInt32 stackPos = 1;
     PRBool flushed = PR_FALSE;
+    PRUint32 childCount;
+    nsGenericHTMLElement* content;
+
     while (stackPos < mStackPos) {
       content = mStack[stackPos].mContent;
       childCount = content->GetChildCount();
@@ -1812,7 +1749,7 @@ SinkContext::FlushTags(PRBool aNotify)
     mNotifyLevel = mStackPos - 1;
   }
 
-  return result;
+  return NS_OK;
 }
 
 void
@@ -1826,10 +1763,8 @@ SinkContext::UpdateChildCounts()
   // further reflows occur.
   PRInt32 stackPos = mStackPos - 1;
   while (stackPos > 0) {
-    if (mStack[stackPos].mFlags & APPENDED) {
-      content = mStack[stackPos].mContent;
-      mStack[stackPos].mNumFlushed = content->GetChildCount();
-    }
+    Node & node = mStack[stackPos];
+    node.mNumFlushed = node.mContent->GetChildCount();
 
     stackPos--;
   }
@@ -1909,7 +1844,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
   }
 
 #ifdef DEBUG
-  if (mPreAppend && didFlush &&
+  if (didFlush &&
       SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
     mSink->ForceReflow();
   }
@@ -2731,13 +2666,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     return NS_OK;
   }
 
-  // Open body. Note that we pre-append the body to the root so that
-  // incremental reflow during document loading will work properly.
-  mCurrentContext->SetPreAppend(PR_TRUE);
-
   nsresult rv = mCurrentContext->OpenContainer(aNode);
-
-  mCurrentContext->SetPreAppend(PR_FALSE);
 
   if (NS_FAILED(rv)) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
@@ -3778,7 +3707,6 @@ HTMLContentSink::OpenHeadContext()
     mHeadContext = new SinkContext(this);
     NS_ENSURE_TRUE(mHeadContext, NS_ERROR_OUT_OF_MEMORY);
 
-    mHeadContext->SetPreAppend(PR_TRUE);
     nsresult rv = mHeadContext->Begin(eHTMLTag_head, mHead, 0, -1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -4133,13 +4061,11 @@ HTMLContentSink::PreEvaluateScript()
               "evaluating script"));
 
   mCurrentContext->FlushTags(PR_FALSE);
-  mCurrentContext->SetPreAppend(PR_TRUE);
 }
 
 void
 HTMLContentSink::PostEvaluateScript()
 {
-  mCurrentContext->SetPreAppend(PR_FALSE);
 }
 
 nsresult
