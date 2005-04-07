@@ -781,6 +781,15 @@ nsObjectFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsresult
+nsObjectFrame::CreateWidgetForView(nsIView* aView)
+{
+  // Bug 179822: Create widget and allow non-unicode SubClass
+  nsWidgetInitData initData;
+  initData.mUnicode = PR_FALSE;
+  return aView->CreateWidget(kWidgetCID, &initData);
+}
+
+nsresult
 nsObjectFrame::CreateWidget(nscoord aWidth,
                             nscoord aHeight,
                             PRBool  aViewOnly)
@@ -805,12 +814,9 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   viewMan->AllowDoubleBuffering(doubleBuffer);
 #endif
   
-  if (!aViewOnly) {
-    // Bug 179822: Create widget and allow non-unicode SubClass
-    nsWidgetInitData initData;
-    initData.mUnicode = PR_FALSE;
-    nsresult result = view->CreateWidget(kWidgetCID, &initData);
-    if (NS_FAILED(result)) {
+  if (!aViewOnly && !view->HasWidget()) {
+    nsresult rv = CreateWidgetForView(view);
+    if (NS_FAILED(rv)) {
       return NS_OK;       //XXX why OK? MMP
     }
   }
