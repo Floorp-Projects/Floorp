@@ -377,7 +377,15 @@ Feed.prototype =
       this.storeItemsTimer.initWithCallback(this, 50, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
     }
     else
+    {
+      // we have just finished downloading one or more feed items into the destination folder,
+      // if the folder is still listed as having new messages in it, then we should set the biff state on the folder
+      // so the right RDF UI changes happen in the folder pane to indicate new mail.
+
+      if (item.feed.folder.hasNewMessages)
+        item.feed.folder.biffState = Components.interfaces.nsIMsgFolder.nsMsgBiffState_NewMail;
       this.cleanupParsingState(item.feed);   
+    }
   },
 
   cleanupParsingState: function(aFeed) 
