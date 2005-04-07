@@ -217,7 +217,12 @@ struct JSRuntime {
 
     /*
      * Check property accessibility for objects of arbitrary class.  Used at
-     * present to check f.caller accessibility for any function object f.
+     * present to check whether:
+     *  1.  f.caller should be accessible for any function object f.
+     *  2.  a getter or setter on another trust domain's global object should
+     *      be accessible to a given script.
+     *  3.  eval or eval-like primitives (Script objects) should be accessible
+     *      to trusted scripts.
      */
     JSCheckAccessOp     checkObjectAccess;
 

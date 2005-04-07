@@ -236,6 +236,7 @@ static JSBool
 script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSScript *script;
+    JSRuntime *rt;
     JSObject *scopeobj, *parent;
     JSStackFrame *fp, *caller;
 
@@ -244,6 +245,24 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     script = (JSScript *) JS_GetPrivate(cx, obj);
     if (!script)
         return JS_TRUE;
+
+    /*
+     * Check whether the caller (native or scripted) should trust this
+     * Script.prototype.exec function object.
+     */
+    rt = cx->runtime;
+    if (rt->checkObjectAccess) {
+        JSString *exec_str;
+        jsval exec_idval;
+
+        exec_str = JS_InternString(cx, "exec");
+        if (!exec_str)
+            return JS_FALSE;
+        exec_idval = STRING_TO_JSVAL(exec_str);
+        *rval = argv[-2];
+        if (!rt->checkObjectAccess(cx, obj, exec_idval, JSACC_EXEC, rval))
+            return JS_FALSE;
+    }
 
     scopeobj = NULL;
     if (argc) {
