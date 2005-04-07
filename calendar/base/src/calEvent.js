@@ -60,7 +60,7 @@ calEvent.prototype = {
         if (aIID.equals(Components.interfaces.calIEvent))
             return this;
 
-        return this.__proto__.QueryInterface.apply(this, aIID);
+        return this.__proto__.__proto__.QueryInterface.call(this, aIID);
     },
 
     clone: function () {

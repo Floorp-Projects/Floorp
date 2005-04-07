@@ -132,8 +132,8 @@ var calItemModule = {
         var dirsvc = Components.classes[dirsvcContractID].getService(propsIID);
         var iosvc = Components.classes[iosvcContractID].getService(iosvcIID);
 
-        // NS_XPCOM_COMPONENT_DIR
-        var appdir = dirsvc.get("ComsD", Components.interfaces.nsIFile);
+        // We expect to find the subscripts in our directory.
+        var appdir = __LOCATION__.parent;
 
         for (var i = 0; i < componentData.length; i++) {
             var scriptName = componentData[i].script;
