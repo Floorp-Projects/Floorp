@@ -1001,6 +1001,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
+    JSRuntime *rt;
     JSObject *scopeobj;
     JSString *str;
     const char *file;
@@ -1025,6 +1026,20 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                       JSMSG_BAD_INDIRECT_CALL,
                                       js_eval_str)) {
         return JS_FALSE;
+    }
+
+    /*
+     * Check whether the caller (native or scripted) should trust this
+     * eval function object.
+     */
+    rt = cx->runtime;
+    if (rt->checkObjectAccess) {
+        *rval = argv[-2];
+        if (!rt->checkObjectAccess(cx, obj,
+                                   ATOM_KEY(rt->atomState.evalAtom),
+                                   JSACC_EXEC, rval)) {
+            return JS_FALSE;
+        }
     }
 
     if (!JSVAL_IS_STRING(argv[0])) {

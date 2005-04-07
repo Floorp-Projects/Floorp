@@ -444,12 +444,44 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
     //    a different trust domain.
     // 2. A user-defined getter or setter function accessible on another
     //    trust domain's window or document object.
+    // 3. An eval or Script.prototype.exec attempt from trusted content where
+    //    the eval or exec method comes from untrusted content.
     // If *vp is not a primitive, some new JS engine call to this hook was
     // added, but we can handle that case too -- if a primitive value in a
     // property of obj is being accessed, we should use obj as the target
     // object.
     NS_ASSERTION(!JSVAL_IS_PRIMITIVE(*vp), "unexpected target property value");
     JSObject* target = JSVAL_IS_PRIMITIVE(*vp) ? obj : JSVAL_TO_OBJECT(*vp);
+
+    NS_ASSERTION(!(mode & JSACC_WRITE), "unexpected write access check");
+    if (mode & JSACC_EXEC)
+    {
+        nsresult rv;
+
+        nsCOMPtr<nsIPrincipal> subjectPrincipal;
+        rv = ssm->GetSubjectPrincipal(cx, getter_AddRefs(subjectPrincipal));
+        if (NS_FAILED(rv))
+            return JS_FALSE;
+
+        nsCOMPtr<nsIPrincipal> objectPrincipal;
+        rv = ssm->doGetObjectPrincipal(cx, target,
+                                       getter_AddRefs(objectPrincipal));
+        if (NS_FAILED(rv))
+            return JS_FALSE;
+
+        // If any eval or exec call is crossing a trust boundary, whether
+        // chrome to content, content to chrome, or between two different
+        // origins for content, stop it cold here.
+        if (subjectPrincipal != objectPrincipal)
+        {
+            ssm->ThrowAccessDeniedException(cx,
+                                nsIXPCSecurityManager::ACCESS_CALL_METHOD,
+                                JS_GetClass(cx, obj)->name,
+                                id);
+            return JS_FALSE;
+        }
+        return JS_TRUE;
+    }
 
     // Do the same-origin check -- this sets a JS exception if the check fails.
     // Pass the parent object's class name, as we have no class-info for it.
@@ -765,50 +797,58 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         printf("CheckXPCPerms DENIED.\n");
 #endif
 
-    if (NS_FAILED(rv)) //-- Security tests failed, access is denied, report error
+    if (NS_FAILED(rv))
     {
-        nsAutoString stringName;
-        switch(aAction)
-        {
-        case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
-            stringName.AssignLiteral("GetPropertyDenied");
-            break;
-        case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
-            stringName.AssignLiteral("SetPropertyDenied");
-            break;
-        case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
-            stringName.AssignLiteral("CallMethodDenied");
-        }
-
-        NS_ConvertUTF8toUTF16 className(classInfoData.GetName());
-        const PRUnichar *formatStrings[] =
-        {
-            className.get(),
-            JSValIDToString(cx, aProperty)
-        };
-
-        nsXPIDLString errorMsg;
-        // We need to keep our existing failure rv and not override it
-        // with a likely success code from the following string bundle
-        // call in order to throw the correct security exception later.
-        nsresult rv2 = sStrBundle->FormatStringFromName(stringName.get(),
-                                                        formatStrings,
-                                                        NS_ARRAY_LENGTH(formatStrings),
-                                                        getter_Copies(errorMsg));
-        NS_ENSURE_SUCCESS(rv2, rv2);
-
-        SetPendingException(cx, errorMsg.get());
-
-        if (sXPConnect)
-        {
-            nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
-            sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(xpcCallContext));
-            if (xpcCallContext)
-                xpcCallContext->SetExceptionWasThrown(PR_TRUE);
-        }
+        //-- Security tests failed, access is denied, report error
+        ThrowAccessDeniedException(cx, aAction, classInfoData.GetName(),
+                                   aProperty);
     }
 
     return rv;
+}
+void
+nsScriptSecurityManager::ThrowAccessDeniedException(JSContext *cx,
+                                                    PRUint32 aAction,
+                                                    const char *aClassName,
+                                                    jsval aProperty)
+{
+    nsAutoString stringName;
+    switch(aAction)
+    {
+    case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
+        stringName.AssignLiteral("GetPropertyDenied");
+        break;
+    case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
+        stringName.AssignLiteral("SetPropertyDenied");
+        break;
+    case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
+        stringName.AssignLiteral("CallMethodDenied");
+    }
+  
+    NS_ConvertUTF8toUTF16 className(aClassName);
+    const PRUnichar *formatStrings[] =
+    {
+        className.get(),
+        JSValIDToString(cx, aProperty)
+    };
+  
+    // If FormatStringFromName fails, we'll still throw an empty string
+    // as an exception, and fail the caller.
+    nsXPIDLString errorMsg;
+    sStrBundle->FormatStringFromName(stringName.get(),
+                                     formatStrings,
+                                     NS_ARRAY_LENGTH(formatStrings),
+                                     getter_Copies(errorMsg));
+
+    SetPendingException(cx, errorMsg.get());
+
+    if (sXPConnect)
+    {
+        nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
+        sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(xpcCallContext));
+        if (xpcCallContext)
+            xpcCallContext->SetExceptionWasThrown(PR_TRUE);
+    }
 }
 
 nsresult
@@ -2957,8 +2997,8 @@ nsScriptSecurityManager::InitPolicies()
 
         nsCAutoString sitesPrefName(
             NS_LITERAL_CSTRING(sPolicyPrefix) +
-				    nsDependentCString(nameBegin) +
-				    NS_LITERAL_CSTRING(".sites"));
+            nsDependentCString(nameBegin) +
+            NS_LITERAL_CSTRING(".sites"));
         nsXPIDLCString domainList;
         rv = mSecurityPref->SecurityGetCharPref(sitesPrefName.get(),
                                                 getter_Copies(domainList));

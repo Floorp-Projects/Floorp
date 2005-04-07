@@ -367,6 +367,12 @@ private:
                             const char* aClassName, jsval aProperty,
                             void** aCachedClassPolicy);
 
+    void
+    ThrowAccessDeniedException(JSContext *cx,
+                               PRUint32 aAction,
+                               const char *aClassName,
+                               jsval aProperty);
+
     nsresult
     CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject,
                                      nsIPrincipal* aObject,
