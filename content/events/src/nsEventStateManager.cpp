@@ -2643,6 +2643,9 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
 void
 nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
 {
+  if (!mDocument)
+    return;
+
   // Hold onto old target content through the event and reset after.
   nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
 
@@ -2652,6 +2655,12 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
       // Get the target content target (mousemove target == mouseover target)
       nsCOMPtr<nsIContent> targetElement;
       GetEventTargetContent(aEvent, getter_AddRefs(targetElement));
+      if (!targetElement) {
+        // We're always over the document root, even if we're only
+        // over dead space in a page (whose frame is not associated with
+        // any content) or in print preview dead space
+        targetElement = mDocument->GetRootContent();
+      }
       NS_ASSERTION(targetElement, "Mouse move must have some target content");
       if (targetElement) {
         NotifyMouseOver(aEvent, targetElement);
