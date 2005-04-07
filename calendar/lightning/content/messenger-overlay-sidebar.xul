@@ -7,6 +7,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
+<script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
 
 <vbox id="folderPaneBox">
   <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
@@ -19,7 +20,8 @@
     </popup>
   </popupset>
 
-  <tree id="calendarTree" flex="1" context="ltnCalendarTreeContext">
+  <tree id="calendarTree" onfocus="selectedCalendarPane(event)" flex="1"
+        context="ltnCalendarTreeContext">
     <treecols>
       <treecol label="Calendar" id="col-calendar-Calendar" flex="1"/>
     </treecols>
@@ -28,4 +30,9 @@
   </tree>
 </vbox>
 
+<deck id="displayDeck">
+  <vbox id="calendarViewBox" flex="1">
+    <iframe name="calendarViewTempIframe" width="150" flex="1" src="javascript:'Lightning'"/>
+  </vbox>
+</deck>
 </overlay>
