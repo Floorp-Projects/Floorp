@@ -189,6 +189,9 @@ public:
   static nsWindow *GetGrabWindow(void);
   GdkWindow *GetGdkGrabWindow(void);
   
+  // Return the Gdk window used for positioning, raising and lowering
+  virtual GdkWindow* GetLayeringWindow();
+
   virtual void DispatchSetFocusEvent(void);
   virtual void DispatchLostFocusEvent(void);
   virtual void DispatchActivateEvent(void);
