@@ -183,19 +183,26 @@ if (!Param('letsubmitterchoosepriority')) {
 
 GetVersionTable();
 
+# XXX Temporar FORM compatibility code, reflect changes back to CGI object
+$cgi->param('bug_file_loc', $::FORM{'bug_file_loc'});
+$cgi->param('assigned_to', $::FORM{'assigned_to'});
+$cgi->param('bug_status', $::FORM{'bug_status'});
+$cgi->param('target_milestone', $::FORM{'target_milestone'});
+$cgi->param('priority', $::FORM{'priority'});
+
 # Some more sanity checking
-CheckFormField(\%::FORM, 'product',      \@::legal_product);
-CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
-CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
-CheckFormField(\%::FORM, 'priority',     \@::legal_priority);
-CheckFormField(\%::FORM, 'op_sys',       \@::legal_opsys);
-CheckFormField(\%::FORM, 'bug_status',   ['UNCONFIRMED', 'NEW']);
-CheckFormField(\%::FORM, 'version',          $::versions{$product});
-CheckFormField(\%::FORM, 'component',        $::components{$product});
-CheckFormField(\%::FORM, 'target_milestone', $::target_milestone{$product});
-CheckFormFieldDefined(\%::FORM, 'assigned_to');
-CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
-CheckFormFieldDefined(\%::FORM, 'comment');
+CheckFormField($cgi, 'product',      \@::legal_product);
+CheckFormField($cgi, 'rep_platform', \@::legal_platform);
+CheckFormField($cgi, 'bug_severity', \@::legal_severity);
+CheckFormField($cgi, 'priority',     \@::legal_priority);
+CheckFormField($cgi, 'op_sys',       \@::legal_opsys);
+CheckFormField($cgi, 'bug_status',   ['UNCONFIRMED', 'NEW']);
+CheckFormField($cgi, 'version',          $::versions{$product});
+CheckFormField($cgi, 'component',        $::components{$product});
+CheckFormField($cgi, 'target_milestone', $::target_milestone{$product});
+CheckFormFieldDefined($cgi, 'assigned_to');
+CheckFormFieldDefined($cgi, 'bug_file_loc');
+CheckFormFieldDefined($cgi, 'comment');
 
 my @used_fields;
 foreach my $field (@bug_fields) {

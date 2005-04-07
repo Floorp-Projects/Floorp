@@ -93,17 +93,17 @@ sub url_decode {
 # legal value.  assume a browser bug and abort appropriately if not.
 # if $legalsRef is not passed, just check to make sure the value exists and 
 # is non-NULL
-sub CheckFormField (\%$;\@) {
-    my ($formRef,                # a reference to the form to check (a hash)
+sub CheckFormField ($$;\@) {
+    my ($cgi,                    # a CGI object
         $fieldname,              # the fieldname to check
         $legalsRef               # (optional) ref to a list of legal values 
        ) = @_;
 
-    if ( !defined $formRef->{$fieldname} ||
-         trim($formRef->{$fieldname}) eq "" ||
-         (defined($legalsRef) && 
-          lsearch($legalsRef, $formRef->{$fieldname})<0) ){
-
+    if (!defined $cgi->param($fieldname)
+        || trim($cgi->param($fieldname)) eq ""
+        || (defined($legalsRef)
+            && lsearch($legalsRef, $cgi->param($fieldname))<0))
+    {
         SendSQL("SELECT description FROM fielddefs WHERE name=" . SqlQuote($fieldname));
         my $result = FetchOneColumn();
         my $field;
@@ -115,16 +115,16 @@ sub CheckFormField (\%$;\@) {
         }
         
         ThrowCodeError("illegal_field", { field => $field });
-      }
+    }
 }
 
 # check and see if a given field is defined, and abort if not
-sub CheckFormFieldDefined (\%$) {
-    my ($formRef,                # a reference to the form to check (a hash)
+sub CheckFormFieldDefined ($$) {
+    my ($cgi,                    # a CGI object
         $fieldname,              # the fieldname to check
        ) = @_;
 
-    if (!defined $formRef->{$fieldname}) {
+    if (!defined $cgi->param($fieldname)) {
         ThrowCodeError("undefined_field", { field => $fieldname });
     }
 }

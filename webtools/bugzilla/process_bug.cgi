@@ -193,9 +193,9 @@ if ($cgi->cookie("BUGLIST") && $::FORM{'id'}) {
 
 GetVersionTable();
 
-CheckFormFieldDefined(\%::FORM, 'product');
-CheckFormFieldDefined(\%::FORM, 'version');
-CheckFormFieldDefined(\%::FORM, 'component');
+CheckFormFieldDefined($cgi, 'product');
+CheckFormFieldDefined($cgi, 'version');
+CheckFormFieldDefined($cgi, 'component');
 
 
 # This function checks if there is a comment required for a specific
@@ -245,7 +245,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
         ThrowUserError("illegal_change", $vars);
     }
 
-    CheckFormField(\%::FORM, 'product', \@::legal_product);
+    CheckFormField($cgi, 'product', \@::legal_product);
     my $prod = $::FORM{'product'};
 
     # note that when this script is called from buglist.cgi (rather
@@ -261,7 +261,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
     if ( Param("usetargetmilestone") ) {
-       CheckFormFieldDefined(\%::FORM, 'target_milestone');
+       CheckFormFieldDefined($cgi, 'target_milestone');
        $mok = lsearch($::target_milestone{$prod}, $::FORM{'target_milestone'}) >= 0;
     }
 
@@ -532,22 +532,22 @@ if (defined $::FORM{'id'}) {
     # (XXX those error checks need to happen too, but implementing them 
     # is more work in the current architecture of this script...)
     #
-    CheckFormField(\%::FORM, 'product', \@::legal_product);
-    CheckFormField(\%::FORM, 'component', 
+    CheckFormField($cgi, 'product', \@::legal_product);
+    CheckFormField($cgi, 'component', 
                    \@{$::components{$::FORM{'product'}}});
-    CheckFormField(\%::FORM, 'version', 
+    CheckFormField($cgi, 'version', 
                    \@{$::versions{$::FORM{'product'}}});
     if ( Param("usetargetmilestone") ) {
-        CheckFormField(\%::FORM, 'target_milestone', 
+        CheckFormField($cgi, 'target_milestone', 
                        \@{$::target_milestone{$::FORM{'product'}}});
     }
-    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
-    CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
-    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
-    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
-    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
-    CheckFormFieldDefined(\%::FORM, 'short_desc');
-    CheckFormFieldDefined(\%::FORM, 'longdesclength');
+    CheckFormField($cgi, 'rep_platform', \@::legal_platform);
+    CheckFormField($cgi, 'op_sys', \@::legal_opsys);
+    CheckFormField($cgi, 'priority', \@::legal_priority);
+    CheckFormField($cgi, 'bug_severity', \@::legal_severity);
+    CheckFormFieldDefined($cgi, 'bug_file_loc');
+    CheckFormFieldDefined($cgi, 'short_desc');
+    CheckFormFieldDefined($cgi, 'longdesclength');
 
     if (trim($::FORM{'short_desc'}) eq "") {
         ThrowUserError("require_summary");
@@ -895,7 +895,7 @@ if (defined $::FORM{'qa_contact'}
     }
 }
 
-CheckFormFieldDefined(\%::FORM, 'knob');
+CheckFormFieldDefined($cgi, 'knob');
 SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
         last SWITCH;
@@ -919,7 +919,7 @@ SWITCH: for ($::FORM{'knob'}) {
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
         # Check here, because its the only place we require the resolution
-        CheckFormField(\%::FORM, 'resolution', \@::settable_resolution);
+        CheckFormField($cgi, 'resolution', \@::settable_resolution);
 
         # don't resolve as fixed while still unresolved blocking bugs
         if (Param("noresolveonopenblockers")
@@ -1004,7 +1004,7 @@ SWITCH: for ($::FORM{'knob'}) {
     };
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
         # Make sure we can change the original bug (issue A on bug 96085)
-        CheckFormFieldDefined(\%::FORM, 'dup_id');
+        CheckFormFieldDefined($cgi, 'dup_id');
         ValidateBugID($::FORM{'dup_id'}, 'dup_id');
 
         # Also, let's see if the reporter has authorization to see
@@ -1855,7 +1855,7 @@ foreach my $id (@idlist) {
                       "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***",
                       0, $timestamp);
 
-        CheckFormFieldDefined(\%::FORM,'comment');
+        CheckFormFieldDefined($cgi,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         
         $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login }; 
