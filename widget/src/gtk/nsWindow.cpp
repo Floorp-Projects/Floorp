@@ -2489,7 +2489,15 @@ void nsWindow::SetInternalVisibility(PRBool aVisible)
 {
   // don't show if we are too small
   if (mIsTooSmall)
+  {
+    aVisible = PR_FALSE;
+  }
+
+  // Bail out now if we have nothing to do
+  if (aVisible == mInternalShown)
+  {
     return;
+  }
 
   mInternalShown = aVisible;
 
@@ -2517,6 +2525,13 @@ void nsWindow::SetInternalVisibility(PRBool aVisible)
       if (mShell)
         gtk_widget_show(mShell);
     }
+
+    // We just brought ourselves to the top. If we're not supposed to
+    // be at the top, put us back where we belong.
+    if (GetNextSibling()) {
+      ResetZOrder();
+    }
+
     // and if we've been grabbed, grab for good measure.
     if (sGrabWindow == this && mLastGrabFailed && !nsWindow::DragInProgress())
       NativeGrab(PR_TRUE);
@@ -2623,8 +2638,6 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
   mBounds.x = aX;
   mBounds.y = aY;
 
-  ResetInternalVisibility();
-
   if (mIsToplevel && mShell)
   {
 #ifdef DEBUG
@@ -2654,12 +2667,14 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
   else if (mSuperWin) {
     gdk_window_move(mSuperWin->shell_window, aX, aY);
   }
+
+  ResetInternalVisibility();
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  PRBool nNeedToShow = PR_FALSE;
   PRInt32 sizeHeight = aHeight;
   PRInt32 sizeWidth = aWidth;
 
@@ -2675,60 +2690,20 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
 
-  ResetInternalVisibility();
-  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    NS_STATIC_CAST(nsWidget*, kid)->ResetInternalVisibility();
-  }
-
-  // code to keep the window from showing before it has been moved or resized
-
-  // if we are resized to 1x1 or less, we will hide the window.  Show(TRUE) will be ignored until a
-  // larger resize has happened
+  // code to keep the window from showing before it has been moved or
+  // resized
+  // if we are resized to 1x1 or less, we will hide the window.
+  // Show(TRUE) will be ignored until a larger resize has happened
   if (aWidth <= 1 || aHeight <= 1)
   {
-    if (mMozArea)
-    {
-      aWidth = 1;
-      aHeight = 1;
-      mIsTooSmall = PR_TRUE;
-      if (mShell)
-      {
-        if (GTK_WIDGET_VISIBLE(mShell))
-        {
-          gtk_widget_hide(mMozArea);
-          gtk_widget_hide(mShell);
-          gtk_widget_unmap(mShell);
-        }
-      }
-      else
-      {
-        gtk_widget_hide(mMozArea);
-      }
-    }
-    else
-    {
-      aWidth = 1;
-      aHeight = 1;
-      mIsTooSmall = PR_TRUE;
-
-      NS_ASSERTION(mSuperWin,"no super window!");
-      if (!mSuperWin) return NS_ERROR_FAILURE;
-
-      gdk_window_hide(mSuperWin->bin_window);
-      gdk_window_hide(mSuperWin->shell_window);
-    }
-    mInternalShown = PR_FALSE;
+    aWidth = 1;
+    aHeight = 1;
+    mIsTooSmall = PR_TRUE;
   }
   else
   {
-    if (mIsTooSmall)
-    {
-      // if we are not shown, we don't want to force a show here, so check and see if Show(TRUE) has been called
-      nNeedToShow = mShown;
-      mIsTooSmall = PR_FALSE;
-    }
+    mIsTooSmall = PR_FALSE;
   }
-
 
   if (mSuperWin) {
     // toplevel window?  if so, we should resize it as well.
@@ -2762,12 +2737,14 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     //g_print("not sending resize event\n");
   }
 
-  if (nNeedToShow) {
-    Show(PR_TRUE);
-  }
-
   if (aRepaint)
     Invalidate(PR_FALSE);
+
+  // Do the actual work of showing or hiding the window as necessary
+  ResetInternalVisibility();
+  for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
+    NS_STATIC_CAST(nsWidget*, kid)->ResetInternalVisibility();
+  }
 
   return NS_OK;
 }
@@ -3036,6 +3013,12 @@ nsWindow::GetGdkGrabWindow(void)
   else
     return mSuperWin->bin_window;
 
+}
+
+GdkWindow *
+nsWindow::GetLayeringWindow()
+{
+  return mSuperWin->shell_window;
 }
 
 /* virtual */ GdkWindow *
@@ -4338,8 +4321,10 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
 
   gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
 
-  if (mShown)
+  if (mShown) 
     gdk_window_show(mShell->window);
+  // XXX This brought the window to the front, which maybe isn't what
+  // we wanted.
 
   // For some window managers, adding or removing window decorations
   // requires unmapping and remapping our toplevel window.  Go ahead
