@@ -36,8 +36,12 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= os2Embed$(BIN_SUFFIX)
 RESFILE		= os2Embed.res
+MOZILLA_INTERNAL_API = 1
 
 MODULE		= os2Embed
+
+PACKAGE_FILE = os2embed.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  embed_base \
