@@ -350,7 +350,7 @@ nsMsgStatusFeedback.prototype =
     {
       if (status.length > 0)
       {
-        myDefaultStatus = status;
+        this.myDefaultStatus = status;
         this.statusTextFld.label = status;
       }
     },
@@ -373,9 +373,9 @@ nsMsgStatusFeedback.prototype =
     {
       this.ensureStatusFields();
       if ( !statusText.length )
-        statusText = myDefaultStatus;
+        statusText = this.myDefaultStatus;
       else
-        myDefaultStatus = "";
+        this.myDefaultStatus = "";
       this.statusTextFld.label = statusText;
   },
   _startMeteors : function()
