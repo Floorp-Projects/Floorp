@@ -427,9 +427,10 @@ typedef PRUint32 nsresult;
 #define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
 
 /*
- * Use this macro to form a string literal from an identifier.
+ * Use NS_STRINGIFY to form a string literal from the value of a macro.
  */
-#define NS_STRINGIFY(x) #x
+#define NS_STRINGIFY_HELPER(x_) #x_
+#define NS_STRINGIFY(x_) NS_STRINGIFY_HELPER(x_)
 
 /*
  * These macros allow you to give a hint to the compiler about branch

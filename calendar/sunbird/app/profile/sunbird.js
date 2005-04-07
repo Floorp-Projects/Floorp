@@ -81,10 +81,7 @@ pref("update.extensions.count", 0);
 
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
-pref("general.useragent.vendor", "Mozilla Sunbird");
-pref("general.useragent.vendorSub",
-#expand __APP_VERSION__
-);
+#expand pref("general.useragent.extra.sunbird", "Mozilla Sunbird/__APP_VERSION__");
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",        true);

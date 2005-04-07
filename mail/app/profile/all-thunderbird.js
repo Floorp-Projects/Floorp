@@ -35,10 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-pref("general.useragent.vendor", "Thunderbird");
-pref("general.useragent.vendorSub",
-#expand __APP_VERSION__
-);
+#expand pref("general.useragent.extra.thunderbird", "Thunderbird/__APP_VERSION__");
 
 #expand pref("general.useragent.locale", "__AB_CD__");
 pref("general.skins.selectedSkin", "classic/1.0");

@@ -36,8 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 pref("general.skins.selectedSkin", "modern/1.0"); 
-pref("general.useragent.vendor", "Mozilla (standalone) Composer");
-pref("general.useragent.vendorSub", "0.0.1");
+pref("general.useragent.extra.composer", "Mozilla (standalone) Composer/0.0.1");
 
 pref("general.startup.browser",             false);
 pref("general.startup.editor",              true);

@@ -285,6 +285,7 @@ private:
     nsXPIDLCString mProduct;
     nsXPIDLCString mProductSub;
     nsXPIDLCString mProductComment;
+    nsCString      mExtraUA;
 
     nsCString      mUserAgent;
     nsXPIDLCString mUserAgentOverride;
