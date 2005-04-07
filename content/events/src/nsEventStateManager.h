@@ -181,7 +181,7 @@ protected:
    * Tell this ESM and ESMs in affected child documents that the mouse
    * has exited this document's currently hovered content.
    */
-  void NotifyMouseOut(nsGUIEvent* aEvent);
+  void NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto);
   void GenerateDragDropEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
   nsresult SetClickCount(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   nsresult CheckForAndDispatchClick(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
