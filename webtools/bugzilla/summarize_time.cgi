@@ -322,7 +322,8 @@ sub get_inactive_bugs {
             WHERE  longdescs.bug_id IN ($buglist)
                    $date_bits } .
          $dbh->sql_group_by('longdescs.bug_id',
-                            'bugs.short_desc, bugs.bug_status') . qq{
+                            'bugs.short_desc, bugs.bug_status,
+                             longdescs.bug_when') . qq{
             ORDER BY longdescs.bug_when};
     $sth = $dbh->prepare($q);
     $sth->execute(@{$date_values});

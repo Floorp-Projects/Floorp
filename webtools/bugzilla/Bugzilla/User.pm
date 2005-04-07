@@ -598,7 +598,8 @@ sub match {
 
         # Build the query.
         my $sqlstr = &::SqlQuote($wildstr);
-        my $query  = "SELECT DISTINCT userid, realname, login_name " .
+        my $query  = "SELECT DISTINCT userid, realname, login_name, " .
+                     "LENGTH(login_name) AS namelength " .
                      "FROM profiles ";
         if (&::Param('usevisibilitygroups')) {
             $query .= ", user_group_map ";
@@ -613,7 +614,7 @@ sub match {
                       "AND grant_type <> " . GRANT_DERIVED;
         }
         $query    .= " AND disabledtext = '' " if $exclude_disabled;
-        $query    .= "ORDER BY length(login_name) ";
+        $query    .= "ORDER BY namelength ";
         $query    .= $dbh->sql_limit($limit) if $limit;
 
         # Execute the query, retrieve the results, and make them into
@@ -648,7 +649,8 @@ sub match {
 
         my $sqlstr = &::SqlQuote(uc($str));
 
-        my $query   = "SELECT DISTINCT userid, realname, login_name " .
+        my $query   = "SELECT DISTINCT userid, realname, login_name, " .
+                      "LENGTH(login_name) AS namelength " .
                       "FROM  profiles";
         if (&::Param('usevisibilitygroups')) {
             $query .= ", user_group_map";
@@ -665,7 +667,7 @@ sub match {
                       " AND grant_type <> " . GRANT_DERIVED;
         }
         $query     .= " AND disabledtext = ''" if $exclude_disabled;
-        $query     .= " ORDER BY length(login_name)";
+        $query     .= " ORDER BY namelength";
         $query     .= " " . $dbh->sql_limit($limit) if $limit;
         &::PushGlobalSQLState();
         &::SendSQL($query);
