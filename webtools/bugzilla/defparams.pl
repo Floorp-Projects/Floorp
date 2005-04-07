@@ -226,15 +226,15 @@ sub check_languages {
 sub find_languages {
     my @languages = ();
     opendir(DIR, $templatedir) || return "Can't open 'template' directory: $!";
-    my @langdirs = grep { /^[a-z-]+$/i } readdir(DIR);
-    closedir DIR;
-
-    foreach my $lang (@langdirs) {
+    foreach my $dir (readdir(DIR)) {
+        next unless $dir =~ /^([a-z-]+)$/i;
+        my $lang = $1;
         next if($lang =~ /^CVS$/i);
         my $deft_path = File::Spec->catdir('template', $lang, 'default');
         my $cust_path = File::Spec->catdir('template', $lang, 'custom');
         push(@languages, $lang) if(-d $deft_path or -d $cust_path);
     }
+    closedir DIR;
     return join(', ', @languages);
 }
 
