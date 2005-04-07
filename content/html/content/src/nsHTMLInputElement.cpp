@@ -236,6 +236,12 @@ public:
   NS_IMETHOD GetCheckedChanged(PRBool* aCheckedChanged);
   NS_IMETHOD AddedToRadioGroup(PRBool aNotify = PR_TRUE);
   NS_IMETHOD WillRemoveFromRadioGroup();
+  /**
+   * Get the radio group container for this button (form or document)
+   * @return the radio group container (or null if no form or document)
+   */
+  virtual already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
+
 
 protected:
   // Helper method
@@ -302,12 +308,6 @@ protected:
    * @param aValue the value of checked to set
    */
   nsresult SetCheckedInternal(PRBool aValue, PRBool aNotify);
-
-  /**
-   * Get the radio group container for this button (form or document)
-   * @return the radio group container (or null if no form or document)
-   */
-  already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
 
   /**
    * MaybeSubmitForm looks for a submit input or a single text control
@@ -892,7 +892,7 @@ nsHTMLInputElement::RadioSetChecked(PRBool aNotify)
   return rv;
 }
 
-already_AddRefed<nsIRadioGroupContainer>
+/* virtual */ already_AddRefed<nsIRadioGroupContainer>
 nsHTMLInputElement::GetRadioGroupContainer()
 {
   nsIRadioGroupContainer* retval = nsnull;
