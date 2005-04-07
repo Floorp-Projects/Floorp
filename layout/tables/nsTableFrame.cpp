@@ -171,10 +171,10 @@ struct BCPropertyData
   BCPropertyData() { mDamageArea.x = mDamageArea.y = mDamageArea.width = mDamageArea.height =
                      mTopBorderWidth = mRightBorderWidth = mBottomBorderWidth = mLeftBorderWidth = 0; }
   nsRect  mDamageArea;
-  PRUint8 mTopBorderWidth;
-  PRUint8 mRightBorderWidth;
-  PRUint8 mBottomBorderWidth;
-  PRUint8 mLeftBorderWidth;
+  BCPixelSize mTopBorderWidth;
+  BCPixelSize mRightBorderWidth;
+  BCPixelSize mBottomBorderWidth;
+  BCPixelSize mLeftBorderWidth;
 };
 
 NS_IMETHODIMP 
@@ -2736,19 +2736,10 @@ nsTableFrame::GetBCBorder() const
     (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)this, nsLayoutAtoms::tableBCProperty, PR_FALSE);
   if (propData) {
     if (eCompatibility_NavQuirks != presContext->CompatibilityMode()) {
-      nscoord smallHalf, largeHalf;
-
-      DivideBCBorderSize(propData->mTopBorderWidth, smallHalf, largeHalf);
-      border.top += NSToCoordRound(p2t * (float)smallHalf);
-
-      DivideBCBorderSize(propData->mRightBorderWidth, smallHalf, largeHalf);
-      border.right += NSToCoordRound(p2t * (float)largeHalf);
-
-      DivideBCBorderSize(propData->mBottomBorderWidth, smallHalf, largeHalf);
-      border.bottom += NSToCoordRound(p2t * (float)largeHalf);
-
-      DivideBCBorderSize(propData->mLeftBorderWidth, smallHalf, largeHalf);
-      border.left += NSToCoordRound(p2t * (float)smallHalf);
+      border.top += BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mTopBorderWidth);
+      border.right += BC_BORDER_LEFT_HALF_COORD(p2t, propData->mRightBorderWidth);
+      border.bottom += BC_BORDER_TOP_HALF_COORD(p2t, propData->mBottomBorderWidth);
+      border.left += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mLeftBorderWidth);
     }
     else {
       border.top    += NSToCoordRound(p2t * (float)propData->mTopBorderWidth);
@@ -2772,19 +2763,10 @@ nsTableFrame::GetBCMargin() const
                                                PR_FALSE);
   if (propData) {
     if (eCompatibility_NavQuirks != presContext->CompatibilityMode()) {
-      nscoord smallHalf, largeHalf;
-
-      DivideBCBorderSize(propData->mTopBorderWidth, smallHalf, largeHalf);
-      overflow.top += NSToCoordRound(p2t * (float)largeHalf);
-
-      DivideBCBorderSize(propData->mRightBorderWidth, smallHalf, largeHalf);
-      overflow.right += NSToCoordRound(p2t * (float)smallHalf);
-
-      DivideBCBorderSize(propData->mBottomBorderWidth, smallHalf, largeHalf);
-      overflow.bottom += NSToCoordRound(p2t * (float)smallHalf);
-
-      DivideBCBorderSize(propData->mLeftBorderWidth, smallHalf, largeHalf);
-      overflow.left += NSToCoordRound(p2t * (float)largeHalf);
+      overflow.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
+      overflow.right += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
+      overflow.bottom += BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
+      overflow.left += BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
     }
   }
   return overflow;
@@ -2809,23 +2791,15 @@ nsTableFrame::GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const
     nsPresContext* presContext = GetPresContext();
     if (eCompatibility_NavQuirks == presContext->CompatibilityMode()) {
       nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow(); if (!firstInFlow) ABORT1(offset);
-      nscoord smallHalf, largeHalf;
       GET_PIXELS_TO_TWIPS(presContext, p2t);
       BCPropertyData* propData = 
         (BCPropertyData*)nsTableFrame::GetProperty((nsIFrame*)firstInFlow, nsLayoutAtoms::tableBCProperty, PR_FALSE);
       if (!propData) ABORT1(offset);
 
-      DivideBCBorderSize(propData->mTopBorderWidth, smallHalf, largeHalf);
-      offset.top += NSToCoordRound(p2t * (float)largeHalf);
-
-      DivideBCBorderSize(propData->mRightBorderWidth, smallHalf, largeHalf);
-      offset.right += NSToCoordRound(p2t * (float)smallHalf);
-
-      DivideBCBorderSize(propData->mBottomBorderWidth, smallHalf, largeHalf);
-      offset.bottom += NSToCoordRound(p2t * (float)smallHalf);
-
-      DivideBCBorderSize(propData->mLeftBorderWidth, smallHalf, largeHalf);
-      offset.left += NSToCoordRound(p2t * (float)largeHalf);
+      offset.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
+      offset.right += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
+      offset.bottom += BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
+      offset.left += BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
     }
   }
   else {
@@ -4208,7 +4182,7 @@ nsTableFrame::CalcMinAndPreferredWidths(const           nsHTMLReflowState& aRefl
   for (PRInt32 colX = 0; colX < numCols; colX++) { 
     nsTableColFrame* colFrame = GetColFrame(colX);
     if (!colFrame) continue;
-    aMinWidth += PR_MAX(colFrame->GetMinWidth(), colFrame->GetWidth(MIN_ADJ));
+    aMinWidth += colFrame->GetMinWidth();
     nscoord width = colFrame->GetFixWidth();
     if (width <= 0) {
       width = colFrame->GetDesWidth();
@@ -5811,7 +5785,6 @@ nsTableFrame::CalcBCBorders()
   BCCellBorder currentBorder, adjacentBorder;
   PRInt32   cellEndRowIndex = -1;
   PRInt32   cellEndColIndex = -1;
-  nscoord   smallHalf, largeHalf;
   BCCorners topCorners(damageArea.width + 1, damageArea.x); if (!topCorners.corners) ABORT0();
   BCCorners bottomCorners(damageArea.width + 1, damageArea.x); if (!bottomCorners.corners) ABORT0();
 
@@ -5871,12 +5844,12 @@ nsTableFrame::CalcBCBorders()
         tableCellMap->SetBCBorderEdge(NS_SIDE_TOP, *info.cellMap, 0, 0, colX,
                                       1, currentBorder.owner, currentBorder.width, startSeg);
         // update the affected borders of the cell, row, and table
-        DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
         if (info.cell) {
-          info.cell->SetBorderWidth(NS_SIDE_TOP, PR_MAX(smallHalf, info.cell->GetBorderWidth(NS_SIDE_TOP)));
+          info.cell->SetBorderWidth(NS_SIDE_TOP, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(NS_SIDE_TOP)));
         }
         if (info.topRow) {
-          info.topRow->SetTopBCBorderWidth(PR_MAX(smallHalf, info.topRow->GetTopBCBorderWidth()));
+          BCPixelSize half = BC_BORDER_BOTTOM_HALF(currentBorder.width);
+          info.topRow->SetTopBCBorderWidth(PR_MAX(half, info.topRow->GetTopBCBorderWidth()));
         }
         propData->mTopBorderWidth = LimitBorderWidth(PR_MAX(propData->mTopBorderWidth, (PRUint8)currentBorder.width));
         //calculate column continuous borders
@@ -5960,12 +5933,12 @@ nsTableFrame::CalcBCBorders()
         tableCellMap->SetBCBorderEdge(NS_SIDE_LEFT, *info.cellMap, iter.mRowGroupStart, rowX, 
                                       info.colIndex, 1, currentBorder.owner, currentBorder.width, startSeg);
         // update the left border of the cell, col and table
-        DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
         if (info.cell) {
-          info.cell->SetBorderWidth(firstSide, PR_MAX(smallHalf, info.cell->GetBorderWidth(firstSide)));
+          info.cell->SetBorderWidth(firstSide, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(firstSide)));
         }
         if (info.leftCol) {
-          info.leftCol->SetLeftBorderWidth(PR_MAX(smallHalf, info.leftCol->GetLeftBorderWidth()));
+          BCPixelSize half = BC_BORDER_RIGHT_HALF(currentBorder.width);
+          info.leftCol->SetLeftBorderWidth(PR_MAX(half, info.leftCol->GetLeftBorderWidth()));
         }
         propData->mLeftBorderWidth = LimitBorderWidth(PR_MAX(propData->mLeftBorderWidth, currentBorder.width));
         //get row continuous borders
@@ -6011,12 +5984,12 @@ nsTableFrame::CalcBCBorders()
         tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *info.cellMap, iter.mRowGroupStart, rowX,
                                       cellEndColIndex, 1, currentBorder.owner, currentBorder.width, startSeg);
         // update the affected borders of the cell, col, and table
-        DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
         if (info.cell) {
-          info.cell->SetBorderWidth(secondSide, PR_MAX(largeHalf, info.cell->GetBorderWidth(secondSide)));
+          info.cell->SetBorderWidth(secondSide, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(secondSide)));
         }
         if (info.rightCol) {
-          info.rightCol->SetRightBorderWidth(PR_MAX(largeHalf, info.rightCol->GetRightBorderWidth()));
+          BCPixelSize half = BC_BORDER_LEFT_HALF(currentBorder.width);
+          info.rightCol->SetRightBorderWidth(PR_MAX(half, info.rightCol->GetRightBorderWidth()));
         }
         propData->mRightBorderWidth = LimitBorderWidth(PR_MAX(propData->mRightBorderWidth, currentBorder.width));
         //get row continuous borders
@@ -6058,18 +6031,19 @@ nsTableFrame::CalcBCBorders()
           tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *info.cellMap, iter.mRowGroupStart, rowX, 
                                         cellEndColIndex, segLength, currentBorder.owner, currentBorder.width, startSeg);
           // update the borders of the cells and cols affected 
-          DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
           if (info.cell) {
-            info.cell->SetBorderWidth(secondSide, PR_MAX(largeHalf, info.cell->GetBorderWidth(secondSide)));
+            info.cell->SetBorderWidth(secondSide, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(secondSide)));
           }
           if (info.rightCol) {
-            info.rightCol->SetRightBorderWidth(PR_MAX(largeHalf, info.rightCol->GetRightBorderWidth()));
+            BCPixelSize half = BC_BORDER_LEFT_HALF(currentBorder.width);
+            info.rightCol->SetRightBorderWidth(PR_MAX(half, info.rightCol->GetRightBorderWidth()));
           }
           if (ajaInfo.cell) {
-            ajaInfo.cell->SetBorderWidth(firstSide, PR_MAX(smallHalf, ajaInfo.cell->GetBorderWidth(firstSide)));
+            ajaInfo.cell->SetBorderWidth(firstSide, PR_MAX(currentBorder.width, ajaInfo.cell->GetBorderWidth(firstSide)));
           }
           if (ajaInfo.leftCol) {
-            ajaInfo.leftCol->SetLeftBorderWidth(PR_MAX(smallHalf, ajaInfo.leftCol->GetLeftBorderWidth()));
+            BCPixelSize half = BC_BORDER_RIGHT_HALF(currentBorder.width);
+            ajaInfo.leftCol->SetLeftBorderWidth(PR_MAX(half, ajaInfo.leftCol->GetLeftBorderWidth()));
           }
         }
         // update the top right corner
@@ -6146,12 +6120,12 @@ nsTableFrame::CalcBCBorders()
         tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex, 
                                       colX, 1, currentBorder.owner, currentBorder.width, startSeg);
         // update the bottom borders of the cell, the bottom row, and the table 
-        DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
         if (info.cell) {
-          info.cell->SetBorderWidth(NS_SIDE_BOTTOM, PR_MAX(largeHalf, info.cell->GetBorderWidth(NS_SIDE_BOTTOM)));
+          info.cell->SetBorderWidth(NS_SIDE_BOTTOM, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(NS_SIDE_BOTTOM)));
         }
         if (info.bottomRow) {
-          info.bottomRow->SetBottomBCBorderWidth(PR_MAX(largeHalf, info.bottomRow->GetBottomBCBorderWidth()));
+          BCPixelSize half = BC_BORDER_TOP_HALF(currentBorder.width);
+          info.bottomRow->SetBottomBCBorderWidth(PR_MAX(half, info.bottomRow->GetBottomBCBorderWidth()));
         }
         propData->mBottomBorderWidth = LimitBorderWidth(PR_MAX(propData->mBottomBorderWidth, currentBorder.width));
         // update lastBottomBorders
@@ -6243,18 +6217,19 @@ nsTableFrame::CalcBCBorders()
           tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex,
                                         colX, segLength, currentBorder.owner, currentBorder.width, startSeg);
           // update the borders of the affected cells and rows
-          DivideBCBorderSize(currentBorder.width, smallHalf, largeHalf);
           if (info.cell) {
-            info.cell->SetBorderWidth(NS_SIDE_BOTTOM, PR_MAX(largeHalf, info.cell->GetBorderWidth(NS_SIDE_BOTTOM)));
+            info.cell->SetBorderWidth(NS_SIDE_BOTTOM, PR_MAX(currentBorder.width, info.cell->GetBorderWidth(NS_SIDE_BOTTOM)));
           }
           if (info.bottomRow) {
-            info.bottomRow->SetBottomBCBorderWidth(PR_MAX(largeHalf, info.bottomRow->GetBottomBCBorderWidth()));
+            BCPixelSize half = BC_BORDER_TOP_HALF(currentBorder.width);
+            info.bottomRow->SetBottomBCBorderWidth(PR_MAX(half, info.bottomRow->GetBottomBCBorderWidth()));
           }
           if (ajaInfo.cell) {
-            ajaInfo.cell->SetBorderWidth(NS_SIDE_TOP, PR_MAX(smallHalf, ajaInfo.cell->GetBorderWidth(NS_SIDE_TOP)));
+            ajaInfo.cell->SetBorderWidth(NS_SIDE_TOP, PR_MAX(currentBorder.width, ajaInfo.cell->GetBorderWidth(NS_SIDE_TOP)));
           }
           if (ajaInfo.topRow) {
-            ajaInfo.topRow->SetTopBCBorderWidth(PR_MAX(smallHalf, ajaInfo.topRow->GetTopBCBorderWidth()));
+            BCPixelSize half = BC_BORDER_BOTTOM_HALF(currentBorder.width);
+            ajaInfo.topRow->SetTopBCBorderWidth(PR_MAX(half, ajaInfo.topRow->GetTopBCBorderWidth()));
           }
         }
         // update bottom right corner
@@ -6603,6 +6578,7 @@ CalcVerCornerOffset(PRUint8 aCornerOwnerSide,
                     float   aPixelsToTwips)
 {
   nscoord offset = 0;
+  // XXX These should be replaced with appropriate side-specific macros (which?).
   nscoord smallHalf, largeHalf;
   if ((NS_SIDE_TOP == aCornerOwnerSide) || (NS_SIDE_BOTTOM == aCornerOwnerSide)) {
     DivideBCBorderSize(aCornerSubWidth, smallHalf, largeHalf);
@@ -6645,6 +6621,7 @@ CalcHorCornerOffset(PRUint8 aCornerOwnerSide,
                     PRBool  aTableIsLTR)
 {
   nscoord offset = 0;
+  // XXX These should be replaced with appropriate side-specific macros (which?).
   nscoord smallHalf, largeHalf;
   if ((NS_SIDE_LEFT == aCornerOwnerSide) || (NS_SIDE_RIGHT == aCornerOwnerSide)) {
     if (aTableIsLTR) {
@@ -7594,7 +7571,7 @@ DestroyCoordFunc(void*           aFrame,
                  void*           aPropertyValue,
                  void*           aDtorData)
 {
-  delete (nscoord*)aPropertyValue;
+  delete NS_STATIC_CAST(nscoord*, aPropertyValue);
 }
 
 // Destructor function point properties
@@ -7604,7 +7581,7 @@ DestroyPointFunc(void*           aFrame,
                  void*           aPropertyValue,
                  void*           aDtorData)
 {
-  delete (nsPoint*)aPropertyValue;
+  delete NS_STATIC_CAST(nsPoint*, aPropertyValue);
 }
 
 // Destructor function for nscoord properties
@@ -7614,7 +7591,7 @@ DestroyBCPropertyDataFunc(void*           aFrame,
                           void*           aPropertyValue,
                           void*           aDtorData)
 {
-  delete (BCPropertyData*)aPropertyValue;
+  delete NS_STATIC_CAST(BCPropertyData*, aPropertyValue);
 }
 
 void*
@@ -7626,7 +7603,7 @@ nsTableFrame::GetProperty(nsIFrame*            aFrame,
   void *value = propTable->GetProperty(aFrame, aPropertyName);
   if (value) {
     return (nsPoint*)value;  // the property already exists
-  } 
+  }
   if (aCreateIfNecessary) {
     // The property isn't set yet, so allocate a new value, set the property,
     // and return the newly allocated value
@@ -7643,8 +7620,9 @@ nsTableFrame::GetProperty(nsIFrame*            aFrame,
       value = new BCPropertyData;
       dtorFunc = DestroyBCPropertyDataFunc;
     }
-    if (!value) return nsnull;
-    propTable->SetProperty(aFrame, aPropertyName, value, dtorFunc, nsnull);
+    if (value) {
+      propTable->SetProperty(aFrame, aPropertyName, value, dtorFunc, nsnull);
+    }
     return value;
   }
   return nsnull;

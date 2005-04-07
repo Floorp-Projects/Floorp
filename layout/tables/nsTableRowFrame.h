@@ -333,7 +333,8 @@ private:
   nscoord mMaxCellAscent;  // does include cells with rowspan > 1
   nscoord mMaxCellDescent; // does *not* include cells with rowspan > 1
 
-  // border widths in pixels in the collapsing border model
+  // border widths in pixels in the collapsing border model of the *inner*
+  // half of the border only
   BCPixelSize mTopBorderWidth;
   BCPixelSize mBottomBorderWidth;
   BCPixelSize mRightContBorderWidth;

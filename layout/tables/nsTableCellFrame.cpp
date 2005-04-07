@@ -1240,44 +1240,35 @@ nsBCTableCellFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-void 
-nsBCTableCellFrame::SetBorderWidth(const nsMargin& aBorder)
-{
-  mTopBorder    = aBorder.top;
-  mRightBorder  = aBorder.right;
-  mBottomBorder = aBorder.bottom;
-  mLeftBorder   = aBorder.left;
-}
-
 nsMargin* 
 nsBCTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
                                    nsMargin&  aBorder) const
 {
-  aBorder.top    = (aPixelsToTwips) ? NSToCoordRound(aPixelsToTwips * mTopBorder) :   mTopBorder;
-  aBorder.right  = (aPixelsToTwips) ? NSToCoordRound(aPixelsToTwips * mRightBorder) : mRightBorder;
-  aBorder.bottom = (aPixelsToTwips) ? NSToCoordRound(aPixelsToTwips * mBottomBorder): mBottomBorder;
-  aBorder.left   = (aPixelsToTwips) ? NSToCoordRound(aPixelsToTwips * mLeftBorder):   mLeftBorder;
+  aBorder.top    = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips, mTopBorder);
+  aBorder.right  = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips, mRightBorder);
+  aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips, mBottomBorder);
+  aBorder.left   = BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips, mLeftBorder);
   return &aBorder;
 }
 
-nscoord 
+BCPixelSize
 nsBCTableCellFrame::GetBorderWidth(PRUint8 aSide) const
 {
   switch(aSide) {
   case NS_SIDE_TOP:
-    return (PRUint8)mTopBorder;
+    return BC_BORDER_BOTTOM_HALF(mTopBorder);
   case NS_SIDE_RIGHT:
-    return (PRUint8)mRightBorder;
+    return BC_BORDER_LEFT_HALF(mRightBorder);
   case NS_SIDE_BOTTOM:
-    return (PRUint8)mBottomBorder;
+    return BC_BORDER_TOP_HALF(mBottomBorder);
   default:
-    return (PRUint8)mLeftBorder;
+    return BC_BORDER_RIGHT_HALF(mLeftBorder);
   }
 }
 
 void 
 nsBCTableCellFrame::SetBorderWidth(PRUint8 aSide,
-                                   nscoord aValue)
+                                   BCPixelSize aValue)
 {
   switch(aSide) {
   case NS_SIDE_TOP:
@@ -1298,15 +1289,11 @@ nsBCTableCellFrame::SetBorderWidth(PRUint8 aSide,
 nsBCTableCellFrame::GetSelfOverflow(nsRect& aOverflowArea)
 {
   nsMargin halfBorder;
-  GetBorderWidth(GetPresContext()->PixelsToTwips(), halfBorder);
-  // Since we have the inner half and we want an outer bound for the
-  // outer half, just inflate the right and bottom sides by a pixel.
-  // XXX Overestimating could lead to problems with outlines (although
-  // this is probably bad for outlines to begin with) and scrollable
-  // regions in 'overflow: auto' or 'overflow: scroll' containers.
-  nscoord onePixel = nscoord(GetPresContext()->PixelsToTwips() + 0.999);
-  halfBorder.right += onePixel;
-  halfBorder.bottom += onePixel;
+  float p2t = GetPresContext()->PixelsToTwips();
+  halfBorder.top = BC_BORDER_TOP_HALF_COORD(p2t, mTopBorder);
+  halfBorder.right = BC_BORDER_RIGHT_HALF_COORD(p2t, mRightBorder);
+  halfBorder.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, mBottomBorder);
+  halfBorder.left = BC_BORDER_LEFT_HALF_COORD(p2t, mLeftBorder);
 
   nsRect overflow(nsPoint(0,0), GetSize());
   overflow.Inflate(halfBorder);

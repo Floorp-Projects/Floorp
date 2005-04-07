@@ -38,17 +38,7 @@
 #ifndef nsTablePainter_h__
 #define nsTablePainter_h__
 
-typedef PRUint8 BCPixelSize;
-
-#define BC_BORDER_TOP_HALF_COORD(p2t,px)    NSToCoordRound(((px) - (px) / 2) * (p2t) )
-#define BC_BORDER_RIGHT_HALF_COORD(p2t,px)  NSToCoordRound((       (px) / 2) * (p2t) )
-#define BC_BORDER_BOTTOM_HALF_COORD(p2t,px) NSToCoordRound((       (px) / 2) * (p2t) )
-#define BC_BORDER_LEFT_HALF_COORD(p2t,px)   NSToCoordRound(((px) - (px) / 2) * (p2t) )
-
-#define BC_BORDER_TOP_HALF(px)    ((px) - (px) / 2)
-#define BC_BORDER_RIGHT_HALF(px)  ((px) / 2)
-#define BC_BORDER_BOTTOM_HALF(px) ((px) / 2)
-#define BC_BORDER_LEFT_HALF(px)   ((px) - (px) / 2)
+#include "celldata.h"
 
 // flags for Paint, PaintChild, PaintChildren are currently only used by tables.
 //Table-based paint call; not a direct call as with views

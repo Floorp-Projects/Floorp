@@ -517,7 +517,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
 {
   nsTableFrame* tableFrame = nsnull;
   nsTableFrame::GetTableFrame(this, tableFrame);
-  if (!aPresContext || !tableFrame) return;
+  if (!tableFrame) return;
 
   PRBool isPaginated = aPresContext->IsPaginated();
 
@@ -1212,7 +1212,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
 
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (!aPresContext || !tableFrame) return NS_ERROR_NULL_POINTER;
+  if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
   // see if a special height reflow needs to occur due to having a pct height
   if (!NeedSpecialReflow()) 

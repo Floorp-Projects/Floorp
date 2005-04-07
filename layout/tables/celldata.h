@@ -179,10 +179,21 @@ enum BCBorderOwner
   eAjaCellOwner      = 10  // cell to the top or to the left
 };
 
+typedef PRUint16 BCPixelSize;
+
 // These are the max sizes that are stored. If they are exceeded, then the max is stored and
 // the actual value is computed when needed.
-#define MAX_BORDER_WIDTH      64
-#define MAX_CORNER_SUB_WIDTH 128
+#define MAX_BORDER_WIDTH nscoord(PR_BITMASK(sizeof(BCPixelSize) * 8))
+
+#define BC_BORDER_TOP_HALF_COORD(p2t,px)    NSToCoordRound(float((px) - (px) / 2) * (p2t) )
+#define BC_BORDER_RIGHT_HALF_COORD(p2t,px)  NSToCoordRound(float(       (px) / 2) * (p2t) )
+#define BC_BORDER_BOTTOM_HALF_COORD(p2t,px) NSToCoordRound(float(       (px) / 2) * (p2t) )
+#define BC_BORDER_LEFT_HALF_COORD(p2t,px)   NSToCoordRound(float((px) - (px) / 2) * (p2t) )
+
+#define BC_BORDER_TOP_HALF(px)    ((px) - (px) / 2)
+#define BC_BORDER_RIGHT_HALF(px)  ((px) / 2)
+#define BC_BORDER_BOTTOM_HALF(px) ((px) / 2)
+#define BC_BORDER_LEFT_HALF(px)   ((px) - (px) / 2)
 
 // BCData stores the top and left border info and the corner connecting the two.
 class BCData
@@ -206,11 +217,11 @@ public:
                   nscoord       aSize,
                   PRBool        aStart);
 
-  PRUint8 GetCorner(PRUint8&       aCornerOwner,
-                    PRPackedBool&  aBevel) const;
+  BCPixelSize GetCorner(PRUint8&       aCornerOwner,
+                        PRPackedBool&  aBevel) const;
 
-  void SetCorner(PRUint8 aOwner,
-                 PRUint8 aSubSize,
+  void SetCorner(BCPixelSize aSubSize,
+                 PRUint8 aOwner,
                  PRBool  aBevel);
 
   PRBool IsLeftStart() const;
@@ -223,17 +234,19 @@ public:
 
                
 protected:
+  BCPixelSize mLeftSize;      // size in pixels of left border
+  BCPixelSize mTopSize;       // size in pixels of top border
+  BCPixelSize mCornerSubSize; // size of the largest border not in the
+                              //   dominant plane (for example, if corner is
+                              //   owned by the segment to its top or bottom,
+                              //   then the size is the max of the border
+                              //   sizes of the segments to its left or right.
   unsigned mLeftOwner:     4; // owner of left border     
-  unsigned mLeftSize:      6; // size in pixels of left border
-  unsigned mLeftStart:     1; // set if this is the start of a vertical border segment
-  unsigned mCornerSide:    2; // side of the owner of the upper left corner relative to the corner
-  unsigned mCornerSubSize: 7; // size of the largest border not in the dominate plane (for example, if
-                              // corner is owned by the segment to its top or bottom, then the size is the
-                              // max of the border sizes of the segments to its left or right.
-  unsigned mCornerBevel:   1; // is the corner beveled (only two segments, perpendicular, not dashed or dotted).
   unsigned mTopOwner:      4; // owner of top border    
-  unsigned mTopSize:       6; // size in pixels of top border
+  unsigned mLeftStart:     1; // set if this is the start of a vertical border segment
   unsigned mTopStart:      1; // set if this is the start of a horizontal border segment
+  unsigned mCornerSide:    2; // side of the owner of the upper left corner relative to the corner
+  unsigned mCornerBevel:   1; // is the corner beveled (only two segments, perpendicular, not dashed or dotted).
 };
 
 // BCCellData entries replace CellData entries in the cell map if the border collapsing model is in
@@ -437,19 +450,19 @@ inline void BCData::SetTopEdge(BCBorderOwner  aOwner,
   mTopStart = aStart;
 }
 
-inline PRUint8 BCData::GetCorner(PRUint8&       aOwnerSide,
-                                 PRPackedBool&  aBevel) const
+inline BCPixelSize BCData::GetCorner(PRUint8&       aOwnerSide,
+                                     PRPackedBool&  aBevel) const
 {
   aOwnerSide = mCornerSide;
   aBevel     = (PRBool)mCornerBevel;
-  return (PRUint8)mCornerSubSize;
+  return mCornerSubSize;
 }
 
-inline void BCData::SetCorner(PRUint8 aSubSize,
+inline void BCData::SetCorner(BCPixelSize aSubSize,
                               PRUint8 aOwnerSide,
                               PRBool  aBevel)
 {
-  mCornerSubSize = (aSubSize > MAX_CORNER_SUB_WIDTH) ? MAX_CORNER_SUB_WIDTH : aSubSize;
+  mCornerSubSize = aSubSize;
   mCornerSide    = aOwnerSide;
   mCornerBevel   = aBevel;
 }

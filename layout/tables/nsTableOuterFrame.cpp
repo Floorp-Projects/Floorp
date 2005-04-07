@@ -409,7 +409,7 @@ nsTableOuterFrame::ZeroAutoMargin(nsHTMLReflowState& aReflowState,
   }
 }
 
-void 
+static void 
 FixAutoMargins(nscoord            aAvailWidth,
                nscoord            aChildWidth,
                nsHTMLReflowState& aReflowState)
@@ -474,6 +474,7 @@ nsTableOuterFrame::GetMarginPadding(nsPresContext*          aPresContext,
   aPadding = childRS.mComputedPadding;
 }
 
+static
 nscoord CalcAutoMargin(nscoord aAutoMargin,
                        nscoord aOppositeMargin,
                        nscoord aContainBlockSize,
@@ -489,7 +490,7 @@ nscoord CalcAutoMargin(nscoord aAutoMargin,
   return PR_MAX(0, margin);
 }
 
-void
+static void
 MoveFrameTo(nsIFrame* aFrame, 
             nscoord   aX,
             nscoord   aY)
@@ -501,7 +502,7 @@ MoveFrameTo(nsIFrame* aFrame,
   }
 }
 
-nsSize
+static nsSize
 GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
 {
   nsSize size(0,0);
@@ -755,11 +756,10 @@ nsTableOuterFrame::GetMaxWidth(PRUint8         aCaptionSide,
     switch(aCaptionSide) {
     case NS_SIDE_LEFT:
     case NS_SIDE_RIGHT:
+      maxWidth += mCaptionFrame->GetSize().width + aCaptionMargin.left + aCaptionMargin.right;
       // the caption plus it margins should cover the corresponding inner table side
       // margin - don't count it twice.
-      maxWidth = mCaptionFrame->GetSize().width + aCaptionMargin.left + aCaptionMargin.right +
-                 ((nsTableFrame *)mInnerTableFrame)->GetPreferredWidth();
-      maxWidth += (NS_SIDE_LEFT == aCaptionSide) ? aInnerMargin.right : aInnerMargin.left;
+      maxWidth -= (NS_SIDE_LEFT == aCaptionSide) ? aInnerMargin.left : aInnerMargin.right;
       break;
     case NS_SIDE_TOP:
     case NS_SIDE_BOTTOM:
@@ -785,12 +785,10 @@ nsTableOuterFrame::GetCaptionSide()
 PRUint8
 nsTableOuterFrame::GetCaptionVerticalAlign()
 {
-  const nsStyleTextReset* textStyle = mCaptionFrame->GetStyleTextReset();
-  PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_TOP;
-  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-    verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
-  }
-  return verticalAlignFlags;
+  const nsStyleCoord& va = mCaptionFrame->GetStyleTextReset()->mVerticalAlign;
+  return (va.GetUnit() == eStyleUnit_Enumerated)
+           ? va.GetIntValue()
+           : NS_STYLE_VERTICAL_ALIGN_TOP;
 }
 
 void
@@ -1233,7 +1231,6 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
                                     nsReflowStatus&            aStatus,
                                     PRBool*                    aNeedToReflowCaption)
 { 
-  if (!aPresContext) ABORT1(NS_ERROR_NULL_POINTER);
   aMargin = aPadding = nsMargin(0,0,0,0);
 
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
