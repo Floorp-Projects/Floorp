@@ -1272,8 +1272,8 @@ GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
-  long xpcom_obj = env->CallStaticIntMethod(xpcomJavaProxyClass,
-                                            getNativeXPCOMInstMID, aJavaObject);
+  long xpcom_obj = env->CallStaticLongMethod(xpcomJavaProxyClass,
+                                             getNativeXPCOMInstMID, aJavaObject);
 
   if (!xpcom_obj || env->ExceptionCheck()) {
     return NS_ERROR_FAILURE;
