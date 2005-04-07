@@ -987,6 +987,13 @@ public:
   nsresult SetView(nsIView* aView);
 
   /**
+   * This view will be used to parent the views of any children.
+   * This allows us to insert an anonymous inner view to parent
+   * some children.
+   */
+  virtual nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const;
+
+  /**
    * Find the closest view (on |this| or an ancestor).
    * If aOffset is non-null, it will be set to the offset of |this|
    * from the returned view.

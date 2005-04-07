@@ -537,11 +537,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
     return NS_OK;
   }
 
-  // Create a view
-  nsIFrame* parent = aFrame->GetAncestorWithView();
-  NS_ASSERTION(parent, "GetParentWithView failed");
-
-  nsIView* parentView = parent->GetView();
+  nsIView* parentView = aFrame->GetParent()->GetParentViewForChildFrame(aFrame);
   NS_ASSERTION(parentView, "no parent with view");
 
   nsIViewManager* viewManager = parentView->GetViewManager();
