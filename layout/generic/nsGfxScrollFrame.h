@@ -123,6 +123,8 @@ public:
 
   nsIScrollableView* GetScrollableView() const { return mScrollableView; }
 
+  nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const;
+
   void ScrollToRestoredPosition();
 
   nsPresState* SaveState();
@@ -223,6 +225,10 @@ public:
                                            PRBool&         aBeginFrameContent) {
     return mInner.GetChildContentAndOffsetsFromPoint(aCX, aPoint, aNewContent, aContentOffset,
                                                      aContentOffsetEnd, aBeginFrameContent);
+  }
+
+  virtual nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const {
+    return mInner.GetParentViewForChildFrame(aFrame);
   }
 
   virtual nsIFrame* GetContentInsertionFrame() {
@@ -371,6 +377,10 @@ public:
                                            PRBool&         aBeginFrameContent) {
     return mInner.GetChildContentAndOffsetsFromPoint(aCX, aPoint, aNewContent, aContentOffset,
                                                      aContentOffsetEnd, aBeginFrameContent);
+  }
+
+  virtual nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const {
+    return mInner.GetParentViewForChildFrame(aFrame);
   }
 
   virtual nsIFrame* GetContentInsertionFrame() {

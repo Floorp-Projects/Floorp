@@ -2257,6 +2257,12 @@ NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsIView*
+nsIFrame::GetParentViewForChildFrame(nsIFrame* aFrame) const
+{
+  return GetClosestView();
+}
+
 // Associated view object
 nsIView*
 nsIFrame::GetView() const

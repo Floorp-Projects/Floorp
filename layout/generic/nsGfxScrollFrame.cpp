@@ -1076,7 +1076,7 @@ nsGfxScrollFrameInner::NeedsClipWidget() const
 {
   // Scrollports contained in form controls (e.g., listboxes) don't get
   // widgets.
-  for (nsIFrame* parentFrame = mOuter->GetParent(); parentFrame;
+  for (nsIFrame* parentFrame = mOuter; parentFrame;
        parentFrame = parentFrame->GetParent()) {
     nsIFormControlFrame* fcFrame;
     if ((NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame)))) {
@@ -1155,6 +1155,18 @@ static void HandleScrollPref(nsIScrollable *aScrollable, PRInt32 aOrientation,
       aValue = NS_STYLE_OVERFLOW_SCROLL;
       break;
   }
+}
+
+nsIView*
+nsGfxScrollFrameInner::GetParentViewForChildFrame(nsIFrame* aFrame) const
+{
+  if (aFrame->GetContent() == mOuter->GetContent()) {
+    NS_ASSERTION(mScrollableView, "Scrollable view should have been created by now");
+    // scrolled frame, put it under our anonymous view
+    return mScrollableView->View();
+  }
+  // scrollbars and stuff; put them under our regular view
+  return mOuter->GetView();
 }
 
 nsGfxScrollFrameInner::ScrollbarStyles

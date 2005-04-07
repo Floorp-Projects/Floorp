@@ -6346,20 +6346,13 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
 {
   aScrollFrame->AppendFrames(nsnull, aScrolledFrame);
 
-  // force the scrolled frame to have a view
+  // force the scrolled frame to have a view. The view will be parented to
+  // the correct anonymous inner view because the scrollframes override
+  // nsIFrame::GetParentViewForChildFrame.
   nsHTMLContainerFrame::CreateViewForFrame(aScrolledFrame, nsnull, PR_TRUE);
   nsIView* view = aScrolledFrame->GetView();
   if (!view)
     return;
-
-  // reparent the view from the scrollframe's view to its inner scrolling view
-  nsIScrollableFrame* scrollable;
-  CallQueryInterface(aScrollFrame, &scrollable);
-  if (scrollable) {
-    nsIViewManager* vm = view->GetViewManager();
-    vm->RemoveChild(view);
-    vm->InsertChild(scrollable->GetScrollableView()->View(), view, nsnull, PR_TRUE);
-  }
 }
 
 
