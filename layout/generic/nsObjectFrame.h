@@ -87,6 +87,7 @@ public:
   virtual nsIAtom* GetType() const;
   virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
   virtual PRBool NeedsView() { return PR_TRUE; }
+  virtual nsresult CreateWidgetForView(nsIView* aView);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
