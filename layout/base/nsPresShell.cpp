@@ -1401,6 +1401,7 @@ protected:
   PRPackedBool mDocumentLoading;
   PRPackedBool mIsReflowing;
   PRPackedBool mIsDestroying;
+  PRPackedBool mIsReleasingAnonymousContent;
 
   PRPackedBool mDidInitialReflow;
   PRPackedBool mIgnoreFrameDestruction;
@@ -1654,6 +1655,7 @@ PresShell::PresShell()
 #endif
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = PR_FALSE;
+  mIsReleasingAnonymousContent = PR_FALSE;
 
   new (this) nsFrameManager();
 }
@@ -4906,6 +4908,9 @@ PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnony
         
         content->UnbindFromTree();
       }
+
+      if (!mIsReleasingAnonymousContent)
+        mAnonymousContentTable->Remove(&key);
     }
   }
 
@@ -4954,6 +4959,7 @@ NS_IMETHODIMP
 PresShell::ReleaseAnonymousContent()
 {
   if (mAnonymousContentTable) {
+    mIsReleasingAnonymousContent = PR_TRUE;
     mAnonymousContentTable->Enumerate(ClearDocumentEnumerator);
     delete mAnonymousContentTable;
     mAnonymousContentTable = nsnull;
