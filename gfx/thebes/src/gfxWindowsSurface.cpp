@@ -35,13 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "WindowsSurface.h"
+#include "gfxWindowsSurface.h"
 
-WindowsSurface::WindowsSurface(HDC dc)
+gfxWindowsSurface::gfxWindowsSurface(HDC dc)
 {
     Init(cairo_win32_surface_create(dc));
 }
 
-WindowsSurface::~WindowsSurface()
+gfxWindowsSurface::~gfxWindowsSurface()
 {
 }

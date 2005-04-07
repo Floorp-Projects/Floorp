@@ -59,5 +59,5 @@ class gfxTextRun {
     // the implementor could optimize for that.
     int GetCharsFit(int pos, int len, double width, int breakflags);
 
-    int GetPositionInString(gfxPoint pt);
+    int GetPositionInString(gfxPoint& pt);
 };

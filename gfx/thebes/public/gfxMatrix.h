@@ -105,8 +105,8 @@ public:
         double s = sin(radians);
         double c = cos(radians);
         gfxMatrix t( c, s,
-                 -s, c,
-                  0, 0);
+                    -s, c,
+                     0, 0);
         return *this = t.Multiply(*this);
     }
 
