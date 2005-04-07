@@ -46,7 +46,7 @@
 static const nsXREAppData kAppData = {
   "Mozilla",
   "Firefox",
-  APP_VERSION,
+  NS_STRINGIFY(APP_VERSION),
   NS_STRINGIFY(BUILD_ID),
   // ec8030f7-c20a-464f-9b0e-13a3a9e97384
   { 0xec8030f7, 0xc20a, 0x464f, { 0x9b, 0x0e, 0x13, 0xa3, 0xa9, 0xe9, 0x73, 0x84 } },

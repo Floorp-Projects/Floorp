@@ -70,6 +70,7 @@
 #include "nsAutoLock.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
+#include "nsQuickSort.h"
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <sys/utsname.h>
@@ -239,6 +240,7 @@ nsHttpHandler::Init()
     LOG(("> vendor = %s\n", mVendor.get()));
     LOG(("> vendor-sub = %s\n", mVendorSub.get()));
     LOG(("> vendor-comment = %s\n", mVendorComment.get()));
+    LOG(("> extra = %s\n", mExtraUA.get()));
     LOG(("> product = %s\n", mProduct.get()));
     LOG(("> product-sub = %s\n", mProductSub.get()));
     LOG(("> product-comment = %s\n", mProductComment.get()));
@@ -530,6 +532,7 @@ nsHttpHandler::BuildUserAgent()
                            mVendor.Length() +
                            mVendorSub.Length() +
                            mVendorComment.Length() +
+                           mExtraUA.Length() +
                            22);
 
     // Application portion
@@ -584,6 +587,9 @@ nsHttpHandler::BuildUserAgent()
             mUserAgent += ')';
         }
     }
+
+    if (!mExtraUA.IsEmpty())
+        mUserAgent += mExtraUA;
 }
 
 void
@@ -696,6 +702,12 @@ nsHttpHandler::InitUserAgentComponents()
     mUserAgentIsDirty = PR_TRUE;
 }
 
+static int StringCompare(const void* s1, const void* s2, void*)
+{
+    return nsCRT::strcmp(*NS_STATIC_CAST(const char *const *, s1),
+                         *NS_STATIC_CAST(const char *const *, s2));
+}
+
 void
 nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 {
@@ -705,6 +717,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     LOG(("nsHttpHandler::PrefsChanged [pref=%s]\n", pref));
 
 #define PREF_CHANGED(p) ((pref == nsnull) || !PL_strcmp(pref, p))
+#define MULTI_PREF_CHANGED(p) \
+  ((pref == nsnull) || !PL_strncmp(pref, p, sizeof(p) - 1))
 
     //
     // UA components
@@ -740,6 +754,36 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(UA_PREF("vendorComment"))) {
         prefs->GetCharPref(UA_PREF("vendorComment"),
             getter_Copies(mVendorComment));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
+    if (MULTI_PREF_CHANGED(UA_PREF("extra."))) {
+        mExtraUA.Truncate();
+
+        // Unfortunately, we can't do this using the pref branch.
+        nsCOMPtr<nsIPrefService> service =
+            do_GetService(NS_PREFSERVICE_CONTRACTID);
+        nsCOMPtr<nsIPrefBranch> branch;
+        service->GetBranch(UA_PREF("extra."), getter_AddRefs(branch));
+        if (branch) {
+            PRUint32 extraCount;
+            char **extraItems;
+            rv = branch->GetChildList("", &extraCount, &extraItems);
+            if (NS_SUCCEEDED(rv) && extraItems) {
+                NS_QuickSort(extraItems, extraCount, sizeof(extraItems[0]),
+                             StringCompare, nsnull);
+                for (char **item = extraItems,
+                      **item_end = extraItems + extraCount;
+                     item < item_end; ++item) {
+                    nsXPIDLCString valStr;
+                    branch->GetCharPref(*item, getter_Copies(valStr));
+                    if (!valStr.IsEmpty())
+                        mExtraUA += NS_LITERAL_CSTRING(" ") + valStr;
+                }
+                NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(extraCount, extraItems);
+            }
+        }
+
         mUserAgentIsDirty = PR_TRUE;
     }
 
@@ -1075,6 +1119,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
 #undef PREF_CHANGED
+#undef MULTI_PREF_CHANGED
 }
 
 /**
