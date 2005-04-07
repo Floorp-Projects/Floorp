@@ -882,7 +882,7 @@ NS_IMETHODIMP nsDocAccessible::AttrModified(nsIDOMEvent* aMutationEvent)
   mutationEvent->GetAttrName(attrName);
 
   PRUint32 eventType = 0;
-  if (attrName.EqualsLiteral("checked")) {
+  if (attrName.EqualsLiteral("checked") || attrName.EqualsLiteral("expanded")) {
     nsCOMPtr<nsIContent> targetContent(do_QueryInterface(targetNode));
     if (targetContent->IsContentOfType(nsIContent::eXUL)) {
       // XXX Should we remove XUL's CheckboxStateChanged event and just utilize this instead?

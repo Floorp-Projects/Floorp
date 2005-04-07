@@ -1385,17 +1385,18 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"alert", ROLE_ALERT, eNameFromSubtree, eNoValue, eNoReqStates, END_ENTRY},
   {"application", ROLE_APPLICATION, eNoName, eNoValue, eNoReqStates, END_ENTRY},
   {"button", ROLE_PUSHBUTTON, eNameFromSubtree, eNoValue, eNoReqStates,
+            {"pressed", BOOL_STATE, STATE_PRESSED},
             {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY},
   {"button-submit", ROLE_PUSHBUTTON, eNameFromSubtree, eNoValue, STATE_DEFAULT, END_ENTRY},
   {"checkbox", ROLE_CHECKBUTTON, eNameFromSubtree, eNoValue, eNoReqStates,
             {"checked", BOOL_STATE, STATE_CHECKED},
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"required", BOOL_STATE, STATE_REQUIRED }, END_ENTRY},
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"checkbox-tristate", ROLE_CHECKBUTTON, eNameFromSubtree, eNoValue, eNoReqStates, 
             {"checked", BOOL_STATE, STATE_CHECKED},
             {"checked", "mixed", STATE_MIXED},
             {"readonly", BOOL_STATE, STATE_READONLY},
-            {"required", BOOL_STATE, STATE_REQUIRED }},
+            {"invalid", BOOL_STATE, STATE_INVALID},
+            {"required", BOOL_STATE, STATE_REQUIRED}},
   {"columnheader", ROLE_COLUMNHEADER, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
@@ -1418,26 +1419,25 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"menuitem-checkbox", ROLE_MENUITEM, eNameFromSubtree, eNoValue, eNoReqStates,
             {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
   {"grid", ROLE_TABLE, eNameFromTitle, eNoValue, STATE_FOCUSABLE,
-            {"readonly", BOOL_STATE, STATE_READONLY},
-            {"multiselectable", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
-  {"gridcell", ROLE_CELL, eNameFromSubtree, eHasValue, STATE_SELECTABLE,
+            {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
+  {"gridcell", ROLE_CELL, eNameFromSubtree, eHasValueMinMax, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
             {"readonly", BOOL_STATE, STATE_READONLY}, 
             {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}},
+            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY},
   {"group", ROLE_GROUPING, eNameFromTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"link", ROLE_LINK, eNameFromTitle, eNoValue, STATE_LINKED, END_ENTRY},
-  {"option", ROLE_LISTITEM, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
-            {"selected", BOOL_STATE, STATE_SELECTED}, END_ENTRY},
-  {"progressmeter", ROLE_PROGRESSBAR, eNameFromTitle, eHasValueMinMax, STATE_READONLY,
+  {"progressbar", ROLE_PROGRESSBAR, eNameFromTitle, eHasValueMinMax, STATE_READONLY,
             {"valuenow", "unknown", STATE_MIXED}, END_ENTRY},
-  {"radio", ROLE_RADIOBUTTON, eNameFromSubtree, eNoValue, STATE_SELECTABLE, END_ENTRY},
+  {"radio", ROLE_RADIOBUTTON, eNameFromSubtree, eNoValue, eNoReqStates, 
+            {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
   {"rowheader", ROLE_ROWHEADER, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
             {"readonly", BOOL_STATE, STATE_READONLY}, END_ENTRY},
   {"secret", ROLE_PASSWORD_TEXT, eNameFromTitle, eNoValue, STATE_PROTECTED,
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY}, // XXX EXT_STATE_SINGLE_LINE
+  {"separator", ROLE_SEPARATOR, eNameFromTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"slider", ROLE_SLIDER, eNameFromTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
@@ -1451,23 +1451,24 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"tab", ROLE_PAGETAB, eNameFromSubtree, eNoValue, eNoReqStates,  END_ENTRY},
   {"tablist", ROLE_PAGETABLIST, eNameFromSubtree, eNoValue, eNoReqStates,  END_ENTRY},
   {"tabpanel", ROLE_PROPERTYPAGE, eNameFromSubtree, eNoValue, eNoReqStates,  END_ENTRY},
-  {"textarea", ROLE_TEXT, eNameFromTitle, eHasValue, eNoReqStates,
+  {"textarea", ROLE_TEXT, eNameFromTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
             {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY}, // XXX EXT_STATE_MULTI_LINE
-  {"textfield", ROLE_TEXT, eNameFromTitle, eHasValue, eNoReqStates, {"readonly", BOOL_STATE, STATE_READONLY},
+  {"textfield", ROLE_TEXT, eNameFromTitle, eHasValueMinMax, eNoReqStates,
+            {"readonly", BOOL_STATE, STATE_READONLY},
             {"invalid", BOOL_STATE, STATE_INVALID},
-            {"required", BOOL_STATE, STATE_REQUIRED}, END_ENTRY}, // XXX EXT_STATE_SINGLE_LINE
-  {"toolbarbutton", ROLE_PUSHBUTTON, eNameFromSubtree, eNoValue, eNoReqStates,
-            {"pressed", BOOL_STATE, STATE_PRESSED}, END_ENTRY},
+            {"required", BOOL_STATE, STATE_REQUIRED},
+            {"haspopup", BOOL_STATE, STATE_HASPOPUP}, END_ENTRY}, // XXX EXT_STATE_SINGLE_LINE
+  {"toolbar", ROLE_TOOLBAR, eNoName, eNoValue, eNoReqStates, END_ENTRY},
   {"tree", ROLE_OUTLINE, eNameFromTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
-            {"multiselectable", BOOL_STATE, STATE_EXTSELECTABLE}, END_ENTRY},
+            {"multiselectable", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
   {"treeitem", ROLE_OUTLINEITEM, eNameFromSubtree, eNoValue, STATE_SELECTABLE,
             {"selected", BOOL_STATE, STATE_SELECTED},
-            {"collapsed", BOOL_STATE, STATE_COLLAPSED},
             {"expanded", BOOL_STATE, STATE_EXPANDED},
-            {"checked", BOOL_STATE, STATE_CHECKED}},
+            {"expanded", "false", STATE_COLLAPSED},
+            {"checked", BOOL_STATE, STATE_CHECKED}, END_ENTRY},
   {nsnull, ROLE_NOTHING, eNoName, eNoValue, eNoReqStates, END_ENTRY} // Last item
 };
 
@@ -1555,8 +1556,9 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
     finalState |= mRoleMapEntry->state;
     if (MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap1) &&
         MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap2) &&
-        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap3)) {
-      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap4);
+        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap3) &&
+        MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap4)) {
+      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap5);
     }
     // Anything can be disabled/unavailable
     MappedAttrState(content, &finalState, &gDisabledStateMap);

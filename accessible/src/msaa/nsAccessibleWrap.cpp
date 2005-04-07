@@ -280,7 +280,8 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
   nsresult rv = GetFinalRole(&currentRole);
   if (NS_FAILED(rv) ||
       (currentRole != ROLE_LISTITEM && currentRole != ROLE_MENUITEM &&
-       currentRole != ROLE_RADIOBUTTON && currentRole != ROLE_PAGETAB)) {
+       currentRole != ROLE_RADIOBUTTON && currentRole != ROLE_PAGETAB &&
+       currentRole != ROLE_OUTLINEITEM)) {
     return rv;
   }
   
@@ -315,9 +316,27 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
   
   // Don't localize the string "of" -- that's just the format of this string.
   // The AT will parse the relevant numbers out and add its own localization.
-  nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("%d of %d").get(),
-                            indexInParent, numSiblings);
+  if (currentRole == ROLE_OUTLINEITEM) {
+    PRUint32 level = 1;
+    nsCOMPtr<nsIAccessible> nextParent;
+    while (parent) {
+      parent->GetFinalRole(&currentRole);
+      if (currentRole != ROLE_GROUPING) {
+        break;
+      }
+      ++level;
+      parent->GetParent(getter_AddRefs(nextParent));
+      parent.swap(nextParent);
+    }
 
+    // This must be a DHTML tree item -- XUL tree items impl GetDescription()
+    nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("L%d, %d of %d").get(),
+                              level, indexInParent, numSiblings);
+  }
+  else {
+    nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("%d of %d").get(),
+                              indexInParent, numSiblings);
+  }
   return NS_OK;
 }
 

@@ -375,7 +375,7 @@ interface nsIAccessible : nsISupports
   enum { ROLE_CHART = 26U };       // ATK_ROLE_IMAGE
   enum { ROLE_DIALOG = 16U };      // ATK_ROLE_DIALOG
   enum { ROLE_BORDER = 66U };      // ATK_ROLE_UNKNOWN
-  enum { ROLE_GROUPING = 66U };    // ATK_ROLE_UNKNOWN
+  enum { ROLE_GROUPING = 38U };    // ATK_ROLE_PANEL
   enum { ROLE_SEPARATOR = 49U };   // ATK_ROLE_SEPARATOR
   enum { ROLE_TOOLBAR = 62U };     // ATK_ROLE_TOOL_BAR
   enum { ROLE_STATUSBAR = 53U };   // ATK_ROLE_STATUSBAR
