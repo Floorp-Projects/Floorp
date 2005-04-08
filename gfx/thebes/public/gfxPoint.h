@@ -35,17 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef POINT_H
-#define POINT_H
+#ifndef _GFX_POINT_H
+#define _GFX_POINT_H
+
+#include "gfxTypes.h"
 
 struct gfxSize {
-    double width, height;
+    gfxFloat width, height;
 
     gfxSize() {}
     gfxSize(const gfxSize& s) : width(s.width), height(s.height) {}
-    gfxSize(double _width, double _height) : width(_width), height(_height) {}
+    gfxSize(gfxFloat _width, gfxFloat _height) : width(_width), height(_height) {}
 
-    void SizeTo(double _width, double _height) {width = _width; height = _height;}
+    void SizeTo(gfxFloat _width, gfxFloat _height) {width = _width; height = _height;}
 
     int operator==(const gfxSize& s) const {
         return ((width == s.width) && (height == s.height));
@@ -56,13 +58,13 @@ struct gfxSize {
 };
 
 struct gfxPoint {
-    double x, y;
+    gfxFloat x, y;
 
     gfxPoint() { }
     gfxPoint(const gfxPoint& p) : x(p.x), y(p.y) {}
-    gfxPoint(double _x, double _y) : x(_x), y(_y) {}
+    gfxPoint(gfxFloat _x, gfxFloat _y) : x(_x), y(_y) {}
 
-    void MoveTo(double aX, double aY) { x = aX; y = aY; }
+    void MoveTo(gfxFloat aX, gfxFloat aY) { x = aX; y = aY; }
 
     int operator==(const gfxPoint& p) const {
         return ((x == p.x) && (y == p.y));
@@ -72,4 +74,4 @@ struct gfxPoint {
     }
 };
 
-#endif /* POINT_H */
+#endif /* _GFX_POINT_H */

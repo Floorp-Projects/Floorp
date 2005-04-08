@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFXCONTEXT_H
-#define GFXCONTEXT_H
+#ifndef _GFX_CONTEXT_H
+#define _GFX_CONTEXT_H
 
 #include <cairo.h>
 
@@ -44,6 +44,7 @@
 #include "gfxPattern.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
+#include "gfxTypes.h"
 
 class gfxASurface;
 class gfxMatrix;
@@ -57,7 +58,9 @@ public:
     ~gfxContext();
 
     // <insert refcount stuff here>
-
+    // XXX document ownership
+    // XXX can you call SetSurface more than once?
+    // What happens to the current drawing state if you do that? or filters?
     void SetSurface(gfxASurface* surface);
     gfxASurface* CurrentSurface();
 
@@ -66,31 +69,35 @@ public:
     void Restore();
 
     // drawing
+    // XXX are these the only things that affect the current path?
     void NewPath();
     void ClosePath();
 
     void Stroke();
     void Fill();
     
-    void MoveTo(double x, double y);
-    void LineTo(double x, double y);
-    void CurveTo(double x1, double y1,
-                 double x2, double y2,
-                 double x3, double y3);
+    void MoveTo(gfxPoint pt);
+    void LineTo(gfxPoint pt);
+    void CurveTo(gfxPoint pt1, gfxPoint pt2, gfxPoint pt3);
 
-    void Arc(double xc, double yc,
-             double radius,
-             double angle1, double angle2);
+    void Arc(gfxPoint center, gfxFloat radius,
+             gfxFloat angle1, gfxFloat angle2);
 
-    void Rectangle(double x, double y, double width, double height);
+    void Rectangle(gfxRect rect);
     void Polygon(const gfxPoint points[], unsigned long numPoints);
 
-    void DrawSurface(gfxASurface *surface, double width, double height);
+    // XXX These next two don't affect the current path?
+    // XXX document 'size'
+    void DrawSurface(gfxASurface *surface, gfxSize size);
+    // Draw a rectangle with aliasing on. Points whose centers are in the
+    // rectangle should be painted 100% with the current color; all other
+    // points are untouched.
+    void AliasedRectangle(gfxRect rect);
 
     // transform stuff
-    void Translate(double x, double y);
-    void Scale(double x, double y);
-    void Rotate(double angle);
+    void Translate(gfxPoint pt);
+    void Scale(gfxFloat x, gfxFloat y);
+    void Rotate(gfxFloat angle);
 
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix CurrentMatrix() const;
@@ -100,11 +107,11 @@ public:
     void SetColor(const gfxRGBA& c);
     gfxRGBA CurrentColor() const;
 
-    void SetDash(double* dashes, int ndash, double offset);
+    void SetDash(gfxFloat* dashes, int ndash, gfxFloat offset);
     //void getDash() const;
 
-    void SetLineWidth(double width);
-    double CurrentLineWidth() const;
+    void SetLineWidth(gfxFloat width);
+    gfxFloat CurrentLineWidth() const;
 
     // define enum for operators (clear, src, dst, etc)
     enum GraphicsOperator {
@@ -143,8 +150,8 @@ public:
     void SetLineJoin(GraphicsLineJoin join);
     GraphicsLineJoin CurrentLineJoin() const;
 
-    void SetMiterLimit(double limit);
-    double CurrentMiterLimit() const;
+    void SetMiterLimit(gfxFloat limit);
+    gfxFloat CurrentMiterLimit() const;
 
 
     // clipping
@@ -171,4 +178,4 @@ private:
     cairo_t *mCairo;
 };
 
-#endif /* GFXCONTEXT_H */
+#endif /* _GFX_CONTEXT_H */

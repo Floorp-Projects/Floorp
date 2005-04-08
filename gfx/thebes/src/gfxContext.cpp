@@ -91,59 +91,56 @@ void gfxContext::Fill()
     cairo_fill(mCairo);
 }
 
-void gfxContext::MoveTo(double x, double y)
+void gfxContext::MoveTo(gfxPoint pt)
 {
-    cairo_move_to(mCairo, x, y);
+    cairo_move_to(mCairo, pt.x, pt.y);
 }
-void gfxContext::LineTo(double x, double y)
+void gfxContext::LineTo(gfxPoint pt)
 {
-    cairo_line_to(mCairo, x, y);
-}
-
-void gfxContext::CurveTo(double x1, double y1,
-                        double x2, double y2,
-                        double x3, double y3)
-{
-    cairo_curve_to(mCairo, x1, y1, x2, y2, x3, y3);
+    cairo_line_to(mCairo, pt.x, pt.y);
 }
 
-void gfxContext::Arc(double xc, double yc,
-                    double radius,
-                    double angle1, double angle2)
+void gfxContext::CurveTo(gfxPoint pt1, gfxPoint pt2, gfxPoint pt3)
 {
-    cairo_arc(mCairo, xc, yc, radius, angle1, angle2);
+    cairo_curve_to(mCairo, pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y);
 }
 
-void gfxContext::Rectangle(double x, double y, double width, double height)
+void gfxContext::Arc(gfxPoint center, gfxFloat radius,
+                     gfxFloat angle1, gfxFloat angle2)
 {
-    cairo_rectangle(mCairo, x, y, width, height);
+    cairo_arc(mCairo, center.x, center.y, radius, angle1, angle2);
+}
+
+void gfxContext::Rectangle(gfxRect rect)
+{
+    cairo_rectangle(mCairo, rect.x, rect.y, rect.width, rect.height);
 }
 
 void gfxContext::Polygon(const gfxPoint points[], unsigned long numPoints)
 {
     cairo_new_path(mCairo);
-    cairo_move_to(mCairo, (double)points[0].x, (double)points[0].y);
+    cairo_move_to(mCairo, (gfxFloat)points[0].x, (gfxFloat)points[0].y);
     for (unsigned long i = 1; i < numPoints; ++i) {
-        cairo_line_to(mCairo, (double)points[i].x, (double)points[i].y);
+        cairo_line_to(mCairo, (gfxFloat)points[i].x, (gfxFloat)points[i].y);
     }
 }
 
-void gfxContext::DrawSurface(gfxASurface *surface, double width, double height)
+void gfxContext::DrawSurface(gfxASurface *surface, gfxSize size)
 {
     cairo_show_surface(mCairo, surface->CairoSurface(),
-                       (int)width, (int)height);
+                       (int)size.width, (int)size.height);
 }
 
 // transform stuff
-void gfxContext::Translate(double x, double y)
+void gfxContext::Translate(gfxPoint pt)
 {
-    cairo_translate(mCairo, x, y);
+    cairo_translate(mCairo, pt.x, pt.y);
 }
-void gfxContext::Scale(double x, double y)
+void gfxContext::Scale(gfxFloat x, gfxFloat y)
 {
     cairo_scale(mCairo, x, y);
 }
-void gfxContext::Rotate(double angle)
+void gfxContext::Rotate(gfxFloat angle)
 {
     cairo_rotate(mCairo, angle);
 }
@@ -181,17 +178,17 @@ gfxRGBA gfxContext::CurrentColor() const
     return c;
 }
 
-void gfxContext::SetDash(double* dashes, int ndash, double offset)
+void gfxContext::SetDash(gfxFloat* dashes, int ndash, gfxFloat offset)
 {
     cairo_set_dash(mCairo, dashes, ndash, offset);
 }
 //void getDash() const;
 
-void gfxContext::SetLineWidth(double width)
+void gfxContext::SetLineWidth(gfxFloat width)
 {
     cairo_set_line_width(mCairo, width);
 }
-double gfxContext::CurrentLineWidth() const
+gfxFloat gfxContext::CurrentLineWidth() const
 {
     return cairo_current_line_width(mCairo);
 }
@@ -224,11 +221,11 @@ gfxContext::GraphicsLineJoin gfxContext::CurrentLineJoin() const
 }
 
 
-void gfxContext::SetMiterLimit(double limit)
+void gfxContext::SetMiterLimit(gfxFloat limit)
 {
     cairo_set_miter_limit(mCairo, limit);
 }
-double gfxContext::CurrentMiterLimit() const
+gfxFloat gfxContext::CurrentMiterLimit() const
 {
     return cairo_current_miter_limit(mCairo);
 }

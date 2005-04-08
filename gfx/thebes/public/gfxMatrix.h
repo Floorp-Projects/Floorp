@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef _GFX_MATRIX_H
+#define _GFX_MATRIX_H
 
 #ifdef _MSC_VER
 #define _USE_MATH_DEFINES
@@ -45,15 +45,17 @@
 
 #include <cairo.h>
 
+#include "gfxTypes.h"
+
 class gfxMatrix {
 private:
-    double m0, m1, m2, m3, m4, m5;
+    gfxFloat m0, m1, m2, m3, m4, m5;
 
 public:
     gfxMatrix() { Reset(); }
     gfxMatrix(const gfxMatrix& m) :
         m0(m.m0), m1(m.m1), m2(m.m2), m3(m.m3), m4(m.m4), m5(m.m5) {}
-    gfxMatrix(double a, double b, double c, double d, double tx, double ty) :
+    gfxMatrix(gfxFloat a, gfxFloat b, gfxFloat c, gfxFloat d, gfxFloat tx, gfxFloat ty) :
         m0(a), m1(b), m2(c), m3(d), m4(tx), m5(ty) {}
 
     gfxMatrix(const cairo_matrix_t* m) {
@@ -91,19 +93,19 @@ public:
         return *this;
     }
 
-    const gfxMatrix& Scale(double x, double y) {
+    const gfxMatrix& Scale(gfxFloat x, gfxFloat y) {
         gfxMatrix t(x, 0, 0, y, 0, 0);
         return *this = t.Multiply(*this);
     }
 
-    const gfxMatrix& Translate(double x, double y) {
+    const gfxMatrix& Translate(gfxFloat x, gfxFloat y) {
         gfxMatrix t(1, 0, 0, 1, x, y);
         return *this = t.Multiply(*this);
     }
 
-    const gfxMatrix& Rotate(double radians) {
-        double s = sin(radians);
-        double c = cos(radians);
+    const gfxMatrix& Rotate(gfxFloat radians) {
+        gfxFloat s = sin(radians);
+        gfxFloat c = cos(radians);
         gfxMatrix t( c, s,
                     -s, c,
                      0, 0);
@@ -111,9 +113,9 @@ public:
     }
 
     const gfxMatrix& Multiply(const gfxMatrix& m) {
-        double t0 = m0 * m.m0 + m1 * m.m2;
-        double t2 = m2 * m.m0 + m3 * m.m2;
-        double t4 = m4 * m.m0 + m5 * m.m2 + m.m4;
+        gfxFloat t0 = m0 * m.m0 + m1 * m.m2;
+        gfxFloat t2 = m2 * m.m0 + m3 * m.m2;
+        gfxFloat t4 = m4 * m.m0 + m5 * m.m2 + m.m4;
         m1 = m0 * m.m1 + m1 * m.m3;
         m3 = m2 * m.m1 + m3 * m.m3;
         m5 = m4 * m.m1 + m5 * m.m3 + m.m5;
@@ -123,18 +125,18 @@ public:
         return *this;
     }
 
-    void TransformDistance(double *dx, double *dy) const {
-        double new_x = m0 * *dx  +  m2 * *dy;
-        double new_y = m1 * *dx  +  m3 * *dy;
+    void TransformDistance(gfxFloat *dx, gfxFloat *dy) const {
+        gfxFloat new_x = m0 * *dx  +  m2 * *dy;
+        gfxFloat new_y = m1 * *dx  +  m3 * *dy;
         *dx = new_x;
         *dy = new_y;
     }
 
-    void TransformPoint(double *x, double *y) const {
+    void TransformPoint(gfxFloat *x, gfxFloat *y) const {
         TransformDistance(x, y);
         *x += m4;
         *y += m5;
     }
 };
 
-#endif /* MATRIX_H */
+#endif /* _GFX_MATRIX_H */
