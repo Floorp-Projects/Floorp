@@ -46,7 +46,6 @@
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
 ]>
 
-
 <!-- The Window  -->
 
 <overlay
@@ -57,19 +56,6 @@
    <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
    <script type="application/x-javascript" src="chrome://lightning/content/weekView.js"/>
    
-   <script type="application/x-javascript">
-      var ArrayOfDayNames = new Array();
-   
-      ArrayOfDayNames[0] = "&day.1.DDD;";
-      ArrayOfDayNames[1] = "&day.2.DDD;";
-      ArrayOfDayNames[2] = "&day.3.DDD;";
-      ArrayOfDayNames[3] = "&day.4.DDD;";
-      ArrayOfDayNames[4] = "&day.5.DDD;";
-      ArrayOfDayNames[5] = "&day.6.DDD;";
-      ArrayOfDayNames[6] = "&day.7.DDD;";
-      
-   </script>
-
    <vbox id="week-view-box" flex="1">
   
       <!-- Week View: Controls-->

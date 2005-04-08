@@ -16,3 +16,4 @@ calendar.jar:
 
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)
+  locale/en-US/calendar/calendar.dtd		(/calendar/resources/locale/en-US/calendar.dtd)

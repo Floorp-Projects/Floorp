@@ -1,4 +1,5 @@
 content lightning	jar:chrome/lightning.jar!/content/lightning/
 content calendar	jar:chrome/calendar.jar!/content/calendar/
 locale  lightning en-US jar:chrome/en-US.jar!/locale/en-US/lightning/
+locale  calendar  en-US jar:chrome/calendar-en-US.jar!/locale/en-US/calendar/
 overlay chrome://messenger/content/messenger.xul chrome://lightning/content/messenger-overlay-sidebar.xul

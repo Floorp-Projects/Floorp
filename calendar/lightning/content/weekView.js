@@ -35,25 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-function insertWeekView()
+function WeekView()
 {
-    // there is no id on the vbox we want to insret stuff in to...
-    var searchBox = document.getElementById("searchBox");
-    var insertPoint = searchBox.parent;
-    insertPoint.removeChild(searchBox);
-
-    var weekView = document.getElementById("week-view-box");
-
-    insertPoint.appendElement(weekView);
 }
 
-window.addEventListener("load", "insertWeekView", false);
-
-
-
-
-weekView.prototype = {
+WeekView.prototype = {
     __proto__: calendarView ? (new calendarView()) : {},
 
     refresh: function() {

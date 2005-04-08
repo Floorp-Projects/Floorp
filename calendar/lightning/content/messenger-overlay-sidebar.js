@@ -2,13 +2,15 @@ function selectedCalendarPane(event)
 {
     dump("selecting calendar pane\n");
     document.getElementById("displayDeck").selectedPanel =
-        document.getElementById("calendarViewBox");
+        document.getElementById("calendar-view-box");
 }
 
 function LtnObserveDisplayDeckChange(event)
 {
     var deck = event.target;
-    if (deck.selectedPanel.id == "calendarViewBox") {
+    var id = null;
+    try { id = deck.selectedPanel.id } catch (e) { }
+    if (id == "calendar-view-box") {
         GetMessagePane().collapsed = true;
         document.getElementById("threadpane-splitter").collapsed = true;
         gSearchBox.collapsed = true;

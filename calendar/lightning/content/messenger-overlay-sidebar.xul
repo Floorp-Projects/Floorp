@@ -9,6 +9,8 @@
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
 
+<?xul-overlay href="chrome://lightning/content/weekView.xul"?>
+
 <vbox id="folderPaneBox">
   <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
 
@@ -31,8 +33,8 @@
 </vbox>
 
 <deck id="displayDeck">
-  <vbox id="calendarViewBox" flex="1">
-    <iframe name="calendarViewTempIframe" width="150" flex="1" src="javascript:'Lightning'"/>
+  <vbox id="calendar-view-box" flex="1">
+    <vbox id="week-view-box" flex="1"/>
   </vbox>
 </deck>
 </overlay>
