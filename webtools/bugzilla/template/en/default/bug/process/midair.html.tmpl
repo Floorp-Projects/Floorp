@@ -20,8 +20,6 @@
   #%]
 
 [%# INTERFACE:
-  # form: hash; the form values submitted to the script
-  # mform: hash; the form multi-values submitted to the script
   # operations: array; bug activity since the user last displayed the bug form,
   #   used by bug/activity/table.html.tmpl to display recent changes that will
   #   be overwritten if the user submits these changes.  See that template
@@ -33,6 +31,10 @@
   # comments: array; all the comments on the bug.
   # bug_id: number; the ID of the bug being changed.
   #%]
+
+[%# The global Bugzilla->cgi object is used to obtain form variable values. %]
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
 
 [% PROCESS global/variables.none.tmpl %]
 
@@ -62,7 +64,7 @@
 
 <p>
   Your comment was:<br>
-  <blockquote><pre>[% form.comment FILTER html %]</pre></blockquote>
+  <blockquote><pre>[% cgi.param("comment") FILTER html %]</pre></blockquote>
 </p>
 
 <p>

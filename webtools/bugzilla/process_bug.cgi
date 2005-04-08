@@ -26,6 +26,18 @@
 #                 Jeff Hedlund <jeff.hedlund@matrixsi.com>
 #                 Frédéric Buclin <LpSolit@gmail.com>
 
+# Implementation notes for this file:
+#
+# 1) the 'id' form parameter is validated early on, and if it is not a valid
+# bugid an error will be reported, so it is OK for later code to simply check
+# for a defined form 'id' value, and it can assume a valid bugid.
+#
+# 2) If the 'id' form parameter is not defined (after the initial validation),
+# then we are processing multiple bugs, and @idlist will contain the ids.
+#
+# 3) If we are processing just the one id, then it is stored in @idlist for
+# later processing.
+
 use strict;
 
 my $UserInEditGroupSet = -1;
@@ -79,11 +91,16 @@ use vars qw($template $vars);
 # For each bug being modified, make sure its ID is a valid bug number 
 # representing an existing bug that the user is authorized to access.
 my @idlist;
-if (defined $::FORM{'id'}) {
-    ValidateBugID($::FORM{'id'});
-    push @idlist, $::FORM{'id'};
+if (defined $cgi->param('id')) {
+  my $id = $cgi->param('id');
+  ValidateBugID($id);
+
+  # Store the validated, and detainted id back in the cgi data, as
+  # lots of later code will need it, and will obtain it from there
+  $cgi->param('id', $id);
+  push @idlist, $id;
 } else {
-    foreach my $i (keys %::FORM) {
+    foreach my $i ($cgi->param()) {
         if ($i =~ /^id_([1-9][0-9]*)/) {
             my $id = $1;
             ValidateBugID($id);
@@ -95,26 +112,27 @@ if (defined $::FORM{'id'}) {
 # Make sure there are bugs to process.
 scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 
-$::FORM{'dontchange'} = '' unless exists $::FORM{'dontchange'};
+# Make sure form param 'dontchange' is defined so it can be compared to easily.
+$cgi->param('dontchange','') unless defined $cgi->param('dontchange');
 
 # Validate all timetracking fields
 foreach my $field ("estimated_time", "work_time", "remaining_time") {
-    if (defined $::FORM{$field}) {
-        my $er_time = trim($::FORM{$field});
-        if ($er_time ne $::FORM{'dontchange'}) {
+    if (defined $cgi->param($field)) {
+        my $er_time = trim($cgi->param($field));
+        if ($er_time ne $cgi->param('dontchange')) {
             Bugzilla::Bug::ValidateTime($er_time, $field);
         }
     }
 }
 
 if (UserInGroup(Param('timetrackinggroup'))) {
-    my $wk_time = $::FORM{'work_time'};
-    if ($::FORM{'comment'} =~ /^\s*$/ && $wk_time && $wk_time != 0) {
+    my $wk_time = $cgi->param('work_time');
+    if ($cgi->param('comment') =~ /^\s*$/ && $wk_time && $wk_time != 0) {
         ThrowUserError('comment_required');
     }
 }
 
-ValidateComment($::FORM{'comment'});
+ValidateComment(scalar $cgi->param('comment'));
 
 # If the bug(s) being modified have dependencies, validate them
 # and rebuild the list with the validated values.  This is important
@@ -123,14 +141,14 @@ ValidateComment($::FORM{'comment'});
 # is a bug alias that gets converted to its corresponding bug ID
 # during validation.
 foreach my $field ("dependson", "blocked") {
-    if (defined($::FORM{$field}) && $::FORM{$field} ne "") {
+    if (defined $cgi->param($field) && $cgi->param($field) ne "") {
         my @validvalues;
-        foreach my $id (split(/[\s,]+/, $::FORM{$field})) {
+        foreach my $id (split(/[\s,]+/, $cgi->param($field))) {
             next unless $id;
             ValidateBugID($id, $field);
             push(@validvalues, $id);
         }
-        $::FORM{$field} = join(",", @validvalues);
+        $cgi->param($field, join(",", @validvalues));
     }
 }
 
@@ -148,9 +166,9 @@ foreach my $field ("dependson", "blocked") {
 });
 # Validate flags, but only if the user is changing a single bug,
 # since the multi-change form doesn't include flag changes.
-if (defined $::FORM{'id'}) {
-    Bugzilla::Flag::validate($cgi, $::FORM{'id'});
-    Bugzilla::FlagType::validate($cgi, $::FORM{'id'});
+if (defined $cgi->param('id')) {
+    Bugzilla::Flag::validate($cgi, $cgi->param('id'));
+    Bugzilla::FlagType::validate($cgi, $cgi->param('id'));
 }
 
 ######################################################################
@@ -163,12 +181,12 @@ $vars->{'title_tag'} = "bug_processed";
 # Set the title if we can see a mid-air coming. This test may have false
 # negatives, but never false positives, and should catch the majority of cases.
 # It only works at all in the single bug case.
-if (defined($::FORM{'id'})) {
-    SendSQL("SELECT delta_ts FROM bugs WHERE bug_id = $::FORM{'id'}");
+if (defined $cgi->param('id')) {
+    SendSQL("SELECT delta_ts FROM bugs WHERE bug_id = " .
+            $cgi->param('id'));
     my $delta_ts = FetchOneColumn();
     
-    if (defined $::FORM{'delta_ts'} && $delta_ts && 
-        $::FORM{'delta_ts'} ne $delta_ts) 
+    if (defined $cgi->param('delta_ts') && $cgi->param('delta_ts') ne $delta_ts)
     {
         $vars->{'title_tag'} = "mid_air";
     }
@@ -176,10 +194,10 @@ if (defined($::FORM{'id'})) {
 
 # Set up the vars for nagiavtional <link> elements
 my $next_bug;
-if ($cgi->cookie("BUGLIST") && $::FORM{'id'}) {
+if ($cgi->cookie("BUGLIST") && defined $cgi->param('id')) {
     my @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
     $vars->{'bug_list'} = \@bug_list;
-    my $cur = lsearch(\@bug_list, $::FORM{"id"});
+    my $cur = lsearch(\@bug_list, $cgi->param("id"));
     if ($cur >= 0 && $cur < $#bug_list) {
         $next_bug = $bug_list[$cur + 1];
 
@@ -212,7 +230,8 @@ sub CheckonComment( $ ) {
     $ret = 0 unless ( defined( $ret ));
 
     if( $ret ) {
-        if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
+        if (!defined $cgi->param('comment')
+            || $cgi->param('comment') =~ /^\s*$/) {
             # No comment - sorry, action not allowed !
             ThrowUserError("comment_required");
         } else {
@@ -227,26 +246,31 @@ sub CheckonComment( $ ) {
 # user is changing a single bug and has changed the bug's product),
 # and make the user verify the version, component, target milestone,
 # and bug groups if so.
-if ( $::FORM{'id'} ) {
+my $oldproduct = '';
+if (defined $cgi->param('id')) {
     SendSQL("SELECT name FROM products INNER JOIN bugs " .
-            "ON products.id = bugs.product_id WHERE bug_id = $::FORM{'id'}");
-    $::oldproduct = FetchSQLData();
+            "ON products.id = bugs.product_id WHERE bug_id = " .
+            $cgi->param('id'));
+    $oldproduct = FetchSQLData();
 }
-if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
-     || (!$::FORM{'id'} && $::FORM{'product'} ne $::FORM{'dontchange'}))
+
+if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct) 
+     || (!$cgi->param('id')
+         && $cgi->param('product') ne $cgi->param('dontchange')))
     && CheckonComment( "reassignbycomponent" ))
 {
     # Check to make sure they actually have the right to change the product
-    if (!CheckCanChangeField('product', $::FORM{'id'}, $::oldproduct, $::FORM{'product'})) {
-        $vars->{'oldvalue'} = $::oldproduct;
-        $vars->{'newvalue'} = $::FORM{'product'};
+    if (!CheckCanChangeField('product', $cgi->param('id'), $oldproduct,
+                              $cgi->param('product'))) {
+        $vars->{'oldvalue'} = $oldproduct;
+        $vars->{'newvalue'} = $cgi->param('product');
         $vars->{'field'} = 'product';
         $vars->{'privs'} = $PrivilegesRequired;
         ThrowUserError("illegal_change", $vars);
     }
-
+ 
     CheckFormField($cgi, 'product', \@::legal_product);
-    my $prod = $::FORM{'product'};
+    my $prod = $cgi->param('product');
 
     # note that when this script is called from buglist.cgi (rather
     # than show_bug.cgi), it's possible that the product will be changed
@@ -256,21 +280,21 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
     # pretty weird case, and not terribly unreasonable behavior, but 
     # worthy of a comment, perhaps.
     #
-    my $vok = lsearch($::versions{$prod}, $::FORM{'version'}) >= 0;
-    my $cok = lsearch($::components{$prod}, $::FORM{'component'}) >= 0;
+    my $vok = lsearch($::versions{$prod}, $cgi->param('version')) >= 0;
+    my $cok = lsearch($::components{$prod}, $cgi->param('component')) >= 0;
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
     if ( Param("usetargetmilestone") ) {
        CheckFormFieldDefined($cgi, 'target_milestone');
-       $mok = lsearch($::target_milestone{$prod}, $::FORM{'target_milestone'}) >= 0;
+       $mok = lsearch($::target_milestone{$prod},
+                      $cgi->param('target_milestone')) >= 0;
     }
 
     # If the product-specific fields need to be verified, or we need to verify
     # whether or not to add the bugs to their new product's group, display
     # a verification form.
-    if (!$vok || !$cok || !$mok || (AnyDefaultGroups() && !defined($::FORM{'addtonewgroup'}))) {
-        $vars->{'form'} = \%::FORM;
-        $vars->{'mform'} = \%::MFORM;
+    if (!$vok || !$cok || !$mok || (AnyDefaultGroups()
+        && !defined $cgi->param('addtonewgroup'))) {
         
         if (!$vok || !$cok || !$mok) {
             $vars->{'verify_fields'} = 1;
@@ -280,17 +304,17 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
             # thats appropriate
             $vars->{'versions'} = $::versions{$prod};
             if ($vok) {
-                $defaults{'version'} = $::FORM{'version'};
+                $defaults{'version'} = $cgi->param('version');
             }
             $vars->{'components'} = $::components{$prod};
             if ($cok) {
-                $defaults{'component'} = $::FORM{'component'};
+                $defaults{'component'} = $cgi->param('component');
             }
             if (Param("usetargetmilestone")) {
                 $vars->{'use_target_milestone'} = 1;
                 $vars->{'milestones'} = $::target_milestone{$prod};
                 if ($mok) {
-                    $defaults{'target_milestone'} = $::FORM{'target_milestone'};
+                    $defaults{'target_milestone'} = $cgi->param('target_milestone');
                 } else {
                     SendSQL("SELECT defaultmilestone FROM products " .
                             "WHERE name = " . SqlQuote($prod));
@@ -307,7 +331,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
         }
         
         $vars->{'verify_bug_group'} = (AnyDefaultGroups() 
-                                       && !defined($::FORM{'addtonewgroup'}));
+                                       && !defined $cgi->param('addtonewgroup'));
         
         $template->process("bug/process/verify-new-product.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
@@ -380,8 +404,8 @@ sub CheckCanChangeField {
 
     # Ignore the assigned_to field if the bug is not being reassigned
     if ($field eq "assigned_to"
-        && $::FORM{'knob'} ne "reassignbycomponent"
-        && $::FORM{'knob'} ne "reassign")
+        && $cgi->param('knob') ne "reassignbycomponent"
+        && $cgi->param('knob') ne "reassign")
     {
         return 1;
     }
@@ -488,19 +512,21 @@ sub CheckCanChangeField {
 # Confirm that the reporter of the current bug can access the bug we are duping to.
 sub DuplicateUserConfirm {
     # if we've already been through here, then exit
-    if (defined $::FORM{'confirm_add_duplicate'}) {
+    if (defined $cgi->param('confirm_add_duplicate')) {
         return;
     }
 
-    my $dupe = $::FORM{'id'};
-    my $original = $::FORM{'dup_id'};
+    # Remember that we validated both these ids earlier, so we know
+    # they are both valid bug ids
+    my $dupe = $cgi->param('id');
+    my $original = $cgi->param('dup_id');
     
-    SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($dupe));
+    SendSQL("SELECT reporter FROM bugs WHERE bug_id = $dupe");
     my $reporter = FetchOneColumn();
     my $rep_user = Bugzilla::User->new($reporter);
 
     if ($rep_user->can_see_bug($original)) {
-        $::FORM{'confirm_add_duplicate'} = "1";
+        $cgi->param('confirm_add_duplicate', '1');
         return;
     }
 
@@ -511,8 +537,6 @@ sub DuplicateUserConfirm {
     # and the duper has not chosen whether or not to add to CC list, so let's
     # ask the duper what he/she wants to do.
     
-    $vars->{'form'} = \%::FORM;
-    $vars->{'mform'} = \%::MFORM;
     $vars->{'original_bug_id'} = $original;
     $vars->{'duplicate_bug_id'} = $dupe;
     
@@ -524,7 +548,7 @@ sub DuplicateUserConfirm {
     exit;
 }
 
-if (defined $::FORM{'id'}) {
+if (defined $cgi->param('id')) {
     # since this means that we were called from show_bug.cgi, now is a good
     # time to do a whole bunch of error checking that can't easily happen when
     # we've been called from buglist.cgi, because buglist.cgi only tweaks
@@ -534,12 +558,11 @@ if (defined $::FORM{'id'}) {
     #
     CheckFormField($cgi, 'product', \@::legal_product);
     CheckFormField($cgi, 'component', 
-                   \@{$::components{$::FORM{'product'}}});
-    CheckFormField($cgi, 'version', 
-                   \@{$::versions{$::FORM{'product'}}});
+                   \@{$::components{$cgi->param('product')}});
+    CheckFormField($cgi, 'version', \@{$::versions{$cgi->param('product')}});
     if ( Param("usetargetmilestone") ) {
         CheckFormField($cgi, 'target_milestone', 
-                       \@{$::target_milestone{$::FORM{'product'}}});
+                       \@{$::target_milestone{$cgi->param('product')}});
     }
     CheckFormField($cgi, 'rep_platform', \@::legal_platform);
     CheckFormField($cgi, 'op_sys', \@::legal_opsys);
@@ -549,14 +572,14 @@ if (defined $::FORM{'id'}) {
     CheckFormFieldDefined($cgi, 'short_desc');
     CheckFormFieldDefined($cgi, 'longdesclength');
 
-    if (trim($::FORM{'short_desc'}) eq "") {
+    if (trim($cgi->param('short_desc')) eq "") {
         ThrowUserError("require_summary");
     }
 }
 
 my $action = '';
-if (defined $::FORM{action}) {
-  $action = trim($::FORM{action});
+if (defined $cgi->param('action')) {
+  $action = trim($cgi->param('action'));
 }
 if (Param("move-enabled") && $action eq Param("move-button-text")) {
   $cgi->param('buglist', join (":", @idlist));
@@ -572,10 +595,10 @@ umask(0);
 
 sub _remove_remaining_time {
     if (UserInGroup(Param('timetrackinggroup'))) {
-        if ( defined $::FORM{'remaining_time'} 
-             && $::FORM{'remaining_time'} > 0 )
+        if ( defined $cgi->param('remaining_time') 
+             && $cgi->param('remaining_time') > 0 )
         {
-            $::FORM{'remaining_time'} = 0;
+            $cgi->param('remaining_time', 0);
             $vars->{'message'} = "remaining_time_zeroed";
         }
     }
@@ -591,19 +614,18 @@ sub DoComma {
 }
 
 sub DoConfirm {
-    if (CheckCanChangeField("canconfirm", $::FORM{'id'}, 0, 1)) {
+    if (CheckCanChangeField("canconfirm", $cgi->param('id'), 0, 1)) {
         DoComma();
         $::query .= "everconfirmed = 1";
     }
 }
 
-
 sub ChangeStatus {
     my ($str) = (@_);
-    if (!$::FORM{'dontchange'} ||
-       ($str ne $::FORM{'dontchange'})) {
+    if (!$cgi->param('dontchange')
+        || $str ne $cgi->param('dontchange')) {
         DoComma();
-        if ($::FORM{knob} eq 'reopen') {
+        if ($cgi->param('knob') eq 'reopen') {
             # When reopening, we need to check whether the bug was ever
             # confirmed or not
             $::query .= "bug_status = CASE WHEN everconfirmed = 1 THEN " .
@@ -647,20 +669,20 @@ sub ChangeStatus {
         # If bugs are reassigned and their status is "UNCONFIRMED", they
         # should keep this status instead of "NEW" as suggested here.
         # This point is checked for each bug later in the code.
-        $::FORM{'bug_status'} = $str;
+        $cgi->param('bug_status', $str);
     }
 }
 
 sub ChangeResolution {
     my ($str) = (@_);
-    if (!$::FORM{'dontchange'}
-        || $str ne $::FORM{'dontchange'})
+    if (!$cgi->param('dontchange')
+        || $str ne $cgi->param('dontchange'))
     {
         DoComma();
         $::query .= "resolution = " . SqlQuote($str);
         # We define this variable here so that customized installations
         # may set rules based on the resolution in CheckCanChangeField.
-        $::FORM{'resolution'} = $str;
+        $cgi->param('resolution', $str);
     }
 }
 
@@ -685,10 +707,10 @@ while (my ($b, $isactive) = FetchSQLData()) {
     # for single bug changes because non-checked checkboxes aren't present.
     # All the checkboxes should be shown in that case, though, so its not
     # an issue there
-    if ($::FORM{'id'} || exists $::FORM{"bit-$b"}) {
-        if (!$::FORM{"bit-$b"}) {
+    if (defined $cgi->param('id') || defined $cgi->param("bit-$b")) {
+        if (!$cgi->param("bit-$b")) {
             push(@groupDel, $b);
-        } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
+        } elsif ($cgi->param("bit-$b") == 1 && $isactive) {
             push(@groupAdd, $b);
         }
     }
@@ -697,20 +719,21 @@ while (my ($b, $isactive) = FetchSQLData()) {
 foreach my $field ("rep_platform", "priority", "bug_severity",
                    "bug_file_loc", "short_desc", "version", "op_sys",
                    "target_milestone", "status_whiteboard") {
-    if (defined $::FORM{$field}) {
-        if (!$::FORM{'dontchange'}
-            || $::FORM{$field} ne $::FORM{'dontchange'}) {
+    if (defined $cgi->param($field)) {
+        if (!$cgi->param('dontchange')
+            || $cgi->param($field) ne $cgi->param('dontchange')) {
             DoComma();
-            $::query .= "$field = " . SqlQuote(trim($::FORM{$field}));
+            $::query .= "$field = " . SqlQuote(trim($cgi->param($field)));
         }
     }
 }
 
 my $prod_id; # Remember, can't use this for mass changes
-if ($::FORM{'product'} ne $::FORM{'dontchange'}) {
-    $prod_id = get_product_id($::FORM{'product'});
+if ($cgi->param('product') ne $cgi->param('dontchange')) {
+    $prod_id = get_product_id($cgi->param('product'));
     $prod_id ||
-      ThrowUserError("invalid_product_name", {product => $::FORM{'product'}});
+      ThrowUserError("invalid_product_name", 
+                     {product => $cgi->param('product')});
       
     DoComma();
     $::query .= "product_id = $prod_id";
@@ -722,15 +745,15 @@ if ($::FORM{'product'} ne $::FORM{'dontchange'}) {
 }
 
 my $comp_id; # Remember, can't use this for mass changes
-if ($::FORM{'component'} ne $::FORM{'dontchange'}) {
+if ($cgi->param('component') ne $cgi->param('dontchange')) {
     if (!defined $prod_id) {
         ThrowUserError("no_component_change_for_multiple_products");
     }
     $comp_id = get_component_id($prod_id,
-                                $::FORM{'component'});
+                                $cgi->param('component'));
     $comp_id || ThrowCodeError("invalid_component", 
-                               {name => $::FORM{'component'},
-                                product => $::FORM{'product'}});
+                               {name => $cgi->param('component'),
+                                product => $cgi->param('product')});
     
     DoComma();
     $::query .= "component_id = $comp_id";
@@ -738,8 +761,8 @@ if ($::FORM{'component'} ne $::FORM{'dontchange'}) {
 
 # If this installation uses bug aliases, and the user is changing the alias,
 # add this change to the query.
-if (Param("usebugaliases") && defined($::FORM{'alias'})) {
-    my $alias = trim($::FORM{'alias'});
+if (Param("usebugaliases") && defined $cgi->param('alias')) {
+    my $alias = trim($cgi->param('alias'));
     
     # Since aliases are unique (like bug numbers), they can only be changed
     # for one bug at a time, so ignore the alias change unless only a single
@@ -795,31 +818,37 @@ if (Param("usebugaliases") && defined($::FORM{'alias'})) {
 # allowed the user to set whether or not the reporter
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
-if ( $::FORM{'id'} ) {
-    SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = $::FORM{'id'}");
+if (defined $cgi->param('id')) {
+    SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = " .
+            $cgi->param('id'));
     my ($havegroup) = FetchSQLData();
     if ( $havegroup ) {
         DoComma();
-        $::FORM{'reporter_accessible'} = $::FORM{'reporter_accessible'} ? '1' : '0';
-        $::query .= "reporter_accessible = $::FORM{'reporter_accessible'}";
+        $cgi->param('reporter_accessible',
+                    $cgi->param('reporter_accessible') ? '1' : '0');
+        $::query .= 'reporter_accessible = ' .
+                    $cgi->param('reporter_accessible');
 
         DoComma();
-        $::FORM{'cclist_accessible'} = $::FORM{'cclist_accessible'} ? '1' : '0';
-        $::query .= "cclist_accessible = $::FORM{'cclist_accessible'}";
+        $cgi->param('cclist_accessible',
+                    $cgi->param('cclist_accessible') ? '1' : '0');
+        $::query .= 'cclist_accessible = ' . $cgi->param('cclist_accessible');
     }
 }
 
-if ($::FORM{'id'} && 
+if (defined $cgi->param('id') &&
     (Param("insidergroup") && UserInGroup(Param("insidergroup")))) {
-    detaint_natural($::FORM{'id'});
-    foreach my $field (keys %::FORM) {
+
+    foreach my $field ($cgi->param()) {
         if ($field =~ /when-([0-9]+)/) {
             my $sequence = $1;
-            my $private = $::FORM{"isprivate-$sequence"} ? 1 : 0 ;
-            if ($private != $::FORM{"oisprivate-$sequence"}) {
-                detaint_natural($::FORM{"$field"});
-                SendSQL("UPDATE longdescs SET isprivate = $private 
-                    WHERE bug_id = $::FORM{'id'} AND bug_when = " . $::FORM{"$field"});
+            my $private = $cgi->param("isprivate-$sequence") ? 1 : 0 ;
+            if ($private != $cgi->param("oisprivate-$sequence")) {
+                my $field_data = $cgi->param("$field");
+                detaint_natural($field_data);
+                SendSQL("UPDATE longdescs SET isprivate = $private " .
+                        "WHERE bug_id = " . $cgi->param('id') . 
+                        " AND bug_when = $field_data");
             }
         }
 
@@ -832,22 +861,25 @@ my $duplicate = 0;
 # What we'll do here is formulate the CC data into two hashes of ID's involved
 # in this CC change.  Then those hashes can be used later on for the actual change.
 my (%cc_add, %cc_remove);
-if (defined $::FORM{newcc} || defined $::FORM{'addselfcc'} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
+if (defined $cgi->param('newcc')
+    || defined $cgi->param('addselfcc')
+    || defined $cgi->param('removecc')
+    || defined $cgi->param('masscc')) {
     # If masscc is defined, then we came from buglist and need to either add or
     # remove cc's... otherwise, we came from bugform and may need to do both.
     my ($cc_add, $cc_remove) = "";
-    if (defined $::FORM{masscc}) {
-        if ($::FORM{ccaction} eq 'add') {
-            $cc_add = $::FORM{masscc};
-        } elsif ($::FORM{ccaction} eq 'remove') {
-            $cc_remove = $::FORM{masscc};
+    if (defined $cgi->param('masscc')) {
+        if ($cgi->param('ccaction') eq 'add') {
+            $cc_add = join(' ',$cgi->param('masscc'));
+        } elsif ($cgi->param('ccaction') eq 'remove') {
+            $cc_remove = join(' ',$cgi->param('masscc'));
         }
     } else {
-        $cc_add = $::FORM{newcc};
+        $cc_add = join(' ',$cgi->param('newcc'));
         # We came from bug_form which uses a select box to determine what cc's
         # need to be removed...
-        if (defined $::FORM{removecc} && $::FORM{cc}) {
-            $cc_remove = join (",", @{$::MFORM{cc}});
+        if (defined $cgi->param('removecc') && $cgi->param('cc')) {
+            $cc_remove = join (",", $cgi->param('cc'));
         }
     }
 
@@ -858,7 +890,7 @@ if (defined $::FORM{newcc} || defined $::FORM{'addselfcc'} || defined $::FORM{re
             $cc_add{$pid} = $person;
         }
     }
-    if ($::FORM{'addselfcc'}) {
+    if ($cgi->param('addselfcc')) {
         $cc_add{$whoid} = $user->login;
     }
     if ($cc_remove) {
@@ -872,18 +904,18 @@ if (defined $::FORM{newcc} || defined $::FORM{'addselfcc'} || defined $::FORM{re
 
 # Store the new assignee and QA contact IDs (if any). This is the
 # only way to keep these informations when bugs are reassigned by
-# component as $::FORM{'assigned_to'} and $::FORM{'qa_contact'}
+# component as $cgi->param('assigned_to') and $cgi->param('qa_contact')
 # are not the right fields to look at.
 
 my $assignee;
 my $qacontact;
 
-if (defined $::FORM{'qa_contact'}
-    && $::FORM{'knob'} ne "reassignbycomponent")
+if (defined $cgi->param('qa_contact')
+    && $cgi->param('knob') ne "reassignbycomponent")
 {
-    my $name = trim($::FORM{'qa_contact'});
+    my $name = trim($cgi->param('qa_contact'));
     # The QA contact cannot be deleted from show_bug.cgi for a single bug!
-    if ($name ne $::FORM{'dontchange'}) {
+    if ($name ne $cgi->param('dontchange')) {
         $qacontact = DBNameToIdAndCheck($name) if ($name ne "");
         DoComma();
         if($qacontact) {
@@ -896,7 +928,7 @@ if (defined $::FORM{'qa_contact'}
 }
 
 CheckFormFieldDefined($cgi, 'knob');
-SWITCH: for ($::FORM{'knob'}) {
+SWITCH: for ($cgi->param('knob')) {
     /^none$/ && do {
         last SWITCH;
     };
@@ -923,7 +955,7 @@ SWITCH: for ($::FORM{'knob'}) {
 
         # don't resolve as fixed while still unresolved blocking bugs
         if (Param("noresolveonopenblockers")
-            && $::FORM{'resolution'} eq 'FIXED')
+            && $cgi->param('resolution') eq 'FIXED')
         {
             my @dependencies = Bugzilla::Bug::CountOpenDependencies(@idlist);
             if (scalar @dependencies > 0) {
@@ -938,32 +970,31 @@ SWITCH: for ($::FORM{'knob'}) {
         _remove_remaining_time();
 
         ChangeStatus('RESOLVED');
-        ChangeResolution($::FORM{'resolution'});
+        ChangeResolution($cgi->param('resolution'));
         last SWITCH;
     };
     /^reassign$/ && CheckonComment( "reassign" ) && do {
-        if ($::FORM{'andconfirm'}) {
+        if ($cgi->param('andconfirm')) {
             DoConfirm();
         }
         ChangeStatus('NEW');
         DoComma();
-        if (!defined $::FORM{'assigned_to'}
-            || trim($::FORM{'assigned_to'}) eq "")
-        {
+        if (!defined $cgi->param('assigned_to')
+            || trim($cgi->param('assigned_to')) eq "") {
             ThrowUserError("reassign_to_empty");
         }
-        $assignee = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
+        $assignee = DBNameToIdAndCheck(trim($cgi->param('assigned_to')));
         $::query .= "assigned_to = $assignee";
         last SWITCH;
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
-        if ($::FORM{'product'} eq $::FORM{'dontchange'}) {
+        if ($cgi->param('product') eq $cgi->param('dontchange')) {
             ThrowUserError("need_product");
         }
-        if ($::FORM{'component'} eq $::FORM{'dontchange'}) {
+        if ($cgi->param('component') eq $cgi->param('dontchange')) {
             ThrowUserError("need_component");
         }
-        if ($::FORM{'compconfirm'}) {
+        if ($cgi->param('compconfirm')) {
             DoConfirm();
         }
         ChangeStatus('NEW');
@@ -1005,14 +1036,15 @@ SWITCH: for ($::FORM{'knob'}) {
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
         # Make sure we can change the original bug (issue A on bug 96085)
         CheckFormFieldDefined($cgi, 'dup_id');
-        ValidateBugID($::FORM{'dup_id'}, 'dup_id');
+        $duplicate = $cgi->param('dup_id');
+        ValidateBugID($duplicate, 'dup_id');
+        $cgi->param('dup_id', $duplicate);
 
         # Also, let's see if the reporter has authorization to see
         # the bug to which we are duping. If not we need to prompt.
         DuplicateUserConfirm();
 
-        $duplicate = $::FORM{'dup_id'};
-        if (!defined($::FORM{'id'}) || $duplicate == $::FORM{'id'}) {
+        if (!defined $cgi->param('id') || $duplicate == $cgi->param('id')) {
             ThrowUserError("dupe_of_self_disallowed");
         }
 
@@ -1021,25 +1053,21 @@ SWITCH: for ($::FORM{'knob'}) {
 
         ChangeStatus('RESOLVED');
         ChangeResolution('DUPLICATE');
-        $::FORM{'comment'} .= "\n\n*** This bug has been marked " .
-                              "as a duplicate of $duplicate ***";
+        my $comment = $cgi->param('comment');
+        $comment .= "\n\n*** This bug has been marked " .
+                    "as a duplicate of $duplicate ***";
+        $cgi->param('comment', $comment);
         last SWITCH;
     };
 
-    ThrowCodeError("unknown_action", { action => $::FORM{'knob'} });
+    ThrowCodeError("unknown_action", { action => $cgi->param('knob') });
 }
-
-
-if ($#idlist < 0) {
-    ThrowUserError("no_bugs_chosen");
-}
-
 
 my @keywordlist;
 my %keywordseen;
 
-if ($::FORM{'keywords'}) {
-    foreach my $keyword (split(/[\s,]+/, $::FORM{'keywords'})) {
+if (defined $cgi->param('keywords')) {
+    foreach my $keyword (split(/[\s,]+/, $cgi->param('keywords'))) {
         if ($keyword eq '') {
             next;
         }
@@ -1055,7 +1083,7 @@ if ($::FORM{'keywords'}) {
     }
 }
 
-my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
+my $keywordaction = $cgi->param('keywordaction') || "makeexact";
 if (!grep($keywordaction eq $_, qw(add delete makeexact))) {
     $keywordaction = "makeexact";
 }
@@ -1063,9 +1091,9 @@ if (!grep($keywordaction eq $_, qw(add delete makeexact))) {
 if ($::comma eq ""
     && (! @groupAdd) && (! @groupDel)
     && (! @::legal_keywords || (0 == @keywordlist && $keywordaction ne "makeexact"))
-    && defined $::FORM{'masscc'} && ! $::FORM{'masscc'}
+    && defined $cgi->param('masscc') && ! $cgi->param('masscc')
     ) {
-    if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
+    if (!defined $cgi->param('comment') || $cgi->param('comment') =~ /^\s*$/) {
         ThrowUserError("bugs_not_changed");
     }
 }
@@ -1073,21 +1101,21 @@ if ($::comma eq ""
 # Process data for Time Tracking fields
 if (UserInGroup(Param('timetrackinggroup'))) {
     foreach my $field ("estimated_time", "remaining_time") {
-        if (defined $::FORM{$field}) {
-            my $er_time = trim($::FORM{$field});
-            if ($er_time ne $::FORM{'dontchange'}) {
+        if (defined $cgi->param($field)) {
+            my $er_time = trim($cgi->param($field));
+            if ($er_time ne $cgi->param('dontchange')) {
                 DoComma();
                 $::query .= "$field = " . SqlQuote($er_time);
             }
         }
     }
 
-    if (defined $::FORM{'deadline'}) {
+    if (defined $cgi->param('deadline')) {
         DoComma();
         $::query .= "deadline = ";
-        if ($::FORM{'deadline'}) {
-            Bugzilla::Util::ValidateDate($::FORM{'deadline'}, 'YYYY-MM-DD');
-            $::query .= SqlQuote($::FORM{'deadline'});
+        if ($cgi->param('deadline')) {
+            Bugzilla::Util::ValidateDate($cgi->param('deadline'), 'YYYY-MM-DD');
+            $::query .= SqlQuote($cgi->param('deadline'));
         } else {
             $::query .= "NULL" ;
         }
@@ -1158,8 +1186,9 @@ sub LogDependencyActivity {
     return 0;
 }
 
-# this loop iterates once for each bug to be processed (eg when this script
-# is called with multiple bugs selected from buglist.cgi instead of
+# This loop iterates once for each bug to be processed (i.e. all the
+# bugs selected when this script is called with multiple bugs selected
+# from buglist.cgi, or just the one bug when called from
 # show_bug.cgi).
 #
 foreach my $id (@idlist) {
@@ -1189,14 +1218,14 @@ foreach my $id (@idlist) {
     # this id ready for the loop below, otherwise anybody can
     # change the component of a bug (we checked product above).
     # http://bugzilla.mozilla.org/show_bug.cgi?id=180545
-    my $product_id = get_product_id($::FORM{'product'});
+    my $product_id = get_product_id($cgi->param('product'));
     
-    if ($::FORM{'component'} ne $::FORM{'dontchange'}) {
-        $::FORM{'component_id'} = 
-                            get_component_id($product_id, $::FORM{'component'});
+    if ($cgi->param('component') ne $cgi->param('dontchange')) {
+        $cgi->param('component_id',
+                    get_component_id($product_id, $cgi->param('component')));
     }
 
-    # It may sound crazy to set %formhash for each bug as $::FORM{}
+    # It may sound crazy to set %formhash for each bug as $cgi->param()
     # will not change, but %formhash is modified below and we prefer
     # to set it again.
     my $i = 0;
@@ -1207,7 +1236,7 @@ foreach my $id (@idlist) {
         # Consider NULL db entries to be equivalent to the empty string
         $oldvalues[$i] = '' unless defined $oldvalues[$i];
         $oldhash{$col} = $oldvalues[$i];
-        $formhash{$col} = $::FORM{$col} if defined $::FORM{$col};
+        $formhash{$col} = $cgi->param($col) if defined $cgi->param($col);
         $i++;
     }
     # If the user is reassigning bugs, we need to:
@@ -1216,9 +1245,8 @@ foreach my $id (@idlist) {
     # - update $newhash{'bug_status'} to its real state if the bug
     #   is in the unconfirmed state.
     $formhash{'qa_contact'} = $qacontact if Param('useqacontact');
-    if ($::FORM{'knob'} eq 'reassignbycomponent'
-        || $::FORM{'knob'} eq 'reassign')
-    {
+    if ($cgi->param('knob') eq 'reassignbycomponent'
+        || $cgi->param('knob') eq 'reassign') {
         $formhash{'assigned_to'} = $assignee;
         if ($oldhash{'bug_status'} eq 'UNCONFIRMED') {
             $formhash{'bug_status'} = $oldhash{'bug_status'};
@@ -1232,7 +1260,7 @@ foreach my $id (@idlist) {
             if ($col eq 'component_id') {
                 # Display the component name
                 $vars->{'oldvalue'} = get_component_name($oldhash{$col});
-                $vars->{'newvalue'} = $::FORM{'component'};
+                $vars->{'newvalue'} = $cgi->param('component');
                 $vars->{'field'} = 'component';
             } elsif ($col eq 'assigned_to' || $col eq 'qa_contact') {
                 # Display the assignee or QA contact email address
@@ -1255,9 +1283,9 @@ foreach my $id (@idlist) {
     # the list hasn't changed.  To fix that, we have to call CheckCanChangeField
     # again with old!=new if the keyword action is "delete" and old=new.
     if ($keywordaction eq "delete"
-        && exists $::FORM{keywords}
+        && defined $cgi->param('keywords')
         && length(@keywordlist) > 0
-        && $::FORM{keywords} eq $oldhash{keywords}
+        && $cgi->param('keywords') eq $oldhash{keywords}
         && !CheckCanChangeField("keywords", $id, "old is not", "equal to new"))
     {
         $vars->{'oldvalue'} = $oldhash{keywords};
@@ -1273,12 +1301,12 @@ foreach my $id (@idlist) {
                       { product => $oldhash{'product'} });
     }
 
-    if (defined $::FORM{'product'} 
-        && $::FORM{'product'} ne $::FORM{'dontchange'} 
-        && $::FORM{'product'} ne $oldhash{'product'}
-        && !CanEnterProduct($::FORM{'product'})) {
+    if (defined $cgi->param('product') 
+        && $cgi->param('product') ne $cgi->param('dontchange')
+        && $cgi->param('product') ne $oldhash{'product'}
+        && !CanEnterProduct($cgi->param('product'))) {
         ThrowUserError("entry_access_denied",
-                       { product => $::FORM{'product'} });
+                       { product => $cgi->param('product') });
     }
     if ($requiremilestone) {
         # musthavemilestoneonaccept applies only if at least two
@@ -1300,15 +1328,15 @@ foreach my $id (@idlist) {
             }
         }
     }   
-    if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
-        ($vars->{'operations'}) = GetBugActivity($::FORM{'id'}, $::FORM{'delta_ts'});
+    if (defined $cgi->param('delta_ts') && $cgi->param('delta_ts') ne $delta_ts)
+    {
+        ($vars->{'operations'}) = GetBugActivity($cgi->param('id'),
+                                                 $cgi->param('delta_ts'));
 
-        $vars->{'start_at'} = $::FORM{'longdesclength'};
+        $vars->{'start_at'} = $cgi->param('longdesclength');
         $vars->{'comments'} = Bugzilla::Bug::GetComments($id);
 
-        $::FORM{'delta_ts'} = $delta_ts;
-        $vars->{'form'} = \%::FORM;
-        $vars->{'mform'} = \%::MFORM;
+        $cgi->param('delta_ts', $delta_ts);
         
         $vars->{'bug_id'} = $id;
         
@@ -1321,14 +1349,14 @@ foreach my $id (@idlist) {
     }
         
     my %deps;
-    if (defined $::FORM{'dependson'}) {
+    if (defined $cgi->param('dependson')) {
         my $me = "blocked";
         my $target = "dependson";
         my %deptree;
         for (1..2) {
             $deptree{$target} = [];
             my %seen;
-            foreach my $i (split('[\s,]+', $::FORM{$target})) {
+            foreach my $i (split('[\s,]+', $cgi->param($target))) {
                 next if $i eq "";
                 
                 if ($id eq $i) {
@@ -1395,23 +1423,23 @@ foreach my $id (@idlist) {
 
     my $work_time;
     if (UserInGroup(Param('timetrackinggroup'))) {
-        $work_time = $::FORM{'work_time'};
+        $work_time = $cgi->param('work_time');
         if ($work_time) {
             # AppendComment (called below) can in theory raise an error,
             # but because we've already validated work_time here it's
             # safe to log the entry before adding the comment.
-            LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
+            LogActivityEntry($id, "work_time", "", $work_time,
                              $whoid, $timestamp);
         }
     }
 
-    if ($::FORM{'comment'} || $work_time) {
-        AppendComment($id, Bugzilla->user->login, $::FORM{'comment'},
-                      $::FORM{'commentprivacy'}, $timestamp, $work_time);
+    if ($cgi->param('comment') || $work_time) {
+        AppendComment($id, Bugzilla->user->login, $cgi->param('comment'),
+                      $cgi->param('commentprivacy'), $timestamp, $work_time);
         $bug_changed = 1;
     }
 
-    if (@::legal_keywords && exists $::FORM{keywords}) {
+    if (@::legal_keywords && defined $cgi->param('keywords')) {
         # There are three kinds of "keywordsaction": makeexact, add, delete.
         # For makeexact, we delete everything, and then add our things.
         # For add, we delete things we're adding (to make sure we don't
@@ -1463,9 +1491,10 @@ foreach my $id (@idlist) {
     }
     
     my $newproduct_id = $oldhash{'product_id'};
-    if ((defined $::FORM{'product'})
-        && ($::FORM{'product'} ne $::FORM{'dontchange'})) {
-        my $newproduct_id = get_product_id($::FORM{'product'});
+    if ((defined $cgi->param('product'))
+        && ($cgi->param('product') ne $cgi->param('dontchange')))
+    {
+        my $newproduct_id = get_product_id($cgi->param('product'));
     }
 
     my %groupsrequired = ();
@@ -1518,7 +1547,10 @@ foreach my $id (@idlist) {
     }
 
     my @ccRemoved = (); 
-    if (defined $::FORM{newcc} || defined $::FORM{'addselfcc'} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
+    if (defined $cgi->param('newcc')
+        || defined $cgi->param('addselfcc')
+        || defined $cgi->param('removecc')
+        || defined $cgi->param('masscc')) {
         # Get the current CC list for this bug
         my %oncc;
         SendSQL("SELECT who FROM cc WHERE bug_id = $id");
@@ -1566,7 +1598,7 @@ foreach my $id (@idlist) {
                                                   undef, $id)};
         @dependencychanged{@oldlist} = 1;
 
-        if (defined $::FORM{'dependson'}) {
+        if (defined $cgi->param('dependson')) {
             my %snapshot;
             my @newlist = sort {$a <=> $b} @{$deps{$target}};
             @dependencychanged{@newlist} = 1;
@@ -1613,12 +1645,11 @@ foreach my $id (@idlist) {
     # conditions under which these activities take place, more information
     # about which can be found in comments within the conditionals below.
     # Check if the user has changed the product to which the bug belongs;
-    if ( 
-      defined $::FORM{'product'} 
-        && $::FORM{'product'} ne $::FORM{'dontchange'} 
-          && $::FORM{'product'} ne $oldhash{'product'} 
+    if (defined $cgi->param('product')
+        && $cgi->param('product') ne $cgi->param('dontchange')
+        && $cgi->param('product') ne $oldhash{'product'}
     ) {
-        my $newproduct_id = get_product_id($::FORM{'product'});
+        $newproduct_id = get_product_id($cgi->param('product'));
         # Depending on the "addtonewgroup" variable, groups with
         # defaults will change.
         #
@@ -1696,8 +1727,8 @@ foreach my $id (@idlist) {
         # replaced.
         push(@groupstoremove, @defaultstoremove);
         if (AnyDefaultGroups()
-            && (($::FORM{'addtonewgroup'} eq 'yes')
-            || (($::FORM{'addtonewgroup'} eq 'yesifinold') 
+            && (($cgi->param('addtonewgroup') eq 'yes')
+            || (($cgi->param('addtonewgroup') eq 'yesifinold')
             && ($buginanydefault)))) {
             push(@groupstoadd, @defaultstoadd);
         }
@@ -1837,26 +1868,33 @@ foreach my $id (@idlist) {
     
     if ($duplicate) {
         # Check to see if Reporter of this bug is reporter of Dupe 
-        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($::FORM{'id'}));
+        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " .
+                $cgi->param('id'));
         my $reporter = FetchOneColumn();
-        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($duplicate) . " and reporter = $reporter");
+        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " .
+                "$duplicate and reporter = $reporter");
         my $isreporter = FetchOneColumn();
-        SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($duplicate) . " and who = $reporter");
+        SendSQL("SELECT who FROM cc WHERE bug_id = " .
+                " $duplicate and who = $reporter");
         my $isoncc = FetchOneColumn();
-        unless ($isreporter || $isoncc || ! $::FORM{'confirm_add_duplicate'}) {
+        unless ($isreporter || $isoncc
+                || !$cgi->param('confirm_add_duplicate')) {
             # The reporter is oblivious to the existence of the new bug and is permitted access
             # ... add 'em to the cc (and record activity)
             LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter),
                              $whoid,$timestamp);
-            SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
+            SendSQL("INSERT INTO cc (who, bug_id) " .
+                    "VALUES ($reporter, $duplicate)");
         }
         # Bug 171639 - Duplicate notifications do not need to be private. 
         AppendComment($duplicate, Bugzilla->user->login,
-                      "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***",
+                      "*** Bug " . $cgi->param('id') .
+                      " has been marked as a duplicate of this bug. ***",
                       0, $timestamp);
 
         CheckFormFieldDefined($cgi,'comment');
-        SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
+        SendSQL("INSERT INTO duplicates VALUES ($duplicate, " .
+                $cgi->param('id') . ")");
         
         $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login }; 
 
