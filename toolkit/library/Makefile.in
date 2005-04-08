@@ -233,6 +233,10 @@ ifdef ACCESSIBILITY
 COMPONENT_LIBS += accessibility
 endif
 
+ifdef MOZ_ENABLE_XREMOTE
+COMPONENT_LIBS += remoteservice
+endif
+
 SHARED_LIBRARY_LIBS = \
 	$(foreach lib,$(STATIC_LIBS),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
 	$(foreach component,$(COMPONENT_LIBS),$(DIST)/lib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \

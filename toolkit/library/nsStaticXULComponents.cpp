@@ -143,6 +143,12 @@
 #define ACCESS_MODULES
 #endif
 
+#ifdef MOZ_ENABLE_XREMOTE
+#define XREMOTE_MODULES MODULE(RemoteServiceModule)
+#else
+#define XREMOTE_MODULES
+#endif
+
 #define XUL_MODULES                          \
     MODULE(xpcomObsoleteModule)              \
     MODULE(xpconnect)                        \
@@ -180,6 +186,7 @@
     MODULE(application)                      \
     MODULE(CommandLineModule)                \
     MODULE(nsToolkitCompsModule)             \
+    XREMOTE_MODULES                          \
     MODULE(nsSoftwareUpdate)                 \
     MODULE(JavaScript_Debugger)              \
     /* end of list */
