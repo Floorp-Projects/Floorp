@@ -69,7 +69,6 @@ ifdef MOZ_HAVE_BROWSER
 DIRS	= \
 			directory \
 			find \
-			search \
 			intl \
 			resetPref \
 			killAll \
@@ -97,12 +96,6 @@ DIRS += \
 		extensions \
 		$(NULL)
 endif
-endif
-
-# XXX because 'search' depends on nsIBookmarksService
-# XXX we need to clean up the set of xulrunner dependencies
-ifdef MOZ_XULRUNNER
-DIRS += bookmarks/public
 endif
 
 ifeq ($(OS_ARCH),WINNT)

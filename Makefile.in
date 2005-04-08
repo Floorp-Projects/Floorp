@@ -252,9 +252,8 @@ tier_50_dirs	+= toolkit
 endif
 
 ifdef MOZ_PHOENIX
-#xpfe/components/search depends on nsIBookmarksService.idl
 #XXXBlake this shell path is a temp hack; toolkit shouldn't depend on browser
-tier_50_dirs    += browser/components/bookmarks/public browser/components/shell/public
+tier_50_dirs    += browser/components/shell/public
 endif
 
 ifdef MOZ_XPINSTALL
@@ -330,6 +329,10 @@ tier_99_dirs += \
 		embedding/browser/activex/src/control_kicker \
 		$(NULL)
 endif
+endif
+
+ifneq (,$(filter browser suite,$(MOZ_BUILD_APP)))
+tier_99_dirs += xpfe/components/search
 endif
 
 ifdef MOZ_PHOENIX

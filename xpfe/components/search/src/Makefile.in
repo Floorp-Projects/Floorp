@@ -43,12 +43,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
-LIBRARY_NAME	= search_s
-FORCE_STATIC_LIB = 1
-
-# XXXbsmedberg: this really shouldn't be part of toolkit, but part of
-# tier_99 app-specific code. Fix me!
-LIBXUL_LIBRARY = 1
+LIBRARY_NAME	= searchservice
+SHORT_LIBNAME   = srchsvc
+IS_COMPONENT	= 1
+EXPORT_LIBRARY	= 1
+MODULE_NAME	= SearchServiceModule
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -58,11 +58,8 @@ REQUIRES	= xpcom \
 		  uconv \
 		  intl \
 		  unicharutil \
+		  bookmarks \
 		  $(NULL)
-
-ifdef MOZ_PHOENIX
-REQUIRES	+= bookmarks
-endif
 
 CPPSRCS		= \
 		nsInternetSearchService.cpp \
@@ -71,3 +68,7 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
