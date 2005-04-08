@@ -325,7 +325,7 @@ nsXFormsInputElement::UpdateInstanceData()
 NS_IMETHODIMP
 nsXFormsInputElement::Refresh()
 {
-  if (!mControl || !mModel)
+  if (!mControl || !mModel || !mHasParent)
     return NS_OK;
 
   nsAutoString text;

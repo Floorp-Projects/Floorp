@@ -204,7 +204,7 @@ nsXFormsOutputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 nsresult
 nsXFormsOutputElement::Bind()
 {
-  if (!mValue)
+  if (!mValue || !mHasParent)
     return NS_OK;
   
   mBoundNode = nsnull;
@@ -240,7 +240,7 @@ nsXFormsOutputElement::Bind()
 NS_IMETHODIMP
 nsXFormsOutputElement::Refresh()
 {
-  if (!mValue)
+  if (!mValue || !mHasParent)
     return NS_OK;
 
   nsAutoString text;    

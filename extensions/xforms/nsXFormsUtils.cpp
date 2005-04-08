@@ -261,11 +261,15 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
   NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
   nsAutoString bindId;
-  aElement->GetAttribute(NS_LITERAL_STRING("bind"), bindId);
+  NS_NAMED_LITERAL_STRING(bindStr, "bind");
+  aElement->GetAttribute(bindStr, bindId);
   if (!bindId.IsEmpty()) {
     // CASE 1: Use @bind
     domDoc->GetElementById(bindId, aBindElement);
-    if (!IsXFormsElement(*aBindElement, NS_LITERAL_STRING("bind"))) {
+    if (!IsXFormsElement(*aBindElement, bindStr)) {
+      const PRUnichar *strings[] = { bindId.get(), bindStr.get() };
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
+                                 strings, 2, aElement, aElement);
       DispatchEvent(aElement, eEvent_BindingException);
       return NS_ERROR_ABORT;
     }
@@ -286,7 +290,8 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
     // CASE 2: Use @model
     // If bind did not set model, and the element has a model attribute we use this
     nsAutoString modelId;
-    aElement->GetAttribute(NS_LITERAL_STRING("model"), modelId);
+    NS_NAMED_LITERAL_STRING(modelStr, "model");
+    aElement->GetAttribute(modelStr, modelId);
     
     if (!modelId.IsEmpty()) {
       nsCOMPtr<nsIDOMElement> modelElement;
@@ -295,6 +300,9 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
       
       // No element found, or element not a \<model\> element
       if (!model) {
+        const PRUnichar *strings[] = { modelId.get(), modelStr.get() };
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
+                                   strings, 2, aElement, aElement);
         nsXFormsUtils::DispatchEvent(aElement, eEvent_BindingException);        
         return NS_ERROR_FAILURE;
       }
@@ -393,11 +401,13 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
     }
     CallQueryInterface(supResult, &result);  // addrefs
   }
-  else if(rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION){
-      nsCOMPtr<nsIDOMElement> resolverElement = do_QueryInterface(aResolverNode);
-      nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(resolverElement);
-      nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
-      DispatchEvent(model, eEvent_ComputeException);
+  else if (rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION) {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprEvaluateError"),
+                               nsnull, 0, aContextNode, nsnull);
+    nsCOMPtr<nsIDOMElement> resolverElement = do_QueryInterface(aResolverNode);
+    nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(resolverElement);
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+    DispatchEvent(model, eEvent_ComputeException);
   }
 
   return result;
@@ -800,11 +810,8 @@ nsXFormsUtils::FindParentContext(nsIDOMElement           *aElement,
   NS_ENSURE_ARG_POINTER(aModel);
   NS_ENSURE_ARG_POINTER(aContextNode);
 
-  nsCOMPtr<nsIDOMNode> elementNode = do_QueryInterface(aElement);
-  NS_ENSURE_TRUE(elementNode, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsIDOMNode> curNode;
-  nsresult rv = elementNode->GetParentNode(getter_AddRefs(curNode));
+  nsresult rv = aElement->GetParentNode(getter_AddRefs(curNode));
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
   // If a model is set, get its ID
@@ -881,6 +888,7 @@ nsXFormsUtils::FindParentContext(nsIDOMElement           *aElement,
       model = do_QueryInterface(modelElement);
     }    
     if (!model) {
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("noModelError"), aElement);
       DispatchEvent(aElement, eEvent_BindingException);
       return NS_ERROR_ABORT;
     }

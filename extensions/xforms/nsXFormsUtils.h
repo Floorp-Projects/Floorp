@@ -362,11 +362,25 @@ public:
    * @param aContext          If set, the node is used to output what element
                               caused the error
    */
-  static NS_HIDDEN_(void) ReportError(const nsString& aMessageName,
+  static NS_HIDDEN_(void) ReportError(const nsString   &aMessageName,
                                       const PRUnichar **aParams,
-                                      PRUint32 aParamLength,
-                                      nsIDOMNode *aElement,
-                                      nsIDOMNode *aContext);
+                                      PRUint32          aParamLength,
+                                      nsIDOMNode       *aElement,
+                                      nsIDOMNode       *aContext);
+
+  /**
+   * Simple version of ReportError(), used when reporting without message
+   * arguments and file location and node is taken from same element (or
+   * nsnull).
+   *
+   * @param aMessageName      Name of string
+   * @param aElement          Element to use for location and context
+   */
+  static NS_HIDDEN_(void) ReportError(const nsString &aMessageName,
+                                      nsIDOMNode     *aElement = nsnull)
+    {
+      nsXFormsUtils::ReportError(aMessageName, nsnull, 0, aElement, aElement);
+    }
 
 };
 

@@ -111,6 +111,9 @@ nsXFormsControlStub::ResetBoundNode()
 {
   mBoundNode = nsnull;
 
+  if (!mHasParent)
+    return NS_OK;
+
   nsCOMPtr<nsIModelElementPrivate> modelNode;
   nsCOMPtr<nsIDOMXPathResult> result;
   nsresult rv =
@@ -337,9 +340,10 @@ nsXFormsControlStub::DocumentChanged(nsIDOMDocument *aNewDocument)
 NS_IMETHODIMP
 nsXFormsControlStub::ParentChanged(nsIDOMElement *aNewParent)
 {
+  mHasParent = aNewParent != nsnull;
   // We need to re-evaluate our instance data binding when our parent changes,
   // since xmlns declarations or our context could have changed.
-  if (aNewParent) {
+  if (mHasParent) {
     Bind();
     Refresh();
   }

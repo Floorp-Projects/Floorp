@@ -343,6 +343,9 @@ nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   nsCOMPtr<nsIXFormsSubmissionElement> xfSubmission(do_QueryInterface(submissionElement));
   
   if (!xfSubmission) {
+    const PRUnichar *strings[] = { submissionID.get(), submission.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
+                               strings, 2, mElement, mElement);
     return nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
   }
 

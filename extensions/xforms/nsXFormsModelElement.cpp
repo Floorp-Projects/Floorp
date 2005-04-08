@@ -329,7 +329,8 @@ nsXFormsModelElement::DoneAddingChildren()
         }
       }
       if (NS_FAILED(rv)) {
-        // this is a fatal error
+        // this is a fatal error (XXX)
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
         nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
         return NS_OK;
       }
@@ -694,6 +695,7 @@ NS_IMETHODIMP
 nsXFormsModelElement::OnError(nsresult aStatus,
                               const nsAString &aStatusMessage)
 {
+  nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
   nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
   return NS_OK;
 }
@@ -728,7 +730,8 @@ nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
           mSchemaCount++;
       }
       if (NS_FAILED(rv)) {
-        // this is a fatal error
+        // this is a fatal error (XXX)
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
         nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
         return NS_OK;
       }
@@ -834,6 +837,7 @@ nsXFormsModelElement::InstanceLoadFinished(PRBool aSuccess)
 {
   --mPendingInstanceCount;
   if (!aSuccess) {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadError"), mElement);
     nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
   } else if (IsComplete()) {
     nsresult rv = FinishConstruction();
@@ -1115,8 +1119,7 @@ nsXFormsModelElement::FinishConstruction()
         nsresult rv = mSchemas->ProcessSchemaElement(element, nsnull,
                                                      getter_AddRefs(schema));
         if (!NS_SUCCEEDED(rv)) {
-          nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaProcessError"),
-                                     nsnull, 0, node, node);
+          nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaProcessError"), node);
         }
       }
     }
@@ -1217,6 +1220,8 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
       rv = aEvaluator->CreateExpression(propStrings[i], aBindElement,
                                         getter_AddRefs(props[i]));
       if (NS_FAILED(rv)) {
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("mipParseError"),
+                                   aBindElement);
         nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
         return rv;
       }
@@ -1240,6 +1245,8 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 #ifdef DEBUG
     printf("xforms-binding-exception: XPath Evaluation failed\n");
 #endif
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("nodesetEvaluateError"),
+                               aBindElement);
     nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
     return rv;
   }
@@ -1352,6 +1359,8 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 #ifdef DEBUG
       printf("xforms-binding-exception: Multiple MIPs on same node!");
 #endif
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("multiMIPError"),
+                                 aBindElement);
       nsXFormsUtils::DispatchEvent(aBindElement,
                                    eEvent_BindingException);
       return NS_ERROR_FAILURE;

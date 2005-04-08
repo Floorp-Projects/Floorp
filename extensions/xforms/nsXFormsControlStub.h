@@ -114,7 +114,8 @@ public:
                               nsIXTFElement::NOTIFY_DOCUMENT_CHANGED |
                               nsIXTFElement::NOTIFY_PARENT_CHANGED |
                               nsIXTFElement::NOTIFY_HANDLE_DEFAULT),
-    kElementFlags(nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR)
+    kElementFlags(nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR),
+    mHasParent(PR_FALSE)
     {};
 
 protected:
@@ -132,6 +133,9 @@ protected:
 
   /** This event listener is used to create xforms-hint and xforms-help events. */
   nsCOMPtr<nsIDOMEventListener>    mEventListener;
+
+  /** State that tells whether control has a parent or not */
+  PRBool                           mHasParent;
 
   /** Returns the read only state of the control (ie. mBoundNode) */
   PRBool GetReadOnlyState();

@@ -60,7 +60,7 @@ nsXFormsSendElement::HandleAction(nsIDOMEvent* aEvent,
 
   NS_NAMED_LITERAL_STRING(submission, "submission");
   nsAutoString submissionID;
-  mElement->GetAttribute(NS_LITERAL_STRING("submission"), submissionID);
+  mElement->GetAttribute(submission, submissionID);
   if (submissionID.IsEmpty())
     return NS_OK;
 
@@ -73,6 +73,9 @@ nsXFormsSendElement::HandleAction(nsIDOMEvent* aEvent,
   doc->GetElementById(submissionID, getter_AddRefs(el));
 
   if (!el || !nsXFormsUtils::IsXFormsElement(el, submission)) {
+    const PRUnichar *strings[] = { submissionID.get(), submission.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
+                               strings, 2, mElement, mElement);
     return nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
   }
   

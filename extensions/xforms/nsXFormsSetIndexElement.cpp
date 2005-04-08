@@ -73,8 +73,10 @@ nsXFormsSetIndexElement::HandleAction(nsIDOMEvent            *aEvent,
   
   // Get @repeat and @index
   nsAutoString id, index;
-  mElement->GetAttribute(NS_LITERAL_STRING("repeat"), id);
-  mElement->GetAttribute(NS_LITERAL_STRING("index"), index);
+  NS_NAMED_LITERAL_STRING(repeatStr, "repeat");
+  mElement->GetAttribute(repeatStr, id);
+  NS_NAMED_LITERAL_STRING(indexStr, "index");
+  mElement->GetAttribute(indexStr, index);
   if (id.IsEmpty() || index.IsEmpty()) {
     /// @todo Should we dispatch an exception, or just define that this does
     /// not happen as it is a non-validating form as both are required
@@ -91,13 +93,15 @@ nsXFormsSetIndexElement::HandleAction(nsIDOMEvent            *aEvent,
   // checked that @index is present above
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
                                           0,
-                                          NS_LITERAL_STRING("index"),
+                                          indexStr,
                                           EmptyString(),
                                           nsIDOMXPathResult::NUMBER_TYPE,
                                           getter_AddRefs(model),
                                           getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!result) {
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("indexEvalError"),
+                               mElement);
     // beaufour: This makes sense, but is not according to the spec. I guess...
     nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
     return NS_ERROR_ABORT;
@@ -121,6 +125,9 @@ nsXFormsSetIndexElement::HandleAction(nsIDOMEvent            *aEvent,
   rv = domDoc->GetElementById(id, getter_AddRefs(repeatElem));
   nsCOMPtr<nsIXFormsRepeatElement> repeat = do_QueryInterface(repeatElem);
   if (!repeat) {
+    const PRUnichar *strings[] = { id.get(), repeatStr.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
+                               strings, 2, mElement, mElement);
     // beaufour: This makes sense, but is not according to the spec. I guess...
     nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
     return NS_ERROR_ABORT;
