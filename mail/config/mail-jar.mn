@@ -106,8 +106,8 @@ content/global/printPreviewProgress.xul,              toolkit/content/global/pri
 content/global/printPreviewProgress.js,               toolkit/content/global/printPreviewProgress.js
 content/global/printPageSetup.js,                     toolkit/content/global/printPageSetup.js
 content/global/printPageSetup.xul,                    toolkit/content/global/printPageSetup.xul
-content/global/printjoboptions.js,		                toolkit/content/global/printjoboptions.js
-content/global/printjoboptions.xul,		                toolkit/content/global/printjoboptions.xul
+content/global/printjoboptions.js,		      toolkit/content/global/printjoboptions.js
+content/global/printjoboptions.xul,		      toolkit/content/global/printjoboptions.xul
 content/global/MPL-1.1.html,                          toolkit/content/global/MPL-1.1.html
 content/global/NPL-1.1.html,                          toolkit/content/global/NPL-1.1.html
 content/global/customizeToolbar.xul,                  toolkit/content/global/customizeToolbar.xul
@@ -119,6 +119,8 @@ content/global/viewZoomOverlay.js,                    toolkit/content/global/vie
 content/global/viewSource.css,                        toolkit/content/global/viewSource.css
 content/global/viewSource.xul,                        toolkit/content/global/viewSource.xul
 content/global/viewSource.js,                         toolkit/content/global/viewSource.js
+content/global/config.xul,                            toolkit/content/global/config.xul
+content/global/config.js,                             toolkit/content/global/config.js
 content/global/findUtils.js,                          toolkit/content/global/findUtils.js
 content/global/printUtils.js,                         toolkit/content/global/printUtils.js
 content/global/editMenuOverlay.xul,                   toolkit/content/global/editMenuOverlay.xul
