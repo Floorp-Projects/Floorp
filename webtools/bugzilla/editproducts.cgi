@@ -43,11 +43,6 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 # doesn't work for me.
 use vars qw(@legal_bug_status @legal_resolution);
 
-sub sillyness {
-    my $zz;
-    $zz = %::MFORM;
-}
-
 my %ctl = ( 
     &::CONTROLMAPNA => 'NA',
     &::CONTROLMAPSHOWN => 'Shown',
@@ -263,7 +258,8 @@ sub PutTrailer (@)
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $whoid = $user->id;
 
-print Bugzilla->cgi->header();
+my $cgi = Bugzilla->cgi;
+print $cgi->header();
 
 UserInGroup("editcomponents")
   || ThrowUserError("auth_failure", {group  => "editcomponents",
@@ -273,9 +269,9 @@ UserInGroup("editcomponents")
 #
 # often used variables
 #
-my $classification = trim($::FORM{classification} || '');
-my $product = trim($::FORM{product} || '');
-my $action  = trim($::FORM{action}  || '');
+my $classification = trim($cgi->param('classification') || '');
+my $product = trim($cgi->param('product') || '');
+my $action  = trim($cgi->param('action')  || '');
 my $headerdone = 0;
 my $localtrailer = "<A HREF=\"editproducts.cgi\">edit</A> more products";
 my $classhtmlvarstart = "";
@@ -457,7 +453,7 @@ if ($action eq 'new') {
         }
     }
 
-    my $version = trim($::FORM{version} || '');
+    my $version = trim($cgi->param('version') || '');
 
     if ($version eq '') {
         print "You must enter a version for product '$product'. Please press\n";
@@ -466,17 +462,17 @@ if ($action eq 'new') {
         exit;
     }
 
-    my $description  = trim($::FORM{description}  || '');
-    my $milestoneurl = trim($::FORM{milestoneurl} || '');
+    my $description  = trim($cgi->param('description')  || '');
+    my $milestoneurl = trim($cgi->param('milestoneurl') || '');
     my $disallownew = 0;
-    $disallownew = 1 if $::FORM{disallownew};
-    my $votesperuser = $::FORM{votesperuser};
+    $disallownew = 1 if $cgi->param('disallownew');
+    my $votesperuser = $cgi->param('votesperuser');
     $votesperuser ||= 0;
-    my $maxvotesperbug = $::FORM{maxvotesperbug};
+    my $maxvotesperbug = $cgi->param('maxvotesperbug');
     $maxvotesperbug = 10000 if !defined $maxvotesperbug;
-    my $votestoconfirm = $::FORM{votestoconfirm};
+    my $votestoconfirm = $cgi->param('votestoconfirm');
     $votestoconfirm ||= 0;
-    my $defaultmilestone = $::FORM{defaultmilestone} || "---";
+    my $defaultmilestone = $cgi->param('defaultmilestone') || "---";
 
     my $classification_id = 1;
     if (Param('useclassification')) {
@@ -546,14 +542,15 @@ if ($action eq 'new') {
                 CONTROLMAPNA . ", 0)");
     }
 
-    if ($::FORM{createseries}) {
+    if ($cgi->param('createseries')) {
         # Insert default charting queries for this product.
         # If they aren't using charting, this won't do any harm.
         GetVersionTable();
 
-        # $::FORM{'open_name'} and $product are sqlquoted by the series
-        # code and never used again here, so we can trick_taint them.
-        trick_taint($::FORM{'open_name'});
+        # $open_name and $product are sqlquoted by the series code 
+        # and never used again here, so we can trick_taint them.
+        my $open_name = $cgi->param('open_name');
+        trick_taint($open_name);
         trick_taint($product);
     
         my @series;
@@ -574,11 +571,11 @@ if ($action eq 'new') {
         my @openedstatuses = OpenStates();
         my $query = 
                join("&", map { "bug_status=" . url_quote($_) } @openedstatuses);
-        push(@series, [$::FORM{'open_name'}, $query]);
+        push(@series, [$open_name, $query]);
     
         foreach my $sdata (@series) {
             my $series = new Bugzilla::Series(undef, $product, 
-                            $::FORM{'subcategory'},
+                            scalar $cgi->param('subcategory'),
                             $sdata->[0], $::userid, 1,
                             $sdata->[1] . "&product=" . url_quote($product), 1);
             $series->writeToDatabase();
@@ -1008,19 +1005,17 @@ if ($action eq 'updategroupcontrols') {
     my $product_id = get_product_id($product);
     my @now_na = ();
     my @now_mandatory = ();
-    foreach my $f (keys %::FORM) {
+    foreach my $f ($cgi->param()) {
         if ($f =~ /^membercontrol_(\d+)$/) {
             my $id = $1;
-            if ($::FORM{$f} == CONTROLMAPNA) {
+            if ($cgi->param($f) == CONTROLMAPNA) {
                 push @now_na,$id;
-            } elsif ($::FORM{$f} == CONTROLMAPMANDATORY) {
+            } elsif ($cgi->param($f) == CONTROLMAPMANDATORY) {
                 push @now_mandatory,$id;
             }
         }
     }
-    if (!($::FORM{'confirmed'})) {
-        $vars->{'form'} = \%::FORM;
-        $vars->{'mform'} = \%::MFORM;
+    if (!defined $cgi->param('confirmed')) {
         my @na_groups = ();
         if (@now_na) {
             SendSQL("SELECT groups.name, COUNT(bugs.bug_id) 
@@ -1073,8 +1068,8 @@ if ($action eq 'updategroupcontrols') {
             "WHERE isbuggroup != 0 AND isactive != 0");
     while (MoreSQLData()){
         my ($groupid, $groupname) = FetchSQLData();
-        my $newmembercontrol = $::FORM{"membercontrol_$groupid"} || 0;
-        my $newothercontrol = $::FORM{"othercontrol_$groupid"} || 0;
+        my $newmembercontrol = $cgi->param("membercontrol_$groupid") || 0;
+        my $newothercontrol = $cgi->param("othercontrol_$groupid") || 0;
         #  Legality of control combination is a function of
         #  membercontrol\othercontrol
         #                 NA SH DE MA
@@ -1105,10 +1100,10 @@ if ($action eq 'updategroupcontrols') {
     while (MoreSQLData()) {
         my ($groupid, $groupname, $entry, $membercontrol, 
             $othercontrol, $canedit) = FetchSQLData();
-        my $newentry = $::FORM{"entry_$groupid"} || 0;
-        my $newmembercontrol = $::FORM{"membercontrol_$groupid"} || 0;
-        my $newothercontrol = $::FORM{"othercontrol_$groupid"} || 0;
-        my $newcanedit = $::FORM{"canedit_$groupid"} || 0;
+        my $newentry = $cgi->param("entry_$groupid") || 0;
+        my $newmembercontrol = $cgi->param("membercontrol_$groupid") || 0;
+        my $newothercontrol = $cgi->param("othercontrol_$groupid") || 0;
+        my $newcanedit = $cgi->param("canedit_$groupid") || 0;
         my $oldentry = $entry;
         $entry = $entry || 0;
         $membercontrol = $membercontrol || 0;
@@ -1233,21 +1228,21 @@ if ($action eq 'updategroupcontrols') {
 if ($action eq 'update') {
     PutHeader("Update product");
 
-    my $productold          = trim($::FORM{productold}          || '');
-    my $description         = trim($::FORM{description}         || '');
-    my $descriptionold      = trim($::FORM{descriptionold}      || '');
-    my $disallownew         = trim($::FORM{disallownew}         || '');
-    my $disallownewold      = trim($::FORM{disallownewold}      || '');
-    my $milestoneurl        = trim($::FORM{milestoneurl}        || '');
-    my $milestoneurlold     = trim($::FORM{milestoneurlold}     || '');
-    my $votesperuser        = trim($::FORM{votesperuser}        || 0);
-    my $votesperuserold     = trim($::FORM{votesperuserold}     || 0);
-    my $maxvotesperbug      = trim($::FORM{maxvotesperbug}      || 0);
-    my $maxvotesperbugold   = trim($::FORM{maxvotesperbugold}   || 0);
-    my $votestoconfirm      = trim($::FORM{votestoconfirm}      || 0);
-    my $votestoconfirmold   = trim($::FORM{votestoconfirmold}   || 0);
-    my $defaultmilestone    = trim($::FORM{defaultmilestone}    || '---');
-    my $defaultmilestoneold = trim($::FORM{defaultmilestoneold} || '---');
+    my $productold          = trim($cgi->param('productold')          || '');
+    my $description         = trim($cgi->param('description')         || '');
+    my $descriptionold      = trim($cgi->param('descriptionold')      || '');
+    my $disallownew         = trim($cgi->param('disallownew')         || '');
+    my $disallownewold      = trim($cgi->param('disallownewold')      || '');
+    my $milestoneurl        = trim($cgi->param('milestoneurl')        || '');
+    my $milestoneurlold     = trim($cgi->param('milestoneurlold')     || '');
+    my $votesperuser        = trim($cgi->param('votesperuser')        || 0);
+    my $votesperuserold     = trim($cgi->param('votesperuserold')     || 0);
+    my $maxvotesperbug      = trim($cgi->param('maxvotesperbug')      || 0);
+    my $maxvotesperbugold   = trim($cgi->param('maxvotesperbugold')   || 0);
+    my $votestoconfirm      = trim($cgi->param('votestoconfirm')      || 0);
+    my $votestoconfirmold   = trim($cgi->param('votestoconfirmold')   || 0);
+    my $defaultmilestone    = trim($cgi->param('defaultmilestone')    || '---');
+    my $defaultmilestoneold = trim($cgi->param('defaultmilestoneold') || '---');
 
     my $checkvotes = 0;
 
