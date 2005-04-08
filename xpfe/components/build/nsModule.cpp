@@ -38,8 +38,6 @@
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
 #include "rdf.h"
-#include "nsLocalSearchService.h"
-#include "nsInternetSearchService.h"
 #include "nsXPIDLString.h"
 #include "nsCharsetMenu.h"
 #include "nsDirectoryViewer.h"
@@ -93,8 +91,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 
 #if !defined(MOZ_MACBROWSER)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
@@ -242,14 +238,6 @@ static const nsModuleComponentInfo components[] = {
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 
 #if !defined(MOZ_MACBROWSER)
-    { "Local Search", NS_RDFFINDDATASOURCE_CID,
-      NS_LOCALSEARCH_SERVICE_CONTRACTID, LocalSearchDataSourceConstructor },
-    { "Local Search", NS_RDFFINDDATASOURCE_CID,
-      NS_LOCALSEARCH_DATASOURCE_CONTRACTID, LocalSearchDataSourceConstructor },
-    { "Internet Search", NS_RDFSEARCHDATASOURCE_CID,
-      NS_INTERNETSEARCH_SERVICE_CONTRACTID, InternetSearchDataSourceConstructor },
-    { "Internet Search", NS_RDFSEARCHDATASOURCE_CID,
-      NS_INTERNETSEARCH_DATASOURCE_CONTRACTID, InternetSearchDataSourceConstructor },
     { "nsCharsetMenu", NS_CHARSETMENU_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
       NS_NewCharsetMenu },
