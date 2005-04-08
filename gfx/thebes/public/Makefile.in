@@ -19,6 +19,7 @@ EXPORTS		= 	gfxASurface.h \
 			gfxRect.h \
 			gfxRegion.h \
 			gfxTextRun.h \
+			gfxTypes.h \
 			$(NULL)
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
