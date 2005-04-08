@@ -1,4 +1,4 @@
-/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,6 +40,8 @@
 interface calICalendar;
 interface nsIURI;
 
+interface calICalendarManagerObserver;
+
 [scriptable, uuid(43a71d40-7807-4e2f-b741-2926ee73f89a)]
 interface calICalendarManager : nsISupports
 {
@@ -67,4 +69,26 @@ interface calICalendarManager : nsISupports
   AUTF8String getCalendarPref(in calICalendar aCalendar, in AUTF8String aName);
   void setCalendarPref(in calICalendar aCalendar, in AUTF8String aName, in AUTF8String aValue);
   void deleteCalendarPref(in calICalendar aCalendar, in AUTF8String aName);
+
+  void addObserver(in calICalendarManagerObserver aObserver);
+  void removeObserver(in calICalendarManagerObserver aObserver);
+};
+
+[scriptable, uuid(383f36f1-e669-4ca4-be7f-06b43910f44a)]
+interface calICalendarManagerObserver : nsISupports
+{
+  // called after the calendar is registered
+  void onCalendarRegistered(in calICalendar aCalendar);
+
+  // called before the unregister actually takes place
+  void onCalendarUnregistering(in calICalendar aCalendar);
+
+  // called before the delete actually takes place
+  void onCalendarDeleting(in calICalendar aCalendar);
+
+  // called after the pref is set
+  void onCalendarPrefSet(in calICalendar aCalendar, in AUTF8String aName, in AUTF8String aValue);
+
+  // called before the pref is deleted
+  void onCalendarPrefDeleting(in calICalendar aCalendar, in AUTF8String aName);
 };

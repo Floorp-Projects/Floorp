@@ -1,4 +1,5 @@
 lightning.jar:
+  content/lightning/lightning-utils.js			(content/lightning-utils.js) 
   content/lightning/messenger-overlay-sidebar.xul	(content/messenger-overlay-sidebar.xul)
   content/lightning/messenger-overlay-sidebar.js	(content/messenger-overlay-sidebar.js)
   content/lightning/calendar-management.js		(content/calendar-management.js)

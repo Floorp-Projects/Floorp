@@ -281,6 +281,13 @@ interface calICompositeCalendar : calICalendar
    * @param aServer  URI of the server to be removed
    */
   void removeCalendar( in nsIURI aServer );
+  /**
+   * If a calendar for the given URI exists in the CompositeCalendar,
+   * return it; otherwise return null.
+   *
+   * @param aServer  URI of the server whose calendar to return
+   * @return calendar for aServer, or null if none
+   */
   calICalendar getCalendar( in nsIURI aServer );
 
   /**

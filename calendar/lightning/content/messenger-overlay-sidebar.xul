@@ -2,10 +2,13 @@
 
 <!-- DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" -->
 
+<?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
+
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
+<script type="application/x-javascript" src="chrome://lightning/content/lightning-utils.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
 
@@ -25,7 +28,8 @@
   <tree id="calendarTree" onfocus="selectedCalendarPane(event)" flex="1"
         context="ltnCalendarTreeContext">
     <treecols>
-      <treecol label="Calendar" id="col-calendar-Calendar" flex="1"/>
+      <treecol id="col-calendar-Checkbox" cycler="true" fixed="true" />
+      <treecol id="col-calendar-Calendar" label="Calendar" flex="1"/>
     </treecols>
     <treechildren>
     </treechildren>

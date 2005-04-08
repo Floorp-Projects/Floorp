@@ -47,47 +47,47 @@ const kCalICalendar = Components.interfaces.calICalendar;
 
 const kCalEventContractID = "@mozilla.org/calendar/event;1";
 const kCalIEvent = Components.interfaces.calIEvent;
-const CalEvent = new Components.Constructor(kCalEventContractID, kCalIEvent);
+var CalEvent;
 
 const kCalTodoContractID = "@mozilla.org/calendar/todo;1";
 const kCalITodo = Components.interfaces.calITodo;
-const CalTodo = new Components.Constructor(kCalTodoContractID, kCalITodo);
+var CalTodo;
 
 const kCalDateTimeContractID = "@mozilla.org/calendar/datetime;1";
 const kCalIDateTime = Components.interfaces.calIDateTime;
-const CalDateTime = new Components.Constructor(kCalDateTimeContractID, kCalIDateTime);
+var CalDateTime;
 
 const kCalAttendeeContractID = "@mozilla.org/calendar/attendee;1";
 const kCalIAttendee = Components.interfaces.calIAttendee;
-const CalAttendee = new Components.Constructor(kCalAttendeeContractID, kCalIAttendee);
+var CalAttendee;
 
 const kCalItemOccurrenceContractID = "@mozilla.org/calendar/item-occurrence;1";
 const kCalIItemOccurrence = Components.interfaces.calIItemOccurrence;
-const CalItemOccurrence = new Components.Constructor(kCalItemOccurrenceContractID, kCalIItemOccurrence);
+var CalItemOccurrence;
 
 const kCalRecurrenceInfoContractID = "@mozilla.org/calendar/recurrence-info;1";
 const kCalIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
-const CalRecurrenceInfo = new Components.Constructor(kCalRecurrenceInfoContractID, kCalIRecurrenceInfo);
+var CalRecurrenceInfo;
 
 const kCalRecurrenceRuleContractID = "@mozilla.org/calendar/recurrence-rule;1";
 const kCalIRecurrenceRule = Components.interfaces.calIRecurrenceRule;
-const CalRecurrenceRule = new Components.Constructor(kCalRecurrenceRuleContractID, kCalIRecurrenceRule);
+var CalRecurrenceRule;
 
 const kCalRecurrenceDateSetContractID = "@mozilla.org/calendar/recurrence-date-set;1";
 const kCalIRecurrenceDateSet = Components.interfaces.calIRecurrenceDateSet;
-const CalRecurrenceDateSet = new Components.Constructor(kCalRecurrenceDateSetContractID, kCalIRecurrenceDateSet);
+var CalRecurrenceDateSet;
 
 const kCalRecurrenceDateContractID = "@mozilla.org/calendar/recurrence-date;1";
 const kCalIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
-const CalRecurrenceDate = new Components.Constructor(kCalRecurrenceDateContractID, kCalIRecurrenceDate);
+var CalRecurrenceDate;
 
 const kMozStorageStatementWrapperContractID = "@mozilla.org/storage/statement-wrapper;1";
 const kMozStorageStatementWrapperIID = Components.interfaces.mozIStorageStatementWrapper;
-if (kMozStorageStatementWrapperIID) {
-    const MozStorageStatementWrapper = new Components.Constructor(kMozStorageStatementWrapperContractID, kMozStorageStatementWrapperIID);
- } else {
+var MozStorageStatementWrapper;
+
+if (!kMozStorageStatementWrapperIID) {
     dump("*** mozStorage not available, calendar/storage provider will not function\n");
- }
+}
 
 const CAL_ITEM_TYPE_EVENT = 0;
 const CAL_ITEM_TYPE_TODO = 1;
@@ -98,6 +98,19 @@ const CAL_ITEM_FLAG_HAS_ATTENDEES = 2;
 const CAL_ITEM_FLAG_HAS_PROPERTIES = 4;
 const CAL_ITEM_FLAG_EVENT_ALLDAY = 8;
 const CAL_ITEM_FLAG_HAS_RECURRENCE = 16;
+
+function initCalStorageCalendarComponent() {
+    CalEvent = new Components.Constructor(kCalEventContractID, kCalIEvent);
+    CalTodo = new Components.Constructor(kCalTodoContractID, kCalITodo);
+    CalDateTime = new Components.Constructor(kCalDateTimeContractID, kCalIDateTime);
+    CalAttendee = new Components.Constructor(kCalAttendeeContractID, kCalIAttendee);
+    CalItemOccurrence = new Components.Constructor(kCalItemOccurrenceContractID, kCalIItemOccurrence);
+    CalRecurrenceInfo = new Components.Constructor(kCalRecurrenceInfoContractID, kCalIRecurrenceInfo);
+    CalRecurrenceRule = new Components.Constructor(kCalRecurrenceRuleContractID, kCalIRecurrenceRule);
+    CalRecurrenceDateSet = new Components.Constructor(kCalRecurrenceDateSetContractID, kCalIRecurrenceDateSet);
+    CalRecurrenceDate = new Components.Constructor(kCalRecurrenceDateContractID, kCalIRecurrenceDate);
+    MozStorageStatementWrapper = new Components.Constructor(kMozStorageStatementWrapperContractID, kMozStorageStatementWrapperIID);
+}
 
 //
 // Storage helpers
@@ -1162,6 +1175,10 @@ var calStorageCalendarModule = {
 
         if (!kStorageServiceIID)
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
+
+        if (!CalEvent) {
+            initCalStorageCalendarComponent();
+        }
 
         return this.mFactory;
     },

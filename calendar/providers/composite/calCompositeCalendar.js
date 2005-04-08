@@ -76,8 +76,8 @@ calCompositeCalendar.prototype = {
 
     addCalendar: function (aCalendar) {
         // check if the calendar already exists
-        for (cal in this.mCalendars) {
-            if (cal.uri == aCalendar.uri) {
+        for each (cal in this.mCalendars) {
+            if (aCalendar.uri.equals(cal.uri)) {
                 // throw exception if calendar already exists?
                 return;
             }
@@ -97,8 +97,8 @@ calCompositeCalendar.prototype = {
     removeCalendar: function (aServer) {
         var newCalendars = Array();
         var calToRemove = null;
-        for (cal in this.mCalendars) {
-            if (cal.uri != aServer)
+        for each (cal in this.mCalendars) {
+            if (!aServer.equals(cal.uri))
                 newCalendars.push(cal);
             else
                 calToRemove = cal;
@@ -109,8 +109,8 @@ calCompositeCalendar.prototype = {
     },
 
     getCalendar: function (aServer) {
-        for (cal in this.mCalendars) {
-            if (cal.uri == aServer)
+        for each (cal in this.mCalendars) {
+            if (aServer.equals(cal.uri))
                 return cal;
         }
 
@@ -157,15 +157,15 @@ calCompositeCalendar.prototype = {
         const calICompositeObserver = Components.interfaces.calICompositeObserver;
         if (aObserver instanceof calICompositeObserver) {
             var compobs = aObserver.QueryInterface (calICompositeObserver);
-            for (var i = 0; i < this.mCompositeObservers.length; i++) {
-                if (this.mCompositeObservers[i] == aObserver)
+            for each (obs in this.mCompositeObservers) {
+                if (obs == aObserver)
                     return;
             }
             this.mCompositeObservers.push(compobs);
         }
 
-        for (cal in this.mCalendars) {
-            this.mCalendars[cal].addObserver(aObserver, aItemFilter);
+        for each (cal in this.mCalendars) {
+            cal.addObserver(aObserver, aItemFilter);
         }
     },
 
@@ -175,15 +175,15 @@ calCompositeCalendar.prototype = {
         var compobs = aObserver.QueryInterface (calICompositeObserver);
         if (compobs) {
             var newCompObs = Array ();
-            for (var i = 0; i < this.mCompositeObservers.length; i++) {
-                if (this.mCompositeObservers[i] != compobs)
+            for each (obs in this.mCompositeObservers) {
+                if (obs != compobs)
                     newCompObs.push(this.mCompositeObservers[i]);
             }
             this.mCompositeObservers = newCompObs;
         }
 
-        for (cal in this.mCalendars) {
-            this.mCalendars[cal].removeObserver(aObserver);
+        for each (cal in this.mCalendars) {
+            cal.removeObserver(aObserver);
         }
     },
 
@@ -215,7 +215,7 @@ calCompositeCalendar.prototype = {
     // void getItem( in string aId, in calIOperationListener aListener );
     getItem: function (aId, aListener) {
         var cmpListener = new calCompositeGetListenerHelper(this.mCalendars.length, aListener);
-        for (cal in this.mCalendars) {
+        for each (cal in this.mCalendars) {
             cal.getItem (aId, cmpListener);
         }
     },
@@ -234,17 +234,17 @@ calCompositeCalendar.prototype = {
     // observer helpers
     //
     observeCalendarAdded: function (aCalendar) {
-        for (obs in this.mCompositeObservers)
+        for each (obs in this.mCompositeObservers)
             obs.onCalendarAdded (aCalendar);
     },
 
     observeCalendarRemoved: function (aCalendar) {
-        for (obs in this.mCompositeObservers)
+        for each (obs in this.mCompositeObservers)
             obs.onCalendarRemoved (aCalendar);
     },
 
     observeDefaultCalendarChanged: function (aCalendar) {
-        for (obs in this.mCompositeObservers)
+        for each (obs in this.mCompositeObservers)
             obs.onDefaultCalendarChanged (aCalendar);
     }
 };

@@ -171,9 +171,15 @@ calCalendarManager.prototype = {
         //dump("adding [" + this.mDB.lastInsertRowID + "]\n");
         //this.mCache[this.mDB.lastInsertRowID] = calendar;
         this.mCache[this.findCalendarID(calendar)] = calendar;
+
+        for each (obs in this.mObservers)
+            obs.onCalendarRegistered(calendar);
     },
 
     unregisterCalendar: function(calendar) {
+        for each (obs in this.mObservers)
+            obs.onCalendarUnregistering(calendar);
+
         var pp = this.mUnregisterCalendar.params;
         pp.id = this.findCalendarID(calendar);
         this.mUnregisterCalendar.step();
@@ -184,6 +190,8 @@ calCalendarManager.prototype = {
         /* check to see if calendar is unregistered first... */
         /* delete the calendar for good */
 
+        for each (obs in this.mObservers)
+            obs.onCalendarDeleting(calendar);
     },
 
     getCalendars: function(count) {
@@ -239,14 +247,41 @@ calCalendarManager.prototype = {
         this.mInsertPref.reset();
 
         this.mDB.commitTransaction();
+
+        for each (obs in this.mObservers)
+            obs.onCalendarPrefSet(calendar, name, value);
     },
 
     deleteCalendarPref: function(calendar, name) {
+        for each (obs in this.mObservers)
+            obs.onCalendarPrefDeleting(calendar, name);
+
         var calendarID = this.findCalendarID(calendar);
 
         var pp = this.mDeletePref.params;
         pp.calendar = calendarID;
         this.mDeletePref.step();
         this.mDeletePref.reset();
+    },
+
+    mObservers: Array(),
+    addObserver: function(aObserver) {
+        for each (obs in this.mObservers) {
+            if (obs == aObserver)
+                return;
+        }
+
+        this.mObservers.push(aObserver);
+    },
+
+    removeObserver: function(aObserver) {
+        var newObs = Array();
+
+        for each (obs in this.mObservers) {
+            if (obs != aObserver)
+                newObs.push(obs);
+        }
+
+        this.mObservers = newObs;
     }
 };
