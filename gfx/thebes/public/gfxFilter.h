@@ -35,12 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFXFILTER_H
-#define GFXFILTER_H
+#ifndef _GFX_FILTER_H
+#define _GFX_FILTER_H
+
+#include "gfxTypes.h"
 
 class gfxFilter {
-    static gfxFilter* CreateOpacityFilter(double alpha);
+    static gfxFilter* CreateOpacityFilter(gfxFloat alpha);
     // CreateGaussianFilter, etc
 };
 
-#endif /* GFXFILTER_H */
+#endif /* _GFX_FILTER_H */

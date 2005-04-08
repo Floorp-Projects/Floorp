@@ -35,16 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFXRECT_H
-#define GFXRECT_H
+#ifndef _GFX_RECT_H
+#define _GFX_RECT_H
+
+#include "gfxTypes.h"
 
 struct gfxRect {
-    double x, y, width, height;
+    gfxFloat x, y, width, height;
 
     gfxRect() {}
     gfxRect(const gfxRect& s) : x(s.x), y(s.y), width(s.width), height(s.height) {}
-    gfxRect(double _x, double _y, double _width, double _height) : x(_x), y(_y),
-                                                                   width(_width), height(_height) {}
+    gfxRect(gfxFloat _x, gfxFloat _y, gfxFloat _width, gfxFloat _height) :
+        x(_x), y(_y), width(_width), height(_height) {}
 
     int operator==(const gfxRect& s) const {
         return ((x == s.x) && (y == s.y) && (width == s.width) && (height == s.height));
@@ -56,4 +58,4 @@ struct gfxRect {
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 };
 
-#endif /* GFXRECT_H */
+#endif /* _GFX_RECT_H */

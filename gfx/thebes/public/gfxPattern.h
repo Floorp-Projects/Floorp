@@ -35,14 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef PATTERN_H
-#define PATTERN_H
+#ifndef _GFX_PATTERN_H
+#define _GFX_PATTERN_H
 
 #include <cairo.h>
 
 #include "gfxColor.h"
 #include "gfxASurface.h"
 #include "gfxMatrix.h"
+#include "gfxTypes.h"
 
 class gfxPattern {
 public:
@@ -51,12 +52,12 @@ public:
         mPattern = cairo_pattern_create_for_surface(surface.CairoSurface());
     }
     // linear
-    gfxPattern(double x0, double y0, double x1, double y1) {
+    gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1) {
         mPattern = cairo_pattern_create_linear(x0, y0, x1, y1);
     }
     // radial
-    gfxPattern(double cx0, double cy0, double radius0,
-               double cx1, double cy1, double radius1) {
+    gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
+               gfxFloat cx1, gfxFloat cy1, gfxFloat radius1) {
         mPattern = cairo_pattern_create_radial(cx0, cy0, radius0,
                                                cx1, cy1, radius1);
     }
@@ -68,7 +69,7 @@ public:
         return mPattern;
     }
 
-    void AddColorStop(double offset, const gfxRGBA& c) {
+    void AddColorStop(gfxFloat offset, const gfxRGBA& c) {
         cairo_pattern_add_color_stop(mPattern, offset, c.r, c.g, c.b, c.a);
     }
 
@@ -107,4 +108,4 @@ private:
     cairo_pattern_t *mPattern;
 };
 
-#endif /* PATTERN_H */
+#endif /* _GFX_PATTERN_H */

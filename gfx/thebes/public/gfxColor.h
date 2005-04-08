@@ -35,17 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFXCOLOR_H
-#define GFXCOLOR_H
+#ifndef _GFX_COLOR_H
+#define _GFX_COLOR_H
 
 #include "nsPrintfCString.h"
 
+#include "gfxTypes.h"
+
 struct gfxRGBA {
-    double r, g, b, a;
+    gfxFloat r, g, b, a;
 
     gfxRGBA() { }
     gfxRGBA(const gfxRGBA& c) : r(c.r), g(c.g), b(c.b), a(c.a) {}
-    gfxRGBA(double _r, double _g, double _b, double _a=1.0) : r(_r), g(_g), b(_b), a(_a) {}
+    gfxRGBA(gfxFloat _r, gfxFloat _g, gfxFloat _b, gfxFloat _a=1.0) : r(_r), g(_g), b(_b), a(_a) {}
     gfxRGBA(uint32_t c) {
         a = (c & 0xff) / 255.0;
         r = ((c >> 8) & 0xff) / 255.0;
@@ -75,4 +77,4 @@ struct gfxRGBA {
 
 };
 
-#endif /* GFXCOLOR_H */
+#endif /* _GFX_COLOR_H */
