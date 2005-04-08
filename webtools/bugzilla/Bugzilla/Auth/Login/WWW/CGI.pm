@@ -148,8 +148,6 @@ sub login {
         my $template = Bugzilla->template;
         $template->process("account/auth/login.html.tmpl",
                            { 'target' => $cgi->url(-relative=>1),
-                             'form' => \%::FORM,
-                             'mform' => \%::MFORM,
                              'caneditaccount' => Bugzilla::Auth->can_edit('new'),
                              'has_db' => Bugzilla::Auth->has_db,
                            }
