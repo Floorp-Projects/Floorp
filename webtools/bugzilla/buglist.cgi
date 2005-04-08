@@ -69,7 +69,7 @@ if (length($::buffer) == 0) {
 ################################################################################
 
 # Whether or not the user wants to change multiple bugs.
-my $dotweak = $::FORM{'tweak'} ? 1 : 0;
+my $dotweak = $cgi->param('tweak') ? 1 : 0;
 
 # Log the user in
 if ($dotweak) {
@@ -85,9 +85,10 @@ else {
 }
 
 # Hack to support legacy applications that think the RDF ctype is at format=rdf.
-if ($::FORM{'format'} && $::FORM{'format'} eq "rdf" && !$::FORM{'ctype'}) { 
-    $::FORM{'ctype'} = "rdf";
-    delete($::FORM{'format'});
+if (defined $cgi->param('format') && $cgi->param('format') eq "rdf"
+    && !defined $cgi->param('ctype')) {
+    $cgi->param('ctype', "rdf");
+    $cgi->delete('format');
 }
 
 # The js ctype presents a security risk; a malicious site could use it  
@@ -96,14 +97,15 @@ if ($::FORM{'format'} && $::FORM{'format'} eq "rdf" && !$::FORM{'ctype'}) {
 #
 # Note that if and when this call clears cookies or has other persistent 
 # effects, we'll need to do this another way instead.
-if ((exists $::FORM{'ctype'}) && ($::FORM{'ctype'} eq "js")) {
+if ((defined $cgi->param('ctype')) && ($cgi->param('ctype') eq "js")) {
     Bugzilla->logout_request();
 }
 
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
-my $format = GetFormat("list/list", $::FORM{'format'}, $::FORM{'ctype'});
+my $format = GetFormat("list/list", scalar $cgi->param('format'),
+                       scalar $cgi->param('ctype'));
 
 # Use server push to display a "Please wait..." message for the user while
 # executing their query if their browser supports it and they are viewing
@@ -120,10 +122,10 @@ my $serverpush =
       && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ 
         && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/
           && $ENV{'HTTP_USER_AGENT'} !~ /WebKit/
-            && !defined($::FORM{'serverpush'})
-              || $::FORM{'serverpush'};
+            && !defined($cgi->param('serverpush'))
+              || $cgi->param('serverpush');
 
-my $order = $::FORM{'order'} || "";
+my $order = $cgi->param('order') || "";
 my $order_from_cookie = 0;  # True if $order set using the LASTORDER cookie
 
 # The params object to use for the actual query itself
@@ -131,7 +133,7 @@ my $params;
 
 # If the user is retrieving the last bug list they looked at, hack the buffer
 # storing the query string so that it looks like a query retrieving those bugs.
-if ($::FORM{'regetlastlist'}) {
+if (defined $cgi->param('regetlastlist')) {
     $cgi->cookie('BUGLIST') || ThrowUserError("missing_cookie");
 
     $order = "reuse last sort" unless $order;
@@ -159,10 +161,10 @@ if ($::buffer =~ /&cmd-/) {
 # we'll remove the relevance column from the lists of columns to display
 # and order by, since relevance only exists when doing a fulltext search.
 my $fulltext = 0;
-if ($::FORM{'content'}) { $fulltext = 1 }
-my @charts = map(/^field(\d-\d-\d)$/ ? $1 : (), keys %::FORM);
+if (defined $cgi->param('content')) { $fulltext = 1 }
+my @charts = map(/^field(\d-\d-\d)$/ ? $1 : (), $cgi->param());
 foreach my $chart (@charts) {
-    if ($::FORM{"field$chart"} eq 'content' && $::FORM{"value$chart"}) {
+    if ($cgi->param("field$chart") eq 'content' && $cgi->param("value$chart")) {
         $fulltext = 1;
         last;
     }
@@ -324,14 +326,14 @@ sub GetGroupsByUserId {
 # Command Execution
 ################################################################################
 
-$::FORM{'cmdtype'} ||= "";
-$::FORM{'remaction'} ||= "";
+$cgi->param('cmdtype', "") if !defined $cgi->param('cmdtype');
+$cgi->param('remaction', "") if !defined $cgi->param('remaction');
 
 # Backwards-compatibility - the old interface had cmdtype="runnamed" to run
 # a named command, and we can't break this because it's in bookmarks.
-if ($::FORM{'cmdtype'} eq "runnamed") {  
-    $::FORM{'cmdtype'} = "dorem"; 
-    $::FORM{'remaction'} = "run";
+if ($cgi->param('cmdtype') eq "runnamed") {  
+    $cgi->param('cmdtype', "dorem");
+    $cgi->param('remaction', "run");
 }
 
 # Now we're going to be running, so ensure that the params object is set up,
@@ -349,36 +351,36 @@ $params ||= new Bugzilla::CGI($cgi);
 my @time = localtime(time());
 my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
 my $filename = "bugs-$date.$format->{extension}";
-if ($::FORM{'cmdtype'} eq "dorem" && $::FORM{'remaction'} =~ /^run/) {
-    $filename = "$::FORM{'namedcmd'}-$date.$format->{extension}";
+if ($cgi->param('cmdtype') eq "dorem" && $cgi->param('remaction') =~ /^run/) {
+    $filename = $cgi->param('namedcmd') . "-$date.$format->{extension}";
     # Remove white-space from the filename so the user cannot tamper
     # with the HTTP headers.
     $filename =~ s/\s/_/g;
 }
 
 # Take appropriate action based on user's request.
-if ($::FORM{'cmdtype'} eq "dorem") {  
-    if ($::FORM{'remaction'} eq "run") {
-        $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
-        $vars->{'searchname'} = $::FORM{'namedcmd'};
+if ($cgi->param('cmdtype') eq "dorem") {  
+    if ($cgi->param('remaction') eq "run") {
+        $::buffer = LookupNamedQuery(scalar $cgi->param("namedcmd"));
+        $vars->{'searchname'} = $cgi->param('namedcmd');
         $vars->{'searchtype'} = "saved";
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
 
     }
-    elsif ($::FORM{'remaction'} eq "runseries") {
-        $::buffer = LookupSeries($::FORM{"series_id"});
-        $vars->{'searchname'} = $::FORM{'namedcmd'};
+    elsif ($cgi->param('remaction') eq "runseries") {
+        $::buffer = LookupSeries(scalar $cgi->param("series_id"));
+        $vars->{'searchname'} = $cgi->param('namedcmd');
         $vars->{'searchtype'} = "series";
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
     }
-    elsif ($::FORM{'remaction'} eq "forget") {
+    elsif ($cgi->param('remaction') eq "forget") {
         Bugzilla->login(LOGIN_REQUIRED);
         # Copy the name into a variable, so that we can trick_taint it for
         # the DB. We know it's safe, because we're using placeholders in 
         # the SQL, and the SQL is only a DELETE.
-        my $qname = $::FORM{'namedcmd'};
+        my $qname = $cgi->param('namedcmd');
         trick_taint($qname);
         $dbh->do("DELETE FROM namedqueries"
             . " WHERE userid = ? AND name = ?"
@@ -390,27 +392,28 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         print $cgi->header();
         # Generate and return the UI (HTML page) from the appropriate template.
         $vars->{'message'} = "buglist_query_gone";
-        $vars->{'namedcmd'} = $::FORM{'namedcmd'};
+        $vars->{'namedcmd'} = $cgi->param('namedcmd');
         $vars->{'url'} = "query.cgi";
         $template->process("global/message.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
     }
 }
-elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
-    if ($::FORM{'remtype'} eq "asdefault") {
+elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
+    if ($cgi->param('remtype') eq "asdefault") {
         Bugzilla->login(LOGIN_REQUIRED);
         InsertNamedQuery(Bugzilla->user->id, DEFAULT_QUERY_NAME, $::buffer);
         $vars->{'message'} = "buglist_new_default_query";
     }
-    elsif ($::FORM{'remtype'} eq "asnamed") {
+    elsif ($cgi->param('remtype') eq "asnamed") {
         Bugzilla->login(LOGIN_REQUIRED);
         my $userid = Bugzilla->user->id;
-        my $query_name = $::FORM{'newqueryname'};
+        my $query_name = $cgi->param('newqueryname');
 
         my $tofooter = 1;
         my $existed_before = InsertNamedQuery($userid, $query_name, 
-                                              $::FORM{'newquery'}, $tofooter);
+                                              scalar $cgi->param('newquery'),
+                                              $tofooter);
         if ($existed_before) {
             $vars->{'message'} = "buglist_updated_named_query";
         }
@@ -762,8 +765,11 @@ my $search = new Bugzilla::Search('fields' => \@selectnames,
                                   'order' => \@orderstrings);
 my $query = $search->getSQL();
 
-if ($::FORM{'limit'} && detaint_natural($::FORM{'limit'})) {
-    $query .= " " . $dbh->sql_limit($::FORM{'limit'});
+if (defined $cgi->param('limit')) {
+    my $limit = $cgi->param('limit');
+    if (detaint_natural($limit)) {
+        $query .= " " . $dbh->sql_limit($limit);
+    }
 }
 elsif ($fulltext) {
     $query .= " " . $dbh->sql_limit(200);
@@ -774,7 +780,7 @@ elsif ($fulltext) {
 # Query Execution
 ################################################################################
 
-if ($::FORM{'debug'}) {
+if ($cgi->param('debug')) {
     $vars->{'debug'} = 1;
     $vars->{'query'} = $query;
 }
