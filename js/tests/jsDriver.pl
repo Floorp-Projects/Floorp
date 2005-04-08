@@ -346,8 +346,9 @@ sub write_results {
            "# $tests_completed of " . ($#test_list + 1) .
            " test(s) were completed, " .
            "$failures_reported failures reported.\n" .
+	   "Engine command line: $engine_command<br>\n" .
            join ("\n", @failed_tests) .
-           "</pre>\n" .
+           "\n</pre>\n" .
            "[ <a href='#tippy_top'>Top of Page</a> | " .
            "<a href='#retest_list'>Top of Retest List</a> ]<br>\n");
     } else {
@@ -1238,7 +1239,6 @@ sub report_failure {
     }
 
     $message =~ s/\n/<br>\n/g;
-    $html .= "<a name='failure$failures_reported'></a>";
 
     if ($bug_number) {
         my $bug_url = ($bug_number =~ /^\d+$/) ? "$opt_bug_url$bug_number" : $bug_number;
@@ -1258,14 +1258,8 @@ sub report_failure {
     }
 
     $html .= " [ ";
-    if ($failures_reported > 1) {
-        $html .= "<a href='#failure" . ($failures_reported - 1) . "'>" .
-          "Previous Failure</a> | ";
-    }
 
-    $html .= "<a href='#failure" . ($failures_reported + 1) . "'>" .
-      "Next Failure</a> | " .
-        "<a href='#tippy_top'>Top of Page</a> ]<br>\n" .
+    $html .= "<a href='#tippy_top'>Top of Page</a> ]<br>\n" .
           "<tt>$message</tt><br>\n";
 
     @failed_tests[$#failed_tests + 1] = $test;
