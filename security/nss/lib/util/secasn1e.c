@@ -38,7 +38,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.18 2004/07/13 06:02:54 nelsonb%netscape.com Exp $
+ * $Id: secasn1e.c,v 1.19 2005/04/09 05:06:34 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "secasn1.h"
@@ -193,6 +193,7 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
     unsigned char tag_modifiers;
     unsigned long encode_kind, under_kind;
     unsigned long tag_number;
+    PRBool isInline = PR_FALSE;
 
 
     encode_kind = state->theTemplate->kind;
@@ -222,7 +223,7 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
     } else if ((encode_kind & (SEC_ASN1_POINTER | SEC_ASN1_INLINE)) || 
         (!universal && !isExplicit)) {
 	const SEC_ASN1Template *subt;
-	void *src;
+	void *src = NULL;
 
 	PORT_Assert ((encode_kind & (SEC_ASN1_ANY | SEC_ASN1_SKIP)) == 0);
 
@@ -231,6 +232,7 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 	if (encode_kind & SEC_ASN1_POINTER) {
 	    src = *(void **)state->src;
 	    state->place = afterPointer;
+
 	    if (src == NULL) {
 		/*
 		 * If this is optional, but NULL, then the field does
@@ -249,8 +251,9 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 	    src = state->src;
 	    if (encode_kind & SEC_ASN1_INLINE) {
 		/* check that there are no extraneous bits */
-		PORT_Assert (encode_kind == SEC_ASN1_INLINE && !optional);
+		/* PORT_Assert (encode_kind == SEC_ASN1_INLINE && !optional); */
 		state->place = afterInline;
+		isInline = PR_TRUE;
 	    } else {
 		/*
 		 * Save the tag modifiers and tag number here before moving
@@ -268,6 +271,22 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 	}
 
 	subt = SEC_ASN1GetSubtemplate (state->theTemplate, state->src, PR_TRUE);
+	if (isInline && optional) {
+	    /* we only handle a very limited set of optional inline cases at
+	       this time */
+	    if (PR_FALSE != SEC_ASN1IsTemplateSimple(subt)) {
+		/* we now know that the target is a SECItem*, so we can check
+		   if the source contains one */
+		SECItem* target = (SECItem*)state->src;
+		if (!target || !target->data || !target->len) {
+		    /* no valid data to encode subtemplate */
+		    return state;
+		}
+	    } else {
+		PORT_Assert(0); /* complex templates are not handled as
+				   inline optional */
+	    }
+	}
 	state = sec_asn1e_push_state (state->top, subt, src, PR_FALSE);
 	if (state == NULL)
 	    return state;
@@ -552,7 +571,21 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	    }
 	} else if (encode_kind & SEC_ASN1_INLINE) {
 	    /* check that there are no extraneous bits */
-	    PORT_Assert (encode_kind == SEC_ASN1_INLINE && !optional);
+	    if (optional) {
+		if (PR_FALSE != SEC_ASN1IsTemplateSimple(theTemplate)) {
+		    /* we now know that the target is a SECItem*, so we can check
+		       if the source contains one */
+		    SECItem* target = (SECItem*)src;
+		    if (!target || !target->data || !target->len) {
+			/* no valid data to encode subtemplate */
+			*noheaderp = PR_TRUE;
+			return 0;
+		    }
+		} else {
+		    PORT_Assert(0); /* complex templates not handled as inline
+                                       optional */
+		}
+	    }
 	}
 
 	src = (char *)src + theTemplate->offset;

@@ -37,7 +37,7 @@
 /*
  * Utility routines to complement the ASN.1 encoding and decoding functions.
  *
- * $Id: secasn1u.c,v 1.3 2004/04/25 15:03:18 gerv%gerv.net Exp $
+ * $Id: secasn1u.c,v 1.4 2005/04/09 05:06:34 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "secasn1.h"
@@ -107,3 +107,25 @@ SEC_ASN1GetSubtemplate (const SEC_ASN1Template *theTemplate, void *thing,
     }
     return subt;
 }
+
+PRBool SEC_ASN1IsTemplateSimple(const SEC_ASN1Template *theTemplate)
+{
+    if (!theTemplate) {
+	return PR_TRUE; /* it doesn't get any simpler than NULL */
+    }
+    /* only templates made of one primitive type or a choice of primitive
+       types are considered simple */
+    if (! (theTemplate->kind & (~SEC_ASN1_TAGNUM_MASK))) {
+	return PR_TRUE; /* primitive type */
+    }
+    if (!theTemplate->kind & SEC_ASN1_CHOICE) {
+	return PR_FALSE; /* no choice means not simple */
+    }
+    while (++theTemplate && theTemplate->kind) {
+	if (theTemplate->kind & (~SEC_ASN1_TAGNUM_MASK)) {
+	    return PR_FALSE; /* complex type */
+	}
+    }
+    return PR_TRUE; /* choice of primitive types */
+}
+
