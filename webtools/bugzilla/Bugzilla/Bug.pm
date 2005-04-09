@@ -761,7 +761,11 @@ sub ValidateTime {
 }
 
 sub GetComments {
-    my ($id) = (@_);
+    my ($id, $comment_sort_order) = (@_);
+    $comment_sort_order = $comment_sort_order ||
+        Bugzilla->user->settings->{'comment_sort_order'}->{'value'};
+
+    my $sort_order = ($comment_sort_order eq "oldest_to_newest") ? 'asc' : 'desc';
     my $dbh = Bugzilla->dbh;
     my @comments;
     my $sth = $dbh->prepare(
@@ -774,7 +778,7 @@ sub GetComments {
              FROM    longdescs, profiles
             WHERE    profiles.userid = longdescs.who
               AND    longdescs.bug_id = ?
-            ORDER BY longdescs.bug_when");
+            ORDER BY longdescs.bug_when $sort_order");
     $sth->execute($id);
 
     while (my $comment_ref = $sth->fetchrow_hashref()) {
@@ -788,6 +792,10 @@ sub GetComments {
         $comment{'name'} = $comment{'name'} || $comment{'email'};
 
         push (@comments, \%comment);
+    }
+   
+    if ($comment_sort_order eq "newest_to_oldest_desc_first") {
+        unshift(@comments, pop @comments);
     }
 
     return \@comments;

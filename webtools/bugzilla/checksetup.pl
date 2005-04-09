@@ -3953,6 +3953,13 @@ if ($dbh->bz_get_field_def('quips', 'approved')->[1] eq 'tinyint(1)') {
                                'tinyint not null default 1');
 }
 
+# 2005-03-10 travis@sedsystems.ca -- Bug 199048
+add_setting ("comment_sort_order", {"oldest_to_newest" => 1,
+                                    "newest_to_oldest" => 2,
+                                    "newest_to_oldest_desc_first" => 3}, 
+             "oldest_to_newest" );
+
+
 } # END LEGACY CHECKS
 
 # If you had to change the --TABLE-- definition in any way, then add your

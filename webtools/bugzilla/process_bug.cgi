@@ -1334,7 +1334,10 @@ foreach my $id (@idlist) {
                                                  $cgi->param('delta_ts'));
 
         $vars->{'start_at'} = $cgi->param('longdesclength');
-        $vars->{'comments'} = Bugzilla::Bug::GetComments($id);
+
+        # Always sort midair collision comments oldest to newest,
+        # regardless of the user's personal preference.
+        $vars->{'comments'} = Bugzilla::Bug::GetComments($id, "oldest_to_newest");
 
         $cgi->param('delta_ts', $delta_ts);
         

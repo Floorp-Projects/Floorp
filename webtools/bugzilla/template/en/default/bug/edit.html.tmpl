@@ -566,19 +566,6 @@
 [%# *** Additional Comments *** %]
 
 <hr>
-<table>
-  <tr>
-    <td align="left">
-      <b><a name="c0" href="#c0">Description</a>:</b>&nbsp;&nbsp;<script 
-        type="text/javascript"><!-- 
-          addReplyLink(0);
-        //--></script>
-    </td>
-    <td align="right" width="100%">
-      Opened: [% bug.creation_ts FILTER time %]
-    </td>
-  </tr>
-</table>
 
 [% PROCESS bug/comments.html.tmpl
    comments = bug.longdescs

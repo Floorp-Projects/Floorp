@@ -18,20 +18,47 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Maxwell Kanat-Alexander <mkanat@kerio.com>
+  #                 Shane H. W. Travis <travis@sedsystems.ca>
   #%]
 
+[% PROCESS bug/time.html.tmpl %]
+
 [% DEFAULT start_at = 0 mode = "show" %]
-[% count = 0 %]
 [% isinsider = Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
+[% sort_order = user.settings.comment_sort_order.value %]
+
+[%# NOTE: (start_at > 0) means we came here from a midair collision,
+  #       in which case we don't care what the user's preference is.
+ %]
+[% IF (start_at > 0) %]
+    [% sort_order = "oldest_to_newest" %]
+[% END %]
+
+
+[%# Set up the variables as needed, depending on the sort order %]
+[% IF sort_order == "oldest_to_newest" %]
+    [% count = 0 %]
+    [% description = 0 %]
+    [% increment = 1 %]
+[% ELSE %]
+    [% increment = -1 %]
+    [% IF sort_order == "newest_to_oldest" %]
+        [% count = comments.size - 1 %]
+        [% description = 0 %]
+    [% ELSIF sort_order == "newest_to_oldest_desc_first" %]
+        [% count = comments.size %]
+        [% description = comments.size %]
+    [% END %]
+[% END %]
+
+
 [% FOREACH comment = comments %]
   [% IF count >= start_at %]
     [% PROCESS a_comment %]
   [% END %]
   
-  [% count = count + 1 %]
+  [% count = count + increment %]
 [% END %]
-
-[% PROCESS bug/time.html.tmpl %]
 
 [%# Note: this template is used in multiple places; if you use this hook,
   # make sure you are aware of this fact.
@@ -46,7 +73,21 @@
   [% IF NOT comment.isprivate || isinsider %]
     <div [% "class=\"bz_private\" " IF comment.isprivate %]
          [% "class=\"bz_comment_hilite\" " IF marks.$count %]>
-      [% IF count > 0 %]
+      [% IF count == description %]
+        <table>
+          <tr>
+            <td align="left">
+              <b><a name="c0" href="#c0">Description</a>:</b>&nbsp;&nbsp;<script 
+                type="text/javascript"><!-- 
+                  addReplyLink(0);
+                //--></script>
+            </td>
+            <td align="left" width="30%">
+              Opened: [% bug.creation_ts FILTER time %]
+            </td>
+          </tr>
+        </table>
+      [% ELSE %]
         <br>
         <span class="bz_comment">
           ------- <i>Comment
