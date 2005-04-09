@@ -39,7 +39,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.12 2004/04/25 15:03:18 gerv%gerv.net Exp $
+ * $Id: secasn1.h,v 1.13 2005/04/09 05:06:34 julien.pierre.bugs%sun.com Exp $
  */
 
 #ifndef _SECASN1_H_
@@ -182,6 +182,11 @@ extern int SEC_ASN1EncodeLength(unsigned char *buf,int value);
 extern const SEC_ASN1Template *
 SEC_ASN1GetSubtemplate (const SEC_ASN1Template *inTemplate, void *thing,
 			PRBool encoding);
+
+/* whether the template is for a primitive type or a choice of
+ * primitive types
+ */
+extern PRBool SEC_ASN1IsTemplateSimple(const SEC_ASN1Template *theTemplate);
 
 /************************************************************************/
 
