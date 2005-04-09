@@ -380,7 +380,7 @@ own_GetClientAuthData(void *                       arg,
     return NSS_GetClientAuthData(arg, socket, caNames, pRetCert, pRetKey);
 }
 
-#if defined(WIN32)
+#if defined(WIN32) || defined(OS2)
 void
 thread_main(void * arg)
 {
@@ -389,6 +389,7 @@ thread_main(void * arg)
     int wc, rc;
     char buf[256];
 
+#ifdef WIN32
     {
 	/* Put stdin into O_BINARY mode 
 	** or else incoming \r\n's will become \n's.
@@ -401,6 +402,7 @@ thread_main(void * arg)
 	    /* plow ahead anyway */
 	}
     }
+#endif
 
     do {
 	rc = PR_Read(std_in, buf, sizeof buf);
@@ -771,8 +773,8 @@ int main(int argc, char **argv)
     npds                 = 2;
     std_out              = PR_GetSpecialFD(PR_StandardOutput);
 
-#if defined(WIN32)
-    /* PR_Poll cannot be used with stdin on Windows.  (sigh). 
+#if defined(WIN32) || defined(OS2)
+    /* PR_Poll cannot be used with stdin on Windows or OS/2.  (sigh). 
     ** But use of PR_Poll and non-blocking sockets is a major feature
     ** of this program.  So, we simulate a pollable stdin with a 
     ** TCP socket pair and a  thread that reads stdin and writes to 
