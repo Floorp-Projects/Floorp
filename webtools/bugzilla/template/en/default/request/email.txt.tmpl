@@ -29,12 +29,12 @@
                 '?' => "asked" } %]
 [% IF flag.status == '?' %]
    [% to_email = flag.requestee.email 
-                   IF flag.requestee.wants_mail(constants.EVT_FLAG_REQUESTED) %]
+                 IF flag.requestee.wants_mail([constants.EVT_FLAG_REQUESTED]) %]
    [% to_identity = flag.requestee.identity %]
    [% subject_status = "requested" %]
 [% ELSE %]
    [% to_email = flag.setter.email 
-                      IF flag.setter.wants_mail(constants.EVT_REQUESTED_FLAG) %]
+                    IF flag.setter.wants_mail([constants.EVT_REQUESTED_FLAG]) %]
    [% to_identity = flag.setter.identity _ "'s request" %]
    [% subject_status = statuses.${flag.status} %]
 [% END %]
