@@ -960,30 +960,9 @@ if (!-d "skins/custom") {
     mkdir "skins/custom", 0700;
 }
 
-# Whether or not the custom skin directory has been ignored (i.e. added to
-# skins/.cvsignore).
-sub customSkinsIgnored {
-    if (!-e "skins/.cvsignore") {
-        return 0;
-    }
-    else {
-        open CVSIGNORE, '<', "skins/.cvsignore";
-        while (<CVSIGNORE>) {
-            chomp;
-            if (/^custom$/) {
-                close CVSIGNORE;
-                return 1;
-            }
-        }
-        close CVSIGNORE;
-        return 0;
-    }
-}
-
-# If the custom skin directory hasn't been ignored, ignore it (i.e. add it to
-# skins/.cvsignore).
-if (!customSkinsIgnored()) {
+if (!-e "skins/.cvsignore") {
     open CVSIGNORE, '>>', "skins/.cvsignore";
+    print CVSIGNORE ".cvsignore\n";
     print CVSIGNORE "custom\n";
     close CVSIGNORE;
 }
