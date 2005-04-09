@@ -682,7 +682,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     nsCOMPtr<nsIDocument> document;
     nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
     if (content)
-      document = content->GetDocument();
+      document = content->GetOwnerDoc();
     else document = do_QueryInterface(mTarget);
     if (document)
       global = document->GetScriptGlobalObject();
@@ -1144,7 +1144,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
 
   if (content) {
     // Try to get context from doc
-    doc = content->GetDocument();
+    doc = content->GetOwnerDoc();
     nsIScriptGlobalObject *global;
 
     if (doc && (global = doc->GetScriptGlobalObject())) {
@@ -1452,7 +1452,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
         if (!doc) {
           nsCOMPtr<nsIContent> content = do_QueryInterface(aCurrentTarget);
           if (content)
-            doc = content->GetDocument();
+            doc = content->GetOwnerDoc();
         }
         if (doc) {
           nsIURI *uri = doc->GetDocumentURI();
