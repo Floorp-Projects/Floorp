@@ -111,7 +111,8 @@ my $component_id = get_component_id($product_id,
                                     scalar($cgi->param('component')));
 $component_id || ThrowUserError("require_component");
 
-if (!$cgi->param('short_desc') || trim($cgi->param('short_desc')) eq "") {
+if (!defined $cgi->param('short_desc')
+    || trim($cgi->param('short_desc')) eq "") {
     ThrowUserError("require_summary");
 }
 
@@ -163,7 +164,7 @@ if (Param("useqacontact")) {
 
 if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
     # Default to NEW if the user hasn't selected another status
-    if (!$cgi->param('bug_status')) {
+    if (!defined $cgi->param('bug_status')) {
         $cgi->param(-name => 'bug_status', -value => "NEW");
     }
 } else {
@@ -361,7 +362,6 @@ if (UserInGroup(Param("timetrackinggroup")) &&
 
 if ((UserInGroup(Param("timetrackinggroup"))) && ($cgi->param('deadline'))) {
     Bugzilla::Util::ValidateDate($cgi->param('deadline'), 'YYYY-MM-DD');
-    my $str = $cgi->param('deadline');
     $sql .= SqlQuote($cgi->param('deadline'));  
 } else {
     $sql .= "NULL";

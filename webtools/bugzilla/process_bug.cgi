@@ -260,7 +260,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
     && CheckonComment( "reassignbycomponent" ))
 {
     # Check to make sure they actually have the right to change the product
-    if (!CheckCanChangeField('product', $cgi->param('id'), $oldproduct,
+    if (!CheckCanChangeField('product', scalar $cgi->param('id'), $oldproduct,
                               $cgi->param('product'))) {
         $vars->{'oldvalue'} = $oldproduct;
         $vars->{'newvalue'} = $cgi->param('product');
@@ -614,7 +614,7 @@ sub DoComma {
 }
 
 sub DoConfirm {
-    if (CheckCanChangeField("canconfirm", $cgi->param('id'), 0, 1)) {
+    if (CheckCanChangeField("canconfirm", scalar $cgi->param('id'), 0, 1)) {
         DoComma();
         $::query .= "everconfirmed = 1";
     }
@@ -1301,8 +1301,7 @@ foreach my $id (@idlist) {
                       { product => $oldhash{'product'} });
     }
 
-    if (defined $cgi->param('product') 
-        && $cgi->param('product') ne $cgi->param('dontchange')
+    if ($cgi->param('product') ne $cgi->param('dontchange')
         && $cgi->param('product') ne $oldhash{'product'}
         && !CanEnterProduct($cgi->param('product'))) {
         ThrowUserError("entry_access_denied",
@@ -1494,9 +1493,7 @@ foreach my $id (@idlist) {
     }
     
     my $newproduct_id = $oldhash{'product_id'};
-    if ((defined $cgi->param('product'))
-        && ($cgi->param('product') ne $cgi->param('dontchange')))
-    {
+    if ($cgi->param('product') ne $cgi->param('dontchange')) {
         my $newproduct_id = get_product_id($cgi->param('product'));
     }
 
@@ -1648,8 +1645,7 @@ foreach my $id (@idlist) {
     # conditions under which these activities take place, more information
     # about which can be found in comments within the conditionals below.
     # Check if the user has changed the product to which the bug belongs;
-    if (defined $cgi->param('product')
-        && $cgi->param('product') ne $cgi->param('dontchange')
+    if ($cgi->param('product') ne $cgi->param('dontchange')
         && $cgi->param('product') ne $oldhash{'product'}
     ) {
         $newproduct_id = get_product_id($cgi->param('product'));

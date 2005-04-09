@@ -841,9 +841,6 @@ sub match_field {
                 $cgi->append(-name=>$field,
                              -values=>[@{$users}[0]->{'login'}]);
 
-                # XXX FORM compatilibity code, will be removed in bug 225818
-                $::FORM{$field} = join(" ", $cgi->param($field));
-
                 next;
             }
 
@@ -856,9 +853,6 @@ sub match_field {
 
                 $cgi->append(-name=>$field,
                              -values=>[@{$users}[0]->{'login'}]);
-
-                # XXX FORM compatilibity code, will be removed in bug 225818
-                $::FORM{$field} = join(" ", $cgi->param($field));
 
                 $need_confirm = 1 if &::Param('confirmuniqueusermatch');
 

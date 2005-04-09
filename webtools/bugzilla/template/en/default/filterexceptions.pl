@@ -417,10 +417,6 @@
   'linktext.$type',
 ],
 
-'bug/create/comment.txt.tmpl' => [
-  'form.comment', 
-],
-
 'bug/create/create.html.tmpl' => [
   'g.bit',
   'g.description',

@@ -401,18 +401,6 @@ use Bugzilla;
 # XXX - mod_perl - reset this between runs
 $::cgi = Bugzilla->cgi;
 
-# Set up stuff for compatibility with the old CGI.pl code
-# This code will be removed as soon as possible, in favour of
-# using the CGI.pm stuff directly
-
-# XXX - mod_perl - reset these between runs
-
-foreach my $name ($::cgi->param()) {
-    my @val = $::cgi->param($name);
-    $::FORM{$name} = join('', @val);
-    $::MFORM{$name} = \@val;
-}
-
 $::buffer = $::cgi->query_string();
 
 # This could be needed in any CGI, so we set it here.

@@ -62,9 +62,10 @@ Attachment [% attidsummary %]
 [%- END %]
 [%- FILTER bullet = wrap(80) %]
 
-[% IF form.comment.length > 0 %]
+[% USE Bugzilla %]
+[% IF Bugzilla.cgi.param("comment").length > 0 %]
 ------- Additional Comments from [% user.identity %]
-[%+ form.comment %]
+[%+ Bugzilla.cgi.param("comment") %]
 [% END %]
 
 [%- END %]
