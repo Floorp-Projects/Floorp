@@ -3769,6 +3769,7 @@ CK_RV NSC_CopyObject(CK_SESSION_HANDLE hSession,
     if (crv != CKR_OK) {
 	sftk_FreeObject(destObject);
 	sftk_FreeSession(session);
+        return crv;
     }
 
     crv = sftk_handleObject(destObject,session);
