@@ -149,11 +149,6 @@ DIRS    = \
                 console \
                 filepicker \
                 $(NULL)
-
-ifdef MOZ_ENABLE_XREMOTE
-DIRS		+= xremote
-endif
-
 endif
 
 include $(topsrcdir)/config/rules.mk
