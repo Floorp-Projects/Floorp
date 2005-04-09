@@ -3492,18 +3492,17 @@ Equals(JSContext *cx, JSXML *xml, jsval v, JSBool *bp)
     JSXML *vxml;
 
     if (JSVAL_IS_PRIMITIVE(v)) {
+        *bp = JS_FALSE;
         if (xml->xml_class == JSXML_CLASS_LIST) {
-            if (JSVAL_IS_VOID(v)) {
-                *bp = JS_TRUE;
-            } else if (xml->xml_kids.length == 1) {
+            if (xml->xml_kids.length == 1) {
                 vxml = XMLARRAY_MEMBER(&xml->xml_kids, 0, JSXML);
                 vobj = js_GetXMLObject(cx, vxml);
                 if (!vobj)
                     return JS_FALSE;
                 return js_XMLObjectOps.equality(cx, vobj, v, bp);
-            } else {
-                *bp = JS_FALSE;
             }
+            if (JSVAL_IS_VOID(v) && xml->xml_kids.length == 0)
+                *bp = JS_TRUE;
         }
     } else {
         vobj = JSVAL_TO_OBJECT(v);
