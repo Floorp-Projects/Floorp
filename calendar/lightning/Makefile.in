@@ -49,4 +49,16 @@ XPI_INSTALL_EXTRAS = $(srcdir)/chrome.manifest
 XPI_PKGNAME	= lightning
 DIRS		= ../../db/sqlite3/src ../../storage ../libical ../base ../providers
 
+# Select a theme from which to pull our skin goodness
+# OS X: pinstripe
+# Others: winstripe
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+THEME=pinstripe
+else
+THEME=winstripe
+endif
+
+DEFINES += -DTHEME=$(THEME)
+
 include $(topsrcdir)/config/rules.mk

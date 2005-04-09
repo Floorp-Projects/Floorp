@@ -6,6 +6,7 @@ lightning.jar:
   content/lightning/weekView.xul	(content/weekView.xul)
   content/lightning/weekView.js		(content/weekView.js)
   content/lightning/calendarView.js	(content/calendarView.js)
+  content/lightning/lightning-widgets.css		(content/lightning-widgets.css)
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
@@ -18,3 +19,7 @@ calendar.jar:
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)
   locale/en-US/calendar/calendar.dtd		(/calendar/resources/locale/en-US/calendar.dtd)
+
+classic.jar:
+#expand  skin/classic/calendar/calendar.css	(/calendar/sunbird/themes/__THEME__/sunbird/calendar.css)
+#expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)
