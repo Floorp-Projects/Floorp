@@ -732,21 +732,23 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
         // It's a hack, but it kind of works. It doesn't set the right
         // timezone info for the date, but that's not a real problem.
         startDate = aItemOccurrence.occurrenceStartDate.clone();
-        startDate.year = startDate.jsDate.getFullYear();
-        startDate.month = startDate.jsDate.getMonth();
-        startDate.day = startDate.jsDate.getDate();
-        startDate.hour = startDate.jsDate.getHours();
-        startDate.minute = startDate.jsDate.getMinutes();
-        startDate.second = startDate.jsDate.getSeconds();
+        var jsDate = startDate.jsDate;
+        startDate.year = jsDate.getFullYear();
+        startDate.month = jsDate.getMonth();
+        startDate.day = jsDate.getDate();
+        startDate.hour = jsDate.getHours();
+        startDate.minute = jsDate.getMinutes();
+        startDate.second = jsDate.getSeconds();
         startDate.normalize();
 
         origEndDate = aItemOccurrence.occurrenceEndDate.clone();
-        origEndDate.year = origEndDate.jsDate.getFullYear();
-        origEndDate.month = origEndDate.jsDate.getMonth();
-        origEndDate.day = origEndDate.jsDate.getDate();
-        origEndDate.hour = origEndDate.jsDate.getHours();
-        origEndDate.minute = origEndDate.jsDate.getMinutes();
-        origEndDate.second = origEndDate.jsDate.getSeconds();
+        jsDate = origEndDate.jsDate;
+        origEndDate.year = jsDate.getFullYear();
+        origEndDate.month = jsDate.getMonth();
+        origEndDate.day = jsDate.getDate();
+        origEndDate.hour = jsDate.getHours();
+        origEndDate.minute = jsDate.getMinutes();
+        origEndDate.second = jsDate.getSeconds();
         origEndDate.normalize();
     }
 
