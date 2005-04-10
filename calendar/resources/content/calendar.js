@@ -436,7 +436,7 @@ function weekEventItemClick(eventBox, event)
 {
     //do this check, otherwise on double click you get into an infinite loop
     if (event.detail == 1) {
-        var calEvent = eventBox.calEvent;
+        var calEvent = eventBox.event;
 
         gCalendarWindow.EventSelection.replaceSelection(calEvent);
 
@@ -465,7 +465,7 @@ function weekEventItemDoubleClick( eventBox, event )
    // we only care about button 0 (left click) events
    if (event.button != 0) return;
    
-   editEvent( eventBox.calEvent );
+   editEvent( eventBox.event );
 
    if ( event ) 
    {
