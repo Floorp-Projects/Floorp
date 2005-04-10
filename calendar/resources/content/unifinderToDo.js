@@ -94,8 +94,8 @@ var unifinderToDoDataSourceObserver =
 
 function prepareCalendarToDoUnifinder()
 {
-    var calendar = getCalendar();
-    calendar.addObserver(unifinderToDoDataSourceObserver, calendar.ITEM_FILTER_TYPE_TODO);
+    var ccalendar = getDisplayComposite();
+    ccalendar.addObserver(unifinderToDoDataSourceObserver, ccalendar.ITEM_FILTER_TYPE_TODO);
     toDoUnifinderRefresh();
 }
 
@@ -105,8 +105,8 @@ function prepareCalendarToDoUnifinder()
 
 function finishCalendarToDoUnifinder()
 {
-    var calendar = createCalendar();
-    calendar.removeObserver(unifinderToDoDataSourceObserver);
+    var ccalendar = getDisplayComposite();
+    ccalendar.removeObserver(unifinderToDoDataSourceObserver);
 }
 
 /**
@@ -144,16 +144,16 @@ function toDoUnifinderRefresh()
        }
    };
 
-   var calendar = getCalendar();
+   var ccalendar = getDisplayComposite();
    var filter = 0;
    if (hideCompleted)
-       filter |= calendar.ITEM_FILTER_COMPLETED_NO;
+       filter |= ccalendar.ITEM_FILTER_COMPLETED_NO;
    else
-       filter |= calendar.ITEM_FILTER_COMPLETED_ALL;
+       filter |= ccalendar.ITEM_FILTER_COMPLETED_ALL;
 
-   filter |= calendar.ITEM_FILTER_TYPE_TODO;
+   filter |= ccalendar.ITEM_FILTER_TYPE_TODO;
 
-   calendar.getItems (filter, 0, null, null, refreshListener);
+   ccalendar.getItems(filter, 0, null, null, refreshListener);
 }
 
 function getToDoFromEvent( event )
@@ -233,8 +233,8 @@ function checkboxClick(thisTodo, completed)
             newTodo.percentComplete = 0;
     }
    
-    var calendar = getCalendar();
-    calendar.modifyItem (newTodo, null);
+    var ccalendar = getDisplayComposite();
+    ccalendar.modifyItem (newTodo, null);
 }
 
 
@@ -543,8 +543,8 @@ function contextChangeProgress( event, Progress )
       {
           var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
           newItem.percentComplete = Progress;
-          var calendar = getCalendar();
-          calendar.modifyItem (newItem, null);
+          var ccalendar = getDisplayComposite();
+          ccalendar.modifyItem(newItem, null);
       }
    }
 }
@@ -561,8 +561,8 @@ function contextChangePriority( event, Priority )
       {
           var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
           newItem.priority = Priority;
-          var calendar = getCalendar();
-          calendar.modifyItem (newItem, null);
+          var ccalendar = getDisplayComposite();
+          ccalendar.modifyItem(newItem, null);
       }
    }
 }
