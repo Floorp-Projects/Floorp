@@ -516,8 +516,7 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
     }
 
     // Get a principal from the context
-    nsCOMPtr<nsIPrincipal> sourcePrincipal;
-    rv = GetSubjectPrincipal(cx, getter_AddRefs(sourcePrincipal));
+    nsIPrincipal* sourcePrincipal = GetSubjectPrincipal(cx, &rv);
     if (NS_FAILED(rv))
         return rv;
 
@@ -593,15 +592,15 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                                                  const char* aClassName, jsval aProperty,
                                                  void** aCachedClassPolicy)
 {
-    nsCOMPtr<nsIPrincipal> subjectPrincipal;
-    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(subjectPrincipal))))
-        return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsIPrincipal* subjectPrincipal = GetSubjectPrincipal(cx, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     if (!subjectPrincipal || subjectPrincipal == mSystemPrincipal)
         // We have native code or the system principal: just allow access
         return NS_OK;
 
-    nsresult rv;
     // Hold the class info data here so we don't have to go back to virtual
     // methods all the time
     ClassInfoData classInfoData(aClassInfo, aClassName);
@@ -658,11 +657,9 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 nsCOMPtr<nsIPrincipal> objectPrincipal;
                 if(aJSObject)
                 {
-                    rv = doGetObjectPrincipal(cx,
-                                              NS_REINTERPRET_CAST(JSObject*,
-                                                                  aJSObject),
-                                              getter_AddRefs(objectPrincipal));
-                    if (NS_FAILED(rv))
+                    objectPrincipal =
+                        doGetObjectPrincipal(cx, aJSObject);
+                    if (!objectPrincipal)
                         return NS_ERROR_FAILURE;
                 }
                 else if(aTargetURI)
@@ -1071,9 +1068,10 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
 {
     // Get principal of currently executing script.
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal))))
-        return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsIPrincipal* principal = GetSubjectPrincipal(cx, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     // Native code can load all URIs.
     if (!principal)
@@ -1424,9 +1422,9 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
                                              void *aTargetObj)
 {
     //-- This check is called for event handlers
-    nsCOMPtr<nsIPrincipal> subject;
-    nsresult rv = GetFunctionObjectPrincipal(aCx, (JSObject *)aFunObj,
-                                             getter_AddRefs(subject));
+    nsresult rv;
+    nsIPrincipal* subject =
+        GetFunctionObjectPrincipal(aCx, (JSObject *)aFunObj, &rv);
     //-- If subject is null, get a principal from the function object's scope.
     if (NS_SUCCEEDED(rv) && !subject)
     {
@@ -1440,13 +1438,11 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
         }
 #endif
 
-        rv = doGetObjectPrincipal(aCx, (JSObject*)aFunObj,
-                                  getter_AddRefs(subject));
+        subject = doGetObjectPrincipal(aCx, (JSObject*)aFunObj);
     }
 
-    if (NS_FAILED(rv)) return rv;
-    if (!subject) return NS_ERROR_FAILURE;
-
+    if (!subject)
+        return NS_ERROR_FAILURE;
 
     if (subject == mSystemPrincipal)
         // This is the system principal: just allow access
@@ -1467,12 +1463,13 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     ** Get origin of subject and object and compare.
     */
     JSObject* obj = (JSObject*)aTargetObj;
-    nsCOMPtr<nsIPrincipal> object;
-    if (NS_FAILED(doGetObjectPrincipal(aCx, obj, getter_AddRefs(object))))
-        return NS_ERROR_FAILURE;
-    if (subject == object)
-        return NS_OK;
+    nsIPrincipal* object = doGetObjectPrincipal(aCx, obj);
 
+    if (!object)
+        return NS_ERROR_FAILURE;        
+
+    // Note that CheckSameOriginPrincipalInternal already does an equality
+    // comparison on subject and object, so no need for us to do it.
     return CheckSameOriginPrincipalInternal(subject, object, PR_TRUE);
 }
 
@@ -1605,15 +1602,26 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
 
 ///////////////// Principals ///////////////////////
 NS_IMETHODIMP
-nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **result)
+nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **aSubjectPrincipal)
 {
+    nsresult rv;
+    *aSubjectPrincipal = doGetSubjectPrincipal(&rv);
+    if (NS_SUCCEEDED(rv))
+        NS_IF_ADDREF(*aSubjectPrincipal);
+    return rv;
+}
+
+nsIPrincipal*
+nsScriptSecurityManager::doGetSubjectPrincipal(nsresult* rv)
+{
+    NS_PRECONDITION(rv, "Null out param");
     JSContext *cx = GetCurrentJSContext();
     if (!cx)
     {
-        *result = nsnull;
-        return NS_OK;
+        *rv = NS_OK;
+        return nsnull;
     }
-    return GetSubjectPrincipal(cx, result);
+    return GetSubjectPrincipal(cx, rv);
 }
 
 NS_IMETHODIMP
@@ -1796,78 +1804,81 @@ nsScriptSecurityManager::GetPrincipalFromContext(JSContext *cx,
     return NS_OK;
 }
 
-nsresult
+// static
+nsIPrincipal*
 nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx,
                                             JSScript *script,
-                                            nsIPrincipal **result)
+                                            nsresult* rv)
 {
+    NS_PRECONDITION(rv, "Null out param");
+    *rv = NS_OK;
     if (!script)
     {
-        *result = nsnull;
-        return NS_OK;
+        return nsnull;
     }
     JSPrincipals *jsp = JS_GetScriptPrincipals(cx, script);
     if (!jsp) {
+        *rv = NS_ERROR_FAILURE;
         // Script didn't have principals -- shouldn't happen.
-        return NS_ERROR_FAILURE;
+        return nsnull;
     }
     nsJSPrincipals *nsJSPrin = NS_STATIC_CAST(nsJSPrincipals *, jsp);
-    *result = nsJSPrin->nsIPrincipalPtr;
-    if (!*result)
-        return NS_ERROR_FAILURE;
-    NS_ADDREF(*result);
-    return NS_OK;
-
+    nsIPrincipal* result = nsJSPrin->nsIPrincipalPtr;
+    if (!result)
+        *rv = NS_ERROR_FAILURE;
+    return result;
 }
 
-nsresult
+// static
+nsIPrincipal*
 nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
                                                     JSObject *obj,
-                                                    nsIPrincipal **result)
+                                                    nsresult *rv)
 {
+    NS_PRECONDITION(rv, "Null out param");
     JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
     JSScript *script = JS_GetFunctionScript(cx, fun);
 
-    nsCOMPtr<nsIPrincipal> scriptPrincipal;
+    *rv = NS_OK;
     if (script)
     {
         if (JS_GetFunctionObject(fun) != obj)
         {
             // Function is a clone, its prototype was precompiled from
             // brutally shared chrome. For this case only, get the
-            // principals from the clone's scope since there's no
+            // principals from the clone's scope since there are no
             // reliable principals compiled into the function.
-            return doGetObjectPrincipal(cx, obj, result);
+            nsIPrincipal* result = doGetObjectPrincipal(cx, obj);
+            if (!result)
+                *rv = NS_ERROR_FAILURE;
+            return result;
         }
 
-        if (NS_FAILED(GetScriptPrincipal(cx, script,
-                                         getter_AddRefs(scriptPrincipal))))
-            return NS_ERROR_FAILURE;
-
+        return GetScriptPrincipal(cx, script, rv);
     }
 
-    NS_IF_ADDREF(*result = scriptPrincipal);
-
-    return NS_OK;
+    return nsnull;
 }
 
-nsresult
+// static
+nsIPrincipal*
 nsScriptSecurityManager::GetFramePrincipal(JSContext *cx,
                                            JSStackFrame *fp,
-                                           nsIPrincipal **result)
+                                           nsresult *rv)
 {
+    NS_PRECONDITION(rv, "Null out param");
     JSObject *obj = JS_GetFrameFunctionObject(cx, fp);
     if (!obj)
     {
         // Must be in a top-level script. Get principal from the script.
         JSScript *script = JS_GetFrameScript(cx, fp);
-        return GetScriptPrincipal(cx, script, result);
+        return GetScriptPrincipal(cx, script, rv);
     }
 
-    nsresult rv = GetFunctionObjectPrincipal(cx, obj, result);
+    nsIPrincipal* result = GetFunctionObjectPrincipal(cx, obj, rv);
 
 #ifdef DEBUG
-    if (NS_SUCCEEDED(rv) && !*result)
+    if (NS_SUCCEEDED(*rv) && !result)
     {
         JSFunction *fun = (JSFunction *)JS_GetPrivate(cx, obj);
         JSScript *script = JS_GetFunctionScript(cx, fun);
@@ -1876,28 +1887,30 @@ nsScriptSecurityManager::GetFramePrincipal(JSContext *cx,
     }
 #endif
 
-    return rv;
+    return result;
 }
 
-nsresult
+// static
+nsIPrincipal*
 nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
-                                              nsIPrincipal **result,
-                                              JSStackFrame **frameResult)
+                                              JSStackFrame **frameResult,
+                                              nsresult* rv)
 {
+    NS_PRECONDITION(rv, "Null out param");    
     //-- If there's no principal on the stack, look at the global object
     //   and return the innermost frame for annotations.
+    *rv = NS_OK;
     if (cx)
     {
         // Get principals from innermost frame of JavaScript or Java.
         JSStackFrame *fp = nsnull; // tell JS_FrameIterator to start at innermost
         for (fp = JS_FrameIterator(cx, &fp); fp; fp = JS_FrameIterator(cx, &fp))
         {
-            if (NS_FAILED(GetFramePrincipal(cx, fp, result)))
-                return NS_ERROR_FAILURE;
-            if (*result)
+            nsIPrincipal* result = GetFramePrincipal(cx, fp, rv);
+            if (result)
             {
-                *frameResult = fp;
-                return NS_OK;
+                NS_ASSERTION(NS_SUCCEEDED(*rv), "Weird return");
+                return result;
             }
         }
 
@@ -1906,43 +1919,54 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
         {
             nsCOMPtr<nsIScriptObjectPrincipal> globalData =
                 do_QueryInterface(scriptContext->GetGlobalObject());
-            NS_ENSURE_TRUE(globalData, NS_ERROR_FAILURE);
+            if (!globalData)
+            {
+                *rv = NS_ERROR_FAILURE;
+                return nsnull;
+            }
 
-            NS_IF_ADDREF(*result = globalData->GetPrincipal());
-            if (*result)
+            // Note that we're not in a loop or anything, and nothing comes
+            // after this point in the function, so we can just return here.
+            nsIPrincipal* result = globalData->GetPrincipal();
+            if (result)
             {
                 JSStackFrame *inner = nsnull;
                 *frameResult = JS_FrameIterator(cx, &inner);
-                return NS_OK;
+                return result;
             }
         }
     }
 
-    *result = nsnull;
-    return NS_OK;
+    return nsnull;
 }
 
-nsresult
+// static
+nsIPrincipal*
 nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx,
-                                             nsIPrincipal **result)
+                                             nsresult* rv)
 {
+    NS_PRECONDITION(rv, "Null out param");
     JSStackFrame *fp;
-    return GetPrincipalAndFrame(cx, result, &fp);
+    return GetPrincipalAndFrame(cx, &fp, rv);
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                                             nsIPrincipal **result)
 {
-    return doGetObjectPrincipal(aCx, aObj, result);
+    *result = doGetObjectPrincipal(aCx, aObj);
+    if (!*result)
+        return NS_ERROR_FAILURE;
+    NS_ADDREF(*result);
+    return NS_OK;
 }
 
 // static
-nsresult
-nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj,
-                                              nsIPrincipal **result)
+nsIPrincipal*
+nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj)
 {
-    NS_ASSERTION(aCx && aObj && result, "Bad call to doGetObjectPrincipal()!");
+    NS_ASSERTION(aCx && aObj, "Bad call to doGetObjectPrincipal()!");
+    nsIPrincipal* result = nsnull;
 
     do
     {
@@ -1972,18 +1996,16 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                 objPrin = do_QueryInterface(priv);
             }
 
-            if (objPrin && (*result = objPrin->GetPrincipal()))
+            if (objPrin && (result = objPrin->GetPrincipal()))
             {
-                NS_ADDREF(*result);
-                return NS_OK;
+                break;
             }
         }
 
         aObj = JS_GetParent(aCx, aObj);
     } while (aObj);
 
-    // Couldn't find a principal for this object.
-    return NS_ERROR_FAILURE;
+    return result;
 }
 
 nsresult
@@ -2049,12 +2071,12 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         return NS_OK;
     }
     *result = PR_FALSE;
-    nsCOMPtr<nsIPrincipal> previousPrincipal;
+    nsIPrincipal* previousPrincipal = nsnull;
     do
     {
-        nsCOMPtr<nsIPrincipal> principal;
-        if (NS_FAILED(GetFramePrincipal(cx, fp, getter_AddRefs(principal))))
-            return NS_ERROR_FAILURE;
+        nsIPrincipal* principal = GetFramePrincipal(cx, fp, &rv);
+        if (NS_FAILED(rv))
+            return rv;
         if (!principal)
             continue;
         // If caller has a different principal, stop looking up the stack.
@@ -2296,9 +2318,10 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
         }
     }
 
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), &fp)))
-        return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsIPrincipal* principal = GetPrincipalAndFrame(cx, &fp, &rv);
+    if (NS_FAILED(rv))
+        return rv;
     if (!principal)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -2355,9 +2378,10 @@ nsScriptSecurityManager::RevertCapability(const char *capability)
 {
     JSContext *cx = GetCurrentJSContext();
     JSStackFrame *fp;
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), &fp)))
-        return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsIPrincipal* principal = GetPrincipalAndFrame(cx, &fp, &rv);
+    if (NS_FAILED(rv))
+        return rv;
     if (!principal)
         return NS_ERROR_NOT_AVAILABLE;
     void *annotation = JS_GetFrameAnnotation(cx, fp);
@@ -2371,9 +2395,10 @@ nsScriptSecurityManager::DisableCapability(const char *capability)
 {
     JSContext *cx = GetCurrentJSContext();
     JSStackFrame *fp;
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), &fp)))
-        return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsIPrincipal* principal = GetPrincipalAndFrame(cx, &fp, &rv);
+    if (NS_FAILED(rv))
+        return rv;
     if (!principal)
         return NS_ERROR_NOT_AVAILABLE;
     void *annotation = JS_GetFrameAnnotation(cx, fp);
@@ -2389,9 +2414,9 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
                                                 PRInt16 canEnable)
 {
     nsresult rv;
-    nsCOMPtr<nsIPrincipal> subjectPrincipal;
-    rv = GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    nsIPrincipal* subjectPrincipal = doGetSubjectPrincipal(&rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     //-- Get the system certificate
     if (!mSystemCertificate)
@@ -2524,9 +2549,9 @@ nsScriptSecurityManager::CheckComponentPermissions(JSContext *cx,
                                                    const nsCID &aCID)
 {
     nsresult rv;
-    nsCOMPtr<nsIPrincipal> subjectPrincipal;
-    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(subjectPrincipal))))
-        return NS_ERROR_FAILURE;
+    nsIPrincipal* subjectPrincipal = GetSubjectPrincipal(cx, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     // Reformat the CID string so it's suitable for prefs
     nsXPIDLCString cidTemp;
