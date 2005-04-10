@@ -345,9 +345,16 @@ private:
                       jsval id, JSAccessMode mode,
                       jsval *vp);
 
-    static nsresult
-    doGetObjectPrincipal(JSContext *cx, JSObject *obj, nsIPrincipal **result);
+    // Returns null if a principal cannot be found; generally callers
+    // should error out at that point.
+    static nsIPrincipal*
+    doGetObjectPrincipal(JSContext *cx, JSObject *obj);
 
+    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
+    // when this happens -- this means that there was no JS running.
+    nsIPrincipal*
+    doGetSubjectPrincipal(nsresult* rv);
+    
     static nsresult
     GetBaseURIScheme(nsIURI* aURI, nsCString& aScheme);
 
@@ -388,23 +395,37 @@ private:
     nsresult
     CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
 
-    nsresult
-    GetSubjectPrincipal(JSContext* cx, nsIPrincipal** result);
+    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
+    // when this happens -- this means that there was no script for the
+    // context.  Callers MUST pass in a non-null rv here.
+    static nsIPrincipal*
+    GetSubjectPrincipal(JSContext* cx, nsresult* rv);
 
-    nsresult
-    GetFramePrincipal(JSContext* cx, JSStackFrame* fp, nsIPrincipal** result);
+    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
+    // when this happens -- this means that there was no script for the frame.
+    // Callers MUST pass in a non-null rv here.
+    static nsIPrincipal*
+    GetFramePrincipal(JSContext* cx, JSStackFrame* fp, nsresult* rv);
                                                      
-    nsresult
-    GetScriptPrincipal(JSContext* cx, JSScript* script, nsIPrincipal** result);
+    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
+    // when this happens -- this means that there was no script.  Callers MUST
+    // pass in a non-null rv here.
+    static nsIPrincipal*
+    GetScriptPrincipal(JSContext* cx, JSScript* script, nsresult* rv);
 
-    nsresult
-    GetFunctionObjectPrincipal(JSContext* cx, JSObject* obj, 
-                               nsIPrincipal** result);
+    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
+    // when this happens -- this means that there was no script associated
+    // with the function object.  Callers MUST pass in a non-null rv here.
+    static nsIPrincipal*
+    GetFunctionObjectPrincipal(JSContext* cx, JSObject* obj, nsresult* rv);
 
-    nsresult
+    // Returns null if a principal cannot be found.  Note that rv can be NS_OK
+    // when this happens -- this means that there was no script
+    // running.  Callers MUST pass in a non-null rv here.
+    static nsIPrincipal*
     GetPrincipalAndFrame(JSContext *cx,
-                         nsIPrincipal** result,
-                         JSStackFrame** frameResult);
+                         JSStackFrame** frameResult,
+                         nsresult* rv);
 
     static PRBool
     CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
