@@ -386,7 +386,7 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
     dump("startdate: " + startDate + "\n");
     dump("enddate:   " + endDate + "\n");
 
-    var startHour = startDate.jsDate.getHours();
+    var startHour = startDate.hour;
     var startMinutes = startDate.minute;
     var eventDuration = (endDate.jsDate - startDate.jsDate) / (60 * 60 * 1000);
 
