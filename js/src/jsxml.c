@@ -5614,7 +5614,7 @@ xml_contains(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 break;
         }
     } else {
-        if (!Equals(cx, xml, value, &eq))
+        if (!xml_equality(cx, obj, value, &eq))
             return JS_FALSE;
     }
     *rval = BOOLEAN_TO_JSVAL(eq);
