@@ -425,18 +425,20 @@ dump(this.displayEndDate+"\n");
     eventBox.setAttribute("tooltip", "eventTooltip");
 
     // Event box text (title, location and description)
-    if (calEvent.title || calEvent.getProperty("location")) {
+    var locationText = calEvent.getProperty("LOCATION");
+    if (calEvent.title || locationText) {
       var titleText = ( (calEvent.title || "") + 
-        (calEvent.getProperty("location") ? " ("+calEvent.getProperty("location")+")" : "") );
+        (locationText ? " ("+locationText+")" : "") );
       var titleElement = document.createElement( "label" );
       titleElement.setAttribute( "class", "week-view-event-title-label-class" );
       titleElement.appendChild( document.createTextNode( titleText ));
       eventBox.appendChild( titleElement );
     }
-    if (calEvent.getProperty("description")) {
+    var descriptionText = calEvent.getProperty("DESCRIPTION");
+    if (descriptionText) {
       var descriptionElement = document.createElement( "description" );
       descriptionElement.setAttribute( "class", "week-view-event-description-class" );
-      descriptionElement.appendChild( document.createTextNode( calEvent.getProperty("description") ));
+      descriptionElement.appendChild(document.createTextNode(descriptionText));
       eventBox.appendChild( descriptionElement );
     }
 

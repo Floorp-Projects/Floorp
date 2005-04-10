@@ -401,8 +401,6 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
     var eventSlotWidth = Math.round( ( hourWidth - kDayViewHourLeftStart ) 
                                      / 1 /*calendarEventDisplay.totalSlotCount */);
 
-    var eventLocation = calEvent.location;
-
     //calculate event dimensions
     var eventTop = startHourTreeItem.boxObject.y -
                     startHourTreeItem.parentNode.boxObject.y +
@@ -414,12 +412,14 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
     // create title label, location label and description description :)
     var eventTitleLabel = document.createElement( "label" );
     eventTitleLabel.setAttribute( "class", "day-view-event-title-label-class" );
+
+    var eventLocation = calEvent.getProperty("LOCATION");
     if (eventLocation)
         eventTitleLabel.setAttribute( "value", calEvent.title + " (" + eventLocation + ")" );
     else
         eventTitleLabel.setAttribute( "value", calEvent.title );
 
-    var desc = calEvent.getProperty("description");
+    var desc = calEvent.getProperty("DESCRIPTION");
     if (!desc)
         desc = ""
     var eventText = document.createTextNode(desc);
