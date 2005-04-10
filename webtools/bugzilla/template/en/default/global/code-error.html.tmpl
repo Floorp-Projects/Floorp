@@ -177,7 +177,7 @@
   
   [% ELSIF error == "flag_type_target_type_invalid" %]
     The target type was neither <em>[% terms.bug %]</em> nor <em>attachment</em>
-    but rather <em>[% variables.target_type FILTER html %]</em>.
+    but rather <em>[% target_type FILTER html %]</em>.
   
   [% ELSIF error == "invalid_field_name" %]
     Can't use [% field FILTER html %] as a field name.
