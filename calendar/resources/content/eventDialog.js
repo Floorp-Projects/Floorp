@@ -427,7 +427,7 @@ function loadCalendarEventDialog()
         // compare cal.uri because there may be multiple instances of
         // calICalendar or uri for the same spec, and those instances are
         // not ==.
-        if (eventCalendar && event.parent.uri.equals(calendars[i].uri))
+        if (eventCalendar && eventCalendar.uri.equals(calendars[i].uri))
             calendarField.selectedIndex = i;
     }    
 
