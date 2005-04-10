@@ -2643,6 +2643,7 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
 void
 nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
 {
+  EnsureDocument(mPresContext);
   if (!mDocument)
     return;
 
