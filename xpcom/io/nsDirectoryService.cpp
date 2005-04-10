@@ -590,11 +590,12 @@ static PRBool FindProviderFile(nsISupports* aElement, void *aData)
   else
   {
       nsCOMPtr<nsIDirectoryServiceProvider> prov = do_QueryInterface(aElement);
-      if (!prov)
-          return PR_FALSE;
-      rv = prov->GetFile(fileData->property, &fileData->persistent, (nsIFile **)&fileData->data);
-      if (NS_SUCCEEDED(rv) && fileData->data)
-          return PR_FALSE;
+      if (prov)
+      {
+          rv = prov->GetFile(fileData->property, &fileData->persistent, (nsIFile **)&fileData->data);
+          if (NS_SUCCEEDED(rv) && fileData->data)
+              return PR_FALSE;
+      }
   }
 
   return PR_TRUE;
