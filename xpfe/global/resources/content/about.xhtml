@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
-<!ENTITY % versionDTD SYSTEM "chrome://global/content/version.dtd" >
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 <!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
-%versionDTD;
 %brandDTD;
 %regionDTD;
 ]>
@@ -89,7 +87,7 @@ h1 {
 
 <td id="mozver">
 <h1>
-<a id="mozlink" href="&releaseURL;">&brandShortName; &version;</a>
+#expand <a id="mozlink" href="&releaseURL;">&brandShortName; __MOZ_APP_VERSION__</a>
 </h1>
 <script type="application/x-javascript">
   document.getElementById("mozver").appendChild(document.createTextNode(navigator.userAgent));
