@@ -718,7 +718,7 @@ CalendarView.prototype.refresh = function calView_refresh( ShowEvent )
  * the internal function
  */
 
-CalendarView.prototype.displayTimezone = "/mozilla.org/20050126_1/Europe/Amsterdam";
+//CalendarView.prototype.displayTimezone = "/mozilla.org/20050126_1/Europe/Amsterdam";
 CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFunction )
 {    
     var startDate;
