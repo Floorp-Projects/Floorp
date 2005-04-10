@@ -112,10 +112,13 @@ DayView.prototype.refreshEvents = function()
     this.removeElementsByAttribute("eventbox", "dayview");
 
     // Figure out the start and end days for the week we're currently viewing
-    this.displayStartDate = new Date(this.calendarWindow.getSelectedDate());
-    this.displayEndDate = new Date(this.displayStartDate );
-    this.displayEndDate.setDate(this.displayEndDate.getDate() + 1);
-    this.displayEndDate.setSeconds(this.displayEndDate.getSeconds() - 1);
+    var selectedDateTime = this.calendarWindow.getSelectedDate();
+    this.displayStartDate = new Date(selectedDateTime.getFullYear(),
+                                     selectedDateTime.getMonth(),
+                                     selectedDateTime.getDate());
+    this.displayEndDate = new Date(this.displayStartDate);
+    this.displayEndDate.setDate(this.displayEndDate.getDate() + 1)
+    this.displayEndDate.setMilliseconds(this.displayEndDate.getMilliseconds() - 1);
 
     // Save this off so we can get it again in onGetResult below
     var eventController = this;
