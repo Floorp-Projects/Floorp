@@ -659,11 +659,11 @@ function getCalendar()
 {
    var calendarList = document.getElementById("list-calendars-listbox");
    try {
-       var selectedCalendar = calendarList.currentItem.calendar;
+       var selectedCalendar = calendarList.selectedItem.calendar;
        return selectedCalendar;
    } catch(e) {
        newCalendarDialog();
-       selectedCalendar = calendarList.currentItem.calendar;
+       selectedCalendar = calendarList.selectedItem.calendar;
        return selectedCalendar;
    }
 }
@@ -788,9 +788,9 @@ function newEvent(startDate, endDate, allDay)
    if (allDay)
        calendarEvent.isAllDay = true;
 
-   var server = getSelectedCalendarPathOrNull();
+   var calendar = getSelectedCalendarOrNull();
 
-   editNewEvent( calendarEvent, server );
+   editNewEvent( calendarEvent, calendar );
 }
 
 /*
@@ -809,75 +809,79 @@ function newToDo ( startDate, dueDate )
     if (dueDate)
         calendarToDo.dueDate.jsDate = dueDate;
 
-    var server = getSelectedCalendarPathOrNull();
+    var calendar = getSelectedCalendarOrNull();
     
-    editNewToDo(calendarToDo, server);
+    editNewToDo(calendarToDo, calendar);
 }
 
-function getSelectedCalendarPathOrNull()
+/**
+ * Get the default calendar selected in the calendars tab.
+ * Returns a calICalendar object, or null if none selected.
+ */
+function getSelectedCalendarOrNull()
 {
-   //get the selected calendar
    var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
    
    if ( selectedCalendarItem )
-     return selectedCalendarItem.getAttribute( "calendarPath" );
+     return selectedCalendarItem.calendar;
    else
      return null;
 }
 
 /**
 * Launch the event dialog to edit a new (created, imported, or pasted) event.
-* 'server' is calendarPath.
+* 'calendar' is a calICalendar object.
 * When the user clicks OK "addEventDialogResponse" is called
 */
 
-function editNewEvent( calendarEvent, server )
+function editNewEvent( calendarEvent, calendar )
 {
   openEventDialog(calendarEvent,
                   "new",
                   self.addEventDialogResponse,
-                  server);
+                  calendar);
 }
 
 /**
 * Launch the todo dialog to edit a new (created, imported, or pasted) ToDo.
-* 'server' is calendarPath.
+* 'calendar' is a calICalendar object.
 * When the user clicks OK "addToDoDialogResponse" is called
 */
-function editNewToDo( calendarToDo, server )
+function editNewToDo( calendarToDo, calendar )
 {
   openEventDialog(calendarToDo,
                   "new",
                   self.addToDoDialogResponse,
-                  server);
+                  calendar);
 }
 
 /** 
 * Called when the user clicks OK in the new event dialog
+* 'calendar' is a calICalendar object.
 *
-* Update the data source, the unifinder views and the calendar views will be
-* notified of the change through their respective observers
+* Updates the data source.  The unifinder views and the calendar views will be
+* notified of the change through their respective observers.
 */
 
-function addEventDialogResponse( calendarEvent, Server )
+function addEventDialogResponse( calendarEvent, calendar )
 {
-   saveItem( calendarEvent, Server, "addEvent" );
+   saveItem( calendarEvent, calendar, "addEvent" );
 }
 
 
 /** 
 * Called when the user clicks OK in the new to do item dialog
-*
+* 'calendar' is a calICalendar object.
 */
 
-function addToDoDialogResponse( calendarToDo, Server )
+function addToDoDialogResponse( calendarToDo, calendar )
 {
-    addEventDialogResponse(calendarToDo, Server);
+    addEventDialogResponse(calendarToDo, calendar);
 }
 
 
 /** 
-* Helper function to launch the event composer to edit an event.
+* Helper function to launch the event dialog to edit an event.
 * When the user clicks OK "modifyEventDialogResponse" is called
 */
 
@@ -899,35 +903,37 @@ function editToDo( calendarTodo )
    
 /** 
 * Called when the user clicks OK in the edit event dialog
+* 'calendar' is a calICalendar object.
 *
 * Update the data source, the unifinder views and the calendar views will be
 * notified of the change through their respective observers
 */
 
-function modifyEventDialogResponse( calendarEvent, Server, originalEvent )
+function modifyEventDialogResponse( calendarEvent, calendar, originalEvent )
 {
-   saveItem( calendarEvent, Server, "modifyEvent", originalEvent );
+   saveItem( calendarEvent, calendar, "modifyEvent", originalEvent );
 }
 
 
 /** 
 * Called when the user clicks OK in the edit event dialog
+* 'calendar' is a calICalendar object.
 *
 * Update the data source, the unifinder views and the calendar views will be
 * notified of the change through their respective observers
 */
 
-function modifyToDoDialogResponse( calendarToDo, Server, originalToDo )
+function modifyToDoDialogResponse( calendarToDo, calendar, originalToDo )
 {
-    modifyEventDialogResponse(calendarToDo, Server, originalToDo);
+    modifyEventDialogResponse(calendarToDo, calendar, originalToDo);
 }
 
 
 /** PRIVATE: open event dialog in mode, and call onOk if ok is clicked.
     'mode' is "new" or "edit".
-    'server' is path to calendar to update.
+    'calendar' is default calICalendar, typically from getSelectedCalendarOrNull
  **/
-function openEventDialog(calendarEvent, mode, onOk, server)
+function openEventDialog(calendarEvent, mode, onOk, calendar)
 {
   // set up a bunch of args to pass to the dialog
   var args = new Object();
@@ -935,8 +941,8 @@ function openEventDialog(calendarEvent, mode, onOk, server)
   args.mode = mode;
   args.onOk = onOk;
 
-  if( server )
-    args.server = server;
+  if( calendar )
+    args.calendar = calendar;
 
   // wait cursor will revert to auto in eventDialog.js loadCalendarEventDialog
   window.setCursor( "wait" );
@@ -972,10 +978,14 @@ function saveItem( calendarEvent, calendar, functionToRun, originalEvent )
         calendar.addItem(calendarEvent, null);
 
     else if (functionToRun == 'modifyEvent') {
-        if (!originalEvent.parent || (originalEvent.parent == calendar))
+        // compare cal.uri because there may be multiple instances of
+        // calICalendar or uri for the same spec, and those instances are
+        // not ==.
+        if (!originalEvent.parent || 
+            (originalEvent.parent.uri.equals(calendar.uri)))
             calendar.modifyItem(calendarEvent, null);
         else {
-            originalEvent.parent.removeItem(calendarEvent, null);
+            originalEvent.parent.deleteItem(calendarEvent, null);
             calendar.addItem(calendarEvent, null);
         }
     }

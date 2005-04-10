@@ -413,15 +413,22 @@ function loadCalendarEventDialog()
     else
         document.getElementById("categories-field").selectedIndex = -1;
 
-    // Server stuff
-    var calendar = event.calendar;
+    // The event calendar is its current calendar, or for a new event,
+    // the selected calendar in the calendar list, passed in args.calendar.
+    var eventCalendar = event.parent || args.calendar;
+
+    // Initialize calendar names in drop down list.
+    var calendarField = document.getElementById('server-field');
     var calendars = getCalendarManager().getCalendars({});
-    for (var i = 0; i < calendars.length; i++) {
-        var menuitem = document.getElementById('server-field')
-                               .appendItem(calendars[i].name, calendars[i].uri);
+    for (i in calendars) {
+        var menuitem = calendarField.appendItem(calendars[i].name,
+                                                calendars[i].uri);
         menuitem.calendar = calendars[i];
-        if (event.parent == calendar)
-            document.getElementById('server-field').selectedIndex = i;
+        // compare cal.uri because there may be multiple instances of
+        // calICalendar or uri for the same spec, and those instances are
+        // not ==.
+        if (event.parent.uri.equals(calendars[i].uri))
+            calendarField.selectedIndex = i;
     }    
 
     // update enabling and disabling
