@@ -22,6 +22,7 @@
 #      Brant Gurganus <brantgurganus2001@cherokeescouting.org>
 #      R.J. Keller <rlk@trfenv.com>
 #      Steffen Wilberg <steffen.wilberg@web.de>
+#      Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,16 +42,32 @@
 var helpBrowser;
 var helpSearchPanel;
 var emptySearch;
-var emptySearchText
-var emptySearchLink
+var emptySearchText;
+var emptySearchLink = "about:blank";
 var helpTocPanel;
 var helpIndexPanel;
 var helpGlossaryPanel;
+var strBundle;
 
 # Namespaces
 const NC = "http://home.netscape.com/NC-rdf#";
 const MAX_LEVEL = 40; // maximum depth of recursion in search datasources.
 const MAX_HISTORY_MENU_ITEMS = 6;
+
+# ifdef logic ripped from toolkit/components/help/content/platformClasses.css
+#ifdef XP_WIN
+const platform = "win";
+#else
+#ifdef XP_MACOSX
+const platform = "mac;
+#else
+#ifdef XP_OS2
+const platform = "os2";
+#else
+const platform = "unix";
+#endif
+#endif
+#endif
 
 # Resources
 const RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -61,6 +78,7 @@ const NC_PANELID = RDF.GetResource(NC + "panelid");
 const NC_EMPTY_SEARCH_TEXT = RDF.GetResource(NC + "emptysearchtext");
 const NC_EMPTY_SEARCH_LINK = RDF.GetResource(NC + "emptysearchlink");
 const NC_DATASOURCES = RDF.GetResource(NC + "datasources");
+const NC_PLATFORM = RDF.GetResource(NC + "platform");
 const NC_SUBHEADINGS = RDF.GetResource(NC + "subheadings");
 const NC_NAME = RDF.GetResource(NC + "name");
 const NC_CHILD = RDF.GetResource(NC + "child");
@@ -126,6 +144,9 @@ function init() {
     helpGlossaryPanel = document.getElementById("help-glossary-panel");
     helpBrowser = document.getElementById("help-content");
     
+    strBundle = document.getElementById("bundle_help");
+    emptySearchText = strBundle.getString("emptySearchText");
+
     initFindBar();
 
     // Get the content pack, base URL, and help topic
@@ -174,8 +195,7 @@ function init() {
     // Set the text of the sidebar toolbar button to "Hide Sidebar" taken the properties file.
     // This is needed so that it says "Toggle Sidebar" in toolbar customization, but outside
     // of it, it says either "Show Sidebar" or "Hide Sidebar".
-    document.getElementById("help-sidebar-button").label =
-           document.getElementById("bundle_help").getString("hideSidebarLabel");
+    document.getElementById("help-sidebar-button").label = strBundle.getString("hideSidebarLabel");
 }
 
 function loadHelpRDF() {
@@ -206,21 +226,25 @@ function loadHelpRDF() {
                 var datasources = getAttribute(helpFileDS, panelDef,
                     NC_DATASOURCES, "rdf:none");
                 datasources = normalizeLinks(helpBaseURI, datasources);
+
+                if (getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform) != platform)
+                   continue; // ignore datasources for other platforms
+
                 // Cache Additional Datasources to Augment Search Datasources.
                 if (panelID == "search") {
                     emptySearchText = getAttribute(helpFileDS, panelDef,
-                        NC_EMPTY_SEARCH_TEXT, null) || "No search items found.";
+                        NC_EMPTY_SEARCH_TEXT, emptySearchText);
                     emptySearchLink = getAttribute(helpFileDS, panelDef,
-                        NC_EMPTY_SEARCH_LINK, null) || "about:blank";
-                    searchDatasources = datasources;
-                    // Don't try to display them yet!
-                    datasources = "rdf:null";
+                        NC_EMPTY_SEARCH_LINK, emptySearchLink);
+                    searchDatasources += " " + datasources;
+                    continue; // Don't try to display them yet!
                 }
 
                 // Cache TOC Datasources for Use by ID Lookup.
                 var tree = document.getElementById("help-" + panelID + "-panel");
                 loadDatabasesBlocking(datasources);
-                tree.setAttribute("datasources", datasources);
+                tree.setAttribute("datasources",
+                    tree.getAttribute("datasources") + " " + datasources);
             }
         } catch (e) {
             log(e + "");
@@ -828,7 +852,6 @@ function toggleSidebar()
 
     //Use the string bundle to retrieve the text "Hide Sidebar"
     //and "Show Sidebar" from the locale directory.
-    var strBundle = document.getElementById("bundle_help");
     if (sidebar.hidden) {
       sidebar.removeAttribute("hidden");
       sidebarButton.label = strBundle.getString("hideSidebarLabel");
