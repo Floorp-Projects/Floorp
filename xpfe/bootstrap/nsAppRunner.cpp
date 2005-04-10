@@ -1315,7 +1315,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
       }
     }
 
-    remoteService->Startup(MOZ_APP_NAME, pname.IsEmpty() ? nsnull : pname.get());
+    remoteService->Startup(NS_STRINGIFY(MOZ_APP_NAME), pname.IsEmpty() ? nsnull : pname.get());
   }
 #endif /* MOZ_ENABLE_XREMOTE */
 
@@ -1397,7 +1397,7 @@ static void DumpHelp(char *appname)
 #ifdef XP_UNIX
   printf("%s--g-fatal-warnings%sMake all warnings fatal\n", HELP_SPACER_1, HELP_SPACER_2);
 
-  printf("\n%s options\n", MOZ_APP_DISPLAYNAME);
+  printf("\n%s options\n", NS_STRINGIFY(MOZ_APP_DISPLAYNAME));
 #endif
 
   printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
@@ -1413,13 +1413,13 @@ static void DumpHelp(char *appname)
   printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
 #if defined(XP_WIN32) || defined(XP_OS2)
-  printf("%s-console%sStart %s with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2,MOZ_APP_DISPLAYNAME);
+  printf("%s-console%sStart %s with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2,NS_STRINGIFY(MOZ_APP_DISPLAYNAME));
 #endif
 #ifdef MOZ_ENABLE_XREMOTE
   printf("%s-remote <command>%sExecute <command> in an already running\n"
          "%s%s process.  For more info, see:\n"
          "\n%shttp://www.mozilla.org/unix/remote.html\n\n",
-         HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,MOZ_APP_DISPLAYNAME,HELP_SPACER_2);
+         HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,NS_STRINGIFY(MOZ_APP_DISPLAYNAME),HELP_SPACER_2);
   printf("%s-splash%sEnable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #else
   printf("%s-nosplash%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
@@ -1440,7 +1440,7 @@ static nsresult DumpVersion(char *appname)
   nsresult rv = NS_OK;
   long buildID = NS_BUILD_ID;  // 10-digit number
 
-  printf("%s %s, Copyright (c) 2003-2005 mozilla.org", MOZ_APP_DISPLAYNAME, MOZ_APP_VERSION);
+  printf("%s %s, Copyright (c) 2003-2005 mozilla.org", NS_STRINGIFY(MOZ_APP_DISPLAYNAME), NS_STRINGIFY(MOZ_APP_VERSION));
 
   if(buildID) {
     printf(", build %u\n", (unsigned int)buildID);
@@ -1526,7 +1526,7 @@ static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
 
   // Same with the program name
   if (!program) {
-    program = MOZ_APP_NAME;
+    program = NS_STRINGIFY(MOZ_APP_NAME);
   }
 
   char *response = NULL;
