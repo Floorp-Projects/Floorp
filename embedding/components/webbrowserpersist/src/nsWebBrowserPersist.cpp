@@ -260,6 +260,7 @@ NS_IMPL_RELEASE(nsWebBrowserPersist)
 NS_INTERFACE_MAP_BEGIN(nsWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
+    NS_INTERFACE_MAP_ENTRY(nsICancelable)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
@@ -502,12 +503,19 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
     return rv;
 }
 
+/* void cancel(nsresult aReason); */
+NS_IMETHODIMP nsWebBrowserPersist::Cancel(nsresult aReason)
+{
+    mCancel = PR_TRUE;
+    EndDownload(aReason);
+    return NS_OK;
+}
+
+
 /* void cancelSave(); */
 NS_IMETHODIMP nsWebBrowserPersist::CancelSave()
 {
-    mCancel = PR_TRUE;
-    EndDownload(NS_BINDING_ABORTED);
-    return NS_OK;
+    return Cancel(NS_BINDING_ABORTED);
 }
 
 

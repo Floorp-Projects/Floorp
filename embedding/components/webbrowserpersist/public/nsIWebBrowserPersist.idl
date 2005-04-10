@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsICancelable.idl"
 
 interface nsIURI;
 interface nsIInputStream;
@@ -47,14 +47,12 @@ interface nsILocalFile;
 interface nsIChannel;
 
 /**
+ * Interface for persisting DOM documents and URIs to local or remote storage.
+ *
  * @status UNDER_REVIEW
  */
-
-/**
- * Interface for persisting DOM documents and URIs to local or remote storage.
- */
-[scriptable, uuid(1c2a6fac-c100-4c67-95d3-281736038700)]
-interface nsIWebBrowserPersist : nsISupports
+[scriptable, uuid(dd4e0a6a-210f-419a-ad85-40e8543b9465)]
+interface nsIWebBrowserPersist : nsICancelable
 {
   /** No special persistence behaviour. */
   const unsigned long PERSIST_FLAGS_NONE = 0;
@@ -280,7 +278,8 @@ interface nsIWebBrowserPersist : nsISupports
 
   /**
    * Cancels the current operation. The caller is responsible for cleaning up
-   * partially written files or directories.
+   * partially written files or directories. This has the same effect as calling
+   * cancel with an argument of NS_BINDING_ABORTED.
    */
   void cancelSave();
 };
