@@ -184,6 +184,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSetup)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
+    NS_INTERFACE_MAP_ENTRY(nsICancelable)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserStream)
@@ -1077,6 +1078,18 @@ NS_IMETHODIMP nsWebBrowser::CancelSave()
     }
     return NS_OK;
 }
+
+/* void cancel(nsresult aReason); */
+NS_IMETHODIMP nsWebBrowser::Cancel(nsresult aReason)
+{
+    if (mPersist)
+    {
+        return mPersist->Cancel(aReason);
+    }
+    return NS_OK;
+}
+
+
 
 
 //*****************************************************************************
