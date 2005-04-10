@@ -107,34 +107,6 @@ function getMostRecentWindow(aType) {
 var nsBrowserContentHandler = {
   /* helper functions */
 
-  get defaultArgs() {
-    var prefb = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(nsIPrefBranch);
-
-    if (needHomepageOverride(prefb)) {
-      try {
-        return prefb.getComplexValue("startup.homepage_override_url",
-                                     nsIPrefLocalizedString).data;
-      }
-      catch (e) {
-      }
-    }
-
-    try {
-      var choice = prefb.getIntPref("browser.startup.page");
-      if (choice == 1)
-        return this.startPage;
-
-      if (choice == 2)
-        return Components.classes["@mozilla.org/browser/global-history;2"]
-                         .getService(nsIBrowserHistory).lastPageVisited;
-    }
-    catch (e) {
-    }
-
-    return "about:blank";
-  },
-
   mChromeURL : null,
 
   get chromeURL() {
@@ -252,6 +224,34 @@ var nsBrowserContentHandler = {
   helpInfo : "  -browser            Open a browser window.\n",
 
   /* nsIBrowserHandler */
+
+  get defaultArgs() {
+    var prefb = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(nsIPrefBranch);
+
+    if (needHomepageOverride(prefb)) {
+      try {
+        return prefb.getComplexValue("startup.homepage_override_url",
+                                     nsIPrefLocalizedString).data;
+      }
+      catch (e) {
+      }
+    }
+
+    try {
+      var choice = prefb.getIntPref("browser.startup.page");
+      if (choice == 1)
+        return this.startPage;
+
+      if (choice == 2)
+        return Components.classes["@mozilla.org/browser/global-history;2"]
+                         .getService(nsIBrowserHistory).lastPageVisited;
+    }
+    catch (e) {
+    }
+
+    return "about:blank";
+  },
 
   get startPage() {
     var prefb = Components.classes["@mozilla.org/preferences-service;1"]
