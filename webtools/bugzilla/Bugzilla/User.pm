@@ -1030,8 +1030,8 @@ sub wants_mail {
                               AND relationship = $relationship 
                               AND event IN (" . join(",", @$events) . ") 
                               LIMIT 1");
-    
-    return($wants_mail);
+                              
+    return defined($wants_mail) ? 1 : 0;
 }
   
 sub get_userlist {
