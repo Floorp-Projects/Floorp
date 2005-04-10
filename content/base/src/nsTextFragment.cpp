@@ -360,7 +360,7 @@ nsTextFragment::SetBidiFlag()
         PRUnichar ch2 = *cp++;
         utf32Char = SURROGATE_TO_UCS4(ch1, ch2);
       }
-      if (UTF32_CHAR_IS_BIDI(utf32Char) ) {
+      if (UTF32_CHAR_IS_BIDI(utf32Char) || IS_BIDI_CONTROL_CHAR(utf32Char)) {
         mState.mIsBidi = PR_TRUE;
         break;
       }
