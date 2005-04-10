@@ -389,7 +389,7 @@ for (my $chart = 0; $cgi->param("field$chart-0-0"); $chart++) {
         }
         push(@rows, \@cols);
     }
-    push(@charts, {'rows' => \@rows, 'negate' => $cgi->param("negate$chart")});
+    push(@charts, {'rows' => \@rows, 'negate' => scalar($cgi->param("negate$chart")) });
 }
 
 $default{'charts'} = \@charts;
