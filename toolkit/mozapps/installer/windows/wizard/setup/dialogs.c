@@ -24,6 +24,7 @@
  *   Sean Su <ssu@netscape.com>
  *   Curt Patrick <curt@netscape.com>
  *   Ben Goodger <ben@mozilla.org>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -373,6 +374,12 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     wsprintf(szBuf, diWelcome.szMessage3, sgProduct.szProductName);
     SetDlgItemText(hDlg, IDC_STATIC3, szBuf);
 
+    SendDlgItemMessage(hDlg, IDC_STATIC_TITLE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_STATIC0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+
     // Subclass dialog to paint all static controls white.
     OldDialogWndProc = SubclassWindow(hDlg, (WNDPROC)NewDialogWndProc);
     break;
@@ -417,9 +424,14 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     SetDlgItemText(hDlg, IDC_RADIO_ACCEPT, diLicense.szRadioAccept);
     SetDlgItemText(hDlg, IDC_RADIO_DECLINE, diLicense.szRadioDecline);
 
+    SendDlgItemMessage(hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_RADIO_ACCEPT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_RADIO_DECLINE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+
     // Check the "Decline" Radio button by default. 
     CheckDlgButton(hDlg, IDC_RADIO_DECLINE, BST_CHECKED);
     SendMessage(GetDlgItem(hDlg, IDC_RADIO_DECLINE), BM_SETCHECK, BST_CHECKED, 0);
+    SendDlgItemMessage(hDlg, IDC_RADIO_DECLINE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
     // License Text
     lstrcpy(szBuf, szSetupDir);
@@ -501,10 +513,13 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
     lstrcpy(defaultPath, sgProduct.szPath);
 
     SetDlgItemText(hDlg, IDC_STATIC_MSG0, diSetupType.szMessage0);
+    SendDlgItemMessage(hDlg, IDC_STATIC_MSG0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
     if(diSetupType.stSetupType0.bVisible) {
       SetDlgItemText(hDlg, IDC_RADIO_ST0, diSetupType.stSetupType0.szDescriptionShort);
       SetDlgItemText(hDlg, IDC_STATIC_ST0_DESCRIPTION, diSetupType.stSetupType0.szDescriptionLong);
+      SendDlgItemMessage(hDlg, IDC_RADIO_ST0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage(hDlg, IDC_STATIC_ST0_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       ShowWindow(hRadioSt0, SW_SHOW);
       ShowWindow(hStaticSt0, SW_SHOW);
     }
@@ -516,6 +531,8 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
     if(diSetupType.stSetupType1.bVisible) {
       SetDlgItemText(hDlg, IDC_RADIO_ST1, diSetupType.stSetupType1.szDescriptionShort);
       SetDlgItemText(hDlg, IDC_STATIC_ST1_DESCRIPTION, diSetupType.stSetupType1.szDescriptionLong);
+      SendDlgItemMessage(hDlg, IDC_RADIO_ST1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage(hDlg, IDC_STATIC_ST1_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       ShowWindow(hRadioSt1, SW_SHOW);
       ShowWindow(hStaticSt1, SW_SHOW);
     }
@@ -735,6 +752,10 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
     InitPathDisplay(hDlg, szTempSetupPath, IDC_FOLDER_ICON, IDC_EDIT_DESTINATION);
 
     SetDlgItemText(hDlg, IDC_BUTTON_BROWSE, sgInstallGui.szBrowse_);
+
+    SendDlgItemMessage(hDlg, IDC_STATIC_MSG0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_BUTTON_BROWSE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+
     break;
 
   case WM_COMMAND:
@@ -861,6 +882,9 @@ LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   case WM_INITDIALOG:
     SetDlgItemText(hDlg, IDC_MESSAGE_UPGRADE, diUpgrade.szMessageCleanup);
     SetDlgItemText(hDlg, IDC_CHECK_SAFE_INSTALL, diUpgrade.szCheckboxSafeInstall);
+
+    SendDlgItemMessage(hDlg, IDC_MESSAGE_UPGRADE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_CHECK_SAFE_INSTALL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
     // Default to "Safe Upgrade".
     CheckDlgButton(hDlg, IDC_CHECK_SAFE_INSTALL, BST_CHECKED);
@@ -1237,6 +1261,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   switch(msg) {
   case WM_INITDIALOG:
     SetDlgItemText(hDlg, IDC_MESSAGE0, diSelectComponents.szMessage0);
+    SendDlgItemMessage(hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
     siCTemp = siComponents;
     if(siCTemp != NULL)
@@ -1255,15 +1280,22 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       SetFocus(hwndLBComponents);
       SendMessage(hwndLBComponents, LB_SETCURSEL, 0, 0);
       SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE, AC_COMPONENTS));
+      SendDlgItemMessage(hDlg, IDC_STATIC_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     }
 
     SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szComponents_);
     SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szDescription);
 
+    SendDlgItemMessage(hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+
 #ifdef STUB_INSTALLER
     // XXXben We don't support net stub installs yet. 
     SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, sgInstallGui.szTotalDownloadSize);
+    SendDlgItemMessage(hDlg, IDC_STATIC_DOWNLOAD_SIZE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 #endif
+
+    SendDlgItemMessage(hDlg, IDC_LIST_COMPONENTS, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
 
     gdwACFlag = AC_COMPONENTS;
     OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
@@ -1413,6 +1445,14 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     SetDlgItemText(hDlg, IDC_MESSAGE2, sgInstallGui.szProxyMessage);
     SetDlgItemText(hDlg, IDC_CONNECTION_SETTINGS, sgInstallGui.szProxyButton);
     SetDlgItemText(hDlg, IDC_INSTALL_FOLDER_LABEL, sgInstallGui.szInstallFolder);
+
+    SendDlgItemMessage(hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_MESSAGE2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_CONNECTION_SETTINGS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_INSTALL_FOLDER_LABEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_PRIMARY_COMPONENT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_OPTIONAL_COMPONENTS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
     ExtractIconEx("setuprsc.dll", 1, &largeIcon, &smallIcon, 1);
     SendMessage(GetDlgItem(hDlg, IDC_APP_ICON), STM_SETICON, (LPARAM)smallIcon, 0);
@@ -1808,6 +1848,11 @@ LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
       SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloading.szBlurb);
       SetDlgItemText(hDlg, IDC_STATIC0, diDownloading.szFileNameKey);
       SetDlgItemText(hDlg, IDC_STATIC1, diDownloading.szTimeRemainingKey);
+
+      SendDlgItemMessage(hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage(hDlg, IDC_STATIC0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage(hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+
       break;
 
     case WM_COMMAND:
@@ -1862,6 +1907,9 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
 
     SetDlgItemText(hDlg, IDC_STATUS0, diInstalling.szStatusFile);
     SetDlgItemText(hDlg, IDC_STATUS3, diInstalling.szStatusComponent);
+
+    SendDlgItemMessage(hDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_STATUS3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
     break;
 
@@ -1996,10 +2044,12 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
   switch (msg) {
   case WM_INITDIALOG:
     SetDlgItemText(hDlg, IDC_MESSAGE0, diWindowsIntegration.szMessage0);
+    SendDlgItemMessage(hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
     if (diWindowsIntegration.wiCB0.bEnabled) {
       ShowWindow(GetDlgItem(hDlg, IDC_CHECK0), SW_SHOW);
       SetDlgItemText(hDlg, IDC_CHECK0, diWindowsIntegration.wiCB0.szDescription);
+      SendDlgItemMessage(hDlg, IDC_CHECK0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     }
     else
       ShowWindow(GetDlgItem(hDlg, IDC_CHECK0), SW_HIDE);
@@ -2007,6 +2057,7 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
     if (diWindowsIntegration.wiCB1.bEnabled) {
       ShowWindow(GetDlgItem(hDlg, IDC_CHECK1), SW_SHOW);
       SetDlgItemText(hDlg, IDC_CHECK1, diWindowsIntegration.wiCB1.szDescription);
+      SendDlgItemMessage(hDlg, IDC_CHECK1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     }
     else
       ShowWindow(GetDlgItem(hDlg, IDC_CHECK1), SW_HIDE);
@@ -2014,6 +2065,7 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
     if (diWindowsIntegration.wiCB2.bEnabled) {
       ShowWindow(GetDlgItem(hDlg, IDC_CHECK2), SW_SHOW);
       SetDlgItemText(hDlg, IDC_CHECK2, diWindowsIntegration.wiCB2.szDescription);
+      SendDlgItemMessage(hDlg, IDC_CHECK2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     }
     else
       ShowWindow(GetDlgItem(hDlg, IDC_CHECK2), SW_HIDE);
@@ -2086,6 +2138,12 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
     wsprintf(szBuf, diInstallSuccessful.szLaunchApp, sgProduct.szProductName);
     SetDlgItemText(hDlg, IDC_START_APP, szBuf);
     SetDlgItemText(hDlg, IDC_RESET_HOMEPAGE, diInstallSuccessful.szResetHomepage);
+
+    SendDlgItemMessage(hDlg, IDC_STATIC_TITLE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_STATIC0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_START_APP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_RESET_HOMEPAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
 #ifndef MOZ_PHOENIX
     // Hide the "Reset Homepage" item for non-Firefox installers. 
@@ -2237,6 +2295,9 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
         lstrcpy(szBuf, sgProduct.szProductName);
 
       SetWindowText(hDlg, szBuf);
+
+      SendDlgItemMessage(hDlg, IDC_MESSAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+
       break;
 
     case WM_COMMAND:
@@ -2295,7 +2356,6 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
       GetPrivateProfileString("Messages", "MB_MESSAGE_STR", "", szBuf, sizeof(szBuf), szFileIniInstall);
       hDlgMessage = InstantiateDialog(hWndMain, DLG_MESSAGE, szBuf, DlgProcMessage);
       SendMessage(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (LPARAM)szMessage);
-      SendDlgItemMessage (hDlgMessage, IDC_MESSAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     }
     else
     {
