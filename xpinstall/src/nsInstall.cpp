@@ -1613,9 +1613,9 @@ nsInstall::GetPatch(nsHashKey *aKey, nsIFile** fileName)
     else
         *fileName = nsnull;
 
-    if (mPatchList != nsnull)
+    if (mPatchList)
     {
-        *fileName = (nsIFile*) mPatchList->Get(aKey);
+        NS_IF_ADDREF(*fileName = (nsIFile*) mPatchList->Get(aKey));
     }
 }
 
