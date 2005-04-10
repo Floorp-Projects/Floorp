@@ -1416,9 +1416,9 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
         nsImageMap* map = GetImageMap(aPresContext);
         if (nsnull != map) {
           nsRect inner = GetInnerArea();
+          aRenderingContext.PushState();
           aRenderingContext.SetColor(NS_RGB(0, 0, 0));
           aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-          aRenderingContext.PushState();
           aRenderingContext.Translate(inner.x, inner.y);
           map->Draw(aPresContext, aRenderingContext);
           aRenderingContext.PopState();
