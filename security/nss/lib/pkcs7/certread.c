@@ -42,6 +42,7 @@
 #include "secder.h"
 #include "secasn1.h"
 #include "secoid.h"
+#include "secerr.h"
 
 SEC_ASN1_MKSUB(SEC_AnyTemplate)
 
@@ -348,6 +349,10 @@ CERT_DecodeCertPackage(char *certbuf,
 	/* check entire length if definite length */
 	if ( seqLen || seqLenLen ) {
 	    if ( certlen != ( seqLen + seqLenLen + 2 ) ) {
+		if (certlen > ( seqLen + seqLenLen + 2 ))
+		    PORT_SetError(SEC_ERROR_EXTRA_INPUT);
+		else 
+		    PORT_SetError(SEC_ERROR_INPUT_LEN);
 		goto notder;
 	    }
 	}
