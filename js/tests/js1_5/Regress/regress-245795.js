@@ -51,9 +51,15 @@ if (typeof uneval != 'undefined')
       b=function() {};
     }
 
-  expect = ' function a() { b = (function () {}); } ';
+  var r = / function a\(\) \{ b = \(?function \(\) \{\s*\}\)?; \} /;
   eval(uneval(a));
-  actual = a.toString().replace(/[ \n]+/g, ' ');
+
+  var v = a.toString().replace(/[ \n]+/g, ' ');
+  
+  printStatus("[" + v + "]");
+
+  expect = true;
+  actual = r.test(v);
 
   reportCompare(expect, actual, summary);
 }
