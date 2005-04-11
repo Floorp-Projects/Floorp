@@ -178,6 +178,16 @@ gfxRGBA gfxContext::CurrentColor() const
     return c;
 }
 
+void gfxContext::SetAntialiasMode(AntialiasMode mode)
+{
+    // XXX implement me
+}
+
+gfxContext::AntialiasMode gfxContext::CurrentAntialiasMode()
+{
+    return MODE_COVERAGE;
+}
+
 void gfxContext::SetDash(gfxFloat* dashes, int ndash, gfxFloat offset)
 {
     cairo_set_dash(mCairo, dashes, ndash, offset);
