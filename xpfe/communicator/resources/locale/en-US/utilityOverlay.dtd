@@ -24,10 +24,10 @@
 <!ENTITY editMenu.accesskey				"e"> 
 <!ENTITY undoCmd.label						"Undo">  
 <!ENTITY undoCmd.key						"Z">  
-<!ENTITY undoCmd.accesskey					"u"> 
+<!ENTITY undoCmd.accesskey					"U"> 
 <!ENTITY redoCmd.label						"Redo">  
 <!ENTITY redoCmd.key						"Y">  
-<!ENTITY redoCmd.accesskey					"r"> 
+<!ENTITY redoCmd.accesskey					"R"> 
 <!ENTITY cutCmd.label						"Cut">  
 <!ENTITY cutCmd.key							"X">  
 <!ENTITY cutCmd.accesskey					"t"> 
