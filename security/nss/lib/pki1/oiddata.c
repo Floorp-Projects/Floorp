@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: oiddata.c,v $ $Revision: 1.5 $ $Date: 2005/03/14 18:04:44 $ ; @(#) $RCSfile: oiddata.c,v $ $Revision: 1.5 $ $Date: 2005/03/14 18:04:44 $";
+static const char CVS_ID[] = "@(#) $RCSfile: oiddata.c,v $ $Revision: 1.6 $ $Date: 2005/04/11 21:27:01 $ ; @(#) $RCSfile: oiddata.c,v $ $Revision: 1.6 $ $Date: 2005/04/11 21:27:01 $";
 #endif /* DEBUG */
 
 #ifndef PKI1T_H
@@ -2000,7 +2000,7 @@ const NSSOID nss_builtin_oids[] = {
   {
 #ifdef DEBUG
     "id-ce-invalidityDate",
-    "Invalid Date",
+    "Invalidity Date",
 #endif /* DEBUG */
     { "\x55\x1d\x18", 3 }
   },
