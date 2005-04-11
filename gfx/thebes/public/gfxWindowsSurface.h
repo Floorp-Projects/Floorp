@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef WINDOWSSURFACE_H
-#define WINDOWSSURFACE_H
+#ifndef GFX_WINDOWSSURFACE_H
+#define GFX_WINDOWSSURFACE_H
 
 #include "gfxASurface.h"
 #include "gfxPoint.h"
@@ -52,4 +52,4 @@ public:
     // <insert refcount stuff here>
 };
 
-#endif /* WINDOWSSURFACE_H */
+#endif /* GFX_WINDOWSSURFACE_H */

@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _GFX_FILTER_H
-#define _GFX_FILTER_H
+#ifndef GFX_FILTER_H
+#define GFX_FILTER_H
 
 #include "gfxTypes.h"
 
@@ -45,4 +45,4 @@ class gfxFilter {
     // CreateGaussianFilter, etc
 };
 
-#endif /* _GFX_FILTER_H */
+#endif /* GFX_FILTER_H */

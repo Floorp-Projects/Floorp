@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _GFX_CONTEXT_H
-#define _GFX_CONTEXT_H
+#ifndef GFX_CONTEXT_H
+#define GFX_CONTEXT_H
 
 #include <cairo.h>
 
@@ -178,4 +178,4 @@ private:
     cairo_t *mCairo;
 };
 
-#endif /* _GFX_CONTEXT_H */
+#endif /* GFX_CONTEXT_H */

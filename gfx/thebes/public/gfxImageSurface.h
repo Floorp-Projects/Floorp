@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFXSURFACEIMAGE_H
-#define GFXSURFACEIMAGE_H
+#ifndef GFX_IMAGESURFACE_H
+#define GFX_IMAGESURFACE_H
 
 #include "gfxASurface.h"
 #include "gfxPoint.h"
@@ -63,4 +63,4 @@ private:
     long mHeight;
 };
 
-#endif /* GFXSURFACEIMAGE_H */
+#endif /* GFX_IMAGESURFACE_H */

@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _GFX_RECT_H
-#define _GFX_RECT_H
+#ifndef GFX_RECT_H
+#define GFX_RECT_H
 
 #include "gfxTypes.h"
 
@@ -58,4 +58,4 @@ struct gfxRect {
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 };
 
-#endif /* _GFX_RECT_H */
+#endif /* GFX_RECT_H */
