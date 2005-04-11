@@ -1066,6 +1066,9 @@ nsFormFillController::GetWindowForDocShell(nsIDocShell *aDocShell)
 PRInt32
 nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
 {
+  if (!aDocShell)
+    return -1;
+
   // Loop through our cached docShells looking for the given docShell
   PRUint32 count;
   mDocShells->Count(&count);
@@ -1087,4 +1090,3 @@ nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
     
   return -1;
 }
-
