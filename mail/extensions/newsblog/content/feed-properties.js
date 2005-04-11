@@ -60,7 +60,7 @@ function onLoad()
   {
     // if we are editing an existing feed, disable the top level account
     rssAccountMenuItem.setAttribute('disabled', 'true');
-    feedLocationEl.disabled = true;
+    feedLocationEl.setAttribute('readonly', true);
   }
 }
 
@@ -93,4 +93,18 @@ function SetFolderPicker(uri,pickerID)
 
   picker.setAttribute("label",msgfolder.name);
   picker.setAttribute("uri",uri);
+}
+
+// CopyWebsiteAddress takes the website address title button, extracts
+// the website address we stored in there and copies it to the clipboard
+function CopyWebsiteAddress(websiteAddressNode)
+{
+  if (websiteAddressNode)
+  {
+    var websiteAddress = websiteAddressNode.value;
+    var contractid = "@mozilla.org/widget/clipboardhelper;1";
+    var iid = Components.interfaces.nsIClipboardHelper;
+    var clipboard = Components.classes[contractid].getService(iid);
+    clipboard.copyString(websiteAddress);
+  }
 }

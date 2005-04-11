@@ -303,6 +303,11 @@ var gFeedSubscriptionsWindow = {
     {
       var item = this.getItemAtIndex(aIndex);
       if (!item) return;
+
+      // save off the current selection item
+      var seln = this.selection;
+      var currentSelectionIndex = seln.currentIndex;
+
       var multiplier = item.open ? -1 : 1;
       var delta = multiplier * item.children.length;
       this.mRowCount += delta;
@@ -316,6 +321,10 @@ var gFeedSubscriptionsWindow = {
       // add or remove the children from our view
       item.open = !item.open;
       gFeedSubscriptionsWindow.mTree.treeBoxObject.rowCountChanged(aIndex, delta);
+
+      // now restore selection
+      seln.select(currentSelectionIndex);
+      
     },    
     cycleHeader: function (aColumn) {},    
     selectionChanged: function () {},    

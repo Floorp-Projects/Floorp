@@ -49,14 +49,18 @@
 #ifdef XP_MACOSX
   style="width: 40em;"
 #else
-  style="width: 30em;"
+  style="width: 33em;"
 #endif
   buttons="accept,cancel"
   onload="onLoad();"
   ondialogaccept="return onOk();">
+
+  <popup id="copyUrlPopup" popupanchor="bottomleft">
+    <menuitem label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;" oncommand="CopyWebsiteAddress(document.popupNode)"/>
+  </popup>
   
   <script type="application/x-javascript" src="feed-properties.js"/>
-   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
   <grid flex="1">
     <columns>
@@ -64,11 +68,10 @@
       <column  flex="1"/>
     </columns>
 
-    <rows>
-    
+    <rows>   
       <row>
-          <label value="&feedLocation.label;" accesskey="&feedLocation.accesskey;" control="feedLocation"/>
-          <textbox id="feedLocation"/>
+        <label value="&feedLocation.label;" accesskey="&feedLocation.accesskey;" control="feedLocation"/>
+        <textbox id="feedLocation" context="copyUrlPopup"/>
       </row>
 
       <row>
