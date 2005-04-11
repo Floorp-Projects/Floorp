@@ -49,7 +49,11 @@
   goToPrevious
 */
 
-calendarView.prototype = {
+function CalendarView()
+{
+}
+
+CalendarView.prototype = {
 
 
     setDisplayCalendar: function(calendar) {

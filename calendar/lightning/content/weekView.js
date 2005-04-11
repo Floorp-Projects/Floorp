@@ -40,7 +40,7 @@ function WeekView()
 }
 
 WeekView.prototype = {
-    __proto__: calendarView ? (new calendarView()) : {},
+    __proto__: CalendarView ? (new CalendarView()) : {},
 
     refresh: function() {
         // clean up anything that was here before

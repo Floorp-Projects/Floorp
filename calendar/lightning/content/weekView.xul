@@ -54,6 +54,7 @@
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
    <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
    <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+   <script type="application/x-javascript" src="chrome://lightning/content/calendarView.js"/>
    <script type="application/x-javascript" src="chrome://lightning/content/weekView.js"/>
    
    <vbox id="week-view-box" flex="1">
