@@ -414,7 +414,9 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
   rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aForce) {
+  // Skip the URI equality check if our current image was blocked.  If
+  // that happened, we really do want to try loading again.
+  if (!aForce && NS_CP_ACCEPTED(mImageBlockingStatus)) {
     nsCOMPtr<nsIURI> currentURI;
     GetCurrentURI(getter_AddRefs(currentURI));
     PRBool equal;
