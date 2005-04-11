@@ -8,7 +8,8 @@
 <!--
 Contributors:
   R.J. Keller <rlk@trfenv.com> (original author)
-  Nilson Cain (nilson@gmail.com)
+  Nilson Cain <nilson@gmail.com>
+  Steffen Wilberg <steffen.wilberg@web.de>
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -20,7 +21,7 @@ Contributors:
 <body>
 
 <h1>Using &brandFullName;</h1>
-<p>Welcome to &brandFullName;! &brandFullName; is an Internet browser that
+<p>Welcome to &brandFullName;! &brandShortName; is an Internet browser that
   you can use to visit web pages and search the Web.</p>
 
 <div class="contentsBox">In this section:
@@ -128,7 +129,7 @@ Contributors:
   to visit several different web pages. This frees up space on your desktop.
   You can open, close, and reload web pages conveniently in one place without
   having to switch to another window.</p>
-  
+
 <p>For more info, see <a href="tabbed_browsing.xhtml">Tabbed Browsing</a>.</p>
 
 <h3 id="using_the_sidebar">Using the Sidebar</h3>
@@ -461,47 +462,36 @@ Contributors:
 <h2 id="improving_speed_and_efficiency">Improving Speed and Efficiency</h2>
 
 <h3 id="managing_different_file_types">Managing Different File Types</h3>
-<p>&brandShortName; can handle many types of files. However, for some files
-  such as movies or music, &brandShortName; needs plug-ins or
-  &quot;helper&quot; applications that can handle those files. If
-  &brandShortName; doesn't have the needed helper application or plug-in, it
-  can still save the file to your hard disk. When saving files, you can keep
-  track of them using the Download Manager.</p>
+<p>&brandShortName; can handle many types of files. However, for some files such
+  as movies or music, &brandShortName; needs Plugins or external applications
+  that can handle those files. If &brandShortName; doesn't have the needed
+  Plugin or doesn't know what application to use to open the file, it can still
+  save the file to your hard disk. When saving files, you can keep track of them
+  using the Download Manager.</p>
 
-<p><strong>Plug-ins</strong><br/>
-  Plug-ins are helper applications that extend functionality within
-  &brandShortName; and run within it. Plug-ins like Sun Java, Macromedia Flash,
-  and RealNetworks RealPlayer allow &brandShortName; to show multimedia files
-  and run small applications such as movies, animations, and games.</p>
+<p>Plugins extend &brandShortName;'s functionality and run within it.
+  Plugins like Sun Java, Macromedia Flash, and RealNetworks RealPlayer allow
+  &brandShortName; to show multimedia files and run small applications such as
+  movies, animations, and games. You can find common Plugins on the <a href=
+  "https://pfs.mozilla.org/plugins/" target="_blank">Plugins page</a>
+   at Mozilla Update.</p>
 
-<p>You can also install plug-ins after you install &brandShortName;. To see the
-  plug-ins for &brandShortName; that are currently installed, select
-  &pref.menuPath;.  Select the <em>Downloads</em> category and click the
-  <em>Plug-Ins...</em> button. You can also enable or disable currently
-  installed plug-ins here.</p>
+<p>When files cannot be opened within &brandShortName;, you can choose to open
+  them with applications outside of &brandShortName;. For example, you can use
+  the media player of your choice to play MP3 files.</p>
 
-<p>To see a full list of &brandShortName; plug-ins you can install, see the
-  <a href="http://home.netscape.com/plugins/index.html" target="_blank">Browser
-  Plug-ins page</a> at Netscape.com.</p>
+<p>You can specify how &brandShortName; handles files it can't display in the
+  <em>Download Actions</em> dialog. To open this dialog, select &pref.menuPath;,
+  open the <em>Downloads</em> panel, and click the <em>View &amp; Edit
+  Actions...</em> button. You can change the action for a file type or remove it.
+  More information about this dialog is available in the respective section of
+  <a href="prefs.xhtml#download_actions">Download &pref.pluralCaps;</a>.</p>
 
-<p><strong>Helper Applications</strong><br/>
-  When files cannot be opened within &brandShortName;, you can choose to
-  launch helper applications that open outside of &brandShortName;. For
-  example, to play MP3 files, programs like Winamp can be opened outside of
-  &brandShortName;.</p>
-
-<p>The settings in the <em>Downloads</em> panel in the &pref.pluralCaps; window
-  tell &brandShortName; which helper applications to use on your computer. In
-  the <em>File Types</em> section, you can see how different file types will be
-  handled by &brandShortName;. You can change the action for a file type or
-  remove it. Also, if &brandShortName; doesn't know which helper application to
-  use, it allows you to find helper applications within the download dialog
-  box.</p>
-
-<p>The download dialog box has these choices:</p>
+<p>When you click on a file and &brandShortName; doesn't know how to handle it,
+  an <em>Opening</em> dialog box is displayed, offering these choices:</p>
 
 <ul>
-  <li><strong>Open using</strong>: &brandShortName; opens the file using the
+  <li><strong>Open with</strong>: &brandShortName; opens the file using the
     default program in your system settings. You can also choose a different
     program by selecting <em>Other...</em> in the drop-down list.</li>
   <li><strong>Save to Disk</strong>: &brandShortName; allows you to select a
@@ -514,8 +504,8 @@ Contributors:
 </ul>
 
 <p><strong>Tip</strong>: You can clear your saved &pref.plural; for <em>Do this
-  automatically for files like this from now on</em> in the <em>Downloads</em>
-  panel of &pref.pluralCaps;.</p>
+  automatically for files like this from now on</em> in the <em>Download
+  Actions</em> dialog.</p>
 
 <h3 id="making_firebird_your_default_browser">Making &brandShortName; Your
   Default Browser</h3>
@@ -527,24 +517,23 @@ Contributors:
   on your computer. To easily open web pages, you can make &brandShortName;
   your default browser.</p>
 
-<p>To make &brandShortName; your default web browser, select &pref.menuPath;.
-  You can then click on the <em>Set Default Browser</em> button in the General
-  panel of &pref.pluralCaps; to make &brandShortName; your default web browser.</p>
+<p>To make &brandShortName; your default web browser, select &pref.menuPath;
+  and click the <em>Check Now</em> button in the <em>General</em> panel.</p>
 
 <h3 id="changing_cache_settings">Changing Cache Settings</h3>
 <p>&brandShortName; stores copies of frequently accessed pages in the cache.
   By doing this &brandShortName; doesn't have to retrieve the page from the
   network each time you view the web page.</p>
 
-<p>To set the size of the cache or to clear it (Windows and Unix only):</p>
+<p>To set the size of the cache or to clear it:</p>
 
 <ol>
   <li>Select &pref.menuPath;.</li>
-  <li>Under the <em>Privacy</em> category, click <em>Cache</em> to expand the
-    list.</li>
+  <li>Open the <em>Privacy</em> panel and click the <em>Cache</em> tab.</li>
   <li>Enter a number in the <em>Use up to</em> field to specify the size of the
     cache. 50MB to 70MB is a good size. To clear the cache immediately, click
-    the <em>Clear</em> button to the right of the <em>Cache</em> category.</li>
+    the <em>Clear Cache Now</em> button at the bottom of the <em>Cache</em>
+    tab.</li>
 </ol>
 
 <p><strong>Important</strong>: A larger cache allows more data to be quickly
@@ -554,14 +543,11 @@ Contributors:
   maintenance takes longer than you wish, try reducing the size of the disk
   cache.</p>
 
-<p>To reload a page at any time:</p>
-<ul>
-  <li>Click the <em>Reload</em> button in &brandShortName;'s <em>Navigation
-    Toolbar</em>. The computer checks the Internet to make sure you have the
-    latest version of the page.</li>
-</ul>
+<p>To reload a page at any time, click the <em>Reload</em> button in
+  &brandShortName;'s <em>Navigation Toolbar</em>. &brandShortName; then loads
+  and displays the latest version of the page.</p>
 
-<div class="contentsBox"><em>05 November 2004</em></div>
+<div class="contentsBox"><em>10 April 2005</em></div>
 <p>Copyright &copy; 2003-2005 Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>
