@@ -38,8 +38,8 @@
 # ***** END LICENSE BLOCK *****
 
 #==============================================================================
-# usage: perl deliver.pl version URLPath stubName blobName buildWizard
-# e.g.   perl deliver.pl 5.0.0.1 ftp://foo/ mozilla-installer mozilla-installer
+# usage: perl deliver.pl version URLPath stubName blobName buildWizard appName appDisplayName
+# e.g.   perl deliver.pl 5.0.0.1 ftp://foo/ mozilla-installer mozilla-installer mozilla Mozilla
 #
 # Delivers the stub and blob installers to mozilla/installer/stub 
 # and mozilla/installer/sea, respectively.  Also, delivers the .xpis
@@ -64,7 +64,6 @@ getopts('o:s:');
 @libraryList = undef;
 
 #// constants
-$SUBDIR = "mozilla-installer";
 $_DEPTH  = "../../..";
 
 # Determine topsrcdir
@@ -101,22 +100,29 @@ $aURLPath = "ftp://ftp.mozilla.org/";
 $aStubName = "mozilla-installer";
 $aBlobName = "mozilla-installer";
 $aBuildWizard = "NO";
+$aMozAppName = "mozilla";
+$aMozAppDisplayName = "Mozilla";
 
 #// parse args
-# all optional args: version, URLPath, stubName, blobName
-if ($#ARGV >= 4) { $aBuildWizard = $ARGV[4]; }
-if ($#ARGV >= 3) { $aBlobName    = $ARGV[3]; }
-if ($#ARGV >= 2) { $aStubName    = $ARGV[2]; }
-if ($#ARGV >= 1) { $aURLPath     = $ARGV[1]; }
-if ($#ARGV >= 0) { $aVersion     = $ARGV[0]; }
+# all optional args: version, URLPath, stubName, blobName, MozAppName,
+# MozDisplayName
+if ($#ARGV >= 6) { $aMozAppDisplayName = $ARGV[6]; }
+if ($#ARGV >= 5) { $aMozAppName        = $ARGV[5]; }
+if ($#ARGV >= 4) { $aBuildWizard       = $ARGV[4]; }
+if ($#ARGV >= 3) { $aBlobName          = $ARGV[3]; }
+if ($#ARGV >= 2) { $aStubName          = $ARGV[2]; }
+if ($#ARGV >= 1) { $aURLPath           = $ARGV[1]; }
+if ($#ARGV >= 0) { $aVersion           = $ARGV[0]; }
 
-#// create dist structure (mozilla/installer/{stage,raw,stub,sea})
+$SUBDIR = "$aMozAppName-installer";
+
+#// create dist structure ($ROOT/{stage,raw,stub,sea})
 if (-e $ROOT)
 {
     if (-w $ROOT) 
         { system("rm -rf $ROOT"); }
     else 
-        { die "--- deliver.pl: check perms on mozilla/installer: $!"; }
+        { die "--- deliver.pl: check perms on $ROOT: $!"; }
 }
 
 mkdir($ROOT, 0777)  || die "--- deliver.pl: couldn't mkdir root: $!";
@@ -142,12 +148,12 @@ if ($aBuildWizard eq "buildwizard")
 }
 
 #// deliver wizard to staging area (mozilla/installer/stage)
-copy("$WIZSRC/mozilla-installer", $RAW);
-copy("$WIZARD/mozilla-installer-bin", $RAW);
+copy("$WIZSRC/mozilla-installer", "$RAW/$aMozAppName-installer");
+copy("$WIZARD/mozilla-installer-bin", "$RAW/$aMozAppName-installer-bin");
 copy("$WIZSRC/installer.ini", $RAW);
 copy("$WIZSRC/README", $RAW);
 copy("$WIZSRC/MPL-1.1.txt", $RAW);
-chmod(0755, "$RAW/mozilla-installer"); #// ensure shell script is executable
+chmod(0755, "$RAW/$aMozAppName-installer"); #// ensure shell script is executable
 
 spew("Completed delivering wizard");
 
@@ -182,7 +188,7 @@ spew("Completed signing NSS libraries");
 
 #// call makeall.pl tunneling args (delivers .xpis to $topobjdir/installer/stage)
 chdir("$topsrcdir/xpinstall/packager/unix");
-system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI");
+system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI $aMozAppName $aMozAppDisplayName");
 system("mv $topsrcdir/xpinstall/packager/unix/config.ini $RAW");
 spew("Completed making .xpis");
 
@@ -195,7 +201,7 @@ my $create_tar = 'tar -cv --owner=0 --group=0 --numeric-owner --mode="go-w" -f';
 spew("Creating stub installer tarball...");
 chdir("$RAW/..");
 system("mv $RAW $ROOT/$SUBDIR");
-system($create_tar . "$STUB/$aStubName.tar ./$SUBDIR/mozilla-installer ./$SUBDIR/mozilla-installer-bin ./$SUBDIR/installer.ini ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
+system($create_tar . "$STUB/$aStubName.tar ./$SUBDIR/$aMozAppName-installer ./$SUBDIR/$aMozAppName-installer-bin ./$SUBDIR/installer.ini ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
 system("mv $ROOT/$SUBDIR $RAW");
 system("gzip $STUB/$aStubName.tar");
 spew("Completed creating stub installer tarball");
@@ -211,7 +217,7 @@ spew("Completed creating blob (aka full or sea) installer tarball");
 chdir($_orig);
 
 spew("Completed packaging stub and sea");
-spew("Installers built (see mozilla/installer/{stub,sea})");
+spew("Installers built (see $ROOT/{stub,sea})");
 
 
 #-------------------------------------------------------------------------

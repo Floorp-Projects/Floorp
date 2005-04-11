@@ -61,11 +61,13 @@ PATH=.${PATH+":$PATH"}
 export PATH
 
 BASEDIR=`dirname "$0"`
+BINNAME=`basename "$0"`
+
 if [ "$BASEDIR" = "" ]; then
     echo "dirname is not in your PATH"
-    ./mozilla-installer-bin ${1+"$@"}
+    "./${BINNAME}-bin" ${1+"$@"}
 else
     cd "${BASEDIR:-.}"
-    ./mozilla-installer-bin ${1+"$@"}
+    "./${BINNAME}-bin" ${1+"$@"}
 fi
 
