@@ -739,7 +739,6 @@ nsCairoRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
                                            PRUint32 aCopyFlags)
 {
     nsCairoDrawingSurface *cds = (nsCairoDrawingSurface *) aSrcSurf;
-    cairo_surface_t *src = cds->GetCairoSurface();
 
     fprintf (stderr, "***** nsCairoRenderingContext::CopyOffScreenBits: [%p] %d,%d -> %d,%d %dx%d\n",
              aSrcSurf, aSrcX, aSrcY, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height);
@@ -1012,7 +1011,7 @@ nsCairoRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 NS_IMETHODIMP
 nsCairoRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
 {
-    mFontMetrics = aFontMetrics;
+    mFontMetrics = NS_STATIC_CAST(nsICairoFontMetrics*, aFontMetrics);
     return NS_OK;
 }
 
@@ -1186,7 +1185,7 @@ nsCairoRenderingContext::DrawString(const nsString& aString,
 }
 
 NS_IMETHODIMP
-nsCairoRenderingContext:: RenderPostScriptDataFragment(const unsigned char *psdata, unsigned long psdatalen)
+nsCairoRenderingContext::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 {
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

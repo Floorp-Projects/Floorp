@@ -220,6 +220,7 @@ nsCairoDrawingSurface::Lock (PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 a
     NS_ASSERTION(aY + aHeight <= mHeight, "Invalid aY/aHeight");
     NS_ASSERTION(mLockFlags == 0, "nsCairoDrawingSurface::Lock while surface is already locked!");
 
+#if 0
     if (!mFastAccess) {
         mImageSurface = cairo_surface_get_image (mSurface);
     }
@@ -238,13 +239,13 @@ nsCairoDrawingSurface::Lock (PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 a
         }
         return NS_ERROR_FAILURE;
     }
-
     *aBits = data + (stride * aY) + (aX * (depth / 8));
     *aStride = stride;
     *aWidthBytes = width * (depth / 8);
 
     mLockFlags = 0;
 
+#endif
     return NS_OK;
 }
 
@@ -260,7 +261,7 @@ nsCairoDrawingSurface::Unlock (void)
 
     if (mLockFlags & NS_LOCK_SURFACE_WRITE_ONLY) {
         /* need to copy back */
-        cairo_surface_set_image (mSurface, mImageSurface);
+        //cairo_surface_set_image (mSurface, mImageSurface);
     }
 
     cairo_surface_destroy (mImageSurface);

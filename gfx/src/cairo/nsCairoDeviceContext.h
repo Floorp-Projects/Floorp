@@ -46,6 +46,9 @@
 #include "nsDeviceContext.h"
 
 #include <cairo.h>
+#ifdef MOZ_X11
+#include <cairo-xlib.h>
+#endif
 
 #ifdef MOZ_ENABLE_XLIB
 #include "xlibrgb.h"
