@@ -7905,39 +7905,7 @@ nsCSSFrameConstructor::AppendFrames(const nsFrameConstructorState& aState,
     }
   }
 
-  nsresult rv = NS_OK;
-
-  if (nsLayoutAtoms::tableFrame == aParentFrame->GetType()) { 
-    nsIAtom* childType = aFrameList->GetType();
-    if (nsLayoutAtoms::tableColFrame == childType) {
-      // table column
-      nsIFrame* parentFrame = aFrameList->GetParent();
-      rv = frameManager->AppendFrames(parentFrame, nsLayoutAtoms::colGroupList,
-                                      aFrameList);
-    }
-    else if (nsLayoutAtoms::tableCaptionFrame == childType) {
-      // table caption
-      rv = frameManager->AppendFrames(aParentFrame, nsLayoutAtoms::captionList,
-                                      aFrameList);
-    }
-    else {
-      rv = frameManager->AppendFrames(aParentFrame, nsnull, aFrameList);
-    }
-  }
-  else {
-    // Append the frames to the end of the parent's child list
-    // check for a table caption which goes on an additional child list with a different parent
-    nsIFrame* outerTableFrame; 
-    if (GetCaptionAdjustedParent(aParentFrame, aFrameList, &outerTableFrame)) {
-      rv = frameManager->AppendFrames(outerTableFrame,
-                                      nsLayoutAtoms::captionList, aFrameList);
-    }
-    else {
-      rv = frameManager->AppendFrames(aParentFrame, nsnull, aFrameList);
-    }
-  }
-
-  return rv;
+  return frameManager->AppendFrames(aParentFrame, nsnull, aFrameList);
 }
 
 /**
@@ -8666,7 +8634,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       if (captionItems.childList) { // append the caption to the outer table
         nsIFrame* outerTable = parentFrame->GetParent();
         if (outerTable) { 
-          AppendFrames(state, aContainer, outerTable, captionItems.childList); 
+          state.mFrameManager->AppendFrames(outerTable,
+                                            nsLayoutAtoms::captionList,
+                                            captionItems.childList);
         }
       }
       if (frameItems.childList) { // append children of the inner table
@@ -9120,8 +9090,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     // If we didn't process children when we originally created the frame,
     // then don't do any processing now
     nsIAtom* frameType = parentFrame->GetType();
-    if (frameType == nsLayoutAtoms::objectFrame) {
-      // This handles APPLET, EMBED, and OBJECT
+    if (frameType == nsLayoutAtoms::objectFrame ||
+        frameType == nsLayoutAtoms::tableColFrame) {
+      // This handles APPLET, EMBED, OBJECT and COL
       return NS_OK;
     }
     // Deal with inner/outer tables, fieldsets
@@ -9154,6 +9125,16 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                 GetAbsoluteContainingBlock(parentFrame),
                                 GetFloatContainingBlock(parentFrame),
                                 aFrameState);
+
+  PRBool hasCaption = PR_FALSE;
+  if (nsLayoutAtoms::tableFrame == parentFrame->GetType()) {
+    nsIFrame* outerTable = parentFrame->GetParent();
+    if (outerTable) {
+      if (outerTable->GetFirstChild(nsLayoutAtoms::captionList)) {
+        hasCaption = PR_TRUE;
+      }
+    }
+  }
 
   // Recover state for the containing block - we need to know if
   // it has :first-letter or :first-line style applied to it. The
@@ -9241,8 +9222,28 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       if (childStyleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)
         return NS_OK; //don't create anything else than columns below a colgroup  
   }
+  else if (parentFrame->GetType() == nsLayoutAtoms::tableFrame && hasCaption) {
+    // Resolve the style context and get its display
+    nsRefPtr<nsStyleContext> childStyleContext;
+    childStyleContext = ResolveStyleContext(parentFrame, aChild);
+    if (childStyleContext->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)
+      return NS_OK; //don't create a second table caption frame and its descendants
+  }
 
-  ConstructFrame(state, aChild, parentFrame, frameItems);
+  // if the container is a table and a caption will be appended, it needs to be
+  // put in the outer table frame's additional child list.
+  
+  nsFrameItems tempItems, captionItems;
+
+  ConstructFrame(state, aChild, parentFrame, tempItems);
+  if (tempItems.childList) {
+    if (nsLayoutAtoms::tableCaptionFrame == tempItems.childList->GetType()) {
+      captionItems.AddChild(tempItems.childList);
+    }
+    else {
+      frameItems.AddChild(tempItems.childList);
+    }
+  }
 
   // Now that we've created frames, run the attach queue.
   //XXXwaterson should we do this after we've processed pseudos, too?
@@ -9299,20 +9300,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
           prevSibling = firstChild;
         }
       }
-
-      // check for a table caption which goes on an additional child list
-      nsIFrame* outerTableFrame; 
-      if (GetCaptionAdjustedParent(parentFrame, newFrame, &outerTableFrame)) {
-        // XXXwaterson this seems wrong; i.e., how can we assume
-        // that appending is the right thing to do here?
-        state.mFrameManager->AppendFrames(outerTableFrame,
-                                          nsLayoutAtoms::captionList,
-                                          newFrame);
-      }
-      else {
-        state.mFrameManager->InsertFrames(parentFrame,
-                                          nsnull, prevSibling, newFrame);
-      }
+      state.mFrameManager->InsertFrames(parentFrame,
+                                        nsnull, prevSibling, newFrame);
     }
 
     if (haveFirstLetterStyle) {
@@ -9321,7 +9310,22 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       RecoverLetterFrames(state, state.mFloatedItems.containingBlock);
     }
   }
-
+  else {
+    // we might have a caption treat it here
+    nsIFrame* newCaptionFrame = captionItems.childList;
+    if (NS_SUCCEEDED(rv) && newCaptionFrame) {
+      nsIFrame* outerTableFrame;
+      if (GetCaptionAdjustedParent(parentFrame, newCaptionFrame, &outerTableFrame)) {
+        // the double caption creation was prevented above, so we are sure
+        // that we can append
+        NS_ASSERTION(!outerTableFrame->GetFirstChild(nsLayoutAtoms::captionList),
+                     "No double captions please");
+        state.mFrameManager->AppendFrames(outerTableFrame,
+                                          nsLayoutAtoms::captionList,
+                                          newCaptionFrame);
+      }
+    }
+  }
   // Here we have been notified that content has been insert
   // so if the select now has a single item 
   // we need to go in and removed the dummy frame
