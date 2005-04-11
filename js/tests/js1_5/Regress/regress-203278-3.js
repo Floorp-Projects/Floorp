@@ -55,7 +55,7 @@ while (i-- != 0)
   a[i] = {};
 }
 
-// Prepare linked list that causes recursion iduring GC with 
+// Prepare linked list that causes recursion during GC with 
 // depth O(list size)
 
 for (i = 0; i != 50*1000; ++i) 
@@ -63,7 +63,10 @@ for (i = 0; i != 50*1000; ++i)
   a = [a, a.concat()];
 }
 
-gc();
+if (typeof gc == 'function')
+{
+  gc();
+}
 
 actual = 'PASS';
 
