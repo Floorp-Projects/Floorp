@@ -32,7 +32,7 @@
   <arg choice='opt'>--depends-on <replaceable>dependson</replaceable></arg>
   <arg choice='opt'>--blocked <replaceable>blocked</replaceable></arg>
   <arg choice='opt'>--description <replaceable>comment</replaceable></arg>
-  <arg choice='opt'>--no-read </arg>
+  <arg choice='opt'>--no-stdin </arg>
   <arg choice='plain'><replaceable>bugzilla-url</replaceable></arg>
 </cmdsynopsis>
 
@@ -60,7 +60,7 @@ relevant Bugzilla instance's base URL (technically, its
 following options to set or override fields:</para>
 <variablelist>
 <varlistentry>
-<term>-b. --bug-status</term>
+<term>-b, --status</term>
 <listitem>
 <para>Set the bug_status field, overriding the Status header from
 standard input if present.  (The stock Bugzilla web presentation
