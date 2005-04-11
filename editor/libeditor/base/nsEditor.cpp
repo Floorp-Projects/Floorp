@@ -150,19 +150,20 @@ nsEditor::nsEditor()
 ,  mSelState(nsnull)
 ,  mSavedSel()
 ,  mRangeUpdater()
-,  mShouldTxnSetSelection(PR_TRUE)
 ,  mAction(nsnull)
 ,  mDirection(eNone)
-,  mInIMEMode(PR_FALSE)
 ,  mIMETextRangeList(nsnull)
 ,  mIMETextNode(nsnull)
 ,  mIMETextOffset(0)
 ,  mIMEBufferLength(0)
+,  mInIMEMode(PR_FALSE)
 ,  mIsIMEComposing(PR_FALSE)
 ,  mNeedRecoverIMEOpenState(PR_FALSE)
+,  mShouldTxnSetSelection(PR_TRUE)
 ,  mActionListeners(nsnull)
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
+,  mGotDOMEventReceiver(PR_FALSE)
 ,  mDocWeak(nsnull)
 ,  mPhonetic(nsnull)
 {
@@ -5401,24 +5402,35 @@ nsEditor::HandleInlineSpellCheck(PRInt32 action,
 already_AddRefed<nsIDOMEventReceiver>
 nsEditor::GetDOMEventReceiver()
 {
-  nsIDOMEventReceiver *erp = nsnull;
-
-  nsIDOMElement *rootElement = GetRoot();
-
-  // Now hack to make sure we are not anonymous content.
-  // If we are grab the parent of root element for our observer.
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
-
-  if (content)
+  if (mDOMEventReceiver)
   {
-    nsIContent* parent = content->GetParent();
-    if (parent)
+    nsIDOMEventReceiver *erp = mDOMEventReceiver;
+    NS_ADDREF(erp);
+    return erp;
+  }      
+
+  nsIDOMEventReceiver *erp = nsnull;
+  
+  if (!mGotDOMEventReceiver)
+  {
+    // Look for one
+    nsIDOMElement *rootElement = GetRoot();
+
+    // Now hack to make sure we are not anonymous content.
+    // If we are grab the parent of root element for our observer.
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
+
+    if (content)
     {
-      if (parent->IndexOf(content) < 0)
+      nsIContent* parent = content->GetParent();
+      if (parent)
       {
-        // this will put listener on the form element basically
-        CallQueryInterface(parent, &erp);
+        if (parent->IndexOf(content) < 0)
+        {
+          // this will put listener on the form element basically
+          CallQueryInterface(parent, &erp);
+        }
       }
     }
   }
@@ -5435,6 +5447,14 @@ nsEditor::GetDOMEventReceiver()
       CallQueryInterface(domdoc, &erp);
     }
   }
+  else
+  {
+    // We got a DOM event receiver from our content.  Cache it.
+    mDOMEventReceiver = erp;
+  }
+
+  // If we found something, make a note of that.
+  mGotDOMEventReceiver = mGotDOMEventReceiver || erp;
 
   return erp;
 }

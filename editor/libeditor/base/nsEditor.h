@@ -598,28 +598,34 @@ protected:
   nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
   nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
   nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
-  PRBool            mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   nsCOMPtr<nsIDOMElement> mRootElement;    // cached root node
   PRInt32           mAction;             // the current editor action
   EDirection        mDirection;          // the current direction of editor action
   
   // data necessary to build IME transactions
-  PRBool                        mInIMEMode;        // are we inside an IME composition?
   nsIPrivateTextRangeList*      mIMETextRangeList; // IME special selection ranges
   nsCOMPtr<nsIDOMCharacterData> mIMETextNode;      // current IME text node
   PRUint32                      mIMETextOffset;    // offset in text node where IME comp string begins
   PRUint32                      mIMEBufferLength;  // current length of IME comp string
+  PRPackedBool                  mInIMEMode;        // are we inside an IME composition?
   PRPackedBool                  mIsIMEComposing;   // is IME in composition state?
                                                    // This is different from mInIMEMode. see Bug 98434.
   PRPackedBool                  mNeedRecoverIMEOpenState;   // Need IME open state change on blur.
 
+  PRPackedBool                  mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   // various listeners
   nsVoidArray*                  mActionListeners;  // listens to all low level actions on the doc
   nsVoidArray*                  mEditorObservers;   // just notify once per high level change
   nsCOMPtr<nsISupportsArray>    mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
   PRInt8                        mDocDirtyState;		// -1 = not initialized
+  PRPackedBool                  mGotDOMEventReceiver;  // True if we've gotten our DOMEventReceiver once
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
+  // When mGotDOMEventReceiver is set, a null mDOMEventReceiver means we didn't
+  // find one (and hence should be using the document).  We cache the event
+  // receiver when we get it off anonymous content because during document
+  // teardown the anonymous content can get unhooked before we get unhooked.
+  nsCOMPtr<nsIDOMEventReceiver> mDOMEventReceiver;
   nsCOMPtr<nsIDTD> mDTD;
 
   nsString* mPhonetic;
