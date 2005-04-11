@@ -460,23 +460,6 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
       }
     }
   } 
-  else if (aNodeInfo->Equals(nsHTMLAtoms::img, kNameSpaceID_XHTML) ||
-           aNodeInfo->Equals(nsHTMLAtoms::input, kNameSpaceID_XHTML) ||
-           aNodeInfo->Equals(nsHTMLAtoms::object, kNameSpaceID_XHTML) ||
-           aNodeInfo->Equals(nsHTMLAtoms::applet, kNameSpaceID_XHTML)) {
-    nsCAutoString cmd;
-    if (mParser) {
-      mParser->GetCommand(cmd);
-    }
-    if (cmd.EqualsASCII(kLoadAsData)) {
-      // XXXbz Should this be done to all elements, not just XHTML ones?
-      // We don't have any non-XHTML image loading things yet, but....
-      nsCOMPtr<nsIImageLoadingContent> imgLoader(do_QueryInterface(content));
-      if (imgLoader) {
-        imgLoader->SetLoadingEnabled(PR_FALSE);
-      }
-    }
-  }
 
   content.swap(*aResult);
 

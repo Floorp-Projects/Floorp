@@ -591,6 +591,11 @@ public:
 
   virtual nsresult AddXMLEventsContent(nsIContent * aXMLEventsElement) = 0;
 
+  virtual PRBool IsLoadedAsData()
+  {
+    return PR_FALSE;
+  }
+
   /**
    * Create an element with the specified name, prefix and namespace ID.
    * If aDocumentDefaultType is true we create an element of the default type

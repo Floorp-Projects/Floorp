@@ -94,6 +94,7 @@ CPPSRCS		= \
 		nsContentSink.cpp \
 		nsContentUtils.cpp \
 		nsCopySupport.cpp \
+		nsDataDocumentContentPolicy.cpp \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
