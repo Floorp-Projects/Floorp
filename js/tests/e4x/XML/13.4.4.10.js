@@ -25,6 +25,7 @@
  *   Igor Bukanov
  *   Ethan Hugg
  *   Milen Nankov
+ *   Martin Honnen
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,9 +41,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var nTest = 0;
+
 START("13.4.4.10 - XML contains()");
 
-TEST(1, true, XML.prototype.hasOwnProperty("contains"));
+TEST(++nTest, true, XML.prototype.hasOwnProperty("contains"));
 
 emps =
 <employees>
@@ -50,7 +53,46 @@ emps =
     <employee id="1"><name>Joe</name><age>20</age></employee>
 </employees>;
 
-TEST(2, true, emps.contains(emps));
+TEST(++nTest, true, emps.contains(emps));
 
+// Martin - bug 289706
+
+expect = 'gods.contains(\'Kibo\')==false && (gods==\'Kibo\')==false';
+
+var gods = <gods>
+  <god>Kibo</god>
+  <god>Xibo</god>
+</gods>;
+
+printStatus('XML markup is:\r\n' + gods.toXMLString());
+
+var string = 'Kibo';
+actual = 'gods.contains(\'' + string + '\')==' + gods.contains(string);
+actual += ' && ';
+actual += '(gods==\'' + string + '\')==' + (gods == string);
+
+TEST(++nTest, expect, actual);
+
+// Martin - bug 289790
+
+function containsTest(xmlObject, value) 
+{
+    var comparison    = (xmlObject == value);
+    var containsCheck = xmlObject.contains(value);
+    var result        = (comparison == containsCheck);
+
+    printStatus('Comparing ' + xmlObject.nodeKind() + 
+                ' against ' + (typeof value) + ':');
+
+    printStatus('==: ' + comparison + '; contains: ' + containsCheck + 
+                '; check ' + (result ? 'passed' : 'failed'));
+    return result;
+}
+
+actual = containsTest(new XML('Kibo'), 'Kibo');
+TEST(++nTest, true, actual);
+
+actual = containsTest(<god>Kibo</god>, 'Kibo');
+TEST(++nTest, true, actual);
 
 END();
