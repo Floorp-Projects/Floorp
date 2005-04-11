@@ -783,12 +783,6 @@ DumpHelp()
 #if defined(XP_WIN) || defined(XP_OS2)
   printf("%s-console%sStart %s with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2,gAppData->appName);
 #endif
-#ifdef MOZ_ENABLE_XREMOTE
-  printf("%s-remote <command>%sExecute <command> in an already running\n"
-         "%sMozilla process.  For more info, see:\n"
-         "\n%shttp://www.mozilla.org/unix/remote.html\n\n",
-         HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,HELP_SPACER_2);
-#endif
 
   // this works, but only after the components have registered.  so if you drop in a new command line handler, -help
   // won't not until the second run.
@@ -1802,9 +1796,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return HandleRemoteArgument(xremotearg);
   }
 
-  // Try to remote the entire command line. If this fails, start up normally.
-  if (RemoteCommandLine())
-    return 0;
+  if (!PR_GetEnv("MOZ_NO_REMOTE")) {
+    // Try to remote the entire command line. If this fails, start up normally.
+    if (RemoteCommandLine())
+      return 0;
+  }
 #endif
 
   nsCOMPtr<nsIProfileLock> profileLock;
