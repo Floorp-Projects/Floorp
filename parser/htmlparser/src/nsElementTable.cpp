@@ -905,7 +905,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          (kHeadMisc|kSpecial), (kFlowEntity|kInlineEntity|kSelf), kNone,
+    /*parent,incl,exclgroups*/          kSpecial, (kFlowEntity|kInlineEntity|kSelf), kNone, // XXX should have a kHeadMisc parent too
     /*special props, prop-range*/       kNoStyleLeaksOut,kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown,
     /*contain-func*/                    0
