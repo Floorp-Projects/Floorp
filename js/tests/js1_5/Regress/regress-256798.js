@@ -61,7 +61,8 @@ expect = 'b,aaa';
 actual = /b(?=(a+))/.exec("baaabac") + '';
 reportCompare(expect, actual, status);
 
+// XXXbc revisit this
 status = summary + ' ' + inSection(4);
-expect = 'b,b';
+expect = 'null';
 actual = /b(?=(b+))/.exec("baaabac") + '';
 reportCompare(expect, actual, status);
