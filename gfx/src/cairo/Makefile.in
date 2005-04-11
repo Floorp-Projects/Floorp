@@ -67,7 +67,7 @@ REQUIRES =  xpcom \
             dom \
             debug \
             imglib2 \
-	    $(ZLIB_REQUIRES) \
+            $(ZLIB_REQUIRES) \
             $(NULL)
 
 CPPSRCS		= \
@@ -98,13 +98,21 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(TK_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+CXXFLAGS  += $(TK_CFLAGS)
+CFLAGS    += $(TK_CFLAGS)
+
+ifdef MOZ_ENABLE_XFT
+CXXFLAGS  += $(MOZ_XFT_CFLAGS)
+CFLAGS    += $(MOZ_XFT_CFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_XFT_LIBS)
+endif
+
 ifdef MOZ_ENABLE_GTK2
-EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS)
-CXXFLAGS	+= $(MOZ_GTK_CFLAGS) $(MOZ_XFT_CFLAGS) $(MOZ_GTK2_CFLAGS) -DMOZ_ENABLE_GTK2 -DMOZ_ENABLE_XFT
-CFLAGS		+= $(MOZ_GTK_CFLAGS) $(MOZ_XFT_CFLAGS) $(MOZ_GTK2_CFLAGS) -DMOZ_ENABLE_GTK2 -DMOZ_ENABLE_XFT
+DEFINES += -DMOZ_ENABLE_GTK2
 endif
 

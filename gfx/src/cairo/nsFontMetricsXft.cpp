@@ -348,8 +348,6 @@ nsFontMetricsXft::nsFontMetricsXft(): mMiniFont(nsnull)
 
 nsFontMetricsXft::~nsFontMetricsXft()
 {
-    delete mFont;
-
     if (mDeviceContext)
         mDeviceContext->FontMetricsDeleted(this);
 

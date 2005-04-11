@@ -65,7 +65,7 @@ nsCairoImage::~nsCairoImage()
         nsMemory::Free(mImageSurfaceAlpha);
 }
 
-NS_IMPL_ISUPPORTS1(nsCairoImage, nsIImage);
+NS_IMPL_ISUPPORTS1(nsCairoImage, nsIImage)
 
 //////////////////////////////////////////////
 //// nsIImage

@@ -937,7 +937,7 @@ xlfd_from_pango_font_description(GtkWidget *aWidget,
   PangoXSubfont *subfont_ids;
   PangoFontMap *fontmap;
   int *subfont_charsets, i, count = 0;
-  char *tmp, *subfont;
+  char *subfont;
   char *encodings[] = {
     "ascii-0",
     "big5-0",

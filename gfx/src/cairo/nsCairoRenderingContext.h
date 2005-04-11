@@ -187,7 +187,6 @@ public:
     NS_IMETHOD ReleaseBackbuffer(void);
     NS_IMETHOD DestroyCachedBackbuffer(void);
     NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
-    NS_IMETHOD RenderPostScriptDataFragment(const unsigned char *psdata, unsigned long psdatalen);
 #ifdef MOZ_MATHML
     NS_IMETHOD GetBoundingMetrics(const char* aString, PRUint32 aLength, nsBoundingMetrics& aBoundingMetrics);
     NS_IMETHOD GetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
@@ -204,6 +203,8 @@ public:
                         const nsRect * aTargetRect);
 
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) { return NS_OK; }
+
+    NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile);
 
     // Cairo specific stuff
 
