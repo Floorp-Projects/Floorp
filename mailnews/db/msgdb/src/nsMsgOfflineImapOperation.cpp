@@ -87,7 +87,7 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::GetOperation(nsOfflineImapOperationType
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetOperation(nsOfflineImapOperationType aOperation)
 {
   m_operation |= aOperation;
-  return m_mdb->SetUint32Property(m_mdbRow, PROP_OPERATION, aOperation);
+  return m_mdb->SetUint32Property(m_mdbRow, PROP_OPERATION, m_operation);
 }
 
 /* void clearOperation (in nsOfflineImapOperationType operation); */
