@@ -479,7 +479,8 @@ var DefaultController =
         MsgCreateFilter();
         break;   
       case "cmd_createFilterFromPopup":
-        break;// This does nothing because the createfilter is invoked from the popupnode oncommand.
+        CreateFilter(document.popupNode);
+        break;
 			case "button_delete":
 			case "cmd_delete":
         // if the user deletes a message before its mark as read timer goes off, we should mark it as read

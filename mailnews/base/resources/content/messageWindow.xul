@@ -124,7 +124,6 @@
                   oncommand="CopyEmailAddress(document.popupNode)"/>  
         <menuitem label="&CreateFilter.label;"
                   accesskey="&CreateFilter.accesskey;"
-                  oncommand="CreateFilter(document.popupNode)"
                   command="cmd_createFilterFromPopup"/>  
     </popup>
 

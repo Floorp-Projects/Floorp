@@ -148,9 +148,7 @@
 <!ENTITY undoCopyMsgCmd.label "Undo Copy Message">
 <!ENTITY redoCopyMsgCmd.label "Redo Copy Message">
 <!ENTITY undoDefaultCmd.label "Undo">
-<!ENTITY undoDefaultCmd.accesskey "U">
 <!ENTITY redoDefaultCmd.label "Redo">
-<!ENTITY redoDefaultCmd.accesskey "R">
 <!ENTITY editDraftCmd.label "Edit Draft">
 <!ENTITY editDraftCmd.accesskey "f">
 

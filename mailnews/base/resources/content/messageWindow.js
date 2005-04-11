@@ -846,7 +846,8 @@ var MessageWindowController =
 				MsgEditMessageAsNew();
 				break;
       case "cmd_createFilterFromPopup":
-				break;// This does nothing because the createfilter is invoked from the popupnode oncommand.        
+        CreateFilter(document.popupNode);
+        break;
       case "cmd_createFilterFromMenu":
         MsgCreateFilter();
 				break;        

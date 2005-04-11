@@ -126,8 +126,7 @@
   <command id="cmd_newNavigator"/>
   <command id="cmd_newEditor"/>
   <command id="cmd_quit"/>
-  <!--The cmd_createFilterFromPopup is used to notify the email context popup -->
-  <command id="cmd_createFilterFromPopup"/>
+  <command id="cmd_createFilterFromPopup" oncommand="goDoCommand('cmd_createFilterFromPopup')"/>
   <command id="cmd_pageSetup"/>
   <command id="cmd_search" oncommand="goDoCommand('cmd_search')" disabled="true"/>
 </commandset>
@@ -1052,7 +1051,6 @@
         </menupopup>
       </menu>
       <menuitem id="openMessageFileMenuitem" label="&openMessageFileCmd.label;"
-        command="cmd_openFileMessage"
         key="key_openFileMessage"
         accesskey="&openMessageFileCmd.accesskey;"
         oncommand="MsgOpenFromFile();"/>
@@ -1148,8 +1146,8 @@
 
   <menu id="menu_Edit" oncommand="CommandUpdate_UndoRedo();">
     <menupopup id="menu_Edit_Popup" onpopupshowing="InitEditMessagesMenu()">
-      <menuitem id="menu_undo" label="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" command="cmd_undo" oncommand="Undo()"/>
-      <menuitem id="menu_redo" label="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" command="cmd_redo" oncommand="Redo()"/>
+      <menuitem id="menu_undo"/>
+      <menuitem id="menu_redo"/>
       <menuseparator/>
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
