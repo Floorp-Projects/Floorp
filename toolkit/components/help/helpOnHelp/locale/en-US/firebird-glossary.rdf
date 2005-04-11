@@ -23,7 +23,6 @@
         <rdf:li> <rdf:Description nc:name="feed" nc:link="glossary.xhtml#feed"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="File Transfer Protocol (FTP)" nc:link="glossary.xhtml#File_Transfer_Protocol"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="FIPS PUBS 140-1" nc:link="glossary.xhtml#FIPS_PUBS_140-1"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="helper application" nc:link="glossary.xhtml#helper_application"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="home page" nc:link="glossary.xhtml#home_page"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Hypertext Markup Language (HTML)" nc:link="glossary.xhtml#Hypertext_Markup_Language"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Internet" nc:link="glossary.xhtml#Internet"/> </rdf:li>
@@ -36,7 +35,7 @@
         <rdf:li> <rdf:Description nc:name="Navigation Toolbar" nc:link="glossary.xhtml#navigation_toolbar"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Password Manager" nc:link="glossary.xhtml#Password_Manager"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.xhtml#PKCS_11"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="plug-in" nc:link="glossary.xhtml#plug-in"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Plugin" nc:link="glossary.xhtml#Plugin"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="private key" nc:link="glossary.xhtml#private_key"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="proxy" nc:link="glossary.xhtml#proxy"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="search engine" nc:link="glossary.xhtml#search_engine"/> </rdf:li>
