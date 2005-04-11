@@ -39,7 +39,11 @@
 /* ::::: Feed Subscription UI icons :::::: */
 
 #subscriptionsDialog { 
-  padding: 8px 10px 10px 8px;
+  padding: 0px;
+}
+
+#contentPane {
+  margin: 9px 8px 5px 8px;
 }
 
 #subscriptionChildren::-moz-tree-image(folderNameCol) {

@@ -72,65 +72,74 @@
   </keyset>
 
   <stringbundle id="bundle_newsblog" src="chrome://messenger-newsblog/locale/newsblog.properties"/>
-  <description>&subscriptionDesc.label;</description>
 
-  <separator class="thin"/>
+  <vbox flex="1" id="contentPane">
+    <description>&subscriptionDesc.label;</description>
 
-  <tree id="rssSubscriptionsList" flex="1" style="height: 10em;"
-      hidecolumnpicker="true"
-      onselect="gFeedSubscriptionsWindow.onSelect();"
-      onkeypress="gFeedSubscriptionsWindow.onKeyPress(event);"
-      seltype="single">
-    <treecols>
-      <treecol id="folderNameCol" flex="2" primary="true" hideheader="true"/>
-    </treecols>
-    <treechildren id="subscriptionChildren" ondblclick="gFeedSubscriptionsWindow.editFeed();" ondraggesture="gFeedSubscriptionsWindow.beginDrag(event);"/>
-  </tree>
+    <separator class="thin"/>
 
-  <hbox id="rssFeedInfoBox">
-    <stack flex="1">
-      <hbox id="backgroundBox" flex="1"/>
-      <grid flex="1">
-        <columns>
-          <column/>
-          <column flex="1"/>
-        </columns>
-        <rows>
-          <row align="center">
-            <hbox pack="end"><label id="nameLabel" value="&feedTitle.label;"/></hbox>
-            <textbox id="nameValue" readonly="true" class="plain"/>
-          </row>
-          <row align="center">
-            <hbox pack="end"><label id="locationLabel" value="&location.label;"/></hbox>
-            <textbox id="locationValue" readonly="true" class="plain"/>
-          </row>
-        </rows>
-      </grid>
-    </stack>
-  </hbox>
+    <tree id="rssSubscriptionsList" flex="1" style="height: 10em;"
+        hidecolumnpicker="true"
+        onselect="gFeedSubscriptionsWindow.onSelect();"
+        onkeypress="gFeedSubscriptionsWindow.onKeyPress(event);"
+        seltype="single">
+      <treecols>
+        <treecol id="folderNameCol" flex="2" primary="true" hideheader="true"/>
+      </treecols>
+      <treechildren id="subscriptionChildren" ondblclick="gFeedSubscriptionsWindow.editFeed();" ondraggesture="gFeedSubscriptionsWindow.beginDrag(event);"/>
+    </tree>
 
-
-  <hbox id="statusContainerBox" align="center">
-    <label id="statusText" class="statusbarpanel-text" crop="right" flex="1"/> 
-    <progressmeter id="progressMeter" collapsed="true" class="progressmeter-statusbar" style="margin-right: 5px;" mode="normal" value="0"/>
-  </hbox>
-
-  <hbox align="end">
-    <hbox class="actionButtons" flex="1">
-      <button id="addFeed" 
-              label="&button.addFeed.label;" accesskey="&button.addFeed.accesskey;"
-              oncommand="gFeedSubscriptionsWindow.addFeed();"/>
-
-      <button id="removeFeed" disabled="true" 
-              label="&button.removeFeed.label;" accesskey="&button.removeFeed.accesskey;"
-              oncommand="gFeedSubscriptionsWindow.removeFeed();"/>
-	      
-      <button id="importOPML"  
-              label="&button.importOPML.label;" accesskey="&button.importOPML.accesskey;"
-              oncommand="gFeedSubscriptionsWindow.importOPML();"/>
+    <hbox id="rssFeedInfoBox">
+      <stack flex="1">
+        <hbox id="backgroundBox" flex="1"/>
+        <grid flex="1">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row align="center">
+              <hbox pack="end"><label id="nameLabel" value="&feedTitle.label;"/></hbox>
+              <textbox id="nameValue" readonly="true" class="plain"/>
+            </row>
+            <row align="center">
+              <hbox pack="end"><label id="locationLabel" value="&location.label;"/></hbox>
+              <textbox id="locationValue" readonly="true" class="plain"/>
+            </row>
+          </rows>
+        </grid>
+      </stack>
     </hbox>
 
+    <hbox id="statusContainerBox" align="center">
+      <label id="statusText" class="statusbarpanel-text" crop="right" flex="1"/> 
+      <progressmeter id="progressMeter" collapsed="true" class="progressmeter-statusbar" style="margin-right: 5px;" mode="normal" value="0"/>
+    </hbox>
+
+    <hbox align="end">
+      <hbox class="actionButtons" flex="1">
+        <button id="addFeed" 
+                label="&button.addFeed.label;" accesskey="&button.addFeed.accesskey;"
+                oncommand="gFeedSubscriptionsWindow.addFeed();"/>
+
+        <button id="editFeed" disabled="true" 
+                label="&button.editFeed.label;" accesskey="&button.editFeed.accesskey;"
+                oncommand="gFeedSubscriptionsWindow.editFeed();"/>
+
+        <button id="removeFeed" disabled="true" 
+                label="&button.removeFeed.label;" accesskey="&button.removeFeed.accesskey;"
+                oncommand="gFeedSubscriptionsWindow.removeFeed();"/>
+	        
+        <button id="importOPML"  
+                label="&button.importOPML.label;" accesskey="&button.importOPML.accesskey;"
+                oncommand="gFeedSubscriptionsWindow.importOPML();"/>
+        <spacer flex="1"/>
+      </hbox>
+    </hbox>
+  </vbox>
+
+  <hbox>
+    <spring flex="1"/>
     <resizer dir="bottomright"/>
   </hbox>
-
 </window>

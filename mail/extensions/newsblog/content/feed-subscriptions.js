@@ -470,6 +470,7 @@ var gFeedSubscriptionsWindow = {
     this.updateFeedData(item);
         
     document.getElementById("removeFeed").disabled = !item || item.container;
+    document.getElementById("editFeed").disabled = !item || item.container;
   },
   
   removeFeed: function () 

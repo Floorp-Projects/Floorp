@@ -4,13 +4,13 @@
 <!ENTITY feedTitle.label "Title:">
 <!ENTITY location.label  "Location:">
 
-<!ENTITY button.addFeed.label       "Add Feed">
+<!ENTITY button.addFeed.label       "Add">
 <!ENTITY button.addFeed.accesskey   "A">
-<!ENTITY editButton.label      "Edit">
-<!ENTITY editButton.accesskey  "E">
-<!ENTITY button.removeFeed.label "Remove Feed">
+<!ENTITY button.editFeed.label      "Edit">
+<!ENTITY button.editFeed.accesskey  "E">
+<!ENTITY button.removeFeed.label "Remove">
 <!ENTITY button.removeFeed.accesskey   "R">
-<!ENTITY button.importOPML.label "Import Feeds">
+<!ENTITY button.importOPML.label "Import">
 <!ENTITY button.importOPML.accesskey   "I">
 
 <!ENTITY cmd.close.commandKey             "w">
