@@ -77,6 +77,7 @@ public:
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
   NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
 
   // nsIXFormsControl
@@ -218,6 +219,32 @@ nsXFormsInputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
   
   if (aName == nsXFormsAtoms::incremental)
     mIncremental = aValue.EqualsLiteral("true");
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsInputElement::AttributeRemoved(nsIAtom *aName)
+{
+  nsXFormsControlStub::AttributeRemoved(aName);
+
+  if (aName == nsXFormsAtoms::incremental) {
+    /* if we remove the incremental attribute, then we need to go back to the
+     * default value.  True if it is a checkbox, false otherwise.  
+     *
+     * XXX - Once we get more input types, the default value for incremental
+     * should probably be abstracted out somewhere. 
+     */
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mControl);
+    NS_ENSURE_STATE(input);
+    nsAutoString type;
+    input->GetType(type);
+    if (mType == eType_Input && type.EqualsLiteral("checkbox")) {
+      mIncremental = PR_TRUE;
+    } else {
+      mIncremental = PR_FALSE;
+    }
+  }
   
   return NS_OK;
 }

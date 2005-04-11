@@ -103,6 +103,26 @@ public:
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+  NS_IMETHOD WillRemoveAttribute(nsIAtom *aName);
+  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
+
+  /**
+   * This function manages the mBindAttrsCount value.  mBindAttrsCount will
+   * be incremented if a single node binding attribute is specified that isn't
+   * currently on the control AND aValue isn't empty.  Otherwise, if the control
+   * already contains this attribute with a non-empty value and aValue is empty,
+   * then mBindAttrsCount is decremented.
+   *
+   *   aName -  Atom of the single node binding attribute ('bind', 'ref', etc.).
+   *            Using an atom to make it a tad harder to misuse by passing in
+   *            any old string, for instance.  Since different controls may have
+   *            different binding attrs, we do NO validation on the attr.  We
+   *            assume that the caller is smart enough to only send us a
+   *            binding attr atom.
+   *   aValue - The string value that the SNB attribute is being set to.
+   *
+   */
+  void AddRemoveSNBAttr(nsIAtom *aName, const nsAString &aValue);
 
   // nsIXFormsContextControl
   NS_DECL_NSIXFORMSCONTEXTCONTROL
@@ -111,11 +131,14 @@ public:
   nsXFormsControlStub() :
     kStandardNotificationMask(nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE |
                               nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
+                              nsIXTFElement::NOTIFY_WILL_REMOVE_ATTRIBUTE | 
+                              nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED | 
                               nsIXTFElement::NOTIFY_DOCUMENT_CHANGED |
                               nsIXTFElement::NOTIFY_PARENT_CHANGED |
                               nsIXTFElement::NOTIFY_HANDLE_DEFAULT),
     kElementFlags(nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR),
-    mHasParent(PR_FALSE)
+    mHasParent(PR_FALSE),
+    mBindAttrsCount(0)
     {};
 
 protected:
@@ -136,6 +159,12 @@ protected:
 
   /** State that tells whether control has a parent or not */
   PRBool                           mHasParent;
+
+  /** 
+   * Used to keep track of whether this control has any single node binding
+   * attributes.
+   */
+  PRInt32 mBindAttrsCount;
 
   /** Returns the read only state of the control (ie. mBoundNode) */
   PRBool GetReadOnlyState();
@@ -167,6 +196,29 @@ protected:
    *  xforms-hint and xforms-help events.
    */
   void ResetHelpAndHint(PRBool aInitialize);
+
+  /**
+   * Removes all of the attributes that may have been added to the control due
+   * to binding with an instance node.
+   */
+  void ResetProperties();
+
+  /**
+   * Causes Bind() and Refresh() to be called if aName is the atom of a
+   * single node binding attribute for this control.  Called by AttributeSet
+   * and AttributeRemoved.
+   */
+  void MaybeBindAndRefresh(nsIAtom *aName);
+
+  /**
+   * Removes this control from its model's list of controls if a single node
+   * binding attribute is removed.  Called by WillSetAttribute and
+   * WillRemoveAttribute.
+   * 
+   * @param aName  - atom of the attribute being changed
+   * @param aValue - value that the attribute is being changed to.
+   */
+  void MaybeRemoveFromModel(nsIAtom *aName, const nsAString &aValue); 
 };
 
 #endif

@@ -111,7 +111,7 @@ nsXFormsControlStub::ResetBoundNode()
 {
   mBoundNode = nsnull;
 
-  if (!mHasParent)
+  if (!mHasParent || !mBindAttrsCount)
     return NS_OK;
 
   nsCOMPtr<nsIModelElementPrivate> modelNode;
@@ -354,26 +354,28 @@ nsXFormsControlStub::ParentChanged(nsIDOMElement *aNewParent)
 NS_IMETHODIMP
 nsXFormsControlStub::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
 {
-  if (aName == nsXFormsAtoms::model ||
-      aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::ref) {
-    if (mModel)
-      mModel->RemoveFormControl(this);
-  }
-
+  MaybeRemoveFromModel(aName, aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsControlStub::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 {
-  if (aName == nsXFormsAtoms::model ||
-      aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::ref) {
-    Bind();
-    Refresh();
-  }
+  MaybeBindAndRefresh(aName);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsXFormsControlStub::WillRemoveAttribute(nsIAtom *aName)
+{
+  MaybeRemoveFromModel(aName, EmptyString());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsControlStub::AttributeRemoved(nsIAtom *aName)
+{
+  MaybeBindAndRefresh(aName);
   return NS_OK;
 }
 
@@ -412,3 +414,71 @@ nsXFormsControlStub::GetContext(nsAString      &aModelID,
   return NS_OK;
 }
 
+void
+nsXFormsControlStub::ResetProperties()
+{
+  if (!mElement) {
+    return;
+  }
+
+  mElement->RemoveAttribute(NS_LITERAL_STRING("valid"));
+  mElement->RemoveAttribute(NS_LITERAL_STRING("invalid"));
+  mElement->RemoveAttribute(NS_LITERAL_STRING("enabled"));
+  mElement->RemoveAttribute(NS_LITERAL_STRING("disabled"));
+  mElement->RemoveAttribute(NS_LITERAL_STRING("required"));
+  mElement->RemoveAttribute(NS_LITERAL_STRING("optional"));
+  mElement->RemoveAttribute(NS_LITERAL_STRING("read-only"));
+  mElement->RemoveAttribute(NS_LITERAL_STRING("read-write"));
+
+}
+
+void
+nsXFormsControlStub::AddRemoveSNBAttr(nsIAtom *aName, const nsAString &aValue) 
+{
+  nsAutoString attrStr, attrValue;
+  aName->ToString(attrStr);
+  mElement->GetAttribute(attrStr, attrValue);
+
+  // if we are setting a single node binding attribute that we don't already
+  // have, bump the count.
+  if (!aValue.IsEmpty() && attrValue.IsEmpty()) {
+    ++mBindAttrsCount;
+  } else if (!attrValue.IsEmpty()) { 
+    // if we are setting a currently existing binding attribute to have an
+    // empty value, treat it like the binding attr is being removed.
+    --mBindAttrsCount;
+    NS_ASSERTION(mBindAttrsCount>=0, "bad mojo!  mBindAttrsCount < 0!");
+    if (!mBindAttrsCount) {
+      ResetProperties();
+    }
+  }
+}
+
+void
+nsXFormsControlStub::MaybeBindAndRefresh(nsIAtom *aName)
+{
+  if (aName == nsXFormsAtoms::bind ||
+      aName == nsXFormsAtoms::ref  ||
+      aName == nsXFormsAtoms::model) {
+
+    Bind();
+    Refresh();
+  }
+
+}
+
+void
+nsXFormsControlStub::MaybeRemoveFromModel(nsIAtom         *aName, 
+                                          const nsAString &aValue)
+{
+  if (aName == nsXFormsAtoms::model ||
+      aName == nsXFormsAtoms::bind ||
+      aName == nsXFormsAtoms::ref) {
+    if (mModel)
+      mModel->RemoveFormControl(this);
+
+    if (aName != nsXFormsAtoms::model) {
+      AddRemoveSNBAttr(aName, aValue);
+    }
+  }
+}

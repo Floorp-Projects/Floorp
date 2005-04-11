@@ -79,12 +79,17 @@ public:
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+  NS_IMETHOD WillRemoveAttribute(nsIAtom *aName);
+  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
 
   // nsIXFormsControl
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
 
 private:
+  void MaybeBindAndRefresh(nsIAtom *aName);
+  void MaybeRemoveFromModel(nsIAtom *aName, const nsAString &aValue);
+
   nsCOMPtr<nsIDOMElement> mLabel;
   nsCOMPtr<nsIDOMElement> mContainer;
   nsCOMPtr<nsIDOMElement> mValue;
@@ -174,28 +179,28 @@ nsXFormsOutputElement::OnDestroyed()
 NS_IMETHODIMP
 nsXFormsOutputElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
 {
-  if (aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::ref ||
-      aName == nsXFormsAtoms::model ||
-      aName == nsXFormsAtoms::value) {
-    if (mModel)
-      mModel->RemoveFormControl(this);
-  }
-
+  MaybeRemoveFromModel(aName, aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsOutputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 {
-  if (aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::ref ||
-      aName == nsXFormsAtoms::model ||
-      aName == nsXFormsAtoms::value) {
-    Bind();
-    Refresh();
-  }
+  MaybeBindAndRefresh(aName);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsXFormsOutputElement::WillRemoveAttribute(nsIAtom *aName)
+{
+  MaybeRemoveFromModel(aName, EmptyString());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsOutputElement::AttributeRemoved(nsIAtom *aName)
+{
+  MaybeBindAndRefresh(aName);
   return NS_OK;
 }
 
@@ -269,6 +274,37 @@ nsXFormsOutputElement::Refresh()
 
   return rv;
 }
+
+void
+nsXFormsOutputElement::MaybeBindAndRefresh(nsIAtom *aName)
+{
+  if (aName == nsXFormsAtoms::bind  ||
+      aName == nsXFormsAtoms::value ||
+      aName == nsXFormsAtoms::ref   ||
+      aName == nsXFormsAtoms::model) {
+
+    Bind();
+    Refresh();
+  }
+}
+
+void
+nsXFormsOutputElement::MaybeRemoveFromModel(nsIAtom *aName,
+                                            const nsAString &aValue)
+{
+  if (aName == nsXFormsAtoms::bind ||
+      aName == nsXFormsAtoms::ref ||
+      aName == nsXFormsAtoms::model ||
+      aName == nsXFormsAtoms::value) {
+    if (mModel)
+      mModel->RemoveFormControl(this);
+
+    if (aName != nsXFormsAtoms::model) {
+      AddRemoveSNBAttr(aName, aValue);
+    }
+  }
+}
+
 
 
 NS_HIDDEN_(nsresult)
