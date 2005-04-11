@@ -50,7 +50,14 @@ function f1()
 	eval.call(o, "var a = 'vodka'"); // <- CRASH !!!
 }
 
-f1();
+// Rhino does not allow indirect eval calls
+try
+{
+  f1();
+}
+catch(e)
+{
+}
 
 actual = 'No Crash';
   
