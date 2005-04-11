@@ -38,6 +38,7 @@
 
 #include "nsCairoDeviceContext.h"
 #include "nsCairoDrawingSurface.h"
+#include "cairo-xlib.h"
 
 #if defined(MOZ_ENABLE_GTK2)
 #include <sys/ipc.h>

@@ -50,6 +50,10 @@
 #include <cairo-xlib.h>
 #endif
 
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+#include <X11/Xlib.h>
+#endif
+
 #ifdef MOZ_ENABLE_XLIB
 #include "xlibrgb.h"
 #endif
