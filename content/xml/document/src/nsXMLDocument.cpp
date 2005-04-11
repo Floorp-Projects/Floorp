@@ -548,6 +548,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                  nsIContentSink* aSink)
 {
   if (nsCRT::strcmp(kLoadAsData, aCommand) == 0) {
+    mLoadedAsData = PR_TRUE;
     // We need to disable script & style loading in this case.
     // We leave them disabled even in EndLoad(), and let anyone
     // who puts the document on display to worry about enabling.
@@ -566,11 +567,8 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
       cssLoader->SetEnabled(PR_FALSE); // Do not load/process styles when loading as data
     }
   } else if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
+    mLoadedAsInteractiveData = PR_TRUE;
     aCommand = kLoadAsData; // XBL, for example, needs scripts and styles
-  }
-
-  if (nsCRT::strcmp(aCommand, kLoadAsData) == 0) {
-    mLoadedAsData = PR_TRUE;
   }
 
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
@@ -626,7 +624,7 @@ nsXMLDocument::EndLoad()
 {
   mLoopingForSyncLoad = PR_FALSE;
 
-  if (mLoadedAsData) {
+  if (mLoadedAsData || mLoadedAsInteractiveData) {
     // Generate a document load event for the case when an XML document was loaded
     // as pure data without any presentation attached to it.
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -646,6 +644,12 @@ nsXMLDocument::EndLoad()
   nsDocument::EndLoad();  
 }
 
+PRBool
+nsXMLDocument::IsLoadedAsData()
+{
+  return mLoadedAsData;
+}
+  
 
 // nsIDOMNode interface
 

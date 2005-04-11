@@ -74,6 +74,8 @@ public:
 
   virtual void EndLoad();
 
+  virtual PRBool IsLoadedAsData();
+
   // nsIDOMNode interface
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
@@ -102,6 +104,7 @@ protected:
   nsCOMPtr<nsIScriptContext> mScriptContext;
   PRPackedBool mCrossSiteAccessEnabled;
   PRPackedBool mLoadedAsData;
+  PRPackedBool mLoadedAsInteractiveData;
   PRPackedBool mAsync;
   PRPackedBool mLoopingForSyncLoad;
 };

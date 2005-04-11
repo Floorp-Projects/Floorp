@@ -47,6 +47,7 @@
 #include "nsContentDLF.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
+#include "nsDataDocumentContentPolicy.h"
 #include "nsLayoutStylesheetCache.h"
 #include "nsDOMCID.h"
 #include "nsCSSOMFactory.h"
@@ -592,6 +593,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSSOMFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 MAKE_CTOR(CreateSyncLoadDOMService,       nsISyncLoadDOMService,       NS_NewSyncLoadDOMService)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
 
@@ -726,6 +728,44 @@ UnregisterHTMLOptionElement(nsIComponentManager* aCompMgr,
 {
   // XXX remove category entry
   return NS_OK;
+}
+
+static NS_METHOD
+RegisterDataDocumentContentPolicy(nsIComponentManager *aCompMgr,
+                                  nsIFile* aPath,
+                                  const char* aRegistryLocation,
+                                  const char* aComponentType,
+                                  const nsModuleComponentInfo* aInfo)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsXPIDLCString previous;
+  return catman->AddCategoryEntry("content-policy",
+                                  NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID,
+                                  NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+}
+
+static NS_METHOD
+UnregisterDataDocumentContentPolicy(nsIComponentManager *aCompMgr,
+                                    nsIFile *aPath,
+                                    const char *registryLocation,
+                                    const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  return catman->DeleteCategoryEntry("content-policy",
+                                     NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID,
+                                     PR_TRUE);
 }
 
 static NS_METHOD
@@ -1133,6 +1173,13 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_CONTENTPOLICY_CID,
     NS_CONTENTPOLICY_CONTRACTID,
     CreateContentPolicy },
+
+  { "Data document content policy",
+    NS_DATADOCUMENTCONTENTPOLICY_CID,
+    NS_DATADOCUMENTCONTENTPOLICY_CONTRACTID,
+    nsDataDocumentContentPolicyConstructor,
+    RegisterDataDocumentContentPolicy,
+    UnregisterDataDocumentContentPolicy },
 
   { "DOM CSS Computed Style Declaration",
     NS_COMPUTEDDOMSTYLE_CID,
