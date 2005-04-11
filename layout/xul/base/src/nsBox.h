@@ -110,7 +110,7 @@ public:
    * Returns PR_TRUE if this box clips its children, e.g., if this box is an sc
 rollbox.
   */
-  virtual PRBool DoesClipChildren() { return PR_FALSE; }
+  virtual PRBool DoesClipChildren();
   virtual PRBool ComputesOwnOverflowArea() = 0;
 
   NS_HIDDEN_(nsresult) SyncLayout(nsBoxLayoutState& aBoxLayoutState);

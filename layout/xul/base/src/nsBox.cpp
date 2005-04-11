@@ -804,6 +804,16 @@ nsIFrame::Layout(nsBoxLayoutState& aState)
   return NS_OK;
 }
 
+PRBool
+nsBox::DoesClipChildren()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+  NS_ASSERTION((display->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
+               (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
+               "If one overflow is clip, the other should be too");
+  return display->mOverflowX == NS_STYLE_OVERFLOW_CLIP;
+}
+
 nsresult
 nsBox::SyncLayout(nsBoxLayoutState& aState)
 {
