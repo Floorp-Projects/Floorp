@@ -83,7 +83,7 @@ char* xpc_CloneAllAccess()
 char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 {
     nsCAutoString asciiName;   
-    CopyUCS2toASCII(nsDependentString(wideName), asciiName);
+    CopyUTF16toUTF8(nsDependentString(wideName), asciiName);
 
     for(const char** p = list; *p; p++)
         if(!strcmp(*p, asciiName.get()))
@@ -2118,8 +2118,8 @@ nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP
 nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    // If you have to ask, then the answer is NO
-    *_retval = nsnull;
+    static const char* allowed[] = { "isSuccessCode", "lookupMethod", nsnull };
+    *_retval = xpc_CheckAccessList(methodName, allowed);
     return NS_OK;
 }
 
