@@ -133,6 +133,6 @@ x = <{c} a={a + " < " + b + " is " + (a < b)}>{a + " < " + b + " is " + (a < b)}
 TEST(18, "<x a=\"5 &lt; 3 is false\">5 &lt; 3 is false</x>", x.toXMLString());
 
 x = <{c} a={a + " > " + b + " is " + (a > b)}>{a + " > " + b + " is " + (a > b)}</{c}>;
-TEST(19, "<x a=\"5 > 3 is true\">5 > 3 is true</x>", x.toXMLString());
+TEST(19, "<x a=\"5 > 3 is true\">5 &gt; 3 is true</x>", x.toXMLString());
 
 END();
