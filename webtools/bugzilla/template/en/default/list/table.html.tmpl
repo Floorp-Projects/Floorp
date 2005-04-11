@@ -161,7 +161,7 @@
              [%+ "bz_$bug.resolution" FILTER css_class_quote IF bug.resolution -%]
              [%+ "bz_secure" IF bug.secure_mode -%]
              [%+ "bz_secure_mode_$bug.secure_mode" FILTER css_class_quote IF bug.secure_mode -%]
-             [%+ count % 2 == 1 ? "bz_odd" : "bz_even" -%]
+             [%+ count % 2 == 1 ? "bz_row_odd" : "bz_row_even" -%]
              ">
              
 

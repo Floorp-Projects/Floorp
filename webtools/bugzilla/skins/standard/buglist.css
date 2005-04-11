@@ -32,14 +32,6 @@ table#form tr th { text-align: right; }
 table.bz_buglist td, table.bz_buglist th { 
 }
 
-/* For styling rows; by default striped white and gray */
-tr.bz_odd {
-    background-color: #F7F7F7;
-}
-
-tr.bz_even {
-}
-
 /* we use a first-child class and not the pseudo-class because IE
  * doesn't support it :-( */
 tr.bz_secure td.first-child { 

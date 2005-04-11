@@ -148,7 +148,7 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
       description = "Voter" },
 ] %]
 
-<table width="100%" border="1">
+<table class="bz_emailprefs" border="1">
   <tr>
     <td colspan="[% (useqacontact AND usevotes) ? '5' : 
                      ((useqacontact OR usevotes) ? '4' : '3') %]" 
@@ -171,7 +171,8 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
   </tr>
   
   [% FOREACH event = events %]  
-    <tr>
+    [% count = loop.count() %]
+    <tr class="bz_row_[% count % 2 == 1 ? "odd" : "even" %]">
       [% FOREACH relationship = relationships %]
       [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
                  (relationship.id == constants.REL_VOTER AND NOT usevotes) %]

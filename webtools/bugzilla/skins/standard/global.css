@@ -293,6 +293,18 @@ body
 .bz_private { color: darkred ; background : #f3eeee ; }
 .bz_disabled { color: #a0a0a0 ; }
 
+.bz_row_odd
+{
+    background-color: #CCCCCC;
+    color: #000000;
+}
+
+.bz_row_even
+{
+    background-color: #FFFFFF;
+    color: #000000;
+}
+
 .bz_comment { background-color: #e0e0e0; }
 .bz_comment_hilite pre
 {
