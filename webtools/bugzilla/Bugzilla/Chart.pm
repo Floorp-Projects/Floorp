@@ -115,16 +115,11 @@ sub add {
     my $self = shift;
     my @series_ids = @_;
 
-    # If we are going from < 2 to >= 2 series, add the Grand Total line.
-    if (!$self->{'gt'}) {
-        my $current_size = scalar($self->getSeriesIDs());
-        if ($current_size < 2 &&
-            $current_size + scalar(@series_ids) >= 2) 
-        {
-            $self->{'gt'} = 1;
-        }
-    }
-        
+    # Get the current size of the series; required for adding Grand Total later
+    my $current_size = scalar($self->getSeriesIDs());
+    
+    # Count the number of added series
+    my $added = 0;
     # Create new Series and push them on to the list of lines.
     # Note that new lines have no label; the display template is responsible
     # for inventing something sensible.
@@ -133,6 +128,16 @@ sub add {
         if ($series) {
             push(@{$self->{'lines'}}, [$series]);
             push(@{$self->{'labels'}}, "");
+            $added++;
+        }
+    }
+    
+    # If we are going from < 2 to >= 2 series, add the Grand Total line.
+    if (!$self->{'gt'}) {
+        if ($current_size < 2 &&
+            $current_size + $added >= 2) 
+        {
+            $self->{'gt'} = 1;
         }
     }
 }
