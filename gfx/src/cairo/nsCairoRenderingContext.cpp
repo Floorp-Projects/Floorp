@@ -459,24 +459,9 @@ nsCairoRenderingContext::UpdateTempTransformMatrix()
 
     cairo_matrix_destroy (mat);
 
-    if (tx == ty == 0.0 &&
-        b == c == 0.0)
-    {
-        mTempTransform.SetToScale (a, d);
-    } else if (b == c == 0.0 &&
-               a == d == 1.0)
-    {
-        mTempTransform.SetToTranslate (tx, ty);
-    } else {
-        /* XXX we need to add api on nsTransform2D to set all these values since they are private */
-        mTempTransform.m00 = a;
-        mTempTransform.m01 = b;
-        mTempTransform.m10 = c;
-        mTempTransform.m11 = d;
-        mTempTransform.m20 = tx;
-        mTempTransform.m21 = ty;
-        mTempTransform.type = MG_2DGENERAL;
-    }
+    NS_ASSERTION(b == 0 && c == 0, "Can't represent Cairo matrix to Gfx");
+    mTempTransform.SetToTranslate(tx, ty);
+    mTempTransform.AddScale(a, d);
 }
 
 nsTransform2D&
