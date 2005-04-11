@@ -544,16 +544,15 @@ nsXFormsModelElement::Revalidate()
   printf("nsXFormsModelElement::Revalidate()\n");
 #endif
 
-  /// @note Prerequisite: Both changed nodes and dependencies are sorted in
-  /// ascending order!
-
 #ifdef DEBUG_MODEL
-  printf("Changed nodes:\n");
+  printf("[%s] Changed nodes:\n", __TIME__);
   for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
-    nsCOMPtr<nsIDOMNode> node = mChangedNodes.GetNode(j);
+    nsCOMPtr<nsIDOMNode> node = mChangedNodes[j];
     nsAutoString name;
     node->GetNodeName(name);
-    printf("\t%s\n", NS_ConvertUCS2toUTF8(name).get());
+    printf("\t%s [%p]\n",
+           NS_ConvertUCS2toUTF8(name).get(),
+           (void*) node);
   }
 #endif
 
@@ -580,52 +579,63 @@ nsXFormsModelElement::Revalidate()
     // Get dependencies
     nsCOMArray<nsIDOMNode> *deps = nsnull;
     control->GetDependencies(&deps);    
-    PRUint32 depCount = deps ? deps->Count() : 0;
 
 #ifdef DEBUG_MODEL
+    PRUint32 depCount = deps ? deps->Count() : 0;
     nsCOMPtr<nsIDOMElement> controlElement;
     control->GetElement(getter_AddRefs(controlElement));
     if (controlElement) {
       printf("Checking control: ");      
-      //DBG_TAGINFO(controlElement);
+      // DBG_TAGINFO(controlElement);
       nsAutoString boundName;
       if (boundNode)
         boundNode->GetNodeName(boundName);
-      printf("\tBound to: '%s', dependencies: %d\n",
+      printf("\tDependencies: %d, Bound to: '%s' [%p]\n",
+             depCount,
              NS_ConvertUCS2toUTF8(boundName).get(),
-             depCount);
+             (void*) boundNode);
+
+      nsAutoString depNodeName;
+      for (PRUint32 t = 0; t < depCount; ++t) {
+        nsCOMPtr<nsIDOMNode> tmpdep = deps->ObjectAt(t);
+        if (tmpdep) {
+          tmpdep->GetNodeName(depNodeName);
+          printf("\t\t%s [%p]\n",
+                 NS_ConvertUCS2toUTF8(depNodeName).get(),
+                 (void*) tmpdep);
+        }
+      }
     }
 #endif
 
-    nsCOMPtr<nsIDOMNode> curDep, curChanged;
-    PRUint32 depPos = 0;
-    /// @bug This should be set to PR_FALSE! (XXX)
-    ///      Setting it to PR_TRUE rebinds all controls all the time
-    ///      @see https://bugzilla.mozilla.org/show_bug.cgi?id=278368
-    PRBool rebind = PR_TRUE;
+    nsCOMPtr<nsIDOM3Node> curChanged;
+    PRBool rebind = PR_FALSE;
     PRBool refresh = PR_FALSE;
 
     for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
-      curChanged = mChangedNodes[j];
+      curChanged = do_QueryInterface(mChangedNodes[j]);
 
-      if (curChanged == boundNode) {
-        refresh = PR_TRUE;
-        // We cannot break here, as we need to to check for any changed
-        // dependencies
+      // Check whether the bound node is dirty. If so, we need to refresh the
+      // control (get updated node value from the bound node)
+      if (!refresh && boundNode) {
+        curChanged->IsSameNode(boundNode, &refresh);
+        
+        if (refresh)
+          // We need to refresh the control. We cannot break out of the loop
+          // as we need to check dependencies
+          continue;
       }
 
-      if (depPos == depCount) {
-        continue;
-      }
-
-      while (depPos < depCount && (void*) curChanged > (void*) curDep) {
-        curDep = deps->ObjectAt(depPos);
-        ++depPos;
-      }
-
-      if (curDep == curChanged) {
-        rebind = PR_TRUE;
-        break;
+      // Check whether any dependencies are dirty. If so, we need to rebind
+      // the control (re-evaluate it's binding expression)
+      for (PRInt32 k = 0; k < deps->Count(); ++k) {
+        /// @note beaufour: I'm not to happy about this ...
+        /// O(mChangedNodes.Count() * deps->Count()), but using the pointers
+        /// for sorting and comparing does not work...
+        curChanged->IsSameNode(deps->ObjectAt(k), &rebind);
+        if (rebind)
+          // We need to rebind the control, no need to check any more
+          break;
       }
     }
 

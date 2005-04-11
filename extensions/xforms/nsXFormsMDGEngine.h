@@ -367,8 +367,6 @@ public:
    * Recalculate the MDG.
    * 
    * @param aChangedNodes    Returns the nodes that was changed during recalculation.
-   *
-   * @note aChangedNodes are unique and sorted in pointer-order, ascending.
    */
   nsresult Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes);
 

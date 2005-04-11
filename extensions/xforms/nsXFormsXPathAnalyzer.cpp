@@ -121,9 +121,7 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
     printf("\tCon: %d, Predicate: %d, Literal: %d\n", aNode->mCon, aNode->mPredicate, aNode->mLiteral);
 #endif
 
-    if (   aNode->mEndIndex < 0
-        || aNode->mStartIndex >= aNode->mEndIndex
-        || ((PRUint32) aNode->mEndIndex == mCurExprString->Length() && aNode->mStartIndex == 0)) { 
+    if (aNode->mEndIndex < 0 || aNode->mStartIndex >= aNode->mEndIndex) {
       continue;
     }
 

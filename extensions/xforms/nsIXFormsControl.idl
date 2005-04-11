@@ -81,8 +81,6 @@ interface nsIXFormsControl : nsIXFormsContextControl
    * the control is bound to (mBoundNode). For example:
    * If a node has @ref="/share[@owner = /me]", it depends on all /share
    * nodes, all @owned attributes on /share nodes, and all /me nodes.
-   *
-   * @note The array MUST be sorted, pointer-order, ascending.
    */
   readonly attribute nsCOMArrayPtr dependencies;
 

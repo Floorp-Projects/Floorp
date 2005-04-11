@@ -250,8 +250,6 @@ nsXFormsOutputElement::Refresh()
       nsXFormsUtils::GetNodeValue(mBoundNode, text);
     }
   } else {
-    ///
-    /// @todo Update mBoundNode? (XXX)
     nsCOMPtr<nsIDOMXPathResult> result;
     rv = ProcessNodeBinding(NS_LITERAL_STRING("value"),
                             nsIDOMXPathResult::STRING_TYPE,

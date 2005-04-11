@@ -971,7 +971,7 @@ nsXFormsUtils::FocusControl(nsIDOMElement *aElement)
 int
 sortFunc(nsIDOMNode *aNode1, nsIDOMNode *aNode2, void *aArg) 
 {
-  return (void*) aNode1 < (void*) aNode2;
+  return (void*) aNode1 > (void*) aNode2;
 }
 
 /* static */ void
