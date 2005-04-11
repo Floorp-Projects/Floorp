@@ -467,7 +467,7 @@ ER3(SEC_ERROR_BUSY,				(SEC_ERROR_BASE + 139),
 "NSS could not shutdown. Objects are still in use.")
 
 ER3(SEC_ERROR_EXTRA_INPUT,			(SEC_ERROR_BASE + 140),
-"DER-encoded message contained extra usused data.")
+"DER-encoded message contained extra unused data.")
 
 ER3(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE,	(SEC_ERROR_BASE + 141),
 "Unsupported elliptic curve.")
