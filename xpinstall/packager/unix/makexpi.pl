@@ -50,9 +50,11 @@
 #        dest path
 #             - path to where the .xpi files are are to be created at.
 #               ** MUST BE AN ABSOLUTE PATH, NOT A RELATIVE PATH **
+#        app display name
+#             - the display name of the application
 #
 #   ie: perl makexpi.pl core z:\exposed\windows\32bit\en\5.0 
-#            d:\build\mozilla\dist\win32_o.obj\install\working
+#            d:\build\mozilla\dist\win32_o.obj\install\working Mozilla
 #
 
 use Cwd;
@@ -62,20 +64,21 @@ sub MakeJsFile
   my($componentName) = @_;
 
   # Make .js file
-  if(system("perl makejs.pl $componentName.jst $inDefaultVersion $inStagePath/$componentName install.js") != 0)
+  if(system("perl makejs.pl $componentName.jst $inDefaultVersion $inStagePath/$componentName $inAppDisplayName install.js") != 0)
   {
     exit(1);
   }
 }
 
-# Make sure there are at least three arguments
-if($#ARGV < 2)
+# Make sure there are at least four arguments
+if(@ARGV < 4)
 {
-  die "usage: $0 <component name> <staging path> <dest path>
+  die "usage: $0 <component name> <staging path> <dest path> <app display name>
 
-       component name : name of component directory within staging path
-       staging path   : path to where the components are staged at
-       dest path      : path to where the .xpi files are to be created at
+       component name   : name of component directory within staging path
+       staging path     : path to where the components are staged at
+       dest path        : path to where the .xpi files are to be created at
+       app display name : display name of the application
        \n";
 }
 
@@ -83,6 +86,7 @@ $inComponentName  = $ARGV[0];
 $inStagePath      = $ARGV[1];
 $inDestPath       = $ARGV[2];
 $inDefaultVersion = $ARGV[3];
+$inAppDisplayName = $ARGV[4];
 
 # check for existence of staging component path
 if(!(-e "$inStagePath/$inComponentName"))

@@ -49,8 +49,9 @@
 #                           major.minor.release.yydoy
 #                           ie: 5.0.0.99256
 #        staging path     - path to where the components are staged at
+#        app display name - display name of the application
 #
-#        ie: perl makejs.pl core.jst 5.0.0.99256 ../../staging_area/core
+#        ie: perl makejs.pl core.jst 5.0.0.99256 ../../staging_area/core Mozilla
 #
 
 ##
@@ -92,10 +93,10 @@ sub GetSpaceRequired
     return $spaceUsed;
 }
 
-# Make sure there are at least three arguments
-if($#ARGV < 2)
+# Make sure there are at least four arguments
+if(@ARGV < 4)
 {
-  die "usage: $0 <.jst file> <default version> <staging path> [<.js file>]
+  die "usage: $0 <.jst file> <default version> <staging path> <app display name> [<.js file>]
 
        .jst file              : .js template input file
        .js file               : .js output file
@@ -104,12 +105,14 @@ if($#ARGV < 2)
                                 ie: 5.0.0.99256
        component staging path : path to where this component is staged at
                                 ie: ./../staging_area/core
+       app display name       : application display name
        \n";
 }
 
 $inJstFile        = $ARGV[0];
 $inVersion        = $ARGV[1];
 $inStagePath      = $ARGV[2];
+$inAppDisplayName = $ARGV[3];
 $fullProgName     = $0;
 $fullProgName     =~ /(.*)makejs\.pl$/;
 if ($1){
@@ -122,7 +125,7 @@ if ($1){
 @inJstFileSplit   = split(/\./,$inJstFile);
 $outJsFile        = $inJstFileSplit[0];
 $outJsFile       .= ".js";
-if($#ARGV >= 3) {$outJsFile = $ARGV[3];};
+if($#ARGV >= 4) {$outJsFile = $ARGV[4];};
 @outJsFileSplit   = split(/\./,$outJsFile);
 $outTempFile      = $outJsFileSplit[0];
 $outTempFile     .= ".template";
@@ -143,6 +146,12 @@ while($line = <fpInJst>)
   if($line =~ /\$Version\$/i)
   {
     $line =~ s/\$Version\$/$inVersion/i;
+  }
+
+  # For each line read, search and replace $AppDisplayName$ with the display name passed in
+  if($line =~ /\$AppDisplayName\$/i)
+  {
+    $line =~ s/\$AppDisplayName\$/$inAppDisplayName/i;
   }
 
   # For each line read, search and replace $SpaceRequired$ with the version passed in

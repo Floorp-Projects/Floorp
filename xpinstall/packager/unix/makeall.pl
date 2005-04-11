@@ -43,10 +43,10 @@
 # This perl script builds the xpi, config.ini, and js files.
 #
 
-# Make sure there are at least four arguments
-if($#ARGV < 3)
+# Make sure there are at least six arguments
+if(@ARGV < 6)
 {
-  die "usage: $0 <default version> <URL path> <staging path> <dist install path>
+  die "usage: $0 <default version> <URL path> <staging path> <dist install path> <app name> <app display name>
 
        default version   : julian based date version
                            ie: 5.0.0.99257
@@ -59,6 +59,10 @@ if($#ARGV < 3)
 
        dist install path : full path to target dist area
 
+       app name          : the base name for executables (e.g. mozilla)
+
+       app display name  : the display name to use
+
        \n";
 }
 
@@ -66,6 +70,8 @@ $inDefaultVersion = $ARGV[0];
 $inURLPath        = $ARGV[1];
 $inStagePath      = $ARGV[2];
 $inDistPath       = $ARGV[3];
+$inAppName        = $ARGV[4];
+$inAppDisplayName = $ARGV[5];
 
 # Check for existance of staging path
 if(!(-e "$inStagePath"))
@@ -104,7 +110,7 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inDefaultVersion $inStagePath $inDistPath $inURLPath") != 0)
+  if(system("perl makecfgini.pl config.it $inDefaultVersion $inStagePath $inDistPath $inURLPath $inAppName $inAppDisplayName") != 0)
   {
     exit(1);
   }
@@ -115,7 +121,7 @@ sub MakeXpiFile
   my($componentName) = @_;
 
   # Make .xpi file
-  if(system("perl makexpi.pl $componentName $inStagePath $inDistPath $inDefaultVersion") != 0)
+  if(system("perl makexpi.pl $componentName $inStagePath $inDistPath $inDefaultVersion $inAppDisplayName") != 0)
   {
     exit(1);
   }

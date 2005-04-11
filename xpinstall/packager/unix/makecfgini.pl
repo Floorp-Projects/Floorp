@@ -55,22 +55,29 @@
 #        URL path
 #             - path to where the .xpi files are staged.  can be
 #               either ftp:// or http://
+#        App Name
+#             - the base name to use for executables (e.g. mozilla)
+#        App Display Name
+#             - the application display name to use.
 #
 #   ie: perl makecfgini.pl config.it 5.0.0.1999120608 z:\exposed\windows\32bit\en\5.0 d:\builds\mozilla\dist\win32_0.obj\install\xpi ftp://sweetlou/products/client/seamonkey/windows/32bit/x86/1999-09-13-10-M10
 #
 
-# Make sure there are at least two arguments
-if($#ARGV < 4)
+# Make sure there are at least seven arguments
+if(@ARGV < 7)
 {
   die "usage: $0 <.it file> <version> <staging path> <.xpi path> <URL path>
+                 <app name> <app display name>
 
-       .it file     : input ini template file
-       version      : version to be shown in setup.  Typically the same version
-                      as show in mozilla.exe.
-       staging path : path to where the components are staged at
-       .xpi path    : path to where the .xpi files have been built to
-       URL path     : URL path to where the .xpi files will be staged at.
-                      Either ftp:// or http:// can be used
+       .it file         : input ini template file
+       version          : version to be shown in setup.  Typically the same
+                          version as show in mozilla.exe.
+       staging path     : path to where the components are staged at
+       .xpi path        : path to where the .xpi files have been built to
+       URL path         : URL path to where the .xpi files will be staged at.
+                          Either ftp:// or http:// can be used
+       app name         : the base name to use for executables.
+       app display name : the application display name to use.
        \n";
 }
 
@@ -79,6 +86,8 @@ $inVersion        = $ARGV[1];
 $inStagePath      = $ARGV[2];
 $inXpiPath        = $ARGV[3];
 $inURLPath        = $ARGV[4];
+$inAppName        = $ARGV[5];
+$inAppDisplayName = $ARGV[6];
 
 # Get the name of the file replacing the .it extension with a .ini extension
 @inItFileSplit    = split(/\./,$inItFile);
@@ -133,6 +142,18 @@ while($line = <fpInIt>)
   {
     # For each line read, search and replace $Version$ with the version passed in
     $line =~ s/\$Version\$/$inVersion/i;
+    print fpOutIni $line;
+  }
+  elsif($line =~ /\$AppDisplayName\$/i)
+  {
+    # For each line read, search and replace $AppName$ with the version passed in
+    $line =~ s/\$AppDisplayName\$/$inAppDisplayName/ig;
+    print fpOutIni $line;
+  }
+  elsif($line =~ /\$AppName\$/i)
+  {
+    # For each line read, search and replace $AppName$ with the version passed in
+    $line =~ s/\$AppName\$/$inAppName/i;
     print fpOutIni $line;
   }
   else
