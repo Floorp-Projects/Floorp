@@ -1784,6 +1784,9 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
   while (nsnull != (token = nsCRT::strtok(newline, kNewlines, &newline))) {
     ++line;
 
+    if (*token == '#') // ignore lines that begin with # as comments
+      continue;
+
     char *whitespace = token;
     token = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
     if (!token) continue;
