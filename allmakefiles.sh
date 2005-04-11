@@ -913,8 +913,6 @@ MAKEFILES_xulapp="
 chrome/Makefile
 chrome/public/Makefile
 chrome/src/Makefile
-chrome/tools/Makefile
-chrome/tools/chromereg/Makefile
 toolkit/Makefile
 toolkit/library/Makefile
 toolkit/content/Makefile
