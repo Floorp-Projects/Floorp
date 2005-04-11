@@ -525,6 +525,9 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
     rv = NS_NewArrayEnumerator(aResult, manifests);
   }
   else if (!strcmp(aProperty, NS_APP_CHROME_DIR_LIST)) {
+    // NS_APP_CHROME_DIR_LIST is only used to get default (native) icons
+    // for OS window decoration.
+
     nsCOMArray<nsIFile> directories;
 
     if (mXULAppDir) {
@@ -534,6 +537,17 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
       PRBool exists;
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         directories.AppendObject(file);
+    }
+
+    if (mProfileDir) {
+      static const char *const kAppendChromeDir[] = { "chrome", nsnull };
+
+      nsCOMPtr<nsIFile> profileFile;
+      mProfileDir->Clone(getter_AddRefs(profileFile));
+      profileFile->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
+
+      LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                        kAppendChromeDir, directories);
     }
 
     rv = NS_NewArrayEnumerator(aResult, directories);
