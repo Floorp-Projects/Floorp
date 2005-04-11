@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef GFX_TEXTRUN_H
+#define GFX_TEXTRUN_H
+
 class gfxTextRun {
     // these do not copy the text
     gfxTextRun(const char* ASCII, int length);
@@ -61,3 +64,5 @@ class gfxTextRun {
 
     int GetPositionInString(gfxPoint& pt);
 };
+
+#endif

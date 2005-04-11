@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _GFX_TYPES_H
-#define _GFX_TYPES_H
+#ifndef GFX_TYPES_H
+#define GFX_TYPES_H
 
 /**
  * Currently needs to be 'double' for Cairo compatibility. Could
@@ -44,4 +44,4 @@
  */
 typedef double gfxFloat;
 
-#endif /* _GFX_TYPES_H */
+#endif /* GFX_TYPES_H */

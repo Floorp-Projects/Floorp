@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFXASURFACE_H
-#define GFXASURFACE_H
+#ifndef GFX_ASURFACE_H
+#define GFX_ASURFACE_H
 
 #include <cairo.h>
 
@@ -74,4 +74,4 @@ private:
     cairo_surface_t* mSurface;
 };
 
-#endif /* GFXASURFACE_H */
+#endif /* GFX_ASURFACE_H */

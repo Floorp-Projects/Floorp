@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _GFX_POINT_H
-#define _GFX_POINT_H
+#ifndef GFX_POINT_H
+#define GFX_POINT_H
 
 #include "gfxTypes.h"
 
@@ -74,4 +74,4 @@ struct gfxPoint {
     }
 };
 
-#endif /* _GFX_POINT_H */
+#endif /* GFX_POINT_H */

@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _GFX_PATTERN_H
-#define _GFX_PATTERN_H
+#ifndef GFX_PATTERN_H
+#define GFX_PATTERN_H
 
 #include <cairo.h>
 
@@ -108,4 +108,4 @@ private:
     cairo_pattern_t *mPattern;
 };
 
-#endif /* _GFX_PATTERN_H */
+#endif /* GFX_PATTERN_H */

@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFXXLIBSURFACE_H
-#define GFXXLIBSURFACE_H
+#ifndef GFX_XLIBSURFACE_H
+#define GFX_XLIBSURFACE_H
 
 #include "gfxASurface.h"
 
@@ -51,4 +51,4 @@ public:
     // <insert refcount stuff here>
 };
 
-#endif /* GFXXLIBSURFACE_H */
+#endif /* GFX_XLIBSURFACE_H */

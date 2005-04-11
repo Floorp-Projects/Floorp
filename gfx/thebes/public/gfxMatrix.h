@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _GFX_MATRIX_H
-#define _GFX_MATRIX_H
+#ifndef GFX_MATRIX_H
+#define GFX_MATRIX_H
 
 #ifdef _MSC_VER
 #define _USE_MATH_DEFINES
@@ -139,4 +139,4 @@ public:
     }
 };
 
-#endif /* _GFX_MATRIX_H */
+#endif /* GFX_MATRIX_H */
