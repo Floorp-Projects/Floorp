@@ -593,7 +593,11 @@ MOZ_PNG_LIBS='-L$(DIST)/lib -lmozpng'
 
 MOZ_JS_LIBS='-L$(DIST)/bin -lmozjs'
 DYNAMIC_XPCOM_LIBS='-L$(DIST)/bin -lxpcom -lxpcom_core'
-LIBXUL_LIBS='-L$(DIST)/bin -lxpcom -Wl,-rpath-link,$(DIST)/bin -lxul'
+MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(DIST)/bin'
+XPCOM_FROZEN_LDOPTS='-L$(DIST)/bin $(MOZ_FIX_LINK_PATHS) -lxpcom'
+LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) -lxul'
+XPCOM_GLUE_LDOPTS='-L$(DIST)/lib -lxpcomglue_s $(XPCOM_FROZEN_LDOPTS)'
+XPCOM_STANDALONE_GLUE_LDOPTS='-L$(DIST)/lib -lxpcomglue'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
 MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib -lxpcom_compat'
@@ -891,6 +895,8 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
     HOST_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
+    MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(DIST)/bin'
+    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) -lxul -lobjc'
     ;;
 
 *-linux*)
@@ -1171,8 +1177,9 @@ case "$target" in
         MOZ_ZLIB_LIBS='-L$(DIST)/lib -lmozz'
         MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
         MOZ_JS_LIBS='-L$(DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
+        MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(DIST)/lib -lxpcom -lxpcom_core'
-        LIBXUL_LIBS='-L$(DIST)/lib -lxpcom -lxul'
+        XPCOM_FROZEN_LDOPTS='-L$(DIST)/lib -lxpcom'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
     else
@@ -1208,8 +1215,12 @@ case "$target" in
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
         MOZ_PNG_LIBS='$(DIST)/lib/png.lib'
         MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
+        MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcom_core.lib'
+        XPCOM_FROZEN_LDOPTS='$(DIST)/lib/xpcom.lib'
         LIBXUL_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xul.lib'
+        XPCOM_GLUE_LDOPTS='$(DIST)/lib/xpcomglue_s.lib $(DIST)/lib/xpcom.lib'
+        XPCOM_STANDALONE_GLUE_LDOPTS='$(DIST)/lib/xpcomglue.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
     fi
@@ -5843,16 +5854,6 @@ if test "$MOZ_V1_STRING_ABI"; then
 fi
 
 dnl ========================================================
-dnl =
-dnl = Cleanup section for misc ordering snafus
-dnl =
-if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
-    XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX)'
-else
-    XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s'
-fi
-
-dnl ========================================================
 if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
@@ -5943,7 +5944,6 @@ AC_SUBST(MOZ_PLUGINS)
 AC_SUBST(ENABLE_EAZEL_PROFILER)
 AC_SUBST(EAZEL_PROFILER_CFLAGS)
 AC_SUBST(EAZEL_PROFILER_LIBS)
-AC_SUBST(XPCOM_GLUE_LIBS)
 AC_SUBST(MOZ_PERF_METRICS)
 AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LOG_REFCNT)
@@ -6006,7 +6006,13 @@ AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 AC_SUBST(MOZ_XPCOM_OBSOLETE_LIBS)
+
+AC_SUBST(MOZ_FIX_LINK_PATHS)
 AC_SUBST(XPCOM_LIBS)
+AC_SUBST(XPCOM_FROZEN_LDOPTS)
+AC_SUBST(XPCOM_GLUE_LDOPTS)
+AC_SUBST(XPCOM_STANDALONE_GLUE_LDOPTS)
+
 AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_BUILD_ROOT)

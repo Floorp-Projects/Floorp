@@ -54,8 +54,7 @@ LOCAL_INCLUDES	= \
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LIBS            = \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(XPCOM_LIBS) \
+		$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
