@@ -143,8 +143,6 @@ protected:
   PRBool checkURITarget();
   //
   NS_IMETHOD PrivateGetGradientUnits(nsIDOMSVGAnimatedEnumeration * *aEnum);
-  NS_IMETHOD PrivateGetGradientTransform(nsIDOMSVGMatrix * *aValue, 
-                                         nsISVGGeometrySource *aSource);
   NS_IMETHOD PrivateGetSpreadMethod(nsIDOMSVGAnimatedEnumeration * *aValue);
   //
 
@@ -153,7 +151,6 @@ protected:
 private:
   // Cached values
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration>  mGradientUnits;
-  nsCOMPtr<nsIDOMSVGMatrix>               mGradientTransform;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration>  mSpreadMethod;
 
   nsAutoString                            mNextGradStr;
@@ -279,7 +276,6 @@ nsSVGGradientFrame::~nsSVGGradientFrame()
 
   // Remove observers on gradient attributes
   if (mGradientUnits) NS_REMOVE_SVGVALUE_OBSERVER(mGradientUnits);
-  if (mGradientTransform) NS_REMOVE_SVGVALUE_OBSERVER(mGradientTransform);
   if (mSpreadMethod) NS_REMOVE_SVGVALUE_OBSERVER(mSpreadMethod);
 }
 
@@ -467,58 +463,6 @@ NS_IMETHODIMP
 nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
                                          nsISVGGeometrySource *aSource)
 {
-  if (!mGradientTransform) {
-    PrivateGetGradientTransform(getter_AddRefs(mGradientTransform),aSource);
-    if (!mGradientTransform)
-      return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mGradientTransform);
-  }
-  *aGradientTransform = mGradientTransform;
-  NS_ADDREF(*aGradientTransform);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGradientFrame::GetSpreadMethod(PRUint16 *aSpreadMethod)
-{
-  if (!mSpreadMethod) {
-    PrivateGetSpreadMethod(getter_AddRefs(mSpreadMethod));
-    if (!mSpreadMethod)
-      return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mSpreadMethod);
-  }
-  mSpreadMethod->GetAnimVal(aSpreadMethod);
-  return NS_OK;
-}
-
-// -------------------------------------------------------------
-// Protected versions of the various "Get" routines.  These need
-// to be used to allow for the ability to delegate to referenced
-// gradients
-// -------------------------------------------------------------
-NS_IMETHODIMP
-nsSVGGradientFrame::PrivateGetGradientUnits(nsIDOMSVGAnimatedEnumeration * *aEnum)
-{
-  nsCOMPtr<nsIDOMSVGGradientElement> aGrad = do_QueryInterface(mContent);
-  NS_ASSERTION(aGrad, "Wrong content element (not gradient)");
-  if (aGrad == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-  // See if we need to get the value from another gradient
-  if (!checkURITarget(nsSVGAtoms::gradientUnits)) {
-    // No, return the values
-    aGrad->GetGradientUnits(aEnum);
-  } else {
-    // Yes, get it from the target
-    mNextGrad->PrivateGetGradientUnits(aEnum);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGradientFrame::PrivateGetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
-                                                nsISVGGeometrySource *aSource)
-{
   *aGradientTransform = nsnull;
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> aTrans;
   nsCOMPtr<nsIDOMSVGGradientElement> aGrad = do_QueryInterface(mContent);
@@ -566,10 +510,47 @@ nsSVGGradientFrame::PrivateGetGradientTransform(nsIDOMSVGMatrix **aGradientTrans
     lTrans->GetConsolidationMatrix(getter_AddRefs(gradientTransform));
   } else {
     // Yes, get it from the target
-    mNextGrad->PrivateGetGradientTransform(getter_AddRefs(gradientTransform), nsnull);
+    mNextGrad->GetGradientTransform(getter_AddRefs(gradientTransform), nsnull);
   }
 
   bboxTransform->Multiply(gradientTransform, aGradientTransform);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGGradientFrame::GetSpreadMethod(PRUint16 *aSpreadMethod)
+{
+  if (!mSpreadMethod) {
+    PrivateGetSpreadMethod(getter_AddRefs(mSpreadMethod));
+    if (!mSpreadMethod)
+      return NS_ERROR_FAILURE;
+    NS_ADD_SVGVALUE_OBSERVER(mSpreadMethod);
+  }
+  mSpreadMethod->GetAnimVal(aSpreadMethod);
+  return NS_OK;
+}
+
+// -------------------------------------------------------------
+// Protected versions of the various "Get" routines.  These need
+// to be used to allow for the ability to delegate to referenced
+// gradients
+// -------------------------------------------------------------
+NS_IMETHODIMP
+nsSVGGradientFrame::PrivateGetGradientUnits(nsIDOMSVGAnimatedEnumeration * *aEnum)
+{
+  nsCOMPtr<nsIDOMSVGGradientElement> aGrad = do_QueryInterface(mContent);
+  NS_ASSERTION(aGrad, "Wrong content element (not gradient)");
+  if (aGrad == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+  // See if we need to get the value from another gradient
+  if (!checkURITarget(nsSVGAtoms::gradientUnits)) {
+    // No, return the values
+    aGrad->GetGradientUnits(aEnum);
+  } else {
+    // Yes, get it from the target
+    mNextGrad->PrivateGetGradientUnits(aEnum);
+  }
   return NS_OK;
 }
 
