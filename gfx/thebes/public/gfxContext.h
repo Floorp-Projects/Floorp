@@ -41,7 +41,6 @@
 #include <cairo.h>
 
 #include "gfxColor.h"
-#include "gfxPattern.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "gfxTypes.h"
@@ -51,6 +50,7 @@ class gfxMatrix;
 class gfxRegion;
 class gfxFilter;
 class gfxTextRun;
+class gfxPattern;
 
 class gfxContext {
 public:
@@ -86,13 +86,15 @@ public:
     void Rectangle(gfxRect rect);
     void Polygon(const gfxPoint points[], unsigned long numPoints);
 
+    // Add the text outline to the current path
+    void AddStringToPath(gfxTextRun& text, int pos, int len);
+
     // XXX These next two don't affect the current path?
     // XXX document 'size'
     void DrawSurface(gfxASurface *surface, gfxSize size);
-    // Draw a rectangle with aliasing on. Points whose centers are in the
-    // rectangle should be painted 100% with the current color; all other
-    // points are untouched.
-    void AliasedRectangle(gfxRect rect);
+
+    // Draw a substring of the text run at the current point
+    void DrawString(gfxTextRun& text, int pos, int len);
 
     // transform stuff
     void Translate(gfxPoint pt);
@@ -101,7 +103,6 @@ public:
 
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix CurrentMatrix() const;
-
 
     // properties
     void SetColor(const gfxRGBA& c);
@@ -133,6 +134,17 @@ public:
     void SetOperator(GraphicsOperator op);
     GraphicsOperator CurrentOperator() const;
 
+    /**
+     * MODE_ALIASED means that only pixels whose centers are in the drawn area
+     * should be modified, and they should be modified to take the value drawn
+     * at the pixel center.
+     */
+    enum AntialiasMode {
+        MODE_ALIASED,
+        MODE_COVERAGE
+    };
+    void SetAntialiasMode(AntialiasMode mode);
+    AntialiasMode CurrentAntialiasMode();
 
     enum GraphicsLineCap {
         LINE_CAP_BUTT,
@@ -162,9 +174,6 @@ public:
 
     // patterns
     void SetPattern(gfxPattern& pattern);
-
-    // fonts?
-    void DrawString(gfxTextRun& text, int pos, int len);
 
     // filters
     // Start rendering under the filter. We guarantee not to draw outside 'maxArea'.

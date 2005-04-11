@@ -38,19 +38,23 @@
 #ifndef GFX_TEXTRUN_H
 #define GFX_TEXTRUN_H
 
+#include "prtypes.h"
+#include "gfxTypes.h"
+
+class nsIFontMetrics;
+class nsIAtom;
+
 class gfxTextRun {
     // these do not copy the text
-    gfxTextRun(const char* ASCII, int length);
-    gfxTextRun(const PRUnichar* unicode, int length);
+    gfxTextRun(const char* ASCII, int length, nsIFontMetrics* font, nsIAtom* language);
+    gfxTextRun(const PRUnichar* unicode, int length, nsIFontMetrics* font, nsIAtom* language);
  
-    void SetFont(nsFont* font, nsIAtom* language);
-
     enum { ClusterStart = 0x1 } CharFlags;
     // ClusterStart: character is the first character of a cluster/glyph
     void GetCharacterFlags(int pos, int len, CharFlags* flags);
 
     struct Dimensions {
-        double ascent, descent, width, leftBearing, rightBearing;
+        gfxFloat ascent, descent, width, leftBearing, rightBearing;
     };
     Dimensions MeasureText(int pos, int len);
 
@@ -60,7 +64,7 @@ class gfxTextRun {
     // preferences about where we allow breaks.
     // We will usually want to call MeasureText right afterwards,
     // the implementor could optimize for that.
-    int GetCharsFit(int pos, int len, double width, int breakflags);
+    int GetCharsFit(int pos, int len, gfxFloat width, int breakflags);
 
     int GetPositionInString(gfxPoint& pt);
 };
