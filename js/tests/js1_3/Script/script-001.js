@@ -150,7 +150,7 @@ s.getJSClass = Object.prototype.toString;
 
 new TestCase( SECTION,
 	      "var s = new Script(); typeof s",
-	      "function",
+	      "object",
 	      typeof s );
 
 new TestCase( SECTION,
