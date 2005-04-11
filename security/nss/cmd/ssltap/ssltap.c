@@ -63,7 +63,7 @@
 
 #include "plgetopt.h"
 
-#define VERSIONSTRING "$Revision: 1.5 $ ($Date: 2004/04/25 15:02:56 $) $Author: gerv%gerv.net $"
+#define VERSIONSTRING "$Revision: 1.6 $ ($Date: 2005/04/11 02:48:54 $) $Author: nelsonb%netscape.com $"
 
 
 struct _DataBufferList;
@@ -711,7 +711,8 @@ void print_ssl3_handshake(unsigned char *tbuf,
 
 	  PR_snprintf(certFileName, sizeof certFileName, "cert.%03d",
 	              ++certFileNumber);
-	  cfd = PR_Open(certFileName, PR_WRONLY|PR_CREATE_FILE, 0664);
+	  cfd = PR_Open(certFileName, PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE, 
+	                0664);
 	  if (!cfd) {
 	    PR_fprintf(PR_STDOUT,
 	               "               data = { couldn't save file '%s' }\n",
