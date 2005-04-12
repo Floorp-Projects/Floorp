@@ -30,9 +30,9 @@
                              onset="return document.title = val;"/>
 
       <property name="canAdvance" onget="return this._canAdvance;"
-                                  onset="this._canAdvance=val; this._nextButton.setAttribute('disabled', !val);"/>
+                                  onset="this._canAdvance=val; this._nextButton.disabled = !val;"/>
       <property name="canRewind" onget="return this._canRewind;"
-                                 onset="this._canRewind=val; this._backButton.setAttribute('disabled', !val);"/>
+                                 onset="this._canRewind=val; this._backButton.disabled = !val;"/>
 
       <property name="pageStep" onget="return this._pageStack.length"/>
 
