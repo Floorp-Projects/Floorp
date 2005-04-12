@@ -962,7 +962,9 @@ sub get_legal_field_values {
     my ($field) = @_;
     my $dbh = Bugzilla->dbh;
     my $result_ref = $dbh->selectcol_arrayref(
-                           "SELECT value FROM $field ORDER BY sortkey, value");
+         "SELECT value FROM $field
+           WHERE isactive = ?
+        ORDER BY sortkey, value", undef, (1));
     return @$result_ref;
 }
 

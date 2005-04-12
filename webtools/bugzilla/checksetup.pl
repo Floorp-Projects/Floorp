@@ -1756,8 +1756,8 @@ sub PopulateEnumTable ($@) {
 @my_severities = ('blocker','critical','major','normal','minor',
                  'trivial','enhancement') if !@my_severities;
 @my_priorities = ("P1","P2","P3","P4","P5") if !@my_priorities;
-@my_opsys = ("---","All","Windows","Mac OS","Linux","Other") if !@my_opsys;
-@my_platforms = ("---","All","PC","Macintosh","Other") if !@my_platforms;
+@my_opsys = ("All","Windows","Mac OS","Linux","Other") if !@my_opsys;
+@my_platforms = ("All","PC","Macintosh","Other") if !@my_platforms;
 
 PopulateEnumTable('bug_severity', @my_severities);
 PopulateEnumTable('priority', @my_priorities);
