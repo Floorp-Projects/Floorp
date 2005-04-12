@@ -241,7 +241,7 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
                                        relativeToDate);
     }
 
-    if (event.status && event.status != event.ICAL_STATUS_NONE)
+    if (event.status && event.status != "NONE")
     {
       var statusString = getEventStatusString(event);
       boxAppendLabeledText(vbox, "tooltipStatus", statusString);
@@ -270,13 +270,13 @@ function getEventStatusString(calendarEvent)
 {
   switch( calendarEvent.status )
   {
-     case calendarEvent.ICAL_STATUS_TENTATIVE:
-        return( gCalendarBundle.getString( "statusTentative" ) );
-     case calendarEvent.ICAL_STATUS_CONFIRMED:
-        return( gCalendarBundle.getString( "statusConfirmed" ) );
-     case calendarEvent.ICAL_STATUS_CANCELLED:
-        return( gCalendarBundle.getString( "statusCancelled" ) );
-     case calendarEvent.ICAL_STATUS_NONE:
+    // Event status value keywords are specified in RFC2445sec4.8.1.11
+    case "TENTATIVE":
+      return gCalendarBundle.getString("statusTentative");
+    case "CONFIRMED":
+      return gCalendarBundle.getString("statusConfirmed");
+    case "CANCELLED":
+      return gCalendarBundle.getString("statusCancelled");
      default: 
         return "";
   }
@@ -287,15 +287,15 @@ function getToDoStatusString(iCalToDo)
 {
   switch( iCalToDo.status )
   {
-     case iCalToDo.ICAL_STATUS_NEEDSACTION:
-        return( gCalendarBundle.getString( "statusNeedsAction" ) );
-     case iCalToDo.ICAL_STATUS_INPROCESS:
-        return( gCalendarBundle.getString( "statusInProcess" ) );
-     case iCalToDo.ICAL_STATUS_CANCELLED:
-        return( gCalendarBundle.getString( "statusCancelled" ) );
-     case iCalToDo.ICAL_STATUS_COMPLETED:
-        return( gCalendarBundle.getString( "statusCompleted" ) );
-     case iCalToDo.ICAL_STATUS_NONE:
+    // Todo status keywords are specified in RFC2445sec4.8.1.11
+    case "NEEDS-ACTION":
+      return gCalendarBundle.getString("statusNeedsAction");
+    case "IN-PROCESS":
+      return gCalendarBundle.getString("statusInProcess");
+    case "CANCELLED":
+      return gCalendarBundle.getString("statusCancelled");
+    case "COMPLETED":
+      return gCalendarBundle.getString("statusCompleted");
      default: 
         return "";
   }
