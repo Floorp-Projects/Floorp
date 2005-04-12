@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
- #import "SecurityPane.h"
+#import "SecurityPane.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsIPref.h"
