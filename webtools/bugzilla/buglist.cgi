@@ -161,7 +161,7 @@ if ($::buffer =~ /&cmd-/) {
 # we'll remove the relevance column from the lists of columns to display
 # and order by, since relevance only exists when doing a fulltext search.
 my $fulltext = 0;
-if (defined $cgi->param('content')) { $fulltext = 1 }
+if ($cgi->param('content')) { $fulltext = 1 }
 my @charts = map(/^field(\d-\d-\d)$/ ? $1 : (), $cgi->param());
 foreach my $chart (@charts) {
     if ($cgi->param("field$chart") eq 'content' && $cgi->param("value$chart")) {
