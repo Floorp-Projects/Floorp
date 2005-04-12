@@ -424,9 +424,8 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
   } else if (aKey == nsIAutoCompleteController::KEY_LEFT ||
              aKey == nsIAutoCompleteController::KEY_RIGHT)
   {
-    // When the user arrows to the side, close the popup
-    ClearSearchTimer();
-    ClosePopup();
+    // When the user arrows to the side select that value and close the popup
+    HandleEnter(_retval);
   }
   
   return NS_OK;
