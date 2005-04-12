@@ -4323,8 +4323,20 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
           sel->AddRange(range);
         }
       }
-      // Selection is at anchor, but put focus on the document
-      esm->ChangeFocusWith(nsnull, nsIEventStateManager::eEventFocusedByApplication);
+      // Selection is at anchor.
+      // Now focus the document itself if focus is on an element within it.
+      nsCOMPtr<nsPIDOMWindow> win =
+        do_QueryInterface(mDocument->GetScriptGlobalObject());
+      if (win) {
+        nsCOMPtr<nsIFocusController> focusController = win->GetRootFocusController();
+        if (focusController) {
+          nsCOMPtr<nsIDOMWindowInternal> focusedWin;
+          focusController->GetFocusedWindow(getter_AddRefs(focusedWin));
+          if (SameCOMIdentity(win, focusedWin)) {
+            esm->ChangeFocusWith(nsnull, nsIEventStateManager::eEventFocusedByApplication);
+          }
+        }
+      }
     }
   } else {
     rv = NS_ERROR_FAILURE; //changed to NS_OK in quirks mode if ScrollTo is called
