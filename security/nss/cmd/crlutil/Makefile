@@ -74,7 +74,12 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-
+#
+# crlgen_lex can be generated on linux by flex or solaris by lex
+#
+crlgen_lex:
+	${LEX} -t crlgen_lex_orig.l > crlgen_lex_fix.c
+	sed -f crlgen_lex_fix.sed < crlgen_lex_fix.c > crlgen_lex.c
+	rm -f crlgen_lex_fix.c
 
 include ../platrules.mk
-

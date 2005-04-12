@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.46 2005/03/03 04:07:26 julien.pierre.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.47 2005/04/12 02:24:15 alexei.volkov.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -231,7 +231,7 @@ const SEC_ASN1Template CERT_CrlTemplateEntriesOnly[] = {
     { 0 }
 };
 
-static const SEC_ASN1Template cert_SignedCrlTemplate[] = {
+const SEC_ASN1Template CERT_SignedCrlTemplate[] = {
     { SEC_ASN1_SEQUENCE,
 	  0, NULL, sizeof(CERTSignedCrl) },
     { SEC_ASN1_SAVE,
@@ -264,7 +264,7 @@ static const SEC_ASN1Template cert_SignedCrlTemplateNoEntries[] = {
 };
 
 const SEC_ASN1Template CERT_SetOfSignedCrlTemplate[] = {
-    { SEC_ASN1_SET_OF, 0, cert_SignedCrlTemplate },
+    { SEC_ASN1_SET_OF, 0, CERT_SignedCrlTemplate },
 };
 
 /* get CRL version */
@@ -462,7 +462,7 @@ CERT_DecodeDERCrlWithFlags(PRArenaPool *narena, SECItem *derSignedCrl,
     CERTSignedCrl *crl;
     SECStatus rv;
     OpaqueCRLFields* extended = NULL;
-    const SEC_ASN1Template* crlTemplate = cert_SignedCrlTemplate;
+    const SEC_ASN1Template* crlTemplate = CERT_SignedCrlTemplate;
 
     if (!derSignedCrl ||
         ( (options & CRL_DECODE_ADOPT_HEAP_DER) && /* adopting DER requires
@@ -827,10 +827,13 @@ SEC_DestroyCrl(CERTSignedCrl *crl)
 	    if (crl->slot) {
 		PK11_FreeSlot(crl->slot);
 	    }
-            if (PR_TRUE == GetOpaqueCRLFields(crl)->heapDER) {
+            if (GetOpaqueCRLFields(crl) &&
+                PR_TRUE == GetOpaqueCRLFields(crl)->heapDER) {
                 SECITEM_FreeItem(crl->derCrl, PR_TRUE);
             }
-	    PORT_FreeArena(crl->arena, PR_FALSE);
+            if (crl->arena) {
+                PORT_FreeArena(crl->arena, PR_FALSE);
+            }
 	}
         return SECSuccess;
     } else {
@@ -879,6 +882,7 @@ SEC_LookupCrls(CERTCertDBHandle *handle, CERTCrlHeadNode **nodes, int type)
 */
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_IssuerAndSNTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_CrlTemplate)
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SignedCrlTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SetOfSignedCrlTemplate)
 
 /* CRL cache code starts here */
@@ -2997,4 +3001,6 @@ static SECStatus CachedCrl_Compare(CachedCrl* a, CachedCrl* b, PRBool* isDupe,
     }
     return SECSuccess;
 }
+
+
 

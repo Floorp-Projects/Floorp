@@ -467,6 +467,30 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         MAX_CERT=$GLOB_MAX_CERT
     fi
 
+    #################################################
+    # CRL SSL testing constatnts
+    #
+
+
+    CRL_GRP_1_BEGIN=40
+    CRL_GRP_1_RANGE=3
+    UNREVOKED_CERT_GRP_1=41
+
+    CRL_GRP_2_BEGIN=43
+    CRL_GRP_2_RANGE=6
+    UNREVOKED_CERT_GRP_2=46
+
+    CRL_GRP_3_BEGIN=49
+    CRL_GRP_3_RANGE=4
+    UNREVOKED_CERT_GRP_3=51
+
+    TOTAL_CRL_RANGE=`expr ${CRL_GRP_1_RANGE} + ${CRL_GRP_2_RANGE} + \
+                     ${CRL_GRP_3_RANGE}`
+
+    TOTAL_GRP_NUM=3
+    
+    RELOAD_CRL=1
+
     SCRIPTNAME=$0
     INIT_SOURCED=TRUE   #whatever one does - NEVER export this one please
 fi
