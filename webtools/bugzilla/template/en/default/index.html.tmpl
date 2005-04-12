@@ -72,7 +72,7 @@ function addSidebar() {
     <li id="logout"><a href="relogin.cgi">Log out [% user.login FILTER html %]</a></li>
   [% END %]
 [% ELSE %]
-    <li id="login"><a href="index.cgi?GoAheadAndLogIn=1">Log in to an existing account</a></li>
+    [% PROCESS "account/auth/login-small.html.tmpl" %]
   [% IF Param('createemailregexp') %]
     <li id="account"><a href="createaccount.cgi">Open a new [% terms.Bugzilla %] account</a></li>
   [% END %]
