@@ -294,8 +294,6 @@ if ($action eq 'search') {
               AND grant_type = ?
           });
 
-    # We need the group names, too -- for display and for profiles_activity.
-    my $groups = $dbh->selectall_hashref('SELECT id, name FROM groups', 'id');
     my @groupsAddedTo;
     my @groupsRemovedFrom;
     my @groupsGrantedRightsToBless;
@@ -305,8 +303,9 @@ if ($action eq 'search') {
     # silently.
     # XXX: checking for existence of each user_group_map entry
     #      would allow to display a friendlier error message on page reloads.
-    foreach (@{groupsUserMayBless($user, 'id')}) {
+    foreach (@{groupsUserMayBless($user, 'id', 'name')}) {
         my $id = $$_{'id'};
+        my $name = $$_{'name'};
 
         # Change memberships.
         my $oldgroupid = $cgi->param("oldgroup_$id") || '0';
@@ -315,11 +314,11 @@ if ($action eq 'search') {
             if ($groupid eq '0') {
                 $sth_remove_mapping->execute(
                     $otherUserID, $id, 0, GRANT_DIRECT);
-                push(@groupsRemovedFrom, $$groups{$id}{'name'});
+                push(@groupsRemovedFrom, $name);
             } else {
                 $sth_add_mapping->execute(
                     $otherUserID, $id, 0, GRANT_DIRECT);
-                push(@groupsAddedTo, $$groups{$id}{'name'});
+                push(@groupsAddedTo, $name);
             }
         }
 
@@ -332,11 +331,11 @@ if ($action eq 'search') {
                 if ($groupid eq '0') {
                     $sth_remove_mapping->execute(
                         $otherUserID, $id, 1, GRANT_DIRECT);
-                    push(@groupsDeniedRightsToBless, $$groups{$id}{'name'});
+                    push(@groupsDeniedRightsToBless, $name);
                 } else {
                     $sth_add_mapping->execute(
                         $otherUserID, $id, 1, GRANT_DIRECT);
-                    push(@groupsGrantedRightsToBless, $$groups{$id}{'name'});
+                    push(@groupsGrantedRightsToBless, $name);
                 }
             }
         }
