@@ -28,6 +28,19 @@
   # Remember to PROCESS rather than INCLUDE this template. 
   #%]
 
+[%# Note on changing terms:
+  # Changing this will not affect "linkification" of your new terms.
+  # This means if you change "bug" to "problem", then if you have
+  # "problem 3" in a comment, it won't become a clickable URL.
+  # To have that feature, you must edit the quoteUrls function in
+  # globals.pl (in the base Bugzilla directory).
+  # Change the line:
+  # my $bug_re = qr/bug\s*\#?\s*(\d+)/i;
+  # to something like:
+  # my $bug_re = qr/(?:bug|problem)\s*\#?\s*(\d+)/i;
+  # (here "problem" was used instead of bug - substitute as needed!).
+  #%]
+
 [% terms = {
   "bug" => "bug",
   "Bug" => "Bug",
