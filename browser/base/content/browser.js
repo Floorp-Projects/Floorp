@@ -696,10 +696,6 @@ function prepareForStartup()
   // enable global history
   gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
 
-  const selectedBrowser = gBrowser.selectedBrowser;
-  if (selectedBrowser.securityUI)
-    selectedBrowser.securityUI.init(selectedBrowser.contentWindow);
-
   // hook up UI through progress listener
   gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 }
