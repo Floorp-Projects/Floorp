@@ -2759,7 +2759,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
     for (i = 0, n = xml->xml_attrs.length; i < n; i++) {
         attr = XMLARRAY_MEMBER(&xml->xml_attrs, i, JSXML);
         js_AppendChar(&sb, ' ');
-        ns2 = GetNamespace(cx, attr->name, ancestorNSes);
+        ns2 = GetNamespace(cx, attr->name, &ancdecls);
         if (!ns2)
             goto out;
 
@@ -6535,10 +6535,13 @@ xml_setLocalName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 xml_setName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSXML *xml;
+    JSXML *xml, *nsowner;
     jsval name;
     JSXMLQName *nameqn;
     JSObject *nameobj;
+    JSXMLArray *nsarray;
+    uint32 i, n;
+    JSXMLNamespace *ns;
 
     xml = (JSXML *) JS_GetPrivate(cx, obj);
     if (!JSXML_HAS_NAME(xml))
@@ -6555,25 +6558,98 @@ xml_setName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     nameobj = js_ConstructObject(cx, &js_QNameClass.base, NULL, NULL, 1, &name);
     if (!nameobj)
         return JS_FALSE;
+    nameqn = (JSXMLQName *) JS_GetPrivate(cx, nameobj);
+
+    /* ECMA-357 13.4.4.35 Step 4. */
+    if (xml->xml_class == JSXML_CLASS_PROCESSING_INSTRUCTION)
+        nameqn->uri = cx->runtime->emptyString;
 
     xml = CHECK_COPY_ON_WRITE(cx, xml, obj);
     if (!xml)
         return JS_FALSE;
-    xml->name = (JSXMLQName *) JS_GetPrivate(cx, nameobj);
-    return JS_TRUE;
+    xml->name = nameqn;
+
+    /*
+     * Erratum: nothing in 13.4.4.35 talks about making the name match the
+     * in-scope namespaces, either by finding an in-scope namespace with a
+     * matching uri and setting the new name's prefix to that namespace's
+     * prefix, or by extending the in-scope namespaces for xml (which are in
+     * xml->parent if xml is an attribute or a PI).
+     */
+    if (xml->xml_class == JSXML_CLASS_ELEMENT) {
+        nsowner = xml;
+    } else {
+        if (!xml->parent || xml->parent->xml_class != JSXML_CLASS_ELEMENT)
+            return JS_TRUE;
+        nsowner = xml->parent;
+    }
+
+    if (nameqn->prefix) {
+        /*
+         * The name being set has a prefix, which originally came from some
+         * namespace object (which may be the null namespace, where both the
+         * prefix and uri are the empty string).  We must go through a full
+         * GetNamespace in case that namespace is in-scope in nsowner.
+         *
+         * If we find such an in-scope namespace, we return true right away,
+         * in this block.  Otherwise, we fall through to the final return of
+         * AddInScopeNamespace(cx, nsowner, ns).
+         */
+        ns = GetNamespace(cx, nameqn, &nsowner->xml_namespaces);
+        if (!ns)
+            return JS_FALSE;
+
+        /* XXXbe have to test membership to see whether GetNamespace added */
+        if (XMLARRAY_HAS_MEMBER(&nsowner->xml_namespaces, ns, NULL))
+            return JS_TRUE;
+    } else {
+        /*
+         * At this point, we know nameqn->prefix is null, so nameqn->uri can't
+         * be the empty string (the null namespace always uses the empty string
+         * for both prefix and uri).
+         *
+         * This means we must inline GetNamespace and specialize it to match
+         * uri only, never prefix.  If we find a namespace with nameqn's uri
+         * already in nsowner->xml_namespaces, then all that we need do is set
+         * nameqn->prefix to that namespace's prefix.
+         *
+         * If no such namespace exists, we can create one without going through
+         * the constructor, because we know nameqn->uri is non-empty (so prefix
+         * does not need to be converted from null to empty by QName).
+         */
+        JS_ASSERT(!IS_EMPTY(nameqn->uri));
+
+        nsarray = &nsowner->xml_namespaces;
+        for (i = 0, n = nsarray->length; i < n; i++) {
+            ns = XMLARRAY_MEMBER(nsarray, i, JSXMLNamespace);
+            if (!js_CompareStrings(ns->uri, nameqn->uri)) {
+                nameqn->prefix = ns->prefix;
+                return JS_TRUE;
+            }
+        }
+
+        ns = js_NewXMLNamespace(cx, NULL, nameqn->uri, JS_TRUE);
+        if (!ns)
+            return JS_FALSE;
+    }
+
+    return AddInScopeNamespace(cx, nsowner, ns);
 }
 
 static JSBool
 xml_setNamespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval)
 {
-    JSXML *xml;
+    JSXML *xml, *nsowner;
     JSObject *nsobj, *qnobj;
+    JSXMLNamespace *ns;
     jsval qnargv[2];
 
     xml = (JSXML *) JS_GetPrivate(cx, obj);
-    if (!JSXML_HAS_NAME(xml))
+    if (xml->xml_class != JSXML_CLASS_ELEMENT &&
+        xml->xml_class != JSXML_CLASS_ATTRIBUTE) {
         return JS_TRUE;
+    }
 
     xml = CHECK_COPY_ON_WRITE(cx, xml, obj);
     if (!xml || !js_GetXMLQNameObject(cx, xml->name))
@@ -6582,6 +6658,8 @@ xml_setNamespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     nsobj = js_ConstructObject(cx, &js_NamespaceClass.base, NULL, obj, 1, argv);
     if (!nsobj)
         return JS_FALSE;
+    ns = (JSXMLNamespace *) JS_GetPrivate(cx, nsobj);
+    ns->declared = JS_TRUE;
 
     qnargv[0] = argv[0] = OBJECT_TO_JSVAL(nsobj);
     qnargv[1] = OBJECT_TO_JSVAL(xml->name->object);
@@ -6590,7 +6668,19 @@ xml_setNamespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
 
     xml->name = (JSXMLQName *) JS_GetPrivate(cx, qnobj);
-    return JS_TRUE;
+
+    /*
+     * Erratum: the spec fails to update the governing in-scope namespaces.
+     * See the erratum noted in xml_setName, above.
+     */
+    if (xml->xml_class == JSXML_CLASS_ELEMENT) {
+        nsowner = xml;
+    } else {
+        if (!xml->parent || xml->parent->xml_class != JSXML_CLASS_ELEMENT)
+            return JS_TRUE;
+        nsowner = xml->parent;
+    }
+    return AddInScopeNamespace(cx, nsowner, ns);
 }
 
 /* XML and XMLList */
