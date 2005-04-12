@@ -1226,7 +1226,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     // document creation and not do all these null-checks all over?
     nsICSSLoader* cssLoader = GetCSSLoader();
     if (!cssLoader) {
-      return NS_ERROR_OUT_OF_MEMORY;
+      return;
     }
     cssLoader->SetPreferredSheet(aData);
 
