@@ -48,7 +48,7 @@ REQUIRES = seccmd dbm
 
 DEFINES = -DNSPR20
 
-CSRCS = crlutil.c
+CSRCS = crlgen_lex.c crlgen.c crlutil.c 
 
 # this has to be different for NT and UNIX.
 # PROGRAM	= ./$(OBJDIR)/crlutil.exe

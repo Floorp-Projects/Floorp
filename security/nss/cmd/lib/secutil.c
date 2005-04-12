@@ -48,6 +48,7 @@
 #include "prenv.h"
 #include "prnetdb.h"
 
+#include "cryptohi.h"
 #include "secutil.h"
 #include "secpkcs7.h"
 #include <stdarg.h>
@@ -3345,4 +3346,334 @@ SECU_printCertProblems(FILE *outfile, CERTCertDBHandle *handle,
 	}    
     }
     PORT_SetError(err); /* restore original error code */
+}
+
+SECOidTag 
+SECU_StringToSignatureAlgTag(const char *alg)
+{
+    SECOidTag hashAlgTag = SEC_OID_UNKNOWN;
+
+    if (alg) {
+	if (!PL_strcmp(alg, "MD2")) {
+	    hashAlgTag = SEC_OID_MD2;
+	} else if (!PL_strcmp(alg, "MD4")) {
+	    hashAlgTag = SEC_OID_MD4;
+	} else if (!PL_strcmp(alg, "MD5")) {
+	    hashAlgTag = SEC_OID_MD5;
+	} else if (!PL_strcmp(alg, "SHA1")) {
+	    hashAlgTag = SEC_OID_SHA1;
+	} else if (!PL_strcmp(alg, "SHA256")) {
+	    hashAlgTag = SEC_OID_SHA256;
+	} else if (!PL_strcmp(alg, "SHA384")) {
+	    hashAlgTag = SEC_OID_SHA384;
+	} else if (!PL_strcmp(alg, "SHA512")) {
+	    hashAlgTag = SEC_OID_SHA512;
+	}
+    }
+    return hashAlgTag;
+}
+
+
+SECStatus
+SECU_StoreCRL(PK11SlotInfo *slot, SECItem *derCrl, PRFileDesc *outFile,
+              const PRBool ascii, char *url)
+{
+    PORT_Assert(derCrl != NULL);
+    if (!derCrl) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (outFile != NULL) {
+        if (ascii) {
+            PR_fprintf(outFile, "%s\n%s\n%s\n", NS_CRL_HEADER, 
+                       BTOA_DataToAscii(derCrl->data, derCrl->len), 
+                       NS_CRL_TRAILER);
+        } else {
+            if (PR_Write(outFile, derCrl->data, derCrl->len) != derCrl->len) {
+                return SECFailure;
+            }
+        }
+    }
+    if (slot) {
+        CERTSignedCrl *newCrl = PK11_ImportCRL(slot, derCrl, url,
+                                               SEC_CRL_TYPE, NULL, 0, NULL, 0);
+        if (newCrl != NULL) {
+            SEC_DestroyCrl(newCrl);
+            return SECSuccess;
+        }
+        return SECFailure;
+    }
+    if (!outFile && !slot) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    return SECSuccess;
+}
+
+SECStatus
+SECU_SignAndEncodeCRL(CERTCertificate *issuer, CERTSignedCrl *signCrl,
+                      SECOidTag hashAlgTag, SignAndEncodeFuncExitStat *resCode)
+{
+    SECItem der;
+    SECKEYPrivateKey *caPrivateKey = NULL;    
+    SECStatus rv;
+    PRArenaPool *arena;
+    SECOidTag algID;
+    void *dummy;
+
+    PORT_Assert(issuer != NULL && signCrl != NULL);
+    if (!issuer || !signCrl) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    arena = signCrl->arena;
+
+    caPrivateKey = PK11_FindKeyByAnyCert(issuer, NULL);
+    if (caPrivateKey == NULL) {
+        *resCode = noKeyFound;
+        return SECFailure;
+    }
+
+    algID = SEC_GetSignatureAlgorithmOidTag(caPrivateKey->keyType, hashAlgTag);
+    if (algID == SEC_OID_UNKNOWN) {
+        *resCode = noSignatureMatch;
+        rv = SECFailure;
+        goto done;
+    }
+
+    if (!signCrl->crl.signatureAlg.parameters.data) {
+        rv = SECOID_SetAlgorithmID(arena, &signCrl->crl.signatureAlg, algID, 0);
+        if (rv != SECSuccess) {
+            *resCode = failToEncode;
+            goto done;
+        }
+    }
+
+    der.len = 0;
+    der.data = NULL;
+    dummy = SEC_ASN1EncodeItem(arena, &der, &signCrl->crl,
+                               SEC_ASN1_GET(CERT_CrlTemplate));
+    if (!dummy) {
+        *resCode = failToEncode;
+        rv = SECFailure;
+        goto done;
+    }
+
+    rv = SECU_DerSignDataCRL(arena, &signCrl->signatureWrap,
+                             der.data, der.len, caPrivateKey, algID);
+    if (rv != SECSuccess) {
+        *resCode = failToSign;
+        goto done;
+    }
+
+    signCrl->derCrl = PORT_ArenaZNew(arena, SECItem);
+    if (signCrl->derCrl == NULL) {
+        *resCode = noMem;
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        rv = SECFailure;
+        goto done;
+    }
+
+    signCrl->derCrl->len = 0;
+    signCrl->derCrl->data = NULL;
+    dummy = SEC_ASN1EncodeItem (arena, signCrl->derCrl, signCrl,
+                                SEC_ASN1_GET(CERT_SignedCrlTemplate));
+    if (!dummy) {
+        *resCode = failToEncode;
+        rv = SECFailure;
+        goto done;
+    }
+
+done:
+    if (caPrivateKey) {
+        SECKEY_DestroyPrivateKey(caPrivateKey);
+    }
+    return rv;
+}
+
+
+
+SECStatus
+SECU_CopyCRL(PRArenaPool *destArena, CERTCrl *destCrl, CERTCrl *srcCrl)
+{
+    void *dummy;
+    SECStatus rv = SECSuccess;
+    SECItem der;
+
+    PORT_Assert(destArena && srcCrl && destCrl);
+    if (!destArena || !srcCrl || !destCrl) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    der.len = 0;
+    der.data = NULL;
+    dummy = SEC_ASN1EncodeItem (destArena, &der, srcCrl,
+                                SEC_ASN1_GET(CERT_CrlTemplate));
+    if (!dummy) {
+        return SECFailure;
+    }
+
+    rv = SEC_QuickDERDecodeItem(destArena, destCrl,
+                                SEC_ASN1_GET(CERT_CrlTemplate), &der);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    
+    destCrl->arena = destArena;
+
+    return rv;
+}
+
+SECStatus
+SECU_DerSignDataCRL(PRArenaPool *arena, CERTSignedData *sd,
+                    unsigned char *buf, int len, SECKEYPrivateKey *pk,
+                    SECOidTag algID)
+{
+    SECItem it;
+    SECStatus rv;
+
+    it.data = 0;
+
+    /* XXX We should probably have some asserts here to make sure the key type
+     * and algID match
+     */
+
+    /* Sign input buffer */
+    rv = SEC_SignData(&it, buf, len, pk, algID);
+    if (rv) goto loser;
+
+    /* Fill out SignedData object */
+    PORT_Memset(sd, 0, sizeof(sd));
+    sd->data.data = buf;
+    sd->data.len = len;
+    sd->signature.data = it.data;
+    sd->signature.len = it.len << 3;		/* convert to bit string */
+    if (!sd->signatureAlgorithm.parameters.data) {
+        rv = SECOID_SetAlgorithmID(arena, &sd->signatureAlgorithm, algID, 0);
+        if (rv) goto loser;
+    }
+
+    return rv;
+
+  loser:
+    PORT_Free(it.data);
+    return rv;
+}
+
+#if 0
+
+/* we need access to the private function cert_FindExtension for this code to work */
+
+CERTAuthKeyID *
+SECU_FindCRLAuthKeyIDExten (PRArenaPool *arena, CERTSignedCrl *scrl)
+{
+    SECItem encodedExtenValue;
+    SECStatus rv;
+    CERTAuthKeyID *ret;
+    CERTCrl* crl;
+
+    if (!scrl) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    crl = &scrl->crl;
+    
+    encodedExtenValue.data = NULL;
+    encodedExtenValue.len = 0;
+
+    rv = cert_FindExtension(crl->extensions, SEC_OID_X509_AUTH_KEY_ID,
+			    &encodedExtenValue);
+    if ( rv != SECSuccess ) {
+	return (NULL);
+    }
+
+    ret = CERT_DecodeAuthKeyID (arena, &encodedExtenValue);
+
+    PORT_Free(encodedExtenValue.data);
+    encodedExtenValue.data = NULL;
+    
+    return(ret);
+}
+
+#endif
+
+/*
+ * Find the issuer of a Crl.  Use the authorityKeyID if it exists.
+ */
+CERTCertificate *
+SECU_FindCrlIssuer(CERTCertDBHandle *dbhandle, SECItem* subject,
+                   CERTAuthKeyID* authorityKeyID, PRTime validTime)
+{
+    CERTCertListNode *node;
+    CERTCertificate * issuerCert = NULL, *cert = NULL;
+    CERTCertList *certList = NULL;
+    SECStatus rv = SECFailure;
+
+    if (!subject) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    certList =
+        CERT_CreateSubjectCertList(NULL, dbhandle, subject,
+                                   validTime, PR_TRUE);
+    if (!certList) {
+        goto loser;
+    }
+
+    node = CERT_LIST_HEAD(certList);
+    
+    /* XXX and authoritykeyid in the future */
+    while ( ! CERT_LIST_END(node, certList) ) {
+	cert = node->cert;
+        if (CERT_CheckCertUsage(cert, KU_CRL_SIGN) != SECSuccess ||
+            !cert->trust) {
+            continue;
+        }
+        /* select the first (newest) user cert */
+        if (CERT_IsUserCert(cert)) {
+            rv = SECSuccess;
+            goto success;
+        }
+    }
+
+  success:
+    if (rv == SECSuccess) {
+        issuerCert = CERT_DupCertificate(cert);
+    }
+  loser:
+    if (certList) {
+        CERT_DestroyCertList(certList);
+    }
+    return(issuerCert);
+}
+
+
+/* Encodes and adds extensions to the CRL or CRL entries. */
+SECStatus 
+SECU_EncodeAndAddExtensionValue(PRArenaPool *arena, void *extHandle, 
+                                void *value, PRBool criticality, int extenType, 
+                                EXTEN_EXT_VALUE_ENCODER EncodeValueFn)
+{
+    SECItem encodedValue;
+    SECStatus rv;
+
+    encodedValue.data = NULL;
+    encodedValue.len = 0;
+    do {
+        rv = (*EncodeValueFn)(arena, value, &encodedValue);
+        if (rv != SECSuccess)
+            break;
+
+        rv = CERT_AddExtension(extHandle, extenType, &encodedValue,
+                               criticality, PR_TRUE);
+        if (rv != SECSuccess)
+            break;
+    } while (0);
+
+    return (rv);
 }

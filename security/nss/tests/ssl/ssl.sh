@@ -73,7 +73,8 @@ ssl_init()
   SCRIPTNAME=ssl.sh
   echo "$SCRIPTNAME: SSL tests ==============================="
 
-  grep "SUCCESS: SSL passed" $CERT_LOG_FILE >/dev/null || {
+  grep "SUCCESS: SSL passed" $CERT_LOG_FILE >/dev/null &&
+  grep "SUCCESS: SSL CRL prep passed" $CERT_LOG_FILE >/dev/null || {
       html_head "SSL Test failure"
       Exit 8 "Fatal - SSL of cert.sh needs to pass first"
   }
@@ -330,6 +331,271 @@ ssl_stress()
   html "</TABLE><BR>"
 }
 
+############################## ssl_crl #################################
+# local shell function to perform SSL test with/out revoked certs tests
+########################################################################
+
+ssl_crl_ssl()
+{
+  html_head "CRL SSL Client Tests $NORM_EXT"
+  
+  # Using First CRL Group for this test. There are $CRL_GRP_1_RANGE certs in it.
+  # Cert number $UNREVOKED_CERT_GRP_1 was not revoked
+  CRL_GROUP_BEGIN=$CRL_GRP_1_BEGIN
+  CRL_GROUP_RANGE=$CRL_GRP_1_RANGE
+  UNREVOKED_CERT=$UNREVOKED_CERT_GRP_1
+
+  while read value sparam cparam testname
+  do
+    if [ $value != "#" ]; then
+	servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
+	pwd=`echo $cparam | grep nss`
+	user=`echo $cparam | grep TestUser`
+	_cparam=$cparam
+	case $servarg in
+	    1) if [ -z "$pwd" -o -z "$user" ]; then
+                 rev_modvalue=0
+               else
+	         rev_modvalue=254
+               fi
+               ;;
+	    2) rev_modvalue=254 ;;
+	    3) if [ -z "$pwd" -o -z "$user" ]; then
+		rev_modvalue=0
+		else
+		rev_modvalue=1
+		fi
+		;;
+	    4) rev_modvalue=1 ;;
+	esac
+	TEMP_NUM=0
+	while [ $TEMP_NUM -lt $CRL_GROUP_RANGE ]
+	  do
+	  CURR_SER_NUM=`expr ${CRL_GROUP_BEGIN} + ${TEMP_NUM}`
+	  TEMP_NUM=`expr $TEMP_NUM + 1`
+	  USER_NICKNAME="TestUser${CURR_SER_NUM}"
+	  cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
+	  start_selfserv
+	  
+	  echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} \\"
+	  echo "        ${cparam}  < ${REQUEST_FILE}"
+	  rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+	  tstclnt -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
+	      -d ${R_CLIENTDIR} < ${REQUEST_FILE} \
+	      >${TMP}/$HOST.tmp.$$  2>&1
+	  ret=$?
+	  cat ${TMP}/$HOST.tmp.$$ 
+	  rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+	  if [ $CURR_SER_NUM -ne $UNREVOKED_CERT ]; then
+	      modvalue=$rev_modvalue
+	  else
+	      modvalue=$value
+	  fi
+	  
+	  html_msg $ret $modvalue "${testname}" \
+		"produced a returncode of $ret, expected is $modvalue"
+	  kill_selfserv
+	done
+    fi
+  done < ${SSLAUTH}
+
+  html "</TABLE><BR>"
+}
+
+############################## ssl_crl #################################
+# local shell function to perform SSL test for crl cache functionality
+# with/out revoked certs 
+########################################################################
+
+is_revoked() {
+    certNum=$1
+    currLoadedGrp=$2
+    
+    found=0
+    ownerGrp=1
+    while [ $ownerGrp -le $TOTAL_GRP_NUM -a $found -eq 0 ]
+      do
+      currGrpBegin=`eval echo \$\{CRL_GRP_${ownerGrp}_BEGIN\}`
+      currGrpRange=`eval echo \$\{CRL_GRP_${ownerGrp}_RANGE\}`
+      currGrpEnd=`expr $currGrpBegin + $currGrpRange - 1`
+      if [ $certNum -ge $currGrpBegin -a $certNum -le $currGrpEnd ]; then
+          found=1
+      else
+          ownerGrp=`expr $ownerGrp + 1`
+      fi
+    done
+    if [ $found -eq 1 -a $currLoadedGrp -lt $ownerGrp ]; then
+        return 1
+    fi
+    if [ $found -eq 0 ]; then
+        return 1
+    fi
+    unrevokedGrpCert=`eval echo \$\{UNREVOKED_CERT_GRP_${ownerGrp}\}`
+    if [ $certNum -eq $unrevokedGrpCert ]; then
+        return 1
+    fi
+    return 0
+}
+
+load_group_crl() {
+    group=$1
+
+    OUTFILE_TMP=${TMP}/$HOST.tmp.$$
+    grpBegin=`eval echo \$\{CRL_GRP_${group}_BEGIN\}`
+    grpRange=`eval echo \$\{CRL_GRP_${group}_RANGE\}`
+    grpEnd=`expr $grpBegin + $grpRange - 1`
+    
+    if [ "$grpBegin" = "" -o "$grpRange" = "" ]; then
+        ret=1
+        return 1;
+    fi
+    
+    if [ "$RELOAD_CRL" != "" ]; then
+        if [ $group -eq 1 ]; then
+            echo "==================== Resetting to group 1 crl ==================="
+            kill_selfserv
+            start_selfserv
+            is_selfserv_alive
+        fi
+        echo "================= Reloading CRL for group $grpBegin - $grpEnd ============="
+
+        echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} \\"
+        echo "          -w nss -n TestUser${UNREVOKED_CERT_GRP_1}"
+        echo "Request:"
+        echo "GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}"
+        echo ""
+        echo "RELOAD time $i"
+        tstclnt -p ${PORT} -h ${HOSTADDR} -f  \
+            -d ${R_CLIENTDIR} -w nss -n TestUser${UNREVOKED_CERT_GRP_1} \
+            <<_EOF_REQUEST_ >${OUTFILE_TMP}  2>&1
+GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}
+
+_EOF_REQUEST_
+        cat ${OUTFILE_TMP}
+        grep "CRL ReCache Error" ${OUTFILE_TMP}
+        if [ $? -eq 0 ]; then
+            ret=1
+            return 1
+        fi
+    else
+        echo "=== Updating DB for group $grpBegin - $grpEnd and restarting selfserv ====="
+
+        kill_selfserv
+        CU_ACTION="Importing CRL for groups $grpBegin - $grpEnd"
+        crlu -d ${R_SERVERDIR} -I -i ${SERVERDIR}/root.crl_${grpBegin}-${grpEnd} \
+             -p ../tests.pw.928
+        ret=$?
+        if [ "$ret" -eq 0 ]; then
+            return 1
+        fi
+        start_selfserv        
+    fi
+    is_selfserv_alive
+    ret=$?
+    echo "================= CRL Reloaded ============="
+}
+
+
+ssl_crl_cache()
+{
+  html_head "Cache CRL SSL Client Tests $NORM_EXT"
+  SSLAUTH_TMP=${TMP}/authin.tl.tmp
+  SERV_ARG=-r_-r
+  rm -f ${SSLAUTH_TMP}
+  echo ${SSLAUTH_TMP}
+
+  grep -- " $SERV_ARG " ${SSLAUTH} | grep -v "^#" | grep -v none | grep -v bogus > ${SSLAUTH_TMP}
+  echo $?
+  while [ $? -eq 0 -a -f ${SSLAUTH_TMP} ]
+    do
+    sparam=$SERV_ARG
+    start_selfserv
+    while read value sparam cparam testname
+      do
+      servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
+      pwd=`echo $cparam | grep nss`
+      user=`echo $cparam | grep TestUser`
+      _cparam=$cparam
+      case $servarg in
+          1) if [ -z "$pwd" -o -z "$user" ]; then
+              rev_modvalue=0
+              else
+              rev_modvalue=254
+              fi
+              ;;
+          2) rev_modvalue=254 ;;
+
+          3) if [ -z "$pwd" -o -z "$user" ]; then
+              rev_modvalue=0
+              else
+              rev_modvalue=1
+              fi
+              ;;
+          4) rev_modvalue=1 ;;
+	esac
+      TEMP_NUM=0
+      LOADED_GRP=1
+      while [ ${LOADED_GRP} -le ${TOTAL_GRP_NUM} ]
+        do
+        while [ $TEMP_NUM -lt $TOTAL_CRL_RANGE ]
+          do
+          CURR_SER_NUM=`expr ${CRL_GRP_1_BEGIN} + ${TEMP_NUM}`
+          TEMP_NUM=`expr $TEMP_NUM + 1`
+          USER_NICKNAME="TestUser${CURR_SER_NUM}"
+          cparam=`echo $_cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
+          
+          echo "Server Args: $SERV_ARG"
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} \\"
+          echo "        ${cparam}  < ${REQUEST_FILE}"
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+          tstclnt -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
+	      -d ${R_CLIENTDIR} < ${REQUEST_FILE} \
+              >${TMP}/$HOST.tmp.$$  2>&1
+          ret=$?
+          cat ${TMP}/$HOST.tmp.$$ 
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+          is_revoked ${CURR_SER_NUM} ${LOADED_GRP}
+          isRevoked=$?
+          if [ $isRevoked -eq 0 ]; then
+              modvalue=$rev_modvalue
+              testAddMsg="is revoked"
+          else
+              modvalue=$value
+              testAddMsg="is not revoked"
+          fi
+          
+          is_selfserv_alive
+          ss_status=$?
+          if [ "$ss_status" -ne 0 ]; then
+              html_msg $ret $modvalue \
+                  "${testname}(cert ${USER_NICKNAME} - $testAddMsg)" \
+                  "produced a returncode of $ret, expected is $modvalue. " \
+                  "selfserv is not alive!"
+          else
+              html_msg $ret $modvalue \
+                  "${testname}(cert ${USER_NICKNAME} - $testAddMsg)" \
+                  "produced a returncode of $ret, expected is $modvalue"
+          fi
+        done
+        LOADED_GRP=`expr $LOADED_GRP + 1`
+        TEMP_NUM=0
+        if [ "$LOADED_GRP" -le "$TOTAL_GRP_NUM" ]; then
+            load_group_crl $LOADED_GRP
+            html_msg $ret 0 "Load group $LOADED_GRP crl " \
+                "produced a returncode of $ret, expected is 0"
+        fi
+      done
+      load_group_crl 1
+    done < ${SSLAUTH_TMP}
+    kill_selfserv
+    SERV_ARG="${SERV_ARG}_-r"
+    rm -f ${SSLAUTH_TMP}
+    grep -- " $SERV_ARG " ${SSLAUTH} | grep -v none | grep -v bogus  > ${SSLAUTH_TMP}
+  done
+  TEMPFILES=${SSLAUTH_TMP}
+  html "</TABLE><BR>"
+}
+
 
 ############################## ssl_cleanup #############################
 # local shell function to finish this script (no exit since it might be
@@ -350,6 +616,8 @@ if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
     ssl_init
     ssl_cov
     ssl_auth
+    ssl_crl_ssl
+    ssl_crl_cache
     ssl_stress
 
     SERVERDIR=$EXT_SERVERDIR

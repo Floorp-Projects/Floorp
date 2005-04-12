@@ -59,6 +59,9 @@
 #define NS_CERT_HEADER "-----BEGIN CERTIFICATE-----"
 #define NS_CERT_TRAILER "-----END CERTIFICATE-----"
 
+#define NS_CRL_HEADER  "-----BEGIN CRL-----"
+#define NS_CRL_TRAILER "-----END CRL-----"
+
 /* From libsec/pcertdb.c --- it's not declared in sec.h */
 extern SECStatus SEC_AddPermCertificate(CERTCertDBHandle *handle,
 		SECItem *derCert, char *nickname, CERTCertTrust *trust);
@@ -298,6 +301,74 @@ extern char *SECU_SECModDBName(void);
 extern void SECU_PrintPRandOSError(char *progName);
 
 extern SECStatus SECU_RegisterDynamicOids(void);
+
+/* Identifies hash algorithm tag by its string representation. */
+extern SECOidTag SECU_StringToSignatureAlgTag(const char *alg);
+
+/* Store CRL in output file or pk11 db. Also
+ * encodes with base64 and exports to file if ascii flag is set
+ * and file is not NULL. */
+extern SECStatus SECU_StoreCRL(PK11SlotInfo *slot, SECItem *derCrl,
+                               PRFileDesc *outFile, int ascii, char *url);
+
+
+/*
+** DER sign a single block of data using private key encryption and the
+** MD5 hashing algorithm. This routine first computes a digital signature
+** using SEC_SignData, then wraps it with an CERTSignedData and then der
+** encodes the result.
+**	"arena" is the memory arena to use to allocate data from
+**      "sd" returned CERTSignedData 
+** 	"result" the final der encoded data (memory is allocated)
+** 	"buf" the input data to sign
+** 	"len" the amount of data to sign
+** 	"pk" the private key to encrypt with
+*/
+extern SECStatus SECU_DerSignDataCRL(PRArenaPool *arena, CERTSignedData *sd,
+                                     unsigned char *buf, int len,
+                                     SECKEYPrivateKey *pk, SECOidTag algID);
+
+typedef enum  {
+    noKeyFound = 1,
+    noSignatureMatch = 2,
+    failToEncode = 3,
+    failToSign = 4,
+    noMem = 5
+} SignAndEncodeFuncExitStat;
+
+extern SECStatus
+SECU_SignAndEncodeCRL(CERTCertificate *issuer, CERTSignedCrl *signCrl,
+                      SECOidTag hashAlgTag, SignAndEncodeFuncExitStat *resCode);
+
+extern SECStatus
+SECU_CopyCRL(PRArenaPool *destArena, CERTCrl *destCrl, CERTCrl *srcCrl);
+
+/*
+** Finds the crl Authority Key Id extension. Returns NULL if no such extension
+** was found.
+*/
+CERTAuthKeyID *
+SECU_FindCRLAuthKeyIDExten (PRArenaPool *arena, CERTSignedCrl *crl);
+
+/*
+ * Find the issuer of a crl. Cert usage should be checked before signing a crl.
+ */
+CERTCertificate *
+SECU_FindCrlIssuer(CERTCertDBHandle *dbHandle, SECItem* subject,
+                   CERTAuthKeyID* id, PRTime validTime);
+
+
+/* call back function used in encoding of an extension. Called from
+ * SECU_EncodeAndAddExtensionValue */
+typedef SECStatus (* EXTEN_EXT_VALUE_ENCODER) (PRArenaPool *extHandleArena,
+                                               void *value, SECItem *encodedValue);
+
+/* Encodes and adds extensions to the CRL or CRL entries. */
+SECStatus 
+SECU_EncodeAndAddExtensionValue(PRArenaPool *arena, void *extHandle, 
+                                void *value, PRBool criticality, int extenType, 
+                                EXTEN_EXT_VALUE_ENCODER EncodeValueFn);
+
 
 /*
  *

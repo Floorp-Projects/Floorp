@@ -74,7 +74,8 @@ cert_init()
       . ./init.sh
   fi
   SCRIPTNAME="cert.sh"
-  html_head "Certutil Tests"
+  CRL_GRP_DATE=`date "+%Y%m%d%H%M%SZ"`
+  html_head "Certutil and Crlutil Tests"
 
   ################## Generate noise for our CA cert. ######################
   # NOTE: these keys are only suitable for testing, as this whole thing 
@@ -128,6 +129,31 @@ certu()
     fi
     if [ "$RET" -ne 0 ]; then
         CERTFAILED=$RET
+        html_failed "<TR><TD>${CU_ACTION} ($RET) " 
+        cert_log "ERROR: ${CU_ACTION} failed $RET"
+    else
+        html_passed "<TR><TD>${CU_ACTION}"
+    fi
+
+    # echo "Contine?"
+    # cat > /dev/null
+    return $RET
+}
+
+################################ certu #################################
+# local shell function to call crlutil, also: writes action and options to
+# stdout, sets variable RET and writes results to the html file results
+########################################################################
+crlu()
+{
+    echo "$SCRIPTNAME: ${CU_ACTION} --------------------------"
+    
+    CRLUTIL=crlutil
+    echo "$CRLUTIL $*"
+    $CRLUTIL $*
+    RET=$?
+    if [ "$RET" -ne 0 ]; then
+        CRLFAILED=$RET
         html_failed "<TR><TD>${CU_ACTION} ($RET) " 
         cert_log "ERROR: ${CU_ACTION} failed $RET"
     else
@@ -346,6 +372,7 @@ cert_CA()
   certu -S -n $NICKNAME -t $TRUSTARG -v 600 $SIGNER -d ${LPROFILE} -1 -2 -5 \
         -f ${R_PWFILE} -z ${R_NOISE_FILE} -m $CERTSERIAL 2>&1 <<CERTSCRIPT
 5
+6
 9
 n
 y
@@ -628,6 +655,131 @@ MODSCRIPT
   fi
 }
 
+
+############################## cert_stresscerts ################################
+# local shell function to generate certs and crls for SSL tests
+########################################################################
+cert_crl_ssl()
+{
+    
+  ################# Creating Certs ###################################
+  #
+  CERTFAILED=0
+  CERTSERIAL=${CRL_GRP_1_BEGIN}
+
+  cd $CADIR
+  
+  PROFILEDIR=${CLIENTDIR}
+  CRL_GRPS_END=`expr ${CRL_GRP_1_BEGIN} + ${TOTAL_CRL_RANGE} - 1`
+  echo "$SCRIPTNAME: Creating Client CA Issued Certificates Range $CRL_GRP_1_BEGIN - $CRL_GRPS_END ==="
+  CU_ACTION="Creating client test certs"
+
+  while [ $CERTSERIAL -le $CRL_GRPS_END ]
+  do
+      CERTNAME="TestUser$CERTSERIAL"
+      cert_add_cert 
+      CERTSERIAL=`expr $CERTSERIAL + 1 `
+  done
+
+  #################### CRL Creation ##############################
+  CRL_GEN_RES=0
+  echo "$SCRIPTNAME: Creating CA CRL ====================================="
+
+  CRL_GRP_END=`expr ${CRL_GRP_1_BEGIN} + ${CRL_GRP_1_RANGE} - 1`
+  CRL_FILE_GRP_1=${R_SERVERDIR}/root.crl_${CRL_GRP_1_BEGIN}-${CRL_GRP_END}
+  CRL_FILE=${CRL_FILE_GRP_1}
+  
+  CRLUPDATE=`date +%Y%m%d%H%M%SZ`
+  CU_ACTION="Generating CRL for range ${CRL_GRP_1_BEGIN}-${CRL_GRP_END} TestCA authority"
+  CRL_GRP_END_=`expr ${CRL_GRP_END} - 1`
+  crlu -d $CADIR -G -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1}_or <<EOF_CRLINI
+update=$CRLUPDATE
+addcert ${CRL_GRP_1_BEGIN}-${CRL_GRP_END_} $CRL_GRP_DATE
+addext reasonCode 0 4
+addext issuerAltNames 0 "rfc822Name:caemail@ca.com|dnsName:ca.com|x400Address:x400Address|directoryName:CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US|URI:http://ca.com|ipAddress:192.168.0.1|registerID=reg CA"
+EOF_CRLINI
+# This extension should be added to the list, but currently nss has bug
+#addext authKeyId 0 "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" 1
+  CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+  
+  chmod 600 ${CRL_FILE_GRP_1}_or
+
+  echo test > file
+  ############################# Modification ##################################
+
+  echo "$SCRIPTNAME: Modifying CA CRL by adding one more cert ============"
+  sleep 2
+  CRL_GRP_DATE=`date "+%Y%m%d%H%M%SZ"`
+  CU_ACTION="Modification CRL by adding one more cert"
+  crlu -d $CADIR -M -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1}_or1 \
+      -i ${CRL_FILE_GRP_1}_or <<EOF_CRLINI
+addcert ${CRL_GRP_END} $CRL_GRP_DATE
+EOF_CRLINI
+  CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+  chmod 600 ${CRL_FILE_GRP_1}_or1
+  TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or"
+
+  ########### Removing one cert ${UNREVOKED_CERT_GRP_1} #######################
+  echo "$SCRIPTNAME: Modifying CA CRL by removing one cert ==============="
+  CU_ACTION="Modification CRL by removing one cert"
+  crlu -d $CADIR -M -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1} \
+      -i ${CRL_FILE_GRP_1}_or1 <<EOF_CRLINI
+rmcert  ${UNREVOKED_CERT_GRP_1}
+EOF_CRLINI
+  chmod 600 ${CRL_FILE_GRP_1}
+  TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or1"
+
+  ########### Creating second CRL which includes groups 1 and 2 ##############
+  CRL_GRP_END=`expr ${CRL_GRP_2_BEGIN} + ${CRL_GRP_2_RANGE} - 1`
+  CRL_FILE_GRP_2=${R_SERVERDIR}/root.crl_${CRL_GRP_2_BEGIN}-${CRL_GRP_END}
+
+  echo "$SCRIPTNAME: Creating CA CRL for groups 1 and 2  ==============="
+  CRLUPDATE=`date "+%Y%m%d%H%M%SZ"`
+  CRL_GRP_DATE=`date "+%Y%m%d%H%M%SZ"`
+  CU_ACTION="Creating CRL for groups 1 and 2"
+  crlu -d $CADIR -M -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_2} \
+          -i ${CRL_FILE_GRP_1} <<EOF_CRLINI
+update=$CRLUPDATE
+addcert ${CRL_GRP_2_BEGIN}-${CRL_GRP_END} $CRL_GRP_DATE
+addext invalidityDate 0 $CRLUPDATE
+rmcert  ${UNREVOKED_CERT_GRP_2}
+EOF_CRLINI
+  CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+  chmod 600 ${CRL_FILE_GRP_2}
+
+  ########### Creating second CRL which includes groups 1, 2 and 3 ##############
+  CRL_GRP_END=`expr ${CRL_GRP_3_BEGIN} + ${CRL_GRP_3_RANGE} - 1`
+  CRL_FILE_GRP_3=${R_SERVERDIR}/root.crl_${CRL_GRP_3_BEGIN}-${CRL_GRP_END}
+
+  echo "$SCRIPTNAME: Creating CA CRL for groups 1, 2 and 3  ==============="
+  sleep 2
+  CRLUPDATE=`date "+%Y%m%d%H%M%SZ"`
+  CRL_GRP_DATE=`date "+%Y%m%d%H%M%SZ"`
+  CU_ACTION="Creating CRL for groups 1, 2 and 3"
+  crlu -d $CADIR -M -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_3} \
+            -i ${CRL_FILE_GRP_2} <<EOF_CRLINI
+update=$CRLUPDATE
+addcert ${CRL_GRP_3_BEGIN}-${CRL_GRP_END} $CRL_GRP_DATE
+rmcert  ${UNREVOKED_CERT_GRP_3}
+addext crlNumber 0 2
+EOF_CRLINI
+  CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+  chmod 600 ${CRL_FILE_GRP_3}
+
+  ############ Importing Server CA Issued CRL for certs of first group #######
+
+  echo "$SCRIPTNAME: Importing Server CA Issued CRL for certs ${CRL_GRP_BEGIN} trough ${CRL_GRP_END}"
+  CU_ACTION="Importing CRL for groups 1"
+  crlu -I -i ${CRL_FILE} -n "TestCA" -f "${R_PWFILE}" -d "${R_SERVERDIR}"
+  CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+
+  if [ "$CERTFAILED" != 0 -o "$CRL_GEN_RES" != 0 ] ; then
+      cert_log "ERROR: SSL CRL prep failed $CERTFAILED : $CRL_GEN_RES"
+  else
+      cert_log "SUCCESS: SSL CRL prep passed"
+  fi
+}
+
 ############################## cert_cleanup ############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -648,6 +800,7 @@ cert_extended_ssl
 cert_ssl 
 cert_smime_client        
 cert_fips
+cert_crl_ssl
 if [ -n "$DO_DIST_ST" -a "$DO_DIST_ST" = "TRUE" ] ; then
     cert_stresscerts 
     #following lines to be used when databases are to be reused
