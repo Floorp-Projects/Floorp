@@ -208,7 +208,8 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
   </tr>
 
   [% FOREACH event = neg_events %]  
-    <tr>
+    [% count = loop.count() %]
+    <tr class="bz_row_[% count % 2 == 1 ? "odd" : "even" %]">
       [% FOREACH relationship = relationships %]
         [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
                    (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
