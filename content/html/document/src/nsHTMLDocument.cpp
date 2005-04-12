@@ -673,6 +673,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCAutoString contentType;
   aChannel->GetContentType(contentType);
 
+  // Note: we MUST set the compat mode and default namespace ID before we call
+  // StartDocumentLoad on our superclass (since that could force creation of a
+  // CSSLoader and the CSSLoader creation needs to know our compat mode and
+  // case sensitivity.
   if (contentType.Equals("application/xhtml+xml") &&
       (!aCommand || nsCRT::strcmp(aCommand, "view-source") != 0)) {
     // We're parsing XHTML as XML, remember that.
