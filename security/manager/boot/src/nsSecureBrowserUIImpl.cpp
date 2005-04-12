@@ -177,8 +177,19 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
 {
   PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: Init\n", this));
+         ("SecureUI:%p: Init: mWindow: %p, window: %p\n", this, mWindow.get(),
+          window));
 
+  if (!window) {
+    NS_WARNING("Null window passed to nsSecureBrowserUIImpl::Init()");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (mWindow) {
+    NS_WARNING("Trying to init an nsSecureBrowserUIImpl twice");
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+  
   nsresult rv = NS_OK;
   mWindow = window;
 
