@@ -106,3 +106,6 @@ CXXFLAGS	+= $(TK_CFLAGS)
 ifdef PHOTON_DND
 CXXFLAGS += -DPHOTON_DND
 endif
+
+export::
+	$(INSTALL) nsClipboard.h $(DIST)/include/widget

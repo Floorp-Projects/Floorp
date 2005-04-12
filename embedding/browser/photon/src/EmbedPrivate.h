@@ -52,6 +52,7 @@
 #include <nsIAppShell.h>
 #include <nsIDOMEventReceiver.h>
 #include <nsVoidArray.h>
+#include <nsClipboard.h>
 // for profiles
 #include <nsIPref.h>
 
@@ -91,9 +92,9 @@ class EmbedPrivate {
   void 		  ScrollDown(int amount);
   void 		  ScrollLeft(int amount);
   void 		  ScrollRight(int amount);
-  void        Cut  (void);
-  void        Copy  (void);
-  void        Paste  (void);
+  void        Cut  (int ig);
+  void        Copy  (int ig);
+  void        Paste  (int ig);
   void        SelectAll  (void);
   void        Clear  (void);
   int    	  SaveAs(char *fname,char *dirname);
@@ -177,6 +178,8 @@ class EmbedPrivate {
   // for profiles
   static nsIPref                *sPrefs;
 	static nsVoidArray            *sWindowList;
+  // for clipboard input group setting
+  static nsClipboard *sClipboard;
 
   // chrome mask
   PRUint32                       mChromeMask;

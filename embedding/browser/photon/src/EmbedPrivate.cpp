@@ -74,6 +74,10 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIClipboardCommands.h"
 
+// for the clipboard input group setting
+#include "nsClipboard.h"
+#include "nsWidgetsCID.h"
+
 // for the focus hacking we need to do
 #include <nsIFocusController.h>
 
@@ -96,10 +100,12 @@
 extern char *g_Print_Left_Header_String, *g_Print_Right_Header_String, *g_Print_Left_Footer_String, *g_Print_Right_Footer_String;
 
 static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
+static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
 nsIPref     *EmbedPrivate::sPrefs       = nsnull;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
+nsClipboard *EmbedPrivate::sClipboard   = nsnull;
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -119,6 +125,13 @@ EmbedPrivate::EmbedPrivate(void)
   		sWindowList = new nsVoidArray();
 	}
 	sWindowList->AppendElement(this);
+	if( !sClipboard ) {
+		nsresult rv;
+		nsCOMPtr<nsClipboard> s;
+		s = do_GetService( kCClipboardCID, &rv );
+		sClipboard = ( nsClipboard * ) s;
+		if( NS_FAILED( rv ) ) sClipboard = 0;
+	}
 }
 
 EmbedPrivate::~EmbedPrivate()
@@ -499,27 +512,48 @@ EmbedPrivate::CanGoForward()
 }
 
 void
-EmbedPrivate::Cut()
+EmbedPrivate::Cut(int ig)
 {
 	nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(mWindow->mWebBrowser));
-	if (clipboard)
+	if (clipboard) {
+		//
+		// Pass Voyager input group to clipboard functions.
+		// Using Ctrl-C/V does not do this, only Edit->Copy/Paste.
+		//
+		if (sClipboard)
+			sClipboard->SetInputGroup(ig);
 	    clipboard->CutSelection();
+		}
 }
 
 void
-EmbedPrivate::Copy()
+EmbedPrivate::Copy(int ig)
 {
 	nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(mWindow->mWebBrowser));
-	if (clipboard)
+	if (clipboard) {
+		//
+		// Pass Voyager input group to clipboard functions.
+		// Using Ctrl-C/V does not do this, only Edit->Copy/Paste.
+		//
+		if (sClipboard)
+			sClipboard->SetInputGroup(ig);
 	    clipboard->CopySelection();
+		}
 }
 
 void
-EmbedPrivate::Paste()
+EmbedPrivate::Paste(int ig)
 {
 	nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(mWindow->mWebBrowser));
-	if (clipboard)
+	if (clipboard) {
+		//
+		// Pass Voyager input group to clipboard functions.
+		// Using Ctrl-C/V does not do this, only Edit->Copy/Paste.
+		//
+		if (sClipboard)
+			sClipboard->SetInputGroup(ig);
 	    clipboard->Paste();
+		}
 }
 
 void
