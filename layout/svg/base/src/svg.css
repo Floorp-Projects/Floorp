@@ -40,9 +40,6 @@
 
 a {
   -moz-binding:url('chrome://svg/content/svgBindings.xml#a'); 
-}
-
-a * {
   cursor: pointer;
 }
                
@@ -58,12 +55,10 @@ svg {
   font-family: sans-serif;
 }
 
-style {
+style, script, symbol {
  display: none;
 }
 
-svg:not(:root), symbol, image, marker, pattern, foreignObject { overflow: hidden }
-
-symbol {
- display: none;
+svg:not(:root), symbol, image, marker, pattern, foreignObject {
+ overflow: hidden;
 }
