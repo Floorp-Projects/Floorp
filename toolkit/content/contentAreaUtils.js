@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@netscape.com> (Save File)
+#   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -417,6 +418,9 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
         return "UsrDsk";
 #endif
 #ifdef XP_OS2
+        return "Desk";
+#endif
+#ifdef XP_BEOS
         return "Desk";
 #endif
         return "Home";
