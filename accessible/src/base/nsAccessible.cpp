@@ -632,7 +632,18 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
   // The disabled attribute is mostly used in XUL elements and HTML forms, but
   // if someone sets it on another attribute, 
   // it seems reasonable to consider it unavailable
-  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled)) {
+  PRBool isDisabled;
+  if (content->IsContentOfType(nsIContent::eHTML)) {
+    // In HTML, just the presence of the disabled attribute means it is disabled,
+    // therefore disabled="false" indicates disabled!
+    isDisabled = content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled);
+  }
+  else {
+    nsAutoString disabled;
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled, disabled);
+    isDisabled = disabled.EqualsLiteral("true");
+  }
+  if (isDisabled) {
     *aState |= STATE_UNAVAILABLE;
   }
   else if (content->IsContentOfType(nsIContent::eELEMENT)) {
