@@ -1845,6 +1845,15 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 void
 nsComboboxControlFrame::HandleRedisplayTextEvent(const nsAString& aText)
 {
+  // First, make sure that the content model is up to date and we've
+  // constructed the frames for all our content in the right places.
+  // Otherwise they'll end up under the wrong insertion frame when we
+  // ActuallyDisplayText, since that flushes out the content sink by
+  // calling SetText on a DOM node with aNotify set to true.  See bug
+  // 289730.
+  GetPresContext()->GetDocument()->
+    FlushPendingNotifications(Flush_ContentAndNotify);
+  
   // Redirect frame insertions during this method (see GetContentInsertionFrame())
   // so that any reframing that the frame constructor forces upon us is inserted
   // into the correct parent (mDisplayFrame). See bug 282607.
