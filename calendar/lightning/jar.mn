@@ -21,5 +21,13 @@ calendar-en-US.jar:
   locale/en-US/calendar/calendar.dtd		(/calendar/resources/locale/en-US/calendar.dtd)
 
 classic.jar:
-#expand  skin/classic/calendar/calendar.css	(/calendar/sunbird/themes/__THEME__/sunbird/calendar.css)
 #expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)
+#expand  skin/classic/calendar/calendar-views.css	(/calendar/sunbird/themes/__THEME__/sunbird/calendar-views.css)
+#expand  skin/classic/calendar/prevnextarrow.png	(/calendar/sunbird/themes/__THEME__/sunbird/prevnextarrow.png)
+#expand  skin/classic/calendar/pageupdown.png	(/calendar/sunbird/themes/__THEME__/sunbird/pageupdown.png)
+#expand  skin/classic/calendar/dot.png	(/calendar/resources/skin/classic/dot.png)
+#expand  skin/classic/calendar/dot_selected.png	(/calendar/resources/skin/classic/dot_selected.png)
+#expand  skin/classic/calendar/all_day_event.png	(/calendar/resources/skin/classic/all_day_event.png)
+#expand  skin/classic/calendar/all_day_event_hover.png	(/calendar/resources/skin/classic/all_day_event_hover.png)
+#expand  skin/classic/calendar/all_day_event_down.png	(/calendar/resources/skin/classic/all_day_event_down.png)
+#expand  skin/classic/calendar/week-view-corner.png	(/calendar/resources/skin/classic/week-view-corner.png)
