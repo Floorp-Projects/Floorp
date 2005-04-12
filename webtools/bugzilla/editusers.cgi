@@ -153,6 +153,7 @@ if ($action eq 'search') {
     # Lock tables during the check+creation session.
     $dbh->bz_lock_tables('profiles WRITE',
                          'profiles_activity WRITE',
+                         'email_setting WRITE',
                          'namedqueries READ',
                          'whine_queries READ',
                          'tokens READ');
