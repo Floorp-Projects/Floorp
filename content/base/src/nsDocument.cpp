@@ -1221,7 +1221,14 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     nsAutoString title;
     PRInt32 index;
 
-    mCSSLoader->SetPreferredSheet(aData);
+    // We lazily create our CSSLoader.
+    // XXXbz why?  Wouldn't it make more sense to just create it at
+    // document creation and not do all these null-checks all over?
+    nsICSSLoader* cssLoader = GetCSSLoader();
+    if (!cssLoader) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    cssLoader->SetPreferredSheet(aData);
 
     PRInt32 count = mStyleSheets.Count();
     for (index = 0; index < count; index++) {
