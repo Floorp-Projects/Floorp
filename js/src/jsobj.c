@@ -1005,7 +1005,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     const char *file;
     uintN line;
-    JSPrincipals *principals;
+    JSPrincipals *principals, *scopePrincipals;
     JSScript *script;
     JSBool ok;
 #if JS_HAS_EVAL_THIS_SCOPE
@@ -1123,6 +1123,14 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             scopeobj = caller->scopeChain;
     }
 #endif
+
+    /* Belt-and-braces: check that this eval callee has access to scopeobj. */
+    if (cx->findObjectPrincipals) {
+        scopePrincipals = cx->findObjectPrincipals(cx, scopeobj);
+        if (scopePrincipals != principals)
+            scopeobj = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]));
+    }
+
     ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
     JS_DestroyScript(cx, script);
 
