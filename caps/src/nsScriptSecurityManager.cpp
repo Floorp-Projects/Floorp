@@ -657,8 +657,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 nsCOMPtr<nsIPrincipal> objectPrincipal;
                 if(aJSObject)
                 {
-                    objectPrincipal =
-                        doGetObjectPrincipal(cx, aJSObject);
+                    objectPrincipal = doGetObjectPrincipal(cx, aJSObject);
                     if (!objectPrincipal)
                         return NS_ERROR_FAILURE;
                 }
@@ -1910,6 +1909,7 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
             if (result)
             {
                 NS_ASSERTION(NS_SUCCEEDED(*rv), "Weird return");
+                *frameResult = fp;
                 return result;
             }
         }
