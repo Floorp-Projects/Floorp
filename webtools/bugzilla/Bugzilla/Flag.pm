@@ -280,7 +280,10 @@ sub validate {
             && trim($cgi->param("requestee-$id")))
         {
             my $requestee_email = trim($cgi->param("requestee-$id"));
-            if ($requestee_email ne $flag->{'requestee'}->{'email'}) {
+            my $old_requestee = 
+              $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
+
+            if ($old_requestee ne $requestee_email) {
                 # We know the requestee exists because we ran
                 # Bugzilla::User::match_field before getting here.
                 my $requestee = Bugzilla::User->new_from_login($requestee_email);
@@ -551,7 +554,7 @@ sub modify {
         my $flag = get($id);
 
         my $status = $cgi->param("flag-$id");
-        my $requestee_email = trim($cgi->param("requestee-$id"));
+        my $requestee_email = trim($cgi->param("requestee-$id") || '');
 
         
         # Ignore flags the user didn't change. There are two components here:

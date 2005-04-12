@@ -232,7 +232,9 @@ sub SaveEmail {
     foreach my $rel (RELATIONSHIPS) {
         # Positive events: a ticked box means "send me mail."
         foreach my $event (POS_EVENTS) {
-            if (1 == $cgi->param("email-$rel-$event")) {
+            if (defined($cgi->param("email-$rel-$event"))
+                && $cgi->param("email-$rel-$event") == 1)
+            {
                 $dbh->do("INSERT INTO email_setting " . 
                          "(user_id, relationship, event) " . 
                          "VALUES ($userid, $rel, $event)");
