@@ -101,6 +101,9 @@ var gDownloadsPane = {
 #ifdef XP_OS2
     return aFolderType == "Desktop" ? "Desk" : "Home";
 #endif
+#ifdef XP_BEOS
+    return aFolderType == "Desktop" ? "Desk" : "Home";
+#endif
     return "Home";
   },
 

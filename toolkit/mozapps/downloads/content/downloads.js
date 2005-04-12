@@ -23,6 +23,7 @@
 #   Blake Ross <blakeross@telocity.com> (Original Author)
 #   Ben Goodger <ben@bengoodger.com> (v2.0)
 #   Dan Mosedale <dmose@mozilla.org>
+#   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -755,6 +756,9 @@ function initAutoDownloadDisplay()
       return aFolderType == "Desktop" ? "UsrDsk" : "UsrDocs";
 #endif
 #ifdef XP_OS2
+      return aFolderType == "Desktop" ? "Desk" : "Home";
+#endif
+#ifdef XP_BEOS
       return aFolderType == "Desktop" ? "Desk" : "Home";
 #endif
       return "Home";
