@@ -66,6 +66,13 @@ REQUIRES	= xpcom \
 		  js \
 		  $(NULL)
 
+ifdef MOZ_ENABLE_CAIRO
+REQUIRES        += \
+                cairo \
+                pixman \
+                $(NULL)
+endif
+
 ifdef MOZ_XUL
 DIRS		= tree grid
 endif
