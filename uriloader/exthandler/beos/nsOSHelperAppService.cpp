@@ -73,8 +73,19 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
 		BString protoStr(aProtocolScheme);
 		protoStr.Prepend("application/x-vnd.Be.URL.");
 		BMimeType protocol;
-		if (protocol.SetTo(protoStr.String()) == B_OK) {
-			*aHandlerExists = PR_TRUE;
+		if (protocol.SetTo(protoStr.String()) == B_OK)
+		{
+			if (protocol.IsInstalled())
+				*aHandlerExists = PR_TRUE;
+		}
+		if ((!*aHandlerExists) && (!strcmp("mailto", aProtocolScheme)))
+		{
+			// mailto link, no x-vnd.Be.URL.mailto entry
+			if (protocol.SetTo("text/x-email") == B_OK)
+			{
+				if (protocol.IsInstalled())
+					*aHandlerExists = PR_TRUE;
+			}
 		}
 	}
 
@@ -95,12 +106,21 @@ nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 		// Get the Spec
 		nsCAutoString spec;
 		aURL->GetSpec(spec);
-		// Set up the BRoster message
-		BMessage args(B_ARGV_RECEIVED);
-		args.AddInt32("argc",1);
-		args.AddString("argv",spec.get());
-
-		be_roster->Launch(protoStr.String(), &args);
+		const char* arg = spec.get();
+		
+		//Launch the app		
+		BMimeType protocol;
+		bool isInstalled = false;
+		if (protocol.SetTo(protoStr.String()) == B_OK)
+		{
+			if(protocol.IsInstalled())
+			{
+				isInstalled = true;	
+				be_roster->Launch(protoStr.String(), 1, &(char*)arg);
+			}
+		}
+		if ((!isInstalled) && (!strcmp("mailto", scheme.get())))
+			be_roster->Launch("text/x-email", 1, &(char*)arg);
 	}
 	return rv;
 }
