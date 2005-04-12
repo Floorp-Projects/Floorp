@@ -175,6 +175,10 @@ if (defined $cgi->param('cleangroupsnow')) {
            "- reduced from $before records to $after records");
 }
 
+###########################################################################
+# Send unsent mail
+###########################################################################
+
 if (defined $cgi->param('rescanallBugMail')) {
     require Bugzilla::BugMail;
 
@@ -201,6 +205,42 @@ if (defined $cgi->param('rescanallBugMail')) {
     PutFooter();
     exit;
 }
+
+###########################################################################
+# Remove all references to deleted bugs
+###########################################################################
+
+if (defined $cgi->param('remove_invalid_references')) {
+    Status("OK, now removing all references to deleted bugs.");
+
+    $dbh->bz_lock_tables('attachments WRITE', 'bug_group_map WRITE',
+                         'bugs_activity WRITE', 'cc WRITE',
+                         'dependencies WRITE', 'duplicates WRITE',
+                         'flags WRITE', 'keywords WRITE',
+                         'longdescs WRITE', 'votes WRITE', 'bugs READ');
+
+    foreach my $pair ('attachments/', 'bug_group_map/', 'bugs_activity/', 'cc/',
+                      'dependencies/blocked', 'dependencies/dependson',
+                      'duplicates/dupe', 'duplicates/dupe_of',
+                      'flags/', 'keywords/', 'longdescs/', 'votes/') {
+
+        my ($table, $field) = split('/', $pair);
+        $field ||= "bug_id";
+
+        my $bug_ids =
+          $dbh->selectcol_arrayref("SELECT $table.$field FROM $table
+                                    LEFT JOIN bugs ON $table.$field = bugs.bug_id
+                                    WHERE bugs.bug_id IS NULL");
+
+        if (scalar(@$bug_ids)) {
+            $dbh->do("DELETE FROM $table WHERE $field IN (" . join(',', @$bug_ids) . ")");
+        }
+    }
+
+    $dbh->bz_unlock_tables();
+    Status("All references to deleted bugs have been removed.");
+}
+
 
 print "OK, now running sanity checks.<p>\n";
 
@@ -247,6 +287,7 @@ sub CrossCheck {
                 "WHERE  $table.$field IS NULL " .
                 "  AND  $refertable.$referfield IS NOT NULL");
 
+        my $has_bad_references = 0;
         while (MoreSQLData()) {
             my ($value, $key) = FetchSQLData();
             if (!$exceptions{$value}) {
@@ -260,7 +301,12 @@ sub CrossCheck {
                     }
                 }
                 Alert($alert);
+                $has_bad_references = 1;
             }
+        }
+        # References to non existent bugs can be safely removed, bug 288461
+        if ($table eq 'bugs' && $has_bad_references) {
+            print qq{<a href="sanitycheck.cgi?remove_invalid_references=1">Remove invalid references to non existent bugs.</a><p>\n};
         }
     }
 }
