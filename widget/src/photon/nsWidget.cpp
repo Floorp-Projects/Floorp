@@ -60,11 +60,13 @@
 #include "nsReadableUtils.h"
 
 #include "nsIPref.h"
+#include "nsClipboard.h"
 
 #include <errno.h>
 #include <photon/PtServer.h>
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 // BGR, not RGB - REVISIT
 #define NSCOLOR_TO_PHCOLOR(g,n) \
@@ -86,6 +88,7 @@ nsILookAndFeel     *nsWidget::sLookAndFeel = nsnull;
 #ifdef PHOTON_DND
 nsIDragService     *nsWidget::sDragService = nsnull;
 #endif
+nsClipboard        *nsWidget::sClipboard = nsnull;
 PRUint32            nsWidget::sWidgetCount = 0;
 nsWidget*						nsWidget::sFocusWidget = 0;
 
@@ -107,6 +110,14 @@ nsWidget::nsWidget()
 		if( NS_FAILED( rv ) ) sDragService = 0;
 		}
 #endif
+
+	if( !sClipboard ) {
+		nsresult rv;
+		nsCOMPtr<nsClipboard> s;
+		s = do_GetService( kCClipboardCID, &rv );
+		sClipboard = ( nsClipboard * ) s;
+		if( NS_FAILED( rv ) ) sClipboard = 0;
+		}
 
   mWidget = nsnull;
   mParent = nsnull;
@@ -1031,6 +1042,14 @@ inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbIn
 			  PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
 			  nsMouseEvent      theMouseEvent;
 			  
+			  // Update the current input group for clipboard mouse events
+			  // (mozilla only). Note that for mozserver the mouse based
+			  // (eg. Edit->Copy/Paste menu) events don't come through here.
+			  // They are sent by the voyager client app via libPtWeb.so to
+			  // do_command() in mozserver.cpp.
+			  if (sClipboard)
+			  	sClipboard->SetInputGroup(event->input_group);
+
 			  if (event->subtype==Ph_EV_RELEASE_REAL || event->subtype==Ph_EV_RELEASE_PHANTOM) {
 				  if (ptrev) {
 					  ScreenToWidgetPos( ptrev->pos );
@@ -1078,6 +1097,10 @@ inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbIn
       	break;
 
       case Ph_EV_KEY:
+        // Update the current input group for clipboard key events. This
+        // covers both mozserver and mozilla.
+        if (sClipboard)
+          sClipboard->SetInputGroup(event->input_group);
 				result = DispatchKeyEvent( (PhKeyEvent_t*) PhGetData( event ) );
         break;
 

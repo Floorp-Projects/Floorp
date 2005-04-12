@@ -69,6 +69,13 @@ public:
   // nsIClipboard
   NS_DECL_NSICLIPBOARD
 
+  NS_IMETHOD SetInputGroup(PRInt32 aInputGroup)
+  {
+    mInputGroup = aInputGroup;
+    return NS_OK;
+  }
+
+
 protected:
   NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, 
@@ -79,6 +86,7 @@ nsresult GetFormat(const char* aMimeStr, char *format );
 	inline nsITransferable *GetTransferable(PRInt32 aWhichClipboard);
 
 private:
+  unsigned long GetFlavourTimestamp( char *type );
   nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
   nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
   nsCOMPtr<nsITransferable>   mSelectionTransferable;
@@ -87,6 +95,8 @@ private:
   // Used for communicating pasted data
   // from the asynchronous X routines back to a blocking paste:
   PRBool mBlocking;
+  // Used for keeping track of the current input group
+  PRInt32 mInputGroup;
 };
 
 #endif // nsClipboard_h__

@@ -81,6 +81,7 @@
 
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsUnknownContentTypeHandler.h"
 
 #include "EmbedPrivate.h"
@@ -355,19 +356,20 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 			}
 			break;
 
-		case Pt_ARG_MOZ_COMMAND:
+		case Pt_ARG_MOZ_COMMAND: {
+			PtWebClient2Command_t *wdata = ( PtWebClient2Command_t * ) argt->len;
 			switch ((int)(argt->value)) 
 			{
 				case Pt_MOZ_COMMAND_CUT: {
-					moz->EmbedRef->Cut();
+					moz->EmbedRef->Cut(wdata?wdata->ClipboardInfo.input_group:1);
 					}
 					break;
 				case Pt_MOZ_COMMAND_COPY: {
-					moz->EmbedRef->Copy();
+					moz->EmbedRef->Copy(wdata?wdata->ClipboardInfo.input_group:1);
 					}
 					break;
 				case Pt_MOZ_COMMAND_PASTE: {
-					moz->EmbedRef->Paste();
+					moz->EmbedRef->Paste(wdata?wdata->ClipboardInfo.input_group:1);
 					}
 					break;
 				case Pt_MOZ_COMMAND_SELECTALL: {
@@ -380,7 +382,6 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 					break;
 
 				case Pt_MOZ_COMMAND_FIND: {
-					PtWebClient2Command_t *wdata = ( PtWebClient2Command_t * ) argt->len;
 					nsCOMPtr<nsIWebBrowserFind> finder( do_GetInterface( moz->EmbedRef->mWindow->mWebBrowser ) );
 					finder->SetSearchString( NS_ConvertASCIItoUCS2(wdata->FindInfo.string).get() );
 					finder->SetMatchCase( wdata->FindInfo.flags & Pt_WEB_FIND_MATCH_CASE );
@@ -394,7 +395,6 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 					}
 
 				case Pt_MOZ_COMMAND_SAVEAS: {
-					PtWebClient2Command_t *wdata = ( PtWebClient2Command_t * ) argt->len;
 					char *dirname = ( char * ) calloc( 1, strlen( wdata->SaveasInfo.filename + 7 ) );
 					if( dirname ) {
 						sprintf( dirname, "%s_files", wdata->SaveasInfo.filename );
@@ -403,6 +403,7 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 						}
 					break;
 					}
+				}
 			}
 			break;
 

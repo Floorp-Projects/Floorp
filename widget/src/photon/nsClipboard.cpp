@@ -82,8 +82,6 @@ NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 #define Ph_CLIPBOARD_TYPE_IMAGE			"IMAG"
 #define Ph_CLIPBOARD_TYPE_HTML			"HTML"
 
-static unsigned long get_flavour_timestamp( char *type );
-
 //-------------------------------------------------------------------------
 //
 // nsClipboard constructor
@@ -100,6 +98,7 @@ nsClipboard::nsClipboard()
   mSelectionTransferable = nsnull;
   mGlobalOwner = nsnull;
   mSelectionOwner = nsnull;
+  mInputGroup = 1;
 }
 
 //-------------------------------------------------------------------------
@@ -302,7 +301,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 		}
 	}
 
-	PhClipboardCopy( 1, index, cliphdr );
+	PhClipboardCopy( mInputGroup, index, cliphdr );
 	for( PRUint32 k=0; k<index; k++)
 		nsMemory::Free(NS_REINTERPRET_CAST(char*, cliphdr[k].data));
 
@@ -358,7 +357,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
   	char         *data = nsnull, type[8];
   	PRUint32      dataLen;
 
-  	clipPtr = PhClipboardPasteStart( 1 );
+  	clipPtr = PhClipboardPasteStart( mInputGroup );
   	if(!clipPtr) return NS_ERROR_FAILURE;
 
 	/*
@@ -389,7 +388,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 				if (err != NS_OK) 
 					continue;
 
-			dont_use_flavour[i] = get_flavour_timestamp( type );
+			dont_use_flavour[i] = GetFlavourTimestamp( type );
 			if( dont_use_flavour[i] > max_time ) max_time = dont_use_flavour[i];
 			}
 		}
@@ -580,9 +579,8 @@ nsITransferable *nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
   return transferable;
 }
 
-static unsigned long get_flavour_timestamp( char *type )
+unsigned long nsClipboard::GetFlavourTimestamp( char *type)
 {
-	int ig = 1; /* we always use input group 1 in mozilla */
 	char fname[512];
 	extern struct _Ph_ctrl *_Ph_;
 
@@ -597,7 +595,7 @@ static unsigned long get_flavour_timestamp( char *type )
   if(gethostname(&fname[strlen(fname)],PATH_MAX-40)!=0)
     strcpy(&fname[strlen(fname)],"localhost");
 
-  sprintf( &fname[strlen(fname)], "/%08x/%d.%s",buf.st_uid, ig, type );
+  sprintf( &fname[strlen(fname)], "/%08x/%d.%s",buf.st_uid, mInputGroup, type );
 	struct stat st;
 	if( stat( fname, &st ) != 0 )
 		return 0;

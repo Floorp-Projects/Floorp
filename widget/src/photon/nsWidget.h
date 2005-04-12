@@ -44,6 +44,7 @@
 #ifdef PHOTON_DND
 #include "nsIDragService.h"
 #endif
+#include "nsClipboard.h"
 
 class nsILookAndFeel;
 class nsIAppShell;
@@ -363,6 +364,7 @@ protected:
 #ifdef PHOTON_DND
 	static nsIDragService *sDragService;
 #endif
+	static nsClipboard *sClipboard;
   static PRUint32 sWidgetCount;
 };
 
