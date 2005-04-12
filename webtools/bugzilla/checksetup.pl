@@ -1133,6 +1133,55 @@ END
     }
 }
 
+# Just to be sure ...
+unlink "$datadir/versioncache";
+
+# Remove parameters from the params file that no longer exist in Bugzilla,
+# and set the defaults for new ones
+
+my @oldparams = UpdateParams();
+
+if (@oldparams) {
+    open(PARAMFILE, '>>', 'old-params.txt') 
+      || die "$0: Can't open old-params.txt for writing: $!\n";
+
+    print "The following parameters are no longer used in Bugzilla, " .
+          "and so have been\nmoved from your parameters file " .
+          "into old-params.txt:\n";
+
+    foreach my $p (@oldparams) {
+        my ($item, $value) = @{$p};
+
+        print PARAMFILE "\n\n$item:\n$value\n";
+
+        print $item;
+        print ", " unless $item eq $oldparams[$#oldparams]->[0];
+    }
+    print "\n";
+    close PARAMFILE;
+}
+
+# Set mail_delivery_method to SMTP and prompt for SMTP server
+# if running on Windows and set to sendmail (Mail::Mailer doesn't
+# support sendmail on Windows)
+if ($^O =~ /MSWin32/i && Param('mail_delivery_method') eq 'sendmail') {
+    print "\nBugzilla requires an SMTP server to function on Windows.\n" .
+        "Please enter your SMTP server's hostname: ";
+    my $smtp = $answer{'SMTP_SERVER'} 
+        || ($silent && die("cant preload SMTP_SERVER")) 
+        || <STDIN>;
+    chomp $smtp;
+    if (!$smtp) {
+        print "\nWarning: No SMTP Server provided, defaulting to localhost\n";
+        $smtp = 'localhost';
+    }
+    SetParam('mail_delivery_method', 'smtp');
+    SetParam('smtpserver', $smtp);
+}
+
+# WriteParams will only write out still-valid entries
+WriteParams();
+
 unless ($switch{'no_templates'}) {
     if (-e "$datadir/template") {
         print "Removing existing compiled templates ...\n" unless $silent;
@@ -1203,55 +1252,6 @@ unless ($switch{'no_templates'}) {
        }
     }
 }
-
-# Just to be sure ...
-unlink "$datadir/versioncache";
-
-# Remove parameters from the params file that no longer exist in Bugzilla,
-# and set the defaults for new ones
-
-my @oldparams = UpdateParams();
-
-if (@oldparams) {
-    open(PARAMFILE, '>>', 'old-params.txt') 
-      || die "$0: Can't open old-params.txt for writing: $!\n";
-
-    print "The following parameters are no longer used in Bugzilla, " .
-          "and so have been\nmoved from your parameters file " .
-          "into old-params.txt:\n";
-
-    foreach my $p (@oldparams) {
-        my ($item, $value) = @{$p};
-
-        print PARAMFILE "\n\n$item:\n$value\n";
-
-        print $item;
-        print ", " unless $item eq $oldparams[$#oldparams]->[0];
-    }
-    print "\n";
-    close PARAMFILE;
-}
-
-# Set mail_delivery_method to SMTP and prompt for SMTP server
-# if running on Windows and set to sendmail (Mail::Mailer doesn't
-# support sendmail on Windows)
-if ($^O =~ /MSWin32/i && Param('mail_delivery_method') eq 'sendmail') {
-    print "\nBugzilla requires an SMTP server to function on Windows.\n" .
-        "Please enter your SMTP server's hostname: ";
-    my $smtp = $answer{'SMTP_SERVER'} 
-        || ($silent && die("cant preload SMTP_SERVER")) 
-        || <STDIN>;
-    chomp $smtp;
-    if (!$smtp) {
-        print "\nWarning: No SMTP Server provided, defaulting to localhost\n";
-        $smtp = 'localhost';
-    }
-    SetParam('mail_delivery_method', 'smtp');
-    SetParam('smtpserver', $smtp);
-}
-
-# WriteParams will only write out still-valid entries
-WriteParams();
 
 ###########################################################################
 # Set proper rights
