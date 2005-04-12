@@ -342,10 +342,9 @@
 #define NS_STYLE_DISPLAY_STACK                  24
 #define NS_STYLE_DISPLAY_INLINE_STACK           25
 #define NS_STYLE_DISPLAY_DECK                   26
-#define NS_STYLE_DISPLAY_BULLETINBOARD          27
-#define NS_STYLE_DISPLAY_POPUP                  28
-#define NS_STYLE_DISPLAY_GROUPBOX               29
-#define NS_STYLE_DISPLAY_PAGE_BREAK             30
+#define NS_STYLE_DISPLAY_POPUP                  27
+#define NS_STYLE_DISPLAY_GROUPBOX               28
+#define NS_STYLE_DISPLAY_PAGE_BREAK             29
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0
