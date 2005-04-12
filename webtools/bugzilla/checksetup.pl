@@ -3716,7 +3716,7 @@ if ($dbh->bz_get_field_def('bugs', 'short_desc')->[2]) { # if it allows nulls
 
 # 2003-10-24 - alt@sonic.net, bug 224208
 # Support classification level
-$dbh->bz_add_field('products', 'classification_id', 'smallint DEFAULT 1');
+$dbh->bz_add_field('products', 'classification_id', 'smallint NOT NULL DEFAULT 1');
 
 # 2004-08-29 - Tomas.Kopal@altap.cz, bug 257303
 # Change logincookies.lastused type from timestamp to datetime
@@ -3938,6 +3938,11 @@ add_setting ("comment_sort_order", {"oldest_to_newest" => 1,
                                     "newest_to_oldest_desc_first" => 3}, 
              "oldest_to_newest" );
 
+
+# 2005-04-07 - alt@sonic.net, bug 289455
+# make classification_id field type be consistent with DB:Schema
+$dbh->bz_change_field_type('products', 'classification_id',
+                           'smallint NOT NULL DEFAULT 1');
 
 } # END LEGACY CHECKS
 
