@@ -697,6 +697,9 @@
             var origURIStr = safeGetProperty(targetDoc, "documentURI");
             var origURI = ioService.newURI(origURIStr, docCharset, null);
 
+            if (uri.schemeIs("javascript"))
+              return;
+
             const nsIScriptSecMan =
               Components.interfaces.nsIScriptSecurityManager;
 
