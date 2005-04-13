@@ -388,11 +388,13 @@ ssl_crl_ssl()
 	  rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
 	  if [ $CURR_SER_NUM -ne $UNREVOKED_CERT ]; then
 	      modvalue=$rev_modvalue
+              testAddMsg="revoked"
 	  else
+              testAddMsg="not revoked"
 	      modvalue=$value
 	  fi
 	  
-	  html_msg $ret $modvalue "${testname}" \
+	  html_msg $ret $modvalue "${testname} (cert ${USER_NICKNAME} - $testAddMsg)" \
 		"produced a returncode of $ret, expected is $modvalue"
 	  kill_selfserv
 	done
@@ -558,10 +560,10 @@ ssl_crl_cache()
           isRevoked=$?
           if [ $isRevoked -eq 0 ]; then
               modvalue=$rev_modvalue
-              testAddMsg="is revoked"
+              testAddMsg="revoked"
           else
               modvalue=$value
-              testAddMsg="is not revoked"
+              testAddMsg="not revoked"
           fi
           
           is_selfserv_alive
