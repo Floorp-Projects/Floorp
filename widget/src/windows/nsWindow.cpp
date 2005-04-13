@@ -196,6 +196,25 @@ static PRBool IsCursorTranslucencySupported() {
 }
 
 
+static PRBool IsWin2k()
+{
+  static PRBool didCheck = PR_FALSE;
+  static PRBool isWin2k = PR_FALSE;
+
+  if (!didCheck) {
+    didCheck = PR_TRUE;
+    OSVERSIONINFO versionInfo;
+  
+    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
+    if (::GetVersionEx(&versionInfo))
+      isWin2k = versionInfo.dwMajorVersion == 5 &&
+                versionInfo.dwMinorVersion == 0;
+  }
+
+  return isWin2k;
+}
+
+
 // Pick some random timer ID.  Is there a better way?
 #define NS_FLASH_TIMER_ID 0x011231984
 
@@ -281,6 +300,9 @@ UINT nsWindow::uWM_MSIME_RECONVERT = 0; // reconvert message for MSIME
 UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse message for MSIME
 UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert message for ATOK
 UINT nsWindow::uWM_HEAP_DUMP       = 0; // Heap Dump to a file
+
+HCURSOR        nsWindow::gHCursor            = NULL;
+imgIContainer* nsWindow::gCursorImgContainer = nsnull;
 
 
 #ifdef ACCESSIBILITY
@@ -939,6 +961,11 @@ nsWindow::~nsWindow()
   //XXX Temporary: Should not be caching the font
   delete mFont;
 
+  if (mCursor == -1) {
+    // A sucessfull SetCursor call will destroy the custom cursor, if it's ours
+    SetCursor(eCursor_standard);
+  }
+
   //
   // delete any of the IME structures that we allocated
   //
@@ -952,6 +979,8 @@ nsWindow::~nsWindow()
       delete [] sIMECompClauseArray;
     if (sIMEReconvertUnicode)
       nsMemory::Free(sIMEReconvertUnicode);
+
+    NS_IF_RELEASE(gCursorImgContainer);
   }
 
   NS_IF_RELEASE(mNativeDragTarget);
@@ -2619,9 +2648,57 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   if (NULL != newCursor) {
     mCursor = aCursor;
     HCURSOR oldCursor = ::SetCursor(newCursor);
+    
+    if (gHCursor == oldCursor) {
+      NS_IF_RELEASE(gCursorImgContainer);
+      ::DestroyIcon(gHCursor);
+      gHCursor = NULL;
+    }
   }
   //}
   return NS_OK;
+}
+
+// static
+PRUint8* nsWindow::Data8BitTo1Bit(PRUint8* aAlphaData,
+                                  PRUint32 aAlphaBytesPerRow,
+                                  PRUint32 aWidth, PRUint32 aHeight)
+{
+  PRUint32 outBpr = ((aWidth / 8) + 3) & ~3;
+  
+  PRUint8* outData = new PRUint8[outBpr * aHeight];
+  if (!outData)
+    return NULL;
+
+  PRUint8 *outRow = outData,
+          *alphaRow = aAlphaData;
+
+  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
+    PRUint8 *arow = alphaRow;
+    PRUint8 *orow = outRow;
+    PRUint8 alphaPixels = 0;
+    PRUint8 offset = 7;
+
+    for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
+      if (*alphaRow++ > 0)
+        alphaPixels |= (1 << offset);
+        
+      if (offset == 0) {
+        *outRow++ = alphaPixels;
+        offset = 7;
+        alphaPixels = 0;
+      } else {
+        offset--;
+      }
+    }
+    if (offset != 7)
+      *outRow++ = alphaPixels;
+
+    alphaRow = arow + aAlphaBytesPerRow;
+    outRow = orow + outBpr;
+  }
+
+  return outData;
 }
 
 // static
@@ -2663,7 +2740,22 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
                                PRUint32 aHeight,
                                PRUint32 aDepth)
 {
-  HDC dc = ::GetDC(NULL);
+  if (aDepth == 8 || aDepth == 4) {
+    NS_WARNING("nsWindow::DataToBitmap can't handle 4 or 8 bit images");
+    return NULL;
+  }
+
+  // dc must be a CreateCompatibleDC.
+  // GetDC, cursors, 1 bit masks, and Win9x do not mix for some reason.
+  HDC dc = ::CreateCompatibleDC(NULL);
+  
+  // force dc into color/bw mode
+  int planes = ::GetDeviceCaps(dc, PLANES);
+  int bpp = (aDepth == 1) ? 1 : ::GetDeviceCaps(dc, BITSPIXEL);
+
+  HBITMAP tBitmap = ::CreateBitmap(1, 1, planes, bpp, NULL);
+  HBITMAP oldbits = (HBITMAP)::SelectObject(dc, tBitmap);
+
   if (aDepth == 32 && IsCursorTranslucencySupported()) {
     // Alpha channel. We need the new header.
     BITMAPV4HEADER head = { 0 };
@@ -2690,26 +2782,29 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
                                    aImageData,
                                    NS_REINTERPRET_CAST(CONST BITMAPINFO*, &head),
                                    DIB_RGB_COLORS);
-    ::ReleaseDC(NULL, dc);
+
+    ::SelectObject(dc, oldbits);
+    ::DeleteObject(tBitmap);
+    ::DeleteDC(dc);
     return bmp;
   }
-   
+
 
   BITMAPINFOHEADER head = { 0 };
 
-  head.biSize = sizeof(head);
+  head.biSize = sizeof(BITMAPINFOHEADER);
   head.biWidth = aWidth;
   head.biHeight = aHeight;
   head.biPlanes = 1;
-  head.biBitCount = aDepth;
+  head.biBitCount = (WORD)aDepth;
   head.biCompression = BI_RGB;
   head.biSizeImage = 0; // Uncompressed
   head.biXPelsPerMeter = 0;
   head.biYPelsPerMeter = 0;
-  head.biClrUsed = (aDepth == 1) ? 2 : 0;
+  head.biClrUsed = 0;
   head.biClrImportant = 0;
   
-  char reserved_space[sizeof(BITMAPINFO) + sizeof(RGBQUAD) * 256];
+  char reserved_space[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2];
   BITMAPINFO& bi = *(BITMAPINFO*)reserved_space;
 
   bi.bmiHeader = head;
@@ -2720,15 +2815,13 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
 
     bi.bmiColors[0] = white;
     bi.bmiColors[1] = black;
-  } else {
-    for (int i = 0; i < 256; i++) {
-      RGBQUAD cur = { i, i, i, 0 };
-      bi.bmiColors[255 - i] = cur;
-    }
   }
 
   HBITMAP bmp = ::CreateDIBitmap(dc, &head, CBM_INIT, aImageData, &bi, DIB_RGB_COLORS);
-  ::ReleaseDC(NULL, dc);
+
+  ::SelectObject(dc, oldbits);
+  ::DeleteObject(tBitmap);
+  ::DeleteDC(dc);
   return bmp;
 }
 
@@ -2748,8 +2841,18 @@ HBITMAP nsWindow::CreateOpaqueAlphaChannel(PRUint32 aWidth, PRUint32 aHeight)
   return hAlpha;
 }
 
+/*
+  For Win9x/ME, API specs say the image size must be 
+  SM_CXCURSOR, SM_CYCURSOR (::GetSystemMetrics).  However, ::CreateIconIndirect
+  returns null when the size is not correct.
+*/
 NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
 {
+  if (gCursorImgContainer == aCursor && gHCursor) {
+    ::SetCursor(gHCursor);
+    return NS_OK;
+  }
+
   // Get the image data
   nsCOMPtr<gfxIImageFrame> frame;
   aCursor->GetFrameAt(0, getter_AddRefs(frame));
@@ -2783,6 +2886,12 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
   if (format != gfxIFormats::BGR_A1 && format != gfxIFormats::BGR_A8 &&
       format != gfxIFormats::BGR)
     return NS_ERROR_UNEXPECTED;
+
+  // On Win2k with nVidia video drivers 71.84 at 32 bit color, cursors that 
+  // have 8 bit alpha are truncated to 64x64.  Skip cursors larger than that.
+  if (IsWin2k() && (format == gfxIFormats::BGR_A8) &&
+      (width > 64 || height > 64))
+    return NS_ERROR_FAILURE;
 
   PRUint32 bpr;
   rv = frame->GetImageBytesPerRow(&bpr);
@@ -2832,12 +2941,24 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
     }
 
     if (format == gfxIFormats::BGR_A8) {
+      // Convert BGR_A8 to BGRA.  
+      // Some platforms (or video cards?) on 32bit color mode will ignore
+      // hAlpha. For them, we could speed up things by creating an opaque alpha
+      // channel, but since we don't know how to determine whether hAlpha is
+      // ignored, create a proper 1 bit alpha channel to supplement the RGBA.
+      // Plus, on non-32bit color and possibly other platforms, the alpha
+      // of RGBA is ignored.
       PRUint8* bgra8data = DataToAData(data, bpr, adata, abpr, width, height);
       if (bgra8data) {
         hBMP = DataToBitmap(bgra8data, width, height, 32);
         if (hBMP != NULL) {
-          hAlpha = CreateOpaqueAlphaChannel(width, height);
+          PRUint8* a1data = Data8BitTo1Bit(adata, abpr, width, height);
+          if (a1data) {
+            hAlpha = DataToBitmap(a1data, width, height, 1);
+            delete [] a1data;
+          }
         }
+        delete [] bgra8data;
       }
     } else {
       hAlpha = DataToBitmap(adata, width, height, 1);
@@ -2870,7 +2991,15 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
 
   mCursor = nsCursor(-1);
   ::SetCursor(cursor);
-  ::DestroyIcon(cursor);
+
+  NS_IF_RELEASE(gCursorImgContainer);
+  gCursorImgContainer = aCursor;
+  NS_ADDREF(gCursorImgContainer);
+
+  if (gHCursor != NULL)
+    ::DestroyIcon(gHCursor);
+  gHCursor = cursor;
+
   return NS_OK;
 }
 
