@@ -76,6 +76,12 @@ nsNativeScrollbar::~nsNativeScrollbar()
 {
 }
 
+NS_IMETHODIMP
+nsNativeScrollbar::Destroy()
+{
+  [mView scrollbarDestroyed];
+  return NS_OK;
+}
 
 //
 // CreateCocoaView
@@ -105,7 +111,7 @@ nsNativeScrollbar::GetQuickDrawPort ( )
   // pray we're always a child of a NSQuickDrawView
   if ( [mParentView isKindOfClass: [ChildView class]] ) {
     NSQuickDrawView* parent = NS_STATIC_CAST(NSQuickDrawView*, mParentView);
-    return [parent qdPort];
+    return (GrafPtr)[parent qdPort];
   }
   
   return nsnull;
@@ -531,15 +537,15 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 //
 - (id)initWithFrame:(NSRect)frameRect geckoChild:(nsNativeScrollbar*)inChild
 {
-  [super initWithFrame:frameRect];
-
-  NS_ASSERTION(inChild, "Need to provide a tether between this and a nsChildView class");
-  mGeckoChild = inChild;
-  
-  // make ourselves the target of the scroll and set the action message
-  [self setTarget:self];
-  [self setAction:@selector(scroll:)];
-  
+  if ((self = [super initWithFrame:frameRect]))
+  {
+    NS_ASSERTION(inChild, "Need to provide a tether between this and a nsChildView class");
+    mGeckoChild = inChild;
+    
+    // make ourselves the target of the scroll and set the action message
+    [self setTarget:self];
+    [self setAction:@selector(scroll:)];
+  }
   return self;
 }
 
@@ -552,7 +558,10 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 - (id)initWithFrame:(NSRect)frameRect
 {
   NS_WARNING("You're calling the wrong initializer. You really want -initWithFrame:geckoChild");
-  return [self initWithFrame:frameRect geckoChild:nsnull];
+  if ((self = [self initWithFrame:frameRect geckoChild:nsnull]))
+  {
+  }
+  return self;
 }
 
 
@@ -601,6 +610,34 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
   // do nothing
 }
 
+//
+// -scrollbarDestroyed
+//
+// the gecko nsNativeScrollbar is being destroyed.
+//
+- (void)scrollbarDestroyed
+{
+  mGeckoChild = nsnull;
+
+  if (mInTracking)
+  {
+    // To get out of the NSScroller tracking loop, we post a fake mouseup event.
+    // We have to do this here, before we are ripped out of the view hierarchy.
+    [NSApp postEvent:[NSEvent mouseEventWithType:NSLeftMouseUp
+                                        location:[NSEvent mouseLocation]
+                                   modifierFlags:0
+                                       timestamp:[[NSApp currentEvent] timestamp]
+                                    windowNumber:[[self window] windowNumber]
+                                         context:NULL
+                                     eventNumber:0
+                                      clickCount:0
+                                        pressure:1.0]
+             atStart:YES];
+
+    mInTracking = NO;
+  }
+}
+
 
 //
 // -scroll
@@ -615,6 +652,52 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
     mGeckoChild->DoScroll([sender hitPart]);
 }
 
+
+//
+// -trackKnob:
+//
+// overridden to toggle mInTracking on and off
+//
+- (void)trackKnob:(NSEvent *)theEvent
+{
+  mInTracking = YES;
+  NS_DURING   // be sure we always turn mInTracking off.
+    [super trackKnob:theEvent];
+  NS_HANDLER
+  NS_ENDHANDLER
+  mInTracking = NO;
+}
+
+//
+// -trackScrollButtons:
+//
+// overridden to toggle mInTracking on and off
+//
+- (void)trackScrollButtons:(NSEvent *)theEvent
+{
+  mInTracking = YES;
+  NS_DURING   // be sure we always turn mInTracking off.
+    [super trackScrollButtons:theEvent];
+  NS_HANDLER
+  NS_ENDHANDLER
+  mInTracking = NO;
+}
+
+//
+// -trackPagingArea:
+//
+// this method is not documented, but was seen in sampling. We have
+// to override it to toggle mInTracking.
+//
+- (void)trackPagingArea:(id)theEvent
+{
+  mInTracking = YES;
+  NS_DURING   // be sure we always turn mInTracking off.
+    [super trackPagingArea:theEvent];
+  NS_HANDLER
+  NS_ENDHANDLER
+  mInTracking = NO;
+}
 
 @end
 
