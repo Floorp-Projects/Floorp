@@ -197,16 +197,14 @@ nsCreateInstanceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr)
     NS_GetComponentManager(getter_AddRefs(compMgr));
     if (!compMgr)
         return NS_ERROR_FAILURE;
-    compMgr->CreateInstanceByContractID(value,
-                                        mOuter,
-                                        aIID,
-                                        aInstancePtr);
+    rv = compMgr->CreateInstanceByContractID(value, mOuter, aIID, aInstancePtr);
     if (NS_FAILED(rv)) {
     error:
         *aInstancePtr = 0;
     }
 
-    *mErrorPtr = rv;
+    if (mErrorPtr)
+        *mErrorPtr = rv;
     return rv;
 }
 
