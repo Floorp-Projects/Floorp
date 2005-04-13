@@ -46,6 +46,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIModelElementPrivate.h"
+#include "nsIScriptError.h"
 
 class nsIDOMElement;
 class nsIXFormsModelElement;
@@ -361,12 +362,14 @@ public:
                               location of the file the XForm is located in
    * @param aContext          If set, the node is used to output what element
                               caused the error
+   * @param aErrorType        Type of error in form of an nsIScriptError flag
    */
   static NS_HIDDEN_(void) ReportError(const nsString   &aMessageName,
                                       const PRUnichar **aParams,
                                       PRUint32          aParamLength,
                                       nsIDOMNode       *aElement,
-                                      nsIDOMNode       *aContext);
+                                      nsIDOMNode       *aContext,
+                                      PRUint32          aErrorFlag = nsIScriptError::errorFlag);
 
   /**
    * Simple version of ReportError(), used when reporting without message
@@ -375,11 +378,13 @@ public:
    *
    * @param aMessageName      Name of string
    * @param aElement          Element to use for location and context
+   * @param aErrorType        Type of error in form of an nsIScriptError flag
    */
   static NS_HIDDEN_(void) ReportError(const nsString &aMessageName,
-                                      nsIDOMNode     *aElement = nsnull)
+                                      nsIDOMNode     *aElement = nsnull,
+                                      PRUint32        aErrorFlag = nsIScriptError::errorFlag)
     {
-      nsXFormsUtils::ReportError(aMessageName, nsnull, 0, aElement, aElement);
+      nsXFormsUtils::ReportError(aMessageName, nsnull, 0, aElement, aElement, aErrorFlag);
     }
 
 };

@@ -1114,13 +1114,18 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
 
 /* static */ void
 nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aParams,
-                           PRUint32 aParamLength, nsIDOMNode *aElement, nsIDOMNode *aContext)
+                           PRUint32 aParamLength, nsIDOMNode *aElement,
+                           nsIDOMNode *aContext, PRUint32 aErrorFlag)
 {
+
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance("@mozilla.org/scripterror;1");
+
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
 
-  if (consoleService) {
-    nsAutoString msg;
+  if (consoleService && errorObject) {
+    nsAutoString msg, srcFile, srcLine;
 
     // get the string from the bundle (xforms.properties)
     nsCOMPtr<nsIStringBundleService> bundleService =
@@ -1155,13 +1160,7 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
         // SerializeToString always does a deep serialize, so we do a non-deep
         // clone so that we don't serialize any children.
         aContext->CloneNode(PR_FALSE, getter_AddRefs(tmpNode));
-        ds->SerializeToString(tmpNode, contextMsg);
-
-        // get the context string from the properties file
-        const PRUnichar *params[] = { contextMsg.get() };
-        bundle->FormatStringFromName(NS_LITERAL_STRING("errorContext").get(),
-                                     params, 1, getter_Copies(message));
-        msg.Append(message);
+        ds->SerializeToString(tmpNode, srcLine);
       }
     }
 
@@ -1180,22 +1179,18 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
 
           if (domLoc) {
             nsAutoString location;
-            nsresult rv = domLoc->GetHref(location);
-
-            if (NS_SUCCEEDED(rv)) {
-              // get the source string from the properties file
-              const PRUnichar *params[] = { location.get() };
-              bundle->FormatStringFromName(NS_LITERAL_STRING("errorSource").get(),
-                                           params, 1, getter_Copies(message));
-              msg.Append(message);
-            }
+            domLoc->GetHref(srcFile);
           }
         }
       }
     }
 
     if (!msg.IsEmpty()) {
-      consoleService->LogStringMessage(msg.get());
+      nsresult rv = errorObject->Init(msg.get(), srcFile.get(), srcLine.get(),
+                                      0, 0, aErrorFlag, "XForms");
+      if (NS_SUCCEEDED(rv)) {
+        consoleService->LogMessage(errorObject);
+      }
     }
   }
 }
