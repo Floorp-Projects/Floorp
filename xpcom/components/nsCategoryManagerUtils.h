@@ -53,6 +53,7 @@ public:
                                  nsISupports *aOuter, nsresult *aErrorPtr)
         : mCategory(aCategory),
           mEntry(aEntry),
+          mOuter(aOuter),
           mErrorPtr(aErrorPtr)
     {
         // nothing else to do;
