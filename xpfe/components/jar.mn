@@ -1,4 +1,5 @@
 #ifndef SUPPRESS_CHROME
+#ifndef MOZ_XUL_APP
 comm.jar:
     content/communicator/directory/directory.xul                (directory/directory.xul)
     content/communicator/directory/directory.html               (directory/directory.html)
@@ -197,11 +198,14 @@ toolkit.jar:
     content/global/consoleBindings.xml                          (console/resources/content/consoleBindings.xml)
     content/global/finddialog.js                                (find/resources/finddialog.js)
     content/global/finddialog.xul                               (find/resources/finddialog.xul)
-    content/global/autocomplete.xml                             (autocomplete/resources/content/autocomplete.xml)
-    content/global/autocomplete.css                             (autocomplete/resources/content/autocomplete.css)
     content/global/filepicker.js				(filepicker/res/content/filepicker.js)
     content/global/filepicker.xul				(filepicker/res/content/filepicker.xul)
 
 en-win.jar:
     locale/en-US/global-platform/nsWindowsHooks.properties      (winhooks/locale/en-US/nsWindowsHooks.properties)
+#endif
+
+toolkit.jar:
+    content/global/autocomplete.xml                             (autocomplete/resources/content/autocomplete.xml)
+    content/global/autocomplete.css                             (autocomplete/resources/content/autocomplete.css)
 #endif
