@@ -21,3 +21,5 @@ PATCHES:
   stroke-extent.diff - fix calculation of stroke extents.
 
   dash-dos.diff - prevent DOS attack with dasharray.
+
+  icformat.diff - upstream patch to select appropriate depth
