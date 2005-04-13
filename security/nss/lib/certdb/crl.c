@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.47 2005/04/12 02:24:15 alexei.volkov.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.48 2005/04/13 18:08:48 julien.pierre.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -1763,11 +1763,12 @@ static SECStatus DPCache_GetUpToDate(CRLDPCache* cache, CERTCertificate*
 
     /* first, make sure we have obtained all the CRLs we need.
        We do an expensive token fetch in the following cases :
-       1) cache is explicitly set to refresh state
-       2) cache is in invalid state because last fetch failed
-       3) cache contains no token CRLs, and it's been more than one minute
+       1) cache is empty because no fetch was ever performed yet
+       2) cache is explicitly set to refresh state
+       3) cache is in invalid state because last fetch failed
+       4) cache contains no token CRLs, and it's been more than one minute
           since the last fetch
-       4) cache contains token CRLs, and it's been more than 10 minutes since
+       5) cache contains token CRLs, and it's been more than 10 minutes since
           the last fetch
     */
     forcedrefresh = cache->refresh;
@@ -1778,7 +1779,9 @@ static SECStatus DPCache_GetUpToDate(CRLDPCache* cache, CERTCertificate*
         now = PR_IntervalNow();
         hastokenCRLs = DPCache_HasTokenCRLs(cache);
     }
-    if ( (PR_TRUE == forcedrefresh) ||
+    if ( (0 == lastfetch) ||
+
+         (PR_TRUE == forcedrefresh) ||
 
          (cache->invalid & CRL_CACHE_LAST_FETCH_FAILED) ||
 
