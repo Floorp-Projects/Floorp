@@ -49,6 +49,40 @@
 
 #include "nsSoftwareUpdateIIDs.h"
 
+
+PR_STATIC_CALLBACK(JSBool)
+GetInstallVersionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+PR_STATIC_CALLBACK(JSBool)
+SetInstallVersionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+PR_STATIC_CALLBACK(JSBool)
+EnumerateInstallVersion(JSContext *cx, JSObject *obj);
+
+PR_STATIC_CALLBACK(JSBool)
+ResolveInstallVersion(JSContext *cx, JSObject *obj, jsval id);
+
+PR_STATIC_CALLBACK(void)
+FinalizeInstallVersion(JSContext *cx, JSObject *obj);
+
+/***********************************************************************/
+//
+// class for InstallVersion
+//
+JSClass InstallVersionClass = {
+  "InstallVersion",
+  JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetInstallVersionProperty,
+  SetInstallVersionProperty,
+  EnumerateInstallVersion,
+  ResolveInstallVersion,
+  JS_ConvertStub,
+  FinalizeInstallVersion
+};
+
+
 extern void ConvertJSValToStr(nsString&  aString,
                              JSContext* aContext,
                              jsval      aValue);
@@ -282,7 +316,12 @@ ResolveInstallVersion(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 InstallVersionInit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMInstallVersion *nativeThis = (nsIDOMInstallVersion*)JS_GetPrivate(cx, obj);
+  nsIDOMInstallVersion *nativeThis =
+    (nsIDOMInstallVersion*)JS_GetInstancePrivate(cx, obj, &InstallVersionClass,
+                                                 argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -320,7 +359,12 @@ InstallVersionInit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 InstallVersionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMInstallVersion *nativeThis = (nsIDOMInstallVersion*)JS_GetPrivate(cx, obj);
+  nsIDOMInstallVersion *nativeThis =
+    (nsIDOMInstallVersion*)JS_GetInstancePrivate(cx, obj, &InstallVersionClass,
+                                                 argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsAutoString nativeRet;
 
   *rval = JSVAL_NULL;
@@ -351,7 +395,12 @@ InstallVersionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMInstallVersion *nativeThis = (nsIDOMInstallVersion*)JS_GetPrivate(cx, obj);
+  nsIDOMInstallVersion *nativeThis =
+    (nsIDOMInstallVersion*)JS_GetInstancePrivate(cx, obj, &InstallVersionClass,
+                                                 argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32                 nativeRet;
   nsString                b0str;
   PRInt32                 b0int;
@@ -448,24 +497,6 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   return JS_TRUE;
 }
-
-
-/***********************************************************************/
-//
-// class for InstallVersion
-//
-JSClass InstallVersionClass = {
-  "InstallVersion", 
-  JSCLASS_HAS_PRIVATE,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  GetInstallVersionProperty,
-  SetInstallVersionProperty,
-  EnumerateInstallVersion,
-  ResolveInstallVersion,
-  JS_ConvertStub,
-  FinalizeInstallVersion
-};
 
 
 //

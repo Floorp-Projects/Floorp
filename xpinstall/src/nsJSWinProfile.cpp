@@ -63,6 +63,27 @@ extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                jsval aValue);
 
 
+static void PR_CALLBACK
+WinProfileCleanup(JSContext *cx, JSObject *obj);
+
+/***********************************************************************/
+//
+// class for WinProfile
+//
+JSClass WinProfileClass = {
+  "WinProfile",
+  JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_EnumerateStub,
+  JS_ResolveStub,
+  JS_ConvertStub,
+  WinProfileCleanup
+};
+
+
 static void PR_CALLBACK WinProfileCleanup(JSContext *cx, JSObject *obj)
 {
     nsWinProfile *nativeThis = (nsWinProfile*)JS_GetPrivate(cx, obj);
@@ -78,18 +99,16 @@ static void PR_CALLBACK WinProfileCleanup(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 WinProfileGetString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsWinProfile *nativeThis = (nsWinProfile*)JS_GetPrivate(cx, obj);
+  nsWinProfile *nativeThis =
+    (nsWinProfile*)JS_GetInstancePrivate(cx, obj, &WinProfileClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsString     nativeRet;
   nsAutoString b0;
   nsAutoString b1;
 
   *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if(nsnull == nativeThis)
-  {
-    return JS_TRUE;
-  }
 
   if(argc >= 2)                             
   {
@@ -111,25 +130,41 @@ WinProfileGetString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   return JS_TRUE;
 }
 
+/***********************************************************************/
+//
+// class for WinProfile
+//
+JSClass WinProfileClass = {
+  "WinProfile",
+  JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_EnumerateStub,
+  JS_ResolveStub,
+  JS_ConvertStub,
+  WinProfileCleanup
+};
+
+
 //
 // Native method WriteString
 //
 PR_STATIC_CALLBACK(JSBool)
 WinProfileWriteString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsWinProfile *nativeThis = (nsWinProfile*)JS_GetPrivate(cx, obj);
+  nsWinProfile *nativeThis =
+    (nsWinProfile*)JS_GetInstancePrivate(cx, obj, &WinProfileClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
 
   *rval = JSVAL_ZERO;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if(nsnull == nativeThis)
-  {
-    return JS_TRUE;
-  }
 
   if(argc >= 3)
   {
@@ -162,24 +197,6 @@ WinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_FALSE;
 }
-
-/***********************************************************************/
-//
-// class for WinProfile
-//
-JSClass WinProfileClass = {
-  "WinProfile",
-  JSCLASS_HAS_PRIVATE,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  JS_EnumerateStub,
-  JS_ResolveStub,
-  JS_ConvertStub,
-  WinProfileCleanup
-};
-
 
 static JSConstDoubleSpec winprofile_constants[] = 
 {

@@ -66,6 +66,32 @@ extern JSClass FileSpecObjectClass;
 
 extern JSClass FileOpClass;
 
+PR_STATIC_CALLBACK(JSBool)
+GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+PR_STATIC_CALLBACK(JSBool)
+SetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+PR_STATIC_CALLBACK(void)
+FinalizeInstall(JSContext *cx, JSObject *obj);
+
+/***********************************************************************/
+//
+// class for Install
+//
+JSClass InstallClass = {
+  "Install",
+  JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetInstallProperty,
+  SetInstallProperty,
+  JS_EnumerateStub,
+  JS_ResolveStub,
+  JS_ConvertStub,
+  FinalizeInstall
+};
+
 //
 // Install property ids
 //
@@ -334,7 +360,11 @@ void ConvertJSvalToVersionString(nsString& versionString, JSContext* cx, jsval a
 PR_STATIC_CALLBACK(JSBool)
 InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   int32   b0;
 
   *rval = JSVAL_VOID;
@@ -372,7 +402,11 @@ InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -524,7 +558,11 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -697,7 +735,11 @@ InstallDeleteComponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -762,7 +804,11 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 PR_STATIC_CALLBACK(JSBool)
 InstallFinalizeInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
 
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
@@ -791,7 +837,11 @@ InstallFinalizeInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 InstallGestalt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
   nsAutoString b0;
 
@@ -832,7 +882,11 @@ InstallGestalt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 PR_STATIC_CALLBACK(JSBool)
 InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsInstallFolder* folder;
   nsAutoString b0;
   nsAutoString b1;
@@ -904,7 +958,11 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 PR_STATIC_CALLBACK(JSBool)
 InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   JSObject *jsObj;
   nsAutoString b0;
   nsAutoString b1;
@@ -1005,7 +1063,11 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 PR_STATIC_CALLBACK(JSBool)
 InstallGetLastError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
 
 
@@ -1035,15 +1097,13 @@ InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   *rval = JSVAL_NULL;
 
 #ifdef _WINDOWS
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsAutoString b0;
   nsAutoString b1;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if(nsnull == nativeThis)
-  {
-    return JS_TRUE;
-  }
 
   if(argc >= 2)
   {
@@ -1079,13 +1139,10 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 #ifdef _WINDOWS
 
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-
-  // If there's no private data, this must be the prototype, so ignore
-  if(nsnull == nativeThis)
-  {
-    return JS_TRUE;
-  }
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
 
   //  public int GetWinRegistry (void);
   if(NS_OK != nativeThis->GetWinRegistry(cx, &WinRegClass, rval))
@@ -1105,31 +1162,35 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 InstallLoadResources(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-    nsAutoString b0;
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
 
-    *rval = JSVAL_NULL;
+  nsAutoString b0;
 
-    // If there's no private data, this must be the prototype, so ignore
-    if (nsnull == nativeThis) {
-        return JS_TRUE;
-    }
+  *rval = JSVAL_NULL;
 
-    if (argc >= 1)
-    {
-        ConvertJSValToStr(b0, cx, argv[0]);
-        if (NS_OK != nativeThis->LoadResources(cx, b0, rval))
-        {
-            return JS_FALSE;
-        }
-    }
-    else
-    {
-        JS_ReportError(cx, "Function LoadResources requires 1 parameter");
-        return JS_FALSE;
-    }
-
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
     return JS_TRUE;
+  }
+
+  if (argc >= 1)
+  {
+    ConvertJSValToStr(b0, cx, argv[0]);
+    if (NS_OK != nativeThis->LoadResources(cx, b0, rval))
+    {
+      return JS_FALSE;
+    }
+  }
+  else
+  {
+    JS_ReportError(cx, "Function LoadResources requires 1 parameter");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
 }
 
 
@@ -1139,7 +1200,11 @@ InstallLoadResources(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -1251,7 +1316,11 @@ PR_STATIC_CALLBACK(JSBool)
 InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   // If there's no private data, this must be the prototype, so ignore
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   if (nsnull == nativeThis) {
     *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
     return JS_TRUE;
@@ -1294,8 +1363,12 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 InstallRefreshPlugins(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   // If there's no private data, this must be the prototype, so ignore
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   if (!nativeThis)
   {
     *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
@@ -1318,7 +1391,10 @@ InstallRefreshPlugins(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
 
   *rval = JSVAL_VOID;
 
@@ -1344,7 +1420,11 @@ InstallResetError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 PR_STATIC_CALLBACK(JSBool)
 InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsAutoString b0;
   JSObject *jsObj;
   nsInstallFolder *folder;
@@ -1402,7 +1482,11 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 InstallStartInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -1454,7 +1538,11 @@ InstallStartInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 InstallUninstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   PRInt32 nativeRet;
   nsAutoString b0;
 
@@ -1515,16 +1603,14 @@ InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 InstallLogComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if(nsnull == nativeThis)
-  {
-    return JS_TRUE;
-  }
 
   if(argc >= 1)
   {
@@ -1550,16 +1636,14 @@ InstallLogComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 PR_STATIC_CALLBACK(JSBool)
 InstallAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if(nsnull == nativeThis)
-  {
-    return JS_TRUE;
-  }
 
   if(argc == 1)
   {
@@ -1588,7 +1672,11 @@ InstallAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsInstall *nativeThis =
+    (nsInstall*)JS_GetInstancePrivate(cx, obj, &InstallClass, argv);
+  if (!nativeThis)
+    return JS_FALSE;
+
   nsAutoString text;
   nsAutoString title;
   PRUint32 buttonFlags = nsIPromptService::STD_OK_CANCEL_BUTTONS;
@@ -1602,12 +1690,6 @@ InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   PRInt32 nativeRet;
 
   *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if(nsnull == nativeThis)
-  {
-    return JS_TRUE;
-  }
 
   if(argc == 0)
   {
@@ -1686,23 +1768,6 @@ InstallConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
   return JS_TRUE;
 }
-
-/***********************************************************************/
-//
-// class for Install
-//
-JSClass InstallClass = {
-  "Install",
-  JSCLASS_HAS_PRIVATE,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  GetInstallProperty,
-  SetInstallProperty,
-  JS_EnumerateStub,
-  JS_ResolveStub,
-  JS_ConvertStub,
-  FinalizeInstall
-};
 
 //
 // Install class properties
