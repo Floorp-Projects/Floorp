@@ -99,7 +99,6 @@ pixman_format_init (pixman_format_t *format, int format_code)
     format->id = FakeClientID (0);
 */
     format->format_code = format_code;
-    format->depth = PICT_FORMAT_BPP(format_code);
 
     switch (PICT_FORMAT_TYPE(format_code)) {
     case PICT_TYPE_ARGB:
@@ -148,6 +147,11 @@ pixman_format_init (pixman_format_t *format, int format_code)
 	/* remaining fields already set to zero */
 	break;
     }
+
+    format->depth = _IcOnes ((format->alphaMask << format->alpha) |
+			     (format->redMask << format->red) |
+			     (format->blueMask << format->blue) |
+			     (format->greenMask << format->green));
 }
 slim_hidden_def(pixman_format_init);
 
