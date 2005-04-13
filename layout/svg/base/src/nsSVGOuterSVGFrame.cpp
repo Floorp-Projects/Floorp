@@ -1026,9 +1026,14 @@ nsSVGOuterSVGFrame::SuspendRedraw()
   if (++mRedrawSuspendCount != 1)
     return NS_OK;
 
- // get the view manager, so that we can wrap this up in a batch
+  // get the view manager, so that we can wrap this up in a batch
   // update.
   nsIViewManager* vm = GetPresContext()->GetViewManager();
+
+  // we can get called in the process of ripping down a page, in
+  // which case the view manager isn't around anymore.
+  if (!vm)
+    return NS_OK;
 
   vm->BeginUpdateViewBatch();
  
@@ -1066,6 +1071,11 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
   // update.
   nsIViewManager* vm = GetPresContext()->GetViewManager();
   
+  // we can get called in the process of ripping down a page, in
+  // which case the view manager isn't around anymore.
+  if (!vm)
+    return NS_OK;
+
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
