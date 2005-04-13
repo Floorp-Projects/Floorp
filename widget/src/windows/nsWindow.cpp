@@ -5241,7 +5241,8 @@ LPCWSTR nsWindow::WindowClassW()
 #ifdef WINCE
     wc.hIcon         = NULL;
 #else
-    wc.hIcon         = ::LoadIconW(::GetModuleHandle(NULL), MAKEINTRESOURCEW(IDI_APPLICATION));
+    // XXX : we don't need LoadIconW for now (see bug 171349, comment 181)
+    wc.hIcon         = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
 #endif
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
@@ -5306,7 +5307,8 @@ LPCWSTR nsWindow::WindowPopupClassW()
 #ifdef WINCE
     wc.hIcon         = NULL;
 #else
-    wc.hIcon         = ::LoadIconW(::GetModuleHandle(NULL), MAKEINTRESOURCEW(IDI_APPLICATION));
+    // XXX : we don't need LoadIconW for now (see bug 171349, comment 181)
+    wc.hIcon         = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
 #endif
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
