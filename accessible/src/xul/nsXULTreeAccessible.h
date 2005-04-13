@@ -97,7 +97,6 @@ public:
 
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetName(nsAString& _retval);
-  NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
