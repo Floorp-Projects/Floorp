@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -113,6 +113,12 @@ public class TestProps {
     // test the "getKeys" method
     int[] count = new int[1];
     String[] keys = props.getKeys(count);
+    if (keys == null || keys.length != 3) {
+      System.out.println("getKeys returned incorrect array.");
+    }
+    for (int i = 0; i < keys.length; i++) {
+      System.out.println("key " + i + ": " + keys[i]);
+    }
 
     XPCOM.shutdownXPCOM(null);
     //    GeckoEmbed.termEmbedding();
