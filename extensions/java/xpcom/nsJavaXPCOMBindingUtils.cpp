@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -803,13 +803,13 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
 
 nsresult
 GetIIDForMethodParam(nsIInterfaceInfo *iinfo, const nsXPTMethodInfo *methodInfo,
-                     const nsXPTParamInfo &paramInfo, PRUint16 methodIndex,
-                     nsXPTCMiniVariant *dispatchParams,
+                     const nsXPTParamInfo &paramInfo, PRUint8 paramType,
+                     PRUint16 methodIndex, nsXPTCMiniVariant *dispatchParams,
                      PRBool isFullVariantArray, nsID &result)
 {
   nsresult rv;
 
-  switch (paramInfo.GetType().TagPart())
+  switch (paramType)
   {
     case nsXPTType::T_INTERFACE:
       rv = iinfo->GetIIDForParamNoAlloc(methodIndex, &paramInfo, &result);
@@ -818,7 +818,8 @@ GetIIDForMethodParam(nsIInterfaceInfo *iinfo, const nsXPTMethodInfo *methodInfo,
     case nsXPTType::T_INTERFACE_IS:
     {
       PRUint8 argnum;
-      rv = iinfo->GetInterfaceIsArgNumberForParam(methodIndex, &paramInfo, &argnum);
+      rv = iinfo->GetInterfaceIsArgNumberForParam(methodIndex, &paramInfo,
+                                                  &argnum);
       if (NS_FAILED(rv))
         break;
 
