@@ -6,57 +6,110 @@
 
 <!-- The Window  -->
 
-<wizard
-	id="calendar-wizard"
-	title="Create New Calendar"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	onwizardfinish="return doCreateWizardFinish();"
-	persist="screenX screenY"
-	>
+<wizard id="calendar-wizard"
+        title="Create New Calendar"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onwizardfinish=""
+        persist="screenX screenY">
 
    <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
    <script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
 
-   <wizardpage pageid="initialPage" description="Create new calendar" next="finish" onpageshow="">
-      <hbox><label value="name:"/><textbox id="calendar-name"/></hbox>
-      <hbox><label value="uri:"/><textbox id="calendar-uri"/></hbox>
-      <radiogroup id="initial-radiogroup">
-         <radio value="storage"
-                label="Local Calendar"
-                selected="true"/>
-         <radio value="ics"
-                label="WebCal Calendar"/>
-         <radio value="caldav"
-                label="CalDAV Calendar"/>
-      </radiogroup>
+   <wizardpage pageid="initialPage" 
+               next="locationPage"
+               label="Create a new calendar"
+               description="Locate your calendar"
+               onpageadvanced="onInitialAdvance();">
+        <description>
+            Your calendar can be stored on your computer or be stored on a server in order to
+            access it remotely or share it with your friends or co-workers. 
+        </description>
+        <radiogroup id="calendar-type">
+            <radio value="local" label="Local" selected="true" />
+            <radio value="remote" label="Remote"/>
+        </radiogroup>
    </wizardpage>
 
-<!--
-   <wizardpage pageid="remote"
-               label="Select your remote control"
-               description="Pick your type"
-               onpagehide=""
-               onpageshow="onPageShow( 'import' );">
-      <radiogroup id="remote-type">
-         <radio value="caldav"
-                label="CalDAV"
-                selected="true"/>
-         <radio value="webcal"
-                label="WebCal"/>
-      </radiogroup>
-      <textbox id="url"/> 
+   <wizardpage pageid="locationPage" 
+               next="customizePage"
+               label="Create a new calendar"
+               onpageshow="checkRequired();"
+               description="Locate your calendar">
+        <description>
+            Provide info about what is needed to access your remote calendar 
+        </description>
+        <grid>
+            <columns>
+                <column/>
+                <column flex="1"/>
+            </columns>
+            <rows>
+                <row>
+                    <label value="Format:"/>
+                    <radiogroup id="calendar-format">
+                        <radio value="webdav" label="WebDav" selected="true" />
+                        <radio value="caldav" label="CalDav"/>
+                    </radiogroup>
+                </row>
+                <row align="center">
+                    <label value="Location:"/>
+                    <textbox id="calendar-uri"
+                             required="true" onchange="checkRequired();" onkeyup="checkRequired();"/>
+                </row>
+                <!--
+                <description>
+                    Optional: enter an username and password 
+                </description>
+                <row align="center">
+                    <label value="Username:"/>
+                    <textbox id="calendar-username"/>
+                </row>
+                <row align="center">
+                    <label value="Password:"/>
+                    <textbox id="calendar-password"/>
+                </row>
+                -->
+            </rows>
+        </grid>
    </wizardpage>
--->
 
-   <wizardpage pageid="finish"
-               label="Done"
-               description="Hi mom"
-               onpagehide=""
-               onpageshow="">
-              label="Find a File"/>
-      <description>
-         Calendar created! Way to go!
-      </description>
-         
+   <wizardpage pageid="customizePage" 
+               description="Customize your calendar"
+               label="Create a new calendar"
+               next="finishPage"
+               onpageshow="checkRequired();"
+               onpageadvanced="doCreateCalendar();">
+        <description value="Customize your calendar"/>
+        <description>
+            You can give your calendar a nickname and colorize the events from this calendar 
+        </description>
+        <grid>
+            <columns>
+                <column/>
+                <column flex="1"/>
+            </columns>
+            <rows>
+                <row align="center">
+                    <label value="Name:"/>
+                    <textbox id="calendar-name"
+                             required="true" onchange="checkRequired();" onkeyup="checkRequired();"/>
+                </row>
+                <row align="center">
+                    <label value="Color:"/>
+                    <hbox align="center">
+                        <colorpicker id="calendar-color"
+                                     class="small-margin"
+                                     type="button"
+                                     palettename="standard"/>
+                    </hbox>
+                </row>
+            </rows>
+        </grid>
+   </wizardpage>
+
+   <wizardpage pageid="finishPage" 
+               description="Calendar Created"
+               label="Create a new calendar">
+        <description value="Your calendar has been created"/>
    </wizardpage>
 </wizard>

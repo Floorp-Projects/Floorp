@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,11 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ * The Original Code is Calendar Code.
  *
  * The Initial Developer of the Original Code is
- * OEone Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Michiel van Leeuwen <mvl@exedo.nl>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,26 +35,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function doCreateWizardFinish()
+function checkRequired() {
+    var canAdvance = true;
+    var curPage = document.getElementById('calendar-wizard').currentPage;
+    if (curPage) {
+        var eList = curPage.getElementsByAttribute('required', 'true');
+        for (var i = 0; i < eList.length && canAdvance; ++i) {
+            canAdvance = (eList[i].value != "");
+        }
+        document.getElementById('calendar-wizard').canAdvance = canAdvance;
+    }
+}
+
+function onInitialAdvance() {
+    var type = document.getElementById('calendar-type').selectedItem.value;
+    var page = document.getElementsByAttribute('pageid', 'initialPage')[0];
+    if (type == 'local')
+        page.next = 'customizePage';
+    else
+        page.next = 'locationPage';
+}
+
+function doCreateCalendar()
 {
     var cal_name = document.getElementById("calendar-name").value;
-    var uri = document.getElementById("calendar-uri").value;
-    var sel_item=document.getElementById("initial-radiogroup").selectedItem;
-    var type = sel_item.value;
-
-    dump(cal_name + " (" + type + "): " + uri + "\n");
+    var cal_color = document.getElementById('calendar-color').color;
+    var type = document.getElementById('calendar-type').selectedItem.value;
+    var provider;
+    var uri;
+    if (type == 'local') {
+        provider = 'storage';
+        uri = 'moz-profile-calendar://';
+    } else {
+        uri = document.getElementById("calendar-uri").value;
+        var format = document.getElementById('calendar-format').selectedItem.value;
+        if (format == 'webdav')
+            provider = 'ics';
+        else
+            provider = 'caldav';
+    }
+        
+    dump(cal_name + "\n");
+    dump(cal_color + "\n");
+    dump(uri + "\n");
+    dump(provider + "\n");
 
     var calManager = getCalendarManager();
     try {
-        var newCalendar = calManager.createCalendar(cal_name, type, makeURL(uri));
+        var newCalendar = calManager.createCalendar(cal_name, provider, makeURL(uri));
     } catch (ex) {
         dump(ex);
         return false;
     }
     calManager.registerCalendar(newCalendar);
+    
+    calManager.setCalendarPref(newCalendar, 'color', cal_color);
 
-    if ("arguments" in window)
-        window.arguments[0](newCalendar);
+    // XXX This requires the caller to have calendar.js to be included.
+    // It should use observers to the calendar manager.
+    addCalendarToUI(window.opener.document, newCalendar);
 
     return true;
 }
