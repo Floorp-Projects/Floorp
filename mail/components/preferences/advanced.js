@@ -60,8 +60,9 @@ var gAdvancedPane = {
 
   showConfigEdit: function()
   {
-    document.documentElement.openSubDialog("chrome://global/content/config.xul",
-                                           "chrome,centerscreen,resizable=yes", null);
+    document.documentElement.openWindow("Preferences:ConfigManager",
+                                        "chrome://global/content/config.xul",
+                                        "", null);
   },
 
   updateAppUpdateUI: function ()
