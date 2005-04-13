@@ -2709,6 +2709,12 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	nsAutoString	action, input, method, userVar, name;
 	if (NS_FAILED(rv = GetData(dataUni, "search", 0, "action", action)))
 	    return(rv);
+
+    // Search only supports the http protocol
+    if (!StringBeginsWith(action, NS_LITERAL_STRING("http:")) &&
+        !StringBeginsWith(action, NS_LITERAL_STRING("https:")))
+        return NS_ERROR_UNEXPECTED;
+
 	if (NS_FAILED(rv = GetData(dataUni, "search", 0, "method", method)))
 	    return(rv);
 	if (NS_FAILED(rv = GetData(dataUni, "search", 0, "name", name)))
