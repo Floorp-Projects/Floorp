@@ -41,6 +41,8 @@
 #import "Bookmark.h"
 #import "BookmarkManager.h"
 
+#import "BookmarkViewController.h"
+
 #import "AddBookmarkDialogController.h"
 
 
@@ -254,7 +256,7 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
     }  
   }
   
-  [mBookmarkViewController revealItem:newItem selecting:YES];
+  [mBookmarkViewController revealItem:newItem scrollIntoView:YES selecting:YES byExtendingSelection:NO];
   [[BookmarkManager sharedBookmarkManager] setLastUsedBookmarkFolder:parentFolder];
 }
 

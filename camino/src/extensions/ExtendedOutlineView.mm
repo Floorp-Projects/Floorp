@@ -572,4 +572,48 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
   oldFrameRect = frameRect;
 }
 
+#pragma mark -
+
+// Support clipboard actions if our delegate implements them
+-(BOOL) validateMenuItem:(id)aMenuItem
+{
+  SEL action = [aMenuItem action];
+
+  // XXX we should probably try to call validateMenuItem: on the delegate too
+  if (action == @selector(delete:))
+    return [[self delegate] respondsToSelector:@selector(delete:)];
+  else if (action == @selector(copy:))
+    return [[self delegate] respondsToSelector:@selector(copy:)];
+  else if (action == @selector(paste:))
+    return [[self delegate] respondsToSelector:@selector(paste:)];
+  else if (action == @selector(cut:))
+    return [[self delegate] respondsToSelector:@selector(cut:)];
+
+  return YES;
+}
+
+-(IBAction) copy:(id)aSender
+{
+  if ([[self delegate] respondsToSelector:@selector(copy:)])
+    [[self delegate] copy:aSender];
+}
+
+-(IBAction) paste:(id)aSender
+{
+  if ([[self delegate] respondsToSelector:@selector(paste:)])
+    [[self delegate] paste:aSender];
+}
+
+-(IBAction) delete:(id)aSender
+{
+  if ([[self delegate] respondsToSelector:@selector(delete:)])
+    [[self delegate] delete:aSender];
+}
+
+-(IBAction) cut:(id)aSender
+{
+  if ([[self delegate] respondsToSelector:@selector(cut:)])
+    [[self delegate] cut:aSender];
+}
+
 @end

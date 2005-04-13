@@ -43,13 +43,13 @@
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
 #import "BookmarkManager.h"
-
+#import "NSPasteboard+Utils.h"
 
 @implementation BookmarkOutlineView
 
 - (void)awakeFromNib
 {
-  [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, NSURLPboardType, nil]];
+  [self registerForDraggedTypes:[NSArray arrayWithObjects:kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType, NSStringPboardType, NSURLPboardType, nil]];
 }
 
 -(NSMenu*)menu
@@ -73,7 +73,7 @@
 {
   if (operation == NSDragOperationDelete) {
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType: @"MozBookmarkType"]];
+    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType: kCaminoBookmarkListPBoardType]];
     if (bookmarks) {
       for (unsigned int i = 0; i < [bookmarks count]; ++i) {
         BookmarkItem* item = [bookmarks objectAtIndex:i];
@@ -108,6 +108,34 @@
     return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationMove);
 
   return (NSDragOperationDelete | NSDragOperationGeneric);
+}
+
+//
+// Override implementation in ExtendedOutlineView so we can check whether an
+// item is selected or whether appropriate data is available on the clipboard.
+//
+- (BOOL)validateMenuItem:(id)aMenuItem
+{
+  SEL action = [aMenuItem action];
+
+  if (action == @selector(delete:))
+    return [[self delegate] numberOfSelectedRows] > 0;
+
+  if (action == @selector(copy:))
+    return [super validateMenuItem:aMenuItem] && [[self delegate] numberOfSelectedRows] > 0;
+
+  if (action == @selector(paste:))
+    return [super validateMenuItem:aMenuItem] && [[self delegate] canPasteFromPasteboard:[NSPasteboard generalPasteboard]];
+
+  if (action == @selector(cut:))
+    return NO; // XXX fix me [super validateMenuItem:aMenuItem] && [[self delegate] numberOfSelectedRows] > 0;
+  
+  return YES;
+}
+
+- (IBAction)delete:(id)aSender
+{
+  [[self delegate] deleteBookmarks:aSender];
 }
 
 @end

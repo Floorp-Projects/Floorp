@@ -44,4 +44,9 @@
 @interface BookmarkOutlineView : ExtendedOutlineView
 {
 }
+
+// Actions for the edit menu
+-(BOOL)validateMenuItem:(id)aMenuItem;
+-(IBAction)delete:(id)aSender;
+
 @end

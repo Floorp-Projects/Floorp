@@ -541,10 +541,11 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     [undoManager setActionName:NSLocalizedString(@"Move Separator",@"Move Separator")];
 }
 
--(void) copyChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex
+-(BookmarkItem*) copyChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex
 {
   if ([aNewParent isRoot] && [aChild isKindOfClass:[Bookmark class]])
-    return;
+    return nil;
+
   BookmarkItem *copiedChild = [aChild copyWithZone:nil];
   if (copiedChild) {
     [aNewParent insertChild:copiedChild atIndex:aIndex isMove:NO];
@@ -555,6 +556,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     else
       [undoManager setActionName:NSLocalizedString(@"Copy Bookmark",@"Copy Bookmark")];
   }
+  return copiedChild;
 }
 
 //

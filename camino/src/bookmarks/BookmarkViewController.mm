@@ -25,6 +25,7 @@
  *   David Haas <haasd@cae.wisc.edu>
  *   Simon Woodside <sbwoodside@yahoo.com>
  *   Josh Aas <josha@mac.com>
+ *   Bruce Davidson <Bruce.Davidson@ipl.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -82,6 +83,8 @@
 
 #define kGetInfoContextMenuItemTag 9
 
+static NSString* const kExpandedBookmarksStatesDefaultsKey = @"bookmarks_expand_state";
+
 // minimum sizes for the search panel
 const long kMinContainerSplitWidth = 150;
 const long kMinSearchPaneHeight = 80;
@@ -123,6 +126,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (NSMutableDictionary *)expandedStateDictionary;
 - (void)restoreFolderExpandedStates;
+- (void)saveExpandedStateDictionary;
 
 - (BOOL)hasExpandedState:(id)anItem;
 - (void)setStateOfItem:(BookmarkFolder *)anItem toExpanded:(BOOL)aBool;
@@ -133,6 +137,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (NSDragOperation)preferredDragOperationForSourceMask:(NSDragOperation)srcMask;
 
+-(void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy;
+-(void)pasteBookmarksFromURLsAndTitles:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder*)dropFolder index:(int)index;
 @end
 
 
@@ -172,6 +178,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
+  [self saveExpandedStateDictionary];
+
   // balance the extra retains
   [mBookmarksHostView release];
   [mHistoryHostView release];
@@ -196,8 +204,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   
   // release data
   [mItemToReveal release];
-  [mCachedHref release];
-  [mExpandedStatus release];
+  [mExpandedStates release];
   [mActiveRootCollection release];
   [mRootBookmarks release];
   [mSearchResultArray release];
@@ -267,7 +274,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [nc addObserver:self selector:@selector(managerStarted:) name:[BookmarkManager managerStartedNotification] object:nil];
   
   // register for dragged types
-  [mContainersTableView registerForDraggedTypes:[NSArray arrayWithObjects:@"MozBookmarkType", @"MozURLType", NSURLPboardType, NSStringPboardType, nil]];
+  [mContainersTableView registerForDraggedTypes:[NSArray arrayWithObjects:kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType, NSURLPboardType, NSStringPboardType, nil]];
 
   [self ensureBookmarks];
 
@@ -582,6 +589,75 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [mBookmarksOutlineView selectRow:[mBookmarksOutlineView rowForItem:item] byExtendingSelection:NO];
 }
 
+-(IBAction) cut:(id)aSender
+{
+  // XXX write me. We'll need to write to the pasteboard something other than an array of UUIDs,
+  // because we need to rip the bookmark items out of the tree.
+  
+}
+
+- (IBAction)copy:(id)aSender
+{
+  // Get the list of bookmark items that are selected
+  NSMutableArray *bookmarkItemsToCopy = [NSMutableArray array];
+  NSEnumerator* selRows = [mBookmarksOutlineView selectedRowEnumerator];
+  id curSelectedRow;
+  while ((curSelectedRow = [selRows nextObject])) {
+    [bookmarkItemsToCopy addObject: [mBookmarksOutlineView itemAtRow:[curSelectedRow intValue]]];
+  }
+  
+  [self copyBookmarks:bookmarkItemsToCopy toPasteboard:[NSPasteboard generalPasteboard]];
+}
+
+
+//
+// Paste bookmark(s) from the general pasteboard into the user's bookmarks file
+// We use the view to work out where to paste the bookmark
+// If no items are selected in the view : at the end of the bookmark menu folder
+// If a folder is selected: at the end of that folder
+// If a bookmark is selected: immediately after that bookmark, under the same parent
+// XXX: At the moment if multiple items are selected we only examine the first one
+//
+-(IBAction) paste:(id)aSender
+{
+  NSArray* types = [[NSPasteboard generalPasteboard] types];
+
+  int pasteDestinationIndex = 0;
+  BookmarkFolder* pasteDestinationFolder = nil;
+
+  // Work out what the selected item is and therefore where to paste the bookmark(s)
+  NSEnumerator* selRows = [mBookmarksOutlineView selectedRowEnumerator];
+  id curSelectedRow = [selRows nextObject];
+
+  if (curSelectedRow) {
+    BookmarkItem* item = [mBookmarksOutlineView itemAtRow:[curSelectedRow intValue]];
+    if ([item isKindOfClass:[BookmarkFolder class]]) {
+      pasteDestinationFolder = (BookmarkFolder*) item;
+      pasteDestinationIndex = [pasteDestinationFolder count];
+    } else if ([item isKindOfClass:[Bookmark class]]) {
+      pasteDestinationFolder = (BookmarkFolder*) [item parent];
+      pasteDestinationIndex = [pasteDestinationFolder indexOfObject:item] + 1;
+    }
+  }
+
+  // If we don't have a destination use the end of the bookmark menu
+  if (!pasteDestinationFolder) {
+    pasteDestinationFolder = [[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder];
+    pasteDestinationIndex = [pasteDestinationFolder count];
+  }
+
+  // Do the actual copy based on the type available on the clipboard
+  if ([types containsObject: kCaminoBookmarkListPBoardType])
+    [self pasteBookmarks:[NSPasteboard generalPasteboard] intoFolder:pasteDestinationFolder index:pasteDestinationIndex copying:YES];
+  else if ([[NSPasteboard generalPasteboard] containsURLData])
+    [self pasteBookmarksFromURLsAndTitles:[NSPasteboard generalPasteboard] intoFolder:pasteDestinationFolder index:pasteDestinationIndex];
+}
+
+-(IBAction) delete:(id)aSender
+{
+  [self deleteBookmarks:aSender];
+}
+
 -(IBAction)quicksearchPopupChanged:(id)aSender
 {
   // do the search again (we'll pick up the new popup item tag)
@@ -692,7 +768,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   mItemToReveal = [inItem retain];
 }
 
--(void)revealItem:(BookmarkItem*)item selecting:(BOOL)inSelectItem
+-(void)revealItem:(BookmarkItem*)item scrollIntoView:(BOOL)inScroll selecting:(BOOL)inSelectItem byExtendingSelection:(BOOL)inExtendSelection
 {
   BookmarkManager* bmManager = [BookmarkManager sharedBookmarkManager];
   
@@ -774,9 +850,100 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (NSMutableDictionary *)expandedStateDictionary
 {
-  if (!mExpandedStatus)
-    mExpandedStatus = [[NSMutableDictionary alloc] initWithCapacity:20];
-  return mExpandedStatus;
+  if (!mExpandedStates)
+  {
+    // We can't save BM expanded states to user defaults, because we don't have a persisent per-bookmark ID.
+    // mExpandedStates = [[[NSUserDefaults standardUserDefaults] dictionaryForKey:kExpandedBookmarksStatesDefaultsKey] mutableCopy];
+    // if (!mExpandedStates)
+    mExpandedStates = [[NSMutableDictionary alloc] initWithCapacity:20];
+  }
+  return mExpandedStates;
+}
+
+- (void)saveExpandedStateDictionary
+{
+  // We can't save BM expanded states to user defaults, because we don't have a persisent per-bookmark ID.
+  // if (mExpandedStates)
+  //   [[NSUserDefaults standardUserDefaults] setObject:mExpandedStates forKey:kExpandedBookmarksStatesDefaultsKey];
+}
+
+-(void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy
+{
+  NSArray* mozBookmarkList = [BookmarkManager bookmarkItemsFromSerializableArray:[aPasteboard propertyListForType: kCaminoBookmarkListPBoardType]];
+
+  NSMutableArray* newBookmarks = [[NSMutableArray alloc] initWithCapacity:[mozBookmarkList count]];
+  if (!isCopy)
+    [newBookmarks addObjectsFromArray:mozBookmarkList];
+  
+  // turn off updates to avoid lots of reloadData with multiple items
+  mBookmarkUpdatesDisabled = YES;
+  
+  // make sure we re-enable updates
+  NS_DURING
+    NSEnumerator *enumerator = [mozBookmarkList objectEnumerator];
+
+    id aKid;
+    while ((aKid = [enumerator nextObject]))
+    {
+      if (isCopy)
+      {
+        BookmarkItem* newItem = [[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+        [newBookmarks addObject:newItem];
+        ++index;
+      }
+      else
+      {
+        // need to be careful to adjust index as we insert items to avoid
+        // inserting in reverse order
+        if ([aKid parent] == dropFolder)
+        {
+          int kidIndex = [dropFolder indexOfObject:aKid];
+          [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+          if (kidIndex > index)
+            ++index;
+        }
+        else
+        {
+          [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+          ++index;
+        }
+      }
+    }
+  NS_HANDLER
+  NS_ENDHANDLER
+  
+  mBookmarkUpdatesDisabled = NO;
+  [self reloadDataForItem:nil reloadChildren:YES];
+  [self selectItems:newBookmarks expandingContainers:YES scrollIntoView:YES];
+  [newBookmarks release];
+}
+
+-(void)pasteBookmarksFromURLsAndTitles:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index
+{
+  NSArray* urls = nil;
+  NSArray* titles = nil;
+  
+  [aPasteboard getURLs:&urls andTitles:&titles];
+
+  // turn off updates to avoid lots of reloadData with multiple items
+  mBookmarkUpdatesDisabled = YES;
+  
+  NSMutableArray* newBookmarks = [NSMutableArray arrayWithCapacity:[urls count]];
+  // make sure we re-enable updates
+  NS_DURING
+    for ( unsigned int i = 0; i < [urls count]; ++i ) {
+      NSString* title = [titles objectAtIndex:i];
+      if ([title length] == 0)
+        title = [urls objectAtIndex:i];
+        
+      [newBookmarks addObject:[dropFolder addBookmark:title url:[urls objectAtIndex:i] inPosition:(index + i) isSeparator:NO]];
+    }
+  NS_HANDLER
+  NS_ENDHANDLER
+  
+  mBookmarkUpdatesDisabled = NO;
+  [self reloadDataForItem:nil reloadChildren:YES];
+  [self selectItems:newBookmarks expandingContainers:NO scrollIntoView:YES];
 }
 
 //
@@ -790,82 +957,16 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   NSArray* types  = [[info draggingPasteboard] types];
   BOOL isCopy = ([info draggingSourceOperationMask] == NSDragOperationCopy);
 
-  if ([types containsObject: @"MozBookmarkType"])
+  if ([types containsObject: kCaminoBookmarkListPBoardType])
   {
-    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-
-    // turn off updates to avoid lots of reloadData with multiple items
-    mBookmarkUpdatesDisabled = YES;
-    
-    // make sure we re-enable updates
-    NS_DURING
-      NSEnumerator *enumerator = [draggedItems objectEnumerator];
-
-      id aKid;
-      while ((aKid = [enumerator nextObject]))
-      {
-        if (isCopy)
-        {
-          [[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
-          ++index;
-        }
-        else
-        {
-          // need to be careful to adjust index as we insert items to avoid
-          // inserting in reverse order
-          if ([aKid parent] == dropFolder)
-          {
-            int kidIndex = [dropFolder indexOfObject:aKid];
-            [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
-            if (kidIndex > index)
-              ++index;
-          }
-          else
-          {
-            [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
-            ++index;
-          }
-        }
-      }
-    NS_HANDLER
-    NS_ENDHANDLER
-    
-    mBookmarkUpdatesDisabled = NO;
-    [self reloadDataForItem:nil reloadChildren:YES];
-    [self selectItems:draggedItems expandingContainers:NO scrollIntoView:NO];
-
+    [self pasteBookmarks:[info draggingPasteboard] intoFolder:dropFolder index:index copying:isCopy];
     return YES;
   }
-  else if ([types containsObject: @"MozURLType"])
+  
+  if ([[info draggingPasteboard] containsURLData])
   {
-    NSDictionary* proxy = [[info draggingPasteboard] propertyListForType: @"MozURLType"];
-    Bookmark* newBookmark = [dropFolder addBookmark:[proxy objectForKey:@"title"] url:[proxy objectForKey:@"url"] inPosition:index isSeparator:NO];
-    [self selectItem:newBookmark expandingContainers:NO scrollIntoView:NO byExtendingSelection:NO];
+    [self pasteBookmarksFromURLsAndTitles:[info draggingPasteboard] intoFolder:dropFolder index:index];
     return YES;
-  }
-  else if ([types containsObject: NSURLPboardType])
-  {
-    NSURL*	urlData = [NSURL URLFromPasteboard:[info draggingPasteboard]];
-    NSString* urlTitle = nil;
-    if ([types containsObject:kCorePasteboardFlavorType_urld])
-      urlTitle = [[info draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
-    Bookmark* newBookmark = [dropFolder addBookmark:(urlTitle ? urlTitle : [urlData absoluteString]) url:[urlData absoluteString] inPosition:index isSeparator:NO];
-    [self selectItem:newBookmark expandingContainers:NO scrollIntoView:NO byExtendingSelection:NO];
-    return YES;
-  }
-  else if ([types containsObject: NSStringPboardType])
-  {
-    NSString* draggedText = [[info draggingPasteboard] stringForType:NSStringPboardType];
-    NSURL *testURL = [NSURL URLWithString:draggedText];
-    NSString* urlTitle = nil;
-    if ([types containsObject:kCorePasteboardFlavorType_urld])
-      urlTitle = [[info draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
-    if (testURL)
-    {
-      Bookmark* newBookmark = [dropFolder addBookmark:(urlTitle ? urlTitle : draggedText) url:draggedText inPosition:index isSeparator:NO];
-      [self selectItem:newBookmark expandingContainers:NO scrollIntoView:NO byExtendingSelection:NO];
-      return YES;
-    }
   }
   return NO;  
 }
@@ -883,6 +984,39 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   return NSDragOperationNone;
 }
 
+//
+// Copy a set of bookmarks (an NSArray containing the BookmarkItem and BookmarkFolder objects)
+// to the specified pasteboard, in all the available formats
+//
+- (void) copyBookmarks:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard
+{
+  // Copy these items to the general pasteboard as an internal list so we can
+  // paste back to ourselves with no information loss
+  NSArray *bookmarkUUIDArray = [BookmarkManager serializableArrayWithBookmarkItems:bookmarkItemsToCopy];
+  [aPasteboard declareTypes:[NSArray arrayWithObject:kCaminoBookmarkListPBoardType] owner:self];
+  [aPasteboard setPropertyList:bookmarkUUIDArray forType:kCaminoBookmarkListPBoardType];
+  
+  // Now add copies in formats useful to other applications. Our pasteboard
+  // category takes care of working out what formats to write.
+  NSMutableArray* urlList = [NSMutableArray array];
+  NSMutableArray* titleList = [NSMutableArray array];
+  for ( unsigned int i = 0; i < [bookmarkItemsToCopy count]; ++i ) {
+    BookmarkItem* bookmarkItem = [bookmarkItemsToCopy objectAtIndex:i];
+    if ([bookmarkItem isKindOfClass:[Bookmark class]]) {
+      Bookmark* bookmark = (Bookmark*) bookmarkItem;
+      [urlList addObject:[bookmark url]];
+      [titleList addObject:[bookmark title]];
+    }
+  }
+  [aPasteboard setURLs:urlList withTitles:titleList];
+}
+
+
+-(BOOL) canPasteFromPasteboard:(NSPasteboard*)aPasteboard
+{
+    return [[aPasteboard types] containsObject:kCaminoBookmarkListPBoardType]
+        || [aPasteboard containsURLData];
+}
 
 #pragma mark -
 //
@@ -1016,11 +1150,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     [itemArray release];
     return NO;
   }
-  // Pack pointers to bookmark items into this array
-  NSArray *pointerArray = [BookmarkManager serializableArrayWithBookmarkItems:itemArray];
+  
+  [self copyBookmarks:itemArray toPasteboard:pboard];
   [itemArray release];
-  [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:self];
-  [pboard setPropertyList:pointerArray forType:@"MozBookmarkType"];
   return YES;
 }
 
@@ -1048,21 +1180,15 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     }
     if (dropFolder) {
       // special check if we're moving pointers around
-      if ([types containsObject:@"MozBookmarkType"])
+      if ([types containsObject:kCaminoBookmarkListPBoardType])
       {
-        NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+        NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
         BOOL isOK = [manager isDropValid:draggedItems toFolder:dropFolder];
         return (isOK) ? dragOp : NSDragOperationNone;
       }
-      else if ([types containsObject:@"MozURLType"] || [types containsObject:NSURLPboardType])
+      else if ([[info draggingPasteboard] containsURLData])
       {
         return (dropFolder == mRootBookmarks) ? NSDragOperationNone : dragOp;
-      }
-      else if ([types containsObject:NSStringPboardType])
-      {
-        NSURL* testURL = [NSURL URLWithString:[[info draggingPasteboard] stringForType:NSStringPboardType]];
-        if (testURL)
-          return (dropFolder == mRootBookmarks) ? NSDragOperationNone : dragOp;        
       }
     }
   }
@@ -1207,20 +1333,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     return NO;
 
   // Pack pointers to bookmark items into this array.
-  NSArray *pointerArray = [BookmarkManager serializableArrayWithBookmarkItems:items];
-  if (count == 1) {
-    id aBookmark = [items objectAtIndex:0];
-    if ([aBookmark isKindOfClass:[Bookmark class]]) {
-      [pboard declareURLPasteboardWithAdditionalTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:self];
-      [pboard setDataForURL:[aBookmark url] title:[aBookmark title]];
-      [pboard setPropertyList:pointerArray forType:@"MozBookmarkType"];
-      return YES;
-    }
-  }
-  // it's either a folder or we've got more than 1 thing. ship it
-  // out as MozBookmarkType
-  [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner: self];
-  [pboard setPropertyList: pointerArray forType:@"MozBookmarkType"];
+  [self copyBookmarks:items toPasteboard:pboard];
   return YES;
 }
 
@@ -1233,22 +1346,16 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   if (index == NSOutlineViewDropOnItemIndex)
     return NSDragOperationNone;
 
-  if ([types containsObject: @"MozBookmarkType"]) {
-    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+  if ([types containsObject: kCaminoBookmarkListPBoardType]) {
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
     BookmarkFolder* parent = (item) ? item : [self itemTreeRootContainer];
     BOOL isOK = [[BookmarkManager sharedBookmarkManager] isDropValid:draggedItems toFolder:parent];
     return (isOK) ? dragOp : NSDragOperationNone;
   }
 
-  if ([types containsObject: NSURLPboardType] || [types containsObject: @"MozURLType"] )
+  if ([[info draggingPasteboard] containsURLData])
     return dragOp;
 
-  // see if we can turn a string into a URL.  If so, accept it. If not, punt.
-  if ([types containsObject: NSStringPboardType]) {
-    NSURL* testURL = [NSURL URLWithString:[[info draggingPasteboard] stringForType:NSStringPboardType]];
-    if (testURL)
-      return dragOp;
-  }
   return NSDragOperationNone;
 }
 
@@ -1483,6 +1590,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 // share code with revealItem:selecting:
 - (void)selectItem:(BookmarkItem*)item expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll byExtendingSelection:(BOOL)extendSelection
 {
+  [self revealItem:item scrollIntoView:scroll selecting:YES byExtendingSelection:extendSelection];
+#if 0
   int itemRow = [mBookmarksOutlineView rowForItem:item];
   if (itemRow == -1)
   {
@@ -1496,6 +1605,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [mBookmarksOutlineView selectRow:itemRow byExtendingSelection:extendSelection];
   if (scroll)
     [mBookmarksOutlineView scrollRowToVisible:itemRow];
+#endif
 }
 
 - (id)itemTreeRootContainer
@@ -1680,7 +1790,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
   if (mItemToReveal)
   {
-    [self revealItem:mItemToReveal selecting:YES];
+    [self revealItem:mItemToReveal scrollIntoView:YES selecting:YES byExtendingSelection:NO];
     [mItemToReveal release];
     mItemToReveal = nil;
   }

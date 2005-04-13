@@ -273,18 +273,19 @@
   NSString     *title = [item title];
   if (isSingleBookmark)
   {
-    [pboard declareURLPasteboardWithAdditionalTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:self];
+    [pboard declareURLPasteboardWithAdditionalTypes:[NSArray arrayWithObject:kCaminoBookmarkListPBoardType] owner:self];
     NSString     *url 	= [(Bookmark *)item url];
     NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
     [pboard setDataForURL:url title:cleanedTitle];
   }
   else
   {
-    [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:self];
+    [pboard declareTypes:[NSArray arrayWithObject:kCaminoBookmarkListPBoardType] owner:self];
   }
-  // MozBookmarkType
+
+  // kCaminoBookmarkListPBoardType
   NSArray *pointerArray = [BookmarkManager serializableArrayWithBookmarkItems:[NSArray arrayWithObject:item]];
-  [pboard setPropertyList:pointerArray forType: @"MozBookmarkType"];
+  [pboard setPropertyList:pointerArray forType: kCaminoBookmarkListPBoardType];
   [self dragImage: [MainController createImageForDragging:[self image] title:title]
                at: NSMakePoint(0,NSHeight([self bounds])) offset: NSMakeSize(0,0)
             event: aEvent pasteboard: pboard source: self slideBack: YES];
@@ -295,7 +296,7 @@
   if (operation == NSDragOperationDelete)
   {
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType: @"MozBookmarkType"]];
+    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType: kCaminoBookmarkListPBoardType]];
     if (bookmarks)
     {
       for (unsigned int i = 0; i < [bookmarks count]; ++i)

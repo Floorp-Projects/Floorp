@@ -104,8 +104,8 @@
   
   BOOL                    mBookmarkUpdatesDisabled;
   
-  NSMutableDictionary*    mExpandedStatus;
-  NSString*               mCachedHref;
+  NSMutableDictionary*    mExpandedStates;
+
   BookmarkFolder*         mActiveRootCollection;
   BookmarkFolder*         mRootBookmarks;
   NSArray*                mSearchResultArray;
@@ -133,6 +133,10 @@
 -(IBAction) deleteBookmarks:(id)aSender;
 -(IBAction) showBookmarkInfo:(id)aSender;
 -(IBAction) locateBookmark:(id)aSender;
+-(IBAction) cut:(id)aSender;
+-(IBAction) copy:(id)aSender;
+-(IBAction) paste:(id)aSender;
+-(IBAction) delete:(id)aSender;
 
 -(IBAction) quicksearchPopupChanged:(id)aSender;
 - (void)resetSearchField;
@@ -147,8 +151,8 @@
 -(void) setActiveCollection:(BookmarkFolder *)aFolder;
 -(BookmarkFolder *)activeCollection;
 
--(BookmarkFolder *)selectedItemFolderAndIndex:(int*)outIndex;
--(void)revealItem:(BookmarkItem*)item selecting:(BOOL)inSelectItem;
+- (BookmarkFolder *)selectedItemFolderAndIndex:(int*)outIndex;
+- (void)revealItem:(BookmarkItem*)item scrollIntoView:(BOOL)inScroll selecting:(BOOL)inSelectItem byExtendingSelection:(BOOL)inExtendSelection;
 
 - (void)setItemToRevealOnLoad:(BookmarkItem*)inItem;
 
@@ -156,5 +160,8 @@
 -(void)focus;
 -(void)completeSetup;
 -(void)ensureBookmarks;
+
+-(BOOL) canPasteFromPasteboard:(NSPasteboard*)aPasteboard;
+-(void) copyBookmarks:(NSArray*)bookmarkItemsToCopy toPasteboard:(NSPasteboard*)aPasteboard;
 
 @end

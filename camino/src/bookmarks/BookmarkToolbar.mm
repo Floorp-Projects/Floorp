@@ -76,7 +76,7 @@ static const int kBMBarScanningStep = 5;
     mDragInsertionButton = nil;
     mDragInsertionPosition = CHInsertNone;
     mDrawBorder = YES;
-    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, NSURLPboardType, nil]];
+    [self registerForDraggedTypes:[NSArray arrayWithObjects: kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType, NSStringPboardType, NSURLPboardType, nil]];
     mIsShowing = YES;
     // Generic notifications for Bookmark Client
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
@@ -465,8 +465,8 @@ static const int kBMBarScanningStep = 5;
   if (!toolbar)
     return NO;
 
-  if ([types containsObject: @"MozBookmarkType"]) {
-    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[draggingPasteboard propertyListForType: @"MozBookmarkType"]];
+  if ([types containsObject: kCaminoBookmarkListPBoardType]) {
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[draggingPasteboard propertyListForType: kCaminoBookmarkListPBoardType]];
     BookmarkItem* destItem = nil;
 
     if (mDragInsertionButton == nil) {
@@ -483,13 +483,9 @@ static const int kBMBarScanningStep = 5;
     if (![bmManager isDropValid:draggedItems toFolder:destItem])
       return NO;
   }
-  else if ([types containsObject:NSStringPboardType]) {
-    // validate the string is a real url before allowing
-    NSURL* testURL = [NSURL URLWithString:[draggingPasteboard stringForType:NSStringPboardType]];
-    return (testURL != nil);
-  }
+  else
+    return [draggingPasteboard containsURLData];
 
-  return YES;
 }
 
 // NSDraggingDestination ///////////
@@ -587,8 +583,8 @@ static const int kBMBarScanningStep = 5;
 
   NSArray *draggedTypes = [[sender draggingPasteboard] types];
 
-  if ([draggedTypes containsObject:@"MozBookmarkType"]) {
-    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+  if ([draggedTypes containsObject:kCaminoBookmarkListPBoardType]) {
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[sender draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
     // added sequentially, so use reverse object enumerator to preserve order.
     NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
     id aKid;
@@ -600,27 +596,17 @@ static const int kBMBarScanningStep = 5;
     }
     dropHandled = YES;
   }
-  else if ([draggedTypes containsObject:@"MozURLType"]) {
-    NSDictionary* proxy = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
-    [toolbar addBookmark:[proxy objectForKey:@"title"] url:[proxy objectForKey:@"url"] inPosition:index isSeparator:NO];
+  else if ([[sender draggingPasteboard] containsURLData]) {
+    NSArray* urls = nil;
+    NSArray* titles = nil;
+    [[sender draggingPasteboard] getURLs:&urls andTitles:&titles];
+    
+    // Add in reverse order to preserve order
+    for ( int i = [urls count] - 1; i >= 0; --i )
+      [toolbar addBookmark:[titles objectAtIndex:i] url:[urls objectAtIndex:i] inPosition:index isSeparator:NO];
     dropHandled = YES;
   }
-  else if ([draggedTypes containsObject:NSStringPboardType]) {
-    NSString* draggedText = [[sender draggingPasteboard] stringForType:NSStringPboardType];
-    NSString* urlTitle = nil;
-    if ([draggedTypes containsObject:kCorePasteboardFlavorType_urld])
-      urlTitle = [[sender draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
-    [toolbar addBookmark:(urlTitle ? urlTitle : draggedText) url:draggedText inPosition:index isSeparator:NO];
-    dropHandled = YES;
-  }
-  else if ([draggedTypes containsObject: NSURLPboardType]) {
-    NSURL*	urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
-    NSString* urlTitle = nil;
-    if ([draggedTypes containsObject:kCorePasteboardFlavorType_urld])
-      urlTitle = [[sender draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
-    [toolbar addBookmark:(urlTitle ? urlTitle : [urlData absoluteString]) url:[urlData absoluteString] inPosition:index isSeparator:NO];
-    dropHandled = YES;
-  }
+
   mDragInsertionButton = nil;
   mDragInsertionPosition = CHInsertNone;
   [self setNeedsDisplay:YES];

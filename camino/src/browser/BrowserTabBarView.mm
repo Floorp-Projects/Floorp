@@ -39,6 +39,7 @@
 #import "BrowserTabBarView.h"
 #import "BrowserTabViewItem.h"
 #import "TabButtonCell.h"
+#import "NSPasteboard+Utils.h"
 
 @interface BrowserTabBarView (PRIVATE)
 -(void)layoutButtons;
@@ -81,8 +82,12 @@ static const int kOverflowButtonMargin = 1;
     mVisible = YES;
     // this will not likely have any result here
     [self rebuildTabBar];
-    [self registerForDraggedTypes:[NSArray arrayWithObjects: @"MozURLType", @"MozBookmarkType", NSStringPboardType,
-                                                              NSFilenamesPboardType, NSURLPboardType, nil]];
+    [self registerForDraggedTypes:[NSArray arrayWithObjects: kCaminoBookmarkListPBoardType,
+                                                             kWebURLsWithTitlesPboardType,
+                                                             NSStringPboardType,
+                                                             NSFilenamesPboardType,
+                                                             NSURLPboardType,
+                                                             nil]];
   }
   return self;
 }

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
+ *   Bruce Davidson <Bruce.Davidson@ipl.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,11 +42,17 @@ extern NSString* const kCorePasteboardFlavorType_url;
 extern NSString* const kCorePasteboardFlavorType_urln;
 extern NSString* const kCorePasteboardFlavorType_urld;
 
+extern NSString* const kCaminoBookmarkListPBoardType;
+extern NSString* const kWebURLsWithTitlesPboardType;
 
 @interface NSPasteboard(ChimeraPasteboardURLUtils)
 
-- (int)declareURLPasteboardWithAdditionalTypes:(NSArray*)additionalTypes owner:(id)newOwner;
-- (void)setDataForURL:(NSString*)url title:(NSString*)title;
+- (int) declareURLPasteboardWithAdditionalTypes:(NSArray*)additionalTypes owner:(id)newOwner;
+- (void) setDataForURL:(NSString*)url title:(NSString*)title;
+
+- (void) setURLs:(NSArray*)inUrls withTitles:(NSArray*)inTitles;
+- (void) getURLs:(NSArray**)outUrls andTitles:(NSArray**)outTitles;
+- (BOOL) containsURLData;
 
 @end
 

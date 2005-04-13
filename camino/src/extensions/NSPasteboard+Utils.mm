@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
+ *   Bruce Davidson <Bruce.Davidson@ipl.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,13 +42,16 @@ NSString* const kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75
 NSString* const kCorePasteboardFlavorType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
 NSString* const kCorePasteboardFlavorType_urld = @"CorePasteboardFlavorType 0x75726C64"; // 'urld' URL description
 
+NSString* const kCaminoBookmarkListPBoardType = @"MozBookmarkType"; // list of Camino bookmark UIDs
+NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; // Safari-compatible URL + title arrays
+
 @implementation NSPasteboard(ChimeraPasteboardURLUtils)
 
 - (int)declareURLPasteboardWithAdditionalTypes:(NSArray*)additionalTypes owner:(id)newOwner
 {
   NSArray* allTypes = [additionalTypes arrayByAddingObjectsFromArray:
                             [NSArray arrayWithObjects:
-                                        @"MozURLType",
+                                        kWebURLsWithTitlesPboardType,
                                         NSURLPboardType,
                                         NSStringPboardType,
                                         kCorePasteboardFlavorType_url,
@@ -56,24 +60,125 @@ NSString* const kCorePasteboardFlavorType_urld = @"CorePasteboardFlavorType 0x75
 	return [self declareTypes:allTypes owner:newOwner];
 }
 
+//
+// Copy a single URL (with an optional title) to the clipboard in all relevant
+// formats. Convinience methods for clients that can only ever deal with one
+// URL and shouldn't have to build up the arrays for setURLs:withTitles:.
+//
 - (void)setDataForURL:(NSString*)url title:(NSString*)title
 {
-  NSDictionary *data = [NSDictionary dictionaryWithObjectsAndKeys:
-                            url, @"url",
-                            title, @"title",
-                            nil];
-
-  [self setPropertyList:data forType: @"MozURLType"];
-  [[NSURL URLWithString:url] writeToPasteboard: self];
-  [self setString:url forType: NSStringPboardType];
-
-  const char* tempCString = [url UTF8String];
-  [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_url];
-
+  NSArray* urlList = [NSArray arrayWithObject:url];
+  NSArray* titleList = nil;
   if (title)
-    tempCString = [title UTF8String];
-  [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_urln];
+    titleList = [NSArray arrayWithObject:title];
+  
+  [self setURLs:urlList withTitles:titleList];
 }
 
+//
+// Copy a set of URLs, each of which may have a title, to the pasteboard
+// using all the available formats.
+// The title array should be nil, or must have the same length as the URL array.
+//
+- (void) setURLs:(NSArray*)inUrls withTitles:(NSArray*)inTitles
+{
+  // Best format that we know about is Safari's URL + title arrays - build these up
+  NSMutableArray* tmpTitleArray = inTitles;
+  if (!inTitles) {
+    tmpTitleArray = [NSMutableArray array];
+    for ( unsigned int i = 0; i < [inUrls count]; ++i )
+      [tmpTitleArray addObject:@""];
+  }
+  
+  NSMutableArray* clipboardData = [NSMutableArray array];
+  [clipboardData addObject:[NSArray arrayWithArray:inUrls]];
+  [clipboardData addObject:tmpTitleArray];
+  
+  [self setPropertyList:clipboardData forType:kWebURLsWithTitlesPboardType];
+  
+  if ([inUrls count] == 1) {
+    NSString* title = @"";
+    if (inTitles)
+      title = [inTitles objectAtIndex:0];
+
+    NSString* url = [inUrls objectAtIndex:0];
+    
+    [[NSURL URLWithString:url] writeToPasteboard: self];
+    [self setString:url forType: NSStringPboardType];
+
+    const char* tempCString = [url UTF8String];
+    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_url];
+
+    if (inTitles)
+      tempCString = [title UTF8String];
+    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_urln];
+  } else {
+    // With multiple URLs there aren't many other formats we can use
+    // Just write a string of each URL (ignoring titles) on a separate line
+    [self setString:[inUrls componentsJoinedByString:@"\n"] forType:NSStringPboardType];
+  }
+}
+
+//
+// Get the set of URLs and their corresponding titles from the clipboards
+// If there are no URLs in a format we understand on the pasteboard empty
+// arrays will be returned. The two arrays will always be the same size.
+// The arrays returned are on the auto release pool.
+//
+- (void) getURLs:(NSArray**)outUrls andTitles:(NSArray**)outTitles
+{
+  NSArray* types = [self types];
+  if ([types containsObject:kWebURLsWithTitlesPboardType]) {
+    NSArray* urlAndTitleContainer = [self propertyListForType:kWebURLsWithTitlesPboardType];
+    *outUrls = [urlAndTitleContainer objectAtIndex:0];
+    *outTitles = [urlAndTitleContainer objectAtIndex:1];
+  } else if ([types containsObject:NSURLPboardType]) {
+    *outUrls = [NSArray arrayWithObject:[NSURL URLFromPasteboard:self]];
+    if ([types containsObject:kCorePasteboardFlavorType_urld])
+      *outTitles = [NSArray arrayWithObject:[self stringForType:kCorePasteboardFlavorType_urld]];
+    else
+      *outTitles = [NSArray arrayWithObject:@""];
+  } else if ([types containsObject:NSStringPboardType]) {
+    NSURL* testURL = [NSURL URLWithString:[self stringForType:NSStringPboardType]];
+    if (testURL) {
+      *outUrls = [NSArray arrayWithObject:[self stringForType:NSStringPboardType]];
+      if ([types containsObject:kCorePasteboardFlavorType_urld])
+        *outTitles = [NSArray arrayWithObject:[self stringForType:kCorePasteboardFlavorType_urld]];
+      else
+        *outTitles = [NSArray arrayWithObject:@""];
+    } else {
+      // The string doesn't look like a URL - return empty arrays
+      *outUrls = [NSArray array];
+      *outTitles = [NSArray array];
+    }
+  } else {
+    // We don't recognise any of these formats - return empty arrays
+    *outUrls = [NSArray array];
+    *outTitles = [NSArray array];
+  }
+}
+
+//
+// Indicates if this pasteboard contains URL data that we understand
+// Deals with all our URL formats. Only strings that are valid URLs count.
+// If this returns YES it is safe to use getURLs:andTitles: to retrieve the data.
+//
+// NB: Does not consider our internal bookmark list format, because callers
+// usually need to deal with this separately because it can include folders etc.
+//
+- (BOOL) containsURLData
+{
+  NSArray* types = [self types];
+  if (    [types containsObject:kWebURLsWithTitlesPboardType]
+       || [types containsObject:NSURLPboardType] )
+    return YES;
+  
+  if ([types containsObject:NSStringPboardType]) {
+    NSURL* testURL = [NSURL URLWithString:[self stringForType:NSStringPboardType]];
+    return (testURL != nil) && ([[testURL scheme] length] > 0);
+  }
+  
+  return NO;
+}
 @end
 

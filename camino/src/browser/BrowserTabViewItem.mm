@@ -98,7 +98,8 @@ const int kMenuTruncationChars = 60;
     mTabButtonCell = [[TabButtonCell alloc] initFromTabViewItem:mTabViewItem];
     
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
-        @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
+        kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType,
+        NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
   }
   return self;
 }

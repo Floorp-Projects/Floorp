@@ -99,7 +99,8 @@ enum {
 -(void) insertChild:(BookmarkItem *)aChild;
 -(void) insertChild:(BookmarkItem *)aChild atIndex:(unsigned)aIndex isMove:(BOOL)aBool;
 -(void) moveChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex;
--(void) copyChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex;
+// returns the new child
+-(BookmarkItem*) copyChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex;
 
 // Used for deleting bookmarks/bookmark arrays
 -(BOOL) deleteChild:(BookmarkItem *)aChild;

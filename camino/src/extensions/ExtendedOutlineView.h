@@ -81,6 +81,13 @@
 - (void)setAutosaveTableSort:(BOOL)autosave;
 - (BOOL)autosaveTableSort;
 
+// Clipboard functions
+-(BOOL) validateMenuItem:(id)aMenuItem;
+-(IBAction) copy:(id)aSender;
+-(IBAction) delete:(id)aSender;
+-(IBAction) paste:(id)aSender;
+-(IBAction) cut:(id)aSender;
+
 @end
 
 @interface NSObject (CHOutlineViewDataSourceToolTips)

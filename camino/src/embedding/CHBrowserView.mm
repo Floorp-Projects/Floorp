@@ -95,11 +95,11 @@ typedef unsigned int DragReference;
 // Cut/copy/paste
 #include "nsIClipboardCommands.h"
 #include "nsIInterfaceRequestorUtils.h"
+#import "NSPasteboard+Utils.h"
 
 // Undo/redo
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
-
 
 
 const char kPersistContractID[] = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
@@ -160,7 +160,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     
 // register the view as a drop site for text, files, and urls. 
     [self registerForDraggedTypes: [NSArray arrayWithObjects:
-              @"MozURLType", NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
+              NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
               
     // The value of mUseGlobalPrintSettings can't change during our lifetime. 
     nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
