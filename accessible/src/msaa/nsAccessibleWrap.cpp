@@ -329,9 +329,30 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
       parent.swap(nextParent);
     }
 
+    // Count the number of tree item children
+    PRInt32 numChildren = 0;
+    nsCOMPtr<nsIAccessible> groupSibling;
+    GetNextSibling(getter_AddRefs(groupSibling));
+    if (groupSibling) {
+      groupSibling->GetFinalRole(&currentRole);
+      if (currentRole == ROLE_GROUPING) {
+        // Accessible that groups child tree items
+        nsCOMPtr<nsIAccessible> child;
+        groupSibling->GetFirstChild(getter_AddRefs(child));
+        while (child) {
+          child->GetFinalRole(&currentRole);
+          numChildren += (currentRole == ROLE_OUTLINEITEM);
+          nsCOMPtr<nsIAccessible> nextChild;
+          child->GetNextSibling(getter_AddRefs(nextChild));
+          child.swap(nextChild);
+        }
+      }
+    }
+
     // This must be a DHTML tree item -- XUL tree items impl GetDescription()
-    nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("L%d, %d of %d").get(),
-                              level, indexInParent, numSiblings);
+    nsTextFormatter::ssprintf(aDescription,
+                              NS_LITERAL_STRING("L%d, %d of %d with %d").get(),
+                              level, indexInParent, numSiblings, numChildren);
   }
   else {
     nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("%d of %d").get(),

@@ -463,22 +463,6 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
   return mTreeView->GetCellText(mRow, mColumn, aName);
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessible::GetValue(nsAString& _retval)
-{
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
-
-  PRInt32 level;
-  if (NS_FAILED(mTreeView->GetLevel(mRow, &level))) {
-    return NS_OK;
-  }
-
-  nsString str;
-  str.AppendInt(level);
-  _retval = str;
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsXULTreeitemAccessible::GetUniqueID(void **aUniqueID)
 {
   // Since mDOMNode is same for all tree item, use |this| pointer as the unique Id

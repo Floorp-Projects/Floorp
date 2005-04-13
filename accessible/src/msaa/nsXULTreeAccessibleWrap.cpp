@@ -135,6 +135,12 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescriptio
     return NS_ERROR_FAILURE;
   }
 
+  PRUint32 itemRole;
+  GetRole(&itemRole);
+  if (itemRole == ROLE_LISTITEM) {
+    return nsAccessibleWrap::GetDescription(aDescription);
+  }
+
   aDescription.Truncate();
 
   PRInt32 level;
@@ -152,6 +158,7 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescriptio
 
   PRInt32 indexInParent = 0, numSiblings = 0;
 
+  // Get the index in parent and number of siblings
   while (++ testRow < numRows) {
     PRInt32 testLevel = 0;
     mTreeView->GetLevel(testRow, &testLevel);
@@ -166,8 +173,24 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescriptio
     }
   }
 
-  nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("L%d, %d of %d").get(),
-                            level + 1, indexInParent, numSiblings);
+  // Count the number of children
+  testRow = mRow;
+  PRInt32 numChildren = 0;
+  while (++ testRow < numRows) {
+    PRInt32 testLevel = 0;
+    mTreeView->GetLevel(testRow, &testLevel);
+    if (testLevel <= level) {
+      break;
+    }
+    else if (testLevel == level + 1) {
+      ++ numChildren;
+    }
+  }
+
+  // Don't localize "of" or "with" -- that is just the format of
+  // the string, and are parsed out by the AT
+  nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("L%d, %d of %d with %d").get(),
+                            level + 1, indexInParent, numSiblings, numChildren);
 
   return NS_OK;
 }
