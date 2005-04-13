@@ -645,6 +645,23 @@ protected:
   // Heap dump
   static UINT   uWM_HEAP_DUMP;       // Dump heap to a file
 
+  // Cursor caching
+  static HCURSOR        gHCursor;
+  static imgIContainer* gCursorImgContainer;
+
+  /**
+   * Create a 1 bit mask out of a 8 bit alpha layer.
+   *
+   * @param aAlphaData        8 bit alpha data
+   * @param aAlphaBytesPerRow How many bytes one row of data is
+   * @param aWidth            Width of the alpha data, in pixels
+   * @param aHeight           Height of the alpha data, in pixels
+   *
+   * @return 1 bit mask.  Must be delete[]d. On failure, NULL will be returned.
+   */
+  static PRUint8* Data8BitTo1Bit(PRUint8* aAlphaData, PRUint32 aAlphaBytesPerRow,
+                                 PRUint32 aWidth, PRUint32 aHeight);
+
   /**
    * Combine the given image data with a separate alpha channel to image data
    * with the alpha channel interleaved with the image data (BGRA).
