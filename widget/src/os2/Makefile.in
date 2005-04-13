@@ -64,6 +64,7 @@ REQUIRES	= gfx \
 		  plugin \
 		  docshell \
 		  webbrowserpersist \
+     		  imglib2 \
 		  $(NULL)
 
 ifdef BUILD_STATIC_LIBS

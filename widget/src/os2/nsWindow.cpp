@@ -85,6 +85,10 @@
 #include "nsOS2Uni.h"
 #include "nsPaletteOS2.h"
 
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIProperties.h"
+
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -229,6 +233,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mChromeHidden       = FALSE;
     mDragHps            = 0;
     mDragStatus         = 0;
+    mCssCursorHPtr      = 0;
 
     mIsTopWidgetWindow = PR_FALSE;
 
@@ -280,6 +285,11 @@ nsWindow::~nsWindow()
   if (mFrameIcon) {
      WinFreeFileIcon(mFrameIcon);
      mFrameIcon = NULLHANDLE;
+  }
+
+  if (mCssCursorHPtr) {
+    WinDestroyPointer(mCssCursorHPtr);
+    mCssCursorHPtr = 0;
   }
 
   // If the widget was released without calling Destroy() then the native
@@ -1822,6 +1832,281 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
   return NS_OK;
 }
+
+//-------------------------------------------------------------------------
+
+// create a mouse pointer on the fly to support the CSS 'cursor' style;
+// this code is based on the Win version by C. Biesinger but has been
+// substantially modified to accommodate platform differences and to
+// improve efficiency
+
+NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
+{
+
+  // if this is the same image as last time, reuse the saved hptr;
+  // it will be destroyed when we create a new one or when the
+  // current window is destroyed
+  if (mCssCursorImg == aCursor && mCssCursorHPtr) {
+    WinSetPointer(HWND_DESKTOP, mCssCursorHPtr);
+    return NS_OK;
+  }
+
+  nsCOMPtr<gfxIImageFrame> frame;
+  aCursor->GetFrameAt(0, getter_AddRefs(frame));
+  if (!frame)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  // if the image is ridiculously large, exit because
+  // it will be unrecognizable when shrunk to 32x32
+  PRInt32 width, height;
+  frame->GetWidth(&width);
+  frame->GetHeight(&height);
+  if (width > 128 || height > 128)
+    return NS_ERROR_FAILURE;
+
+  gfx_format format;
+  nsresult rv = frame->GetFormat(&format);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // only 24-bit images with 0, 1, or 8-bit alpha data are supported
+  if (format != gfxIFormats::BGR_A1 && format != gfxIFormats::BGR_A8 &&
+      format != gfxIFormats::BGR)
+    return NS_ERROR_UNEXPECTED;
+
+  // get the hotspot;  if it doesn't have one, put it in the
+  // upper-left corner of the image (per CSS standards);
+  // PM will scale its location when it rescales the image
+  PRUint32 hotspotX = (PRUint32)-1, hotspotY = (PRUint32)-1;
+
+  nsCOMPtr<nsIProperties> props(do_QueryInterface(aCursor));
+  if (props) {
+    nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
+
+    props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotXWrap));
+    props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotYWrap));
+    if (hotspotXWrap)
+      hotspotXWrap->GetData(&hotspotX);
+    if (hotspotYWrap)
+      hotspotYWrap->GetData(&hotspotY);
+  }
+  if (hotspotX == (PRUint32)-1)
+    hotspotX = 0;
+  if (hotspotY == (PRUint32)-1)
+    hotspotY = height;
+  else
+    hotspotY = height - hotspotY - 1;
+
+  frame->LockImageData();
+  PRUint32 dataLen;
+  PRUint8* data;
+  rv = frame->GetImageData(&data, &dataLen);
+  if (NS_FAILED(rv)) {
+    frame->UnlockImageData();
+    return rv;
+  }
+
+  // create the color bitmap
+  HBITMAP hBmp = 0;
+  hBmp = DataToBitmap(data, width, height, 24);
+  frame->UnlockImageData();
+  if (!hBmp)
+    return NS_ERROR_FAILURE;
+
+  // create a transparency mask from the alpha data;
+  HBITMAP hAlpha = 0;
+
+  // image has no alpha data - make the pointer opaque
+  if (format == gfxIFormats::BGR) {
+    hAlpha = CreateTransparencyMask(format, 0, width, height);
+    if (!hAlpha) {
+      GpiDeleteBitmap(hBmp);
+      return NS_ERROR_FAILURE;
+    }
+  }
+  // image has either 1 or 8 bits of alpha data
+  else {
+    PRUint8* adata;
+    frame->LockAlphaData();
+    rv = frame->GetAlphaData(&adata, &dataLen);
+    if (NS_FAILED(rv)) {
+      GpiDeleteBitmap(hBmp);
+      frame->UnlockAlphaData();
+      return rv;
+    }
+
+    // create the bitmap
+    hAlpha = CreateTransparencyMask(format, adata, width, height);
+    frame->UnlockAlphaData();
+    if (!hAlpha) {
+      GpiDeleteBitmap(hBmp);
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  POINTERINFO info = {0};
+  info.fPointer = TRUE;
+  info.xHotspot = hotspotX;
+  info.yHotspot = hotspotY;
+  info.hbmPointer = hAlpha;
+  info.hbmColor = hBmp;
+
+  // create the pointer
+  HPOINTER cursor = WinCreatePointerIndirect(HWND_DESKTOP, &info);
+  GpiDeleteBitmap(hBmp);
+  GpiDeleteBitmap(hAlpha);
+  if (cursor == NULL)
+    return NS_ERROR_FAILURE;
+
+  // use it
+  WinSetPointer(HWND_DESKTOP, cursor);
+
+  // destroy the previous hptr;  this has to be done after the
+  // new pointer is set or else WinDestroyPointer() will fail
+  if (mCssCursorHPtr)
+    WinDestroyPointer(mCssCursorHPtr);
+
+  // save the hptr and a reference to the image for next time
+  mCssCursorHPtr = cursor;
+  mCssCursorImg = aCursor;
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+
+// render image or modified alpha data as a native bitmap
+
+// aligned bytes per row, rounded up to next dword bounday
+#define ALIGNEDBPR(cx,bits) ( ( ( ((cx)*(bits)) + 31) / 32) * 4)
+
+HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
+                               PRUint32 aHeight, PRUint32 aDepth)
+{
+  // get a presentation space for this window
+  HPS hps = (HPS)GetNativeData(NS_NATIVE_GRAPHIC);
+  if (!hps)
+    return 0;
+
+  // a handy structure that does double duty
+  // as both BITMAPINFOHEADER2 & BITMAPINFO2
+  struct {
+    BITMAPINFOHEADER2 head;
+    RGB2 black;
+    RGB2 white;
+  } bi;
+
+  memset( &bi, 0, sizeof(bi));
+  bi.white.bBlue = 255;
+  bi.white.bGreen = 255;
+  bi.white.bRed = 255;
+
+  // fill in the particulars
+  bi.head.cbFix = sizeof(bi.head);
+  bi.head.cx = aWidth;
+  bi.head.cy = aHeight;
+  bi.head.cPlanes = 1;
+  bi.head.cBitCount = aDepth;
+  bi.head.ulCompression = BCA_UNCOMP;
+  bi.head.cbImage = ALIGNEDBPR(aWidth, aDepth) * aHeight;
+  bi.head.cclrUsed = (aDepth == 1 ? 2 : 0);
+
+  // create a bitmap from the image data
+  HBITMAP hBmp = GpiCreateBitmap(hps, &bi.head, CBM_INIT,
+                 NS_REINTERPRET_CAST(const BYTE*, aImageData),
+                 (BITMAPINFO2*)&bi);
+
+  // free the hps, then return the bitmap
+  FreeNativeData((void*)hps, NS_NATIVE_GRAPHIC);
+  return hBmp;
+}
+
+//-------------------------------------------------------------------------
+
+// create a monochrome AND/XOR bitmap from 0, 1, or 8-bit alpha data
+
+HBITMAP nsWindow::CreateTransparencyMask(gfx_format format,
+                                         PRUint8* aImageData,
+                                         PRUint32 aWidth,
+                                         PRUint32 aHeight)
+{
+  // calc width in bytes, rounding up to a dword boundary
+  PRUint32 abpr = ALIGNEDBPR(aWidth, 1);
+  PRUint32 cbData = abpr * aHeight;
+
+  // alloc space to hold both the AND & XOR bitmaps
+  PRUint8* mono = (PRUint8*)malloc(cbData * 2);
+  if (!mono)
+    return NULL;
+
+  // init the XOR bitmap to produce either black or transparent pixels
+  memset(mono, 0x00, cbData);
+
+  switch (format) {
+
+    // make the AND mask opaque
+    case gfxIFormats::BGR:
+      memset(&mono[cbData], 0x00, cbData);
+      break;
+
+    // make the AND mask the inverse of the 1-bit alpha data
+    case gfxIFormats::BGR_A1: {
+      PRUint32* pSrc = (PRUint32*)aImageData;
+      PRUint32* pAnd = (PRUint32*)&mono[cbData];
+
+      for (PRUint32 dataNdx = 0; dataNdx < cbData; dataNdx += 4)
+        *pAnd++ = ~(*pSrc++);
+
+      break;
+    }
+
+    // make the AND mask the inverse of the 8-bit alpha data
+    case gfxIFormats::BGR_A8: {
+      PRUint8*  pSrc = aImageData;
+      PRUint32* pAnd = (PRUint32*)&mono[cbData];
+
+      // if aWidth isn't a multiple of 4, the input contains byte padding;
+      // if aWidth isn't a multiple of 32, the output contains bit padding
+      for (PRUint32 dataNdx = 0; dataNdx < cbData; dataNdx += 4) {
+        PRUint32 dst = 0;
+        PRUint32 colNdx = 0;
+
+        // construct an output dword, then save
+        for (PRUint32 byteNdx = 0; byteNdx < 4; byteNdx++) {
+          PRUint32 mask = 0x80 << (byteNdx * 8);
+
+          // construct an output byte from 8 input bytes
+          for (PRUint32 bitNdx = 0; bitNdx < 8; bitNdx++) {
+            if (*pSrc++ < 128)
+              dst |= mask;
+            mask >>= 1;
+
+            // at the end of a row, skip over any padding in the
+            // input, then break out of the byte & dword loops
+            if (++colNdx >= aWidth) {
+              pSrc += (4 - (aWidth & 3)) & 3;
+              break;
+            }
+          }
+          if (colNdx >= aWidth)
+            break;
+        }
+        *pAnd++ = dst;
+      }
+
+      break;
+    }
+  }
+
+  // create the bitmap
+  HBITMAP hAlpha = DataToBitmap(mono, aWidth, aHeight * 2, 1);
+
+  // free the buffer, then return the bitmap
+  free(mono);
+  return hAlpha;
+}
+
+//-------------------------------------------------------------------------
 
 NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide) 
 {
