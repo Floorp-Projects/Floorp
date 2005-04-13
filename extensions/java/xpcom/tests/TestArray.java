@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -120,7 +120,11 @@ public class TestArray {
                            assertEqual(index, expectedIndex[count]));
       } while (true);
     } catch (XPCOMException e) {
-      // array.indexOf() did not find the element
+      // If array.indexOf() did not find the element, it returns
+      // NS_ERROR_FAILURE.
+      if (e.errorcode != XPCOM.NS_ERROR_FAILURE) {
+        throw e;
+      }
     }
 
     index = lastIndexOf(array, foo);

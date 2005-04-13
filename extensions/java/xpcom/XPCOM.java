@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -46,7 +46,7 @@ import java.util.*;
  *  Provides access to methods for initializing XPCOM, as well as helper methods
  *  for working with XPCOM classes.
  */
-public final class XPCOM {
+public final class XPCOM implements XPCOMError {
 
   /**
    * Initializes XPCOM. You must call this method before proceeding
