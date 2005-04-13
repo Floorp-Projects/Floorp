@@ -240,17 +240,18 @@ calStorageCalendar.prototype = {
             path = path.substr(0, pos);
         }
 
+        var dbService;
         if (aURI.scheme == "file") {
             var fileURL = aURI.QueryInterface(Components.interfaces.nsIFileURL);
             if (!fileURL)
                 throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
             // open the database
-            var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
+            dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
             this.mDB = dbService.openDatabase (fileURL.file);
             this.mDBTwo = dbService.openDatabase (fileURL.file);
         } else if (aURI.scheme == "moz-profile-calendar") {
-            var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
+            dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
             this.mDB = dbService.getProfileStorage("profile");
             this.mDBTwo = dbService.getProfileStorage("profile");
         }
@@ -811,21 +812,23 @@ calStorageCalendar.prototype = {
             this.mSelectAttendeesForItem.reset();
         }
 
+        var row;
         if (flags & CAL_ITEM_FLAG_HAS_PROPERTIES) {
             this.mSelectPropertiesForItem.params.item_id = item.id;
             while (this.mSelectPropertiesForItem.step()) {
-                var row = this.mSelectPropertiesForItem.row;
+                row = this.mSelectPropertiesForItem.row;
                 item.setProperty (row.key, row.value);
             }
             this.mSelectPropertiesForItem.reset();
         }
 
+        var i;
         if (flags & CAL_ITEM_FLAG_HAS_RECURRENCE) {
             var rec = null;
 
             this.mSelectRecurrenceForItem.params.item_id = item.id;
             while (this.mSelectRecurrenceForItem.step()) {
-                var row = this.mSelectRecurrenceForItem.row;
+                row = this.mSelectRecurrenceForItem.row;
 
                 var ritem = null;
 
@@ -835,7 +838,7 @@ calStorageCalendar.prototype = {
                     ritem = new CalRecurrenceDateSet();
 
                     var dates = row.dates.split(",");
-                    for (var i = 0; i < dates.length; i++) {
+                    for (i = 0; i < dates.length; i++) {
                         var date = textToDate(dates[i]);
                         ritem.addDate(date);
                     }
@@ -864,7 +867,7 @@ calStorageCalendar.prototype = {
                                   "month",
                                   "setpos"];
 
-                    for (var i = 0; i < rtypes.length; i++) {
+                    for (i = 0; i < rtypes.length; i++) {
                         var comp = "BY" + rtypes[i].toUpperCase();
                         if (row[rtypes[i]]) {
                             var rstr = row[rtypes[i]].split(",");
@@ -1003,12 +1006,15 @@ calStorageCalendar.prototype = {
                 this.mDeleteItem.reset();
             }
 
+            var ap;
+            var i;
+            var j;
             var attendees = item.getAttendees({});
             if (attendees && attendees.length > 0) {
                 flags |= CAL_ITEM_FLAG_HAS_ATTENDEES;
-                for (var i = 0; i < attendees.length; i++) {
+                for (i = 0; i < attendees.length; i++) {
                     var a = attendees[i];
-                    var ap = this.mInsertAttendee.params;
+                    ap = this.mInsertAttendee.params;
                     ap.item_id = item.id;
                     ap.attendee_id = a.id;
                     ap.common_name = a.commonName;
@@ -1044,7 +1050,7 @@ calStorageCalendar.prototype = {
                 for (i in ritems) {
                     var ritem = ritems[i];
 
-                    var ap = this.mInsertRecurrence.params;
+                    ap = this.mInsertRecurrence.params;
                     ap.item_id = item.id;
                     ap.recur_index = i;
                     ap.is_negative = ritem.isNegative;
@@ -1088,12 +1094,12 @@ calStorageCalendar.prototype = {
                                       "weekno",
                                       "month",
                                       "setpos"];
-                        for (var i = 0; i < rtypes.length; i++) {
+                        for (j = 0; j < rtypes.length; j++) {
                             var comp = "BY" + rtypes[i].toUpperCase();
                             var comps = ritem.getComponent(comp, {});
                             if (comps && comps.length > 0) {
                                 var compstr = comps.join(",");
-                                ap[rtypes[i]] = compstr;
+                                ap[rtypes[j]] = compstr;
                             }
                         }
                     } else {
@@ -1144,7 +1150,7 @@ calStorageCalendar.prototype = {
         this.mDeleteItem.reset();
 
         delete this.mItemCache[aID];
-    },
+    }
 }
 
 
@@ -1209,11 +1215,6 @@ function NSGetModule(compMgr, fileSpec) {
 var sqlTables = {
   cal_calendar_schema_version:
     "	version	INTEGER" +
-    "",
-
-  cal_calendars:
-    "	id	INTEGER PRIMARY KEY," +
-    "	name	STRING" +
     "",
 
   cal_items:

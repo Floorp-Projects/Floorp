@@ -3,11 +3,6 @@ CREATE TABLE cal_calendar_schema_version (
 	version	INTEGER
 );
 
-CREATE TABLE cal_calendars (
-	id	INTEGER PRIMARY KEY,
-	name	STRING
-);
-
 CREATE TABLE cal_items (
 	cal_id		INTEGER, --	REFERENCES cal_calendars.id,
 	-- 0: event, 1: todo
