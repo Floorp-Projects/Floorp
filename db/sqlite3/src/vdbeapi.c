@@ -623,14 +623,46 @@ int sqlite3_bind_parameter_index(sqlite3_stmt *pStmt, const char *zName){
   return 0;
 }
 
+/*
+** Given a wildcard parameter name, return the set of indexes of the
+** variables with that name.  If there are no variables with the given
+** name, return 0.  Otherwise, return the number of indexes returned
+** in *pIndexes.  The array should be freed with
+** sqlite3_free_parameter_indexes.
+*/
 int sqlite3_bind_parameter_indexes(
     sqlite3_stmt *pStmt,
     const char *zName,
     int **pIndexes
 ){
+  Vdbe *p = (Vdbe*)pStmt;
+  int i, j, nVars, *indexes;
+  if( p==0 ){
     return 0;
+  }
+  createVarMap(p); 
+  if( !zName )
+    return 0;
+  /* first count */
+  nVars = 0;
+  for(i=0; i<p->nVar; i++){
+    const char *z = p->azVar[i];
+    if( z && strcmp(z,zName)==0 ){
+      nVars++;
+    }
+  }
+  indexes = sqliteMalloc( sizeof(int) * nVars );
+  j = 0;
+  for(i=0; i<p->nVar; i++){
+    const char *z = p->azVar[i];
+    if( z && strcmp(z,zName)==0 )
+      indexes[j++] = i+1;
+  }
+  *pIndexes = indexes;
+  return nVars;
 }
 
 void sqlite3_free_parameter_indexes(int *pIndexes)
 {
+  sqliteFree( pIndexes );
 }
