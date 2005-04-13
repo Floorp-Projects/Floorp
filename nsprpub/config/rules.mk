@@ -399,7 +399,7 @@ endif
 # debuggers under Windows and OS/2 to find source files automatically.
 #
 
-ifeq ($(OS_ARCH),OS2)
+ifeq (,$(filter-out AIX OS2,$(OS_ARCH)))
 NEED_ABSOLUTE_PATH = 1
 endif
 
