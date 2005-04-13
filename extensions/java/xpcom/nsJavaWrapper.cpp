@@ -314,9 +314,6 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
 {
   nsresult rv = NS_OK;
 
-  // defaults
-  aVariant.type = aType;
-
   switch (aType)
   {
     case nsXPTType::T_I8:
@@ -1607,9 +1604,10 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
     {
       LOG(("\t Param %d: ", i));
       const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
+      params[i].type = paramInfo.GetType();
 
       if (paramInfo.IsIn() && !paramInfo.IsDipper()) {
-        PRUint8 type = paramInfo.GetType().TagPart();
+        PRUint8 type = params[i].type.TagPart();
 
         // is paramater an array?
         PRUint8 arrayType;
@@ -1651,8 +1649,7 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
         }
       } else if (paramInfo.IsDipper()) {
         LOG(("dipper\n"));
-        const nsXPTType &type = paramInfo.GetType();
-        switch (type.TagPart())
+        switch (params[i].type.TagPart())
         {
           case nsXPTType::T_ASTRING:
           case nsXPTType::T_DOMSTRING:
@@ -1662,7 +1659,6 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
               rv = NS_ERROR_OUT_OF_MEMORY;
               break;
             }
-            params[i].type = type;
             params[i].flags = nsXPTCVariant::VAL_IS_DOMSTR;
             break;
           }
@@ -1675,7 +1671,6 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
               rv = NS_ERROR_OUT_OF_MEMORY;
               break;
             }
-            params[i].type = type;
             params[i].flags = nsXPTCVariant::VAL_IS_CSTR;
             break;
           }
@@ -1687,7 +1682,6 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
       } else {
         LOG(("out/retval\n"));
         params[i].ptr = &(params[i].val);
-        params[i].type = paramInfo.GetType();
         params[i].flags = nsXPTCVariant::PTR_IS_DATA;
       }
     }
