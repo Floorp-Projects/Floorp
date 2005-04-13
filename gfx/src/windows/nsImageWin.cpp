@@ -179,6 +179,7 @@ nsresult nsImageWin::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
   mImageBits = new unsigned char[mSizeImage];
   if (!mImageBits) {
     delete[] mBHead;
+    mBHead = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -218,7 +219,9 @@ nsresult nsImageWin::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
     mAlphaBits = new unsigned char[mARowBytes * aHeight];
     if (!mAlphaBits) {
       delete[] mBHead;
+      mBHead = nsnull;
       delete[] mImageBits;
+      mImageBits = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
