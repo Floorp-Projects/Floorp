@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,7 +49,6 @@
  * 06/15/2000       IBM Corp.      Added NS2PM for rectangles
  * 06/21/2000       IBM Corp.      Added CaptureMouse
  *
- * Rich Walsh <dragtext@e-vertise.com>
  */
 
 #ifndef _nswindow_h
@@ -58,6 +58,8 @@
 #include "nsBaseWidget.h"
 #include "nsToolkit.h"
 #include "nsSwitchToUIThread.h"
+
+class imgIContainer;
 
 //#define DEBUG_FOCUS
 
@@ -165,6 +167,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              SetFont( const nsFont &aFont);
    NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
    NS_IMETHOD              SetCursor( nsCursor aCursor);
+   NS_IMETHOD              SetCursor(imgIContainer* aCursor);
    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsAString& aTitle); 
    NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
@@ -270,6 +273,8 @@ protected:
    nsContentType mContentType;
    HPS       mDragHps;        // retrieved by DrgGetPS() during a drag
    PRUint32  mDragStatus;     // set while this object is being dragged over
+   HPOINTER  mCssCursorHPtr;  // created by SetCursor(imgIContainer*)
+   nsCOMPtr<imgIContainer> mCssCursorImg;  // saved by SetCursor(imgIContainer*)
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
@@ -316,6 +321,12 @@ protected:
 
    PRBool   CheckDragStatus(PRUint32 aAction, HPS * oHps);
    PRBool   ReleaseIfDragHPS(HPS aHps);
+
+   HBITMAP DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
+                        PRUint32 aHeight, PRUint32 aDepth);
+   // 'format' should be 'gfx_format' which is a PRInt32
+   HBITMAP CreateTransparencyMask(PRInt32  format, PRUint8* aImageData,
+                                  PRUint32 aWidth, PRUint32 aHeight);
 
    // Enumeration of the methods which are accessable on the PM thread
    enum {
