@@ -130,23 +130,6 @@ WinProfileGetString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   return JS_TRUE;
 }
 
-/***********************************************************************/
-//
-// class for WinProfile
-//
-JSClass WinProfileClass = {
-  "WinProfile",
-  JSCLASS_HAS_PRIVATE,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  JS_EnumerateStub,
-  JS_ResolveStub,
-  JS_ConvertStub,
-  WinProfileCleanup
-};
-
 
 //
 // Native method WriteString
