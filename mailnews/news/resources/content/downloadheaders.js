@@ -73,6 +73,7 @@ function OnLoad()
         setText('info', infotext);
         var okbutton = document.documentElement.getButton("accept");
         okbutton.setAttribute("label", okButtonText);
+        okbutton.focus();
         setText("newsgroupLabel", args.groupName);
     }
 
