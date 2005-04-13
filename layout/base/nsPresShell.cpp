@@ -53,6 +53,7 @@
  */ 
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
+
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -5976,6 +5977,22 @@ PresShell::HandleEvent(nsIView         *aView,
   }
 
   nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+
+  // if this event has no frame, we need to retarget it at a parent
+  // view that has a frame.
+  if (!frame &&
+      ((NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent)))) {
+    nsIView* targetView = aView;
+    while (targetView && !targetView->GetClientData()) {
+      targetView = targetView->GetParent();
+    }
+    
+    if (targetView) {
+      aEvent->point += aView->GetOffsetTo(targetView);
+      aView = targetView;
+      frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+    }
+  }
 
   nsresult rv = NS_OK;
   
