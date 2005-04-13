@@ -527,7 +527,7 @@ main(int argc, char **argv)
             keybits = DEFAULT_KEY_BITS;
         }
 
-        printf("Using PKCS#11 with %d bits session key in token %s.\n",
+        printf("Using PKCS#11 with %ld bits session key in token %s.\n",
                keybits, PK11_GetTokenName(slot));
 
         rsaparams.keySizeInBits = keybits;
@@ -573,7 +573,7 @@ main(int argc, char **argv)
                 doKeyGen = PR_TRUE;
             }
         }
-        printf("Using freebl with %d bits key.\n", keybits);
+        printf("Using freebl with %ld bits key.\n", keybits);
         if (doKeyGen) {
             fprintf(stderr,"\nGenerating RSA key. "
                     "This may take a few moments.\n");
@@ -593,7 +593,7 @@ main(int argc, char **argv)
             fprintf(stderr,"Keygen completed.\n");
         } else {
             /* use a hardcoded key */
-            printf("Using hardcoded %d bits key.\n", keybits);
+            printf("Using hardcoded %ld bits key.\n", keybits);
             if (doPub) {
                 pubKey = getDefaultRSAPublicKey();
             } else {
