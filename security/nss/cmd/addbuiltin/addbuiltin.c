@@ -37,7 +37,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.12 2005/04/02 06:21:20 julien.pierre.bugs%sun.com Exp $
+ * $Id: addbuiltin.c,v 1.13 2005/04/13 23:03:15 wtchang%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -211,7 +211,7 @@ void printheader() {
 "#\n"
 "# ***** END LICENSE BLOCK *****\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.12 $ $Date: 2005/04/02 06:21:20 $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.13 $ $Date: 2005/04/13 23:03:15 $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
@@ -331,14 +331,15 @@ int main(int argc, char **argv)
 
     if (!addbuiltin.options[opt_Nickname].activated &&
         !addbuiltin.options[opt_Trust].activated) {
-	fprintf(stderr, "%s: you must specify both a nickname and trust.\n");
+	fprintf(stderr, "%s: you must specify both a nickname and trust.\n",
+		progName);
 	Usage(progName);
     }
 
     if (addbuiltin.options[opt_Input].activated) {
 	infile = PR_Open(addbuiltin.options[opt_Input].arg, PR_RDONLY, 00660);
 	if (!infile) {
-	    fprintf(stderr, "%s: failed to open input file.\n");
+	    fprintf(stderr, "%s: failed to open input file.\n", progName);
 	    exit(1);
 	}
     } else {
