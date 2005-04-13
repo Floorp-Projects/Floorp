@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # IBM Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# Portions created by the Initial Developer are Copyright (C) 2005
 # IBM Corporation. All Rights Reserved.
 #
 # Contributor(s):
@@ -76,6 +76,10 @@ JAVA_SRCS = \
 		AppFileLocProvider.java \
 		$(NULL)
 
+GEN_JAVA_SRCS = \
+		XPCOMError.java \
+		$(NULL)
+
 LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -96,6 +100,10 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-export::
+XPCOMError.java: $(topsrcdir)/xpcom/base/nsError.h gen-nsError.pl Makefile Makefile.in
+	$(PERL) $(srcdir)/gen-nsError.pl < $< > $@
+
+export:: $(GEN_JAVA_SRCS)
 	@$(INSTALL) -m 644 $(addprefix $(srcdir)/,$(JAVA_SRCS)) $(JAVA_DIST_DIR)/org/mozilla/xpcom
+	@$(INSTALL) -m 644 $(GEN_JAVA_SRCS) $(JAVA_DIST_DIR)/org/mozilla/xpcom
 
