@@ -67,8 +67,6 @@
 #include <unistd.h>
 #include "nsCursorManager.h"
 
-// #define USE_OPAQUE_VIEWS  1
-
 #define NSAppKitVersionNumber10_2 663
 
 // category of NSView methods to quiet warnings
@@ -2262,6 +2260,11 @@ nsChildView::Idle()
                       // an empty fallback port.
 }
 
+- (NSString*)description
+{
+  return [NSString stringWithFormat:@"ChildView %p, gecko child %p, frame %@", self, mGeckoChild, NSStringFromRect([self frame])];
+}
+
 // Find the nearest scrollable view for this ChildView
 // (recall that views are not refcounted)
 - (nsIScrollableView*) getScrollableView
@@ -2385,16 +2388,17 @@ nsChildView::Idle()
 
 // -isOpaque
 //
-// XXXdwh.  Quickdraw views are transparent by default.  Since Gecko does its own blending if/when
-// opacity is specified, we would like to optimize here by turning off the transparency of the view. 
-// But we can't. :(
+// NSQuickDrawViews do not correctly update if opaque, because of a known incompatibility
+// between the way that NSQuickDrawView is implemented, and the NSWindow update mechanism.
+// This is unlikely to change in future.
+// 
+// It's unfortunate, because it's expensive to redraw every parent view when updating
+// a portion of any given NSQDView. However, there is no efficient workaround. See
+// bug 166932.
+// 
 - (BOOL)isOpaque
 {
-#ifdef USE_OPAQUE_VIEWS
-  return YES;
-#else
   return mIsPluginView;
-#endif
 }
 
 -(void)setIsPluginView:(BOOL)aIsPlugin
@@ -2487,9 +2491,6 @@ nsChildView::Idle()
     ConvertCocoaToGeckoRect(aRect, r);
     nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
     mGeckoChild->UpdateWidget(r, rendContext);
-#ifdef USE_OPAQUE_VIEWS
-    [self flushRect:aRect];
-#endif
   }
   // If >10.3, only paint the sub-rects that need it. This avoids the
   // nasty coalesced updates that result in big white areas.
@@ -2502,9 +2503,6 @@ nsChildView::Idle()
       ConvertCocoaToGeckoRect(rects[i], r);
       nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
       mGeckoChild->UpdateWidget(r, rendContext);
-#ifdef USE_OPAQUE_VIEWS
-      [self flushRect:rects[i]];
-#endif
     }
   }
 }

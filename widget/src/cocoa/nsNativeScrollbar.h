@@ -64,6 +64,8 @@ public:
                 nsNativeScrollbar();
   virtual       ~nsNativeScrollbar();
   
+  NS_IMETHOD    Destroy();
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSINATIVESCROLLBAR
 
@@ -110,12 +112,17 @@ private:
     // the nsNativeScrollbar that created this view. It retains this NSView, so
     // the link back to it must be weak. [WEAK]
   nsNativeScrollbar* mGeckoChild;
+
+    // YES when we're in a tracking loop
+  BOOL      mInTracking;
 }
 
   // default initializer
 - (id)initWithFrame:(NSRect)frameRect geckoChild:(nsNativeScrollbar*)inChild;
   // overridden parent class initializer
 - (id)initWithFrame:(NSRect)frameRect;
+
+- (void)scrollbarDestroyed;
 
 - (IBAction)scroll:(NSScroller*)sender;
 
