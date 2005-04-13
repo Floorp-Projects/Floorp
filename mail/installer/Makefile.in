@@ -80,16 +80,8 @@ NO_PKG_FILES = \
 	res/viewer.properties \
 	res/viewsource.css \
 	chrome/app-chrome.manifest \
-	chrome/US.jar \
 	chrome/chromelist.txt \
-	chrome/classic.jar \
-	chrome/comm.jar \
 	chrome/embed-sample.jar \
-	chrome/en-US.jar \
-	chrome/messenger.jar \
-	chrome/pipnss.jar \
-	chrome/pippki.jar \
-	chrome/toolkit.jar \
 	PalmSyncInstall.exe \
 	components/libgkplugin.so \
 	components/plugin.xpt \
@@ -103,6 +95,23 @@ NO_PKG_FILES += \
 	$(NULL)
 endif
 
+
+ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+NO_PKG_FILES += \
+	chrome/en-US.jar \
+	chrome/messenger.jar \
+	chrome/pipnss.jar \
+	chrome/pippki.jar \
+	chrome/toolkit.jar \
+	chrome/classic.jar \
+	chrome/comm.jar \
+	chrome/US.jar \
+	$(NULL)
+endif
+
+# Windows and Linux both support chrome repackaging to remove
+# unneeded chrome files
+ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 # Before building the installer, re-make in mail/config to pick up
 # new files in dist/bin.  This is needed for Talkback.
 libs:: 
@@ -112,6 +121,11 @@ libs::
 # new files in dist/bin.  This is needed for Talkback.
 installer:: 
 	$(MAKE) -C ../config
+else
+libs::
+
+installer::
+endif
 
 ifeq ($(OS_ARCH), Darwin)
 MOZ_PKG_APPNAME = Thunderbird
