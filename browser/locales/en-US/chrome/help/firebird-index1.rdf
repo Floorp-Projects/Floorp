@@ -195,7 +195,6 @@
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="importing-ie-favorites" nc:name="Favorites, Importing" nc:link="forieusers.xhtml#about_your_ie_settings"/></rdf:li>
                 <rdf:li><rdf:Description ID="file-types" nc:name="File types, managing" nc:link="using_firebird.xhtml#managing_different_file_types"/></rdf:li>
-                <rdf:li><rdf:Description ID="firebird-using" nc:name="&brandShortName;, Using" nc:link="using_firebird.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="fonts" nc:name="Fonts" nc:link="prefs.xhtml#fonts_and_colors"/></rdf:li>
                 <rdf:li><rdf:Description ID="forward-button" nc:name="Forward Button" nc:link="using_firebird.xhtml#retracing_your_steps"/></rdf:li>
 	    </rdf:Seq>
