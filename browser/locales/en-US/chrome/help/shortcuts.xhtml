@@ -19,12 +19,15 @@
 with the shortcuts to equivalent actions in Internet Explorer and Opera.</p>
 
 <table border="1" width="100%">
-	<tr>
-	    <td class="headingCell">Command</td>
-	    <td class="headingCell">&brandShortName;</td>
-		<td class="headingCell">Internet Explorer</td>
-		<td class="headingCell">Opera</td>
-	</tr>
+  <thead>
+    <tr>
+	    <th>Command</th>
+	    <th>&brandShortName;</th>
+	    <th>Internet Explorer</th>
+	    <th>Opera</th>
+    </tr>
+  </thead>
+  <tbody>
     <tr>
 		<td>Add Bookmark</td>
     	<td><kbd>Ctrl</kbd>+<kbd>D</kbd></td>
@@ -215,7 +218,13 @@ with the shortcuts to equivalent actions in Internet Explorer and Opera.</p>
     </tr>
     <tr>
 	    <td>Page Info</td>
-	    <td><kbd>Ctrl</kbd>+<kbd>I</kbd></td>
+	    <td><kbd>Ctrl</kbd>+<kbd>
+#ifdef XP_WIN
+            J
+#else
+            I
+#endif
+            </kbd></td>
 	    <td>&nbsp;</td>
 	    <td>&nbsp;</td>
     </tr>
@@ -321,6 +330,7 @@ with the shortcuts to equivalent actions in Internet Explorer and Opera.</p>
 	    <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
 	    <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
     </tr>
+  </tbody>
 </table>
 
 <div class="contentsBox"><em>05 October 2003</em></div>
