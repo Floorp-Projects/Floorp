@@ -6541,10 +6541,11 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
     if (resultFrame)
     {
       // Translate aEvent->point to resultFrame's closest view (bug 180015).
-      nsIView* closestView = GetClosestView();
-      nsIView* resultFrameView = resultFrame->GetClosestView();
-      if (closestView != resultFrameView && resultFrameView) {
-        aEvent->point -= resultFrameView->GetOffsetTo(closestView);
+      nsPoint tmp;
+      nsIView* resultFrameParentView;
+      resultFrame->GetOffsetFromView(tmp, &resultFrameParentView);
+      if (parentWithView != resultFrameParentView && resultFrameParentView) {
+        aEvent->point += resultFrameParentView->GetOffsetTo(parentWithView);
       }
 
       if (NS_POSITION_BEFORE_TABLE == result)

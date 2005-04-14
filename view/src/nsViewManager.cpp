@@ -2485,6 +2485,8 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
     }
   }
 
+  // Save aEvent->point because child code might change it
+  nsPoint pt = aEvent->point;
   for (i = 0; i < targetViews.Count(); i++) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, targetViews.ElementAt(i));
     nsView* v = element->mView;
@@ -2494,11 +2496,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
       nsRect r;
       v->GetDimensions(r);
 
-      nscoord x = element->mAbsX - r.x;
-      nscoord y = element->mAbsY - r.y;
-
-      aEvent->point.x -= x;
-      aEvent->point.y -= y;
+      aEvent->point = pt - (nsPoint(element->mAbsX, element->mAbsY) - r.TopLeft());
 
       nsViewManager* vVM = v->GetViewManager();
       if (vVM == this) {
@@ -2514,9 +2512,6 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
           vobs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
         }
       }
-
-      aEvent->point.x += x;
-      aEvent->point.y += y;
 
       if (handled) {
         break;
