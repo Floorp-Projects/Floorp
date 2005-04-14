@@ -2,8 +2,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
     %brandDTD;
-]
->
+    <!ENTITY % platformDTD SYSTEM "chrome://help/locale/platformStrings.dtd" >
+    %platformDTD;
+]>
 <!--
 Contributors:
   David Tenser <david.tenser@comhem.se> (original author)
@@ -17,14 +18,14 @@ Contributors:
 <body>
 
 <h1>Controlling Popups</h1>
-<p>This document explains all of the options available in &brandFullName;
+<p>This document explains all of the &pref.plural; available in &brandFullName;
   for controlling popups.</p>
 
 <div class="contentsBox">
   In this section:
   <ul>
     <li><a href="#what_are_popups">What are Popups?</a></li>
-    <li><a href="#popup_blocker_preferences">Popup Blocker Options</a></li>
+    <li><a href="#popup_blocker_preferences">Popup Blocker &pref.pluralCaps;</a></li>
   </ul>
 </div>
 
@@ -35,7 +36,7 @@ open on top of the current &brandShortName; window, while others appear
 underneath &brandShortName; (popunders).</p>
 
 <p>&brandShortName; allows you to control both popups and popunders through the
-<a href="prefs.xhtml#web_features_options">Web Features Options panel</a>.
+<a href="prefs.xhtml#web_features_options">Web Features panel</a> in &pref.pluralCaps;.
 Popup blocking is turned on by default, so you don't have to worry about enabling it
 to prevent popups from appearing in &brandShortName;.</p>
 
@@ -54,22 +55,22 @@ popups, some web sites may show popups using uncovered methods, even when blocke
 
 <p><strong>Allowing popups from certain web sites</strong>: After you've enabled popup
 blocking, you can still allow specific sites to display popups. Select
-<span class="menuPath">Tools &gt; Options</span>. From the Web Features panel, you can
+&pref.menuPath;. From the Web Features panel, you can
 then add and remove sites for which you want to disable popup blocking.</p>
 
-<h2 id="popup_blocker_preferences">Popup Blocker Options</h2>
+<h2 id="popup_blocker_preferences">Popup Blocker &pref.pluralCaps;</h2>
 
 <div>This section describes how to use the &brandShortName; Popup Blocker. If you're not
-already viewing it, open the Web Features Options by following these steps:
+already viewing it, open the Web Features panel by following these steps:
 <ol>
-  <li>Select <span class="menuPath">Tools &gt; Options</span>.</li>
+  <li>Select &pref.menuPath;.</li>
   <li>Click on the <em>Web Features</em> category.</li>
 </ol>
 From there, you can do the following things:
 <ul>
   <li><strong>Block Popup Windows</strong></li>
   <li><strong>Exceptions dialog</strong>: This is a list of sites that you want to allow
-    to display popups. The dialog has the following options:
+    to display popups. The dialog has the following choices:
   <ul>
     <li><strong>Allow</strong>: Click this to add a web site to the exceptions list.</li>
     <li><strong>Remove Site</strong>: Click this to remove a web site from the exceptions list.</li>
@@ -94,7 +95,7 @@ Click <em>Unblock Site</em> to add the web site to the list of allowed web sites
 some web sites. For more information about blocking popups, see
 <a href="#what_are_popups">What are Popups</a>.</p>
 
-<div class="contentsBox"><em>16 September 2004</em></div>
+<div class="contentsBox"><em>02 October 2004</em></div>
 <p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>

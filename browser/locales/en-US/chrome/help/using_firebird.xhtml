@@ -2,6 +2,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
     %brandDTD;
+    <!ENTITY % platformDTD SYSTEM "chrome://help/locale/platformStrings.dtd" >
+    %platformDTD;
 ]>
 <!--
 Contributors:
@@ -186,14 +188,14 @@ Contributors:
     you begin your search.  A new toolbar should appear near the bottom of your
     browser.</li>
   <li>Type the text you want to find.</li>
-  <li>Choose from the following search options:
+  <li>Choose from the following search choices:
   <ul>
-    <li><strong>Find Next</strong>: choose this option to find items in the 
-      page that are below the current cursor position.</li>
-    <li><strong>Find Previous</strong>: choose this option to find items 
-      that are above the current cursor position.</li>
-    <li><strong>Highlight</strong>: choose this option to highlight occurrences 
-      of your search term in the current page.</li>
+    <li><strong>Find Next</strong>: find items in the page that are below the
+      current cursor position.</li>
+    <li><strong>Find Previous</strong>: find items that are above the current
+      cursor position.</li>
+    <li><strong>Highlight</strong>: highlight occurrences of your search term
+      in the current page.</li>
   </ul>
   </li>
   <li>The search automatically begins when something is typed into the
@@ -227,7 +229,7 @@ Contributors:
   <li>Right-click the link or image to display a popup menu. (On Mac OS, press
     <kbd>Ctrl</kbd> and click the mouse button.)</li>
   <li>Choose Copy Link Location or Copy Image Location. If an image is also a
-    link, you will have both options.</li>
+    link, you can choose either menu item.</li>
 </ol>
 
 <p>You can paste the link into other programs or into &brandShortName;'s
@@ -244,16 +246,16 @@ Contributors:
   <li>Choose a format for the page you want to save:
   <ul>
     <li><strong>Web Page, Complete</strong>: Save the whole web page along
-      with pictures. This option allows you to view it as originally shown
+      with pictures. This choice allows you to view it as originally shown
       with pictures, but it may not keep the HTML link structure of the
       original page. &brandShortName; creates a new directory where the
       page is saved to save pictures and other files necessary to show the
       whole web page.</li>
     <li><strong>Web Page, HTML Only</strong>: Save the original page
-      without pictures. This options preserves the original HTML link
+      without pictures. This choice preserves the original HTML link
       structure in one file.</li>
     <li><strong>Text file</strong>: Save the original page as a text file.
-      This option will not preserve the original HTML link structure, but
+      This choice will not preserve the original HTML link structure, but
       will allow you to see a text version of the web page in any text
       editor.</li>
   </ul>
@@ -311,7 +313,7 @@ Contributors:
 
 <p><strong>Tip</strong>: To set an image as your desktop wallpaper on Windows,
   right-click on an image and choose <em>Set As Wallpaper</em> from the popup
-  menu. You can choose various display options through the dialog that is shown.</p>
+  menu. You can choose various display &pref.plural; through the dialog that is shown.</p>
 
 <h3 id="printing_a_page">Printing a Page</h3>
 
@@ -476,29 +478,30 @@ Contributors:
   and run small applications such as movies, animations, and games.</p>
 
 <p>You can also install plug-ins after you install &brandShortName;. To see the
-  plug-ins for &brandShortName; that are currently installed, select <span
-  class="menuPath">Tools &gt; Options</span>.  Select the <em>Downloads</em>
-  category and click the <em>Plug-Ins...</em> button. You can also enable or
-  disable currently installed plug-ins here.</p>
+  plug-ins for &brandShortName; that are currently installed, select
+  &pref.menuPath;.  Select the <em>Downloads</em> category and click the
+  <em>Plug-Ins...</em> button. You can also enable or disable currently
+  installed plug-ins here.</p>
 
 <p>To see a full list of &brandShortName; plug-ins you can install, see the
   <a href="http://home.netscape.com/plugins/index.html" target="_blank">Browser
   Plug-ins page</a> at Netscape.com.</p>
 
 <p><strong>Helper Applications</strong><br/>
-  When files cannot be opened within &brandShortName;, you have to option to
+  When files cannot be opened within &brandShortName;, you can choose to
   launch helper applications that open outside of &brandShortName;. For
   example, to play MP3 files, programs like Winamp can be opened outside of
   &brandShortName;.</p>
 
-<p>The settings in the <em>Downloads</em> options panel tell &brandShortName;
-  which helper applications to use on your computer. In the <em>File Types</em>
-  section, you can see how different file types will be handled by
-  &brandShortName;. You can change the action for a file type or remove it.
-  Also, if &brandShortName; doesn't know which helper application to use, it
-  allows you to find helper applications within the download dialog box.</p>
+<p>The settings in the <em>Downloads</em> panel in the &pref.pluralCaps; window
+  tell &brandShortName; which helper applications to use on your computer. In
+  the <em>File Types</em> section, you can see how different file types will be
+  handled by &brandShortName;. You can change the action for a file type or
+  remove it. Also, if &brandShortName; doesn't know which helper application to
+  use, it allows you to find helper applications within the download dialog
+  box.</p>
 
-<p>The download dialog box has these options:</p>
+<p>The download dialog box has these choices:</p>
 
 <ul>
   <li><strong>Open using</strong>: &brandShortName; opens the file using the
@@ -506,31 +509,30 @@ Contributors:
     program by selecting <em>Other...</em> in the drop-down list.</li>
   <li><strong>Save to Disk</strong>: &brandShortName; allows you to select a
     location to save the file. If you have selected <em>Save all files to this
-    folder</em> in the <em>Downloads</em> options panel, the file will
-    automatically be saved to the default folder.</li>
+    folder</em> in the <em>Downloads</em> panel of &pref.pluralCaps;,
+    the file will automatically be saved to the default folder.</li>
   <li><strong>Do this automatically for files like this from now on</strong>:
     When this is selected, &brandShortName; will automatically perform the
     selected action the next time you download a file of this type.</li>
 </ul>
 
-<p><strong>Tip</strong>: You can clear your saved options for <em>Do this
+<p><strong>Tip</strong>: You can clear your saved &pref.plural; for <em>Do this
   automatically for files like this from now on</em> in the <em>Downloads</em>
-  options panel.</p>
+  panel of &pref.pluralCaps;.</p>
 
 <h3 id="making_firebird_your_default_browser">Making &brandShortName; Your
   Default Browser</h3>
 
 <p><strong>Note</strong>: This section discusses settings and features present
-  only on Windows.</p>
+  only on Windows and Linux.</p>
 
-<p>&brandShortName; is best known for displaying web pages on the Internet and
+<p>&brandShortName; displays web pages on the Internet and
   on your computer. To easily open web pages, you can make &brandShortName;
   your default browser.</p>
 
-<p>To make &brandShortName; your default web browser, select <span
-  class="menuPath">Tools &gt; Options</span>. You can then click on the <em>Set
-  Default Browser</em> button in General options to make &brandShortName; your
-  default web browser.</p>
+<p>To make &brandShortName; your default web browser, select &pref.menuPath;.
+  You can then click on the <em>Set Default Browser</em> button in the General
+  panel of &pref.pluralCaps; to make &brandShortName; your default web browser.</p>
 
 <h3 id="changing_cache_settings">Changing Cache Settings</h3>
 <p>&brandShortName; stores copies of frequently accessed pages in the cache.
@@ -540,7 +542,7 @@ Contributors:
 <p>To set the size of the cache or to clear it (Windows and Unix only):</p>
 
 <ol>
-  <li>Select <span class="menuPath">Tools &gt; Options</span>.</li>
+  <li>Select &pref.menuPath;.</li>
   <li>Under the <em>Privacy</em> category, click <em>Cache</em> to expand the
     list.</li>
   <li>Enter a number in the <em>Use up to</em> field to specify the size of the
@@ -562,7 +564,7 @@ Contributors:
     latest version of the page.</li>
 </ul>
 
-<div class="contentsBox"><em>26 September 2004</em></div>
+<div class="contentsBox"><em>02 October 2004</em></div>
 <p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>
