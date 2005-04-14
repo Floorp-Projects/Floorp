@@ -141,7 +141,6 @@ private:
   nsIFrame* GetNextSibling(nsIFrame* aFrame);
   nsIFrame* GetPrevSibling(nsIFrame* aFrame);
 
-  nsIFrame* GetRealFrame(nsIFrame* aFrame);
   nsIFrame* GetPlaceholderFrame(nsIFrame* aFrame);
   PRBool    IsPopupFrame(nsIFrame* aFrame);
 
@@ -481,7 +480,7 @@ nsFocusIterator::nsFocusIterator(nsPresContext* aPresContext, nsIFrame* aStart)
 {
   nsIFrame* start = aStart;
   if (aStart)
-    start = GetRealFrame(aStart);
+    start = nsPlaceholderFrame::GetRealFrameFor(aStart);
 
   setStart(start);
   setCurrent(start);
@@ -502,28 +501,6 @@ nsFocusIterator::GetPlaceholderFrame(nsIFrame* aFrame)
 
   if (result != aFrame)
     result = GetPlaceholderFrame(result);
-
-  return result;
-}
-
-nsIFrame*
-nsFocusIterator::GetRealFrame(nsIFrame* aFrame)
-{
-  nsIFrame* result = aFrame;
-
-  // See if it's a placeholder frame for a float.
-  if (aFrame) {
-    PRBool isPlaceholder = nsLayoutAtoms::placeholderFrame == aFrame->GetType();
-    if (isPlaceholder) {
-      // Get the out-of-flow frame that the placeholder points to.
-      // This is the real float that we should examine.
-      result = NS_STATIC_CAST(nsPlaceholderFrame*,aFrame)->GetOutOfFlowFrame();
-      NS_ASSERTION(result, "No out of flow frame found for placeholder!\n");
-    }
-    
-    if (result != aFrame)
-      result = GetRealFrame(result);
-  }
 
   return result;
 }
@@ -549,7 +526,7 @@ nsFocusIterator::GetFirstChild(nsIFrame* aFrame)
 {
   nsIFrame* result = aFrame->GetFirstChild(nsnull);
   if (result)
-    result = GetRealFrame(result);
+    result = nsPlaceholderFrame::GetRealFrameFor(result);
 
   if (result && IsPopupFrame(result))
     result = GetNextSibling(result);
@@ -565,7 +542,7 @@ nsFocusIterator::GetNextSibling(nsIFrame* aFrame)
   if (placeholder) {
     result = placeholder->GetNextSibling();
     if (result)
-      result = GetRealFrame(result);
+      result = nsPlaceholderFrame::GetRealFrameFor(result);
   }
 
   if (result && IsPopupFrame(result))
@@ -584,7 +561,7 @@ nsFocusIterator::GetPrevSibling(nsIFrame* aFrame)
     if (parent) {
       nsFrameList list(parent->GetFirstChild(nsnull));
       result = list.GetPrevSiblingFor(placeholder);
-      result = GetRealFrame(result);
+      result = nsPlaceholderFrame::GetRealFrameFor(result);
     }
   }
 

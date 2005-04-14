@@ -38,6 +38,7 @@
 #define nsPlaceholderFrame_h___
 
 #include "nsSplittableFrame.h"
+#include "nsLayoutAtoms.h"
 
 nsresult NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame**  aInstancePtrResult);
 
@@ -89,6 +90,30 @@ public:
 
   virtual PRBool IsEmpty() { return PR_TRUE; }
   virtual PRBool IsSelfEmpty() { return PR_TRUE; }
+
+  /**
+   * @return the out-of-flow for aFrame if aFrame is a placeholder; otherwise
+   * aFrame
+   */
+  static nsIFrame* GetRealFrameFor(nsIFrame* aFrame) {
+    NS_PRECONDITION(aFrame, "Must have a frame to work with");
+    if (aFrame->GetType() == nsLayoutAtoms::placeholderFrame) {
+      return GetRealFrameForPlaceholder(aFrame);
+    }
+    return aFrame;
+  }
+
+  /**
+   * @return the out-of-flow for aFrame, which is known to be a placeholder
+   */
+  static nsIFrame* GetRealFrameForPlaceholder(nsIFrame* aFrame) {
+    NS_PRECONDITION(aFrame->GetType() == nsLayoutAtoms::placeholderFrame,
+                    "Must have placeholder frame as input");
+    nsIFrame* outOfFlow =
+      NS_STATIC_CAST(nsPlaceholderFrame*, aFrame)->GetOutOfFlowFrame();
+    NS_ASSERTION(outOfFlow, "Null out-of-flow for placeholder?");
+    return outOfFlow;
+  }
 
 protected:
   nsIFrame* mOutOfFlowFrame;

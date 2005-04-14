@@ -902,7 +902,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
               NS_ASSERTION(IsContinuationPlaceholder(f),
                            "Overflow placeholders must be continuation placeholders");
               ReparentFrame(f, this, ancestorRS->frame);
-              nsIFrame* oof = NS_STATIC_CAST(nsPlaceholderFrame*, f)->GetOutOfFlowFrame();
+              nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
               mFloats.RemoveFrame(oof);
               ReparentFrame(oof, this, ancestorRS->frame);
               // Clear the next-sibling in case the frame wasn't in mFloats
@@ -4756,8 +4756,7 @@ nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame(
     ReparentFrame(frame, parent, this);
 
     // continuation placeholders are always direct children of a block
-    nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, frame);
-    nsIFrame* outOfFlow = placeholder->GetOutOfFlowFrame();
+    nsIFrame* outOfFlow = nsPlaceholderFrame::GetRealFrameForPlaceholder(frame);
 
     if (!parent->mFloats.RemoveFrame(outOfFlow)) {
       nsAutoOOFFrameList oofs(parent);
@@ -7187,13 +7186,9 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
     return PR_FALSE;
 
   PRBool kidRenumberedABullet = PR_FALSE;
-  nsIFrame* kid = aKid;
 
   // if the frame is a placeholder, then get the out of flow frame
-  if (nsLayoutAtoms::placeholderFrame == aKid->GetType()) {
-    kid = NS_STATIC_CAST(nsPlaceholderFrame*, aKid)->GetOutOfFlowFrame();
-    NS_ASSERTION(kid, "no out-of-flow frame");
-  }
+  nsIFrame* kid = nsPlaceholderFrame::GetRealFrameFor(aKid);
 
   // drill down through any wrappers to the real frame
   kid = kid->GetContentInsertionFrame();

@@ -647,12 +647,8 @@ DoCleanupFrameReferences(nsPresContext*  aPresContext,
 {
   nsIContent* content = aFrameIn->GetContent();
 
-  nsIFrame* frame = aFrameIn;
   // if the frame is a placeholder use the out of flow frame
-  if (nsLayoutAtoms::placeholderFrame == aFrameIn->GetType()) {
-    frame = ((nsPlaceholderFrame*)frame)->GetOutOfFlowFrame();
-    NS_ASSERTION(frame, "program error - null of of flow frame in placeholder");
-  }
+  nsIFrame* frame = nsPlaceholderFrame::GetRealFrameFor(aFrameIn);
 
   // Remove the mapping from the content object to its frame
   aFrameManager->SetPrimaryFrameFor(content, nsnull);
@@ -1545,25 +1541,6 @@ PRBool IsBorderCollapse(nsIFrame* aFrame)
   return PR_FALSE;
 }
 
-// a helper routine that automatically navigates placeholders.
-static nsIFrame*
-GetRealFrame(nsIFrame* aFrame)
-{
-  nsIFrame* result = aFrame;
-
-  // We may be a placeholder.  If we are, go to the real frame.
-  // See if it's a placeholder frame for a float.
-  PRBool isPlaceholder = (nsLayoutAtoms::placeholderFrame == aFrame->GetType());
-  if (isPlaceholder) {
-    // Get the out-of-flow frame that the placeholder points to.
-    // This is the real float that we should examine.
-    result = NS_STATIC_CAST(nsPlaceholderFrame*,aFrame)->GetOutOfFlowFrame();
-    NS_ASSERTION(result, "No out of flow frame found for placeholder!\n");
-  }
-  
-  return result;
-}
-
 /**
  * Utility method, called from MoveChildrenTo(), that recursively
  * descends down the frame hierarchy looking for floating frames that
@@ -1575,7 +1552,7 @@ static void
 AdjustFloatParentPtrs(nsIFrame*                aFrame,
                       nsFrameConstructorState& aState)
 {
-  nsIFrame *outOfFlowFrame = GetRealFrame(aFrame);
+  nsIFrame *outOfFlowFrame = nsPlaceholderFrame::GetRealFrameFor(aFrame);
 
   if (outOfFlowFrame && outOfFlowFrame != aFrame) {
 
@@ -5305,14 +5282,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
                                 aTag, aStyleContext, newFrame,
                                 display, frameHasBeenInitialized,
                                 aFrameItems);
-#ifdef DEBUG
-      nsIFrame* debugFrame = aFrameItems.lastChild;
-      if (debugFrame->GetType() == nsLayoutAtoms::placeholderFrame) {
-        debugFrame = ((nsPlaceholderFrame*)debugFrame)->GetOutOfFlowFrame();
-      }
-      NS_ASSERTION(debugFrame == newFrame,
+      NS_ASSERTION(nsPlaceholderFrame::GetRealFrameFor(aFrameItems.lastChild) ==
+                   newFrame,
                    "Frame didn't get added to aFrameItems?");
-#endif
       addedToFrameList = PR_TRUE;
     }
   }
@@ -5332,14 +5304,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     rv = ConstructFieldSetFrame(aState, aContent, aParentFrame,
                                 aTag, aStyleContext, newFrame,
                                 aFrameItems, display, frameHasBeenInitialized);
-#ifdef DEBUG
-      nsIFrame* debugFrame = aFrameItems.lastChild;
-      if (debugFrame->GetType() == nsLayoutAtoms::placeholderFrame) {
-        debugFrame = ((nsPlaceholderFrame*)debugFrame)->GetOutOfFlowFrame();
-      }
-      NS_ASSERTION(debugFrame == newFrame,
-                   "Frame didn't get added to aFrameItems?");
-#endif
+    NS_ASSERTION(nsPlaceholderFrame::GetRealFrameFor(aFrameItems.lastChild) ==
+                 newFrame,
+                 "Frame didn't get added to aFrameItems?");
     addedToFrameList = PR_TRUE;
   }
   else if (nsHTMLAtoms::legend == aTag) {
@@ -9418,8 +9385,8 @@ DoDeletingFrameSubtree(nsPresContext*  aPresContext,
       // See if it's a placeholder frame
       if (nsLayoutAtoms::placeholderFrame == childFrame->GetType()) {
         // Get the out-of-flow frame
-        nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)childFrame)->GetOutOfFlowFrame();
-        NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+        nsIFrame* outOfFlowFrame =
+          nsPlaceholderFrame::GetRealFrameForPlaceholder(childFrame);
   
         // Remove the mapping from the out-of-flow frame to its placeholder
         aFrameManager->UnregisterPlaceholderFrame((nsPlaceholderFrame*)childFrame);
@@ -9901,7 +9868,8 @@ UpdateViewsForTree(nsPresContext* aPresContext, nsIFrame* aFrame,
         // only do frames that are in flow
         if (nsLayoutAtoms::placeholderFrame == child->GetType()) { // placeholder
           // get out of flow frame and start over there
-          nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
+          nsIFrame* outOfFlowFrame =
+            nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
           NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
           DoApplyRenderingChangeToTree(aPresContext, outOfFlowFrame,
@@ -11098,7 +11066,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
   } else if (nsLayoutAtoms::placeholderFrame == frameType) {
     // create a continuing out of flow frame
-    nsIFrame* oofFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
+    nsIFrame* oofFrame = nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
     nsIFrame* oofContFrame;
     CreateContinuingFrame(aPresContext, oofFrame, aParentFrame, &oofContFrame);
     if (!oofContFrame) 
@@ -11276,14 +11244,8 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
         nsIContent* kidContent = kidFrame->GetContent();
         if (kidContent == aContent) {
 
-          // We found a match. See if it's a placeholder frame
-          if (nsLayoutAtoms::placeholderFrame == kidFrame->GetType()) {
-            // Ignore the placeholder and return the out-of-flow frame instead
-            return ((nsPlaceholderFrame*)kidFrame)->GetOutOfFlowFrame();
-          }
-
-          // Return the matching child frame
-          return kidFrame;
+          // We found a match.  Return the out-of-flow if it's a placeholder
+          return nsPlaceholderFrame::GetRealFrameFor(kidFrame);
         }
 
         // only do this if there is content
