@@ -86,7 +86,7 @@
                 <rdf:li><rdf:Description ID="browsing:forward" nc:name="Going Forward" nc:link="using_firebird.xhtml#retracing_your_steps"/></rdf:li>
                 <rdf:li><rdf:Description ID="browsing:stopping" nc:name="Stopping" nc:link="using_firebird.xhtml#stopping_and_reloading"/></rdf:li>
                 <rdf:li><rdf:Description ID="browsing:reloading" nc:name="Reloading" nc:link="using_firebird.xhtml#stopping_and_reloading"/></rdf:li>
-                <rdf:li><rdf:Description ID="browsing:tabbed-browsing" nc:name="Tabbed Browsing" nc:link="using_firebird.xhtml#tabbed_browsing"/></rdf:li>
+                <rdf:li><rdf:Description ID="browsing:tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -121,8 +121,9 @@
     <rdf:Description about="#customize">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="customize:toolbars" nc:name="Toolbars" nc:link="customization.xhtml#can_i_customize_my_toolbars"/></rdf:li>
+                <rdf:li><rdf:Description ID="customize:tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml#customizing"/></rdf:li>
                 <rdf:li><rdf:Description ID="customize:themes" nc:name="Themes" nc:link="customization.xhtml#themes"/></rdf:li>
+                <rdf:li><rdf:Description ID="customize:toolbars" nc:name="Toolbars" nc:link="customization.xhtml#can_i_customize_my_toolbars"/></rdf:li>
                 <rdf:li><rdf:Description ID="customize:extensions" nc:name="Extensions" nc:link="customization.xhtml#extensions"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
@@ -446,13 +447,23 @@
     <rdf:Description about="#t">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="tabbed-browsing" nc:name="Tabbed Browsing" nc:link="using_firebird.xhtml#tabbed_browsing"/></rdf:li>
+                <rdf:li><rdf:Description ID="tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="text-size-changing" nc:name="Text Size, Changing" nc:link="menu_reference.xhtml#text_size"/></rdf:li>
                 <rdf:li><rdf:Description ID="themes" nc:name="Themes" nc:link="customization.xhtml#themes"/></rdf:li>
                 <rdf:li><rdf:Description ID="toolbar-customization" nc:name="Toolbar Customization" nc:link="customization.xhtml#can_i_customize_my_toolbars"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
+
+  <rdf:Description about="#tabbed-browsing">
+      <nc:subheadings>
+          <rdf:Seq>
+              <rdf:li><rdf:Description ID="tabbed-browsing-using-tabbed-browsing" nc:name="Using Tabbed Browsing" nc:link="tabbed_browsing.xhtml#using_tabbed_browsing"/></rdf:li>
+              <rdf:li><rdf:Description ID="tabbed-browsing-creating-loading-tabs" nc:name="Creating and Loading Tabs" nc:link="tabbed_browsing.xhtml#creating_loading_tabs"/></rdf:li>
+              <rdf:li><rdf:Description ID="tabbed-browsing-customizing" nc:name="Customizing" nc:link="tabbed_browsing.xhtml#customizing"/></rdf:li>
+            </rdf:Seq>
+      </nc:subheadings>
+  </rdf:Description>
 
   <rdf:Description about="#themes">
   		<nc:subheadings>
