@@ -40,6 +40,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
 NO_GECKO_SDK=1
 
 NO_PKG_FILES = \
