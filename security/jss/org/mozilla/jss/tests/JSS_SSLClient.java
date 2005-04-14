@@ -228,6 +228,7 @@ public class JSS_SSLClient {
             System.out.println("client connected");
         }
         
+        sock.setSoTimeout(30 * 1000);
         sock.addHandshakeCompletedListener(
                 new HandshakeListener("client",this));
         

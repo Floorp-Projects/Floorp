@@ -62,10 +62,26 @@ import java.io.IOException;
 
 public class JSS_SSLServer  {
     
-    private static Vector jssSupportedCiphers= new Vector();
+    private static Vector jssSupportedCiphers = new Vector();
+    private static SSLServerSocket serverSock = null;
+    private static SSLSocket sock             = null;
     
     public static void main(String[] args) throws Exception {
-        (new JSS_SSLServer()).doIt(args);
+        try {
+            (new JSS_SSLServer()).doIt(args);
+        } catch (Exception e) {}
+        
+        // Put the main thread to sleep.  In case we do not get any
+        // response within 120 sec (2 min), then we shutdown the server.
+        try {
+            Thread.currentThread().sleep(12000);
+            sock.close();
+            serverSock.close();
+        } catch (InterruptedException e) {
+            System.out.println("Thread Interrupted, exiting normally ...\n");
+            System.exit(0);
+        } catch (Exception ex) {
+        }
     }
     
     private String        serverCertNick  = null;
@@ -120,7 +136,6 @@ public class JSS_SSLServer  {
         // open the server socket and bind to the port
         if ( Constants.debug_level >= 3 )
             System.out.println("Server about .... to create socket");
-        SSLServerSocket serverSock = null;
         
         if (TestInetAddress) {
             if ( Constants.debug_level >= 3 )
@@ -138,6 +153,7 @@ public class JSS_SSLServer  {
         if ( Constants.debug_level >= 3 )
             System.out.println("Server created socket");
         
+        serverSock.setSoTimeout(120 * 1000);
         serverSock.requireClientAuth(true, true);
         serverSock.setServerCertNickname(serverCertNick);
         if ( Constants.debug_level >= 3 )
@@ -147,7 +163,7 @@ public class JSS_SSLServer  {
         
         while ( socketListenStatus ) {
             // accept the connection
-            SSLSocket sock = (SSLSocket) serverSock.accept();
+            sock = (SSLSocket) serverSock.accept();
             sock.addHandshakeCompletedListener(
                     new HandshakeListener("server", this));
             
@@ -173,20 +189,20 @@ public class JSS_SSLServer  {
         
         System.out.println("Server exiting");
         System.out.println("-----------------------------------------" +
-                           "----------------");
+                "----------------");
         System.out.println("Summary of JSSE client to JSS server " +
-                           "communication test :");
+                "communication test :");
         System.out.println("-----------------------------------------" +
-                           "----------------");
+                "----------------");
         for ( int i=0; i<jssSupportedCiphers.size(); i++ ) {
             System.out.println("["+i+"]\t"+jssSupportedCiphers.elementAt(i));
         }
         System.out.println("-----------------------------------------" +
-                           "----------------");
+                "----------------");
         System.out.println("Please note that in JDK 5.0 the same set of ");
         System.out.println("ciphers are exercised for SSLv3 and TLS.");
         System.out.println("-----------------------------------------" +
-                           "----------------");
+                "----------------");
         System.out.flush();
         
         

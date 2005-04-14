@@ -46,6 +46,8 @@ import javax.security.cert.X509Certificate;
 public class JSSE_SSLServer extends ClassServer {
     
     private static int DefaultServerPort = 29753;
+    private static int port              = DefaultServerPort;
+    private static String type           = "SSLv3";
     
     /**
      * Constructs a JSSE_SSLServer.
@@ -80,9 +82,6 @@ public class JSSE_SSLServer extends ClassServer {
             System.exit(0);
         }
         
-        int port    = DefaultServerPort;
-        String type = "SSLv3";
-        
         if (args.length >= 2) {
             port = Integer.parseInt(args[0]);
             type = args[1];
@@ -92,6 +91,7 @@ public class JSSE_SSLServer extends ClassServer {
             SSLServerSocketFactory ssf =
                     JSSE_SSLServer.getServerSocketFactory(type);
             SSLServerSocket ss = (SSLServerSocket)ssf.createServerSocket(port);
+            ss.setSoTimeout(120 * 1000);
             
             // Based on J2SE version, enable appropriate ciphers
             if ( (System.getProperty("java.version")).indexOf("1.4") != -1 ) {
@@ -111,6 +111,15 @@ public class JSSE_SSLServer extends ClassServer {
                     e.getMessage());
             e.printStackTrace();
             System.exit(1);
+        }
+        
+        // Put the main thread to sleep.  In case we do not get any
+        // response within 120 sec (2 min), then we shutdown the server.
+        try {
+            Thread.currentThread().sleep(12000);
+        } catch (InterruptedException e) {
+            System.out.println("Thread Interrupted, exiting normally ...\n");
+            System.exit(0);
         }
     }
     

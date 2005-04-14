@@ -331,7 +331,7 @@ public class JSSE_SSLClient {
              * Ok, let's overlay the tunnel socket with SSL.
              */
                 socket =
-                    (SSLSocket)factory.createSocket(tunnel, host, port, true);
+                      (SSLSocket)factory.createSocket(tunnel, host, port, true);
             } else {
                 socket = (SSLSocket)factory.createSocket(host, port);
             }
@@ -366,7 +366,7 @@ public class JSSE_SSLClient {
          */
             String [] Ciphers = {cipherName};
             socket.setEnabledCipherSuites(Ciphers);
-            socket.setSoTimeout(0);
+            socket.setSoTimeout(30 * 1000);
             socket.startHandshake();
             
             PrintWriter out = new PrintWriter(
@@ -515,18 +515,14 @@ public class JSSE_SSLClient {
         String javaVersion = System.getProperty("java.version");
         String lastCipher  = null;
         System.out.println("\nUsing java version " + javaVersion + "\n");
-        JSSE_SSLClient sslSock =
-                new JSSE_SSLClient();
+        System.out.println("Testing TLS Cipher list ...");
+        JSSE_SSLClient sslSock = new JSSE_SSLClient();
+        sslSock.setSslRevision("TLS");
         sslSock.setHost(testHost);
         sslSock.setPort(testPort);
         
         if ( javaVersion.indexOf("1.4") == -1 ) {
             // Validate Ciphers supported for TLS
-            System.out.println("Testing TLS Cipher list ...");
-            sslSock = new JSSE_SSLClient();
-            sslSock.setSslRevision("TLS");
-            sslSock.setHost(testHost);
-            sslSock.setPort(testPort);
             
             if ( testCipher != null ) {
                 sslSock.setCipherSuite(testCipher);
