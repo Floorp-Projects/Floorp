@@ -8,6 +8,7 @@
 <!--
 Contributors:
   David Tenser <david.tenser@comhem.se> (original author)
+  Steffen Wilberg <steffen.wilberg@web.de>
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -40,10 +41,17 @@ underneath &brandShortName; (popunders).</p>
 Popup blocking is turned on by default, so you don't have to worry about enabling it
 to prevent popups from appearing in &brandShortName;.</p>
 
-<p>When blocking a popup, &brandShortName; displays an
-icon <img src="chrome://browser/skin/Info.png" width="16" height="16" alt=""/> in the
-status bar. You can use this icon to add a web site you're viewing to an exceptions
-list so that the site is allowed to display popups.</p>
+<p>When blocking a popup, &brandShortName; displays an information bar, as well
+as an icon <img src="chrome://browser/skin/Info.png" width="16" height="16"
+alt=""/> in the status bar. When you click either the information bar or the
+icon, a menu is displayed with the following choices:
+<ul>
+  <li>Allow/Block popups for this site</li>
+  <li>Edit <a href="#popup_blocker_preferences">Popup Blocker Options</a></li>
+  <li>Don't show info message when blocking popups</li>
+  <li>(show a blocked popup)</li>
+</ul>
+</p>
 
 <p><strong>Blocking popups may interfere with some web sites</strong>: Some web sites,
 including some banking sites, use popups for important features. Blocking all popups
@@ -52,11 +60,6 @@ all others, you can add specific web sites to the list of allowed sites.</p>
 
 <p><strong>Blocking popups doesn't always work</strong>: Although &brandShortName; blocks most
 popups, some web sites may show popups using uncovered methods, even when blocked.</p>
-
-<p><strong>Allowing popups from certain web sites</strong>: After you've enabled popup
-blocking, you can still allow specific sites to display popups. Select
-&pref.menuPath;. From the Web Features panel, you can
-then add and remove sites for which you want to disable popup blocking.</p>
 
 <h2 id="popup_blocker_preferences">Popup Blocker &pref.pluralCaps;</h2>
 
@@ -81,21 +84,11 @@ From there, you can do the following things:
 </ul>
 </div>
 
-<h3>When a Popup Window Has Been Blocked</h3>
-
-<p>Every time a popup is blocked, an icon is displayed in
-the &brandShortName; status bar to indicate that a popup has been blocked.</p>
-
-<p><strong>Using the popup control icon to add allowed web sites</strong>: You can use
-the popup control icon to quickly add a web site to the list of allowed web sites.
-Click the icon to open a list of blocked web sites. The current web site is already selected.
-Click <em>Unblock Site</em> to add the web site to the list of allowed web sites.</p>
-
 <p><strong>Note</strong>: Blocking popups may not always work and may interfere with
 some web sites. For more information about blocking popups, see
 <a href="#what_are_popups">What are Popups</a>.</p>
 
-<div class="contentsBox"><em>02 October 2004</em></div>
+<div class="contentsBox"><em>14 October 2004</em></div>
 <p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>
