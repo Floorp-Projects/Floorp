@@ -832,7 +832,7 @@ use constant ABSTRACT_SCHEMA => {
                                  PRIMARYKEY => 1},
             name             => {TYPE => 'varchar(64)', NOTNULL => 1},
             product_id       => {TYPE => 'INT2', NOTNULL => 1},
-            initialowner     => {TYPE => 'INT3'},
+            initialowner     => {TYPE => 'INT3', NOTNULL => 1},
             initialqacontact => {TYPE => 'INT3'},
             description      => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
         ],

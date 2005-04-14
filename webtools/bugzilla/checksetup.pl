@@ -3944,6 +3944,17 @@ add_setting ("comment_sort_order", {"oldest_to_newest" => 1,
 $dbh->bz_change_field_type('products', 'classification_id',
                            'smallint NOT NULL DEFAULT 1');
 
+# initialowner was accidentally NULL when we checked-in Schema,
+# when it really should be NOT NULL.
+if ($dbh->bz_get_field_def('components', 'initialowner')->[2]) { # if NULL
+    # There's technically no way a real NULL could have gotten into
+    # initialowner, but better safe than sorry.
+    $dbh->do('UPDATE components SET initialowner = 0 
+               WHERE initialowner IS NULL');
+    $dbh->bz_change_field_type('components', 'initialowner', 
+                               'mediumint NOT NULL');
+}
+
 } # END LEGACY CHECKS
 
 # If you had to change the --TABLE-- definition in any way, then add your
