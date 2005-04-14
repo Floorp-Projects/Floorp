@@ -189,7 +189,7 @@
             <rdf:li><rdf:Description ID="extensions-customizing" nc:name="Customizing" nc:link="customization.xhtml"/></rdf:li>
             <rdf:li><rdf:Description ID="extensions-installing" nc:name="Installing" nc:link="customization.xhtml#getting_installing_extensions"/></rdf:li>
             <rdf:li><rdf:Description ID="extensions-uninstalling" nc:name="Uninstalling" nc:link="customization.xhtml#uninstalling_extensions"/></rdf:li>
-            <rdf:li><rdf:Description ID="extensions-updating" nc:name="Updating Extensions" nc:link="customization.xhtml#updating_extensions"/></rdf:li>
+            <rdf:li><rdf:Description ID="extensions-updating" nc:name="Updating" nc:link="customization.xhtml#updating_extensions"/></rdf:li>
           </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -498,7 +498,7 @@
                 <rdf:li><rdf:Description ID="updates" nc:name="Updates" nc:link="prefs.xhtml#software_update"/></rdf:li>
                 <rdf:li><rdf:Description ID="url" nc:name="URLs" nc:link="glossary.xhtml#Uniform_Resource_Locator"/></rdf:li>
                 <rdf:li><rdf:Description ID="using" nc:name="Using"/></rdf:li>
-                <rdf:li><rdf:Description ID="using-firefox" nc:name="Using &brandShortName;" nc:link="using_firefox.xhtml"/></rdf:li>
+                <rdf:li><rdf:Description ID="using-firefox" nc:name="Using &brandShortName;" nc:link="using_firebird.xhtml"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
