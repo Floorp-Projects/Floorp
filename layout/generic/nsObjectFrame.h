@@ -208,6 +208,13 @@ private:
   nsIFrame              *mFirstChild;
   nsCOMPtr<nsIWidget>   mWidget;
   nsRect                mWindowlessRect;
+
+#ifdef DEBUG
+  // For assertions that make it easier to determine if a crash is due
+  // to the underlying problem described in bug 136927.
+  PRBool mInstantiating;
+#endif
+
   PRPackedBool          mIsBrokenPlugin;
 };
 

@@ -614,6 +614,9 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
                     nsStyleContext*  aContext,
                     nsIFrame*        aPrevInFlow)
 {
+#ifdef DEBUG
+  mInstantiating = PR_FALSE;
+#endif
   mIsBrokenPlugin = PR_FALSE;
 
   if (sDefaultPluginDisabled == (PRBool)0xffffffff) {
@@ -699,6 +702,8 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
 NS_IMETHODIMP
 nsObjectFrame::Destroy(nsPresContext* aPresContext)
 {
+  NS_ASSERTION(!mInstantiating, "about to crash due to bug 136927");
+
   // we need to finish with the plugin before native window is destroyed
   // doing this in the destructor is too late.
   if (mInstanceOwner != nsnull) {
@@ -1347,6 +1352,10 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
     }
   }
 
+#ifdef DEBUG
+  mInstantiating = PR_TRUE;
+#endif
+
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = mInstanceOwner->GetDocument(getter_AddRefs(doc));
   nsCOMPtr<nsIPluginDocument> pDoc (do_QueryInterface(doc));
@@ -1369,6 +1378,9 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
     rv = aPluginHost->InstantiateEmbededPlugin(aMimeType, aURI,
                                                mInstanceOwner);
   }
+#ifdef DEBUG
+  mInstantiating = PR_FALSE;
+#endif
 
   return rv;
 }
