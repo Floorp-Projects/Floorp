@@ -11,17 +11,17 @@
 
 <!-- Options -->
 
-<!ENTITY pref.menuPath     '<span class="noUnix menuPath">Tools &gt;
-                             Options</span><span class="unix menuPath">Edit &gt;
-                             Preferences</span>' >
-<!ENTITY pref.singular     '<span class="noUnix">option</span><span
-                             class="unix">preference</span>' >
-<!ENTITY pref.plural       '<span class="noUnix">options</span><span
-                             class="unix">preferences</span>' >
-<!ENTITY pref.singularCaps '<span class="noUnix">Option</span><span
-                             class="unix">Preference</span>' >
-<!ENTITY pref.pluralCaps   '<span class="noUnix">Options</span><span
-                             class="unix">Preferences</span>' >
+<!ENTITY pref.menuPath     '<span class="win menuPath">Tools &gt; Options</span><span
+                              class="unix menuPath">Edit &gt; Preferences</span><span
+                              class="mac menuPath">&brandShortName; &gt; Preferences</span>' >
+<!ENTITY pref.singular     '<span class="win">option</span><span
+                             class="noWin">preference</span>' >
+<!ENTITY pref.plural       '<span class="win">options</span><span
+                             class="noWin">preferences</span>' >
+<!ENTITY pref.singularCaps '<span class="win">Option</span><span
+                             class="noWin">Preference</span>' >
+<!ENTITY pref.pluralCaps   '<span class="win">Options</span><span
+                             class="noWin">Preferences</span>' >
 
 <!-- Keys -->
 
