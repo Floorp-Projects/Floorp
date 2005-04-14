@@ -6988,17 +6988,11 @@ WalkFramesThroughPlaceholders(nsPresContext *aPresContext, nsIFrame *aFrame,
     nsIFrame *child = aFrame->GetFirstChild(childList);
     while (child) {
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-        // only do frames that are in flow
-        if (nsLayoutAtoms::placeholderFrame == child->GetType()) {
-          // get out of flow frame and recur there
-          nsIFrame* outOfFlowFrame =
-              NS_STATIC_CAST(nsPlaceholderFrame*, child)->GetOutOfFlowFrame();
-          NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-          WalkFramesThroughPlaceholders(aPresContext, outOfFlowFrame,
-                                        aFunc, aClosure);
-        }
-        else
-          WalkFramesThroughPlaceholders(aPresContext, child, aFunc, aClosure);
+        // only do frames that are in flow, and recur through the
+        // out-of-flows of placeholders.
+        WalkFramesThroughPlaceholders(aPresContext,
+                                      nsPlaceholderFrame::GetRealFrameFor(child),
+                                      aFunc, aClosure);
       }
       child = child->GetNextSibling();
     }

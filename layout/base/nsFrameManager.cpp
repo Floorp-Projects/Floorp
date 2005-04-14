@@ -869,10 +869,10 @@ VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
       if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
         if (nsLayoutAtoms::placeholderFrame == child->GetType()) { 
-          // placeholder: first recirse and verify the out of flow frame,
+          // placeholder: first recurse and verify the out of flow frame,
           // then verify the placeholder's context
-          nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
-          NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+          nsIFrame* outOfFlowFrame =
+            nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
 
           // recurse to out of flow frame, letting the parent context get resolved
           VerifyStyleTree(aPresContext, outOfFlowFrame, nsnull);
@@ -946,7 +946,8 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame,
                 // only do frames that are in flow
                 if (nsLayoutAtoms::placeholderFrame == child->GetType()) {
                   // get out of flow frame and recurse there
-                  nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
+                  nsIFrame* outOfFlowFrame =
+                    nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
                   NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
                   result = ReParentStyleContext(outOfFlowFrame, newContext);
@@ -1295,7 +1296,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
             if (nsLayoutAtoms::placeholderFrame == child->GetType()) { // placeholder
               // get out of flow frame and recur there
               nsIFrame* outOfFlowFrame =
-                NS_STATIC_CAST(nsPlaceholderFrame*,child)->GetOutOfFlowFrame();
+                nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
               NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
               NS_ASSERTION(outOfFlowFrame != resolvedChild,
                            "out-of-flow frame not a true descendant");

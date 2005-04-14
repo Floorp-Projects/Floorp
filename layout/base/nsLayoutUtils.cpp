@@ -176,10 +176,8 @@ nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
   }
 
   nsIFrame *outOfFlowFrame =
-    NS_STATIC_CAST(nsPlaceholderFrame*, aFrame)->GetOutOfFlowFrame();
-  // This is a hack.
-  if (outOfFlowFrame &&
-      !outOfFlowFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+    nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
+  if (outOfFlowFrame->GetStyleDisplay()->IsFloating()) {
     return outOfFlowFrame;
   }
 
