@@ -4210,9 +4210,10 @@ DOMJSClass_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   const PRUnichar* class_name =
       NS_CONST_CAST(const PRUnichar *,
                     NS_STATIC_CAST(PRUnichar *,
-                                   ::JS_GetPrivate(cx, obj)));
+      ::JS_GetInstancePrivate(cx, obj, &nsDOMClassInfo::sDOMJSClass,
+                              argv)));
   if (!class_name) {
-    NS_ERROR("DOMJSClass_HasInstance can't get name.");
+    NS_WARNING("DOMJSClass_toString can't get name.");
     nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
 
     return JS_FALSE;
