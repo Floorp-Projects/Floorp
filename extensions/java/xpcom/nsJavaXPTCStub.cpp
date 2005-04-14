@@ -890,8 +890,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
           break;
 
         // Get matching Java object for given xpcom object
-        rv = GetNewOrUsedJavaObject(mJavaEnv, xpcom_obj, iid, &java_stub,
-                                    nsnull);
+        rv = GetNewOrUsedJavaObject(mJavaEnv, xpcom_obj, iid, &java_stub);
         if (NS_FAILED(rv))
           break;
       }
