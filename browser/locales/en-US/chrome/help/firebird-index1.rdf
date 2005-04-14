@@ -351,7 +351,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="pages-navigating" nc:name="Pages, Navigating" nc:link="using_firebird.xhtml#navigating_web_pages"/></rdf:li>
-                <rdf:li><rdf:Description ID="plugins" nc:name="Plug-ins" nc:link="using_firebird.xhtml#managing_different_file_types"/></rdf:li>
+                <rdf:li><rdf:Description ID="page-style" nc:name="Page Style" nc:link="menu_reference.xhtml#page_style"/></rdf:li>                <rdf:li><rdf:Description ID="plugins" nc:name="Plug-ins" nc:link="using_firebird.xhtml#managing_different_file_types"/></rdf:li>
                 <rdf:li><rdf:Description ID="popups" nc:name="Popups" nc:link="popup.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="printing" nc:name="Printing" nc:link="using_firebird.xhtml#printing_a_page"/></rdf:li>
                 <rdf:li><rdf:Description ID="privacy-options" nc:name="Privacy Options" nc:link="prefs.xhtml#privacy_options"/></rdf:li>
