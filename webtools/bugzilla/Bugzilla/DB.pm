@@ -589,13 +589,18 @@ sub bz_index_info {
 # XXX - Needs to be made cross-db compatible.
 sub bz_get_field_def ($$) {
     my ($self, $table, $field) = @_;
-    my $sth = $self->prepare("SHOW COLUMNS FROM $table");
-    $sth->execute;
 
-    while (my $ref = $sth->fetchrow_arrayref) {
-        next if $$ref[0] ne $field;
-        return $ref;
-   }
+    if ($self->bz_table_exists($table)) {
+
+        my $sth = $self->prepare("SHOW COLUMNS FROM $table");
+        $sth->execute;
+
+        while (my $ref = $sth->fetchrow_arrayref) {
+            next if $$ref[0] ne $field;
+            return $ref;
+        }
+    }
+    return undef;
 }
 
 # XXX - Needs to be made cross-db compatible
