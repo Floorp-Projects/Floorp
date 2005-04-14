@@ -292,8 +292,7 @@
         <rdf:li> <rdf:Description ID="menu-view-sidebar" nc:name="Sidebar" nc:link="menu_reference.xhtml#sidebar"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-stop" nc:name="Stop" nc:link="menu_reference.xhtml#stop"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-reload" nc:name="Reload" nc:link="menu_reference.xhtml#reload"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-view-increase-text-size" nc:name="Increase Text Size" nc:link="menu_reference.xhtml#increase_text_size"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-view-decrease-text-size" nc:name="Decrease Text Size" nc:link="menu_reference.xhtml#decrease_text_size"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-text-size" nc:name="Text Size" nc:link="menu_reference.xhtml#text_size"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-character-encoding" nc:name="Character Encoding" nc:link="menu_reference.xhtml#character_encoding"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-page-source" nc:name="Page Source" nc:link="menu_reference.xhtml#page_source"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-full-screen" nc:name="Full Screen" nc:link="menu_reference.xhtml#full_screen"/> </rdf:li>
@@ -316,6 +315,16 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="menu-view-sidebar-bookmarks" nc:name="Bookmarks" nc:link="menu_reference.xhtml#bookmarks_sidebar"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-sidebar-history" nc:name="History" nc:link="menu_reference.xhtml#history"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#menu-view-text-size">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="menu-view-text-size-increase" nc:name="Increase" nc:link="menu_reference.xhtml#increase_text_size"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-text-size-decrease" nc:name="Decrease" nc:link="menu_reference.xhtml#decrease_text_size"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-text-size-reset" nc:name="Normal" nc:link="menu_reference.xhtml#reset_text_size"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
