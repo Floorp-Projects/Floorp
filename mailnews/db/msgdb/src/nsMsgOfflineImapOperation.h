@@ -40,6 +40,7 @@
 #include "mdb.h"
 #include "nsMsgDatabase.h"
 #include "nsXPIDLString.h"
+#include "prlog.h"
 
 class nsMsgOfflineImapOperation : public nsIMsgOfflineImapOperation
 {
@@ -54,7 +55,7 @@ public:
   nsIMdbRow		*GetMDBRow() {return m_mdbRow;}
   nsresult    GetCopiesFromDB();
   nsresult    SetCopiesToDB();
-
+  void        Log(PRLogModuleInfo *logFile);
 protected:
   nsOfflineImapOperationType m_operation;
 	nsMsgKey          m_messageKey; 	
@@ -72,7 +73,7 @@ protected:
   // just a wrapper around the offline operation row in the mdb.
   // though I hope not.
   nsMsgDatabase    *m_mdb;
-  nsIMdbRow         *m_mdbRow;
+  nsCOMPtr <nsIMdbRow> m_mdbRow;
 };
 	
 

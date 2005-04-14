@@ -229,25 +229,30 @@ void nsImapOfflineSync::AdvanceToFirstIMAPFolder()
   while (NS_SUCCEEDED(rv) && m_currentFolder && !imapFolder);
 }
 
-void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *currentOp)
+void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *op)
 {
+  nsCOMPtr <nsIMsgOfflineImapOperation> currentOp = op;
   nsMsgKeyArray matchingFlagKeys;
   PRUint32 currentKeyIndex = m_KeyIndex;
+
   imapMessageFlagsType matchingFlags;
   currentOp->GetNewFlags(&matchingFlags);
   imapMessageFlagsType flagOperation;
   imapMessageFlagsType newFlags;
-	
+  PRBool flagsMatch = PR_TRUE;	
   do
   {	// loop for all messsages with the same flags
-    nsMsgKey curKey;
-    currentOp->GetMessageKey(&curKey);
-    matchingFlagKeys.Add(curKey);
-    currentOp->ClearOperation(nsIMsgOfflineImapOperation::kFlagsChanged);
+    if (flagsMatch)
+    {
+      nsMsgKey curKey;
+      currentOp->GetMessageKey(&curKey);
+      matchingFlagKeys.Add(curKey);
+      currentOp->ClearOperation(nsIMsgOfflineImapOperation::kFlagsChanged);
+    }
     currentOp = nsnull;
     if (++currentKeyIndex < m_CurrentKeys.GetSize())
       m_currentDB->GetOfflineOpForKey(m_CurrentKeys[currentKeyIndex], PR_FALSE,
-        &currentOp);
+        getter_AddRefs(currentOp));
     if (currentOp)
     {
       // init the operation in the currentOp, so we don't crunch it if&when we
@@ -257,9 +262,9 @@ void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *current
       currentOp->GetFlagOperation(&flagOperation);
       currentOp->GetNewFlags(&newFlags);
     }
-  } while (currentOp && (flagOperation & nsIMsgOfflineImapOperation::kFlagsChanged) && (newFlags == matchingFlags) );
-	
-  currentOp = nsnull;
+    flagsMatch = (flagOperation & nsIMsgOfflineImapOperation::kFlagsChanged)
+                  && (newFlags == matchingFlags);
+  } while (currentOp);
 	
   if (matchingFlagKeys.GetSize() > 0)
   {
@@ -394,14 +399,14 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
 }
 
 
-void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *currentOp)
+void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *op)
 {
   nsMsgKeyArray matchingFlagKeys ;
   PRUint32 currentKeyIndex = m_KeyIndex;
   nsXPIDLCString moveDestination;
-  currentOp->GetDestinationFolderURI(getter_Copies(moveDestination));
+  op->GetDestinationFolderURI(getter_Copies(moveDestination));
   PRBool moveMatches = PR_TRUE;
-  
+  nsCOMPtr <nsIMsgOfflineImapOperation> currentOp = op;
   do 
   {	// loop for all messsages with the same destination
     if (moveMatches)
@@ -416,7 +421,7 @@ void nsImapOfflineSync::ProcessMoveOperation(nsIMsgOfflineImapOperation *current
     if (++currentKeyIndex < m_CurrentKeys.GetSize())
     {
       nsXPIDLCString nextDestination;
-      nsresult rv = m_currentDB->GetOfflineOpForKey(m_CurrentKeys[currentKeyIndex], PR_FALSE, &currentOp);
+      nsresult rv = m_currentDB->GetOfflineOpForKey(m_CurrentKeys[currentKeyIndex], PR_FALSE, getter_AddRefs(currentOp));
       moveMatches = PR_FALSE;
       if (NS_SUCCEEDED(rv) && currentOp)
       {
@@ -766,25 +771,24 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
       PRInt32 curFolderUidValidity;
       folderInfo->GetImapUidValidity(&curFolderUidValidity);
       PRBool uidvalidityChanged = (!m_pseudoOffline && folderFlags & MSG_FOLDER_FLAG_IMAPBOX) && (GetCurrentUIDValidity() != curFolderUidValidity);
-      nsIMsgOfflineImapOperation *currentOp = nsnull;
+      nsCOMPtr <nsIMsgOfflineImapOperation> currentOp;
       if (uidvalidityChanged)
         DeleteAllOfflineOpsForCurrentDB();
       else
-        m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, &currentOp);
+        m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, getter_AddRefs(currentOp));
       
       if (currentOp)
       {
         nsOfflineImapOperationType opType; 
         
-        if (currentOp)
-          currentOp->GetOperation(&opType);
+        currentOp->GetOperation(&opType);
         // loop until we find the next db record that matches the current playback operation
         while (currentOp && !(opType & mCurrentPlaybackOpType))
         {
           currentOp = nsnull;
           ++m_KeyIndex;
           if (m_KeyIndex < m_CurrentKeys.GetSize())
-            m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, &currentOp);
+            m_currentDB->GetOfflineOpForKey(m_CurrentKeys[m_KeyIndex], PR_FALSE, getter_AddRefs(currentOp));
           if (currentOp)
             currentOp->GetOperation(&opType);
         }

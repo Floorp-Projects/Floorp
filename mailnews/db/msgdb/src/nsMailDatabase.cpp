@@ -52,6 +52,9 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #endif
+
+extern PRLogModuleInfo *IMAPOffline;
+
 const char *kOfflineOpsScope = "ns:msg:db:row:scope:ops:all";	// scope for all offine ops table
 const char *kOfflineOpsTableKind = "ns:msg:db:table:kind:ops";
 struct mdbOid gAllOfflineOpsTableOID;
@@ -521,6 +524,8 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
   mdbOid		rowObjectId;
   mdb_err   err;
   
+  if (!IMAPOffline)
+    IMAPOffline = PR_NewLogModule("IMAPOFFLINE");
   nsresult rv = GetAllOfflineOpsTable();
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -534,14 +539,14 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
   err = m_mdbAllOfflineOpsTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
   if (err == NS_OK && m_mdbStore && (hasOid  || create))
   {
-    nsIMdbRow *offlineOpRow;
-    err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &offlineOpRow);
+    nsCOMPtr <nsIMdbRow> offlineOpRow;
+    err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, getter_AddRefs(offlineOpRow));
     
     if (create)
     {
       if (!offlineOpRow)
       {
-        err  = m_mdbStore->NewRowWithOid(GetEnv(), &rowObjectId, &offlineOpRow);
+        err  = m_mdbStore->NewRowWithOid(GetEnv(), &rowObjectId, getter_AddRefs(offlineOpRow));
         NS_ENSURE_SUCCESS(err, err);
       }
       if (offlineOpRow && !hasOid)
@@ -606,6 +611,9 @@ NS_IMETHODIMP nsMailDatabase::ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds)
   nsresult rv = GetAllOfflineOpsTable();
   NS_ENSURE_SUCCESS(rv, rv);
   nsIMdbTableRowCursor *rowCursor;
+  if (!IMAPOffline)
+    IMAPOffline = PR_NewLogModule("IMAPOFFLINE");
+
   if (m_mdbAllOfflineOpsTable)
   {
     nsresult err = m_mdbAllOfflineOpsTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
@@ -619,7 +627,22 @@ NS_IMETHODIMP nsMailDatabase::ListAllOfflineOpIds(nsMsgKeyArray *offlineOpIds)
       if (outPos < 0 || outOid.mOid_Id == (mdb_id) -1)	
         break;
       if (err == NS_OK)
+      {
         offlineOpIds->Add(outOid.mOid_Id);
+        if (PR_LOG_TEST(IMAPOffline, PR_LOG_ALWAYS))
+        {
+          nsCOMPtr <nsIMsgOfflineImapOperation> offlineOp;
+          GetOfflineOpForKey(outOid.mOid_Id, PR_FALSE, getter_AddRefs(offlineOp));
+          if (offlineOp)
+          {
+            nsMsgOfflineImapOperation *logOp = NS_STATIC_CAST(nsMsgOfflineImapOperation *, 
+              NS_STATIC_CAST(nsIMsgOfflineImapOperation *, offlineOp.get()));
+            if (logOp)
+              logOp->Log(IMAPOffline);
+
+          }
+        }
+      }
     }
     rv = (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
     rowCursor->Release();
