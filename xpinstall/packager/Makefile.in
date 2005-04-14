@@ -266,7 +266,11 @@ ifeq (,$(filter mozilla firefox,$(MOZ_PKG_APPNAME)))
 endif
 ifdef NO_PKG_FILES
 	@echo "Removing unpackaged files..."
+ifeq ($(MOZ_PKG_FORMAT),DMG)
+	cd $(DIST)/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS; rm -rf $(NO_PKG_FILES)
+else
 	cd $(DIST)/$(MOZ_PKG_APPNAME); rm -rf $(NO_PKG_FILES)
+endif
 endif
 	@echo "Compressing..."
 	cd $(DIST); $(MAKE_PACKAGE)
