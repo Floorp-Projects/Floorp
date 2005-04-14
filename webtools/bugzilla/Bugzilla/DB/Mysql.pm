@@ -278,15 +278,15 @@ sub bz_setup_database {
         # to a standard. We store those names here, so that they
         # can be properly renamed.
         my $bad_names = {
-            bugs_activity => ('bugs_activity_bugid_idx',
-                'bugs_activity_bugwhen_idx'),
-            longdescs => ('longdescs_bugid_idx',
-               'longdescs_bugwhen_idx'),
-            flags => ('flags_bidattid_idx'),
-            flaginclusions => ('flaginclusions_tpcid_idx'),
-            flagexclusions => ('flagexclusions_tpc_id_idx'),
-            profiles_activity => ('profiles_activity_when_idx'),
-            group_control_map => ('group_control_map_gid_idx')
+            bugs_activity => ['bugs_activity_bugid_idx',
+                'bugs_activity_bugwhen_idx'],
+            longdescs => ['longdescs_bugid_idx',
+               'longdescs_bugwhen_idx'],
+            flags => ['flags_bidattid_idx'],
+            flaginclusions => ['flaginclusions_tpcid_idx'],
+            flagexclusions => ['flagexclusions_tpc_id_idx'],
+            profiles_activity => ['profiles_activity_when_idx'],
+            group_control_map => ['group_control_map_gid_idx']
             # series_categories is dealt with below, not here.
         };
 
@@ -346,7 +346,7 @@ sub bz_setup_database {
                 push(@columns, "${table}_unique_idx");
             }
             # And this is how we fix the other inconsistent Schema naming.
-            push(@columns, $bad_names->{$table})
+            push(@columns, @{$bad_names->{$table}})
                 if (exists $bad_names->{$table});
             foreach my $column (@columns) {
                 # If we have an index named after this column, it's an 
