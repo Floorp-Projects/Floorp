@@ -326,7 +326,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="menu-view-sidebar-bookmarks" nc:name="Bookmarks" nc:link="menu_reference.xhtml#bookmarks_sidebar"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-view-sidebar-history" nc:name="History" nc:link="menu_reference.xhtml#history"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-sidebar-history" nc:name="History" nc:link="menu_reference.xhtml#history_sidebar"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
