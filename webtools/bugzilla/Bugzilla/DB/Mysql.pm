@@ -278,7 +278,8 @@ sub bz_setup_database {
         # to a standard. We store those names here, so that they
         # can be properly renamed.
         my $bad_names = {
-            bugs_activity => ['bugs_activity_bugid_idx',
+            # 'when' is a possible leftover from Bugzillas before 2.8
+            bugs_activity => ['when', 'bugs_activity_bugid_idx',
                 'bugs_activity_bugwhen_idx'],
             longdescs => ['longdescs_bugid_idx',
                'longdescs_bugwhen_idx'],

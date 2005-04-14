@@ -90,7 +90,7 @@ sub _get_create_index_ddl {
     my $sql = "CREATE ";
     $sql .= "$index_type " if ($index_type eq 'UNIQUE'
                                || $index_type eq 'FULLTEXT');
-    $sql .= "INDEX $index_name ON $table_name \(" .
+    $sql .= "INDEX \`$index_name\` ON $table_name \(" .
       join(", ", @$index_fields) . "\)";
 
     return($sql);
@@ -107,7 +107,7 @@ sub get_alter_column_ddl {
 
 sub get_drop_index_ddl {
     my ($self, $table, $name) = @_;
-    return ("DROP INDEX $name ON $table");
+    return ("DROP INDEX \`$name\` ON $table");
 }
 
 sub get_rename_column_ddl {
