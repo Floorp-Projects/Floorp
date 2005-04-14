@@ -2,6 +2,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
     %brandDTD;
+    <!ENTITY % platformDTD SYSTEM "chrome://help/locale/platformStrings.dtd" >
+    %platformDTD;
 ]>
 <!--
 Contributors:
@@ -58,7 +60,7 @@ Contributors:
   <p>Closes the current window.</p>
 
   <h3 id="save_page_as">Save Page As...</h3>
-  <p>Saves the page you are currently browsing. You have the option to save the
+  <p>Saves the page you are currently browsing. You can choose to save the
     whole page (complete with graphics), just the current HTML page, or the
     page text only.</p>
 
@@ -68,12 +70,12 @@ Contributors:
     currently only available on Windows, Mac OS X and OS/2.</p>
 
   <h3 id="page_setup">Page Setup...</h3>
-  <p>Displays a Page Setup dialog where you can specify printing options such as
+  <p>Displays a Page Setup dialog where you can specify printing settings such as
     margins, headers and footers, and page orientation.</p>
 
   <h3 id="print_preview">Print Preview (Windows and Linux only)</h3>
   <p>Displays a preview of how the current document will appear when printed. It
-    reflects the options chosen in the Page Setup dialog and the page author's
+    reflects the settings in the Page Setup dialog and the page author's
     intentions.</p>
 
   <h3 id="print">Print...</h3>
@@ -81,7 +83,7 @@ Contributors:
     etc. Click <em>OK</em> to print the page.</p>
 
   <h3 id="import">Import...</h3>
-  <p>Opens the Import Wizard dialog, which allows you to import options, bookmarks,
+  <p>Opens the Import Wizard dialog, which allows you to import &pref.plural;, bookmarks,
     history, passwords and other data from browsers like Microsoft Internet
     Explorer, Netscape, Mozilla or Opera.</p>
 
@@ -95,7 +97,7 @@ Contributors:
     <span class="noWin">Quit</span>
   </h3>
   <p>Closes all opened windows in &brandShortName;, including any active downloads,
-    and exits &brandShortName; completely. If you happen to select this option with
+    and exits &brandShortName; completely. If you happen to select this menu item with
     open tabs, windows, or downloads, &brandShortName; will ask you to confirm your
     choice to prevent accidental exits.</p>
 
@@ -137,9 +139,9 @@ Contributors:
   <p>Searches for the next occurrence of the text specified when using the
   <em>Find in This Page...</em> command.</p>
 
-  <h3 class="unix" id="prefs">Preferences</h3>
-  <p class="unix">Displays the <a href="prefs.xhtml">Preferences Window</a>, where you can
-    change many preferences in &brandShortName;.</p>
+  <h3 class="unix" id="prefs">&pref.pluralCaps;</h3>
+  <p class="unix">Displays the <a href="prefs.xhtml">&pref.pluralCaps; window</a>,
+    where you can change many &pref.plural; in &brandShortName;.</p>
 
 <h2 id="view">View</h2>
 
@@ -175,8 +177,7 @@ Contributors:
     <h4 id="history">History</h4>
     <p>Displays the History Sidebar, which keeps track of what sites you have
       visited. To change how many days a site should be remembered, select
-      <span class="menuPath">Tools &gt; Options</span> and select the
-      Privacy panel.</p>
+      &pref.menuPath; and select the Privacy panel.</p>
 
   <h3 id="stop">Stop</h3>
   <p>Stops loading of the current page you're browsing. This is the same as
@@ -231,7 +232,7 @@ Contributors:
   <h3 id="home">Home</h3>
   <p>Displays your home page. This is the same as clicking on the
     <em>Home</em> button on the navigation toolbar. To change the home page,
-    select <span class="menuPath">Tools &gt; Options &gt; General</span>. You
+    select &pref.menuPath; and open the General panel. You
     can specify to use a blank page, the current page (or tab group), a
     bookmark, or a manually entered address.</p>
 
@@ -289,9 +290,9 @@ Contributors:
     document type, encoding, size, and security information.  The dialog also
     displays lists of the media and links used on the page.</p>
 
-  <h3 class="noUnix" id="options">Options</h3>
-  <p class="noUnix">Displays the <a href="prefs.xhtml">Options Window</a>,
-    where you can change many options in &brandShortName;.</p>
+  <h3 class="noUnix" id="options">&pref.pluralCaps;</h3>
+  <p class="noUnix">Displays the <a href="prefs.xhtml">&pref.pluralCaps; window</a>,
+    where you can change many &pref.plural; in &brandShortName;.</p>
 
 <!--XXX blah, blah, blah -->
 <!--XXX Help contribs need to test Macs as well as Lin/Win -->
@@ -318,7 +319,7 @@ Contributors:
   <p>Displays a dialog box with information about &brandShortName;, including
     the current version and a brief list of credits.</p>
 
-<div class="contentsBox"><em>25 August 2004</em></div>
+<div class="contentsBox"><em>02 October 2004</em></div>
 <p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>

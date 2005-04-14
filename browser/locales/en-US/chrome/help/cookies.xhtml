@@ -2,6 +2,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
     %brandDTD;
+    <!ENTITY % platformDTD SYSTEM "chrome://help/locale/platformStrings.dtd" >
+    %platformDTD;
 ]>
 <!--
 Contributors:
@@ -49,7 +51,7 @@ Contributors:
 
 <p>When you use the default cookie settings, this activity is invisible to you,
   and you won't know when a web site is setting a cookie or when &brandShortName;
-  is sending a web site its cookie. However, you can set your cookies options so that
+  is sending a web site its cookie. However, you can set your cookies &pref.plural; so that
   you will be asked before a cookie is set.</p>
 
 <h2 id="setting_up_cookie_rules">Setting Up Cookie Rules</h2>
@@ -58,9 +60,9 @@ Contributors:
 what cookies are stored, follow these instructions:</p>
 
 <ol>
-  <li>Select <span class="menuPath">Tools &gt; Options</span>.</li>
+  <li>Select &pref.menuPath;.</li>
   <li>Click the Privacy panel and then click on the Cookies label.</li>
-  <li>Select the <em>ask me every time</em> option from the <span class="menuPath">
+  <li>Select the <em>ask me every time</em> &pref.singular; from the <span class="menuPath">
     Keep Cookies</span> combo box.</li>
 </ol>
 
@@ -71,13 +73,13 @@ what cookies are stored, follow these instructions:</p>
 
 <h3 id="other_settings">Other Settings</h3>
 
-<p>There are also other options that affect how cookies are managed by &brandShortName;.
+<p>There are also other &pref.plural; that affect how cookies are managed by &brandShortName;.
   They are not needed for the cookie rules to work but are explained anyway:</p>
 
 <dl>
   <dt>Allow sites to set cookies</dt>
   <dd><p>If you don't want any sites to store cookies on your computer, uncheck
-    this option. Note that some sites may not work properly when cookies are
+    this &pref.singular;. Note that some sites may not work properly when cookies are
     disabled.</p></dd>
   <dt>for the originating web site only</dt>
   <dd>
@@ -103,10 +105,10 @@ what cookies are stored, follow these instructions:</p>
   <dt>Keep Cookies:</dt>
   <dd>
   <ul>
-    <li><strong>until they expire</strong>: If this option is selected, the
-      cookie information will be removed when they hit their expiration
+    <li><strong>until they expire</strong>: If this &pref.singular; is selected,
+      cookie information will be removed when it hits its expiration
       date.</li>
-    <li><strong>until I close &brandShortName;:</strong> If this option is
+    <li><strong>until I close &brandShortName;:</strong> If this &pref.singular; is
       selected, the cookie information will be removed when you restart
       &brandShortName;. Web sites requiring the use of cookies will still
       work, but if you restart &brandShortName;, the web site will think that
@@ -146,8 +148,8 @@ what cookies are stored, follow these instructions:</p>
 <h2 id="the_cookie_manager">Managing Cookies</h2>
 
 <p>Use the Cookie Manager to view and remove cookies and manage per-site cookie
-  options.  It is accessible through the Cookies section in the Privacy tab of
-  Options.</p>
+  &pref.plural;.  It is accessible through the Cookies section in the Privacy tab of
+  &pref.singularCaps;.</p>
 
 <h3 id="the_cookie_list">The Cookie List</h3>
 
@@ -156,20 +158,20 @@ what cookies are stored, follow these instructions:</p>
 
 <p>The <em>Cookie Manager</em> dialog lists all cookies currently stored on your
   computer. You can select them to display more information about them.  Use the
-  <em>View Cookies</em> button in cookies options to access this window.</p>
+  <em>View Cookies</em> button in cookies &pref.plural; to access this window.</p>
 
 <p>To remove a cookie from the list, select it and click <em>Remove Cookie</em>.
   To remove all cookies, click <em>Remove All Cookies</em>. (This is the same as
   clicking the <em>Clear</em> button from the <a
-  href="prefs.xhtml#privacy_options">Privacy panel</a> of the <a
-  href="prefs.xhtml">Options window</a>.)</p>
+  href="prefs.xhtml#privacy_options">Privacy panel</a> of the &pref.pluralCaps;
+  window.)</p>
 
 <p><strong>Don't allow sites that set removed cookies to set future cookies</strong><br/>
 Even if you remove cookies now, you will reacquire those same cookies the next time
 you return to the web site. To prevent that from happening, select this checkbox.
 When this checkbox is selected, web sites for the cookies that you are removing are
 added to the list of sites whose cookies will automatically be rejected.
-<strong>Important</strong>: You must check this option before you start to remove cookies,
+<strong>Important</strong>: You must check this &pref.singular; before you start to remove cookies,
 or the sites will not be added to the list of blocked sites.</p>
 
 <h3 id="the_site_list">The Site List</h3>
@@ -179,7 +181,7 @@ or the sites will not be added to the list of blocked sites.</p>
 
 <p>This is the list of sites that are either allowed or not allowed to store
   cookies on your computer. In the Status column, you can see if a site is
-  blocked or allowed. Use the <em>Exceptions</em> button in cookies options to
+  blocked or allowed. Use the <em>Exceptions</em> button in cookies &pref.plural; to
   access this window.</p>
 
 <p>To add a site to the this list, simply type the site's domain name in the
@@ -191,7 +193,7 @@ or the sites will not be added to the list of blocked sites.</p>
   clear the list completely, click <em>Remove All Sites</em>. This will reset
   the cookie rules and you will see dialogs for each cookie again.</p>
 
-<div class="contentsBox"><em>16 September 2004</em></div>
+<div class="contentsBox"><em>02 October 2004</em></div>
 <p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>
