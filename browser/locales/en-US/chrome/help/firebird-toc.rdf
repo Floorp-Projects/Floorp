@@ -13,14 +13,14 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="firefox-help" nc:name="&brandFullName; Help" nc:link="firefox_welcome.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-firebird" nc:name="Using &brandFullName;" nc:link="using_firebird.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="using-download-manager" nc:name="Using &brandFullName;'s Download Manager" nc:link="download_manager.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-download-manager" nc:name="Using the Download Manager" nc:link="download_manager.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="customize-firebird" nc:name="Customization" nc:link="customization.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs" nc:name="Options" nc:link="prefs.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="popup-blocker" nc:name="Controlling Popups" nc:link="popup.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cookies" nc:name="Managing Cookies" nc:link="cookies.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="firebird-keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="shortcuts.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="firebird-mouse-shortcuts" nc:name="Mouse Shortcuts" nc:link="mouse_shortcuts.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu" nc:name="&brandFullName; Menu Reference" nc:link="menu_reference.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu" nc:name="Menu Reference" nc:link="menu_reference.xhtml"/> </rdf:li>
      	<rdf:li> <rdf:Description ID="ieusers" nc:name="Help for Internet Explorer Users" nc:link="forieusers.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
