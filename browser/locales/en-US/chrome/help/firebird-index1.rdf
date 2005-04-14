@@ -134,7 +134,6 @@
                 <rdf:li><rdf:Description ID="cookies-defined" nc:name="defined" nc:link="cookies.xhtml#what_is_a_cookie"/></rdf:li>
                 <rdf:li><rdf:Description ID="cookies-accepting-and-blocking" nc:name="Accepting and Blocking Cookies" nc:link="cookies.xhtml#accepting_and_blocking_cookies"/></rdf:li>
                 <rdf:li><rdf:Description ID="cookies-setting-up-rules" nc:name="Setting up rules" nc:link="cookies.xhtml#setting_up_cookie_rules"/></rdf:li>
-                <rdf:li><rdf:Description ID="cookies-foreign" nc:name="Foreign Cookies" nc:link="glossary.xhtml#foreign_cookie"/></rdf:li>
                 <rdf:li><rdf:Description ID="cookies-options" nc:name="Managing" nc:link="cookies.xhtml#the_cookie_manager"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
@@ -547,7 +546,6 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="xml" nc:name="XML" nc:link="glossary.xhtml#XML"/></rdf:li>
-                <rdf:li><rdf:Description ID="xslt" nc:name="XSLT" nc:link="glossary.xhtml#XSLT"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
