@@ -2,12 +2,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
     %brandDTD;
-]
->
-#
-#Contributors:
-#  David Tenser <david.tenser@comhem.se> (original author)
-
+]>
+<!--
+Contributors:
+  David Tenser <david.tenser@comhem.se> (original author)
+  R.J. Keller <rlk@trfenv.com>
+  Jeff Walden <jwalden+code@mit.edu>
+-->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>&brandFullName; Menu Reference</title>
@@ -17,19 +18,20 @@
 <body>
 
 <h1>&brandFullName; Menu Reference</h1>
-	<div>This menu reference describes each menu item in the main &brandFullName; window.</div>
+  <div>This menu reference describes each menu item in the main
+    &brandFullName; window.</div>
 
-	<div class="contentsBox">In this section:
-	  <ul>
-	    <li><a href="#file">File</a></li>
-	    <li><a href="#edit">Edit</a></li>
-	    <li><a href="#view">View</a></li>
-	    <li><a href="#go">Go</a></li>
-	    <li><a href="#bookmarks">Bookmarks</a></li>
-	    <li><a href="#tools">Tools</a></li>
-	    <li><a href="#help">Help</a></li>
-	  </ul>
-	</div>
+  <div class="contentsBox">In this section:
+    <ul>
+      <li><a href="#file">File</a></li>
+      <li><a href="#edit">Edit</a></li>
+      <li><a href="#view">View</a></li>
+      <li><a href="#go">Go</a></li>
+      <li><a href="#bookmarks">Bookmarks</a></li>
+      <li><a href="#tools">Tools</a></li>
+      <li><a href="#help">Help</a></li>
+    </ul>
+  </div>
 
 <h2 id="file">File</h2>
 
@@ -39,27 +41,28 @@
   <h3 id="new_tab">New Tab</h3>
   <p>Opens a new browser tab in the current &brandShortName; window.</p>
 
+  <h3 id="open_location">Open Location...</h3>
+  <p>Focuses on the Firefox URL bar so you can type in a new location to
+    go to.</p>
+
   <h3 id="open_file">Open File...</h3>
   <p>Displays an Open File dialog where you can select a file from your
     local disks or network. You can view many file types in &brandShortName;,
     including HTML/XML files, image files, text files and more.</p>
 
-  <h3 id="close">Close</h3>
-  <p>Closes the current window.</p>
-
   <h3 id="close_tab">Close Tab</h3>
-  <p>This menu item is visible only if more than one browser tab is currently
-    open. It closes the current tab and selects the next tab to the right.</p>
+  <p>Closes the current tab and selects the rightmost tab. This menu item is
+    visible only if more than one browser tab is currently open.</p>
 
-  <h3 id="close_window">Close Window</h3>
-  <p>Closes the current window, including all opened tabs.</p>
+  <h3 id="close">Close (Window)</h3>
+  <p>Closes the current window.</p>
 
   <h3 id="save_page_as">Save Page As...</h3>
   <p>Saves the page you are currently browsing. You have the option to save the
     whole page (complete with graphics), just the current HTML page, or the
     page text only.</p>
 
-  <h3 id="send_page">Send Page...</h3>
+  <h3 id="send_page">Send Link...</h3>
   <p>Opens an email composition window using your computer's default email program
     so you can send a message with a link to the current page. This feature is
     currently only available on Windows, Mac OS X and OS/2.</p>
@@ -68,7 +71,7 @@
   <p>Displays a Page Setup dialog where you can specify printing options such as
     margins, headers and footers, and page orientation.</p>
 
-  <h3 id="print_preview">Print Preview</h3>
+  <h3 id="print_preview">Print Preview (Windows and Linux only)</h3>
   <p>Displays a preview of how the current document will appear when printed. It
     reflects the options chosen in the Page Setup dialog and the page author's
     intentions.</p>
@@ -84,9 +87,13 @@
 
   <h3 id="work_offline">Work Offline</h3>
   <p>Toggles between online and offline mode. Offline mode allows you to view
-    Web pages you've previously visited without being connected to the Internet</p>
-    
-  <h3 id="exit">Exit</h3>
+    web pages you've previously visited without being connected to the
+    Internet.</p>
+
+  <h3 id="exit">
+    <span class="win">Exit</span>
+    <span class="noWin">Quit</span>
+  </h3>
   <p>Closes all opened windows in &brandShortName;, including any active downloads,
     and exits &brandShortName; completely. If you happen to select this option with
     open tabs, windows, or downloads, &brandShortName; will ask you to confirm your
@@ -95,33 +102,44 @@
 <h2 id="edit">Edit</h2>
 
   <h3 id="undo">Undo</h3>
-  <p>Undoes the last action in a web form. If you later decide you didn't want to
+  <p>Undoes the last action in a text field. If you later decide you don't want to
     undo an action, use the Redo command.</p>
 
   <h3 id="redo">Redo</h3>
   <p>Redoes the last Undo command.</p>
 
   <h3 id="cut">Cut</h3>
-  <p>Cuts the selected text from a web form and stores it in the clipboard. Paste
+  <p>Cuts the selected text from a text field and stores it in the clipboard. Paste
     the text elsewhere by using the Paste command.</p>
 
   <h3 id="copy">Copy</h3>
-  <p>Copies the selected text to the clipboard. Paste the text elsewhere by
+  <p>Copies the selected text to the clipboard. Paste the text in a text field by
     using the Paste command.</p>
 
+  <h3 id="paste">Paste</h3>
+  <p>Pastes text stored in the clipboard into a text field.</p>
+
   <h3 id="delete">Delete</h3>
-  <p>Deletes the selected text from a web form.</p>
+  <p>Deletes the selected text from a text field.</p>
 
   <h3 id="select_all">Select All</h3>
-  <p>Selects all text on the page.</p>
+  <p>Selects all text and other items on the page.</p>
 
   <h3 id="find_in_this_page">Find in This Page...</h3>
-  <p>Displays a dialog where you can enter the text to
-    search for. Searches for the specified text on the current page.</p>
+  <p>Displays the Find Toolbar at the bottom of the browser window.  Enter the
+    text you wish to find in the toolbar, and as you type &brandShortName; will
+    automatically find and select the first occurrence of the entered text on
+    the page.  Click <em>Find Next</em> or <em>Find Previous</em> to find the
+    text at other locations in the page, and click <em>Highlight</em> to
+    highlight all occurrences of the text on the page.</p>
 
   <h3 id="find_again">Find Again</h3>
   <p>Searches for the next occurrence of the text specified when using the
-  <em>Find in This Page</em> command.</p>
+  <em>Find in This Page...</em> command.</p>
+
+  <h3 class="unix" id="prefs">Preferences</h3>
+  <p class="unix">Displays the <a href="prefs.xhtml">Preferences Window</a>, where you can
+    change many preferences in &brandShortName;.</p>
 
 <h2 id="view">View</h2>
 
@@ -135,7 +153,7 @@
     <p>Toggles the visibility of the bookmarks toolbar, which contains bookmarks
       to various sites.</p>
 
-    <h4 id="customize">Customize</h4>
+    <h4 id="customize">Customize...</h4>
     <p>Displays the toolbar customization dialog.  You can drag and drop toolbar
       buttons to/from the toolbars here. You can also right-click on the
       navigation toolbar and select <em>Customize...</em> to show this dialog.</p>
@@ -146,8 +164,8 @@
     needed by everyone.</p>
 
   <h3 id="Sidebar">Sidebar</h3>
-  <p>The Sidebar can display your downloads, bookmarks or the browsing history.
-    You can always close the Sidebar by clicking on the X in the upper-right
+  <p>The Sidebar can display your bookmarks or the browsing history.  You can
+    always close the Sidebar by clicking on the X in the upper-right
     corner.</p>
 
     <h4 id="bookmarks_Sidebar">Bookmarks</h4>
@@ -157,16 +175,16 @@
     <h4 id="history">History</h4>
     <p>Displays the History Sidebar, which keeps track of what sites you have
       visited. To change how many days a site should be remembered, select
-      <em>Tools</em> &gt; <em>Options</em> &gt; <em>Privacy</em>.</p>
+      <span class="menuPath">Tools &gt; Options</span> and select the
+      Privacy panel.</p>
 
   <h3 id="stop">Stop</h3>
   <p>Stops loading of the current page you're browsing. This is the same as
     clicking on the <em>Stop</em> button on the toolbar.</p>
 
   <h3 id="reload">Reload</h3>
-  <p>To refresh the current page, or get the most up-to-date version, use this
-    command. This is the same as clicking on the <em>Reload</em> button on the
-    toolbar.</p>
+  <p>Gets the most up-to-date version of the current page.  This is the same
+    as clicking the <em>Reload</em> button on the toolbar.</p>
 
   <h3 id="increase_text_size">Increase Text Size</h3>
   <p>Displays the text one size larger on the web page. You can also do this
@@ -181,13 +199,13 @@
     press <kbd>Ctrl</kbd>+<kbd>0</kbd>.</p>
 
   <h3 id="character_encoding">Character Encoding</h3>
-  <p>Allows you to manually change the character encoding on a Web page.
+  <p>Allows you to manually change the character encoding on a web page.
     &brandShortName; usually does this automatically.</p>
 
   <h3 id="page_source">Page Source</h3>
-  <p>Displays the source code for the current document. A future version of
+  <p>Displays the source code for the current document. <!--A future version of
     &brandShortName; will be capable of launching an external program for
-    viewing the source.</p>
+    viewing the source.--></p>
 
   <h3 id="full_screen">Full Screen</h3>
   <p>Displays the window in full screen. If you have the navigation toolbar
@@ -195,15 +213,15 @@
 
 <h2 id="go">Go</h2>
 
-  <p>The Go menu contains a list of the most recently visited Web sites.</p>
+  <p>The Go menu contains a list of the most recently visited web sites.</p>
 
   <h3 id="back">Back</h3>
-  <p>Navigates back one page in history. Same as clicking on the <em>Back</em>
-    button on the navigation toolbar.</p>
+  <p>Navigates back one page in history. This is the same as clicking on the
+    <em>Back</em> button on the toolbar.</p>
 
   <h3 id="forward">Forward</h3>
-  <p>Navigates forward one page in history. Same as clicking on the
-    <em>Forward</em> button on the navigation toolbar.</p>
+  <p>Navigates forward one page in history. This is the same as clicking on
+    the <em>Forward</em> button on the toolbar.</p>
 
   <h3 id="home">Home</h3>
   <p>Displays your home page. This is the same as clicking on the
@@ -216,7 +234,7 @@
 
   <p>This menu contains all your stored bookmarks.</p>
 
-  <h3 id="add_to_bookmarks">Add to Bookmarks...</h3>
+  <h3 id="add_to_bookmarks">Bookmark This Page...</h3>
   <p>Adds the current page to your bookmarks. A dialog will be displayed,
     allowing you to choose a title for the bookmark and specify where you
     want it to be stored.</p>
@@ -228,25 +246,51 @@
 
 <h2 id="tools">Tools</h2>
 
+  <h3 id="web_search">Web Search</h3>
+  <p>Highlights the Web Search box. You can then type in the terms you
+    wish to find on the Web.</p>
+
+  <h3 id="read_mail">Read Mail (Windows only)</h3>
+  <p>Opens up your email program so you can read your email.</p>
+
+  <h3 id="new_message">New Message... (Windows only)</h3>
+  <p>Opens an email composition window using your computer's default email program
+    so you can send a email message to somebody.</p>
+
   <h3 id="downloads">Downloads</h3>
   <p>Opens the Download Manager, where you can see the current, as well as
     finished downloads.</p>
-      
+
+  <h3 id="extensions">Extensions</h3>
+  <p>Opens the Extension Manager, where you can see all extensions installed
+    on this version of &brandShortName;. You can also choose to uninstall
+    extensions from this dialog. <a href="customization.xhtml#extensions">
+    Click here</a> for more information on extensions.</p>
+
+  <h3 id="themes">Themes</h3>
+  <p>Opens the Theme Manager. From here, you can switch the current theme that
+    &brandShortName; is using. You can also install and uninstall themes from
+    this dialog. <a href="customization.xhtml#themes">Click here</a> for more
+    information on themes.</p>
+
   <h3 id="javascript_console">JavaScript Console</h3>
-  <p>JavaScript is a scripting language commonly used to construct web pages.
+  <p>Opens the JavaScript Console, which tracks problems with JavaScript code.
+    JavaScript is a scripting language commonly used to construct web pages.
     Programmers use JavaScript to make web pages more interactive; JavaScript
-    is often used to dynamically validate forms and select buttons. The
-    JavaScript console is useful to debug web pages or track problems with
-    JavaScript code.</p>
+    is often used to dynamically validate forms and select buttons.</p>
 
   <h3 id="page_info">Page Info</h3>
-  <p>The Page Info dialog displays extensive information about the current web
-    page, such as the document type, encoding, size, and security information.
-    The dialog also displays lists of the media and links used on the page.</p>
+  <p>Displays extensive information about the current web page, such as the
+    document type, encoding, size, and security information.  The dialog also
+    displays lists of the media and links used on the page.</p>
 
-  <h3 id="options">Options</h3>
-  <p>Displays the <a href="prefs.xhtml">Options Window</a>, where you can
-    change many options in &brandShortName;.</p>
+  <h3 class="noUnix" id="options">Options</h3>
+  <p class="noUnix">Displays the <a href="prefs.xhtml">Options Window</a>,
+    where you can change many options in &brandShortName;.</p>
+
+<!--XXX blah, blah, blah -->
+<!--XXX Help contribs need to test Macs as well as Lin/Win -->
+<!--XXX the Mac Window menu should be documented here -->
 
 <h2 id="help">Help</h2>
 
@@ -254,19 +298,25 @@
   <p>Opens the &brandShortName; Help window, which contains useful information
     that can help you browse the web.</p>
 
-  <h3 id="release_notes">Release Notes</h3>
-  <p>Displays the release notes for the latest &brandShortName; release.</p>
+  <h3 id="for_ie_users">For Internet Explorer Users (Windows and Mac only)</h3>
+  <p>Opens this Help window displaying information that can
+    help Internet Explorer users transition to &brandShortName;.</p>
 
-  <h3 id="for_ie_users">For Internet Explorer Users</h3>
-  <p>Opens this Help window displaying information that can help Internet
-    Explorer users transition to &brandShortName;.  (This item may not appear
-    on Linux.)</p>
+  <!--h3 id="release_notes">Release Notes</h3>
+  <p>Displays the release notes for the latest &brandShortName; release.</p-->
 
-  <h3 id="about_mozilla_firebird">About &brandShortName;</h3>
+  <h3 id="tell_friend">Tell a Friend</h3>
+  <p>Opens a web page that lets you tell a friend about &brandShortName;.</p>
+
+  <h3 id="promote">Promote &brandShortName;</h3>
+  <p>Opens a web page that gives you information on how to promote
+    &brandShortName;.</p>
+
+  <h3 id="about_mozilla_firebird">About &brandFullName;</h3>
   <p>Displays a dialog box with information about &brandShortName;, including
     the current version and a brief list of credits.</p>
 
-<div class="contentsBox"><em>21 March 2004</em></div>
-<p>Copyright &copy; 2003 Contributors to the Firebird Help Project.</p>
+<div class="contentsBox"><em>31 July 2004</em></div>
+<p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>

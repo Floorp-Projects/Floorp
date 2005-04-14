@@ -88,7 +88,6 @@
       <nc:subheadings>
         <rdf:Seq>
           <rdf:li> <rdf:Description ID="using-firebird-managing-different-file-types" nc:name="Managing Different File Types" nc:link="using_firebird.xhtml#managing_different_file_types"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="using-firebird-download-manager-sidebar" nc:name="Download Manager Sidebar" nc:link="using_firebird.xhtml#download_manager_sidebar"/> </rdf:li>
           <rdf:li> <rdf:Description ID="using-firebird-making-firebird-default-browser" nc:name="Make Default Browser" nc:link="using_firebird.xhtml#making_firebird_your_default_browser"/> </rdf:li>
           <rdf:li> <rdf:Description ID="using-firebird-cache" nc:name="Cache Settings" nc:link="using_firebird.xhtml#changing_cache_settings"/> </rdf:li>
         </rdf:Seq>
@@ -120,8 +119,8 @@
   <rdf:Description about="#themes">
       <nc:subheadings>
         <rdf:Seq>
-          <rdf:li> <rdf:Description ID="themes-getting-and-installing" nc:name="Getting and Installing" nc:link="customization.xhtml#getting_installing_themes"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="themes-changing" nc:name="Changing Themes" nc:link="customization.xhtml#changing_themes"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="themes-getting-and-installing" nc:name="Acquiring and Installing" nc:link="customization.xhtml#getting_installing_themes"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="themes-changing" nc:name="Switching Themes" nc:link="customization.xhtml#changing_themes"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
   </rdf:Description>
@@ -130,18 +129,7 @@
       <nc:subheadings>
         <rdf:Seq>
           <rdf:li><rdf:Description ID="extensions-uninstalling" nc:name="Uninstalling" nc:link="customization.xhtml#uninstalling_extensions"/> </rdf:li>
-          <rdf:li><rdf:Description ID="extensions-disabling" nc:name="Disabling Extensions" nc:link="customization.xhtml#disabling_extensions"/> </rdf:li>
-          <rdf:li><rdf:Description ID="extensions-manual-remove" nc:name="Manually Removing Extensions" nc:link="customization.xhtml#manually_removing_extensions"/> </rdf:li>
-          <rdf:li><rdf:Description ID="profile-manager" nc:name="Profile Manager" nc:link="profiles.xhtml"/> </rdf:li>
-        </rdf:Seq>
-      </nc:subheadings>
-  </rdf:Description>
-
-  <rdf:Description about="#profile-manager">
-      <nc:subheadings>
-        <rdf:Seq>
-          <rdf:li> <rdf:Description ID="profile-manager-creating-a-new-profile" nc:name="Creating a New Profile" nc:link="profiles.xhtml#creating_a_new_profile"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="profile-manager-deleting-or-renaming-a-profile" nc:name="Deleting or Renaming a Profile" nc:link="profiles.xhtml#deleting_or_renaming_a_profile"/> </rdf:li>
+          <rdf:li><rdf:Description ID="extensions-updating" nc:name="Updating Extensions" nc:link="customization.xhtml#updating_extensions"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
   </rdf:Description>
@@ -183,7 +171,6 @@
         <rdf:li> <rdf:Description ID="prefs-privacy" nc:name="Privacy Options" nc:link="prefs.xhtml#privacy_options"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-web-features" nc:name="Web Features Options" nc:link="prefs.xhtml#web_features_options"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-download" nc:name="Download Options" nc:link="prefs.xhtml#downloads_options"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-extensions" nc:name="Extensions Options" nc:link="prefs.xhtml#extensions_options"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-advanced" nc:name="Advanced Options" nc:link="prefs.xhtml#advanced_options"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -194,6 +181,7 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="prefs-home-page" nc:name="Home Page" nc:link="prefs.xhtml#home_page"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-fonts-and-colors" nc:name="Fonts and Colors" nc:link="prefs.xhtml#fonts_and_colors"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-languages" nc:name="Languages" nc:link="prefs.xhtml#languages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-default-browser" nc:name="Default Browser" nc:link="prefs.xhtml#default_browser"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-connection-settings" nc:name="Connection Settings" nc:link="prefs.xhtml#connection_settings"/> </rdf:li>
       </rdf:Seq>
@@ -236,6 +224,7 @@
         <rdf:li> <rdf:Description ID="prefs-accessibility" nc:name="Accessibility" nc:link="prefs.xhtml#accessibility"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-browsing" nc:name="Browsing" nc:link="prefs.xhtml#browsing"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-multimedia" nc:name="Multimedia" nc:link="prefs.xhtml#multimedia"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-updates" nc:name="Software Update" nc:link="prefs.xhtml#software_update"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-security" nc:name="Security" nc:link="prefs.xhtml#security"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-certificates" nc:name="Certificates" nc:link="prefs.xhtml#certificates"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-validation" nc:name="Validation" nc:link="prefs.xhtml#validation"/> </rdf:li>
@@ -262,12 +251,12 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="menu-file-new-window" nc:name="New Window" nc:link="menu_reference.xhtml#new_window"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-new-tab" nc:name="New Tab" nc:link="menu_reference.xhtml#new_tab"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-file-open-location" nc:name="Open Location..." nc:link="menu_reference.xhtml#open_location"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-open-file" nc:name="Open File..." nc:link="menu_reference.xhtml#open_file"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-file-close" nc:name="Close" nc:link="menu_reference.xhtml#close"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-close-tab" nc:name="Close Tab" nc:link="menu_reference.xhtml#close_tab"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-file-close-window" nc:name="Close Window" nc:link="menu_reference.xhtml#close_window"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-file-close" nc:name="Close (Window)" nc:link="menu_reference.xhtml#close"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-save-page-as" nc:name="Save Page As..." nc:link="menu_reference.xhtml#save_page_as"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-file-send-page" nc:name="Send Page..." nc:link="menu_reference.xhtml#send_page"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-file-send-page" nc:name="Send Link..." nc:link="menu_reference.xhtml#send_page"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-page-setup" nc:name="Page Setup..." nc:link="menu_reference.xhtml#page_setup"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-print-preview" nc:name="Print Preview" nc:link="menu_reference.xhtml#print_preview"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-print" nc:name="Print..." nc:link="menu_reference.xhtml#print"/> </rdf:li>
@@ -285,10 +274,12 @@
         <rdf:li> <rdf:Description ID="menu-view-redo" nc:name="Redo" nc:link="menu_reference.xhtml#redo"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-cut" nc:name="Cut" nc:link="menu_reference.xhtml#cut"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-copy" nc:name="Copy" nc:link="menu_reference.xhtml#copy"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-paste" nc:name="Paste" nc:link="menu_reference.xhtml#paste"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-delete" nc:name="Delete" nc:link="menu_reference.xhtml#delete"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-select-all" nc:name="Select All" nc:link="menu_reference.xhtml#select_all"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-find-in-this-page" nc:name="Find in This Page..." nc:link="menu_reference.xhtml#find_in_this_page"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-find-again" nc:name="Find Again" nc:link="menu_reference.xhtml#find_again"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-preferences" nc:name="Preferences" nc:link="menu_reference.xhtml#prefs"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -342,7 +333,7 @@
   <rdf:Description about="#menu-bookmarks">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="menu-bookmarks-add-to-bookmarks" nc:name="Add to Bookmarks..." nc:link="menu_reference.xhtml#add_to_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-bookmarks-add-to-bookmarks" nc:name="Bookmark This Page..." nc:link="menu_reference.xhtml#add_to_bookmarks"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-bookmarks-manage" nc:name="Manage Bookmarks..." nc:link="menu_reference.xhtml#manage_bookmarks"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -351,7 +342,12 @@
   <rdf:Description about="#menu-tools">
     <nc:subheadings>
       <rdf:Seq>
+        <rdf:li> <rdf:Description ID="menu-tools-web-search" nc:name="Web Search" nc:link="menu_reference.xhtml#web_search"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-tools-read-mail" nc:name="Read Mail" nc:link="menu_reference.xhtml#read_mail"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-tools-new-message" nc:name="New Message..." nc:link="menu_reference.xhtml#new_message"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-downloads" nc:name="Downloads" nc:link="menu_reference.xhtml#downloads"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-tools-extensions" nc:name="Extensions" nc:link="menu_reference.xhtml#extensions"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-tools-themes" nc:name="Themes" nc:link="menu_reference.xhtml#themes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-javascript-console" nc:name="JavaScript Console" nc:link="menu_reference.xhtml#javascript_console"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-page-info" nc:name="Page Info" nc:link="menu_reference.xhtml#page_info"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-options" nc:name="Options" nc:link="menu_reference.xhtml#options"/> </rdf:li>
@@ -363,8 +359,10 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="menu-help-help-contents" nc:name="Help Contents" nc:link="menu_reference.xhtml#help_contents"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-help-release-notes" nc:name="Release Notes" nc:link="menu_reference.xhtml#release_notes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-for-ie-users" nc:name="For Internet Explorer Users" nc:link="menu_reference.xhtml#for_ie_users"/> </rdf:li>
+        <!--rdf:li> <rdf:Description ID="menu-help-release-notes" nc:name="Release Notes" nc:link="menu_reference.xhtml#release_notes"/> </rdf:li-->
+        <rdf:li> <rdf:Description ID="menu-help-tell-a-friend" nc:name="Tell a Friend" nc:link="menu_reference.xhtml#tell_friend"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-help-promote" nc:name="Promote &brandShortName;" nc:link="menu_reference.xhtml#promote"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-about-mozilla-firebird" nc:name="About &brandFullName;" nc:link="menu_reference.xhtml#about_mozilla_firebird"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
