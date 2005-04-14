@@ -44,6 +44,7 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
+#include "nsCSSLoader.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
@@ -53,13 +54,13 @@
 #include "nsICharsetAlias.h"
 #include "nsUnicharUtils.h"
 #include "nsHashtable.h"
+#include "nsIURI.h"
 #include "nsIURL.h"
+#include "nsIParser.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
 #include "nsCRT.h"
-#include "nsCOMArray.h"
-#include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIScriptGlobalObject.h"
@@ -68,8 +69,13 @@
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
 #include "nsIAtom.h"
-#include "nsCSSLoader.h"
 #include "nsIDOM3Node.h"
+#include "nsICSSStyleSheet.h"
+#include "nsIStyleSheetLinkingElement.h"
+#include "nsICSSLoaderObserver.h"
+#include "nsICSSLoader.h"
+#include "nsICSSParser.h"
+#include "nsICSSImportRule.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"

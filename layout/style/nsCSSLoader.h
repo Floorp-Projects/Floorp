@@ -50,19 +50,23 @@
 #define nsCSSLoader_h__
 
 class CSSLoaderImpl;
+class nsIURI;
+class nsIParser;
+class nsICSSStyleSheet;
+class nsIStyleSheetLinkingElement;
+class nsICSSLoaderObserver;
+class nsICSSParser;
+class nsICSSImportRule;
+class nsMediaList;
 
-#include "nsIURI.h"
-#include "nsIParser.h"
-#include "nsICSSStyleSheet.h"
-#include "nsIStyleSheetLinkingElement.h"
-#include "nsICSSLoaderObserver.h"
 #include "nsICSSLoader.h"
-#include "nsICSSParser.h"
 #include "nsIUnicharStreamLoader.h"
+#include "nsCOMPtr.h"
+#include "nsCOMArray.h"
+#include "nsString.h"
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
-class nsMediaList;
 
 /**
  * OVERALL ARCHITECTURE
