@@ -6345,7 +6345,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                        "How did GetCurrentEventFrame() succeed?");
           nsIView* rootView;
           mViewManager->GetRootView(rootView);
-          nsIView* frameView = mCurrentEventFrame->GetClosestView();
+          nsIView* frameView;
+          nsPoint pt;
+          mCurrentEventFrame->GetOffsetFromView(pt, &frameView);
           offset = frameView->GetOffsetTo(rootView) - offsetOfaView;
         }
 
