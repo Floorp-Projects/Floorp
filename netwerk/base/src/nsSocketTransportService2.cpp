@@ -384,10 +384,11 @@ nsSocketTransportService::ServiceEventQ()
 //-----------------------------------------------------------------------------
 // xpcom api
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsSocketTransportService,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsSocketTransportService,
                               nsISocketTransportService,
                               nsIEventTarget,
-                              nsIRunnable)
+                              nsIRunnable,
+                              nsPISocketTransportService)
 
 // called from main thread only
 NS_IMETHODIMP

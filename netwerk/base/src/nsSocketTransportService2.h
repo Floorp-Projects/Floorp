@@ -38,7 +38,7 @@
 #ifndef nsSocketTransportService2_h__
 #define nsSocketTransportService2_h__
 
-#include "nsISocketTransportService.h"
+#include "nsPISocketTransportService.h"
 #include "nsIEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
@@ -123,12 +123,13 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class nsSocketTransportService : public nsISocketTransportService
+class nsSocketTransportService : public nsPISocketTransportService
                                , public nsIEventTarget
                                , public nsIRunnable
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSPISOCKETTRANSPORTSERVICE
     NS_DECL_NSISOCKETTRANSPORTSERVICE
     NS_DECL_NSIEVENTTARGET
     NS_DECL_NSIRUNNABLE

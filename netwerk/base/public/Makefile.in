@@ -111,6 +111,7 @@ XPIDLSRCS	= \
 		nsIContentSniffer.idl \
 		nsIAuthPromptProvider.idl \
 		nsPIProtocolProxyService.idl \
+		nsPISocketTransportService.idl \
 		nsIChannelEventSink.idl \
 		$(NULL)
 

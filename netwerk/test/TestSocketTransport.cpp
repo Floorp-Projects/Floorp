@@ -37,7 +37,7 @@
 
 #include "TestCommon.h"
 #include "nsIComponentRegistrar.h"
-#include "nsISocketTransportService.h"
+#include "nsPISocketTransportService.h"
 #include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -313,7 +313,7 @@ main(int argc, char* argv[])
         rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsISocketTransportService> sts =
+        nsCOMPtr<nsPISocketTransportService> sts =
             do_GetService(kSocketTransportServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 

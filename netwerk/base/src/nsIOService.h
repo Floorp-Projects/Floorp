@@ -43,7 +43,7 @@
 #include "nsString.h"
 #include "nsIIOService.h"
 #include "nsVoidArray.h"
-#include "nsISocketTransportService.h" 
+#include "nsPISocketTransportService.h" 
 #include "nsPIDNSService.h" 
 #include "nsIProtocolProxyService.h"
 #include "nsCOMPtr.h"
@@ -100,17 +100,17 @@ protected:
     NS_HIDDEN_(void) ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
 
 protected:
-    PRPackedBool                        mOffline;
-    PRPackedBool                        mOfflineForProfileChange;
-    nsCOMPtr<nsISocketTransportService> mSocketTransportService;
-    nsCOMPtr<nsPIDNSService>            mDNSService;
-    nsCOMPtr<nsIProtocolProxyService>   mProxyService;
-    nsCOMPtr<nsIEventQueueService>      mEventQueueService;
+    PRPackedBool                         mOffline;
+    PRPackedBool                         mOfflineForProfileChange;
+    nsCOMPtr<nsPISocketTransportService> mSocketTransportService;
+    nsCOMPtr<nsPIDNSService>             mDNSService;
+    nsCOMPtr<nsIProtocolProxyService>    mProxyService;
+    nsCOMPtr<nsIEventQueueService>       mEventQueueService;
     
     // Cached protocol handlers
-    nsWeakPtr                           mWeakHandler[NS_N(gScheme)];
+    nsWeakPtr                            mWeakHandler[NS_N(gScheme)];
 
-    nsVoidArray                         mRestrictedPortList;
+    nsVoidArray                          mRestrictedPortList;
 
 public:
     // Necko buffer cache. Used for all default buffer sizes that necko
