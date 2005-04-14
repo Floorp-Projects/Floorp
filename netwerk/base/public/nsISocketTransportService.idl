@@ -40,7 +40,7 @@
 interface nsISocketTransport;
 interface nsIProxyInfo;
 
-[scriptable, uuid(05331390-6884-11d3-9382-00104ba0fd40)]
+[scriptable, uuid(7B19AC06-A5FB-11D9-9F82-0011246ECD24)]
 interface nsISocketTransportService : nsISupports 
 {
     /**
@@ -69,16 +69,4 @@ interface nsISocketTransportService : nsISupports
                                        in AUTF8String aHost, 
                                        in long aPort,
                                        in nsIProxyInfo aProxyInfo);
-
-    /**
-     * init/shutdown routines.
-     */
-    void init();
-    void shutdown();
-
-    /**
-     * controls whether or not the socket transport service should poke
-     * the autodialer on connection failure.
-     */
-    attribute boolean autodialEnabled;
 };
