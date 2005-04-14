@@ -133,7 +133,7 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     *outUrls = [urlAndTitleContainer objectAtIndex:0];
     *outTitles = [urlAndTitleContainer objectAtIndex:1];
   } else if ([types containsObject:NSURLPboardType]) {
-    *outUrls = [NSArray arrayWithObject:[NSURL URLFromPasteboard:self]];
+    *outUrls = [NSArray arrayWithObject:[[NSURL URLFromPasteboard:self] absoluteString]];
     if ([types containsObject:kCorePasteboardFlavorType_urld])
       *outTitles = [NSArray arrayWithObject:[self stringForType:kCorePasteboardFlavorType_urld]];
     else
