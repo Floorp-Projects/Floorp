@@ -10,6 +10,7 @@ Contributors:
   David Tenser <david.tenser@comhem.se> (original author)
   R.J. Keller <rlk@trfenv.com>
   Jeff Walden <jwalden+code@mit.edu>
+  Steffen Wilberg <steffen.wilberg@web.de>
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -25,15 +26,34 @@ Contributors:
 
   <div class="contentsBox">In this section:
     <ul>
+      <li class="mac"><a href="#firefox">&brandShortName;</a></li>
       <li><a href="#file">File</a></li>
       <li><a href="#edit">Edit</a></li>
       <li><a href="#view">View</a></li>
       <li><a href="#go">Go</a></li>
       <li><a href="#bookmarks">Bookmarks</a></li>
       <li><a href="#tools">Tools</a></li>
+      <li class="mac"><a href="#window">Window</a></li>
       <li><a href="#help">Help</a></li>
     </ul>
   </div>
+
+<div class="mac">
+  <h2 id="firefox">&brandShortName;</h2>
+    <h3 id="about_mac">About &brandFullName;</h3>
+    <p>Displays a dialog box with information about &brandShortName;, including
+      the current version and a brief list of credits.</p>
+
+    <h3 id="prefs_mac">Preferences...</h3>
+    <p>Displays the <a href="prefs.xhtml">&pref.pluralCaps; window</a>,
+      where you can change many &pref.plural; in &brandShortName;.</p>
+
+    <h3 id="quit_mac">Quit &brandShortName;</h3>
+    <p>Closes all opened windows in &brandShortName;, including any active downloads,
+      and exits &brandShortName; completely. If you happen to select this menu item with
+      open tabs, windows, or downloads, &brandShortName; will ask you to confirm your
+      choice to prevent accidental exits.</p>
+</div>
 
 <h2 id="file">File</h2>
 
@@ -92,6 +112,7 @@ Contributors:
     web pages you've previously visited without being connected to the
     Internet.</p>
 
+<div class="noMac">
   <h3 id="exit">
     <span class="win">Exit</span>
     <span class="noWin">Quit</span>
@@ -100,6 +121,7 @@ Contributors:
     and exits &brandShortName; completely. If you happen to select this menu item with
     open tabs, windows, or downloads, &brandShortName; will ask you to confirm your
     choice to prevent accidental exits.</p>
+</div>
 
 <h2 id="edit">Edit</h2>
 
@@ -305,13 +327,22 @@ Contributors:
     document type, encoding, size, and security information.  The dialog also
     displays lists of the media and links used on the page.</p>
 
-  <h3 class="noUnix" id="options">&pref.pluralCaps;</h3>
-  <p class="noUnix">Displays the <a href="prefs.xhtml">&pref.pluralCaps; window</a>,
+  <h3 class="win" id="options">&pref.pluralCaps;</h3>
+  <p class="win">Displays the <a href="prefs.xhtml">&pref.pluralCaps; window</a>,
     where you can change many &pref.plural; in &brandShortName;.</p>
 
-<!--XXX blah, blah, blah -->
-<!--XXX Help contribs need to test Macs as well as Lin/Win -->
-<!--XXX the Mac Window menu should be documented here -->
+<div class="mac">
+  <h2 id="window">Window</h2>
+
+    <h3 id="minimize">Minimize</h3>
+    <p>Minimizes the current window.</p>
+
+    <h3 id="zoom">Zoom</h3>
+    <p>Enlarges or restores the current window.</p>
+    
+    <h3 id="open-windows">(Open Windows)</h3>
+    <p>This menu displays all the open windows by their title.</p>
+</div>
 
 <h2 id="help">Help</h2>
 
@@ -319,7 +350,7 @@ Contributors:
   <p>Opens the &brandShortName; Help window, which contains useful information
     that can help you browse the web.</p>
 
-  <h3 id="for_ie_users">For Internet Explorer Users (Windows and Mac only)</h3>
+  <h3 id="for_ie_users">For Internet Explorer Users (Windows only)</h3>
   <p>Opens this Help window displaying information that can
     help Internet Explorer users transition to &brandShortName;.</p>
 
@@ -334,7 +365,7 @@ Contributors:
   <p>Displays a dialog box with information about &brandShortName;, including
     the current version and a brief list of credits.</p>
 
-<div class="contentsBox"><em>25 October 2004</em></div>
+<div class="contentsBox"><em>04 November 2004</em></div>
 <p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>
