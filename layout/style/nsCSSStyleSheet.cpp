@@ -56,6 +56,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsICSSGroupRule.h"
+#include "nsICSSImportRule.h"
 #include "nsIMediaList.h"
 #include "nsIStyledContent.h"
 #include "nsIDocument.h"

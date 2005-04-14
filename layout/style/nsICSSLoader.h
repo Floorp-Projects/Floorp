@@ -40,7 +40,6 @@
 #include "nsISupports.h"
 #include "nsSubstring.h"
 #include "nsCompatibility.h"
-#include "nsICSSImportRule.h"
 
 class nsIAtom;
 class nsIURI;
@@ -53,6 +52,7 @@ class nsIDocument;
 class nsIUnicharInputStream;
 class nsICSSLoaderObserver;
 class nsMediaList;
+class nsICSSImportRule;
 
 // IID for the nsICSSLoader interface
 // 6c50f676-c764-4f2f-b62b-99d1076b44e9
