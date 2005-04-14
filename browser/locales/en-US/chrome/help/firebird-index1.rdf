@@ -65,8 +65,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="bookmarks-defined" nc:name="defined" nc:link="glossary.xhtml#bookmark"/></rdf:li>
-                <rdf:li><rdf:Description ID="bookmarks-importing" nc:name="Importing Internet Explorer Favorites" nc:link="forieusers.xhtml#about_your_ie_favorites"/></rdf:li>
-                <rdf:li><rdf:Description ID="settings-importing" nc:name="Importing Internet Explorer Settings" nc:link="forieusers.xhtml#about_your_ie_settings"/></rdf:li>
+                <rdf:li><rdf:Description ID="bookmarks-importing" nc:name="Importing Internet Explorer Favorites" nc:link="forieusers.xhtml#about_your_ie_settings"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -198,7 +197,7 @@
     <rdf:Description about="#f">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="importing-ie-favorites" nc:name="Favorites, Importing" nc:link="forieusers.xhtml#about_your_ie_favorites"/></rdf:li>
+                <rdf:li><rdf:Description ID="importing-ie-favorites" nc:name="Favorites, Importing" nc:link="forieusers.xhtml#about_your_ie_settings"/></rdf:li>
                 <rdf:li><rdf:Description ID="file-types" nc:name="File types, managing" nc:link="using_firebird.xhtml#managing_different_file_types"/></rdf:li>
                 <rdf:li><rdf:Description ID="firebird-using" nc:name="&brandShortName;, Using" nc:link="using_firebird.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="fonts" nc:name="Fonts" nc:link="prefs.xhtml#fonts_and_colors"/></rdf:li>
@@ -269,7 +268,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li>
-                    <rdf:Description ID="ie-help" nc:name="Internet Explorer Users" nc:link="forieusers.xhtml#firebirds_features"/>
+                    <rdf:Description ID="ie-help" nc:name="Internet Explorer Users" nc:link="forieusers.xhtml"/>
                     <rdf:Description ID="install" nc:name="Install" nc:link="prefs.xhtml#software_update"/>
                 </rdf:li>
             </rdf:Seq>
@@ -280,7 +279,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="ie-help-compared" nc:name="Compared with &brandShortName;" nc:link="forieusers.xhtml#firebirds_features"/></rdf:li>
-				<rdf:li><rdf:Description ID="ie-help-favorites" nc:name="Importing IE Favorites" nc:link="forieusers.xhtml#about_your_ie_favorites"/></rdf:li>
+                <rdf:li><rdf:Description ID="ie-help-favorites" nc:name="Importing IE Favorites and Settings" nc:link="forieusers.xhtml#about_your_ie_settings"/></rdf:li>
                 <rdf:li><rdf:Description ID="ie-help-terminology" nc:name="Terminology Differences" nc:link="forieusers.xhtml#firebird_and_internet_explorer_terminology_differences"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
