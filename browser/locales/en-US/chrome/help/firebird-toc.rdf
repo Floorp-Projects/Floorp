@@ -282,7 +282,7 @@
         <rdf:li> <rdf:Description ID="menu-view-reload" nc:name="Reload" nc:link="menu_reference.xhtml#reload"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-increase-text-size" nc:name="Increase Text Size" nc:link="menu_reference.xhtml#increase_text_size"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-decrease-text-size" nc:name="Decrease Text Size" nc:link="menu_reference.xhtml#decrease_text_size"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-view-character-coding" nc:name="Character Coding" nc:link="menu_reference.xhtml#character_coding"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-view-character-encoding" nc:name="Character Encoding" nc:link="menu_reference.xhtml#character_encoding"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-page-source" nc:name="Page Source" nc:link="menu_reference.xhtml#page_source"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-full-screen" nc:name="Full Screen" nc:link="menu_reference.xhtml#full_screen"/> </rdf:li>
       </rdf:Seq>
