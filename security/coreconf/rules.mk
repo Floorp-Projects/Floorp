@@ -395,7 +395,7 @@ WCCFLAGS3 := $(subst -D,-d,$(WCCFLAGS2))
 # Translate source filenames to absolute paths. This is required for
 # debuggers under Windows & OS/2 to find source files automatically
 
-ifeq (,$(filter-out OS2 AIX,$(OS_TARGET)))
+ifeq (,$(filter-out OS2%,$(OS_TARGET)))
 NEED_ABSOLUTE_PATH := 1
 PWD := $(shell pwd)
 endif
