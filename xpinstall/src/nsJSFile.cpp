@@ -78,7 +78,7 @@ extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                jsval aValue);
 
 extern JSObject *gFileSpecProto;
-
+extern JSClass InstallClass;
 
 /***********************************************************************/
 //
@@ -97,6 +97,20 @@ JSClass FileOpClass = {
   JS_FinalizeStub
 };
 
+static nsInstall *
+GetNativeThis(JSContext *cx, JSObject *obj, jsval *argv)
+{
+  // Pass null for argv in the first test to avoid spurious error
+  // reports when called against the File object.  The Install-global
+  // methods are considered deprecated in favour of the File-scoped ones,
+  // so if we get neither here we'll mention File in the report to point
+  // authors at the new way.
+  if (JS_InstanceOf(cx, obj, &InstallClass, nsnull) ||
+      JS_InstanceOf(cx, obj, &FileOpClass, argv)) {
+    return (nsInstall *)JS_GetPrivate(cx, obj);
+  }
+  return nsnull;
+}
 
 //
 // Native method DirCreate
@@ -105,7 +119,7 @@ JSBool PR_CALLBACK
 InstallFileOpDirCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -150,7 +164,7 @@ JSBool PR_CALLBACK
 InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -210,7 +224,7 @@ JSBool PR_CALLBACK
 InstallFileOpDirRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -263,7 +277,7 @@ JSBool PR_CALLBACK
 InstallFileOpDirRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -326,7 +340,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -395,7 +409,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -440,7 +454,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -485,7 +499,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -560,7 +574,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileGetNativeVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -606,7 +620,7 @@ InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc,
 {
 
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -653,7 +667,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileGetModDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -698,7 +712,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileGetSize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -746,7 +760,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileIsDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -791,7 +805,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileIsWritable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -835,7 +849,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileIsFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -880,7 +894,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileModDateChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -935,7 +949,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileMove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -1001,7 +1015,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -1065,7 +1079,7 @@ InstallFileOpFileWindowsGetShortName(JSContext *cx, JSObject *obj, uintN argc, j
 {
   nsAutoString shortPathName;
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -1110,7 +1124,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -1186,7 +1200,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -1308,7 +1322,7 @@ JSBool PR_CALLBACK
 InstallFileOpFileUnixLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
@@ -1365,7 +1379,7 @@ JSBool PR_CALLBACK
 InstallFileOpWinRegisterServer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis =
-    (nsInstall*)JS_GetInstancePrivate(cx, obj, &FileOpClass, argv);
+    GetNativeThis(cx, obj, argv);
   if (!nativeThis)
     return JS_FALSE;
 
