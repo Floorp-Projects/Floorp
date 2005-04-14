@@ -15,7 +15,7 @@
         <rdf:li> <rdf:Description ID="using-firebird" nc:name="Using &brandFullName;" nc:link="using_firebird.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-download-manager" nc:name="Using the Download Manager" nc:link="download_manager.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="customize-firebird" nc:name="Customization" nc:link="customization.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs" nc:name="Options (Preferences)" nc:link="prefs.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs" nc:name="Options" nc:link="prefs.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="popup-blocker" nc:name="Controlling Popups" nc:link="popup.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cookies" nc:name="Managing Cookies" nc:link="cookies.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml"/> </rdf:li>
@@ -89,7 +89,7 @@
       <nc:subheadings>
         <rdf:Seq>
           <rdf:li> <rdf:Description ID="using-firebird-managing-different-file-types" nc:name="Managing Different File Types" nc:link="using_firebird.xhtml#managing_different_file_types"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="using-firebird-making-firebird-default-browser" nc:name="Make Default Browser (Windows or Linux)" nc:link="using_firebird.xhtml#making_firebird_your_default_browser"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="using-firebird-making-firebird-default-browser" nc:name="Make Default Browser" nc:link="using_firebird.xhtml#making_firebird_your_default_browser"/> </rdf:li>
           <rdf:li> <rdf:Description ID="using-firebird-cache" nc:name="Cache Settings" nc:link="using_firebird.xhtml#changing_cache_settings"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
@@ -196,7 +196,7 @@
         <rdf:li> <rdf:Description ID="prefs-home-page" nc:name="Home Page" nc:link="prefs.xhtml#home_page"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-fonts-and-colors" nc:name="Fonts and Colors" nc:link="prefs.xhtml#fonts_and_colors"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-languages" nc:name="Languages" nc:link="prefs.xhtml#languages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs-default-browser" nc:name="Default Browser (Windows or Linux)" nc:link="prefs.xhtml#default_browser"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-default-browser" nc:name="Default Browser" nc:link="prefs.xhtml#default_browser"/> </rdf:li>
         <rdf:li> <rdf:Description ID="prefs-connection-settings" nc:name="Connection Settings" nc:link="prefs.xhtml#connection_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -284,11 +284,11 @@
         <rdf:li> <rdf:Description ID="menu-file-save-page-as" nc:name="Save Page As..." nc:link="menu_reference.xhtml#save_page_as"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-send-page" nc:name="Send Link..." nc:link="menu_reference.xhtml#send_page"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-page-setup" nc:name="Page Setup..." nc:link="menu_reference.xhtml#page_setup"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-file-print-preview" nc:name="Print Preview (Windows or Linux)" nc:link="menu_reference.xhtml#print_preview"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-file-print-preview" nc:name="Print Preview" nc:link="menu_reference.xhtml#print_preview"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-print" nc:name="Print..." nc:link="menu_reference.xhtml#print"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-import" nc:name="Import..." nc:link="menu_reference.xhtml#import"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-work-offline" nc:name="Work Offline" nc:link="menu_reference.xhtml#work_offline"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-exit" nc:name="Exit (Quit)" nc:link="menu_reference.xhtml#exit"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-exit" nc:name="Exit" nc:link="menu_reference.xhtml#exit"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -395,7 +395,7 @@
         <rdf:li> <rdf:Description ID="menu-tools-themes" nc:name="Themes" nc:link="menu_reference.xhtml#themes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-javascript-console" nc:name="JavaScript Console" nc:link="menu_reference.xhtml#javascript_console"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-page-info" nc:name="Page Info" nc:link="menu_reference.xhtml#page_info"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-tools-options" nc:name="Options (Preferences)" nc:link="menu_reference.xhtml#options"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-tools-options" nc:name="Options" nc:link="menu_reference.xhtml#options"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
