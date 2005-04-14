@@ -450,7 +450,9 @@ listrows {
 listboxbody {
   -moz-box-orient: vertical;
   -moz-box-flex: 1;
-  overflow: auto;
+  /* Don't permit a horizontal scrollbar. See bug 285449 */
+  overflow-x: hidden !important;
+  overflow-y: auto;
   min-height: 0px;
 }
 
