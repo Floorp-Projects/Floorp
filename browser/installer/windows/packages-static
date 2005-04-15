@@ -14,6 +14,7 @@ bin/.autoreg
 
 [@AB_CD@]
 bin\chrome\@AB_CD@.jar
+bin\chrome\@AB_CD@.manifest
 bin\defaults\pref\firefox-l10n.js
 bin\browserconfig.properties
 bin\searchplugins\*
@@ -200,6 +201,7 @@ bin\chrome\browser.jar
 bin\chrome\classic.jar
 bin\chrome\comm.jar
 bin\chrome\toolkit.jar
+bin\chrome\toolkit.manifest
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
