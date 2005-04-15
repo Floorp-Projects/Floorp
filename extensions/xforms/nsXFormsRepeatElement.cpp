@@ -588,6 +588,8 @@ nsXFormsRepeatElement::Bind()
     return NS_OK;
 
   mModel = nsXFormsUtils::GetModel(mElement);
+  if (mModel)
+    mModel->AddFormControl(this);
 
   return NS_OK;
 }

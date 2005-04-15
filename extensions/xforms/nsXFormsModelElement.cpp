@@ -180,7 +180,8 @@ nsXFormsModelElement::nsXFormsModelElement()
     mSchemaCount(0),
     mSchemaTotal(0),
     mPendingInstanceCount(0),
-    mDocumentLoaded(PR_FALSE)
+    mDocumentLoaded(PR_FALSE),
+    mNeedsRefresh(PR_FALSE)
 {
 }
 
@@ -487,6 +488,9 @@ nsXFormsModelElement::Rebuild()
   rv = ProcessBindElements();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Triggers a refresh of all controls
+  mNeedsRefresh = PR_TRUE;
+
   return mMDG.Rebuild();
 }
 
@@ -576,72 +580,76 @@ nsXFormsModelElement::Revalidate()
     nsCOMPtr<nsIDOMNode> boundNode;
     control->GetBoundNode(getter_AddRefs(boundNode));
 
-    // Get dependencies
-    nsCOMArray<nsIDOMNode> *deps = nsnull;
-    control->GetDependencies(&deps);    
-
-#ifdef DEBUG_MODEL
-    PRUint32 depCount = deps ? deps->Count() : 0;
-    nsCOMPtr<nsIDOMElement> controlElement;
-    control->GetElement(getter_AddRefs(controlElement));
-    if (controlElement) {
-      printf("Checking control: ");      
-      // DBG_TAGINFO(controlElement);
-      nsAutoString boundName;
-      if (boundNode)
-        boundNode->GetNodeName(boundName);
-      printf("\tDependencies: %d, Bound to: '%s' [%p]\n",
-             depCount,
-             NS_ConvertUCS2toUTF8(boundName).get(),
-             (void*) boundNode);
-
-      nsAutoString depNodeName;
-      for (PRUint32 t = 0; t < depCount; ++t) {
-        nsCOMPtr<nsIDOMNode> tmpdep = deps->ObjectAt(t);
-        if (tmpdep) {
-          tmpdep->GetNodeName(depNodeName);
-          printf("\t\t%s [%p]\n",
-                 NS_ConvertUCS2toUTF8(depNodeName).get(),
-                 (void*) tmpdep);
-        }
-      }
-    }
-#endif
-
-    nsCOMPtr<nsIDOM3Node> curChanged;
     PRBool rebind = PR_FALSE;
     PRBool refresh = PR_FALSE;
 
-    for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
-      curChanged = do_QueryInterface(mChangedNodes[j]);
-
-      // Check whether the bound node is dirty. If so, we need to refresh the
-      // control (get updated node value from the bound node)
-      if (!refresh && boundNode) {
-        curChanged->IsSameNode(boundNode, &refresh);
-        
-        if (refresh)
-          // We need to refresh the control. We cannot break out of the loop
-          // as we need to check dependencies
-          continue;
-      }
-
-      // Check whether any dependencies are dirty. If so, we need to rebind
-      // the control (re-evaluate it's binding expression)
-      for (PRInt32 k = 0; k < deps->Count(); ++k) {
-        /// @note beaufour: I'm not to happy about this ...
-        /// O(mChangedNodes.Count() * deps->Count()), but using the pointers
-        /// for sorting and comparing does not work...
-        curChanged->IsSameNode(deps->ObjectAt(k), &rebind);
-        if (rebind)
-          // We need to rebind the control, no need to check any more
-          break;
-      }
-    }
+    if (mNeedsRefresh) {
+      refresh = PR_TRUE;
+    } else {
+      // Get dependencies
+      nsCOMArray<nsIDOMNode> *deps = nsnull;
+      control->GetDependencies(&deps);    
 
 #ifdef DEBUG_MODEL
-    printf("\trebind: %d, refresh: %d\n", rebind, refresh);    
+      PRUint32 depCount = deps ? deps->Count() : 0;
+      nsCOMPtr<nsIDOMElement> controlElement;
+      control->GetElement(getter_AddRefs(controlElement));
+      if (controlElement) {
+        printf("Checking control: ");      
+        //DBG_TAGINFO(controlElement);
+        nsAutoString boundName;
+        if (boundNode)
+          boundNode->GetNodeName(boundName);
+        printf("\tDependencies: %d, Bound to: '%s' [%p]\n",
+               depCount,
+               NS_ConvertUCS2toUTF8(boundName).get(),
+               (void*) boundNode);
+
+        nsAutoString depNodeName;
+        for (PRUint32 t = 0; t < depCount; ++t) {
+          nsCOMPtr<nsIDOMNode> tmpdep = deps->ObjectAt(t);
+          if (tmpdep) {
+            tmpdep->GetNodeName(depNodeName);
+            printf("\t\t%s [%p]\n",
+                   NS_ConvertUCS2toUTF8(depNodeName).get(),
+                   (void*) tmpdep);
+          }
+        }
+      }
+#endif
+
+      nsCOMPtr<nsIDOM3Node> curChanged;
+
+      for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
+        curChanged = do_QueryInterface(mChangedNodes[j]);
+
+        // Check whether the bound node is dirty. If so, we need to refresh the
+        // control (get updated node value from the bound node)
+        if (!refresh && boundNode) {
+          curChanged->IsSameNode(boundNode, &refresh);
+        
+          if (refresh)
+            // We need to refresh the control. We cannot break out of the loop
+            // as we need to check dependencies
+            continue;
+        }
+
+        // Check whether any dependencies are dirty. If so, we need to rebind
+        // the control (re-evaluate it's binding expression)
+        for (PRInt32 k = 0; k < deps->Count(); ++k) {
+          /// @note beaufour: I'm not to happy about this ...
+          /// O(mChangedNodes.Count() * deps->Count()), but using the pointers
+          /// for sorting and comparing does not work...
+          curChanged->IsSameNode(deps->ObjectAt(k), &rebind);
+          if (rebind)
+            // We need to rebind the control, no need to check any more
+            break;
+        }
+      }
+#ifdef DEBUG_MODEL
+      printf("\trebind: %d, refresh: %d\n", rebind, refresh);    
 #endif    
+    }
 
     if (rebind) {
       control->Bind();
@@ -656,6 +664,7 @@ nsXFormsModelElement::Revalidate()
 
   mChangedNodes.Clear();
   mMDG.ClearDispatchFlags();
+  mNeedsRefresh = PR_FALSE;
 
   return NS_OK;
 }

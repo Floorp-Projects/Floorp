@@ -156,6 +156,10 @@ private:
 
   // This flag indicates whether or not the document fired DOMContentLoaded
   PRBool mDocumentLoaded;
+
+  // This flag indicates whether a xforms-rebuild has been called, but no
+  // xforms-revalidate yet
+  PRBool mNeedsRefresh;
 };
 
 NS_HIDDEN_(nsresult) NS_NewXFormsModelElement(nsIXTFElement **aResult);
