@@ -95,6 +95,10 @@ interface nsIEventQueue : nsIEventTarget
     void enterMonitor();
     void exitMonitor();
 
+    /**
+     * Revoke events in this event queue and all other event queues
+     * for this thread that have |owner| as the event owner.
+     */
     [noscript] void revokeEvents(in voidPtr owner);
     [noscript] PLEventQueuePtr getPLEventQueue();
 

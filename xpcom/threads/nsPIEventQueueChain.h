@@ -74,8 +74,10 @@ public:
 
     /**
      * Fetch (and addref) the youngest member of the chain which is
-     * still accepting events, or at least still contains events in need
-     * of processing.
+     * still accepting events.  Note that there may be still younger
+     * queues which still contain events in need of processing but
+     * have already stopped accepting new events.
+     *
      * @param *aQueue the youngest such queue. aQueue must not be null.
      *        *aQueue will be returned null, if no such queue is found.
      * @return error indication -- can be NS_OK even if *aQueue is 0
@@ -87,6 +89,13 @@ public:
 
     NS_IMETHOD SetElder(nsPIEventQueueChain *aQueue) = 0;
     NS_IMETHOD GetElder(nsIEventQueue **aQueue) = 0;
+
+    /**
+     * Revoke events for aOwner in this queue and all elder queues.  This
+     * differs in behavior from nsIEventQueue::RevokeEvents in that that
+     * method revokes events in younger queues too.
+     */
+    NS_IMETHOD RevokeEventsInternal(void* aOwner) = 0;
 };
 
 #endif /* nsPIEventQueueChain_h___ */
