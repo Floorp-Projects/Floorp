@@ -119,10 +119,10 @@ nsFormFillController::~nsFormFillController()
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRect&
+nsRect
 GetScreenOrigin(nsIDOMElement* aElement)
 {
-  nsRect* rect = new nsRect(0,0,0,0);
+  nsRect rect(0,0,0,0);
   nsSize size;
  
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
@@ -151,21 +151,21 @@ GetScreenOrigin(nsIDOMElement* aElement)
           nsIWidget* widget = view->GetNearestWidget(&widgetOffset);
           if (widget) {
             nsRect oldBox(0,0,0,0);
-            widget->WidgetToScreen(oldBox, *rect);
+            widget->WidgetToScreen(oldBox, rect);
           }
           
-          rect->x += NSTwipsToIntPixels(offset.x+widgetOffset.x, scale);
-          rect->y += NSTwipsToIntPixels(offset.y+widgetOffset.y, scale);
+          rect.x += NSTwipsToIntPixels(offset.x+widgetOffset.x, scale);
+          rect.y += NSTwipsToIntPixels(offset.y+widgetOffset.y, scale);
         }
         
         size = frame->GetSize();
-        rect->width = NSTwipsToIntPixels(size.width, scale);
-        rect->height = NSTwipsToIntPixels(size.height, scale);
+        rect.width = NSTwipsToIntPixels(size.width, scale);
+        rect.height = NSTwipsToIntPixels(size.height, scale);
       }
     }
   }
   
-  return *rect;
+  return rect;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -479,6 +479,8 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
   nsCOMPtr<nsIAutoCompleteMdbResult> mdbResult = do_QueryInterface(aPreviousResult);
 
   nsPasswordManager* passMgr = nsPasswordManager::GetInstance();
+  if (!passMgr)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Only hand off a previous result to the password manager if it's
   // a password manager result (i.e. not an nsIAutoCompleteMdbResult).
@@ -489,12 +491,13 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
                                    getter_AddRefs(result)))
   {
     nsFormHistory *history = nsFormHistory::GetInstance();
-    history->AutoCompleteSearch(aSearchParam,
-                                aSearchString,
-                                mdbResult,
-                                getter_AddRefs(result));
-
-    NS_RELEASE(history);
+    if (history) {
+      history->AutoCompleteSearch(aSearchParam,
+                                  aSearchString,
+                                  mdbResult,
+                                  getter_AddRefs(result));
+      NS_RELEASE(history);
+    }
   }
   NS_RELEASE(passMgr);
 
