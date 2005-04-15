@@ -10230,6 +10230,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
     nsIFrame* primaryFrame = nsnull;
     mPresShell->GetPrimaryFrameFor(aContent, &primaryFrame);
 
+    nsChangeHint hint = NS_STYLE_HINT_NONE;
     if (primaryFrame) {
       PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
       if (app) {
@@ -10239,8 +10240,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
           PRBool repaint = PR_FALSE;
           theme->WidgetStateChanged(primaryFrame, app, nsnull, &repaint);
           if (repaint) {
-            ApplyRenderingChangeToTree(presContext, primaryFrame, nsnull,
-                                       nsChangeHint_RepaintFrame);
+            NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
           }
         }
       }
@@ -10249,7 +10249,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
     nsReStyleHint rshint = 
       styleSet->HasStateDependentStyle(presContext, aContent, aStateMask);
       
-    PostRestyleEvent(aContent, rshint, NS_STYLE_HINT_NONE);
+    PostRestyleEvent(aContent, rshint, hint);
   }
 }
 
@@ -10329,7 +10329,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
         PRBool repaint = PR_FALSE;
         theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute, &repaint);
         if (repaint)
-          ApplyRenderingChangeToTree(presContext, primaryFrame, nsnull, nsChangeHint_RepaintFrame);
+          NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
       }
     }
   }
