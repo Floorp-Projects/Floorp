@@ -164,6 +164,14 @@ interface calIItemBase : nsISupports
   // will not throw an error if you delete a property that doesn't exist
   void deleteProperty(in AString name);
 
+  /**
+   * The organizer (originator) of the item.  We will likely not
+   * honour or preserve all fields in the calIAttendee passed around here.
+   * A base class like calIPerson might be more appropriate here, if we ever
+   * grow one.
+   */
+  attribute calIAttendee organizer;
+
   // The array returned here is not live; it will not reflect calls to
   // removeAttendee/addAttendee that follow the call to getAttendees.
   void getAttendees(out PRUint32 count,

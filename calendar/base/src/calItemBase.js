@@ -76,6 +76,8 @@ calItemBase.prototype = {
         if (this.mAlarmTime)
             this.mAlarmTime.makeImmutable();
 
+        if (this.mOrganizer)
+            this.mOrganizer.makeImmutable();
         for (var i = 0; i < this.mAttendees.length; i++)
             this.mAttendees[i].makeImmutable();
         this.mImmutable = true;
@@ -243,6 +245,16 @@ calItemBase.prototype = {
         this.mParent = v;
     },
 
+    mOrganizer: null,
+    get organizer() {
+        return this.mOrganizer;
+    },
+
+    set organizer(v) {
+        this.modify();
+        this.mOrganizer = v;
+    },
+
     /* MEMBER_ATTR(mIcalString, "", icalString), */
     get icalString() {
         throw Components.results.NS_NOT_IMPLEMENTED;
@@ -267,6 +279,7 @@ calItemBase.prototype = {
         "EXDATE": true,
         "RDATE": true,
         "ATTENDEE": true,
+        "ORGANIZER": true,
     },
 
     mapPropsFromICS: function(icalcomp, propmap) {
@@ -303,7 +316,6 @@ calItemBase.prototype = {
         this.modify();
 
         this.mapPropsFromICS(icalcomp, this.icsBasePropMap);
-        this.mPrivacy = icalcomp.icalClass;
 
         for (var attprop = icalcomp.getFirstProperty("ATTENDEE");
              attprop;
@@ -312,6 +324,13 @@ calItemBase.prototype = {
             var att = new CalAttendee();
             att.icalProperty = attprop;
             this.addAttendee(att);
+        }
+
+        var orgprop = icalcomp.getFirstProperty("ORGANIZER");
+        if (orgprop) {
+            var org = new CalAttendee();
+            org.icalProperty = orgprop;
+            this.mOrganizer = org;
         }
         
         var gen = icalcomp.getFirstProperty("X-MOZILLA-GENERATION");
@@ -370,8 +389,9 @@ calItemBase.prototype = {
         var suppressDCE = this.lastModifiedTime;
         suppressDCE = this.stampTime;
         this.mapPropsToICS(icalcomp, this.icsBasePropMap);
-        icalcomp.icalClass = this.mPrivacy;
 
+        if (this.mOrganizer)
+            icalcomp.addProperty(this.mOrganizer.icalProperty);
         for (var i = 0; i < this.mAttendees.length; i++)
             icalcomp.addProperty(this.mAttendees[i].icalProperty);
 

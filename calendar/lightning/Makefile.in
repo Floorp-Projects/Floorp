@@ -47,7 +47,13 @@ MODULE		= lightning
 export XPI_NAME	= lightning
 XPI_INSTALL_EXTRAS = $(srcdir)/chrome.manifest
 XPI_PKGNAME	= lightning
-DIRS		= ../../db/sqlite3/src ../../storage ../libical ../base ../providers
+
+DIRS		= ../../db/sqlite3/src ../../storage \
+		  ../../extensions/xmlextras         \
+		  ../../extensions/webdav            \
+                  ../libical ../base ../providers    \
+                  components                         \
+		  $(NULL)
 
 # Select a theme from which to pull our skin goodness
 # OS X: pinstripe
