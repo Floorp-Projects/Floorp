@@ -293,12 +293,8 @@ void SetStatusStatus(void)
 
   if(!gbShowDownloadRetryMsg)
   {
-    GetPrivateProfileString("Strings",
-                            "Status Download",
-                            "",
-                            szStatusStatusLine,
-                            sizeof(szStatusStatusLine),
-                            szFileIniConfig);
+    GetConfigIniProfileString("Strings", "Status Download", "",
+                            szStatusStatusLine, sizeof(szStatusStatusLine));
     if(*szStatusStatusLine != '\0')
       sprintf(szCurrentStatusInfo,
               szStatusStatusLine,
@@ -316,12 +312,8 @@ void SetStatusStatus(void)
   }
   else
   {
-    GetPrivateProfileString("Strings",
-                            "Status Retry",
-                            "",
-                            szStatusStatusLine,
-                            sizeof(szStatusStatusLine),
-                            szFileIniConfig);
+    GetConfigIniProfileString("Strings", "Status Retry", "",
+			      szStatusStatusLine, sizeof(szStatusStatusLine));
     if(*szStatusStatusLine != '\0')
       sprintf(szCurrentStatusInfo,
               szStatusStatusLine,
@@ -338,12 +330,8 @@ void SetStatusStatus(void)
               glTotalKb);
   }
 
-  GetPrivateProfileString("Strings",
-                          "Status Percentage Completed",
-                          "",
-                          szPercentageCompleted,
-                          sizeof(szPercentageCompleted),
-                          szFileIniConfig);
+  GetConfigIniProfileString("Strings", "Status Percentage Completed", "",
+			    szPercentageCompleted, sizeof(szPercentageCompleted));
   wsprintf(szPercentString, szPercentageCompleted, (int)GetPercentSoFar());
 
   /* Set the download dialog title */
@@ -401,7 +389,7 @@ void SetMinimizedDownloadTitle(DWORD dwPercentSoFar)
   char szDownloadTitle[MAX_BUF_MEDIUM];
   char gszCurrentDownloadInfo[MAX_BUF_MEDIUM];
 
-  GetPrivateProfileString("Strings", "Dialog Download Title Minimized", "", szDownloadTitle, sizeof(szDownloadTitle), szFileIniConfig);
+  GetConfigIniProfileString("Strings", "Dialog Download Title Minimized", "", szDownloadTitle, sizeof(szDownloadTitle));
 
   if(*szDownloadTitle != '\0')
     wsprintf(gszCurrentDownloadInfo, szDownloadTitle, dwPercentSoFar, gszCurrentDownloadFilename);
@@ -559,7 +547,7 @@ int DownloadViaProxyOpen(char *szUrl, char *szProxyServer, char *szProxyPort, ch
   {
     char szBuf[MAX_BUF_TINY];
 
-    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    GetConfigIniProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf));
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
@@ -614,7 +602,7 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
   {
     char szBuf[MAX_BUF_TINY];
 
-    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    GetConfigIniProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf));
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
@@ -717,7 +705,7 @@ int DownloadViaFTPOpen(char *szUrl)
   {
     char szBuf[MAX_BUF_TINY];
 
-    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    GetConfigIniProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf));
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
@@ -766,7 +754,7 @@ int DownloadViaFTP(char *szUrl)
   {
     char szBuf[MAX_BUF_TINY];
 
-    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    GetConfigIniProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf));
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
@@ -1072,18 +1060,10 @@ int DownloadFiles(char *szInputIniFile,
           /* The connection unexepectedly dropped for some reason, so inform
            * the user that the download will be Paused, and then update the
            * Download dialog to show the Paused state. */
-          GetPrivateProfileString("Messages",
-                                  "MB_WARNING_STR",
-                                  "",
-                                  szTitle,
-                                  sizeof(szTitle),
-                                  szFileIniInstall);
-          GetPrivateProfileString("Strings",
-                                  "Message Download Paused",
-                                  "",
-                                  szMsgDownloadPaused,
-                                  sizeof(szMsgDownloadPaused),
-                                  szFileIniConfig);
+          GetConfigIniProfileString("Messages", "MB_WARNING_STR", "",
+				    szTitle, sizeof(szTitle));
+          GetConfigIniProfileString("Strings", "Message Download Paused", "",
+				    szMsgDownloadPaused, sizeof(szMsgDownloadPaused));
           MessageBox(dlgInfo.hWndDlg,
                      szMsgDownloadPaused,
                      szTitle,
@@ -1169,12 +1149,8 @@ int DownloadFiles(char *szInputIniFile,
       if(szFailedFile && ((DWORD)lstrlen(szCurrentFile) <= dwFailedFileSize))
         lstrcpy(szFailedFile, gszCurrentDownloadFileDescription);
 
-      GetPrivateProfileString("Strings",
-                              "Error Too Many Network Errors",
-                              "",
-                              szMsg,
-                              sizeof(szMsg),
-                              szFileIniConfig);
+      GetConfigIniProfileString("Strings", "Error Too Many Network Errors", "",
+				szMsg, sizeof(szMsg));
       if(*szMsg != '\0')
       {
         wsprintf(szBuf, szMsg, szCurrentFile);
@@ -1251,12 +1227,8 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
   switch (msg)
   {
     case WM_INITDIALOG:
-      GetPrivateProfileString("Strings",
-                              "Status File Info",
-                              "",
-                              gszFileInfo,
-                              sizeof(gszFileInfo),
-                              szFileIniConfig);
+      GetConfigIniProfileString("Strings", "Status File Info", "",
+				gszFileInfo, sizeof(gszFileInfo));
       if(gbShowDownloadRetryMsg)
         SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
       else

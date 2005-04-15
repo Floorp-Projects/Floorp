@@ -49,18 +49,14 @@ CONFIG_DIR=$(shell cygpath -a instgen)
 OBJ_DIR=$(shell cygpath -a $(DEPTH))
 SRC_DIR=$(shell cygpath -a $(topsrcdir))
 
-LOCALIZED_FILES = \
-	install.it \
-	$(NULL)
-
 PP_LOCALIZED_FILES = \
 	packages-static \
-	config.it \
 	uninstall.it \
 	installer.cfg \
 	$(NULL)
 
 INSTALLER_FILES = \
+	config.it \
 	abe.jst \
 	adt.jst \
 	browser.jst \
@@ -85,7 +81,7 @@ include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.m
 
 installer:
 	$(NSINSTALL) -D instgen
-	$(INSTALL) $(addprefix $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/,$(LOCALIZED_FILES)) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
+	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
 	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(topsrcdir)/browser/locales/$(AB_CD)/installer/installer.inc > instgen/installer.inc
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
@@ -94,6 +90,10 @@ installer:
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
 	  -I$(call EXPAND_LOCALE_SRCDIR,browser/locales)/defines.inc \
 	  $(srcdir)/ab-CD.jst > instgen/$(AB_CD).jst
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  -Iinstgen/installer.inc \
+	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
+	  $(srcdir)/install.it > instgen/install.it
 	cd $(topsrcdir)/toolkit/mozapps/installer && \
 	  perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" \
 	  -objDir "$(OBJ_DIR)"
@@ -109,4 +109,3 @@ ifndef MOZ_USE_OFFICIAL_BRANDING
 	cp $(srcdir)/Header.bmp    $(DIST)/branding/Header.bmp
 	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
 endif
-

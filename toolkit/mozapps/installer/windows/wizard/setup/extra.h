@@ -94,9 +94,9 @@ ULONGLONG         SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible, D
 ULONGLONG         SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
 ULONGLONG         SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
 siC               *SiCNodeFind(siC *siComponents, char *szInReferenceName);
-void              InitSiComponents(char *szFileIni);
+void              InitSiComponents();
 HRESULT           ParseComponentAttributes(char *szBuf, DWORD dwAttributes, BOOL bOverride);
-void              InitSiteSelector(char *szFileIni);
+void              InitSiteSelector();
 void              DeInitSiCDependencies(siCD *siCDDependencies);
 BOOL              ResolveDependencies(DWORD dwIndex, HWND hwndListBox);
 BOOL              ResolveComponentDependency(siCD *siCDInDependency, HWND hwndListBox);
@@ -124,6 +124,9 @@ void              DeInitSiComponents(siC **siComponents);
 void              DeInitSetupGeneral(void);
 HRESULT           ParseSetupIni(void);
 HRESULT           GetConfigIni(void);
+DWORD             GetConfigIniProfileString(const char* aSection, const char *aKey,
+                                            const char *aDefault,
+                                            char *aResult, DWORD aMaxLen);
 HRESULT           GetInstallIni(void);
 void              CleanTempFiles(void);
 void              OutputSetupTitle(HDC hDC);

@@ -69,7 +69,6 @@ LPSTR           szEOutOfMemory;
 LPSTR           szSetupDir;
 LPSTR           szTempDir;
 LPSTR           szOSTempDir;
-LPSTR           szFileIniConfig;
 LPSTR           szFileIniInstall;
 
 LPSTR           szSiteSelectorDescription;
@@ -237,6 +236,3 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
   return 0;
 } 
-
-
-
