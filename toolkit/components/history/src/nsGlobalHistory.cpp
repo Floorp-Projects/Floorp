@@ -3286,8 +3286,9 @@ nsGlobalHistory::FindUrlToTokenList(const char *aURL, nsVoidArray& aResult)
 
       tokenPair *tokenStruct = new tokenPair(tokenName, tokenNameLength,
                                              tokenValue, tokenValueLength);
-      aResult.AppendElement((void *)tokenStruct);
-      
+      if (tokenStruct)
+        aResult.AppendElement((void *)tokenStruct);
+
       // reset our state
       tokenName = tokenValue = nsnull;
       tokenNameLength = tokenValueLength = 0;

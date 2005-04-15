@@ -1207,8 +1207,11 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
               temp = entry;
 
               for (PRUint32 arg = 0; arg < entryCount; ++arg) {
-                if (NS_FAILED(DecryptData(temp->userValue, ptUsernames[arg])))
+                if (NS_FAILED(DecryptData(temp->userValue, ptUsernames[arg]))) {
+                  delete [] formatArgs;
+                  delete [] ptUsernames;
                   return NS_OK;
+                }
 
                 formatArgs[arg] = ptUsernames[arg].get();
                 temp = temp->next;
@@ -1486,7 +1489,9 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
 
         if (aSearchString.Length() <= userValue.Length() &&
             StringBeginsWith(userValue, aSearchString)) {
-          result->mArray.AppendElement(ToNewUnicode(userValue));
+          PRUnichar* data = ToNewUnicode(userValue);
+          if (data)
+            result->mArray.AppendElement(data);
         }
       }
 

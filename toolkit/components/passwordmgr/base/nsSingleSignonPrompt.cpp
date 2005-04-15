@@ -96,7 +96,7 @@ nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
                   aConfirm);
 
   if (*aConfirm) {
-    if (checkValue && value[0] != '\0') {
+    if (checkValue && value && value[0] != '\0') {
       // The user requested that we save the value
       // TODO: support SAVE_PASSWORD_FOR_SESSION
 
@@ -166,7 +166,7 @@ nsSingleSignonPrompt::PromptUsernameAndPassword(const PRUnichar* aDialogTitle,
                                      aConfirm);
 
   if (*aConfirm) {
-    if (checkValue && (user[0] != '\0' || password[0] != '\0')) {
+    if (checkValue && user && password && (user[0] != '\0' || password[0] != '\0')) {
       // The user requested that we save the values
       // TODO: support SAVE_PASSWORD_FOR_SESSION
 
@@ -238,7 +238,7 @@ nsSingleSignonPrompt::PromptPassword(const PRUnichar* aDialogTitle,
                           aConfirm);
 
   if (*aConfirm) {
-    if (checkValue && password[0] != '\0') {
+    if (checkValue && password && password[0] != '\0') {
       // The user requested that we save the password
       // TODO: support SAVE_PASSWORD_FOR_SESSION
 

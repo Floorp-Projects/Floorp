@@ -420,9 +420,7 @@ nsDownloadManager::AssertProgressInfoFor(const PRUnichar* aPath)
     return NS_ERROR_FAILURE;
  
   nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
-  nsCOMPtr<nsIDownload> download;
-  internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
-  if (!download)
+  if (!internalDownload)
     return NS_ERROR_FAILURE;
   
   nsresult rv;
@@ -448,7 +446,7 @@ nsDownloadManager::AssertProgressInfoFor(const PRUnichar* aPath)
   if (NS_FAILED(rv)) return rv;
 
   // update percentage
-  download->GetPercentComplete(&percentComplete);
+  internalDownload->GetPercentComplete(&percentComplete);
 
   mDataSource->GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
   gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(intLiteral));
@@ -710,10 +708,7 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
     return RemoveDownload(aPath); // XXXBlake for now, to provide a workaround for stuck downloads
   
   nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
-  nsCOMPtr<nsIDownload> download;
-  CallQueryInterface(internalDownload, NS_STATIC_CAST(nsIDownload**, 
-                                                      getter_AddRefs(download)));
-  if (!download)
+  if (!internalDownload)
     return NS_ERROR_FAILURE;
 
   // Don't cancel if download is already finished
@@ -724,7 +719,7 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
 
   // if a persist was provided, we can do the cancel ourselves.
   nsCOMPtr<nsIWebBrowserPersist> persist;
-  download->GetPersist(getter_AddRefs(persist));
+  internalDownload->GetPersist(getter_AddRefs(persist));
   if (persist) {
     rv = persist->CancelSave();
     if (NS_FAILED(rv)) return rv;
@@ -734,15 +729,15 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
   // if no persist was provided, this is necessary so that whatever transfer
   // component being used can cancel the download itself.
   nsCOMPtr<nsIObserver> observer;
-  download->GetObserver(getter_AddRefs(observer));
+  internalDownload->GetObserver(getter_AddRefs(observer));
   if (observer) {
-    rv = observer->Observe(download, "oncancel", nsnull);
+    rv = observer->Observe(internalDownload, "oncancel", nsnull);
     if (NS_FAILED(rv)) return rv;
   }
  
   DownloadEnded(aPath, nsnull);
 
-  gObserverService->NotifyObservers(download, "dl-cancel", nsnull);
+  gObserverService->NotifyObservers(internalDownload, "dl-cancel", nsnull);
 
   // if there's a progress dialog open for the item,
   // we have to notify it that we're cancelling
@@ -750,7 +745,7 @@ nsDownloadManager::CancelDownload(const PRUnichar* aPath)
   internalDownload->GetDialog(getter_AddRefs(dialog));
   if (dialog) {
     observer = do_QueryInterface(dialog);
-    rv = observer->Observe(download, "oncancel", nsnull);
+    rv = observer->Observe(internalDownload, "oncancel", nsnull);
     if (NS_FAILED(rv)) return rv;
   }
   
@@ -1034,10 +1029,8 @@ nsDownloadManager::PauseResumeDownload(const PRUnichar* aPath, PRBool aPause)
   if (!mCurrDownloads.Exists(&key))
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDownload> download;
   nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
-  internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
-  if (!download)
+  if (!internalDownload)
     return NS_ERROR_FAILURE;
 
   // Update download state in the DataSource
@@ -1095,10 +1088,8 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, const PRUnichar* aPath)
   if (!mCurrDownloads.Exists(&key))
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDownload> download;
   nsDownload* internalDownload = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
-  internalDownload->QueryInterface(NS_GET_IID(nsIDownload), (void**) getter_AddRefs(download));
-  if (!download)
+  if (!internalDownload)
     return NS_ERROR_FAILURE;
 
   // 2). Update the DataSource. 
