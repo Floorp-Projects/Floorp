@@ -2402,6 +2402,7 @@ js_InitRuntimeStringState(JSContext *cx)
 {
     JSRuntime *rt;
     JSString *empty;
+    JSAtom *atom;
 
     rt = cx->runtime;
     JS_ASSERT(!rt->emptyString);
@@ -2412,10 +2413,12 @@ js_InitRuntimeStringState(JSContext *cx)
         return JS_FALSE;
 
     /* Atomize it for scripts that use '' + x to convert x to string. */
-    if (!js_AtomizeString(cx, empty, ATOM_PINNED))
+    atom = js_AtomizeString(cx, empty, ATOM_PINNED);
+    if (!atom)
         return JS_FALSE;
 
     rt->emptyString = empty;
+    rt->atomState.emptyAtom = atom;
     return JS_TRUE;
 }
 
