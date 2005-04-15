@@ -37,9 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#include "nsISupports.h"
+#include "nsISupports.idl"
 
 interface calICalendar;
+interface calIDateTime;
 
 [scriptable, uuid(be9b4f26-2475-4aeb-9b46-e165fc0809fb)]
 interface calICalendarView : nsISupports {
@@ -54,13 +55,13 @@ interface calICalendarView : nsISupports {
 
   // if the view is displaying disjoint dates, startDate and endDate will
   // be the earliest and latest date that's being displayed
-  attribute readonly calIDateTime startDate;
-  attribute readonly calIDateTime endDate;
+  readonly attribute calIDateTime startDate;
+  readonly attribute calIDateTime endDate;
 
   // whether this view supports disjoint dates or not
   readonly attribute boolean supportsDisjointDates;
   // these are only valid if supportsDisjointDates is true
-  attribute readonly boolean hasDisjointDates;
+  readonly attribute boolean hasDisjointDates;
   // sets this view to show a possibly disjoint set of dates
   void setDateList(in unsigned long aCount, [array,size_is(aCount)] in calIDateTime aDates);
 
