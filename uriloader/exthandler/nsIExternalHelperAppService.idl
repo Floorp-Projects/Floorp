@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsICancelable.idl"
 
 interface nsIURI;
 interface nsIRequest;
@@ -97,9 +97,12 @@ interface nsPIExternalAppLauncher : nsISupports
 /**
  * A helper app launcher is a small object created to handle the launching
  * of an external application.
+ *
+ * Note that cancelling the load via the nsICancelable interface will release
+ * the reference to the launcher dialog.
  */
-[scriptable, uuid(955baa49-7f87-469a-b5f3-e611c083d202)]
-interface nsIHelperAppLauncher : nsISupports
+[scriptable, uuid(99a0882d-2ff9-4659-9952-9ac531ba5592)]
+interface nsIHelperAppLauncher : nsICancelable
 {
   /**
    * The mime info object associated with the content type this helper app
@@ -131,12 +134,6 @@ interface nsIHelperAppLauncher : nsISupports
    * @param aRememberThisPreference TRUE if we should remember this choice.
    */
   void launchWithApplication(in nsIFile aApplication, in boolean aRememberThisPreference);
-
-  /**
-   * Called if the user decides to cancel the handling of this content type
-   * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
-   */
-  void Cancel();
 
   /**
    * The following methods are used by the progress dialog to get or set

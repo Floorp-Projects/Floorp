@@ -52,6 +52,8 @@
 
 #include "nsIHelperAppLauncherDialog.h"
 
+#include "nsNetError.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -392,7 +394,7 @@ void ProgressDlg::OnInitDialog()
 void ProgressDlg::OnCancel() 
 {
     if (mHelperAppLauncher)
-        mHelperAppLauncher->Cancel();
+        mHelperAppLauncher->Cancel(NS_BINDING_ABORTED);
 	DestroyWindow(mHwndDlg);
 }
 
@@ -445,7 +447,7 @@ CHelperAppLauncherDlg::Show(nsIHelperAppLauncher *aLauncher, nsISupports *aConte
     AppLauncherDlg dlg;
     if (dlg.Show(aLauncher, NULL) == IDCANCEL)
     {
-        aLauncher->Cancel();
+        aLauncher->Cancel(NS_BINDING_ABORTED);
         return NS_OK;
     }
 
