@@ -2486,6 +2486,8 @@ function updateUserList()
     var sortDirection;
 
     node = document.getElementById("user-list");
+    if (!node.view)
+        return;
 
     const nsIXULSortService = Components.interfaces.nsIXULSortService;
     const isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
