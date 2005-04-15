@@ -532,7 +532,7 @@ void nsDocAccessibleWrap::CheckForEditor()
         SetEditor(mEditor); // set editor for nsAccessibleEditableText
 }
 
-void nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
+NS_IMETHODIMP nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
 {
   if (!mDocument || !mWeakShell)
     return NS_OK;  // Document has been shut down
