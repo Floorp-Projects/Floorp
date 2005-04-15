@@ -78,7 +78,7 @@
                            .getService(Components.interfaces.nsIConsoleService);
             this.mCService.registerListener(this);
           } catch (ex) {
-            appendMessage(
+            this.appendMessage(
               "Unable to display errors - couldn't get Console Service component. " +
               "(Missing @mozilla.org/consoleservice;1)");
             return;
