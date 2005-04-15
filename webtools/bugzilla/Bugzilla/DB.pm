@@ -331,20 +331,26 @@ sub bz_setup_database {
 #####################################################################
 
 sub bz_add_column {
-    my ($self, $table, $name, $new_def) = @_;
+    my ($self, $table, $name, $new_def, $init_value) = @_;
 
     # You can't add a NOT NULL column to a table with
-    # no DEFAULT statement.
-    if ($new_def->{NOTNULL} && !exists $new_def->{DEFAULT}) {
+    # no DEFAULT statement, unless you have an init_value.
+    # SERIAL types are an exception, though, because they can
+    # auto-populate.
+    if ( $new_def->{NOTNULL} && !exists $new_def->{DEFAULT} 
+         && !defined $init_value && $new_def->{TYPE} !~ /SERIAL/)
+    {
         die "Failed adding the column ${table}.${name}:\n  You cannot add"
-            . " a NOT NULL column with no default to an existing table.\n";
+            . " a NOT NULL column with no default to an existing table,\n"
+            . "  unless you specify something for \$init_value." 
     }
 
     my $current_def = $self->bz_column_info($table, $name);
 
     if (!$current_def) {
         my @statements = $self->_bz_real_schema->get_add_column_ddl(
-            $table, $name, $new_def);
+            $table, $name, $new_def, 
+            defined $init_value ? $self->quote($init_value) : undef);
         print "Adding new column $name to table $table ...\n";
         foreach my $sql (@statements) {
             $self->do($sql);
@@ -898,7 +904,7 @@ Bugzilla::DB - Database access routines, using L<DBI>
   my @result = $sth->fetchrow_array;
 
   # Schema Modification
-  $dbh->bz_add_column($table, $name, \%definition);
+  $dbh->bz_add_column($table, $name, \%definition, $init_value);
   $dbh->bz_add_index($table, $name, $definition);
   $dbh->bz_drop_index($table, $name);
   $dbh->bz_alter_column($table, $name, \%new_def);
@@ -1211,7 +1217,7 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
 
 =over 4
 
-=item C<bz_add_column($table, $name, \%definition)>
+=item C<bz_add_column($table, $name, \%definition, $init_value)>
 
  Description: Adds a new column to a table in the database. Prints out
               a brief statement that it did so, to stdout.
@@ -1221,6 +1227,9 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
  Params:      $table = the table where the column is being added
               $name  = the name of the new column
               \%definition = Abstract column definition for the new column
+              $init_value = (optional) An initial value to set the column
+                            to. Required if your column is NOT NULL and has
+                            no DEFAULT set.
  Returns:     nothing
 
 =item C<bz_add_index($table, $name, $definition)>

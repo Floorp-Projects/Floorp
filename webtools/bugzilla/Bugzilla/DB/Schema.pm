@@ -1359,22 +1359,30 @@ sub _get_create_index_ddl {
 
 sub get_add_column_ddl {
 
-=item C<get_add_column_ddl($table, $column, \%definition)>
+=item C<get_add_column_ddl($table, $column, \%definition, $init_value)>
 
  Description: Generate SQL to add a column to a table.
  Params:      $table - The table containing the column.
               $column - The name of the column being added.
               \%definition - The new definition for the column,
                   in standard C<ABSTRACT_SCHEMA> format.
+              $init_value - (optional) An initial value to set 
+                            the column to. Should already be SQL-quoted
+                            if necessary.
  Returns:     An array of SQL statements.
 
 =cut
-    my ($self, $table, $column, $definition) = @_;
+    my ($self, $table, $column, $definition, $init_value) = @_;
+    my @statements;
+    push(@statements, "ALTER TABLE $table ADD COLUMN $column " .
+        $self->get_type_ddl($definition));
 
-    my $statement = "ALTER TABLE $table ADD COLUMN $column " .
-        $self->get_type_ddl($definition);
+    # XXX - Note that although this works for MySQL, most databases will fail
+    # before this point, if we haven't set a default.
+    (push(@statements, "UPDATE $table SET $column = $init_value"))
+        if defined $init_value;
 
-    return ($statement);
+    return (@statements);
 }
 
 sub get_add_index_ddl {

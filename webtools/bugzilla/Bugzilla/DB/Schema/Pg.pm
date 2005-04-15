@@ -91,7 +91,7 @@ sub _initialize {
 
 # Overridden because Pg has such weird ALTER TABLE problems.
 sub get_add_column_ddl {
-    my ($self, $table, $column, $definition) = @_;
+    my ($self, $table, $column, $definition, $init_value) = @_;
 
     my @statements;
     my $specific = $self->{db_specific};
@@ -109,13 +109,17 @@ sub get_add_column_ddl {
                          . " SET DEFAULT $default");
     }
 
+    if (defined $init_value) {
+        push(@statements, "UPDATE $table SET $column = $init_value");
+    }
+
     if ($definition->{NOTNULL}) {
         # Handle rows that were NULL when we added the column.
         # We *must* have a DEFAULT. This check is usually handled
         # at a higher level than this code, but I figure it can't
         # hurt to have it here.
-        die "NOT NULL columns must have a DEFAULT" 
-            unless exists $definition->{DEFAULT};
+        die "NOT NULL columns must have a DEFAULT or an init_value."
+            unless (exists $definition->{DEFAULT} || defined $init_value);
         push(@statements, "UPDATE $table SET $column = $default");
         push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
                          . " SET NOT NULL");
