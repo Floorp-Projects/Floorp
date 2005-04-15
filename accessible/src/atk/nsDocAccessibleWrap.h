@@ -59,7 +59,7 @@ public:
   virtual ~nsDocAccessibleWrap();
   NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible,
                               void* aData);
-
+  NS_IMETHOD FireDocLoadingEvent(PRBool isFinished);
   NS_IMETHOD Shutdown();
   NS_IMETHOD GetRole(PRUint32 *aAccRole);
 

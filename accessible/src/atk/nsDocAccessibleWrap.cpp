@@ -531,3 +531,20 @@ void nsDocAccessibleWrap::CheckForEditor()
     if (mEditor)
         SetEditor(mEditor); // set editor for nsAccessibleEditableText
 }
+
+void nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
+{
+  if (!mDocument || !mWeakShell)
+    return NS_OK;  // Document has been shut down
+
+  if (!aIsFinished) {
+    // Load has been verified, it will occur, about to commence
+    AtkChildrenChange childrenData;
+    childrenData.index = -1;
+    childrenData.child = 0;
+    childrenData.add = PR_FALSE;
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, this, &childrenData);
+  }
+
+  return nsDocAccessible::FireDocLoadingEvent(aIsFinished);
+}

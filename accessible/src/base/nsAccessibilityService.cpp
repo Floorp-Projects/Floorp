@@ -74,6 +74,7 @@
 #include "nsRootAccessibleWrap.h"
 #include "nsTextFragment.h"
 #include "nsPIAccessNode.h"
+#include "nsIWebProgress.h"
 
 #ifdef MOZ_XUL
 #include "nsXULAlertAccessible.h"
@@ -116,7 +117,8 @@ nsAccessibilityService::nsAccessibilityService()
   nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
   if (progress) {
     progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this),
-                                  nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+                                  nsIWebProgress::NOTIFY_STATE_DOCUMENT |
+                                  nsIWebProgress::NOTIFY_LOCATION);
   }
   nsAccessNodeWrap::InitAccessibility();
 }
@@ -142,37 +144,75 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
     if (observerService) {
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
+    nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
+    if (progress) {
+      progress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
+    }
     nsAccessNodeWrap::ShutdownAccessibility();
   }
   return NS_OK;
 }
 
 // nsIWebProgressListener
-
 NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
-  const PRUint32 kRequiredFlags = STATE_IS_DOCUMENT | STATE_TRANSFERRING;
-  if ((aStateFlags & kRequiredFlags ) != kRequiredFlags) {
+  NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Other notifications excluded");
+
+  // Not interested in START_STOP, because document object has not been created yet
+  if (0 == (aStateFlags & (STATE_TRANSFERRING | STATE_STOP))) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIDOMWindow> domWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  // Bug 214049 OnStateChange can come from non UI threads.
-  if (!domWindow)
-    return NS_OK;
+  NS_ASSERTION(domWindow, "DOM Window for state change is null");
+  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   domWindow->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDOMNode> domDocRootNode(do_QueryInterface(domDoc));
   NS_ENSURE_TRUE(domDocRootNode, NS_ERROR_FAILURE);
 
-  // Get the accessible for the new document
-  // This will cache the doc's accessible and set up event listeners
-  // so that toolkit and internal accessibility events will get fired
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    nsAccessNode::GetDocShellTreeItemFor(domDocRootNode);
+  NS_ASSERTION(docShellTreeItem, "No doc shell tree item for loading document");
+  NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
+  PRInt32 contentType;
+  docShellTreeItem->GetItemType(&contentType);
+  if (contentType != nsIDocShellTreeItem::typeContent) {
+    return NS_OK; // Not interested in chrome loading, just content
+  }
+  nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+  docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+  if (sameTypeRoot != docShellTreeItem) {
+    return NS_OK;  // Not interested in frames or iframes, just the root content
+  }
+
+  if (nsAccessNode::gLastFocusedNode) {
+    nsCOMPtr<nsIDocShellTreeItem> focusedDocShellTreeItem =
+      nsAccessNode::GetDocShellTreeItemFor(nsAccessNode::gLastFocusedNode);
+    nsCOMPtr<nsIDocShellTreeItem> focusedRootTreeItem;
+    focusedDocShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(focusedRootTreeItem));
+
+    if (focusedRootTreeItem != sameTypeRoot) {
+      // Load is not occuring in the currently focused tab, so don't fire 
+      // doc load event there, otherwise assistive technology may become confused
+      return NS_OK;
+    }
+  }
+
+  // Get the accessible for the new document.
+  // If it not created yet this will create it & cache it, as well as 
+  // set up event listeners so that MSAA/ATK toolkit and internal 
+  // accessibility events will get fired.
   nsCOMPtr<nsIAccessible> accessible;
   GetAccessibleFor(domDocRootNode, getter_AddRefs(accessible));
+  nsCOMPtr<nsPIAccessibleDocument> docAccessible =
+    do_QueryInterface(accessible);
+  NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
+  docAccessible->FireDocLoadingEvent(!(aStateFlags & STATE_TRANSFERRING));
+
   return NS_OK;
 }
 
@@ -189,8 +229,29 @@ NS_IMETHODIMP nsAccessibilityService::OnProgressChange(nsIWebProgress *aWebProgr
 NS_IMETHODIMP nsAccessibilityService::OnLocationChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, nsIURI *location)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-  return NS_OK;
+  // If the document is already loaded, this will just check to see
+  // if an anchor jump event needs to be fired.
+  // If there is no accessible for the document, we will ignore
+  // this and the anchor jump event will be fired via OnStateChange
+  // and STATE_STOP
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  NS_ASSERTION(domWindow, "DOM Window for state change is null");
+  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  domWindow->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDOMNode> domDocRootNode(do_QueryInterface(domDoc));
+  NS_ENSURE_TRUE(domDocRootNode, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
+    nsAccessNode::GetDocAccessibleFor(domDocRootNode);
+  nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
+    do_QueryInterface(accessibleDoc);
+  if (!privateAccessibleDoc) {
+    return NS_OK;
+  }
+  return privateAccessibleDoc->FireAnchorJumpEvent();
 }
 
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
@@ -296,15 +357,19 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(aDocument));
   NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
 
-  nsIDocument *parentDoc = aDocument->GetParentDocument();
-
   nsIPresShell *presShell = aShell;
   if (!presShell) {
     presShell = aDocument->GetShellAt(0);
   }
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
 
-  if (parentDoc) {
+  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
+  docShellTreeItem->GetParent(getter_AddRefs(parentTreeItem));
+
+  if (parentTreeItem) {
     // We only create root accessibles for the true root, othewise create a
     // doc accessible
     *aRootAcc = new nsDocAccessibleWrap(rootNode, weakShell);

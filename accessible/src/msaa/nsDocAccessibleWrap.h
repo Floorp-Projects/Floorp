@@ -89,14 +89,15 @@ public:
         /* [in] */ VARIANT varChild,
         /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
 
+    NS_IMETHOD Shutdown();
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
-    NS_IMETHOD OnLocationChange(nsIWebProgress *aWebProgress,
-                                nsIRequest *aRequest, nsIURI *location);
-protected:
-    void FireDocLoadFinished();
+    NS_IMETHOD FireDocLoadingEvent(PRBool isFinished);
+    NS_IMETHOD FireAnchorJumpEvent();
+
 private:
-    void FireAnchorJumpEvent();
+    static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
     already_AddRefed<nsIAccessible> GetFirstLeafAccessible(nsIDOMNode *aStartNode);
+    nsCOMPtr<nsITimer> mDocLoadTimer;
     PRPackedBool mWasAnchor;
 };
 

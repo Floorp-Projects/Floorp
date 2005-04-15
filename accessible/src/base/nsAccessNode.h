@@ -119,7 +119,7 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsISupports *aContainer);
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDOMNode *aNode);
 
-    static already_AddRefed<nsIDocShellTreeItem> GetSameTypeRootFor(nsIDOMNode *aStartNode);
+    static already_AddRefed<nsIDocShellTreeItem> GetDocShellTreeItemFor(nsIDOMNode *aStartNode);
     static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
     
     static nsIDOMNode *gLastFocusedNode;
