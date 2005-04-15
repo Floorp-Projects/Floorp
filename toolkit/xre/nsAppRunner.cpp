@@ -1588,12 +1588,19 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   nsresult rv;
   NS_TIMELINE_MARK("enter main");
 
-#if defined(DEBUG) && defined(XP_WIN32)
+#ifdef XP_WIN32
+  // Suppress the "DLL Foo could not be found" dialog, such that if dependent
+  // libraries (such as GDI+) are not preset, we gracefully fail to load those
+  // XPCOM components, instead of being ungraceful.
+  SetErrorMode(SEM_FAILCRITICALERRORS);
+
+#ifdef DEBUG
   // Disable small heap allocator to get heapwalk() giving us
   // accurate heap numbers. Win2k non-debug does not use small heap allocator.
   // Win2k debug seems to be still using it.
   // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__set_sbh_threshold.asp
   _set_sbh_threshold(0);
+#endif
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
