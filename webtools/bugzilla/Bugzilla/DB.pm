@@ -587,8 +587,12 @@ sub bz_column_info {
 
 sub bz_index_info {
     my ($self, $table, $index) = @_;
-
-    return $self->_bz_real_schema->get_index_abstract($table, $index);
+    my $index_def =
+        $self->_bz_real_schema->get_index_abstract($table, $index);
+    if (ref($index_def) eq 'ARRAY') {
+        $index_def = {FIELDS => $index_def, TYPE => ''};
+    }
+    return $index_def;
 }
 
 
@@ -1368,7 +1372,10 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
  Description: Get abstract index definition.
  Params:      $table - The table the index is on.
               $index - The name of the index.
- Returns:     An abstract index definition for that index.
+ Returns:     An abstract index definition for that index,
+              always in hashref format. The hashref will
+              always contain the TYPE element, but it will
+              be an empty string if it's just a normal index.
               If the index does not exist, we return undef.
 
 =back

@@ -1608,8 +1608,9 @@ sub get_index_abstract {
 
     # Prevent a possible dereferencing of an undef hash, if the
     # table doesn't exist.
-    if (exists $self->{abstract_schema}->{$table}) {
-        my %indexes = (@{ $self->{abstract_schema}{$table}{INDEXES} });
+    my $index_table = $self->get_table_abstract($table);
+    if ($index_table && exists $index_table->{INDEXES}) {
+        my %indexes = (@{ $index_table->{INDEXES} });
         return $indexes{$index};
     }
     return undef;
