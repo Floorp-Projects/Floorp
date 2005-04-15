@@ -301,7 +301,7 @@ void txMozillaXMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
         nsCOMPtr<nsIDocument> document = do_QueryInterface(mNonAddedParent);
         if (document && !mRootContent) {
             mRootContent = do_QueryInterface(mCurrentNode);
-            mRootContent->BindToTree(document, nsnull, nsnull, PR_TRUE);
+            // XXXbz what to do on failure here?
             document->SetRootContent(mRootContent);
         }
         else {
@@ -493,7 +493,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
 
             mParentNode = wrapper;
             mRootContent = do_QueryInterface(wrapper);
-            mRootContent->BindToTree(document, nsnull, nsnull, PR_TRUE);
+            // XXXbz what to do on failure here?
             document->SetRootContent(mRootContent);
         }
 
@@ -504,7 +504,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
         else {
             if (document && currentElement && !mRootContent) {
                 mRootContent = do_QueryInterface(mCurrentNode);
-                mRootContent->BindToTree(document, nsnull, nsnull, PR_TRUE);
+                // XXXbz what to do on failure here?
                 document->SetRootContent(mRootContent);
             }
             else {

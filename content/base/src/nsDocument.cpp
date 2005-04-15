@@ -1490,21 +1490,34 @@ nsDocument::FindContentForSubDocument(nsIDocument *aDocument) const
   return data.mResult;
 }
 
-void
+nsresult
 nsDocument::SetRootContent(nsIContent* aRoot)
 {
-  if (mRootContent) {
-    PRInt32 indx = mChildren.IndexOf(mRootContent);
-    if (aRoot) {
-      mChildren.ReplaceObjectAt(aRoot, indx);
-    } else {
-      mChildren.RemoveObjectAt(indx);
+  if (aRoot) {
+    NS_ASSERTION(!mRootContent,
+                 "Already have a root content!  Clear out first!");
+    nsresult rv = aRoot->BindToTree(this, nsnull, nsnull, PR_TRUE);
+
+    if (NS_SUCCEEDED(rv) && !mChildren.AppendObject(aRoot)) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
     }
-  } else if (aRoot) {
-    mChildren.AppendObject(aRoot);
+
+    if (NS_FAILED(rv)) {
+      aRoot->UnbindFromTree();
+    } else {
+      mRootContent = aRoot;
+    }
+    
+    return rv;
   }
 
-  mRootContent = aRoot;
+  if (mRootContent) {
+    mRootContent->UnbindFromTree();
+    mChildren.RemoveObject(mRootContent);
+    mRootContent = nsnull;
+  }
+
+  return NS_OK;
 }
 
 nsIContent *

@@ -362,19 +362,15 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
 
     // blat in the structure
     if (htmlElement && headElement && bodyElement) {
-      rv = htmlElement->BindToTree(blankDoc, nsnull, nsnull, PR_TRUE);
-      if (NS_FAILED(rv)) {
-        htmlElement->UnbindFromTree();
-      } else {
-        blankDoc->SetRootContent(htmlElement);
+      rv = blankDoc->SetRootContent(htmlElement);
+      if (NS_SUCCEEDED(rv)) {
+        rv = htmlElement->AppendChildTo(headElement, PR_FALSE, PR_FALSE);
 
-        htmlElement->AppendChildTo(headElement, PR_FALSE, PR_FALSE);
-
-        bodyElement->SetContentID(blankDoc->GetAndIncrementContentID());
-        // XXXbz Why not notifying here?
-        htmlElement->AppendChildTo(bodyElement, PR_FALSE, PR_FALSE);
-
-        rv = NS_OK;
+        if (NS_SUCCEEDED(rv)) {
+          bodyElement->SetContentID(blankDoc->GetAndIncrementContentID());
+          // XXXbz Why not notifying here?
+          htmlElement->AppendChildTo(bodyElement, PR_FALSE, PR_FALSE);
+        }
       }
     }
   }

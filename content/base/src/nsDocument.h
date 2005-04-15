@@ -291,7 +291,7 @@ public:
   virtual nsIDocument* GetSubDocumentFor(nsIContent *aContent) const;
   virtual nsIContent* FindContentForSubDocument(nsIDocument *aDocument) const;
 
-  virtual void SetRootContent(nsIContent* aRoot);
+  virtual nsresult SetRootContent(nsIContent* aRoot);
 
   /**
    * Get the direct children of the document - content in

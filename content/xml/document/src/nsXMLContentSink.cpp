@@ -857,14 +857,12 @@ nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
   mDocElement = aContent;
   NS_ADDREF(mDocElement);
 
-  nsresult rv = mDocElement->BindToTree(mDocument, nsnull, nsnull, PR_TRUE);
+  nsresult rv = mDocument->SetRootContent(mDocElement);
   if (NS_FAILED(rv)) {
-    mDocElement->UnbindFromTree();
     // If we return PR_FALSE here, the caller will bail out because it won't
     // find a parent content node to append to, which is fine.
     return PR_FALSE;
   }
-  mDocument->SetRootContent(mDocElement);
   return PR_TRUE;
 }
 
