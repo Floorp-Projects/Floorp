@@ -358,14 +358,6 @@ static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
   NS_ASSERTION(nsnull != aEvent,"Event is null");
   nsViewManagerEvent *event = NS_STATIC_CAST(nsViewManagerEvent*, aEvent);
 
-  // Search for valid view manager before trying to access it.  This
-  // is working around a bug in RevokeEvents.
-  const nsVoidArray *vmArray = nsViewManager::GetViewManagerArray();
-  if (!vmArray || vmArray->IndexOf(event->ViewManager()) == -1) {
-    NS_ERROR("RevokeEvents is buggy.  Fix it!");
-    return nsnull;
-  }
-
   event->HandleEvent();
   return nsnull;
 }

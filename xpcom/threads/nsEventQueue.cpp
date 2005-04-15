@@ -346,13 +346,12 @@ nsEventQueueImpl::ExitMonitor()
 NS_IMETHODIMP
 nsEventQueueImpl::RevokeEvents(void* owner)
 {
-  PL_RevokeEvents(mEventQueue, owner);
-  if (mElderQueue) {
-    nsCOMPtr<nsIEventQueue> elder(do_QueryInterface(mElderQueue));
-    if (elder)
-      elder->RevokeEvents(owner);
-  }
-  return NS_OK;
+  nsCOMPtr<nsIEventQueue> youngest;
+  GetYoungest(getter_AddRefs(youngest));
+  NS_ASSERTION(youngest, "How could we possibly not have a youngest queue?");
+  nsCOMPtr<nsPIEventQueueChain> youngestAsChain(do_QueryInterface(youngest));
+  NS_ASSERTION(youngestAsChain, "RevokeEvents won't work; expect crashes");
+  return youngestAsChain->RevokeEventsInternal(owner);
 }
 
 
@@ -657,3 +656,12 @@ nsEventQueueImpl::GetElder(nsIEventQueue **aQueue)
   return mElderQueue->QueryInterface(NS_GET_IID(nsIEventQueue), (void**)&aQueue);
 }
 
+NS_IMETHODIMP
+nsEventQueueImpl::RevokeEventsInternal(void* aOwner)
+{
+  PL_RevokeEvents(mEventQueue, aOwner);
+  if (mElderQueue) {
+    mElderQueue->RevokeEventsInternal(aOwner);
+  }
+  return NS_OK;
+}

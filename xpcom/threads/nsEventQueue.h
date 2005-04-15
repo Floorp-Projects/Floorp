@@ -64,6 +64,7 @@ public:
     NS_IMETHOD GetYounger(nsIEventQueue **aQueue);
     NS_IMETHOD SetElder(nsPIEventQueueChain *aQueue);
     NS_IMETHOD GetElder(nsIEventQueue **aQueue);
+    NS_IMETHOD RevokeEventsInternal(void* aOwner);
 
 private:
     ~nsEventQueueImpl();
