@@ -110,8 +110,6 @@
       |     |     |     \--- MimeInlineTextEnriched
       |     |	  |
       |     |	  +--- MimeInlineTextVCard
-      |     |     |
-      |     |	  \--- MimeInlineTextCalendar
       |     |
       |     +--- MimeInlineImage
       |     |

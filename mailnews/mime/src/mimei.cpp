@@ -74,7 +74,6 @@
 #include "mimetric.h"	/*   |     |     |--- MimeInlineTextRichtext		*/
 #include "mimetenr.h"	/*   |     |     |     |--- MimeInlineTextEnriched	*/
 /* SUPPORTED VIA PLUGIN      |     |     |--- MimeInlineTextVCard           */
-/* SUPPORTED VIA PLUGIN      |     |     |--- MimeInlineTextCalendar        */
 #include "mimeiimg.h"	/*   |     |--- MimeInlineImage						*/
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
 #include "mimeebod.h"	/*   |--- MimeExternalBody							*/
@@ -92,6 +91,10 @@
 #include "mimemoz2.h"
 #include "nsIMimeContentTypeHandler.h"
 #include "nsIComponentManager.h"
+#include "nsCategoryManagerUtils.h"
+#include "nsXPCOMCID.h"
+#include "nsISimpleMimeConverter.h"
+#include "nsSimpleMimeConverterStub.h"
 #include "nsVoidArray.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
@@ -230,8 +233,22 @@ mime_locate_external_content_handler(const char *content_type,
   PR_snprintf(lookupID, sizeof(lookupID), "@mozilla.org/mimecth;1?type=%s", content_type);
   
   ctHandler = do_CreateInstance(lookupID, &rv);
-  if (NS_FAILED(rv) || !ctHandler)
-    return nsnull;
+  if (NS_FAILED(rv) || !ctHandler) {
+    nsCOMPtr<nsICategoryManager> catman =
+      do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return nsnull;
+
+    nsXPIDLCString value;
+    rv = catman->GetCategoryEntry(NS_SIMPLEMIMECONVERTERS_CATEGORY,
+                                  content_type, getter_Copies(value));
+    if (NS_FAILED(rv) || !value)
+      return nsnull;
+    rv = MIME_NewSimpleMimeConverterStub(content_type,
+                                         getter_AddRefs(ctHandler));
+    if (NS_FAILED(rv) || !ctHandler)
+      return nsnull;
+  }
   
   rv = ctHandler->CreateContentTypeHandlerClass(content_type, ctHandlerInfo, &newObj);
   if (NS_FAILED(rv))
@@ -495,8 +512,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   if ((tempClass = mime_locate_external_content_handler(content_type, &ctHandlerInfo)) != NULL)
   {
     if (types_of_classes_to_disallow > 0
-        && (!nsCRT::strncasecmp(content_type, "text/x-vcard", 12) ||
-            !nsCRT::strncasecmp(content_type, "text/calendar", 13))
+        && (!nsCRT::strncasecmp(content_type, "text/x-vcard", 12))
        )
       /* Use a little hack to prevent some dangerous plugins, which ship
          with Mozilla, to run.

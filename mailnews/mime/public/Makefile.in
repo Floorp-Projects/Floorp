@@ -57,6 +57,7 @@ XPIDLSRCS	= \
 		nsIMimeMiscStatus.idl \
 		nsIMimeHeaders.idl \
 		nsIMimeConverter.idl \
+		nsISimpleMimeConverter.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
