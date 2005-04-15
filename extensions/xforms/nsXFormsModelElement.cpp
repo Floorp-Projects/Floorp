@@ -1230,8 +1230,9 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
       rv = aEvaluator->CreateExpression(propStrings[i], aBindElement,
                                         getter_AddRefs(props[i]));
       if (NS_FAILED(rv)) {
+        const PRUnichar *strings[] = { propStrings[i].get() };
         nsXFormsUtils::ReportError(NS_LITERAL_STRING("mipParseError"),
-                                   aBindElement);
+                                   strings, 1, aBindElement, aBindElement);
         nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
         return rv;
       }
@@ -1255,8 +1256,9 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 #ifdef DEBUG
     printf("xforms-binding-exception: XPath Evaluation failed\n");
 #endif
+    const PRUnichar *strings[] = { expr.get() };
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("nodesetEvaluateError"),
-                               aBindElement);
+                               strings, 1, aBindElement, aBindElement);
     nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
     return rv;
   }

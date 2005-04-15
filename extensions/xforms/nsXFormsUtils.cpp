@@ -372,8 +372,14 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
   eval->CreateExpression(aExpression,
                          aResolverNode,
                          getter_AddRefs(expression));
-  NS_ENSURE_TRUE(expression, nsnull);
-   
+  if (!expression) {
+    const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
+    const PRUnichar *strings[] = { flat.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprParseError"),
+                               strings, 1, aContextNode, nsnull);
+    return nsnull;
+  }
+  
   ///
   /// @todo Evaluate() should use aContextPosition and aContextSize
   nsCOMPtr<nsISupports> supResult;
@@ -402,8 +408,10 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
     CallQueryInterface(supResult, &result);  // addrefs
   }
   else if (rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION) {
+    const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
+    const PRUnichar *strings[] = { flat.get() };
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprEvaluateError"),
-                               nsnull, 0, aContextNode, nsnull);
+                               strings, 1, aContextNode, nsnull);
     nsCOMPtr<nsIDOMElement> resolverElement = do_QueryInterface(aResolverNode);
     nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(resolverElement);
     nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
