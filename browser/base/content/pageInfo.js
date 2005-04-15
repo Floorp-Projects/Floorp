@@ -347,7 +347,7 @@ function doHelpButton() {
       helpdoc = "pageinfo_general";
       break;
   }
-  openHelp(helpdoc);  
+  openHelp(helpdoc, 'chrome://browser/locale/help/help.rdf');
 }
  
 function makeGeneralTab()

@@ -69,7 +69,7 @@
           accesskey="&helpMenu.accesskey;">
 #endif
         <menupopup id="menu_HelpPopup">
-            <menuitem oncommand="openHelp('firefox-help');"
+            <menuitem oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
 #ifdef XP_MACOSX
                       label="&helpContentsMac.label;"
 #else
@@ -81,7 +81,7 @@
 #ifdef XP_WIN
             <menuitem label="&helpForIEUsers.label;"
                       accesskey="&helpForIEUsers.accesskey;"
-                      oncommand="openHelp('ieusers');"/>
+                      oncommand="openHelp('ieusers', 'chrome://browser/locale/help/help.rdf');"/>
 #endif
             <menuseparator/>
             <menuitem accesskey="&promote.accesskey;"
@@ -103,7 +103,7 @@
 
     <keyset id="baseMenuKeyset">
         <key id="key_openHelp"
-            oncommand="openHelp('firefox-help');"
+            oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
 # VK_HELP doesn't work on other platforms yet
 #ifdef XP_MACOSX
             keycode="&openHelpMac.commandkey;"/>

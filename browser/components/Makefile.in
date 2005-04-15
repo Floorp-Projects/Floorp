@@ -55,7 +55,6 @@ EXTRA_PP_COMPONENTS = \
 
 DIRS = \
 	bookmarks \
-	help \
 	migration \
 	history \
 	preferences \

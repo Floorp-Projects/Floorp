@@ -103,7 +103,6 @@ var helpFileDS;
 # reduction on all links within the current help set.
 var helpBaseURI;
 
-const defaultHelpFile = "chrome://help/locale/help.rdf";
 var searchDatasources = "rdf:null";
 var searchDS = null;
 

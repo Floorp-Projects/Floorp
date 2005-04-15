@@ -11,11 +11,10 @@ function upgradeCleanup()
   deleteThisFolder("Chrome",      "en-win");
   deleteThisFile("Chrome",        "en-win.jar");
   deleteThisFolder("Chrome",      "US");
+  deleteThisFile("Chrome",        "help.jar");
+
   // Remove chrome and overlay registries, to remove bogus dependencies
   // on any of the above files which may cause the app not to start. 
-  // XXXben Erk. This will effectively disable all global extensions...
-  //        we need to come up with a way to preserve global extensions 
-  //        across app versions...
   deleteThisFile("Chrome",        "chrome.rdf");
   deleteThisFolder("Chrome",      "overlayinfo");
 
