@@ -3128,10 +3128,19 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
 
   if (0 != textLength) {
 #ifdef IBMBIDI
+    PRBool isRightToLeftOnBidiPlatform = PR_FALSE;
+    PRBool isBidiSystem = PR_FALSE;
     PRBool isOddLevel = PR_FALSE;
+    PRUint32 hints = 0;
+    aRenderingContext.GetHints(hints);
+    PRBool paintCharByChar = (0 == hints & NS_RENDERING_HINT_REORDER_SPACED_TEXT) &&
+      ((0 != aTextStyle.mLetterSpacing) ||
+       (0 != aTextStyle.mWordSpacing) ||
+       aTextStyle.mJustifying);
     nsCharType charType = eCharType_LeftToRight;
 
     if (aPresContext->BidiEnabled()) {
+      isBidiSystem = aPresContext->IsBidiSystem();
       nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
 
       if (bidiUtils) {
@@ -3140,9 +3149,19 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
 #ifdef DEBUG
         PRInt32 rememberTextLength = textLength;
 #endif
-        // Since we paint char by char, handle the text like on non-bidi platform
+        isRightToLeftOnBidiPlatform = (!paintCharByChar &&
+                                       isBidiSystem &&
+                                       (eCharType_RightToLeft == charType ||
+                                        eCharType_RightToLeftArabic == charType));
+        if (isRightToLeftOnBidiPlatform) {
+          // indicate that the platform should use its native
+          // capabilities to reorder the text with right-to-left
+          // base direction 
+          aRenderingContext.SetRightToLeftText(PR_TRUE);
+        }
+        // If we will be painting char by char, handle the text like on non-bidi platform
         bidiUtils->ReorderUnicodeText(text, textLength, charType,
-                                      isOddLevel, PR_FALSE);
+                                      isOddLevel, (paintCharByChar) ? PR_FALSE : isBidiSystem);
         NS_ASSERTION(rememberTextLength == textLength, "Bidi formatting changed text length");
       }
     }
@@ -3183,7 +3202,9 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
         sdptr->mStart = ip[sdptr->mStart] - mContentOffset;
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
 #ifdef IBMBIDI
-        AdjustSelectionPointsForBidi(sdptr, textLength, CHARTYPE_IS_RTL(charType), isOddLevel, PR_FALSE);
+        AdjustSelectionPointsForBidi(sdptr, textLength,
+                                     CHARTYPE_IS_RTL(charType), isOddLevel,
+                                     (paintCharByChar) ? PR_FALSE : isBidiSystem);
 #endif
         sdptr = sdptr->mNext;
       }
@@ -3193,6 +3214,15 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
       {
         nscoord currentX = dx;
         nsTextDimensions newDimensions;//temp
+#ifdef IBMBIDI // Simon - display substrings RTL in RTL frame
+        if (isRightToLeftOnBidiPlatform)
+        {
+          nsTextDimensions frameDimensions;
+          GetTextDimensions(aRenderingContext, aTextStyle, text, 
+                            (PRInt32)textLength, iter.IsLast(), &frameDimensions);
+          currentX = dx + frameDimensions.width;
+        }
+#endif
         while (!iter.IsDone())
         {
           PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
@@ -3208,6 +3238,10 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
                             (PRInt32)currentlength, isEndOfFrame, &newDimensions);
           if (newDimensions.width)
           {
+#ifdef IBMBIDI
+            if (isRightToLeftOnBidiPlatform)
+              currentX -= newDimensions.width;
+#endif
             if (isSelection)
             {//DRAW RECT HERE!!!
               if (!isCurrentBKColorTransparent) {
@@ -3229,6 +3263,9 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
                          currentX, dy, width, details);
           }
 
+#ifdef IBMBIDI
+          if (!isRightToLeftOnBidiPlatform)
+#endif
           // increment twips X start but remember to get ready for
           // next draw by reducing current x by letter spacing amount
           currentX += newDimensions.width; // + aTextStyle.mLetterSpacing;
@@ -3252,6 +3289,13 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
         delete details;
       }
     }
+#ifdef IBMBIDI
+    if (isRightToLeftOnBidiPlatform) {
+      // indicate that future text should not be reordered with
+      // right-to-left base direction 
+      aRenderingContext.SetRightToLeftText(PR_FALSE);
+    }
+#endif // IBMBIDI
   }
 }
 

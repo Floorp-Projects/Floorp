@@ -835,6 +835,14 @@ public:
  */
 #define NS_RENDERING_HINT_FAST_MEASURE 0x10
 
+/**
+ * This bit, when set, indicates that gfx performs glyph reordering of complex
+ * text after applying character or word spacing, and so expects to be passed
+ * text in logical order. When this bit is not set, gfx must be passed text in
+ * visual order if characters and word spacing are to be applied.
+ */
+#define NS_RENDERING_HINT_REORDER_SPACED_TEXT 0x40
+
 //flags for copy CopyOffScreenBits
 
 //when performing the blit, use the region, if any,
