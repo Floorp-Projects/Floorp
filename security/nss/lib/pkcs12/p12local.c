@@ -45,7 +45,6 @@
 #include "secerr.h"
 #include "pk11func.h"
 #include "p12local.h"
-#include "alghmac.h"
 #include "p12.h"
 
 #define SALT_LENGTH	16

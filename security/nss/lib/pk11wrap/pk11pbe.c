@@ -45,7 +45,6 @@
 #include "secasn1.h"
 #include "secder.h"
 #include "secoid.h"
-#include "alghmac.h"
 #include "secerr.h"
 #include "secmod.h"
 #include "pk11func.h"
