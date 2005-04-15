@@ -1,0 +1,90 @@
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/*== calendar-event-column ==*/
+
+calendar-event-column { 
+  -moz-binding: url(xfu.xml#calendar-event-column);
+}
+
+calendar-event-column { 
+  border: 1px solid #888888;
+}
+
+.calendar-event-column-header { 
+  border: 1px solid #888888;
+}
+
+/*== calendar-event-box ==*/
+
+calendar-event-box { 
+  -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-event-box);
+}
+
+.calendar-event-box-container {
+  background: #777799;
+  padding: 2px;
+}
+
+.calendar-event-box-container[parentorient=vertical] {
+  background: #777799;
+  padding: 2px;
+}
+
+/*== calendar-event-gripbar ==*/
+
+calendar-event-gripbar { 
+  -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-event-gripbar);
+}
+
+calendar-event-gripbar[parentorient="vertical"] {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+
+  border-top: 1px dotted #888888;
+  border-bottom: 1px dotted #888888;
+
+  cursor: n-resize;
+
+  min-height: 3px;
+  min-width: 3px;
+
+  background: #aaaaaa;
+}
+
+calendar-event-gripbar {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+
+  border-left: 1px dotted #888888;
+  border-right: 1px dotted #888888;
+
+  cursor: e-resize;
+
+  min-height: 3px;
+  min-width: 3px;
+
+  background: #aaaaaa;
+}
+
+/*== calendar-time-bar ==*/
+calendar-time-bar { 
+  -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-time-bar);
+}
+
+.calendar-time-bar-label { 
+  font-weight: bold;
+}
+
+.calendar-time-bar-box-odd {
+  background: #6666ff;
+}
+
+.calendar-time-bar-box-even {
+  background: #ff6666;
+}
+
+/*== calendar-multiday-view ==*/
+calendar-multiday-view { 
+  -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-multiday-view);
+}

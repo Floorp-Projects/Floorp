@@ -1,0 +1,70 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is calendar views.
+ *
+ * The Initial Developer of the Original Code is
+ *   Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+#include "nsISupports.h"
+
+interface calICalendar;
+
+[scriptable, uuid(be9b4f26-2475-4aeb-9b46-e165fc0809fb)]
+interface calICalendarView : nsISupports {
+
+  // the calendar that this view is displaying
+  attribute calICalendar displayCalender;
+
+  // Some views may decide to utilize the time portion of these
+  // calIDateTimes; pass in calIDateTimes that are dates if you
+  // want to make sure this doesn't happen.
+  void setDateRange(in calIDateTime aStartDate, in calIDateTime aEndDate);
+
+  // if the view is displaying disjoint dates, startDate and endDate will
+  // be the earliest and latest date that's being displayed
+  attribute readonly calIDateTime startDate;
+  attribute readonly calIDateTime endDate;
+
+  // whether this view supports disjoint dates or not
+  readonly attribute boolean supportsDisjointDates;
+  // these are only valid if supportsDisjointDates is true
+  attribute readonly boolean hasDisjointDates;
+  // sets this view to show a possibly disjoint set of dates
+  void setDateList(in unsigned long aCount, [array,size_is(aCount)] in calIDateTime aDates);
+
+  // returns the set of dates being shown by this view; will expand out a date range into
+  // a set of dates
+  void getDateList(out unsigned long aCount, [array,size_is(aCount),retval] out calIDateTime aDates);
+};

@@ -1,0 +1,1135 @@
+<?xml version="1.0"?>
+
+<!--
+   - ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is calendar views.
+   -
+   - The Initial Developer of the Original Code is
+   -   Oracle Corporation
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****
+-->
+
+<bindings id="calendar-multiday-view-bindings"
+  xmlns="http://www.mozilla.org/xbl"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="calendar-time-bar">
+    <content>
+      <xul:box xbl:inherits="orient,width,height" flex="1" anonid="topbox">
+      </xul:box>
+    </content>
+
+    <implementation>
+      <field name="mPixPerMin">2.0</field>
+      <field name="mStartMin">8*60</field>
+      <field name="mEndMin">16*60</field>
+
+      <constructor>
+	this.relayout();
+      </constructor>
+
+      <method name="setAttribute">
+	<parameter name="aAttr"/>
+	<parameter name="aVal"/>
+	<body><![CDATA[
+	  var needsrelayout = false;
+	  if (aAttr == "orient") {
+              if (this.getAttribute("orient") != aVal)
+                  needsrelayout = true;
+          }
+
+	  // this should be done using lookupMethod(), see bug 286629
+	  var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+
+          if (needsrelayout) {
+              this.relayout();
+          }
+
+          return ret;
+	]]></body>
+      </method>
+
+      <property name="pixelsPerMinute"
+	onget="return this.mPixPerMin"
+	onset="if (this.mPixPerMin != val) { this.mPixPerMin = val; this.relayout(); } return val;"/>
+
+      <property name="startMinute"
+	onget="return this.mStartMin"
+	onset="if (this.mStartMin != val) { this.mStartMin = val; this.relayout(); } return val;"/>
+
+      <property name="endMinute"
+	onget="return this.mEndMin"
+	onset="if (this.mEndMin != val) { this.mEndMin = val; this.relayout(); } return val;"/>
+
+      <method name="relayout">
+	<body><![CDATA[
+          dump ("calendar-time-bar: relayout\n");
+	  function createXULElement(el) {
+              return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+
+          var topbox = document.getAnonymousElementByAttribute(this, "anonid", "topbox");
+          var orient = topbox.getAttribute("orient");
+          var otherorient = "vertical";
+	  if (!orient) orient = "horizontal";
+          if (orient == "vertical") otherorient = "horizontal";
+
+          dump ("calendar-time-bar: orient: " + orient + " other: " + otherorient + "\n");
+
+          function makeTimeBox(timestr, size) {
+              //dump ("calendar-time-bar: making box for: " + timestr + " size: " + size + "\n");
+
+              var box = createXULElement("box");
+              box.setAttribute("orient", orient);
+
+              if (orient == "horizontal") {
+                  box.setAttribute("width", size);
+              } else {
+                  box.setAttribute("height", size);
+              }
+
+              var label = createXULElement("label");
+              label.setAttribute("class", "calendar-time-bar-label");
+              label.setAttribute("value", timestr);
+              label.setAttribute("align", "center");
+
+              box.appendChild(label);
+
+              return box;
+          }
+
+          while (topbox.lastChild)
+              topbox.removeChild(topbox.lastChild);
+
+          var firstDur = this.mStartMin % 60;
+          var theHour = Math.floor(this.mStartMin / 60);
+          //dump ("firstDur: " + firstDur + "\n");
+          if (firstDur != 0) {
+              var box = makeTimeBox("", firstDur);
+              box.setAttribute("class", "calendar-time-bar-box-" + (theHour % 2 == 0 ? "even" : "odd"));
+              topbox.appendChild(box);
+              theHour++;
+          }
+
+          //dump ("ppm: " + this.mPixPerMin + " startmin: " + this.mStartMin + " end: " + this.mEndMin + "\n");
+          var durLeft = this.mEndMin  - (this.mStartMin + firstDur);
+          //dump ("durLeft: " + durLeft + "\n");
+          while (durLeft > 0) {
+              var box = makeTimeBox(String(theHour) + ":00",
+                                    this.mPixPerMin * ((durLeft > 60) ? 60 : durLeft));
+              box.setAttribute("class", "calendar-time-bar-box-" + (theHour % 2 == 0 ? "even" : "odd"));
+              topbox.appendChild(box);
+              durLeft -= 60;
+              theHour++;
+          }
+	]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="calendar-event-gripbar">
+    <content>
+      <xul:box anonid="thebox" flex="1"/>
+    </content>
+
+    <implementation>
+      <!-- public -->
+      <field name="eventElement">null</field>
+
+      <property name="parentorient">
+	<getter><![CDATA[
+	  return this.getAttribute("parentorient");
+	]]></getter>
+	<setter><![CDATA[
+	  this.setAttribute("parentorient", val);
+	  var thebox = document.getAnonymousElementByAttribute(this, "anonid", "thebox");
+	  if (val == "vertical")
+              thebox.setAttribute("orient", "horizontal");
+	  else
+              thebox.setAttribute("orient", "vertical");
+          return val;
+	]]></setter>
+      </property>
+
+      <!-- private -->
+      <field name="mSide">top</field>
+
+      <field name="mResizing">false</field>
+      <field name="mSizeStartX">0</field>
+      <field name="mSizeStartY">0</field>
+
+      <constructor><![CDATA[
+	if (this.getAttribute("side") == "top")
+            this.mSide = "top";
+	else if (this.getAttribute("side") == "bottom")
+            this.mSide = "bottom";
+        this.parentorient = this.getAttribute("parentorient");
+      ]]></constructor>
+
+    </implementation>
+
+    <handlers>
+      <handler event="mousedown" phase="capturing" button="0"><![CDATA[
+	dump("mousedown\n");
+	this.mResizing = true;
+	this.mSizeStartX = event.screenX;
+	this.mSizeStartY = event.screenY;
+	dump ("ev.t: " + event.target + " bo: " + event.target.boxObject + "\n");
+	event.target.boxObject.captureMouseEvents = true;
+	event.preventDefault();
+      ]]></handler>
+
+      <handler event="mousemove" phase="capturing"><![CDATA[
+	if (!this.mResizing)
+	  return;
+	dump("mousemove\n");
+      ]]></handler>
+
+      <handler event="mouseup" phase="capturing"><![CDATA[
+	if (!this.mResizing)
+	  return;
+	dump("mouseup\n");
+	this.mResizing = false;
+	event.target.boxObject.captureMouseEvents = false;
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="calendar-event-column">
+    <content>
+      <xul:box anonid="topbox" flex="1">
+      </xul:box>
+    </content>
+
+    <implementation>
+      <constructor><![CDATA[
+	this.mEvents = Array();
+      ]]></constructor>
+
+      <!-- fields -->
+      <field name="mPixPerMin">2.0</field>
+      <field name="mStartMin">8*60</field>
+      <field name="mEndMin">20*60</field>
+      <field name="mEvents">new Array()</field>
+      <field name="mEventMap">null</field>
+
+      <!-- properties -->
+      <property name="pixelsPerMinute">
+	<getter><![CDATA[
+          return this.mPixPerMin;
+        ]]></getter>
+	<setter><![CDATA[
+          if (val <= 0.0)
+            throw "Bad pixpermin";
+          if (val != this.mPixPerMin) {
+            this.mPixPerMin = val;
+            this.relayout();
+          }
+        ]]></setter>
+      </property>
+
+      <property
+	name="topbox"
+	readonly="true">
+	<getter><![CDATA[
+	  return document.getAnonymousElementByAttribute(this, "anonid", "topbox");
+	]]></getter>
+      </property>
+
+      <property
+	name="events"
+	readonly="true"
+	onget="return this.mEvents"/>
+
+      <property name="startMinute">
+	<getter><![CDATA[
+          return this.mStartMin;
+        ]]></getter>
+	<setter><![CDATA[
+          if (val < 0)
+            throw "Bad start minute";
+          if (val != this.mStartMin) {
+            this.mStartMin = val;
+            this.relayout();
+          }
+        ]]></setter>
+      </property>
+
+      <property name="endMinute">
+	<getter><![CDATA[
+          return this.mEndMin;
+        ]]></getter>
+	<setter><![CDATA[
+          if (val < 0)
+            throw "Bad end minute";
+          if (val != this.mEndMin) {
+            this.mEndMin = val;
+            this.relayout();
+          }
+        ]]></setter>
+      </property>
+
+      <!-- methods -->
+
+      <method name="setAttribute">
+	<parameter name="aAttr"/>
+	<parameter name="aVal"/>
+	<body><![CDATA[
+	  var needsrelayout = false;
+	  if (aAttr == "orient") {
+              if (this.getAttribute("orient") != aVal)
+                  needsrelayout = true;
+          }
+
+	  // this should be done using lookupMethod(), see bug 286629
+	  var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+
+          if (needsrelayout) {
+              this.relayout();
+          }
+
+          return ret;
+	]]></body>
+      </method>
+
+      <method name="internalDeleteEvent">
+	<parameter name="aOccurrence"/>
+	<body><![CDATA[
+           var itemIndex = -1;
+           var i;
+           for (i = 0; i < this.mEvents.length; i++) {
+               if (this.mEvents[i].event == aOccurrence) {
+                   itemIndex = i;
+                   break;
+               }
+           }
+
+           if (itemIndex != -1) {
+               this.mEvents.splice(itemIndex, 1);
+               return true;
+           } else {
+               return false;
+           }
+	]]></body>
+      </method>
+
+      
+      <method name="addEvent">
+	<parameter name="aOccurrence"/>
+	<body><![CDATA[
+           this.internalDeleteEvent(aOccurrence);
+
+           var chunk = {
+               startMinute:
+                 aOccurrence.occurrenceStartDate.hour * 60 + aOccurrence.occurrenceStartDate.minute,
+               endMinute:
+                 aOccurrence.occurrenceEndDate.hour * 60 + aOccurrence.occurrenceEndDate.minute,
+               event:
+                 aOccurrence
+           };
+           this.mEvents.push(chunk);
+           this.relayout();
+	]]></body>
+      </method>
+
+      <method name="deleteEvent">
+	<parameter name="aOccurrence"/>
+	<body><![CDATA[
+           if (this.internalDeleteEvent(aOccurrence))
+	     this.relayout();
+	]]></body>
+      </method>
+
+      <method name="clear">
+	<body><![CDATA[
+	  while (this.topbox.lastChild)
+              this.topbox.removeChild(this.topbox.lastChild);
+	]]></body>
+      </method>
+
+      <method name="relayout">
+	<body><![CDATA[
+
+	  function createXULElement(el) {
+              return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+
+	  this.clear();
+
+          var orient = this.getAttribute("orient");
+          var otherorient = "vertical";
+	  if (!orient) orient = "horizontal";
+          if (orient == "vertical") otherorient = "horizontal";
+
+	  this.topbox.setAttribute("orient", otherorient);
+
+          this.mEventMap = this.computeEventMap();
+
+	  for each (column in this.mEventMap) {
+              var xulColumn = createXULElement("box");
+              xulColumn.setAttribute("orient", orient);
+              xulColumn.setAttribute("flex", "1");
+              this.topbox.appendChild(xulColumn);
+
+              var numBlocksInserted = 0
+
+              var curTime = 0;
+              for each (chunk in column) {
+                  var duration = chunk.duration;
+                  //dump ("curTime: " + curTime + " duration: " + duration + " ev: " + chunk.event + "\n");
+
+                  // if this chunk isn't entirely visible, we skip it
+                  if (curTime < this.mStartMin) {
+                      if (curTime + duration <= this.mStartMin) {
+                          curTime += duration;
+                          continue;
+                      }
+
+                      // offset the duration so that stuff starts at
+                      // whatever our start time is set to, if this item
+                      // starts before our start time
+                      var delta = this.mStartMin - curTime;
+                      if (delta > 0) {
+                          duration -= delta;
+                          curTime += delta;
+                      }
+                  }
+
+                  if (chunk.event) {
+                      var chunkBox = createXULElement("calendar-event-box");
+                      chunkBox.setAttribute("orient", orient);
+                      // chunkBox.setAttribute("style", "background: #eeeeff; padding: 0px 1px 0px 1px");
+
+                      // chunkBox.setAttribute("flex", "1");
+                      if (orient == "vertical")
+                          chunkBox.setAttribute("height", duration * this.mPixPerMin);
+                      else
+                          chunkBox.setAttribute("width", duration * this.mPixPerMin);
+
+                      xulColumn.appendChild(chunkBox);
+
+                      chunkBox.occurrence = chunk.event;
+                  } else {
+                      var chunkBox = createXULElement("box");
+                      chunkBox.setAttribute("orient", orient);
+                      chunkBox.setAttribute("class", "calendar-empty-space-box");
+                      xulColumn.appendChild(chunkBox);
+
+                      if (orient == "vertical")
+                          chunkBox.setAttribute("height", duration * this.mPixPerMin);
+                      else
+                          chunkBox.setAttribute("width", duration * this.mPixPerMin);
+                  }
+
+                  numBlocksInserted++;
+                  curTime += duration;
+              }
+
+              if (numBlocksInserted == 0) {
+                  // if we didn't insert any blocks, then
+                  // forget about this column
+                  this.topbox.removeChild(xulColumn);
+              }
+          }
+	]]></body>
+      </method>
+
+      <method name="computeEventMap">
+	<body><![CDATA[
+	  dump ("computeEventMap\n");
+          // we need to build a layout data structure
+          // that looks like this:
+          // [
+          //  [
+          //   { duration: 120 /* min */ },
+          //   { duration: 180, event: ev },
+          //   { duration: 240 }
+          //  ],
+          //  [
+          //   { duration: 180 },
+          //   { duration: 120, event: ev2 },
+          //   { duration: 240 }
+          //  ]
+          // ]
+          // Indicating two events that overlap, with each index in the main
+          // array indicating one vertical line of events.  If an event can't be placed
+          // in the first line, it should be placed in the next, and so on.
+
+          this.mEvents.sort(function (a,b) {
+                                var comp = a.startMinute - b.startMinute;
+                                if (comp != 0) return comp;
+                                return b.endMinute - a.endMinute;
+                            });
+
+          var eventMap = []
+          eventMap.push(new Array());
+
+          for each (event in this.mEvents) {
+              //if (event.occurrenceStartDate.isDate)
+              //    continue;
+
+	      if (event.startMinute == null || event.endMinute == null || event.event == null)
+                  continue;
+
+              dump ("=== event: " + event + " " + event.startMinute + "-" + event.endMinute + "\n");
+
+              var startAt = event.startMinute;
+              var endAt = event.endMinute;
+
+              var curCol = 0;
+              while (curCol < eventMap.length) {
+                  dump ("+ curCol: " + curCol + "\n");
+                  var blockIndex = 0;
+                  var curOffset = 0;
+                  var finished = false;
+
+                  var prevblock = null;
+
+                  while (blockIndex < eventMap[curCol].length) {
+                      var block = eventMap[curCol][blockIndex];
+
+                      //dump ("  blockIndex: " + blockIndex + "  curOffset: " + curOffset + " block.duration: " + block.duration + " (startAt: " + startAt + ")\n");
+                      if (curOffset <= startAt && curOffset + block.duration > startAt) {
+
+                          // We want to insert the event here.  prevblock contains the
+                          // preceeding block, if any.  block contains the block that already
+                          // exists at this location, e.g.:
+                          //          .....v- startAt
+                          // ~~----------+----------~~
+                          //   prevblock | block
+                          // ~~----------+----------~~
+                          //             ^- curOffset
+                          //
+                          // The event we're trying to insert starts at startAt,
+                          // which can be anywhere from curOffset - prevblock.duration to
+                          // curOffset + block.duration.
+                          //
+                          // We need to look at block; if it's an event, then we evict ourselves
+                          // to the next eventMap index.  We also do this if it's free space
+                          // and we can't fit ourselves here.
+
+
+                          // If the previous block is an event, and we
+                          // need to start in the middle of it, we push
+                          // to the next column.
+                          if (prevblock && prevblock.event && startAt < curOffset) {
+                              //dump ("** break 1\n");
+                              break;
+                          }
+
+                          // If the next block is an event, we push to the
+                          // next column, since we can't break it.
+                          if (block.event) {
+                              //dump ("** break 2\n");
+                              break;
+                          }
+
+                          // If the next block is free space, but it isn't
+                          // large enough to hold our event, we push to the
+                          // next column.
+                          if (curOffset + block.duration < endAt) {
+                              //dump ("** break 3\n");
+                              break;
+                          }
+
+                          // Otherwise, we are ready to insert the event.
+                          // Figure out how much to shrink the previous/following
+                          // blocks.
+
+                          var startDelta = startAt - curOffset;
+                          if (startDelta < 0 || (prevblock && !prevblock.event)) {
+                              // we need to shrink or expand the previous free space
+                              eventMap[curCol][blockIndex-1].duration += startDelta;
+                              curOffset += startDelta;
+                          } else if (startDelta > 0) {
+                              eventMap[curCol].splice(blockIndex, 0, { duration: startDelta });
+                              curOffset += startDelta;
+                              blockIndex++;
+                          }
+
+                          var endDelta = endAt - curOffset;
+                          if (endDelta > 0) {
+                              eventMap[curCol][blockIndex].duration -= startDelta;
+                          }
+
+                          // insert our event block
+                          eventMap[curCol].splice(blockIndex, 0, { duration: endAt - startAt, event: event });
+
+                          finished = true;
+                          break;
+                      }
+
+                      prevblock = block;
+                      curOffset += block.duration;
+                          
+                      blockIndex++;
+                  }
+
+                  // we got to the end of the list, so just add to the end
+                  if (blockIndex == eventMap[curCol].length && curOffset <= startAt) {
+                      var delta = startAt - curOffset;
+                      if (delta)
+                          eventMap[curCol].push({ duration: delta });
+                      eventMap[curCol].push({ duration: endAt - startAt, event: event });
+                      finished = true;
+                  }
+
+                  if (finished) {
+                      //dump (eventMap.toSource() + "\n");
+                      break;
+                  }
+
+                  if (curCol+1 == eventMap.length) {
+                      eventMap.push(new Array());
+                  }
+                  curCol++;
+              }
+          }
+
+          return eventMap;
+      ]]></body>
+      </method>
+
+    </implementation>
+  </binding>
+
+  <binding id="calendar-event-box">
+
+    <content>
+      <xul:box anonid="eventbox" xbl:inherits="orient,width,height" flex="1">
+	<xul:calendar-event-gripbar anonid="gripbar1" xbl:inherits="parentorient=orient"/>
+	<xul:vbox class="calendar-event-box-container" xbl:inherits="parentorient=orient" flex="1" align="left">
+	  <xul:label style="font-size: x-small;" anonid="event-name" flex="1" crop="right"/>
+	</xul:vbox>
+	<xul:calendar-event-gripbar anonid="gripbar2" xbl:inherits="parentorient=orient"/>
+      </xul:box>
+    </content>
+
+    <implementation>
+      <constructor><![CDATA[
+         this.orient = this.getAttribute("orient");
+          var otherorient = "vertical";
+	  if (!orient) orient = "horizontal";
+          if (orient == "vertical") otherorient = "horizontal";
+      ]]></constructor>
+
+      <!-- fields -->
+      <field name="mOccurrence">null</field>
+
+      <!-- properties -->
+      <method name="setAttribute">
+	<parameter name="aAttr"/>
+	<parameter name="aVal"/>
+	<body><![CDATA[
+	  var needsrelayout = false;
+	  if (aAttr == "orient") {
+              if (this.getAttribute("orient") != aVal)
+                  needsrelayout = true;
+          }
+
+	  // this should be done using lookupMethod(), see bug 286629
+	  var ret = XULElement.prototype.setAttribute.call (this, aAttr, aVal);
+
+          if (needsrelayout) {
+              var otherorient = "vertical";
+              if (val != "horizontal") otherorient = "horizontal";
+
+              var eventbox = document.getAnonymousElementByAttribute(this, "anonid", "eventbox");
+              eventbox.setAttribute("orient", val);
+              eventbox.setAttribute("class", "calendar-event-box-" + val);
+              var gb1 = document.getAnonymousElementByAttribute(this, "anonid", "gripbar1");
+              gb1.parentorient = val;
+              var gb2 = document.getAnonymousElementByAttribute(this, "anonid", "gripbar2");
+              gb2.parentorient = val;
+          }
+
+          return ret;
+	]]></body>
+      </method>
+
+      <property name="eventNameLabel" readonly="true"
+	onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'event-name');"/>
+
+      <property name="occurrence">
+	<getter><![CDATA[
+	  return this.mOccurrence;
+	]]></getter>
+	<setter><![CDATA[
+	  dump ('set occurrence\n');
+	  this.mOccurrence = val;
+	  if (val && val.item)
+              this.eventNameLabel.setAttribute('value', val.item.summary);
+          else
+              this.eventNameLabel.setAttribute('value', 'Event');
+	  return val;
+	]]></setter>
+      </property>
+
+      <property name="startMinute" readonly="true"
+	onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceStartDate.hour * 60 + this.mOccurrence.occurrenceStartDate.minute"/>
+
+      <property name="endMinute" readonly="true"
+	onget="if (!this.mOccurrence) return 0; return this.mOccurrence.occurrenceEndDate.hour * 60 + this.mOccurrence.occurrenceEndDate.minute"/>
+    </implementation>
+  </binding>
+
+  <binding id="calendar-multiday-view">
+    <content>
+      <xul:box anonid="mainbox" flex="1">
+	<!-- this thing is tricky; its width/height need to be programatically set based on the orientation -->
+	<xul:box anonid="headerbox">
+	  <xul:box anonid="headertimespacer"/>
+          <xul:box anonid="headerdaybox" flex="1" equalsize="always" />
+	</xul:box>
+	<xul:box anonid="childbox" flex="1">
+	  <!-- the orient of the calendar-time-bar needs to be the opposite of the parent -->
+	  <xul:calendar-time-bar xbl:inherits="orient" anonid="timebar"/>
+	  <xul:box anonid="daybox" flex="1" equalsize="always" />
+	</xul:box>
+      </xul:box>
+    </content>
+
+    <implementation implements="calICalendarView">
+
+      <constructor><![CDATA[
+        this.fixorient();
+      ]]></constructor>
+
+      <field name="mCalendar">null</field>
+      <field name="mStartDate">null</field>
+      <field name="mEndDate">null</field>
+      <!-- mDateList will always be sorted before being set -->
+      <field name="mDateList">null</field>
+      <!-- array of { date: calIDatetime, col: column item } -->
+      <field name="mDateColumns">null</field>
+      <field name="mBatchCount">0</field>
+
+      <field name="mObserver"><![CDATA[
+        // the calIObserver
+        ({
+            calView: this,
+
+            onStartBatch: function() {
+                this.mBatchCount++;
+            },
+            onEndBatch: function() {
+                this.mBatchCount--;
+                if (this.mBatchCount == 0) {
+                    this.refresh();
+                }
+            },
+            onLoad: function() {
+                this.refresh();
+            },
+            onAddItem: function (aItem) {
+                if (!(aItem instanceof Components.interfaces.calIEvent))
+                    return;
+
+                var occs = aItem.getOccurrencesBetween(this.calView.startDate,
+                                                       this.calView.endDate,
+                                                       {});
+                for each (occ in occs) {
+                    this.doAddEvent(occ);
+                }
+            },
+            onModifyItem: function (aOldItem, aNewItem) {
+                if (!(aOldItem instanceof Components.interfaces.calIEvent))
+                    return;
+
+                if (!(aNewItem instanceof Components.interfaces.calIEvent))
+                    return;
+
+                var occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
+                                                             this.calView.endDate,
+                                                             {});
+                for each (occ in occs) {
+                    this.doDeleteEvent(occ);
+                }
+
+                var occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
+                                                          this.calView.endDate,
+                                                          {});
+                for each (occ in occs) {
+                    this.doAddEvent(occ);
+                }
+            },
+            onDeleteItem: function (aItem) {
+                if (!(aItem instanceof Components.interfaces.calIEvent))
+                    return;
+
+                var occs = aItem.getOccurrencesBetween(this.calView.startDate,
+                                                       this.calView.endDate,
+                                                      { file});
+                for each (occ in occs) {
+                    this.doDeleteEvent(occ);
+                }
+            },
+            //XXXvv Alarm could, in theory, flash the event or something
+            onAlarm: function (aAlarmItem) { },
+            onError: function (aErrNo, aMessage) { }
+        })
+      ]]></field>
+
+      <field name="mOperationListener"><![CDATA[
+      ({
+          calView: this,
+
+          onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+              // nothing to do
+          },
+          onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+              netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect UniversalBrowserAccess');
+              if (!Components.isSuccessCode(aStatus))
+                  return;
+
+              for each (item in aItems) {
+                  this.calView.doAddEvent(item);
+              }
+          }
+      })
+      ]]></field>
+
+
+      <!-- calICalendarView -->
+      <property name="supportsDisjointDates"
+	onget="return true"/>
+      <property name="hasDisjointDates"
+	onget="return (this.mDateList != null);"/>
+
+      <property name="displayCalendar">
+	<getter><![CDATA[
+	  return this.mCalendar;
+	]]></getter>
+	<setter><![CDATA[
+	  if (this.mCalendar)
+              this.mCalendar.removeObserver (this.mObserver);
+          this.mCalendar = val;
+          this.mCalendar.addObserver (this.mObserver);
+          this.refresh();
+	]]></setter>
+      </property>
+
+      <property name="startDate">
+	<getter><![CDATA[
+	  if (this.mStartDate) return this.mStartDate;
+	  else if (this.mDateList && this.mDateList.length > 0) return this.mDateList[0];
+	  else return null;
+	]]></getter>
+      </property>
+
+      <property name="endDate">
+	<getter><![CDATA[
+	  if (this.mEndDate) return this.mEndDate;
+	  else if (this.mDateList && this.mDateList.length > 0) return this.mDateList[this.mDateList.length-1];
+	  else return null;
+	]]></getter>
+      </property>
+
+      <method name="setDateRange">
+	<parameter name="aStartDate"/>
+	<parameter name="aEndDate"/>
+	<body><![CDATA[
+	  dump ("setDateRange\n");
+	  this.mDateList = null;
+	  this.mStartDate = aStartDate.clone();
+          this.mStartDate.makeImmutable();
+	  this.mEndDate = aEndDate.clone();
+          this.mEndDate.makeImmutable();
+
+          // this function needs to be smarter, and needs to compare
+          // the current date range and add/remove, instead of just
+          // replacing.
+
+	  this.refresh();
+	]]></body>
+      </method>
+
+      <method name="setDateList">
+	<parameter name="aCount"/>
+	<parameter name="aDates"/>
+	<body><![CDATA[
+	  this.mStartDate = null;
+	  this.mEndDate = null;
+
+	  if (aCount == 0) {
+              this.mDateList = null;
+          } else {
+              aDates.sort (function(a, b) { return a.compare(b); });
+              this.mDateList = new Array();
+              for each (d in aDates) {
+                  var n = d.clone();
+                  n.makeImmutable();
+                  this.mDateList.push(n);
+              }
+          }
+
+          this.refresh();
+	]]></body>
+      </method>
+
+      <method name="getDateList">
+	<parameter name="aCount"/>
+	<body><![CDATA[
+           var dates = new Array();
+           if (this.mStartDate && this.mEndDate) {
+               var d = this.mStartDate.clone();
+               while (d.compare(this.mEndDate) != 0) {
+                   dates.push(d.clone());
+                   d.day += 1;
+                   d.normalize();
+               }
+           } else if (this.mDateList) {
+               for each (d in this.mDateList)
+                   dates.push(d.clone);
+           }
+
+           aCount.value = dates.length;
+           return dates;
+	]]></body>
+      </method>
+
+      <!-- private -->
+
+      <method name="fixorient">
+	<body><![CDATA[
+          var orient = this.getAttribute("orient");
+          var otherorient = "vertical";
+          if (!orient) orient = "horizontal";
+          if (orient == "vertical") otherorient = "horizontal";
+
+	  var normalelems = ['mainbox', 'timebar'];
+	  var otherelems = ['headerbox', 'headerdaybox', 'childbox', 'daybox'];
+
+	  for each (id in normalelems) {
+              document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", orient);
+          }
+
+	  for each (id in otherelems) {
+              document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", otherorient);
+          }
+
+          var headerbox = document.getAnonymousElementByAttribute(this, "anonid", "headerbox");
+          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
+	  var headertimespacer = document.getAnonymousElementByAttribute(this, "anonid", "headertimespacer");
+
+	  if (orient == "vertical") {
+              headerbox.setAttribute("height", 50);
+              headerbox.removeAttribute("width");
+
+              var timebarWidth = 50;
+              timebar.setAttribute("width", timebarWidth);
+              timebar.removeAttribute("height");
+              headertimespacer.setAttribute("width", timebarWidth);
+              headertimespacer.removeAttribute("height");
+          } else {
+              headerbox.setAttribute("width", 30);
+              headerbox.removeAttribute("height");
+
+              var timebarHeight = 30;
+              timebar.setAttribute("height", timebarHeight);
+              timebar.removeAttribute("width");
+              headertimespacer.setAttribute("height", timebarHeight);
+              headertimespacer.removeAttribute("width");
+          }
+
+          var daybox = document.getAnonymousElementByAttribute(this, "anonid", "daybox");
+          var child = daybox.firstChild;
+          while (child) {
+              child.setAttribute("orient", orient);
+              child = child.nextSibling;
+          }
+
+          var headerbox = document.getAnonymousElementByAttribute(this, "anonid", "headerdaybox");
+          var child = headerbox.firstChild;
+          while (child) {
+              child.setAttribute("orient", orient);
+              child = child.nextSibling;
+          }
+	]]></body>
+      </method>
+
+      <method name="refresh">
+	<body><![CDATA[
+	  // recreate our columns as necessary
+	  this.relayout();
+
+	  if (!this.mCalendar)
+              return;
+
+          // start our items query; for a disjoint date range
+          // we get all the items, and just filter out the ones we don't
+          // care about in addItem
+          this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
+                                  this.mCalendar.ITEM_FILTER_TYPE_EVENT |
+                                  this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
+                                  0,
+                                  this.startDate,
+                                  this.endDate,
+                                  this.mOperationListener);
+	]]></body>
+      </method>
+
+      <method name="relayout">
+	<body><![CDATA[
+	  function createXULElement(el) {
+              return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+
+          var orient = this.getAttribute("orient");
+          var otherorient = "vertical";
+          if (!orient) orient = "horizontal";
+          if (orient == "vertical") otherorient = "horizontal";
+
+          var computedDateList;
+          if (this.mDateList) {
+              computedDateList = this.mDateList;
+          } else {
+              computedDateList = new Array();
+
+              var theDate = this.mStartDate.clone();
+              while (theDate.compare(this.mEndDate) <= 0) {
+                  computedDateList.push(theDate.clone());
+                  theDate.day += 1;
+                  theDate.normalize();
+              }
+          }
+
+          var daybox = document.getAnonymousElementByAttribute(this, "anonid", "daybox");
+          var headerdaybox = document.getAnonymousElementByAttribute(this, "anonid", "headerdaybox");
+
+          while (daybox.lastChild)
+              daybox.removeChild(daybox.lastChild);
+
+          while (headerdaybox.lastChild)
+              headerdaybox.removeChild(headerdaybox.lastChild);
+
+          this.mDateColumns = new Array();
+
+          var counter = 0;
+          for each (d in computedDateList) {
+              var dayEventsBox = createXULElement("calendar-event-column");
+              dayEventsBox.setAttribute("flex", "1");
+              dayEventsBox.setAttribute("class", "calendar-event-column-" + (counter % 2 == 0 ? "even" : "odd"));
+              daybox.appendChild(dayEventsBox);
+
+              dayEventsBox.setAttribute("orient", orient);
+
+              var dayHeaderBox = createXULElement("box");
+              dayHeaderBox.setAttribute("class", "calendar-event-column-header");
+              dayHeaderBox.setAttribute("flex", "1");
+              headerdaybox.appendChild(dayHeaderBox);
+
+              dayHeaderBox.setAttribute("orient", orient);
+
+              d.isDate = true;
+
+              if (!d.isUtc)
+                  d = d.getInTimezone(null);
+
+              this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox } );
+          }
+
+	  daybox.removeAttribute("flex");
+	  daybox.setAttribute("flex", "1");
+	]]></body>
+      </method>
+
+      <method name="findColumnForEvent">
+	<parameter name="aEvent"/>
+	<body><![CDATA[
+	  var estart = aEvent.occurrenceStartDate;
+	  var eend = aEvent.occurrenceEndDate;
+
+          var eday = estart.clone();
+          eday.isDate = true;
+          if (!eday.isUtc)
+              eday = eday.getInTimezone(null);
+
+          var column = null;
+          var header = null;
+	  for each (col in this.mDateColumns) {
+              if (col.date.compare(eday) == 0) { 
+                  return col;
+              }
+          }
+
+          return null;
+	]]></body>
+      </method>
+
+      <method name="doAddEvent">
+	<parameter name="aEvent"/>
+	<body><![CDATA[
+	  dump ("++ doAddevent\n");
+          var col = this.findColumnForEvent(aEvent);
+          if (!col)
+              return;
+
+          var column = col.column;
+          var header = col.header;
+
+	  var estart = aEvent.occurrenceStartDate;
+          if (estart.isDate) {
+              // add it to header
+          } else {
+              column.addEvent(aEvent);
+          }
+	]]></body>
+      </method>
+
+      <method name="doDeleteEvent">
+	<parameter name="aEvent"/>
+	<body><![CDATA[
+          var col = this.findColumnForEvent(aEvent);
+          if (!col)
+              return;
+
+          var column = col.column;
+          var header = col.header;
+
+	  var estart = aEvent.occurrenceStartDate;
+          if (estart.isDate) {
+              // remove from header
+          } else {
+              column.deleteEvent(aEvent);
+          }
+	]]></body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+    </handlers>
+  </binding>
+</bindings>
