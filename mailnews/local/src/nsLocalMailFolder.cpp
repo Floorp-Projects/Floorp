@@ -3306,8 +3306,9 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 
   if (m_parsingFolder && mReparseListener)
   {
-    mReparseListener->OnStopRunningUrl(aUrl, aExitCode);
+    nsCOMPtr<nsIUrlListener> saveReparseListener = mReparseListener;
     mReparseListener = nsnull;
+    saveReparseListener->OnStopRunningUrl(aUrl, aExitCode);
   }
   if (mFlags & MSG_FOLDER_FLAG_INBOX)
   {
