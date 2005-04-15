@@ -62,7 +62,6 @@ INSTALLER_FILES = \
 	abe.jst \
 	adt.jst \
 	browser.jst \
-	help.jst \
 	talkback.jst \
 	xpcom.jst \
 	$(NULL)

@@ -62,7 +62,6 @@ INSTALLER_FILES = \
 	browser.jst \
 	chatzilla.jst \
 	editor.jst \
-	help.jst \
 	inspector.jst \
 	psm.jst \
 	talkback.jst \
