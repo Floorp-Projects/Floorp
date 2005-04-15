@@ -3,8 +3,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 [langenus]
-bin\chrome\en-US-mail.jar
+bin\chrome\en-US.jar
 bin\chrome\en-win.jar
+bin\chrome\en-US.manifest
+bin\chrome\mail-locales.manifest
 
 [regus]
 bin\defaults\profile\US\localstore.rdf
