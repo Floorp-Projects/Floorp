@@ -242,12 +242,9 @@ nsMediaDocument::CreateSyntheticDocument()
   if (!root) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = root->BindToTree(this, nsnull, nsnull, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    root->UnbindFromTree();
-    return rv;
-  }
-  SetRootContent(root);
+
+  rv = SetRootContent(root);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::body, nsnull,
                                      kNameSpaceID_None,

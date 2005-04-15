@@ -2104,12 +2104,8 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     }
     NS_ADDREF(mRoot);
 
-    rv = mRoot->BindToTree(mDocument, nsnull, nsnull, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      mRoot->UnbindFromTree();
-      return rv;
-    }
-    mDocument->SetRootContent(mRoot);
+    rv = mDocument->SetRootContent(mRoot);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Make head part

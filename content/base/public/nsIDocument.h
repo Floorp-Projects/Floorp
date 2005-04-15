@@ -338,7 +338,18 @@ public:
   {
     return mRootContent;
   }
-  virtual void SetRootContent(nsIContent* aRoot) = 0;
+
+  /**
+   * Set aRoot as the root content object for this document.  If aRoot is
+   * non-null, this should not be called on documents that currently have a
+   * root content without first clearing out the document's children.  Passing
+   * in null to unbind the existing root content is allowed.  This method will
+   * bind aRoot to the document; the caller need not call BindToTree on aRoot.
+   *
+   * Note that this method never sends out nsIDocumentObserver notifications;
+   * doing that is the caller's responsibility.
+   */
+  virtual nsresult SetRootContent(nsIContent* aRoot) = 0;
 
   /** 
    * Get the direct children of the document - content in

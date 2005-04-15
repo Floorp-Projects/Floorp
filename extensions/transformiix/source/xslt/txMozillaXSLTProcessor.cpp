@@ -712,8 +712,10 @@ txMozillaXSLTProcessor::notifyError()
         return;
     }
 
-    rootContent->BindToTree(document, nsnull, nsnull, PR_TRUE);
-    document->SetRootContent(rootContent);
+    rv = document->SetRootContent(rootContent);
+    if (NS_FAILED(rv)) {
+        return;
+    }
 
     nsCOMPtr<nsIDOMText> text;
     rv = errorDocument->CreateTextNode(mErrorText, getter_AddRefs(text));

@@ -249,14 +249,13 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
             return;
         }
 
-        rv = rootContent->BindToTree(doc, nsnull, nsnull, PR_TRUE);
+        // XXXbz what to do on failure here?
+        rv = doc->SetRootContent(rootContent);
         if (NS_FAILED(rv)) {
-            NS_ERROR("Failed to bind root to tree");
-            rootContent->UnbindFromTree();
+            NS_ERROR("Failed to set root content");
             return;
         }
-
-        doc->SetRootContent(rootContent);
+            
 
         mDocument->CreateElementNS(XHTML_NSURI,
                                    NS_LITERAL_STRING("head"),
