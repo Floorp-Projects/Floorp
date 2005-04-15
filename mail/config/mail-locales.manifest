@@ -8,7 +8,6 @@ locale messenger-views en-US jar:en-US.jar!/locale/en-US/messenger-views/
 locale messenger-smime en-US jar:en-US.jar!/locale/en-US/messenger-smime/
 locale messenger-mapi en-US jar:en-US.jar!/locale/en-US/messenger-mapi/
 locale messenger-region en-US jar:en-US.jar!/locale/en-US/messenger-region/
-locale necko en-US jar:en-US.jar!/locale/en-US/necko/
 locale editor en-US jar:en-US.jar!/locale/en-US/editor/
 locale mozldap en-US jar:en-US.jar!/locale/en-US/mozldap/
 locale mozapps en-US jar:en-US.jar!/locale/en-US/mozapps/
