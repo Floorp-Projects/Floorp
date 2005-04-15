@@ -69,7 +69,6 @@ extern LPSTR            szTempSetupPath;
 extern LPSTR            szSetupDir;
 extern LPSTR            szTempDir;
 extern LPSTR            szOSTempDir;
-extern LPSTR            szFileIniConfig;
 extern LPSTR            szFileIniInstall;
 
 extern LPSTR            szSiteSelectorDescription;

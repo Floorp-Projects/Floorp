@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= setup$(BIN_SUFFIX)
 RESFILE		= setup.res
+
 REQUIRES	= \
 		setuprsc \
 		xpnet \

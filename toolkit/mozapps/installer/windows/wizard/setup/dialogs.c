@@ -333,8 +333,8 @@ BOOL ShouldExitSetup(HWND hDlg)
                     MB_SETFOREGROUND) == IDYES;
   }
   else {
-    GetPrivateProfileString("Strings", "Message Cancel Setup AUTO mode", "", szMsg, 
-                            sizeof(szMsg), szFileIniConfig);
+    GetConfigIniProfileString("Strings", "Message Cancel Setup AUTO mode",
+                              "", szMsg, sizeof(szMsg));
     ShowMessage(szMsg, TRUE);
     Delay(5);
     ShowMessage(szMsg, FALSE);
@@ -345,7 +345,7 @@ BOOL ShouldExitSetup(HWND hDlg)
     SetWindowLong(hDlg, DWL_MSGRESULT, (LONG)TRUE);
 
   return rv;
-} 
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1750,9 +1750,9 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_USER,   diAdvancedSettings.szProxyUser);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_PASSWD, diAdvancedSettings.szProxyPasswd);
 
-      GetPrivateProfileString("Strings", "IDC Use Ftp", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      GetIniConfigProfileString("Strings", "IDC Use Ftp", "", szBuf, sizeof(szBuf));
       SetDlgItemText(hDlg, IDC_USE_FTP, szBuf);
-      GetPrivateProfileString("Strings", "IDC Use Http", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      GetIniConfigProfileString("Strings", "IDC Use Http", "", szBuf, sizeof(szBuf));
       SetDlgItemText(hDlg, IDC_USE_HTTP, szBuf);
 
       SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szProxySettings);

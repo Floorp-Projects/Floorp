@@ -40,7 +40,7 @@
 #ifndef _IFUNCNS_H_
 #define _IFUNCNS_H_
 
-HRESULT     TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile);
+HRESULT     TimingCheck(DWORD dwTiming, LPSTR szSection);
 HRESULT     MeetCondition(LPSTR dwSection);
 HRESULT     FileUncompress(LPSTR szFrom, LPSTR szTo);
 HRESULT     ProcessXpcomFile(void);

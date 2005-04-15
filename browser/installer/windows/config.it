@@ -1,5 +1,3 @@
-#filter substitution
-
 [General]
 ; Run Mode values:
 ;   Normal - Shows all dialogs.  Requires user input.
@@ -184,33 +182,33 @@ Verify Existence=
 
 [Dialog Welcome]
 Show Dialog=TRUE
-Title=@SETUP_TITLE@
-MessageWelcome=@SETUP_WELCOME@
-Message0=@SETUP_MESSAGE0@
-Message1=@SETUP_MESSAGE1@
-Message2=@SETUP_MESSAGE2@
-Message3=@SETUP_MESSAGE3@
+Title={SETUP_TITLE}
+MessageWelcome={SETUP_WELCOME}
+Message0={SETUP_MESSAGE0}
+Message1={SETUP_MESSAGE1}
+Message2={SETUP_MESSAGE2}
+Message3={SETUP_MESSAGE3}
 
 [Dialog License]
 Show Dialog=TRUE
-Title=@LICENSE_TITLE@
-Sub Title=@LICENSE_SUBTITLE@
+Title={LICENSE_TITLE}
+Sub Title={LICENSE_SUBTITLE}
 License File=license.txt
-Message0=@LICENSE_MESSAGE0@
-RadioAccept=@LICENSE_ACCEPT@
-RadioDecline=@LICENSE_DECLINE@
+Message0={LICENSE_MESSAGE0}
+RadioAccept={LICENSE_ACCEPT}
+RadioDecline={LICENSE_DECLINE}
 
 [Dialog Setup Type]
 Show Dialog=TRUE
-Title=@SETUP_TYPE_TITLE@
-Sub Title=@SETUP_TYPE_SUBTITLE@
-Message0=@SETUP_TYPE_MESSAGE0@
+Title={SETUP_TYPE_TITLE}
+Sub Title={SETUP_TYPE_SUBTITLE}
+Message0={SETUP_TYPE_MESSAGE0}
 
 ; at least one Setup Type needs to be set, and up to 4 can be
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
 [Setup Type0]
-Description Short=@TYPE_STANDARD@
-Description Long=@TYPE_STANDARD_DESC@
+Description Short={TYPE_STANDARD}
+Description Long={TYPE_STANDARD_DESC}
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
@@ -224,8 +222,8 @@ C3=Component Langpack
 C4=Component QFA
 
 [Setup Type1]
-Description Short=@TYPE_CUSTOM@
-Description Long=@TYPE_CUSTOM_DESC@
+Description Short={TYPE_CUSTOM}
+Description Long={TYPE_CUSTOM_DESC}
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
@@ -241,28 +239,28 @@ C5=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
-Title=@SELECT_TITLE@
-Sub Title=@SELECT_SUBTITLE@
-Message0=@SELECT_MESSAGE0@
+Title={SELECT_TITLE}
+Sub Title={SELECT_SUBTITLE}
+Message0={SELECT_MESSAGE0}
 
 [Dialog Select Install Path]
 Show Dialog=TRUE
-Title=@LOCATION_TITLE@
-Sub Title=@LOCATION_SUBTITLE@
-Message0=@LOCATION_MESSAGE0@
+Title={LOCATION_TITLE}
+Sub Title={LOCATION_SUBTITLE}
+Message0={LOCATION_MESSAGE0}
 
 [Dialog Upgrade]
 Show Dialog=FALSE
 Show In Easy Install=FALSE
-Title=@UPGRADE_TITLE@
-Sub Title=@UPGRADE_SUBTITLE@
-Message Cleanup=@UPGRADE_CLEANUP@
+Title={UPGRADE_TITLE}
+Sub Title={UPGRADE_SUBTITLE}
+Message Cleanup={UPGRADE_CLEANUP}
 ; XXXben - we need a strategy for uninstallation that obviates the need for "Safe Upgrade" which can doing nasty things if you have installed the app into a stupid location.
 
-Checkbox Clean Install=@UPGRADE_CLEAN@
-Message Clean Install=@UPGRADE_CLEAN_MSG@
-Message Install Over=@UPGRADE_OVER@
-Message Install Over Windir=@UPGRADE_OVER_WINDIR@
+Checkbox Clean Install={UPGRADE_CLEAN}
+Message Clean Install={UPGRADE_CLEAN_MSG}
+Message Install Over={UPGRADE_OVER}
+Message Install Over Windir={UPGRADE_OVER_WINDIR}
 
 ;Checkbox Clean Install=Perform a Safe Upgrade
 ;Message Clean Install=A Safe Upgrade will completely remove the old installation. Any third party components you have installed will be lost. This is recommended as it may prevent incompatibilities.
@@ -270,44 +268,44 @@ Message Install Over Windir=@UPGRADE_OVER_WINDIR@
 
 [Dialog Select Additional Components]
 Show Dialog=FALSE
-Title=@ADD_TITLE@
-Message0=@ADD_MESSAGE0@
+Title={ADD_TITLE}
+Message0={ADD_MESSAGE0}
 
 [Dialog Windows Integration]
 ; Note - this dialog isn't actually used yet!
 Show Dialog=TRUE
 Registry Key=SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main
-Title=@WININT_TITLE@
-Sub Title=@WININT_SUBTITLE@
-Message0=@WININT_MESSAGE0@
+Title={WININT_TITLE}
+Sub Title={WININT_SUBTITLE}
+Message0={WININT_MESSAGE0}
 
 
 ; Only a maximum of 3 "Windows Integration-Item"s are allowed.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
 CheckBoxState=TRUE
-Description=@WININT_DESKTOP@
+Description={WININT_DESKTOP}
 Archive=
 
 [Windows Integration-Item1]
 CheckBoxState=TRUE 
-Description=@WININT_START@
+Description={WININT_START}
 Archive=
 
 [Windows Integration-Item2]
 CheckBoxState=TRUE
-Description=@WININT_QUICKL@
+Description={WININT_QUICKL}
 Archive=
 
 [Dialog Program Folder]
 Show Dialog=TRUE
-Title=@WININT_PFOLDER_TITLE@
-Message0=@WININT_PFOLDER_MESSAGE0@
+Title={WININT_PFOLDER_TITLE}
+Message0={WININT_PFOLDER_MESSAGE0}
 
 [Dialog Additional Options]
 Show Dialog=TRUE
-Title=@ADDL_OPTIONS_TITLE@
-Message1=@ADDL_OPTIONS_MSG1@
+Title={ADDL_OPTIONS_TITLE}
+Message1={ADDL_OPTIONS_MSG1}
 Save Installer=
 ; The following settings control whether the Recapture Homepage checkbox is displayed.
 ;    For this option to work the file nsResetPref.js must be installed into the 
@@ -319,8 +317,8 @@ Recapture Homepage=FALSE
 
 [Dialog Advanced Settings]
 Show Dialog=TRUE
-Title=@ADV_SETTINGS_TITLE@
-Message0=@ADV_SETTINGS_MSG@
+Title={ADV_SETTINGS_TITLE}
+Message0={ADV_SETTINGS_MSG}
 Proxy Server=
 Proxy Port=
 Proxy User=
@@ -340,13 +338,9 @@ Show Protocols=TRUE
 
 [Dialog Quick Launch]
 Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
 Title=$ProductShortName$ Setup - Quick Launch
-;*** LOCALIZE ME BABY ***
 Message0=Quick Launch starts Mozilla faster by keeping portions of the program in computer memory.
-;*** LOCALIZE ME BABY ***
 Message1=You can access Quick Launch through the icon on the Windows taskbar tray.
-;*** LOCALIZE ME BABY ***
 Message2=Check the box below to activate Quick Launch when you restart your computer.
 ; Turbo Mode (Quick Launch) values: TRUE, FALSE
 ; Defaults to FALSE if not set
@@ -359,45 +353,45 @@ Turbo Mode Enabled=TRUE
 
 [Dialog Start Install]
 Show Dialog=TRUE
-Title=@START_TITLE@
-Sub Title=@START_SUBTITLE@
-Message Install=@START_INSTALL@
-Message Download=@START_DOWNLOAD@
-Message0=@START_MESSAGE0@
+Title={START_TITLE}
+Sub Title={START_SUBTITLE}
+Message Install={START_INSTALL}
+Message Download={START_DOWNLOAD}
+Message0={START_MESSAGE0}
 
 [Dialog Downloading]
 Show Dialog=TRUE
-Title=@DL_TITLE@
-Sub Title=@DL_SUBTITLE@
-Blurb=@DL_BLURB@
-File Name=@DL_FILENAME@
-Time Remaining=@DL_TIMELEFT@
+Title={DL_TITLE}
+Sub Title={DL_SUBTITLE}
+Blurb={DL_BLURB}
+File Name={DL_FILENAME}
+Time Remaining={DL_TIMELEFT}
 
 [Dialog Installing]
 Show Dialog=TRUE
-Title=@INSTALL_TITLE@
-Sub Title=@INSTALL_SUBTITLE@
-Blurb=@INSTALL_BLURB@
-Status File=@INSTALL_STATUSFILE@
-Status Component=@INSTALL_STATUSCOMP@
+Title={INSTALL_TITLE}
+Sub Title={INSTALL_SUBTITLE}
+Blurb={INSTALL_BLURB}
+Status File={INSTALL_STATUSFILE}
+Status Component={INSTALL_STATUSCOMP}
 
 [Dialog Install Successful]
 Show Dialog=TRUE
-Title=@COMPLETE_TITLE@
-MessageHeader=@COMPLETE_TITLE@
-Message0=@COMPLETE_MESSAGE0@
-Message1=@COMPLETE_MESSAGE1@
-Launch App=@COMPLETE_LAUNCH@
+Title={COMPLETE_TITLE}
+MessageHeader={COMPLETE_TITLE}
+Message0={COMPLETE_MESSAGE0}
+Message1={COMPLETE_MESSAGE1}
+Launch App={COMPLETE_LAUNCH}
 Launch App Checked=TRUE
-Reset Homepage=@COMPLETE_RESET_HOMEPAGE@
+Reset Homepage={COMPLETE_RESET_HOMEPAGE}
 Reset Homepage Checked=TRUE
 Registry Key=SOFTWARE\\$CompanyName$\\$ProductName$
 
 [Dialog Download]
 Show Dialog=TRUE
-Title=@DL2_TITLE@
-Message Download0=@DL2_MESSAGE0@
-Message Retry0=@DL2_RETRY@
+Title={DL2_TITLE}
+Message Download0={DL2_MESSAGE0}
+Message Retry0={DL2_RETRY}
 
 [Dialog Reboot]
 ; Show Dialog values are:
@@ -415,9 +409,9 @@ Class Name=FirefoxMessageWindow
 Window Name=
 Process Name=$MainExeFile$
 Pretty Name=$ProductNameInternal$
-Message=@CLOSE_CHECK@
-Message Full Installer=@CLOSE_CHECK2@
-Message wait=@CLOSE_WAIT@
+Message={CLOSE_CHECK}
+Message Full Installer={CLOSE_CHECK2}
+Message wait={CLOSE_WAIT}
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.
@@ -525,8 +519,8 @@ Extra Cmd0 Parameter=-kill
 ;for it's xpinstall engine from the TEMP dir.  The files that
 ;this component has are already in Component GRE.
 [Component XPCOM]
-Description Short=@XPCOM_SHORT@
-Description Long=@XPCOM_SHORT@
+Description Short={XPCOM_SHORT}
+Description Long={XPCOM_SHORT}
 Archive=xpcom.xpi
 $InstallSize$:xpcom
 $InstallSizeSystem$
@@ -535,8 +529,8 @@ Attributes=SELECTED|INVISIBLE
 FileCount=$FileCount$
 
 [Component Browser]
-Description Short=@BROWSER_SHORT@
-Description Long=@BROWSER_SHORT@
+Description Short={BROWSER_SHORT}
+Description Long={BROWSER_SHORT}
 Archive=browser.xpi
 $InstallSize$:browser
 $InstallSizeSystem$
@@ -546,8 +540,8 @@ Force Upgrade File0=[SETUP PATH]\$MainExeFile$
 FileCount=$FileCount$
 
 [Component ADT]
-Description Short=@ADT_SHORT@
-Description Long=@ADT_LONG@
+Description Short={ADT_SHORT}
+Description Long={ADT_LONG}
 Archive=adt.xpi
 $InstallSize$:adt
 $InstallSizeArchive$:adt.xpi
@@ -557,8 +551,8 @@ Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
 FileCount=$FileCount$
 
 [Component Uninstaller]
-Description Short=@UNINSTALL_SHORT@
-Description Long=@UNINSTALL_SHORT@
+Description Short={UNINSTALL_SHORT}
+Description Long={UNINSTALL_SHORT}
 Archive=$UninstallFileZip$
 $InstallSize$:$UninstallFileZip$
 $InstallSizeSystem$
@@ -573,19 +567,19 @@ FileCount=$FileCount$
 Path=[WINDIR]
 
 [Component Langpack]
-Description Short=@AB_CD@ @LANGPACK_TITLE@
-Description Long=@AB_CD@ @LANGPACK_TITLE@
-Archive=@AB_CD@.xpi
-$InstallSize$:@AB_CD@
+Description Short={AB_CD} {LANGPACK_TITLE}
+Description Long={AB_CD} {LANGPACK_TITLE}
+Archive={AB_CD}.xpi
+$InstallSize$:{AB_CD}
 $InstallSizeSystem$
-$InstallSizeArchive$:@AB_CD@.xpi
+$InstallSizeArchive$:{AB_CD}.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\chrome\@AB_CD@.jar
+Force Upgrade File0=[SETUP PATH]\chrome\{AB_CD}.jar
 FileCount=$FileCount$
 
 [Component RPT]
-Description Short=@RPT_SHORT@
-Description Long=@RPT_SHORT@ 
+Description Short={RPT_SHORT}
+Description Long={RPT_SHORT} 
 Archive=reporter.xpi
 $InstallSize$:reporter
 $InstallSizeArchive$:reporter.xpi
@@ -594,8 +588,8 @@ Force Upgrade File0=[SETUP PATH]\chrome\reporter.jar
 FileCount=$FileCount$
 
 [Component QFA]
-Description Short=@QFA_SHORT@
-Description Long=@QFA_LONG@
+Description Short={QFA_SHORT}
+Description Long={QFA_LONG}
 Archive=talkback.xpi
 Install Size=870
 Install Size System=1
@@ -615,7 +609,7 @@ Source=[XPI PATH]\xpcom.xpi
 Destination=[WIZTEMP]\xpcom.ns
 $InstallSize$:xpcom
 Cleanup=TRUE
-Message=@CORE_PREPARING@
+Message={CORE_PREPARING}
 ; Status= values: Disabled, Enabled
 ; If nothing is set, default value is Enabled.  If set to Disabled,
 ; it will then use GRE as the xpinstall engine, in which case, there
@@ -637,7 +631,6 @@ Status=Disabled
 ;
 ; and so on...
 Server Path=redirect.ini
-;*** LOCALIZE ME BABY ***
 Description=Redirect File
 Message=
 
@@ -662,7 +655,7 @@ Message=
 Timing=post smartupdate
 Source=[XPI PATH]\$UninstallFileZip$
 Destination=[WINDIR]
-Message=@INST_UNINST@
+Message={INST_UNINST}
 Only If Exists=FALSE
 
 
@@ -1104,34 +1097,32 @@ Product Reg Key1=Software\$CompanyName$\$ProductName$
 Current Version1=$UserAgent$
 
 [Strings]
-Message Unfinished Download Restart=@MSG_UNFINISHED_DL@
-Message Unfinished Install Xpi Restart=@MSG_UNFINISHED_INSTALL@
-Error Corrupted Archives Detected=@MSG_CORRUPTED@
-Error Corrupted Archives Detected AUTO mode=@MSG_CORRUPTED_AUTO@
-Error Too Many CRC Failures=@MSG_TOO_MANY_CRC@
-Error Too Many Network Errors=@MSG_TOO_MANY_NETWORK@
-Message Verifying Archives=@MSG_VERIFYING@
-Error Undefined=@MSG_UNDEFINED@
-Error Out Of Memory=@MSG_OOM@
-Status Download=@MSG_STATUS_DL@
-Status Retry=@MSG_STATUS_DL@
+Message Unfinished Download Restart={MSG_UNFINISHED_DL}
+Message Unfinished Install Xpi Restart={MSG_UNFINISHED_INSTALL}
+Error Corrupted Archives Detected={MSG_CORRUPTED}
+Error Corrupted Archives Detected AUTO mode={MSG_CORRUPTED_AUTO}
+Error Too Many CRC Failures={MSG_TOO_MANY_CRC}
+Error Too Many Network Errors={MSG_TOO_MANY_NETWORK}
+Message Verifying Archives={MSG_VERIFYING}
+Error Undefined={MSG_UNDEFINED}
+Error Out Of Memory={MSG_OOM}
+Status Download={MSG_STATUS_DL}
+Status Retry={MSG_STATUS_DL}
 Status File Info=%s
 Status Percentage Completed=%d%%
-Dialog Download Title Minimized=@MSG_COMPLETED@
-STR Force Upgrade Required=@MSG_REQUIRED@
-Message Cancel Setup AUTO mode=@MSG_CANCELING@
-Error File Uncompress=@MSG_ERROR_UNCOMPRESS@
-UsageMsg Usage=@MSG_USAGE@
-IDC Use FTP=@MSG_USE_FTP@
-IDC Use HTTP=@MSG_USE_HTTP@
-IDC Save Installer Files=@MSG_SAVE_LOCALLY@
-;*** LOCALIZE ME BABY ***
+Dialog Download Title Minimized={MSG_COMPLETED}
+STR Force Upgrade Required={MSG_REQUIRED}
+Message Cancel Setup AUTO mode={MSG_CANCELING}
+Error File Uncompress={MSG_ERROR_UNCOMPRESS}
+UsageMsg Usage={MSG_USAGE}
+IDC Use FTP={MSG_USE_FTP}
+IDC Use HTTP={MSG_USE_HTTP}
+IDC Save Installer Files={MSG_SAVE_LOCALLY}
 IDC Recapture Homepage=&Make Netscape.com my home page
-;*** LOCALIZE ME BABY ***
 IDC Turbo Mode=&Use Quick Launch for faster startup times when possible
-Message Download Paused=@MSG_DL_PAUSED@
-Message NORMAL Restricted Access=@MSG_NOT_ADMIN@
-Message AUTO Restricted Access=@MSG_NOT_ADMIN_AUTO@
+Message Download Paused={MSG_DL_PAUSED}
+Message NORMAL Restricted Access={MSG_NOT_ADMIN}
+Message AUTO Restricted Access={MSG_NOT_ADMIN_AUTO}
 
 
 [Site Selector]
@@ -1142,14 +1133,9 @@ Message AUTO Restricted Access=@MSG_NOT_ADMIN_AUTO@
 Status=HIDE
 
 Identifier0=Site0
-;*** LOCALIZE ME BABY ***
 Description0=Default
-;*** LOCALIZE ME BABY ***
 Domain0=$ArchiveUrl$
 
 Identifier1=Site1
-;*** LOCALIZE ME BABY ***
 Description1=North America
-;*** LOCALIZE ME BABY ***
 Domain1=$ArchiveUrl$
-
