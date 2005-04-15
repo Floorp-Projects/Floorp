@@ -49,7 +49,6 @@
 #include "pk11func.h"
 #include "p12plcy.h"
 #include "p12local.h"
-#include "alghmac.h"
 #include "prcpucfg.h"
 
 /*
