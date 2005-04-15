@@ -223,10 +223,9 @@ C0=Component XPCOM
 C1=Component Browser
 ;C2=Component Uninstaller
 C2=Component Langpack
-C3=Component Help
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C4=Component QFA
+C3=Component QFA
 
 [Setup Type1]
 Description Short=@TYPE_CUSTOM@
@@ -240,10 +239,9 @@ C1=Component Browser
 C2=Component ADT
 ;C3=Component Uninstaller
 C3=Component Langpack
-C4=Component Help
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C5=Component QFA
+C4=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -591,17 +589,6 @@ $InstallSizeArchive$:adt.xpi
 Attributes=FORCE_UPGRADE|VISIBLE
 ;Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
 Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
-FileCount=$FileCount$
-
-[Component Help]
-Description Short=@HELP_SHORT@
-Description Long=@HELP_SHORT@
-Archive=help.xpi
-$InstallSize$:help
-$InstallSizeSystem$
-$InstallSizeArchive$:help.xpi
-Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\chrome\help.jar
 FileCount=$FileCount$
 
 [Component Uninstaller]

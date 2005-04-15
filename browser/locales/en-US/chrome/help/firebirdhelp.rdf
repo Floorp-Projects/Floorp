@@ -12,7 +12,7 @@
     <rdf:Description about="urn:root"
             nc:title="&brandFullName; Help"
             nc:defaulttopic="firefox-help"
-            nc:base="chrome://help/locale/">
+            nc:base="chrome://browser/locale/help/">
         <nc:panellist>
             <rdf:Seq>
                 <rdf:li>

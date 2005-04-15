@@ -1,4 +1,5 @@
-help.jar:
+classic.jar:
+* skin/classic/help/contents.rdf
   skin/classic/help/help.css
   skin/classic/help/Toolbar.png
 * skin/classic/help/helpFileLayout.css
@@ -9,6 +10,5 @@ help.jar:
 * skin/classic/help/sidebarBindings.xml
   skin/classic/help/Weblink.png
   skin/classic/help/Weblink-rtl.png
-* skin/classic/help/contents.rdf
   skin/classic/help/throbber.png
   skin/classic/help/throbber-busy.gif

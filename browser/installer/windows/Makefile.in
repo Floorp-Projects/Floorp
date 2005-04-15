@@ -77,7 +77,7 @@ INSTALLER_FILES = \
 	7zip.bat \
 	$(NULL)
 
-DEFINES += -DAB_CD=$(AB_CD) -DPKG_BASENAME=$(PKG_BASENAME)
+DEFINES += -DAB_CD=$(AB_CD) -DPKG_BASENAME=$(PKG_BASENAME) -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
 
 include $(topsrcdir)/config/config.mk
 

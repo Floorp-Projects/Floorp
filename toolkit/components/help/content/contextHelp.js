@@ -36,12 +36,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# default content pack used by Help
-const MOZILLA_CONTENT_PACK = "chrome://help/locale/help.rdf";
-
 # Set the default content pack to the Mozilla content pack. Use the
 # setHelpFileURI function to set this value.
-var helpFileURI = MOZILLA_CONTENT_PACK;
+var helpFileURI;
 
 # openHelp - Opens up the Mozilla Help Viewer with the specified
 #    topic and content pack.

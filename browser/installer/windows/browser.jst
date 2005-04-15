@@ -316,6 +316,7 @@ function upgradeCleanup()
   // Remove Chrome directory cruft
   deleteThisFile("Chrome",      "US.jar");
   deleteThisFile("Chrome",      "en-win.jar");
+  deleteThisFile("Chrome",      "help.jar");
   // Remove chrome and overlay registries, to remove bogus dependencies
   // on any of the above files which may cause the app not to start. 
   // XXXben Erk. This will effectively disable all global extensions...
