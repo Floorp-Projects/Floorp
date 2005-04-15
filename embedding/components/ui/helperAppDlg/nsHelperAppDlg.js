@@ -688,7 +688,8 @@ nsHelperAppDialog.prototype = {
 
         // Cancel app launcher.
         try {
-            this.mLauncher.Cancel();
+            const NS_BINDING_ABORTED = 0x804b0002;
+            this.mLauncher.cancel(NS_BINDING_ABORTED);
         } catch( exception ) {
         }
 

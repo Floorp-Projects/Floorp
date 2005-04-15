@@ -1347,6 +1347,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
+   NS_INTERFACE_MAP_ENTRY(nsICancelable)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -1394,7 +1395,7 @@ NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *a
   if (strcmp(aTopic, "oncancel") == 0)
   {
     // User pressed cancel button on dialog.
-    return Cancel();
+    return Cancel(NS_BINDING_ABORTED);
   }
   return NS_OK;
 }
@@ -1970,7 +1971,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
       SendStatusChange(readError ? kReadError : kWriteError, rv, request, tempFilePath);
 
       // Cancel the download.
-      Cancel();
+      Cancel(rv);
     }
   }
   return rv;
@@ -1990,7 +1991,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
       mTempFile->GetPath(tempFilePath);
     SendStatusChange( kReadError, aStatus, request, tempFilePath );
 
-    Cancel();
+    Cancel(aStatus);
   }
 
   // first, check to see if we've been canceled....
@@ -2207,7 +2208,7 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
        nsAutoString path;
        fileToUse->GetPath(path);
        SendStatusChange(kWriteError, rv, nsnull, path);
-       Cancel(); // Cancel (and clean up temp file).
+       Cancel(rv); // Cancel (and clean up temp file).
      }
   }
 
@@ -2253,7 +2254,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
     }
 
     if (NS_FAILED(rv) || !fileToUse) {
-      Cancel();
+      Cancel(NS_BINDING_ABORTED);
       return NS_ERROR_FAILURE;
     }
   }
@@ -2288,7 +2289,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
         nsAutoString path;
         mTempFile->GetPath(path);
         SendStatusChange(kWriteError, rv, nsnull, path);
-        Cancel();
+        Cancel(rv);
         return NS_OK;
       }
     }
@@ -2326,7 +2327,7 @@ nsresult nsExternalAppHandler::OpenWithApplication()
       nsAutoString path;
       mFinalFileDestination->GetPath(path);
       SendStatusChange(kLaunchError, rv, nsnull, path);
-      Cancel(); // Cancel, and clean up temp file.
+      Cancel(rv); // Cancel, and clean up temp file.
     }
     else
     {
@@ -2365,7 +2366,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   nsCOMPtr<nsIFileURL> fileUrl(do_QueryInterface(mSourceUrl));
   if (fileUrl)
   {
-    Cancel();
+    Cancel(NS_BINDING_ABORTED);
     nsCOMPtr<nsIFile> file;
     nsresult rv = fileUrl->GetFile(getter_AddRefs(file));
 
@@ -2423,8 +2424,11 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::Cancel()
+NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
 {
+  NS_ENSURE_ARG(NS_FAILED(aReason));
+  // XXX should not ignore the reason
+
   mCanceled = PR_TRUE;
   // Break our reference cycle with the helper app dialog (set up in
   // OnStartRequest)

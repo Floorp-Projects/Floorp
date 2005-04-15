@@ -36,6 +36,7 @@
 #include "nsString.h"
 #include "nsILocalFile.h"
 #include "nsIURI.h"
+#include "nsNetError.h"
 #include "nsIMIMEInfo.h"
 #include "nsIDOMWindow.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -221,7 +222,7 @@ NS_IMETHODIMP CHelperAppLauncherDialog::Show(nsIHelperAppLauncher *aLauncher,
     {
         // User chose Cancel - just cancel the download
 
-        aLauncher->Cancel();
+        aLauncher->Cancel(NS_BINDING_ABORTED);
 
         return NS_OK;
     }
@@ -587,7 +588,7 @@ BOOL CProgressDlg::OnInitDialog()
 void CProgressDlg::OnCancel() 
 {
     if(m_HelperAppLauncher)
-        m_HelperAppLauncher->Cancel();
+        m_HelperAppLauncher->Cancel(NS_BINDING_ABORTED);
 
 	DestroyWindow();
 }

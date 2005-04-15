@@ -46,6 +46,7 @@
 #include "nsIRequest.h"
 #include "nsIFileURL.h"
 #include "netCore.h"
+#include "nsNetError.h"
 
 nsDownloadListener::nsDownloadListener()
 : mDownloadStatus(NS_OK)
@@ -347,7 +348,7 @@ nsDownloadListener::CancelDownload()
     if (mWebPersist)
       mWebPersist->CancelSave();
     else if (mHelperAppLauncher)
-      mHelperAppLauncher->Cancel();
+      mHelperAppLauncher->Cancel(NS_BINDING_ABORTED);
 
     mSentCancel = PR_TRUE;
   }

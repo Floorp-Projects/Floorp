@@ -199,7 +199,7 @@ NS_IMETHODIMP CDownload::OnProgressChange(nsIWebProgress *aWebProgress, nsIReque
 {
     if (mUserCanceled) {
         if (mHelperAppLauncher)
-            mHelperAppLauncher->Cancel();
+            mHelperAppLauncher->Cancel(NS_BINDING_ABORTED);
         else if (aRequest)
             aRequest->Cancel(NS_BINDING_ABORTED);
         mUserCanceled = false;

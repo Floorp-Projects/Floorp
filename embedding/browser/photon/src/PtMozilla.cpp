@@ -419,7 +419,7 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 			if( unknown->response == Pt_WEB_RESPONSE_CANCEL ) {
 				EmbedDownload *d = FindDownload( moz, unknown->download_ticket );
 				if( d ) {
-					if( d->mLauncher ) d->mLauncher->Cancel(); /* this will also call the EmbedDownload destructor */
+					if( d->mLauncher ) d->mLauncher->Cancel(NS_BINDING_ABORTED); /* this will also call the EmbedDownload destructor */
 					else if( d->mPersist ) d->mPersist->CancelSave(); /* this will also call the EmbedDownload destructor */
 					else delete d; /* just in case neither d->mLauncher or d->mPersist was set */
 					}
