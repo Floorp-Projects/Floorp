@@ -62,7 +62,7 @@ printStatus(inSection(2));
 function getclosure()
 {
   return function () { 
-    return arguments.callee.__parent__ == global;
+    return arguments.callee.__parent__ == GLOBAL;
   };
 }
 
