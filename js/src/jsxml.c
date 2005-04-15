@@ -3378,7 +3378,8 @@ Descendants(JSContext *cx, JSXML *xml, jsval id)
     jsid funid;
     JSXMLQName *nameqn;
     JSObject *listobj;
-    JSXML *list;
+    JSXML *list, *kid;
+    uint32 i, n;
     JSBool ok;
 
     nameqn = ToXMLName(cx, id, &funid);
@@ -3401,7 +3402,18 @@ Descendants(JSContext *cx, JSXML *xml, jsval id)
     list->name = nameqn;
     if (!JS_EnterLocalRootScope(cx))
         return NULL;
-    ok = DescendantsHelper(cx, xml, nameqn, list);
+    if (xml->xml_class == JSXML_CLASS_LIST) {
+        for (i = 0, n = xml->xml_kids.length; i < n; i++) {
+            kid = XMLARRAY_MEMBER(&xml->xml_kids, i, JSXML);
+            if (kid->xml_class == JSXML_CLASS_ELEMENT) {
+                ok = DescendantsHelper(cx, kid, nameqn, list);
+                if (!ok)
+                    break;
+            }
+        }
+    } else {
+        ok = DescendantsHelper(cx, xml, nameqn, list);
+    }
     JS_LeaveLocalRootScope(cx);
     if (!ok)
         return NULL;
