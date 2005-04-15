@@ -1205,8 +1205,13 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 
     // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
-    if (offline || (mLoadFlags & INHIBIT_CACHING))
-        accessRequested = nsICache::ACCESS_READ; // have no way of writing to cache
+    if (offline || (mLoadFlags & INHIBIT_CACHING)) {
+        // If we have been asked to bypass the cache and not write to the
+        // cache, then don't use the cache at all.
+        if (mLoadFlags & LOAD_BYPASS_CACHE && !offline)
+            return NS_ERROR_NOT_AVAILABLE;
+        accessRequested = nsICache::ACCESS_READ;
+    }
     else if (mLoadFlags & LOAD_BYPASS_CACHE)
         accessRequested = nsICache::ACCESS_WRITE; // replace cache entry
     else
