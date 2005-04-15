@@ -300,7 +300,7 @@ my $modules = [
     }, 
     { 
         name => 'DBD::mysql', 
-        version => '2.1010' 
+        version => '2.9003' 
     }, 
     { 
         name => 'File::Spec', 
