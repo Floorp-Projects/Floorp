@@ -166,7 +166,7 @@ else
 endif
 endif
 
-nss_RelEng_bld: build_coreconf import all
+nss_RelEng_bld: build_coreconf import build_dbm all
 
 package:
 	$(MAKE) -C pkg publish
