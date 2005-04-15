@@ -322,8 +322,8 @@ sub UniqIt
             chomp;
             delete $lines{$_};
         }
+	close(FILE);
     }
-    close(FILE);
 
     unless (open(FILE, ">>$manifest")) {
         mozUnlock($lockfile) if (!$nofilelocks);
