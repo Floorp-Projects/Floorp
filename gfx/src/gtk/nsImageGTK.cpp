@@ -590,7 +590,7 @@ XlibRectStretch(PRInt32 srcWidth, PRInt32 srcHeight,
   if (!skipHorizontal)
     XlibStretchHorizontal(xd1, xd2, xs1, xs2, scaleStartY, scaleEndY,
                           startColumn, endColumn,
-                          (skipVertical?MAX(dstOrigX,0):0),(skipVertical?MAX(dstOrigY,0):0),
+                          skipVertical?dstOrigX:-startColumn, skipVertical?dstOrigY:-scaleStartY,
                           aSrcImage, aTmpImage, (skipVertical?gc:copygc));
   
   if (!skipVertical) {
@@ -598,7 +598,7 @@ XlibRectStretch(PRInt32 srcWidth, PRInt32 srcHeight,
       if ((yd1 >= startRow) && (yd1 <= endRow)) {
         gdk_draw_pixmap(aDstImage, gc, aTmpImage,
                         (skipHorizontal?startColumn:0), ys1-scaleStartY,
-                        (dstOrigX>0?dstOrigX:0), dstOrigY+yd1,
+                        aDX, dstOrigY+yd1,
                         endColumn-startColumn, 1);
       }
       while (e>=0) {
@@ -645,7 +645,7 @@ XlibStretchHorizontal(long x1, long x2, long y1, long y2,
   for (d=0; d<=dx; d++) {
     if ((x1 >= startColumn) && (x1 <= endColumn)) {
       gdk_draw_pixmap(aDstImage, gc, aSrcImage,
-                      y1, ymin, x1-startColumn+offsetX, 0+offsetY,
+                      y1, ymin, x1+offsetX, ymin+offsetY,
                       1, ymax-ymin);
     }
     while (e>=0) {
