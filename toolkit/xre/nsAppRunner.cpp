@@ -23,6 +23,7 @@
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Benjamin Smedberg <bsmedberg@covad.net>
  *   Ben Goodger <ben@mozilla.org>
+ *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -114,6 +115,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
+
+#ifdef XP_BEOS
+//BeOS has execve in unistd, but it doesn't work well enough.
+//It leaves zombies around until the app that launched Firefox is closed.
+//#include <unistd.h>
+#include <AppKit.h>
+#include <AppFileInfo.h>
+#endif //XP_BEOS
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -235,78 +244,6 @@ char **gArgv;
 
 static int    gRestartArgc;
 static char **gRestartArgv;
-
-#if defined(XP_BEOS)
-
-#include <AppKit.h>
-#include <AppFileInfo.h>
-
-class nsBeOSApp : public BApplication
-{
-public:
-  nsBeOSApp(sem_id sem)
-  : BApplication(GetAppSig()), init(sem)
-  {
-  }
-
-  void ReadyToRun(void)
-  {
-    release_sem(init);
-  }
-
-  static int32 Main(void *args)
-  {
-    nsBeOSApp *app = new nsBeOSApp((sem_id)args);
-    if (nsnull == app)
-      return B_ERROR;
-    return app->Run();
-  }
-
-private:
-  char *GetAppSig(void)
-  {
-    app_info appInfo;
-    BFile file;
-    BAppFileInfo appFileInfo;
-    image_info info;
-    int32 cookie = 0;
-    static char sig[B_MIME_TYPE_LENGTH];
-
-    sig[0] = 0;
-    if (get_next_image_info(0, &cookie, &info) != B_OK ||
-        file.SetTo(info.name, B_READ_ONLY) != B_OK ||
-        appFileInfo.SetTo(&file) != B_OK ||
-        appFileInfo.GetSignature(sig) != B_OK)
-    {
-      return "application/x-vnd.Mozilla";
-    }
-    return sig;
-  }
-
-  sem_id init;
-};
-
-static nsresult InitializeBeOSApp(void)
-{
-  nsresult rv = NS_OK;
-
-  sem_id initsem = create_sem(0, "beapp init");
-  if (initsem < B_OK)
-    return NS_ERROR_FAILURE;
-
-  thread_id tid = spawn_thread(nsBeOSApp::Main, "BApplication", B_NORMAL_PRIORITY, (void *)initsem);
-  if (tid < B_OK || B_OK != resume_thread(tid))
-    rv = NS_ERROR_FAILURE;
-
-  if (B_OK != acquire_sem(initsem))
-    rv = NS_ERROR_FAILURE;
-  if (B_OK != delete_sem(initsem))
-    rv = NS_ERROR_FAILURE;
-
-  return rv;
-}
-
-#endif // XP_BEOS
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
@@ -1644,11 +1581,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
   ScopedFPHandler handler;
 #endif /* XP_OS2 */
-
-#if defined(XP_BEOS)
-  if (NS_OK != InitializeBeOSApp())
-    return 1;
-#endif
 
 #ifdef _BUILD_STATIC_BIN
   // Initialize XPCOM's module info table
