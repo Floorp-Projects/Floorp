@@ -195,7 +195,7 @@ function prepareCalendarUnifinder( )
    // set up our calendar event observer
    
    var ccalendar = getDisplayComposite();
-   ccalendar.addObserver(unifinderObserver, ccalendar.ITEM_FILTER_TYPE_EVENT);
+   ccalendar.addObserver(unifinderObserver);
    refreshEventTree(); //Display something upon first load. onLoad doesn't work properly for observers
 }
 

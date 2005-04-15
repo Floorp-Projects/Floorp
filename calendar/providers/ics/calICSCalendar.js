@@ -81,7 +81,7 @@ calICSCalendar.prototype = {
                                      .getService(Components.interfaces.calIICSService);
 
         this.mObserver = new calICSObserver(this);
-        this.mMemoryCalendar.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
+        this.mMemoryCalendar.addObserver(this.mObserver);
     },
 
     name: "",
@@ -125,7 +125,7 @@ calICSCalendar.prototype = {
         this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
                                          .createInstance(Components.interfaces.calICalendar);
         // And don't forget to add our observer
-        this.mMemoryCalendar.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
+        this.mMemoryCalendar.addObserver(this.mObserver);
 
         this.mObserver.onStartBatch();
 
@@ -272,8 +272,8 @@ calICSCalendar.prototype = {
         ctxt.processQueue();
     },
 
-    addObserver: function (aObserver, aItemFilter) {
-        this.mObserver.addObserver(aObserver, aItemFilter);
+    addObserver: function (aObserver) {
+        this.mObserver.addObserver(aObserver);
     },
     removeObserver: function (aObserver) {
         this.mObserver.removeObserver(aObserver);
@@ -405,23 +405,20 @@ calICSObserver.prototype = {
 
     // This observer functions as proxy for all the other observers
     // So need addObserver and removeObserver here
-    addObserver: function (aObserver, aItemFilter) {
-        for (var i = 0; i < this.mObservers.length; i++) {
-            if (this.mObservers[i].observer == aObserver &&
-                this.mObservers[i].filter == aItemFilter)
-            {
+    addObserver: function (aObserver) {
+        for each (obs in this.mObservers) {
+            if (obs == aObserver)
                 return;
-            }
         }
 
-        this.mObservers.push( {observer: aObserver, filter: aItemFilter} );
+        this.mObservers.push(aObserver);
     },
 
     removeObserver: function (aObserver) {
         var newObservers = Array();
-        for (var i = 0; i < this.mObservers.length; i++) {
-            if (this.mObservers[i].observer != aObserver)
-                newObservers.push(this.mObservers[i]);
+        for each (obs in this.mObservers) {
+            if (obs != aObserver)
+                newObservers.push(obs);
         }
         this.mObservers = newObservers;
     }

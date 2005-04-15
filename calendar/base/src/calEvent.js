@@ -159,6 +159,24 @@ calEvent.prototype = {
         this.importUnpromotedProperties(event, promotedProps);
         // Importing didn't really change anything
         this.mDirty = false;
+    },
+
+    getOccurrencesBetween: function(aStartDate, aEndDate, aCount) {
+        if (this.recurrenceInfo) {
+            return this.recurrenceInfo.getOccurrences(aStartDate, aEndDate, 0, aCount);
+        }
+
+        if (aStartDate.compare(this.startDate) >= 0 &&
+            aEndDate.compare(this.endDate) <= 0)
+        {
+            var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(Components.interfaces.calIOccurence);
+            occ.initialize(this, this.startDate, this.endDate);
+            aCount.value = 1;
+            return ([ occ ]);
+        }
+
+        aCount.value = 0;
+        return null;
     }
 };
 

@@ -172,6 +172,11 @@ interface calIItemBase : nsISupports
   void removeAttendee(in calIAttendee attendee);
   void addAttendee(in calIAttendee attendee);
   void removeAllAttendees();
+
+  // return a list of occurrences of this item between the given dates
+  void getOccurrencesBetween (in calIDateTime aStartDate, in calIDateTime aEndDate,
+                              out PRUint32 aCount,
+                              [array,size_is(aCount),retval] out calIItemOccurrence aOccurrences);
 };
 
 //

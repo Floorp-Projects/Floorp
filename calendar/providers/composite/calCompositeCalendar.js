@@ -151,7 +151,7 @@ calCompositeCalendar.prototype = {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
-    // void addObserver( in calIObserver observer, in unsigned long aItemFilter );
+    // void addObserver( in calIObserver observer );
     mCompositeObservers: Array(),
     addObserver: function (aObserver, aItemFilter) {
         const calICompositeObserver = Components.interfaces.calICompositeObserver;
@@ -165,7 +165,7 @@ calCompositeCalendar.prototype = {
         }
 
         for each (cal in this.mCalendars) {
-            cal.addObserver(aObserver, aItemFilter);
+            cal.addObserver(aObserver);
         }
     },
 

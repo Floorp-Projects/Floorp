@@ -95,7 +95,7 @@ var unifinderToDoDataSourceObserver =
 function prepareCalendarToDoUnifinder()
 {
     var ccalendar = getDisplayComposite();
-    ccalendar.addObserver(unifinderToDoDataSourceObserver, ccalendar.ITEM_FILTER_TYPE_TODO);
+    ccalendar.addObserver(unifinderToDoDataSourceObserver);
     toDoUnifinderRefresh();
 }
 

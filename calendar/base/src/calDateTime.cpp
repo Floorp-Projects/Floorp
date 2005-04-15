@@ -292,37 +292,93 @@ calDateTime::GetInTimezone(const char *aTimezone, calIDateTime **aResult)
 NS_IMETHODIMP
 calDateTime::GetStartOfWeek(calIDateTime **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    struct icaltimetype icalt;
+    ToIcalTime(&icalt);
+    int day_of_week = icaltime_day_of_week(icalt);
+    if (day_of_week > 1)
+        icaltime_adjust(&icalt, - (day_of_week - 1), 0, 0, 0);
+    icalt.hour = 0;
+    icalt.minute = 0;
+    icalt.second = 0;
+
+    calDateTime *cdt = new calDateTime(&icalt);
+    NS_ADDREF(*aResult = cdt);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 calDateTime::GetEndOfWeek(calIDateTime **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    struct icaltimetype icalt;
+    ToIcalTime(&icalt);
+    int day_of_week = icaltime_day_of_week(icalt);
+    if (day_of_week < 7)
+        icaltime_adjust(&icalt, 7 - day_of_week, 0, 0, 0);
+    icalt.hour = 23;
+    icalt.minute = 59;
+    icalt.second = 59;
+
+    calDateTime *cdt = new calDateTime(&icalt);
+    NS_ADDREF(*aResult = cdt);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 calDateTime::GetStartOfMonth(calIDateTime **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    struct icaltimetype icalt;
+    ToIcalTime(&icalt);
+    icalt.day = 1;
+    icalt.hour = 0;
+    icalt.minute = 0;
+    icalt.second = 0;
+    calDateTime *cdt = new calDateTime(&icalt);
+    NS_ADDREF(*aResult = cdt);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 calDateTime::GetEndOfMonth(calIDateTime **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    struct icaltimetype icalt;
+    ToIcalTime(&icalt);
+    icalt.day = icaltime_days_in_month(icalt.month, icalt.year);
+    icalt.hour = 23;
+    icalt.minute = 59;
+    icalt.second = 59;
+    calDateTime *cdt = new calDateTime(&icalt);
+    NS_ADDREF(*aResult = cdt);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 calDateTime::GetStartOfYear(calIDateTime **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    struct icaltimetype icalt;
+    ToIcalTime(&icalt);
+    icalt.month = 1;
+    icalt.day = 1;
+    icalt.hour = 0;
+    icalt.minute = 0;
+    icalt.second = 0;
+    calDateTime *cdt = new calDateTime(&icalt);
+    NS_ADDREF(*aResult = cdt);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 calDateTime::GetEndOfYear(calIDateTime **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    struct icaltimetype icalt;
+    ToIcalTime(&icalt);
+    icalt.month = 12;
+    icalt.day = 31;
+    icalt.hour = 23;
+    icalt.minute = 59;
+    icalt.second = 59;
+    calDateTime *cdt = new calDateTime(&icalt);
+    NS_ADDREF(*aResult = cdt);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

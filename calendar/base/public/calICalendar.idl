@@ -103,7 +103,7 @@ interface calICalendar : nsISupports
    */
   const unsigned long ITEM_FILTER_CLASS_OCCURRENCES = 1 << 5;
 
-  void addObserver( in calIObserver observer, in unsigned long aItemFilter );
+  void addObserver( in calIObserver observer );
   void removeObserver( in calIObserver observer );
 
   /**

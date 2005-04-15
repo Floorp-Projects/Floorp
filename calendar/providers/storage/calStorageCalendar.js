@@ -270,25 +270,22 @@ calStorageCalendar.prototype = {
     get suppressAlarms() { return false; },
     set suppressAlarms(aSuppressAlarms) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
-    // void addObserver( in calIObserver observer, in unsigned long aItemFilter );
+    // void addObserver( in calIObserver observer );
     addObserver: function (aObserver, aItemFilter) {
-        for (var i = 0; i < this.mObservers.length; i++) {
-            if (this.mObservers[i].observer == aObserver &&
-                this.mObservers[i].filter == aItemFilter)
-            {
+        for each (obs in this.mObservers) {
+            if (obs == aObserver)
                 return;
-            }
         }
 
-        this.mObservers.push( {observer: aObserver, filter: aItemFilter} );
+        this.mObservers.push(aObserver);
     },
 
     // void removeObserver( in calIObserver observer );
     removeObserver: function (aObserver) {
         var newObservers = Array();
-        for (var i = 0; i < this.mObservers.length; i++) {
-            if (this.mObservers[i].observer != aObserver)
-                newObservers.push(this.mObservers[i]);
+        for each (obs in this.mObservers) {
+            if (obs != aObserver)
+                newObservers.push(obs);
         }
         this.mObservers = newObservers;
     },
@@ -563,32 +560,32 @@ calStorageCalendar.prototype = {
     // Helper functions
     //
     observeLoad: function () {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onLoad ();
+        for each (obs in this.mObservers)
+            obs.onLoad ();
     },
 
     observeBatchChange: function (aNewBatchMode) {
-        for (var i = 0; i < this.mObservers.length; i++) {
+        for each (obs in this.mObservers) {
             if (aNewBatchMode)
-                this.mObservers[i].observer.onStartBatch ();
+                obs.onStartBatch ();
             else
-                this.mObservers[i].observer.onEndBatch ();
+                obs.onEndBatch ();
         }
     },
 
     observeAddItem: function (aItem) {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onAddItem (aItem);
+        for each (obs in this.mObservers)
+            obs.onAddItem (aItem);
     },
 
     observeModifyItem: function (aOldItem, aNewItem) {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onModifyItem (aOldItem, aNewItem);
+        for each (obs in this.mObservers)
+            obs.onModifyItem (aOldItem, aNewItem);
     },
 
     observeDeleteItem: function (aDeletedItem) {
-        for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onDeleteItem (aDeletedItem);
+        for each (obs in this.mObservers)
+            obs.onDeleteItem (aDeletedItem);
     },
 
     //

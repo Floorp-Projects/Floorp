@@ -390,6 +390,9 @@ calItemBase.prototype = {
 
     },
     
+    getOccurrencesBetween: function(aStartDate, aEndDate, aCount) {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    }
 };
 
 function calItemOccurrence () {
