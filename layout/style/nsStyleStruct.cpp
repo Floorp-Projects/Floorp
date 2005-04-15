@@ -537,32 +537,34 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
   if ((mBorder == aOther.mBorder) && 
       (mFloatEdge == aOther.mFloatEdge)) {
+    // Note that mBorderStyle stores not only the border style but also
+    // color-related flags.  So while it's OK to compare entries in
+    // mBorderStyle directly for purposes of finding out whether something at
+    // all changed, any time we want to work with actual border styles we
+    // should use GetBorderStyle().
+    PRBool hasVisualChange = PR_FALSE;
     NS_FOR_CSS_SIDES(ix) {
       if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) || 
           (mBorderColor[ix] != aOther.mBorderColor[ix])) {
-        if (mBorderStyle[ix] != aOther.mBorderStyle[ix] &&
-            (NS_STYLE_BORDER_STYLE_NONE ==
-               (mBorderStyle[ix] & BORDER_STYLE_MASK) ||
-             NS_STYLE_BORDER_STYLE_NONE ==
-               (aOther.mBorderStyle[ix] & BORDER_STYLE_MASK) ||
-             NS_STYLE_BORDER_STYLE_HIDDEN ==
-               (mBorderStyle[ix] & BORDER_STYLE_MASK) ||          // bug 45754
-             NS_STYLE_BORDER_STYLE_HIDDEN ==
-               (aOther.mBorderStyle[ix] & BORDER_STYLE_MASK))) {
+        if (GetBorderStyle(ix) != aOther.GetBorderStyle(ix) &&
+            (NS_STYLE_BORDER_STYLE_NONE == GetBorderStyle(ix) ||
+             NS_STYLE_BORDER_STYLE_NONE == aOther.GetBorderStyle(ix) ||
+             NS_STYLE_BORDER_STYLE_HIDDEN == GetBorderStyle(ix) || // bug 45754
+             NS_STYLE_BORDER_STYLE_HIDDEN == aOther.GetBorderStyle(ix))) {
           return NS_STYLE_HINT_REFLOW;  // border on or off
         }
-        return NS_STYLE_HINT_VISUAL;
+        hasVisualChange = PR_TRUE;
       }
     }
-    if (mBorderRadius != aOther.mBorderRadius) {
-      return NS_STYLE_HINT_VISUAL;
-    }
-    if (mBorderColors && !aOther.mBorderColors ||
-        !mBorderColors && aOther.mBorderColors) {
+    if (hasVisualChange ||
+        mBorderRadius != aOther.mBorderRadius ||
+        !mBorderColors != !aOther.mBorderColors) {
       return NS_STYLE_HINT_VISUAL;
     }
 
-    if (mBorderColors && aOther.mBorderColors) {
+    // Note that at this point if mBorderColors is non-null so is
+    // aOther.mBorderColors
+    if (mBorderColors) {
       NS_FOR_CSS_SIDES(ix) {
         if (mBorderColors[ix] && !aOther.mBorderColors[ix] ||
             !mBorderColors[ix] && aOther.mBorderColors[ix]) {
