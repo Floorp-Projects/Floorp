@@ -15,6 +15,15 @@
       </Description>
     </em:targetApplication>
 
+    <em:targetApplication>
+      <Description>
+        <!-- firefox -->
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>0.6</em:minVersion>
+        <em:maxVersion>1.1+</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
     <em:id>{e2fda1a4-762b-4020-b5ad-a41df1933103}</em:id>
     <em:name>Lightning</em:name>
     <em:version>0.0.1+</em:version>
