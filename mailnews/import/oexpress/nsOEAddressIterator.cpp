@@ -64,6 +64,13 @@ typedef struct {
 	ULONG		mapiTag;
 } MAPIFields;
 
+enum {
+    ieidPR_DISPLAY_NAME = 0,
+    ieidPR_ENTRYID,
+	ieidPR_OBJECT_TYPE,
+    ieidMax
+};
+
 /*
 	Fields in MAPI, not in Mozilla
 	PR_OFFICE_LOCATION
@@ -105,66 +112,149 @@ static MAPIFields	gMapiFields[] = {
 
 nsOEAddressIterator::nsOEAddressIterator( CWAB *pWab, nsIAddrDatabase *database)
 {
-	m_pWab = pWab;
-	m_database = database;
-	NS_IF_ADDREF( m_database);
+  m_pWab = pWab;
+  m_database = database;
+  NS_IF_ADDREF( m_database);
 }
 
 nsOEAddressIterator::~nsOEAddressIterator()
 {
-	NS_IF_RELEASE( m_database);
+  m_listRows.Reset();
+  NS_IF_RELEASE( m_database);
 }
 
 nsresult nsOEAddressIterator::EnumUser( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid)
 {
-	IMPORT_LOG1( "User: %S\n", pName);
-	
-	nsresult 	rv = NS_OK;
-	
-	if (m_database) {
-		LPMAILUSER	pUser = m_pWab->GetUser( cbEid, pEid);
-		if (pUser) {
-			// Get a new row from the database!
-			nsIMdbRow* newRow = nsnull;
-			rv = m_database->GetNewRow( &newRow); 
+  IMPORT_LOG1( "User: %S\n", pName);
+  nsresult 	rv = NS_OK;
+  
+  if (m_database) {
+    LPMAILUSER	pUser = m_pWab->GetUser( cbEid, pEid);
+    if (pUser) {
+      // Get a new row from the database!
+      nsCOMPtr <nsIMdbRow> newRow;
+      rv = m_database->GetNewRow(getter_AddRefs(newRow));
       NS_ENSURE_SUCCESS(rv, rv);
-			// FIXME: Check with Candice about releasing the newRow if it
-			// isn't added to the database.  Candice's code in nsAddressBook
-			// never releases it but that doesn't seem right to me!
-			if (newRow) {
-				if (BuildCard( pName, newRow, pUser)) {
-					rv = m_database->AddCardRowToDB( newRow);
-          NS_ENSURE_SUCCESS(rv, rv);
-					IMPORT_LOG0( "* Added entry to address book database\n");
-				}
-			}
-			m_pWab->ReleaseUser( pUser);
-		}
-	}	
-	
-	return(rv);
+      if (newRow && BuildCard( pName, newRow, pUser))
+      {
+        rv = m_database->AddCardRowToDB(newRow);
+        NS_ENSURE_SUCCESS(rv, rv);
+        IMPORT_LOG0( "* Added entry to address book database\n");
+        nsString  eMail;
+
+        LPSPropValue	pProp = m_pWab->GetUserProperty( pUser, PR_EMAIL_ADDRESS);
+        if (pProp) 
+        {
+          m_pWab->GetValueString( pProp, eMail);
+          SanitizeValue( eMail);
+          m_pWab->FreeProperty( pProp);
+          nsStringKey hashKey(eMail);
+          m_listRows.Put(&hashKey, newRow);
+        }
+      }
+      m_pWab->ReleaseUser( pUser);
+    }
+  }	
+  
+  return(rv);
 }
 
-nsresult nsOEAddressIterator::EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid)
+void nsOEAddressIterator::FindListRow(nsString &eMail, nsIMdbRow **cardRow)
+{
+  nsStringKey hashKey(eMail);
+  *cardRow = (nsIMdbRow *) m_listRows.Get(&hashKey);
+}
+
+nsresult nsOEAddressIterator::EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid, LPMAPITABLE lpTable)
 {
   // If no name provided then we're done.
   if (!pName || !(*pName))
     return NS_OK;
 
   nsresult rv = NS_ERROR_FAILURE;
+  HRESULT hr = E_FAIL;
   // Make sure we have db to work with.
   if (!m_database)
     return rv;
 
-  nsCOMPtr <nsIMdbRow> newRow;
-  rv = m_database->GetNewListRow(getter_AddRefs(newRow));
+  nsCOMPtr <nsIMdbRow>  listRow;
+  rv = m_database->GetNewListRow(getter_AddRefs(listRow));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = m_database->AddListName(newRow, NS_ConvertUCS2toUTF8(pName).get());
+  rv = m_database->AddListName(listRow, NS_ConvertUCS2toUTF8(pName).get());
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = m_database->AddCardRowToDB(newRow);
+  rv = m_database->AddCardRowToDB(listRow);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = m_database->AddListDirNode(newRow);
+  rv = m_database->AddListDirNode(listRow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LPSRowSet   lpRowAB = NULL;
+  ULONG	      lpcbEID = 0;
+  LPENTRYID   lpEID = NULL;
+  ULONG	      rowCount = 0;
+  int         cNumRows = 0;
+  int         numListElems = 0;
+  nsAutoString    uniStr;
+
+  hr = lpTable->GetRowCount( 0, &rowCount);
+  //
+  hr = lpTable->SeekRow( BOOKMARK_BEGINNING, 0, NULL );
+
+  if(HR_FAILED(hr))
+    return NS_ERROR_FAILURE;
+
+  // Read all the rows of the table one by one
+  do 
+  {
+    hr = lpTable->QueryRows(1, 0, &lpRowAB);
+  
+    if(HR_FAILED(hr))
+      break;
+  
+    if(lpRowAB)
+    {
+      cNumRows = lpRowAB->cRows;
+      if (cNumRows)
+      {
+        LPTSTR lpsz = lpRowAB->aRow[0].lpProps[ieidPR_DISPLAY_NAME].Value.lpszA;
+        LPENTRYID lpEID = (LPENTRYID) lpRowAB->aRow[0].lpProps[ieidPR_ENTRYID].Value.bin.lpb;
+        ULONG cbEID = lpRowAB->aRow[0].lpProps[ieidPR_ENTRYID].Value.bin.cb;
+      
+        // There are 2 kinds of objects - the MAPI_MAILUSER contact object
+        // and the MAPI_DISTLIST contact object
+        // For distribution lists, we will only consider MAILUSER
+        // objects since we can't nest lists yet.
+        if(lpRowAB->aRow[0].lpProps[ieidPR_OBJECT_TYPE].Value.l == MAPI_MAILUSER)
+        {
+          LPMAILUSER	pUser = m_pWab->GetUser( cbEID, lpEID);
+          LPSPropValue pProp = m_pWab->GetUserProperty( pUser, PR_EMAIL_ADDRESS);
+	  nsString  eMail;
+
+          nsCOMPtr <nsIMdbRow> cardRow;
+
+	  m_pWab->GetValueString( pProp, eMail);
+	  SanitizeValue( eMail);
+          FindListRow(eMail, getter_AddRefs(cardRow));
+          if (cardRow)
+          {
+            nsCOMPtr <nsIAbCard> userCard;
+            nsCOMPtr <nsIAbCard> newCard;
+            userCard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+            m_database->InitCardFromRow(userCard,cardRow);
+
+            m_database->AddListCardColumnsToRow(userCard, listRow, ++numListElems,
+                                        getter_AddRefs(newCard),PR_TRUE);
+          }
+	  m_pWab->FreeProperty( pProp);
+          m_pWab->ReleaseUser( pUser);
+        }
+      }
+      m_pWab->FreeProws(lpRowAB );		
+    }
+  } while (SUCCEEDED(hr) && cNumRows && lpRowAB);
+
+  m_database->SetListAddressTotal(listRow, numListElems);
   return rv;
 }
 
@@ -178,153 +268,151 @@ void nsOEAddressIterator::SanitizeValue( nsString& val)
 
 void nsOEAddressIterator::SplitString( nsString& val1, nsString& val2)
 {
-	nsString	temp;
-
-	// Find the last line if there is more than one!
-	PRInt32 idx = val1.RFind( "\x0D\x0A");
-	PRInt32	cnt = 2;
-	if (idx == -1) {
-		cnt = 1;
-		idx = val1.RFindChar( 13);
-	}
-	if (idx == -1)
-		idx= val1.RFindChar( 10);
-	if (idx != -1) {
-		val1.Right( val2, val1.Length() - idx - cnt);
-		val1.Left( temp, idx);
-		val1 = temp;
-		SanitizeValue( val1);
-	}
+  nsString	temp;
+  
+  // Find the last line if there is more than one!
+  PRInt32 idx = val1.RFind( "\x0D\x0A");
+  PRInt32	cnt = 2;
+  if (idx == -1) {
+    cnt = 1;
+    idx = val1.RFindChar( 13);
+  }
+  if (idx == -1)
+    idx= val1.RFindChar( 10);
+  if (idx != -1) {
+    val1.Right( val2, val1.Length() - idx - cnt);
+    val1.Left( temp, idx);
+    val1 = temp;
+    SanitizeValue( val1);
+  }
 }
 
 PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRow, LPMAILUSER pUser)
 {
-	
-	nsString		lastName;
-	nsString		firstName;
-	nsString		eMail;
-	nsString		nickName;
-	nsString		middleName;
-
-	LPSPropValue	pProp = m_pWab->GetUserProperty( pUser, PR_EMAIL_ADDRESS);
-	if (pProp) {
-		m_pWab->GetValueString( pProp, eMail);
-		SanitizeValue( eMail);
-		m_pWab->FreeProperty( pProp);
-	}
-	pProp = m_pWab->GetUserProperty( pUser, PR_GIVEN_NAME);
-	if (pProp) {
-		m_pWab->GetValueString( pProp, firstName);
-		SanitizeValue( firstName);
-		m_pWab->FreeProperty( pProp);
-	}
-	pProp = m_pWab->GetUserProperty( pUser, PR_SURNAME);
-	if (pProp) {
-		m_pWab->GetValueString( pProp, lastName);
-		SanitizeValue( lastName);
-		m_pWab->FreeProperty( pProp);
-	}
-	pProp = m_pWab->GetUserProperty( pUser, PR_MIDDLE_NAME);
-	if (pProp) {
-		m_pWab->GetValueString( pProp, middleName);
-		SanitizeValue( middleName);
-		m_pWab->FreeProperty( pProp);
-	}
-	pProp = m_pWab->GetUserProperty( pUser, PR_NICKNAME);
-	if (pProp) {
-		m_pWab->GetValueString( pProp, nickName);
-		SanitizeValue( nickName);
-		m_pWab->FreeProperty( pProp);
-	}
-	
-	// The idea here is that firstName and lastName cannot both be empty!
-	if (firstName.IsEmpty() && lastName.IsEmpty())
-		firstName = pName;
-
-	nsString	displayName;
-	pProp = m_pWab->GetUserProperty( pUser, PR_DISPLAY_NAME);
-	if (pProp) {
-		m_pWab->GetValueString( pProp, displayName);
-		SanitizeValue( displayName);
-		m_pWab->FreeProperty( pProp);
-	}
-	if (displayName.IsEmpty()) {
-		if (firstName.IsEmpty())
-			displayName = pName;
-		else {
-			displayName = firstName;
-			if (!middleName.IsEmpty()) {
-				displayName.Append(PRUnichar(' '));
-				displayName.Append( middleName);
-			}
-			if (!lastName.IsEmpty()) {
-				displayName.Append(PRUnichar(' '));
-				displayName.Append( lastName);
-			}
-		}
-	}
-	
-	// We now have the required fields
-	// write them out followed by any optional fields!
-	if (!displayName.IsEmpty()) {
-		m_database->AddDisplayName( newRow, NS_ConvertUCS2toUTF8(displayName).get());
-	}
-	if (!firstName.IsEmpty()) {
-		m_database->AddFirstName( newRow, NS_ConvertUCS2toUTF8(firstName).get());
-	}
-	if (!lastName.IsEmpty()) {
-		m_database->AddLastName( newRow, NS_ConvertUCS2toUTF8(lastName).get());
-	}
-	if (!nickName.IsEmpty()) {
-		m_database->AddNickName( newRow, NS_ConvertUCS2toUTF8(nickName).get());
-	}
-	if (!eMail.IsEmpty()) {
-		m_database->AddPrimaryEmail( newRow, NS_ConvertUCS2toUTF8(eMail).get());
-	}
-
-	// Do all of the extra fields!
-
-	nsString	value;
-	nsString	line2;
-	nsresult	rv;
-	// Create a field map
-
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
-	if (NS_SUCCEEDED( rv)) {
-		nsIImportFieldMap *		pFieldMap = nsnull;
-		rv = impSvc->CreateNewFieldMap( &pFieldMap);
-		if (NS_SUCCEEDED( rv) && pFieldMap) {
-			int max = sizeof( gMapiFields) / sizeof( MAPIFields);
-			for (int i = 0; i < max; i++) {
-				pProp = m_pWab->GetUserProperty( pUser, gMapiFields[i].mapiTag);
-				if (pProp) {
-					m_pWab->GetValueString( pProp, value);
-					m_pWab->FreeProperty( pProp);
-					if (!value.IsEmpty()) {
-						if (gMapiFields[i].multiLine == kNoMultiLine) {
-							SanitizeValue( value);
-							pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
-						}
-						else if (gMapiFields[i].multiLine == kIsMultiLine) {
-							pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
-						}
-						else {
-							line2.Truncate();
-							SplitString( value, line2);
-							if (!value.IsEmpty())
-								pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
-							if (!line2.IsEmpty())
-								pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].multiLine, line2.get());
-						}
-					}
-				}
-			}
-			// call fieldMap SetFieldValue based on the table of fields
-
-			NS_RELEASE( pFieldMap);
-		}
-	}
-
-
-	return( PR_TRUE);
+  
+  nsString		lastName;
+  nsString		firstName;
+  nsString		eMail;
+  nsString		nickName;
+  nsString		middleName;
+  
+  LPSPropValue	pProp = m_pWab->GetUserProperty( pUser, PR_EMAIL_ADDRESS);
+  if (pProp) {
+    m_pWab->GetValueString( pProp, eMail);
+    SanitizeValue( eMail);
+    m_pWab->FreeProperty( pProp);
+  }
+  pProp = m_pWab->GetUserProperty( pUser, PR_GIVEN_NAME);
+  if (pProp) {
+    m_pWab->GetValueString( pProp, firstName);
+    SanitizeValue( firstName);
+    m_pWab->FreeProperty( pProp);
+  }
+  pProp = m_pWab->GetUserProperty( pUser, PR_SURNAME);
+  if (pProp) {
+    m_pWab->GetValueString( pProp, lastName);
+    SanitizeValue( lastName);
+    m_pWab->FreeProperty( pProp);
+  }
+  pProp = m_pWab->GetUserProperty( pUser, PR_MIDDLE_NAME);
+  if (pProp) {
+    m_pWab->GetValueString( pProp, middleName);
+    SanitizeValue( middleName);
+    m_pWab->FreeProperty( pProp);
+  }
+  pProp = m_pWab->GetUserProperty( pUser, PR_NICKNAME);
+  if (pProp) {
+    m_pWab->GetValueString( pProp, nickName);
+    SanitizeValue( nickName);
+    m_pWab->FreeProperty( pProp);
+  }
+  
+  // The idea here is that firstName and lastName cannot both be empty!
+  if (firstName.IsEmpty() && lastName.IsEmpty())
+    firstName = pName;
+  
+  nsString	displayName;
+  pProp = m_pWab->GetUserProperty( pUser, PR_DISPLAY_NAME);
+  if (pProp) {
+    m_pWab->GetValueString( pProp, displayName);
+    SanitizeValue( displayName);
+    m_pWab->FreeProperty( pProp);
+  }
+  if (displayName.IsEmpty()) {
+    if (firstName.IsEmpty())
+      displayName = pName;
+    else {
+      displayName = firstName;
+      if (!middleName.IsEmpty()) {
+        displayName.Append(PRUnichar(' '));
+        displayName.Append( middleName);
+      }
+      if (!lastName.IsEmpty()) {
+        displayName.Append(PRUnichar(' '));
+        displayName.Append( lastName);
+      }
+    }
+  }
+  
+  // We now have the required fields
+  // write them out followed by any optional fields!
+  if (!displayName.IsEmpty()) {
+    m_database->AddDisplayName( newRow, NS_ConvertUCS2toUTF8(displayName).get());
+  }
+  if (!firstName.IsEmpty()) {
+    m_database->AddFirstName( newRow, NS_ConvertUCS2toUTF8(firstName).get());
+  }
+  if (!lastName.IsEmpty()) {
+    m_database->AddLastName( newRow, NS_ConvertUCS2toUTF8(lastName).get());
+  }
+  if (!nickName.IsEmpty()) {
+    m_database->AddNickName( newRow, NS_ConvertUCS2toUTF8(nickName).get());
+  }
+  if (!eMail.IsEmpty()) {
+    m_database->AddPrimaryEmail( newRow, NS_ConvertUCS2toUTF8(eMail).get());
+  }
+  
+  // Do all of the extra fields!
+  
+  nsString	value;
+  nsString	line2;
+  nsresult	rv;
+  // Create a field map
+  
+  nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
+  if (NS_SUCCEEDED( rv)) {
+    nsIImportFieldMap *		pFieldMap = nsnull;
+    rv = impSvc->CreateNewFieldMap( &pFieldMap);
+    if (NS_SUCCEEDED( rv) && pFieldMap) {
+      int max = sizeof( gMapiFields) / sizeof( MAPIFields);
+      for (int i = 0; i < max; i++) {
+        pProp = m_pWab->GetUserProperty( pUser, gMapiFields[i].mapiTag);
+        if (pProp) {
+          m_pWab->GetValueString( pProp, value);
+          m_pWab->FreeProperty( pProp);
+          if (!value.IsEmpty()) {
+            if (gMapiFields[i].multiLine == kNoMultiLine) {
+              SanitizeValue( value);
+              pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
+            }
+            else if (gMapiFields[i].multiLine == kIsMultiLine) {
+              pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
+            }
+            else {
+              line2.Truncate();
+              SplitString( value, line2);
+              if (!value.IsEmpty())
+                pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
+              if (!line2.IsEmpty())
+                pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].multiLine, line2.get());
+            }
+          }
+        }
+      }
+      // call fieldMap SetFieldValue based on the table of fields
+      
+      NS_RELEASE( pFieldMap);
+    }
+  }
+  return( PR_TRUE);
 }

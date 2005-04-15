@@ -42,6 +42,7 @@
 #include "nsIAddrDatabase.h"
 #include "mdb.h"
 #include "nsString.h"
+#include "nsHashtable.h"
 
 class nsOEAddressIterator : public CWabIterator {
 public:
@@ -49,16 +50,17 @@ public:
 	~nsOEAddressIterator();
 	
 	virtual nsresult  EnumUser( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid);
-	virtual nsresult  EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid);
+	virtual nsresult  EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid, LPMAPITABLE table);
+        void FindListRow(nsString &eMail, nsIMdbRow **cardRow);
 
 private:
 	PRBool		BuildCard( const PRUnichar * pName, nsIMdbRow *card, LPMAILUSER pUser);
 	void		SanitizeValue( nsString& val);
 	void		SplitString( nsString& val1, nsString& val2);
 
-	CWAB *				m_pWab;
-	nsIAddrDatabase	*	m_database;
-	
+	CWAB *                m_pWab;
+	nsIAddrDatabase	*     m_database;
+	nsSupportsHashtable m_listRows;
 };
 
 #endif 

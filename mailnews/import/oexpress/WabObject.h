@@ -50,7 +50,7 @@
 class CWabIterator {
 public:
 	virtual nsresult  EnumUser( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid) = 0;
-	virtual nsresult  EnumList( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid) = 0;
+	virtual nsresult  EnumList( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid, LPMAPITABLE lpTable) = 0;
 };
 
 
