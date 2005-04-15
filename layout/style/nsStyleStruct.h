@@ -450,12 +450,6 @@ struct nsStyleBorder: public nsStyleStruct {
     mBorderStyle[aSide] |= BORDER_COLOR_FOREGROUND; 
   }
 
-  void UnsetBorderColor(PRUint8 aSide)
-  {
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
-    mBorderStyle[aSide] &= BORDER_STYLE_MASK; 
-  }
-
   // XXX these are deprecated methods
   void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
   void CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide, nscoord& aWidth) const;
