@@ -163,6 +163,15 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
   return nsAccessibleWrap::get_accChild(varChild, ppdispChild);
 }
 
+NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
+{
+  if (mDocLoadTimer) {
+    mDocLoadTimer->Cancel();
+    mDocLoadTimer = nsnull;
+  }
+  return nsDocAccessible::Shutdown();
+}
+
 NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
 {
   if (!mWeakShell) {   // Means we're not active
@@ -268,7 +277,7 @@ nsDocAccessibleWrap::GetFirstLeafAccessible(nsIDOMNode *aStartNode)
   return nsnull;
 }
 
-void nsDocAccessibleWrap::FireAnchorJumpEvent()
+NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
 {
   // Staying on the same page, jumping to a named anchor
   // Fire EVENT_SELECTION_WITHIN on first leaf accessible -- because some
@@ -276,6 +285,11 @@ void nsDocAccessibleWrap::FireAnchorJumpEvent()
   // the can only relate events back to their internal model if it's a leaf.
   // There is usually an accessible for the focus node, but if it's an empty text node
   // we have to move forward in the document to get one
+  PRUint32 state;
+  GetState(&state);
+  if (state & STATE_BUSY) {
+    return NS_OK;
+  }
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(container));
   nsCAutoString theURL;
@@ -296,7 +310,7 @@ void nsDocAccessibleWrap::FireAnchorJumpEvent()
   // This way we still know to fire the SELECTION_WITHIN event when we
   // move from a named anchor back to the top.
   if (!mWasAnchor && !hasAnchor) {
-    return;
+    return NS_OK;
   }
   mWasAnchor = hasAnchor;
 
@@ -304,12 +318,12 @@ void nsDocAccessibleWrap::FireAnchorJumpEvent()
   if (hasAnchor) {
     nsCOMPtr<nsISelectionController> selCon(do_QueryReferent(mWeakShell));
     if (!selCon) {
-      return;
+      return NS_OK;
     }
     nsCOMPtr<nsISelection> domSel;
     selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
     if (!domSel) {
-      return;
+      return NS_OK;
     }
     domSel->GetFocusNode(getter_AddRefs(focusNode));
   }
@@ -323,42 +337,46 @@ void nsDocAccessibleWrap::FireAnchorJumpEvent()
     privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                                         accessible, nsnull);
   }
+  return NS_OK;
 }
 
-void nsDocAccessibleWrap::FireDocLoadFinished()
+void nsDocAccessibleWrap::DocLoadCallback(nsITimer *aTimer, void *aClosure)
+{
+  // Doc has finished loading, fire "load finished" event
+  // By using short timer we can wait for MS Windows to make the window visible,
+  // which it does asynchronously. This avoids confusing the screen reader with a
+  // hidden window.
+
+  nsDocAccessibleWrap *docAcc =
+    NS_REINTERPRET_CAST(nsDocAccessibleWrap*, aClosure);
+  if (docAcc) {
+    docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
+                             docAcc, nsnull);
+    docAcc->FireAnchorJumpEvent();
+  }
+}
+
+NS_IMETHODIMP nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
 {
   if (!mDocument || !mWeakShell)
-    return;  // Document has been shut down
+    return NS_OK;  // Document has been shut down
 
-  PRUint32 state;
-  GetState(&state);
-  if ((state & STATE_INVISIBLE) != 0) {
-    return; // Don't consider load finished until window unhidden
+  if (aIsFinished) {
+    // Use short timer before firing state change event for finished doc,
+    // because the window is made visible asynchronously by Microsoft Windows
+    if (!mDocLoadTimer) {
+      mDocLoadTimer = do_CreateInstance("@mozilla.org/timer;1");
+    }
+    if (mDocLoadTimer) {
+      mDocLoadTimer->InitWithFuncCallback(DocLoadCallback, this, 0,
+                                          nsITimer::TYPE_ONE_SHOT);
+    }
+  }
+  else {
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
   }
 
-  // Cache decision before nsDocAccessible::FireDocLoadFinished
-  // changes mIsNewDocument and mBusy
-  PRBool fireStateChange = mIsNewDocument && mBusy != eBusyStateDone;
-
-  nsDocAccessible::FireDocLoadFinished();
-
-  if (fireStateChange) {
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
-                     this, nsnull);
-  }
-  FireAnchorJumpEvent();
-}
-
-NS_IMETHODIMP nsDocAccessibleWrap::OnLocationChange(nsIWebProgress *aWebProgress,
-                                                    nsIRequest *aRequest,
-                                                    nsIURI *location)
-{
-  if (!mWeakShell || !mDocument) {
-    return NS_OK;
-  }
-
-  FireAnchorJumpEvent();
-  return NS_OK;
+  return nsDocAccessible::FireDocLoadingEvent(aIsFinished);
 }
 
 STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)

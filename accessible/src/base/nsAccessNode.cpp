@@ -487,9 +487,8 @@ nsAccessNode::GetPresShellFor(nsIDOMNode *aNode)
 
 
 already_AddRefed<nsIDocShellTreeItem>
-nsAccessNode::GetSameTypeRootFor(nsIDOMNode *aStartNode)
+nsAccessNode::GetDocShellTreeItemFor(nsIDOMNode *aStartNode)
 {
-
   nsCOMPtr<nsIDOMDocument> domDoc;
   aStartNode->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
@@ -498,13 +497,10 @@ nsAccessNode::GetSameTypeRootFor(nsIDOMNode *aStartNode)
   }
   NS_ASSERTION(doc, "No document for node passed in");
   nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
-  NS_ENSURE_TRUE(docShellTreeItem, nsnull);
-  nsIDocShellTreeItem *topOfDocShellTree = nsnull;
-  docShellTreeItem->GetSameTypeRootTreeItem(&topOfDocShellTree);
-  NS_ASSERTION(topOfDocShellTree, "No same type root tree item for doc shell");
+  nsIDocShellTreeItem *docShellTreeItem = nsnull;
+  CallQueryInterface(container, &docShellTreeItem);
 
-  return topOfDocShellTree;
+  return docShellTreeItem;
 }
 
 void nsAccessNode::PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> &aCache, 

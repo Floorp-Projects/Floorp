@@ -51,8 +51,6 @@
 #include "nsIScrollPositionListener.h"
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
-#include "nsIWebProgress.h"
-#include "nsIWebProgressListener.h"
 
 class nsIScrollableView;
 
@@ -61,7 +59,6 @@ const PRUint32 kDefaultCacheSize = 256;
 class nsDocAccessible : public nsBlockAccessible,
                         public nsIAccessibleDocument,
                         public nsPIAccessibleDocument,
-                        public nsIWebProgressListener,
                         public nsIObserver,
                         public nsIDOMMutationListener,
                         public nsIScrollPositionListener,
@@ -96,8 +93,6 @@ class nsDocAccessible : public nsBlockAccessible,
     NS_IMETHOD AttrModified(nsIDOMEvent* aMutationEvent);
     NS_IMETHOD CharacterDataModified(nsIDOMEvent* aMutationEvent);
 
-    NS_DECL_NSIWEBPROGRESSLISTENER
-
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
     static void FlushEventsCallback(nsITimer *aTimer, void *aClosure);
 
@@ -109,14 +104,11 @@ class nsDocAccessible : public nsBlockAccessible,
     NS_IMETHOD_(nsIFrame *) GetFrame(void);
 
   protected:
-    enum EBusyState {eBusyStateUninitialized, eBusyStateLoading, eBusyStateDone};
-
     virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsresult AddEventListeners();
     virtual nsresult RemoveEventListeners();
     void AddScrollListener();
     void RemoveScrollListener();
-    virtual void FireDocLoadFinished();
     void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
     virtual void CheckForEditor();
@@ -125,11 +117,8 @@ class nsDocAccessible : public nsBlockAccessible,
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;
-    nsCOMPtr<nsITimer> mDocLoadTimer;
     nsCOMPtr<nsITimer> mFireEventTimer;
-    nsCOMPtr<nsIWebProgress> mWebProgress;
     nsCOMPtr<nsIEditor> mEditor; // Editor, if there is one
-    EBusyState mBusy;
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsNewDocument;
     nsCOMArray<nsIAccessibleEvent> mEventsToFire;

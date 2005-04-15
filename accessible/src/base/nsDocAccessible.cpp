@@ -80,9 +80,7 @@
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsBlockAccessible(aDOMNode, aShell), mWnd(nsnull),
-  mWebProgress(nsnull), mEditor(nsnull), 
-  mBusy(eBusyStateUninitialized), 
-  mScrollPositionChangedTicks(0), mIsNewDocument(PR_FALSE)
+  mEditor(nsnull), mScrollPositionChangedTicks(0)
 {
   // Because of the way document loading happens, the new nsIWidget is created before
   // the old one is removed. Since it creates the nsDocAccessible, for a brief moment 
@@ -118,7 +116,6 @@ nsDocAccessible::~nsDocAccessible()
 NS_INTERFACE_MAP_BEGIN(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsPIAccessibleDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMutationListener)
   NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -147,10 +144,22 @@ NS_IMETHODIMP nsDocAccessible::GetValue(nsAString& aValue)
 
 NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
   nsAccessible::GetState(aState);
   *aState |= STATE_FOCUSABLE;
-  if (mBusy == eBusyStateLoading)
-    *aState |= STATE_BUSY; // If busy, not sure if visible yet or not
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(docShellTreeItem));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  PRUint32 busyFlags;
+  docShell->GetBusyFlags(&busyFlags);
+  if (busyFlags != nsIDocShell::BUSY_FLAGS_NONE) {
+    *aState |= STATE_BUSY;
+  }
 
   // Is it visible?
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
@@ -409,21 +418,11 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
 
   mEditor = nsnull;
 
-  if (mScrollWatchTimer) {
-    mScrollWatchTimer->Cancel();
-    mScrollWatchTimer = nsnull;
-  }
-  if (mDocLoadTimer) {
-    mDocLoadTimer->Cancel();
-    mDocLoadTimer = nsnull;
-  }
   if (mFireEventTimer) {
     mFireEventTimer->Cancel();
     mFireEventTimer = nsnull;
   }
   mEventsToFire.Clear();
-
-  mWebProgress = nsnull;
 
   ClearCache(mAccessNodeCache);
 
@@ -519,23 +518,6 @@ nsresult nsDocAccessible::AddEventListeners()
         commandManager->AddCommandObserver(this, "obs_documentCreated");
       }
     }
-
-    // Make sure we're the top content doc shell 
-    // We don't want to listen to iframe progress
-    nsCOMPtr<nsIDocShellTreeItem> topOfContentTree;
-    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(topOfContentTree));
-    if (topOfContentTree != docShellTreeItem) {
-      mBusy = eBusyStateDone;
-      return NS_OK;
-    }
-
-    mWebProgress = do_GetInterface(docShellTreeItem);
-    NS_ENSURE_TRUE(mWebProgress, NS_ERROR_FAILURE);
-
-    mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT |
-                                            nsIWebProgress::NOTIFY_LOCATION);
-    mIsNewDocument = PR_TRUE;
-    mBusy = eBusyStateLoading;
   }
 
   // add ourself as a mutation event listener 
@@ -568,13 +550,6 @@ nsresult nsDocAccessible::AddEventListeners()
 nsresult nsDocAccessible::RemoveEventListeners()
 {
   // Remove listeners associated with content documents
-
-  // Remove web progress listener
-  if (mWebProgress) {
-    mWebProgress->RemoveProgressListener(this);
-    mWebProgress = nsnull;
-  }
-
   // Remove scroll position listener
   RemoveScrollListener();
 
@@ -590,11 +565,6 @@ nsresult nsDocAccessible::RemoveEventListeners()
   if (mScrollWatchTimer) {
     mScrollWatchTimer->Cancel();
     mScrollWatchTimer = nsnull;
-  }
-
-  if (mDocLoadTimer) {
-    mDocLoadTimer->Cancel();
-    mDocLoadTimer = nsnull;
   }
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
@@ -613,21 +583,23 @@ nsresult nsDocAccessible::RemoveEventListeners()
   return NS_OK;
 }
 
-void nsDocAccessible::FireDocLoadFinished()
+NS_IMETHODIMP nsDocAccessible::FireAnchorJumpEvent()
 {
-  if (!mDocument || !mWeakShell)
-    return;  // Document has been shut down
+  return NS_OK;
+}
 
-  PRUint32 state;
-  GetState(&state);
-  if ((state & STATE_INVISIBLE) == 0) {
-    // Don't consider load finished until window unhidden
-    mIsNewDocument = PR_FALSE;
-    if (mBusy != eBusyStateDone) {
-      AddScrollListener();
-    }
-    mBusy = eBusyStateDone;
+NS_IMETHODIMP nsDocAccessible::FireDocLoadingEvent(PRBool aIsFinished)
+{
+  if (!mDocument || !mWeakShell) {
+    return NS_OK;  // Document has been shut down
   }
+
+  if (aIsFinished) {
+    // Need to wait until scrollable view is available
+    AddScrollListener();
+  }
+
+  return NS_OK;
 }
 
 void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
@@ -703,104 +675,6 @@ NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nsIScrollableView *aScrol
     }
   }
   mScrollPositionChangedTicks = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::OnStateChange(nsIWebProgress *aWebProgress,
-                                             nsIRequest *aRequest,
-                                             PRUint32 aStateFlags,
-                                             nsresult aStatus)
-{
-  if (!(aStateFlags & (STATE_START | STATE_STOP))) {
-    return NS_OK;   // We don't care about STATE_TRANSFERRING
-  }
-  NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Should not be listening to other OnStateChange types (should be document)");
-  if (!mWeakShell || !mDocument) {
-    return NS_OK;
-  }
-  nsCOMPtr<nsIDOMWindow> domWin;
-  aWebProgress->GetDOMWindow(getter_AddRefs(domWin));
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  domWin->GetDocument(getter_AddRefs(domDoc));
-  if (!SameCOMIdentity(mDocument, domDoc)) {
-    return NS_OK;
-  }
-
-  if (aStateFlags & STATE_STOP) {
-    FireDocLoadFinished();
-    return NS_OK;
-  }
-
-  // STATE_START
-  if (!mIsNewDocument) {
-    return NS_OK;  // Already fired for this document
-  }
-
-  if (gLastFocusedNode) {
-    nsCOMPtr<nsIDocShellTreeItem> topOfLoadingContentTree =
-      GetSameTypeRootFor(mDOMNode);
-    nsCOMPtr<nsIDocShellTreeItem> topOfFocusedContentTree =
-      GetSameTypeRootFor(gLastFocusedNode);
-
-    if (topOfLoadingContentTree != topOfFocusedContentTree) {
-      // Load is not occuring in the currently focused tab, so don't fire 
-      // doc load event there, otherwise assistive technology may become confused
-      return NS_OK;
-    }
-  }
-
-  // Load has been verified, it will occur, about to commence
-
-  // We won't fire a "doc finished loading" event on this nsDocAccessible 
-  // Instead we fire that on the new nsDocAccessible that is created for the new doc
-  mIsNewDocument = PR_FALSE;   // We're a doc that's going away
-
-  if (mBusy != eBusyStateLoading) {
-    mBusy = eBusyStateLoading; 
-    // Fire a "new doc has started to load" event if at top of content tree
-#ifndef MOZ_ACCESSIBILITY_ATK
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
-#else
-    AtkChildrenChange childrenData;
-    childrenData.index = -1;
-    childrenData.child = 0;
-    childrenData.add = PR_FALSE;
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER , this, &childrenData);
-#endif
-  }
-
-  return NS_OK;
-}
-
-/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
-NS_IMETHODIMP nsDocAccessible::OnProgressChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress,
-  PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
-{
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
-NS_IMETHODIMP nsDocAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, nsIURI *location)
-{
-  return NS_OK;
-}
-
-/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
-NS_IMETHODIMP nsDocAccessible::OnStatusChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
-{
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
-NS_IMETHODIMP nsDocAccessible::OnSecurityChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRUint32 state)
-{
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -891,8 +765,9 @@ NS_IMETHODIMP nsDocAccessible::AttrModified(nsIDOMEvent* aMutationEvent)
     eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
   }
   else if (attrName.EqualsLiteral("readonly") ||
-      attrName.EqualsLiteral("disabled") || attrName.EqualsLiteral("required") ||
-      attrName.EqualsLiteral("invalid")) {
+           attrName.EqualsLiteral("disabled") ||
+           attrName.EqualsLiteral("required") ||
+           attrName.EqualsLiteral("invalid")) {
     eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
   }
   else if (attrName.EqualsLiteral("valuenow")) {
@@ -1086,11 +961,6 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
 
 void nsDocAccessible::HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aAccessibleEventType)
 {
-  if (mBusy == eBusyStateLoading) {
-    // We need this unless bug 90983 is fixed -- 
-    // We only want mutation events after the doc is finished loading
-    return; 
-  }
   nsCOMPtr<nsIDOMMutationEvent> mutationEvent(do_QueryInterface(aEvent));
   NS_ASSERTION(mutationEvent, "Not a mutation event!");
 
