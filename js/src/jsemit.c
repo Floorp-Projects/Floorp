@@ -4555,15 +4555,30 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             break;
         }
 
-        JS_ASSERT(pn->pn_count != 0);
+        JS_ASSERT(pn->pn_type == TOK_XMLLIST || pn->pn_count != 0);
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
             if (pn2 != pn->pn_head && js_Emit1(cx, cg, JSOP_ADD) < 0)
                 return JS_FALSE;
         }
-        if ((pn->pn_extra & PNX_XMLROOT) && js_Emit1(cx, cg, pn->pn_op) < 0)
-            return JS_FALSE;
+
+        if (pn->pn_extra & PNX_XMLROOT) {
+            if (pn->pn_count == 0) {
+                JS_ASSERT(pn->pn_type == TOK_XMLLIST);
+                atom = cx->runtime->atomState.emptyAtom;
+                ale = js_IndexAtom(cx, atom, &cg->atomList);
+                if (!ale)
+                    return JS_FALSE;
+                EMIT_ATOM_INDEX_OP(JSOP_STRING, ALE_INDEX(ale));
+            }
+            if (js_Emit1(cx, cg, pn->pn_op) < 0)
+                return JS_FALSE;
+        }
+#ifdef DEBUG
+        else
+            JS_ASSERT(pn->pn_count != 0);
+#endif
         break;
 
       case TOK_XMLPTAGC:

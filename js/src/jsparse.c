@@ -4733,7 +4733,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
       case TOK_XMLETAGO:
       case TOK_XMLNAME:
         if (pn->pn_arity == PN_LIST) {
-            JS_ASSERT(pn->pn_count != 0);
+            JS_ASSERT(pn->pn_type == TOK_XMLLIST || pn->pn_count != 0);
             if (!FoldXMLConstants(cx, pn, tc))
                 return JS_FALSE;
         }

@@ -153,6 +153,9 @@ struct JSAtomState {
     jsatomid            number;         /* one beyond greatest atom number */
     jsatomid            liveAtoms;      /* number of live atoms after last GC */
 
+    /* The rt->emptyString atom, see jsstr.c's js_InitRuntimeStringState. */
+    JSAtom              *emptyAtom;
+
     /* Type names and value literals. */
     JSAtom              *typeAtoms[JSTYPE_LIMIT];
     JSAtom              *booleanAtoms[2];
@@ -180,8 +183,8 @@ struct JSAtomState {
     JSAtom              *classPrototypeAtom;
     JSAtom              *constructorAtom;
     JSAtom              *countAtom;
-    JSAtom              *etagoAtom;
     JSAtom              *eachAtom;
+    JSAtom              *etagoAtom;
     JSAtom              *evalAtom;
     JSAtom              *getAtom;
     JSAtom              *getterAtom;
