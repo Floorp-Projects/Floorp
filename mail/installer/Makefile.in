@@ -100,7 +100,6 @@ endif
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 NO_PKG_FILES += \
-	chrome/en-US.jar \
 	chrome/messenger.jar \
 	chrome/pipnss.jar \
 	chrome/pippki.jar \
