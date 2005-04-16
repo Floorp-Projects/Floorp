@@ -184,6 +184,13 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
 
 static  void    FireTimer(nsITimer* aTimer, void* aClosure);
 
+  // Just like AddSearchEngine, but with an extra fifth parameter to say
+  // whether it's our internal update or a new engine.
+  nsresult AddSearchEngineInternal(const char *engineURL,
+                                   const char *iconURL,
+                                   const PRUnichar *suggestedTitle,
+                                   const PRUnichar *suggestedCategory,
+                                   PRBool isUpdate);
 
 public:
   NS_DECL_ISUPPORTS

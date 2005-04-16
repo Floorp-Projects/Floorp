@@ -726,7 +726,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		search->busyResource = searchURI;
 
 		nsCOMPtr<nsIInternetSearchContext>	engineContext;
-		if (NS_FAILED(rv = NS_NewInternetSearchContext(nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT,
+		if (NS_FAILED(rv = NS_NewInternetSearchContext(nsIInternetSearchContext::ENGINE_UPDATE_HEAD_CONTEXT,
 			nsnull, searchURI, nsnull, nsnull, getter_AddRefs(engineContext))))
 			return;
 		if (!engineContext)	return;
@@ -2451,6 +2451,15 @@ NS_IMETHODIMP
 InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *iconURL,
 					  const PRUnichar *suggestedTitle, const PRUnichar *suggestedCategory)
 {
+        return AddSearchEngineInternal(engineURL, iconURL, suggestedTitle, suggestedCategory, PR_FALSE);
+}
+
+nsresult
+InternetSearchDataSource::AddSearchEngineInternal(const char *engineURL, const char *iconURL,
+                                                  const PRUnichar *suggestedTitle,
+                                                  const PRUnichar *suggestedCategory,
+                                                  PRBool isUpdate)
+{
 	NS_PRECONDITION(engineURL != nsnull, "null ptr");
 	if (!engineURL)	return(NS_ERROR_NULL_POINTER);
 	// Note: iconURL, suggestedTitle & suggestedCategory
@@ -2473,7 +2482,7 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 
 	// download engine
 	nsCOMPtr<nsIInternetSearchContext>	engineContext;
-	if (NS_FAILED(rv = NS_NewInternetSearchContext(nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT,
+	if (NS_FAILED(rv = NS_NewInternetSearchContext(isUpdate ? nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT : nsIInternetSearchContext::ENGINE_DOWNLOAD_NEW_CONTEXT,
 		nsnull, nsnull, nsnull, suggestedCategory, getter_AddRefs(engineContext))))
 		return(rv);
 	if (!engineContext)	return(NS_ERROR_UNEXPECTED);
@@ -2491,7 +2500,7 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 
 	// download icon
 	nsCOMPtr<nsIInternetSearchContext>	iconContext;
-	if (NS_FAILED(rv = NS_NewInternetSearchContext(nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT,
+	if (NS_FAILED(rv = NS_NewInternetSearchContext(isUpdate ? nsIInternetSearchContext::ICON_DOWNLOAD_UPDATE_CONTEXT : nsIInternetSearchContext::ICON_DOWNLOAD_NEW_CONTEXT,
 		nsnull, nsnull, nsnull, nsnull, getter_AddRefs(iconContext))))
 		return(rv);
 	if (!iconContext)	return(NS_ERROR_UNEXPECTED);
@@ -2516,6 +2525,11 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 nsresult
 InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchContext *context, PRUint32	contextType)
 {
+    NS_ASSERTION(contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_NEW_CONTEXT ||
+                 contextType == nsIInternetSearchContext::ICON_DOWNLOAD_NEW_CONTEXT ||
+                 contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT ||
+                 contextType == nsIInternetSearchContext::ICON_DOWNLOAD_UPDATE_CONTEXT,
+                 "unexpected context");
 	nsresult	rv = NS_OK;
 
 	if (!channel)	return(NS_ERROR_UNEXPECTED);
@@ -2539,8 +2553,8 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 
 	// make sure that search engines are .src files
 	PRInt32	extensionOffset;
-	if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
-		contextType == nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT)
+	if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_NEW_CONTEXT ||
+		contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT)
 	{
 		extensionOffset = baseName.RFind(".src", PR_TRUE);
 		if ((extensionOffset < 0) || (extensionOffset != (PRInt32)(baseName.Length()-4)))
@@ -2571,7 +2585,19 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
     // XXX - It appears that this is done in order to discard the upper
     // byte of each PRUnichar.  I hope that's OK!!
     //
-	outFile->Remove(PR_FALSE);
+    if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT ||
+        contextType == nsIInternetSearchContext::ICON_DOWNLOAD_UPDATE_CONTEXT) {
+        // This is an update operation that we triggered.  Remove the old one.
+        outFile->Remove(PR_FALSE);
+    } else {
+        PRBool exists;
+        rv = outFile->Exists(&exists);
+        if (NS_FAILED(rv) || exists) {
+            // We already have a search plugin with this filename; don't
+            // replace it (bug 290038).
+            return NS_ERROR_UNEXPECTED;
+        }
+    }
 
     nsCOMPtr<nsIOutputStream> outputStream, fileOutputStream;
     rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), outFile);
@@ -2588,8 +2614,8 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
     outputStream->Flush();		
     outputStream->Close();
 
-    if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
-        contextType == nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT)
+    if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_NEW_CONTEXT ||
+        contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT)
     {
 #ifdef	XP_MAC
         // set appropriate Mac file type/creator for search engine files
@@ -2607,7 +2633,8 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
         // update graph with various required info
         SaveEngineInfoIntoGraph(outFile, nsnull, hintUni, dataBuf, PR_FALSE, PR_FALSE);
     }
-    else if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
+    else if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_NEW_CONTEXT ||
+             contextType == nsIInternetSearchContext::ICON_DOWNLOAD_UPDATE_CONTEXT)
     {
         // update graph with icon info
         SaveEngineInfoIntoGraph(nsnull, outFile, nsnull, nsnull, PR_FALSE, PR_FALSE);
@@ -5121,8 +5148,10 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		// continue to process nsIInternetSearchContext::WEB_SEARCH_CONTEXT
 		rv = webSearchFinalize(channel, context);
 	}
-	else if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
-		 contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
+	else if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_NEW_CONTEXT ||
+	         contextType == nsIInternetSearchContext::ICON_DOWNLOAD_NEW_CONTEXT ||
+	         contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT ||
+	         contextType == nsIInternetSearchContext::ICON_DOWNLOAD_UPDATE_CONTEXT)
 	{
 		nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 		if (!httpChannel)	return(NS_ERROR_UNEXPECTED);
@@ -5135,7 +5164,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 			rv = saveContents(channel, context, contextType);
 		}
 	}
-	else if (contextType == nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT)
+	else if (contextType == nsIInternetSearchContext::ENGINE_UPDATE_HEAD_CONTEXT)
 	{
 		nsCOMPtr<nsIRDFResource>	theEngine;
 		if (NS_FAILED(rv = context->GetEngine(getter_AddRefs(theEngine))))	return(rv);
@@ -5271,7 +5300,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 			}
 
 			// download it!
-			AddSearchEngine(updateURL.get(), updateIconURL.get(), nsnull, nsnull);
+			AddSearchEngineInternal(updateURL.get(), updateIconURL.get(), nsnull, nsnull, PR_TRUE);
 		}
 		else
 		{
