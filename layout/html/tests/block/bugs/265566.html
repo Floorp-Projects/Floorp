@@ -1,178 +1,35 @@
-Index: view/public/nsIViewManager.h
-===================================================================
-RCS file: /home/rocallahan/mozilla-cvs-mirror/mozilla/view/public/nsIViewManager.h,v
-retrieving revision 3.88
-diff -u -t -p -1 -2 -r3.88 nsIViewManager.h
---- view/public/nsIViewManager.h	20 Jan 2005 03:39:07 -0000	3.88
-+++ view/public/nsIViewManager.h	1 Feb 2005 23:57:55 -0000
-@@ -281,24 +281,25 @@ public:
-    * Set the region to which a view's descendants are clipped.  The view
-    * itself is not clipped to this region; this allows for effects
-    * where part of the view is drawn outside the clip region (e.g.,
-    * its borders and background).  The view manager generates the
-    * appropriate dirty regions.
-    * 
-    * @param aView view to set clipping for
-    * @param aRegion
-    *     if null then no clipping is required. In this case all descendant
-    * views (but not descendants through placeholder edges) must have their
-    * bounds inside the bounds of this view
-    *     if non-null, then we will clip this view's descendant views
-+   * --- including descendants through placeholder edges ---
-    * to the region. The region's bounds must be within the bounds of
-    * this view. The descendant views' bounds need not be inside the bounds
-    * of this view (because we're going to clip them anyway).
-    *
-    * XXX Currently we only support regions consisting of a single rectangle.
-    */
-   NS_IMETHOD  SetViewChildClipRegion(nsIView *aView, const nsRegion *aRegion) = 0;
- 
-   /**
-    * Set the visibility of a view.
-    * The view manager generates the appropriate dirty regions.
-    * @param aView view to change visibility state of
-Index: view/src/nsView.cpp
-===================================================================
-RCS file: /home/rocallahan/mozilla-cvs-mirror/mozilla/view/src/nsView.cpp,v
-retrieving revision 3.210
-diff -u -t -p -1 -2 -r3.210 nsView.cpp
---- view/src/nsView.cpp	27 Jan 2005 20:49:46 -0000	3.210
-+++ view/src/nsView.cpp	2 Feb 2005 00:11:57 -0000
-@@ -907,26 +907,31 @@ static PRBool ApplyClipRect(const nsView
-     // aView's origin
-     offset += offsetFromParent;
-     if (parentView->GetClipChildrenToBounds(aFollowPlaceholders)) {
-       // Get the parent's clip rect (which is just the dimensions in this
-       // case) into the initial aView's coordinates
-       nsRect clipRect = parentView->GetDimensions();
-       clipRect -= offset;
-       PRBool overlap = aRect->IntersectRect(clipRect, *aRect);
-       if (!overlap) {
-         break;
-       }
-     }
-+    // The child-clipping rect is applied to all *content* children.
-+    // So we apply it if we're in the placeholder-following pass, or
-+    // if we're in the first pass and we haven't detected any
-+    // placeholders yet, in which case this geometric ancestor is also
-+    // a content ancestor.
-     const nsRect* r = parentView->GetClipChildrenToRect();
--    if (r && !aFollowPlaceholders) {
-+    if (r && (!foundPlaceholders || aFollowPlaceholders)) {
-       // Get the parent's clip rect into the initial aView's coordinates
-       nsRect clipRect = *r;
-       clipRect -= offset;
-       PRBool overlap = aRect->IntersectRect(clipRect, *aRect);
-       if (!overlap) {
-         break;
-       }
-     }
- 
-     aView = parentView;
-     lastViewIsFloating = parentIsFloating;
-   }
-Index: layout/generic/nsContainerFrame.cpp
-===================================================================
-RCS file: /home/rocallahan/mozilla-cvs-mirror/mozilla/layout/generic/nsContainerFrame.cpp,v
-retrieving revision 1.223
-diff -u -t -p -1 -2 -r1.223 nsContainerFrame.cpp
---- layout/generic/nsContainerFrame.cpp	27 Jan 2005 20:49:46 -0000	1.223
-+++ layout/generic/nsContainerFrame.cpp	2 Feb 2005 00:10:22 -0000
-@@ -630,30 +630,29 @@ SyncFrameViewGeometryDependentProperties
-             && (kidState & NS_FRAME_OUTSIDE_CHILDREN) != 0)) {
-       viewHasTransparentContent = PR_TRUE;
-     }
-   }
- 
-   // If the frame has visible content that overflows the content area, then we
-   // need the view marked as having transparent content
- 
-   // There are two types of clipping:
-   // - 'clip' which only applies to absolutely positioned elements, and is
-   //    relative to the element's border edge. 'clip' applies to the entire
-   //    element
--  // - 'overflow-clip' which only applies to block-level elements and replaced
--  //   elements that have 'overflow' set to 'hidden'. 'overflow-clip' is relative
--  //   to the content area and applies to content only (not border or background).
--  //   Note that out-of-flow frames like floated or absolutely positioned frames
--  //   are block-level, but we can't rely on the 'display' value being set correctly
--  //   in the style context...
-+  // - 'overflow:-moz-hidden-unscrollable' which only applies to
-+  //    block-level elements and replaced elements. Note
-+  //    that out-of-flow frames like floated or absolutely positioned
-+  //    frames are block-level, but we can't rely on the 'display' value
-+  //    being set correctly in the style context...
-   PRBool isBlockLevel = display->IsBlockLevel() || (kidState & NS_FRAME_OUT_OF_FLOW);
-   PRBool hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
-   PRBool hasOverflowClip = isBlockLevel && (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP);
-   if (hasClip || hasOverflowClip) {
-     nsSize frameSize = aFrame->GetSize();
-     nsRect  clipRect;
- 
-     if (hasClip) {
-       // Start with the 'auto' values and then factor in user specified values
-       clipRect.SetRect(0, 0, frameSize.width, frameSize.height);
- 
-       if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
-@@ -668,26 +667,24 @@ SyncFrameViewGeometryDependentProperties
-         }
-         if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
-           clipRect.height = display->mClip.height;
-         }
-       }
-     }
- 
-     if (hasOverflowClip) {
-       const nsStyleBorder* borderStyle = aStyleContext->GetStyleBorder();
-       const nsStylePadding* paddingStyle = aStyleContext->GetStylePadding();
- 
-       nsMargin border, padding;
--      // XXX We don't support the 'overflow-clip' property yet so just use the
--      // content area (which is the default value) as the clip shape
-       nsRect overflowClipRect(0, 0, frameSize.width, frameSize.height);
-       borderStyle->GetBorder(border);
-       overflowClipRect.Deflate(border);
-       // XXX We need to handle percentage padding
-       if (paddingStyle->GetPadding(padding)) {
-         overflowClipRect.Deflate(padding);
-       }
- 
-       if (hasClip) {
-         // If both 'clip' and 'overflow-clip' apply then use the intersection
-         // of the two
-         clipRect.IntersectRect(clipRect, overflowClipRect);
-@@ -882,29 +879,29 @@ nsContainerFrame::FrameNeedsView(nsIFram
-   } else if (display->IsAbsolutelyPositioned()) {
-     return PR_TRUE;
-   } 
- 
-   if (sc->GetPseudoType() == nsCSSAnonBoxes::scrolledContent) {
-     return PR_TRUE;
-   }
- 
-   if (aFrame->GetType() == nsLayoutAtoms::objectFrame) {
-     return PR_TRUE;
-   }
- 
--  // See if the frame is block-level and has 'overflow' set to 'hidden'. If
--  // so, then we need to give it a view so clipping
--  // of any child views works correctly. Note that if it's floated it is also
--  // block-level, but we can't trust that the style context 'display' value is
--  // set correctly
-+  // See if the frame is block-level and has 'overflow' set to
-+  // '-moz-hidden-unscrollable'. If so, then we need to give it a view
-+  // so clipping of any child views works correctly. Note that if it's
-+  // floated it is also block-level, but we can't trust that the style
-+  // context 'display' value is set correctly.
-   if ((display->IsBlockLevel() || display->IsFloating()) &&
-       (display->mOverflowX == NS_STYLE_OVERFLOW_CLIP)) {
-     // XXX Check for the frame being a block frame and only force a view
-     // in that case, because adding a view for box frames seems to cause
-     // problems for XUL...
-     nsIAtom* frameType = aFrame->GetType();
-     if ((frameType == nsLayoutAtoms::blockFrame) ||
-         (frameType == nsLayoutAtoms::areaFrame)) {
-       return PR_TRUE;
-     }
-   }
- 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<html>
+<head>
+<style type="text/css">
+.green {
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+
+.red {
+  width: 100px;
+  height: 100px;
+  margin-top: 100px;
+  margin-left: 100px;
+  background-color: red;
+}
+
+.clip {
+  clip: rect(0px 100px 100px 0px);
+}
+
+.positioned {
+  position: fixed;
+}
+</style>
+<body>
+You should see a 100x100 green square below.  If you see any red, the test
+has failed.  This test is checking to make sure clip is applying to all
+descendants.
+
+<div class="clip green positioned">
+<div class="red"></div>
+<div class="red positioned"></div>
+</div>
