@@ -43,29 +43,55 @@ interface calICalendar;
 interface calIDateTime;
 
 [scriptable, uuid(be9b4f26-2475-4aeb-9b46-e165fc0809fb)]
-interface calICalendarView : nsISupports {
-
-  // the calendar that this view is displaying
+interface calICalendarView : nsISupports
+{
+  /**
+   * the calendar that this view is displaying
+   */
   attribute calICalendar displayCalender;
 
-  // Some views may decide to utilize the time portion of these
-  // calIDateTimes; pass in calIDateTimes that are dates if you
-  // want to make sure this doesn't happen.
+  /**
+   * Set a date range for the view to display, from aStartDate to
+   * aEndDate, inclusive.
+   *
+   * Some views may decide to utilize the time portion of these
+   * calIDateTimes; pass in calIDateTimes that are dates if you
+   * want to make sure this doesn't happen.
+   */
   void setDateRange(in calIDateTime aStartDate, in calIDateTime aEndDate);
 
-  // if the view is displaying disjoint dates, startDate and endDate will
-  // be the earliest and latest date that's being displayed
+  /**
+   * The start date of the view's display.  If the view is displaying
+   * disjoint dates, this will be the earliest date that's displayed.
+   */
   readonly attribute calIDateTime startDate;
+
+  /**
+   * The start date of the view's display.  If the view is displaying
+   * disjoint dates, this will be the latestdate that's displayed.
+   */
   readonly attribute calIDateTime endDate;
 
-  // whether this view supports disjoint dates or not
+  /**
+   * True if this view supports disjoint dates
+   */
   readonly attribute boolean supportsDisjointDates;
-  // these are only valid if supportsDisjointDates is true
+
+  /**
+   * True if this view currently has a disjoint date set.
+   */
   readonly attribute boolean hasDisjointDates;
-  // sets this view to show a possibly disjoint set of dates
+
+  /**
+   * Set a disjoint date list for this view to show.  Throws
+   * if supportsDisjointDates is false for this view.
+   */
   void setDateList(in unsigned long aCount, [array,size_is(aCount)] in calIDateTime aDates);
 
-  // returns the set of dates being shown by this view; will expand out a date range into
-  // a set of dates
+  /**
+   * Returns the list of dates being shown by this calendar.
+   * If a date range is set, it will expand out the date range by
+   * day and return the full set.
+   */
   void getDateList(out unsigned long aCount, [array,size_is(aCount),retval] out calIDateTime aDates);
 };
