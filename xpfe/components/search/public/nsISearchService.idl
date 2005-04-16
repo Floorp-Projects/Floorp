@@ -70,15 +70,25 @@ interface nsIInternetSearchService : nsISupports
                          in wstring suggestedTitle, in wstring suggestedCategory);
 };
 
-[noscript, uuid(ac0c0781-ab71-11d3-a652-b09b68feee44)]
+[noscript, uuid(7b171610-80ca-4d33-b16c-4186cd7b7e73)]
 interface nsIInternetSearchContext : nsISupports
 {
-  // context types: WEB_SEARCH_CONTEXT=1, ENGINE_DOWNLOAD_CONTEXT, ICON_DOWNLOAD_CONTEXT };
   const unsigned long WEB_SEARCH_CONTEXT      = 1;
-  const unsigned long ENGINE_DOWNLOAD_CONTEXT = 2;
-  const unsigned long ICON_DOWNLOAD_CONTEXT   = 3;
-  const unsigned long ENGINE_UPDATE_CONTEXT   = 4;
-  const unsigned long ICON_UPDATE_CONTEXT     = 5;
+
+  // The download of the .src file for a *new* engine.
+  const unsigned long ENGINE_DOWNLOAD_NEW_CONTEXT = 2;
+
+  // The download of the icon file for a new engine.
+  const unsigned long ICON_DOWNLOAD_NEW_CONTEXT = 3;
+
+  // The head request to see if we need to update the engine.
+  const unsigned long ENGINE_UPDATE_HEAD_CONTEXT = 4;
+
+  // The download of the .src file for an engine update.
+  const unsigned long ENGINE_DOWNLOAD_UPDATE_CONTEXT = 5;
+
+  // The download of the icon file for an engine update.
+  const unsigned long ICON_DOWNLOAD_UPDATE_CONTEXT = 6;
 
   // attributes
   readonly attribute unsigned long ContextType;
