@@ -174,17 +174,6 @@ sub ValidateBugID {
     }
 }
 
-sub PasswordForLogin {
-    my ($login) = (@_);
-    SendSQL("SELECT cryptpassword FROM profiles WHERE login_name = " .
-            SqlQuote($login));
-    my $result = FetchOneColumn();
-    if (!defined $result) {
-        $result = "";
-    }
-    return $result;
-}
-
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
