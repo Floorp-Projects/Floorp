@@ -57,7 +57,7 @@ sub login {
     trick_taint($env_id);
     trick_taint($env_realname);
 
-    if ($env_id | $env_email) {
+    if ($env_id || $env_email) {
         # Look in the DB for the extern_id
         if ($env_id) {
 
