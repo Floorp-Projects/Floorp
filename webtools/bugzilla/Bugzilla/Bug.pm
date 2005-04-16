@@ -38,6 +38,7 @@ use CGI::Carp qw(fatalsToBrowser);
 
 use Bugzilla;
 use Bugzilla::Attachment;
+use Bugzilla::BugMail;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Flag;
@@ -48,9 +49,9 @@ use Bugzilla::Error;
 
 use base qw(Exporter);
 @Bugzilla::Bug::EXPORT = qw(
-    AppendComment
+    AppendComment ValidateComment
     bug_alias_to_id
-    ValidateComment
+    RemoveVotes
 );
 
 use constant MAX_COMMENT_LENGTH => 65535;
@@ -832,6 +833,97 @@ sub ValidateComment ($) {
 
     if (defined($comment) && length($comment) > MAX_COMMENT_LENGTH) {
         ThrowUserError("comment_too_long");
+    }
+}
+
+# If a bug is moved to a product which allows less votes per bug
+# compared to the previous product, extra votes need to be removed.
+sub RemoveVotes {
+    my ($id, $who, $reason) = (@_);
+    my $dbh = Bugzilla->dbh;
+
+    my $whopart = ($who) ? " AND votes.who = $who" : "";
+
+    my $sth = $dbh->prepare("SELECT profiles.login_name, " .
+                            "profiles.userid, votes.vote_count, " .
+                            "products.votesperuser, products.maxvotesperbug " .
+                            "FROM profiles " . 
+                            "LEFT JOIN votes ON profiles.userid = votes.who " .
+                            "LEFT JOIN bugs USING(bug_id) " .
+                            "LEFT JOIN products ON products.id = bugs.product_id " .
+                            "WHERE votes.bug_id = ? " . $whopart);
+    $sth->execute($id);
+    my @list;
+    while (my ($name, $userid, $oldvotes, $votesperuser, $maxvotesperbug) = $sth->fetchrow_array()) {
+        push(@list, [$name, $userid, $oldvotes, $votesperuser, $maxvotesperbug]);
+    }
+    if (scalar(@list)) {
+        foreach my $ref (@list) {
+            my ($name, $userid, $oldvotes, $votesperuser, $maxvotesperbug) = (@$ref);
+            my $s;
+
+            $maxvotesperbug = min($votesperuser, $maxvotesperbug);
+
+            # If this product allows voting and the user's votes are in
+            # the acceptable range, then don't do anything.
+            next if $votesperuser && $oldvotes <= $maxvotesperbug;
+
+            # If the user has more votes on this bug than this product
+            # allows, then reduce the number of votes so it fits
+            my $newvotes = $maxvotesperbug;
+
+            my $removedvotes = $oldvotes - $newvotes;
+
+            $s = ($oldvotes == 1) ? "" : "s";
+            my $oldvotestext = "You had $oldvotes vote$s on this bug.";
+
+            $s = ($removedvotes == 1) ? "" : "s";
+            my $removedvotestext = "You had $removedvotes vote$s removed from this bug.";
+
+            my $newvotestext;
+            if ($newvotes) {
+                $dbh->do("UPDATE votes SET vote_count = ? " .
+                         "WHERE bug_id = ? AND who = ?",
+                         undef, ($newvotes, $id, $userid));
+                $s = $newvotes == 1 ? "" : "s";
+                $newvotestext = "You still have $newvotes vote$s on this bug."
+            } else {
+                $dbh->do("DELETE FROM votes WHERE bug_id = ? AND who = ?",
+                         undef, ($id, $userid));
+                $newvotestext = "You have no more votes remaining on this bug.";
+            }
+
+            # Notice that we did not make sure that the user fit within the $votesperuser
+            # range.  This is considered to be an acceptable alternative to losing votes
+            # during product moves.  Then next time the user attempts to change their votes,
+            # they will be forced to fit within the $votesperuser limit.
+
+            # Now lets send the e-mail to alert the user to the fact that their votes have
+            # been reduced or removed.
+            my %substs;
+
+            $substs{"to"} = $name . Param('emailsuffix');
+            $substs{"bugid"} = $id;
+            $substs{"reason"} = $reason;
+
+            $substs{"votesremoved"} = $removedvotes;
+            $substs{"votesold"} = $oldvotes;
+            $substs{"votesnew"} = $newvotes;
+
+            $substs{"votesremovedtext"} = $removedvotestext;
+            $substs{"votesoldtext"} = $oldvotestext;
+            $substs{"votesnewtext"} = $newvotestext;
+
+            $substs{"count"} = $removedvotes . "\n    " . $newvotestext;
+
+            my $msg = PerformSubsts(Param("voteremovedmail"), \%substs);
+            Bugzilla::BugMail::MessageToMTA($msg);
+        }
+        my $votes = $dbh->selectrow_array("SELECT SUM(vote_count) " .
+                                          "FROM votes WHERE bug_id = ?",
+                                          undef, $id) || 0;
+        $dbh->do("UPDATE bugs SET votes = ? WHERE bug_id = ?",
+                 undef, ($votes, $id));
     }
 }
 
