@@ -561,7 +561,8 @@ nsFocusIterator::GetPrevSibling(nsIFrame* aFrame)
     if (parent) {
       nsFrameList list(parent->GetFirstChild(nsnull));
       result = list.GetPrevSiblingFor(placeholder);
-      result = nsPlaceholderFrame::GetRealFrameFor(result);
+      if (result)
+        result = nsPlaceholderFrame::GetRealFrameFor(result);
     }
   }
 
