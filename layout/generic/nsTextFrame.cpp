@@ -2256,6 +2256,7 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
   PRInt32* ip     = indexBuffer.mBuffer;
   PRUnichar* text = paintBuffer.mBuffer;
 
+  isSelected = PR_FALSE;
   if (0 != textLength) {
 
     SelectionDetails *details = nsnull;
@@ -2293,7 +2294,7 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
     //PRBool drawn = PR_FALSE;
     DrawSelectionIterator iter(content, details,text,(PRUint32)textLength, ts, nsISelectionController::SELECTION_NORMAL, aPresContext, mStyleContext);
     if (!iter.IsDone() && iter.First()) {
-      return PR_TRUE;
+      isSelected = PR_TRUE;
     }
 
     sdptr = details;
@@ -2305,7 +2306,7 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
       delete details;
     }
   }
-  return PR_FALSE;
+  return isSelected;
 }
 
 NS_IMETHODIMP
