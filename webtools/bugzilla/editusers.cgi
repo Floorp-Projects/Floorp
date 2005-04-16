@@ -81,57 +81,68 @@ if ($action eq 'search') {
                 'FROM profiles';
     my @bindValues;
     my $nextCondition;
+    my $visibleGroups;
 
     if (Param('usevisibilitygroups')) {
         # Show only users in visible groups.
-        my $visibleGroups = visibleGroupsAsString();
-        $query .= qq{, user_group_map AS ugm
-                     WHERE ugm.user_id = profiles.userid
-                       AND ugm.isbless = 0
-                       AND ugm.group_id IN ($visibleGroups)
-                    };
-        $nextCondition = 'AND';
+        $visibleGroups = visibleGroupsAsString();
+
+        if ($visibleGroups) {
+            $query .= qq{, user_group_map AS ugm
+                         WHERE ugm.user_id = profiles.userid
+                           AND ugm.isbless = 0
+                           AND ugm.group_id IN ($visibleGroups)
+                        };
+            $nextCondition = 'AND';
+        }
     } else {
+        $visibleGroups = 1;
         if ($grouprestrict eq '1') {
             $query .= ', user_group_map AS ugm';
         }
         $nextCondition = 'WHERE';
     }
 
-    # Selection by user name.
-    if (defined($matchtype)) {
-        $query .= " $nextCondition profiles.login_name ";
-        if ($matchtype eq 'regexp') {
-            $query .= $dbh->sql_regexp . ' ?';
-            $matchstr = '.' unless $matchstr;
-        } elsif ($matchtype eq 'notregexp') {
-            $query .= $dbh->sql_not_regexp . ' ?';
-            $matchstr = '.' unless $matchstr;
-        } else { # substr or unknown
-            $query .= 'like ?';
-            $matchstr = "%$matchstr%";
+    if (!$visibleGroups) {
+        $vars->{'users'} = {};
+    }
+    else {
+        # Handle selection by user name.
+        if (defined($matchtype)) {
+            $query .= " $nextCondition profiles.login_name ";
+            if ($matchtype eq 'regexp') {
+                $query .= $dbh->sql_regexp . ' ?';
+                $matchstr = '.' unless $matchstr;
+            } elsif ($matchtype eq 'notregexp') {
+                $query .= $dbh->sql_not_regexp . ' ?';
+                $matchstr = '.' unless $matchstr;
+            } else { # substr or unknown
+                $query .= 'like ?';
+                $matchstr = "%$matchstr%";
+            }
+            $nextCondition = 'AND';
+            # We can trick_taint because we use the value in a SELECT only,
+            # using a placeholder.
+            trick_taint($matchstr);
+            push(@bindValues, $matchstr);
         }
-        $nextCondition = 'AND';
-        # We can trick_taint because we use the value in a SELECT only, using
-        # a placeholder.
-        trick_taint($matchstr);
-        push(@bindValues, $matchstr);
+
+        # Handle selection by group.
+        if ($grouprestrict eq '1') {
+            $query .= " $nextCondition profiles.userid = ugm.user_id " .
+                      'AND ugm.group_id = ?';
+            # We can trick_taint because we use the value in a SELECT only,
+            # using a placeholder.
+            trick_taint($groupid);
+            push(@bindValues, $groupid);
+        }
+        $query .= ' ORDER BY profiles.login_name';
+
+        $vars->{'users'} = $dbh->selectall_arrayref($query,
+                                                    {'Slice' => {}},
+                                                    @bindValues);
     }
 
-    # Selection by group.
-    if ($grouprestrict eq '1') {
-        $query .= " $nextCondition profiles.userid = ugm.user_id " .
-                  'AND ugm.group_id = ?';
-        # We can trick_taint because we use the value in a SELECT only, using
-        # a placeholder.
-        trick_taint($groupid);
-        push(@bindValues, $groupid);
-    }
-    $query .= ' ORDER BY profiles.login_name';
-
-    $vars->{'users'} = $dbh->selectall_arrayref($query,
-                                                {'Slice' => {}},
-                                                @bindValues);
     $template->process('admin/users/list.html.tmpl', $vars)
        || ThrowTemplateError($template->error());
 
@@ -591,7 +602,7 @@ sub mirrorListSelectionValues {
 
 # Give a list of IDs of groups the user can see.
 sub visibleGroupsAsString {
-    return join(', ', -1, @{$user->visible_groups_direct()});
+    return join(', ', @{$user->visible_groups_direct()});
 }
 
 # Give a list of IDs of groups the user may bless.
@@ -623,7 +634,8 @@ sub groupsUserMayBless {
 
     # If visibilitygroups are used, restrict the set of groups.
     if (Param('usevisibilitygroups')) {
-        my $visibleGroups = visibleGroupsAsString();
+        # Users need to see a group in order to bless it.
+        my $visibleGroups = visibleGroupsAsString() || return {};
         $query .= " $connector id in ($visibleGroups)";
     }
 
@@ -638,7 +650,9 @@ sub canSeeUser {
     my $query;
 
     if (Param('usevisibilitygroups')) {
-        my $visibleGroups = visibleGroupsAsString();
+        # If the user can see no groups, then no users are visible either.
+        my $visibleGroups = visibleGroupsAsString() || return 0;
+
         $query = qq{SELECT COUNT(DISTINCT userid)
                     FROM profiles, user_group_map
                     WHERE userid = ?
