@@ -726,10 +726,15 @@ sub init {
                  my $table = "longdescs_$chartid";
                  push(@supptables, "INNER JOIN longdescs AS $table " .
                                    "ON $table.bug_id = bugs.bug_id");
-                 my $field = "(100*((SUM($table.work_time)*COUNT(DISTINCT $table.bug_when)/COUNT(bugs.bug_id))/((SUM($table.work_time)*COUNT(DISTINCT $table.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete_$table";
-                 push(@fields, $field);
-                 push(@having, 
-                      "percentage_complete_$table $oper " . &::SqlQuote($v));
+                 my $expression = "(100 * ((SUM($table.work_time) *
+                                             COUNT(DISTINCT $table.bug_when) /
+                                             COUNT(bugs.bug_id)) /
+                                            ((SUM($table.work_time) *
+                                              COUNT(DISTINCT $table.bug_when) /
+                                              COUNT(bugs.bug_id)) +
+                                             bugs.remaining_time)))";
+                 push(@having, "$expression $oper " . &::SqlQuote($v));
+                 push(@groupby, "bugs.remaining_time");
              }
              $term = "0=0";
          },
@@ -814,9 +819,9 @@ sub init {
              # If the numbers are the same, all flags match the condition,
              # so this bug should be included.
              if ($t =~ m/not/) {
-                push(@fields, "SUM(CASE WHEN $ff IS NOT NULL THEN 1 ELSE 0 END) AS allflags_$chartid");
-                push(@fields, "SUM(CASE WHEN $term THEN 1 ELSE 0 END) AS matchingflags_$chartid");
-                push(@having, "allflags_$chartid = matchingflags_$chartid");
+                push(@having,
+                     "SUM(CASE WHEN $ff IS NOT NULL THEN 1 ELSE 0 END) = " .
+                     "SUM(CASE WHEN $term THEN 1 ELSE 0 END)");
                 $term = "0=0";
              }
          },

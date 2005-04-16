@@ -76,50 +76,46 @@ sub queue {
                 flags.attach_id, attachments.description,
                 requesters.realname, requesters.login_name,
                 requestees.realname, requestees.login_name,
-    " . $dbh->sql_date_format('flags.creation_date', '%Y.%m.%d %H:%i') . ",
-    " . 
-    # Select columns that help us weed out secure bugs to which the user
-    # should not have access.
-    "            COUNT(DISTINCT ugmap.group_id) AS cntuseringroups, 
-                COUNT(DISTINCT bgmap.group_id) AS cntbugingroups, 
-                ((COUNT(DISTINCT ccmap.who) > 0 AND cclist_accessible = 1) 
-                  OR ((bugs.reporter = $::userid) AND bugs.reporter_accessible = 1) 
-                  OR bugs.assigned_to = $::userid ) AS canseeanyway 
-    " . 
+    " . $dbh->sql_date_format('flags.creation_date', '%Y.%m.%d %H:%i') .
     # Use the flags and flagtypes tables for information about the flags,
     # the bugs and attachments tables for target info, the profiles tables
     # for setter and requestee info, the products/components tables
     # so we can display product and component names, and the bug_group_map
-    # and user_group_map tables to help us weed out secure bugs to which
-    # the user should not have access.
-    " FROM      flags
-                LEFT JOIN attachments
+    # table to help us weed out secure bugs to which the user should not have
+    # access.
+    "
+      FROM           flags 
+           LEFT JOIN attachments
                   ON ($attach_join_clause)
-                INNER JOIN flagtypes
+          INNER JOIN flagtypes
                   ON flags.type_id = flagtypes.id
-                INNER JOIN profiles AS requesters
+          INNER JOIN profiles AS requesters
                   ON flags.setter_id = requesters.userid
-                LEFT JOIN profiles AS requestees
+           LEFT JOIN profiles AS requestees
                   ON flags.requestee_id  = requestees.userid
-                INNER JOIN bugs
+          INNER JOIN bugs
                   ON flags.bug_id = bugs.bug_id
-                LEFT JOIN products
+           LEFT JOIN products
                   ON bugs.product_id = products.id
-                LEFT JOIN components
+           LEFT JOIN components
                   ON bugs.component_id = components.id
-                LEFT JOIN bug_group_map AS bgmap
+           LEFT JOIN bug_group_map AS bgmap
                   ON bgmap.bug_id = bugs.bug_id
-                LEFT JOIN user_group_map AS ugmap
-                  ON bgmap.group_id = ugmap.group_id
-                  AND ugmap.user_id = $::userid
-                  AND ugmap.isbless = 0
-                LEFT JOIN cc AS ccmap
+                 AND bgmap.group_id NOT IN (" .
+                     join(', ', (-1, values(%{Bugzilla->user->groups}))) . ")
+           LEFT JOIN cc AS ccmap
                   ON ccmap.who = $::userid
-                  AND ccmap.bug_id = bugs.bug_id
-    ";
+                 AND ccmap.bug_id = bugs.bug_id
+    " .
+
+    # Weed out bug the user does not have access to
+    " WHERE     ((bgmap.group_id IS NULL) OR
+                 (ccmap.who IS NOT NULL AND cclist_accessible = 1) OR
+                 (bugs.reporter = $::userid AND bugs.reporter_accessible = 1) OR
+                 (bugs.assigned_to = $::userid))";
     
     # Non-deleted flags only
-    $query .= " WHERE flags.is_active = 1 ";
+    $query .= " AND flags.is_active = 1 ";
     
     # Limit query to pending requests.
     $query .= " AND flags.status = '?' " unless $cgi->param('status');
@@ -215,7 +211,6 @@ sub queue {
                 requestees.login_name, flags.creation_date,
                 cclist_accessible, bugs.reporter, bugs.reporter_accessible,
                 bugs.assigned_to');
-    $query .= " HAVING cntuseringroups = cntbugingroups OR canseeanyway ";
 
     # Group the records, in other words order them by the group column
     # so the loop in the display template can break them up into separate
