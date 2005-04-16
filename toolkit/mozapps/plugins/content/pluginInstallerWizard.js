@@ -48,7 +48,7 @@ function nsPluginInstallerWizard(){
   this.mPluginInfoArray = new Object();
   this.mPluginInfoArrayLength = 0;
 
-  // holds plugins w ecouldn't find
+  // holds plugins we couldn't find
   this.mPluginNotFoundArray = new Object();
   this.mPluginNotFoundArrayLength = 0;
 
@@ -425,8 +425,8 @@ nsPluginInstallerWizard.prototype.addPluginResultRow = function (aImgSrc, aName,
 
   // manual install
   if (aManualUrl) {
-   var myButton = document.createElement("button");
-      
+    var myButton = document.createElement("button");
+
     var manualInstallLabel = this.getString("pluginInstallationSummary.manualInstall.label");
     var manualInstallTooltip = this.getString("pluginInstallationSummary.manualInstall.tooltip");
 
@@ -543,6 +543,19 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 } 
 
 nsPluginInstallerWizard.prototype.loadURL = function (aUrl){
+  // Check if the page where the plugin came from can load aUrl before
+  // loading it, and do *not* allow loading javascript: or data: URIs.
+  var pluginPage = window.opener.content.location.href;
+
+  const nsIScriptSecurityManager =
+    Components.interfaces.nsIScriptSecurityManager;
+  var secMan =
+    Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+    .getService(nsIScriptSecurityManager);
+
+  secMan.checkLoadURIStr(pluginPage, aUrl,
+                         nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA);
+
   window.opener.open(aUrl);
 }
 
