@@ -99,7 +99,7 @@
       function updateCategoryList()
       {
         document.getElementById("categories").value = gCategoryList.join(",");
-        var listbox = document.getElementById("catergorieslist")
+        var listbox = document.getElementById("categorieslist")
 
         listbox.clearSelection();
         while (listbox.firstChild)
@@ -126,7 +126,7 @@
 
       function editCategory()
       {
-        var list = document.getElementById("catergorieslist");
+        var list = document.getElementById("categorieslist");
         if (list.selectedItem) {
           var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                         .getService(Components.interfaces.nsIPromptService);
@@ -144,7 +144,7 @@
 
       function deleteCategory()
       {
-        var list = document.getElementById("catergorieslist");
+        var list = document.getElementById("categorieslist");
         if (list.selectedItem) {
           gCategoryList.splice(list.selectedIndex, 1);
           updateCategoryList();
@@ -191,7 +191,7 @@
    <groupbox flex="1">
      <caption label="&pref.categories.label;"/>
      <hbox flex="1">
-       <listbox flex="1" id="catergorieslist"/>
+       <listbox flex="1" id="categorieslist"/>
        <vbox>
          <spacer flex="1"/>
          <button label="&add.label;" oncommand="addCategory()"/>
