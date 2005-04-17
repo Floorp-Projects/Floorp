@@ -144,16 +144,6 @@
 <!ENTITY editcheckspelling.keybinding "k">
 
 <!-- View menu items -->
-<!ENTITY viewToolbarsMenu.label "Show/Hide"> 
-<!ENTITY viewToolbarsMenu.accesskey "w"> 
-<!ENTITY compositionToolbarCmd.label "Composition Toolbar">
-<!ENTITY compositiontb.accesskey "c">
-<!ENTITY formattingToolbarCmd.label "Format Toolbar">
-<!ENTITY formattingtb.accesskey "f">
-<!ENTITY editmodeToolbarCmd.label "Edit Mode Toolbar">
-<!ENTITY editmodetb.accesskey "E">
-<!ENTITY taskbarCmd.label "Status Bar">  
-<!ENTITY taskbarCmd.accesskey "S"> 
 <!ENTITY viewPageSource.label "Page Source">
 <!ENTITY viewpagesource.accesskey "s">
 <!ENTITY viewParagraphMarks.label "Paragraph Marks">

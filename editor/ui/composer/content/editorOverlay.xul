@@ -415,16 +415,6 @@
     </menupopup>
   </menu>
 
-  <!-- view menu items -->
-  <menu id="menu_Toolbars" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
-    <menupopup id="view_toolbars_popup"> 
-      <menuitem id="viewComposerToolbar" label="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
-      <menuitem id="viewFormatToolbar"   label="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
-      <menuitem id="viewEditModeToolbar" label="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
-      <menuitem id="viewTaskBar"         label="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
-    </menupopup>
-  </menu>
-
   <menuitem id="viewNormalMode"   type="radio" group="mode" accesskey="&NormalMode.accesskey;"     observes="cmd_NormalMode"/>
   <menuitem id="viewAllTagsMode"  type="radio" group="mode" accesskey="&AllTagsMode.accesskey;"    observes="cmd_AllTagsMode"/>
   <menuitem id="viewSourceMode"   type="radio" group="mode" accesskey="&HTMLSourceMode.accesskey;" observes="cmd_HTMLSourceMode" label="&HTMLSourceMode.label;"/>
