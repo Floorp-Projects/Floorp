@@ -394,17 +394,29 @@ nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLo
   // any value when going to a printer, for example mPixleScale is
   // 6.25 when going to a 600dpi printer.
   // round, but take into account whether it is negative
-  LONG logHeight = LONG((float(ptrLogFont->lfHeight) * mPixelScale) + (ptrLogFont->lfHeight < 0 ? -0.5 : 0.5)); // round up
-  int pointSize = -MulDiv(logHeight, 72, ::GetDeviceCaps(*aHDC, LOGPIXELSY));
+  float pixelHeight = -ptrLogFont->lfHeight;
+  if (pixelHeight < 0) {
+    HFONT hFont = ::CreateFontIndirect(ptrLogFont);
+    if (!hFont)
+      return NS_ERROR_OUT_OF_MEMORY;
+    HGDIOBJ hObject = ::SelectObject(*aHDC, hFont);
+    TEXTMETRIC tm;
+    ::GetTextMetrics(*aHDC, &tm);
+    ::SelectObject(*aHDC, hObject);
+    ::DeleteObject(hFont);
+    pixelHeight = tm.tmAscent;
+  }
+
+  float pointSize = pixelHeight * mPixelScale * 72 / ::GetDeviceCaps(*aHDC, LOGPIXELSY);
 
   // we have problem on Simplified Chinese system because the system report
   // the default font size is 8. but if we use 8, the text display very
   // Ugly. force it to be at 9 on that system (cp936), but leave other sizes alone.
-  if ((pointSize == 8) && 
+  if ((pointSize < 9) && 
       (936 == ::GetACP())) 
     pointSize = 9;
 
-  aFont->size = NSIntPointsToTwips(pointSize);
+  aFont->size = NSFloatPointsToTwips(pointSize);
   return NS_OK;
 }
 
