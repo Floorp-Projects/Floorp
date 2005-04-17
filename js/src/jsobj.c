@@ -505,7 +505,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         he = MarkSharpObjects(cx, obj, &ida);
         if (!he)
             goto bad;
-        JS_ASSERT((((jsatomid) he->value) & SHARP_BIT) == 0);
+        JS_ASSERT((JS_PTR_TO_UINT32(he->value) & SHARP_BIT) == 0);
         if (!idap) {
             JS_DestroyIdArray(cx, ida);
             ida = NULL;
