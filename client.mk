@@ -98,7 +98,7 @@ AVAILABLE_PROJECTS = \
   macbrowser \
   $(NULL)
 
-MODULES_suite :=                                \
+MODULES_core :=                                \
   SeaMonkeyAll                                  \
   mozilla/ipc/ipcd                              \
   mozilla/modules/libpr0n                       \
@@ -109,19 +109,28 @@ MODULES_suite :=                                \
   mozilla/db/sqlite3                            \
   $(NULL)
 
-LOCALES_suite :=                                \
+LOCALES_core :=                                 \
   netwerk                                       \
   dom                                           \
   $(NULL)
 
 MODULES_toolkit :=                              \
-  $(MODULES_suite)                              \
+  $(MODULES_core)                               \
   mozilla/chrome                                \
   $(NULL)
 
 LOCALES_toolkit :=                              \
-  $(LOCALES_suite)                              \
+  $(LOCALES_core)                               \
   toolkit                                       \
+  $(NULL)
+
+MODULES_suite :=                                \
+  $(MODULES_core)                               \
+  mozilla/suite                                 \
+  $(NULL)
+
+LOCALES_suite :=                                \
+  $(LOCALES_core)                               \
   $(NULL)
 
 MODULES_browser :=                              \
@@ -174,7 +183,7 @@ MODULES_xulrunner :=                            \
 BOOTSTRAP_xulrunner := mozilla/xulrunner/config/mozconfig
 
 MODULES_macbrowser :=                           \
-  $(MODULES_suite)                              \
+  $(MODULES_core)                               \
   mozilla/camino                                \
   $(NULL)
 
