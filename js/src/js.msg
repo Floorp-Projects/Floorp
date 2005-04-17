@@ -278,3 +278,4 @@ MSG_DEF(JSMSG_UNKNOWN_XML_ENTITY,     195, 1, JSEXN_TYPEERR, "unknown XML entity
 MSG_DEF(JSMSG_BAD_XML_NCR,            196, 1, JSEXN_TYPEERR, "malformed XML character {0}")
 MSG_DEF(JSMSG_UNDEFINED_XML_NAME,     197, 1, JSEXN_TYPEERR, "reference to undefined XML name {0}")
 MSG_DEF(JSMSG_DUPLICATE_XML_ATTR,     198, 1, JSEXN_TYPEERR, "duplicate XML attribute {0}")
+MSG_DEF(JSMSG_TOO_MANY_FUN_VARS,      199, 0, JSEXN_SYNTAXERR, "too many local variables")
