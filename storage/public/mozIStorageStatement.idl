@@ -66,6 +66,12 @@ interface mozIStorageStatement : mozIStorageValueArray {
   AUTF8String getParameterName(in unsigned long aParamIndex);
 
   /*
+   * Indexes of named parameter
+   */
+  void getParameterIndexes(in AUTF8String aParameterName,
+                           out unsigned long aCount,
+                           [array,size_is(aCount),retval] out unsigned long aIndexes);
+  /*
    * Number of columns returned
    */
   readonly attribute unsigned long columnCount;

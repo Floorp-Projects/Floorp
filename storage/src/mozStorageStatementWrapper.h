@@ -66,9 +66,12 @@ private:
     ~mozStorageStatementWrapper();
 
 protected:
+    sqlite3_stmt* NativeStatement() {
+        return mStatement->GetNativeStatementPointer();
+    }
+
     // note: pointer to the concrete statement
     nsCOMPtr<mozIStorageStatement> mStatement;
-    sqlite3_stmt *mDBStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
     nsStringArray mColumnNames;
