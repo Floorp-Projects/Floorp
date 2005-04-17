@@ -32,6 +32,10 @@ import java.net.MalformedURLException;
 import java.util.Map;
 import java.util.Iterator;
 
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
 import org.mozilla.webclient.*;
 
 /**
@@ -56,10 +60,13 @@ public class TestBrowser extends JPanel {
 
     BorderLayout borderLayout1 = new BorderLayout();
 
+    DOMViewerFrame domViewer = null;
+
     JToolBar jBrowserToolBar = new JToolBar();
     JButton jStopButton = new JButton("Stop",
             new ImageIcon(getClass().getResource("images/Stop.png")));
-
+    JButton jViewSourceButton = new JButton("View Source",
+            new ImageIcon(getClass().getResource("images/Stop.png")));
     JButton jRefreshButton = new JButton("Refresh",
             new ImageIcon(getClass().getResource("images/Reload.png")));
     JButton jForwardButton = new JButton("Forward",
@@ -80,7 +87,7 @@ public class TestBrowser extends JPanel {
     Navigation navigation;
     History history;
     EventRegistration eventRegistration;
-    CurrentPage currentPage;
+    CurrentPage2 currentPage;
     Canvas browserControlCanvas;
 
     public TestBrowser() {
@@ -174,6 +181,14 @@ public class TestBrowser extends JPanel {
         jStopButton.setMinimumSize(new Dimension(75, 27));
         jStopButton.setPreferredSize(new Dimension(75, 27));
         jStopButton.addActionListener(new TestBrowser_jStopButton_actionAdapter(this));
+        jViewSourceButton.setToolTipText("View Source");
+        jViewSourceButton.setVerifyInputWhenFocusTarget(true);
+        jViewSourceButton.setText("View Source");
+        jViewSourceButton.setEnabled(true);
+        jViewSourceButton.setMaximumSize(new Dimension(75, 27));
+        jViewSourceButton.setMinimumSize(new Dimension(75, 27));
+        jViewSourceButton.setPreferredSize(new Dimension(75, 27));
+        jViewSourceButton.addActionListener(new TestBrowser_jViewSourceButton_actionAdapter(this));
         jAddressPanel.add(jAddressLabel, BorderLayout.WEST);
         jAddressPanel.add(jAddressTextField, BorderLayout.CENTER);
         jAddressPanel.add(jGoButton, BorderLayout.EAST);
@@ -187,6 +202,7 @@ public class TestBrowser extends JPanel {
         jBrowserToolBar.addSeparator();
         jBrowserToolBar.add(jRefreshButton, null);
         jBrowserToolBar.add(jStopButton, null);
+        jBrowserToolBar.add(jViewSourceButton, null);
 	//        jBrowserToolBar.add(jCopyButton, null);
         jBrowserToolBar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createEtchedBorder(),
@@ -208,7 +224,7 @@ public class TestBrowser extends JPanel {
 		webBrowser.queryInterface(BrowserControl.HISTORY_NAME);
 	    eventRegistration = (EventRegistration) 
 		webBrowser.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
-	    currentPage = (CurrentPage)
+	    currentPage = (CurrentPage2)
 		webBrowser.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
 	    browserControlCanvas  = (Canvas)
 		webBrowser.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
@@ -437,6 +453,33 @@ public class TestBrowser extends JPanel {
     void jStopButton_actionPerformed(ActionEvent e) {
         navigation.stop();
     }
+
+    void jViewSourceButton_actionPerformed(ActionEvent e) {
+	try {
+		String source = currentPage.getSource();
+		System.out.println(source);
+		/*****
+	    if (null != doc) {
+		      Document doc = currentPage.getDOM();
+		currentPage.selectAll();
+		Selection selection = currentPage.getSelection();
+		System.out.println(selection.toString());
+		
+		if (null == domViewer) {
+		    domViewer = new DOMViewerFrame("DOM Viewer", this);
+		    domViewer.setSize(new Dimension(300, 600));
+		    domViewer.setLocation(645, 0);
+		}
+		domViewer.setDocument(doc);
+		domViewer.setVisible(true);
+	    }
+		******/
+	}
+	catch (DOMException exc) {
+	    System.out.println(exc.getMessage());
+	}
+    }
+
 }
 
 
@@ -513,6 +556,18 @@ class TestBrowser_jStopButton_actionAdapter implements java.awt.event.ActionList
 
     public void actionPerformed(ActionEvent e) {
         adaptee.jStopButton_actionPerformed(e);
+    }
+}
+
+class TestBrowser_jViewSourceButton_actionAdapter implements java.awt.event.ActionListener {
+    TestBrowser adaptee;
+
+    TestBrowser_jViewSourceButton_actionAdapter(TestBrowser adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        adaptee.jViewSourceButton_actionPerformed(e);
     }
 }
 

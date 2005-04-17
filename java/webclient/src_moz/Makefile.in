@@ -101,6 +101,7 @@ CPPSRCS = \
 	NavigationActionEvents.cpp \
 	InputStreamShim.cpp \
 	NativeInputStreamImpl.cpp \
+	LoadCompleteProgressListener.cpp \
 	CurrentPageImpl.cpp \
 	NativeBrowserControl.cpp \
 	NativeWrapperFactory.cpp \

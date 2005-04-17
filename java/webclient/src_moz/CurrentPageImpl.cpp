@@ -36,9 +36,11 @@
 #include "rdf_util.h"
 #include "NativeBrowserControl.h"
 #include "EmbedWindow.h"
+#include "LoadCompleteProgressListener.h"
 
 #include "nsIWebBrowser.h"
 #include "nsIWebPageDescriptor.h"
+#include "nsIWebProgressListener.h"
 #include "nsIDocShell.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserPrint.h"
@@ -492,34 +494,47 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
         return;
     }
 
-    // create a new nsIDocShell
-    EmbedWindow *embedWindow = new EmbedWindow();
-    rv = embedWindow->InitNoChrome(nativeBrowserControl);
+    EmbedWindow *sourceWindow = new EmbedWindow();
+    sourceWindow->InitNoChrome(nativeBrowserControl);
+    rv = sourceWindow->CreateWindow_(0,0);
     if (NS_FAILED(rv)) {
-        ::util_ThrowExceptionToJava(env, "Exception: Can't init new window for view source");
+        ::util_ThrowExceptionToJava(env, "Exception: Can't create window for view source window");
         return;
     }
 
-    rv = embedWindow->CreateWindow_(0,0);
+    nsCOMPtr<nsIWebBrowser> newWebBrowser = nsnull;
+    rv = sourceWindow->GetWebBrowser(getter_AddRefs(newWebBrowser));
     if (NS_FAILED(rv)) {
-        ::util_ThrowExceptionToJava(env, "Exception: Can't create new window for view source");
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get existing webBrowser for new view source window");
         return;
     }
+
+    // create and install the LoadCompleteProgressListener on the new
+    // window
+    LoadCompleteProgressListener *loadCompleteListener = 
+        new LoadCompleteProgressListener();
+    loadCompleteListener->Init(nativeBrowserControl);
     
-    // get the new page descriptor
-    nsCOMPtr<nsIWebBrowser> webBrowser = nsnull;
-    rv = embedWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    nsCOMPtr<nsISupports> loadCompleteGuard = 
+        NS_STATIC_CAST(nsIWebProgressListener *, loadCompleteListener);
+    nsCOMPtr<nsISupportsWeakReference> supportsWeak;
+    supportsWeak = do_QueryInterface(loadCompleteGuard);
+    nsCOMPtr<nsIWeakReference> weakRef;
+    supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
+    rv = newWebBrowser->AddWebBrowserListener(weakRef,
+                                             nsIWebProgressListener::GetIID());
     if (NS_FAILED(rv)) {
-        ::util_ThrowExceptionToJava(env, "Exception: Can't get webBrowser for view source window");
+        ::util_ThrowExceptionToJava(env, "Exception: install progress listener for view source window");
         return;
     }
-    
-    nsCOMPtr<nsIDocShell> newDocShell = do_GetInterface(webBrowser);
+
+    nsCOMPtr<nsIDocShell> newDocShell = do_GetInterface(newWebBrowser);
     if (!newDocShell) {
-        ::util_ThrowExceptionToJava(env, "Exception: Can't get docShell for view source window");
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get existing docShell for new view source window");
         return;
     }
 
+    // get the page descriptor from the new window
     nsCOMPtr<nsIWebPageDescriptor> newPageDesc = do_GetInterface(newDocShell);
     if (!newPageDesc) {
         ::util_ThrowExceptionToJava(env, "Exception: Can't get pageDescriptor for view source window");
@@ -531,16 +546,26 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
         ::util_ThrowExceptionToJava(env, "Exception: Can't load page for view source window");
         return;
     }
-    // allow the page load to complete
-    nativeBrowserControl->GetWrapperFactory()->ProcessEventLoop();
 
-    rv = embedWindow->SelectAll();
+    // allow the page load to complete
+    PRBool loadComplete = PR_FALSE;
+    while (!loadComplete) {
+        nativeBrowserControl->GetWrapperFactory()->ProcessEventLoop();
+        rv = loadCompleteListener->IsLoadComplete(&loadComplete);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Exception: Error getting status of load in view source window");
+            return;
+        }
+
+    }
+
+    rv = sourceWindow->SelectAll();
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "Exception: Can't select all for view source window");
         return;
     }
     
-    rv = embedWindow->GetSelection(env, selection);
+    rv = sourceWindow->GetSelection(env, selection);
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "Exception: Can't get seletion for view source window");
         return;
@@ -548,8 +573,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 
     newPageDesc = nsnull;
     newDocShell = nsnull;
-    webBrowser = nsnull;
-    delete embedWindow;
+    sourceWindow->ReleaseChildren();
+    delete sourceWindow;
+
+    weakRef = nsnull;
+    supportsWeak = nsnull;
+    loadCompleteGuard = nsnull;
+    // not necessary to delete sourceWindow, the guard takes care of it.
 
     return;
 }
