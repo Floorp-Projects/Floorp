@@ -2657,9 +2657,9 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
             if (sprop->getter != js_GetArgument)
                 continue;
             JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
-            JS_ASSERT((uintN) sprop->shortid < nargs);
+            JS_ASSERT((uint16) sprop->shortid < nargs);
             JS_ASSERT(JSID_IS_ATOM(sprop->id));
-            params[(uintN) sprop->shortid] = JSID_TO_ATOM(sprop->id);
+            params[(uint16) sprop->shortid] = JSID_TO_ATOM(sprop->id);
         }
         for (i = 0; i < nargs; i++) {
             if (i > 0)

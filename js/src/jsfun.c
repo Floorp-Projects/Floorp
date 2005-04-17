@@ -753,7 +753,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
             return JS_FALSE;
         JS_ASSERT(obj && prop);
         cprop = (JSScopeProperty *)prop;
-        LOCKED_OBJ_SET_SLOT(obj, cprop->slot, vec[sprop->shortid]);
+        LOCKED_OBJ_SET_SLOT(obj, cprop->slot, vec[(uint16) sprop->shortid]);
         OBJ_DROP_PROPERTY(cx, obj, prop);
     }
 

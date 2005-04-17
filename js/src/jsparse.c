@@ -839,6 +839,11 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                              NULL)) {
                     return NULL;
                 }
+                if (fp->fun->nvars == JS_BITMASK(16)) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_TOO_MANY_FUN_VARS);
+                    return NULL;
+                }
                 fp->fun->nvars++;
             }
         }
@@ -900,6 +905,11 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                       JSPROP_SHARED,
                                       SPROP_HAS_SHORTID | dupflag,
                                       fun->nargs)) {
+                return NULL;
+            }
+            if (fun->nargs == JS_BITMASK(16)) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_TOO_MANY_FUN_ARGS);
                 return NULL;
             }
             fun->nargs++;
@@ -2232,7 +2242,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     if (clasp == &js_FunctionClass) {
                         JS_ASSERT(sprop->getter == js_GetLocalVariable);
                         JS_ASSERT((sprop->flags & SPROP_HAS_SHORTID) &&
-                                  sprop->shortid < fun->nvars);
+                                  (uint16) sprop->shortid < fun->nvars);
                     } else if (clasp == &js_CallClass) {
                         if (sprop->getter == js_GetCallVariable) {
                             /*
@@ -2241,7 +2251,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                              * that the slot number we have is in range.
                              */
                             JS_ASSERT((sprop->flags & SPROP_HAS_SHORTID) &&
-                                      sprop->shortid < fun->nvars);
+                                      (uint16) sprop->shortid < fun->nvars);
                         } else {
                             /*
                              * A variable introduced through another eval:
@@ -2290,7 +2300,12 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                           SPROP_INVALID_SLOT,
                                           pn2->pn_attrs | JSPROP_SHARED,
                                           SPROP_HAS_SHORTID, fun->nvars)) {
-                    ok = JS_FALSE;
+                    return NULL;
+                }
+                if (fun->nvars == JS_BITMASK(16)) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_TOO_MANY_FUN_VARS);
+                    return NULL;
                 }
                 fun->nvars++;
             }
