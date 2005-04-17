@@ -7164,7 +7164,7 @@ down:
                 else
                     xml->parent = top;
                 if (JSXML_HAS_KIDS(xml))
-                    xml->xml_kids.cursors = (JSXMLArrayCursor *) i;
+                    xml->xml_kids.cursors = JS_UINT32_TO_PTR(i);
                 top = xml;
                 xml = kid;
                 goto down;
@@ -7181,7 +7181,7 @@ down:
 
         /* Time to go back up the spanning tree. */
         GCMETER(rt->gcStats.dswup++);
-        i = JSXML_HAS_KIDS(top) ? JS_PTR_TO_INT32(top->xml_kids.cursors) : 0;
+        i = JSXML_HAS_KIDS(top) ? JS_PTR_TO_UINT32(top->xml_kids.cursors) : 0;
         if (i < JSXML_LENGTH(top)) {
             kid = XMLARRAY_MEMBER(&top->xml_kids, i, JSXML);
             XMLARRAY_SET_MEMBER(&top->xml_kids, i, xml);
