@@ -1549,6 +1549,18 @@ sub get_drop_column_ddl {
     return ("ALTER TABLE $table DROP COLUMN $column");
 }
 
+=item C<get_drop_table_ddl($table)>
+
+ Description: Generate SQL to drop a table from the database.
+ Params:      $table - The name of the table to drop.
+ Returns:     An array of SQL statements.
+
+=cut
+sub get_drop_table_ddl {
+    my ($self, $table) = @_;
+    return ("DROP TABLE $table");
+}
+
 sub get_rename_column_ddl {
 
 =item C<get_rename_column_ddl($table, $old_name, $new_name)>
@@ -1568,10 +1580,27 @@ sub get_rename_column_ddl {
         . " has not implemented a method.";
 }
 
+=item C<delete_table($name)>
+
+ Description: Deletes a table from this Schema object.
+              Dies if you try to delete a table that doesn't exist.
+ Params:      $name - The name of the table to delete.
+ Returns:     nothing
+
+=cut
+sub delete_table {
+    my ($self, $name) = @_;
+
+    die "Attempted to delete nonexistent table '$name'." unless
+        $self->get_table_abstract($name);
+
+    delete $self->{abstract_schema}->{$name};
+    delete $self->{schema}->{$name};
+}
+
 sub get_column_abstract {
 
 =item C<get_column_abstract($table, $column)>
-
 
  Description: A column definition from the abstract internal schema.
               cross-database format.

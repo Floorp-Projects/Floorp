@@ -569,6 +569,21 @@ sub bz_drop_index_raw {
     $self->do($_) foreach (@statements);
 }
 
+sub bz_drop_table {
+    my ($self, $name) = @_;
+
+    my $table_exists = $self->bz_table_info($name);
+
+    if ($table_exists) {
+        my @statements = $self->_bz_schema->get_drop_table_ddl($name);
+        print "Dropping table $name...\n";
+        $self->do($_) foreach (@statements);
+        $self->_bz_real_schema->delete_table($name);
+        $self->_bz_store_real_schema;
+    }
+}
+
+
 # XXX - Needs to be made cross-db compatible
 sub bz_drop_table_indexes ($) {
     my ($self, $table) = @_;
@@ -1006,6 +1021,7 @@ Bugzilla::DB - Database access routines, using L<DBI>
   $dbh->bz_add_index($table, $name, $definition);
   $dbh->bz_add_table($name);
   $dbh->bz_drop_index($table, $name);
+  $dbh->bz_drop_table($name);
   $dbh->bz_alter_column($table, $name, \%new_def);
   $dbh->bz_drop_column($table, $column);
   $dbh->bz_rename_column($table, $old_name, $new_name);
@@ -1361,6 +1377,13 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
               doesn't exist, we do nothing.
  Params:      $table - The table that the index is on.
               $name  - The name of the index that you want to drop.
+ Returns:     nothing
+
+=item C<bz_drop_table($name)>
+
+ Description: Drops a table from the database. If the table
+              doesn't exist, we just return silently.
+ Params:      $name - The name of the table to drop.
  Returns:     nothing
 
 =item C<bz_alter_column($table, $name, \%new_def)>
