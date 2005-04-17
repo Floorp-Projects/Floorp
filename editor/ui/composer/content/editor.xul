@@ -143,7 +143,13 @@
     <menu id="viewMenu" label="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
-      <menu id="menu_Toolbars"/>
+      <menu id="menu_Toolbars">
+        <menupopup id="view_toolbars_popup"> 
+          <menuitem id="viewComposerToolbar" label="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" command="cmd_viewCompToolbar"  />           <menuitem id="viewFormatToolbar"   label="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  command="cmd_viewFormatToolbar" />
+          <menuitem id="viewEditModeToolbar" label="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    command="cmd_viewEditModeToolbar" />
+          <menuitem id="viewTaskBar"         label="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    command="cmd_viewtaskbar" />
+        </menupopup>
+      </menu>
       <menuseparator id="viewSep1"/>
       <menuitem id="viewNormalMode" checked="true"/>
       <menuitem id="viewAllTagsMode"/>

@@ -46,6 +46,12 @@
 <!-- View menu items -->
 <!ENTITY viewMenu.label "View">
 <!ENTITY viewmenu.accesskey "v">
+<!ENTITY compositionToolbarCmd.label "Composition Toolbar">
+<!ENTITY compositiontb.accesskey "c">
+<!ENTITY formattingToolbarCmd.label "Format Toolbar">
+<!ENTITY formattingtb.accesskey "f">
+<!ENTITY editmodeToolbarCmd.label "Edit Mode Toolbar">
+<!ENTITY editmodetb.accesskey "E">
 
 <!-- Format menu items -->
 <!ENTITY formatMenu.label "Format">
