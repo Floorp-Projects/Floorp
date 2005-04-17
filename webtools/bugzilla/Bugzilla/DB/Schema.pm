@@ -897,7 +897,8 @@ use constant ABSTRACT_SCHEMA => {
 
     whine_queries => {
         FIELDS => [
-            id            => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1},
+            id            => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1,
+                              NOTNULL => 1},
             eventid       => {TYPE => 'INT3', NOTNULL => 1},
             query_name    => {TYPE => 'varchar(64)', NOTNULL => 1,
                               DEFAULT => "''"},
@@ -914,7 +915,8 @@ use constant ABSTRACT_SCHEMA => {
 
     whine_schedules => {
         FIELDS => [
-            id          => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1},
+            id          => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1,
+                            NOTNULL => 1},
             eventid     => {TYPE => 'INT3', NOTNULL => 1},
             run_day     => {TYPE => 'varchar(32)'},
             run_time    => {TYPE => 'varchar(32)'},
@@ -930,7 +932,8 @@ use constant ABSTRACT_SCHEMA => {
 
     whine_events => {
         FIELDS => [
-            id           => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1},
+            id           => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1,
+                             NOTNULL => 1},
             owner_userid => {TYPE => 'INT3', NOTNULL => 1},
             subject      => {TYPE => 'varchar(128)'},
             body         => {TYPE => 'MEDIUMTEXT'},
@@ -1211,7 +1214,7 @@ sub get_column {
     }
     return undef;
 } #eosub--get_column
-#--------------------------------------------------------------------------
+
 sub get_table_list {
 
 =item C<get_table_list>
@@ -1584,7 +1587,7 @@ sub get_column_abstract {
 
     # Prevent a possible dereferencing of an undef hash, if the
     # table doesn't exist.
-    if (exists $self->{abstract_schema}->{$table}) {
+    if ($self->get_table_abstract($table)) {
         my %fields = (@{ $self->{abstract_schema}{$table}{FIELDS} });
         return $fields{$column};
     }
@@ -1614,6 +1617,47 @@ sub get_index_abstract {
         return $indexes{$index};
     }
     return undef;
+}
+
+=item C<get_table_abstract($table)>
+
+ Description: Gets the abstract definition for a table in this Schema
+              object.
+ Params:      $table - The name of the table you want a definition for.
+ Returns:     An abstract table definition, or undef if the table doesn't
+              exist.
+
+=cut
+
+sub get_table_abstract {
+    my ($self, $table) = @_;
+    return $self->{abstract_schema}->{$table};
+}
+
+=item C<add_table($name, \%definition)>
+
+ Description: Creates a new table in this Schema object.
+              If you do not specify a definition, we will
+              simply create an empty table.
+ Params:      $name - The name for the new table.
+              \%definition (optional) - An abstract definition for
+                  the new table.
+ Returns:     nothing
+
+=cut
+sub add_table {
+    my ($self, $name, $definition) = @_;
+    (die "Table already exists: $name")
+        if exists $self->{abstract_schema}->{$name};
+    if ($definition) {
+        $self->{abstract_schema}->{$name} = dclone($definition);
+        $self->{schema} = dclone($self->{abstract_schema});
+        $self->_adjust_schema();
+    }
+    else {
+        $self->{abstract_schema}->{$name} = {FIELDS => []};
+        $self->{schema}->{$name}          = {FIELDS => []};
+    }
 }
 
 sub delete_column {
@@ -1704,6 +1748,11 @@ sub set_index {
 =cut
 
     my ($self, $table, $name, $definition) = @_;
+
+    if ( exists $self->{abstract_schema}{$table}
+         && !exists $self->{abstract_schema}{$table}{INDEXES} ) {
+        $self->{abstract_schema}{$table}{INDEXES} = [];
+    }
 
     my $indexes = $self->{abstract_schema}{$table}{INDEXES};
     $self->_set_object($table, $name, $definition, $indexes);
@@ -1837,6 +1886,31 @@ sub deserialize_abstract {
     # "private" section of the SCHEMA_VERSION docs.
 
     return $class->new(undef, $thawed_hash);
+}
+
+#####################################################################
+# Class Methods
+#####################################################################
+
+=back
+
+=head1 CLASS METHODS
+
+These methods are generally called on the class instead of on a specific
+object.
+
+=item C<get_empty_schema()>
+
+ Description: Returns a Schema that has no tables. In effect, this
+              Schema is totally "empty."
+ Params:      none
+ Returns:     A "empty" Schema object.
+
+=cut
+
+sub get_empty_schema {
+    my ($class) = @_;
+    return $class->deserialize_abstract(freeze({}));
 }
 
 1;

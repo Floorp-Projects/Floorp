@@ -425,6 +425,40 @@ sub bz_add_index {
     }
 }
 
+sub bz_add_table {
+    my ($self, $name) = @_;
+
+    my $table_exists = $self->bz_table_info($name);
+
+    if (!$table_exists) {
+        $self->_bz_add_table_raw($name);
+        $self->_bz_real_schema->add_table($name,
+            $self->_bz_schema->get_table_abstract($name));
+        $self->_bz_store_real_schema;
+    }
+}
+
+# _bz_add_table_raw($name) - Private
+#
+# Description: A helper function for bz_add_table.
+#              Creates a table in the database without
+#              updating any Schema object. Generally
+#              should only be called by bz_add_table and by
+#              _bz_init_schema_storage. Used when you don't
+#              yet have a Schema object but you need to
+#              add a table, for some reason.
+# Params:      $name - The name of the table you're creating. 
+#                  The definition for the table is pulled from 
+#                  _bz_schema.
+# Returns:     nothing
+#
+sub _bz_add_table_raw {
+    my ($self, $name) = @_;
+    my @statements = $self->_bz_schema->get_table_ddl($name);
+    print "Adding new table $name ...\n";
+    $self->do($_) foreach (@statements);
+}
+
 # XXX - Need to make this cross-db compatible
 # XXX - This shouldn't print stuff to stdout
 sub bz_change_field_type ($$$) {
@@ -579,9 +613,23 @@ sub _bz_schema {
     return $self->{private_bz_schema};
 }
 
+# _bz_get_initial_schema()
+#
+# Description: A protected method, intended for use only by Bugzilla::DB
+#              and subclasses. Used to get the initial Schema that will
+#              be wirtten to disk for _bz_init_schema_storage. You probably
+#              want to use _bz_schema or _bz_real_schema instead of this
+#              method.
+# Params:      none
+# Returns:     A Schema object that can be serialized and written to disk
+#              for _bz_init_schema_storage.
+sub _bz_get_initial_schema {
+    my ($self) = @_;
+    return $self->_bz_schema->get_empty_schema();
+}
+
 sub bz_column_info {
     my ($self, $table, $column) = @_;
-
     return $self->_bz_real_schema->get_column_abstract($table, $column);
 }
 
@@ -593,6 +641,11 @@ sub bz_index_info {
         $index_def = {FIELDS => $index_def, TYPE => ''};
     }
     return $index_def;
+}
+
+sub bz_table_info {
+    my ($self, $table) = @_;
+    return $self->_bz_real_schema->get_table_abstract($table);
 }
 
 
@@ -837,7 +890,8 @@ sub _bz_real_schema {
     my ($data, $version) = $self->selectrow_array(
         "SELECT schema_data, version FROM bz_schema");
 
-    # XXX - Should I do the undef check here instead of in checksetup?
+    (die "_bz_real_schema tried to read the bz_schema table but it's empty!")
+        if !$data;
 
     $self->{private_real_schema} = 
         $self->_bz_schema->deserialize_abstract($data, $version);
@@ -870,11 +924,13 @@ sub _bz_store_real_schema {
     # that we read from the database. So we use the actual hash
     # member instead of the subroutine call. If the hash
     # member is not defined, we will (and should) fail.
-    my $store_me = $self->{private_real_schema}->serialize_abstract();
+    my $update_schema = $self->{private_real_schema};
+    my $store_me = $update_schema->serialize_abstract();
+    my $schema_version = $update_schema->SCHEMA_VERSION;
     my $sth = $self->prepare("UPDATE bz_schema 
                                  SET schema_data = ?, version = ?");
     $sth->bind_param(1, $store_me, $self->BLOB_TYPE);
-    $sth->bind_param(2, Bugzilla::DB::Schema::SCHEMA_VERSION);
+    $sth->bind_param(2, $schema_version);
     $sth->execute();
 }
 
@@ -910,6 +966,7 @@ Bugzilla::DB - Database access routines, using L<DBI>
   # Schema Modification
   $dbh->bz_add_column($table, $name, \%definition, $init_value);
   $dbh->bz_add_index($table, $name, $definition);
+  $dbh->bz_add_table($name);
   $dbh->bz_drop_index($table, $name);
   $dbh->bz_alter_column($table, $name, \%new_def);
   $dbh->bz_drop_column($table, $column);
@@ -1245,6 +1302,18 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
               $name  - A name for the new index.
               $definition - An abstract index definition. 
                             Either a hashref or an arrayref.
+ Returns:     nothing
+
+=item C<bz_add_table($name)>
+
+ Description: Creates a new table in the database, based on the
+              definition for that table in the abstract schema.
+              Note that unlike the other 'add' functions, this does
+              not take a definition, but always creates the table
+              as it exists in the ABSTRACT_SCHEMA.
+              If a table with that name already exists, then this
+              function returns silently.
+ Params:      $name - The name of the table you want to create.
  Returns:     nothing
 
 =item C<bz_drop_index($table, $name)>

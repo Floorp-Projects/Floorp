@@ -465,6 +465,33 @@ backwards-compatibility anyway, for versions of Bugzilla before 2.20.
 
 =over 4
 
+=item C<bz_column_info_real($table, $column)>
+
+ Description: Returns an abstract column definition for a column
+              as it actually exists on disk in the database.
+ Params:      $table - The name of the table the column is on.
+              $column - The name of the column you want info about.
+ Returns:     An abstract column definition.
+              If the column does not exist, returns undef.
+
+=cut
+
+sub bz_column_info_real {
+    my ($self, $table, $column) = @_;
+
+    # DBD::mysql does not support selecting a specific column,
+    # so we have to get all the columns on the table and find 
+    # the one we want.
+    my $info_sth = $self->column_info(undef, undef, $table, '%');
+    my $all_cols = $info_sth->fetchall_hashref("COLUMN_NAME");
+    my $col_data = $all_cols->{$column};
+
+    if (!defined $col_data) {
+        return undef;
+    }
+    return $self->_bz_schema->column_info_to_column($col_data);
+}
+
 =item C<bz_index_info_real($table, $index)>
 
  Description: Returns information about an index on a table in the database.
@@ -519,6 +546,69 @@ sub bz_index_info_real {
     return $retval;
 }
 
+=item C<bz_index_list_real($table)>
+
+ Description: Returns a list of index names on a table in 
+              the database, as it actually exists on disk.
+ Params:      $table - The name of the table you want info about.
+ Returns:     An array of index names.
+
+=cut
+
+sub bz_index_list_real {
+    my ($self, $table) = @_;
+    my $sth = $self->prepare("SHOW INDEX FROM $table");
+    # Column 3 of a SHOW INDEX statement contains the name of the index.
+    return @{ $self->selectcol_arrayref($sth, {Columns => [3]}) };
+}
+
+#####################################################################
+# MySQL-Specific "Schema Builder"
+#####################################################################
+
+=back
+
+=head 1 MYSQL-SPECIFIC "SCHEMA BUILDER"
+
+MySQL needs to be able to read in a legacy database (from before 
+Schema existed) and create a Schema object out of it. That's what
+this code does.
+
+=cut
+
+# This sub itself is actually written generically, but the subroutines
+# that it depends on are database-specific. In particular, the
+# bz_column_info_real function would be very difficult to create
+# properly for any other DB besides MySQL.
+sub _bz_build_schema_from_disk {
+    my ($self) = @_;
+
+    print "Building Schema object from database...\n";
+
+    my $schema = $self->_bz_schema->get_empty_schema();
+
+    my @tables = $self->bz_table_list_real();
+    foreach my $table (@tables) {
+        $schema->add_table($table);
+        my @columns = $self->bz_table_columns_real($table);
+        foreach my $column (@columns) {
+            my $type_info = $self->bz_column_info_real($table, $column);
+            $schema->set_column($table, $column, $type_info);
+        }
+
+        my @indexes = $self->bz_index_list_real($table);
+        foreach my $index (@indexes) {
+            unless ($index eq 'PRIMARY') {
+                my $index_info = $self->bz_index_info_real($table, $index);
+                ($index_info = $index_info->{FIELDS}) 
+                    if (!$index_info->{TYPE});
+                $schema->set_index($table, $index, $index_info);
+            }
+        }
+    }
+
+    return $schema;
+}
 1;
 
 __END__
