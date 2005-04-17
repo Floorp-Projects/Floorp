@@ -3403,6 +3403,7 @@ Descendants(JSContext *cx, JSXML *xml, jsval id)
     if (!JS_EnterLocalRootScope(cx))
         return NULL;
     if (xml->xml_class == JSXML_CLASS_LIST) {
+        ok = JS_TRUE;
         for (i = 0, n = xml->xml_kids.length; i < n; i++) {
             kid = XMLARRAY_MEMBER(&xml->xml_kids, i, JSXML);
             if (kid->xml_class == JSXML_CLASS_ELEMENT) {
