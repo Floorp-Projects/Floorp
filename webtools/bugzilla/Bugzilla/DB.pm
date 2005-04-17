@@ -363,35 +363,59 @@ sub bz_add_column {
 sub bz_alter_column {
     my ($self, $table, $name, $new_def) = @_;
 
-    # You can't change a column to be NOT NULL if you have no DEFAULT,
-    # if there are any NULL values in that column.
-    if ($new_def->{NOTNULL} && !exists $new_def->{DEFAULT}) {
-        # Check for NULLs
-        my $any_nulls = $self->selectrow_array(
-            "SELECT 1 FROM $table WHERE $name IS NULL");
-        if ($any_nulls) {
-            die "You cannot alter the ${table}.${name} column to be NOT NULL"
-                . " without\nspecifying a default, because there are NULL"
-                . " values currently in it.";
-        }
-    }
-
     my $current_def = $self->bz_column_info($table, $name);
 
     if (!$self->_bz_schema->columns_equal($current_def, $new_def)) {
-        my @statements = $self->_bz_real_schema->get_alter_column_ddl(
-            $table, $name, $new_def);
-        my $old_ddl = $self->_bz_schema->get_type_ddl($current_def);
-        my $new_ddl = $self->_bz_schema->get_type_ddl($new_def);
-        print "Updating column $name in table $table ...\n";
-        print "Old: $old_ddl\n";
-        print "New: $new_ddl\n";
-        foreach my $sql (@statements) {
-            $self->do($sql);
+        # You can't change a column to be NOT NULL if you have no DEFAULT,
+        # if there are any NULL values in that column.
+        if ($new_def->{NOTNULL} && !exists $new_def->{DEFAULT}) {
+            # Check for NULLs
+            my $any_nulls = $self->selectrow_array(
+                "SELECT 1 FROM $table WHERE $name IS NULL");
+            if ($any_nulls) {
+                die "You cannot alter the ${table}.${name} column to be"
+                    . " NOT NULL without\nspecifying a default, because"
+                    . " there are NULL values currently in it.";
+            }
         }
+        $self->bz_alter_column_raw($table, $name, $new_def, $current_def);
         $self->_bz_real_schema->set_column($table, $name, $new_def);
         $self->_bz_store_real_schema;
     }
+}
+
+
+# bz_alter_column_raw($table, $name, $new_def, $current_def)
+#
+# Description: A helper function for bz_alter_column.
+#              Alters a column in the database
+#              without updating any Schema object. Generally
+#              should only be called by bz_alter_column.
+#              Used when either: (1) You don't yet have a Schema
+#              object but you need to alter a column, for some reason.
+#              (2) You need to alter a column for some database-specific
+#              reason.
+# Params:      $table   - The name of the table the column is on.
+#              $name    - The name of the column you're changing.
+#              $new_def - The abstract definition that you are changing
+#                         this column to.
+#              $current_def - (optional) The current definition of the
+#                             column. Will be used in the output message,
+#                             if given.
+# Returns:     nothing
+#
+sub bz_alter_column_raw {
+    my ($self, $table, $name, $new_def, $current_def) = @_;
+    my @statements = $self->_bz_real_schema->get_alter_column_ddl(
+        $table, $name, $new_def);
+    my $new_ddl = $self->_bz_schema->get_type_ddl($new_def);
+    print "Updating column $name in table $table ...\n";
+    if (defined $current_def) {
+        my $old_ddl = $self->_bz_schema->get_type_ddl($current_def);
+        print "Old: $old_ddl\n";
+    }
+    print "New: $new_ddl\n";
+    $self->do($_) foreach (@statements);
 }
 
 
