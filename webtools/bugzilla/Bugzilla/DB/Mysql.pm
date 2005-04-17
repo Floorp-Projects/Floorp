@@ -304,16 +304,7 @@ sub bz_setup_database {
             elsif ($self->bz_index_info_real('series', 'series_creator_idx')) {
                     $dropname = 'series_creator_idx';
             }
-
-            if ($dropname) {
-                print "Removing the useless index $dropname on the"
-                      . " series table...\n";
-                my @drop = $self->_bz_schema->get_drop_index_ddl(
-                    'series', $dropname);
-                foreach my $sql (@drop) {
-                    $self->do($sql);
-                }
-            }
+            $self->bz_drop_index_raw('series', $dropname) if $dropname;
         }
 
         # The email_setting table also had the same problem.
@@ -321,11 +312,8 @@ sub bz_setup_database {
             && $self->bz_index_info_real('email_setting', 
                                          'email_settings_user_id_idx') ) 
         {
-            print "Removing the useless index email_settings_user_id_idx\n"
-                  . "  on the email_setting table...\n";
-            my @drop = $self->_bz_schema->get_drop_index_ddl('email_setting',
-                'email_settings_user_id_idx');
-            $self->do($_) foreach (@drop);
+            $self->bz_drop_index_raw('email_setting', 
+                                     'email_settings_user_id_idx');
         }
 
         # Go through all the tables.
@@ -361,12 +349,9 @@ sub bz_setup_database {
                     print "Renaming index $column to to $new_name...\n";
                     # Unfortunately, MySQL has no way to rename an index. :-(
                     # So we have to drop and recreate the indexes.
-                    my @drop = $self->_bz_schema->get_drop_index_ddl(
-                        $table, $column);
-                    my @add = $self->_bz_schema->get_add_index_ddl(
-                        $table, $new_name, $index);
-                    $self->do($_) foreach (@drop);
-                    $self->do($_) foreach (@add);
+                    $self->bz_drop_index_raw($table, $column, "silent");
+                    $self->bz_add_index_raw($table, $new_name, 
+                                             $index, "silent");
                 } # if
             } # foreach column
         } # foreach table

@@ -414,15 +414,34 @@ sub bz_add_index {
     my $index_exists = $self->bz_index_info($table, $name);
 
     if (!$index_exists) {
-        my @statements = $self->_bz_real_schema->get_add_index_ddl(
-            $table, $name, $definition);
-        print "Adding new index '$name' to the $table table ...\n";
-        foreach my $sql (@statements) {
-            $self->do($sql);
-        }
+        $self->_bz_add_index_raw($table, $name, $definition);
         $self->_bz_real_schema->set_index($table, $name, $definition);
         $self->_bz_store_real_schema;
     }
+}
+
+# bz_add_index_raw($table, $name, $silent)
+#
+# Description: A helper function for bz_add_index.
+#              Adds an index to the database
+#              without updating any Schema object. Generally
+#              should only be called by bz_add_index.
+#              Used when you don't yet have a Schema
+#              object but you need to add an index, for some reason.
+# Params:      $table  - The name of the table the index is on.
+#              $name   - The name of the index you're adding.
+#              $definition - The abstract index definition, in hashref
+#                            or arrayref format.
+#              $silent - (optional) If specified and true, don't output
+#                        any message about this change.
+# Returns:     nothing
+#
+sub bz_add_index_raw {
+    my ($self, $table, $name, $definition, $silent) = @_;
+    my @statements = $self->_bz_schema->get_add_index_ddl(
+        $table, $name, $definition);
+    print "Adding new index '$name' to the $table table ...\n" unless $silent;
+    $self->do($_) foreach (@statements);
 }
 
 sub bz_add_table {
@@ -520,15 +539,34 @@ sub bz_drop_index {
     my $index_exists = $self->bz_index_info($table, $name);
 
     if ($index_exists) {
-        my @statements = $self->_bz_real_schema->get_drop_index_ddl(
-            $table, $name);
-        print "Removing index '$name' from the $table table...\n";
-        foreach my $sql (@statements) {
-            $self->do($sql);
-        }
+        $self->_bz_drop_index_raw($table, $name);
         $self->_bz_real_schema->delete_index($table, $name);
         $self->_bz_store_real_schema;        
     }
+}
+
+# bz_drop_index_raw($table, $name, $silent)
+#
+# Description: A helper function for bz_drop_index.
+#              Drops an index from the database
+#              without updating any Schema object. Generally
+#              should only be called by bz_drop_index.
+#              Used when either: (1) You don't yet have a Schema 
+#              object but you need to drop an index, for some reason.
+#              (2) You need to drop an index that somehow got into the
+#              database but doesn't exist in Schema.
+# Params:      $table  - The name of the table the index is on.
+#              $name   - The name of the index you're dropping.
+#              $silent - (optional) If specified and true, don't output
+#                        any message about this change.
+# Returns:     nothing
+#
+sub bz_drop_index_raw {
+    my ($self, $table, $name, $silent) = @_;
+    my @statements = $self->_bz_schema->get_drop_index_ddl(
+        $table, $name);
+    print "Removing index '$name' from the $table table...\n" unless $silent;
+    $self->do($_) foreach (@statements);
 }
 
 # XXX - Needs to be made cross-db compatible
