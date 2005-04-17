@@ -1007,7 +1007,8 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
       if (!isWhitespace) {
         switch (mTextTransform) {
         case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
-          *wordPtr = toupper(*wordPtr);
+          if (!aInWord)
+            *wordPtr = toupper(*wordPtr);
           break;
         case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
           AsciiToLowerCase(wordPtr, wordLen);
