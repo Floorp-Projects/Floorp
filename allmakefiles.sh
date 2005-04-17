@@ -899,6 +899,10 @@ browser/themes/winstripe/browser/Makefile
 browser/themes/winstripe/Makefile
 "
 
+MAKEFILES_suite="
+suite/Makefile
+"
+
 MAKEFILES_xulrunner="
 xulrunner/Makefile
 xulrunner/app/Makefile
@@ -1576,6 +1580,10 @@ if test -n "$MOZ_PHOENIX"; then
         add_makefiles "$MAKEFILES_firefox_branding"
     fi
     add_makefiles "$MAKEFILES_phoenix"
+fi
+
+if test -n "$MOZ_SUITE"; then
+    add_makefiles "$MAKEFILES_suite"
 fi
 
 if test -n "$MOZ_XUL_APP"; then
