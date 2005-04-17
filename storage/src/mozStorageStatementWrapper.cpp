@@ -53,7 +53,7 @@ class mozStorageStatementRow : public mozIStorageStatementRow,
                                public nsIXPCScriptable
 {
 public:
-    mozStorageStatementRow(sqlite3_stmt *aStatement,
+    mozStorageStatementRow(mozIStorageStatement *aStatement,
                            int aNumColumns,
                            const nsStringArray *aColumnNames);
 
@@ -66,7 +66,11 @@ public:
     // nsIXPCScriptable interface
     NS_DECL_NSIXPCSCRIPTABLE
 protected:
-    sqlite3_stmt *mDBStatement;
+    sqlite3_stmt* NativeStatement() {
+        return mStatement->GetNativeStatementPointer();
+    }
+
+    nsCOMPtr<mozIStorageStatement> mStatement;
     int mNumColumns;
     const nsStringArray *mColumnNames;
 };
@@ -93,26 +97,34 @@ protected:
 static PRBool
 JSValStorageStatementBinder (JSContext *cx,
                              mozIStorageStatement *aStatement,
-                             PRUint32 aParamIndex,
+                             int *aParamIndexes,
+                             int aNumIndexes,
                              jsval val)
 {
+    int i;
     if (JSVAL_IS_INT(val)) {
         int v = JSVAL_TO_INT(val);
-        aStatement->BindInt32Parameter(aParamIndex, v);
+        for (i = 0; i < aNumIndexes; i++)
+            aStatement->BindInt32Parameter(aParamIndexes[i], v);
     } else if (JSVAL_IS_DOUBLE(val)) {
         double d = *JSVAL_TO_DOUBLE(val);
-        aStatement->BindDoubleParameter(aParamIndex, d);
+        for (i = 0; i < aNumIndexes; i++)
+            aStatement->BindDoubleParameter(aParamIndexes[i], d);
     } else if (JSVAL_IS_STRING(val)) {
         JSString *str = JSVAL_TO_STRING(val);
-        aStatement->BindWStringParameter(aParamIndex, NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str)));
+        for (i = 0; i < aNumIndexes; i++)
+            aStatement->BindWStringParameter(aParamIndexes[i], NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str)));
     } else if (JSVAL_IS_BOOLEAN(val)) {
         if (val == JSVAL_TRUE) {
-            aStatement->BindInt32Parameter(aParamIndex, 1);
+            for (i = 0; i < aNumIndexes; i++)
+                aStatement->BindInt32Parameter(aParamIndexes[i], 1);
         } else {
-            aStatement->BindInt32Parameter(aParamIndex, 0);
+            for (i = 0; i < aNumIndexes; i++)
+                aStatement->BindInt32Parameter(aParamIndexes[i], 0);
         }
     } else if (JSVAL_IS_NULL(val)) {
-        aStatement->BindNullParameter(aParamIndex);
+        for (i = 0; i < aNumIndexes; i++)
+            aStatement->BindNullParameter(aParamIndexes[i]);
     } else if (JSVAL_IS_OBJECT(val)) {
         JSObject *obj = JSVAL_TO_OBJECT(val);
         // some special things
@@ -122,7 +134,8 @@ JSValStorageStatementBinder (JSContext *cx,
             PRInt64 msec;
             LL_D2L(msec, msecd);
 
-            aStatement->BindInt64Parameter(aParamIndex, msec);
+            for (i = 0; i < aNumIndexes; i++)
+                aStatement->BindInt64Parameter(aParamIndexes[i], msec);
         } else {
             return PR_FALSE;
         }
@@ -143,14 +156,13 @@ JSValStorageStatementBinder (JSContext *cx,
 NS_IMPL_ISUPPORTS2(mozStorageStatementWrapper, mozIStorageStatementWrapper, nsIXPCScriptable)
 
 mozStorageStatementWrapper::mozStorageStatementWrapper()
-    : mStatement(nsnull), mDBStatement(nsnull)
+    : mStatement(nsnull)
 {
 }
 
 mozStorageStatementWrapper::~mozStorageStatementWrapper()
 {
     mStatement = nsnull;
-    mDBStatement = nsnull;
 }
 
 NS_IMETHODIMP
@@ -161,15 +173,12 @@ mozStorageStatementWrapper::Initialize(mozIStorageStatement *aStatement)
 
     mStatement = aStatement;
 
-    // fetch the actual statement out
-    mDBStatement = mStatement->GetNativeStatementPointer();
-
     // fetch various things we care about
     mStatement->GetParameterCount(&mParamCount);
     mStatement->GetNumColumns(&mResultColumnCount);
 
     for (unsigned int i = 0; i < mResultColumnCount; i++) {
-        const void *name = sqlite3_column_name16 (mDBStatement, i);
+        const void *name = sqlite3_column_name16 (NativeStatement(), i);
         mColumnNames.AppendString(nsDependentString(NS_STATIC_CAST(const PRUnichar*, name)));
     }
 
@@ -224,7 +233,7 @@ mozStorageStatementWrapper::GetRow(mozIStorageStatementRow **aRow)
         return NS_ERROR_FAILURE;
 
     if (!mStatementRow) {
-        mozStorageStatementRow *row = new mozStorageStatementRow(mDBStatement, mResultColumnCount, &mColumnNames);
+        mozStorageStatementRow *row = new mozStorageStatementRow(mStatement, mResultColumnCount, &mColumnNames);
         if (!row)
             return NS_ERROR_OUT_OF_MEMORY;
         mStatementRow = row;
@@ -294,8 +303,8 @@ mozStorageStatementWrapper::Call(nsIXPConnectWrappedNative *wrapper, JSContext *
     mStatement->Reset();
 
     // bind parameters
-    for (PRUint32 i = 0; i < argc; i++) {
-        if (!JSValStorageStatementBinder(cx, mStatement, i, argv[i])) {
+    for (int i = 0; i < argc; i++) {
+        if (!JSValStorageStatementBinder(cx, mStatement, &i, 1, argv[i])) {
             *_retval = PR_FALSE;
             return NS_ERROR_FAILURE;
         }
@@ -450,10 +459,10 @@ mozStorageStatementWrapper::Mark(nsIXPConnectWrappedNative *wrapper, JSContext *
 
 NS_IMPL_ISUPPORTS2(mozStorageStatementRow, mozIStorageStatementRow, nsIXPCScriptable)
 
-mozStorageStatementRow::mozStorageStatementRow(sqlite3_stmt *aStatement,
+mozStorageStatementRow::mozStorageStatementRow(mozIStorageStatement *aStatement,
                                                int aNumColumns,
                                                const nsStringArray *aColumnNames)
-    : mDBStatement(aStatement),
+    : mStatement(aStatement),
       mNumColumns(aNumColumns),
       mColumnNames(aColumnNames)
 {
@@ -498,18 +507,18 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
 
         for (int i = 0; i < mNumColumns; i++) {
             if (jsid.Equals(*(*mColumnNames)[i])) {
-                int ctype = sqlite3_column_type(mDBStatement, i);
+                int ctype = sqlite3_column_type(NativeStatement(), i);
 
                 if (ctype == SQLITE_INTEGER || ctype == SQLITE_FLOAT) {
-                    double dval = sqlite3_column_double(mDBStatement, i);
+                    double dval = sqlite3_column_double(NativeStatement(), i);
                     if (!JS_NewNumberValue(cx, dval, vp)) {
                         *_retval = PR_FALSE;
                         return NS_ERROR_FAILURE;
                     }
                 } else if (ctype == SQLITE_TEXT) {
                     JSString *str = JS_NewUCStringCopyN(cx,
-                                                        (jschar*) sqlite3_column_text16(mDBStatement, i),
-                                                        sqlite3_column_bytes16(mDBStatement, i)/2);
+                                                        (jschar*) sqlite3_column_text16(NativeStatement(), i),
+                                                        sqlite3_column_bytes16(NativeStatement(), i)/2);
                     if (!str) {
                         *_retval = PR_FALSE;
                         return NS_ERROR_FAILURE;
@@ -517,8 +526,8 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                     *vp = STRING_TO_JSVAL(str);
                 } else if (ctype == SQLITE_BLOB) {
                     JSString *str = JS_NewStringCopyN(cx,
-                                                      (char*) sqlite3_column_blob(mDBStatement, i),
-                                                      sqlite3_column_bytes(mDBStatement, i));
+                                                      (char*) sqlite3_column_blob(NativeStatement(), i),
+                                                      sqlite3_column_bytes(NativeStatement(), i));
                     if (!str) {
                         *_retval = PR_FALSE;
                         return NS_OK;
@@ -741,39 +750,37 @@ NS_IMETHODIMP
 mozStorageStatementParams::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    int idx = -1;
-
     if (JSVAL_IS_INT(id)) {
-        idx = JSVAL_TO_INT(id);
+        int idx = JSVAL_TO_INT(id);
+
+        *_retval = JSValStorageStatementBinder (cx, mStatement, &idx, 1, *vp);
     } else if (JSVAL_IS_STRING(id)) {
+        int indexCount = 0, *indexes;
+
         JSString *str = JSVAL_TO_STRING(id);
         nsCAutoString name(":");
         name.Append(NS_ConvertUTF16toUTF8(nsDependentString((PRUnichar *)::JS_GetStringChars(str),
                                                             ::JS_GetStringLength(str))));
 
         // check to see if there's a parameter with this name
-        
-        idx = sqlite3_bind_parameter_index(mStatement->GetNativeStatementPointer(), name.get());
-        if (idx == 0) {
+        indexCount = sqlite3_bind_parameter_indexes(mStatement->GetNativeStatementPointer(), name.get(), &indexes);
+        if (indexCount == 0) {
             // er, not found? How'd we get past NewResolve?
+            fprintf (stderr, "********** mozStorageStatementWrapper: Couldn't find parameter %s\n", name.get());
             *_retval = PR_FALSE;
             return NS_ERROR_FAILURE;
         } else {
             // drop this by 1, to account for sqlite's indexes being 1-based
-            idx -= 1;
+            for (int i = 0; i < indexCount; i++)
+                indexes[i]--;
+
+            *_retval = JSValStorageStatementBinder (cx, mStatement, indexes, indexCount, *vp);
+            sqlite3_free_parameter_indexes(indexes);
         }
     } else {
         *_retval = PR_FALSE;
         return NS_ERROR_FAILURE;
     }
-
-    if (idx == -1) {
-        *_retval = PR_FALSE;
-        return NS_ERROR_FAILURE;
-    }
-
-    // we have a valid param index, so do the conversion from JSVal -> bind
-    *_retval = JSValStorageStatementBinder (cx, mStatement, idx, *vp);
 
     return NS_OK;
 }
@@ -851,6 +858,7 @@ mozStorageStatementParams::NewResolve(nsIXPConnectWrappedNative *wrapper, JSCont
         idx = sqlite3_bind_parameter_index(mStatement->GetNativeStatementPointer(), name.get());
         if (idx == 0) {
             // nope.
+            fprintf (stderr, "********** mozStorageStatementWrapper: Couldn't find parameter %s\n", name.get());
             *_retval = PR_FALSE;
             return NS_OK;
         } else {
