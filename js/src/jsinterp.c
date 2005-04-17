@@ -1755,6 +1755,38 @@ bad:
     return JS_FALSE;
 }
 
+JSBool
+js_StrictlyEqual(jsval lval, jsval rval)
+{
+    jsval ltag = JSVAL_TAG(lval), rtag = JSVAL_TAG(rval);
+    jsdouble ld, rd;
+
+    if (ltag == rtag) {
+        if (ltag == JSVAL_STRING) {
+            JSString *lstr = JSVAL_TO_STRING(lval),
+                     *rstr = JSVAL_TO_STRING(rval);
+            return js_CompareStrings(lstr, rstr) == 0;
+        }
+        if (ltag == JSVAL_DOUBLE) {
+            ld = *JSVAL_TO_DOUBLE(lval);
+            rd = *JSVAL_TO_DOUBLE(rval);
+            return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+        }
+        return lval == rval;
+    }
+    if (ltag == JSVAL_DOUBLE && JSVAL_IS_INT(rval)) {
+        ld = *JSVAL_TO_DOUBLE(lval);
+        rd = JSVAL_TO_INT(rval);
+        return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+    }
+    if (JSVAL_IS_INT(lval) && rtag == JSVAL_DOUBLE) {
+        ld = JSVAL_TO_INT(lval);
+        rd = *JSVAL_TO_DOUBLE(rval);
+        return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+    }
+    return lval == rval;
+}
+
 static JSBool
 InternStringElementId(JSContext *cx, jsval idval, jsid *idp)
 {
@@ -2851,52 +2883,26 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             break;
 
 #if !JS_BUG_FALLIBLE_EQOPS
-#define NEW_EQUALITY_OP(OP, IFNAN)                                            \
+#define NEW_EQUALITY_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
         rval = FETCH_OPND(-1);                                                \
         lval = FETCH_OPND(-2);                                                \
-        ltmp = JSVAL_TAG(lval);                                               \
-        rtmp = JSVAL_TAG(rval);                                               \
-        if (ltmp == rtmp) {                                                   \
-            if (ltmp == JSVAL_STRING) {                                       \
-                str  = JSVAL_TO_STRING(lval);                                 \
-                str2 = JSVAL_TO_STRING(rval);                                 \
-                cond = js_CompareStrings(str, str2) OP 0;                     \
-            } else if (ltmp == JSVAL_DOUBLE) {                                \
-                d  = *JSVAL_TO_DOUBLE(lval);                                  \
-                d2 = *JSVAL_TO_DOUBLE(rval);                                  \
-                cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                    \
-            } else {                                                          \
-                cond = lval OP rval;                                          \
-            }                                                                 \
-        } else {                                                              \
-            if (ltmp == JSVAL_DOUBLE && JSVAL_IS_INT(rval)) {                 \
-                d  = *JSVAL_TO_DOUBLE(lval);                                  \
-                d2 = JSVAL_TO_INT(rval);                                      \
-                cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                    \
-            } else if (JSVAL_IS_INT(lval) && rtmp == JSVAL_DOUBLE) {          \
-                d  = JSVAL_TO_INT(lval);                                      \
-                d2 = *JSVAL_TO_DOUBLE(rval);                                  \
-                cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                    \
-            } else {                                                          \
-                cond = lval OP rval;                                          \
-            }                                                                 \
-        }                                                                     \
+        cond = js_StrictlyEqual(lval, rval) OP JS_TRUE;                       \
         sp--;                                                                 \
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
 
           case JSOP_NEW_EQ:
-            NEW_EQUALITY_OP(==, JS_FALSE);
+            NEW_EQUALITY_OP(==);
             break;
 
           case JSOP_NEW_NE:
-            NEW_EQUALITY_OP(!=, JS_TRUE);
+            NEW_EQUALITY_OP(!=);
             break;
 
 #if JS_HAS_SWITCH_STATEMENT
           case JSOP_CASE:
-            NEW_EQUALITY_OP(==, JS_FALSE);
+            NEW_EQUALITY_OP(==);
             (void) POP();
             if (cond) {
                 len = GET_JUMP_OFFSET(pc);
@@ -2907,7 +2913,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             break;
 
           case JSOP_CASEX:
-            NEW_EQUALITY_OP(==, JS_FALSE);
+            NEW_EQUALITY_OP(==);
             (void) POP();
             if (cond) {
                 len = GET_JUMPX_OFFSET(pc);

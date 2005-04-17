@@ -48,6 +48,7 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsbool.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsfun.h"
@@ -1351,6 +1352,219 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif /* JS_HAS_SEQUENCE_OPS */
 
+#if JS_HAS_ARRAY_EXTRAS
+static JSBool
+array_indexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval)
+{
+    jsuint len, i;
+    
+    if (!js_GetLengthProperty(cx, obj, &len))
+        return JS_FALSE;
+    
+    for (i = 0; i < len; i++) {
+        jsid id;
+        jsval v;
+
+        if (!IndexToId(cx, i, &id) ||
+            !OBJ_GET_PROPERTY(cx, obj, id, &v)) {
+            return JS_FALSE;
+        }
+
+        if (js_StrictlyEqual(v, argv[0])) {
+            *rval = INT_TO_JSVAL(i);
+            return JS_TRUE;
+        }
+    }
+
+    *rval = INT_TO_JSVAL(-1);
+    return JS_TRUE;
+}
+
+/* Order is important; extras that use a caller's predicate must follow MAP. */
+typedef enum ArrayExtraMode {
+    FOREACH,
+    MAP,
+    FILTER,
+    SOME,
+    EVERY
+} ArrayExtraMode;
+
+static JSBool
+array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
+            ArrayExtraMode mode)
+{
+    jsuint len, newlen, i;
+    JSObject *funobj, *thisp, *newarr;
+    jsval *sp, *origsp, *oldsp;
+    void *mark;
+    JSStackFrame *fp;
+    JSBool ok, b;
+    
+    if (!js_GetLengthProperty(cx, obj, &len))
+        return JS_FALSE;
+
+    if (len == 0 || argc == 0)
+        return JS_TRUE;
+
+    if (JSVAL_IS_FUNCTION(cx, argv[0])) {
+        funobj = JSVAL_TO_OBJECT(argv[0]);
+    } else {
+        JSFunction *fun = js_ValueToFunction(cx, &argv[0], 0);
+        if (!fun)
+            return JS_FALSE;
+        funobj = fun->object;
+        argv[0] = OBJECT_TO_JSVAL(funobj);
+    }
+
+    if (argc > 1) {
+        if (!js_ValueToObject(cx, argv[1], &thisp))
+            return JS_FALSE;
+        argv[1] = OBJECT_TO_JSVAL(thisp);
+    } else {
+        JSObject *tmp;
+        thisp = funobj;
+        while ((tmp = OBJ_GET_PARENT(cx, thisp)) != NULL)
+            thisp = tmp;
+    }
+
+    if (mode == MAP || mode == FILTER) {
+        newlen = (mode == MAP ? len : 0);
+        newarr = js_NewArrayObject(cx, newlen, NULL);
+        if (!newarr)
+            return JS_FALSE;
+        *rval = OBJECT_TO_JSVAL(newarr);
+    }
+
+    /* We call with 2 args, value and index, plus room for rval. */
+    origsp = js_AllocStack(cx, 2 + 3, &mark);
+    if (!origsp)
+        return JS_FALSE;
+
+    /* Lift current frame to include our args. */
+    fp = cx->fp;
+    oldsp = fp->sp;
+
+    for (i = 0; i < len; i++) {
+        jsid id;
+        jsval v, rval2;
+
+        ok = IndexToId(cx, i, &id);
+        if (!ok)
+            break;
+        ok = OBJ_GET_PROPERTY(cx, obj, id, &v);
+        if (!ok)
+            break;
+
+        /* Push funobj and 'this', then args. */
+        sp = origsp;
+        *sp++ = OBJECT_TO_JSVAL(funobj);
+        *sp++ = OBJECT_TO_JSVAL(thisp);
+        *sp++ = v;
+        *sp++ = INT_TO_JSVAL(i);
+
+        /* Do the call. */
+        fp->sp = sp;
+        ok = js_Invoke(cx, 2, JSINVOKE_INTERNAL);
+        rval2 = fp->sp[-1];
+        fp->sp = oldsp;
+        if (!ok)
+            break;
+
+        if (mode > MAP) {
+            if (rval2 == JSVAL_NULL) {
+                b = JS_FALSE;
+            } else if (JSVAL_IS_BOOLEAN(rval2)) {
+                b = JSVAL_TO_BOOLEAN(rval2);
+            } else {
+                ok = js_ValueToBoolean(cx, rval2, &b);
+                if (!ok)
+                    goto out;
+            }
+        }
+
+        switch (mode) {
+          case FOREACH:
+            break;
+          case MAP:
+            ok = OBJ_SET_PROPERTY(cx, newarr, id, &rval2);
+            if (!ok)
+                goto out;
+            break;
+          case FILTER:
+            if (!b)
+                break;
+            /* Filter passed v, push as result. */
+            ok = IndexToId(cx, newlen++, &id);
+            if (!ok)
+                goto out;
+            ok = OBJ_SET_PROPERTY(cx, newarr, id, &v);
+            if (!ok)
+                goto out;
+            break;
+          case SOME:
+            if (b) {
+                *rval = JSVAL_TRUE;
+                goto out;
+            }
+            break;
+          case EVERY:
+            if (!b) {
+                *rval = JSVAL_FALSE;
+                goto out;
+            }
+            break;
+        }
+    }
+
+        
+    if (mode == SOME)
+        *rval = JSVAL_FALSE;
+    else if (mode == EVERY)
+        *rval = JSVAL_TRUE;
+ out:
+    js_FreeStack(cx, mark);
+    if (ok && mode == FILTER)
+        ok = js_SetLengthProperty(cx, newarr, newlen);
+    return ok;
+}
+
+static JSBool
+array_forEach(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval)
+{
+    return array_extra(cx, obj, argc, argv, rval, FOREACH);
+}
+
+static JSBool
+array_map(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+          jsval *rval)
+{
+    return array_extra(cx, obj, argc, argv, rval, MAP);
+}
+
+static JSBool
+array_filter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+             jsval *rval)
+{
+    return array_extra(cx, obj, argc, argv, rval, FILTER);
+}
+
+static JSBool
+array_some(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+           jsval *rval)
+{
+    return array_extra(cx, obj, argc, argv, rval, SOME);
+}
+
+static JSBool
+array_every(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+           jsval *rval)
+{
+    return array_extra(cx, obj, argc, argv, rval, EVERY);
+}
+#endif
+
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
     {js_toSource_str,       array_toSource,         0,0,0},
@@ -1376,6 +1590,15 @@ static JSFunctionSpec array_methods[] = {
 #if JS_HAS_SEQUENCE_OPS
     {"concat",              array_concat,           1,0,0},
     {"slice",               array_slice,            2,0,0},
+#endif
+
+#if JS_HAS_ARRAY_EXTRAS
+    {"indexOf",             array_indexOf,          1,0,0},
+    {"forEach",             array_forEach,          1,0,0},
+    {"map",                 array_map,              1,0,0},
+    {"filter",              array_filter,           1,0,0},
+    {"some",                array_some,             1,0,0},
+    {"every",               array_every,            1,0,0},
 #endif
 
     {0,0,0,0,0}
