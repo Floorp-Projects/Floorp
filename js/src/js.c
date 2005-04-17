@@ -1750,8 +1750,36 @@ its_item(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+its_bindMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval)
+{
+    char *name;
+    JSObject *method;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "so", &name, &method))
+        return JS_FALSE;
+
+    *rval = OBJECT_TO_JSVAL(method);
+
+    if (JS_TypeOfValue(cx, *rval) != JSTYPE_FUNCTION) {
+        JSString *valstr = JS_ValueToString(cx, *rval);
+        if (valstr) {
+            JS_ReportError(cx, "can't bind method %s to non-callable object %s",
+                           name, JS_GetStringBytes(valstr));
+        }
+        return JS_FALSE;
+    }
+
+    if (!JS_DefineProperty(cx, obj, name, *rval, NULL, NULL, JSPROP_ENUMERATE))
+        return JS_FALSE;
+
+    return JS_SetParent(cx, method, obj);
+}
+
 static JSFunctionSpec its_methods[] = {
     {"item",            its_item,       0},
+    {"bindMethod",      its_bindMethod, 2},
     {0}
 };
 
