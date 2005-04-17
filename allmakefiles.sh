@@ -873,7 +873,6 @@ browser/components/bookmarks/Makefile
 browser/components/bookmarks/public/Makefile
 browser/components/bookmarks/src/Makefile
 browser/components/build/Makefile
-browser/components/help/Makefile
 browser/components/history/Makefile
 browser/components/migration/Makefile
 browser/components/migration/public/Makefile
@@ -937,7 +936,6 @@ toolkit/components/downloads/src/Makefile
 toolkit/components/filepicker/Makefile
 toolkit/components/gnome/Makefile
 toolkit/components/help/Makefile
-toolkit/components/help/helpOnHelp/Makefile
 toolkit/components/history/Makefile
 toolkit/components/history/public/Makefile
 toolkit/components/history/src/Makefile
