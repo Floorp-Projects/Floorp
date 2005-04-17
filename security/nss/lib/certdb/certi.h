@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.15 2005/02/25 00:54:29 julien.pierre.bugs%sun.com Exp $
+ * $Id: certi.h,v 1.16 2005/04/17 03:17:06 julien.pierre.bugs%sun.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -169,9 +169,9 @@ struct CRLDPCacheStr {
     PRBool refresh;        /* manual refresh from tokens has been forced */
     PRBool mustchoose;     /* trigger reselection algorithm, for case when
                               RAM CRL objects are dropped from the cache */
-    PRIntervalTime lastfetch; /* time a CRL token fetch was last performed */
-    PRIntervalTime lastcheck; /* time CRL token objects were last checked for
-                                 existence */
+    PRTime lastfetch;      /* time a CRL token fetch was last performed */
+    PRTime lastcheck;      /* time CRL token objects were last checked for
+                              existence */
 };
 
 /*  CRL issuer cache object
