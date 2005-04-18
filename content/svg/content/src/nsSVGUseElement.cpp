@@ -557,7 +557,7 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
     for (i = 0; i < num; i++) {
       nsCOMPtr<nsIContent> child = newcontent->GetChildAt(0);
       newcontent->RemoveChildAt(0, PR_FALSE);
-      svgNode->InsertChildAt(child, i, PR_TRUE, PR_TRUE);
+      svgNode->InsertChildAt(child, i, PR_TRUE);
     }
 
     newcontent = svgNode;

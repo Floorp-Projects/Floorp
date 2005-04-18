@@ -351,9 +351,8 @@ public:
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument);
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
 
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
@@ -458,10 +457,9 @@ nsHTMLScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
 nsresult
 nsHTMLScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify, PRBool aDeepSetDocument)
+                                   PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify,
-                                                    aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
   if (NS_SUCCEEDED(rv) && aNotify) {
     MaybeProcessScript();
   }
@@ -470,11 +468,9 @@ nsHTMLScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsHTMLScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                   PRBool aDeepSetDocument)
+nsHTMLScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLElement::AppendChildTo(aKid, aNotify,
-                                                    aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::AppendChildTo(aKid, aNotify);
   if (NS_SUCCEEDED(rv) && aNotify) {
     MaybeProcessScript();
   }

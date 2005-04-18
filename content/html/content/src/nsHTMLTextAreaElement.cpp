@@ -112,9 +112,8 @@ public:
 
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument);
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -455,11 +454,10 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
 
 nsresult
 nsHTMLTextAreaElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                     PRBool aNotify, PRBool aDeepSetDocument)
+                                     PRBool aNotify)
 {
   nsresult rv;
-  rv = nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify,
-                                               aDeepSetDocument);
+  rv = nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify);
   if (!mValueChanged) {
     Reset();
   }
@@ -467,12 +465,10 @@ nsHTMLTextAreaElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsHTMLTextAreaElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                     PRBool aDeepSetDocument)
+nsHTMLTextAreaElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   nsresult rv;
-  rv = nsGenericHTMLFormElement::AppendChildTo(aKid, aNotify,
-                                               aDeepSetDocument);
+  rv = nsGenericHTMLFormElement::AppendChildTo(aKid, aNotify);
   if (!mValueChanged) {
     Reset();
   }

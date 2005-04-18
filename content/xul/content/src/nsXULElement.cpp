@@ -587,7 +587,7 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
             if (! newchild)
                 return NS_ERROR_UNEXPECTED;
 
-            rv = result->AppendChildTo(newchild, PR_FALSE, PR_FALSE);
+            rv = result->AppendChildTo(newchild, PR_FALSE);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -1127,8 +1127,7 @@ nsXULElement::IndexOf(nsIContent* aPossibleChild) const
 }
 
 nsresult
-nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
-                            PRBool aDeepSetDocument)
+nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify)
 {
     nsresult rv = EnsureContentsGenerated();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1193,8 +1192,7 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
 }
 
 nsresult
-nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                            PRBool aDeepSetDocument)
+nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
     nsresult rv = EnsureContentsGenerated();
     NS_ENSURE_SUCCESS(rv, rv);

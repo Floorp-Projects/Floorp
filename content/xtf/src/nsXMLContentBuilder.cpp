@@ -174,7 +174,7 @@ NS_IMETHODIMP nsXMLContentBuilder::BeginElement(const nsAString & tagname)
     mCurrent = mTop;
   }
   else {    
-    mCurrent->AppendChildTo(node, PR_TRUE, PR_TRUE);
+    mCurrent->AppendChildTo(node, PR_TRUE);
     mCurrent = node;
   }
   
@@ -210,7 +210,7 @@ NS_IMETHODIMP nsXMLContentBuilder::TextNode(const nsAString & text)
   domDoc->CreateTextNode(text, getter_AddRefs(textNode));
   NS_ASSERTION(textNode, "Failed to create text node");
   nsCOMPtr<nsIContent> textContent = do_QueryInterface(textNode);
-  mCurrent->AppendChildTo(textContent, PR_TRUE, PR_TRUE);
+  mCurrent->AppendChildTo(textContent, PR_TRUE);
   return NS_OK;
 }
 

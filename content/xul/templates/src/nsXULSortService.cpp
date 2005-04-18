@@ -1228,7 +1228,7 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
       contentSortInfo * contentSortInfo = contentSortInfoArray[loop];
       nsIContent *parentNode = (nsIContent *)contentSortInfo->content;
       nsIContent* kid = parentNode;
-      container->InsertChildAt(kid, childPos++, PR_FALSE, PR_TRUE);
+      container->InsertChildAt(kid, childPos++, PR_FALSE);
 
       NS_RELEASE(contentSortInfo->content);
       delete contentSortInfo;
@@ -1502,7 +1502,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
         temp = child;
         direction = inplaceSortCallback(&node, &temp, &sortInfo);
         if (direction < 0) {
-          container->InsertChildAt(node, staticCount, aNotify, PR_FALSE);
+          container->InsertChildAt(node, staticCount, aNotify);
           childAdded = PR_TRUE;
         } else
           sortState->lastWasFirst = PR_FALSE;
@@ -1511,7 +1511,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
         temp = child;
         direction = inplaceSortCallback(&node, &temp, &sortInfo);
         if (direction > 0) {
-          container->InsertChildAt(node, realNumChildren, aNotify, PR_FALSE);
+          container->InsertChildAt(node, realNumChildren, aNotify);
           childAdded = PR_TRUE;
         } else
           sortState->lastWasLast = PR_FALSE;
@@ -1531,7 +1531,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
              && (direction >= 0)) || (left == right))
         {
           PRInt32 thePos = ((direction > 0) ? x : x-1);
-          container->InsertChildAt(node, thePos, aNotify, PR_FALSE);
+          container->InsertChildAt(node, thePos, aNotify);
           childAdded = PR_TRUE;
           
           sortState->lastWasFirst = (thePos == staticCount) ? PR_TRUE: PR_FALSE;
@@ -1548,7 +1548,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
   }
 
   if (!childAdded)
-    container->InsertChildAt(node, numChildren, aNotify, PR_FALSE);
+    container->InsertChildAt(node, numChildren, aNotify);
 
   if (!sortState->mCache && sortInfo.mInner)
     sortState->mCache = sortInfo.mInner;
@@ -1672,14 +1672,16 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
   nsCOMPtr<nsIContent> containerParent = container->GetParent();
   PRInt32 containerIndex = containerParent->IndexOf(container);
   PRInt32 childCount = containerParent->GetChildCount();
-  if (NS_FAILED(rv = containerParent->RemoveChildAt(containerIndex, PR_TRUE))) return rv;
+  rv = containerParent->RemoveChildAt(containerIndex, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   if (containerIndex+1 < childCount) {
-    if (NS_FAILED(rv = containerParent->InsertChildAt(container, containerIndex, PR_TRUE, PR_TRUE))) return rv;
+    rv = containerParent->InsertChildAt(container, containerIndex, PR_TRUE);
   } else {
-    if (NS_FAILED(rv = containerParent->AppendChildTo(container, PR_TRUE, PR_TRUE))) return rv;
+    rv = containerParent->AppendChildTo(container, PR_TRUE);
   }
   
-  return NS_OK;
+  return rv;
 }
 
 nsresult

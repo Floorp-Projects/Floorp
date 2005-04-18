@@ -561,7 +561,7 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
     nsCOMPtr<nsIContent> parent = GetCurrentContent();
 
     if (parent) {
-      result = parent->AppendChildTo(aContent, PR_FALSE, PR_FALSE);
+      result = parent->AppendChildTo(aContent, PR_FALSE);
     }
   }
 
@@ -938,7 +938,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
       nsCOMPtr<nsIContent> parent = GetCurrentContent();
       NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
-      parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
+      parent->AppendChildTo(content, PR_FALSE);
     }
 
     PushContent(content);
@@ -991,7 +991,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
     nsCOMPtr<nsIContent> parent = GetCurrentContent();
     NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
-    parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
+    parent->AppendChildTo(content, PR_FALSE);
   }
 
   if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {

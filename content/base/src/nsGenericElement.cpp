@@ -295,7 +295,7 @@ nsNode3Tearoff::SetTextContent(nsIContent* aContent,
 
   textContent->SetText(aTextContent, PR_TRUE);
 
-  aContent->AppendChildTo(textContent, PR_TRUE, PR_FALSE);
+  aContent->AppendChildTo(textContent, PR_TRUE);
 
   return NS_OK;
 }
@@ -2639,8 +2639,7 @@ nsGenericElement::MayHaveFrame() const
 nsresult
 nsGenericElement::InsertChildAt(nsIContent* aKid,
                                 PRUint32 aIndex,
-                                PRBool aNotify,
-                                PRBool aDeepSetDocument)
+                                PRBool aNotify)
 {
   NS_PRECONDITION(aKid, "null ptr");
 
@@ -2693,8 +2692,7 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
 }
 
 nsresult
-nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                PRBool aDeepSetDocument)
+nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION(aKid && this != aKid, "null ptr");
   nsIDocument *document = GetCurrentDoc();
@@ -2932,7 +2930,7 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
       childContent = newContent->GetChildAt(i);
 
       // Insert the child and increment the insertion position
-      res = InsertChildAt(childContent, refPos++, do_notify, PR_TRUE);
+      res = InsertChildAt(childContent, refPos++, do_notify);
 
       if (NS_FAILED(res)) {
         break;
@@ -3012,7 +3010,7 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
                                              old_doc);
     }
 
-    res = InsertChildAt(newContent, refPos, PR_TRUE, PR_TRUE);
+    res = InsertChildAt(newContent, refPos, PR_TRUE);
 
     if (NS_FAILED(res)) {
       return res;
@@ -3128,7 +3126,7 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
       NS_ENSURE_SUCCESS(res, res);
 
       // Insert the child and increment the insertion position
-      res = InsertChildAt(childContent, oldPos++, PR_TRUE, PR_TRUE);
+      res = InsertChildAt(childContent, oldPos++, PR_TRUE);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
@@ -3184,7 +3182,7 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
       NS_ENSURE_SUCCESS(res, res);
     }
 
-    res = InsertChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
+    res = InsertChildAt(newContent, oldPos, PR_TRUE);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -3390,7 +3388,7 @@ nsGenericElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIContent> newContent = do_QueryInterface(newNode);
-    rv = aDst->AppendChildTo(newContent, PR_FALSE, PR_FALSE);
+    rv = aDst->AppendChildTo(newContent, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

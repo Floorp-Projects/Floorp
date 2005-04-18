@@ -528,7 +528,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
             }
 
             textContent->SetText(value, PR_TRUE);
-            realElement->AppendChildTo(textContent, PR_TRUE, PR_FALSE);
+            realElement->AppendChildTo(textContent, PR_TRUE);
           }
         }
       }
@@ -900,7 +900,7 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
           }
 
           textContent->SetText(value, PR_TRUE);
-          realElement->AppendChildTo(textContent, PR_TRUE, PR_FALSE);
+          realElement->AppendChildTo(textContent, PR_TRUE);
         }
       }
 

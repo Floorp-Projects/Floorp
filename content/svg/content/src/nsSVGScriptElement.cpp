@@ -99,9 +99,8 @@ public:
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument);
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
     
 protected:
   /**
@@ -376,10 +375,9 @@ nsSVGScriptElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
 nsresult
 nsSVGScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify, PRBool aDeepSetDocument)
+                                  PRBool aNotify)
 {
-  nsresult rv = nsSVGScriptElementBase::InsertChildAt(aKid, aIndex, aNotify,
-                                                      aDeepSetDocument);
+  nsresult rv = nsSVGScriptElementBase::InsertChildAt(aKid, aIndex, aNotify);
   if (NS_SUCCEEDED(rv) && aNotify) {
     MaybeProcessScript();
   }
@@ -388,11 +386,9 @@ nsSVGScriptElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsSVGScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                  PRBool aDeepSetDocument)
+nsSVGScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
-  nsresult rv = nsSVGScriptElementBase::AppendChildTo(aKid, aNotify,
-                                                      aDeepSetDocument);
+  nsresult rv = nsSVGScriptElementBase::AppendChildTo(aKid, aNotify);
   if (NS_SUCCEEDED(rv) && aNotify) {
     MaybeProcessScript();
   }

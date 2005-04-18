@@ -66,9 +66,8 @@ public:
 
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument);
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -148,11 +147,9 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGStyleElement)
 
 nsresult
 nsSVGStyleElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument)
+                                 PRBool aNotify)
 {
-  nsresult rv =
-    nsSVGStyleElementBase::InsertChildAt(aKid, aIndex, aNotify,
-                                         aDeepSetDocument);
+  nsresult rv = nsSVGStyleElementBase::InsertChildAt(aKid, aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
@@ -161,11 +158,9 @@ nsSVGStyleElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsSVGStyleElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument)
+nsSVGStyleElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
-  nsresult rv =
-    nsSVGStyleElementBase::AppendChildTo(aKid, aNotify, aDeepSetDocument);
+  nsresult rv = nsSVGStyleElementBase::AppendChildTo(aKid, aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }

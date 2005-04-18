@@ -2119,7 +2119,6 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     mDisplayContent->SetText(NS_LITERAL_STRING("X"), PR_TRUE);
 
     nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
-    // mContent->AppendChildTo(labelContent, PR_FALSE, PR_FALSE);
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
     doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::input, nsnull,

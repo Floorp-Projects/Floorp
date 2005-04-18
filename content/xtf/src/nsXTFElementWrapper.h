@@ -82,9 +82,8 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
   nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                         PRBool aNotify, PRBool aDeepSetDocument);
-  nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                         PRBool aDeepSetDocument);
+                         PRBool aNotify);
+  nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   nsIAtom *GetIDAttributeName() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
