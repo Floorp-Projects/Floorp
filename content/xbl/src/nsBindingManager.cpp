@@ -434,30 +434,9 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
     nsIPresShell *shell = aOldDocument->GetShellAt(i);
     NS_ASSERTION(shell != nsnull, "Zoiks! nsIDocument::GetShellAt() broke");
 
-    // See if the element has nsIAnonymousContentCreator-created
-    // anonymous content...
+    // now clear out the anonymous content for this node in the old presshell.
     // XXXbz this really doesn't belong here, somehow... either that, or we
     // need to better define what sort of bindings we're managing.
-    nsCOMPtr<nsISupportsArray> anonymousElements;
-    shell->GetAnonymousContentFor(aContent, getter_AddRefs(anonymousElements));
-
-    if (anonymousElements) {
-      // ...yep, so be sure to update the doc pointer in those
-      // elements, too.
-      PRUint32 count;
-      anonymousElements->Count(&count);
-
-      while (PRInt32(--count) >= 0) {
-        nsCOMPtr<nsIContent> content( do_QueryElementAt(anonymousElements, count));
-        NS_ASSERTION(content != nsnull, "not an nsIContent");
-        if (! content)
-          continue;
-
-        content->UnbindFromTree();
-      }
-    }
-
-    // now clear out the anonymous content for this node in the old presshell.
     shell->SetAnonymousContentFor(aContent, nsnull);
   }
 
