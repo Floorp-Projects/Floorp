@@ -201,15 +201,17 @@ protected:
     return mTopRowIndex + mPageLength;
   };
 
-  // An internal hit test.
-  PRInt32 GetRowAt(PRInt32 aX, PRInt32 aY);
+  // An internal hit test.  aX and aY are expected to be in twips in the
+  // coordinate system of this frame.
+  PRInt32 GetRowAt(nscoord aX, nscoord aY);
 
   // A helper used when hit testing.
-  nsIAtom* GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, PRInt32 aRowIndex,
-                               nsTreeColumn* aColumn);
+  nsIAtom* GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
+                               PRInt32 aRowIndex, nsTreeColumn* aColumn);
 
-  // An internal hit test.
-  void GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, nsTreeColumn** aCol,
+  // An internal hit test.  aX and aY are expected to be in twips in the
+  // coordinate system of this frame.
+  void GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow, nsTreeColumn** aCol,
                  nsIAtom** aChildElt);
 
   // Fetch an image from the image cache.
@@ -252,8 +254,9 @@ protected:
   // Our internal scroll method, used by all the public scroll methods.
   nsresult ScrollInternal(PRInt32 aRow);
   
-  // Convert pixels, probably from an event, into twips in our coordinate space.
-  void AdjustEventCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY, PRInt32* aResultX, PRInt32* aResultY);
+  // Convert client pixels into twips in our coordinate space.
+  void AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY,
+                                         nscoord* aResultX, nscoord* aResultY);
 
   // Convert a border style into line style.
   nsLineStyle ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle);

@@ -128,6 +128,9 @@ interface nsITreeBoxObject : nsISupports
   /**
    * A hit test that can tell you what row the mouse is over.
    * returns -1 for invalid mouse coordinates.
+   *
+   * The coordinate system is the client coordinate system for the
+   * document this boxObject lives in, and the units are CSS pixels.
    */
   long getRowAt(in long x, in long y);
 
@@ -136,6 +139,9 @@ interface nsITreeBoxObject : nsISupports
    * hit,  returns -1 for invalid mouse coordinates.  ColID is the column hit.
    * ChildElt is the pseudoelement hit: this can have values of
    * "cell", "twisty", "image", and "text".
+   *
+   * The coordinate system is the client coordinate system for the
+   * document this boxObject lives in, and the units are CSS pixels.
    */
   void getCellAt(in long x, in long y, out long row, out nsITreeColumn col, out ACString childElt);
 
