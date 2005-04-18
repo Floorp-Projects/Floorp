@@ -80,7 +80,7 @@ var ltnCalendarViewController = {
     },
 
     createNewEvent: function (aCalendar, aStartTime, aEndTime) {
-        dump ("+++ createNewEvent!!\n");
+        createEventWithDialog(aCalendar, aStartTime, aEndTime);
     },
 
     modifyEventTime: function (aCalendar, aEvent, aNewStartTime, aNewEndTime) {

@@ -1541,25 +1541,6 @@ function CalendarToolboxCustomizeDone(aToolboxChanged)
   window.focus();
 }
 
-//
-// timezone pref bits
-//
-
-// returns the TZID of the timezone pref
-var gDefaultTimezone = -1;
-function calendarDefaultTimezone() {
-    if (gDefaultTimezone == -1) {
-        var prefobj = prefService.getBranch("calendar.");
-        try {
-            gDefaultTimezone = prefobj.getCharPref("timezone.local");
-        } catch (e) {
-            gDefaultTimezone = null;
-        }
-    }
-
-    return gDefaultTimezone;
-}
-
 /* Called from doCreateWizardFinished after the calendar is created. */
 function afterCreateWizardFinish(newCalendar)
 {

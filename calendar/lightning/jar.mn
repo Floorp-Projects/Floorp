@@ -3,9 +3,6 @@ lightning.jar:
   content/lightning/messenger-overlay-sidebar.xul	(content/messenger-overlay-sidebar.xul)
   content/lightning/messenger-overlay-sidebar.js	(content/messenger-overlay-sidebar.js)
   content/lightning/calendar-management.js		(content/calendar-management.js)
-  content/lightning/weekView.xul	(content/weekView.xul)
-  content/lightning/weekView.js		(content/weekView.js)
-  content/lightning/calendarView.js	(content/calendarView.js)
   content/lightning/lightning-widgets.css		(content/lightning-widgets.css)
 
 en-US.jar:
@@ -14,13 +11,31 @@ en-US.jar:
 calendar.jar:
   content/calendar/calendarCreation.xul		(/calendar/resources/content/calendarCreation.xul) 
   content/calendar/calendarCreation.js		(/calendar/resources/content/calendarCreation.js) 
-  content/calendar/calendarUtils.js		(/calendar/resources/content/calendarUtils.js)
+  content/calendar/calendarUtils.js		(/calendar/resources/content/calendarUtils.js) 
+  content/calendar/eventDialog.js		(/calendar/resources/content/eventDialog.js)
+* content/calendar/eventDialog.xul		(/calendar/resources/content/eventDialog.xul)
+* content/calendar/applicationUtil.js		(/calendar/resources/content/applicationUtil.js)
+  content/calendar/dateUtils.js			(/calendar/resources/content/dateUtils.js)
+  content/calendar/selectAddressesDialog.js	(/calendar/resources/content/selectAddressesDialog.js)
+  content/calendar/attachFile.js		(/calendar/resources/content/attachFile.js)
+  content/calendar/datetimepickers/datepicker.css (/calendar/resources/content/datetimepickers/datepicker.css)
+  content/calendar/datetimepickers/datepicker.xbl (/calendar/resources/content/datetimepickers/datepicker.xbl)
+  content/calendar/datetimepickers/datetimepicker.css (/calendar/resources/content/datetimepickers/datetimepicker.css)
+  content/calendar/datetimepickers/datetimepicker.xbl (/calendar/resources/content/datetimepickers/datetimepicker.xbl)
+  content/calendar/datetimepickers/timepicker.css (/calendar/resources/content/datetimepickers/timepicker.css)
+  content/calendar/datetimepickers/timepicker.xbl (/calendar/resources/content/datetimepickers/timepicker.xbl)
+  content/calendar/datetimepickers/minimonth.css (/calendar/resources/content/datetimepickers/minimonth.css)
+  content/calendar/datetimepickers/minimonth.xbl (/calendar/resources/content/datetimepickers/minimonth.xbl)
   content/calendar/calendar-multiday-view.css	(/calendar/base/content/calendar-multiday-view.css)
   content/calendar/calendar-multiday-view.xml	(/calendar/base/content/calendar-multiday-view.xml)
+  content/calendar/calendar-item-editing.js	(/calendar/base/content/calendar-item-editing.js)
 
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)
   locale/en-US/calendar/calendar.dtd		(/calendar/resources/locale/en-US/calendar.dtd)
+  locale/en-US/calendar/selectAddresses.dtd	(/calendar/resources/locale/en-US/selectAddresses.dtd)
+  locale/en-US/calendar/calendar.properties	(/calendar/resources/locale/en-US/calendar.properties)
+  locale/en-US/calendar/dateFormat.properties	(/calendar/resources/locale/en-US/dateFormat.properties)
 
 classic.jar:
 #expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)

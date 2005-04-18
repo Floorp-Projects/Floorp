@@ -117,3 +117,27 @@ function isToDo(aObject)
    return aObject instanceof Components.interfaces.calITodo;
 }
 
+//
+// timezone pref bits
+// XXX is this really the function we want here?
+//
+
+var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+var rootPrefNode = prefService.getBranch(null); // preferences root node
+
+// returns the TZID of the timezone pref
+var gDefaultTimezone = -1;
+function calendarDefaultTimezone() {
+    if (gDefaultTimezone == -1) {
+        var prefobj = prefService.getBranch("calendar.");
+        try {
+            gDefaultTimezone = prefobj.getCharPref("timezone.local");
+        } catch (e) {
+            gDefaultTimezone = null;
+        }
+    }
+
+    return gDefaultTimezone;
+}
+

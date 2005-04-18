@@ -391,6 +391,7 @@ function loadCalendarEventDialog()
 
     // CATEGORIES --------------------------------------------------------
     // Load categories from preferences
+    try {
     var categoriesString = opener.GetUnicharPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "categories.names", getDefaultCategories());
     var categoriesList = categoriesString.split( "," );
 
@@ -412,7 +413,9 @@ function loadCalendarEventDialog()
         menuListSelectItem("categories-field", categories);
     else
         document.getElementById("categories-field").selectedIndex = -1;
-
+    } catch (ex) {
+        dump("unable to do categories stuff in event dialog\n");
+    }
     // The event calendar is its current calendar, or for a new event,
     // the selected calendar in the calendar list, passed in args.calendar.
     var eventCalendar = event.parent || args.calendar;
@@ -427,8 +430,12 @@ function loadCalendarEventDialog()
         // compare cal.uri because there may be multiple instances of
         // calICalendar or uri for the same spec, and those instances are
         // not ==.
-        if (eventCalendar && eventCalendar.uri.equals(calendars[i].uri))
-            calendarField.selectedIndex = i;
+        try {
+            if (eventCalendar && eventCalendar.uri.equals(calendars[i].uri))
+                calendarField.selectedIndex = i;
+        } catch(ex) {
+            dump("eventCalendar.uri not found...\n");
+        }
     }    
 
     // update enabling and disabling
@@ -1209,7 +1216,7 @@ function addException(dateToAdd)
     if ( isAlreadyException( dateToAdd ) )
        return;
 
-    var DateLabel = formatDate(dateToAdd);
+    var DateLabel = (new dateFormater()).getFormatedDate(date);
 
     // add a row to the listbox.
     var listbox = document.getElementById("exception-dates-listbox");
@@ -1393,26 +1400,6 @@ function loadURL()
     launchBrowser( UrlToGoTo );
     launch = true;
 }
-
-
-/*
- * Take a Date object and return a displayable date string i.e.: May 5, 1959
- */
-function formatDate( date )
-{
-   return( opener.gCalendarWindow.dateFormater.getFormatedDate( date ) );
-}
-
-
-/*
- * Take a Date object and return a displayable time string i.e.: 12:30 PM
- */
-function formatTime( time )
-{
-   var timeString = opener.gCalendarWindow.dateFormater.getFormatedTime( time );
-   return timeString;
-}
-
 
 /*
  *  A textbox changed - see if its button needs to be enabled or disabled
