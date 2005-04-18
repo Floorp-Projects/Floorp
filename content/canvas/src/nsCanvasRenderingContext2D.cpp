@@ -113,7 +113,7 @@ protected:
     PRInt32 mWidth, mHeight;
 
     nsCOMPtr<nsIDOMHTMLCanvasElement> mDOMCanvasElement;
-    nsICanvasElement* mCanvasElement;
+    nsCOMPtr<nsICanvasElement> mCanvasElement;
 
     // image bits
     nsCOMPtr<gfxIImageFrame> mImageFrame;
@@ -475,7 +475,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Init(nsIDOMHTMLCanvasElement* aCanvasElement)
 {
     mDOMCanvasElement = aCanvasElement;
-    CallQueryInterface(mDOMCanvasElement, &mCanvasElement);
+    mCanvasElement = do_QueryInterface(mDOMCanvasElement);
 
     // set up our css parser
     if (!mCSSParser) {
