@@ -870,7 +870,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   PRInt32 wordLen = 0;
   PRBool isWhitespace = PR_FALSE;
   PRUnichar* result = nsnull;
-  PRBool prevBufferPos;
+  PRInt32 prevBufferPos;
   PRBool skippedWhitespace = PR_FALSE;
 
   // Initialize OUT parameter
@@ -1034,15 +1034,15 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           // if the first character is szlig
           if(kSzlig == *result)
           {
-              if ((prevBufferPos + wordLen + 1) >= mTransformBuf.mBufferLen) {
+              if (mBufferPos + 1 >= mTransformBuf.mBufferLen) {
                 mTransformBuf.GrowBy(128);
                 result = &mTransformBuf.mBuffer[prevBufferPos];
               }
-              PRUnichar* src = result +  wordLen;
+              PRUnichar* src = result +  mBufferPos-prevBufferPos;
               while(src>result) 
               {
-                  *(src+1) = *src;
-                  src--;
+                *src = *(src-1);
+                src--;
               }
               result[0] = PRUnichar('S');
               result[1] = PRUnichar('S');
@@ -1062,12 +1062,12 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             PRInt32 szligCnt = CountGermanSzlig(result, wordLen);
             if(szligCnt > 0) {
               // Make sure we have enough room in the transform buffer
-              if ((prevBufferPos + wordLen + szligCnt) >= mTransformBuf.mBufferLen) 
+              if (mBufferPos + szligCnt >= mTransformBuf.mBufferLen)
               {
                 mTransformBuf.GrowBy(128);
                 result = &mTransformBuf.mBuffer[prevBufferPos];
               }
-              ReplaceGermanSzligToSS(result, wordLen, szligCnt);
+              ReplaceGermanSzligToSS(result, mBufferPos-prevBufferPos, szligCnt);
               wordLen += szligCnt;
             }
           }
