@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,11 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ *   Vladimir Vukicevic <vladimir@pobox.com>
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,48 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHTMLTags_h___
-#define nsHTMLTags_h___
+#include "nsIDOMHTMLElement.idl"
 
-#include "nsAString.h"
-
-class nsIAtom;
-
-/*
-   Declare the enum list using the magic of preprocessing
-   enum values are "eHTMLTag_foo" (where foo is the tag)
-
-   To change the list of tags, see nsHTMLTagList.h
-
+/**
+ * The nsIDOMHTMLCanvasElement interface is the interface to a HTML
+ * <canvas> element.
+ *
+ * For more information on this interface, please see
+ * http://www.whatwg.org/specs/web-apps/current-work/#graphics
+ *
+ * @status UNDER_DEVELOPMENT
  */
-#define HTML_TAG(_tag, _classname) eHTMLTag_##_tag,
-#define HTML_OTHER(_tag, _classname) eHTMLTag_##_tag,
-enum nsHTMLTag {
-  /* this enum must be first and must be zero */
-  eHTMLTag_unknown = 0,
-#include "nsHTMLTagList.h"
 
-  /* can't be moved into nsHTMLTagList since gcc3.4 doesn't like a
-     comma at the end of enum list*/
-  eHTMLTag_userdefined
-};
-#undef HTML_TAG
-#undef HTML_OTHER
+// XXX This should inherit from nsIDOMHTMLImageElement instead,
+// and implement that interface as well.
+[scriptable, uuid(332dd7d0-97e2-44a0-af5b-1c3bafb0b1f2)]
+interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
+{
+  attribute long width;
+  attribute long height;
 
-// All tags before eHTMLTag_text are HTML tags
-#define NS_HTML_TAG_MAX PRInt32(eHTMLTag_text - 1)
-
-class nsHTMLTags {
-public:
-  static nsresult AddRefTable(void);
-  static void ReleaseTable(void);
-
-  static nsHTMLTag LookupTag(const nsAString& aTagName);
-  static nsHTMLTag CaseSensitiveLookupTag(const PRUnichar* aTagName);
-  static const PRUnichar *GetStringValue(nsHTMLTag aEnum);
-  static nsIAtom *GetAtom(nsHTMLTag aEnum);
+  nsISupports getContext(in DOMString contextId);
 };
 
-#define eHTMLTags nsHTMLTag
-
-#endif /* nsHTMLTags_h___ */

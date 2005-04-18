@@ -79,6 +79,8 @@ static const PRUnichar sHTMLTagUnicodeName_br[] =
   {'b', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_button[] =
   {'b', 'u', 't', 't', 'o', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_canvas[] =
+  {'c', 'a', 'n', 'v', 'a', 's', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_caption[] =
   {'c', 'a', 'p', 't', 'i', 'o', 'n', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_center[] =

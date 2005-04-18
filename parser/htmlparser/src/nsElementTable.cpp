@@ -370,6 +370,16 @@ const nsHTMLElement gHTMLElements[] = {
     /*contain-func*/                    0
   },
   {
+    /*tag*/                             eHTMLTag_canvas,
+    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
+    /*autoclose starttags and endtags*/ 0,0,0,0,
+    /*parent,incl,exclgroups*/          kSpecial, kNone, kNone,
+    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
+    /*contain-func*/                    0
+  },
+  {
     /*tag*/                             eHTMLTag_caption,
     /*req-parent excl-parent*/          eHTMLTag_table,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gInTable,&gInTable,

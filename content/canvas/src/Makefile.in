@@ -1,4 +1,4 @@
-#
+# 
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,11 +12,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is canvas code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Vladimir Vukicevic <vladimir@pobox.com>
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -42,25 +42,49 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =						\
-	base					\
-	canvas					\
-	core					\
-	html					\
-	events					\
-	stylesheets				\
-	views					\
-	css					\
-	traversal				\
-	range					\
-	xbl					\
-	xpath					\
-	ls					\
-	xul
+MODULE		= content
+LIBRARY_NAME	= gkconcvs_s
+LIBXUL_LIBRARY  = 1
 
-ifdef MOZ_SVG
-DIRS += svg
+REQUIRES	= \
+		xpcom \
+		string \
+		gfx \
+		layout \
+		widget \
+		dom \
+		js \
+		locale \
+		unicharutil \
+		webshell \
+		uriloader \
+		htmlparser \
+		necko \
+		view \
+		pref \
+		docshell \
+		xpconnect \
+		xuldoc \
+		caps \
+		editor \
+		imglib2 \
+		mimetype \
+		exthandler \
+		uconv \
+		intl \
+		plugin \
+		$(NULL)
+
+CPPSRCS		= \
+		$(NULL)
+
+ifdef MOZ_ENABLE_CAIRO
+CPPSRCS		+= nsCanvasRenderingContext2D.cpp
 endif
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -D_IMPL_NS_LAYOUT

@@ -225,6 +225,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
+#include "nsIDOMHTMLCanvasElement.h"
 #include "nsIDOMHTMLDListElement.h"
 #include "nsIDOMHTMLDirectoryElement.h"
 #include "nsIDOMHTMLDivElement.h"
@@ -369,6 +370,10 @@
 #include "nsIDOMSVGUseElement.h"
 #include "nsIDOMSVGZoomAndPan.h"
 #endif // MOZ_SVG
+
+#ifdef MOZ_ENABLE_CAIRO
+#include "nsIDOMCanvasRenderingContext2D.h"
+#endif
 
 #include "nsIImageDocument.h"
 
@@ -582,6 +587,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLButtonElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLCanvasElement, nsHTMLElementSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLDListElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLDelElement, nsHTMLElementSH,
@@ -982,6 +989,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGTransformList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif // MOZ_SVG
+
+#ifdef MOZ_ENABLE_CAIRO
+  NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContext2D, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#endif // MOZ_ENABLE_CAIRO
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -1796,6 +1808,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(HTMLButtonElement, nsIDOMHTMLButtonElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLButtonElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLButtonElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLCanvasElement, nsIDOMHTMLCanvasElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCanvasElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -2657,8 +2674,13 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGTransformList, nsIDOMSVGTransformList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTransformList)
   DOM_CLASSINFO_MAP_END
-
 #endif // MOZ_SVG
+
+#ifdef MOZ_ENABLE_CAIRO
+  DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCanvasRenderingContext2D)
+  DOM_CLASSINFO_MAP_END
+#endif // MOZ_ENABLE_CAIRO
 
 #ifdef NS_DEBUG
   {
