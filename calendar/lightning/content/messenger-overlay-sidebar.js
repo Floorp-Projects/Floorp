@@ -3,6 +3,18 @@ function selectedCalendarPane(event)
     dump("selecting calendar pane\n");
     document.getElementById("displayDeck").selectedPanel =
         document.getElementById("calendar-view-box");
+
+    // give the view the calendar
+    var view = document.getElementById("calendar-multiday-view");
+    if (view.displayCalendar != getCompositeCalendar()) {
+        var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
+        d.jsDate = new Date();
+        var st = d.startOfWeek;
+        var end = d.endOfWeek;
+
+        view.setDateRange(st, end);
+        view.displayCalendar = getCompositeCalendar();
+    }
 }
 
 function LtnObserveDisplayDeckChange(event)

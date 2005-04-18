@@ -5,6 +5,8 @@
 <?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/skin/calendar-views.css" type="text/css"?>
 
+<?xml-stylesheet href="chrome://calendar/content/calendar-multiday-view.css" type="text/css"?>
+
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
@@ -39,7 +41,8 @@
 
 <deck id="displayDeck">
   <vbox id="calendar-view-box" flex="1">
-    <vbox id="week-view-box" flex="1"/>
+    <calendar-multiday-view orient="vertical" id="calendar-multiday-view" style="overflow:-moz-scrollbars-vertical" flex="1" />
+    <!-- <vbox id="week-view-box" flex="1"/> -->
   </vbox>
 </deck>
 </overlay>

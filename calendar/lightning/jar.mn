@@ -14,7 +14,9 @@ en-US.jar:
 calendar.jar:
   content/calendar/calendarCreation.xul		(/calendar/resources/content/calendarCreation.xul) 
   content/calendar/calendarCreation.js		(/calendar/resources/content/calendarCreation.js) 
-  content/calendar/calendarUtils.js		(/calendar/resources/content/calendarUtils.js) 
+  content/calendar/calendarUtils.js		(/calendar/resources/content/calendarUtils.js)
+  content/calendar/calendar-multiday-view.css	(/calendar/base/content/calendar-multiday-view.css)
+  content/calendar/calendar-multiday-view.xml	(/calendar/base/content/calendar-multiday-view.xml)
 
 calendar-en-US.jar:
   locale/en-US/calendar/global.dtd		(/calendar/resources/locale/en-US/global.dtd)
