@@ -12,11 +12,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is mozilla.org canvas code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Vladimir Vukicevic <vladimir@pobox.com>
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,32 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =						\
-	base					\
-	canvas					\
-	core					\
-	html					\
-	events					\
-	stylesheets				\
-	views					\
-	css					\
-	traversal				\
-	range					\
-	xbl					\
-	xpath					\
-	ls					\
-	xul
+MODULE		= dom
+XPIDL_MODULE	= dom_canvas
+GRE_MODULE	= 1
 
-ifdef MOZ_SVG
-DIRS += svg
-endif
+XPIDLSRCS = 					\
+	nsIDOMCanvasRenderingContext2D.idl	\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

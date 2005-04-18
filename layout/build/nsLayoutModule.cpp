@@ -147,6 +147,12 @@
 #include "nsDOMScriptObjectFactory.h"
 #include "nsAutoCopyListener.h"
 
+#include "nsHTMLCanvasFrame.h"
+
+#ifdef MOZ_ENABLE_CAIRO
+#include "nsIDOMCanvasRenderingContext2D.h"
+#endif
+
 class nsIDocumentLoaderFactory;
 
 #define PRODUCT_NAME "Gecko"
@@ -176,9 +182,6 @@ static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 #include "nsIXULSortService.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
-#ifdef MOZ_ENABLE_CAIRO
-#include "nsICanvasRenderingContext2D.h"
-#endif
 
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -445,10 +448,10 @@ nsresult NS_NewPopupBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
+#endif
+
 #ifdef MOZ_ENABLE_CAIRO
-nsresult NS_NewCanvasBoxObject(nsIBoxObject** aResult);
-nsresult NS_NewCanvasRenderingContext2D(nsICanvasRenderingContext2D** aResult);
-#endif /* MOZ_ENABLE_CAIRO */
+nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult);
 #endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
@@ -516,10 +519,6 @@ MAKE_CTOR(CreateNewEditorBoxObject,     nsIBoxObject,           NS_NewEditorBoxO
 MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxObject)
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
-#ifdef MOZ_ENABLE_CAIRO
-MAKE_CTOR(CreateNewCanvasBoxObject,     nsIBoxObject,           NS_NewCanvasBoxObject)
-MAKE_CTOR(CreateNewCanvasRenderingContext2D, nsICanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
-#endif
 #endif
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
 #ifdef MOZ_SVG
@@ -596,6 +595,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 MAKE_CTOR(CreateSyncLoadDOMService,       nsISyncLoadDOMService,       NS_NewSyncLoadDOMService)
 MAKE_CTOR(CreatePluginDocument,           nsIDocument,                 NS_NewPluginDocument)
+
+#ifdef MOZ_ENABLE_CAIRO
+MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStyleSheetService, Init)
 
@@ -908,18 +911,6 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/layout/xul-boxobject-tree;1",
     CreateNewTreeBoxObject },
 
-#ifdef MOZ_ENABLE_CAIRO
-  { "XUL Canvas Box Object",
-    NS_CANVASBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-canvas;1",
-    CreateNewCanvasBoxObject },
-
-  { "Canvas 2D Rendering Context",
-    NS_CANVASRENDERINGCONTEXT2D_CID,
-    "@mozilla.org/layout/canvas-rendering-context?name=context-2d;1",
-    CreateNewCanvasRenderingContext2D },
-#endif /* MOZ_ENABLE_CAIRO */
-
 #endif
 
   { "Namespace manager",
@@ -1059,6 +1050,13 @@ static const nsModuleComponentInfo gComponents[] = {
     CreateHTMLOptionElement,
     RegisterHTMLOptionElement,
     UnregisterHTMLOptionElement },
+
+#ifdef MOZ_ENABLE_CAIRO
+  { "Canvas 2D Rendering Context",
+    NS_CANVASRENDERINGCONTEXT2D_CID,
+    "@mozilla.org/content/canvas-rendering-context;1?id=2d",
+    CreateCanvasRenderingContext2D },
+#endif
 
   { "XML document encoder",
     NS_TEXT_ENCODER_CID,

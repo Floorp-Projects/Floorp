@@ -1,4 +1,4 @@
-#
+# 
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -15,8 +15,8 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Vladimir Vukicevic <vladimir@pobox.com>
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,32 +35,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =						\
-	base					\
-	canvas					\
-	core					\
-	html					\
-	events					\
-	stylesheets				\
-	views					\
-	css					\
-	traversal				\
-	range					\
-	xbl					\
-	xpath					\
-	ls					\
-	xul
-
-ifdef MOZ_SVG
-DIRS += svg
-endif
+DIRS		= public src
 
 include $(topsrcdir)/config/rules.mk
 

@@ -132,14 +132,6 @@ CPPSRCS		+= \
 		nsListBoxLayout.cpp \
 		$(NULL)
 
-ifdef MOZ_ENABLE_CAIRO
-CPPSRCS		+= \
-		nsCanvasFrame.cpp \
-		nsCanvasBoxObject.cpp \
-		nsCanvasRenderingContext2D.cpp \
-		$(NULL)
-endif
-
 endif
 
 include $(topsrcdir)/config/config.mk

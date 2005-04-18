@@ -124,7 +124,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 
-
 //----------------------------------------------------------------------
 
 #ifdef NS_DEBUG

@@ -112,9 +112,6 @@
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
 #include "nsIBoxLayout.h"
-#ifdef MOZ_ENABLE_CAIRO
-#include "nsCanvasFrame.h"
-#endif
 
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 
@@ -158,6 +155,9 @@ nsresult
 NS_NewXTFSVGDisplayFrame(nsIPresShell*, nsIContent*, nsIFrame**);
 #endif
 #endif
+
+nsresult
+NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
@@ -331,11 +331,6 @@ NS_NewMenuBarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewTreeBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-
-#ifdef MOZ_ENABLE_CAIRO
-nsresult
-NS_NewCanvasXULFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-#endif
 
 // grid
 nsresult
@@ -5375,6 +5370,10 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     isReplaced = PR_TRUE;
     rv = NS_NewIsIndexFrame(mPresShell, &newFrame);
   }
+  else if (nsHTMLAtoms::canvas == aTag) {
+    isReplaced = PR_TRUE;
+    rv = NS_NewHTMLCanvasFrame(mPresShell, &newFrame);
+  }
 
   if (NS_FAILED(rv) || !newFrame)
     return rv;
@@ -5782,12 +5781,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         processChildren = PR_TRUE;
         rv = NS_NewTreeColFrame(mPresShell, &newFrame);
       }
-#ifdef MOZ_ENABLE_CAIRO
-      else if (aTag == nsXULAtoms::canvas) {
-        isReplaced = PR_TRUE;
-        rv = NS_NewCanvasXULFrame(mPresShell, &newFrame);
-      }
-#endif
       // TEXT CONSTRUCTION
       else if (aTag == nsXULAtoms::text || aTag == nsHTMLAtoms::label ||
                aTag == nsXULAtoms::description) {

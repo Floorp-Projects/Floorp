@@ -108,6 +108,7 @@ dom/public/base/Makefile
 dom/public/coreEvents/Makefile
 dom/public/idl/Makefile
 dom/public/idl/base/Makefile
+dom/public/idl/canvas/Makefile
 dom/public/idl/core/Makefile
 dom/public/idl/css/Makefile
 dom/public/idl/events/Makefile
@@ -277,6 +278,9 @@ content/Makefile
 content/base/Makefile
 content/base/public/Makefile
 content/base/src/Makefile
+content/canvas/Makefile
+content/canvas/public/Makefile
+content/canvas/src/Makefile
 content/events/Makefile
 content/events/public/Makefile
 content/events/src/Makefile
