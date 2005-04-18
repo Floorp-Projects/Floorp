@@ -86,14 +86,14 @@ public:
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
   {
     return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
   }
-  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsIAtom* aPrefix, const nsAString& aValue,
-                     PRBool aNotify);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
 
   nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                       PRInt32 aModType) const;
