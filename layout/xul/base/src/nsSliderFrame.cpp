@@ -451,15 +451,16 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         // We're in the process of moving the thumb to the mouse,
         // but the mouse just moved.  Make sure to update our
         // destination point.
-        mDestinationPoint = aEvent->point;
+        mDestinationPoint = EventPointInOurCoords(aEvent);
         nsRepeatService::GetInstance()->Stop();
         nsRepeatService::GetInstance()->Start(mMediator);
         break;
       }
 
        // convert coord to pixels
-      nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
-
+       nsPoint eventPoint = EventPointInOurCoords(aEvent);
+       nscoord pos = isHorizontal ? eventPoint.x : eventPoint.y;
+         
        nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
        nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -471,14 +472,18 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
          nsSize thumbSize = thumbFrame->GetSize();
          if (isHorizontal) {
            // horizontal scrollbar - check if mouse is above or below thumb
-           if (aEvent->point.y < (-gSnapMultiplier * thumbSize.height) || 
-               aEvent->point.y > thumbSize.height + (gSnapMultiplier * thumbSize.height))
+           // XXXbz what about looking at the .y of the thumb's rect?  Is that
+           // always zero here?
+           if (eventPoint.y < -gSnapMultiplier * thumbSize.height ||
+               eventPoint.y > thumbSize.height +
+                                gSnapMultiplier * thumbSize.height)
              isMouseOutsideThumb = PR_TRUE;
          }
          else {
            // vertical scrollbar - check if mouse is left or right of thumb
-           if (aEvent->point.x < (-gSnapMultiplier * thumbSize.width) || 
-               aEvent->point.x > thumbSize.width + (gSnapMultiplier * thumbSize.width))
+           if (eventPoint.x < -gSnapMultiplier * thumbSize.width ||
+               eventPoint.x > thumbSize.width +
+                                gSnapMultiplier * thumbSize.width)
              isMouseOutsideThumb = PR_TRUE;
          }
        }
@@ -529,7 +534,9 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   else if ((aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && ((nsMouseEvent *)aEvent)->isShift)
       || (gMiddlePref && aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN)) {
     // convert coord from twips to pixels
-    nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
+    nsPoint eventPoint = EventPointInOurCoords(aEvent);
+    nscoord pos = isHorizontal ? eventPoint.x : eventPoint.y;
+
     nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
     nscoord pospx = pos/onePixel;
 
@@ -794,10 +801,29 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     scrollToClick = PR_TRUE;
   }
 
-  nsCOMPtr<nsIPrivateDOMEvent> domEvent(do_QueryInterface(aMouseEvent));
-  nsEvent *event;
-  domEvent->GetInternalNSEvent(&event);
-  nscoord pos = isHorizontal ? event->point.x : event->point.y;
+  // The event's client position is in pixels and in the coordinate system of
+  // the root view for our presentation.
+  PRInt32 clientPosPx;
+  if (isHorizontal) {
+    mouseEvent->GetClientX(&clientPosPx);
+  } else {
+    mouseEvent->GetClientY(&clientPosPx);
+  }
+
+  nsPresContext* presContext = GetPresContext();
+
+  nscoord clientPos = presContext->IntScaledPixelsToTwips(clientPosPx);
+
+  // Now convert this to twips and to our coordinates
+  
+  nsPoint clientOffset;
+  nsIView* closestView = GetClosestView(&clientOffset);
+  nsIView* rootView;
+  presContext->GetViewManager()->GetRootView(rootView);
+  NS_ASSERTION(closestView && rootView, "No view?");
+  clientOffset += closestView->GetOffsetTo(rootView);
+
+  nscoord pos = clientPos - (isHorizontal ? clientOffset.x : clientOffset.y);
 
   // If shift click or middle button, first
   // place the middle of the slider thumb under the click
@@ -887,6 +913,18 @@ nsSliderFrame::isDraggingThumb()
   return PR_FALSE;
 }
 
+nsPoint
+nsSliderFrame::EventPointInOurCoords(nsEvent* aEvent)
+{
+  // aEvent->point is in the coordinate system of the view returned by
+  // GetOffsetFromView.
+  nsPoint eventPoint = aEvent->point;
+  nsPoint viewOffset;
+  nsIView* dummy;
+  GetOffsetFromView(viewOffset, &dummy);
+  return eventPoint - viewOffset;
+}
+
 void
 nsSliderFrame::AddListener()
 {
@@ -934,13 +972,14 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   nsRect thumbRect = thumbFrame->GetRect();
   
   nscoord change = 1;
-  if (IsHorizontal() ? aEvent->point.x < thumbRect.x 
-                     : aEvent->point.y < thumbRect.y)
+  nsPoint eventPoint = EventPointInOurCoords(aEvent);
+  if (IsHorizontal() ? eventPoint.x < thumbRect.x 
+                     : eventPoint.y < thumbRect.y)
     change = -1;
 
   mChange = change;
   DragThumb(PR_TRUE);
-  mDestinationPoint = aEvent->point;
+  mDestinationPoint = eventPoint;
   PageUpDown(thumbFrame, change);
   
   nsRepeatService::GetInstance()->Start(mMediator);
