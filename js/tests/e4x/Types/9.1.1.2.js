@@ -25,6 +25,7 @@
  *   Igor Bukanov
  *   Ethan Hugg
  *   Milen Nankov
+ *   Martin Honnen
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,5 +65,16 @@ TEST(2, "three", x.delta.toString())
 x = <alpha attr1="value1" attr2="value2"><bravo>one<charlie>two</charlie></bravo></alpha>
 x.@attr1 = "newValue"
 TEST_XML(3, "newValue", x.@attr1)
+
+// From Martin
+
+XML.prettyPrinting = false;
+
+var god = <god><name>Kibo</name></god>;
+god.name = <><prename>James</prename><nickname>Kibo</nickname></>;
+
+var expect = '<god><prename>James</prename><nickname>Kibo</nickname></god>';
+actual = god;
+TEST_XML(4, expect, actual);
 
 END();
