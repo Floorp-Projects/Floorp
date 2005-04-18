@@ -1236,32 +1236,20 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
     NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
     if (!nsTextEditUtils::IsBody(rootElement))
     {
-      // XXX Why does this use range rather than selection collapse/extend?
       nsCOMPtr<nsIDOMRange> range (do_CreateInstance("@mozilla.org/content/range;1", &rv));
-      if (NS_FAILED(rv)) return rv;
-      if (!range) return NS_ERROR_FAILURE;
-      nsCOMPtr<nsISelection> selection (do_CreateInstance(
-                                "@mozilla.org/content/dom-selection;1", &rv));
-      if (NS_FAILED(rv)) return rv;
-      if (!selection) return NS_ERROR_FAILURE;
-
-      // get the independent selection interface
-      nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-      if (selPriv)
-        selPriv->SetPresShell(presShell);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
       if (content)
       {
         PRInt32 children = content->GetChildCount();
 
-        range->SetStart(rootElement, 0);
-        range->SetEnd(rootElement, children);
-
-        if (NS_FAILED(selection->AddRange(range)))
-          return NS_ERROR_FAILURE;
+        rv = range->SetStart(rootElement, 0);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = range->SetEnd(rootElement, children);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
-      rv = docEncoder->SetSelection(selection);
+      rv = docEncoder->SetRange(range);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
