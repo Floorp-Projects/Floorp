@@ -4728,7 +4728,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   // pointer-events: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mPointerEvents.GetUnit()) {
     svg->mPointerEvents = SVGData.mPointerEvents.GetIntValue();
-  } else if (eCSSUnit_None == SVGData.mMarkerMid.GetUnit()) {
+  } else if (eCSSUnit_None == SVGData.mPointerEvents.GetUnit()) {
     svg->mPointerEvents = NS_STYLE_POINTER_EVENTS_NONE;
   } else if (eCSSUnit_Inherit == SVGData.mPointerEvents.GetUnit()) {
     inherited = PR_TRUE;
