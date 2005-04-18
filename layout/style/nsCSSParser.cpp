@@ -75,6 +75,7 @@
 #include "nsUnitConversion.h"
 #include "nsPrintfCString.h"
 #include "nsIMediaList.h"
+#include "nsILookAndFeel.h"
 
 #include "prprf.h"
 #include "math.h"
@@ -137,6 +138,12 @@ public:
                             PRUint32 aLineNumber, // for error reporting
                             nsMediaList* aMediaList,
                             PRBool aHTMLMode);
+
+  NS_IMETHOD ParseColorString(const nsSubstring& aBuffer,
+                              nsIURI* aURL, // for error reporting
+                              PRUint32 aLineNumber, // for error reporting
+                              PRBool aHandleAlphaColors,
+                              nscolor* aColor);
 
   void AppendRule(nsICSSRule* aRule);
 
@@ -339,6 +346,7 @@ protected:
                             float aNumber, const nsString& aUnit);
 
   void SetParsingCompoundProperty(PRBool aBool) {
+    NS_ASSERTION(aBool == PR_TRUE || aBool == PR_FALSE, "bad PRBool value");
     mParsingCompoundProperty = aBool;
   }
   PRBool IsParsingCompoundProperty(void) {
@@ -375,26 +383,30 @@ protected:
 
   // After an UngetToken is done this flag is true. The next call to
   // GetToken clears the flag.
-  PRPackedBool mHavePushBack;
+  PRPackedBool mHavePushBack : 1;
 
   // True if we are in quirks mode; false in standards or almost standards mode
-  PRPackedBool  mNavQuirkMode;
+  PRPackedBool  mNavQuirkMode : 1;
 
 #ifdef MOZ_SVG
   // True if we are in SVG mode; false in "normal" CSS
-  PRPackedBool  mSVGMode;
+  PRPackedBool  mSVGMode : 1;
 #endif
 
   // True for parsing media lists for HTML attributes, where we have to
   // ignore CSS comments.
-  PRPackedBool mHTMLMediaMode;
+  PRPackedBool mHTMLMediaMode : 1;
+
+  // True if ParseColor should handle rgba() and hsla(), which most of
+  // Gecko currently doesn't understand.
+  PRPackedBool mHandleAlphaColors : 1;
 
   // True if tagnames and attributes are case-sensitive
-  PRPackedBool  mCaseSensitive;
+  PRPackedBool  mCaseSensitive : 1;
 
   // This flag is set when parsing a non-box shorthand; it's used to not apply
   // some quirks during shorthand parsing
-  PRPackedBool  mParsingCompoundProperty;
+  PRPackedBool  mParsingCompoundProperty : 1;
 
   // Stack of rule groups; used for @media and such.
   nsCOMArray<nsICSSGroupRule> mGroupStack;
@@ -487,6 +499,7 @@ CSSParserImpl::CSSParserImpl()
     mSVGMode(PR_FALSE),
 #endif
     mHTMLMediaMode(PR_FALSE),
+    mHandleAlphaColors(PR_FALSE),
     mCaseSensitive(PR_FALSE),
     mParsingCompoundProperty(PR_FALSE)
 #ifdef DEBUG
@@ -524,6 +537,7 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 NS_IMETHODIMP
 CSSParserImpl::SetCaseSensitive(PRBool aCaseSensitive)
 {
+  NS_ASSERTION(aCaseSensitive == PR_TRUE || aCaseSensitive == PR_FALSE, "bad PRBool value");
   mCaseSensitive = aCaseSensitive;
   return NS_OK;
 }
@@ -531,6 +545,7 @@ CSSParserImpl::SetCaseSensitive(PRBool aCaseSensitive)
 NS_IMETHODIMP
 CSSParserImpl::SetQuirkMode(PRBool aQuirkMode)
 {
+  NS_ASSERTION(aQuirkMode == PR_TRUE || aQuirkMode == PR_FALSE, "bad PRBool value");
   mNavQuirkMode = aQuirkMode;
   return NS_OK;
 }
@@ -539,6 +554,7 @@ CSSParserImpl::SetQuirkMode(PRBool aQuirkMode)
 NS_IMETHODIMP
 CSSParserImpl::SetSVGMode(PRBool aSVGMode)
 {
+  NS_ASSERTION(aSVGMode == PR_TRUE || aSVGMode == PR_FALSE, "bad PRBool value");
   mSVGMode = aSVGMode;
   return NS_OK;
 }
@@ -957,6 +973,62 @@ CSSParserImpl::DoParseMediaList(const nsSubstring& aBuffer,
   }
   CLEAR_ERROR();
   ReleaseScanner();
+  return rv;
+}
+
+NS_IMETHODIMP
+CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
+                                nsIURI* aURL, // for error reporting
+                                PRUint32 aLineNumber, // for error reporting
+                                PRBool aHandleAlphaColors,
+                                nscolor* aColor)
+{
+  NS_ASSERTION(aHandleAlphaColors == PR_TRUE || aHandleAlphaColors == PR_FALSE, "bad PRBool value");
+
+  nsresult rv = NS_ERROR_FAILURE;
+
+  rv = InitScanner(aBuffer, aURL, aLineNumber, aURL);
+  if (NS_FAILED(rv))
+    return rv;
+
+  mHandleAlphaColors = aHandleAlphaColors;
+
+  nsCSSValue value;
+  NS_ENSURE_TRUE(ParseColor(rv, value), NS_ERROR_FAILURE);
+
+  if (value.GetUnit() == eCSSUnit_String) {
+    nsAutoString s;
+    nscolor rgba;
+    if (NS_ColorNameToRGB(value.GetStringValue(s), &rgba)) {
+      (*aColor) = rgba;
+      rv = NS_OK;
+    }
+  } else if (value.GetUnit() == eCSSUnit_Color) {
+    (*aColor) = value.GetColorValue();
+    rv = NS_OK;
+  } else if (value.GetUnit() == eCSSUnit_Integer) {
+    PRInt32 intValue = value.GetIntValue();
+    if (intValue >= 0) {
+      nsCOMPtr<nsILookAndFeel> lfSvc = do_GetService("@mozilla.org/widget/lookandfeel;1");
+      if (lfSvc) {
+        nscolor rgba;
+        rv = lfSvc->GetColor((nsILookAndFeel::nsColorID) value.GetIntValue(), rgba);
+        if (NS_SUCCEEDED(rv))
+          (*aColor) = rgba;
+      }
+    } else {
+      // XXX - this is NS_COLOR_CURRENTCOLOR, NS_COLOR_MOZ_HYPERLINKTEXT, etc.
+      // which we don't handle as per the ParseColorString definition.  Should
+      // remove this limitation at some point.
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  CLEAR_ERROR();
+  ReleaseScanner();
+
+  mHandleAlphaColors = PR_FALSE;
+
   return rv;
 }
 
@@ -2697,7 +2769,8 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
         }
         return PR_FALSE;  // already pushed back
       }
-      else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-rgba")) {
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-rgba") ||
+               (mHandleAlphaColors && mToken.mIdent.LowerCaseEqualsLiteral("rgba"))) {
         // rgba ( component , component , component , opacity )
         PRUint8 r, g, b, a;
         PRInt32 type = COLOR_TYPE_UNKNOWN;
@@ -2720,7 +2793,8 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
         }
         return PR_FALSE;
       }
-      else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-hsla")) {
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-hsla") ||
+               (mHandleAlphaColors && mToken.mIdent.LowerCaseEqualsLiteral("hsla"))) {
         // hsla ( hue , saturation , lightness , opacity )
         // "hue" is a number, "saturation" and "lightness" are percentages,
         // "opacity" is a number.
@@ -3577,7 +3651,10 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
          (tk->mIdent.LowerCaseEqualsLiteral("rgb") ||
           tk->mIdent.LowerCaseEqualsLiteral("hsl") ||
           tk->mIdent.LowerCaseEqualsLiteral("-moz-rgba") ||
-          tk->mIdent.LowerCaseEqualsLiteral("-moz-hsla")))) {
+          tk->mIdent.LowerCaseEqualsLiteral("-moz-hsla") ||
+          (mHandleAlphaColors && (tk->mIdent.LowerCaseEqualsLiteral("rgba") ||
+                                  tk->mIdent.LowerCaseEqualsLiteral("hsla"))))))
+    {
       // Put token back so that parse color can get it
       UngetToken();
       if (ParseColor(aErrorCode, aValue)) {

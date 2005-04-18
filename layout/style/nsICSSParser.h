@@ -40,6 +40,7 @@
 #include "nsISupports.h"
 #include "nsAString.h"
 #include "nsCSSProperty.h"
+#include "nsColor.h"
 
 class nsICSSStyleRule;
 class nsICSSStyleSheet;
@@ -127,6 +128,21 @@ public:
                             PRUint32 aLineNumber, // for error reporting
                             nsMediaList* aMediaList,
                             PRBool aHTMLMode) = 0;
+
+  /**
+   * Parse aBuffer into a nscolor |aColor|.  If aHandleAlphaColors is
+   * set, handle rgba()/hsla(). Will return NS_ERROR_FAILURE if
+   * aBuffer is not a valid CSS color specification.
+   *
+   * Will also currently return NS_ERROR_FAILURE if it is not
+   * self-contained (i.e.  doesn't reference any external style state,
+   * such as "initial" or "inherit").
+   */
+  NS_IMETHOD ParseColorString(const nsSubstring& aBuffer,
+                              nsIURI* aURL, // for error reporting
+                              PRUint32 aLineNumber, // for error reporting
+                              PRBool aHandleAlphaColors,
+                              nscolor* aColor) = 0;
 };
 
 nsresult
