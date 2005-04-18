@@ -4,7 +4,7 @@
 /*== calendar-event-column ==*/
 
 calendar-event-column { 
-  -moz-binding: url(xfu.xml#calendar-event-column);
+  -moz-binding: url(chrome://calendar/content/calendar-multiday-view.xml#calendar-event-column);
 }
 
 calendar-event-column { 

@@ -50,6 +50,8 @@ XPIDLSRCS	= calIAttachment.idl \
 		  calIAttendee.idl   \
 		  calICalendar.idl   \
 		  calICalendarManager.idl \
+		  calICalendarView.idl \
+		  calICalendarViewController.idl \
 		  calIDateTime.idl   \
 		  calIEvent.idl      \
 		  calIICSService.idl \

@@ -14,6 +14,7 @@ function selectedCalendarPane(event)
 
         view.setDateRange(st, end);
         view.displayCalendar = getCompositeCalendar();
+        view.controller = ltnCalendarViewController;
     }
 }
 

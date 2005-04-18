@@ -44,6 +44,10 @@
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:xbl="http://www.mozilla.org/xbl">
 
+  <!--
+     - This is the time bar that displays time divisions to the side
+     - or top of a multiday view.
+    -->
   <binding id="calendar-time-bar">
     <content>
       <xul:box xbl:inherits="orient,width,height" flex="1" anonid="topbox">
@@ -158,6 +162,11 @@
     </implementation>
   </binding>
 
+  <!--
+     - A simple gripbar that is displayed at the start and end of an
+     - event box.  Needs to handle being dragged and resizing the
+     - event, thus changing its start/end time.
+    -->
   <binding id="calendar-event-gripbar">
     <content>
       <xul:box anonid="thebox" flex="1"/>
@@ -226,6 +235,10 @@
     </handlers>
   </binding>
 
+  <!--
+     - A column for displaying event boxes in.  One column per
+     - day; it manages the layout of the events given via add/deleteEvent.
+    -->
   <binding id="calendar-event-column">
     <content>
       <xul:box anonid="topbox" flex="1">
@@ -243,6 +256,8 @@
       <field name="mEndMin">20*60</field>
       <field name="mEvents">new Array()</field>
       <field name="mEventMap">null</field>
+      <field name="mCalendarView">null</field>
+      <field name="mDate">null</field>
 
       <!-- properties -->
       <property name="pixelsPerMinute">
@@ -258,6 +273,13 @@
           }
         ]]></setter>
       </property>
+
+      <property name="date"
+        onget="return this.mDate;"
+        onset="return (this.mDate = val);" />
+      <property name="calendarView"
+	onget="return this.mCalendarView;"
+	onset="return (this.mCalendarView = val);" />
 
       <property
 	name="topbox"
@@ -622,8 +644,20 @@
       </method>
 
     </implementation>
+
+    <handlers>
+      <handler event="dblclick"><![CDATA[
+	if (this.calendarView.controller) {
+            this.calendarView.controller.createNewEvent (this.mCalendarView.displayCalendar,
+                                                         this.mDate);
+	}
+      ]]></handler>
+    </handlers>
   </binding>
 
+  <!--
+     -  An individual event box, to be inserted into a column.
+    -->
   <binding id="calendar-event-box">
 
     <content>
@@ -647,7 +681,12 @@
       <!-- fields -->
       <field name="mOccurrence">null</field>
 
-      <!-- properties -->
+      <field name="mCalendarView">null</field>
+      <property name="calendarView"
+	onget="return this.mCalendarView;"
+	onset="return (this.mCalendarView = val);" />
+
+      <!-- methods/properties -->
       <method name="setAttribute">
 	<parameter name="aAttr"/>
 	<parameter name="aVal"/>
@@ -708,10 +747,15 @@
     <content>
       <xul:box anonid="mainbox" flex="1">
 	<!-- this thing is tricky; its width/height need to be programatically set based on the orientation -->
+	<xul:box anonid="labelbox">
+	  <xul:box anonid="labeltimespacer"/>
+          <xul:box anonid="labeldaybox" flex="1" equalsize="always" />
+	</xul:box>
 	<xul:box anonid="headerbox">
 	  <xul:box anonid="headertimespacer"/>
           <xul:box anonid="headerdaybox" flex="1" equalsize="always" />
 	</xul:box>
+        <xul:splitter collapse="before"><xul:grippy/></xul:splitter>
 	<xul:box anonid="childbox" flex="1">
 	  <!-- the orient of the calendar-time-bar needs to be the opposite of the parent -->
 	  <xul:calendar-time-bar xbl:inherits="orient" anonid="timebar"/>
@@ -723,9 +767,11 @@
     <implementation implements="calICalendarView">
 
       <constructor><![CDATA[
-        this.fixorient();
+	dump ("+++++++++ calendar-multiday-view\n");
+        this.reorient();
       ]]></constructor>
 
+      <field name="mController">null</field>
       <field name="mCalendar">null</field>
       <field name="mStartDate">null</field>
       <field name="mEndDate">null</field>
@@ -790,7 +836,7 @@
 
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.endDate,
-                                                      { file});
+                                                       {});
                 for each (occ in occs) {
                     this.doDeleteEvent(occ);
                 }
@@ -826,6 +872,10 @@
 	onget="return true"/>
       <property name="hasDisjointDates"
 	onget="return (this.mDateList != null);"/>
+
+      <property name="controller"
+	onget="return this.mController;"
+	onset="return (this.mController = val);" />
 
       <property name="displayCalendar">
 	<getter><![CDATA[
@@ -921,7 +971,7 @@
 
       <!-- private -->
 
-      <method name="fixorient">
+      <method name="reorient">
 	<body><![CDATA[
           var orient = this.getAttribute("orient");
           var otherorient = "vertical";
@@ -929,7 +979,7 @@
           if (orient == "vertical") otherorient = "horizontal";
 
 	  var normalelems = ['mainbox', 'timebar'];
-	  var otherelems = ['headerbox', 'headerdaybox', 'childbox', 'daybox'];
+	  var otherelems = ['labelbox', 'labeldaybox', 'headerbox', 'headerdaybox', 'childbox', 'daybox'];
 
 	  for each (id in normalelems) {
               document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", orient);
@@ -939,42 +989,50 @@
               document.getAnonymousElementByAttribute(this, "anonid", id).setAttribute("orient", otherorient);
           }
 
+          var labelbox = document.getAnonymousElementByAttribute(this, "anonid", "labelbox");
+	  var labeltimespacer = document.getAnonymousElementByAttribute(this, "anonid", "labeltimespacer");
           var headerbox = document.getAnonymousElementByAttribute(this, "anonid", "headerbox");
-          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
 	  var headertimespacer = document.getAnonymousElementByAttribute(this, "anonid", "headertimespacer");
+          var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
 
 	  if (orient == "vertical") {
               headerbox.setAttribute("height", 50);
               headerbox.removeAttribute("width");
+
+              labelbox.setAttribute("height", 50);
+              labelbox.removeAttribute("width");
 
               var timebarWidth = 50;
               timebar.setAttribute("width", timebarWidth);
               timebar.removeAttribute("height");
               headertimespacer.setAttribute("width", timebarWidth);
               headertimespacer.removeAttribute("height");
+              labeltimespacer.setAttribute("width", timebarWidth);
+              labeltimespacer.removeAttribute("height");
           } else {
               headerbox.setAttribute("width", 30);
               headerbox.removeAttribute("height");
+
+              labelbox.setAttribute("width", 30);
+              labelbox.removeAttribute("height");
 
               var timebarHeight = 30;
               timebar.setAttribute("height", timebarHeight);
               timebar.removeAttribute("width");
               headertimespacer.setAttribute("height", timebarHeight);
               headertimespacer.removeAttribute("width");
+              labeltimespacer.setAttribute("height", timebarHeight);
+              labeltimespacer.removeAttribute("width");
           }
 
-          var daybox = document.getAnonymousElementByAttribute(this, "anonid", "daybox");
-          var child = daybox.firstChild;
-          while (child) {
-              child.setAttribute("orient", orient);
-              child = child.nextSibling;
-          }
-
-          var headerbox = document.getAnonymousElementByAttribute(this, "anonid", "headerdaybox");
-          var child = headerbox.firstChild;
-          while (child) {
-              child.setAttribute("orient", orient);
-              child = child.nextSibling;
+	  var boxes = ["daybox", "headerdaybox", "labeldaybox"];
+	  for each (boxname in boxes) {
+              var box = document.getAnonymousElementByAttribute(this, "anonid", boxname);
+              var child = box.firstChild;
+              while (child) {
+                  child.setAttribute("orient", orient);
+                  child = child.nextSibling;
+              }
           }
 	]]></body>
       </method>
@@ -1014,7 +1072,7 @@
           var computedDateList;
           if (this.mDateList) {
               computedDateList = this.mDateList;
-          } else {
+          } else if (this.mStartDate && this.mEndDate) {
               computedDateList = new Array();
 
               var theDate = this.mStartDate.clone();
@@ -1027,6 +1085,7 @@
 
           var daybox = document.getAnonymousElementByAttribute(this, "anonid", "daybox");
           var headerdaybox = document.getAnonymousElementByAttribute(this, "anonid", "headerdaybox");
+          var labeldaybox = document.getAnonymousElementByAttribute(this, "anonid", "labeldaybox");
 
           while (daybox.lastChild)
               daybox.removeChild(daybox.lastChild);
@@ -1034,7 +1093,13 @@
           while (headerdaybox.lastChild)
               headerdaybox.removeChild(headerdaybox.lastChild);
 
+          while (labeldaybox.lastChild)
+              labeldaybox.removeChild(labeldaybox.lastChild);
+
           this.mDateColumns = new Array();
+
+          if (!computedDateList || computedDateList.length == 0)
+              return;
 
           var counter = 0;
           for each (d in computedDateList) {
@@ -1044,6 +1109,8 @@
               daybox.appendChild(dayEventsBox);
 
               dayEventsBox.setAttribute("orient", orient);
+              dayEventsBox.date = d;
+              dayEventsBox.calendarView = this;
 
               var dayHeaderBox = createXULElement("box");
               dayHeaderBox.setAttribute("class", "calendar-event-column-header");
@@ -1052,12 +1119,17 @@
 
               dayHeaderBox.setAttribute("orient", orient);
 
+              var dayLabelBox = createXULElement("label");
+              dayLabelBox.setAttribute("align", "center");
+              dayLabelBox.setAttribute("value", (d.month + 1) + "/" + d.day);
+              labeldaybox.appendChild(dayLabelBox);
+              
               d.isDate = true;
 
               if (!d.isUtc)
                   d = d.getInTimezone(null);
 
-              this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox } );
+              this.mDateColumns.push ( { date: d, column: dayEventsBox, header: dayHeaderBox, label: dayLabelBox } );
           }
 
 	  daybox.removeAttribute("flex");

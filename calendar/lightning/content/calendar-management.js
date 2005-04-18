@@ -69,6 +69,25 @@ var ltnCompositeCalendarObserver = {
     onError: function(aErrNo, aMessage) { }
 };
 
+var ltnCalendarViewController = {
+    QueryInterface: function(aIID) {
+        if (!aIID.equals(Components.interfaces.calICalendarViewController) ||
+            !aIID.equals(Components.interfaces.nsISupports)) {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
+
+        return this;
+    },
+
+    createNewEvent: function (aCalendar, aStartTime, aEndTime) {
+        dump ("+++ createNewEvent!!\n");
+    },
+
+    modifyEventTime: function (aCalendar, aEvent, aNewStartTime, aNewEndTime) {
+        dump ("+++ modifyEvent!\n");
+    }
+};
+
 var activeCompositeCalendar = null;
 function getCompositeCalendar()
 {

@@ -41,6 +41,7 @@
 
 interface calICalendar;
 interface calIDateTime;
+interface calICalendarViewController;
 
 [scriptable, uuid(be9b4f26-2475-4aeb-9b46-e165fc0809fb)]
 interface calICalendarView : nsISupports
@@ -49,6 +50,11 @@ interface calICalendarView : nsISupports
    * the calendar that this view is displaying
    */
   attribute calICalendar displayCalender;
+
+  /**
+   * the controller for this view
+   */
+  attribute calICalendarViewController controller;
 
   /**
    * Set a date range for the view to display, from aStartDate to
