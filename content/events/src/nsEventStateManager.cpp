@@ -1478,6 +1478,11 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       KillClickHoldTimer();
 #endif
 
+      nsCOMPtr<nsIContent> targetContent = mGestureDownContent;
+      // Stop tracking the drag gesture now. This should stop us from
+      // reentering GenerateDragGesture inside DOM event processing.
+      StopTrackingDragGesture();
+
       // get the widget from the target frame
       nsEventStatus status = nsEventStatus_eIgnore;
       nsMouseEvent event(NS_DRAGDROP_GESTURE, mCurrentTarget->GetWindow());
@@ -1519,12 +1524,13 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       // Hold onto old target content through the event and reset after.
       nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
+
       // Set the current target to the content for the mouse down
-      mCurrentTargetContent = mGestureDownContent;
+      mCurrentTargetContent = targetContent;
 
       // Dispatch to DOM
-      mGestureDownContent->HandleDOMEvent(aPresContext, &event, nsnull,
-                                          NS_EVENT_FLAG_INIT, &status);
+      targetContent->HandleDOMEvent(aPresContext, &event, nsnull,
+                                    NS_EVENT_FLAG_INIT, &status);
 
       // Note that frame event handling doesn't care about NS_DRAGDROP_GESTURE,
       // which is just as well since we don't really know which frame to
@@ -1532,8 +1538,6 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       // Reset mCurretTargetContent to what it was
       mCurrentTargetContent = targetBeforeEvent;
-
-      StopTrackingDragGesture();
     }
 
     // Now flush all pending notifications, for better responsiveness
