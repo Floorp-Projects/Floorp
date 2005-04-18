@@ -730,6 +730,8 @@ public:
    *
    * @param   aEvent event structure describing the type of event and rge widget
    *            where the event originated
+   *          The |point| member of this is in the coordinate system of the
+   *          view returned by GetOffsetFromView.
    * @param   aEventStatus a return value indicating whether the event was handled
    *            and whether default processing should be done
    *

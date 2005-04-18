@@ -812,54 +812,34 @@ nsTreeBodyFrame::InvalidateScrollbar()
 // Takes client x/y in pixels, converts them to twips, and massages them to be
 // in our coordinate system.
 void
-nsTreeBodyFrame::AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt32* aResultX, PRInt32* aResultY)
+nsTreeBodyFrame::AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY,
+                                                   nscoord* aResultX,
+                                                   nscoord* aResultY)
 {
   // Convert our x and y coords to twips.
+  // XXXbz should this use IntScaledPixelsToTwips?
   float pixelsToTwips = mPresContext->PixelsToTwips();
-  aX = NSToIntRound(aX * pixelsToTwips);
-  aY = NSToIntRound(aY * pixelsToTwips);
+  nsPoint point(NSToIntRound(aX * pixelsToTwips),
+                NSToIntRound(aY * pixelsToTwips));
   
-  // Get our box object.
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mContent->GetDocument()));
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
+  // Now get our client offset, in twips, and subtract if from the
+  // point to get it in our coordinates
+  nsPoint clientOffset;
+  nsIView* closestView = GetClosestView(&clientOffset);
+  point -= clientOffset;
   
-  nsCOMPtr<nsIBoxObject> boxObject;
-  nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
-  
-  PRInt32 x;
-  PRInt32 y;
-  boxObject->GetX(&x);
-  boxObject->GetY(&y);
+  nsIView* rootView;
+  mPresContext->GetViewManager()->GetRootView(rootView);
+  NS_ASSERTION(closestView && rootView, "No view?");
+  point -= closestView->GetOffsetTo(rootView);
 
-  x = NSToIntRound(x * pixelsToTwips);
-  y = NSToIntRound(y * pixelsToTwips);
-
-  // Take into account the parent's scroll offset, since clientX and clientY
-  // are relative to the viewport.
-
-  nsIView* parentView = nsLeafBoxFrame::GetView()->GetParent()->GetParent();
-
-  if (parentView) {
-    nsIScrollableView* scrollView = parentView->ToScrollableView();
-    if (scrollView) {
-      nscoord scrollX = 0, scrollY = 0;
-      scrollView->GetScrollPosition(scrollX, scrollY);
-      x -= scrollX;
-      y -= scrollY;
-    }
-  }
-
-  // Adjust into our coordinate space.
-  x = aX-x;
-  y = aY-y;
-
-  // Adjust y by the inner box y, so that we're in the inner box's
+  // Adjust by the inner box coords, so that we're in the inner box's
   // coordinate space.
-  y += mInnerBox.y;
+  point -= mInnerBox.TopLeft();
   
-  *aResultX = x;
-  *aResultY = y;
-} // AdjustEventCoordsToBoxCoordSpace
+  *aResultX = point.x;
+  *aResultY = point.y;
+} // AdjustClientCoordsToBoxCoordSpace
 
 NS_IMETHODIMP
 nsTreeBodyFrame::GetRowAt(PRInt32 aX, PRInt32 aY, PRInt32* _retval)
@@ -867,9 +847,9 @@ nsTreeBodyFrame::GetRowAt(PRInt32 aX, PRInt32 aY, PRInt32* _retval)
   if (!mView)
     return NS_OK;
 
-  PRInt32 x;
-  PRInt32 y;
-  AdjustEventCoordsToBoxCoordSpace(aX, aY, &x, &y);
+  nscoord x;
+  nscoord y;
+  AdjustClientCoordsToBoxCoordSpace(aX, aY, &x, &y);
 
   // Check if the coordinates are above our visible space.
   if (y < 0) {
@@ -889,9 +869,9 @@ nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, nsITreeColumn*
   if (!mView)
     return NS_OK;
 
-  PRInt32 x;
-  PRInt32 y;
-  AdjustEventCoordsToBoxCoordSpace(aX, aY, &x, &y);
+  nscoord x;
+  nscoord y;
+  AdjustClientCoordsToBoxCoordSpace(aX, aY, &x, &y);
 
   // Check if the coordinates are above our visible space.
   if (y < 0) {
@@ -1134,7 +1114,7 @@ nsTreeBodyFrame::GetRowAt(PRInt32 aX, PRInt32 aY)
 }
 
 nsIAtom*
-nsTreeBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, 
+nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect, 
                                      PRInt32 aRowIndex,
                                      nsTreeColumn* aColumn)
 {
@@ -1239,8 +1219,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 }
 
 void
-nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, nsTreeColumn** aCol,
-                           nsIAtom** aChildElt)
+nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow,
+                           nsTreeColumn** aCol, nsIAtom** aChildElt)
 {
   *aCol = nsnull;
   *aChildElt = nsnull;
@@ -3420,8 +3400,14 @@ nsTreeBodyFrame::ComputeDropPosition(nsGUIEvent* aEvent, PRInt32* aRow, PRInt16*
   *aOrient = -1;
   *aScrollLines = 0;
 
-  PRInt32 xTwips = aEvent->point.y;
-  PRInt32 yTwips = aEvent->point.y;
+  // Convert the event's point to our coordinates.  The point is currently in
+  // the coordinates of the view returned by GetOffsetFromView.  We want it in
+  // the coordinates of our inner box's coordinates.
+  nsPoint offsetFromView;
+  nsIView* dummy;
+  GetOffsetFromView(offsetFromView, &dummy);
+  PRInt32 xTwips = aEvent->point.x - offsetFromView.x - mInnerBox.x;
+  PRInt32 yTwips = aEvent->point.y - offsetFromView.y - mInnerBox.y;
 
   *aRow = GetRowAt(xTwips, yTwips);
   if (*aRow >=0) {
