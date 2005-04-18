@@ -3153,7 +3153,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
     PRBool isOddLevel = PR_FALSE;
     PRUint32 hints = 0;
     aRenderingContext.GetHints(hints);
-    PRBool paintCharByChar = (0 == hints & NS_RENDERING_HINT_REORDER_SPACED_TEXT) &&
+    PRBool paintCharByChar = (0 == (hints & NS_RENDERING_HINT_REORDER_SPACED_TEXT)) &&
       ((0 != aTextStyle.mLetterSpacing) ||
        (0 != aTextStyle.mWordSpacing) ||
        aTextStyle.mJustifying);
