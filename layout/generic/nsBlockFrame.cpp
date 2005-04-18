@@ -6545,7 +6545,7 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
       nsIView* resultFrameParentView;
       resultFrame->GetOffsetFromView(tmp, &resultFrameParentView);
       if (parentWithView != resultFrameParentView && resultFrameParentView) {
-        aEvent->point += resultFrameParentView->GetOffsetTo(parentWithView);
+        aEvent->point -= resultFrameParentView->GetOffsetTo(parentWithView);
       }
 
       if (NS_POSITION_BEFORE_TABLE == result)

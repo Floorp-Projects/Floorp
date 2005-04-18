@@ -161,7 +161,7 @@ public:
 
   nsSplitterFrame* mOuter;
   PRBool mDidDrag;
-  nscoord mDragStartPx;
+  PRInt32 mDragStartPx;
   nscoord mCurrentPos;
   nsIBox* mParentBox;
   PRBool mPressed;
@@ -520,37 +520,28 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
     // convert coord to pixels
     nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
 
-    // mDragStartPx is in pixels and is in our client areas coordinate system. 
-    // so we need to first convert it so twips and then get it into our coordinate system.
+    // mDragStartPx is in pixels and is in our client area's coordinate system.
+    // so we need to first convert it so twips and then get it into our
+    // coordinate system.
 
     // convert start to twips
-    nscoord startpx = mDragStartPx;
+    nscoord start = aPresContext->IntScaledPixelsToTwips(mDragStartPx);
 
-    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
-    nscoord start = startpx*onePixel;
+    // get it into our coordinate system (that is, the coordinate
+    // system that aEvent->point is in)
+    nsIView* eventCoordView;
+    nsPoint offsetFromView;
+    mOuter->GetOffsetFromView(offsetFromView, &eventCoordView);
+    NS_ASSERTION(eventCoordView, "No view?");
 
-    // get it into our coordintate system by subtracting our parents offsets.
-    nsIFrame* parent = mOuter;
-    while(parent != nsnull)
-    {
-      // if we hit a scrollable view make sure we take into account
-      // how much we are scrolled.
-      nsIView* view = parent->GetView();
-      if (view) {
-        nsIScrollableView* scrollingView = view->ToScrollableView();
-        if (scrollingView) {
-          nscoord xoff = 0;
-          nscoord yoff = 0;
-          scrollingView->GetScrollPosition(xoff, yoff);
-          isHorizontal ? start += xoff : start += yoff;
-        }
-      }
-
-      nsRect r = parent->GetRect();
-      isHorizontal ? start -= r.x : start -= r.y;
-      parent = parent->GetParent();
-    }
-
+    nsIView* rootView;
+    aPresContext->GetViewManager()->GetRootView(rootView);
+    NS_ASSERTION(rootView, "No root view?");
+    
+    nsPoint eventCoordViewOffset = eventCoordView->GetOffsetTo(rootView);
+    
+    start -= (isHorizontal ? eventCoordViewOffset.x : eventCoordViewOffset.y);
+    
     // take our current position and substract the start location
     pos -= start;
 
