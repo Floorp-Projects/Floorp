@@ -47,28 +47,23 @@ printStatus (summary);
 
 printStatus(inSection(1));
   
-function func()
-{
-  return arguments.callee.__parent__ == GLOBAL;
-}
+function func() { return this; }
 
-description = 'function with no closure arguments.callee.__parent__ == GLOBAL';
-expect = true;
-actual = func();
+description = 'top-level function: this == GLOBAL';
+expect = GLOBAL;
+actual = func.call();
 reportCompare(expect, actual, description);
 
 printStatus(inSection(2));
 
-function getclosure()
+function getBoundMethod()
 {
-  return function () { 
-    return arguments.callee.__parent__ == GLOBAL;
-  };
+  return it.bindMethod("boundMethod", function () { return this; });
 }
 
-description = 'function with closure arguments.callee.__parent__ == GLOBAL';
-var closure = getclosure();
-expect = true;
-actual = closure();
+description = 'bound method: this == GLOBAL';
+var func = getBoundMethod();
+expect = GLOBAL;
+actual = func.call();
 reportCompare(expect, actual, description);
 
