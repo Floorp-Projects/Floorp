@@ -39,6 +39,7 @@
 #define nsICanvasElement_h___
 
 #include "nsISupports.h"
+#include "nsIFrame.h"
 #include "imgIContainer.h"
 
 // {8fd94ec9-d4e0-409b-af8f-828c7d7648f5}
@@ -53,12 +54,12 @@ public:
    * Ask the Canvas Element to return the current image container that
    * the frame should render.
    */
-  NS_IMETHOD GetCanvasImageContainer (imgIContainer **aImageContainer);
+  NS_IMETHOD GetCanvasImageContainer (imgIContainer **aImageContainer) = 0;
 
   /**
    * Ask the canvas Element to return the primary frame, if any
    */
-  NS_IMETHOD GetPrimaryCanvasFrame (nsIFrame **aFrame);
+  NS_IMETHOD GetPrimaryCanvasFrame (nsIFrame **aFrame) = 0;
 };
 
 #endif /* nsICanvasElement_h___ */
