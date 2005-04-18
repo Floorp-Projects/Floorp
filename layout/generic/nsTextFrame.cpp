@@ -1638,6 +1638,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 
   // Rescan the content and transform it. Stop when we have consumed
   // mContentLength characters.
+  PRUint8 textTransform = GetStyleText()->mTextTransform;
   PRBool inWord = (TEXT_IN_WORD & mState) ? PR_TRUE : PR_FALSE;
   PRInt32 column = mColumn;
   PRInt32 textLength = 0;
@@ -1648,7 +1649,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   if (!textBuffer && aJustifiableCharCount)
     textBuffer = &tmpTextBuffer;
 
-  while (0 != n) {
+  while (n > 0) {
     PRUnichar* bp;
     PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
@@ -1668,11 +1669,16 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
 #endif // IBMBIDI
       break;
     }
-    if (contentLen > n) {
-      contentLen = n;
-    }
-    if (wordLen > n) {
-      wordLen = n;
+    // for ::first-letter, the content is chopped
+    if (mState & TEXT_FIRST_LETTER) {
+      // XXX: doesn't support the case where the first-letter expands, e.g.,
+      // with text-transform:capitalize, the German szlig; becomes SS.
+      if (contentLen > n) {
+        contentLen = n;
+      }
+      if (wordLen > n) {
+        wordLen = n;
+      }
     }
     inWord = PR_FALSE;
     if (isWhitespace) {
@@ -1715,28 +1721,41 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
       }
     }
     else {
-      PRInt32 i;
+      PRInt32 i = contentLen;
       if (nsnull != indexp) {
         // Point mapping indicies at each content index in the word
         if (1 == wordLen && contentLen == 2 && IS_CJ_CHAR(*bp)) {
           // if all these condition meets, we have a '\n' between CJK chars, 
           // and this '\n' should be removed.
-          i = contentLen;
           while (--i >= 0) {
             *indexp++ = strInx;
           }
           strInx++;
-        } else {
-          i = contentLen;
+        } else if (!wasTransformed) {
           while (--i >= 0) {
             *indexp++ = strInx++;
           }
+        } else {
+          PRUnichar* tp = bp;
+          PRBool caseChanged = 
+            textTransform == NS_STYLE_TEXT_TRANSFORM_UPPERCASE ||
+            textTransform == NS_STYLE_TEXT_TRANSFORM_CAPITALIZE;
+          while (--i >= 0) {
+            *indexp++ = strInx++;
+            // Point any capitalized German &szlig; to 'SS'
+            if (caseChanged && *tp == PRUnichar('S') &&
+                aTX.GetContentCharAt(mContentOffset +
+                  indexp - aIndexBuffer->mBuffer - 1) == kSZLIG) {
+              ++strInx;
+              ++tp;
+            }
+            ++tp;
+          }          
         }
       }
     }
 
-    // Grow the buffer before we run out of room. The only time this
-    // happens is because of tab expansion.
+    // Grow the buffer before we run out of room.
     if (textBuffer != nsnull && dstOffset + wordLen > textBuffer->mBufferLen) {
       nsresult rv = textBuffer->GrowBy(wordLen);
       if (NS_FAILED(rv)) {

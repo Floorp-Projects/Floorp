@@ -170,6 +170,10 @@ public:
     return mFrag ? mFrag->GetLength() : 0;
   }
 
+  PRUnichar GetContentCharAt(PRInt32 aIndex) {
+    return (mFrag && aIndex < mFrag->GetLength()) ? mFrag->CharAt(aIndex) : 0;
+  }
+
   /**
    * Iterates the next word in the text fragment.
    *
