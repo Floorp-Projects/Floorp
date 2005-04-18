@@ -218,9 +218,8 @@ public:
 
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument);
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
@@ -483,24 +482,21 @@ nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 
 // nsIContent
 nsresult
-nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                   PRBool aDeepSetDocument)
+nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   WillAddOptions(aKid, this, GetChildCount());
 
   // Actually perform the append
-  return nsGenericHTMLFormElement::AppendChildTo(aKid, aNotify,
-                                                 aDeepSetDocument);
+  return nsGenericHTMLFormElement::AppendChildTo(aKid, aNotify);
 }
 
 nsresult
 nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify, PRBool aDeepSetDocument)
+                                   PRBool aNotify)
 {
   WillAddOptions(aKid, this, aIndex);
 
-  return nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify,
-                                                 aDeepSetDocument);
+  return nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify);
 }
 
 nsresult
@@ -1067,7 +1063,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     rv = NS_NewTextNode(getter_AddRefs(text));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = element->AppendChildTo(text, PR_FALSE, PR_FALSE);
+    rv = element->AppendChildTo(text, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(element));

@@ -74,9 +74,8 @@ public:
 
   // nsIContent
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument);
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
@@ -167,8 +166,7 @@ nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
 
 // nsIContent
 nsresult
-nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                     PRBool aDeepSetDocument)
+nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   // Since we're appending, the relevant option index to add after is found
   // *after* this optgroup.
@@ -179,12 +177,12 @@ nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   }
 
   // Actually perform the append
-  return nsGenericHTMLElement::AppendChildTo(aKid, aNotify, aDeepSetDocument);
+  return nsGenericHTMLElement::AppendChildTo(aKid, aNotify);
 }
 
 nsresult
 nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                     PRBool aNotify, PRBool aDeepSetDocument)
+                                     PRBool aNotify)
 {
   nsCOMPtr<nsISelectElement> sel;
   GetSelect(getter_AddRefs(sel));
@@ -192,8 +190,7 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     sel->WillAddOptions(aKid, this, aIndex);
   }
 
-  return nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify,
-                                             aDeepSetDocument);
+  return nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
 }
 
 nsresult

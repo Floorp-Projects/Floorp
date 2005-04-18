@@ -224,11 +224,9 @@ public:
    *        after it is inserted)
    * @param aNotify whether to notify the document that the insert has
    *        occurred
-   * @param aDeepSetDocument whether to set document on all children of aKid
-   * XXXbz aDeepSetDocument is now unused
    */
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument) = 0;
+                                 PRBool aNotify) = 0;
 
   /**
    * Append a content node to the end of the child list.
@@ -236,11 +234,8 @@ public:
    * @param aKid the content to append
    * @param aNotify whether to notify the document that the replace has
    *        occurred
-   * @param aDeepSetDocument whether to set document on all children of aKid
-   * XXXbz aDeepSetDocument is now unused
    */
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument) = 0;
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify) = 0;
 
   /**
    * Remove a child from this content node.

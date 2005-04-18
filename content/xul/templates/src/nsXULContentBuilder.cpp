@@ -658,7 +658,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
                 content->SetText(value, PR_FALSE);
 
-                rv = aRealNode->AppendChildTo(content, aNotify, PR_FALSE);
+                rv = aRealNode->AppendChildTo(content, aNotify);
                 if (NS_FAILED(rv)) return rv;
 
                 // XXX Don't bother remembering text nodes as the
@@ -678,7 +678,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 NS_ERROR("failed to clone textnode");
                 return NS_ERROR_FAILURE;
             }
-            rv = aRealNode->AppendChildTo(clonedContent, aNotify, PR_FALSE);
+            rv = aRealNode->AppendChildTo(clonedContent, aNotify);
             if (NS_FAILED(rv)) return rv;
         }
         else {
@@ -806,7 +806,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 }
 
                 if (NS_FAILED(rv)) {
-                    rv = aRealNode->AppendChildTo(realKid, aNotify, PR_FALSE);
+                    rv = aRealNode->AppendChildTo(realKid, aNotify);
                     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert element");
                 }
             }
@@ -1317,7 +1317,7 @@ nsXULContentBuilder::EnsureElementHasGenericChild(nsIContent* parent,
         if (NS_FAILED(rv)) return rv;
 
         // XXX Note that the notification ensures we won't batch insertions! This could be bad! - Dave
-        rv = parent->AppendChildTo(element, aNotify, PR_FALSE);
+        rv = parent->AppendChildTo(element, aNotify);
         if (NS_FAILED(rv)) return rv;
 
         *result = element;

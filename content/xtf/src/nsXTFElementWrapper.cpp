@@ -196,7 +196,7 @@ nsXTFElementWrapper::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 
 nsresult
 nsXTFElementWrapper::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify, PRBool aDeepSetDocument)
+                                   PRBool aNotify)
 {
   nsresult rv;
 
@@ -207,7 +207,7 @@ nsXTFElementWrapper::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   
   if (mNotificationMask & nsIXTFElement::NOTIFY_WILL_INSERT_CHILD)
     GetXTFElement()->WillInsertChild(domKid, aIndex);
-  rv = nsXTFElementWrapperBase::InsertChildAt(aKid, aIndex, aNotify, aDeepSetDocument);
+  rv = nsXTFElementWrapperBase::InsertChildAt(aKid, aIndex, aNotify);
   if (mNotificationMask & nsIXTFElement::NOTIFY_CHILD_INSERTED)
     GetXTFElement()->ChildInserted(domKid, aIndex);
   
@@ -215,8 +215,7 @@ nsXTFElementWrapper::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 }
 
 nsresult
-nsXTFElementWrapper::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                   PRBool aDeepSetDocument)
+nsXTFElementWrapper::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   nsresult rv;
 
@@ -227,7 +226,7 @@ nsXTFElementWrapper::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   
   if (mNotificationMask & nsIXTFElement::NOTIFY_WILL_APPEND_CHILD)
     GetXTFElement()->WillAppendChild(domKid);
-  rv = nsXTFElementWrapperBase::AppendChildTo(aKid, aNotify, aDeepSetDocument);
+  rv = nsXTFElementWrapperBase::AppendChildTo(aKid, aNotify);
   if (mNotificationMask & nsIXTFElement::NOTIFY_CHILD_APPENDED)
     GetXTFElement()->ChildAppended(domKid);
   return rv;

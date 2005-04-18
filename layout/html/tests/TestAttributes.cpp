@@ -300,9 +300,8 @@ int main(int argc, char** argv)
     printf("Could not create container.\n");
     return -1;
   }
-  container->SetDocument(myDoc, PR_FALSE, PR_TRUE);
 
-  container->AppendChildTo(text, PR_FALSE, PR_FALSE);
+  container->AppendChildTo(text, PR_FALSE);
   PRInt32 nk;
   container->ChildCount(nk);
   if (nk != 1) {

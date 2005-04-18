@@ -257,7 +257,7 @@ nsMediaDocument::CreateSyntheticDocument()
   }
   mBodyContent = do_QueryInterface(body);
 
-  root->AppendChildTo(body, PR_FALSE, PR_FALSE);
+  root->AppendChildTo(body, PR_FALSE);
 
   return NS_OK;
 }

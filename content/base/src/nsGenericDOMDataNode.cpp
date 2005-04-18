@@ -850,14 +850,13 @@ nsGenericDOMDataNode::IndexOf(nsIContent* aPossibleChild) const
 
 nsresult
 nsGenericDOMDataNode::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                    PRBool aNotify, PRBool aDeepSetDocument)
+                                    PRBool aNotify)
 {
   return NS_OK;
 }
 
 nsresult
-nsGenericDOMDataNode::AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                    PRBool aDeepSetDocument)
+nsGenericDOMDataNode::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   return NS_OK;
 }
@@ -1044,7 +1043,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 
     nsCOMPtr<nsIContent> content(do_QueryInterface(newContent));
 
-    parent->InsertChildAt(content, index+1, PR_TRUE, PR_FALSE);
+    parent->InsertChildAt(content, index+1, PR_TRUE);
   }
 
   // XXX Shouldn't we handle the case where this is a child of the document?

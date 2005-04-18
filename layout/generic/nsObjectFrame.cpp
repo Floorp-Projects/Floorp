@@ -1590,8 +1590,8 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
     return;
   }
 
-  anchor->AppendChildTo(img, PR_FALSE, PR_TRUE);
-  anchor->AppendChildTo(text, PR_FALSE, PR_TRUE);
+  anchor->AppendChildTo(img, PR_FALSE);
+  anchor->AppendChildTo(text, PR_FALSE);
 
   nsAutoString style;
   CopyASCIItoUTF16("text-align: -moz-center;"

@@ -202,7 +202,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type,
                           NS_ConvertUTF8toUTF16(mMimeType), PR_FALSE);
 
-  body->AppendChildTo(mPluginContent, PR_FALSE, PR_FALSE);
+  body->AppendChildTo(mPluginContent, PR_FALSE);
 
   return NS_OK;
 

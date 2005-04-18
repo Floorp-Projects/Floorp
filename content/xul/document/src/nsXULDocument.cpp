@@ -2910,7 +2910,7 @@ nsXULDocument::ResumeWalk()
                     if (NS_FAILED(rv)) return rv;
 
                     // ...and append it to the content model.
-                    rv = element->AppendChildTo(child, PR_FALSE, PR_FALSE);
+                    rv = element->AppendChildTo(child, PR_FALSE);
                     if (NS_FAILED(rv)) return rv;
 
                     // do pre-order document-level hookup, but only if
@@ -2993,7 +2993,7 @@ nsXULDocument::ResumeWalk()
                     if (! child)
                         return NS_ERROR_UNEXPECTED;
 
-                    rv = element->AppendChildTo(child, PR_FALSE, PR_FALSE);
+                    rv = element->AppendChildTo(child, PR_FALSE);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -3698,7 +3698,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
                                                getter_AddRefs(bodyContent));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            aElement->AppendChildTo(bodyContent, PR_FALSE, PR_TRUE);
+            aElement->AppendChildTo(bodyContent, PR_FALSE);
         }
     }
     else {
@@ -4279,7 +4279,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
 
             if (pos != -1) {
                 pos = isInsertAfter ? pos + 1 : pos;
-                rv = aParent->InsertChildAt(aChild, pos, aNotify, PR_TRUE);
+                rv = aParent->InsertChildAt(aChild, pos, aNotify);
                 if (NS_FAILED(rv))
                     return rv;
 
@@ -4302,8 +4302,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
             // appending.
             if (NS_SUCCEEDED(rv) && pos > 0 &&
                 PRUint32(pos - 1) <= aParent->GetChildCount()) {
-                rv = aParent->InsertChildAt(aChild, pos - 1, aNotify,
-                                            PR_TRUE);
+                rv = aParent->InsertChildAt(aChild, pos - 1, aNotify);
                 if (NS_SUCCEEDED(rv))
                     wasInserted = PR_TRUE;
                 // If the insertion fails, then we should still
@@ -4315,7 +4314,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
     }
 
     if (! wasInserted) {
-        rv = aParent->AppendChildTo(aChild, aNotify, PR_TRUE);
+        rv = aParent->AppendChildTo(aChild, aNotify);
         if (NS_FAILED(rv)) return rv;
     }
     return NS_OK;

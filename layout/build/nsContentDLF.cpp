@@ -364,12 +364,12 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
     if (htmlElement && headElement && bodyElement) {
       rv = blankDoc->SetRootContent(htmlElement);
       if (NS_SUCCEEDED(rv)) {
-        rv = htmlElement->AppendChildTo(headElement, PR_FALSE, PR_FALSE);
+        rv = htmlElement->AppendChildTo(headElement, PR_FALSE);
 
         if (NS_SUCCEEDED(rv)) {
           bodyElement->SetContentID(blankDoc->GetAndIncrementContentID());
           // XXXbz Why not notifying here?
-          htmlElement->AppendChildTo(bodyElement, PR_FALSE, PR_FALSE);
+          htmlElement->AppendChildTo(bodyElement, PR_FALSE);
         }
       }
     }

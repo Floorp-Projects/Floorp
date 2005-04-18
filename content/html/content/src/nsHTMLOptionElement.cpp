@@ -119,9 +119,8 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument);
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
 protected:
@@ -424,7 +423,7 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
 
     text->SetText(aText, PR_TRUE);
 
-    rv = AppendChildTo(text, PR_TRUE, PR_FALSE);
+    rv = AppendChildTo(text, PR_TRUE);
   }
 
   return rv;
@@ -471,19 +470,17 @@ nsHTMLOptionElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 //
 nsresult
 nsHTMLOptionElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify, PRBool aDeepSetDocument)
+                                   PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify,
-                                                    aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
   NotifyTextChanged();
   return rv;
 }
 
 nsresult
-nsHTMLOptionElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDocument)
+nsHTMLOptionElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLElement::AppendChildTo(aKid, aNotify,
-                                                    aDeepSetDocument);
+  nsresult rv = nsGenericHTMLElement::AppendChildTo(aKid, aNotify);
   NotifyTextChanged();
   return rv;
 }
@@ -564,7 +561,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
                            JS_GetStringLength(jsstr),
                            PR_FALSE);
       
-      result = AppendChildTo(textContent, PR_FALSE, PR_FALSE);
+      result = AppendChildTo(textContent, PR_FALSE);
       if (NS_FAILED(result)) {
         return result;
       }

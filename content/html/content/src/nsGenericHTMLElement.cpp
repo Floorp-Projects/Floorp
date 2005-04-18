@@ -337,7 +337,7 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep)
 
       nsCOMPtr<nsIContent> newContent(do_QueryInterface(newNode));
       NS_ASSERTION(newContent, "clone doesn't implement nsIContent");
-      rv = aDst->AppendChildTo(newContent, PR_FALSE, PR_FALSE);
+      rv = aDst->AppendChildTo(newContent, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -3014,7 +3014,7 @@ nsGenericHTMLElement::ReplaceContentsWithText(const nsAString& aText,
 
     text->SetText(aText, PR_TRUE);
 
-    rv = InsertChildAt(text, 0, aNotify, PR_FALSE);
+    rv = InsertChildAt(text, 0, aNotify);
   }    
       
   return rv;

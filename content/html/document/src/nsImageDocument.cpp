@@ -608,7 +608,7 @@ nsImageDocument::CreateSyntheticDocument()
     mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, errorMsg, PR_FALSE);
   }
 
-  body->AppendChildTo(mImageContent, PR_FALSE, PR_FALSE);
+  body->AppendChildTo(mImageContent, PR_FALSE);
   imageLoader->SetLoadingEnabled(PR_TRUE);
 
   return NS_OK;
