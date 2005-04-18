@@ -590,10 +590,19 @@ CanvasFrame::HandleEvent(nsPresContext* aPresContext,
     //canvas frame needs to pass mouse events to its area frame so that mouse movement
     //and selection code will work properly. this will still have the necessary effects
     //that would have happened if nsFrame::HandleEvent was called.
-    if (firstChild)
+    if (firstChild) {
+      nsIView* eventView;
+      nsIView* newEventView;
+      nsPoint pt1, pt2;
+      GetOffsetFromView(pt1, &eventView);
+      firstChild->GetOffsetFromView(pt2, &newEventView);
+      nsPoint offset = eventView->GetOffsetTo(newEventView);
+      aEvent->point += offset;
       firstChild->HandleEvent(aPresContext, aEvent, aEventStatus);
-    else
+      aEvent->point -= offset;
+    } else {
       nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    }
   }
 
   return NS_OK;
