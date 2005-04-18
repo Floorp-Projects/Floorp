@@ -100,7 +100,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_HTMLBaseFontElement_id,
   eDOMClassInfo_HTMLBodyElement_id,
   eDOMClassInfo_HTMLButtonElement_id,
-  eDOMClassInfo_HTMLCanvasElement_id,
   eDOMClassInfo_HTMLDListElement_id,
   eDOMClassInfo_HTMLDelElement_id,
   eDOMClassInfo_HTMLDirectoryElement_id,
@@ -325,6 +324,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGTransformList_id,
 #endif // MOZ_SVG
 
+  // Canvas
+  eDOMClassInfo_HTMLCanvasElement_id,
 #ifdef MOZ_ENABLE_CAIRO
   eDOMClassInfo_CanvasRenderingContext2D_id,
 #endif
