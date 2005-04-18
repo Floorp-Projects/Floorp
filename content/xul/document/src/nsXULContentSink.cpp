@@ -1021,28 +1021,40 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
 
   mState = eInProlog;
 
-  NS_NAMED_LITERAL_STRING(name, "xmlns");
-  NS_NAMED_LITERAL_STRING(value, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+  // Clear any buffered-up text we have.  It's enough to set the length to 0.
+  // The buffer itself is allocated when we're created and deleted in our
+  // destructor, so don't mess with it.
+  mTextLength = 0;
 
-  const PRUnichar* atts[] = {name.get(), value.get(), nsnull};
-    
-  rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 2, -1, 0);
+  const PRUnichar* noAtts[] = { 0, 0 };
+
+  NS_NAMED_LITERAL_STRING(errorNs,
+                          "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+
+  nsAutoString parsererror(errorNs);
+  parsererror.Append((PRUnichar)0xFFFF);
+  parsererror.AppendLiteral("parsererror");
+  
+  rv = HandleStartElement(parsererror.get(), noAtts, 0, -1, 0);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
   NS_ENSURE_SUCCESS(rv,rv);  
   
-  const PRUnichar* noAtts[] = {0, 0};
-  rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0, -1, 0);
+  nsAutoString sourcetext(errorNs);
+  sourcetext.Append((PRUnichar)0xFFFF);
+  sourcetext.AppendLiteral("sourcetext");
+
+  rv = HandleStartElement(sourcetext.get(), noAtts, 0, -1, 0);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  rv = HandleEndElement(NS_LITERAL_STRING("sourcetext").get());
+  rv = HandleEndElement(sourcetext.get());
   NS_ENSURE_SUCCESS(rv,rv); 
   
-  rv = HandleEndElement(NS_LITERAL_STRING("parsererror").get());
+  rv = HandleEndElement(parsererror.get());
   NS_ENSURE_SUCCESS(rv,rv);
 
   return rv;
