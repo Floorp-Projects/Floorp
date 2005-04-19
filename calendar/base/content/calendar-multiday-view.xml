@@ -258,6 +258,7 @@
       <field name="mEventMap">null</field>
       <field name="mCalendarView">null</field>
       <field name="mDate">null</field>
+      <field name="mTimezone">null</field>
 
       <!-- properties -->
       <property name="pixelsPerMinute">
@@ -274,7 +275,23 @@
         ]]></setter>
       </property>
 
-      <property name="date"
+      <property name="date">
+	<getter><![CDATA[
+	  return this.mDate;
+	]]></getter>
+	<setter><![CDATA[
+	  this.mDate = val;
+
+	  if (val.timezone != this.mTimezone) {
+              dump ("++ column tz: " + val.timezone + "\n");
+              this.mTimezone = val.timezone;
+              this.recalculateStartEndMinutes();
+	  }
+
+	  return val;
+	]]></setter>
+      </property>
+
         onget="return this.mDate;"
         onset="return (this.mDate = val);" />
       <property name="calendarView"
@@ -366,19 +383,46 @@
 	]]></body>
       </method>
 
-      
+      <method name="recalculateStartEndMinutes">
+	<body><![CDATA[
+	  for each (chunk in this.mEvents) {
+              var mins = this.getStartEndMinutesForOccurrence(chunk.event);
+              chunk.startMinute = mins.start;
+              chunk.endMinute = mins.end;
+          }
+
+          this.relayout();
+        ]]></body>
+      </method>
+
+      <method name="getStartEndMinutesForOccurrence">
+	<parameter name="aOccurrence"/>
+	<body><![CDATA[
+           var stdate = aOccurrence.occurrenceStartDate;
+           var enddate = aOccurrence.occurrenceEndDate;
+
+           if (stdate.isUtc || stdate.timezone != this.mTimezone)
+               stdate = stdate.getInTimezone (this.mTimezone);
+
+           if (enddate.isUtc || enddate.timezone != this.mTimezone)
+               enddate = enddate.getInTimezone (this.mTimezone);
+
+           return { start: stdate.hour * 60 + stdate.minute,
+                    end: enddate.hour * 60 + enddate.minute };
+        ]]></body>
+      </method>
+
       <method name="addEvent">
 	<parameter name="aOccurrence"/>
 	<body><![CDATA[
            this.internalDeleteEvent(aOccurrence);
 
+           var mins = this.getStartEndMinutesForOccurrence(aOccurrence);
+
            var chunk = {
-               startMinute:
-                 aOccurrence.occurrenceStartDate.hour * 60 + aOccurrence.occurrenceStartDate.minute,
-               endMinute:
-                 aOccurrence.occurrenceEndDate.hour * 60 + aOccurrence.occurrenceEndDate.minute,
-               event:
-                 aOccurrence
+               startMinute: mins.start,
+               endMinute: mins.end,
+               event: aOccurrence
            };
            this.mEvents.push(chunk);
            this.relayout();
@@ -782,23 +826,34 @@
       <field name="mBatchCount">0</field>
 
       <field name="mObserver"><![CDATA[
-        // the calIObserver
+        // the calIObserver, and calICompositeObserver
         ({
+            QueryInterface: function (aIID) {
+                if (!aIID.equals(Components.interfaces.calIObserver) &&
+                    !aIID.equals(Components.interfaces.calICompositeObserver) &&
+                    !aIID.equals(Components.interfaces.nsISupports)) {
+                    throw Components.results.NS_ERROR_NO_INTERFACE;
+                }
+
+                return this;
+            },
+
             calView: this,
 
             onStartBatch: function() {
-                this.mBatchCount++;
+                this.calView.mBatchCount++;
             },
             onEndBatch: function() {
                 this.mBatchCount--;
                 if (this.mBatchCount == 0) {
-                    this.refresh();
+                    this.calView.refresh();
                 }
             },
             onLoad: function() {
-                this.refresh();
+                this.calView.refresh();
             },
             onAddItem: function (aItem) {
+                dump ("++ AddItem\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
 
@@ -806,10 +861,11 @@
                                                        this.calView.endDate,
                                                        {});
                 for each (occ in occs) {
-                    this.doAddEvent(occ);
+                    this.calView.doAddEvent(occ);
                 }
             },
             onModifyItem: function (aOldItem, aNewItem) {
+                dump ("++ ModifyItem\n");
                 if (!(aOldItem instanceof Components.interfaces.calIEvent))
                     return;
 
@@ -817,20 +873,21 @@
                     return;
 
                 var occs = aOldItem.getOccurrencesBetween(this.calView.startDate,
-                                                             this.calView.endDate,
-                                                             {});
+                                                          this.calView.endDate,
+                                                          {});
                 for each (occ in occs) {
-                    this.doDeleteEvent(occ);
+                    this.calView.doDeleteEvent(occ);
                 }
 
                 var occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
                                                           this.calView.endDate,
                                                           {});
                 for each (occ in occs) {
-                    this.doAddEvent(occ);
+                    this.calView.doAddEvent(occ);
                 }
             },
             onDeleteItem: function (aItem) {
+                dump ("++ DeleteItem\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
 
@@ -838,12 +895,30 @@
                                                        this.calView.endDate,
                                                        {});
                 for each (occ in occs) {
-                    this.doDeleteEvent(occ);
+                    this.calView.doDeleteEvent(occ);
                 }
             },
             //XXXvv Alarm could, in theory, flash the event or something
             onAlarm: function (aAlarmItem) { },
-            onError: function (aErrNo, aMessage) { }
+            onError: function (aErrNo, aMessage) { },
+
+            //
+            // calICompositeObserver stuff
+            // XXXvv we can be smarter about how we handle this stuff
+            //
+            onCalendarAdded: function (aCalendar) {
+                dump ("view onCalendarAdded\n");
+                this.calView.refresh();
+            },
+
+            onCalendarRemoved: function (aCalendar) {
+                dump ("view onCalendarRemoved\n");
+                this.calView.refresh();
+            },
+
+            onDefaultCalendarChanged: function (aNewDefaultCalendar) {
+                // don't care, for now
+            },
         })
       ]]></field>
 
@@ -853,9 +928,9 @@
 
           onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
               // nothing to do
+              dump ("+++ OnOperationComplete (detail: " + aDetail + ")");
           },
           onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
-              netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect UniversalBrowserAccess');
               if (!Components.isSuccessCode(aStatus))
                   return;
 
@@ -886,6 +961,7 @@
               this.mCalendar.removeObserver (this.mObserver);
           this.mCalendar = val;
           this.mCalendar.addObserver (this.mObserver);
+
           this.refresh();
 	]]></setter>
       </property>
@@ -1048,6 +1124,7 @@
           // start our items query; for a disjoint date range
           // we get all the items, and just filter out the ones we don't
           // care about in addItem
+          dump ("+++++++++ Calling getItems\n");
           this.mCalendar.getItems(this.mCalendar.ITEM_FILTER_COMPLETED_ALL |
                                   this.mCalendar.ITEM_FILTER_TYPE_EVENT |
                                   this.mCalendar.ITEM_FILTER_CLASS_OCCURRENCES,
@@ -1120,6 +1197,7 @@
               dayHeaderBox.setAttribute("orient", orient);
 
               var dayLabelBox = createXULElement("label");
+              dayLabelBox.setAttribute("flex", "1");
               dayLabelBox.setAttribute("align", "center");
               dayLabelBox.setAttribute("value", (d.month + 1) + "/" + d.day);
               labeldaybox.appendChild(dayLabelBox);
