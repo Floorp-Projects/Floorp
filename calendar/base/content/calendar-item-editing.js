@@ -36,6 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+/* this needs to be a pref/system thing/something.. wtf! */
+var TIMEZONE = "/mozilla.org/20050126_1/America/Los_Angeles"
+
 /* all params are optional */
 function createEventWithDialog(calendar, startDate, endDate, summary)
 {
@@ -45,7 +48,24 @@ function createEventWithDialog(calendar, startDate, endDate, summary)
         startDate = jsDateToDateTime(new Date());
         startDate.second = 0;
         startDate.normalize();
+    } else if (startDate.isDate) {
+        /* set the hour/minute of startDate to "right now"
+           if the day is the same */
+        var now = jsDateToDateTime(new Date()).getInTimezone(TIMEZONE).clone();
+        var nowDate = now.clone();
+        nowDate.isDate = true;
+        nowDate.normalize();
+
+        if (startDate.compare(nowDate) == 0) {
+            /* they're the same, so set now's seconds to 0,
+               normalize and change startDate to be now. */
+            now.second = 0;
+            now.normalize();
+
+            startDate = now;
+        }
     }
+
     event.startDate = startDate.clone();
 
     if (!endDate) {
