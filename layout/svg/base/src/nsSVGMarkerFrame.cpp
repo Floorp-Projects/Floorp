@@ -165,9 +165,10 @@ nsSVGMarkerFrame::~nsSVGMarkerFrame()
     value->RemoveObserver(this);
 }
 
-nsresult nsSVGMarkerFrame::Init()
+NS_IMETHODIMP
+nsSVGMarkerFrame::InitSVG()
 {
-  nsresult rv = nsSVGDefsFrame::Init();
+  nsresult rv = nsSVGDefsFrame::InitSVG();
   if (NS_FAILED(rv))
     return rv;
 
@@ -333,7 +334,7 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCanvasTMChanged();
-      SVGFrame->Paint(aCanvas, dirtyRectTwips);
+      SVGFrame->PaintSVG(aCanvas, dirtyRectTwips);
     }
   }
   mMarkerParent = nsnull;

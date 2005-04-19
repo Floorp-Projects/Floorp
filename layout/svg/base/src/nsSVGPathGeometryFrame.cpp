@@ -122,7 +122,7 @@ nsSVGPathGeometryFrame::Init(nsPresContext*  aPresContext,
     mContent->SetMayHaveFrame(PR_TRUE);
   }
   
-  Init();
+  InitSVG();
   
   SetStyleContext(aPresContext, aContext);
     
@@ -133,8 +133,7 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::AttributeChanged(nsIContent*     aChild,
                                          PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
-                                         PRInt32         aModType,
-                                         PRInt32         aHint)
+                                         PRInt32         aModType)
 {
   // we don't use this notification mechanism
   
@@ -209,7 +208,7 @@ nsSVGPathGeometryFrame::GetMarkerFrames(nsSVGMarkerFrame **markerStart,
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
@@ -274,7 +273,7 @@ nsSVGPathGeometryFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyR
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
+nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
 #ifdef DEBUG
   //printf("nsSVGPathGeometryFrame(%p)::GetFrameForPoint\n", this);
@@ -768,8 +767,8 @@ nsSVGPathGeometryFrame::GetShapeRendering(PRUint16 *aShapeRendering)
 
 //---------------------------------------------------------------------- 
 
-nsresult
-nsSVGPathGeometryFrame::Init()
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::InitSVG()
 {
   // all path geometry frames listen in on changes to their
   // corresponding content element's transform attribute:

@@ -43,6 +43,7 @@
 //#include "nsASVGPathBuilder.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
+#include "nsSVGMarkerFrame.h"
 #include "nsLayoutAtoms.h"
 
 class nsSVGPolygonFrame : public nsSVGPathGeometryFrame,
@@ -54,7 +55,7 @@ protected:
 
   ~nsSVGPolygonFrame();
 
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
   
 public:
   // nsISVGValueObserver interface:
@@ -125,9 +126,10 @@ nsSVGPolygonFrame::~nsSVGPolygonFrame()
       value->RemoveObserver(this);
 }
 
-nsresult nsSVGPolygonFrame::Init()
+NS_IMETHODIMP
+nsSVGPolygonFrame::InitSVG()
 {
-  nsresult rv = nsSVGPathGeometryFrame::Init();
+  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIDOMSVGAnimatedPoints> anim_points = do_QueryInterface(mContent);

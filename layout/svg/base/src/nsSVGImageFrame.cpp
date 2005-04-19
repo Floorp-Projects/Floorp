@@ -84,7 +84,7 @@ protected:
   NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   virtual ~nsSVGImageFrame();
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
 
 public:
   // nsISVGValueObserver interface:
@@ -95,7 +95,7 @@ public:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
 
   // nsISVGGeometrySource interface:
   NS_IMETHOD GetStrokePaintType(PRUint16 *aStrokePaintType);
@@ -181,9 +181,10 @@ nsSVGImageFrame::~nsSVGImageFrame()
   mListener = nsnull;
 }
 
-nsresult nsSVGImageFrame::Init()
+NS_IMETHODIMP
+nsSVGImageFrame::InitSVG()
 {
-  nsresult rv = nsSVGPathGeometryFrame::Init();
+  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIDOMSVGImageElement> Rect = do_QueryInterface(mContent);
@@ -304,7 +305,7 @@ NS_IMETHODIMP nsSVGImageFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuil
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
 NS_IMETHODIMP
-nsSVGImageFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;

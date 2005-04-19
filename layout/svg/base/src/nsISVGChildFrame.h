@@ -58,9 +58,22 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCHILDFRAME_IID)
 
   // XXX Ideally we don't want to pass the dirtyRect along but extract
-  // it from nsIRenderingContext where needed (only in foreign objects)
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)=0;
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit)=0;
+  // it from nsIRenderingContext where needed (only in foreign
+  // objects) dirtyRectTwips is the unmodified region passed to the
+  // outer svg frame's ::Paint
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)=0;
+
+  // Check if this frame or children contain the given point,
+  // specified in device pixels relative to the origin of the outer
+  // svg frame (origin ill-defined in the case of borders - bug
+  // 290770).  Return value unspecified (usually NS_OK for hit, error
+  // no hit, but not always [ex: nsSVGPathGeometryFrame.cpp]) and no
+  // code trusts the return value - this should be fixed (bug 290765).
+  // *hit set to topmost frame in the children (or 'this' if leaf
+  // frame) which is accepting pointer events, null if no frame hit.
+  // See bug 290852 for foreignObject complications.
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit)=0;
+
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion()=0;
   NS_IMETHOD InitialUpdate()=0;
   NS_IMETHOD NotifyCanvasTMChanged()=0;

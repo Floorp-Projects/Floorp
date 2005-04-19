@@ -56,7 +56,7 @@ protected:
                      nsIFrame** aNewFrame);
 
   virtual ~nsSVGRectFrame();
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
 
 public:
   // nsISVGValueObserver interface:
@@ -129,9 +129,10 @@ nsSVGRectFrame::~nsSVGRectFrame()
       value->RemoveObserver(this);
 }
 
-nsresult nsSVGRectFrame::Init()
+NS_IMETHODIMP
+nsSVGRectFrame::InitSVG()
 {
-  nsresult rv = nsSVGPathGeometryFrame::Init();
+  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
   if (NS_FAILED(rv))
     return rv;
 

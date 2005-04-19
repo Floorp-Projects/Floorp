@@ -799,7 +799,7 @@ nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      nsresult rv = SVGFrame->GetFrameForPoint(x, y, &hit);
+      nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &hit);
       if (NS_SUCCEEDED(rv) && hit) {
         *aFrame = hit;
         // return NS_OK; can't return. we need reverse order but only
@@ -912,7 +912,7 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->Paint(canvas, aDirtyRect);
+      SVGFrame->PaintSVG(canvas, aDirtyRect);
   }
   
   canvas->Flush();
