@@ -505,7 +505,7 @@
 
                       xulColumn.appendChild(chunkBox);
 
-                      chunkBox.occurrence = chunk.event;
+                      chunkBox.occurrence = chunk.event.event;
                   } else {
                       var chunkBox = createXULElement("box");
                       chunkBox.setAttribute("orient", orient);
@@ -769,12 +769,11 @@
 	  return this.mOccurrence;
 	]]></getter>
 	<setter><![CDATA[
-	  dump ('set occurrence\n');
 	  this.mOccurrence = val;
 	  if (val && val.item)
-              this.eventNameLabel.setAttribute('value', val.item.summary);
+              this.eventNameLabel.setAttribute('value', val.item.title);
           else
-              this.eventNameLabel.setAttribute('value', 'Event');
+              this.eventNameLabel.setAttribute('value', 'Untitled Event');
 	  return val;
 	]]></setter>
       </property>
