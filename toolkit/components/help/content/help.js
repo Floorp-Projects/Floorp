@@ -59,7 +59,7 @@ const MAX_HISTORY_MENU_ITEMS = 6;
 const platform = "win";
 #else
 #ifdef XP_MACOSX
-const platform = "mac;
+const platform = "mac";
 #else
 #ifdef XP_OS2
 const platform = "os2";
