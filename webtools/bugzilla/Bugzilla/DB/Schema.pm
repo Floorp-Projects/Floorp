@@ -371,6 +371,7 @@ use constant ABSTRACT_SCHEMA => {
             flags_bug_id_idx       => [qw(bug_id attach_id)],
             flags_setter_id_idx    => ['setter_id'],
             flags_requestee_id_idx => ['requestee_id'],
+            flags_type_id_idx      => ['type_id'],
         ],
     },
 

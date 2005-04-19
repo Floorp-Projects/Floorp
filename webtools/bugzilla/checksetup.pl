@@ -3890,6 +3890,12 @@ if ($dbh->bz_get_field_def('components', 'initialowner')->[2]) { # if NULL
                                'mediumint NOT NULL');
 }
 
+# 2005-03-28 - bug 238800 - index flags.type_id to make editflagtypes.cgi speedy
+if (!defined $dbh->bz_get_index_def('flags','type_id')) {
+    print "Adding index for type_id column in flags table...\n";
+    $dbh->do('ALTER TABLE flags ADD INDEX (type_id)');
+}
+
 } # END LEGACY CHECKS
 
 # If you had to change the --TABLE-- definition in any way, then add your
