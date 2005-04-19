@@ -82,7 +82,8 @@ nsSVGDefsFrame::~nsSVGDefsFrame()
     value->RemoveObserver(this);
 }
 
-nsresult nsSVGDefsFrame::Init()
+NS_IMETHODIMP
+nsSVGDefsFrame::InitSVG()
 {
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
   if (!transformable)
@@ -121,7 +122,7 @@ nsSVGDefsFrame::Init(nsPresContext*  aPresContext,
   rv = nsSVGDefsFrameBase::Init(aPresContext, aContent, aParent,
                                 aContext, aPrevInFlow);
 
-  Init();
+  InitSVG();
   
   return rv;
 }
@@ -237,7 +238,7 @@ nsSVGDefsFrame::DidModifySVGObservable (nsISVGValue* observable,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGDefsFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGDefsFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
   // defs don't paint
 
@@ -245,7 +246,7 @@ nsSVGDefsFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
+nsSVGDefsFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
   *hit = nsnull;
   

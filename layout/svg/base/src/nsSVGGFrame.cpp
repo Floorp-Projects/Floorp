@@ -84,7 +84,7 @@ nsSVGGFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGGFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
   nsCOMPtr<nsISVGRendererSurface> surface;
 
@@ -134,7 +134,7 @@ nsSVGGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->Paint(canvas, dirtyRectTwips);
+      SVGFrame->PaintSVG(canvas, dirtyRectTwips);
   }
 
   if (surface) {
@@ -149,7 +149,7 @@ nsSVGGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 }
 
 NS_IMETHODIMP
-nsSVGGFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
+nsSVGGFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
   *hit = nsnull;
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
@@ -158,7 +158,7 @@ nsSVGGFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       nsIFrame* temp=nsnull;
-      nsresult rv = SVGFrame->GetFrameForPoint(x, y, &temp);
+      nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &temp);
       if (NS_SUCCEEDED(rv) && temp) {
         *hit = temp;
         // return NS_OK; can't return. we need reverse order but only

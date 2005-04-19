@@ -67,8 +67,8 @@ protected:
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);  
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);

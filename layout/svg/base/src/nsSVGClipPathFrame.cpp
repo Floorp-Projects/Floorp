@@ -148,10 +148,10 @@ nsSVGClipPathFrame::~nsSVGClipPathFrame()
 {
 }
 
-nsresult
-nsSVGClipPathFrame::Init()
+NS_IMETHODIMP
+nsSVGClipPathFrame::InitSVG()
 {
-  nsresult rv = nsSVGDefsFrame::Init();
+  nsresult rv = nsSVGDefsFrame::InitSVG();
   if (NS_FAILED(rv))
     return rv;
 
@@ -182,7 +182,7 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->Paint(canvas, dirty);
+      SVGFrame->PaintSVG(canvas, dirty);
     }
   }
 
@@ -207,7 +207,7 @@ nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       nsIFrame *temp = nsnull;
-      nsresult rv = SVGFrame->GetFrameForPoint(aX, aY, &temp);
+      nsresult rv = SVGFrame->GetFrameForPointSVG(aX, aY, &temp);
       if (NS_SUCCEEDED(rv) && temp) {
         *aHit = PR_TRUE;
         return NS_OK;

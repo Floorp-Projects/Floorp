@@ -54,7 +54,7 @@ class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
 
   virtual ~nsSVGEllipseFrame();
 
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
 
   /**
    * Get the "type" of the frame
@@ -120,9 +120,10 @@ nsSVGEllipseFrame::~nsSVGEllipseFrame()
       value->RemoveObserver(this);
 }
 
-nsresult nsSVGEllipseFrame::Init()
+NS_IMETHODIMP
+nsSVGEllipseFrame::InitSVG()
 {
-  nsresult rv = nsSVGPathGeometryFrame::Init();
+  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIDOMSVGEllipseElement> ellipse = do_QueryInterface(mContent);

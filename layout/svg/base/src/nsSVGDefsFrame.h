@@ -59,7 +59,7 @@ class nsSVGDefsFrame : public nsSVGDefsFrameBase,
 protected:
   nsSVGDefsFrame();
   virtual ~nsSVGDefsFrame();
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -108,8 +108,8 @@ public:
   // implementation inherited from nsSupportsWeakReference
   
   // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);  
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged();

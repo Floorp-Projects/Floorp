@@ -55,7 +55,7 @@ class nsSVGUseFrame : public nsSVGUseFrameBase,
 
 protected:
 
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -128,9 +128,10 @@ NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNe
   return NS_OK;
 }
 
-nsresult nsSVGUseFrame::Init()
+NS_IMETHODIMP
+nsSVGUseFrame::InitSVG()
 {
-  nsresult rv = nsSVGUseFrameBase::Init();
+  nsresult rv = nsSVGUseFrameBase::InitSVG();
   if (NS_FAILED(rv)) return rv;
  
   nsCOMPtr<nsIDOMSVGUseElement> UseElement = do_QueryInterface(mContent);
@@ -187,7 +188,7 @@ nsSVGUseFrame::Init(nsPresContext*  aPresContext,
   NS_IF_ADDREF(mContent);
   mParent = aParent;
 
-  Init();
+  InitSVG();
   
   SetStyleContext(aPresContext, aContext);
     

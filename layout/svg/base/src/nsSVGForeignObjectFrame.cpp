@@ -138,8 +138,8 @@ public:
   // implementation inherited from nsSupportsWeakReference
   
   // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);  
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged();
@@ -467,7 +467,7 @@ nsSVGForeignObjectFrame::DidModifySVGObservable (nsISVGValue* observable,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
   if (mIsDirty) {
     nsCOMPtr<nsISVGRendererRegion> region = DoReflow();
@@ -533,7 +533,7 @@ nsSVGForeignObjectFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirty
 
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
+nsSVGForeignObjectFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
   *hit = nsnull;
 

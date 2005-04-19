@@ -114,8 +114,8 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);  
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged();
@@ -351,7 +351,7 @@ nsSVGInnerSVGFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
 #ifdef DEBUG
 //  printf("nsSVGInnerSVG(%p)::Paint\n", this);
@@ -384,7 +384,7 @@ nsSVGInnerSVGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->Paint(canvas, dirtyRectTwips);
+      SVGFrame->PaintSVG(canvas, dirtyRectTwips);
   }
 
   canvas->PopClip();
@@ -393,7 +393,7 @@ nsSVGInnerSVGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
 }
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
+nsSVGInnerSVGFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
 #ifdef DEBUG
 //  printf("nsSVGInnerSVGFrame(%p)::GetFrameForPoint\n", this);
@@ -405,7 +405,7 @@ nsSVGInnerSVGFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       nsIFrame* temp=nsnull;
-      nsresult rv = SVGFrame->GetFrameForPoint(x, y, &temp);
+      nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &temp);
       if (NS_SUCCEEDED(rv) && temp) {
         *hit = temp;
         // return NS_OK; can't return. we need reverse order but only

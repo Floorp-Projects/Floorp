@@ -63,7 +63,7 @@ protected:
                        nsIFrame** aNewFrame);
 
   virtual ~nsSVGMarkerFrame();
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
 
 public:
   NS_DECL_ISUPPORTS

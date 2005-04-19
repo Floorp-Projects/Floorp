@@ -46,6 +46,7 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
+#include "nsSVGMarkerFrame.h"
 #include "nsISupports.h"
 #include "nsLayoutAtoms.h"
 
@@ -57,7 +58,7 @@ protected:
   NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   ~nsSVGPathFrame();
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
   
 public:
   // nsISVGValueObserver interface:
@@ -129,9 +130,10 @@ nsSVGPathFrame::~nsSVGPathFrame()
       value->RemoveObserver(this);
 }
 
-nsresult nsSVGPathFrame::Init()
+NS_IMETHODIMP
+nsSVGPathFrame::InitSVG()
 {
-  nsresult rv = nsSVGPathGeometryFrame::Init();
+  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIDOMSVGAnimatedPathData> anim_data = do_QueryInterface(mContent);

@@ -130,8 +130,8 @@ public:
                                      nsISVGValue::modificationType aModType);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged();
@@ -444,7 +444,7 @@ nsSVGGlyphFrame::DidModifySVGObservable (nsISVGValue* observable,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
 #ifdef DEBUG
   //printf("nsSVGGlyphFrame(%p)::Paint\n", this);
@@ -457,7 +457,7 @@ nsSVGGlyphFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwip
 }
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
+nsSVGGlyphFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
 #ifdef DEBUG
   //printf("nsSVGGlyphFrame(%p)::GetFrameForPoint\n", this);

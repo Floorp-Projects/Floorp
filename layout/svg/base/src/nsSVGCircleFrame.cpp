@@ -54,7 +54,7 @@ protected:
   NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   virtual ~nsSVGCircleFrame();
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
 
 public:
   /**
@@ -119,9 +119,10 @@ nsSVGCircleFrame::~nsSVGCircleFrame()
       value->RemoveObserver(this);
 }
 
-nsresult nsSVGCircleFrame::Init()
+NS_IMETHODIMP
+nsSVGCircleFrame::InitSVG()
 {
-  nsresult rv = nsSVGPathGeometryFrame::Init();
+  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
   if (NS_FAILED(rv)) return rv;
 
   

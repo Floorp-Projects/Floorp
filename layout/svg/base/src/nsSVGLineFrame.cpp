@@ -56,7 +56,7 @@ protected:
   NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   virtual ~nsSVGLineFrame();
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
 
   /**
    * Get the "type" of the frame
@@ -137,9 +137,10 @@ nsSVGLineFrame::~nsSVGLineFrame()
       value->RemoveObserver(this);
 }
 
-nsresult nsSVGLineFrame::Init()
+NS_IMETHODIMP
+nsSVGLineFrame::InitSVG()
 {
-  nsresult rv = nsSVGPathGeometryFrame::Init();
+  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIDOMSVGLineElement> line = do_QueryInterface(mContent);

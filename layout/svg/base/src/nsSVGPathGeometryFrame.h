@@ -47,13 +47,13 @@
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsISVGOuterSVGFrame.h"
-#include "nsSVGMarkerFrame.h"
 #include "nsSVGGradient.h"
 #include "nsLayoutAtoms.h"
 
 class nsPresContext;
 class nsIDOMSVGMatrix;
 class nsISVGRendererRegion;
+class nsSVGMarkerFrame;
 
 typedef nsFrame nsSVGPathGeometryFrameBase;
 
@@ -84,8 +84,7 @@ public:
   NS_IMETHOD  AttributeChanged(nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType,
-                               PRInt32         aHint);
+                               PRInt32         aModType);
 
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
 
@@ -112,8 +111,8 @@ protected:
                                      nsISVGValue::modificationType aModType);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged();
@@ -135,7 +134,7 @@ protected:
   //NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder) = 0;
   
 protected:
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
   void UpdateGraphic(PRUint32 flags);
   nsISVGOuterSVGFrame *GetOuterSVGFrame();
   nsISVGRendererPathGeometry *GetGeometry();

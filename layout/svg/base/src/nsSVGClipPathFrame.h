@@ -48,7 +48,7 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   virtual ~nsSVGClipPathFrame();
-  virtual nsresult Init();
+  NS_IMETHOD InitSVG();
 
  public:
   NS_DECL_ISUPPORTS

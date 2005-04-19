@@ -111,8 +111,7 @@ public:
   NS_IMETHOD  AttributeChanged(nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType,
-                               PRInt32         aHint);
+                               PRInt32         aModType);
 
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
 
@@ -143,8 +142,8 @@ public:
   // implementation inherited from nsSupportsWeakReference
   
   // nsISVGChildFrame interface:
-  NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
-  NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged();
@@ -330,8 +329,7 @@ NS_IMETHODIMP
 nsSVGTextFrame::AttributeChanged(nsIContent*     aChild,
                                  PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
-                                 PRInt32         aModType,
-                                 PRInt32         aHint)
+                                 PRInt32         aModType)
 {
   // we don't use this notification mechanism
   
@@ -522,7 +520,7 @@ nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGTextFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGTextFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
 #ifdef DEBUG
 //  printf("nsSVGTextFrame(%p)::Paint\n", this);
@@ -533,7 +531,7 @@ nsSVGTextFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->Paint(canvas, dirtyRectTwips);
+      SVGFrame->PaintSVG(canvas, dirtyRectTwips);
     kid = kid->GetNextSibling();
   }
 
@@ -541,7 +539,7 @@ nsSVGTextFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
+nsSVGTextFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
 #ifdef DEBUG
 //  printf("nsSVGTextFrame(%p)::GetFrameForPoint\n", this);
@@ -553,7 +551,7 @@ nsSVGTextFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       nsIFrame* temp=nsnull;
-      nsresult rv = SVGFrame->GetFrameForPoint(x, y, &temp);
+      nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &temp);
       if (NS_SUCCEEDED(rv) && temp) {
         *hit = temp;
         // return NS_OK; can't return. we need reverse order but only
