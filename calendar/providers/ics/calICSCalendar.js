@@ -359,48 +359,48 @@ calICSObserver.prototype = {
 
     onStartBatch: function() {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onStartBatch();
+            this.mObservers[i].onStartBatch();
         this.mInBatch = true;
     },
     onEndBatch: function() {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onEndBatch();
+            this.mObservers[i].onEndBatch();
 
         this.mInBatch = false;
         this.mCalendar.writeICS();
     },
     onLoad: function() {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onLoad();
+            this.mObservers[i].onLoad();
     },
     onAddItem: function(aItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onAddItem(aItem);
+            this.mObservers[i].onAddItem(aItem);
 
         if (!this.mInBatch)
             this.mCalendar.writeICS();
     },
     onModifyItem: function(aNewItem, aOldItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onAddItem(aNewItem, aOldItem);
+            this.mObservers[i].onAddItem(aNewItem, aOldItem);
 
         if (!this.mInBatch)
             this.mCalendar.writeICS();
     },
     onDeleteItem: function(aDeletedItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onDeleteItem(aItem);
+            this.mObservers[i].onDeleteItem(aItem);
 
         if (!this.mInBatch)
             this.mCalendar.writeICS();
     },
     onAlarm: function(aAlarmItem) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onAlarm(aAlarmItem);
+            this.mObservers[i].onAlarm(aAlarmItem);
     },
     onError: function(aMessage) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].observer.onError(aMessage);
+            this.mObservers[i].onError(aMessage);
     },
 
     // This observer functions as proxy for all the other observers
