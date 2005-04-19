@@ -145,7 +145,7 @@ function Startup()
   var rAttribute = RDF.GetResource("class");
   var rElement   = RDF.GetResource("chrome://browser/content/bookmarks/addBookmark2.xul#expander");
   var rDialog    = RDF.GetResource("chrome://browser/content/bookmarks/addBookmark2.xul");
-  var rPersist   = RDF.GetResource(NC_NS+"persist");
+  var rPersist   = RDF.GetResource(gNC_NS+"persist");
   
   var rOldValue = localStore.GetTarget(rElement, rAttribute, true);
   if (rOldValue) {
@@ -195,7 +195,7 @@ function onOK()
   
   if (gArg.bWebPanel && rSource) {
     // Assert that we're a web panel.
-    BMDS.Assert(rSource, RDF.GetResource(NC_NS+"WebPanel"),
+    BMDS.Assert(rSource, RDF.GetResource(gNC_NS+"WebPanel"),
                 RDF.GetLiteral("true"), true);
   }
   
@@ -246,7 +246,7 @@ function selectTreeFolder()
   gMenulist.selectedItem = menuitem;
   if (!menuitem) {
     gMenulist.removeItemAt(gMenulist.firstChild.childNodes.length-1);
-    var newItem = gMenulist.appendItem(BookmarksUtils.getProperty(gSelectedFolder, NC_NS+"Name"), gSelectedFolder.Value);
+    var newItem = gMenulist.appendItem(BookmarksUtils.getProperty(gSelectedFolder, gNC_NS+"Name"), gSelectedFolder.Value);
     newItem.setAttribute("class", "menuitem-iconic folder-icon");
     newItem.setAttribute("id", gSelectedFolder.Value);
     gMenulist.selectedItem = newItem;
