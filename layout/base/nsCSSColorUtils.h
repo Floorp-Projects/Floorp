@@ -63,7 +63,7 @@ int NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
 
 // Get Luminosity of a specific color. That is same as Y of YIQ color space.
 // The range of return value is 0 to 255000.
-PRUint32 NS_GetLuminosity(nscolor aColor);
+PRInt32 NS_GetLuminosity(nscolor aColor);
 
 // function to convert from RGB color space to HSV color space 
 void NS_RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue);
