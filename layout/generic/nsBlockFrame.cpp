@@ -6500,6 +6500,12 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
     nsPoint viewOffset;
     nsIView* parentWithView;
     GetOffsetFromView(viewOffset, &parentWithView);
+    // The offset returned by GetOffsetFromView is not trustworthy.
+    // It's just the sum of frame positions and is not the true
+    // geometric offset. So recalculate the true geometric offset.
+    NS_ASSERTION(nsLayoutUtils::GetFrameFor(parentWithView),
+                 "GetOffsetFromView shouldn't be returning a frameless view");
+    viewOffset = GetOffsetTo(nsLayoutUtils::GetFrameFor(parentWithView));
 
     while(NS_OK == result)
     { //we are starting aloop to allow us to "drill down to the one we want"
