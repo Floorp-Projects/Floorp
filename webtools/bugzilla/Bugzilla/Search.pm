@@ -1000,10 +1000,10 @@ sub init {
              $term = $dbh->sql_position(lc($q), "LOWER($ff)") . " = 0";
          },
          ",regexp" => sub {
-             $term = "LOWER($ff) " . $dbh->sql_regexp() . " $q";
+             $term = "$ff " . $dbh->sql_regexp() . " $q";
          },
          ",notregexp" => sub {
-             $term = "LOWER($ff) " . $dbh->sql_not_regexp() . " $q";
+             $term = "$ff " . $dbh->sql_not_regexp() . " $q";
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
@@ -1506,7 +1506,7 @@ sub GetByWordList {
             $word =~ s/^'//;
             $word =~ s/'$//;
             $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
-            push(@list, "lower($field) " . $dbh->sql_regexp() . " '$word'");
+            push(@list, "$field " . $dbh->sql_regexp() . " '$word'");
         }
     }
 

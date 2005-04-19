@@ -1199,7 +1199,8 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 =item C<sql_regexp>
 
  Description: Outputs SQL regular expression operator for POSIX regex
-              searches in format suitable for a given database.
+              searches (case insensitive) in format suitable for a given
+              database.
               Abstract method, should be overriden by database specific code.
  Params:      none
  Returns:     formatted SQL for regular expression search (e.g. REGEXP)
@@ -1208,7 +1209,8 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 =item C<sql_not_regexp>
 
  Description: Outputs SQL regular expression operator for negative POSIX
-              regex searches in format suitable for a given database.
+              regex searches (case insensitive) in format suitable for a given
+              database.
               Abstract method, should be overriden by database specific code.
  Params:      none
  Returns:     formatted SQL for negative regular expression search

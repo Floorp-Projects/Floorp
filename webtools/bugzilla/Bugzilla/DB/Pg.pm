@@ -87,11 +87,11 @@ sub bz_last_key {
 }
 
 sub sql_regexp {
-    return "~";
+    return "~*";
 }
 
 sub sql_not_regexp {
-    return "!~" 
+    return "!~*" 
 }
 
 sub sql_limit {
