@@ -242,10 +242,19 @@ protected:
   // end mousewheel functions
 
   // routines for the d&d gesture tracking state machine
-  void BeginTrackingDragGesture ( nsPresContext* aPresContext, nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
+  void BeginTrackingDragGesture ( nsPresContext* aPresContext, nsMouseEvent* inDownEvent,
+                                  nsIFrame* inDownFrame ) ;
   void StopTrackingDragGesture ( ) ;
-  void GenerateDragGesture ( nsPresContext* aPresContext, nsGUIEvent *aEvent ) ;
+  void GenerateDragGesture ( nsPresContext* aPresContext, nsMouseEvent *aEvent ) ;
   PRBool IsTrackingDragGesture ( ) const { return mGestureDownContent != nsnull; }
+  /**
+   * Set the fields of aEvent to reflect the mouse position and modifier keys
+   * that were set when the user first pressed the mouse button (stored by
+   * BeginTrackingDragGesture). aEvent->widget must be
+   * mCurrentTarget->GetWindow().
+   * @param aIsTrusted if true, we set the trusted flag in the event
+   */
+  void FillInEventFromGestureDown(nsMouseEvent* aEvent, PRBool aIsTrusted);
 
   PRBool mSuppressFocusChange; // Used only for Ender text fields to suppress a focus firing on mouse down
 
@@ -277,6 +286,11 @@ protected:
   // member variables for the d&d gesture state machine
   nsPoint mGestureDownPoint; // screen coordinates
   nsCOMPtr<nsIContent> mGestureDownContent;
+  // State of keys when the original gesture-down happened
+  PRPackedBool mGestureDownShift;
+  PRPackedBool mGestureDownControl;
+  PRPackedBool mGestureDownAlt;
+  PRPackedBool mGestureDownMeta;
 
   nsCOMPtr<nsIContent> mLastLeftMouseDownContent;
   nsCOMPtr<nsIContent> mLastMiddleMouseDownContent;
@@ -347,13 +361,6 @@ protected:
   void FireContextClick ( ) ;
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
   
-    // stash a bunch of stuff because we're going through a timer and the event
-    // isn't guaranteed to be there later. We don't want to hold strong refs to
-    // things because we're alerted to when they are going away in ClearFrameRefs().
-  nsPoint mEventPoint, mEventRefPoint;
-  nsIFrame* mEventDownFrame;
-  nsIWidget* mEventDownWidget; // [WEAK]
-  nsPresContext* mEventPresContext; // [WEAK]
   nsCOMPtr<nsITimer> mClickHoldTimer;
 #endif
 
