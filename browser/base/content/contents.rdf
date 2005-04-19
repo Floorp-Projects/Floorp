@@ -15,6 +15,16 @@
         chrome:localeVersion="0.9.9"
         chrome:skinVersion="1.5">
   </RDF:Description>
+  
+# Overlays Points
+#ifdef XP_MACOSX
+  <RDF:Seq RDF:about="urn:mozilla:overlays">
+      <RDF:li RDF:resource="chrome://mozapps/content/downloads/downloads.xul"/>
+  </RDF:Seq>
 
+  <RDF:Seq RDF:about="chrome://mozapps/content/downloads/downloads.xul">
+      <RDF:li>chrome://browser/content/downloadManagerOverlay.xul</RDF:li>
+  </RDF:Seq>
+#endif
 </RDF:RDF>
 

@@ -24,6 +24,7 @@
 #
 # Contributor(s):
 #   David Hyatt <hyatt@mozilla.org> (Original Author)
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,8 +40,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-#ifdef XP_MACOSX
-
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
 #include browser-doctype.inc
@@ -55,7 +54,9 @@
 # so that they can be shared by hiddenWindow.xul.
 #include browser-scripts.inc
 
-<window id="main-window">
+<script type="application/x-javascript">
+  addEventListener("load", nonBrowserWindowStartup, false);
+</script>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
@@ -68,8 +69,4 @@
 # hiddenWindow.xul.
 #include browser-menubar.inc
 
-</window>
-
 </overlay>
-
-#endif
