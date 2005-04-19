@@ -151,6 +151,38 @@ NS_IMETHODIMP nsRenderingContextImpl::UseBackbuffer(PRBool* aUseBackbuffer)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextImpl::PushTranslation(PushedTranslation* aState)
+{
+  // The transform components are saved and restored instead 
+  // of using PushState and PopState because they are too slow
+  // because they also save and restore the clip state.
+  // Note: Setting a negative translation to restore the 
+  // state does not work because the floating point errors can accumulate
+  // causing the display of some frames to be off by one pixel. 
+  // This happens frequently when running in 120DPI mode where frames are
+  // often positioned at 1/2 pixel locations and small floating point errors
+  // will cause the frames to vary their pixel x location during scrolling
+  // operations causes a single scan line of pixels to be shifted left relative
+  // to the other scan lines for the same text. 
+  
+  // Save the transformation matrix's translation components.
+  nsTransform2D *theTransform; 
+  GetCurrentTransform(theTransform);
+  NS_ASSERTION(theTransform != nsnull, "The rendering context transform is null");
+  theTransform->GetTranslation(&aState->mSavedX, &aState->mSavedY);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextImpl::PopTranslation(PushedTranslation* aState)
+{
+  nsTransform2D *theTransform; 
+  GetCurrentTransform(theTransform);
+  NS_ASSERTION(theTransform != nsnull, "The rendering context transform is null");
+  theTransform->SetTranslation(aState->mSavedX, aState->mSavedY);
+
+  return NS_OK;
+}
 
 PRBool nsRenderingContextImpl::RectFitsInside(const nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const
 {

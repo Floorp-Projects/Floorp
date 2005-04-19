@@ -313,6 +313,28 @@ public:
    */
   NS_IMETHOD Scale(float aSx, float aSy) = 0;
 
+  struct PushedTranslation {
+    float mSavedX, mSavedY;
+  };
+
+  class AutoPushTranslation {
+    nsIRenderingContext* mCtx;
+    PushedTranslation mPushed;
+  public:
+    AutoPushTranslation(nsIRenderingContext* aCtx, nscoord aX, nscoord aY)
+      : mCtx(aCtx) {
+      mCtx->PushTranslation(&mPushed);
+      mCtx->Translate(aX, aY);
+    }
+    ~AutoPushTranslation() {
+      mCtx->PopTranslation(&mPushed);
+    }
+  };
+
+  NS_IMETHOD PushTranslation(PushedTranslation* aState) = 0;
+
+  NS_IMETHOD PopTranslation(PushedTranslation* aState) = 0;
+
   /** 
    * Get the current transformation matrix for the RenderingContext
    * @return The transformation matrix for the RenderingContext

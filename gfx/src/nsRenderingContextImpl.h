@@ -95,6 +95,9 @@ public:
   NS_IMETHOD DestroyCachedBackbuffer(void);
   NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
   
+  NS_IMETHOD PushTranslation(PushedTranslation* aState);
+  NS_IMETHOD PopTranslation(PushedTranslation* aState);
+
   /**
    * Let the device context know whether we want text reordered with
    * right-to-left base direction

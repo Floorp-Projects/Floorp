@@ -1465,21 +1465,13 @@ nsBoxFrame::PaintChild(nsPresContext*      aPresContext,
       damageArea.x -= kidRect.x;
       damageArea.y -= kidRect.y;
 
-      // Save the transformation matrix's translation components.
-      float xMatrix;
-      float yMatrix;
-      nsTransform2D *theTransform; 
-      aRenderingContext.GetCurrentTransform(theTransform);
-      NS_ASSERTION(theTransform != nsnull, "The rendering context transform is null");
-      theTransform->GetTranslation(&xMatrix, &yMatrix);
+      {
+        nsIRenderingContext::AutoPushTranslation
+          translate(&aRenderingContext, kidRect.x, kidRect.y);
 
-      aRenderingContext.Translate(kidRect.x, kidRect.y);
-     
-      // Paint the kid
-      aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
-
-      // Restore the transformation matrix's translation components.
-      theTransform->SetTranslation(xMatrix, yMatrix);
+        // Paint the kid
+        aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
+      }
     }
   }
 }
