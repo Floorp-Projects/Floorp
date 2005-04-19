@@ -166,10 +166,10 @@ calEvent.prototype = {
             return this.recurrenceInfo.getOccurrences(aStartDate, aEndDate, 0, aCount);
         }
 
-        if (aStartDate.compare(this.startDate) >= 0 &&
-            aEndDate.compare(this.endDate) <= 0)
+        if ((this.startDate.compare(aStartDate) >= 0 && this.startDate.compare(aEndDate) <= 0) ||
+            (this.endDate.compare(aStartDate) >= 0 && this.endDate.compare(aEndDate) <= 0))
         {
-            var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(Components.interfaces.calIOccurence);
+            var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(Components.interfaces.calIItemOccurrence);
             occ.initialize(this, this.startDate, this.endDate);
             aCount.value = 1;
             return ([ occ ]);
