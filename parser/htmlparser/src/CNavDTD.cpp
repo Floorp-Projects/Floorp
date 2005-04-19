@@ -660,6 +660,22 @@ PRBool DoesRequireBody(CToken* aToken,nsITokenizer* aTokenizer) {
   return result;
 }
 
+/**
+ * Returns whether or not there is a tag of type aType open on aContext.
+ */
+static
+PRBool HasOpenTagOfType(PRInt32 aType, const nsDTDContext& aContext) {
+  PRInt32 count = aContext.GetCount();
+
+  while (--count >= 0) {
+    if (gHTMLElements[aContext.TagAt(count)].IsMemberOf(aType)) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 static void
 InPlaceConvertLineEndings( nsAString& aString )
 {
@@ -2814,13 +2830,14 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
           PRInt32 sindex=0;
 
           nsTagEntry *theEntry=theStack->mEntries;
+          PRBool isHeadingOpen = HasOpenTagOfType(kHeading, *mBodyContext);
           for(sindex=0;sindex<theStack->mCount;++sindex){            
             nsCParserNode* theNode=(nsCParserNode*)theEntry->mNode;
             if(1==theNode->mUseCount) {
               eHTMLTags theNodeTag=(eHTMLTags)theNode->GetNodeType();
               if(gHTMLElements[theNodeTag].CanContain(aChildTag,mDTDMode)) {
                 theEntry->mParent = theStack;  //we do this too, because this entry differs from the new one we're pushing...
-                if(gHTMLElements[mBodyContext->Last()].IsMemberOf(kHeading)) {
+                if(isHeadingOpen) {
                   // Bug 77352
                   // The style system needs to identify residual style tags
                   // within heading tags so that heading tags' size can take

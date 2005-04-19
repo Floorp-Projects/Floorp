@@ -347,7 +347,7 @@ public:
   PRInt32         LastOf(eHTMLTags aTag) const {return mStack.LastOf(aTag);}
 
   void            Empty(void); 
-  PRInt32         GetCount(void) {return mStack.mCount;}
+  PRInt32         GetCount(void) const {return mStack.mCount;}
   PRInt32         GetResidualStyleCount(void) {return mResidualStyleCount;}
   nsEntryStack*   GetStylesAt(PRInt32 anIndex) const;
   void            PushStyle(nsCParserNode* aNode);
