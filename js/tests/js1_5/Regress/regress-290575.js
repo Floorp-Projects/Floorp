@@ -53,6 +53,22 @@ function crashMe(n) {
   fn.toString();
 }
 
+printStatus('crashMe(0x8001)');
+
 crashMe(0x8001);
   
+reportCompare(expect, actual, summary);
+
+function crashMe2(n) {
+	var nasty = [], fn
+	
+	while (n--) nasty[n] = "a"+n
+	fn = Function(nasty.join(), "void 0")
+	fn.toString()
+}
+
+printStatus('crashMe2(0x10000)');
+
+crashMe2(0x10000);
+
 reportCompare(expect, actual, summary);
