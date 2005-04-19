@@ -469,12 +469,15 @@ var progressNotifier = {
 
     if (this.mStatusFeedback)
     {
-      if (aErrorCode == kNewsBlogInvalidFeed)
-      this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-invalidFeed",
-                                            [feed.url], 1));
+      var newsBlogBundle = GetNewsBlogStringBundle();
+      if (aErrorCode == kNewsBlogNoNewItems)
+        this.mStatusFeedback.showStatusString(newsBlogBundle.GetStringFromName("newsblog-noNewArticlesForFeed"));
+      else if (aErrorCode == kNewsBlogInvalidFeed)
+        this.mStatusFeedback.showStatusString(newsBlogBundle.formatStringFromName("newsblog-invalidFeed",
+                                              [feed.url], 1));
       else if (aErrorCode == kNewsBlogRequestFailure)
-        this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-networkError",
-                                            [feed.url], 1));                                           
+        this.mStatusFeedback.showStatusString(newsBlogBundle.formatStringFromName("newsblog-networkError",
+                                              [feed.url], 1));                                           
       this.mStatusFeedback.stopMeteors();
     }
 

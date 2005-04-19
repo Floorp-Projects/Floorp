@@ -66,6 +66,7 @@ const DC_CREATOR = rdf.GetResource(DC_NS + "creator");
 const DC_SUBJECT = rdf.GetResource(DC_NS + "subject");
 const DC_DATE = rdf.GetResource(DC_NS + "date");
 const DC_TITLE = rdf.GetResource(DC_NS + "title");
+const DC_LASTMODIFIED = rdf.GetResource(DC_NS + "lastModified");
 const DC_IDENTIFIER = rdf.GetResource(DC_NS + "identifier");
 
 const FZ_NS = "urn:forumzilla:";

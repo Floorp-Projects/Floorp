@@ -41,6 +41,7 @@ const kNewsBlogSuccess = 0;
 const kNewsBlogInvalidFeed = 1; // usually means there was an error trying to parse the feed...
 const kNewsBlogRequestFailure = 2; // generic networking failure when trying to download the feed.
 const kNewsBlogFeedIsBusy = 3;
+const kNewsBlogNoNewItems = 4; // there are no new articles for this feed
 
 // Cache for all of the feeds currently being downloaded, indexed by URL, so the load event listener
 // can access the Feed objects after it finishes downloading the feed.
@@ -158,6 +159,9 @@ Feed.prototype =
     this.request.onprogress = Feed.onProgress; // must be set before calling .open
     this.request.open("GET", this.url, true);
 
+    var lastModified = this.lastModified;
+    if (lastModified)
+      this.request.setRequestHeader("If-Modified-Since", lastModified);
     this.request.overrideMimeType("text/xml");
     this.request.onload = this.onDownloaded;
     this.request.onerror = this.onDownloadError;
@@ -173,6 +177,13 @@ Feed.prototype =
     var feed = FeedCache.getFeed(url);
     if (!feed)
       throw("error after downloading " + url + ": couldn't retrieve feed from request");
+
+    // if the request has a Last-Modified header on it, then go ahead and remember
+    // that as a property on the feed so we can use it when making future requests.    
+    var lastModifiedHeader = request.getResponseHeader('Last-Modified');
+    if (lastModifiedHeader)
+      this.lastModified = lastModifiedHeader;
+
     feed.parse(); // parse will asynchronously call the download callback when it is done
   }, 
   
@@ -191,8 +202,11 @@ Feed.prototype =
     var request = aEvent.target;
     var url = request.channel.originalURI.spec;
     var feed = FeedCache.getFeed(url);
-    if (feed.downloadCallback)
-      feed.downloadCallback.downloaded(feed, kNewsBlogRequestFailure);
+    if (feed.downloadCallback) 
+    {
+      // if the http status code is a 304, then the feed has not been modified since we last downloaded it.
+      feed.downloadCallback.downloaded(feed, request.status == 304 ? kNewsBlogNoNewItems : kNewsBlogRequestFailure);
+    }
     
     FeedCache.removeFeed(url);
   },
@@ -202,7 +216,7 @@ Feed.prototype =
     if (aFeed && aFeed.downloadCallback)
     {
       if (aFeed.downloadCallback)
-        aFeed.downloadCallback.downloaded(aFeed, kNewsBlogInvalidFeed);
+        aFeed.downloadCallback.downloaded(aFeed, aFeed.request.status == 304 ? kNewsBlogNoNewItems : kNewsBlogInvalidFeed);
       FeedCache.removeFeed(aFeed.url);
     }
   },
@@ -236,6 +250,30 @@ Feed.prototype =
         ds.Change(this.resource, DC_TITLE, old_title, aNewTitle);
     else
         ds.Assert(this.resource, DC_TITLE, aNewTitle, true);
+  },
+
+  get lastModified()
+  {
+    var ds = getSubscriptionsDS(this.server);
+    var lastModified = ds.GetTarget(this.resource, DC_LASTMODIFIED, true);
+    if (lastModified)
+      lastModified = lastModified.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    return lastModified;
+  },
+
+  set lastModified(aLastModified)
+  {
+    var ds = getSubscriptionsDS(this.server);
+    aLastModified = rdf.GetLiteral(aLastModified);
+    var old_lastmodified = ds.GetTarget(this.resource, DC_LASTMODIFIED, true);
+    if (old_lastmodified)
+        ds.Change(this.resource, DC_LASTMODIFIED, old_lastmodified, aLastModified);
+    else
+        ds.Assert(this.resource, DC_LASTMODIFIED, aLastModified, true);  
+
+    // do we need to flush every time this property changes? 
+    ds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);    
+    ds.Flush();  
   },
 
   get quickMode ()
@@ -291,7 +329,7 @@ Feed.prototype =
 
     if (!this.request.responseText) 
       return this.onParseError(this);
-
+      
     // create a feed parser which will parse the feed for us
     var parser = new FeedParser();
     this.itemsToStore = parser.parseFeed(this, this.request.responseText, this.request.responseXML, this.request.channel.URI);
