@@ -185,7 +185,7 @@ int NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
           (luminosity * LUMINOSITY_FACTOR)) / 100;
 }
 
-PRUint32 NS_GetLuminosity(nscolor aColor)
+PRInt32 NS_GetLuminosity(nscolor aColor)
 {
   return (NS_GET_R(aColor) * RED_LUMINOSITY +
           NS_GET_G(aColor) * GREEN_LUMINOSITY +

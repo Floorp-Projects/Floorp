@@ -995,6 +995,8 @@ private:
   PRUint8 * mTypes;
   PRBool    mInit;
   PRInt16    mSelectionStatus;//see nsIDocument.h SetDisplaySelection()
+  nscolor   mFrameBackgroundColor;
+  PRInt32   mSufficientContrast;
   nscolor   mDisabledColor;
   nscolor   mAttentionColor;
 
@@ -1026,6 +1028,11 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
     mSelectionPseudoStyle = PR_FALSE;
     mSelectionPseudoBGIsTransparent = PR_FALSE;
 
+    const nsStyleBackground* bg =
+      nsCSSRendering::FindNonTransparentBackground(aStyleContext);
+    NS_ASSERTION(bg, "Cannot find NonTransparentBackground.");
+    mFrameBackgroundColor = bg->mBackgroundColor;
+
     if (aContent) {
       nsRefPtr<nsStyleContext> sc;
       sc = aPresContext->StyleSet()->
@@ -1033,7 +1040,7 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
                             nsCSSPseudoElements::mozSelection, aStyleContext);
       if (sc) {
         mSelectionPseudoStyle = PR_TRUE;
-        const nsStyleBackground* bg = sc->GetStyleBackground();
+        bg = sc->GetStyleBackground();
         mSelectionPseudoBGIsTransparent = PRBool(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
         if (!mSelectionPseudoBGIsTransparent )
           mSelectionPseudoBGcolor = bg->mBackgroundColor;
@@ -1043,6 +1050,9 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
 
     // Get background colors for disabled selection at attention-getting selection (used with type ahead find)
     nsILookAndFeel *look = aPresContext->LookAndFeel();
+    nscolor defaultWindowBackgroundColor;
+    look->GetColor(nsILookAndFeel::eColor_WindowBackground,
+                   defaultWindowBackgroundColor);
     look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundAttention,
                    mAttentionColor);
     look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled,
@@ -1051,6 +1061,13 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
                                             mOldStyle.mSelectionBGColor);
     mAttentionColor = EnsureDifferentColors(mAttentionColor,
                                             mOldStyle.mSelectionBGColor);
+
+    mSufficientContrast =
+      PR_MIN(PR_MIN(NS_SUFFICIENT_LUMINOSITY_DIFFERENCE,
+                    NS_LUMINOSITY_DIFFERENCE(mOldStyle.mSelectionTextColor,
+                                             mOldStyle.mSelectionBGColor)),
+                    NS_LUMINOSITY_DIFFERENCE(defaultWindowBackgroundColor,
+                                             mOldStyle.mSelectionBGColor));
 
     if (!aSelDetails)
     {
@@ -1263,22 +1280,22 @@ DrawSelectionIterator::GetSelectionColors(nscolor *aForeColor,
     return PR_TRUE;
   }
 
-  // Note: We assume that the combination of the background color and text color
-  // of selection is sufficient contrast. Because if it isn't, user cannot read
-  // the selection text.
-
-  // If the combination of the selection text color and the original text color
-  // are sufficient contrast, probably these background colors are not alike.
-  // Therefore, we should not exchange selection colors.
-  if (NS_LUMINOSITY_DIFFERENCE(*aForeColor, mOldStyle.mColor->mColor) >=
-      NS_SUFFICIENT_LUMINOSITY_DIFFERENCE)
+  // If the combination of selection background color and frame background color
+  // is sufficient contrast, don't exchange the selection colors.
+  PRInt32 backLuminosityDifference =
+            NS_LUMINOSITY_DIFFERENCE(*aBackColor, mFrameBackgroundColor);
+  if (backLuminosityDifference >= mSufficientContrast)
     return PR_TRUE;
 
-  // Otherwise, if those colors are similar, those background colors may be similar.
-  // Therefore, we should exchange the colors.
-  nscolor tmpColor = *aForeColor;
-  *aForeColor = *aBackColor;
-  *aBackColor = tmpColor;
+  // Otherwise, we should use the higher-contrast color for the selection
+  // background color.
+  PRInt32 foreLuminosityDifference =
+            NS_LUMINOSITY_DIFFERENCE(*aForeColor, mFrameBackgroundColor);
+  if (backLuminosityDifference < foreLuminosityDifference) {
+    nscolor tmpColor = *aForeColor;
+    *aForeColor = *aBackColor;
+    *aBackColor = tmpColor;
+  }
   return PR_TRUE;
 }
 
