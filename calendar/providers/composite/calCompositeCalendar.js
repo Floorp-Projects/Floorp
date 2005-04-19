@@ -99,7 +99,7 @@ calCompositeCalendarObserverHelper.prototype = {
 };
 
 function calCompositeCalendar () {
-    this.mObserverHelper = new calCompositeCalendarObserverHelper();
+    this.mObserverHelper = new calCompositeCalendarObserverHelper(this);
     this.wrappedJSObject = this;
 }
 
