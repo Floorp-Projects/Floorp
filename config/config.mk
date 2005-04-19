@@ -828,4 +828,5 @@ endif
 #
 # Add BUILD_ID to set of DEFINES
 #
-DEFINES += -DBUILD_ID=$(shell cat $(DEPTH)/config/build_number)
+BUILD_ID := $(shell cat $(DEPTH)/config/build_number)
+DEFINES += -DBUILD_ID=$(BUILD_ID)
