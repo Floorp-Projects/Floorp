@@ -106,6 +106,7 @@ ifdef MOZ_X11
 CSRCS	+=	cairo_xlib_surface.c \
 		cairo_ft_font.c
 EXPORTS += cairo-xlib.h
+LOCAL_INCLUDES += $(FT2_CFLAGS)
 endif
 
 ifdef BUILD_CAIRO_GL
@@ -114,7 +115,7 @@ EXPORTS += cairo-glitz.h
 endif
 
 
-LOCAL_INCLUDES	= -I$(srcdir)
+LOCAL_INCLUDES	+= -I$(srcdir)
 
 FORCE_STATIC_LIB = 1
 # This library is used by other shared libs in a static build
