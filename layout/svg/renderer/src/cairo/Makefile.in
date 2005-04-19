@@ -69,6 +69,8 @@ REQUIRES = \
 	windowwatcher \
 	locale \
 	layout \
+	cairo \
+	libpixman \
 	$(NULL)
 
 CPPSRCS = \

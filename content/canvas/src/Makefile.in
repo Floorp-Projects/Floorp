@@ -73,6 +73,8 @@ REQUIRES	= \
 		uconv \
 		intl \
 		plugin \
+		cairo \
+		libpixman \
 		$(NULL)
 
 # XXX some platforms can't handle building

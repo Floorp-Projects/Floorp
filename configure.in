@@ -3191,6 +3191,8 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$SYSTEM_PNG" = 1; then
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
+fi # SKIP_LIBRARY_CHECKS
+
 dnl check whether to enable cairo
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(cairo,
@@ -3200,8 +3202,6 @@ MOZ_ARG_ENABLE_BOOL(cairo,
 if test "$MOZ_ENABLE_CAIRO"; then
     AC_DEFINE(MOZ_ENABLE_CAIRO)
 fi
-
-fi # SKIP_LIBRARY_CHECKS
 
 dnl ========================================================
 dnl = 
@@ -5700,11 +5700,6 @@ dnl Check for cairo
 dnl ========================================================
 if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CAIRO" ; then
    MOZ_CAIRO_CFLAGS='-I$(DIST)/include/cairo'
-   MOZ_CAIRO_LIBS="-lcairo -lpixman"
-
-   if test -z "$MACOSX"; then
-      MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lfreetype"
-   fi
 
    MOZ_TREE_CAIRO=1
    MOZ_ARG_ENABLE_BOOL(system-cairo,
@@ -5712,7 +5707,66 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CAIRO" ; then
    MOZ_TREE_CAIRO=,
    MOZ_TREE_CAIRO=1 )
 
-   if test -z "$MOZ_TREE_CAIRO"; then
+   if test "$MOZ_TREE_CAIRO"; then
+       # Check for headers defining standard int types.
+       AC_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+
+       # For now we assume that we will have a uint64_t available through
+       # one of the above headers or mozstdint.h.
+       AC_DEFINE(HAVE_UINT64_T)
+
+       # Define macros for cairo-features.h
+       PS_SURFACE_FEATURE=CAIRO_HAS_NO_PS_SURFACE
+       PDF_SURFACE_FEATURE=CAIRO_HAS_NO_PDF_SURFACE
+       PNG_SURFACE_FEATURE=CAIRO_HAS_NO_PNG_SURFACE
+       if test "$MOZ_X11"; then
+           XLIB_SURFACE_FEATURE=CAIRO_HAS_XLIB_SURFACE
+           FT_FONT_FEATURE=CAIRO_HAS_FT_FONT
+       else
+           XLIB_SURFACE_FEATURE=CAIRO_HAS_NO_XLIB_SURFACe
+           FT_FONT_FEATURE=CAIRO_HAS_NO_FT_FONT
+       fi
+       if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+           QUARTZ_SURFACE_FEATURE=CAIRO_HAS_QUARTZ_SURFACE
+           ATSUI_FONT_FEATURE=CAIRO_HAS_ATSUI_FONT
+       else
+           QUARTZ_SURFACE_FEATURE=CAIRO_HAS_NO_QUARTZ_SURFACE
+           ATSUI_FONT_FEATURE=CAIRO_HAS_NO_ATSUI_FONT
+       fi
+       XCB_SURFACE_FEATURE=CAIRO_HAS_NO_XCB_SURFACE
+       if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
+           WIN32_SURFACE_FEATURE=CAIRO_HAS_WIN32_SURFACE
+           WIN32_FONT_FEATURE=CAIRO_HAS_WIN32_FONT
+       else
+           WIN32_SURFACE_FEATURE=CAIRO_HAS_NO_WIN32_SURFACE
+           WIN32_FONT_FEATURE=CAIRO_HAS_NO_WIN32_FONT
+       fi
+       GLITZ_SURFACE_FEATURE=CAIRO_HAS_NO_GLITZ_SURFACE
+       SANITY_CHECKING_FEATURE=CAIRO_DO_SANITY_CHECKING
+
+       AC_SUBST(PS_SURFACE_FEATURE)
+       AC_SUBST(PDF_SURFACE_FEATURE)
+       AC_SUBST(PNG_SURFACE_FEATURE)
+       AC_SUBST(XLIB_SURFACE_FEATURE)
+       AC_SUBST(QUARTZ_SURFACE_FEATURE)
+       AC_SUBST(XCB_SURFACE_FEATURE)
+       AC_SUBST(WIN32_SURFACE_FEATURE)
+       AC_SUBST(GLITZ_SURFACE_FEATURE)
+       AC_SUBST(FT_FONT_FEATURE)
+       AC_SUBST(WIN32_FONT_FEATURE)
+       AC_SUBST(ATSUI_FONT_FEATURE)
+       AC_SUBST(SANITY_CHECKING_FEATURE)
+
+       if test "$_WIN32_MSVC"; then
+           MOZ_CAIRO_LIBS='$(DIST)/lib/mozcairo.lib $(DIST)/lib/mozlibpixman.lib'
+       else
+           MOZ_CAIRO_LIBS="-lmozcairo -lmozlibpixman"
+
+           if test -z "$MACOSX"; then
+               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lfreetype"
+            fi
+       fi
+   else
       PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
       MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
       MOZ_CAIRO_LIBS=$CAIRO_LIBS
@@ -6470,33 +6524,5 @@ if test "$MOZ_LDAP_XPCOM"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
     fi
     AC_OUTPUT_SUBDIRS(directory/c-sdk)
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
-fi
-
-if test "$MOZ_TREE_CAIRO"; then
-    # these subdirs may not yet have been created in the build tree.
-    # don't use the "-p" switch to mkdir, since not all platforms have it
-    #
-    if test ! -d "gfx/cairo"; then
-        mkdir "gfx/cairo"
-    fi
-    if test ! -d "gfx/cairo/libpixman"; then
-        mkdir "gfx/cairo/libpixman"
-    fi
-    if test ! -d "gfx/cairo/cairo"; then
-        mkdir "gfx/cairo/cairo"
-    fi
-
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --includedir=$MOZ_BUILD_ROOT/dist/include/cairo"
-    AC_OUTPUT_SUBDIRS(gfx/cairo/libpixman)
-
-    PKG_CONFIG_PATH=$MOZ_BUILD_ROOT/gfx/cairo/libpixman:$PKG_CONFIG_PATH
-    export PKG_CONFIG_PATH
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --disable-ps --disable-pdf --disable-png --disable-glitz --disable-xcb"
-    if test -n "$MACOSX"; then
-        ac_configure_args="$ac_configure_args --disable-freetype --disable-xlib"
-    fi
-
-    AC_OUTPUT_SUBDIRS(gfx/cairo/cairo)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi

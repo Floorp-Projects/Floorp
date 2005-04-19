@@ -42,6 +42,10 @@
  */
 #define WINVER 0x0500
 
+#ifndef AC_SRC_ALPHA
+#define AC_SRC_ALPHA 0x1
+#endif
+
 #include <cairo-win32.h>
 #include <cairoint.h>
 

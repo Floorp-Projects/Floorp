@@ -12,7 +12,7 @@ PATCHES:
 
   subdirs.diff - don't build test/ or doc/.
 
-  stdint.diff - select between inttypes.h and stdint.h for AIX.
+  stdint.diff - select between inttypes.h, stdint.h, and mozstdint.h.
 
   quartz.diff - update cairo quartz/atsui backend for 0.4.0, reenable.
 

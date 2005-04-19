@@ -69,7 +69,7 @@ REQUIRES	= xpcom \
 ifdef MOZ_ENABLE_CAIRO
 REQUIRES        += \
                 cairo \
-                pixman \
+                libpixman \
                 $(NULL)
 endif
 

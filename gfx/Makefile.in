@@ -43,7 +43,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= gfx
-DIRS		= public idl src
+
+ifdef MOZ_TREE_CAIRO
+DIRS		= cairo
+endif
+
+DIRS		+= public idl src
 
 ifdef ENABLE_TESTS
 TOOL_DIRS	+= tests
