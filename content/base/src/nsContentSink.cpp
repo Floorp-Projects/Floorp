@@ -181,7 +181,7 @@ nsContentSink::Init(nsIDocument* aDoc,
   nsresult rv = loader->AddObserver(proxy);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCSSLoader = aDoc->GetCSSLoader();
+  mCSSLoader = aDoc->CSSLoader();
 
   ProcessHTTPHeaders(aChannel);
 

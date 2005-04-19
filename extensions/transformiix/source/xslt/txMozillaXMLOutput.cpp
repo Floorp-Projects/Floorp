@@ -940,10 +940,7 @@ txTransformNotifier::SignalTransformEnd(nsresult aResult)
         }
 
         if (NS_FAILED(aResult)) {
-            nsICSSLoader *cssLoader = doc->GetCSSLoader();
-            if (cssLoader) {
-                cssLoader->Stop();
-            }
+            doc->CSSLoader()->Stop();
         }
     }
 

@@ -3748,10 +3748,7 @@ nsHTMLEditor::GetCSSLoader(const nsAString& aURL, nsICSSLoader** aCSSLoader)
   nsIDocument *document = ps->GetDocument();
   if (!document)     return NS_ERROR_NULL_POINTER;
 
-  NS_IF_ADDREF(*aCSSLoader = document->GetCSSLoader());
-  if (!*aCSSLoader) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ADDREF(*aCSSLoader = document->CSSLoader());
 
   return NS_OK;
 }

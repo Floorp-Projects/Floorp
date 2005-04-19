@@ -61,7 +61,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocumentType.h"
 #include "nsINameSpaceManager.h"
-#include "nsICSSLoader.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIHttpChannel.h"
@@ -560,12 +559,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     }
 
     // styles
-    nsICSSLoader* cssLoader = GetCSSLoader();
-    if (!cssLoader)
-      return NS_ERROR_OUT_OF_MEMORY;
-    if (cssLoader) {
-      cssLoader->SetEnabled(PR_FALSE); // Do not load/process styles when loading as data
-    }
+    CSSLoader()->SetEnabled(PR_FALSE); // Do not load/process styles when loading as data
   } else if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
     mLoadedAsInteractiveData = PR_TRUE;
     aCommand = kLoadAsData; // XBL, for example, needs scripts and styles
@@ -789,19 +783,4 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   }
 
   return CallQueryInterface(content, aReturn);
-}
-
-nsICSSLoader*
-nsXMLDocument::GetCSSLoader()
-{
-  if (!mCSSLoader) {
-    NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
-    if (mCSSLoader) {
-      mCSSLoader->SetCaseSensitive(PR_TRUE);
-      // no quirks in XML
-      mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
-    }
-  }
-
-  return mCSSLoader;
 }

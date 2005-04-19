@@ -673,10 +673,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCAutoString contentType;
   aChannel->GetContentType(contentType);
 
-  // Note: we MUST set the compat mode and default namespace ID before we call
-  // StartDocumentLoad on our superclass (since that could force creation of a
-  // CSSLoader and the CSSLoader creation needs to know our compat mode and
-  // case sensitivity.
   if (contentType.Equals("application/xhtml+xml") &&
       (!aCommand || nsCRT::strcmp(aCommand, "view-source") != 0)) {
     // We're parsing XHTML as XML, remember that.
@@ -691,6 +687,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 #endif
 
+  CSSLoader()->SetCaseSensitive(IsXHTML());
+  CSSLoader()->SetCompatibilityMode(mCompatMode);
+  
   PRBool needsParser = PR_TRUE;
   if (aCommand)
   {
@@ -1052,22 +1051,6 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
   return nsnull;
 }
 
-
-nsICSSLoader*
-nsHTMLDocument::GetCSSLoader()
-{
-  if (!mCSSLoader) {
-    NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
-    if (mCSSLoader) {
-      mCSSLoader->SetCaseSensitive(IsXHTML());
-      mCSSLoader->SetCompatibilityMode(mCompatMode);
-    }
-  }
-  
-  return mCSSLoader;
-}
-
-
 nsCompatibility
 nsHTMLDocument::GetCompatibilityMode()
 {
@@ -1081,9 +1064,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
                "Bad compat mode for XHTML document!");
 
   mCompatMode = aMode;
-  if (mCSSLoader) {
-    mCSSLoader->SetCompatibilityMode(mCompatMode);
-  }
+  CSSLoader()->SetCompatibilityMode(mCompatMode);
   nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
   if (shell) {
     nsPresContext *pc = shell->GetPresContext();

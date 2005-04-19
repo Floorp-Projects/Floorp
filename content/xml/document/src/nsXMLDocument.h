@@ -50,7 +50,6 @@
 
 class nsIParser;
 class nsIDOMNode;
-class nsICSSLoader;
 class nsIURI;
 
 class nsXMLDocument : public nsDocument,
@@ -82,8 +81,6 @@ public:
   // nsIDOMDocument interface
   NS_IMETHOD GetElementById(const nsAString& aElementId,
                             nsIDOMElement** aReturn);
-
-  virtual nsICSSLoader* GetCSSLoader();
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR

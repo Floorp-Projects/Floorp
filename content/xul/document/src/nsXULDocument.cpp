@@ -690,9 +690,9 @@ nsXULDocument::EndLoad()
     if (isChrome) {
         nsCOMPtr<nsIXULOverlayProvider> reg =
             do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
-        nsCOMPtr<nsICSSLoader> cssLoader = GetCSSLoader();
+        nsICSSLoader* cssLoader = CSSLoader();
         
-        if (reg && cssLoader) {
+        if (reg) {
             nsCOMPtr<nsISimpleEnumerator> overlays;
             reg->GetStyleOverlays(uri, getter_AddRefs(overlays));
 
@@ -3769,9 +3769,7 @@ nsXULDocument::AddPrototypeSheets()
         // only system that partially invalidates the XUL cache).
         // - dwh
         //XXXbz we hit this code from fastload all the time.  Bug 183505.
-        nsICSSLoader* loader = GetCSSLoader();
-        NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
-        rv = loader->LoadAgentSheet(uri, getter_AddRefs(sheet));
+        rv = CSSLoader()->LoadAgentSheet(uri, getter_AddRefs(sheet));
         // XXXldb We need to prevent bogus sheets from being held in the
         // prototype's list, but until then, don't propagate the failure
         // from LoadAgentSheet (and thus exit the loop).

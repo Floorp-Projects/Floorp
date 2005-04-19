@@ -261,12 +261,6 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     return NS_OK;
   }
 
-  nsICSSLoader* loader = doc->GetCSSLoader();
-
-  if (!loader) {
-    return NS_OK;
-  }
-
   PRBool blockParser = kBlockByDefault;
   if (isAlternate) {
     blockParser = PR_FALSE;
@@ -325,14 +319,16 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
 
     // Now that we have a url and a unicode input stream, parse the
     // style sheet.
-    rv = loader->LoadInlineStyle(thisContent, uin, mLineNumber, title, media,
-                                 ((blockParser) ? parser.get() : nsnull),
-                                 doneLoading, aObserver);
+    rv = doc->CSSLoader()->
+      LoadInlineStyle(thisContent, uin, mLineNumber, title, media,
+                      ((blockParser) ? parser.get() : nsnull),
+                      doneLoading, aObserver);
   }
   else {
-    rv = loader->LoadStyleLink(thisContent, uri, title, media,
-                               ((blockParser) ? parser.get() : nsnull),
-                               doneLoading, aObserver);
+    rv = doc->CSSLoader()->
+      LoadStyleLink(thisContent, uri, title, media,
+                    ((blockParser) ? parser.get() : nsnull),
+                    doneLoading, aObserver);
   }
 
   if (NS_SUCCEEDED(rv) && blockParser && !doneLoading) {

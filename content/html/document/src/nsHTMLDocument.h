@@ -61,7 +61,6 @@
 #include "nsICommandManager.h"
 
 class nsIParser;
-class nsICSSLoader;
 class nsIURI;
 class nsIMarkupDocumentViewer;
 class nsIDocumentCharsetInfo;
@@ -108,8 +107,6 @@ public:
   virtual void RemoveImageMap(nsIDOMHTMLMapElement* aMap);
 
   virtual nsIDOMHTMLMapElement *GetImageMap(const nsAString& aMapName);
-
-  virtual nsICSSLoader* GetCSSLoader();
 
   virtual nsCompatibility GetCompatibilityMode();
   virtual void SetCompatibilityMode(nsCompatibility aMode);
