@@ -42,6 +42,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+
 ifdef MOZ_USE_OFFICIAL_BRANDING
 DEFINES += -DMOZ_USE_OFFICIAL_BRANDING
 endif

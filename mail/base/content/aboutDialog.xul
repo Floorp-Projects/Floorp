@@ -63,8 +63,7 @@
       <![CDATA[
         function onLoad() {
           var versionField = document.getElementById("versionField");
-          versionField.value = document.documentElement.getAttribute("versionlabel") + ' ' 
-                             + navigator.vendorSub + ' (' + navigator.productSub + ')';
+          versionField.value = versionField.value + ' (' + navigator.productSub + ')';
 
           var button = document.documentElement.getButton("extra2");
           button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
@@ -107,7 +106,8 @@
     <deck id="modes" flex="1">
       <vbox flex="1" id="clientBox">
       <vbox id="versionWrapper">
-        <textbox id="versionField" readonly="true" class="plain" tabindex="2"/>
+        <textbox id="versionField" readonly="true" class="plain" tabindex="2"
+#expand value="&aboutVersion; __MOZ_APP_VERSION__"/>
             </vbox>
           <separator class="thin"/>
       <description id="copyright">&copyrightText;</description>

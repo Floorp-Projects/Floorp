@@ -479,43 +479,40 @@ RRT_HEADER:
     // allow a user to override the default UA
     if (!userAgentOverride)
     {
-    nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) 
-	{
-      nsCOMPtr<nsIStringBundle> brandSringBundle;
-      rv = stringService->CreateBundle("chrome://branding/locale/brand.properties", getter_AddRefs(brandSringBundle));
+      nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv)) 
-	  {
-        nsXPIDLString brandName;
-        rv = brandSringBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), getter_Copies(brandName));
+	    {
+        nsCOMPtr<nsIStringBundle> brandSringBundle;
+        rv = stringService->CreateBundle("chrome://branding/locale/brand.properties", getter_AddRefs(brandSringBundle));
+        if (NS_SUCCEEDED(rv)) 
+	      {
+          nsXPIDLString brandName;
+          rv = brandSringBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), getter_Copies(brandName));
 
-		nsCAutoString vendorSub;
-		pHTTPHandler->GetVendorSub(vendorSub);
+		      nsCAutoString productSub;
+		      pHTTPHandler->GetProductSub(productSub);
 
-		nsCAutoString productSub;
-		pHTTPHandler->GetProductSub(productSub);
+		      nsCAutoString platform;
+		      pHTTPHandler->GetPlatform(platform);
 
-		nsCAutoString platform;
-		pHTTPHandler->GetPlatform(platform);
-
-    // XXX: This may leave characters with the 8th bit set in the string, which
-    // aren't allowed in header values. this should use some kind of encoding
-    // for them
-    LossyCopyUTF16toASCII(brandName, userAgentString);
-		userAgentString += ' ';
-		userAgentString += vendorSub;
-		userAgentString += " (";
-		userAgentString += platform;
-		userAgentString += "/";
-		userAgentString += productSub;
-		userAgentString += ")";
-	  }
-	}
+          // XXX: This may leave characters with the 8th bit set in the string, which
+          // aren't allowed in header values. this should use some kind of encoding
+          // for them
+          LossyCopyUTF16toASCII(brandName, userAgentString);
+		      userAgentString += ' ';
+		      userAgentString += NS_STRINGIFY(MOZ_APP_VERSION);
+		      userAgentString += " (";
+		      userAgentString += platform;
+		      userAgentString += "/";
+		      userAgentString += productSub;
+		      userAgentString += ")";
+	      }
+	    }
     } 
     else
       userAgentString = userAgentOverride;
 #else
-        pHTTPHandler->GetUserAgent(userAgentString);
+      pHTTPHandler->GetUserAgent(userAgentString);
 #endif
 
     if (!userAgentString.IsEmpty())

@@ -88,6 +88,8 @@ REQUIRES	= xpcom \
       REQUIRES += gfx
 #endif
 
+DEFINES += -DMOZ_APP_VERSION="$(MOZ_APP_VERSION)"
+
 CPPSRCS		= \
 		nsMsgCompFields.cpp \
 		nsSmtpUrl.cpp \
