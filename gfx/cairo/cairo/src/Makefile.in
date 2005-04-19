@@ -103,8 +103,7 @@ endif
 
 
 ifdef MOZ_X11
-CSRCS	+=	cairo_xcb_surface.c \
-		cairo_xlib_surface.c \
+CSRCS	+=	cairo_xlib_surface.c \
 		cairo_ft_font.c
 EXPORTS += cairo-xlib.h
 endif
