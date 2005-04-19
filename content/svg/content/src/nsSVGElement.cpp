@@ -738,18 +738,14 @@ nsSVGElement::UpdateContentStyleRule()
   }
 
   // Try to fetch the CSS Parser from the document.
-  nsICSSLoader* cssLoader = doc->GetCSSLoader();
+  nsICSSLoader* cssLoader = doc->CSSLoader();
   
   nsCOMPtr<nsICSSParser> parser;
   nsresult rv = NS_OK; 
-  if (cssLoader) {
-    rv = cssLoader->GetParserFor(nsnull, getter_AddRefs(parser));
-  } else {
-    rv = NS_NewCSSParser(getter_AddRefs(parser));
-  }
+  rv = cssLoader->GetParserFor(nsnull, getter_AddRefs(parser));
   
   if (NS_FAILED(rv)) {
-    NS_WARNING("failed to get or create a css parser");
+    NS_WARNING("failed to get a css parser");
     declaration->RuleAbort();
     return;
   }
@@ -788,11 +784,9 @@ nsSVGElement::UpdateContentStyleRule()
     declaration->RuleAbort();
   }
   
-  // Recycle the parser if it a CSS loader exists.
-  if (cssLoader) {
-    parser->SetSVGMode(PR_FALSE);
-    cssLoader->RecycleParser(parser);
-  }
+  // Recycle the parser
+  parser->SetSVGMode(PR_FALSE);
+  cssLoader->RecycleParser(parser);
 }
 
 nsISVGValue*

@@ -551,8 +551,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
 
     // Get the CSS loader from the document so we can load
     // stylesheets
-    mCSSLoader = aDocument->GetCSSLoader();
-    NS_ENSURE_TRUE(mCSSLoader, NS_ERROR_OUT_OF_MEMORY);
+    mCSSLoader = aDocument->CSSLoader();
 
     mNodeInfoManager = aPrototype->GetNodeInfoManager();
     if (! mNodeInfoManager)

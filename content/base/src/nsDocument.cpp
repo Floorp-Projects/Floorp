@@ -586,7 +586,9 @@ nsDocument::~nsDocument()
   }
 
   if (mCSSLoader) {
+    // Could be null here if Init() failed
     mCSSLoader->DropDocumentReference();
+    NS_RELEASE(mCSSLoader);
   }
 
   // XXX Ideally we'd do this cleanup in the nsIDocument destructor.
@@ -666,6 +668,10 @@ NS_IMPL_RELEASE(nsDocument)
 nsresult
 nsDocument::Init()
 {
+  if (mBindingManager || mCSSLoader || mNodeInfoManager) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
   // Force initialization.
   nsBindingManager *bindingManager = new nsBindingManager();
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
@@ -675,9 +681,11 @@ nsDocument::Init()
   // (static cast to the correct interface pointer)
   mObservers.InsertElementAt(NS_STATIC_CAST(nsIDocumentObserver*, bindingManager), 0);
 
-  if (mNodeInfoManager) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
+  NS_NewCSSLoader(this, &mCSSLoader);
+  NS_ENSURE_TRUE(mCSSLoader, NS_ERROR_OUT_OF_MEMORY);
+  // Assume we're not HTML and not quirky, until we know otherwise
+  mCSSLoader->SetCaseSensitive(PR_TRUE);
+  mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
   mNodeInfoManager = new nsNodeInfoManager();
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
@@ -1221,14 +1229,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     nsAutoString title;
     PRInt32 index;
 
-    // We lazily create our CSSLoader.
-    // XXXbz why?  Wouldn't it make more sense to just create it at
-    // document creation and not do all these null-checks all over?
-    nsICSSLoader* cssLoader = GetCSSLoader();
-    if (!cssLoader) {
-      return;
-    }
-    cssLoader->SetPreferredSheet(aData);
+    CSSLoader()->SetPreferredSheet(aData);
 
     PRInt32 count = mStyleSheets.Count();
     for (index = 0; index < count; index++) {
@@ -1793,9 +1794,9 @@ nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
 void
 nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
 {
-  nsICSSLoader* cssLoader = GetCSSLoader();
+  nsICSSLoader* cssLoader = CSSLoader();
   PRBool enabled;
-  if (cssLoader && NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
+  if (NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
     PRInt32 sheetCount = GetNumberOfCatalogStyleSheets();
     for (PRInt32 i = 0; i < sheetCount; i++) {
       nsIStyleSheet* sheet = GetCatalogStyleSheetAt(i);
@@ -2622,12 +2623,7 @@ nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
 NS_IMETHODIMP
 nsDocument::GetPreferredStylesheetSet(nsAString& aStyleTitle)
 {
-  if (mCSSLoader) {
-    mCSSLoader->GetPreferredSheet(aStyleTitle);
-  }
-  else {
-    aStyleTitle.Truncate();
-  }
+  CSSLoader()->GetPreferredSheet(aStyleTitle);
   return NS_OK;
 }
 

@@ -435,10 +435,11 @@ public:
   virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI) = 0;
 
   /**
-   * Get this document's CSSLoader.  May return null in error
-   * conditions (OOM)
+   * Get this document's CSSLoader.  This is guaranteed to not return null.
    */
-  virtual nsICSSLoader* GetCSSLoader() = 0;
+  nsICSSLoader* CSSLoader() const {
+    return mCSSLoader;
+  }
 
   /**
    * Get this document's attribute stylesheet.  May return null if
@@ -697,6 +698,10 @@ protected:
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]
+
+  nsICSSLoader* mCSSLoader; // [STRONG; not a COMPtr to avoid
+                            // including nsICSSLoader.h; the ownership
+                            // is managed by nsDocument]
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;

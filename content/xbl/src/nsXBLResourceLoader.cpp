@@ -93,11 +93,10 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
   *aResult = PR_TRUE;
 
   // Declare our loaders.
-  nsCOMPtr<nsICSSLoader> cssLoader;
-
   nsCOMPtr<nsIDocument> doc;
   mBinding->XBLDocumentInfo()->GetDocument(getter_AddRefs(doc));
 
+  nsICSSLoader* cssLoader = doc->CSSLoader();
   nsIURI *docURL = doc->GetDocumentURI();
 
   nsCOMPtr<nsIURI> url;
@@ -125,13 +124,6 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
                                 getter_AddRefs(req));
     }
     else if (curr->mType == nsXBLAtoms::stylesheet) {
-      if (!cssLoader) {
-        cssLoader = doc->GetCSSLoader();
-      }
-
-      if (!cssLoader)
-        continue;
-
       // Kick off the load of the stylesheet.
 
       // Always load chrome synchronously

@@ -594,7 +594,6 @@ protected:
 
   nsSupportsHashtable* mBoxObjectTable;
 
-  nsCOMPtr<nsICSSLoader> mCSSLoader;
   nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
   nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
   nsRefPtr<nsXMLEventsManager> mXMLEventsManager;

@@ -42,7 +42,6 @@
 #include "nsIStyledContent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsICSSStyleRule.h"
-#include "nsINodeInfo.h"
 #include "nsICSSLoader.h"
 #include "nsICSSParser.h"
 #include "nsIURI.h"
@@ -155,28 +154,17 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
   nsCOMPtr<nsIURI> sheetURI = doc->GetDocumentURI();
 
-  if (doc) {
-    NS_IF_ADDREF(*aCSSLoader = doc->GetCSSLoader());
-    NS_ASSERTION(*aCSSLoader, "Document with no CSS loader!");
-  }
+  NS_ADDREF(*aCSSLoader = doc->CSSLoader());
   
   nsresult rv = NS_OK;
 
-  if (*aCSSLoader) {
-    rv = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
-  } else {
-    rv = NS_NewCSSParser(aCSSParser);
-  }
+  // Note: parsers coming from a CSSLoader for a document already have
+  // the right case-sensitivity, quirkiness, etc.
+  rv = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
   if (NS_FAILED(rv)) {
     return rv;
   }
   
-  // If we are not HTML, we need to be case-sensitive.  Otherwise, Look up our
-  // namespace.  If we're XHTML, we need to be case-sensitive Otherwise, we
-  // should not be
-  (*aCSSParser)->SetCaseSensitive(!mContent->IsContentOfType(nsIContent::eHTML) ||
-                                  mContent->GetNodeInfo()->NamespaceEquals(kNameSpaceID_XHTML));
-
   baseURI.swap(*aBaseURI);
   sheetURI.swap(*aSheetURI);
 

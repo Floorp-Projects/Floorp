@@ -1022,8 +1022,7 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
       nsCOMPtr<nsIDocument> document;
       sheet->GetOwningDocument(*getter_AddRefs(document));
       if (document) {
-        NS_IF_ADDREF(*aCSSLoader = document->GetCSSLoader());
-        NS_ASSERTION(*aCSSLoader, "Document with no CSS loader!");
+        NS_ADDREF(*aCSSLoader = document->CSSLoader());
       }
     }
   }

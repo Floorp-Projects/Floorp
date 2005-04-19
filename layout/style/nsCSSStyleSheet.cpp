@@ -2231,7 +2231,7 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
   // kills the document
   nsCOMPtr<nsICSSLoader> loader;
   if (mDocument) {
-    loader = mDocument->GetCSSLoader();
+    loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
   }
   
@@ -2476,7 +2476,7 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   // kills the document
   nsCOMPtr<nsICSSLoader> loader;
   if (mDocument) {
-    loader = mDocument->GetCSSLoader();
+    loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
   }
 

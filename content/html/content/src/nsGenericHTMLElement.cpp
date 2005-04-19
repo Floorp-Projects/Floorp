@@ -2621,19 +2621,9 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
     }
 
     if (isCSS) {
-      nsICSSLoader* cssLoader = doc->GetCSSLoader();
+      nsICSSLoader* cssLoader = doc->CSSLoader();
       nsCOMPtr<nsICSSParser> cssParser;
-      if (cssLoader) {
-        result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
-      }
-      else {
-        result = NS_NewCSSParser(getter_AddRefs(cssParser));
-        if (cssParser) {
-          // look up our namespace.  If we're XHTML, we need to be case-sensitive
-          // Otherwise, we should not be.
-          cssParser->SetCaseSensitive(aCaseSensitive);
-        }
-      }
+      result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
       if (cssParser) {
         nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
 
@@ -2641,9 +2631,7 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
         result = cssParser->ParseStyleAttribute(aValue, doc->GetDocumentURI(),
                                                 baseURI,
                                                 getter_AddRefs(rule));
-        if (cssLoader) {
-          cssLoader->RecycleParser(cssParser);
-        }
+        cssLoader->RecycleParser(cssParser);
 
         if (rule) {
           aResult.SetTo(rule);
