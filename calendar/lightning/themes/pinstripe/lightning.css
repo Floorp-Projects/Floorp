@@ -1,1 +1,10 @@
 /* Skin-domain style rules for lightning UI (pinstripe version) */
+
+#calendarTree { 
+  background: #cccccc;
+}
+
+treechildren::-moz-tree-cell(checked) {
+  background: #ff0000;
+  list-style-image: url("chrome://calendar/skin/dot.png");
+}

@@ -5,7 +5,7 @@
 
 var ltnCalendarManagerObserver = {
     QueryInterface: function(aIID) {
-        if (!aIID.equals(Components.interfaces.calICalendarManagerObserver) ||
+        if (!aIID.equals(Components.interfaces.calICalendarManagerObserver) &&
             !aIID.equals(Components.interfaces.nsISupports)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
@@ -36,8 +36,8 @@ var ltnCompositeCalendarObserver = {
     QueryInterface: function(aIID) {
         // I almost wish that calICompositeObserver did not inherit from calIObserver,
         // and that the composite calendar maintined its own observer list
-        if (!aIID.equals(Components.interfaces.calIObserver) ||
-            !aIID.equals(Components.interfaces.calICompositeObserver) ||
+        if (!aIID.equals(Components.interfaces.calIObserver) &&
+            !aIID.equals(Components.interfaces.calICompositeObserver) &&
             !aIID.equals(Components.interfaces.nsISupports)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
@@ -71,7 +71,7 @@ var ltnCompositeCalendarObserver = {
 
 var ltnCalendarViewController = {
     QueryInterface: function(aIID) {
-        if (!aIID.equals(Components.interfaces.calICalendarViewController) ||
+        if (!aIID.equals(Components.interfaces.calICalendarViewController) &&
             !aIID.equals(Components.interfaces.nsISupports)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
@@ -149,11 +149,9 @@ var ltnCalendarTreeView = {
         if (getCompositeCalendar().getCalendar(cal.uri)) {
             // need to remove it
             getCompositeCalendar().removeCalendar(cal.uri);
-            dump ("calendar removed\n");
         } else {
             // need to add it
             getCompositeCalendar().addCalendar(cal);
-            dump ("calendar added\n");
         }
         document.getElementById("calendarTree").boxObject.invalidateRow(row);
     },

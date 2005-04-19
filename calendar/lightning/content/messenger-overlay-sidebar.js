@@ -9,6 +9,8 @@ function selectedCalendarPane(event)
     if (view.displayCalendar != getCompositeCalendar()) {
         var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
         d.jsDate = new Date();
+        //XXX use default timezone
+        d = d.getInTimezone("/mozilla.org/20050126_1/America/Los_Angeles");
         var st = d.startOfWeek;
         var end = d.endOfWeek;
 
