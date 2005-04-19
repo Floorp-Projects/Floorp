@@ -66,6 +66,7 @@
 #include "jsopcode.h"
 #include "jsregexp.h"
 #include "jsscan.h"
+#include "jsscript.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsparse.h"
@@ -577,6 +578,7 @@ js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
 #endif
     JSErrorReporter onError;
     JSTokenPos *tp;
+    JSStackFrame *fp;
     uintN index;
     char *message;
     JSBool warning;
@@ -658,6 +660,19 @@ js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
             if (cg) {
                 report.filename = cg->filename;
                 report.lineno = CG_CURRENT_LINE(cg);
+                break;
+            }
+
+            /*
+             * If we can't find out where the error was based on the current frame,
+             * see if the next frame has a script/pc combo we can use.
+             */
+            for (fp = cx->fp; fp; fp = fp->down) {
+                if (fp->script && fp->pc) {
+                    report.filename = fp->script->filename;
+                    report.lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
+                    break;
+                }
             }
         } while (0);
 
