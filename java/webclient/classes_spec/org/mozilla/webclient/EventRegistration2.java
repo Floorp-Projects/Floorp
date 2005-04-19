@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,28 +24,62 @@ package org.mozilla.webclient;
 
 import java.awt.event.KeyListener;
 
+/**
+ * <p>Extended event registration features.</p>
+ */
+
 public interface EventRegistration2  extends EventRegistration {
 
-public void setNewWindowListener(NewWindowListener listener); 
+    /**
+     * <p>Set the argument <code>listener</code> as the one and only
+     * {@link NewWindowListener} for the current {@link
+     * BrowserControl}.</p>
+     *
+     * @param listener the listener to install
+     */
+    
+    public void setNewWindowListener(NewWindowListener listener); 
+    
+    /**
+     * <p>Add the argument listener as a {@link NewWindowListener} to
+     * the current {@link BrowserControl}.</p>
+     *
+     * @param listener the listener to install
+     *
+     * @deprecated Use {@link #setNewWindowListener} instead.
+     * Implementations must implement this method as a call to {@link
+     * #setNewWindowListener} passing null, followed by a call to {@link
+     * #setNewWindowListener} passing the argument listener.
+     */
+    public void addNewWindowListener(NewWindowListener listener);
+    
+    /**
+     * <p>Remove the argument listener from the current {@link
+     * BrowserControl}.</p>
+     *
+     * @param listener the listener to remove
+     *
+     * @deprecated Use {@link #setNewWindowListener} passing <code>null</code>.
+     */
+    public void removeNewWindowListener(NewWindowListener listener);
 
-/**
- * <p>Use {@link #setNewWindowListener} instead.  Implementations must
- * implement this method as a call to {@link #setNewWindowListener}
- * passing null, followed by a call to {@link #setNewWindowListener}
- * passing the argument listener.</p>
- *
- * @deprecated
- */
-public void addNewWindowListener(NewWindowListener listener);
+    /**
+     * <p>Add the argument <code>listener</code> as a
+     * <code>KeyListener</code> for the current {@link
+     * BrowserControl}.</p>
+     *
+     * @param listener the listener to install
+     */ 
+    
+    public void addKeyListener(KeyListener listener); 
 
-/**
- * <p>Use {@link #setNewWindowListener} passing <code>null</code>.</p>
- *
- * @deprecated
- */
-public void removeNewWindowListener(NewWindowListener listener);
-
-public void addKeyListener(KeyListener listener); 
-public void removeKeyListener(KeyListener listener); 
-
+    /**
+     * <p>Remove the argument <code>listener</code> from the current
+     * {@link BrowserControl}.</p>
+     *
+     * @param listener the listener to remove
+     */ 
+    
+    public void removeKeyListener(KeyListener listener); 
+    
 }

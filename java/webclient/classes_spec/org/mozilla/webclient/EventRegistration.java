@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -25,27 +25,73 @@ package org.mozilla.webclient;
 import java.awt.event.WindowListener;
 import java.awt.event.MouseListener;
 
+/**
+ * <p>Allow the user to add and remove listeners on the current {@link
+ * BrowserControl} instance.</p>
+ */
+
 public interface EventRegistration {
-
-// public void addContainerListener(ContainerListener containerListener); 
-// public void removeContainerListener(ContainerListener containerListener); 
-
-// public void addDocumentListener(DocumentListener documentListener); 
-// public void removeDocumentListener(DocumentListener documentListener); 
-
-public void addDocumentLoadListener(DocumentLoadListener listener); 
-public void removeDocumentLoadListener(DocumentLoadListener listener); 
-
-public void addMouseListener(MouseListener listener);
-public void removeMouseListener(MouseListener listener);
-
-// public void addDOMListener(DOMListener containerListener); 
-// public void removeDOMListener(DOMListener containerListener); 
-
-// public void addJavaScriptListener(JavaScriptListener containerListener); 
-// public void removeJavaScriptListener(JavaScriptListener containerListener); 
-
-// public void addWindowListener(WindowListener windowListener); 
-// public void removeWindowListener(WindowListener windowListener); 
     
-}
+    // public void addContainerListener(ContainerListener containerListener); 
+    // public void removeContainerListener(ContainerListener containerListener); 
+    
+    // public void addDocumentListener(DocumentListener documentListener); 
+    // public void removeDocumentListener(DocumentListener documentListener); 
+    
+    /**
+     * <p>Add the argument <code>listener</code> as a {@link
+     * DocumentLoadListener} on the current {@link BrowserControl}.</p>
+     *
+     * @param listener the listener to install
+     *
+     * @throws NullPointerException if argument is <code>null</code>.
+     */
+    
+    public void addDocumentLoadListener(DocumentLoadListener listener); 
+    
+    /**
+     * <p>Remove the argument <code>listener</code> as a {@link
+     * DocumentLoadListener} on the current {@link BrowserControl}.</p>
+     *
+     * @param listener the listener to remove
+     *
+     * @throws NullPointerException if argument is <code>null</code>.
+     */
+    
+    public void removeDocumentLoadListener(DocumentLoadListener listener); 
+    
+    /**
+     * <p>Add the argument <code>MouseListener</code> to the {@link
+     * BrowserControlCanvas} for this {@link BrowserControl}.</p>
+     *
+     * @param listener the listener to install
+     *
+     * @deprecated This method has been replaced by leveraging the
+     * method of the same name on {@link BrowserControlCanvas}.
+     */
+       
+    public void addMouseListener(MouseListener listener);
+
+    /**
+     * <p>Remove the argument <code>MouseListener</code> from the {@link
+     * BrowserControlCanvas} for this {@link BrowserControl}.</p>
+     *
+     * @param listener the listener to remove
+     *
+     * @deprecated This method has been replaced by leveraging the
+     * method of the same name on {@link BrowserControlCanvas}.
+     */
+       
+    public void removeMouseListener(MouseListener listener);
+    
+    // public void addDOMListener(DOMListener containerListener); 
+    // public void removeDOMListener(DOMListener containerListener); 
+    
+    // public void addJavaScriptListener(JavaScriptListener containerListener); 
+    // public void removeJavaScriptListener(JavaScriptListener containerListener); 
+    
+    // public void addWindowListener(WindowListener windowListener); 
+    // public void removeWindowListener(WindowListener windowListener); 
+    
+    }
+    
