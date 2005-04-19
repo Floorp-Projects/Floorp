@@ -69,7 +69,7 @@ function updateOK()
 //    if ((type == "Bookmark" || type == "") && 
 //        protocol != "find" && protocol != "javascript") {
     if (type == "Bookmark" || type == "") {
-      url = BookmarksUtils.getProperty(selection.item[i], NC_NS+"URL", ds)
+      url = BookmarksUtils.getProperty(selection.item[i], gNC_NS+"URL", ds)
       if (url)
         gUrls.push(url);
     } else if (type == "Folder" || type == "PersonalToolbarFolder") {
@@ -77,13 +77,13 @@ function updateOK()
       var children = RDFC.GetElements();
       while (children.hasMoreElements()) {
         var child = children.getNext().QueryInterface(kRDFRSCIID);
-        type      = BookmarksUtils.getProperty(child, RDF_NS+"type", ds);
+        type      = BookmarksUtils.getProperty(child, gRDF_NS+"type", ds);
 // XXX protocol is broken since we have unique id...
 //        protocol  = child.Value.split(":")[0];
-//        if (type == NC_NS+"Bookmark" && protocol != "find" && 
+//        if (type == gNC_NS+"Bookmark" && protocol != "find" && 
 //            protocol != "javascript") {
-          if (type == NC_NS+"Bookmark") {
-          url = BookmarksUtils.getProperty(child, NC_NS+"URL", ds);
+          if (type == gNC_NS+"Bookmark") {
+          url = BookmarksUtils.getProperty(child, gNC_NS+"URL", ds);
           if (url)
             gUrls.push(url);
         }

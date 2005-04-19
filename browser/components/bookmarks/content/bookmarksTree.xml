@@ -108,7 +108,7 @@
         // Save column settings and sort info to persisted attribute
         var persistString = "";
         
-        var sortResource = NC_NS + "Name";
+        var sortResource = gNC_NS + "Name";
         var sortDirection = "none";
 
         var treecols = document.getAnonymousElementByAttribute(this, "anonid", "treecols");
@@ -334,7 +334,7 @@
           for (var i=0; i<chain.length; i++) {
             var rParent = chain.queryElementAt(i, kRDFRSCIID);
             index = this.treeBuilder.getIndexOfResource(rParent);
-            //dump(i+":"+BookmarksUtils.getProperty(rParent, NC_NS+"Name")+", index:"+index+"\n");
+            //dump(i+":"+BookmarksUtils.getProperty(rParent, gNC_NS+"Name")+", index:"+index+"\n");
             if (index == -1)
 #             rParent is or is a parent of "ref", we go on searching for the
 #             first parent in the tree.

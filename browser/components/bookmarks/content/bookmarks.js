@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-var NC_NS, WEB_NS, RDF_NS, XUL_NS, NC_NS_CMD;
+var gNC_NS, gWEB_NS, gRDF_NS, gXUL_NS, gNC_NS_CMD;
 
 // definition of the services frequently used for bookmarks
 var kRDFContractID;
@@ -80,11 +80,11 @@ var IOSVC;
 // should be moved in a separate file
 function initServices()
 {
-  NC_NS     = "http://home.netscape.com/NC-rdf#";
-  WEB_NS    = "http://home.netscape.com/WEB-rdf#";
-  RDF_NS    = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-  XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  NC_NS_CMD = NC_NS + "command?cmd=";
+  gNC_NS     = "http://home.netscape.com/NC-rdf#";
+  gWEB_NS    = "http://home.netscape.com/WEB-rdf#";
+  gRDF_NS    = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+  gXUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  gNC_NS_CMD = gNC_NS + "command?cmd=";
 
   kRDFContractID   = "@mozilla.org/rdf/rdf-service;1";
   kRDFSVCIID       = Components.interfaces.nsIRDFService;
@@ -163,12 +163,12 @@ var BookmarksCommand = {
   // as appropriate.
   createMenuItem: function (aDisplayName, aAccessKey, aCommandName, aSelection)
   {
-    var xulElement = document.createElementNS(XUL_NS, "menuitem");
+    var xulElement = document.createElementNS(gXUL_NS, "menuitem");
     xulElement.setAttribute("cmd", aCommandName);
-    var cmd = "cmd_" + aCommandName.substring(NC_NS_CMD.length);
+    var cmd = "cmd_" + aCommandName.substring(gNC_NS_CMD.length);
     xulElement.setAttribute("command", cmd);
     
-    if (aCommandName == NC_NS_CMD + "bm_expandfolder") {
+    if (aCommandName == gNC_NS_CMD + "bm_expandfolder") {
       var shouldCollapse = true;
       for (var i=0; i<aSelection.length; ++i)
         if (!aSelection.isExpanded[i])
@@ -222,7 +222,7 @@ var BookmarksCommand = {
     for (i = 0; i < commonCommands.length; ++i) {
       var currCommand = commonCommands[i].QueryInterface(kRDFRSCIID).Value;
       var element = null;
-      if (currCommand != NC_NS_CMD + "bm_separator") {
+      if (currCommand != gNC_NS_CMD + "bm_separator") {
         var commandName = this.getCommandName(currCommand);
         var accessKey = this.getAccessKey(currCommand);
         element = this.createMenuItem(commandName, accessKey, currCommand, aSelection);
@@ -230,7 +230,7 @@ var BookmarksCommand = {
       else if (i != 0 && i < commonCommands.length-1) {
         // Never append a separator as the first or last element in a context
         // menu.
-        element = document.createElementNS(XUL_NS, "menuseparator");
+        element = document.createElementNS(gXUL_NS, "menuseparator");
       }
       if (element) 
         popup.appendChild(element);
@@ -370,7 +370,7 @@ var BookmarksCommand = {
   // manufacturing a UI to invoke commands.
   getCommandName: function (aCommand) 
   {
-    var cmdName = aCommand.substring(NC_NS_CMD.length);
+    var cmdName = aCommand.substring(gNC_NS_CMD.length);
     return BookmarksUtils.getLocaleString ("cmd_" + cmdName);
   },
 
@@ -379,7 +379,7 @@ var BookmarksCommand = {
   // manufacturing a UI to invoke commands.
   getAccessKey: function (aCommand) 
   {
-    var cmdName = aCommand.substring(NC_NS_CMD.length);
+    var cmdName = aCommand.substring(gNC_NS_CMD.length);
     return BookmarksUtils.getLocaleString ("cmd_" + cmdName + "_accesskey");
   },
   
@@ -452,8 +452,8 @@ var BookmarksCommand = {
   
     var sBookmarkItem = ""; var sTextUnicode = ""; var sTextHTML = "";
     for (var i = 0; i < aSelection.length; ++i) {
-      var url  = BookmarksUtils.getProperty(aSelection.item[i], NC_NS+"URL" );
-      var name = BookmarksUtils.getProperty(aSelection.item[i], NC_NS+"Name");
+      var url  = BookmarksUtils.getProperty(aSelection.item[i], gNC_NS+"URL" );
+      var name = BookmarksUtils.getProperty(aSelection.item[i], gNC_NS+"Name");
       sBookmarkItem += aSelection.item[i].Value + "\n";
       sTextUnicode += url + "\n";
       sTextHTML += "<A HREF=\"" + url + "\">" + name + "</A>";
@@ -562,7 +562,7 @@ var BookmarksCommand = {
       }
       else if (type == "Bookmark" || type == "ImmutableBookmark") {
         var webPanel = BMDS.GetTarget(aSelection.item[i],
-                                      RDF.GetResource(NC_NS + "WebPanel"),
+                                      RDF.GetResource(gNC_NS + "WebPanel"),
                                       true);
         if (webPanel && aTargetBrowser == "current")
           this.openWebPanel(aSelection.item[i].Value, aDS);
@@ -587,7 +587,7 @@ var BookmarksCommand = {
   // requires utilityOverlay.js if opening in new window for getTopWin()
   openWebPanel: function(aResource, aDS)
   {
-    var url = BookmarksUtils.getProperty(aResource, NC_NS+"URL", aDS);
+    var url = BookmarksUtils.getProperty(aResource, gNC_NS+"URL", aDS);
     // Ignore "NC:" and empty urls.
     if (url == "")
       return;
@@ -596,13 +596,13 @@ var BookmarksCommand = {
       openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
       return;
     }
-    w.openWebPanel(BookmarksUtils.getProperty(aResource,  NC_NS+"Name"), url);
+    w.openWebPanel(BookmarksUtils.getProperty(aResource,  gNC_NS+"Name"), url);
   },
   
   // requires utilityOverlay.js because it calls openUILinkIn
   openOneBookmark: function (aURI, aTargetBrowser, aDS)
   {
-    var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS);
+    var url = BookmarksUtils.getProperty(aURI, gNC_NS+"URL", aDS);
     // Ignore "NC:" and empty urls.
     if (url == "")
       return;
@@ -618,7 +618,7 @@ var BookmarksCommand = {
       aTargetBrowser = "window";
 
     var resource = RDF.GetResource(aURI);
-    var urlArc   = RDF.GetResource(NC_NS+"URL");
+    var urlArc   = RDF.GetResource(gNC_NS+"URL");
     RDFC.Init(BMDS, resource);
     var containerChildren = RDFC.GetElements();
 
@@ -760,10 +760,10 @@ var BookmarksCommand = {
     }
     rTarget = RDF.GetResource("NC:BookmarksRoot");
     RDFC.Init(BMDS, rTarget);
-    var countBefore = parseInt(BookmarksUtils.getProperty(rTarget, RDF_NS+"nextVal"));
-    var args = [{ property: NC_NS+"URL", literal: fileName}];
-    this.doBookmarksCommand(rTarget, NC_NS_CMD+"import", args);
-    var countAfter = parseInt(BookmarksUtils.getProperty(rTarget, RDF_NS+"nextVal"));
+    var countBefore = parseInt(BookmarksUtils.getProperty(rTarget, gRDF_NS+"nextVal"));
+    var args = [{ property: gNC_NS+"URL", literal: fileName}];
+    this.doBookmarksCommand(rTarget, gNC_NS_CMD+"import", args);
+    var countAfter = parseInt(BookmarksUtils.getProperty(rTarget, gRDF_NS+"nextVal"));
 
     var transaction = new BookmarkImportTransaction("import");
     for (var index = countBefore; index < countAfter; index++) {
@@ -808,13 +808,13 @@ var BookmarksCommand = {
       return;
     }
     var selection = RDF.GetResource("NC:BookmarksRoot");
-    var args = [{ property: NC_NS+"URL", literal: fileName}];
-    this.doBookmarksCommand(selection, NC_NS_CMD+"export", args);
+    var args = [{ property: gNC_NS+"URL", literal: fileName}];
+    this.doBookmarksCommand(selection, gNC_NS_CMD+"export", args);
   },
 
   refreshLivemark: function (aSelection)
   {
-    var exp = RDF.GetResource(NC_NS+"LivemarkExpiration");
+    var exp = RDF.GetResource(gNC_NS+"LivemarkExpiration");
     for (var i = 0; i < aSelection.length; i++) {
       rsrc = RDF.GetResource(aSelection.item[i].Value);
       oldtgt = BMDS.GetTarget(rsrc, exp, true);
@@ -865,7 +865,7 @@ var BookmarksCommand = {
         toSort.push(rsrc);
     }
 
-    const kName = RDF.GetResource(NC_NS+"Name");
+    const kName = RDF.GetResource(gNC_NS+"Name");
 
     var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
                                   .getService(Components.interfaces.nsILocaleService);
@@ -1110,7 +1110,7 @@ var BookmarksController = {
     case "cmd_bm_setnewbookmarkfolder":
     case "cmd_bm_setpersonaltoolbarfolder":
     case "cmd_bm_setnewsearchfolder":
-      BookmarksCommand.doBookmarksCommand(aSelection.item[0], NC_NS_CMD+aCommand.substring("cmd_bm_".length), []);
+      BookmarksCommand.doBookmarksCommand(aSelection.item[0], gNC_NS_CMD+aCommand.substring("cmd_bm_".length), []);
       break;
     case "cmd_bm_rename":
     case "cmd_bm_properties":
@@ -1185,7 +1185,7 @@ function CommandArrayEnumerator (aCommandArray)
 {
   this._inner = [];
   for (var i = 0; i < aCommandArray.length; ++i)
-    this._inner.push(RDF.GetResource(NC_NS_CMD + aCommandArray[i]));
+    this._inner.push(RDF.GetResource(gNC_NS_CMD + aCommandArray[i]));
     
   this._index = 0;
 }
@@ -1270,7 +1270,7 @@ var BookmarksUtils = {
   // Determine the rdf:type property for the given resource.
   resolveType: function (aResource, aDS)
   {
-    var type = this.getProperty(aResource, RDF_NS+"type", aDS);
+    var type = this.getProperty(aResource, gRDF_NS+"type", aDS);
     if (type != "")
       type = type.split("#")[1];
     if (type == "Folder") {
@@ -1280,12 +1280,12 @@ var BookmarksUtils = {
 
     if (type == "") {
       // we're not sure what type it is.  figure out if it's a container.
-      var child = this.getProperty(aResource, NC_NS+"child", aDS);
+      var child = this.getProperty(aResource, gNC_NS+"child", aDS);
       if (child || RDFCU.IsContainer(aDS?aDS:BMDS, RDF.GetResource(aResource)))
         return "ImmutableFolder";
 
       // not a container; make sure it has at least a URL
-      if (this.getProperty(aResource, NC_NS+"URL") != null)
+      if (this.getProperty(aResource, gNC_NS+"URL") != null)
         return "ImmutableBookmark";
     }
 
@@ -1518,8 +1518,8 @@ var BookmarksUtils = {
     for (var i=0; i<aSelection.length; ++i) {
       data     = new TransferData();
       item     = aSelection.item[i].Value;
-      itemUrl  = this.getProperty(item, NC_NS+"URL");
-      itemName = this.getProperty(item, NC_NS+"Name");
+      itemUrl  = this.getProperty(item, gNC_NS+"URL");
+      itemName = this.getProperty(item, gNC_NS+"Name");
       parent   = aSelection.parent[i].Value;
       data.addDataForFlavour("moz/rdfitem",    item+"\n"+(parent?parent:""));
       data.addDataForFlavour("text/x-moz-url", itemUrl+"\n"+itemName);
@@ -1579,7 +1579,7 @@ var BookmarksUtils = {
 
   getTargetFromFolder: function(aResource)
   {
-    var index = parseInt(this.getProperty(aResource, RDF_NS+"nextVal"));
+    var index = parseInt(this.getProperty(aResource, gRDF_NS+"nextVal"));
     if (isNaN(index))
       return {parent: null, index: -1};
     else
@@ -1602,7 +1602,7 @@ var BookmarksUtils = {
       // look up in the history ds to retrieve the name
       var rSource = RDF.GetResource(aURL);
       var HISTDS  = RDF.GetDataSource("rdf:history");
-      var nameArc = RDF.GetResource(NC_NS+"Name");
+      var nameArc = RDF.GetResource(gNC_NS+"Name");
       var rName   = HISTDS.GetTarget(rSource, nameArc, true);
       aName       = rName ? rName.QueryInterface(kRDFLITIID).Value : aDefaultName;
       if (!aName)
@@ -1622,7 +1622,7 @@ var BookmarksUtils = {
       // look up in the history ds to retrieve the name
       var rSource = RDF.GetResource(aURL);
       var HISTDS  = RDF.GetDataSource("rdf:history");
-      var nameArc = RDF.GetResource(NC_NS+"Name");
+      var nameArc = RDF.GetResource(gNC_NS+"Name");
       var rName   = HISTDS.GetTarget(rSource, nameArc, true);
       aName       = rName ? rName.QueryInterface(kRDFLITIID).Value : aDefaultName;
       if (!aName)
@@ -1676,14 +1676,14 @@ var BookmarksUtils = {
   loadFavIcon: function (aURL, aFavIconURL) {
     var urlLiteral = RDF.GetLiteral(aURL);
     // don't do anything if this URI isn't bookmarked
-    var bmResources = BMSVC.GetSources(RDF.GetResource(NC_NS+"URL"), urlLiteral, true);
+    var bmResources = BMSVC.GetSources(RDF.GetResource(gNC_NS+"URL"), urlLiteral, true);
     var toUpdate = 0;
 
     while (bmResources.hasMoreElements()) {
       var bmResource = bmResources.getNext();
  
       // don't flag this as needing update if it already has a data: icon url set
-      var oldIcon = BMDS.GetTarget(bmResource, RDF.GetResource(NC_NS+"Icon"), true);
+      var oldIcon = BMDS.GetTarget(bmResource, RDF.GetResource(gNC_NS+"Icon"), true);
       if (oldIcon && (oldIcon.QueryInterface(kRDFLITIID).Value.substring(0,5) == "data:"))
         continue;
 
@@ -2197,7 +2197,7 @@ function dumpTXN(aTxn)
   dump(aTxn.type+", "+aTxn.action+"\n");
   if (aTxn.type == "insert" || aTxn.type == "remove") {
     for (var i=0; i<aTxn.item.length; ++i) {
-      dump(i+": "+aTxn.item[i].Value+" in "+BookmarksUtils.getProperty(aTxn.parent[i], NC_NS+"Name")+", i:"+aTxn.index[i]+"\n");
+      dump(i+": "+aTxn.item[i].Value+" in "+BookmarksUtils.getProperty(aTxn.parent[i], gNC_NS+"Name")+", i:"+aTxn.index[i]+"\n");
     }
   }
 }

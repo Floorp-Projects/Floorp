@@ -64,10 +64,10 @@ var BookmarksMenu = {
     if (!this.validOpenInTabsMenuItem(aTarget) ||
         aTarget.lastChild.getAttribute("class") == "openintabs-menuitem")
       return;
-    var element = document.createElementNS(XUL_NS, "menuseparator");
+    var element = document.createElementNS(gXUL_NS, "menuseparator");
     element.setAttribute("class", "openintabs-menuseparator");
     aTarget.appendChild(element);
-    element = document.createElementNS(XUL_NS, "menuitem");
+    element = document.createElementNS(gXUL_NS, "menuitem");
     element.setAttribute("class", "openintabs-menuitem");
     element.setAttribute("label", BookmarksUtils.getLocaleString("cmd_bm_openfolder"));
     element.setAttribute("accesskey", BookmarksUtils.getLocaleString("cmd_bm_openfolder_accesskey"));
@@ -143,7 +143,7 @@ var BookmarksMenu = {
       return;
 
     var EmptyMsg = BookmarksUtils.getLocaleString("emptyFolder");
-    var emptyElement = document.createElementNS(XUL_NS, "menuitem");
+    var emptyElement = document.createElementNS(gXUL_NS, "menuitem");
     emptyElement.setAttribute("id", "empty-menuitem");
     emptyElement.setAttribute("label", EmptyMsg);
     emptyElement.setAttribute("disabled", "true");
@@ -1051,7 +1051,7 @@ var BookmarksToolbarRDFObserver =
 {
   onAssert: function (aDataSource, aSource, aProperty, aTarget)
   {
-    if (aProperty.Value == NC_NS+"BookmarksToolbarFolder") {
+    if (aProperty.Value == gNC_NS+"BookmarksToolbarFolder") {
       var bt = document.getElementById("bookmarks-ptf");
       if (bt) {
         bt.ref = aSource.Value;
@@ -1078,7 +1078,7 @@ var BookmarksToolbarRDFObserver =
     if (this._overflowTimerInEffect)
       return;
     if (aSource != BMSVC.getBookmarksToolbarFolder()
-        || aProperty.Value == NC_NS+"LastModifiedDate")
+        || aProperty.Value == gNC_NS+"LastModifiedDate")
       return;
     this._overflowTimerInEffect = true;
     setTimeout(BookmarksToolbar.resizeFunc, 0);

@@ -70,12 +70,12 @@ function Init()
 
   // ...and this is a parallel array that contains the RDF properties
   // that they are associated with.
-  gProperties = [RDF.GetResource(NC_NS+"Name"),
-                 RDF.GetResource(NC_NS+"URL"),
-                 RDF.GetResource(NC_NS+"ShortcutURL"),
-                 RDF.GetResource(NC_NS+"Description"),
-                 RDF.GetResource(NC_NS+"WebPanel"),
-                 RDF.GetResource(NC_NS+"FeedURL")];
+  gProperties = [RDF.GetResource(gNC_NS+"Name"),
+                 RDF.GetResource(gNC_NS+"URL"),
+                 RDF.GetResource(gNC_NS+"ShortcutURL"),
+                 RDF.GetResource(gNC_NS+"Description"),
+                 RDF.GetResource(gNC_NS+"WebPanel"),
+                 RDF.GetResource(gNC_NS+"FeedURL")];
 
   var x;
   // Initialize the properties panel by copying the values from the
@@ -98,7 +98,7 @@ function Init()
   document.title = document.title.replace(/\*\*bm_title\*\*/gi, nameNode.value);
 
   // check bookmark schedule
-  var scheduleArc = RDF.GetResource(WEB_NS+"Schedule");
+  var scheduleArc = RDF.GetResource(gWEB_NS+"Schedule");
   value = BMDS.GetTarget(gResource, scheduleArc, true);
 
   if (value) {
@@ -271,8 +271,8 @@ function Commit()
 
     if (gFields[i] == "url" && oldValue && oldValue.Value != newValue.Value) {
       // if the URL was updated, clear out the favicon
-      var icon = BMDS.GetTarget(gResource, RDF.GetResource(NC_NS+"Icon"), true);
-      if (icon) BMDS.Unassert(gResource, RDF.GetResource(NC_NS+"Icon"), icon);
+      var icon = BMDS.GetTarget(gResource, RDF.GetResource(gNC_NS+"Icon"), true);
+      if (icon) BMDS.Unassert(gResource, RDF.GetResource(gNC_NS+"Icon"), icon);
     }
   }
 
@@ -280,7 +280,7 @@ function Commit()
   // if the tab was removed, just skip it
   var scheduleTab = document.getElementById("ScheduleTab");
   if (scheduleTab) {
-    var scheduleArc = RDF.GetResource(WEB_NS+"Schedule");
+    var scheduleArc = RDF.GetResource(gWEB_NS+"Schedule");
     oldValue = BMDS.GetTarget(gResource, scheduleArc, true);
     newValue = null;
     var dayRangeNode = document.getElementById("dayRange");

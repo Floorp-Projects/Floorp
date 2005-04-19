@@ -66,7 +66,7 @@ function Startup()
       windowNode.setAttribute("windowtype", "bookmarks:searchresults");
     }
     else
-      title = BookmarksUtils.getProperty(window.arguments[0], NC_NS+"Name");
+      title = BookmarksUtils.getProperty(window.arguments[0], gNC_NS+"Name");
     
     titleString = BookmarksUtils.getLocaleString("window_title", title);
   }
@@ -258,7 +258,7 @@ function onViewSelected(aEvent)
       displayValue = BookmarksUtils.getLocaleString("status_foldercount", String(count));
     }
     else if (selection.type[0] == "Bookmark")
-      displayValue = BookmarksUtils.getProperty(selection.item[0], NC_NS+"URL", aEvent.target.db)
+      displayValue = BookmarksUtils.getProperty(selection.item[0], gNC_NS+"URL", aEvent.target.db)
     else
       displayValue = "";
     statusBar.label = displayValue;
