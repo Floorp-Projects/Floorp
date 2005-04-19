@@ -64,9 +64,35 @@ calDateTime::calDateTime()
 }
 
 calDateTime::calDateTime(struct icaltimetype *atimeptr)
+    : mImmutable(PR_FALSE)
 {
     FromIcalTime(atimeptr);
     mValid = PR_TRUE;
+}
+
+calDateTime::calDateTime(const calDateTime& cdt)
+{
+    // bitwise copy everything
+    mValid = cdt.mValid;
+    mNativeTime = cdt.mNativeTime;
+    mYear = cdt.mYear;
+    mMonth = cdt.mMonth;
+    mDay = cdt.mDay;
+    mHour = cdt.mHour;
+    mMinute = cdt.mMinute;
+    mSecond = cdt.mSecond;
+    mIsUtc = cdt.mIsUtc;
+    mWeekday = cdt.mWeekday;
+    mYearday = cdt.mYearday;
+
+    mIsDate = cdt.mIsDate;
+
+    mLastModified = PR_Now();
+
+    // copies are always mutable
+    mImmutable = PR_FALSE;
+
+    mTimezone.Assign(cdt.mTimezone);
 }
 
 NS_IMETHODIMP
@@ -91,31 +117,9 @@ calDateTime::MakeImmutable()
 NS_IMETHODIMP
 calDateTime::Clone(calIDateTime **aResult)
 {
-    calDateTime *cdt = new calDateTime();
+    calDateTime *cdt = new calDateTime(*this);
     if (!cdt)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    // bitwise copy everything
-    cdt->mValid = mValid;
-    cdt->mNativeTime = mNativeTime;
-    cdt->mYear = mYear;
-    cdt->mMonth = mMonth;
-    cdt->mDay = mDay;
-    cdt->mHour = mHour;
-    cdt->mMinute = mMinute;
-    cdt->mSecond = mSecond;
-    cdt->mIsUtc = mIsUtc;
-    cdt->mWeekday = mWeekday;
-    cdt->mYearday = mYearday;
-
-    cdt->mIsDate = mIsDate;
-
-    cdt->mLastModified = PR_Now();
-
-    // copies are always mutable
-    cdt->mImmutable = PR_FALSE;
-
-    cdt->mTimezone.Assign(mTimezone);
 
     NS_ADDREF(*aResult = cdt);
     return NS_OK;

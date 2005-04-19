@@ -54,6 +54,7 @@ class calDateTime : public calIDateTime,
 public:
     calDateTime ();
     calDateTime (struct icaltimetype *timeptr);
+    calDateTime (const calDateTime& cdt);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
