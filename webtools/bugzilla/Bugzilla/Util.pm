@@ -33,8 +33,8 @@ use base qw(Exporter);
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
                              lsearch max min
-                             diff_arrays
-                             trim diff_strings wrap_comment
+                             diff_arrays diff_strings
+                             trim wrap_comment find_wrap_point
                              format_time format_time_decimal
                              file_mod_time);
 
@@ -217,6 +217,25 @@ sub wrap_comment ($) {
     }
 
     return $wrappedcomment;
+}
+
+sub find_wrap_point ($$) {
+    my ($string, $maxpos) = @_;
+    if (!$string) { return 0 }
+    if (length($string) < $maxpos) { return length($string) }
+    my $wrappoint = rindex($string, ",", $maxpos); # look for comma
+    if ($wrappoint < 0) {  # can't find comma
+        $wrappoint = rindex($string, " ", $maxpos); # look for space
+        if ($wrappoint < 0) {  # can't find space
+            $wrappoint = rindex($string, "-", $maxpos); # look for hyphen
+            if ($wrappoint < 0) {  # can't find hyphen
+                $wrappoint = $maxpos;  # just truncate it
+            } else {
+                $wrappoint++; # leave hyphen on the left side
+            }
+        }
+    }
+    return $wrappoint;
 }
 
 sub format_time {
@@ -477,6 +496,14 @@ with ">" are assumed to be quotes, and they will not be wrapped.
 The intended use of this function is to wrap comments that are about to be
 displayed or emailed. Generally, wrapped text should not be stored in the
 database.
+
+=back
+
+=item C<find_wrap_point($string, $maxpos)>
+
+Search for a comma, a whitespace or a hyphen to split $string, within the first
+$maxpos characters. If none of them is found, just split $string at $maxpos.
+The search starts at $maxpos and goes back to the beginning of the string.
 
 =back
 

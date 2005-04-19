@@ -1151,25 +1151,6 @@ sub SnapShotDeps {
 my $timestamp;
 my $bug_changed;
 
-sub FindWrapPoint {
-    my ($string, $startpos) = @_;
-    if (!$string) { return 0 }
-    if (length($string) < $startpos) { return length($string) }
-    my $wrappoint = rindex($string, ",", $startpos); # look for comma
-    if ($wrappoint < 0) {  # can't find comma
-        $wrappoint = rindex($string, " ", $startpos); # look for space
-        if ($wrappoint < 0) {  # can't find space
-            $wrappoint = rindex($string, "-", $startpos); # look for hyphen
-            if ($wrappoint < 0) {  # can't find hyphen
-                $wrappoint = $startpos;  # just truncate it
-            } else {
-                $wrappoint++; # leave hyphen on the left side
-            }
-        }
-    }
-    return $wrappoint;
-}
-
 sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me, $timestamp) = (@_);
     my $sql_timestamp = SqlQuote($timestamp);
