@@ -51,7 +51,7 @@ use base qw(Exporter);
 @Bugzilla::Bug::EXPORT = qw(
     AppendComment ValidateComment
     bug_alias_to_id
-    RemoveVotes
+    RemoveVotes CheckIfVotedConfirmed
 );
 
 use constant MAX_COMMENT_LENGTH => 65535;
@@ -925,6 +925,61 @@ sub RemoveVotes {
         $dbh->do("UPDATE bugs SET votes = ? WHERE bug_id = ?",
                  undef, ($votes, $id));
     }
+}
+
+# If a user votes for a bug, or the number of votes required to
+# confirm a bug has been reduced, check if the bug is now confirmed.
+sub CheckIfVotedConfirmed {
+    my ($id, $who) = (@_);
+    my $dbh = Bugzilla->dbh;
+
+    my ($votes, $status, $everconfirmed, $votestoconfirm, $timestamp) =
+        $dbh->selectrow_array("SELECT votes, bug_status, everconfirmed, " .
+                              "       votestoconfirm, NOW() " .
+                              "FROM bugs INNER JOIN products " .
+                              "                  ON products.id = bugs.product_id " .
+                              "WHERE bugs.bug_id = ?",
+                              undef, $id);
+
+    my $ret = 0;
+    if ($votes >= $votestoconfirm && !$everconfirmed) {
+        if ($status eq 'UNCONFIRMED') {
+            my $fieldid = &::GetFieldID("bug_status");
+            $dbh->do("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1, " .
+                     "delta_ts = ? WHERE bug_id = ?",
+                     undef, ($timestamp, $id));
+            $dbh->do("INSERT INTO bugs_activity " .
+                     "(bug_id, who, bug_when, fieldid, removed, added) " .
+                     "VALUES (?, ?, ?, ?, ?, ?)",
+                     undef, ($id, $who, $timestamp, $fieldid, 'UNCONFIRMED', 'NEW'));
+        }
+        else {
+            $dbh->do("UPDATE bugs SET everconfirmed = 1, delta_ts = ? " .
+                     "WHERE bug_id = ?", undef, ($timestamp, $id));
+        }
+
+        my $fieldid = &::GetFieldID("everconfirmed");
+        $dbh->do("INSERT INTO bugs_activity " .
+                 "(bug_id, who, bug_when, fieldid, removed, added) " .
+                 "VALUES (?, ?, ?, ?, ?, ?)",
+                 undef, ($id, $who, $timestamp, $fieldid, '0', '1'));
+
+        AppendComment($id, &::DBID_to_name($who),
+                      "*** This bug has been confirmed by popular vote. ***",
+                      0, $timestamp);
+
+        my $template = Bugzilla->template;
+        my $vars = $::vars;
+
+        $vars->{'type'} = "votes";
+        $vars->{'id'} = $id;
+        $vars->{'mailrecipients'} = { 'changer' => $who };
+
+        $template->process("bug/process/results.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+        $ret = 1;
+    }
+    return $ret;
 }
 
 sub AUTOLOAD {

@@ -28,6 +28,7 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Bug;
 
 require "CGI.pl";
 
@@ -323,7 +324,8 @@ sub record_votes {
              'dependencies READ', 'groups READ', 'fielddefs READ',
              'namedqueries READ', 'whine_queries READ', 'watch READ',
              'profiles AS watchers READ', 'profiles AS watched READ',
-             'user_group_map READ', 'bug_group_map READ');
+             'user_group_map READ', 'bug_group_map READ',
+             'email_setting READ');
     
     # Take note of, and delete the user's old votes from the database.
     SendSQL("SELECT bug_id FROM votes WHERE who = $who");
