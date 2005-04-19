@@ -946,8 +946,6 @@ calStorageCalendar.prototype = {
         // for now, we just delete and insert
         // set up params before transaction
 
-        dump ("flushItem: item: " + item + "\n");
-
         if (olditem) {
             this.mDeleteItem.params.id = olditem.id;
             this.mDeleteItem.params.cal_id = this.mCalId;

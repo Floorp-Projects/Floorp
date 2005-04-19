@@ -42,7 +42,64 @@
 
 const calIOperationListener = Components.interfaces.calIOperationListener;
 
+function calCompositeCalendarObserverHelper (compCalendar) {
+    this.compCalendar = compCalendar;
+}
+
+calCompositeCalendarObserverHelper.prototype = {
+    QueryInterface: function (aIID) {
+        if (!aIID.equals(Components.interfaces.calIObserver) &&
+            !aIID.equals(Components.interfaces.nsISupports))
+        {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
+
+        return this;
+    },
+
+    onStartBatch: function() {
+        for each (obs in this.compCalendar.mObservers)
+            obs.onStartBatch();
+    },
+
+    onEndBatch: function() {
+        for each (obs in this.compCalendar.mObservers)
+            obs.onEndBatch();
+    },
+
+    onLoad: function() {
+        for each (obs in this.compCalendar.mObservers)
+            obs.onLoad();
+    },
+
+    onAddItem: function(aItem) {
+        for each (obs in this.compCalendar.mObservers)
+            obs.onAddItem(aItem);
+    },
+
+    onModifyItem: function(aNewItem, aOldItem) {
+        for each (obs in this.compCalendar.mObservers)
+            obs.onAddItem(aNewItem, aOldItem);
+    },
+
+    onDeleteItem: function(aDeletedItem) {
+        for each (obs in this.compCalendar.mObservers)
+            obs.onAddItem(aDeletedItem);
+    },
+
+    onAlarm: function(aAlarmItem) {
+        for each (obs in this.compCalendar.mObservers)
+            obs.onAddItem(aAlarmItem);
+    },
+
+    onError: function(aErrNo, aMessage) {
+        for each (obs in this.compCalendar.mObservers)
+            obs.onAddItem(aErrNo, aMessage);
+    }
+};
+
 function calCompositeCalendar () {
+    this.mObserverHelper = new calCompositeCalendarObserverHelper();
     this.wrappedJSObject = this;
 }
 
@@ -83,6 +140,9 @@ calCompositeCalendar.prototype = {
             }
         }
 
+        // add our observer helper
+        aCalendar.addObserver(this.mObserverHelper);
+
         this.mCalendars.push(aCalendar);
 
         this.observeCalendarAdded(aCalendar);
@@ -103,9 +163,12 @@ calCompositeCalendar.prototype = {
             else
                 calToRemove = cal;
         }
-        this.mCalendars = newCalendars;
 
-        this.observeCalendarRemoved(calToRemove);
+        if (calToRemove) {
+            this.mCalendars = newCalendars;
+            calToRemove.removeObserver(this.mObserverHelper);
+            this.observeCalendarRemoved(calToRemove);
+        }
     },
 
     getCalendar: function (aServer) {
@@ -153,38 +216,27 @@ calCompositeCalendar.prototype = {
 
     // void addObserver( in calIObserver observer );
     mCompositeObservers: Array(),
-    addObserver: function (aObserver, aItemFilter) {
+    mObservers: Array(),
+    addObserver: function (aObserver) {
         const calICompositeObserver = Components.interfaces.calICompositeObserver;
         if (aObserver instanceof calICompositeObserver) {
-            var compobs = aObserver.QueryInterface (calICompositeObserver);
-            for each (obs in this.mCompositeObservers) {
-                if (obs == aObserver)
-                    return;
+            if (this.mCompositeObservers.indexOf(aObserver) == -1) {
+                var compobs = aObserver.QueryInterface (calICompositeObserver);
+                this.mCompositeObservers.push(compobs);
             }
-            this.mCompositeObservers.push(compobs);
         }
 
-        for each (cal in this.mCalendars) {
-            cal.addObserver(aObserver);
-        }
+        if (this.mObservers.indexOf(aObserver) == -1)
+            this.mObservers.push(aObserver);
     },
 
     // void removeObserver( in calIObserver observer );
     removeObserver: function (aObserver) {
         const calICompositeObserver = Components.interfaces.calICompositeObserver;
-        var compobs = aObserver.QueryInterface (calICompositeObserver);
-        if (compobs) {
-            var newCompObs = Array ();
-            for each (obs in this.mCompositeObservers) {
-                if (obs != compobs)
-                    newCompObs.push(this.mCompositeObservers[i]);
-            }
-            this.mCompositeObservers = newCompObs;
-        }
+        if (aObserver instanceof calICompositeObserver)
+            this.mCompositeObservers = this.mCompositeObservers.filter( function (v) { return v != aObserver; } );
 
-        for each (cal in this.mCalendars) {
-            cal.removeObserver(aObserver);
-        }
+        this.mObservers = this.mObservers.filter( function (v) { return v != aObserver; } );
     },
 
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
