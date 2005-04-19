@@ -48,6 +48,10 @@
   %pageInfoDTD;
 ]>
 
+#ifdef XP_MACOSX
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#endif
+
 <window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="Browser:page-info"
@@ -354,4 +358,9 @@
       <!-- Others added by overlay -->
     </tabpanels>
   </tabbox>
+
+#ifdef XP_MACOSX
+#include browserMountPoints.inc
+#endif
+
 </window>

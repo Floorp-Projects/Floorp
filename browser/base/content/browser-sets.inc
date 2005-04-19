@@ -51,16 +51,20 @@
     <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
   </stringbundleset>
 
-  <commandset commandupdater="true"
+  <commandset id="globalEditCommandSet"
+              commandupdater="true"
               events="focus"
               oncommandupdate="goUpdateGlobalEditMenuItems()"/>
-  <commandset commandupdater="true"
+  <commandset id="selectEditCommandSet"
+              commandupdater="true"
               events="select"
               oncommandupdate="goUpdateSelectEditMenuItems()"/>
-  <commandset commandupdater="true"
+  <commandset id="undoEditCommandSet"
+              commandupdater="true"
               events="undo"
               oncommandupdate="goUpdateUndoEditMenuItems()"/>
-  <commandset commandupdater="true"
+  <commandset id="pasteCommandSet"
+              commandupdater="true"
               events="clipboard"
               oncommandupdate="goUpdatePasteMenuItems()"/>
   

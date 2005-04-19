@@ -46,6 +46,10 @@
 %aboutDialogDTD;
 ]>
 
+#ifdef XP_MACOSX
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#endif
+
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
@@ -82,14 +86,9 @@
   </deck>
   <separator class="groove" id="groove"/>
 
-# manually add Cmd+W until we add a menubar on mac
 #ifdef XP_MACOSX
-  <keyset id="mainKeyset">
-    <key id="keyClose"
-         modifiers="accel"
-         key="&cmdClose.macKey;"
-         oncommand="window.close();"/>
-  </keyset>
+#include browserMountPoints.inc
 #endif
+
 </dialog>
 

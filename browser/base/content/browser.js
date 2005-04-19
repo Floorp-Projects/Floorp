@@ -516,7 +516,7 @@ const gXPInstallObserver = {
   }
 };
 
-function Startup()
+function BrowserStartup()
 {
   gBrowser = document.getElementById("content");
 
@@ -879,7 +879,7 @@ function delayedStartup()
     theToolbar.appendChild(updateItem);
 }
 
-function Shutdown()
+function BrowserShutdown()
 {
   var os = Components.classes["@mozilla.org/observer-service;1"]
     .getService(Components.interfaces.nsIObserverService);
@@ -953,12 +953,12 @@ function Shutdown()
 }
 
 #ifdef XP_MACOSX
-// The following functions should be used by both hiddenWindow.xul
-// and any other windows which only have menus on Mac OS X
+// nonBrowserWindowStartup() and nonBrowserWindowDelayedStartup() are used for
+// non-browser windows in macBrowserOverlay
 function nonBrowserWindowStartup()
 {
   // Disable inappropriate commands / submenus
-  var disabledItems = ['cmd_newNavigatorTab', 'cmd_close', 'Browser:SavePage', 'Browser:SendLink',
+  var disabledItems = ['cmd_newNavigatorTab', 'Browser:SavePage', 'Browser:SendLink',
                        'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain', 'viewToolbarsMenu',
                        'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'Browser:ReloadSkipCache',
                        'viewTextZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
@@ -972,14 +972,18 @@ function nonBrowserWindowStartup()
       element.setAttribute("disabled", "true");
   }
 
-  // If no windows are active (i.e. we're the hidden window), disable the minimize
+  // If no windows are active (i.e. we're the hidden window), disable the close, minimize
   // and zoom menu commands as well
   if (window.location.href == "chrome://browser/content/hiddenWindow.xul")
   {
-    element = document.getElementById("minimizeWindow");
-    element.setAttribute("disabled", "true");
-    element = document.getElementById("zoomWindow");
-    element.setAttribute("disabled", "true");
+    var hiddenWindowDisabledItems = ['cmd_close', 'minimizeWindow', 'zoomWindow'];
+    for (var id in hiddenWindowDisabledItems)
+    {
+      element = document.getElementById(hiddenWindowDisabledItems[id]);
+      if (element)
+        element.setAttribute("disabled", "true");
+    }
+
     // also hide the window-list separator
     element = document.getElementById("sep-window-list");
     element.setAttribute("hidden", "true");
@@ -1563,8 +1567,8 @@ function openLocation()
   }
   else {
 #ifdef XP_MACOSX
-    if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
-      // If no windows are active, open a new one. 
+    if (window.location.href != getBrowserURL()) {
+      // If it's not a browser window, open a new one. 
       window.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no", "about:blank");
     }
     else
@@ -1619,6 +1623,14 @@ function BrowserOpenFileWindow()
 
 function BrowserCloseTabOrWindow()
 {
+#ifdef XP_MACOSX
+  // If we're not a browser window, just close the window
+  if (window.location.href != getBrowserURL()) {
+    closeWindow(true);
+    return;
+  }
+#endif
+
   if (gBrowser.localName == 'tabbrowser' && gBrowser.tabContainer.childNodes.length > 1) {
     // Just close up a tab.
     gBrowser.removeCurrentTab();
@@ -1637,7 +1649,7 @@ function BrowserTryToCloseWindow()
 
 function BrowserCloseWindow() 
 {
-  // This code replicates stuff in Shutdown().  It is here because
+  // This code replicates stuff in BrowserShutdown().  It is here because
   // window.screenX and window.screenY have real values.  We need
   // to fix this eventually but by replicating the code here, we
   // provide a means of saving position (it just requires that the
