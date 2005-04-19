@@ -329,7 +329,7 @@ function fillFolderPaneContextMenu()
   EnableMenuItem("folderPaneContext-markMailFolderAllRead", true);
 
   ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
-  EnableMenuItem("folderPaneContext-searchMessages", IsCanSearchMessagesEnabled());
+  goUpdateCommand('cmd_search');
 
   return(true);
 }

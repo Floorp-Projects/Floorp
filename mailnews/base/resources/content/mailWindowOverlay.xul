@@ -128,7 +128,6 @@
   <command id="cmd_quit"/>
   <command id="cmd_createFilterFromPopup" oncommand="goDoCommand('cmd_createFilterFromPopup')"/>
   <command id="cmd_pageSetup"/>
-  <command id="cmd_search" oncommand="goDoCommand('cmd_search')" disabled="true"/>
 </commandset>
 <commandset id="mailViewMenuItems"
             commandupdater="true"
@@ -304,6 +303,7 @@
   <command id="cmd_applyFilters" oncommand="goDoCommand('cmd_applyFilters');" disabled="true"/>
   <command id="cmd_runJunkControls" oncommand="goDoCommand('cmd_runJunkControls');" disabled="true"/>
   <command id="cmd_deleteJunk" oncommand="goDoCommand('cmd_deleteJunk');" disabled="true"/>
+  <command id="cmd_search" oncommand="goDoCommand('cmd_search')"/>
 </commandset>
 
 <keyset id="mailKeys">
@@ -384,7 +384,7 @@
   <key id="key_label4" charcode="&labelCmd4.key;"  oncommand="goDoCommand('cmd_label4')"/>
   <key id="key_label5" charcode="&labelCmd5.key;"  oncommand="goDoCommand('cmd_label5')"/>
 
-  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="MsgSearchMessages();" modifiers="accel, shift"/>
+  <key id="key_searchMail" key="&searchMailCmd.key;" oncommand="goDoCommand('cmd_search')" modifiers="accel, shift"/>
 
 </keyset>
 
@@ -1632,7 +1632,7 @@
     <menuitem label="&searchMailCmd.label;"
               key="key_searchMail" 
               accesskey="&searchMailCmd.accesskey;" 
-              oncommand="MsgSearchMessages();"/>
+              command="cmd_search"/>
     <menuitem label="&searchAddressesCmd.label;" 
               accesskey="&searchAddressesCmd.accesskey;" 
               oncommand="MsgSearchAddresses()"/>
