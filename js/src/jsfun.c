@@ -1783,6 +1783,11 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                           fun->nargs)) {
                     goto bad_formal;
                 }
+                if (fun->nargs == JS_BITMASK(16)) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_TOO_MANY_FUN_ARGS);
+                    goto bad;
+                }
                 fun->nargs++;
 
                 /*
@@ -1838,6 +1843,7 @@ bad_formal:
     if (!(ts->flags & TSF_ERROR))
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_FORMAL);
 
+bad:
     /*
      * Clean up the arguments string and tokenstream if we failed to parse
      * the arguments.
