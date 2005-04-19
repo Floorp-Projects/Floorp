@@ -40,7 +40,7 @@
 
 <!ENTITY calendar.label             "Naptár" >
 <!ENTITY calendarPanel.label        "Naptár" >
-<!ENTITY calendar.accesskey         "n" >
+<!ENTITY calendar.accesskey         "n">
 <!ENTITY calendar.publish.label     "Közzététel">
 <!ENTITY calendar.general.label     "Általános">
 <!ENTITY calendar.alarms.label      "Értesítések">

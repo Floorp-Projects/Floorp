@@ -80,14 +80,14 @@
 <!ENTITY newevent.startdate.label    "Kezdés" >
 <!ENTITY newevent.enddate.label      "Befejezés" >
 <!ENTITY newevent.end.label          "Befejezés" >
-<!ENTITY newevent.alldayevent.label  "Ez egy egész napos esemény" >
+<!ENTITY newevent.alldayevent.label  "Egész napos" >
 <!ENTITY newevent.description.label  "Leírás" >
 <!ENTITY newevent.uri.label          "URL" >
 <!ENTITY newevent.uri.visit.label    "URL megtekintése" >
 <!ENTITY newevent.private.label      "Magánjellegű" >
 <!ENTITY newevent.private.note       "Ez az esemény magánjellegű" >
 <!ENTITY newevent.alarm.label        "Értesítés" >
-<!ENTITY newevent.server.label       "Naptárfájl" >
+<!ENTITY newevent.server.label       "Naptár" >
 <!ENTITY newevent.invite.label       "Meghívó" >
 <!ENTITY newevent.email.label        "E-mail értesítés címzettje" >
 <!ENTITY newevent.beforealarm.label  "az esemény kezdete előtt" >
@@ -107,10 +107,11 @@
 <!ENTITY newevent.endtime.tooltip    "Válasszon befejezési időpontot ehhez az eseményhez." >
 <!ENTITY newevent.starttimeerror.alertmessage "Az esemény nem érhet véget, mielőtt elkezdődik. Javítsa ki a kezdési vagy a befejezési időpontot." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Az esemény megismétlése nem kezdődhet az esemény befejeződése előtt. Javítsa ki, vagy törölje az ismétlődési beállítást." >
-<!ENTITY newevent.newevent.tab.label "Esemény" >
-<!ENTITY newevent.recurrence.tab.label "Ismétlődés" >
-<!ENTITY newevent.contacts.tab.label "Résztvevők" >
-<!ENTITY newevent.files.tab.label "Fájlok" >
+<!ENTITY newevent.general.tab.label         "Általános" >
+<!ENTITY newevent.recurrence.tab.label      "Ismétlődés" >
+<!ENTITY newevent.attendees.tab.label       "Résztvevők" >
+<!ENTITY newevent.attachments.tab.label     "Mellékletek" >
+<!ENTITY newevent.advanced.tab.label        "Haladó" >
 <!ENTITY newevent.status.label "Állapot" >
 <!ENTITY newevent.status.longlabel "Esemény állapota">
 <!ENTITY newevent.status.needsaction.label "Foglalkozni kell vele" >
@@ -119,6 +120,10 @@
 <!ENTITY newevent.status.cancelled.label   "Törölve" >
 <!ENTITY newevent.status.tentative.label   "Nem megerősített" >
 <!ENTITY newevent.status.confirmed.label   "Megerősített" >
+<!ENTITY newevent.itemType.label            "Elemtípus" >
+<!ENTITY newevent.itemType.event.label      "Esemény" >
+<!ENTITY newevent.itemType.todo.label       "Feladat" >
+<!ENTITY newevent.itemType.journal.label    "Napló" >
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "A hónap adott napján">
 <!ENTITY newevent.advanced.repeat.dayofweek.label "A hónap 4. keddjén">
@@ -294,7 +299,7 @@
 <!ENTITY calendar.monthview.button.label        "Havi nézet" >
 <!ENTITY calendar.multiweekview.button.label        "Többheti nézet" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Csak munkanap" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey "C">
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "C">
 <!ENTITY calendar.displaytodos.checkbox.label   "Feladatok a nézetben" >
 <!ENTITY calendar.displaytodos.checkbox.accesskey "z">
 
@@ -325,7 +330,7 @@
 <!ENTITY calendar.monthview.column.5.name "CSÜ">
 <!ENTITY calendar.monthview.column.6.name "PÉ">
 <!ENTITY calendar.monthview.column.7.name "SZO">
-<!ENTITY week.short "W">
+<!ENTITY week.short "H">
 
 <!-- Statusbar -->
 <!ENTITY statusText.label            "Dokumentum: kész">
