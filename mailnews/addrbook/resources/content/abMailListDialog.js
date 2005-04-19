@@ -143,12 +143,19 @@ function GetListValue(mailList, doAdd)
         var names = {};
         var fullNames = {};
         var numAddresses = gHeaderParser.parseHeadersWithArray(fieldValue, addresses, names, fullNames);
+        for (var j = 0; j < numAddresses; j++)
+        {
+          if (j > 0)
+          {
+            cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance();
+            cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
+          }
+          cardproperty.primaryEmail = addresses.value[j];
+          cardproperty.displayName = names.value[j];
 
-        cardproperty.primaryEmail = addresses.value[0];
-        cardproperty.displayName = names.value[0];
-
-        if (doAdd || (doAdd == false && pos >= oldTotal))
-          mailList.addressLists.AppendElement(cardproperty);
+          if (doAdd || (doAdd == false && pos >= oldTotal))
+            mailList.addressLists.AppendElement(cardproperty);
+        }
         pos++;
       }
     }
