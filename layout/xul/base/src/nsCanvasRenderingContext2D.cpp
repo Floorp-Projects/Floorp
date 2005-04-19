@@ -204,7 +204,7 @@ nsCanvasRenderingContext2D::SetCairoColor(nscolor c)
     cairo_set_rgb_color (mCairo, r, g, b);
 }
 
-NS_IMETHODIMP
+nsresult
 nsCanvasRenderingContext2D::Init(nsCanvasFrame* aCanvasFrame, nsPresContext* aPresContext)
 {
     nsresult rv;

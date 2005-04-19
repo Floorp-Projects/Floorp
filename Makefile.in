@@ -58,7 +58,6 @@ default alldep all:: $(SUBMAKEFILES)
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
-	$(MAKE) cairo
 	$(MAKE) tier_0
 	$(MAKE) tier_1
 	$(MAKE) tier_2
@@ -445,7 +444,6 @@ export::
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
-	$(MAKE) cairo
 ifneq ($(BUILD_MODULES),all)
 ifneq (,$(findstring xpcom, $(BUILD_MODULE_DIRS)))
 	$(MAKE) -C xpcom/typelib
@@ -475,18 +473,6 @@ ifdef MOZ_LDAP_XPCOM
 endif
 
 # Map mozilla targets to standard automake target
-clobber realclean clobber_all::
-ifdef MOZ_TREE_CAIRO
-	$(MAKE) -C gfx/cairo/libpixman clean
-	$(MAKE) -C gfx/cairo/cairo clean
-endif
-
-clean distclean::
-ifdef MOZ_TREE_CAIRO
-	$(MAKE) -C gfx/cairo/libpixman $@
-	$(MAKE) -C gfx/cairo/cairo $@
-endif
-
 ifdef MOZ_ENABLE_LIBXUL
 tier_50:
 	@echo "tier_50: $(tier_50_dirs)"
@@ -533,26 +519,6 @@ ldap:
 ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk
 endif
-
-cairo:
-ifdef MOZ_TREE_CAIRO
-	$(MAKE) -C gfx/cairo/libpixman install
-	$(MAKE) -C gfx/cairo/cairo install
-ifndef BUILD_STATIC_LIBS
-ifeq ($(OS_ARCH),Darwin)
-	$(INSTALL) $(DIST)/lib/libpixman.1.dylib $(DIST)/bin
-	$(INSTALL) $(DIST)/lib/libcairo.1.dylib $(DIST)/bin
-else
-ifeq ($(OS_ARCH),AIX)
-	$(INSTALL) $(DIST)/lib/libpixman.a $(DIST)/bin
-	$(INSTALL) $(DIST)/lib/libcairo.a $(DIST)/bin
-else
-	$(INSTALL) $(DIST)/lib/libpixman.so.1 $(DIST)/bin
-	$(INSTALL) $(DIST)/lib/libcairo.so.1 $(DIST)/bin
-endif # OS_ARCH == AIX
-endif # OS_ARCH == DARWIN
-endif # BUILD_STATIC_LIBS
-endif # MOZ_TREE_CAIRO
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f

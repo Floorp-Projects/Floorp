@@ -174,6 +174,15 @@ gfx/src/cairo/Makefile
 gfx/tests/Makefile
 "
 
+if [ "$MOZ_TREE_CAIRO" ] ; then
+MAKEFILES_gfx="$MAKEFILES_gfx
+gfx/cairo/Makefile
+gfx/cairo/libpixman/src/Makefile
+gfx/cairo/cairo/src/Makefile
+gfx/cairo/cairo/src/cairo-features.h
+"
+fi
+
 MAKEFILES_htmlparser="
 parser/htmlparser/Makefile
 parser/htmlparser/robot/Makefile

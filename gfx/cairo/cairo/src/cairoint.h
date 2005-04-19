@@ -55,14 +55,14 @@
 #include <math.h>
 #include <limits.h>
 
-#if defined (__SVR4) && defined (__sun)
+#if HAVE_STDINT_H
+# include <stdint.h>
+#elif HAVE_INTTYPES_H
+# include <inttypes.h>
+#elif HAVE_SYS_INT_TYPES_H
 # include <sys/int_types.h>
 #else
-# if defined (__OpenBSD__) || defined (_AIX)
-#  include <inttypes.h>
-# else 
-#  include <stdint.h>
-# endif
+# include "mozstdint.h"
 #endif
 
 #include "cairo.h"
@@ -126,6 +126,11 @@
 
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+/* Define M_PI if math.h does not define it. */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
 #endif
 
 #include "cairo-wideint.h"

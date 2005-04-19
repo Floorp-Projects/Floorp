@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.4 2005/03/29 20:53:07 tor%cs.brown.edu Exp $ */
+/* $Id: pixman.h,v 1.5 2005/04/19 17:19:46 bryner%brianryner.com Exp $ */
 
 /* libic.h */
 
@@ -81,14 +81,14 @@ SOFTWARE.
  */
 
 
-#if defined (__SVR4) && defined (__sun)
+#if HAVE_STDINT_H
+# include <stdint.h>
+#elif HAVE_INTTYPES_H
+# include <inttypes.h>
+#elif HAVE_SYS_INT_TYPES_H
 # include <sys/int_types.h>
 #else
-# if defined (__OpenBSD__) || defined (_AIX)
-#  include <inttypes.h>
-# else 
-#  include <stdint.h>
-# endif
+# include "mozstdint.h"
 #endif
 
 

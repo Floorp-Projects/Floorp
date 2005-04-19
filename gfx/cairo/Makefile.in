@@ -20,7 +20,6 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
-#  Stuart Parmenter <pavlov@pavlov.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,89 +35,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= cairo
-LIBRARY_NAME	= mozcairo
-LIBXUL_LIBRARY = 1
-
-REQUIRES	= $(PNG_REQUIRES) \
-		  $(ZLIB_REQUIRES) \
-		  libpixman \
-		  $(NULL)
-
-CSRCS	= \
-	cairo.c \
-	cairo_array.c \
-	cairo_cache.c \
-	cairo_color.c \
-	cairo_fixed.c \
-	cairo_font.c \
-	cairo_gstate.c \
-	cairo_hull.c \
-	cairo_image_surface.c \
-	cairo_matrix.c \
-	cairo_path.c \
-	cairo_path_bounds.c \
-	cairo_path_fill.c \
-	cairo_path_stroke.c \
-	cairo_pattern.c \
-	cairo_pen.c \
-	cairo_polygon.c \
-	cairo_slope.c \
-	cairo_spline.c \
-	cairo_surface.c \
-	cairo_traps.c \
-	cairo_unicode.c \
-	cairo_wideint.c \
-	$(NULL)
-
-EXPORTS		= cairo.h cairo-features.h
-
-
-ifeq ($(MOZ_GFX_TOOLKIT),windows)
-CSRCS	+= 	cairo_win32_font.c \
-		cairo_win32_surface.c
-EXPORTS += cairo-win32.h
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
-CSRCS	+= 	cairo_quartz_surface.c \
-		cairo_atsui_font.c
-EXPORTS += cairo-quartz.h
-endif
-
-
-ifdef BUILD_CAIRO_PDF
-CSRCS	+=	cairo_pdf_surface.c \
-		cairo_png_surface.c \
-		cairo_ps_surface.c
-EXPORTS += cairo-pdf.h
-endif
-
-
-ifdef MOZ_X11
-CSRCS	+=	cairo_xcb_surface.c \
-		cairo_xlib_surface.c \
-		cairo_ft_font.c
-EXPORTS += cairo-xlib.h
-endif
-
-ifdef BUILD_CAIRO_GL
-CSRCS	+= 	cairo_glitz_surface.c
-EXPORTS += cairo-glitz.h
-endif
-
-
-LOCAL_INCLUDES	= -I$(srcdir)
-
-FORCE_STATIC_LIB = 1
-# This library is used by other shared libs in a static build
-FORCE_USE_PIC = 1
+DIRS	= libpixman/src cairo/src
 
 include $(topsrcdir)/config/rules.mk
+
