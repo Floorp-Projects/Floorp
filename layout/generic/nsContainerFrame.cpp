@@ -274,34 +274,13 @@ nsContainerFrame::PaintChild(nsPresContext*      aPresContext,
       damageArea.x -= kidRect.x;
       damageArea.y -= kidRect.y;
 
-
-      // The transform components are saved and restored instead 
-      // of using PushState and PopState because they are too slow
-      // because they also save and restore the clip state.
-      // Note: Setting a negative translation to restore the 
-      // state does not work because the floating point errors can accumulate
-      // causing the display of some frames to be off by one pixel. 
-      // This happens frequently when running in 120DPI mode where frames are
-      // often positioned at 1/2 pixel locations and small floating point errors
-      // will cause the frames to vary their pixel x location during scrolling
-      // operations causes a single scan line of pixels to be shifted left relative
-      // to the other scan lines for the same text. 
-
-      // Save the transformation matrix's translation components.
-      float xMatrix; 
-      float yMatrix;
-      nsTransform2D *theTransform; 
-      aRenderingContext.GetCurrentTransform(theTransform);
-      NS_ASSERTION(theTransform != nsnull, "The rendering context transform is null");
-      theTransform->GetTranslation(&xMatrix, &yMatrix);
-
-      aRenderingContext.Translate(kidRect.x, kidRect.y);
-
-      // Paint the kid
-      aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer, aFlags);
-
-      // Restore the transformation matrix's translation components.
-      theTransform->SetTranslation(xMatrix, yMatrix);
+      {
+        nsIRenderingContext::AutoPushTranslation
+          translate(&aRenderingContext, kidRect.x, kidRect.y);
+  
+        // Paint the kid
+        aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer, aFlags);
+      }
 
 #ifdef NS_DEBUG
       // Draw a border around the child
