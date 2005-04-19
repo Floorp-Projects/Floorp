@@ -433,8 +433,11 @@ nsPluginInstallerWizard.prototype.addPluginResultRow = function (aImgSrc, aName,
     myButton.setAttribute("label", manualInstallLabel);
     myButton.setAttribute("tooltiptext", manualInstallTooltip);
 
-    myButton.setAttribute("oncommand","gPluginInstaller.loadURL('" + aManualUrl + "')");
     myRow.appendChild(myButton);
+
+    // XXX: XUL sucks, need to add the listener after it got added into the document
+    if (aManualUrl)
+      myButton.addEventListener("command", function() { gPluginInstaller.loadURL(aManualUrl) }, false);
   }
 
   myRows.appendChild(myRow);
@@ -531,8 +534,7 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
     "&clientOS=" + this.getOS() +
     "&chromeLocale=" + this.getChromeLocale();
 
-  document.getElementById("moreInfoLink").setAttribute("onclick",
-    "gPluginInstaller.loadURL('https://pfs.mozilla.org/plugins/"+notInstalledList+"')");
+  document.getElementById("moreInfoLink").addEventListener("click", function() { gPluginInstaller.loadURL("https://pfs.mozilla.org/plugins/" + notInstalledList) }, false);
 
   // clear the tab's plugin list
   this.mTab.missingPlugins = null;

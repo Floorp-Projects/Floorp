@@ -137,8 +137,7 @@
     <description id="pluginSummaryRestartNeeded" style="padding-top:10px;"
                  value="&pluginWizard.finalPage.restart.label;"/>
     <spacer flex="1" />
-    <description id="moreInfoLink" 
-      onclick="gPluginInstaller.loadURL('https://pfs.mozilla.org/plugins/')"
+    <description id="moreInfoLink"
       style="color:rgb(0, 0, 255); cursor:pointer; text-decoration:underline;"
       value="&pluginWizard.finalPage.moreInfo.label;"/>
   </wizardpage>
