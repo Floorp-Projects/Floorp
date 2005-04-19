@@ -576,10 +576,23 @@ nsContextMenu.prototype = {
         var qmark = url.indexOf( "?" );
         var addresses;
         
-        if ( qmark > kMailToLength ) 
-            addresses = url.substring( kMailToLength, qmark );
-        else 
-            addresses = url.substr( kMailToLength );
+        if ( qmark > 7 ) {                   // 7 == length of "mailto:"
+            addresses = url.substring( 7, qmark );
+        } else {
+            addresses = url.substr( 7 );
+        }
+
+        // Let's try to unescape it using a character set
+        try {
+          var ownerDocument = new XPCNativeWrapper(this.target, "ownerDocument").ownerDocument;
+          var characterSet = new XPCNativeWrapper(ownerDocument, "characterSet").characterSet;
+          const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                                         .getService(Components.interfaces.nsITextToSubURI);
+          addresses = textToSubURI.unEscapeURIForUI(characterSet, addresses);
+        }
+        catch(ex) {
+          // Do nothing.
+        }
 
         var clipboard = this.getService( "@mozilla.org/widget/clipboardhelper;1",
                                          Components.interfaces.nsIClipboardHelper );
