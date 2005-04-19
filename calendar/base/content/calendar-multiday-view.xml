@@ -283,7 +283,7 @@
 	  this.mDate = val;
 
 	  if (val.timezone != this.mTimezone) {
-              dump ("++ column tz: " + val.timezone + "\n");
+              //dump ("++ column tz: " + val.timezone + "\n");
               this.mTimezone = val.timezone;
               this.recalculateStartEndMinutes();
 	  }
@@ -533,7 +533,7 @@
 
       <method name="computeEventMap">
 	<body><![CDATA[
-	  dump ("computeEventMap\n");
+                     //dump ("computeEventMap\n");
           // we need to build a layout data structure
           // that looks like this:
           // [
@@ -568,14 +568,14 @@
 	      if (event.startMinute == null || event.endMinute == null || event.event == null)
                   continue;
 
-              dump ("=== event: " + event + " " + event.startMinute + "-" + event.endMinute + "\n");
+              //dump ("=== event: " + event + " " + event.startMinute + "-" + event.endMinute + "\n");
 
               var startAt = event.startMinute;
               var endAt = event.endMinute;
 
               var curCol = 0;
               while (curCol < eventMap.length) {
-                  dump ("+ curCol: " + curCol + "\n");
+                  //dump ("+ curCol: " + curCol + "\n");
                   var blockIndex = 0;
                   var curOffset = 0;
                   var finished = false;
@@ -855,6 +855,7 @@
                 dump ("++ AddItem\n");
                 if (!(aItem instanceof Components.interfaces.calIEvent))
                     return;
+                aItem = aItem.QueryInterface(Components.interfaces.calIEvent);
 
                 var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                        this.calView.endDate,
