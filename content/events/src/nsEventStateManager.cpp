@@ -193,12 +193,6 @@ nsEventStateManager::nsEventStateManager()
     mTabbedThroughDocument(PR_FALSE),
     mDOMEventLevel(0),
     mAccessKeys(nsnull)
-#ifdef CLICK_HOLD_CONTEXT_MENUS
-    ,
-    mEventDownFrame(nsnull),
-    mEventDownWidget(nsnull),
-    mEventPresContext(nsnull)
-#endif
 {
   ++sESMInstanceCount;
 }
@@ -268,10 +262,7 @@ nsEventStateManager::Init()
 nsEventStateManager::~nsEventStateManager()
 {
 #if CLICK_HOLD_CONTEXT_MENUS
-  if ( mClickHoldTimer ) {
-    mClickHoldTimer->Cancel();
-    mClickHoldTimer = nsnull;
-  }
+  KillClickHoldTimer();
 #endif
 
   --sESMInstanceCount;
@@ -427,7 +418,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
 #ifndef XP_OS2
-    BeginTrackingDragGesture ( aPresContext, (nsGUIEvent*)aEvent, aTargetFrame );
+    BeginTrackingDragGesture ( aPresContext, (nsMouseEvent*)aEvent, aTargetFrame );
 #endif
     mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
@@ -439,7 +430,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
 #ifdef XP_OS2
-    BeginTrackingDragGesture ( aPresContext, (nsGUIEvent*)aEvent, aTargetFrame );
+    BeginTrackingDragGesture ( aPresContext, (nsMouseEvent*)aEvent, aTargetFrame );
 #endif
     mRClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
@@ -482,7 +473,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // that ClearFrameRefs() has been called and it cleared out
     // |mCurrentTarget|. As a result, we should pass |mCurrentTarget|
     // into UpdateCursor().
-    GenerateDragGesture(aPresContext, (nsGUIEvent*)aEvent);
+    GenerateDragGesture(aPresContext, (nsMouseEvent*)aEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
     GenerateMouseEnterExit((nsGUIEvent*)aEvent);
     break;
@@ -1151,14 +1142,6 @@ nsEventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
     mClickHoldTimer->InitWithFuncCallback(sClickHoldCallback, this,
                                           kClickHoldDelay,
                                           nsITimer::TYPE_ONE_SHOT);
-
-  mEventPoint = inMouseDownEvent->point;
-  mEventRefPoint = inMouseDownEvent->refPoint;
-  mEventDownFrame = inDownFrame;
-  mEventDownWidget = inMouseDownEvent->widget;
-
-  mEventPresContext = inPresContext;
-
 } // CreateClickHoldTimer
 
 
@@ -1174,12 +1157,7 @@ nsEventStateManager::KillClickHoldTimer()
     mClickHoldTimer->Cancel();
     mClickHoldTimer = nsnull;
   }
-
-  mEventDownFrame = nsnull;
-  mEventDownWidget = nsnull;
-  mEventPresContext = nsnull;
-
-} // KillTooltipTimer
+}
 
 
 //
@@ -1216,7 +1194,7 @@ nsEventStateManager::sClickHoldCallback(nsITimer *aTimer, void* aESM)
 void
 nsEventStateManager::FireContextClick()
 {
-  if ( !mEventDownWidget || !mEventPresContext )
+  if ( !mGestureDownContent )
     return;
 
 #if defined (XP_MAC) || defined(XP_MACOSX)
@@ -1228,11 +1206,6 @@ nsEventStateManager::FireContextClick()
 #endif
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(NS_CONTEXTMENU, mEventDownWidget);
-  event.clickCount = 1;
-  event.point = mEventPoint;
-  event.refPoint = mEventRefPoint;
-  event.internalAppFlags |= NS_APP_EVENT_FLAG_TRUSTED;
 
   // Dispatch to the DOM. We have to fake out the ESM and tell it that the
   // current target frame is actually where the mouseDown occurred, otherwise it
@@ -1242,11 +1215,11 @@ nsEventStateManager::FireContextClick()
   // event and it will get reset on the very next event to the correct frame).
   mCurrentTarget = nsnull;
   if ( mGestureDownContent ) {
-    mEventPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownContent,
-                                                          &mCurrentTarget);
+    mPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownContent,
+                                                     &mCurrentTarget);
 
     if ( mCurrentTarget ) {
-      NS_ASSERTION(mEventPresContext == mCurrentTarget->GetPresContext(),
+      NS_ASSERTION(mPresContext == mCurrentTarget->GetPresContext(),
                    "a prescontext returned a primary frame that didn't belong to it?");
 
       // before dispatching, check that we're not on something that
@@ -1292,7 +1265,7 @@ nsEventStateManager::FireContextClick()
       if (allowedToDispatch) {
         // stop selection tracking, we're in control now
         nsCOMPtr<nsIFrameSelection> frameSel;
-        GetSelection(mCurrentTarget, mEventPresContext, getter_AddRefs(frameSel));
+        GetSelection(mCurrentTarget, mPresContext, getter_AddRefs(frameSel));
         if (frameSel) {
           PRBool mouseDownState = PR_TRUE;
           frameSel->GetMouseDownState(&mouseDownState);
@@ -1300,8 +1273,12 @@ nsEventStateManager::FireContextClick()
             frameSel->SetMouseDownState(PR_FALSE);
         }
 
+        nsMouseEvent event(NS_CONTEXTMENU, mCurrentTarget->GetWindow());
+        event.clickCount = 1;
+        FillInEventFromGestureDown(&event, PR_TRUE);
+
         // dispatch to DOM
-        mGestureDownContent->HandleDOMEvent(mEventPresContext, &event, nsnull,
+        mGestureDownContent->HandleDOMEvent(mPresContext, &event, nsnull,
                                             NS_EVENT_FLAG_INIT, &status);
 
         // We don't need to dispatch to frame handling because no frames
@@ -1337,7 +1314,7 @@ nsEventStateManager::FireContextClick()
 //
 void
 nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
-                                              nsGUIEvent* inDownEvent,
+                                              nsMouseEvent* inDownEvent,
                                               nsIFrame* inDownFrame)
 {
   // Note that |inDownEvent| could be either a mouse down event or a
@@ -1349,6 +1326,11 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
 
   inDownFrame->GetContentForEvent(aPresContext, inDownEvent,
                                   getter_AddRefs(mGestureDownContent));
+
+  mGestureDownShift = inDownEvent->isShift;
+  mGestureDownControl = inDownEvent->isControl;
+  mGestureDownAlt = inDownEvent->isAlt;
+  mGestureDownMeta = inDownEvent->isMeta;
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   // fire off a timer to track click-hold
@@ -1405,6 +1387,48 @@ nsEventStateManager::GetSelection(nsIFrame* inFrame,
 
 } // GetSelection
 
+void
+nsEventStateManager::FillInEventFromGestureDown(nsMouseEvent* aEvent,
+                                                PRBool aIsTrusted)
+{
+  NS_ASSERTION(aEvent->widget == mCurrentTarget->GetWindow(),
+               "Incorrect widget in event");
+
+  // Set the coordinates in the new event to the coordinates of
+  // the old event, adjusted for the fact that the widget might be
+  // different
+  nsRect tmpRect(0, 0, 1, 1);
+  aEvent->widget->WidgetToScreen(tmpRect, tmpRect);
+  aEvent->refPoint = mGestureDownPoint - tmpRect.TopLeft();
+  
+  float pixelsToTwips;
+  pixelsToTwips = mPresContext->DeviceContext()->DevUnitsToTwips();
+  nsPoint refPointTwips(NSIntPixelsToTwips(aEvent->refPoint.x, pixelsToTwips),
+                        NSIntPixelsToTwips(aEvent->refPoint.y, pixelsToTwips));
+
+  nsIView* widgetView = mCurrentTarget->GetClosestView();
+  nsPoint widgetToView;
+#ifdef DEBUG
+  nsIWidget* theWidget =
+#endif
+  widgetView->GetNearestWidget(&widgetToView);
+  NS_ASSERTION(theWidget == aEvent->widget, "Widget confusion!");
+  nsPoint widgetViewPoint = refPointTwips + widgetToView;
+
+  nsPoint targetToView;
+  nsIView* view;
+  mCurrentTarget->GetOffsetFromView(targetToView, &view);
+
+  aEvent->point = widgetViewPoint + widgetView->GetOffsetTo(view);
+
+  aEvent->isShift = mGestureDownShift;
+  aEvent->isControl = mGestureDownControl;
+  aEvent->isAlt = mGestureDownAlt;
+  aEvent->isMeta = mGestureDownMeta;
+  if (aIsTrusted) {
+    aEvent->internalAppFlags |= NS_APP_EVENT_FLAG_TRUSTED;
+  }
+}
 
 //
 // GenerateDragGesture
@@ -1422,7 +1446,7 @@ nsEventStateManager::GetSelection(nsIFrame* inFrame,
 //
 void
 nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
-                                         nsGUIEvent *aEvent)
+                                         nsMouseEvent *aEvent)
 {
   NS_WARN_IF_FALSE(aPresContext, "This shouldn't happen.");
   if ( IsTrackingDragGesture() ) {
@@ -1459,12 +1483,6 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
         pixelThresholdY = 5;
     }
 
-    // figure out the delta in twips, since that is how it is in the event.
-    // Do we need to do this conversion every time?
-    // Will the pres context really change on us or can we cache it?
-    float pixelsToTwips;
-    pixelsToTwips = aPresContext->DeviceContext()->DevUnitsToTwips();
-
     // fire drag gesture if mouse has moved enough
     nsRect tmpRect;
     aEvent->widget->WidgetToScreen(nsRect(aEvent->refPoint, nsSize(1, 1)),
@@ -1486,32 +1504,8 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // get the widget from the target frame
       nsEventStatus status = nsEventStatus_eIgnore;
       nsMouseEvent event(NS_DRAGDROP_GESTURE, mCurrentTarget->GetWindow());
-
-      // Set the coordinates in the new event to the coordinates of
-      // the old event, adjusted for the fact that the widget might be
-      // different
-      tmpRect = nsRect(0, 0, 1, 1);
-      event.widget->WidgetToScreen(tmpRect, tmpRect);
-      event.refPoint = mGestureDownPoint - tmpRect.TopLeft();
-
-      nsPoint refPointTwips(NSIntPixelsToTwips(event.refPoint.x, pixelsToTwips),
-                            NSIntPixelsToTwips(event.refPoint.y, pixelsToTwips));
-      nsPoint targetToView;
-      nsIView* view = mCurrentTarget->GetClosestView(&targetToView);
-      nsPoint viewToWidget;
-      nsIWidget* widget = view->GetNearestWidget(&viewToWidget);
-      NS_ASSERTION(widget == event.widget, "Widget confusion");
-      event.point = refPointTwips - (targetToView + viewToWidget);
-
-      // ideally, we should get the modifiers from the original event too,
-      // but the drag code looks at modifiers at the end of the drag, so this
-      // is probably OK.
-      event.isShift = ((nsMouseEvent*)aEvent)->isShift;
-      event.isControl = ((nsMouseEvent*)aEvent)->isControl;
-      event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
-      event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
-      event.internalAppFlags |=
-        aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
+      FillInEventFromGestureDown(&event,
+                                 (aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) != 0);
 
       // Dispatch to the DOM. By setting mCurrentTarget we are faking
       // out the ESM and telling it that the current target frame is
@@ -2285,13 +2279,6 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
     mLastMouseOverFrame = nsnull;
   if (aFrame == mLastDragOverFrame)
     mLastDragOverFrame = nsnull;
-#if CLICK_HOLD_CONTEXT_MENUS
-  if (aFrame == mEventDownFrame) {
-    mEventDownFrame = nsnull;
-    mEventDownWidget = nsnull;
-    mEventPresContext = nsnull;
-  }
-#endif
   if (aFrame == mCurrentTarget) {
     if (aFrame) {
       mCurrentTargetContent = aFrame->GetContent();
