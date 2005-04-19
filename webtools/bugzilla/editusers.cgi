@@ -224,7 +224,9 @@ if ($action eq 'search') {
                          'logincookies WRITE',
                          'groups READ',
                          'user_group_map WRITE',
-                         'group_group_map READ');
+                         'user_group_map AS ugm READ',
+                         'group_group_map READ',
+                         'group_group_map AS ggm READ');
  
     canSeeUser($otherUserID)
         || ThrowUserError('auth_failure', {reason => "not_visible",
