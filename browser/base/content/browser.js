@@ -780,7 +780,7 @@ function delayedStartup()
     }
   }
 
-  SetPageProxyState("invalid", null);
+  SetPageProxyState("invalid");
 
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
@@ -1989,7 +1989,7 @@ function handleURLBarRevert()
     if (url != "about:blank") { 
       gURLBar.value = url;
       gURLBar.select();
-      SetPageProxyState("valid", null); // XXX Build a URI and pass it in here.
+      SetPageProxyState("valid");
     } else { //if about:blank, urlbar becomes ""
       gURLBar.value = "";
     }
@@ -2070,10 +2070,10 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef)
 function UpdatePageProxyState()
 {
   if (gURLBar && gURLBar.value != gLastValidURLStr)
-    SetPageProxyState("invalid", null);
+    SetPageProxyState("invalid");
 }
 
-function SetPageProxyState(aState, aURI)
+function SetPageProxyState(aState)
 {
   if (!gURLBar)
     return;
@@ -2795,10 +2795,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   var url = getWebNavigation().currentURI.spec;
   if (gURLBar) {
     gURLBar.value = url;
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                        .createInstance(Components.interfaces.nsIURI);
-    uri.spec = url;
-    SetPageProxyState("valid", uri);
+    SetPageProxyState("valid");
   }
 
   // Re-enable parts of the UI we disabled during the dialog
@@ -3234,13 +3231,13 @@ nsBrowserStatusHandler.prototype =
           if (getBrowser().forceSyncURLBarUpdate) {
             gURLBar.value = ""; // hack for bug 249322
             gURLBar.value = location;
-            SetPageProxyState("valid", aLocation);
+            SetPageProxyState("valid");
           } else {
-            setTimeout(function(loc, aloc) { 
+            setTimeout(function(loc) { 
                          gURLBar.value = ""; // hack for bug 249322
                          gURLBar.value = loc; 
-                         SetPageProxyState("valid", aloc);
-                       }, 0, location, aLocation);
+                         SetPageProxyState("valid");
+                       }, 0, location);
           }
 
           // Setting the urlBar value in some cases causes userTypedValue to
@@ -3248,7 +3245,7 @@ nsBrowserStatusHandler.prototype =
           browser.userTypedValue = userTypedValue;
         } else {
           gURLBar.value = userTypedValue;
-          SetPageProxyState("invalid", null);
+          SetPageProxyState("invalid");
         }
       }
     }
