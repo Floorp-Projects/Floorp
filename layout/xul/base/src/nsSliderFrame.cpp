@@ -801,29 +801,18 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     scrollToClick = PR_TRUE;
   }
 
-  // The event's client position is in pixels and in the coordinate system of
-  // the root view for our presentation.
   PRInt32 clientPosPx;
+  nsIntRect screenRect = GetScreenRect();
   if (isHorizontal) {
-    mouseEvent->GetClientX(&clientPosPx);
+    mouseEvent->GetScreenX(&clientPosPx);
+    clientPosPx -= screenRect.x;
   } else {
-    mouseEvent->GetClientY(&clientPosPx);
+    mouseEvent->GetScreenY(&clientPosPx);
+    clientPosPx -= screenRect.y;
   }
 
   nsPresContext* presContext = GetPresContext();
-
-  nscoord clientPos = presContext->IntScaledPixelsToTwips(clientPosPx);
-
-  // Now convert this to twips and to our coordinates
-  
-  nsPoint clientOffset;
-  nsIView* closestView = GetClosestView(&clientOffset);
-  nsIView* rootView;
-  presContext->GetViewManager()->GetRootView(rootView);
-  NS_ASSERTION(closestView && rootView, "No view?");
-  clientOffset += closestView->GetOffsetTo(rootView);
-
-  nscoord pos = clientPos - (isHorizontal ? clientOffset.x : clientOffset.y);
+  nscoord pos = presContext->IntScaledPixelsToTwips(clientPosPx);
 
   // If shift click or middle button, first
   // place the middle of the slider thumb under the click
