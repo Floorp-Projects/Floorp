@@ -1,7 +1,7 @@
 #filter substitution
 
 @AB_CD@.jar:
-* locale/@AB_CD@/global/contents.rdf                    (generic/chrome/global/contents.rdf)
+% locale global @AB_CD@ %locale/@AB_CD@/global/
 + locale/@AB_CD@/global/accept2locale.properties        (%chrome/global/accept2locale.properties)
   locale/@AB_CD@/global/brand.dtd                       (generic/chrome/global/brand.dtd)
 + locale/@AB_CD@/global/charsetOverlay.dtd              (%chrome/global/charsetOverlay.dtd)
@@ -54,18 +54,18 @@
   locale/@AB_CD@/global/nsProgressDialog.properties     (%chrome/global/nsProgressDialog.properties)
   locale/@AB_CD@/global/history/history.properties      (%chrome/global/history/history.properties)
   locale/@AB_CD@/global/xpinstall/xpinstall.properties  (%chrome/global/xpinstall/xpinstall.properties)
-* locale/@AB_CD@/global-region/contents.rdf             (generic/chrome/global-region/contents.rdf)
+% locale global-region @AB_CD@ %locale/@AB_CD@/global-region/
 + locale/@AB_CD@/global-region/region.dtd               (%chrome/global-region/region.dtd)
 + locale/@AB_CD@/global-region/region.properties        (%chrome/global-region/region.properties)
 + locale/@AB_CD@/global-region/builtinURLs.rdf          (%chrome/global-region/builtinURLs.rdf)
-* locale/@AB_CD@/global-platform/contents.rdf                 (generic/chrome/global-platform/contents.rdf)
+% locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/
   locale/@AB_CD@/global-platform/mac/platformKeys.properties  (%chrome/global-platform/mac/platformKeys.properties)
   locale/@AB_CD@/global-platform/unix/platformKeys.properties (%chrome/global-platform/unix/platformKeys.properties)
   locale/@AB_CD@/global-platform/win/platformKeys.properties  (%chrome/global-platform/win/platformKeys.properties)
   locale/@AB_CD@/global-platform/mac/intl.properties          (%chrome/global-platform/mac/intl.properties)
   locale/@AB_CD@/global-platform/unix/intl.properties         (%chrome/global-platform/unix/intl.properties)
   locale/@AB_CD@/global-platform/win/intl.properties          (%chrome/global-platform/win/intl.properties)
-* locale/@AB_CD@/mozapps/contents.rdf                             (generic/chrome/mozapps/contents.rdf)
+% locale mozapps @AB_CD@ %locale/@AB_CD@/mozapps/
 * locale/@AB_CD@/mozapps/downloads/unknownContentType.properties  (%chrome/mozapps/downloads/unknownContentType.properties)
 * locale/@AB_CD@/mozapps/downloads/unknownContentType.dtd         (%chrome/mozapps/downloads/unknownContentType.dtd)
   locale/@AB_CD@/mozapps/downloads/editAction.dtd                 (%chrome/mozapps/downloads/editAction.dtd)
@@ -91,13 +91,13 @@
   locale/@AB_CD@/mozapps/update/errors.dtd                        (%chrome/mozapps/update/errors.dtd)
   locale/@AB_CD@/mozapps/xpinstall/xpinstallConfirm.dtd           (%chrome/mozapps/xpinstall/xpinstallConfirm.dtd)
   locale/@AB_CD@/mozapps/xpinstall/xpinstallConfirm.properties    (%chrome/mozapps/xpinstall/xpinstallConfirm.properties)
-* locale/@AB_CD@/cookie/contents.rdf                     (generic/chrome/cookie/contents.rdf)
+% locale cookie @AB_CD@ %locale/@AB_CD@/cookie/
   locale/@AB_CD@/cookie/cookieAcceptDialog.dtd           (%chrome/cookie/cookieAcceptDialog.dtd)
   locale/@AB_CD@/cookie/cookieAcceptDialog.properties    (%chrome/cookie/cookieAcceptDialog.properties)
-* locale/@AB_CD@/passwordmgr/contents.rdf           (generic/chrome/passwordmgr/contents.rdf)
+% locale passwordmgr @AB_CD@ %locale/@AB_CD@/passwordmgr/
 * locale/@AB_CD@/passwordmgr/passwordmgr.properties (%chrome/passwordmgr/passwordmgr.properties)
 * locale/@AB_CD@/passwordmgr/passwordManager.dtd    (%chrome/passwordmgr/passwordManager.dtd)
-* locale/@AB_CD@/autoconfig/contents.rdf            (generic/chrome/autoconfig/contents.rdf)
+% locale autoconfig @AB_CD@ %locale/@AB_CD@/autoconfig/
   locale/@AB_CD@/autoconfig/autoconfig.properties   (%chrome/autoconfig/autoconfig.properties)
 % locale help @AB_CD@ %locale/@AB_CD@/help/
   locale/@AB_CD@/help/help.properties                     (%chrome/mozapps/help/help.properties)

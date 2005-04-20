@@ -1,7 +1,7 @@
 #filter substitution
 
 @AB_CD@.jar:
-*   locale/browser/contents.rdf                    (generic/chrome/browser/contents.rdf)
+% locale browser @AB_CD@ %locale/browser/
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
@@ -45,8 +45,8 @@
     locale/browser/preferences/sanitize.dtd           (%chrome/browser/preferences/sanitize.dtd)
     locale/browser/preferences/tabs.dtd               (%chrome/browser/preferences/tabs.dtd)
     locale/browser/sidebar/sidebar.properties      (%chrome/browser/sidebar/sidebar.properties)
+% locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
-*   locale/browser-region/contents.rdf             (generic/chrome/browser-region/contents.rdf)
     locale/browser/help/help.rdf                      (%chrome/help/firebirdhelp.rdf)
     locale/browser/help/firebird-index1.rdf           (%chrome/help/firebird-index1.rdf)
     locale/browser/help/firebird-toc.rdf              (%chrome/help/firebird-toc.rdf)
@@ -66,7 +66,7 @@
     locale/browser/help/glossary.xhtml                (%chrome/help/glossary.xhtml)
     locale/browser/help/firebird-glossary.rdf         (%chrome/help/firebird-glossary.rdf)
 #ifndef MOZ_USE_OFFICIAL_BRANDING
-*   locale/branding/contents.rdf      (generic/chrome/branding/contents.rdf)
+% locale branding @AB_CD@ %locale/branding/
     locale/branding/brand.dtd         (%chrome/branding/brand.dtd)
     locale/branding/brand.properties  (%chrome/branding/brand.properties)
 #endif

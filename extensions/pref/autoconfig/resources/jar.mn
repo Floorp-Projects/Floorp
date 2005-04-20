@@ -1,7 +1,7 @@
+#ifndef MOZ_XUL_APP
 comm.jar:
 *   content/autoconfig/contents.rdf           (content/contents.rdf)
 
-#ifndef MOZ_XUL_APP
 en-US.jar:
 *   locale/en-US/autoconfig/contents.rdf           (locale/en-US/contents.rdf)
     locale/en-US/autoconfig/autoconfig.properties  (/toolkit/locales/en-US/chrome/autoconfig/autoconfig.properties)
