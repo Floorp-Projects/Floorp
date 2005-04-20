@@ -59,7 +59,7 @@ class nsXBMDecoder : public imgIDecoder
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_IMGIDECODER
-    
+
     nsXBMDecoder();
     virtual ~nsXBMDecoder();
 
@@ -74,19 +74,23 @@ private:
     nsCOMPtr<imgIContainer> mImage;
     nsCOMPtr<gfxIImageFrame> mFrame;
 
-    PRInt32 mCurRow;
-    PRInt32 mCurCol;
+    PRUint32 mCurRow;
+    PRUint32 mCurCol;
 
     char* mBuf; // Holds the received data
     char* mPos;
     PRUint32 mBufSize; // number of bytes in mBuf
 
-    PRInt32 mWidth;
-    PRInt32 mHeight;
-    PRBool mIsX10; // X10 flavor XBM?
+    PRUint32 mWidth;
+    PRUint32 mHeight;
+    PRUint32 mXHotspot;
+    PRUint32 mYHotspot;
 
     PRUint8* mRow; // Hold the decoded row
     PRUint8* mAlphaRow; // alpha data for the row
+
+    PRPackedBool mIsCursor;
+    PRPackedBool mIsX10; // X10 flavor XBM?
 
     enum {
         RECV_HEADER,
