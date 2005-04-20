@@ -59,6 +59,12 @@ const int kDefaultExpireDays = 9;
 
 @end
 
+// necessary because we're building against the 10.2 SDK and need to use some
+// private APIs to get at a feature that's hidden in on 10.2
+@interface NSOpenPanel(NewFolderExtensionsFor102SDK)
+-(void)setCanCreateDirectories:(BOOL)inInclude;      // exists in 10.3 SDK
+-(void)_setIncludeNewFolderButton:(BOOL)inInclude;   // exists on 10.2 as private api
+@end
 
 @implementation OrgMozillaChimeraPreferenceDownloads
 
@@ -229,6 +235,10 @@ const int kDefaultExpireDays = 9;
   [panel setCanChooseFiles:NO];
   [panel setCanChooseDirectories:YES];
   [panel setAllowsMultipleSelection:NO];
+  if ([panel respondsToSelector:@selector(setCanCreateDirectories:)])
+    [panel setCanCreateDirectories:YES];
+  else if ([panel respondsToSelector:@selector(_setIncludeNewFolderButton:)]) 	// try private API in 10.2
+    [panel _setIncludeNewFolderButton:YES];
   [panel setPrompt:NSLocalizedString(@"ChooseDirectoryOKButton", @"")];
   
   [panel beginSheetForDirectory:oldDLFolder file:nil types:nil modalForWindow:[mDownloadFolder window]
