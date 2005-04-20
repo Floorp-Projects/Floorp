@@ -120,6 +120,8 @@ nsStorageStream::GetOutputStream(PRInt32 aStartingOffset,
                                  nsIOutputStream * *aOutputStream)
 {
     NS_ENSURE_ARG(aOutputStream);
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
+    
     if (mWriteInProgress)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -145,6 +147,8 @@ nsStorageStream::GetOutputStream(PRInt32 aStartingOffset,
 NS_IMETHODIMP
 nsStorageStream::Close()
 {
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
+    
     mWriteInProgress = PR_FALSE;
     
     PRInt32 segmentOffset = SegOffset(mLogicalLength);
@@ -173,6 +177,8 @@ nsStorageStream::Flush()
 NS_IMETHODIMP
 nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritten)
 {
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
+    
     const char* readCursor;
     PRUint32 count, availableInSegment, remaining;
     nsresult rv = NS_OK;
@@ -256,6 +262,8 @@ nsStorageStream::GetLength(PRUint32 *aLength)
 NS_IMETHODIMP
 nsStorageStream::SetLength(PRUint32 aLength)
 {
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
+    
     if (mWriteInProgress)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -288,6 +296,8 @@ nsStorageStream::GetWriteInProgress(PRBool *aWriteInProgress)
 NS_METHOD
 nsStorageStream::Seek(PRInt32 aPosition)
 {
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
+    
     // An argument of -1 means "seek to end of stream"
     if (aPosition == -1)
         aPosition = mLogicalLength;
@@ -378,6 +388,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsStorageInputStream,
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(PRInt32 aStartingOffset, nsIInputStream* *aInputStream)
 {
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
+    
     nsStorageInputStream *inputStream = new nsStorageInputStream(this, mSegmentSize);
     if (!inputStream)
         return NS_ERROR_OUT_OF_MEMORY;
