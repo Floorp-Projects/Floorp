@@ -803,7 +803,7 @@ nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKey *aCurrentMsgKey, nsMsgKeyAr
   if (m_saveRestoreSelectionDepth != 1)
     return NS_OK;
   
-  if (!mTreeSelection)
+  if (!mTreeSelection || !mTree)
     return NS_OK;
 
   // first, freeze selection.
@@ -876,7 +876,8 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKey aCurrentMsgKey, nsMsgKeyArray *a
   if (aCurrentMsgKey != nsMsgKey_None)
     currentViewPosition = FindKey(aCurrentMsgKey, PR_TRUE);
 
-  mTreeSelection->SetCurrentIndex(currentViewPosition);
+  if (mTree)
+    mTreeSelection->SetCurrentIndex(currentViewPosition);
       
   // make sure the current message is once again visible in the thread pane
   // so we don't have to go search for it in the thread pane
