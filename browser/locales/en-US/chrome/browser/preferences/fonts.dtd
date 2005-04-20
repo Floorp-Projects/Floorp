@@ -1,4 +1,5 @@
 <!ENTITY  fontsDialog.title                       "Fonts">
+<!ENTITY  window.width                            "39em">
 
 <!ENTITY  language.label                          "Fonts for:">
 <!ENTITY  language.accesskey                      "t">

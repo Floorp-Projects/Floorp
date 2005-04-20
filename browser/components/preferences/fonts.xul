@@ -46,7 +46,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&fontsDialog.title;"
             dlgbuttons="accept,cancel"
-            style="width: 39em !important;">
+            style="width: &window.width; !important;">
 
   <prefpane id="FontsDialogPane">
   

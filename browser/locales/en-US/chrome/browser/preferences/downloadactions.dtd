@@ -1,4 +1,7 @@
 <!ENTITY  downloadactionsWindow.title         "Download Actions">
+<!ENTITY window.width                         "480">
+<!ENTITY window.height                        "310">
+
 <!ENTITY  fileTypesDescription.label          "Automatically perform the associated Action with each of the following file types:">
 
 <!ENTITY  fileHandlerColumn.label             "Action">
