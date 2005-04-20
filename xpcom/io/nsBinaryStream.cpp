@@ -57,6 +57,7 @@
 #include "nsMemory.h"
 #include "prlong.h"
 #include "nsGenericFactory.h"
+#include "nsString.h"
 
 NS_IMPL_ISUPPORTS3(nsBinaryOutputStream, nsIObjectOutputStream, nsIBinaryOutputStream, nsIOutputStream)
 
@@ -222,8 +223,7 @@ nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteUtf8Z(const PRUnichar* aString)
 {
-    NS_NOTREACHED("WriteUtf8Z");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return WriteStringZ(NS_ConvertUTF16toUTF8(aString).get());
 }
 
 NS_IMETHODIMP
