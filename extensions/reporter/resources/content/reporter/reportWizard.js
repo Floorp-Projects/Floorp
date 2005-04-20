@@ -192,7 +192,7 @@ function initForm(){
 }
 
 function validateForm() {
-  if(document.getElementById('problem_type').value != "0_0")
+  if(document.getElementById('problem_type').value != "0")
     document.getElementById('reportWizard').canAdvance= true;
   else
     document.getElementById('reportWizard').canAdvance= false;
