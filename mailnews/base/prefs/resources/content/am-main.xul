@@ -7,7 +7,7 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.onPanelLoaded('am-main.xul');">
 
-    <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
+    <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 
     <script type="application/x-javascript" src="chrome://messenger/content/am-identity-edit.js"/>

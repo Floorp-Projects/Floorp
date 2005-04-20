@@ -236,8 +236,8 @@ function selectFile()
   var fp = Components.classes["@mozilla.org/filepicker;1"]
                      .createInstance(nsIFilePicker);
 
-  var prefutilitiesBundle = document.getElementById("bundle_prefutilities");
-  var title = prefutilitiesBundle.getString("choosefile");
+  var prefBundle = document.getElementById("bundle_prefs");
+  var title = prefBundle.getString("choosefile");
   fp.init(window, title, nsIFilePicker.modeOpen);
   fp.appendFilters(nsIFilePicker.filterAll);
 
