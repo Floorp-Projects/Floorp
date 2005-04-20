@@ -79,5 +79,6 @@ interface nsMsgFilterAction {
     const long LeaveOnPop3Server=13;
     const long JunkScore=14;
     const long FetchBodyFromPop3Server=15;
+    const long CopyToFolder=16;
 };
 

@@ -508,7 +508,8 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
         continue;
       
       nsXPIDLCString actionTargetFolderUri;
-      if (actionType == nsMsgFilterAction::MoveToFolder)
+      if (actionType == nsMsgFilterAction::MoveToFolder ||
+          actionType == nsMsgFilterAction::CopyToFolder)
       {
         filterAction->GetTargetFolderUri(getter_Copies(actionTargetFolderUri));
         if (actionTargetFolderUri.IsEmpty())
@@ -544,8 +545,9 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
         applyMoreActions = PR_FALSE;
         break;
       case nsMsgFilterAction::MoveToFolder:
+      case nsMsgFilterAction::CopyToFolder:
       {
-        // if moving to a different file, do it.
+        // if moving or copying to a different file, do it.
         nsXPIDLCString uri;
         rv = m_curFolder->GetURI(getter_Copies(uri));
 
@@ -582,10 +584,11 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
           }
           nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
           if (copyService)
-            return copyService->CopyMessages(m_curFolder, m_searchHitHdrs, destIFolder, PR_TRUE, this, m_msgWindow, PR_FALSE);
+            return copyService->CopyMessages(m_curFolder, m_searchHitHdrs, destIFolder, actionType == nsMsgFilterAction::MoveToFolder, this, m_msgWindow, PR_FALSE);
         }
         //we have already moved the hdrs so we can't apply more actions
-        applyMoreActions = PR_FALSE;
+        if (actionType == nsMsgFilterAction::MoveToFolder)
+          applyMoreActions = PR_FALSE;
       }
         
         break;

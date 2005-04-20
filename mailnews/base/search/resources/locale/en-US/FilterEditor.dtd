@@ -17,6 +17,8 @@
 <!ENTITY contains.label "contains">
 <!ENTITY nocontains.label "doesn't contain">
 <!ENTITY moveToFolder.label "Move to folder:">
+<!ENTITY copyToFolder.label "Copy to folder:">
+
 <!ENTITY changePriority.label "Change the priority to:">
 <!ENTITY delete.label "Delete the message">
 <!ENTITY markRead.label "Mark the message as read">

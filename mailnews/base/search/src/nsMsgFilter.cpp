@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -116,7 +116,8 @@ NS_IMETHODIMP
 nsMsgRuleAction::SetTargetFolderUri(const char *aUri)
 {
   NS_ENSURE_ARG_POINTER(aUri);
-  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::MoveToFolder,
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::MoveToFolder ||
+                 m_type == nsMsgFilterAction::CopyToFolder,
                  NS_ERROR_ILLEGAL_VALUE);
   m_folderUri = aUri;
   return NS_OK;
@@ -126,7 +127,8 @@ NS_IMETHODIMP
 nsMsgRuleAction::GetTargetFolderUri(char** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::MoveToFolder,
+  NS_ENSURE_TRUE(m_type == nsMsgFilterAction::MoveToFolder ||
+                 m_type == nsMsgFilterAction::CopyToFolder,
                  NS_ERROR_ILLEGAL_VALUE);
   *aResult = ToNewCString(m_folderUri);
   return NS_OK;
@@ -260,6 +262,7 @@ nsMsgFilter::GetSortedActionList(nsISupportsArray *actionList)
   PRUint32 numActions;
   nsresult err = m_actionList->Count(&numActions);
   NS_ENSURE_SUCCESS(err, err);
+  PRBool insertedFinalAction = PR_FALSE;
   PRUint32 front = 0;
 
   for (PRUint32 index =0; index < numActions; index++)
@@ -271,9 +274,32 @@ nsMsgFilter::GetSortedActionList(nsISupportsArray *actionList)
  
     nsMsgRuleActionType actionType;
     action->GetType(&actionType);
+    
     //we always want MoveToFolder action to be last (or delete to trash)
-    if (actionType == nsMsgFilterAction::MoveToFolder || actionType == nsMsgFilterAction::Delete)  
-      actionList->AppendElement(action);
+    if (actionType == nsMsgFilterAction::MoveToFolder || actionType == nsMsgFilterAction::Delete)
+    {
+      err = actionList->AppendElement(action);
+      NS_ENSURE_SUCCESS(err, err);
+      insertedFinalAction = PR_TRUE;
+    }
+    // Copy is always last, except for move/delete
+    else if (actionType == nsMsgFilterAction::CopyToFolder)
+    {
+      if (!insertedFinalAction)
+      {
+        err = actionList->AppendElement(action);
+        NS_ENSURE_SUCCESS(err, err);
+      }
+      else
+      {
+        // If we already have a move/delete action in place, we want to
+        // place ourselves just before that final action.
+        PRUint32 count;
+        actionList->Count(&count);
+        err = actionList->InsertElementAt(action, count - 2);
+        NS_ENSURE_SUCCESS(err, err);
+      }
+    }
     else
     {
       actionList->InsertElementAt(action,front);
@@ -416,14 +442,16 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBH
     buffer +=  actionStr;
     buffer +=  " ";
         
-    if (actionType == nsMsgFilterAction::MoveToFolder) {
+    if (actionType == nsMsgFilterAction::MoveToFolder ||
+        actionType == nsMsgFilterAction::CopyToFolder) {
       nsXPIDLCString actionFolderUri;
       aFilterAction->GetTargetFolderUri(getter_Copies(actionFolderUri));
       buffer += actionFolderUri.get();
     } 
          
     buffer += "\n";
-    if (actionType == nsMsgFilterAction::MoveToFolder) {
+    if (actionType == nsMsgFilterAction::MoveToFolder ||
+        actionType == nsMsgFilterAction::CopyToFolder) {
       nsXPIDLCString msgId;
       aMsgHdr->GetMessageId(getter_Copies(msgId));
       buffer += " id = ";
@@ -492,7 +520,7 @@ void nsMsgFilter::SetFilterScript(nsCString *fileName)
   m_scriptFileName = *fileName;
 }
 
-nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, nsCString &moveValue)
+nsresult nsMsgFilter::ConvertMoveOrCopyToFolderValue(nsIMsgRuleAction *filterAction, nsCString &moveValue)
 {
   NS_ENSURE_ARG_POINTER(filterAction);
   PRInt16 filterVersion = kFileVersion;
@@ -652,6 +680,7 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
     switch(actionType)
     {
       case nsMsgFilterAction::MoveToFolder:
+      case nsMsgFilterAction::CopyToFolder:
       {
         nsXPIDLCString imapTargetString;
         action->GetTargetFolderUri(getter_Copies(imapTargetString));
@@ -739,6 +768,7 @@ struct RuleActionsTableEntry
 static struct RuleActionsTableEntry ruleActionsTable[] =
 {
   { nsMsgFilterAction::MoveToFolder,    nsMsgFilterType::Inbox, 0,  "Move to folder"},
+  { nsMsgFilterAction::CopyToFolder,    nsMsgFilterType::Inbox, 0,  "Copy to folder"},
   { nsMsgFilterAction::ChangePriority,  nsMsgFilterType::Inbox, 0,  "Change priority"},
   { nsMsgFilterAction::Delete,          nsMsgFilterType::All,   0,  "Delete"},
   { nsMsgFilterAction::MarkRead,        nsMsgFilterType::All,   0,  "Mark read"},

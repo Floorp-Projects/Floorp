@@ -3204,7 +3204,8 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
       continue;
     if (NS_SUCCEEDED(filterAction->GetType(&actionType)))
     {
-      if (actionType == nsMsgFilterAction::MoveToFolder)
+      if (actionType == nsMsgFilterAction::MoveToFolder ||
+          actionType == nsMsgFilterAction::CopyToFolder)
       {
         filterAction->GetTargetFolderUri(getter_Copies(actionTargetFolderUri));
         if (actionTargetFolderUri.IsEmpty())
@@ -3270,6 +3271,42 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
           }
           // don't apply any more filters, even if it was a move to the same folder
           *applyMore = PR_FALSE; 
+        }
+        break;
+        case nsMsgFilterAction::CopyToFolder:
+        {
+          nsXPIDLCString uri;
+          rv = GetURI(getter_Copies(uri));
+
+          if (NS_STATIC_CAST(const char *, actionTargetFolderUri) &&
+            strcmp(uri, actionTargetFolderUri))
+          {
+            // XXXshaver I'm not actually 100% what the right semantics are for
+            // MDNs and copied messages, but I suspect deep down inside that
+            // we probably want to suppress them only on the copies.
+            msgHdr->GetFlags(&msgFlags);
+            if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED && !isRead)
+            {
+               msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+               msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+            }
+
+            nsCOMPtr<nsISupportsArray> messageArray;
+            NS_NewISupportsArray(getter_AddRefs(messageArray));
+            messageArray->AppendElement(msgHdr);
+
+            nsCOMPtr<nsIMsgFolder> dstFolder;
+            rv = GetExistingFolder(actionTargetFolderUri,
+                                   getter_AddRefs(dstFolder));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIMsgCopyService> copyService =
+              do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+            rv = copyService->CopyMessages(this, messageArray, dstFolder,
+                                           PR_FALSE, nsnull, msgWindow, PR_FALSE);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
         }
         break;
         case nsMsgFilterAction::MarkRead:

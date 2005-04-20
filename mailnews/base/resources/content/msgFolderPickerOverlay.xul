@@ -532,6 +532,70 @@
       <menupopup/>
     </menulist>
 
+    <menulist id="actionTargetFolder2"
+              containment="http://home.netscape.com/NC-rdf#child"
+              sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+              sortDirection="ascending"
+              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+              ref="msgaccounts:/">
+      <template>
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which do not allow message filing -->
+        </rule>
+        <rule nc:CanSearchMessages="false">
+          <!-- don't show servers (nntp & any others) which do not allow search -->
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+          <menupopup>
+              <menu uri="..." 
+                class="folderMenuItem menu-iconic"
+                oncommand="PickedMsgFolder(event.target,'actionTargetFolder2')"
+                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup class="menulist-menupopup">
+                  <menuitem label="&filemessageschoosethis.label;"
+                            oncommand="PickedMsgFolder(event.target.parentNode.parentNode,'actionTargetFolder2')"/>
+                  <menuseparator/>
+                </menupopup>
+              </menu>
+          </menupopup>
+       </rule>
+       <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <menupopup>
+             <menu uri="..."
+               class="folderMenuItem menu-iconic"
+               oncommand="PickedMsgFolder(event.target,'actionTargetFolder2')"
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+               label="rdf:http://home.netscape.com/NC-rdf#Name">
+			   <menupopup class="menulist-menupopup"/>
+              </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+             <menuitem uri="..." value="..."  
+              class="folderMenuItem menuitem-iconic"
+              oncommand="PickedMsgFolder(event.target,'actionTargetFolder2')"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+              label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </menupopup>
+        </rule>
+      </template>
+      <menupopup/>
+    </menulist>
+
     <menulist id="runFiltersFolder"
               containment="http://home.netscape.com/NC-rdf#child"
               sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"

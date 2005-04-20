@@ -48,6 +48,7 @@ var gFilter;
 var gFilterList;
 var gFilterNameElement;
 var gActionTargetElement;
+var gActionTargetCopyElement;
 var gActionValueDeck;
 var gActionPriority;
 var gActionLabel;
@@ -58,6 +59,7 @@ var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var gPrefBranch;
 var gMailSession = null;
 var gMoveToFolderCheckbox;
+var gCopyToFolderCheckbox;
 var gChangePriorityCheckbox;
 var gLabelCheckbox;
 var gJunkScoreCheckbox;
@@ -260,11 +262,13 @@ function initializeFilterWidgets()
 {
     gFilterNameElement = document.getElementById("filterName");
     gActionTargetElement = document.getElementById("actionTargetFolder");
+    gActionTargetCopyElement = document.getElementById("actionTargetFolder2");
     gActionValueDeck = document.getElementById("actionValueDeck");
     gActionPriority = document.getElementById("actionValuePriority");
     gActionJunkScore = document.getElementById("actionValueJunkScore");
     gActionLabel = document.getElementById("actionValueLabel");
     gMoveToFolderCheckbox = document.getElementById("moveToFolder");
+    gCopyToFolderCheckbox = document.getElementById("copyToFolder");
     gChangePriorityCheckbox = document.getElementById("changePriority");
     gLabelCheckbox = document.getElementById("label");
     gJunkScoreCheckbox = document.getElementById("setJunkScore");
@@ -294,6 +298,14 @@ function initializeDialog(filter)
         var target = filterAction.targetFolderUri;
         if (target) 
           SetFolderPicker(target, gActionTargetElement.id);
+      }
+      else if (filterAction.type == nsMsgFilterAction.CopyToFolder)
+      {
+        // preselect target folder
+        gCopyToFolderCheckbox.checked = true;
+        var target = filterAction.targetFolderUri;
+        if (target) 
+          SetFolderPicker(target, gActionTargetCopyElement.id);
       }
       else if (filterAction.type == nsMsgFilterAction.ChangePriority) 
       {
@@ -435,6 +447,19 @@ function saveFilter()
     }
   }
 
+  if (gCopyToFolderCheckbox.checked)
+  {
+    if (gActionTargetCopyElement)
+      targetUri = gActionTargetCopyElement.getAttribute("uri");
+    if (!targetUri || targetUri == "") 
+    {
+      if (gPromptService)
+        gPromptService.alert(window, null,
+                             gFilterBundle.getString("mustSelectFolder"));
+      return false;
+    }
+  }
+
   if (!gFilter) 
   {
     gFilter = gFilterList.createFilter(filterName);
@@ -461,6 +486,23 @@ function saveFilter()
   {
     filterAction = gFilter.createAction();
     filterAction.type = nsMsgFilterAction.MoveToFolder;
+    filterAction.targetFolderUri = targetUri;
+    gFilter.appendAction(filterAction);
+  }
+
+  if (gCopyToFolderCheckbox.checked)
+  {
+    if (gActionTargetCopyElement)
+      targetUri = gActionTargetCopyElement.getAttribute("uri");
+    if (!targetUri || targetUri == "") 
+    {
+      str = gFilterBundle.getString("mustSelectFolder");
+      window.alert(str);
+      return false;
+    }
+      
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.CopyToFolder;
     filterAction.targetFolderUri = targetUri;
     gFilter.appendAction(filterAction);
   }
@@ -555,11 +597,6 @@ function saveFilter()
   return true;
 }
 
-function onTargetFolderSelected(event)
-{
-    SetFolderPicker(event.target.id, gActionTargetElement.id);
-}
-
 function SetUpFilterActionList(aScope)
 {
   var element, elements, i;
@@ -646,7 +683,7 @@ function GetFirstSelectedMsgFolder()
     return msgFolder;
 }
 
-function SearchNewFolderOkCallback(name,uri)
+function SearchNewFolderOkCallback(name,uri,targetid)
 {
   var msgFolder = GetMsgFolderFromUri(uri, true);
   var imapFolder = null;
@@ -682,7 +719,7 @@ function SearchNewFolderOkCallback(name,uri)
   if (!imapFolder)
   {
     var curFolder = uri+"/"+encodeURIComponent(name);
-    SetFolderPicker(curFolder, gActionTargetElement.id);
+    SetFolderPicker(curFolder, targetid);
   }
 }
 

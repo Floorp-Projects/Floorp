@@ -97,7 +97,7 @@ public:
   void	    Dump();
 #endif
 
-  nsresult  ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, nsCString &relativePath);
+  nsresult  ConvertMoveOrCopyToFolderValue(nsIMsgRuleAction *filterAction, nsCString &relativePath);
   static const char *GetActionStr(nsMsgRuleActionType action);
   static nsresult GetActionFilingStr(nsMsgRuleActionType action, nsCString &actionStr);
   static nsMsgRuleActionType GetActionForFilingStr(nsCString &actionStr);

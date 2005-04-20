@@ -636,8 +636,11 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
         {
           nsMsgRuleActionType type;
           currentFilterAction->GetType(&type);
-          if (type == nsMsgFilterAction::MoveToFolder)
-            err = m_curFilter->ConvertMoveToFolderValue(currentFilterAction, value);
+          if (type == nsMsgFilterAction::MoveToFolder ||
+              type == nsMsgFilterAction::CopyToFolder)
+          {
+            err = m_curFilter->ConvertMoveOrCopyToFolderValue(currentFilterAction, value);
+          }
           else if (type == nsMsgFilterAction::ChangePriority)
           {
             nsMsgPriorityValue outPriority;
@@ -1048,7 +1051,8 @@ NS_IMETHODIMP nsMsgFilterList::MatchOrChangeFilterTarget(const char *oldFolderUr
       else
         continue;
 
-      if (actionType == nsMsgFilterAction::MoveToFolder)
+      if (actionType == nsMsgFilterAction::MoveToFolder ||
+          actionType == nsMsgFilterAction::CopyToFolder)
       {
         rv = filterAction->GetTargetFolderUri(getter_Copies(folderUri));
         if (NS_SUCCEEDED(rv) && folderUri)

@@ -75,6 +75,7 @@
 #include "nsMsgSearchCore.h"
 #include "nsMailHeaders.h"
 #include "nsIMsgMailSession.h"
+#include "nsIMsgCopyService.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -1655,7 +1656,8 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
     
     if (NS_SUCCEEDED(filterAction->GetType(&actionType)))
     {
-      if (actionType == nsMsgFilterAction::MoveToFolder)
+      if (actionType == nsMsgFilterAction::MoveToFolder ||
+          actionType == nsMsgFilterAction::CopyToFolder)
       {
         filterAction->GetTargetFolderUri(getter_Copies(actionTargetFolderUri));
         if (actionTargetFolderUri.IsEmpty())
@@ -1721,6 +1723,33 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
           }
         }
         *applyMore = PR_FALSE; 
+        break;
+        case nsMsgFilterAction::CopyToFolder:
+        {
+          nsXPIDLCString uri;
+          rv = m_rootFolder->GetURI(getter_Copies(uri));
+
+          if (NS_STATIC_CAST(const char*, actionTargetFolderUri) &&
+            strcmp(uri, actionTargetFolderUri))
+          {
+
+            nsCOMPtr<nsISupportsArray> messageArray;
+            NS_NewISupportsArray(getter_AddRefs(messageArray));
+            messageArray->AppendElement(msgHdr);
+
+            nsCOMPtr<nsIMsgFolder> dstFolder;
+            rv = GetExistingFolder(actionTargetFolderUri,
+                                   getter_AddRefs(dstFolder));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIMsgCopyService> copyService =
+              do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+            rv = copyService->CopyMessages(m_rootFolder, messageArray, dstFolder,
+                                           PR_FALSE, nsnull, msgWindow, PR_FALSE);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
+        }
         break;
       case nsMsgFilterAction::MarkRead:
         msgIsNew = PR_FALSE;
@@ -1815,7 +1844,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
       default:
         break;
       }
-      if (loggingEnabled && actionType != nsMsgFilterAction::MoveToFolder && actionType != nsMsgFilterAction::Delete)  
+      if (loggingEnabled && actionType != nsMsgFilterAction::MoveToFolder && actionType != nsMsgFilterAction::Delete)
         (void)filter->LogRuleHit(filterAction, msgHdr); 
     }
   }
