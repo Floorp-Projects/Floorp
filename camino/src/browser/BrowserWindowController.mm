@@ -98,6 +98,9 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMHTMLEmbedElement.h"
+#include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLAppletElement.h"
 #include "nsIFocusController.h"
 
 
@@ -2167,16 +2170,17 @@ enum BWCOpenDest {
 }
 
 //
-// isPageTextFieldFocused
+// -focusedElement
 //
-// Determine if a text field in the content area has focus. Returns YES if the
-// focus is in a <input type="text"> or <textarea>
+// Returns the currently focused DOM element in the currently visible tab
 //
-- (BOOL)isPageTextFieldFocused
+- (void)focusedElement:(nsIDOMElement**)outElement
 {
-  #define ENSURE_TRUE(x) if (!x) return NO;
-  BOOL isFocused = NO;
-  
+  #define ENSURE_TRUE(x) if (!x) return;
+  if (!outElement)
+    return;
+  *outElement = nsnull;
+
   nsCOMPtr<nsIWebBrowser> webBrizzle = dont_AddRef([[[self getBrowserWrapper] getBrowserView] getWebBrowser]);
   ENSURE_TRUE(webBrizzle);
   nsCOMPtr<nsIDOMWindow> domWindow;
@@ -2187,6 +2191,24 @@ enum BWCOpenDest {
   ENSURE_TRUE(controller);
   nsCOMPtr<nsIDOMElement> focusedItem;
   controller->GetFocusedElement(getter_AddRefs(focusedItem));
+  *outElement = focusedItem.get();
+  NS_IF_ADDREF(*outElement);
+
+  #undef ENSURE_TRUE
+}
+
+//
+// -isPageTextFieldFocused
+//
+// Determine if a text field in the content area has focus. Returns YES if the
+// focus is in a <input type="text"> or <textarea>
+//
+- (BOOL)isPageTextFieldFocused
+{
+  BOOL isFocused = NO;
+  
+  nsCOMPtr<nsIDOMElement> focusedItem;
+  [self focusedElement:getter_AddRefs(focusedItem)];
   
   // we got it, now check if it's what we care about
   nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(focusedItem);
@@ -2203,13 +2225,36 @@ enum BWCOpenDest {
   return isFocused;
 }
 
+//
+// -isPagePluginFocused
+//
+// Determine if a plugin/applet in the content area has focus. Returns YES if the
+// focus is in a <embed>, <object>, or <applet>
+//
+- (BOOL)isPagePluginFocused
+{
+  BOOL isFocused = NO;
+  
+  nsCOMPtr<nsIDOMElement> focusedItem;
+  [self focusedElement:getter_AddRefs(focusedItem)];
+  
+  // we got it, now check if it's what we care about
+  nsCOMPtr<nsIDOMHTMLEmbedElement> embed = do_QueryInterface(focusedItem);
+  nsCOMPtr<nsIDOMHTMLObjectElement> object = do_QueryInterface(focusedItem);
+  nsCOMPtr<nsIDOMHTMLAppletElement> applet = do_QueryInterface(focusedItem);
+  if (embed || object || applet)
+    isFocused = YES;
+  
+  return isFocused;
+}
+
 // map delete key to Back
 - (void)deleteBackward:(id)sender
 {
   // there are times when backspaces can seep through from IME gone wrong. As a 
   // workaround until we can get them all fixed, ignore backspace when the
-  // focused widget is a text field (<input type="text"> or <textarea>
-  if ([self isPageTextFieldFocused])
+  // focused widget is a text field (<input type="text"> or <textarea>)
+  if ([self isPageTextFieldFocused] || [self isPagePluginFocused])
     return;
   
   if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
