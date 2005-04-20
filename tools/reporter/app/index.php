@@ -143,15 +143,10 @@ include($config['app_path'].'/includes/message.inc.php');
 		<tr>
 			<td class="label"><label for="report_problem_type">Problem Type:</label></td>
 			<td>
-				<input type="radio" name="report_problem_type" ID="0_0" VALUE="0_0" <?php if (($_GET['report_problem_type'] == '0_0') || ($_GET['report_problem_type'] == '')) { ?>checked="true"<?php } ?>><label for="0_0">All types</label><br>
-				<input type="radio" name="report_problem_type" ID="1_1" VALUE="1_1" <?php if ($_GET['report_problem_type'] == '1_1') { ?>checked="true"<?php } ?>><label for="1_1">Program freezes</label><br>
-				<input type="radio" name="report_problem_type" ID="1_2" VALUE="1_2" <?php if ($_GET['report_problem_type'] == '1_2') { ?>checked="true"<?php } ?>><label for="1_2">Program crashes</label><br>
-				<input type="radio" name="report_problem_type" ID="2_1" VALUE="2_1" <?php if ($_GET['report_problem_type'] == '2_1') { ?>checked="true"<?php } ?>><label for="2_1">Program slows down</label><br>
-				<input type="radio" name="report_problem_type" ID="3_1" VALUE="3_1" <?php if ($_GET['report_problem_type'] == '3_1') { ?>checked="true"<?php } ?>><label for="3_1">Page displays improperly</label><br>
-				<input type="radio" name="report_problem_type" ID="3_2" VALUE="3_2" <?php if ($_GET['report_problem_type'] == '3_2') { ?>checked="true"<?php } ?>><label for="3_2">Page does not display</label><br>
-				<input type="radio" name="report_problem_type" ID="3_3" VALUE="3_3" <?php if ($_GET['report_problem_type'] == '3_3') { ?>checked="true"<?php } ?>><label for="3_3">Page does not work properly</label><br>
-				<input type="radio" name="report_problem_type" ID="3_4" VALUE="3_4" <?php if ($_GET['report_problem_type'] == '3_4') { ?>checked="true"<?php } ?>><label for="3_4">Page does not load</label><br>
-				<input type="radio" name="report_problem_type" ID="3_5" VALUE="3_5" <?php if ($_GET['report_problem_type'] == '3_5') { ?>checked="true"<?php } ?>><label for="3_5">Program blocked/("Netscape not supported")</label><br>
+				<input type="radio" name="report_problem_type" id="0" value="0" <?php if (($_GET['report_problem_type'] == '0') || ($_GET['report_problem_type'] == '')) { ?>checked="true"<?php } ?>><label for="0">All types</label><br>
+				<?php foreach($problemTypes as $key => $title){ ?>
+				<input type="radio" name="report_problem_type" id="<?php print $key; ?>" value="<?php print $key; ?>" <?php if ($_GET['report_problem_type'] == $key) { ?>checked="true"<?php } ?>><label for="<?php print $key; ?>"><?php print $title; ?></label><br>
+				<?php } ?>
 			</td>
 		</tr>
 		<tr>

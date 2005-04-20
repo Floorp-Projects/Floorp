@@ -106,7 +106,7 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     if (!$url || !$parsedURL['host']){
         return new soap_fault('Client', '', 'url must use a valid URL syntax http://domain.tld/foo', $url);
     }
-    if (!$problem_type || $problem_type == -1 || $problem_type == "0_0") {
+    if (!$problem_type || $problem_type == -1 || $problem_type == "0") {
     }
     if ($behind_login != 1 && $behind_login != 0) {
         return new soap_fault('Client', '', 'behind_login must be type bool int', $behind_login);
@@ -244,9 +244,9 @@ function register($language){
         $id = date("ymd").rand(1000,9999);
 
         $query =& $db->Execute("SELECT sysid.sysid_id
-........                      FROM sysid
-                              WHERE sysid.sysid_id = '$newid'
-                            ");
+                                FROM sysid
+                                WHERE sysid.sysid_id = '$newid'
+                               ");
         $numRows = $query->RecordCount();
         if ($numRows == 0) {
             // It's unique, stop the loop.

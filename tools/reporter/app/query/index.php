@@ -145,7 +145,7 @@ else if ($_GET['submit_query']){
 			($param == 'report_oscpu') ||
 			($param == 'report_product')){
 				// there sare our various ways of saying "no value"
-				if (($val != -1) && ($val != null) && ($val != '0_0')){
+				if (($val != -1) && ($val != null) && ($val != '0')){
 					// if there's a wildcard (%,_) we should use 'LIKE', otherwise '='
 					// XX-> strpos returns 0 if the first char is % or _, so we just pad it with a 'x' to force it to do so... harmless hack
 					if ((strpos('x'.$val, "%") == false) && (strpos('x'.$val, "_") == false)){

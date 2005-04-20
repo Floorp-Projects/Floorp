@@ -79,13 +79,7 @@ function strMiddleReduceWordSensitive($string, $max = 50, $rep = '[...]') {
 
 function resolveProblemTypes($q){
   global $problemTypes;
-  reset($problemTypes);
-  while (list($key, $val) = each($problemTypes)) {
-    if (isset($val[$q])) {
-        $result = $val[$q];
-    }
-  }
-  return $result;
+  return $problemTypes[$q];
 }
 
 function navigation($pre_href='?page=', $post_href='', $num_items=0, $items_per_page=25, $active=1, $nearby=5, $threshold=100){

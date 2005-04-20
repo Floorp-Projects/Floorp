@@ -74,18 +74,13 @@ $boolTypes[-1] = '--';
 $boolTypes[0] = 'No';
 $boolTypes[1] = 'Yes';
 
-
-// ProblemTypes
-$problemTypes['0_0'] = '--';
-$problemTypes['Crash']['1_1'] = 'Freeze';
-$problemTypes['Crash']['1_2'] = 'Crashes Mozilla';
-$problemTypes['Performance']['2_1'] = 'Slows Down Mozilla';
-
-$problemTypes['Compatibility']['3_1'] = 'Appears Wrong';
-$problemTypes['Compatibility']['3_2'] = 'Doesn\'t Appear';
-$problemTypes['Compatibility']['3_3'] = 'Doesn\'t Function Properly';
-$problemTypes['Compatibility']['3_4'] = 'Doesn\'t Load';
-$problemTypes['Compatibility']['3_5'] = 'Mozilla Blocked / ("Netscape Not Supported")';
-$problemTypes['Compatibility']['3_6'] = 'Appears Wrong';
+//$problemTypes[0] = '--';
+$problemTypes[1] = 'Browser not supported';
+$problemTypes[2] = 'Can\'t log in';
+$problemTypes[3] = 'Plugin not shown';
+$problemTypes[4] = 'Other content missing';
+$problemTypes[5] = 'Behavior wrong';
+$problemTypes[6] = 'Appearance wrong';
+$problemTypes[7] = 'Other problem';
 
 ?>
