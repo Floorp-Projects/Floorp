@@ -104,19 +104,17 @@
           <!-- XXX: Perhaps this should eventually/maybe come from somewhere else?  Eh, not sure so lets just hardcode this for now. -->
           <menulist label="problem_type" id="problem_type" oncommand="validateForm()">
             <menupopup>
-              <!-- DO *NOT* Add/change/modify without consulting with r.m.o server first -->
-              <menuitem label="&reportForm.problem_type.chooseOne.title;" value="0_0"/>
-              <!--Crash -->
-              <menuitem label="&reportForm.problem_type.item1_1.title;" value="1_1"/>
-              <menuitem label="&reportForm.problem_type.item1_2.title;" value="1_2"/>
-              <!--Performance-->
-              <menuitem label="&reportForm.problem_type.item2_1.title;" value="2_1"/>
-              <!--Compatibility"-->
-              <menuitem label="&reportForm.problem_type.item3_1.title;" value="3_1"/>
-              <menuitem label="&reportForm.problem_type.item3_2.title;" value="3_2"/>
-              <menuitem label="&reportForm.problem_type.item3_3.title;" value="3_3"/>
-              <menuitem label="&reportForm.problem_type.item3_4.title;" value="3_4"/>
-              <menuitem label="&reportForm.problem_type.item3_5.title;" value="3_5"/>
+              <!-- ************* WARNING *************** -->
+              <!-- DO *NOT* Add/change/modify without consulting with r.m.o server admin first! -->
+              <!-- ************ /WARNING *************** -->
+              <menuitem label="&reportForm.problem_type.chooseOne.title;" value="0"/>
+              <menuitem label="&reportForm.problem_type.item1.title;" value="1"/>
+              <menuitem label="&reportForm.problem_type.item2.title;" value="2"/>
+              <menuitem label="&reportForm.problem_type.item3.title;" value="3"/>
+              <menuitem label="&reportForm.problem_type.item4.title;" value="4"/>
+              <menuitem label="&reportForm.problem_type.item5.title;" value="5"/>
+              <menuitem label="&reportForm.problem_type.item6.title;" value="6"/>
+              <menuitem label="&reportForm.problem_type.item7.title;" value="7"/>
             </menupopup>
           </menulist>
         </row>

@@ -21,15 +21,14 @@
 
 <!ENTITY reportForm.problem_type.chooseOne.title    "Choose One...">
 
-<!-- DO *NOT* Add/change/modify (except localization) without consulting with r.m.o server first! -->
-<!ENTITY reportForm.problem_type.item3_1.title      "Appears Wrong">
-<!ENTITY reportForm.problem_type.item3_2.title      "Doesn't Appear">
-<!ENTITY reportForm.problem_type.item3_3.title      "Doesn't Function Properly">
-<!ENTITY reportForm.problem_type.item3_4.title      "Doesn't Load">
-<!ENTITY reportForm.problem_type.item3_5.title      "Mozilla Blocked / (&quot;Netscape Not Supported&quot;)">
-<!ENTITY reportForm.problem_type.item1_1.title      "Freeze">
-<!ENTITY reportForm.problem_type.item1_2.title      "Crashes Mozilla">
-<!ENTITY reportForm.problem_type.item2_1.title      "Slows Down Mozilla">
+<!-- DO *NOT* Add/change/modify (except localization) without consulting with r.m.o server admin first! -->
+<!ENTITY reportForm.problem_type.item1.title        "Browser not supported">
+<!ENTITY reportForm.problem_type.item2.title        "Can't log in">
+<!ENTITY reportForm.problem_type.item3.title        "Plugin not shown">
+<!ENTITY reportForm.problem_type.item4.title        "Other content missing">
+<!ENTITY reportForm.problem_type.item5.title        "Behavior wrong">
+<!ENTITY reportForm.problem_type.item6.title        "Appearance wrong">
+<!ENTITY reportForm.problem_type.item7.title        "Other problem">
 
 <!ENTITY reportForm.describe.title                  "Describe Problem:">
 <!ENTITY reportForm.platform.title                  "Platform:">
