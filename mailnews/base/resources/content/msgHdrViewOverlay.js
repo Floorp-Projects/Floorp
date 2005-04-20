@@ -294,7 +294,7 @@ var messageHeaderSink = {
       ClearAttachmentList();
       ClearEditMessageButton();
 
-      for (index in gMessageListeners)
+      for (var index in gMessageListeners)
         gMessageListeners[index].onStartHeaders();
     },
 
@@ -313,6 +313,9 @@ var messageHeaderSink = {
       UpdateMessageHeaders();
       if (gIsEditableMsgFolder)
         ShowEditMessageButton();
+
+      for (var index in gMessageListeners)
+        gMessageListeners[index].onEndHeaders();
     },
 
     processHeaders: function(headerNameEnumerator, headerValueEnumerator, dontCollectAddress)
