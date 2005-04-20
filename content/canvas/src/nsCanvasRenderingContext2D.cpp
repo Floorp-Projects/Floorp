@@ -909,10 +909,13 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 
     DirtyAllStyles();
 
+    cairo_save (mCairo);
+    cairo_set_operator (mCairo, CAIRO_OPERATOR_CLEAR);
     cairo_set_alpha (mCairo, 0.0);
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
     cairo_fill (mCairo);
+    cairo_restore (mCairo);
 
     return Redraw();
 }
