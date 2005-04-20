@@ -12,7 +12,6 @@
 tab {
   -moz-appearance: tab;
   -moz-box-align: stretch;
-  color				: #000000;
 }
 
 /* we use |tab-left-edge| for all 3, which is not drawn in the theme impl
@@ -45,10 +44,6 @@ tab {
   font				: menu;
 }
 
-tab:hover:active {
-  color				: #FFFFFF;
-}
-
 tab:hover:active > .tab-image-left { 
   background		: url(chrome://global/skin/tabbox/tab-unselect-active-left.gif) no-repeat;
 }
@@ -63,11 +58,7 @@ tab:hover:active > .tab-image-right {
   background		: url(chrome://global/skin/tabbox/tab-unselect-active-right.gif) no-repeat;
 }
 
-
 /* when a tab is selected this is how it should look */
-tab[selected="true"]:hover:active {
-	color			: #000000;
-}
 
 tab[selected="true"] > .tab-image-left,
 tab[selected="true"]:hover:active > .tab-image-left {

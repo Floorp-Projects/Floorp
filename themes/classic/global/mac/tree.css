@@ -146,7 +146,6 @@ treechildren::-moz-tree-separator {
   height: 2px;
 }
 
-
 /* ::::: drop feedback ::::: */
 
 tree[selstyle="primary"] > treechildren::-moz-tree-cell-text(primary, dropOn),
@@ -227,21 +226,7 @@ treecol[hideheader="true"] {
 
 treecol:hover:active,
 treecolpicker:hover:active {
-  border-top: 2px solid;
-  border-right: 1px solid;
-  border-bottom: 1px solid;
-  border-left: 2px solid;
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-right-colors: ThreeDDarkShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
   background-color: #666666;
-  color: #FFFFFF;
-  padding: 1px 4px 0px 5px;
-}
-
-.treecol-image:hover:active {
-  padding: 1px 1px 0px 2px;
 }
 
 /* ::::: column drag and drop styles ::::: */

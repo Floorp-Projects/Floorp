@@ -74,7 +74,6 @@ textbox {
   -moz-border-right-colors: ThreeDShadow ThreeDFace;
   -moz-border-bottom-colors: ThreeDShadow ThreeDFace;
   -moz-border-left-colors: ThreeDShadow ThreeDFace;
-  padding: 2px 0 0 2px;
 }
 
 /* ::::: autocomplete popups ::::: */
