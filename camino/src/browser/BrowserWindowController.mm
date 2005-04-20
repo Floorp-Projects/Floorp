@@ -2615,6 +2615,11 @@ enum BWCOpenDest {
 
 -(void) openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups
 {
+  // if there are no urls to load (say, an empty tab group), just bail outright. otherwise we'd be
+  // left with no tabs at all and hell to pay when it came time to do menu/toolbar item validation.
+  if (![urlArray count])
+    return;
+
   [self openURLArray:urlArray replaceExistingTabs:YES allowPopups:inAllowPopups];
   if (closeExtra) {
     int closeIndex = [urlArray count];
