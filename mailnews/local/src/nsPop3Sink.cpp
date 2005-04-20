@@ -814,6 +814,7 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
           PRUint32 newMsgPos = destFolderSpec.GetFileSize();
           PRUint32 msgSize;
           hdr->GetMessageSize(&msgSize);
+          hdr->SetMessageKey(newMsgPos);
           if (msgSize > m_tmpDownloadFileSpec.GetFileSize())
             rv = NS_MSG_ERROR_WRITING_MAIL_FOLDER;   
           else
