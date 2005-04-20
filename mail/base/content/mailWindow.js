@@ -511,11 +511,16 @@ function loadStartPage()
   }
 }
 
-// Display AccountCentral page when users clicks on the Account Folder.
-// When AccountCentral page need to be shown, we need to hide
-// the box containing threadPane, splitter and messagePane.
-// Load iframe in the AccountCentral box with corresponding page
 function ShowAccountCentral()
+{
+    document.getElementById("displayDeck").selectedPanel = accountCentralBox;
+}
+
+// When AccountCentral is shown via the displayDeck, we need to switch the
+// displayDeck to show the accountCentralBox, collapse all the other
+// UI elements that aren't meaningful for AccountCentral, and finally
+// load the iframe in the AccountCentral box with corresponding page.
+function ShowingAccountCentral()
 {
     try
     {
@@ -524,9 +529,6 @@ function ShowAccountCentral()
         GetMessagePane().collapsed = true;
         document.getElementById("threadpane-splitter").collapsed = true;
         gSearchBox.collapsed = true;
-        
-        GetThreadTree().collapsed = true;
-        document.getElementById("accountCentralBox").collapsed = false;
 
         window.frames["accountCentralPane"].location = acctCentralPage;
         
@@ -538,32 +540,57 @@ function ShowAccountCentral()
     catch (ex)
     {
         dump("Error loading AccountCentral page -> " + ex + "\n");
-        return;
     }
 }
 
-// Display thread and message panes with splitter when user tries
-// to read messages by clicking on msgfolders. Hide AccountCentral
-// box and display message box.
-function HideAccountCentral()
+function HidingAccountCentral()
 {
     try
     {
         window.frames["accountCentralPane"].location = "about:blank";
-        document.getElementById("accountCentralBox").collapsed = true;
-        GetThreadTree().collapsed = false;
-        gSearchBox.collapsed = false;
-        
-        var threadPaneSplitter = document.getElementById("threadpane-splitter");
-        threadPaneSplitter.collapsed = false;
-        GetMessagePane().collapsed = threadPaneSplitter.getAttribute("state") == "collapsed";
-        gAccountCentralLoaded = false;
     }
     catch (ex)
     {
         dump("Error hiding AccountCentral page -> " + ex + "\n");
-        return;
     }
+    gAccountCentralLoaded = false;
+}
+
+function ShowThreadPane()
+{
+    document.getElementById("displayDeck").selectedPanel = 
+        document.getElementById("threadPaneBox");
+}
+
+function ShowingThreadPane()
+{
+    gSearchBox.collapsed = false;
+    var threadPaneSplitter = document.getElementById("threadpane-splitter");
+    threadPaneSplitter.collapsed = false;
+    GetMessagePane().collapsed =
+        (threadPaneSplitter.getAttribute("state") == "collapsed");
+}
+
+function HidingThreadPane()
+{
+    ClearThreadPane();
+}
+
+function ObserveDisplayDeckChange(event)
+{
+    var deck = document.getElementById("displayDeck");
+    var nowSelected = null;
+    try { nowSelected = deck.selectedPanel.id; } catch (ex) { }
+
+    if (nowSelected == "threadPaneBox")
+        ShowingThreadPane();
+    else
+        HidingThreadPane();
+    
+    if (nowSelected == "accountCentralBox")
+        ShowingAccountCentral();
+    else
+        HidingAccountCentral();
 }
 
 // Given the server, open the twisty and the set the selection
@@ -572,7 +599,7 @@ function HideAccountCentral()
 function OpenInboxForServer(server)
 {
     try {
-        HideAccountCentral();
+        ShowThreadPane();
         var inboxFolder = GetInboxFolder(server);
         SelectFolder(inboxFolder.URI);
 

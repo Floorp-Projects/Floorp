@@ -793,7 +793,7 @@ function delayedOnLoadMessenger()
   CreateMailWindowGlobals();
   verifyAccounts(null);
     
-  HideAccountCentral();
+  ShowThreadPane();
   InitMsgWindow();
   messenger.SetWindow(window, msgWindow);
 
