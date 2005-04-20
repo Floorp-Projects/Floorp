@@ -993,6 +993,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #ifdef MOZ_ENABLE_CAIRO
   NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContext2D, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CanvasGradient, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CanvasPattern, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif // MOZ_ENABLE_CAIRO
 };
 
@@ -2679,6 +2683,14 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_ENABLE_CAIRO
   DOM_CLASSINFO_MAP_BEGIN(CanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCanvasRenderingContext2D)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CanvasGradient, nsIDOMCanvasGradient)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCanvasGradient)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CanvasPattern, nsIDOMCanvasPattern)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCanvasPattern)
   DOM_CLASSINFO_MAP_END
 #endif // MOZ_ENABLE_CAIRO
 
