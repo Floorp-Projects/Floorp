@@ -2987,6 +2987,9 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     }
 #endif
     // Create an shistory entry for the old load, if we have a channel
+    // XXXbz except what happens if this got called in EndPageLoad?  Then we've
+    // already cleared out mLSHE, so we're just setting mOSHE to null.  That
+    // can't be a good idea.
     if (aFailedChannel) {
         mURIResultedInDocument = PR_TRUE;
         OnLoadingSite(aFailedChannel, PR_TRUE);
@@ -6321,14 +6324,21 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     if (aChannel && aLoadType == LOAD_RELOAD_BYPASS_CACHE ||
         aLoadType == LOAD_RELOAD_BYPASS_PROXY ||
         aLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE) {                 
+        NS_ASSERTION(!updateHistory,
+                     "We shouldn't be updating history for forced reloads!");
         
         nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aChannel));
         nsCOMPtr<nsISupports>  cacheKey;
         // Get the Cache Key  and store it in SH.         
         if (cacheChannel) 
             cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
+        // If we already have a loading history entry, store the new cache key
+        // in it.  Otherwise, since we're doing a reload and won't be updating
+        // our history entry, store the cache key in our current history entry.
         if (mLSHE)
             mLSHE->SetCacheKey(cacheKey);
+        else if (mOSHE)
+            mOSHE->SetCacheKey(cacheKey);
     }
 
     if (updateHistory && shAvailable) { 
