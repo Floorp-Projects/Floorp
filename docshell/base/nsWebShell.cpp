@@ -651,6 +651,11 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
   else 
     mCharsetReloadState = eCharsetReloadInit;
 
+  // Save a pointer to the currently-loading history entry.
+  // nsDocShell::EndPageLoad will clear mLSHE, but we may need this history
+  // entry further down in this method.
+  nsCOMPtr<nsISHEntry> loadingSHE = mLSHE;
+  
   //
   // one of many safeguards that prevent death and destruction if
   // someone is so very very rude as to bring this window down
@@ -903,6 +908,15 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
               if (shInternal)
                shInternal->UpdateIndex();
             }
+
+            // Make it look like we really did honestly finish loading the
+            // history page we were loading, since the "reload" load we're
+            // about to kick off will reload our current history entry.  This
+            // is a bit of a hack, and if the force-load fails I think we'll
+            // end up being confused about what page we're on... but we would
+            // anyway, since we've updated the session history index above.
+            mOSHE = loadingSHE;
+            
             /* The user does want to repost the data to the server.
              * Initiate a new load again.
              */
