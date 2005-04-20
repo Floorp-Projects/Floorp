@@ -3184,17 +3184,6 @@ nsBrowserStatusHandler.prototype =
     selectedBrowser.lastURI = aLocation;
 
     this.setOverLink("", null);
-
-    var location = aLocation.spec;
-
-    if (location == "about:blank" || location == "") {   //second condition is for new tabs, otherwise
-      location = "";                                     //reload function is enabled until tab is refreshed
-      this.reloadCommand.setAttribute("disabled", "true");
-      this.reloadSkipCacheCommand.setAttribute("disabled", "true");
-    } else {
-      this.reloadCommand.removeAttribute("disabled");
-      this.reloadSkipCacheCommand.removeAttribute("disabled");
-    }
     
     // We should probably not do this if the value has changed since the user
     // searched
@@ -3203,7 +3192,19 @@ nsBrowserStatusHandler.prototype =
 
     var browser = getBrowser().selectedBrowser;
     var findField = document.getElementById("find-field");
-    if (aWebProgress.DOMWindow == content) {      
+    if (aWebProgress.DOMWindow == content) {
+      
+      var location = aLocation.spec;
+
+      if (location == "about:blank" || location == "") {   //second condition is for new tabs, otherwise
+        location = "";                                     //reload function is enabled until tab is refreshed
+        this.reloadCommand.setAttribute("disabled", "true");
+        this.reloadSkipCacheCommand.setAttribute("disabled", "true");
+      } else {
+        this.reloadCommand.removeAttribute("disabled");
+        this.reloadSkipCacheCommand.removeAttribute("disabled");
+      }
+
       // The document loaded correctly, clear the value if we should
       if (browser.userTypedClear)
         browser.userTypedValue = null;
