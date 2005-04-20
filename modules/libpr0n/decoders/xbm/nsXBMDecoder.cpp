@@ -50,6 +50,9 @@
 
 #include "imgILoad.h"
 
+#include "nsIProperties.h"
+#include "nsISupportsPrimitives.h"
+
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
 #define GFXFORMAT gfxIFormats::BGR_A1
 #else
@@ -155,15 +158,20 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             // #define not found. return for now, waiting for more data.
             return NS_OK;
 
-        // Convert width and height to numbers
-        if (sscanf(mPos, "#define %*s %d #define %*s %d", &mWidth, &mHeight) != 2)
+        // Convert width and height to numbers.  Convert hotspot for cursor functionality, if present
+        if (sscanf(mPos, "#define %*s %u #define %*s %u #define %*s %u #define %*s %u unsigned", &mWidth, &mHeight, &mXHotspot, &mYHotspot) == 4)
+            mIsCursor = PR_TRUE;
+        else if (sscanf(mPos, "#define %*s %u #define %*s %u unsigned", &mWidth, &mHeight) == 2)
+            mIsCursor = PR_FALSE;
+        else
+             // No identifiers found.  Return for now, waiting for more data.
             return NS_OK;
 
         // Check for X11 flavor
-        if (strstr(mBuf, " char "))
+        if (strstr(mPos, " char "))
             mIsX10 = PR_FALSE;
         // Check for X10 flavor
-        else if (strstr(mBuf, " short "))
+        else if (strstr(mPos, " short "))
             mIsX10 = PR_TRUE;
         else
             // Neither identifier found.  Return for now, waiting for more data.
@@ -174,7 +182,23 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
 
         nsresult rv = mFrame->Init(0, 0, mWidth, mHeight, GFXFORMAT, 24);
         if (NS_FAILED(rv))
-          return rv;
+            return rv;
+
+        if (mIsCursor) {
+            nsCOMPtr<nsIProperties> props(do_QueryInterface(mImage));
+            if (props) {
+                nsCOMPtr<nsISupportsPRUint32> intwrapx = do_CreateInstance("@mozilla.org/supports-PRUint32;1");
+                nsCOMPtr<nsISupportsPRUint32> intwrapy = do_CreateInstance("@mozilla.org/supports-PRUint32;1");
+
+                if (intwrapx && intwrapy) {
+                    intwrapx->SetData(mXHotspot);
+                    intwrapy->SetData(mYHotspot);
+
+                    props->Set("hotspotX", intwrapx);
+                    props->Set("hotspotY", intwrapy);
+                }
+            }
+        }
 
         mImage->AppendFrame(mFrame);
         mObserver->OnStartFrame(nsnull, mFrame);
@@ -228,7 +252,7 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
                 mPos = endPtr; // go to next value only when done with this one
             if (mIsX10) {
                 // handle X10 flavor short values
-                if (hiByte) 
+                if (hiByte)
                     pixel >>= 8;
                 hiByte = !hiByte;
             }
@@ -258,7 +282,7 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             mPos++;
         } while (*mPos && (mState == RECV_DATA));
     }
-    
+
     return NS_OK;
 }
 
