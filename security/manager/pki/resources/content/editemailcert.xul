@@ -44,7 +44,7 @@
 <dialog id="editEmailCert" 
         title="&certmgr.editemailcert.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        buttons="accept,cancel,help"
+#expand buttons="accept,cancel__HELP_BUTTON__"
         ondialogaccept="return doEmailOK();"
         ondialoghelp="openHelp('edit_email_certs');"
         onload="doLoadForEmailCert();"

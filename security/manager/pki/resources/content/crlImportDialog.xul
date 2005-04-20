@@ -44,7 +44,7 @@
   title="&crl.import.status.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
   onload="onLoad();"
-  buttons="accept,cancel,help"
+#expand buttons="accept,cancel__HELP_BUTTON__"
   ondialogaccept="return onAccept();"
   ondialogcancel="return onCancel();"
   ondialoghelp="return doHelpButton();">

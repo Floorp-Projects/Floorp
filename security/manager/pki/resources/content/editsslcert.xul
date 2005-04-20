@@ -44,7 +44,7 @@
 <dialog id="editWebsiteCert" 
         title="&certmgr.editsslcert.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        buttons="accept,cancel,help"
+#expand buttons="accept,cancel__HELP_BUTTON__"
         ondialogaccept="return doSSLOK();"
         ondialoghelp="openHelp('edit_web_certs');"
         onload="doLoadForSSLCert();"

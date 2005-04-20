@@ -49,7 +49,7 @@
 <dialog id="certDetails" 
   title="&certmgr.certdetail.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  buttons="accept,help"
+#expand buttons="accept__HELP_BUTTON__"
   buttonlabelaccept="&certmgr.close.label;"
   ondialoghelp="openHelp('cert_details');"
   onload="setWindowName();">
