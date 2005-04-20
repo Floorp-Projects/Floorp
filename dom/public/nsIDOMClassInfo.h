@@ -328,6 +328,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_HTMLCanvasElement_id,
 #ifdef MOZ_ENABLE_CAIRO
   eDOMClassInfo_CanvasRenderingContext2D_id,
+  eDOMClassInfo_CanvasGradient_id,
+  eDOMClassInfo_CanvasPattern_id,
 #endif
   
   // This one better be the last one in this list

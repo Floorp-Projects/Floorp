@@ -68,6 +68,110 @@
 
 #include "cairo.h"
 
+/**
+ ** nsCanvasGradient
+ **/
+#define NS_CANVASGRADIENT_PRIVATE_IID \
+    { 0x491d39d8, 0x4058, 0x42bd, { 0xac, 0x76, 0x70, 0xd5, 0x62, 0x7f, 0x02, 0x10 } }
+class nsCanvasGradient : public nsIDOMCanvasGradient
+{
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENT_PRIVATE_IID)
+
+    nsCanvasGradient(cairo_pattern_t *cpat, nsICSSParser *cssparser)
+        : mPattern(cpat), mCSSParser(cssparser)
+    {
+    }
+
+    ~nsCanvasGradient() {
+        if (mPattern)
+            cairo_pattern_destroy(mPattern);
+    }
+
+    void Apply(cairo_t *cairo) {
+        cairo_set_pattern(cairo, mPattern);
+    }
+
+    /* nsIDOMCanvasGradient */
+    NS_IMETHOD AddColorStop (float offset,
+                             const nsAString& colorstr)
+    {
+        nscolor color;
+
+        nsresult rv = mCSSParser->ParseColorString(nsString(colorstr), nsnull, 0, PR_TRUE, &color);
+        if (NS_FAILED(rv))
+            return PR_FALSE;
+
+        cairo_pattern_add_color_stop (mPattern, (double) offset,
+                                      NS_GET_R(color) / 255.0,
+                                      NS_GET_G(color) / 255.0,
+                                      NS_GET_B(color) / 255.0,
+                                      NS_GET_A(color) / 255.0);
+        return NS_OK;
+    }
+
+    NS_DECL_ISUPPORTS
+
+protected:
+    cairo_pattern_t *mPattern;
+    nsCOMPtr<nsICSSParser> mCSSParser;
+};
+
+NS_IMPL_ADDREF(nsCanvasGradient)
+NS_IMPL_RELEASE(nsCanvasGradient)
+
+NS_INTERFACE_MAP_BEGIN(nsCanvasGradient)
+  NS_INTERFACE_MAP_ENTRY(nsCanvasGradient)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasGradient)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasGradient)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+/**
+ ** nsCanvasPattern
+ **/
+#define NS_CANVASPATTERN_PRIVATE_IID \
+    { 0xb85c6c8a, 0x0624, 0x4530, { 0xb8, 0xee, 0xff, 0xdf, 0x42, 0xe8, 0x21, 0x6d } }
+class nsCanvasPattern : public nsIDOMCanvasPattern
+{
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
+
+    nsCanvasPattern(cairo_pattern_t *cpat, PRUint8 *dataToFree)
+        : mPattern(cpat), mData(dataToFree)
+    { }
+
+    ~nsCanvasPattern() {
+        if (mPattern)
+            cairo_pattern_destroy(mPattern);
+        if (mData)
+            nsMemory::Free(mData);
+    }
+
+    void Apply(cairo_t *cairo) {
+        cairo_set_pattern(cairo, mPattern);
+    }
+
+    NS_DECL_ISUPPORTS
+
+protected:
+    cairo_pattern_t *mPattern;
+    PRUint8 *mData;
+};
+
+NS_IMPL_ADDREF(nsCanvasPattern)
+NS_IMPL_RELEASE(nsCanvasPattern)
+
+NS_INTERFACE_MAP_BEGIN(nsCanvasPattern)
+  NS_INTERFACE_MAP_ENTRY(nsCanvasPattern)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasPattern)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasPattern)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+/**
+ ** nsCanvasRenderingContext2D
+ **/
 class nsCanvasRenderingContext2D :
     public nsIDOMCanvasRenderingContext2D,
     public nsICanvasRenderingContextInternal
@@ -132,8 +236,8 @@ protected:
     PRInt32 mLastStyle;
     PRPackedBool mDirtyStyle[STYLE_MAX];
     nscolor mColorStyles[STYLE_MAX];
-    nsCOMPtr<nsIDOMCanvasGradient> mGradientStyles[STYLE_MAX];
-    nsCOMPtr<nsIDOMCanvasPattern> mPatternStyles[STYLE_MAX];
+    nsCOMPtr<nsCanvasGradient> mGradientStyles[STYLE_MAX];
+    nsCOMPtr<nsCanvasPattern> mPatternStyles[STYLE_MAX];
 
     // stolen from nsJSUtils
     static PRBool ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
@@ -143,6 +247,11 @@ protected:
     static PRBool ConvertJSValToDouble(double* aProp, JSContext* aContext,
                                        jsval aValue);
 
+    // cairo helpers
+    nsresult CairoSurfaceFromImageElement(nsIDOMHTMLImageElement *imgElt,
+                                          cairo_surface_t **aCairoSurface,
+                                          PRUint8 **imgDataOut,
+                                          PRInt32 *widthOut, PRInt32 *heightOut);
 };
 
 NS_IMPL_ADDREF(nsCanvasRenderingContext2D)
@@ -154,6 +263,10 @@ NS_INTERFACE_MAP_BEGIN(nsCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasRenderingContext2D)
 NS_INTERFACE_MAP_END
+
+/**
+ ** CanvasRenderingContext2D impl
+ **/
 
 nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
@@ -268,15 +381,25 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
         nsCOMPtr<nsIDOMCanvasGradient> grad (do_QueryInterface(iface));
         if (grad) {
             mPatternStyles[aWhichStyle] = nsnull;
-            mGradientStyles[aWhichStyle] = grad;
+            mGradientStyles[aWhichStyle] = do_QueryInterface(iface);
             mDirtyStyle[aWhichStyle] = PR_TRUE;
+
+            if (!mGradientStyles[aWhichStyle])
+                return PR_FALSE;
+
+            return PR_TRUE;
         }
 
         nsCOMPtr<nsIDOMCanvasPattern> pattern (do_QueryInterface(iface));
         if (pattern) {
-            mPatternStyles[aWhichStyle] = pattern;
+            mPatternStyles[aWhichStyle] = do_QueryInterface(iface);
             mGradientStyles[aWhichStyle] = nsnull;
             mDirtyStyle[aWhichStyle] = PR_TRUE;
+
+            if (!mPatternStyles[aWhichStyle])
+                return PR_FALSE;
+
+            return PR_TRUE;
         }
     }
 
@@ -324,9 +447,13 @@ nsCanvasRenderingContext2D::ApplyStyle(PRInt32 aWhichStyle)
     mLastStyle = aWhichStyle;
 
     if (mPatternStyles[aWhichStyle]) {
+        mPatternStyles[aWhichStyle]->Apply(mCairo);
+        return;
     }
 
     if (mGradientStyles[aWhichStyle]) {
+        mGradientStyles[aWhichStyle]->Apply(mCairo);
+        return;
     }
 
     SetCairoColor(mColorStyles[aWhichStyle]);
@@ -568,21 +695,27 @@ nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant** aStyle)
 {
     nsresult rv;
 
-    nsString styleStr;
-    StyleColorToString(mColorStyles[STYLE_STROKE], styleStr);
-
     nsCOMPtr<nsIWritableVariant> var = do_CreateInstance("@mozilla.org/variant;1");
     if (!var)
         return NS_ERROR_FAILURE;
-
     rv = var->SetWritable(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = var->SetAsDOMString(styleStr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mPatternStyles[STYLE_STROKE]) {
+        rv = var->SetAsISupports(mPatternStyles[STYLE_STROKE]);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else if (mGradientStyles[STYLE_STROKE]) {
+        rv = var->SetAsISupports(mGradientStyles[STYLE_STROKE]);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+        nsString styleStr;
+        StyleColorToString(mColorStyles[STYLE_STROKE], styleStr);
+
+        rv = var->SetAsDOMString(styleStr);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     NS_ADDREF(*aStyle = var);
-
     return NS_OK;
 }
 
@@ -600,21 +733,27 @@ nsCanvasRenderingContext2D::GetFillStyle(nsIVariant** aStyle)
 {
     nsresult rv;
 
-    nsString styleStr;
-    StyleColorToString(mColorStyles[STYLE_FILL], styleStr);
-
     nsCOMPtr<nsIWritableVariant> var = do_CreateInstance("@mozilla.org/variant;1");
     if (!var)
         return NS_ERROR_FAILURE;
-
     rv = var->SetWritable(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = var->SetAsDOMString(styleStr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mPatternStyles[STYLE_FILL]) {
+        rv = var->SetAsISupports(mPatternStyles[STYLE_FILL]);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else if (mGradientStyles[STYLE_FILL]) {
+        rv = var->SetAsISupports(mGradientStyles[STYLE_FILL]);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+        nsString styleStr;
+        StyleColorToString(mColorStyles[STYLE_FILL], styleStr);
+
+        rv = var->SetAsDOMString(styleStr);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     NS_ADDREF(*aStyle = var);
-
     return NS_OK;
 }
 
@@ -625,22 +764,75 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::CreateLinearGradient(float x0, float y0, float x1, float y1,
                                                  nsIDOMCanvasGradient **_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    cairo_pattern_t *gradpat = nsnull;
+    gradpat = cairo_pattern_create_linear ((double) x0, (double) y0, (double) x1, (double) y1);
+    nsCanvasGradient *grad = new nsCanvasGradient(gradpat, mCSSParser);
+    if (!grad) {
+        cairo_pattern_destroy(gradpat);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    NS_ADDREF(*_retval = grad);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, float x1, float y1, float r1,
                                                  nsIDOMCanvasGradient **_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    cairo_pattern_t *gradpat = nsnull;
+    gradpat = cairo_pattern_create_radial ((double) x0, (double) y0, (double) r0,
+                                           (double) x1, (double) y1, (double) r1);
+    nsCanvasGradient *grad = new nsCanvasGradient(gradpat, mCSSParser);
+    if (!grad) {
+        cairo_pattern_destroy(gradpat);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    NS_ADDREF(*_retval = grad);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
-                                          const nsAString& repetition,
+                                          const nsAString& repeat,
                                           nsIDOMCanvasPattern **_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    cairo_matrix_t *mat = cairo_matrix_create();
+
+    if (repeat.IsEmpty() || repeat.EqualsLiteral("repeat")) {
+        // XX
+    } else if (repeat.EqualsLiteral("repeat-x")) {
+        // XX
+    } else if (repeat.EqualsLiteral("repeat-y")) {
+        // XX
+    } else if (repeat.EqualsLiteral("no-repeat")) {
+        // XX
+    } else {
+        cairo_matrix_destroy(mat);
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    cairo_surface_t *imgSurf = nsnull;
+    PRUint8 *imgData = nsnull;
+    PRInt32 imgWidth, imgHeight;
+    rv = CairoSurfaceFromImageElement (image, &imgSurf, &imgData, &imgWidth, &imgHeight);
+    if (NS_FAILED(rv))
+        return rv;
+
+    cairo_pattern_t *cairopat = cairo_pattern_create_for_surface(imgSurf);
+    cairo_surface_destroy(imgSurf);
+
+    nsCanvasPattern *pat = new nsCanvasPattern(cairopat, imgData);
+    if (!pat) {
+        cairo_pattern_destroy(cairopat);
+        nsMemory::Free(imgData);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    NS_ADDREF(*_retval = pat);
+    return NS_OK;
 }
 
 //
@@ -991,38 +1183,12 @@ nsCanvasRenderingContext2D::DrawImage()
                                  ctx, argv[0]))
         return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
 
-    // before we do anything more, make sure that this image is something
-    // that we can actually render
-    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgElt);
-    if (!imageLoader)
-        return NS_ERROR_NOT_AVAILABLE;
-    nsCOMPtr<imgIRequest> imgRequest;
-    rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                                 getter_AddRefs(imgRequest));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!imgRequest)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    nsCOMPtr<imgIContainer> imgContainer;
-    rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!imgContainer)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    nsCOMPtr<gfxIImageFrame> frame;
-    rv = imgContainer->GetCurrentFrame(getter_AddRefs(frame));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIImage> img(do_GetInterface(frame));
-
+    cairo_surface_t *imgSurf = nsnull;
+    PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
-    rv = frame->GetWidth(&imgWidth);
-    rv |= frame->GetHeight(&imgHeight);
+    rv = CairoSurfaceFromImageElement (imgElt, &imgSurf, &imgData, &imgWidth, &imgHeight);
     if (NS_FAILED(rv))
-        return NS_ERROR_FAILURE;
-
-    // if we're at this point, we have an image container
-    // and we can actually get at the image data
+        return rv;
 
 #define GET_ARG(dest,whicharg) \
     if (!ConvertJSValToDouble(dest, ctx, whicharg)) return NS_ERROR_INVALID_ARG
@@ -1064,6 +1230,181 @@ nsCanvasRenderingContext2D::DrawImage()
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
+    cairo_matrix_t *surfMat = cairo_matrix_create();
+
+    cairo_matrix_translate(surfMat, -sx, -sy);
+    cairo_matrix_scale(surfMat, sw/dw, sh/dh);
+    cairo_surface_set_matrix(imgSurf, surfMat);
+    cairo_matrix_destroy(surfMat);
+
+    cairo_save(mCairo);
+    cairo_translate(mCairo, dx, dy);
+    cairo_show_surface(mCairo, imgSurf, (int) dw, (int) dh);
+    cairo_restore(mCairo);
+
+    nsMemory::Free(imgData);
+    cairo_surface_destroy(imgSurf);
+
+    return Redraw();
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
+{
+    cairo_operator_t cairo_op;
+
+#define CANVAS_OP_TO_CAIRO_OP(cvsop,cairoop) \
+    if (op.EqualsLiteral(cvsop))   \
+        cairo_op = CAIRO_OPERATOR_##cairoop;
+
+    CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
+    else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
+    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
+    else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("lighter", SATURATE)
+    else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
+    else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
+    else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
+    else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
+    else CANVAS_OP_TO_CAIRO_OP("over", OVER)
+    else return NS_ERROR_NOT_IMPLEMENTED;
+
+#undef CANVAS_OP_TO_CAIRO_OP
+
+    cairo_set_operator(mCairo, cairo_op);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op)
+{
+    cairo_operator_t cairo_op = cairo_current_operator(mCairo);
+
+#define CANVAS_OP_TO_CAIRO_OP(cvsop,cairoop) \
+    if (cairo_op == CAIRO_OPERATOR_##cairoop) \
+        op.AssignLiteral(cvsop);
+
+    CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
+    else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
+    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
+    else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
+    else CANVAS_OP_TO_CAIRO_OP("lighter", SATURATE)
+    else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
+    else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
+    else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
+    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
+    else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
+    else CANVAS_OP_TO_CAIRO_OP("over", OVER)
+    else return NS_ERROR_FAILURE;
+
+#undef CANVAS_OP_TO_CAIRO_OP
+
+    return NS_OK;
+}
+
+
+//
+// Utils
+//
+PRBool
+nsCanvasRenderingContext2D::ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
+                                                 jsval aValue)
+{
+  uint32 temp;
+  if (::JS_ValueToECMAUint32(aContext, aValue, &temp)) {
+    *aProp = (PRUint32)temp;
+  }
+  else {
+    ::JS_ReportError(aContext, "Parameter must be an integer");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+PRBool
+nsCanvasRenderingContext2D::ConvertJSValToDouble(double* aProp, JSContext* aContext,
+                                                 jsval aValue)
+{
+  jsdouble temp;
+  if (::JS_ValueToNumber(aContext, aValue, &temp)) {
+    *aProp = (jsdouble)temp;
+  }
+  else {
+    ::JS_ReportError(aContext, "Parameter must be a number");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+PRBool
+nsCanvasRenderingContext2D::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
+                                                    JSContext* aContext, jsval aValue)
+{
+  *aSupports = nsnull;
+  if (JSVAL_IS_NULL(aValue)) {
+    return JS_TRUE;
+  }
+
+  if (JSVAL_IS_OBJECT(aValue)) {
+    // WrapJS does all the work to recycle an existing wrapper and/or do a QI
+    nsresult rv = nsContentUtils::XPConnect()->
+      WrapJS(aContext, JSVAL_TO_OBJECT(aValue), aIID, (void**)aSupports);
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return JS_FALSE;
+}
+
+nsresult
+nsCanvasRenderingContext2D::CairoSurfaceFromImageElement(nsIDOMHTMLImageElement *imgElt,
+                                                         cairo_surface_t **aCairoSurface,
+                                                         PRUint8 **imgData,
+                                                         PRInt32 *widthOut, PRInt32 *heightOut)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgElt);
+    if (!imageLoader)
+        return NS_ERROR_NOT_AVAILABLE;
+    nsCOMPtr<imgIRequest> imgRequest;
+    rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                 getter_AddRefs(imgRequest));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!imgRequest)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<imgIContainer> imgContainer;
+    rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!imgContainer)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<gfxIImageFrame> frame;
+    rv = imgContainer->GetCurrentFrame(getter_AddRefs(frame));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIImage> img(do_GetInterface(frame));
+
+    PRInt32 imgWidth, imgHeight;
+    rv = frame->GetWidth(&imgWidth);
+    rv |= frame->GetHeight(&imgHeight);
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+
+    if (widthOut)
+        *widthOut = imgWidth;
+    if (heightOut)
+        *heightOut = imgHeight;
 
     //
     // We now need to create a cairo_surface with the same data as
@@ -1080,8 +1421,10 @@ nsCanvasRenderingContext2D::DrawImage()
     rv = frame->LockImageData();
     if (img->GetHasAlphaMask())
         rv |= frame->LockAlphaData();
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+        nsMemory::Free(cairoImgData);
         return NS_ERROR_FAILURE;
+    }
 
     PRUint8 *inPixBits, *inAlphaBits = nsnull;
     PRUint32 inPixStride, inAlphaStride = 0;
@@ -1227,137 +1570,8 @@ nsCanvasRenderingContext2D::DrawImage()
         cairo_image_surface_create_for_data((char *)cairoImgData, CAIRO_FORMAT_ARGB32,
                                             imgWidth, imgHeight, imgWidth*4);
 
-    cairo_matrix_t *surfMat = cairo_matrix_create();
-
-    cairo_matrix_translate(surfMat, -sx, -sy);
-    cairo_matrix_scale(surfMat, sw/dw, sh/dh);
-    cairo_surface_set_matrix(imgSurf, surfMat);
-    cairo_matrix_destroy(surfMat);
-
-    cairo_save(mCairo);
-    cairo_translate(mCairo, dx, dy);
-    cairo_show_surface(mCairo, imgSurf, (int) dw, (int) dh);
-    cairo_restore(mCairo);
-
-    nsMemory::Free(cairoImgData);
-    cairo_surface_destroy(imgSurf);
-
-    return Redraw();
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
-{
-    cairo_operator_t cairo_op;
-
-#define CANVAS_OP_TO_CAIRO_OP(cvsop,cairoop) \
-    if (op.EqualsLiteral(cvsop))   \
-        cairo_op = CAIRO_OPERATOR_##cairoop;
-
-    CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
-    else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
-    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
-    else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("lighter", SATURATE)
-    else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
-    else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
-    else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
-    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
-    else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
-    else CANVAS_OP_TO_CAIRO_OP("over", OVER)
-    else return NS_ERROR_NOT_IMPLEMENTED;
-
-#undef CANVAS_OP_TO_CAIRO_OP
-
-    cairo_set_operator(mCairo, cairo_op);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op)
-{
-    cairo_operator_t cairo_op = cairo_current_operator(mCairo);
-
-#define CANVAS_OP_TO_CAIRO_OP(cvsop,cairoop) \
-    if (cairo_op == CAIRO_OPERATOR_##cairoop) \
-        op.AssignLiteral(cvsop);
-
-    CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
-    else CANVAS_OP_TO_CAIRO_OP("copy", SRC)
-    else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
-    else CANVAS_OP_TO_CAIRO_OP("destination-atop", ATOP_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-in", IN_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-out", OUT_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("destination-over", OVER_REVERSE)
-    else CANVAS_OP_TO_CAIRO_OP("lighter", SATURATE)
-    else CANVAS_OP_TO_CAIRO_OP("source-atop", ATOP)
-    else CANVAS_OP_TO_CAIRO_OP("source-in", IN)
-    else CANVAS_OP_TO_CAIRO_OP("source-out", OUT)
-    else CANVAS_OP_TO_CAIRO_OP("source-over", OVER)
-    else CANVAS_OP_TO_CAIRO_OP("xor", XOR)
-    else CANVAS_OP_TO_CAIRO_OP("over", OVER)
-    else return NS_ERROR_FAILURE;
-
-#undef CANVAS_OP_TO_CAIRO_OP
+    *aCairoSurface = imgSurf;
+    *imgData = cairoImgData;
 
     return NS_OK;
-}
-
-
-//
-// Utils
-//
-PRBool
-nsCanvasRenderingContext2D::ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
-                                                 jsval aValue)
-{
-  uint32 temp;
-  if (::JS_ValueToECMAUint32(aContext, aValue, &temp)) {
-    *aProp = (PRUint32)temp;
-  }
-  else {
-    ::JS_ReportError(aContext, "Parameter must be an integer");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-PRBool
-nsCanvasRenderingContext2D::ConvertJSValToDouble(double* aProp, JSContext* aContext,
-                                                 jsval aValue)
-{
-  jsdouble temp;
-  if (::JS_ValueToNumber(aContext, aValue, &temp)) {
-    *aProp = (jsdouble)temp;
-  }
-  else {
-    ::JS_ReportError(aContext, "Parameter must be a number");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-PRBool
-nsCanvasRenderingContext2D::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
-                                                    JSContext* aContext, jsval aValue)
-{
-  *aSupports = nsnull;
-  if (JSVAL_IS_NULL(aValue)) {
-    return JS_TRUE;
-  }
-
-  if (JSVAL_IS_OBJECT(aValue)) {
-    // WrapJS does all the work to recycle an existing wrapper and/or do a QI
-    nsresult rv = nsContentUtils::XPConnect()->
-      WrapJS(aContext, JSVAL_TO_OBJECT(aValue), aIID, (void**)aSupports);
-
-    return NS_SUCCEEDED(rv);
-  }
-
-  return JS_FALSE;
 }
