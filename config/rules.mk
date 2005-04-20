@@ -1629,7 +1629,7 @@ libs realchrome:: $(CHROME_DEPS)
 ifndef NO_DIST_INSTALL
 	@$(EXIT_ON_ERROR) \
 	if test -f $(JAR_MANIFEST); then \
-	  if test ! -d $(FINAL_TARGET)/chrome; then mkdir $(FINAL_TARGET)/chrome; fi; \
+	  if test ! -d $(FINAL_TARGET)/chrome; then $(NSINSTALL) -D $(FINAL_TARGET)/chrome; fi; \
 	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	    $(JAR_MANIFEST) | \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
