@@ -65,9 +65,12 @@
         screenX="4" screenY="4"
         persist="screenX screenY width height sizemode"> 
 
-# All JS files that browser.xul wishes to include *must* go into the browser-scripts.inc file
-# so that they can be shared by hiddenWindow.xul.
-#include browser-scripts.inc
+# All JS files which are not content (only) dependent that browser.xul
+# wishes to include *must* go into the global-scripts.inc file
+# so that they can be shared by macBrowserOverlay.xul.
+#include global-scripts.inc
+
+<script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.

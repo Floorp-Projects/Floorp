@@ -45,7 +45,6 @@
 <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
 <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksMenu.js"/>
 <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-<script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
 <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
 <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
 <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
