@@ -38,17 +38,6 @@ if (verifyDiskSpace(fProgram, srDest))
                        "");
     logComment("addDirectory() returned: " + err);
 
-    if (err != SUCCESS)
-    {
-        logComment("addDirectory() to " + fProgram + "failed!");
-        // couldn't install globally, try installing to the profile
-        resetError();
-        chromeType |= PROFILE_CHROME;
-        fProgram = getFolder("Profile");
-        logComment("try installing to the user profile:" + fProgram);
-        err = addDirectory("","bin",fProgram,"");
-    }
- 
     setPackageFolder(fProgram);
  
     // check return value
@@ -69,35 +58,6 @@ if (verifyDiskSpace(fProgram, srDest))
                            fTarget,
                            "");
         logComment("addDirectory() returned: " + err);
-
-        // register chrome
-        var cf = getFolder(fProgram, "chrome/"+chromeName);
-
-        registerChrome(chromeType, cf, "locale/@AB_CD@/global/");
-        registerChrome(chromeType, cf, "locale/@AB_CD@/global-platform/");
-        registerChrome(chromeType, cf, "locale/@AB_CD@/global-region/");
-
-        registerChrome(chromeType, cf, "locale/browser/");
-        registerChrome(chromeType, cf, "locale/browser-region/");
-        registerChrome(chromeType, cf, "locale/branding/");
-        registerChrome(chromeType, cf, "locale/@AB_CD@/passwordmgr/");
-        registerChrome(chromeType, cf, "locale/@AB_CD@/mozapps/");
-
-#ifdef EXTENSION_PREF
-        registerChrome(chromeType, cf, "locale/@AB_CD@/autoconfig/");
-#endif
-        registerChrome(chromeType, cf, "locale/@AB_CD@/cookie/");
-        registerChrome(chromeType, cf, "locale/@AB_CD@/pipnss/");
-        registerChrome(chromeType, cf, "locale/@AB_CD@/pippki/");
-
-#ifdef LOCALE_HAS_HELP
-        registerChrome(chromeType, cf, "locale/@AB_CD@/help/");
-#endif
-#ifdef LOCALE_HAS_DOMI
-        registerChrome(chromeType, cf, "locale/@AB_CD@/inspector/");
-#endif
-
-        registerChrome(chromeType, cf, "locale/@AB_CD@/communicator/");
 
         err = performInstall(); 
         logComment("performInstall() returned: " + err);
