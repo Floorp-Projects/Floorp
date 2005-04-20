@@ -4,17 +4,16 @@
 <!ENTITY setDefaultMailClient.accesskey    "M">
 <!ENTITY setDefaultNewsClient.label        "News">
 <!ENTITY setDefaultNewsClient.accesskey    "N">
-<!ENTITY setDefaultMailClient.label        "Mail">
-<!ENTITY setDefaultMailClient.accesskey    "M">
 <!ENTITY setDefaultFeedClient.label        "RSS Feeds">
-<!ENTITY setDefaultFeedClient.accesskey    "R">
+<!ENTITY setDefaultFeedClient.accesskey    "F">
 <!ENTITY checkNow.label                    "Check Now">
-<!ENTITY checkNow.accesskey                "N">
+<!ENTITY checkMailNow.accesskey            "C">
+<!ENTITY checkNewsNow.accesskey            "h">
 <!ENTITY whenStartingCheck.label           "When starting, &brandShortName; should check to see if it is the default application for">
 <!ENTITY mailApplication.label             "Mail">
-<!ENTITY checkDefaultMail.accesskey        "d">
+<!ENTITY checkDefaultMail.accesskey        "M">
 <!ENTITY newsApplication.label             "News">
-<!ENTITY checkDefaultNews.accesskey        "D">
+<!ENTITY checkDefaultNews.accesskey        "N">
 
 <!ENTITY windowSettings.label             "Window Configuration">
 <!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail.">
@@ -40,6 +39,6 @@
 <!ENTITY soundbutton.accesskey            "A">
 
 <!ENTITY showConnections.label         "Connection Settings...">
-<!ENTITY showConnections.accesskey     "C">
+<!ENTITY showConnections.accesskey     "o">
 <!ENTITY proxiesInfo.label             "Determine how &brandShortName; connects to the Internet.">
 <!ENTITY connectionsInfo.caption       "Connection">

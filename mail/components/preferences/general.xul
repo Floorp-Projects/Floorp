@@ -108,14 +108,14 @@
               <checkbox id="checkDefaultMail" preference="mail.checkDefaultMail"
                         label="&mailApplication.label;"
                         accesskey="&checkDefaultMail.accesskey;"/>
-              <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+              <button label="&checkNow.label;" accesskey="&checkMailNow.accesskey;"
                        oncommand="gGeneralPane.checkDefaultMailNow(false)"/>
             </row>
             <row>
               <checkbox id="checkDefaultNews" preference="mail.checkDefaultNews"
                         label="&newsApplication.label;"
                         accesskey="&checkDefaultNews.accesskey;"/>
-              <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+              <button label="&checkNow.label;" accesskey="&checkNewsNow.accesskey;"
                       oncommand="gGeneralPane.checkDefaultMailNow(true)"/>
             </row>
           </rows>
