@@ -288,9 +288,15 @@ NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIReque
 
         if (NS_FAILED(status))
         {
+          nsString wStr;
           char buffer[100];
           sprintf(buffer, "Error loading page (status=%x)", status);
-          MessageBox(0, buffer, "Error", 0);
+          wStr.AppendLiteral(buffer);
+          WebBrowserChromeUI::UpdateStatusBarText(this, wStr.get());
+
+#ifdef DEBUG
+            printf(buffer);
+#endif
         }
     }
 
