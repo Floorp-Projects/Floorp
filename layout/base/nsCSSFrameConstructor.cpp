@@ -6592,7 +6592,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       nsIFrame* parentFrame = aParentFrame;
       nsIFrame* outerFrame = aParentFrame->GetParent();
       if (outerFrame) {
-        if (nsLayoutAtoms::tableOuterFrame == outerFrame->GetType()) {
+        if ((nsLayoutAtoms::tableOuterFrame == outerFrame->GetType()) &&
+            (nsLayoutAtoms::tableFrame == parentFrame->GetType())) {
           parentFrame = outerFrame;
         }
       }
@@ -9276,6 +9277,11 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     if (NS_SUCCEEDED(rv) && newCaptionFrame) {
       nsIFrame* outerTableFrame;
       if (GetCaptionAdjustedParent(parentFrame, newCaptionFrame, &outerTableFrame)) {
+        // If the parent is not a outer table frame we will try to add frames
+        // to a named child list that the parent does not honour and the frames
+        // will get lost
+        NS_ASSERTION(nsLayoutAtoms::tableOuterFrame == outerTableFrame->GetType(),
+                     "Pseudo frame construction failure, a caption can be only a child of a outer table frame");
         // the double caption creation was prevented above, so we are sure
         // that we can append
         NS_ASSERTION(!outerTableFrame->GetFirstChild(nsLayoutAtoms::captionList),
