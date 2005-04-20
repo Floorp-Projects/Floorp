@@ -177,6 +177,17 @@
          label="&editMenu.label;"
          accesskey="&editMenu.accesskey;">
       <menupopup id="mppEdit">
+         <menuitem id="calendar-undo-menu"
+                   key="key_undo"
+                   label="&calendar.undo.label;"
+                   accesskey="&calendar.undo.accesskey;"
+                   observes="undo_command" />
+         <menuitem id="calendar-redo-menu"
+                   key="key_undo"
+                   label="&calendar.redo.label;"
+                   accesskey="&calendar.redo.accesskey;"
+                   observes="redo_command" />
+         <menuseparator/>
          <menuitem id="calendar-cut-menu"
                    key="key_cut"
                    label="&calendar.cut.label;"

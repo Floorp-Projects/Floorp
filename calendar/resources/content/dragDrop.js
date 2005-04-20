@@ -238,7 +238,7 @@ var calendarViewDNDObserver = {
                 newEvent.startDate = newStartDate;
                 newEvent.endDate = newStartDate.clone();
                 newEvent.endDate.addDuration(eventDuration);
-                newEvent.parent.modifyItem(newEvent, null);
+                doTransaction('modify', newEvent, newEvent.parent, calendarEvent, null);
               } else {
                 // if we didn't get a calendar event, then we want to open the edit dialog with
                 // the new event

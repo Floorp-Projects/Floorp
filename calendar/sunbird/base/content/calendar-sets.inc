@@ -53,14 +53,16 @@
   <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="print_command" oncommand="print()"/>
   
-  <command id="Edit:Undo"      oncommand="goDoCommand('cmd_undo')"      disabled="true"/>
-  <command id="Edit:Redo"      oncommand="goDoCommand('cmd_redo')"      disabled="true"/>
+#  <command id="Edit:Undo"      oncommand="goDoCommand('cmd_undo')"      disabled="true"/>
+#  <command id="Edit:Redo"      oncommand="goDoCommand('cmd_redo')"      disabled="true"/>
 #  <command id="Edit:Cut"       oncommand="goDoCommand('cmd_cut')"       disabled="true"/>
 #  <command id="Edit:Copy"      oncommand="goDoCommand('cmd_copy')"      disabled="true"/>
 #  <command id="Edit:Paste"     oncommand="goDoCommand('cmd_paste')"     disabled="true"/>
 #  <command id="Edit:Delete"    oncommand="goDoCommand('cmd_delete')"    disabled="true"/>
 #  <command id="Edit:SelectAll" oncommand="goDoCommand('cmd_selectAll')" disabled="true"/>
   
+  <command id="undo_command" oncommand="undo()" disabled="true"/>
+  <command id="redo_command" oncommand="redo()" disabled="true"/>
   <command id="cut_command" oncommand="cutToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="copy_command" oncommand="copyToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="paste_command" oncommand="pasteFromClipboard()"/>

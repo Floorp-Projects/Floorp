@@ -90,6 +90,8 @@
   <command id="modify_command" oncommand="editEventCommand()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="print_command" oncommand="print()"/>
+  <command id="undo_command" oncommand="undo()" disabled="true"/>
+  <command id="redo_command" oncommand="redo()" disabled="true"/>
   <command id="cut_command" oncommand="cutToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="copy_command" oncommand="copyToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
   <command id="paste_command" oncommand="pasteFromClipboard()"/>
@@ -153,6 +155,12 @@
 #endif
   <key id="print_key"            key="&calendar.print.key;"              observes="print_command"               modifiers="accel"/>
 
+  <key id="key_undo"             key="&calendar.undo.key;"               observes="undo_command"                modifiers="accel"/>
+#ifdef XP_UNIX
+  <key id="key_redo"             key="&calendar.undo.key;"               observes="redo_command"                modifiers="accel,shift"/>
+#else
+  <key id="key_redo"             key="&calendar.redo.key;"               observes="redo_command"                modifiers="accel"/>
+#endif
   <key id="key_cut"              key="&calendar.cut.key;"                observes="cut_command"                 modifiers="accel"/>
   <key id="key_copy"             key="&calendar.copy.key;"               observes="copy_command"                modifiers="accel"/>
   <key id="key_paste"            key="&calendar.paste.key;"              observes="paste_command"               modifiers="accel"/>

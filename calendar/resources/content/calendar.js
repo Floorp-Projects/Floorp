@@ -974,20 +974,17 @@ function saveItem( calendarEvent, calendar, functionToRun, originalEvent )
 {
     dump(functionToRun + " " + calendarEvent.title + "\n");
 
-    if (functionToRun == 'addEvent')
-        calendar.addItem(calendarEvent, null);
-
-    else if (functionToRun == 'modifyEvent') {
+    if (functionToRun == 'addEvent') {
+        doTransaction('add', calendarEvent, calendar, null, null);
+    } else if (functionToRun == 'modifyEvent') {
         // compare cal.uri because there may be multiple instances of
         // calICalendar or uri for the same spec, and those instances are
         // not ==.
         if (!originalEvent.parent || 
             (originalEvent.parent.uri.equals(calendar.uri)))
-            calendar.modifyItem(calendarEvent, null);
-        else {
-            originalEvent.parent.deleteItem(calendarEvent, null);
-            calendar.addItem(calendarEvent, null);
-        }
+            doTransaction('modify', calendarEvent, calendar, originalEvent, null);
+        else
+            doTransaction('move', calendarEvent, calendar, originalEvent, null);
     }
 }
 
@@ -1001,113 +998,11 @@ function deleteItems( SelectedItems, DoNotConfirm )
     if (!SelectedItems)
         return;
 
-    //Confirmation
-    if (!DoNotConfirm) {
-        var calendarEvent = SelectedItems[0];
-        var confirmText;
-        if (SelectedItems.length > 1) {
-            confirmText = confirmDeleteAllEvents;
-        } else if (calendarEvent.title) {
-            confirmText = (confirmDeleteEvent + " " + calendarEvent.title + "?");
-        } else {
-            confirmText = confirmDeleteUntitledEvent;
-        }
-        if (!confirm(confirmText)) {
-            return;
-        }
+    startBatchTransaction();
+    for (i in SelectedItems) {
+        doTransaction('delete', SelectedItems[i], SelectedItems[i].parent, null, null);
     }
-
-    ccalendar = getCalendar();
-
-    for (i in  SelectedItems) {
-        ccalendar.deleteItem(SelectedItems[i], null);
-    }
-
-   /*
-
-   //group items to delete by calendarServer
-   calendarsToPublish = new Array();
-   var autoPublishEnabled = false;
-   var serverInArray = false;
-   for( i = 0; i < SelectedItems.length; i++ ) {
-      var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( SelectedItems[i].parent.server );
-      var calendarId = calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" );
-      if (!(calendarId in calendarsToPublish)) {
-         calendarsToPublish[calendarId] = new Object();
-         calendarsToPublish[calendarId].items =new Array();
-      }
-      calendarsToPublish[calendarId].calendarServer = calendarServer;
-      calendarsToPublish[calendarId].items.push(SelectedItems[i]);
-   }
-   
-   //process each calendarServer
-   for (calendarId in calendarsToPublish) {
-      calendarServer = calendarsToPublish[calendarId].calendarServer;
-      var path = calendarServer.getAttribute("http://home.netscape.com/NC-rdf#path");
-      var shared = (calendarServer.getAttribute("http://home.netscape.com/NC-rdf#shared" )  == "true");
-      var publishAutomatically = (calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true");
-      
-      //pre-processing
-      if( publishAutomatically ) {
-         //download
-         gCalendarWindow.calendarManager.retrieveAndSaveRemoteCalendar(calendarServer);
-      } else if ( shared ) {
-         //lock
-         if ( !gCalendarWindow.calendarManager.startLocalLock(calendarServer)){
-            alert(gCalendarBundle.getString( "unableToWrite" ) + path + ".lock");
-            continue; 
-            //skip deleting items from this calendar, try other calendars 
-         }
-         //reload 
-         var isModified = gCalendarWindow.calendarManager.reloadCalendar(calendarServer, true); 
-      }
-         
-      //delete selected items of this calendarServer locally 
-      gICalLib.batchMode = true;
-      for (eventId in calendarsToPublish[calendarId].items) {
-         var selectedItem = calendarsToPublish[calendarId].items[eventId]; //item to delte
-
-         //item-level checks
-         if ( shared ) {
-            //Check if the same event was edited externally since the last reload.
-            if ( isModified ) {
-               //calendar edited externally
-               var uneditedEvent = fetchItem(selectedItem );
-               if (uneditedEvent != null ){
-                  //not already deleted
-                  if (!compareItems( uneditedEvent, selectedItem )){
-                     //event edited externally
-                     alert(gCalendarBundle.getString("concurrentEdit") + " " + selectedItem.title);
-                     continue; 
-                     //skip deleting this item
-                  }
-               }
-            }
-         }
-
-         //delete item
-         try {
-            if( isToDo(selectedItem) ) {
-               gICalLib.deleteTodo( selectedItem.id );
-            }else{
-               gICalLib.deleteEvent( selectedItem.id );
-            }
-         } catch (ex) {
-            dump("*** deleteItems failed: "+ ex + "\n");
-         }
-      }
-      gICalLib.batchMode = false;
-
-      //post-processing 
-      if ( publishAutomatically) {
-         //publish
-         gCalendarWindow.calendarManager.publishCalendar(calendarServer);
-      } else if ( shared) {
-         //unlock
-         gCalendarWindow.calendarManager.removeLocalLock(calendarServer);
-      }
-   }
-   */
+    endBatchTransaction();
 }
 
 
@@ -1592,3 +1487,119 @@ function getContrastingTextColor(bgColor)
     return "black";
 }
 
+var gTransactionMgr = Components.classes["@mozilla.org/transactionmanager;1"]
+                                .getService(Components.interfaces.nsITransactionManager);
+function doTransaction(aAction, aItem, aCalendar, aOldItem, aListener) {
+    var txn = new calTransaction(aAction, aItem, aCalendar, aOldItem, aListener);
+    gTransactionMgr.doTransaction(txn);
+    updateUndoRedoMenu();
+}
+
+function undo() {
+    gTransactionMgr.undoTransaction();
+    updateUndoRedoMenu();
+}
+
+function redo() {
+    gTransactionMgr.redoTransaction();
+    updateUndoRedoMenu();
+}
+
+function startBatchTransaction() {
+    gTransactionMgr.beginBatch();
+}
+function endBatchTransaction() {
+    gTransactionMgr.endBatch();
+}
+
+function canUndo() {
+    return (gTransactionMgr.numberOfUndoItems > 0);
+}
+function canRedo() {
+    return (gTransactionMgr.numberOfRedoItems > 0);
+}
+
+function updateUndoRedoMenu() {
+    if (gTransactionMgr.numberOfUndoItems)
+        document.getElementById('undo_command').removeAttribute('disabled');
+    else    
+        document.getElementById('undo_command').setAttribute('disabled', true);
+
+    if (gTransactionMgr.numberOfRedoItems)
+        document.getElementById('redo_command').removeAttribute('disabled');
+    else    
+        document.getElementById('redo_command').setAttribute('disabled', true);
+}
+
+// Valid values for aAction: 'add', 'modify', 'delete', 'move'
+// aOldItem is only needed for aAction == 'modify'
+function calTransaction(aAction, aItem, aCalendar, aOldItem, aListener) {
+    this.mAction = aAction;
+    this.mItem = aItem;
+    this.mCalendar = aCalendar;
+    this.mOldItem = aOldItem;
+    this.mListener = aListener;
+}
+
+calTransaction.prototype = {
+    mAction: null,
+    mItem: null,
+    mCalendar: null,
+    mOldItem: null,
+    mOldCalendar: null,
+    mListener: null,
+
+    QueryInterface: function (aIID) {
+        if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.nsITransaction))
+        {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
+        return this;
+    },
+
+    doTransaction: function () {
+        switch (this.mAction) {
+            case 'add':
+                this.mCalendar.addItem(this.mItem, this.mListener);
+                break;
+            case 'modify':
+                this.mCalendar.modifyItem(this.mItem, this.mListener);
+                break;
+            case 'delete':
+                this.mCalendar.deleteItem(this.mItem, this.mListener);
+                break;
+            case 'move':
+                this.mOldCalendar = this.mOldItem.parent;
+                this.mCalendar.addItem(this.mItem, this.mListener);
+                this.mOldCalendar.deleteItem(this.mOldItem, this.mListener);
+                break;
+        }
+    },
+    undoTransaction: function () {
+        switch (this.mAction) {
+            case 'add':
+                this.mCalendar.deleteItem(this.mItem, null);
+                break;
+            case 'modify':
+                this.mCalendar.modifyItem(this.mOldItem, null);
+                break;
+            case 'delete':
+                this.mCalendar.addItem(this.mItem, null);
+                break;
+            case 'move':
+                this.mOldCalendar.addItem(this.mOldItem, this.mListener);
+                this.mCalendar.deleteItem(this.mItem, this.mListener);
+                break;
+        }
+    },
+    redoTransaction: function () {
+        this.doTransaction();
+    },
+    isTransient: false,
+    
+    merge: function (aTransaction) {
+        // No support for merging
+        return false;
+    }
+}
