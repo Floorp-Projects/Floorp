@@ -1,5 +1,5 @@
 browser.jar:
-        content/browser/contents.rdf                  (content/contents.rdf)
+*       content/browser/contents.rdf                  (content/contents.rdf)
         content/browser-region/contents.rdf           (content/contents-region.rdf)
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
@@ -32,6 +32,8 @@ browser.jar:
 #ifdef XP_MACOSX
 *       content/browser/macBrowserOverlay.xul         (content/macBrowserOverlay.xul)
 *       content/browser/downloadManagerOverlay.xul    (content/downloadManagerOverlay.xul)
+*       content/browser/extensionsManagerOverlay.xul  (content/extensionsManagerOverlay.xul)
+*       content/browser/jsConsoleOverlay.xul          (content/jsConsoleOverlay.xul)
 #endif
 #ifndef MOZ_USE_OFFICIAL_BRANDING
   content/branding/contents.rdf                  (branding/contents.rdf)

@@ -20,10 +20,25 @@
 #ifdef XP_MACOSX
   <RDF:Seq RDF:about="urn:mozilla:overlays">
       <RDF:li RDF:resource="chrome://mozapps/content/downloads/downloads.xul"/>
+      <RDF:li RDF:resource="chrome://mozapps/content/extensions/extensions.xul?type=extensions"/>
+      <RDF:li RDF:resource="chrome://mozapps/content/extensions/extensions.xul?type=themes"/>
+      <RDF:li RDF:resource="chrome://global/content/console.xul"/>
   </RDF:Seq>
 
   <RDF:Seq RDF:about="chrome://mozapps/content/downloads/downloads.xul">
       <RDF:li>chrome://browser/content/downloadManagerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq RDF:about="chrome://mozapps/content/extensions/extensions.xul?type=extensions">
+      <RDF:li>chrome://browser/content/extensionsManagerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq RDF:about="chrome://mozapps/content/extensions/extensions.xul?type=themes">
+      <RDF:li>chrome://browser/content/extensionsManagerOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq RDF:about="chrome://global/content/console.xul">
+      <RDF:li>chrome://browser/content/jsConsoleOverlay.xul</RDF:li>
   </RDF:Seq>
 #endif
 </RDF:RDF>
