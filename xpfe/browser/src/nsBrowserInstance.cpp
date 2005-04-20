@@ -219,6 +219,9 @@ public:
       nsresult rv;
       // make sure our timer is stopped first
       StopTimer();
+
+      // XXX This needs to do a whole bunch of other stuff that
+      // globalOverlay.js's goQuitApplication does.
       nsCOMPtr<nsIAppStartup> appStartup = 
                do_GetService(NS_APPSTARTUP_CONTRACTID, &rv);
       if(NS_FAILED(rv)) return rv;
