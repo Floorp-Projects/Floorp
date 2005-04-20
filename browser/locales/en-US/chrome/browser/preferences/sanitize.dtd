@@ -1,4 +1,5 @@
 <!ENTITY sanitizeDialog.title         "Sanitize">
+<!ENTITY window.width                 "30em">
 
 <!ENTITY items.label                  "Sanitize Items">
 <!ENTITY sanitizeItems.label          "Clear the following items when Sanitizing &brandShortName;:">

@@ -45,7 +45,7 @@
             title="&connectionsDialog.title;"
             dlgbuttons="accept,cancel"
             onbeforeaccept="return gConnectionsDialog.beforeAccept();"
-            style="width: 37em !important;">
+            style="width: &window.width; !important;">
 
   <prefpane id="ConnectionsDialogPane">
     <preferences>

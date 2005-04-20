@@ -1,4 +1,6 @@
 <!ENTITY window.title                 "Exceptions">
+<!ENTITY window.width                 "36em">
+
 <!ENTITY treehead.sitename.label      "Site">
 <!ENTITY treehead.status.label        "Status">
 <!ENTITY addpermission.label          "New Site">

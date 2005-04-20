@@ -49,7 +49,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel"
             title="&sanitizeDialog.title;"
-            style="width: 30em !important;">
+            style="width: &window.width; !important;">
 
   <prefpane id="SanitizeDialogPane">  
     <script type="application/x-javascript" src="chrome://browser/content/preferences/sanitize.js"/>
