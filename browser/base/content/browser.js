@@ -3967,28 +3967,14 @@ nsContextMenu.prototype = {
 
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
-             if ( this.target.localName.toUpperCase() == "IMG" ) {
+             if ( this.target instanceof Components.interfaces.nsIImageLoadingContent &&
+                  this.target.currentURI != null ) {
                 this.onImage = true;
-                this.imageURL = this.target.src;
-             } else if ( this.target.localName.toUpperCase() == "OBJECT"
-                         &&
-                         // See if object tag is for an image.
-                         this.objectIsImage( this.target ) ) {
-                // This is an image.
-                this.onImage = true;
-                // URL must be constructed.
-                this.imageURL = this.objectImageURL( this.target );
+                this.imageURL = this.target.currentURI.spec;
              } else if ( this.target.localName.toUpperCase() == "INPUT") {
                type = this.target.getAttribute("type");
-               if(type && type.toUpperCase() == "IMAGE") {
-                 this.onImage = true;
-                 // Convert src attribute to absolute URL.
-                 this.imageURL = makeURLAbsolute( this.target.baseURI,
-                                                  this.target.src );
-               } else /* if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") */ {
-                 this.onTextInput = this.isTargetATextBox(this.target);
-                 this.onKeywordField = this.isTargetAKeywordField(this.target);
-               }
+               this.onTextInput = this.isTargetATextBox(this.target);
+               this.onKeywordField = this.isTargetAKeywordField(this.target);
             } else if ( this.target.localName.toUpperCase() == "TEXTAREA" ) {
                  this.onTextInput = true;
             } else if ( this.target.localName.toUpperCase() == "HTML" ) {
@@ -4472,30 +4458,6 @@ nsContextMenu.prototype = {
         return searchStr;
     },
     
-    // Determine if target <object> is an image.
-    objectIsImage : function ( objElem ) {
-        var result = false;
-        // Get type and data attributes.
-        var type = objElem.getAttribute( "type" );
-        var data = objElem.getAttribute( "data" );
-        // Presume any mime type of the form "image/..." is an image.
-        // There must be a data= attribute with an URL, also.
-        if ( type.substring( 0, 6 ) == "image/" && data) {
-            result = true;
-        }
-        return result;
-    },
-    // Extract image URL from <object> tag.
-    objectImageURL : function ( objElem ) {
-        // Extract url from data= attribute.
-        var data = objElem.getAttribute( "data" );
-        // Make it absolute.
-        return makeURLAbsolute( objElem.baseURI, data );
-    },
-    // Parse coords= attribute and return array.
-    parseCoords : function ( area ) {
-        return [];
-    },
     toString : function () {
         return "contextMenu.target     = " + this.target + "\n" +
                "contextMenu.onImage    = " + this.onImage + "\n" +
