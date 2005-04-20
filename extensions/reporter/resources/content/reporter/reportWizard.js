@@ -272,7 +272,7 @@ function sendReport(){
 
     finishExtendedDoc = finishExtended.contentDocument;
     finishExtendedDoc.getElementById('urlStri').textContent = gURL;
-    finishExtendedDoc.getElementById('problemTypeStri').textContent = problemTypeStri;
+    finishExtendedDoc.getElementById('problemTypeStri').textContent = document.getElementById('problem_type').label;
     finishExtendedDoc.getElementById('descriptionStri').textContent = descriptionStri;
     finishExtendedDoc.getElementById('platformStri').textContent = gPlatform;
     finishExtendedDoc.getElementById('oscpuStri').textContent = goscpu;
