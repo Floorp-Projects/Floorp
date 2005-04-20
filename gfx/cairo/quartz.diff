@@ -10,8 +10,8 @@
  if test "x$use_quartz" = "xyes"; then
    dnl There is no pkgconfig for quartz; lets do a header check
 --- cairo-0.4.0/src/cairo_atsui_font.c	2005-02-22 13:28:48.000000000 -0600
-+++ cairo/src/cairo_atsui_font.c	2005-03-24 13:42:48.371421116 -0600
-@@ -30,778 +30,710 @@
++++ cairo/src/cairo_atsui_font.c	2005-04-20 13:50:01.191886799 -0500
+@@ -30,778 +30,718 @@
   * The Initial Developer of the Original Code is Calum Robinson
   *
   * Contributor(s):
@@ -25,6 +25,14 @@
  #include "cairo-atsui.h"
  #include "cairoint.h"
 +#include <iconv.h>
+ 
++// FixedToFloat/FloatToFixed are 10.3 SDK items - include definitions
++// here so we can use older SDKs
++#ifndef FixedToFloat
++#define fixed1              ((Fixed) 0x00010000L)
++#define FixedToFloat(a)     ((float)(a) / fixed1)
++#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
++#endif
  
 +typedef struct {
 +    cairo_font_t base;
@@ -40,8 +48,8 @@
 +    cairo_matrix_t scale;
 +} cairo_ATSUI_glyph_path_callback_info_t;
  
- 
 -#pragma mark Types
+ 
  
 +static CGAffineTransform
 +CGAffineTransformMakeWithCairoFontScale(cairo_font_scale_t scale)
@@ -58,13 +66,13 @@
 +    ATSUStyle style;
 +    OSStatus err;
  
- 
 -typedef struct {
 -	cairo_unscaled_font_t	base;
 -	
 -	ATSUStyle				style;
 -	ATSUFontID				fontID;
 -} cairo_atsui_font_t;
+ 
 +    // Set the style's size
 +    CGAffineTransform theTransform =
 +        CGAffineTransformMakeWithCairoFontScale(*scale);
@@ -75,12 +83,12 @@
 +    const ByteCount theFontStyleSizes[] = { sizeof(Fixed) };
 +    ATSUAttributeValuePtr theFontStyleValues[] = { &theSize };
  
-+    err = ATSUCreateAndCopyStyle(inStyle, &style);
- 
 -typedef struct cairo_ATSUI_glyph_path_callback_info_t {
 -	cairo_path_t		*path;
 -	cairo_matrix_t		scale;
 -} cairo_ATSUI_glyph_path_callback_info_t;
++    err = ATSUCreateAndCopyStyle(inStyle, &style);
++
 +    err = ATSUSetAttributes(style,
 +                            sizeof(theFontStyleTags) /
 +                            sizeof(ATSUAttributeTag), theFontStyleTags,
@@ -117,7 +125,7 @@
 +        isBold = false;
 +        break;
 +    }
-+
+ 
 +    switch (slant) {
 +    case CAIRO_FONT_SLANT_ITALIC:
 +        isItalic = true;
@@ -153,6 +161,7 @@
 +	else // anything else - return error instead?
 +	    family = "Courier";
  
+-#pragma mark Private Functions
 +	err = ATSUFindFontFromName(family, strlen(family),
 +				   kFontFamilyName,
 +				   kFontNoPlatformCode,
@@ -160,7 +169,6 @@
 +				   kFontNoLanguageCode, &fontID);
 +    }
  
--#pragma mark Private Functions
  
 +    ATSUAttributeTag styleTags[] =
 +        { kATSUQDItalicTag, kATSUQDBoldfaceTag, kATSUFontTag };
@@ -173,9 +181,9 @@
 +                            sizeof(styleTags) / sizeof(styleTags[0]),
 +                            styleTags, styleSizes, styleValues);
  
-+    font = malloc(sizeof(cairo_atsui_font_t));
- 
 -static CGAffineTransform CGAffineTransformMakeWithCairoFontScale(cairo_font_scale_t scale)
++    font = malloc(sizeof(cairo_atsui_font_t));
++
 +    _cairo_font_init(&font->base, scale, &cairo_atsui_font_backend);
 +
 +    font->style = CreateSizedCopyOfStyle(style, scale);
@@ -203,24 +211,6 @@
 +
 +static void
 +_cairo_atsui_font_destroy_font(void *abstract_font)
-+{
-+    cairo_atsui_font_t *font = abstract_font;
-+
-+
-+    if (font == NULL)
-+        return;
-+
-+    if (font->style)
-+        ATSUDisposeStyle(font->style);
-+    if (font->unscaled_style)
-+        ATSUDisposeStyle(font->unscaled_style);
-+
-+    free(font);
-+}
-+
-+
-+static void 
-+_cairo_atsui_font_destroy_unscaled_font(void *abstract_font)
  {
 -	return CGAffineTransformMake(	scale.matrix[0][0],	scale.matrix[0][1],
 -									scale.matrix[1][0],	scale.matrix[1][1],
@@ -249,7 +239,25 @@
 -	
 -	
 -	return style;
++    cairo_atsui_font_t *font = abstract_font;
++
++
++    if (font == NULL)
++        return;
++
++    if (font->style)
++        ATSUDisposeStyle(font->style);
++    if (font->unscaled_style)
++        ATSUDisposeStyle(font->unscaled_style);
++
++    free(font);
  }
+ 
+ 
++static void 
++_cairo_atsui_font_destroy_unscaled_font(void *abstract_font)
++{
++}
  
  
 +static void
@@ -258,6 +266,7 @@
 +{
 +}
  
+-#pragma mark Public Functions
  
 +static cairo_status_t
 +_cairo_atsui_font_text_to_glyphs(void *abstract_font,
@@ -272,8 +281,7 @@
 +    ItemCount glyphCount, charCount;
 +    UniChar *theText;
 +    ATSUStyle style;
- 
--#pragma mark Public Functions
++
 +    err = ATSUCreateTextLayout(&textLayout);
  
 +#if 1
@@ -286,11 +294,6 @@
 +        theText[i] = utf8[i];
 +    }
 +#endif
- 
-+#if 0
-+    // Set the text in the text layout object, so we can measure it
-+    charCount = strlen(utf8);
-+    theText = (UniChar *) malloc(charCount * sizeof(UniChar));
  
 -static cairo_unscaled_font_t *
 -_cairo_atsui_font_create(	const char   	*family, 
@@ -368,6 +371,11 @@
 -	free(font);
 -	
 -	return NULL;
++#if 0
++    // Set the text in the text layout object, so we can measure it
++    charCount = strlen(utf8);
++    theText = (UniChar *) malloc(charCount * sizeof(UniChar));
++
 +    size_t inBytes = charCount, outBytes = charCount;
 +    iconv_t converter = iconv_open("UTF-8", "UTF-16");
 +    charCount = iconv(converter, utf8, &inBytes, theText, &outBytes);
@@ -1395,7 +1403,7 @@
 +    return NULL;
 +}
 --- cairo-0.4.0/src/cairo_quartz_surface.c	2005-02-22 13:24:50.000000000 -0600
-+++ cairo/src/cairo_quartz_surface.c	2005-03-24 13:42:53.233334195 -0600
++++ cairo/src/cairo_quartz_surface.c	2005-03-24 13:42:53.000000000 -0600
 @@ -36,66 +36,45 @@
  #include "cairoint.h"
  #include "cairo-quartz.h"

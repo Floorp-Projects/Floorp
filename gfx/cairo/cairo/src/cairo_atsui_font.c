@@ -39,6 +39,14 @@
 #include "cairoint.h"
 #include <iconv.h>
 
+// FixedToFloat/FloatToFixed are 10.3 SDK items - include definitions
+// here so we can use older SDKs
+#ifndef FixedToFloat
+#define fixed1              ((Fixed) 0x00010000L)
+#define FixedToFloat(a)     ((float)(a) / fixed1)
+#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
+#endif
+
 typedef struct {
     cairo_font_t base;
 
