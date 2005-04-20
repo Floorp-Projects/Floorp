@@ -72,22 +72,27 @@ TAR_CREATE_FLAGS = -cvLf
 endif
 
 CREATE_FINAL_TAR = tar -c --owner=0 --group=0 --numeric-owner --mode="go-w" -f
+UNPACK_TAR       = tar -x
 
 ifeq ($(MOZ_PKG_FORMAT),TAR)
 PKG_SUFFIX	= .tar
 MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) > $(PACKAGE)
+UNMAKE_PACKAGE	= $(UNPACK_TAR) < $(UNPACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
 MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
+UNMAKE_PACKAGE	= gunzip -c $(UNPACKAGE) | $(UNPACK_TAR)
 endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
 PKG_SUFFIX	= .tar.bz2
 MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
+UNMAKE_PACKAGE	= bunzip2 -c $(UNPACKAGE) | $(UNPACK_TAR)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_APPNAME)
+UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifdef MOZ_DEBUG
@@ -98,6 +103,7 @@ endif
 PKG_SUFFIX	= .dmg
 _ABS_TOPSRCDIR	= $(shell cd $(topsrcdir) && pwd)
 MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PKG_BASENAME).dmg $(MOZ_PKG_APPNAME) $(MOZ_APP_DISPLAYNAME)
+UNMAKE_PACKAGE	= $(error XXX Need to implement this!)
 endif
 
 # dummy macro if we don't have PSM built
@@ -152,7 +158,11 @@ NO_PKG_FILES += \
 	chrome/app-chrome.manifest \
 	$(NULL)
 
+# browser/locales/Makefile uses this makefile for it's variable defs, but
+# doesn't want the libs:: rule.
+ifndef PACKAGER_NO_LIBS
 libs:: $(PACKAGE)
+endif
 
 GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 

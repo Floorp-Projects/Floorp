@@ -66,11 +66,7 @@ GRE_DIST	= $(DIST)/gre
 #
 # It will usually be the well-loved $(DIST)/bin, today, but can also be an
 # XPI-contents staging directory for ambitious and right-thinking extensions.
-ifdef XPI_NAME
-FINAL_TARGET = $(DIST)/xpi-stage/$(XPI_NAME)
-else
-FINAL_TARGET = $(DIST)/bin
-endif
+FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)
 
 #
 # The VERSION_NUMBER is suffixed onto the end of the DLLs we ship.
