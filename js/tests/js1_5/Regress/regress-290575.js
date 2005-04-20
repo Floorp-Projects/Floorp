@@ -69,6 +69,20 @@ function crashMe2(n) {
 
 printStatus('crashMe2(0x10000)');
 
-crashMe2(0x10000);
+summary = 'Syntax Error Function to string when more than 65536 arguments';
+expect = 'Error';
+try
+{
+  crashMe2(0x10000);
+  actual = 'No Error';
+  reportCompare(expect, actual, summary);
+}
+catch(e)
+{
+  actual = 'Error';
+  reportCompare(expect, actual, summary);
+  expect = 'SyntaxError';
+  actual = e.name;
+  reportCompare(expect, actual, summary);
+}
 
-reportCompare(expect, actual, summary);
