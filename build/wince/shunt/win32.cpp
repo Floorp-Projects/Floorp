@@ -1032,6 +1032,17 @@ MOZCE_SHUNT_API DWORD mozce_GetCurrentThreadId(void)
     return GetCurrentThreadId();
 }
 
+
+MOZCE_SHUNT_API DWORD mozce_GetCurrentProcessId(void)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_GetCurrentProcessId called\n");
+#endif
+    return GetCurrentProcessId();
+}
+
 MOZCE_SHUNT_API DWORD mozce_TlsAlloc(void)
 {
     MOZCE_PRECHECK

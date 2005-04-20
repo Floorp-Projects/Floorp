@@ -423,10 +423,16 @@
 #endif
 #define GetCurrentProcess         mozce_GetCurrentProcess
 
+#ifdef GetCurrentProcessId
+#undef GetCurrentProcessId
+#endif
+#define GetCurrentProcessId       mozce_GetCurrentProcessId
+
 #ifdef GetCurrentThreadId
 #undef GetCurrentThreadId
 #endif
 #define GetCurrentThreadId        mozce_GetCurrentThreadId
+
 
 #ifdef GetDIBits
 #undef GetDIBits
@@ -642,7 +648,6 @@
 #undef _OleSetClipboard
 #endif
 #define _OleSetClipboard          mozce_OleSetClipboard
-
 
 
 // From win32a.cpp
@@ -992,6 +997,11 @@
 #endif
 #define SetCurrentDirectoryA      mozce_SetCurrentDirectoryA
 
+#ifdef SetCurrentDirectory
+#undef SetCurrentDirectory
+#endif
+#define SetCurrentDirectory      mozce_SetCurrentDirectoryA
+
 #ifdef SetDlgItemTextA
 #undef SetDlgItemTextA
 #endif
@@ -1271,6 +1281,7 @@ extern "C" {
 
   MOZCE_SHUNT_API UINT mozce_GetACP(void);
   MOZCE_SHUNT_API HANDLE mozce_GetCurrentProcess(void);
+  MOZCE_SHUNT_API HANDLE mozce_GetCurrentProcessId(void);
   MOZCE_SHUNT_API DWORD mozce_TlsAlloc(void);
   MOZCE_SHUNT_API BOOL mozce_TlsFree(DWORD dwTlsIndex);
   MOZCE_SHUNT_API DWORD GetCurrentThreadId(void);
