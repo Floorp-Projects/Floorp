@@ -77,11 +77,11 @@
 <popup id="attachmentMenuList">
   <menuseparator/>
   <menuitem id="file-saveAllAttachments" label="&saveAllAttachmentsCmd.label;" 
-    accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="HandleMultipleAttachments('saveAttachment');"/>
+    accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="HandleMultipleAttachments('saveAttachment', currentAttachments);"/>
   <menuitem id="file-detachAllAttachments" label="&detachAllAttachmentsCmd.label;" 
-    accesskey="&detachAllAttachmentsCmd.accesskey;" oncommand="HandleMultipleAttachments('detachAttachment');" />
+    accesskey="&detachAllAttachmentsCmd.accesskey;" oncommand="HandleMultipleAttachments('detachAttachment', currentAttachments);" />
   <menuitem id="file-deleteAllAttachments" label="&deleteAllAttachmentsCmd.label;" 
-    accesskey="&deleteAllAttachmentsCmd.accesskey;" oncommand="HandleMultipleAttachments('deleteAttachment');" />
+    accesskey="&deleteAllAttachmentsCmd.accesskey;" oncommand="HandleMultipleAttachments('deleteAttachment', currentAttachments);" />
 </popup>
 
 <tooltip id="attachmentListTooltip"
