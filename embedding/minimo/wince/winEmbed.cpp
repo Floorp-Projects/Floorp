@@ -30,49 +30,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
+#include <initguid.h> // for IID_DestNetInternet
 
-// C RunTime Header Files
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-
-// Win32 header files
-#include <windows.h>
-#include <commctrl.h>
-#include <commdlg.h>
-#include <aygshell.h>
-#include <sipapi.h>
-#include <winsock2.h>
-#include <initguid.h>
-#include <connmgr.h>
-
-// Mozilla header files
-#include "nsEmbedAPI.h"
-#include "nsIClipboardCommands.h"
-#include "nsXPIDLString.h"
-#include "nsIWebBrowserPersist.h"
-#include "nsIWebBrowserFocus.h"
-#include "nsIWindowWatcher.h"
-#include "nsIObserverService.h"
-#include "nsIObserver.h"
-#include "nsIURI.h"
-#include "plstr.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIEventQueueService.h"
-
-#include "nsDirectoryService.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsProfileDirServiceProvider.h"
-#include "nsAppDirectoryServiceDefs.h"
-
-// Local header files
-#include "winEmbed.h"
-#include "WebBrowserChrome.h"
-#include "WindowCreator.h"
-#include "resource.h"
-
+#include "MinimoPrivate.h"
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
@@ -80,13 +40,17 @@ nsresult PR_CALLBACK
 app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
-#define TASKBAR_H 22
+#define STATUS_DIALOG_H 50
+#define HEADSUP_DIALOG_H 300
+
+#define MENU_HEIGHT 26
 
 // Foward declarations of functions included in this code module:
 static BOOL    CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL    CALLBACK StatusDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL    CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+static nsresult OverrideMozillaComponents();
 static nsresult InitializeWindowCreator();
 static nsresult OpenWebPage(const char * url);
 static nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome);
@@ -103,9 +67,10 @@ static BOOL      gBusy = TRUE;
 static HANDLE    gConnectionHandle = NULL;
 
 // minimo/wince/ list of URLs to populate the URL drop down list with
-static const TCHAR *gDefaultURLs[] = 
+static const TCHAR *gDefaultURLs[] =
 {
     _T("http://browsertest.web.aol.com/tests/javascript/javascpt/index.htm"),
+    _T("http://mecha.mozilla.org/buster/test_url_25.html"),
     _T("http://www.cnn.com/"),
     _T("http://www.disney.com/"),
     _T("http://www.ebay.com/"),
@@ -124,13 +89,12 @@ static const TCHAR *gDefaultURLs[] =
 };
 
 
-
 typedef struct MinimoWindowContext
 {
     HWND mMainWindow;
     HWND mStatusWindow;
     HWND mHeadsUpWindow;
-
+    
 } MinimoWindowContext;
 
 
@@ -138,7 +102,7 @@ PRBool LowOnMemory()
 {
     MEMORYSTATUS memStats;
     memStats.dwLength = sizeof( memStats);
-
+    
     GlobalMemoryStatus( (LPMEMORYSTATUS)&memStats );
     
     if (memStats.dwAvailPhys <= (262144) /*1024*256*/)
@@ -146,79 +110,236 @@ PRBool LowOnMemory()
     return PR_FALSE; 
 }
 
-
-void DoPPCConnection()
+void AdjustSIP(BOOL bRaise)
 {
-    if (gConnectionHandle)
-        ConnMgrReleaseConnection(gConnectionHandle,0);
+    HWND hnd;
+    
+    if( hnd = FindWindow(_T("SipWndClass"),NULL) )
+    {
+        if( bRaise ) {
+            ShowWindow(hnd, SW_SHOW);
+        } else {
+            ShowWindow(hnd, SW_HIDE);
+        }
+    }
+}
 
+HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
+{
+    if (!aChrome)
+    {
+        return NULL;
+    }
+    nsCOMPtr<nsIEmbeddingSiteWindow> baseWindow = do_QueryInterface(aChrome);
+    HWND hwnd = NULL;
+    baseWindow->GetSiteWindow((void **) & hwnd);
+    return hwnd;
+}
+
+HWND GetBrowserDlgFromChrome(nsIWebBrowserChrome *aChrome)
+{
+    return GetParent(GetBrowserFromChrome(aChrome));
+}
+
+void DoPPCConnection(nsIWebBrowserChrome* aChrome)
+{
+    if (gConnectionHandle) {
+        ConnMgrReleaseConnection(gConnectionHandle,0);
+        gConnectionHandle = nsnull;
+    }
+    
+    GUID gNetworkID;
+    (void) ConnMgrMapURL("http://www.mozilla.org", &gNetworkID, 0);
+	
 	DWORD status;
 	CONNMGR_CONNECTIONINFO conn_info;
 	memset(&conn_info, 0, sizeof(CONNMGR_CONNECTIONINFO));
-
+    
 	conn_info.cbSize     = sizeof(CONNMGR_CONNECTIONINFO);
 	conn_info.dwParams   = CONNMGR_PARAM_GUIDDESTNET;
 	conn_info.dwPriority = CONNMGR_PRIORITY_USERINTERACTIVE;
 	conn_info.bExclusive = FALSE;
 	conn_info.bDisabled  = FALSE;
-	conn_info.guidDestNet= IID_DestNetInternet;
-
-	if(ConnMgrEstablishConnectionSync(&conn_info, &gConnectionHandle, 30000, &status) != S_OK)
-		MessageBox(0, "Could not connect to network", "Error", 0);
-
+    
+    conn_info.guidDestNet= gNetworkID;
+    
+    WebBrowserChromeUI::UpdateStatusBarText(aChrome, L"Attempting data communication");
+    
+    printf("Trying GUID from ConnMgrMapURL\n");
+    
+	if(ConnMgrEstablishConnectionSync(&conn_info, &gConnectionHandle, 1000, &status) != S_OK &&
+       gNetworkID != IID_DestNetInternet)
+    {
+        conn_info.guidDestNet = IID_DestNetInternet;
+        
+        printf("Trying GUID IID_DestNetInternet\n");
+        
+        if(ConnMgrEstablishConnectionSync(&conn_info, &gConnectionHandle, 5000, &status) != S_OK)
+        {
+            WebBrowserChromeUI::UpdateStatusBarText(aChrome, L"Could not connect to network");
+            return;
+        }
+    }
+    
     if (status != CONNMGR_STATUS_CONNECTED)
-		MessageBox(0, "Could not connect to network", "Error", 0);
+        WebBrowserChromeUI::UpdateStatusBarText(aChrome, L"Could not connect to network. Status isn't connected");
+}
+
+PRBool SetupAndVerifyPPCConnection(nsIWebBrowserChrome* aChrome)
+{
+    DWORD status;
+    if (!gConnectionHandle)
+        DoPPCConnection(aChrome);
+    
+    if (gConnectionHandle)
+    {
+        ConnMgrConnectionStatus(gConnectionHandle, &status);
+        if (status != CONNMGR_STATUS_CONNECTED)
+        {
+            DoPPCConnection(aChrome);
+        }
+    }
+    
+    if (status != CONNMGR_STATUS_CONNECTED)
+        return PR_FALSE;
+    
+    return PR_TRUE;
+}
+
+
+LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (Msg) 
+	{
+
+    case WM_ACTIVATE:
+        return 0;
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    default:
+        return DefWindowProc(hWnd, Msg, wParam, lParam);
+	}
+	return 0;
+}
+
+
+void RegisterMainWindowClass()
+{
+	WNDCLASS wc;
+    
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = (WNDPROC) MainWindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = ghInstanceApp;
+	wc.hIcon = NULL; //LoadIcon(hInstance, MAKEINTRESOURCE(IDI_BASICDIALOG));
+	wc.hCursor = 0;
+    wc.hbrBackground = (HBRUSH) GetStockObject(GRAY_BRUSH);
+	wc.lpszMenuName = 0;
+	wc.lpszClassName = "Minimo Main Window";
+    
+	RegisterClass(&wc);
+    
 }
 
 int main(int argc, char *argv[])
 {
-    const HWND hWndExistingInstance = FindWindowW(NULL, L"Minimo");
-
-    if (hWndExistingInstance)
+    const HANDLE hMutex = CreateMutexW(0, 0, L"_MINIMO_EXE_MUTEX_");
+    
+	if(0 != hMutex) 
+    {
+		if(ERROR_ALREADY_EXISTS == GetLastError()) 
+        {
+            CloseHandle(hMutex);
+            
+            HWND hWndExistingInstance = FindWindowW(NULL, L"Minimo");
+            
+            if (!hWndExistingInstance)
+            {
+                Sleep(1000);
+                hWndExistingInstance = FindWindowW(NULL, L"Minimo");
+            }
+            
+            if (hWndExistingInstance)
+            {
+                SetForegroundWindow (hWndExistingInstance);    
+                return FALSE;
+            }
+            
+            // Couldn't find the window, probably the other
+            // application is starting up.  Lets just exit.
+            return FALSE;
+        }
+    }
+	else
 	{
-        //Notify other instance and exit
-        SetForegroundWindow (hWndExistingInstance);    
 		return FALSE;
 	}
-
+    
     ghInstanceApp = GetModuleHandle(NULL);
-
+    
 #ifdef _BUILD_STATIC_BIN
     // Initialize XPCOM's module info table
     NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
-
+    
     // Init Embedding APIs
     NS_InitEmbedding(nsnull, nsnull);
-
+    
     // Choose the new profile
     if (NS_FAILED(StartupProfile()))
     {
         NS_TermEmbedding();
         return 1;
     }
-
+    
     InitializeWindowCreator();
-
+    
+    OverrideMozillaComponents();
+    
+	RegisterMainWindowClass();
+    
 	WSADATA wsaData;
 	WSAStartup( MAKEWORD( 1, 1 ), &wsaData );
-
-    DoPPCConnection();
-
+    
     // Open the initial browser window
     OpenWebPage("resource://gre/res/start.html");
     
     WPARAM rv = AppCallbacks::RunEventLoop(gRunCondition);
-
+    
     // Close down Embedding APIs
     NS_TermEmbedding();
-
-
+    
+    
     if (gConnectionHandle)
         ConnMgrReleaseConnection(gConnectionHandle,0);
-
+    
 	WSACleanup();
+    
+    return rv;
+}
 
+
+nsresult OverrideMozillaComponents()
+{
+    // Register our own native prompting service for message boxes, login
+    // prompts etc.
+    nsCOMPtr<nsIFactory> promptFactory;
+    nsresult rv = NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIComponentRegistrar> registrar;
+    rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+    if (NS_FAILED(rv)) return rv;
+    
+    static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
+    
+    rv = registrar->RegisterFactory(kPromptServiceCID,
+                                    "Prompt Service",
+                                    NS_PROMPTSERVICE_CONTRACTID,
+                                    promptFactory);
     return rv;
 }
 
@@ -245,17 +366,12 @@ nsresult InitializeWindowCreator()
     return NS_ERROR_FAILURE;
 }
 
-void LoadURL(nsIWebNavigation* webNavigation, char* url)
+void LoadURL(nsIWebBrowserChrome* aChrome, nsIWebNavigation* webNavigation, char* url)
 {
-
-    if (!gConnectionHandle)
-        DoPPCConnection();
-
-    DWORD status;
-    ConnMgrConnectionStatus(gConnectionHandle, &status);
-    if (status != CONNMGR_STATUS_CONNECTED)
-        DoPPCConnection();
-
+    WebBrowserChromeUI::UpdateBusyState(aChrome, PR_TRUE);
+    
+    SetupAndVerifyPPCConnection(aChrome);
+    
     webNavigation->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
                            nsIWebNavigation::LOAD_FLAGS_NONE,
                            nsnull,
@@ -266,43 +382,26 @@ void LoadURL(nsIWebNavigation* webNavigation, char* url)
 nsresult OpenWebPage(const char *url)
 {
     nsresult  rv;
-
+    
     // Create the chrome object. Note that it leaves this function
     // with an extra reference so that it can released correctly during
     // destruction (via Win32UI::Destroy)
-
+    
     nsCOMPtr<nsIWebBrowserChrome> chrome;
     rv = AppCallbacks::CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL,
-           nsnull, getter_AddRefs(chrome));
+                                           nsnull, getter_AddRefs(chrome));
     if (NS_SUCCEEDED(rv))
     {
         // Start loading a page
         nsCOMPtr<nsIWebBrowser> newBrowser;
         chrome->GetWebBrowser(getter_AddRefs(newBrowser));
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-
-        LoadURL(webNav, (char*)url);
+        
+        LoadURL(chrome, webNav, (char*)url);
         return NS_OK;
     }
-
+    
     return rv;
-}   
-
-HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
-{
-    if (!aChrome)
-    {
-        return NULL;
-    }
-    nsCOMPtr<nsIEmbeddingSiteWindow> baseWindow = do_QueryInterface(aChrome);
-    HWND hwnd = NULL;
-    baseWindow->GetSiteWindow((void **) & hwnd);
-    return hwnd;
-}
-
-HWND GetBrowserDlgFromChrome(nsIWebBrowserChrome *aChrome)
-{
-    return GetParent(GetBrowserFromChrome(aChrome));
 }
 
 nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
@@ -327,13 +426,13 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
     if (webBrowserAsWin)
     {
         webBrowserAsWin->SetPositionAndSize(rect.left, 
-                                   rect.top, 
-                                   rect.right - rect.left, 
-                                   rect.bottom - rect.top,
-                                   PR_TRUE);
+                                            rect.top, 
+                                            rect.right - rect.left, 
+                                            rect.bottom - rect.top,
+                                            PR_TRUE);
         webBrowserAsWin->SetVisibility(PR_TRUE);
     }
-
+    
     return NS_OK;
 }
 
@@ -344,7 +443,7 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
     nsCOMPtr<nsIWebNavigation> webNavigation;
     aChrome->GetWebBrowser(getter_AddRefs(webBrowser));
     webNavigation = do_QueryInterface(webBrowser);
-
+    
     PRBool canGoBack = PR_FALSE;
     PRBool canGoForward = PR_FALSE;
     if (webNavigation)
@@ -352,11 +451,11 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
         webNavigation->GetCanGoBack(&canGoBack);
         webNavigation->GetCanGoForward(&canGoForward);
     }
-
+    
     PRBool canCutSelection = PR_FALSE;
     PRBool canCopySelection = PR_FALSE;
     PRBool canPaste = PR_FALSE;
-
+    
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
     if (clipCmds)
     {
@@ -364,35 +463,39 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
         clipCmds->CanCopySelection(&canCopySelection);
         clipCmds->CanPaste(&canPaste);
     }
-
+    
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+    if (!mwcontext)
+		return;
     
     HWND button;
-
+    
     button = GetDlgItem(mwcontext->mStatusWindow, IDC_BACK);
     if (button)
-      EnableWindow(button, canGoBack);
-
+        EnableWindow(button, canGoBack);
+    
     button = GetDlgItem(mwcontext->mStatusWindow, IDC_FORWARD);
     if (button)
-      EnableWindow(button, canGoForward);
+        EnableWindow(button, canGoForward);
 }
 
-void LoadURLInURLBar(HWND hwndDlg, nsIWebNavigation* webNavigation)
+void LoadURLInURLBar(HWND hwndDlg, nsIWebBrowserChrome* chrome, nsIWebNavigation* webNavigation)
 {
     TCHAR szURL[2048];
     memset(szURL, 0, sizeof(szURL));
     GetDlgItemText(hwndDlg, IDC_ADDRESS, szURL, sizeof(szURL) / sizeof(szURL[0]) - 1);
- 
-    LoadURL(webNavigation, szURL);
+    
+    LoadURL(chrome, webNavigation, szURL);
 }
 
 BOOL CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
-
+	if (!mwcontext)
+		return FALSE;
+    
     HWND hwndBrowser = GetDlgItem(mwcontext->mMainWindow, IDC_BROWSER);
-
+    
     nsIWebBrowserChrome *chrome = nsnull ;
     if (hwndBrowser)
     {
@@ -405,17 +508,10 @@ BOOL CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         chrome->GetWebBrowser(getter_AddRefs(webBrowser));
         webNavigation = do_QueryInterface(webBrowser);
     }
-
+    
     switch (uMsg)
     {
-
-        case WM_INITDIALOG:
-        {
-            SetWindowTextW(hwndDlg, L"Headsup Display");
-        }
-        return TRUE;
-
-        case WM_COMMAND:
+    case WM_COMMAND:
         {
             if (!webBrowser)
             {
@@ -434,27 +530,25 @@ BOOL CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 else if (HIWORD(wParam) == CBN_SELENDOK)
                 {
                     HWND hwndAddress = GetDlgItem(hwndDlg, IDC_ADDRESS);
-
+                    
                     // Find the current selected item and get the item's length.
                     int t = SendMessage(hwndAddress, CB_GETCURSEL, 0, 0);
                     int l = SendMessage(hwndAddress, CB_GETLBTEXTLEN, t, 0);
-
+                    
                     // Get the text
                     char* buffer = new char[l + 1];
                     SendMessage(hwndAddress, CB_GETLBTEXT, t, (long) buffer);
                     
                     // Set the text area so that we can see it
                     SetDlgItemText(hwndDlg, IDC_ADDRESS, buffer);
-
+                    
                     delete buffer;
                 }
                 break;
                 
             case IDC_GO:
-                {
-                LoadURLInURLBar(hwndDlg,webNavigation);
+                LoadURLInURLBar(hwndDlg, chrome, webNavigation);
                 ::ShowWindow(hwndDlg, SW_HIDE);
-                }
                 break;
                 
             case IDC_STOP:
@@ -465,17 +559,17 @@ BOOL CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             case IDC_RELOAD:
                 webNavigation->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
                 break;
-
+                
             case IDC_Hide:
-            {
-                RECT rect;
-                ::ShowWindow(mwcontext->mHeadsUpWindow, SW_HIDE);
-                ::GetWindowRect(mwcontext->mHeadsUpWindow, &rect);
-                ::InvalidateRect(mwcontext->mMainWindow, &rect, TRUE);
-                ::SetForegroundWindow(mwcontext->mMainWindow);
-                break;
-            }
-       
+                {
+                    RECT rect;
+                    ::ShowWindow(mwcontext->mHeadsUpWindow, SW_HIDE);
+                    ::GetWindowRect(mwcontext->mHeadsUpWindow, &rect);
+                    ::InvalidateRect(mwcontext->mMainWindow, &rect, TRUE);
+                    ::SetForegroundWindow(mwcontext->mMainWindow);
+                    break;
+                }
+                
             case IDM_EXIT:
                 PostMessage(hwndDlg, WM_SYSCOMMAND, SC_CLOSE, 0);
                 break;
@@ -505,9 +599,11 @@ static HBRUSH yellowBrush = NULL;
 BOOL CALLBACK StatusDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
-
+	if (!mwcontext)
+	    return FALSE;
+    
     HWND hwndBrowser = GetDlgItem(mwcontext->mMainWindow, IDC_BROWSER);
-
+    
     nsIWebBrowserChrome *chrome = nsnull ;
     if (hwndBrowser)
     {
@@ -520,30 +616,29 @@ BOOL CALLBACK StatusDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
         chrome->GetWebBrowser(getter_AddRefs(webBrowser));
         webNavigation = do_QueryInterface(webBrowser);
     }
-
+    
     switch (uMsg) {
-
+        
     case WM_INITDIALOG:
         {
             yellowBrush = CreateSolidBrush(RGB(255,255,204));
-            SetWindowTextW(hwndDlg, L"Progress");
         }
         return TRUE;
-
+        
     case WM_CTLCOLORDLG:
         return (BOOL) yellowBrush;
-
+        
     case WM_DESTROY:
         DeleteObject(yellowBrush);
         break;
-
+        
     case WM_COMMAND:
         {
             switch (LOWORD(wParam))
             {
-                case IDC_STOP:
-                    webNavigation->Stop(nsIWebNavigation::STOP_ALL);
-                    UpdateUI(chrome);
+            case IDC_STOP:
+                webNavigation->Stop(nsIWebNavigation::STOP_ALL);
+                UpdateUI(chrome);
             }
         }
     }
@@ -566,27 +661,14 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         chrome->GetWebBrowser(getter_AddRefs(webBrowser));
         webNavigation = do_QueryInterface(webBrowser);
     }
-
+    
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);        
-
+	if (!mwcontext)
+	    return FALSE;
+    
     // Test the message
     switch (uMsg)
     {
-    case WM_INITDIALOG:
-    {
-        SHINITDLGINFO hidi;
-        hidi.dwMask  = SHIDIM_FLAGS;
-        hidi.hDlg    = hwndDlg;
-        hidi.dwFlags = SHIDIF_FULLSCREENNOMENUBAR;
-        SHInitDialog( &hidi );
-
-        SetForegroundWindow(hwndDlg);
-        SHFullScreen(hwndDlg, SHFS_HIDETASKBAR | SHFS_HIDESIPBUTTON);
-
-        SetWindowTextW(hwndDlg, L"Minimo");
-    }
-    return TRUE;
-
     case WM_SYSCOMMAND:
         if (wParam == SC_CLOSE)
         {
@@ -594,7 +676,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             return TRUE;
         }
         break;
-    
+        
     case WM_HIBERNATE: /* not sure about this */
         // fall through.
     case WM_CLOSE:
@@ -608,61 +690,82 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             free((void*) mwcontext);
         }
         return 0;
-
+        
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
-
-
+        
+        
     case WM_ACTIVATE:
         {
             nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(webBrowser));
+            if (!focus)
+                return 0;
 
             switch (wParam)
             {
-               case WA_ACTIVE:
-                   gActive = TRUE;
-                   if (focus)
-                       focus->Activate();
-                   break;
-                   
-               case WA_INACTIVE:
-                   if (focus)
-                       focus->Deactivate();
-               default:
-                   break;
+            case WA_ACTIVE:
+                gActive = TRUE;
+                if (focus)
+                    focus->Activate();
+                break;
+                
+            case WA_INACTIVE:
+                if (focus)
+                    focus->Deactivate();
+            default:
+                break;
             }
         }
         return 0;
-
+        
     case WM_SIZE:
-        return 0; /*If an application processes this message, it should return zero.*/
+        {
+            if (!mwcontext || !chrome)
+                return 0;
+        
+            int screenH = GetSystemMetrics(SM_CYSCREEN);
+            int screenW = GetSystemMetrics(SM_CXSCREEN) ;
+            
+            MoveWindow(mwcontext->mMainWindow,    0, MENU_HEIGHT, screenW, screenH - MENU_HEIGHT, TRUE);
+            
+            RECT rt;
+            GetClientRect(mwcontext->mMainWindow, &rt);
+            
+            MoveWindow(mwcontext->mHeadsUpWindow, rt.left, rt.top, rt.right, HEADSUP_DIALOG_H, TRUE);
+            MoveWindow(mwcontext->mStatusWindow,  rt.left, rt.top, rt.right, STATUS_DIALOG_H, TRUE);
+            
+            HWND hwndBrowser = GetDlgItem(mwcontext->mMainWindow, IDC_BROWSER);
+            if (hwndBrowser)
+                MoveWindow(hwndBrowser, rt.left, rt.top, rt.right, rt.bottom, TRUE);
+            
+            ResizeEmbedding(chrome);
+            return 0;
+        }
     }
     return FALSE;
 }
 
 nsresult StartupProfile()
-{
-
+{    
 	nsCOMPtr<nsIFile> appDataDir;
 	nsresult rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR, getter_AddRefs(appDataDir));
 	if (NS_FAILED(rv))
-      return rv;
+        return rv;
     
 	appDataDir->Append(NS_LITERAL_STRING("winembed"));
 	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
-
+    
 	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
     NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
     if (!locProvider)
-      return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     
 	rv = locProvider->Register();
     if (NS_FAILED(rv))
-      return rv;
+        return rv;
     
-	return locProvider->SetProfileDir(localAppDataDir);
-
+	return locProvider->SetProfileDir(localAppDataDir);   
 }
 
 void
@@ -675,129 +778,146 @@ KillCurrentLoad(nsIWebBrowserChrome* aChrome)
     webNavigation = do_QueryInterface(webBrowser);
     if (webNavigation)
         webNavigation->Stop(nsIWebNavigation::STOP_ALL);
-
+    
     HWND win = GetBrowserDlgFromChrome(aChrome);
+    
+    WebBrowserChromeUI::UpdateStatusBarText(aChrome, L"Running Low on Memory. Cancelling page load.");
+    
     MessageBox(win, "Running Low on Memory. Cancelling page load.", "Note", 0);
-
+    
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(win, GWL_USERDATA);
+    if (!mwcontext)
+	    return;
+    
     ::ShowWindow(mwcontext->mStatusWindow, SW_HIDE);
 }
 
 nativeWindow 
 WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
-  // Load the browser dialog from resource
-  HWND hwndDialog;
-  PRUint32 chromeFlags;
-
-  chrome->GetChromeFlags(&chromeFlags);
-  hwndDialog = CreateDialog(ghInstanceApp,
-                            MAKEINTRESOURCE(IDD_BROWSER),
-                            NULL,
-                            BrowserDlgProc);
-  if (!hwndDialog)
-    return NULL;
-
-  HWND statusDialog = CreateDialog(ghInstanceApp,
-                                   MAKEINTRESOURCE(IDD_STATUS_DISPLAY),
-                                   NULL,
-                                   StatusDlgProc);
-
-  if (!statusDialog) {
-      MessageBox(0, "statusDialog failed", "error", 0);
-      return NULL;
-  }
-
-  HWND headsupDialog = CreateDialog(ghInstanceApp,
-                                    MAKEINTRESOURCE(IDD_HEADSUP_DISPLAY),
-                                    NULL,
-                                    HeadsUpDlgProc);
-
-  if (!headsupDialog)
-  {
-      MessageBox(0, "headsupDialog failed", "error", 0);
-      return NULL;
-  }
-
-  RECT rtDesktop;
-  SystemParametersInfo(SPI_GETWORKAREA, 0, &rtDesktop, NULL);
-
-#define STATUS_DIALOG_H 50
-#define HEADSUP_DIALOG_H 300
-
-  int screenH = GetSystemMetrics(SM_CYSCREEN) - TASKBAR_H;
-  int screenW = GetSystemMetrics(SM_CXSCREEN) ;
-  
-  MoveWindow(hwndDialog,    0, 0, screenW, screenH, TRUE);
-  MoveWindow(headsupDialog, 0, 0, screenW, HEADSUP_DIALOG_H, TRUE);
-  MoveWindow(statusDialog,  0, 0, screenW, STATUS_DIALOG_H, TRUE);
-  
-
-  // Add some interesting URLs to the address drop down
-  HWND hwndAddress = GetDlgItem(headsupDialog, IDC_ADDRESS);
-  if (hwndAddress) {
-    for (int i = 0; i < sizeof(gDefaultURLs) / sizeof(gDefaultURLs[0]); i++)
-    {
-      SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) gDefaultURLs[i]);
+    
+	HWND mainWindow = CreateWindow("Minimo Main Window", 
+                                   "Minimo", 
+                                   WS_VISIBLE, 
+                                   CW_USEDEFAULT, 
+                                   CW_USEDEFAULT, 
+                                   CW_USEDEFAULT, 
+                                   CW_USEDEFAULT, 
+                                   NULL, 
+                                   NULL, 
+                                   ghInstanceApp, 
+                                   NULL);
+    
+    
+    
+    // Load the browser dialog from resource
+    HWND hwndDialog = CreateDialog(ghInstanceApp,
+                                   MAKEINTRESOURCE(IDD_BROWSER),
+                                   mainWindow,
+                                   BrowserDlgProc);
+    if (!hwndDialog)
+        return NULL;
+    
+    HWND statusDialog = CreateDialog(ghInstanceApp,
+                                     MAKEINTRESOURCE(IDD_STATUS_DISPLAY),
+                                     mainWindow,
+                                     StatusDlgProc);
+    
+    if (!statusDialog) {
+        MessageBox(0, "statusDialog failed", "error", 0);
+        return NULL;
     }
-  }
+    
+    HWND headsupDialog = CreateDialog(ghInstanceApp,
+                                      MAKEINTRESOURCE(IDD_HEADSUP_DISPLAY),
+                                      mainWindow,
+                                      HeadsUpDlgProc);
+    
+    if (!headsupDialog)
+    {
+        MessageBox(0, "headsupDialog failed", "error", 0);
+        return NULL;
+    }
+    
+    int screenH = GetSystemMetrics(SM_CYSCREEN);
+    int screenW = GetSystemMetrics(SM_CXSCREEN) ;
+    
+    MoveWindow(mainWindow,    0, MENU_HEIGHT, screenW, screenH - MENU_HEIGHT, TRUE);
+    
+    RECT rt;
+    GetClientRect(mainWindow, &rt);
+    
+    MoveWindow(hwndDialog,    rt.left, rt.top, rt.right, rt.bottom, TRUE);
+    MoveWindow(headsupDialog, rt.left, rt.top, rt.right, HEADSUP_DIALOG_H, TRUE);
+    MoveWindow(statusDialog,  rt.left, rt.top, rt.right, STATUS_DIALOG_H, TRUE);
+    
+    // Fetch the browser window handle
+    HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
+    MoveWindow(hwndBrowser, rt.left, rt.top, rt.right, rt.bottom, TRUE);
 
-  // Fetch the browser window handle
-  HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
-  MoveWindow(hwndBrowser, 0, 0, screenW, screenH, TRUE);
-
-  SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
-  SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
-
-  MinimoWindowContext *mwcontext = (MinimoWindowContext*) malloc(sizeof(MinimoWindowContext));
-  
-  mwcontext->mMainWindow = hwndDialog;
-  mwcontext->mStatusWindow = statusDialog;
-  mwcontext->mHeadsUpWindow = headsupDialog;
-
-  SetWindowLong(hwndDialog,    GWL_USERDATA, (LONG)mwcontext);  
-  SetWindowLong(headsupDialog, GWL_USERDATA, (LONG)mwcontext);  
-  SetWindowLong(statusDialog,  GWL_USERDATA, (LONG)mwcontext);  
-
-  // Activate the window
-  PostMessage(hwndDialog, WM_ACTIVATE, WA_ACTIVE, 0);
-
-  ::ShowWindow(hwndDialog, SW_SHOW);
-
-  gDialogCount++;
-
-  return hwndBrowser;
+    // Add some interesting URLs to the address drop down
+    HWND hwndAddress = GetDlgItem(headsupDialog, IDC_ADDRESS);
+    if (hwndAddress) {
+        for (int i = 0; i < sizeof(gDefaultURLs) / sizeof(gDefaultURLs[0]); i++)
+        {
+            SendMessage(hwndAddress, CB_ADDSTRING, 0, (LPARAM) gDefaultURLs[i]);
+        }
+    }    
+    
+    SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
+    SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
+    
+    MinimoWindowContext *mwcontext = (MinimoWindowContext*) malloc(sizeof(MinimoWindowContext));
+    if (!mwcontext)
+        return NULL;
+    
+    mwcontext->mMainWindow = hwndDialog;
+    mwcontext->mStatusWindow = statusDialog;
+    mwcontext->mHeadsUpWindow = headsupDialog;
+    
+    SetWindowLong(hwndDialog,    GWL_USERDATA, (LONG)mwcontext);  
+    SetWindowLong(headsupDialog, GWL_USERDATA, (LONG)mwcontext);  
+    SetWindowLong(statusDialog,  GWL_USERDATA, (LONG)mwcontext);  
+    
+    // Activate the window
+    PostMessage(hwndDialog, WM_ACTIVATE, WA_ACTIVE, 0);
+    
+    ::ShowWindow(hwndDialog, SW_SHOW);
+    
+    gDialogCount++;
+    
+    return hwndBrowser;
 }
 
 void 
 WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
 {
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  nsCOMPtr<nsIWebNavigation> webNavigation;
-
-  chrome->GetWebBrowser(getter_AddRefs(webBrowser));
-  webNavigation = do_QueryInterface(webBrowser);
-  if (webNavigation)
-    webNavigation->Stop(nsIWebNavigation::STOP_ALL);
-
-  chrome->ExitModalEventLoop(NS_OK);
-
-  HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
-  if (hwndDlg == NULL)
-    return;
-
-  // Explicitly destroy the embedded browser and then the chrome
-
-  // First the browser
-  nsCOMPtr<nsIWebBrowser> browser = nsnull;
-  chrome->GetWebBrowser(getter_AddRefs(browser));
-  nsCOMPtr<nsIBaseWindow> browserAsWin = do_QueryInterface(browser);
-  if (browserAsWin)
-    browserAsWin->Destroy();
-
-      // Now the chrome
-  chrome->SetWebBrowser(nsnull);
-  NS_RELEASE(chrome);
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nsCOMPtr<nsIWebNavigation> webNavigation;
+    
+    chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+    webNavigation = do_QueryInterface(webBrowser);
+    if (webNavigation)
+        webNavigation->Stop(nsIWebNavigation::STOP_ALL);
+    
+    chrome->ExitModalEventLoop(NS_OK);
+    
+    HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
+    if (hwndDlg == NULL)
+        return;
+    
+    // Explicitly destroy the embedded browser and then the chrome
+    
+    // First the browser
+    nsCOMPtr<nsIWebBrowser> browser = nsnull;
+    chrome->GetWebBrowser(getter_AddRefs(browser));
+    nsCOMPtr<nsIBaseWindow> browserAsWin = do_QueryInterface(browser);
+    if (browserAsWin)
+        browserAsWin->Destroy();
+    
+    // Now the chrome
+    chrome->SetWebBrowser(nsnull);
+    NS_RELEASE(chrome);
 }
 
 
@@ -811,13 +931,13 @@ void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
     {
         return;
     }
-
+    
     // Clear the window user data
     HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
     SetWindowLong(hwndBrowser, GWL_USERDATA, nsnull);
     DestroyWindow(hwndBrowser);
     DestroyWindow(hwndDlg);
-
+    
     --gDialogCount;
     if (gDialogCount == 0)
     {
@@ -842,16 +962,21 @@ WebBrowserChromeUI::SetFocus(nsIWebBrowserChrome *chrome)
 void 
 WebBrowserChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText)
 {
+    if (!aChrome)
+        return;
+    
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
-
+    
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
-
+	if (!mwcontext)
+	    return;
+    
     nsCString status; 
     if (aStatusText)
         status.AssignWithConversion(aStatusText);
-
+    
     SetDlgItemText(mwcontext->mStatusWindow, IDC_STATUS, status.get());
-
+    
     if (LowOnMemory())
         KillCurrentLoad(aChrome);
 }
@@ -863,7 +988,7 @@ WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
     nsCOMPtr<nsIWebNavigation> webNavigation;
     aChrome->GetWebBrowser(getter_AddRefs(webBrowser));
     webNavigation = do_QueryInterface(webBrowser);
-
+    
     nsCOMPtr<nsIURI> currentURI;
     webNavigation->GetCurrentURI(getter_AddRefs(currentURI));
     if (currentURI)
@@ -872,7 +997,8 @@ WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
         currentURI->GetAsciiSpec(uriString);
         HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
         MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
-        SetDlgItemText(mwcontext->mHeadsUpWindow, IDC_ADDRESS, uriString.get());
+        if (mwcontext)
+            SetDlgItemText(mwcontext->mHeadsUpWindow, IDC_ADDRESS, uriString.get());
     }
 }
 
@@ -881,12 +1007,14 @@ WebBrowserChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
 {
     if (LowOnMemory())
         KillCurrentLoad(aChrome);
-
+    
     gBusy = aBusy;
-
+    
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
-
+	if (!mwcontext)
+		return;
+    
     if (aBusy) {
         ::ShowWindow(mwcontext->mStatusWindow, SW_SHOW);
         ::SetForegroundWindow(mwcontext->mStatusWindow);
@@ -898,22 +1026,22 @@ WebBrowserChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
         ::GetWindowRect(mwcontext->mStatusWindow, &rect);
         ::InvalidateRect(mwcontext->mMainWindow, &rect, TRUE);
         ::SetForegroundWindow(mwcontext->mMainWindow);
-
+        
         nsMemory::HeapMinimize(PR_TRUE);
     }
-        
-
+    
+    
     HWND button;
     button = GetDlgItem(mwcontext->mHeadsUpWindow, IDC_STOP);
-
+    
     if (button)
         EnableWindow(button, aBusy);
-
+    
     button = GetDlgItem(mwcontext->mHeadsUpWindow, IDC_GO);
-
+    
     if (button)
         EnableWindow(button, !aBusy);
-
+    
     UpdateUI(aChrome);
 }
 
@@ -922,9 +1050,11 @@ WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurren
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
- 
+	if (!mwcontext)
+		return;
+    
     HWND hwndProgress = GetDlgItem(mwcontext->mStatusWindow, IDC_PROGRESS);
-
+    
     if (aCurrent < 0)
     {
         aCurrent = 0;
@@ -938,8 +1068,7 @@ WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurren
         SendMessage(hwndProgress, PBM_SETRANGE, 0, MAKELPARAM(0, aMax));
         SendMessage(hwndProgress, PBM_SETPOS, aCurrent, 0);
     }
-
-
+    
     if (LowOnMemory())
         KillCurrentLoad(aChrome);
 }
@@ -962,8 +1091,8 @@ WebBrowserChromeUI::HideTooltip(nsIWebBrowserChrome *aChrome)
 void 
 WebBrowserChromeUI::ShowWindow(nsIWebBrowserChrome *aChrome, PRBool aShow)
 {
-  HWND win = GetBrowserDlgFromChrome(aChrome);
-  ::ShowWindow(win, aShow ? SW_SHOW : SW_HIDE);
+    HWND win = GetBrowserDlgFromChrome(aChrome);
+    ::ShowWindow(win, aShow ? SW_SHOW : SW_HIDE);
 }
 
 void WebBrowserChromeUI::SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PRInt32 aHeight)
@@ -975,9 +1104,11 @@ WebBrowserChromeUI::DoubleClick(nsIWebBrowserChrome *aChrome, PRInt32 x, PRInt32
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
     MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
-
+	if (!mwcontext)
+		return false;
+    
     HWND hwndBrowser = GetDlgItem(mwcontext->mMainWindow, IDC_BROWSER);
-
+    
     nsIWebBrowserChrome *chrome = nsnull ;
     if (hwndBrowser)
     {
@@ -990,11 +1121,11 @@ WebBrowserChromeUI::DoubleClick(nsIWebBrowserChrome *aChrome, PRInt32 x, PRInt32
         chrome->GetWebBrowser(getter_AddRefs(webBrowser));
         webNavigation = do_QueryInterface(webBrowser);
     }
-
+    
     // Stop any current load.
     webNavigation->Stop(nsIWebNavigation::STOP_ALL);
-
-
+    
+    
     // Show our heads up display.
     ::ShowWindow(mwcontext->mHeadsUpWindow, SW_SHOW);
     return true;
@@ -1009,84 +1140,84 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
                                            nsIWebBrowserChrome *aParent,
                                            nsIWebBrowserChrome **aNewWindow)
 {
-  WebBrowserChrome * chrome = new WebBrowserChrome();
-  if (!chrome)
-    return NS_ERROR_FAILURE;
-
-  // the interface to return and one addref, which we assume will be
-  // immediately released
-  CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
-  // now an extra addref; the window owns itself (to be released by
-  // WebBrowserChromeUI::Destroy)
-  NS_ADDREF(*aNewWindow);
-
-  chrome->SetChromeFlags(aChromeFlags);
-  chrome->SetParent(aParent);
-
-  // Insert the browser
-  nsCOMPtr<nsIWebBrowser> newBrowser;
-  chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
-  if (!newBrowser)
-    return NS_ERROR_FAILURE;
-
-  // Place it where we want it.
-  ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
-
-  // if opened as chrome, it'll be made visible after the chrome has loaded.
-  // otherwise, go ahead and show it now.
-  if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
-    WebBrowserChromeUI::ShowWindow(*aNewWindow, PR_TRUE);
-
-  return NS_OK;
+    WebBrowserChrome * chrome = new WebBrowserChrome();
+    if (!chrome)
+        return NS_ERROR_FAILURE;
+    
+    // the interface to return and one addref, which we assume will be
+    // immediately released
+    CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
+    // now an extra addref; the window owns itself (to be released by
+    // WebBrowserChromeUI::Destroy)
+    NS_ADDREF(*aNewWindow);
+    
+    chrome->SetChromeFlags(aChromeFlags);
+    chrome->SetParent(aParent);
+    
+    // Insert the browser
+    nsCOMPtr<nsIWebBrowser> newBrowser;
+    chrome->CreateBrowser(-1, -1, -1, -1, getter_AddRefs(newBrowser));
+    if (!newBrowser)
+        return NS_ERROR_FAILURE;
+    
+    // Place it where we want it.
+    ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+    
+    // if opened as chrome, it'll be made visible after the chrome has loaded.
+    // otherwise, go ahead and show it now.
+    if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
+        WebBrowserChromeUI::ShowWindow(*aNewWindow, PR_TRUE);
+    
+    return NS_OK;
 }
 
 void AppCallbacks::EnableChromeWindow(nsIWebBrowserChrome *aWindow,
-                      PRBool aEnabled)
+                                      PRBool aEnabled)
 {
-  HWND hwnd = GetBrowserDlgFromChrome(aWindow);
-  ::EnableWindow(hwnd, aEnabled ? TRUE : FALSE);
+    HWND hwnd = GetBrowserDlgFromChrome(aWindow);
+    ::EnableWindow(hwnd, aEnabled ? TRUE : FALSE);
 }
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
 {
-  MSG msg;
-  HANDLE hFakeEvent = ::CreateEventA(NULL, TRUE, FALSE, NULL);
-  
-  nsCOMPtr<nsIEventQueue> eventQ;
-  nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID);
-  if (!eqs)
-      return -1;
-
-  eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
-
-  while (aRunCondition ) 
-  {
-    // Process pending messages
-    while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) 
+    MSG msg;
+    HANDLE hFakeEvent = ::CreateEventA(NULL, TRUE, FALSE, NULL);
+    
+    nsCOMPtr<nsIEventQueue> eventQ;
+    nsCOMPtr<nsIEventQueueService> eqs = do_GetService(kEventQueueServiceCID);
+    if (!eqs)
+        return -1;
+    
+    eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+    
+    while (aRunCondition ) 
     {
-      if (!::GetMessage(&msg, NULL, 0, 0)) 
-      {
-          aRunCondition = PR_FALSE;
-          break;
-      }
-
-      eventQ->ProcessPendingEvents();
-
-      ::TranslateMessage(&msg);
-      ::DispatchMessage(&msg);
+        // Process pending messages
+        while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) 
+        {
+            if (!::GetMessage(&msg, NULL, 0, 0)) 
+            {
+                aRunCondition = PR_FALSE;
+                break;
+            }
+            
+            eventQ->ProcessPendingEvents();
+            
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
+        }
+        
+        // Do idle stuff
+        if (gActive)
+        {
+            if (!gBusy)
+                ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 5000, QS_ALLEVENTS);
+            
+            eventQ->ProcessPendingEvents();
+        }
     }
-
-    // Do idle stuff
-    if (gActive)
-    {
-        if (!gBusy)
-            ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 100, QS_ALLEVENTS);
-
-        eventQ->ProcessPendingEvents();
-    }
-  }
-  ::CloseHandle(hFakeEvent);
-  return msg.wParam;
+    ::CloseHandle(hFakeEvent);
+    return msg.wParam;
 }

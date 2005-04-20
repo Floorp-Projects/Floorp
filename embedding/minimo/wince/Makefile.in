@@ -67,6 +67,7 @@ CPPSRCS		= \
 		winEmbed.cpp \
 		WebBrowserChrome.cpp \
 		WindowCreator.cpp \
+		PromptService.cpp \
 		$(NULL)
 
 

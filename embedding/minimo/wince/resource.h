@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft eMbedded Visual C++ generated include file.
+// Microsoft Developer Studio generated include file.
 // Used by winEmbed.rc
 //
 #define IDC_MYICON                      2
@@ -41,6 +41,8 @@
 #define IDD_UTILITIES                   137
 #define IDM_POPUPMENU                   138
 #define IDB_SPLASH                      140
+#define IDM_MINIMO_A                    500
+#define IDM_MINIMO_B                    501
 #define MOZ_EDIT_URI                    1001
 #define IDC_GO                          1003
 #define IDC_BROWSER                     1004
@@ -100,7 +102,10 @@
 #define IDS_CAP_C                       32819
 #define ID_C_C                          32820
 #define IDS_CAP_POPUPMENU               32822
-#define IDC_STATIC                      -1
+#define IDS_MINIMO_A                    40001
+#define IDS_MINIMO_B                    40002
+
+#define IDC_STATIC -1
 
 // Next default values for new objects
 // 
