@@ -497,7 +497,9 @@ nsUnknownContentTypeDialog.prototype = {
         {
           // wasn't a fileURL
           var tmpurl = url.clone(); // don't want to change the real url
-          tmpurl.userPass = "";
+          try {
+            tmpurl.userPass = "";
+          } catch (ex) {}
           pathString = tmpurl.prePath;
         }
 
