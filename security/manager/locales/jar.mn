@@ -1,10 +1,15 @@
 #filter substitution
 
 @AB_CD@.jar:
+#ifdef MOZ_XUL_APP
+% locale pipnss @AB_CD@ %locale/@AB_CD@/pipnss/
+% locale pippki @AB_CD@ %locale/@AB_CD@/pippki/
+#else
 * locale/@AB_CD@/pipnss/contents.rdf          (generic/chrome/pipnss/contents.rdf)
+* locale/@AB_CD@/pippki/contents.rdf          (generic/chrome/pippki/contents.rdf)
+#endif
   locale/@AB_CD@/pipnss/pipnss.properties     (%chrome/pipnss/pipnss.properties)
   locale/@AB_CD@/pipnss/security.properties   (%chrome/pipnss/security.properties)
-* locale/@AB_CD@/pippki/contents.rdf          (generic/chrome/pippki/contents.rdf)
   locale/@AB_CD@/pippki/pippki.dtd            (%chrome/pippki/pippki.dtd)
   locale/@AB_CD@/pippki/pref-ssl.dtd          (%chrome/pippki/pref-ssl.dtd)
   locale/@AB_CD@/pippki/pippki.properties     (%chrome/pippki/pippki.properties)

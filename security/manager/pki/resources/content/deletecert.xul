@@ -44,7 +44,7 @@
   title="&certmgr.deletecert.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="setWindowName();"
-  buttons="accept,cancel,help"
+#expand buttons="accept,cancel__HELP_BUTTON__"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
   ondialoghelp="doHelp();">

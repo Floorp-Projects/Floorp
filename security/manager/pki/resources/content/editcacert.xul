@@ -44,7 +44,7 @@
 <dialog id="editCaCert" 
         title="&certmgr.editcacert.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        buttons="accept,cancel,help"
+#expand buttons="accept,cancel__HELP_BUTTON__"
         ondialogaccept="return doOK();"
         ondialoghelp="openHelp('edit_ca_certs');"
         onload="setWindowName();"

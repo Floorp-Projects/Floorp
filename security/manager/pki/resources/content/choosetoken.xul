@@ -47,7 +47,7 @@
 <dialog id="ssl_warning" title="&chooseToken.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 40em;"
-  buttons="accept,cancel,help"
+#expand buttons="accept,cancel__HELP_BUTTON__"
   ondialogaccept="return doOk();"
   ondialogcancel="return doCancel();"
   ondialoghelp="openHelp('which_token');"

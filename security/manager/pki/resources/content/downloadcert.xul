@@ -43,7 +43,7 @@
 <dialog id="download_cert" title="&downloadCert.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 46em;"
-  buttons="accept,cancel,help"
+#expand buttons="accept,cancel__HELP__"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
   ondialoghelp="openHelp('new_ca');"

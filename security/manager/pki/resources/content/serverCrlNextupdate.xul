@@ -48,7 +48,7 @@
   id="serverCrlNextupdate"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 30em;"
-  buttons="accept,help"
+#expand buttons="accept__HELP_BUTTON__"
   ondialoghelp="openHelp('exp_crl');"
   onload="onLoad();"
 >

@@ -53,7 +53,9 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
         onload="onLoad();"
+#ifndef MOZ_XUL_APP
         buttons="help"
+#endif
         ondialoghelp="openHelp('validation-crl-manage');"
         persist="screenX screenY width height">
 

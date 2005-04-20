@@ -51,7 +51,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   style="width: 47em;"
   onload="onLoad();"
-  buttons="accept,cancel,help"
+#expand buttons="accept,cancel__HELP_BUTTON__"
   ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
   ondialoghelp="openHelp('new_web_cert');">
