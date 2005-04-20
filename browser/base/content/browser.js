@@ -3346,9 +3346,6 @@ nsBrowserStatusHandler.prototype =
       observerService.notifyObservers(content, "StartDocumentLoad", urlStr);
     } catch (e) {
     }
-
-    // clear missing plugins
-    gMissingPluginInstaller.clearMissingPlugins(getBrowser().selectedTab);
   },
 
   endDocumentLoad : function(aRequest, aStatus)
@@ -5687,7 +5684,6 @@ function SwitchDocumentDirection(){
 }
 
 function missingPluginInstaller(){
-  this.missingPlugins = new Object();
 }
 
 missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
@@ -5743,12 +5739,8 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   }
 
   var tab = tabbrowser.mTabContainer.childNodes[i];
-
-  if (!gMissingPluginInstaller.missingPlugins)
-    gMissingPluginInstaller.missingPlugins = new Object();
-
-  if (!gMissingPluginInstaller.missingPlugins[tab])
-    gMissingPluginInstaller.missingPlugins[tab] = new Object();
+  if (!tab.missingPlugins)
+    tab.missingPlugins = new Object();
 
   var tagMimetype;
   var pluginsPage;
@@ -5762,7 +5754,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
     pluginsPage = aEvent.target.getAttribute("pluginspage");
   }
 
-  gMissingPluginInstaller.missingPlugins[tab][tagMimetype] = {
+  tab.missingPlugins[tagMimetype] = {
     mimetype: tagMimetype,
     pluginsPage: pluginsPage
   };
@@ -5778,17 +5770,12 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
                          "", "missing-plugin", null, "top", true);
 }
 
-missingPluginInstaller.prototype.clearMissingPlugins = function(aTab){
-  this.missingPlugins[aTab] = null;
-}
-
-
 missingPluginInstaller.prototype.observe = function(aSubject, aTopic, aData){
   switch (aTopic) {
     case "missing-plugin":
       // get the urls of missing plugins
       var tabbrowser = getBrowser();
-      var missingPluginsArray = gMissingPluginInstaller.missingPlugins[tabbrowser.mCurrentTab];
+      var missingPluginsArray = tabbrowser.mCurrentTab.missingPlugins;
 
       if (missingPluginsArray) {
         window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
