@@ -16,8 +16,6 @@
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
 
-<?xul-overlay href="chrome://lightning/content/weekView.xul"?>
-
 <vbox id="folderPaneBox">
   <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
 
