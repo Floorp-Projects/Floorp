@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function MessageManager()
+function MessageManager(entities)
 {
     const UC_CTRID = "@mozilla.org/intl/scriptableunicodeconverter";
     const nsIUnicodeConverter = 
@@ -47,6 +47,50 @@ function MessageManager()
         Components.classes[UC_CTRID].getService(nsIUnicodeConverter);
     this.defaultBundle = null;
     this.bundleList = new Array();
+    this.entities = entities;
+}
+
+MessageManager.prototype.loadBrands =
+function mm_loadbrands()
+{
+    var entities = this.entities;
+    var app = getService("@mozilla.org/xre/app-info;1", "nsIXULAppInfo");
+    if (app)
+    {
+        // Use App info if possible
+        entities.brandShortName = app.name;
+        entities.brandFullName = app.name + " " + app.version;
+        entities.brandVendorName = app.vendor;
+        return;
+    }
+
+    var brandBundle;
+    var path = "chrome://branding/locale/brand.properties";
+    try
+    {
+        brandBundle = this.addBundle(path);
+    }
+    catch (exception)
+    {
+        // May be an older mozilla version, try another location.
+        path = "chrome://global/locale/brand.properties";
+        brandBundle = this.addBundle(path);
+    }
+
+    entities.brandShortName = brandBundle.GetStringFromName("brandShortName");
+    entities.brandVendorName = brandBundle.GetStringFromName("vendorShortName");
+    // Not all versions of Suite / Fx have this defined; Cope:
+    try
+    {
+        entities.brandFullName = brandBundle.GetStringFromName("brandFullName");
+    }
+    catch(exception)
+    {
+        entities.brandFullName = entities.brandShortName;
+    }
+
+    // Remove all of this junk, or it will be the default bundle for getMsg...
+    this.bundleList.pop();
 }
 
 MessageManager.prototype.addBundle = 
@@ -55,14 +99,32 @@ function mm_addbundle(bundlePath, targetWindow)
     var bundle = srGetStrBundle(bundlePath);
     this.bundleList.push(bundle);
 
-    this.importBundle(bundle, targetWindow, this.bundleList.length - 1);
-
+    // The bundle will load if the file doesn't exist. This will fail though.
+    // We want to be clean and remove the bundle again.
+    try
+    {
+        this.importBundle(bundle, targetWindow, this.bundleList.length - 1);
+    }
+    catch (exception)
+    {
+        // Clean up and return the exception.
+        this.bundleList.pop();
+        throw exception;
+    }
     return bundle;
 }
 
 MessageManager.prototype.importBundle =
 function mm_importbundle(bundle, targetWindow, index)
 {
+    var me = this;
+    function replaceEntities(matched, entity)
+    {
+        if (entity in me.entities)
+            return me.entities[entity];
+
+        return matched;
+    };
     const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 
     if (!targetWindow)
@@ -92,6 +154,7 @@ function mm_importbundle(bundle, targetWindow, index)
             else
                 constValue = prop.value.replace (/^\"/, "").replace (/\"$/, "");
 
+            constValue = constValue.replace(/\&(\w+)\;/g, replaceEntities);
             targetWindow[constName] = constValue;
         }
     }
@@ -193,6 +256,15 @@ function mm_getmsg (msgName, params, deflt)
 MessageManager.prototype.getMsgFrom =
 function mm_getfrom (bundle, msgName, params, deflt)
 {
+    var me = this;
+    function replaceEntities(matched, entity)
+    {
+        if (entity in me.entities)
+            return me.entities[entity];
+
+        return matched;
+    };
+
     try 
     {
         var rv;
@@ -207,8 +279,9 @@ function mm_getfrom (bundle, msgName, params, deflt)
         /* strip leading and trailing quote characters, see comment at the
          * top of venkman.properties.
          */
-        rv = rv.replace (/^\"/, "");
-        rv = rv.replace (/\"$/, "");
+        rv = rv.replace(/^\"/, "");
+        rv = rv.replace(/\"$/, "");
+        rv = rv.replace(/\&(\w+)\;/g, replaceEntities);
 
         return rv;
     }
@@ -223,5 +296,5 @@ function mm_getfrom (bundle, msgName, params, deflt)
         return deflt;
     }
 
-    return null;    
+    return null;
 }

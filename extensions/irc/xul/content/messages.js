@@ -41,7 +41,8 @@ function initMessages()
 {
     var path = "chrome://chatzilla/locale/chatzilla.properties";
     
-    client.messageManager = new MessageManager();
+    client.messageManager = new MessageManager(client.entities);
+    client.messageManager.loadBrands();
     client.defaultBundle = client.messageManager.addBundle(path);
 
     client.viewName = client.unicodeName = MSG_CLIENT_NAME;

@@ -133,6 +133,7 @@ function init()
     client.initialized = false;
 
     client.networks = new Object();
+    client.entities = new Object();
     client.eventPump = new CEventPump (200);
 
     if (DEBUG)
@@ -146,10 +147,12 @@ function init()
                                     false /* disable */);
     }
 
-    initRDF();
-    initMessages();
-    // Must be after messages, since it uses 'em.
     initApplicationCompatibility();
+    initMessages();
+    if (client.host == "")
+        showErrorDlg(getMsg(MSG_ERR_UNKNOWN_HOST, getBrowserURL()));
+
+    initRDF();
     initCommands();
     initPrefs();
     initMunger();
@@ -266,27 +269,19 @@ function initStatic()
     var ver = __cz_version + (__cz_suffix ? "-" + __cz_suffix : "");
 
     var ary = navigator.userAgent.match (/(rv:[^;)\s]+).*?Gecko\/(\d+)/);
+    var ua = navigator.userAgent;
     if (ary)
     {
         if (navigator.vendor)
-        {
-            client.userAgent = getMsg(MSG_VERSION_REPLY,
-                                      [ver, navigator.vendor + " " + 
-                                       navigator.vendorSub + "/" + ary[2]]);
-        }
+            ua = navigator.vendor + " " + navigator.vendorSub;
         else
-        {
-            client.userAgent = getMsg(MSG_VERSION_REPLY,
-                                      [ver, client.host + " " + 
-                                       ary[1] + "/" + ary[2]]);
-        }
+            ua = client.entities.brandShortName + " " + ary[1];
+        ua = ua + "/" + ary[2];
     }
-    else
-    {
-        client.userAgent = getMsg(MSG_VERSION_REPLY,
-                                  [ver, navigator.userAgent]);
-    }
+    client.userAgent = getMsg(MSG_VERSION_REPLY, [ver, ua]);
 
+    CIRCServer.prototype.HOST_RPLY = client.entities.brandShortName + ", " + 
+                                     client.platform;
     CIRCServer.prototype.VERSION_RPLY = client.userAgent;
 
     CIRCServer.prototype.SOURCE_RPLY = MSG_SOURCE_REPLY;
@@ -325,7 +320,7 @@ function initApplicationCompatibility()
         else if (url == "chrome://browser/content/browser.xul")
             client.host = "Firefox";
         else
-            showErrorDlg(getMsg(MSG_ERR_UNKNOWN_HOST, url));
+            client.host = ""; // We don't know this host. Show an error later.
     }
     else
     {
@@ -346,7 +341,6 @@ function initApplicationCompatibility()
 
     CIRCServer.prototype.OS_RPLY = navigator.oscpu + " (" +
                                    navigator.platform + ")";
-    CIRCServer.prototype.HOST_RPLY = client.host + ", " + client.platform;
 
     // Windows likes \r\n line endings, as wussy-notepad can't cope with just
     // \n logs.
