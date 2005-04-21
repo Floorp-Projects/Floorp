@@ -1929,6 +1929,7 @@ function cmdGotoURL(e)
     if (e.command.name == "goto-url-newwin")
     {
         openTopWin(e.url);
+        dispatch("focus-input");
         return;
     }
 
@@ -1937,6 +1938,7 @@ function cmdGotoURL(e)
     if (!window)
     {
         openTopWin(e.url);
+        dispatch("focus-input");
         return;
     }
 
@@ -1949,6 +1951,7 @@ function cmdGotoURL(e)
         } else {
             window.openNewTabWith(e.url, null, null, null, null, false);
         }
+        dispatch("focus-input");
         return;
     }
 
@@ -1957,10 +1960,12 @@ function cmdGotoURL(e)
     {
         // don't replace chatzilla running in a tab
         openTopWin(e.url);
+        dispatch("focus-input");
         return;
     }
 
     location.href = e.url;
+    dispatch("focus-input");
 }
 
 function cmdCTCP(e)
