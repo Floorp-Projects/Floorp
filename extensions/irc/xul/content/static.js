@@ -289,6 +289,8 @@ function initStatic()
 
     CIRCServer.prototype.VERSION_RPLY = client.userAgent;
 
+    CIRCServer.prototype.SOURCE_RPLY = MSG_SOURCE_REPLY;
+
     client.statusBar = new Object();
 
     client.statusBar["server-nick"] = document.getElementById ("server-nick");

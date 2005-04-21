@@ -731,6 +731,12 @@ function serv_ccinfohelp()
     return MSG_CTCPHELP_VERSION;
 }
 
+CIRCServer.prototype.CTCPHelpSource =
+function serv_csrchelp()
+{
+    return MSG_CTCPHELP_SOURCE;
+}
+
 CIRCServer.prototype.CTCPHelpOs =
 function serv_oshelp()
 {

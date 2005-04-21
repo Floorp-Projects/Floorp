@@ -2371,6 +2371,14 @@ function serv_cver (e)
     return true;
 }
 
+CIRCServer.prototype.onCTCPSource =
+function serv_csrc (e)
+{
+    e.user.ctcp("SOURCE", this.SOURCE_RPLY, "NOTICE");
+
+    return true;
+}
+
 CIRCServer.prototype.onCTCPOs =
 function serv_os(e)
 {
