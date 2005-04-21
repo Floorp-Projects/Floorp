@@ -462,8 +462,6 @@ NS_Free(void* ptr)
 
 #endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING
 
-
-static char  sEnvString[MAXPATHLEN*10];
 static char* spEnvString = 0;
 
 void
@@ -482,26 +480,19 @@ GRE_AddGREToEnvironment()
     path = "";
   }
 
-  if (spEnvString) PR_smprintf_free(spEnvString);
-
   /**
-   * if the PATH string is longer than our static buffer, allocate a
-   * buffer for the environment string. This buffer will be leaked at shutdown!
+   * This buffer will leak at shutdown due to a restriction in PR_SetEnv
+   *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=25982#c3
+   *   See-Also: http://lxr.mozilla.org/mozilla/source/nsprpub/pr/include/prenv.h
    */
-  if (strlen(grePath) + strlen(path) +
-      sizeof(XPCOM_SEARCH_KEY) + sizeof(XPCOM_ENV_PATH_SEPARATOR) > MAXPATHLEN*10) {
-      if (PR_smprintf(XPCOM_SEARCH_KEY "=%s" XPCOM_ENV_PATH_SEPARATOR "%s",
-                      grePath,
-                      path)) {
-          PR_SetEnv(spEnvString);
-      }
-  } else {
-      if (sprintf(sEnvString,
-                  XPCOM_SEARCH_KEY "=%s" XPCOM_ENV_PATH_SEPARATOR "%s",
-                  grePath,
-                  path) > 0) {
-          PR_SetEnv(sEnvString);
-      }
+  char * tempPath = PR_smprintf(XPCOM_SEARCH_KEY "=%s" XPCOM_ENV_PATH_SEPARATOR "%s",
+                                grePath, path);
+  if (tempPath){
+    if (PR_SetEnv(tempPath) == PR_SUCCESS){
+      if (spEnvString) PR_smprintf_free(spEnvString);
+      spEnvString = tempPath;
+    }else
+      PR_smprintf_free(tempPath);
   }
                  
 #ifdef XP_WIN32
