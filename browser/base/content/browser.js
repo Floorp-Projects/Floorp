@@ -3934,11 +3934,9 @@ nsContextMenu.prototype = {
         this.showItem( "context-copylink", this.onLink );
         this.showItem( "context-sep-copylink", this.onLink && this.onImage);
 
-#ifndef XP_UNIX
-#ifndef XP_OS2
+#ifdef CONTEXT_COPY_IMAGE_CONTENTS
         // Copy image contents depends on whether we're on an image.
         this.showItem( "context-copyimage-contents", this.onImage );
-#endif
 #endif
         // Copy image location depends on whether we're on an image.
         this.showItem( "context-copyimage", this.onImage );

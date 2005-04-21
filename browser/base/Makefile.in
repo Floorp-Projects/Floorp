@@ -63,3 +63,7 @@ libs locale::
 install::
 	$(INSTALL) $(srcdir)/content/browserconfig.properties $(DESTDIR)$(mozappdir)
 endif
+
+ifneq (,$(filter windows mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
+DEFINES += -DCONTEXT_COPY_IMAGE_CONTENTS=1
+endif
