@@ -31,7 +31,7 @@
                 </rdf:li>
                 <rdf:li>
                     <rdf:Description nc:panelid="toc"
-                        nc:datasources="help-toc.rdf firebird-toc.rdf"/>
+                        nc:datasources="chrome://help/locale/help-toc.rdf firebird-toc.rdf"/>
                 </rdf:li>
             </rdf:Seq>
         </nc:panellist>
