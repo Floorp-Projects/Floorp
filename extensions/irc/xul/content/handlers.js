@@ -1703,11 +1703,13 @@ function my_umode (e)
     if ("user" in e && e.user)
     {
         e.user.updateHeader();
-        display(getMsg(MSG_USER_MODE, [e.user.unicodeName, e.params[2]]), MT_MODE);
+        this.display(getMsg(MSG_USER_MODE, [e.user.unicodeName, e.params[2]]),
+                     MT_MODE);
     }
     else
     {
-        display(getMsg(MSG_USER_MODE, [e.params[1], e.params[2]]), MT_MODE);
+        this.display(getMsg(MSG_USER_MODE, [e.params[1], e.params[2]]),
+                     MT_MODE);
     }
 }
 
