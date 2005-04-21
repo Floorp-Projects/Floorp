@@ -194,7 +194,7 @@ repackage-zip-%: ZIP_IN=$(_ABS_DIST)/$(PACKAGE)
 repackage-zip-%: $(ZIP_IN)
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN=$(ZIP_IN)
 
-langpack-%: LANGPACK_FILE=$(DIST)/firefox-$(MOZ_APP_VERSION).$(AB_CD).langpack.xpi
+langpack-%: LANGPACK_FILE=$(_ABS_DIST)/firefox-$(MOZ_APP_VERSION).$(AB_CD).langpack.xpi
 langpack-%: AB_CD=$*
 langpack-%: XPI_NAME=locale-$*
 langpack-%:
@@ -203,7 +203,7 @@ langpack-%:
 	@$(MAKE) libs-$(AB_CD)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc -I$(LOCALE_SRCDIR)/defines.inc $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  $(ZIP) -r9D $(shell cygpath -a $(LANGPACK_FILE)) install.rdf chrome
+	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome
 
 # This is a generic target that will make a langpack, repack ZIP (+tarball)
 # builds, and repack an installer if applicable. It is called from the
@@ -211,7 +211,7 @@ langpack-%:
 
 installers-%:
 	@$(MAKE) langpack-$*
-	@$(MAKE) repackage-$*
+	@$(MAKE) repackage-zip-$*
 ifeq (WINNT,$(OS_ARCH))
 	@$(MAKE) win32-installer-$*
 endif
