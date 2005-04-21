@@ -166,7 +166,7 @@ calRecurrenceDate::GetOccurrences(calIDateTime *aStartTime,
 
     if (mDate) {
         if (NS_SUCCEEDED(mDate->Compare(aRangeStart, &r1)) && r1 >= 0 &&
-            NS_SUCCEEDED(mDate->Compare(aRangeEnd, &r2)) && r2 <= 0)
+            NS_SUCCEEDED(mDate->Compare(aRangeEnd, &r2)) && r2 < 0)
         {
             calIDateTime **dates = (calIDateTime **) nsMemory::Alloc(sizeof(calIDateTime*));
             NS_ADDREF (dates[0] = mDate);

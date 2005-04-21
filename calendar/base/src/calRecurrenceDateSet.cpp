@@ -247,7 +247,7 @@ calRecurrenceDateSet::GetOccurrences(calIDateTime *aStartTime,
         if (aRangeEnd) {
             rv = mDates[i]->Compare(aRangeEnd, &result);
             NS_ENSURE_SUCCESS(rv, rv);
-            if (result > 0)
+            if (result >= 0)
                 break;
         }
 

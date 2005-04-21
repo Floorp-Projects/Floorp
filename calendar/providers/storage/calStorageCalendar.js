@@ -648,8 +648,8 @@ calStorageCalendar.prototype = {
         this.mSelectItemsByRange = createStatement(
             this.mDB,
             "SELECT * FROM cal_items " +
-            "WHERE (item_type = 0 AND (event_end >= :event_start AND event_start <= :event_end)) " +
-            "   OR (item_type = 1 AND (todo_entry >= :todo_start AND todo_entry <= :todo_end)) " +
+            "WHERE (item_type = 0 AND (event_end >= :event_start AND event_start < :event_end)) " +
+            "   OR (item_type = 1 AND (todo_entry >= :todo_start AND todo_entry < :todo_end)) " +
             "  AND cal_id = :cal_id"
             );
 
@@ -658,8 +658,8 @@ calStorageCalendar.prototype = {
             this.mDB,
             "SELECT * FROM cal_items " +
             "WHERE ((flags & 16 == 16) " +
-            "   OR (item_type = 0 AND (flags & 16 == 0) AND (event_end >= :event_start AND event_start <= :event_end)) " +
-            "   OR (item_type = 1 AND (flags & 16 == 0) AND todo_entry >= :todo_start AND todo_entry <= :todo_end)) " +
+            "   OR (item_type = 0 AND (flags & 16 == 0) AND (event_end >= :event_start AND event_start < :event_end)) " +
+            "   OR (item_type = 1 AND (flags & 16 == 0) AND todo_entry >= :todo_start AND todo_entry < :todo_end)) " +
             "  AND cal_id = :cal_id"
             );
 

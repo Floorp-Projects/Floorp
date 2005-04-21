@@ -373,7 +373,7 @@ calMemoryCalendar.prototype = {
                 continue;
             }
 
-            if (itemStartTime <= endTime) {
+            if (itemStartTime < endTime) {
                 // figure out if there are recurrences here we care about
                 if (itemReturnOccurrences && item.recurrenceInfo)
                 {

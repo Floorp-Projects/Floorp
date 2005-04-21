@@ -238,8 +238,8 @@ interface calICalendar : nsISupports
    * @param aRangeStart Items starting at this time or after should be 
    *                    returned.  If invalid, assume "since the beginning
    *                    of time".
-   * @param aRangeEnd   Items starting at this time or before should be
-   *                    returned.  If invalid, assume "until the end of time".
+   * @param aRangeEndEx Items starting before (not including) aRangeEndEx should be
+   *                    returned.  If null, assume "until the end of time".
    * @param aListener   The results will be called back through this interface.
    *
    *
@@ -253,7 +253,7 @@ interface calICalendar : nsISupports
    * - aDetail: null
    */
   void getItems( in unsigned long aItemFilter, in unsigned long aCount, 
-                 in calIDateTime aRangeStart, in calIDateTime aRangeEnd,
+                 in calIDateTime aRangeStart, in calIDateTime aRangeEndEx,
                  in calIOperationListener aListener );
 
   /**

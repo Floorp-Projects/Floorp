@@ -427,7 +427,7 @@ calRecurrenceRule::GetOccurrences(calIDateTime *aStartTime,
 
         // if the start of the recurrence is past the end,
         // we have no dates
-        if (icaltime_compare (dtstart, dtend) > 0) {
+        if (icaltime_compare (dtstart, dtend) >= 0) {
             *aDates = nsnull;
             *aCount = 0;
             return NS_OK;
@@ -449,7 +449,7 @@ calRecurrenceRule::GetOccurrences(calIDateTime *aStartTime,
             continue;
         }
 
-        if (aRangeEnd && icaltime_compare(next, dtend) > 0)
+        if (aRangeEnd && icaltime_compare(next, dtend) >= 0)
             break;
 
         nsCOMPtr<calIDateTime> cdt = new calDateTime(&next);

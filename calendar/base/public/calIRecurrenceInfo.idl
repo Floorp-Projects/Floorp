@@ -90,7 +90,7 @@ interface calIRecurrenceInfo : nsISupports
   calIItemOccurrence getNextOccurrence (in calIDateTime aOccurrenceTime);
 
   // return array of calIItemOccurrence representing all
-  // occurrences of this event between start and end.
+  // occurrences of this event between start (inclusive) and end (non-inclusive).
   void getOccurrences (in calIDateTime aRangeStart,
                        in calIDateTime aRangeEnd,
                        in unsigned long aMaxCount,
