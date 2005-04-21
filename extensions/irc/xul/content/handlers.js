@@ -123,9 +123,6 @@ function onClose()
     if ("userClose" in client && client.userClose)
         return true;
 
-    client.userClose = true;
-    display(MSG_CLOSING);
-
     if (!("getConnectionCount" in client) ||
         client.getConnectionCount() == 0)
     {
@@ -134,7 +131,23 @@ function onClose()
     }
 
     /* otherwise, try to close out gracefully */
-    client.quit(client.userAgent);
+    var close = true;
+    if (client.prefs["warnOnClose"])
+    {
+        const buttons = ["!yes", "!no"];
+        var checkState = { value: true };
+        var rv = confirmEx(MSG_CONFIRM_QUIT, buttons, 0, MSG_WARN_ON_EXIT,
+                           checkState);
+        close = (rv == 0);
+        client.prefs["warnOnClose"] = checkState.value;
+    }
+
+    if (close)
+    {
+        client.userClose = true;
+        display(MSG_CLOSING);
+        client.quit(client.userAgent);
+    }
     return false;
 }
 

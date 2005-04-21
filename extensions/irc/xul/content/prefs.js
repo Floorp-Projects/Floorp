@@ -196,7 +196,8 @@ function initPrefs()
          ["usermode",           "+i",     ".ident"],
          ["userHeader",         true,     "global.header"],
          ["userLog",            false,    "global.log"],
-         ["userMaxLines",       200,      "global.maxLines"]
+         ["userMaxLines",       200,      "global.maxLines"],
+         ["warnOnClose",        true,     "global"]
         ];
 
     client.prefManager.addPrefs(prefs);
