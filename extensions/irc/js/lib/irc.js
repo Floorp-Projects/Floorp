@@ -2200,6 +2200,7 @@ function serv_notice (e)
         e.replyTo = e.user; /* send replys to the user who sent the message */
     }
 
+    e.msg = e.decodeParam(2, e.replyTo);
     e.destObject = e.replyTo;
 
     return true;
@@ -2231,7 +2232,10 @@ function serv_privmsg (e)
         e.destObject = this;
     }
     else
+    {
         e.destObject = e.replyTo;
+        e.msg = e.decodeParam(2, e.replyTo);
+    }
 
     return true;
 }
