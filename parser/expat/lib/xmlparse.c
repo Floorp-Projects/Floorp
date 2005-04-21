@@ -2353,10 +2353,30 @@ doContent(XML_Parser parser,
         len = XmlNameLength(enc, rawName);
         if (len != tag->rawNameLength
             || memcmp(tag->rawName, rawName, len) != 0) {
-          *eventPP = rawName;
 /* BEGIN MOZILLA CHANGE (Report opening tag of mismatched closing tag) */
+	  /* This code is copied from the |if (endElementHandler)| block below */
+          const XML_Char *localPart;
+          const XML_Char *prefix;
+          XML_Char *uri;
+          localPart = tag->name.localPart;
+          if (ns && localPart) {
+            /* localPart and prefix may have been overwritten in
+               tag->name.str, since this points to the binding->uri
+               buffer which gets re-used; so we have to add them again
+            */
+            uri = (XML_Char *)tag->name.str + tag->name.uriLen;
+            /* don't need to check for space - already done in storeAtts() */
+            while (*localPart) *uri++ = *localPart++;
+            prefix = (XML_Char *)tag->name.prefix;
+            if (ns_triplets && prefix) {
+              *uri++ = namespaceSeparator;
+              while (*prefix) *uri++ = *prefix++;
+             }
+            *uri = XML_T('\0');
+          }
           mismatch = tag->name.str;
 /* END MOZILLA CHANGE */
+          *eventPP = rawName;
           return XML_ERROR_TAG_MISMATCH;
         }
         --tagLevel;
